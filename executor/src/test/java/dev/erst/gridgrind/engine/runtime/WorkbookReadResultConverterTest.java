@@ -85,6 +85,9 @@ class InspectionResultConverterTest extends DefaultGridGrindRequestExecutorTestS
         OoxmlEncryptionReport.Encrypted.class, packageSecurity.security().encryption());
     assertEquals(
         ExcelOoxmlSignatureState.VALID, packageSecurity.security().signatures().getFirst().state());
+    assertEquals(
+        "CN=GridGrind Signing Test",
+        packageSecurity.security().signatures().getFirst().signer().orElseThrow().subject());
   }
 
   @Test

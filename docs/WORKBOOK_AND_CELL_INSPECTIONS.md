@@ -1,6 +1,6 @@
 ---
 afad: "4.0"
-version: "0.71.0"
+version: "0.72.0"
 domain: WORKBOOK_CELL_INSPECTIONS
 updated: "2026-07-02"
 route:
@@ -65,11 +65,11 @@ Response shape:
 {
   "security": {
     "encryption": {
-      "encrypted": true,
+      "type": "ENCRYPTED",
       "mode": "AGILE",
-      "cipherAlgorithm": "aes",
-      "hashAlgorithm": "sha512",
-      "chainingMode": "ChainingModeCBC",
+      "cipherAlgorithm": "AES_256",
+      "hashAlgorithm": "SHA_512",
+      "chainingMode": "CBC",
       "keyBits": 256,
       "blockSize": 16,
       "spinCount": 100000
@@ -77,9 +77,11 @@ Response shape:
     "signatures": [
       {
         "packagePartName": "/_xmlsignatures/sig1.xml",
-        "signerSubject": "CN=GridGrind Signing",
-        "signerIssuer": "CN=GridGrind Signing",
-        "serialNumberHex": "01",
+        "signer": {
+          "subject": "CN=GridGrind Signing",
+          "issuer": "CN=GridGrind Signing",
+          "serialNumberHex": "01"
+        },
         "state": "VALID"
       }
     ]
@@ -89,8 +91,9 @@ Response shape:
 
 `GET_PACKAGE_SECURITY` runs only on the full-XSSF read path. `execution.mode.type=EVENT_READ`
 rejects it up front because the event-model reader exposes only workbook and sheet summaries.
-Unencrypted workbooks return `"encryption": { "encrypted": false }` plus an empty `signatures`
-array.
+Unencrypted workbooks return `"encryption": { "type": "NONE" }` plus an empty `signatures`
+array. Readback continues to report factual legacy modes such as `STANDARD` when the loaded OOXML
+package uses them, even though the write-side request contract authors AGILE packages only.
 
 ### GET_WORKBOOK_PROTECTION
 
@@ -364,9 +367,11 @@ The protocol catalog publishes this same mapping in machine-readable form: field
 so an agent can derive `FORMAT -> displayValue`, `FORMULA -> formula`,
 `RICH_TEXT_RUNS -> runs`, and `TEMPORAL -> temporal` directly from the catalog payload. The
 compact protocol-catalog index also publishes a legend for field-metadata keys such as
-`projectedByFacets` and `enumValueDocs`, while `plainTypes:cellReadProjectionType` uses
-`enumValueDocs` on `facets` so tokens such as `VALUE`, `FORMAT`, and `TEMPORAL` explain their
-own output directly in the machine contract.
+`projectedByFacets`, `noteRefs`, and `enumValueDocs`, while `plainTypes:cellReadProjectionType`
+uses `enumValueDocs` on `facets` so tokens such as `VALUE`, `FORMAT`, and `TEMPORAL` explain
+their own output directly in the machine contract. Shared catalog rules such as request-owned
+path resolution now appear once under top-level `notes`, with entry-local `noteRefs` pointing at
+the stable note id instead of repeating the same paragraph across summaries.
 
 Type-specific fields:
 
@@ -377,7 +382,7 @@ Type-specific fields:
 | `numberValue` | `type=NUMBER` and `VALUE` projected | The numeric value as a double. |
 | `temporal` | `type=NUMBER` and `TEMPORAL` projected | Optional temporal facet `{ isDate, kind, isoValue }`. Date-like numeric cells stay `type=NUMBER`; `kind` refines them to `DATE`, `TIME`, or `DATE_TIME`. |
 | `booleanValue` | `type=BOOLEAN` and `VALUE` projected | `true` or `false`. |
-| `errorValue` | `type=ERROR` and `VALUE` projected | The error string (e.g. `#DIV/0!`). |
+| `errorValue` | `type=ERROR` and `VALUE` projected | The GridGrind-owned reported error literal. Stored error cells use canonical Excel tokens such as `#DIV/0!` and `#REF!`; evaluated states may additionally report `#CIRCULAR_REF!` or `#FUNCTION_NOT_IMPLEMENTED!`. |
 | `formula` | `type=FORMULA` and `FORMULA` projected | The stored formula text without the leading `=`. |
 | `evaluation` | `type=FORMULA` and `VALUE` projected | Nested `CellValueReport` carrying the evaluated value kind (`BLANK`, `TEXT`, `NUMBER`, `BOOLEAN`, or `ERROR`). |
 | `displayValue` | `FORMAT` projected | Formatted string exactly as Excel would render it. |

@@ -16,7 +16,7 @@ import dev.erst.gridgrind.contract.dto.ChartPlotInput;
 import dev.erst.gridgrind.contract.dto.ChartSeriesInput;
 import dev.erst.gridgrind.contract.dto.ChartTitleInput;
 import dev.erst.gridgrind.contract.dto.CommentInput;
-import dev.erst.gridgrind.contract.dto.ConditionalFormattingBlockInput;
+import dev.erst.gridgrind.contract.dto.ConditionalFormattingDefinitionInput;
 import dev.erst.gridgrind.contract.dto.ConditionalFormattingRuleInput;
 import dev.erst.gridgrind.contract.dto.DataValidationInput;
 import dev.erst.gridgrind.contract.dto.DataValidationRuleInput;
@@ -239,10 +239,9 @@ class SequenceIntrospectionTest {
         "SET_CONDITIONAL_FORMATTING",
         mutationKind(
             mutate(
-                new SheetSelector.ByName("Budget"),
+                new RangeSelector.ByRange("Budget", "A2:A5"),
                 new StructuredMutationAction.SetConditionalFormatting(
-                    new ConditionalFormattingBlockInput(
-                        List.of("A2:A5"),
+                    new ConditionalFormattingDefinitionInput(
                         List.of(
                             new ConditionalFormattingRuleInput.FormulaRule(
                                 "A2>0",

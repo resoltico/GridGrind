@@ -42,45 +42,26 @@ sealed interface CliCommand {
     }
   }
 
-  /** Requests that one built-in generated example request be emitted as the primary output. */
-  record PrintExample(String lookupId, Optional<Path> responsePath) implements CliCommand {
-    public PrintExample {
-      Objects.requireNonNull(lookupId, "lookupId must not be null");
-      Objects.requireNonNull(responsePath, "responsePath must not be null");
-    }
-  }
-
-  /**
-   * Requests that the machine-readable built-in example catalog be emitted as the primary output.
-   */
-  record PrintExampleCatalog(Optional<Path> responsePath) implements CliCommand {
-    public PrintExampleCatalog {
-      Objects.requireNonNull(responsePath, "responsePath must not be null");
-    }
-  }
-
-  /** Requests that the machine-readable task catalog be emitted as the primary output. */
-  record PrintTaskCatalog(Optional<String> lookupId, Optional<Path> responsePath)
+  /** Requests that the unified machine-readable recipe catalog be emitted. */
+  record PrintRecipeCatalog(Optional<String> lookupId, Optional<Path> responsePath)
       implements CliCommand {
-    public PrintTaskCatalog {
+    public PrintRecipeCatalog {
       Objects.requireNonNull(lookupId, "lookupId must not be null");
       Objects.requireNonNull(responsePath, "responsePath must not be null");
     }
   }
 
-  /** Requests that one runnable starter request scaffold be emitted as the primary output. */
-  record PrintTaskPlan(String lookupId, Optional<Path> responsePath) implements CliCommand {
-    public PrintTaskPlan {
+  /** Requests that one built-in runnable recipe request be emitted as the primary output. */
+  record PrintRecipe(String lookupId, Optional<Path> responsePath) implements CliCommand {
+    public PrintRecipe {
       Objects.requireNonNull(lookupId, "lookupId must not be null");
       Objects.requireNonNull(responsePath, "responsePath must not be null");
     }
   }
 
-  /**
-   * Requests that one machine-readable task keyword match report be emitted as the primary output.
-   */
-  record PrintTaskKeywordMatch(String query, Optional<Path> responsePath) implements CliCommand {
-    public PrintTaskKeywordMatch {
+  /** Requests that one machine-readable recipe keyword match report be emitted. */
+  record PrintRecipeKeywordMatch(String query, Optional<Path> responsePath) implements CliCommand {
+    public PrintRecipeKeywordMatch {
       Objects.requireNonNull(query, "query must not be null");
       Objects.requireNonNull(responsePath, "responsePath must not be null");
     }

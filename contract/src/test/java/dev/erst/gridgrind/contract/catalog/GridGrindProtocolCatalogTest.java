@@ -14,6 +14,7 @@ import dev.erst.gridgrind.contract.json.GridGrindJson;
 import dev.erst.gridgrind.contract.json.GridGrindJsonOutput;
 import dev.erst.gridgrind.contract.step.MutationStep;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -194,6 +195,48 @@ class GridGrindProtocolCatalogTest {
   }
 
   @Test
+  void requestOwnedPathRulePublishesOnceAndRemainsSearchableAcrossPathBearingEntries()
+      throws IOException {
+    Catalog catalog = GridGrindProtocolCatalog.catalog();
+    String noteText = GridGrindRequestSurfaceContractText.requestOwnedPathResolutionSummary();
+    String rendered =
+        new String(GridGrindJsonOutput.writeProtocolCatalogBytes(catalog), StandardCharsets.UTF_8);
+
+    assertEquals(
+        List.of(
+            new CatalogNote(GridGrindProtocolCatalogNotes.REQUEST_OWNED_PATH_RULE_ID, noteText)),
+        catalog.notes());
+    assertEquals(
+        List.of(GridGrindProtocolCatalogNotes.REQUEST_OWNED_PATH_RULE_ID),
+        GridGrindProtocolCatalog.entryFor("EXISTING").orElseThrow().noteRefs());
+    assertEquals(
+        List.of(GridGrindProtocolCatalogNotes.REQUEST_OWNED_PATH_RULE_ID),
+        GridGrindProtocolCatalog.entryFor("SAVE_AS").orElseThrow().noteRefs());
+    assertEquals(
+        List.of(GridGrindProtocolCatalogNotes.REQUEST_OWNED_PATH_RULE_ID),
+        ((PlainTypeGroup)
+                GridGrindProtocolCatalog.lookupValueFor(
+                        "plainTypes:formulaExternalWorkbookInputType")
+                    .orElseThrow())
+            .type()
+            .noteRefs());
+    assertEquals(1, occurrenceCount(rendered, noteText));
+
+    CatalogSearchResult search = GridGrindProtocolCatalog.searchCatalog("request-owned paths");
+    assertTrue(
+        search.matches().stream()
+            .anyMatch(match -> "sourceTypes:EXISTING".equals(match.qualifiedId())));
+    assertTrue(
+        search.matches().stream()
+            .anyMatch(match -> "persistenceTypes:SAVE_AS".equals(match.qualifiedId())));
+    assertTrue(
+        search.matches().stream()
+            .anyMatch(
+                match ->
+                    "plainTypes:formulaExternalWorkbookInputType".equals(match.qualifiedId())));
+  }
+
+  @Test
   void executionPolicyCatalogEntryPublishesIndependentlyOptionalAxes() {
     PlainTypeGroup executionPolicy =
         (PlainTypeGroup)
@@ -205,6 +248,23 @@ class GridGrindProtocolCatalogTest {
     assertEquals(FieldRequirement.OPTIONAL, entry.field("journal").orElseThrow().requirement());
     assertEquals(FieldRequirement.OPTIONAL, entry.field("calculation").orElseThrow().requirement());
     assertTrue(entry.summary().contains("omit any nested execution field"));
+  }
+
+  @Test
+  void ooxmlWriteEncryptionCatalogEntryPublishesModeLessStrongOnlyDefaults() {
+    PlainTypeGroup encryption =
+        (PlainTypeGroup)
+            GridGrindProtocolCatalog.lookupValueFor("plainTypes:ooxmlEncryptionInputType")
+                .orElseThrow();
+    TypeEntry entry = encryption.type();
+
+    assertTrue(entry.field("password").isPresent());
+    assertFalse(entry.field("mode").isPresent());
+    assertEquals(FieldRequirement.OPTIONAL, entry.field("cipher").orElseThrow().requirement());
+    assertEquals(FieldRequirement.OPTIONAL, entry.field("hash").orElseThrow().requirement());
+    assertTrue(entry.summary().contains("AGILE packages only"));
+    assertTrue(entry.summary().contains("AES_256"));
+    assertTrue(entry.summary().contains("SHA_512"));
   }
 
   @Test
@@ -237,6 +297,15 @@ class GridGrindProtocolCatalogTest {
         (NestedTypeGroup)
             GridGrindProtocolCatalog.lookupValueFor("nestedTypes:cellValueReportTypes")
                 .orElseThrow();
+    NestedTypeGroup inputGroup =
+        (NestedTypeGroup)
+            GridGrindProtocolCatalog.lookupValueFor("nestedTypes:cellInputTypes").orElseThrow();
+    NestedTypeGroup rowInputGroup =
+        (NestedTypeGroup)
+            GridGrindProtocolCatalog.lookupValueFor("nestedTypes:cellRowInputTypes").orElseThrow();
+    NestedTypeGroup gridInputGroup =
+        (NestedTypeGroup)
+            GridGrindProtocolCatalog.lookupValueFor("nestedTypes:cellGridInputTypes").orElseThrow();
     TypeEntry number =
         group.types().stream().filter(type -> "NUMBER".equals(type.id())).findFirst().orElseThrow();
     TypeEntry formula =
@@ -244,8 +313,15 @@ class GridGrindProtocolCatalogTest {
             .filter(type -> "FORMULA".equals(type.id()))
             .findFirst()
             .orElseThrow();
+    TypeEntry error =
+        group.types().stream().filter(type -> "ERROR".equals(type.id())).findFirst().orElseThrow();
     TypeEntry text =
         group.types().stream().filter(type -> "TEXT".equals(type.id())).findFirst().orElseThrow();
+    TypeEntry evaluatedError =
+        valueGroup.types().stream()
+            .filter(type -> "ERROR".equals(type.id()))
+            .findFirst()
+            .orElseThrow();
     TypeEntry evaluatedText =
         valueGroup.types().stream()
             .filter(type -> "TEXT".equals(type.id()))
@@ -256,10 +332,38 @@ class GridGrindProtocolCatalogTest {
             .filter(type -> "NUMBER".equals(type.id()))
             .findFirst()
             .orElseThrow();
+    TypeEntry inputError =
+        inputGroup.types().stream()
+            .filter(type -> "ERROR".equals(type.id()))
+            .findFirst()
+            .orElseThrow();
+    TypeEntry rowInputError =
+        rowInputGroup.types().stream()
+            .filter(type -> "ERROR".equals(type.id()))
+            .findFirst()
+            .orElseThrow();
+    TypeEntry gridInputError =
+        gridInputGroup.types().stream()
+            .filter(type -> "ERROR".equals(type.id()))
+            .findFirst()
+            .orElseThrow();
     PlainTypeGroup projection =
         (PlainTypeGroup)
             GridGrindProtocolCatalog.lookupValueFor("plainTypes:cellReadProjectionType")
                 .orElseThrow();
+    List<String> storedErrorLiterals =
+        List.of("#NULL!", "#DIV/0!", "#VALUE!", "#REF!", "#NAME?", "#NUM!", "#N/A");
+    List<String> reportedErrorLiterals =
+        List.of(
+            "#NULL!",
+            "#DIV/0!",
+            "#VALUE!",
+            "#REF!",
+            "#NAME?",
+            "#NUM!",
+            "#N/A",
+            "#CIRCULAR_REF!",
+            "#FUNCTION_NOT_IMPLEMENTED!");
 
     assertEquals(FieldRequirement.REQUIRED, number.field("address").orElseThrow().requirement());
     assertTrue(number.field("address").orElseThrow().projectedByFacets().isEmpty());
@@ -283,6 +387,7 @@ class GridGrindProtocolCatalogTest {
     assertEquals(List.of("VALUE"), text.field("textValue").orElseThrow().projectedByFacets());
     assertEquals(FieldRequirement.OPTIONAL, text.field("runs").orElseThrow().requirement());
     assertEquals(List.of("RICH_TEXT_RUNS"), text.field("runs").orElseThrow().projectedByFacets());
+    assertEquals(reportedErrorLiterals, error.field("errorValue").orElseThrow().enumValues());
     assertEquals(FieldRequirement.OPTIONAL, formula.field("formula").orElseThrow().requirement());
     assertEquals(List.of("FORMULA"), formula.field("formula").orElseThrow().projectedByFacets());
     assertEquals(
@@ -301,9 +406,17 @@ class GridGrindProtocolCatalogTest {
         evaluatedNumber.field("numberValue").orElseThrow().requirement());
     assertTrue(evaluatedNumber.field("numberValue").orElseThrow().projectedByFacets().isEmpty());
     assertEquals(
+        reportedErrorLiterals, evaluatedError.field("errorValue").orElseThrow().enumValues());
+    assertEquals(
         FieldRequirement.OPTIONAL, evaluatedNumber.field("temporal").orElseThrow().requirement());
     assertEquals(
         List.of("TEMPORAL"), evaluatedNumber.field("temporal").orElseThrow().projectedByFacets());
+    assertEquals(storedErrorLiterals, inputError.field("error").orElseThrow().enumValues());
+    assertEquals(storedErrorLiterals, rowInputError.field("cells").orElseThrow().enumValues());
+    assertEquals(storedErrorLiterals, gridInputError.field("cells").orElseThrow().enumValues());
+    assertEquals(
+        "#FUNCTION_NOT_IMPLEMENTED!",
+        error.field("errorValue").orElseThrow().enumValueDocs().get(8).value());
     assertEquals(
         List.of(
             new EnumValueDocEntry(
@@ -514,4 +627,8 @@ class GridGrindProtocolCatalogTest {
 
   /** Record subtype for blank-property discriminator coverage. */
   private record BlankPropertyRecord() implements BlankPropertySealedType {}
+
+  private static int occurrenceCount(String text, String needle) {
+    return text.split(java.util.regex.Pattern.quote(needle), -1).length - 1;
+  }
 }

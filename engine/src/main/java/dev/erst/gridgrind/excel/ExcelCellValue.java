@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.excel.foundation.ExcelStoredCellErrorLiteral;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Objects;
@@ -41,7 +42,7 @@ public sealed interface ExcelCellValue
     return new BooleanValue(value);
   }
 
-  /** Creates an Excel error cell value such as {@code #REF!}. */
+  /** Creates one stored OOXML error cell value such as {@code #REF!}. */
   static ExcelCellValue error(String value) {
     return new ErrorValue(value);
   }
@@ -79,12 +80,11 @@ public sealed interface ExcelCellValue
 
   record BooleanValue(boolean value) implements ExcelCellValue {}
 
+  /** Stored OOXML error cell literal. */
   record ErrorValue(String value) implements ExcelCellValue {
     public ErrorValue {
       Objects.requireNonNull(value, "value must not be null");
-      if (value.isBlank()) {
-        throw new IllegalArgumentException("value must not be blank");
-      }
+      value = ExcelStoredCellErrorLiteral.fromWireValue(value).wireValue();
     }
   }
 

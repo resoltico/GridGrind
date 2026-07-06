@@ -1,6 +1,7 @@
 package dev.erst.gridgrind.cli;
 
-import dev.erst.gridgrind.cli.discovery.CliFailureReport;
+import dev.erst.gridgrind.cli.discovery.CliDiagnostic;
+import dev.erst.gridgrind.cli.discovery.CliTransport;
 import dev.erst.gridgrind.cli.discovery.GridGrindCliJson;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -25,31 +26,40 @@ final class CliUnexpectedFailureSupport {
     Objects.requireNonNull(stderr, "stderr must not be null");
     Objects.requireNonNull(exception, "exception must not be null");
 
-    CliFailureReport report =
-        CliFailureReports.unexpectedFailure(
-            CliPrimaryCommandSupport.primaryCommandName(args), "unexpected-failure", exception);
+    CliDiagnostic diagnostic =
+        CliDiagnostics.unexpectedFailure(
+            CliPrimaryCommandSupport.primaryCommandName(args), exception);
     try {
       return new CliResponseWriter()
-          .writeCliFailureReport(responsePathHint, stdout, stderr, report, prettyJson);
+          .writeCliDiagnostic(responsePathHint, stdout, stderr, diagnostic, prettyJson);
     } catch (Throwable writeFailure) {
-      directFallback(report, stdout, stderr, responsePathHint.isPresent(), prettyJson);
-      return report.exitCode();
+      directFallback(
+          diagnostic, stdout, stderr, responsePathHint.isPresent(), prettyJson, writeFailure);
+      return diagnostic.exitCode();
     }
   }
 
   private static void directFallback(
-      CliFailureReport report,
+      CliDiagnostic diagnostic,
       OutputStream stdout,
       OutputStream stderr,
       boolean responsePathUsed,
-      boolean prettyJson) {
+      boolean prettyJson,
+      Throwable writeFailure) {
+    CliDiagnostic stdoutDiagnostic =
+        responsePathUsed
+            ? CliResponseWriter.diagnosticWithTransport(diagnostic, CliTransport.standardOutput())
+            : diagnostic;
     try {
-      byte[] payload = GridGrindCliJson.writeBytes(report, prettyJson);
+      byte[] payload = GridGrindCliJson.writeBytes(stdoutDiagnostic, prettyJson);
       writePayload(stdout, payload);
       return;
     } catch (IOException exception) {
+      if (structuredStderrWasAlreadyRecovered(responsePathUsed, writeFailure)) {
+        return;
+      }
       try {
-        writePayload(stderr, GridGrindCliJson.writeBytes(report, prettyJson));
+        writePayload(stderr, GridGrindCliJson.writeBytes(diagnostic, prettyJson));
         return;
       } catch (IOException exceptionOnStderr) {
         exception.addSuppressed(exceptionOnStderr);
@@ -66,6 +76,14 @@ final class CliUnexpectedFailureSupport {
         exception.addSuppressed(humanReadableFailure);
       }
     }
+  }
+
+  private static boolean structuredStderrWasAlreadyRecovered(
+      boolean responsePathUsed, Throwable writeFailure) {
+    if (!responsePathUsed || !(writeFailure instanceof IOException ioFailure)) {
+      return false;
+    }
+    return ioFailure.getSuppressed().length == 0;
   }
 
   private static void writePayload(OutputStream outputStream, byte[] payload) throws IOException {

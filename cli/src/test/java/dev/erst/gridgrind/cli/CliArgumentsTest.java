@@ -140,13 +140,13 @@ class CliArgumentsTest {
             () ->
                 CliArguments.parse(
                     new String[] {
-                      "--print-example", "--lookup", "BUDGET", "--print-task-catalog"
+                      "--print-recipe", "--lookup", "BUDGET", "--print-recipe-catalog"
                     }));
 
-    assertEquals("--print-task-catalog", exception.argument());
+    assertEquals("--print-recipe-catalog", exception.argument());
     assertEquals(
-        "Only one primary command may be used per invocation; --print-example cannot be"
-            + " combined with --print-task-catalog",
+        "Only one primary command may be used per invocation; --print-recipe cannot be"
+            + " combined with --print-recipe-catalog",
         exception.getMessage());
   }
 
@@ -167,14 +167,12 @@ class CliArgumentsTest {
   }
 
   @Test
-  void printExampleRejectsMissingAndDuplicateLookupFlags() {
+  void printRecipeRejectsMissingAndDuplicateLookupFlags() {
     CliArgumentsException missing =
         assertThrows(
-            CliArgumentsException.class,
-            () -> CliArguments.parse(new String[] {"--print-example"}));
+            CliArgumentsException.class, () -> CliArguments.parse(new String[] {"--print-recipe"}));
     assertEquals("--lookup", missing.argument());
-    assertEquals(
-        "--print-example requires --lookup and one example id value", missing.getMessage());
+    assertEquals("--print-recipe requires --lookup and one recipe id value", missing.getMessage());
 
     CliArgumentsException duplicate =
         assertThrows(
@@ -182,28 +180,21 @@ class CliArgumentsTest {
             () ->
                 CliArguments.parse(
                     new String[] {
-                      "--print-example", "--lookup", "BUDGET", "--lookup", "DASHBOARD"
+                      "--print-recipe", "--lookup", "BUDGET", "--lookup", "DASHBOARD"
                     }));
     assertEquals("--lookup", duplicate.argument());
     assertEquals("Duplicate argument: --lookup", duplicate.getMessage());
   }
 
   @Test
-  void printTaskPlanRejectsMissingAndDuplicateLookupFlags() {
-    CliArgumentsException missing =
-        assertThrows(
-            CliArgumentsException.class,
-            () -> CliArguments.parse(new String[] {"--print-task-plan"}));
-    assertEquals("--lookup", missing.argument());
-    assertEquals("--print-task-plan requires --lookup and one task id value", missing.getMessage());
-
+  void printRecipeCatalogAndRecipeRejectDuplicateLookupFlags() {
     CliArgumentsException duplicate =
         assertThrows(
             CliArgumentsException.class,
             () ->
                 CliArguments.parse(
                     new String[] {
-                      "--print-task-plan", "--lookup", "DASHBOARD", "--lookup", "TABULAR_REPORT"
+                      "--print-recipe", "--lookup", "DASHBOARD", "--lookup", "TABULAR_REPORT"
                     }));
     assertEquals("--lookup", duplicate.argument());
     assertEquals("Duplicate argument: --lookup", duplicate.getMessage());
@@ -214,10 +205,10 @@ class CliArgumentsTest {
     CliArgumentsException missing =
         assertThrows(
             CliArgumentsException.class,
-            () -> CliArguments.parse(new String[] {"--print-task-keyword-match"}));
+            () -> CliArguments.parse(new String[] {"--print-recipe-keyword-match"}));
     assertEquals("--query", missing.argument());
     assertEquals(
-        "--print-task-keyword-match requires --query and one query value", missing.getMessage());
+        "--print-recipe-keyword-match requires --query and one query value", missing.getMessage());
 
     CliArgumentsException duplicate =
         assertThrows(
@@ -225,15 +216,15 @@ class CliArgumentsTest {
             () ->
                 CliArguments.parse(
                     new String[] {
-                      "--print-task-keyword-match", "--query", "budget", "--query", "dashboard"
+                      "--print-recipe-keyword-match", "--query", "budget", "--query", "dashboard"
                     }));
     assertEquals("--query", duplicate.argument());
     assertEquals("Duplicate argument: --query", duplicate.getMessage());
 
-    CliCommand.PrintTaskKeywordMatch blankQuery =
+    CliCommand.PrintRecipeKeywordMatch blankQuery =
         assertInstanceOf(
-            CliCommand.PrintTaskKeywordMatch.class,
-            CliArguments.parse(new String[] {"--print-task-keyword-match", "--query", ""}));
+            CliCommand.PrintRecipeKeywordMatch.class,
+            CliArguments.parse(new String[] {"--print-recipe-keyword-match", "--query", ""}));
     assertEquals("", blankQuery.query());
   }
 
@@ -244,11 +235,13 @@ class CliArgumentsTest {
             CliArgumentsException.class,
             () ->
                 CliArguments.parse(
-                    new String[] {"--print-task-keyword-match", "--query", "budget", "--version"}));
+                    new String[] {
+                      "--print-recipe-keyword-match", "--query", "budget", "--version"
+                    }));
 
     assertEquals("--version", exception.argument());
     assertEquals(
-        "Only one primary command may be used per invocation; --print-task-keyword-match cannot be combined with --version",
+        "Only one primary command may be used per invocation; --print-recipe-keyword-match cannot be combined with --version",
         exception.getMessage());
   }
 
@@ -282,12 +275,12 @@ class CliArgumentsTest {
 
   @Test
   void printTaskKeywordMatchParsesIntoItsDedicatedCommand() {
-    CliCommand.PrintTaskKeywordMatch command =
+    CliCommand.PrintRecipeKeywordMatch command =
         assertInstanceOf(
-            CliCommand.PrintTaskKeywordMatch.class,
+            CliCommand.PrintRecipeKeywordMatch.class,
             CliArguments.parse(
                 new String[] {
-                  "--print-task-keyword-match", "--query", "monthly sales dashboard with charts"
+                  "--print-recipe-keyword-match", "--query", "monthly sales dashboard with charts"
                 }));
 
     assertEquals("monthly sales dashboard with charts", command.query());
@@ -460,13 +453,13 @@ class CliArgumentsTest {
   }
 
   @Test
-  void printTaskCatalogParsesLookupAndResponsePathTogether() {
-    CliCommand.PrintTaskCatalog command =
+  void printRecipeCatalogParsesLookupAndResponsePathTogether() {
+    CliCommand.PrintRecipeCatalog command =
         assertInstanceOf(
-            CliCommand.PrintTaskCatalog.class,
+            CliCommand.PrintRecipeCatalog.class,
             CliArguments.parse(
                 new String[] {
-                  "--print-task-catalog", "--lookup", "DASHBOARD", "--response", "task.json"
+                  "--print-recipe-catalog", "--lookup", "DASHBOARD", "--response", "task.json"
                 }));
 
     assertEquals(java.util.Optional.of("DASHBOARD"), command.lookupId());
@@ -474,14 +467,14 @@ class CliArgumentsTest {
   }
 
   @Test
-  void printTaskCatalogRejectsDuplicateLookupAndResponseArguments() {
+  void printRecipeCatalogRejectsDuplicateLookupAndResponseArguments() {
     CliArgumentsException duplicateLookup =
         assertThrows(
             CliArgumentsException.class,
             () ->
                 CliArguments.parse(
                     new String[] {
-                      "--print-task-catalog", "--lookup", "DASHBOARD", "--lookup", "AUDIT"
+                      "--print-recipe-catalog", "--lookup", "DASHBOARD", "--lookup", "AUDIT"
                     }));
 
     assertEquals("--lookup", duplicateLookup.argument());
@@ -493,7 +486,7 @@ class CliArgumentsTest {
             () ->
                 CliArguments.parse(
                     new String[] {
-                      "--print-task-catalog",
+                      "--print-recipe-catalog",
                       "--lookup",
                       "DASHBOARD",
                       "--response",
@@ -511,44 +504,42 @@ class CliArgumentsTest {
     CliArgumentsException blankTask =
         assertThrows(
             CliArgumentsException.class,
-            () -> CliArguments.parse(new String[] {"--print-task-catalog", "--lookup", ""}));
+            () -> CliArguments.parse(new String[] {"--print-recipe-catalog", "--lookup", ""}));
     assertEquals("--lookup", blankTask.argument());
-    assertEquals("task lookup id must not be blank", blankTask.getMessage());
+    assertEquals("recipe lookup id must not be blank", blankTask.getMessage());
 
     CliArgumentsException blankTaskPlan =
         assertThrows(
             CliArgumentsException.class,
-            () -> CliArguments.parse(new String[] {"--print-task-plan", "--lookup", ""}));
+            () -> CliArguments.parse(new String[] {"--print-recipe", "--lookup", ""}));
     assertEquals("--lookup", blankTaskPlan.argument());
-    assertEquals("task lookup id must not be blank", blankTaskPlan.getMessage());
+    assertEquals("recipe lookup id must not be blank", blankTaskPlan.getMessage());
 
     CliArgumentsException missingTaskPlan =
         assertThrows(
-            CliArgumentsException.class,
-            () -> CliArguments.parse(new String[] {"--print-task-plan"}));
+            CliArgumentsException.class, () -> CliArguments.parse(new String[] {"--print-recipe"}));
     assertEquals("--lookup", missingTaskPlan.argument());
     assertEquals(
-        "--print-task-plan requires --lookup and one task id value", missingTaskPlan.getMessage());
+        "--print-recipe requires --lookup and one recipe id value", missingTaskPlan.getMessage());
 
     CliArgumentsException blankExample =
         assertThrows(
             CliArgumentsException.class,
-            () -> CliArguments.parse(new String[] {"--print-example", "--lookup", ""}));
+            () -> CliArguments.parse(new String[] {"--print-recipe", "--lookup", ""}));
     assertEquals("--lookup", blankExample.argument());
-    assertEquals("example lookup id must not be blank", blankExample.getMessage());
+    assertEquals("recipe lookup id must not be blank", blankExample.getMessage());
 
     CliArgumentsException missingExample =
         assertThrows(
-            CliArgumentsException.class,
-            () -> CliArguments.parse(new String[] {"--print-example"}));
+            CliArgumentsException.class, () -> CliArguments.parse(new String[] {"--print-recipe"}));
     assertEquals("--lookup", missingExample.argument());
     assertEquals(
-        "--print-example requires --lookup and one example id value", missingExample.getMessage());
+        "--print-recipe requires --lookup and one recipe id value", missingExample.getMessage());
 
-    CliCommand.PrintTaskKeywordMatch blankQuery =
+    CliCommand.PrintRecipeKeywordMatch blankQuery =
         assertInstanceOf(
-            CliCommand.PrintTaskKeywordMatch.class,
-            CliArguments.parse(new String[] {"--print-task-keyword-match", "--query", ""}));
+            CliCommand.PrintRecipeKeywordMatch.class,
+            CliArguments.parse(new String[] {"--print-recipe-keyword-match", "--query", ""}));
     assertEquals("", blankQuery.query());
   }
 
@@ -559,18 +550,14 @@ class CliArgumentsTest {
             CliArgumentsException.class,
             () -> CliArguments.parse(new String[] {"--example", "BUDGET"}));
     assertEquals("--example", exampleException.argument());
-    assertEquals(
-        "--example is no longer part of the CLI grammar; use --print-example --lookup <id>",
-        exampleException.getMessage());
+    assertEquals("Unknown argument: --example", exampleException.getMessage());
 
     CliArgumentsException taskException =
         assertThrows(
             CliArgumentsException.class,
             () -> CliArguments.parse(new String[] {"--task", "BUDGET"}));
     assertEquals("--task", taskException.argument());
-    assertEquals(
-        "--task is no longer part of the CLI grammar; use --lookup instead",
-        taskException.getMessage());
+    assertEquals("Unknown argument: --task", taskException.getMessage());
 
     CliArgumentsException lookupException =
         assertThrows(
@@ -578,8 +565,8 @@ class CliArgumentsTest {
             () -> CliArguments.parse(new String[] {"--lookup", "SET_CELL"}));
     assertEquals("--lookup", lookupException.argument());
     assertEquals(
-        "--lookup requires --print-example, --print-task-catalog, --print-task-plan,"
-            + " or --print-protocol-catalog and one lookup id value",
+        "--lookup requires --print-recipe, --print-recipe-catalog, or"
+            + " --print-protocol-catalog and one lookup id value",
         lookupException.getMessage());
 
     CliArgumentsException searchException =
@@ -597,7 +584,7 @@ class CliArgumentsTest {
             () -> CliArguments.parse(new String[] {"--query", "budget spreadsheet"}));
     assertEquals("--query", queryException.argument());
     assertEquals(
-        "--query requires --print-task-keyword-match and one natural-language query value",
+        "--query requires --print-recipe-keyword-match and one natural-language query value",
         queryException.getMessage());
   }
 
@@ -629,10 +616,10 @@ class CliArgumentsTest {
             () ->
                 CliArguments.parse(
                     new String[] {
-                      "--print-task-plan", "--lookup", "DASHBOARD", "--request", "ignored.json"
+                      "--print-recipe", "--lookup", "DASHBOARD", "--request", "ignored.json"
                     }));
     assertEquals("--request", taskFailure.argument());
-    assertEquals("--print-task-plan does not allow --request", taskFailure.getMessage());
+    assertEquals("--print-recipe does not allow --request", taskFailure.getMessage());
 
     CliArgumentsException helpExecutionRootFailure =
         assertThrows(
@@ -654,11 +641,11 @@ class CliArgumentsTest {
     CliArgumentsException exception =
         assertThrows(
             CliArgumentsException.class,
-            () -> CliArguments.parse(new String[] {"--print-example-catalog", "--doctor-request"}));
+            () -> CliArguments.parse(new String[] {"--print-recipe-catalog", "--doctor-request"}));
 
     assertEquals("--doctor-request", exception.argument());
     assertEquals(
-        "Only one primary command may be used per invocation; --print-example-catalog"
+        "Only one primary command may be used per invocation; --print-recipe-catalog"
             + " cannot be combined with --doctor-request",
         exception.getMessage());
   }

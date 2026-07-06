@@ -1,6 +1,7 @@
 package dev.erst.gridgrind.contract.json;
 
 import dev.erst.gridgrind.contract.catalog.Catalog;
+import dev.erst.gridgrind.contract.catalog.CatalogNote;
 import dev.erst.gridgrind.contract.catalog.TypeEntry;
 import dev.erst.gridgrind.contract.dto.GridGrindProtocolVersion;
 import dev.erst.gridgrind.contract.dto.GridGrindResponse;
@@ -8,6 +9,7 @@ import dev.erst.gridgrind.contract.dto.RequestDoctorReport;
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.List;
 import java.util.Objects;
 import tools.jackson.databind.node.ObjectNode;
 
@@ -123,10 +125,10 @@ public final class GridGrindJsonOutput {
   /**
    * Writes one catalog lookup result as a JSON object with protocolVersion prepended to the root.
    */
-  public static void writeCatalogLookupResult(
+  static void writeCatalogLookupResult(
       OutputStream outputStream, GridGrindProtocolVersion protocolVersion, Object value)
       throws IOException {
-    writeCatalogLookupResult(outputStream, protocolVersion, value, false);
+    writeCatalogLookupResult(outputStream, protocolVersion, value, List.of(), false);
   }
 
   /**
@@ -139,12 +141,30 @@ public final class GridGrindJsonOutput {
       Object value,
       boolean pretty)
       throws IOException {
+    writeCatalogLookupResult(outputStream, protocolVersion, value, List.of(), pretty);
+  }
+
+  /**
+   * Writes one protocol-catalog lookup result with shared-note payloads prepended to the root when
+   * the scoped value references them.
+   */
+  public static void writeCatalogLookupResult(
+      OutputStream outputStream,
+      GridGrindProtocolVersion protocolVersion,
+      Object value,
+      List<CatalogNote> notes,
+      boolean pretty)
+      throws IOException {
     Objects.requireNonNull(protocolVersion, "protocolVersion must not be null");
     Objects.requireNonNull(value, "value must not be null");
+    Objects.requireNonNull(notes, "notes must not be null");
     var mapper = wireWriteMapper(pretty);
     ObjectNode valueNode = mapper.valueToTree(value);
     ObjectNode envelope = mapper.createObjectNode();
     envelope.put("protocolVersion", protocolVersion.name());
+    if (!notes.isEmpty()) {
+      envelope.set("notes", mapper.valueToTree(notes));
+    }
     for (var field : valueNode.properties()) {
       envelope.set(field.getKey(), field.getValue());
     }

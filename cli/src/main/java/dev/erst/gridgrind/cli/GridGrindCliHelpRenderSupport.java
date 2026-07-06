@@ -1,7 +1,6 @@
 package dev.erst.gridgrind.cli;
 
-import dev.erst.gridgrind.cli.discovery.ShippedExampleEntry;
-import dev.erst.gridgrind.cli.discovery.TaskEntry;
+import dev.erst.gridgrind.cli.discovery.RecipeCatalogEntry;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -12,15 +11,9 @@ import java.util.regex.Pattern;
 final class GridGrindCliHelpRenderSupport {
   private GridGrindCliHelpRenderSupport() {}
 
-  static String formatExamples(List<ShippedExampleEntry> shippedExamples) {
-    return shippedExamples.stream()
-        .map(GridGrindCliHelpRenderSupport::formatExampleBlock)
-        .collect(java.util.stream.Collectors.joining("\n"));
-  }
-
-  static String formatTaskStarters(List<TaskEntry> tasks) {
-    return tasks.stream()
-        .map(GridGrindCliHelpRenderSupport::formatTaskBlock)
+  static String formatRecipes(List<RecipeCatalogEntry> recipes) {
+    return recipes.stream()
+        .map(GridGrindCliHelpRenderSupport::formatRecipeBlock)
         .collect(java.util.stream.Collectors.joining("\n"));
   }
 
@@ -122,29 +115,17 @@ final class GridGrindCliHelpRenderSupport {
             List.of(replacePlaceholders(section.description().orElseThrow(), containerTag)), 2);
   }
 
-  static String renderDiscovery(
-      CliSurface.CliDiscoverySection section, String discoveryExamples, String taskStarters) {
+  static String renderDiscovery(CliSurface.CliDiscoverySection section, String recipes) {
     return section.label()
         + ":\n"
         + "  Discovery commands:\n"
         + indentLinesWrapped(section.lines(), 4)
         + "\n"
-        + "  "
-        + section.builtInExamplesLabel()
-        + " catalog entries:\n"
-        + discoveryExamples
+        + "  Unified recipe catalog entries:\n"
+        + recipes
         + "\n"
-        + "  "
-        + section.printOneExampleLabel()
-        + ":\n"
-        + "    "
-        + section.printOneExampleCommand()
-        + "\n"
-        + "  Task starter catalog entries:\n"
-        + taskStarters
-        + "\n"
-        + "  Print one task starter:\n"
-        + "    gridgrind --print-task-plan --lookup DASHBOARD --response task-plan.json\n"
+        + "  Print one recipe:\n"
+        + "    gridgrind --print-recipe --lookup DASHBOARD --response recipe.json\n"
         + renderAdvisoryEntries("Advisory notes", section.guidanceEntries());
   }
 
@@ -170,53 +151,20 @@ final class GridGrindCliHelpRenderSupport {
             .stripTrailing();
   }
 
-  private static String formatExampleBlock(ShippedExampleEntry example) {
+  private static String formatRecipeBlock(RecipeCatalogEntry recipe) {
     List<String> lines = new ArrayList<>();
-    lines.add("    - " + example.id());
+    lines.add("    - " + recipe.id() + " (" + recipe.view().name() + ")");
     lines.add(
         wrappedText(
-            "requestFileName: " + example.requestFileName(),
-            "      ",
-            "        ",
-            helpTextWidth()));
+            "requestFileName: " + recipe.requestFileName(), "      ", "        ", helpTextWidth()));
     lines.add(
         wrappedText(
-            "workspace: " + example.workspaceMode().name(), "      ", "        ", helpTextWidth()));
-    lines.add(wrappedText("summary: " + example.summary(), "      ", "        ", helpTextWidth()));
-    if (!example.requiredWorkspacePaths().isEmpty()) {
+            "workspace: " + recipe.workspaceMode().name(), "      ", "        ", helpTextWidth()));
+    lines.add(wrappedText("summary: " + recipe.summary(), "      ", "        ", helpTextWidth()));
+    if (!recipe.requiredWorkspacePaths().isEmpty()) {
       lines.add(
           wrappedText(
-              "requiredWorkspacePaths: " + String.join(", ", example.requiredWorkspacePaths()),
-              "      ",
-              "        ",
-              helpTextWidth()));
-    }
-    return String.join("\n", lines);
-  }
-
-  private static String formatTaskBlock(TaskEntry task) {
-    List<String> lines = new ArrayList<>();
-    lines.add("    - " + task.id());
-    lines.add(
-        wrappedText(
-            "requestFileName: " + task.starter().requestFileName(),
-            "      ",
-            "        ",
-            helpTextWidth()));
-    lines.add(
-        wrappedText(
-            "workspace: " + task.starter().workspaceMode().name(),
-            "      ",
-            "        ",
-            helpTextWidth()));
-    lines.add(
-        wrappedText(
-            "summary: " + task.narrative().summary(), "      ", "        ", helpTextWidth()));
-    if (!task.starter().requiredWorkspacePaths().isEmpty()) {
-      lines.add(
-          wrappedText(
-              "requiredWorkspacePaths: "
-                  + String.join(", ", task.starter().requiredWorkspacePaths()),
+              "requiredWorkspacePaths: " + String.join(", ", recipe.requiredWorkspacePaths()),
               "      ",
               "        ",
               helpTextWidth()));

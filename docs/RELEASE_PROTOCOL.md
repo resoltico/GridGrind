@@ -1,6 +1,6 @@
 ---
 afad: "4.0"
-version: "0.71.0"
+version: "0.72.0"
 domain: RELEASE_PROTOCOL
 updated: "2026-07-02"
 route:
@@ -498,7 +498,7 @@ Before publication, that workflow also black-box verifies the packaged fat JAR w
 `./scripts/verify-cli-contract.sh jar ./cli/build/libs/gridgrind.jar` plus
 `./scripts/verify-cli-discovery-execution.sh jar ./cli/build/libs/gridgrind.jar` so the shipped
 `--help` surface, the interactive no-arg failure path, `--print-protocol-catalog`,
-`--print-task-catalog`, `--print-task-plan`, `--print-task-keyword-match`, `--doctor-request`,
+`--print-recipe-catalog`, `--print-recipe`, `--print-recipe-keyword-match`, `--doctor-request`,
 and every published built-in example and task starter cannot drift from the core contract
 silently. The operator-side `gh release view` check remains mandatory because workflow success is
 still not the authoritative state. The packaged verifiers use repo-local disposable scratch under
@@ -520,7 +520,7 @@ The verifier script must confirm both the exact `X.Y.Z` tag and `latest` are ano
 that both `docker run ... --version` results match the two-line product header for the target
 release version exactly — `GridGrind X.Y.Z` on the first line and the product description on the
 second — and that both published tags still expose the expected `--help`, interactive no-arg failure,
-`--print-protocol-catalog`, `--print-task-catalog`, `--print-task-plan`, `--print-task-keyword-match`, and
+`--print-protocol-catalog`, `--print-recipe-catalog`, `--print-recipe`, `--print-recipe-keyword-match`, and
 `--doctor-request` contract, while also executing every published built-in example and task
 starter from the published container surface. The verifier uses a disposable anonymous Docker
 config rooted under repo-local `tmp/`, so a passing local run matches CI's anonymous publication

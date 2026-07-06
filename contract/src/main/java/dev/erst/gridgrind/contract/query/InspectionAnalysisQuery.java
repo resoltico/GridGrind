@@ -1,6 +1,6 @@
 package dev.erst.gridgrind.contract.query;
 
-import dev.erst.gridgrind.contract.catalog.GridGrindContractText;
+import dev.erst.gridgrind.contract.catalog.GridGrindInspectionContractText;
 import dev.erst.gridgrind.contract.catalog.ProtocolTypeMetadata;
 import dev.erst.gridgrind.contract.selector.NamedRangeSelector;
 import dev.erst.gridgrind.contract.selector.PivotTableSelector;
@@ -22,7 +22,7 @@ public sealed interface InspectionAnalysisQuery extends InspectionQuery.Analysis
 
   @ProtocolTypeMetadata(
       id = "ANALYZE_FORMULA_HEALTH",
-      summary = GridGrindContractText.FORMULA_HEALTH_READ_SUMMARY,
+      summary = GridGrindInspectionContractText.FORMULA_HEALTH_READ_SUMMARY,
       targetSelectors = {SheetSelector.class})
   record AnalyzeFormulaHealth() implements InspectionAnalysisQuery {}
 
@@ -64,13 +64,13 @@ public sealed interface InspectionAnalysisQuery extends InspectionQuery.Analysis
 
   @ProtocolTypeMetadata(
       id = "ANALYZE_NAMED_RANGE_HEALTH",
-      summary = GridGrindContractText.NAMED_RANGE_HEALTH_READ_SUMMARY,
+      summary = GridGrindInspectionContractText.NAMED_RANGE_HEALTH_READ_SUMMARY,
       targetSelectors = {NamedRangeSelector.class})
   record AnalyzeNamedRangeHealth() implements InspectionAnalysisQuery {}
 
   @ProtocolTypeMetadata(
       id = "ANALYZE_WORKBOOK_FINDINGS",
-      summary = GridGrindContractText.WORKBOOK_FINDINGS_READ_SUMMARY,
+      summary = GridGrindInspectionContractText.WORKBOOK_FINDINGS_READ_SUMMARY,
       targetSelectors = {WorkbookSelector.class})
   record AnalyzeWorkbookFindings() implements InspectionAnalysisQuery {}
 }

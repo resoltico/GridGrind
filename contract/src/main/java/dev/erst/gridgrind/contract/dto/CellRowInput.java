@@ -86,7 +86,8 @@ public sealed interface CellRowInput
   record ErrorValues(List<String> cells) implements CellRowInput {
     public ErrorValues {
       cells = copyScalars(cells, "cells");
-      cells.forEach(value -> CellInput.Validation.requireErrorLiteral(value, "cells element"));
+      cells.forEach(
+          value -> CellErrorLiteralValidation.requireStoredErrorLiteral(value, "cells element"));
     }
 
     @Override

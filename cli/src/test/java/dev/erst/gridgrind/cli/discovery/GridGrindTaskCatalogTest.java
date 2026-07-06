@@ -47,6 +47,7 @@ class GridGrindTaskCatalogTest {
     TaskEntry left =
         new TaskEntry(
             "DUPLICATE",
+            java.util.List.of("office"),
             TaskTestFixtures.discoveryProfile("duplicate"),
             TaskTestFixtures.narrative("one"),
             profile(),
@@ -56,6 +57,7 @@ class GridGrindTaskCatalogTest {
     TaskEntry right =
         new TaskEntry(
             "DUPLICATE",
+            java.util.List.of("office"),
             TaskTestFixtures.discoveryProfile("duplicate"),
             TaskTestFixtures.narrative("two"),
             profile(),

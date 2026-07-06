@@ -102,7 +102,9 @@ public sealed interface CellGridInput
       cells.forEach(
           row ->
               row.forEach(
-                  value -> CellInput.Validation.requireErrorLiteral(value, "cells element")));
+                  value ->
+                      CellErrorLiteralValidation.requireStoredErrorLiteral(
+                          value, "cells element")));
     }
 
     @Override

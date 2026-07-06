@@ -71,39 +71,31 @@ final class GridGrindCliProtocolCatalogCommands {
               + command.lookupId()
               + ". Use one of: "
               + String.join(", ", matches);
-      return CliCatalogPayloadSupport.writeCliFailure(
+      return CliCatalogPayloadSupport.writeCliDiagnostic(
           responseWriter,
           command.responsePath(),
           stdout,
           stderr,
-          CliFailureReports.invalidArguments(
-              2,
-              "print-protocol-catalog",
-              "resolve-lookup",
-              Optional.of("--lookup"),
-              message,
-              matches,
-              Optional.of(
-                  "Rerun the lookup with one qualified id exactly as listed in suggestions.")),
+          CliDiagnostics.invalidArguments(
+              2, "print-protocol-catalog", Optional.of("--lookup"), message, matches),
           prettyJson);
     }
     var lookupValue = GridGrindProtocolCatalog.lookupValueFor(command.lookupId());
     if (lookupValue.isEmpty()) {
       String message = CliCatalogCommandSupport.unknownOperationMessage(command.lookupId());
-      return CliCatalogPayloadSupport.writeCliFailure(
+      return CliCatalogPayloadSupport.writeCliDiagnostic(
           responseWriter,
           command.responsePath(),
           stdout,
           stderr,
-          CliFailureReports.invalidArguments(
+          CliDiagnostics.invalidArguments(
               2,
               "print-protocol-catalog",
-              "resolve-lookup",
               Optional.of("--lookup"),
               message,
-              List.of("gridgrind --print-protocol-catalog --search \"sheet layout\""),
-              Optional.of(
-                  "Use --search when you know the concept but not the exact lookup id or group.")),
+              CliSuggestionSupport.protocolCatalogSearchCommandForLookupId(command.lookupId())
+                  .map(List::of)
+                  .orElse(List.of())),
           prettyJson);
     }
     return CliCatalogPayloadSupport.writeRenderedPayload(
@@ -119,6 +111,7 @@ final class GridGrindCliProtocolCatalogCommands {
                 output,
                 GridGrindProtocolCatalog.catalog().protocolVersion(),
                 lookupValue.get(),
+                GridGrindProtocolCatalog.referencedNotesForLookupValue(lookupValue.get()),
                 prettyJson),
         prettyJson);
   }

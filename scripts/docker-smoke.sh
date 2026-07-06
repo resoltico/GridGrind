@@ -41,13 +41,18 @@ readonly smoke_root="$(mktemp -d "${TMPDIR:-/tmp}/gridgrind docker smoke.XXXXXX"
 readonly docker_run_user="$(id -u):$(id -g)"
 readonly custom_container_workdir="/gridgrind-smoke-root"
 readonly repo_lock_support="${repo_root}/scripts/repo-verification-lock-support.sh"
+readonly bind_mount_support="${repo_root}/scripts/lib/docker-smoke-bind-mount-support.sh"
 readonly lock_dir="${repo_root}/tmp/repo-verification-lock"
 readonly pid_file="${lock_dir}/pid"
 anonymous_docker_config=''
 docker_endpoint=''
 [[ -f "${repo_lock_support}" ]] || die "missing repo verification lock helper at ${repo_lock_support}"
+[[ -f "${bind_mount_support}" ]] || die \
+    "missing bind-mount docker smoke helper at ${bind_mount_support}"
 # shellcheck source=/dev/null
 source "${repo_lock_support}"
+# shellcheck source=/dev/null
+source "${bind_mount_support}"
 
 resolve_docker_buildx_plugin() {
     local docker_binary=''
@@ -533,6 +538,9 @@ else
     DOCKER_CONFIG="${anonymous_docker_config}" \
         "${repo_root}/scripts/verify-cli-discovery-execution.sh" docker-image "${image_tag}"
 fi
+
+printf 'Docker smoke: verifying bind-mount user guidance\n'
+verify_documented_bind_mount_user_guidance "${image_tag}" "${smoke_root}" "${docker_run_user}"
 
 printf 'Docker smoke: verifying custom workdir and weird paths\n'
 help_output="$(docker_with_repo_config run --rm \

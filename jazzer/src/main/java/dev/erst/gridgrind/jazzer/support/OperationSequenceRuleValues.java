@@ -69,10 +69,9 @@ final class OperationSequenceRuleValues {
             : Optional.empty());
   }
 
-  static ConditionalFormattingBlockInput nextConditionalFormattingInput(
-      GridGrindFuzzData data, boolean validRange) {
-    return new ConditionalFormattingBlockInput(
-        List.of(validRange ? "A1:A4" : FuzzDataDecoders.nextNonBlankRange(data, false)),
+  static ConditionalFormattingDefinitionInput nextConditionalFormattingInput(
+      GridGrindFuzzData data) {
+    return new ConditionalFormattingDefinitionInput(
         List.of(
             data.consumeBoolean()
                 ? new ConditionalFormattingRuleInput.FormulaRule(

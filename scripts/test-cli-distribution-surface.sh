@@ -144,11 +144,13 @@ grep -Eq '"code"[[:space:]]*:[[:space:]]*"IO_ERROR"' "${version_fallback_stdout_
     "packaged gridgrind --version fallback stdout no longer emits IO_ERROR"
 grep -Eq '"command"[[:space:]]*:[[:space:]]*"version"' "${version_fallback_stdout_path}" || die \
     "packaged gridgrind --version fallback stdout no longer identifies the version command"
-grep -Eq '"argument"[[:space:]]*:[[:space:]]*"--response"' "${version_fallback_stdout_path}" || die \
-    "packaged gridgrind --version fallback stdout no longer points at --response"
-expected_version_fallback_notice="Could not write response file ${version_fallback_response_path}: already exists; GridGrind never replaces an existing response file implicitly. Wrote the structured failure report to stdout instead."
-actual_version_fallback_notice="$(tr -d '\r' < "${version_fallback_stderr_path}")"
-[[ "${actual_version_fallback_notice}" == "${expected_version_fallback_notice}" ]] || die \
-    "packaged gridgrind --version fallback notice drifted from the structured failure report wording"
+grep -Eq '"stage"[[:space:]]*:[[:space:]]*"WRITE_RESPONSE"' "${version_fallback_stdout_path}" || die \
+    "packaged gridgrind --version fallback stdout no longer reports WRITE_RESPONSE context"
+grep -Eq "\"responsePath\"[[:space:]]*:[[:space:]]*\"${version_fallback_response_path//\//\\/}\"" "${version_fallback_stdout_path}" || die \
+    "packaged gridgrind --version fallback stdout no longer carries the response output path"
+grep -Eq '"wroteTo"[[:space:]]*:[[:space:]]*"STDOUT"' "${version_fallback_stderr_path}" || die \
+    "packaged gridgrind --version fallback stderr no longer identifies stdout fallback transport"
+cmp -s "${version_fallback_stdout_path}" "${version_fallback_stderr_path}" || die \
+    "packaged gridgrind --version fallback stderr no longer mirrors the canonical CLI diagnostic"
 
 printf 'cli-distribution-surface regression: success\n'

@@ -4,12 +4,13 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import dev.erst.gridgrind.cli.discovery.CliFailureReport;
+import dev.erst.gridgrind.cli.discovery.CliDiagnostic;
 import dev.erst.gridgrind.cli.discovery.GridGrindCliJson;
 import dev.erst.gridgrind.cli.discovery.ProtocolCatalogCliJson;
 import dev.erst.gridgrind.cli.discovery.ProtocolCatalogIndexReport;
 import dev.erst.gridgrind.cli.discovery.ProtocolCatalogSearchReport;
 import dev.erst.gridgrind.contract.catalog.GridGrindProtocolCatalog;
+import dev.erst.gridgrind.contract.catalog.GridGrindRequestSurfaceContractText;
 import dev.erst.gridgrind.contract.dto.GridGrindProblemCode;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -51,6 +52,8 @@ class GridGrindCliProtocolCatalogCommandTest extends GridGrindCliTestSupport {
     assertTrue(
         indexReport.fieldMetadataKeys().stream()
             .anyMatch(key -> "projectedByFacets".equals(key.name())));
+    assertTrue(
+        indexReport.fieldMetadataKeys().stream().anyMatch(key -> "noteRefs".equals(key.name())));
     assertTrue(
         indexReport.fieldMetadataKeys().stream()
             .anyMatch(key -> "enumValueDocs".equals(key.name())));
@@ -96,13 +99,10 @@ class GridGrindCliProtocolCatalogCommandTest extends GridGrindCliTestSupport {
                 stderr);
 
     assertEquals(2, exitCode);
-    CliFailureReport failure = cliFailureOnStderr(stdout, stderr);
-    assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.code());
-    assertEquals(java.util.Optional.of("--full"), failure.argument());
-    assertEquals(
-        "--full is no longer part of the CLI grammar; use --print-protocol-catalog --lookup"
-            + " <lookup-id> for one scoped catalog payload",
-        failure.message());
+    CliDiagnostic failure = cliDiagnosticOnStderr(stdout, stderr);
+    assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.problem().code());
+    assertEquals(java.util.Optional.of("--full"), parseArgumentsContext(failure).argumentName());
+    assertEquals("Unknown argument: --full", failure.problem().message());
   }
 
   @Test
@@ -118,9 +118,9 @@ class GridGrindCliProtocolCatalogCommandTest extends GridGrindCliTestSupport {
                 stderr);
 
     assertEquals(2, exitCode);
-    CliFailureReport failure = cliFailureOnStderr(stdout, stderr);
-    assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.code());
-    assertTrue(failure.message().contains("--version"));
+    CliDiagnostic failure = cliDiagnosticOnStderr(stdout, stderr);
+    assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.problem().code());
+    assertTrue(failure.problem().message().contains("--version"));
   }
 
   @Test
@@ -147,6 +147,28 @@ class GridGrindCliProtocolCatalogCommandTest extends GridGrindCliTestSupport {
     assertFalse(
         output.contains(": null"),
         "filtered catalog entry output must omit explicit null placeholders");
+  }
+
+  @Test
+  void pathBearingLookupPublishesSharedNotesOnceAndCarriesStableNoteRefs() throws IOException {
+    String noteText = GridGrindRequestSurfaceContractText.requestOwnedPathResolutionSummary();
+    ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+    int exitCode =
+        new GridGrindCli()
+            .run(
+                new String[] {"--print-protocol-catalog", "--lookup", "sourceTypes:EXISTING"},
+                InputStream.nullInputStream(),
+                stdout);
+
+    assertEquals(0, exitCode);
+    JsonNode output = GridGrindCliJson.readBytes(stdout.toByteArray(), JsonNode.class);
+    String rendered = stdout.toString(StandardCharsets.UTF_8);
+
+    assertEquals("EXISTING", output.path("id").asText());
+    assertEquals("requestOwnedPathRule", output.path("noteRefs").get(0).asText());
+    assertEquals("requestOwnedPathRule", output.path("notes").get(0).path("id").asText());
+    assertEquals(noteText, output.path("notes").get(0).path("text").asText());
+    assertEquals(1, occurrenceCount(rendered, noteText));
   }
 
   @Test
@@ -189,6 +211,19 @@ class GridGrindCliProtocolCatalogCommandTest extends GridGrindCliTestSupport {
     assertFalse(getWindow.path("stepTemplate").path("template").path("query").has("includeBlanks"));
     assertFalse(
         getSheetSchema.path("stepTemplate").path("template").path("query").has("projection"));
+  }
+
+  @Test
+  void ooxmlWriteEncryptionLookupPublishesModeLessStrongOnlyShape() throws IOException {
+    JsonNode encryption = protocolCatalogLookupJson("plainTypes:ooxmlEncryptionInputType");
+    JsonNode type = encryption.path("type");
+
+    assertFalse(type.path("fields").toString().contains("\"mode\""));
+    assertEquals("OPTIONAL", catalogField(type, "cipher").path("requirement").asText());
+    assertEquals("OPTIONAL", catalogField(type, "hash").path("requirement").asText());
+    assertTrue(type.path("summary").asText().contains("AGILE packages only"));
+    assertTrue(type.path("summary").asText().contains("AES_256"));
+    assertTrue(type.path("summary").asText().contains("SHA_512"));
   }
 
   @Test
@@ -264,13 +299,18 @@ class GridGrindCliProtocolCatalogCommandTest extends GridGrindCliTestSupport {
                 InputStream.nullInputStream(),
                 blankOperationStdout,
                 blankOperationStdout);
-    CliFailureReport blankOperationFailure = cliFailure(blankOperationStdout.toByteArray());
+    CliDiagnostic blankOperationFailure = cliDiagnostic(blankOperationStdout.toByteArray());
 
     assertEquals(2, blankOperationExitCode);
-    assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, blankOperationFailure.code());
-    assertEquals(java.util.Optional.of("--lookup"), blankOperationFailure.argument());
+    assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, blankOperationFailure.problem().code());
+    assertEquals(
+        java.util.Optional.of("--lookup"),
+        parseArgumentsContext(blankOperationFailure).argumentName());
     assertTrue(
-        blankOperationFailure.message().contains("protocol catalog lookup id must not be blank"));
+        blankOperationFailure
+            .problem()
+            .message()
+            .contains("protocol catalog lookup id must not be blank"));
 
     ByteArrayOutputStream blankSearchStdout = new ByteArrayOutputStream();
     int blankSearchExitCode =
@@ -280,12 +320,14 @@ class GridGrindCliProtocolCatalogCommandTest extends GridGrindCliTestSupport {
                 InputStream.nullInputStream(),
                 blankSearchStdout,
                 blankSearchStdout);
-    CliFailureReport blankSearchFailure = cliFailure(blankSearchStdout.toByteArray());
+    CliDiagnostic blankSearchFailure = cliDiagnostic(blankSearchStdout.toByteArray());
 
     assertEquals(2, blankSearchExitCode);
-    assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, blankSearchFailure.code());
-    assertEquals(java.util.Optional.of("--search"), blankSearchFailure.argument());
-    assertTrue(blankSearchFailure.message().contains("search query must not be blank"));
+    assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, blankSearchFailure.problem().code());
+    assertEquals(
+        java.util.Optional.of("--search"),
+        parseArgumentsContext(blankSearchFailure).argumentName());
+    assertTrue(blankSearchFailure.problem().message().contains("search query must not be blank"));
   }
 
   @Test
@@ -422,11 +464,11 @@ class GridGrindCliProtocolCatalogCommandTest extends GridGrindCliTestSupport {
                 stderr);
 
     assertEquals(2, exitCode);
-    CliFailureReport failure = cliFailureOnStderr(stdout, stderr);
-    assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.code());
-    assertTrue(failure.message().contains("Ambiguous lookup id: FORMULA"));
-    assertTrue(failure.message().contains("cellInputTypes:FORMULA"));
-    assertTrue(failure.message().contains("namedRangeReportTypes:FORMULA"));
+    CliDiagnostic failure = cliDiagnosticOnStderr(stdout, stderr);
+    assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.problem().code());
+    assertTrue(failure.problem().message().contains("Ambiguous lookup id: FORMULA"));
+    assertTrue(failure.problem().message().contains("cellInputTypes:FORMULA"));
+    assertTrue(failure.problem().message().contains("namedRangeReportTypes:FORMULA"));
   }
 
   @Test
@@ -459,11 +501,12 @@ class GridGrindCliProtocolCatalogCommandTest extends GridGrindCliTestSupport {
                 stderr);
 
     assertEquals(2, exitCode);
-    CliFailureReport failure = cliFailureOnStderr(stdout, stderr);
-    assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.code());
-    assertTrue(failure.message().contains("BOGUS_XYZ"));
-    assertTrue(failure.message().contains("--print-protocol-catalog --search \"sheet layout\""));
-    assertTrue(failure.message().contains("--print-protocol-catalog"));
+    CliDiagnostic failure = cliDiagnosticOnStderr(stdout, stderr);
+    assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.problem().code());
+    assertTrue(failure.problem().message().contains("BOGUS_XYZ"));
+    assertTrue(
+        failure.problem().message().contains("--print-protocol-catalog --search \"BOGUS_XYZ\""));
+    assertTrue(failure.problem().message().contains("--print-protocol-catalog"));
   }
 
   @Test
@@ -488,18 +531,14 @@ class GridGrindCliProtocolCatalogCommandTest extends GridGrindCliTestSupport {
                 stdout,
                 stderr);
 
-    CliFailureReport failure = cliFailure(Files.readAllBytes(responsePath));
+    CliDiagnostic failure = cliDiagnostic(Files.readAllBytes(responsePath));
+    CliDiagnostic stderrDiagnostic = cliDiagnosticOnStderr(stderr);
 
     assertEquals(2, exitCode);
     assertEquals("", stdout.toString(StandardCharsets.UTF_8));
-    assertTrue(
-        stderr
-            .toString(StandardCharsets.UTF_8)
-            .contains(
-                "GridGrind wrote the CLI failure report to " + responsePath.toAbsolutePath()));
-    assertTrue(stderr.toString(StandardCharsets.UTF_8).contains("[INVALID_ARGUMENTS:"));
-    assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.code());
-    assertTrue(failure.message().contains("BOGUS_XYZ"));
+    assertEquals(failure, stderrDiagnostic);
+    assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.problem().code());
+    assertTrue(failure.problem().message().contains("BOGUS_XYZ"));
   }
 
   @Test
@@ -552,9 +591,13 @@ class GridGrindCliProtocolCatalogCommandTest extends GridGrindCliTestSupport {
                 stderr);
 
     assertEquals(2, exitCode);
-    CliFailureReport failure = cliFailureOnStderr(stdout, stderr);
-    assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.code());
-    assertTrue(failure.message().contains("--lookup"));
-    assertTrue(failure.message().contains("--search"));
+    CliDiagnostic failure = cliDiagnosticOnStderr(stdout, stderr);
+    assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.problem().code());
+    assertTrue(failure.problem().message().contains("--lookup"));
+    assertTrue(failure.problem().message().contains("--search"));
+  }
+
+  private static int occurrenceCount(String text, String needle) {
+    return text.split(java.util.regex.Pattern.quote(needle), -1).length - 1;
   }
 }

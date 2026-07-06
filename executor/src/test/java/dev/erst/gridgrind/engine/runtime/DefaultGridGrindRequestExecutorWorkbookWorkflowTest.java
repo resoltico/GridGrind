@@ -1242,7 +1242,7 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
                                     List.of(textCell("Done"), new CellInput.NumberValue(11.0)),
                                     List.of(textCell("Queued"), new CellInput.NumberValue(4.0)))))),
                     mutate(
-                        new SheetSelector.ByName("Budget"),
+                        new RangeSelector.ByRange("Budget", "B2:B5"),
                         new StructuredMutationAction.SetConditionalFormatting(
                             conditionalFormattingReadbackBlock()))),
                 inspect(
@@ -1465,9 +1465,8 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
     }
   }
 
-  private static ConditionalFormattingBlockInput conditionalFormattingReadbackBlock() {
-    return new ConditionalFormattingBlockInput(
-        List.of("B2:B5"),
+  private static ConditionalFormattingDefinitionInput conditionalFormattingReadbackBlock() {
+    return new ConditionalFormattingDefinitionInput(
         List.of(
             new ConditionalFormattingRuleInput.FormulaRule(
                 "B2>5",

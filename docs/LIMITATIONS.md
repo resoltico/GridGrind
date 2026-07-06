@@ -1,6 +1,6 @@
 ---
 afad: "4.0"
-version: "0.71.0"
+version: "0.72.0"
 domain: LIMITATIONS
 updated: "2026-07-02"
 route:
@@ -479,6 +479,31 @@ layer; the extension check in LIM-002 remains the defense against unrecognized o
 
 ---
 
+### LIM-038 — OOXML Write Encryption Is AGILE-Only And Strong-Only
+
+| Field | Value |
+|:------|:------|
+| **Category** | Protocol |
+| **Limit** | Write-side OOXML package encryption authors AGILE only, defaults to `AES_256` / `SHA_512`, and allows only `AES_256` or `AES_192` plus `SHA_512`, `SHA_384`, or `SHA_256` |
+| **Error code** | `INVALID_REQUEST` |
+| **Applies to** | `persistence.security.encryption`; implicit encrypted-source preservation during persistence |
+| **Code** | `OoxmlEncryptionInput.create // LIM-038`; `ExcelOoxmlPackagePersistenceSupport.preservedSourceEncryption // LIM-038` |
+| **UX** | `GridGrindOoxmlWriteEncryptionContractText.inputSummary // LIM-038`; `GridGrindOoxmlWriteEncryptionContractText.limitSummary // LIM-038` |
+
+GridGrind reads and reports broader factual OOXML encryption state than it authors. Inspection may
+surface legacy envelopes such as `STANDARD`, weaker AGILE variants, or non-default hashes because
+the goal on the read path is factual reporting. The write path is intentionally narrower:
+authorable persistence security owns one explicit strong-only AGILE contract and does not accept a
+`mode` field. When an encrypted source workbook is persisted without an explicit
+`persistence.security.encryption` block, GridGrind auto-preserves source encryption only if the
+loaded package already sits on the authorable AGILE/CBC allowlist; otherwise the request must
+choose one supported AGILE write envelope explicitly instead of silently carrying forward a legacy
+or weak source package. Reintroduce write-side `STANDARD` only if a named consumer proves an
+old-Excel authoring requirement; until then readable/reportable `STANDARD` remains intentionally
+broader than the authorable write contract.
+
+---
+
 ## Excel / Apache POI Structural Limits
 
 This section mixes two kinds of upstream-driven constraints:
@@ -717,7 +742,7 @@ streaming workbooks or hidden mode fallback.
 | **Error** | `INVALID_REQUEST` |
 | **Message** | `Request JSON exceeds the maximum size of 16 MiB (16777216 bytes); move large authored payloads into UTF8_FILE, FILE, or STANDARD_INPUT sources.` |
 | **Applies to** | CLI stdin request ingestion, `--request <path>` file ingestion, `GridGrindJson.readRequest(InputStream)`, `GridGrindJson.readRequest(byte[])` |
-| **Code** | `GridGrindContractText.requestDocumentLimitBytes`; `GridGrindJson.requireSupportedRequestLength`; request JSON stream constraints in `GridGrindJson` |
+| **Code** | `GridGrindRequestSurfaceContractText.requestDocumentLimitBytes`; `GridGrindJson.requireSupportedRequestLength`; request JSON stream constraints in `GridGrindJson` |
 | **UX** | `--help` Limits section; request-shape docs; source-backed input docs |
 
 GridGrind accepts large authored values through source-backed inputs (`UTF8_FILE`, `FILE`, and
@@ -784,7 +809,7 @@ All other reads and mutations continue to use the normal full-XSSF in-memory exe
 | `.xls`, `.xlsm`, `.xlsb` | Not supported. See LIM-002. |
 | Streaming read/write | Supported only through `execution.mode`: `EVENT_READ` summary reads (`LIM-019`) and `STREAMING_WRITE` append-oriented `NEW` workbook authoring (`LIM-020`). |
 | Request JSON size | Capped at `16 MiB`; large authored values belong in `UTF8_FILE`, `FILE`, or `STANDARD_INPUT` sources (`LIM-021`). |
-| OOXML encryption and signing | Supported for `.xlsx` package security on the full-XSSF path. `source.security.password` is required for encrypted sources, `GET_PACKAGE_SECURITY` is unavailable in `EVENT_READ`, and persisting mutations to a signed workbook requires explicit `persistence.security.signature` re-signing. |
+| OOXML encryption and signing | Supported for `.xlsx` package security on the full-XSSF path. `source.security.password` is required for encrypted sources, `GET_PACKAGE_SECURITY` is unavailable in `EVENT_READ`, persisting mutations to a signed workbook requires explicit `persistence.security.signature` re-signing, and write-side OOXML encryption is the AGILE-only strong contract from LIM-038. |
 
 Apache POI feature coverage: https://poi.apache.org/components/spreadsheet/
 

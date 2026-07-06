@@ -1,6 +1,6 @@
 ---
 afad: "4.0"
-version: "0.71.0"
+version: "0.72.0"
 domain: QUICK_REFERENCE
 updated: "2026-07-02"
 route:
@@ -24,18 +24,18 @@ gridgrind --print-protocol-catalog --search validation --response validation-sea
 gridgrind --print-protocol-catalog --lookup inspectionQueryTypes:GET_SHEET_LAYOUT
 gridgrind --print-protocol-catalog --lookup mutationActionTypes --response mutation-actions.json
 gridgrind --print-protocol-catalog --lookup nestedTypes:cellInputTypes --response cell-input-types.json
-gridgrind --print-example --lookup BUDGET --response budget-request.json
-gridgrind --print-task-plan --lookup DASHBOARD --response dashboard-request.json
-gridgrind --print-example --lookup SHEET_MAINTENANCE --response sheet-maintenance.json
-gridgrind --print-example --lookup WORKBOOK_HEALTH --response workbook-health.json
-gridgrind --print-example --lookup ASSERTION --response assertion.json
+gridgrind --print-recipe --lookup BUDGET --response budget-request.json
+gridgrind --print-recipe --lookup DASHBOARD --response dashboard-request.json
+gridgrind --print-recipe --lookup SHEET_MAINTENANCE --response sheet-maintenance.json
+gridgrind --print-recipe --lookup WORKBOOK_HEALTH --response workbook-health.json
+gridgrind --print-recipe --lookup ASSERTION --response assertion.json
 gridgrind --print-request-template | gridgrind --doctor-request --execution-root .
 gridgrind --doctor-request --request request.json --response doctor-report.json
 ```
 
 `--help` is the short synopsis. `--help-protocol` is the authoritative CLI/request contract, `--help-guidance` is the workflow/example playbook, and `--doctor-request` validates request shape, resolves source-backed inputs, preflights existing workbook-source access, and returns every independently provable blocking problem it can isolate safely without mutating a workbook, including multiple malformed steps in one pass. `--response <path>` works across execution, doctoring, and discovery commands, so the primary output can be captured to a file instead of stdout. Built-in example and task catalogs also publish `requestFileName`, `workspaceMode`, and `requiredWorkspacePaths` so you can see whether a printed request is self-contained before executing it.
 
-The bare `--print-protocol-catalog` output is the compact first-contact index. `--search` is the fast discovery path when you only know part of an id or summary. Use `--lookup` with one globally unique top-level id, one top-level group name, one nested/plain support-group name, `nestedTypes:<group>`, `plainTypes:<group>`, or `<topLevelGroup>:<id>` once you want one scoped machine-readable payload. Search ranks published top-level operations ahead of support-type groups, returns compact summaries by default, and adds `relatedEntryIds` or `supportingQualifiedIds` only when that lightweight context helps agents climb from a type family to the executable operation that uses it.
+The bare `--print-protocol-catalog` output is the compact first-contact index only. `--search` is the fast discovery path when you only know part of an id or summary. Use `--lookup` with one globally unique top-level id, one top-level group name, one nested/plain support-group name, `nestedTypes:<group>`, `plainTypes:<group>`, or `<topLevelGroup>:<id>` once you want one scoped machine-readable payload. Search ranks published top-level operations ahead of support-type groups, returns compact summaries by default, and adds `relatedEntryIds` or `supportingQualifiedIds` only when that lightweight context helps agents climb from a type family to the executable operation that uses it. Shared catalog rules such as request-owned path resolution are published on those scoped lookup payloads under top-level `notes`, while entry-local `noteRefs` point at the stable rule id instead of repeating the full paragraph in the bare index.
 Machine-readable request-template, discovery, doctor, and execution payloads are compact JSON by
 default; add `--pretty` when you want indented JSON instead.
 
@@ -119,8 +119,12 @@ When the CLI reads a request via `--request <path>`, relative request-owned path
 material resolve from that request file's directory. When the request JSON arrives on stdin, pass
 `--execution-root <path>` and those same relative paths resolve from that explicit directory.
 `--request`, `--response`, `--execution-root`, and `--temp-root` themselves resolve from the
-shell working directory. `--temp-root` is optional; without it, GridGrind uses `.gridgrind/tmp`
-inside the request root or explicit execution root.
+shell working directory. `--temp-root` is optional; without it, GridGrind creates one private
+per-run scratch directory under the OS temporary-file root. When you pass `--temp-root <path>`,
+GridGrind creates that private per-run scratch directory under the supplied parent path and
+best-effort cleanup removes it on normal command completion. Encrypted OOXML plaintext temp
+workbooks always stay in private OS temp rather than the request root, execution root, or
+`--temp-root` parent.
 
 ## Execution, Formula, And Mode Rules
 
@@ -335,9 +339,10 @@ Lookup payloads for `nestedTypes:cellReportTypes` and `nestedTypes:cellValueRepo
 `projectedByFacets` on each conditional field, so the facet request needed for `displayValue`,
 `formula`, `runs`, or `temporal` is derivable from the machine contract alone. The compact
 protocol-catalog index now includes a field-metadata legend for keys such as
-`projectedByFacets` and `enumValueDocs`, and `plainTypes:cellReadProjectionType` publishes
-`enumValueDocs` on `facets` so tokens such as `FORMAT`, `VALUE`, and `TEMPORAL` explain
-themselves without leaving the catalog.
+`projectedByFacets`, `noteRefs`, and `enumValueDocs`, and `plainTypes:cellReadProjectionType`
+publishes `enumValueDocs` on `facets` so tokens such as `FORMAT`, `VALUE`, and `TEMPORAL`
+explain themselves without leaving the catalog. Path-bearing lookup payloads now publish shared
+`notes` once and let entry-local `noteRefs` point at those reusable rules.
 
 Read sheet layout:
 

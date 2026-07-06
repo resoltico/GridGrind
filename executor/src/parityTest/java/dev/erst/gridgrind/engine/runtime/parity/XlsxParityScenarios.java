@@ -831,7 +831,14 @@ public final class XlsxParityScenarios {
             workbookBytes = outputStream.toByteArray();
           }
 
-          EncryptionInfo encryptionInfo = new EncryptionInfo(EncryptionMode.agile);
+          EncryptionInfo encryptionInfo =
+              new EncryptionInfo(
+                  EncryptionMode.agile,
+                  org.apache.poi.poifs.crypt.CipherAlgorithm.aes256,
+                  org.apache.poi.poifs.crypt.HashAlgorithm.sha512,
+                  org.apache.poi.poifs.crypt.CipherAlgorithm.aes256.defaultKeySize,
+                  org.apache.poi.poifs.crypt.CipherAlgorithm.aes256.blockSize,
+                  org.apache.poi.poifs.crypt.ChainingMode.cbc);
           Encryptor encryptor = encryptionInfo.getEncryptor();
           encryptor.confirmPassword(ENCRYPTION_PASSWORD);
           try (POIFSFileSystem fileSystem = new POIFSFileSystem()) {
@@ -1292,10 +1299,9 @@ public final class XlsxParityScenarios {
                                     "Hours must be 1-40",
                                     true))))),
                 mutate(
-                    new SheetSelector.ByName("Ops"),
+                    new RangeSelector.ByRange("Ops", "D3:D4"),
                     new StructuredMutationAction.SetConditionalFormatting(
-                        new ConditionalFormattingBlockInput(
-                            List.of("D3:D4"),
+                        new ConditionalFormattingDefinitionInput(
                             List.of(
                                 new ConditionalFormattingRuleInput.FormulaRule(
                                     "D3>20",

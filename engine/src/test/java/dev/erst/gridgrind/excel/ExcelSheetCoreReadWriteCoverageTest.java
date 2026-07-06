@@ -53,8 +53,10 @@ class ExcelSheetCoreReadWriteCoverageTest extends ExcelSheetTestSupport {
               ExcelCellValue.date(LocalDate.of(2026, 3, 23)),
               ExcelCellValue.dateTime(LocalDateTime.of(2026, 3, 23, 14, 15, 16)),
               ExcelCellValue.formula("1/0"));
+      sheet.cells().setCell("A3", ExcelCellValue.formula("B3+1"));
       sheet.cells().setCell("B3", ExcelCellValue.date(LocalDate.of(2026, 3, 24)));
       sheet.cells().setCell("C3", ExcelCellValue.dateTime(LocalDateTime.of(2026, 3, 24, 9, 0)));
+      sheet.cells().setCell("D3", ExcelCellValue.formula("D3+1"));
       sheet.columns().autoSize();
 
       Row errorRow = poiSheet.createRow(3);
@@ -109,6 +111,11 @@ class ExcelSheetCoreReadWriteCoverageTest extends ExcelSheetTestSupport {
           (ExcelCellSnapshot.ErrorSnapshot) sheet.cells().snapshotCell("A4");
       assertEquals("ERROR", errorSnapshot.type());
       assertEquals("#DIV/0!", errorSnapshot.errorValue());
+      ExcelCellSnapshot.FormulaSnapshot circularFormulaSnapshot =
+          (ExcelCellSnapshot.FormulaSnapshot) sheet.cells().snapshotCell("D3");
+      assertEquals(
+          "#CIRCULAR_REF!",
+          ((ExcelCellSnapshot.ErrorSnapshot) circularFormulaSnapshot.evaluation()).errorValue());
 
       List<ExcelPreviewRow> preview = sheet.cells().preview(4, 6);
       assertEquals(4, preview.size());

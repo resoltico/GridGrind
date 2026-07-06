@@ -1,6 +1,6 @@
 package dev.erst.gridgrind.cli;
 
-import dev.erst.gridgrind.contract.catalog.GridGrindContractText;
+import dev.erst.gridgrind.contract.catalog.GridGrindRequestSurfaceContractText;
 import java.util.List;
 
 /** Request and flag-oriented CLI help sections. */
@@ -43,7 +43,7 @@ final class GridGrindCliSurfaceRequestSections {
                 + " between runs; assert status/category/detail, not literal timings.",
             "Source-backed text and binary fields support INLINE, UTF8_FILE or FILE, and"
                 + " STANDARD_INPUT sources.",
-            GridGrindContractText.standardInputRequiresRequestMessage()
+            GridGrindRequestSurfaceContractText.standardInputRequiresRequestMessage()
                 + " because stdin cannot carry both the request JSON and authored input"
                 + " content in one CLI invocation.",
             "formulaEnvironment is optional. When omitted, GridGrind uses the empty"
@@ -52,10 +52,17 @@ final class GridGrindCliSurfaceRequestSections {
                 + " When supplied, omitted nested fields keep those same defaults."
                 + " missingWorkbookPolicy accepts ERROR or USE_CACHED_VALUE;"
                 + " udfToolpacks[] registers named UDF packs for formula evaluation.",
+            "persistence.security.encryption writes OOXML AGILE packages only."
+                + " encryption.password is required; encryption.cipher defaults to AES_256"
+                + " and encryption.hash defaults to SHA_512 when omitted."
+                + " Supported ciphers are AES_256 and AES_192; supported hashes are"
+                + " SHA_512, SHA_384, and SHA_256."
+                + " Legacy STANDARD packages remain readable on inspection but are not"
+                + " authorable.",
             "array-formula braces such as {=SUM(A1:A2*B1:B2)} are rejected as"
                 + " INVALID_FORMULA.",
             "steps is required. [] represents an empty no-op plan.",
-            GridGrindContractText.stepKindSummary()
+            GridGrindRequestSurfaceContractText.stepKindSummary()
                 + " target is a sibling field on each step; it is not nested inside"
                 + " action, assertion, or query.",
             "Step order is authoritative. Mutations, assertions, and inspections may be"
@@ -72,7 +79,7 @@ final class GridGrindCliSurfaceRequestSections {
             new CliSurface.DefinitionEntry(
                 "No --request flag",
                 "read the JSON request from stdin; pass --execution-root so relative"
-                    + " request-owned paths and execution temp files resolve from one"
+                    + " request-owned paths resolve from one"
                     + " explicit directory. A bare TTY invocation with no piped request"
                     + " is rejected."),
             new CliSurface.DefinitionEntry(
@@ -85,9 +92,8 @@ final class GridGrindCliSurfaceRequestSections {
                     + " paths resolve from that directory."),
             new CliSurface.DefinitionEntry(
                 "--temp-root <path>",
-                "override execution scratch space. Without it, temp files resolve under"
-                    + " .gridgrind/tmp inside the request root or explicit"
-                    + " --execution-root."),
+                "override the scratch-parent path. "
+                    + GridGrindRequestSurfaceContractText.cliScratchSpaceSummary()),
             new CliSurface.DefinitionEntry(
                 "No --response flag", "write the primary command output to stdout."),
             new CliSurface.DefinitionEntry(
@@ -96,16 +102,16 @@ final class GridGrindCliSurfaceRequestSections {
                     + " created, but existing files are never replaced implicitly."
                     + " JSON-native payloads stay compact by default; pass --pretty when"
                     + " you want indented JSON."
-                    + " Without --response, CLI argument errors and request-content failure"
-                    + " reports stay on stderr, while executed GridGrindResponse payloads"
+                    + " Without --response, CLI diagnostics and request-content diagnostics"
+                    + " stay on stderr, while executed GridGrindResponse payloads"
                     + " stay on stdout even when status=FAILED."
                     + " Execution writes the JSON response, doctoring writes the doctor"
                     + " report, and help or discovery commands write their rendered text"
-                    + " or JSON payload. Non-success results also emit one stderr pointer"
-                    + " line naming the file: CLI argument errors write 'CLI failure"
-                    + " report', request-content errors write 'request failure report',"
-                    + " execution failures write 'response', and doctor failures write"
-                    + " 'doctor report'."),
+                    + " or JSON payload. Non-success results also emit one structured"
+                    + " stderr CLI diagnostic whose transport block names where the"
+                    + " primary payload went: FILE plus responsePath when the response"
+                    + " file write succeeded, or STDOUT when GridGrind had to fall back"
+                    + " after a response-path write failure."),
             new CliSurface.DefinitionEntry(
                 "source.type=EXISTING + source.path", "open an existing workbook from that path."),
             new CliSurface.DefinitionEntry(
@@ -115,14 +121,15 @@ final class GridGrindCliSurfaceRequestSections {
             new CliSurface.DefinitionEntry(
                 "persistence OVERWRITE", "write back to source.path; no path field is supplied."),
             new CliSurface.DefinitionEntry(
-                "Relative CLI flag paths", GridGrindContractText.cliFlagPathResolutionSummary()),
+                "Relative CLI flag paths",
+                GridGrindRequestSurfaceContractText.cliFlagPathResolutionSummary()),
             new CliSurface.DefinitionEntry(
                 "Relative request-owned paths",
                 "source.path, persistence paths, source-backed file inputs,"
                     + " formulaEnvironment.externalWorkbooks[*].path, and"
                     + " persistence.security.signature.pkcs12Path follow one rule:"
                     + " "
-                    + GridGrindContractText.requestOwnedPathResolutionSummary()),
+                    + GridGrindRequestSurfaceContractText.requestOwnedPathResolutionSummary()),
             new CliSurface.DefinitionEntry(
                 "Relative FILE hyperlink targets",
                 "are analyzed against the persisted workbook path when one exists; use"
@@ -138,12 +145,11 @@ final class GridGrindCliSurfaceRequestSections {
             new CliSurface.DefinitionEntry(
                 "--execution-root <path>",
                 "Required when the request JSON arrives on stdin; relative request-owned"
-                    + " paths and execution temp files resolve from that directory."),
+                    + " paths resolve from that directory."),
             new CliSurface.DefinitionEntry(
                 "--temp-root <path>",
-                "Override execution scratch space. Without it, GridGrind uses"
-                    + " .gridgrind/tmp inside the request root or explicit"
-                    + " --execution-root."),
+                "Override the scratch-parent path. "
+                    + GridGrindRequestSurfaceContractText.cliScratchSpaceSummary()),
             new CliSurface.DefinitionEntry(
                 "--response <path>",
                 "Write the primary command output to a new file instead of stdout;"
@@ -172,18 +178,14 @@ final class GridGrindCliSurfaceRequestSections {
                 "Print a minimal valid request JSON document with default execution and"
                     + " formula settings omitted."),
             new CliSurface.DefinitionEntry(
-                "--print-example-catalog",
-                "Print the machine-readable built-in example catalog, including the stable"
-                    + " workspaceMode portability contract plus any"
-                    + " requiredWorkspacePaths for asset-backed example ids."),
-            new CliSurface.DefinitionEntry(
-                "--print-task-catalog",
-                "Print the machine-readable task catalog of high-level office-work"
-                    + " recipes, including starter.requestFileName,"
-                    + " starter.workspaceMode, and starter.requiredWorkspacePaths."),
+                "--print-recipe-catalog",
+                "Print the machine-readable unified recipe catalog of built-in examples"
+                    + " and CLI-authored task starters. The bare list stays compact;"
+                    + " scoped --lookup payloads add richer view-specific detail,"
+                    + " including the exact runnable request profile."),
             new CliSurface.DefinitionEntry(
                 "--lookup <id>",
-                "With --print-example, --print-task-catalog, or --print-task-plan,"
+                "With --print-recipe, --print-recipe-catalog, or --print-protocol-catalog,"
                     + " print one stable entry by id. With --print-protocol-catalog,"
                     + " that lookup id may also name one top-level category"
                     + " (mutationActionTypes, assertionTypes, inspectionQueryTypes,"
@@ -192,29 +194,32 @@ final class GridGrindCliSurfaceRequestSections {
                     + " executionPolicyInputType, ...), one explicit namespace form"
                     + " (nestedTypes:<group>, plainTypes:<group>), or one qualified"
                     + " top-level entry <category>:<id> such as"
-                    + " mutationActionTypes:SET_CELL when ids repeat across groups."),
+                    + " mutationActionTypes:SET_CELL when ids repeat across groups."
+                    + " Scoped lookup payloads may also publish shared top-level notes and"
+                    + " entry-local noteRefs when a reusable rule would otherwise be"
+                    + " repeated across multiple summaries."),
             new CliSurface.DefinitionEntry(
-                "--print-task-plan --lookup <id>",
-                "Print one executable starter scenario for one task id."),
+                "--print-recipe --lookup <id>",
+                "Print one built-in example or executable task-starter scenario by id."),
             new CliSurface.DefinitionEntry(
-                "--print-task-keyword-match --query <text>",
-                "Print ranked CLI-owned task matches for one English keyword query."
-                    + " Use --print-task-plan --lookup <id> for the executable starter"
-                    + " scenario after you choose a task id. After normalization, at least"
+                "--print-recipe-keyword-match --query <text>",
+                "Print ranked built-in recipe matches for one English keyword query."
+                    + " Use --print-recipe --lookup <id> for the executable starter"
+                    + " scenario after you choose a recipe id. After normalization, at least"
                     + " one searchable non-stop-word term must remain."),
             new CliSurface.DefinitionEntry(
                 "--print-protocol-catalog",
                 "Print the compact protocol-catalog index with group ids, lookup"
                     + " namespace forms, and field-metadata legends such as"
-                    + " projectedByFacets and enumValueDocs."),
+                    + " projectedByFacets, noteRefs, and enumValueDocs."
+                    + " Shared reusable notes stay on scoped --lookup payloads instead of"
+                    + " bloating the bare index."),
             new CliSurface.DefinitionEntry(
                 "--search <text>",
                 "With --print-protocol-catalog, perform case-insensitive search across"
                     + " lookup ids, qualified ids, catalog groups, and summaries."
                     + " Search promotes top-level operations first and uses"
                     + " relatedEntryIds on support-group hits."),
-            new CliSurface.DefinitionEntry(
-                "--print-example --lookup <id>", "Print one built-in generated example request."),
             new CliSurface.DefinitionEntry("--help, -h", "Print the short synopsis."),
             new CliSurface.DefinitionEntry(
                 "--help-protocol", "Print the authoritative CLI and request grammar only."),

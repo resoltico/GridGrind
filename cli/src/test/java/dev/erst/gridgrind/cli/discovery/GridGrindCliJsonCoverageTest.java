@@ -6,32 +6,58 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import dev.erst.gridgrind.cli.examples.GridGrindShippedExamples;
+import dev.erst.gridgrind.contract.dto.GridGrindProblemCode;
+import dev.erst.gridgrind.contract.dto.GridGrindProblemDetail;
 import dev.erst.gridgrind.contract.dto.GridGrindProtocolVersion;
+import dev.erst.gridgrind.contract.dto.ProblemContext;
+import dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces.CliArgument;
+import dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces.JsonLocation;
+import dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces.RequestInput;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 import org.junit.jupiter.api.Test;
+import tools.jackson.databind.JsonNode;
 
 /** Additional round-trip and stream-ownership coverage for the CLI discovery JSON codec. */
 class GridGrindCliJsonCoverageTest {
   @Test
   void discoveryRoundTripsDoNotCloseCallerOwnedStreams() throws IOException {
     TaskCatalog taskCatalog = GridGrindTaskCatalog.catalog();
-    TaskKeywordMatchReport taskKeywordMatchReport = sampleTaskKeywordMatchReport();
+    RecipeCatalog recipeCatalog = GridGrindRecipeCatalog.catalog();
+    RecipeCatalogDetail recipeCatalogDetail =
+        GridGrindRecipeCatalog.lookupFor("BUDGET").orElseThrow();
+    RecipeCatalogDetail taskRecipeCatalogDetail =
+        GridGrindRecipeCatalog.lookupFor("DASHBOARD").orElseThrow();
+    RecipeKeywordMatchReport taskKeywordMatchReport = sampleRecipeKeywordMatchReport();
     ShippedExampleCatalog exampleCatalog = GridGrindShippedExamples.catalog();
     ProtocolCatalogSearchReport protocolCatalogSearchReport = sampleProtocolCatalogSearchReport();
-    CliFailureReport cliFailureReport = sampleCliFailureReport();
+    CliDiagnostic cliDiagnostic = sampleCliDiagnostic();
 
     assertEquals(
         taskCatalog,
         GridGrindCliJson.readBytes(GridGrindCliJson.writeBytes(taskCatalog), TaskCatalog.class));
     assertEquals(
+        recipeCatalog,
+        GridGrindCliJson.readBytes(
+            GridGrindCliJson.writeBytes(recipeCatalog), RecipeCatalog.class));
+    assertEquals(
+        recipeCatalogDetail,
+        GridGrindCliJson.readBytes(
+            GridGrindCliJson.writeBytes(recipeCatalogDetail), RecipeCatalogDetail.class));
+    assertEquals(
+        taskRecipeCatalogDetail,
+        GridGrindCliJson.readBytes(
+            GridGrindCliJson.writeBytes(taskRecipeCatalogDetail), RecipeCatalogDetail.class));
+    assertEquals(
         taskKeywordMatchReport,
         GridGrindCliJson.readBytes(
-            GridGrindCliJson.writeBytes(taskKeywordMatchReport), TaskKeywordMatchReport.class));
+            GridGrindCliJson.writeBytes(taskKeywordMatchReport), RecipeKeywordMatchReport.class));
     assertEquals(
         exampleCatalog,
         GridGrindCliJson.readBytes(
@@ -42,12 +68,14 @@ class GridGrindCliJsonCoverageTest {
             ProtocolCatalogCliJson.writeProtocolCatalogSearchReportBytes(
                 protocolCatalogSearchReport)));
     assertEquals(
-        cliFailureReport,
+        cliDiagnostic,
         GridGrindCliJson.readBytes(
-            GridGrindCliJson.writeBytes(cliFailureReport), CliFailureReport.class));
+            GridGrindCliJson.writeBytes(cliDiagnostic), CliDiagnostic.class));
 
     try (TrackingInputStream taskCatalogStream =
             new TrackingInputStream(GridGrindCliJson.writeBytes(taskCatalog));
+        TrackingInputStream recipeCatalogStream =
+            new TrackingInputStream(GridGrindCliJson.writeBytes(recipeCatalog));
         TrackingInputStream taskKeywordMatchReportStream =
             new TrackingInputStream(GridGrindCliJson.writeBytes(taskKeywordMatchReport));
         TrackingInputStream exampleCatalogStream =
@@ -56,35 +84,36 @@ class GridGrindCliJsonCoverageTest {
             new TrackingInputStream(
                 ProtocolCatalogCliJson.writeProtocolCatalogSearchReportBytes(
                     protocolCatalogSearchReport));
-        TrackingInputStream cliFailureReportStream =
-            new TrackingInputStream(GridGrindCliJson.writeBytes(cliFailureReport))) {
+        TrackingInputStream cliDiagnosticStream =
+            new TrackingInputStream(GridGrindCliJson.writeBytes(cliDiagnostic))) {
       assertEquals(taskCatalog, GridGrindCliJsonStreams.readTaskCatalog(taskCatalogStream));
+      assertEquals(recipeCatalog, GridGrindCliJsonStreams.readRecipeCatalog(recipeCatalogStream));
       assertEquals(
           taskKeywordMatchReport,
-          GridGrindCliJsonStreams.readTaskKeywordMatchReport(taskKeywordMatchReportStream));
+          GridGrindCliJsonStreams.readRecipeKeywordMatchReport(taskKeywordMatchReportStream));
       assertEquals(
           exampleCatalog, GridGrindCliJsonStreams.readShippedExampleCatalog(exampleCatalogStream));
       assertEquals(
           protocolCatalogSearchReport,
           GridGrindCliJsonStreams.readProtocolCatalogSearchReport(
               protocolCatalogSearchReportStream));
-      assertEquals(
-          cliFailureReport, GridGrindCliJsonStreams.readCliFailureReport(cliFailureReportStream));
+      assertEquals(cliDiagnostic, GridGrindCliJsonStreams.readCliDiagnostic(cliDiagnosticStream));
       assertFalse(taskCatalogStream.closed);
+      assertFalse(recipeCatalogStream.closed);
       assertFalse(taskKeywordMatchReportStream.closed);
       assertFalse(exampleCatalogStream.closed);
       assertFalse(protocolCatalogSearchReportStream.closed);
-      assertFalse(cliFailureReportStream.closed);
+      assertFalse(cliDiagnosticStream.closed);
     }
   }
 
   @Test
   void discoveryWritersAndReadersRejectNullArguments() {
     TaskEntry task = GridGrindTaskCatalog.entryFor("DASHBOARD").orElseThrow();
-    TaskKeywordMatchReport taskKeywordMatchReport = sampleTaskKeywordMatchReport();
+    RecipeKeywordMatchReport taskKeywordMatchReport = sampleRecipeKeywordMatchReport();
     ShippedExampleCatalog exampleCatalog = GridGrindShippedExamples.catalog();
     ProtocolCatalogSearchReport protocolCatalogSearchReport = sampleProtocolCatalogSearchReport();
-    CliFailureReport cliFailureReport = sampleCliFailureReport();
+    CliDiagnostic cliDiagnostic = sampleCliDiagnostic();
 
     assertEquals(
         "bytes must not be null",
@@ -93,21 +122,38 @@ class GridGrindCliJsonCoverageTest {
                 () -> GridGrindCliJson.readBytes(null, TaskCatalog.class))
             .getMessage());
     assertEquals(
-        "inputStream must not be null",
+        "bytes must not be null",
         assertThrows(
-                NullPointerException.class, () -> GridGrindCliJsonStreams.readTaskCatalog(null))
+                NullPointerException.class,
+                () -> GridGrindCliJson.readBytes(null, RecipeCatalog.class))
             .getMessage());
     assertEquals(
         "bytes must not be null",
         assertThrows(
                 NullPointerException.class,
-                () -> GridGrindCliJson.readBytes(null, TaskKeywordMatchReport.class))
+                () -> GridGrindCliJson.readBytes(null, RecipeCatalogDetail.class))
+            .getMessage());
+    assertEquals(
+        "inputStream must not be null",
+        assertThrows(
+                NullPointerException.class, () -> GridGrindCliJsonStreams.readTaskCatalog(null))
+            .getMessage());
+    assertEquals(
+        "inputStream must not be null",
+        assertThrows(
+                NullPointerException.class, () -> GridGrindCliJsonStreams.readRecipeCatalog(null))
+            .getMessage());
+    assertEquals(
+        "bytes must not be null",
+        assertThrows(
+                NullPointerException.class,
+                () -> GridGrindCliJson.readBytes(null, RecipeKeywordMatchReport.class))
             .getMessage());
     assertEquals(
         "inputStream must not be null",
         assertThrows(
                 NullPointerException.class,
-                () -> GridGrindCliJsonStreams.readTaskKeywordMatchReport(null))
+                () -> GridGrindCliJsonStreams.readRecipeKeywordMatchReport(null))
             .getMessage());
     assertEquals(
         "bytes must not be null",
@@ -137,13 +183,12 @@ class GridGrindCliJsonCoverageTest {
         "bytes must not be null",
         assertThrows(
                 NullPointerException.class,
-                () -> GridGrindCliJson.readBytes(null, CliFailureReport.class))
+                () -> GridGrindCliJson.readBytes(null, CliDiagnostic.class))
             .getMessage());
     assertEquals(
         "inputStream must not be null",
         assertThrows(
-                NullPointerException.class,
-                () -> GridGrindCliJsonStreams.readCliFailureReport(null))
+                NullPointerException.class, () -> GridGrindCliJsonStreams.readCliDiagnostic(null))
             .getMessage());
     assertEquals(
         "outputStream must not be null",
@@ -197,8 +242,7 @@ class GridGrindCliJsonCoverageTest {
     assertEquals(
         "outputStream must not be null",
         assertThrows(
-                NullPointerException.class,
-                () -> GridGrindCliJson.writeValue(null, cliFailureReport))
+                NullPointerException.class, () -> GridGrindCliJson.writeValue(null, cliDiagnostic))
             .getMessage());
     assertEquals(
         "value must not be null",
@@ -231,7 +275,7 @@ class GridGrindCliJsonCoverageTest {
     assertFalse(taskCatalogOutput.toString(StandardCharsets.UTF_8).contains(": null"));
 
     ByteArrayOutputStream taskKeywordMatchOutput = new ByteArrayOutputStream();
-    GridGrindCliJson.writeValue(taskKeywordMatchOutput, sampleTaskKeywordMatchReport());
+    GridGrindCliJson.writeValue(taskKeywordMatchOutput, sampleRecipeKeywordMatchReport());
     assertFalse(taskKeywordMatchOutput.toString(StandardCharsets.UTF_8).contains(": null"));
 
     ByteArrayOutputStream exampleCatalogOutput = new ByteArrayOutputStream();
@@ -243,9 +287,9 @@ class GridGrindCliJsonCoverageTest {
         protocolCatalogSearchOutput, sampleProtocolCatalogSearchReport(), false);
     assertFalse(protocolCatalogSearchOutput.toString(StandardCharsets.UTF_8).contains(": null"));
 
-    ByteArrayOutputStream cliFailureReportOutput = new ByteArrayOutputStream();
-    GridGrindCliJson.writeValue(cliFailureReportOutput, sampleCliFailureReport());
-    assertFalse(cliFailureReportOutput.toString(StandardCharsets.UTF_8).contains(": null"));
+    ByteArrayOutputStream cliDiagnosticOutput = new ByteArrayOutputStream();
+    GridGrindCliJson.writeValue(cliDiagnosticOutput, sampleCliDiagnostic());
+    assertFalse(cliDiagnosticOutput.toString(StandardCharsets.UTF_8).contains(": null"));
 
     assertTrue(
         GridGrindCliJsonStreams.readTree("{\"hello\":true}".getBytes(StandardCharsets.UTF_8))
@@ -253,35 +297,132 @@ class GridGrindCliJsonCoverageTest {
             .asBoolean());
   }
 
-  private static TaskKeywordMatchReport sampleTaskKeywordMatchReport() {
+  @Test
+  void cliDiagnosticJsonKeepsTheWrapperTransportOnlyAndLeavesProblemFactsInProblemCore()
+      throws IOException {
+    JsonNode parseArgumentsDiagnostic =
+        GridGrindCliJsonStreams.readTree(GridGrindCliJson.writeBytes(sampleCliDiagnostic()));
+    JsonNode readRequestDiagnostic =
+        GridGrindCliJsonStreams.readTree(
+            GridGrindCliJson.writeBytes(
+                new CliDiagnostic(
+                    GridGrindProtocolVersion.current(),
+                    1,
+                    "execute",
+                    List.of("gridgrind --doctor-request --request request.json"),
+                    GridGrindProblemDetail.Problem.of(
+                        GridGrindProblemCode.INVALID_REQUEST_SHAPE,
+                        "Unknown field 'bogus'",
+                        new ProblemContext.ReadRequest(
+                            RequestInput.standardInput(),
+                            JsonLocation.located("steps[0].target.type", 7, 13))),
+                    java.util.Optional.of(CliTransport.standardOutput()))));
+
+    assertEquals(
+        Set.of("protocolVersion", "exitCode", "command", "suggestions", "problem", "transport"),
+        fieldNames(parseArgumentsDiagnostic));
+    assertFalse(parseArgumentsDiagnostic.has("code"));
+    assertFalse(parseArgumentsDiagnostic.has("message"));
+    assertFalse(parseArgumentsDiagnostic.has("resolution"));
+    assertFalse(parseArgumentsDiagnostic.has("argument"));
+    assertFalse(parseArgumentsDiagnostic.has("location"));
+    assertFalse(parseArgumentsDiagnostic.has("jsonPath"));
+    assertEquals(
+        "NAMED",
+        parseArgumentsDiagnostic
+            .path("problem")
+            .path("context")
+            .path("argument")
+            .path("type")
+            .asText());
+    assertEquals(
+        "--query",
+        parseArgumentsDiagnostic
+            .path("problem")
+            .path("context")
+            .path("argument")
+            .path("argument")
+            .asText());
+    assertEquals("FILE", parseArgumentsDiagnostic.path("transport").path("wroteTo").asText());
+    assertEquals(
+        "/tmp/diagnostic.json",
+        parseArgumentsDiagnostic.path("transport").path("responsePath").asText());
+
+    assertEquals(
+        Set.of("protocolVersion", "exitCode", "command", "suggestions", "problem", "transport"),
+        fieldNames(readRequestDiagnostic));
+    assertFalse(readRequestDiagnostic.has("location"));
+    assertFalse(readRequestDiagnostic.has("jsonPath"));
+    assertFalse(readRequestDiagnostic.has("jsonLine"));
+    assertFalse(readRequestDiagnostic.has("jsonColumn"));
+    assertEquals(
+        "STANDARD_INPUT",
+        readRequestDiagnostic
+            .path("problem")
+            .path("context")
+            .path("request")
+            .path("type")
+            .asText());
+    assertEquals(
+        "LOCATED",
+        readRequestDiagnostic.path("problem").path("context").path("json").path("type").asText());
+    assertEquals(
+        "steps[0].target.type",
+        readRequestDiagnostic
+            .path("problem")
+            .path("context")
+            .path("json")
+            .path("jsonPath")
+            .asText());
+    assertEquals(
+        7,
+        readRequestDiagnostic
+            .path("problem")
+            .path("context")
+            .path("json")
+            .path("jsonLine")
+            .asInt());
+    assertEquals(
+        13,
+        readRequestDiagnostic
+            .path("problem")
+            .path("context")
+            .path("json")
+            .path("jsonColumn")
+            .asInt());
+    assertEquals("STDOUT", readRequestDiagnostic.path("transport").path("wroteTo").asText());
+    assertFalse(readRequestDiagnostic.path("transport").has("responsePath"));
+  }
+
+  private static RecipeKeywordMatchReport sampleRecipeKeywordMatchReport() {
     TaskEntry task = GridGrindTaskCatalog.entryFor("DASHBOARD").orElseThrow();
-    return new TaskKeywordMatchReport(
+    return new RecipeKeywordMatchReport(
         GridGrindProtocolVersion.current(),
         "Create a monthly sales dashboard with charts",
         List.of("monthly", "sales", "dashboard", "chart"),
         List.of("monthly", "sales"),
         List.of("dashboard", "charts", "summary"),
         List.of(
-            new TaskKeywordMatchReport.Candidate(
+            new RecipeKeywordMatchReport.Candidate(
                 task.id(),
+                RecipeView.TASK_STARTER,
                 task.narrative().summary(),
                 42,
                 List.of("dashboard", "chart"),
                 List.of("summary", "discovery term"))));
   }
 
-  private static CliFailureReport sampleCliFailureReport() {
-    return new CliFailureReport(
+  private static CliDiagnostic sampleCliDiagnostic() {
+    return new CliDiagnostic(
         GridGrindProtocolVersion.current(),
         2,
-        "print-task-keyword-match",
-        "match-query",
-        dev.erst.gridgrind.contract.dto.GridGrindProblemCode.INVALID_ARGUMENTS,
-        "message",
-        java.util.Optional.empty(),
-        java.util.Optional.of("--query"),
-        List.of("gridgrind --print-task-catalog"),
-        java.util.Optional.of("Use a fuller query."));
+        "print-recipe-keyword-match",
+        List.of("gridgrind --print-recipe-catalog"),
+        GridGrindProblemDetail.Problem.of(
+            GridGrindProblemCode.INVALID_ARGUMENTS,
+            "message",
+            new ProblemContext.ParseArguments(CliArgument.named("--query"))),
+        java.util.Optional.of(CliTransport.responseFile("/tmp/diagnostic.json")));
   }
 
   private static ProtocolCatalogSearchReport sampleProtocolCatalogSearchReport() {
@@ -297,6 +438,14 @@ class GridGrindCliJsonCoverageTest {
                 "Create or mutate one supported simple chart on one sheet.",
                 List.of("SET_CHART"),
                 List.of("chartInputType:ChartInput"))));
+  }
+
+  private static Set<String> fieldNames(JsonNode node) {
+    Set<String> names = new LinkedHashSet<>();
+    for (var property : node.properties()) {
+      names.add(property.getKey());
+    }
+    return names;
   }
 
   /** Tracks whether the codec attempts to close one caller-owned input stream. */

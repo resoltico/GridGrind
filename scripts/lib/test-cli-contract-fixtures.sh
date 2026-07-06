@@ -78,17 +78,20 @@ load_test_cli_contract_fixtures() {
     success_execution_policy_input_type="$(
         java -jar "${jar_path}" --print-protocol-catalog --lookup plainTypes:executionPolicyInputType | tr -d '\r'
     )"
-    success_example_catalog="$(
-        java -jar "${jar_path}" --print-example-catalog | tr -d '\r'
+    success_recipe_catalog="$(
+        java -jar "${jar_path}" --print-recipe-catalog | tr -d '\r'
     )"
-    success_task_catalog="$(
-        java -jar "${jar_path}" --print-task-catalog | tr -d '\r'
+    success_example_recipe_catalog_detail="$(
+        java -jar "${jar_path}" --print-recipe-catalog --lookup BUDGET | tr -d '\r'
     )"
-    success_task_plan="$(
-        java -jar "${jar_path}" --print-task-plan --lookup DASHBOARD | tr -d '\r'
+    success_task_recipe_catalog_detail="$(
+        java -jar "${jar_path}" --print-recipe-catalog --lookup TABULAR_REPORT | tr -d '\r'
     )"
-    success_task_keyword_match="$(
-        java -jar "${jar_path}" --print-task-keyword-match --query "monthly sales dashboard with charts" | tr -d '\r'
+    success_recipe_request="$(
+        java -jar "${jar_path}" --print-recipe --lookup DASHBOARD | tr -d '\r'
+    )"
+    success_recipe_keyword_match="$(
+        java -jar "${jar_path}" --print-recipe-keyword-match --query "monthly sales dashboard with charts" | tr -d '\r'
     )"
     success_request_template="$(
         java -jar "${jar_path}" --print-request-template | tr -d '\r'

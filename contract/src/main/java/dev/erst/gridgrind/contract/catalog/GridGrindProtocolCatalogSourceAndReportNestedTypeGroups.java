@@ -1,6 +1,7 @@
 package dev.erst.gridgrind.contract.catalog;
 
 import static dev.erst.gridgrind.contract.catalog.GridGrindProtocolCatalogNestedTypeGroupSupport.descriptor;
+import static dev.erst.gridgrind.contract.catalog.GridGrindProtocolCatalogNestedTypeGroupSupport.descriptorWithNotes;
 import static dev.erst.gridgrind.contract.catalog.GridGrindProtocolCatalogNestedTypeGroupSupport.nestedTypeGroup;
 
 import dev.erst.gridgrind.contract.dto.CellReport;
@@ -48,7 +49,9 @@ final class GridGrindProtocolCatalogSourceAndReportNestedTypeGroups {
                   descriptor(
                       CellScalarValue.ErrorValue.class,
                       "ERROR",
-                      "Require the effective cell value to be one exact Excel error string."))),
+                      "Require the effective cell value to be one exact GridGrind-owned error"
+                          + " literal, including canonical Excel tokens and evaluation-only"
+                          + " states such as #CIRCULAR_REF!."))),
           nestedTypeGroup(
               "cellReportTypes",
               CellReport.class,
@@ -154,7 +157,9 @@ final class GridGrindProtocolCatalogSourceAndReportNestedTypeGroups {
                   descriptor(
                       CellValueReport.ErrorValue.class,
                       "ERROR",
-                      "Effective formula evaluation is an Excel error value."))),
+                      "Effective formula evaluation is one GridGrind-owned error literal,"
+                          + " including canonical Excel tokens plus evaluator-specific tokens"
+                          + " such as #CIRCULAR_REF!."))),
           nestedTypeGroup(
               "windowReportTypes",
               WindowReport.class,
@@ -175,12 +180,11 @@ final class GridGrindProtocolCatalogSourceAndReportNestedTypeGroups {
                       TextSourceInput.Inline.class,
                       "INLINE",
                       "Embed UTF-8 text directly in the request JSON."),
-                  descriptor(
+                  descriptorWithNotes(
                       TextSourceInput.Utf8File.class,
                       "UTF8_FILE",
-                      "Load UTF-8 text from one file path."
-                          + " "
-                          + GridGrindContractText.requestOwnedPathResolutionSummary()),
+                      "Load UTF-8 text from one file path.",
+                      GridGrindProtocolCatalogNotes.requestOwnedPathRuleRef()),
                   descriptor(
                       TextSourceInput.StandardInput.class,
                       "STANDARD_INPUT",
@@ -194,12 +198,11 @@ final class GridGrindProtocolCatalogSourceAndReportNestedTypeGroups {
                       BinarySourceInput.InlineBase64.class,
                       "INLINE_BASE64",
                       "Embed base64-encoded binary content directly in the request JSON."),
-                  descriptor(
+                  descriptorWithNotes(
                       BinarySourceInput.File.class,
                       "FILE",
-                      "Load binary content from one file path."
-                          + " "
-                          + GridGrindContractText.requestOwnedPathResolutionSummary()),
+                      "Load binary content from one file path.",
+                      GridGrindProtocolCatalogNotes.requestOwnedPathRuleRef()),
                   descriptor(
                       BinarySourceInput.StandardInput.class,
                       "STANDARD_INPUT",

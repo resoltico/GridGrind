@@ -3,7 +3,6 @@ package dev.erst.gridgrind.excel.ooxml;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
 import dev.erst.gridgrind.excel.InvalidWorkbookPasswordException;
 import dev.erst.gridgrind.excel.WorkbookPasswordRequiredException;
-import dev.erst.gridgrind.excel.WorkbookTempFileFactory;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -23,11 +22,10 @@ final class ExcelOoxmlPackageSecurityInternals {
   }
 
   static ExcelOoxmlPackageSecuritySupport.ReadableWorkbook decryptWorkbook(
-      Path workbookPath, ExcelOoxmlOpenOptions openOptions, WorkbookTempFileFactory tempFileFactory)
-      throws IOException {
-    Path plainWorkbookPath = tempFileFactory.createTempFile("gridgrind-ooxml-decrypted-", ".xlsx");
-    boolean success = false;
-    try (POIFSFileSystem fileSystem = new POIFSFileSystem(workbookPath.toFile())) {
+      Path workbookPath, ExcelOoxmlOpenOptions openOptions) throws IOException {
+    try (ExcelOoxmlPrivateTempWorkbook privateWorkbook =
+            ExcelOoxmlPrivateTempWorkbook.create("gridgrind-ooxml-decrypted-", ".xlsx");
+        POIFSFileSystem fileSystem = new POIFSFileSystem(workbookPath.toFile())) {
       if (!isEncryptedOoxmlPackage(fileSystem)) {
         throw new IllegalArgumentException("Only .xlsx workbooks are supported");
       }
@@ -44,23 +42,16 @@ final class ExcelOoxmlPackageSecurityInternals {
       }
 
       ExcelOoxmlPackageEncryptionSupport.materializeDecryptedWorkbook(
-          () -> decryptor.getDataStream(fileSystem), plainWorkbookPath, workbookPath);
+          () -> decryptor.getDataStream(fileSystem), privateWorkbook.workbookPath(), workbookPath);
 
       ExcelOoxmlEncryptionSnapshot encryption =
           ExcelOoxmlPackageEncryptionSupport.encryptionSnapshot(encryptionInfo);
-      ExcelOoxmlPackageSecuritySupport.ReadableWorkbook readableWorkbook =
-          new ExcelOoxmlPackageSecuritySupport.ReadableWorkbook(
-              plainWorkbookPath,
-              ExcelOoxmlPackageInspectionSupport.inspectPackageSecurity(
-                  plainWorkbookPath, encryption),
-              Optional.of(password),
-              true);
-      success = true;
-      return readableWorkbook;
-    } finally {
-      if (!success) {
-        ExcelOoxmlPackageFileSupport.deleteIfExists(plainWorkbookPath);
-      }
+      return new ExcelOoxmlPackageSecuritySupport.ReadableWorkbook(
+          privateWorkbook.workbookPath(),
+          ExcelOoxmlPackageInspectionSupport.inspectPackageSecurity(
+              privateWorkbook.workbookPath(), encryption),
+          Optional.of(password),
+          Optional.of(privateWorkbook.releaseRoot()));
     }
   }
 

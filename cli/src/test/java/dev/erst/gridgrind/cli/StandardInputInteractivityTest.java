@@ -6,7 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import dev.erst.gridgrind.cli.discovery.CliFailureReport;
+import dev.erst.gridgrind.cli.discovery.CliDiagnostic;
 import dev.erst.gridgrind.contract.dto.GridGrindProblemCode;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
@@ -128,10 +128,10 @@ class StandardInputInteractivityTest extends GridGrindCliTestSupport {
                   () -> true)
               .run(new String[0], blockingStdin, stdout, stderr);
 
-      CliFailureReport failure = cliFailureOnStderr(stdout, stderr);
+      CliDiagnostic failure = cliDiagnosticOnStderr(stdout, stderr);
       assertEquals(2, exitCode);
-      assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.code());
-      assertTrue(failure.message().contains("No request JSON was provided."));
+      assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.problem().code());
+      assertTrue(failure.problem().message().contains("No request JSON was provided."));
     }
   }
 }

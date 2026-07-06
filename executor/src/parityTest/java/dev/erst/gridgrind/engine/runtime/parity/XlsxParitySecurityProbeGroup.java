@@ -14,8 +14,9 @@ import dev.erst.gridgrind.contract.selector.*;
 import dev.erst.gridgrind.engine.runtime.parity.ParityPlanSupport.PendingMutation;
 import dev.erst.gridgrind.engine.runtime.parity.XlsxParityProbeRegistry.ProbeContext;
 import dev.erst.gridgrind.engine.runtime.parity.XlsxParityProbeRegistry.ProbeResult;
-import dev.erst.gridgrind.excel.foundation.ExcelOoxmlEncryptionMode;
 import dev.erst.gridgrind.excel.foundation.ExcelOoxmlSignatureState;
+import dev.erst.gridgrind.excel.foundation.ExcelOoxmlWriteCipher;
+import dev.erst.gridgrind.excel.foundation.ExcelOoxmlWriteHash;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -188,7 +189,9 @@ final class XlsxParitySecurityProbeGroup {
             authoredOutput,
             new OoxmlPersistenceSecurityInput(
                 new OoxmlEncryptionInput(
-                    XlsxParityScenarios.ENCRYPTION_PASSWORD, ExcelOoxmlEncryptionMode.AGILE),
+                    XlsxParityScenarios.ENCRYPTION_PASSWORD,
+                    ExcelOoxmlWriteCipher.AES_256,
+                    ExcelOoxmlWriteHash.SHA_512),
                 null),
             (ExecutionModeInput) null,
             List.of(

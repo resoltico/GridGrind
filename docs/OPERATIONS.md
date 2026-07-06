@@ -1,6 +1,6 @@
 ---
 afad: "4.0"
-version: "0.71.0"
+version: "0.72.0"
 domain: OPERATIONS
 updated: "2026-07-01"
 route:
@@ -30,52 +30,21 @@ gridgrind --print-protocol-catalog --lookup mutationActionTypes:SET_CELL
 gridgrind --print-protocol-catalog --lookup mutationActionTypes --response mutation-actions.json
 gridgrind --print-protocol-catalog --lookup nestedTypes:executionModeTypes --response execution-modes.json
 gridgrind --print-protocol-catalog --lookup plainTypes:executionPolicyInputType --response execution-policy.json
-gridgrind --print-example --lookup BUDGET --response budget-request.json
-gridgrind --print-example --lookup ASSERTION --response assertion-request.json
+gridgrind --print-recipe --lookup BUDGET --response budget-request.json
+gridgrind --print-recipe --lookup ASSERTION --response assertion-request.json
 gridgrind --print-request-template | gridgrind --doctor-request --execution-root .
 gridgrind --doctor-request --request request.json --response doctor-report.json
 ```
 
-`--print-protocol-catalog` is the authoritative machine-readable shape inventory. The bare command
-returns the compact first-contact index. Use `--search` when you only know part of the name or
-summary, then switch to `--lookup` once you have one stable lookup id. Bare `SET_CELL` returns one
-globally unique top-level entry, bare `mutationActionTypes` returns one top-level category, bare
-`cellInputTypes` or `executionPolicyInputType` return one support group, `--lookup
-nestedTypes:executionModeTypes` returns one nested tagged-union group, `--lookup
-plainTypes:executionPolicyInputType` returns one plain record group, and `--lookup
-mutationActionTypes:SET_CELL` returns one qualified exact entry. Search returns summary-first matches with
-`catalogGroup`, `lookupId`, `qualifiedId`, `kind`, and one
-short `summary`; supporting-type context stays lightweight through optional
-`supportingQualifiedIds` or `relatedEntryIds`, and full authoring payloads remain behind the
-follow-up `--lookup` step instead of being dumped inline in the search response. Discovery,
-printed example requests, doctor reports, and normal execution responses omit absent optional
-fields, and request payloads must omit absent fields instead of sending explicit JSON `null`
-placeholders, so the machine-readable surface is easier for agents and shell tooling to consume
-directly. Those JSON-native payloads are compact by default; add `--pretty` when you want
-indented JSON instead of the single-line form.
-Task discovery is layered on top of that same catalog surface:
-`--print-task-catalog --response tasks.json`,
-`--print-task-plan --lookup <id> --response task-request.json`,
-and `--print-task-keyword-match --query "<query>" --response task-keyword-match.json` now cover
-dashboards, tabular reports, data-entry flows, pivot reports, custom XML workflows, workbook
-maintenance, and drawing/signature workflows. Each published task entry also carries
-`starter.requestFileName`, `starter.workspaceMode`, and `starter.requiredWorkspacePaths`, so
-callers can stage the right workspace before printing or executing the starter. Task-plan output is one
-curated executable starter request validated from the packaged artifact; keyword-match responses
-stay compact, are weighted by typed goal/artifact metadata first, and point at the matched task
-id plus why it ranked.
-`--doctor-request` is the fast preflight path for request shape, execution-mode limits,
-source-backed input resolution, and existing workbook-source accessibility; it does not mutate a
-workbook and returns every independently provable blocking problem it can isolate safely in one
-report, including multiple malformed steps in one pass. `--response <path>` applies across
-execution, doctoring, and discovery, so primary outputs can be written
-directly to files during artifact, shell, or Docker workflows. When the request JSON arrives on
-stdin instead of `--request <path>`, pass `--execution-root <path>` so request-owned relative
-paths and execution scratch space resolve from one explicit directory.
-Mount the host working directory at `/work` and rely on the image's prepared `WORKDIR` so
-relative CLI paths resolve inside that mounted directory without a separate `-w` override. The
-mounted-directory execution pattern is:
-`docker run --rm -i -v "$(pwd)":/work ghcr.io/resoltico/gridgrind:latest --request request.json --response response.json`.
+`--print-protocol-catalog` is the authoritative machine-readable shape inventory. The bare command returns the compact first-contact index only. Use `--search` when you only know part of the name or summary, then switch to `--lookup` once you have one stable lookup id. Bare `SET_CELL` returns one globally unique top-level entry, bare `mutationActionTypes` returns one top-level category, bare `cellInputTypes` or `executionPolicyInputType` return one support group, `--lookup nestedTypes:executionModeTypes` returns one nested tagged-union group, `--lookup plainTypes:executionPolicyInputType` returns one plain record group, and `--lookup mutationActionTypes:SET_CELL` returns one qualified exact entry. Search returns summary-first matches with `catalogGroup`, `lookupId`, `qualifiedId`, `kind`, and one short `summary`; supporting-type context stays lightweight through optional `supportingQualifiedIds` or `relatedEntryIds`, and full authoring payloads remain behind the follow-up `--lookup` step instead of being dumped inline in the search response. Scoped `--lookup` payloads may also publish shared `notes` once at the top level, while entry-local `noteRefs` point at reusable rule text such as request-owned path resolution instead of repeating the same paragraph in every path-bearing summary. Discovery, printed recipe requests, doctor reports, and normal execution responses omit absent optional fields, and request payloads must omit absent fields instead of sending explicit JSON `null` placeholders, so the machine-readable surface is easier for agents and shell tooling to consume directly. Those JSON-native payloads are compact by default; add `--pretty` when you want indented JSON instead of the single-line form.
+Task discovery is layered on top of that same catalog surface: `--print-recipe-catalog --response recipes.json`, `--print-recipe-catalog --lookup <id> --response recipe-detail.json`, `--print-recipe --lookup <id> --response recipe-request.json`, and `--print-recipe-keyword-match --query "<query>" --response recipe-keyword-match.json` now cover dashboards, tabular reports, data-entry flows, pivot reports, custom XML workflows, workbook maintenance, and drawing/signature workflows. Each published task entry also carries `starter.requestFileName`, `starter.workspaceMode`, and `starter.requiredWorkspacePaths`, so callers can stage the right workspace before printing or executing the starter. Recipe output is one curated executable starter request validated from the packaged artifact; keyword-match responses stay compact, are weighted by typed goal/artifact metadata first, point at the matched task id plus why it ranked, and fall back to the published intent-tag vocabulary when the query does not match any recipe.
+`--doctor-request` is the fast preflight path for request shape, execution-mode limits, source-backed input resolution, and existing workbook-source accessibility; it does not mutate a workbook and returns every independently provable blocking problem it can isolate safely in one report, including multiple malformed steps in one pass. `--response <path>` applies across execution, doctoring, and discovery, so primary outputs can be written directly to files during artifact, shell, or Docker workflows. When the request JSON arrives on stdin instead of `--request <path>`, pass `--execution-root <path>` so request-owned relative paths resolve from one explicit directory. Execution scratch is separate: without `--temp-root`, GridGrind creates one private per-run scratch directory under the OS temporary-file root; with `--temp-root <path>`, it creates that private scratch directory under the supplied parent path, and best-effort cleanup removes it on normal command completion. Encrypted OOXML plaintext temp workbooks always stay in private OS temp rather than the mounted work directory or the `--temp-root` parent.
+Mount the host working directory at `/work` and rely on the image's prepared `WORKDIR` so relative CLI paths resolve inside that mounted directory without a separate `-w` override. Pass `--user "$(id -u):$(id -g)"` on ordinary bind mounts so response and workbook files stay owned by the calling host user; omit it only when Docker Desktop or a rootless runtime already remaps bind-mount ownership for you. The mounted-directory execution pattern is
+`docker run --rm -i --user "$(id -u):$(id -g)" -v "$(pwd)":/work ghcr.io/resoltico/gridgrind:latest --request request.json --response response.json`.
+This exact command shape is re-verified by the Docker smoke gate: the same bind-mounted run
+without `--user` must either succeed cleanly on an ownership-remapping runtime or fail cleanly
+with `IO_ERROR` before the mounted write flow completes; Docker Desktop or rootless runtimes that
+already remap bind-mount ownership may allow both forms.
 
 ## Canonical Terminology
 
@@ -201,7 +170,7 @@ charts are supported when every plot belongs to one of those families.
 - Java-first authoring without hand-written JSON: [JAVA_AUTHORING.md](./JAVA_AUTHORING.md) and
   [../examples/java-authoring-workflow.java](../examples/java-authoring-workflow.java)
 - Budget walkthrough: [../examples/budget-request.json](../examples/budget-request.json) or
-  `gridgrind --print-example --lookup BUDGET --response budget-request.json`
+  `gridgrind --print-recipe --lookup BUDGET --response budget-request.json`
 - Assertion walkthrough: [../examples/assertion-request.json](../examples/assertion-request.json)
 - Workbook-health walkthrough:
   [../examples/workbook-health-request.json](../examples/workbook-health-request.json)

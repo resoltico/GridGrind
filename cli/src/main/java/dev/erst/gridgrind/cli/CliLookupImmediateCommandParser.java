@@ -8,48 +8,35 @@ import java.util.Optional;
 final class CliLookupImmediateCommandParser {
   private CliLookupImmediateCommandParser() {}
 
-  static CliImmediateCommandParser.Result parseExample(
+  static CliImmediateCommandParser.Result parseRecipe(
       String[] args, int index, Optional<Path> responsePath) {
     String lookupId =
         requireLookupValue(
             args,
             index,
-            "example lookup id",
-            "--print-example requires --lookup and one example id value");
-    int nextIndex = consumeLookupSequence(args, index, "example lookup id").nextIndex();
+            "recipe lookup id",
+            "--print-recipe requires --lookup and one recipe id value");
+    int nextIndex = consumeLookupSequence(args, index, "recipe lookup id").nextIndex();
     return new CliImmediateCommandParser.Result(
-        new CliCommand.PrintExample(lookupId, responsePath), nextIndex, "--print-example");
+        new CliCommand.PrintRecipe(lookupId, responsePath), nextIndex, "--print-recipe");
   }
 
-  static CliImmediateCommandParser.Result parseTaskCatalog(
+  static CliImmediateCommandParser.Result parseRecipeCatalog(
       String[] args, int index, Optional<Path> responsePath) {
-    LookupSequence lookupSequence = consumeLookupSequence(args, index, "task lookup id");
+    LookupSequence lookupSequence = consumeLookupSequence(args, index, "recipe lookup id");
     return new CliImmediateCommandParser.Result(
-        new CliCommand.PrintTaskCatalog(lookupSequence.lookupId(), responsePath),
+        new CliCommand.PrintRecipeCatalog(lookupSequence.lookupId(), responsePath),
         lookupSequence.nextIndex(),
-        "--print-task-catalog");
+        "--print-recipe-catalog");
   }
 
-  static CliImmediateCommandParser.Result parseTaskPlan(
-      String[] args, int index, Optional<Path> responsePath) {
-    String lookupId =
-        requireLookupValue(
-            args,
-            index,
-            "task lookup id",
-            "--print-task-plan requires --lookup and one task id value");
-    int nextIndex = consumeLookupSequence(args, index, "task lookup id").nextIndex();
-    return new CliImmediateCommandParser.Result(
-        new CliCommand.PrintTaskPlan(lookupId, responsePath), nextIndex, "--print-task-plan");
-  }
-
-  static CliImmediateCommandParser.Result parseTaskKeywordMatch(
+  static CliImmediateCommandParser.Result parseRecipeKeywordMatch(
       String[] args, int index, Optional<Path> responsePath) {
     QuerySequence querySequence = consumeQuerySequence(args, index);
     return new CliImmediateCommandParser.Result(
-        new CliCommand.PrintTaskKeywordMatch(querySequence.query().orElseThrow(), responsePath),
+        new CliCommand.PrintRecipeKeywordMatch(querySequence.query().orElseThrow(), responsePath),
         querySequence.nextIndex(),
-        "--print-task-keyword-match");
+        "--print-recipe-keyword-match");
   }
 
   private static String requireLookupValue(
@@ -94,7 +81,7 @@ final class CliLookupImmediateCommandParser {
     }
     if (query.isEmpty()) {
       throw new CliArgumentsException(
-          "--query", "--print-task-keyword-match requires --query and one query value");
+          "--query", "--print-recipe-keyword-match requires --query and one query value");
     }
     return new QuerySequence(query, nextIndex);
   }

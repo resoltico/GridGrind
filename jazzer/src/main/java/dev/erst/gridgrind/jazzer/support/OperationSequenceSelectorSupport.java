@@ -2,6 +2,8 @@ package dev.erst.gridgrind.jazzer.support;
 
 import dev.erst.gridgrind.contract.dto.ExecutionPolicyInput;
 import dev.erst.gridgrind.contract.selector.CellSelector;
+import dev.erst.gridgrind.contract.selector.RangeSelector;
+import java.util.List;
 
 /** Shared selector, span, and execution-policy helpers for Jazzer operation generation. */
 final class OperationSequenceSelectorSupport {
@@ -37,6 +39,16 @@ final class OperationSequenceSelectorSupport {
 
   static String nextFormulaTargetAddress(GridGrindFuzzData data, boolean validAddress) {
     return validAddress ? "C2" : FuzzDataDecoders.nextNonBlankCellAddress(data, false);
+  }
+
+  static RangeSelector nextConditionalFormattingTarget(
+      GridGrindFuzzData data, String sheetName, boolean validRange) {
+    String firstRange = validRange ? "A1:A4" : FuzzDataDecoders.nextNonBlankRange(data, false);
+    if (data.consumeBoolean()) {
+      return new RangeSelector.ByRange(sheetName, firstRange);
+    }
+    String secondRange = validRange ? "C1:C4" : FuzzDataDecoders.nextNonBlankRange(data, false);
+    return new RangeSelector.ByRanges(sheetName, List.of(firstRange, secondRange));
   }
 
   static IndexSpan nextIndexSpan(GridGrindFuzzData data, int upperBound) {

@@ -23,30 +23,18 @@ final class CliExecutionCommandParser {
 
   static CliArgumentsException unknownArgumentException(String argument) {
     return switch (argument) {
-      case "--example" ->
-          new CliArgumentsException(
-              "--example",
-              "--example is no longer part of the CLI grammar; use --print-example --lookup <id>");
-      case "--task" ->
-          new CliArgumentsException(
-              "--task", "--task is no longer part of the CLI grammar; use --lookup instead");
       case "--query" ->
           new CliArgumentsException(
               "--query",
-              "--query requires --print-task-keyword-match and one natural-language query value");
+              "--query requires --print-recipe-keyword-match and one natural-language query value");
       case "--lookup" ->
           new CliArgumentsException(
               "--lookup",
-              "--lookup requires --print-example, --print-task-catalog, --print-task-plan,"
-                  + " or --print-protocol-catalog and one lookup id value");
+              "--lookup requires --print-recipe, --print-recipe-catalog, or"
+                  + " --print-protocol-catalog and one lookup id value");
       case "--search" ->
           new CliArgumentsException(
               "--search", "--search requires --print-protocol-catalog and one search text value");
-      case "--full" ->
-          new CliArgumentsException(
-              "--full",
-              "--full is no longer part of the CLI grammar; use --print-protocol-catalog"
-                  + " --lookup <lookup-id> for one scoped catalog payload");
       default -> new CliArgumentsException(argument, "Unknown argument: " + argument);
     };
   }

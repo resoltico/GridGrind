@@ -14,7 +14,8 @@
     "security": {
       "encryption": {
         "password": "GridGrind-2026",
-        "mode": "AGILE"
+        "cipher": "AES_256",
+        "hash": "SHA_512"
       },
       "signature": {
         "pkcs12Path": "fixtures/signing-material.p12",

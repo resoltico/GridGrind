@@ -7,7 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import dev.erst.gridgrind.contract.action.CellMutationAction;
 import dev.erst.gridgrind.contract.action.StructuredMutationAction;
 import dev.erst.gridgrind.contract.assertion.*;
-import dev.erst.gridgrind.contract.dto.ConditionalFormattingBlockInput;
+import dev.erst.gridgrind.contract.dto.ConditionalFormattingDefinitionInput;
 import dev.erst.gridgrind.contract.dto.ConditionalFormattingRuleInput;
 import dev.erst.gridgrind.contract.dto.NamedRangeScope;
 import dev.erst.gridgrind.contract.dto.NamedRangeTarget;
@@ -106,8 +106,7 @@ class ExecutionDiagnosticFieldsTest {
                 "BudgetTable", "Budget", "A1:B4", false, new TableStyleInput.None()));
     StructuredMutationAction.SetConditionalFormatting conditionalFormatting =
         new StructuredMutationAction.SetConditionalFormatting(
-            new ConditionalFormattingBlockInput(
-                List.of("B2:B5"),
+            new ConditionalFormattingDefinitionInput(
                 List.of(
                     new ConditionalFormattingRuleInput.FormulaRule(
                         "B2>0", false, Optional.empty()))));
@@ -125,7 +124,7 @@ class ExecutionDiagnosticFieldsTest {
         new ProblemContextWorkbookSurfaces.ProblemLocation.Range("Budget", "A1:B4"),
         ExecutionDiagnosticFields.locationFor(table));
     assertEquals(
-        new ProblemContextWorkbookSurfaces.ProblemLocation.RangeOnly("B2:B5"),
+        ProblemContextWorkbookSurfaces.ProblemLocation.unknown(),
         ExecutionDiagnosticFields.locationFor(conditionalFormatting));
     assertEquals(
         ProblemContextWorkbookSurfaces.ProblemLocation.unknown(),

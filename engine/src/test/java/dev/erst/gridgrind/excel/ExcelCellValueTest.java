@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import org.apache.poi.ss.usermodel.FormulaError;
 import org.junit.jupiter.api.Test;
 
 /** Tests for ExcelCellValue sealed interface record construction. */
@@ -44,9 +45,23 @@ class ExcelCellValueTest {
     assertThrows(NullPointerException.class, () -> ExcelCellValue.text(null));
     assertThrows(NullPointerException.class, () -> ExcelCellValue.error(null));
     assertThrows(IllegalArgumentException.class, () -> ExcelCellValue.error(" "));
+    assertThrows(IllegalArgumentException.class, () -> ExcelCellValue.error("#CIRCULAR_REF!"));
+    assertThrows(
+        IllegalArgumentException.class, () -> ExcelCellValue.error("#FUNCTION_NOT_IMPLEMENTED!"));
+    assertThrows(IllegalArgumentException.class, () -> ExcelCellValue.error("~CIRCULAR~REF~"));
     assertThrows(NullPointerException.class, () -> ExcelCellValue.date(null));
     assertThrows(NullPointerException.class, () -> ExcelCellValue.dateTime(null));
     assertThrows(NullPointerException.class, () -> ExcelCellValue.formula(null));
     assertThrows(IllegalArgumentException.class, () -> ExcelCellValue.formula(" "));
+  }
+
+  @Test
+  void rejectsPoiFormulaErrorsThatHaveNoPublishedGridGrindWireLiteral() {
+    IllegalArgumentException unsupported =
+        assertThrows(
+            IllegalArgumentException.class,
+            () -> ExcelCellErrorLiteralSupport.toReportedWireValue(FormulaError._NO_ERROR));
+
+    assertEquals("_NO_ERROR is not a publishable cell error", unsupported.getMessage());
   }
 }

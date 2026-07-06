@@ -9,8 +9,12 @@ import dev.erst.gridgrind.contract.dto.WorkbookPlan;
 import dev.erst.gridgrind.engine.api.GridGrindEngine;
 import dev.erst.gridgrind.engine.api.GridGrindJournalSink;
 import dev.erst.gridgrind.engine.api.GridGrindRequestInputs;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Comparator;
 import java.util.List;
+import java.util.stream.Stream;
 
 /** Compile-verified example showing the Java-first authoring API over the canonical contract. */
 final class JavaAuthoringWorkflowExample {
@@ -65,11 +69,26 @@ final class JavaAuthoringWorkflowExample {
 
   /** Executes the authored workflow in-process against the canonical executor. */
   public static GridGrindResponse run(Path workspace) throws Exception {
-    return GridGrindEngine.requestExecutor()
-        .execute(
-            build(workspace).toPlan(),
-            new GridGrindRequestInputs(
-                workspace, workspace.resolve(".gridgrind").resolve("tmp")),
-            GridGrindJournalSink.NOOP);
+    Path tempRoot = Files.createTempDirectory("gridgrind-java-");
+    try {
+      return GridGrindEngine.requestExecutor()
+          .execute(
+              build(workspace).toPlan(),
+              new GridGrindRequestInputs(workspace, tempRoot),
+              GridGrindJournalSink.NOOP);
+    } finally {
+      deleteTreeIfExists(tempRoot);
+    }
+  }
+
+  private static void deleteTreeIfExists(Path root) throws IOException {
+    if (!Files.exists(root)) {
+      return;
+    }
+    try (Stream<Path> paths = Files.walk(root)) {
+      for (Path path : paths.sorted(Comparator.reverseOrder()).toList()) {
+        Files.deleteIfExists(path);
+      }
+    }
   }
 }

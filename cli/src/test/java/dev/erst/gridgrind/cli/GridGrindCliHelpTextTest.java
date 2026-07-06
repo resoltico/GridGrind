@@ -4,7 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import dev.erst.gridgrind.cli.discovery.CliFailureReport;
+import dev.erst.gridgrind.cli.discovery.CliDiagnostic;
 import dev.erst.gridgrind.cli.discovery.CliHelpReport;
 import dev.erst.gridgrind.cli.discovery.CliLicenseReport;
 import dev.erst.gridgrind.cli.discovery.CliVersionReport;
@@ -246,12 +246,12 @@ class GridGrindCliHelpTextTest extends GridGrindCliTestSupport {
   }
 
   private static void assertOverviewHelpSurface(String overview) {
+    String normalizedOverview = overview.replaceAll("\\s+", " ");
     assertTrue(overview.contains("Primary Commands:"));
     assertTrue(overview.contains("Command Rules:"));
     assertTrue(overview.contains("Next Commands:"));
-    assertTrue(overview.contains("--print-example --lookup <id>"));
-    assertTrue(overview.contains("--print-task-plan --lookup <id>"));
-    assertTrue(overview.contains("--print-task-keyword-match --query <text>"));
+    assertTrue(overview.contains("--print-recipe --lookup <id>"));
+    assertTrue(overview.contains("--print-recipe-keyword-match --query <text>"));
     assertTrue(overview.contains("--print-protocol-catalog --lookup <lookup-id>"));
     assertFalse(overview.contains("--print-protocol-catalog --lookup <id>|<group>:<id>"));
     assertTrue(overview.contains("--print-protocol-catalog --search <text>"));
@@ -260,14 +260,17 @@ class GridGrindCliHelpTextTest extends GridGrindCliTestSupport {
     assertTrue(overview.contains("--help, -h"));
     assertTrue(overview.contains("--version"));
     assertTrue(overview.contains("--license"));
-    assertTrue(overview.contains("--print-task-catalog [--lookup <id>]"));
+    assertTrue(overview.contains("--print-recipe-catalog [--lookup <id>]"));
     assertTrue(overview.contains("--help-protocol"));
     assertTrue(overview.contains("--help-guidance"));
     assertTrue(overview.contains("Use --format structured"));
     assertTrue(overview.contains("Use --pretty"));
     assertTrue(overview.contains("--pretty"));
-    assertTrue(overview.contains("CLI argument errors and request-content failure reports"));
+    assertTrue(overview.contains("CLI diagnostics and request-content diagnostics"));
     assertTrue(overview.contains("structured JSON on stderr"));
+    assertTrue(
+        normalizedOverview.contains(
+            "transport block to name the persisted file or stdout fallback channel"));
     assertTrue(overview.contains("executed responses stay on stdout."));
     assertTrue(overview.contains("docs/QUICK_REFERENCE.md"));
     assertFalse(overview.contains("Minimal Valid Request:"));
@@ -283,9 +286,8 @@ class GridGrindCliHelpTextTest extends GridGrindCliTestSupport {
     assertTrue(protocol.contains("File Workflow:"));
     assertTrue(protocol.contains("Coordinate Systems:"));
     assertFalse(protocol.contains("Minimal Valid Request:"));
-    assertTrue(protocol.contains("--print-example --lookup <id>"));
-    assertTrue(protocol.contains("--print-task-plan --lookup <id>"));
-    assertTrue(protocol.contains("--print-task-keyword-match --query <text>"));
+    assertTrue(protocol.contains("--print-recipe --lookup <id>"));
+    assertTrue(protocol.contains("--print-recipe-keyword-match --query <text>"));
     assertTrue(protocol.contains("--print-protocol-catalog --lookup <lookup-id>"));
     assertTrue(protocol.contains("--execution-root <path>"));
     assertTrue(protocol.contains("--temp-root <path>"));
@@ -297,8 +299,15 @@ class GridGrindCliHelpTextTest extends GridGrindCliTestSupport {
     assertTrue(
         normalizedProtocol.contains(
             "execution may include any subset of execution.mode, execution.journal, and execution.calculation"));
+    assertTrue(
+        normalizedProtocol.contains(
+            "The bare --print-protocol-catalog command emits only the compact index."));
     assertTrue(protocol.contains("projectedByFacets"));
+    assertTrue(protocol.contains("noteRefs"));
     assertTrue(protocol.contains("enumValueDocs"));
+    assertTrue(
+        normalizedProtocol.contains("Scoped --lookup payloads may annotate conditional fields"));
+    assertTrue(normalizedProtocol.contains("publish shared notes"));
     assertTrue(protocol.contains("STREAMING_WRITE"));
     assertTrue(protocol.contains("formulaEnvironment.missingWorkbookPolicy"));
     assertTrue(protocol.contains("USE_CACHED_VALUE"));
@@ -306,8 +315,10 @@ class GridGrindCliHelpTextTest extends GridGrindCliTestSupport {
     assertTrue(protocol.contains("GET_CELLS addresses"));
     assertTrue(protocol.contains("EVALUATE_TARGETS requires strategy.cells[]"));
     assertTrue(protocol.contains("stepId must be unique within steps[]"));
-    assertTrue(normalizedProtocol.contains("CLI argument errors and request-content failure"));
-    assertTrue(normalizedProtocol.contains("reports stay on stderr"));
+    assertTrue(normalizedProtocol.contains("CLI diagnostics and request-content diagnostics"));
+    assertTrue(normalizedProtocol.contains("stay on stderr"));
+    assertTrue(normalizedProtocol.contains("structured stderr CLI diagnostic"));
+    assertTrue(normalizedProtocol.contains("transport block names where the primary payload went"));
     assertTrue(
         normalizedProtocol.contains(
             "executed GridGrindResponse payloads stay on stdout even when status=FAILED."));
@@ -324,8 +335,12 @@ class GridGrindCliHelpTextTest extends GridGrindCliTestSupport {
     assertTrue(guidance.contains("Docker Example:"));
     assertFalse(guidance.contains("{{CONTAINER_TAG}}"));
     assertTrue(guidance.contains("Discovery:"));
-    assertTrue(guidance.contains("Built-in generated examples catalog entries:"));
-    assertTrue(guidance.contains("Print one built-in example:"));
+    assertTrue(guidance.contains("Unified recipe catalog entries:"));
+    assertTrue(guidance.contains("Print one recipe:"));
+    assertTrue(guidance.contains("gridgrind --print-recipe --lookup"));
+    assertTrue(
+        guidance.contains("The bare --print-protocol-catalog output is intentionally compact:"));
+    assertTrue(guidance.contains("Shared reusable notes such as request-owned path resolution"));
     assertFalse(guidance.contains("starter scaffolds"));
     assertFalse(guidance.contains("Authoritative Contract Scope:"));
     assertFalse(guidance.contains("Minimal Valid Request:"));
@@ -391,22 +406,19 @@ class GridGrindCliHelpTextTest extends GridGrindCliTestSupport {
                 stdout,
                 stderr);
 
-    CliFailureReport failure =
-        GridGrindCliJson.readBytes(stdout.toByteArray(), CliFailureReport.class);
+    CliDiagnostic failure = GridGrindCliJson.readBytes(stdout.toByteArray(), CliDiagnostic.class);
+    CliDiagnostic stderrDiagnostic =
+        GridGrindCliJson.readBytes(stderr.toByteArray(), CliDiagnostic.class);
 
     assertEquals(1, exitCode);
-    assertEquals(
-        "Could not write response file "
-            + responsePath.toAbsolutePath()
-            + ": already exists; GridGrind never replaces an existing response file implicitly."
-            + " Wrote the structured failure report to stdout instead."
-            + System.lineSeparator(),
-        stderr.toString(StandardCharsets.UTF_8));
-    assertEquals(GridGrindProblemCode.IO_ERROR, failure.code());
+    assertEquals(failure, stderrDiagnostic);
+    assertEquals(GridGrindProblemCode.IO_ERROR, failure.problem().code());
     assertEquals("version", failure.command());
-    assertEquals(java.util.Optional.of("--response"), failure.argument());
+    assertEquals(
+        java.util.Optional.of(responsePath.toAbsolutePath().toString()),
+        writeResponseContext(failure).responsePath());
     assertTrue(
-        failure.message().contains(responsePath.toAbsolutePath().toString()),
+        failure.problem().message().contains(responsePath.toAbsolutePath().toString()),
         "fallback report should point at the rejected response path");
     assertEquals(
         "sentinel\n", Files.readString(responsePath), "existing response file must stay untouched");
@@ -440,9 +452,19 @@ class GridGrindCliHelpTextTest extends GridGrindCliTestSupport {
 
   @Test
   void guidanceHelpDocumentsDockerWorkdirUsage() {
-    String help = GridGrindCliProductInfo.helpText(CliCommand.HelpTopic.GUIDANCE, "1.0.0");
+    String version = "1.0.0";
+    String help = GridGrindCliProductInfo.helpText(CliCommand.HelpTopic.GUIDANCE, version);
+    String normalizedHelp = help.replace("\\", "").replaceAll("\\s+", " ");
+    String expectedCommand =
+        GridGrindContainerRuntimeText.dockerMountedWorkdirExecutionCommand(
+                GridGrindCliProductInfo.containerImageRef(version))
+            .replaceAll("\\s+", " ");
 
+    assertTrue(help.contains(GridGrindContainerRuntimeText.dockerMountedWorkdirUserArgument()));
     assertTrue(help.contains(GridGrindContainerRuntimeText.dockerMountedWorkdirVolumeArgument()));
+    assertTrue(
+        normalizedHelp.contains(expectedCommand),
+        "guidance help must keep the mounted-directory Docker command in canonical order");
     assertFalse(help.contains("-w /workdir"));
     assertTrue(help.contains("--request request.json"));
     assertTrue(help.contains("--response response.json"));

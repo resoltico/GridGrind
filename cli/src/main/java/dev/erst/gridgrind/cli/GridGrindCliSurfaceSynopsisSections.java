@@ -1,7 +1,9 @@
 package dev.erst.gridgrind.cli;
 
-import dev.erst.gridgrind.contract.catalog.GridGrindContractText;
 import dev.erst.gridgrind.contract.catalog.GridGrindExecutionModeMetadata;
+import dev.erst.gridgrind.contract.catalog.GridGrindInspectionContractText;
+import dev.erst.gridgrind.contract.catalog.GridGrindOoxmlWriteEncryptionContractText;
+import dev.erst.gridgrind.contract.catalog.GridGrindRequestSurfaceContractText;
 import java.util.List;
 
 /** Synopsis-first CLI help sections. */
@@ -21,17 +23,15 @@ final class GridGrindCliSurfaceSynopsisSections {
             "gridgrind --doctor-request --execution-root <path> [--temp-root <path>]"
                 + " [--response <path>] [--pretty] < request.json",
             "gridgrind --print-request-template [--response <path>] [--pretty]",
-            "gridgrind --print-example-catalog [--response <path>] [--pretty]",
-            "gridgrind --print-task-catalog [--lookup <id>] [--response <path>] [--pretty]",
-            "gridgrind --print-task-plan --lookup <id> [--response <path>] [--pretty]",
-            "gridgrind --print-task-keyword-match --query <text> [--response <path>]"
+            "gridgrind --print-recipe --lookup <id> [--response <path>] [--pretty]",
+            "gridgrind --print-recipe-catalog [--lookup <id>] [--response <path>] [--pretty]",
+            "gridgrind --print-recipe-keyword-match --query <text> [--response <path>]"
                 + " [--pretty]",
             "gridgrind --print-protocol-catalog [--response <path>] [--pretty]",
             "gridgrind --print-protocol-catalog --lookup <lookup-id> [--response"
                 + " <path>] [--pretty]",
             "gridgrind --print-protocol-catalog --search <text> [--response <path>]"
                 + " [--pretty]",
-            "gridgrind --print-example --lookup <id> [--response <path>] [--pretty]",
             "gridgrind --help | -h | help [--response <path>] [--format <text|structured>]"
                 + " [--pretty]",
             "gridgrind --help-protocol | help-protocol [--response <path>] [--format"
@@ -51,9 +51,9 @@ final class GridGrindCliSurfaceSynopsisSections {
             new CliSurface.WorkflowEntry(
                 "Discover What To Send",
                 List.of(
-                    "List shipped task recipes: gridgrind --print-task-catalog"
-                        + " --response tasks.json",
-                    "Get one executable starter scenario: gridgrind --print-task-plan"
+                    "List every built-in recipe: gridgrind --print-recipe-catalog"
+                        + " --response recipes.json",
+                    "Get one executable starter scenario: gridgrind --print-recipe"
                         + " --lookup DASHBOARD --response dashboard-request.json",
                     "Get the compact protocol-catalog index: gridgrind"
                         + " --print-protocol-catalog --response protocol-index.json",
@@ -68,12 +68,11 @@ final class GridGrindCliSurfaceSynopsisSections {
                     "Start from the minimal request: gridgrind --print-request-template"
                         + " --response request.json",
                     "For stdin-driven execution or doctoring, pass one explicit"
-                        + " --execution-root so request-owned paths and temp files"
-                        + " stay invocation-owned instead of ambient.",
-                    "Use --print-task-plan --lookup <id> when you want one executable"
-                        + " starter scenario instead of building from scratch.",
-                    "Or copy one built-in example: gridgrind --print-example"
-                        + " --lookup WORKBOOK_HEALTH --response example.json",
+                        + " --execution-root so request-owned paths resolve from one"
+                        + " explicit invocation directory.",
+                    "Use --print-recipe --lookup <id> when you want one shipped"
+                        + " executable example or task-starter scenario instead of"
+                        + " building from scratch.",
                     "Lint before executing: gridgrind --doctor-request --request"
                         + " request.json --response doctor.json")),
             new CliSurface.WorkflowEntry(
@@ -127,7 +126,7 @@ final class GridGrindCliSurfaceSynopsisSections {
             new CliSurface.DefinitionEntry(
                 "Request JSON size",
                 "request JSON must not exceed 16 MiB ("
-                    + GridGrindContractText.requestDocumentLimitBytes()
+                    + GridGrindRequestSurfaceContractText.requestDocumentLimitBytes()
                     + " bytes); authored text and binary payloads may instead use"
                     + " UTF8_FILE, FILE, or STANDARD_INPUT sources."),
             new CliSurface.DefinitionEntry(
@@ -135,6 +134,8 @@ final class GridGrindCliSurfaceSynopsisSections {
             new CliSurface.DefinitionEntry(
                 "STREAMING_WRITE mode",
                 GridGrindExecutionModeMetadata.streamingWrite().catalogSummary()),
+            new CliSurface.DefinitionEntry(
+                "OOXML write encryption", GridGrindOoxmlWriteEncryptionContractText.limitSummary()),
             new CliSurface.DefinitionEntry(
                 "Column widthCharacters", "authored widthCharacters > 0 and <= 255 (Excel limit)."),
             new CliSurface.DefinitionEntry(
@@ -192,8 +193,10 @@ final class GridGrindCliSurfaceSynopsisSections {
                     + " TEMPORAL facet reveals DATE / TIME / DATE_TIME semantics when that"
                     + " distinction matters."),
             new CliSurface.DefinitionEntry(
-                "Formula authoring", GridGrindContractText.formulaAuthoringLimitSummary()),
+                "Formula authoring",
+                GridGrindInspectionContractText.formulaAuthoringLimitSummary()),
             new CliSurface.DefinitionEntry(
-                "Loaded formula support", GridGrindContractText.loadedFormulaSupportSummary())));
+                "Loaded formula support",
+                GridGrindInspectionContractText.loadedFormulaSupportSummary())));
   }
 }

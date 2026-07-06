@@ -35,26 +35,24 @@ From a repository checkout, the shortest reliable path is:
 
 ```bash
 ./gradlew :cli:installShadowDist
-GRIDGRIND=./cli/build/install/gridgrind/bin/gridgrind
-"$GRIDGRIND" --help
-"$GRIDGRIND" --print-example --lookup BUDGET --response budget-request.json
-"$GRIDGRIND" --doctor-request --request budget-request.json --response doctor-report.json
-"$GRIDGRIND" --request budget-request.json --response response.json
+export PATH="$(pwd)/cli/build/install/gridgrind/bin:$PATH"
+gridgrind --help
+gridgrind --print-recipe --lookup BUDGET --response budget-request.json
+gridgrind --doctor-request --request budget-request.json --response doctor-report.json
+gridgrind --request budget-request.json --response response.json
 ```
 
-In the snippets below, read `gridgrind` as the entry point you actually have: the packaged repo
-launcher (`./cli/build/install/gridgrind/bin/gridgrind`), the `bin/gridgrind` launcher from a
-release archive, or `java -jar gridgrind.jar` if you downloaded the standalone JAR.
+The rest of this README uses `gridgrind` for the active entry point. From a repository checkout,
+the `export PATH=...` line above points that name at the packaged launcher. From a release
+archive, add its `bin/` directory to `PATH`; from the standalone JAR, replace `gridgrind` with
+`java -jar gridgrind.jar`.
 
 For first contact, prefer `--request <path>` over stdin. Stdin-driven execution and doctoring
 require `--execution-root <path>` so request-owned paths resolve from one explicit invocation root.
 `--doctor-request` returns every independently provable blocking problem it can isolate safely before any workbook mutation or save attempt, including multiple malformed steps in one pass when their failures are independent.
 
-If you want the repository JAR surface directly, run `./gradlew :cli:shadowJar` and replace
-`gridgrind` below with `java -jar cli/build/libs/gridgrind.jar`.
-
-If you already have a release artifact, use the unpacked `bin/gridgrind` launcher from the zip/tar
-distribution, or invoke the standalone `gridgrind.jar` with `java -jar gridgrind.jar`.
+If you want the repository JAR surface directly, run `./gradlew :cli:shadowJar` and invoke
+`java -jar cli/build/libs/gridgrind.jar ...` instead of `gridgrind ...`.
 
 If you want the container surface from a repository checkout, the root Dockerfile now builds the
 packaged runtime image on its own:
@@ -70,9 +68,20 @@ Fast Docker first-contact:
 docker run --pull=always --rm ghcr.io/resoltico/gridgrind:latest --help
 ```
 
-For file-producing container runs, mount your workspace at `/work` and let the image's prepared
-`WORKDIR` resolve relative request and response paths from there; you do not need a separate `-w`
-override.
+For file-producing container runs, mount your workspace at `/work`, pass
+`--user "$(id -u):$(id -g)"` on ordinary bind mounts so written files stay owned by your host
+user, and let the image's prepared `WORKDIR` resolve relative request and response paths from
+there; omit `--user` only when Docker Desktop or a rootless runtime already remaps bind-mount
+ownership for you.
+
+```bash
+docker run --pull=always --rm -i \
+  --user "$(id -u):$(id -g)" \
+  -v "$(pwd)":/work \
+  ghcr.io/resoltico/gridgrind:latest \
+  --request request.json \
+  --response response.json
+```
 
 ## Find The Right Starting Point
 
@@ -80,20 +89,20 @@ GridGrind can print valid starting material instead of making you invent request
 
 ```bash
 gridgrind --print-request-template --response request.json
-gridgrind --print-example-catalog --response examples.json
-gridgrind --print-task-catalog --response tasks.json
-gridgrind --print-task-plan --lookup DASHBOARD --response dashboard-request.json
-gridgrind --print-task-keyword-match --query "monthly sales dashboard" --response task-match.json
+gridgrind --print-recipe-catalog --response recipes.json
+gridgrind --print-recipe-catalog --lookup DASHBOARD --response dashboard-detail.json
+gridgrind --print-recipe --lookup DASHBOARD --response dashboard-request.json
+gridgrind --print-recipe-keyword-match --query "monthly sales dashboard" --response task-match.json
 gridgrind --print-protocol-catalog --response protocol-index.json
 gridgrind --print-protocol-catalog --search pivot --response pivot-search.json
 gridgrind --print-protocol-catalog --lookup mutationActionTypes:SET_CELL --response set-cell.json
 gridgrind --print-protocol-catalog --lookup plainTypes:cellReadProjectionType --response cell-read-projection.json
 ```
 
-The example and task catalogs publish `requestFileName`, `workspaceMode`, and
-`requiredWorkspacePaths`, so you can tell whether a printed request is self-contained before you
-try to run it. Shipped save-producing examples already use `SAVE_AS.ifExists=REPLACE`, so rerunning
-them does not depend on cleaning the workspace first.
+The compact recipe catalog publishes `requestFileName`, `workspaceMode`, and
+`requiredWorkspacePaths`, while `--print-recipe-catalog --lookup <id>` adds the exact runnable
+request profile for that recipe. Shipped save-producing examples already use
+`SAVE_AS.ifExists=REPLACE`, so rerunning them does not depend on cleaning the workspace first.
 
 The bare `--print-protocol-catalog` output is the compact first-contact index. Use
 `--print-protocol-catalog --search <text>` when you know the concept but not the exact id, follow
@@ -123,8 +132,8 @@ The safest way to start is to ask GridGrind to emit a valid request for you:
 
 ```bash
 gridgrind --print-request-template --response request.json
-gridgrind --print-example --lookup BUDGET --response budget-request.json
-gridgrind --print-task-plan --lookup DASHBOARD --response dashboard-request.json
+gridgrind --print-recipe --lookup BUDGET --response budget-request.json
+gridgrind --print-recipe --lookup DASHBOARD --response dashboard-request.json
 ```
 
 ## Documentation

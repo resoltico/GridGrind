@@ -8,6 +8,9 @@ import dev.erst.gridgrind.excel.foundation.ExcelOoxmlEncryptionMode;
 import dev.erst.gridgrind.excel.foundation.ExcelOoxmlHashAlgorithm;
 import dev.erst.gridgrind.excel.foundation.ExcelOoxmlSignatureDigestAlgorithm;
 import dev.erst.gridgrind.excel.foundation.ExcelOoxmlSignatureState;
+import dev.erst.gridgrind.excel.foundation.ExcelOoxmlWriteCipher;
+import dev.erst.gridgrind.excel.foundation.ExcelOoxmlWriteHash;
+import dev.erst.gridgrind.excel.ooxml.ExcelOoxmlEncryptionOptions;
 import dev.erst.gridgrind.excel.ooxml.ExcelOoxmlEncryptionSnapshot;
 import dev.erst.gridgrind.excel.ooxml.ExcelOoxmlOpenOptions;
 import dev.erst.gridgrind.excel.ooxml.ExcelOoxmlPackageEncryptionSupport;
@@ -68,11 +71,12 @@ class ExcelOoxmlPackageSecurityCoverageTest {
 
     OoxmlSecurityTestSupport.EncryptedWorkbook encryptedWorkbook =
         OoxmlSecurityTestSupport.createEncryptedWorkbook(directory.resolve("encrypted"));
-    Path[] decryptedPath = new Path[1];
+    Path explicitTempRoot = directory.resolve("caller-scratch");
+    AtomicInteger tempFilesCreated = new AtomicInteger();
     WorkbookTempFileFactory tempFileFactory =
         (prefix, suffix) -> {
-          decryptedPath[0] = ExcelTempFiles.createManagedTempFile(prefix, suffix);
-          return decryptedPath[0];
+          tempFilesCreated.incrementAndGet();
+          return ExcelTempFiles.createManagedTempFile(explicitTempRoot, prefix, suffix);
         };
 
     try (ExcelOoxmlPackageSecuritySupport.ReadableWorkbook readableWorkbook =
@@ -88,9 +92,14 @@ class ExcelOoxmlPackageSecurityCoverageTest {
       assertInstanceOf(
           ExcelOoxmlEncryptionSnapshot.Encrypted.class,
           readableWorkbook.packageSecurity().encryption());
-      assertTrue(Files.exists(decryptedPath[0]));
+      assertTrue(Files.exists(readableWorkbook.workbookPath()));
+      assertFalse(
+          readableWorkbook
+              .workbookPath()
+              .startsWith(explicitTempRoot.toAbsolutePath().normalize()));
     }
-    assertFalse(Files.exists(decryptedPath[0]));
+    assertEquals(0, tempFilesCreated.get());
+    assertTrue(Files.notExists(explicitTempRoot));
 
     Path legacyWorkbookPath =
         ExcelTempFiles.createManagedTempFile("gridgrind-legacy-materialize-", ".xls");
@@ -210,7 +219,8 @@ class ExcelOoxmlPackageSecurityCoverageTest {
     OoxmlSecurityTestSupport.EncryptedWorkbook encryptedWorkbook =
         OoxmlSecurityTestSupport.createEncryptedWorkbook(
             ExcelTempFiles.createManagedTempDirectory("gridgrind-ooxml-materialize-cleanup-"));
-    Path[] decryptedPath = new Path[1];
+    Path explicitTempRoot = encryptedWorkbook.workbookPath().getParent().resolve("caller-scratch");
+    AtomicInteger tempFilesCreated = new AtomicInteger();
 
     InvalidWorkbookPasswordException failure =
         assertThrows(
@@ -220,13 +230,13 @@ class ExcelOoxmlPackageSecurityCoverageTest {
                     encryptedWorkbook.workbookPath(),
                     new ExcelOoxmlOpenOptions.Encrypted("wrong-password"),
                     (prefix, suffix) -> {
-                      decryptedPath[0] = ExcelTempFiles.createManagedTempFile(prefix, suffix);
-                      return decryptedPath[0];
+                      tempFilesCreated.incrementAndGet();
+                      return ExcelTempFiles.createManagedTempFile(explicitTempRoot, prefix, suffix);
                     }));
 
     assertEquals(encryptedWorkbook.workbookPath(), failure.workbookPath());
-    assertNotNull(decryptedPath[0]);
-    assertFalse(Files.exists(decryptedPath[0]));
+    assertEquals(0, tempFilesCreated.get());
+    assertTrue(Files.notExists(explicitTempRoot));
   }
 
   @Test
@@ -354,7 +364,7 @@ class ExcelOoxmlPackageSecurityCoverageTest {
       assertEquals(
           "Encrypted workbook", workbookWithEnvironment.sheet("Encrypted").cells().text("A1"));
     }
-    assertEquals(2, tempFilesCreated.get());
+    assertEquals(0, tempFilesCreated.get());
 
     Path materializedWorkbookPath =
         ExcelTempFiles.createManagedTempFile("gridgrind-materialized-open-", ".xlsx");
@@ -547,6 +557,15 @@ class ExcelOoxmlPackageSecurityCoverageTest {
     assertTrue(signerIdentity.subject().contains("GridGrind Signing Test"));
     assertTrue(signerIdentity.issuer().contains("GridGrind Signing Test"));
     assertFalse(signerIdentity.serialNumberHex().isBlank());
+
+    ExcelOoxmlSignatureSnapshot inspectedSignature =
+        ExcelOoxmlPackageInspectionSupport.inspectPackageSecurity(
+                signedWorkbook.workbookPath(), ExcelOoxmlEncryptionSnapshot.none())
+            .signatures()
+            .getFirst();
+    assertEquals(ExcelOoxmlSignatureState.VALID, inspectedSignature.state());
+    assertTrue(
+        inspectedSignature.signer().orElseThrow().subject().contains("GridGrind Signing Test"));
 
     WorkbookSecurityException signingFailure =
         assertThrows(
@@ -774,6 +793,46 @@ class ExcelOoxmlPackageSecurityCoverageTest {
     assertTrue(OoxmlSecurityTestSupport.signatureValid(resignedWorkbookPath));
   }
 
+  @Test
+  void encryptedSaveKeepsPlaintextTempsOutOfCallerScratchRoot() throws IOException {
+    Path workspace = ExcelTempFiles.createManagedTempDirectory("gridgrind-encrypted-save-private-");
+    Path explicitTempRoot = workspace.resolve("caller-scratch");
+    Path encryptedOutput = workspace.resolve("encrypted-output.xlsx");
+    AtomicInteger tempFilesCreated = new AtomicInteger();
+
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
+      workbook
+          .getOrCreateSheet("Encrypted")
+          .cells()
+          .setCell("A1", ExcelCellValue.text("Encrypted save"));
+      ExcelOoxmlPackageSecuritySupport.saveWorkbook(
+          workbook,
+          encryptedOutput,
+          WorkbookArtifactWriteDisposition.CREATE_NEW,
+          new ExcelOoxmlPersistenceOptions(
+              Optional.of(
+                  new ExcelOoxmlEncryptionOptions(
+                      "secret-password",
+                      ExcelOoxmlWriteCipher.AES_256,
+                      ExcelOoxmlWriteHash.SHA_512)),
+              Optional.empty()),
+          (prefix, suffix) -> {
+            tempFilesCreated.incrementAndGet();
+            return ExcelTempFiles.createManagedTempFile(explicitTempRoot, prefix, suffix);
+          });
+    }
+
+    assertEquals(0, tempFilesCreated.get());
+    assertTrue(Files.notExists(explicitTempRoot));
+    try (ExcelWorkbook reopened =
+        ExcelWorkbooks.open(
+            encryptedOutput,
+            new ExcelOoxmlOpenOptions.Encrypted("secret-password"),
+            ExcelTempFileFactoryTestSupport.tempFileFactory())) {
+      assertEquals("Encrypted save", reopened.sheet("Encrypted").cells().text("A1"));
+    }
+  }
+
   private static void assertCopyDeleteAndEffectiveOptionsBranches(Path sourceWorkbookPath)
       throws IOException {
     ExcelOoxmlPackageFileSupport.copySourceWorkbook(
@@ -797,6 +856,11 @@ class ExcelOoxmlPackageSecurityCoverageTest {
     Files.writeString(nonEmptyDirectory.resolve("child.txt"), "keep");
     ExcelOoxmlPackageFileSupport.deleteIfExists(nonEmptyDirectory);
     assertTrue(Files.exists(nonEmptyDirectory));
+    ExcelOoxmlPackageFileSupport.deleteTreeIfExists(null);
+    ExcelOoxmlPackageFileSupport.deleteTreeIfExists(
+        nonEmptyDirectory.resolve("missing-cleanup-root"));
+    ExcelOoxmlPackageFileSupport.deleteTreeIfExists(nonEmptyDirectory);
+    assertFalse(Files.exists(nonEmptyDirectory));
 
     ExcelOoxmlEncryptionSnapshot encryptedSnapshot =
         new ExcelOoxmlEncryptionSnapshot.Encrypted(
@@ -816,6 +880,94 @@ class ExcelOoxmlPackageSecurityCoverageTest {
                     Optional.empty(),
                     ExcelOoxmlPersistenceOptions.none()));
     assertTrue(missingPasswordFailure.getMessage().contains("verified source password"));
+
+    ExcelOoxmlPersistenceOptions preservedOptions =
+        ExcelOoxmlPackagePersistenceSupport.effectiveOptions(
+            new ExcelOoxmlPackageSecuritySnapshot(encryptedSnapshot, java.util.List.of()),
+            Optional.of("persist-pass"),
+            ExcelOoxmlPersistenceOptions.none());
+    assertEquals(
+        ExcelOoxmlWriteCipher.AES_256, preservedOptions.encryption().orElseThrow().cipher());
+    assertEquals(ExcelOoxmlWriteHash.SHA_512, preservedOptions.encryption().orElseThrow().hash());
+
+    ExcelOoxmlEncryptionSnapshot standardSnapshot =
+        new ExcelOoxmlEncryptionSnapshot.Encrypted(
+            ExcelOoxmlEncryptionMode.STANDARD,
+            ExcelOoxmlCipherAlgorithm.AES_128,
+            ExcelOoxmlHashAlgorithm.SHA_1,
+            ExcelOoxmlChainingMode.ECB,
+            128,
+            16,
+            50_000);
+    IllegalArgumentException standardPreservationFailure =
+        assertThrows(
+            IllegalArgumentException.class,
+            () ->
+                ExcelOoxmlPackagePersistenceSupport.effectiveOptions(
+                    new ExcelOoxmlPackageSecuritySnapshot(standardSnapshot, java.util.List.of()),
+                    Optional.of("persist-pass"),
+                    ExcelOoxmlPersistenceOptions.none()));
+    assertTrue(standardPreservationFailure.getMessage().contains("not auto-preservable"));
+
+    ExcelOoxmlEncryptionSnapshot nonCbcSnapshot =
+        new ExcelOoxmlEncryptionSnapshot.Encrypted(
+            ExcelOoxmlEncryptionMode.AGILE,
+            ExcelOoxmlCipherAlgorithm.AES_256,
+            ExcelOoxmlHashAlgorithm.SHA_512,
+            ExcelOoxmlChainingMode.CFB,
+            256,
+            16,
+            100_000);
+    IllegalArgumentException nonCbcPreservationFailure =
+        assertThrows(
+            IllegalArgumentException.class,
+            () ->
+                ExcelOoxmlPackagePersistenceSupport.effectiveOptions(
+                    new ExcelOoxmlPackageSecuritySnapshot(nonCbcSnapshot, java.util.List.of()),
+                    Optional.of("persist-pass"),
+                    ExcelOoxmlPersistenceOptions.none()));
+    assertTrue(nonCbcPreservationFailure.getMessage().contains("chaining mode"));
+    assertTrue(nonCbcPreservationFailure.getMessage().contains("CFB"));
+
+    ExcelOoxmlEncryptionSnapshot unsupportedCipherSnapshot =
+        new ExcelOoxmlEncryptionSnapshot.Encrypted(
+            ExcelOoxmlEncryptionMode.AGILE,
+            ExcelOoxmlCipherAlgorithm.AES_128,
+            ExcelOoxmlHashAlgorithm.SHA_512,
+            ExcelOoxmlChainingMode.CBC,
+            128,
+            16,
+            100_000);
+    IllegalArgumentException unsupportedCipherPreservationFailure =
+        assertThrows(
+            IllegalArgumentException.class,
+            () ->
+                ExcelOoxmlPackagePersistenceSupport.effectiveOptions(
+                    new ExcelOoxmlPackageSecuritySnapshot(
+                        unsupportedCipherSnapshot, java.util.List.of()),
+                    Optional.of("persist-pass"),
+                    ExcelOoxmlPersistenceOptions.none()));
+    assertTrue(unsupportedCipherPreservationFailure.getMessage().contains("cipher AES_128"));
+
+    ExcelOoxmlEncryptionSnapshot unsupportedHashSnapshot =
+        new ExcelOoxmlEncryptionSnapshot.Encrypted(
+            ExcelOoxmlEncryptionMode.AGILE,
+            ExcelOoxmlCipherAlgorithm.AES_256,
+            ExcelOoxmlHashAlgorithm.SHA_1,
+            ExcelOoxmlChainingMode.CBC,
+            256,
+            16,
+            100_000);
+    IllegalArgumentException unsupportedHashPreservationFailure =
+        assertThrows(
+            IllegalArgumentException.class,
+            () ->
+                ExcelOoxmlPackagePersistenceSupport.effectiveOptions(
+                    new ExcelOoxmlPackageSecuritySnapshot(
+                        unsupportedHashSnapshot, java.util.List.of()),
+                    Optional.of("persist-pass"),
+                    ExcelOoxmlPersistenceOptions.none()));
+    assertTrue(unsupportedHashPreservationFailure.getMessage().contains("hash SHA_1"));
   }
 
   private static void assertSigningMaterialAndAliasBranches(

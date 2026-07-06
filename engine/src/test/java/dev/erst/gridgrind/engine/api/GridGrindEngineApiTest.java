@@ -40,7 +40,7 @@ class GridGrindEngineApiTest {
 
     assertTrue(inputs.workingDirectory().isAbsolute());
     assertTrue(inputs.workingDirectory().endsWith(Path.of("tmp", "inputs")));
-    assertTrue(inputs.tempRoot().endsWith(Path.of("tmp", "inputs", ".gridgrind", "tmp")));
+    assertTrue(inputs.tempRoot().endsWith(Path.of("tmp", "inputs", "temp-root")));
     assertTrue(inputs.hasStandardInput());
     assertArrayEquals(new byte[] {1, 2, 3}, inputs.standardInputBytes().orElseThrow());
   }
@@ -246,15 +246,14 @@ class GridGrindEngineApiTest {
   private static GridGrindRequestInputs inputs(Path workingDirectory) {
     Path normalizedWorkingDirectory = workingDirectory.toAbsolutePath().normalize();
     return new GridGrindRequestInputs(
-        normalizedWorkingDirectory,
-        normalizedWorkingDirectory.resolve(".gridgrind").resolve("tmp"));
+        normalizedWorkingDirectory, normalizedWorkingDirectory.resolve("temp-root"));
   }
 
   private static GridGrindRequestInputs inputs(Path workingDirectory, byte[] standardInputBytes) {
     Path normalizedWorkingDirectory = workingDirectory.toAbsolutePath().normalize();
     return new GridGrindRequestInputs(
         normalizedWorkingDirectory,
-        normalizedWorkingDirectory.resolve(".gridgrind").resolve("tmp"),
+        normalizedWorkingDirectory.resolve("temp-root"),
         standardInputBytes);
   }
 }

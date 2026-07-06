@@ -176,7 +176,32 @@ final class ExecutionJournalRecorder {
   }
 
   private List<ExecutionJournal.Step> journalSteps() {
-    return level == ExecutionJournalLevel.SUMMARY ? List.of() : List.copyOf(steps);
+    return switch (level) {
+      case SUMMARY ->
+          steps.stream()
+              .map(
+                  step ->
+                      new ExecutionJournal.Step(
+                          step.stepIndex(),
+                          step.stepId(),
+                          step.stepKind(),
+                          step.stepType(),
+                          step.resolvedTargets(),
+                          phaseWithoutTiming(step.phase()),
+                          step.outcome(),
+                          step.failure()))
+              .toList();
+      case NORMAL, VERBOSE -> List.copyOf(steps);
+    };
+  }
+
+  static ExecutionJournal.Phase phaseWithoutTiming(ExecutionJournal.Phase phase) {
+    return switch (phase) {
+      case ExecutionJournal.Phase.NotStarted notStarted -> notStarted;
+      case ExecutionJournal.Phase.NotRequested notRequested -> notRequested;
+      case ExecutionJournal.Phase.Succeeded _ -> ExecutionJournal.Phase.succeededWithoutTiming();
+      case ExecutionJournal.Phase.Failed _ -> ExecutionJournal.Phase.failedWithoutTiming();
+    };
   }
 
   private int completedStepCount() {

@@ -10,7 +10,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import dev.erst.gridgrind.contract.action.CellMutationAction;
 import dev.erst.gridgrind.contract.action.StructuredMutationAction;
 import dev.erst.gridgrind.contract.dto.CellInput;
-import dev.erst.gridgrind.contract.dto.ConditionalFormattingBlockInput;
+import dev.erst.gridgrind.contract.dto.ConditionalFormattingDefinitionInput;
 import dev.erst.gridgrind.contract.dto.ConditionalFormattingRuleInput;
 import dev.erst.gridgrind.contract.dto.DifferentialStyleInput;
 import dev.erst.gridgrind.contract.dto.ExecutionModeInput;
@@ -51,7 +51,8 @@ import dev.erst.gridgrind.excel.NamedRangeNotFoundException;
 import dev.erst.gridgrind.excel.SheetNotFoundException;
 import dev.erst.gridgrind.excel.UnregisteredUserDefinedFunctionException;
 import dev.erst.gridgrind.excel.WorkbookArtifactIo;
-import dev.erst.gridgrind.excel.foundation.ExcelOoxmlEncryptionMode;
+import dev.erst.gridgrind.excel.foundation.ExcelOoxmlWriteCipher;
+import dev.erst.gridgrind.excel.foundation.ExcelOoxmlWriteHash;
 import dev.erst.gridgrind.excel.ooxml.ExcelOoxmlPackageSecuritySnapshot;
 import dev.erst.gridgrind.excel.ooxml.ExcelOoxmlPersistenceOptions;
 import java.io.IOException;
@@ -377,13 +378,17 @@ class ExecutorPolicyCoverageTest {
                 "/tmp/out.xlsx",
                 WorkbookPlan.WorkbookPersistence.IfExists.REJECT,
                 new OoxmlPersistenceSecurityInput(
-                    new OoxmlEncryptionInput("secret", ExcelOoxmlEncryptionMode.AGILE), null)),
+                    new OoxmlEncryptionInput(
+                        "secret", ExcelOoxmlWriteCipher.AES_256, ExcelOoxmlWriteHash.SHA_512),
+                    null)),
             workingDirectory);
     ExcelOoxmlPersistenceOptions overwriteOptions =
         ExecutionRequestPaths.persistenceOptions(
             new WorkbookPlan.WorkbookPersistence.Overwrite(
                 new OoxmlPersistenceSecurityInput(
-                    new OoxmlEncryptionInput("secret", ExcelOoxmlEncryptionMode.AGILE), null)),
+                    new OoxmlEncryptionInput(
+                        "secret", ExcelOoxmlWriteCipher.AES_256, ExcelOoxmlWriteHash.SHA_512),
+                    null)),
             workingDirectory);
     assertTrue(noneOptions.isEmpty());
     assertFalse(saveAsOptions.isEmpty());
@@ -558,10 +563,8 @@ class ExecutorPolicyCoverageTest {
             "BudgetTotal",
             new NamedRangeScope.Workbook(),
             NamedRangeTarget.formula("SUM(Budget!B2:B4)"));
-    StructuredMutationAction.SetConditionalFormatting singleRangeFormatting =
-        conditionalFormattingAction(List.of("B2:B5"));
-    StructuredMutationAction.SetConditionalFormatting multiRangeFormatting =
-        conditionalFormattingAction(List.of("B2:B5", "D2:D5"));
+    StructuredMutationAction.SetConditionalFormatting conditionalFormatting =
+        conditionalFormattingAction();
 
     assertEquals(
         java.util.Optional.of("Budget"),
@@ -610,10 +613,8 @@ class ExecutorPolicyCoverageTest {
         java.util.Optional.of("SUM(A1:A2)"),
         ExecutionActionDiagnosticFields.formulaFor(setFormula));
     assertEquals(
-        java.util.Optional.of("B2:B5"),
-        ExecutionActionDiagnosticFields.rangeFor(singleRangeFormatting));
-    assertEquals(
-        java.util.Optional.empty(), ExecutionActionDiagnosticFields.rangeFor(multiRangeFormatting));
+        java.util.Optional.empty(),
+        ExecutionActionDiagnosticFields.rangeFor(conditionalFormatting));
   }
 
   private static void assertSelectorSheetAndAddressDiagnostics() {
@@ -919,11 +920,9 @@ class ExecutorPolicyCoverageTest {
                     Optional.empty()))));
   }
 
-  private static StructuredMutationAction.SetConditionalFormatting conditionalFormattingAction(
-      List<String> ranges) {
+  private static StructuredMutationAction.SetConditionalFormatting conditionalFormattingAction() {
     return new StructuredMutationAction.SetConditionalFormatting(
-        new ConditionalFormattingBlockInput(
-            ranges,
+        new ConditionalFormattingDefinitionInput(
             List.of(
                 new ConditionalFormattingRuleInput.FormulaRule(
                     "B2>0",

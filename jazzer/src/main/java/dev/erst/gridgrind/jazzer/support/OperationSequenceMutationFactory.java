@@ -222,9 +222,9 @@ final class OperationSequenceMutationFactory {
                     new StructuredMutationAction.ClearDataValidations());
             case 0x2 ->
                 mutate(
-                    new SheetSelector.ByName(targetSheet),
+                    nextConditionalFormattingTarget(data, targetSheet, validRange),
                     new StructuredMutationAction.SetConditionalFormatting(
-                        nextConditionalFormattingInput(data, validRange)));
+                        nextConditionalFormattingInput(data)));
             default ->
                 mutate(
                     nextRangeSelector(data, targetSheet, validRange),

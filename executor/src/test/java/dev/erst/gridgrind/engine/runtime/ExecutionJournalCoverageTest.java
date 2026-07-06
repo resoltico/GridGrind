@@ -1,5 +1,7 @@
 package dev.erst.gridgrind.engine.runtime;
 
+import static dev.erst.gridgrind.engine.runtime.ExecutionContextFixtureSupport.execute;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
@@ -7,6 +9,7 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import dev.erst.gridgrind.contract.action.WorkbookMutationAction;
 import dev.erst.gridgrind.contract.dto.CellInput;
 import dev.erst.gridgrind.contract.dto.ExecutionJournal;
 import dev.erst.gridgrind.contract.dto.ExecutionJournalInput;
@@ -19,6 +22,7 @@ import dev.erst.gridgrind.contract.dto.GridGrindProtocolVersion;
 import dev.erst.gridgrind.contract.dto.GridGrindResponse;
 import dev.erst.gridgrind.contract.dto.GridGrindResponses;
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
+import dev.erst.gridgrind.contract.json.GridGrindJsonOutput;
 import dev.erst.gridgrind.contract.query.*;
 import dev.erst.gridgrind.contract.selector.CellSelector;
 import dev.erst.gridgrind.contract.selector.ChartSelector;
@@ -35,6 +39,7 @@ import dev.erst.gridgrind.contract.selector.TableRowSelector;
 import dev.erst.gridgrind.contract.selector.TableSelector;
 import dev.erst.gridgrind.contract.selector.WorkbookSelector;
 import dev.erst.gridgrind.contract.step.InspectionStep;
+import dev.erst.gridgrind.contract.step.MutationStep;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -391,17 +396,112 @@ class ExecutionJournalCoverageTest {
     assertTrue(mixedIdentityOutcome.failedStep().isEmpty());
   }
 
+  @Test
+  void recorderKeepsCompactSummaryStepsWithoutTimingAndPreservesTimedNormalVerboseSteps() {
+    MutationStep selectionStep =
+        new MutationStep(
+            "step-1",
+            new SheetSelector.ByNames(List.of("Budget", "Ops")),
+            new WorkbookMutationAction.SetSelectedSheets());
+
+    ExecutionJournal summary = completedJournal(ExecutionJournalLevel.SUMMARY, selectionStep);
+    ExecutionJournal.Step summaryStep = summary.steps().getFirst();
+    assertEquals(1, summary.steps().size());
+    assertEquals("Sheets [Budget, Ops]", summaryStep.resolvedTargets().getFirst().label());
+    assertEquals(ExecutionJournal.StepOutcome.SUCCEEDED, summaryStep.outcome());
+    assertTrue(
+        assertInstanceOf(ExecutionJournal.Phase.Succeeded.class, summaryStep.phase())
+            .timing()
+            .isEmpty());
+
+    ExecutionJournal normal = completedJournal(ExecutionJournalLevel.NORMAL, selectionStep);
+    ExecutionJournal.Step normalStep = normal.steps().getFirst();
+    assertEquals(2, normalStep.resolvedTargets().size());
+    assertEquals("Sheet Budget", normalStep.resolvedTargets().getFirst().label());
+    assertTrue(
+        assertInstanceOf(ExecutionJournal.Phase.Succeeded.class, normalStep.phase())
+            .timing()
+            .isPresent());
+
+    ExecutionJournal verbose = completedJournal(ExecutionJournalLevel.VERBOSE, selectionStep);
+    assertTrue(
+        assertInstanceOf(ExecutionJournal.Phase.Succeeded.class, verbose.steps().getFirst().phase())
+            .timing()
+            .isPresent());
+  }
+
+  @Test
+  void summarySuccessResponsesSerializeDeterministicallyAcrossRepeatedRuns() throws Exception {
+    GridGrindResponse.Success firstResponse =
+        assertInstanceOf(
+            GridGrindResponse.Success.class,
+            execute(
+                new DefaultGridGrindRequestExecutor(),
+                planForJournalLevel(ExecutionJournalLevel.SUMMARY)));
+    GridGrindResponse.Success secondResponse =
+        assertInstanceOf(
+            GridGrindResponse.Success.class,
+            execute(
+                new DefaultGridGrindRequestExecutor(),
+                planForJournalLevel(ExecutionJournalLevel.SUMMARY)));
+
+    ExecutionJournal.Step firstStep = firstResponse.journal().steps().getFirst();
+    assertEquals(ExecutionJournalLevel.SUMMARY, firstResponse.journal().level());
+    assertEquals(1, firstResponse.journal().steps().size());
+    assertEquals("Sheet Ledger", firstStep.resolvedTargets().getFirst().label());
+    assertEquals(ExecutionJournal.StepOutcome.SUCCEEDED, firstStep.outcome());
+    assertTrue(
+        assertInstanceOf(ExecutionJournal.Phase.Succeeded.class, firstStep.phase())
+            .timing()
+            .isEmpty());
+    assertArrayEquals(
+        GridGrindJsonOutput.writeResponseBytes(firstResponse),
+        GridGrindJsonOutput.writeResponseBytes(secondResponse));
+  }
+
   private static WorkbookPlan verbosePlan() {
+    return planWithSteps("phase-5-plan", ExecutionJournalLevel.VERBOSE, List.of(), List.of());
+  }
+
+  private static ExecutionJournal completedJournal(
+      ExecutionJournalLevel level, dev.erst.gridgrind.contract.step.WorkbookStep step) {
+    ExecutionJournalRecorder recorder =
+        ExecutionContextFixtureSupport.startJournal(
+            planWithSteps("journal-level-" + level.name(), level, List.of(step), List.of()),
+            ExecutionJournalSink.NOOP);
+    recorder.beginStep(0, step).succeed();
+    return recorder.buildSuccess(1);
+  }
+
+  private static WorkbookPlan planForJournalLevel(ExecutionJournalLevel level) {
+    return planWithSteps(
+        "journal-response-" + level.name(),
+        level,
+        List.of(
+            new MutationStep(
+                "ensure-ledger",
+                new SheetSelector.ByName("Ledger"),
+                new WorkbookMutationAction.EnsureSheet())),
+        List.of());
+  }
+
+  private static WorkbookPlan planWithSteps(
+      String planId,
+      ExecutionJournalLevel level,
+      List<dev.erst.gridgrind.contract.step.WorkbookStep> mutationsAndAssertions,
+      List<InspectionStep> inspections) {
+    List<dev.erst.gridgrind.contract.step.WorkbookStep> steps =
+        new ArrayList<>(mutationsAndAssertions);
+    steps.addAll(inspections);
     return WorkbookPlan.identified(
         GridGrindProtocolVersion.current(),
-        "phase-5-plan",
+        planId,
         new WorkbookPlan.WorkbookSource.New(),
         new WorkbookPlan.WorkbookPersistence.None(),
         ExecutionPolicyInput.modeAndJournal(
-            ExecutionModeInput.defaults(),
-            new ExecutionJournalInput(ExecutionJournalLevel.VERBOSE)),
+            ExecutionModeInput.defaults(), new ExecutionJournalInput(level)),
         dev.erst.gridgrind.contract.dto.FormulaEnvironmentInput.empty(),
-        List.of());
+        List.copyOf(steps));
   }
 
   private static List<ExecutionJournal.Target> expandedTargets(Selector selector) {

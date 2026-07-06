@@ -169,9 +169,9 @@ final class OperationSequenceValueFactory {
     return OperationSequenceRuleValues.nextExcelDataValidationDefinition(data);
   }
 
-  static ConditionalFormattingBlockInput nextConditionalFormattingInput(
-      GridGrindFuzzData data, boolean validRange) {
-    return OperationSequenceRuleValues.nextConditionalFormattingInput(data, validRange);
+  static ConditionalFormattingDefinitionInput nextConditionalFormattingInput(
+      GridGrindFuzzData data) {
+    return OperationSequenceRuleValues.nextConditionalFormattingInput(data);
   }
 
   static ExcelConditionalFormattingBlockDefinition nextExcelConditionalFormattingBlockDefinition(

@@ -499,7 +499,8 @@ class CatalogStepTemplateSupportTest {
         assertionTypes,
         inspectionQueryTypes,
         nestedTypes,
-        plainTypes);
+        plainTypes,
+        List.of());
   }
 
   private static TypeEntry unionRecursive() {

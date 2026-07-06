@@ -1,5 +1,13 @@
 package dev.erst.gridgrind.contract.catalog;
 
+import dev.erst.gridgrind.contract.dto.CellGridInput;
+import dev.erst.gridgrind.contract.dto.CellInput;
+import dev.erst.gridgrind.contract.dto.CellReport;
+import dev.erst.gridgrind.contract.dto.CellRowInput;
+import dev.erst.gridgrind.contract.dto.CellScalarValue;
+import dev.erst.gridgrind.contract.dto.CellValueReport;
+import dev.erst.gridgrind.excel.foundation.ExcelReportedCellErrorLiteral;
+import dev.erst.gridgrind.excel.foundation.ExcelStoredCellErrorLiteral;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.RecordComponent;
 import java.lang.reflect.Type;
@@ -31,6 +39,34 @@ public final class CatalogFieldMetadataSupport {
           Double.class,
           java.math.BigDecimal.class,
           java.math.BigInteger.class);
+  private static final FieldMetadataOverride STORED_CELL_ERROR_LITERAL_METADATA =
+      new FieldMetadataOverride(
+          ExcelStoredCellErrorLiteral.orderedWireValues(),
+          CatalogEnumValueDocumentationSupport.storedCellErrorLiteralDocs());
+  private static final FieldMetadataOverride REPORTED_CELL_ERROR_LITERAL_METADATA =
+      new FieldMetadataOverride(
+          ExcelReportedCellErrorLiteral.orderedWireValues(),
+          CatalogEnumValueDocumentationSupport.reportedCellErrorLiteralDocs());
+  private static final Map<ComponentKey, FieldMetadataOverride> FIELD_METADATA_OVERRIDES =
+      Map.ofEntries(
+          Map.entry(
+              new ComponentKey(CellInput.ErrorValue.class, "error"),
+              STORED_CELL_ERROR_LITERAL_METADATA),
+          Map.entry(
+              new ComponentKey(CellScalarValue.ErrorValue.class, "error"),
+              REPORTED_CELL_ERROR_LITERAL_METADATA),
+          Map.entry(
+              new ComponentKey(CellRowInput.ErrorValues.class, "cells"),
+              STORED_CELL_ERROR_LITERAL_METADATA),
+          Map.entry(
+              new ComponentKey(CellGridInput.ErrorRows.class, "cells"),
+              STORED_CELL_ERROR_LITERAL_METADATA),
+          Map.entry(
+              new ComponentKey(CellValueReport.ErrorValue.class, "errorValue"),
+              REPORTED_CELL_ERROR_LITERAL_METADATA),
+          Map.entry(
+              new ComponentKey(CellReport.ErrorReport.class, "errorValue"),
+              REPORTED_CELL_ERROR_LITERAL_METADATA));
 
   private CatalogFieldMetadataSupport() {}
 
@@ -47,14 +83,18 @@ public final class CatalogFieldMetadataSupport {
     Objects.requireNonNull(component, "component must not be null");
     Objects.requireNonNull(optionalFields, "optionalFields must not be null");
     Objects.requireNonNull(projectedFieldsByName, "projectedFieldsByName must not be null");
+    FieldMetadataOverride metadataOverride =
+        FIELD_METADATA_OVERRIDES.getOrDefault(
+            new ComponentKey(component.getDeclaringRecord(), component.getName()),
+            FieldMetadataOverride.NONE);
     return new FieldEntry(
         component.getName(),
         optionalFields.contains(component.getName())
             ? FieldRequirement.OPTIONAL
             : FieldRequirement.REQUIRED,
         fieldShape(component.getGenericType()),
-        enumValues(component.getGenericType()),
-        enumValueDocs(component.getGenericType()),
+        metadataOverride.overrideEnumValues(enumValues(component.getGenericType())),
+        metadataOverride.overrideEnumValueDocs(enumValueDocs(component.getGenericType())),
         projectedFieldsByName.getOrDefault(component.getName(), List.of()));
   }
 
@@ -127,6 +167,12 @@ public final class CatalogFieldMetadataSupport {
         && parameterizedType.getRawType() == java.util.List.class) {
       return enumValues(singleTypeArgument(parameterizedType, "List"));
     }
+    if (type == ExcelStoredCellErrorLiteral.class) {
+      return ExcelStoredCellErrorLiteral.orderedWireValues();
+    }
+    if (type == ExcelReportedCellErrorLiteral.class) {
+      return ExcelReportedCellErrorLiteral.orderedWireValues();
+    }
     if (type instanceof Class<?> classType && classType.isEnum()) {
       return Arrays.stream(classType.getEnumConstants())
           .map(value -> ((Enum<?>) value).name())
@@ -137,6 +183,22 @@ public final class CatalogFieldMetadataSupport {
 
   static List<EnumValueDocEntry> enumValueDocs(Type type) {
     return CatalogEnumValueDocumentationSupport.enumValueDocs(type);
+  }
+
+  private record ComponentKey(Class<?> declaringRecord, String componentName) {}
+
+  private record FieldMetadataOverride(
+      List<String> enumValues, List<EnumValueDocEntry> enumValueDocs) {
+    private static final FieldMetadataOverride NONE =
+        new FieldMetadataOverride(List.of(), List.of());
+
+    private List<String> overrideEnumValues(List<String> discoveredValues) {
+      return enumValues.isEmpty() ? discoveredValues : enumValues;
+    }
+
+    private List<EnumValueDocEntry> overrideEnumValueDocs(List<EnumValueDocEntry> discoveredDocs) {
+      return enumValueDocs.isEmpty() ? discoveredDocs : enumValueDocs;
+    }
   }
 
   static Type singleTypeArgument(ParameterizedType parameterizedType, String typeName) {

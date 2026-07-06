@@ -1,7 +1,7 @@
 package dev.erst.gridgrind.cli;
 
-import dev.erst.gridgrind.contract.catalog.GridGrindContractText;
 import dev.erst.gridgrind.contract.catalog.GridGrindProtocolCatalog;
+import dev.erst.gridgrind.contract.catalog.GridGrindRequestSurfaceContractText;
 import dev.erst.gridgrind.contract.dto.GridGrindProblemCode;
 import dev.erst.gridgrind.contract.dto.GridGrindProblemDetail;
 import dev.erst.gridgrind.contract.dto.ProblemContext;
@@ -90,7 +90,7 @@ final class CliDoctorRequestAnalyzer {
       GridGrindProblemDetail.Problem standardInputProblem =
           GridGrindProblems.problem(
               GridGrindProblemCode.INVALID_REQUEST,
-              GridGrindContractText.standardInputRequiresRequestMessage(),
+              GridGrindRequestSurfaceContractText.standardInputRequiresRequestMessage(),
               new ProblemContext.ValidateRequest(requestShape(request)),
               List.of());
       return RequestDoctorReport.invalid(
@@ -121,10 +121,11 @@ final class CliDoctorRequestAnalyzer {
       return requestDoctor.diagnose(request);
     }
     if (requestPath.isPresent() || executionRootPath.isPresent()) {
-      return requestDoctor.diagnose(
-          request,
+      try (CliExecutionBindingsFactory.ManagedRequestInputs bindings =
           CliExecutionBindingsFactory.create(
-              requestPath, executionRootPath, tempRootPath, request, stdin));
+              requestPath, executionRootPath, tempRootPath, request, stdin)) {
+        return requestDoctor.diagnose(request, bindings.inputs());
+      }
     }
     return requestDoctor.diagnose(request);
   }

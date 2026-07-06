@@ -12,7 +12,7 @@ import dev.erst.gridgrind.contract.dto.CellProtectionInput;
 import dev.erst.gridgrind.contract.dto.CellStyleInput;
 import dev.erst.gridgrind.contract.dto.CommentAnchorInput;
 import dev.erst.gridgrind.contract.dto.CommentInput;
-import dev.erst.gridgrind.contract.dto.ConditionalFormattingBlockInput;
+import dev.erst.gridgrind.contract.dto.ConditionalFormattingDefinitionInput;
 import dev.erst.gridgrind.contract.dto.ConditionalFormattingThresholdInput;
 import dev.erst.gridgrind.contract.dto.DataValidationErrorAlertInput;
 import dev.erst.gridgrind.contract.dto.DataValidationInput;
@@ -186,11 +186,11 @@ final class GridGrindProtocolCatalogWorkbookAuthoringPlainTypeDescriptors {
               "Authored autofilter sort-state payload with one or more ordered sort conditions.",
               List.of("caseSensitive", "columnSort", "sortMethod")),
           plainTypeDescriptor(
-              "conditionalFormattingBlockInputType",
-              ConditionalFormattingBlockInput.class,
-              "ConditionalFormattingBlockInput",
-              "One authored conditional-formatting block with ordered target ranges and rules."
-                  + " rules must not be empty; ranges must be unique.",
+              "conditionalFormattingDefinitionInputType",
+              ConditionalFormattingDefinitionInput.class,
+              "ConditionalFormattingDefinitionInput",
+              "One authored conditional-formatting definition with an ordered rule list."
+                  + " Target ranges are owned by the selector; rules must not be empty.",
               List.of()),
           plainTypeDescriptor(
               "conditionalFormattingThresholdInputType",

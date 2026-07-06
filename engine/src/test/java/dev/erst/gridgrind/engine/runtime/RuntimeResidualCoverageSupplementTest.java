@@ -4,13 +4,19 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import dev.erst.gridgrind.contract.action.CellMutationAction;
+import dev.erst.gridgrind.contract.action.StructuredMutationAction;
 import dev.erst.gridgrind.contract.dto.CellGridInput;
 import dev.erst.gridgrind.contract.dto.CellInput;
 import dev.erst.gridgrind.contract.dto.CellRowInput;
+import dev.erst.gridgrind.contract.dto.ConditionalFormattingDefinitionInput;
+import dev.erst.gridgrind.contract.dto.ConditionalFormattingRuleInput;
 import dev.erst.gridgrind.contract.dto.ExecutionJournal;
 import dev.erst.gridgrind.contract.dto.RichTextRunInput;
+import dev.erst.gridgrind.contract.selector.RangeSelector;
 import dev.erst.gridgrind.contract.selector.TableRowSelector;
 import dev.erst.gridgrind.contract.selector.TableSelector;
 import dev.erst.gridgrind.contract.source.TextSourceInput;
@@ -28,6 +34,31 @@ import org.junit.jupiter.api.Test;
 
 /** Direct residual coverage for runtime helpers left outside end-to-end executor suites. */
 class RuntimeResidualCoverageSupplementTest {
+  @Test
+  void summaryPhaseStrippingPreservesUntimedStatesAndRemovesTimingFromFinishedPhases() {
+    ExecutionJournal.Phase notStarted = ExecutionJournal.Phase.notStarted();
+    ExecutionJournal.Phase notRequested = ExecutionJournal.Phase.notRequested();
+    ExecutionJournal.Phase timedSuccess =
+        ExecutionJournal.Phase.succeeded("2026-07-03T10:00:00Z", "2026-07-03T10:00:01Z", 1);
+    ExecutionJournal.Phase timedFailure =
+        ExecutionJournal.Phase.failed("2026-07-03T10:00:00Z", "2026-07-03T10:00:01Z", 1);
+
+    assertSame(notStarted, ExecutionJournalRecorder.phaseWithoutTiming(notStarted));
+    assertSame(notRequested, ExecutionJournalRecorder.phaseWithoutTiming(notRequested));
+    assertTrue(
+        assertInstanceOf(
+                ExecutionJournal.Phase.Succeeded.class,
+                ExecutionJournalRecorder.phaseWithoutTiming(timedSuccess))
+            .timing()
+            .isEmpty());
+    assertTrue(
+        assertInstanceOf(
+                ExecutionJournal.Phase.Failed.class,
+                ExecutionJournalRecorder.phaseWithoutTiming(timedFailure))
+            .timing()
+            .isEmpty());
+  }
+
   @Test
   void executionJournalTargetLabelsCoverResidualCellKindsAndSourceShapes() {
     TableSelector.ByName table = new TableSelector.ByName("BudgetTable");
@@ -85,7 +116,7 @@ class RuntimeResidualCoverageSupplementTest {
     ExecutionInputBindings bindings =
         new ExecutionInputBindings(
             Path.of("tmp", "runtime-residual-supplement"),
-            Path.of("tmp", "runtime-residual-supplement", ".gridgrind", "tmp"),
+            Path.of("tmp", "runtime-residual-supplement", "temp-root"),
             "unused".getBytes(StandardCharsets.UTF_8));
     CellMutationAction.SetRange compactRange =
         new CellMutationAction.SetRange(new CellGridInput.TextRows(List.of(List.of("Ada"))));
@@ -102,7 +133,7 @@ class RuntimeResidualCoverageSupplementTest {
     ExecutionInputBindings bindings =
         new ExecutionInputBindings(
             Path.of("tmp", "runtime-residual-supplement"),
-            Path.of("tmp", "runtime-residual-supplement", ".gridgrind", "tmp"));
+            Path.of("tmp", "runtime-residual-supplement", "temp-root"));
     CellInput.ErrorValue errorValue = new CellInput.ErrorValue("#REF!");
 
     assertSame(errorValue, SourceBackedPlanResolver.resolveCellInput(errorValue, bindings));
@@ -126,5 +157,23 @@ class RuntimeResidualCoverageSupplementTest {
 
       assertFalse(matched);
     }
+  }
+
+  @Test
+  void conditionalFormattingMutationRequiresExplicitRangeTargets() {
+    IllegalArgumentException failure =
+        assertThrows(
+            IllegalArgumentException.class,
+            () ->
+                WorkbookCommandStructuredMutationConverter.toCommand(
+                    new RangeSelector.AllOnSheet("Budget"),
+                    new StructuredMutationAction.SetConditionalFormatting(
+                        new ConditionalFormattingDefinitionInput(
+                            List.of(
+                                new ConditionalFormattingRuleInput.FormulaRule(
+                                    "A1>0", false, Optional.empty()))))));
+
+    assertEquals(
+        "SET_CONDITIONAL_FORMATTING requires explicit range targets", failure.getMessage());
   }
 }

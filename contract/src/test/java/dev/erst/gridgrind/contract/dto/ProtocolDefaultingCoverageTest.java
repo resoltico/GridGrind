@@ -25,8 +25,9 @@ import dev.erst.gridgrind.excel.foundation.ExcelChartScatterStyle;
 import dev.erst.gridgrind.excel.foundation.ExcelDataValidationErrorStyle;
 import dev.erst.gridgrind.excel.foundation.ExcelDrawingAnchorBehavior;
 import dev.erst.gridgrind.excel.foundation.ExcelIgnoredErrorType;
-import dev.erst.gridgrind.excel.foundation.ExcelOoxmlEncryptionMode;
 import dev.erst.gridgrind.excel.foundation.ExcelOoxmlSignatureDigestAlgorithm;
+import dev.erst.gridgrind.excel.foundation.ExcelOoxmlWriteCipher;
+import dev.erst.gridgrind.excel.foundation.ExcelOoxmlWriteHash;
 import dev.erst.gridgrind.excel.foundation.ExcelPivotDataConsolidateFunction;
 import dev.erst.gridgrind.excel.foundation.ExcelPrintOrientation;
 import java.util.List;
@@ -197,7 +198,8 @@ class ProtocolDefaultingCoverageTest {
             """,
             OoxmlSignatureInput.class);
     OoxmlEncryptionInput explicitEncryption =
-        OoxmlEncryptionInput.create("persist-pass", ExcelOoxmlEncryptionMode.STANDARD);
+        OoxmlEncryptionInput.create(
+            "persist-pass", ExcelOoxmlWriteCipher.AES_192, ExcelOoxmlWriteHash.SHA_384);
     OoxmlSignatureInput createdSignatureWithNullOptionals =
         OoxmlSignatureInput.create(
             "keys/signing.p12",
@@ -211,8 +213,10 @@ class ProtocolDefaultingCoverageTest {
     assertTrue(journal.isDefault());
     assertTrue(calculation.isDefault());
     assertTrue(formulaEnvironment.isEmpty());
-    assertEquals(ExcelOoxmlEncryptionMode.AGILE, encryption.mode());
-    assertEquals(ExcelOoxmlEncryptionMode.STANDARD, explicitEncryption.mode());
+    assertEquals(ExcelOoxmlWriteCipher.AES_256, encryption.cipher());
+    assertEquals(ExcelOoxmlWriteHash.SHA_512, encryption.hash());
+    assertEquals(ExcelOoxmlWriteCipher.AES_192, explicitEncryption.cipher());
+    assertEquals(ExcelOoxmlWriteHash.SHA_384, explicitEncryption.hash());
     assertEquals("store-pass", signature.keyPassword());
     assertEquals(ExcelOoxmlSignatureDigestAlgorithm.SHA256, signature.digestAlgorithm());
     assertEquals(Optional.empty(), signature.alias());

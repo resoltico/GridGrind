@@ -1,14 +1,14 @@
 package dev.erst.gridgrind.cli;
 
 import dev.erst.gridgrind.cli.discovery.ExampleWorkspaceMode;
-import dev.erst.gridgrind.cli.discovery.GridGrindTaskCatalog;
 import dev.erst.gridgrind.cli.discovery.ProtocolCatalogFieldMetadataKey;
 import dev.erst.gridgrind.cli.discovery.ProtocolCatalogGroupIndex;
 import dev.erst.gridgrind.cli.discovery.ProtocolCatalogIndexReport;
 import dev.erst.gridgrind.cli.discovery.ProtocolCatalogLookupNamespace;
 import dev.erst.gridgrind.cli.discovery.ProtocolCatalogSearchHit;
 import dev.erst.gridgrind.cli.discovery.ProtocolCatalogSearchReport;
-import dev.erst.gridgrind.cli.examples.GridGrindShippedExamples;
+import dev.erst.gridgrind.cli.examples.GridGrindCliRecipe;
+import dev.erst.gridgrind.cli.examples.GridGrindCliRecipeRegistry;
 import dev.erst.gridgrind.contract.catalog.Catalog;
 import dev.erst.gridgrind.contract.catalog.CatalogSearchMatch;
 import dev.erst.gridgrind.contract.catalog.GridGrindProtocolCatalog;
@@ -24,86 +24,57 @@ import java.util.Optional;
 final class CliCatalogCommandSupport {
   private CliCatalogCommandSupport() {}
 
-  static String unknownExampleMessage(String exampleId) {
-    return suggestedExampleId(exampleId)
-        .map(
-            suggestion ->
-                "Unknown example: "
-                    + exampleId
-                    + ". Example ids use stable upper-case tokens; did you mean "
-                    + suggestion
-                    + "? Run gridgrind --print-example-catalog to list valid ids.")
-        .orElse(
-            "Unknown example: "
-                + exampleId
-                + ". Run gridgrind --print-example-catalog to list valid ids.");
+  static String unknownRecipeMessage(String recipeId) {
+    Optional<String> recipeSuggestion = suggestedRecipeId(recipeId);
+    if (recipeSuggestion.isPresent()) {
+      return "Unknown recipe: "
+          + recipeId
+          + ". Recipe ids use stable upper-case tokens; did you mean "
+          + recipeSuggestion.orElseThrow()
+          + "? Run gridgrind --print-recipe-catalog to list recipe ids or"
+          + " gridgrind --print-recipe-keyword-match --query \"monthly sales dashboard\""
+          + " when you know the goal but not the id.";
+    }
+    return "Unknown recipe: "
+        + recipeId
+        + ". Run gridgrind --print-recipe-catalog or"
+        + " gridgrind --print-recipe-keyword-match --query \"monthly sales dashboard\""
+        + " to discover valid recipe ids.";
   }
 
-  static void emitExamplePortabilityWarning(
-      GridGrindShippedExamples.ShippedExample example, OutputStream stderr) throws IOException {
-    Objects.requireNonNull(example, "example must not be null");
+  static void emitRecipePortabilityWarning(GridGrindCliRecipe recipe, OutputStream stderr)
+      throws IOException {
+    Objects.requireNonNull(recipe, "recipe must not be null");
     Objects.requireNonNull(stderr, "stderr must not be null");
-    if (GridGrindShippedExamples.workspaceModeFor(example.id()).orElseThrow()
-        != ExampleWorkspaceMode.REQUIRES_EXAMPLE_ASSETS) {
+    if (recipe.workspaceMode() != ExampleWorkspaceMode.REQUIRES_EXAMPLE_ASSETS) {
       return;
     }
-    var requirements = GridGrindShippedExamples.requirementsFor(example);
-    String requiredPaths = String.join(", ", requirements.requiredWorkspacePaths());
+    String requiredPaths = String.join(", ", recipe.requiredWorkspacePaths());
     stderr.write(
-        ("Printed example "
-                + example.id()
+        ("Printed recipe "
+                + recipe.id()
                 + " requires copied asset paths beside the request file before execution;"
                 + " required paths: "
                 + requiredPaths
-                + ". Inspect --print-example-catalog or --help-guidance for portability details.\n")
+                + ". Inspect --print-recipe-catalog or --help-guidance"
+                + " for portability details.\n")
             .getBytes(StandardCharsets.UTF_8));
     stderr.flush();
-  }
-
-  static void emitTaskStarterPortabilityWarning(
-      dev.erst.gridgrind.cli.discovery.TaskEntry task, OutputStream stderr) throws IOException {
-    Objects.requireNonNull(task, "task must not be null");
-    Objects.requireNonNull(stderr, "stderr must not be null");
-    if (task.starter().workspaceMode() != ExampleWorkspaceMode.REQUIRES_EXAMPLE_ASSETS) {
-      return;
-    }
-    String requiredPaths = String.join(", ", task.starter().requiredWorkspacePaths());
-    stderr.write(
-        ("Printed task starter "
-                + task.id()
-                + " requires copied asset paths beside the request file before execution;"
-                + " required paths: "
-                + requiredPaths
-                + ". Inspect --print-task-catalog or --help-guidance for starter portability"
-                + " details.\n")
-            .getBytes(StandardCharsets.UTF_8));
-    stderr.flush();
-  }
-
-  static String unknownTaskMessage(String taskId) {
-    return suggestedTaskId(taskId)
-        .map(
-            suggestion ->
-                "Unknown task: "
-                    + taskId
-                    + ". Task ids use stable upper-case tokens; did you mean "
-                    + suggestion
-                    + "? Run gridgrind --print-task-catalog to list valid ids or"
-                    + " gridgrind --print-task-keyword-match --query \"monthly sales dashboard\""
-                    + " to discover a close task id before printing its task plan.")
-        .orElse(
-            "Unknown task: "
-                + taskId
-                + ". Run gridgrind --print-task-catalog to list valid ids or"
-                + " gridgrind --print-task-keyword-match --query \"monthly sales dashboard\""
-                + " to discover a close task id before printing its task plan.");
   }
 
   static String unknownOperationMessage(String operationId) {
-    return "Unknown lookup id: "
-        + operationId
-        + ". Run gridgrind --print-protocol-catalog --search \"sheet layout\" or"
-        + " gridgrind --print-protocol-catalog to discover valid lookup ids.";
+    return CliSuggestionSupport.protocolCatalogSearchCommandForLookupId(operationId)
+        .map(
+            command ->
+                "Unknown lookup id: "
+                    + operationId
+                    + ". Run "
+                    + command
+                    + " or gridgrind --print-protocol-catalog to discover valid lookup ids.")
+        .orElse(
+            "Unknown lookup id: "
+                + operationId
+                + ". Run gridgrind --print-protocol-catalog to discover valid lookup ids.");
   }
 
   static ProtocolCatalogIndexReport protocolCatalogIndexReport() {
@@ -126,6 +97,10 @@ final class CliCatalogCommandSupport {
                 "projectedByFacets",
                 "Field is present only when one of the listed read-projection facets is"
                     + " requested."),
+            new ProtocolCatalogFieldMetadataKey(
+                "noteRefs",
+                "Entry references stable note ids published once in the scoped lookup payload or"
+                    + " full catalog."),
             new ProtocolCatalogFieldMetadataKey(
                 "enumValueDocs",
                 "Field publishes per-enum-value summaries aligned with enumValues so agents can"
@@ -168,29 +143,23 @@ final class CliCatalogCommandSupport {
     return types.stream().map(dev.erst.gridgrind.contract.catalog.TypeEntry::id).toList();
   }
 
-  private static Optional<String> suggestedTaskId(String taskId) {
-    String normalizedTaskId = normalizeLookupToken(taskId);
-    return GridGrindTaskCatalog.catalog().tasks().stream()
-        .map(dev.erst.gridgrind.cli.discovery.TaskEntry::id)
-        .filter(
-            candidate ->
-                candidate.equalsIgnoreCase(taskId)
-                    || normalizeLookupToken(candidate).equals(normalizedTaskId))
+  private static Optional<String> suggestedRecipeId(String recipeId) {
+    String normalizedRecipeId = normalizeLookupToken(recipeId);
+    return GridGrindCliRecipeRegistry.recipes().stream()
+        .filter(recipe -> recipeLooksLikeLookup(recipe, recipeId, normalizedRecipeId))
+        .map(GridGrindCliRecipe::id)
         .findFirst();
   }
 
-  private static Optional<String> suggestedExampleId(String exampleId) {
-    String normalizedExampleId = normalizeLookupToken(exampleId);
-    return GridGrindShippedExamples.examples().stream()
-        .filter(
-            example ->
-                example.id().equalsIgnoreCase(exampleId)
-                    || example.requestFileName().equalsIgnoreCase(exampleId)
-                    || exampleStem(example.requestFileName()).equalsIgnoreCase(exampleId)
-                    || normalizeLookupToken(exampleStem(example.requestFileName()))
-                        .equals(normalizedExampleId))
-        .map(GridGrindShippedExamples.ShippedExample::id)
-        .findFirst();
+  private static boolean recipeLooksLikeLookup(
+      GridGrindCliRecipe recipe, String lookupText, String normalizedLookupText) {
+    if (recipe.id().equalsIgnoreCase(lookupText)
+        || normalizeLookupToken(recipe.id()).equals(normalizedLookupText)) {
+      return true;
+    }
+    return recipe.requestFileName().equalsIgnoreCase(lookupText)
+        || exampleStem(recipe.requestFileName()).equalsIgnoreCase(lookupText)
+        || normalizeLookupToken(exampleStem(recipe.requestFileName())).equals(normalizedLookupText);
   }
 
   private static String normalizeLookupToken(String value) {

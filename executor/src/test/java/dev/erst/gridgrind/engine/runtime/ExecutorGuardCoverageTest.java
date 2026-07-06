@@ -337,8 +337,7 @@ class ExecutorGuardCoverageTest {
                     null,
                     null)),
             new StructuredMutationAction.SetConditionalFormatting(
-                new dev.erst.gridgrind.contract.dto.ConditionalFormattingBlockInput(
-                    java.util.List.of("A1:A2", "C1:C2"),
+                new dev.erst.gridgrind.contract.dto.ConditionalFormattingDefinitionInput(
                     java.util.List.of(
                         new dev.erst.gridgrind.contract.dto.ConditionalFormattingRuleInput
                             .FormulaRule("A1>0", false, Optional.empty())))),

@@ -6,6 +6,8 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import dev.erst.gridgrind.contract.dto.CellInput;
 import dev.erst.gridgrind.contract.query.CellReadFacet;
 import dev.erst.gridgrind.contract.query.CellReadProjection;
+import dev.erst.gridgrind.excel.foundation.ExcelReportedCellErrorLiteral;
+import dev.erst.gridgrind.excel.foundation.ExcelStoredCellErrorLiteral;
 import java.lang.reflect.RecordComponent;
 import java.util.List;
 import java.util.Map;
@@ -35,6 +37,16 @@ class CatalogEnumValueDocumentationSupportTest {
         List.of(),
         CatalogEnumValueDocumentationSupport.enumValueDocs(
             recordComponent(EnumDocFixture.class, "cells").getGenericType()));
+    assertEquals(
+        "#NULL!",
+        CatalogEnumValueDocumentationSupport.enumValueDocs(ExcelStoredCellErrorLiteral.class)
+            .getFirst()
+            .value());
+    assertEquals(
+        "#CIRCULAR_REF!",
+        CatalogEnumValueDocumentationSupport.enumValueDocs(ExcelReportedCellErrorLiteral.class)
+            .get(7)
+            .value());
   }
 
   @Test

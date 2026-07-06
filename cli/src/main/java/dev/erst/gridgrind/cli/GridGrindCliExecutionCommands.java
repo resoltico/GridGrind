@@ -1,6 +1,7 @@
 package dev.erst.gridgrind.cli;
 
-import dev.erst.gridgrind.contract.catalog.GridGrindContractText;
+import dev.erst.gridgrind.contract.catalog.GridGrindRequestSurfaceContractText;
+import dev.erst.gridgrind.contract.dto.GridGrindProblemDetail;
 import dev.erst.gridgrind.contract.dto.GridGrindProtocolVersion;
 import dev.erst.gridgrind.contract.dto.GridGrindResponse;
 import dev.erst.gridgrind.contract.dto.GridGrindResponses;
@@ -12,7 +13,6 @@ import dev.erst.gridgrind.contract.json.InvalidRequestShapeException;
 import dev.erst.gridgrind.engine.api.GridGrindProblems;
 import dev.erst.gridgrind.engine.api.GridGrindRequestDoctor;
 import dev.erst.gridgrind.engine.api.GridGrindRequestExecutor;
-import dev.erst.gridgrind.engine.api.GridGrindRequestInputs;
 import dev.erst.gridgrind.engine.api.GridGrindRequestRequirements;
 import java.io.IOException;
 import java.io.InputStream;
@@ -66,7 +66,7 @@ final class GridGrindCliExecutionCommands {
       throws IOException {
     if (requestArrivesOnStandardInput(command.requestPath())
         && command.executionRootPath().isEmpty()) {
-      return responseWriter.writeCliFailureReport(
+      return responseWriter.writeCliDiagnostic(
           command.responsePath(), stdout, stderr, stdinExecutionRootFailure("execute"), prettyJson);
     }
 
@@ -100,40 +100,51 @@ final class GridGrindCliExecutionCommands {
     GridGrindResponse response;
     if (requestArrivesOnStandardInput(command.requestPath())
         && GridGrindRequestRequirements.requiresStandardInput(request)) {
-      return responseWriter.writeCliFailureReport(
+      return responseWriter.writeCliDiagnostic(
           command.responsePath(),
           stdout,
           stderr,
-          CliFailureReports.invalidArguments(
+          CliDiagnostics.invalidArguments(
               2,
               "execute",
-              "bind-inputs",
               Optional.of("--request"),
-              GridGrindContractText.standardInputRequiresRequestMessage(),
-              List.of("gridgrind --request request.json", "gridgrind --help-protocol"),
-              Optional.of(
-                  "Requests that bind STANDARD_INPUT-authored payloads must arrive by"
-                      + " --request so standard input stays available for payload bytes.")),
+              GridGrindRequestSurfaceContractText.standardInputRequiresRequestMessage(),
+              List.of("gridgrind --request request.json", "gridgrind --help-protocol")),
           prettyJson);
     }
 
-    GridGrindRequestInputs bindings =
-        CliExecutionBindingsFactory.create(
-            command.requestPath(),
-            command.executionRootPath(),
-            command.tempRootPath(),
-            request,
-            stdin);
     try {
-      response = requestExecutor.execute(request, bindings, journalWriter.sinkFor(request, stderr));
-    } catch (Exception exception) {
-      response =
-          GridGrindResponses.failure(
-              GridGrindProtocolVersion.current(),
-              GridGrindProblems.fromException(
-                  exception,
-                  new dev.erst.gridgrind.contract.dto.ProblemContext.ExecuteRequest(
-                      requestShape(request))));
+      try (CliExecutionBindingsFactory.ManagedRequestInputs bindings =
+          CliExecutionBindingsFactory.create(
+              command.requestPath(),
+              command.executionRootPath(),
+              command.tempRootPath(),
+              request,
+              stdin)) {
+        try {
+          response =
+              requestExecutor.execute(
+                  request, bindings.inputs(), journalWriter.sinkFor(request, stderr));
+        } catch (Exception exception) {
+          response =
+              GridGrindResponses.failure(
+                  GridGrindProtocolVersion.current(),
+                  GridGrindProblems.fromException(
+                      exception,
+                      new dev.erst.gridgrind.contract.dto.ProblemContext.ExecuteRequest(
+                          requestShape(request))));
+        }
+      }
+    } catch (IOException exception) {
+      return writeReadRequestFailure(
+          1,
+          "execute",
+          command.requestPath(),
+          command.responsePath(),
+          stdout,
+          stderr,
+          exception,
+          prettyJson);
     }
 
     return responseWriter.write(
@@ -154,29 +165,25 @@ final class GridGrindCliExecutionCommands {
       throws IOException {
     Optional<InputStream> requestInput = standardInputIfPresent(command.requestPath(), stdin);
     if (requestInput.isEmpty()) {
-      return responseWriter.writeCliFailureReport(
+      return responseWriter.writeCliDiagnostic(
           command.responsePath(),
           stdout,
           stderr,
-          CliFailureReports.invalidArguments(
+          CliDiagnostics.invalidArguments(
               2,
               "doctor-request",
-              "resolve-request",
               Optional.of("--request"),
               "No request JSON was provided. Pass --request <path> or pipe one request document"
                   + " on standard input.",
               List.of(
                   "gridgrind --print-request-template --response request.json",
                   "gridgrind --help",
-                  "gridgrind --help-protocol"),
-              Optional.of(
-                  "Use --doctor-request only after you have one real request document to"
-                      + " inspect.")),
+                  "gridgrind --help-protocol")),
           prettyJson);
     }
     if (requestArrivesOnStandardInput(command.requestPath())
         && command.executionRootPath().isEmpty()) {
-      return responseWriter.writeCliFailureReport(
+      return responseWriter.writeCliDiagnostic(
           command.responsePath(),
           stdout,
           stderr,
@@ -211,22 +218,17 @@ final class GridGrindCliExecutionCommands {
         command.responsePath(), stdout, stderr, report, prettyJson);
   }
 
-  private static dev.erst.gridgrind.cli.discovery.CliFailureReport stdinExecutionRootFailure(
+  private static dev.erst.gridgrind.cli.discovery.CliDiagnostic stdinExecutionRootFailure(
       String command) {
-    return CliFailureReports.invalidArguments(
+    return CliDiagnostics.invalidArguments(
         2,
         command,
-        "resolve-request",
         Optional.of("--execution-root"),
-        GridGrindContractText.stdinExecutionRootRequiredMessage(),
+        GridGrindRequestSurfaceContractText.stdinExecutionRootRequiredMessage(),
         List.of(
             "gridgrind --execution-root . < request.json",
             "gridgrind --request request.json",
-            "gridgrind --help-protocol"),
-        Optional.of(
-            "When the request JSON arrives on stdin, pass one explicit --execution-root so"
-                + " relative request-owned paths and internal temp files resolve from one"
-                + " caller-chosen directory."));
+            "gridgrind --help-protocol"));
   }
 
   private dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces.RequestInput requestInput(
@@ -287,21 +289,18 @@ final class GridGrindCliExecutionCommands {
     Objects.requireNonNull(stdout, "stdout must not be null");
     Objects.requireNonNull(stderr, "stderr must not be null");
     Objects.requireNonNull(exception, "exception must not be null");
-    return responseWriter.writeRequestFailureReport(
+    GridGrindProblemDetail.Problem problem =
+        GridGrindProblems.fromException(
+            exception,
+            new dev.erst.gridgrind.contract.dto.ProblemContext.ReadRequest(
+                requestInput(requestPath),
+                dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces.JsonLocation
+                    .unavailable()));
+    return responseWriter.writeRequestDiagnostic(
         responsePath,
         stdout,
         stderr,
-        CliFailureReports.readRequestFailure(
-            exitCode,
-            command,
-            requestPath.isPresent() ? Optional.of("--request") : Optional.empty(),
-            GridGrindProblems.fromException(
-                exception,
-                new dev.erst.gridgrind.contract.dto.ProblemContext.ReadRequest(
-                    requestInput(requestPath),
-                    dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces.JsonLocation
-                        .unavailable())),
-            exception),
+        CliDiagnostics.readRequestFailure(exitCode, command, problem),
         prettyJson);
   }
 

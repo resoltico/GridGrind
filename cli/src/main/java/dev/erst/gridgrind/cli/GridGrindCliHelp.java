@@ -1,7 +1,6 @@
 package dev.erst.gridgrind.cli;
 
-import static dev.erst.gridgrind.cli.GridGrindCliHelpRenderSupport.formatExamples;
-import static dev.erst.gridgrind.cli.GridGrindCliHelpRenderSupport.formatTaskStarters;
+import static dev.erst.gridgrind.cli.GridGrindCliHelpRenderSupport.formatRecipes;
 import static dev.erst.gridgrind.cli.GridGrindCliHelpRenderSupport.renderCommandExample;
 import static dev.erst.gridgrind.cli.GridGrindCliHelpRenderSupport.renderCommandSection;
 import static dev.erst.gridgrind.cli.GridGrindCliHelpRenderSupport.renderCoordinateSystems;
@@ -11,8 +10,7 @@ import static dev.erst.gridgrind.cli.GridGrindCliHelpRenderSupport.renderReferen
 import static dev.erst.gridgrind.cli.GridGrindCliHelpRenderSupport.renderSection;
 import static dev.erst.gridgrind.cli.GridGrindCliHelpRenderSupport.renderWorkflows;
 
-import dev.erst.gridgrind.cli.discovery.GridGrindTaskCatalog;
-import dev.erst.gridgrind.cli.examples.GridGrindShippedExamples;
+import dev.erst.gridgrind.cli.discovery.GridGrindRecipeCatalog;
 import java.util.List;
 import java.util.Objects;
 
@@ -84,19 +82,14 @@ public final class GridGrindCliHelp {
                         "--print-request-template",
                         "Emit the canonical minimal request JSON skeleton."),
                     new CliSurface.DefinitionEntry(
-                        "--print-example-catalog",
-                        "List built-in example ids plus portability and required-path details."),
+                        "--print-recipe --lookup <id>",
+                        "Emit one built-in example or task-starter request by stable id."),
                     new CliSurface.DefinitionEntry(
-                        "--print-example --lookup <id>", "Emit one built-in example request."),
+                        "--print-recipe-catalog [--lookup <id>]",
+                        "List every built-in recipe or print one recipe descriptor by id."),
                     new CliSurface.DefinitionEntry(
-                        "--print-task-catalog [--lookup <id>]",
-                        "List CLI-owned task recipes or print one task entry by id."),
-                    new CliSurface.DefinitionEntry(
-                        "--print-task-plan --lookup <id>",
-                        "Emit one validated starter request for a stable task id."),
-                    new CliSurface.DefinitionEntry(
-                        "--print-task-keyword-match --query <text>",
-                        "Rank likely task ids for one natural-language query."),
+                        "--print-recipe-keyword-match --query <text>",
+                        "Rank likely built-in recipe ids for one natural-language query."),
                     new CliSurface.DefinitionEntry(
                         "--print-protocol-catalog",
                         "Emit the compact authoritative protocol-catalog index."),
@@ -126,9 +119,11 @@ public final class GridGrindCliHelp {
                     "A bare gridgrind invocation expects one request JSON document on standard"
                         + " input together with --execution-root <path>, or one --request"
                         + " <path>.",
-                    "With no --response path, CLI argument errors and request-content failure"
-                        + " reports are emitted as structured JSON on stderr, while executed"
-                        + " responses stay on stdout.",
+                    "With no --response path, CLI diagnostics and request-content diagnostics"
+                        + " are emitted as structured JSON on stderr, while executed responses"
+                        + " stay on stdout. With --response, non-success stderr diagnostics"
+                        + " stay structured and use their transport block to name the persisted"
+                        + " file or stdout fallback channel.",
                     "Use --format structured when you want JSON help, version, or license"
                         + " discovery instead of prose.",
                     "Use --pretty when you want indented JSON instead of the compact default"
@@ -157,9 +152,11 @@ public final class GridGrindCliHelp {
                 List.of(
                     "This help surface describes the authoritative CLI and request contract"
                         + " only.",
-                    "Protocol-catalog lookup payloads may annotate conditional fields with"
-                        + " projectedByFacets and enumValueDocs so the machine contract stays"
-                        + " self-describing.",
+                    "The bare --print-protocol-catalog command emits only the compact"
+                        + " index. Scoped --lookup payloads may annotate conditional fields"
+                        + " with projectedByFacets, noteRefs, and enumValueDocs, and may"
+                        + " publish shared notes when one stable rule applies across"
+                        + " multiple entries.",
                     "Workflow playbooks, examples, Docker usage, and catalog walk-throughs live"
                         + " under --help-guidance."))),
         renderSection(cliSurface.execution()),
@@ -185,8 +182,7 @@ public final class GridGrindCliHelp {
   }
 
   private static String renderGuidanceHelp(CliSurface cliSurface, String containerTag) {
-    String discoveryExamples = formatExamples(GridGrindShippedExamples.catalog().examples());
-    String taskStarters = formatTaskStarters(GridGrindTaskCatalog.catalog().tasks());
+    String recipeCatalogEntries = formatRecipes(GridGrindRecipeCatalog.catalog().recipes());
     return String.join(
         "\n\n",
         renderSection(
@@ -202,7 +198,7 @@ public final class GridGrindCliHelp {
                 List.of(
                     "1. Print a minimal request: gridgrind --print-request-template --response"
                         + " request.json",
-                    "2. Print a task starter: gridgrind --print-task-plan --lookup DASHBOARD"
+                    "2. Print a task starter: gridgrind --print-recipe --lookup DASHBOARD"
                         + " --response task-request.json",
                     "3. Preflight the starter: gridgrind --doctor-request --request"
                         + " task-request.json --response doctor.json",
@@ -215,6 +211,6 @@ public final class GridGrindCliHelp {
                 "Workflow Playbooks", cliSurface.workflows().entries())),
         renderCommandExample(cliSurface.stdinExample(), containerTag),
         renderCommandExample(cliSurface.dockerFileExample(), containerTag),
-        renderDiscovery(cliSurface.discovery(), discoveryExamples, taskStarters));
+        renderDiscovery(cliSurface.discovery(), recipeCatalogEntries));
   }
 }

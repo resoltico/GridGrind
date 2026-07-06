@@ -389,6 +389,7 @@ class CatalogLookupSupportCoverageTest {
             List.of(field("nested", new FieldShape.NestedTypeGroupRef("lookupNested"))),
             List.of(),
             Optional.empty(),
+            List.of(),
             Optional.of(
                 new ProtocolStepTemplate(
                     "MUTATION_STEP",
@@ -402,6 +403,7 @@ class CatalogLookupSupportCoverageTest {
             List.of(field("plain", new FieldShape.PlainTypeGroupRef("lookupPlain"))),
             List.of(),
             Optional.empty(),
+            List.of(),
             Optional.of(
                 new ProtocolStepTemplate(
                     "INSPECTION_STEP",
@@ -419,7 +421,8 @@ class CatalogLookupSupportCoverageTest {
         List.of(),
         List.of(usePlain),
         List.of(new NestedTypeGroup("lookupNested", "type", List.of(nestedEntry))),
-        List.of(new PlainTypeGroup("lookupPlain", plainEntry)));
+        List.of(new PlainTypeGroup("lookupPlain", plainEntry)),
+        List.of());
   }
 
   private static Catalog bogusTopLevelCoverageCatalog() {
@@ -436,6 +439,7 @@ class CatalogLookupSupportCoverageTest {
         List.of(),
         List.of(),
         List.of(useBogusTopLevel),
+        List.of(),
         List.of(),
         List.of(),
         List.of(),
@@ -490,7 +494,8 @@ class CatalogLookupSupportCoverageTest {
         List.of(),
         List.of(),
         List.of(new NestedTypeGroup("lookupNested", "type", List.of(nestedEntry))),
-        List.of(new PlainTypeGroup("lookupPlain", plainEntry)));
+        List.of(new PlainTypeGroup("lookupPlain", plainEntry)),
+        List.of());
   }
 
   private static Catalog recursiveReferenceCoverageCatalog() {
@@ -539,7 +544,8 @@ class CatalogLookupSupportCoverageTest {
             new NestedTypeGroup("unionGroup", "type", List.of(unionEntry))),
         List.of(
             new PlainTypeGroup("recursivePlainGroup", recursivePlain),
-            new PlainTypeGroup("plainLeafGroup", plainLeaf)));
+            new PlainTypeGroup("plainLeafGroup", plainLeaf)),
+        List.of());
   }
 
   private static Catalog brokenNestedCoverageCatalog() {
@@ -556,6 +562,7 @@ class CatalogLookupSupportCoverageTest {
         List.of(),
         List.of(),
         List.of(action),
+        List.of(),
         List.of(),
         List.of(),
         List.of(),
@@ -576,6 +583,7 @@ class CatalogLookupSupportCoverageTest {
         List.of(),
         List.of(),
         List.of(action),
+        List.of(),
         List.of(),
         List.of(),
         List.of(),
@@ -600,7 +608,8 @@ class CatalogLookupSupportCoverageTest {
         List.of(),
         List.of(),
         List.of(new NestedTypeGroup("orphanNested", "type", List.of(nestedEntry))),
-        List.of(new PlainTypeGroup("orphanPlain", plainEntry)));
+        List.of(new PlainTypeGroup("orphanPlain", plainEntry)),
+        List.of());
   }
 
   private static Catalog groupLookupBranchCoverageCatalog() {
@@ -623,6 +632,7 @@ class CatalogLookupSupportCoverageTest {
         List.of(
             new NestedTypeGroup("lookupNested", "type", List.of(firstNested)),
             new NestedTypeGroup("lookupNestedOther", "type", List.of(secondNested))),
+        List.of(),
         List.of());
   }
 

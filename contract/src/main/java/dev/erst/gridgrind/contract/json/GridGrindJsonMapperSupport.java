@@ -3,7 +3,7 @@ package dev.erst.gridgrind.contract.json;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import dev.erst.gridgrind.contract.action.MutationAction;
 import dev.erst.gridgrind.contract.assertion.Assertion;
-import dev.erst.gridgrind.contract.catalog.GridGrindContractText;
+import dev.erst.gridgrind.contract.catalog.GridGrindRequestSurfaceContractText;
 import dev.erst.gridgrind.contract.query.InspectionQuery;
 import dev.erst.gridgrind.contract.query.InspectionResult;
 import org.jspecify.annotations.Nullable;
@@ -29,7 +29,7 @@ final class GridGrindJsonMapperSupport {
   private GridGrindJsonMapperSupport() {}
 
   static long maxRequestDocumentBytes() {
-    return GridGrindContractText.requestDocumentLimitBytes();
+    return GridGrindRequestSurfaceContractText.requestDocumentLimitBytes();
   }
 
   static void requireSupportedRequestLength(long lengthBytes) {
@@ -42,7 +42,8 @@ final class GridGrindJsonMapperSupport {
   static InvalidRequestException requestTooLarge(@Nullable Throwable cause) {
     return new InvalidRequestException(
         new MessageInvariant(
-            GridGrindContractText.requestDocumentTooLargeMessage(), java.util.Optional.empty()),
+            GridGrindRequestSurfaceContractText.requestDocumentTooLargeMessage(),
+            java.util.Optional.empty()),
         java.util.Optional.empty(),
         java.util.Optional.empty(),
         java.util.Optional.empty(),

@@ -31,11 +31,15 @@ import dev.erst.gridgrind.excel.foundation.ExcelIgnoredErrorType;
 import dev.erst.gridgrind.excel.foundation.ExcelOoxmlEncryptionMode;
 import dev.erst.gridgrind.excel.foundation.ExcelOoxmlSignatureDigestAlgorithm;
 import dev.erst.gridgrind.excel.foundation.ExcelOoxmlSignatureState;
+import dev.erst.gridgrind.excel.foundation.ExcelOoxmlWriteCipher;
+import dev.erst.gridgrind.excel.foundation.ExcelOoxmlWriteHash;
 import dev.erst.gridgrind.excel.foundation.ExcelPaneRegion;
 import dev.erst.gridgrind.excel.foundation.ExcelPictureFormat;
 import dev.erst.gridgrind.excel.foundation.ExcelPivotDataConsolidateFunction;
 import dev.erst.gridgrind.excel.foundation.ExcelPrintOrientation;
+import dev.erst.gridgrind.excel.foundation.ExcelReportedCellErrorLiteral;
 import dev.erst.gridgrind.excel.foundation.ExcelSheetVisibility;
+import dev.erst.gridgrind.excel.foundation.ExcelStoredCellErrorLiteral;
 import dev.erst.gridgrind.excel.foundation.ExcelVerticalAlignment;
 import java.util.Arrays;
 import java.util.List;
@@ -103,6 +107,21 @@ class ExcelFoundationWireVocabularyTest {
         "NONE",
         "SMOOTH",
         "SMOOTH_MARKER");
+    assertEquals(
+        List.of("#NULL!", "#DIV/0!", "#VALUE!", "#REF!", "#NAME?", "#NUM!", "#N/A"),
+        ExcelStoredCellErrorLiteral.orderedWireValues());
+    assertEquals(
+        List.of(
+            "#NULL!",
+            "#DIV/0!",
+            "#VALUE!",
+            "#REF!",
+            "#NAME?",
+            "#NUM!",
+            "#N/A",
+            "#CIRCULAR_REF!",
+            "#FUNCTION_NOT_IMPLEMENTED!"),
+        ExcelReportedCellErrorLiteral.orderedWireValues());
     assertWireVocabulary(
         ExcelComparisonOperator.class,
         "BETWEEN",
@@ -202,6 +221,8 @@ class ExcelFoundationWireVocabularyTest {
         "TWO_DIGIT_TEXT_YEAR",
         "UNLOCKED_FORMULA");
     assertWireVocabulary(ExcelOoxmlEncryptionMode.class, "AGILE", "STANDARD");
+    assertWireVocabulary(ExcelOoxmlWriteCipher.class, "AES_256", "AES_192");
+    assertWireVocabulary(ExcelOoxmlWriteHash.class, "SHA_512", "SHA_384", "SHA_256");
     assertWireVocabulary(ExcelOoxmlSignatureDigestAlgorithm.class, "SHA256", "SHA384", "SHA512");
     assertWireVocabulary(
         ExcelOoxmlSignatureState.class, "VALID", "INVALID", "INVALIDATED_BY_MUTATION");

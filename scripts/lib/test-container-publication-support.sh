@@ -78,17 +78,29 @@ case "${command}" in
             --print-request-template)
                 emit_fixture_file "${FAKE_DOCKER_REQUEST_TEMPLATE_OUTPUT_FILE:?}"
                 ;;
-            --print-task-catalog)
-                emit_fixture_file "${FAKE_DOCKER_TASK_CATALOG_OUTPUT_FILE:?}"
+            --print-recipe-catalog)
+                if [[ "${args[$((run_index + 2))]:-}" == "--lookup" ]]; then
+                    case "${args[$((run_index + 3))]:-}" in
+                        BUDGET)
+                            emit_fixture_file "${FAKE_DOCKER_EXAMPLE_RECIPE_CATALOG_DETAIL_OUTPUT_FILE:?}"
+                            ;;
+                        TABULAR_REPORT)
+                            emit_fixture_file "${FAKE_DOCKER_TASK_RECIPE_CATALOG_DETAIL_OUTPUT_FILE:?}"
+                            ;;
+                        *)
+                            printf 'unexpected docker recipe catalog lookup fixture request: %s\n' "${args[$((run_index + 3))]:-}" >&2
+                            exit 1
+                            ;;
+                    esac
+                else
+                    emit_fixture_file "${FAKE_DOCKER_RECIPE_CATALOG_OUTPUT_FILE:?}"
+                fi
                 ;;
-            --print-example-catalog)
-                emit_fixture_file "${FAKE_DOCKER_EXAMPLE_CATALOG_OUTPUT_FILE:?}"
+            --print-recipe)
+                emit_fixture_file "${FAKE_DOCKER_RECIPE_REQUEST_OUTPUT_FILE:?}"
                 ;;
-            --print-task-plan)
-                emit_fixture_file "${FAKE_DOCKER_TASK_PLAN_OUTPUT_FILE:?}"
-                ;;
-            --print-task-keyword-match)
-                emit_fixture_file "${FAKE_DOCKER_TASK_KEYWORD_MATCH_OUTPUT_FILE:?}"
+            --print-recipe-keyword-match)
+                emit_fixture_file "${FAKE_DOCKER_RECIPE_KEYWORD_MATCH_OUTPUT_FILE:?}"
                 ;;
             --doctor-request)
                 emit_fixture_file "${FAKE_DOCKER_DOCTOR_REPORT_OUTPUT_FILE:?}"
@@ -175,34 +187,22 @@ run_fake_docker_verify_with_fixture_texts() {
     local inspection_query_types_output=${12}
     local execution_mode_types_output=${13}
     local execution_policy_input_type_output=${14}
-    local example_catalog_output=${15}
-    local task_catalog_output=${16}
-    local task_plan_output=${17}
-    local task_keyword_match_output=${18}
-    local doctor_report_output=${19}
-    local noargs_failure_output=${20}
-    local case_dir
-    local version_output_file
-    local latest_version_output_file
-    local help_overview_output_file
-    local help_protocol_output_file
-    local help_guidance_output_file
-    local catalog_index_output_file
-    local source_types_output_file
-    local persistence_types_output_file
-    local step_types_output_file
-    local mutation_action_types_output_file
-    local assertion_types_output_file
-    local inspection_query_types_output_file
-    local execution_mode_types_output_file
-    local execution_policy_input_type_output_file
-    local example_catalog_output_file
-    local task_catalog_output_file
-    local task_plan_output_file
-    local task_keyword_match_output_file
-    local request_template_output_file
-    local doctor_report_output_file
-    local noargs_failure_output_file
+    local recipe_catalog_output=${15}
+    local recipe_request_output=${16}
+    local recipe_keyword_match_output=${17}
+    local doctor_report_output=${18}
+    local noargs_failure_output=${19}
+    local example_recipe_catalog_detail_output=${20:-${success_example_recipe_catalog_detail}}
+    local task_recipe_catalog_detail_output=${21:-${success_task_recipe_catalog_detail}}
+    local case_dir version_output_file latest_version_output_file
+    local help_overview_output_file help_protocol_output_file help_guidance_output_file
+    local catalog_index_output_file source_types_output_file persistence_types_output_file
+    local step_types_output_file mutation_action_types_output_file assertion_types_output_file
+    local inspection_query_types_output_file execution_mode_types_output_file
+    local execution_policy_input_type_output_file recipe_catalog_output_file
+    local example_recipe_catalog_detail_output_file task_recipe_catalog_detail_output_file
+    local recipe_request_output_file recipe_keyword_match_output_file
+    local request_template_output_file doctor_report_output_file noargs_failure_output_file
 
     case_dir="$(next_fixture_case_dir "${test_root}")"
     version_output_file="$(write_case_fixture "${case_dir}" 'version.txt' "${version_output}")"
@@ -219,10 +219,11 @@ run_fake_docker_verify_with_fixture_texts() {
     inspection_query_types_output_file="$(write_case_fixture "${case_dir}" 'inspection-query-types.json' "${inspection_query_types_output}")"
     execution_mode_types_output_file="$(write_case_fixture "${case_dir}" 'execution-mode-types.json' "${execution_mode_types_output}")"
     execution_policy_input_type_output_file="$(write_case_fixture "${case_dir}" 'execution-policy-input-type.json' "${execution_policy_input_type_output}")"
-    example_catalog_output_file="$(write_case_fixture "${case_dir}" 'example-catalog.json' "${example_catalog_output}")"
-    task_catalog_output_file="$(write_case_fixture "${case_dir}" 'task-catalog.json' "${task_catalog_output}")"
-    task_plan_output_file="$(write_case_fixture "${case_dir}" 'task-plan.json' "${task_plan_output}")"
-    task_keyword_match_output_file="$(write_case_fixture "${case_dir}" 'task-keyword-match.json' "${task_keyword_match_output}")"
+    recipe_catalog_output_file="$(write_case_fixture "${case_dir}" 'recipe-catalog.json' "${recipe_catalog_output}")"
+    example_recipe_catalog_detail_output_file="$(write_case_fixture "${case_dir}" 'recipe-catalog-example-detail.json' "${example_recipe_catalog_detail_output}")"
+    task_recipe_catalog_detail_output_file="$(write_case_fixture "${case_dir}" 'recipe-catalog-task-detail.json' "${task_recipe_catalog_detail_output}")"
+    recipe_request_output_file="$(write_case_fixture "${case_dir}" 'recipe-request.json' "${recipe_request_output}")"
+    recipe_keyword_match_output_file="$(write_case_fixture "${case_dir}" 'recipe-keyword-match.json' "${recipe_keyword_match_output}")"
     request_template_output_file="$(write_case_fixture "${case_dir}" 'request-template.json' "${success_request_template}")"
     doctor_report_output_file="$(write_case_fixture "${case_dir}" 'doctor-report.json' "${doctor_report_output}")"
     noargs_failure_output_file="$(write_case_fixture "${case_dir}" 'noargs-failure.json' "${noargs_failure_output}")"
@@ -244,10 +245,11 @@ run_fake_docker_verify_with_fixture_texts() {
         FAKE_DOCKER_INSPECTION_QUERY_TYPES_OUTPUT_FILE="${inspection_query_types_output_file}" \
         FAKE_DOCKER_EXECUTION_MODE_TYPES_OUTPUT_FILE="${execution_mode_types_output_file}" \
         FAKE_DOCKER_EXECUTION_POLICY_INPUT_TYPE_OUTPUT_FILE="${execution_policy_input_type_output_file}" \
-        FAKE_DOCKER_EXAMPLE_CATALOG_OUTPUT_FILE="${example_catalog_output_file}" \
-        FAKE_DOCKER_TASK_CATALOG_OUTPUT_FILE="${task_catalog_output_file}" \
-        FAKE_DOCKER_TASK_PLAN_OUTPUT_FILE="${task_plan_output_file}" \
-        FAKE_DOCKER_TASK_KEYWORD_MATCH_OUTPUT_FILE="${task_keyword_match_output_file}" \
+        FAKE_DOCKER_RECIPE_CATALOG_OUTPUT_FILE="${recipe_catalog_output_file}" \
+        FAKE_DOCKER_EXAMPLE_RECIPE_CATALOG_DETAIL_OUTPUT_FILE="${example_recipe_catalog_detail_output_file}" \
+        FAKE_DOCKER_TASK_RECIPE_CATALOG_DETAIL_OUTPUT_FILE="${task_recipe_catalog_detail_output_file}" \
+        FAKE_DOCKER_RECIPE_REQUEST_OUTPUT_FILE="${recipe_request_output_file}" \
+        FAKE_DOCKER_RECIPE_KEYWORD_MATCH_OUTPUT_FILE="${recipe_keyword_match_output_file}" \
         FAKE_DOCKER_REQUEST_TEMPLATE_OUTPUT_FILE="${request_template_output_file}" \
         FAKE_DOCKER_DOCTOR_REPORT_OUTPUT_FILE="${doctor_report_output_file}" \
         FAKE_DOCKER_NOARGS_FAILURE_OUTPUT_FILE="${noargs_failure_output_file}" \

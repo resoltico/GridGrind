@@ -7,8 +7,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import dev.erst.gridgrind.cli.GridGrindCli;
 import dev.erst.gridgrind.cli.discovery.ExampleWorkspaceMode;
 import dev.erst.gridgrind.cli.discovery.GridGrindCliJson;
-import dev.erst.gridgrind.cli.discovery.ShippedExampleCatalog;
-import dev.erst.gridgrind.cli.discovery.ShippedExampleEntry;
+import dev.erst.gridgrind.cli.discovery.RecipeCatalog;
+import dev.erst.gridgrind.cli.discovery.RecipeCatalogEntry;
+import dev.erst.gridgrind.cli.discovery.RecipeView;
 import dev.erst.gridgrind.contract.dto.GridGrindProblemCode;
 import dev.erst.gridgrind.contract.dto.GridGrindResponse;
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
@@ -37,7 +38,7 @@ class ExampleExecutionFixturesTest {
     DefaultGridGrindRequestExecutor executor = new DefaultGridGrindRequestExecutor();
     ExecutionInputBindings workspaceBindings =
         ExecutionInputBindingsFixtureSupport.bindings(workspace);
-    for (ShippedExampleEntry example : selfContainedExamples()) {
+    for (RecipeCatalogEntry example : selfContainedExamples()) {
       WorkbookPlan request = printedBuiltInExample(example.id());
       GridGrindResponse.Success success =
           assertInstanceOf(
@@ -62,7 +63,7 @@ class ExampleExecutionFixturesTest {
     DefaultGridGrindRequestExecutor executor = new DefaultGridGrindRequestExecutor();
     ExecutionInputBindings workspaceBindings =
         ExecutionInputBindingsFixtureSupport.bindings(workspace);
-    for (ShippedExampleEntry example : exampleCatalog().examples()) {
+    for (RecipeCatalogEntry example : exampleEntries()) {
       copyRequiredExampleAssets(example, repositoryExamples, workspace);
       WorkbookPlan request = printedBuiltInExample(example.id());
       GridGrindResponse.Success success =
@@ -86,7 +87,7 @@ class ExampleExecutionFixturesTest {
     DefaultGridGrindRequestExecutor executor = new DefaultGridGrindRequestExecutor();
     ExecutionInputBindings workspaceBindings =
         ExecutionInputBindingsFixtureSupport.bindings(workspace);
-    for (ShippedExampleEntry example : repositoryAssetBackedExamples()) {
+    for (RecipeCatalogEntry example : repositoryAssetBackedExamples()) {
       GridGrindResponse.Failure failure =
           assertInstanceOf(
               GridGrindResponse.Failure.class,
@@ -111,7 +112,7 @@ class ExampleExecutionFixturesTest {
     DefaultGridGrindRequestExecutor executor = new DefaultGridGrindRequestExecutor();
     ExecutionInputBindings exampleBindings =
         ExecutionInputBindingsFixtureSupport.bindings(examplesDirectory);
-    for (ShippedExampleEntry example : exampleCatalog().examples()) {
+    for (RecipeCatalogEntry example : exampleEntries()) {
       Path requestPath = examplesDirectory.resolve(example.requestFileName());
       WorkbookPlan request = GridGrindJson.readRequest(Files.readAllBytes(requestPath));
       GridGrindResponse.Success success =
@@ -130,27 +131,31 @@ class ExampleExecutionFixturesTest {
     }
   }
 
-  private static ShippedExampleCatalog exampleCatalog() throws IOException {
+  private static List<RecipeCatalogEntry> exampleEntries() throws IOException {
     GridGrindCli cli = new GridGrindCli();
     ByteArrayOutputStream stdout = new ByteArrayOutputStream();
     int exitCode =
         cli.run(
-            new String[] {"--print-example-catalog"},
+            new String[] {"--print-recipe-catalog"},
             InputStream.nullInputStream(),
             stdout,
             OutputStream.nullOutputStream());
     assertEquals(0, exitCode, "example catalog command must succeed");
-    return GridGrindCliJson.readBytes(stdout.toByteArray(), ShippedExampleCatalog.class);
+    RecipeCatalog recipeCatalog =
+        GridGrindCliJson.readBytes(stdout.toByteArray(), RecipeCatalog.class);
+    return recipeCatalog.recipes().stream()
+        .filter(recipe -> recipe.view() == RecipeView.EXAMPLE)
+        .toList();
   }
 
-  private static List<ShippedExampleEntry> selfContainedExamples() throws IOException {
-    return exampleCatalog().examples().stream()
+  private static List<RecipeCatalogEntry> selfContainedExamples() throws IOException {
+    return exampleEntries().stream()
         .filter(example -> example.workspaceMode() == ExampleWorkspaceMode.SELF_CONTAINED)
         .toList();
   }
 
-  private static List<ShippedExampleEntry> repositoryAssetBackedExamples() throws IOException {
-    return exampleCatalog().examples().stream()
+  private static List<RecipeCatalogEntry> repositoryAssetBackedExamples() throws IOException {
+    return exampleEntries().stream()
         .filter(example -> example.workspaceMode() == ExampleWorkspaceMode.REQUIRES_EXAMPLE_ASSETS)
         .toList();
   }
@@ -160,7 +165,7 @@ class ExampleExecutionFixturesTest {
     ByteArrayOutputStream stdout = new ByteArrayOutputStream();
     int exitCode =
         cli.run(
-            new String[] {"--print-example", "--lookup", exampleId},
+            new String[] {"--print-recipe", "--lookup", exampleId},
             InputStream.nullInputStream(),
             stdout,
             OutputStream.nullOutputStream());
@@ -213,7 +218,7 @@ class ExampleExecutionFixturesTest {
   }
 
   private static void copyRequiredExampleAssets(
-      ShippedExampleEntry example, Path repositoryExamples, Path workspace) throws IOException {
+      RecipeCatalogEntry example, Path repositoryExamples, Path workspace) throws IOException {
     for (String requiredPath : example.requiredWorkspacePaths()) {
       Path sourcePath = repositoryExamples.resolve(requiredPath);
       Path targetPath = workspace.resolve(requiredPath);

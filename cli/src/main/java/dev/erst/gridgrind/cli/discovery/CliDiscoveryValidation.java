@@ -62,15 +62,14 @@ final class CliDiscoveryValidation {
     return java.util.Optional.of(normalized.orElseThrow());
   }
 
-  static java.util.Optional<CliFailureLocation> copyOptionalLocation(
-      java.util.Optional<CliFailureLocation> value, String fieldName) {
-    java.util.Optional<CliFailureLocation> normalized =
+  static java.util.Optional<CliTransport> copyOptionalTransport(
+      java.util.Optional<CliTransport> value, String fieldName) {
+    java.util.Optional<CliTransport> normalized =
         java.util.Objects.requireNonNull(value, fieldName + " must not be null");
     if (normalized.isEmpty()) {
       return java.util.Optional.empty();
     }
-    CliFailureLocation location = normalized.orElseThrow();
-    return location.isAvailable() ? java.util.Optional.of(location) : java.util.Optional.empty();
+    return java.util.Optional.of(normalized.orElseThrow());
   }
 
   static List<TaskEntry> copyTaskEntries(List<TaskEntry> tasks, String fieldName) {
@@ -105,7 +104,7 @@ final class CliDiscoveryValidation {
             .toList());
   }
 
-  private static <T> List<T> copyUnique(
+  static <T> List<T> copyUnique(
       List<T> values, String fieldName, Function<T, String> keyExtractor) {
     Objects.requireNonNull(values, fieldName + " must not be null");
     Set<String> seen = new LinkedHashSet<>();

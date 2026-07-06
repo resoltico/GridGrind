@@ -13,7 +13,11 @@ import dev.erst.gridgrind.contract.selector.*;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
 import dev.erst.gridgrind.excel.ExcelWorkbooks;
 import dev.erst.gridgrind.excel.OoxmlSecurityTestSupport;
+import dev.erst.gridgrind.excel.foundation.ExcelOoxmlCipherAlgorithm;
 import dev.erst.gridgrind.excel.foundation.ExcelOoxmlEncryptionMode;
+import dev.erst.gridgrind.excel.foundation.ExcelOoxmlHashAlgorithm;
+import dev.erst.gridgrind.excel.foundation.ExcelOoxmlWriteCipher;
+import dev.erst.gridgrind.excel.foundation.ExcelOoxmlWriteHash;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -177,7 +181,8 @@ class OoxmlSecurityRequestExecutorTest extends DefaultGridGrindRequestExecutorTe
                         new OoxmlPersistenceSecurityInput(
                             new OoxmlEncryptionInput(
                                 OoxmlSecurityTestSupport.ENCRYPTION_PASSWORD,
-                                ExcelOoxmlEncryptionMode.AGILE),
+                                ExcelOoxmlWriteCipher.AES_192,
+                                ExcelOoxmlWriteHash.SHA_384),
                             new OoxmlSignatureInput(
                                 signingMaterial.pkcs12Path().toString(),
                                 signingMaterial.keystorePassword(),
@@ -223,11 +228,24 @@ class OoxmlSecurityRequestExecutorTest extends DefaultGridGrindRequestExecutorTe
     SheetInspectionResult.CellsResult cells =
         read(reopened, "cells", SheetInspectionResult.CellsResult.class);
 
-    assertInstanceOf(OoxmlEncryptionReport.Encrypted.class, security.security().encryption());
+    OoxmlEncryptionReport.Encrypted encryption =
+        assertInstanceOf(OoxmlEncryptionReport.Encrypted.class, security.security().encryption());
+    assertEquals(ExcelOoxmlEncryptionMode.AGILE, encryption.mode());
+    assertEquals(ExcelOoxmlCipherAlgorithm.AES_192, encryption.cipherAlgorithm());
+    assertEquals(ExcelOoxmlHashAlgorithm.SHA_384, encryption.hashAlgorithm());
     assertEquals(1, security.security().signatures().size());
     assertEquals(
         dev.erst.gridgrind.excel.foundation.ExcelOoxmlSignatureState.VALID,
         security.security().signatures().getFirst().state());
+    assertTrue(
+        security
+            .security()
+            .signatures()
+            .getFirst()
+            .signer()
+            .orElseThrow()
+            .subject()
+            .contains("GridGrind Signing Test"));
     assertEquals(
         "Secured",
         assertInstanceOf(

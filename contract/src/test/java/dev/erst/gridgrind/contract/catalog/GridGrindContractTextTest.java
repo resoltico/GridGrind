@@ -18,12 +18,17 @@ import org.junit.jupiter.api.Test;
 class GridGrindContractTextTest {
   @Test
   void formulaAndPathResolutionSummariesStayStable() {
-    assertTrue(GridGrindContractText.formulaAuthoringLimitSummary().contains("LAMBDA/LET"));
-    assertTrue(GridGrindContractText.loadedFormulaSupportSummary().contains("UNSUPPORTED_FORMULA"));
     assertTrue(
-        GridGrindContractText.stdinExecutionRootRequiredMessage().contains("--execution-root"));
+        GridGrindInspectionContractText.formulaAuthoringLimitSummary().contains("LAMBDA/LET"));
     assertTrue(
-        GridGrindContractText.cliFlagPathResolutionSummary().contains("current working directory"));
+        GridGrindInspectionContractText.loadedFormulaSupportSummary()
+            .contains("UNSUPPORTED_FORMULA"));
+    assertTrue(
+        GridGrindRequestSurfaceContractText.stdinExecutionRootRequiredMessage()
+            .contains("--execution-root"));
+    assertTrue(
+        GridGrindRequestSurfaceContractText.cliFlagPathResolutionSummary()
+            .contains("current working directory"));
   }
 
   @Test
@@ -36,29 +41,36 @@ class GridGrindContractTextTest {
             WorkbookIntrospectionQuery.GetWorkbookSummary.class,
             SheetIntrospectionQuery.GetSheetSummary.class),
         GridGrindContractText.eventReadInspectionQueryClasses());
-    assertTrue(GridGrindContractText.sheetLayoutReadSummary().contains("zoomPercent"));
+    assertTrue(GridGrindInspectionContractText.sheetLayoutReadSummary().contains("zoomPercent"));
     assertEquals(
-        GridGrindContractText.FORMULA_SURFACE_READ_SUMMARY,
-        GridGrindContractText.formulaSurfaceReadSummary());
+        GridGrindInspectionContractText.FORMULA_SURFACE_READ_SUMMARY,
+        GridGrindInspectionContractText.formulaSurfaceReadSummary());
     assertEquals(
-        GridGrindContractText.NAMED_RANGE_SURFACE_READ_SUMMARY,
-        GridGrindContractText.namedRangeSurfaceReadSummary());
+        GridGrindInspectionContractText.NAMED_RANGE_SURFACE_READ_SUMMARY,
+        GridGrindInspectionContractText.namedRangeSurfaceReadSummary());
     assertEquals(
-        GridGrindContractText.FORMULA_HEALTH_READ_SUMMARY,
-        GridGrindContractText.formulaHealthReadSummary());
+        GridGrindInspectionContractText.FORMULA_HEALTH_READ_SUMMARY,
+        GridGrindInspectionContractText.formulaHealthReadSummary());
     assertEquals(
-        GridGrindContractText.NAMED_RANGE_HEALTH_READ_SUMMARY,
-        GridGrindContractText.namedRangeHealthReadSummary());
+        GridGrindInspectionContractText.NAMED_RANGE_HEALTH_READ_SUMMARY,
+        GridGrindInspectionContractText.namedRangeHealthReadSummary());
     assertEquals(
-        GridGrindContractText.WORKBOOK_FINDINGS_READ_SUMMARY,
-        GridGrindContractText.workbookFindingsReadSummary());
-    assertTrue(GridGrindContractText.workbookAnalysisFamilyPhrase().contains("formula health"));
+        GridGrindInspectionContractText.WORKBOOK_FINDINGS_READ_SUMMARY,
+        GridGrindInspectionContractText.workbookFindingsReadSummary());
+    assertTrue(
+        GridGrindInspectionContractText.workbookAnalysisFamilyPhrase().contains("formula health"));
     assertTrue(GridGrindContractText.executionModeInputSummary().contains("FULL_XSSF"));
     assertTrue(GridGrindContractText.executionModeInputSummary().contains("EVENT_READ"));
     assertTrue(GridGrindContractText.executionModeInputSummary().contains("STREAMING_WRITE"));
-    assertEquals(16L * 1024 * 1024, GridGrindContractText.requestDocumentLimitBytes());
-    assertTrue(GridGrindContractText.requestDocumentLimitSummary().contains("16777216 bytes"));
-    assertTrue(GridGrindContractText.stepKindSummary().contains("step.type"));
+    assertEquals(
+        16L * 1024 * 1024, GridGrindRequestSurfaceContractText.requestDocumentLimitBytes());
+    assertTrue(
+        GridGrindRequestSurfaceContractText.requestDocumentLimitSummary()
+            .contains("16777216 bytes"));
+    assertTrue(GridGrindRequestSurfaceContractText.stepKindSummary().contains("step.type"));
+    assertTrue(
+        GridGrindRequestSurfaceContractText.encryptedWorkbookTempSecuritySummary()
+            .contains("private OS temporary"));
     assertEquals(
         "ENSURE_SHEET",
         GridGrindContractText.mutationActionTypeName(WorkbookMutationAction.EnsureSheet.class));
@@ -88,6 +100,25 @@ class GridGrindContractTextTest {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> GridGrindContractText.humanJoin(List.of("", " ")))
+            .getMessage());
+  }
+
+  @Test
+  void inspectionHumanJoinRejectsEmptyListsAndFormatsSinglePairAndSeriesValues() {
+    assertEquals("alpha", GridGrindInspectionContractText.humanJoin(List.of("alpha")));
+    assertEquals(
+        "alpha and beta", GridGrindInspectionContractText.humanJoin(List.of("alpha", "beta")));
+    assertEquals(
+        "alpha, beta, and gamma",
+        GridGrindInspectionContractText.humanJoin(List.of("alpha", "beta", "gamma")));
+    assertEquals(
+        "alpha and beta",
+        GridGrindInspectionContractText.humanJoin(List.of("alpha", "", "beta", " ")));
+    assertEquals(
+        "values must not be empty",
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> GridGrindInspectionContractText.humanJoin(List.of("", " ")))
             .getMessage());
   }
 }

@@ -3,8 +3,8 @@ package dev.erst.gridgrind.cli;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 
-import dev.erst.gridgrind.cli.discovery.CliFailureReport;
-import dev.erst.gridgrind.contract.catalog.GridGrindContractText;
+import dev.erst.gridgrind.cli.discovery.CliDiagnostic;
+import dev.erst.gridgrind.contract.catalog.GridGrindRequestSurfaceContractText;
 import dev.erst.gridgrind.contract.dto.GridGrindProblemCode;
 import dev.erst.gridgrind.contract.dto.GridGrindResponse;
 import dev.erst.gridgrind.contract.json.GridGrindJson;
@@ -82,11 +82,13 @@ class CliStandardInputRoutingCoverageTest extends GridGrindCliTestSupport {
                 stdout,
                 stderr);
 
-    CliFailureReport failure = cliFailureOnStderr(stdout, stderr);
+    CliDiagnostic failure = cliDiagnosticOnStderr(stdout, stderr);
 
     assertEquals(2, exitCode);
-    assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.code());
-    assertEquals("--request", failure.argument().orElseThrow());
-    assertEquals(GridGrindContractText.standardInputRequiresRequestMessage(), failure.message());
+    assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.problem().code());
+    assertEquals("--request", parseArgumentsContext(failure).argumentName().orElseThrow());
+    assertEquals(
+        GridGrindRequestSurfaceContractText.standardInputRequiresRequestMessage(),
+        failure.problem().message());
   }
 }

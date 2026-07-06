@@ -20,11 +20,9 @@ final class CliPrimaryCommandSupport {
           Map.entry("--license", "license"),
           Map.entry("license", "license"),
           Map.entry("--print-request-template", "print-request-template"),
-          Map.entry("--print-example", "print-example"),
-          Map.entry("--print-example-catalog", "print-example-catalog"),
-          Map.entry("--print-task-catalog", "print-task-catalog"),
-          Map.entry("--print-task-plan", "print-task-plan"),
-          Map.entry("--print-task-keyword-match", "print-task-keyword-match"),
+          Map.entry("--print-recipe", "print-recipe"),
+          Map.entry("--print-recipe-catalog", "print-recipe-catalog"),
+          Map.entry("--print-recipe-keyword-match", "print-recipe-keyword-match"),
           Map.entry("--print-protocol-catalog", "print-protocol-catalog"),
           Map.entry("--doctor-request", "doctor-request"));
 

@@ -107,6 +107,11 @@ public final class GridGrindProtocolCatalog {
     return GridGrindProtocolCatalogLookupSupport.search(CATALOG, query);
   }
 
+  /** Resolves the shared notes referenced by one previously resolved lookup value. */
+  public static List<CatalogNote> referencedNotesForLookupValue(Object lookupValue) {
+    return CatalogNoteResolutionSupport.referencedNotes(CATALOG, lookupValue);
+  }
+
   private static Catalog buildCatalog() {
     GridGrindProtocolCatalogCoverageValidator.validateFieldShapeGroupMappings(
         NESTED_TYPE_GROUPS, PLAIN_TYPE_DESCRIPTORS);
@@ -133,7 +138,8 @@ public final class GridGrindProtocolCatalog {
             NESTED_TYPE_GROUPS.stream().map(GridGrindProtocolCatalog::publicGroup).toList(),
             PLAIN_TYPE_DESCRIPTORS.stream()
                 .map(GridGrindProtocolCatalog::publicPlainGroup)
-                .toList()));
+                .toList(),
+            GridGrindProtocolCatalogNotes.notes()));
   }
 
   private static NestedTypeGroup publicGroup(CatalogNestedTypeDescriptor descriptor) {

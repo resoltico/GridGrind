@@ -1,6 +1,6 @@
 ---
 afad: "4.0"
-version: "0.71.0"
+version: "0.72.0"
 domain: STYLE_VALIDATION_MUTATIONS
 updated: "2026-05-16"
 route:
@@ -430,8 +430,9 @@ ranges, preserving any remaining coverage fragments around the cleared area.
 
 ### SET_CONDITIONAL_FORMATTING
 
-Creates or replaces one logical conditional-formatting block on the sheet. The block owns one or
-more target ranges and one ordered rule list. Authoring supports six rule families:
+Creates or replaces one logical conditional-formatting block over one or more explicit target
+ranges. The target selector owns the ranges; the `conditionalFormatting` payload owns the ordered
+rule list. Authoring supports six rule families:
 
 - `FORMULA_RULE`
 - `CELL_VALUE_RULE`
@@ -449,15 +450,13 @@ differential, not a whole-cell style patch. Supported differential-style attribu
 {
   "stepId": "set-conditional-formatting",
   "target": {
-    "type": "SHEET_BY_NAME",
-    "name": "Inventory"
+    "type": "RANGE_BY_RANGE",
+    "sheetName": "Inventory",
+    "range": "D2:D200"
   },
   "action": {
     "type": "SET_CONDITIONAL_FORMATTING",
     "conditionalFormatting": {
-      "ranges": [
-        "D2:D200"
-      ],
       "rules": [
         {
           "type": "CELL_VALUE_RULE",
@@ -481,15 +480,16 @@ differential, not a whole-cell style patch. Supported differential-style attribu
 {
   "stepId": "set-conditional-formatting",
   "target": {
-    "type": "SHEET_BY_NAME",
-    "name": "Inventory"
+    "type": "RANGE_BY_RANGES",
+    "sheetName": "Inventory",
+    "ranges": [
+      "K2:K200",
+      "M2:M200"
+    ]
   },
   "action": {
     "type": "SET_CONDITIONAL_FORMATTING",
     "conditionalFormatting": {
-      "ranges": [
-        "K2:K200"
-      ],
       "rules": [
         {
           "type": "COLOR_SCALE_RULE",

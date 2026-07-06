@@ -1,6 +1,7 @@
 package dev.erst.gridgrind.contract.dto;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -192,10 +193,28 @@ class CompactCellInputCoverageTest {
   @Test
   void explicitErrorLiteralValidationAndPhaseFactoriesCoverResidualBranches() {
     assertEquals("#REF!", new CellInput.ErrorValue("#REF!").error());
+    assertEquals(
+        "storedError must not be null",
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> CellErrorLiteralValidation.requireStoredErrorLiteral(null, "storedError"))
+            .getMessage());
+    assertEquals(
+        "reportedError must not be null",
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> CellErrorLiteralValidation.requireReportedErrorLiteral(null, "reportedError"))
+            .getMessage());
+    IllegalArgumentException computedState =
+        assertThrows(
+            IllegalArgumentException.class, () -> new CellInput.ErrorValue("#CIRCULAR_REF!"));
+    assertTrue(computedState.getMessage().contains("cannot be authored as stored cell values"));
+    assertTrue(computedState.getMessage().contains("#FUNCTION_NOT_IMPLEMENTED!"));
     IllegalArgumentException invalidError =
         assertThrows(
             IllegalArgumentException.class, () -> new CellInput.ErrorValue("NOT_AN_ERROR"));
     assertTrue(invalidError.getMessage().contains("#REF!"));
+    assertFalse(invalidError.getMessage().contains("#FUNCTION_NOT_IMPLEMENTED!"));
     assertEquals(ExecutionJournal.Status.NOT_STARTED, ExecutionJournal.Phase.notStarted().status());
     assertEquals(
         ExecutionJournal.Status.NOT_REQUESTED, ExecutionJournal.Phase.notRequested().status());
@@ -223,5 +242,20 @@ class CompactCellInputCoverageTest {
                 () ->
                     new ExecutionJournal.Timing("2026-06-12T09:30:00Z", "2026-06-12T09:30:25Z", -1))
             .getMessage());
+  }
+
+  @Test
+  void compactErrorRowsRejectEvaluationOnlyReportedStates() {
+    IllegalArgumentException rowError =
+        assertThrows(
+            IllegalArgumentException.class,
+            () -> new CellRowInput.ErrorValues(List.of("#REF!", "#CIRCULAR_REF!")));
+    IllegalArgumentException gridError =
+        assertThrows(
+            IllegalArgumentException.class,
+            () -> new CellGridInput.ErrorRows(List.of(List.of("#FUNCTION_NOT_IMPLEMENTED!"))));
+
+    assertTrue(rowError.getMessage().contains("cannot be authored as stored cell values"));
+    assertTrue(gridError.getMessage().contains("cannot be authored as stored cell values"));
   }
 }

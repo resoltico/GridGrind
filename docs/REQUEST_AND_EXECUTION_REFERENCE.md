@@ -1,6 +1,6 @@
 ---
 afad: "4.0"
-version: "0.71.0"
+version: "0.72.0"
 domain: REQUEST_EXECUTION_REFERENCE
 updated: "2026-07-01"
 route:
@@ -115,7 +115,13 @@ When the CLI reads the request from `--request <path>`, relative request-owned p
 JSON follow the request file directory. That includes `source.path`, `persistence.path`,
 source-backed `UTF8_FILE` / `FILE` payloads, `formulaEnvironment.externalWorkbooks[*].path` when
 present, and `persistence.security.signature.pkcs12Path`. The CLI flags themselves are separate:
-`--request` and `--response` still resolve from the shell working directory.
+`--request` and `--response` still resolve from the shell working directory, as do
+`--execution-root` and `--temp-root`. Execution scratch is not request-rooted: without `--temp-root`, GridGrind
+creates one private per-run scratch directory under the OS temporary-file root; with
+`--temp-root <path>`, it creates that private scratch directory under the supplied parent path,
+and best-effort cleanup removes it on normal command completion. Encrypted OOXML plaintext temp
+workbooks always stay in private OS temp rather than the request root, execution root, or
+`--temp-root` parent.
 
 ### Formula Environment
 
@@ -455,7 +461,8 @@ Write the workbook to the given path, creating parent directories as needed. `SA
   "security": {
     "encryption": {
       "password": "GridGrind-2026",
-      "mode": "AGILE"
+      "cipher": "AES_256",
+      "hash": "SHA_512"
     },
     "signature": {
       "pkcs12Path": "signing-material.p12",
@@ -468,8 +475,10 @@ Write the workbook to the given path, creating parent directories as needed. `SA
 ```
 
 `security.encryption` applies OOXML package encryption to the persisted workbook. Supply the
-password and optionally set the package-encryption `mode`; `mode` defaults to `AGILE`, which is
-the normal choice.
+password. GridGrind writes AGILE packages only; `mode` is not part of the request shape.
+`cipher` defaults to `AES_256`, `hash` defaults to `SHA_512`, supported ciphers are
+`AES_256` and `AES_192`, and supported hashes are `SHA_512`, `SHA_384`, and `SHA_256`.
+Legacy STANDARD packages remain readable on inspection but are not authorable.
 
 `security.signature` applies OOXML package signing during persistence using a PKCS#12 keystore.
 `pkcs12Path` must point to a readable `.p12` or `.pfx` file, and `keystorePassword` must unlock
@@ -487,6 +496,12 @@ The response uses one failure-capable save result:
 - `requestedPath` — the literal `path` string from the request.
 - `write.status=WRITTEN` plus `write.executionPath` when the file was actually written.
 - `write.status=NOT_WRITTEN` when the run failed before any file write happened.
+
+When an encrypted source workbook is reopened and `persistence.security.encryption` is omitted,
+GridGrind auto-preserves source encryption only when the loaded package already uses an authorable
+AGILE/CBC envelope on the supported cipher/hash allowlist above. Otherwise set
+`persistence.security.encryption` explicitly to author a supported AGILE write envelope instead of
+carrying a legacy or weak source package forward implicitly.
 
 `ifExists=REJECT` requires the destination path to be absent. `ifExists=REPLACE` enables create-or-replace behavior while preserving the same `requestedPath` versus `executionPath` response split.
 

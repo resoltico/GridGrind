@@ -61,10 +61,9 @@ run_verify_expect_success() {
         "${success_inspection_query_types}" \
         "${success_execution_mode_types}" \
         "${success_execution_policy_input_type}" \
-        "${success_example_catalog}" \
-        "${success_task_catalog}" \
-        "${success_task_plan}" \
-        "${success_task_keyword_match}" \
+        "${success_recipe_catalog}" \
+        "${success_recipe_request}" \
+        "${success_recipe_keyword_match}" \
         "${success_doctor_report}" \
         "${success_noargs_failure}" \
         "${success_noargs_failure}"
@@ -84,10 +83,9 @@ run_verify_expect_success_without_tmpdir() {
         "${success_inspection_query_types}" \
         "${success_execution_mode_types}" \
         "${success_execution_policy_input_type}" \
-        "${success_example_catalog}" \
-        "${success_task_catalog}" \
-        "${success_task_plan}" \
-        "${success_task_keyword_match}" \
+        "${success_recipe_catalog}" \
+        "${success_recipe_request}" \
+        "${success_recipe_keyword_match}" \
         "${success_doctor_report}" \
         "${success_noargs_failure}" \
         "${success_noargs_failure}"
@@ -105,13 +103,14 @@ run_verify_expect_failure() {
     local inspection_query_types_text=${9:-${success_inspection_query_types}}
     local execution_mode_types_text=${10:-${success_execution_mode_types}}
     local execution_policy_input_type_text=${11:-${success_execution_policy_input_type}}
-    local example_catalog_text=${12:-${success_example_catalog}}
-    local task_catalog_text=${13:-${success_task_catalog}}
-    local task_plan_text=${14:-${success_task_plan}}
-    local task_keyword_match_text=${15:-${success_task_keyword_match}}
-    local doctor_report_text=${16:-${success_doctor_report}}
-    local noargs_failure_text=${17:-${success_noargs_failure}}
-    local interactive_noargs_failure_text=${18:-${noargs_failure_text}}
+    local recipe_catalog_text=${12:-${success_recipe_catalog}}
+    local recipe_request_text=${13:-${success_recipe_request}}
+    local recipe_keyword_match_text=${14:-${success_recipe_keyword_match}}
+    local doctor_report_text=${15:-${success_doctor_report}}
+    local noargs_failure_text=${16:-${success_noargs_failure}}
+    local interactive_noargs_failure_text=${17:-${noargs_failure_text}}
+    local example_recipe_catalog_detail_text=${18:-${success_example_recipe_catalog_detail}}
+    local task_recipe_catalog_detail_text=${19:-${success_task_recipe_catalog_detail}}
     if run_fake_gridgrind_verify_with_fixture_texts \
         false \
         "${help_overview_text}" \
@@ -125,13 +124,14 @@ run_verify_expect_failure() {
         "${inspection_query_types_text}" \
         "${execution_mode_types_text}" \
         "${execution_policy_input_type_text}" \
-        "${example_catalog_text}" \
-        "${task_catalog_text}" \
-        "${task_plan_text}" \
-        "${task_keyword_match_text}" \
+        "${recipe_catalog_text}" \
+        "${recipe_request_text}" \
+        "${recipe_keyword_match_text}" \
         "${doctor_report_text}" \
         "${noargs_failure_text}" \
-        "${interactive_noargs_failure_text}" >/dev/null 2>&1; then
+        "${interactive_noargs_failure_text}" \
+        "${example_recipe_catalog_detail_text}" \
+        "${task_recipe_catalog_detail_text}" >/dev/null 2>&1; then
         die "verifier unexpectedly succeeded"
     fi
 }
@@ -151,10 +151,9 @@ run_fake_gridgrind_verify_with_fixture_texts \
     "${success_inspection_query_types}" \
     "${success_execution_mode_types}" \
     "${success_execution_policy_input_type}" \
-    "${success_example_catalog}" \
-    "${success_task_catalog}" \
-    "${success_task_plan}" \
-    "${success_task_keyword_match}" \
+    "${success_recipe_catalog}" \
+    "${success_recipe_request}" \
+    "${success_recipe_keyword_match}" \
     "${success_doctor_report}" \
     "${success_noargs_failure}" \
     "$(append_fixture_line "${success_noargs_failure}" 'runtime-owned trailer')"
@@ -183,8 +182,14 @@ run_verify_expect_failure \
     "${success_inspection_query_types}" \
     "${success_execution_mode_types}" \
     "${success_execution_policy_input_type}" \
-    "${success_example_catalog}" \
-    "$(replace_fixture_token "${success_task_catalog}" 'SET_TABLE' 'NO_SUCH_MUTATION')"
+    "${success_recipe_catalog}" \
+    "${success_recipe_request}" \
+    "${success_recipe_keyword_match}" \
+    "${success_doctor_report}" \
+    "${success_noargs_failure}" \
+    "${success_noargs_failure}" \
+    "${success_example_recipe_catalog_detail}" \
+    "$(replace_fixture_token "${success_task_recipe_catalog_detail}" 'SET_TABLE' 'NO_SUCH_MUTATION')"
 
 run_verify_expect_failure \
     "${success_help_overview}" \
@@ -198,10 +203,9 @@ run_verify_expect_failure \
     "${success_inspection_query_types}" \
     "${success_execution_mode_types}" \
     "${success_execution_policy_input_type}" \
-    "${success_example_catalog}" \
-    "${success_task_catalog}" \
+    "${success_recipe_catalog}" \
     "$(replace_fixture_token \
-        "${success_task_plan}" \
+        "${success_recipe_request}" \
         'generated-workbooks/dashboard.xlsx' \
         'generated-workbooks/dashboard.xls')"
 
@@ -217,10 +221,9 @@ run_verify_expect_failure \
     "${success_inspection_query_types}" \
     "${success_execution_mode_types}" \
     "${success_execution_policy_input_type}" \
-    "${success_example_catalog}" \
-    "${success_task_catalog}" \
-    "${success_task_plan}" \
-    "${success_task_keyword_match}" \
+    "${success_recipe_catalog}" \
+    "${success_recipe_request}" \
+    "${success_recipe_keyword_match}" \
     "$(replace_fixture_token \
         "${success_doctor_report}" \
         '"sourceType":"NEW"' \
@@ -239,13 +242,12 @@ run_verify_expect_failure \
     "${success_inspection_query_types}" \
     "${success_execution_mode_types}" \
     "${success_execution_policy_input_type}" \
-    "${success_example_catalog}" \
-    "${success_task_catalog}" \
-    "${success_task_plan}" \
+    "${success_recipe_catalog}" \
+    "${success_recipe_request}" \
     "$(replace_fixture_token \
-        "${success_task_keyword_match}" \
-        '"taskId":"DASHBOARD"' \
-        '"taskId":"TABULAR_REPORT"')" \
+        "${success_recipe_keyword_match}" \
+        '"recipeId":"DASHBOARD"' \
+        '"recipeId":"TABULAR_REPORT"')" \
     "${success_doctor_report}"
 
 run_verify_expect_failure \
@@ -260,10 +262,9 @@ run_verify_expect_failure \
     "${success_inspection_query_types}" \
     "${success_execution_mode_types}" \
     "${success_execution_policy_input_type}" \
-    "${success_example_catalog}" \
-    "${success_task_catalog}" \
-    "${success_task_plan}" \
-    "${success_task_keyword_match}" \
+    "${success_recipe_catalog}" \
+    "${success_recipe_request}" \
+    "${success_recipe_keyword_match}" \
     "${success_doctor_report}" \
     "${success_noargs_failure}" \
     "$(replace_fixture_token \

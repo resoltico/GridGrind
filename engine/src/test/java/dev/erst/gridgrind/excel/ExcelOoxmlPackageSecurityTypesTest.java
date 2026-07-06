@@ -8,6 +8,8 @@ import dev.erst.gridgrind.excel.foundation.ExcelOoxmlEncryptionMode;
 import dev.erst.gridgrind.excel.foundation.ExcelOoxmlHashAlgorithm;
 import dev.erst.gridgrind.excel.foundation.ExcelOoxmlSignatureDigestAlgorithm;
 import dev.erst.gridgrind.excel.foundation.ExcelOoxmlSignatureState;
+import dev.erst.gridgrind.excel.foundation.ExcelOoxmlWriteCipher;
+import dev.erst.gridgrind.excel.foundation.ExcelOoxmlWriteHash;
 import dev.erst.gridgrind.excel.ooxml.ExcelOoxmlEncryptionOptions;
 import dev.erst.gridgrind.excel.ooxml.ExcelOoxmlEncryptionSnapshot;
 import dev.erst.gridgrind.excel.ooxml.ExcelOoxmlOpenOptions;
@@ -20,6 +22,8 @@ import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
+import org.apache.poi.poifs.crypt.ChainingMode;
+import org.apache.poi.poifs.crypt.CipherAlgorithm;
 import org.apache.poi.poifs.crypt.EncryptionMode;
 import org.apache.poi.poifs.crypt.HashAlgorithm;
 import org.junit.jupiter.api.Test;
@@ -30,14 +34,16 @@ class ExcelOoxmlPackageSecurityTypesTest {
   void openOptionsEncryptionOptionsAndSignatureOptionsNormalizeInputs() {
     String blankValue = Character.toString(' ');
     ExcelOoxmlOpenOptions openOptions = new ExcelOoxmlOpenOptions.Encrypted("secret");
-    ExcelOoxmlEncryptionOptions encryptionOptions = new ExcelOoxmlEncryptionOptions("secret", null);
+    ExcelOoxmlEncryptionOptions encryptionOptions =
+        new ExcelOoxmlEncryptionOptions("secret", null, null);
     ExcelOoxmlSignatureOptions signatureOptions =
         new ExcelOoxmlSignatureOptions(
             Path.of("/tmp/signing-material.p12"), "store-pass", null, null, null, null);
 
     assertEquals(
         "secret", assertInstanceOf(ExcelOoxmlOpenOptions.Encrypted.class, openOptions).password());
-    assertEquals(ExcelOoxmlEncryptionMode.AGILE, encryptionOptions.mode());
+    assertEquals(ExcelOoxmlWriteCipher.AES_256, encryptionOptions.cipher());
+    assertEquals(ExcelOoxmlWriteHash.SHA_512, encryptionOptions.hash());
     assertEquals("store-pass", signatureOptions.keyPassword());
     assertEquals(ExcelOoxmlSignatureDigestAlgorithm.SHA256, signatureOptions.digestAlgorithm());
     assertNull(signatureOptions.alias());
@@ -49,7 +55,8 @@ class ExcelOoxmlPackageSecurityTypesTest {
         IllegalArgumentException.class, () -> new ExcelOoxmlOpenOptions.Encrypted(blankValue));
     assertThrows(NullPointerException.class, () -> new ExcelOoxmlOpenOptions.Encrypted(null));
     assertThrows(
-        IllegalArgumentException.class, () -> new ExcelOoxmlEncryptionOptions(blankValue, null));
+        IllegalArgumentException.class,
+        () -> new ExcelOoxmlEncryptionOptions(blankValue, null, null));
     assertThrows(
         IllegalArgumentException.class,
         () ->
@@ -180,6 +187,39 @@ class ExcelOoxmlPackageSecurityTypesTest {
     assertThrows(
         IllegalArgumentException.class,
         () -> ExcelOoxmlSecurityPoiBridge.fromPoi(EncryptionMode.binaryRC4));
+    assertEquals(
+        CipherAlgorithm.aes256, ExcelOoxmlSecurityPoiBridge.toPoi(ExcelOoxmlWriteCipher.AES_256));
+    assertEquals(
+        CipherAlgorithm.aes192, ExcelOoxmlSecurityPoiBridge.toPoi(ExcelOoxmlWriteCipher.AES_192));
+    assertEquals(
+        HashAlgorithm.sha512, ExcelOoxmlSecurityPoiBridge.toPoi(ExcelOoxmlWriteHash.SHA_512));
+    assertEquals(
+        HashAlgorithm.sha384, ExcelOoxmlSecurityPoiBridge.toPoi(ExcelOoxmlWriteHash.SHA_384));
+    assertEquals(
+        HashAlgorithm.sha256, ExcelOoxmlSecurityPoiBridge.toPoi(ExcelOoxmlWriteHash.SHA_256));
+    assertEquals(ChainingMode.ecb, ExcelOoxmlSecurityPoiBridge.toPoi(ExcelOoxmlChainingMode.ECB));
+    assertEquals(ChainingMode.cbc, ExcelOoxmlSecurityPoiBridge.toPoi(ExcelOoxmlChainingMode.CBC));
+    assertEquals(ChainingMode.cfb, ExcelOoxmlSecurityPoiBridge.toPoi(ExcelOoxmlChainingMode.CFB));
+    assertEquals(
+        Optional.of(ExcelOoxmlWriteCipher.AES_256),
+        ExcelOoxmlSecurityPoiBridge.toWriteCipher(ExcelOoxmlCipherAlgorithm.AES_256));
+    assertEquals(
+        Optional.of(ExcelOoxmlWriteCipher.AES_192),
+        ExcelOoxmlSecurityPoiBridge.toWriteCipher(ExcelOoxmlCipherAlgorithm.AES_192));
+    assertEquals(
+        Optional.empty(),
+        ExcelOoxmlSecurityPoiBridge.toWriteCipher(ExcelOoxmlCipherAlgorithm.AES_128));
+    assertEquals(
+        Optional.of(ExcelOoxmlWriteHash.SHA_512),
+        ExcelOoxmlSecurityPoiBridge.toWriteHash(ExcelOoxmlHashAlgorithm.SHA_512));
+    assertEquals(
+        Optional.of(ExcelOoxmlWriteHash.SHA_384),
+        ExcelOoxmlSecurityPoiBridge.toWriteHash(ExcelOoxmlHashAlgorithm.SHA_384));
+    assertEquals(
+        Optional.of(ExcelOoxmlWriteHash.SHA_256),
+        ExcelOoxmlSecurityPoiBridge.toWriteHash(ExcelOoxmlHashAlgorithm.SHA_256));
+    assertEquals(
+        Optional.empty(), ExcelOoxmlSecurityPoiBridge.toWriteHash(ExcelOoxmlHashAlgorithm.SHA_1));
     assertEquals(
         HashAlgorithm.sha256,
         ExcelOoxmlSecurityPoiBridge.toPoi(ExcelOoxmlSignatureDigestAlgorithm.SHA256));

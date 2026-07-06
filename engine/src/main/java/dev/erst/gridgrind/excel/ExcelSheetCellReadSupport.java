@@ -324,7 +324,8 @@ final class ExcelSheetCellReadSupport {
               displayValue,
               style,
               metadata,
-              FormulaError.forInt(evaluatedCell.getErrorValue()).getString());
+              ExcelCellErrorLiteralSupport.toReportedWireValue(
+                  FormulaError.forInt(evaluatedCell.getErrorValue())));
       case BLANK, _NONE, FORMULA ->
           new ExcelCellSnapshot.BlankSnapshot(address, displayValue, style, metadata);
     };
@@ -362,7 +363,8 @@ final class ExcelSheetCellReadSupport {
               displayValue,
               style,
               metadata,
-              FormulaError.forInt(cell.getErrorCellValue()).getString());
+              ExcelCellErrorLiteralSupport.toReportedWireValue(
+                  FormulaError.forInt(cell.getErrorCellValue())));
       case BLANK, _NONE, FORMULA ->
           new ExcelCellSnapshot.BlankSnapshot(address, displayValue, style, metadata);
     };

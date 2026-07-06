@@ -5,9 +5,7 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import dev.erst.gridgrind.contract.source.TextSourceInput;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Set;
 
 /** JSON-friendly typed cell input used at the agent protocol boundary. */
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
@@ -67,11 +65,11 @@ public sealed interface CellInput
   /** Boolean cell input. */
   record BooleanValue(boolean bool) implements CellInput {}
 
-  /** Excel error cell input such as {@code #REF!} or {@code #DIV/0!}. */
+  /** Stored Excel error cell input such as {@code #REF!}, {@code #DIV/0!}, or {@code #N/A}. */
   record ErrorValue(String error) implements CellInput {
     public ErrorValue {
       error = Validation.requireNonBlank(error, "error");
-      error = Validation.requireErrorLiteral(error, "error");
+      error = CellErrorLiteralValidation.requireStoredErrorLiteral(error, "error");
     }
   }
 
@@ -104,9 +102,6 @@ public sealed interface CellInput
 
   /** Null-checking helpers for CellInput compact constructors. */
   final class Validation {
-    private static final Set<String> VALID_ERROR_LITERALS =
-        Set.of("#NULL!", "#DIV/0!", "#VALUE!", "#REF!", "#NAME?", "#NUM!", "#N/A", "#GETTING_DATA");
-
     private Validation() {}
 
     static <T> T required(T value, String fieldName) {
@@ -157,22 +152,6 @@ public sealed interface CellInput
         return TextSourceInput.inline(normalizeInlineFormula(inline.text(), fieldName + ".text"));
       }
       return source;
-    }
-
-    static String requireErrorLiteral(String value, String fieldName) {
-      String normalized = requireNonBlank(value, fieldName);
-      if (VALID_ERROR_LITERALS.contains(normalized)) {
-        return normalized;
-      }
-      throw new IllegalArgumentException(
-          fieldName
-              + " must be one of "
-              + String.join(", ", orderedErrorLiterals())
-              + "; for example #REF! or #DIV/0!");
-    }
-
-    private static Set<String> orderedErrorLiterals() {
-      return new LinkedHashSet<>(VALID_ERROR_LITERALS);
     }
   }
 }

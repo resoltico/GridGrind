@@ -8,6 +8,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import dev.erst.gridgrind.contract.catalog.Catalog;
+import dev.erst.gridgrind.contract.catalog.CatalogNote;
 import dev.erst.gridgrind.contract.catalog.GridGrindProtocolCatalog;
 import dev.erst.gridgrind.contract.catalog.TypeEntry;
 import dev.erst.gridgrind.contract.dto.*;
@@ -608,6 +609,29 @@ class GridGrindJsonCoverageTest {
                 () ->
                     GridGrindJsonOutput.writeCatalogLookupResult(
                         new ByteArrayOutputStream(), GridGrindProtocolVersion.V1, null))
+            .getMessage());
+
+    ByteArrayOutputStream noteOutput = new ByteArrayOutputStream();
+    GridGrindJsonOutput.writeCatalogLookupResult(
+        noteOutput,
+        GridGrindProtocolVersion.V1,
+        entry,
+        List.of(new CatalogNote("sharedRule", "Shared rule text.")),
+        false);
+    String notedJson = noteOutput.toString(StandardCharsets.UTF_8);
+    assertTrue(notedJson.contains("\"notes\""));
+    assertTrue(notedJson.contains("\"sharedRule\""));
+    assertEquals(
+        "notes must not be null",
+        assertThrows(
+                NullPointerException.class,
+                () ->
+                    GridGrindJsonOutput.writeCatalogLookupResult(
+                        new ByteArrayOutputStream(),
+                        GridGrindProtocolVersion.V1,
+                        entry,
+                        null,
+                        false))
             .getMessage());
   }
 

@@ -206,7 +206,7 @@ class GridGrindSpreadsheetDocsAuditTest {
     assertAll(
         () ->
             assertTrue(
-                quickStart.contains("--print-example --lookup BUDGET"),
+                quickStart.contains("--print-recipe --lookup BUDGET"),
                 "quick start must teach the built-in budget example bootstrap flow"),
         () ->
             assertFalse(
@@ -219,16 +219,51 @@ class GridGrindSpreadsheetDocsAuditTest {
   void dockerDocsFollowThePublishedMountedWorkdirContract() throws IOException {
     String operations = readDoc("docs/OPERATIONS.md");
     String quickStart = readDoc("docs/QUICK_START.md");
-    String normalizedOperations = operations.replaceAll("\\s+", " ").replace("`", "");
+    String readme = readDoc("README.md");
+    String normalizedOperations = normalizeMarkdownText(operations).replace("`", "");
+    String normalizedQuickStart = normalizeMarkdownText(quickStart);
+    String normalizedReadme = normalizeMarkdownText(readme);
     String expectedMountSummary = GridGrindContainerRuntimeText.dockerMountedWorkdirSummary();
+    String expectedUserArgument = GridGrindContainerRuntimeText.dockerMountedWorkdirUserArgument();
+    String expectedExecutionCommand =
+        GridGrindContainerRuntimeText.dockerMountedWorkdirExecutionCommand(
+            "ghcr.io/resoltico/gridgrind:latest");
     String expectedVolumeArgument =
         GridGrindContainerRuntimeText.dockerMountedWorkdirVolumeArgument();
+    String expectedReadmeExecutionCommand =
+        "docker run --pull=always --rm -i "
+            + expectedUserArgument
+            + " "
+            + expectedVolumeArgument
+            + " ghcr.io/resoltico/gridgrind:latest --request request.json --response"
+            + " response.json";
+    String expectedQuickStartReleaseExecutionCommand =
+        "docker run --pull=always --rm -i "
+            + expectedUserArgument
+            + " "
+            + expectedVolumeArgument
+            + " ghcr.io/resoltico/gridgrind:latest --request budget-request.json --response"
+            + " response.json";
+    String expectedQuickStartLocalExecutionCommand =
+        "docker run --rm -i "
+            + expectedUserArgument
+            + " "
+            + expectedVolumeArgument
+            + " gridgrind-local --request budget-request.json --response response.json";
 
     assertAll(
         () ->
             assertTrue(
                 normalizedOperations.contains(expectedMountSummary),
                 "operations doc must use the canonical mounted-workdir Docker wording"),
+        () ->
+            assertTrue(
+                operations.contains(expectedUserArgument),
+                "operations doc must publish the canonical bind-mount --user argument"),
+        () ->
+            assertTrue(
+                operations.contains(expectedExecutionCommand),
+                "operations doc must publish the canonical mounted-directory Docker command"),
         () ->
             assertTrue(
                 operations.contains(expectedVolumeArgument),
@@ -239,12 +274,26 @@ class GridGrindSpreadsheetDocsAuditTest {
                 "operations doc must not revive the removed Docker -w override"),
         () ->
             assertTrue(
-                quickStart.contains(expectedVolumeArgument),
-                "quick start must use the canonical /work volume argument"),
+                normalizedQuickStart.contains(expectedQuickStartReleaseExecutionCommand),
+                "quick start must publish the exact released-image mounted-directory Docker"
+                    + " command"),
+        () ->
+            assertTrue(
+                normalizedQuickStart.contains(expectedQuickStartLocalExecutionCommand),
+                "quick start must publish the exact local-image mounted-directory Docker"
+                    + " command"),
         () ->
             assertFalse(
                 quickStart.contains("-w /workdir"),
-                "quick start must not teach the removed Docker -w override"));
+                "quick start must not teach the removed Docker -w override"),
+        () ->
+            assertTrue(
+                normalizedReadme.contains(expectedReadmeExecutionCommand),
+                "readme must keep the published Docker bind-mount command in sync"),
+        () ->
+            assertFalse(
+                readme.contains("-w /workdir"),
+                "readme must not revive the removed Docker -w override"));
   }
 
   @Test
@@ -345,7 +394,7 @@ class GridGrindSpreadsheetDocsAuditTest {
         () ->
             assertTrue(
                 normalizedExamples.contains(
-                    "machine-readable CLI example catalog exposes stable example ids, file names, summaries, a portable `requestFileName` plus `workspaceMode` contract, and exact `requiredWorkspacePaths`"),
+                    "machine-readable CLI recipe catalog exposes stable example ids, file names, summaries, a portable `requestFileName` plus `workspaceMode` contract, and exact `requiredWorkspacePaths`"),
                 "examples guide must describe the public example-catalog portability surface"),
         () ->
             assertTrue(
@@ -460,6 +509,10 @@ class GridGrindSpreadsheetDocsAuditTest {
   private static String readDoc(String relativePath) throws IOException {
     Path repositoryRoot = RepositoryRootTestSupport.repositoryRoot();
     return Files.readString(repositoryRoot.resolve(relativePath));
+  }
+
+  private static String normalizeMarkdownText(String markdown) {
+    return markdown.replace("\\", "").replaceAll("\\s+", " ").trim();
   }
 
   private static List<CapabilityRow> capabilityRows(String markdown) {

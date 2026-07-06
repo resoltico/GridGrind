@@ -34,7 +34,8 @@ final class CatalogStepTemplateSupport {
         enrich(catalog, catalog.assertionTypes(), AssertionStep.class, "assertion"),
         enrich(catalog, catalog.inspectionQueryTypes(), InspectionStep.class, "query"),
         catalog.nestedTypes(),
-        catalog.plainTypes());
+        catalog.plainTypes(),
+        catalog.notes());
   }
 
   private static List<TypeEntry> enrich(
@@ -51,6 +52,7 @@ final class CatalogStepTemplateSupport {
                     entry.fields(),
                     entry.targetSelectors(),
                     entry.targetSelectorRule(),
+                    entry.noteRefs(),
                     Optional.of(buildTemplate(catalog, entry, stepKind, bodyField))))
         .toList();
   }

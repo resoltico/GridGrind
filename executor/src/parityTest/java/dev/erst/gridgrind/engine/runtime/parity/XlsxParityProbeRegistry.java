@@ -17,7 +17,10 @@ import dev.erst.gridgrind.excel.foundation.ExcelConditionalFormattingIconSet;
 import dev.erst.gridgrind.excel.foundation.ExcelConditionalFormattingThresholdType;
 import dev.erst.gridgrind.excel.foundation.ExcelDrawingAnchorBehavior;
 import dev.erst.gridgrind.excel.foundation.ExcelFillPattern;
+import dev.erst.gridgrind.excel.foundation.ExcelOoxmlChainingMode;
+import dev.erst.gridgrind.excel.foundation.ExcelOoxmlCipherAlgorithm;
 import dev.erst.gridgrind.excel.foundation.ExcelOoxmlEncryptionMode;
+import dev.erst.gridgrind.excel.foundation.ExcelOoxmlHashAlgorithm;
 import dev.erst.gridgrind.excel.foundation.ExcelOoxmlSignatureState;
 import dev.erst.gridgrind.excel.foundation.ExcelPrintOrientation;
 import java.nio.file.Files;
@@ -171,6 +174,9 @@ final class XlsxParityProbeRegistry {
   static boolean hasEncryptedAgilePackage(OoxmlPackageSecurityReport security) {
     return security.encryption() instanceof OoxmlEncryptionReport.Encrypted encrypted
         && encrypted.mode() == ExcelOoxmlEncryptionMode.AGILE
+        && encrypted.cipherAlgorithm() == ExcelOoxmlCipherAlgorithm.AES_256
+        && encrypted.hashAlgorithm() == ExcelOoxmlHashAlgorithm.SHA_512
+        && encrypted.chainingMode() == ExcelOoxmlChainingMode.CBC
         && security.signatures().isEmpty();
   }
 
@@ -385,10 +391,9 @@ final class XlsxParityProbeRegistry {
   static List<PendingMutation> advancedConditionalFormattingMutations() {
     PendingMutation colorScale =
         mutate(
-            new SheetSelector.ByName("Advanced"),
+            new RangeSelector.ByRange("Advanced", "L2:L5"),
             new StructuredMutationAction.SetConditionalFormatting(
-                new ConditionalFormattingBlockInput(
-                    List.of("L2:L5"),
+                new ConditionalFormattingDefinitionInput(
                     List.of(
                         new ConditionalFormattingRuleInput.ColorScaleRule(
                             false,
@@ -407,10 +412,9 @@ final class XlsxParityProbeRegistry {
                                 ColorInput.rgb("#11CC66")))))));
     PendingMutation dataBar =
         mutate(
-            new SheetSelector.ByName("Advanced"),
+            new RangeSelector.ByRange("Advanced", "M2:M5"),
             new StructuredMutationAction.SetConditionalFormatting(
-                new ConditionalFormattingBlockInput(
-                    List.of("M2:M5"),
+                new ConditionalFormattingDefinitionInput(
                     List.of(
                         new ConditionalFormattingRuleInput.DataBarRule(
                             false,
@@ -424,10 +428,9 @@ final class XlsxParityProbeRegistry {
                                 ExcelConditionalFormattingThresholdType.MAX, null, null))))));
     PendingMutation iconSet =
         mutate(
-            new SheetSelector.ByName("Advanced"),
+            new RangeSelector.ByRange("Advanced", "N2:N5"),
             new StructuredMutationAction.SetConditionalFormatting(
-                new ConditionalFormattingBlockInput(
-                    List.of("N2:N5"),
+                new ConditionalFormattingDefinitionInput(
                     List.of(
                         new ConditionalFormattingRuleInput.IconSetRule(
                             false,
@@ -445,10 +448,9 @@ final class XlsxParityProbeRegistry {
                                     67.0d)))))));
     PendingMutation top10 =
         mutate(
-            new SheetSelector.ByName("Advanced"),
+            new RangeSelector.ByRange("Advanced", "K2:K5"),
             new StructuredMutationAction.SetConditionalFormatting(
-                new ConditionalFormattingBlockInput(
-                    List.of("K2:K5"),
+                new ConditionalFormattingDefinitionInput(
                     List.of(
                         new ConditionalFormattingRuleInput.Top10Rule(
                             false, 10, false, false, java.util.Optional.empty())))));
