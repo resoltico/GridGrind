@@ -9,7 +9,7 @@ jackson-annotations = "2.22"
 log4j = "2.26.0"
 poi-ooxml = "5.5.1"
 jazzer = "0.30.0"
-bouncycastle = "1.84"
+bouncycastle = "1.85"
 # Santuario xmlsec 4.x declares transitive JPMS requires on these APIs while publishing them as
 # provided dependencies, so GridGrind must own them explicitly for modular compile/runtime use.
 jakarta-activation = "2.1.4"
