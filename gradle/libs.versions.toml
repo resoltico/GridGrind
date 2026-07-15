@@ -3,7 +3,7 @@ kotlin = "2.4.0"
 junit-jupiter = "6.1.1"
 junit-platform-launcher = "6.1.1"
 junit-bom = "6.1.1"
-jackson-databind = "3.2.0"
+jackson-databind = "3.2.1"
 # Jackson 3.x keeps annotations on the Jackson 2.x coordinates and package namespace by design.
 jackson-annotations = "2.22"
 log4j = "2.26.0"
