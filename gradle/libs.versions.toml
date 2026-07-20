@@ -1,15 +1,15 @@
 [versions]
-kotlin = "2.4.0"
+kotlin = "2.4.10"
 junit-jupiter = "6.1.1"
 junit-platform-launcher = "6.1.1"
 junit-bom = "6.1.1"
-jackson-databind = "3.2.0"
+jackson-databind = "3.2.1"
 # Jackson 3.x keeps annotations on the Jackson 2.x coordinates and package namespace by design.
 jackson-annotations = "2.22"
-log4j = "2.26.0"
+log4j = "2.26.1"
 poi-ooxml = "5.5.1"
 jazzer = "0.30.0"
-bouncycastle = "1.84"
+bouncycastle = "1.85"
 # Santuario xmlsec 4.x declares transitive JPMS requires on these APIs while publishing them as
 # provided dependencies, so GridGrind must own them explicitly for modular compile/runtime use.
 jakarta-activation = "2.1.4"
@@ -19,11 +19,11 @@ slf4j = "2.0.18"
 errorprone = "2.50.0"
 errorprone-plugin = "5.1.0"
 jspecify = "1.0.0"
-nullaway = "0.13.7"
+nullaway = "0.13.8"
 google-java-format = "1.35.0"
 jacoco = "0.8.15"
 pmd = "7.25.0"
-shadow = "9.4.2"
+shadow = "9.5.1"
 spotless = "8.7.0"
 
 [libraries]

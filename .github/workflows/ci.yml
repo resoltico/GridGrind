@@ -33,7 +33,7 @@ jobs:
           # On PRs, only read from the cache to avoid cache poisoning from untrusted code.
           cache-read-only: ${{ github.event_name == 'pull_request' }}
 
-      - uses: docker/setup-buildx-action@d7f5e7f509e45cec5c76c4d5afdd7de93d0b3df5 # v4.1.0
+      - uses: docker/setup-buildx-action@bb05f3f5519dd87d3ba754cc423b652a5edd6d2c # v4.2.0
 
       - name: Run the supported whole-repo deterministic gate
         # Active fuzzing remains local-only. CI exercises only the deterministic nested Jazzer,
@@ -58,7 +58,7 @@ jobs:
         with:
           cache-read-only: ${{ github.event_name == 'pull_request' }}
 
-      - uses: docker/setup-buildx-action@d7f5e7f509e45cec5c76c4d5afdd7de93d0b3df5 # v4.1.0
+      - uses: docker/setup-buildx-action@bb05f3f5519dd87d3ba754cc423b652a5edd6d2c # v4.2.0
 
       - name: Run Docker smoke separately so branch protection keeps an honest Docker-specific gate
         run: ./scripts/docker-smoke.sh
@@ -105,7 +105,7 @@ jobs:
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
 
-      - uses: docker/setup-buildx-action@d7f5e7f509e45cec5c76c4d5afdd7de93d0b3df5 # v4.1.0
+      - uses: docker/setup-buildx-action@bb05f3f5519dd87d3ba754cc423b652a5edd6d2c # v4.2.0
 
       - name: Validate the committed contributor devcontainer surface
         run: ./scripts/validate-devcontainer.sh

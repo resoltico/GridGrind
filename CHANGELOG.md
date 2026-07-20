@@ -5,6 +5,9 @@ Earlier release history through `0.68.0` is archived in [docs/CHANGELOG_ARCHIVE.
 
 ## [Unreleased]
 
+### Changed
+- Refreshed build and release dependencies to NullAway `0.13.8`, the Kotlin Gradle plugin `2.4.10`, Jackson Databind `3.2.1`, Bouncy Castle `1.85`, Log4j `2.26.1`, Gradle Shadow `9.5.1`, `actions/setup-java` `5.5.0`, `docker/login-action` `4.4.0`, `docker/setup-buildx-action` `4.2.0`, and `docker/metadata-action` `6.2.0`.
+
 ## [0.72.0] - 2026-07-06
 
 ### Added
