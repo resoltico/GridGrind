@@ -23,7 +23,7 @@ nullaway = "0.13.8"
 google-java-format = "1.35.0"
 jacoco = "0.8.15"
 pmd = "7.25.0"
-shadow = "9.5.1"
+shadow = "9.6.1"
 spotless = "8.7.0"
 
 [libraries]
