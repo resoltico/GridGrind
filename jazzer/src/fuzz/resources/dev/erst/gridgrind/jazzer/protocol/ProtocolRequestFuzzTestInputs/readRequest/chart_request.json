@@ -1,5 +1,5 @@
 {
-  "protocolVersion": "V1",
+  "protocolVersion": "V2",
   "planId": "chart-workflow",
   "source": {
     "type": "NEW"

@@ -6,6 +6,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import dev.erst.gridgrind.contract.catalog.ProtocolTypeMetadata;
 import dev.erst.gridgrind.contract.dto.PaneInput;
 import dev.erst.gridgrind.contract.dto.PrintLayoutInput;
+import dev.erst.gridgrind.contract.dto.ProtocolField;
 import dev.erst.gridgrind.contract.dto.SheetCopyPosition;
 import dev.erst.gridgrind.contract.dto.SheetPresentationInput;
 import dev.erst.gridgrind.contract.dto.SheetProtectionSettings;
@@ -65,9 +66,8 @@ public sealed interface WorkbookMutationAction extends MutationAction {
   @ProtocolTypeMetadata(
       id = "COPY_SHEET",
       summary = "Copy one sheet into a new visible, unselected sheet.",
-      optionalFields = {"position"},
       targetSelectors = {SheetSelector.ByName.class})
-  record CopySheet(String newSheetName, SheetCopyPosition position)
+  record CopySheet(String newSheetName, @ProtocolField(optional = true) SheetCopyPosition position)
       implements WorkbookMutationAction {
     /** Copies one sheet to the end of the workbook. */
     public CopySheet(String newSheetName) {
@@ -122,11 +122,11 @@ public sealed interface WorkbookMutationAction extends MutationAction {
   @ProtocolTypeMetadata(
       id = "SET_SHEET_PROTECTION",
       summary = "Enable sheet protection with the exact supported lock flags.",
-      optionalFields = {"password"},
       targetSelectors = {SheetSelector.ByName.class})
   record SetSheetProtection(
       SheetProtectionSettings protection,
-      @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<String> password)
+      @ProtocolField(optional = true, secret = true) @JsonInclude(JsonInclude.Include.NON_ABSENT)
+          Optional<String> password)
       implements WorkbookMutationAction {
     /** Enables sheet protection without applying a password hash. */
     public SetSheetProtection(SheetProtectionSettings protection) {

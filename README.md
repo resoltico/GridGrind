@@ -49,7 +49,7 @@ archive, add its `bin/` directory to `PATH`; from the standalone JAR, replace `g
 
 For first contact, prefer `--request <path>` over stdin. Stdin-driven execution and doctoring
 require `--execution-root <path>` so request-owned paths resolve from one explicit invocation root.
-`--doctor-request` returns every independently provable blocking problem it can isolate safely before any workbook mutation or save attempt, including multiple malformed steps in one pass when their failures are independent.
+`--doctor-request` returns every independently provable blocking problem it can isolate safely before any workbook mutation or save attempt. Request intake reports invalid UTF-8, duplicate keys, unknown fields, omitted required fields, explicit nulls, malformed scalar values, missing or unknown type discriminators, and constructor-level field validation failures together while retaining valid sibling fragments for safe preflight. Normal `--request` performs the same intake before execution, so both commands expose the same complete findings for the same request.
 
 If you want the repository JAR surface directly, run `./gradlew :cli:shadowJar` and invoke
 `java -jar cli/build/libs/gridgrind.jar ...` instead of `gridgrind ...`.

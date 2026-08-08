@@ -245,8 +245,10 @@ fixed_pattern_exists ':protocol:jacocoTestCoverageVerification' "${root_plugin}"
     "root coverage wiring hardcodes module names"
 fixed_pattern_exists ':cli:jacocoTestCoverageVerification' "${root_plugin}" && die \
     "root coverage wiring hardcodes module names"
-fixed_pattern_exists 'taskPathsByType(coverageSubprojects, Test::class.java)' "${root_plugin}" || die \
-    "root aggregated coverage no longer discovers test tasks dynamically"
+fixed_pattern_exists 'taskPathsByName(coverageSubprojects, "jacocoTestReport")' "${root_plugin}" || die \
+    "root aggregated coverage no longer discovers module reports dynamically"
+fixed_pattern_exists 'report.dependsOn(subprojectCoverageReports)' "${root_plugin}" || die \
+    "root aggregated coverage no longer waits for dynamically discovered module reports"
 fixed_pattern_exists 'coverageSubprojects().flatMap { subproject ->' "${root_plugin}" || die \
     "root aggregated coverage no longer discovers JaCoCo execution data from all coverage subprojects"
 fixed_pattern_exists 'testTask.extensions.getByType(JacocoTaskExtension::class.java).destinationFile' "${root_plugin}" || die \

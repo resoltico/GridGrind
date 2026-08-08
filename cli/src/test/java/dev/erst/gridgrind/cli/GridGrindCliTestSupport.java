@@ -35,7 +35,7 @@ class GridGrindCliTestSupport {
       String sourceJson, String persistenceJson, String stepsJson) {
     return """
         {
-          "protocolVersion": "V1",
+          "protocolVersion": "V2",
           "source": %s,
           "persistence": %s,
           "steps": %s
@@ -52,7 +52,7 @@ class GridGrindCliTestSupport {
       String stepsJson) {
     return """
         {
-          "protocolVersion": "V1",
+          "protocolVersion": "V2",
           "source": %s,
           "persistence": %s,
           "execution": %s,
@@ -72,7 +72,7 @@ class GridGrindCliTestSupport {
       String stepsJson) {
     return """
         {
-          "protocolVersion": "V1",
+          "protocolVersion": "V2",
           "planId": "%s",
           "source": %s,
           "persistence": %s,
@@ -143,7 +143,8 @@ class GridGrindCliTestSupport {
   }
 
   protected static ProblemContext.ParseArguments parseArgumentsContext(CliDiagnostic diagnostic) {
-    return assertInstanceOf(ProblemContext.ParseArguments.class, diagnostic.problem().context());
+    return assertInstanceOf(
+        ProblemContext.ParseArguments.class, diagnostic.primaryProblem().context());
   }
 
   protected static ProblemContext.ReadRequest readRequestContext(
@@ -157,7 +158,8 @@ class GridGrindCliTestSupport {
   }
 
   protected static ProblemContext.ReadRequest readRequestContext(CliDiagnostic diagnostic) {
-    return assertInstanceOf(ProblemContext.ReadRequest.class, diagnostic.problem().context());
+    return assertInstanceOf(
+        ProblemContext.ReadRequest.class, diagnostic.primaryProblem().context());
   }
 
   protected static ProblemContext.ResolveInputs resolveInputsContext(RequestDoctorReport report) {
@@ -186,7 +188,8 @@ class GridGrindCliTestSupport {
   }
 
   protected static ProblemContext.WriteResponse writeResponseContext(CliDiagnostic diagnostic) {
-    return assertInstanceOf(ProblemContext.WriteResponse.class, diagnostic.problem().context());
+    return assertInstanceOf(
+        ProblemContext.WriteResponse.class, diagnostic.primaryProblem().context());
   }
 
   protected static ProblemContext.ExecuteStep executeStepContext(

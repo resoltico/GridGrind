@@ -7,7 +7,7 @@ import java.util.Objects;
 import java.util.Optional;
 
 /** Protocol-facing color payload preserving RGB, theme, indexed, and tint semantics. */
-@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "kind")
+@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
 @JsonSubTypes({
   @JsonSubTypes.Type(value = ColorInput.Rgb.class, name = "RGB"),
   @JsonSubTypes.Type(value = ColorInput.Theme.class, name = "THEME"),

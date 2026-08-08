@@ -72,6 +72,16 @@ public sealed interface ProblemContext {
       return json.jsonPathValue();
     }
 
+    /** Returns the exact UTF-8 request byte offset when structural intake located one token. */
+    public Optional<Long> byteOffset() {
+      return json.byteOffsetValue();
+    }
+
+    /** Returns duplicate-key identity when one property occurrence cannot have a unique path. */
+    public Optional<JsonLocation.DuplicateKey> duplicateKey() {
+      return json.duplicateKeyValue();
+    }
+
     /** Returns the request JSON line when the parser exposed one concrete cursor. */
     public Optional<Integer> jsonLine() {
       return json.jsonLineValue();

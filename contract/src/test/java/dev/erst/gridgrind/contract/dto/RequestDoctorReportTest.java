@@ -184,7 +184,7 @@ class RequestDoctorReportTest {
                 NullPointerException.class,
                 () ->
                     new RequestDoctorReport(
-                        GridGrindProtocolVersion.V1,
+                        GridGrindProtocolVersion.V2,
                         AnalysisSeverity.ERROR,
                         false,
                         Optional.empty(),

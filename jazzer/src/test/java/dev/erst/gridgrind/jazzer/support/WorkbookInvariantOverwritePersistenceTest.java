@@ -27,7 +27,7 @@ class WorkbookInvariantOverwritePersistenceTest {
             List.of());
     GridGrindResponse.Failure response =
         GridGrindResponses.failure(
-            GridGrindProtocolVersion.V1,
+            GridGrindProtocolVersion.V2,
             new GridGrindResponsePersistence.PersistenceOutcome.Overwritten(
                 Optional.empty(), new GridGrindResponsePersistence.WriteResult.NotWritten()),
             GridGrindProblemDetail.Problem.of(

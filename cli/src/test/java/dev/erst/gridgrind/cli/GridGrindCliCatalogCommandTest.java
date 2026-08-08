@@ -606,8 +606,8 @@ class GridGrindCliCatalogCommandTest extends GridGrindCliTestSupport {
     assertEquals(1, exitCode);
     assertFalse(report.valid());
     assertEquals(GridGrindProblemCode.INVALID_JSON, report.primaryProblem().orElseThrow().code());
-    assertEquals(java.util.Optional.of(1), readRequestContext(report).jsonLine());
-    assertEquals(java.util.Optional.of(2), readRequestContext(report).jsonColumn());
+    assertEquals(java.util.Optional.empty(), readRequestContext(report).jsonLine());
+    assertEquals(java.util.Optional.empty(), readRequestContext(report).jsonColumn());
   }
 
   @Test
@@ -687,7 +687,7 @@ class GridGrindCliCatalogCommandTest extends GridGrindCliTestSupport {
                 new ByteArrayInputStream(
                     """
                     {
-                      "protocolVersion": "V1",
+                      "protocolVersion": "V2",
                       "source": { "type": "EXISTING" },
                       "persistence": { "type": "SAVE_AS" },
                       "execution": {
@@ -734,13 +734,10 @@ class GridGrindCliCatalogCommandTest extends GridGrindCliTestSupport {
 
     assertEquals(1, exitCode);
     assertFalse(report.valid());
-    assertEquals(4, report.problems().size());
+    assertEquals(3, report.problems().size());
     assertTrue(problemMessages.contains("Missing required field 'source.path'"));
     assertTrue(problemMessages.contains("Missing required field 'persistence.path'"));
     assertTrue(problemMessages.contains("Missing required field 'persistence.ifExists'"));
-    assertTrue(
-        problemMessages.stream()
-            .anyMatch(message -> message.contains("duplicate stepId values: duplicate-step")));
   }
 
   @Test
@@ -756,7 +753,7 @@ class GridGrindCliCatalogCommandTest extends GridGrindCliTestSupport {
                 new ByteArrayInputStream(
                     """
                     {
-                      "protocolVersion": "V1",
+                      "protocolVersion": "V2",
                       "source": { "type": "NEW" },
                       "persistence": { "type": "OVERWRITE" },
                       "execution": {

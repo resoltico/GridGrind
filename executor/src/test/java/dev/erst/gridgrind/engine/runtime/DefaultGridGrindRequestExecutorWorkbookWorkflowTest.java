@@ -277,7 +277,7 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
     WindowReport window =
         read(success, "window", SheetInspectionResult.WindowResult.class).window();
 
-    assertEquals(GridGrindProtocolVersion.V1, success.protocolVersion());
+    assertEquals(GridGrindProtocolVersion.V2, success.protocolVersion());
     assertEquals(workbookPath.toAbsolutePath().toString(), savedPath(success));
     assertTrue(Files.exists(workbookPath));
     assertEquals(List.of(), success.warnings());
@@ -1477,10 +1477,10 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
                         Optional.of(true),
                         Optional.empty(),
                         Optional.empty(),
-                        java.util.Optional.of("#102030"),
+                        java.util.Optional.of(ColorInput.rgb("#102030")),
                         Optional.empty(),
                         Optional.empty(),
-                        java.util.Optional.of("#E0F0AA"),
+                        java.util.Optional.of(ColorInput.rgb("#E0F0AA")),
                         java.util.Optional.empty()))),
             new ConditionalFormattingRuleInput.CellValueRule(
                 ExcelComparisonOperator.BETWEEN,

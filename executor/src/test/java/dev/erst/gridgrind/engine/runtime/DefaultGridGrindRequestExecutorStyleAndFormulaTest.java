@@ -167,11 +167,11 @@ class DefaultGridGrindRequestExecutorStyleAndFormulaTest
                                         ColorInput.rgb("#DDEBF7")),
                                     new CellBorderInput(
                                         Optional.ofNullable(
-                                            new CellBorderSideInput(
+                                            new BorderSideInput(
                                                 ExcelBorderStyle.THIN, ColorInput.rgb("#102030"))),
                                         Optional.empty(),
                                         Optional.ofNullable(
-                                            new CellBorderSideInput(
+                                            new BorderSideInput(
                                                 ExcelBorderStyle.DOUBLE,
                                                 ColorInput.rgb("#203040"))),
                                         Optional.empty(),
@@ -263,7 +263,7 @@ class DefaultGridGrindRequestExecutorStyleAndFormulaTest
                                         Optional.empty(),
                                         Optional.empty(),
                                         Optional.ofNullable(
-                                            new CellBorderSideInput(
+                                            new BorderSideInput(
                                                 ExcelBorderStyle.THIN,
                                                 ColorInput.indexed(
                                                     Short.toUnsignedInt(

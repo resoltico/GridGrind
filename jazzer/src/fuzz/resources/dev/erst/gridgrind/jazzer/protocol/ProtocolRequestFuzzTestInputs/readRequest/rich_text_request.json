@@ -1,5 +1,5 @@
 {
-  "protocolVersion": "V1",
+  "protocolVersion": "V2",
   "source": {
     "type": "NEW"
   },
@@ -34,7 +34,7 @@
               "type": "POINTS",
               "points": 12
             },
-            "fontColor": "#1F1F1F"
+            "fontColor": { "type": "RGB", "rgb": "#1F1F1F" }
           }
         }
       },
@@ -53,7 +53,7 @@
           "runs": [
             {
               "font": {
-                "fontColor": "#44546A"
+                "fontColor": { "type": "RGB", "rgb": "#44546A" }
               },
               "source": {
                 "type": "INLINE",
@@ -63,7 +63,7 @@
             {
               "font": {
                 "bold": true,
-                "fontColor": "#C00000"
+                "fontColor": { "type": "RGB", "rgb": "#C00000" }
               },
               "source": {
                 "type": "INLINE",

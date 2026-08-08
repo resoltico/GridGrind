@@ -70,15 +70,15 @@ class GridGrindCliTest extends GridGrindCliTestSupport {
 
   @Test
   void cliJournalWriterSwallowsBestEffortIoFailures() throws IOException {
+    String requestPayload =
+        requestJson(
+            "{ \"type\": \"NEW\" }",
+            "{ \"type\": \"NONE\" }",
+            verboseExecutionJson(),
+            emptyFormulaEnvironmentJson(),
+            "[]");
     WorkbookPlan request =
-        GridGrindJson.readRequest(
-            requestJson(
-                    "{ \"type\": \"NEW\" }",
-                    "{ \"type\": \"NONE\" }",
-                    verboseExecutionJson(),
-                    emptyFormulaEnvironmentJson(),
-                    "[]")
-                .getBytes(StandardCharsets.UTF_8));
+        GridGrindJson.readRequest(requestPayload.getBytes(StandardCharsets.UTF_8));
     CliJournalWriter writer = new CliJournalWriter();
     try (OutputStream broken =
         new OutputStream() {
@@ -103,15 +103,15 @@ class GridGrindCliTest extends GridGrindCliTestSupport {
 
   @Test
   void cliJournalWriterIncludesStepMetadataWhenPresent() throws IOException {
+    String requestPayload =
+        requestJson(
+            "{ \"type\": \"NEW\" }",
+            "{ \"type\": \"NONE\" }",
+            verboseExecutionJson(),
+            emptyFormulaEnvironmentJson(),
+            "[]");
     WorkbookPlan request =
-        GridGrindJson.readRequest(
-            requestJson(
-                    "{ \"type\": \"NEW\" }",
-                    "{ \"type\": \"NONE\" }",
-                    verboseExecutionJson(),
-                    emptyFormulaEnvironmentJson(),
-                    "[]")
-                .getBytes(StandardCharsets.UTF_8));
+        GridGrindJson.readRequest(requestPayload.getBytes(StandardCharsets.UTF_8));
     ByteArrayOutputStream stderr = new ByteArrayOutputStream();
 
     new CliJournalWriter()
@@ -128,6 +128,35 @@ class GridGrindCliTest extends GridGrindCliTestSupport {
         "[gridgrind] 2026-04-18T11:45:00Z STEP stepId=step-007 stepIndex=7 wrote cell"
             + System.lineSeparator(),
         stderr.toString(StandardCharsets.UTF_8));
+  }
+
+  @Test
+  void cliJournalWriterPreservesLiveTextThatMerelyContainsAShortSecret() {
+    String requestPayload =
+        requestJson(
+            "{ \"type\": \"EXISTING\", \"path\": \"source.xlsx\", \"security\": { \"password\": \"a\" } }",
+            "{ \"type\": \"NONE\" }",
+            verboseExecutionJson(),
+            emptyFormulaEnvironmentJson(),
+            "[]");
+    var analysis = GridGrindJson.analyzeRequest(requestPayload.getBytes(StandardCharsets.UTF_8));
+    ByteArrayOutputStream stderr = new ByteArrayOutputStream();
+
+    new CliJournalWriter()
+        .sinkFor(analysis.requireCompletePlan(), stderr)
+        .emit(
+            new ExecutionJournal.Event(
+                "2026-04-18T11:45:00Z",
+                "STEP",
+                "saved a cell",
+                Optional.of(7),
+                Optional.of("step-007")));
+
+    String rendered = stderr.toString(StandardCharsets.UTF_8);
+    assertEquals(
+        "[gridgrind] 2026-04-18T11:45:00Z STEP stepId=step-007 stepIndex=7 saved a cell"
+            + System.lineSeparator(),
+        rendered);
   }
 
   @Test

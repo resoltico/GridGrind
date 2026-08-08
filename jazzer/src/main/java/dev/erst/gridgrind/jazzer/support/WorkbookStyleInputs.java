@@ -1,12 +1,12 @@
 package dev.erst.gridgrind.jazzer.support;
 
+import dev.erst.gridgrind.contract.dto.BorderSideInput;
 import dev.erst.gridgrind.contract.dto.CellAlignmentInput;
 import dev.erst.gridgrind.contract.dto.CellBorderInput;
-import dev.erst.gridgrind.contract.dto.CellBorderSideInput;
 import dev.erst.gridgrind.contract.dto.CellFillInput;
 import dev.erst.gridgrind.contract.dto.CellFontInput;
 import dev.erst.gridgrind.contract.dto.CellProtectionInput;
-import dev.erst.gridgrind.contract.dto.CellStyleInput;
+import dev.erst.gridgrind.contract.dto.CellStylePatchInput;
 import dev.erst.gridgrind.contract.dto.ColorInput;
 import dev.erst.gridgrind.contract.dto.FontHeightInput;
 import dev.erst.gridgrind.excel.ExcelFontHeight;
@@ -23,12 +23,12 @@ public final class WorkbookStyleInputs {
   private WorkbookStyleInputs() {}
 
   /** Returns a bounded protocol style patch. */
-  public static CellStyleInput nextStyleInput(GridGrindFuzzData data) {
+  public static CellStylePatchInput nextStyleInput(GridGrindFuzzData data) {
     Objects.requireNonNull(data, "data must not be null");
 
     return switch (data.consumeInt(0, 7)) {
       case 0 ->
-          new CellStyleInput(
+          new CellStylePatchInput(
               Optional.of(data.consumeBoolean() ? "0.00" : "yyyy-mm-dd"),
               Optional.empty(),
               Optional.empty(),
@@ -36,7 +36,7 @@ public final class WorkbookStyleInputs {
               Optional.empty(),
               Optional.empty());
       case 1 ->
-          new CellStyleInput(
+          new CellStylePatchInput(
               Optional.empty(),
               Optional.of(nextAlignmentInput(data, true)),
               Optional.empty(),
@@ -44,7 +44,7 @@ public final class WorkbookStyleInputs {
               Optional.empty(),
               Optional.empty());
       case 2 ->
-          new CellStyleInput(
+          new CellStylePatchInput(
               Optional.empty(),
               Optional.empty(),
               Optional.of(nextFontInput(data, true)),
@@ -52,7 +52,7 @@ public final class WorkbookStyleInputs {
               Optional.empty(),
               Optional.empty());
       case 3 ->
-          new CellStyleInput(
+          new CellStylePatchInput(
               Optional.empty(),
               Optional.of(nextAlignmentInput(data, true)),
               Optional.of(nextFontInput(data, true)),
@@ -60,7 +60,7 @@ public final class WorkbookStyleInputs {
               Optional.of(nextProtocolBorder(data)),
               Optional.ofNullable(nextProtectionInput(data)));
       case 4 ->
-          new CellStyleInput(
+          new CellStylePatchInput(
               Optional.empty(),
               Optional.empty(),
               Optional.of(nextFontInput(data, false)),
@@ -68,7 +68,7 @@ public final class WorkbookStyleInputs {
               Optional.of(nextProtocolBorder(data)),
               Optional.empty());
       case 5 ->
-          new CellStyleInput(
+          new CellStylePatchInput(
               Optional.empty(),
               Optional.empty(),
               Optional.empty(),
@@ -76,7 +76,7 @@ public final class WorkbookStyleInputs {
               Optional.empty(),
               Optional.ofNullable(nextProtectionInput(data)));
       case 6 ->
-          new CellStyleInput(
+          new CellStylePatchInput(
               Optional.empty(),
               Optional.of(nextAlignmentInput(data, true)),
               Optional.empty(),
@@ -84,7 +84,7 @@ public final class WorkbookStyleInputs {
               Optional.of(nextProtocolBorder(data)),
               Optional.empty());
       default ->
-          new CellStyleInput(
+          new CellStylePatchInput(
               Optional.empty(),
               Optional.empty(),
               Optional.of(nextFontInput(data, false)),
@@ -222,10 +222,10 @@ public final class WorkbookStyleInputs {
     };
   }
 
-  private static CellBorderSideInput nextBorderSide(GridGrindFuzzData data) {
+  private static BorderSideInput nextBorderSide(GridGrindFuzzData data) {
     ExcelBorderStyle[] values = ExcelBorderStyle.values();
     ExcelBorderStyle style = values[data.consumeInt(0, values.length - 1)];
-    return new CellBorderSideInput(
+    return new BorderSideInput(
         Optional.of(style),
         style == ExcelBorderStyle.NONE || !data.consumeBoolean()
             ? Optional.empty()

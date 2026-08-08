@@ -8,7 +8,9 @@ import java.util.Objects;
 
 /** OOXML package-encryption settings applied during workbook persistence. */
 public record OoxmlEncryptionInput(
-    String password, ExcelOoxmlWriteCipher cipher, ExcelOoxmlWriteHash hash) {
+    @ProtocolField(secret = true) String password,
+    @ProtocolField(optional = true) ExcelOoxmlWriteCipher cipher,
+    @ProtocolField(optional = true) ExcelOoxmlWriteHash hash) {
   /** Reads one OOXML encryption block while applying the documented omission default. */
   @JsonCreator
   static OoxmlEncryptionInput create(

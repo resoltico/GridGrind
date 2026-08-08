@@ -1,5 +1,5 @@
 {
-  "protocolVersion": "V1",
+  "protocolVersion": "V2",
   "source": {
     "type": "NEW"
   },
@@ -186,8 +186,8 @@
               "stopIfTrue": false,
               "style": {
                 "numberFormat": "0.0",
-                "fillColor": "#FDE9D9",
-                "fontColor": "#9C0006",
+                "fillColor": { "type": "RGB", "rgb": "#FDE9D9" },
+                "fontColor": { "type": "RGB", "rgb": "#9C0006" },
                 "bold": true
               }
             }
@@ -213,8 +213,8 @@
               "formula": "$D2=\"Blocked\"",
               "stopIfTrue": true,
               "style": {
-                "fillColor": "#FFF2CC",
-                "fontColor": "#7F6000",
+                "fillColor": { "type": "RGB", "rgb": "#FFF2CC" },
+                "fontColor": { "type": "RGB", "rgb": "#7F6000" },
                 "italic": true
               }
             }

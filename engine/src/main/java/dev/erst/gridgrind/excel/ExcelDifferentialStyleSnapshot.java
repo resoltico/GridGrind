@@ -11,18 +11,16 @@ public record ExcelDifferentialStyleSnapshot(
     @Nullable Boolean bold,
     @Nullable Boolean italic,
     @Nullable ExcelFontHeight fontHeight,
-    @Nullable String fontColor,
+    @Nullable ExcelColor fontColor,
     @Nullable Boolean underline,
     @Nullable Boolean strikeout,
-    @Nullable String fillColor,
+    @Nullable ExcelColor fillColor,
     @Nullable ExcelDifferentialBorder border,
     List<ExcelConditionalFormattingUnsupportedFeature> unsupportedFeatures) {
   public ExcelDifferentialStyleSnapshot {
     if (numberFormat != null && numberFormat.isBlank()) {
       throw new IllegalArgumentException("numberFormat must not be blank");
     }
-    fontColor = ExcelRgbColorSupport.normalizeRgbHex(fontColor, "fontColor").orElse(null);
-    fillColor = ExcelRgbColorSupport.normalizeRgbHex(fillColor, "fillColor").orElse(null);
     Objects.requireNonNull(unsupportedFeatures, "unsupportedFeatures must not be null");
     unsupportedFeatures = List.copyOf(unsupportedFeatures);
     for (ExcelConditionalFormattingUnsupportedFeature unsupportedFeature : unsupportedFeatures) {

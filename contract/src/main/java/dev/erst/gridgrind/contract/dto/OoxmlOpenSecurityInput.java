@@ -6,7 +6,8 @@ import java.util.Optional;
 
 /** Optional OOXML package-open settings for encrypted existing workbook sources. */
 public record OoxmlOpenSecurityInput(
-    @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<String> password) {
+    @ProtocolField(optional = true, secret = true) @JsonInclude(JsonInclude.Include.NON_ABSENT)
+        Optional<String> password) {
   public OoxmlOpenSecurityInput {
     password = normalizeOptional(password, "password");
   }

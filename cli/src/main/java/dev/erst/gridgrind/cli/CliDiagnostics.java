@@ -49,7 +49,7 @@ final class CliDiagnostics {
         new ProblemContext.WriteResponse(
             dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces.ResponseOutput
                 .responseFile(targetPath.toString()));
-    String message = CliResponseWriter.responseWriteMessage(exception, targetPath);
+    String message = CliResponseTransportSupport.responseWriteMessage(exception, targetPath);
     return diagnostic(
         1,
         command,
@@ -66,13 +66,27 @@ final class CliDiagnostics {
   static CliDiagnostic readRequestFailure(
       int exitCode, String command, GridGrindProblemDetail.Problem problem) {
     Objects.requireNonNull(problem, "problem must not be null");
-    return diagnostic(exitCode, command, suggestionsForReadRequest(problem, command), problem);
+    return readRequestFailures(exitCode, command, List.of(problem));
+  }
+
+  static CliDiagnostic readRequestFailures(
+      int exitCode, String command, List<GridGrindProblemDetail.Problem> problems) {
+    List<GridGrindProblemDetail.Problem> diagnosticProblems =
+        List.copyOf(Objects.requireNonNull(problems, "problems must not be null"));
+    if (diagnosticProblems.isEmpty()) {
+      throw new IllegalArgumentException("problems must not be empty");
+    }
+    return diagnostic(
+        exitCode,
+        command,
+        suggestionsForReadRequest(diagnosticProblems, command),
+        diagnosticProblems);
   }
 
   static CliDiagnostic problemDiagnostic(
       int exitCode, String command, GridGrindProblemDetail.Problem problem) {
     Objects.requireNonNull(problem, "problem must not be null");
-    return diagnostic(exitCode, command, List.of(), problem);
+    return diagnostic(exitCode, command, List.of(), List.of(problem));
   }
 
   static CliDiagnostic unexpectedFailure(String command, Throwable exception) {
@@ -80,10 +94,7 @@ final class CliDiagnostics {
     Objects.requireNonNull(exception, "exception must not be null");
     ProblemContext.ExecuteRequest context =
         new ProblemContext.ExecuteRequest(RequestShape.unknown());
-    String message =
-        Optional.ofNullable(exception.getMessage())
-            .filter(text -> !text.isBlank())
-            .orElse(GridGrindProblemCode.INTERNAL_ERROR.title());
+    String message = GridGrindProblemCode.INTERNAL_ERROR.title();
     return diagnostic(
         1,
         command,
@@ -102,50 +113,60 @@ final class CliDiagnostics {
       String command,
       List<String> suggestions,
       GridGrindProblemDetail.Problem problem) {
+    return diagnostic(exitCode, command, suggestions, List.of(problem));
+  }
+
+  private static CliDiagnostic diagnostic(
+      int exitCode,
+      String command,
+      List<String> suggestions,
+      List<GridGrindProblemDetail.Problem> problems) {
     return new CliDiagnostic(
         GridGrindProtocolVersion.current(),
         exitCode,
         command,
         List.copyOf(Objects.requireNonNull(suggestions, "suggestions must not be null")),
-        Objects.requireNonNull(problem, "problem must not be null"),
+        problems,
         Optional.empty());
   }
 
   private static List<String> suggestionsForReadRequest(
-      GridGrindProblemDetail.Problem problem, String command) {
+      List<GridGrindProblemDetail.Problem> problems, String command) {
     Set<String> suggestions = new LinkedHashSet<>();
-    switch (problem.code()) {
-      case INVALID_JSON -> {
-        suggestions.add("gridgrind --print-request-template --response request.json");
-        suggestions.add("gridgrind --help-protocol");
-      }
-      case INVALID_REQUEST_SHAPE -> {
-        CliSuggestionSupport.protocolCatalogSearchCommandForProblem(problem)
-            .ifPresent(suggestions::add);
-        if ("doctor-request".equals(command)) {
+    for (GridGrindProblemDetail.Problem problem : problems) {
+      switch (problem.code()) {
+        case INVALID_ENCODING, INVALID_JSON -> {
           suggestions.add("gridgrind --print-request-template --response request.json");
-        } else {
-          suggestions.add("gridgrind --doctor-request --request request.json");
           suggestions.add("gridgrind --help-protocol");
         }
-      }
-      case INVALID_REQUEST -> {
-        CliSuggestionSupport.protocolCatalogSearchCommandForProblem(problem)
-            .ifPresent(suggestions::add);
-        if ("doctor-request".equals(command)) {
-          suggestions.add("gridgrind --print-request-template --response request.json");
-        } else {
-          suggestions.add("gridgrind --doctor-request --request request.json");
+        case INVALID_REQUEST_SHAPE -> {
+          CliSuggestionSupport.protocolCatalogSearchCommandForProblem(problem)
+              .ifPresent(suggestions::add);
+          if ("doctor-request".equals(command)) {
+            suggestions.add("gridgrind --print-request-template --response request.json");
+          } else {
+            suggestions.add("gridgrind --doctor-request --request request.json");
+            suggestions.add("gridgrind --help-protocol");
+          }
+        }
+        case INVALID_REQUEST -> {
+          CliSuggestionSupport.protocolCatalogSearchCommandForProblem(problem)
+              .ifPresent(suggestions::add);
+          if ("doctor-request".equals(command)) {
+            suggestions.add("gridgrind --print-request-template --response request.json");
+          } else {
+            suggestions.add("gridgrind --doctor-request --request request.json");
+            suggestions.add("gridgrind --help-protocol");
+          }
+        }
+        case IO_ERROR -> {
+          suggestions.add("gridgrind --request request.json");
+          suggestions.add("gridgrind --help-guidance");
+        }
+        default -> {
+          suggestions.add("gridgrind --help");
           suggestions.add("gridgrind --help-protocol");
         }
-      }
-      case IO_ERROR -> {
-        suggestions.add("gridgrind --request request.json");
-        suggestions.add("gridgrind --help-guidance");
-      }
-      default -> {
-        suggestions.add("gridgrind --help");
-        suggestions.add("gridgrind --help-protocol");
       }
     }
     return List.copyOf(suggestions);

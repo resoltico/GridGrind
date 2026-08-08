@@ -91,10 +91,10 @@ final class ExcelConditionalFormattingStyleSnapshotSupport {
         && patternFill.getPatternType() != STPatternType.NONE;
   }
 
-  static @Nullable String patternForegroundColor(
+  static @Nullable ExcelColor patternForegroundColor(
       CTPatternFill patternFill,
       List<ExcelConditionalFormattingUnsupportedFeature> unsupportedFeatures) {
-    String fillColor = optionalPatternForegroundColor(patternFill).orElse(null);
+    ExcelColor fillColor = optionalPatternForegroundColor(patternFill).orElse(null);
     if (fillColor == null
         && (patternTypeIsUnsupported(patternFill) || patternFill.isSetFgColor())) {
       unsupportedFeatures.add(ExcelConditionalFormattingUnsupportedFeature.FILL_PATTERN);
@@ -116,10 +116,10 @@ final class ExcelConditionalFormattingStyleSnapshotSupport {
 
   static boolean hasUnsupportedSideReference(
       CTBorder border,
-      @Nullable ExcelDifferentialBorderSide top,
-      @Nullable ExcelDifferentialBorderSide right,
-      @Nullable ExcelDifferentialBorderSide bottom,
-      @Nullable ExcelDifferentialBorderSide left) {
+      @Nullable ExcelBorderSide top,
+      @Nullable ExcelBorderSide right,
+      @Nullable ExcelBorderSide bottom,
+      @Nullable ExcelBorderSide left) {
     return java.util.stream.Stream.of(
             border.isSetTop() && top == null,
             border.isSetRight() && right == null,
@@ -129,14 +129,14 @@ final class ExcelConditionalFormattingStyleSnapshotSupport {
   }
 
   static @Nullable ExcelDifferentialBorder borderValue(
-      @Nullable ExcelDifferentialBorderSide top,
-      @Nullable ExcelDifferentialBorderSide right,
-      @Nullable ExcelDifferentialBorderSide bottom,
-      @Nullable ExcelDifferentialBorderSide left) {
+      @Nullable ExcelBorderSide top,
+      @Nullable ExcelBorderSide right,
+      @Nullable ExcelBorderSide bottom,
+      @Nullable ExcelBorderSide left) {
     return optionalBorderValue(top, right, bottom, left).orElse(null);
   }
 
-  static @Nullable ExcelDifferentialBorderSide snapshotBorderSide(@Nullable CTBorderPr side) {
+  static @Nullable ExcelBorderSide snapshotBorderSide(@Nullable CTBorderPr side) {
     return optionalSnapshotBorderSide(side).orElse(null);
   }
 
@@ -214,7 +214,7 @@ final class ExcelConditionalFormattingStyleSnapshotSupport {
     }
 
     List<ExcelConditionalFormattingUnsupportedFeature> unsupportedFeatures = new ArrayList<>();
-    String fontColor = fontColor(font, unsupportedFeatures);
+    ExcelColor fontColor = fontColor(font, unsupportedFeatures);
     if (hasUnsupportedFontAttributes(font)) {
       unsupportedFeatures.add(ExcelConditionalFormattingUnsupportedFeature.FONT_ATTRIBUTES);
     }
@@ -236,9 +236,9 @@ final class ExcelConditionalFormattingStyleSnapshotSupport {
     return Optional.of(ExcelFontHeight.fromPoints(BigDecimal.valueOf(font.getSzArray(0).getVal())));
   }
 
-  private static @Nullable String fontColor(
+  private static @Nullable ExcelColor fontColor(
       CTFont font, List<ExcelConditionalFormattingUnsupportedFeature> unsupportedFeatures) {
-    String fontColor = optionalFontColor(font).orElse(null);
+    ExcelColor fontColor = optionalFontColor(font).orElse(null);
     if (fontColor == null && font.sizeOfColorArray() > 0) {
       unsupportedFeatures.add(ExcelConditionalFormattingUnsupportedFeature.FONT_ATTRIBUTES);
     }
@@ -259,10 +259,10 @@ final class ExcelConditionalFormattingStyleSnapshotSupport {
       unsupportedFeatures.add(ExcelConditionalFormattingUnsupportedFeature.BORDER_COMPLEXITY);
     }
 
-    ExcelDifferentialBorderSide top = borderSide(border.isSetTop(), border::getTop);
-    ExcelDifferentialBorderSide right = borderSide(border.isSetRight(), border::getRight);
-    ExcelDifferentialBorderSide bottom = borderSide(border.isSetBottom(), border::getBottom);
-    ExcelDifferentialBorderSide left = borderSide(border.isSetLeft(), border::getLeft);
+    ExcelBorderSide top = borderSide(border.isSetTop(), border::getTop);
+    ExcelBorderSide right = borderSide(border.isSetRight(), border::getRight);
+    ExcelBorderSide bottom = borderSide(border.isSetBottom(), border::getBottom);
+    ExcelBorderSide left = borderSide(border.isSetLeft(), border::getLeft);
 
     if (hasUnsupportedSideReference(border, top, right, bottom, left)) {
       unsupportedFeatures.add(ExcelConditionalFormattingUnsupportedFeature.BORDER_COMPLEXITY);
@@ -284,57 +284,56 @@ final class ExcelConditionalFormattingStyleSnapshotSupport {
     return List.copyOf(unsupportedFeatures);
   }
 
-  private static @Nullable ExcelDifferentialBorderSide borderSide(
+  private static @Nullable ExcelBorderSide borderSide(
       boolean present, java.util.function.Supplier<CTBorderPr> sideSupplier) {
     return present ? snapshotBorderSide(sideSupplier.get()) : null;
   }
 
-  private static Optional<String> optionalFontColor(CTFont font) {
+  private static Optional<ExcelColor> optionalFontColor(CTFont font) {
     return font.sizeOfColorArray() == 0
         ? Optional.empty()
-        : ExcelConditionalFormattingColorSupport.optionalRgbHexFromCtColor(font.getColorArray(0));
+        : ExcelConditionalFormattingColorSupport.optionalColor(font.getColorArray(0));
   }
 
-  private static Optional<String> optionalPatternForegroundColor(CTPatternFill patternFill) {
+  private static Optional<ExcelColor> optionalPatternForegroundColor(CTPatternFill patternFill) {
     if (patternTypeIsUnsupported(patternFill) || !patternFill.isSetFgColor()) {
       return Optional.empty();
     }
-    return ExcelConditionalFormattingColorSupport.optionalRgbHexFromCtColor(
-        patternFill.getFgColor());
+    return ExcelConditionalFormattingColorSupport.optionalColor(patternFill.getFgColor());
   }
 
   private static Optional<ExcelDifferentialBorder> optionalBorderValue(
-      @Nullable ExcelDifferentialBorderSide top,
-      @Nullable ExcelDifferentialBorderSide right,
-      @Nullable ExcelDifferentialBorderSide bottom,
-      @Nullable ExcelDifferentialBorderSide left) {
+      @Nullable ExcelBorderSide top,
+      @Nullable ExcelBorderSide right,
+      @Nullable ExcelBorderSide bottom,
+      @Nullable ExcelBorderSide left) {
     if (top == null && right == null && bottom == null && left == null) {
       return Optional.empty();
     }
     return Optional.of(new ExcelDifferentialBorder(null, top, right, bottom, left));
   }
 
-  private static Optional<ExcelDifferentialBorderSide> optionalSnapshotBorderSide(
-      @Nullable CTBorderPr side) {
+  private static Optional<ExcelBorderSide> optionalSnapshotBorderSide(@Nullable CTBorderPr side) {
     if (side == null) {
       return Optional.empty();
     }
     if (!side.isSetStyle() && !side.isSetColor()) {
       return Optional.empty();
     }
-    ExcelBorderStyle style =
+    Optional<ExcelBorderStyle> style =
         side.isSetStyle()
-            ? ExcelConditionalFormattingBorderStyleSupport.fromCtBorderStyle(
-                side.getStyle().intValue())
-            : ExcelBorderStyle.NONE;
-    String color =
+            ? Optional.of(
+                ExcelConditionalFormattingBorderStyleSupport.fromCtBorderStyle(
+                    side.getStyle().intValue()))
+            : Optional.empty();
+    Optional<ExcelColor> color =
         side.isSetColor()
-            ? ExcelConditionalFormattingColorSupport.rgbHexFromCtColor(side.getColor())
-            : null;
-    if (side.isSetColor() && color == null) {
+            ? ExcelConditionalFormattingColorSupport.optionalColor(side.getColor())
+            : Optional.empty();
+    if (side.isSetColor() && color.isEmpty()) {
       return Optional.empty();
     }
-    return Optional.of(new ExcelDifferentialBorderSide(style, color));
+    return Optional.of(new ExcelBorderSide(style, color));
   }
 
   @SafeVarargs

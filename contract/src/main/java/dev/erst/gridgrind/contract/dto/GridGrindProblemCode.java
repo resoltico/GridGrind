@@ -15,6 +15,11 @@ public enum GridGrindProblemCode {
       GridGrindProblemRecovery.CHANGE_REQUEST,
       "Invalid JSON payload",
       "Send syntactically valid JSON."),
+  INVALID_ENCODING(
+      GridGrindProblemCategory.REQUEST,
+      GridGrindProblemRecovery.CHANGE_REQUEST,
+      "Invalid request encoding",
+      "Encode the request document as UTF-8."),
   INVALID_REQUEST_SHAPE(
       GridGrindProblemCategory.REQUEST,
       GridGrindProblemRecovery.CHANGE_REQUEST,

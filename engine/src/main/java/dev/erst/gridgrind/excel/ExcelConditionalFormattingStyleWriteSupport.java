@@ -69,7 +69,7 @@ final class ExcelConditionalFormattingStyleWriteSupport {
     }
   }
 
-  private static void applyFill(CTDxf dxf, @Nullable String fillColor) {
+  private static void applyFill(CTDxf dxf, @Nullable ExcelColor fillColor) {
     if (fillColor == null) {
       return;
     }
@@ -91,22 +91,24 @@ final class ExcelConditionalFormattingStyleWriteSupport {
   }
 
   private static void applyBorderSide(
-      java.util.function.Supplier<CTBorderPr> borderPrFactory,
-      @Nullable ExcelDifferentialBorderSide side) {
+      java.util.function.Supplier<CTBorderPr> borderPrFactory, @Nullable ExcelBorderSide side) {
     Objects.requireNonNull(borderPrFactory, "borderPrFactory must not be null");
     if (side == null) {
       return;
     }
     CTBorderPr borderPr = borderPrFactory.get();
-    borderPr.setStyle(ExcelConditionalFormattingBorderStyleSupport.toCtBorderStyle(side.style()));
-    if (side.color() != null) {
-      ExcelConditionalFormattingColorSupport.setColor(borderPr.addNewColor(), side.color());
+    if (side.style().isPresent()) {
+      borderPr.setStyle(
+          ExcelConditionalFormattingBorderStyleSupport.toCtBorderStyle(side.style().orElseThrow()));
+    }
+    if (side.color().isPresent()) {
+      ExcelConditionalFormattingColorSupport.setColor(
+          borderPr.addNewColor(), side.color().orElseThrow());
     }
   }
 
-  private static @Nullable ExcelDifferentialBorderSide resolvedSide(
-      @Nullable ExcelDifferentialBorderSide defaultSide,
-      @Nullable ExcelDifferentialBorderSide explicitSide) {
+  private static @Nullable ExcelBorderSide resolvedSide(
+      @Nullable ExcelBorderSide defaultSide, @Nullable ExcelBorderSide explicitSide) {
     return explicitSide == null ? defaultSide : explicitSide;
   }
 

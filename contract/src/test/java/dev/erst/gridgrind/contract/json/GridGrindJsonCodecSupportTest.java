@@ -13,6 +13,29 @@ import tools.jackson.databind.JsonNode;
 /** Direct coverage for request-shape detection at the tree-to-record decode seam. */
 class GridGrindJsonCodecSupportTest {
   @Test
+  void decodeTreeReturnsAValidBoundValue() throws IOException {
+    JsonNode requestTree =
+        GridGrindJsonMapperSupport.REQUEST_JSON_MAPPER.readTree(
+            """
+            {
+              "protocolVersion": "V2",
+              "source": { "type": "NEW" },
+              "persistence": { "type": "NONE" },
+              "steps": []
+            }
+            """);
+
+    WorkbookPlan plan =
+        GridGrindJsonCodecSupport.decodeTree(
+            requestTree,
+            GridGrindJsonMapperSupport.REQUEST_JSON_MAPPER,
+            WorkbookPlan.class,
+            GridGrindJsonProblemMessageSupport::invalidRequestPayload);
+
+    assertEquals(0, plan.steps().size());
+  }
+
+  @Test
   void decodeTreeRejectsExplicitNullMembersBeforeBinding() throws IOException {
     JsonNode requestTree =
         GridGrindJsonMapperSupport.REQUEST_JSON_MAPPER.readTree(

@@ -7,4 +7,4 @@ Message: Sheet does not exist: V
 Input Bytes: 154
 Command Count: 7
 Style Kinds: (none)
-Command Kinds: GROUP_COLUMNS=5, SET_SHEET_PANE=1, MERGE_CELLS=1
+Command Kinds: GROUP_COLUMNS=5, MERGE_CELLS=1, SET_SHEET_PANE=1

@@ -16,9 +16,6 @@ public @interface ProtocolTypeMetadata {
   /** Public catalog/help summary for the protocol leaf. */
   String summary();
 
-  /** Optional record fields omitted by default on the catalog surface. */
-  String[] optionalFields() default {};
-
   /** Static selector families accepted by the leaf when targetingMode is STATIC. */
   Class<? extends Selector>[] targetSelectors() default {};
 

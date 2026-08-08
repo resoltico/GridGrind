@@ -186,7 +186,7 @@ class GridGrindEngineApiTest {
     return GridGrindJson.readRequest(
         """
         {
-          "protocolVersion": "V1",
+          "protocolVersion": "V2",
           "source": { "type": "NEW" },
           "persistence": { "type": "NONE" },
           "execution": {
@@ -221,7 +221,7 @@ class GridGrindEngineApiTest {
     return GridGrindJson.readRequest(
         """
         {
-          "protocolVersion": "V1",
+          "protocolVersion": "V2",
           "source": { "type": "NEW" },
           "persistence": { "type": "NONE" },
           "execution": {

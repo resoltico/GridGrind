@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import java.util.Objects;
 import java.util.Optional;
 
-/** Protocol-facing cell protection patch used by {@link CellStyleInput}. */
+/** Protocol-facing cell protection patch used by {@link CellStylePatchInput}. */
 public record CellProtectionInput(
     @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<Boolean> locked,
     @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<Boolean> hiddenFormula) {

@@ -109,7 +109,7 @@ class GridGrindCliDoctorCatalogCommandTest extends GridGrindCliTestSupport {
                 new ByteArrayInputStream(
                     """
                     {
-                      "protocolVersion": "V1",
+                      "protocolVersion": "V2",
                       "source": { "type": "NEW" },
                       "persistence": { "type": "NONE" },
                       "execution": {
@@ -145,7 +145,7 @@ class GridGrindCliDoctorCatalogCommandTest extends GridGrindCliTestSupport {
                 new ByteArrayInputStream(
                     """
                     {
-                      "protocolVersion": "V1",
+                      "protocolVersion": "V2",
                       "source": { "type": "NEW" },
                       "persistence": { "type": "NONE" },
                       "execution": {
@@ -181,7 +181,7 @@ class GridGrindCliDoctorCatalogCommandTest extends GridGrindCliTestSupport {
                 new ByteArrayInputStream(
                     """
                     {
-                      "protocolVersion": "V1",
+                      "protocolVersion": "V2",
                       "source": { "type": "NEW" },
                       "persistence": { "type": "NONE" },
                       "execution": {
@@ -287,8 +287,7 @@ class GridGrindCliDoctorCatalogCommandTest extends GridGrindCliTestSupport {
   }
 
   @Test
-  void doctorRequestBatchesIndependentMalformedStepsAndSuppressesSyntheticSummary()
-      throws IOException {
+  void doctorRequestDoesNotSynthesizeAPlanForConstructorInvalidSteps() throws IOException {
     Path workspace = Files.createTempDirectory("gridgrind-doctor-step-batch-");
     ByteArrayOutputStream stdout = new ByteArrayOutputStream();
     ByteArrayOutputStream stderr = new ByteArrayOutputStream();
@@ -333,28 +332,29 @@ class GridGrindCliDoctorCatalogCommandTest extends GridGrindCliTestSupport {
                 stderr);
 
     RequestDoctorReport report = doctorReport(stdout, stderr);
-    List<String> problemMessages =
-        report.problems().stream().map(GridGrindProblemDetail.Problem::message).toList();
-    List<java.util.Optional<String>> problemPaths =
-        report.problems().stream()
-            .map(
-                problem ->
-                    assertInstanceOf(ProblemContext.ReadRequest.class, problem.context())
-                        .jsonPath())
-            .toList();
-
     assertEquals(1, exitCode);
     assertFalse(report.valid());
     assertTrue(report.summary().isEmpty());
     assertEquals(3, report.problems().size());
-    assertTrue(problemMessages.contains("zoomPercent must be between 10 and 400 inclusive: 9999"));
-    assertTrue(problemMessages.contains("zoomPercent must be between 10 and 400 inclusive: 9998"));
+    assertEquals(
+        List.of(
+            "steps[0].action.zoomPercent",
+            "steps[1].action.zoomPercent",
+            "steps[2].action.widthCharacters"),
+        report.problems().stream()
+            .map(
+                problem ->
+                    assertInstanceOf(ProblemContext.ReadRequest.class, problem.context())
+                        .json()
+                        .jsonPathValue()
+                        .orElseThrow())
+            .toList());
     assertTrue(
-        problemMessages.contains(
-            "widthCharacters must not exceed 255.0 (Excel column width limit): got 999.0"));
-    assertTrue(problemPaths.contains(java.util.Optional.of("steps[0].action.zoomPercent")));
-    assertTrue(problemPaths.contains(java.util.Optional.of("steps[1].action.zoomPercent")));
-    assertTrue(problemPaths.contains(java.util.Optional.of("steps[2].action.widthCharacters")));
+        report.problems().stream()
+            .allMatch(problem -> problem.code() == GridGrindProblemCode.INVALID_REQUEST));
+    assertEquals(
+        "zoomPercent must be between 10 and 400 inclusive: 9999",
+        report.primaryProblem().orElseThrow().message());
   }
 
   @Test
@@ -437,8 +437,9 @@ class GridGrindCliDoctorCatalogCommandTest extends GridGrindCliTestSupport {
     assertEquals(1, exitCode);
     assertFalse(report.valid());
     assertEquals(GridGrindProblemCode.INVALID_REQUEST_SHAPE, problem.code());
-    assertEquals("Field 'type' must be a string", problem.message());
-    assertEquals("Replace field 'type' with a JSON string type id.", problem.resolution());
+    assertEquals("Field 'steps[0].query.type' must be a JSON string type id", problem.message());
+    assertEquals(
+        "Replace field 'steps[0].query.type' with a JSON string type id.", problem.resolution());
     assertEquals(Optional.of("steps[0].query.type"), readRequestContext(report).jsonPath());
   }
 
@@ -485,8 +486,9 @@ class GridGrindCliDoctorCatalogCommandTest extends GridGrindCliTestSupport {
     assertEquals(1, exitCode);
     assertFalse(report.valid());
     assertEquals(GridGrindProblemCode.INVALID_REQUEST_SHAPE, problem.code());
-    assertEquals("Field 'type' must be a string", problem.message());
-    assertEquals("Replace field 'type' with a JSON string type id.", problem.resolution());
+    assertEquals("Field 'steps[2].query.type' must be a JSON string type id", problem.message());
+    assertEquals(
+        "Replace field 'steps[2].query.type' with a JSON string type id.", problem.resolution());
     assertEquals(Optional.of("steps[2].query.type"), readRequestContext(report).jsonPath());
   }
 
@@ -573,7 +575,7 @@ class GridGrindCliDoctorCatalogCommandTest extends GridGrindCliTestSupport {
             [
               {
                 "stepId": "set-error",
-                "target": { "type": "CELL", "sheetName": "Budget", "address": "A1" },
+                "target": { "type": "CELL_BY_ADDRESS", "sheetName": "Budget", "address": "A1" },
                 "action": {
                   "type": "SET_CELL",
                   "value": { "type": "ERROR", "error": "#CIRCULAR_REF!" }

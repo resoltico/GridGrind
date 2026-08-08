@@ -353,7 +353,7 @@ class CliDiscoveryValidationCoverageTest {
             .getMessage());
 
     assertEquals(
-        "problem must not be null",
+        "problems must not be null",
         assertThrows(
                 NullPointerException.class,
                 () ->
@@ -362,7 +362,20 @@ class CliDiscoveryValidationCoverageTest {
                         2,
                         "print-recipe",
                         List.of(),
-                        null,
+                        (List<GridGrindProblemDetail.Problem>) null,
+                        Optional.empty()))
+            .getMessage());
+    assertEquals(
+        "problems must not be empty",
+        assertThrows(
+                IllegalArgumentException.class,
+                () ->
+                    new CliDiagnostic(
+                        GridGrindProtocolVersion.current(),
+                        2,
+                        "print-recipe",
+                        List.of(),
+                        List.of(),
                         Optional.empty()))
             .getMessage());
     assertEquals(
@@ -375,7 +388,7 @@ class CliDiscoveryValidationCoverageTest {
                         2,
                         "print-recipe",
                         null,
-                        problem(),
+                        List.of(problem()),
                         Optional.empty()))
             .getMessage());
     assertEquals(
@@ -388,7 +401,7 @@ class CliDiscoveryValidationCoverageTest {
                         2,
                         "print-recipe",
                         List.of(),
-                        problem(),
+                        List.of(problem()),
                         null))
             .getMessage());
     assertEquals(
@@ -401,7 +414,7 @@ class CliDiscoveryValidationCoverageTest {
                         0,
                         "print-recipe",
                         List.of(),
-                        problem(),
+                        List.of(problem()),
                         Optional.empty()))
             .getMessage());
     assertEquals(

@@ -248,7 +248,7 @@ class GridGrindCliDiagnosticClassificationTest extends GridGrindCliTestSupport {
                 new ByteArrayInputStream(
                     """
                     {
-                      "protocolVersion": "V1",
+                      "protocolVersion": "V2",
                       "source": { "type": "NEW" },
                       "persistence": { "type": "NONE" },
                       "execution": {
@@ -543,8 +543,9 @@ class GridGrindCliDiagnosticClassificationTest extends GridGrindCliTestSupport {
     assertEquals(1, exitCode);
     assertEquals(GridGrindProblemCode.INVALID_JSON, failure.problem().code());
     assertEquals("execute", failure.command());
-    assertEquals(java.util.Optional.of(1), readRequestContext(failure).jsonLine());
-    assertEquals(java.util.Optional.of(2), readRequestContext(failure).jsonColumn());
+    assertTrue(readRequestContext(failure).byteOffset().isPresent());
+    assertEquals(java.util.Optional.empty(), readRequestContext(failure).jsonLine());
+    assertEquals(java.util.Optional.empty(), readRequestContext(failure).jsonColumn());
     assertEquals(java.util.Optional.empty(), readRequestContext(failure).jsonPath());
   }
 

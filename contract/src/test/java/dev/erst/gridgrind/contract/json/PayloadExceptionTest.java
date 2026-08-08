@@ -47,6 +47,9 @@ class PayloadExceptionTest {
 
   @Test
   void payloadExceptionsExposeNormalizedTypedLocations() {
+    PayloadException encoding =
+        new InvalidEncodingException(
+            "bad encoding", Optional.empty(), Optional.empty(), Optional.empty(), null);
     PayloadException pathOnly =
         new InvalidJsonException(
             "bad json", Optional.of("steps[0].target"), Optional.of(4), Optional.empty(), null);
@@ -65,6 +68,7 @@ class PayloadExceptionTest {
             Optional.of(3),
             null);
 
+    assertInstanceOf(PayloadLocation.Unavailable.class, encoding.jsonLocation());
     assertInstanceOf(PayloadLocation.PathOnly.class, pathOnly.jsonLocation());
     assertEquals(Optional.of("steps[0].target"), pathOnly.jsonPath());
     assertEquals(Optional.empty(), pathOnly.jsonLine());

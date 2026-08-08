@@ -224,8 +224,7 @@ final class GridGrindProtocolCatalogWorkbookInputNestedTypeGroups {
                       ShapeInput.SimpleShape.class,
                       "SIMPLE_SHAPE",
                       "Write one authored simple shape with required geometry token and optional"
-                          + " text payload.",
-                      "text"),
+                          + " text payload."),
                   descriptor(
                       ShapeInput.Connector.class,
                       "CONNECTOR",

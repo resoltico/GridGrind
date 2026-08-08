@@ -1,6 +1,7 @@
 package dev.erst.gridgrind.cli;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import dev.erst.gridgrind.cli.discovery.CliDiagnostic;
 import dev.erst.gridgrind.contract.dto.GridGrindProblemCode;
@@ -89,7 +90,7 @@ class CliDiagnosticsTest extends GridGrindCliTestSupport {
 
     assertEquals(Optional.of("protocolVersion"), readRequestContext(failure).jsonPath());
     assertEquals(
-        "Add protocolVersion: \"V1\" at the request root.", failure.problem().resolution());
+        "Add protocolVersion: \"V2\" at the request root.", failure.problem().resolution());
   }
 
   @Test
@@ -144,6 +145,16 @@ class CliDiagnosticsTest extends GridGrindCliTestSupport {
     assertEquals(GridGrindProblemCode.IO_ERROR, failure.problem().code());
     assertEquals(List.of(), failure.suggestions());
     assertEquals(Optional.of("/tmp/response.json"), writeResponseContext(failure).responsePath());
+  }
+
+  @Test
+  void readRequestFailuresRejectsAnEmptyProblemCollection() {
+    assertEquals(
+        "problems must not be empty",
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> CliDiagnostics.readRequestFailures(1, "execute", List.of()))
+            .getMessage());
   }
 
   private static GridGrindProblemDetail.Problem problem(GridGrindProblemCode code, String message) {

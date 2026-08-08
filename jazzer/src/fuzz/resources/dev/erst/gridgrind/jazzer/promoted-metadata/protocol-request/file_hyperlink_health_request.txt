@@ -3,7 +3,7 @@ Input: src/fuzz/resources/dev/erst/gridgrind/jazzer/protocol/ProtocolRequestFuzz
 Harness: protocol-request
 Outcome: EXPECTED_INVALID
 Kind: InvalidRequestShapeException
-Message: JSON value has the wrong shape for this field
+Message: Field 'steps[1].action.rows' must be a JSON object
 Input Bytes: 3726
 Decode Outcome: INVALID_REQUEST_SHAPE
 Source Kind: NOT_PARSED

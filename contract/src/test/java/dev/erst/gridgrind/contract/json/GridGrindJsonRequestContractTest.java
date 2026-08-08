@@ -58,7 +58,7 @@ class GridGrindJsonRequestContractTest {
                 GridGrindJson.readRequest(
                     """
                     {
-                      "protocolVersion": "V1",
+                      "protocolVersion": "V2",
                       "source": { "type": "NEW" },
                       "execution": {
                         "mode": {"type": "FULL_XSSF"},
@@ -87,7 +87,7 @@ class GridGrindJsonRequestContractTest {
         GridGrindJson.readRequest(
             """
             {
-              "protocolVersion": "V1",
+              "protocolVersion": "V2",
               "source": { "type": "NEW" },
               "persistence": { "type": "NONE" },
               "steps": []
@@ -106,7 +106,7 @@ class GridGrindJsonRequestContractTest {
         GridGrindJson.readRequest(
             """
             {
-              "protocolVersion": "V1",
+              "protocolVersion": "V2",
               "source": { "type": "NEW" },
 	              "persistence": {
 	                "type": "SAVE_AS",
@@ -152,7 +152,7 @@ class GridGrindJsonRequestContractTest {
                 GridGrindJson.readRequest(
                     """
                     {
-                      "protocolVersion": "V1",
+                      "protocolVersion": "V2",
                       "source": { "type": "NEW" },
                       "persistence": {
                         "type": "SAVE_AS",
@@ -182,7 +182,7 @@ class GridGrindJsonRequestContractTest {
                 GridGrindJson.readRequest(
                     """
                     {
-                      "protocolVersion": "V1",
+                      "protocolVersion": "V2",
                       "source": { "type": "NEW" },
                       "persistence": { "type": "NONE" },
                       "steps": [ {
@@ -221,7 +221,7 @@ class GridGrindJsonRequestContractTest {
                 GridGrindJson.readRequest(
                     """
                     {
-                      "protocolVersion": "V1",
+                      "protocolVersion": "V2",
                       "source": { "type": "NEW" },
                       "persistence": {
                         "type": "SAVE_AS",
@@ -253,7 +253,7 @@ class GridGrindJsonRequestContractTest {
                 GridGrindJson.readRequest(
                     """
                     {
-                      "protocolVersion": "V1",
+                      "protocolVersion": "V2",
                       "source": { "type": "NEW" },
                       "persistence": {
                         "type": "SAVE_AS",
@@ -285,7 +285,7 @@ class GridGrindJsonRequestContractTest {
                 GridGrindJson.readRequest(
                     """
                     {
-                      "protocolVersion": "V1",
+                      "protocolVersion": "V2",
                       "source": { "type": "NEW" },
                       "persistence": { "type": "NONE" },
                       "execution": {
@@ -341,7 +341,7 @@ class GridGrindJsonRequestContractTest {
                 GridGrindJson.readRequest(
                     """
                     {
-                      "protocolVersion": "V1",
+                      "protocolVersion": "V2",
                       "source": { "type": "NEW" },
                       "persistence": { "type": "NONE" },
                       "execution": {
@@ -359,17 +359,20 @@ class GridGrindJsonRequestContractTest {
                       },
                       "steps": [ {
                         "stepId": "chart",
-                        "target": { "type": "DRAWING_OBJECT_BY_NAME_ON_SHEET", "sheetName": "Sheet1", "name": "RevenueChart" },
+                        "target": { "type": "SHEET_BY_NAME", "name": "Sheet1" },
                         "action": {
                           "type": "SET_CHART",
                           "chart": {
                             "name": "RevenueChart",
                             "anchor": {
                               "type": "TWO_CELL",
-                              "start": { "columnIndex": 0, "rowIndex": 0, "dx": 0, "dy": 0 },
-                              "end": { "columnIndex": 8, "rowIndex": 14, "dx": 0, "dy": 0 },
+                              "to": { "columnIndex": 8, "rowIndex": 14, "dx": 0, "dy": 0 },
                               "behavior": "MOVE_AND_RESIZE"
                             },
+                            "title": { "type": "NONE" },
+                            "legend": { "type": "VISIBLE", "position": "RIGHT" },
+                            "displayBlanksAs": "GAP",
+                            "plotOnlyVisibleCells": true,
                             "plots": [ {
                               "type": "LINE",
                               "varyColors": false,
@@ -390,8 +393,8 @@ class GridGrindJsonRequestContractTest {
                               ],
                               "series": [ {
                                 "title": { "type": "NONE" },
-                                "categories": { "type": "REFERENCE", "reference": "Sheet1!$A$2:$A$5" },
-                                "values": { "type": "REFERENCE", "reference": "Sheet1!$B$2:$B$5" }
+                                "categories": { "type": "REFERENCE", "formula": "Sheet1!$A$2:$A$5" },
+                                "values": { "type": "REFERENCE", "formula": "Sheet1!$B$2:$B$5" }
                               } ]
                             } ]
                           }
@@ -404,6 +407,7 @@ class GridGrindJsonRequestContractTest {
     assertTrue(
         exception
             .getMessage()
-            .contains("Missing required field 'steps[0].action.chart.anchor.from'"));
+            .contains("Missing required field 'steps[0].action.chart.anchor.from'"),
+        exception::getMessage);
   }
 }

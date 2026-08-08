@@ -21,24 +21,31 @@ import dev.erst.gridgrind.contract.json.UnknownField;
 import dev.erst.gridgrind.contract.selector.Selector;
 import dev.erst.gridgrind.contract.selector.SelectorJsonSupport;
 import dev.erst.gridgrind.contract.selector.TableSelector;
+import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
+import tools.jackson.core.JacksonException;
+import tools.jackson.core.JsonParser;
+import tools.jackson.core.ObjectReadContext;
+import tools.jackson.core.json.JsonFactory;
+import tools.jackson.databind.json.JsonMapper;
+import tools.jackson.databind.node.JsonNodeFactory;
 
 /** Direct parser coverage for the canonical step envelope deserializer. */
 class WorkbookStepJsonDeserializerTest {
   @Test
   void rejectsUnknownAndMissingStepFieldsWithProductOwnedMessages() {
     assertEquals(
-        "steps entries must be JSON objects",
+        "Field 'steps[0]' must be a JSON object",
         assertThrows(
                 InvalidRequestShapeException.class,
                 () ->
                     GridGrindJson.readRequest(
                         """
                         {
-                          "protocolVersion": "V1",
+                          "protocolVersion": "V2",
                           "source": { "type": "NEW" },
                           "persistence": { "type": "NONE" },
                           "steps": [3]
@@ -110,12 +117,13 @@ class WorkbookStepJsonDeserializerTest {
     assertEquals(Optional.of("steps[0].target"), missingTarget.jsonPath());
     assertInstanceOf(MissingRequiredField.class, missingTarget.requestProblem());
     assertEquals(
-        "Each step must contain exactly one of 'action', 'assertion', or 'query'",
+        "Field 'steps[0]' must be an object containing exactly one of action, assertion, or query",
         missingStepPayload.getMessage());
     assertEquals(Optional.of("steps[0]"), missingStepPayload.jsonPath());
-    assertEquals("Field 'stepId' must be a string", nonStringStepId.getMessage());
+    assertEquals("Field 'steps[0].stepId' must be a JSON string", nonStringStepId.getMessage());
     assertEquals(Optional.of("steps[0].stepId"), nonStringStepId.jsonPath());
-    assertInstanceOf(ActionableShapeMessage.class, nonStringStepId.requestProblem());
+    assertInstanceOf(
+        dev.erst.gridgrind.contract.json.MessageShape.class, nonStringStepId.requestProblem());
   }
 
   @Test
@@ -226,20 +234,23 @@ class WorkbookStepJsonDeserializerTest {
                         "query": { "type": "GET_WORKBOOK_SUMMARY" }
                         """)));
 
-    assertEquals("Field 'target' must be a JSON object", nonObjectTarget.getMessage());
+    assertEquals("Field 'steps[0].target' must be a JSON object", nonObjectTarget.getMessage());
     assertEquals(Optional.of("steps[0].target"), nonObjectTarget.jsonPath());
-    assertInstanceOf(ActionableShapeMessage.class, nonObjectTarget.requestProblem());
+    assertInstanceOf(
+        dev.erst.gridgrind.contract.json.MessageShape.class, nonObjectTarget.requestProblem());
     assertEquals("Missing required field 'steps[0].target.type'", missingTargetType.getMessage());
     assertEquals(Optional.of("steps[0].target.type"), missingTargetType.jsonPath());
     assertInstanceOf(MissingTypeDiscriminator.class, missingTargetType.requestProblem());
-    assertEquals("Field 'target.type' must be a string", nonStringTargetType.getMessage());
+    assertEquals(
+        "Field 'steps[0].target.type' must be a JSON string type id",
+        nonStringTargetType.getMessage());
     assertEquals(Optional.of("steps[0].target.type"), nonStringTargetType.jsonPath());
     assertInstanceOf(ActionableShapeMessage.class, nonStringTargetType.requestProblem());
-    assertEquals(
-        "Field 'target.type' uses unknown target selector type 'BY_RIDDLE'; allowed targets: WorkbookSelector(WORKBOOK_CURRENT)",
-        unknownTargetType.getMessage());
+    assertEquals("Unknown type value 'BY_RIDDLE'", unknownTargetType.getMessage());
     assertEquals(Optional.of("steps[0].target.type"), unknownTargetType.jsonPath());
-    assertInstanceOf(ActionableShapeMessage.class, unknownTargetType.requestProblem());
+    assertInstanceOf(
+        dev.erst.gridgrind.contract.json.UnknownTypeValue.class,
+        unknownTargetType.requestProblem());
   }
 
   @Test
@@ -252,7 +263,7 @@ class WorkbookStepJsonDeserializerTest {
                     requestWithStepBody(
                         """
                         "stepId": "zoom-too-far",
-                        "target": { "type": "SHEET_BY_NAME", "sheetName": "Budget" },
+                        "target": { "type": "SHEET_BY_NAME", "name": "Budget" },
                         "action": { "type": "SET_SHEET_ZOOM", "zoomPercent": 401 }
                         """)));
 
@@ -309,9 +320,7 @@ class WorkbookStepJsonDeserializerTest {
                         "query": { "type": "GET_WORKBOOK_SUMMARY" }
                         """)));
 
-    assertEquals(
-        "Field 'target.type' uses unknown target selector type 'BY_NAME'; target selector ids are family-specific; allowed targets: WorkbookSelector(WORKBOOK_CURRENT)",
-        legacyTargetType.getMessage());
+    assertEquals("Unknown type value 'BY_NAME'", legacyTargetType.getMessage());
     assertEquals(Optional.of("steps[0].target.type"), legacyTargetType.jsonPath());
   }
 
@@ -325,7 +334,7 @@ class WorkbookStepJsonDeserializerTest {
                     requestWithStepBody(
                         """
                         "stepId": "assert-table-present",
-                        "target": { "type": "TABLE_BY_NAME", "sheetName": "Ops" },
+                        "target": { "type": "TABLE_BY_NAME" },
                         "assertion": { "type": "EXPECT_TABLE_PRESENT" }
                         """)));
 
@@ -361,10 +370,106 @@ class WorkbookStepJsonDeserializerTest {
     assertEquals("TableSelector", SelectorJsonSupport.familyName(TableSelector.ByName.class));
   }
 
+  @Test
+  void directStepDeserializerRejectsMissingEnvelopeAndTargetDiscriminators() {
+    JsonMapper mapper = JsonMapper.builder().build();
+
+    assertThrows(
+        JacksonException.class,
+        () ->
+            mapper.readValue(
+                """
+                {"stepId":"missing-target","query":{"type":"GET_WORKBOOK_SUMMARY"}}
+                """,
+                WorkbookStep.class));
+    assertThrows(
+        JacksonException.class,
+        () ->
+            mapper.readValue(
+                """
+                {"stepId":"missing-target-type","target":{},"query":{"type":"GET_WORKBOOK_SUMMARY"}}
+                """,
+                WorkbookStep.class));
+  }
+
+  @Test
+  void directStepDeserializerDefendsEveryEnvelopeFieldBeforeSubtypeBinding() {
+    JsonMapper mapper = JsonMapper.builder().build();
+
+    assertDirectStepFailure(mapper, "3");
+    assertDirectStepFailure(
+        mapper,
+        """
+        {
+          "stepId": 7,
+          "target": { "type": "WORKBOOK_CURRENT" },
+          "query": { "type": "GET_WORKBOOK_SUMMARY" }
+        }
+        """);
+    assertDirectStepFailure(
+        mapper,
+        """
+        {
+          "stepId": "unknown-field",
+          "target": { "type": "WORKBOOK_CURRENT" },
+          "query": { "type": "GET_WORKBOOK_SUMMARY" },
+          "unexpected": true
+        }
+        """);
+    assertEquals(
+        "target selector ids are family-specific; ",
+        WorkbookStepLegacySelectorTypeHints.guidancePrefix("BY_NAME"));
+    assertEquals("", WorkbookStepLegacySelectorTypeHints.guidancePrefix("BY_RIDDLE"));
+  }
+
+  @Test
+  void targetSupportPinsMissingDiscriminatorsToTheTargetTypeFieldBeforeSelectorDispatch()
+      throws Exception {
+    try (JsonParser parser =
+        new JsonFactory()
+            .createParser(
+                ObjectReadContext.empty(),
+                new ByteArrayInputStream("{}".getBytes(StandardCharsets.UTF_8)))) {
+      parser.nextToken();
+      assertThrows(
+          JacksonException.class,
+          () ->
+              WorkbookStepJsonTargetSupport.deserializeTarget(
+                  JsonNodeFactory.instance.objectNode(),
+                  parser,
+                  "target",
+                  TableSelector.ByName.class));
+      assertThrows(
+          JacksonException.class,
+          () ->
+              WorkbookStepJsonTargetSupport.deserializeTarget(
+                  JsonNodeFactory.instance.numberNode(7),
+                  parser,
+                  "target",
+                  TableSelector.ByName.class));
+      assertThrows(
+          JacksonException.class,
+          () ->
+              WorkbookStepJsonTargetSupport.deserializeTarget(
+                  JsonNodeFactory.instance.objectNode().put("type", 7),
+                  parser,
+                  "target",
+                  TableSelector.ByName.class));
+      assertThrows(
+          JacksonException.class,
+          () ->
+              WorkbookStepJsonTargetSupport.deserializeTarget(
+                  JsonNodeFactory.instance.objectNode().put("type", "BY_NAME"),
+                  parser,
+                  "target",
+                  TableSelector.ByName.class));
+    }
+  }
+
   private static byte[] requestWithStepBody(String stepBody) {
     return ("""
         {
-          "protocolVersion": "V1",
+          "protocolVersion": "V2",
           "source": { "type": "NEW" },
           "persistence": { "type": "NONE" },
           "execution": {
@@ -390,5 +495,9 @@ class WorkbookStepJsonDeserializerTest {
         }
         """)
         .getBytes(StandardCharsets.UTF_8);
+  }
+
+  private static void assertDirectStepFailure(JsonMapper mapper, String step) {
+    assertThrows(JacksonException.class, () -> mapper.readValue(step, WorkbookStep.class));
   }
 }

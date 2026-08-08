@@ -10,8 +10,8 @@
       "inputBytes" : 38,
       "commandCount" : 8,
       "commandKinds" : {
-        "CREATE_SHEET" : 7,
-        "CLEAR_SHEET_PROTECTION" : 1
+        "CLEAR_SHEET_PROTECTION" : 1,
+        "CREATE_SHEET" : 7
       },
       "styleKinds" : { }
     }

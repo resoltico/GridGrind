@@ -147,7 +147,7 @@ public final class GridGrindRequestProblemSupport {
 
   private static String missingFieldResolution(String jsonPath) {
     if ("protocolVersion".equals(jsonPath)) {
-      return "Add protocolVersion: \"V1\" at the request root.";
+      return "Add protocolVersion: \"V2\" at the request root.";
     }
     if (jsonPath.endsWith(".type")) {
       return "Add the required type discriminator at '" + jsonPath + "'.";

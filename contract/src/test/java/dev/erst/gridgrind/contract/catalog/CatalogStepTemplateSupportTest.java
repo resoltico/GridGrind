@@ -77,6 +77,20 @@ class CatalogStepTemplateSupportTest {
   }
 
   @Test
+  void differentialStyleTemplateDefaultProducesAnExecutableStylePlaceholder() {
+    ObjectNode style = tools.jackson.databind.node.JsonNodeFactory.instance.objectNode();
+    CatalogStepTemplateDefaults.buildTypeSpecificDefaults()
+        .get("DifferentialStyleInput")
+        .apply(
+            GridGrindProtocolCatalog.catalog(),
+            style,
+            new java.util.HashSet<>(),
+            new java.util.ArrayList<>());
+
+    assertTrue(style.path("bold").booleanValue());
+  }
+
+  @Test
   void attachUsesTargetRulesAndRejectsBrokenCatalogReferences() {
     Catalog targetRuleCatalog = CatalogStepTemplateSupport.attach(targetRuleCatalog());
     ProtocolStepTemplate targetRuleTemplate =

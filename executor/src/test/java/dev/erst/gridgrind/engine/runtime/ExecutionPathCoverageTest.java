@@ -236,7 +236,7 @@ class ExecutionPathCoverageTest {
 
     GridGrindResponse.Failure failure =
         ExecutionResponseSupport.failureResponse(
-            GridGrindProtocolVersion.V1, journal, request, problem, 1, "step-1");
+            GridGrindProtocolVersion.V2, journal, request, problem, 1, "step-1");
 
     assertEquals(CalculationReport.notRequested(), failure.calculation());
     assertEquals(problem, failure.problem());

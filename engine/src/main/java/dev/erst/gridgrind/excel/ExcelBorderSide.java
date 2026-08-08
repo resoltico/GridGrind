@@ -4,9 +4,9 @@ import dev.erst.gridgrind.excel.foundation.ExcelBorderStyle;
 import java.util.Objects;
 import java.util.Optional;
 
-/** One side of a border patch or snapshot, defined by style and optional RGB color. */
+/** One side of a border patch or snapshot, defined by optional style and owned color reference. */
 public record ExcelBorderSide(Optional<ExcelBorderStyle> style, Optional<ExcelColor> color) {
-  /** Creates a border side with the supplied style and no explicit RGB color override. */
+  /** Creates a border side with the supplied style and no explicit color override. */
   public ExcelBorderSide(ExcelBorderStyle style) {
     this(Optional.ofNullable(style), Optional.empty());
   }

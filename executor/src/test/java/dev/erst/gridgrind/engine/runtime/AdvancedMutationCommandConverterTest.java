@@ -14,13 +14,13 @@ import dev.erst.gridgrind.contract.dto.AutofilterFilterColumnInput;
 import dev.erst.gridgrind.contract.dto.AutofilterFilterCriterionInput;
 import dev.erst.gridgrind.contract.dto.AutofilterSortConditionInput;
 import dev.erst.gridgrind.contract.dto.AutofilterSortStateInput;
+import dev.erst.gridgrind.contract.dto.BorderSideInput;
 import dev.erst.gridgrind.contract.dto.CellBorderInput;
-import dev.erst.gridgrind.contract.dto.CellBorderSideInput;
 import dev.erst.gridgrind.contract.dto.CellFillInput;
 import dev.erst.gridgrind.contract.dto.CellFontInput;
 import dev.erst.gridgrind.contract.dto.CellGradientFillInput;
 import dev.erst.gridgrind.contract.dto.CellGradientStopInput;
-import dev.erst.gridgrind.contract.dto.CellStyleInput;
+import dev.erst.gridgrind.contract.dto.CellStylePatchInput;
 import dev.erst.gridgrind.contract.dto.ChartDataSourceInput;
 import dev.erst.gridgrind.contract.dto.ChartInput;
 import dev.erst.gridgrind.contract.dto.ChartLegendInput;
@@ -654,7 +654,7 @@ class AdvancedMutationCommandConverterTest {
   void convertsAdvancedStyleAndConditionalFormattingPayloads() {
     ExcelCellStyle style =
         WorkbookCommandCellInputConverter.toExcelCellStyle(
-            new CellStyleInput(
+            new CellStylePatchInput(
                 Optional.empty(),
                 Optional.empty(),
                 Optional.of(
@@ -679,8 +679,7 @@ class AdvancedMutationCommandConverterTest {
                 Optional.of(
                     new CellBorderInput(
                         Optional.empty(),
-                        Optional.ofNullable(
-                            new CellBorderSideInput(null, ColorInput.theme(1, 0.15d))),
+                        Optional.ofNullable(new BorderSideInput(null, ColorInput.theme(1, 0.15d))),
                         Optional.empty(),
                         Optional.empty(),
                         Optional.empty())),

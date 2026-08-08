@@ -172,7 +172,8 @@ final class GridGrindCliSurfaceRequestSections {
                     + " workbook-source accessibility, and emit a machine-readable doctor"
                     + " report without mutating a workbook. The doctor response returns"
                     + " warnings plus every independently provable blocking problem it can"
-                    + " isolate safely, including multiple malformed steps in one pass."),
+                    + " isolate safely, including structural and constructor-level request"
+                    + " intake failures across multiple steps in one pass."),
             new CliSurface.DefinitionEntry(
                 "--print-request-template",
                 "Print a minimal valid request JSON document with default execution and"

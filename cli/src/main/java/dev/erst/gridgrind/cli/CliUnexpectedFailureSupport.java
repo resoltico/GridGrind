@@ -48,7 +48,8 @@ final class CliUnexpectedFailureSupport {
       Throwable writeFailure) {
     CliDiagnostic stdoutDiagnostic =
         responsePathUsed
-            ? CliResponseWriter.diagnosticWithTransport(diagnostic, CliTransport.standardOutput())
+            ? CliResponseTransportSupport.diagnosticWithTransport(
+                diagnostic, CliTransport.standardOutput())
             : diagnostic;
     try {
       byte[] payload = GridGrindCliJson.writeBytes(stdoutDiagnostic, prettyJson);

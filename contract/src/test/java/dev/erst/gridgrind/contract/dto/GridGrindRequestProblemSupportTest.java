@@ -98,7 +98,7 @@ class GridGrindRequestProblemSupportTest {
             ProblemContextRequestSurfaces.JsonLocation.pathOnly("steps[0].stepId"));
 
     assertEquals(
-        "Add protocolVersion: \"V1\" at the request root.",
+        "Add protocolVersion: \"V2\" at the request root.",
         GridGrindRequestProblemSupport.resolution(
             new MissingRequiredField("protocolVersion"), requestContext));
     assertEquals(

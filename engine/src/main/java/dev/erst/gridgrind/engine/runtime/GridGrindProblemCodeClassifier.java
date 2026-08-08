@@ -1,6 +1,7 @@
 package dev.erst.gridgrind.engine.runtime;
 
 import dev.erst.gridgrind.contract.dto.GridGrindProblemCode;
+import dev.erst.gridgrind.contract.json.InvalidEncodingException;
 import dev.erst.gridgrind.contract.json.InvalidJsonException;
 import dev.erst.gridgrind.contract.json.InvalidRequestException;
 import dev.erst.gridgrind.contract.json.InvalidRequestShapeException;
@@ -30,6 +31,7 @@ final class GridGrindProblemCodeClassifier {
   static GridGrindProblemCode codeFor(Throwable exception) {
     Objects.requireNonNull(exception, "exception must not be null");
     return switch (exception) {
+      case InvalidEncodingException _ -> GridGrindProblemCode.INVALID_ENCODING;
       case InvalidJsonException _ -> GridGrindProblemCode.INVALID_JSON;
       case InvalidRequestShapeException _ -> GridGrindProblemCode.INVALID_REQUEST_SHAPE;
       case InvalidRequestException _ -> GridGrindProblemCode.INVALID_REQUEST;

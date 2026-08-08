@@ -136,7 +136,7 @@ class WorkbookInvariantChecksTest {
 
     GridGrindResponse.Success response =
         GridGrindResponses.success(
-            GridGrindProtocolVersion.V1,
+            GridGrindProtocolVersion.V2,
             writtenSaveAs("result.xlsx", workbookPath),
             List.of(
                 new RequestWarning(
@@ -322,7 +322,7 @@ class WorkbookInvariantChecksTest {
     WorkbookPlan request = saveAsRequest(workbookPath);
     GridGrindResponse.Failure response =
         GridGrindResponses.failure(
-            GridGrindProtocolVersion.V1,
+            GridGrindProtocolVersion.V2,
             notWrittenSaveAs(workbookPath.toString()),
             GridGrindProblemDetail.Problem.of(
                 GridGrindProblemCode.IO_ERROR,
@@ -370,7 +370,7 @@ class WorkbookInvariantChecksTest {
                 new InspectionAnalysisQuery.AnalyzeNamedRangeHealth()));
     GridGrindResponse.Success response =
         GridGrindResponses.success(
-            GridGrindProtocolVersion.V1,
+            GridGrindProtocolVersion.V2,
             writtenSaveAs(workbookPath.toString(), workbookPath),
             List.of(),
             List.of(),
@@ -422,7 +422,7 @@ class WorkbookInvariantChecksTest {
 
     GridGrindResponse.Success response =
         GridGrindResponses.success(
-            GridGrindProtocolVersion.V1,
+            GridGrindProtocolVersion.V2,
             writtenSaveAs(workbookPath.toString(), workbookPath),
             List.of(),
             List.of(),
@@ -475,7 +475,7 @@ class WorkbookInvariantChecksTest {
 
     GridGrindResponse.Success response =
         GridGrindResponses.success(
-            GridGrindProtocolVersion.V1,
+            GridGrindProtocolVersion.V2,
             writtenSaveAs("result.xlsx", workbookPath),
             List.of(),
             List.of(),
@@ -501,7 +501,7 @@ class WorkbookInvariantChecksTest {
 
     GridGrindResponse.Success response =
         GridGrindResponses.success(
-            GridGrindProtocolVersion.V1,
+            GridGrindProtocolVersion.V2,
             writtenSaveAs("result.xlsx", workbookPath),
             List.of(),
             List.of(),
@@ -561,7 +561,7 @@ class WorkbookInvariantChecksTest {
                 new InspectionAnalysisQuery.AnalyzeTableHealth()));
     GridGrindResponse.Success response =
         GridGrindResponses.success(
-            GridGrindProtocolVersion.V1,
+            GridGrindProtocolVersion.V2,
             writtenSaveAs(workbookPath.toString(), workbookPath),
             List.of(),
             List.of(),
@@ -601,7 +601,7 @@ class WorkbookInvariantChecksTest {
 
     GridGrindResponse.Success response =
         GridGrindResponses.success(
-            GridGrindProtocolVersion.V1,
+            GridGrindProtocolVersion.V2,
             writtenSaveAs("pivot.xlsx", workbookPath),
             List.of(),
             List.of(),
@@ -634,7 +634,7 @@ class WorkbookInvariantChecksTest {
                 new InspectionAnalysisQuery.AnalyzePivotTableHealth()));
     GridGrindResponse.Success response =
         GridGrindResponses.success(
-            GridGrindProtocolVersion.V1,
+            GridGrindProtocolVersion.V2,
             writtenSaveAs(workbookPath.toString(), workbookPath),
             List.of(),
             List.of(),
@@ -675,7 +675,7 @@ class WorkbookInvariantChecksTest {
                     new SheetIntrospectionQuery.GetSheetSummary())));
     GridGrindResponse.Success response =
         GridGrindResponses.success(
-            GridGrindProtocolVersion.V1,
+            GridGrindProtocolVersion.V2,
             writtenSaveAs(workbookPath.toString(), workbookPath),
             List.of(),
             List.of(
@@ -750,7 +750,7 @@ class WorkbookInvariantChecksTest {
 
     GridGrindResponse.Success response =
         GridGrindResponses.success(
-            GridGrindProtocolVersion.V1,
+            GridGrindProtocolVersion.V2,
             writtenSaveAs("advanced.xlsx", workbookPath),
             List.of(),
             List.of(),
@@ -882,7 +882,7 @@ class WorkbookInvariantChecksTest {
 
     GridGrindResponse.Success response =
         GridGrindResponses.success(
-            GridGrindProtocolVersion.V1,
+            GridGrindProtocolVersion.V2,
             writtenSaveAs("drawing.xlsx", workbookPath),
             List.of(),
             List.of(),
@@ -964,7 +964,7 @@ class WorkbookInvariantChecksTest {
                 new WorkbookAssetIntrospectionQuery.GetDrawingObjectPayload()));
     GridGrindResponse.Success response =
         GridGrindResponses.success(
-            GridGrindProtocolVersion.V1,
+            GridGrindProtocolVersion.V2,
             writtenSaveAs(workbookPath.toString(), workbookPath),
             List.of(),
             List.of(),
@@ -1006,7 +1006,7 @@ class WorkbookInvariantChecksTest {
 
     GridGrindResponse.Success response =
         GridGrindResponses.success(
-            GridGrindProtocolVersion.V1,
+            GridGrindProtocolVersion.V2,
             writtenSaveAs("chart.xlsx", workbookPath),
             List.of(),
             List.of(),
@@ -1041,7 +1041,7 @@ class WorkbookInvariantChecksTest {
                 new WorkbookAssetIntrospectionQuery.GetCharts()));
     GridGrindResponse.Success response =
         GridGrindResponses.success(
-            GridGrindProtocolVersion.V1,
+            GridGrindProtocolVersion.V2,
             writtenSaveAs(workbookPath.toString(), workbookPath),
             List.of(),
             List.of(),
@@ -1165,7 +1165,7 @@ class WorkbookInvariantChecksTest {
                 new WorkbookIntrospectionQuery.GetPackageSecurity()));
     GridGrindResponse.Success response =
         GridGrindResponses.success(
-            GridGrindProtocolVersion.V1,
+            GridGrindProtocolVersion.V2,
             new GridGrindResponsePersistence.PersistenceOutcome.NotSaved(),
             List.of(),
             List.of(),
@@ -1222,7 +1222,7 @@ class WorkbookInvariantChecksTest {
     CustomXmlMappingReport mapping = customXmlMappingReport();
     GridGrindResponse.Success response =
         GridGrindResponses.success(
-            GridGrindProtocolVersion.V1,
+            GridGrindProtocolVersion.V2,
             new GridGrindResponsePersistence.PersistenceOutcome.NotSaved(),
             List.of(),
             List.of(),

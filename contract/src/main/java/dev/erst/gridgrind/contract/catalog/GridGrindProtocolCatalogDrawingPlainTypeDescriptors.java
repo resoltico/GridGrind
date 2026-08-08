@@ -23,36 +23,31 @@ final class GridGrindProtocolCatalogDrawingPlainTypeDescriptors {
               "qualifiedCellAddressType",
               dev.erst.gridgrind.contract.selector.CellSelector.QualifiedAddress.class,
               "CellSelector.QualifiedAddress",
-              "One workbook-qualified cell address used by selector-based targeted cell workflows.",
-              List.of()),
+              "One workbook-qualified cell address used by selector-based targeted cell workflows."),
           plainTypeDescriptor(
               "drawingMarkerInputType",
               DrawingMarkerInput.class,
               "DrawingMarkerInput",
-              "One zero-based drawing marker with explicit column, row, and in-cell offsets.",
-              List.of()),
+              "One zero-based drawing marker with explicit column, row, and in-cell offsets."),
           plainTypeDescriptor(
               "arrayFormulaInputType",
               ArrayFormulaInput.class,
               "ArrayFormulaInput",
               "One authored array formula bound to a contiguous single-cell or multi-cell range."
-                  + " Leading = or {=...} wrappers normalize away for inline sources.",
-              List.of()),
+                  + " Leading = or {=...} wrappers normalize away for inline sources."),
           plainTypeDescriptor(
               "customXmlMappingLocatorType",
               CustomXmlMappingLocator.class,
               "CustomXmlMappingLocator",
               "One locator for an existing workbook custom-XML mapping."
                   + " Supply mapId, name, or both; the locator must resolve to exactly one"
-                  + " existing mapping.",
-              List.of("mapId", "name")),
+                  + " existing mapping."),
           plainTypeDescriptor(
               "customXmlImportInputType",
               CustomXmlImportInput.class,
               "CustomXmlImportInput",
               "One custom-XML import payload targeting an existing workbook mapping plus the XML"
-                  + " content to import.",
-              List.of()),
+                  + " content to import."),
           plainTypeDescriptor(
               "chartInputType",
               ChartInput.class,
@@ -60,64 +55,45 @@ final class GridGrindProtocolCatalogDrawingPlainTypeDescriptors {
               "One authored chart with an explicit drawing anchor, chart-level presentation"
                   + " state, and one or more plots."
                   + " Use ChartInput.withStandardDisplay(...) from Java authoring when the"
-                  + " standard legend and blank-cell display policy is intended.",
-              List.of()),
+                  + " standard legend and blank-cell display policy is intended."),
           plainTypeDescriptor(
               "chartAxisInputType",
               ChartAxisInput.class,
               "ChartAxisInput",
-              "One authored chart axis used by a chart plot with explicit visibility state.",
-              List.of()),
+              "One authored chart axis used by a chart plot with explicit visibility state."),
           plainTypeDescriptor(
               "chartSeriesInputType",
               ChartSeriesInput.class,
               "ChartSeriesInput",
               "One authored chart series with a title plus category and value data sources."
-                  + " smooth, marker, and explosion fields are optional by chart family.",
-              List.of("smooth", "markerStyle", "markerSize", "explosion")),
+                  + " smooth, marker, and explosion fields are optional by chart family."),
           plainTypeDescriptor(
               "pictureDataInputType",
               PictureDataInput.class,
               "PictureDataInput",
-              "One picture payload with explicit format and base64-encoded binary data.",
-              List.of()),
+              "One picture payload with explicit format and base64-encoded binary data."),
           plainTypeDescriptor(
               "pictureInputType",
               PictureInput.class,
               "PictureInput",
-              "Named picture-authoring payload for SET_PICTURE.",
-              List.of("description")),
+              "Named picture-authoring payload for SET_PICTURE."),
           plainTypeDescriptor(
               "signatureLineInputType",
               SignatureLineInput.class,
               "SignatureLineInput",
               "Named signature-line authoring payload for SET_SIGNATURE_LINE."
                   + " allowComments is explicit and plainSignature is optional,"
-                  + " but caption or suggested signer metadata must still be present.",
-              List.of(
-                  "signingInstructions",
-                  "suggestedSigner",
-                  "suggestedSigner2",
-                  "suggestedSignerEmail",
-                  "caption",
-                  "invalidStamp",
-                  "plainSignature")),
+                  + " but caption or suggested signer metadata must still be present."),
           plainTypeDescriptor(
               "embeddedObjectInputType",
               EmbeddedObjectInput.class,
               "EmbeddedObjectInput",
               "Named embedded-object authoring payload for SET_EMBEDDED_OBJECT."
                   + " base64Data holds the embedded package bytes and previewImage holds the"
-                  + " visible preview raster.",
-              List.of()));
+                  + " visible preview raster."));
 
   private static CatalogPlainTypeDescriptor plainTypeDescriptor(
-      String group,
-      Class<? extends Record> recordType,
-      String id,
-      String summary,
-      List<String> optionalFields) {
-    return CatalogTypeEntryFactory.plainTypeDescriptor(
-        group, recordType, id, summary, optionalFields);
+      String group, Class<? extends Record> recordType, String id, String summary) {
+    return CatalogTypeEntryFactory.plainTypeDescriptor(group, recordType, id, summary);
   }
 }

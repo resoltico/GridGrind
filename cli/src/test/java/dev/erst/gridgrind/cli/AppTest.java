@@ -20,7 +20,7 @@ class AppTest {
   private static final String EMPTY_SUCCESS_REQUEST =
       """
       {
-        "protocolVersion": "V1",
+        "protocolVersion": "V2",
         "source": { "type": "NEW" },
         "persistence": { "type": "NONE" },
         "execution": {

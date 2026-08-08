@@ -21,7 +21,7 @@ class GridGrindJsonPersistenceEnvelopeTest {
   void successResponsesKeepPersistenceOnlyAtTheTopLevel() throws IOException {
     GridGrindResponse persistSuccess =
         GridGrindResponses.success(
-            GridGrindProtocolVersion.V1,
+            GridGrindProtocolVersion.V2,
             new GridGrindResponsePersistence.PersistenceOutcome.SavedAs(
                 "out/report.xlsx",
                 new GridGrindResponsePersistence.WriteResult.Written("/work/out/report.xlsx")),
@@ -48,7 +48,7 @@ class GridGrindJsonPersistenceEnvelopeTest {
   void persistFailureContextsDoNotDuplicateTheTopLevelPersistenceBlock() throws IOException {
     GridGrindResponse persistFailure =
         GridGrindResponses.failure(
-            GridGrindProtocolVersion.V1,
+            GridGrindProtocolVersion.V2,
             new GridGrindResponsePersistence.PersistenceOutcome.SavedAs(
                 "out/report.xlsx", new GridGrindResponsePersistence.WriteResult.NotWritten()),
             new GridGrindProblemDetail.Problem(
@@ -86,7 +86,7 @@ class GridGrindJsonPersistenceEnvelopeTest {
       throws IOException {
     GridGrindResponse persistFailure =
         GridGrindResponses.failure(
-            GridGrindProtocolVersion.V1,
+            GridGrindProtocolVersion.V2,
             new GridGrindResponsePersistence.PersistenceOutcome.Overwritten(
                 Optional.empty(), new GridGrindResponsePersistence.WriteResult.NotWritten()),
             new GridGrindProblemDetail.Problem(

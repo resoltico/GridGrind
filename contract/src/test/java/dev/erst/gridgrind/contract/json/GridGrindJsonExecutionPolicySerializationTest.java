@@ -27,7 +27,7 @@ final class GridGrindJsonExecutionPolicySerializationTest {
                 GridGrindJson.readRequest(
                     """
                     {
-                      "protocolVersion": "V1",
+                      "protocolVersion": "V2",
                       "source": { "type": "NEW" },
                       "persistence": { "type": "NONE" },
                       "execution": {},
@@ -48,7 +48,7 @@ final class GridGrindJsonExecutionPolicySerializationTest {
                 GridGrindJson.readRequest(
                     """
                     {
-                      "protocolVersion": "V1",
+                      "protocolVersion": "V2",
                       "source": { "type": "NEW" },
                       "persistence": { "type": "NONE" },
                       "execution": {
@@ -71,7 +71,7 @@ final class GridGrindJsonExecutionPolicySerializationTest {
                 GridGrindJson.readRequest(
                     """
                     {
-                      "protocolVersion": "V1",
+                      "protocolVersion": "V2",
                       "source": { "type": "NEW" },
                       "persistence": { "type": "NONE" },
                       "execution": {
@@ -94,7 +94,7 @@ final class GridGrindJsonExecutionPolicySerializationTest {
                 GridGrindJson.readRequest(
                     """
                     {
-                      "protocolVersion": "V1",
+                      "protocolVersion": "V2",
                       "source": { "type": "NEW" },
                       "persistence": { "type": "NONE" },
                       "execution": {
@@ -121,7 +121,7 @@ final class GridGrindJsonExecutionPolicySerializationTest {
                 GridGrindJson.readRequest(
                     """
                     {
-                      "protocolVersion": "V1",
+                      "protocolVersion": "V2",
                       "source": { "type": "NEW" },
                       "persistence": { "type": "NONE" },
                       "execution": {

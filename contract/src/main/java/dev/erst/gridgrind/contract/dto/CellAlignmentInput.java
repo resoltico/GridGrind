@@ -5,7 +5,7 @@ import dev.erst.gridgrind.excel.foundation.ExcelVerticalAlignment;
 import java.util.Objects;
 import java.util.Optional;
 
-/** Protocol-facing alignment patch used by {@link CellStyleInput}. */
+/** Protocol-facing alignment patch used by {@link CellStylePatchInput}. */
 public record CellAlignmentInput(
     Optional<Boolean> wrapText,
     Optional<ExcelHorizontalAlignment> horizontalAlignment,

@@ -61,7 +61,6 @@ final class GridGrindProtocolCatalogSourceAndReportNestedTypeGroups {
                       "BLANK",
                       "Factual blank cell report. Only address and type are always present;"
                           + " FORMAT, STYLE, HYPERLINK, and COMMENT project the remaining fields.",
-                      List.of(),
                       projectedField("displayValue", CellReadFacet.FORMAT),
                       projectedField("style", CellReadFacet.STYLE),
                       projectedField("hyperlink", CellReadFacet.HYPERLINK),
@@ -72,7 +71,6 @@ final class GridGrindProtocolCatalogSourceAndReportNestedTypeGroups {
                       "Factual text cell report. VALUE projects textValue,"
                           + " RICH_TEXT_RUNS projects runs, and the remaining fields are"
                           + " facet-gated.",
-                      List.of(),
                       projectedField("displayValue", CellReadFacet.FORMAT),
                       projectedField("style", CellReadFacet.STYLE),
                       projectedField("hyperlink", CellReadFacet.HYPERLINK),
@@ -85,7 +83,6 @@ final class GridGrindProtocolCatalogSourceAndReportNestedTypeGroups {
                       "Factual numeric cell report. VALUE projects numberValue; TEMPORAL adds"
                           + " date, time, or date-time semantics when a numeric Excel value is"
                           + " format-derived rather than a plain number.",
-                      List.of(),
                       projectedField("displayValue", CellReadFacet.FORMAT),
                       projectedField("style", CellReadFacet.STYLE),
                       projectedField("hyperlink", CellReadFacet.HYPERLINK),
@@ -97,7 +94,6 @@ final class GridGrindProtocolCatalogSourceAndReportNestedTypeGroups {
                       "BOOLEAN",
                       "Factual boolean cell report. VALUE projects booleanValue and the"
                           + " remaining fields are facet-gated.",
-                      List.of(),
                       projectedField("displayValue", CellReadFacet.FORMAT),
                       projectedField("style", CellReadFacet.STYLE),
                       projectedField("hyperlink", CellReadFacet.HYPERLINK),
@@ -108,7 +104,6 @@ final class GridGrindProtocolCatalogSourceAndReportNestedTypeGroups {
                       "ERROR",
                       "Factual error cell report. VALUE projects errorValue and the remaining"
                           + " fields are facet-gated.",
-                      List.of(),
                       projectedField("displayValue", CellReadFacet.FORMAT),
                       projectedField("style", CellReadFacet.STYLE),
                       projectedField("hyperlink", CellReadFacet.HYPERLINK),
@@ -120,7 +115,6 @@ final class GridGrindProtocolCatalogSourceAndReportNestedTypeGroups {
                       "Factual formula cell report with separate projected evaluation."
                           + " FORMULA projects formula text, VALUE projects evaluation, and the"
                           + " remaining fields are facet-gated.",
-                      List.of(),
                       projectedField("displayValue", CellReadFacet.FORMAT),
                       projectedField("style", CellReadFacet.STYLE),
                       projectedField("hyperlink", CellReadFacet.HYPERLINK),
@@ -140,7 +134,6 @@ final class GridGrindProtocolCatalogSourceAndReportNestedTypeGroups {
                       "TEXT",
                       "Effective formula evaluation is text; RICH_TEXT_RUNS projects optional"
                           + " runs.",
-                      List.of(),
                       projectedField("runs", CellReadFacet.RICH_TEXT_RUNS)),
                   descriptor(
                       CellValueReport.NumberValue.class,
@@ -148,7 +141,6 @@ final class GridGrindProtocolCatalogSourceAndReportNestedTypeGroups {
                       "Effective formula evaluation is numeric; TEMPORAL projects derived"
                           + " date, time, or date-time semantics when formatting marks the"
                           + " numeric value as date-like.",
-                      List.of(),
                       projectedField("temporal", CellReadFacet.TEMPORAL)),
                   descriptor(
                       CellValueReport.BooleanValue.class,
@@ -278,40 +270,15 @@ final class GridGrindProtocolCatalogSourceAndReportNestedTypeGroups {
               List.of(
                   descriptor(ChartReport.Area.class, "AREA", "Exact area-chart plot report."),
                   descriptor(
-                      ChartReport.Area3D.class,
-                      "AREA_3D",
-                      "Exact 3D area-chart plot report.",
-                      "gapDepth"),
+                      ChartReport.Area3D.class, "AREA_3D", "Exact 3D area-chart plot report."),
+                  descriptor(ChartReport.Bar.class, "BAR", "Exact bar-chart plot report."),
+                  descriptor(ChartReport.Bar3D.class, "BAR_3D", "Exact 3D bar-chart plot report."),
                   descriptor(
-                      ChartReport.Bar.class,
-                      "BAR",
-                      "Exact bar-chart plot report.",
-                      "gapWidth",
-                      "overlap"),
-                  descriptor(
-                      ChartReport.Bar3D.class,
-                      "BAR_3D",
-                      "Exact 3D bar-chart plot report.",
-                      "gapDepth",
-                      "gapWidth",
-                      "shape"),
-                  descriptor(
-                      ChartReport.Doughnut.class,
-                      "DOUGHNUT",
-                      "Exact doughnut-chart plot report.",
-                      "firstSliceAngle",
-                      "holeSize"),
+                      ChartReport.Doughnut.class, "DOUGHNUT", "Exact doughnut-chart plot report."),
                   descriptor(ChartReport.Line.class, "LINE", "Exact line-chart plot report."),
                   descriptor(
-                      ChartReport.Line3D.class,
-                      "LINE_3D",
-                      "Exact 3D line-chart plot report.",
-                      "gapDepth"),
-                  descriptor(
-                      ChartReport.Pie.class,
-                      "PIE",
-                      "Exact pie-chart plot report.",
-                      "firstSliceAngle"),
+                      ChartReport.Line3D.class, "LINE_3D", "Exact 3D line-chart plot report."),
+                  descriptor(ChartReport.Pie.class, "PIE", "Exact pie-chart plot report."),
                   descriptor(ChartReport.Pie3D.class, "PIE_3D", "Exact 3D pie-chart plot report."),
                   descriptor(ChartReport.Radar.class, "RADAR", "Exact radar-chart plot report."),
                   descriptor(

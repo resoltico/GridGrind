@@ -172,11 +172,11 @@ class CatalogEdgeCoverageTest {
         duplicateFailure.getMessage());
 
     assertEquals(
-        List.of("stepId", "query"),
-        CatalogTypeEntryFactory.requiredFields(InspectionStep.class, List.of("target")));
+        List.of("stepId", "target", "query"),
+        CatalogTypeEntryFactory.requiredFields(InspectionStep.class));
     assertEquals(
-        List.of("stepId", "action"),
-        CatalogTypeEntryFactory.requiredFields(MutationStep.class, List.of("target")));
+        List.of("stepId", "target", "action"),
+        CatalogTypeEntryFactory.requiredFields(MutationStep.class));
   }
 
   @Test
@@ -204,14 +204,6 @@ class CatalogEdgeCoverageTest {
 
   @Test
   void descriptorFactoryHelpersRejectInvalidShapesAndHideIgnoredFields() {
-    IllegalStateException missingOptionalField =
-        assertThrows(
-            IllegalStateException.class,
-            () -> CatalogTypeEntryFactory.requiredFields(InspectionStep.class, List.of("missing")));
-    assertEquals(
-        "Catalog optional field 'missing' does not exist on " + InspectionStep.class.getName(),
-        missingOptionalField.getMessage());
-
     IllegalStateException missingDiscriminator =
         assertThrows(
             IllegalStateException.class,
@@ -226,7 +218,7 @@ class CatalogEdgeCoverageTest {
 
     TypeEntry ignoredFieldEntry =
         CatalogTypeEntryFactory.typeEntry(
-            IgnoredFieldRecord.class, "IgnoredFieldRecord", "summary", List.of());
+            IgnoredFieldRecord.class, "IgnoredFieldRecord", "summary");
     assertEquals(
         List.of("visible"), ignoredFieldEntry.fields().stream().map(FieldEntry::name).toList());
   }
@@ -244,14 +236,13 @@ class CatalogEdgeCoverageTest {
             java.util.Optional.empty());
     TypeEntry factoryNoted =
         CatalogTypeEntryFactory.typeEntry(
-            NoteAwareRecord.class, "NoteAwareRecord", "summary", List.of(), List.of("sharedRule"));
+            NoteAwareRecord.class, "NoteAwareRecord", "summary", List.of("sharedRule"));
     CatalogPlainTypeDescriptor plainDescriptor =
         CatalogTypeEntryFactory.plainTypeDescriptorWithNotes(
             "noteAwareGroup",
             NoteAwareRecord.class,
             "NoteAwareRecord",
             "summary",
-            List.of(),
             List.of("sharedRule"));
     Catalog catalog =
         new Catalog(

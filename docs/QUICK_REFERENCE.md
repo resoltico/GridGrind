@@ -33,9 +33,9 @@ gridgrind --print-request-template | gridgrind --doctor-request --execution-root
 gridgrind --doctor-request --request request.json --response doctor-report.json
 ```
 
-`--help` is the short synopsis. `--help-protocol` is the authoritative CLI/request contract, `--help-guidance` is the workflow/example playbook, and `--doctor-request` validates request shape, resolves source-backed inputs, preflights existing workbook-source access, and returns every independently provable blocking problem it can isolate safely without mutating a workbook, including multiple malformed steps in one pass. `--response <path>` works across execution, doctoring, and discovery commands, so the primary output can be captured to a file instead of stdout. Built-in example and task catalogs also publish `requestFileName`, `workspaceMode`, and `requiredWorkspacePaths` so you can see whether a printed request is self-contained before executing it.
+`--help` is the short synopsis. `--help-protocol` is the authoritative CLI/request contract, `--help-guidance` is the workflow/example playbook, and `--doctor-request` validates request shape, resolves source-backed inputs, preflights existing workbook-source access, and returns every independently provable blocking problem it can isolate safely without mutating a workbook. Request intake reports duplicate keys, unknown fields, omitted required fields, explicit nulls, malformed scalar values, missing or unknown type discriminators, and constructor-level field validation failures together while retaining valid sibling fragments for safe preflight. `--response <path>` works across execution, doctoring, and discovery commands, so the primary output can be captured to a file instead of stdout. Built-in example and task catalogs also publish `requestFileName`, `workspaceMode`, and `requiredWorkspacePaths` so you can see whether a printed request is self-contained before executing it.
 
-The bare `--print-protocol-catalog` output is the compact first-contact index only. `--search` is the fast discovery path when you only know part of an id or summary. Use `--lookup` with one globally unique top-level id, one top-level group name, one nested/plain support-group name, `nestedTypes:<group>`, `plainTypes:<group>`, or `<topLevelGroup>:<id>` once you want one scoped machine-readable payload. Search ranks published top-level operations ahead of support-type groups, returns compact summaries by default, and adds `relatedEntryIds` or `supportingQualifiedIds` only when that lightweight context helps agents climb from a type family to the executable operation that uses it. Shared catalog rules such as request-owned path resolution are published on those scoped lookup payloads under top-level `notes`, while entry-local `noteRefs` point at the stable rule id instead of repeating the full paragraph in the bare index.
+The bare `--print-protocol-catalog` output is the compact first-contact index only. `--search` is the fast discovery path when you only know part of an id or summary. Use `--lookup` with one globally unique top-level id, one top-level group name, one nested/plain support-group name, `nestedTypes:<group>`, `plainTypes:<group>`, or `<topLevelGroup>:<id>` once you want one scoped machine-readable payload. Search ranks published top-level operations ahead of support-type groups, returns compact summaries by default, and adds `relatedEntryIds` or `supportingQualifiedIds` only when that lightweight context helps agents climb from a type family to the executable operation that uses it. Shared catalog rules such as request-owned path resolution are published on those scoped lookup payloads under top-level `notes`, while entry-local `noteRefs` point at the stable rule id instead of repeating the full paragraph in the bare index. Optional boolean fields publish `defaultBoolean` only when omission has an explicit effective value; request payloads must still omit absent fields rather than sending `null`.
 Machine-readable request-template, discovery, doctor, and execution payloads are compact JSON by
 default; add `--pretty` when you want indented JSON instead.
 
@@ -43,7 +43,7 @@ default; add `--pretty` when you want indented JSON instead.
 
 ```json
 {
-  "protocolVersion": "V1",
+  "protocolVersion": "V2",
   "source": {
     "type": "NEW"
   },
@@ -259,7 +259,7 @@ Apply a style patch:
   "target": { "type": "RANGE_BY_RANGE", "sheetName": "Budget", "range": "A2:C2" },
   "action": {
     "type": "APPLY_STYLE",
-    "style": { "bold": true, "fill": { "pattern": "SOLID", "foregroundColor": "#D9EAF7" } }
+    "style": { "bold": true, "fill": { "pattern": "SOLID", "foregroundColor": { "type": "RGB", "rgb": "#D9EAF7" } } }
   }
 }
 ```

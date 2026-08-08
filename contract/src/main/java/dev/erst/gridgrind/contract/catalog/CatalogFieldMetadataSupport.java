@@ -6,6 +6,7 @@ import dev.erst.gridgrind.contract.dto.CellReport;
 import dev.erst.gridgrind.contract.dto.CellRowInput;
 import dev.erst.gridgrind.contract.dto.CellScalarValue;
 import dev.erst.gridgrind.contract.dto.CellValueReport;
+import dev.erst.gridgrind.contract.dto.ProtocolField;
 import dev.erst.gridgrind.excel.foundation.ExcelReportedCellErrorLiteral;
 import dev.erst.gridgrind.excel.foundation.ExcelStoredCellErrorLiteral;
 import java.lang.reflect.ParameterizedType;
@@ -87,15 +88,17 @@ public final class CatalogFieldMetadataSupport {
         FIELD_METADATA_OVERRIDES.getOrDefault(
             new ComponentKey(component.getDeclaringRecord(), component.getName()),
             FieldMetadataOverride.NONE);
+    ProtocolField protocolField = component.getAnnotation(ProtocolField.class);
+    String fieldName = GridGrindProtocolContractSupport.wireFieldName(component);
     return new FieldEntry(
-        component.getName(),
-        optionalFields.contains(component.getName())
-            ? FieldRequirement.OPTIONAL
-            : FieldRequirement.REQUIRED,
+        fieldName,
+        optionalFields.contains(fieldName) ? FieldRequirement.OPTIONAL : FieldRequirement.REQUIRED,
         fieldShape(component.getGenericType()),
         metadataOverride.overrideEnumValues(enumValues(component.getGenericType())),
+        protocolField == null ? Optional.empty() : protocolField.booleanDefault().value(),
         metadataOverride.overrideEnumValueDocs(enumValueDocs(component.getGenericType())),
-        projectedFieldsByName.getOrDefault(component.getName(), List.of()));
+        projectedFieldsByName.getOrDefault(fieldName, List.of()),
+        protocolField != null && protocolField.secret());
   }
 
   /** Returns the machine-readable field shape for one record component type. */

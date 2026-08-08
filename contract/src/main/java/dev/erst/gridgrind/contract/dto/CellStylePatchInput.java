@@ -4,15 +4,15 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import java.util.Objects;
 import java.util.Optional;
 
-/** Protocol-facing style patch used for range and cell presentation changes. */
-public record CellStyleInput(
+/** Protocol-facing cell-style patch used for range and cell presentation changes. */
+public record CellStylePatchInput(
     @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<String> numberFormat,
     @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<CellAlignmentInput> alignment,
     @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<CellFontInput> font,
     @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<CellFillInput> fill,
     @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<CellBorderInput> border,
     @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<CellProtectionInput> protection) {
-  public CellStyleInput {
+  public CellStylePatchInput {
     Objects.requireNonNull(numberFormat, "numberFormat must not be null");
     Objects.requireNonNull(alignment, "alignment must not be null");
     Objects.requireNonNull(font, "font must not be null");

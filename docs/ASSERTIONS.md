@@ -29,7 +29,7 @@ Successful responses echo passed assertion steps back through the ordered `asser
 ```json
 {
   "status": "SUCCEEDED",
-  "protocolVersion": "V1",
+  "protocolVersion": "V2",
   "journal": {
     "planId": "assert-budget",
     "level": "NORMAL"

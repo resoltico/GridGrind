@@ -135,7 +135,7 @@ class GridGrindJsonCoverageTest {
     ObjectNode requestTree = GridGrindJsonOutput.requestTree(request);
     ObjectNode explicitRequestTree = GridGrindJsonOutput.requestTree(explicitRequest);
 
-    assertEquals("V1", requestTree.path("protocolVersion").stringValue());
+    assertEquals("V2", requestTree.path("protocolVersion").stringValue());
     assertEquals("NEW", requestTree.path("source").path("type").stringValue());
     assertTrue(requestTree.path("steps").isArray());
     assertFalse(requestTree.has("execution"));
@@ -178,7 +178,7 @@ class GridGrindJsonCoverageTest {
                 GridGrindJson.readRequest(
                     """
                     {
-                      "protocolVersion": "V1",
+                      "protocolVersion": "V2",
                       "source": { "type": "NEW" },
                       "persistence": { "type": "NONE" },
                       "execution": null,
@@ -216,13 +216,13 @@ class GridGrindJsonCoverageTest {
   @Test
   void rejectsTopLevelAndArrayNullRequestPayloads() {
     assertEquals(
-        "JSON payload must not be null",
+        "Field 'request' must be a JSON object at the root",
         assertThrows(
                 InvalidRequestShapeException.class,
                 () -> GridGrindJson.readRequest("null".getBytes(StandardCharsets.UTF_8)))
             .getMessage());
     assertEquals(
-        "JSON payload must not be null",
+        "Field 'request' must be a JSON object at the root",
         assertThrows(
                 InvalidRequestShapeException.class,
                 () ->
@@ -237,7 +237,7 @@ class GridGrindJsonCoverageTest {
                     GridGrindJson.readRequest(
                         """
                         {
-                          "protocolVersion": "V1",
+                          "protocolVersion": "V2",
                           "source": { "type": "NEW" },
                           "persistence": { "type": "NONE" },
                           "execution": {
@@ -533,7 +533,7 @@ class GridGrindJsonCoverageTest {
         GridGrindJson.readRequest(
             """
                         {
-                          "protocolVersion": "V1",
+                          "protocolVersion": "V2",
                           "source": { "type": "NEW" },
                           "persistence": { "type": "NONE" },
                           "execution": {
@@ -590,7 +590,7 @@ class GridGrindJsonCoverageTest {
   void catalogLookupResultPrependsProtocolVersionToValueFields() throws IOException {
     TypeEntry entry = GridGrindProtocolCatalog.entryFor("GET_CELLS").orElseThrow();
     ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-    GridGrindJsonOutput.writeCatalogLookupResult(outputStream, GridGrindProtocolVersion.V1, entry);
+    GridGrindJsonOutput.writeCatalogLookupResult(outputStream, GridGrindProtocolVersion.V2, entry);
     String json = outputStream.toString(StandardCharsets.UTF_8);
     assertTrue(json.indexOf("\"protocolVersion\"") < json.indexOf("\"id\""));
     assertTrue(json.contains("\"GET_CELLS\""));
@@ -608,13 +608,13 @@ class GridGrindJsonCoverageTest {
                 NullPointerException.class,
                 () ->
                     GridGrindJsonOutput.writeCatalogLookupResult(
-                        new ByteArrayOutputStream(), GridGrindProtocolVersion.V1, null))
+                        new ByteArrayOutputStream(), GridGrindProtocolVersion.V2, null))
             .getMessage());
 
     ByteArrayOutputStream noteOutput = new ByteArrayOutputStream();
     GridGrindJsonOutput.writeCatalogLookupResult(
         noteOutput,
-        GridGrindProtocolVersion.V1,
+        GridGrindProtocolVersion.V2,
         entry,
         List.of(new CatalogNote("sharedRule", "Shared rule text.")),
         false);
@@ -628,7 +628,7 @@ class GridGrindJsonCoverageTest {
                 () ->
                     GridGrindJsonOutput.writeCatalogLookupResult(
                         new ByteArrayOutputStream(),
-                        GridGrindProtocolVersion.V1,
+                        GridGrindProtocolVersion.V2,
                         entry,
                         null,
                         false))
@@ -740,7 +740,7 @@ class GridGrindJsonCoverageTest {
                 GridGrindJson.readRequest(
                     """
                     {
-                      "protocolVersion": "V1",
+                      "protocolVersion": "V2",
                       "source": { "type": "NEW" },
                       "persistence": { "type": "NONE" },
                       "execution": {

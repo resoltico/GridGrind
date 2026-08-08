@@ -10,7 +10,7 @@ import java.util.Optional;
 public record CommentInput(
     TextSourceInput text,
     String author,
-    boolean visible,
+    @ProtocolField(optional = true, booleanDefault = ProtocolBooleanDefault.FALSE) boolean visible,
     @com.fasterxml.jackson.annotation.JsonInclude(
             com.fasterxml.jackson.annotation.JsonInclude.Include.NON_ABSENT)
         Optional<java.util.List<RichTextRunInput>> runs,
@@ -53,7 +53,12 @@ public record CommentInput(
       @JsonProperty("visible") Boolean visible,
       @JsonProperty("runs") Optional<java.util.List<RichTextRunInput>> runs,
       @JsonProperty("anchor") Optional<CommentAnchorInput> anchor) {
-    this(text, author, Boolean.TRUE.equals(visible), emptyIfNull(runs), emptyIfNull(anchor));
+    this(
+        text,
+        author,
+        ProtocolBooleanDefault.FALSE.resolve(visible),
+        emptyIfNull(runs),
+        emptyIfNull(anchor));
   }
 
   private static void validateRunsAgainstInlineText(

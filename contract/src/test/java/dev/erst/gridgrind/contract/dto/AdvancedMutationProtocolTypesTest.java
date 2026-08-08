@@ -1025,18 +1025,18 @@ class AdvancedMutationProtocolTypesTest {
   }
 
   private void assertBorderSideInputsNormalizeAndValidate() {
-    CellBorderSideInput noneStyleOnly = new CellBorderSideInput(ExcelBorderStyle.NONE);
-    CellBorderSideInput borderSide = new CellBorderSideInput(null, ColorInput.theme(1, 0.15d));
-    CellBorderSideInput indexedBorderSide = new CellBorderSideInput(null, ColorInput.indexed(64));
+    BorderSideInput noneStyleOnly = new BorderSideInput(ExcelBorderStyle.NONE);
+    BorderSideInput borderSide = new BorderSideInput(null, ColorInput.theme(1, 0.15d));
+    BorderSideInput indexedBorderSide = new BorderSideInput(null, ColorInput.indexed(64));
     assertEquals(Optional.of(ExcelBorderStyle.NONE), noneStyleOnly.style());
     assertThemeColor(borderSide.color().orElseThrow(), 1, 0.15d);
     assertIndexedColor(indexedBorderSide.color().orElseThrow(), 64, null);
     assertThrows(
         IllegalArgumentException.class,
-        () -> new CellBorderSideInput(Optional.empty(), Optional.empty()));
+        () -> new BorderSideInput(Optional.empty(), Optional.empty()));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new CellBorderSideInput(ExcelBorderStyle.NONE, ColorInput.theme(1)));
+        () -> new BorderSideInput(ExcelBorderStyle.NONE, ColorInput.theme(1)));
     assertThrows(IllegalArgumentException.class, () -> ColorInput.theme(-1));
     assertThrows(IllegalArgumentException.class, () -> ColorInput.indexed(-1));
     assertThrows(

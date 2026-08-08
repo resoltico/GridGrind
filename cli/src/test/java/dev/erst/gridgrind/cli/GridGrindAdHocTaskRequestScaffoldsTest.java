@@ -213,7 +213,7 @@ class GridGrindAdHocTaskRequestScaffoldsTest {
   @Test
   void scaffolderWrapsSerializationFailuresFromInvalidGeneratedTrees() {
     ObjectNode cyclic = JsonNodeFactory.instance.objectNode();
-    cyclic.put("protocolVersion", "V1");
+    cyclic.put("protocolVersion", "V2");
     cyclic.set("self", cyclic);
 
     IllegalStateException failure =
@@ -227,7 +227,7 @@ class GridGrindAdHocTaskRequestScaffoldsTest {
   @Test
   void decodedRequestRejectsBlankTaskIdsWhenGeneratedJsonIsInvalid() {
     ObjectNode cyclic = JsonNodeFactory.instance.objectNode();
-    cyclic.put("protocolVersion", "V1");
+    cyclic.put("protocolVersion", "V2");
     cyclic.set("self", cyclic);
 
     IllegalArgumentException failure =

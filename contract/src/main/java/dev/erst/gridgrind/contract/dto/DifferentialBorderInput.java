@@ -7,11 +7,11 @@ import java.util.stream.Stream;
 
 /** Protocol-facing differential border patch used by conditional-formatting rule styles. */
 public record DifferentialBorderInput(
-    @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<DifferentialBorderSideInput> all,
-    @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<DifferentialBorderSideInput> top,
-    @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<DifferentialBorderSideInput> right,
-    @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<DifferentialBorderSideInput> bottom,
-    @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<DifferentialBorderSideInput> left) {
+    @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<BorderSideInput> all,
+    @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<BorderSideInput> top,
+    @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<BorderSideInput> right,
+    @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<BorderSideInput> bottom,
+    @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<BorderSideInput> left) {
   public DifferentialBorderInput {
     Objects.requireNonNull(all, "all must not be null");
     Objects.requireNonNull(top, "top must not be null");

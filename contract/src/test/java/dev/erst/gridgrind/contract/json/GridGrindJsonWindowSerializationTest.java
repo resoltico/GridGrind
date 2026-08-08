@@ -6,6 +6,8 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
+import dev.erst.gridgrind.contract.query.SheetIntrospectionQuery;
+import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import tools.jackson.databind.JsonNode;
 
@@ -14,6 +16,20 @@ import tools.jackson.databind.JsonNode;
  */
 final class GridGrindJsonWindowSerializationTest {
   @Test
+  @SuppressWarnings(
+      "NullOptional") // Deliberately proves the Jackson creator normalizes absent input.
+  void getWindowCreatorNormalizesEachOmittedAxisAtTheDeserializationBoundary() {
+    SheetIntrospectionQuery.GetWindow defaults =
+        SheetIntrospectionQuery.GetWindow.create(null, null);
+    SheetIntrospectionQuery.GetWindow dense =
+        SheetIntrospectionQuery.GetWindow.create(Optional.empty(), Boolean.TRUE);
+
+    assertEquals(Optional.empty(), defaults.projection());
+    assertFalse(defaults.includeBlanks());
+    assertTrue(dense.includeBlanks());
+  }
+
+  @Test
   void sparseWindowRequestsOmitIncludeBlanksUntilDenseReadbackIsRequested() {
     WorkbookPlan sparseWindowRequest =
         assertDoesNotThrow(
@@ -21,7 +37,7 @@ final class GridGrindJsonWindowSerializationTest {
                 GridGrindJson.readRequest(
                     """
                     {
-                      "protocolVersion": "V1",
+                      "protocolVersion": "V2",
                       "source": { "type": "NEW" },
                       "persistence": { "type": "NONE" },
                       "steps": [
@@ -45,7 +61,7 @@ final class GridGrindJsonWindowSerializationTest {
                 GridGrindJson.readRequest(
                     """
                     {
-                      "protocolVersion": "V1",
+                      "protocolVersion": "V2",
                       "source": { "type": "NEW" },
                       "persistence": { "type": "NONE" },
                       "steps": [

@@ -12,7 +12,6 @@ import dev.erst.gridgrind.contract.dto.DataValidationInput;
 import dev.erst.gridgrind.contract.dto.DataValidationPromptInput;
 import dev.erst.gridgrind.contract.dto.DataValidationRuleInput;
 import dev.erst.gridgrind.contract.dto.DifferentialBorderInput;
-import dev.erst.gridgrind.contract.dto.DifferentialBorderSideInput;
 import dev.erst.gridgrind.contract.dto.DifferentialStyleInput;
 import dev.erst.gridgrind.excel.ExcelAutofilterFilterColumn;
 import dev.erst.gridgrind.excel.ExcelAutofilterFilterCriterion;
@@ -21,7 +20,6 @@ import dev.erst.gridgrind.excel.ExcelAutofilterSortState;
 import dev.erst.gridgrind.excel.ExcelConditionalFormattingBlockDefinition;
 import dev.erst.gridgrind.excel.ExcelConditionalFormattingRule;
 import dev.erst.gridgrind.excel.ExcelDifferentialBorder;
-import dev.erst.gridgrind.excel.ExcelDifferentialBorderSide;
 import dev.erst.gridgrind.excel.ExcelDifferentialStyle;
 import dev.erst.gridgrind.excel.validation.ExcelDataValidationDefinition;
 import dev.erst.gridgrind.excel.validation.ExcelDataValidationErrorAlert;
@@ -183,10 +181,10 @@ final class WorkbookCommandStructuredInputConverter {
             style.bold(),
             style.italic(),
             style.fontHeight().flatMap(WorkbookCommandCellInputConverter::toExcelFontHeight),
-            style.fontColor(),
+            style.fontColor().flatMap(WorkbookCommandCellInputConverter::toExcelColor),
             style.underline(),
             style.strikeout(),
-            style.fillColor(),
+            style.fillColor().flatMap(WorkbookCommandCellInputConverter::toExcelColor),
             style
                 .border()
                 .flatMap(WorkbookCommandStructuredInputConverter::toExcelDifferentialBorder)));
@@ -199,25 +197,19 @@ final class WorkbookCommandStructuredInputConverter {
     }
     return Optional.of(
         new ExcelDifferentialBorder(
-            border
-                .all()
-                .map(WorkbookCommandStructuredInputConverter::toExcelDifferentialBorderSide)
-                .orElse(null),
-            border
-                .top()
-                .map(WorkbookCommandStructuredInputConverter::toExcelDifferentialBorderSide)
-                .orElse(null),
+            border.all().flatMap(WorkbookCommandCellInputConverter::toExcelBorderSide).orElse(null),
+            border.top().flatMap(WorkbookCommandCellInputConverter::toExcelBorderSide).orElse(null),
             border
                 .right()
-                .map(WorkbookCommandStructuredInputConverter::toExcelDifferentialBorderSide)
+                .flatMap(WorkbookCommandCellInputConverter::toExcelBorderSide)
                 .orElse(null),
             border
                 .bottom()
-                .map(WorkbookCommandStructuredInputConverter::toExcelDifferentialBorderSide)
+                .flatMap(WorkbookCommandCellInputConverter::toExcelBorderSide)
                 .orElse(null),
             border
                 .left()
-                .map(WorkbookCommandStructuredInputConverter::toExcelDifferentialBorderSide)
+                .flatMap(WorkbookCommandCellInputConverter::toExcelBorderSide)
                 .orElse(null)));
   }
 
@@ -300,10 +292,5 @@ final class WorkbookCommandStructuredInputConverter {
       toExcelConditionalFormattingThreshold(ConditionalFormattingThresholdInput threshold) {
     return new dev.erst.gridgrind.excel.ExcelConditionalFormattingThreshold(
         threshold.type(), threshold.formula(), threshold.value());
-  }
-
-  private static ExcelDifferentialBorderSide toExcelDifferentialBorderSide(
-      DifferentialBorderSideInput side) {
-    return new ExcelDifferentialBorderSide(side.style(), side.color().orElse(null));
   }
 }

@@ -46,6 +46,68 @@ class GridGrindJsonSupportCoverageTest {
   }
 
   @Test
+  void requestPayloadAndShapeFallbacksCoverTheDedicatedTransportBranches() throws IOException {
+    assertInstanceOf(
+        InvalidRequestException.class,
+        GridGrindJsonProblemMessageSupport.invalidRequestPayload(
+            new StreamConstraintsException("too large")));
+
+    JsonMapper mapper = GridGrindJsonMapperSupport.REQUEST_JSON_MAPPER;
+    try (JsonParser parser = parser("{}")) {
+      parser.nextToken();
+      MismatchedInputException mismatch =
+          MismatchedInputException.from(parser, String.class, "Expected a string");
+      MessageShape shape =
+          assertInstanceOf(
+              MessageShape.class,
+              GridGrindJsonRequestShapeProblemSupport.mismatchedInputProblem(
+                      mapper.readTree("{}"), String.class, mismatch)
+                  .orElseThrow());
+      assertEquals(
+          "JSON object is missing required fields or has the wrong shape", shape.message());
+    }
+  }
+
+  @Test
+  void codecSupportMapsStringGrammarFailuresAndNestedArrayNullsBeforeBinding() throws IOException {
+    JsonMapper mapper = GridGrindJsonMapperSupport.REQUEST_JSON_MAPPER;
+
+    assertEquals(
+        "{}",
+        GridGrindJsonCodecSupport.readTree(
+                "{}", mapper, GridGrindJsonProblemMessageSupport::invalidRequestPayload)
+            .toString());
+
+    assertInstanceOf(
+        InvalidJsonException.class,
+        assertThrows(
+            InvalidJsonException.class,
+            () ->
+                GridGrindJsonCodecSupport.readTree(
+                    "{", mapper, GridGrindJsonProblemMessageSupport::invalidRequestPayload)));
+    assertInstanceOf(
+        InvalidRequestShapeException.class,
+        assertThrows(
+            InvalidRequestShapeException.class,
+            () ->
+                GridGrindJsonCodecSupport.decodeTree(
+                    mapper.readTree("[null]"),
+                    mapper,
+                    Object.class,
+                    GridGrindJsonProblemMessageSupport::invalidRequestPayload)));
+    assertInstanceOf(
+        InvalidRequestShapeException.class,
+        assertThrows(
+            InvalidRequestShapeException.class,
+            () ->
+                GridGrindJsonCodecSupport.decodeTree(
+                    mapper.nullNode(),
+                    mapper,
+                    Object.class,
+                    GridGrindJsonProblemMessageSupport::invalidRequestPayload)));
+  }
+
+  @Test
   void requestProblemDetectorFindsMissingRequiredFieldsAndTypeDiscriminatorsStructurally()
       throws IOException {
     JsonMapper mapper = GridGrindJsonMapperSupport.REQUEST_JSON_MAPPER;
@@ -285,6 +347,45 @@ class GridGrindJsonSupportCoverageTest {
   }
 
   @Test
+  void payloadMetadataRetainsOnlyConcreteTerminalPropertyNames() {
+    assertEquals(
+        Optional.empty(), GridGrindJsonPayloadMetadataSupport.terminalContainerName(List.of()));
+    assertEquals(
+        Optional.of("source"),
+        GridGrindJsonPayloadMetadataSupport.terminalContainerName(
+            List.of(new JacksonException.Reference(WorkbookPlan.class, "source"))));
+  }
+
+  @Test
+  void subtypeProblemMessagesKeepAlreadyQualifiedDiscriminatorPathsStable() throws IOException {
+    JsonMapper mapper = GridGrindJsonMapperSupport.REQUEST_JSON_MAPPER;
+    InvalidTypeIdException sourceFileAtType =
+        (InvalidTypeIdException)
+            InvalidTypeIdException.from(
+                    parser("\"FILE\""),
+                    "bad type",
+                    mapper.constructType(WorkbookPlan.WorkbookSource.class),
+                    "FILE")
+                .prependPath(WorkbookPlan.WorkbookSource.class, "type")
+                .prependPath(WorkbookPlan.class, "source");
+    InvalidTypeIdException topLevelType =
+        (InvalidTypeIdException)
+            InvalidTypeIdException.from(
+                    parser("\"FILE\""),
+                    "bad type",
+                    mapper.constructType(WorkbookPlan.WorkbookSource.class),
+                    "FILE")
+                .prependPath(WorkbookPlan.WorkbookSource.class, "type");
+
+    assertTrue(
+        GridGrindJsonSubtypeProblemSupport.unknownTypeValueMessage(sourceFileAtType)
+            .contains("source.type='EXISTING'"));
+    assertTrue(
+        GridGrindJsonSubtypeProblemSupport.unknownTypeValueMessage(topLevelType)
+            .startsWith("Unknown type value 'FILE'"));
+  }
+
+  @Test
   void requestShapeHelpersCoverFloatingPointAndFallbackTargetTypes() throws IOException {
     JsonMapper mapper = GridGrindJsonMapperSupport.REQUEST_JSON_MAPPER;
     JsonNode requestNode = mapper.readTree("{\"steps\":[]}");
@@ -422,6 +523,12 @@ class GridGrindJsonSupportCoverageTest {
         () -> GridGrindJsonStepPayloadShapeSupport.rejectInvalidStepPayloadShapes(request));
 
     request.putArray("steps").add(3);
+    assertDoesNotThrow(
+        () -> GridGrindJsonStepPayloadShapeSupport.rejectInvalidStepPayloadShapes(request));
+
+    ObjectNode validStep = mapper.createObjectNode();
+    validStep.putObject("action").put("type", "ENSURE_SHEET");
+    request.set("steps", mapper.createArrayNode().add(validStep));
     assertDoesNotThrow(
         () -> GridGrindJsonStepPayloadShapeSupport.rejectInvalidStepPayloadShapes(request));
 

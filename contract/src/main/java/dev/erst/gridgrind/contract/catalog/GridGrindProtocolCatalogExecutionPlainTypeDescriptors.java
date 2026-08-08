@@ -30,152 +30,118 @@ final class GridGrindProtocolCatalogExecutionPlainTypeDescriptors {
               "ExecutionJournal",
               "Structured execution telemetry returned on every success and failure response,"
                   + " including validation, input resolution, open, calculation, step,"
-                  + " persistence, and close phases.",
-              List.of(
-                  "planId",
-                  "level",
-                  "source",
-                  "validation",
-                  "inputResolution",
-                  "open",
-                  "calculation",
-                  "persistencePhase",
-                  "close",
-                  "steps",
-                  "outcome",
-                  "events")),
+                  + " persistence, and close phases."),
           plainTypeDescriptor(
               "executionJournalSourceSummaryType",
               ExecutionJournal.SourceSummary.class,
               "ExecutionJournalSourceSummary",
-              "Journal summary of the authored workbook source.",
-              List.of("path")),
+              "Journal summary of the authored workbook source."),
           plainTypeDescriptor(
               "executionJournalStepType",
               ExecutionJournal.Step.class,
               "ExecutionJournalStep",
               "Per-step execution telemetry with resolved targets, timing, outcome,"
-                  + " and optional failure detail.",
-              List.of("failure")),
+                  + " and optional failure detail."),
           plainTypeDescriptor(
               "executionJournalTargetType",
               ExecutionJournal.Target.class,
               "ExecutionJournalTarget",
-              "One canonical target label recorded inside a step journal.",
-              List.of()),
+              "One canonical target label recorded inside a step journal."),
           plainTypeDescriptor(
               "executionJournalFailureClassificationType",
               ExecutionJournal.FailureClassification.class,
               "ExecutionJournalFailureClassification",
-              "Structured problem-code classification for one failed step.",
-              List.of()),
+              "Structured problem-code classification for one failed step."),
           plainTypeDescriptor(
               "executionJournalCalculationType",
               ExecutionJournal.Calculation.class,
               "ExecutionJournalCalculation",
-              "Top-level calculation preflight and execution timings for one request.",
-              List.of()),
+              "Top-level calculation preflight and execution timings for one request."),
           plainTypeDescriptor(
               "executionJournalTimingType",
               ExecutionJournal.Timing.class,
               "ExecutionJournalTiming",
-              "Measured timestamps and duration for one execution phase that actually ran.",
-              List.of()),
+              "Measured timestamps and duration for one execution phase that actually ran."),
           plainTypeDescriptor(
               "executionJournalFailureStepType",
               ExecutionJournal.FailureStep.class,
               "ExecutionJournalFailureStep",
               "Canonical failing-step reference recorded when an execution failure is attributable"
-                  + " to one authored step.",
-              List.of()),
+                  + " to one authored step."),
           plainTypeDescriptor(
               "executionJournalEventType",
               ExecutionJournal.Event.class,
               "ExecutionJournalEvent",
-              "Fine-grained verbose execution event emitted for live CLI rendering.",
-              List.of("stepIndex", "stepId")),
+              "Fine-grained verbose execution event emitted for live CLI rendering."),
           plainTypeDescriptor(
               "requestWarningType",
               RequestWarning.class,
               "RequestWarning",
-              "Non-fatal authored-plan warning surfaced at the response root.",
-              List.of()),
+              "Non-fatal authored-plan warning surfaced at the response root."),
           plainTypeDescriptor(
               "executionPolicyInputType",
               ExecutionPolicyInput.class,
               "ExecutionPolicyInput",
-              GridGrindContractText.executionPolicyInputSummary(),
-              List.of("mode", "journal", "calculation")),
+              GridGrindContractText.executionPolicyInputSummary()),
           plainTypeDescriptor(
               "calculationPolicyInputType",
               CalculationPolicyInput.class,
               "CalculationPolicyInput",
-              GridGrindContractText.calculationPolicyInputSummary(),
-              List.of("strategy", "markRecalculateOnOpen")),
+              GridGrindContractText.calculationPolicyInputSummary()),
           plainTypeDescriptor(
               "executionJournalInputType",
               ExecutionJournalInput.class,
               "ExecutionJournalInput",
-              GridGrindContractText.executionJournalInputSummary(),
-              List.of("level")),
+              GridGrindContractText.executionJournalInputSummary()),
           plainTypeDescriptor(
               "calculationReportType",
               CalculationReport.class,
               "CalculationReport",
               "Structured calculation policy, preflight classification, and execution outcome"
-                  + " returned on every success and failure response.",
-              List.of("preflight")),
+                  + " returned on every success and failure response."),
           plainTypeDescriptor(
               "calculationPreflightType",
               CalculationReport.Preflight.class,
               "CalculationPreflightReport",
-              "Formula capability classification captured before server-side evaluation begins.",
-              List.of()),
+              "Formula capability classification captured before server-side evaluation begins."),
           plainTypeDescriptor(
               "calculationSummaryType",
               CalculationReport.Summary.class,
               "CalculationPreflightSummary",
-              "Aggregate counts for evaluable, unevaluable, and unparseable formulas.",
-              List.of()),
+              "Aggregate counts for evaluable, unevaluable, and unparseable formulas."),
           plainTypeDescriptor(
               "formulaCapabilityType",
               CalculationReport.FormulaCapability.class,
               "FormulaCapabilityReport",
-              "One classified formula-cell capability entry from calculation preflight.",
-              List.of("problemCode", "message")),
+              "One classified formula-cell capability entry from calculation preflight."),
           plainTypeDescriptor(
               "calculationExecutionType",
               CalculationReport.Execution.class,
               "CalculationExecutionReport",
-              "Post-execution outcome for the authored calculation policy.",
-              List.of("message")),
+              "Post-execution outcome for the authored calculation policy."),
           plainTypeDescriptor(
               "formulaEnvironmentInputType",
               FormulaEnvironmentInput.class,
               "FormulaEnvironmentInput",
-              GridGrindContractText.formulaEnvironmentInputSummary(),
-              List.of("externalWorkbooks", "missingWorkbookPolicy", "udfToolpacks")),
+              GridGrindContractText.formulaEnvironmentInputSummary()),
           plainTypeDescriptor(
               "ooxmlOpenSecurityInputType",
               OoxmlOpenSecurityInput.class,
               "OoxmlOpenSecurityInput",
               "Optional OOXML package-open settings for encrypted existing workbook sources."
                   + " password unlocks the encrypted OOXML package before GridGrind opens the"
-                  + " inner .xlsx workbook.",
-              List.of("password")),
+                  + " inner .xlsx workbook."),
           plainTypeDescriptor(
               "ooxmlPersistenceSecurityInputType",
               OoxmlPersistenceSecurityInput.class,
               "OoxmlPersistenceSecurityInput",
               "Optional OOXML package-security settings applied during persistence."
-                  + " Supply encryption, signature, or both.",
-              List.of("encryption", "signature")),
+                  + " Supply encryption, signature, or both."),
           plainTypeDescriptor(
               "ooxmlEncryptionInputType",
               OoxmlEncryptionInput.class,
               "OoxmlEncryptionInput",
-              GridGrindOoxmlWriteEncryptionContractText.inputSummary(),
-              List.of("cipher", "hash")),
+              GridGrindOoxmlWriteEncryptionContractText.inputSummary()),
           plainTypeDescriptorWithNotes(
               "ooxmlSignatureInputType",
               OoxmlSignatureInput.class,
@@ -185,59 +151,47 @@ final class GridGrindProtocolCatalogExecutionPlainTypeDescriptors {
                   + " SHA256 when omitted."
                   + " alias may be omitted only when the keystore contains exactly one"
                   + " signable private-key entry.",
-              GridGrindProtocolCatalogNotes.requestOwnedPathRuleRef(),
-              List.of("keyPassword", "alias", "digestAlgorithm", "description")),
+              GridGrindProtocolCatalogNotes.requestOwnedPathRuleRef()),
           plainTypeDescriptor(
               "ooxmlPackageSecurityReportType",
               OoxmlPackageSecurityReport.class,
               "OoxmlPackageSecurityReport",
-              "Factual OOXML package-security report covering encryption and package signatures.",
-              List.of()),
+              "Factual OOXML package-security report covering encryption and package signatures."),
           plainTypeDescriptor(
               "ooxmlSignatureReportType",
               OoxmlSignatureReport.class,
               "OoxmlSignatureReport",
               "Factual OOXML package-signature report for one signature part."
                   + " state reflects the currently loaded workbook package, including"
-                  + " INVALIDATED_BY_MUTATION for source signatures after in-memory edits.",
-              List.of("signer")),
+                  + " INVALIDATED_BY_MUTATION for source signatures after in-memory edits."),
           plainTypeDescriptor(
               "ooxmlSignatureSignerIdentityType",
               OoxmlSignatureReport.SignerIdentity.class,
               "OoxmlSignatureSignerIdentity",
-              "Signer identity material attached to one OOXML package signature report.",
-              List.of()),
+              "Signer identity material attached to one OOXML package signature report."),
           plainTypeDescriptorWithNotes(
               "formulaExternalWorkbookInputType",
               FormulaExternalWorkbookInput.class,
               "FormulaExternalWorkbookInput",
               "One external workbook binding keyed by the workbook name used inside formulas."
                   + " Workbook paths resolve through the shared request-owned path rule.",
-              GridGrindProtocolCatalogNotes.requestOwnedPathRuleRef(),
-              List.of()),
+              GridGrindProtocolCatalogNotes.requestOwnedPathRuleRef()),
           plainTypeDescriptor(
               "formulaUdfToolpackInputType",
               FormulaUdfToolpackInput.class,
               "FormulaUdfToolpackInput",
-              "One named collection of template-backed user-defined functions.",
-              List.of()),
+              "One named collection of template-backed user-defined functions."),
           plainTypeDescriptor(
               "formulaUdfFunctionInputType",
               FormulaUdfFunctionInput.class,
               "FormulaUdfFunctionInput",
               "One template-backed user-defined function."
                   + " formulaTemplate may reference ARG1, ARG2, and higher placeholders."
-                  + " maximumArgumentCount defaults to minimumArgumentCount when omitted.",
-              List.of("maximumArgumentCount")));
+                  + " maximumArgumentCount defaults to minimumArgumentCount when omitted."));
 
   private static CatalogPlainTypeDescriptor plainTypeDescriptor(
-      String group,
-      Class<? extends Record> recordType,
-      String id,
-      String summary,
-      List<String> optionalFields) {
-    return CatalogTypeEntryFactory.plainTypeDescriptor(
-        group, recordType, id, summary, optionalFields);
+      String group, Class<? extends Record> recordType, String id, String summary) {
+    return CatalogTypeEntryFactory.plainTypeDescriptor(group, recordType, id, summary);
   }
 
   private static CatalogPlainTypeDescriptor plainTypeDescriptorWithNotes(
@@ -245,9 +199,8 @@ final class GridGrindProtocolCatalogExecutionPlainTypeDescriptors {
       Class<? extends Record> recordType,
       String id,
       String summary,
-      List<String> noteRefs,
-      List<String> optionalFields) {
+      List<String> noteRefs) {
     return CatalogTypeEntryFactory.plainTypeDescriptorWithNotes(
-        group, recordType, id, summary, optionalFields, noteRefs);
+        group, recordType, id, summary, noteRefs);
   }
 }

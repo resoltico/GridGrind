@@ -282,8 +282,8 @@ final class XlsxParityProbeRegistry {
             List.of(3)));
   }
 
-  static CellStyleInput advancedThemedStyleInput() {
-    return new CellStyleInput(
+  static CellStylePatchInput advancedThemedStyleInput() {
+    return new CellStylePatchInput(
         java.util.Optional.empty(),
         java.util.Optional.empty(),
         java.util.Optional.of(
@@ -303,7 +303,7 @@ final class XlsxParityProbeRegistry {
                 java.util.Optional.empty(),
                 java.util.Optional.empty(),
                 java.util.Optional.of(
-                    new CellBorderSideInput(
+                    new BorderSideInput(
                         ExcelBorderStyle.THIN,
                         ColorInput.indexed(
                             Short.toUnsignedInt(IndexedColors.DARK_RED.getIndex())))),
@@ -311,8 +311,8 @@ final class XlsxParityProbeRegistry {
         java.util.Optional.empty());
   }
 
-  static CellStyleInput advancedGradientStyleInput() {
-    return new CellStyleInput(
+  static CellStylePatchInput advancedGradientStyleInput() {
+    return new CellStylePatchInput(
         java.util.Optional.empty(),
         java.util.Optional.empty(),
         java.util.Optional.empty(),

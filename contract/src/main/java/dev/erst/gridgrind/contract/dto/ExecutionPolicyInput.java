@@ -11,15 +11,18 @@ import java.util.Objects;
  * explicit calculation handling.
  */
 public record ExecutionPolicyInput(
-    @JsonInclude(
+    @ProtocolField(optional = true)
+        @JsonInclude(
             value = JsonInclude.Include.CUSTOM,
             valueFilter = ExecutionModeInput.DefaultFilter.class)
         ExecutionModeInput mode,
-    @JsonInclude(
+    @ProtocolField(optional = true)
+        @JsonInclude(
             value = JsonInclude.Include.CUSTOM,
             valueFilter = ExecutionJournalInput.DefaultFilter.class)
         ExecutionJournalInput journal,
-    @JsonInclude(
+    @ProtocolField(optional = true)
+        @JsonInclude(
             value = JsonInclude.Include.CUSTOM,
             valueFilter = CalculationPolicyInput.DefaultFilter.class)
         CalculationPolicyInput calculation) {

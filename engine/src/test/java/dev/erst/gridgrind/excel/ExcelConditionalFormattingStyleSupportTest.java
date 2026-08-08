@@ -36,13 +36,15 @@ class ExcelConditionalFormattingStyleSupportTest {
               Optional.of(true),
               Optional.of(false),
               Optional.ofNullable(ExcelFontHeight.fromPoints(BigDecimal.valueOf(11))),
-              Optional.of("#102030"),
+              Optional.of(ExcelColor.theme(3, Optional.of(0.25d))),
               Optional.of(true),
               Optional.of(true),
-              Optional.of("#E0F0AA"),
+              Optional.of(ExcelColor.indexed(12, Optional.empty())),
               Optional.ofNullable(
                   new ExcelDifferentialBorder(
-                      new ExcelDifferentialBorderSide(ExcelBorderStyle.THIN, "#405060"),
+                      new ExcelBorderSide(
+                          Optional.of(ExcelBorderStyle.THIN),
+                          Optional.of(ExcelColor.theme(5, Optional.of(-0.2d)))),
                       null,
                       null,
                       null,
@@ -59,16 +61,24 @@ class ExcelConditionalFormattingStyleSupportTest {
               true,
               false,
               ExcelFontHeight.fromPoints(BigDecimal.valueOf(11)),
-              "#102030",
+              ExcelColor.theme(3, Optional.of(0.25d)),
               true,
               true,
-              "#E0F0AA",
+              ExcelColor.indexed(12, Optional.empty()),
               new ExcelDifferentialBorder(
                   null,
-                  new ExcelDifferentialBorderSide(ExcelBorderStyle.THIN, "#405060"),
-                  new ExcelDifferentialBorderSide(ExcelBorderStyle.THIN, "#405060"),
-                  new ExcelDifferentialBorderSide(ExcelBorderStyle.THIN, "#405060"),
-                  new ExcelDifferentialBorderSide(ExcelBorderStyle.THIN, "#405060")),
+                  new ExcelBorderSide(
+                      Optional.of(ExcelBorderStyle.THIN),
+                      Optional.of(ExcelColor.theme(5, Optional.of(-0.2d)))),
+                  new ExcelBorderSide(
+                      Optional.of(ExcelBorderStyle.THIN),
+                      Optional.of(ExcelColor.theme(5, Optional.of(-0.2d)))),
+                  new ExcelBorderSide(
+                      Optional.of(ExcelBorderStyle.THIN),
+                      Optional.of(ExcelColor.theme(5, Optional.of(-0.2d)))),
+                  new ExcelBorderSide(
+                      Optional.of(ExcelBorderStyle.THIN),
+                      Optional.of(ExcelColor.theme(5, Optional.of(-0.2d))))),
               List.of()),
           snapshot);
     }
@@ -117,7 +127,7 @@ class ExcelConditionalFormattingStyleSupportTest {
               ExcelConditionalFormattingUnsupportedFeature.ALIGNMENT,
               ExcelConditionalFormattingUnsupportedFeature.PROTECTION),
           snapshot.unsupportedFeatures());
-      assertNull(snapshot.fontColor());
+      assertEquals(ExcelColor.theme(1), snapshot.fontColor());
       assertNull(snapshot.fillColor());
       assertNull(snapshot.border());
     }
@@ -191,7 +201,7 @@ class ExcelConditionalFormattingStyleSupportTest {
   }
 
   @Test
-  void rgbAndPatternHelpersNormalizeRawColorPayloads() {
+  void colorHelpersPreserveEverySupportedRawColorReference() {
     var argbColor =
         org.openxmlformats.schemas.spreadsheetml.x2006.main.CTColor.Factory.newInstance();
     argbColor.setRgb(new byte[] {(byte) 0xFF, 0x10, 0x20, 0x30});
@@ -201,11 +211,33 @@ class ExcelConditionalFormattingStyleSupportTest {
     var unsupportedColor =
         org.openxmlformats.schemas.spreadsheetml.x2006.main.CTColor.Factory.newInstance();
     unsupportedColor.setRgb(new byte[] {0x01, 0x02});
+    var themeColor =
+        org.openxmlformats.schemas.spreadsheetml.x2006.main.CTColor.Factory.newInstance();
+    themeColor.setTheme(5L);
+    themeColor.setTint(-0.2d);
+    var indexedColor =
+        org.openxmlformats.schemas.spreadsheetml.x2006.main.CTColor.Factory.newInstance();
+    indexedColor.setIndexed(12L);
+    var absentColor =
+        org.openxmlformats.schemas.spreadsheetml.x2006.main.CTColor.Factory.newInstance();
 
-    assertNull(ExcelConditionalFormattingStyleSupport.rgbHexFromCtColor(null));
-    assertEquals("#102030", ExcelConditionalFormattingStyleSupport.rgbHexFromCtColor(argbColor));
-    assertEquals("#405060", ExcelConditionalFormattingStyleSupport.rgbHexFromCtColor(rgbColor));
-    assertNull(ExcelConditionalFormattingStyleSupport.rgbHexFromCtColor(unsupportedColor));
+    assertEquals(Optional.empty(), ExcelConditionalFormattingColorSupport.optionalColor(null));
+    assertEquals(
+        Optional.of(ExcelColor.rgb("#102030")),
+        ExcelConditionalFormattingColorSupport.optionalColor(argbColor));
+    assertEquals(
+        Optional.of(ExcelColor.rgb("#405060")),
+        ExcelConditionalFormattingColorSupport.optionalColor(rgbColor));
+    assertEquals(
+        Optional.empty(), ExcelConditionalFormattingColorSupport.optionalColor(unsupportedColor));
+    assertEquals(
+        Optional.of(ExcelColor.theme(5, Optional.of(-0.2d))),
+        ExcelConditionalFormattingColorSupport.optionalColor(themeColor));
+    assertEquals(
+        Optional.of(ExcelColor.indexed(12)),
+        ExcelConditionalFormattingColorSupport.optionalColor(indexedColor));
+    assertEquals(
+        Optional.empty(), ExcelConditionalFormattingColorSupport.optionalColor(absentColor));
   }
 
   @Test
@@ -240,24 +272,26 @@ class ExcelConditionalFormattingStyleSupportTest {
     coloredSide.setStyle(
         org.openxmlformats.schemas.spreadsheetml.x2006.main.STBorderStyle.DASH_DOT);
     coloredSide.addNewColor().setRgb(new byte[] {(byte) 0xFF, 0x01, 0x23, 0x45});
-    var unsupportedSide =
+    var themedSide =
         org.openxmlformats.schemas.spreadsheetml.x2006.main.CTBorderPr.Factory.newInstance();
-    unsupportedSide.setStyle(
-        org.openxmlformats.schemas.spreadsheetml.x2006.main.STBorderStyle.THIN);
-    unsupportedSide.addNewColor().setTheme(1L);
+    themedSide.setStyle(org.openxmlformats.schemas.spreadsheetml.x2006.main.STBorderStyle.THIN);
+    themedSide.addNewColor().setTheme(1L);
 
     assertNull(ExcelConditionalFormattingStyleSupport.snapshotBorderSide(null));
     assertNull(ExcelConditionalFormattingStyleSupport.snapshotBorderSide(emptySide));
     assertEquals(
-        new ExcelDifferentialBorderSide(ExcelBorderStyle.DASH_DOT, "#012345"),
+        new ExcelBorderSide(
+            Optional.of(ExcelBorderStyle.DASH_DOT), Optional.of(ExcelColor.rgb("#012345"))),
         ExcelConditionalFormattingStyleSupport.snapshotBorderSide(coloredSide));
-    assertNull(ExcelConditionalFormattingStyleSupport.snapshotBorderSide(unsupportedSide));
+    assertEquals(
+        new ExcelBorderSide(Optional.of(ExcelBorderStyle.THIN), Optional.of(ExcelColor.theme(1))),
+        ExcelConditionalFormattingStyleSupport.snapshotBorderSide(themedSide));
 
     var colorOnlySide =
         org.openxmlformats.schemas.spreadsheetml.x2006.main.CTBorderPr.Factory.newInstance();
     colorOnlySide.addNewColor().setRgb(new byte[] {(byte) 0xFF, 0x22, 0x33, 0x44});
     assertEquals(
-        new ExcelDifferentialBorderSide(ExcelBorderStyle.NONE, "#223344"),
+        new ExcelBorderSide(Optional.empty(), Optional.of(ExcelColor.rgb("#223344"))),
         ExcelConditionalFormattingStyleSupport.snapshotBorderSide(colorOnlySide));
 
     for (ExcelBorderStyle borderStyle : ExcelBorderStyle.values()) {
@@ -270,8 +304,7 @@ class ExcelConditionalFormattingStyleSupportTest {
         IllegalArgumentException.class,
         () -> ExcelConditionalFormattingStyleSupport.fromCtBorderStyle(Integer.MAX_VALUE));
 
-    ExcelDifferentialBorderSide thinSide =
-        new ExcelDifferentialBorderSide(ExcelBorderStyle.THIN, null);
+    ExcelBorderSide thinSide = new ExcelBorderSide(ExcelBorderStyle.THIN);
 
     var complexBorder =
         org.openxmlformats.schemas.spreadsheetml.x2006.main.CTBorder.Factory.newInstance();
@@ -374,24 +407,30 @@ class ExcelConditionalFormattingStyleSupportTest {
     assertNull(
         ExcelConditionalFormattingStyleSupport.patternForegroundColor(
             solidWithoutForeground, new java.util.ArrayList<>()));
-    var unsupportedForeground =
+    var malformedForeground =
         org.openxmlformats.schemas.spreadsheetml.x2006.main.CTPatternFill.Factory.newInstance();
-    unsupportedForeground.setPatternType(
+    malformedForeground.setPatternType(
         org.openxmlformats.schemas.spreadsheetml.x2006.main.STPatternType.SOLID);
-    unsupportedForeground.addNewFgColor().setTheme(4L);
-    List<ExcelConditionalFormattingUnsupportedFeature> unsupportedFeatures =
+    malformedForeground.addNewFgColor().setRgb(new byte[] {0x01, 0x02});
+    List<ExcelConditionalFormattingUnsupportedFeature> malformedFeatures =
         new java.util.ArrayList<>();
     assertNull(
         ExcelConditionalFormattingStyleSupport.patternForegroundColor(
-            unsupportedForeground, unsupportedFeatures));
+            malformedForeground, malformedFeatures));
     assertEquals(
-        List.of(ExcelConditionalFormattingUnsupportedFeature.FILL_PATTERN), unsupportedFeatures);
-    assertArrayEquals(
-        new byte[] {(byte) 0xFF, 0x10, 0x20, 0x30},
-        ExcelConditionalFormattingStyleSupport.argbBytes("#102030"));
-    assertThrows(
-        IllegalArgumentException.class,
-        () -> ExcelConditionalFormattingStyleSupport.argbBytes(null));
+        List.of(ExcelConditionalFormattingUnsupportedFeature.FILL_PATTERN), malformedFeatures);
+    var themedForeground =
+        org.openxmlformats.schemas.spreadsheetml.x2006.main.CTPatternFill.Factory.newInstance();
+    themedForeground.setPatternType(
+        org.openxmlformats.schemas.spreadsheetml.x2006.main.STPatternType.SOLID);
+    themedForeground.addNewFgColor().setTheme(4L);
+    List<ExcelConditionalFormattingUnsupportedFeature> unsupportedFeatures =
+        new java.util.ArrayList<>();
+    assertEquals(
+        ExcelColor.theme(4),
+        ExcelConditionalFormattingStyleSupport.patternForegroundColor(
+            themedForeground, unsupportedFeatures));
+    assertEquals(List.of(), unsupportedFeatures);
   }
 
   @Test
@@ -454,15 +493,48 @@ class ExcelConditionalFormattingStyleSupportTest {
               workbook.getStylesSource(), malformedCtRule);
 
       assertEquals(false, snapshot.underline());
-      assertNull(snapshot.fontColor());
-      assertNull(snapshot.fillColor());
-      assertNull(snapshot.border());
+      assertEquals(ExcelColor.theme(1), snapshot.fontColor());
+      assertEquals(ExcelColor.theme(2), snapshot.fillColor());
+      assertEquals(
+          new ExcelDifferentialBorder(
+              null,
+              new ExcelBorderSide(
+                  Optional.of(ExcelBorderStyle.THIN), Optional.of(ExcelColor.theme(3))),
+              null,
+              null,
+              null),
+          snapshot.border());
+      assertEquals(List.of(), snapshot.unsupportedFeatures());
+
+      XSSFConditionalFormattingRule unsupportedRule =
+          sheet.getSheetConditionalFormatting().createConditionalFormattingRule("C1>0");
+      sheet
+          .getSheetConditionalFormatting()
+          .addConditionalFormatting(
+              new org.apache.poi.ss.util.CellRangeAddress[] {
+                org.apache.poi.ss.util.CellRangeAddress.valueOf("C1:C3")
+              },
+              unsupportedRule);
+      CTCfRule unsupportedCtRule =
+          sheet.getCTWorksheet().getConditionalFormattingArray(2).getCfRuleArray(0);
+      var unsupportedDxf =
+          org.openxmlformats.schemas.spreadsheetml.x2006.main.CTDxf.Factory.newInstance();
+      unsupportedDxf.addNewFont().addNewColor().setRgb(new byte[] {0x01, 0x02});
+      unsupportedDxf.addNewBorder().addNewTop().addNewColor().setRgb(new byte[] {0x01, 0x02});
+      ExcelConditionalFormattingStyleSupport.attachStyle(
+          workbook.getStylesSource(), unsupportedCtRule, unsupportedDxf);
+
+      ExcelDifferentialStyleSnapshot unsupportedSnapshot =
+          ExcelConditionalFormattingStyleSupport.snapshotStyle(
+              workbook.getStylesSource(), unsupportedCtRule);
+
+      assertNull(unsupportedSnapshot.fontColor());
+      assertNull(unsupportedSnapshot.border());
       assertEquals(
           List.of(
               ExcelConditionalFormattingUnsupportedFeature.FONT_ATTRIBUTES,
-              ExcelConditionalFormattingUnsupportedFeature.FILL_PATTERN,
               ExcelConditionalFormattingUnsupportedFeature.BORDER_COMPLEXITY),
-          snapshot.unsupportedFeatures());
+          unsupportedSnapshot.unsupportedFeatures());
     }
   }
 
@@ -496,8 +568,8 @@ class ExcelConditionalFormattingStyleSupportTest {
               Optional.ofNullable(
                   new ExcelDifferentialBorder(
                       null,
-                      new ExcelDifferentialBorderSide(ExcelBorderStyle.THIN, null),
-                      null,
+                      new ExcelBorderSide(ExcelBorderStyle.THIN),
+                      new ExcelBorderSide(Optional.empty(), Optional.of(ExcelColor.indexed(9))),
                       null,
                       null))));
 
@@ -516,8 +588,8 @@ class ExcelConditionalFormattingStyleSupportTest {
               null,
               new ExcelDifferentialBorder(
                   null,
-                  new ExcelDifferentialBorderSide(ExcelBorderStyle.THIN, null),
-                  null,
+                  new ExcelBorderSide(ExcelBorderStyle.THIN),
+                  new ExcelBorderSide(Optional.empty(), Optional.of(ExcelColor.indexed(9))),
                   null,
                   null),
               List.of()),

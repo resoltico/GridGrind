@@ -53,8 +53,8 @@ catalog_groups = {
     },
 }
 
-if recipe_catalog.get("protocolVersion") != "V1":
-    die("recipe catalog no longer emits protocolVersion=V1")
+if recipe_catalog.get("protocolVersion") != "V2":
+    die("recipe catalog no longer emits protocolVersion=V2")
 if not recipes:
     die("recipe catalog recipes is empty")
 if not shipped_examples:
@@ -116,8 +116,8 @@ for example_id, required_paths in expected_required_paths.items():
     if required_paths_snippet not in normalized_guidance_help_output:
         die(f"guidance help no longer lists requiredWorkspacePaths for {example_id}")
 
-if example_recipe_catalog_detail.get("protocolVersion") != "V1":
-    die("recipe catalog example lookup no longer emits protocolVersion=V1")
+if example_recipe_catalog_detail.get("protocolVersion") != "V2":
+    die("recipe catalog example lookup no longer emits protocolVersion=V2")
 if example_recipe_catalog_detail.get("id") != "BUDGET":
     die("recipe catalog example lookup no longer returns the requested BUDGET detail")
 if example_recipe_catalog_detail.get("view") != "EXAMPLE":
@@ -127,8 +127,8 @@ if not example_recipe_catalog_detail.get("intentTags"):
 if "requestProfile" not in example_recipe_catalog_detail:
     die("recipe catalog example lookup no longer publishes requestProfile")
 
-if task_recipe_catalog_detail.get("protocolVersion") != "V1":
-    die("recipe catalog task-starter lookup no longer emits protocolVersion=V1")
+if task_recipe_catalog_detail.get("protocolVersion") != "V2":
+    die("recipe catalog task-starter lookup no longer emits protocolVersion=V2")
 if task_recipe_catalog_detail.get("id") != "TABULAR_REPORT":
     die(
         "recipe catalog task-starter lookup no longer returns the requested "

@@ -61,6 +61,28 @@ public final class ProtocolTypeMetadataSupport {
     return metadata;
   }
 
+  /**
+   * Returns the leaf record subtype owned by one discriminator value, when the family declares it.
+   */
+  public static Optional<Class<? extends Record>> subtypeForTypeId(
+      Class<?> rootType, String typeId) {
+    Objects.requireNonNull(rootType, "rootType must not be null");
+    Objects.requireNonNull(typeId, "typeId must not be null");
+    return typeIdsByClass(rootType).entrySet().stream()
+        .filter(entry -> entry.getValue().equals(typeId))
+        .<Class<? extends Record>>map(entry -> entry.getKey().asSubclass(Record.class))
+        .findFirst();
+  }
+
+  /** Returns every concrete record subtype accepted by one discriminated request family. */
+  public static List<Class<? extends Record>> subtypesForType(Class<?> rootType) {
+    Objects.requireNonNull(rootType, "rootType must not be null");
+    return typeIdsByClass(rootType).entrySet().stream()
+        .sorted(Map.Entry.comparingByValue())
+        .<Class<? extends Record>>map(entry -> entry.getKey().asSubclass(Record.class))
+        .toList();
+  }
+
   /** Returns the targeting mode declared for one protocol leaf. */
   public static ProtocolTargetingMode targetingMode(Class<?> type) {
     return requiredMetadata(type).targetingMode();
@@ -122,8 +144,7 @@ public final class ProtocolTypeMetadataSupport {
     ProtocolTypeMetadata metadata = requiredMetadata(leafType);
     @SuppressWarnings("unchecked")
     Class<? extends Record> recordType = (Class<? extends Record>) leafType;
-    return new CatalogTypeDescriptor(
-        recordType, metadata.id(), metadata.summary(), List.of(metadata.optionalFields()));
+    return new CatalogTypeDescriptor(recordType, metadata.id(), metadata.summary());
   }
 
   private static List<Class<?>> sealedLeafSubtypes(Class<?> rootType) {

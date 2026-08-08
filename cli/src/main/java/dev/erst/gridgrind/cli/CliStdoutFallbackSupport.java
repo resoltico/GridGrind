@@ -5,9 +5,11 @@ import dev.erst.gridgrind.cli.discovery.GridGrindCliJson;
 import dev.erst.gridgrind.contract.dto.GridGrindResponse;
 import dev.erst.gridgrind.contract.dto.RequestDoctorReport;
 import dev.erst.gridgrind.contract.json.GridGrindJsonOutput;
+import dev.erst.gridgrind.contract.json.RequestDiagnosticRedactor;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Objects;
+import java.util.Optional;
 
 /** Shared stdout-fallback payload rendering and stderr notice formatting. */
 final class CliStdoutFallbackSupport {
@@ -48,28 +50,61 @@ final class CliStdoutFallbackSupport {
       StdoutFallback fallback,
       boolean prettyJson)
       throws IOException {
+    write(stderr, stdout, stderrDiagnostic, fallback, Optional.empty(), prettyJson);
+  }
+
+  /** Writes a fallback while applying the originating request's secret-output boundary. */
+  static void write(
+      OutputStream stderr,
+      OutputStream stdout,
+      CliDiagnostic stderrDiagnostic,
+      StdoutFallback fallback,
+      Optional<RequestDiagnosticRedactor> redactor,
+      boolean prettyJson)
+      throws IOException {
     Objects.requireNonNull(stderr, "stderr must not be null");
     Objects.requireNonNull(stdout, "stdout must not be null");
     Objects.requireNonNull(stderrDiagnostic, "stderrDiagnostic must not be null");
     Objects.requireNonNull(fallback, "fallback must not be null");
+    Objects.requireNonNull(redactor, "redactor must not be null");
     try {
       CliPayloadOutput.write(stdout, fallback.payload());
     } catch (IOException stdoutFailure) {
       try {
-        CliPayloadOutput.write(stderr, GridGrindCliJson.writeBytes(stderrDiagnostic, prettyJson));
+        CliPayloadOutput.write(stderr, diagnosticBytes(stderrDiagnostic, redactor, prettyJson));
       } catch (IOException stderrFailure) {
         stdoutFailure.addSuppressed(stderrFailure);
       }
       throw stdoutFailure;
     }
     try {
-      CliPayloadOutput.write(stderr, GridGrindCliJson.writeBytes(stderrDiagnostic, prettyJson));
+      CliPayloadOutput.write(stderr, diagnosticBytes(stderrDiagnostic, redactor, prettyJson));
     } catch (IOException ignored) {
       // The stdout fallback payload is the primary recovery channel once response-file writing has
       // already failed. If stderr cannot mirror the transport diagnostic afterwards, keep the
       // successfully recovered stdout payload rather than re-failing the whole command.
       return;
     }
+  }
+
+  static StdoutFallback redacted(
+      StdoutFallback fallback, Optional<RequestDiagnosticRedactor> redactor, boolean prettyJson)
+      throws IOException {
+    Objects.requireNonNull(fallback, "fallback must not be null");
+    Objects.requireNonNull(redactor, "redactor must not be null");
+    return new StdoutFallback(
+        redactor.isEmpty()
+            ? fallback.payload()
+            : redactor.orElseThrow().redactSerializedJson(fallback.payload(), prettyJson));
+  }
+
+  private static byte[] diagnosticBytes(
+      CliDiagnostic diagnostic, Optional<RequestDiagnosticRedactor> redactor, boolean prettyJson)
+      throws IOException {
+    byte[] payload = GridGrindCliJson.writeBytes(diagnostic, prettyJson);
+    return redactor.isEmpty()
+        ? payload
+        : redactor.orElseThrow().redactSerializedJson(payload, prettyJson);
   }
 
   /** Value object for a stdout fallback payload. */

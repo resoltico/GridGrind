@@ -21,9 +21,9 @@ public record PivotTableInput(
     String sheetName,
     Source source,
     Anchor anchor,
-    List<String> rowLabels,
-    List<String> columnLabels,
-    List<String> reportFilters,
+    @ProtocolField(optional = true) List<String> rowLabels,
+    @ProtocolField(optional = true) List<String> columnLabels,
+    @ProtocolField(optional = true) List<String> reportFilters,
     List<DataField> dataFields) {
   /** Reads a pivot-table payload while defaulting omitted axis lists to empty. */
   @JsonCreator
@@ -105,7 +105,7 @@ public record PivotTableInput(
   public record DataField(
       String sourceColumnName,
       ExcelPivotDataConsolidateFunction function,
-      String displayName,
+      @ProtocolField(optional = true) String displayName,
       Optional<String> valueFormat) {
     /** Reads one pivot data-field while defaulting displayName and valueFormat when omitted. */
     @JsonCreator

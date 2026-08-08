@@ -132,12 +132,18 @@ public interface ProblemContextRequestSurfaces {
   @JsonSubTypes({
     @JsonSubTypes.Type(value = JsonLocation.Unavailable.class, name = "UNAVAILABLE"),
     @JsonSubTypes.Type(value = JsonLocation.PathOnly.class, name = "PATH_ONLY"),
+    @JsonSubTypes.Type(value = JsonLocation.ByteOffset.class, name = "BYTE_OFFSET"),
+    @JsonSubTypes.Type(value = JsonLocation.PathAtByteOffset.class, name = "PATH_BYTE_OFFSET"),
+    @JsonSubTypes.Type(value = JsonLocation.DuplicateKey.class, name = "DUPLICATE_KEY"),
     @JsonSubTypes.Type(value = JsonLocation.LineColumn.class, name = "LINE_COLUMN"),
     @JsonSubTypes.Type(value = JsonLocation.Located.class, name = "LOCATED")
   })
   sealed interface JsonLocation
       permits JsonLocation.Unavailable,
           JsonLocation.PathOnly,
+          JsonLocation.ByteOffset,
+          JsonLocation.PathAtByteOffset,
+          JsonLocation.DuplicateKey,
           JsonLocation.LineColumn,
           JsonLocation.Located {
     /** Returns the explicit unavailable JSON-location variant. */
@@ -157,6 +163,22 @@ public interface ProblemContextRequestSurfaces {
       return new PathOnly(requireNonBlank(jsonPath, "jsonPath"));
     }
 
+    /** Returns a JSON-location variant with one exact UTF-8 byte offset. */
+    static JsonLocation byteOffset(long byteOffset) {
+      return new ByteOffset(byteOffset);
+    }
+
+    /** Returns a JSON-location variant with a path and exact UTF-8 byte offset. */
+    static JsonLocation pathAtByteOffset(String jsonPath, long byteOffset) {
+      return new PathAtByteOffset(requireNonBlank(jsonPath, "jsonPath"), byteOffset);
+    }
+
+    /** Returns a duplicate-property location that remains distinguishable without a JSON path. */
+    static JsonLocation duplicateKey(
+        String containingObjectPath, String key, int occurrenceOrdinal, long byteOffset) {
+      return new DuplicateKey(containingObjectPath, key, occurrenceOrdinal, byteOffset);
+    }
+
     /** Returns a JSON-location variant with path, line, and column. */
     static JsonLocation located(String jsonPath, Integer jsonLine, Integer jsonColumn) {
       Objects.requireNonNull(jsonLine, "jsonLine must not be null");
@@ -166,32 +188,57 @@ public interface ProblemContextRequestSurfaces {
 
     /** Returns the JSON path when one precise request cursor was captured. */
     default Optional<String> jsonPathValue() {
-      return switch (this) {
-        case Located located -> Optional.of(located.jsonPath());
-        case PathOnly pathOnly -> Optional.of(pathOnly.jsonPath());
-        case LineColumn _ -> Optional.empty();
-        case Unavailable _ -> Optional.empty();
-      };
+      if (this instanceof Located located) {
+        return Optional.of(located.jsonPath());
+      }
+      if (this instanceof PathOnly pathOnly) {
+        return Optional.of(pathOnly.jsonPath());
+      }
+      if (this instanceof PathAtByteOffset located) {
+        return Optional.of(located.jsonPath());
+      }
+      return Optional.empty();
+    }
+
+    /** Returns the exact UTF-8 byte offset when a structural parser located one token. */
+    default Optional<Long> byteOffsetValue() {
+      if (this instanceof ByteOffset located) {
+        return Optional.of(located.byteOffset());
+      }
+      if (this instanceof PathAtByteOffset located) {
+        return Optional.of(located.byteOffset());
+      }
+      if (this instanceof DuplicateKey duplicate) {
+        return Optional.of(duplicate.byteOffset());
+      }
+      return Optional.empty();
+    }
+
+    /** Returns duplicate-key identity when a property occurrence cannot have one JSON path. */
+    default Optional<DuplicateKey> duplicateKeyValue() {
+      return this instanceof DuplicateKey duplicate ? Optional.of(duplicate) : Optional.empty();
     }
 
     /** Returns the JSON line when one precise request cursor was captured. */
     default Optional<Integer> jsonLineValue() {
-      return switch (this) {
-        case LineColumn lineColumn -> Optional.of(lineColumn.jsonLine());
-        case Located located -> Optional.of(located.jsonLine());
-        case PathOnly _ -> Optional.empty();
-        case Unavailable _ -> Optional.empty();
-      };
+      if (this instanceof LineColumn lineColumn) {
+        return Optional.of(lineColumn.jsonLine());
+      }
+      if (this instanceof Located located) {
+        return Optional.of(located.jsonLine());
+      }
+      return Optional.empty();
     }
 
     /** Returns the JSON column when one precise request cursor was captured. */
     default Optional<Integer> jsonColumnValue() {
-      return switch (this) {
-        case LineColumn lineColumn -> Optional.of(lineColumn.jsonColumn());
-        case Located located -> Optional.of(located.jsonColumn());
-        case PathOnly _ -> Optional.empty();
-        case Unavailable _ -> Optional.empty();
-      };
+      if (this instanceof LineColumn lineColumn) {
+        return Optional.of(lineColumn.jsonColumn());
+      }
+      if (this instanceof Located located) {
+        return Optional.of(located.jsonColumn());
+      }
+      return Optional.empty();
     }
 
     /** No JSON cursor could be derived for the request failure. */
@@ -201,6 +248,35 @@ public interface ProblemContextRequestSurfaces {
     record PathOnly(String jsonPath) implements JsonLocation {
       public PathOnly {
         jsonPath = requireNonBlank(jsonPath, "jsonPath");
+      }
+    }
+
+    /** A structural parser located an offending token without a JSON path. */
+    record ByteOffset(long byteOffset) implements JsonLocation {
+      public ByteOffset {
+        requireByteOffset(byteOffset);
+      }
+    }
+
+    /** A structural parser located an offending object member or scalar token precisely. */
+    record PathAtByteOffset(String jsonPath, long byteOffset) implements JsonLocation {
+      public PathAtByteOffset {
+        jsonPath = requireNonBlank(jsonPath, "jsonPath");
+        requireByteOffset(byteOffset);
+      }
+    }
+
+    /** One duplicate property occurrence, which has no unique JSON path of its own. */
+    record DuplicateKey(
+        String containingObjectPath, String key, int occurrenceOrdinal, long byteOffset)
+        implements JsonLocation {
+      public DuplicateKey {
+        Objects.requireNonNull(containingObjectPath, "containingObjectPath must not be null");
+        key = requireNonBlank(key, "key");
+        if (occurrenceOrdinal < 0) {
+          throw new IllegalArgumentException("occurrenceOrdinal must not be negative");
+        }
+        requireByteOffset(byteOffset);
       }
     }
 
@@ -226,6 +302,12 @@ public interface ProblemContextRequestSurfaces {
         if (jsonColumn < 1) {
           throw new IllegalArgumentException("jsonColumn must be greater than 0");
         }
+      }
+    }
+
+    private static void requireByteOffset(long byteOffset) {
+      if (byteOffset < 0) {
+        throw new IllegalArgumentException("byteOffset must not be negative");
       }
     }
   }

@@ -10,10 +10,10 @@ import java.util.Optional;
 /** OOXML package-signing settings applied during workbook persistence. */
 public record OoxmlSignatureInput(
     String pkcs12Path,
-    String keystorePassword,
-    String keyPassword,
+    @ProtocolField(secret = true) String keystorePassword,
+    @ProtocolField(optional = true, secret = true) String keyPassword,
     @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<String> alias,
-    ExcelOoxmlSignatureDigestAlgorithm digestAlgorithm,
+    @ProtocolField(optional = true) ExcelOoxmlSignatureDigestAlgorithm digestAlgorithm,
     @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<String> description) {
   @JsonCreator
   static OoxmlSignatureInput create(

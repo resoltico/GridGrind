@@ -12,7 +12,6 @@ import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTBooleanProperty;
 import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTBorder;
 import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTBorderPr;
 import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTCfRule;
-import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTColor;
 import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTDxf;
 import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTFill;
 import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTFont;
@@ -68,7 +67,7 @@ final class ExcelConditionalFormattingStyleSupport {
   /**
    * Returns one modeled solid-fill foreground color, recording unsupported fill states as needed.
    */
-  static @Nullable String patternForegroundColor(
+  static @Nullable ExcelColor patternForegroundColor(
       CTPatternFill patternFill,
       List<ExcelConditionalFormattingUnsupportedFeature> unsupportedFeatures) {
     return ExcelConditionalFormattingStyleSnapshotSupport.patternForegroundColor(
@@ -83,25 +82,25 @@ final class ExcelConditionalFormattingStyleSupport {
   /** Reports whether one differential border references a side payload GridGrind cannot read. */
   static boolean hasUnsupportedSideReference(
       CTBorder border,
-      @Nullable ExcelDifferentialBorderSide top,
-      @Nullable ExcelDifferentialBorderSide right,
-      @Nullable ExcelDifferentialBorderSide bottom,
-      @Nullable ExcelDifferentialBorderSide left) {
+      @Nullable ExcelBorderSide top,
+      @Nullable ExcelBorderSide right,
+      @Nullable ExcelBorderSide bottom,
+      @Nullable ExcelBorderSide left) {
     return ExcelConditionalFormattingStyleSnapshotSupport.hasUnsupportedSideReference(
         border, top, right, bottom, left);
   }
 
   /** Collapses the four explicit sides of one differential border into the public border record. */
   static @Nullable ExcelDifferentialBorder borderValue(
-      @Nullable ExcelDifferentialBorderSide top,
-      @Nullable ExcelDifferentialBorderSide right,
-      @Nullable ExcelDifferentialBorderSide bottom,
-      @Nullable ExcelDifferentialBorderSide left) {
+      @Nullable ExcelBorderSide top,
+      @Nullable ExcelBorderSide right,
+      @Nullable ExcelBorderSide bottom,
+      @Nullable ExcelBorderSide left) {
     return ExcelConditionalFormattingStyleSnapshotSupport.borderValue(top, right, bottom, left);
   }
 
   /** Returns the factual border side modeled by one differential border-side XML payload. */
-  static @Nullable ExcelDifferentialBorderSide snapshotBorderSide(@Nullable CTBorderPr side) {
+  static @Nullable ExcelBorderSide snapshotBorderSide(@Nullable CTBorderPr side) {
     return ExcelConditionalFormattingStyleSnapshotSupport.snapshotBorderSide(side);
   }
 
@@ -120,15 +119,6 @@ final class ExcelConditionalFormattingStyleSupport {
   /** Reports whether one differential-font payload uses font features GridGrind does not model. */
   static boolean hasUnsupportedFontAttributes(CTFont font) {
     return ExcelConditionalFormattingStyleSnapshotSupport.hasUnsupportedFontAttributes(font);
-  }
-
-  /** Converts one raw OOXML color payload into {@code #RRGGBB}, or null when RGB is unavailable. */
-  static @Nullable String rgbHexFromCtColor(@Nullable CTColor color) {
-    return ExcelConditionalFormattingColorSupport.rgbHexFromCtColor(color);
-  }
-
-  static byte[] argbBytes(String rgbHex) {
-    return ExcelConditionalFormattingColorSupport.argbBytes(rgbHex);
   }
 
   /** Returns unsupported-feature markers exposed by one raw differential-style metadata payload. */
@@ -158,7 +148,7 @@ final class ExcelConditionalFormattingStyleSupport {
   }
 
   record FillSnapshot(
-      @Nullable String fillColor,
+      @Nullable ExcelColor fillColor,
       List<ExcelConditionalFormattingUnsupportedFeature> unsupportedFeatures) {
     FillSnapshot {
       unsupportedFeatures = List.copyOf(unsupportedFeatures);
@@ -185,7 +175,7 @@ final class ExcelConditionalFormattingStyleSupport {
       @Nullable Boolean bold,
       @Nullable Boolean italic,
       @Nullable ExcelFontHeight fontHeight,
-      @Nullable String fontColor,
+      @Nullable ExcelColor fontColor,
       @Nullable Boolean underline,
       @Nullable Boolean strikeout,
       List<ExcelConditionalFormattingUnsupportedFeature> unsupportedFeatures) {

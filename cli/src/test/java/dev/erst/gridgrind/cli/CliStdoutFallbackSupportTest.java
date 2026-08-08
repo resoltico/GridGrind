@@ -31,10 +31,11 @@ class CliStdoutFallbackSupportTest extends GridGrindCliTestSupport {
             2,
             "cli",
             List.of("gridgrind --help"),
-            GridGrindProblemDetail.Problem.of(
-                GridGrindProblemCode.INVALID_ARGUMENTS,
-                "bad flag",
-                new ProblemContext.ParseArguments(CliArgument.named("--flag"))),
+            List.of(
+                GridGrindProblemDetail.Problem.of(
+                    GridGrindProblemCode.INVALID_ARGUMENTS,
+                    "bad flag",
+                    new ProblemContext.ParseArguments(CliArgument.named("--flag")))),
             Optional.of(CliTransport.standardOutput()));
     GridGrindResponse response =
         GridGrindResponses.success(java.util.List.of(), java.util.List.of(), java.util.List.of());
@@ -65,10 +66,11 @@ class CliStdoutFallbackSupportTest extends GridGrindCliTestSupport {
             1,
             "execute",
             List.of(),
-            GridGrindProblemDetail.Problem.of(
-                GridGrindProblemCode.IO_ERROR,
-                "write failed",
-                new ProblemContext.ParseArguments(CliArgument.named("--response"))),
+            List.of(
+                GridGrindProblemDetail.Problem.of(
+                    GridGrindProblemCode.IO_ERROR,
+                    "write failed",
+                    new ProblemContext.ParseArguments(CliArgument.named("--response")))),
             Optional.of(CliTransport.standardOutput()));
     CliStdoutFallbackSupport.StdoutFallback fallback =
         CliStdoutFallbackSupport.cliDiagnostic(diagnostic);

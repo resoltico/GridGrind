@@ -3,10 +3,11 @@ package dev.erst.gridgrind.engine.runtime;
 import static org.junit.jupiter.api.Assertions.*;
 
 import dev.erst.gridgrind.contract.dto.*;
+import dev.erst.gridgrind.excel.ExcelBorderSide;
+import dev.erst.gridgrind.excel.ExcelColor;
 import dev.erst.gridgrind.excel.ExcelConditionalFormattingBlockDefinition;
 import dev.erst.gridgrind.excel.ExcelConditionalFormattingRule;
 import dev.erst.gridgrind.excel.ExcelDifferentialBorder;
-import dev.erst.gridgrind.excel.ExcelDifferentialBorderSide;
 import dev.erst.gridgrind.excel.ExcelDifferentialStyle;
 import dev.erst.gridgrind.excel.ExcelFontHeight;
 import dev.erst.gridgrind.excel.foundation.ExcelBorderStyle;
@@ -32,15 +33,15 @@ class ConditionalFormattingInputTest {
                             Optional.of(true),
                             Optional.of(false),
                             Optional.ofNullable(new FontHeightInput.Points(BigDecimal.valueOf(11))),
-                            Optional.of("#102030"),
+                            Optional.of(ColorInput.rgb("#102030")),
                             Optional.of(true),
                             Optional.of(true),
-                            Optional.of("#E0F0AA"),
+                            Optional.of(ColorInput.rgb("#E0F0AA")),
                             Optional.of(
                                 new DifferentialBorderInput(
                                     Optional.of(
-                                        new DifferentialBorderSideInput(
-                                            ExcelBorderStyle.THIN, Optional.of("#405060"))),
+                                        new BorderSideInput(
+                                            ExcelBorderStyle.THIN, ColorInput.rgb("#405060"))),
                                     Optional.empty(),
                                     Optional.empty(),
                                     Optional.empty(),
@@ -59,7 +60,7 @@ class ConditionalFormattingInputTest {
                             Optional.empty(),
                             Optional.empty(),
                             Optional.empty(),
-                            Optional.of("#AAEECC"),
+                            Optional.of(ColorInput.rgb("#AAEECC")),
                             Optional.empty())))));
 
     assertEquals(
@@ -75,14 +76,15 @@ class ConditionalFormattingInputTest {
                             Optional.of(true),
                             Optional.of(false),
                             Optional.ofNullable(ExcelFontHeight.fromPoints(BigDecimal.valueOf(11))),
-                            Optional.of("#102030"),
+                            Optional.of(ExcelColor.rgb("#102030")),
                             Optional.of(true),
                             Optional.of(true),
-                            Optional.of("#E0F0AA"),
+                            Optional.of(ExcelColor.rgb("#E0F0AA")),
                             Optional.ofNullable(
                                 new ExcelDifferentialBorder(
-                                    new ExcelDifferentialBorderSide(
-                                        ExcelBorderStyle.THIN, "#405060"),
+                                    new ExcelBorderSide(
+                                        Optional.of(ExcelBorderStyle.THIN),
+                                        Optional.of(ExcelColor.rgb("#405060"))),
                                     null,
                                     null,
                                     null,
@@ -101,7 +103,7 @@ class ConditionalFormattingInputTest {
                             Optional.empty(),
                             Optional.empty(),
                             Optional.empty(),
-                            Optional.of("#AAEECC"),
+                            Optional.of(ExcelColor.rgb("#AAEECC")),
                             Optional.empty()))))),
         WorkbookCommandStructuredInputConverter.toExcelConditionalFormattingBlock(
             List.of("A1:A3"), input));
@@ -186,8 +188,8 @@ class ConditionalFormattingInputTest {
                 Optional.empty(),
                 Optional.empty()));
     assertThrows(
-        NullPointerException.class,
-        () -> new DifferentialBorderSideInput(null, Optional.of("#102030")));
+        IllegalArgumentException.class,
+        () -> new BorderSideInput(Optional.empty(), Optional.empty()));
   }
 
   @Test
@@ -233,24 +235,24 @@ class ConditionalFormattingInputTest {
   void convertsDifferentialBordersWithExplicitSides() {
     DifferentialBorderInput border =
         new DifferentialBorderInput(
-            Optional.of(
-                new DifferentialBorderSideInput(ExcelBorderStyle.THIN, Optional.of("#102030"))),
-            Optional.of(
-                new DifferentialBorderSideInput(ExcelBorderStyle.DASHED, Optional.of("#203040"))),
-            Optional.of(
-                new DifferentialBorderSideInput(ExcelBorderStyle.DOUBLE, Optional.of("#304050"))),
-            Optional.of(
-                new DifferentialBorderSideInput(ExcelBorderStyle.HAIR, Optional.of("#405060"))),
-            Optional.of(
-                new DifferentialBorderSideInput(ExcelBorderStyle.DOTTED, Optional.of("#506070"))));
+            Optional.of(new BorderSideInput(ExcelBorderStyle.THIN, ColorInput.rgb("#102030"))),
+            Optional.of(new BorderSideInput(ExcelBorderStyle.DASHED, ColorInput.rgb("#203040"))),
+            Optional.of(new BorderSideInput(ExcelBorderStyle.DOUBLE, ColorInput.rgb("#304050"))),
+            Optional.of(new BorderSideInput(ExcelBorderStyle.HAIR, ColorInput.rgb("#405060"))),
+            Optional.of(new BorderSideInput(ExcelBorderStyle.DOTTED, ColorInput.rgb("#506070"))));
 
     assertEquals(
         new ExcelDifferentialBorder(
-            new ExcelDifferentialBorderSide(ExcelBorderStyle.THIN, "#102030"),
-            new ExcelDifferentialBorderSide(ExcelBorderStyle.DASHED, "#203040"),
-            new ExcelDifferentialBorderSide(ExcelBorderStyle.DOUBLE, "#304050"),
-            new ExcelDifferentialBorderSide(ExcelBorderStyle.HAIR, "#405060"),
-            new ExcelDifferentialBorderSide(ExcelBorderStyle.DOTTED, "#506070")),
+            new ExcelBorderSide(
+                Optional.of(ExcelBorderStyle.THIN), Optional.of(ExcelColor.rgb("#102030"))),
+            new ExcelBorderSide(
+                Optional.of(ExcelBorderStyle.DASHED), Optional.of(ExcelColor.rgb("#203040"))),
+            new ExcelBorderSide(
+                Optional.of(ExcelBorderStyle.DOUBLE), Optional.of(ExcelColor.rgb("#304050"))),
+            new ExcelBorderSide(
+                Optional.of(ExcelBorderStyle.HAIR), Optional.of(ExcelColor.rgb("#405060"))),
+            new ExcelBorderSide(
+                Optional.of(ExcelBorderStyle.DOTTED), Optional.of(ExcelColor.rgb("#506070")))),
         WorkbookCommandStructuredInputConverter.toExcelDifferentialBorder(border).orElseThrow());
   }
 

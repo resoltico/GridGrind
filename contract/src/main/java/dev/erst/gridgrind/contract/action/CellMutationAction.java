@@ -5,7 +5,7 @@ import dev.erst.gridgrind.contract.dto.ArrayFormulaInput;
 import dev.erst.gridgrind.contract.dto.CellGridInput;
 import dev.erst.gridgrind.contract.dto.CellInput;
 import dev.erst.gridgrind.contract.dto.CellRowInput;
-import dev.erst.gridgrind.contract.dto.CellStyleInput;
+import dev.erst.gridgrind.contract.dto.CellStylePatchInput;
 import dev.erst.gridgrind.contract.dto.CommentInput;
 import dev.erst.gridgrind.contract.dto.HyperlinkTarget;
 import dev.erst.gridgrind.contract.selector.CellSelector;
@@ -112,7 +112,7 @@ public sealed interface CellMutationAction extends MutationAction {
       id = "APPLY_STYLE",
       summary = "Apply a style patch to every cell in the selected range.",
       targetSelectors = {RangeSelector.ByRange.class})
-  record ApplyStyle(CellStyleInput style) implements CellMutationAction {
+  record ApplyStyle(CellStylePatchInput style) implements CellMutationAction {
     public ApplyStyle {
       Objects.requireNonNull(style, "style must not be null");
     }

@@ -5,8 +5,31 @@ Earlier release history through `0.68.0` is archived in [docs/CHANGELOG_ARCHIVE.
 
 ## [Unreleased]
 
+### Added
+- Request doctoring now reports every independently observable request-intake defect in one response, including duplicate keys, unknown fields, omitted required fields, explicit nulls, malformed scalar values, missing or unknown type discriminators, and constructor-level field validation failures; valid sibling fragments remain available for safe preflight rather than being discarded after the first defect.
+- Protocol catalog field descriptors now publish `secret: true` for authored credential-bearing fields, allowing consumers to identify values that diagnostics and telemetry must never reproduce.
+- CLI request diagnostics now publish a nonempty ordered `problems` collection, with `PATH_BYTE_OFFSET` and `DUPLICATE_KEY` request locations that retain exact UTF-8 offsets and duplicate-property identity.
+
 ### Changed
+- The request and response contract now uses protocol version `V2` exclusively; `V1` requests are rejected. Request-side tagged unions use the uniform `type` discriminator, including colors, fills, drawing shapes, and named-range targets, while unrelated report-domain `kind` fields retain their established meanings.
+- Protocol-catalog field requirements now derive from each request record's effective JSON creator contract and selected-union discriminator, including explicit defaultable fields and JSON property names, instead of catalog-local required or optional field lists.
+- Optional boolean request fields now declare their effective wire default in the request model and protocol catalog as `defaultBoolean`, so omission resolves consistently while explicit `null` remains invalid.
+- Sensitive request diagnostics now use the contract's exact secret-owner JSON paths rather than global text replacement, so a problem at a credential path is safely generic without corrupting unrelated workbook data or diagnostic text that happens to contain a short secret; workbook, revisions, and OOXML encryption passwords are declared as secret fields, and last-resort failures use the canonical internal-error title instead of arbitrary throwable text.
 - Refreshed build and release dependencies to NullAway `0.13.8`, the Kotlin Gradle plugin `2.4.10`, Jackson Databind `3.2.1`, Bouncy Castle `1.85`, Log4j `2.26.1`, Gradle Shadow `9.5.1`, `actions/setup-java` `5.5.0`, `docker/login-action` `4.4.0`, `docker/setup-buildx-action` `4.2.0`, and `docker/metadata-action` `6.2.0`.
+- Style authoring now names partial updates honestly: the catalog and request model use `CellStylePatchInput` for `APPLY_STYLE.style`, while the separate complete `CellStyleReport` remains the factual readback shape. Cell-style and conditional-formatting patches now share `BorderSideInput` and `ColorInput`, so RGB, theme, indexed, and tint color references have one consistent authoring vocabulary.
+
+### Fixed
+- Constructor-level and cross-fragment request diagnostics now resolve `PATH_BYTE_OFFSET` to the exact authored member or array token named by their JSON path; when no authored token exists, diagnostics retain the path without fabricating a byte coordinate.
+- Request structural analysis now validates every authored occurrence of a known field, so a duplicate-key finding no longer hides an independently provable malformed, explicit-null, unknown-type, or nested-step problem in the repeated value.
+- Duplicate root fields no longer leave an arbitrary first value available as a bound request fragment: the affected field, including `steps`, remains explicitly unbound while unrelated valid siblings remain available for analysis.
+- Request-read diagnostics now anchor every object-member finding, including malformed scalar, explicit-null, unsupported-enum, and unknown-discriminator cases, at the property's opening quote; array-element and root-value findings retain their value-token offsets.
+- Request intake now rejects trailing object and array commas, reports root-level non-JSON whitespace at byte zero, and classifies explicit `null` protocol versions and union discriminators with the same omission-only message used by every other request field.
+- Request intake now distinguishes malformed UTF-8 from syntactically invalid JSON: non-UTF-8 request bytes fail as `INVALID_ENCODING`, while valid UTF-8 JSON syntax failures retain their existing `INVALID_JSON` classification and source coordinates.
+- Request analysis now owns typed conversion from one tolerant parse: a syntax-faulted subtree cannot bind as valid, constructor-invalid fragments are retained as explicit intake findings, unaffected siblings remain available for analysis, and execution and doctoring share the same ordered problem collection instead of re-decoding the raw request. When a union discriminator is malformed, unknown fields that no variant permits are still reported; every valid authored discriminator branch contributes its independently provable shape findings without re-scanning raw members for each branch.
+- Normal execution no longer drops independent structural request findings after the first one: it now returns the same deterministic problem collection as request doctoring before any workbook work starts, preserving exact value offsets and duplicate-key metadata rather than reconstructing a singular legacy location.
+- Doctoring no longer rewrites malformed authored steps into synthetic placeholders to continue analysis, so every reported structural defect remains tied to the original request and no fabricated plan data can affect later diagnostics.
+- Shadow packaging now feeds every `META-INF/services/**` descriptor to the service-file merger and rejects duplicate final JAR entries, preventing ServiceLoader registrations from being silently lost during distribution assembly.
+- Conditional-formatting style write and readback no longer collapse theme, indexed, or tint color references to an RGB-only side channel; the documented examples and promoted request-fuzz fixtures now use the same tagged `ColorInput` shape enforced by the protocol.
 
 ## [0.72.0] - 2026-07-06
 
@@ -71,6 +94,7 @@ Earlier release history through `0.68.0` is archived in [docs/CHANGELOG_ARCHIVE.
 - Refreshed the developer and operator docs to the live Gradle `9.6.1`, Jackson `3.2.0`, JUnit `6.1.1`, Log4j `2.26.0`, and doctor-request batching contract so first-contact guidance and contributor references match current HEAD.
 
 ### Fixed
+- Request intake now rejects malformed mismatched JSON container closers without stalling, accepts only RFC JSON whitespace, and classifies unrepresentable numeric and temporal scalar values at their authored path and UTF-8 byte offset before typed binding; late payload failures also retain their owned request location in CLI diagnostics.
 - Help, `--help-protocol`, and `--response` prose now match the real stdout/stderr contract: transport and argument failures emit structured JSON on stderr, executed request failures remain primary stdout payloads, and `--response` write-fallback notices now describe the structured failure report that is actually written.
 - Explicit `null` placeholders now produce the dedicated message `Field '<x>' must be omitted when absent; explicit null is not accepted.`, and `--doctor-request` now reports both top-level omission-legal `execution` and `formulaEnvironment` null violations in one report instead of stopping after the first one.
 - Request doctor now batches independently provable blocking problems across request-default preflight, multiple malformed step payloads, and semantic validation while normal execution still stops at the first blocking failure.

@@ -18,18 +18,15 @@ final class GridGrindProtocolCatalogStyleTypeGroups {
               CatalogTypeEntryFactory.descriptor(
                   ColorInput.Rgb.class,
                   "RGB",
-                  "Write one explicit RGB color reference plus optional tint metadata.",
-                  "tint"),
+                  "Write one explicit RGB color reference plus optional tint metadata."),
               CatalogTypeEntryFactory.descriptor(
                   ColorInput.Theme.class,
                   "THEME",
-                  "Write one workbook theme-slot color reference plus optional tint metadata.",
-                  "tint"),
+                  "Write one workbook theme-slot color reference plus optional tint metadata."),
               CatalogTypeEntryFactory.descriptor(
                   ColorInput.Indexed.class,
                   "INDEXED",
-                  "Write one indexed-palette color reference plus optional tint metadata.",
-                  "tint")));
+                  "Write one indexed-palette color reference plus optional tint metadata.")));
 
   static final CatalogNestedTypeDescriptor CELL_GRADIENT_FILL_INPUT_TYPES =
       CatalogTypeEntryFactory.nestedTypeGroup(
@@ -40,18 +37,13 @@ final class GridGrindProtocolCatalogStyleTypeGroups {
                   CellGradientFillInput.Linear.class,
                   "LINEAR",
                   "Write one linear gradient fill with ordered stops."
-                      + " degree is optional when Excel's default angle is acceptable.",
-                  "degree"),
+                      + " degree is optional when Excel's default angle is acceptable."),
               CatalogTypeEntryFactory.descriptor(
                   CellGradientFillInput.Path.class,
                   "PATH",
                   "Write one path gradient fill with ordered stops."
                       + " Each edge offset is optional and omitted offsets preserve Excel's"
-                      + " default path geometry.",
-                  "left",
-                  "right",
-                  "top",
-                  "bottom")));
+                      + " default path geometry.")));
 
   static final CatalogNestedTypeDescriptor CELL_FILL_INPUT_TYPES =
       CatalogTypeEntryFactory.nestedTypeGroup(
@@ -85,18 +77,15 @@ final class GridGrindProtocolCatalogStyleTypeGroups {
               CatalogTypeEntryFactory.descriptor(
                   CellColorReport.Rgb.class,
                   "RGB",
-                  "Read one explicit RGB workbook color plus optional tint metadata.",
-                  "tint"),
+                  "Read one explicit RGB workbook color plus optional tint metadata."),
               CatalogTypeEntryFactory.descriptor(
                   CellColorReport.Theme.class,
                   "THEME",
-                  "Read one workbook theme-slot color plus optional tint metadata.",
-                  "tint"),
+                  "Read one workbook theme-slot color plus optional tint metadata."),
               CatalogTypeEntryFactory.descriptor(
                   CellColorReport.Indexed.class,
                   "INDEXED",
-                  "Read one indexed-palette workbook color plus optional tint metadata.",
-                  "tint")));
+                  "Read one indexed-palette workbook color plus optional tint metadata.")));
 
   static final CatalogNestedTypeDescriptor CELL_GRADIENT_FILL_REPORT_TYPES =
       CatalogTypeEntryFactory.nestedTypeGroup(
@@ -106,17 +95,12 @@ final class GridGrindProtocolCatalogStyleTypeGroups {
               CatalogTypeEntryFactory.descriptor(
                   CellGradientFillReport.Linear.class,
                   "LINEAR",
-                  "Read one factual linear gradient fill with ordered stops.",
-                  "degree"),
+                  "Read one factual linear gradient fill with ordered stops."),
               CatalogTypeEntryFactory.descriptor(
                   CellGradientFillReport.Path.class,
                   "PATH",
                   "Read one factual path gradient fill with ordered stops."
-                      + " Edge offsets are omitted when Excel does not persist them.",
-                  "left",
-                  "right",
-                  "top",
-                  "bottom")));
+                      + " Edge offsets are omitted when Excel does not persist them.")));
 
   static final CatalogNestedTypeDescriptor CELL_FILL_REPORT_TYPES =
       CatalogTypeEntryFactory.nestedTypeGroup(

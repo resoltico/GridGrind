@@ -32,6 +32,54 @@ class CliResponseWriterTest extends GridGrindCliTestSupport {
   private final CliResponseWriter responseWriter = new CliResponseWriter();
 
   @Test
+  void requestDiagnosticOutputBoundaryRedactsOnlyTheProblemAtItsSecretOwnerPath()
+      throws IOException {
+    ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+    ByteArrayOutputStream stderr = new ByteArrayOutputStream();
+    String rawRequest =
+        """
+        {
+          "protocolVersion":"V2",
+          "source":{"type":"EXISTING","path":"source.xlsx","security":{"password":"source-secret"}},
+          "persistence":{"type":"NONE"},
+          "steps":[]
+        }
+        """;
+    CliDiagnostic diagnostic =
+        new CliDiagnostic(
+            GridGrindProtocolVersion.current(),
+            1,
+            "execute",
+            List.of(),
+            List.of(
+                GridGrindProblemDetail.Problem.of(
+                    GridGrindProblemCode.INVALID_REQUEST,
+                    "source-secret",
+                    new ProblemContext.ReadRequest(
+                        dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces.RequestInput
+                            .standardInput(),
+                        dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces.JsonLocation
+                            .pathOnly("source.security.password")))),
+            Optional.empty());
+
+    int exitCode =
+        responseWriter.writeRequestDiagnostic(
+            Optional.empty(),
+            stdout,
+            stderr,
+            diagnostic,
+            GridGrindJson.analyzeRequest(rawRequest.getBytes(StandardCharsets.UTF_8))
+                .diagnosticRedactor(),
+            false);
+
+    String rendered = stderr.toString(StandardCharsets.UTF_8);
+    assertEquals(1, exitCode);
+    assertEquals("", stdout.toString(StandardCharsets.UTF_8));
+    assertFalse(rendered.contains("source-secret"));
+    assertEquals("[REDACTED]", cliDiagnosticOnStderr(stderr).problem().message());
+  }
+
+  @Test
   void writePayloadFallsBackToCliDiagnosticWhenTheResponsePathCannotBeWritten() throws IOException {
     Path responseDirectory = Files.createTempDirectory("gridgrind-payload-dir-");
     ByteArrayOutputStream stdout = new ByteArrayOutputStream();
@@ -161,10 +209,11 @@ class CliResponseWriterTest extends GridGrindCliTestSupport {
                 2,
                 "cli",
                 List.of("gridgrind --help"),
-                GridGrindProblemDetail.Problem.of(
-                    GridGrindProblemCode.INVALID_ARGUMENTS,
-                    "bad flag",
-                    new ProblemContext.ParseArguments(CliArgument.named("--flag"))),
+                List.of(
+                    GridGrindProblemDetail.Problem.of(
+                        GridGrindProblemCode.INVALID_ARGUMENTS,
+                        "bad flag",
+                        new ProblemContext.ParseArguments(CliArgument.named("--flag")))),
                 Optional.empty()),
             false);
 
@@ -190,10 +239,11 @@ class CliResponseWriterTest extends GridGrindCliTestSupport {
                 2,
                 "cli",
                 List.of("gridgrind --help"),
-                GridGrindProblemDetail.Problem.of(
-                    GridGrindProblemCode.INVALID_ARGUMENTS,
-                    "bad flag",
-                    new ProblemContext.ParseArguments(CliArgument.named("--flag"))),
+                List.of(
+                    GridGrindProblemDetail.Problem.of(
+                        GridGrindProblemCode.INVALID_ARGUMENTS,
+                        "bad flag",
+                        new ProblemContext.ParseArguments(CliArgument.named("--flag")))),
                 Optional.empty()),
             false);
 
@@ -235,14 +285,15 @@ class CliResponseWriterTest extends GridGrindCliTestSupport {
                 1,
                 "execute",
                 List.of("gridgrind --help-protocol"),
-                GridGrindProblemDetail.Problem.of(
-                    GridGrindProblemCode.INVALID_REQUEST_SHAPE,
-                    "missing required field",
-                    new ProblemContext.ReadRequest(
-                        dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces.RequestInput
-                            .standardInput(),
-                        dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces.JsonLocation
-                            .pathOnly("steps[0].type"))),
+                List.of(
+                    GridGrindProblemDetail.Problem.of(
+                        GridGrindProblemCode.INVALID_REQUEST_SHAPE,
+                        "missing required field",
+                        new ProblemContext.ReadRequest(
+                            dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces
+                                .RequestInput.standardInput(),
+                            dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces
+                                .JsonLocation.pathOnly("steps[0].type")))),
                 Optional.empty()),
             false);
 
@@ -349,7 +400,7 @@ class CliResponseWriterTest extends GridGrindCliTestSupport {
             stdout,
             stderr,
             failure,
-            CliResponseWriter.exitCodeFor(failure),
+            CliResponseTransportSupport.exitCodeFor(failure),
             false);
 
     CliDiagnostic stderrDiagnostic = cliDiagnosticOnStderr(stderr);
@@ -533,7 +584,7 @@ class CliResponseWriterTest extends GridGrindCliTestSupport {
             stdout,
             stderr,
             originalFailure,
-            CliResponseWriter.exitCodeFor(originalFailure),
+            CliResponseTransportSupport.exitCodeFor(originalFailure),
             false);
 
     GridGrindResponse.Failure fallbackResponse =
@@ -567,7 +618,7 @@ class CliResponseWriterTest extends GridGrindCliTestSupport {
     Path responsePath = Path.of("/tmp/response.json");
 
     GridGrindProblemDetail.Problem problem =
-        CliResponseWriter.writeResponseProblem(
+        CliResponseTransportSupport.writeResponseProblem(
             new AccessDeniedException(responsePath.toString()), responsePath);
 
     assertEquals(
@@ -580,7 +631,7 @@ class CliResponseWriterTest extends GridGrindCliTestSupport {
     Path responsePath = Path.of("/tmp/response.json");
 
     GridGrindProblemDetail.Problem problem =
-        CliResponseWriter.writeResponseProblem(
+        CliResponseTransportSupport.writeResponseProblem(
             new FileSystemException(responsePath.toString(), null, "Is a directory"), responsePath);
 
     assertEquals(
@@ -593,7 +644,7 @@ class CliResponseWriterTest extends GridGrindCliTestSupport {
     Path responsePath = Path.of("/tmp/response.json");
 
     GridGrindProblemDetail.Problem problem =
-        CliResponseWriter.writeResponseProblem(
+        CliResponseTransportSupport.writeResponseProblem(
             new FileSystemException(responsePath.toString(), "/tmp/other.json", null),
             responsePath);
 
@@ -610,13 +661,13 @@ class CliResponseWriterTest extends GridGrindCliTestSupport {
 
     assertEquals(
         "Could not write response file " + existingDirectory + ": Is a directory",
-        CliResponseWriter.responseWriteMessage(
+        CliResponseTransportSupport.responseWriteMessage(
             new FileAlreadyExistsException(existingDirectory.toString()), existingDirectory));
     assertEquals(
         "Could not write response file "
             + existingFile
             + ": already exists; GridGrind never replaces an existing response file implicitly",
-        CliResponseWriter.responseWriteMessage(
+        CliResponseTransportSupport.responseWriteMessage(
             new FileAlreadyExistsException(existingFile.toString()), existingFile));
   }
 
@@ -625,11 +676,12 @@ class CliResponseWriterTest extends GridGrindCliTestSupport {
     Path responsePath = Path.of("/tmp/response.json");
 
     GridGrindProblemDetail.Problem blankMessageProblem =
-        CliResponseWriter.writeResponseProblem(new IOException(), responsePath);
+        CliResponseTransportSupport.writeResponseProblem(new IOException(), responsePath);
     GridGrindProblemDetail.Problem blankStringProblem =
-        CliResponseWriter.writeResponseProblem(new IOException("   "), responsePath);
+        CliResponseTransportSupport.writeResponseProblem(new IOException("   "), responsePath);
     GridGrindProblemDetail.Problem explicitMessageProblem =
-        CliResponseWriter.writeResponseProblem(new IOException("disk full"), responsePath);
+        CliResponseTransportSupport.writeResponseProblem(
+            new IOException("disk full"), responsePath);
 
     assertEquals("Could not write response file /tmp/response.json", blankMessageProblem.message());
     assertEquals("Could not write response file /tmp/response.json", blankStringProblem.message());
@@ -643,7 +695,7 @@ class CliResponseWriterTest extends GridGrindCliTestSupport {
     Path responsePath = Path.of("/tmp/response.json");
 
     GridGrindProblemDetail.Problem problem =
-        CliResponseWriter.writeResponseProblem(
+        CliResponseTransportSupport.writeResponseProblem(
             new FileSystemException(responsePath.toString(), "   ", "   "), responsePath);
 
     assertEquals("Could not write response file /tmp/response.json", problem.message());
@@ -655,7 +707,7 @@ class CliResponseWriterTest extends GridGrindCliTestSupport {
     Path responsePath = Path.of("/tmp/response.json");
 
     GridGrindProblemDetail.Problem problem =
-        CliResponseWriter.writeResponseProblem(
+        CliResponseTransportSupport.writeResponseProblem(
             new FileSystemException(responsePath.toString(), null, null), responsePath);
 
     assertEquals("Could not write response file /tmp/response.json", problem.message());

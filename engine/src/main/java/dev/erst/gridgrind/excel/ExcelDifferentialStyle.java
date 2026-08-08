@@ -9,10 +9,10 @@ public record ExcelDifferentialStyle(
     Optional<Boolean> bold,
     Optional<Boolean> italic,
     Optional<ExcelFontHeight> fontHeight,
-    Optional<String> fontColor,
+    Optional<ExcelColor> fontColor,
     Optional<Boolean> underline,
     Optional<Boolean> strikeout,
-    Optional<String> fillColor,
+    Optional<ExcelColor> fillColor,
     Optional<ExcelDifferentialBorder> border) {
   public ExcelDifferentialStyle {
     Objects.requireNonNull(numberFormat, "numberFormat must not be null");
@@ -32,10 +32,6 @@ public record ExcelDifferentialStyle(
               }
               return value;
             });
-    fontColor =
-        fontColor.flatMap(value -> ExcelRgbColorSupport.normalizeRgbHex(value, "fontColor"));
-    fillColor =
-        fillColor.flatMap(value -> ExcelRgbColorSupport.normalizeRgbHex(value, "fillColor"));
     if (java.util.stream.Stream.of(
             numberFormat.orElse(null),
             bold.orElse(null),

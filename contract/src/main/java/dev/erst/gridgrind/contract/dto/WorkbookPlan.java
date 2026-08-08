@@ -26,11 +26,13 @@ public record WorkbookPlan(
     @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<String> planId,
     WorkbookSource source,
     WorkbookPersistence persistence,
-    @JsonInclude(
+    @ProtocolField(optional = true)
+        @JsonInclude(
             value = JsonInclude.Include.CUSTOM,
             valueFilter = ExecutionPolicyInput.DefaultFilter.class)
         ExecutionPolicyInput execution,
-    @JsonInclude(
+    @ProtocolField(optional = true)
+        @JsonInclude(
             value = JsonInclude.Include.CUSTOM,
             valueFilter = FormulaEnvironmentInput.EmptyFilter.class)
         FormulaEnvironmentInput formulaEnvironment,

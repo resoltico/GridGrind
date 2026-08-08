@@ -2,7 +2,7 @@
 afad: "4.0"
 version: "0.72.0"
 domain: ERRORS
-updated: "2026-07-02"
+updated: "2026-07-22"
 route:
   keywords: [gridgrind, errors, problem, code, category, recovery, failure, assertion-failed, invalid-json, invalid-request-shape, invalid-formula, unsupported-formula-construct, sheet-not-found, named-range-not-found, workbook-not-found, workbook-password-required, invalid-workbook-password, invalid-signing-configuration, workbook-security-error, input-source-not-found, input-source-unavailable, input-source-io-error, source-backed, standard_input, utf8_file, file, causes, context, sourceType, persistenceType, coordinates, rowindex, columnindex]
   questions: ["what error codes does gridgrind return", "what does a gridgrind failure response look like", "how do I handle gridgrind errors", "what is the problem model", "how do I read gridgrind error context", "how do I interpret gridgrind row or column index errors", "how does gridgrind report assertion failures", "how does gridgrind report encrypted workbook password failures", "how does gridgrind report signing failures", "how does gridgrind report source-backed input failures", "what happens if a gridgrind input file is missing"]
@@ -20,7 +20,7 @@ route:
 ```json
 {
   "status": "FAILED",
-  "protocolVersion": "V1",
+  "protocolVersion": "V2",
   "persistence": {
     "type": "SAVE_AS",
     "requestedPath": "out/budget-reviewed.xlsx",
@@ -160,13 +160,13 @@ Persist-workbook failures point at `sourceWorkbookPath` or `persistencePath` ins
 `problem.context`; they do not repeat a nested `problem.context.persistence` object.
 
 Pre-pipeline failures — CLI argument errors, help-routing, discovery-lookup failures, and request
-read/parse/validate errors (including `INVALID_JSON`, `INVALID_REQUEST_SHAPE`, and
+read/parse/validate errors (including `INVALID_ENCODING`, `INVALID_JSON`, `INVALID_REQUEST_SHAPE`, and
 `INVALID_REQUEST` failures caught during validation before workbook open) — use one canonical CLI
 diagnostic envelope instead of the execution journal envelope:
 
 ```json
 {
-  "protocolVersion": "V1",
+  "protocolVersion": "V2",
   "exitCode": 2,
   "command": "cli",
   "suggestions": [
@@ -174,31 +174,37 @@ diagnostic envelope instead of the execution journal envelope:
     "gridgrind --help-protocol",
     "gridgrind --help-guidance"
   ],
-  "problem": {
-    "code": "INVALID_ARGUMENTS",
-    "category": "ARGUMENTS",
-    "recovery": "CHANGE_REQUEST",
-    "title": "Invalid CLI arguments",
-    "message": "Unknown argument: --bogus",
-    "resolution": "Use one exact CLI flag. Start from --help for the synopsis, --help-protocol for the grammar, or --help-guidance for workflow-oriented commands.",
-    "context": {
-      "stage": "PARSE_ARGUMENTS",
-      "argument": {
-        "type": "NAMED",
-        "argument": "--bogus"
-      }
-    },
-    "causes": []
-  }
+  "problems": [
+    {
+      "code": "INVALID_ARGUMENTS",
+      "category": "ARGUMENTS",
+      "recovery": "CHANGE_REQUEST",
+      "title": "Invalid CLI arguments",
+      "message": "Unknown argument: --bogus",
+      "resolution": "Use one exact CLI flag. Start from --help for the synopsis, --help-protocol for the grammar, or --help-guidance for workflow-oriented commands.",
+      "context": {
+        "stage": "PARSE_ARGUMENTS",
+        "argument": {
+          "type": "NAMED",
+          "argument": "--bogus"
+        }
+      },
+      "causes": []
+    }
+  ]
 }
 ```
+
+`problems` is always nonempty. Argument and operational CLI failures naturally contain one entry;
+request intake can carry every independently observable structural or constructor-level binding
+finding in deterministic source order. Before execution begins, `gridgrind --request` and
+`gridgrind --doctor-request` expose the same problem collection for the same request bytes.
 
 When GridGrind writes that diagnostic anywhere other than the default stderr channel, it adds one
 optional transport block such as `{"wroteTo":"FILE","responsePath":"doctor.json"}` or
 `{"wroteTo":"STDOUT"}`. The wrapper intentionally stays transport-only: CLI flag names live in
-`problem.context.argument.argument`, request-cursor details live in
-`problem.context.json.jsonPath` / `jsonLine` / `jsonColumn`, and
-category/title/resolution/causes live in `problem`.
+`problems[*].context.argument.argument`, request-cursor details live in
+`problems[*].context.json`, and category/title/resolution/causes live in `problems[*]`.
 
 Every entry in `problem.causes` also carries an explicit `stage` token. Cause diagnostics are not
 stage-less fallbacks; they preserve the same pipeline stage vocabulary used by the primary
@@ -209,7 +215,7 @@ Assertion mismatches attach an additional `problem.assertionFailure` payload:
 ```json
 {
   "status": "FAILED",
-  "protocolVersion": "V1",
+  "protocolVersion": "V2",
   "problem": {
     "code": "ASSERTION_FAILED",
     "category": "ASSERTION",
@@ -274,6 +280,7 @@ Assertion mismatches attach an additional `problem.assertionFailure` payload:
 
 | Code | Trigger |
 |:-----|:--------|
+| `INVALID_ENCODING` | Request bytes are not valid UTF-8, so GridGrind cannot begin JSON parsing. |
 | `INVALID_JSON` | Request payload is not syntactically valid JSON. |
 | `INVALID_REQUEST_SHAPE` | JSON is syntactically valid, but fields, discriminator IDs, explicit `null` placeholders, or token shapes do not match the GridGrind protocol schema. Messages are product-owned, classify the failure structurally at intake from the effective creator/discriminator contract, and point `context.jsonPath` at the exact offending field without leaking Jackson or Java class names. |
 | `INPUT_SOURCE_UNAVAILABLE` | A source-backed authored field requested `STANDARD_INPUT`, but no stdin bytes were bound for authored input content. On the CLI this usually means the request itself was also read from stdin instead of `--request <path>`. |
@@ -391,16 +398,33 @@ nullable fields:
 - `PARSE_ARGUMENTS` uses `context.argument`, where `type=UNKNOWN|NAMED` and the concrete flag or
   operand lives at `context.argument.argument` when `type=NAMED`.
 - `READ_REQUEST` uses `context.request` (`STANDARD_INPUT` or `FILE`) plus `context.json`
-  (`UNAVAILABLE`, `PATH_ONLY`, `LINE_COLUMN`, or `LOCATED`).
+  (`UNAVAILABLE`, `PATH_ONLY`, `BYTE_OFFSET`, `PATH_BYTE_OFFSET`, `DUPLICATE_KEY`,
+  `LINE_COLUMN`, or `LOCATED`). `PATH_BYTE_OFFSET` preserves both the owned path and its exact
+  zero-based UTF-8 byte offset. Object-member failures, including scalar-shape and explicit-null
+  findings, point to the property's opening quote; array-element and root-value failures point to
+  the value token. `DUPLICATE_KEY` preserves the
+  containing-object path, key, duplicate occurrence ordinal, and property-token byte offset
+  without inventing a false JSON path. Every authored occurrence is structurally checked, so a
+  repeated known field produces its duplicate-key finding and any independently provable problem
+  with that repeated value, such as explicit `null` or the wrong scalar kind.
 - `WRITE_RESPONSE` uses `context.output` (`STANDARD_OUTPUT` or `FILE`).
 
 When a command exits non-zero and also writes a JSON response, doctor report, or persisted CLI
 diagnostic to `--response <path>`, GridGrind mirrors one structured `CliDiagnostic` on stderr.
-That stderr diagnostic reuses the same `problem` core and sets `transport={"wroteTo":"FILE",
+That stderr diagnostic reuses the same `problems` core and sets `transport={"wroteTo":"FILE",
 "responsePath":"..."}` so one parser can still learn where the main payload was persisted.
 When GridGrind cannot write the requested `--response <path>`, it streams the structured fallback
 payload to stdout and mirrors one stderr `CliDiagnostic` with `transport={"wroteTo":"STDOUT"}`
-whose `problem` matches the stdout fallback problem.
+whose `problems` collection matches the stdout fallback problem collection.
+
+Values declared `secret: true` in the request contract are protected by their exact JSON owner
+path. A binding or validation problem at a declared secret path uses a generic sensitive-safe
+message, and a structured problem carrying that same path redacts its message, resolution, and
+causes. GridGrind deliberately does not use global string replacement: a short password must not
+alter unrelated workbook data or diagnostics that merely contain the same text. Live journal events
+do not carry request-field values and remain the authored engine events. Last-resort failures that
+no longer retain a trustworthy request context use the canonical internal-error title rather than
+reproducing arbitrary throwable text.
 
 ## Index-Based Validation Messages
 

@@ -1,5 +1,5 @@
 {
-  "protocolVersion": "V1",
+  "protocolVersion": "V2",
   "source": {
     "type": "NEW"
   },
@@ -23,7 +23,7 @@
               "formula1": "100",
               "stopIfTrue": null,
               "style": {
-                "fillColor": "#C6EFCE"
+                "fillColor": { "type": "RGB", "rgb": "#C6EFCE" }
               }
             }
           ]

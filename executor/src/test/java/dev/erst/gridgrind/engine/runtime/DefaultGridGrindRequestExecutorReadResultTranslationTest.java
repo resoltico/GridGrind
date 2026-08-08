@@ -147,8 +147,16 @@ class DefaultGridGrindRequestExecutorReadResultTranslationTest
                                 true,
                                 "A2>0",
                                 new ExcelDifferentialStyleSnapshot(
-                                    "0.00", true, null, null, "#102030", null, null, "#E0F0AA",
-                                    null, List.of())),
+                                    "0.00",
+                                    true,
+                                    null,
+                                    null,
+                                    ExcelColor.rgb("#102030"),
+                                    null,
+                                    null,
+                                    ExcelColor.rgb("#E0F0AA"),
+                                    null,
+                                    List.of())),
                             new ExcelConditionalFormattingRuleSnapshot.ColorScaleRule(
                                 2,
                                 false,

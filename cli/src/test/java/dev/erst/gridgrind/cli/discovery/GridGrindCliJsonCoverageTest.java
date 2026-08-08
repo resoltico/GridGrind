@@ -310,16 +310,17 @@ class GridGrindCliJsonCoverageTest {
                     1,
                     "execute",
                     List.of("gridgrind --doctor-request --request request.json"),
-                    GridGrindProblemDetail.Problem.of(
-                        GridGrindProblemCode.INVALID_REQUEST_SHAPE,
-                        "Unknown field 'bogus'",
-                        new ProblemContext.ReadRequest(
-                            RequestInput.standardInput(),
-                            JsonLocation.located("steps[0].target.type", 7, 13))),
+                    List.of(
+                        GridGrindProblemDetail.Problem.of(
+                            GridGrindProblemCode.INVALID_REQUEST_SHAPE,
+                            "Unknown field 'bogus'",
+                            new ProblemContext.ReadRequest(
+                                RequestInput.standardInput(),
+                                JsonLocation.located("steps[0].target.type", 7, 13)))),
                     java.util.Optional.of(CliTransport.standardOutput()))));
 
     assertEquals(
-        Set.of("protocolVersion", "exitCode", "command", "suggestions", "problem", "transport"),
+        Set.of("protocolVersion", "exitCode", "command", "suggestions", "problems", "transport"),
         fieldNames(parseArgumentsDiagnostic));
     assertFalse(parseArgumentsDiagnostic.has("code"));
     assertFalse(parseArgumentsDiagnostic.has("message"));
@@ -330,7 +331,8 @@ class GridGrindCliJsonCoverageTest {
     assertEquals(
         "NAMED",
         parseArgumentsDiagnostic
-            .path("problem")
+            .path("problems")
+            .path(0)
             .path("context")
             .path("argument")
             .path("type")
@@ -338,7 +340,8 @@ class GridGrindCliJsonCoverageTest {
     assertEquals(
         "--query",
         parseArgumentsDiagnostic
-            .path("problem")
+            .path("problems")
+            .path(0)
             .path("context")
             .path("argument")
             .path("argument")
@@ -349,7 +352,7 @@ class GridGrindCliJsonCoverageTest {
         parseArgumentsDiagnostic.path("transport").path("responsePath").asText());
 
     assertEquals(
-        Set.of("protocolVersion", "exitCode", "command", "suggestions", "problem", "transport"),
+        Set.of("protocolVersion", "exitCode", "command", "suggestions", "problems", "transport"),
         fieldNames(readRequestDiagnostic));
     assertFalse(readRequestDiagnostic.has("location"));
     assertFalse(readRequestDiagnostic.has("jsonPath"));
@@ -358,18 +361,26 @@ class GridGrindCliJsonCoverageTest {
     assertEquals(
         "STANDARD_INPUT",
         readRequestDiagnostic
-            .path("problem")
+            .path("problems")
+            .path(0)
             .path("context")
             .path("request")
             .path("type")
             .asText());
     assertEquals(
         "LOCATED",
-        readRequestDiagnostic.path("problem").path("context").path("json").path("type").asText());
+        readRequestDiagnostic
+            .path("problems")
+            .path(0)
+            .path("context")
+            .path("json")
+            .path("type")
+            .asText());
     assertEquals(
         "steps[0].target.type",
         readRequestDiagnostic
-            .path("problem")
+            .path("problems")
+            .path(0)
             .path("context")
             .path("json")
             .path("jsonPath")
@@ -377,7 +388,8 @@ class GridGrindCliJsonCoverageTest {
     assertEquals(
         7,
         readRequestDiagnostic
-            .path("problem")
+            .path("problems")
+            .path(0)
             .path("context")
             .path("json")
             .path("jsonLine")
@@ -385,7 +397,8 @@ class GridGrindCliJsonCoverageTest {
     assertEquals(
         13,
         readRequestDiagnostic
-            .path("problem")
+            .path("problems")
+            .path(0)
             .path("context")
             .path("json")
             .path("jsonColumn")
@@ -418,10 +431,11 @@ class GridGrindCliJsonCoverageTest {
         2,
         "print-recipe-keyword-match",
         List.of("gridgrind --print-recipe-catalog"),
-        GridGrindProblemDetail.Problem.of(
-            GridGrindProblemCode.INVALID_ARGUMENTS,
-            "message",
-            new ProblemContext.ParseArguments(CliArgument.named("--query"))),
+        List.of(
+            GridGrindProblemDetail.Problem.of(
+                GridGrindProblemCode.INVALID_ARGUMENTS,
+                "message",
+                new ProblemContext.ParseArguments(CliArgument.named("--query")))),
         java.util.Optional.of(CliTransport.responseFile("/tmp/diagnostic.json")));
   }
 

@@ -1,5 +1,5 @@
 {
-  "protocolVersion": "V1",
+  "protocolVersion": "V2",
   "source": {
     "type": "NEW"
   },
@@ -437,7 +437,7 @@
               "font": {
                 "bold": true,
                 "fontColor": {
-                  "kind": "THEME",
+                  "type": "THEME",
                   "theme": 4,
                   "tint": -0.2
                 }
@@ -457,7 +457,7 @@
               "font": {
                 "italic": true,
                 "fontColor": {
-                  "kind": "INDEXED",
+                  "type": "INDEXED",
                   "indexed": 17
                 }
               },
@@ -572,16 +572,16 @@
           "font": {
             "italic": true,
             "fontColor": {
-              "kind": "THEME",
+              "type": "THEME",
               "theme": 6,
               "tint": -0.35
             }
           },
           "fill": {
-            "kind": "PATTERN_FOREGROUND",
+            "type": "PATTERN_FOREGROUND",
             "pattern": "SOLID",
             "foregroundColor": {
-              "kind": "THEME",
+              "type": "THEME",
               "theme": 3,
               "tint": 0.3
             }
@@ -590,7 +590,7 @@
             "bottom": {
               "style": "THIN",
               "color": {
-                "kind": "INDEXED",
+                "type": "INDEXED",
                 "indexed": 8
               }
             }

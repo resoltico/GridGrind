@@ -373,10 +373,10 @@ class ExcelWorkbookTest {
                                   Optional.of(true),
                                   Optional.empty(),
                                   Optional.empty(),
-                                  Optional.of("#102030"),
+                                  Optional.of(ExcelColor.rgb("#102030")),
                                   Optional.empty(),
                                   Optional.empty(),
-                                  Optional.of("#E0F0AA"),
+                                  Optional.of(ExcelColor.rgb("#E0F0AA")),
                                   Optional.empty()))))));
       workbook.sheet("Source").layout().mergeCells("A1:B1");
       workbook.sheet("Source").layout().setPane(new ExcelSheetPane.Frozen(1, 1, 1, 1));

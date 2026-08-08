@@ -1,6 +1,7 @@
 package dev.erst.gridgrind.cli;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import dev.erst.gridgrind.cli.discovery.CliDiagnostic;
@@ -27,7 +28,7 @@ class CliUnexpectedFailureSupportTest extends GridGrindCliTestSupport {
         new App(
             () ->
                 (args, stdin, out, err) -> {
-                  throw new IOException("runner exploded");
+                  throw new IOException("source-secret");
                 },
             observedExitCode::set);
 
@@ -36,7 +37,8 @@ class CliUnexpectedFailureSupportTest extends GridGrindCliTestSupport {
     CliDiagnostic failure = cliDiagnosticOnStderr(stdout, stderr);
     assertEquals(1, observedExitCode.get());
     assertEquals(GridGrindProblemCode.INTERNAL_ERROR, failure.problem().code());
-    assertEquals("runner exploded", failure.problem().message());
+    assertEquals(GridGrindProblemCode.INTERNAL_ERROR.title(), failure.problem().message());
+    assertFalse(stderr.toString(StandardCharsets.UTF_8).contains("source-secret"));
   }
 
   @Test
@@ -54,7 +56,7 @@ class CliUnexpectedFailureSupportTest extends GridGrindCliTestSupport {
     CliDiagnostic failure = cliDiagnostic(stderr.toByteArray());
     assertEquals(1, exitCode);
     assertEquals(GridGrindProblemCode.INTERNAL_ERROR, failure.problem().code());
-    assertEquals("help stdout exploded", failure.problem().message());
+    assertEquals(GridGrindProblemCode.INTERNAL_ERROR.title(), failure.problem().message());
   }
 
   @Test
@@ -97,7 +99,7 @@ class CliUnexpectedFailureSupportTest extends GridGrindCliTestSupport {
       CliDiagnostic failure = cliDiagnostic(stderr.toByteArray());
       assertEquals(1, exitCode);
       assertEquals(GridGrindProblemCode.INTERNAL_ERROR, failure.problem().code());
-      assertEquals("boom", failure.problem().message());
+      assertEquals(GridGrindProblemCode.INTERNAL_ERROR.title(), failure.problem().message());
     }
   }
 
@@ -208,7 +210,7 @@ class CliUnexpectedFailureSupportTest extends GridGrindCliTestSupport {
       CliDiagnostic failure = cliDiagnostic(stderr.toByteArray());
       assertEquals(1, exitCode);
       assertEquals(GridGrindProblemCode.INTERNAL_ERROR, failure.problem().code());
-      assertEquals("boom", failure.problem().message());
+      assertEquals(GridGrindProblemCode.INTERNAL_ERROR.title(), failure.problem().message());
     }
   }
 

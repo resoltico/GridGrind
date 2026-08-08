@@ -38,6 +38,21 @@ import tools.jackson.databind.json.JsonMapper;
 /** Covers explicit request constructors, convenience factories, and strict creator branches. */
 class ProtocolDefaultingCoverageTest {
   @Test
+  void protocolBooleanDefaultsOwnTheirDeclaredWireSemantics() {
+    assertEquals(Optional.empty(), ProtocolBooleanDefault.UNSPECIFIED.value());
+    assertEquals(Optional.of(false), ProtocolBooleanDefault.FALSE.value());
+    assertEquals(Optional.of(true), ProtocolBooleanDefault.TRUE.value());
+    assertFalse(ProtocolBooleanDefault.FALSE.resolve(null));
+    assertTrue(ProtocolBooleanDefault.TRUE.resolve(null));
+    assertFalse(ProtocolBooleanDefault.TRUE.resolve(false));
+    assertEquals(
+        "An unspecified boolean default cannot normalize a value",
+        assertThrows(
+                IllegalStateException.class, () -> ProtocolBooleanDefault.UNSPECIFIED.resolve(null))
+            .getMessage());
+  }
+
+  @Test
   void explicitRequestConstructorsPreserveAuthoredValues() {
     JsonMapper mapper = JsonMapper.builder().build();
     CalculationPolicyInput calculation =
@@ -627,8 +642,8 @@ class ProtocolDefaultingCoverageTest {
     AutofilterSortStateReport createdStateReport =
         AutofilterSortStateReport.withoutSortMethod(
             "A1:F9", true, false, List.of(createdConditionReport));
-    DifferentialBorderSideInput borderSide =
-        new DifferentialBorderSideInput(ExcelBorderStyle.THIN, Optional.empty());
+    BorderSideInput borderSide =
+        new BorderSideInput(Optional.of(ExcelBorderStyle.THIN), Optional.empty());
     DifferentialBorderInput borderInput =
         new DifferentialBorderInput(
             Optional.of(borderSide),
@@ -639,7 +654,9 @@ class ProtocolDefaultingCoverageTest {
     DifferentialBorderReport borderReport =
         new DifferentialBorderReport(
             Optional.empty(),
-            Optional.of(new DifferentialBorderSideReport(ExcelBorderStyle.THIN, Optional.empty())),
+            Optional.of(
+                new DifferentialBorderSideReport(
+                    Optional.of(ExcelBorderStyle.THIN), Optional.empty())),
             Optional.empty(),
             Optional.empty(),
             Optional.empty());
@@ -696,7 +713,24 @@ class ProtocolDefaultingCoverageTest {
     assertEquals(Optional.empty(), stateReport.sortMethod());
     assertEquals(Optional.empty(), createdStateReport.sortMethod());
     assertEquals(borderSide, borderInput.all().orElseThrow());
-    assertEquals(ExcelBorderStyle.THIN, borderReport.top().orElseThrow().style());
+    assertEquals(ExcelBorderStyle.THIN, borderReport.top().orElseThrow().style().orElseThrow());
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new DifferentialBorderSideReport(Optional.empty(), Optional.empty()));
+    assertEquals(
+        Optional.of(CellColorReport.rgb("#aabbcc")),
+        new DifferentialBorderSideReport(
+                Optional.empty(), Optional.of(CellColorReport.rgb("#aabbcc")))
+            .color());
+    assertEquals(
+        Optional.of(ExcelBorderStyle.NONE),
+        new DifferentialBorderSideReport(Optional.of(ExcelBorderStyle.NONE), Optional.empty())
+            .style());
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new DifferentialBorderSideReport(
+                Optional.of(ExcelBorderStyle.NONE), Optional.of(CellColorReport.rgb("#aabbcc"))));
     assertInstanceOf(AutofilterSortConditionInput.Icon.class, explicitSortCondition);
     assertFalse(explicitFilterColumn.showButton());
     assertEquals(Optional.of(ExcelAutofilterSortMethod.PINYIN), explicitSortState.sortMethod());

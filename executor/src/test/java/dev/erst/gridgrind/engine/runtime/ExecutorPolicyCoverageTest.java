@@ -485,7 +485,7 @@ class ExecutorPolicyCoverageTest {
         assertInstanceOf(
             GridGrindResponse.Failure.class,
             responseSupport.guardUnexpectedRuntime(
-                GridGrindProtocolVersion.V1,
+                GridGrindProtocolVersion.V2,
                 request,
                 ExecutionContextFixtureSupport.startJournal(request, ExecutionJournalSink.NOOP),
                 () -> {
@@ -498,7 +498,7 @@ class ExecutorPolicyCoverageTest {
           assertInstanceOf(
               GridGrindResponse.Failure.class,
               responseSupport.guardUnexpectedRuntime(
-                  GridGrindProtocolVersion.V1,
+                  GridGrindProtocolVersion.V2,
                   request,
                   ExecutionContextFixtureSupport.startJournal(request, ExecutionJournalSink.NOOP),
                   workbook,
@@ -519,7 +519,7 @@ class ExecutorPolicyCoverageTest {
           assertInstanceOf(
               GridGrindResponse.Failure.class,
               closeFailingResponseSupport.guardUnexpectedRuntime(
-                  GridGrindProtocolVersion.V1,
+                  GridGrindProtocolVersion.V2,
                   request,
                   ExecutionContextFixtureSupport.startJournal(request, ExecutionJournalSink.NOOP),
                   workbook,

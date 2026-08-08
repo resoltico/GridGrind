@@ -23,8 +23,7 @@ final class GridGrindProtocolCatalogPersistenceTypeDescriptors {
                   + " available, and otherwise omits sourcePath instead of inventing one."
                   + " It carries write.status=WRITTEN with executionPath after a successful save"
                   + " or write.status=NOT_WRITTEN when the run fails before any file is updated.",
-              GridGrindProtocolCatalogNotes.requestOwnedPathRuleRef(),
-              "security"),
+              GridGrindProtocolCatalogNotes.requestOwnedPathRuleRef()),
           CatalogTypeEntryFactory.descriptorWithNotes(
               WorkbookPlan.WorkbookPersistence.SaveAs.class,
               "SAVE_AS",
@@ -38,8 +37,7 @@ final class GridGrindProtocolCatalogPersistenceTypeDescriptors {
                   + " write.status=NOT_WRITTEN when the run fails before the target file is"
                   + " created."
                   + " Missing parent directories are created automatically.",
-              GridGrindProtocolCatalogNotes.requestOwnedPathRuleRef(),
-              "security"));
+              GridGrindProtocolCatalogNotes.requestOwnedPathRuleRef()));
 
   private GridGrindProtocolCatalogPersistenceTypeDescriptors() {}
 }

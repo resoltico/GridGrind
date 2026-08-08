@@ -11,17 +11,22 @@ public record TableInput(
     String name,
     String sheetName,
     String range,
-    boolean showTotalsRow,
-    boolean hasAutofilter,
+    @ProtocolField(optional = true, booleanDefault = ProtocolBooleanDefault.FALSE)
+        boolean showTotalsRow,
+    @ProtocolField(optional = true, booleanDefault = ProtocolBooleanDefault.TRUE)
+        boolean hasAutofilter,
     TableStyleInput style,
-    TextSourceInput comment,
-    boolean published,
-    boolean insertRow,
-    boolean insertRowShift,
-    String headerRowCellStyle,
-    String dataCellStyle,
-    String totalsRowCellStyle,
-    java.util.List<TableColumnInput> columns) {
+    @ProtocolField(optional = true) TextSourceInput comment,
+    @ProtocolField(optional = true, booleanDefault = ProtocolBooleanDefault.FALSE)
+        boolean published,
+    @ProtocolField(optional = true, booleanDefault = ProtocolBooleanDefault.FALSE)
+        boolean insertRow,
+    @ProtocolField(optional = true, booleanDefault = ProtocolBooleanDefault.FALSE)
+        boolean insertRowShift,
+    @ProtocolField(optional = true) String headerRowCellStyle,
+    @ProtocolField(optional = true) String dataCellStyle,
+    @ProtocolField(optional = true) String totalsRowCellStyle,
+    @ProtocolField(optional = true) java.util.List<TableColumnInput> columns) {
   /** Creates a table payload with explicit standard metadata. */
   public static TableInput withDefaultMetadata(
       String name, String sheetName, String range, boolean showTotalsRow, TableStyleInput style) {
@@ -82,13 +87,13 @@ public record TableInput(
         name,
         sheetName,
         range,
-        Boolean.TRUE.equals(showTotalsRow),
-        !Boolean.FALSE.equals(hasAutofilter),
+        ProtocolBooleanDefault.FALSE.resolve(showTotalsRow),
+        ProtocolBooleanDefault.TRUE.resolve(hasAutofilter),
         Objects.requireNonNull(style, "style must not be null"),
         comment == null ? new TextSourceInput.Inline("") : comment,
-        Boolean.TRUE.equals(published),
-        Boolean.TRUE.equals(insertRow),
-        Boolean.TRUE.equals(insertRowShift),
+        ProtocolBooleanDefault.FALSE.resolve(published),
+        ProtocolBooleanDefault.FALSE.resolve(insertRow),
+        ProtocolBooleanDefault.FALSE.resolve(insertRowShift),
         headerRowCellStyle == null ? "" : headerRowCellStyle,
         dataCellStyle == null ? "" : dataCellStyle,
         totalsRowCellStyle == null ? "" : totalsRowCellStyle,

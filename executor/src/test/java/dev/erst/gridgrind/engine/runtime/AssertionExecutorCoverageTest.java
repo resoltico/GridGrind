@@ -992,94 +992,6 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
   }
 
   @Test
-  void observationHelperBranchesRejectUnsupportedTargetsAndReturnZeroMatches() throws Exception {
-    var readExecutor = new dev.erst.gridgrind.excel.WorkbookExecutionEngine();
-    AssertionExecutor assertionExecutor =
-        new AssertionExecutor(readExecutor, new SemanticSelectorResolver(readExecutor));
-
-    IllegalArgumentException unsupportedPresence =
-        assertThrows(
-            IllegalArgumentException.class,
-            () ->
-                assertionExecutor.presenceObservation(
-                    "presence", new WorkbookSelector.Current(), null, null));
-    assertTrue(unsupportedPresence.getMessage().contains("Unsupported presence assertion target"));
-
-    NullPointerException nullWorkbook =
-        assertThrows(
-            NullPointerException.class,
-            () ->
-                assertionExecutor.chartsObservation(
-                    "charts", new WorkbookSelector.Current(), null, null));
-    assertEquals("workbook must not be null", nullWorkbook.getMessage());
-
-    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
-      IllegalArgumentException unsupportedCharts =
-          assertThrows(
-              IllegalArgumentException.class,
-              () ->
-                  assertionExecutor.chartsObservation(
-                      "charts",
-                      new WorkbookSelector.Current(),
-                      workbook,
-                      new WorkbookLocation.UnsavedWorkbook()));
-      assertEquals("Unsupported chart inspection target", unsupportedCharts.getMessage());
-    }
-
-    IllegalArgumentException unsupportedObservedCount =
-        assertThrows(
-            IllegalArgumentException.class,
-            () ->
-                AssertionExecutor.observedCount(
-                    new WorkbookInspectionResult.WorkbookSummaryResult(
-                        "summary",
-                        new WorkbookSummary.WithSheets(
-                            1, List.of("Budget"), "Budget", List.of("Budget"), 0, false))));
-    assertTrue(
-        unsupportedObservedCount.getMessage().contains("Unsupported presence observation result"));
-    assertEquals(
-        List.of(),
-        assertInstanceOf(
-                WorkbookInspectionResult.NamedRangesResult.class,
-                AssertionExecutor.zeroMatchPresenceObservation(
-                    "missing-range", new NamedRangeSelector.WorkbookScope("MissingTotal")))
-            .namedRanges());
-    assertEquals(
-        List.of(),
-        assertInstanceOf(
-                WorkbookAssetInspectionResult.TablesResult.class,
-                AssertionExecutor.zeroMatchPresenceObservation(
-                    "missing-table", new TableSelector.ByName("MissingTable")))
-            .tables());
-    assertEquals(
-        List.of(),
-        assertInstanceOf(
-                WorkbookAssetInspectionResult.PivotTablesResult.class,
-                AssertionExecutor.zeroMatchPresenceObservation(
-                    "missing-pivot", new PivotTableSelector.ByName("Missing Pivot")))
-            .pivotTables());
-    assertEquals(
-        "MissingSheet",
-        assertInstanceOf(
-                WorkbookAssetInspectionResult.ChartsResult.class,
-                AssertionExecutor.zeroMatchPresenceObservation(
-                    "missing-chart-sheet", new ChartSelector.AllOnSheet("MissingSheet")))
-            .sheetName());
-    assertEquals(
-        "MissingSheet",
-        assertInstanceOf(
-                WorkbookAssetInspectionResult.ChartsResult.class,
-                AssertionExecutor.zeroMatchPresenceObservation(
-                    "missing-chart-name", new ChartSelector.ByName("MissingSheet", "MissingChart")))
-            .sheetName());
-    assertThrows(
-        IllegalArgumentException.class,
-        () ->
-            AssertionExecutor.zeroMatchPresenceObservation(
-                "unsupported-zero-match", new WorkbookSelector.Current()));
-  }
-
-  @Test
   void analysisHelperBranchesCoverAllAnalysisFamiliesAndSeverityRanking() {
     AnalysisFindingReport finding =
         new AnalysisFindingReport(
@@ -1123,33 +1035,36 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
                 "workbook", new WorkbookFindingsReport(summary, List.of(finding))));
 
     for (WorkbookAnalysisResult analysis : analyses) {
-      assertEquals(summary, AssertionExecutor.analysisSummary(analysis));
-      assertEquals(List.of(finding), AssertionExecutor.analysisFindings(analysis));
+      assertEquals(summary, AssertionAnalysisEvaluator.analysisSummary(analysis));
+      assertEquals(List.of(finding), AssertionAnalysisEvaluator.analysisFindings(analysis));
       assertEquals(
           java.util.Optional.of(AnalysisSeverity.ERROR),
-          AssertionExecutor.highestSeverity(analysis));
+          AssertionAnalysisEvaluator.highestSeverity(analysis));
     }
 
-    assertEquals(-1, AssertionExecutor.severityRank(java.util.Optional.empty()));
-    assertEquals(0, AssertionExecutor.severityRank(java.util.Optional.of(AnalysisSeverity.INFO)));
+    assertEquals(-1, AssertionAnalysisEvaluator.severityRank(java.util.Optional.empty()));
     assertEquals(
-        1, AssertionExecutor.severityRank(java.util.Optional.of(AnalysisSeverity.WARNING)));
-    assertEquals(2, AssertionExecutor.severityRank(java.util.Optional.of(AnalysisSeverity.ERROR)));
+        0, AssertionAnalysisEvaluator.severityRank(java.util.Optional.of(AnalysisSeverity.INFO)));
+    assertEquals(
+        1,
+        AssertionAnalysisEvaluator.severityRank(java.util.Optional.of(AnalysisSeverity.WARNING)));
+    assertEquals(
+        2, AssertionAnalysisEvaluator.severityRank(java.util.Optional.of(AnalysisSeverity.ERROR)));
     assertEquals(
         java.util.Optional.of(AnalysisSeverity.WARNING),
-        AssertionExecutor.highestSeverity(
+        AssertionAnalysisEvaluator.highestSeverity(
             new WorkbookAnalysisResult.FormulaHealthResult(
                 "warning",
                 new FormulaHealthReport(1, new AnalysisSummaryReport(1, 0, 1, 0), List.of()))));
     assertEquals(
         java.util.Optional.of(AnalysisSeverity.INFO),
-        AssertionExecutor.highestSeverity(
+        AssertionAnalysisEvaluator.highestSeverity(
             new WorkbookAnalysisResult.FormulaHealthResult(
                 "info",
                 new FormulaHealthReport(1, new AnalysisSummaryReport(1, 0, 0, 1), List.of()))));
     assertEquals(
         java.util.Optional.empty(),
-        AssertionExecutor.highestSeverity(
+        AssertionAnalysisEvaluator.highestSeverity(
             new WorkbookAnalysisResult.FormulaHealthResult(
                 "clean",
                 new FormulaHealthReport(1, new AnalysisSummaryReport(0, 0, 0, 0), List.of()))));
@@ -1180,54 +1095,67 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
         formulaReadCell(
             "E2", "42", style, "2+40", new CellValueReport.NumberValue(42.0d, Optional.empty()));
 
-    assertTrue(AssertionExecutor.matchesCellValue(blankCell, new CellScalarValue.Blank()));
-    assertFalse(AssertionExecutor.matchesCellValue(textCell, new CellScalarValue.Blank()));
-    assertFalse(AssertionExecutor.matchesCellValue(blankCell, new CellScalarValue.Text("Owner")));
-    assertTrue(AssertionExecutor.matchesCellValue(textCell, new CellScalarValue.Text("Owner")));
-    assertFalse(AssertionExecutor.matchesCellValue(textCell, new CellScalarValue.Text("Wrong")));
+    assertTrue(AssertionValueEvaluator.matchesCellValue(blankCell, new CellScalarValue.Blank()));
+    assertFalse(AssertionValueEvaluator.matchesCellValue(textCell, new CellScalarValue.Blank()));
     assertFalse(
-        AssertionExecutor.matchesCellValue(textCell, new CellScalarValue.NumberValue(42.0d)));
+        AssertionValueEvaluator.matchesCellValue(blankCell, new CellScalarValue.Text("Owner")));
     assertTrue(
-        AssertionExecutor.matchesCellValue(numberCell, new CellScalarValue.NumberValue(42.0d)));
+        AssertionValueEvaluator.matchesCellValue(textCell, new CellScalarValue.Text("Owner")));
     assertFalse(
-        AssertionExecutor.matchesCellValue(numberCell, new CellScalarValue.NumberValue(41.0d)));
+        AssertionValueEvaluator.matchesCellValue(textCell, new CellScalarValue.Text("Wrong")));
+    assertFalse(
+        AssertionValueEvaluator.matchesCellValue(textCell, new CellScalarValue.NumberValue(42.0d)));
     assertTrue(
-        AssertionExecutor.matchesCellValue(booleanCell, new CellScalarValue.BooleanValue(true)));
+        AssertionValueEvaluator.matchesCellValue(
+            numberCell, new CellScalarValue.NumberValue(42.0d)));
     assertFalse(
-        AssertionExecutor.matchesCellValue(booleanCell, new CellScalarValue.BooleanValue(false)));
-    assertFalse(
-        AssertionExecutor.matchesCellValue(numberCell, new CellScalarValue.BooleanValue(true)));
+        AssertionValueEvaluator.matchesCellValue(
+            numberCell, new CellScalarValue.NumberValue(41.0d)));
     assertTrue(
-        AssertionExecutor.matchesCellValue(errorCell, new CellScalarValue.ErrorValue("#DIV/0!")));
+        AssertionValueEvaluator.matchesCellValue(
+            booleanCell, new CellScalarValue.BooleanValue(true)));
     assertFalse(
-        AssertionExecutor.matchesCellValue(errorCell, new CellScalarValue.ErrorValue("#REF!")));
+        AssertionValueEvaluator.matchesCellValue(
+            booleanCell, new CellScalarValue.BooleanValue(false)));
     assertFalse(
-        AssertionExecutor.matchesCellValue(numberCell, new CellScalarValue.ErrorValue("#DIV/0!")));
+        AssertionValueEvaluator.matchesCellValue(
+            numberCell, new CellScalarValue.BooleanValue(true)));
     assertTrue(
-        AssertionExecutor.matchesCellValue(formulaCell, new CellScalarValue.NumberValue(42.0d)));
+        AssertionValueEvaluator.matchesCellValue(
+            errorCell, new CellScalarValue.ErrorValue("#DIV/0!")));
     assertFalse(
-        AssertionExecutor.matchesCellValue(formulaCell, new CellScalarValue.NumberValue(41.0d)));
+        AssertionValueEvaluator.matchesCellValue(
+            errorCell, new CellScalarValue.ErrorValue("#REF!")));
+    assertFalse(
+        AssertionValueEvaluator.matchesCellValue(
+            numberCell, new CellScalarValue.ErrorValue("#DIV/0!")));
+    assertTrue(
+        AssertionValueEvaluator.matchesCellValue(
+            formulaCell, new CellScalarValue.NumberValue(42.0d)));
+    assertFalse(
+        AssertionValueEvaluator.matchesCellValue(
+            formulaCell, new CellScalarValue.NumberValue(41.0d)));
 
     assertTrue(
-        AssertionExecutor.matchesFinding(
+        AssertionAnalysisEvaluator.matchesFinding(
             finding, finding.code(), Optional.of(finding.severity()), Optional.of("Division")));
     assertFalse(
-        AssertionExecutor.matchesFinding(
+        AssertionAnalysisEvaluator.matchesFinding(
             finding,
             AnalysisFindingCode.FORMULA_VOLATILE_FUNCTION,
             Optional.empty(),
             Optional.empty()));
     assertTrue(
-        AssertionExecutor.matchesFinding(
+        AssertionAnalysisEvaluator.matchesFinding(
             finding, finding.code(), Optional.empty(), Optional.empty()));
     assertFalse(
-        AssertionExecutor.matchesFinding(
+        AssertionAnalysisEvaluator.matchesFinding(
             finding,
             finding.code(),
             Optional.of(AnalysisSeverity.WARNING),
             Optional.of("Division")));
     assertFalse(
-        AssertionExecutor.matchesFinding(
+        AssertionAnalysisEvaluator.matchesFinding(
             finding,
             finding.code(),
             Optional.of(finding.severity()),
@@ -1536,28 +1464,31 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
   void directAssertionObservationHelpersExposePresenceAndChartReads() throws IOException {
     WorkbookExecutionEngine readExecutor = new WorkbookExecutionEngine();
     SemanticSelectorResolver selectorResolver = new SemanticSelectorResolver(readExecutor);
-    AssertionExecutor assertionExecutor = new AssertionExecutor(readExecutor, selectorResolver);
+    AssertionObservationExecutor observationExecutor =
+        new AssertionObservationExecutor(readExecutor, selectorResolver);
 
     try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       workbook.getOrCreateSheet("Budget");
 
       InspectionResult presence =
-          assertionExecutor.presenceObservation(
+          observationExecutor.presenceObservation(
               "named-range-present",
               new NamedRangeSelector.WorkbookScope("MissingBudgetTotal"),
               workbook,
               new WorkbookLocation.UnsavedWorkbook());
       WorkbookAssetInspectionResult.ChartsResult charts =
-          assertionExecutor.chartsObservation(
-              "charts",
-              new ChartSelector.AllOnSheet("Budget"),
-              workbook,
-              new WorkbookLocation.UnsavedWorkbook());
+          (WorkbookAssetInspectionResult.ChartsResult)
+              observationExecutor.executeObservation(
+                  "charts",
+                  new ChartSelector.AllOnSheet("Budget"),
+                  new WorkbookAssetIntrospectionQuery.GetCharts(),
+                  workbook,
+                  new WorkbookLocation.UnsavedWorkbook());
 
       assertInstanceOf(WorkbookInspectionResult.NamedRangesResult.class, presence);
       assertTrue(charts.charts().isEmpty());
-      assertEquals(0, AssertionExecutor.observedCount(presence));
-      assertEquals(0, AssertionExecutor.observedCount(charts));
+      assertEquals(0, AssertionObservationExecutor.observedCount(presence));
+      assertEquals(0, AssertionObservationExecutor.observedCount(charts));
     }
   }
 

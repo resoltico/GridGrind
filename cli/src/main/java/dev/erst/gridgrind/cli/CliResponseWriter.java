@@ -2,21 +2,16 @@ package dev.erst.gridgrind.cli;
 
 import dev.erst.gridgrind.cli.discovery.CliDiagnostic;
 import dev.erst.gridgrind.cli.discovery.CliTransport;
-import dev.erst.gridgrind.cli.discovery.GridGrindCliJson;
-import dev.erst.gridgrind.contract.dto.GridGrindProblemCode;
 import dev.erst.gridgrind.contract.dto.GridGrindProblemDetail;
 import dev.erst.gridgrind.contract.dto.GridGrindProtocolVersion;
 import dev.erst.gridgrind.contract.dto.GridGrindResponse;
 import dev.erst.gridgrind.contract.dto.GridGrindResponses;
 import dev.erst.gridgrind.contract.dto.RequestDoctorReport;
 import dev.erst.gridgrind.contract.json.GridGrindJsonOutput;
+import dev.erst.gridgrind.contract.json.RequestDiagnosticRedactor;
 import dev.erst.gridgrind.engine.api.GridGrindProblems;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.nio.file.AccessDeniedException;
-import java.nio.file.FileAlreadyExistsException;
-import java.nio.file.FileSystemException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Objects;
 import java.util.Optional;
@@ -38,7 +33,8 @@ final class CliResponseWriter {
       CliDiagnostic diagnostic,
       boolean prettyJson)
       throws IOException {
-    return writeCliDiagnosticNamed(responsePath, stdout, stderr, diagnostic, prettyJson);
+    return writeCliDiagnosticNamed(
+        responsePath, stdout, stderr, diagnostic, Optional.empty(), prettyJson);
   }
 
   /** Writes a request-content diagnostic and mirrors it to stderr when one file captures it. */
@@ -49,7 +45,26 @@ final class CliResponseWriter {
       CliDiagnostic diagnostic,
       boolean prettyJson)
       throws IOException {
-    return writeCliDiagnosticNamed(responsePath, stdout, stderr, diagnostic, prettyJson);
+    return writeCliDiagnosticNamed(
+        responsePath, stdout, stderr, diagnostic, Optional.empty(), prettyJson);
+  }
+
+  /** Writes one request diagnostic after applying the request-scoped secret boundary. */
+  int writeRequestDiagnostic(
+      Optional<Path> responsePath,
+      OutputStream stdout,
+      OutputStream stderr,
+      CliDiagnostic diagnostic,
+      RequestDiagnosticRedactor redactor,
+      boolean prettyJson)
+      throws IOException {
+    return writeCliDiagnosticNamed(
+        responsePath,
+        stdout,
+        stderr,
+        diagnostic,
+        Optional.of(Objects.requireNonNull(redactor, "redactor must not be null")),
+        prettyJson);
   }
 
   private int writeCliDiagnosticNamed(
@@ -57,30 +72,41 @@ final class CliResponseWriter {
       OutputStream stdout,
       OutputStream stderr,
       CliDiagnostic diagnostic,
+      Optional<RequestDiagnosticRedactor> redactor,
       boolean prettyJson)
       throws IOException {
     Objects.requireNonNull(diagnostic, "diagnostic must not be null");
+    Objects.requireNonNull(redactor, "redactor must not be null");
     if (responsePath.isEmpty()) {
-      writePayload(stderr, GridGrindCliJson.writeBytes(diagnostic, prettyJson));
+      CliResponseTransportSupport.writePayload(
+          stderr, CliResponseTransportSupport.diagnosticBytes(diagnostic, redactor, prettyJson));
       return diagnostic.exitCode();
     }
 
-    Path targetPath = responseTargetPath(responsePath.orElseThrow());
+    Path targetPath = CliResponseTransportSupport.responseTargetPath(responsePath.orElseThrow());
     try {
       CliDiagnostic persistedDiagnostic =
-          diagnosticWithTransport(diagnostic, CliTransport.responseFile(targetPath.toString()));
-      byte[] reportBytes = GridGrindCliJson.writeBytes(persistedDiagnostic, prettyJson);
-      writePayload(targetPath, reportBytes);
-      writeCliDiagnosticToStderr(stderr, persistedDiagnostic, prettyJson);
+          CliResponseTransportSupport.diagnosticWithTransport(
+              diagnostic, CliTransport.responseFile(targetPath.toString()));
+      byte[] reportBytes =
+          CliResponseTransportSupport.diagnosticBytes(persistedDiagnostic, redactor, prettyJson);
+      CliResponseTransportSupport.writePayload(targetPath, reportBytes);
+      CliResponseTransportSupport.writeCliDiagnosticToStderr(
+          stderr, persistedDiagnostic, redactor, prettyJson);
       return diagnostic.exitCode();
     } catch (IOException exception) {
       CliDiagnostic stdoutDiagnostic =
-          diagnosticWithTransport(diagnostic, CliTransport.standardOutput());
+          CliResponseTransportSupport.diagnosticWithTransport(
+              diagnostic, CliTransport.standardOutput());
       CliStdoutFallbackSupport.write(
           stderr,
           stdout,
           stdoutDiagnostic,
-          CliStdoutFallbackSupport.cliDiagnostic(stdoutDiagnostic, prettyJson),
+          CliStdoutFallbackSupport.redacted(
+              CliStdoutFallbackSupport.cliDiagnostic(stdoutDiagnostic, prettyJson),
+              redactor,
+              prettyJson),
+          redactor,
           prettyJson);
       return diagnostic.exitCode();
     }
@@ -112,17 +138,17 @@ final class CliResponseWriter {
     Objects.requireNonNull(stderr, "stderr must not be null");
     Objects.requireNonNull(payload, "payload must not be null");
     if (responsePath.isEmpty()) {
-      writePayload(stdout, payload);
+      CliResponseTransportSupport.writePayload(stdout, payload);
       return successExitCode;
     }
 
-    Path targetPath = responseTargetPath(responsePath.orElseThrow());
+    Path targetPath = CliResponseTransportSupport.responseTargetPath(responsePath.orElseThrow());
     try {
-      writePayload(targetPath, payload);
+      CliResponseTransportSupport.writePayload(targetPath, payload);
       return successExitCode;
     } catch (IOException exception) {
       CliDiagnostic stdoutDiagnostic =
-          diagnosticWithTransport(
+          CliResponseTransportSupport.diagnosticWithTransport(
               CliDiagnostics.responseWriteFailure(
                   command, payloadName, targetPath, exception, stdoutSuggestion),
               CliTransport.standardOutput());
@@ -145,29 +171,71 @@ final class CliResponseWriter {
       int logicalExitCode,
       boolean prettyJson)
       throws IOException {
+    return write(
+        responsePath, stdout, stderr, response, logicalExitCode, Optional.empty(), prettyJson);
+  }
+
+  /** Writes one execution response after applying the request-scoped secret boundary. */
+  int write(
+      Optional<Path> responsePath,
+      OutputStream stdout,
+      OutputStream stderr,
+      GridGrindResponse response,
+      int logicalExitCode,
+      RequestDiagnosticRedactor redactor,
+      boolean prettyJson)
+      throws IOException {
+    return write(
+        responsePath,
+        stdout,
+        stderr,
+        response,
+        logicalExitCode,
+        Optional.of(Objects.requireNonNull(redactor, "redactor must not be null")),
+        prettyJson);
+  }
+
+  private int write(
+      Optional<Path> responsePath,
+      OutputStream stdout,
+      OutputStream stderr,
+      GridGrindResponse response,
+      int logicalExitCode,
+      Optional<RequestDiagnosticRedactor> redactor,
+      boolean prettyJson)
+      throws IOException {
     Objects.requireNonNull(responsePath, "responsePath must not be null");
     Objects.requireNonNull(stdout, "stdout must not be null");
     Objects.requireNonNull(stderr, "stderr must not be null");
     Objects.requireNonNull(response, "response must not be null");
+    Objects.requireNonNull(redactor, "redactor must not be null");
     if (responsePath.isEmpty()) {
-      write(stdout, response, prettyJson);
+      CliResponseTransportSupport.writePayload(
+          stdout,
+          CliResponseTransportSupport.redact(
+              redactor, GridGrindJsonOutput.writeResponseBytes(response, prettyJson), prettyJson));
       return logicalExitCode;
     }
 
-    Path targetPath = responseTargetPath(responsePath.orElseThrow());
+    Path targetPath = CliResponseTransportSupport.responseTargetPath(responsePath.orElseThrow());
     try {
-      writePayload(targetPath, GridGrindJsonOutput.writeResponseBytes(response, prettyJson));
+      CliResponseTransportSupport.writePayload(
+          targetPath,
+          CliResponseTransportSupport.redact(
+              redactor, GridGrindJsonOutput.writeResponseBytes(response, prettyJson), prettyJson));
       if (logicalExitCode != 0 && response instanceof GridGrindResponse.Failure failure) {
-        writeCliDiagnosticToStderr(
+        CliResponseTransportSupport.writeCliDiagnosticToStderr(
             stderr,
-            diagnosticWithTransport(
+            CliResponseTransportSupport.diagnosticWithTransport(
                 CliDiagnostics.problemDiagnostic(logicalExitCode, "execute", failure.problem()),
                 CliTransport.responseFile(targetPath.toString())),
+            redactor,
             prettyJson);
       }
       return logicalExitCode;
     } catch (IOException exception) {
-      GridGrindProblemDetail.Problem problem = writeResponseProblem(exception, targetPath);
+      GridGrindProblemDetail.Problem problem =
+          CliResponseTransportSupport.writeResponseProblem(exception, targetPath);
       if (response instanceof GridGrindResponse.Failure failure) {
         problem =
             GridGrindProblems.appendCause(
@@ -177,33 +245,21 @@ final class CliResponseWriter {
           GridGrindResponses.failure(
               GridGrindProtocolVersion.current(), response.persistence(), problem);
       CliDiagnostic stderrDiagnostic =
-          diagnosticWithTransport(
+          CliResponseTransportSupport.diagnosticWithTransport(
               CliDiagnostics.problemDiagnostic(1, "execute", fallbackResponse.problem()),
               CliTransport.standardOutput());
       CliStdoutFallbackSupport.write(
           stderr,
           stdout,
           stderrDiagnostic,
-          CliStdoutFallbackSupport.response(fallbackResponse, prettyJson),
+          CliStdoutFallbackSupport.redacted(
+              CliStdoutFallbackSupport.response(fallbackResponse, prettyJson),
+              redactor,
+              prettyJson),
+          redactor,
           prettyJson);
       return 1;
     }
-  }
-
-  /** Writes one response to an already-open output stream, preserving caller stream ownership. */
-  void write(OutputStream outputStream, GridGrindResponse response, boolean prettyJson)
-      throws IOException {
-    Objects.requireNonNull(outputStream, "outputStream must not be null");
-    Objects.requireNonNull(response, "response must not be null");
-    writePayload(outputStream, GridGrindJsonOutput.writeResponseBytes(response, prettyJson));
-  }
-
-  /** Returns the process exit code associated with the response shape. */
-  static int exitCodeFor(GridGrindResponse response) {
-    return switch (response) {
-      case GridGrindResponse.Success _ -> 0;
-      case GridGrindResponse.Failure _ -> 1;
-    };
   }
 
   /** Writes one doctor report to stdout or a configured response file. */
@@ -214,33 +270,74 @@ final class CliResponseWriter {
       RequestDoctorReport report,
       boolean prettyJson)
       throws IOException {
+    return writeDoctorReport(responsePath, stdout, stderr, report, Optional.empty(), prettyJson);
+  }
+
+  /** Writes one doctor report after applying the request-scoped secret boundary. */
+  int writeDoctorReport(
+      Optional<Path> responsePath,
+      OutputStream stdout,
+      OutputStream stderr,
+      RequestDoctorReport report,
+      RequestDiagnosticRedactor redactor,
+      boolean prettyJson)
+      throws IOException {
+    return writeDoctorReport(
+        responsePath,
+        stdout,
+        stderr,
+        report,
+        Optional.of(Objects.requireNonNull(redactor, "redactor must not be null")),
+        prettyJson);
+  }
+
+  private int writeDoctorReport(
+      Optional<Path> responsePath,
+      OutputStream stdout,
+      OutputStream stderr,
+      RequestDoctorReport report,
+      Optional<RequestDiagnosticRedactor> redactor,
+      boolean prettyJson)
+      throws IOException {
     Objects.requireNonNull(responsePath, "responsePath must not be null");
     Objects.requireNonNull(stdout, "stdout must not be null");
     Objects.requireNonNull(stderr, "stderr must not be null");
     Objects.requireNonNull(report, "report must not be null");
+    Objects.requireNonNull(redactor, "redactor must not be null");
     if (responsePath.isEmpty()) {
-      writeDoctorReport(stdout, report, prettyJson);
-      return doctorExitCodeFor(report);
+      CliResponseTransportSupport.writePayload(
+          stdout,
+          CliResponseTransportSupport.redact(
+              redactor,
+              GridGrindJsonOutput.writeRequestDoctorReportBytes(report, prettyJson),
+              prettyJson));
+      return CliResponseTransportSupport.doctorExitCodeFor(report);
     }
 
-    int exitCode = doctorExitCodeFor(report);
-    Path targetPath = responseTargetPath(responsePath.orElseThrow());
+    int exitCode = CliResponseTransportSupport.doctorExitCodeFor(report);
+    Path targetPath = CliResponseTransportSupport.responseTargetPath(responsePath.orElseThrow());
     try {
-      writePayload(
-          targetPath, GridGrindJsonOutput.writeRequestDoctorReportBytes(report, prettyJson));
+      CliResponseTransportSupport.writePayload(
+          targetPath,
+          CliResponseTransportSupport.redact(
+              redactor,
+              GridGrindJsonOutput.writeRequestDoctorReportBytes(report, prettyJson),
+              prettyJson));
       if (report.valid()) {
         return exitCode;
       }
       GridGrindProblemDetail.Problem primaryProblem = report.primaryProblem().orElseThrow();
-      writeCliDiagnosticToStderr(
+      CliResponseTransportSupport.writeCliDiagnosticToStderr(
           stderr,
-          diagnosticWithTransport(
+          CliResponseTransportSupport.diagnosticWithTransport(
               CliDiagnostics.problemDiagnostic(exitCode, "doctor-request", primaryProblem),
               CliTransport.responseFile(targetPath.toString())),
+          redactor,
           prettyJson);
       return exitCode;
     } catch (IOException exception) {
-      GridGrindProblemDetail.Problem problem = writeResponseProblem(exception, targetPath);
+      GridGrindProblemDetail.Problem problem =
+          CliResponseTransportSupport.writeResponseProblem(exception, targetPath);
       if (report.primaryProblem().isPresent()) {
         problem =
             GridGrindProblems.appendCause(
@@ -249,7 +346,7 @@ final class CliResponseWriter {
       RequestDoctorReport fallbackReport =
           RequestDoctorReport.invalid(report.summary(), report.warnings(), problem);
       CliDiagnostic stderrDiagnostic =
-          diagnosticWithTransport(
+          CliResponseTransportSupport.diagnosticWithTransport(
               CliDiagnostics.problemDiagnostic(
                   1, "doctor-request", fallbackReport.primaryProblem().orElseThrow()),
               CliTransport.standardOutput());
@@ -257,115 +354,13 @@ final class CliResponseWriter {
           stderr,
           stdout,
           stderrDiagnostic,
-          CliStdoutFallbackSupport.doctorReport(fallbackReport, prettyJson),
+          CliStdoutFallbackSupport.redacted(
+              CliStdoutFallbackSupport.doctorReport(fallbackReport, prettyJson),
+              redactor,
+              prettyJson),
+          redactor,
           prettyJson);
       return 1;
     }
-  }
-
-  /** Writes one doctor report to an already-open output stream, preserving caller ownership. */
-  void writeDoctorReport(OutputStream outputStream, RequestDoctorReport report, boolean prettyJson)
-      throws IOException {
-    Objects.requireNonNull(outputStream, "outputStream must not be null");
-    Objects.requireNonNull(report, "report must not be null");
-    writePayload(
-        outputStream, GridGrindJsonOutput.writeRequestDoctorReportBytes(report, prettyJson));
-  }
-
-  /** Returns the process exit code associated with one request doctor report. */
-  static int doctorExitCodeFor(RequestDoctorReport report) {
-    Objects.requireNonNull(report, "report must not be null");
-    return report.valid() ? 0 : 1;
-  }
-
-  private static Path responseTargetPath(Path responsePath) {
-    return responsePath.toAbsolutePath();
-  }
-
-  private static void writePayload(Path targetPath, byte[] payload) throws IOException {
-    Files.createDirectories(
-        Objects.requireNonNull(
-            targetPath.getParent(), "responsePath must not be a filesystem root"));
-    try (OutputStream responseOutput =
-        Files.newOutputStream(
-            targetPath,
-            java.nio.file.StandardOpenOption.CREATE_NEW,
-            java.nio.file.StandardOpenOption.WRITE)) {
-      writePayload(responseOutput, payload);
-    }
-  }
-
-  private static void writePayload(OutputStream outputStream, byte[] payload) throws IOException {
-    CliPayloadOutput.write(outputStream, payload);
-  }
-
-  private static void writeCliDiagnosticToStderr(
-      OutputStream stderr, CliDiagnostic diagnostic, boolean prettyJson) throws IOException {
-    Objects.requireNonNull(stderr, "stderr must not be null");
-    Objects.requireNonNull(diagnostic, "diagnostic must not be null");
-    writePayload(stderr, GridGrindCliJson.writeBytes(diagnostic, prettyJson));
-  }
-
-  static GridGrindProblemDetail.Problem writeResponseProblem(
-      IOException exception, Path targetPath) {
-    var context =
-        new dev.erst.gridgrind.contract.dto.ProblemContext.WriteResponse(
-            dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces.ResponseOutput
-                .responseFile(targetPath.toString()));
-    String message = responseWriteMessage(exception, targetPath);
-    return GridGrindProblems.problem(
-        GridGrindProblemCode.IO_ERROR,
-        message,
-        context,
-        java.util.List.of(
-            new GridGrindProblemDetail.ProblemCause(
-                GridGrindProblemCode.IO_ERROR, message, context.stage())));
-  }
-
-  static String responseWriteMessage(IOException exception, Path targetPath) {
-    Objects.requireNonNull(exception, "exception must not be null");
-    Objects.requireNonNull(targetPath, "targetPath must not be null");
-    return switch (exception) {
-      case AccessDeniedException _ ->
-          "Could not write response file " + targetPath + ": permission denied";
-      case FileAlreadyExistsException _ when Files.isDirectory(targetPath) ->
-          "Could not write response file " + targetPath + ": Is a directory";
-      case FileAlreadyExistsException _ ->
-          "Could not write response file "
-              + targetPath
-              + ": already exists; GridGrind never replaces an existing response file implicitly";
-      case FileSystemException fileSystemException ->
-          fileSystemReason(fileSystemException)
-              .map(reason -> "Could not write response file " + targetPath + ": " + reason)
-              .orElse("Could not write response file " + targetPath);
-      default -> {
-        String message = exception.getMessage();
-        yield message == null || message.isBlank()
-            ? "Could not write response file " + targetPath
-            : "Could not write response file " + targetPath + ": " + message;
-      }
-    };
-  }
-
-  static CliDiagnostic diagnosticWithTransport(CliDiagnostic diagnostic, CliTransport transport) {
-    return new CliDiagnostic(
-        diagnostic.protocolVersion(),
-        diagnostic.exitCode(),
-        diagnostic.command(),
-        diagnostic.suggestions(),
-        diagnostic.problem(),
-        Optional.of(Objects.requireNonNull(transport, "transport must not be null")));
-  }
-
-  private static java.util.Optional<String> fileSystemReason(FileSystemException exception) {
-    String reason = exception.getReason();
-    if (reason != null && !reason.isBlank()) {
-      return java.util.Optional.of(reason);
-    }
-    String otherFile = exception.getOtherFile();
-    if (otherFile != null && !otherFile.isBlank()) {
-      return java.util.Optional.of("conflict with " + otherFile);
-    }
-    return java.util.Optional.empty();
   }
 }

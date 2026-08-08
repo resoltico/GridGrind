@@ -6,7 +6,7 @@ import dev.erst.gridgrind.contract.assertion.AnalysisAssertion;
 import dev.erst.gridgrind.contract.assertion.CellAssertion;
 import dev.erst.gridgrind.contract.dto.ArrayFormulaInput;
 import dev.erst.gridgrind.contract.dto.CellAlignmentInput;
-import dev.erst.gridgrind.contract.dto.CellStyleInput;
+import dev.erst.gridgrind.contract.dto.CellStylePatchInput;
 import dev.erst.gridgrind.contract.dto.CommentInput;
 import dev.erst.gridgrind.contract.dto.ExecutionJournalInput;
 import dev.erst.gridgrind.contract.dto.ExecutionJournalLevel;
@@ -57,7 +57,7 @@ final class WorkbookAuthoringExamples {
             "step-03-apply-header-style",
             ExampleSelectors.range("Budget", "A1:C1"),
             new CellMutationAction.ApplyStyle(
-                new CellStyleInput(
+                new CellStylePatchInput(
                     Optional.empty(),
                     Optional.of(
                         new CellAlignmentInput(
@@ -82,7 +82,7 @@ final class WorkbookAuthoringExamples {
             "step-04-apply-number-style",
             ExampleSelectors.range("Budget", "B2:B4"),
             new CellMutationAction.ApplyStyle(
-                new CellStyleInput(
+                new CellStylePatchInput(
                     Optional.of("#,##0.00"),
                     Optional.of(
                         new CellAlignmentInput(

@@ -45,13 +45,11 @@ final class GridGrindProtocolCatalogExecutionNestedTypeGroups {
                   descriptor(
                       ExecutionJournal.Phase.Succeeded.class,
                       "SUCCEEDED",
-                      "Execution phase that completed successfully and may include one timing payload.",
-                      "timing"),
+                      "Execution phase that completed successfully and may include one timing payload."),
                   descriptor(
                       ExecutionJournal.Phase.Failed.class,
                       "FAILED",
-                      "Execution phase that ended in failure and may include one timing payload.",
-                      "timing"))),
+                      "Execution phase that ended in failure and may include one timing payload."))),
           nestedTypeGroup(
               "executionJournalOutcomeTypes",
               ExecutionJournal.Outcome.class,
@@ -64,8 +62,7 @@ final class GridGrindProtocolCatalogExecutionNestedTypeGroups {
                       ExecutionJournal.Outcome.Failed.class,
                       "FAILED",
                       "Execution outcome summary for a failed run, including the canonical failure"
-                          + " code and an optional failing-step reference.",
-                      "failedStep"))),
+                          + " code and an optional failing-step reference."))),
           nestedTypeGroup(
               "ooxmlEncryptionReportTypes",
               OoxmlEncryptionReport.class,

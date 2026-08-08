@@ -2,7 +2,8 @@ package dev.erst.gridgrind.contract.dto;
 
 /** Optional OOXML package-encryption and package-signing settings for workbook persistence. */
 public record OoxmlPersistenceSecurityInput(
-    OoxmlEncryptionInput encryption, OoxmlSignatureInput signature) {
+    @ProtocolField(optional = true) OoxmlEncryptionInput encryption,
+    @ProtocolField(optional = true) OoxmlSignatureInput signature) {
   public OoxmlPersistenceSecurityInput {
     if (encryption == null && signature == null) {
       throw new IllegalArgumentException(

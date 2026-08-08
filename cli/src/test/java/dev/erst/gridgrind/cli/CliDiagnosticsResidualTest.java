@@ -52,7 +52,7 @@ class CliDiagnosticsResidualTest extends GridGrindCliTestSupport {
                     RequestInput.standardInput(), JsonLocation.pathOnly("protocolVersion"))));
 
     assertEquals(
-        "Add protocolVersion: \"V1\" at the request root.", failure.problem().resolution());
+        "Add protocolVersion: \"V2\" at the request root.", failure.problem().resolution());
   }
 
   @Test
@@ -94,13 +94,14 @@ class CliDiagnosticsResidualTest extends GridGrindCliTestSupport {
   }
 
   @Test
-  void unexpectedFailureFallsBackToTheCanonicalInternalErrorTitleWhenMessageIsBlank() {
+  void unexpectedFailureNeverSerializesTheThrowableMessage() {
     CliDiagnostic failure =
-        CliDiagnostics.unexpectedFailure("help", new IllegalStateException("   "));
+        CliDiagnostics.unexpectedFailure("help", new IllegalStateException("source-secret"));
 
     assertEquals(GridGrindProblemCode.INTERNAL_ERROR, failure.problem().code());
     assertEquals(GridGrindProblemCode.INTERNAL_ERROR.title(), failure.problem().message());
     assertEquals(GridGrindProblemCode.INTERNAL_ERROR.resolution(), failure.problem().resolution());
+    assertFalse(failure.problem().causes().getFirst().message().contains("source-secret"));
   }
 
   @Test

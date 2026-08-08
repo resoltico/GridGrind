@@ -12,7 +12,7 @@ import dev.erst.gridgrind.contract.dto.CellFillInput;
 import dev.erst.gridgrind.contract.dto.CellFontInput;
 import dev.erst.gridgrind.contract.dto.CellInput;
 import dev.erst.gridgrind.contract.dto.CellProtectionInput;
-import dev.erst.gridgrind.contract.dto.CellStyleInput;
+import dev.erst.gridgrind.contract.dto.CellStylePatchInput;
 import dev.erst.gridgrind.contract.dto.ColorInput;
 import dev.erst.gridgrind.contract.dto.DataValidationErrorAlertInput;
 import dev.erst.gridgrind.contract.dto.DataValidationInput;
@@ -178,14 +178,14 @@ final class ExecutorTestPlanSupport {
         maybe(strikeout));
   }
 
-  static CellStyleInput styleInput(
+  static CellStylePatchInput styleInput(
       String numberFormat,
       CellAlignmentInput alignment,
       CellFontInput font,
       CellFillInput fill,
       CellBorderInput border,
       CellProtectionInput protection) {
-    return new CellStyleInput(
+    return new CellStylePatchInput(
         maybe(numberFormat),
         maybe(alignment),
         maybe(font),

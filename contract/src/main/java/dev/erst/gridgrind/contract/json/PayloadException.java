@@ -8,7 +8,10 @@ import java.util.Optional;
  * coordinates directly.
  */
 public sealed interface PayloadException
-    permits InvalidJsonException, InvalidRequestException, InvalidRequestShapeException {
+    permits InvalidEncodingException,
+        InvalidJsonException,
+        InvalidRequestException,
+        InvalidRequestShapeException {
   /** Normalized JSON location variant for the payload failure. */
   PayloadLocation jsonLocation();
 

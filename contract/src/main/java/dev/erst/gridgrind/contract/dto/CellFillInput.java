@@ -5,8 +5,8 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import dev.erst.gridgrind.excel.foundation.ExcelFillPattern;
 import java.util.Objects;
 
-/** Protocol-facing fill patch used by {@link CellStyleInput}. */
-@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "kind")
+/** Protocol-facing fill patch used by {@link CellStylePatchInput}. */
+@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
 @JsonSubTypes({
   @JsonSubTypes.Type(value = CellFillInput.PatternOnly.class, name = "PATTERN_ONLY"),
   @JsonSubTypes.Type(value = CellFillInput.PatternForeground.class, name = "PATTERN_FOREGROUND"),

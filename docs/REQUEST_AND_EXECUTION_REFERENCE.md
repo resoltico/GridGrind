@@ -2,7 +2,7 @@
 afad: "4.0"
 version: "0.72.0"
 domain: REQUEST_EXECUTION_REFERENCE
-updated: "2026-07-01"
+updated: "2026-07-21"
 route:
   keywords: [gridgrind, request, source, persistence, execution, formula-environment, source-backed, input, calculation, journal, event-read, streaming-write]
   questions: ["what does a gridgrind request look like", "how do source-backed inputs work in gridgrind", "how does execution.calculation work", "what is the response journal", "how do event read and streaming write work"]
@@ -72,8 +72,11 @@ resolution, and existing workbook-source accessibility without mutating a workbo
   unreadable authored inputs can fail under `journal.inputResolution`.
 - It also preflights `source.type: EXISTING` workbook access, so missing or unreadable
   `source.path` workbooks can already fail during doctoring under `OPEN_WORKBOOK`.
-- When multiple authored steps fail independently during request decoding, doctoring isolates and
-  reports those step-level failures together instead of stopping after the first malformed step.
+- It collects every independently observable request-intake defect in one pass, including invalid UTF-8, duplicate keys, unknown fields, omitted required fields, explicit nulls, malformed scalar values, missing or unknown type discriminators, and constructor-level field validation failures. Valid sibling fragments remain available for safe subsequent preflight; rules that require a complete typed plan are not fabricated from malformed input.
+- Normal execution performs the same request intake before any workbook work begins. For the
+  same request bytes, `--request` emits the same ordered CLI diagnostic `problems` collection that
+  `--doctor-request` returns in `RequestDoctorReport.problems`; only complete requests proceed to
+  execution.
 - It emits a machine-readable `RequestDoctorReport` instead of a normal execution response.
 - When the request JSON arrives on stdin, pass `--execution-root <path>` so doctoring uses one
   explicit request root instead of ambient process state.
@@ -86,7 +89,7 @@ resolution, and existing workbook-source accessibility without mutating a workbo
 
 ```json
 {
-  "protocolVersion": "V1",
+  "protocolVersion": "V2",
   "source":      { ... },
   "persistence": { ... },
   "steps": [ ... ]
@@ -95,7 +98,7 @@ resolution, and existing workbook-source accessibility without mutating a workbo
 
 | Field | Required | Description |
 |:------|:---------|:------------|
-| `protocolVersion` | Yes | Wire-contract version. The current public value is `V1`. |
+| `protocolVersion` | Yes | Wire-contract version. The current public value is `V2`. |
 | `source` | Yes | Where the workbook comes from. |
 | `persistence` | Yes | Where and whether to save. Use `{"type":"NONE"}` for unsaved runs. |
 | `execution` | No | Optional execution policy for low-memory mode selection, structured journaling, and formula calculation handling. Omit it for the standard full-XSSF path with `SUMMARY` journaling and `DO_NOT_CALCULATE`, or supply it explicitly when you need non-default behavior. |
@@ -230,7 +233,7 @@ the journal telemetry it travels with:
 ```json
 {
   "status": "SUCCEEDED",
-  "protocolVersion": "V1",
+  "protocolVersion": "V2",
   "persistence": {
     "type": "SAVE_AS",
     "requestedPath": "out/budget-reviewed.xlsx",
@@ -364,7 +367,7 @@ Use `ANALYZE_WORKBOOK_FINDINGS` as the primary workbook-health check. Pair it wi
 
 ```json
 {
-  "protocolVersion": "V1",
+  "protocolVersion": "V2",
   "source": {
     "type": "NEW"
   },
@@ -577,11 +580,11 @@ Used in `SET_CELL`, `SET_RANGE`, and `APPEND_ROW`:
   "runs": [
     {
       "source": { "type": "INLINE", "text": "Q2 " },
-      "font": { "fontName": "Aptos", "fontColor": "#44546A" }
+      "font": { "fontName": "Aptos", "fontColor": { "type": "RGB", "rgb": "#44546A" } }
     },
     {
       "source": { "type": "INLINE", "text": "Budget" },
-      "font": { "bold": true, "fontColor": "#C00000" }
+      "font": { "bold": true, "fontColor": { "type": "RGB", "rgb": "#C00000" } }
     }
   ]
 }

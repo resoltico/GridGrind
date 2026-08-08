@@ -9,7 +9,6 @@ import java.io.InputStream;
 import java.util.Objects;
 import tools.jackson.core.JacksonException;
 import tools.jackson.core.TokenStreamLocation;
-import tools.jackson.databind.JsonNode;
 
 /** Shared JSON codec for the GridGrind protocol. */
 public final class GridGrindJson {
@@ -18,53 +17,32 @@ public final class GridGrindJson {
   /** Reads a request from an input stream without closing the caller-owned stream. */
   public static WorkbookPlan readRequest(InputStream inputStream) throws IOException {
     Objects.requireNonNull(inputStream, "inputStream must not be null");
-    return GridGrindJsonCodecSupport.decodeTree(
-        readRequestTree(inputStream),
-        GridGrindJsonMapperSupport.REQUEST_JSON_MAPPER,
-        WorkbookPlan.class,
-        GridGrindJsonProblemMessageSupport::invalidRequestPayload);
+    byte[] bytes = inputStream.readAllBytes();
+    return readRequest(bytes);
   }
 
   /** Reads a request from a byte array. */
   public static WorkbookPlan readRequest(byte[] bytes) throws IOException {
     Objects.requireNonNull(bytes, "bytes must not be null");
-    return GridGrindJsonCodecSupport.decodeTree(
-        readRequestTree(bytes),
-        GridGrindJsonMapperSupport.REQUEST_JSON_MAPPER,
-        WorkbookPlan.class,
-        GridGrindJsonProblemMessageSupport::invalidRequestPayload);
+    return GridGrindRequestDecoder.read(bytes);
   }
 
   /** Reads a request from one in-memory JSON string without exposing a checked I/O seam. */
   public static WorkbookPlan readRequest(String json) {
     Objects.requireNonNull(json, "json must not be null");
-    return GridGrindJsonCodecSupport.decodeTree(
-        GridGrindJsonCodecSupport.readTree(
-            json,
-            GridGrindJsonMapperSupport.REQUEST_JSON_MAPPER,
-            GridGrindJsonProblemMessageSupport::invalidRequestPayload),
-        GridGrindJsonMapperSupport.REQUEST_JSON_MAPPER,
-        WorkbookPlan.class,
-        GridGrindJsonProblemMessageSupport::invalidRequestPayload);
+    return GridGrindRequestDecoder.read(json);
   }
 
-  /** Reads one request JSON tree from an input stream without closing the caller-owned stream. */
-  public static JsonNode readRequestTree(InputStream inputStream) throws IOException {
+  /** Analyses one request byte stream without discarding valid sibling fragments after a defect. */
+  public static RequestAnalysis analyzeRequest(InputStream inputStream) throws IOException {
     Objects.requireNonNull(inputStream, "inputStream must not be null");
-    return GridGrindJsonCodecSupport.readTree(
-        inputStream,
-        GridGrindJsonMapperSupport.REQUEST_JSON_MAPPER,
-        GridGrindJsonProblemMessageSupport::invalidRequestPayload);
+    return analyzeRequest(inputStream.readAllBytes());
   }
 
-  /** Reads one request JSON tree from a byte array. */
-  public static JsonNode readRequestTree(byte[] bytes) throws IOException {
+  /** Analyses one UTF-8 request document into bound fragments and every structural problem. */
+  public static RequestAnalysis analyzeRequest(byte[] bytes) {
     Objects.requireNonNull(bytes, "bytes must not be null");
-    GridGrindJsonMapperSupport.requireSupportedRequestLength(bytes.length);
-    return GridGrindJsonCodecSupport.readTree(
-        bytes,
-        GridGrindJsonMapperSupport.REQUEST_JSON_MAPPER,
-        GridGrindJsonProblemMessageSupport::invalidRequestPayload);
+    return GridGrindRequestDecoder.analyze(bytes);
   }
 
   /** Reads a response from an input stream without closing the caller-owned stream. */
@@ -161,5 +139,11 @@ public final class GridGrindJson {
 
   static java.util.Optional<Integer> jsonColumn(TokenStreamLocation location) {
     return GridGrindJsonPayloadMetadataSupport.jsonColumn(location);
+  }
+
+  /** Converts one tolerant-parser finding into a canonical classified exception. */
+  public static IllegalArgumentException structuralException(RequestStructuralProblem problem) {
+    Objects.requireNonNull(problem, "problem must not be null");
+    return GridGrindRequestDecoder.structuralException(problem);
   }
 }

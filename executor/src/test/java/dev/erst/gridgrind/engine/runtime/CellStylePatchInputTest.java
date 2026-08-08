@@ -3,12 +3,12 @@ package dev.erst.gridgrind.engine.runtime;
 import static dev.erst.gridgrind.engine.runtime.ExecutorTestPlanSupport.*;
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.contract.dto.BorderSideInput;
 import dev.erst.gridgrind.contract.dto.CellAlignmentInput;
 import dev.erst.gridgrind.contract.dto.CellBorderInput;
-import dev.erst.gridgrind.contract.dto.CellBorderSideInput;
 import dev.erst.gridgrind.contract.dto.CellFillInput;
 import dev.erst.gridgrind.contract.dto.CellProtectionInput;
-import dev.erst.gridgrind.contract.dto.CellStyleInput;
+import dev.erst.gridgrind.contract.dto.CellStylePatchInput;
 import dev.erst.gridgrind.contract.dto.ColorInput;
 import dev.erst.gridgrind.contract.dto.FontHeightInput;
 import dev.erst.gridgrind.excel.ExcelCellFill;
@@ -21,11 +21,11 @@ import java.math.BigDecimal;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
 
-/** Tests for CellStyleInput record construction and ExcelCellStyle conversion. */
-class CellStyleInputTest {
+/** Tests for CellStylePatchInput record construction and ExcelCellStyle conversion. */
+class CellStylePatchInputTest {
   @Test
   void validatesAndConvertsStylePatches() {
-    CellStyleInput style =
+    CellStylePatchInput style =
         styleInput(
             "#,##0.00",
             new CellAlignmentInput(
@@ -49,7 +49,7 @@ class CellStyleInputTest {
             new CellBorderInput(
                 Optional.empty(),
                 Optional.ofNullable(
-                    new CellBorderSideInput(ExcelBorderStyle.THICK, ColorInput.rgb("#112233"))),
+                    new BorderSideInput(ExcelBorderStyle.THICK, ColorInput.rgb("#112233"))),
                 Optional.empty(),
                 Optional.empty(),
                 Optional.empty()),
@@ -95,7 +95,7 @@ class CellStyleInputTest {
 
   @Test
   void convertsStylesWithoutAlignmentSettings() {
-    CellStyleInput style =
+    CellStylePatchInput style =
         styleInput(
             null,
             new CellAlignmentInput(
@@ -199,7 +199,7 @@ class CellStyleInputTest {
                 ExcelFillPattern.SOLID, ColorInput.rgb("#AABBCC"), ColorInput.rgb("#112233")));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new CellBorderSideInput(ExcelBorderStyle.NONE, ColorInput.rgb("#AABBCC")));
+        () -> new BorderSideInput(ExcelBorderStyle.NONE, ColorInput.rgb("#AABBCC")));
     assertThrows(
         IllegalArgumentException.class,
         () -> new CellProtectionInput(Optional.empty(), Optional.empty()));
@@ -290,7 +290,7 @@ class CellStyleInputTest {
                 Optional.empty(),
                 Optional.empty(),
                 Optional.empty(),
-                Optional.ofNullable(new CellBorderSideInput(ExcelBorderStyle.THIN))),
+                Optional.ofNullable(new BorderSideInput(ExcelBorderStyle.THIN))),
             null));
     CellAlignmentInput boundedAlignment =
         new CellAlignmentInput(
@@ -321,7 +321,7 @@ class CellStyleInputTest {
     CellProtectionInput hiddenOnlyProtection =
         new CellProtectionInput(Optional.empty(), Optional.of(true));
     assertTrue(hiddenOnlyProtection.hiddenFormula().orElseThrow());
-    CellStyleInput protectionOnlyStyle =
+    CellStylePatchInput protectionOnlyStyle =
         styleInput(
             null,
             null,

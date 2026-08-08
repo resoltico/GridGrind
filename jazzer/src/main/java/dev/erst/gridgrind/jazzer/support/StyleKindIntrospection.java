@@ -1,12 +1,12 @@
 package dev.erst.gridgrind.jazzer.support;
 
+import dev.erst.gridgrind.contract.dto.BorderSideInput;
 import dev.erst.gridgrind.contract.dto.CellAlignmentInput;
 import dev.erst.gridgrind.contract.dto.CellBorderInput;
-import dev.erst.gridgrind.contract.dto.CellBorderSideInput;
 import dev.erst.gridgrind.contract.dto.CellFillInput;
 import dev.erst.gridgrind.contract.dto.CellFontInput;
 import dev.erst.gridgrind.contract.dto.CellProtectionInput;
-import dev.erst.gridgrind.contract.dto.CellStyleInput;
+import dev.erst.gridgrind.contract.dto.CellStylePatchInput;
 import dev.erst.gridgrind.contract.dto.FontHeightInput;
 import dev.erst.gridgrind.excel.ExcelBorder;
 import dev.erst.gridgrind.excel.ExcelBorderSide;
@@ -28,7 +28,7 @@ public final class StyleKindIntrospection {
   private StyleKindIntrospection() {}
 
   /** Returns attribute labels present on a protocol style patch. */
-  public static Map<String, Long> styleKinds(CellStyleInput style) {
+  public static Map<String, Long> styleKinds(CellStylePatchInput style) {
     Objects.requireNonNull(style, "style must not be null");
     LinkedHashMap<String, Long> kinds = new LinkedHashMap<>();
     increment(kinds, "number_format", style.numberFormat().isPresent());
@@ -219,7 +219,7 @@ public final class StyleKindIntrospection {
     increment(kinds, "hidden_formula", protection.hiddenFormula().isPresent());
   }
 
-  private static boolean isProtocolNone(Optional<CellBorderSideInput> side) {
+  private static boolean isProtocolNone(Optional<BorderSideInput> side) {
     return side.isPresent() && side.orElseThrow().style().orElseThrow() == ExcelBorderStyle.NONE;
   }
 
@@ -229,7 +229,7 @@ public final class StyleKindIntrospection {
             == dev.erst.gridgrind.excel.foundation.ExcelBorderStyle.NONE;
   }
 
-  private static boolean hasProtocolColor(Optional<CellBorderSideInput> side) {
+  private static boolean hasProtocolColor(Optional<BorderSideInput> side) {
     return side.isPresent() && side.orElseThrow().color().isPresent();
   }
 

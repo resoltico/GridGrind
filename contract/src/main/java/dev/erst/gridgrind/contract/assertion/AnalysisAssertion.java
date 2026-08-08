@@ -35,7 +35,6 @@ public sealed interface AnalysisAssertion extends Assertion
   @ProtocolTypeMetadata(
       id = "EXPECT_ANALYSIS_FINDING_PRESENT",
       summary = "Run one analysis query and require at least one matching finding.",
-      optionalFields = {"severity", "messageContains"},
       targetingMode = ProtocolTargetingMode.ANALYSIS_QUERY,
       targetSelectorRule = ANALYSIS_RULE)
   record AnalysisFindingPresent(
@@ -63,7 +62,6 @@ public sealed interface AnalysisAssertion extends Assertion
   @ProtocolTypeMetadata(
       id = "EXPECT_ANALYSIS_FINDING_ABSENT",
       summary = "Run one analysis query and require no matching finding.",
-      optionalFields = {"severity", "messageContains"},
       targetingMode = ProtocolTargetingMode.ANALYSIS_QUERY,
       targetSelectorRule = ANALYSIS_RULE)
   record AnalysisFindingAbsent(

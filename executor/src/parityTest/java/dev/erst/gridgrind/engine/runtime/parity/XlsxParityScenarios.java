@@ -1206,7 +1206,7 @@ public final class XlsxParityScenarios {
                 mutate(
                     new RangeSelector.ByRange("Ops", "A1:D4"),
                     new CellMutationAction.ApplyStyle(
-                        new CellStyleInput(
+                        new CellStylePatchInput(
                             Optional.empty(),
                             Optional.of(
                                 new CellAlignmentInput(
@@ -1230,7 +1230,7 @@ public final class XlsxParityScenarios {
                             Optional.of(
                                 new CellBorderInput(
                                     Optional.of(
-                                        new CellBorderSideInput(
+                                        new BorderSideInput(
                                             ExcelBorderStyle.THIN, ColorInput.rgb("#5B7C99"))),
                                     Optional.empty(),
                                     Optional.empty(),
@@ -1312,10 +1312,10 @@ public final class XlsxParityScenarios {
                                             Optional.of(true),
                                             Optional.empty(),
                                             Optional.empty(),
-                                            Optional.of("#006100"),
+                                            Optional.of(ColorInput.rgb("#006100")),
                                             Optional.empty(),
                                             Optional.empty(),
-                                            Optional.of("#C6EFCE"),
+                                            Optional.of(ColorInput.rgb("#C6EFCE")),
                                             Optional.empty()))),
                                 new ConditionalFormattingRuleInput.CellValueRule(
                                     ExcelComparisonOperator.LESS_THAN,
@@ -1328,10 +1328,10 @@ public final class XlsxParityScenarios {
                                             Optional.empty(),
                                             Optional.empty(),
                                             Optional.empty(),
-                                            Optional.of("#9C0006"),
+                                            Optional.of(ColorInput.rgb("#9C0006")),
                                             Optional.empty(),
                                             Optional.empty(),
-                                            Optional.of("#FFC7CE"),
+                                            Optional.of(ColorInput.rgb("#FFC7CE")),
                                             Optional.empty()))))))),
                 mutate(
                     new RangeSelector.ByRange("Ops", "A2:D4"),

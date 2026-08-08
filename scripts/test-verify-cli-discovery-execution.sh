@@ -81,7 +81,7 @@ write_json_file() {
 case "${command_name}" in
     --print-recipe-catalog)
         cat <<'JSON'
-{"protocolVersion":"V1","recipes":[{"view":"EXAMPLE","id":"BUDGET","requestFileName":"budget-request.json","summary":"Budget example.","workspaceMode":"SELF_CONTAINED","requiredWorkspacePaths":[]},{"view":"TASK_STARTER","id":"DASHBOARD","requestFileName":"dashboard-request.json","summary":"Dashboard starter.","workspaceMode":"SELF_CONTAINED","requiredWorkspacePaths":[]}]}
+{"protocolVersion":"V2","recipes":[{"view":"EXAMPLE","id":"BUDGET","requestFileName":"budget-request.json","summary":"Budget example.","workspaceMode":"SELF_CONTAINED","requiredWorkspacePaths":[]},{"view":"TASK_STARTER","id":"DASHBOARD","requestFileName":"dashboard-request.json","summary":"Dashboard starter.","workspaceMode":"SELF_CONTAINED","requiredWorkspacePaths":[]}]}
 JSON
         ;;
     --print-recipe)
@@ -148,7 +148,7 @@ write_json_file() {
 case "${command_name}" in
     --print-recipe-catalog)
         cat <<'JSON'
-{"protocolVersion":"V1","recipes":[{"view":"EXAMPLE","id":"BUDGET","requestFileName":"budget-request.json","summary":"Budget example.","workspaceMode":"SELF_CONTAINED","requiredWorkspacePaths":[]},{"view":"TASK_STARTER","id":"DASHBOARD","requestFileName":"dashboard-request.json","summary":"Dashboard starter.","workspaceMode":"SELF_CONTAINED","requiredWorkspacePaths":[]}]}
+{"protocolVersion":"V2","recipes":[{"view":"EXAMPLE","id":"BUDGET","requestFileName":"budget-request.json","summary":"Budget example.","workspaceMode":"SELF_CONTAINED","requiredWorkspacePaths":[]},{"view":"TASK_STARTER","id":"DASHBOARD","requestFileName":"dashboard-request.json","summary":"Dashboard starter.","workspaceMode":"SELF_CONTAINED","requiredWorkspacePaths":[]}]}
 JSON
         ;;
     --print-recipe)
