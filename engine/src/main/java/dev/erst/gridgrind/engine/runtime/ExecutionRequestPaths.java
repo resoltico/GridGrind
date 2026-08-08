@@ -1,7 +1,6 @@
 package dev.erst.gridgrind.engine.runtime;
 
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
-import dev.erst.gridgrind.contract.dto.WorkbookResultPersistence;
 import dev.erst.gridgrind.excel.WorkbookArtifactWriteDisposition;
 import dev.erst.gridgrind.excel.WorkbookLocation;
 import dev.erst.gridgrind.excel.ooxml.ExcelOoxmlPackageSecuritySnapshot;
@@ -91,25 +90,6 @@ final class ExecutionRequestPaths {
       case WorkbookPlan.WorkbookPersistence.None _ -> "NONE";
       case WorkbookPlan.WorkbookPersistence.Overwrite _ -> "OVERWRITE";
       case WorkbookPlan.WorkbookPersistence.SaveAs _ -> "SAVE_AS";
-    };
-  }
-
-  static WorkbookResultPersistence.PersistenceOutcome unwrittenPersistenceOutcome(
-      WorkbookPlan request) {
-    return switch (request.persistence()) {
-      case WorkbookPlan.WorkbookPersistence.None _ ->
-          new WorkbookResultPersistence.PersistenceOutcome.NotSaved();
-      case WorkbookPlan.WorkbookPersistence.SaveAs saveAs ->
-          new WorkbookResultPersistence.PersistenceOutcome.SavedAs(
-              saveAs.path(), new WorkbookResultPersistence.WriteResult.NotWritten());
-      case WorkbookPlan.WorkbookPersistence.Overwrite _ -> {
-        if (!(request.source() instanceof WorkbookPlan.WorkbookSource.ExistingFile existingFile)) {
-          yield new WorkbookResultPersistence.PersistenceOutcome.Overwritten(
-              Optional.empty(), new WorkbookResultPersistence.WriteResult.NotWritten());
-        }
-        yield new WorkbookResultPersistence.PersistenceOutcome.Overwritten(
-            existingFile.path(), new WorkbookResultPersistence.WriteResult.NotWritten());
-      }
     };
   }
 

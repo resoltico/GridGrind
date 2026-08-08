@@ -268,7 +268,8 @@ class GridGrindCliHelpTextTest extends GridGrindCliTestSupport {
     assertTrue(overview.contains("--pretty"));
     assertTrue(overview.contains("Without --response"));
     assertTrue(overview.contains("compact transport notice"));
-    assertTrue(normalizedOverview.contains("recovering the payload on stdout"));
+    assertTrue(normalizedOverview.contains("with writable stdout recovers that payload there"));
+    assertTrue(normalizedOverview.contains("never moves a primary payload to stderr"));
     assertTrue(overview.contains("docs/QUICK_REFERENCE.md"));
     assertFalse(overview.contains("Minimal Valid Request:"));
     assertFalse(overview.contains("Built-in generated examples:"));
@@ -319,7 +320,8 @@ class GridGrindCliHelpTextTest extends GridGrindCliTestSupport {
         normalizedProtocol.contains("With --response, that payload is written to the new file"));
     assertTrue(
         normalizedProtocol.contains(
-            "response-file write failure adds one compact transport notice"));
+            "response-file write failure recovers the payload there and adds one compact transport notice"));
+    assertTrue(normalizedProtocol.contains("never moves a primary payload to stderr"));
     assertFalse(protocol.contains("Workflows:"));
     assertFalse(protocol.contains("Docker Example:"));
   }

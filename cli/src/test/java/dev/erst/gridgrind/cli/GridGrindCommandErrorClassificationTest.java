@@ -416,7 +416,7 @@ class GridGrindCommandErrorClassificationTest extends GridGrindCliTestSupport {
     assertEquals("EXECUTE_REQUEST", failure.problem().context().stage());
     assertEquals(java.util.Optional.of("NEW"), executeRequestContext(failure).sourceType());
     assertEquals(java.util.Optional.of("NONE"), executeRequestContext(failure).persistenceType());
-    assertEquals("boom", failure.problem().message());
+    assertEquals(GridGrindProblemCode.INTERNAL_ERROR.title(), failure.problem().message());
   }
 
   @Test
@@ -488,7 +488,7 @@ class GridGrindCommandErrorClassificationTest extends GridGrindCliTestSupport {
   }
 
   @Test
-  void fallsBackToExceptionTypeWhenExecutionErrorHasNoMessage() throws IOException {
+  void redactsInternalExecutionErrorsWithoutMessages() throws IOException {
     Path responsePath = Path.of("gridgrind-cli-response-" + UUID.randomUUID() + ".json");
     GridGrindCli cli =
         GridGrindCli.forTesting(
@@ -512,7 +512,7 @@ class GridGrindCommandErrorClassificationTest extends GridGrindCliTestSupport {
       WorkbookResult.Failure failure = (WorkbookResult.Failure) response;
       assertEquals(GridGrindProblemCode.INTERNAL_ERROR, failure.problem().code());
       assertEquals("EXECUTE_REQUEST", failure.problem().context().stage());
-      assertEquals("UnsupportedOperationException", failure.problem().message());
+      assertEquals(GridGrindProblemCode.INTERNAL_ERROR.title(), failure.problem().message());
     } finally {
       Files.deleteIfExists(responsePath);
     }

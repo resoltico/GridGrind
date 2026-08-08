@@ -106,8 +106,9 @@ final class GridGrindCliSurfaceRequestSections {
                     + " content: CommandError for a rejected command, WorkbookResult"
                     + " for execution, or the command's own discovery, help, or doctor"
                     + " payload. With --response, that payload is written to the new"
-                    + " file. Only a response-file write failure adds one compact"
-                    + " transport notice on stderr after recovering the payload on stdout."),
+                    + " file. When stdout is writable, a response-file write failure"
+                    + " recovers the payload there and adds one compact transport notice on stderr;"
+                    + " GridGrind never moves a primary payload to stderr."),
             new CliSurface.DefinitionEntry(
                 "source.type=EXISTING + source.path", "open an existing workbook from that path."),
             new CliSurface.DefinitionEntry(

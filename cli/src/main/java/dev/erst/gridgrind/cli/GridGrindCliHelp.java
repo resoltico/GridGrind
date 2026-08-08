@@ -121,8 +121,9 @@ public final class GridGrindCliHelp {
                         + " <path>.",
                     "Without --response, the command payload is the sole stdout content. With"
                         + " --response, GridGrind writes that payload to one new file; only a"
-                        + " response-file write failure emits one compact transport notice on"
-                        + " stderr after recovering the payload on stdout.",
+                        + " response-file write failure with writable stdout recovers that payload"
+                        + " there and emits one compact transport notice on stderr; GridGrind never"
+                        + " moves a primary payload to stderr.",
                     "Use --format structured when you want JSON help, version, or license"
                         + " discovery instead of prose.",
                     "Use --pretty when you want indented JSON instead of the compact default"

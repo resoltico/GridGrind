@@ -23,6 +23,9 @@ Earlier release history through `0.68.0` is archived in [docs/CHANGELOG_ARCHIVE.
 - Normal CLI output now has one primary channel: stdout without `--response`, or the requested response file with it. The CLI no longer mirrors an equivalent failure payload on stderr.
 
 ### Fixed
+- Unexpected failures raised after workbook execution begins now retain the `WorkbookResult` envelope with `status=FAILED`, including the requested `SAVE_AS` or `OVERWRITE` intent as `NotWritten`, instead of being mislabeled as pre-execution `CommandError` rejections.
+- An unavailable stdout transport no longer moves a primary diagnostic to stderr; GridGrind exits nonzero rather than emitting a competing result schema on the transport channel.
+- `INTERNAL_ERROR` problems now use the canonical public title in their messages and causes instead of exposing arbitrary runtime exception text.
 - Constructor-level and cross-fragment request diagnostics now resolve `PATH_BYTE_OFFSET` to the exact authored member or array token named by their JSON path; when no authored token exists, diagnostics retain the path without fabricating a byte coordinate.
 - Request structural analysis now validates every authored occurrence of a known field, so a duplicate-key finding no longer hides an independently provable malformed, explicit-null, unknown-type, or nested-step problem in the repeated value.
 - Duplicate root fields no longer leave an arbitrary first value available as a bound request fragment: the affected field, including `steps`, remains explicitly unbound while unrelated valid siblings remain available for analysis.

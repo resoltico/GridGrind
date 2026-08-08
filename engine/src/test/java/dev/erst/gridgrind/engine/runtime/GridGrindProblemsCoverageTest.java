@@ -145,6 +145,29 @@ class GridGrindProblemsCoverageTest {
         writeResponseDenied.resolution());
   }
 
+  @Test
+  void internalProblemsNeverExposeThrowableMessages() {
+    ProblemContext.ExecuteRequest context =
+        new ProblemContext.ExecuteRequest(ProblemContextRequestSurfaces.RequestShape.unknown());
+
+    GridGrindProblemDetail.Problem classified =
+        GridGrindProblems.fromException(new AssertionError("secret runtime detail"), context);
+    GridGrindProblemDetail.Problem explicit =
+        GridGrindProblems.problem(
+            GridGrindProblemCode.INTERNAL_ERROR,
+            "another secret runtime detail",
+            context,
+            new IllegalStateException("third secret runtime detail"));
+
+    assertEquals(GridGrindProblemCode.INTERNAL_ERROR, classified.code());
+    assertEquals(GridGrindProblemCode.INTERNAL_ERROR.title(), classified.message());
+    assertEquals(
+        GridGrindProblemCode.INTERNAL_ERROR.title(), classified.causes().getFirst().message());
+    assertEquals(GridGrindProblemCode.INTERNAL_ERROR.title(), explicit.message());
+    assertEquals(
+        GridGrindProblemCode.INTERNAL_ERROR.title(), explicit.causes().getFirst().message());
+  }
+
   private static InvalidRequestException badRequest(
       Optional<String> jsonPath, Optional<Integer> jsonLine, Optional<Integer> jsonColumn) {
     return new InvalidRequestException(

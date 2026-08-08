@@ -77,6 +77,53 @@ class WorkbookResultTest {
   }
 
   @Test
+  void unwrittenPersistenceOutcomesPreserveRequestedSaveIntentWithoutInventingPaths() {
+    WorkbookPlan overwriteExistingRequest =
+        WorkbookPlan.standard(
+            new WorkbookPlan.WorkbookSource.ExistingFile("fixtures/budget.xlsx"),
+            new WorkbookPlan.WorkbookPersistence.Overwrite(),
+            ExecutionPolicyInput.defaults(),
+            FormulaEnvironmentInput.empty(),
+            List.of());
+    WorkbookPlan saveAsRequest =
+        WorkbookPlan.standard(
+            new WorkbookPlan.WorkbookSource.New(),
+            new WorkbookPlan.WorkbookPersistence.SaveAs(
+                "fixtures/output.xlsx", WorkbookPlan.WorkbookPersistence.IfExists.REJECT),
+            ExecutionPolicyInput.defaults(),
+            FormulaEnvironmentInput.empty(),
+            List.of());
+    WorkbookPlan impossibleOverwriteRequest =
+        WorkbookPlan.standard(
+            new WorkbookPlan.WorkbookSource.New(),
+            new WorkbookPlan.WorkbookPersistence.Overwrite(),
+            ExecutionPolicyInput.defaults(),
+            FormulaEnvironmentInput.empty(),
+            List.of());
+
+    WorkbookResultPersistence.PersistenceOutcome.Overwritten overwritten =
+        assertInstanceOf(
+            WorkbookResultPersistence.PersistenceOutcome.Overwritten.class,
+            WorkbookResults.unwrittenPersistenceOutcome(overwriteExistingRequest));
+    WorkbookResultPersistence.PersistenceOutcome.SavedAs savedAs =
+        assertInstanceOf(
+            WorkbookResultPersistence.PersistenceOutcome.SavedAs.class,
+            WorkbookResults.unwrittenPersistenceOutcome(saveAsRequest));
+    WorkbookResultPersistence.PersistenceOutcome.Overwritten impossibleOverwrite =
+        assertInstanceOf(
+            WorkbookResultPersistence.PersistenceOutcome.Overwritten.class,
+            WorkbookResults.unwrittenPersistenceOutcome(impossibleOverwriteRequest));
+
+    assertEquals(Optional.of("fixtures/budget.xlsx"), overwritten.sourcePath());
+    assertInstanceOf(WorkbookResultPersistence.WriteResult.NotWritten.class, overwritten.write());
+    assertEquals("fixtures/output.xlsx", savedAs.requestedPath());
+    assertInstanceOf(WorkbookResultPersistence.WriteResult.NotWritten.class, savedAs.write());
+    assertEquals(Optional.empty(), impossibleOverwrite.sourcePath());
+    assertInstanceOf(
+        WorkbookResultPersistence.WriteResult.NotWritten.class, impossibleOverwrite.write());
+  }
+
+  @Test
   void syntheticJournalRejectsInvalidFailureCodeCombinations() {
     IllegalArgumentException missingFailureCode =
         assertThrows(

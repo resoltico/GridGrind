@@ -3,6 +3,7 @@ package dev.erst.gridgrind.contract.dto;
 import dev.erst.gridgrind.contract.assertion.AssertionResult;
 import dev.erst.gridgrind.contract.query.InspectionResult;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 /** Public result factories that keep {@link WorkbookResult} focused on contract shapes. */
@@ -72,6 +73,34 @@ public final class WorkbookResults {
   }
 
   /**
+   * Describes persistence that was requested but did not write an artifact.
+   *
+   * <p>This keeps every failure response truthful about the caller's save intent without inventing
+   * an execution path for an artifact that was never written.
+   */
+  public static WorkbookResultPersistence.PersistenceOutcome unwrittenPersistenceOutcome(
+      WorkbookPlan request) {
+    Objects.requireNonNull(request, "request must not be null");
+    return switch (request.persistence()) {
+      case WorkbookPlan.WorkbookPersistence.None _ ->
+          new WorkbookResultPersistence.PersistenceOutcome.NotSaved();
+      case WorkbookPlan.WorkbookPersistence.SaveAs saveAs ->
+          new WorkbookResultPersistence.PersistenceOutcome.SavedAs(
+              saveAs.path(), new WorkbookResultPersistence.WriteResult.NotWritten());
+      case WorkbookPlan.WorkbookPersistence.Overwrite _ -> {
+        Optional<String> sourcePath =
+            switch (request.source()) {
+              case WorkbookPlan.WorkbookSource.New _ -> Optional.empty();
+              case WorkbookPlan.WorkbookSource.ExistingFile existingFile ->
+                  Optional.of(existingFile.path());
+            };
+        yield new WorkbookResultPersistence.PersistenceOutcome.Overwritten(
+            sourcePath, new WorkbookResultPersistence.WriteResult.NotWritten());
+      }
+    };
+  }
+
+  /**
    * Reclassifies a completed execution as failed when a later execution-channel operation fails.
    *
    * <p>The journal remains the truthful workbook-execution record: writing the CLI response is a
@@ -80,8 +109,8 @@ public final class WorkbookResults {
    */
   public static WorkbookResult.Failure afterExecutionFailure(
       WorkbookResult response, GridGrindProblemDetail.Problem problem) {
-    java.util.Objects.requireNonNull(response, "response must not be null");
-    java.util.Objects.requireNonNull(problem, "problem must not be null");
+    Objects.requireNonNull(response, "response must not be null");
+    Objects.requireNonNull(problem, "problem must not be null");
     return switch (response) {
       case WorkbookResult.Success success ->
           new WorkbookResult.Failure(

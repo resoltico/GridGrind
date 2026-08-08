@@ -85,7 +85,8 @@ resolution, and existing workbook-source accessibility without mutating a workbo
   stdout when the workflow needs a saved artifact.
 - Without `--response`, each command writes exactly one primary JSON payload to stdout. With it,
   the payload goes only to the requested file. If that file cannot be written, GridGrind recovers
-  the primary payload to stdout and writes one transport-only JSON notice to stderr.
+  the primary payload to stdout when stdout is writable and writes one transport-only JSON notice
+  to stderr. GridGrind never moves a primary payload to stderr.
 
 ---
 

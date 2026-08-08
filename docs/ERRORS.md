@@ -416,9 +416,10 @@ nullable fields:
 Without `--response`, the primary `CommandError`, `WorkbookResult`, doctor report, or discovery
 payload is the sole stdout content. With `--response <path>`, that primary payload is written only
 to the requested file. GridGrind does not mirror an equivalent diagnostic on stderr. If that file
-cannot be written, the primary fallback payload goes to stdout and stderr receives exactly one
-transport-only JSON line, `{"wroteTo":"STDOUT","responsePath":"..."}`. The notice has no
-status, exit code, or problem data and is not a second result schema.
+cannot be written and stdout is writable, the primary fallback payload goes to stdout and stderr
+receives exactly one transport-only JSON line, `{"wroteTo":"STDOUT","responsePath":"..."}`.
+The notice has no status, exit code, or problem data and is not a second result schema. If stdout
+is unavailable, GridGrind exits nonzero without moving the primary payload to stderr.
 
 Values declared `secret: true` in the request contract are protected by their exact JSON owner
 path. A binding or validation problem at a declared secret path uses a generic sensitive-safe
@@ -426,8 +427,8 @@ message, and a structured problem carrying that same path redacts its message, r
 causes. GridGrind deliberately does not use global string replacement: a short password must not
 alter unrelated workbook data or diagnostics that merely contain the same text. Live journal events
 do not carry request-field values and remain the authored engine events. Last-resort failures that
-no longer retain a trustworthy request context use the canonical internal-error title rather than
-reproducing arbitrary throwable text.
+classify as `INTERNAL_ERROR` use the canonical internal-error title rather than reproducing
+arbitrary throwable text.
 
 ## Index-Based Validation Messages
 

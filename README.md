@@ -52,7 +52,8 @@ Without `--response`, GridGrind writes one primary JSON payload to stdout. A com
 before workbook execution uses `CommandError` with `status: "REJECTED"`; execution uses
 `WorkbookResult` with `status: "SUCCEEDED"` or `"FAILED"`. With `--response`, that payload goes
 to the requested file instead. If the file cannot be written, the fallback payload goes to stdout
-and stderr contains one small transport-only JSON notice.
+when stdout is available and stderr contains one small transport-only JSON notice. GridGrind never
+moves a primary payload to stderr.
 
 For first contact, prefer `--request <path>` over stdin. Stdin-driven execution and doctoring
 require `--execution-root <path>` so request-owned paths resolve from one explicit invocation root.

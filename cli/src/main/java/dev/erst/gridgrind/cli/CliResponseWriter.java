@@ -15,7 +15,7 @@ import java.nio.file.Path;
 import java.util.Objects;
 import java.util.Optional;
 
-/** Writes GridGrind responses to stdout or an explicit response file with structured fallback. */
+/** Writes GridGrind responses to stdout or an explicit response file with a stdout fallback. */
 final class CliResponseWriter {
   /** Writes one rejected-command result to stdout or the requested response file. */
   int writeCommandError(
@@ -93,8 +93,10 @@ final class CliResponseWriter {
    * Writes one arbitrary command payload to stdout or a configured response file while also
    * reporting response-file fallback details on stderr.
    *
-   * <p>When the response file cannot be written, a structured failure response is emitted to stdout
-   * so every command family keeps the same fallback contract.
+   * <p>When the response file cannot be written and stdout is writable, a structured failure
+   * response is emitted there so every command family keeps the same fallback contract. An
+   * unavailable stdout transport is allowed to fail closed rather than moving a primary payload to
+   * stderr.
    */
   int writePayload(
       String command,

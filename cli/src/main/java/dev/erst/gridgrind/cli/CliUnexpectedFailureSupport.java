@@ -32,8 +32,8 @@ final class CliUnexpectedFailureSupport {
     try {
       return new CliResponseWriter()
           .writeCommandError(responsePathHint, stdout, stderr, diagnostic, prettyJson);
-    } catch (Throwable writeFailure) {
-      directFallback(diagnostic, stdout, stderr, responsePathHint, prettyJson, writeFailure);
+    } catch (Throwable ignored) {
+      directFallback(diagnostic, stdout, stderr, responsePathHint, prettyJson);
       return CliExitCodes.forCommandError(diagnostic);
     }
   }
@@ -43,8 +43,7 @@ final class CliUnexpectedFailureSupport {
       OutputStream stdout,
       OutputStream stderr,
       Optional<Path> responsePathHint,
-      boolean prettyJson,
-      Throwable writeFailure) {
+      boolean prettyJson) {
     try {
       byte[] payload = GridGrindCliJson.writeBytes(diagnostic, prettyJson);
       writePayload(stdout, payload);
@@ -58,15 +57,8 @@ final class CliUnexpectedFailureSupport {
           // The recovered command error on stdout remains the primary fallback result.
         }
       }
-      return;
-    } catch (IOException exception) {
-      try {
-        writePayload(stderr, GridGrindCliJson.writeBytes(diagnostic, prettyJson));
-        return;
-      } catch (IOException exceptionOnStderr) {
-        exception.addSuppressed(exceptionOnStderr);
-      }
-      exception.addSuppressed(writeFailure);
+    } catch (IOException ignored) {
+      // The primary payload is stdout-only; stderr must never carry a competing result schema.
     }
   }
 

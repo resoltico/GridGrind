@@ -18,7 +18,7 @@ import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.jupiter.api.Test;
 
-/** Last-resort failures retain the same canonical command-error core. */
+/** Last-resort failures retain the canonical command error on stdout only. */
 class CliUnexpectedFailureSupportTest extends GridGrindCliTestSupport {
   @Test
   void appConvertsRunnerCrashesIntoACommandErrorOnStdout() throws IOException {
@@ -65,7 +65,7 @@ class CliUnexpectedFailureSupportTest extends GridGrindCliTestSupport {
   }
 
   @Test
-  void emergencyFallbackWritesTheCommandErrorToStderrOnlyWhenStdoutIsUnavailable()
+  void emergencyFallbackDoesNotMoveTheCommandErrorToStderrWhenStdoutIsUnavailable()
       throws Exception {
     ByteArrayOutputStream stderr = new ByteArrayOutputStream();
 
@@ -79,9 +79,7 @@ class CliUnexpectedFailureSupportTest extends GridGrindCliTestSupport {
             new IllegalStateException("secret"));
 
     assertEquals(1, exitCode);
-    assertEquals(
-        GridGrindProblemCode.INTERNAL_ERROR,
-        commandError(stderr.toByteArray()).primaryProblem().code());
+    assertEquals("", stderr.toString(StandardCharsets.UTF_8));
   }
 
   @Test
@@ -94,8 +92,7 @@ class CliUnexpectedFailureSupportTest extends GridGrindCliTestSupport {
         stdout,
         failingOutputStream(),
         Optional.of(responsePath),
-        false,
-        new IOException("response write failed"));
+        false);
 
     assertEquals(
         GridGrindProblemCode.INTERNAL_ERROR,
@@ -111,12 +108,7 @@ class CliUnexpectedFailureSupportTest extends GridGrindCliTestSupport {
         CommandErrors.unexpectedFailure("execute", new IllegalStateException("secret"));
 
     CliUnexpectedFailureSupport.directFallback(
-        error,
-        stdout,
-        stderr,
-        Optional.of(responsePath),
-        false,
-        new IOException("response write failed"));
+        error, stdout, stderr, Optional.of(responsePath), false);
 
     assertEquals(error, commandError(stdout.toByteArray()));
     assertEquals(
@@ -134,8 +126,7 @@ class CliUnexpectedFailureSupportTest extends GridGrindCliTestSupport {
         stdout,
         stderr,
         Optional.empty(),
-        false,
-        new IOException("response write failed"));
+        false);
 
     assertEquals(
         GridGrindProblemCode.INTERNAL_ERROR,
@@ -144,8 +135,7 @@ class CliUnexpectedFailureSupportTest extends GridGrindCliTestSupport {
   }
 
   @Test
-  void directFallbackSuppressesSecondaryOutputFailuresWithoutLeakingTheOriginalFault()
-      throws IOException {
+  void directFallbackDoesNotAttemptStderrWhenStdoutIsUnavailable() throws IOException {
     AtomicInteger stdoutAttempts = new AtomicInteger();
     AtomicInteger stderrAttempts = new AtomicInteger();
 
@@ -154,11 +144,10 @@ class CliUnexpectedFailureSupportTest extends GridGrindCliTestSupport {
         failingOutputStream(stdoutAttempts),
         failingOutputStream(stderrAttempts),
         Optional.empty(),
-        false,
-        new IOException("response write failed"));
+        false);
 
     assertEquals(1, stdoutAttempts.get());
-    assertEquals(1, stderrAttempts.get());
+    assertEquals(0, stderrAttempts.get());
   }
 
   private static OutputStream failingOutputStream() {

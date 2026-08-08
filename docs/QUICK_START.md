@@ -2,7 +2,7 @@
 afad: "4.0"
 version: "0.72.0"
 domain: QUICK_START
-updated: "2026-06-29"
+updated: "2026-08-08"
 route:
   keywords: [gridgrind, quick start, first run, docker, jar, xlsx, example, response]
   questions: ["how do i do a first run with gridgrind", "what is the fastest way to try gridgrind", "how do i run the shipped examples", "how do i get my first successful gridgrind run"]
@@ -175,7 +175,7 @@ After a successful run:
   working directory, while relative paths inside a `--request` file follow that request file's
   directory, and stdin-driven requests use the explicit `--execution-root`; `--temp-root` chooses
   the parent for one private per-run scratch directory rather than a request-root `.gridgrind/tmp`
-- Ignoring stderr after a failed `--response` run: GridGrind prints one line naming the written response or doctor-report file so the structured failure payload is easy to find
+- Ignoring stdout and stderr after a failed `--response` run: when stdout is writable, GridGrind recovers the primary payload there and emits one transport-only JSON notice on stderr; it never moves the primary payload to stderr
 - Expecting GridGrind to save a workbook after a failed run
 
 For hard limits and supported boundaries, see [LIMITATIONS.md](./LIMITATIONS.md).

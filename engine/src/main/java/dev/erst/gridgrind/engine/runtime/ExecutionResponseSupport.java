@@ -6,6 +6,7 @@ import dev.erst.gridgrind.contract.dto.GridGrindProblemDetail;
 import dev.erst.gridgrind.contract.dto.GridGrindProtocolVersion;
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
 import dev.erst.gridgrind.contract.dto.WorkbookResult;
+import dev.erst.gridgrind.contract.dto.WorkbookResults;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
 import dev.erst.gridgrind.excel.WorkbookArtifactIo;
 import java.util.Objects;
@@ -216,7 +217,7 @@ final class ExecutionResponseSupport {
                 detail.failedStepId(),
                 emitPlanOutcomeEvent),
         context.calculation(),
-        ExecutionRequestPaths.unwrittenPersistenceOutcome(context.request()),
+        WorkbookResults.unwrittenPersistenceOutcome(context.request()),
         failure.artifacts().warnings(),
         failure.artifacts().assertions(),
         failure.artifacts().inspections(),

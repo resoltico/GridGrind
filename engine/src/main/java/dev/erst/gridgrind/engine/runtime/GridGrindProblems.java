@@ -27,9 +27,10 @@ public final class GridGrindProblems {
       Throwable exception, dev.erst.gridgrind.contract.dto.ProblemContext context) {
     Objects.requireNonNull(exception, "exception must not be null");
     Objects.requireNonNull(context, "context must not be null");
-    String publicMessage = messageFor(exception, context);
+    GridGrindProblemCode code = codeFor(exception);
+    String publicMessage = publicMessageFor(code, exception, context);
     return problem(
-        codeFor(exception),
+        code,
         publicMessage,
         enrichContext(context, exception),
         Optional.ofNullable(assertionFailureFor(exception)),
@@ -44,12 +45,19 @@ public final class GridGrindProblems {
       dev.erst.gridgrind.contract.dto.ProblemContext context,
       @Nullable Throwable cause) {
     Objects.requireNonNull(context, "context must not be null");
+    String publicMessage =
+        code == GridGrindProblemCode.INTERNAL_ERROR
+            ? code.title()
+            : Objects.requireNonNull(message);
     return problem(
         code,
-        message,
+        publicMessage,
         context,
         Optional.ofNullable(assertionFailureFor(cause)),
-        causesFor(cause, context.stage(), cause == null ? message : messageFor(cause, context)),
+        causesFor(
+            cause,
+            context.stage(),
+            cause == null ? publicMessage : publicMessageFor(codeFor(cause), cause, context)),
         cause);
   }
 
@@ -121,11 +129,13 @@ public final class GridGrindProblems {
       String stage, Throwable exception, String messagePrefix) {
     Objects.requireNonNull(stage, "stage must not be null");
     Objects.requireNonNull(exception, "exception must not be null");
+    GridGrindProblemCode code = codeFor(exception);
+    String publicMessage = publicMessageFor(code, exception);
     String message =
         messagePrefix == null || messagePrefix.isBlank()
-            ? messageFor(exception)
-            : messagePrefix + ": " + messageFor(exception);
-    return new GridGrindProblemDetail.ProblemCause(codeFor(exception), message, stage);
+            ? publicMessage
+            : messagePrefix + ": " + publicMessage;
+    return new GridGrindProblemDetail.ProblemCause(code, message, stage);
   }
 
   /** Converts an already-built problem into a synthetic cause entry for fallback reporting. */
@@ -168,6 +178,19 @@ public final class GridGrindProblems {
     return messageFor(exception);
   }
 
+  private static String publicMessageFor(
+      GridGrindProblemCode code,
+      Throwable exception,
+      dev.erst.gridgrind.contract.dto.ProblemContext context) {
+    return code == GridGrindProblemCode.INTERNAL_ERROR
+        ? code.title()
+        : messageFor(exception, context);
+  }
+
+  private static String publicMessageFor(GridGrindProblemCode code, Throwable exception) {
+    return code == GridGrindProblemCode.INTERNAL_ERROR ? code.title() : messageFor(exception);
+  }
+
   /**
    * Returns the public diagnostic entries for one failure without exposing raw throwable internals.
    */
@@ -175,7 +198,8 @@ public final class GridGrindProblems {
     if (exception == null) {
       return List.of();
     }
-    return causesFor(exception, "EXECUTE_REQUEST", messageFor(exception));
+    GridGrindProblemCode code = codeFor(exception);
+    return causesFor(exception, "EXECUTE_REQUEST", publicMessageFor(code, exception));
   }
 
   private static List<GridGrindProblemDetail.ProblemCause> causesFor(
