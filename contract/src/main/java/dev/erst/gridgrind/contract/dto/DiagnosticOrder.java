@@ -3,15 +3,22 @@ package dev.erst.gridgrind.contract.dto;
 import dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces.JsonLocation;
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.ToIntFunction;
 
 /** Provides the protocol's deterministic ordering for emitted problems and warnings. */
 public final class DiagnosticOrder {
+  private static final int PRE_EXECUTION_PHASE = 1;
+  private static final int STATIC_VALIDATION_PHASE = 3;
+  private static final int SOURCE_RESOLUTION_PHASE = 4;
+  private static final int EXECUTION_PHASE = 5;
+  private static final int PHASE_COUNT = EXECUTION_PHASE + 1;
+  private static final int UNPOSITIONED_RANK = 1;
+  private static final long UNPOSITIONED_BYTE_OFFSET = Long.MAX_VALUE;
+  private static final int NON_DUPLICATE_OCCURRENCE = 0;
+
   private DiagnosticOrder() {}
 
   /** Returns problems in the complete protocol order without exposing allocation metadata. */
@@ -60,36 +67,31 @@ public final class DiagnosticOrder {
   private static <T> List<Allocated<T>> allocate(List<T> values, ToIntFunction<T> phaseSelector) {
     Objects.requireNonNull(phaseSelector, "phaseSelector must not be null");
     List<Allocated<T>> allocated = new ArrayList<>(values.size());
-    Map<Integer, Integer> nextOrdinalByPhase = new HashMap<>();
+    int[] nextOrdinalByPhase = new int[PHASE_COUNT];
     for (T value : values) {
       T nonNullValue = Objects.requireNonNull(value, "values must not contain nulls");
       int phase = phaseSelector.applyAsInt(nonNullValue);
-      int ordinal = nextOrdinalByPhase.getOrDefault(phase, 0);
-      nextOrdinalByPhase.put(phase, Math.incrementExact(ordinal));
+      int ordinal = nextOrdinalByPhase[phase];
+      nextOrdinalByPhase[phase] = Math.incrementExact(ordinal);
       allocated.add(new Allocated<>(ordinal, nonNullValue));
     }
     return allocated;
   }
 
-  private static final int STATIC_VALIDATION_PHASE = 3;
-  private static final int UNPOSITIONED_RANK = 1;
-  private static final long UNPOSITIONED_BYTE_OFFSET = Long.MAX_VALUE;
-  private static final int NON_DUPLICATE_OCCURRENCE = 0;
-
   private static int phase(GridGrindProblemDetail.Problem problem) {
     return switch (problem.context()) {
-      case ProblemContext.ParseArguments _, ProblemContext.ReadRequest _ -> 1;
-      case ProblemContext.ValidateRequest _ -> 3;
+      case ProblemContext.ParseArguments _, ProblemContext.ReadRequest _ -> PRE_EXECUTION_PHASE;
+      case ProblemContext.ValidateRequest _ -> STATIC_VALIDATION_PHASE;
       case ProblemContext.ResolveInputs _,
           ProblemContext.OpenWorkbook _,
           ProblemContext.ExecuteCalculation.Preflight _ ->
-          4;
+          SOURCE_RESOLUTION_PHASE;
       case ProblemContext.ExecuteCalculation.Execution _,
           ProblemContext.ExecuteStep _,
           ProblemContext.PersistWorkbook _,
           ProblemContext.ExecuteRequest _,
           ProblemContext.WriteResponse _ ->
-          5;
+          EXECUTION_PHASE;
     };
   }
 
@@ -102,10 +104,10 @@ public final class DiagnosticOrder {
   }
 
   private static Optional<Long> byteOffsetOptional(GridGrindProblemDetail.Problem problem) {
-    return switch (problem.context()) {
-      case ProblemContext.ReadRequest readRequest -> readRequest.byteOffset();
-      default -> Optional.empty();
-    };
+    if (problem.context() instanceof ProblemContext.ReadRequest readRequest) {
+      return readRequest.byteOffset();
+    }
+    return Optional.empty();
   }
 
   private static int stepIndex(GridGrindProblemDetail.Problem problem) {
@@ -133,11 +135,10 @@ public final class DiagnosticOrder {
   }
 
   private static int occurrenceOrdinal(GridGrindProblemDetail.Problem problem) {
-    return switch (problem.context()) {
-      case ProblemContext.ReadRequest readRequest ->
-          readRequest.duplicateKey().map(JsonLocation.DuplicateKey::occurrenceOrdinal).orElse(0);
-      default -> 0;
-    };
+    if (problem.context() instanceof ProblemContext.ReadRequest readRequest) {
+      return readRequest.duplicateKey().map(JsonLocation.DuplicateKey::occurrenceOrdinal).orElse(0);
+    }
+    return NON_DUPLICATE_OCCURRENCE;
   }
 
   /** Internal deterministic allocation carrier; never part of a serialized DTO. */
