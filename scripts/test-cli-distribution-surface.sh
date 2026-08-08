@@ -150,7 +150,19 @@ grep -Eq "\"responsePath\"[[:space:]]*:[[:space:]]*\"${version_fallback_response
     "packaged gridgrind --version fallback stdout no longer carries the response output path"
 grep -Eq '"wroteTo"[[:space:]]*:[[:space:]]*"STDOUT"' "${version_fallback_stderr_path}" || die \
     "packaged gridgrind --version fallback stderr no longer identifies stdout fallback transport"
-cmp -s "${version_fallback_stdout_path}" "${version_fallback_stderr_path}" || die \
-    "packaged gridgrind --version fallback stderr no longer mirrors the canonical CLI diagnostic"
+python3 - "${version_fallback_stderr_path}" "${version_fallback_response_path}" <<'PY'
+import json
+import sys
+from pathlib import Path
+
+transport = json.loads(Path(sys.argv[1]).read_text())
+expected = {"wroteTo": "STDOUT", "responsePath": sys.argv[2]}
+if transport != expected:
+    print(
+        "error: packaged gridgrind --version fallback stderr is not the exact transport notice",
+        file=sys.stderr,
+    )
+    raise SystemExit(1)
+PY
 
 printf 'cli-distribution-surface regression: success\n'
