@@ -40,9 +40,6 @@ import dev.erst.gridgrind.contract.dto.DrawingObjectPayloadReport;
 import dev.erst.gridgrind.contract.dto.DrawingObjectReport;
 import dev.erst.gridgrind.contract.dto.FontHeightReport;
 import dev.erst.gridgrind.contract.dto.GridGrindProtocolVersion;
-import dev.erst.gridgrind.contract.dto.WorkbookResult;
-import dev.erst.gridgrind.contract.dto.WorkbookResultPersistence;
-import dev.erst.gridgrind.contract.dto.WorkbookResults;
 import dev.erst.gridgrind.contract.dto.HeaderFooterTextReport;
 import dev.erst.gridgrind.contract.dto.HyperlinkTarget;
 import dev.erst.gridgrind.contract.dto.NamedRangeScope;
@@ -66,6 +63,9 @@ import dev.erst.gridgrind.contract.dto.TableHealthReport;
 import dev.erst.gridgrind.contract.dto.TableStyleReport;
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
 import dev.erst.gridgrind.contract.dto.WorkbookProtectionReport;
+import dev.erst.gridgrind.contract.dto.WorkbookResult;
+import dev.erst.gridgrind.contract.dto.WorkbookResultPersistence;
+import dev.erst.gridgrind.contract.dto.WorkbookResults;
 import dev.erst.gridgrind.contract.query.*;
 import dev.erst.gridgrind.contract.query.SheetInspectionResult;
 import dev.erst.gridgrind.contract.query.WorkbookAnalysisResult;
@@ -1345,8 +1345,7 @@ class WorkbookInvariantChecksTest {
   private static WorkbookResultPersistence.PersistenceOutcome.SavedAs writtenSaveAs(
       String requestedPath, Path workbookPath) {
     return new WorkbookResultPersistence.PersistenceOutcome.SavedAs(
-        requestedPath,
-        new WorkbookResultPersistence.WriteResult.Written(workbookPath.toString()));
+        requestedPath, new WorkbookResultPersistence.WriteResult.Written(workbookPath.toString()));
   }
 
   private static WorkbookResultPersistence.PersistenceOutcome.SavedAs notWrittenSaveAs(

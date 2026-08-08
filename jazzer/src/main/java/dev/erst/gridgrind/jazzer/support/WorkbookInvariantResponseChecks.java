@@ -119,8 +119,7 @@ final class WorkbookInvariantResponseChecks {
       case WorkbookPlan.WorkbookPersistence.Overwrite _ -> {
         requirePersistenceOutcomeShape(persistenceOutcome);
         require(
-            persistenceOutcome
-                instanceof WorkbookResultPersistence.PersistenceOutcome.Overwritten,
+            persistenceOutcome instanceof WorkbookResultPersistence.PersistenceOutcome.Overwritten,
             "OVERWRITE persistence must return OVERWRITE outcome");
         WorkbookResultPersistence.PersistenceOutcome.Overwritten overwritten =
             (WorkbookResultPersistence.PersistenceOutcome.Overwritten) persistenceOutcome;
