@@ -56,7 +56,8 @@ class CliUnexpectedFailureSupportTest extends GridGrindCliTestSupport {
             new IllegalStateException("secret"));
 
     CommandError error = commandError(stdout.toByteArray());
-    CliTransportNotice notice = GridGrindCliJson.readBytes(stderr.toByteArray(), CliTransportNotice.class);
+    CliTransportNotice notice =
+        GridGrindCliJson.readBytes(stderr.toByteArray(), CliTransportNotice.class);
     assertEquals(1, exitCode);
     assertEquals(GridGrindProblemCode.INTERNAL_ERROR, error.primaryProblem().code());
     assertEquals(CliTransportNotice.Destination.STDOUT, notice.wroteTo());

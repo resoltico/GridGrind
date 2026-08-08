@@ -3,10 +3,9 @@ package dev.erst.gridgrind.cli;
 import dev.erst.gridgrind.cli.discovery.CliTransportNotice;
 import dev.erst.gridgrind.cli.discovery.CommandError;
 import dev.erst.gridgrind.contract.dto.GridGrindProblemDetail;
-import dev.erst.gridgrind.contract.dto.GridGrindProtocolVersion;
+import dev.erst.gridgrind.contract.dto.RequestDoctorReport;
 import dev.erst.gridgrind.contract.dto.WorkbookResult;
 import dev.erst.gridgrind.contract.dto.WorkbookResults;
-import dev.erst.gridgrind.contract.dto.RequestDoctorReport;
 import dev.erst.gridgrind.contract.json.GridGrindJsonOutput;
 import dev.erst.gridgrind.contract.json.RequestDiagnosticRedactor;
 import dev.erst.gridgrind.engine.api.GridGrindProblems;
@@ -60,15 +59,17 @@ final class CliResponseWriter {
     Objects.requireNonNull(redactor, "redactor must not be null");
     if (responsePath.isEmpty()) {
       CliResponseTransportSupport.writePayload(
-          stdout, CliResponseTransportSupport.commandErrorBytes(commandError, redactor, prettyJson));
-      return CliResponseTransportSupport.exitCodeFor(commandError);
+          stdout,
+          CliResponseTransportSupport.commandErrorBytes(commandError, redactor, prettyJson));
+      return CliExitCodes.forCommandError(commandError);
     }
 
     Path targetPath = CliResponseTransportSupport.responseTargetPath(responsePath.orElseThrow());
     try {
       CliResponseTransportSupport.writePayload(
-          targetPath, CliResponseTransportSupport.commandErrorBytes(commandError, redactor, prettyJson));
-      return CliResponseTransportSupport.exitCodeFor(commandError);
+          targetPath,
+          CliResponseTransportSupport.commandErrorBytes(commandError, redactor, prettyJson));
+      return CliExitCodes.forCommandError(commandError);
     } catch (IOException exception) {
       CommandError fallback =
           new CommandError(
@@ -180,7 +181,9 @@ final class CliResponseWriter {
       CliResponseTransportSupport.writePayload(
           stdout,
           CliResponseTransportSupport.redact(
-              redactor, GridGrindJsonOutput.writeWorkbookResultBytes(response, prettyJson), prettyJson));
+              redactor,
+              GridGrindJsonOutput.writeWorkbookResultBytes(response, prettyJson),
+              prettyJson));
       return logicalExitCode;
     }
 
@@ -189,7 +192,9 @@ final class CliResponseWriter {
       CliResponseTransportSupport.writePayload(
           targetPath,
           CliResponseTransportSupport.redact(
-              redactor, GridGrindJsonOutput.writeWorkbookResultBytes(response, prettyJson), prettyJson));
+              redactor,
+              GridGrindJsonOutput.writeWorkbookResultBytes(response, prettyJson),
+              prettyJson));
       return logicalExitCode;
     } catch (IOException exception) {
       GridGrindProblemDetail.Problem problem =
@@ -262,10 +267,10 @@ final class CliResponseWriter {
               redactor,
               GridGrindJsonOutput.writeRequestDoctorReportBytes(report, prettyJson),
               prettyJson));
-      return CliResponseTransportSupport.doctorExitCodeFor(report);
+      return CliExitCodes.forDoctorReport(report);
     }
 
-    int exitCode = CliResponseTransportSupport.doctorExitCodeFor(report);
+    int exitCode = CliExitCodes.forDoctorReport(report);
     Path targetPath = CliResponseTransportSupport.responseTargetPath(responsePath.orElseThrow());
     try {
       CliResponseTransportSupport.writePayload(
@@ -288,7 +293,8 @@ final class CliResponseWriter {
   }
 
   private static void writeStdoutFallback(
-      OutputStream stdout, OutputStream stderr, byte[] payload, Path responsePath) throws IOException {
+      OutputStream stdout, OutputStream stderr, byte[] payload, Path responsePath)
+      throws IOException {
     CliResponseTransportSupport.writePayload(stdout, payload);
     try {
       CliResponseTransportSupport.writeTransportNoticeToStderr(

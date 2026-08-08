@@ -6,11 +6,13 @@ import java.util.Optional;
 
 /** One stderr-only notice emitted when a requested response file falls back to standard output. */
 public record CliTransportNotice(
-    Destination wroteTo, @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<String> responsePath) {
+    Destination wroteTo,
+    @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<String> responsePath) {
   public CliTransportNotice {
     Objects.requireNonNull(wroteTo, "wroteTo must not be null");
     responsePath = Objects.requireNonNullElseGet(responsePath, Optional::empty);
-    responsePath = responsePath.map(path -> CliDiscoveryValidation.requireNonBlank(path, "responsePath"));
+    responsePath =
+        responsePath.map(path -> CliDiscoveryValidation.requireNonBlank(path, "responsePath"));
   }
 
   /** Creates the fallback notice for a response file that could not be written. */

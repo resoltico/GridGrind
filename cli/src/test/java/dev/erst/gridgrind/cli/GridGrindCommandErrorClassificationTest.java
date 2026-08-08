@@ -15,7 +15,6 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.PosixFilePermission;
-import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -314,7 +313,8 @@ class GridGrindCommandErrorClassificationTest extends GridGrindCliTestSupport {
     assertEquals(GridGrindProblemCode.IO_ERROR, failure.primaryProblem().code());
     assertEquals("execute", failure.command());
     assertEquals(Optional.of(missingPath), readRequestContext(failure).requestPath());
-    assertEquals("Request file not found: " + Path.of(missingPath), failure.primaryProblem().message());
+    assertEquals(
+        "Request file not found: " + Path.of(missingPath), failure.primaryProblem().message());
   }
 
   @Test
@@ -747,8 +747,7 @@ class GridGrindCommandErrorClassificationTest extends GridGrindCliTestSupport {
     assertEquals(
         java.util.Optional.of(responseDirectory.toAbsolutePath().toString()),
         writeResponseContext(failure).responsePath());
-    assertEquals(
-        CliTransportNotice.Destination.STDOUT, transportNotice.wroteTo());
+    assertEquals(CliTransportNotice.Destination.STDOUT, transportNotice.wroteTo());
     assertEquals(
         Optional.of(responseDirectory.toAbsolutePath().toString()), transportNotice.responsePath());
   }
@@ -851,7 +850,8 @@ class GridGrindCommandErrorClassificationTest extends GridGrindCliTestSupport {
       assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.primaryProblem().code());
       assertEquals("cli", failure.command());
       assertEquals(
-          "--request and --response must not point to the same path", failure.primaryProblem().message());
+          "--request and --response must not point to the same path",
+          failure.primaryProblem().message());
     } finally {
       Files.deleteIfExists(path);
     }

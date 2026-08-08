@@ -69,8 +69,7 @@ class GridGrindCliJsonCoverageTest {
                 protocolCatalogSearchReport)));
     assertEquals(
         commandError,
-        GridGrindCliJson.readBytes(
-            GridGrindCliJson.writeBytes(commandError), CommandError.class));
+        GridGrindCliJson.readBytes(GridGrindCliJson.writeBytes(commandError), CommandError.class));
 
     try (TrackingInputStream taskCatalogStream =
             new TrackingInputStream(GridGrindCliJson.writeBytes(taskCatalog));
@@ -298,8 +297,7 @@ class GridGrindCliJsonCoverageTest {
   }
 
   @Test
-  void commandErrorJsonKeepsCommandFactsSeparateFromTheSharedProblemCore()
-      throws IOException {
+  void commandErrorJsonKeepsCommandFactsSeparateFromTheSharedProblemCore() throws IOException {
     JsonNode parseArgumentsDiagnostic =
         GridGrindCliJsonStreams.readTree(GridGrindCliJson.writeBytes(sampleCommandError()));
     GridGrindProblemDetail.Problem readRequestProblem =

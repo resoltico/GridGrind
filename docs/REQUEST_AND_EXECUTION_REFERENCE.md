@@ -2,7 +2,7 @@
 afad: "4.0"
 version: "0.72.0"
 domain: REQUEST_EXECUTION_REFERENCE
-updated: "2026-07-21"
+updated: "2026-08-08"
 route:
   keywords: [gridgrind, request, source, persistence, execution, formula-environment, source-backed, input, calculation, journal, event-read, streaming-write]
   questions: ["what does a gridgrind request look like", "how do source-backed inputs work in gridgrind", "how does execution.calculation work", "what is the response journal", "how do event read and streaming write work"]
@@ -74,14 +74,18 @@ resolution, and existing workbook-source accessibility without mutating a workbo
   `source.path` workbooks can already fail during doctoring under `OPEN_WORKBOOK`.
 - It collects every independently observable request-intake defect in one pass, including invalid UTF-8, duplicate keys, unknown fields, omitted required fields, explicit nulls, malformed scalar values, missing or unknown type discriminators, and constructor-level field validation failures. Valid sibling fragments remain available for safe subsequent preflight; rules that require a complete typed plan are not fabricated from malformed input.
 - Normal execution performs the same request intake before any workbook work begins. For the
-  same request bytes, `--request` emits the same ordered CLI diagnostic `problems` collection that
-  `--doctor-request` returns in `RequestDoctorReport.problems`; only complete requests proceed to
-  execution.
-- It emits a machine-readable `RequestDoctorReport` instead of a normal execution response.
+  same request bytes, a rejected `--request` command emits the same ordered problem core in
+  `CommandError.problems` that `--doctor-request` returns in `RequestDoctorReport.problems`; only
+  complete requests proceed to execution.
+- It emits its own machine-readable `RequestDoctorReport`; a report with findings is
+  `valid:false`, not a rejected command result.
 - When the request JSON arrives on stdin, pass `--execution-root <path>` so doctoring uses one
   explicit request root instead of ambient process state.
 - `--response <path>` works here too, so the doctor report can be captured to a file instead of
   stdout when the workflow needs a saved artifact.
+- Without `--response`, each command writes exactly one primary JSON payload to stdout. With it,
+  the payload goes only to the requested file. If that file cannot be written, GridGrind recovers
+  the primary payload to stdout and writes one transport-only JSON notice to stderr.
 
 ---
 
@@ -222,18 +226,20 @@ override.
 - Execution mode is one closed variant, not a read/write cross-product. Choose exactly one of
   `FULL_XSSF`, `EVENT_READ`, or `STREAMING_WRITE` for the whole request.
 
-### Response Journal
+### Execution Results And Journal
 
-Every success and failure response includes one top-level `persistence` outcome plus a structured
-`journal` object. Persist-workbook failures keep that save outcome at the response root; their
-`problem.context` adds `sourceWorkbookPath` or `persistencePath` directly instead of nesting a
-second `persistence` object. The excerpt below focuses on that canonical persistence outcome and
-the journal telemetry it travels with:
+Only `--request` emits `WorkbookResult` after workbook execution begins. Every `SUCCEEDED` and
+`FAILED` execution result includes one top-level `persistence` outcome, structured `journal`,
+`warnings`, `assertions`, and `inspections`; only `FAILED` carries the singular top-level `problem`.
+Persist-workbook failures keep the save outcome at the response root; their `problem.context` adds
+`sourceWorkbookPath` or `persistencePath` directly instead of nesting a second `persistence`
+object. The excerpt below focuses on that canonical persistence outcome and its journal telemetry:
 
 ```json
 {
   "status": "SUCCEEDED",
   "protocolVersion": "V2",
+  "planId": "budget-pass",
   "persistence": {
     "type": "SAVE_AS",
     "requestedPath": "out/budget-reviewed.xlsx",
@@ -243,7 +249,6 @@ the journal telemetry it travels with:
     }
   },
   "journal": {
-    "planId": "budget-pass",
     "level": "NORMAL",
     "source": {
       "type": "EXISTING",
@@ -327,7 +332,7 @@ the journal telemetry it travels with:
 
 | Field | Description |
 |:------|:------------|
-| `planId` | Caller-supplied plan correlation ID when present. When omitted in the request, the response journal omits it too. |
+| `planId` | Caller-supplied plan correlation ID when present. It belongs to the top-level `WorkbookResult`, not journal telemetry. |
 | `level` | `SUMMARY`, `NORMAL`, or `VERBOSE`, matching the effective `execution.journal.level`. |
 | `source` | Structured echo of the authored workbook source family and, when applicable, the authored source path string. |
 | `validation`, `inputResolution`, `open`, `persistencePhase`, `close` | Top-level pipeline phase summaries. `SUMMARY` keeps these phases timestamp-free with `durationMillis=0`; `NORMAL` and `VERBOSE` add observational `startedAt`, `finishedAt`, and non-zero timing where applicable. `NOT_STARTED` and `NOT_REQUESTED` always omit timestamps and use `durationMillis=0`. `inputResolution` records source-backed file/stdin loading before workbook open. |

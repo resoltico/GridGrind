@@ -2,7 +2,7 @@
 afad: "4.0"
 version: "0.72.0"
 domain: ERRORS
-updated: "2026-07-22"
+updated: "2026-08-08"
 route:
   keywords: [gridgrind, errors, problem, code, category, recovery, failure, assertion-failed, invalid-json, invalid-request-shape, invalid-formula, unsupported-formula-construct, sheet-not-found, named-range-not-found, workbook-not-found, workbook-password-required, invalid-workbook-password, invalid-signing-configuration, workbook-security-error, input-source-not-found, input-source-unavailable, input-source-io-error, source-backed, standard_input, utf8_file, file, causes, context, sourceType, persistenceType, coordinates, rowindex, columnindex]
   questions: ["what error codes does gridgrind return", "what does a gridgrind failure response look like", "how do I handle gridgrind errors", "what is the problem model", "how do I read gridgrind error context", "how do I interpret gridgrind row or column index errors", "how does gridgrind report assertion failures", "how does gridgrind report encrypted workbook password failures", "how does gridgrind report signing failures", "how does gridgrind report source-backed input failures", "what happens if a gridgrind input file is missing"]
@@ -19,8 +19,9 @@ route:
 
 ```json
 {
-  "status": "FAILED",
   "protocolVersion": "V2",
+  "status": "FAILED",
+  "planId": "set-total-pass",
   "persistence": {
     "type": "SAVE_AS",
     "requestedPath": "out/budget-reviewed.xlsx",
@@ -29,7 +30,6 @@ route:
     }
   },
   "journal": {
-    "planId": "set-total-pass",
     "level": "NORMAL",
     "source": {
       "type": "EXISTING",
@@ -123,6 +123,9 @@ route:
       "markRecalculateOnOpenApplied": false
     }
   },
+  "warnings": [],
+  "assertions": [],
+  "inspections": [],
   "problem": {
     "code": "INVALID_CELL_ADDRESS",
     "category": "REQUEST",
@@ -159,21 +162,16 @@ before the workbook is opened.
 Persist-workbook failures point at `sourceWorkbookPath` or `persistencePath` inside
 `problem.context`; they do not repeat a nested `problem.context.persistence` object.
 
-Pre-pipeline failures — CLI argument errors, help-routing, discovery-lookup failures, and request
-read/parse/validate errors (including `INVALID_ENCODING`, `INVALID_JSON`, `INVALID_REQUEST_SHAPE`, and
-`INVALID_REQUEST` failures caught during validation before workbook open) — use one canonical CLI
-diagnostic envelope instead of the execution journal envelope:
+Pre-execution command failures — CLI argument errors, help-routing, discovery-lookup failures, and
+request read/parse/validate errors (including `INVALID_ENCODING`, `INVALID_JSON`,
+`INVALID_REQUEST_SHAPE`, and `INVALID_REQUEST` failures caught before workbook execution begins) —
+use the plural `CommandError` envelope instead of an execution result:
 
 ```json
 {
   "protocolVersion": "V2",
-  "exitCode": 2,
-  "command": "cli",
-  "suggestions": [
-    "gridgrind --help",
-    "gridgrind --help-protocol",
-    "gridgrind --help-guidance"
-  ],
+  "command": "execute",
+  "status": "REJECTED",
   "problems": [
     {
       "code": "INVALID_ARGUMENTS",
@@ -197,14 +195,20 @@ diagnostic envelope instead of the execution journal envelope:
 
 `problems` is always nonempty. Argument and operational CLI failures naturally contain one entry;
 request intake can carry every independently observable structural or constructor-level binding
-finding in deterministic source order. Before execution begins, `gridgrind --request` and
-`gridgrind --doctor-request` expose the same problem collection for the same request bytes.
+finding. `REJECTED` means workbook execution never began; it does not describe the problem's fault
+domain. Read `problems[*].category` for that domain.
 
-When GridGrind writes that diagnostic anywhere other than the default stderr channel, it adds one
-optional transport block such as `{"wroteTo":"FILE","responsePath":"doctor.json"}` or
-`{"wroteTo":"STDOUT"}`. The wrapper intentionally stays transport-only: CLI flag names live in
-`problems[*].context.argument.argument`, request-cursor details live in
-`problems[*].context.json`, and category/title/resolution/causes live in `problems[*]`.
+`WorkbookResult` is emitted only by the execution command after workbook execution begins. Its
+`status` is `SUCCEEDED` or `FAILED`; `problem` appears only on `FAILED`. `--doctor-request` keeps
+its own successful `RequestDoctorReport` payload: findings make that report `valid:false`, not a
+`CommandError`. For the same request bytes, execution rejection and doctor findings use the same
+ordered problem core.
+
+Every emitted `problems[]` and `warnings[]` uses one deterministic order: pipeline phase, present
+UTF-8 byte offset before token-less locations, step index, duplicate occurrence, code, then an
+internal phase-local allocation tie-breaker. That last tie-breaker is never serialized. CLI argument
+details remain in `problems[*].context.argument`; request cursor details remain in
+`problems[*].context.json`; category, title, resolution, and causes remain in `problems[*]`.
 
 Every entry in `problem.causes` also carries an explicit `stage` token. Cause diagnostics are not
 stage-less fallbacks; they preserve the same pipeline stage vocabulary used by the primary
@@ -409,13 +413,12 @@ nullable fields:
   with that repeated value, such as explicit `null` or the wrong scalar kind.
 - `WRITE_RESPONSE` uses `context.output` (`STANDARD_OUTPUT` or `FILE`).
 
-When a command exits non-zero and also writes a JSON response, doctor report, or persisted CLI
-diagnostic to `--response <path>`, GridGrind mirrors one structured `CliDiagnostic` on stderr.
-That stderr diagnostic reuses the same `problems` core and sets `transport={"wroteTo":"FILE",
-"responsePath":"..."}` so one parser can still learn where the main payload was persisted.
-When GridGrind cannot write the requested `--response <path>`, it streams the structured fallback
-payload to stdout and mirrors one stderr `CliDiagnostic` with `transport={"wroteTo":"STDOUT"}`
-whose `problems` collection matches the stdout fallback problem collection.
+Without `--response`, the primary `CommandError`, `WorkbookResult`, doctor report, or discovery
+payload is the sole stdout content. With `--response <path>`, that primary payload is written only
+to the requested file. GridGrind does not mirror an equivalent diagnostic on stderr. If that file
+cannot be written, the primary fallback payload goes to stdout and stderr receives exactly one
+transport-only JSON line, `{"wroteTo":"STDOUT","responsePath":"..."}`. The notice has no
+status, exit code, or problem data and is not a second result schema.
 
 Values declared `secret: true` in the request contract are protected by their exact JSON owner
 path. A binding or validation problem at a declared secret path uses a generic sensitive-safe

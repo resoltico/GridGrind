@@ -1,9 +1,9 @@
 package dev.erst.gridgrind.contract.json;
 
 import dev.erst.gridgrind.contract.catalog.Catalog;
-import dev.erst.gridgrind.contract.dto.WorkbookResult;
 import dev.erst.gridgrind.contract.dto.RequestDoctorReport;
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
+import dev.erst.gridgrind.contract.dto.WorkbookResult;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Objects;

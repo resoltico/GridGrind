@@ -3,9 +3,12 @@ package dev.erst.gridgrind.contract.dto;
 import dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces.JsonLocation;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.ToIntFunction;
 
 /** Provides the protocol's deterministic ordering for emitted problems and warnings. */
 public final class DiagnosticOrder {
@@ -15,7 +18,8 @@ public final class DiagnosticOrder {
   public static List<GridGrindProblemDetail.Problem> problems(
       List<GridGrindProblemDetail.Problem> problems) {
     Objects.requireNonNull(problems, "problems must not be null");
-    List<Allocated<GridGrindProblemDetail.Problem>> allocated = allocate(problems);
+    List<Allocated<GridGrindProblemDetail.Problem>> allocated =
+        allocate(problems, DiagnosticOrder::phase);
     allocated.sort(problemComparator());
     return allocated.stream().map(Allocated::value).toList();
   }
@@ -23,20 +27,14 @@ public final class DiagnosticOrder {
   /** Returns warnings in the complete protocol order without exposing allocation metadata. */
   public static List<RequestWarning> warnings(List<RequestWarning> warnings) {
     Objects.requireNonNull(warnings, "warnings must not be null");
-    List<Allocated<RequestWarning>> allocated = allocate(warnings);
-    allocated.sort(
-        Comparator.comparingInt((Allocated<RequestWarning> _) -> 3)
-            .thenComparingInt(_ -> 1)
-            .thenComparingLong(_ -> Long.MAX_VALUE)
-            .thenComparingInt(warning -> warning.value().stepIndex())
-            .thenComparingInt(_ -> 0)
-            .thenComparing(warning -> warning.value().code().name())
-            .thenComparingInt(Allocated::ordinal));
+    List<Allocated<RequestWarning>> allocated = allocate(warnings, _ -> STATIC_VALIDATION_PHASE);
+    allocated.sort(warningComparator());
     return allocated.stream().map(Allocated::value).toList();
   }
 
   private static Comparator<Allocated<GridGrindProblemDetail.Problem>> problemComparator() {
-    return Comparator.comparingInt((Allocated<GridGrindProblemDetail.Problem> problem) -> phase(problem.value()))
+    return Comparator.comparingInt(
+            (Allocated<GridGrindProblemDetail.Problem> problem) -> phase(problem.value()))
         .thenComparingInt(problem -> positionRank(problem.value()))
         .thenComparingLong(problem -> byteOffset(problem.value()))
         .thenComparingInt(problem -> stepIndex(problem.value()))
@@ -45,13 +43,38 @@ public final class DiagnosticOrder {
         .thenComparingInt(Allocated::ordinal);
   }
 
-  private static <T> List<Allocated<T>> allocate(List<T> values) {
+  private static Comparator<Allocated<RequestWarning>> warningComparator() {
+    return Comparator.comparingInt((Allocated<RequestWarning> _) -> STATIC_VALIDATION_PHASE)
+        .thenComparingInt(_ -> UNPOSITIONED_RANK)
+        .thenComparingLong(_ -> UNPOSITIONED_BYTE_OFFSET)
+        .thenComparingInt(warning -> warning.value().stepIndex())
+        .thenComparingInt(_ -> NON_DUPLICATE_OCCURRENCE)
+        .thenComparing(warning -> warning.value().code().name())
+        .thenComparingInt(Allocated::ordinal);
+  }
+
+  /**
+   * Gives each phase its own deterministic final tiebreaker. The ordinal is deliberately internal:
+   * it orders otherwise identical diagnostics without becoming a protocol field.
+   */
+  private static <T> List<Allocated<T>> allocate(List<T> values, ToIntFunction<T> phaseSelector) {
+    Objects.requireNonNull(phaseSelector, "phaseSelector must not be null");
     List<Allocated<T>> allocated = new ArrayList<>(values.size());
-    for (int ordinal = 0; ordinal < values.size(); ordinal++) {
-      allocated.add(new Allocated<>(ordinal, Objects.requireNonNull(values.get(ordinal), "values must not contain nulls")));
+    Map<Integer, Integer> nextOrdinalByPhase = new HashMap<>();
+    for (T value : values) {
+      T nonNullValue = Objects.requireNonNull(value, "values must not contain nulls");
+      int phase = phaseSelector.applyAsInt(nonNullValue);
+      int ordinal = nextOrdinalByPhase.getOrDefault(phase, 0);
+      nextOrdinalByPhase.put(phase, Math.incrementExact(ordinal));
+      allocated.add(new Allocated<>(ordinal, nonNullValue));
     }
     return allocated;
   }
+
+  private static final int STATIC_VALIDATION_PHASE = 3;
+  private static final int UNPOSITIONED_RANK = 1;
+  private static final long UNPOSITIONED_BYTE_OFFSET = Long.MAX_VALUE;
+  private static final int NON_DUPLICATE_OCCURRENCE = 0;
 
   private static int phase(GridGrindProblemDetail.Problem problem) {
     return switch (problem.context()) {
@@ -59,12 +82,14 @@ public final class DiagnosticOrder {
       case ProblemContext.ValidateRequest _ -> 3;
       case ProblemContext.ResolveInputs _,
           ProblemContext.OpenWorkbook _,
-          ProblemContext.ExecuteCalculation.Preflight _ -> 4;
+          ProblemContext.ExecuteCalculation.Preflight _ ->
+          4;
       case ProblemContext.ExecuteCalculation.Execution _,
           ProblemContext.ExecuteStep _,
           ProblemContext.PersistWorkbook _,
           ProblemContext.ExecuteRequest _,
-          ProblemContext.WriteResponse _ -> 5;
+          ProblemContext.WriteResponse _ ->
+          5;
     };
   }
 

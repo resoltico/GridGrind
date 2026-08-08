@@ -20,7 +20,9 @@ public sealed interface WorkbookResult {
   /** Protocol version negotiated for this response. */
   GridGrindProtocolVersion protocolVersion();
 
-  /** Optional caller-supplied plan identifier, owned by the result rather than execution telemetry. */
+  /**
+   * Optional caller-supplied plan identifier, owned by the result rather than execution telemetry.
+   */
   Optional<String> planId();
 
   /** Structured execution journal captured for this run, even when it failed. */
@@ -37,7 +39,8 @@ public sealed interface WorkbookResult {
   /** Successful workbook execution result. */
   record Success(
       GridGrindProtocolVersion protocolVersion,
-      @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_ABSENT)
+      @com.fasterxml.jackson.annotation.JsonInclude(
+              com.fasterxml.jackson.annotation.JsonInclude.Include.NON_ABSENT)
           Optional<String> planId,
       ExecutionJournal journal,
       CalculationReport calculation,
@@ -66,7 +69,8 @@ public sealed interface WorkbookResult {
   /** Failed workbook execution with a structured problem. */
   record Failure(
       GridGrindProtocolVersion protocolVersion,
-      @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_ABSENT)
+      @com.fasterxml.jackson.annotation.JsonInclude(
+              com.fasterxml.jackson.annotation.JsonInclude.Include.NON_ABSENT)
           Optional<String> planId,
       ExecutionJournal journal,
       CalculationReport calculation,

@@ -19,9 +19,9 @@ import dev.erst.gridgrind.contract.dto.ExecutionPolicyInput;
 import dev.erst.gridgrind.contract.dto.GridGrindProblemCategory;
 import dev.erst.gridgrind.contract.dto.GridGrindProblemCode;
 import dev.erst.gridgrind.contract.dto.GridGrindProtocolVersion;
+import dev.erst.gridgrind.contract.dto.WorkbookPlan;
 import dev.erst.gridgrind.contract.dto.WorkbookResult;
 import dev.erst.gridgrind.contract.dto.WorkbookResults;
-import dev.erst.gridgrind.contract.dto.WorkbookPlan;
 import dev.erst.gridgrind.contract.json.GridGrindJsonOutput;
 import dev.erst.gridgrind.contract.query.*;
 import dev.erst.gridgrind.contract.selector.CellSelector;
@@ -56,8 +56,7 @@ class ExecutionJournalCoverageTest {
             dev.erst.gridgrind.contract.dto.ExecutionPolicyInput.defaults(),
             dev.erst.gridgrind.contract.dto.FormulaEnvironmentInput.empty(),
             List.of());
-    WorkbookResult.Success expected =
-        WorkbookResults.success(List.of(), List.of(), List.of());
+    WorkbookResult.Success expected = WorkbookResults.success(List.of(), List.of(), List.of());
     AtomicBoolean called = new AtomicBoolean(false);
     GridGrindRequestExecutor executor =
         (ignoredRequest, ignoredBindings, ignoredSink) -> {

@@ -212,8 +212,7 @@ class DefaultGridGrindRequestExecutorTestSupport
     };
   }
 
-  static String writtenExecutionPath(
-      WorkbookResultPersistence.PersistenceOutcome.SavedAs savedAs) {
+  static String writtenExecutionPath(WorkbookResultPersistence.PersistenceOutcome.SavedAs savedAs) {
     return writtenExecutionPath(savedAs.write());
   }
 

@@ -33,9 +33,8 @@ final class CliUnexpectedFailureSupport {
       return new CliResponseWriter()
           .writeCommandError(responsePathHint, stdout, stderr, diagnostic, prettyJson);
     } catch (Throwable writeFailure) {
-      directFallback(
-          diagnostic, stdout, stderr, responsePathHint, prettyJson, writeFailure);
-      return CliResponseTransportSupport.exitCodeFor(diagnostic);
+      directFallback(diagnostic, stdout, stderr, responsePathHint, prettyJson, writeFailure);
+      return CliExitCodes.forCommandError(diagnostic);
     }
   }
 
@@ -53,7 +52,8 @@ final class CliUnexpectedFailureSupport {
         try {
           CliResponseTransportSupport.writeTransportNoticeToStderr(
               stderr,
-              CliTransportNotice.stdoutFallback(responsePathHint.orElseThrow().toAbsolutePath().toString()));
+              CliTransportNotice.stdoutFallback(
+                  responsePathHint.orElseThrow().toAbsolutePath().toString()));
         } catch (IOException ignored) {
           // The recovered command error on stdout remains the primary fallback result.
         }

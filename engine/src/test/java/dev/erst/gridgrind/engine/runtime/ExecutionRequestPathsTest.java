@@ -5,8 +5,8 @@ import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 
 import dev.erst.gridgrind.contract.dto.ExecutionPolicyInput;
 import dev.erst.gridgrind.contract.dto.FormulaEnvironmentInput;
-import dev.erst.gridgrind.contract.dto.WorkbookResultPersistence;
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
+import dev.erst.gridgrind.contract.dto.WorkbookResultPersistence;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 
@@ -51,8 +51,7 @@ class ExecutionRequestPathsTest {
             ExecutionRequestPaths.unwrittenPersistenceOutcome(impossibleOverwriteRequest));
 
     assertEquals(java.util.Optional.of("fixtures/budget.xlsx"), overwritten.sourcePath());
-    assertInstanceOf(
-        WorkbookResultPersistence.WriteResult.NotWritten.class, overwritten.write());
+    assertInstanceOf(WorkbookResultPersistence.WriteResult.NotWritten.class, overwritten.write());
     assertEquals("fixtures/output.xlsx", savedAs.requestedPath());
     assertInstanceOf(WorkbookResultPersistence.WriteResult.NotWritten.class, savedAs.write());
     assertEquals(java.util.Optional.empty(), impossibleOverwrite.sourcePath());

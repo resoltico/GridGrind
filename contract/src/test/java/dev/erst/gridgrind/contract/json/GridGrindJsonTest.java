@@ -18,11 +18,11 @@ import dev.erst.gridgrind.contract.dto.ExecutionPolicyInput;
 import dev.erst.gridgrind.contract.dto.FormulaEnvironmentInput;
 import dev.erst.gridgrind.contract.dto.GridGrindProblemDetail;
 import dev.erst.gridgrind.contract.dto.GridGrindProtocolVersion;
+import dev.erst.gridgrind.contract.dto.RequestWarning;
+import dev.erst.gridgrind.contract.dto.WorkbookPlan;
 import dev.erst.gridgrind.contract.dto.WorkbookResult;
 import dev.erst.gridgrind.contract.dto.WorkbookResultPersistence;
 import dev.erst.gridgrind.contract.dto.WorkbookResults;
-import dev.erst.gridgrind.contract.dto.RequestWarning;
-import dev.erst.gridgrind.contract.dto.WorkbookPlan;
 import dev.erst.gridgrind.contract.query.*;
 import dev.erst.gridgrind.contract.query.WorkbookInspectionResult;
 import dev.erst.gridgrind.contract.selector.CellSelector;
@@ -38,7 +38,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
-import tools.jackson.databind.node.ObjectNode;
 
 /** Tests for JSON serialization, parser wording, and the step-based wire shape. */
 @SuppressWarnings("NotJavadoc")
@@ -359,7 +358,14 @@ class GridGrindJsonTest {
         WorkbookResults.success(
             GridGrindProtocolVersion.V2,
             new WorkbookResultPersistence.PersistenceOutcome.NotSaved(),
-            List.of(new RequestWarning(dev.erst.gridgrind.contract.dto.GridGrindWarningCode.UNQUOTED_SHEET_NAME_IN_FORMULA, 0, "set-owner", "SET_CELL", "warning")),
+            List.of(
+                new RequestWarning(
+                    dev.erst.gridgrind.contract.dto.GridGrindWarningCode
+                        .UNQUOTED_SHEET_NAME_IN_FORMULA,
+                    0,
+                    "set-owner",
+                    "SET_CELL",
+                    "warning")),
             List.of(
                 new AssertionResult(
                     dev.erst.gridgrind.contract.assertion.AssertionOutcome.PASSED,
@@ -375,7 +381,8 @@ class GridGrindJsonTest {
     assertEquals(
         request, GridGrindJson.readRequest(GridGrindJsonOutput.writeRequestBytes(request)));
     assertEquals(
-        response, GridGrindJson.readWorkbookResult(GridGrindJsonOutput.writeWorkbookResultBytes(response)));
+        response,
+        GridGrindJson.readWorkbookResult(GridGrindJsonOutput.writeWorkbookResultBytes(response)));
     assertEquals(
         catalog,
         GridGrindJson.readProtocolCatalog(GridGrindJsonOutput.writeProtocolCatalogBytes(catalog)));
@@ -425,10 +432,12 @@ class GridGrindJsonTest {
 
     assertEquals(
         resolveInputsFailure,
-        GridGrindJson.readWorkbookResult(GridGrindJsonOutput.writeWorkbookResultBytes(resolveInputsFailure)));
+        GridGrindJson.readWorkbookResult(
+            GridGrindJsonOutput.writeWorkbookResultBytes(resolveInputsFailure)));
     assertEquals(
         calculationFailure,
-        GridGrindJson.readWorkbookResult(GridGrindJsonOutput.writeWorkbookResultBytes(calculationFailure)));
+        GridGrindJson.readWorkbookResult(
+            GridGrindJsonOutput.writeWorkbookResultBytes(calculationFailure)));
   }
 
   private static TextSourceInput text(String value) {
@@ -814,131 +823,6 @@ class GridGrindJsonTest {
         "Field 'steps[0]' must be an object containing exactly one of action, assertion, or query",
         invalidStep.getMessage());
     assertEquals(Optional.of("steps[0]"), invalidStep.jsonPath());
-  }
-
-  @Test
-  void defaultsDataValidationPayloadsThatOmitValidationBooleans() throws IOException {
-    ObjectNode missingAllowBlank =
-        GridGrindJsonOutput.requestTree(
-            GridGrindJson.readRequest(
-                """
-                {
-                  "protocolVersion": "V2",
-                  "source": { "type": "NEW" },
-                  "persistence": { "type": "NONE" },
-                  "execution": {
-                    "mode": { "type": "FULL_XSSF" },
-                    "journal": { "level": "NORMAL" },
-                    "calculation": {
-                      "strategy": { "type": "DO_NOT_CALCULATE" },
-                      "markRecalculateOnOpen": false
-                    }
-                  },
-                  "formulaEnvironment": {
-                    "externalWorkbooks": [ ],
-                    "missingWorkbookPolicy": "ERROR",
-                    "udfToolpacks": [ ]
-                  },
-                  "steps": [
-                    {
-                      "stepId": "validation-missing-allowBlank",
-                      "target": {
-                        "type": "RANGE_BY_RANGE",
-                        "sheetName": "Intake",
-                        "range": "A2:A20"
-                      },
-                      "action": {
-                        "type": "SET_DATA_VALIDATION",
-                        "validation": {
-                          "rule": {
-                            "type": "EXPLICIT_LIST",
-                            "values": [ "Queued" ]
-                          },
-                          "suppressDropDownArrow": false
-                        }
-                      }
-                    }
-                  ]
-                }
-                """
-                    .getBytes(StandardCharsets.UTF_8)));
-    ObjectNode missingSuppressDropDownArrow =
-        GridGrindJsonOutput.requestTree(
-            GridGrindJson.readRequest(
-                """
-                {
-                  "protocolVersion": "V2",
-                  "source": { "type": "NEW" },
-                  "persistence": { "type": "NONE" },
-                  "execution": {
-                    "mode": { "type": "FULL_XSSF" },
-                    "journal": { "level": "NORMAL" },
-                    "calculation": {
-                      "strategy": { "type": "DO_NOT_CALCULATE" },
-                      "markRecalculateOnOpen": false
-                    }
-                  },
-                  "formulaEnvironment": {
-                    "externalWorkbooks": [ ],
-                    "missingWorkbookPolicy": "ERROR",
-                    "udfToolpacks": [ ]
-                  },
-                  "steps": [
-                    {
-                      "stepId": "validation-missing-suppressDropDownArrow",
-                      "target": {
-                        "type": "RANGE_BY_RANGE",
-                        "sheetName": "Intake",
-                        "range": "A2:A20"
-                      },
-                      "action": {
-                        "type": "SET_DATA_VALIDATION",
-                        "validation": {
-                          "rule": {
-                            "type": "EXPLICIT_LIST",
-                            "values": [ "Queued" ]
-                          },
-                          "allowBlank": false
-                        }
-                      }
-                    }
-                  ]
-                }
-                """
-                    .getBytes(StandardCharsets.UTF_8)));
-
-    assertFalse(
-        missingAllowBlank
-            .path("steps")
-            .path(0)
-            .path("action")
-            .path("validation")
-            .path("allowBlank")
-            .booleanValue());
-    assertFalse(
-        missingAllowBlank
-            .path("steps")
-            .path(0)
-            .path("action")
-            .path("validation")
-            .path("suppressDropDownArrow")
-            .booleanValue());
-    assertFalse(
-        missingSuppressDropDownArrow
-            .path("steps")
-            .path(0)
-            .path("action")
-            .path("validation")
-            .path("allowBlank")
-            .booleanValue());
-    assertFalse(
-        missingSuppressDropDownArrow
-            .path("steps")
-            .path(0)
-            .path("action")
-            .path("validation")
-            .path("suppressDropDownArrow")
-            .booleanValue());
   }
 
   /** Tracks whether the request reader closes the source stream after consuming it. */

@@ -481,8 +481,7 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
     assertEquals(
         List.of(
             new RequestWarning(
-                dev.erst.gridgrind.contract.dto.GridGrindWarningCode
-                    .UNQUOTED_SHEET_NAME_IN_FORMULA,
+                dev.erst.gridgrind.contract.dto.GridGrindWarningCode.UNQUOTED_SHEET_NAME_IN_FORMULA,
                 3,
                 "step-04-set-cell",
                 "SET_CELL",

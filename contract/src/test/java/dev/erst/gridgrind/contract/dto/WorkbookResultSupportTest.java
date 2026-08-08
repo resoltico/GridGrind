@@ -36,8 +36,7 @@ class WorkbookResultSupportTest {
         assertThrows(
                 IllegalArgumentException.class,
                 () ->
-                    WorkbookResultSupport.copyOptionalValues(
-                        Optional.of(List.of()), "sheetNames"))
+                    WorkbookResultSupport.copyOptionalValues(Optional.of(List.of()), "sheetNames"))
             .getMessage());
   }
 }

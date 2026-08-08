@@ -6,8 +6,8 @@ import dev.erst.gridgrind.cli.discovery.CommandError;
 import dev.erst.gridgrind.contract.dto.*;
 import dev.erst.gridgrind.contract.dto.ExecutionJournal;
 import dev.erst.gridgrind.contract.dto.GridGrindProblemCode;
-import dev.erst.gridgrind.contract.dto.WorkbookResult;
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
+import dev.erst.gridgrind.contract.dto.WorkbookResult;
 import dev.erst.gridgrind.contract.json.GridGrindJson;
 import dev.erst.gridgrind.contract.query.SheetInspectionResult;
 import dev.erst.gridgrind.contract.query.WorkbookAssetInspectionResult;
@@ -235,7 +235,8 @@ class GridGrindCliTest extends GridGrindCliTestSupport {
     assertEquals(0, compactExitCode);
     assertEquals(0, prettyExitCode);
     assertInstanceOf(
-        WorkbookResult.Success.class, GridGrindJson.readWorkbookResult(compactStdout.toByteArray()));
+        WorkbookResult.Success.class,
+        GridGrindJson.readWorkbookResult(compactStdout.toByteArray()));
     assertInstanceOf(
         WorkbookResult.Success.class, GridGrindJson.readWorkbookResult(prettyStdout.toByteArray()));
     assertEquals(1L, compactStdout.toString(StandardCharsets.UTF_8).lines().count());

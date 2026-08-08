@@ -4,10 +4,10 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import dev.erst.gridgrind.cli.discovery.CommandError;
 import dev.erst.gridgrind.cli.discovery.CliHelpReport;
 import dev.erst.gridgrind.cli.discovery.CliLicenseReport;
 import dev.erst.gridgrind.cli.discovery.CliVersionReport;
+import dev.erst.gridgrind.cli.discovery.CommandError;
 import dev.erst.gridgrind.cli.discovery.GridGrindCliJson;
 import dev.erst.gridgrind.cli.discovery.ShippedExampleEntry;
 import dev.erst.gridgrind.cli.examples.GridGrindShippedExamples;
@@ -312,9 +312,14 @@ class GridGrindCliHelpTextTest extends GridGrindCliTestSupport {
     assertTrue(protocol.contains("GET_CELLS addresses"));
     assertTrue(protocol.contains("EVALUATE_TARGETS requires strategy.cells[]"));
     assertTrue(protocol.contains("stepId must be unique within steps[]"));
-    assertTrue(normalizedProtocol.contains("Without --response, the command payload is the sole stdout content"));
-    assertTrue(normalizedProtocol.contains("With --response, that payload is written to the new file"));
-    assertTrue(normalizedProtocol.contains("response-file write failure adds one compact transport notice"));
+    assertTrue(
+        normalizedProtocol.contains(
+            "Without --response, the command payload is the sole stdout content"));
+    assertTrue(
+        normalizedProtocol.contains("With --response, that payload is written to the new file"));
+    assertTrue(
+        normalizedProtocol.contains(
+            "response-file write failure adds one compact transport notice"));
     assertFalse(protocol.contains("Workflows:"));
     assertFalse(protocol.contains("Docker Example:"));
   }

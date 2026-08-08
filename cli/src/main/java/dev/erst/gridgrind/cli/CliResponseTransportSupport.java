@@ -5,9 +5,7 @@ import dev.erst.gridgrind.cli.discovery.CommandError;
 import dev.erst.gridgrind.cli.discovery.GridGrindCliJson;
 import dev.erst.gridgrind.contract.dto.GridGrindProblemCode;
 import dev.erst.gridgrind.contract.dto.GridGrindProblemDetail;
-import dev.erst.gridgrind.contract.dto.WorkbookResult;
 import dev.erst.gridgrind.contract.dto.ProblemContext;
-import dev.erst.gridgrind.contract.dto.RequestDoctorReport;
 import dev.erst.gridgrind.contract.json.RequestDiagnosticRedactor;
 import dev.erst.gridgrind.engine.api.GridGrindProblems;
 import java.io.IOException;
@@ -52,9 +50,7 @@ final class CliResponseTransportSupport {
   }
 
   static byte[] commandErrorBytes(
-      CommandError commandError,
-      Optional<RequestDiagnosticRedactor> redactor,
-      boolean prettyJson)
+      CommandError commandError, Optional<RequestDiagnosticRedactor> redactor, boolean prettyJson)
       throws IOException {
     return redact(redactor, GridGrindCliJson.writeBytes(commandError, prettyJson), prettyJson);
   }
@@ -106,30 +102,6 @@ final class CliResponseTransportSupport {
             : "Could not write response file " + targetPath + ": " + message;
       }
     };
-  }
-
-  static int exitCodeFor(WorkbookResult result) {
-    return switch (result) {
-      case WorkbookResult.Success _ -> 0;
-      case WorkbookResult.Failure _ -> 1;
-    };
-  }
-
-  static int exitCodeFor(CommandError commandError) {
-    java.util.Objects.requireNonNull(commandError, "commandError must not be null");
-    return switch (commandError.primaryProblem().code()) {
-      case INVALID_ARGUMENTS,
-          INVALID_JSON,
-          INVALID_ENCODING,
-          INVALID_REQUEST_SHAPE,
-          INVALID_REQUEST -> 2;
-      default -> 1;
-    };
-  }
-
-  static int doctorExitCodeFor(RequestDoctorReport report) {
-    java.util.Objects.requireNonNull(report, "report must not be null");
-    return report.valid() ? 0 : 1;
   }
 
   private static Optional<String> fileSystemReason(FileSystemException exception) {

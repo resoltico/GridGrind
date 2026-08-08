@@ -647,8 +647,7 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
         assertInstanceOf(
             WorkbookResultPersistence.PersistenceOutcome.SavedAs.class, failure.persistence());
     assertEquals(workbookPath.toString(), persistence.requestedPath());
-    assertInstanceOf(
-        WorkbookResultPersistence.WriteResult.NotWritten.class, persistence.write());
+    assertInstanceOf(WorkbookResultPersistence.WriteResult.NotWritten.class, persistence.write());
     assertEquals(
         java.util.Optional.of(workbookPath.toAbsolutePath().toString()),
         persistWorkbookContext(failure).persistencePath());
@@ -679,8 +678,7 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
         assertInstanceOf(
             WorkbookResultPersistence.PersistenceOutcome.SavedAs.class, failure.persistence());
     assertEquals(workbookPath.toString(), persistence.requestedPath());
-    assertInstanceOf(
-        WorkbookResultPersistence.WriteResult.NotWritten.class, persistence.write());
+    assertInstanceOf(WorkbookResultPersistence.WriteResult.NotWritten.class, persistence.write());
     assertEquals(
         "Could not write workbook to "
             + workbookPath.toAbsolutePath()
@@ -786,14 +784,12 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
                     List.of())));
     WorkbookResultPersistence.PersistenceOutcome.Overwritten persistence =
         assertInstanceOf(
-            WorkbookResultPersistence.PersistenceOutcome.Overwritten.class,
-            failure.persistence());
+            WorkbookResultPersistence.PersistenceOutcome.Overwritten.class, failure.persistence());
 
     assertEquals(GridGrindProblemCode.INVALID_REQUEST, failure.problem().code());
     assertEquals("VALIDATE_REQUEST", failure.problem().context().stage());
     assertEquals(java.util.Optional.empty(), persistence.sourcePath());
-    assertInstanceOf(
-        WorkbookResultPersistence.WriteResult.NotWritten.class, persistence.write());
+    assertInstanceOf(WorkbookResultPersistence.WriteResult.NotWritten.class, persistence.write());
   }
 
   @Test

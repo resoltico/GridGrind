@@ -1,10 +1,10 @@
 package dev.erst.gridgrind.cli;
 
 import dev.erst.gridgrind.contract.catalog.GridGrindRequestSurfaceContractText;
-import dev.erst.gridgrind.contract.dto.WorkbookResult;
-import dev.erst.gridgrind.contract.dto.WorkbookResults;
 import dev.erst.gridgrind.contract.dto.RequestDoctorReport;
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
+import dev.erst.gridgrind.contract.dto.WorkbookResult;
+import dev.erst.gridgrind.contract.dto.WorkbookResults;
 import dev.erst.gridgrind.contract.json.GridGrindJson;
 import dev.erst.gridgrind.contract.json.InvalidEncodingException;
 import dev.erst.gridgrind.contract.json.InvalidJsonException;
@@ -171,7 +171,7 @@ final class GridGrindCliExecutionCommands {
         stdout,
         stderr,
         response,
-        CliResponseTransportSupport.exitCodeFor(response),
+        CliExitCodes.forWorkbookResult(response),
         requestRedactor.orElseThrow(),
         prettyJson);
   }
@@ -314,8 +314,7 @@ final class GridGrindCliExecutionCommands {
       return responseWriter.writeCommandError(
           responsePath, stdout, stderr, diagnostic, requestRedactor.orElseThrow(), prettyJson);
     }
-    return responseWriter.writeCommandError(
-        responsePath, stdout, stderr, diagnostic, prettyJson);
+    return responseWriter.writeCommandError(responsePath, stdout, stderr, diagnostic, prettyJson);
   }
 
   private static boolean requestArrivesOnStandardInput(Optional<Path> requestPath) {

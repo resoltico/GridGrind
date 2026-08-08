@@ -83,9 +83,7 @@ final class GridGrindCliProtocolCatalogCommands {
           stdout,
           stderr,
           CommandErrors.invalidArguments(
-              "print-protocol-catalog",
-              Optional.of("--lookup"),
-              message),
+              "print-protocol-catalog", Optional.of("--lookup"), message),
           prettyJson);
     }
     return CliCatalogPayloadSupport.writeRenderedPayload(

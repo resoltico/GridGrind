@@ -322,7 +322,8 @@ class GridGrindCliCatalogCommandTest extends GridGrindCliTestSupport {
     CommandError failure = commandErrorOnStdout(stdout, stderr);
     assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.primaryProblem().code());
     assertEquals(java.util.Optional.of("--lookup"), parseArgumentsContext(failure).argumentName());
-    assertTrue(failure.primaryProblem().message().contains("did you mean AUDIT_EXISTING_WORKBOOK?"));
+    assertTrue(
+        failure.primaryProblem().message().contains("did you mean AUDIT_EXISTING_WORKBOOK?"));
     assertTrue(failure.primaryProblem().message().contains("--print-recipe-catalog"));
     assertTrue(
         failure

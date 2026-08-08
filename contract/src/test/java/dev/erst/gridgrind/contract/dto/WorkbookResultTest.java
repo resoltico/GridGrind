@@ -24,7 +24,12 @@ class WorkbookResultTest {
   void successDefaultsPersistenceAndCopiesWarningsAndInspections() {
     List<RequestWarning> warnings = new ArrayList<>();
     warnings.add(
-        new RequestWarning(dev.erst.gridgrind.contract.dto.GridGrindWarningCode.UNQUOTED_SHEET_NAME_IN_FORMULA, 0, "set-total", "SET_CELL", "Quote spaced sheet names in formulas."));
+        new RequestWarning(
+            dev.erst.gridgrind.contract.dto.GridGrindWarningCode.UNQUOTED_SHEET_NAME_IN_FORMULA,
+            0,
+            "set-total",
+            "SET_CELL",
+            "Quote spaced sheet names in formulas."));
     List<InspectionResult> inspections = new ArrayList<>();
     inspections.add(
         new WorkbookInspectionResult.WorkbookSummaryResult(
@@ -32,8 +37,7 @@ class WorkbookResultTest {
             new WorkbookSummary.WithSheets(
                 1, List.of("Budget"), "Budget", List.of("Budget"), 0, false)));
 
-    WorkbookResult.Success success =
-        WorkbookResults.success(warnings, List.of(), inspections);
+    WorkbookResult.Success success = WorkbookResults.success(warnings, List.of(), inspections);
     WorkbookResult.Success successWithoutInspections =
         WorkbookResults.success(warnings, List.of(), List.of());
 
@@ -116,11 +120,41 @@ class WorkbookResultTest {
   @Test
   void requestWarningsRequireStepIdentity() {
     assertThrows(
-        IllegalArgumentException.class, () -> new RequestWarning(dev.erst.gridgrind.contract.dto.GridGrindWarningCode.UNQUOTED_SHEET_NAME_IN_FORMULA, -1, "a", "SET_CELL", "warn"));
+        IllegalArgumentException.class,
+        () ->
+            new RequestWarning(
+                dev.erst.gridgrind.contract.dto.GridGrindWarningCode.UNQUOTED_SHEET_NAME_IN_FORMULA,
+                -1,
+                "a",
+                "SET_CELL",
+                "warn"));
     assertThrows(
-        IllegalArgumentException.class, () -> new RequestWarning(dev.erst.gridgrind.contract.dto.GridGrindWarningCode.UNQUOTED_SHEET_NAME_IN_FORMULA, 0, " ", "SET_CELL", "warn"));
-    assertThrows(IllegalArgumentException.class, () -> new RequestWarning(dev.erst.gridgrind.contract.dto.GridGrindWarningCode.UNQUOTED_SHEET_NAME_IN_FORMULA, 0, "a", " ", "warn"));
-    assertThrows(IllegalArgumentException.class, () -> new RequestWarning(dev.erst.gridgrind.contract.dto.GridGrindWarningCode.UNQUOTED_SHEET_NAME_IN_FORMULA, 0, "a", "SET_CELL", " "));
+        IllegalArgumentException.class,
+        () ->
+            new RequestWarning(
+                dev.erst.gridgrind.contract.dto.GridGrindWarningCode.UNQUOTED_SHEET_NAME_IN_FORMULA,
+                0,
+                " ",
+                "SET_CELL",
+                "warn"));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new RequestWarning(
+                dev.erst.gridgrind.contract.dto.GridGrindWarningCode.UNQUOTED_SHEET_NAME_IN_FORMULA,
+                0,
+                "a",
+                " ",
+                "warn"));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new RequestWarning(
+                dev.erst.gridgrind.contract.dto.GridGrindWarningCode.UNQUOTED_SHEET_NAME_IN_FORMULA,
+                0,
+                "a",
+                "SET_CELL",
+                " "));
   }
 
   @Test

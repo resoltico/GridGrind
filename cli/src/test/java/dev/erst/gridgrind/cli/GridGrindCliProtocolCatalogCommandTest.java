@@ -302,7 +302,8 @@ class GridGrindCliProtocolCatalogCommandTest extends GridGrindCliTestSupport {
     CommandError blankOperationFailure = commandError(blankOperationStdout.toByteArray());
 
     assertEquals(2, blankOperationExitCode);
-    assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, blankOperationFailure.primaryProblem().code());
+    assertEquals(
+        GridGrindProblemCode.INVALID_ARGUMENTS, blankOperationFailure.primaryProblem().code());
     assertEquals(
         java.util.Optional.of("--lookup"),
         parseArgumentsContext(blankOperationFailure).argumentName());
@@ -323,11 +324,13 @@ class GridGrindCliProtocolCatalogCommandTest extends GridGrindCliTestSupport {
     CommandError blankSearchFailure = commandError(blankSearchStdout.toByteArray());
 
     assertEquals(2, blankSearchExitCode);
-    assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, blankSearchFailure.primaryProblem().code());
+    assertEquals(
+        GridGrindProblemCode.INVALID_ARGUMENTS, blankSearchFailure.primaryProblem().code());
     assertEquals(
         java.util.Optional.of("--search"),
         parseArgumentsContext(blankSearchFailure).argumentName());
-    assertTrue(blankSearchFailure.primaryProblem().message().contains("search query must not be blank"));
+    assertTrue(
+        blankSearchFailure.primaryProblem().message().contains("search query must not be blank"));
   }
 
   @Test
@@ -505,7 +508,10 @@ class GridGrindCliProtocolCatalogCommandTest extends GridGrindCliTestSupport {
     assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.primaryProblem().code());
     assertTrue(failure.primaryProblem().message().contains("BOGUS_XYZ"));
     assertTrue(
-        failure.primaryProblem().message().contains("--print-protocol-catalog --search \"BOGUS_XYZ\""));
+        failure
+            .primaryProblem()
+            .message()
+            .contains("--print-protocol-catalog --search \"BOGUS_XYZ\""));
     assertTrue(failure.primaryProblem().message().contains("--print-protocol-catalog"));
   }
 

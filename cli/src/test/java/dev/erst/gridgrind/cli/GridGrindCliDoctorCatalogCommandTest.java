@@ -622,7 +622,8 @@ class GridGrindCliDoctorCatalogCommandTest extends GridGrindCliTestSupport {
     assertEquals("doctor-request", failure.command());
     assertEquals(
         Optional.of(missingRequestPath.toString()), readRequestContext(failure).requestPath());
-    assertEquals("Request file not found: " + missingRequestPath, failure.primaryProblem().message());
+    assertEquals(
+        "Request file not found: " + missingRequestPath, failure.primaryProblem().message());
   }
 
   @Test

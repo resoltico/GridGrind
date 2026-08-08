@@ -6,11 +6,11 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import dev.erst.gridgrind.cli.discovery.CommandError;
 import dev.erst.gridgrind.contract.dto.GridGrindProblemCode;
-import dev.erst.gridgrind.contract.dto.WorkbookResult;
-import dev.erst.gridgrind.contract.dto.WorkbookResults;
 import dev.erst.gridgrind.contract.dto.ProblemContext;
 import dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces.JsonLocation;
 import dev.erst.gridgrind.contract.dto.RequestDoctorReport;
+import dev.erst.gridgrind.contract.dto.WorkbookResult;
+import dev.erst.gridgrind.contract.dto.WorkbookResults;
 import dev.erst.gridgrind.contract.json.GridGrindJson;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -152,7 +152,8 @@ class GridGrindCliInvocationTest extends GridGrindCliTestSupport {
     assertEquals(
         java.util.Optional.of("steps[0].query.type"), readRequestContext(failure).jsonPath());
     assertEquals(
-        "Field 'steps[0].query.type' must be a JSON string type id", failure.primaryProblem().message());
+        "Field 'steps[0].query.type' must be a JSON string type id",
+        failure.primaryProblem().message());
     assertEquals(
         "Replace field 'steps[0].query.type' with a JSON string type id.",
         failure.primaryProblem().resolution());
@@ -189,7 +190,8 @@ class GridGrindCliInvocationTest extends GridGrindCliTestSupport {
     assertEquals(2, exitCode);
     assertEquals(GridGrindProblemCode.INVALID_REQUEST_SHAPE, failure.primaryProblem().code());
     assertEquals(Optional.of("steps[0].target.type"), readRequestContext(failure).jsonPath());
-    assertEquals("Missing required field 'steps[0].target.type'", failure.primaryProblem().message());
+    assertEquals(
+        "Missing required field 'steps[0].target.type'", failure.primaryProblem().message());
     assertTrue(failure.primaryProblem().resolution().contains("steps[0].target.type"));
   }
 
@@ -341,7 +343,8 @@ class GridGrindCliInvocationTest extends GridGrindCliTestSupport {
     assertEquals(GridGrindProblemCode.INVALID_REQUEST_SHAPE, failure.primaryProblem().code());
     assertEquals(Optional.of("steps[0].target.type"), readRequestContext(failure).jsonPath());
     assertEquals(
-        "Field 'steps[0].target.type' must be a JSON string type id", failure.primaryProblem().message());
+        "Field 'steps[0].target.type' must be a JSON string type id",
+        failure.primaryProblem().message());
     assertTrue(failure.primaryProblem().resolution().contains("steps[0].target.type"));
   }
 

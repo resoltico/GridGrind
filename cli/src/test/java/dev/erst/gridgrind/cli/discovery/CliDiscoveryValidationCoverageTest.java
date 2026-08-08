@@ -367,20 +367,14 @@ class CliDiscoveryValidationCoverageTest {
         assertThrows(
                 IllegalArgumentException.class,
                 () ->
-                    new CommandError(
-                        GridGrindProtocolVersion.current(),
-                        "print-recipe",
-                        List.of()))
+                    new CommandError(GridGrindProtocolVersion.current(), "print-recipe", List.of()))
             .getMessage());
     assertEquals(
         "command must not be blank",
         assertThrows(
                 IllegalArgumentException.class,
                 () ->
-                    new CommandError(
-                        GridGrindProtocolVersion.current(),
-                        "   ",
-                        List.of(problem())))
+                    new CommandError(GridGrindProtocolVersion.current(), "   ", List.of(problem())))
             .getMessage());
     assertEquals(
         "responsePath must not be blank",

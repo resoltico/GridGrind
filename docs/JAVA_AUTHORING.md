@@ -2,7 +2,7 @@
 afad: "4.0"
 version: "0.72.0"
 domain: JAVA_AUTHORING
-updated: "2026-05-01"
+updated: "2026-08-08"
 route:
   keywords: [gridgrind, java, authoring, gridgrindplan, targets, values, tables, links, workbookplan, executioninputbindings]
   questions: ["can i use gridgrind from java", "how do i author gridgrind workflows in java", "what is gridgrindplan", "how do i execute a java-authored plan in process", "how do source-backed inputs work from java"]
@@ -142,6 +142,10 @@ the request workspace when you can, and remove it when your application is done 
 The compile-verified
 [../examples/java-authoring-workflow.java](../examples/java-authoring-workflow.java) example shows
 that cleanup explicitly.
+
+In-process execution returns `WorkbookResult` only after workbook execution begins. Its
+`status` is `SUCCEEDED` or `FAILED`; a failed execution carries one canonical `problem` while both
+outcomes retain the same journal, persistence, warning, assertion, and inspection surfaces.
 
 ## Source-Backed Inputs From Java
 

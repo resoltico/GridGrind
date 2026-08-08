@@ -14,7 +14,8 @@ class CliArgumentFailureSupportTest {
   void namedArgumentFailureKeepsTheArgumentInTheProblemContext() {
     CommandError error =
         CliArgumentFailureSupport.reportFor(
-            new String[] {"--bogus"}, new CliArgumentsException("--bogus", "Unknown argument: --bogus"));
+            new String[] {"--bogus"},
+            new CliArgumentsException("--bogus", "Unknown argument: --bogus"));
 
     assertEquals("REJECTED", error.status());
     assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, error.primaryProblem().code());

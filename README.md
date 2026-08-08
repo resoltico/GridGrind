@@ -2,7 +2,8 @@
 
 GridGrind is a `.xlsx` automation engine. Describe workbook work as a JSON request — create sheets,
 write cells, build tables, assert results, read facts back. GridGrind runs the whole plan and
-returns a structured JSON response. If workbook execution fails, no workbook is saved.
+returns a structured JSON response. A failed step stops the plan before persistence, so a workbook
+is committed only after successful execution.
 
 The usual alternative is a mix of libraries, helper scripts, and post-write checks that run after
 the file is already saved — with no clean rollback when something fails mid-run. GridGrind replaces
@@ -46,6 +47,12 @@ The rest of this README uses `gridgrind` for the active entry point. From a repo
 the `export PATH=...` line above points that name at the packaged launcher. From a release
 archive, add its `bin/` directory to `PATH`; from the standalone JAR, replace `gridgrind` with
 `java -jar gridgrind.jar`.
+
+Without `--response`, GridGrind writes one primary JSON payload to stdout. A command rejected
+before workbook execution uses `CommandError` with `status: "REJECTED"`; execution uses
+`WorkbookResult` with `status: "SUCCEEDED"` or `"FAILED"`. With `--response`, that payload goes
+to the requested file instead. If the file cannot be written, the fallback payload goes to stdout
+and stderr contains one small transport-only JSON notice.
 
 For first contact, prefer `--request <path>` over stdin. Stdin-driven execution and doctoring
 require `--execution-root <path>` so request-owned paths resolve from one explicit invocation root.

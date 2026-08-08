@@ -112,8 +112,7 @@ class GridGrindRequestWarningsTest {
     assertEquals(
         List.of(
             new RequestWarning(
-                dev.erst.gridgrind.contract.dto.GridGrindWarningCode
-                    .UNQUOTED_SHEET_NAME_IN_FORMULA,
+                dev.erst.gridgrind.contract.dto.GridGrindWarningCode.UNQUOTED_SHEET_NAME_IN_FORMULA,
                 4,
                 "step-05-set-cell",
                 "SET_CELL",
@@ -178,15 +177,13 @@ class GridGrindRequestWarningsTest {
     assertEquals(
         List.of(
             new RequestWarning(
-                dev.erst.gridgrind.contract.dto.GridGrindWarningCode
-                    .UNQUOTED_SHEET_NAME_IN_FORMULA,
+                dev.erst.gridgrind.contract.dto.GridGrindWarningCode.UNQUOTED_SHEET_NAME_IN_FORMULA,
                 2,
                 "step-03-set-range",
                 "SET_RANGE",
                 "Formula references same-request sheet names with spaces without single quotes: Budget Review. Use 'Sheet Name'!A1 syntax."),
             new RequestWarning(
-                dev.erst.gridgrind.contract.dto.GridGrindWarningCode
-                    .UNQUOTED_SHEET_NAME_IN_FORMULA,
+                dev.erst.gridgrind.contract.dto.GridGrindWarningCode.UNQUOTED_SHEET_NAME_IN_FORMULA,
                 3,
                 "step-04-append-row",
                 "APPEND_ROW",

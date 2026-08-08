@@ -5,9 +5,9 @@ import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 
 import dev.erst.gridgrind.cli.discovery.CommandError;
 import dev.erst.gridgrind.cli.discovery.GridGrindCliJson;
-import dev.erst.gridgrind.contract.dto.WorkbookResult;
 import dev.erst.gridgrind.contract.dto.ProblemContext;
 import dev.erst.gridgrind.contract.dto.RequestDoctorReport;
+import dev.erst.gridgrind.contract.dto.WorkbookResult;
 import dev.erst.gridgrind.contract.json.GridGrindJson;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -147,8 +147,7 @@ class GridGrindCliTestSupport {
         ProblemContext.ParseArguments.class, diagnostic.primaryProblem().context());
   }
 
-  protected static ProblemContext.ReadRequest readRequestContext(
-      WorkbookResult.Failure failure) {
+  protected static ProblemContext.ReadRequest readRequestContext(WorkbookResult.Failure failure) {
     return assertInstanceOf(ProblemContext.ReadRequest.class, failure.problem().context());
   }
 
@@ -192,8 +191,7 @@ class GridGrindCliTestSupport {
         ProblemContext.WriteResponse.class, diagnostic.primaryProblem().context());
   }
 
-  protected static ProblemContext.ExecuteStep executeStepContext(
-      WorkbookResult.Failure failure) {
+  protected static ProblemContext.ExecuteStep executeStepContext(WorkbookResult.Failure failure) {
     return assertInstanceOf(ProblemContext.ExecuteStep.class, failure.problem().context());
   }
 

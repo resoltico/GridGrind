@@ -140,6 +140,7 @@ class WorkbookInvariantChecksTest {
             writtenSaveAs("result.xlsx", workbookPath),
             List.of(
                 new RequestWarning(
+                    GridGrindWarningCode.UNQUOTED_SHEET_NAME_IN_FORMULA,
                     1,
                     "step-01-set-cell",
                     "SET_CELL",

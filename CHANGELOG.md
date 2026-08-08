@@ -8,7 +8,8 @@ Earlier release history through `0.68.0` is archived in [docs/CHANGELOG_ARCHIVE.
 ### Added
 - Request doctoring now reports every independently observable request-intake defect in one response, including duplicate keys, unknown fields, omitted required fields, explicit nulls, malformed scalar values, missing or unknown type discriminators, and constructor-level field validation failures; valid sibling fragments remain available for safe preflight rather than being discarded after the first defect.
 - Protocol catalog field descriptors now publish `secret: true` for authored credential-bearing fields, allowing consumers to identify values that diagnostics and telemetry must never reproduce.
-- CLI request diagnostics now publish a nonempty ordered `problems` collection, with `PATH_BYTE_OFFSET` and `DUPLICATE_KEY` request locations that retain exact UTF-8 offsets and duplicate-property identity.
+- Added the plural `CommandError` result for command failures before workbook execution, with `status=REJECTED` and a nonempty canonical `problems[]` collection. Request locations retain exact UTF-8 offsets and duplicate-property identity where the source contains an offending token.
+- Added stable `GridGrindWarningCode` values to every structured request warning so warning consumers no longer need to infer meaning from prose alone.
 
 ### Changed
 - The request and response contract now uses protocol version `V2` exclusively; `V1` requests are rejected. Request-side tagged unions use the uniform `type` discriminator, including colors, fills, drawing shapes, and named-range targets, while unrelated report-domain `kind` fields retain their established meanings.
@@ -17,6 +18,9 @@ Earlier release history through `0.68.0` is archived in [docs/CHANGELOG_ARCHIVE.
 - Sensitive request diagnostics now use the contract's exact secret-owner JSON paths rather than global text replacement, so a problem at a credential path is safely generic without corrupting unrelated workbook data or diagnostic text that happens to contain a short secret; workbook, revisions, and OOXML encryption passwords are declared as secret fields, and last-resort failures use the canonical internal-error title instead of arbitrary throwable text.
 - Refreshed build and release dependencies to NullAway `0.13.8`, the Kotlin Gradle plugin `2.4.10`, Jackson Databind `3.2.1`, Bouncy Castle `1.85`, Log4j `2.26.1`, Gradle Shadow `9.5.1`, `actions/setup-java` `5.5.0`, `docker/login-action` `4.4.0`, `docker/setup-buildx-action` `4.2.0`, and `docker/metadata-action` `6.2.0`.
 - Style authoring now names partial updates honestly: the catalog and request model use `CellStylePatchInput` for `APPLY_STYLE.style`, while the separate complete `CellStyleReport` remains the factual readback shape. Cell-style and conditional-formatting patches now share `BorderSideInput` and `ColorInput`, so RGB, theme, indexed, and tint color references have one consistent authoring vocabulary.
+- Command failures now use `CommandError` directly instead of a parallel CLI diagnostic wrapper. `REJECTED` describes only that workbook execution never began; the canonical problem's category continues to describe the fault domain.
+- Execution results now use `WorkbookResult` exclusively. The top-level result owns optional `planId`, common journal, persistence, warning, assertion, and inspection fields on both outcomes, and only `FAILED` carries the singular canonical `problem`.
+- Normal CLI output now has one primary channel: stdout without `--response`, or the requested response file with it. The CLI no longer mirrors an equivalent failure payload on stderr.
 
 ### Fixed
 - Constructor-level and cross-fragment request diagnostics now resolve `PATH_BYTE_OFFSET` to the exact authored member or array token named by their JSON path; when no authored token exists, diagnostics retain the path without fabricating a byte coordinate.
@@ -30,6 +34,8 @@ Earlier release history through `0.68.0` is archived in [docs/CHANGELOG_ARCHIVE.
 - Doctoring no longer rewrites malformed authored steps into synthetic placeholders to continue analysis, so every reported structural defect remains tied to the original request and no fabricated plan data can affect later diagnostics.
 - Shadow packaging now feeds every `META-INF/services/**` descriptor to the service-file merger and rejects duplicate final JAR entries, preventing ServiceLoader registrations from being silently lost during distribution assembly.
 - Conditional-formatting style write and readback no longer collapse theme, indexed, or tint color references to an RGB-only side channel; the documented examples and promoted request-fuzz fixtures now use the same tagged `ColorInput` shape enforced by the protocol.
+- Response-file write failure now preserves completed execution artifacts in a `WorkbookResult` fallback and emits only one transport-only stderr notice; command and doctor fallbacks similarly retain one primary stdout payload rather than competing result envelopes.
+- Problems and warnings now use a total deterministic order across pipeline phase, source position, step, duplicate occurrence, code, and a nonserialized internal phase-local tie-breaker.
 
 ## [0.72.0] - 2026-07-06
 

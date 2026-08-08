@@ -13,11 +13,11 @@ import dev.erst.gridgrind.contract.catalog.GridGrindProtocolCatalog;
 import dev.erst.gridgrind.contract.catalog.TypeEntry;
 import dev.erst.gridgrind.contract.dto.*;
 import dev.erst.gridgrind.contract.dto.GridGrindProblemDetail;
-import dev.erst.gridgrind.contract.dto.WorkbookResult;
-import dev.erst.gridgrind.contract.dto.WorkbookResults;
 import dev.erst.gridgrind.contract.dto.RequestDoctorReport;
 import dev.erst.gridgrind.contract.dto.RequestWarning;
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
+import dev.erst.gridgrind.contract.dto.WorkbookResult;
+import dev.erst.gridgrind.contract.dto.WorkbookResults;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -53,7 +53,14 @@ class GridGrindJsonCoverageTest {
         RequestDoctorReport.warnings(
             new RequestDoctorReport.Summary(
                 "NEW", "NONE", "FULL_XSSF", "DO_NOT_CALCULATE", false, false, 1, 1, 0, 0),
-            List.of(new RequestWarning(dev.erst.gridgrind.contract.dto.GridGrindWarningCode.UNQUOTED_SHEET_NAME_IN_FORMULA, 0, "step-1", "SET_CELL", "warning")));
+            List.of(
+                new RequestWarning(
+                    dev.erst.gridgrind.contract.dto.GridGrindWarningCode
+                        .UNQUOTED_SHEET_NAME_IN_FORMULA,
+                    0,
+                    "step-1",
+                    "SET_CELL",
+                    "warning")));
 
     try (TrackingInputStream responseStream =
             new TrackingInputStream(GridGrindJsonOutput.writeWorkbookResultBytes(response));
@@ -284,7 +291,8 @@ class GridGrindJsonCoverageTest {
                     GridGrindJson.readWorkbookResult(
                         new ByteArrayInputStream(
                             withTopLevelNull(
-                                GridGrindJsonOutput.writeWorkbookResultBytes(response), "warnings"))))
+                                GridGrindJsonOutput.writeWorkbookResultBytes(response),
+                                "warnings"))))
             .getMessage());
     assertEquals(
         "Field 'warnings' must be omitted when absent; explicit null is not accepted.",
@@ -321,7 +329,8 @@ class GridGrindJsonCoverageTest {
     assertEquals(
         "inputStream must not be null",
         assertThrows(
-                NullPointerException.class, () -> GridGrindJson.readWorkbookResult((InputStream) null))
+                NullPointerException.class,
+                () -> GridGrindJson.readWorkbookResult((InputStream) null))
             .getMessage());
     assertEquals(
         "inputStream must not be null",
@@ -352,7 +361,9 @@ class GridGrindJsonCoverageTest {
             .getMessage());
     assertEquals(
         "response must not be null",
-        assertThrows(NullPointerException.class, () -> GridGrindJsonOutput.writeWorkbookResultBytes(null))
+        assertThrows(
+                NullPointerException.class,
+                () -> GridGrindJsonOutput.writeWorkbookResultBytes(null))
             .getMessage());
     assertEquals(
         "outputStream must not be null",
@@ -715,7 +726,8 @@ class GridGrindJsonCoverageTest {
                                 Optional.empty()))))));
 
     byte[] cellsResponseBytes = GridGrindJsonOutput.writeWorkbookResultBytes(cellsResponse);
-    byte[] sparseWindowResponseBytes = GridGrindJsonOutput.writeWorkbookResultBytes(sparseWindowResponse);
+    byte[] sparseWindowResponseBytes =
+        GridGrindJsonOutput.writeWorkbookResultBytes(sparseWindowResponse);
 
     assertTrue(
         cellsResponseBytes.length < 1316,

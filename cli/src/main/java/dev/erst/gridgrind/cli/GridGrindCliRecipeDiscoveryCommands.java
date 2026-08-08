@@ -28,10 +28,7 @@ final class GridGrindCliRecipeDiscoveryCommands {
           command.responsePath(),
           stdout,
           stderr,
-          CommandErrors.invalidArguments(
-              "print-recipe",
-              Optional.of("--lookup"),
-              message),
+          CommandErrors.invalidArguments("print-recipe", Optional.of("--lookup"), message),
           prettyJson);
     }
     CliCatalogCommandSupport.emitRecipePortabilityWarning(recipe.get(), stderr);
@@ -72,10 +69,7 @@ final class GridGrindCliRecipeDiscoveryCommands {
           command.responsePath(),
           stdout,
           stderr,
-          CommandErrors.invalidArguments(
-              "print-recipe-catalog",
-              Optional.of("--lookup"),
-              message),
+          CommandErrors.invalidArguments("print-recipe-catalog", Optional.of("--lookup"), message),
           prettyJson);
     }
     return CliCatalogPayloadSupport.writeRenderedPayload(

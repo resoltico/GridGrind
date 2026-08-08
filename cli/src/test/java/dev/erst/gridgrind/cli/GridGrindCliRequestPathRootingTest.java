@@ -62,8 +62,7 @@ class GridGrindCliRequestPathRootingTest extends GridGrindCliTestSupport {
     assertEquals(0, exitCode);
     assertEquals(
         requestDirectory.resolve("result.xlsx").toString(),
-        assertInstanceOf(
-                WorkbookResultPersistence.WriteResult.Written.class, persistence.write())
+        assertInstanceOf(WorkbookResultPersistence.WriteResult.Written.class, persistence.write())
             .executionPath());
     assertTrue(Files.exists(requestDirectory.resolve("result.xlsx")));
   }
@@ -268,8 +267,7 @@ class GridGrindCliRequestPathRootingTest extends GridGrindCliTestSupport {
     assertEquals(0, exitCode);
     assertEquals(
         workspace.resolve("result.xlsx").toString(),
-        assertInstanceOf(
-                WorkbookResultPersistence.WriteResult.Written.class, persistence.write())
+        assertInstanceOf(WorkbookResultPersistence.WriteResult.Written.class, persistence.write())
             .executionPath());
     assertTrue(Files.exists(workspace.resolve("result.xlsx")));
   }

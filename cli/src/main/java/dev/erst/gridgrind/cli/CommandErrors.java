@@ -23,7 +23,8 @@ final class CommandErrors {
             argument.map(CliArgument::named).orElseGet(CliArgument::unknown));
     return commandError(
         command,
-        GridGrindProblemDetail.Problem.of(GridGrindProblemCode.INVALID_ARGUMENTS, message, context));
+        GridGrindProblemDetail.Problem.of(
+            GridGrindProblemCode.INVALID_ARGUMENTS, message, context));
   }
 
   static CommandError responseWriteFailure(
@@ -85,9 +86,6 @@ final class CommandErrors {
 
   private static CommandError commandError(
       String command, List<GridGrindProblemDetail.Problem> problems) {
-    return new CommandError(
-        GridGrindProtocolVersion.current(),
-        command,
-        problems);
+    return new CommandError(GridGrindProtocolVersion.current(), command, problems);
   }
 }

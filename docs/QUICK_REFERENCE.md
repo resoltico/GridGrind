@@ -2,7 +2,7 @@
 afad: "4.0"
 version: "0.72.0"
 domain: QUICK_REFERENCE
-updated: "2026-07-02"
+updated: "2026-08-08"
 route:
   keywords: [gridgrind, quick-reference, snippets, request, execution, examples, formula, workbook-health, chart, signature-line]
   questions: ["what is the quickest way to write a gridgrind request", "how do I generate a built-in gridgrind example", "what are the most common gridgrind request snippets", "where is the detailed gridgrind reference"]
@@ -367,9 +367,12 @@ Run a no-save workbook-health pass by starting from the smallest valid request a
 - `ANALYZE_NAMED_RANGE_HEALTH`: `analysis.checkedNamedRangeCount`, `analysis.summary`, and
   `analysis.findings`
 - `ANALYZE_WORKBOOK_FINDINGS`: `analysis.summary` and `analysis.findings`
-- Every response, success or failure: top-level structured `journal`
-- Every response, success or failure: top-level `persistence`; `SAVE_AS` and `OVERWRITE` then
-  distinguish `write.status=WRITTEN|NOT_WRITTEN`
+- Every execution `WorkbookResult`, `SUCCEEDED` or `FAILED`: top-level structured `journal`,
+  `persistence`, `warnings`, `assertions`, and `inspections`; `FAILED` alone adds singular
+  `problem`
+- Every pre-execution command rejection: `CommandError` with `status=REJECTED` and nonempty
+  `problems[]`; doctor findings instead remain in `RequestDoctorReport.valid=false`
+- `SAVE_AS` and `OVERWRITE` distinguish `persistence.write.status=WRITTEN|NOT_WRITTEN`
 
 ## Detailed References
 

@@ -6,8 +6,8 @@ import dev.erst.gridgrind.contract.dto.GridGrindProblemCode;
 import dev.erst.gridgrind.contract.dto.GridGrindProblemDetail;
 import dev.erst.gridgrind.contract.dto.GridGrindProtocolVersion;
 import dev.erst.gridgrind.contract.dto.RequestWarning;
-import dev.erst.gridgrind.contract.dto.WorkbookResult;
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
+import dev.erst.gridgrind.contract.dto.WorkbookResult;
 import dev.erst.gridgrind.contract.query.InspectionResult;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
 import dev.erst.gridgrind.excel.WorkbookArtifactIo;
@@ -40,7 +40,7 @@ final class ExecutionResponseSupport {
     try {
       workbookCloser.close(workbook);
       closePhase.succeed();
-      return rebuildResponse(
+      return ExecutionResponseCloseFinalizer.withCompletedClose(
           response, request, journal, primaryFailureCode, failedStepIndex, failedStepId);
     } catch (Exception closeFailure) {
       GridGrindProblemDetail.Problem closeProblem =
@@ -49,7 +49,7 @@ final class ExecutionResponseSupport {
               new dev.erst.gridgrind.contract.dto.ProblemContext.ExecuteRequest(
                   ExecutionRequestPaths.requestShape(request)));
       closePhase.fail("failed (" + closeProblem.code() + ")");
-      return appendCloseFailure(
+      return ExecutionResponseCloseFinalizer.withCloseFailure(
           response,
           request,
           journal,
@@ -75,7 +75,7 @@ final class ExecutionResponseSupport {
     try {
       readableWorkbookCloser.close(workbook);
       closePhase.succeed();
-      return rebuildResponse(
+      return ExecutionResponseCloseFinalizer.withCompletedClose(
           response, request, journal, primaryFailureCode, failedStepIndex, failedStepId);
     } catch (Exception closeFailure) {
       GridGrindProblemDetail.Problem closeProblem =
@@ -84,7 +84,7 @@ final class ExecutionResponseSupport {
               new dev.erst.gridgrind.contract.dto.ProblemContext.ExecuteRequest(
                   ExecutionRequestPaths.requestShape(request)));
       closePhase.fail("failed (" + closeProblem.code() + ")");
-      return appendCloseFailure(
+      return ExecutionResponseCloseFinalizer.withCloseFailure(
           response,
           request,
           journal,
@@ -353,78 +353,5 @@ final class ExecutionResponseSupport {
         assertions,
         inspections,
         problem);
-  }
-
-  private static WorkbookResult rebuildResponse(
-      WorkbookResult response,
-      WorkbookPlan request,
-      ExecutionJournalRecorder journal,
-      @Nullable GridGrindProblemCode primaryFailureCode,
-      @Nullable Integer failedStepIndex,
-      @Nullable String failedStepId) {
-    return switch (response) {
-      case WorkbookResult.Success success ->
-          new WorkbookResult.Success(
-              success.protocolVersion(),
-              success.planId(),
-              journal.buildSuccess(request.steps().size()),
-              success.calculation(),
-              success.persistence(),
-              success.warnings(),
-              success.assertions(),
-              success.inspections());
-      case WorkbookResult.Failure failure ->
-          new WorkbookResult.Failure(
-              failure.protocolVersion(),
-              failure.planId(),
-              journal.buildFailure(
-                  request.steps().size(),
-                  Objects.requireNonNullElse(primaryFailureCode, failure.problem().code()),
-                  failedStepIndex,
-                  failedStepId),
-              failure.calculation(),
-              failure.persistence(),
-              failure.warnings(),
-              failure.assertions(),
-              failure.inspections(),
-              failure.problem());
-    };
-  }
-
-  private static WorkbookResult appendCloseFailure(
-      WorkbookResult response,
-      WorkbookPlan request,
-      ExecutionJournalRecorder journal,
-      @Nullable GridGrindProblemCode primaryFailureCode,
-      @Nullable Integer failedStepIndex,
-      @Nullable String failedStepId,
-      GridGrindProblemDetail.Problem closeProblem) {
-    if (response instanceof WorkbookResult.Failure existingFailure) {
-      return new WorkbookResult.Failure(
-          existingFailure.protocolVersion(),
-          existingFailure.planId(),
-          journal.buildFailure(
-              request.steps().size(),
-              Objects.requireNonNullElse(primaryFailureCode, existingFailure.problem().code()),
-              failedStepIndex,
-              failedStepId),
-          existingFailure.calculation(),
-          existingFailure.persistence(),
-          existingFailure.warnings(),
-          existingFailure.assertions(),
-          existingFailure.inspections(),
-          GridGrindProblems.appendCause(
-              existingFailure.problem(), GridGrindProblems.problemCause(closeProblem)));
-    }
-    return new WorkbookResult.Failure(
-        request.protocolVersion(),
-        request.planId(),
-        journal.buildFailure(request.steps().size(), closeProblem.code(), null, null),
-        response.calculation(),
-        response.persistence(),
-        response instanceof WorkbookResult.Success success ? success.warnings() : List.of(),
-        List.of(),
-        response instanceof WorkbookResult.Success success ? success.inspections() : List.of(),
-        closeProblem);
   }
 }

@@ -22,13 +22,7 @@ final class GridGrindCliIdentityCommands {
       throws IOException {
     byte[] payload = renderHelpPayload(command, outputFormat, prettyJson);
     return CliCatalogPayloadSupport.writePayload(
-        responseWriter,
-        "help",
-        command.responsePath(),
-        stdout,
-        stderr,
-        payload,
-        prettyJson);
+        responseWriter, "help", command.responsePath(), stdout, stderr, payload, prettyJson);
   }
 
   static int version(
@@ -41,13 +35,7 @@ final class GridGrindCliIdentityCommands {
       throws IOException {
     byte[] payload = renderVersionPayload(outputFormat, prettyJson);
     return CliCatalogPayloadSupport.writePayload(
-        responseWriter,
-        "version",
-        command.responsePath(),
-        stdout,
-        stderr,
-        payload,
-        prettyJson);
+        responseWriter, "version", command.responsePath(), stdout, stderr, payload, prettyJson);
   }
 
   static int license(
@@ -60,13 +48,7 @@ final class GridGrindCliIdentityCommands {
       throws IOException {
     byte[] payload = renderLicensePayload(outputFormat, prettyJson);
     return CliCatalogPayloadSupport.writePayload(
-        responseWriter,
-        "license",
-        command.responsePath(),
-        stdout,
-        stderr,
-        payload,
-        prettyJson);
+        responseWriter, "license", command.responsePath(), stdout, stderr, payload, prettyJson);
   }
 
   static int requestTemplate(

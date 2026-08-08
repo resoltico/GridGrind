@@ -21,13 +21,7 @@ final class CliCatalogPayloadSupport {
       boolean prettyJson)
       throws IOException {
     return responseWriter.writePayload(
-        command,
-        responsePath,
-        stdout,
-        stderr,
-        payload,
-        0,
-        prettyJson);
+        command, responsePath, stdout, stderr, payload, 0, prettyJson);
   }
 
   static int writeRenderedPayload(
@@ -42,13 +36,7 @@ final class CliCatalogPayloadSupport {
     ByteArrayOutputStream buffer = new ByteArrayOutputStream();
     renderer.write(buffer);
     return responseWriter.writePayload(
-        command,
-        responsePath,
-        stdout,
-        stderr,
-        buffer.toByteArray(),
-        0,
-        prettyJson);
+        command, responsePath, stdout, stderr, buffer.toByteArray(), 0, prettyJson);
   }
 
   static int writeCommandError(

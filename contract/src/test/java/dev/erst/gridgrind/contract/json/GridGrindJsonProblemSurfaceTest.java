@@ -32,7 +32,8 @@ class GridGrindJsonProblemSurfaceTest {
             .getMessage());
     assertEquals(
         "bytes must not be null",
-        assertThrows(NullPointerException.class, () -> GridGrindJson.readWorkbookResult((byte[]) null))
+        assertThrows(
+                NullPointerException.class, () -> GridGrindJson.readWorkbookResult((byte[]) null))
             .getMessage());
     assertEquals(
         "catalog must not be null",

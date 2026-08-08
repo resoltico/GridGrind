@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.cli.discovery;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import dev.erst.gridgrind.contract.dto.DiagnosticOrder;
@@ -17,7 +18,9 @@ public record CommandError(
   public CommandError {
     protocolVersion = CliDiscoveryValidation.requireProtocolVersion(protocolVersion);
     command = CliDiscoveryValidation.requireNonBlank(command, "command");
-    problems = DiagnosticOrder.problems(List.copyOf(Objects.requireNonNull(problems, "problems must not be null")));
+    problems =
+        DiagnosticOrder.problems(
+            List.copyOf(Objects.requireNonNull(problems, "problems must not be null")));
     if (problems.isEmpty()) {
       throw new IllegalArgumentException("problems must not be empty");
     }
@@ -30,6 +33,7 @@ public record CommandError(
   }
 
   /** Returns the leading problem for narrow human summaries without changing the wire shape. */
+  @JsonIgnore
   public GridGrindProblemDetail.Problem primaryProblem() {
     return problems.getFirst();
   }

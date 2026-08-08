@@ -7,7 +7,6 @@ import dev.erst.gridgrind.engine.api.GridGrindRequestExecutor;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.BooleanSupplier;
