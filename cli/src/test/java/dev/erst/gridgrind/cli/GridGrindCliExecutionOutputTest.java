@@ -5,7 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import dev.erst.gridgrind.contract.dto.GridGrindProblemCode;
-import dev.erst.gridgrind.contract.dto.GridGrindResponse;
+import dev.erst.gridgrind.contract.dto.WorkbookResult;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -35,12 +35,12 @@ class GridGrindCliExecutionOutputTest extends GridGrindCliTestSupport {
             stdout,
             stderr);
 
-    GridGrindResponse response = response(stdout, stderr);
+    WorkbookResult response = response(stdout, stderr);
 
     assertEquals(1, exitCode);
     assertEquals("", stderr.toString(StandardCharsets.UTF_8));
-    assertInstanceOf(GridGrindResponse.Failure.class, response);
-    GridGrindResponse.Failure failure = (GridGrindResponse.Failure) response;
+    assertInstanceOf(WorkbookResult.Failure.class, response);
+    WorkbookResult.Failure failure = (WorkbookResult.Failure) response;
     assertEquals(GridGrindProblemCode.INTERNAL_ERROR, failure.problem().code());
     assertEquals("EXECUTE_REQUEST", failure.problem().context().stage());
   }
@@ -91,11 +91,11 @@ class GridGrindCliExecutionOutputTest extends GridGrindCliTestSupport {
                 stdout,
                 stderr);
 
-    GridGrindResponse response = response(stdout, stderr);
+    WorkbookResult response = response(stdout, stderr);
 
     assertEquals(1, exitCode);
-    assertInstanceOf(GridGrindResponse.Failure.class, response);
-    GridGrindResponse.Failure failure = (GridGrindResponse.Failure) response;
+    assertInstanceOf(WorkbookResult.Failure.class, response);
+    WorkbookResult.Failure failure = (WorkbookResult.Failure) response;
     assertEquals(GridGrindProblemCode.INVALID_FORMULA, failure.problem().code());
     assertEquals("EXECUTE_STEP", failure.problem().context().stage());
     assertEquals(java.util.Optional.of("A1"), executeStepContext(failure).address());
@@ -117,11 +117,11 @@ class GridGrindCliExecutionOutputTest extends GridGrindCliTestSupport {
                 stdout,
                 stderr);
 
-    GridGrindResponse response = response(stdout, stderr);
+    WorkbookResult response = response(stdout, stderr);
 
     assertEquals(1, exitCode);
-    assertInstanceOf(GridGrindResponse.Failure.class, response);
-    GridGrindResponse.Failure failure = (GridGrindResponse.Failure) response;
+    assertInstanceOf(WorkbookResult.Failure.class, response);
+    WorkbookResult.Failure failure = (WorkbookResult.Failure) response;
     assertEquals(GridGrindProblemCode.UNSUPPORTED_FORMULA_CONSTRUCT, failure.problem().code());
     assertEquals("EXECUTE_STEP", failure.problem().context().stage());
     assertEquals(java.util.Optional.of("A1"), executeStepContext(failure).address());

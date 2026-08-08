@@ -6,7 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 
 import dev.erst.gridgrind.contract.dto.ExecutionModeInput;
 import dev.erst.gridgrind.contract.dto.GridGrindProblemCode;
-import dev.erst.gridgrind.contract.dto.GridGrindResponse;
+import dev.erst.gridgrind.contract.dto.WorkbookResult;
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
 import dev.erst.gridgrind.contract.query.*;
 import dev.erst.gridgrind.contract.selector.SheetSelector;
@@ -24,9 +24,9 @@ class EventReadExecutorCoverageTest {
   void eventReadExecutionReturnsStructuredStepFailureForInspectionErrors() throws IOException {
     Path workbookPath = createWorkbookFile("gridgrind-event-step-failure-");
 
-    GridGrindResponse.Failure failure =
+    WorkbookResult.Failure failure =
         assertInstanceOf(
-            GridGrindResponse.Failure.class,
+            WorkbookResult.Failure.class,
             ExecutionContextFixtureSupport.execute(
                 new DefaultGridGrindRequestExecutor(),
                 request(
@@ -52,9 +52,9 @@ class EventReadExecutorCoverageTest {
   void eventReadExecutionReturnsInspectionResultsWhenAllStepsSucceed() throws IOException {
     Path workbookPath = createWorkbookFile("gridgrind-event-success-");
 
-    GridGrindResponse.Success success =
+    WorkbookResult.Success success =
         assertInstanceOf(
-            GridGrindResponse.Success.class,
+            WorkbookResult.Success.class,
             ExecutionContextFixtureSupport.execute(
                 new DefaultGridGrindRequestExecutor(),
                 request(
@@ -77,9 +77,9 @@ class EventReadExecutorCoverageTest {
   void eventReadCloseFailureTurnsSuccessIntoExecuteRequestFailure() throws IOException {
     Path workbookPath = createWorkbookFile("gridgrind-event-close-success-failure-");
 
-    GridGrindResponse.Failure failure =
+    WorkbookResult.Failure failure =
         assertInstanceOf(
-            GridGrindResponse.Failure.class,
+            WorkbookResult.Failure.class,
             ExecutionContextFixtureSupport.execute(
                 new DefaultGridGrindRequestExecutor(
                     new DefaultGridGrindRequestExecutorDependencies(
@@ -110,9 +110,9 @@ class EventReadExecutorCoverageTest {
   void eventReadCloseFailureAppendsCauseToExistingStepFailure() throws IOException {
     Path workbookPath = createWorkbookFile("gridgrind-event-close-step-failure-");
 
-    GridGrindResponse.Failure failure =
+    WorkbookResult.Failure failure =
         assertInstanceOf(
-            GridGrindResponse.Failure.class,
+            WorkbookResult.Failure.class,
             ExecutionContextFixtureSupport.execute(
                 new DefaultGridGrindRequestExecutor(
                     new DefaultGridGrindRequestExecutorDependencies(
@@ -144,9 +144,9 @@ class EventReadExecutorCoverageTest {
   void eventReadExecutionReturnsOpenWorkbookFailureWhenMaterializationFails() {
     Path missingWorkbook = Path.of("/tmp/gridgrind-missing-event-" + System.nanoTime() + ".xlsx");
 
-    GridGrindResponse.Failure failure =
+    WorkbookResult.Failure failure =
         assertInstanceOf(
-            GridGrindResponse.Failure.class,
+            WorkbookResult.Failure.class,
             ExecutionContextFixtureSupport.execute(
                 new DefaultGridGrindRequestExecutor(),
                 request(

@@ -16,8 +16,8 @@ import dev.erst.gridgrind.contract.dto.DifferentialStyleInput;
 import dev.erst.gridgrind.contract.dto.ExecutionModeInput;
 import dev.erst.gridgrind.contract.dto.GridGrindProblemCode;
 import dev.erst.gridgrind.contract.dto.GridGrindProtocolVersion;
-import dev.erst.gridgrind.contract.dto.GridGrindResponse;
-import dev.erst.gridgrind.contract.dto.GridGrindResponsePersistence;
+import dev.erst.gridgrind.contract.dto.WorkbookResult;
+import dev.erst.gridgrind.contract.dto.WorkbookResultPersistence;
 import dev.erst.gridgrind.contract.dto.NamedRangeScope;
 import dev.erst.gridgrind.contract.dto.NamedRangeTarget;
 import dev.erst.gridgrind.contract.dto.OoxmlEncryptionInput;
@@ -420,19 +420,19 @@ class ExecutorPolicyCoverageTest {
     ExecutionWorkbookSupport workbookSupport =
         ExecutionContextFixtureSupport.workbookSupport(workingDirectory);
     Path materialized = createWorkbookFile("gridgrind-streaming-source-");
-    GridGrindResponsePersistence.PersistenceOutcome notSaved =
+    WorkbookResultPersistence.PersistenceOutcome notSaved =
         workbookSupport.persistStreamingWorkbook(
             materialized,
             new WorkbookPlan.WorkbookPersistence.None(),
             new WorkbookPlan.WorkbookSource.New(),
             workingDirectory);
-    assertInstanceOf(GridGrindResponsePersistence.PersistenceOutcome.NotSaved.class, notSaved);
+    assertInstanceOf(WorkbookResultPersistence.PersistenceOutcome.NotSaved.class, notSaved);
 
     Path saveAsRoot = Files.createTempDirectory("gridgrind-streaming-saveas-");
     Path saveAsPath = saveAsRoot.resolve("nested output").resolve("streaming save-as.xlsx");
-    GridGrindResponsePersistence.PersistenceOutcome.SavedAs savedAs =
+    WorkbookResultPersistence.PersistenceOutcome.SavedAs savedAs =
         assertInstanceOf(
-            GridGrindResponsePersistence.PersistenceOutcome.SavedAs.class,
+            WorkbookResultPersistence.PersistenceOutcome.SavedAs.class,
             workbookSupport.persistStreamingWorkbook(
                 materialized,
                 new WorkbookPlan.WorkbookPersistence.SaveAs(
@@ -446,9 +446,9 @@ class ExecutorPolicyCoverageTest {
 
     Path overwriteMaterialized = createWorkbookFile("gridgrind-streaming-overwrite-materialized-");
     Path overwriteSourcePath = createWorkbookFile("gridgrind-streaming-overwrite-source-");
-    GridGrindResponsePersistence.PersistenceOutcome.Overwritten overwritten =
+    WorkbookResultPersistence.PersistenceOutcome.Overwritten overwritten =
         assertInstanceOf(
-            GridGrindResponsePersistence.PersistenceOutcome.Overwritten.class,
+            WorkbookResultPersistence.PersistenceOutcome.Overwritten.class,
             workbookSupport.persistStreamingWorkbook(
                 overwriteMaterialized,
                 new WorkbookPlan.WorkbookPersistence.Overwrite(),
@@ -481,9 +481,9 @@ class ExecutorPolicyCoverageTest {
             new WorkbookPlan.WorkbookPersistence.None(),
             List.of(),
             List.of());
-    GridGrindResponse.Failure runtimeFailure =
+    WorkbookResult.Failure runtimeFailure =
         assertInstanceOf(
-            GridGrindResponse.Failure.class,
+            WorkbookResult.Failure.class,
             responseSupport.guardUnexpectedRuntime(
                 GridGrindProtocolVersion.V2,
                 request,
@@ -494,9 +494,9 @@ class ExecutorPolicyCoverageTest {
     assertEquals(GridGrindProblemCode.INTERNAL_ERROR, runtimeFailure.problem().code());
 
     try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
-      GridGrindResponse.Failure workbookRuntimeFailure =
+      WorkbookResult.Failure workbookRuntimeFailure =
           assertInstanceOf(
-              GridGrindResponse.Failure.class,
+              WorkbookResult.Failure.class,
               responseSupport.guardUnexpectedRuntime(
                   GridGrindProtocolVersion.V2,
                   request,
@@ -515,9 +515,9 @@ class ExecutorPolicyCoverageTest {
                 throw new IOException("close failed");
               },
               WorkbookArtifactIo.MaterializedWorkbook::close);
-      GridGrindResponse.Failure closeFailure =
+      WorkbookResult.Failure closeFailure =
           assertInstanceOf(
-              GridGrindResponse.Failure.class,
+              WorkbookResult.Failure.class,
               closeFailingResponseSupport.guardUnexpectedRuntime(
                   GridGrindProtocolVersion.V2,
                   request,

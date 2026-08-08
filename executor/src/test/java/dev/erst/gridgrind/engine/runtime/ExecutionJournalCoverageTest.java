@@ -19,8 +19,8 @@ import dev.erst.gridgrind.contract.dto.ExecutionPolicyInput;
 import dev.erst.gridgrind.contract.dto.GridGrindProblemCategory;
 import dev.erst.gridgrind.contract.dto.GridGrindProblemCode;
 import dev.erst.gridgrind.contract.dto.GridGrindProtocolVersion;
-import dev.erst.gridgrind.contract.dto.GridGrindResponse;
-import dev.erst.gridgrind.contract.dto.GridGrindResponses;
+import dev.erst.gridgrind.contract.dto.WorkbookResult;
+import dev.erst.gridgrind.contract.dto.WorkbookResults;
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
 import dev.erst.gridgrind.contract.json.GridGrindJsonOutput;
 import dev.erst.gridgrind.contract.query.*;
@@ -56,8 +56,8 @@ class ExecutionJournalCoverageTest {
             dev.erst.gridgrind.contract.dto.ExecutionPolicyInput.defaults(),
             dev.erst.gridgrind.contract.dto.FormulaEnvironmentInput.empty(),
             List.of());
-    GridGrindResponse.Success expected =
-        GridGrindResponses.success(List.of(), List.of(), List.of());
+    WorkbookResult.Success expected =
+        WorkbookResults.success(List.of(), List.of(), List.of());
     AtomicBoolean called = new AtomicBoolean(false);
     GridGrindRequestExecutor executor =
         (ignoredRequest, ignoredBindings, ignoredSink) -> {
@@ -432,15 +432,15 @@ class ExecutionJournalCoverageTest {
 
   @Test
   void summarySuccessResponsesSerializeDeterministicallyAcrossRepeatedRuns() throws Exception {
-    GridGrindResponse.Success firstResponse =
+    WorkbookResult.Success firstResponse =
         assertInstanceOf(
-            GridGrindResponse.Success.class,
+            WorkbookResult.Success.class,
             execute(
                 new DefaultGridGrindRequestExecutor(),
                 planForJournalLevel(ExecutionJournalLevel.SUMMARY)));
-    GridGrindResponse.Success secondResponse =
+    WorkbookResult.Success secondResponse =
         assertInstanceOf(
-            GridGrindResponse.Success.class,
+            WorkbookResult.Success.class,
             execute(
                 new DefaultGridGrindRequestExecutor(),
                 planForJournalLevel(ExecutionJournalLevel.SUMMARY)));
@@ -455,8 +455,8 @@ class ExecutionJournalCoverageTest {
             .timing()
             .isEmpty());
     assertArrayEquals(
-        GridGrindJsonOutput.writeResponseBytes(firstResponse),
-        GridGrindJsonOutput.writeResponseBytes(secondResponse));
+        GridGrindJsonOutput.writeWorkbookResultBytes(firstResponse),
+        GridGrindJsonOutput.writeWorkbookResultBytes(secondResponse));
   }
 
   private static WorkbookPlan verbosePlan() {

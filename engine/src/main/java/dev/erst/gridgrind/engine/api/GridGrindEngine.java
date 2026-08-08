@@ -32,7 +32,7 @@ public final class GridGrindEngine {
     }
 
     @Override
-    public dev.erst.gridgrind.contract.dto.GridGrindResponse execute(
+    public dev.erst.gridgrind.contract.dto.WorkbookResult execute(
         WorkbookPlan request, GridGrindRequestInputs inputs, GridGrindJournalSink sink) {
       Objects.requireNonNull(request, "request must not be null");
       Objects.requireNonNull(inputs, "inputs must not be null");

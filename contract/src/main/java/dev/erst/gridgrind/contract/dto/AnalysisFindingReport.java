@@ -25,6 +25,6 @@ public record AnalysisFindingReport(
     if (message.isBlank()) {
       throw new IllegalArgumentException("message must not be blank");
     }
-    evidence = GridGrindResponseSupport.copyStrings(evidence, "evidence");
+    evidence = WorkbookResultSupport.copyStrings(evidence, "evidence");
   }
 }

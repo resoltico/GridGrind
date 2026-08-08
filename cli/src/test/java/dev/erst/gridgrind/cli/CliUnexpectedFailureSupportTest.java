@@ -4,7 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import dev.erst.gridgrind.cli.discovery.CliDiagnostic;
+import dev.erst.gridgrind.cli.discovery.CommandError;
 import dev.erst.gridgrind.contract.dto.GridGrindProblemCode;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -34,10 +34,10 @@ class CliUnexpectedFailureSupportTest extends GridGrindCliTestSupport {
 
     app.run(new String[] {"--help"}, new ByteArrayInputStream(new byte[0]), stdout, stderr);
 
-    CliDiagnostic failure = cliDiagnosticOnStderr(stdout, stderr);
+    CommandError failure = commandErrorOnStdout(stdout, stderr);
     assertEquals(1, observedExitCode.get());
-    assertEquals(GridGrindProblemCode.INTERNAL_ERROR, failure.problem().code());
-    assertEquals(GridGrindProblemCode.INTERNAL_ERROR.title(), failure.problem().message());
+    assertEquals(GridGrindProblemCode.INTERNAL_ERROR, failure.primaryProblem().code());
+    assertEquals(GridGrindProblemCode.INTERNAL_ERROR.title(), failure.primaryProblem().message());
     assertFalse(stderr.toString(StandardCharsets.UTF_8).contains("source-secret"));
   }
 
@@ -53,10 +53,10 @@ class CliUnexpectedFailureSupportTest extends GridGrindCliTestSupport {
                 FailingOutputStream.checked("help stdout exploded"),
                 stderr);
 
-    CliDiagnostic failure = cliDiagnostic(stderr.toByteArray());
+    CommandError failure = commandError(stderr.toByteArray());
     assertEquals(1, exitCode);
-    assertEquals(GridGrindProblemCode.INTERNAL_ERROR, failure.problem().code());
-    assertEquals(GridGrindProblemCode.INTERNAL_ERROR.title(), failure.problem().message());
+    assertEquals(GridGrindProblemCode.INTERNAL_ERROR, failure.primaryProblem().code());
+    assertEquals(GridGrindProblemCode.INTERNAL_ERROR.title(), failure.primaryProblem().message());
   }
 
   @Test
@@ -74,10 +74,10 @@ class CliUnexpectedFailureSupportTest extends GridGrindCliTestSupport {
               stderr,
               new IllegalStateException("boom"));
 
-      CliDiagnostic failure = cliDiagnostic(stdout.toByteArray());
-      CliDiagnostic stderrDiagnostic = cliDiagnostic(stderr.toByteArray());
+      CommandError failure = commandError(stdout.toByteArray());
+      CommandError stderrDiagnostic = commandError(stderr.toByteArray());
       assertEquals(1, exitCode);
-      assertEquals(GridGrindProblemCode.INTERNAL_ERROR, failure.problem().code());
+      assertEquals(GridGrindProblemCode.INTERNAL_ERROR, failure.primaryProblem().code());
       assertEquals(stderrDiagnostic, failure);
       assertEquals(Optional.of("STDOUT"), wroteTo(stderrDiagnostic));
     }
@@ -96,10 +96,10 @@ class CliUnexpectedFailureSupportTest extends GridGrindCliTestSupport {
               stderr,
               new IllegalStateException("boom"));
 
-      CliDiagnostic failure = cliDiagnostic(stderr.toByteArray());
+      CommandError failure = commandError(stderr.toByteArray());
       assertEquals(1, exitCode);
-      assertEquals(GridGrindProblemCode.INTERNAL_ERROR, failure.problem().code());
-      assertEquals(GridGrindProblemCode.INTERNAL_ERROR.title(), failure.problem().message());
+      assertEquals(GridGrindProblemCode.INTERNAL_ERROR, failure.primaryProblem().code());
+      assertEquals(GridGrindProblemCode.INTERNAL_ERROR.title(), failure.primaryProblem().message());
     }
   }
 
@@ -119,10 +119,10 @@ class CliUnexpectedFailureSupportTest extends GridGrindCliTestSupport {
             FailingOutputStream.runtime("stderr exploded"),
             new IllegalStateException("boom"));
 
-    CliDiagnostic stdoutDiagnostic = cliDiagnostic(stdout.toByteArray());
-    CliDiagnostic fileDiagnostic = cliDiagnostic(Files.readAllBytes(responsePath));
+    CommandError stdoutDiagnostic = commandError(stdout.toByteArray());
+    CommandError fileDiagnostic = commandError(Files.readAllBytes(responsePath));
     assertEquals(1, exitCode);
-    assertEquals(GridGrindProblemCode.INTERNAL_ERROR, stdoutDiagnostic.problem().code());
+    assertEquals(GridGrindProblemCode.INTERNAL_ERROR, stdoutDiagnostic.primaryProblem().code());
     assertEquals(Optional.of("STDOUT"), wroteTo(stdoutDiagnostic));
     assertEquals(Optional.of("FILE"), wroteTo(fileDiagnostic));
   }
@@ -143,10 +143,10 @@ class CliUnexpectedFailureSupportTest extends GridGrindCliTestSupport {
               stderr,
               new IllegalStateException("boom"));
 
-      CliDiagnostic stderrDiagnostic = cliDiagnostic(stderr.toByteArray());
-      CliDiagnostic fileDiagnostic = cliDiagnostic(Files.readAllBytes(responsePath));
+      CommandError stderrDiagnostic = commandError(stderr.toByteArray());
+      CommandError fileDiagnostic = commandError(Files.readAllBytes(responsePath));
       assertEquals(1, exitCode);
-      assertEquals(GridGrindProblemCode.INTERNAL_ERROR, stderrDiagnostic.problem().code());
+      assertEquals(GridGrindProblemCode.INTERNAL_ERROR, stderrDiagnostic.primaryProblem().code());
       assertEquals(Optional.empty(), stderrDiagnostic.transport());
       assertEquals(Optional.of("FILE"), wroteTo(fileDiagnostic));
     }
@@ -167,9 +167,9 @@ class CliUnexpectedFailureSupportTest extends GridGrindCliTestSupport {
             stderr,
             new IllegalStateException("boom"));
 
-    CliDiagnostic failure = cliDiagnostic(stderr.toByteArray());
+    CommandError failure = commandError(stderr.toByteArray());
     assertEquals(1, exitCode);
-    assertEquals(GridGrindProblemCode.INTERNAL_ERROR, failure.problem().code());
+    assertEquals(GridGrindProblemCode.INTERNAL_ERROR, failure.primaryProblem().code());
     assertEquals(Optional.of("STDOUT"), wroteTo(failure));
   }
 
@@ -187,9 +187,9 @@ class CliUnexpectedFailureSupportTest extends GridGrindCliTestSupport {
               stderr,
               new IllegalStateException("boom"));
 
-      CliDiagnostic failure = cliDiagnostic(stderr.toByteArray());
+      CommandError failure = commandError(stderr.toByteArray());
       assertEquals(1, exitCode);
-      assertEquals(GridGrindProblemCode.INTERNAL_ERROR, failure.problem().code());
+      assertEquals(GridGrindProblemCode.INTERNAL_ERROR, failure.primaryProblem().code());
       assertEquals(Optional.empty(), failure.transport());
     }
   }
@@ -207,10 +207,10 @@ class CliUnexpectedFailureSupportTest extends GridGrindCliTestSupport {
               stderr,
               new IllegalStateException("boom"));
 
-      CliDiagnostic failure = cliDiagnostic(stderr.toByteArray());
+      CommandError failure = commandError(stderr.toByteArray());
       assertEquals(1, exitCode);
-      assertEquals(GridGrindProblemCode.INTERNAL_ERROR, failure.problem().code());
-      assertEquals(GridGrindProblemCode.INTERNAL_ERROR.title(), failure.problem().message());
+      assertEquals(GridGrindProblemCode.INTERNAL_ERROR, failure.primaryProblem().code());
+      assertEquals(GridGrindProblemCode.INTERNAL_ERROR.title(), failure.primaryProblem().message());
     }
   }
 
@@ -347,7 +347,7 @@ class CliUnexpectedFailureSupportTest extends GridGrindCliTestSupport {
     }
   }
 
-  private static Optional<String> wroteTo(CliDiagnostic diagnostic) {
+  private static Optional<String> wroteTo(CommandError diagnostic) {
     return diagnostic
         .transport()
         .map(

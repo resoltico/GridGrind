@@ -5,8 +5,8 @@ import dev.erst.gridgrind.contract.dto.CalculationReport;
 import dev.erst.gridgrind.contract.dto.ExecutionModeInput;
 import dev.erst.gridgrind.contract.dto.GridGrindProblemDetail;
 import dev.erst.gridgrind.contract.dto.GridGrindProtocolVersion;
-import dev.erst.gridgrind.contract.dto.GridGrindResponse;
-import dev.erst.gridgrind.contract.dto.GridGrindResponsePersistence;
+import dev.erst.gridgrind.contract.dto.WorkbookResult;
+import dev.erst.gridgrind.contract.dto.WorkbookResultPersistence;
 import dev.erst.gridgrind.contract.dto.RequestWarning;
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
 import dev.erst.gridgrind.contract.query.InspectionResult;
@@ -54,7 +54,7 @@ final class ExecutionWorkflowSupport {
             workbookSupport, calculationSupport, stepSupport, requiredTempFileFactory);
   }
 
-  GridGrindResponse executeWorkbookWorkflow(
+  WorkbookResult executeWorkbookWorkflow(
       GridGrindProtocolVersion protocolVersion,
       WorkbookPlan request,
       ExcelWorkbook workbook,
@@ -121,8 +121,9 @@ final class ExecutionWorkflowSupport {
 
     return responseSupport.closeWorkbook(
         workbook,
-        new GridGrindResponse.Success(
+        new WorkbookResult.Success(
             protocolVersion,
+            request.planId(),
             journal.buildSuccess(request.steps().size(), false),
             calculation,
             Objects.requireNonNull(
@@ -189,7 +190,7 @@ final class ExecutionWorkflowSupport {
     }
   }
 
-  private GridGrindResponse closeFailedStepExecution(
+  private WorkbookResult closeFailedStepExecution(
       WorkbookExecutionContext executionContext,
       CalculationReport calculation,
       List<AssertionResult> assertions,
@@ -237,7 +238,7 @@ final class ExecutionWorkflowSupport {
       CalculationReport calculation) {
     ExecutionJournalRecorder.PhaseHandle persistencePhase = journal.beginPersistence();
     try {
-      GridGrindResponsePersistence.PersistenceOutcome persistence =
+      WorkbookResultPersistence.PersistenceOutcome persistence =
           workbookSupport.persistWorkbook(
               workbook, request.source(), request.persistence(), workingDirectory);
       persistencePhase.succeed();
@@ -265,7 +266,7 @@ final class ExecutionWorkflowSupport {
   }
 
   private record CalculationCheckpoint(
-      CalculationReport report, boolean executed, @Nullable GridGrindResponse failureResponse) {}
+      CalculationReport report, boolean executed, @Nullable WorkbookResult failureResponse) {}
 
   private record WorkbookExecutionContext(
       GridGrindProtocolVersion protocolVersion,
@@ -274,10 +275,10 @@ final class ExecutionWorkflowSupport {
       ExecutionJournalRecorder journal) {}
 
   private record PersistenceResult(
-      GridGrindResponsePersistence.@Nullable PersistenceOutcome persistence,
-      @Nullable GridGrindResponse failureResponse) {}
+      WorkbookResultPersistence.@Nullable PersistenceOutcome persistence,
+      @Nullable WorkbookResult failureResponse) {}
 
-  GridGrindResponse executeDirectEventReadWorkflow(
+  WorkbookResult executeDirectEventReadWorkflow(
       GridGrindProtocolVersion protocolVersion,
       WorkbookPlan request,
       List<RequestWarning> warnings,
@@ -287,7 +288,7 @@ final class ExecutionWorkflowSupport {
         protocolVersion, request, warnings, journal, workingDirectory);
   }
 
-  GridGrindResponse executeStreamingWorkflow(
+  WorkbookResult executeStreamingWorkflow(
       GridGrindProtocolVersion protocolVersion,
       WorkbookPlan request,
       ExecutionModeInput executionMode,

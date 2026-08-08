@@ -54,7 +54,7 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
     extends DefaultGridGrindRequestExecutorTestSupport {
   @Test
   void executesAssertionStepsAlongsideMutationsAndInspections() {
-    GridGrindResponse.Success success =
+    WorkbookResult.Success success =
         success(
             ExecutionContextFixtureSupport.execute(
                 new DefaultGridGrindRequestExecutor(),
@@ -102,7 +102,7 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
 
   @Test
   void surfacesStructuredAssertionFailuresWithObservedFacts() {
-    GridGrindResponse.Failure failure =
+    WorkbookResult.Failure failure =
         failure(
             ExecutionContextFixtureSupport.execute(
                 new DefaultGridGrindRequestExecutor(),
@@ -139,7 +139,7 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
 
   @Test
   void successResponsesCarryStructuredExecutionJournal() {
-    GridGrindResponse.Success success =
+    WorkbookResult.Success success =
         success(
             ExecutionContextFixtureSupport.execute(
                 new DefaultGridGrindRequestExecutor(),
@@ -176,7 +176,7 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
 
   @Test
   void failedResponsesCarryStepFailureClassificationInExecutionJournal() {
-    GridGrindResponse.Failure failure =
+    WorkbookResult.Failure failure =
         failure(
             ExecutionContextFixtureSupport.execute(
                 new DefaultGridGrindRequestExecutor(),
@@ -212,7 +212,7 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
     Path workbookPath = Files.createTempFile("gridgrind-agent-", ".xlsx");
     Files.deleteIfExists(workbookPath);
 
-    GridGrindResponse response =
+    WorkbookResult response =
         ExecutionContextFixtureSupport.execute(
             new DefaultGridGrindRequestExecutor(),
             request(
@@ -269,7 +269,7 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
                     new RangeSelector.RectangularWindow("Budget", "A1", 4, 3),
                     new SheetIntrospectionQuery.GetWindow())));
 
-    GridGrindResponse.Success success = success(response);
+    WorkbookResult.Success success = success(response);
     WorkbookSummary workbook =
         read(success, "workbook", WorkbookInspectionResult.WorkbookSummaryResult.class).workbook();
     SheetInspectionResult.CellsResult cells =
@@ -331,7 +331,7 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
             binary(
                 "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+X2kQAAAAASUVORK5CYII="));
 
-    GridGrindResponse.Success success =
+    WorkbookResult.Success success =
         success(
             ExecutionContextFixtureSupport.execute(
                 new DefaultGridGrindRequestExecutor(),
@@ -399,7 +399,7 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
 
   @Test
   void executesRichTextCellWorkflowAndReportsStructuredRuns() {
-    GridGrindResponse response =
+    WorkbookResult response =
         ExecutionContextFixtureSupport.execute(
             new DefaultGridGrindRequestExecutor(),
             request(
@@ -434,7 +434,7 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
                     new CellSelector.ByAddresses("Budget", List.of("A1")),
                     allFacetCellsQuery())));
 
-    GridGrindResponse.Success success = success(response);
+    WorkbookResult.Success success = success(response);
     SheetInspectionResult.CellsResult cells =
         read(success, "cells", SheetInspectionResult.CellsResult.class);
     dev.erst.gridgrind.contract.dto.CellReport.TextReport cell =
@@ -456,7 +456,7 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
 
   @Test
   void surfacesRequestWarningsAlongsideSuccessfulExecution() {
-    GridGrindResponse response =
+    WorkbookResult response =
         ExecutionContextFixtureSupport.execute(
             new DefaultGridGrindRequestExecutor(),
             request(
@@ -476,7 +476,7 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
                         new CellSelector.ByAddress("Summary", "A1"),
                         new CellMutationAction.SetCell(formulaCell("Budget Review!A1"))))));
 
-    GridGrindResponse.Success success = success(response);
+    WorkbookResult.Success success = success(response);
 
     assertEquals(
         List.of(
@@ -498,7 +498,7 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
       ExecutionContextFixtureSupport.saveWorkbook(workbook, workbookPath);
     }
 
-    GridGrindResponse response =
+    WorkbookResult response =
         ExecutionContextFixtureSupport.execute(
             new DefaultGridGrindRequestExecutor(),
             request(
@@ -516,7 +516,7 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
                     new CellSelector.ByAddresses("Budget", List.of("A1", "B1")),
                     allFacetCellsQuery())));
 
-    GridGrindResponse.Success success = success(response);
+    WorkbookResult.Success success = success(response);
     SheetInspectionResult.CellsResult cells =
         read(success, "cells", SheetInspectionResult.CellsResult.class);
 
@@ -537,7 +537,7 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
   void returnsStructuralReadResultsAndPersistsWorkbookShape() throws IOException {
     Path workbookPath = XlsxRoundTrip.newWorkbookPath("gridgrind-layout-ops-");
 
-    GridGrindResponse response =
+    WorkbookResult response =
         ExecutionContextFixtureSupport.execute(
             new DefaultGridGrindRequestExecutor(),
             request(
@@ -623,7 +623,7 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
                     new WorkbookSelector.Current(),
                     new WorkbookIntrospectionQuery.GetWorkbookSummary())));
 
-    GridGrindResponse.Success success = success(response);
+    WorkbookResult.Success success = success(response);
     SheetInspectionResult.CellsResult cells =
         read(success, "cells", SheetInspectionResult.CellsResult.class);
     SheetInspectionResult.MergedRegionsResult merged =
@@ -690,7 +690,7 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
   void returnsB3SheetLayoutFactsAndPersistsVisibilityGrouping() throws IOException {
     Path workbookPath = XlsxRoundTrip.newWorkbookPath("gridgrind-b3-layout-");
 
-    GridGrindResponse response =
+    WorkbookResult response =
         ExecutionContextFixtureSupport.execute(
             new DefaultGridGrindRequestExecutor(),
             request(
@@ -765,7 +765,7 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
                     new SheetSelector.ByName("Layout"),
                     new SheetIntrospectionQuery.GetSheetLayout())));
 
-    GridGrindResponse.Success success = success(response);
+    WorkbookResult.Success success = success(response);
     SheetLayoutReport layout =
         read(success, "layout", SheetInspectionResult.SheetLayoutResult.class).layout();
 
@@ -814,7 +814,7 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
                             "<sheetViews>", "<sheetFormatPr defaultRowHeight=\"999\"/><sheetViews>")
                         .replace("width=\"16.0\"", "width=\"300.0\"")));
 
-    GridGrindResponse.Success success =
+    WorkbookResult.Success success =
         success(
             ExecutionContextFixtureSupport.execute(
                 new DefaultGridGrindRequestExecutor(),
@@ -844,7 +844,7 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
   void executesB3InsertDeleteAndShiftOperationsAndPersistsMovedCells() throws IOException {
     Path workbookPath = XlsxRoundTrip.newWorkbookPath("gridgrind-b3-geometry-");
 
-    GridGrindResponse response =
+    WorkbookResult response =
         ExecutionContextFixtureSupport.execute(
             new DefaultGridGrindRequestExecutor(),
             request(
@@ -904,7 +904,7 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
                     new CellSelector.ByAddresses("Moves", List.of("A2", "B1", "A3", "C3", "E4")),
                     allFacetCellsQuery())));
 
-    GridGrindResponse.Success success = success(response);
+    WorkbookResult.Success success = success(response);
     SheetInspectionResult.CellsResult cells =
         read(success, "cells", SheetInspectionResult.CellsResult.class);
 
@@ -946,7 +946,7 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
 
   @Test
   void returnsStructuredFailureForRowStructuralEditsThatWouldMoveTables() {
-    GridGrindResponse.Failure failure =
+    WorkbookResult.Failure failure =
         failure(
             ExecutionContextFixtureSupport.execute(
                 new DefaultGridGrindRequestExecutor(),
@@ -987,7 +987,7 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
 
   @Test
   void returnsStructuredFailureForColumnStructuralEditsWhenWorkbookHasFormulas() {
-    GridGrindResponse.Failure failure =
+    WorkbookResult.Failure failure =
         failure(
             ExecutionContextFixtureSupport.execute(
                 new DefaultGridGrindRequestExecutor(),
@@ -1017,7 +1017,7 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
   void returnsAuthoringMetadataAndNamedRangeReadResults() throws IOException {
     Path workbookPath = XlsxRoundTrip.newWorkbookPath("gridgrind-authoring-ops-");
 
-    GridGrindResponse response =
+    WorkbookResult response =
         ExecutionContextFixtureSupport.execute(
             new DefaultGridGrindRequestExecutor(),
             request(
@@ -1069,7 +1069,7 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
                     new dev.erst.gridgrind.contract.selector.NamedRangeSelector.All(),
                     new WorkbookIntrospectionQuery.GetNamedRanges())));
 
-    GridGrindResponse.Success success = success(response);
+    WorkbookResult.Success success = success(response);
     dev.erst.gridgrind.contract.dto.CellReport.TextReport linkedCell =
         cast(
             dev.erst.gridgrind.contract.dto.CellReport.TextReport.class,
@@ -1135,7 +1135,7 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
   void returnsDataValidationReadResultsAndPersistsNormalizedRules() throws IOException {
     Path workbookPath = XlsxRoundTrip.newWorkbookPath("gridgrind-data-validation-ops-");
 
-    GridGrindResponse response =
+    WorkbookResult response =
         ExecutionContextFixtureSupport.execute(
             new DefaultGridGrindRequestExecutor(),
             request(
@@ -1180,7 +1180,7 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
                     new SheetSelector.ByNames(List.of("Budget")),
                     new InspectionAnalysisQuery.AnalyzeDataValidationHealth())));
 
-    GridGrindResponse.Success success = success(response);
+    WorkbookResult.Success success = success(response);
     SheetInspectionResult.DataValidationsResult validations =
         read(success, "validations", SheetInspectionResult.DataValidationsResult.class);
     dev.erst.gridgrind.contract.query.WorkbookAnalysisResult.DataValidationHealthResult health =
@@ -1220,7 +1220,7 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
   void returnsConditionalFormattingReadResultsAndPersistsDefinitions() throws IOException {
     Path workbookPath = XlsxRoundTrip.newWorkbookPath("gridgrind-conditional-formatting-");
 
-    GridGrindResponse response =
+    WorkbookResult response =
         ExecutionContextFixtureSupport.execute(
             new DefaultGridGrindRequestExecutor(),
             request(
@@ -1254,7 +1254,7 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
                     new SheetSelector.ByNames(List.of("Budget")),
                     new InspectionAnalysisQuery.AnalyzeConditionalFormattingHealth())));
 
-    GridGrindResponse.Success success = success(response);
+    WorkbookResult.Success success = success(response);
     SheetInspectionResult.ConditionalFormattingResult conditionalFormatting =
         read(
             success,
@@ -1316,7 +1316,7 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
   void returnsAutofilterAndTableReadResultsAndPersistsDefinitions() throws IOException {
     Path workbookPath = XlsxRoundTrip.newWorkbookPath("gridgrind-table-autofilter-");
 
-    GridGrindResponse response =
+    WorkbookResult response =
         ExecutionContextFixtureSupport.execute(
             new DefaultGridGrindRequestExecutor(),
             request(
@@ -1383,7 +1383,7 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
                     new TableSelector.All(),
                     new InspectionAnalysisQuery.AnalyzeTableHealth())));
 
-    GridGrindResponse.Success success = success(response);
+    WorkbookResult.Success success = success(response);
     SheetInspectionResult.AutofiltersResult filters =
         read(success, "filters", SheetInspectionResult.AutofiltersResult.class);
     WorkbookAssetInspectionResult.TablesResult tables =

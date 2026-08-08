@@ -3,8 +3,10 @@ package dev.erst.gridgrind.contract.dto;
 import java.util.Objects;
 
 /** One non-fatal request warning produced during protocol execution. */
-public record RequestWarning(int stepIndex, String stepId, String stepType, String message) {
+public record RequestWarning(
+    GridGrindWarningCode code, int stepIndex, String stepId, String stepType, String message) {
   public RequestWarning {
+    Objects.requireNonNull(code, "code must not be null");
     if (stepIndex < 0) {
       throw new IllegalArgumentException("stepIndex must not be negative");
     }

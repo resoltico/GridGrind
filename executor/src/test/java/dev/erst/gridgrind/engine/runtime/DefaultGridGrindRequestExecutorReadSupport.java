@@ -182,7 +182,7 @@ class DefaultGridGrindRequestExecutorReadSupport {
   }
 
   static <T extends InspectionResult> T read(
-      GridGrindResponse.Success success, String stepId, Class<T> type) {
+      WorkbookResult.Success success, String stepId, Class<T> type) {
     return ExecutorTestPlanSupport.inspection(success, stepId, type);
   }
 

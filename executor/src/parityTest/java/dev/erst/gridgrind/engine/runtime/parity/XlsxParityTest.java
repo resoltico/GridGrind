@@ -12,7 +12,7 @@ import dev.erst.gridgrind.contract.dto.CalculationStrategyInput;
 import dev.erst.gridgrind.contract.dto.ExecutionPolicyInput;
 import dev.erst.gridgrind.contract.dto.FormulaEnvironmentInput;
 import dev.erst.gridgrind.contract.dto.FormulaExternalWorkbookInput;
-import dev.erst.gridgrind.contract.dto.GridGrindResponse;
+import dev.erst.gridgrind.contract.dto.WorkbookResult;
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
 import dev.erst.gridgrind.contract.query.*;
 import dev.erst.gridgrind.contract.selector.*;
@@ -206,7 +206,7 @@ final class XlsxParityTest {
       XlsxParityScenarios.MaterializedScenario scenario =
           XlsxParityScenarios.materialize(XlsxParityScenarios.EXTERNAL_FORMULA, temporaryRoot);
       Path outputPath = temporaryRoot.resolve("output.xlsx");
-      GridGrindResponse response =
+      WorkbookResult response =
           new DefaultGridGrindRequestExecutor()
               .execute(
                   ParityPlanSupport.request(
@@ -232,7 +232,7 @@ final class XlsxParityTest {
                               XlsxParityProbeRegistry.allFacetCellsQuery()))),
                   XlsxParitySupport.bindings(temporaryRoot),
                   ExecutionJournalSink.NOOP);
-      assertInstanceOf(GridGrindResponse.Success.class, response);
+      assertInstanceOf(WorkbookResult.Success.class, response);
     } finally {
       deleteRecursively(temporaryRoot);
     }

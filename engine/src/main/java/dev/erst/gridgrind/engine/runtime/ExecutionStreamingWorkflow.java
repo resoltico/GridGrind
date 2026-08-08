@@ -6,8 +6,8 @@ import dev.erst.gridgrind.contract.dto.CalculationReport;
 import dev.erst.gridgrind.contract.dto.ExecutionModeInput;
 import dev.erst.gridgrind.contract.dto.GridGrindProblemDetail;
 import dev.erst.gridgrind.contract.dto.GridGrindProtocolVersion;
-import dev.erst.gridgrind.contract.dto.GridGrindResponse;
-import dev.erst.gridgrind.contract.dto.GridGrindResponsePersistence;
+import dev.erst.gridgrind.contract.dto.WorkbookResult;
+import dev.erst.gridgrind.contract.dto.WorkbookResultPersistence;
 import dev.erst.gridgrind.contract.dto.RequestWarning;
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
 import dev.erst.gridgrind.contract.query.InspectionResult;
@@ -47,7 +47,7 @@ final class ExecutionStreamingWorkflow {
         Objects.requireNonNull(tempFileFactory, "tempFileFactory must not be null");
   }
 
-  GridGrindResponse execute(
+  WorkbookResult execute(
       GridGrindProtocolVersion protocolVersion,
       WorkbookPlan request,
       ExecutionModeInput executionMode,
@@ -120,13 +120,13 @@ final class ExecutionStreamingWorkflow {
     }
 
     ExecutionJournalRecorder.PhaseHandle persistencePhase = journal.beginPersistence();
-    GridGrindResponsePersistence.PersistenceOutcome persistence;
+    WorkbookResultPersistence.PersistenceOutcome persistence;
     try {
       persistence =
           workbookSupport.persistStreamingWorkbook(
               materializedPath, request.persistence(), request.source(), workingDirectory);
       movedToPersistenceTarget =
-          !(persistence instanceof GridGrindResponsePersistence.PersistenceOutcome.NotSaved);
+          !(persistence instanceof WorkbookResultPersistence.PersistenceOutcome.NotSaved);
     } catch (Exception exception) {
       ExecutionWorkbookSupport.deleteIfExists(materializedPath);
       GridGrindProblemDetail.Problem problem =
@@ -145,8 +145,9 @@ final class ExecutionStreamingWorkflow {
     }
     persistencePhase.succeed();
 
-    return new GridGrindResponse.Success(
+    return new WorkbookResult.Success(
         protocolVersion,
+        request.planId(),
         journal.buildSuccess(request.steps().size()),
         calculation,
         persistence,
@@ -181,7 +182,7 @@ final class ExecutionStreamingWorkflow {
     }
   }
 
-  private GridGrindResponse closeFailedStreamingStep(
+  private WorkbookResult closeFailedStreamingStep(
       StreamingWorkflowContext workflowContext,
       CalculationReport calculation,
       @Nullable Path materializedPath,

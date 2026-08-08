@@ -31,8 +31,8 @@ final class GridGrindCliJsonStreams {
     return GridGrindCliJsonCodecSupport.readStream(inputStream, ProtocolCatalogSearchReport.class);
   }
 
-  static CliDiagnostic readCliDiagnostic(InputStream inputStream) throws IOException {
-    return GridGrindCliJsonCodecSupport.readStream(inputStream, CliDiagnostic.class);
+  static CommandError readCommandError(InputStream inputStream) throws IOException {
+    return GridGrindCliJsonCodecSupport.readStream(inputStream, CommandError.class);
   }
 
   static JsonNode readTree(byte[] bytes) throws IOException {

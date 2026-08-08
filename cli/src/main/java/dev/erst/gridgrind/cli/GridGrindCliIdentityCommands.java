@@ -24,8 +24,6 @@ final class GridGrindCliIdentityCommands {
     return CliCatalogPayloadSupport.writePayload(
         responseWriter,
         "help",
-        "help text",
-        Optional.of("gridgrind --help"),
         command.responsePath(),
         stdout,
         stderr,
@@ -45,8 +43,6 @@ final class GridGrindCliIdentityCommands {
     return CliCatalogPayloadSupport.writePayload(
         responseWriter,
         "version",
-        "version output",
-        Optional.of("gridgrind --version"),
         command.responsePath(),
         stdout,
         stderr,
@@ -66,8 +62,6 @@ final class GridGrindCliIdentityCommands {
     return CliCatalogPayloadSupport.writePayload(
         responseWriter,
         "license",
-        "license output",
-        Optional.of("gridgrind --license"),
         command.responsePath(),
         stdout,
         stderr,
@@ -85,8 +79,6 @@ final class GridGrindCliIdentityCommands {
     return CliCatalogPayloadSupport.writePayload(
         responseWriter,
         "print-request-template",
-        "request template",
-        Optional.of("gridgrind --print-request-template"),
         command.responsePath(),
         stdout,
         stderr,

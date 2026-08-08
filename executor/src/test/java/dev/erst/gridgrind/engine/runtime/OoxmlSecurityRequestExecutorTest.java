@@ -32,7 +32,7 @@ class OoxmlSecurityRequestExecutorTest extends DefaultGridGrindRequestExecutorTe
         OoxmlSecurityTestSupport.createEncryptedWorkbook(
             Files.createTempDirectory("gridgrind-protocol-encrypted-"));
 
-    GridGrindResponse.Success success =
+    WorkbookResult.Success success =
         success(
             ExecutionContextFixtureSupport.execute(
                 new DefaultGridGrindRequestExecutor(),
@@ -75,7 +75,7 @@ class OoxmlSecurityRequestExecutorTest extends DefaultGridGrindRequestExecutorTe
         OoxmlSecurityTestSupport.createEncryptedWorkbook(
             Files.createTempDirectory("gridgrind-protocol-encrypted-failures-"));
 
-    GridGrindResponse.Failure missingPassword =
+    WorkbookResult.Failure missingPassword =
         failure(
             ExecutionContextFixtureSupport.execute(
                 new DefaultGridGrindRequestExecutor(),
@@ -89,7 +89,7 @@ class OoxmlSecurityRequestExecutorTest extends DefaultGridGrindRequestExecutorTe
                             "workbook",
                             new WorkbookSelector.Current(),
                             new WorkbookIntrospectionQuery.GetWorkbookSummary())))));
-    GridGrindResponse.Failure wrongPassword =
+    WorkbookResult.Failure wrongPassword =
         failure(
             ExecutionContextFixtureSupport.execute(
                 new DefaultGridGrindRequestExecutor(),
@@ -118,7 +118,7 @@ class OoxmlSecurityRequestExecutorTest extends DefaultGridGrindRequestExecutorTe
             Files.createTempDirectory("gridgrind-protocol-signed-copy-"));
     Path copiedWorkbook = signedWorkbook.workbookPath().getParent().resolve("signed-copy.xlsx");
 
-    GridGrindResponse.Success success =
+    WorkbookResult.Success success =
         success(
             ExecutionContextFixtureSupport.execute(
                 new DefaultGridGrindRequestExecutor(),
@@ -142,7 +142,7 @@ class OoxmlSecurityRequestExecutorTest extends DefaultGridGrindRequestExecutorTe
             Files.createTempDirectory("gridgrind-protocol-signed-mutated-"));
     Path outputPath = signedWorkbook.workbookPath().getParent().resolve("signed-mutated.xlsx");
 
-    GridGrindResponse.Failure failure =
+    WorkbookResult.Failure failure =
         failure(
             ExecutionContextFixtureSupport.execute(
                 new DefaultGridGrindRequestExecutor(),
@@ -169,7 +169,7 @@ class OoxmlSecurityRequestExecutorTest extends DefaultGridGrindRequestExecutorTe
     Path securedWorkbook =
         signingMaterial.workbookPath().getParent().resolve("secured-output.xlsx");
 
-    GridGrindResponse.Success persisted =
+    WorkbookResult.Success persisted =
         success(
             ExecutionContextFixtureSupport.execute(
                 new DefaultGridGrindRequestExecutor(),
@@ -202,7 +202,7 @@ class OoxmlSecurityRequestExecutorTest extends DefaultGridGrindRequestExecutorTe
 
     assertEquals(securedWorkbook.toAbsolutePath().toString(), savedPath(persisted));
 
-    GridGrindResponse.Success reopened =
+    WorkbookResult.Success reopened =
         success(
             ExecutionContextFixtureSupport.execute(
                 new DefaultGridGrindRequestExecutor(),
@@ -260,7 +260,7 @@ class OoxmlSecurityRequestExecutorTest extends DefaultGridGrindRequestExecutorTe
     Path outputPath =
         Files.createTempDirectory("gridgrind-protocol-signing-invalid-").resolve("bad.xlsx");
 
-    GridGrindResponse.Failure failure =
+    WorkbookResult.Failure failure =
         failure(
             ExecutionContextFixtureSupport.execute(
                 new DefaultGridGrindRequestExecutor(),
@@ -297,7 +297,7 @@ class OoxmlSecurityRequestExecutorTest extends DefaultGridGrindRequestExecutorTe
       ExecutionContextFixtureSupport.saveWorkbook(workbook, workbookPath);
     }
 
-    GridGrindResponse.Failure failure =
+    WorkbookResult.Failure failure =
         failure(
             ExecutionContextFixtureSupport.execute(
                 new DefaultGridGrindRequestExecutor(),
@@ -334,7 +334,7 @@ class OoxmlSecurityRequestExecutorTest extends DefaultGridGrindRequestExecutorTe
     OoxmlSecurityTestSupport.tamperWorkbookCell(
         signedWorkbook.workbookPath(), tamperedWorkbook, "Signed", "B2", "Broken");
 
-    GridGrindResponse.Success success =
+    WorkbookResult.Success success =
         success(
             ExecutionContextFixtureSupport.execute(
                 new DefaultGridGrindRequestExecutor(),

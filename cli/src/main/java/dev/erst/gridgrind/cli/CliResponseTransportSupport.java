@@ -1,11 +1,11 @@
 package dev.erst.gridgrind.cli;
 
-import dev.erst.gridgrind.cli.discovery.CliDiagnostic;
-import dev.erst.gridgrind.cli.discovery.CliTransport;
+import dev.erst.gridgrind.cli.discovery.CliTransportNotice;
+import dev.erst.gridgrind.cli.discovery.CommandError;
 import dev.erst.gridgrind.cli.discovery.GridGrindCliJson;
 import dev.erst.gridgrind.contract.dto.GridGrindProblemCode;
 import dev.erst.gridgrind.contract.dto.GridGrindProblemDetail;
-import dev.erst.gridgrind.contract.dto.GridGrindResponse;
+import dev.erst.gridgrind.contract.dto.WorkbookResult;
 import dev.erst.gridgrind.contract.dto.ProblemContext;
 import dev.erst.gridgrind.contract.dto.RequestDoctorReport;
 import dev.erst.gridgrind.contract.json.RequestDiagnosticRedactor;
@@ -44,21 +44,19 @@ final class CliResponseTransportSupport {
     CliPayloadOutput.write(outputStream, payload);
   }
 
-  static void writeCliDiagnosticToStderr(
-      OutputStream stderr,
-      CliDiagnostic diagnostic,
+  static void writeTransportNoticeToStderr(OutputStream stderr, CliTransportNotice notice)
+      throws IOException {
+    java.util.Objects.requireNonNull(stderr, "stderr must not be null");
+    java.util.Objects.requireNonNull(notice, "notice must not be null");
+    writePayload(stderr, GridGrindCliJson.writeBytes(notice));
+  }
+
+  static byte[] commandErrorBytes(
+      CommandError commandError,
       Optional<RequestDiagnosticRedactor> redactor,
       boolean prettyJson)
       throws IOException {
-    java.util.Objects.requireNonNull(stderr, "stderr must not be null");
-    java.util.Objects.requireNonNull(diagnostic, "diagnostic must not be null");
-    writePayload(stderr, diagnosticBytes(diagnostic, redactor, prettyJson));
-  }
-
-  static byte[] diagnosticBytes(
-      CliDiagnostic diagnostic, Optional<RequestDiagnosticRedactor> redactor, boolean prettyJson)
-      throws IOException {
-    return redact(redactor, GridGrindCliJson.writeBytes(diagnostic, prettyJson), prettyJson);
+    return redact(redactor, GridGrindCliJson.writeBytes(commandError, prettyJson), prettyJson);
   }
 
   static byte[] redact(
@@ -110,20 +108,22 @@ final class CliResponseTransportSupport {
     };
   }
 
-  static CliDiagnostic diagnosticWithTransport(CliDiagnostic diagnostic, CliTransport transport) {
-    return new CliDiagnostic(
-        diagnostic.protocolVersion(),
-        diagnostic.exitCode(),
-        diagnostic.command(),
-        diagnostic.suggestions(),
-        diagnostic.problems(),
-        Optional.of(java.util.Objects.requireNonNull(transport, "transport must not be null")));
+  static int exitCodeFor(WorkbookResult result) {
+    return switch (result) {
+      case WorkbookResult.Success _ -> 0;
+      case WorkbookResult.Failure _ -> 1;
+    };
   }
 
-  static int exitCodeFor(GridGrindResponse response) {
-    return switch (response) {
-      case GridGrindResponse.Success _ -> 0;
-      case GridGrindResponse.Failure _ -> 1;
+  static int exitCodeFor(CommandError commandError) {
+    java.util.Objects.requireNonNull(commandError, "commandError must not be null");
+    return switch (commandError.primaryProblem().code()) {
+      case INVALID_ARGUMENTS,
+          INVALID_JSON,
+          INVALID_ENCODING,
+          INVALID_REQUEST_SHAPE,
+          INVALID_REQUEST -> 2;
+      default -> 1;
     };
   }
 

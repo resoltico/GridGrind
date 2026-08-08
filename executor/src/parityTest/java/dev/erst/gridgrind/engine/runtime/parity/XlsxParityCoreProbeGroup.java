@@ -45,7 +45,7 @@ final class XlsxParityCoreProbeGroup {
         context.scenario(XlsxParityScenarios.CORE_WORKBOOK);
     XlsxParityOracle.CoreWorkbookSnapshot direct =
         XlsxParityOracle.coreWorkbook(scenario.workbookPath());
-    GridGrindResponse.Success success =
+    WorkbookResult.Success success =
         XlsxParityGridGrind.readWorkbook(
             scenario.workbookPath(),
             inspect(
@@ -475,7 +475,7 @@ final class XlsxParityCoreProbeGroup {
         context.scenario(XlsxParityScenarios.ADVANCED_NONDRAWING);
     XlsxParityOracle.WorkbookProtectionSnapshot direct =
         XlsxParityOracle.workbookProtection(advanced.workbookPath());
-    GridGrindResponse.Success success =
+    WorkbookResult.Success success =
         XlsxParityGridGrind.readWorkbook(
             advanced.workbookPath(),
             inspect(
@@ -503,7 +503,7 @@ final class XlsxParityCoreProbeGroup {
     XlsxParityOracle.AdvancedPrintSnapshot direct =
         XlsxParityOracle.advancedPrint(
             context.scenario(XlsxParityScenarios.ADVANCED_NONDRAWING).workbookPath());
-    GridGrindResponse.Success success =
+    WorkbookResult.Success success =
         XlsxParityGridGrind.readWorkbook(
             context.scenario(XlsxParityScenarios.ADVANCED_NONDRAWING).workbookPath(),
             inspect(
@@ -545,7 +545,7 @@ final class XlsxParityCoreProbeGroup {
         XlsxParityOracle.style(advanced.workbookPath(), "Advanced", "A3");
     XlsxParityOracle.StyleSnapshot gradient =
         XlsxParityOracle.style(advanced.workbookPath(), "Advanced", "A4");
-    GridGrindResponse.Success success =
+    WorkbookResult.Success success =
         XlsxParityGridGrind.readWorkbook(
             advanced.workbookPath(),
             inspect(
@@ -618,7 +618,7 @@ final class XlsxParityCoreProbeGroup {
         context.scenario(XlsxParityScenarios.ADVANCED_NONDRAWING);
     XlsxParityOracle.CommentSnapshot direct =
         XlsxParityOracle.comment(advanced.workbookPath(), "Advanced", "E2");
-    GridGrindResponse.Success success =
+    WorkbookResult.Success success =
         XlsxParityGridGrind.readWorkbook(
             advanced.workbookPath(),
             inspect(
@@ -659,19 +659,19 @@ final class XlsxParityCoreProbeGroup {
         context.scenario(XlsxParityScenarios.ADVANCED_NONDRAWING);
     List<String> directKinds =
         XlsxParityOracle.dataValidationKinds(advanced.workbookPath(), "Advanced");
-    GridGrindResponse response =
+    WorkbookResult response =
         XlsxParityGridGrind.executeReadWorkbook(
             advanced.workbookPath(),
             inspect(
                 "health",
                 new SheetSelector.ByNames(List.of("Advanced")),
                 new InspectionAnalysisQuery.AnalyzeDataValidationHealth()));
-    if (response instanceof GridGrindResponse.Failure failure) {
+    if (response instanceof WorkbookResult.Failure failure) {
       return fail(
           "GridGrind data-validation analysis fails on malformed POI-authored rules: "
               + failure.problem().message());
     }
-    GridGrindResponse.Success success = cast(GridGrindResponse.Success.class, response);
+    WorkbookResult.Success success = cast(WorkbookResult.Success.class, response);
     WorkbookAnalysisResult.DataValidationHealthResult health =
         XlsxParityGridGrind.read(
             success, "health", WorkbookAnalysisResult.DataValidationHealthResult.class);
@@ -695,7 +695,7 @@ final class XlsxParityCoreProbeGroup {
         context.scenario(XlsxParityScenarios.ADVANCED_NONDRAWING);
     XlsxParityOracle.AutofilterSnapshot direct =
         XlsxParityOracle.autofilter(advanced.workbookPath(), "Advanced");
-    GridGrindResponse.Success success =
+    WorkbookResult.Success success =
         XlsxParityGridGrind.readWorkbook(
             advanced.workbookPath(),
             inspect(
@@ -741,7 +741,7 @@ final class XlsxParityCoreProbeGroup {
         context.scenario(XlsxParityScenarios.ADVANCED_NONDRAWING);
     XlsxParityOracle.TableSnapshot direct =
         XlsxParityOracle.table(advanced.workbookPath(), "AdvancedTable");
-    GridGrindResponse.Success success =
+    WorkbookResult.Success success =
         XlsxParityGridGrind.readWorkbook(
             advanced.workbookPath(),
             inspect(
@@ -790,7 +790,7 @@ final class XlsxParityCoreProbeGroup {
         context.scenario(XlsxParityScenarios.ADVANCED_NONDRAWING);
     List<String> directKinds =
         XlsxParityOracle.conditionalFormattingKinds(advanced.workbookPath(), "Advanced");
-    GridGrindResponse.Success success =
+    WorkbookResult.Success success =
         XlsxParityGridGrind.readWorkbook(
             advanced.workbookPath(),
             inspect(
@@ -820,7 +820,7 @@ final class XlsxParityCoreProbeGroup {
         context.scenario(XlsxParityScenarios.ADVANCED_NONDRAWING);
     List<String> directKinds =
         XlsxParityOracle.conditionalFormattingKinds(advanced.workbookPath(), "Advanced");
-    GridGrindResponse.Success success =
+    WorkbookResult.Success success =
         XlsxParityGridGrind.readWorkbook(
             advanced.workbookPath(),
             inspect(
@@ -883,7 +883,7 @@ final class XlsxParityCoreProbeGroup {
         XlsxParityOracle.workbookProtection(source.workbookPath());
 
     Path clearedPath = context.derivedWorkbook("workbook-protection-cleared");
-    GridGrindResponse.Success clearedSuccess =
+    WorkbookResult.Success clearedSuccess =
         XlsxParityGridGrind.mutateWorkbook(
             source.workbookPath(),
             clearedPath,
@@ -910,7 +910,7 @@ final class XlsxParityCoreProbeGroup {
             && matchesWorkbookProtectionReport(clearedObserved, clearedDirect);
 
     Path restoredPath = context.derivedWorkbook("workbook-protection-restored");
-    GridGrindResponse.Success restoredSuccess =
+    WorkbookResult.Success restoredSuccess =
         XlsxParityGridGrind.mutateWorkbook(
             clearedPath,
             restoredPath,
@@ -1121,7 +1121,7 @@ final class XlsxParityCoreProbeGroup {
   private static SheetCopyCopiedObservation copySheetObservation(
       ProbeContext context, SheetCopySourceObservation source) {
     Path copiedPath = context.derivedWorkbook("sheet-copy-advanced");
-    GridGrindResponse.Success copiedSuccess =
+    WorkbookResult.Success copiedSuccess =
         XlsxParityGridGrind.mutateWorkbook(
             source.source().workbookPath(),
             copiedPath,

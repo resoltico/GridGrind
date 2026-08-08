@@ -3,9 +3,9 @@ package dev.erst.gridgrind.cli;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 
-import dev.erst.gridgrind.cli.discovery.CliDiagnostic;
+import dev.erst.gridgrind.cli.discovery.CommandError;
 import dev.erst.gridgrind.cli.discovery.GridGrindCliJson;
-import dev.erst.gridgrind.contract.dto.GridGrindResponse;
+import dev.erst.gridgrind.contract.dto.WorkbookResult;
 import dev.erst.gridgrind.contract.dto.ProblemContext;
 import dev.erst.gridgrind.contract.dto.RequestDoctorReport;
 import dev.erst.gridgrind.contract.json.GridGrindJson;
@@ -133,8 +133,8 @@ class GridGrindCliTestSupport {
   }
 
   protected static ProblemContext.ParseArguments parseArgumentsContext(
-      GridGrindResponse.Failure failure) {
-    return assertInstanceOf(ProblemContext.ParseArguments.class, failure.problem().context());
+      WorkbookResult.Failure failure) {
+    return assertInstanceOf(ProblemContext.ParseArguments.class, failure.primaryProblem().context());
   }
 
   protected static ProblemContext.ParseArguments parseArgumentsContext(RequestDoctorReport report) {
@@ -142,14 +142,14 @@ class GridGrindCliTestSupport {
         ProblemContext.ParseArguments.class, report.primaryProblem().orElseThrow().context());
   }
 
-  protected static ProblemContext.ParseArguments parseArgumentsContext(CliDiagnostic diagnostic) {
+  protected static ProblemContext.ParseArguments parseArgumentsContext(CommandError diagnostic) {
     return assertInstanceOf(
         ProblemContext.ParseArguments.class, diagnostic.primaryProblem().context());
   }
 
   protected static ProblemContext.ReadRequest readRequestContext(
-      GridGrindResponse.Failure failure) {
-    return assertInstanceOf(ProblemContext.ReadRequest.class, failure.problem().context());
+      WorkbookResult.Failure failure) {
+    return assertInstanceOf(ProblemContext.ReadRequest.class, failure.primaryProblem().context());
   }
 
   protected static ProblemContext.ReadRequest readRequestContext(RequestDoctorReport report) {
@@ -157,7 +157,7 @@ class GridGrindCliTestSupport {
         ProblemContext.ReadRequest.class, report.primaryProblem().orElseThrow().context());
   }
 
-  protected static ProblemContext.ReadRequest readRequestContext(CliDiagnostic diagnostic) {
+  protected static ProblemContext.ReadRequest readRequestContext(CommandError diagnostic) {
     return assertInstanceOf(
         ProblemContext.ReadRequest.class, diagnostic.primaryProblem().context());
   }
@@ -173,13 +173,13 @@ class GridGrindCliTestSupport {
   }
 
   protected static ProblemContext.ExecuteRequest executeRequestContext(
-      GridGrindResponse.Failure failure) {
-    return assertInstanceOf(ProblemContext.ExecuteRequest.class, failure.problem().context());
+      WorkbookResult.Failure failure) {
+    return assertInstanceOf(ProblemContext.ExecuteRequest.class, failure.primaryProblem().context());
   }
 
   protected static ProblemContext.WriteResponse writeResponseContext(
-      GridGrindResponse.Failure failure) {
-    return assertInstanceOf(ProblemContext.WriteResponse.class, failure.problem().context());
+      WorkbookResult.Failure failure) {
+    return assertInstanceOf(ProblemContext.WriteResponse.class, failure.primaryProblem().context());
   }
 
   protected static ProblemContext.WriteResponse writeResponseContext(RequestDoctorReport report) {
@@ -187,46 +187,46 @@ class GridGrindCliTestSupport {
         ProblemContext.WriteResponse.class, report.primaryProblem().orElseThrow().context());
   }
 
-  protected static ProblemContext.WriteResponse writeResponseContext(CliDiagnostic diagnostic) {
+  protected static ProblemContext.WriteResponse writeResponseContext(CommandError diagnostic) {
     return assertInstanceOf(
         ProblemContext.WriteResponse.class, diagnostic.primaryProblem().context());
   }
 
   protected static ProblemContext.ExecuteStep executeStepContext(
-      GridGrindResponse.Failure failure) {
-    return assertInstanceOf(ProblemContext.ExecuteStep.class, failure.problem().context());
+      WorkbookResult.Failure failure) {
+    return assertInstanceOf(ProblemContext.ExecuteStep.class, failure.primaryProblem().context());
   }
 
-  protected static CliDiagnostic cliDiagnostic(byte[] bytes) throws IOException {
-    return GridGrindCliJson.readBytes(bytes, CliDiagnostic.class);
+  protected static CommandError commandError(byte[] bytes) throws IOException {
+    return GridGrindCliJson.readBytes(bytes, CommandError.class);
   }
 
-  /** Reads one {@link CliDiagnostic} from stderr without asserting anything about stdout. */
-  protected static CliDiagnostic cliDiagnosticOnStderr(ByteArrayOutputStream stderr)
+  /** Reads one {@link CommandError} from stderr without asserting anything about stdout. */
+  protected static CommandError commandErrorOnStdout(ByteArrayOutputStream stderr)
       throws IOException {
     Objects.requireNonNull(stderr, "stderr must not be null");
-    return GridGrindCliJson.readBytes(stderr.toByteArray(), CliDiagnostic.class);
+    return GridGrindCliJson.readBytes(stderr.toByteArray(), CommandError.class);
   }
 
   /**
-   * Reads a {@link CliDiagnostic} from stderr and asserts that stdout stayed empty.
+   * Reads a {@link CommandError} from stderr and asserts that stdout stayed empty.
    *
    * <p>Use this helper in every test that expects a CLI diagnostic with no {@code --response} path
    * configured. It encodes the current routing contract — structured JSON on stderr, nothing on
    * stdout — in a single call so individual tests cannot forget either half.
    */
-  protected static CliDiagnostic cliDiagnosticOnStderr(
+  protected static CommandError commandErrorOnStdout(
       ByteArrayOutputStream stdout, ByteArrayOutputStream stderr) throws IOException {
     assertEquals(
         "",
         stdout.toString(StandardCharsets.UTF_8),
         "stdout must be empty when a CLI diagnostic is routed to stderr");
-    return GridGrindCliJson.readBytes(stderr.toByteArray(), CliDiagnostic.class);
+    return GridGrindCliJson.readBytes(stderr.toByteArray(), CommandError.class);
   }
 
-  protected static GridGrindResponse response(
+  protected static WorkbookResult response(
       ByteArrayOutputStream stdout, ByteArrayOutputStream stderr) throws IOException {
-    return GridGrindJson.readResponse(nonEmptyPayload(stdout, stderr));
+    return GridGrindJson.readWorkbookResult(nonEmptyPayload(stdout, stderr));
   }
 
   protected static RequestDoctorReport doctorReport(

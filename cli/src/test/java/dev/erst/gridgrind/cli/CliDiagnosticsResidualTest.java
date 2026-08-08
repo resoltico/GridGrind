@@ -3,7 +3,7 @@ package dev.erst.gridgrind.cli;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 
-import dev.erst.gridgrind.cli.discovery.CliDiagnostic;
+import dev.erst.gridgrind.cli.discovery.CommandError;
 import dev.erst.gridgrind.contract.dto.GridGrindProblemCode;
 import dev.erst.gridgrind.contract.dto.GridGrindProblemDetail;
 import dev.erst.gridgrind.contract.dto.ProblemContext;
@@ -23,14 +23,14 @@ import java.util.Optional;
 import org.junit.jupiter.api.Test;
 
 /** Residual coverage for canonical CLI diagnostic branches. */
-class CliDiagnosticsResidualTest extends GridGrindCliTestSupport {
+class CommandErrorsResidualTest extends GridGrindCliTestSupport {
   @Test
   void readRequestFailureUsesExecutionRepairTextForGenericInvalidRequests() {
-    CliDiagnostic failure =
-        CliDiagnostics.readRequestFailure(
+    CommandError failure =
+        CommandErrors.readRequestFailure(
             1, "execute", problem(GridGrindProblemCode.INVALID_REQUEST, "invalid request"));
 
-    assertEquals("Fix the request data and retry the workflow.", failure.problem().resolution());
+    assertEquals("Fix the request data and retry the workflow.", failure.primaryProblem().resolution());
   }
 
   @Test
@@ -42,8 +42,8 @@ class CliDiagnosticsResidualTest extends GridGrindCliTestSupport {
             Optional.empty(),
             Optional.empty(),
             null);
-    CliDiagnostic failure =
-        CliDiagnostics.readRequestFailure(
+    CommandError failure =
+        CommandErrors.readRequestFailure(
             1,
             "doctor-request",
             GridGrindProblems.fromException(
@@ -52,7 +52,7 @@ class CliDiagnosticsResidualTest extends GridGrindCliTestSupport {
                     RequestInput.standardInput(), JsonLocation.pathOnly("protocolVersion"))));
 
     assertEquals(
-        "Add protocolVersion: \"V2\" at the request root.", failure.problem().resolution());
+        "Add protocolVersion: \"V2\" at the request root.", failure.primaryProblem().resolution());
   }
 
   @Test
@@ -64,8 +64,8 @@ class CliDiagnosticsResidualTest extends GridGrindCliTestSupport {
             Optional.empty(),
             Optional.empty(),
             null);
-    CliDiagnostic failure =
-        CliDiagnostics.readRequestFailure(
+    CommandError failure =
+        CommandErrors.readRequestFailure(
             1,
             "doctor-request",
             GridGrindProblems.fromException(
@@ -75,13 +75,13 @@ class CliDiagnosticsResidualTest extends GridGrindCliTestSupport {
 
     assertEquals(
         "Make every stepId unique. Rename or remove the duplicate value 'duplicate'.",
-        failure.problem().resolution());
+        failure.primaryProblem().resolution());
   }
 
   @Test
   void readRequestFailureLeavesNonReadRequestContextsUnwrapped() {
-    CliDiagnostic failure =
-        CliDiagnostics.readRequestFailure(
+    CommandError failure =
+        CommandErrors.readRequestFailure(
             1,
             "execute",
             GridGrindProblemDetail.Problem.of(
@@ -90,18 +90,18 @@ class CliDiagnosticsResidualTest extends GridGrindCliTestSupport {
                 new ProblemContext.ParseArguments(CliArgument.named("--request"))));
 
     assertEquals(Optional.of("--request"), parseArgumentsContext(failure).argumentName());
-    assertFalse(failure.problem().context() instanceof ProblemContext.ReadRequest);
+    assertFalse(failure.primaryProblem().context() instanceof ProblemContext.ReadRequest);
   }
 
   @Test
   void unexpectedFailureNeverSerializesTheThrowableMessage() {
-    CliDiagnostic failure =
-        CliDiagnostics.unexpectedFailure("help", new IllegalStateException("source-secret"));
+    CommandError failure =
+        CommandErrors.unexpectedFailure("help", new IllegalStateException("source-secret"));
 
-    assertEquals(GridGrindProblemCode.INTERNAL_ERROR, failure.problem().code());
-    assertEquals(GridGrindProblemCode.INTERNAL_ERROR.title(), failure.problem().message());
-    assertEquals(GridGrindProblemCode.INTERNAL_ERROR.resolution(), failure.problem().resolution());
-    assertFalse(failure.problem().causes().getFirst().message().contains("source-secret"));
+    assertEquals(GridGrindProblemCode.INTERNAL_ERROR, failure.primaryProblem().code());
+    assertEquals(GridGrindProblemCode.INTERNAL_ERROR.title(), failure.primaryProblem().message());
+    assertEquals(GridGrindProblemCode.INTERNAL_ERROR.resolution(), failure.primaryProblem().resolution());
+    assertFalse(failure.primaryProblem().causes().getFirst().message().contains("source-secret"));
   }
 
   @Test

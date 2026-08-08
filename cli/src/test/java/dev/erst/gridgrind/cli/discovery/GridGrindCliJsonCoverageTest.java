@@ -37,7 +37,7 @@ class GridGrindCliJsonCoverageTest {
     RecipeKeywordMatchReport taskKeywordMatchReport = sampleRecipeKeywordMatchReport();
     ShippedExampleCatalog exampleCatalog = GridGrindShippedExamples.catalog();
     ProtocolCatalogSearchReport protocolCatalogSearchReport = sampleProtocolCatalogSearchReport();
-    CliDiagnostic cliDiagnostic = sampleCliDiagnostic();
+    CommandError commandError = sampleCommandError();
 
     assertEquals(
         taskCatalog,
@@ -68,9 +68,9 @@ class GridGrindCliJsonCoverageTest {
             ProtocolCatalogCliJson.writeProtocolCatalogSearchReportBytes(
                 protocolCatalogSearchReport)));
     assertEquals(
-        cliDiagnostic,
+        commandError,
         GridGrindCliJson.readBytes(
-            GridGrindCliJson.writeBytes(cliDiagnostic), CliDiagnostic.class));
+            GridGrindCliJson.writeBytes(commandError), CommandError.class));
 
     try (TrackingInputStream taskCatalogStream =
             new TrackingInputStream(GridGrindCliJson.writeBytes(taskCatalog));
@@ -84,8 +84,8 @@ class GridGrindCliJsonCoverageTest {
             new TrackingInputStream(
                 ProtocolCatalogCliJson.writeProtocolCatalogSearchReportBytes(
                     protocolCatalogSearchReport));
-        TrackingInputStream cliDiagnosticStream =
-            new TrackingInputStream(GridGrindCliJson.writeBytes(cliDiagnostic))) {
+        TrackingInputStream commandErrorStream =
+            new TrackingInputStream(GridGrindCliJson.writeBytes(commandError))) {
       assertEquals(taskCatalog, GridGrindCliJsonStreams.readTaskCatalog(taskCatalogStream));
       assertEquals(recipeCatalog, GridGrindCliJsonStreams.readRecipeCatalog(recipeCatalogStream));
       assertEquals(
@@ -97,13 +97,13 @@ class GridGrindCliJsonCoverageTest {
           protocolCatalogSearchReport,
           GridGrindCliJsonStreams.readProtocolCatalogSearchReport(
               protocolCatalogSearchReportStream));
-      assertEquals(cliDiagnostic, GridGrindCliJsonStreams.readCliDiagnostic(cliDiagnosticStream));
+      assertEquals(commandError, GridGrindCliJsonStreams.readCommandError(commandErrorStream));
       assertFalse(taskCatalogStream.closed);
       assertFalse(recipeCatalogStream.closed);
       assertFalse(taskKeywordMatchReportStream.closed);
       assertFalse(exampleCatalogStream.closed);
       assertFalse(protocolCatalogSearchReportStream.closed);
-      assertFalse(cliDiagnosticStream.closed);
+      assertFalse(commandErrorStream.closed);
     }
   }
 
@@ -113,7 +113,7 @@ class GridGrindCliJsonCoverageTest {
     RecipeKeywordMatchReport taskKeywordMatchReport = sampleRecipeKeywordMatchReport();
     ShippedExampleCatalog exampleCatalog = GridGrindShippedExamples.catalog();
     ProtocolCatalogSearchReport protocolCatalogSearchReport = sampleProtocolCatalogSearchReport();
-    CliDiagnostic cliDiagnostic = sampleCliDiagnostic();
+    CommandError commandError = sampleCommandError();
 
     assertEquals(
         "bytes must not be null",
@@ -183,12 +183,12 @@ class GridGrindCliJsonCoverageTest {
         "bytes must not be null",
         assertThrows(
                 NullPointerException.class,
-                () -> GridGrindCliJson.readBytes(null, CliDiagnostic.class))
+                () -> GridGrindCliJson.readBytes(null, CommandError.class))
             .getMessage());
     assertEquals(
         "inputStream must not be null",
         assertThrows(
-                NullPointerException.class, () -> GridGrindCliJsonStreams.readCliDiagnostic(null))
+                NullPointerException.class, () -> GridGrindCliJsonStreams.readCommandError(null))
             .getMessage());
     assertEquals(
         "outputStream must not be null",
@@ -242,7 +242,7 @@ class GridGrindCliJsonCoverageTest {
     assertEquals(
         "outputStream must not be null",
         assertThrows(
-                NullPointerException.class, () -> GridGrindCliJson.writeValue(null, cliDiagnostic))
+                NullPointerException.class, () -> GridGrindCliJson.writeValue(null, commandError))
             .getMessage());
     assertEquals(
         "value must not be null",
@@ -287,9 +287,9 @@ class GridGrindCliJsonCoverageTest {
         protocolCatalogSearchOutput, sampleProtocolCatalogSearchReport(), false);
     assertFalse(protocolCatalogSearchOutput.toString(StandardCharsets.UTF_8).contains(": null"));
 
-    ByteArrayOutputStream cliDiagnosticOutput = new ByteArrayOutputStream();
-    GridGrindCliJson.writeValue(cliDiagnosticOutput, sampleCliDiagnostic());
-    assertFalse(cliDiagnosticOutput.toString(StandardCharsets.UTF_8).contains(": null"));
+    ByteArrayOutputStream commandErrorOutput = new ByteArrayOutputStream();
+    GridGrindCliJson.writeValue(commandErrorOutput, sampleCommandError());
+    assertFalse(commandErrorOutput.toString(StandardCharsets.UTF_8).contains(": null"));
 
     assertTrue(
         GridGrindCliJsonStreams.readTree("{\"hello\":true}".getBytes(StandardCharsets.UTF_8))
@@ -298,14 +298,14 @@ class GridGrindCliJsonCoverageTest {
   }
 
   @Test
-  void cliDiagnosticJsonKeepsTheWrapperTransportOnlyAndLeavesProblemFactsInProblemCore()
+  void commandErrorJsonKeepsTheWrapperTransportOnlyAndLeavesProblemFactsInProblemCore()
       throws IOException {
     JsonNode parseArgumentsDiagnostic =
-        GridGrindCliJsonStreams.readTree(GridGrindCliJson.writeBytes(sampleCliDiagnostic()));
+        GridGrindCliJsonStreams.readTree(GridGrindCliJson.writeBytes(sampleCommandError()));
     JsonNode readRequestDiagnostic =
         GridGrindCliJsonStreams.readTree(
             GridGrindCliJson.writeBytes(
-                new CliDiagnostic(
+                new CommandError(
                     GridGrindProtocolVersion.current(),
                     1,
                     "execute",
@@ -425,8 +425,8 @@ class GridGrindCliJsonCoverageTest {
                 List.of("summary", "discovery term"))));
   }
 
-  private static CliDiagnostic sampleCliDiagnostic() {
-    return new CliDiagnostic(
+  private static CommandError sampleCommandError() {
+    return new CommandError(
         GridGrindProtocolVersion.current(),
         2,
         "print-recipe-keyword-match",

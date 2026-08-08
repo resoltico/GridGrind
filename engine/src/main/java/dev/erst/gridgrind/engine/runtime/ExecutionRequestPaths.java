@@ -1,6 +1,6 @@
 package dev.erst.gridgrind.engine.runtime;
 
-import dev.erst.gridgrind.contract.dto.GridGrindResponsePersistence;
+import dev.erst.gridgrind.contract.dto.WorkbookResultPersistence;
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
 import dev.erst.gridgrind.excel.WorkbookArtifactWriteDisposition;
 import dev.erst.gridgrind.excel.WorkbookLocation;
@@ -94,21 +94,21 @@ final class ExecutionRequestPaths {
     };
   }
 
-  static GridGrindResponsePersistence.PersistenceOutcome unwrittenPersistenceOutcome(
+  static WorkbookResultPersistence.PersistenceOutcome unwrittenPersistenceOutcome(
       WorkbookPlan request) {
     return switch (request.persistence()) {
       case WorkbookPlan.WorkbookPersistence.None _ ->
-          new GridGrindResponsePersistence.PersistenceOutcome.NotSaved();
+          new WorkbookResultPersistence.PersistenceOutcome.NotSaved();
       case WorkbookPlan.WorkbookPersistence.SaveAs saveAs ->
-          new GridGrindResponsePersistence.PersistenceOutcome.SavedAs(
-              saveAs.path(), new GridGrindResponsePersistence.WriteResult.NotWritten());
+          new WorkbookResultPersistence.PersistenceOutcome.SavedAs(
+              saveAs.path(), new WorkbookResultPersistence.WriteResult.NotWritten());
       case WorkbookPlan.WorkbookPersistence.Overwrite _ -> {
         if (!(request.source() instanceof WorkbookPlan.WorkbookSource.ExistingFile existingFile)) {
-          yield new GridGrindResponsePersistence.PersistenceOutcome.Overwritten(
-              Optional.empty(), new GridGrindResponsePersistence.WriteResult.NotWritten());
+          yield new WorkbookResultPersistence.PersistenceOutcome.Overwritten(
+              Optional.empty(), new WorkbookResultPersistence.WriteResult.NotWritten());
         }
-        yield new GridGrindResponsePersistence.PersistenceOutcome.Overwritten(
-            existingFile.path(), new GridGrindResponsePersistence.WriteResult.NotWritten());
+        yield new WorkbookResultPersistence.PersistenceOutcome.Overwritten(
+            existingFile.path(), new WorkbookResultPersistence.WriteResult.NotWritten());
       }
     };
   }

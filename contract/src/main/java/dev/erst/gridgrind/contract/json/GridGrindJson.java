@@ -1,7 +1,7 @@
 package dev.erst.gridgrind.contract.json;
 
 import dev.erst.gridgrind.contract.catalog.Catalog;
-import dev.erst.gridgrind.contract.dto.GridGrindResponse;
+import dev.erst.gridgrind.contract.dto.WorkbookResult;
 import dev.erst.gridgrind.contract.dto.RequestDoctorReport;
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
 import java.io.IOException;
@@ -46,22 +46,22 @@ public final class GridGrindJson {
   }
 
   /** Reads a response from an input stream without closing the caller-owned stream. */
-  public static GridGrindResponse readResponse(InputStream inputStream) throws IOException {
+  public static WorkbookResult readWorkbookResult(InputStream inputStream) throws IOException {
     Objects.requireNonNull(inputStream, "inputStream must not be null");
     return GridGrindJsonCodecSupport.readValue(
         inputStream,
         GridGrindJsonMapperSupport.JSON_MAPPER,
-        GridGrindResponse.class,
+        WorkbookResult.class,
         GridGrindJsonProblemMessageSupport::invalidPayload);
   }
 
   /** Reads a response from a byte array. */
-  public static GridGrindResponse readResponse(byte[] bytes) throws IOException {
+  public static WorkbookResult readWorkbookResult(byte[] bytes) throws IOException {
     Objects.requireNonNull(bytes, "bytes must not be null");
     return GridGrindJsonCodecSupport.readValue(
         bytes,
         GridGrindJsonMapperSupport.JSON_MAPPER,
-        GridGrindResponse.class,
+        WorkbookResult.class,
         GridGrindJsonProblemMessageSupport::invalidPayload);
   }
 

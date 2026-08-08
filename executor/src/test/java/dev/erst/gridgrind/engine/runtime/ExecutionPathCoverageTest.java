@@ -10,7 +10,7 @@ import dev.erst.gridgrind.contract.dto.ExecutionJournal;
 import dev.erst.gridgrind.contract.dto.GridGrindProblemCode;
 import dev.erst.gridgrind.contract.dto.GridGrindProblemDetail;
 import dev.erst.gridgrind.contract.dto.GridGrindProtocolVersion;
-import dev.erst.gridgrind.contract.dto.GridGrindResponse;
+import dev.erst.gridgrind.contract.dto.WorkbookResult;
 import dev.erst.gridgrind.contract.dto.ProblemContext;
 import dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces;
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
@@ -234,7 +234,7 @@ class ExecutionPathCoverageTest {
             Optional.empty(),
             List.of());
 
-    GridGrindResponse.Failure failure =
+    WorkbookResult.Failure failure =
         ExecutionResponseSupport.failureResponse(
             GridGrindProtocolVersion.V2, journal, request, problem, 1, "step-1");
 

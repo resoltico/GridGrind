@@ -12,8 +12,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import dev.erst.gridgrind.contract.catalog.GridGrindProtocolCatalog;
 import dev.erst.gridgrind.contract.dto.GridGrindProblemCode;
 import dev.erst.gridgrind.contract.dto.GridGrindProblemDetail;
-import dev.erst.gridgrind.contract.dto.GridGrindResponse;
-import dev.erst.gridgrind.contract.dto.GridGrindResponses;
+import dev.erst.gridgrind.contract.dto.WorkbookResult;
+import dev.erst.gridgrind.contract.dto.WorkbookResults;
 import dev.erst.gridgrind.contract.dto.ProblemContext;
 import dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces;
 import dev.erst.gridgrind.contract.dto.RequestDoctorReport;
@@ -59,7 +59,7 @@ class GridGrindEngineApiTest {
     WorkbookPlan request = GridGrindProtocolCatalog.requestTemplate();
     AtomicReference<GridGrindRequestInputs> observedInputs = new AtomicReference<>();
     AtomicReference<GridGrindJournalSink> observedSink = new AtomicReference<>();
-    GridGrindResponse success = GridGrindResponses.success(List.of(), List.of(), List.of());
+    WorkbookResult success = WorkbookResults.success(List.of(), List.of(), List.of());
     GridGrindRequestExecutor executor =
         (observedRequest, inputs, sink) -> {
           assertSame(request, observedRequest);
@@ -120,7 +120,7 @@ class GridGrindEngineApiTest {
     assertNotNull(doctor);
 
     assertInstanceOf(
-        GridGrindResponse.Success.class,
+        WorkbookResult.Success.class,
         executor.execute(
             template,
             inputs(Path.of("engine-api-runtime"), new byte[] {7}),
@@ -167,11 +167,11 @@ class GridGrindEngineApiTest {
     AtomicReference<dev.erst.gridgrind.contract.dto.ExecutionJournal.Event> observedEvent =
         new AtomicReference<>();
 
-    GridGrindResponse response =
+    WorkbookResult response =
         GridGrindEngine.requestExecutor()
             .execute(verboseRequest, inputs(Path.of("engine-api-verbose")), observedEvent::set);
 
-    assertInstanceOf(GridGrindResponse.Success.class, response);
+    assertInstanceOf(WorkbookResult.Success.class, response);
     assertNotNull(observedEvent.get());
     assertEquals("PLAN", observedEvent.get().category());
   }

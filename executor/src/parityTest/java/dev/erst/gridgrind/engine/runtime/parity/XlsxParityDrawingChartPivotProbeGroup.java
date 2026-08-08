@@ -34,7 +34,7 @@ final class XlsxParityDrawingChartPivotProbeGroup {
         context.scenario(XlsxParityScenarios.DRAWING_IMAGE);
     XlsxParityOracle.DrawingSheetSnapshot direct =
         XlsxParityOracle.drawingSheet(drawing.workbookPath(), "Ops");
-    GridGrindResponse.Success success =
+    WorkbookResult.Success success =
         XlsxParityGridGrind.readWorkbook(
             drawing.workbookPath(),
             inspect(
@@ -83,7 +83,7 @@ final class XlsxParityDrawingChartPivotProbeGroup {
         context.scenario(XlsxParityScenarios.DRAWING_AUTHORING);
     XlsxParityOracle.DrawingSheetSnapshot direct =
         XlsxParityOracle.drawingSheet(drawing.workbookPath(), "Ops");
-    GridGrindResponse.Success success =
+    WorkbookResult.Success success =
         XlsxParityGridGrind.readWorkbook(
             drawing.workbookPath(),
             inspect(
@@ -224,7 +224,7 @@ final class XlsxParityDrawingChartPivotProbeGroup {
         context.copiedScenario(XlsxParityScenarios.EMBEDDED_OBJECT, "embedded-object-source");
     XlsxParityOracle.DrawingSheetSnapshot before =
         XlsxParityOracle.drawingSheet(embedded.workbookPath(), "Objects");
-    GridGrindResponse.Success success =
+    WorkbookResult.Success success =
         XlsxParityGridGrind.readWorkbook(
             embedded.workbookPath(),
             inspect(
@@ -280,7 +280,7 @@ final class XlsxParityDrawingChartPivotProbeGroup {
     List<ChartReport> directCharts = XlsxParityOracle.charts(chart.workbookPath(), "Chart");
     XlsxParityOracle.DrawingSheetSnapshot directDrawing =
         XlsxParityOracle.drawingSheet(chart.workbookPath(), "Chart");
-    GridGrindResponse.Success success =
+    WorkbookResult.Success success =
         XlsxParityGridGrind.readWorkbook(
             chart.workbookPath(),
             inspect(
@@ -331,7 +331,7 @@ final class XlsxParityDrawingChartPivotProbeGroup {
     List<ChartReport> directCharts = XlsxParityOracle.charts(chart.workbookPath(), "Chart");
     XlsxParityOracle.DrawingSheetSnapshot directDrawing =
         XlsxParityOracle.drawingSheet(chart.workbookPath(), "Chart");
-    GridGrindResponse.Success success =
+    WorkbookResult.Success success =
         XlsxParityGridGrind.readWorkbook(
             chart.workbookPath(),
             inspect(
@@ -417,7 +417,7 @@ final class XlsxParityDrawingChartPivotProbeGroup {
                             java.util.Optional.empty(),
                             java.util.Optional.empty(),
                             java.util.Optional.empty())))));
-    GridGrindResponse.Success success =
+    WorkbookResult.Success success =
         XlsxParityGridGrind.mutateWorkbook(
             chart.workbookPath(),
             outputPath,
@@ -512,7 +512,7 @@ final class XlsxParityDrawingChartPivotProbeGroup {
     List<ChartReport> directCharts = XlsxParityOracle.charts(chart.workbookPath(), "Chart");
     XlsxParityOracle.DrawingSheetSnapshot directDrawing =
         XlsxParityOracle.drawingSheet(chart.workbookPath(), "Chart");
-    GridGrindResponse.Success success =
+    WorkbookResult.Success success =
         XlsxParityGridGrind.readWorkbook(
             chart.workbookPath(),
             inspect(
@@ -629,7 +629,7 @@ final class XlsxParityDrawingChartPivotProbeGroup {
     }
     XlsxParityScenarios.MaterializedScenario pivot = context.scenario(XlsxParityScenarios.PIVOT);
     List<PivotTableReport> directPivots = XlsxParityOracle.pivotTables(pivot.workbookPath());
-    GridGrindResponse.Success success =
+    WorkbookResult.Success success =
         XlsxParityGridGrind.readWorkbook(
             pivot.workbookPath(),
             inspect(
@@ -668,7 +668,7 @@ final class XlsxParityDrawingChartPivotProbeGroup {
     XlsxParityScenarios.MaterializedScenario pivot =
         context.scenario(XlsxParityScenarios.PIVOT_AUTHORING);
     List<PivotTableReport> directPivots = XlsxParityOracle.pivotTables(pivot.workbookPath());
-    GridGrindResponse.Success success =
+    WorkbookResult.Success success =
         XlsxParityGridGrind.readWorkbook(
             pivot.workbookPath(),
             inspect(
@@ -706,7 +706,7 @@ final class XlsxParityDrawingChartPivotProbeGroup {
     XlsxParityScenarios.MaterializedScenario pivot =
         context.copiedScenario(XlsxParityScenarios.PIVOT_AUTHORING, "pivot-mutation-source");
     Path outputPath = context.derivedWorkbook("pivot-mutated");
-    GridGrindResponse.Success success =
+    WorkbookResult.Success success =
         XlsxParityGridGrind.mutateWorkbook(
             pivot.workbookPath(),
             outputPath,

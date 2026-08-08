@@ -103,7 +103,7 @@ final class GridGrindCliSurfaceRequestSections {
                     + " JSON-native payloads stay compact by default; pass --pretty when"
                     + " you want indented JSON."
                     + " Without --response, CLI diagnostics and request-content diagnostics"
-                    + " stay on stderr, while executed GridGrindResponse payloads"
+                    + " stay on stderr, while executed WorkbookResult payloads"
                     + " stay on stdout even when status=FAILED."
                     + " Execution writes the JSON response, doctoring writes the doctor"
                     + " report, and help or discovery commands write their rendered text"

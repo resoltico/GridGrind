@@ -4,10 +4,10 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import dev.erst.gridgrind.cli.discovery.CliDiagnostic;
+import dev.erst.gridgrind.cli.discovery.CommandError;
 import dev.erst.gridgrind.contract.dto.GridGrindProblemCode;
-import dev.erst.gridgrind.contract.dto.GridGrindResponse;
-import dev.erst.gridgrind.contract.dto.GridGrindResponses;
+import dev.erst.gridgrind.contract.dto.WorkbookResult;
+import dev.erst.gridgrind.contract.dto.WorkbookResults;
 import dev.erst.gridgrind.contract.dto.ProblemContext;
 import dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces.JsonLocation;
 import dev.erst.gridgrind.contract.dto.RequestDoctorReport;
@@ -26,7 +26,7 @@ import org.junit.jupiter.api.Test;
 /** Focused invocation-path tests for stdin discovery and execution behavior. */
 class GridGrindCliInvocationTest extends GridGrindCliTestSupport {
   @Test
-  void noArgInvocationWithEmptyStandardInputReturnsCliDiagnostic() throws IOException {
+  void noArgInvocationWithEmptyStandardInputReturnsCommandError() throws IOException {
     ByteArrayOutputStream stdout = new ByteArrayOutputStream();
     ByteArrayOutputStream stderr = new ByteArrayOutputStream();
 
@@ -34,22 +34,22 @@ class GridGrindCliInvocationTest extends GridGrindCliTestSupport {
         nonInteractiveCli()
             .run(new String[0], new ByteArrayInputStream(new byte[0]), stdout, stderr);
 
-    CliDiagnostic failure = cliDiagnosticOnStderr(stdout, stderr);
+    CommandError failure = commandErrorOnStdout(stdout, stderr);
 
     assertEquals(2, exitCode);
-    assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.problem().code());
+    assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.primaryProblem().code());
     assertEquals("execute", failure.command());
     assertEquals(java.util.Optional.of("--request"), parseArgumentsContext(failure).argumentName());
-    assertTrue(failure.problem().message().contains("No request JSON was provided."));
+    assertTrue(failure.primaryProblem().message().contains("No request JSON was provided."));
     assertTrue(
         failure
-            .problem()
+            .primaryProblem()
             .resolution()
             .contains("Standard-input request mode always requires --execution-root"));
   }
 
   @Test
-  void noArgInvocationWithResponsePathWritesCliDiagnosticToFile() throws IOException {
+  void noArgInvocationWithResponsePathWritesCommandErrorToFile() throws IOException {
     Path responsePath = Files.createTempFile("gridgrind-no-request-response-", ".json");
     Files.deleteIfExists(responsePath);
     ByteArrayOutputStream stdout = new ByteArrayOutputStream();
@@ -65,10 +65,10 @@ class GridGrindCliInvocationTest extends GridGrindCliTestSupport {
 
     assertEquals(2, exitCode);
     assertEquals("", stdout.toString(StandardCharsets.UTF_8));
-    CliDiagnostic failure = cliDiagnostic(Files.readAllBytes(responsePath));
-    CliDiagnostic stderrDiagnostic = cliDiagnosticOnStderr(stderr);
+    CommandError failure = commandError(Files.readAllBytes(responsePath));
+    CommandError stderrDiagnostic = commandErrorOnStdout(stderr);
     assertEquals(failure, stderrDiagnostic);
-    assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.problem().code());
+    assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.primaryProblem().code());
     assertEquals(java.util.Optional.of("--request"), parseArgumentsContext(failure).argumentName());
   }
 
@@ -87,13 +87,13 @@ class GridGrindCliInvocationTest extends GridGrindCliTestSupport {
                 stdout,
                 stderr);
 
-    CliDiagnostic failure = cliDiagnosticOnStderr(stdout, stderr);
+    CommandError failure = commandErrorOnStdout(stdout, stderr);
 
     assertEquals(2, exitCode);
-    assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.problem().code());
+    assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.primaryProblem().code());
     assertEquals(
         java.util.Optional.of("--execution-root"), parseArgumentsContext(failure).argumentName());
-    assertTrue(failure.problem().message().contains("--execution-root"));
+    assertTrue(failure.primaryProblem().message().contains("--execution-root"));
   }
 
   @Test
@@ -116,7 +116,7 @@ class GridGrindCliInvocationTest extends GridGrindCliTestSupport {
     assertEquals(0, exitCode);
     assertEquals("", stderr.toString(StandardCharsets.UTF_8));
     assertInstanceOf(
-        GridGrindResponse.Success.class, GridGrindJson.readResponse(stdout.toByteArray()));
+        WorkbookResult.Success.class, GridGrindJson.readWorkbookResult(stdout.toByteArray()));
   }
 
   @Test
@@ -145,18 +145,18 @@ class GridGrindCliInvocationTest extends GridGrindCliTestSupport {
                 stdout,
                 stderr);
 
-    CliDiagnostic failure = cliDiagnosticOnStderr(stdout, stderr);
+    CommandError failure = commandErrorOnStdout(stdout, stderr);
 
     assertEquals(1, exitCode);
-    assertEquals(GridGrindProblemCode.INVALID_REQUEST_SHAPE, failure.problem().code());
+    assertEquals(GridGrindProblemCode.INVALID_REQUEST_SHAPE, failure.primaryProblem().code());
     assertEquals("execute", failure.command());
     assertEquals(
         java.util.Optional.of("steps[0].query.type"), readRequestContext(failure).jsonPath());
     assertEquals(
-        "Field 'steps[0].query.type' must be a JSON string type id", failure.problem().message());
+        "Field 'steps[0].query.type' must be a JSON string type id", failure.primaryProblem().message());
     assertEquals(
         "Replace field 'steps[0].query.type' with a JSON string type id.",
-        failure.problem().resolution());
+        failure.primaryProblem().resolution());
   }
 
   @Test
@@ -185,13 +185,13 @@ class GridGrindCliInvocationTest extends GridGrindCliTestSupport {
                 stdout,
                 stderr);
 
-    CliDiagnostic failure = cliDiagnosticOnStderr(stdout, stderr);
+    CommandError failure = commandErrorOnStdout(stdout, stderr);
 
     assertEquals(1, exitCode);
-    assertEquals(GridGrindProblemCode.INVALID_REQUEST_SHAPE, failure.problem().code());
+    assertEquals(GridGrindProblemCode.INVALID_REQUEST_SHAPE, failure.primaryProblem().code());
     assertEquals(Optional.of("steps[0].target.type"), readRequestContext(failure).jsonPath());
-    assertEquals("Missing required field 'steps[0].target.type'", failure.problem().message());
-    assertTrue(failure.problem().resolution().contains("steps[0].target.type"));
+    assertEquals("Missing required field 'steps[0].target.type'", failure.primaryProblem().message());
+    assertTrue(failure.primaryProblem().resolution().contains("steps[0].target.type"));
   }
 
   @Test
@@ -231,12 +231,12 @@ class GridGrindCliInvocationTest extends GridGrindCliTestSupport {
                 doctorStdout,
                 doctorStderr);
 
-    CliDiagnostic executeDiagnostic = cliDiagnosticOnStderr(executeStdout, executeStderr);
+    CommandError executeDiagnostic = commandErrorOnStdout(executeStdout, executeStderr);
     RequestDoctorReport doctorReport = doctorReport(doctorStdout, doctorStderr);
 
     assertEquals(1, executeExitCode);
     assertEquals(1, doctorExitCode);
-    assertEquals(executeDiagnostic.problem(), doctorReport.primaryProblem().orElseThrow());
+    assertEquals(executeDiagnostic.primaryProblem(), doctorReport.primaryProblem().orElseThrow());
     assertEquals(
         Optional.of("steps[0].target.type"), readRequestContext(executeDiagnostic).jsonPath());
     assertEquals(Optional.of("steps[0].target.type"), readRequestContext(doctorReport).jsonPath());
@@ -277,7 +277,7 @@ class GridGrindCliInvocationTest extends GridGrindCliTestSupport {
                 doctorStdout,
                 doctorStderr);
 
-    CliDiagnostic executeDiagnostic = cliDiagnosticOnStderr(executeStdout, executeStderr);
+    CommandError executeDiagnostic = commandErrorOnStdout(executeStdout, executeStderr);
     RequestDoctorReport doctorReport = doctorReport(doctorStdout, doctorStderr);
 
     assertEquals(1, executeExitCode);
@@ -336,14 +336,14 @@ class GridGrindCliInvocationTest extends GridGrindCliTestSupport {
                 stdout,
                 stderr);
 
-    CliDiagnostic failure = cliDiagnosticOnStderr(stdout, stderr);
+    CommandError failure = commandErrorOnStdout(stdout, stderr);
 
     assertEquals(1, exitCode);
-    assertEquals(GridGrindProblemCode.INVALID_REQUEST_SHAPE, failure.problem().code());
+    assertEquals(GridGrindProblemCode.INVALID_REQUEST_SHAPE, failure.primaryProblem().code());
     assertEquals(Optional.of("steps[0].target.type"), readRequestContext(failure).jsonPath());
     assertEquals(
-        "Field 'steps[0].target.type' must be a JSON string type id", failure.problem().message());
-    assertTrue(failure.problem().resolution().contains("steps[0].target.type"));
+        "Field 'steps[0].target.type' must be a JSON string type id", failure.primaryProblem().message());
+    assertTrue(failure.primaryProblem().resolution().contains("steps[0].target.type"));
   }
 
   @Test
@@ -364,17 +364,17 @@ class GridGrindCliInvocationTest extends GridGrindCliTestSupport {
                 stdout,
                 stderr);
 
-    CliDiagnostic failure = cliDiagnosticOnStderr(stdout, stderr);
+    CommandError failure = commandErrorOnStdout(stdout, stderr);
 
     assertEquals(1, exitCode);
-    assertEquals(GridGrindProblemCode.INVALID_REQUEST, failure.problem().code());
+    assertEquals(GridGrindProblemCode.INVALID_REQUEST, failure.primaryProblem().code());
     assertEquals(Optional.of("persistence.path"), readRequestContext(failure).jsonPath());
-    assertEquals("path must end in .xlsx (got: '.txt')", failure.problem().message());
-    assertTrue(failure.problem().resolution().contains("persistence.path"));
+    assertEquals("path must end in .xlsx (got: '.txt')", failure.primaryProblem().message());
+    assertTrue(failure.primaryProblem().resolution().contains("persistence.path"));
   }
 
   @Test
-  void noArgInvocationWithInteractiveStandardInputReturnsCliDiagnosticWithoutReadingInput()
+  void noArgInvocationWithInteractiveStandardInputReturnsCommandErrorWithoutReadingInput()
       throws IOException {
     ByteArrayOutputStream stdout = new ByteArrayOutputStream();
     ByteArrayOutputStream stderr = new ByteArrayOutputStream();
@@ -392,19 +392,19 @@ class GridGrindCliInvocationTest extends GridGrindCliTestSupport {
         }) {
       int exitCode = interactiveCli().run(new String[0], blockingStdin, stdout, stderr);
 
-      CliDiagnostic failure = cliDiagnosticOnStderr(stdout, stderr);
+      CommandError failure = commandErrorOnStdout(stdout, stderr);
       assertEquals(2, exitCode);
-      assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.problem().code());
+      assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.primaryProblem().code());
       assertEquals(
           java.util.Optional.of("--request"), parseArgumentsContext(failure).argumentName());
-      assertTrue(failure.problem().message().contains("No request JSON was provided."));
+      assertTrue(failure.primaryProblem().message().contains("No request JSON was provided."));
     }
   }
 
   private static GridGrindCli nonInteractiveCli() {
     return GridGrindCli.forTesting(
         (ignoredRequest, ignoredBindings, ignoredSink) ->
-            GridGrindResponses.success(List.of(), List.of(), List.of()),
+            WorkbookResults.success(List.of(), List.of(), List.of()),
         () -> false);
   }
 

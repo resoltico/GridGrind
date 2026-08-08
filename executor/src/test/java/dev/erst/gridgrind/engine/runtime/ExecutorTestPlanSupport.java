@@ -23,7 +23,7 @@ import dev.erst.gridgrind.contract.dto.ExecutionModeInput;
 import dev.erst.gridgrind.contract.dto.ExecutionPolicyInput;
 import dev.erst.gridgrind.contract.dto.FontHeightInput;
 import dev.erst.gridgrind.contract.dto.FormulaEnvironmentInput;
-import dev.erst.gridgrind.contract.dto.GridGrindResponse;
+import dev.erst.gridgrind.contract.dto.WorkbookResult;
 import dev.erst.gridgrind.contract.dto.HeaderFooterTextInput;
 import dev.erst.gridgrind.contract.dto.NamedRangeScope;
 import dev.erst.gridgrind.contract.dto.PictureDataInput;
@@ -483,16 +483,16 @@ final class ExecutorTestPlanSupport {
         steps(mutations, inspections));
   }
 
-  static List<String> inspectionIds(GridGrindResponse.Success success) {
+  static List<String> inspectionIds(WorkbookResult.Success success) {
     return success.inspections().stream().map(InspectionResult::stepId).toList();
   }
 
-  static List<String> assertionIds(GridGrindResponse.Success success) {
+  static List<String> assertionIds(WorkbookResult.Success success) {
     return success.assertions().stream().map(AssertionResult::stepId).toList();
   }
 
   static <T extends InspectionResult> T inspection(
-      GridGrindResponse.Success success, String stepId, Class<T> type) {
+      WorkbookResult.Success success, String stepId, Class<T> type) {
     return type.cast(
         success.inspections().stream()
             .filter(result -> result.stepId().equals(stepId))

@@ -14,7 +14,6 @@ class ExecutionJournalTest {
   void defaultsLevelWarningsAndEvents() {
     ExecutionJournal journal =
         new ExecutionJournal(
-            Optional.of("plan-1"),
             ExecutionJournalLevel.NORMAL,
             new ExecutionJournal.SourceSummary(Optional.of("NEW"), Optional.empty()),
             ExecutionJournal.Phase.notStarted(),

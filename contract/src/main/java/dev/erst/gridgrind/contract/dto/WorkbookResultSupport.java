@@ -7,18 +7,19 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
-/** Shared support logic that keeps the public response DTO file focused on contract shapes. */
-final class GridGrindResponseSupport {
-  private GridGrindResponseSupport() {}
+/** Shared support logic that keeps the public result DTO file focused on contract shapes. */
+final class WorkbookResultSupport {
+  private WorkbookResultSupport() {}
 
-  static GridGrindResponse.Success success(
+  static WorkbookResult.Success success(
       GridGrindProtocolVersion protocolVersion,
-      GridGrindResponsePersistence.PersistenceOutcome persistence,
+      WorkbookResultPersistence.PersistenceOutcome persistence,
       List<RequestWarning> warnings,
       List<AssertionResult> assertions,
       List<InspectionResult> inspections) {
-    return new GridGrindResponse.Success(
+    return new WorkbookResult.Success(
         Objects.requireNonNull(protocolVersion, "protocolVersion must not be null"),
+        Optional.empty(),
         syntheticSuccessJournal(),
         CalculationReport.notRequested(),
         Objects.requireNonNull(persistence, "persistence must not be null"),
@@ -28,13 +29,15 @@ final class GridGrindResponseSupport {
             Objects.requireNonNull(inspections, "inspections must not be null"), "inspections"));
   }
 
-  static GridGrindResponse.Failure failure(
+  static WorkbookResult.Failure failure(
       GridGrindProtocolVersion protocolVersion,
-      GridGrindResponsePersistence.PersistenceOutcome persistence,
+      Optional<String> planId,
+      WorkbookResultPersistence.PersistenceOutcome persistence,
       GridGrindProblemDetail.Problem problem) {
     Objects.requireNonNull(problem, "problem must not be null");
-    return new GridGrindResponse.Failure(
+    return new WorkbookResult.Failure(
         Objects.requireNonNull(protocolVersion, "protocolVersion must not be null"),
+        optionalPlanId(planId),
         syntheticFailureJournal(problem.code()),
         CalculationReport.notRequested(),
         Objects.requireNonNull(persistence, "persistence must not be null"),
@@ -44,6 +47,11 @@ final class GridGrindResponseSupport {
 
   static ExecutionJournal syntheticSuccessJournal() {
     return syntheticJournal(ExecutionJournal.Status.SUCCEEDED, Optional.empty());
+  }
+
+  static Optional<String> optionalPlanId(Optional<String> planId) {
+    Optional<String> normalized = Objects.requireNonNullElseGet(planId, Optional::empty);
+    return normalized.map(value -> WorkbookPlan.requireNonBlank(value, "planId"));
   }
 
   static ExecutionJournal syntheticFailureJournal(GridGrindProblemCode failureCode) {
@@ -60,7 +68,6 @@ final class GridGrindResponseSupport {
     validateSyntheticOutcomeRequest(status, normalizedFailureCode);
     ExecutionJournal.Outcome outcome = syntheticOutcome(status, normalizedFailureCode);
     return new ExecutionJournal(
-        Optional.empty(),
         ExecutionJournalLevel.SUMMARY,
         new ExecutionJournal.SourceSummary(Optional.empty(), Optional.empty()),
         ExecutionJournal.Phase.notStarted(),

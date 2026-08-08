@@ -1,6 +1,6 @@
 package dev.erst.gridgrind.cli;
 
-import dev.erst.gridgrind.cli.discovery.CliDiagnostic;
+import dev.erst.gridgrind.cli.discovery.CommandError;
 import dev.erst.gridgrind.engine.api.GridGrindEngine;
 import dev.erst.gridgrind.engine.api.GridGrindRequestDoctor;
 import dev.erst.gridgrind.engine.api.GridGrindRequestExecutor;
@@ -187,14 +187,14 @@ public final class GridGrindCli {
     try {
       invocation = CliArguments.parseInvocation(args);
     } catch (CliArgumentsException exception) {
-      return responseWriter.writeCliDiagnostic(
+      return responseWriter.writeCommandError(
           responsePathHint,
           stdout,
           stderr,
           CliArgumentFailureSupport.reportFor(args, exception),
           prettyJsonHint);
     } catch (IllegalArgumentException exception) {
-      return responseWriter.writeCliDiagnostic(
+      return responseWriter.writeCommandError(
           responsePathHint,
           stdout,
           stderr,
@@ -251,19 +251,14 @@ public final class GridGrindCli {
       throws IOException {
     Optional<InputStream> requestInput = executionCommands.standardInputIfPresent(execute, stdin);
     if (requestInput.isEmpty()) {
-      CliDiagnostic report =
-          CliDiagnostics.invalidArguments(
-              2,
+      CommandError report =
+          CommandErrors.invalidArguments(
               "execute",
               Optional.of("--request"),
               "No request JSON was provided. Pass --request <path>, pass --request - together with"
                   + " --execution-root <path>, or pipe one request document on standard input"
-                  + " alongside --execution-root <path>.",
-              List.of(
-                  "gridgrind --print-request-template --response request.json",
-                  "gridgrind --execution-root . < request.json",
-                  "gridgrind --request - --execution-root ."));
-      return responseWriter.writeCliDiagnostic(
+                  + " alongside --execution-root <path>.");
+      return responseWriter.writeCommandError(
           execute.responsePath(), stdout, stderr, report, prettyJson);
     }
     return executionCommands.executeCommand(

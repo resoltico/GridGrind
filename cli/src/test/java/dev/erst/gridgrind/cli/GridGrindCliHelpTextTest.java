@@ -4,7 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import dev.erst.gridgrind.cli.discovery.CliDiagnostic;
+import dev.erst.gridgrind.cli.discovery.CommandError;
 import dev.erst.gridgrind.cli.discovery.CliHelpReport;
 import dev.erst.gridgrind.cli.discovery.CliLicenseReport;
 import dev.erst.gridgrind.cli.discovery.CliVersionReport;
@@ -321,7 +321,7 @@ class GridGrindCliHelpTextTest extends GridGrindCliTestSupport {
     assertTrue(normalizedProtocol.contains("transport block names where the primary payload went"));
     assertTrue(
         normalizedProtocol.contains(
-            "executed GridGrindResponse payloads stay on stdout even when status=FAILED."));
+            "executed WorkbookResult payloads stay on stdout even when status=FAILED."));
     assertFalse(protocol.contains("Workflows:"));
     assertFalse(protocol.contains("Docker Example:"));
   }
@@ -406,19 +406,19 @@ class GridGrindCliHelpTextTest extends GridGrindCliTestSupport {
                 stdout,
                 stderr);
 
-    CliDiagnostic failure = GridGrindCliJson.readBytes(stdout.toByteArray(), CliDiagnostic.class);
-    CliDiagnostic stderrDiagnostic =
-        GridGrindCliJson.readBytes(stderr.toByteArray(), CliDiagnostic.class);
+    CommandError failure = GridGrindCliJson.readBytes(stdout.toByteArray(), CommandError.class);
+    CommandError stderrDiagnostic =
+        GridGrindCliJson.readBytes(stderr.toByteArray(), CommandError.class);
 
     assertEquals(1, exitCode);
     assertEquals(failure, stderrDiagnostic);
-    assertEquals(GridGrindProblemCode.IO_ERROR, failure.problem().code());
+    assertEquals(GridGrindProblemCode.IO_ERROR, failure.primaryProblem().code());
     assertEquals("version", failure.command());
     assertEquals(
         java.util.Optional.of(responsePath.toAbsolutePath().toString()),
         writeResponseContext(failure).responsePath());
     assertTrue(
-        failure.problem().message().contains(responsePath.toAbsolutePath().toString()),
+        failure.primaryProblem().message().contains(responsePath.toAbsolutePath().toString()),
         "fallback report should point at the rejected response path");
     assertEquals(
         "sentinel\n", Files.readString(responsePath), "existing response file must stay untouched");

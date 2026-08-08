@@ -2,12 +2,12 @@ package dev.erst.gridgrind.cli;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import dev.erst.gridgrind.cli.discovery.CliDiagnostic;
+import dev.erst.gridgrind.cli.discovery.CommandError;
 import dev.erst.gridgrind.contract.dto.GridGrindProblemCode;
 import dev.erst.gridgrind.contract.dto.GridGrindProblemDetail;
 import dev.erst.gridgrind.contract.dto.GridGrindProtocolVersion;
-import dev.erst.gridgrind.contract.dto.GridGrindResponse;
-import dev.erst.gridgrind.contract.dto.GridGrindResponses;
+import dev.erst.gridgrind.contract.dto.WorkbookResult;
+import dev.erst.gridgrind.contract.dto.WorkbookResults;
 import dev.erst.gridgrind.contract.dto.ProblemContext;
 import dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces.CliArgument;
 import dev.erst.gridgrind.contract.dto.RequestDoctorReport;
@@ -45,8 +45,8 @@ class CliResponseWriterTest extends GridGrindCliTestSupport {
           "steps":[]
         }
         """;
-    CliDiagnostic diagnostic =
-        new CliDiagnostic(
+    CommandError diagnostic =
+        new CommandError(
             GridGrindProtocolVersion.current(),
             1,
             "execute",
@@ -63,7 +63,7 @@ class CliResponseWriterTest extends GridGrindCliTestSupport {
             Optional.empty());
 
     int exitCode =
-        responseWriter.writeRequestDiagnostic(
+        responseWriter.writeCommandError(
             Optional.empty(),
             stdout,
             stderr,
@@ -76,11 +76,11 @@ class CliResponseWriterTest extends GridGrindCliTestSupport {
     assertEquals(1, exitCode);
     assertEquals("", stdout.toString(StandardCharsets.UTF_8));
     assertFalse(rendered.contains("source-secret"));
-    assertEquals("[REDACTED]", cliDiagnosticOnStderr(stderr).problem().message());
+    assertEquals("[REDACTED]", commandErrorOnStdout(stderr).primaryProblem().message());
   }
 
   @Test
-  void writePayloadFallsBackToCliDiagnosticWhenTheResponsePathCannotBeWritten() throws IOException {
+  void writePayloadFallsBackToCommandErrorWhenTheResponsePathCannotBeWritten() throws IOException {
     Path responseDirectory = Files.createTempDirectory("gridgrind-payload-dir-");
     ByteArrayOutputStream stdout = new ByteArrayOutputStream();
     ByteArrayOutputStream stderr = new ByteArrayOutputStream();
@@ -97,12 +97,12 @@ class CliResponseWriterTest extends GridGrindCliTestSupport {
             0,
             false);
 
-    CliDiagnostic fallback = cliDiagnostic(stdout.toByteArray());
-    CliDiagnostic stderrDiagnostic = cliDiagnosticOnStderr(stderr);
+    CommandError fallback = commandError(stdout.toByteArray());
+    CommandError stderrDiagnostic = commandErrorOnStdout(stderr);
 
     assertEquals(1, exitCode);
     assertEquals(fallback, stderrDiagnostic);
-    assertEquals(GridGrindProblemCode.IO_ERROR, fallback.problem().code());
+    assertEquals(GridGrindProblemCode.IO_ERROR, fallback.primaryProblem().code());
     assertEquals("print-request-template", fallback.command());
     assertEquals(
         Optional.of(responseDirectory.toAbsolutePath().toString()),
@@ -120,12 +120,12 @@ class CliResponseWriterTest extends GridGrindCliTestSupport {
                     }));
     assertTrue(
         fallback
-            .problem()
+            .primaryProblem()
             .message()
             .startsWith("Could not write response file " + responseDirectory.toAbsolutePath()));
     assertEquals(
         "Check the --response destination path, parent directory permissions, free disk space, and file locks before retrying.",
-        fallback.problem().resolution());
+        fallback.primaryProblem().resolution());
   }
 
   @Test
@@ -194,17 +194,17 @@ class CliResponseWriterTest extends GridGrindCliTestSupport {
   }
 
   @Test
-  void writeCliDiagnosticWithoutResponsePathWritesTheCompactDiagnosticToStderr()
+  void writeCommandErrorWithoutResponsePathWritesTheCompactDiagnosticToStderr()
       throws IOException {
     ByteArrayOutputStream stdout = new ByteArrayOutputStream();
     ByteArrayOutputStream stderr = new ByteArrayOutputStream();
 
     int exitCode =
-        responseWriter.writeCliDiagnostic(
+        responseWriter.writeCommandError(
             Optional.empty(),
             stdout,
             stderr,
-            new dev.erst.gridgrind.cli.discovery.CliDiagnostic(
+            new dev.erst.gridgrind.cli.discovery.CommandError(
                 GridGrindProtocolVersion.current(),
                 2,
                 "cli",
@@ -217,24 +217,24 @@ class CliResponseWriterTest extends GridGrindCliTestSupport {
                 Optional.empty()),
             false);
 
-    CliDiagnostic failure = cliDiagnosticOnStderr(stdout, stderr);
+    CommandError failure = commandErrorOnStdout(stdout, stderr);
     assertEquals(2, exitCode);
-    assertEquals("bad flag", failure.problem().message());
+    assertEquals("bad flag", failure.primaryProblem().message());
   }
 
   @Test
-  void writeCliDiagnosticFallsBackToTheCliDiagnosticWhenTheResponsePathCannotBeWritten()
+  void writeCommandErrorFallsBackToTheCommandErrorWhenTheResponsePathCannotBeWritten()
       throws IOException {
     Path responseDirectory = Files.createTempDirectory("gridgrind-cli-failure-dir-");
     ByteArrayOutputStream stdout = new ByteArrayOutputStream();
     ByteArrayOutputStream stderr = new ByteArrayOutputStream();
 
     int exitCode =
-        responseWriter.writeCliDiagnostic(
+        responseWriter.writeCommandError(
             Optional.of(responseDirectory),
             stdout,
             stderr,
-            new dev.erst.gridgrind.cli.discovery.CliDiagnostic(
+            new dev.erst.gridgrind.cli.discovery.CommandError(
                 GridGrindProtocolVersion.current(),
                 2,
                 "cli",
@@ -247,12 +247,12 @@ class CliResponseWriterTest extends GridGrindCliTestSupport {
                 Optional.empty()),
             false);
 
-    CliDiagnostic fallback = cliDiagnostic(stdout.toByteArray());
-    CliDiagnostic stderrDiagnostic = cliDiagnosticOnStderr(stderr);
+    CommandError fallback = commandError(stdout.toByteArray());
+    CommandError stderrDiagnostic = commandErrorOnStdout(stderr);
 
     assertEquals(2, exitCode);
     assertEquals(fallback, stderrDiagnostic);
-    assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, fallback.problem().code());
+    assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, fallback.primaryProblem().code());
     assertEquals("cli", fallback.command());
     assertEquals(Optional.of("--flag"), parseArgumentsContext(fallback).argumentName());
     assertEquals(
@@ -276,11 +276,11 @@ class CliResponseWriterTest extends GridGrindCliTestSupport {
     ByteArrayOutputStream stderr = new ByteArrayOutputStream();
 
     int exitCode =
-        responseWriter.writeRequestDiagnostic(
+        responseWriter.writeCommandError(
             Optional.of(responsePath),
             stdout,
             stderr,
-            new dev.erst.gridgrind.cli.discovery.CliDiagnostic(
+            new dev.erst.gridgrind.cli.discovery.CommandError(
                 GridGrindProtocolVersion.current(),
                 1,
                 "execute",
@@ -299,10 +299,10 @@ class CliResponseWriterTest extends GridGrindCliTestSupport {
 
     assertEquals(1, exitCode);
     assertEquals("", stdout.toString(StandardCharsets.UTF_8));
-    CliDiagnostic failure = cliDiagnostic(Files.readAllBytes(responsePath));
-    CliDiagnostic stderrDiagnostic = cliDiagnosticOnStderr(stderr);
+    CommandError failure = commandError(Files.readAllBytes(responsePath));
+    CommandError stderrDiagnostic = commandErrorOnStdout(stderr);
     assertEquals(failure, stderrDiagnostic);
-    assertEquals(GridGrindProblemCode.INVALID_REQUEST_SHAPE, failure.problem().code());
+    assertEquals(GridGrindProblemCode.INVALID_REQUEST_SHAPE, failure.primaryProblem().code());
     assertEquals(
         Optional.of(responsePath.toAbsolutePath().toString()),
         failure.transport().flatMap(transport -> transport.responsePathValue()));
@@ -314,7 +314,7 @@ class CliResponseWriterTest extends GridGrindCliTestSupport {
     ByteArrayOutputStream stdout = new ByteArrayOutputStream();
     ByteArrayOutputStream stderr = new ByteArrayOutputStream();
     RequestDoctorReport.Summary summary = summary();
-    RequestWarning warning = new RequestWarning(0, "step-1", "SET_CELL", "warning");
+    RequestWarning warning = new RequestWarning(dev.erst.gridgrind.contract.dto.GridGrindWarningCode.UNQUOTED_SHEET_NAME_IN_FORMULA, 0, "step-1", "SET_CELL", "warning");
 
     int exitCode =
         responseWriter.writeDoctorReport(
@@ -325,14 +325,14 @@ class CliResponseWriterTest extends GridGrindCliTestSupport {
             false);
 
     RequestDoctorReport fallback = GridGrindJson.readRequestDoctorReport(stdout.toByteArray());
-    CliDiagnostic stderrDiagnostic = cliDiagnosticOnStderr(stderr);
+    CommandError stderrDiagnostic = commandErrorOnStdout(stderr);
 
     assertEquals(1, exitCode);
     assertFalse(fallback.valid());
     assertEquals(java.util.Optional.of(summary), fallback.summary());
     assertEquals(List.of(warning), fallback.warnings());
     assertEquals(GridGrindProblemCode.IO_ERROR, fallback.primaryProblem().orElseThrow().code());
-    assertEquals(fallback.primaryProblem().orElseThrow(), stderrDiagnostic.problem());
+    assertEquals(fallback.primaryProblem().orElseThrow(), stderrDiagnostic.primaryProblem());
     assertEquals(
         Optional.of("STDOUT"),
         stderrDiagnostic
@@ -366,7 +366,7 @@ class CliResponseWriterTest extends GridGrindCliTestSupport {
     ByteArrayOutputStream stderr = new ByteArrayOutputStream();
     RequestDoctorReport report =
         RequestDoctorReport.warnings(
-            summary(), List.of(new RequestWarning(0, "step-1", "SET_CELL", "warning")));
+            summary(), List.of(new RequestWarning(dev.erst.gridgrind.contract.dto.GridGrindWarningCode.UNQUOTED_SHEET_NAME_IN_FORMULA, 0, "step-1", "SET_CELL", "warning")));
 
     int exitCode =
         responseWriter.writeDoctorReport(Optional.of(responsePath), stdout, stderr, report, false);
@@ -378,13 +378,13 @@ class CliResponseWriterTest extends GridGrindCliTestSupport {
   }
 
   @Test
-  void writeToResponseFileEmitsCliDiagnosticOnStderrForNonSuccessResponses() throws IOException {
+  void writeToResponseFileEmitsCommandErrorOnStderrForNonSuccessResponses() throws IOException {
     Path responsePath = Files.createTempFile("gridgrind-failure-response-", ".json");
     Files.deleteIfExists(responsePath);
     ByteArrayOutputStream stdout = new ByteArrayOutputStream();
     ByteArrayOutputStream stderr = new ByteArrayOutputStream();
-    GridGrindResponse.Failure failure =
-        GridGrindResponses.failure(
+    WorkbookResult.Failure failure =
+        WorkbookResults.failure(
             dev.erst.gridgrind.contract.dto.GridGrindProtocolVersion.current(),
             GridGrindProblems.problem(
                 GridGrindProblemCode.INVALID_REQUEST,
@@ -403,15 +403,15 @@ class CliResponseWriterTest extends GridGrindCliTestSupport {
             CliResponseTransportSupport.exitCodeFor(failure),
             false);
 
-    CliDiagnostic stderrDiagnostic = cliDiagnosticOnStderr(stderr);
+    CommandError stderrDiagnostic = commandErrorOnStdout(stderr);
 
     assertEquals(1, exitCode);
     assertEquals("", stdout.toString(StandardCharsets.UTF_8));
-    GridGrindResponse.Failure persistedFailure =
+    WorkbookResult.Failure persistedFailure =
         assertInstanceOf(
-            GridGrindResponse.Failure.class,
-            GridGrindJson.readResponse(Files.readAllBytes(responsePath)));
-    assertEquals(persistedFailure.problem(), stderrDiagnostic.problem());
+            WorkbookResult.Failure.class,
+            GridGrindJson.readWorkbookResult(Files.readAllBytes(responsePath)));
+    assertEquals(persistedFailure.primaryProblem(), stderrDiagnostic.primaryProblem());
     assertEquals(
         Optional.of(responsePath.toAbsolutePath().toString()),
         stderrDiagnostic.transport().flatMap(transport -> transport.responsePathValue()));
@@ -428,7 +428,7 @@ class CliResponseWriterTest extends GridGrindCliTestSupport {
             Optional.of(responsePath),
             stdout,
             OutputStream.nullOutputStream(),
-            GridGrindResponses.success(
+            WorkbookResults.success(
                 java.util.List.of(), java.util.List.of(), java.util.List.of()),
             2,
             false);
@@ -436,8 +436,8 @@ class CliResponseWriterTest extends GridGrindCliTestSupport {
     assertEquals(2, exitCode);
     assertEquals("", stdout.toString(StandardCharsets.UTF_8));
     assertInstanceOf(
-        GridGrindResponse.Success.class,
-        GridGrindJson.readResponse(Files.readAllBytes(responsePath)));
+        WorkbookResult.Success.class,
+        GridGrindJson.readWorkbookResult(Files.readAllBytes(responsePath)));
   }
 
   @Test
@@ -453,7 +453,7 @@ class CliResponseWriterTest extends GridGrindCliTestSupport {
             Optional.of(responsePath),
             stdout,
             stderr,
-            GridGrindResponses.success(
+            WorkbookResults.success(
                 java.util.List.of(), java.util.List.of(), java.util.List.of()),
             2,
             false);
@@ -474,7 +474,7 @@ class CliResponseWriterTest extends GridGrindCliTestSupport {
             Optional.of(responsePath),
             stdout,
             OutputStream.nullOutputStream(),
-            GridGrindResponses.success(
+            WorkbookResults.success(
                 java.util.List.of(), java.util.List.of(), java.util.List.of()),
             0,
             false);
@@ -482,12 +482,12 @@ class CliResponseWriterTest extends GridGrindCliTestSupport {
     assertEquals(0, exitCode);
     assertEquals("", stdout.toString(StandardCharsets.UTF_8));
     assertInstanceOf(
-        GridGrindResponse.Success.class,
-        GridGrindJson.readResponse(Files.readAllBytes(responsePath)));
+        WorkbookResult.Success.class,
+        GridGrindJson.readWorkbookResult(Files.readAllBytes(responsePath)));
   }
 
   @Test
-  void writeDoctorReportToResponseFileEmitsCliDiagnosticOnStderrForInvalidReports()
+  void writeDoctorReportToResponseFileEmitsCommandErrorOnStderrForInvalidReports()
       throws IOException {
     Path responsePath = Files.createTempFile("gridgrind-invalid-doctor-report-", ".json");
     Files.deleteIfExists(responsePath);
@@ -508,14 +508,14 @@ class CliResponseWriterTest extends GridGrindCliTestSupport {
     int exitCode =
         responseWriter.writeDoctorReport(Optional.of(responsePath), stdout, stderr, report, false);
 
-    CliDiagnostic stderrDiagnostic = cliDiagnosticOnStderr(stderr);
+    CommandError stderrDiagnostic = commandErrorOnStdout(stderr);
 
     assertEquals(1, exitCode);
     assertEquals("", stdout.toString(StandardCharsets.UTF_8));
     RequestDoctorReport persistedReport =
         GridGrindJson.readRequestDoctorReport(Files.readAllBytes(responsePath));
     assertFalse(persistedReport.valid());
-    assertEquals(persistedReport.primaryProblem().orElseThrow(), stderrDiagnostic.problem());
+    assertEquals(persistedReport.primaryProblem().orElseThrow(), stderrDiagnostic.primaryProblem());
     assertEquals(
         Optional.of(responsePath.toAbsolutePath().toString()),
         stderrDiagnostic.transport().flatMap(transport -> transport.responsePathValue()));
@@ -565,8 +565,8 @@ class CliResponseWriterTest extends GridGrindCliTestSupport {
     Path responseDirectory = Files.createTempDirectory("gridgrind-response-problem-dir-");
     ByteArrayOutputStream stdout = new ByteArrayOutputStream();
     ByteArrayOutputStream stderr = new ByteArrayOutputStream();
-    GridGrindResponse.Failure originalFailure =
-        GridGrindResponses.failure(
+    WorkbookResult.Failure originalFailure =
+        WorkbookResults.failure(
             dev.erst.gridgrind.contract.dto.GridGrindProtocolVersion.current(),
             GridGrindProblems.problem(
                 GridGrindProblemCode.IO_ERROR,
@@ -587,17 +587,17 @@ class CliResponseWriterTest extends GridGrindCliTestSupport {
             CliResponseTransportSupport.exitCodeFor(originalFailure),
             false);
 
-    GridGrindResponse.Failure fallbackResponse =
+    WorkbookResult.Failure fallbackResponse =
         assertInstanceOf(
-            GridGrindResponse.Failure.class, GridGrindJson.readResponse(stdout.toByteArray()));
-    CliDiagnostic stderrDiagnostic = cliDiagnosticOnStderr(stderr);
+            WorkbookResult.Failure.class, GridGrindJson.readWorkbookResult(stdout.toByteArray()));
+    CommandError stderrDiagnostic = commandErrorOnStdout(stderr);
 
     assertEquals(1, exitCode);
-    assertEquals(fallbackResponse.problem(), stderrDiagnostic.problem());
-    assertEquals(GridGrindProblemCode.IO_ERROR, stderrDiagnostic.problem().code());
+    assertEquals(fallbackResponse.primaryProblem(), stderrDiagnostic.primaryProblem());
+    assertEquals(GridGrindProblemCode.IO_ERROR, stderrDiagnostic.primaryProblem().code());
     assertEquals(
         List.of("WRITE_RESPONSE", "PERSIST_WORKBOOK"),
-        stderrDiagnostic.problem().causes().stream()
+        stderrDiagnostic.primaryProblem().causes().stream()
             .map(GridGrindProblemDetail.ProblemCause::stage)
             .toList());
     assertEquals(

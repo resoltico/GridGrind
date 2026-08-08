@@ -18,7 +18,7 @@ import java.util.Optional;
 import org.junit.jupiter.api.Test;
 
 /** Coverage tests for nested response-report records that are not exercised by end-to-end flows. */
-class GridGrindResponseNestedCoverageTest {
+class WorkbookResultNestedCoverageTest {
   @Test
   void windowLayoutSchemaAndAnalysisReportsValidateAndCopyCollections() {
     dev.erst.gridgrind.contract.dto.CellReport textCell =

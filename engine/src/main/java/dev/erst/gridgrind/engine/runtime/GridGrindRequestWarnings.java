@@ -3,6 +3,7 @@ package dev.erst.gridgrind.engine.runtime;
 import dev.erst.gridgrind.contract.action.CellMutationAction;
 import dev.erst.gridgrind.contract.action.WorkbookMutationAction;
 import dev.erst.gridgrind.contract.dto.CellInput;
+import dev.erst.gridgrind.contract.dto.GridGrindWarningCode;
 import dev.erst.gridgrind.contract.dto.RequestWarning;
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
 import dev.erst.gridgrind.contract.step.MutationStep;
@@ -98,6 +99,7 @@ final class GridGrindRequestWarnings {
     }
     return Optional.of(
         new RequestWarning(
+            GridGrindWarningCode.UNQUOTED_SHEET_NAME_IN_FORMULA,
             stepIndex,
             mutationStep.stepId(),
             mutationStep.action().actionType(),

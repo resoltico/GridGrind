@@ -5,7 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import dev.erst.gridgrind.cli.discovery.CliDiagnostic;
+import dev.erst.gridgrind.cli.discovery.CommandError;
 import dev.erst.gridgrind.contract.dto.GridGrindProblemCode;
 import dev.erst.gridgrind.contract.dto.GridGrindProblemDetail;
 import dev.erst.gridgrind.contract.dto.ProblemContext;
@@ -231,14 +231,14 @@ class GridGrindCliDoctorCatalogCommandTest extends GridGrindCliTestSupport {
 
     RequestDoctorReport report =
         GridGrindJson.readRequestDoctorReport(Files.readAllBytes(responsePath));
-    CliDiagnostic stderrDiagnostic = cliDiagnosticOnStderr(stderr);
+    CommandError stderrDiagnostic = commandErrorOnStdout(stderr);
 
     assertEquals(1, exitCode);
     assertEquals("", stdout.toString(StandardCharsets.UTF_8));
     assertFalse(report.valid());
     assertEquals(
         GridGrindProblemCode.INVALID_REQUEST, report.primaryProblem().orElseThrow().code());
-    assertEquals(report.primaryProblem().orElseThrow(), stderrDiagnostic.problem());
+    assertEquals(report.primaryProblem().orElseThrow(), stderrDiagnostic.primaryProblem());
     assertEquals(
         Optional.of(responsePath.toAbsolutePath().toString()),
         stderrDiagnostic.transport().flatMap(transport -> transport.responsePathValue()));
@@ -619,14 +619,14 @@ class GridGrindCliDoctorCatalogCommandTest extends GridGrindCliTestSupport {
                 stdout,
                 stderr);
 
-    CliDiagnostic failure = cliDiagnosticOnStderr(stdout, stderr);
+    CommandError failure = commandErrorOnStdout(stdout, stderr);
 
     assertEquals(1, exitCode);
-    assertEquals(GridGrindProblemCode.IO_ERROR, failure.problem().code());
+    assertEquals(GridGrindProblemCode.IO_ERROR, failure.primaryProblem().code());
     assertEquals("doctor-request", failure.command());
     assertEquals(
         Optional.of(missingRequestPath.toString()), readRequestContext(failure).requestPath());
-    assertEquals("Request file not found: " + missingRequestPath, failure.problem().message());
+    assertEquals("Request file not found: " + missingRequestPath, failure.primaryProblem().message());
   }
 
   @Test
@@ -644,13 +644,13 @@ class GridGrindCliDoctorCatalogCommandTest extends GridGrindCliTestSupport {
                 stdout,
                 stderr);
 
-    CliDiagnostic failure = cliDiagnosticOnStderr(stdout, stderr);
+    CommandError failure = commandErrorOnStdout(stdout, stderr);
 
     assertEquals(2, exitCode);
-    assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.problem().code());
+    assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.primaryProblem().code());
     assertEquals("doctor-request", failure.command());
     assertEquals(
         java.util.Optional.of("--execution-root"), parseArgumentsContext(failure).argumentName());
-    assertTrue(failure.problem().message().contains("--execution-root"));
+    assertTrue(failure.primaryProblem().message().contains("--execution-root"));
   }
 }

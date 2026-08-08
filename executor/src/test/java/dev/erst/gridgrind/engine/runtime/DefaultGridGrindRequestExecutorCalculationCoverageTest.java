@@ -20,7 +20,7 @@ import dev.erst.gridgrind.contract.dto.ExecutionModeInput;
 import dev.erst.gridgrind.contract.dto.FormulaEnvironmentInput;
 import dev.erst.gridgrind.contract.dto.GridGrindProblemCode;
 import dev.erst.gridgrind.contract.dto.GridGrindProblemDetail;
-import dev.erst.gridgrind.contract.dto.GridGrindResponse;
+import dev.erst.gridgrind.contract.dto.WorkbookResult;
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
 import dev.erst.gridgrind.contract.query.*;
 import dev.erst.gridgrind.contract.selector.CellSelector;
@@ -63,7 +63,7 @@ class DefaultGridGrindRequestExecutorCalculationCoverageTest {
                     new CellSelector.ByAddress("Ops", "A1"),
                     new CellMutationAction.SetCell(
                         new dev.erst.gridgrind.contract.dto.CellInput.NumberValue(1.0)))));
-    GridGrindResponse.Failure failure =
+    WorkbookResult.Failure failure =
         failure(
             ExecutionContextFixtureSupport.execute(new DefaultGridGrindRequestExecutor(), request));
 
@@ -104,7 +104,7 @@ class DefaultGridGrindRequestExecutorCalculationCoverageTest {
                   throw new IllegalStateException("streaming calculation failed");
                 }));
 
-    GridGrindResponse.Failure failure =
+    WorkbookResult.Failure failure =
         failure(
             ExecutionContextFixtureSupport.execute(
                 executor,
@@ -291,8 +291,8 @@ class DefaultGridGrindRequestExecutorCalculationCoverageTest {
     assertEquals(java.util.Optional.empty(), missingAddressContext.sheetName());
   }
 
-  private static GridGrindResponse.Failure failure(GridGrindResponse response) {
-    return assertInstanceOf(GridGrindResponse.Failure.class, response);
+  private static WorkbookResult.Failure failure(WorkbookResult response) {
+    return assertInstanceOf(WorkbookResult.Failure.class, response);
   }
 
   private static ExcelWorkbook instantiateWorkbook(XSSFWorkbook workbook) {

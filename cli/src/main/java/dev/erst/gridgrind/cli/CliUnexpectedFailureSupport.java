@@ -1,7 +1,7 @@
 package dev.erst.gridgrind.cli;
 
-import dev.erst.gridgrind.cli.discovery.CliDiagnostic;
-import dev.erst.gridgrind.cli.discovery.CliTransport;
+import dev.erst.gridgrind.cli.discovery.CommandError;
+import dev.erst.gridgrind.cli.discovery.CliTransportNotice;
 import dev.erst.gridgrind.cli.discovery.GridGrindCliJson;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -26,65 +26,47 @@ final class CliUnexpectedFailureSupport {
     Objects.requireNonNull(stderr, "stderr must not be null");
     Objects.requireNonNull(exception, "exception must not be null");
 
-    CliDiagnostic diagnostic =
-        CliDiagnostics.unexpectedFailure(
+    CommandError diagnostic =
+        CommandErrors.unexpectedFailure(
             CliPrimaryCommandSupport.primaryCommandName(args), exception);
     try {
       return new CliResponseWriter()
-          .writeCliDiagnostic(responsePathHint, stdout, stderr, diagnostic, prettyJson);
+          .writeCommandError(responsePathHint, stdout, stderr, diagnostic, prettyJson);
     } catch (Throwable writeFailure) {
       directFallback(
           diagnostic, stdout, stderr, responsePathHint.isPresent(), prettyJson, writeFailure);
-      return diagnostic.exitCode();
+      return CliResponseTransportSupport.exitCodeFor(diagnostic);
     }
   }
 
   private static void directFallback(
-      CliDiagnostic diagnostic,
+      CommandError diagnostic,
       OutputStream stdout,
       OutputStream stderr,
       boolean responsePathUsed,
       boolean prettyJson,
       Throwable writeFailure) {
-    CliDiagnostic stdoutDiagnostic =
-        responsePathUsed
-            ? CliResponseTransportSupport.diagnosticWithTransport(
-                diagnostic, CliTransport.standardOutput())
-            : diagnostic;
     try {
-      byte[] payload = GridGrindCliJson.writeBytes(stdoutDiagnostic, prettyJson);
+      byte[] payload = GridGrindCliJson.writeBytes(diagnostic, prettyJson);
       writePayload(stdout, payload);
+      if (responsePathUsed) {
+        try {
+          CliResponseTransportSupport.writeTransportNoticeToStderr(
+              stderr, CliTransportNotice.stdoutFallback("<unavailable>"));
+        } catch (IOException ignored) {
+          // The recovered command error on stdout remains the primary fallback result.
+        }
+      }
       return;
     } catch (IOException exception) {
-      if (structuredStderrWasAlreadyRecovered(responsePathUsed, writeFailure)) {
-        return;
-      }
       try {
         writePayload(stderr, GridGrindCliJson.writeBytes(diagnostic, prettyJson));
         return;
       } catch (IOException exceptionOnStderr) {
         exception.addSuppressed(exceptionOnStderr);
       }
-      try {
-        String message =
-            responsePathUsed
-                ? "GridGrind failed before it could emit a structured error payload to the response fallback channels."
-                : "GridGrind failed before it could emit a structured error payload.";
-        stderr.write(
-            (message + System.lineSeparator()).getBytes(java.nio.charset.StandardCharsets.UTF_8));
-        stderr.flush();
-      } catch (IOException humanReadableFailure) {
-        exception.addSuppressed(humanReadableFailure);
-      }
+      exception.addSuppressed(writeFailure);
     }
-  }
-
-  private static boolean structuredStderrWasAlreadyRecovered(
-      boolean responsePathUsed, Throwable writeFailure) {
-    if (!responsePathUsed || !(writeFailure instanceof IOException ioFailure)) {
-      return false;
-    }
-    return ioFailure.getSuppressed().length == 0;
   }
 
   private static void writePayload(OutputStream outputStream, byte[] payload) throws IOException {

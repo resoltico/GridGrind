@@ -11,7 +11,7 @@ import dev.erst.gridgrind.cli.discovery.RecipeCatalog;
 import dev.erst.gridgrind.cli.discovery.RecipeCatalogEntry;
 import dev.erst.gridgrind.cli.discovery.RecipeView;
 import dev.erst.gridgrind.contract.dto.GridGrindProblemCode;
-import dev.erst.gridgrind.contract.dto.GridGrindResponse;
+import dev.erst.gridgrind.contract.dto.WorkbookResult;
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
 import dev.erst.gridgrind.contract.json.GridGrindJson;
 import dev.erst.gridgrind.contract.json.GridGrindJsonOutput;
@@ -40,9 +40,9 @@ class ExampleExecutionFixturesTest {
         ExecutionInputBindingsFixtureSupport.bindings(workspace);
     for (RecipeCatalogEntry example : selfContainedExamples()) {
       WorkbookPlan request = printedBuiltInExample(example.id());
-      GridGrindResponse.Success success =
+      WorkbookResult.Success success =
           assertInstanceOf(
-              GridGrindResponse.Success.class,
+              WorkbookResult.Success.class,
               executor.execute(request, workspaceBindings),
               () -> "self-contained built-in example must execute successfully: " + example.id());
       assertEquals(
@@ -66,9 +66,9 @@ class ExampleExecutionFixturesTest {
     for (RecipeCatalogEntry example : exampleEntries()) {
       copyRequiredExampleAssets(example, repositoryExamples, workspace);
       WorkbookPlan request = printedBuiltInExample(example.id());
-      GridGrindResponse.Success success =
+      WorkbookResult.Success success =
           assertInstanceOf(
-              GridGrindResponse.Success.class,
+              WorkbookResult.Success.class,
               executor.execute(request, workspaceBindings),
               () -> "built-in example must execute successfully: " + example.id());
       assertEquals(
@@ -88,9 +88,9 @@ class ExampleExecutionFixturesTest {
     ExecutionInputBindings workspaceBindings =
         ExecutionInputBindingsFixtureSupport.bindings(workspace);
     for (RecipeCatalogEntry example : repositoryAssetBackedExamples()) {
-      GridGrindResponse.Failure failure =
+      WorkbookResult.Failure failure =
           assertInstanceOf(
-              GridGrindResponse.Failure.class,
+              WorkbookResult.Failure.class,
               executor.execute(printedBuiltInExample(example.id()), workspaceBindings),
               () ->
                   "repo-asset-backed built-in example must fail without copied assets: "
@@ -115,9 +115,9 @@ class ExampleExecutionFixturesTest {
     for (RecipeCatalogEntry example : exampleEntries()) {
       Path requestPath = examplesDirectory.resolve(example.requestFileName());
       WorkbookPlan request = GridGrindJson.readRequest(Files.readAllBytes(requestPath));
-      GridGrindResponse.Success success =
+      WorkbookResult.Success success =
           assertInstanceOf(
-              GridGrindResponse.Success.class,
+              WorkbookResult.Success.class,
               executor.execute(request, exampleBindings),
               () ->
                   "repository example must execute successfully in-place: "
@@ -173,10 +173,10 @@ class ExampleExecutionFixturesTest {
     return GridGrindJson.readRequest(stdout.toByteArray());
   }
 
-  private static void assertNullFreeResponse(GridGrindResponse response, String exampleId)
+  private static void assertNullFreeResponse(WorkbookResult response, String exampleId)
       throws IOException {
     assertTrue(
-        !new String(GridGrindJsonOutput.writeResponseBytes(response), StandardCharsets.UTF_8)
+        !new String(GridGrindJsonOutput.writeWorkbookResultBytes(response), StandardCharsets.UTF_8)
             .contains(": null"),
         () -> "serialized response must omit explicit null properties: " + exampleId);
   }

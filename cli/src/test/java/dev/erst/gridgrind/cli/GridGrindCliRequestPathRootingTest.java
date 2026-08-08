@@ -4,8 +4,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import dev.erst.gridgrind.contract.dto.GridGrindResponse;
-import dev.erst.gridgrind.contract.dto.GridGrindResponsePersistence;
+import dev.erst.gridgrind.contract.dto.WorkbookResult;
+import dev.erst.gridgrind.contract.dto.WorkbookResultPersistence;
 import dev.erst.gridgrind.contract.json.GridGrindJson;
 import dev.erst.gridgrind.contract.query.SheetInspectionResult;
 import java.io.ByteArrayInputStream;
@@ -52,18 +52,18 @@ class GridGrindCliRequestPathRootingTest extends GridGrindCliTestSupport {
                 InputStream.nullInputStream(),
                 stdout);
 
-    GridGrindResponse.Success response =
+    WorkbookResult.Success response =
         assertInstanceOf(
-            GridGrindResponse.Success.class, GridGrindJson.readResponse(stdout.toByteArray()));
-    GridGrindResponsePersistence.PersistenceOutcome.SavedAs persistence =
+            WorkbookResult.Success.class, GridGrindJson.readWorkbookResult(stdout.toByteArray()));
+    WorkbookResultPersistence.PersistenceOutcome.SavedAs persistence =
         assertInstanceOf(
-            GridGrindResponsePersistence.PersistenceOutcome.SavedAs.class, response.persistence());
+            WorkbookResultPersistence.PersistenceOutcome.SavedAs.class, response.persistence());
 
     assertEquals(0, exitCode);
     assertEquals(
         requestDirectory.resolve("result.xlsx").toString(),
         assertInstanceOf(
-                GridGrindResponsePersistence.WriteResult.Written.class, persistence.write())
+                WorkbookResultPersistence.WriteResult.Written.class, persistence.write())
             .executionPath());
     assertTrue(Files.exists(requestDirectory.resolve("result.xlsx")));
   }
@@ -97,9 +97,9 @@ class GridGrindCliRequestPathRootingTest extends GridGrindCliTestSupport {
                 InputStream.nullInputStream(),
                 stdout);
 
-    GridGrindResponse.Success response =
+    WorkbookResult.Success response =
         assertInstanceOf(
-            GridGrindResponse.Success.class, GridGrindJson.readResponse(stdout.toByteArray()));
+            WorkbookResult.Success.class, GridGrindJson.readWorkbookResult(stdout.toByteArray()));
     SheetInspectionResult.CellsResult cells =
         assertInstanceOf(
             SheetInspectionResult.CellsResult.class, response.inspections().getFirst());
@@ -159,9 +159,9 @@ class GridGrindCliRequestPathRootingTest extends GridGrindCliTestSupport {
                 InputStream.nullInputStream(),
                 stdout);
 
-    GridGrindResponse.Success response =
+    WorkbookResult.Success response =
         assertInstanceOf(
-            GridGrindResponse.Success.class, GridGrindJson.readResponse(stdout.toByteArray()));
+            WorkbookResult.Success.class, GridGrindJson.readWorkbookResult(stdout.toByteArray()));
     SheetInspectionResult.CellsResult cells =
         assertInstanceOf(
             SheetInspectionResult.CellsResult.class, response.inspections().getFirst());
@@ -213,9 +213,9 @@ class GridGrindCliRequestPathRootingTest extends GridGrindCliTestSupport {
                 InputStream.nullInputStream(),
                 stdout);
 
-    GridGrindResponse.Success response =
+    WorkbookResult.Success response =
         assertInstanceOf(
-            GridGrindResponse.Success.class, GridGrindJson.readResponse(stdout.toByteArray()));
+            WorkbookResult.Success.class, GridGrindJson.readWorkbookResult(stdout.toByteArray()));
     SheetInspectionResult.CellsResult cells =
         assertInstanceOf(
             SheetInspectionResult.CellsResult.class, response.inspections().getFirst());
@@ -258,18 +258,18 @@ class GridGrindCliRequestPathRootingTest extends GridGrindCliTestSupport {
                         .getBytes(StandardCharsets.UTF_8)),
                 stdout);
 
-    GridGrindResponse.Success response =
+    WorkbookResult.Success response =
         assertInstanceOf(
-            GridGrindResponse.Success.class, GridGrindJson.readResponse(stdout.toByteArray()));
-    GridGrindResponsePersistence.PersistenceOutcome.SavedAs persistence =
+            WorkbookResult.Success.class, GridGrindJson.readWorkbookResult(stdout.toByteArray()));
+    WorkbookResultPersistence.PersistenceOutcome.SavedAs persistence =
         assertInstanceOf(
-            GridGrindResponsePersistence.PersistenceOutcome.SavedAs.class, response.persistence());
+            WorkbookResultPersistence.PersistenceOutcome.SavedAs.class, response.persistence());
 
     assertEquals(0, exitCode);
     assertEquals(
         workspace.resolve("result.xlsx").toString(),
         assertInstanceOf(
-                GridGrindResponsePersistence.WriteResult.Written.class, persistence.write())
+                WorkbookResultPersistence.WriteResult.Written.class, persistence.write())
             .executionPath());
     assertTrue(Files.exists(workspace.resolve("result.xlsx")));
   }
@@ -316,9 +316,9 @@ class GridGrindCliRequestPathRootingTest extends GridGrindCliTestSupport {
                         .getBytes(StandardCharsets.UTF_8)),
                 stdout);
 
-    GridGrindResponse.Success response =
+    WorkbookResult.Success response =
         assertInstanceOf(
-            GridGrindResponse.Success.class, GridGrindJson.readResponse(stdout.toByteArray()));
+            WorkbookResult.Success.class, GridGrindJson.readWorkbookResult(stdout.toByteArray()));
     SheetInspectionResult.CellsResult cells =
         assertInstanceOf(
             SheetInspectionResult.CellsResult.class, response.inspections().getFirst());

@@ -9,7 +9,6 @@ import java.util.Optional;
 
 /** Structured execution telemetry returned for every GridGrind run, including failures. */
 public record ExecutionJournal(
-    @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<String> planId,
     ExecutionJournalLevel level,
     SourceSummary source,
     Phase validation,
@@ -22,10 +21,6 @@ public record ExecutionJournal(
     Outcome outcome,
     @JsonInclude(JsonInclude.Include.NON_EMPTY) List<Event> events) {
   public ExecutionJournal {
-    planId = Objects.requireNonNullElseGet(planId, Optional::empty);
-    if (planId.isPresent()) {
-      planId = Optional.of(WorkbookPlan.requireNonBlank(planId.orElseThrow(), "planId"));
-    }
     level = Objects.requireNonNullElse(level, ExecutionJournalLevel.SUMMARY);
     Objects.requireNonNull(source, "source must not be null");
     Objects.requireNonNull(validation, "validation must not be null");

@@ -18,9 +18,9 @@ import dev.erst.gridgrind.contract.dto.ExecutionPolicyInput;
 import dev.erst.gridgrind.contract.dto.FormulaEnvironmentInput;
 import dev.erst.gridgrind.contract.dto.GridGrindProblemDetail;
 import dev.erst.gridgrind.contract.dto.GridGrindProtocolVersion;
-import dev.erst.gridgrind.contract.dto.GridGrindResponse;
-import dev.erst.gridgrind.contract.dto.GridGrindResponsePersistence;
-import dev.erst.gridgrind.contract.dto.GridGrindResponses;
+import dev.erst.gridgrind.contract.dto.WorkbookResult;
+import dev.erst.gridgrind.contract.dto.WorkbookResultPersistence;
+import dev.erst.gridgrind.contract.dto.WorkbookResults;
 import dev.erst.gridgrind.contract.dto.RequestWarning;
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
 import dev.erst.gridgrind.contract.query.*;
@@ -355,11 +355,11 @@ class GridGrindJsonTest {
                     "summary",
                     new WorkbookSelector.Current(),
                     new WorkbookIntrospectionQuery.GetWorkbookSummary())));
-    GridGrindResponse response =
-        GridGrindResponses.success(
+    WorkbookResult response =
+        WorkbookResults.success(
             GridGrindProtocolVersion.V2,
-            new GridGrindResponsePersistence.PersistenceOutcome.NotSaved(),
-            List.of(new RequestWarning(0, "set-owner", "SET_CELL", "warning")),
+            new WorkbookResultPersistence.PersistenceOutcome.NotSaved(),
+            List.of(new RequestWarning(dev.erst.gridgrind.contract.dto.GridGrindWarningCode.UNQUOTED_SHEET_NAME_IN_FORMULA, 0, "set-owner", "SET_CELL", "warning")),
             List.of(
                 new AssertionResult(
                     dev.erst.gridgrind.contract.assertion.AssertionOutcome.PASSED,
@@ -375,7 +375,7 @@ class GridGrindJsonTest {
     assertEquals(
         request, GridGrindJson.readRequest(GridGrindJsonOutput.writeRequestBytes(request)));
     assertEquals(
-        response, GridGrindJson.readResponse(GridGrindJsonOutput.writeResponseBytes(response)));
+        response, GridGrindJson.readWorkbookResult(GridGrindJsonOutput.writeWorkbookResultBytes(response)));
     assertEquals(
         catalog,
         GridGrindJson.readProtocolCatalog(GridGrindJsonOutput.writeProtocolCatalogBytes(catalog)));
@@ -383,11 +383,11 @@ class GridGrindJsonTest {
 
   @Test
   void roundTripsResolveInputsAndCalculationFailureContexts() throws IOException {
-    GridGrindResponse resolveInputsFailure =
-        GridGrindResponses.failure(
+    WorkbookResult resolveInputsFailure =
+        WorkbookResults.failure(
             GridGrindProtocolVersion.V2,
-            new GridGrindResponsePersistence.PersistenceOutcome.SavedAs(
-                "out/report.xlsx", new GridGrindResponsePersistence.WriteResult.NotWritten()),
+            new WorkbookResultPersistence.PersistenceOutcome.SavedAs(
+                "out/report.xlsx", new WorkbookResultPersistence.WriteResult.NotWritten()),
             new GridGrindProblemDetail.Problem(
                 dev.erst.gridgrind.contract.dto.GridGrindProblemCode.INPUT_SOURCE_NOT_FOUND,
                 dev.erst.gridgrind.contract.dto.GridGrindProblemCode.INPUT_SOURCE_NOT_FOUND
@@ -405,8 +405,8 @@ class GridGrindJsonTest {
                         .path("cell text", "missing.txt")),
                 java.util.Optional.empty(),
                 List.of()));
-    GridGrindResponse calculationFailure =
-        GridGrindResponses.failure(
+    WorkbookResult calculationFailure =
+        WorkbookResults.failure(
             GridGrindProtocolVersion.V2,
             new GridGrindProblemDetail.Problem(
                 dev.erst.gridgrind.contract.dto.GridGrindProblemCode.INVALID_FORMULA,
@@ -425,10 +425,10 @@ class GridGrindJsonTest {
 
     assertEquals(
         resolveInputsFailure,
-        GridGrindJson.readResponse(GridGrindJsonOutput.writeResponseBytes(resolveInputsFailure)));
+        GridGrindJson.readWorkbookResult(GridGrindJsonOutput.writeWorkbookResultBytes(resolveInputsFailure)));
     assertEquals(
         calculationFailure,
-        GridGrindJson.readResponse(GridGrindJsonOutput.writeResponseBytes(calculationFailure)));
+        GridGrindJson.readWorkbookResult(GridGrindJsonOutput.writeWorkbookResultBytes(calculationFailure)));
   }
 
   private static TextSourceInput text(String value) {

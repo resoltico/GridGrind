@@ -5,9 +5,9 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 
 import dev.erst.gridgrind.contract.dto.GridGrindProblemDetail;
 import dev.erst.gridgrind.contract.dto.GridGrindProtocolVersion;
-import dev.erst.gridgrind.contract.dto.GridGrindResponse;
-import dev.erst.gridgrind.contract.dto.GridGrindResponsePersistence;
-import dev.erst.gridgrind.contract.dto.GridGrindResponses;
+import dev.erst.gridgrind.contract.dto.WorkbookResult;
+import dev.erst.gridgrind.contract.dto.WorkbookResultPersistence;
+import dev.erst.gridgrind.contract.dto.WorkbookResults;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
@@ -19,17 +19,17 @@ import tools.jackson.databind.node.ObjectNode;
 class GridGrindJsonPersistenceEnvelopeTest {
   @Test
   void successResponsesKeepPersistenceOnlyAtTheTopLevel() throws IOException {
-    GridGrindResponse persistSuccess =
-        GridGrindResponses.success(
+    WorkbookResult persistSuccess =
+        WorkbookResults.success(
             GridGrindProtocolVersion.V2,
-            new GridGrindResponsePersistence.PersistenceOutcome.SavedAs(
+            new WorkbookResultPersistence.PersistenceOutcome.SavedAs(
                 "out/report.xlsx",
-                new GridGrindResponsePersistence.WriteResult.Written("/work/out/report.xlsx")),
+                new WorkbookResultPersistence.WriteResult.Written("/work/out/report.xlsx")),
             List.of(),
             List.of(),
             List.of());
 
-    byte[] responseBytes = GridGrindJsonOutput.writeResponseBytes(persistSuccess);
+    byte[] responseBytes = GridGrindJsonOutput.writeWorkbookResultBytes(persistSuccess);
     String rendered = new String(responseBytes, StandardCharsets.UTF_8);
     ObjectNode responseTree =
         (ObjectNode) GridGrindJsonMapperSupport.JSON_MAPPER.readTree(responseBytes);
@@ -46,11 +46,11 @@ class GridGrindJsonPersistenceEnvelopeTest {
 
   @Test
   void persistFailureContextsDoNotDuplicateTheTopLevelPersistenceBlock() throws IOException {
-    GridGrindResponse persistFailure =
-        GridGrindResponses.failure(
+    WorkbookResult persistFailure =
+        WorkbookResults.failure(
             GridGrindProtocolVersion.V2,
-            new GridGrindResponsePersistence.PersistenceOutcome.SavedAs(
-                "out/report.xlsx", new GridGrindResponsePersistence.WriteResult.NotWritten()),
+            new WorkbookResultPersistence.PersistenceOutcome.SavedAs(
+                "out/report.xlsx", new WorkbookResultPersistence.WriteResult.NotWritten()),
             new GridGrindProblemDetail.Problem(
                 dev.erst.gridgrind.contract.dto.GridGrindProblemCode.IO_ERROR,
                 dev.erst.gridgrind.contract.dto.GridGrindProblemCode.IO_ERROR.category(),
@@ -66,7 +66,7 @@ class GridGrindJsonPersistenceEnvelopeTest {
                 java.util.Optional.empty(),
                 List.of()));
 
-    byte[] responseBytes = GridGrindJsonOutput.writeResponseBytes(persistFailure);
+    byte[] responseBytes = GridGrindJsonOutput.writeWorkbookResultBytes(persistFailure);
     String rendered = new String(responseBytes, StandardCharsets.UTF_8);
     ObjectNode responseTree =
         (ObjectNode) GridGrindJsonMapperSupport.JSON_MAPPER.readTree(responseBytes);
@@ -84,11 +84,11 @@ class GridGrindJsonPersistenceEnvelopeTest {
   @Test
   void overwriteFailuresWithoutASourcePathStillKeepTheTopLevelPersistenceEnvelope()
       throws IOException {
-    GridGrindResponse persistFailure =
-        GridGrindResponses.failure(
+    WorkbookResult persistFailure =
+        WorkbookResults.failure(
             GridGrindProtocolVersion.V2,
-            new GridGrindResponsePersistence.PersistenceOutcome.Overwritten(
-                Optional.empty(), new GridGrindResponsePersistence.WriteResult.NotWritten()),
+            new WorkbookResultPersistence.PersistenceOutcome.Overwritten(
+                Optional.empty(), new WorkbookResultPersistence.WriteResult.NotWritten()),
             new GridGrindProblemDetail.Problem(
                 dev.erst.gridgrind.contract.dto.GridGrindProblemCode.INVALID_REQUEST,
                 dev.erst.gridgrind.contract.dto.GridGrindProblemCode.INVALID_REQUEST.category(),
@@ -102,7 +102,7 @@ class GridGrindJsonPersistenceEnvelopeTest {
                 Optional.empty(),
                 List.of()));
 
-    byte[] responseBytes = GridGrindJsonOutput.writeResponseBytes(persistFailure);
+    byte[] responseBytes = GridGrindJsonOutput.writeWorkbookResultBytes(persistFailure);
     String rendered = new String(responseBytes, StandardCharsets.UTF_8);
     ObjectNode responseTree =
         (ObjectNode) GridGrindJsonMapperSupport.JSON_MAPPER.readTree(responseBytes);
@@ -112,6 +112,6 @@ class GridGrindJsonPersistenceEnvelopeTest {
     assertEquals(
         "NOT_WRITTEN", responseTree.path("persistence").path("write").path("status").asText());
     assertFalse(responseTree.path("persistence").has("sourcePath"));
-    assertEquals(persistFailure, GridGrindJson.readResponse(responseBytes));
+    assertEquals(persistFailure, GridGrindJson.readWorkbookResult(responseBytes));
   }
 }

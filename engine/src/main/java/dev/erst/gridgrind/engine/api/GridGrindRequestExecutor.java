@@ -1,6 +1,6 @@
 package dev.erst.gridgrind.engine.api;
 
-import dev.erst.gridgrind.contract.dto.GridGrindResponse;
+import dev.erst.gridgrind.contract.dto.WorkbookResult;
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
 import java.util.Objects;
 
@@ -8,11 +8,11 @@ import java.util.Objects;
 @FunctionalInterface
 public interface GridGrindRequestExecutor {
   /** Executes the request and returns the corresponding structured response. */
-  GridGrindResponse execute(
+  WorkbookResult execute(
       WorkbookPlan request, GridGrindRequestInputs inputs, GridGrindJournalSink sink);
 
   /** Executes the request with explicit authored-input bindings and no live journal sink. */
-  default GridGrindResponse execute(WorkbookPlan request, GridGrindRequestInputs inputs) {
+  default WorkbookResult execute(WorkbookPlan request, GridGrindRequestInputs inputs) {
     Objects.requireNonNull(inputs, "inputs must not be null");
     return execute(request, inputs, GridGrindJournalSink.NOOP);
   }

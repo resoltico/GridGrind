@@ -2,10 +2,10 @@ package dev.erst.gridgrind.cli;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import dev.erst.gridgrind.cli.discovery.CliDiagnostic;
+import dev.erst.gridgrind.cli.discovery.CommandError;
 import dev.erst.gridgrind.contract.dto.GridGrindProblemCategory;
 import dev.erst.gridgrind.contract.dto.GridGrindProblemCode;
-import dev.erst.gridgrind.contract.dto.GridGrindResponse;
+import dev.erst.gridgrind.contract.dto.WorkbookResult;
 import dev.erst.gridgrind.contract.json.GridGrindJson;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -21,7 +21,7 @@ import java.util.UUID;
 import org.junit.jupiter.api.Test;
 
 /** Argument and diagnostic-classification integration tests for GridGrindCli. */
-class GridGrindCliDiagnosticClassificationTest extends GridGrindCliTestSupport {
+class GridGrindCommandErrorClassificationTest extends GridGrindCliTestSupport {
   @Test
   void versionFlagRejectsTrailingExecutionFlags() throws IOException {
     ByteArrayOutputStream stdout = new ByteArrayOutputStream();
@@ -35,10 +35,10 @@ class GridGrindCliDiagnosticClassificationTest extends GridGrindCliTestSupport {
                 stdout,
                 stderr);
 
-    CliDiagnostic failure = cliDiagnosticOnStderr(stdout, stderr);
+    CommandError failure = commandErrorOnStdout(stdout, stderr);
 
     assertEquals(2, exitCode);
-    assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.problem().code());
+    assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.primaryProblem().code());
     assertEquals(java.util.Optional.of("--request"), parseArgumentsContext(failure).argumentName());
   }
 
@@ -55,10 +55,10 @@ class GridGrindCliDiagnosticClassificationTest extends GridGrindCliTestSupport {
                 stdout,
                 stderr);
 
-    CliDiagnostic failure = cliDiagnosticOnStderr(stdout, stderr);
+    CommandError failure = commandErrorOnStdout(stdout, stderr);
 
     assertEquals(2, exitCode);
-    assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.problem().code());
+    assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.primaryProblem().code());
     assertEquals(java.util.Optional.of("--request"), parseArgumentsContext(failure).argumentName());
   }
 
@@ -75,10 +75,10 @@ class GridGrindCliDiagnosticClassificationTest extends GridGrindCliTestSupport {
                 stdout,
                 stderr);
 
-    CliDiagnostic failure = cliDiagnosticOnStderr(stdout, stderr);
+    CommandError failure = commandErrorOnStdout(stdout, stderr);
 
     assertEquals(2, exitCode);
-    assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.problem().code());
+    assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.primaryProblem().code());
     assertEquals(java.util.Optional.of("--request"), parseArgumentsContext(failure).argumentName());
   }
 
@@ -97,10 +97,10 @@ class GridGrindCliDiagnosticClassificationTest extends GridGrindCliTestSupport {
                 stdout,
                 stderr);
 
-    CliDiagnostic failure = cliDiagnosticOnStderr(stdout, stderr);
+    CommandError failure = commandErrorOnStdout(stdout, stderr);
 
     assertEquals(2, exitCode);
-    assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.problem().code());
+    assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.primaryProblem().code());
     assertEquals(java.util.Optional.of("--request"), parseArgumentsContext(failure).argumentName());
   }
 
@@ -113,20 +113,20 @@ class GridGrindCliDiagnosticClassificationTest extends GridGrindCliTestSupport {
         new GridGrindCli()
             .run(new String[] {"--unknown"}, new ByteArrayInputStream(new byte[0]), stdout, stderr);
 
-    CliDiagnostic failure = cliDiagnosticOnStderr(stdout, stderr);
+    CommandError failure = commandErrorOnStdout(stdout, stderr);
 
     assertEquals(2, exitCode);
-    assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.problem().code());
+    assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.primaryProblem().code());
     assertEquals("cli", failure.command());
     assertEquals(java.util.Optional.of("--unknown"), parseArgumentsContext(failure).argumentName());
-    assertEquals("Unknown argument: --unknown", failure.problem().message());
+    assertEquals("Unknown argument: --unknown", failure.primaryProblem().message());
     assertEquals(
         List.of("gridgrind --help", "gridgrind --help-protocol", "gridgrind --help-guidance"),
         failure.suggestions());
     assertEquals(
         "Use one exact CLI flag. Start from --help for the synopsis, --help-protocol for the"
             + " grammar, or --help-guidance for workflow-oriented commands.",
-        failure.problem().resolution());
+        failure.primaryProblem().resolution());
   }
 
   @Test
@@ -138,13 +138,13 @@ class GridGrindCliDiagnosticClassificationTest extends GridGrindCliTestSupport {
         new GridGrindCli()
             .run(new String[] {"--request"}, new ByteArrayInputStream(new byte[0]), stdout, stderr);
 
-    CliDiagnostic failure = cliDiagnosticOnStderr(stdout, stderr);
+    CommandError failure = commandErrorOnStdout(stdout, stderr);
 
     assertEquals(2, exitCode);
-    assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.problem().code());
+    assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.primaryProblem().code());
     assertEquals("cli", failure.command());
     assertEquals(java.util.Optional.of("--request"), parseArgumentsContext(failure).argumentName());
-    assertEquals("Missing value for --request", failure.problem().message());
+    assertEquals("Missing value for --request", failure.primaryProblem().message());
     assertEquals(
         List.of(
             "gridgrind --request request.json --response response.json",
@@ -153,7 +153,7 @@ class GridGrindCliDiagnosticClassificationTest extends GridGrindCliTestSupport {
     assertEquals(
         "Provide one readable request JSON file path, or omit --request and pipe one request"
             + " document on standard input.",
-        failure.problem().resolution());
+        failure.primaryProblem().resolution());
   }
 
   @Test
@@ -169,14 +169,14 @@ class GridGrindCliDiagnosticClassificationTest extends GridGrindCliTestSupport {
                 stdout,
                 stderr);
 
-    CliDiagnostic failure = cliDiagnosticOnStderr(stdout, stderr);
+    CommandError failure = commandErrorOnStdout(stdout, stderr);
 
     assertEquals(2, exitCode);
-    assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.problem().code());
+    assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.primaryProblem().code());
     assertEquals("cli", failure.command());
     assertEquals(
         java.util.Optional.of("--execution-root"), parseArgumentsContext(failure).argumentName());
-    assertEquals("Missing value for --execution-root", failure.problem().message());
+    assertEquals("Missing value for --execution-root", failure.primaryProblem().message());
   }
 
   @Test
@@ -192,10 +192,10 @@ class GridGrindCliDiagnosticClassificationTest extends GridGrindCliTestSupport {
                 stdout,
                 stderr);
 
-    CliDiagnostic failure = cliDiagnosticOnStderr(stdout, stderr);
+    CommandError failure = commandErrorOnStdout(stdout, stderr);
 
     assertEquals(2, exitCode);
-    assertEquals("Duplicate argument: --request", failure.problem().message());
+    assertEquals("Duplicate argument: --request", failure.primaryProblem().message());
   }
 
   @Test
@@ -211,10 +211,10 @@ class GridGrindCliDiagnosticClassificationTest extends GridGrindCliTestSupport {
                 stdout,
                 stderr);
 
-    CliDiagnostic failure = cliDiagnosticOnStderr(stdout, stderr);
+    CommandError failure = commandErrorOnStdout(stdout, stderr);
 
     assertEquals(2, exitCode);
-    assertEquals("Duplicate argument: --response", failure.problem().message());
+    assertEquals("Duplicate argument: --response", failure.primaryProblem().message());
   }
 
   @Test
@@ -230,10 +230,10 @@ class GridGrindCliDiagnosticClassificationTest extends GridGrindCliTestSupport {
                 stdout,
                 stderr);
 
-    CliDiagnostic failure = cliDiagnosticOnStderr(stdout, stderr);
+    CommandError failure = commandErrorOnStdout(stdout, stderr);
 
     assertEquals(2, exitCode);
-    assertEquals("Duplicate argument: --execution-root", failure.problem().message());
+    assertEquals("Duplicate argument: --execution-root", failure.primaryProblem().message());
   }
 
   @Test
@@ -271,14 +271,14 @@ class GridGrindCliDiagnosticClassificationTest extends GridGrindCliTestSupport {
                 stdout,
                 stderr);
 
-    CliDiagnostic failure = cliDiagnosticOnStderr(stdout, stderr);
+    CommandError failure = commandErrorOnStdout(stdout, stderr);
 
     assertEquals(2, exitCode);
-    assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.problem().code());
+    assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.primaryProblem().code());
     assertEquals("execute", failure.command());
     assertEquals(
         java.util.Optional.of("--execution-root"), parseArgumentsContext(failure).argumentName());
-    assertTrue(failure.problem().message().contains("--execution-root"));
+    assertTrue(failure.primaryProblem().message().contains("--execution-root"));
   }
 
   @Test
@@ -294,10 +294,10 @@ class GridGrindCliDiagnosticClassificationTest extends GridGrindCliTestSupport {
                 stdout,
                 stderr);
 
-    CliDiagnostic failure = cliDiagnosticOnStderr(stdout, stderr);
+    CommandError failure = commandErrorOnStdout(stdout, stderr);
 
     assertEquals(2, exitCode);
-    assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.problem().code());
+    assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.primaryProblem().code());
     assertEquals("cli", failure.command());
   }
 
@@ -315,13 +315,13 @@ class GridGrindCliDiagnosticClassificationTest extends GridGrindCliTestSupport {
                 stdout,
                 stderr);
 
-    CliDiagnostic failure = cliDiagnosticOnStderr(stdout, stderr);
+    CommandError failure = commandErrorOnStdout(stdout, stderr);
 
     assertEquals(1, exitCode);
-    assertEquals(GridGrindProblemCode.IO_ERROR, failure.problem().code());
+    assertEquals(GridGrindProblemCode.IO_ERROR, failure.primaryProblem().code());
     assertEquals("execute", failure.command());
     assertEquals(Optional.of(missingPath), readRequestContext(failure).requestPath());
-    assertEquals("Request file not found: " + Path.of(missingPath), failure.problem().message());
+    assertEquals("Request file not found: " + Path.of(missingPath), failure.primaryProblem().message());
   }
 
   @Test
@@ -339,14 +339,14 @@ class GridGrindCliDiagnosticClassificationTest extends GridGrindCliTestSupport {
                   stdout,
                   stderr);
 
-      CliDiagnostic failure = cliDiagnosticOnStderr(stdout, stderr);
+      CommandError failure = commandErrorOnStdout(stdout, stderr);
 
       assertEquals(1, exitCode);
-      assertEquals(GridGrindProblemCode.IO_ERROR, failure.problem().code());
+      assertEquals(GridGrindProblemCode.IO_ERROR, failure.primaryProblem().code());
       assertEquals("execute", failure.command());
       assertEquals(
           "Request path is not a regular file: " + requestDirectory.toAbsolutePath().normalize(),
-          failure.problem().message());
+          failure.primaryProblem().message());
     } finally {
       Files.deleteIfExists(requestDirectory);
     }
@@ -379,14 +379,14 @@ class GridGrindCliDiagnosticClassificationTest extends GridGrindCliTestSupport {
                   stdout,
                   stderr);
 
-      CliDiagnostic failure = cliDiagnosticOnStderr(stdout, stderr);
+      CommandError failure = commandErrorOnStdout(stdout, stderr);
 
       assertEquals(1, exitCode);
-      assertEquals(GridGrindProblemCode.IO_ERROR, failure.problem().code());
+      assertEquals(GridGrindProblemCode.IO_ERROR, failure.primaryProblem().code());
       assertEquals("execute", failure.command());
       assertEquals(
           "Request file is not readable: " + unreadableFile.toAbsolutePath().normalize(),
-          failure.problem().message());
+          failure.primaryProblem().message());
     } finally {
       Files.setPosixFilePermissions(unreadableFile, originalPermissions);
       Files.deleteIfExists(unreadableFile);
@@ -413,17 +413,17 @@ class GridGrindCliDiagnosticClassificationTest extends GridGrindCliTestSupport {
                     .getBytes(StandardCharsets.UTF_8)),
             new ByteArrayOutputStream());
 
-    GridGrindResponse response = GridGrindJson.readResponse(Files.readAllBytes(responsePath));
+    WorkbookResult response = GridGrindJson.readWorkbookResult(Files.readAllBytes(responsePath));
 
     assertEquals(1, exitCode);
-    assertInstanceOf(GridGrindResponse.Failure.class, response);
-    GridGrindResponse.Failure failure = (GridGrindResponse.Failure) response;
-    assertEquals(GridGrindProblemCode.INTERNAL_ERROR, failure.problem().code());
-    assertEquals(GridGrindProblemCategory.INTERNAL, failure.problem().category());
-    assertEquals("EXECUTE_REQUEST", failure.problem().context().stage());
+    assertInstanceOf(WorkbookResult.Failure.class, response);
+    WorkbookResult.Failure failure = (WorkbookResult.Failure) response;
+    assertEquals(GridGrindProblemCode.INTERNAL_ERROR, failure.primaryProblem().code());
+    assertEquals(GridGrindProblemCategory.INTERNAL, failure.primaryProblem().category());
+    assertEquals("EXECUTE_REQUEST", failure.primaryProblem().context().stage());
     assertEquals(java.util.Optional.of("NEW"), executeRequestContext(failure).sourceType());
     assertEquals(java.util.Optional.of("NONE"), executeRequestContext(failure).persistenceType());
-    assertEquals("boom", failure.problem().message());
+    assertEquals("boom", failure.primaryProblem().message());
   }
 
   @Test
@@ -448,13 +448,13 @@ class GridGrindCliDiagnosticClassificationTest extends GridGrindCliTestSupport {
             stdout,
             stderr);
 
-    GridGrindResponse response = response(stdout, stderr);
+    WorkbookResult response = response(stdout, stderr);
 
     assertEquals(1, exitCode);
-    assertInstanceOf(GridGrindResponse.Failure.class, response);
-    GridGrindResponse.Failure failure = (GridGrindResponse.Failure) response;
-    assertEquals(GridGrindProblemCode.INTERNAL_ERROR, failure.problem().code());
-    assertEquals("EXECUTE_REQUEST", failure.problem().context().stage());
+    assertInstanceOf(WorkbookResult.Failure.class, response);
+    WorkbookResult.Failure failure = (WorkbookResult.Failure) response;
+    assertEquals(GridGrindProblemCode.INTERNAL_ERROR, failure.primaryProblem().code());
+    assertEquals("EXECUTE_REQUEST", failure.primaryProblem().context().stage());
     assertEquals(java.util.Optional.of("EXISTING"), executeRequestContext(failure).sourceType());
     assertEquals(
         java.util.Optional.of("OVERWRITE"), executeRequestContext(failure).persistenceType());
@@ -482,13 +482,13 @@ class GridGrindCliDiagnosticClassificationTest extends GridGrindCliTestSupport {
             stdout,
             stderr);
 
-    GridGrindResponse response = response(stdout, stderr);
+    WorkbookResult response = response(stdout, stderr);
 
     assertEquals(1, exitCode);
-    assertInstanceOf(GridGrindResponse.Failure.class, response);
-    GridGrindResponse.Failure failure = (GridGrindResponse.Failure) response;
-    assertEquals(GridGrindProblemCode.INTERNAL_ERROR, failure.problem().code());
-    assertEquals("EXECUTE_REQUEST", failure.problem().context().stage());
+    assertInstanceOf(WorkbookResult.Failure.class, response);
+    WorkbookResult.Failure failure = (WorkbookResult.Failure) response;
+    assertEquals(GridGrindProblemCode.INTERNAL_ERROR, failure.primaryProblem().code());
+    assertEquals("EXECUTE_REQUEST", failure.primaryProblem().context().stage());
     assertEquals(java.util.Optional.of("EXISTING"), executeRequestContext(failure).sourceType());
     assertEquals(
         java.util.Optional.of("SAVE_AS"), executeRequestContext(failure).persistenceType());
@@ -512,14 +512,14 @@ class GridGrindCliDiagnosticClassificationTest extends GridGrindCliTestSupport {
                       .getBytes(StandardCharsets.UTF_8)),
               new ByteArrayOutputStream());
 
-      GridGrindResponse response = GridGrindJson.readResponse(Files.readAllBytes(responsePath));
+      WorkbookResult response = GridGrindJson.readWorkbookResult(Files.readAllBytes(responsePath));
 
       assertEquals(1, exitCode);
-      assertInstanceOf(GridGrindResponse.Failure.class, response);
-      GridGrindResponse.Failure failure = (GridGrindResponse.Failure) response;
-      assertEquals(GridGrindProblemCode.INTERNAL_ERROR, failure.problem().code());
-      assertEquals("EXECUTE_REQUEST", failure.problem().context().stage());
-      assertEquals("UnsupportedOperationException", failure.problem().message());
+      assertInstanceOf(WorkbookResult.Failure.class, response);
+      WorkbookResult.Failure failure = (WorkbookResult.Failure) response;
+      assertEquals(GridGrindProblemCode.INTERNAL_ERROR, failure.primaryProblem().code());
+      assertEquals("EXECUTE_REQUEST", failure.primaryProblem().context().stage());
+      assertEquals("UnsupportedOperationException", failure.primaryProblem().message());
     } finally {
       Files.deleteIfExists(responsePath);
     }
@@ -538,10 +538,10 @@ class GridGrindCliDiagnosticClassificationTest extends GridGrindCliTestSupport {
                 stdout,
                 stderr);
 
-    CliDiagnostic failure = cliDiagnosticOnStderr(stdout, stderr);
+    CommandError failure = commandErrorOnStdout(stdout, stderr);
 
     assertEquals(1, exitCode);
-    assertEquals(GridGrindProblemCode.INVALID_JSON, failure.problem().code());
+    assertEquals(GridGrindProblemCode.INVALID_JSON, failure.primaryProblem().code());
     assertEquals("execute", failure.command());
     assertTrue(readRequestContext(failure).byteOffset().isPresent());
     assertEquals(java.util.Optional.empty(), readRequestContext(failure).jsonLine());
@@ -571,14 +571,14 @@ class GridGrindCliDiagnosticClassificationTest extends GridGrindCliTestSupport {
                 stdout,
                 stderr);
 
-    CliDiagnostic failure = cliDiagnosticOnStderr(stdout, stderr);
+    CommandError failure = commandErrorOnStdout(stdout, stderr);
 
     assertEquals(1, exitCode);
-    assertEquals(GridGrindProblemCode.INVALID_REQUEST_SHAPE, failure.problem().code());
+    assertEquals(GridGrindProblemCode.INVALID_REQUEST_SHAPE, failure.primaryProblem().code());
     assertEquals("execute", failure.command());
     assertEquals(java.util.Optional.of("steps[0]"), readRequestContext(failure).jsonPath());
-    assertFalse(failure.problem().message().contains("tools.jackson"));
-    assertFalse(failure.problem().message().contains("dev.erst.gridgrind"));
+    assertFalse(failure.primaryProblem().message().contains("tools.jackson"));
+    assertFalse(failure.primaryProblem().message().contains("dev.erst.gridgrind"));
   }
 
   @Test
@@ -615,10 +615,10 @@ class GridGrindCliDiagnosticClassificationTest extends GridGrindCliTestSupport {
                 stdout,
                 stderr);
 
-    CliDiagnostic failure = cliDiagnosticOnStderr(stdout, stderr);
+    CommandError failure = commandErrorOnStdout(stdout, stderr);
 
     assertEquals(1, exitCode);
-    assertEquals(GridGrindProblemCode.INVALID_REQUEST_SHAPE, failure.problem().code());
+    assertEquals(GridGrindProblemCode.INVALID_REQUEST_SHAPE, failure.primaryProblem().code());
     assertEquals("execute", failure.command());
     assertEquals(Optional.of("protocolVersion"), readRequestContext(failure).jsonPath());
   }
@@ -655,10 +655,10 @@ class GridGrindCliDiagnosticClassificationTest extends GridGrindCliTestSupport {
                 stdout,
                 stderr);
 
-    CliDiagnostic failure = cliDiagnosticOnStderr(stdout, stderr);
+    CommandError failure = commandErrorOnStdout(stdout, stderr);
 
     assertEquals(1, exitCode);
-    assertEquals(GridGrindProblemCode.INVALID_REQUEST, failure.problem().code());
+    assertEquals(GridGrindProblemCode.INVALID_REQUEST, failure.primaryProblem().code());
     assertEquals("execute", failure.command());
     assertEquals(
         java.util.Optional.of("steps[0].target.rowCount"), readRequestContext(failure).jsonPath());
@@ -691,14 +691,14 @@ class GridGrindCliDiagnosticClassificationTest extends GridGrindCliTestSupport {
                 stdout,
                 stderr);
 
-    CliDiagnostic failure = cliDiagnosticOnStderr(stdout, stderr);
+    CommandError failure = commandErrorOnStdout(stdout, stderr);
 
     assertEquals(1, exitCode);
-    assertEquals(GridGrindProblemCode.INVALID_REQUEST, failure.problem().code());
+    assertEquals(GridGrindProblemCode.INVALID_REQUEST, failure.primaryProblem().code());
     assertEquals("execute", failure.command());
     assertEquals(
         "Request JSON exceeds the maximum size of 16 MiB (16777216 bytes); move large authored payloads into UTF8_FILE, FILE, or STANDARD_INPUT sources.",
-        failure.problem().message());
+        failure.primaryProblem().message());
   }
 
   @Test
@@ -715,10 +715,10 @@ class GridGrindCliDiagnosticClassificationTest extends GridGrindCliTestSupport {
                           .getBytes(StandardCharsets.UTF_8)),
                   new ByteArrayOutputStream());
 
-      GridGrindResponse response = GridGrindJson.readResponse(Files.readAllBytes(responsePath));
+      WorkbookResult response = GridGrindJson.readWorkbookResult(Files.readAllBytes(responsePath));
 
       assertEquals(0, exitCode);
-      assertInstanceOf(GridGrindResponse.Success.class, response);
+      assertInstanceOf(WorkbookResult.Success.class, response);
     } finally {
       Files.deleteIfExists(responsePath);
     }
@@ -741,15 +741,15 @@ class GridGrindCliDiagnosticClassificationTest extends GridGrindCliTestSupport {
                 stdout,
                 stderr);
 
-    GridGrindResponse response = response(stdout, stderr);
-    CliDiagnostic stderrDiagnostic = cliDiagnosticOnStderr(stderr);
+    WorkbookResult response = response(stdout, stderr);
+    CommandError stderrDiagnostic = commandErrorOnStdout(stderr);
 
     assertEquals(1, exitCode);
-    assertInstanceOf(GridGrindResponse.Failure.class, response);
-    GridGrindResponse.Failure failure = (GridGrindResponse.Failure) response;
-    assertEquals(failure.problem(), stderrDiagnostic.problem());
-    assertEquals(GridGrindProblemCode.IO_ERROR, failure.problem().code());
-    assertEquals("WRITE_RESPONSE", failure.problem().context().stage());
+    assertInstanceOf(WorkbookResult.Failure.class, response);
+    WorkbookResult.Failure failure = (WorkbookResult.Failure) response;
+    assertEquals(failure.primaryProblem(), stderrDiagnostic.primaryProblem());
+    assertEquals(GridGrindProblemCode.IO_ERROR, failure.primaryProblem().code());
+    assertEquals("WRITE_RESPONSE", failure.primaryProblem().context().stage());
     assertEquals(
         java.util.Optional.of(responseDirectory.toAbsolutePath().toString()),
         writeResponseContext(failure).responsePath());
@@ -782,15 +782,15 @@ class GridGrindCliDiagnosticClassificationTest extends GridGrindCliTestSupport {
                 stdout,
                 stderr);
 
-    CliDiagnostic failure = cliDiagnostic(Files.readAllBytes(responsePath));
-    CliDiagnostic stderrDiagnostic = cliDiagnosticOnStderr(stderr);
+    CommandError failure = commandError(Files.readAllBytes(responsePath));
+    CommandError stderrDiagnostic = commandErrorOnStdout(stderr);
 
     assertEquals(2, exitCode);
     assertEquals("", stdout.toString(StandardCharsets.UTF_8));
     assertEquals(failure, stderrDiagnostic);
-    assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.problem().code());
+    assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.primaryProblem().code());
     assertEquals("cli", failure.command());
-    assertEquals("Unknown argument: --bogus-flag", failure.problem().message());
+    assertEquals("Unknown argument: --bogus-flag", failure.primaryProblem().message());
   }
 
   @Test
@@ -813,17 +813,17 @@ class GridGrindCliDiagnosticClassificationTest extends GridGrindCliTestSupport {
             stdout,
             stderr);
 
-    GridGrindResponse response = response(stdout, stderr);
-    CliDiagnostic stderrDiagnostic = cliDiagnosticOnStderr(stderr);
+    WorkbookResult response = response(stdout, stderr);
+    CommandError stderrDiagnostic = commandErrorOnStdout(stderr);
 
     assertEquals(1, exitCode);
-    assertInstanceOf(GridGrindResponse.Failure.class, response);
-    GridGrindResponse.Failure failure = (GridGrindResponse.Failure) response;
-    assertEquals(failure.problem(), stderrDiagnostic.problem());
-    assertEquals(GridGrindProblemCode.IO_ERROR, failure.problem().code());
-    assertEquals(2, failure.problem().causes().size());
-    assertEquals(GridGrindProblemCode.INTERNAL_ERROR, failure.problem().causes().get(1).code());
-    assertEquals("EXECUTE_REQUEST", failure.problem().causes().get(1).stage());
+    assertInstanceOf(WorkbookResult.Failure.class, response);
+    WorkbookResult.Failure failure = (WorkbookResult.Failure) response;
+    assertEquals(failure.primaryProblem(), stderrDiagnostic.primaryProblem());
+    assertEquals(GridGrindProblemCode.IO_ERROR, failure.primaryProblem().code());
+    assertEquals(2, failure.primaryProblem().causes().size());
+    assertEquals(GridGrindProblemCode.INTERNAL_ERROR, failure.primaryProblem().causes().get(1).code());
+    assertEquals("EXECUTE_REQUEST", failure.primaryProblem().causes().get(1).stage());
   }
 
   @Test
@@ -857,13 +857,13 @@ class GridGrindCliDiagnosticClassificationTest extends GridGrindCliTestSupport {
                   stdout,
                   stderr);
 
-      CliDiagnostic failure = cliDiagnosticOnStderr(stdout, stderr);
+      CommandError failure = commandErrorOnStdout(stdout, stderr);
 
       assertEquals(2, exitCode);
-      assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.problem().code());
+      assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.primaryProblem().code());
       assertEquals("cli", failure.command());
       assertEquals(
-          "--request and --response must not point to the same path", failure.problem().message());
+          "--request and --response must not point to the same path", failure.primaryProblem().message());
     } finally {
       Files.deleteIfExists(path);
     }
@@ -902,13 +902,13 @@ class GridGrindCliDiagnosticClassificationTest extends GridGrindCliTestSupport {
                 stdout,
                 stderr);
 
-    CliDiagnostic failure = cliDiagnosticOnStderr(stdout, stderr);
+    CommandError failure = commandErrorOnStdout(stdout, stderr);
 
     assertEquals(1, exitCode);
-    assertEquals(GridGrindProblemCode.INVALID_REQUEST, failure.problem().code());
+    assertEquals(GridGrindProblemCode.INVALID_REQUEST, failure.primaryProblem().code());
     assertEquals("execute", failure.command());
     assertTrue(
-        failure.problem().message().contains("rowCount * columnCount must not exceed"),
+        failure.primaryProblem().message().contains("rowCount * columnCount must not exceed"),
         "message should state the limit");
   }
 }

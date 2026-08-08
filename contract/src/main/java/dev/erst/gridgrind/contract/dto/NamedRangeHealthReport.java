@@ -13,6 +13,6 @@ public record NamedRangeHealthReport(
       throw new IllegalArgumentException("checkedNamedRangeCount must not be negative");
     }
     Objects.requireNonNull(summary, "summary must not be null");
-    findings = GridGrindResponseSupport.copyValues(findings, "findings");
+    findings = WorkbookResultSupport.copyValues(findings, "findings");
   }
 }

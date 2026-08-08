@@ -15,7 +15,7 @@ class RequestDoctorReportTest {
     RequestDoctorReport.Summary summary =
         new RequestDoctorReport.Summary(
             "NEW", "NONE", "FULL_XSSF", "DO_NOT_CALCULATE", false, false, 0, 0, 0, 0);
-    RequestWarning warning = new RequestWarning(0, "step-1", "SET_CELL", "warning");
+    RequestWarning warning = new RequestWarning(dev.erst.gridgrind.contract.dto.GridGrindWarningCode.UNQUOTED_SHEET_NAME_IN_FORMULA, 0, "step-1", "SET_CELL", "warning");
     List<RequestWarning> mutableWarnings = new java.util.ArrayList<>(List.of(warning));
     GridGrindProblemDetail.Problem problem =
         GridGrindProblemDetail.Problem.of(
@@ -29,7 +29,7 @@ class RequestDoctorReportTest {
     RequestDoctorReport invalid = RequestDoctorReport.invalid(summary, mutableWarnings, problem);
     RequestDoctorReport invalidBatch =
         RequestDoctorReport.invalid(summary, mutableWarnings, List.of(problem));
-    mutableWarnings.add(new RequestWarning(1, "step-2", "SET_RANGE", "ignored"));
+    mutableWarnings.add(new RequestWarning(dev.erst.gridgrind.contract.dto.GridGrindWarningCode.UNQUOTED_SHEET_NAME_IN_FORMULA, 1, "step-2", "SET_RANGE", "ignored"));
 
     assertEquals(AnalysisSeverity.INFO, clean.severity());
     assertEquals(AnalysisSeverity.WARNING, warnings.severity());
@@ -130,7 +130,7 @@ class RequestDoctorReportTest {
                         AnalysisSeverity.INFO,
                         true,
                         Optional.of(summary),
-                        List.of(new RequestWarning(0, "step-1", "SET_CELL", "warning")),
+                        List.of(new RequestWarning(dev.erst.gridgrind.contract.dto.GridGrindWarningCode.UNQUOTED_SHEET_NAME_IN_FORMULA, 0, "step-1", "SET_CELL", "warning")),
                         List.of()))
             .getMessage());
     assertEquals(

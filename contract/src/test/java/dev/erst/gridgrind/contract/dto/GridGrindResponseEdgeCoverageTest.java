@@ -19,20 +19,20 @@ import org.junit.jupiter.api.Test;
 
 /** Additional branch coverage for edge-case GridGrind response DTO validation. */
 @SuppressWarnings("NotJavadoc")
-class GridGrindResponseEdgeCoverageTest {
+class WorkbookResultEdgeCoverageTest {
   @Test
   void successFailureWorkbookSummaryAndNamedRangeBranchesAreExplicit() {
     RequestShape requestShape = RequestShape.known("NEW", "NONE");
-    GridGrindResponse.Success success =
-        GridGrindResponses.success(
+    WorkbookResult.Success success =
+        WorkbookResults.success(
             List.of(),
             List.of(),
             List.of(
                 new dev.erst.gridgrind.contract.query.WorkbookInspectionResult
                     .WorkbookSummaryResult(
                     "summary", new WorkbookSummary.Empty(0, List.of(), 0, false))));
-    GridGrindResponse.Failure failure =
-        GridGrindResponses.failure(
+    WorkbookResult.Failure failure =
+        WorkbookResults.failure(
             GridGrindProblemDetail.Problem.of(
                 GridGrindProblemCode.INVALID_REQUEST,
                 "bad request",
@@ -45,17 +45,17 @@ class GridGrindResponseEdgeCoverageTest {
         assertThrows(
                 IllegalArgumentException.class,
                 () ->
-                    new GridGrindResponsePersistence.PersistenceOutcome.SavedAs(
-                        "budget.xlsx", new GridGrindResponsePersistence.WriteResult.Written(" ")))
+                    new WorkbookResultPersistence.PersistenceOutcome.SavedAs(
+                        "budget.xlsx", new WorkbookResultPersistence.WriteResult.Written(" ")))
             .getMessage());
     assertEquals(
         "sourcePath must not be blank",
         assertThrows(
                 IllegalArgumentException.class,
                 () ->
-                    new GridGrindResponsePersistence.PersistenceOutcome.Overwritten(
+                    new WorkbookResultPersistence.PersistenceOutcome.Overwritten(
                         Optional.of(" "),
-                        new GridGrindResponsePersistence.WriteResult.Written("/tmp/out.xlsx")))
+                        new WorkbookResultPersistence.WriteResult.Written("/tmp/out.xlsx")))
             .getMessage());
     assertEquals(
         "sheetCount must not be negative",

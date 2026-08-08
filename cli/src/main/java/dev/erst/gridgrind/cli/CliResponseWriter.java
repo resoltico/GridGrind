@@ -1,11 +1,11 @@
 package dev.erst.gridgrind.cli;
 
-import dev.erst.gridgrind.cli.discovery.CliDiagnostic;
-import dev.erst.gridgrind.cli.discovery.CliTransport;
+import dev.erst.gridgrind.cli.discovery.CliTransportNotice;
+import dev.erst.gridgrind.cli.discovery.CommandError;
 import dev.erst.gridgrind.contract.dto.GridGrindProblemDetail;
 import dev.erst.gridgrind.contract.dto.GridGrindProtocolVersion;
-import dev.erst.gridgrind.contract.dto.GridGrindResponse;
-import dev.erst.gridgrind.contract.dto.GridGrindResponses;
+import dev.erst.gridgrind.contract.dto.WorkbookResult;
+import dev.erst.gridgrind.contract.dto.WorkbookResults;
 import dev.erst.gridgrind.contract.dto.RequestDoctorReport;
 import dev.erst.gridgrind.contract.json.GridGrindJsonOutput;
 import dev.erst.gridgrind.contract.json.RequestDiagnosticRedactor;
@@ -18,97 +18,73 @@ import java.util.Optional;
 
 /** Writes GridGrind responses to stdout or an explicit response file with structured fallback. */
 final class CliResponseWriter {
-  /**
-   * Writes a CLI diagnostic to the configured destination.
-   *
-   * <p>When {@code responsePath} is empty, CLI failure JSON goes to {@code stderr} so non-success
-   * CLI transport failures do not masquerade as primary stdout payloads. When a response path is
-   * present, the same CLI diagnostic is also mirrored to {@code stderr} with transport metadata so
-   * stderr stays machine-readable while still naming the persisted file or stdout fallback.
-   */
-  int writeCliDiagnostic(
+  /** Writes one rejected-command result to stdout or the requested response file. */
+  int writeCommandError(
       Optional<Path> responsePath,
       OutputStream stdout,
       OutputStream stderr,
-      CliDiagnostic diagnostic,
+      CommandError commandError,
       boolean prettyJson)
       throws IOException {
-    return writeCliDiagnosticNamed(
-        responsePath, stdout, stderr, diagnostic, Optional.empty(), prettyJson);
+    return writeCommandError(
+        responsePath, stdout, stderr, commandError, Optional.empty(), prettyJson);
   }
 
-  /** Writes a request-content diagnostic and mirrors it to stderr when one file captures it. */
-  int writeRequestDiagnostic(
+  /** Writes one rejected-command result after applying the request-scoped secret boundary. */
+  int writeCommandError(
       Optional<Path> responsePath,
       OutputStream stdout,
       OutputStream stderr,
-      CliDiagnostic diagnostic,
-      boolean prettyJson)
-      throws IOException {
-    return writeCliDiagnosticNamed(
-        responsePath, stdout, stderr, diagnostic, Optional.empty(), prettyJson);
-  }
-
-  /** Writes one request diagnostic after applying the request-scoped secret boundary. */
-  int writeRequestDiagnostic(
-      Optional<Path> responsePath,
-      OutputStream stdout,
-      OutputStream stderr,
-      CliDiagnostic diagnostic,
+      CommandError commandError,
       RequestDiagnosticRedactor redactor,
       boolean prettyJson)
       throws IOException {
-    return writeCliDiagnosticNamed(
+    return writeCommandError(
         responsePath,
         stdout,
         stderr,
-        diagnostic,
+        commandError,
         Optional.of(Objects.requireNonNull(redactor, "redactor must not be null")),
         prettyJson);
   }
 
-  private int writeCliDiagnosticNamed(
+  private int writeCommandError(
       Optional<Path> responsePath,
       OutputStream stdout,
       OutputStream stderr,
-      CliDiagnostic diagnostic,
+      CommandError commandError,
       Optional<RequestDiagnosticRedactor> redactor,
       boolean prettyJson)
       throws IOException {
-    Objects.requireNonNull(diagnostic, "diagnostic must not be null");
+    Objects.requireNonNull(commandError, "commandError must not be null");
     Objects.requireNonNull(redactor, "redactor must not be null");
     if (responsePath.isEmpty()) {
       CliResponseTransportSupport.writePayload(
-          stderr, CliResponseTransportSupport.diagnosticBytes(diagnostic, redactor, prettyJson));
-      return diagnostic.exitCode();
+          stdout, CliResponseTransportSupport.commandErrorBytes(commandError, redactor, prettyJson));
+      return CliResponseTransportSupport.exitCodeFor(commandError);
     }
 
     Path targetPath = CliResponseTransportSupport.responseTargetPath(responsePath.orElseThrow());
     try {
-      CliDiagnostic persistedDiagnostic =
-          CliResponseTransportSupport.diagnosticWithTransport(
-              diagnostic, CliTransport.responseFile(targetPath.toString()));
-      byte[] reportBytes =
-          CliResponseTransportSupport.diagnosticBytes(persistedDiagnostic, redactor, prettyJson);
-      CliResponseTransportSupport.writePayload(targetPath, reportBytes);
-      CliResponseTransportSupport.writeCliDiagnosticToStderr(
-          stderr, persistedDiagnostic, redactor, prettyJson);
-      return diagnostic.exitCode();
+      CliResponseTransportSupport.writePayload(
+          targetPath, CliResponseTransportSupport.commandErrorBytes(commandError, redactor, prettyJson));
+      return CliResponseTransportSupport.exitCodeFor(commandError);
     } catch (IOException exception) {
-      CliDiagnostic stdoutDiagnostic =
-          CliResponseTransportSupport.diagnosticWithTransport(
-              diagnostic, CliTransport.standardOutput());
-      CliStdoutFallbackSupport.write(
-          stderr,
+      CommandError fallback =
+          new CommandError(
+              commandError.protocolVersion(),
+              commandError.command(),
+              java.util.stream.Stream.concat(
+                      commandError.problems().stream(),
+                      java.util.stream.Stream.of(
+                          CliResponseTransportSupport.writeResponseProblem(exception, targetPath)))
+                  .toList());
+      writeStdoutFallback(
           stdout,
-          stdoutDiagnostic,
-          CliStdoutFallbackSupport.redacted(
-              CliStdoutFallbackSupport.cliDiagnostic(stdoutDiagnostic, prettyJson),
-              redactor,
-              prettyJson),
-          redactor,
-          prettyJson);
-      return diagnostic.exitCode();
+          stderr,
+          CliResponseTransportSupport.commandErrorBytes(fallback, redactor, prettyJson),
+          targetPath);
+      return 1;
     }
   }
 
@@ -121,8 +97,6 @@ final class CliResponseWriter {
    */
   int writePayload(
       String command,
-      String payloadName,
-      Optional<String> stdoutSuggestion,
       Optional<Path> responsePath,
       OutputStream stdout,
       OutputStream stderr,
@@ -131,8 +105,6 @@ final class CliResponseWriter {
       boolean prettyJson)
       throws IOException {
     Objects.requireNonNull(command, "command must not be null");
-    Objects.requireNonNull(payloadName, "payloadName must not be null");
-    Objects.requireNonNull(stdoutSuggestion, "stdoutSuggestion must not be null");
     Objects.requireNonNull(responsePath, "responsePath must not be null");
     Objects.requireNonNull(stdout, "stdout must not be null");
     Objects.requireNonNull(stderr, "stderr must not be null");
@@ -147,17 +119,12 @@ final class CliResponseWriter {
       CliResponseTransportSupport.writePayload(targetPath, payload);
       return successExitCode;
     } catch (IOException exception) {
-      CliDiagnostic stdoutDiagnostic =
-          CliResponseTransportSupport.diagnosticWithTransport(
-              CliDiagnostics.responseWriteFailure(
-                  command, payloadName, targetPath, exception, stdoutSuggestion),
-              CliTransport.standardOutput());
-      CliStdoutFallbackSupport.write(
-          stderr,
+      CommandError fallback = CommandErrors.responseWriteFailure(command, targetPath, exception);
+      writeStdoutFallback(
           stdout,
-          stdoutDiagnostic,
-          CliStdoutFallbackSupport.cliDiagnostic(stdoutDiagnostic, prettyJson),
-          prettyJson);
+          stderr,
+          CliResponseTransportSupport.commandErrorBytes(fallback, Optional.empty(), prettyJson),
+          targetPath);
       return 1;
     }
   }
@@ -167,7 +134,7 @@ final class CliResponseWriter {
       Optional<Path> responsePath,
       OutputStream stdout,
       OutputStream stderr,
-      GridGrindResponse response,
+      WorkbookResult response,
       int logicalExitCode,
       boolean prettyJson)
       throws IOException {
@@ -180,7 +147,7 @@ final class CliResponseWriter {
       Optional<Path> responsePath,
       OutputStream stdout,
       OutputStream stderr,
-      GridGrindResponse response,
+      WorkbookResult response,
       int logicalExitCode,
       RequestDiagnosticRedactor redactor,
       boolean prettyJson)
@@ -199,7 +166,7 @@ final class CliResponseWriter {
       Optional<Path> responsePath,
       OutputStream stdout,
       OutputStream stderr,
-      GridGrindResponse response,
+      WorkbookResult response,
       int logicalExitCode,
       Optional<RequestDiagnosticRedactor> redactor,
       boolean prettyJson)
@@ -213,7 +180,7 @@ final class CliResponseWriter {
       CliResponseTransportSupport.writePayload(
           stdout,
           CliResponseTransportSupport.redact(
-              redactor, GridGrindJsonOutput.writeResponseBytes(response, prettyJson), prettyJson));
+              redactor, GridGrindJsonOutput.writeWorkbookResultBytes(response, prettyJson), prettyJson));
       return logicalExitCode;
     }
 
@@ -222,42 +189,27 @@ final class CliResponseWriter {
       CliResponseTransportSupport.writePayload(
           targetPath,
           CliResponseTransportSupport.redact(
-              redactor, GridGrindJsonOutput.writeResponseBytes(response, prettyJson), prettyJson));
-      if (logicalExitCode != 0 && response instanceof GridGrindResponse.Failure failure) {
-        CliResponseTransportSupport.writeCliDiagnosticToStderr(
-            stderr,
-            CliResponseTransportSupport.diagnosticWithTransport(
-                CliDiagnostics.problemDiagnostic(logicalExitCode, "execute", failure.problem()),
-                CliTransport.responseFile(targetPath.toString())),
-            redactor,
-            prettyJson);
-      }
+              redactor, GridGrindJsonOutput.writeWorkbookResultBytes(response, prettyJson), prettyJson));
       return logicalExitCode;
     } catch (IOException exception) {
       GridGrindProblemDetail.Problem problem =
           CliResponseTransportSupport.writeResponseProblem(exception, targetPath);
-      if (response instanceof GridGrindResponse.Failure failure) {
+      if (response instanceof WorkbookResult.Failure failure) {
         problem =
             GridGrindProblems.appendCause(
                 problem, GridGrindProblems.problemCause(failure.problem()));
       }
-      GridGrindResponse.Failure fallbackResponse =
-          GridGrindResponses.failure(
+      WorkbookResult.Failure fallbackResponse =
+          WorkbookResults.failure(
               GridGrindProtocolVersion.current(), response.persistence(), problem);
-      CliDiagnostic stderrDiagnostic =
-          CliResponseTransportSupport.diagnosticWithTransport(
-              CliDiagnostics.problemDiagnostic(1, "execute", fallbackResponse.problem()),
-              CliTransport.standardOutput());
-      CliStdoutFallbackSupport.write(
-          stderr,
+      writeStdoutFallback(
           stdout,
-          stderrDiagnostic,
-          CliStdoutFallbackSupport.redacted(
-              CliStdoutFallbackSupport.response(fallbackResponse, prettyJson),
+          stderr,
+          CliResponseTransportSupport.redact(
               redactor,
+              GridGrindJsonOutput.writeWorkbookResultBytes(fallbackResponse, prettyJson),
               prettyJson),
-          redactor,
-          prettyJson);
+          targetPath);
       return 1;
     }
   }
@@ -323,44 +275,27 @@ final class CliResponseWriter {
               redactor,
               GridGrindJsonOutput.writeRequestDoctorReportBytes(report, prettyJson),
               prettyJson));
-      if (report.valid()) {
-        return exitCode;
-      }
-      GridGrindProblemDetail.Problem primaryProblem = report.primaryProblem().orElseThrow();
-      CliResponseTransportSupport.writeCliDiagnosticToStderr(
-          stderr,
-          CliResponseTransportSupport.diagnosticWithTransport(
-              CliDiagnostics.problemDiagnostic(exitCode, "doctor-request", primaryProblem),
-              CliTransport.responseFile(targetPath.toString())),
-          redactor,
-          prettyJson);
       return exitCode;
     } catch (IOException exception) {
-      GridGrindProblemDetail.Problem problem =
-          CliResponseTransportSupport.writeResponseProblem(exception, targetPath);
-      if (report.primaryProblem().isPresent()) {
-        problem =
-            GridGrindProblems.appendCause(
-                problem, GridGrindProblems.problemCause(report.primaryProblem().orElseThrow()));
-      }
-      RequestDoctorReport fallbackReport =
-          RequestDoctorReport.invalid(report.summary(), report.warnings(), problem);
-      CliDiagnostic stderrDiagnostic =
-          CliResponseTransportSupport.diagnosticWithTransport(
-              CliDiagnostics.problemDiagnostic(
-                  1, "doctor-request", fallbackReport.primaryProblem().orElseThrow()),
-              CliTransport.standardOutput());
-      CliStdoutFallbackSupport.write(
-          stderr,
+      CommandError fallback =
+          CommandErrors.responseWriteFailure("doctor-request", targetPath, exception);
+      writeStdoutFallback(
           stdout,
-          stderrDiagnostic,
-          CliStdoutFallbackSupport.redacted(
-              CliStdoutFallbackSupport.doctorReport(fallbackReport, prettyJson),
-              redactor,
-              prettyJson),
-          redactor,
-          prettyJson);
+          stderr,
+          CliResponseTransportSupport.commandErrorBytes(fallback, redactor, prettyJson),
+          targetPath);
       return 1;
+    }
+  }
+
+  private static void writeStdoutFallback(
+      OutputStream stdout, OutputStream stderr, byte[] payload, Path responsePath) throws IOException {
+    CliResponseTransportSupport.writePayload(stdout, payload);
+    try {
+      CliResponseTransportSupport.writeTransportNoticeToStderr(
+          stderr, CliTransportNotice.stdoutFallback(responsePath.toString()));
+    } catch (IOException ignored) {
+      // The recovered stdout payload is primary once the requested response file cannot be used.
     }
   }
 }

@@ -3,7 +3,7 @@ package dev.erst.gridgrind.engine.runtime;
 import dev.erst.gridgrind.contract.dto.ExecutionModeInput;
 import dev.erst.gridgrind.contract.dto.GridGrindProblemDetail;
 import dev.erst.gridgrind.contract.dto.GridGrindProtocolVersion;
-import dev.erst.gridgrind.contract.dto.GridGrindResponse;
+import dev.erst.gridgrind.contract.dto.WorkbookResult;
 import dev.erst.gridgrind.contract.dto.RequestWarning;
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
@@ -33,7 +33,7 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
 
   /** Executes one complete GridGrind request with optional live verbose journal emission. */
   @Override
-  public GridGrindResponse execute(
+  public WorkbookResult execute(
       WorkbookPlan request, ExecutionInputBindings bindings, ExecutionJournalSink sink) {
     WorkbookPlan authoredRequest = Objects.requireNonNull(request, "request must not be null");
     ExecutionInputBindings executionBindings =

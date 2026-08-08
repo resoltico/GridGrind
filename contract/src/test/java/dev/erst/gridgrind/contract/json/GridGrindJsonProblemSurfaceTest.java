@@ -32,7 +32,7 @@ class GridGrindJsonProblemSurfaceTest {
             .getMessage());
     assertEquals(
         "bytes must not be null",
-        assertThrows(NullPointerException.class, () -> GridGrindJson.readResponse((byte[]) null))
+        assertThrows(NullPointerException.class, () -> GridGrindJson.readWorkbookResult((byte[]) null))
             .getMessage());
     assertEquals(
         "catalog must not be null",
@@ -111,7 +111,7 @@ class GridGrindJsonProblemSurfaceTest {
     InvalidJsonException invalidResponse =
         assertThrows(
             InvalidJsonException.class,
-            () -> GridGrindJson.readResponse("{".getBytes(StandardCharsets.UTF_8)));
+            () -> GridGrindJson.readWorkbookResult("{".getBytes(StandardCharsets.UTF_8)));
     InvalidRequestShapeException invalidCatalog =
         assertThrows(
             InvalidRequestShapeException.class,

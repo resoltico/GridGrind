@@ -14,7 +14,7 @@ import dev.erst.gridgrind.contract.dto.FormulaMissingWorkbookPolicy;
 import dev.erst.gridgrind.contract.dto.FormulaUdfFunctionInput;
 import dev.erst.gridgrind.contract.dto.FormulaUdfToolpackInput;
 import dev.erst.gridgrind.contract.dto.GridGrindProblemCode;
-import dev.erst.gridgrind.contract.dto.GridGrindResponse;
+import dev.erst.gridgrind.contract.dto.WorkbookResult;
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
 import dev.erst.gridgrind.contract.query.*;
 import dev.erst.gridgrind.contract.query.SheetInspectionResult;
@@ -38,9 +38,9 @@ class FormulaEnvironmentRequestExecutorTest {
   void evaluatesExternalWorkbookReferencesThroughFormulaEnvironment() throws Exception {
     ExternalFormulaScenario scenario = createExternalFormulaScenario(true);
 
-    GridGrindResponse.Success success =
+    WorkbookResult.Success success =
         assertInstanceOf(
-            GridGrindResponse.Success.class,
+            WorkbookResult.Success.class,
             ExecutionContextFixtureSupport.execute(
                 new DefaultGridGrindRequestExecutor(),
                 request(
@@ -79,9 +79,9 @@ class FormulaEnvironmentRequestExecutorTest {
   void usesCachedFormulaValueWhenMissingExternalWorkbookPolicyAllowsIt() throws Exception {
     ExternalFormulaScenario scenario = createExternalFormulaScenario(true);
 
-    GridGrindResponse.Success success =
+    WorkbookResult.Success success =
         assertInstanceOf(
-            GridGrindResponse.Success.class,
+            WorkbookResult.Success.class,
             ExecutionContextFixtureSupport.execute(
                 new DefaultGridGrindRequestExecutor(),
                 request(
@@ -116,9 +116,9 @@ class FormulaEnvironmentRequestExecutorTest {
   void evaluatesRegisteredTemplateBackedUserDefinedFunctions() throws Exception {
     Path workbookPath = createUdfFormulaWorkbook();
 
-    GridGrindResponse.Success success =
+    WorkbookResult.Success success =
         assertInstanceOf(
-            GridGrindResponse.Success.class,
+            WorkbookResult.Success.class,
             ExecutionContextFixtureSupport.execute(
                 new DefaultGridGrindRequestExecutor(),
                 request(
@@ -157,9 +157,9 @@ class FormulaEnvironmentRequestExecutorTest {
   void reportsUnregisteredUserDefinedFunctionsPrecisely() throws Exception {
     Path workbookPath = createUdfFormulaWorkbook();
 
-    GridGrindResponse.Failure failure =
+    WorkbookResult.Failure failure =
         assertInstanceOf(
-            GridGrindResponse.Failure.class,
+            WorkbookResult.Failure.class,
             ExecutionContextFixtureSupport.execute(
                 new DefaultGridGrindRequestExecutor(),
                 request(
@@ -181,9 +181,9 @@ class FormulaEnvironmentRequestExecutorTest {
     Path workbookPath = Files.createTempFile("gridgrind-targeted-protocol-", ".xlsx");
     Files.deleteIfExists(workbookPath);
 
-    GridGrindResponse.Success success =
+    WorkbookResult.Success success =
         assertInstanceOf(
-            GridGrindResponse.Success.class,
+            WorkbookResult.Success.class,
             ExecutionContextFixtureSupport.execute(
                 new DefaultGridGrindRequestExecutor(),
                 request(
@@ -221,9 +221,9 @@ class FormulaEnvironmentRequestExecutorTest {
     Path workbookPath = Files.createTempFile("gridgrind-cleared-formula-caches-", ".xlsx");
     Files.deleteIfExists(workbookPath);
 
-    GridGrindResponse.Success seeded =
+    WorkbookResult.Success seeded =
         assertInstanceOf(
-            GridGrindResponse.Success.class,
+            WorkbookResult.Success.class,
             ExecutionContextFixtureSupport.execute(
                 new DefaultGridGrindRequestExecutor(),
                 request(
@@ -248,9 +248,9 @@ class FormulaEnvironmentRequestExecutorTest {
                     inspections())));
     assertEquals(workbookPath.toAbsolutePath().toString(), savedPath(seeded));
 
-    GridGrindResponse.Success success =
+    WorkbookResult.Success success =
         assertInstanceOf(
-            GridGrindResponse.Success.class,
+            WorkbookResult.Success.class,
             ExecutionContextFixtureSupport.execute(
                 new DefaultGridGrindRequestExecutor(),
                 request(
@@ -266,7 +266,7 @@ class FormulaEnvironmentRequestExecutorTest {
     assertNull(cachedFormulaRawValue(workbookPath, "Budget", "C1"));
   }
 
-  private static String savedPath(GridGrindResponse.Success success) {
+  private static String savedPath(WorkbookResult.Success success) {
     return DefaultGridGrindRequestExecutorTestSupport.writtenExecutionPath(success.persistence());
   }
 

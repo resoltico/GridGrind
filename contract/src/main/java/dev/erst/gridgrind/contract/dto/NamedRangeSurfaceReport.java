@@ -22,6 +22,6 @@ public record NamedRangeSurfaceReport(
     if (formulaBackedCount < 0) {
       throw new IllegalArgumentException("formulaBackedCount must not be negative");
     }
-    namedRanges = GridGrindResponseSupport.copyValues(namedRanges, "namedRanges");
+    namedRanges = WorkbookResultSupport.copyValues(namedRanges, "namedRanges");
   }
 }

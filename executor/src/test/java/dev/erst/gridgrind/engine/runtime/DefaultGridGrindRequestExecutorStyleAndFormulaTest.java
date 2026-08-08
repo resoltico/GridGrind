@@ -7,7 +7,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import dev.erst.gridgrind.contract.action.CellMutationAction;
 import dev.erst.gridgrind.contract.action.WorkbookMutationAction;
 import dev.erst.gridgrind.contract.dto.*;
-import dev.erst.gridgrind.contract.dto.GridGrindResponsePersistence;
+import dev.erst.gridgrind.contract.dto.WorkbookResultPersistence;
 import dev.erst.gridgrind.contract.query.*;
 import dev.erst.gridgrind.contract.selector.*;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
@@ -36,7 +36,7 @@ class DefaultGridGrindRequestExecutorStyleAndFormulaTest
     Path workbookPath = Files.createTempFile("gridgrind-range-style-", ".xlsx");
     Files.deleteIfExists(workbookPath);
 
-    GridGrindResponse.Success success =
+    WorkbookResult.Success success =
         success(
             ExecutionContextFixtureSupport.execute(
                 new DefaultGridGrindRequestExecutor(),
@@ -126,7 +126,7 @@ class DefaultGridGrindRequestExecutorStyleAndFormulaTest
     Path workbookPath = Files.createTempFile("gridgrind-format-depth-", ".xlsx");
     Files.deleteIfExists(workbookPath);
 
-    GridGrindResponse.Success success =
+    WorkbookResult.Success success =
         success(
             ExecutionContextFixtureSupport.execute(
                 new DefaultGridGrindRequestExecutor(),
@@ -222,7 +222,7 @@ class DefaultGridGrindRequestExecutorStyleAndFormulaTest
     Path workbookPath = Files.createTempFile("gridgrind-advanced-style-", ".xlsx");
     Files.deleteIfExists(workbookPath);
 
-    GridGrindResponse.Success success =
+    WorkbookResult.Success success =
         success(
             ExecutionContextFixtureSupport.execute(
                 new DefaultGridGrindRequestExecutor(),
@@ -317,7 +317,7 @@ class DefaultGridGrindRequestExecutorStyleAndFormulaTest
   void preservesDistinctLinearAndPathGradientStylesInSameRequest() throws IOException {
     Path workbookPath = Files.createTempFile("gridgrind-distinct-gradients-", ".xlsx");
     assertDoesNotThrow(() -> Files.deleteIfExists(workbookPath));
-    GridGrindResponse.Success success =
+    WorkbookResult.Success success =
         success(
             ExecutionContextFixtureSupport.execute(
                 new DefaultGridGrindRequestExecutor(),
@@ -405,7 +405,7 @@ class DefaultGridGrindRequestExecutorStyleAndFormulaTest
 
   @Test
   void producesErrorReportForCellsWithErrorValues() {
-    GridGrindResponse.Success success =
+    WorkbookResult.Success success =
         success(
             ExecutionContextFixtureSupport.execute(
                 new DefaultGridGrindRequestExecutor(),
@@ -513,7 +513,7 @@ class DefaultGridGrindRequestExecutorStyleAndFormulaTest
     String pathWithDotDot = subDir + "/../out.xlsx";
 
     try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
-      GridGrindResponsePersistence.PersistenceOutcome outcome =
+      WorkbookResultPersistence.PersistenceOutcome outcome =
           workbookSupport.persistWorkbook(
               workbook,
               new WorkbookPlan.WorkbookSource.New(),
@@ -521,8 +521,8 @@ class DefaultGridGrindRequestExecutorStyleAndFormulaTest
                   pathWithDotDot, WorkbookPlan.WorkbookPersistence.IfExists.REJECT),
               tempDir);
 
-      GridGrindResponsePersistence.PersistenceOutcome.SavedAs savedAs =
-          assertInstanceOf(GridGrindResponsePersistence.PersistenceOutcome.SavedAs.class, outcome);
+      WorkbookResultPersistence.PersistenceOutcome.SavedAs savedAs =
+          assertInstanceOf(WorkbookResultPersistence.PersistenceOutcome.SavedAs.class, outcome);
       assertEquals(pathWithDotDot, savedAs.requestedPath());
       assertEquals(tempDir.resolve("out.xlsx").toString(), writtenExecutionPath(savedAs));
     } finally {
@@ -550,7 +550,7 @@ class DefaultGridGrindRequestExecutorStyleAndFormulaTest
                 dev.erst.gridgrind.excel.stream.ExcelStreamingWorkbookWriter
                     ::markRecalculateOnOpen));
 
-    GridGrindResponse.Failure failure =
+    WorkbookResult.Failure failure =
         failure(
             ExecutionContextFixtureSupport.execute(
                 executor,
@@ -616,7 +616,7 @@ class DefaultGridGrindRequestExecutorStyleAndFormulaTest
 
   @Test
   void returnsStructuredFailureForAppendRowWithInvalidFormula() {
-    GridGrindResponse.Failure failure =
+    WorkbookResult.Failure failure =
         failure(
             ExecutionContextFixtureSupport.execute(
                 new DefaultGridGrindRequestExecutor(),

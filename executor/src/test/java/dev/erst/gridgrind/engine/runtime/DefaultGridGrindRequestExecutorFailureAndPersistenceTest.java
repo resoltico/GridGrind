@@ -39,7 +39,7 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
     extends DefaultGridGrindRequestExecutorTestSupport {
   @Test
   void returnsTableReadResultsForByNameSelectionAndNoneStyle() {
-    GridGrindResponse response =
+    WorkbookResult response =
         ExecutionContextFixtureSupport.execute(
             new DefaultGridGrindRequestExecutor(),
             request(
@@ -97,7 +97,7 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
       }
     }
 
-    GridGrindResponse response =
+    WorkbookResult response =
         ExecutionContextFixtureSupport.execute(
             new DefaultGridGrindRequestExecutor(),
             request(
@@ -125,7 +125,7 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
     Path linkedFile = linkedFileDirectory.resolve("memo final.pdf");
     Files.writeString(linkedFile, "seed");
 
-    GridGrindResponse response =
+    WorkbookResult response =
         ExecutionContextFixtureSupport.execute(
             new DefaultGridGrindRequestExecutor(),
             request(
@@ -151,7 +151,7 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
                     new CellSelector.ByAddresses("Budget", List.of("A1")),
                     new SheetIntrospectionQuery.GetHyperlinks())));
 
-    GridGrindResponse.Success success = success(response);
+    WorkbookResult.Success success = success(response);
     dev.erst.gridgrind.contract.dto.CellReport.TextReport linkedCell =
         cast(
             dev.erst.gridgrind.contract.dto.CellReport.TextReport.class,
@@ -181,7 +181,7 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
 
   @Test
   void returnsFactualAndAnalysisReadResults() {
-    GridGrindResponse response =
+    WorkbookResult response =
         ExecutionContextFixtureSupport.execute(
             new DefaultGridGrindRequestExecutor(),
             request(
@@ -231,7 +231,7 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
                     new SheetSelector.All(),
                     new InspectionAnalysisQuery.AnalyzeFormulaHealth())));
 
-    GridGrindResponse.Success success = success(response);
+    WorkbookResult.Success success = success(response);
     FormulaSurfaceReport formula =
         read(success, "formula", WorkbookSurfaceInspectionResult.FormulaSurfaceResult.class)
             .surface();
@@ -269,7 +269,7 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
 
   @Test
   void returnsStructuredFailureWhenMoveSheetTargetsMissingSheet() {
-    GridGrindResponse.Failure failure =
+    WorkbookResult.Failure failure =
         failure(
             ExecutionContextFixtureSupport.execute(
                 new DefaultGridGrindRequestExecutor(),
@@ -289,7 +289,7 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
 
   @Test
   void returnsStructuredFailureForConflictingRenameTarget() {
-    GridGrindResponse.Failure failure =
+    WorkbookResult.Failure failure =
         failure(
             ExecutionContextFixtureSupport.execute(
                 new DefaultGridGrindRequestExecutor(),
@@ -317,7 +317,7 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
 
   @Test
   void returnsStructuredFailureForInvalidMoveSheetIndex() {
-    GridGrindResponse.Failure failure =
+    WorkbookResult.Failure failure =
         failure(
             ExecutionContextFixtureSupport.execute(
                 new DefaultGridGrindRequestExecutor(),
@@ -355,7 +355,7 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
 
   @Test
   void returnsStructuredFailureForUnmergeCellsWithoutExactMatch() {
-    GridGrindResponse.Failure failure =
+    WorkbookResult.Failure failure =
         failure(
             ExecutionContextFixtureSupport.execute(
                 new DefaultGridGrindRequestExecutor(),
@@ -379,7 +379,7 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
 
   @Test
   void returnsStructuredFailureWhenSetSheetPaneTargetsMissingSheet() {
-    GridGrindResponse.Failure failure =
+    WorkbookResult.Failure failure =
         failure(
             ExecutionContextFixtureSupport.execute(
                 new DefaultGridGrindRequestExecutor(),
@@ -399,7 +399,7 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
 
   @Test
   void returnsStructuredFailureForMissingNamedRangeDuringRead() {
-    GridGrindResponse.Failure failure =
+    WorkbookResult.Failure failure =
         failure(
             ExecutionContextFixtureSupport.execute(
                 new DefaultGridGrindRequestExecutor(),
@@ -446,7 +446,7 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
       }
     }
 
-    GridGrindResponse.Success success =
+    WorkbookResult.Success success =
         success(
             ExecutionContextFixtureSupport.execute(
                 new DefaultGridGrindRequestExecutor(),
@@ -483,7 +483,7 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
     Path workingDirectory = Files.createTempDirectory("gridgrind-missing-workbook-root-");
     DefaultGridGrindRequestExecutor executor = new DefaultGridGrindRequestExecutor();
 
-    GridGrindResponse.Failure failure =
+    WorkbookResult.Failure failure =
         failure(
             executor.execute(
                 request(
@@ -503,7 +503,7 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
 
   @Test
   void returnsStructuredFailureWithOperationContext() {
-    GridGrindResponse.Failure failure =
+    WorkbookResult.Failure failure =
         failure(
             ExecutionContextFixtureSupport.execute(
                 new DefaultGridGrindRequestExecutor(),
@@ -524,7 +524,7 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
 
   @Test
   void returnsStructuredFailureWithReadContext() {
-    GridGrindResponse.Failure failure =
+    WorkbookResult.Failure failure =
         failure(
             ExecutionContextFixtureSupport.execute(
                 new DefaultGridGrindRequestExecutor(),
@@ -547,7 +547,7 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
 
   @Test
   void returnsStructuredFailureWhenReadTargetsMissingSheet() {
-    GridGrindResponse.Failure failure =
+    WorkbookResult.Failure failure =
         failure(
             ExecutionContextFixtureSupport.execute(
                 new DefaultGridGrindRequestExecutor(),
@@ -569,7 +569,7 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
 
   @Test
   void returnsStructuredFailureWhenDeletingLastSheet() {
-    GridGrindResponse.Failure failure =
+    WorkbookResult.Failure failure =
         failure(
             ExecutionContextFixtureSupport.execute(
                 new DefaultGridGrindRequestExecutor(),
@@ -593,7 +593,7 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
 
   @Test
   void returnsStructuredFailureWhenDeletingLastVisibleSheet() {
-    GridGrindResponse.Failure failure =
+    WorkbookResult.Failure failure =
         failure(
             ExecutionContextFixtureSupport.execute(
                 new DefaultGridGrindRequestExecutor(),
@@ -628,7 +628,7 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
     Path parentFile = Files.createTempFile("gridgrind-persist-target-", ".tmp");
     Path workbookPath = parentFile.resolve("book.xlsx");
 
-    GridGrindResponse.Failure failure =
+    WorkbookResult.Failure failure =
         failure(
             ExecutionContextFixtureSupport.execute(
                 new DefaultGridGrindRequestExecutor(),
@@ -643,12 +643,12 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
 
     assertEquals(GridGrindProblemCode.IO_ERROR, failure.problem().code());
     assertEquals("PERSIST_WORKBOOK", failure.problem().context().stage());
-    GridGrindResponsePersistence.PersistenceOutcome.SavedAs persistence =
+    WorkbookResultPersistence.PersistenceOutcome.SavedAs persistence =
         assertInstanceOf(
-            GridGrindResponsePersistence.PersistenceOutcome.SavedAs.class, failure.persistence());
+            WorkbookResultPersistence.PersistenceOutcome.SavedAs.class, failure.persistence());
     assertEquals(workbookPath.toString(), persistence.requestedPath());
     assertInstanceOf(
-        GridGrindResponsePersistence.WriteResult.NotWritten.class, persistence.write());
+        WorkbookResultPersistence.WriteResult.NotWritten.class, persistence.write());
     assertEquals(
         java.util.Optional.of(workbookPath.toAbsolutePath().toString()),
         persistWorkbookContext(failure).persistencePath());
@@ -660,7 +660,7 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
     Path workbookPath = workspace.resolve("existing-output.xlsx");
     Files.writeString(workbookPath, "occupied");
 
-    GridGrindResponse.Failure failure =
+    WorkbookResult.Failure failure =
         failure(
             ExecutionContextFixtureSupport.execute(
                 new DefaultGridGrindRequestExecutor(),
@@ -675,12 +675,12 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
 
     assertEquals(GridGrindProblemCode.IO_ERROR, failure.problem().code());
     assertEquals("PERSIST_WORKBOOK", failure.problem().context().stage());
-    GridGrindResponsePersistence.PersistenceOutcome.SavedAs persistence =
+    WorkbookResultPersistence.PersistenceOutcome.SavedAs persistence =
         assertInstanceOf(
-            GridGrindResponsePersistence.PersistenceOutcome.SavedAs.class, failure.persistence());
+            WorkbookResultPersistence.PersistenceOutcome.SavedAs.class, failure.persistence());
     assertEquals(workbookPath.toString(), persistence.requestedPath());
     assertInstanceOf(
-        GridGrindResponsePersistence.WriteResult.NotWritten.class, persistence.write());
+        WorkbookResultPersistence.WriteResult.NotWritten.class, persistence.write());
     assertEquals(
         "Could not write workbook to "
             + workbookPath.toAbsolutePath()
@@ -695,7 +695,7 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
     Path workbookPath = workspace.resolve("existing-output.xlsx");
     Files.writeString(workbookPath, "occupied");
 
-    GridGrindResponse.Success success =
+    WorkbookResult.Success success =
         success(
             ExecutionContextFixtureSupport.execute(
                 new DefaultGridGrindRequestExecutor(),
@@ -708,9 +708,9 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
                             new SheetSelector.ByName("Budget"),
                             new WorkbookMutationAction.EnsureSheet())))));
 
-    GridGrindResponsePersistence.PersistenceOutcome.SavedAs persistence =
+    WorkbookResultPersistence.PersistenceOutcome.SavedAs persistence =
         assertInstanceOf(
-            GridGrindResponsePersistence.PersistenceOutcome.SavedAs.class, success.persistence());
+            WorkbookResultPersistence.PersistenceOutcome.SavedAs.class, success.persistence());
 
     assertEquals(workbookPath.toString(), persistence.requestedPath());
     assertEquals(workbookPath.toAbsolutePath().toString(), writtenExecutionPath(persistence));
@@ -728,7 +728,7 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
     Path workbookPath = Files.createTempFile("gridgrind-analysis-failure-", ".xlsx");
     Files.deleteIfExists(workbookPath);
 
-    GridGrindResponse.Failure failure =
+    WorkbookResult.Failure failure =
         failure(
             ExecutionContextFixtureSupport.execute(
                 new DefaultGridGrindRequestExecutor(),
@@ -776,7 +776,7 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
 
   @Test
   void returnsStructuredFailureForInvalidOverwriteUsage() {
-    GridGrindResponse.Failure failure =
+    WorkbookResult.Failure failure =
         failure(
             ExecutionContextFixtureSupport.execute(
                 new DefaultGridGrindRequestExecutor(),
@@ -784,21 +784,21 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
                     new WorkbookPlan.WorkbookSource.New(),
                     new WorkbookPlan.WorkbookPersistence.Overwrite(),
                     List.of())));
-    GridGrindResponsePersistence.PersistenceOutcome.Overwritten persistence =
+    WorkbookResultPersistence.PersistenceOutcome.Overwritten persistence =
         assertInstanceOf(
-            GridGrindResponsePersistence.PersistenceOutcome.Overwritten.class,
+            WorkbookResultPersistence.PersistenceOutcome.Overwritten.class,
             failure.persistence());
 
     assertEquals(GridGrindProblemCode.INVALID_REQUEST, failure.problem().code());
     assertEquals("VALIDATE_REQUEST", failure.problem().context().stage());
     assertEquals(java.util.Optional.empty(), persistence.sourcePath());
     assertInstanceOf(
-        GridGrindResponsePersistence.WriteResult.NotWritten.class, persistence.write());
+        WorkbookResultPersistence.WriteResult.NotWritten.class, persistence.write());
   }
 
   @Test
   void returnsOnlyTheFirstIndependentSemanticValidationProblemDuringExecution() {
-    GridGrindResponse.Failure failure =
+    WorkbookResult.Failure failure =
         failure(
             execute(
                 new DefaultGridGrindRequestExecutor(),
@@ -827,7 +827,7 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
 
   @Test
   void returnsFormulaErrorForInvalidFormulaOperations() {
-    GridGrindResponse.Failure failure =
+    WorkbookResult.Failure failure =
         failure(
             ExecutionContextFixtureSupport.execute(
                 new DefaultGridGrindRequestExecutor(),
@@ -855,7 +855,7 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
 
   @Test
   void returnsFormulaErrorForMalformedParserStateFormulaOperations() {
-    GridGrindResponse.Failure failure =
+    WorkbookResult.Failure failure =
         failure(
             ExecutionContextFixtureSupport.execute(
                 new DefaultGridGrindRequestExecutor(),
@@ -890,7 +890,7 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
   void returnsInvalidFormulaForLambdaAndLetFormulaOperations() {
     DefaultGridGrindRequestExecutor executor = new DefaultGridGrindRequestExecutor();
 
-    GridGrindResponse.Failure lambdaFailure =
+    WorkbookResult.Failure lambdaFailure =
         failure(
             ExecutionContextFixtureSupport.execute(
                 executor,
@@ -904,7 +904,7 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
                         mutate(
                             new CellSelector.ByAddress("Data", "A1"),
                             new CellMutationAction.SetCell(formulaCell("LAMBDA(x,x*2)(5)")))))));
-    GridGrindResponse.Failure letFailure =
+    WorkbookResult.Failure letFailure =
         failure(
             ExecutionContextFixtureSupport.execute(
                 executor,
@@ -938,7 +938,7 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
 
   @Test
   void surfacesWorkbookFormulaLocationWhenEvaluationFails() {
-    GridGrindResponse.Failure failure =
+    WorkbookResult.Failure failure =
         failure(
             ExecutionContextFixtureSupport.execute(
                 new DefaultGridGrindRequestExecutor(),
@@ -1045,7 +1045,7 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
 
   @Test
   void returnsCalculationFailureBeforeObservationStepsWhenBoundaryPreflightFails() {
-    GridGrindResponse.Failure failure =
+    WorkbookResult.Failure failure =
         failure(
             ExecutionContextFixtureSupport.execute(
                 new DefaultGridGrindRequestExecutor(),
@@ -1089,7 +1089,7 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
                 dev.erst.gridgrind.excel.stream.ExcelStreamingWorkbookWriter
                     ::markRecalculateOnOpen));
 
-    GridGrindResponse.Failure failure =
+    WorkbookResult.Failure failure =
         failure(
             ExecutionContextFixtureSupport.execute(
                 executor,
@@ -1120,7 +1120,7 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
                 dev.erst.gridgrind.excel.stream.ExcelStreamingWorkbookWriter
                     ::markRecalculateOnOpen));
 
-    GridGrindResponse.Failure failure =
+    WorkbookResult.Failure failure =
         failure(
             ExecutionContextFixtureSupport.execute(
                 executor,

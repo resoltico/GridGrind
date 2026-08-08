@@ -9,7 +9,7 @@ import dev.erst.gridgrind.contract.action.DrawingMutationAction;
 import dev.erst.gridgrind.contract.action.StructuredMutationAction;
 import dev.erst.gridgrind.contract.action.WorkbookMutationAction;
 import dev.erst.gridgrind.contract.dto.*;
-import dev.erst.gridgrind.contract.dto.GridGrindResponse;
+import dev.erst.gridgrind.contract.dto.WorkbookResult;
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
 import dev.erst.gridgrind.contract.json.GridGrindJson;
 import dev.erst.gridgrind.contract.json.GridGrindJsonOutput;
@@ -206,13 +206,13 @@ public final class XlsxParityScenarios {
           Path scenarioDirectory = Files.createDirectories(temporaryRoot.resolve(CORE_WORKBOOK));
           Path workbookPath = scenarioDirectory.resolve("core.xlsx");
           WorkbookPlan request = coreWorkbookRequest(workbookPath);
-          GridGrindResponse response =
+          WorkbookResult response =
               new DefaultGridGrindRequestExecutor()
                   .execute(
                       request,
                       XlsxParitySupport.bindings(scenarioDirectory),
                       ExecutionJournalSink.NOOP);
-          if (!(response instanceof GridGrindResponse.Success)) {
+          if (!(response instanceof WorkbookResult.Success)) {
             throw new IllegalStateException(
                 "Core parity workbook request must succeed: " + response);
           }
@@ -517,13 +517,13 @@ public final class XlsxParityScenarios {
           Path scenarioDirectory = Files.createDirectories(temporaryRoot.resolve(CHART_AUTHORING));
           Path workbookPath = scenarioDirectory.resolve("chart-authoring.xlsx");
 
-          GridGrindResponse response =
+          WorkbookResult response =
               new DefaultGridGrindRequestExecutor()
                   .execute(
                       chartAuthoringRequest(workbookPath),
                       XlsxParitySupport.bindings(scenarioDirectory),
                       ExecutionJournalSink.NOOP);
-          if (!(response instanceof GridGrindResponse.Success)) {
+          if (!(response instanceof WorkbookResult.Success)) {
             throw new IllegalStateException(
                 "Chart authoring parity workbook request must succeed: " + response);
           }
@@ -632,13 +632,13 @@ public final class XlsxParityScenarios {
           Path scenarioDirectory = Files.createDirectories(temporaryRoot.resolve(PIVOT_AUTHORING));
           Path workbookPath = scenarioDirectory.resolve("pivot-authoring.xlsx");
 
-          GridGrindResponse response =
+          WorkbookResult response =
               new DefaultGridGrindRequestExecutor()
                   .execute(
                       pivotAuthoringRequest(workbookPath),
                       XlsxParitySupport.bindings(scenarioDirectory),
                       ExecutionJournalSink.NOOP);
-          if (!(response instanceof GridGrindResponse.Success)) {
+          if (!(response instanceof WorkbookResult.Success)) {
             throw new IllegalStateException(
                 "Pivot authoring parity workbook request must succeed: " + response);
           }
@@ -688,13 +688,13 @@ public final class XlsxParityScenarios {
           Path scenarioDirectory =
               Files.createDirectories(temporaryRoot.resolve(DRAWING_AUTHORING));
           Path workbookPath = scenarioDirectory.resolve("drawing-authoring.xlsx");
-          GridGrindResponse response =
+          WorkbookResult response =
               new DefaultGridGrindRequestExecutor()
                   .execute(
                       drawingAuthoringRequest(workbookPath),
                       XlsxParitySupport.bindings(scenarioDirectory),
                       ExecutionJournalSink.NOOP);
-          if (!(response instanceof GridGrindResponse.Success)) {
+          if (!(response instanceof WorkbookResult.Success)) {
             throw new IllegalStateException(
                 "GridGrind drawing authoring parity workbook request must succeed: " + response);
           }

@@ -24,7 +24,7 @@ import dev.erst.gridgrind.contract.dto.CellInput;
 import dev.erst.gridgrind.contract.dto.CellProtectionReport;
 import dev.erst.gridgrind.contract.dto.ExecutionModeInput;
 import dev.erst.gridgrind.contract.dto.FontHeightReport;
-import dev.erst.gridgrind.contract.dto.GridGrindResponse;
+import dev.erst.gridgrind.contract.dto.WorkbookResult;
 import dev.erst.gridgrind.contract.dto.NamedRangeScope;
 import dev.erst.gridgrind.contract.dto.NamedRangeTarget;
 import dev.erst.gridgrind.contract.dto.TableInput;
@@ -135,7 +135,7 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
                 List.of(),
                 List.of())));
 
-    GridGrindResponse.Success inspected =
+    WorkbookResult.Success inspected =
         success(
             ExecutionContextFixtureSupport.execute(
                 executor,
@@ -205,7 +205,7 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
             dev.erst.gridgrind.contract.dto.CellReport.FormulaReport.class, cells.cells().get(5));
     AnalysisFindingReport firstFinding = formulaHealth.analysis().findings().getFirst();
 
-    GridGrindResponse.Success asserted =
+    WorkbookResult.Success asserted =
         success(
             ExecutionContextFixtureSupport.execute(
                 executor,
@@ -459,7 +459,7 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
                 List.of(),
                 List.of())));
 
-    GridGrindResponse.Success inspected =
+    WorkbookResult.Success inspected =
         success(
             ExecutionContextFixtureSupport.execute(
                 executor,
@@ -514,7 +514,7 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
         inspection(inspected, "formulaHealth", WorkbookAnalysisResult.FormulaHealthResult.class);
     AnalysisFindingReport firstFinding = formulaHealth.analysis().findings().getFirst();
 
-    GridGrindResponse.Failure presentMissingSheet =
+    WorkbookResult.Failure presentMissingSheet =
         assertionFailure(
             executor,
             workbookPath,
@@ -534,7 +534,7 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
                     .getFirst())
             .sheetNames());
 
-    GridGrindResponse.Failure absentPresentSheet =
+    WorkbookResult.Failure absentPresentSheet =
         assertionFailure(
             executor,
             workbookPath,
@@ -543,7 +543,7 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
             new PresenceAssertion.SheetAbsent());
     assertTrue(absentPresentSheet.problem().message().contains("EXPECT_SHEET_ABSENT"));
 
-    GridGrindResponse.Failure presentMissing =
+    WorkbookResult.Failure presentMissing =
         assertionFailure(
             executor,
             workbookPath,
@@ -558,7 +558,7 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
                 presentMissing.problem().assertionFailure().orElseThrow().observations().getFirst())
             .namedRanges());
 
-    GridGrindResponse.Failure absentTable =
+    WorkbookResult.Failure absentTable =
         assertionFailure(
             executor,
             workbookPath,
@@ -567,7 +567,7 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
             new PresenceAssertion.TableAbsent());
     assertTrue(absentTable.problem().message().contains("EXPECT_TABLE_ABSENT"));
 
-    GridGrindResponse.Failure styleMismatch =
+    WorkbookResult.Failure styleMismatch =
         assertionFailure(
             executor,
             workbookPath,
@@ -583,7 +583,7 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
                     style(owner).protection())));
     assertTrue(styleMismatch.problem().message().contains("EXPECT_CELL_STYLE"));
 
-    GridGrindResponse.Failure formulaTextMismatch =
+    WorkbookResult.Failure formulaTextMismatch =
         assertionFailure(
             executor,
             workbookPath,
@@ -593,7 +593,7 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
     assertTrue(formulaTextMismatch.problem().message().contains("EXPECT_FORMULA_TEXT"));
 
     WorkbookProtectionReport expectedProtection = protection.protection();
-    GridGrindResponse.Failure protectionMismatch =
+    WorkbookResult.Failure protectionMismatch =
         assertionFailure(
             executor,
             workbookPath,
@@ -609,7 +609,7 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
     assertTrue(protectionMismatch.problem().message().contains("EXPECT_WORKBOOK_PROTECTION"));
 
     SheetSummaryReport expectedSheet = sheet.sheet();
-    GridGrindResponse.Failure sheetMismatch =
+    WorkbookResult.Failure sheetMismatch =
         assertionFailure(
             executor,
             workbookPath,
@@ -625,7 +625,7 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
                     expectedSheet.lastColumnIndex())));
     assertTrue(sheetMismatch.problem().message().contains("EXPECT_SHEET_STRUCTURE"));
 
-    GridGrindResponse.Failure namedRangeMismatch =
+    WorkbookResult.Failure namedRangeMismatch =
         assertionFailure(
             executor,
             workbookPath,
@@ -645,7 +645,7 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
                     .getFirst())
             .namedRanges());
 
-    GridGrindResponse.Failure tableMismatch =
+    WorkbookResult.Failure tableMismatch =
         assertionFailure(
             executor,
             workbookPath,
@@ -660,7 +660,7 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
                 tableMismatch.problem().assertionFailure().orElseThrow().observations().getFirst())
             .tables());
 
-    GridGrindResponse.Failure severityMismatch =
+    WorkbookResult.Failure severityMismatch =
         assertionFailure(
             executor,
             workbookPath,
@@ -670,7 +670,7 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
                 new InspectionAnalysisQuery.AnalyzeFormulaHealth(), AnalysisSeverity.WARNING));
     assertTrue(severityMismatch.problem().message().contains("EXPECT_ANALYSIS_MAX_SEVERITY"));
 
-    GridGrindResponse.Failure missingFinding =
+    WorkbookResult.Failure missingFinding =
         assertionFailure(
             executor,
             workbookPath,
@@ -683,7 +683,7 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
                 Optional.empty()));
     assertTrue(missingFinding.problem().message().contains("missing finding"));
 
-    GridGrindResponse.Failure unexpectedFinding =
+    WorkbookResult.Failure unexpectedFinding =
         assertionFailure(
             executor,
             workbookPath,
@@ -720,7 +720,7 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
                 List.of(),
                 List.of())));
 
-    GridGrindResponse.Failure formulaMismatch =
+    WorkbookResult.Failure formulaMismatch =
         failure(
             ExecutionContextFixtureSupport.execute(
                 executor,
@@ -736,7 +736,7 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
                     List.of())));
     assertTrue(formulaMismatch.problem().message().contains("EXPECT_FORMULA_TEXT"));
 
-    GridGrindResponse.Failure allOfFailure =
+    WorkbookResult.Failure allOfFailure =
         failure(
             ExecutionContextFixtureSupport.execute(
                 executor,
@@ -757,7 +757,7 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
                     List.of())));
     assertTrue(allOfFailure.problem().message().contains("ALL_OF failed"));
 
-    GridGrindResponse.Failure anyOfFailure =
+    WorkbookResult.Failure anyOfFailure =
         failure(
             ExecutionContextFixtureSupport.execute(
                 executor,
@@ -778,7 +778,7 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
                     List.of())));
     assertTrue(anyOfFailure.problem().message().contains("ANY_OF failed"));
 
-    GridGrindResponse.Failure notFailure =
+    WorkbookResult.Failure notFailure =
         failure(
             ExecutionContextFixtureSupport.execute(
                 executor,
@@ -803,7 +803,7 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
   void zeroMatchDisplayFormulaAndStyleAssertionsReturnStructuredProblems() {
     DefaultGridGrindRequestExecutor executor = new DefaultGridGrindRequestExecutor();
 
-    GridGrindResponse.Failure displayFailure =
+    WorkbookResult.Failure displayFailure =
         failure(
             ExecutionContextFixtureSupport.execute(
                 executor,
@@ -832,7 +832,7 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
                 displayFailure.problem().assertionFailure().orElseThrow().observations().getFirst())
             .cells());
 
-    GridGrindResponse.Failure formulaFailure =
+    WorkbookResult.Failure formulaFailure =
         failure(
             ExecutionContextFixtureSupport.execute(
                 executor,
@@ -855,7 +855,7 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
         "formula-missing-table-cell",
         formulaFailure.problem().assertionFailure().orElseThrow().stepId());
 
-    GridGrindResponse.Failure styleFailure =
+    WorkbookResult.Failure styleFailure =
         failure(
             ExecutionContextFixtureSupport.execute(
                 executor,
@@ -924,7 +924,7 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
             "pivots",
             WorkbookAssetInspectionResult.PivotTablesResult.class);
 
-    GridGrindResponse.Success asserted =
+    WorkbookResult.Success asserted =
         success(
             ExecutionContextFixtureSupport.execute(
                 executor,
@@ -948,7 +948,7 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
                     List.of())));
     assertEquals(3, asserted.assertions().size());
 
-    GridGrindResponse.Success pivotAssertions =
+    WorkbookResult.Success pivotAssertions =
         success(
             ExecutionContextFixtureSupport.execute(
                 executor,
@@ -972,7 +972,7 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
                     List.of())));
     assertEquals(3, pivotAssertions.assertions().size());
 
-    GridGrindResponse.Failure chartFactsMismatch =
+    WorkbookResult.Failure chartFactsMismatch =
         assertionFailure(
             executor,
             chartPath,
@@ -981,7 +981,7 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
             new WorkbookFactAssertion.ChartFacts(List.of()));
     assertTrue(chartFactsMismatch.problem().message().contains("EXPECT_CHART_FACTS"));
 
-    GridGrindResponse.Failure pivotFactsMismatch =
+    WorkbookResult.Failure pivotFactsMismatch =
         assertionFailure(
             executor,
             pivotPath,
@@ -1167,7 +1167,7 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
     DefaultGridGrindRequestExecutor executor = new DefaultGridGrindRequestExecutor();
     ExecutionStepSupport stepSupport = executionStepSupport();
 
-    GridGrindResponse.Success success =
+    WorkbookResult.Success success =
         success(
             ExecutionContextFixtureSupport.execute(
                 executor,
@@ -1203,7 +1203,7 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
             .map(dev.erst.gridgrind.contract.assertion.AssertionResult::stepId)
             .toList());
 
-    GridGrindResponse.Failure streamingAssertionFailure =
+    WorkbookResult.Failure streamingAssertionFailure =
         failure(
             ExecutionContextFixtureSupport.execute(
                 executor,
@@ -1502,7 +1502,7 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
         Files::createTempFile);
   }
 
-  private static GridGrindResponse.Failure assertionFailure(
+  private static WorkbookResult.Failure assertionFailure(
       DefaultGridGrindRequestExecutor executor,
       Path workbookPath,
       String stepId,

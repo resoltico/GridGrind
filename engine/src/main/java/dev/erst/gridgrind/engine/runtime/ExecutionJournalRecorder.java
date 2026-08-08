@@ -15,7 +15,6 @@ import org.jspecify.annotations.Nullable;
 
 /** Captures one structured execution journal while optionally streaming verbose events. */
 final class ExecutionJournalRecorder {
-  private final @Nullable String planId;
   private final ExecutionJournalLevel level;
   private final ExecutionJournal.SourceSummary source;
   private final ExecutionJournalSink sink;
@@ -32,11 +31,9 @@ final class ExecutionJournalRecorder {
   private ExecutionJournal.Phase close = ExecutionJournal.Phase.notStarted();
 
   private ExecutionJournalRecorder(
-      @Nullable String planId,
       ExecutionJournalLevel level,
       ExecutionJournal.SourceSummary source,
       ExecutionJournalSink sink) {
-    this.planId = planId;
     this.level = level;
     this.source = source;
     this.sink = sink;
@@ -47,7 +44,6 @@ final class ExecutionJournalRecorder {
   static ExecutionJournalRecorder start(
       WorkbookPlan request, ExecutionJournalSink sink, Path workingDirectory) {
     ExecutionJournalSink liveSink = ExecutionJournalSink.requireNonNull(sink);
-    String planId = request == null ? null : request.planId().orElse(null);
     ExecutionJournalLevel level =
         request == null ? ExecutionJournalLevel.SUMMARY : request.journalLevel();
     ExecutionJournal.SourceSummary source =
@@ -57,7 +53,7 @@ final class ExecutionJournalRecorder {
                 Optional.of(ExecutionRequestPaths.reqSourceType(request)),
                 Optional.ofNullable(
                     ExecutionRequestPaths.reqSourcePath(request, workingDirectory)));
-    return new ExecutionJournalRecorder(planId, level, source, liveSink);
+    return new ExecutionJournalRecorder(level, source, liveSink);
   }
 
   PhaseHandle beginValidation() {
@@ -121,7 +117,6 @@ final class ExecutionJournalRecorder {
       emit("PLAN", "succeeded", null, null);
     }
     return new ExecutionJournal(
-        Optional.ofNullable(planId),
         level,
         source,
         validation,
@@ -154,7 +149,6 @@ final class ExecutionJournalRecorder {
       emit("PLAN", "failed (" + failureCode + ")", failedStepIndex, failedStepId);
     }
     return new ExecutionJournal(
-        Optional.ofNullable(planId),
         level,
         source,
         validation,

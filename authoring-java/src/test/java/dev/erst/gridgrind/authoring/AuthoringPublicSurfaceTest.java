@@ -25,7 +25,7 @@ class AuthoringPublicSurfaceTest {
           "dev.erst.gridgrind.contract.dto.ChartInput",
           "dev.erst.gridgrind.contract.dto.CommentInput",
           "dev.erst.gridgrind.contract.dto.DataValidationInput",
-          "dev.erst.gridgrind.contract.dto.GridGrindResponse",
+          "dev.erst.gridgrind.contract.dto.WorkbookResult",
           "dev.erst.gridgrind.contract.dto.HyperlinkTarget",
           "dev.erst.gridgrind.contract.dto.NamedRangeScope",
           "dev.erst.gridgrind.contract.dto.NamedRangeTarget",

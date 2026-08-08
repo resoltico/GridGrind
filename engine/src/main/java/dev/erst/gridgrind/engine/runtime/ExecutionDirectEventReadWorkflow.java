@@ -3,8 +3,8 @@ package dev.erst.gridgrind.engine.runtime;
 import dev.erst.gridgrind.contract.dto.CalculationReport;
 import dev.erst.gridgrind.contract.dto.GridGrindProblemDetail;
 import dev.erst.gridgrind.contract.dto.GridGrindProtocolVersion;
-import dev.erst.gridgrind.contract.dto.GridGrindResponse;
-import dev.erst.gridgrind.contract.dto.GridGrindResponsePersistence;
+import dev.erst.gridgrind.contract.dto.WorkbookResult;
+import dev.erst.gridgrind.contract.dto.WorkbookResultPersistence;
 import dev.erst.gridgrind.contract.dto.RequestWarning;
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
 import dev.erst.gridgrind.contract.query.InspectionResult;
@@ -32,7 +32,7 @@ final class ExecutionDirectEventReadWorkflow {
         Objects.requireNonNull(tempFileFactory, "tempFileFactory must not be null");
   }
 
-  GridGrindResponse execute(
+  WorkbookResult execute(
       GridGrindProtocolVersion protocolVersion,
       WorkbookPlan request,
       List<RequestWarning> warnings,
@@ -105,11 +105,12 @@ final class ExecutionDirectEventReadWorkflow {
 
     return responseSupport.closeReadableWorkbook(
         materialized,
-        new GridGrindResponse.Success(
+        new WorkbookResult.Success(
             protocolVersion,
+            request.planId(),
             journal.buildSuccess(request.steps().size(), false),
             calculation,
-            new GridGrindResponsePersistence.PersistenceOutcome.NotSaved(),
+            new WorkbookResultPersistence.PersistenceOutcome.NotSaved(),
             warnings,
             List.of(),
             List.copyOf(inspections)),

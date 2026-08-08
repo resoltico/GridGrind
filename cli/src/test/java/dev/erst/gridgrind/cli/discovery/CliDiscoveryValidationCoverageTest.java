@@ -357,7 +357,7 @@ class CliDiscoveryValidationCoverageTest {
         assertThrows(
                 NullPointerException.class,
                 () ->
-                    new CliDiagnostic(
+                    new CommandError(
                         GridGrindProtocolVersion.current(),
                         2,
                         "print-recipe",
@@ -370,7 +370,7 @@ class CliDiscoveryValidationCoverageTest {
         assertThrows(
                 IllegalArgumentException.class,
                 () ->
-                    new CliDiagnostic(
+                    new CommandError(
                         GridGrindProtocolVersion.current(),
                         2,
                         "print-recipe",
@@ -383,7 +383,7 @@ class CliDiscoveryValidationCoverageTest {
         assertThrows(
                 NullPointerException.class,
                 () ->
-                    new CliDiagnostic(
+                    new CommandError(
                         GridGrindProtocolVersion.current(),
                         2,
                         "print-recipe",
@@ -396,7 +396,7 @@ class CliDiscoveryValidationCoverageTest {
         assertThrows(
                 NullPointerException.class,
                 () ->
-                    new CliDiagnostic(
+                    new CommandError(
                         GridGrindProtocolVersion.current(),
                         2,
                         "print-recipe",
@@ -409,7 +409,7 @@ class CliDiscoveryValidationCoverageTest {
         assertThrows(
                 IllegalArgumentException.class,
                 () ->
-                    new CliDiagnostic(
+                    new CommandError(
                         GridGrindProtocolVersion.current(),
                         0,
                         "print-recipe",

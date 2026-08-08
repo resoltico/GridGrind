@@ -20,7 +20,7 @@ public record SheetLayoutReport(
     }
     dev.erst.gridgrind.excel.foundation.ExcelSheetLayoutLimits.requireZoomPercent(
         zoomPercent, "zoomPercent");
-    columns = GridGrindResponseSupport.copyValues(columns, "columns");
-    rows = GridGrindResponseSupport.copyValues(rows, "rows");
+    columns = WorkbookResultSupport.copyValues(columns, "columns");
+    rows = WorkbookResultSupport.copyValues(rows, "rows");
   }
 }

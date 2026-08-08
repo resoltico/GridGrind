@@ -3,7 +3,7 @@ package dev.erst.gridgrind.cli;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import dev.erst.gridgrind.cli.discovery.CliDiagnostic;
+import dev.erst.gridgrind.cli.discovery.CommandError;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 
@@ -11,7 +11,7 @@ import org.junit.jupiter.api.Test;
 class CliArgumentFailureSupportTest {
   @Test
   void queryFailuresSuggestTaskDiscoveryCommands() {
-    CliDiagnostic failure =
+    CommandError failure =
         CliArgumentFailureSupport.reportFor(
             new String[] {"--print-recipe-keyword-match", "--query"},
             new CliArgumentsException("--query", "Missing value for --query"));
@@ -23,12 +23,12 @@ class CliArgumentFailureSupportTest {
         failure.suggestions());
     assertEquals(
         "Use --query only with --print-recipe-keyword-match and provide one natural-language query.",
-        failure.problem().resolution());
+        failure.primaryProblem().resolution());
   }
 
   @Test
   void mistypedFlagsOfferNearestKnownCommands() {
-    CliDiagnostic failure =
+    CommandError failure =
         CliArgumentFailureSupport.reportFor(
             new String[] {"--versoin"},
             new CliArgumentsException("--versoin", "Unknown argument: --versoin"));
@@ -39,12 +39,12 @@ class CliArgumentFailureSupportTest {
     assertEquals(
         "Use one exact CLI flag. Start from --help for the synopsis, --help-protocol for the"
             + " grammar, or --help-guidance for workflow-oriented commands.",
-        failure.problem().resolution());
+        failure.primaryProblem().resolution());
   }
 
   @Test
   void distantUnknownFlagsFallBackToGeneralHelpInsteadOfGuessingWorkflowCommands() {
-    CliDiagnostic failure =
+    CommandError failure =
         CliArgumentFailureSupport.reportFor(
             new String[] {"--bogus"},
             new CliArgumentsException("--bogus", "Unknown argument: --bogus"));
@@ -56,7 +56,7 @@ class CliArgumentFailureSupportTest {
 
   @Test
   void genericArgumentFailuresFallBackToHelpCommands() {
-    CliDiagnostic failure =
+    CommandError failure =
         CliArgumentFailureSupport.reportFor(
             new String[] {"--request", ""}, new IllegalArgumentException("bad argument shape"));
 
@@ -66,12 +66,12 @@ class CliArgumentFailureSupportTest {
     assertEquals(
         "Run gridgrind --help for the synopsis, --help-protocol for the authoritative request"
             + " contract, or --help-guidance for workflows and examples.",
-        failure.problem().resolution());
+        failure.primaryProblem().resolution());
   }
 
   @Test
   void nonUnknownArgumentFailuresUseDefaultRecoveryWithoutNearestMatchLookups() {
-    CliDiagnostic failure =
+    CommandError failure =
         CliArgumentFailureSupport.reportFor(
             new String[] {"--license", "--license"},
             new CliArgumentsException("--license", "Duplicate argument: --license"));
@@ -82,7 +82,7 @@ class CliArgumentFailureSupportTest {
     assertEquals(
         "Run gridgrind --help for the synopsis, --help-protocol for the authoritative request"
             + " contract, or --help-guidance for workflows and examples.",
-        failure.problem().resolution());
+        failure.primaryProblem().resolution());
   }
 
   @Test

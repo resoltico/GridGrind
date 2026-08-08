@@ -3,13 +3,13 @@ package dev.erst.gridgrind.cli;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import dev.erst.gridgrind.cli.discovery.CliDiagnostic;
+import dev.erst.gridgrind.cli.discovery.CommandError;
 import dev.erst.gridgrind.cli.discovery.CliTransport;
 import dev.erst.gridgrind.contract.dto.GridGrindProblemCode;
 import dev.erst.gridgrind.contract.dto.GridGrindProblemDetail;
 import dev.erst.gridgrind.contract.dto.GridGrindProtocolVersion;
-import dev.erst.gridgrind.contract.dto.GridGrindResponse;
-import dev.erst.gridgrind.contract.dto.GridGrindResponses;
+import dev.erst.gridgrind.contract.dto.WorkbookResult;
+import dev.erst.gridgrind.contract.dto.WorkbookResults;
 import dev.erst.gridgrind.contract.dto.ProblemContext;
 import dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces.CliArgument;
 import dev.erst.gridgrind.contract.dto.RequestDoctorReport;
@@ -25,8 +25,8 @@ import org.junit.jupiter.api.Test;
 class CliStdoutFallbackSupportTest extends GridGrindCliTestSupport {
   @Test
   void convenienceOverloadsSerializeTheirDefaultCompactPayloads() throws IOException {
-    CliDiagnostic failureReport =
-        new CliDiagnostic(
+    CommandError failureReport =
+        new CommandError(
             GridGrindProtocolVersion.current(),
             2,
             "cli",
@@ -37,31 +37,31 @@ class CliStdoutFallbackSupportTest extends GridGrindCliTestSupport {
                     "bad flag",
                     new ProblemContext.ParseArguments(CliArgument.named("--flag")))),
             Optional.of(CliTransport.standardOutput()));
-    GridGrindResponse response =
-        GridGrindResponses.success(java.util.List.of(), java.util.List.of(), java.util.List.of());
+    WorkbookResult response =
+        WorkbookResults.success(java.util.List.of(), java.util.List.of(), java.util.List.of());
     RequestDoctorReport doctorReport =
         RequestDoctorReport.clean(
             new RequestDoctorReport.Summary(
                 "NEW", "NONE", "FULL_XSSF", "DO_NOT_CALCULATE", false, false, 0, 0, 0, 0));
 
     CliStdoutFallbackSupport.StdoutFallback failureFallback =
-        CliStdoutFallbackSupport.cliDiagnostic(failureReport);
+        CliStdoutFallbackSupport.commandError(failureReport);
     CliStdoutFallbackSupport.StdoutFallback responseFallback =
         CliStdoutFallbackSupport.response(response);
     CliStdoutFallbackSupport.StdoutFallback doctorFallback =
         CliStdoutFallbackSupport.doctorReport(doctorReport);
 
-    assertEquals(failureReport, cliDiagnostic(failureFallback.payload()));
+    assertEquals(failureReport, commandError(failureFallback.payload()));
     assertEquals(
-        GridGrindResponse.Success.class,
-        GridGrindJson.readResponse(responseFallback.payload()).getClass());
+        WorkbookResult.Success.class,
+        GridGrindJson.readWorkbookResult(responseFallback.payload()).getClass());
     assertEquals(doctorReport, GridGrindJson.readRequestDoctorReport(doctorFallback.payload()));
   }
 
   @Test
   void writeKeepsTheRecoveredStdoutPayloadWhenStderrMirroringFailsAfterwards() throws IOException {
-    CliDiagnostic diagnostic =
-        new CliDiagnostic(
+    CommandError diagnostic =
+        new CommandError(
             GridGrindProtocolVersion.current(),
             1,
             "execute",
@@ -73,7 +73,7 @@ class CliStdoutFallbackSupportTest extends GridGrindCliTestSupport {
                     new ProblemContext.ParseArguments(CliArgument.named("--response")))),
             Optional.of(CliTransport.standardOutput()));
     CliStdoutFallbackSupport.StdoutFallback fallback =
-        CliStdoutFallbackSupport.cliDiagnostic(diagnostic);
+        CliStdoutFallbackSupport.commandError(diagnostic);
     ByteArrayOutputStream stdout = new ByteArrayOutputStream();
     try (OutputStream failingStderr =
         new OutputStream() {
@@ -85,6 +85,6 @@ class CliStdoutFallbackSupportTest extends GridGrindCliTestSupport {
       assertDoesNotThrow(
           () -> CliStdoutFallbackSupport.write(failingStderr, stdout, diagnostic, fallback, false));
     }
-    assertEquals(diagnostic, cliDiagnostic(stdout.toByteArray()));
+    assertEquals(diagnostic, commandError(stdout.toByteArray()));
   }
 }

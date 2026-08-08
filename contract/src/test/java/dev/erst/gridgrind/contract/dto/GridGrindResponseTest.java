@@ -19,12 +19,12 @@ import java.util.Optional;
 import org.junit.jupiter.api.Test;
 
 /** Tests for step-based successful and failed protocol responses. */
-class GridGrindResponseTest {
+class WorkbookResultTest {
   @Test
   void successDefaultsPersistenceAndCopiesWarningsAndInspections() {
     List<RequestWarning> warnings = new ArrayList<>();
     warnings.add(
-        new RequestWarning(0, "set-total", "SET_CELL", "Quote spaced sheet names in formulas."));
+        new RequestWarning(dev.erst.gridgrind.contract.dto.GridGrindWarningCode.UNQUOTED_SHEET_NAME_IN_FORMULA, 0, "set-total", "SET_CELL", "Quote spaced sheet names in formulas."));
     List<InspectionResult> inspections = new ArrayList<>();
     inspections.add(
         new WorkbookInspectionResult.WorkbookSummaryResult(
@@ -32,18 +32,18 @@ class GridGrindResponseTest {
             new WorkbookSummary.WithSheets(
                 1, List.of("Budget"), "Budget", List.of("Budget"), 0, false)));
 
-    GridGrindResponse.Success success =
-        GridGrindResponses.success(warnings, List.of(), inspections);
-    GridGrindResponse.Success successWithoutInspections =
-        GridGrindResponses.success(warnings, List.of(), List.of());
+    WorkbookResult.Success success =
+        WorkbookResults.success(warnings, List.of(), inspections);
+    WorkbookResult.Success successWithoutInspections =
+        WorkbookResults.success(warnings, List.of(), List.of());
 
     warnings.clear();
     inspections.clear();
 
     assertEquals(GridGrindProtocolVersion.current(), success.protocolVersion());
     assertInstanceOf(
-        GridGrindResponsePersistence.PersistenceOutcome.NotSaved.class, success.persistence());
-    assertEquals(java.util.Optional.empty(), success.journal().planId());
+        WorkbookResultPersistence.PersistenceOutcome.NotSaved.class, success.persistence());
+    assertEquals(java.util.Optional.empty(), success.planId());
     assertEquals(java.util.Optional.empty(), success.journal().source().type());
     assertEquals(ExecutionJournal.Status.SUCCEEDED, success.journal().outcome().status());
     assertEquals(1, success.warnings().size());
@@ -53,8 +53,8 @@ class GridGrindResponseTest {
 
   @Test
   void failureBackfillConstructorCreatesFailedSyntheticJournal() {
-    GridGrindResponse.Failure failure =
-        GridGrindResponses.failure(
+    WorkbookResult.Failure failure =
+        WorkbookResults.failure(
             GridGrindProblemDetail.Problem.of(
                 GridGrindProblemCode.INVALID_ARGUMENTS,
                 "boom",
@@ -62,10 +62,10 @@ class GridGrindResponseTest {
                     dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces.RequestShape
                         .unknown())));
 
-    assertEquals(java.util.Optional.empty(), failure.journal().planId());
+    assertEquals(java.util.Optional.empty(), failure.planId());
     assertEquals(java.util.Optional.empty(), failure.journal().source().type());
     assertInstanceOf(
-        GridGrindResponsePersistence.PersistenceOutcome.NotSaved.class, failure.persistence());
+        WorkbookResultPersistence.PersistenceOutcome.NotSaved.class, failure.persistence());
     ExecutionJournal.Outcome.Failed outcome =
         assertInstanceOf(ExecutionJournal.Outcome.Failed.class, failure.journal().outcome());
     assertEquals(ExecutionJournal.Status.FAILED, outcome.status());
@@ -78,7 +78,7 @@ class GridGrindResponseTest {
         assertThrows(
             IllegalArgumentException.class,
             () ->
-                GridGrindResponse.syntheticJournal(
+                WorkbookResult.syntheticJournal(
                     ExecutionJournal.Status.FAILED, java.util.Optional.empty()));
     assertEquals("FAILED outcomes must include failureCode", missingFailureCode.getMessage());
 
@@ -86,7 +86,7 @@ class GridGrindResponseTest {
         assertThrows(
             IllegalArgumentException.class,
             () ->
-                GridGrindResponse.syntheticJournal(
+                WorkbookResult.syntheticJournal(
                     ExecutionJournal.Status.SUCCEEDED,
                     java.util.Optional.of(GridGrindProblemCode.INVALID_ARGUMENTS)));
     assertEquals(
@@ -96,7 +96,7 @@ class GridGrindResponseTest {
         assertThrows(
             IllegalArgumentException.class,
             () ->
-                GridGrindResponse.syntheticJournal(
+                WorkbookResult.syntheticJournal(
                     ExecutionJournal.Status.NOT_STARTED, Optional.empty()));
     assertEquals(
         "synthetic journal outcome does not support NOT_STARTED",
@@ -106,7 +106,7 @@ class GridGrindResponseTest {
         assertThrows(
             IllegalArgumentException.class,
             () ->
-                GridGrindResponse.syntheticJournal(
+                WorkbookResult.syntheticJournal(
                     ExecutionJournal.Status.NOT_REQUESTED, Optional.empty()));
     assertEquals(
         "synthetic journal outcome does not support NOT_REQUESTED",
@@ -116,11 +116,11 @@ class GridGrindResponseTest {
   @Test
   void requestWarningsRequireStepIdentity() {
     assertThrows(
-        IllegalArgumentException.class, () -> new RequestWarning(-1, "a", "SET_CELL", "warn"));
+        IllegalArgumentException.class, () -> new RequestWarning(dev.erst.gridgrind.contract.dto.GridGrindWarningCode.UNQUOTED_SHEET_NAME_IN_FORMULA, -1, "a", "SET_CELL", "warn"));
     assertThrows(
-        IllegalArgumentException.class, () -> new RequestWarning(0, " ", "SET_CELL", "warn"));
-    assertThrows(IllegalArgumentException.class, () -> new RequestWarning(0, "a", " ", "warn"));
-    assertThrows(IllegalArgumentException.class, () -> new RequestWarning(0, "a", "SET_CELL", " "));
+        IllegalArgumentException.class, () -> new RequestWarning(dev.erst.gridgrind.contract.dto.GridGrindWarningCode.UNQUOTED_SHEET_NAME_IN_FORMULA, 0, " ", "SET_CELL", "warn"));
+    assertThrows(IllegalArgumentException.class, () -> new RequestWarning(dev.erst.gridgrind.contract.dto.GridGrindWarningCode.UNQUOTED_SHEET_NAME_IN_FORMULA, 0, "a", " ", "warn"));
+    assertThrows(IllegalArgumentException.class, () -> new RequestWarning(dev.erst.gridgrind.contract.dto.GridGrindWarningCode.UNQUOTED_SHEET_NAME_IN_FORMULA, 0, "a", "SET_CELL", " "));
   }
 
   @Test
@@ -316,16 +316,16 @@ class GridGrindResponseTest {
         assertThrows(
                 IllegalArgumentException.class,
                 () ->
-                    new GridGrindResponsePersistence.PersistenceOutcome.SavedAs(
-                        " ", new GridGrindResponsePersistence.WriteResult.Written("/tmp/out.xlsx")))
+                    new WorkbookResultPersistence.PersistenceOutcome.SavedAs(
+                        " ", new WorkbookResultPersistence.WriteResult.Written("/tmp/out.xlsx")))
             .getMessage());
     assertEquals(
         "executionPath must not be blank",
         assertThrows(
                 IllegalArgumentException.class,
                 () ->
-                    new GridGrindResponsePersistence.PersistenceOutcome.Overwritten(
-                        "budget.xlsx", new GridGrindResponsePersistence.WriteResult.Written(" ")))
+                    new WorkbookResultPersistence.PersistenceOutcome.Overwritten(
+                        "budget.xlsx", new WorkbookResultPersistence.WriteResult.Written(" ")))
             .getMessage());
     assertEquals(
         "sheetCount must be 0 for an empty workbook",
@@ -383,8 +383,8 @@ class GridGrindResponseTest {
             "assert-total",
             "EXPECT_CELL_VALUE"));
 
-    GridGrindResponse.Success success =
-        GridGrindResponses.success(
+    WorkbookResult.Success success =
+        WorkbookResults.success(
             List.of(),
             assertions,
             List.of(
@@ -431,7 +431,6 @@ class GridGrindResponseTest {
         ExecutionJournal.Phase.succeeded("2026-04-18T10:00:00Z", "2026-04-18T10:00:01Z", 1);
     ExecutionJournal journal =
         new ExecutionJournal(
-            java.util.Optional.of("budget-audit"),
             ExecutionJournalLevel.VERBOSE,
             new ExecutionJournal.SourceSummary(
                 java.util.Optional.of("NEW"), java.util.Optional.empty()),
@@ -470,7 +469,6 @@ class GridGrindResponseTest {
                     java.util.Optional.of(0),
                     java.util.Optional.of("assert-total"))));
 
-    assertEquals("budget-audit", journal.planId().orElseThrow());
     assertEquals(ExecutionJournalLevel.VERBOSE, journal.level());
     assertEquals("Cell Budget!B4", journal.steps().getFirst().resolvedTargets().getFirst().label());
     assertEquals(

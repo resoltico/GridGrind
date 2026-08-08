@@ -3,7 +3,7 @@ package dev.erst.gridgrind.cli;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import dev.erst.gridgrind.cli.discovery.CliDiagnostic;
+import dev.erst.gridgrind.cli.discovery.CommandError;
 import dev.erst.gridgrind.contract.dto.GridGrindProblemCode;
 import dev.erst.gridgrind.contract.dto.GridGrindProblemDetail;
 import dev.erst.gridgrind.contract.dto.ProblemContext;
@@ -20,7 +20,7 @@ import java.util.Optional;
 import org.junit.jupiter.api.Test;
 
 /** Focused coverage for canonical CLI diagnostic branching. */
-class CliDiagnosticsTest extends GridGrindCliTestSupport {
+class CommandErrorsTest extends GridGrindCliTestSupport {
   @Test
   void readRequestFailureUsesDoctorSuggestionsForDoctorRequestShapeErrors() {
     InvalidRequestShapeException exception =
@@ -30,8 +30,8 @@ class CliDiagnosticsTest extends GridGrindCliTestSupport {
             Optional.of(3),
             Optional.of(7),
             null);
-    CliDiagnostic failure =
-        CliDiagnostics.readRequestFailure(
+    CommandError failure =
+        CommandErrors.readRequestFailure(
             1,
             "doctor-request",
             GridGrindProblems.fromException(
@@ -51,23 +51,23 @@ class CliDiagnosticsTest extends GridGrindCliTestSupport {
 
   @Test
   void readRequestFailureFallsBackToGenericGuidanceForUnhandledCodes() {
-    CliDiagnostic failure =
-        CliDiagnostics.readRequestFailure(
+    CommandError failure =
+        CommandErrors.readRequestFailure(
             1, "execute", problem(GridGrindProblemCode.WORKBOOK_NOT_FOUND, "missing workbook"));
 
     assertEquals(List.of("gridgrind --help", "gridgrind --help-protocol"), failure.suggestions());
     assertEquals(
         "Create the workbook first or provide an existing workbook path.",
-        failure.problem().resolution());
+        failure.primaryProblem().resolution());
   }
 
   @Test
   void readRequestFailureExplainsDoctorInvariantRepairs() {
-    CliDiagnostic failure =
-        CliDiagnostics.readRequestFailure(
+    CommandError failure =
+        CommandErrors.readRequestFailure(
             1, "doctor-request", problem(GridGrindProblemCode.INVALID_REQUEST, "invalid request"));
 
-    assertEquals("Fix the request data and retry the workflow.", failure.problem().resolution());
+    assertEquals("Fix the request data and retry the workflow.", failure.primaryProblem().resolution());
   }
 
   @Test
@@ -79,8 +79,8 @@ class CliDiagnosticsTest extends GridGrindCliTestSupport {
             Optional.empty(),
             Optional.empty(),
             null);
-    CliDiagnostic failure =
-        CliDiagnostics.readRequestFailure(
+    CommandError failure =
+        CommandErrors.readRequestFailure(
             1,
             "execute",
             GridGrindProblems.fromException(
@@ -90,7 +90,7 @@ class CliDiagnosticsTest extends GridGrindCliTestSupport {
 
     assertEquals(Optional.of("protocolVersion"), readRequestContext(failure).jsonPath());
     assertEquals(
-        "Add protocolVersion: \"V2\" at the request root.", failure.problem().resolution());
+        "Add protocolVersion: \"V2\" at the request root.", failure.primaryProblem().resolution());
   }
 
   @Test
@@ -102,8 +102,8 @@ class CliDiagnosticsTest extends GridGrindCliTestSupport {
             Optional.empty(),
             Optional.empty(),
             null);
-    CliDiagnostic failure =
-        CliDiagnostics.readRequestFailure(
+    CommandError failure =
+        CommandErrors.readRequestFailure(
             1,
             "execute",
             GridGrindProblems.fromException(
@@ -114,13 +114,13 @@ class CliDiagnosticsTest extends GridGrindCliTestSupport {
     assertEquals(Optional.of("steps[0].target.type"), readRequestContext(failure).jsonPath());
     assertEquals(
         "Add the required type discriminator at 'steps[0].target.type'.",
-        failure.problem().resolution());
+        failure.primaryProblem().resolution());
   }
 
   @Test
   void readRequestFailureFallsBackToContextLocationWhenExceptionCarriesNone() {
-    CliDiagnostic failure =
-        CliDiagnostics.readRequestFailure(
+    CommandError failure =
+        CommandErrors.readRequestFailure(
             1,
             "execute",
             problem(
@@ -129,20 +129,20 @@ class CliDiagnosticsTest extends GridGrindCliTestSupport {
                 JsonLocation.pathOnly("steps[1].stepId")));
 
     assertEquals(Optional.of("steps[1].stepId"), readRequestContext(failure).jsonPath());
-    assertEquals("Fix the request data and retry the workflow.", failure.problem().resolution());
+    assertEquals("Fix the request data and retry the workflow.", failure.primaryProblem().resolution());
   }
 
   @Test
   void responseWriteFailureOmitsBlankStdoutSuggestionHints() {
-    CliDiagnostic failure =
-        CliDiagnostics.responseWriteFailure(
+    CommandError failure =
+        CommandErrors.responseWriteFailure(
             "print-request-template",
             "request template",
             Path.of("/tmp/response.json"),
             new java.io.IOException("denied"),
             Optional.of("  "));
 
-    assertEquals(GridGrindProblemCode.IO_ERROR, failure.problem().code());
+    assertEquals(GridGrindProblemCode.IO_ERROR, failure.primaryProblem().code());
     assertEquals(List.of(), failure.suggestions());
     assertEquals(Optional.of("/tmp/response.json"), writeResponseContext(failure).responsePath());
   }
@@ -153,7 +153,7 @@ class CliDiagnosticsTest extends GridGrindCliTestSupport {
         "problems must not be empty",
         assertThrows(
                 IllegalArgumentException.class,
-                () -> CliDiagnostics.readRequestFailures(1, "execute", List.of()))
+                () -> CommandErrors.readRequestFailures(1, "execute", List.of()))
             .getMessage());
   }
 

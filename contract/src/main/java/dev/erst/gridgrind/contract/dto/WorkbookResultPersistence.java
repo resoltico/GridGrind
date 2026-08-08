@@ -6,8 +6,8 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import java.util.Objects;
 import java.util.Optional;
 
-/** Persistence outcome variants returned on every GridGrind response. */
-public interface GridGrindResponsePersistence {
+/** Persistence outcome variants returned on every workbook result. */
+public interface WorkbookResultPersistence {
   /** Reports whether the workbook was persisted during execution. */
   @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
   @JsonSubTypes({
