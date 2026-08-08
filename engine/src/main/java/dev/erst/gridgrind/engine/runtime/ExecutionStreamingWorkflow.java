@@ -102,16 +102,7 @@ final class ExecutionStreamingWorkflow {
         ExecutionWorkbookSupport.deleteIfExists(materializedPath);
         GridGrindProblemDetail.Problem problem = calculationOutcome.failure().orElseThrow();
         return ExecutionResponseSupport.failureResponse(
-            protocolVersion,
-            journal,
-            request,
-            calculation,
-            warnings,
-            List.copyOf(assertions),
-            List.copyOf(inspections),
-            problem,
-            null,
-            null);
+            workflowContext.failure(calculation, problem));
       }
 
       materializedPath =
@@ -126,16 +117,7 @@ final class ExecutionStreamingWorkflow {
               new dev.erst.gridgrind.contract.dto.ProblemContext.ExecuteRequest(
                   ExecutionRequestPaths.requestShape(request)));
       return ExecutionResponseSupport.failureResponse(
-          protocolVersion,
-          journal,
-          request,
-          calculation,
-          warnings,
-          List.copyOf(assertions),
-          List.copyOf(inspections),
-          problem,
-          null,
-          null);
+          workflowContext.failure(calculation, problem));
     }
 
     ExecutionJournalRecorder.PhaseHandle persistencePhase = journal.beginPersistence();
@@ -156,16 +138,7 @@ final class ExecutionStreamingWorkflow {
                   ExecutionRequestPaths.persistenceReference(request, workingDirectory)));
       persistencePhase.fail("failed (" + problem.code() + ")");
       return ExecutionResponseSupport.failureResponse(
-          protocolVersion,
-          journal,
-          request,
-          calculation,
-          warnings,
-          List.copyOf(assertions),
-          List.copyOf(inspections),
-          problem,
-          null,
-          null);
+          workflowContext.failure(calculation, problem));
     } finally {
       if (!movedToPersistenceTarget) {
         ExecutionWorkbookSupport.deleteIfExists(materializedPath);
@@ -235,16 +208,7 @@ final class ExecutionStreamingWorkflow {
                   assertionFailed.assertionFailure().assertionType()));
     }
     return ExecutionResponseSupport.failureResponse(
-        workflowContext.protocolVersion(),
-        workflowContext.journal(),
-        workflowContext.request(),
-        calculation,
-        workflowContext.warnings(),
-        List.copyOf(workflowContext.assertions()),
-        List.copyOf(workflowContext.inspections()),
-        problem,
-        stepIndex,
-        step.stepId());
+        workflowContext.failure(calculation, problem, stepIndex, step.stepId()));
   }
 
   private record StreamingWorkflowContext(
@@ -255,5 +219,29 @@ final class ExecutionStreamingWorkflow {
       ExecutionJournalRecorder journal,
       WorkbookLocation workbookLocation,
       List<AssertionResult> assertions,
-      List<InspectionResult> inspections) {}
+      List<InspectionResult> inspections) {
+    private ExecutionFailure failure(
+        CalculationReport calculation, GridGrindProblemDetail.Problem problem) {
+      return failure(calculation, problem, null, null);
+    }
+
+    private ExecutionFailure failure(
+        CalculationReport calculation,
+        GridGrindProblemDetail.Problem problem,
+        int failedStepIndex,
+        String failedStepId) {
+      return failure(calculation, problem, Integer.valueOf(failedStepIndex), failedStepId);
+    }
+
+    private ExecutionFailure failure(
+        CalculationReport calculation,
+        GridGrindProblemDetail.Problem problem,
+        @Nullable Integer failedStepIndex,
+        @Nullable String failedStepId) {
+      return new ExecutionFailure(
+          new ExecutionFailure.Context(protocolVersion, journal, request, calculation),
+          new ExecutionFailure.Artifacts(warnings, assertions, inspections),
+          new ExecutionFailure.Detail(problem, failedStepIndex, failedStepId));
+    }
+  }
 }

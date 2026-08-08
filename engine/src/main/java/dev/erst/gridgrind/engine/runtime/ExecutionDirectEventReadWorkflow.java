@@ -14,6 +14,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import org.jspecify.annotations.Nullable;
 
 /** Direct event-read workflow for inspection-only execution against an existing workbook file. */
 final class ExecutionDirectEventReadWorkflow {
@@ -43,6 +44,9 @@ final class ExecutionDirectEventReadWorkflow {
     WorkbookPlan.WorkbookSource.ExistingFile source =
         (WorkbookPlan.WorkbookSource.ExistingFile) request.source();
     List<InspectionResult> inspections = new ArrayList<>();
+    DirectEventReadContext executionContext =
+        new DirectEventReadContext(
+            protocolVersion, request, warnings, journal, calculation, inspections);
     ExecutionJournalRecorder.PhaseHandle openPhase = journal.beginOpen();
     WorkbookArtifactIo.MaterializedWorkbook materialized;
     try {
@@ -62,16 +66,7 @@ final class ExecutionDirectEventReadWorkflow {
       return responseSupport.closeReadableWorkbook(
           null,
           ExecutionResponseSupport.failureResponseWithoutPlanOutcomeEvent(
-              protocolVersion,
-              journal,
-              request,
-              calculation,
-              warnings,
-              List.of(),
-              List.of(),
-              problem,
-              null,
-              null),
+              executionContext.failure(problem)),
           request,
           journal,
           problem.code(),
@@ -97,16 +92,7 @@ final class ExecutionDirectEventReadWorkflow {
         return responseSupport.closeReadableWorkbook(
             materialized,
             ExecutionResponseSupport.failureResponseWithoutPlanOutcomeEvent(
-                protocolVersion,
-                journal,
-                request,
-                calculation,
-                warnings,
-                List.of(),
-                List.copyOf(inspections),
-                problem,
-                stepIndex,
-                inspectionStep.stepId()),
+                executionContext.failure(problem, stepIndex, inspectionStep.stepId())),
             request,
             journal,
             problem.code(),
@@ -131,5 +117,32 @@ final class ExecutionDirectEventReadWorkflow {
         null,
         null,
         null);
+  }
+
+  private record DirectEventReadContext(
+      GridGrindProtocolVersion protocolVersion,
+      WorkbookPlan request,
+      List<RequestWarning> warnings,
+      ExecutionJournalRecorder journal,
+      CalculationReport calculation,
+      List<InspectionResult> inspections) {
+    private ExecutionFailure failure(GridGrindProblemDetail.Problem problem) {
+      return failure(problem, null, null);
+    }
+
+    private ExecutionFailure failure(
+        GridGrindProblemDetail.Problem problem, int failedStepIndex, String failedStepId) {
+      return failure(problem, Integer.valueOf(failedStepIndex), failedStepId);
+    }
+
+    private ExecutionFailure failure(
+        GridGrindProblemDetail.Problem problem,
+        @Nullable Integer failedStepIndex,
+        @Nullable String failedStepId) {
+      return new ExecutionFailure(
+          new ExecutionFailure.Context(protocolVersion, journal, request, calculation),
+          new ExecutionFailure.Artifacts(warnings, List.of(), inspections),
+          new ExecutionFailure.Detail(problem, failedStepIndex, failedStepId));
+    }
   }
 }

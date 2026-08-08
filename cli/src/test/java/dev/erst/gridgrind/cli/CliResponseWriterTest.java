@@ -17,6 +17,8 @@ import dev.erst.gridgrind.contract.dto.WorkbookResult;
 import dev.erst.gridgrind.contract.dto.WorkbookResults;
 import dev.erst.gridgrind.contract.json.GridGrindJson;
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -137,6 +139,27 @@ class CliResponseWriterTest extends GridGrindCliTestSupport {
         GridGrindCliJson.readBytes(stderr.toByteArray(), CliTransportNotice.class).wroteTo());
   }
 
+  @Test
+  void stdoutFallbackRemainsUsableWhenItsOptionalStderrTransportNoticeCannotBeWritten()
+      throws Exception {
+    Path responseDirectory = Files.createTempDirectory("gridgrind-fallback-stderr-dir-");
+    ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+
+    int exitCode =
+        responseWriter.writePayload(
+            "print-request-template",
+            Optional.of(responseDirectory),
+            stdout,
+            failingOutputStream(),
+            "{}".getBytes(StandardCharsets.UTF_8),
+            0,
+            false);
+
+    assertEquals(1, exitCode);
+    assertEquals(
+        GridGrindProblemCode.IO_ERROR, commandError(stdout.toByteArray()).primaryProblem().code());
+  }
+
   private static CommandError commandError() {
     return new CommandError(
         GridGrindProtocolVersion.current(),
@@ -153,5 +176,14 @@ class CliResponseWriterTest extends GridGrindCliTestSupport {
         GridGrindProblemCode.INVALID_REQUEST,
         message,
         new ProblemContext.ParseArguments(CliArgument.named("--request")));
+  }
+
+  private static OutputStream failingOutputStream() {
+    return new OutputStream() {
+      @Override
+      public void write(int ignored) throws IOException {
+        throw new IOException("test output failure");
+      }
+    };
   }
 }

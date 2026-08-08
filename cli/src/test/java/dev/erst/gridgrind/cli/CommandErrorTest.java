@@ -93,6 +93,16 @@ class CommandErrorTest {
             .getMessage());
   }
 
+  @Test
+  void sharedCommandErrorFactoryRejectsAnEmptyReadRequestProblemSet() {
+    assertEquals(
+        "problems must not be empty",
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> CommandErrors.readRequestFailures("execute", List.of()))
+            .getMessage());
+  }
+
   private static dev.erst.gridgrind.contract.dto.GridGrindProtocolVersion errorVersion() {
     return dev.erst.gridgrind.contract.dto.GridGrindProtocolVersion.current();
   }

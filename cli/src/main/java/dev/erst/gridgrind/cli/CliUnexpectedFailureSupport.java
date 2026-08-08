@@ -38,7 +38,7 @@ final class CliUnexpectedFailureSupport {
     }
   }
 
-  private static void directFallback(
+  static void directFallback(
       CommandError diagnostic,
       OutputStream stdout,
       OutputStream stderr,

@@ -5,10 +5,8 @@ import dev.erst.gridgrind.contract.dto.CalculationReport;
 import dev.erst.gridgrind.contract.dto.GridGrindProblemCode;
 import dev.erst.gridgrind.contract.dto.GridGrindProblemDetail;
 import dev.erst.gridgrind.contract.dto.GridGrindProtocolVersion;
-import dev.erst.gridgrind.contract.dto.RequestWarning;
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
 import dev.erst.gridgrind.contract.dto.WorkbookResult;
-import dev.erst.gridgrind.contract.query.InspectionResult;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
 import dev.erst.gridgrind.excel.WorkbookArtifactIo;
 import java.util.List;
@@ -136,13 +134,14 @@ final class ExecutionResponseSupport {
       return closeWorkbook(
           workbook,
           failureResponseWithoutPlanOutcomeEvent(
-              protocolVersion,
-              journal,
-              request,
-              CalculationPolicyExecutor.notRequestedReport(request.calculationPolicy()),
-              problem,
-              null,
-              null),
+              new ExecutionFailure(
+                  new ExecutionFailure.Context(
+                      protocolVersion,
+                      journal,
+                      request,
+                      CalculationPolicyExecutor.notRequestedReport(request.calculationPolicy())),
+                  ExecutionFailure.Artifacts.empty(),
+                  new ExecutionFailure.Detail(problem, null, null))),
           request,
           journal,
           problem.code(),
@@ -173,17 +172,11 @@ final class ExecutionResponseSupport {
       @Nullable Integer failedStepIndex,
       @Nullable String failedStepId) {
     return failureResponse(
-        protocolVersion,
-        journal,
-        request,
-        CalculationReport.notRequested(),
-        List.of(),
-        List.of(),
-        List.of(),
-        problem,
-        failedStepIndex,
-        failedStepId,
-        true);
+        new ExecutionFailure(
+            new ExecutionFailure.Context(
+                protocolVersion, journal, request, CalculationReport.notRequested()),
+            ExecutionFailure.Artifacts.empty(),
+            new ExecutionFailure.Detail(problem, failedStepIndex, failedStepId)));
   }
 
   static WorkbookResult.Failure failureResponse(
@@ -195,17 +188,10 @@ final class ExecutionResponseSupport {
       @Nullable Integer failedStepIndex,
       @Nullable String failedStepId) {
     return failureResponse(
-        protocolVersion,
-        journal,
-        request,
-        calculation,
-        List.of(),
-        List.of(),
-        List.of(),
-        problem,
-        failedStepIndex,
-        failedStepId,
-        true);
+        new ExecutionFailure(
+            new ExecutionFailure.Context(protocolVersion, journal, request, calculation),
+            ExecutionFailure.Artifacts.empty(),
+            new ExecutionFailure.Detail(problem, failedStepIndex, failedStepId)));
   }
 
   static WorkbookResult.Failure failureResponse(
@@ -218,140 +204,40 @@ final class ExecutionResponseSupport {
       @Nullable Integer failedStepIndex,
       @Nullable String failedStepId) {
     return failureResponse(
-        protocolVersion,
-        journal,
-        request,
-        calculation,
-        List.of(),
-        assertions,
-        List.of(),
-        problem,
-        failedStepIndex,
-        failedStepId,
-        true);
+        new ExecutionFailure(
+            new ExecutionFailure.Context(protocolVersion, journal, request, calculation),
+            new ExecutionFailure.Artifacts(List.of(), assertions, List.of()),
+            new ExecutionFailure.Detail(problem, failedStepIndex, failedStepId)));
   }
 
-  static WorkbookResult.Failure failureResponse(
-      GridGrindProtocolVersion protocolVersion,
-      ExecutionJournalRecorder journal,
-      WorkbookPlan request,
-      CalculationReport calculation,
-      List<RequestWarning> warnings,
-      List<AssertionResult> assertions,
-      List<InspectionResult> inspections,
-      GridGrindProblemDetail.Problem problem,
-      @Nullable Integer failedStepIndex,
-      @Nullable String failedStepId) {
-    return failureResponse(
-        protocolVersion,
-        journal,
-        request,
-        calculation,
-        warnings,
-        assertions,
-        inspections,
-        problem,
-        failedStepIndex,
-        failedStepId,
-        true);
+  static WorkbookResult.Failure failureResponse(ExecutionFailure failure) {
+    return failureResponse(failure, true);
   }
 
-  static WorkbookResult.Failure failureResponseWithoutPlanOutcomeEvent(
-      GridGrindProtocolVersion protocolVersion,
-      ExecutionJournalRecorder journal,
-      WorkbookPlan request,
-      CalculationReport calculation,
-      GridGrindProblemDetail.Problem problem,
-      @Nullable Integer failedStepIndex,
-      @Nullable String failedStepId) {
-    return failureResponse(
-        protocolVersion,
-        journal,
-        request,
-        calculation,
-        List.of(),
-        List.of(),
-        List.of(),
-        problem,
-        failedStepIndex,
-        failedStepId,
-        false);
-  }
-
-  static WorkbookResult.Failure failureResponseWithoutPlanOutcomeEvent(
-      GridGrindProtocolVersion protocolVersion,
-      ExecutionJournalRecorder journal,
-      WorkbookPlan request,
-      CalculationReport calculation,
-      List<AssertionResult> assertions,
-      GridGrindProblemDetail.Problem problem,
-      @Nullable Integer failedStepIndex,
-      @Nullable String failedStepId) {
-    return failureResponse(
-        protocolVersion,
-        journal,
-        request,
-        calculation,
-        List.of(),
-        assertions,
-        List.of(),
-        problem,
-        failedStepIndex,
-        failedStepId,
-        false);
-  }
-
-  static WorkbookResult.Failure failureResponseWithoutPlanOutcomeEvent(
-      GridGrindProtocolVersion protocolVersion,
-      ExecutionJournalRecorder journal,
-      WorkbookPlan request,
-      CalculationReport calculation,
-      List<RequestWarning> warnings,
-      List<AssertionResult> assertions,
-      List<InspectionResult> inspections,
-      GridGrindProblemDetail.Problem problem,
-      @Nullable Integer failedStepIndex,
-      @Nullable String failedStepId) {
-    return failureResponse(
-        protocolVersion,
-        journal,
-        request,
-        calculation,
-        warnings,
-        assertions,
-        inspections,
-        problem,
-        failedStepIndex,
-        failedStepId,
-        false);
+  static WorkbookResult.Failure failureResponseWithoutPlanOutcomeEvent(ExecutionFailure failure) {
+    return failureResponse(failure, false);
   }
 
   private static WorkbookResult.Failure failureResponse(
-      GridGrindProtocolVersion protocolVersion,
-      ExecutionJournalRecorder journal,
-      WorkbookPlan request,
-      CalculationReport calculation,
-      List<RequestWarning> warnings,
-      List<AssertionResult> assertions,
-      List<InspectionResult> inspections,
-      GridGrindProblemDetail.Problem problem,
-      @Nullable Integer failedStepIndex,
-      @Nullable String failedStepId,
-      boolean emitPlanOutcomeEvent) {
+      ExecutionFailure failure, boolean emitPlanOutcomeEvent) {
+    ExecutionFailure.Context context = failure.context();
+    ExecutionFailure.Detail detail = failure.detail();
     return new WorkbookResult.Failure(
-        protocolVersion,
-        request.planId(),
-        journal.buildFailure(
-            request.steps().size(),
-            problem.code(),
-            failedStepIndex,
-            failedStepId,
-            emitPlanOutcomeEvent),
-        calculation,
-        ExecutionRequestPaths.unwrittenPersistenceOutcome(request),
-        warnings,
-        assertions,
-        inspections,
-        problem);
+        context.protocolVersion(),
+        context.request().planId(),
+        context
+            .journal()
+            .buildFailure(
+                context.request().steps().size(),
+                detail.problem().code(),
+                detail.failedStepIndex(),
+                detail.failedStepId(),
+                emitPlanOutcomeEvent),
+        context.calculation(),
+        ExecutionRequestPaths.unwrittenPersistenceOutcome(context.request()),
+        failure.artifacts().warnings(),
+        failure.artifacts().assertions(),
+        failure.artifacts().inspections(),
+        detail.problem());
   }
 }
