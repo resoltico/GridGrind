@@ -146,19 +146,30 @@ class CliUnexpectedFailureSupportTest extends GridGrindCliTestSupport {
   @Test
   void directFallbackSuppressesSecondaryOutputFailuresWithoutLeakingTheOriginalFault()
       throws IOException {
+    AtomicInteger stdoutAttempts = new AtomicInteger();
+    AtomicInteger stderrAttempts = new AtomicInteger();
+
     CliUnexpectedFailureSupport.directFallback(
         CommandErrors.unexpectedFailure("execute", new IllegalStateException("secret")),
-        failingOutputStream(),
-        failingOutputStream(),
+        failingOutputStream(stdoutAttempts),
+        failingOutputStream(stderrAttempts),
         Optional.empty(),
         false,
         new IOException("response write failed"));
+
+    assertEquals(1, stdoutAttempts.get());
+    assertEquals(1, stderrAttempts.get());
   }
 
   private static OutputStream failingOutputStream() {
+    return failingOutputStream(new AtomicInteger());
+  }
+
+  private static OutputStream failingOutputStream(AtomicInteger writeAttempts) {
     return new OutputStream() {
       @Override
       public void write(int ignored) throws IOException {
+        writeAttempts.incrementAndGet();
         throw new IOException("test output failure");
       }
     };
