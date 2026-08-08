@@ -57,32 +57,34 @@ final class ExecutionResponseCloseFinalizer {
       @Nullable Integer failedStepIndex,
       @Nullable String failedStepId,
       GridGrindProblemDetail.Problem closeProblem) {
-    if (response instanceof WorkbookResult.Failure existingFailure) {
-      return new WorkbookResult.Failure(
-          existingFailure.protocolVersion(),
-          existingFailure.planId(),
-          journal.buildFailure(
-              request.steps().size(),
-              Objects.requireNonNullElse(primaryFailureCode, existingFailure.problem().code()),
-              failedStepIndex,
-              failedStepId),
-          existingFailure.calculation(),
-          existingFailure.persistence(),
-          existingFailure.warnings(),
-          existingFailure.assertions(),
-          existingFailure.inspections(),
-          GridGrindProblems.appendCause(
-              existingFailure.problem(), GridGrindProblems.problemCause(closeProblem)));
-    }
-    return new WorkbookResult.Failure(
-        request.protocolVersion(),
-        request.planId(),
-        journal.buildFailure(request.steps().size(), closeProblem.code(), null, null),
-        response.calculation(),
-        response.persistence(),
-        response instanceof WorkbookResult.Success success ? success.warnings() : List.of(),
-        List.of(),
-        response instanceof WorkbookResult.Success success ? success.inspections() : List.of(),
-        closeProblem);
+    return switch (response) {
+      case WorkbookResult.Failure existingFailure ->
+          new WorkbookResult.Failure(
+              existingFailure.protocolVersion(),
+              existingFailure.planId(),
+              journal.buildFailure(
+                  request.steps().size(),
+                  Objects.requireNonNullElse(primaryFailureCode, existingFailure.problem().code()),
+                  failedStepIndex,
+                  failedStepId),
+              existingFailure.calculation(),
+              existingFailure.persistence(),
+              existingFailure.warnings(),
+              existingFailure.assertions(),
+              existingFailure.inspections(),
+              GridGrindProblems.appendCause(
+                  existingFailure.problem(), GridGrindProblems.problemCause(closeProblem)));
+      case WorkbookResult.Success success ->
+          new WorkbookResult.Failure(
+              request.protocolVersion(),
+              request.planId(),
+              journal.buildFailure(request.steps().size(), closeProblem.code(), null, null),
+              success.calculation(),
+              success.persistence(),
+              success.warnings(),
+              List.of(),
+              success.inspections(),
+              closeProblem);
+    };
   }
 }

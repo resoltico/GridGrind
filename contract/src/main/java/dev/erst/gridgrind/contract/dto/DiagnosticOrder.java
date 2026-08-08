@@ -80,18 +80,17 @@ public final class DiagnosticOrder {
 
   private static int phase(GridGrindProblemDetail.Problem problem) {
     return switch (problem.context()) {
-      case ProblemContext.ParseArguments _, ProblemContext.ReadRequest _ -> PRE_EXECUTION_PHASE;
+      case ProblemContext.ParseArguments _ -> PRE_EXECUTION_PHASE;
+      case ProblemContext.ReadRequest _ -> PRE_EXECUTION_PHASE;
       case ProblemContext.ValidateRequest _ -> STATIC_VALIDATION_PHASE;
-      case ProblemContext.ResolveInputs _,
-          ProblemContext.OpenWorkbook _,
-          ProblemContext.ExecuteCalculation.Preflight _ ->
-          SOURCE_RESOLUTION_PHASE;
-      case ProblemContext.ExecuteCalculation.Execution _,
-          ProblemContext.ExecuteStep _,
-          ProblemContext.PersistWorkbook _,
-          ProblemContext.ExecuteRequest _,
-          ProblemContext.WriteResponse _ ->
-          EXECUTION_PHASE;
+      case ProblemContext.ResolveInputs _ -> SOURCE_RESOLUTION_PHASE;
+      case ProblemContext.OpenWorkbook _ -> SOURCE_RESOLUTION_PHASE;
+      case ProblemContext.ExecuteCalculation.Preflight _ -> SOURCE_RESOLUTION_PHASE;
+      case ProblemContext.ExecuteCalculation.Execution _ -> EXECUTION_PHASE;
+      case ProblemContext.ExecuteStep _ -> EXECUTION_PHASE;
+      case ProblemContext.PersistWorkbook _ -> EXECUTION_PHASE;
+      case ProblemContext.ExecuteRequest _ -> EXECUTION_PHASE;
+      case ProblemContext.WriteResponse _ -> EXECUTION_PHASE;
     };
   }
 
@@ -144,9 +143,6 @@ public final class DiagnosticOrder {
   /** Internal deterministic allocation carrier; never part of a serialized DTO. */
   private record Allocated<T>(int ordinal, T value) {
     private Allocated {
-      if (ordinal < 0) {
-        throw new IllegalArgumentException("ordinal must not be negative");
-      }
       Objects.requireNonNull(value, "value must not be null");
     }
   }

@@ -1,6 +1,5 @@
 package dev.erst.gridgrind.engine.runtime;
 
-import dev.erst.gridgrind.contract.assertion.AssertionResult;
 import dev.erst.gridgrind.contract.dto.CalculationReport;
 import dev.erst.gridgrind.contract.dto.GridGrindProblemCode;
 import dev.erst.gridgrind.contract.dto.GridGrindProblemDetail;
@@ -9,7 +8,6 @@ import dev.erst.gridgrind.contract.dto.WorkbookPlan;
 import dev.erst.gridgrind.contract.dto.WorkbookResult;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
 import dev.erst.gridgrind.excel.WorkbookArtifactIo;
-import java.util.List;
 import java.util.Objects;
 import java.util.function.Supplier;
 import org.jspecify.annotations.Nullable;
@@ -191,22 +189,6 @@ final class ExecutionResponseSupport {
         new ExecutionFailure(
             new ExecutionFailure.Context(protocolVersion, journal, request, calculation),
             ExecutionFailure.Artifacts.empty(),
-            new ExecutionFailure.Detail(problem, failedStepIndex, failedStepId)));
-  }
-
-  static WorkbookResult.Failure failureResponse(
-      GridGrindProtocolVersion protocolVersion,
-      ExecutionJournalRecorder journal,
-      WorkbookPlan request,
-      CalculationReport calculation,
-      List<AssertionResult> assertions,
-      GridGrindProblemDetail.Problem problem,
-      @Nullable Integer failedStepIndex,
-      @Nullable String failedStepId) {
-    return failureResponse(
-        new ExecutionFailure(
-            new ExecutionFailure.Context(protocolVersion, journal, request, calculation),
-            new ExecutionFailure.Artifacts(List.of(), assertions, List.of()),
             new ExecutionFailure.Detail(problem, failedStepIndex, failedStepId)));
   }
 
