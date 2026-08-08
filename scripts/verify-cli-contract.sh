@@ -246,9 +246,9 @@ set +e
 noargs_exit_code=$?
 set -e
 [[ ${noargs_exit_code} -eq 2 ]] || die "${label} bare invocation exited ${noargs_exit_code} instead of 2"
-[[ ! -s "${noargs_stdout_path}" ]] || die "${label} bare invocation wrote unexpected stdout"
-[[ -s "${noargs_stderr_path}" ]] || die "${label} bare invocation emitted no structured stderr"
-verify_interactive_noarg_failure "${noargs_stderr_path}" "${interactive_launcher[@]}"
+[[ -s "${noargs_stdout_path}" ]] || die "${label} bare invocation emitted no command rejection"
+[[ ! -s "${noargs_stderr_path}" ]] || die "${label} bare invocation wrote unexpected stderr"
+verify_interactive_noarg_failure "${noargs_stdout_path}" "${interactive_launcher[@]}"
 "${launcher[@]}" --print-request-template | tr -d '\r' > "${request_template_path}"
 "${launcher[@]}" --print-protocol-catalog | tr -d '\r' > "${catalog_index_path}"
 "${launcher[@]}" --print-protocol-catalog --lookup sourceTypes | tr -d '\r' > "${source_types_path}"
