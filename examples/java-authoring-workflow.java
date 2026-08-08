@@ -4,7 +4,7 @@ import dev.erst.gridgrind.authoring.Tables;
 import dev.erst.gridgrind.authoring.Targets;
 import dev.erst.gridgrind.authoring.Values;
 import dev.erst.gridgrind.contract.dto.ExecutionJournalLevel;
-import dev.erst.gridgrind.contract.dto.GridGrindResponse;
+import dev.erst.gridgrind.contract.dto.WorkbookResult;
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
 import dev.erst.gridgrind.engine.api.GridGrindEngine;
 import dev.erst.gridgrind.engine.api.GridGrindJournalSink;
@@ -68,7 +68,7 @@ final class JavaAuthoringWorkflowExample {
   }
 
   /** Executes the authored workflow in-process against the canonical executor. */
-  public static GridGrindResponse run(Path workspace) throws Exception {
+  public static WorkbookResult run(Path workspace) throws Exception {
     Path tempRoot = Files.createTempDirectory("gridgrind-java-");
     try {
       return GridGrindEngine.requestExecutor()

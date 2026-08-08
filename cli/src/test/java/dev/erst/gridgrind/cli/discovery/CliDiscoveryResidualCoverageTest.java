@@ -13,19 +13,12 @@ import org.junit.jupiter.api.Test;
 /** Residual coverage for discovery helper branches and protocol-catalog index codecs. */
 class CliDiscoveryResidualCoverageTest {
   @Test
-  void optionalTransportFactsRoundTripWithoutNullPadding() {
-    CliTransport stdout = CliTransport.standardOutput();
-    CliTransport file = CliTransport.responseFile("/tmp/diagnostic.json");
+  void transportNoticeCarriesOnlyTheRecoveredDestinationAndRequestedPath() {
+    CliTransportNotice notice = CliTransportNotice.stdoutFallback("/tmp/diagnostic.json");
 
-    assertEquals(Optional.empty(), stdout.responsePathValue());
-    assertEquals(Optional.of("/tmp/diagnostic.json"), file.responsePathValue());
-    assertEquals(
-        Optional.empty(),
-        CliDiscoveryValidation.copyOptionalTransport(Optional.empty(), "transport"));
-    assertEquals(
-        Optional.of(stdout),
-        CliDiscoveryValidation.copyOptionalTransport(Optional.of(stdout), "transport"));
-    assertFalse(file.responsePathValue().orElseThrow().isBlank());
+    assertEquals(CliTransportNotice.Destination.STDOUT, notice.wroteTo());
+    assertEquals(Optional.of("/tmp/diagnostic.json"), notice.responsePath());
+    assertFalse(notice.responsePath().orElseThrow().isBlank());
   }
 
   @Test

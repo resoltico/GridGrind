@@ -162,7 +162,7 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
                                 new WorkbookSelector.Current(),
                                 new WorkbookIntrospectionQuery.GetWorkbookSummary()))))));
 
-    assertEquals("ledger-audit", success.journal().planId().orElseThrow());
+    assertEquals("ledger-audit", success.planId().orElseThrow());
     assertEquals(ExecutionJournalLevel.VERBOSE, success.journal().level());
     assertEquals(2, success.journal().steps().size());
     assertEquals("ENSURE_SHEET", success.journal().steps().getFirst().stepType());
@@ -481,6 +481,8 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
     assertEquals(
         List.of(
             new RequestWarning(
+                dev.erst.gridgrind.contract.dto.GridGrindWarningCode
+                    .UNQUOTED_SHEET_NAME_IN_FORMULA,
                 3,
                 "step-04-set-cell",
                 "SET_CELL",

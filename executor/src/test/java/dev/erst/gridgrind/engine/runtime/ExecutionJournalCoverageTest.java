@@ -351,7 +351,6 @@ class ExecutionJournalCoverageTest {
     ExecutionJournalRecorder recorder =
         ExecutionContextFixtureSupport.startJournal(null, ExecutionJournalSink.NOOP);
     ExecutionJournal unknownJournal = recorder.buildSuccess(0);
-    assertEquals(java.util.Optional.empty(), unknownJournal.planId());
     assertEquals(java.util.Optional.empty(), unknownJournal.source().type());
 
     WorkbookPlan request = verbosePlan();

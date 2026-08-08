@@ -119,11 +119,10 @@ public final class GridGrindCliHelp {
                     "A bare gridgrind invocation expects one request JSON document on standard"
                         + " input together with --execution-root <path>, or one --request"
                         + " <path>.",
-                    "With no --response path, CLI diagnostics and request-content diagnostics"
-                        + " are emitted as structured JSON on stderr, while executed responses"
-                        + " stay on stdout. With --response, non-success stderr diagnostics"
-                        + " stay structured and use their transport block to name the persisted"
-                        + " file or stdout fallback channel.",
+                    "Without --response, the command payload is the sole stdout content. With"
+                        + " --response, GridGrind writes that payload to one new file; only a"
+                        + " response-file write failure emits one compact transport notice on"
+                        + " stderr after recovering the payload on stdout.",
                     "Use --format structured when you want JSON help, version, or license"
                         + " discovery instead of prose.",
                     "Use --pretty when you want indented JSON instead of the compact default"

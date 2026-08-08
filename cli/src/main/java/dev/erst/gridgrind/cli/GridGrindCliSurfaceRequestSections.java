@@ -102,16 +102,12 @@ final class GridGrindCliSurfaceRequestSections {
                     + " created, but existing files are never replaced implicitly."
                     + " JSON-native payloads stay compact by default; pass --pretty when"
                     + " you want indented JSON."
-                    + " Without --response, CLI diagnostics and request-content diagnostics"
-                    + " stay on stderr, while executed WorkbookResult payloads"
-                    + " stay on stdout even when status=FAILED."
-                    + " Execution writes the JSON response, doctoring writes the doctor"
-                    + " report, and help or discovery commands write their rendered text"
-                    + " or JSON payload. Non-success results also emit one structured"
-                    + " stderr CLI diagnostic whose transport block names where the"
-                    + " primary payload went: FILE plus responsePath when the response"
-                    + " file write succeeded, or STDOUT when GridGrind had to fall back"
-                    + " after a response-path write failure."),
+                    + " Without --response, the command payload is the sole stdout"
+                    + " content: CommandError for a rejected command, WorkbookResult"
+                    + " for execution, or the command's own discovery, help, or doctor"
+                    + " payload. With --response, that payload is written to the new"
+                    + " file. Only a response-file write failure adds one compact"
+                    + " transport notice on stderr after recovering the payload on stdout."),
             new CliSurface.DefinitionEntry(
                 "source.type=EXISTING + source.path", "open an existing workbook from that path."),
             new CliSurface.DefinitionEntry(

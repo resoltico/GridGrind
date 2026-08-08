@@ -47,8 +47,8 @@ class ExampleExecutionFixturesTest {
               () -> "self-contained built-in example must execute successfully: " + example.id());
       assertEquals(
           request.planId(),
-          success.journal().planId(),
-          () -> "success journal must retain the example plan id: " + example.id());
+          success.planId(),
+          () -> "success result must retain the example plan id: " + example.id());
       assertNullFreeResponse(success, example.id());
       assertPersistedWorkbookExists(request, workspace);
     }
@@ -73,8 +73,8 @@ class ExampleExecutionFixturesTest {
               () -> "built-in example must execute successfully: " + example.id());
       assertEquals(
           request.planId(),
-          success.journal().planId(),
-          () -> "success journal must retain the example plan id: " + example.id());
+          success.planId(),
+          () -> "success result must retain the example plan id: " + example.id());
       assertNullFreeResponse(success, example.id());
       assertPersistedWorkbookExists(request, workspace);
     }
@@ -124,8 +124,8 @@ class ExampleExecutionFixturesTest {
                       + example.requestFileName());
       assertEquals(
           request.planId(),
-          success.journal().planId(),
-          () -> "success journal must retain the repository example plan id: " + example.id());
+          success.planId(),
+          () -> "success result must retain the repository example plan id: " + example.id());
       assertNullFreeResponse(success, example.id());
       assertPersistedWorkbookExists(request, requestPath.getParent());
     }

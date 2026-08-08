@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.cli.discovery;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import dev.erst.gridgrind.contract.dto.DiagnosticOrder;
 import dev.erst.gridgrind.contract.dto.GridGrindProblemDetail;
@@ -8,6 +9,7 @@ import java.util.List;
 import java.util.Objects;
 
 /** Canonical plural result for a command rejected before workbook execution begins. */
+@JsonIgnoreProperties(value = "status", allowGetters = true)
 public record CommandError(
     GridGrindProtocolVersion protocolVersion,
     String command,

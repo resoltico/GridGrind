@@ -200,8 +200,7 @@ final class CliResponseWriter {
                 problem, GridGrindProblems.problemCause(failure.problem()));
       }
       WorkbookResult.Failure fallbackResponse =
-          WorkbookResults.failure(
-              GridGrindProtocolVersion.current(), response.persistence(), problem);
+          WorkbookResults.afterExecutionFailure(response, problem);
       writeStdoutFallback(
           stdout,
           stderr,

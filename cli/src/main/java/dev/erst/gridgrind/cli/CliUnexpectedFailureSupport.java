@@ -1,7 +1,7 @@
 package dev.erst.gridgrind.cli;
 
-import dev.erst.gridgrind.cli.discovery.CommandError;
 import dev.erst.gridgrind.cli.discovery.CliTransportNotice;
+import dev.erst.gridgrind.cli.discovery.CommandError;
 import dev.erst.gridgrind.cli.discovery.GridGrindCliJson;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -34,7 +34,7 @@ final class CliUnexpectedFailureSupport {
           .writeCommandError(responsePathHint, stdout, stderr, diagnostic, prettyJson);
     } catch (Throwable writeFailure) {
       directFallback(
-          diagnostic, stdout, stderr, responsePathHint.isPresent(), prettyJson, writeFailure);
+          diagnostic, stdout, stderr, responsePathHint, prettyJson, writeFailure);
       return CliResponseTransportSupport.exitCodeFor(diagnostic);
     }
   }
@@ -43,16 +43,17 @@ final class CliUnexpectedFailureSupport {
       CommandError diagnostic,
       OutputStream stdout,
       OutputStream stderr,
-      boolean responsePathUsed,
+      Optional<Path> responsePathHint,
       boolean prettyJson,
       Throwable writeFailure) {
     try {
       byte[] payload = GridGrindCliJson.writeBytes(diagnostic, prettyJson);
       writePayload(stdout, payload);
-      if (responsePathUsed) {
+      if (responsePathHint.isPresent()) {
         try {
           CliResponseTransportSupport.writeTransportNoticeToStderr(
-              stderr, CliTransportNotice.stdoutFallback("<unavailable>"));
+              stderr,
+              CliTransportNotice.stdoutFallback(responsePathHint.orElseThrow().toAbsolutePath().toString()));
         } catch (IOException ignored) {
           // The recovered command error on stdout remains the primary fallback result.
         }

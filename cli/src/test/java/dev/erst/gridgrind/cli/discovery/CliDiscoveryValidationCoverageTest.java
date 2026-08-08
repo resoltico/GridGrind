@@ -359,11 +359,8 @@ class CliDiscoveryValidationCoverageTest {
                 () ->
                     new CommandError(
                         GridGrindProtocolVersion.current(),
-                        2,
                         "print-recipe",
-                        List.of(),
-                        (List<GridGrindProblemDetail.Problem>) null,
-                        Optional.empty()))
+                        (List<GridGrindProblemDetail.Problem>) null))
             .getMessage());
     assertEquals(
         "problems must not be empty",
@@ -372,60 +369,26 @@ class CliDiscoveryValidationCoverageTest {
                 () ->
                     new CommandError(
                         GridGrindProtocolVersion.current(),
-                        2,
                         "print-recipe",
-                        List.of(),
-                        List.of(),
-                        Optional.empty()))
+                        List.of()))
             .getMessage());
     assertEquals(
-        "suggestions must not be null",
-        assertThrows(
-                NullPointerException.class,
-                () ->
-                    new CommandError(
-                        GridGrindProtocolVersion.current(),
-                        2,
-                        "print-recipe",
-                        null,
-                        List.of(problem()),
-                        Optional.empty()))
-            .getMessage());
-    assertEquals(
-        "transport must not be null",
-        assertThrows(
-                NullPointerException.class,
-                () ->
-                    new CommandError(
-                        GridGrindProtocolVersion.current(),
-                        2,
-                        "print-recipe",
-                        List.of(),
-                        List.of(problem()),
-                        null))
-            .getMessage());
-    assertEquals(
-        "exitCode must be positive",
+        "command must not be blank",
         assertThrows(
                 IllegalArgumentException.class,
                 () ->
                     new CommandError(
                         GridGrindProtocolVersion.current(),
-                        0,
-                        "print-recipe",
-                        List.of(),
-                        List.of(problem()),
-                        Optional.empty()))
+                        "   ",
+                        List.of(problem())))
             .getMessage());
     assertEquals(
         "responsePath must not be blank",
-        assertThrows(IllegalArgumentException.class, () -> CliTransport.responseFile("   "))
-            .getMessage());
-    assertEquals(
-        "transport must not be null",
         assertThrows(
-                NullPointerException.class,
-                () -> CliDiscoveryValidation.copyOptionalTransport(null, "transport"))
+                IllegalArgumentException.class,
+                () ->
+                    new CliTransportNotice(
+                        CliTransportNotice.Destination.STDOUT, Optional.of("   ")))
             .getMessage());
     assertEquals(
         "requestFileName must be one portable file name, not a repository path",

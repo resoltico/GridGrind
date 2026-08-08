@@ -1,6 +1,6 @@
 package dev.erst.gridgrind.jazzer.support;
 
-import dev.erst.gridgrind.contract.dto.GridGrindResponse;
+import dev.erst.gridgrind.contract.dto.WorkbookResult;
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
 import dev.erst.gridgrind.contract.step.AssertionStep;
 import dev.erst.gridgrind.contract.step.InspectionStep;
@@ -78,11 +78,11 @@ public final class SequenceIntrospection {
   }
 
   /** Returns the response family label used in telemetry and summaries. */
-  public static String responseKind(GridGrindResponse response) {
+  public static String responseKind(WorkbookResult response) {
     Objects.requireNonNull(response, "response must not be null");
     return switch (response) {
-      case GridGrindResponse.Success _ -> "SUCCESS";
-      case GridGrindResponse.Failure _ -> "FAILURE";
+      case WorkbookResult.Success _ -> "SUCCESS";
+      case WorkbookResult.Failure _ -> "FAILURE";
     };
   }
 

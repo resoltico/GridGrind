@@ -5,9 +5,9 @@ import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import dev.erst.gridgrind.contract.dto.GridGrindProblemCode;
 import dev.erst.gridgrind.contract.dto.GridGrindProblemDetail;
 import dev.erst.gridgrind.contract.dto.GridGrindProtocolVersion;
-import dev.erst.gridgrind.contract.dto.GridGrindResponse;
-import dev.erst.gridgrind.contract.dto.GridGrindResponsePersistence;
-import dev.erst.gridgrind.contract.dto.GridGrindResponses;
+import dev.erst.gridgrind.contract.dto.WorkbookResult;
+import dev.erst.gridgrind.contract.dto.WorkbookResultPersistence;
+import dev.erst.gridgrind.contract.dto.WorkbookResults;
 import dev.erst.gridgrind.contract.dto.ProblemContext;
 import dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces;
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
@@ -25,11 +25,11 @@ class WorkbookInvariantOverwritePersistenceTest {
             new WorkbookPlan.WorkbookPersistence.Overwrite(),
             List.of(),
             List.of());
-    GridGrindResponse.Failure response =
-        GridGrindResponses.failure(
+    WorkbookResult.Failure response =
+        WorkbookResults.failure(
             GridGrindProtocolVersion.V2,
-            new GridGrindResponsePersistence.PersistenceOutcome.Overwritten(
-                Optional.empty(), new GridGrindResponsePersistence.WriteResult.NotWritten()),
+            new WorkbookResultPersistence.PersistenceOutcome.Overwritten(
+                Optional.empty(), new WorkbookResultPersistence.WriteResult.NotWritten()),
             GridGrindProblemDetail.Problem.of(
                 GridGrindProblemCode.INVALID_REQUEST,
                 "OVERWRITE persistence requires an EXISTING source; a NEW workbook has no source"

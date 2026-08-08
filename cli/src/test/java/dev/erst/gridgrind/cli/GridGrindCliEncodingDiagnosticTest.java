@@ -27,7 +27,7 @@ class GridGrindCliEncodingDiagnosticTest extends GridGrindCliTestSupport {
 
     CommandError failure = commandErrorOnStdout(stdout, stderr);
 
-    assertEquals(1, exitCode);
+    assertEquals(2, exitCode);
     assertEquals(GridGrindProblemCode.INVALID_ENCODING, failure.primaryProblem().code());
     assertEquals("execute", failure.command());
     assertEquals(java.util.Optional.empty(), readRequestContext(failure).jsonPath());

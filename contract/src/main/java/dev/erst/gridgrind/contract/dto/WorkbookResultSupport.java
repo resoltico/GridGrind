@@ -42,6 +42,8 @@ final class WorkbookResultSupport {
         CalculationReport.notRequested(),
         Objects.requireNonNull(persistence, "persistence must not be null"),
         List.of(),
+        List.of(),
+        List.of(),
         problem);
   }
 

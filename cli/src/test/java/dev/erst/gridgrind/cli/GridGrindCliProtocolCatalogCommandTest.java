@@ -532,11 +532,10 @@ class GridGrindCliProtocolCatalogCommandTest extends GridGrindCliTestSupport {
                 stderr);
 
     CommandError failure = commandError(Files.readAllBytes(responsePath));
-    CommandError stderrDiagnostic = commandErrorOnStdout(stderr);
 
     assertEquals(2, exitCode);
     assertEquals("", stdout.toString(StandardCharsets.UTF_8));
-    assertEquals(failure, stderrDiagnostic);
+    assertEquals("", stderr.toString(StandardCharsets.UTF_8));
     assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.primaryProblem().code());
     assertTrue(failure.primaryProblem().message().contains("BOGUS_XYZ"));
   }

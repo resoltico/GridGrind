@@ -77,7 +77,16 @@ final class ExecutionWorkflowSupport {
       WorkbookStep step = request.steps().get(stepIndex);
       CalculationCheckpoint calculationCheckpoint =
           executeCalculationBeforeStepIfNeeded(
-              protocolVersion, request, workbook, journal, step, calculation, calculationExecuted);
+              protocolVersion,
+              request,
+              workbook,
+              journal,
+              warnings,
+              assertions,
+              inspections,
+              step,
+              calculation,
+              calculationExecuted);
       calculation = calculationCheckpoint.report();
       calculationExecuted = calculationCheckpoint.executed();
       if (calculationCheckpoint.failureResponse() != null) {
@@ -91,7 +100,15 @@ final class ExecutionWorkflowSupport {
         stepHandle.succeed();
       } catch (Exception exception) {
         return closeFailedStepExecution(
-            executionContext, calculation, assertions, stepIndex, step, stepHandle, exception);
+            executionContext,
+            warnings,
+            calculation,
+            assertions,
+            inspections,
+            stepIndex,
+            step,
+            stepHandle,
+            exception);
       }
     }
 
@@ -104,7 +121,16 @@ final class ExecutionWorkflowSupport {
         return responseSupport.closeWorkbook(
             workbook,
             ExecutionResponseSupport.failureResponseWithoutPlanOutcomeEvent(
-                protocolVersion, journal, request, calculation, problem, null, null),
+                protocolVersion,
+                journal,
+                request,
+                calculation,
+                warnings,
+                assertions,
+                inspections,
+                problem,
+                null,
+                null),
             request,
             journal,
             problem.code(),
@@ -114,7 +140,16 @@ final class ExecutionWorkflowSupport {
     }
 
     PersistenceResult persistenceResult =
-        persistWorkbook(protocolVersion, request, workbook, journal, workingDirectory, calculation);
+        persistWorkbook(
+            protocolVersion,
+            request,
+            workbook,
+            journal,
+            workingDirectory,
+            warnings,
+            assertions,
+            inspections,
+            calculation);
     if (persistenceResult.failureResponse() != null) {
       return persistenceResult.failureResponse();
     }
@@ -143,6 +178,9 @@ final class ExecutionWorkflowSupport {
       WorkbookPlan request,
       ExcelWorkbook workbook,
       ExecutionJournalRecorder journal,
+      List<RequestWarning> warnings,
+      List<AssertionResult> assertions,
+      List<InspectionResult> inspections,
       WorkbookStep step,
       CalculationReport currentCalculation,
       boolean calculationExecuted) {
@@ -161,7 +199,16 @@ final class ExecutionWorkflowSupport {
         responseSupport.closeWorkbook(
             workbook,
             ExecutionResponseSupport.failureResponseWithoutPlanOutcomeEvent(
-                protocolVersion, journal, request, outcome.report(), problem, null, null),
+                protocolVersion,
+                journal,
+                request,
+                outcome.report(),
+                warnings,
+                assertions,
+                inspections,
+                problem,
+                null,
+                null),
             request,
             journal,
             problem.code(),
@@ -192,8 +239,10 @@ final class ExecutionWorkflowSupport {
 
   private WorkbookResult closeFailedStepExecution(
       WorkbookExecutionContext executionContext,
+      List<RequestWarning> warnings,
       CalculationReport calculation,
       List<AssertionResult> assertions,
+      List<InspectionResult> inspections,
       int stepIndex,
       WorkbookStep step,
       ExecutionJournalRecorder.StepHandle stepHandle,
@@ -218,7 +267,9 @@ final class ExecutionWorkflowSupport {
             executionContext.journal(),
             executionContext.request(),
             calculation,
+            warnings,
             List.copyOf(assertions),
+            List.copyOf(inspections),
             problem,
             stepIndex,
             step.stepId()),
@@ -235,6 +286,9 @@ final class ExecutionWorkflowSupport {
       ExcelWorkbook workbook,
       ExecutionJournalRecorder journal,
       Path workingDirectory,
+      List<RequestWarning> warnings,
+      List<AssertionResult> assertions,
+      List<InspectionResult> inspections,
       CalculationReport calculation) {
     ExecutionJournalRecorder.PhaseHandle persistencePhase = journal.beginPersistence();
     try {
@@ -256,7 +310,16 @@ final class ExecutionWorkflowSupport {
           responseSupport.closeWorkbook(
               workbook,
               ExecutionResponseSupport.failureResponseWithoutPlanOutcomeEvent(
-                  protocolVersion, journal, request, calculation, problem, null, null),
+                  protocolVersion,
+                  journal,
+                  request,
+                  calculation,
+                  warnings,
+                  assertions,
+                  inspections,
+                  problem,
+                  null,
+                  null),
               request,
               journal,
               problem.code(),

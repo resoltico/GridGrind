@@ -66,8 +66,7 @@ class GridGrindCliInvocationTest extends GridGrindCliTestSupport {
     assertEquals(2, exitCode);
     assertEquals("", stdout.toString(StandardCharsets.UTF_8));
     CommandError failure = commandError(Files.readAllBytes(responsePath));
-    CommandError stderrDiagnostic = commandErrorOnStdout(stderr);
-    assertEquals(failure, stderrDiagnostic);
+    assertEquals("", stderr.toString(StandardCharsets.UTF_8));
     assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.primaryProblem().code());
     assertEquals(java.util.Optional.of("--request"), parseArgumentsContext(failure).argumentName());
   }
@@ -147,7 +146,7 @@ class GridGrindCliInvocationTest extends GridGrindCliTestSupport {
 
     CommandError failure = commandErrorOnStdout(stdout, stderr);
 
-    assertEquals(1, exitCode);
+    assertEquals(2, exitCode);
     assertEquals(GridGrindProblemCode.INVALID_REQUEST_SHAPE, failure.primaryProblem().code());
     assertEquals("execute", failure.command());
     assertEquals(
@@ -187,7 +186,7 @@ class GridGrindCliInvocationTest extends GridGrindCliTestSupport {
 
     CommandError failure = commandErrorOnStdout(stdout, stderr);
 
-    assertEquals(1, exitCode);
+    assertEquals(2, exitCode);
     assertEquals(GridGrindProblemCode.INVALID_REQUEST_SHAPE, failure.primaryProblem().code());
     assertEquals(Optional.of("steps[0].target.type"), readRequestContext(failure).jsonPath());
     assertEquals("Missing required field 'steps[0].target.type'", failure.primaryProblem().message());
@@ -234,7 +233,7 @@ class GridGrindCliInvocationTest extends GridGrindCliTestSupport {
     CommandError executeDiagnostic = commandErrorOnStdout(executeStdout, executeStderr);
     RequestDoctorReport doctorReport = doctorReport(doctorStdout, doctorStderr);
 
-    assertEquals(1, executeExitCode);
+    assertEquals(2, executeExitCode);
     assertEquals(1, doctorExitCode);
     assertEquals(executeDiagnostic.primaryProblem(), doctorReport.primaryProblem().orElseThrow());
     assertEquals(
@@ -280,7 +279,7 @@ class GridGrindCliInvocationTest extends GridGrindCliTestSupport {
     CommandError executeDiagnostic = commandErrorOnStdout(executeStdout, executeStderr);
     RequestDoctorReport doctorReport = doctorReport(doctorStdout, doctorStderr);
 
-    assertEquals(1, executeExitCode);
+    assertEquals(2, executeExitCode);
     assertEquals(1, doctorExitCode);
     assertEquals(doctorReport.problems(), executeDiagnostic.problems());
     assertEquals(5, executeDiagnostic.problems().size());
@@ -338,7 +337,7 @@ class GridGrindCliInvocationTest extends GridGrindCliTestSupport {
 
     CommandError failure = commandErrorOnStdout(stdout, stderr);
 
-    assertEquals(1, exitCode);
+    assertEquals(2, exitCode);
     assertEquals(GridGrindProblemCode.INVALID_REQUEST_SHAPE, failure.primaryProblem().code());
     assertEquals(Optional.of("steps[0].target.type"), readRequestContext(failure).jsonPath());
     assertEquals(
@@ -366,7 +365,7 @@ class GridGrindCliInvocationTest extends GridGrindCliTestSupport {
 
     CommandError failure = commandErrorOnStdout(stdout, stderr);
 
-    assertEquals(1, exitCode);
+    assertEquals(2, exitCode);
     assertEquals(GridGrindProblemCode.INVALID_REQUEST, failure.primaryProblem().code());
     assertEquals(Optional.of("persistence.path"), readRequestContext(failure).jsonPath());
     assertEquals("path must end in .xlsx (got: '.txt')", failure.primaryProblem().message());

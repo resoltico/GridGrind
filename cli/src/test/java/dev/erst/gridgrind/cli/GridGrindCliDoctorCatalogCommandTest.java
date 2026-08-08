@@ -231,17 +231,13 @@ class GridGrindCliDoctorCatalogCommandTest extends GridGrindCliTestSupport {
 
     RequestDoctorReport report =
         GridGrindJson.readRequestDoctorReport(Files.readAllBytes(responsePath));
-    CommandError stderrDiagnostic = commandErrorOnStdout(stderr);
 
     assertEquals(1, exitCode);
     assertEquals("", stdout.toString(StandardCharsets.UTF_8));
     assertFalse(report.valid());
     assertEquals(
         GridGrindProblemCode.INVALID_REQUEST, report.primaryProblem().orElseThrow().code());
-    assertEquals(report.primaryProblem().orElseThrow(), stderrDiagnostic.primaryProblem());
-    assertEquals(
-        Optional.of(responsePath.toAbsolutePath().toString()),
-        stderrDiagnostic.transport().flatMap(transport -> transport.responsePathValue()));
+    assertEquals("", stderr.toString(StandardCharsets.UTF_8));
   }
 
   @Test

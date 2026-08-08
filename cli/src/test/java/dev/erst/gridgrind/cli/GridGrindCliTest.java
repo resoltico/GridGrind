@@ -453,9 +453,9 @@ class GridGrindCliTest extends GridGrindCliTestSupport {
     assertEquals(1, exitCode);
     assertInstanceOf(WorkbookResult.Failure.class, response);
     WorkbookResult.Failure failure = (WorkbookResult.Failure) response;
-    assertEquals(GridGrindProblemCode.WORKBOOK_NOT_FOUND, failure.primaryProblem().code());
-    assertEquals("OPEN_WORKBOOK", failure.primaryProblem().context().stage());
-    assertTrue(failure.primaryProblem().message().contains("Workbook does not exist"));
+    assertEquals(GridGrindProblemCode.WORKBOOK_NOT_FOUND, failure.problem().code());
+    assertEquals("OPEN_WORKBOOK", failure.problem().context().stage());
+    assertTrue(failure.problem().message().contains("Workbook does not exist"));
   }
 
   @Test
@@ -482,7 +482,7 @@ class GridGrindCliTest extends GridGrindCliTestSupport {
 
     CommandError failure = commandErrorOnStdout(stdout, stderr);
 
-    assertEquals(1, exitCode);
+    assertEquals(2, exitCode);
     assertEquals(GridGrindProblemCode.INVALID_REQUEST, failure.primaryProblem().code());
     assertEquals("execute", failure.command());
     assertEquals(
@@ -652,7 +652,7 @@ class GridGrindCliTest extends GridGrindCliTestSupport {
   }
 
   @Test
-  void writesCommandErrorToStderrWhenExecutionFailsAndResponsePathIsConfigured()
+  void writesCommandErrorOnlyToTheResponsePathWhenExecutionIsRejectedBeforeItBegins()
       throws IOException {
     Path requestPath = Files.createTempFile("gridgrind-invalid-request-", ".json");
     Path responsePath = Files.createTempFile("gridgrind-invalid-response-", ".json");
@@ -685,11 +685,10 @@ class GridGrindCliTest extends GridGrindCliTestSupport {
                 stderr);
 
     CommandError failure = commandError(Files.readAllBytes(responsePath));
-    CommandError stderrDiagnostic = commandErrorOnStdout(stderr);
 
-    assertEquals(1, exitCode);
+    assertEquals(2, exitCode);
     assertEquals("", stdout.toString(StandardCharsets.UTF_8));
-    assertEquals(failure, stderrDiagnostic);
+    assertEquals("", stderr.toString(StandardCharsets.UTF_8));
     assertEquals(GridGrindProblemCode.INVALID_REQUEST_SHAPE, failure.primaryProblem().code());
     assertEquals(Optional.of("steps[0].target.type"), readRequestContext(failure).jsonPath());
   }

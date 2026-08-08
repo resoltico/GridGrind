@@ -70,4 +70,41 @@ public final class WorkbookResults {
   public static WorkbookResult.Failure failure(GridGrindProblemDetail.Problem problem) {
     return failure(GridGrindProtocolVersion.current(), problem);
   }
+
+  /**
+   * Reclassifies a completed execution as failed when a later execution-channel operation fails.
+   *
+   * <p>The journal remains the truthful workbook-execution record: writing the CLI response is a
+   * transport operation outside the workbook journal. The result status and singular problem report
+   * that post-execution failure without discarding completed warnings, assertions, or inspections.
+   */
+  public static WorkbookResult.Failure afterExecutionFailure(
+      WorkbookResult response, GridGrindProblemDetail.Problem problem) {
+    java.util.Objects.requireNonNull(response, "response must not be null");
+    java.util.Objects.requireNonNull(problem, "problem must not be null");
+    return switch (response) {
+      case WorkbookResult.Success success ->
+          new WorkbookResult.Failure(
+              success.protocolVersion(),
+              success.planId(),
+              success.journal(),
+              success.calculation(),
+              success.persistence(),
+              success.warnings(),
+              success.assertions(),
+              success.inspections(),
+              problem);
+      case WorkbookResult.Failure failure ->
+          new WorkbookResult.Failure(
+              failure.protocolVersion(),
+              failure.planId(),
+              failure.journal(),
+              failure.calculation(),
+              failure.persistence(),
+              failure.warnings(),
+              failure.assertions(),
+              failure.inspections(),
+              problem);
+    };
+  }
 }

@@ -1,6 +1,6 @@
 package dev.erst.gridgrind.jazzer.support;
 
-import dev.erst.gridgrind.contract.dto.GridGrindResponse;
+import dev.erst.gridgrind.contract.dto.WorkbookResult;
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
 import dev.erst.gridgrind.contract.source.TextSourceInput;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
@@ -12,7 +12,7 @@ public final class WorkbookInvariantChecks {
   private WorkbookInvariantChecks() {}
 
   /** Requires the response shape to satisfy the protocol invariants the fuzzers rely on. */
-  public static void requireResponseShape(GridGrindResponse response) {
+  public static void requireResponseShape(WorkbookResult response) {
     WorkbookInvariantResponseChecks.requireResponseShape(response);
   }
 
@@ -20,7 +20,7 @@ public final class WorkbookInvariantChecks {
    * Requires the response shape to agree with the request's source, reads, and persistence
    * contract.
    */
-  public static void requireWorkflowOutcomeShape(WorkbookPlan request, GridGrindResponse response) {
+  public static void requireWorkflowOutcomeShape(WorkbookPlan request, WorkbookResult response) {
     WorkbookInvariantResponseChecks.requireWorkflowOutcomeShape(request, response);
   }
 

@@ -5,8 +5,10 @@ import dev.erst.gridgrind.contract.dto.CalculationReport;
 import dev.erst.gridgrind.contract.dto.GridGrindProblemCode;
 import dev.erst.gridgrind.contract.dto.GridGrindProblemDetail;
 import dev.erst.gridgrind.contract.dto.GridGrindProtocolVersion;
+import dev.erst.gridgrind.contract.dto.RequestWarning;
 import dev.erst.gridgrind.contract.dto.WorkbookResult;
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
+import dev.erst.gridgrind.contract.query.InspectionResult;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
 import dev.erst.gridgrind.excel.WorkbookArtifactIo;
 import java.util.List;
@@ -176,6 +178,8 @@ final class ExecutionResponseSupport {
         request,
         CalculationReport.notRequested(),
         List.of(),
+        List.of(),
+        List.of(),
         problem,
         failedStepIndex,
         failedStepId,
@@ -195,6 +199,8 @@ final class ExecutionResponseSupport {
         journal,
         request,
         calculation,
+        List.of(),
+        List.of(),
         List.of(),
         problem,
         failedStepIndex,
@@ -216,7 +222,34 @@ final class ExecutionResponseSupport {
         journal,
         request,
         calculation,
+        List.of(),
         assertions,
+        List.of(),
+        problem,
+        failedStepIndex,
+        failedStepId,
+        true);
+  }
+
+  static WorkbookResult.Failure failureResponse(
+      GridGrindProtocolVersion protocolVersion,
+      ExecutionJournalRecorder journal,
+      WorkbookPlan request,
+      CalculationReport calculation,
+      List<RequestWarning> warnings,
+      List<AssertionResult> assertions,
+      List<InspectionResult> inspections,
+      GridGrindProblemDetail.Problem problem,
+      @Nullable Integer failedStepIndex,
+      @Nullable String failedStepId) {
+    return failureResponse(
+        protocolVersion,
+        journal,
+        request,
+        calculation,
+        warnings,
+        assertions,
+        inspections,
         problem,
         failedStepIndex,
         failedStepId,
@@ -236,6 +269,8 @@ final class ExecutionResponseSupport {
         journal,
         request,
         calculation,
+        List.of(),
+        List.of(),
         List.of(),
         problem,
         failedStepIndex,
@@ -257,7 +292,34 @@ final class ExecutionResponseSupport {
         journal,
         request,
         calculation,
+        List.of(),
         assertions,
+        List.of(),
+        problem,
+        failedStepIndex,
+        failedStepId,
+        false);
+  }
+
+  static WorkbookResult.Failure failureResponseWithoutPlanOutcomeEvent(
+      GridGrindProtocolVersion protocolVersion,
+      ExecutionJournalRecorder journal,
+      WorkbookPlan request,
+      CalculationReport calculation,
+      List<RequestWarning> warnings,
+      List<AssertionResult> assertions,
+      List<InspectionResult> inspections,
+      GridGrindProblemDetail.Problem problem,
+      @Nullable Integer failedStepIndex,
+      @Nullable String failedStepId) {
+    return failureResponse(
+        protocolVersion,
+        journal,
+        request,
+        calculation,
+        warnings,
+        assertions,
+        inspections,
         problem,
         failedStepIndex,
         failedStepId,
@@ -269,7 +331,9 @@ final class ExecutionResponseSupport {
       ExecutionJournalRecorder journal,
       WorkbookPlan request,
       CalculationReport calculation,
+      List<RequestWarning> warnings,
       List<AssertionResult> assertions,
+      List<InspectionResult> inspections,
       GridGrindProblemDetail.Problem problem,
       @Nullable Integer failedStepIndex,
       @Nullable String failedStepId,
@@ -285,7 +349,9 @@ final class ExecutionResponseSupport {
             emitPlanOutcomeEvent),
         calculation,
         ExecutionRequestPaths.unwrittenPersistenceOutcome(request),
+        warnings,
         assertions,
+        inspections,
         problem);
   }
 
@@ -318,7 +384,9 @@ final class ExecutionResponseSupport {
                   failedStepId),
               failure.calculation(),
               failure.persistence(),
+              failure.warnings(),
               failure.assertions(),
+              failure.inspections(),
               failure.problem());
     };
   }
@@ -342,7 +410,9 @@ final class ExecutionResponseSupport {
               failedStepId),
           existingFailure.calculation(),
           existingFailure.persistence(),
+          existingFailure.warnings(),
           existingFailure.assertions(),
+          existingFailure.inspections(),
           GridGrindProblems.appendCause(
               existingFailure.problem(), GridGrindProblems.problemCause(closeProblem)));
     }
@@ -352,7 +422,9 @@ final class ExecutionResponseSupport {
         journal.buildFailure(request.steps().size(), closeProblem.code(), null, null),
         response.calculation(),
         response.persistence(),
+        response instanceof WorkbookResult.Success success ? success.warnings() : List.of(),
         List.of(),
+        response instanceof WorkbookResult.Success success ? success.inspections() : List.of(),
         closeProblem);
   }
 }

@@ -134,7 +134,7 @@ class GridGrindCliTestSupport {
 
   protected static ProblemContext.ParseArguments parseArgumentsContext(
       WorkbookResult.Failure failure) {
-    return assertInstanceOf(ProblemContext.ParseArguments.class, failure.primaryProblem().context());
+    return assertInstanceOf(ProblemContext.ParseArguments.class, failure.problem().context());
   }
 
   protected static ProblemContext.ParseArguments parseArgumentsContext(RequestDoctorReport report) {
@@ -149,7 +149,7 @@ class GridGrindCliTestSupport {
 
   protected static ProblemContext.ReadRequest readRequestContext(
       WorkbookResult.Failure failure) {
-    return assertInstanceOf(ProblemContext.ReadRequest.class, failure.primaryProblem().context());
+    return assertInstanceOf(ProblemContext.ReadRequest.class, failure.problem().context());
   }
 
   protected static ProblemContext.ReadRequest readRequestContext(RequestDoctorReport report) {
@@ -174,12 +174,12 @@ class GridGrindCliTestSupport {
 
   protected static ProblemContext.ExecuteRequest executeRequestContext(
       WorkbookResult.Failure failure) {
-    return assertInstanceOf(ProblemContext.ExecuteRequest.class, failure.primaryProblem().context());
+    return assertInstanceOf(ProblemContext.ExecuteRequest.class, failure.problem().context());
   }
 
   protected static ProblemContext.WriteResponse writeResponseContext(
       WorkbookResult.Failure failure) {
-    return assertInstanceOf(ProblemContext.WriteResponse.class, failure.primaryProblem().context());
+    return assertInstanceOf(ProblemContext.WriteResponse.class, failure.problem().context());
   }
 
   protected static ProblemContext.WriteResponse writeResponseContext(RequestDoctorReport report) {
@@ -194,34 +194,34 @@ class GridGrindCliTestSupport {
 
   protected static ProblemContext.ExecuteStep executeStepContext(
       WorkbookResult.Failure failure) {
-    return assertInstanceOf(ProblemContext.ExecuteStep.class, failure.primaryProblem().context());
+    return assertInstanceOf(ProblemContext.ExecuteStep.class, failure.problem().context());
   }
 
   protected static CommandError commandError(byte[] bytes) throws IOException {
     return GridGrindCliJson.readBytes(bytes, CommandError.class);
   }
 
-  /** Reads one {@link CommandError} from stderr without asserting anything about stdout. */
-  protected static CommandError commandErrorOnStdout(ByteArrayOutputStream stderr)
+  /** Reads one {@link CommandError} from stdout without asserting anything about stderr. */
+  protected static CommandError commandErrorOnStdout(ByteArrayOutputStream stdout)
       throws IOException {
-    Objects.requireNonNull(stderr, "stderr must not be null");
-    return GridGrindCliJson.readBytes(stderr.toByteArray(), CommandError.class);
+    Objects.requireNonNull(stdout, "stdout must not be null");
+    return GridGrindCliJson.readBytes(stdout.toByteArray(), CommandError.class);
   }
 
   /**
-   * Reads a {@link CommandError} from stderr and asserts that stdout stayed empty.
+   * Reads a {@link CommandError} from stdout and asserts that stderr stayed empty.
    *
    * <p>Use this helper in every test that expects a CLI diagnostic with no {@code --response} path
-   * configured. It encodes the current routing contract — structured JSON on stderr, nothing on
-   * stdout — in a single call so individual tests cannot forget either half.
+   * configured. It encodes the current routing contract — structured JSON on stdout, nothing on
+   * stderr — in a single call so individual tests cannot forget either half.
    */
   protected static CommandError commandErrorOnStdout(
       ByteArrayOutputStream stdout, ByteArrayOutputStream stderr) throws IOException {
     assertEquals(
         "",
-        stdout.toString(StandardCharsets.UTF_8),
-        "stdout must be empty when a CLI diagnostic is routed to stderr");
-    return GridGrindCliJson.readBytes(stderr.toByteArray(), CommandError.class);
+        stderr.toString(StandardCharsets.UTF_8),
+        "stderr must be empty when a command error is routed to stdout");
+    return GridGrindCliJson.readBytes(stdout.toByteArray(), CommandError.class);
   }
 
   protected static WorkbookResult response(

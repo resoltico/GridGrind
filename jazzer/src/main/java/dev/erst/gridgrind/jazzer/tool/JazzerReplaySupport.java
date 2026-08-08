@@ -1,6 +1,6 @@
 package dev.erst.gridgrind.jazzer.tool;
 
-import dev.erst.gridgrind.contract.dto.GridGrindResponse;
+import dev.erst.gridgrind.contract.dto.WorkbookResult;
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
 import dev.erst.gridgrind.contract.json.GridGrindJson;
 import dev.erst.gridgrind.contract.json.InvalidJsonException;
@@ -171,7 +171,7 @@ public final class JazzerReplaySupport {
     GridGrindFuzzData data = GridGrindFuzzData.replay(input);
     GeneratedProtocolWorkflow workflow = null;
     WorkbookPlan request = null;
-    GridGrindResponse response = null;
+    WorkbookResult response = null;
     try {
       workflow = OperationSequenceModel.nextProtocolWorkflow(data);
       request = workflow.request();
@@ -287,7 +287,7 @@ public final class JazzerReplaySupport {
   }
 
   private static ProtocolWorkflowDetails workflowDetails(
-      int inputLength, @Nullable WorkbookPlan request, @Nullable GridGrindResponse response) {
+      int inputLength, @Nullable WorkbookPlan request, @Nullable WorkbookResult response) {
     if (request == null) {
       return new ProtocolWorkflowDetails(
           inputLength,

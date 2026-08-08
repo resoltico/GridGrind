@@ -298,29 +298,24 @@ class GridGrindCliJsonCoverageTest {
   }
 
   @Test
-  void commandErrorJsonKeepsTheWrapperTransportOnlyAndLeavesProblemFactsInProblemCore()
+  void commandErrorJsonKeepsCommandFactsSeparateFromTheSharedProblemCore()
       throws IOException {
     JsonNode parseArgumentsDiagnostic =
         GridGrindCliJsonStreams.readTree(GridGrindCliJson.writeBytes(sampleCommandError()));
+    GridGrindProblemDetail.Problem readRequestProblem =
+        GridGrindProblemDetail.Problem.of(
+            GridGrindProblemCode.INVALID_REQUEST_SHAPE,
+            "Unknown field 'bogus'",
+            new ProblemContext.ReadRequest(
+                RequestInput.standardInput(), JsonLocation.located("steps[0].target.type", 7, 13)));
     JsonNode readRequestDiagnostic =
         GridGrindCliJsonStreams.readTree(
             GridGrindCliJson.writeBytes(
                 new CommandError(
-                    GridGrindProtocolVersion.current(),
-                    1,
-                    "execute",
-                    List.of("gridgrind --doctor-request --request request.json"),
-                    List.of(
-                        GridGrindProblemDetail.Problem.of(
-                            GridGrindProblemCode.INVALID_REQUEST_SHAPE,
-                            "Unknown field 'bogus'",
-                            new ProblemContext.ReadRequest(
-                                RequestInput.standardInput(),
-                                JsonLocation.located("steps[0].target.type", 7, 13)))),
-                    java.util.Optional.of(CliTransport.standardOutput()))));
+                    GridGrindProtocolVersion.current(), "execute", List.of(readRequestProblem))));
 
     assertEquals(
-        Set.of("protocolVersion", "exitCode", "command", "suggestions", "problems", "transport"),
+        Set.of("protocolVersion", "command", "problems", "status"),
         fieldNames(parseArgumentsDiagnostic));
     assertFalse(parseArgumentsDiagnostic.has("code"));
     assertFalse(parseArgumentsDiagnostic.has("message"));
@@ -328,6 +323,9 @@ class GridGrindCliJsonCoverageTest {
     assertFalse(parseArgumentsDiagnostic.has("argument"));
     assertFalse(parseArgumentsDiagnostic.has("location"));
     assertFalse(parseArgumentsDiagnostic.has("jsonPath"));
+    assertFalse(parseArgumentsDiagnostic.has("exitCode"));
+    assertFalse(parseArgumentsDiagnostic.has("suggestions"));
+    assertFalse(parseArgumentsDiagnostic.has("transport"));
     assertEquals(
         "NAMED",
         parseArgumentsDiagnostic
@@ -346,13 +344,10 @@ class GridGrindCliJsonCoverageTest {
             .path("argument")
             .path("argument")
             .asText());
-    assertEquals("FILE", parseArgumentsDiagnostic.path("transport").path("wroteTo").asText());
-    assertEquals(
-        "/tmp/diagnostic.json",
-        parseArgumentsDiagnostic.path("transport").path("responsePath").asText());
+    assertEquals("REJECTED", parseArgumentsDiagnostic.path("status").asText());
 
     assertEquals(
-        Set.of("protocolVersion", "exitCode", "command", "suggestions", "problems", "transport"),
+        Set.of("protocolVersion", "command", "problems", "status"),
         fieldNames(readRequestDiagnostic));
     assertFalse(readRequestDiagnostic.has("location"));
     assertFalse(readRequestDiagnostic.has("jsonPath"));
@@ -403,8 +398,7 @@ class GridGrindCliJsonCoverageTest {
             .path("json")
             .path("jsonColumn")
             .asInt());
-    assertEquals("STDOUT", readRequestDiagnostic.path("transport").path("wroteTo").asText());
-    assertFalse(readRequestDiagnostic.path("transport").has("responsePath"));
+    assertEquals("REJECTED", readRequestDiagnostic.path("status").asText());
   }
 
   private static RecipeKeywordMatchReport sampleRecipeKeywordMatchReport() {
@@ -428,15 +422,12 @@ class GridGrindCliJsonCoverageTest {
   private static CommandError sampleCommandError() {
     return new CommandError(
         GridGrindProtocolVersion.current(),
-        2,
         "print-recipe-keyword-match",
-        List.of("gridgrind --print-recipe-catalog"),
         List.of(
             GridGrindProblemDetail.Problem.of(
                 GridGrindProblemCode.INVALID_ARGUMENTS,
                 "message",
-                new ProblemContext.ParseArguments(CliArgument.named("--query")))),
-        java.util.Optional.of(CliTransport.responseFile("/tmp/diagnostic.json")));
+                new ProblemContext.ParseArguments(CliArgument.named("--query")))));
   }
 
   private static ProtocolCatalogSearchReport sampleProtocolCatalogSearchReport() {

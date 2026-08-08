@@ -64,6 +64,7 @@ final class ExecutionStreamingWorkflow {
             protocolVersion,
             request,
             executionMode,
+            warnings,
             journal,
             workbookLocation,
             assertions,
@@ -101,7 +102,16 @@ final class ExecutionStreamingWorkflow {
         ExecutionWorkbookSupport.deleteIfExists(materializedPath);
         GridGrindProblemDetail.Problem problem = calculationOutcome.failure().orElseThrow();
         return ExecutionResponseSupport.failureResponse(
-            protocolVersion, journal, request, calculation, problem, null, null);
+            protocolVersion,
+            journal,
+            request,
+            calculation,
+            warnings,
+            List.copyOf(assertions),
+            List.copyOf(inspections),
+            problem,
+            null,
+            null);
       }
 
       materializedPath =
@@ -116,7 +126,16 @@ final class ExecutionStreamingWorkflow {
               new dev.erst.gridgrind.contract.dto.ProblemContext.ExecuteRequest(
                   ExecutionRequestPaths.requestShape(request)));
       return ExecutionResponseSupport.failureResponse(
-          protocolVersion, journal, request, calculation, problem, null, null);
+          protocolVersion,
+          journal,
+          request,
+          calculation,
+          warnings,
+          List.copyOf(assertions),
+          List.copyOf(inspections),
+          problem,
+          null,
+          null);
     }
 
     ExecutionJournalRecorder.PhaseHandle persistencePhase = journal.beginPersistence();
@@ -137,7 +156,16 @@ final class ExecutionStreamingWorkflow {
                   ExecutionRequestPaths.persistenceReference(request, workingDirectory)));
       persistencePhase.fail("failed (" + problem.code() + ")");
       return ExecutionResponseSupport.failureResponse(
-          protocolVersion, journal, request, calculation, problem, null, null);
+          protocolVersion,
+          journal,
+          request,
+          calculation,
+          warnings,
+          List.copyOf(assertions),
+          List.copyOf(inspections),
+          problem,
+          null,
+          null);
     } finally {
       if (!movedToPersistenceTarget) {
         ExecutionWorkbookSupport.deleteIfExists(materializedPath);
@@ -211,7 +239,9 @@ final class ExecutionStreamingWorkflow {
         workflowContext.journal(),
         workflowContext.request(),
         calculation,
+        workflowContext.warnings(),
         List.copyOf(workflowContext.assertions()),
+        List.copyOf(workflowContext.inspections()),
         problem,
         stepIndex,
         step.stepId());
@@ -221,6 +251,7 @@ final class ExecutionStreamingWorkflow {
       GridGrindProtocolVersion protocolVersion,
       WorkbookPlan request,
       ExecutionModeInput executionMode,
+      List<RequestWarning> warnings,
       ExecutionJournalRecorder journal,
       WorkbookLocation workbookLocation,
       List<AssertionResult> assertions,

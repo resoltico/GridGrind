@@ -128,7 +128,7 @@ If you want to execute in process, pass that plan to an executor yourself:
 Typical in-process execution:
 
 ```java
-GridGrindResponse response =
+WorkbookResult response =
     GridGrindEngine.requestExecutor()
         .execute(
             plan.toPlan(),

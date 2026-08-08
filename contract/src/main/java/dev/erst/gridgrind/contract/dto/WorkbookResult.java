@@ -71,7 +71,9 @@ public sealed interface WorkbookResult {
       ExecutionJournal journal,
       CalculationReport calculation,
       PersistenceOutcome persistence,
+      List<RequestWarning> warnings,
       List<AssertionResult> assertions,
+      List<InspectionResult> inspections,
       Problem problem)
       implements WorkbookResult {
     public Failure {
@@ -80,9 +82,16 @@ public sealed interface WorkbookResult {
       Objects.requireNonNull(journal, "journal must not be null");
       Objects.requireNonNull(calculation, "calculation must not be null");
       Objects.requireNonNull(persistence, "persistence must not be null");
+      warnings =
+          DiagnosticOrder.warnings(
+              WorkbookResultSupport.copyValues(
+                  Objects.requireNonNull(warnings, "warnings must not be null"), "warnings"));
       assertions =
           WorkbookResultSupport.copyValues(
               Objects.requireNonNull(assertions, "assertions must not be null"), "assertions");
+      inspections =
+          WorkbookResultSupport.copyValues(
+              Objects.requireNonNull(inspections, "inspections must not be null"), "inspections");
       Objects.requireNonNull(problem, "problem must not be null");
     }
   }

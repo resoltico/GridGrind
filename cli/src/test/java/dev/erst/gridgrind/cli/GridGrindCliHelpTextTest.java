@@ -266,12 +266,9 @@ class GridGrindCliHelpTextTest extends GridGrindCliTestSupport {
     assertTrue(overview.contains("Use --format structured"));
     assertTrue(overview.contains("Use --pretty"));
     assertTrue(overview.contains("--pretty"));
-    assertTrue(overview.contains("CLI diagnostics and request-content diagnostics"));
-    assertTrue(overview.contains("structured JSON on stderr"));
-    assertTrue(
-        normalizedOverview.contains(
-            "transport block to name the persisted file or stdout fallback channel"));
-    assertTrue(overview.contains("executed responses stay on stdout."));
+    assertTrue(overview.contains("Without --response"));
+    assertTrue(overview.contains("compact transport notice"));
+    assertTrue(normalizedOverview.contains("recovering the payload on stdout"));
     assertTrue(overview.contains("docs/QUICK_REFERENCE.md"));
     assertFalse(overview.contains("Minimal Valid Request:"));
     assertFalse(overview.contains("Built-in generated examples:"));
@@ -315,13 +312,9 @@ class GridGrindCliHelpTextTest extends GridGrindCliTestSupport {
     assertTrue(protocol.contains("GET_CELLS addresses"));
     assertTrue(protocol.contains("EVALUATE_TARGETS requires strategy.cells[]"));
     assertTrue(protocol.contains("stepId must be unique within steps[]"));
-    assertTrue(normalizedProtocol.contains("CLI diagnostics and request-content diagnostics"));
-    assertTrue(normalizedProtocol.contains("stay on stderr"));
-    assertTrue(normalizedProtocol.contains("structured stderr CLI diagnostic"));
-    assertTrue(normalizedProtocol.contains("transport block names where the primary payload went"));
-    assertTrue(
-        normalizedProtocol.contains(
-            "executed WorkbookResult payloads stay on stdout even when status=FAILED."));
+    assertTrue(normalizedProtocol.contains("Without --response, the command payload is the sole stdout content"));
+    assertTrue(normalizedProtocol.contains("With --response, that payload is written to the new file"));
+    assertTrue(normalizedProtocol.contains("response-file write failure adds one compact transport notice"));
     assertFalse(protocol.contains("Workflows:"));
     assertFalse(protocol.contains("Docker Example:"));
   }
@@ -407,11 +400,14 @@ class GridGrindCliHelpTextTest extends GridGrindCliTestSupport {
                 stderr);
 
     CommandError failure = GridGrindCliJson.readBytes(stdout.toByteArray(), CommandError.class);
-    CommandError stderrDiagnostic =
-        GridGrindCliJson.readBytes(stderr.toByteArray(), CommandError.class);
+    dev.erst.gridgrind.cli.discovery.CliTransportNotice transportNotice =
+        GridGrindCliJson.readBytes(
+            stderr.toByteArray(), dev.erst.gridgrind.cli.discovery.CliTransportNotice.class);
 
     assertEquals(1, exitCode);
-    assertEquals(failure, stderrDiagnostic);
+    assertEquals(
+        dev.erst.gridgrind.cli.discovery.CliTransportNotice.Destination.STDOUT,
+        transportNotice.wroteTo());
     assertEquals(GridGrindProblemCode.IO_ERROR, failure.primaryProblem().code());
     assertEquals("version", failure.command());
     assertEquals(
