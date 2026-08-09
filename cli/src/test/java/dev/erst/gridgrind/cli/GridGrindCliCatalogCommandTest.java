@@ -82,7 +82,7 @@ class GridGrindCliCatalogCommandTest extends GridGrindCliTestSupport {
   }
 
   @Test
-  void printAssetBackedExampleWarnsOnStderrBeforeExecution() throws IOException {
+  void printAssetBackedExampleKeepsTheRequestPayloadChannelQuiet() throws IOException {
     ByteArrayOutputStream stdout = new ByteArrayOutputStream();
     ByteArrayOutputStream stderr = new ByteArrayOutputStream();
     int exitCode =
@@ -98,16 +98,7 @@ class GridGrindCliCatalogCommandTest extends GridGrindCliTestSupport {
     assertEquals(0, exitCode);
     assertEquals(
         GridGrindShippedExamples.find("PACKAGE_SECURITY_INSPECTION").orElseThrow().plan(), request);
-    assertTrue(
-        stderr
-            .toString(StandardCharsets.UTF_8)
-            .contains("requires copied asset paths beside the request file"),
-        "asset-backed example printing must warn about copied assets");
-    assertTrue(
-        stderr
-            .toString(StandardCharsets.UTF_8)
-            .contains("package-security-assets/gridgrind-package-security.xlsx"),
-        "asset-backed example printing must name the required copied asset paths");
+    assertEquals("", stderr.toString(StandardCharsets.UTF_8));
   }
 
   @Test
@@ -387,7 +378,7 @@ class GridGrindCliCatalogCommandTest extends GridGrindCliTestSupport {
   }
 
   @Test
-  void printAssetBackedTaskStarterWarnsOnStderrBeforeExecution() throws IOException {
+  void printAssetBackedTaskStarterKeepsTheRequestPayloadChannelQuiet() throws IOException {
     ByteArrayOutputStream stdout = new ByteArrayOutputStream();
     ByteArrayOutputStream stderr = new ByteArrayOutputStream();
 
@@ -409,16 +400,7 @@ class GridGrindCliCatalogCommandTest extends GridGrindCliTestSupport {
 
     assertEquals(0, exitCode);
     assertEquals(recipe.plan(), request);
-    assertTrue(
-        stderr
-            .toString(StandardCharsets.UTF_8)
-            .contains("requires copied asset paths beside the request file"),
-        "asset-backed task starter printing must warn about copied assets");
-    assertTrue(
-        stderr
-            .toString(StandardCharsets.UTF_8)
-            .contains("task-starter-assets/workbook-ops-source.xlsx"),
-        "asset-backed task starter printing must name the required copied asset paths");
+    assertEquals("", stderr.toString(StandardCharsets.UTF_8));
   }
 
   @Test

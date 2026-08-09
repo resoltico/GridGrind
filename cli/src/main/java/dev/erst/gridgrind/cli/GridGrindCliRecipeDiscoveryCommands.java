@@ -31,7 +31,6 @@ final class GridGrindCliRecipeDiscoveryCommands {
           CommandErrors.invalidArguments("print-recipe", Optional.of("--lookup"), message),
           prettyJson);
     }
-    CliCatalogCommandSupport.emitRecipePortabilityWarning(recipe.get(), stderr);
     byte[] requestBytes = GridGrindJsonOutput.writeRequestBytes(recipe.get().plan(), prettyJson);
     return CliCatalogPayloadSupport.writePayload(
         responseWriter,

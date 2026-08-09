@@ -1,6 +1,5 @@
 package dev.erst.gridgrind.cli;
 
-import dev.erst.gridgrind.cli.discovery.ExampleWorkspaceMode;
 import dev.erst.gridgrind.cli.discovery.ProtocolCatalogFieldMetadataKey;
 import dev.erst.gridgrind.cli.discovery.ProtocolCatalogGroupIndex;
 import dev.erst.gridgrind.cli.discovery.ProtocolCatalogIndexReport;
@@ -12,12 +11,8 @@ import dev.erst.gridgrind.cli.examples.GridGrindCliRecipeRegistry;
 import dev.erst.gridgrind.contract.catalog.Catalog;
 import dev.erst.gridgrind.contract.catalog.CatalogSearchMatch;
 import dev.erst.gridgrind.contract.catalog.GridGrindProtocolCatalog;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Locale;
-import java.util.Objects;
 import java.util.Optional;
 
 /** Shared discovery, warning, and search-summary helpers for CLI catalog commands. */
@@ -40,26 +35,6 @@ final class CliCatalogCommandSupport {
         + ". Run gridgrind --print-recipe-catalog or"
         + " gridgrind --print-recipe-keyword-match --query \"monthly sales dashboard\""
         + " to discover valid recipe ids.";
-  }
-
-  static void emitRecipePortabilityWarning(GridGrindCliRecipe recipe, OutputStream stderr)
-      throws IOException {
-    Objects.requireNonNull(recipe, "recipe must not be null");
-    Objects.requireNonNull(stderr, "stderr must not be null");
-    if (recipe.workspaceMode() != ExampleWorkspaceMode.REQUIRES_EXAMPLE_ASSETS) {
-      return;
-    }
-    String requiredPaths = String.join(", ", recipe.requiredWorkspacePaths());
-    stderr.write(
-        ("Printed recipe "
-                + recipe.id()
-                + " requires copied asset paths beside the request file before execution;"
-                + " required paths: "
-                + requiredPaths
-                + ". Inspect --print-recipe-catalog or --help-guidance"
-                + " for portability details.\n")
-            .getBytes(StandardCharsets.UTF_8));
-    stderr.flush();
   }
 
   static String unknownOperationMessage(String operationId) {

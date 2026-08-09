@@ -23,6 +23,7 @@ Earlier release history through `0.68.0` is archived in [docs/CHANGELOG_ARCHIVE.
 - Normal CLI output now has one primary channel: stdout without `--response`, or the requested response file with it. The CLI no longer mirrors an equivalent failure payload on stderr.
 
 ### Fixed
+- Asset-backed recipe printing now keeps stderr free of ad hoc portability prose; callers discover the required workspace assets through the catalog's structured `workspaceMode` and `requiredWorkspacePaths` fields, and response-file fallback emits only its one structured transport notice.
 - Execution now rejects static semantic request violations before constructing execution bindings, returning the same ordered `CommandError.problems[]` core as request doctoring instead of a pre-mutation `WorkbookResult` failure.
 - Last-resort CLI failures now use the explicit `CLI_RUNTIME` problem stage before workbook execution, and an unwritable primary stdout stream terminates with a nonzero exit rather than appending a second diagnostic payload.
 - `CommandError` deserialization now requires its fixed `status="REJECTED"` value instead of silently accepting contradictory or absent status input.
