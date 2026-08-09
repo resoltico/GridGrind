@@ -163,8 +163,9 @@ Persist-workbook failures point at `sourceWorkbookPath` or `persistencePath` ins
 `problem.context`; they do not repeat a nested `problem.context.persistence` object.
 
 Pre-execution command failures — CLI argument errors, help-routing, discovery-lookup failures, and
-request read/parse/validate errors (including `INVALID_ENCODING`, `INVALID_JSON`,
-`INVALID_REQUEST_SHAPE`, and `INVALID_REQUEST` failures caught before workbook execution begins) —
+request read/parse/validate errors (including static semantic `INVALID_REQUEST` failures, as well
+as `INVALID_ENCODING`, `INVALID_JSON`, and `INVALID_REQUEST_SHAPE` intake failures caught before
+workbook execution begins) —
 use the plural `CommandError` envelope instead of an execution result:
 
 ```json
@@ -373,7 +374,7 @@ The `context` block provides structured metadata about where the failure occurre
 
 | Field | Description |
 |:------|:------------|
-| `stage` | `PARSE_ARGUMENTS`, `READ_REQUEST`, `VALIDATE_REQUEST`, `RESOLVE_INPUTS`, `OPEN_WORKBOOK`, `EXECUTE_STEP`, `CALCULATION_PREFLIGHT`, `CALCULATION_EXECUTION`, `PERSIST_WORKBOOK`, `EXECUTE_REQUEST`, `WRITE_RESPONSE` |
+| `stage` | `PARSE_ARGUMENTS`, `CLI_RUNTIME`, `READ_REQUEST`, `VALIDATE_REQUEST`, `RESOLVE_INPUTS`, `OPEN_WORKBOOK`, `EXECUTE_STEP`, `CALCULATION_PREFLIGHT`, `CALCULATION_EXECUTION`, `PERSIST_WORKBOOK`, `EXECUTE_REQUEST`, `WRITE_RESPONSE` |
 | `argument` | The CLI flag or argument token that failed parsing, when the stage is `PARSE_ARGUMENTS`. |
 | `requestPath` | The request file path used for `READ_REQUEST`, when the CLI read JSON from `--request <path>`. |
 | `sourceType` | Request `source.type` when the failure occurred after request parsing, including `EXECUTE_REQUEST` failures. |
@@ -401,6 +402,8 @@ nullable fields:
 
 - `PARSE_ARGUMENTS` uses `context.argument`, where `type=UNKNOWN|NAMED` and the concrete flag or
   operand lives at `context.argument.argument` when `type=NAMED`.
+- `CLI_RUNTIME` identifies a last-resort CLI failure before workbook execution when no narrower
+  command, request, or workbook stage truthfully owns the fault.
 - `READ_REQUEST` uses `context.request` (`STANDARD_INPUT` or `FILE`) plus `context.json`
   (`UNAVAILABLE`, `PATH_ONLY`, `BYTE_OFFSET`, `PATH_BYTE_OFFSET`, `DUPLICATE_KEY`,
   `LINE_COLUMN`, or `LOCATED`). `PATH_BYTE_OFFSET` preserves both the owned path and its exact
@@ -419,7 +422,8 @@ to the requested file. GridGrind does not mirror an equivalent diagnostic on std
 cannot be written and stdout is writable, the primary fallback payload goes to stdout and stderr
 receives exactly one transport-only JSON line, `{"wroteTo":"STDOUT","responsePath":"..."}`.
 The notice has no status, exit code, or problem data and is not a second result schema. If stdout
-is unavailable, GridGrind exits nonzero without moving the primary payload to stderr.
+is unavailable or fails while a payload is being written, GridGrind exits nonzero without moving
+or retrying the primary payload on another channel.
 
 Values declared `secret: true` in the request contract are protected by their exact JSON owner
 path. A binding or validation problem at a declared secret path uses a generic sensitive-safe

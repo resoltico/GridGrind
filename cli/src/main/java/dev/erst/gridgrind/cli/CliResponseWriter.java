@@ -58,7 +58,7 @@ final class CliResponseWriter {
     Objects.requireNonNull(commandError, "commandError must not be null");
     Objects.requireNonNull(redactor, "redactor must not be null");
     if (responsePath.isEmpty()) {
-      CliResponseTransportSupport.writePayload(
+      writePrimaryPayload(
           stdout,
           CliResponseTransportSupport.commandErrorBytes(commandError, redactor, prettyJson));
       return CliExitCodes.forCommandError(commandError);
@@ -113,7 +113,7 @@ final class CliResponseWriter {
     Objects.requireNonNull(stderr, "stderr must not be null");
     Objects.requireNonNull(payload, "payload must not be null");
     if (responsePath.isEmpty()) {
-      CliResponseTransportSupport.writePayload(stdout, payload);
+      writePrimaryPayload(stdout, payload);
       return successExitCode;
     }
 
@@ -180,7 +180,7 @@ final class CliResponseWriter {
     Objects.requireNonNull(response, "response must not be null");
     Objects.requireNonNull(redactor, "redactor must not be null");
     if (responsePath.isEmpty()) {
-      CliResponseTransportSupport.writePayload(
+      writePrimaryPayload(
           stdout,
           CliResponseTransportSupport.redact(
               redactor,
@@ -263,7 +263,7 @@ final class CliResponseWriter {
     Objects.requireNonNull(report, "report must not be null");
     Objects.requireNonNull(redactor, "redactor must not be null");
     if (responsePath.isEmpty()) {
-      CliResponseTransportSupport.writePayload(
+      writePrimaryPayload(
           stdout,
           CliResponseTransportSupport.redact(
               redactor,
@@ -297,12 +297,20 @@ final class CliResponseWriter {
   private static void writeStdoutFallback(
       OutputStream stdout, OutputStream stderr, byte[] payload, Path responsePath)
       throws IOException {
-    CliResponseTransportSupport.writePayload(stdout, payload);
+    writePrimaryPayload(stdout, payload);
     try {
       CliResponseTransportSupport.writeTransportNoticeToStderr(
           stderr, CliTransportNotice.stdoutFallback(responsePath.toString()));
     } catch (IOException ignored) {
       // The recovered stdout payload is primary once the requested response file cannot be used.
+    }
+  }
+
+  private static void writePrimaryPayload(OutputStream stdout, byte[] payload) {
+    try {
+      CliResponseTransportSupport.writePayload(stdout, payload);
+    } catch (IOException exception) {
+      throw new CliPrimaryOutputException(exception);
     }
   }
 }

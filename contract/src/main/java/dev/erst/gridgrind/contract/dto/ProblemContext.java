@@ -19,6 +19,7 @@ import java.util.Optional;
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "stage")
 @JsonSubTypes({
   @JsonSubTypes.Type(value = ProblemContext.ParseArguments.class, name = "PARSE_ARGUMENTS"),
+  @JsonSubTypes.Type(value = CliRuntimeContext.class, name = "CLI_RUNTIME"),
   @JsonSubTypes.Type(value = ProblemContext.ReadRequest.class, name = "READ_REQUEST"),
   @JsonSubTypes.Type(value = ProblemContext.ValidateRequest.class, name = "VALIDATE_REQUEST"),
   @JsonSubTypes.Type(value = ProblemContext.ResolveInputs.class, name = "RESOLVE_INPUTS"),
@@ -34,7 +35,15 @@ import java.util.Optional;
   @JsonSubTypes.Type(value = ProblemContext.ExecuteRequest.class, name = "EXECUTE_REQUEST"),
   @JsonSubTypes.Type(value = ProblemContext.WriteResponse.class, name = "WRITE_RESPONSE")
 })
-public sealed interface ProblemContext {
+public sealed interface ProblemContext
+    permits ProblemContext.ParseArguments,
+        CliRuntimeContext,
+        ProblemContext.ReadRequest,
+        ProblemContext.RequestShapeContext,
+        ProblemContext.ExecuteStep,
+        ProblemContext.PersistWorkbook,
+        ProblemContext.ExecuteRequest,
+        ProblemContext.WriteResponse {
   /** Pipeline stage in which the failure occurred. */
   String stage();
 

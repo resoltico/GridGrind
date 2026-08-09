@@ -23,6 +23,9 @@ Earlier release history through `0.68.0` is archived in [docs/CHANGELOG_ARCHIVE.
 - Normal CLI output now has one primary channel: stdout without `--response`, or the requested response file with it. The CLI no longer mirrors an equivalent failure payload on stderr.
 
 ### Fixed
+- Execution now rejects static semantic request violations before constructing execution bindings, returning the same ordered `CommandError.problems[]` core as request doctoring instead of a pre-mutation `WorkbookResult` failure.
+- Last-resort CLI failures now use the explicit `CLI_RUNTIME` problem stage before workbook execution, and an unwritable primary stdout stream terminates with a nonzero exit rather than appending a second diagnostic payload.
+- `CommandError` deserialization now requires its fixed `status="REJECTED"` value instead of silently accepting contradictory or absent status input.
 - Unexpected failures raised after workbook execution begins now retain the `WorkbookResult` envelope with `status=FAILED`, including the requested `SAVE_AS` or `OVERWRITE` intent as `NotWritten`, instead of being mislabeled as pre-execution `CommandError` rejections.
 - An unavailable stdout transport no longer moves a primary diagnostic to stderr; GridGrind exits nonzero rather than emitting a competing result schema on the transport channel.
 - `INTERNAL_ERROR` problems now use the canonical public title in their messages and causes instead of exposing arbitrary runtime exception text.

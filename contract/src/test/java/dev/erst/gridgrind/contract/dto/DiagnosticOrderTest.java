@@ -28,6 +28,7 @@ class DiagnosticOrderTest {
     GridGrindProblemDetail.Problem validation = problem(new ProblemContext.ValidateRequest(SHAPE));
     GridGrindProblemDetail.Problem parseArguments =
         problem(new ProblemContext.ParseArguments(CliArgument.named("--request")));
+    GridGrindProblemDetail.Problem cliRuntime = problem(new CliRuntimeContext());
     GridGrindProblemDetail.Problem readRequest =
         problem(
             new ProblemContext.ReadRequest(
@@ -52,6 +53,7 @@ class DiagnosticOrderTest {
     assertEquals(
         List.of(
             parseArguments,
+            cliRuntime,
             readRequest,
             validation,
             calculationPreflight,
@@ -68,6 +70,7 @@ class DiagnosticOrderTest {
                 calculationPreflight,
                 validation,
                 parseArguments,
+                cliRuntime,
                 readRequest,
                 resolveInputs,
                 openWorkbook,

@@ -129,6 +129,16 @@ final class GridGrindCliExecutionCommands {
           requestRedactor.orElseThrow(),
           prettyJson);
     }
+    RequestDoctorReport staticValidation = requestDoctor.diagnose(request);
+    if (!staticValidation.problems().isEmpty()) {
+      return responseWriter.writeCommandError(
+          command.responsePath(),
+          stdout,
+          stderr,
+          CommandErrors.readRequestFailures("execute", staticValidation.problems()),
+          requestRedactor.orElseThrow(),
+          prettyJson);
+    }
 
     var journalSink = journalWriter.sinkFor(request, stderr);
     try {

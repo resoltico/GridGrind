@@ -1,12 +1,12 @@
 package dev.erst.gridgrind.cli;
 
 import dev.erst.gridgrind.cli.discovery.CommandError;
+import dev.erst.gridgrind.contract.dto.CliRuntimeContext;
 import dev.erst.gridgrind.contract.dto.GridGrindProblemCode;
 import dev.erst.gridgrind.contract.dto.GridGrindProblemDetail;
 import dev.erst.gridgrind.contract.dto.GridGrindProtocolVersion;
 import dev.erst.gridgrind.contract.dto.ProblemContext;
 import dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces.CliArgument;
-import dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces.RequestShape;
 import dev.erst.gridgrind.engine.api.GridGrindProblems;
 import java.nio.file.Path;
 import java.util.List;
@@ -70,8 +70,7 @@ final class CommandErrors {
   static CommandError unexpectedFailure(String command, Throwable exception) {
     Objects.requireNonNull(command, "command must not be null");
     Objects.requireNonNull(exception, "exception must not be null");
-    ProblemContext.ExecuteRequest context =
-        new ProblemContext.ExecuteRequest(RequestShape.unknown());
+    CliRuntimeContext context = new CliRuntimeContext();
     String message = GridGrindProblemCode.INTERNAL_ERROR.title();
     return commandError(
         command,

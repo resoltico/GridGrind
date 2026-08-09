@@ -370,8 +370,7 @@ Run a no-save workbook-health pass by starting from the smallest valid request a
 - Every execution `WorkbookResult`, `SUCCEEDED` or `FAILED`: top-level structured `journal`,
   `persistence`, `warnings`, `assertions`, and `inspections`; `FAILED` alone adds singular
   `problem`
-- Every pre-execution command rejection: `CommandError` with `status=REJECTED` and nonempty
-  `problems[]`; doctor findings instead remain in `RequestDoctorReport.valid=false`
+- Every pre-execution command rejection, including static semantic request validation: `CommandError` with `status=REJECTED` and nonempty `problems[]`; doctor findings instead remain in `RequestDoctorReport.valid=false`
 - `SAVE_AS` and `OVERWRITE` distinguish `persistence.write.status=WRITTEN|NOT_WRITTEN`
 
 ## Detailed References

@@ -14,6 +14,7 @@ import dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces.RequestInpu
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import org.junit.jupiter.api.Test;
+import tools.jackson.core.JacksonException;
 import tools.jackson.databind.exc.UnrecognizedPropertyException;
 
 /** Contract tests for the one plural rejected-command envelope. */
@@ -80,6 +81,27 @@ class CommandErrorTest {
             GridGrindCliJson.readBytes(
                 json.replace("\"REJECTED\"", "\"REJECTED\",\"unexpected\":true")
                     .getBytes(StandardCharsets.UTF_8),
+                CommandError.class));
+  }
+
+  @Test
+  void commandErrorRejectsMissingOrContradictoryStatusOnRead() throws Exception {
+    CommandError error =
+        CommandErrors.invalidArguments(
+            "execute", java.util.Optional.of("--bogus"), "Unknown argument: --bogus");
+    String json = new String(GridGrindCliJson.writeBytes(error), StandardCharsets.UTF_8);
+
+    assertThrows(
+        JacksonException.class,
+        () ->
+            GridGrindCliJson.readBytes(
+                json.replace("\"REJECTED\"", "\"FAILED\"").getBytes(StandardCharsets.UTF_8),
+                CommandError.class));
+    assertThrows(
+        JacksonException.class,
+        () ->
+            GridGrindCliJson.readBytes(
+                json.replace("\"status\":\"REJECTED\",", "").getBytes(StandardCharsets.UTF_8),
                 CommandError.class));
   }
 

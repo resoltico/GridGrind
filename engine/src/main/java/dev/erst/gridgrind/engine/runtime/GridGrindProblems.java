@@ -263,6 +263,7 @@ public final class GridGrindProblems {
               ? executeStep.withLocation(ExecutionDiagnosticFields.locationFor(resolved))
               : context;
       case dev.erst.gridgrind.contract.dto.ProblemContext.ParseArguments _ -> context;
+      case dev.erst.gridgrind.contract.dto.CliRuntimeContext _ -> context;
       case dev.erst.gridgrind.contract.dto.ProblemContext.ValidateRequest _ -> context;
       case dev.erst.gridgrind.contract.dto.ProblemContext.ResolveInputs _ -> context;
       case dev.erst.gridgrind.contract.dto.ProblemContext.OpenWorkbook _ -> context;

@@ -1,10 +1,12 @@
 package dev.erst.gridgrind.engine.runtime;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertSame;
 
 import dev.erst.gridgrind.contract.assertion.AssertionFailure;
 import dev.erst.gridgrind.contract.assertion.CellAssertion;
 import dev.erst.gridgrind.contract.dto.CellScalarValue;
+import dev.erst.gridgrind.contract.dto.CliRuntimeContext;
 import dev.erst.gridgrind.contract.dto.GridGrindProblemCode;
 import dev.erst.gridgrind.contract.dto.GridGrindProblemDetail;
 import dev.erst.gridgrind.contract.dto.ProblemContext;
@@ -20,6 +22,14 @@ import org.junit.jupiter.api.Test;
 
 /** Covers payload-location enrichment branches in {@link GridGrindProblems}. */
 class GridGrindProblemsCoverageTest {
+  @Test
+  void enrichContextKeepsPreExecutionCliRuntimeContextUnchanged() {
+    CliRuntimeContext context = new CliRuntimeContext();
+
+    assertSame(
+        context, GridGrindProblems.enrichContext(context, new IllegalStateException("boom")));
+  }
+
   @Test
   void enrichContextMapsPayloadMetadataToEachJsonLocationShape() {
     ProblemContext.ReadRequest readContext =

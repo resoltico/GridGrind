@@ -244,6 +244,46 @@ class GridGrindCliInvocationTest extends GridGrindCliTestSupport {
   }
 
   @Test
+  void executeRejectsStaticSemanticFailuresBeforeExecutionAndMatchesDoctor() throws IOException {
+    GridGrindCli cli =
+        GridGrindCli.forTesting(
+            (request, inputs, sink) -> {
+              throw new AssertionError("static-invalid request must not reach execution");
+            });
+    byte[] request =
+        requestJson("{ \"type\": \"NEW\" }", "{ \"type\": \"OVERWRITE\" }", "[]")
+            .getBytes(StandardCharsets.UTF_8);
+    ByteArrayOutputStream executeStdout = new ByteArrayOutputStream();
+    ByteArrayOutputStream executeStderr = new ByteArrayOutputStream();
+    ByteArrayOutputStream doctorStdout = new ByteArrayOutputStream();
+    ByteArrayOutputStream doctorStderr = new ByteArrayOutputStream();
+    Path workspace = Files.createTempDirectory("gridgrind-static-validation-root-");
+
+    int executeExitCode =
+        cli.run(
+            stdinExecutionArguments(),
+            new ByteArrayInputStream(request),
+            executeStdout,
+            executeStderr);
+    int doctorExitCode =
+        cli.run(
+            new String[] {"--doctor-request", "--execution-root", workspace.toString()},
+            new ByteArrayInputStream(request),
+            doctorStdout,
+            doctorStderr);
+
+    CommandError executeDiagnostic = commandErrorOnStdout(executeStdout, executeStderr);
+    RequestDoctorReport doctorReport = doctorReport(doctorStdout, doctorStderr);
+
+    assertEquals(2, executeExitCode);
+    assertEquals(1, doctorExitCode);
+    assertEquals(doctorReport.problems(), executeDiagnostic.problems());
+    assertEquals(GridGrindProblemCode.INVALID_REQUEST, executeDiagnostic.primaryProblem().code());
+    assertInstanceOf(
+        ProblemContext.ValidateRequest.class, executeDiagnostic.primaryProblem().context());
+  }
+
+  @Test
   void executeAndDoctorPreserveEveryOrderedStructuralProblemAndItsLocation() throws IOException {
     Path requestPath = Files.createTempFile("gridgrind-multi-fault-request-", ".json");
     Files.writeString(

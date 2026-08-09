@@ -84,6 +84,8 @@ public final class GridGrindCli {
     boolean prettyJsonHint = CliRenderArguments.prettyJsonHint(args);
     try {
       return runInternal(args, stdin, stdout, stderr, responsePathHint, prettyJsonHint);
+    } catch (CliPrimaryOutputException ignored) {
+      return 1;
     } catch (Throwable exception) {
       return CliUnexpectedFailureSupport.emit(
           args, responsePathHint, prettyJsonHint, stdout, stderr, exception);

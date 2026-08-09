@@ -40,6 +40,8 @@ public final class App {
                   Objects.requireNonNull(stdin, "stdin must not be null"),
                   Objects.requireNonNull(stdout, "stdout must not be null"),
                   Objects.requireNonNull(stderr, "stderr must not be null"));
+    } catch (CliPrimaryOutputException ignored) {
+      exitCode = 1;
     } catch (Throwable exception) {
       exitCode =
           CliUnexpectedFailureSupport.emit(

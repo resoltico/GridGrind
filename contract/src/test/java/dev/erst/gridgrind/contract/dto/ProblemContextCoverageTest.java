@@ -114,6 +114,7 @@ class ProblemContextCoverageTest {
             .withJson(ProblemContextRequestSurfaces.JsonLocation.lineColumn(7, 3));
     ProblemContext.ValidateRequest validateRequest =
         new ProblemContext.ValidateRequest(requestShape);
+    CliRuntimeContext cliRuntime = new CliRuntimeContext();
     ProblemContext.ResolveInputs resolveInputs =
         new ProblemContext.ResolveInputs(
             requestShape, ProblemContextWorkbookSurfaces.InputReference.kind("comment"));
@@ -151,6 +152,7 @@ class ProblemContextCoverageTest {
     assertEquals(Optional.empty(), readRequest.jsonPath());
     assertEquals(Optional.of(7), readRequest.jsonLine());
     assertEquals(Optional.of(3), readRequest.jsonColumn());
+    assertEquals("CLI_RUNTIME", cliRuntime.stage());
     assertEquals(Optional.of("EXISTING"), validateRequest.sourceType());
     assertEquals(Optional.of("OVERWRITE"), validateRequest.persistenceType());
     assertEquals(Optional.of("EXISTING"), resolveInputs.sourceType());

@@ -65,8 +65,8 @@ class CliUnexpectedFailureSupportTest extends GridGrindCliTestSupport {
   }
 
   @Test
-  void emergencyFallbackDoesNotMoveTheCommandErrorToStderrWhenStdoutIsUnavailable()
-      throws Exception {
+  void unexpectedFailureDoesNotRetryWhenPrimaryStdoutIsUnavailable() throws Exception {
+    AtomicInteger writeAttempts = new AtomicInteger();
     ByteArrayOutputStream stderr = new ByteArrayOutputStream();
 
     int exitCode =
@@ -74,84 +74,33 @@ class CliUnexpectedFailureSupportTest extends GridGrindCliTestSupport {
             new String[] {"--help"},
             Optional.empty(),
             false,
-            failingOutputStream(),
+            failingOutputStream(writeAttempts),
             stderr,
             new IllegalStateException("secret"));
 
     assertEquals(1, exitCode);
+    assertEquals(1, writeAttempts.get());
     assertEquals("", stderr.toString(StandardCharsets.UTF_8));
   }
 
   @Test
-  void directFallbackRetainsStdoutWhenTheOptionalTransportNoticeCannotBeWritten() throws Exception {
-    ByteArrayOutputStream stdout = new ByteArrayOutputStream();
-    Path responsePath = Files.createTempFile("gridgrind-direct-fallback-", ".json");
-
-    CliUnexpectedFailureSupport.directFallback(
-        CommandErrors.unexpectedFailure("execute", new IllegalStateException("secret")),
-        stdout,
-        failingOutputStream(),
-        Optional.of(responsePath),
-        false);
-
-    assertEquals(
-        GridGrindProblemCode.INTERNAL_ERROR,
-        commandError(stdout.toByteArray()).primaryProblem().code());
-  }
-
-  @Test
-  void directFallbackWritesOnlyItsTransportNoticeWhenAResponsePathIsKnown() throws Exception {
+  void appDoesNotRetryAPrimaryOutputFailure() {
+    AtomicInteger observedExitCode = new AtomicInteger(-1);
     ByteArrayOutputStream stdout = new ByteArrayOutputStream();
     ByteArrayOutputStream stderr = new ByteArrayOutputStream();
-    Path responsePath = Files.createTempFile("gridgrind-direct-fallback-notice-", ".json");
-    CommandError error =
-        CommandErrors.unexpectedFailure("execute", new IllegalStateException("secret"));
+    App app =
+        new App(
+            () ->
+                (args, stdin, out, err) -> {
+                  throw new CliPrimaryOutputException(new IOException("output unavailable"));
+                },
+            observedExitCode::set);
 
-    CliUnexpectedFailureSupport.directFallback(
-        error, stdout, stderr, Optional.of(responsePath), false);
+    app.run(new String[] {"--help"}, new ByteArrayInputStream(new byte[0]), stdout, stderr);
 
-    assertEquals(error, commandError(stdout.toByteArray()));
-    assertEquals(
-        CliTransportNotice.Destination.STDOUT,
-        GridGrindCliJson.readBytes(stderr.toByteArray(), CliTransportNotice.class).wroteTo());
-  }
-
-  @Test
-  void directFallbackWritesNoStderrPayloadWhenNoResponsePathWasRequested() throws Exception {
-    ByteArrayOutputStream stdout = new ByteArrayOutputStream();
-    ByteArrayOutputStream stderr = new ByteArrayOutputStream();
-
-    CliUnexpectedFailureSupport.directFallback(
-        CommandErrors.unexpectedFailure("execute", new IllegalStateException("secret")),
-        stdout,
-        stderr,
-        Optional.empty(),
-        false);
-
-    assertEquals(
-        GridGrindProblemCode.INTERNAL_ERROR,
-        commandError(stdout.toByteArray()).primaryProblem().code());
+    assertEquals(1, observedExitCode.get());
+    assertEquals("", stdout.toString(StandardCharsets.UTF_8));
     assertEquals("", stderr.toString(StandardCharsets.UTF_8));
-  }
-
-  @Test
-  void directFallbackDoesNotAttemptStderrWhenStdoutIsUnavailable() throws IOException {
-    AtomicInteger stdoutAttempts = new AtomicInteger();
-    AtomicInteger stderrAttempts = new AtomicInteger();
-
-    CliUnexpectedFailureSupport.directFallback(
-        CommandErrors.unexpectedFailure("execute", new IllegalStateException("secret")),
-        failingOutputStream(stdoutAttempts),
-        failingOutputStream(stderrAttempts),
-        Optional.empty(),
-        false);
-
-    assertEquals(1, stdoutAttempts.get());
-    assertEquals(0, stderrAttempts.get());
-  }
-
-  private static OutputStream failingOutputStream() {
-    return failingOutputStream(new AtomicInteger());
   }
 
   private static OutputStream failingOutputStream(AtomicInteger writeAttempts) {
