@@ -91,6 +91,28 @@ class GridGrindProblemsCoverageTest {
   }
 
   @Test
+  void enrichContextPreservesTheBindingStageWhileEnrichingPayloadMetadata() {
+    ProblemContext.BindRequest bindingContext =
+        new ProblemContext.BindRequest(
+            ProblemContextRequestSurfaces.RequestInput.requestFile("/tmp/request.json"),
+            ProblemContextRequestSurfaces.JsonLocation.unavailable());
+
+    ProblemContext.BindRequest locatedContext =
+        (ProblemContext.BindRequest)
+            GridGrindProblems.enrichContext(
+                bindingContext,
+                badRequest(Optional.of("source.path"), Optional.of(4), Optional.of(9)));
+
+    assertEquals("BIND_REQUEST", locatedContext.stage());
+    assertEquals(Optional.of("source.path"), locatedContext.jsonPath());
+    assertEquals(Optional.of(4), locatedContext.jsonLine());
+    assertEquals(Optional.of(9), locatedContext.jsonColumn());
+    assertSame(
+        bindingContext,
+        GridGrindProblems.enrichContext(bindingContext, new IllegalStateException("boom")));
+  }
+
+  @Test
   void fromExceptionUsesCauseSpecificPublicResolutions() {
     ProblemContext.ExecuteStep assertionContext =
         new ProblemContext.ExecuteStep(

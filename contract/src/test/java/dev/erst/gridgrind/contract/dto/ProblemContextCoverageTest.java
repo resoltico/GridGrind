@@ -112,6 +112,11 @@ class ProblemContextCoverageTest {
         new ProblemContext.ReadRequest(
                 ProblemContextRequestSurfaces.RequestInput.standardInput(), null)
             .withJson(ProblemContextRequestSurfaces.JsonLocation.lineColumn(7, 3));
+    ProblemContext.BindRequest bindRequest =
+        new ProblemContext.BindRequest(
+                ProblemContextRequestSurfaces.RequestInput.requestFile("request.json"), null)
+            .withJson(
+                ProblemContextRequestSurfaces.JsonLocation.pathAtByteOffset("source.path", 41));
     ProblemContext.ValidateRequest validateRequest =
         new ProblemContext.ValidateRequest(requestShape);
     CliRuntimeContext cliRuntime = new CliRuntimeContext();
@@ -152,6 +157,11 @@ class ProblemContextCoverageTest {
     assertEquals(Optional.empty(), readRequest.jsonPath());
     assertEquals(Optional.of(7), readRequest.jsonLine());
     assertEquals(Optional.of(3), readRequest.jsonColumn());
+    assertEquals("READ_REQUEST", readRequest.stage());
+    assertEquals("BIND_REQUEST", bindRequest.stage());
+    assertEquals(Optional.of("request.json"), bindRequest.requestPath());
+    assertEquals(Optional.of("source.path"), bindRequest.jsonPath());
+    assertEquals(Optional.of(41L), bindRequest.byteOffset());
     assertEquals("CLI_RUNTIME", cliRuntime.stage());
     assertEquals(Optional.of("EXISTING"), validateRequest.sourceType());
     assertEquals(Optional.of("OVERWRITE"), validateRequest.persistenceType());

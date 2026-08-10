@@ -254,7 +254,7 @@ class CliDoctorRequestAnalyzerTest extends GridGrindCliTestSupport {
     assertEquals(
         List.of("source.path", "persistence.path"),
         report.problems().stream()
-            .map(problem -> assertInstanceOf(ProblemContext.ReadRequest.class, problem.context()))
+            .map(problem -> assertInstanceOf(ProblemContext.BindRequest.class, problem.context()))
             .map(context -> context.jsonPath().orElseThrow())
             .toList());
     assertEquals(

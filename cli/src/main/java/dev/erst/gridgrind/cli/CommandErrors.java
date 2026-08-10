@@ -8,7 +8,6 @@ import dev.erst.gridgrind.contract.dto.GridGrindProtocolVersion;
 import dev.erst.gridgrind.contract.dto.ProblemContext;
 import dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces.CliArgument;
 import dev.erst.gridgrind.engine.api.GridGrindProblems;
-import java.nio.file.Path;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -25,26 +24,6 @@ final class CommandErrors {
         command,
         GridGrindProblemDetail.Problem.of(
             GridGrindProblemCode.INVALID_ARGUMENTS, message, context));
-  }
-
-  static CommandError responseWriteFailure(
-      String command, Path targetPath, java.io.IOException exception) {
-    Objects.requireNonNull(targetPath, "targetPath must not be null");
-    Objects.requireNonNull(exception, "exception must not be null");
-    ProblemContext.WriteResponse context =
-        new ProblemContext.WriteResponse(
-            dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces.ResponseOutput
-                .responseFile(targetPath.toString()));
-    String message = CliResponseTransportSupport.responseWriteMessage(exception, targetPath);
-    return commandError(
-        command,
-        GridGrindProblems.problem(
-            GridGrindProblemCode.IO_ERROR,
-            message,
-            context,
-            List.of(
-                new GridGrindProblemDetail.ProblemCause(
-                    GridGrindProblemCode.IO_ERROR, message, context.stage()))));
   }
 
   static CommandError readRequestFailure(String command, GridGrindProblemDetail.Problem problem) {

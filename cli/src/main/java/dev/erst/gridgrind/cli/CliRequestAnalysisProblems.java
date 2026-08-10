@@ -9,7 +9,6 @@ import dev.erst.gridgrind.contract.json.RequestBindingFailure;
 import dev.erst.gridgrind.contract.json.RequestDuplicateKey;
 import dev.erst.gridgrind.contract.json.RequestStructuralProblem;
 import dev.erst.gridgrind.engine.api.GridGrindProblems;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Stream;
@@ -24,11 +23,9 @@ final class CliRequestAnalysisProblems {
     Objects.requireNonNull(requestInput, "requestInput must not be null");
     return Stream.concat(
             analysis.structuralProblems().stream()
-                .map(problem -> LocatedProblem.structural(problem, requestInput)),
+                .map(problem -> structuralProblem(problem, requestInput)),
             analysis.bindingFailures().stream()
-                .map(problem -> LocatedProblem.binding(problem, requestInput)))
-        .sorted(Comparator.comparingLong(LocatedProblem::byteOffset))
-        .map(LocatedProblem::problem)
+                .map(problem -> bindingProblem(problem, requestInput)))
         .toList();
   }
 
@@ -42,7 +39,7 @@ final class CliRequestAnalysisProblems {
   private static GridGrindProblemDetail.Problem bindingProblem(
       RequestBindingFailure problem, ProblemContextRequestSurfaces.RequestInput requestInput) {
     return GridGrindProblems.fromException(
-        problem.exception(), new ProblemContext.ReadRequest(requestInput, locationFor(problem)));
+        problem.exception(), new ProblemContext.BindRequest(requestInput, locationFor(problem)));
   }
 
   static ProblemContextRequestSurfaces.JsonLocation locationFor(RequestBindingFailure problem) {
@@ -74,23 +71,5 @@ final class CliRequestAnalysisProblems {
       return ProblemContextRequestSurfaces.JsonLocation.pathOnly(jsonPath.orElseThrow());
     }
     return ProblemContextRequestSurfaces.JsonLocation.byteOffset(byteOffset.orElseThrow());
-  }
-
-  private record LocatedProblem(long byteOffset, GridGrindProblemDetail.Problem problem) {
-    private LocatedProblem {
-      Objects.requireNonNull(problem, "problem must not be null");
-    }
-
-    static LocatedProblem structural(
-        RequestStructuralProblem problem, ProblemContextRequestSurfaces.RequestInput requestInput) {
-      return new LocatedProblem(
-          problem.byteOffset().orElse(Long.MAX_VALUE), structuralProblem(problem, requestInput));
-    }
-
-    static LocatedProblem binding(
-        RequestBindingFailure problem, ProblemContextRequestSurfaces.RequestInput requestInput) {
-      return new LocatedProblem(
-          problem.byteOffset().orElse(Long.MAX_VALUE), bindingProblem(problem, requestInput));
-    }
   }
 }

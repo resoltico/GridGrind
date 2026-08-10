@@ -11,7 +11,7 @@ import dev.erst.gridgrind.contract.step.AssertionStep;
 import dev.erst.gridgrind.contract.step.InspectionStep;
 import dev.erst.gridgrind.contract.step.MutationStep;
 import dev.erst.gridgrind.contract.step.WorkbookStep;
-import java.util.LinkedHashSet;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
@@ -72,7 +72,7 @@ final class ExecutionModeRules {
   }
 
   private static List<String> eventReadFailures(WorkbookPlan request) {
-    Set<String> failures = new LinkedHashSet<>();
+    List<String> failures = new ArrayList<>();
     if (!CalculationPolicyExecutor.allowsEventRead(request.calculationPolicy())) {
       failures.add(EVENT_READ.calculationFailureMessage());
     }
@@ -89,7 +89,7 @@ final class ExecutionModeRules {
   }
 
   private static List<String> streamingWriteFailures(WorkbookPlan request) {
-    Set<String> failures = new LinkedHashSet<>();
+    List<String> failures = new ArrayList<>();
     if (!CalculationPolicyExecutor.allowsStreamingWrite(request.calculationPolicy())) {
       failures.add(STREAMING_WRITE.calculationFailureMessage());
     }
@@ -121,7 +121,7 @@ final class ExecutionModeRules {
   }
 
   private static List<String> mutationFailures(MutationAction action, boolean seenEnsureSheet) {
-    Set<String> failures = new LinkedHashSet<>();
+    List<String> failures = new ArrayList<>();
     unsupportedStreamingMutationAction(action).ifPresent(failures::add);
     if (requiresEnsureSheetBeforeAppend(action, seenEnsureSheet)) {
       failures.add(STREAMING_WRITE.missingEnsureSheetBeforeAppendMessage());

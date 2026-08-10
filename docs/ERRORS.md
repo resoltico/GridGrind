@@ -374,9 +374,9 @@ The `context` block provides structured metadata about where the failure occurre
 
 | Field | Description |
 |:------|:------------|
-| `stage` | `PARSE_ARGUMENTS`, `CLI_RUNTIME`, `READ_REQUEST`, `VALIDATE_REQUEST`, `RESOLVE_INPUTS`, `OPEN_WORKBOOK`, `EXECUTE_STEP`, `CALCULATION_PREFLIGHT`, `CALCULATION_EXECUTION`, `PERSIST_WORKBOOK`, `EXECUTE_REQUEST`, `WRITE_RESPONSE` |
+| `stage` | `PARSE_ARGUMENTS`, `CLI_RUNTIME`, `READ_REQUEST`, `BIND_REQUEST`, `VALIDATE_REQUEST`, `RESOLVE_INPUTS`, `OPEN_WORKBOOK`, `EXECUTE_STEP`, `CALCULATION_PREFLIGHT`, `CALCULATION_EXECUTION`, `PERSIST_WORKBOOK`, `EXECUTE_REQUEST`, `WRITE_RESPONSE` |
 | `argument` | The CLI flag or argument token that failed parsing, when the stage is `PARSE_ARGUMENTS`. |
-| `requestPath` | The request file path used for `READ_REQUEST`, when the CLI read JSON from `--request <path>`. |
+| `requestPath` | The request file path used for `READ_REQUEST` or `BIND_REQUEST`, when the CLI read JSON from `--request <path>`. |
 | `sourceType` | Request `source.type` when the failure occurred after request parsing, including `EXECUTE_REQUEST` failures. |
 | `persistenceType` | Request `persistence.type` when the failure occurred after request parsing, including `EXECUTE_REQUEST` failures. |
 | `sourceWorkbookPath` | The workbook path involved in `OPEN_WORKBOOK` or `PERSIST_WORKBOOK`, when a source workbook path exists. |
@@ -392,12 +392,12 @@ The `context` block provides structured metadata about where the failure occurre
 | `range` | Range, if applicable. |
 | `formula` | Formula text, if applicable. |
 | `namedRangeName` | Named range involved in the failure, if applicable. |
-| `jsonPath` | GridGrind dotted JSON path to the offending request value itself, such as `steps[0].action.zoomPercent`, `steps[0].target.type`, or `protocolVersion` (request read and validation errors only). |
-| `jsonLine` | Line number in the request payload (transport errors only). |
-| `jsonColumn` | Column number in the request payload (transport errors only). |
+| `jsonPath` | GridGrind dotted JSON path to the offending request value itself, such as `steps[0].action.zoomPercent`, `steps[0].target.type`, or `protocolVersion` (request-intake errors only). |
+| `jsonLine` | One-based line number in the request payload when request parsing exposed a concrete cursor. |
+| `jsonColumn` | One-based column number in the request payload when request parsing exposed a concrete cursor. |
 | `responsePath` | The response file path that failed during `WRITE_RESPONSE`, when the CLI was writing to `--response <path>`. |
 
-For the exact machine shape, three context stages carry typed nested helpers rather than flattened
+For the exact machine shape, four context stages carry typed nested helpers rather than flattened
 nullable fields:
 
 - `PARSE_ARGUMENTS` uses `context.argument`, where `type=UNKNOWN|NAMED` and the concrete flag or
@@ -414,12 +414,16 @@ nullable fields:
   without inventing a false JSON path. Every authored occurrence is structurally checked, so a
   repeated known field produces its duplicate-key finding and any independently provable problem
   with that repeated value, such as explicit `null` or the wrong scalar kind.
+- `BIND_REQUEST` uses the same `context.request` and `context.json` shape for a syntactically and
+  structurally valid JSON fragment that cannot satisfy its request-model creator contract. This
+  keeps structural intake defects before constructor-level binding defects in deterministic
+  diagnostic order.
 - `WRITE_RESPONSE` uses `context.output` (`STANDARD_OUTPUT` or `FILE`).
 
 Without `--response`, the primary `CommandError`, `WorkbookResult`, doctor report, or discovery
 payload is the sole stdout content. With `--response <path>`, that primary payload is written only
 to the requested file. GridGrind does not mirror an equivalent diagnostic on stderr. If that file
-cannot be written and stdout is writable, the primary fallback payload goes to stdout and stderr
+cannot be written and stdout is writable, the already-rendered primary payload goes to stdout unchanged and stderr
 receives exactly one transport-only JSON line, `{"wroteTo":"STDOUT","responsePath":"..."}`.
 The notice has no status, exit code, or problem data and is not a second result schema. If stdout
 is unavailable or fails while a payload is being written, GridGrind exits nonzero without moving

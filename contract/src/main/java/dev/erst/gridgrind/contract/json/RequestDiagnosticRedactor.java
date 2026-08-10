@@ -95,8 +95,7 @@ public final class RequestDiagnosticRedactor {
 
   private boolean redactProblemIfSensitive(ObjectNode object) {
     Optional<String> requestPath = requestPath(object.path("context"));
-    if (requestPath.isEmpty()
-        || !RequestSecretFieldPaths.contains(secretFieldPaths, requestPath.orElseThrow())) {
+    if (!isSecretRequestPath(requestPath)) {
       return false;
     }
     boolean changed = redactTextualProperty(object, "message");
@@ -116,6 +115,12 @@ public final class RequestDiagnosticRedactor {
     JsonNode json = context.path("json");
     JsonNode jsonPath = json.path("jsonPath");
     return jsonPath.isTextual() ? Optional.of(jsonPath.textValue()) : Optional.empty();
+  }
+
+  private boolean isSecretRequestPath(Optional<String> requestPath) {
+    return requestPath
+        .filter(path -> RequestSecretFieldPaths.contains(secretFieldPaths, path))
+        .isPresent();
   }
 
   private static boolean redactTextualProperty(ObjectNode object, String propertyName) {

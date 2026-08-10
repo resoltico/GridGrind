@@ -11,6 +11,7 @@ import java.util.function.ToIntFunction;
 /** Provides the protocol's deterministic ordering for emitted problems and warnings. */
 public final class DiagnosticOrder {
   private static final int PRE_EXECUTION_PHASE = 1;
+  private static final int REQUEST_BINDING_PHASE = 2;
   private static final int STATIC_VALIDATION_PHASE = 3;
   private static final int SOURCE_RESOLUTION_PHASE = 4;
   private static final int EXECUTION_PHASE = 5;
@@ -83,6 +84,7 @@ public final class DiagnosticOrder {
       case ProblemContext.ParseArguments _ -> PRE_EXECUTION_PHASE;
       case CliRuntimeContext _ -> PRE_EXECUTION_PHASE;
       case ProblemContext.ReadRequest _ -> PRE_EXECUTION_PHASE;
+      case ProblemContext.BindRequest _ -> REQUEST_BINDING_PHASE;
       case ProblemContext.ValidateRequest _ -> STATIC_VALIDATION_PHASE;
       case ProblemContext.ResolveInputs _ -> SOURCE_RESOLUTION_PHASE;
       case ProblemContext.OpenWorkbook _ -> SOURCE_RESOLUTION_PHASE;
@@ -104,8 +106,8 @@ public final class DiagnosticOrder {
   }
 
   private static Optional<Long> byteOffsetOptional(GridGrindProblemDetail.Problem problem) {
-    if (problem.context() instanceof ProblemContext.ReadRequest readRequest) {
-      return readRequest.byteOffset();
+    if (problem.context() instanceof RequestInputContext requestInputContext) {
+      return requestInputContext.byteOffset();
     }
     return Optional.empty();
   }
@@ -113,8 +115,8 @@ public final class DiagnosticOrder {
   private static int stepIndex(GridGrindProblemDetail.Problem problem) {
     return switch (problem.context()) {
       case ProblemContext.ExecuteStep executeStep -> executeStep.stepIndex();
-      case ProblemContext.ReadRequest readRequest ->
-          readRequest.jsonPath().map(DiagnosticOrder::stepIndexFromJsonPath).orElse(-1);
+      case RequestInputContext requestInputContext ->
+          requestInputContext.jsonPath().map(DiagnosticOrder::stepIndexFromJsonPath).orElse(-1);
       default -> -1;
     };
   }
@@ -135,8 +137,11 @@ public final class DiagnosticOrder {
   }
 
   private static int occurrenceOrdinal(GridGrindProblemDetail.Problem problem) {
-    if (problem.context() instanceof ProblemContext.ReadRequest readRequest) {
-      return readRequest.duplicateKey().map(JsonLocation.DuplicateKey::occurrenceOrdinal).orElse(0);
+    if (problem.context() instanceof RequestInputContext requestInputContext) {
+      return requestInputContext
+          .duplicateKey()
+          .map(JsonLocation.DuplicateKey::occurrenceOrdinal)
+          .orElse(0);
     }
     return NON_DUPLICATE_OCCURRENCE;
   }

@@ -3,16 +3,9 @@ package dev.erst.gridgrind.cli;
 import dev.erst.gridgrind.cli.discovery.CliTransportNotice;
 import dev.erst.gridgrind.cli.discovery.CommandError;
 import dev.erst.gridgrind.cli.discovery.GridGrindCliJson;
-import dev.erst.gridgrind.contract.dto.GridGrindProblemCode;
-import dev.erst.gridgrind.contract.dto.GridGrindProblemDetail;
-import dev.erst.gridgrind.contract.dto.ProblemContext;
 import dev.erst.gridgrind.contract.json.RequestDiagnosticRedactor;
-import dev.erst.gridgrind.engine.api.GridGrindProblems;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.nio.file.AccessDeniedException;
-import java.nio.file.FileAlreadyExistsException;
-import java.nio.file.FileSystemException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Optional;
@@ -26,13 +19,41 @@ final class CliResponseTransportSupport {
   }
 
   static void writePayload(Path targetPath, byte[] payload) throws IOException {
-    Files.createDirectories(
+    writePayload(targetPath, payload, CliResponseTransportSupport::writeTemporaryPayload);
+  }
+
+  static void writePayload(Path targetPath, byte[] payload, TemporaryPayloadWriter temporaryWriter)
+      throws IOException {
+    java.util.Objects.requireNonNull(targetPath, "targetPath must not be null");
+    java.util.Objects.requireNonNull(payload, "payload must not be null");
+    java.util.Objects.requireNonNull(temporaryWriter, "temporaryWriter must not be null");
+    Path parent =
         java.util.Objects.requireNonNull(
-            targetPath.getParent(), "responsePath must not be a filesystem root"));
+            targetPath.getParent(), "responsePath must not be a filesystem root");
+    Files.createDirectories(parent);
+    Path temporaryPath = Files.createTempFile(parent, ".gridgrind-response-", ".tmp");
+    try {
+      temporaryWriter.write(temporaryPath, payload);
+      Files.move(temporaryPath, targetPath);
+    } catch (IOException | RuntimeException | Error exception) {
+      deleteFailedStagingFile(temporaryPath, exception);
+      throw exception;
+    }
+  }
+
+  private static void deleteFailedStagingFile(Path temporaryPath, Throwable failure) {
+    try {
+      Files.deleteIfExists(temporaryPath);
+    } catch (IOException cleanupFailure) {
+      failure.addSuppressed(cleanupFailure);
+    }
+  }
+
+  private static void writeTemporaryPayload(Path temporaryPath, byte[] payload) throws IOException {
     try (OutputStream responseOutput =
         Files.newOutputStream(
-            targetPath,
-            java.nio.file.StandardOpenOption.CREATE_NEW,
+            temporaryPath,
+            java.nio.file.StandardOpenOption.TRUNCATE_EXISTING,
             java.nio.file.StandardOpenOption.WRITE)) {
       writePayload(responseOutput, payload);
     }
@@ -63,56 +84,10 @@ final class CliResponseTransportSupport {
         : redactor.orElseThrow().redactSerializedJson(payload, prettyJson);
   }
 
-  static GridGrindProblemDetail.Problem writeResponseProblem(
-      IOException exception, Path targetPath) {
-    var context =
-        new ProblemContext.WriteResponse(
-            dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces.ResponseOutput
-                .responseFile(targetPath.toString()));
-    String message = responseWriteMessage(exception, targetPath);
-    return GridGrindProblems.problem(
-        GridGrindProblemCode.IO_ERROR,
-        message,
-        context,
-        java.util.List.of(
-            new GridGrindProblemDetail.ProblemCause(
-                GridGrindProblemCode.IO_ERROR, message, context.stage())));
-  }
-
-  static String responseWriteMessage(IOException exception, Path targetPath) {
-    java.util.Objects.requireNonNull(exception, "exception must not be null");
-    java.util.Objects.requireNonNull(targetPath, "targetPath must not be null");
-    return switch (exception) {
-      case AccessDeniedException _ ->
-          "Could not write response file " + targetPath + ": permission denied";
-      case FileAlreadyExistsException _ when Files.isDirectory(targetPath) ->
-          "Could not write response file " + targetPath + ": Is a directory";
-      case FileAlreadyExistsException _ ->
-          "Could not write response file "
-              + targetPath
-              + ": already exists; GridGrind never replaces an existing response file implicitly";
-      case FileSystemException fileSystemException ->
-          fileSystemReason(fileSystemException)
-              .map(reason -> "Could not write response file " + targetPath + ": " + reason)
-              .orElse("Could not write response file " + targetPath);
-      default -> {
-        String message = exception.getMessage();
-        yield message == null || message.isBlank()
-            ? "Could not write response file " + targetPath
-            : "Could not write response file " + targetPath + ": " + message;
-      }
-    };
-  }
-
-  private static Optional<String> fileSystemReason(FileSystemException exception) {
-    String reason = exception.getReason();
-    if (reason != null && !reason.isBlank()) {
-      return Optional.of(reason);
-    }
-    String otherFile = exception.getOtherFile();
-    if (otherFile != null && !otherFile.isBlank()) {
-      return Optional.of("conflict with " + otherFile);
-    }
-    return Optional.empty();
+  /** Writes the complete response bytes into a staging file before publication. */
+  @FunctionalInterface
+  interface TemporaryPayloadWriter {
+    /** Writes the complete payload into a staging file before it becomes externally visible. */
+    void write(Path temporaryPath, byte[] payload) throws IOException;
   }
 }

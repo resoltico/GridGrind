@@ -150,7 +150,7 @@ class GridGrindCliInvocationTest extends GridGrindCliTestSupport {
     assertEquals(GridGrindProblemCode.INVALID_REQUEST_SHAPE, failure.primaryProblem().code());
     assertEquals("execute", failure.command());
     assertEquals(
-        java.util.Optional.of("steps[0].query.type"), readRequestContext(failure).jsonPath());
+        java.util.Optional.of("steps[0].query.type"), requestIntakeContext(failure).jsonPath());
     assertEquals(
         "Field 'steps[0].query.type' must be a JSON string type id",
         failure.primaryProblem().message());
@@ -189,7 +189,7 @@ class GridGrindCliInvocationTest extends GridGrindCliTestSupport {
 
     assertEquals(2, exitCode);
     assertEquals(GridGrindProblemCode.INVALID_REQUEST_SHAPE, failure.primaryProblem().code());
-    assertEquals(Optional.of("steps[0].target.type"), readRequestContext(failure).jsonPath());
+    assertEquals(Optional.of("steps[0].target.type"), requestIntakeContext(failure).jsonPath());
     assertEquals(
         "Missing required field 'steps[0].target.type'", failure.primaryProblem().message());
     assertTrue(failure.primaryProblem().resolution().contains("steps[0].target.type"));
@@ -239,8 +239,9 @@ class GridGrindCliInvocationTest extends GridGrindCliTestSupport {
     assertEquals(1, doctorExitCode);
     assertEquals(executeDiagnostic.primaryProblem(), doctorReport.primaryProblem().orElseThrow());
     assertEquals(
-        Optional.of("steps[0].target.type"), readRequestContext(executeDiagnostic).jsonPath());
-    assertEquals(Optional.of("steps[0].target.type"), readRequestContext(doctorReport).jsonPath());
+        Optional.of("steps[0].target.type"), requestIntakeContext(executeDiagnostic).jsonPath());
+    assertEquals(
+        Optional.of("steps[0].target.type"), requestIntakeContext(doctorReport).jsonPath());
   }
 
   @Test
@@ -352,6 +353,61 @@ class GridGrindCliInvocationTest extends GridGrindCliTestSupport {
   }
 
   @Test
+  void executeAndDoctorOrderStructuralIntakeBeforeAnEarlierBindingFailure() throws IOException {
+    Path requestPath = Files.createTempFile("gridgrind-phase-ordered-request-", ".json");
+    Files.writeString(
+        requestPath,
+        """
+        {
+          "protocolVersion": "V2",
+          "source": { "type": "EXISTING", "path": "input.xls" },
+          "persistence": { "type": "NONE" },
+          "unexpected": true,
+          "steps": []
+        }
+        """);
+    ByteArrayOutputStream executeStdout = new ByteArrayOutputStream();
+    ByteArrayOutputStream executeStderr = new ByteArrayOutputStream();
+    ByteArrayOutputStream doctorStdout = new ByteArrayOutputStream();
+    ByteArrayOutputStream doctorStderr = new ByteArrayOutputStream();
+
+    int executeExitCode =
+        new GridGrindCli()
+            .run(
+                new String[] {"--request", requestPath.toString()},
+                InputStream.nullInputStream(),
+                executeStdout,
+                executeStderr);
+    int doctorExitCode =
+        new GridGrindCli()
+            .run(
+                new String[] {"--doctor-request", "--request", requestPath.toString()},
+                InputStream.nullInputStream(),
+                doctorStdout,
+                doctorStderr);
+
+    CommandError executeDiagnostic = commandErrorOnStdout(executeStdout, executeStderr);
+    RequestDoctorReport doctorReport = doctorReport(doctorStdout, doctorStderr);
+
+    assertEquals(2, executeExitCode);
+    assertEquals(1, doctorExitCode);
+    assertEquals(doctorReport.problems(), executeDiagnostic.problems());
+    assertEquals(2, executeDiagnostic.problems().size());
+
+    ProblemContext.ReadRequest structural =
+        assertInstanceOf(
+            ProblemContext.ReadRequest.class, executeDiagnostic.problems().get(0).context());
+    ProblemContext.BindRequest binding =
+        assertInstanceOf(
+            ProblemContext.BindRequest.class, executeDiagnostic.problems().get(1).context());
+    assertEquals(Optional.of("unexpected"), structural.jsonPath());
+    assertEquals(Optional.of("source.path"), binding.jsonPath());
+    assertTrue(
+        structural.byteOffset().orElseThrow() > binding.byteOffset().orElseThrow(),
+        "phase order must outrank source position");
+  }
+
+  @Test
   void invocationNamesTheOwnedTargetTypeFieldForCustomTargetShapeFailures() throws IOException {
     ByteArrayOutputStream stdout = new ByteArrayOutputStream();
     ByteArrayOutputStream stderr = new ByteArrayOutputStream();
@@ -381,7 +437,7 @@ class GridGrindCliInvocationTest extends GridGrindCliTestSupport {
 
     assertEquals(2, exitCode);
     assertEquals(GridGrindProblemCode.INVALID_REQUEST_SHAPE, failure.primaryProblem().code());
-    assertEquals(Optional.of("steps[0].target.type"), readRequestContext(failure).jsonPath());
+    assertEquals(Optional.of("steps[0].target.type"), requestIntakeContext(failure).jsonPath());
     assertEquals(
         "Field 'steps[0].target.type' must be a JSON string type id",
         failure.primaryProblem().message());
@@ -410,7 +466,7 @@ class GridGrindCliInvocationTest extends GridGrindCliTestSupport {
 
     assertEquals(2, exitCode);
     assertEquals(GridGrindProblemCode.INVALID_REQUEST, failure.primaryProblem().code());
-    assertEquals(Optional.of("persistence.path"), readRequestContext(failure).jsonPath());
+    assertEquals(Optional.of("persistence.path"), requestIntakeContext(failure).jsonPath());
     assertEquals("path must end in .xlsx (got: '.txt')", failure.primaryProblem().message());
     assertTrue(failure.primaryProblem().resolution().contains("persistence.path"));
   }

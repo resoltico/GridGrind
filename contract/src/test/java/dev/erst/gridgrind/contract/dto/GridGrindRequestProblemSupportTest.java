@@ -129,7 +129,7 @@ class GridGrindRequestProblemSupportTest {
         "Provide a path ending in .xlsx for field 'source.path'.",
         GridGrindRequestProblemSupport.resolution(
             new NonXlsxPath(".xls", java.util.Optional.of("path")),
-            new ProblemContext.ReadRequest(
+            new ProblemContext.BindRequest(
                 ProblemContextRequestSurfaces.RequestInput.standardInput(),
                 ProblemContextRequestSurfaces.JsonLocation.pathOnly("source.path"))));
     assertEquals(

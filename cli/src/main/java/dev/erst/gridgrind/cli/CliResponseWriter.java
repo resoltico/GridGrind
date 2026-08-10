@@ -2,13 +2,10 @@ package dev.erst.gridgrind.cli;
 
 import dev.erst.gridgrind.cli.discovery.CliTransportNotice;
 import dev.erst.gridgrind.cli.discovery.CommandError;
-import dev.erst.gridgrind.contract.dto.GridGrindProblemDetail;
 import dev.erst.gridgrind.contract.dto.RequestDoctorReport;
 import dev.erst.gridgrind.contract.dto.WorkbookResult;
-import dev.erst.gridgrind.contract.dto.WorkbookResults;
 import dev.erst.gridgrind.contract.json.GridGrindJsonOutput;
 import dev.erst.gridgrind.contract.json.RequestDiagnosticRedactor;
-import dev.erst.gridgrind.engine.api.GridGrindProblems;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.file.Path;
@@ -57,79 +54,30 @@ final class CliResponseWriter {
       throws IOException {
     Objects.requireNonNull(commandError, "commandError must not be null");
     Objects.requireNonNull(redactor, "redactor must not be null");
-    if (responsePath.isEmpty()) {
-      writePrimaryPayload(
-          stdout,
-          CliResponseTransportSupport.commandErrorBytes(commandError, redactor, prettyJson));
-      return CliExitCodes.forCommandError(commandError);
-    }
-
-    Path targetPath = CliResponseTransportSupport.responseTargetPath(responsePath.orElseThrow());
-    try {
-      CliResponseTransportSupport.writePayload(
-          targetPath,
-          CliResponseTransportSupport.commandErrorBytes(commandError, redactor, prettyJson));
-      return CliExitCodes.forCommandError(commandError);
-    } catch (IOException exception) {
-      CommandError fallback =
-          new CommandError(
-              commandError.protocolVersion(),
-              commandError.command(),
-              java.util.stream.Stream.concat(
-                      commandError.problems().stream(),
-                      java.util.stream.Stream.of(
-                          CliResponseTransportSupport.writeResponseProblem(exception, targetPath)))
-                  .toList());
-      writeStdoutFallback(
-          stdout,
-          stderr,
-          CliResponseTransportSupport.commandErrorBytes(fallback, redactor, prettyJson),
-          targetPath);
-      return 1;
-    }
+    return routePrimaryPayload(
+        responsePath,
+        stdout,
+        stderr,
+        CliResponseTransportSupport.commandErrorBytes(commandError, redactor, prettyJson),
+        CliExitCodes.forCommandError(commandError));
   }
 
   /**
    * Writes one arbitrary command payload to stdout or a configured response file while also
    * reporting response-file fallback details on stderr.
    *
-   * <p>When the response file cannot be written and stdout is writable, a structured failure
-   * response is emitted there so every command family keeps the same fallback contract. An
-   * unavailable stdout transport is allowed to fail closed rather than moving a primary payload to
-   * stderr.
+   * <p>When the response file cannot be written and stdout is writable, the already-rendered
+   * primary payload is emitted there unchanged. An unavailable stdout transport is allowed to fail
+   * closed rather than moving a primary payload to stderr.
    */
   int writePayload(
-      String command,
       Optional<Path> responsePath,
       OutputStream stdout,
       OutputStream stderr,
       byte[] payload,
-      int successExitCode,
-      boolean prettyJson)
+      int successExitCode)
       throws IOException {
-    Objects.requireNonNull(command, "command must not be null");
-    Objects.requireNonNull(responsePath, "responsePath must not be null");
-    Objects.requireNonNull(stdout, "stdout must not be null");
-    Objects.requireNonNull(stderr, "stderr must not be null");
-    Objects.requireNonNull(payload, "payload must not be null");
-    if (responsePath.isEmpty()) {
-      writePrimaryPayload(stdout, payload);
-      return successExitCode;
-    }
-
-    Path targetPath = CliResponseTransportSupport.responseTargetPath(responsePath.orElseThrow());
-    try {
-      CliResponseTransportSupport.writePayload(targetPath, payload);
-      return successExitCode;
-    } catch (IOException exception) {
-      CommandError fallback = CommandErrors.responseWriteFailure(command, targetPath, exception);
-      writeStdoutFallback(
-          stdout,
-          stderr,
-          CliResponseTransportSupport.commandErrorBytes(fallback, Optional.empty(), prettyJson),
-          targetPath);
-      return 1;
-    }
+    return routePrimaryPayload(responsePath, stdout, stderr, payload, successExitCode);
   }
 
   /** Writes the response and returns one caller-chosen logical exit code on success. */
@@ -179,45 +127,15 @@ final class CliResponseWriter {
     Objects.requireNonNull(stderr, "stderr must not be null");
     Objects.requireNonNull(response, "response must not be null");
     Objects.requireNonNull(redactor, "redactor must not be null");
-    if (responsePath.isEmpty()) {
-      writePrimaryPayload(
-          stdout,
-          CliResponseTransportSupport.redact(
-              redactor,
-              GridGrindJsonOutput.writeWorkbookResultBytes(response, prettyJson),
-              prettyJson));
-      return logicalExitCode;
-    }
-
-    Path targetPath = CliResponseTransportSupport.responseTargetPath(responsePath.orElseThrow());
-    try {
-      CliResponseTransportSupport.writePayload(
-          targetPath,
-          CliResponseTransportSupport.redact(
-              redactor,
-              GridGrindJsonOutput.writeWorkbookResultBytes(response, prettyJson),
-              prettyJson));
-      return logicalExitCode;
-    } catch (IOException exception) {
-      GridGrindProblemDetail.Problem problem =
-          CliResponseTransportSupport.writeResponseProblem(exception, targetPath);
-      if (response instanceof WorkbookResult.Failure failure) {
-        problem =
-            GridGrindProblems.appendCause(
-                problem, GridGrindProblems.problemCause(failure.problem()));
-      }
-      WorkbookResult.Failure fallbackResponse =
-          WorkbookResults.afterExecutionFailure(response, problem);
-      writeStdoutFallback(
-          stdout,
-          stderr,
-          CliResponseTransportSupport.redact(
-              redactor,
-              GridGrindJsonOutput.writeWorkbookResultBytes(fallbackResponse, prettyJson),
-              prettyJson),
-          targetPath);
-      return 1;
-    }
+    return routePrimaryPayload(
+        responsePath,
+        stdout,
+        stderr,
+        CliResponseTransportSupport.redact(
+            redactor,
+            GridGrindJsonOutput.writeWorkbookResultBytes(response, prettyJson),
+            prettyJson),
+        logicalExitCode);
   }
 
   /** Writes one doctor report to stdout or a configured response file. */
@@ -262,34 +180,39 @@ final class CliResponseWriter {
     Objects.requireNonNull(stderr, "stderr must not be null");
     Objects.requireNonNull(report, "report must not be null");
     Objects.requireNonNull(redactor, "redactor must not be null");
+    return routePrimaryPayload(
+        responsePath,
+        stdout,
+        stderr,
+        CliResponseTransportSupport.redact(
+            redactor,
+            GridGrindJsonOutput.writeRequestDoctorReportBytes(report, prettyJson),
+            prettyJson),
+        CliExitCodes.forDoctorReport(report));
+  }
+
+  private static int routePrimaryPayload(
+      Optional<Path> responsePath,
+      OutputStream stdout,
+      OutputStream stderr,
+      byte[] payload,
+      int logicalExitCode)
+      throws IOException {
+    Objects.requireNonNull(responsePath, "responsePath must not be null");
+    Objects.requireNonNull(stdout, "stdout must not be null");
+    Objects.requireNonNull(stderr, "stderr must not be null");
+    Objects.requireNonNull(payload, "payload must not be null");
     if (responsePath.isEmpty()) {
-      writePrimaryPayload(
-          stdout,
-          CliResponseTransportSupport.redact(
-              redactor,
-              GridGrindJsonOutput.writeRequestDoctorReportBytes(report, prettyJson),
-              prettyJson));
-      return CliExitCodes.forDoctorReport(report);
+      writePrimaryPayload(stdout, payload);
+      return logicalExitCode;
     }
 
-    int exitCode = CliExitCodes.forDoctorReport(report);
     Path targetPath = CliResponseTransportSupport.responseTargetPath(responsePath.orElseThrow());
     try {
-      CliResponseTransportSupport.writePayload(
-          targetPath,
-          CliResponseTransportSupport.redact(
-              redactor,
-              GridGrindJsonOutput.writeRequestDoctorReportBytes(report, prettyJson),
-              prettyJson));
-      return exitCode;
+      CliResponseTransportSupport.writePayload(targetPath, payload);
+      return logicalExitCode;
     } catch (IOException exception) {
-      CommandError fallback =
-          CommandErrors.responseWriteFailure("doctor-request", targetPath, exception);
-      writeStdoutFallback(
-          stdout,
-          stderr,
-          CliResponseTransportSupport.commandErrorBytes(fallback, redactor, prettyJson),
-          targetPath);
+      writeStdoutFallback(stdout, stderr, payload, targetPath);
       return 1;
     }
   }

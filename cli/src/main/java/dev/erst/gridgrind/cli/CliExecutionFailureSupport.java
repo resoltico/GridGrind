@@ -5,7 +5,6 @@ import dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces.RequestShap
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
 import dev.erst.gridgrind.contract.dto.WorkbookResult;
 import dev.erst.gridgrind.contract.dto.WorkbookResults;
-import dev.erst.gridgrind.engine.api.GridGrindJournalSink;
 import dev.erst.gridgrind.engine.api.GridGrindProblems;
 import dev.erst.gridgrind.engine.api.GridGrindRequestExecutor;
 import java.io.IOException;
@@ -31,8 +30,7 @@ final class CliExecutionFailureSupport {
       Optional<Path> requestPath,
       Optional<Path> executionRootPath,
       Optional<Path> tempRootPath,
-      InputStream stdin,
-      GridGrindJournalSink journalSink)
+      InputStream stdin)
       throws IOException {
     Objects.requireNonNull(requestExecutor, "requestExecutor must not be null");
     Objects.requireNonNull(request, "request must not be null");
@@ -40,13 +38,12 @@ final class CliExecutionFailureSupport {
     Objects.requireNonNull(executionRootPath, "executionRootPath must not be null");
     Objects.requireNonNull(tempRootPath, "tempRootPath must not be null");
     Objects.requireNonNull(stdin, "stdin must not be null");
-    Objects.requireNonNull(journalSink, "journalSink must not be null");
     CliExecutionBindingsFactory.ManagedRequestInputs bindings =
         CliExecutionBindingsFactory.create(
             requestPath, executionRootPath, tempRootPath, request, stdin);
     try (bindings) {
       return Objects.requireNonNull(
-          requestExecutor.execute(request, bindings.inputs(), journalSink),
+          requestExecutor.execute(request, bindings.inputs()),
           "requestExecutor must not return null");
     } catch (Throwable exception) {
       return failure(request, exception);

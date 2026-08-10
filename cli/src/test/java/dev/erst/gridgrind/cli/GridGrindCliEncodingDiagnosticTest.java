@@ -30,8 +30,8 @@ class GridGrindCliEncodingDiagnosticTest extends GridGrindCliTestSupport {
     assertEquals(2, exitCode);
     assertEquals(GridGrindProblemCode.INVALID_ENCODING, failure.primaryProblem().code());
     assertEquals("execute", failure.command());
-    assertEquals(java.util.Optional.empty(), readRequestContext(failure).jsonPath());
-    assertEquals(java.util.Optional.empty(), readRequestContext(failure).jsonLine());
-    assertEquals(java.util.Optional.empty(), readRequestContext(failure).jsonColumn());
+    assertEquals(java.util.Optional.empty(), requestIntakeContext(failure).jsonPath());
+    assertEquals(java.util.Optional.empty(), requestIntakeContext(failure).jsonLine());
+    assertEquals(java.util.Optional.empty(), requestIntakeContext(failure).jsonColumn());
   }
 }

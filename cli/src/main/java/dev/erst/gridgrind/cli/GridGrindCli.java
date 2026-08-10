@@ -23,7 +23,6 @@ public final class GridGrindCli {
         GridGrindEngine.requestDoctor(),
         new CliRequestReader(),
         new CliResponseWriter(),
-        new CliJournalWriter(),
         StandardInputInteractivity.currentProcess());
   }
 
@@ -33,7 +32,6 @@ public final class GridGrindCli {
         GridGrindEngine.requestDoctor(),
         new CliRequestReader(),
         new CliResponseWriter(),
-        new CliJournalWriter(),
         StandardInputInteractivity.never());
   }
 
@@ -44,7 +42,6 @@ public final class GridGrindCli {
         GridGrindEngine.requestDoctor(),
         new CliRequestReader(),
         new CliResponseWriter(),
-        new CliJournalWriter(),
         standardInputIsInteractive);
   }
 
@@ -53,7 +50,6 @@ public final class GridGrindCli {
       GridGrindRequestDoctor requestDoctor,
       CliRequestReader requestReader,
       CliResponseWriter responseWriter,
-      CliJournalWriter journalWriter,
       BooleanSupplier standardInputIsInteractive) {
     this.responseWriter = Objects.requireNonNull(responseWriter, "responseWriter must not be null");
     this.executionCommands =
@@ -62,7 +58,6 @@ public final class GridGrindCli {
             GridGrindRequestDoctor.requireNonNull(requestDoctor),
             requestReader,
             this.responseWriter,
-            journalWriter,
             standardInputIsInteractive);
   }
 

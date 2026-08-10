@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
-# Keep the release-publication surface deterministic: pinned base image, guarded workflow-dispatch
-# publishing, explicit attestations, accurate OCI labels, dynamic root coverage wiring, and a
-# narrow contract compile API.
+# Keep the release-publication surface deterministic: pinned images, guarded publishing,
+# attestations, accurate OCI labels, dynamic coverage wiring, and a narrow contract compile API.
 
 set -euo pipefail
 
@@ -42,6 +41,7 @@ readonly container_verify_script="${repo_root}/scripts/verify-container-publicat
 readonly stage_contract_script="${repo_root}/scripts/check-stage-contract.sh"
 readonly release_protocol_doc="${repo_root}/docs/RELEASE_PROTOCOL.md"
 readonly temp_parent="${repo_root}/tmp/test-publication-contract"
+source "${script_dir}/lib/test-publication-contract-diagnostic-support.sh"
 test_root=''
 jar_listing_path=''
 archive_listing_path=''
@@ -51,7 +51,6 @@ cleanup() {
 }
 
 trap cleanup EXIT
-
 fixed_pattern_exists() {
     local pattern=$1
     local path=$2
@@ -110,6 +109,8 @@ grep -Fq 'AGENTS.md' "${jar_listing_path}" && die \
     "CLI fat JAR unexpectedly contains /AGENTS.md"
 grep -Fq '.codex/' "${jar_listing_path}" && die \
     "CLI fat JAR unexpectedly contains /.codex/"
+
+verify_packaged_diagnostic_byte_stability "${cli_jar}" "${test_root}"
 
 cp "${gitattributes_file}" "${test_root}/archive-root/.gitattributes"
 printf '# synthetic agent entry point\n' > "${test_root}/archive-root/AGENTS.md"
@@ -198,8 +199,10 @@ grep -Fq '"level": "VERBOSE"' "${docker_smoke_script}" || die \
     "docker smoke no longer exercises verbose execution journaling from the packaged artifact"
 grep -Fq 'docker smoke response did not include the structured execution journal' "${docker_smoke_script}" || die \
     "docker smoke no longer asserts response-journal presence"
-grep -Fq 'docker smoke create request did not stream live verbose journal events to stderr' "${docker_smoke_script}" || die \
-    "docker smoke no longer asserts live verbose stderr journal streaming"
+grep -Fq 'docker smoke response did not retain VERBOSE journal events' "${docker_smoke_script}" || die \
+    "docker smoke no longer asserts structured VERBOSE journal events"
+grep -Fq 'docker smoke create request wrote unexpected stderr' "${docker_smoke_script}" || die \
+    "docker smoke no longer asserts clean stderr for successful VERBOSE response-file writes"
 grep -Fq 'run_verify_cli_contract "${image_name}:${expected_version}"' \
     "${container_verify_script}" || die "public container verification no longer checks the version tag contract"
 grep -Fq 'run_verify_cli_contract "${image_name}:latest"' \

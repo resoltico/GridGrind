@@ -20,7 +20,6 @@ final class GridGrindCliProtocolCatalogCommands {
       throws IOException {
     return CliCatalogPayloadSupport.writeRenderedPayload(
         responseWriter,
-        "print-protocol-catalog",
         command.responsePath(),
         stdout,
         stderr,
@@ -39,7 +38,6 @@ final class GridGrindCliProtocolCatalogCommands {
       throws IOException {
     return CliCatalogPayloadSupport.writeRenderedPayload(
         responseWriter,
-        "print-protocol-catalog",
         command.responsePath(),
         stdout,
         stderr,
@@ -88,7 +86,6 @@ final class GridGrindCliProtocolCatalogCommands {
     }
     return CliCatalogPayloadSupport.writeRenderedPayload(
         responseWriter,
-        "print-protocol-catalog",
         command.responsePath(),
         stdout,
         stderr,

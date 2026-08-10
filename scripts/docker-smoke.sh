@@ -581,10 +581,10 @@ grep -Eq '"journal"[[:space:]]*:' "${response_path}" || die \
     "docker smoke response did not include the structured execution journal"
 grep -Eq '"level"[[:space:]]*:[[:space:]]*"VERBOSE"' "${response_path}" || die \
     "docker smoke response did not preserve the requested VERBOSE journal level"
-[[ -s "${create_stderr_path}" ]] || die \
-    "docker smoke create request did not stream live verbose journal events to stderr"
-grep -Fq '[gridgrind]' "${create_stderr_path}" || die \
-    "docker smoke create request stderr did not contain the CLI journal prefix"
+grep -Eq '"events"[[:space:]]*:[[:space:]]*\[[[:space:]]*\{' "${response_path}" || die \
+    "docker smoke response did not retain VERBOSE journal events"
+[[ ! -s "${create_stderr_path}" ]] || die \
+    "docker smoke create request wrote unexpected stderr: $(tr '\n' ' ' < "${create_stderr_path}")"
 
 printf 'Docker smoke: reopening saved workbook through EXISTING source\n'
 docker_with_repo_config run --rm \

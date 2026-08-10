@@ -93,7 +93,7 @@ class GridGrindCliDoctorCatalogCommandTest extends GridGrindCliTestSupport {
     assertFalse(report.valid());
     assertEquals(
         GridGrindProblemCode.INVALID_REQUEST_SHAPE, report.primaryProblem().orElseThrow().code());
-    assertEquals(java.util.Optional.of("protocolVersion"), readRequestContext(report).jsonPath());
+    assertEquals(java.util.Optional.of("protocolVersion"), requestIntakeContext(report).jsonPath());
   }
 
   @Test
@@ -340,7 +340,7 @@ class GridGrindCliDoctorCatalogCommandTest extends GridGrindCliTestSupport {
         report.problems().stream()
             .map(
                 problem ->
-                    assertInstanceOf(ProblemContext.ReadRequest.class, problem.context())
+                    assertInstanceOf(ProblemContext.BindRequest.class, problem.context())
                         .json()
                         .jsonPathValue()
                         .orElseThrow())
@@ -397,7 +397,7 @@ class GridGrindCliDoctorCatalogCommandTest extends GridGrindCliTestSupport {
         "Use a single-cell A1-style address such as A1 or BC12 within Excel .xlsx bounds for field 'address'.",
         problem.resolution());
     assertEquals(
-        java.util.Optional.of("steps[0].target.address"), readRequestContext(report).jsonPath());
+        java.util.Optional.of("steps[0].target.address"), requestIntakeContext(report).jsonPath());
   }
 
   @Test
@@ -436,7 +436,7 @@ class GridGrindCliDoctorCatalogCommandTest extends GridGrindCliTestSupport {
     assertEquals("Field 'steps[0].query.type' must be a JSON string type id", problem.message());
     assertEquals(
         "Replace field 'steps[0].query.type' with a JSON string type id.", problem.resolution());
-    assertEquals(Optional.of("steps[0].query.type"), readRequestContext(report).jsonPath());
+    assertEquals(Optional.of("steps[0].query.type"), requestIntakeContext(report).jsonPath());
   }
 
   @Test
@@ -485,7 +485,7 @@ class GridGrindCliDoctorCatalogCommandTest extends GridGrindCliTestSupport {
     assertEquals("Field 'steps[2].query.type' must be a JSON string type id", problem.message());
     assertEquals(
         "Replace field 'steps[2].query.type' with a JSON string type id.", problem.resolution());
-    assertEquals(Optional.of("steps[2].query.type"), readRequestContext(report).jsonPath());
+    assertEquals(Optional.of("steps[2].query.type"), requestIntakeContext(report).jsonPath());
   }
 
   @Test
@@ -525,7 +525,7 @@ class GridGrindCliDoctorCatalogCommandTest extends GridGrindCliTestSupport {
     assertEquals("Missing required field 'steps[0].target.type'", problem.message());
     assertEquals(
         "Add the required type discriminator at 'steps[0].target.type'.", problem.resolution());
-    assertEquals(Optional.of("steps[0].target.type"), readRequestContext(report).jsonPath());
+    assertEquals(Optional.of("steps[0].target.type"), requestIntakeContext(report).jsonPath());
   }
 
   @Test
@@ -556,7 +556,7 @@ class GridGrindCliDoctorCatalogCommandTest extends GridGrindCliTestSupport {
     assertEquals("path must end in .xlsx (got: '.txt')", problem.message());
     assertEquals(
         "Provide a path ending in .xlsx for field 'persistence.path'.", problem.resolution());
-    assertEquals(Optional.of("persistence.path"), readRequestContext(report).jsonPath());
+    assertEquals(Optional.of("persistence.path"), requestIntakeContext(report).jsonPath());
   }
 
   @Test
@@ -596,7 +596,7 @@ class GridGrindCliDoctorCatalogCommandTest extends GridGrindCliTestSupport {
     assertEquals(1, exitCode);
     assertFalse(report.valid());
     assertEquals(GridGrindProblemCode.INVALID_REQUEST, problem.code());
-    assertEquals(Optional.of("steps[0].action.value"), readRequestContext(report).jsonPath());
+    assertEquals(Optional.of("steps[0].action.value"), requestIntakeContext(report).jsonPath());
     assertTrue(problem.message().contains("cannot be authored as stored cell values"));
   }
 
@@ -621,7 +621,7 @@ class GridGrindCliDoctorCatalogCommandTest extends GridGrindCliTestSupport {
     assertEquals(GridGrindProblemCode.IO_ERROR, failure.primaryProblem().code());
     assertEquals("doctor-request", failure.command());
     assertEquals(
-        Optional.of(missingRequestPath.toString()), readRequestContext(failure).requestPath());
+        Optional.of(missingRequestPath.toString()), requestIntakeContext(failure).requestPath());
     assertEquals(
         "Request file not found: " + missingRequestPath, failure.primaryProblem().message());
   }

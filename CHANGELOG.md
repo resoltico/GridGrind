@@ -21,10 +21,12 @@ Earlier release history through `0.68.0` is archived in [docs/CHANGELOG_ARCHIVE.
 - Command failures now use `CommandError` directly instead of a parallel CLI diagnostic wrapper. `REJECTED` describes only that workbook execution never began; the canonical problem's category continues to describe the fault domain.
 - Execution results now use `WorkbookResult` exclusively. The top-level result owns optional `planId`, common journal, persistence, warning, assertion, and inspection fields on both outcomes, and only `FAILED` carries the singular canonical `problem`.
 - Normal CLI output now has one primary channel: stdout without `--response`, or the requested response file with it. The CLI no longer mirrors an equivalent failure payload on stderr.
+- `VERBOSE` execution journals now keep their fine-grained events exclusively in `WorkbookResult.journal.events[]`; CLI stderr is reserved for the single structured response-file fallback notice.
 
 ### Fixed
+- Request diagnostics now distinguish `READ_REQUEST` structural intake from `BIND_REQUEST` creator-contract failures, preserving phase-first deterministic ordering even when a constructor failure appears earlier in the JSON payload.
 - Asset-backed recipe printing now keeps stderr free of ad hoc portability prose; callers discover the required workspace assets through the catalog's structured `workspaceMode` and `requiredWorkspacePaths` fields, and response-file fallback emits only its one structured transport notice.
-- Execution now rejects static semantic request violations before constructing execution bindings, returning the same ordered `CommandError.problems[]` core as request doctoring instead of a pre-mutation `WorkbookResult` failure.
+- Execution now rejects static semantic request violations before constructing execution bindings, returning the same ordered `CommandError.problems[]` core as request doctoring instead of a pre-mutation `WorkbookResult` failure, including distinct authored violations that happen to share the same message.
 - Last-resort CLI failures now use the explicit `CLI_RUNTIME` problem stage before workbook execution, and an unwritable primary stdout stream terminates with a nonzero exit rather than appending a second diagnostic payload.
 - `CommandError` deserialization now requires its fixed `status="REJECTED"` value instead of silently accepting contradictory or absent status input.
 - Unexpected failures raised after workbook execution begins now retain the `WorkbookResult` envelope with `status=FAILED`, including the requested `SAVE_AS` or `OVERWRITE` intent as `NotWritten`, instead of being mislabeled as pre-execution `CommandError` rejections.
@@ -41,7 +43,7 @@ Earlier release history through `0.68.0` is archived in [docs/CHANGELOG_ARCHIVE.
 - Doctoring no longer rewrites malformed authored steps into synthetic placeholders to continue analysis, so every reported structural defect remains tied to the original request and no fabricated plan data can affect later diagnostics.
 - Shadow packaging now feeds every `META-INF/services/**` descriptor to the service-file merger and rejects duplicate final JAR entries, preventing ServiceLoader registrations from being silently lost during distribution assembly.
 - Conditional-formatting style write and readback no longer collapse theme, indexed, or tint color references to an RGB-only side channel; the documented examples and promoted request-fuzz fixtures now use the same tagged `ColorInput` shape enforced by the protocol.
-- Response-file write failure now preserves completed execution artifacts in a `WorkbookResult` fallback and emits only one transport-only stderr notice; command and doctor fallbacks similarly retain one primary stdout payload rather than competing result envelopes.
+- Response-file delivery now stages each payload beside its final destination, so a failed write leaves no partial response file and never replaces an existing one. When delivery falls back to stdout, GridGrind preserves the already-rendered, secret-safe primary payload unchanged and emits only one transport-only stderr notice rather than fabricating a secondary transport problem or changing the result status.
 - Problems and warnings now use a total deterministic order across pipeline phase, source position, step, duplicate occurrence, code, and a nonserialized internal phase-local tie-breaker.
 
 ## [0.72.0] - 2026-07-06

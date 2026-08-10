@@ -588,8 +588,8 @@ class GridGrindCliCatalogCommandTest extends GridGrindCliTestSupport {
     assertEquals(1, exitCode);
     assertFalse(report.valid());
     assertEquals(GridGrindProblemCode.INVALID_JSON, report.primaryProblem().orElseThrow().code());
-    assertEquals(java.util.Optional.empty(), readRequestContext(report).jsonLine());
-    assertEquals(java.util.Optional.empty(), readRequestContext(report).jsonColumn());
+    assertEquals(java.util.Optional.empty(), requestIntakeContext(report).jsonLine());
+    assertEquals(java.util.Optional.empty(), requestIntakeContext(report).jsonColumn());
   }
 
   @Test

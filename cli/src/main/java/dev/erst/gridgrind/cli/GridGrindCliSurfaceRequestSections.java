@@ -26,8 +26,7 @@ final class GridGrindCliSurfaceRequestSections {
                 + " Any omitted nested execution field keeps that same default.",
             "execution.journal.level controls journal detail; SUMMARY is the default and"
                 + " keeps the response stable by omitting timing telemetry."
-                + " VERBOSE also streams live phase events to stderr as timestamped CATEGORY"
-                + " detail lines with optional stepIndex/stepId pairs.",
+                + " VERBOSE records fine-grained phase events in journal.events[].",
             "execution.calculation controls server-side evaluation, cache clearing, and"
                 + " open-time recalc flags. strategy.type accepts DO_NOT_CALCULATE,"
                 + " EVALUATE_ALL, EVALUATE_TARGETS, and CLEAR_CACHES_ONLY."
@@ -107,7 +106,7 @@ final class GridGrindCliSurfaceRequestSections {
                     + " for execution, or the command's own discovery, help, or doctor"
                     + " payload. With --response, that payload is written to the new"
                     + " file. When stdout is writable, a response-file write failure"
-                    + " recovers the payload there and adds one compact transport notice on stderr;"
+                    + " recovers the already-rendered payload there unchanged and adds one compact transport notice on stderr;"
                     + " GridGrind never moves a primary payload to stderr."),
             new CliSurface.DefinitionEntry(
                 "source.type=EXISTING + source.path", "open an existing workbook from that path."),

@@ -51,7 +51,7 @@ archive, add its `bin/` directory to `PATH`; from the standalone JAR, replace `g
 Without `--response`, GridGrind writes one primary JSON payload to stdout. A command rejected
 before workbook execution uses `CommandError` with `status: "REJECTED"`; execution uses
 `WorkbookResult` with `status: "SUCCEEDED"` or `"FAILED"`. With `--response`, that payload goes
-to the requested file instead. If the file cannot be written, the fallback payload goes to stdout
+to the requested file instead. If the file cannot be written, the already-rendered primary payload goes to stdout unchanged
 when stdout is available and stderr contains one small transport-only JSON notice. GridGrind never
 moves a primary payload to stderr.
 

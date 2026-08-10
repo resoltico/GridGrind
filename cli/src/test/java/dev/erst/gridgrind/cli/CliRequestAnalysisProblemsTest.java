@@ -92,7 +92,7 @@ class CliRequestAnalysisProblemsTest {
   }
 
   @Test
-  void constructorFailuresRetainTheirExactNestedMemberToken() {
+  void constructorFailuresUseTheBindingStageAndRetainTheirExactNestedMemberToken() {
     byte[] request =
         """
         {
@@ -109,8 +109,8 @@ class CliRequestAnalysisProblemsTest {
             GridGrindJson.analyzeRequest(request),
             ProblemContextRequestSurfaces.RequestInput.standardInput());
 
-    ProblemContext.ReadRequest context =
-        assertInstanceOf(ProblemContext.ReadRequest.class, problems.getFirst().context());
+    ProblemContext.BindRequest context =
+        assertInstanceOf(ProblemContext.BindRequest.class, problems.getFirst().context());
     assertEquals(
         ProblemContextRequestSurfaces.JsonLocation.pathAtByteOffset(
             "source.path", indexOf(request, "\"path\": \"source.xls\"")),
@@ -118,7 +118,7 @@ class CliRequestAnalysisProblemsTest {
   }
 
   @Test
-  void completePlanFailuresRetainTheirExactNestedMemberToken() {
+  void completePlanFailuresUseTheBindingStageAndRetainTheirExactNestedMemberToken() {
     byte[] request =
         """
         {
@@ -146,8 +146,8 @@ class CliRequestAnalysisProblemsTest {
             GridGrindJson.analyzeRequest(request),
             ProblemContextRequestSurfaces.RequestInput.standardInput());
 
-    ProblemContext.ReadRequest context =
-        assertInstanceOf(ProblemContext.ReadRequest.class, problems.getFirst().context());
+    ProblemContext.BindRequest context =
+        assertInstanceOf(ProblemContext.BindRequest.class, problems.getFirst().context());
     assertEquals(
         ProblemContextRequestSurfaces.JsonLocation.pathAtByteOffset(
             "steps[1].stepId", secondIndexOf(request, "\"stepId\"")),

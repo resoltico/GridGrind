@@ -29,7 +29,6 @@ final class GridGrindCliExecutionCommands {
   private final GridGrindRequestDoctor requestDoctor;
   private final CliRequestReader requestReader;
   private final CliResponseWriter responseWriter;
-  private final CliJournalWriter journalWriter;
   private final BooleanSupplier standardInputIsInteractive;
   private final CliDoctorRequestAnalyzer doctorRequestAnalyzer;
 
@@ -38,13 +37,11 @@ final class GridGrindCliExecutionCommands {
       GridGrindRequestDoctor requestDoctor,
       CliRequestReader requestReader,
       CliResponseWriter responseWriter,
-      CliJournalWriter journalWriter,
       BooleanSupplier standardInputIsInteractive) {
     this.requestExecutor = GridGrindRequestExecutor.requireNonNull(requestExecutor);
     this.requestDoctor = GridGrindRequestDoctor.requireNonNull(requestDoctor);
     this.requestReader = Objects.requireNonNull(requestReader, "requestReader must not be null");
     this.responseWriter = Objects.requireNonNull(responseWriter, "responseWriter must not be null");
-    this.journalWriter = Objects.requireNonNull(journalWriter, "journalWriter must not be null");
     this.standardInputIsInteractive =
         Objects.requireNonNull(
             standardInputIsInteractive, "standardInputIsInteractive must not be null");
@@ -140,7 +137,6 @@ final class GridGrindCliExecutionCommands {
           prettyJson);
     }
 
-    var journalSink = journalWriter.sinkFor(request, stderr);
     try {
       response =
           CliExecutionFailureSupport.executeStarted(
@@ -149,8 +145,7 @@ final class GridGrindCliExecutionCommands {
               command.requestPath(),
               command.executionRootPath(),
               command.tempRootPath(),
-              stdin,
-              journalSink);
+              stdin);
     } catch (IOException exception) {
       return CliRequestReadFailureSupport.write(
           responseWriter,

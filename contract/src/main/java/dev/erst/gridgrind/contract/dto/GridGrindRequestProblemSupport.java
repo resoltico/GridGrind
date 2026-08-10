@@ -139,8 +139,8 @@ public final class GridGrindRequestProblemSupport {
   }
 
   private static Optional<String> requestJsonPath(ProblemContext context) {
-    if (context instanceof ProblemContext.ReadRequest readRequest) {
-      return readRequest.jsonPath();
+    if (context instanceof RequestInputContext requestInputContext) {
+      return requestInputContext.jsonPath();
     }
     return Optional.empty();
   }

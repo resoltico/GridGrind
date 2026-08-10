@@ -121,8 +121,8 @@ public final class GridGrindCliHelp {
                         + " <path>.",
                     "Without --response, the command payload is the sole stdout content. With"
                         + " --response, GridGrind writes that payload to one new file; only a"
-                        + " response-file write failure with writable stdout recovers that payload"
-                        + " there and emits one compact transport notice on stderr; GridGrind never"
+                        + " response-file write failure with writable stdout recovers that already-rendered"
+                        + " payload there unchanged and emits one compact transport notice on stderr; GridGrind never"
                         + " moves a primary payload to stderr.",
                     "Use --format structured when you want JSON help, version, or license"
                         + " discovery instead of prose.",
@@ -177,8 +177,7 @@ public final class GridGrindCliHelp {
                     "EVALUATE_TARGETS requires strategy.cells[] and each target must identify an"
                         + " existing formula cell.",
                     "stepId must be unique within steps[] and must match [A-Za-z0-9._-]+.",
-                    "VERBOSE stderr emits one line per phase event as timestamp CATEGORY detail"
-                        + " with optional stepIndex/stepId pairs."))));
+                    "VERBOSE records fine-grained phase events in journal.events[]."))));
   }
 
   private static String renderGuidanceHelp(CliSurface cliSurface, String containerTag) {

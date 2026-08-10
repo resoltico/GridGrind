@@ -224,33 +224,21 @@ public final class GridGrindProblems {
 
   /**
    * Enriches the problem context with exception-specific fields when the exception type and context
-   * type are paired for protocol parsing failures (e.g., PayloadException in a ReadRequest
-   * context).
+   * type are paired for request-intake failures (e.g., PayloadException in a ReadRequest or
+   * BindRequest context).
    */
   static dev.erst.gridgrind.contract.dto.ProblemContext enrichContext(
       dev.erst.gridgrind.contract.dto.ProblemContext context, Throwable exception) {
     return switch (context) {
       case dev.erst.gridgrind.contract.dto.ProblemContext.ReadRequest rc -> {
         if (exception instanceof PayloadException pe) {
-          dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces.JsonLocation jsonLocation =
-              switch (pe.jsonLocation()) {
-                case PayloadLocation.PathOnly pathOnly ->
-                    dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces.JsonLocation
-                        .pathOnly(pathOnly.jsonPathValue());
-                case PayloadLocation.LineColumn lineColumn ->
-                    dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces.JsonLocation
-                        .lineColumn(lineColumn.jsonLineValue(), lineColumn.jsonColumnValue());
-                case PayloadLocation.Located located ->
-                    dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces.JsonLocation
-                        .located(
-                            located.jsonPathValue(),
-                            located.jsonLineValue(),
-                            located.jsonColumnValue());
-                case PayloadLocation.Unavailable _ ->
-                    dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces.JsonLocation
-                        .unavailable();
-              };
-          yield rc.withJson(jsonLocation);
+          yield rc.withJson(jsonLocationFor(pe));
+        }
+        yield context;
+      }
+      case dev.erst.gridgrind.contract.dto.ProblemContext.BindRequest bc -> {
+        if (exception instanceof PayloadException pe) {
+          yield bc.withJson(jsonLocationFor(pe));
         }
         yield context;
       }
@@ -270,6 +258,23 @@ public final class GridGrindProblems {
       case dev.erst.gridgrind.contract.dto.ProblemContext.PersistWorkbook _ -> context;
       case dev.erst.gridgrind.contract.dto.ProblemContext.ExecuteRequest _ -> context;
       case dev.erst.gridgrind.contract.dto.ProblemContext.WriteResponse _ -> context;
+    };
+  }
+
+  private static dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces.JsonLocation
+      jsonLocationFor(PayloadException exception) {
+    return switch (exception.jsonLocation()) {
+      case PayloadLocation.PathOnly pathOnly ->
+          dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces.JsonLocation.pathOnly(
+              pathOnly.jsonPathValue());
+      case PayloadLocation.LineColumn lineColumn ->
+          dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces.JsonLocation.lineColumn(
+              lineColumn.jsonLineValue(), lineColumn.jsonColumnValue());
+      case PayloadLocation.Located located ->
+          dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces.JsonLocation.located(
+              located.jsonPathValue(), located.jsonLineValue(), located.jsonColumnValue());
+      case PayloadLocation.Unavailable _ ->
+          dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces.JsonLocation.unavailable();
     };
   }
 }

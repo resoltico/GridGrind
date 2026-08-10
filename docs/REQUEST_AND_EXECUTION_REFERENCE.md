@@ -84,9 +84,9 @@ resolution, and existing workbook-source accessibility without mutating a workbo
 - `--response <path>` works here too, so the doctor report can be captured to a file instead of
   stdout when the workflow needs a saved artifact.
 - Without `--response`, each command writes exactly one primary JSON payload to stdout. With it,
-  the payload goes only to the requested file. If that file cannot be written, GridGrind recovers
-  the primary payload to stdout when stdout is writable and writes one transport-only JSON notice
-  to stderr. GridGrind never moves a primary payload to stderr.
+  the already-rendered payload goes only to the requested file. If that file cannot be written,
+  GridGrind recovers those unchanged bytes to stdout when stdout is writable and writes one
+  transport-only JSON notice to stderr. GridGrind never moves a primary payload to stderr.
 
 ---
 
@@ -219,8 +219,8 @@ override.
   flag without requiring an extra mutation step.
 - `EVALUATE_TARGETS` addresses must point at existing formula cells. A missing physical cell can
   surface `CELL_NOT_FOUND`; an existing non-formula cell is rejected as `INVALID_REQUEST`.
-- `VERBOSE` keeps the `NORMAL` response journal detail and also streams fine-grained execution
-  events to CLI stderr while the request is running.
+- `VERBOSE` keeps the `NORMAL` response journal detail and records fine-grained execution events
+  in the structured response journal.
 - `EVENT_READ` can run directly against an existing workbook when the request is read-only and
   unsaved. If the request also performs full-XSSF mutations, GridGrind materializes the mutated
   workbook state and then performs the summary reads through the event model.
@@ -339,12 +339,11 @@ object. The excerpt below focuses on that canonical persistence outcome and its 
 | `validation`, `inputResolution`, `open`, `persistencePhase`, `close` | Top-level pipeline phase summaries. `SUMMARY` keeps these phases timestamp-free with `durationMillis=0`; `NORMAL` and `VERBOSE` add observational `startedAt`, `finishedAt`, and non-zero timing where applicable. `NOT_STARTED` and `NOT_REQUESTED` always omit timestamps and use `durationMillis=0`. `inputResolution` records source-backed file/stdin loading before workbook open. |
 | `calculation` | Top-level calculation telemetry. `preflight` classifies authored formulas and `execution` records the requested evaluation or cache-clearing work. |
 | `steps[]` | Ordered per-step telemetry including `resolvedTargets`, phase timing, outcome, and optional failure classification. `resolvedTargets` is compact in `SUMMARY` and expanded in `NORMAL`/`VERBOSE`. |
-| `events[]` | Fine-grained live events. Present only when `level=VERBOSE`. |
+| `events[]` | Fine-grained execution events. Present only when `level=VERBOSE`. |
 | `outcome` | Whole-run status plus `plannedStepCount`, `completedStepCount`, total `durationMillis`, and optional `failedStepIndex`, `failedStepId`, and `failureCode` when the run failed. |
 
-`VERBOSE` keeps the full response journal and also streams `events[]` entries live to CLI stderr
-while the request is running as `[gridgrind] <timestamp> <CATEGORY> <detail>` with optional
-`stepIndex=<n>` and `stepId=<id>` suffixes on step-scoped events.
+`VERBOSE` keeps the full response journal and records `events[]` in that primary structured
+payload. CLI stderr remains reserved for the structured response-file fallback notice.
 
 The top-level response `persistence` field is the canonical save outcome. The journal records
 `persistencePhase` timing only; it no longer repeats the intended or actual save target, and

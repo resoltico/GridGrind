@@ -4,15 +4,13 @@ import dev.erst.gridgrind.contract.dto.GridGrindProblemCode;
 import dev.erst.gridgrind.contract.dto.GridGrindProblemDetail;
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
 import java.util.ArrayList;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 
 /** Cross-field request validation that sits above record-level contract checks. */
 final class ExecutionValidationSupport {
   List<GridGrindProblemDetail.Problem> validateRequest(WorkbookPlan request) {
-    Set<String> messages = new LinkedHashSet<>();
+    List<String> messages = new ArrayList<>();
     messages.addAll(ExecutionModeRules.calculationPolicyFailures(request));
     messages.addAll(
         ExecutionModeRules.executionModeFailures(

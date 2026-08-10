@@ -7,6 +7,7 @@ import dev.erst.gridgrind.cli.discovery.CommandError;
 import dev.erst.gridgrind.cli.discovery.GridGrindCliJson;
 import dev.erst.gridgrind.contract.dto.ProblemContext;
 import dev.erst.gridgrind.contract.dto.RequestDoctorReport;
+import dev.erst.gridgrind.contract.dto.RequestInputContext;
 import dev.erst.gridgrind.contract.dto.WorkbookResult;
 import dev.erst.gridgrind.contract.json.GridGrindJson;
 import java.io.ByteArrayInputStream;
@@ -147,18 +148,17 @@ class GridGrindCliTestSupport {
         ProblemContext.ParseArguments.class, diagnostic.primaryProblem().context());
   }
 
-  protected static ProblemContext.ReadRequest readRequestContext(WorkbookResult.Failure failure) {
-    return assertInstanceOf(ProblemContext.ReadRequest.class, failure.problem().context());
+  protected static RequestInputContext requestIntakeContext(WorkbookResult.Failure failure) {
+    return assertInstanceOf(RequestInputContext.class, failure.problem().context());
   }
 
-  protected static ProblemContext.ReadRequest readRequestContext(RequestDoctorReport report) {
+  protected static RequestInputContext requestIntakeContext(RequestDoctorReport report) {
     return assertInstanceOf(
-        ProblemContext.ReadRequest.class, report.primaryProblem().orElseThrow().context());
+        RequestInputContext.class, report.primaryProblem().orElseThrow().context());
   }
 
-  protected static ProblemContext.ReadRequest readRequestContext(CommandError diagnostic) {
-    return assertInstanceOf(
-        ProblemContext.ReadRequest.class, diagnostic.primaryProblem().context());
+  protected static RequestInputContext requestIntakeContext(CommandError diagnostic) {
+    return assertInstanceOf(RequestInputContext.class, diagnostic.primaryProblem().context());
   }
 
   protected static ProblemContext.ResolveInputs resolveInputsContext(RequestDoctorReport report) {

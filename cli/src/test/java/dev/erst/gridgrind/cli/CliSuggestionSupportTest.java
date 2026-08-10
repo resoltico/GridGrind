@@ -44,7 +44,7 @@ class CliSuggestionSupportTest {
         GridGrindProblemDetail.Problem.of(
             GridGrindProblemCode.INVALID_REQUEST_SHAPE,
             "Field 'ignored' is invalid",
-            new ProblemContext.ReadRequest(
+            new ProblemContext.BindRequest(
                 RequestInput.standardInput(),
                 JsonLocation.pathOnly("steps[0].action.zoomPercent")));
     GridGrindProblemDetail.Problem withoutContextualFact =

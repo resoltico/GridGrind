@@ -4,20 +4,16 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import dev.erst.gridgrind.cli.discovery.CommandError;
 import dev.erst.gridgrind.contract.dto.*;
-import dev.erst.gridgrind.contract.dto.ExecutionJournal;
 import dev.erst.gridgrind.contract.dto.GridGrindProblemCode;
-import dev.erst.gridgrind.contract.dto.WorkbookPlan;
 import dev.erst.gridgrind.contract.dto.WorkbookResult;
 import dev.erst.gridgrind.contract.json.GridGrindJson;
 import dev.erst.gridgrind.contract.query.SheetInspectionResult;
 import dev.erst.gridgrind.contract.query.WorkbookAssetInspectionResult;
 import dev.erst.gridgrind.contract.query.WorkbookInspectionResult;
-import dev.erst.gridgrind.engine.api.GridGrindJournalSink;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -59,104 +55,6 @@ class GridGrindCliTest extends GridGrindCliTestSupport {
     args[1] = workspace.toString();
     System.arraycopy(trailingArguments, 0, args, 2, trailingArguments.length);
     return args;
-  }
-
-  @Test
-  void cliJournalWriterReturnsNoopWhenRequestIsMissing() {
-    CliJournalWriter writer = new CliJournalWriter();
-
-    assertSame(GridGrindJournalSink.NOOP, writer.sinkFor(null, OutputStream.nullOutputStream()));
-  }
-
-  @Test
-  void cliJournalWriterSwallowsBestEffortIoFailures() throws IOException {
-    String requestPayload =
-        requestJson(
-            "{ \"type\": \"NEW\" }",
-            "{ \"type\": \"NONE\" }",
-            verboseExecutionJson(),
-            emptyFormulaEnvironmentJson(),
-            "[]");
-    WorkbookPlan request =
-        GridGrindJson.readRequest(requestPayload.getBytes(StandardCharsets.UTF_8));
-    CliJournalWriter writer = new CliJournalWriter();
-    try (OutputStream broken =
-        new OutputStream() {
-          @Override
-          public void write(int b) throws IOException {
-            throw new IOException("boom");
-          }
-        }) {
-      assertDoesNotThrow(
-          () ->
-              writer
-                  .sinkFor(request, broken)
-                  .emit(
-                      new ExecutionJournal.Event(
-                          "2026-04-18T11:45:00Z",
-                          "OPEN",
-                          "opened",
-                          Optional.empty(),
-                          Optional.empty())));
-    }
-  }
-
-  @Test
-  void cliJournalWriterIncludesStepMetadataWhenPresent() throws IOException {
-    String requestPayload =
-        requestJson(
-            "{ \"type\": \"NEW\" }",
-            "{ \"type\": \"NONE\" }",
-            verboseExecutionJson(),
-            emptyFormulaEnvironmentJson(),
-            "[]");
-    WorkbookPlan request =
-        GridGrindJson.readRequest(requestPayload.getBytes(StandardCharsets.UTF_8));
-    ByteArrayOutputStream stderr = new ByteArrayOutputStream();
-
-    new CliJournalWriter()
-        .sinkFor(request, stderr)
-        .emit(
-            new ExecutionJournal.Event(
-                "2026-04-18T11:45:00Z",
-                "STEP",
-                "wrote cell",
-                Optional.of(7),
-                Optional.of("step-007")));
-
-    assertEquals(
-        "[gridgrind] 2026-04-18T11:45:00Z STEP stepId=step-007 stepIndex=7 wrote cell"
-            + System.lineSeparator(),
-        stderr.toString(StandardCharsets.UTF_8));
-  }
-
-  @Test
-  void cliJournalWriterPreservesLiveTextThatMerelyContainsAShortSecret() {
-    String requestPayload =
-        requestJson(
-            "{ \"type\": \"EXISTING\", \"path\": \"source.xlsx\", \"security\": { \"password\": \"a\" } }",
-            "{ \"type\": \"NONE\" }",
-            verboseExecutionJson(),
-            emptyFormulaEnvironmentJson(),
-            "[]");
-    var analysis = GridGrindJson.analyzeRequest(requestPayload.getBytes(StandardCharsets.UTF_8));
-    ByteArrayOutputStream stderr = new ByteArrayOutputStream();
-
-    new CliJournalWriter()
-        .sinkFor(analysis.requireCompletePlan(), stderr)
-        .emit(
-            new ExecutionJournal.Event(
-                "2026-04-18T11:45:00Z",
-                "STEP",
-                "saved a cell",
-                Optional.of(7),
-                Optional.of("step-007")));
-
-    String rendered = stderr.toString(StandardCharsets.UTF_8);
-    assertEquals(
-        "[gridgrind] 2026-04-18T11:45:00Z STEP stepId=step-007 stepIndex=7 saved a cell"
-            + System.lineSeparator(),
-        rendered);
   }
 
   @Test
@@ -392,7 +290,7 @@ class GridGrindCliTest extends GridGrindCliTestSupport {
   }
 
   @Test
-  void verboseExecutionJournalStreamsLiveEventsToStderr() throws IOException {
+  void verboseExecutionJournalKeepsEventsInTheResponseAndStderrFree() throws IOException {
     String request =
         requestJsonWithPlanId(
             "ledger-audit",
@@ -424,11 +322,10 @@ class GridGrindCliTest extends GridGrindCliTestSupport {
     assertEquals(0, exitCode);
     assertEquals("ledger-audit", success.planId().orElseThrow());
     assertTrue(
-        stderr.toString(StandardCharsets.UTF_8).contains("[gridgrind]"),
-        "verbose journal must emit live stderr lines");
-    assertTrue(
-        stderr.toString(StandardCharsets.UTF_8).contains("ensure-ledger"),
-        "stderr must include the step id");
+        success.journal().events().stream()
+            .anyMatch(event -> event.stepId().equals(Optional.of("ensure-ledger"))),
+        "verbose journal must retain the step-scoped event in the primary response");
+    assertEquals("", stderr.toString(StandardCharsets.UTF_8));
   }
 
   @Test
@@ -487,7 +384,7 @@ class GridGrindCliTest extends GridGrindCliTestSupport {
     assertEquals(GridGrindProblemCode.INVALID_REQUEST, failure.primaryProblem().code());
     assertEquals("execute", failure.command());
     assertEquals(
-        java.util.Optional.of("steps[0].target.name"), readRequestContext(failure).jsonPath());
+        java.util.Optional.of("steps[0].target.name"), requestIntakeContext(failure).jsonPath());
     assertTrue(failure.primaryProblem().message().contains("invalid Excel character ':'"));
   }
 
@@ -691,7 +588,7 @@ class GridGrindCliTest extends GridGrindCliTestSupport {
     assertEquals("", stdout.toString(StandardCharsets.UTF_8));
     assertEquals("", stderr.toString(StandardCharsets.UTF_8));
     assertEquals(GridGrindProblemCode.INVALID_REQUEST_SHAPE, failure.primaryProblem().code());
-    assertEquals(Optional.of("steps[0].target.type"), readRequestContext(failure).jsonPath());
+    assertEquals(Optional.of("steps[0].target.type"), requestIntakeContext(failure).jsonPath());
   }
 
   private static Path locateRepoRoot() {

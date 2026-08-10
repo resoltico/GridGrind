@@ -175,7 +175,7 @@ After a successful run:
   working directory, while relative paths inside a `--request` file follow that request file's
   directory, and stdin-driven requests use the explicit `--execution-root`; `--temp-root` chooses
   the parent for one private per-run scratch directory rather than a request-root `.gridgrind/tmp`
-- Ignoring stdout and stderr after a failed `--response` run: when stdout is writable, GridGrind recovers the primary payload there and emits one transport-only JSON notice on stderr; it never moves the primary payload to stderr
+- Ignoring stdout and stderr after a failed `--response` run: when stdout is writable, GridGrind recovers the already-rendered primary payload there unchanged and emits one transport-only JSON notice on stderr; it never moves the primary payload to stderr
 - Expecting GridGrind to save a workbook after a failed run
 
 For hard limits and supported boundaries, see [LIMITATIONS.md](./LIMITATIONS.md).

@@ -33,13 +33,7 @@ final class GridGrindCliRecipeDiscoveryCommands {
     }
     byte[] requestBytes = GridGrindJsonOutput.writeRequestBytes(recipe.get().plan(), prettyJson);
     return CliCatalogPayloadSupport.writePayload(
-        responseWriter,
-        "print-recipe",
-        command.responsePath(),
-        stdout,
-        stderr,
-        requestBytes,
-        prettyJson);
+        responseWriter, command.responsePath(), stdout, stderr, requestBytes);
   }
 
   static int recipeCatalog(
@@ -52,12 +46,10 @@ final class GridGrindCliRecipeDiscoveryCommands {
     if (command.lookupId().isEmpty()) {
       return CliCatalogPayloadSupport.writePayload(
           responseWriter,
-          "print-recipe-catalog",
           command.responsePath(),
           stdout,
           stderr,
-          GridGrindCliJson.writeBytes(GridGrindRecipeCatalog.catalog(), prettyJson),
-          prettyJson);
+          GridGrindCliJson.writeBytes(GridGrindRecipeCatalog.catalog(), prettyJson));
     }
     String recipeFilter = command.lookupId().orElseThrow();
     var entry = GridGrindRecipeCatalog.lookupFor(recipeFilter);
@@ -73,7 +65,6 @@ final class GridGrindCliRecipeDiscoveryCommands {
     }
     return CliCatalogPayloadSupport.writeRenderedPayload(
         responseWriter,
-        "print-recipe-catalog",
         command.responsePath(),
         stdout,
         stderr,
@@ -96,13 +87,11 @@ final class GridGrindCliRecipeDiscoveryCommands {
     try {
       return CliCatalogPayloadSupport.writePayload(
           responseWriter,
-          "print-recipe-keyword-match",
           command.responsePath(),
           stdout,
           stderr,
           GridGrindCliJson.writeBytes(
-              GridGrindRecipeKeywordMatcher.reportFor(command.query()), prettyJson),
-          prettyJson);
+              GridGrindRecipeKeywordMatcher.reportFor(command.query()), prettyJson));
     } catch (IllegalArgumentException exception) {
       return CliCatalogPayloadSupport.writeCommandError(
           responseWriter,

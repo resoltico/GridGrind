@@ -33,6 +33,10 @@ class DiagnosticOrderTest {
         problem(
             new ProblemContext.ReadRequest(
                 RequestInput.standardInput(), JsonLocation.unavailable()));
+    GridGrindProblemDetail.Problem bindRequest =
+        problem(
+            new ProblemContext.BindRequest(
+                RequestInput.standardInput(), JsonLocation.unavailable()));
     GridGrindProblemDetail.Problem resolveInputs =
         problem(new ProblemContext.ResolveInputs(SHAPE, InputReference.unknown()));
     GridGrindProblemDetail.Problem openWorkbook =
@@ -55,6 +59,7 @@ class DiagnosticOrderTest {
             parseArguments,
             cliRuntime,
             readRequest,
+            bindRequest,
             validation,
             calculationPreflight,
             resolveInputs,
@@ -72,6 +77,7 @@ class DiagnosticOrderTest {
                 parseArguments,
                 cliRuntime,
                 readRequest,
+                bindRequest,
                 resolveInputs,
                 openWorkbook,
                 calculationExecution,
@@ -122,6 +128,22 @@ class DiagnosticOrderTest {
                 earlyOffset,
                 secondDuplicate,
                 firstDuplicate)));
+  }
+
+  @Test
+  void ordersStructuralIntakeBeforeAnEarlierLocatedBindingFailure() {
+    GridGrindProblemDetail.Problem bindingFailure =
+        problem(
+            new ProblemContext.BindRequest(
+                RequestInput.standardInput(), JsonLocation.pathAtByteOffset("source.path", 2)));
+    GridGrindProblemDetail.Problem structuralFailure =
+        problem(
+            new ProblemContext.ReadRequest(
+                RequestInput.standardInput(), JsonLocation.pathAtByteOffset("unexpected", 40)));
+
+    assertEquals(
+        List.of(structuralFailure, bindingFailure),
+        DiagnosticOrder.problems(List.of(bindingFailure, structuralFailure)));
   }
 
   @Test

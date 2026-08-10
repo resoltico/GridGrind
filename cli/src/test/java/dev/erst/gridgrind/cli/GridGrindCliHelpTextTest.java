@@ -7,12 +7,10 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import dev.erst.gridgrind.cli.discovery.CliHelpReport;
 import dev.erst.gridgrind.cli.discovery.CliLicenseReport;
 import dev.erst.gridgrind.cli.discovery.CliVersionReport;
-import dev.erst.gridgrind.cli.discovery.CommandError;
 import dev.erst.gridgrind.cli.discovery.GridGrindCliJson;
 import dev.erst.gridgrind.cli.discovery.ShippedExampleEntry;
 import dev.erst.gridgrind.cli.examples.GridGrindShippedExamples;
 import dev.erst.gridgrind.contract.catalog.GridGrindContainerRuntimeText;
-import dev.erst.gridgrind.contract.dto.GridGrindProblemCode;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -268,7 +266,9 @@ class GridGrindCliHelpTextTest extends GridGrindCliTestSupport {
     assertTrue(overview.contains("--pretty"));
     assertTrue(overview.contains("Without --response"));
     assertTrue(overview.contains("compact transport notice"));
-    assertTrue(normalizedOverview.contains("with writable stdout recovers that payload there"));
+    assertTrue(
+        normalizedOverview.contains(
+            "with writable stdout recovers that already-rendered payload there unchanged"));
     assertTrue(normalizedOverview.contains("never moves a primary payload to stderr"));
     assertTrue(overview.contains("docs/QUICK_REFERENCE.md"));
     assertFalse(overview.contains("Minimal Valid Request:"));
@@ -320,7 +320,7 @@ class GridGrindCliHelpTextTest extends GridGrindCliTestSupport {
         normalizedProtocol.contains("With --response, that payload is written to the new file"));
     assertTrue(
         normalizedProtocol.contains(
-            "response-file write failure recovers the payload there and adds one compact transport notice"));
+            "response-file write failure recovers the already-rendered payload there unchanged and adds one compact transport notice"));
     assertTrue(normalizedProtocol.contains("never moves a primary payload to stderr"));
     assertFalse(protocol.contains("Workflows:"));
     assertFalse(protocol.contains("Docker Example:"));
@@ -392,37 +392,38 @@ class GridGrindCliHelpTextTest extends GridGrindCliTestSupport {
   }
 
   @Test
-  void versionFallsBackToStructuredFailureReportWhenResponsePathAlreadyExists() throws IOException {
+  void versionResponseFileCollisionPreservesTheOriginalVersionPayload() throws IOException {
     Path responsePath = Files.createTempFile("gridgrind-version-", ".json");
     Files.writeString(responsePath, "sentinel\n");
+    ByteArrayOutputStream expected = new ByteArrayOutputStream();
     ByteArrayOutputStream stdout = new ByteArrayOutputStream();
     ByteArrayOutputStream stderr = new ByteArrayOutputStream();
+    GridGrindCli cli = new GridGrindCli();
+
+    int directExitCode =
+        cli.run(new String[] {"--version"}, new ByteArrayInputStream(new byte[0]), expected);
 
     int exitCode =
-        new GridGrindCli()
-            .run(
-                new String[] {"--version", "--response", responsePath.toString()},
-                new ByteArrayInputStream(new byte[0]),
-                stdout,
-                stderr);
+        cli.run(
+            new String[] {"--version", "--response", responsePath.toString()},
+            new ByteArrayInputStream(new byte[0]),
+            stdout,
+            stderr);
 
-    CommandError failure = GridGrindCliJson.readBytes(stdout.toByteArray(), CommandError.class);
     dev.erst.gridgrind.cli.discovery.CliTransportNotice transportNotice =
         GridGrindCliJson.readBytes(
             stderr.toByteArray(), dev.erst.gridgrind.cli.discovery.CliTransportNotice.class);
 
+    assertEquals(0, directExitCode);
     assertEquals(1, exitCode);
+    assertEquals(
+        expected.toString(StandardCharsets.UTF_8), stdout.toString(StandardCharsets.UTF_8));
     assertEquals(
         dev.erst.gridgrind.cli.discovery.CliTransportNotice.Destination.STDOUT,
         transportNotice.wroteTo());
-    assertEquals(GridGrindProblemCode.IO_ERROR, failure.primaryProblem().code());
-    assertEquals("version", failure.command());
     assertEquals(
         java.util.Optional.of(responsePath.toAbsolutePath().toString()),
-        writeResponseContext(failure).responsePath());
-    assertTrue(
-        failure.primaryProblem().message().contains(responsePath.toAbsolutePath().toString()),
-        "fallback report should point at the rejected response path");
+        transportNotice.responsePath());
     assertEquals(
         "sentinel\n", Files.readString(responsePath), "existing response file must stay untouched");
   }

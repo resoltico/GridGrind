@@ -12,16 +12,20 @@ import dev.erst.gridgrind.contract.dto.GridGrindProblemDetail;
 import dev.erst.gridgrind.contract.dto.GridGrindProtocolVersion;
 import dev.erst.gridgrind.contract.dto.ProblemContext;
 import dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces.CliArgument;
+import dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces.JsonLocation;
+import dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces.RequestInput;
 import dev.erst.gridgrind.contract.dto.RequestDoctorReport;
 import dev.erst.gridgrind.contract.dto.WorkbookResult;
 import dev.erst.gridgrind.contract.dto.WorkbookResults;
 import dev.erst.gridgrind.contract.json.GridGrindJson;
+import dev.erst.gridgrind.contract.json.RequestDiagnosticRedactor;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
@@ -46,8 +50,7 @@ class CliResponseWriterTest extends GridGrindCliTestSupport {
   }
 
   @Test
-  void rejectedCommandResponseFileFailureRetainsProblemsOnStdoutAndAddsOnlyTransportMetadata()
-      throws Exception {
+  void rejectedCommandResponseFileFailurePreservesTheOriginalCommandError() throws Exception {
     Path responseDirectory = Files.createTempDirectory("gridgrind-command-error-dir-");
     ByteArrayOutputStream stdout = new ByteArrayOutputStream();
     ByteArrayOutputStream stderr = new ByteArrayOutputStream();
@@ -60,42 +63,35 @@ class CliResponseWriterTest extends GridGrindCliTestSupport {
     CliTransportNotice notice =
         GridGrindCliJson.readBytes(stderr.toByteArray(), CliTransportNotice.class);
     assertEquals(1, exitCode);
-    assertEquals(2, fallback.problems().size());
-    assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, fallback.problems().getFirst().code());
-    assertEquals(GridGrindProblemCode.IO_ERROR, fallback.problems().get(1).code());
+    assertEquals(commandError(), fallback);
     assertEquals(CliTransportNotice.Destination.STDOUT, notice.wroteTo());
     assertEquals(Optional.of(responseDirectory.toAbsolutePath().toString()), notice.responsePath());
     assertFalse(stderr.toString(StandardCharsets.UTF_8).contains("problems"));
   }
 
   @Test
-  void discoveryPayloadResponseFileFailureBecomesARejectedCommandOnStdout() throws Exception {
+  void discoveryPayloadResponseFileFailurePreservesTheOriginalPayload() throws Exception {
     Path responseDirectory = Files.createTempDirectory("gridgrind-payload-dir-");
     ByteArrayOutputStream stdout = new ByteArrayOutputStream();
     ByteArrayOutputStream stderr = new ByteArrayOutputStream();
 
     int exitCode =
         responseWriter.writePayload(
-            "print-request-template",
             Optional.of(responseDirectory),
             stdout,
             stderr,
             "{}".getBytes(StandardCharsets.UTF_8),
-            0,
-            false);
+            0);
 
-    CommandError fallback = commandError(stdout.toByteArray());
     CliTransportNotice notice =
         GridGrindCliJson.readBytes(stderr.toByteArray(), CliTransportNotice.class);
     assertEquals(1, exitCode);
-    assertEquals("REJECTED", fallback.status());
-    assertEquals(GridGrindProblemCode.IO_ERROR, fallback.primaryProblem().code());
+    assertEquals("{}\n", stdout.toString(StandardCharsets.UTF_8));
     assertEquals(CliTransportNotice.Destination.STDOUT, notice.wroteTo());
   }
 
   @Test
-  void executionResponseFileFailureUsesWorkbookResultAndPreservesExecutionArtifacts()
-      throws Exception {
+  void executionResponseFileFailurePreservesTheOriginalSuccessfulWorkbookResult() throws Exception {
     Path responseDirectory = Files.createTempDirectory("gridgrind-result-dir-");
     ByteArrayOutputStream stdout = new ByteArrayOutputStream();
     ByteArrayOutputStream stderr = new ByteArrayOutputStream();
@@ -104,23 +100,18 @@ class CliResponseWriterTest extends GridGrindCliTestSupport {
     int exitCode =
         responseWriter.write(Optional.of(responseDirectory), stdout, stderr, result, 0, false);
 
-    WorkbookResult.Failure fallback =
+    WorkbookResult.Success fallback =
         assertInstanceOf(
-            WorkbookResult.Failure.class, GridGrindJson.readWorkbookResult(stdout.toByteArray()));
+            WorkbookResult.Success.class, GridGrindJson.readWorkbookResult(stdout.toByteArray()));
     CliTransportNotice notice =
         GridGrindCliJson.readBytes(stderr.toByteArray(), CliTransportNotice.class);
     assertEquals(1, exitCode);
-    assertEquals(GridGrindProblemCode.IO_ERROR, fallback.problem().code());
-    assertEquals(result.journal(), fallback.journal());
-    assertEquals(result.warnings(), fallback.warnings());
-    assertEquals(result.assertions(), fallback.assertions());
-    assertEquals(result.inspections(), fallback.inspections());
+    assertEquals(result, fallback);
     assertEquals(CliTransportNotice.Destination.STDOUT, notice.wroteTo());
   }
 
   @Test
-  void doctorResponseFileFailureIsARejectedCommandRatherThanASecondDoctorEnvelope()
-      throws Exception {
+  void doctorResponseFileFailurePreservesTheOriginalDoctorReport() throws Exception {
     Path responseDirectory = Files.createTempDirectory("gridgrind-doctor-dir-");
     ByteArrayOutputStream stdout = new ByteArrayOutputStream();
     ByteArrayOutputStream stderr = new ByteArrayOutputStream();
@@ -131,9 +122,9 @@ class CliResponseWriterTest extends GridGrindCliTestSupport {
         responseWriter.writeDoctorReport(
             Optional.of(responseDirectory), stdout, stderr, report, false);
 
-    CommandError fallback = commandError(stdout.toByteArray());
+    RequestDoctorReport fallback = GridGrindJson.readRequestDoctorReport(stdout.toByteArray());
     assertEquals(1, exitCode);
-    assertEquals(GridGrindProblemCode.IO_ERROR, fallback.primaryProblem().code());
+    assertEquals(report, fallback);
     assertEquals(
         CliTransportNotice.Destination.STDOUT,
         GridGrindCliJson.readBytes(stderr.toByteArray(), CliTransportNotice.class).wroteTo());
@@ -147,17 +138,23 @@ class CliResponseWriterTest extends GridGrindCliTestSupport {
 
     int exitCode =
         responseWriter.writePayload(
-            "print-request-template",
             Optional.of(responseDirectory),
             stdout,
             failingOutputStream(),
             "{}".getBytes(StandardCharsets.UTF_8),
-            0,
-            false);
+            0);
 
     assertEquals(1, exitCode);
-    assertEquals(
-        GridGrindProblemCode.IO_ERROR, commandError(stdout.toByteArray()).primaryProblem().code());
+    assertEquals("{}\n", stdout.toString(StandardCharsets.UTF_8));
+  }
+
+  @Test
+  void redactsEveryDeclaredSecretAcrossFilesStdoutAndFallbacks() throws Exception {
+    RequestDiagnosticRedactor redactor = allSecretsRedactor();
+
+    for (SecretOwner owner : secretOwners()) {
+      assertSecretOwnerIsRedactedAcrossEveryPrimaryTransport(redactor, owner);
+    }
   }
 
   private static CommandError commandError() {
@@ -178,6 +175,187 @@ class CliResponseWriterTest extends GridGrindCliTestSupport {
         new ProblemContext.ParseArguments(CliArgument.named("--request")));
   }
 
+  private static GridGrindProblemDetail.Problem secretProblem(SecretOwner owner) {
+    GridGrindProblemCode code = GridGrindProblemCode.INVALID_REQUEST;
+    return new GridGrindProblemDetail.Problem(
+        code,
+        code.category(),
+        code.recovery(),
+        code.title(),
+        "Request secret was " + owner.value(),
+        "Replace secret " + owner.value() + " before retrying.",
+        new ProblemContext.ReadRequest(
+            RequestInput.standardInput(), JsonLocation.pathOnly(owner.jsonPath())),
+        Optional.empty(),
+        List.of(
+            new GridGrindProblemDetail.ProblemCause(
+                code, "Cause: " + owner.value(), "READ_REQUEST")));
+  }
+
+  private void assertSecretOwnerIsRedactedAcrossEveryPrimaryTransport(
+      RequestDiagnosticRedactor redactor, SecretOwner owner) throws IOException {
+    GridGrindProblemDetail.Problem problem = secretProblem(owner);
+    CommandError commandError =
+        new CommandError(GridGrindProtocolVersion.current(), "execute", List.of(problem));
+    RequestDoctorReport doctorReport =
+        RequestDoctorReport.invalid(Optional.empty(), List.of(), problem);
+    WorkbookResult.Failure executionResult = WorkbookResults.failure(problem);
+
+    ByteArrayOutputStream commandStdout = new ByteArrayOutputStream();
+    ByteArrayOutputStream commandStderr = new ByteArrayOutputStream();
+    assertEquals(
+        2,
+        responseWriter.writeCommandError(
+            Optional.empty(), commandStdout, commandStderr, commandError, redactor, false));
+    assertSecretRedacted(owner, commandStdout.toByteArray(), commandStderr.toByteArray());
+    assertSecretProblemRedacted(commandError(commandStdout.toByteArray()).primaryProblem());
+
+    Path doctorResponse =
+        Files.createTempDirectory("gridgrind-secret-doctor-").resolve("report.json");
+    ByteArrayOutputStream doctorStdout = new ByteArrayOutputStream();
+    ByteArrayOutputStream doctorStderr = new ByteArrayOutputStream();
+    assertEquals(
+        1,
+        responseWriter.writeDoctorReport(
+            Optional.of(doctorResponse),
+            doctorStdout,
+            doctorStderr,
+            doctorReport,
+            redactor,
+            false));
+    byte[] doctorBytes = Files.readAllBytes(doctorResponse);
+    assertSecretRedacted(
+        owner, doctorBytes, doctorStdout.toByteArray(), doctorStderr.toByteArray());
+    assertSecretProblemRedacted(
+        GridGrindJson.readRequestDoctorReport(doctorBytes).primaryProblem().orElseThrow());
+
+    Path executionResponse =
+        Files.createTempDirectory("gridgrind-secret-execution-").resolve("response.json");
+    ByteArrayOutputStream executionStdout = new ByteArrayOutputStream();
+    ByteArrayOutputStream executionStderr = new ByteArrayOutputStream();
+    assertEquals(
+        1,
+        responseWriter.write(
+            Optional.of(executionResponse),
+            executionStdout,
+            executionStderr,
+            executionResult,
+            1,
+            redactor,
+            false));
+    byte[] executionBytes = Files.readAllBytes(executionResponse);
+    assertSecretRedacted(
+        owner, executionBytes, executionStdout.toByteArray(), executionStderr.toByteArray());
+    assertSecretProblemRedacted(
+        assertInstanceOf(
+                WorkbookResult.Failure.class, GridGrindJson.readWorkbookResult(executionBytes))
+            .problem());
+
+    ByteArrayOutputStream commandFallbackStdout = new ByteArrayOutputStream();
+    ByteArrayOutputStream commandFallbackStderr = new ByteArrayOutputStream();
+    assertEquals(
+        1,
+        responseWriter.writeCommandError(
+            Optional.of(Files.createTempDirectory("gridgrind-secret-command-fallback-")),
+            commandFallbackStdout,
+            commandFallbackStderr,
+            commandError,
+            redactor,
+            false));
+    assertSecretRedacted(
+        owner, commandFallbackStdout.toByteArray(), commandFallbackStderr.toByteArray());
+    assertSecretProblemRedacted(commandError(commandFallbackStdout.toByteArray()).primaryProblem());
+
+    ByteArrayOutputStream doctorFallbackStdout = new ByteArrayOutputStream();
+    ByteArrayOutputStream doctorFallbackStderr = new ByteArrayOutputStream();
+    assertEquals(
+        1,
+        responseWriter.writeDoctorReport(
+            Optional.of(Files.createTempDirectory("gridgrind-secret-doctor-fallback-")),
+            doctorFallbackStdout,
+            doctorFallbackStderr,
+            doctorReport,
+            redactor,
+            false));
+    assertSecretRedacted(
+        owner, doctorFallbackStdout.toByteArray(), doctorFallbackStderr.toByteArray());
+    assertSecretProblemRedacted(
+        GridGrindJson.readRequestDoctorReport(doctorFallbackStdout.toByteArray())
+            .primaryProblem()
+            .orElseThrow());
+
+    ByteArrayOutputStream executionFallbackStdout = new ByteArrayOutputStream();
+    ByteArrayOutputStream executionFallbackStderr = new ByteArrayOutputStream();
+    assertEquals(
+        1,
+        responseWriter.write(
+            Optional.of(Files.createTempDirectory("gridgrind-secret-execution-fallback-")),
+            executionFallbackStdout,
+            executionFallbackStderr,
+            executionResult,
+            1,
+            redactor,
+            false));
+    assertSecretRedacted(
+        owner, executionFallbackStdout.toByteArray(), executionFallbackStderr.toByteArray());
+    assertSecretProblemRedacted(
+        assertInstanceOf(
+                WorkbookResult.Failure.class,
+                GridGrindJson.readWorkbookResult(executionFallbackStdout.toByteArray()))
+            .problem());
+  }
+
+  private static RequestDiagnosticRedactor allSecretsRedactor() throws IOException {
+    return GridGrindJson.analyzeRequest(
+            """
+            {
+              "protocolVersion": "V2",
+              "source": {
+                "type": "EXISTING",
+                "path": "source.xlsx",
+                "security": { "password": "source-secret" }
+              },
+              "persistence": {
+                "type": "SAVE_AS",
+                "path": "secured.xlsx",
+                "ifExists": "REJECT",
+                "security": {
+                  "encryption": { "password": "persistence-secret" },
+                  "signature": {
+                    "pkcs12Path": "keys/signing.p12",
+                    "keystorePassword": "keystore-secret",
+                    "keyPassword": "key-secret"
+                  }
+                }
+              },
+              "steps": []
+            }
+            """
+                .getBytes(StandardCharsets.UTF_8))
+        .diagnosticRedactor();
+  }
+
+  private static List<SecretOwner> secretOwners() {
+    return List.of(
+        new SecretOwner("source.security.password", "source-secret"),
+        new SecretOwner("persistence.security.encryption.password", "persistence-secret"),
+        new SecretOwner("persistence.security.signature.keystorePassword", "keystore-secret"),
+        new SecretOwner("persistence.security.signature.keyPassword", "key-secret"));
+  }
+
+  private static void assertSecretRedacted(SecretOwner owner, byte[]... payloads) {
+    assertFalse(
+        Arrays.stream(payloads)
+            .map(payload -> new String(payload, StandardCharsets.UTF_8))
+            .anyMatch(payload -> payload.contains(owner.value())));
+  }
+
+  private static void assertSecretProblemRedacted(GridGrindProblemDetail.Problem problem) {
+    assertEquals("[REDACTED]", problem.message());
+    assertEquals("[REDACTED]", problem.resolution());
+    assertEquals("[REDACTED]", problem.causes().getFirst().message());
+  }
+
   private static OutputStream failingOutputStream() {
     return new OutputStream() {
       @Override
@@ -186,4 +364,6 @@ class CliResponseWriterTest extends GridGrindCliTestSupport {
       }
     };
   }
+
+  private record SecretOwner(String jsonPath, String value) {}
 }
