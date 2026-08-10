@@ -5,6 +5,7 @@ import dev.erst.gridgrind.contract.catalog.GridGrindProtocolTypeNames;
 import dev.erst.gridgrind.contract.catalog.ProtocolTargetingMode;
 import dev.erst.gridgrind.contract.catalog.ProtocolTypeMetadataSupport;
 import dev.erst.gridgrind.contract.selector.Selector;
+import dev.erst.gridgrind.contract.step.WorkbookOperationContracts;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -25,15 +26,21 @@ public sealed interface Assertion
   /** Returns the selector types accepted by one assertion instance. */
   static Class<? extends Selector>[] allowedTargetTypes(Assertion assertion) {
     Objects.requireNonNull(assertion, "assertion must not be null");
+    return WorkbookOperationContracts.targetSelectorsFor(assertion);
+  }
+
+  /** Resolves the selector families for assertion contracts whose target is nested or derived. */
+  public static Class<? extends Selector>[] derivedTargetSelectors(Assertion assertion) {
+    Objects.requireNonNull(assertion, "assertion must not be null");
     ProtocolTargetingMode mode = ProtocolTypeMetadataSupport.targetingMode(assertion.getClass());
     return switch (mode) {
       case STATIC ->
-          staticAllowedTargetTypesForType(assertion.getClass().asSubclass(Assertion.class));
-      case ANALYSIS_QUERY -> AnalysisAssertion.allowedTargetTypes((AnalysisAssertion) assertion);
+          throw new IllegalArgumentException("Static assertions do not derive target selectors");
+      case ANALYSIS_QUERY -> AnalysisAssertion.targetSelectorsFor((AnalysisAssertion) assertion);
       case NESTED_ASSERTION ->
-          CompositeAssertion.allowedTargetTypes((CompositeAssertion) assertion);
+          CompositeAssertion.targetSelectorsFor((CompositeAssertion) assertion);
       case INTERSECTION_OF_NESTED_ASSERTIONS ->
-          CompositeAssertion.allowedTargetTypes((CompositeAssertion) assertion);
+          CompositeAssertion.targetSelectorsFor((CompositeAssertion) assertion);
     };
   }
 
@@ -45,15 +52,14 @@ public sealed interface Assertion
       throw new IllegalArgumentException(
           "No target-type mapping configured for assertion class " + assertionType.getName());
     }
-    Optional<String> dynamicRule = dynamicTargetSelectorRuleForType(assertionType);
-    if (dynamicRule.isPresent()) {
+    if (dynamicTargetSelectorRuleForType(assertionType).isPresent()) {
       throw new IllegalArgumentException(
           "Assertion type "
               + assertionType.getName()
               + " derives target selectors dynamically: "
-              + dynamicRule.orElseThrow());
+              + dynamicTargetSelectorRuleForType(assertionType).orElseThrow());
     }
-    return ProtocolTypeMetadataSupport.staticTargetSelectors(assertionType);
+    return WorkbookOperationContracts.staticTargetSelectorsFor(assertionType);
   }
 
   /** Returns the dynamic selector rule for one assertion type when selector families derive. */

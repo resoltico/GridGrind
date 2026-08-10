@@ -285,6 +285,75 @@ class GridGrindCliInvocationTest extends GridGrindCliTestSupport {
   }
 
   @Test
+  void executeReportsKnownButIncompatibleTargetsAsStaticProblemsInsteadOfInternalErrors()
+      throws IOException {
+    GridGrindCli cli =
+        GridGrindCli.forTesting(
+            (request, inputs, sink) -> {
+              throw new AssertionError("static-invalid request must not reach execution");
+            });
+    byte[] request =
+        requestJson(
+                "{ \"type\": \"NEW\" }",
+                "{ \"type\": \"NONE\" }",
+                """
+                [
+                  {
+                    "stepId": "set-cell",
+                    "target": { "type": "WORKBOOK_CURRENT" },
+                    "action": {
+                      "type": "SET_CELL",
+                      "value": { "type": "NUMBER", "number": 1.0 }
+                    }
+                  },
+                  {
+                    "stepId": "ensure-sheet",
+                    "target": { "type": "WORKBOOK_CURRENT" },
+                    "action": { "type": "ENSURE_SHEET" }
+                  }
+                ]
+                """)
+            .getBytes(StandardCharsets.UTF_8);
+    ByteArrayOutputStream executeStdout = new ByteArrayOutputStream();
+    ByteArrayOutputStream executeStderr = new ByteArrayOutputStream();
+    ByteArrayOutputStream doctorStdout = new ByteArrayOutputStream();
+    ByteArrayOutputStream doctorStderr = new ByteArrayOutputStream();
+    Path workspace = Files.createTempDirectory("gridgrind-incompatible-target-root-");
+
+    int executeExitCode =
+        cli.run(
+            stdinExecutionArguments(),
+            new ByteArrayInputStream(request),
+            executeStdout,
+            executeStderr);
+    int doctorExitCode =
+        cli.run(
+            new String[] {"--doctor-request", "--execution-root", workspace.toString()},
+            new ByteArrayInputStream(request),
+            doctorStdout,
+            doctorStderr);
+
+    CommandError executeDiagnostic = commandErrorOnStdout(executeStdout, executeStderr);
+    RequestDoctorReport doctorReport = doctorReport(doctorStdout, doctorStderr);
+
+    assertEquals(2, executeExitCode);
+    assertEquals(1, doctorExitCode);
+    assertEquals(doctorReport.problems(), executeDiagnostic.problems());
+    assertEquals(
+        List.of(GridGrindProblemCode.INVALID_REQUEST, GridGrindProblemCode.INVALID_REQUEST),
+        executeDiagnostic.problems().stream().map(problem -> problem.code()).toList());
+    List<ProblemContext.ValidateRequest> contexts =
+        executeDiagnostic.problems().stream()
+            .map(
+                problem ->
+                    assertInstanceOf(ProblemContext.ValidateRequest.class, problem.context()))
+            .toList();
+    assertEquals(
+        List.of(Optional.of("steps[0].target.type"), Optional.of("steps[1].target.type")),
+        contexts.stream().map(context -> context.json().orElseThrow().jsonPathValue()).toList());
+  }
+
+  @Test
   void executeAndDoctorPreserveEveryOrderedStructuralProblemAndItsLocation() throws IOException {
     Path requestPath = Files.createTempFile("gridgrind-multi-fault-request-", ".json");
     Files.writeString(

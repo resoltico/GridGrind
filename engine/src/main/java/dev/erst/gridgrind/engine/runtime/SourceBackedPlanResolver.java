@@ -41,7 +41,7 @@ public final class SourceBackedPlanResolver {
     Objects.requireNonNull(bindings, "bindings must not be null");
     List<WorkbookStep> resolvedSteps = new ArrayList<>(plan.steps().size());
     for (WorkbookStep step : plan.steps()) {
-      resolvedSteps.add(resolveStep(step, bindings));
+      resolvedSteps.add(resolveStepUnchecked(step, bindings));
     }
     return new WorkbookPlan(
         plan.protocolVersion(),
@@ -53,8 +53,18 @@ public final class SourceBackedPlanResolver {
         resolvedSteps);
   }
 
-  private static WorkbookStep resolveStep(WorkbookStep step, ExecutionInputBindings bindings)
+  /** Resolves one already-bound step so phase-four preflight can collect sibling input failures. */
+  static WorkbookStep resolveStep(WorkbookStep step, ExecutionInputBindings bindings)
       throws IOException {
+    InputResolutionFailures failures = new InputResolutionFailures();
+    WorkbookStep resolved =
+        resolveStepUnchecked(step, bindings.collectingInputResolutionFailures(failures));
+    failures.throwIfAny();
+    return resolved;
+  }
+
+  private static WorkbookStep resolveStepUnchecked(
+      WorkbookStep step, ExecutionInputBindings bindings) throws IOException {
     return switch (step) {
       case MutationStep mutationStep -> {
         Selector resolvedTarget =
@@ -98,13 +108,13 @@ public final class SourceBackedPlanResolver {
             ? text
             : new CellInput.Text(resolvedSource);
       }
-      case CellInput.RichText richText ->
-          sameReference(
-                  SourceBackedStructuredInputResolver.resolveRuns(richText.runs(), bindings),
-                  richText.runs())
-              ? richText
-              : new CellInput.RichText(
-                  SourceBackedStructuredInputResolver.resolveRuns(richText.runs(), bindings));
+      case CellInput.RichText richText -> {
+        var resolvedRuns =
+            SourceBackedStructuredInputResolver.resolveRuns(richText.runs(), bindings);
+        yield sameReference(resolvedRuns, richText.runs())
+            ? richText
+            : new CellInput.RichText(resolvedRuns);
+      }
       case CellInput.NumberValue numberValue -> numberValue;
       case CellInput.BooleanValue booleanValue -> booleanValue;
       case CellInput.ErrorValue errorValue -> errorValue;
@@ -125,20 +135,29 @@ public final class SourceBackedPlanResolver {
       boolean requireNonBlank,
       String inputKind)
       throws IOException {
-    String resolvedText = resolveText(source, bindings, requireNonBlank, inputKind);
-    return source instanceof TextSourceInput.Inline
-        ? source
-        : new TextSourceInput.Inline(resolvedText);
+    return resolveOrCollect(
+        source,
+        bindings,
+        () -> {
+          String resolvedText = resolveText(source, bindings, requireNonBlank, inputKind);
+          return source instanceof TextSourceInput.Inline
+              ? source
+              : new TextSourceInput.Inline(resolvedText);
+        });
   }
 
   static TextSourceInput resolveFormulaSource(
       TextSourceInput source, ExecutionInputBindings bindings) throws IOException {
-    String resolvedText = resolveText(source, bindings, true, "formula");
+    TextSourceInput resolvedSource = resolveTextSource(source, bindings, true, "formula");
+    if (!(resolvedSource instanceof TextSourceInput.Inline inline)) {
+      return source;
+    }
+    String resolvedText = inline.text();
     if (resolvedText.startsWith("=")) {
       resolvedText = resolvedText.substring(1);
     }
-    if (source instanceof TextSourceInput.Inline inline) {
-      if (inline.text().equals(resolvedText)) {
+    if (source instanceof TextSourceInput.Inline originalInline) {
+      if (originalInline.text().equals(resolvedText)) {
         return source;
       }
       return new TextSourceInput.Inline(resolvedText);
@@ -149,11 +168,16 @@ public final class SourceBackedPlanResolver {
   static BinarySourceInput resolveBinarySource(
       BinarySourceInput source, ExecutionInputBindings bindings, String inputKind)
       throws IOException {
-    String resolvedBase64 = resolveBinaryBase64(source, bindings, inputKind);
-    return source instanceof BinarySourceInput.InlineBase64 inline
-            && inline.base64Data().equals(resolvedBase64)
-        ? source
-        : new BinarySourceInput.InlineBase64(resolvedBase64);
+    return resolveOrCollect(
+        source,
+        bindings,
+        () -> {
+          String resolvedBase64 = resolveBinaryBase64(source, bindings, inputKind);
+          return source instanceof BinarySourceInput.InlineBase64 inline
+                  && inline.base64Data().equals(resolvedBase64)
+              ? source
+              : new BinarySourceInput.InlineBase64(resolvedBase64);
+        });
   }
 
   private static String resolveText(
@@ -249,6 +273,26 @@ public final class SourceBackedPlanResolver {
                 new InputSourceUnavailableException(
                     inputKind + " requires STANDARD_INPUT but no standard-input bytes were bound",
                     inputKind));
+  }
+
+  private static <T> T resolveOrCollect(
+      T source, ExecutionInputBindings bindings, SourceResolution<T> resolution)
+      throws IOException {
+    try {
+      return resolution.resolve();
+    } catch (IOException | RuntimeException exception) {
+      if (bindings.collectInputResolutionFailure(exception)) {
+        return source;
+      }
+      throw exception;
+    }
+  }
+
+  /** One source-resolution operation whose checked failure can join the current batch. */
+  @FunctionalInterface
+  private interface SourceResolution<T> {
+    /** Resolves one authored source value. */
+    T resolve() throws IOException;
   }
 
   static List<List<CellInput>> resolveRows(

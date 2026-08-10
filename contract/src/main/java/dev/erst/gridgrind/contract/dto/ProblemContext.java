@@ -122,10 +122,27 @@ public sealed interface ProblemContext
     }
   }
 
-  /** Context for failures that occur while validating request fields before execution. */
-  record ValidateRequest(RequestShape request) implements RequestShapeContext {
+  /** Context for failures that occur while statically validating bound request fragments. */
+  record ValidateRequest(
+      RequestShape request,
+      @com.fasterxml.jackson.annotation.JsonInclude(
+              com.fasterxml.jackson.annotation.JsonInclude.Include.NON_ABSENT)
+          Optional<JsonLocation> json)
+      implements RequestShapeContext {
     public ValidateRequest {
       Objects.requireNonNull(request, "request must not be null");
+      json = Objects.requireNonNullElseGet(json, Optional::empty);
+    }
+
+    /** Creates an unlocated static-validation context for programmatically assembled requests. */
+    public ValidateRequest(RequestShape request) {
+      this(request, Optional.empty());
+    }
+
+    /** Returns one copy carrying the authored JSON location of the static violation. */
+    public ValidateRequest withJson(JsonLocation location) {
+      return new ValidateRequest(
+          request, Optional.of(Objects.requireNonNull(location, "location must not be null")));
     }
 
     @Override

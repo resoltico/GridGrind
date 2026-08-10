@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.contract.json;
 
+import dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces.JsonLocation;
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
 import java.util.List;
 import java.util.Objects;
@@ -12,6 +13,7 @@ public final class RequestAnalysis {
   private final List<RequestBindingFailure> bindingFailures;
   private final Optional<WorkbookPlan> completePlan;
   private final RequestDiagnosticRedactor diagnosticRedactor;
+  private final Optional<RequestJsonNode> rawRoot;
 
   /**
    * Creates a manually assembled analysis for focused callers that do not retain a raw parse tree.
@@ -43,6 +45,7 @@ public final class RequestAnalysis {
     this.diagnosticRedactor =
         Objects.requireNonNull(diagnosticRedactor, "diagnosticRedactor must not be null");
     Optional<RequestJsonNode> parsedRoot = Objects.requireNonNullElseGet(rawRoot, Optional::empty);
+    this.rawRoot = parsedRoot;
     List<RequestBindingFailure> discoveredBindingFailures =
         new java.util.ArrayList<>(
             Objects.requireNonNull(bindingFailures, "bindingFailures must not be null"));
@@ -101,6 +104,20 @@ public final class RequestAnalysis {
   /** Returns whether every structurally valid fragment and the complete plan bound successfully. */
   public boolean isBindable() {
     return structuralProblems.isEmpty() && bindingFailures.isEmpty() && completePlan.isPresent();
+  }
+
+  /** Returns the authored UTF-8 token offset for one bound path when the tolerant tree has it. */
+  public Optional<Long> byteOffsetAt(String jsonPath) {
+    Objects.requireNonNull(jsonPath, "jsonPath must not be null");
+    return rawRoot.flatMap(root -> RequestJsonTokenLocationSupport.byteOffsetAt(root, jsonPath));
+  }
+
+  /** Returns the strongest JSON location available for one request path. */
+  public JsonLocation jsonLocationAt(String jsonPath) {
+    Objects.requireNonNull(jsonPath, "jsonPath must not be null");
+    return byteOffsetAt(jsonPath)
+        .map(byteOffset -> JsonLocation.pathAtByteOffset(jsonPath, byteOffset))
+        .orElseGet(() -> JsonLocation.pathOnly(jsonPath));
   }
 
   private Optional<WorkbookPlan> bindCompletePlan(

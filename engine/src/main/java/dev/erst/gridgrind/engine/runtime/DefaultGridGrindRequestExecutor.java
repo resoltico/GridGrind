@@ -14,7 +14,7 @@ import java.util.Optional;
 /** Default request executor that applies one GridGrind workflow against the workbook core. */
 public final class DefaultGridGrindRequestExecutor implements GridGrindRequestExecutor {
   private final DefaultGridGrindRequestExecutorDependencies dependencies;
-  private final ExecutionValidationSupport validationSupport;
+  private final StaticRequestValidator staticValidator;
   private final ExecutionResponseSupport responseSupport;
 
   /** Creates the production request executor with the default workbook executors and closers. */
@@ -25,7 +25,7 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
   /** Creates one executor from an explicit owned dependency bundle. */
   DefaultGridGrindRequestExecutor(DefaultGridGrindRequestExecutorDependencies dependencies) {
     this.dependencies = Objects.requireNonNull(dependencies, "dependencies must not be null");
-    this.validationSupport = new ExecutionValidationSupport();
+    this.staticValidator = new StaticRequestValidator();
     this.responseSupport =
         new ExecutionResponseSupport(
             this.dependencies.workbookCloser(), this.dependencies.readableWorkbookCloser());
@@ -54,7 +54,7 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
 
     ExecutionJournalRecorder.PhaseHandle validationPhase = journal.beginValidation();
     Optional<GridGrindProblemDetail.Problem> validationError =
-        validationSupport.firstValidationProblem(authoredRequest);
+        staticValidator.validate(authoredRequest).stream().findFirst();
     if (validationError.isPresent()) {
       validationPhase.fail("failed (" + validationError.get().code() + ")");
       return ExecutionResponseSupport.failureResponse(
@@ -69,13 +69,9 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
     validationPhase.succeed();
 
     ExecutionJournalRecorder.PhaseHandle inputResolutionPhase = journal.beginInputResolution();
-    WorkbookPlan resolvedRequest;
-    try {
-      resolvedRequest = SourceBackedPlanResolver.resolve(authoredRequest, executionBindings);
-    } catch (Exception exception) {
-      GridGrindProblemDetail.Problem problem =
-          ExecutionResponseSupport.problemFor(
-              exception, stepSupport.resolveInputsContext(authoredRequest, exception));
+    RequestPreflight.Result preflight = RequestPreflight.verify(authoredRequest, executionBindings);
+    if (!preflight.problems().isEmpty()) {
+      GridGrindProblemDetail.Problem problem = preflight.problems().getFirst();
       inputResolutionPhase.fail("failed (" + problem.code() + ")");
       return ExecutionResponseSupport.failureResponse(
           protocolVersion,
@@ -86,6 +82,7 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
           null,
           null);
     }
+    WorkbookPlan resolvedRequest = preflight.requireResolvedRequest();
     inputResolutionPhase.succeed();
 
     List<RequestWarning> warnings = GridGrindRequestWarnings.collect(resolvedRequest);

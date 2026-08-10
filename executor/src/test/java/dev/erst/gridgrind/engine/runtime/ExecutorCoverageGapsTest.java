@@ -112,7 +112,7 @@ class ExecutorCoverageGapsTest {
 
     GridGrindRequestDoctor defaultDoctor = new GridGrindRequestDoctor();
     GridGrindRequestDoctor validationOnlyDoctor =
-        new GridGrindRequestDoctor(new ExecutionValidationSupport());
+        new GridGrindRequestDoctor(new StaticRequestValidator());
 
     assertInstanceOf(GridGrindRequestDoctor.class, defaultDoctor);
     assertInstanceOf(GridGrindRequestDoctor.class, validationOnlyDoctor);

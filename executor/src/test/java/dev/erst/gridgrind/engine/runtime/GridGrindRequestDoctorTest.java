@@ -149,7 +149,7 @@ class GridGrindRequestDoctorTest {
             """);
 
     RequestDoctorReport report =
-        new GridGrindRequestDoctor(new ExecutionValidationSupport()).diagnose(request);
+        new GridGrindRequestDoctor(new StaticRequestValidator()).diagnose(request);
 
     assertTrue(report.valid());
     assertEquals(3, report.summary().orElseThrow().stepCount());
@@ -163,7 +163,7 @@ class GridGrindRequestDoctorTest {
     assertThrows(NullPointerException.class, () -> new GridGrindRequestDoctor().diagnose(null));
     assertThrows(
         NullPointerException.class,
-        () -> new GridGrindRequestDoctor(new ExecutionValidationSupport()).diagnose(null));
+        () -> new GridGrindRequestDoctor(new StaticRequestValidator()).diagnose(null));
     assertThrows(
         NullPointerException.class,
         () ->

@@ -65,18 +65,22 @@ Binary-bearing mutation fields use `BinarySourceInput`:
 
 ## Doctor Requests
 
-`--doctor-request` validates request shape, execution-mode rules, source-backed authored input
-resolution, and existing workbook-source accessibility without mutating a workbook.
+`--doctor-request` validates request shape, each bound operation's target contract,
+execution-mode rules, source-backed authored input resolution, and existing workbook-source
+accessibility without mutating a workbook.
 
 - It resolves `UTF8_FILE`, `FILE`, and `STANDARD_INPUT` authored payloads early, so missing or
   unreadable authored inputs can fail under `journal.inputResolution`.
 - It also preflights `source.type: EXISTING` workbook access, so missing or unreadable
   `source.path` workbooks can already fail during doctoring under `OPEN_WORKBOOK`.
-- It collects every independently observable request-intake defect in one pass, including invalid UTF-8, duplicate keys, unknown fields, omitted required fields, explicit nulls, malformed scalar values, missing or unknown type discriminators, and constructor-level field validation failures. Valid sibling fragments remain available for safe subsequent preflight; rules that require a complete typed plan are not fabricated from malformed input.
+- It collects every independently observable request-intake defect in one pass, including invalid UTF-8, duplicate keys, unknown fields, omitted required fields, explicit nulls, malformed scalar values, missing or unknown type discriminators, and constructor-level field validation failures. Valid sibling fragments remain available for their own operation-contract checks; a rule whose own prerequisite fragment is malformed is suppressed rather than guessed.
+- When every request fragment binds, doctoring batches independent source-backed input and existing-workbook preflight failures even when the plan also has static operation or execution-policy failures. This includes independent authored inputs nested in the same step, so one unreadable cell value does not hide a sibling value's failure. A source-backed input failure does not hide an inaccessible existing workbook, and doctoring never mutates or persists a workbook.
 - Normal execution performs the same request intake before any workbook work begins. For the
   same request bytes, a rejected `--request` command emits the same ordered problem core in
-  `CommandError.problems` that `--doctor-request` returns in `RequestDoctorReport.problems`; only
-  complete requests proceed to execution.
+  `CommandError.problems` that `--doctor-request` returns in `RequestDoctorReport.problems` for
+  request-intake and static findings. Execution rejects static findings before workbook access;
+  once static validation passes, a failed source/input preflight completes zero steps and persists
+  no workbook.
 - It emits its own machine-readable `RequestDoctorReport`; a report with findings is
   `valid:false`, not a rejected command result.
 - When the request JSON arrives on stdin, pass `--execution-root <path>` so doctoring uses one

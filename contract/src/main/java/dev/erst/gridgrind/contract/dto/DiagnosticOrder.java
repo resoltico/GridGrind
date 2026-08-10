@@ -109,6 +109,9 @@ public final class DiagnosticOrder {
     if (problem.context() instanceof RequestInputContext requestInputContext) {
       return requestInputContext.byteOffset();
     }
+    if (problem.context() instanceof ProblemContext.ValidateRequest validateRequest) {
+      return validateRequest.json().flatMap(JsonLocation::byteOffsetValue);
+    }
     return Optional.empty();
   }
 
@@ -117,6 +120,12 @@ public final class DiagnosticOrder {
       case ProblemContext.ExecuteStep executeStep -> executeStep.stepIndex();
       case RequestInputContext requestInputContext ->
           requestInputContext.jsonPath().map(DiagnosticOrder::stepIndexFromJsonPath).orElse(-1);
+      case ProblemContext.ValidateRequest validateRequest ->
+          validateRequest
+              .json()
+              .flatMap(JsonLocation::jsonPathValue)
+              .map(DiagnosticOrder::stepIndexFromJsonPath)
+              .orElse(-1);
       default -> -1;
     };
   }
@@ -140,6 +149,13 @@ public final class DiagnosticOrder {
     if (problem.context() instanceof RequestInputContext requestInputContext) {
       return requestInputContext
           .duplicateKey()
+          .map(JsonLocation.DuplicateKey::occurrenceOrdinal)
+          .orElse(0);
+    }
+    if (problem.context() instanceof ProblemContext.ValidateRequest validateRequest) {
+      return validateRequest
+          .json()
+          .flatMap(JsonLocation::duplicateKeyValue)
           .map(JsonLocation.DuplicateKey::occurrenceOrdinal)
           .orElse(0);
     }

@@ -30,16 +30,22 @@ final class ExecutionModeRules {
   private ExecutionModeRules() {}
 
   static List<String> calculationPolicyFailures(WorkbookPlan request) {
-    if (!CalculationPolicyExecutor.requiresMutationPrefix(request.calculationPolicy())) {
+    return calculationPolicyFailures(request.calculationPolicy(), request.steps());
+  }
+
+  static List<String> calculationPolicyFailures(
+      dev.erst.gridgrind.contract.dto.CalculationPolicyInput calculationPolicy,
+      List<WorkbookStep> steps) {
+    if (!CalculationPolicyExecutor.requiresMutationPrefix(calculationPolicy)) {
       return List.of();
     }
     boolean seenObservationStep = false;
-    for (WorkbookStep step : request.steps()) {
+    for (WorkbookStep step : steps) {
       if (step instanceof MutationStep) {
         if (seenObservationStep) {
           return List.of(
               "execution.calculation.strategy="
-                  + request.calculationPolicy().effectiveStrategy().strategyType()
+                  + calculationPolicy.effectiveStrategy().strategyType()
                   + " requires all MUTATION steps to appear before any ASSERTION or INSPECTION"
                   + " step so calculation can run once at the mutation-to-observation boundary");
         }
@@ -52,10 +58,25 @@ final class ExecutionModeRules {
 
   static List<String> executionModeFailures(
       WorkbookPlan request, ExecutionModeInput executionMode) {
+    return executionModeFailures(
+        executionMode,
+        request.calculationPolicy(),
+        java.util.Optional.of(request.source()),
+        request.steps());
+  }
+
+  static List<String> executionModeFailures(
+      ExecutionModeInput executionMode,
+      dev.erst.gridgrind.contract.dto.CalculationPolicyInput calculationPolicy,
+      java.util.Optional<WorkbookPlan.WorkbookSource> source,
+      List<WorkbookStep> steps) {
     return switch (executionMode) {
       case ExecutionModeInput.FullXssf _ -> List.of();
-      case ExecutionModeInput.EventRead _ -> eventReadFailures(request);
-      case ExecutionModeInput.StreamingWrite _ -> streamingWriteFailures(request);
+      case ExecutionModeInput.EventRead _ -> eventReadFailures(calculationPolicy, steps);
+      case ExecutionModeInput.StreamingWrite _ ->
+          source
+              .map(value -> streamingWriteFailures(calculationPolicy, value, steps))
+              .orElseGet(List::of);
     };
   }
 
@@ -71,12 +92,14 @@ final class ExecutionModeRules {
     return request.effectiveExecutionMode();
   }
 
-  private static List<String> eventReadFailures(WorkbookPlan request) {
+  private static List<String> eventReadFailures(
+      dev.erst.gridgrind.contract.dto.CalculationPolicyInput calculationPolicy,
+      List<WorkbookStep> steps) {
     List<String> failures = new ArrayList<>();
-    if (!CalculationPolicyExecutor.allowsEventRead(request.calculationPolicy())) {
+    if (!CalculationPolicyExecutor.allowsEventRead(calculationPolicy)) {
       failures.add(EVENT_READ.calculationFailureMessage());
     }
-    for (WorkbookStep step : request.steps()) {
+    for (WorkbookStep step : steps) {
       if (!(step instanceof InspectionStep inspectionStep)) {
         failures.add(EVENT_READ.unsupportedStepMessage(step.stepKind()));
         continue;
@@ -88,16 +111,19 @@ final class ExecutionModeRules {
     return List.copyOf(failures);
   }
 
-  private static List<String> streamingWriteFailures(WorkbookPlan request) {
+  private static List<String> streamingWriteFailures(
+      dev.erst.gridgrind.contract.dto.CalculationPolicyInput calculationPolicy,
+      WorkbookPlan.WorkbookSource source,
+      List<WorkbookStep> steps) {
     List<String> failures = new ArrayList<>();
-    if (!CalculationPolicyExecutor.allowsStreamingWrite(request.calculationPolicy())) {
+    if (!CalculationPolicyExecutor.allowsStreamingWrite(calculationPolicy)) {
       failures.add(STREAMING_WRITE.calculationFailureMessage());
     }
-    if (!(request.source() instanceof WorkbookPlan.WorkbookSource.New)) {
+    if (!(source instanceof WorkbookPlan.WorkbookSource.New)) {
       failures.add(STREAMING_WRITE.invalidSourceMessage());
     }
     boolean seenEnsureSheet = false;
-    for (WorkbookStep step : request.steps()) {
+    for (WorkbookStep step : steps) {
       failures.addAll(streamingWriteStepFailures(step, seenEnsureSheet));
       seenEnsureSheet |= isEnsureSheet(step);
     }

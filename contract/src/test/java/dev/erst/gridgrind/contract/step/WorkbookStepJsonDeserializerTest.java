@@ -147,14 +147,12 @@ class WorkbookStepJsonDeserializerTest {
   }
 
   @Test
-  void reportsDisallowedSelectorTypesAgainstTheTargetField() {
-    InvalidRequestShapeException wrongMutationTarget =
-        assertThrows(
-            InvalidRequestShapeException.class,
-            () ->
-                GridGrindJson.readRequest(
-                    requestWithStepBody(
-                        """
+  void keepsKnownSelectorTypesBoundForTheStaticContractPhase() {
+    assertDoesNotThrow(
+        () ->
+            GridGrindJson.readRequest(
+                requestWithStepBody(
+                    """
                         "stepId": "set-cell",
                         "target": { "type": "WORKBOOK_CURRENT" },
                         "action": {
@@ -165,26 +163,15 @@ class WorkbookStepJsonDeserializerTest {
                           }
                         }
                         """)));
-    InvalidRequestShapeException wrongInspectionTarget =
-        assertThrows(
-            InvalidRequestShapeException.class,
-            () ->
-                GridGrindJson.readRequest(
-                    requestWithStepBody(
-                        """
+    assertDoesNotThrow(
+        () ->
+            GridGrindJson.readRequest(
+                requestWithStepBody(
+                    """
                         "stepId": "window",
                         "target": { "type": "CELL_BY_ADDRESS", "sheetName": "Budget", "address": "A1" },
                         "query": { "type": "GET_WINDOW" }
                         """)));
-
-    assertEquals(
-        "Field 'target.type' uses target selector type 'WORKBOOK_CURRENT', which is not allowed for this step; allowed targets: CellSelector(CELL_BY_ADDRESS); TableCellSelector(TABLE_CELL_BY_COLUMN_NAME)",
-        wrongMutationTarget.getMessage());
-    assertEquals(Optional.of("steps[0].target.type"), wrongMutationTarget.jsonPath());
-    assertEquals(
-        "Field 'target.type' uses target selector type 'CELL_BY_ADDRESS', which is not allowed for this step; allowed targets: RangeSelector(RANGE_RECTANGULAR_WINDOW)",
-        wrongInspectionTarget.getMessage());
-    assertEquals(Optional.of("steps[0].target.type"), wrongInspectionTarget.jsonPath());
   }
 
   @Test
@@ -362,7 +349,7 @@ class WorkbookStepJsonDeserializerTest {
         WorkbookStepJsonTargetSupport.castSelectorType(TableSelector.ByName.class));
     assertEquals(
         "TableSelector(TABLE_BY_NAME, TABLE_BY_NAME_ON_SHEET)",
-        WorkbookStepJsonTargetSupport.selectorFamilySummary(
+        SelectorJsonSupport.familySummary(
             List.of(
                 (Class<? extends Selector>) TableSelector.ByName.class,
                 TableSelector.ByNameOnSheet.class)));
@@ -435,34 +422,22 @@ class WorkbookStepJsonDeserializerTest {
           JacksonException.class,
           () ->
               WorkbookStepJsonTargetSupport.deserializeTarget(
-                  JsonNodeFactory.instance.objectNode(),
-                  parser,
-                  "target",
-                  TableSelector.ByName.class));
+                  JsonNodeFactory.instance.objectNode(), parser, "target"));
       assertThrows(
           JacksonException.class,
           () ->
               WorkbookStepJsonTargetSupport.deserializeTarget(
-                  JsonNodeFactory.instance.numberNode(7),
-                  parser,
-                  "target",
-                  TableSelector.ByName.class));
+                  JsonNodeFactory.instance.numberNode(7), parser, "target"));
       assertThrows(
           JacksonException.class,
           () ->
               WorkbookStepJsonTargetSupport.deserializeTarget(
-                  JsonNodeFactory.instance.objectNode().put("type", 7),
-                  parser,
-                  "target",
-                  TableSelector.ByName.class));
+                  JsonNodeFactory.instance.objectNode().put("type", 7), parser, "target"));
       assertThrows(
           JacksonException.class,
           () ->
               WorkbookStepJsonTargetSupport.deserializeTarget(
-                  JsonNodeFactory.instance.objectNode().put("type", "BY_NAME"),
-                  parser,
-                  "target",
-                  TableSelector.ByName.class));
+                  JsonNodeFactory.instance.objectNode().put("type", "BY_NAME"), parser, "target"));
     }
   }
 

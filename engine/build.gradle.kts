@@ -11,7 +11,8 @@ plugins {
 
 description = "Core GridGrind workbook automation and request execution engine"
 
-val downstreamCoverageProjects = listOf(project(":executor"))
+// Engine behavior is exercised through both runtime adapters; coverage evidence must include both.
+val downstreamCoverageProjects = listOf(project(":cli"), project(":executor"))
 
 fun downstreamCoverageTaskPaths(): List<String> =
     downstreamCoverageProjects.flatMap { downstreamProject ->

@@ -110,7 +110,7 @@ class CliDoctorRequestAnalyzerTest extends GridGrindCliTestSupport {
                 InputStream.nullInputStream());
 
     assertFalse(report.valid());
-    assertEquals(0, doctor.directCalls());
+    assertEquals(1, doctor.directCalls());
     assertEquals(0, doctor.boundCalls());
     List<String> messages =
         report.problems().stream().map(GridGrindProblemDetail.Problem::message).toList();
@@ -140,7 +140,7 @@ class CliDoctorRequestAnalyzerTest extends GridGrindCliTestSupport {
                 InputStream.nullInputStream());
 
     assertFalse(report.valid());
-    assertEquals(0, doctor.directCalls());
+    assertEquals(1, doctor.directCalls());
     assertTrue(
         report.problems().stream()
             .map(GridGrindProblemDetail.Problem::message)
@@ -162,7 +162,7 @@ class CliDoctorRequestAnalyzerTest extends GridGrindCliTestSupport {
                 InputStream.nullInputStream());
 
     assertFalse(report.valid());
-    assertEquals(0, doctor.directCalls());
+    assertEquals(1, doctor.directCalls());
     assertEquals(
         GridGrindProblemCode.INVALID_ENCODING, report.primaryProblem().orElseThrow().code());
   }
@@ -182,7 +182,7 @@ class CliDoctorRequestAnalyzerTest extends GridGrindCliTestSupport {
                 InputStream.nullInputStream());
 
     assertFalse(report.valid());
-    assertEquals(0, doctor.directCalls());
+    assertEquals(1, doctor.directCalls());
     assertEquals(0, doctor.boundCalls());
     assertEquals(
         "Field 'request' must be a JSON object at the root",
@@ -222,7 +222,7 @@ class CliDoctorRequestAnalyzerTest extends GridGrindCliTestSupport {
                 InputStream.nullInputStream());
 
     assertFalse(report.valid());
-    assertEquals(0, doctor.directCalls());
+    assertEquals(1, doctor.directCalls());
     assertEquals(0, doctor.boundCalls());
     assertEquals(
         "steps must not contain duplicate stepId values: duplicate",
@@ -249,7 +249,7 @@ class CliDoctorRequestAnalyzerTest extends GridGrindCliTestSupport {
                 InputStream.nullInputStream());
 
     assertFalse(report.valid());
-    assertEquals(0, doctor.directCalls());
+    assertEquals(1, doctor.directCalls());
     assertEquals(0, doctor.boundCalls());
     assertEquals(
         List.of("source.path", "persistence.path"),
@@ -377,6 +377,31 @@ class CliDoctorRequestAnalyzerTest extends GridGrindCliTestSupport {
     private RecordingDoctor(
         BiFunction<WorkbookPlan, Optional<GridGrindRequestInputs>, RequestDoctorReport> responder) {
       this.responder = responder;
+    }
+
+    @Override
+    public RequestDoctorReport diagnose(
+        dev.erst.gridgrind.contract.json.RequestAnalysis analysis,
+        dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces.RequestInput requestInput) {
+      directCalls++;
+      if (!analysis.isBindable()) {
+        return RequestDoctorReport.invalid(
+            Optional.empty(),
+            List.of(),
+            dev.erst.gridgrind.engine.api.GridGrindRequestAnalysisProblems.project(
+                analysis, requestInput));
+      }
+      return responder.apply(analysis.requireCompletePlan(), Optional.empty());
+    }
+
+    @Override
+    public RequestDoctorReport diagnose(
+        dev.erst.gridgrind.contract.json.RequestAnalysis analysis,
+        dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces.RequestInput requestInput,
+        GridGrindRequestInputs inputs) {
+      boundCalls++;
+      lastInputs = Optional.of(inputs);
+      return responder.apply(analysis.requireCompletePlan(), lastInputs);
     }
 
     @Override

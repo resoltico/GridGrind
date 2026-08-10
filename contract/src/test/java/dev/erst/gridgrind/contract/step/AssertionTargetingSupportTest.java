@@ -77,6 +77,36 @@ class AssertionTargetingSupportTest {
   }
 
   @Test
+  void exposesDerivedSelectorsOnlyForDynamicAssertionContracts() {
+    assertEquals(
+        List.of(SheetSelector.class),
+        List.of(
+            Assertion.derivedTargetSelectors(
+                new AnalysisAssertion.AnalysisMaxSeverity(
+                    new InspectionAnalysisQuery.AnalyzeFormulaHealth(),
+                    AnalysisSeverity.WARNING))));
+    assertEquals(
+        List.of(TableSelector.class),
+        List.of(
+            Assertion.derivedTargetSelectors(
+                new CompositeAssertion.AllOf(
+                    List.of(
+                        new PresenceAssertion.TablePresent(),
+                        new PresenceAssertion.TableAbsent())))));
+    assertEquals(
+        List.of(TableSelector.class),
+        List.of(
+            Assertion.derivedTargetSelectors(
+                new CompositeAssertion.Not(new PresenceAssertion.TablePresent()))));
+    assertEquals(
+        "Static assertions do not derive target selectors",
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> Assertion.derivedTargetSelectors(new PresenceAssertion.TablePresent()))
+            .getMessage());
+  }
+
+  @Test
   void exposesDynamicRuleTextAndStaticMappings() {
     assertEquals(
         Optional.of("Matches the nested analysis query's target selectors."),

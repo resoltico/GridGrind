@@ -10,7 +10,7 @@ public record AssertionStep(String stepId, Selector target, Assertion assertion)
   public AssertionStep {
     stepId = WorkbookStepValidation.requireStepId(stepId);
     target = WorkbookStepValidation.requireTarget(target);
-    assertion = WorkbookStepValidation.requireCompatible(target, assertion);
+    assertion = WorkbookStepValidation.requireAssertion(assertion);
   }
 
   @Override

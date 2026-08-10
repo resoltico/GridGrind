@@ -45,11 +45,12 @@ final class GridGrindRequestWarnings {
     Set<String> sheetNames = new LinkedHashSet<>();
     for (MutationStep step : steps) {
       switch (step.action()) {
-        case WorkbookMutationAction.EnsureSheet _ ->
-            addIfSpaced(
-                sheetNames,
-                SelectorConverter.toSheetName(
-                    (dev.erst.gridgrind.contract.selector.SheetSelector.ByName) step.target()));
+        case WorkbookMutationAction.EnsureSheet _ -> {
+          if (step.target()
+              instanceof dev.erst.gridgrind.contract.selector.SheetSelector.ByName sheet) {
+            addIfSpaced(sheetNames, SelectorConverter.toSheetName(sheet));
+          }
+        }
         case WorkbookMutationAction.RenameSheet renameSheet ->
             addIfSpaced(sheetNames, renameSheet.newSheetName());
         case WorkbookMutationAction.CopySheet copySheet ->

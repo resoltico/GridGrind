@@ -10,7 +10,7 @@ public record MutationStep(String stepId, Selector target, MutationAction action
   public MutationStep {
     stepId = WorkbookStepValidation.requireStepId(stepId);
     target = WorkbookStepValidation.requireTarget(target);
-    action = WorkbookStepValidation.requireCompatible(target, action);
+    action = WorkbookStepValidation.requireAction(action);
   }
 
   @Override

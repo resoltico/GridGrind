@@ -70,20 +70,6 @@ final class ExecutionStepSupport {
         ExecutionDiagnosticFields.locationFor(step, exception));
   }
 
-  dev.erst.gridgrind.contract.dto.ProblemContext.ResolveInputs resolveInputsContext(
-      WorkbookPlan request, Exception exception) {
-    return new dev.erst.gridgrind.contract.dto.ProblemContext.ResolveInputs(
-        ExecutionRequestPaths.requestShape(request),
-        exception instanceof InputSourceException inputSourceException
-            ? inputSourceException.inputPath() != null
-                ? dev.erst.gridgrind.contract.dto.ProblemContextWorkbookSurfaces.InputReference
-                    .path(inputSourceException.inputKind(), inputSourceException.inputPath())
-                : dev.erst.gridgrind.contract.dto.ProblemContextWorkbookSurfaces.InputReference
-                    .kind(inputSourceException.inputKind())
-            : dev.erst.gridgrind.contract.dto.ProblemContextWorkbookSurfaces.InputReference
-                .unknown());
-  }
-
   InspectionResult executeInspectionStep(
       InspectionStep inspectionStep,
       ExcelWorkbook workbook,

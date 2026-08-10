@@ -67,20 +67,21 @@ final class GridGrindCliExecutionCommands {
     }
 
     WorkbookPlan request;
+    RequestAnalysis analysis;
     Optional<RequestDiagnosticRedactor> requestRedactor = Optional.empty();
     try {
       byte[] requestBytes = requestReader.readBytes(command.requestPath(), stdin);
-      RequestAnalysis analysis = GridGrindJson.analyzeRequest(requestBytes);
+      analysis = GridGrindJson.analyzeRequest(requestBytes);
       requestRedactor = Optional.of(analysis.diagnosticRedactor());
       if (!analysis.isBindable()) {
+        RequestDoctorReport staticValidation =
+            requestDoctor.diagnose(
+                analysis, CliRequestReadFailureSupport.requestInput(command.requestPath()));
         return responseWriter.writeCommandError(
             command.responsePath(),
             stdout,
             stderr,
-            CommandErrors.readRequestFailures(
-                "execute",
-                CliRequestAnalysisProblems.problems(
-                    analysis, CliRequestReadFailureSupport.requestInput(command.requestPath()))),
+            CommandErrors.readRequestFailures("execute", staticValidation.problems()),
             requestRedactor.orElseThrow(),
             prettyJson);
       }
@@ -126,7 +127,9 @@ final class GridGrindCliExecutionCommands {
           requestRedactor.orElseThrow(),
           prettyJson);
     }
-    RequestDoctorReport staticValidation = requestDoctor.diagnose(request);
+    RequestDoctorReport staticValidation =
+        requestDoctor.diagnose(
+            analysis, CliRequestReadFailureSupport.requestInput(command.requestPath()));
     if (!staticValidation.problems().isEmpty()) {
       return responseWriter.writeCommandError(
           command.responsePath(),

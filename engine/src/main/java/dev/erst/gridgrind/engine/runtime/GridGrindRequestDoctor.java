@@ -2,26 +2,54 @@ package dev.erst.gridgrind.engine.runtime;
 
 import dev.erst.gridgrind.contract.dto.ExecutionModeInput;
 import dev.erst.gridgrind.contract.dto.GridGrindProblemDetail;
+import dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces.RequestInput;
 import dev.erst.gridgrind.contract.dto.RequestDoctorReport;
 import dev.erst.gridgrind.contract.dto.RequestWarning;
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
-import dev.erst.gridgrind.excel.ExcelWorkbook;
+import dev.erst.gridgrind.contract.json.RequestAnalysis;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
 /** Runs contract-derived linting for one authored request without mutating workbook sources. */
 public final class GridGrindRequestDoctor {
-  private final ExecutionValidationSupport validationSupport;
+  private final StaticRequestValidator staticValidator;
 
   /** Creates the production doctor backed by the same request validator used for execution. */
   public GridGrindRequestDoctor() {
-    this(new ExecutionValidationSupport());
+    this(new StaticRequestValidator());
   }
 
-  GridGrindRequestDoctor(ExecutionValidationSupport validationSupport) {
-    this.validationSupport =
-        Objects.requireNonNull(validationSupport, "validationSupport must not be null");
+  GridGrindRequestDoctor(StaticRequestValidator staticValidator) {
+    this.staticValidator =
+        Objects.requireNonNull(staticValidator, "staticValidator must not be null");
+  }
+
+  /** Returns all independently provable static findings from one tolerant request analysis. */
+  public RequestDoctorReport diagnose(RequestAnalysis analysis, RequestInput requestInput) {
+    Objects.requireNonNull(analysis, "analysis must not be null");
+    Objects.requireNonNull(requestInput, "requestInput must not be null");
+    List<GridGrindProblemDetail.Problem> problems =
+        staticValidator.validate(analysis, requestInput);
+    if (!problems.isEmpty()) {
+      return invalidAnalysisReport(analysis, problems);
+    }
+    WorkbookPlan request = analysis.requireCompletePlan();
+    return diagnose(request);
+  }
+
+  /** Returns static and source/input preflight findings from one tolerant request analysis. */
+  public RequestDoctorReport diagnose(
+      RequestAnalysis analysis, RequestInput requestInput, ExecutionInputBindings bindings) {
+    Objects.requireNonNull(analysis, "analysis must not be null");
+    Objects.requireNonNull(requestInput, "requestInput must not be null");
+    Objects.requireNonNull(bindings, "bindings must not be null");
+    List<GridGrindProblemDetail.Problem> problems =
+        staticValidator.validate(analysis, requestInput);
+    return analysis
+        .completePlan()
+        .map(request -> diagnose(request, Optional.of(bindings), problems))
+        .orElseGet(() -> invalidAnalysisReport(analysis, problems));
   }
 
   /** Returns one machine-readable lint report for the supplied request. */
@@ -41,34 +69,39 @@ public final class GridGrindRequestDoctor {
 
   private RequestDoctorReport diagnose(
       WorkbookPlan request, Optional<ExecutionInputBindings> bindings) {
+    return diagnose(request, bindings, staticValidator.validate(request));
+  }
+
+  private RequestDoctorReport diagnose(
+      WorkbookPlan request,
+      Optional<ExecutionInputBindings> bindings,
+      List<GridGrindProblemDetail.Problem> staticProblems) {
     RequestDoctorReport.Summary summary = summaryFor(request);
     List<RequestWarning> warnings = GridGrindRequestWarnings.collect(request);
-    List<GridGrindProblemDetail.Problem> validationProblems =
-        validationSupport.validateRequest(request);
-    if (!validationProblems.isEmpty()) {
-      return RequestDoctorReport.invalid(summary, warnings, validationProblems);
-    }
+    List<GridGrindProblemDetail.Problem> problems = new java.util.ArrayList<>(staticProblems);
     if (bindings.isPresent()) {
       ExecutionInputBindings boundInputs = bindings.orElseThrow();
-      WorkbookPlan resolvedRequest;
-      try {
-        resolvedRequest = SourceBackedPlanResolver.resolve(request, boundInputs);
-      } catch (Exception exception) {
-        return RequestDoctorReport.invalid(
-            summary,
-            warnings,
-            GridGrindProblems.fromException(exception, resolveInputsContext(request, exception)));
-      }
-      Optional<GridGrindProblemDetail.Problem> openProblem =
-          preflightWorkbookSource(resolvedRequest, boundInputs);
-      if (openProblem.isPresent()) {
-        return RequestDoctorReport.invalid(summary, warnings, openProblem.get());
-      }
+      RequestPreflight.Result preflight = RequestPreflight.verify(request, boundInputs);
+      problems.addAll(preflight.problems());
+    }
+    if (!problems.isEmpty()) {
+      return RequestDoctorReport.invalid(summary, warnings, problems);
     }
     if (!warnings.isEmpty()) {
       return RequestDoctorReport.warnings(summary, warnings);
     }
     return RequestDoctorReport.clean(summary);
+  }
+
+  private static RequestDoctorReport invalidAnalysisReport(
+      RequestAnalysis analysis, List<GridGrindProblemDetail.Problem> problems) {
+    return analysis
+        .completePlan()
+        .map(
+            request ->
+                RequestDoctorReport.invalid(
+                    summaryFor(request), GridGrindRequestWarnings.collect(request), problems))
+        .orElseGet(() -> RequestDoctorReport.invalid(Optional.empty(), List.of(), problems));
   }
 
   private static RequestDoctorReport.Summary summaryFor(WorkbookPlan request) {
@@ -89,45 +122,5 @@ public final class GridGrindRequestDoctor {
         mutationStepCount,
         assertionStepCount,
         inspectionStepCount);
-  }
-
-  private static dev.erst.gridgrind.contract.dto.ProblemContext.ResolveInputs resolveInputsContext(
-      WorkbookPlan request, Exception exception) {
-    return new dev.erst.gridgrind.contract.dto.ProblemContext.ResolveInputs(
-        ExecutionRequestPaths.requestShape(request),
-        exception instanceof InputSourceException inputSourceException
-            ? inputSourceException.inputPath() != null
-                ? dev.erst.gridgrind.contract.dto.ProblemContextWorkbookSurfaces.InputReference
-                    .path(inputSourceException.inputKind(), inputSourceException.inputPath())
-                : dev.erst.gridgrind.contract.dto.ProblemContextWorkbookSurfaces.InputReference
-                    .kind(inputSourceException.inputKind())
-            : dev.erst.gridgrind.contract.dto.ProblemContextWorkbookSurfaces.InputReference
-                .unknown());
-  }
-
-  private Optional<GridGrindProblemDetail.Problem> preflightWorkbookSource(
-      WorkbookPlan request, ExecutionInputBindings bindings) {
-    if (!(request.source() instanceof WorkbookPlan.WorkbookSource.ExistingFile)) {
-      return Optional.empty();
-    }
-    dev.erst.gridgrind.contract.dto.ProblemContext.OpenWorkbook context =
-        openWorkbookContext(request, bindings);
-    ExecutionWorkbookSupport workbookSupport =
-        new ExecutionWorkbookSupport(bindings.tempFileFactory());
-    try (ExcelWorkbook workbook =
-        workbookSupport.openWorkbook(
-            request.source(), request.formulaEnvironment(), bindings.workingDirectory())) {
-      Objects.requireNonNull(workbook, "workbook must not be null");
-      return Optional.empty();
-    } catch (Exception exception) {
-      return Optional.of(GridGrindProblems.fromException(exception, context));
-    }
-  }
-
-  private static dev.erst.gridgrind.contract.dto.ProblemContext.OpenWorkbook openWorkbookContext(
-      WorkbookPlan request, ExecutionInputBindings bindings) {
-    return new dev.erst.gridgrind.contract.dto.ProblemContext.OpenWorkbook(
-        ExecutionRequestPaths.requestShape(request),
-        ExecutionRequestPaths.workbookReference(request, bindings.workingDirectory()));
   }
 }

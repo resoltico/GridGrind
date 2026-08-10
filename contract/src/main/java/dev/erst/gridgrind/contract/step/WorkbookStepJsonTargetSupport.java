@@ -4,12 +4,7 @@ import dev.erst.gridgrind.contract.json.ActionableShapeMessage;
 import dev.erst.gridgrind.contract.json.MissingTypeDiscriminator;
 import dev.erst.gridgrind.contract.selector.Selector;
 import dev.erst.gridgrind.contract.selector.SelectorJsonSupport;
-import java.util.Arrays;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
-import java.util.Set;
 import tools.jackson.core.JsonParser;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.node.ObjectNode;
@@ -18,12 +13,7 @@ import tools.jackson.databind.node.ObjectNode;
 final class WorkbookStepJsonTargetSupport {
   private WorkbookStepJsonTargetSupport() {}
 
-  @SafeVarargs
-  static Selector deserializeTarget(
-      JsonNode targetNode,
-      JsonParser parser,
-      String fieldName,
-      Class<? extends Selector>... allowedTypes) {
+  static Selector deserializeTarget(JsonNode targetNode, JsonParser parser, String fieldName) {
     String typeFieldName = fieldName + ".type";
     if (!(targetNode instanceof ObjectNode targetObject)) {
       throw WorkbookStepJsonFailurePathSupport.fieldFailure(
@@ -37,58 +27,27 @@ final class WorkbookStepJsonTargetSupport {
                   Optional.empty())));
     }
     String authoredType = requiredTargetType(targetObject, parser, typeFieldName);
-    String allowedSummary = selectorFamilySummary(Arrays.asList(allowedTypes));
     if (!SelectorJsonSupport.isKnownTypeId(authoredType)) {
       throw WorkbookStepJsonFailurePathSupport.fieldFailure(
           typeFieldName,
           WorkbookStepJsonFailurePathSupport.inputMismatch(
               parser,
               new ActionableShapeMessage(
-                  unknownTargetTypeMessage(typeFieldName, authoredType, allowedSummary),
-                  "Replace field '%s' with one of the allowed target selector ids for this step."
-                      .formatted(typeFieldName),
-                  Optional.of(typeFieldName))));
-    }
-    Set<String> allowedTypeIds = new LinkedHashSet<>();
-    Class<? extends Selector> candidateType = null;
-    for (Class<? extends Selector> allowedType : allowedTypes) {
-      List<String> selectorTypeIds = SelectorJsonSupport.typeIdsFor(allowedType);
-      allowedTypeIds.addAll(selectorTypeIds);
-      if (candidateType == null && selectorTypeIds.contains(authoredType)) {
-        candidateType = allowedType;
-      }
-    }
-    if (!allowedTypeIds.contains(authoredType)) {
-      throw WorkbookStepJsonFailurePathSupport.fieldFailure(
-          typeFieldName,
-          WorkbookStepJsonFailurePathSupport.inputMismatch(
-              parser,
-              new ActionableShapeMessage(
-                  ("Field '%s' uses target selector type '%s', which is not allowed for this step;"
-                          + " allowed targets: %s")
-                      .formatted(typeFieldName, authoredType, allowedSummary),
-                  "Replace field '%s' with one of the allowed target selector ids for this step."
+                  "Unknown type value '%s'".formatted(authoredType),
+                  "Replace field '%s' with one shipped target selector id."
                       .formatted(typeFieldName),
                   Optional.of(typeFieldName))));
     }
     return WorkbookStepJsonDeserializer.deserializeField(
         targetNode,
         parser,
-        castSelectorType(
-            Objects.requireNonNull(
-                candidateType,
-                "Selector type ids must be globally unique per step target; authored type '%s'"
-                    .formatted(authoredType))),
+        castSelectorType(SelectorJsonSupport.typeFor(authoredType).orElseThrow()),
         fieldName);
   }
 
   @SuppressWarnings("unchecked")
   static Class<Selector> castSelectorType(Class<? extends Selector> selectorType) {
     return (Class<Selector>) selectorType;
-  }
-
-  static String selectorFamilySummary(Iterable<Class<? extends Selector>> selectorTypes) {
-    return SelectorJsonSupport.familySummary(selectorTypes);
   }
 
   private static String requiredTargetType(
@@ -111,12 +70,5 @@ final class WorkbookStepJsonTargetSupport {
                   Optional.of(typeFieldName))));
     }
     return typeNode.asString();
-  }
-
-  private static String unknownTargetTypeMessage(
-      String typeFieldName, String authoredType, String allowedTargets) {
-    String guidance = WorkbookStepLegacySelectorTypeHints.guidancePrefix(authoredType);
-    return "Field '%s' uses unknown target selector type '%s'; %sallowed targets: %s"
-        .formatted(typeFieldName, authoredType, guidance, allowedTargets);
   }
 }

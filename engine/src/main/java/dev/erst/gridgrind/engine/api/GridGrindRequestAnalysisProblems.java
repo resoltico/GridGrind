@@ -1,4 +1,4 @@
-package dev.erst.gridgrind.cli;
+package dev.erst.gridgrind.engine.api;
 
 import dev.erst.gridgrind.contract.dto.GridGrindProblemDetail;
 import dev.erst.gridgrind.contract.dto.ProblemContext;
@@ -8,16 +8,16 @@ import dev.erst.gridgrind.contract.json.RequestAnalysis;
 import dev.erst.gridgrind.contract.json.RequestBindingFailure;
 import dev.erst.gridgrind.contract.json.RequestDuplicateKey;
 import dev.erst.gridgrind.contract.json.RequestStructuralProblem;
-import dev.erst.gridgrind.engine.api.GridGrindProblems;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Stream;
 
-/** Converts all ordered request-intake findings into the one public problem projection. */
-final class CliRequestAnalysisProblems {
-  private CliRequestAnalysisProblems() {}
+/** Projects all tolerant-intake findings into the canonical public problem core. */
+public final class GridGrindRequestAnalysisProblems {
+  private GridGrindRequestAnalysisProblems() {}
 
-  static List<GridGrindProblemDetail.Problem> problems(
+  /** Returns every structural and binding problem in their original request-analysis order. */
+  public static List<GridGrindProblemDetail.Problem> project(
       RequestAnalysis analysis, ProblemContextRequestSurfaces.RequestInput requestInput) {
     Objects.requireNonNull(analysis, "analysis must not be null");
     Objects.requireNonNull(requestInput, "requestInput must not be null");
@@ -42,7 +42,8 @@ final class CliRequestAnalysisProblems {
         problem.exception(), new ProblemContext.BindRequest(requestInput, locationFor(problem)));
   }
 
-  static ProblemContextRequestSurfaces.JsonLocation locationFor(RequestBindingFailure problem) {
+  private static ProblemContextRequestSurfaces.JsonLocation locationFor(
+      RequestBindingFailure problem) {
     return problem
         .byteOffset()
         .map(

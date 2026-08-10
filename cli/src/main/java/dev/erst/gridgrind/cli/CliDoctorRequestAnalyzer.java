@@ -1,14 +1,11 @@
 package dev.erst.gridgrind.cli;
 
 import dev.erst.gridgrind.contract.catalog.GridGrindRequestSurfaceContractText;
-import dev.erst.gridgrind.contract.dto.GridGrindProblemCode;
 import dev.erst.gridgrind.contract.dto.GridGrindProblemDetail;
-import dev.erst.gridgrind.contract.dto.ProblemContext;
 import dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces;
 import dev.erst.gridgrind.contract.dto.RequestDoctorReport;
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
 import dev.erst.gridgrind.contract.json.RequestAnalysis;
-import dev.erst.gridgrind.engine.api.GridGrindProblems;
 import dev.erst.gridgrind.engine.api.GridGrindRequestDoctor;
 import dev.erst.gridgrind.engine.api.GridGrindRequestRequirements;
 import java.io.IOException;
@@ -41,21 +38,20 @@ final class CliDoctorRequestAnalyzer {
     Objects.requireNonNull(stdin, "stdin must not be null");
 
     ProblemContextRequestSurfaces.RequestInput requestInput = requestInput(requestPath);
-    List<GridGrindProblemDetail.Problem> intakeProblems =
-        CliRequestAnalysisProblems.problems(analysis, requestInput);
-    if (!intakeProblems.isEmpty()) {
-      return RequestDoctorReport.invalid(Optional.empty(), List.of(), intakeProblems);
-    }
-
-    WorkbookPlan boundRequest = analysis.requireCompletePlan();
     RequestDoctorReport baseReport =
-        runBaseDoctorReport(requestPath, executionRootPath, tempRootPath, stdin, boundRequest);
+        runBaseDoctorReport(
+            requestPath, executionRootPath, tempRootPath, stdin, analysis, requestInput);
+    if (!analysis.isBindable()) {
+      return baseReport;
+    }
+    WorkbookPlan boundRequest = analysis.requireCompletePlan();
     if (requestPath.isEmpty() && GridGrindRequestRequirements.requiresStandardInput(boundRequest)) {
       GridGrindProblemDetail.Problem standardInputProblem =
-          GridGrindProblems.problem(
-              GridGrindProblemCode.INVALID_REQUEST,
+          dev.erst.gridgrind.engine.api.GridGrindProblems.problem(
+              dev.erst.gridgrind.contract.dto.GridGrindProblemCode.INVALID_REQUEST,
               GridGrindRequestSurfaceContractText.standardInputRequiresRequestMessage(),
-              new ProblemContext.ValidateRequest(requestShape(boundRequest)),
+              new dev.erst.gridgrind.contract.dto.ProblemContext.ValidateRequest(
+                  requestShape(boundRequest)),
               List.of());
       return RequestDoctorReport.invalid(
           baseReport.summary(),
@@ -70,16 +66,21 @@ final class CliDoctorRequestAnalyzer {
       Optional<Path> executionRootPath,
       Optional<Path> tempRootPath,
       InputStream stdin,
-      WorkbookPlan request)
+      RequestAnalysis analysis,
+      ProblemContextRequestSurfaces.RequestInput requestInput)
       throws IOException {
+    if (!analysis.isBindable()) {
+      return requestDoctor.diagnose(analysis, requestInput);
+    }
+    WorkbookPlan request = analysis.requireCompletePlan();
     if (requestPath.isPresent() || executionRootPath.isPresent()) {
       try (CliExecutionBindingsFactory.ManagedRequestInputs bindings =
           CliExecutionBindingsFactory.create(
               requestPath, executionRootPath, tempRootPath, request, stdin)) {
-        return requestDoctor.diagnose(request, bindings.inputs());
+        return requestDoctor.diagnose(analysis, requestInput, bindings.inputs());
       }
     }
-    return requestDoctor.diagnose(request);
+    return requestDoctor.diagnose(analysis, requestInput);
   }
 
   private static ProblemContextRequestSurfaces.RequestInput requestInput(

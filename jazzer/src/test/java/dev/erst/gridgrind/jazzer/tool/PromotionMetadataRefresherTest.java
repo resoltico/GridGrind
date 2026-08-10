@@ -27,6 +27,7 @@ class PromotionMetadataRefresherTest {
           "protocolVersion": "V2",
           "source": { "type": "NEW" },
           "persistence": { "type": "NONE" },
+          "unknown": true,
           "steps": [
             {
               "stepId": "assert-sheet",

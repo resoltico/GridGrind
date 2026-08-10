@@ -10,6 +10,7 @@ public final class ExecutionInputBindings {
   private final Path workingDirectory;
   private final Path tempRoot;
   private final Optional<StandardInputBinding> standardInput;
+  private final Optional<InputResolutionFailures> inputResolutionFailures;
 
   /** Creates bindings from one working directory and one explicit temp root. */
   public ExecutionInputBindings(Path workingDirectory, Path tempRoot) {
@@ -32,12 +33,22 @@ public final class ExecutionInputBindings {
 
   private ExecutionInputBindings(
       Path workingDirectory, Path tempRoot, Optional<StandardInputBinding> standardInput) {
+    this(workingDirectory, tempRoot, standardInput, Optional.empty());
+  }
+
+  private ExecutionInputBindings(
+      Path workingDirectory,
+      Path tempRoot,
+      Optional<StandardInputBinding> standardInput,
+      Optional<InputResolutionFailures> inputResolutionFailures) {
     Objects.requireNonNull(workingDirectory, "workingDirectory must not be null");
     Objects.requireNonNull(tempRoot, "tempRoot must not be null");
     Objects.requireNonNull(standardInput, "standardInput must not be null");
+    Objects.requireNonNull(inputResolutionFailures, "inputResolutionFailures must not be null");
     this.workingDirectory = workingDirectory.toAbsolutePath().normalize();
     this.tempRoot = tempRoot.toAbsolutePath().normalize();
     this.standardInput = standardInput;
+    this.inputResolutionFailures = inputResolutionFailures;
   }
 
   /** Returns the normalized working directory used to resolve relative authored input paths. */
@@ -64,6 +75,22 @@ public final class ExecutionInputBindings {
   TempFileFactory tempFileFactory() {
     WorkbookTempFileFactory workbookTempFileFactory = WorkbookTempFileFactory.rooted(tempRoot);
     return workbookTempFileFactory::createTempFile;
+  }
+
+  ExecutionInputBindings collectingInputResolutionFailures(InputResolutionFailures failures) {
+    return new ExecutionInputBindings(
+        workingDirectory,
+        tempRoot,
+        standardInput,
+        Optional.of(Objects.requireNonNull(failures, "failures must not be null")));
+  }
+
+  boolean collectInputResolutionFailure(Exception failure) {
+    if (inputResolutionFailures.isEmpty()) {
+      return false;
+    }
+    inputResolutionFailures.orElseThrow().add(failure);
+    return true;
   }
 
   /** Immutable standard-input byte payload bound to one execution. */

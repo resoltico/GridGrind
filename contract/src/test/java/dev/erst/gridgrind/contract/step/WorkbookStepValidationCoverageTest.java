@@ -31,15 +31,17 @@ class WorkbookStepValidationCoverageTest {
                 new dev.erst.gridgrind.contract.dto.CellScalarValue.Text("Owner")));
 
     assertEquals(
-        List.of(TableSelector.class), List.of(WorkbookStepValidation.allowedTargetTypes(allOf)));
+        List.of(TableSelector.class),
+        List.of(WorkbookOperationContracts.targetSelectorsFor(allOf)));
     assertEquals(
-        List.of(TableSelector.class), List.of(WorkbookStepValidation.allowedTargetTypes(anyOf)));
+        List.of(TableSelector.class),
+        List.of(WorkbookOperationContracts.targetSelectorsFor(anyOf)));
     assertEquals(
         List.of(
             CellSelector.ByAddress.class,
             CellSelector.ByAddresses.class,
             TableCellSelector.ByColumnName.class),
-        List.of(WorkbookStepValidation.allowedTargetTypes(not)));
+        List.of(WorkbookOperationContracts.targetSelectorsFor(not)));
   }
 
   @Test
@@ -47,14 +49,14 @@ class WorkbookStepValidationCoverageTest {
     assertEquals(
         List.of(SheetSelector.class),
         List.of(
-            WorkbookStepValidation.allowedTargetTypes(
+            WorkbookOperationContracts.targetSelectorsFor(
                 new AnalysisAssertion.AnalysisMaxSeverity(
                     new InspectionAnalysisQuery.AnalyzeFormulaHealth(),
                     AnalysisSeverity.WARNING))));
     assertEquals(
         List.of(SheetSelector.class),
         List.of(
-            WorkbookStepValidation.allowedTargetTypes(
+            WorkbookOperationContracts.targetSelectorsFor(
                 new AnalysisAssertion.AnalysisFindingPresent(
                     new InspectionAnalysisQuery.AnalyzeFormulaHealth(),
                     AnalysisFindingCode.FORMULA_ERROR_RESULT,
@@ -63,7 +65,7 @@ class WorkbookStepValidationCoverageTest {
     assertEquals(
         List.of(SheetSelector.class),
         List.of(
-            WorkbookStepValidation.allowedTargetTypes(
+            WorkbookOperationContracts.targetSelectorsFor(
                 new AnalysisAssertion.AnalysisFindingAbsent(
                     new InspectionAnalysisQuery.AnalyzeFormulaHealth(),
                     AnalysisFindingCode.FORMULA_VOLATILE_FUNCTION,
@@ -77,7 +79,7 @@ class WorkbookStepValidationCoverageTest {
         assertThrows(
             IllegalArgumentException.class,
             () ->
-                WorkbookStepValidation.allowedTargetTypes(
+                WorkbookOperationContracts.targetSelectorsFor(
                     new CompositeAssertion.AnyOf(
                         List.of(
                             new PresenceAssertion.TablePresent(),

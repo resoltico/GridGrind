@@ -43,6 +43,18 @@ class GridGrindRequestWarningsTest {
   }
 
   @Test
+  void ignoresAnIncompatibleButStructurallyBoundEnsureSheetTarget() {
+    WorkbookPlan request =
+        request(
+            new WorkbookPlan.WorkbookSource.New(),
+            new WorkbookPlan.WorkbookPersistence.None(),
+            List.of(
+                mutate(new WorkbookSelector.Current(), new WorkbookMutationAction.EnsureSheet())));
+
+    assertEquals(List.of(), GridGrindRequestWarnings.collect(request));
+  }
+
+  @Test
   void doesNotWarnWhenSpacedSheetReferencesAreQuotedOrOnlyAppearInsideStrings() {
     WorkbookPlan request =
         request(

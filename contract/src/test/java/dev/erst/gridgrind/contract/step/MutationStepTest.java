@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.contract.step;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
@@ -40,25 +41,37 @@ class MutationStepTest {
   }
 
   @Test
-  void rejectsIncompatibleTargetsOrBlankStepIds() {
-    assertThrows(
-        IllegalArgumentException.class,
+  void keepsIncompatibleTargetsForTheStaticContractPhase() {
+    assertDoesNotThrow(
         () ->
             new MutationStep(
-                " ", new SheetSelector.ByName("Budget"), new WorkbookMutationAction.EnsureSheet()));
-    IllegalArgumentException incompatibleTargetFailure =
-        assertThrows(
-            IllegalArgumentException.class,
-            () ->
-                new MutationStep(
-                    "bad-target",
-                    new RangeSelector.ByRange("Budget", "A1:B2"),
-                    new CellMutationAction.SetCell(new CellInput.Text(text("Owner")))));
+                "bad-target",
+                new RangeSelector.ByRange("Budget", "A1:B2"),
+                new CellMutationAction.SetCell(new CellInput.Text(text("Owner")))));
+  }
 
+  @Test
+  void rejectsBlankAndMalformedStepIdentifiersAtTheRecordBoundary() {
     assertEquals(
-        "SET_CELL requires target type CELL_BY_ADDRESS or TABLE_CELL_BY_COLUMN_NAME but got"
-            + " RANGE_BY_RANGE",
-        incompatibleTargetFailure.getMessage());
+        "stepId must not be blank",
+        assertThrows(
+                IllegalArgumentException.class,
+                () ->
+                    new MutationStep(
+                        " ",
+                        new SheetSelector.ByName("Budget"),
+                        new WorkbookMutationAction.EnsureSheet()))
+            .getMessage());
+    assertEquals(
+        "stepId must match [A-Za-z0-9._-]+",
+        assertThrows(
+                IllegalArgumentException.class,
+                () ->
+                    new MutationStep(
+                        "not valid",
+                        new SheetSelector.ByName("Budget"),
+                        new WorkbookMutationAction.EnsureSheet()))
+            .getMessage());
   }
 
   private static TextSourceInput text(String value) {

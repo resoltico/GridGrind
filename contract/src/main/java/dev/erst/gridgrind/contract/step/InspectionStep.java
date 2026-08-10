@@ -10,7 +10,7 @@ public record InspectionStep(String stepId, Selector target, InspectionQuery que
   public InspectionStep {
     stepId = WorkbookStepValidation.requireStepId(stepId);
     target = WorkbookStepValidation.requireTarget(target);
-    query = WorkbookStepValidation.requireCompatible(target, query);
+    query = WorkbookStepValidation.requireQuery(query);
   }
 
   @Override

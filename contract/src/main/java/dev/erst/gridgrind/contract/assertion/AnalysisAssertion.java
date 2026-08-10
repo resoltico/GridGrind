@@ -87,7 +87,7 @@ public sealed interface AnalysisAssertion extends Assertion
   }
 
   /** Returns the selector types accepted by one analysis assertion instance. */
-  static Class<? extends Selector>[] allowedTargetTypes(AnalysisAssertion assertion) {
+  public static Class<? extends Selector>[] targetSelectorsFor(AnalysisAssertion assertion) {
     Objects.requireNonNull(assertion, "assertion must not be null");
     return switch (assertion) {
       case AnalysisMaxSeverity analysisMaxSeverity ->

@@ -2,9 +2,9 @@ package dev.erst.gridgrind.contract.action;
 
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import dev.erst.gridgrind.contract.catalog.GridGrindProtocolTypeNames;
-import dev.erst.gridgrind.contract.catalog.ProtocolTypeMetadataSupport;
 import dev.erst.gridgrind.contract.dto.CellInput;
 import dev.erst.gridgrind.contract.selector.Selector;
+import dev.erst.gridgrind.contract.step.WorkbookOperationContracts;
 import java.util.List;
 import java.util.Objects;
 
@@ -24,7 +24,7 @@ public sealed interface MutationAction
   /** Returns the selector types accepted by one concrete mutation action instance. */
   static Class<? extends Selector>[] allowedTargetTypes(MutationAction action) {
     Objects.requireNonNull(action, "action must not be null");
-    return allowedTargetTypesForType(action.getClass().asSubclass(MutationAction.class));
+    return WorkbookOperationContracts.targetSelectorsFor(action);
   }
 
   /** Returns the selector types accepted by one concrete mutation action type. */
@@ -32,15 +32,25 @@ public sealed interface MutationAction
       Class<? extends MutationAction> actionType) {
     Objects.requireNonNull(actionType, "actionType must not be null");
     if (!actionType.isRecord()) {
-      throw new IllegalArgumentException(
-          "No target-type mapping configured for action class " + actionType.getName());
+      throw noTargetTypeMapping(actionType);
     }
     try {
-      return ProtocolTypeMetadataSupport.staticTargetSelectors(actionType);
-    } catch (IllegalStateException exception) {
-      throw new IllegalArgumentException(
-          "No target-type mapping configured for action class " + actionType.getName(), exception);
+      return WorkbookOperationContracts.staticTargetSelectorsFor(actionType);
+    } catch (IllegalArgumentException | IllegalStateException exception) {
+      throw noTargetTypeMapping(actionType, exception);
     }
+  }
+
+  private static IllegalArgumentException noTargetTypeMapping(
+      Class<? extends MutationAction> actionType) {
+    return new IllegalArgumentException(
+        "No target-type mapping configured for action class " + actionType.getName());
+  }
+
+  private static IllegalArgumentException noTargetTypeMapping(
+      Class<? extends MutationAction> actionType, RuntimeException cause) {
+    return new IllegalArgumentException(
+        "No target-type mapping configured for action class " + actionType.getName(), cause);
   }
 
   /** Shared validation helpers for MutationAction compact constructors. */

@@ -716,10 +716,16 @@ class GridGrindCliCatalogCommandTest extends GridGrindCliTestSupport {
 
     assertEquals(1, exitCode);
     assertFalse(report.valid());
-    assertEquals(3, report.problems().size());
+    assertEquals(5, report.problems().size());
     assertTrue(problemMessages.contains("Missing required field 'source.path'"));
     assertTrue(problemMessages.contains("Missing required field 'persistence.path'"));
     assertTrue(problemMessages.contains("Missing required field 'persistence.ifExists'"));
+    assertTrue(
+        problemMessages.contains(
+            "execution.mode.type=EVENT_READ requires execution.calculation.strategy=DO_NOT_CALCULATE and markRecalculateOnOpen=false"));
+    assertTrue(
+        problemMessages.contains(
+            "execution.mode.type=EVENT_READ supports inspection steps only; unsupported step kind: ASSERTION"));
   }
 
   @Test

@@ -1,7 +1,9 @@
 package dev.erst.gridgrind.engine.api;
 
+import dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces.RequestInput;
 import dev.erst.gridgrind.contract.dto.RequestDoctorReport;
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
+import dev.erst.gridgrind.contract.json.RequestAnalysis;
 import java.util.Objects;
 
 /** Factory for the engine module's narrow published request-execution seam. */
@@ -49,6 +51,18 @@ public final class GridGrindEngine {
       implements GridGrindRequestDoctor {
     private ProductionRequestDoctor {
       Objects.requireNonNull(delegate, "delegate must not be null");
+    }
+
+    @Override
+    public RequestDoctorReport diagnose(RequestAnalysis analysis, RequestInput requestInput) {
+      return delegate.diagnose(analysis, requestInput);
+    }
+
+    @Override
+    public RequestDoctorReport diagnose(
+        RequestAnalysis analysis, RequestInput requestInput, GridGrindRequestInputs inputs) {
+      Objects.requireNonNull(inputs, "inputs must not be null");
+      return delegate.diagnose(analysis, requestInput, toInternalInputs(inputs));
     }
 
     @Override

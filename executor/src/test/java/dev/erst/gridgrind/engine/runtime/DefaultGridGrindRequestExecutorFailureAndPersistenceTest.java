@@ -499,6 +499,10 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
     assertEquals(
         java.util.Optional.of(workingDirectory.resolve(workbookPath).toAbsolutePath().toString()),
         openWorkbookContext(failure).sourceWorkbookPath());
+    ExecutionJournal.Outcome.Failed outcome =
+        assertInstanceOf(ExecutionJournal.Outcome.Failed.class, failure.journal().outcome());
+    assertEquals(0, outcome.completedStepCount());
+    assertTrue(failure.journal().steps().isEmpty());
   }
 
   @Test
