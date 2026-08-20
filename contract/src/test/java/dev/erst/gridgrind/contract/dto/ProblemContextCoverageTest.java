@@ -205,6 +205,24 @@ class ProblemContextCoverageTest {
   }
 
   @Test
+  void resolveInputsContextRetainsItsOptionalAuthoredLocation() {
+    ProblemContext.ResolveInputs resolveInputs =
+        new ProblemContext.ResolveInputs(
+            ProblemContextRequestSurfaces.RequestShape.known("NEW", "NONE"),
+            ProblemContextWorkbookSurfaces.InputReference.path("cell text", "missing.txt"),
+            Optional.of(
+                ProblemContextRequestSurfaces.JsonLocation.pathAtByteOffset(
+                    "steps[2].action.comment.text.source.path", 88)));
+
+    assertEquals(Optional.of("cell text"), resolveInputs.inputKind());
+    assertEquals(Optional.of("missing.txt"), resolveInputs.inputPath());
+    assertEquals(
+        Optional.of("steps[2].action.comment.text.source.path"),
+        resolveInputs.json().orElseThrow().jsonPathValue());
+    assertEquals(Optional.of(88L), resolveInputs.json().orElseThrow().byteOffsetValue());
+  }
+
+  @Test
   void supportingVariantsValidateNegativeAndAbsentBranches() {
     assertEquals(
         Optional.empty(),

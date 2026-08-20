@@ -48,7 +48,7 @@ public final class GridGrindRequestDoctor {
         staticValidator.validate(analysis, requestInput);
     return analysis
         .completePlan()
-        .map(request -> diagnose(request, Optional.of(bindings), problems))
+        .map(request -> diagnose(request, Optional.of(bindings), Optional.of(analysis), problems))
         .orElseGet(() -> invalidAnalysisReport(analysis, problems));
   }
 
@@ -69,19 +69,23 @@ public final class GridGrindRequestDoctor {
 
   private RequestDoctorReport diagnose(
       WorkbookPlan request, Optional<ExecutionInputBindings> bindings) {
-    return diagnose(request, bindings, staticValidator.validate(request));
+    return diagnose(request, bindings, Optional.empty(), staticValidator.validate(request));
   }
 
   private RequestDoctorReport diagnose(
       WorkbookPlan request,
       Optional<ExecutionInputBindings> bindings,
+      Optional<RequestAnalysis> analysis,
       List<GridGrindProblemDetail.Problem> staticProblems) {
     RequestDoctorReport.Summary summary = summaryFor(request);
     List<RequestWarning> warnings = GridGrindRequestWarnings.collect(request);
     List<GridGrindProblemDetail.Problem> problems = new java.util.ArrayList<>(staticProblems);
     if (bindings.isPresent()) {
       ExecutionInputBindings boundInputs = bindings.orElseThrow();
-      RequestPreflight.Result preflight = RequestPreflight.verify(request, boundInputs);
+      RequestPreflight.Result preflight =
+          analysis
+              .map(value -> RequestPreflight.verify(request, boundInputs, value))
+              .orElseGet(() -> RequestPreflight.verify(request, boundInputs));
       problems.addAll(preflight.problems());
     }
     if (!problems.isEmpty()) {
@@ -106,7 +110,7 @@ public final class GridGrindRequestDoctor {
 
   private static RequestDoctorReport.Summary summaryFor(WorkbookPlan request) {
     Objects.requireNonNull(request, "request must not be null");
-    ExecutionModeInput executionMode = ExecutionModeRules.executionMode(request);
+    ExecutionModeInput executionMode = ExecutionWorkflowRouting.executionMode(request);
     WorkbookPlan.StepPartition stepPartition = request.stepPartition();
     int mutationStepCount = stepPartition.mutations().size();
     int assertionStepCount = stepPartition.assertions().size();

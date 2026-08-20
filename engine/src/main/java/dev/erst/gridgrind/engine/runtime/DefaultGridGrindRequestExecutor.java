@@ -35,9 +35,19 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
   @Override
   public WorkbookResult execute(
       WorkbookPlan request, ExecutionInputBindings bindings, ExecutionJournalSink sink) {
+    return execute(request, bindings, sink, Optional.empty());
+  }
+
+  /** Executes one request while retaining raw-request locations for preflight diagnostics. */
+  public WorkbookResult execute(
+      WorkbookPlan request,
+      ExecutionInputBindings bindings,
+      ExecutionJournalSink sink,
+      Optional<dev.erst.gridgrind.contract.json.RequestAnalysis> analysis) {
     WorkbookPlan authoredRequest = Objects.requireNonNull(request, "request must not be null");
     ExecutionInputBindings executionBindings =
         Objects.requireNonNull(bindings, "bindings must not be null");
+    Objects.requireNonNull(analysis, "analysis must not be null");
     TempFileFactory tempFileFactory = executionBindings.tempFileFactory();
     ExecutionWorkbookSupport workbookSupport = new ExecutionWorkbookSupport(tempFileFactory);
     ExecutionStepSupport stepSupport = stepSupport(this.dependencies, tempFileFactory);
@@ -69,7 +79,10 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
     validationPhase.succeed();
 
     ExecutionJournalRecorder.PhaseHandle inputResolutionPhase = journal.beginInputResolution();
-    RequestPreflight.Result preflight = RequestPreflight.verify(authoredRequest, executionBindings);
+    RequestPreflight.Result preflight =
+        analysis
+            .map(value -> RequestPreflight.verify(authoredRequest, executionBindings, value))
+            .orElseGet(() -> RequestPreflight.verify(authoredRequest, executionBindings));
     if (!preflight.problems().isEmpty()) {
       GridGrindProblemDetail.Problem problem = preflight.problems().getFirst();
       inputResolutionPhase.fail("failed (" + problem.code() + ")");
@@ -170,19 +183,11 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
         dependencies.workbookEngine(), selectorResolver, assertionExecutor, tempFileFactory);
   }
 
-  List<String> calculationPolicyFailures(WorkbookPlan request) {
-    return ExecutionModeRules.calculationPolicyFailures(request);
-  }
-
-  List<String> executionModeFailures(WorkbookPlan request) { // LIM-019, LIM-020
-    return ExecutionModeRules.executionModeFailures(request, executionMode(request));
-  }
-
   static boolean directEventReadEligible(WorkbookPlan request, ExecutionModeInput executionMode) {
-    return ExecutionModeRules.directEventReadEligible(request, executionMode);
+    return ExecutionWorkflowRouting.directEventReadEligible(request, executionMode);
   }
 
   static ExecutionModeInput executionMode(WorkbookPlan request) {
-    return ExecutionModeRules.executionMode(request);
+    return ExecutionWorkflowRouting.executionMode(request);
   }
 }

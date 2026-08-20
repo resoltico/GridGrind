@@ -26,23 +26,15 @@ final class CalculationPolicyExecutor {
   }
 
   static boolean allowsEventRead(CalculationPolicyInput policy) {
-    CalculationPolicyInput effective = normalize(policy);
-    return effective.effectiveStrategy() instanceof CalculationStrategyInput.DoNotCalculate
-        && !effective.markRecalculateOnOpen();
+    return normalize(policy).allowsEventRead();
   }
 
   static boolean allowsStreamingWrite(CalculationPolicyInput policy) {
-    CalculationPolicyInput effective = normalize(policy);
-    return effective.effectiveStrategy() instanceof CalculationStrategyInput.DoNotCalculate;
+    return normalize(policy).allowsStreamingWrite();
   }
 
   static boolean requiresMutationPrefix(CalculationPolicyInput policy) {
-    return switch (normalize(policy).effectiveStrategy()) {
-      case CalculationStrategyInput.DoNotCalculate _ -> false;
-      case CalculationStrategyInput.ClearCachesOnly _ -> true;
-      case CalculationStrategyInput.EvaluateAll _ -> true;
-      case CalculationStrategyInput.EvaluateTargets _ -> true;
-    };
+    return normalize(policy).requiresMutationPrefix();
   }
 
   static CalculationReport notRequestedReport(CalculationPolicyInput policy) {

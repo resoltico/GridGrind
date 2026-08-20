@@ -50,6 +50,8 @@ import dev.erst.gridgrind.contract.selector.TableRowSelector;
 import dev.erst.gridgrind.contract.selector.TableSelector;
 import dev.erst.gridgrind.contract.selector.WorkbookSelector;
 import dev.erst.gridgrind.contract.step.AssertionStep;
+import dev.erst.gridgrind.contract.step.WorkbookStaticRequestContract;
+import dev.erst.gridgrind.contract.step.WorkbookStaticViolation;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
 import dev.erst.gridgrind.excel.ExcelWorkbooks;
 import dev.erst.gridgrind.excel.WorkbookExecutionEngine;
@@ -1357,23 +1359,24 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
         ExecutionActionDiagnosticFields.formulaFor(new PresenceAssertion.TablePresent()));
 
     assertTrue(
-        executor
-            .executionModeFailures(
-                request(
-                    new WorkbookPlan.WorkbookSource.New(),
-                    new WorkbookPlan.WorkbookPersistence.None(),
-                    ExecutionModeInput.streamingWrite(),
-                    null,
-                    List.of(),
-                    List.of(
-                        assertThat(
-                            "assert-without-sheet",
-                            new CellSelector.ByAddress("Ops", "A1"),
-                            new CellAssertion.CellValue(
-                                new dev.erst.gridgrind.contract.dto.CellScalarValue.Text(
-                                    "Owner")))),
-                    List.of()))
+        WorkbookStaticRequestContract.validate(
+                WorkbookStaticRequestContract.from(
+                    request(
+                        new WorkbookPlan.WorkbookSource.New(),
+                        new WorkbookPlan.WorkbookPersistence.None(),
+                        ExecutionModeInput.streamingWrite(),
+                        null,
+                        List.of(),
+                        List.of(
+                            assertThat(
+                                "assert-without-sheet",
+                                new CellSelector.ByAddress("Ops", "A1"),
+                                new CellAssertion.CellValue(
+                                    new dev.erst.gridgrind.contract.dto.CellScalarValue.Text(
+                                        "Owner")))),
+                        List.of())))
             .stream()
+            .map(WorkbookStaticViolation::message)
             .anyMatch(
                 failure -> failure.contains("requires ENSURE_SHEET before any assertion step")));
   }

@@ -129,6 +129,46 @@ class StaticRequestValidatorTest {
   }
 
   @Test
+  void validatesBoundModeIncompatibilitiesDespiteAnUnrelatedMalformedStep() {
+    var analysis =
+        GridGrindJson.analyzeRequest(
+            """
+            {
+              "protocolVersion": "V2",
+              "source": { "type": "EXISTING", "path": "source.xlsx" },
+              "persistence": { "type": "NONE" },
+              "execution": { "mode": { "type": "EVENT_READ" } },
+              "steps": [
+                {
+                  "stepId": "malformed",
+                  "action": { "type": "ENSURE_SHEET" }
+                },
+                {
+                  "stepId": "mutate",
+                  "target": { "type": "CELL_BY_ADDRESS", "sheetName": "Budget", "address": "A1" },
+                  "action": {
+                    "type": "SET_CELL",
+                    "value": { "type": "NUMBER", "number": 1.0 }
+                  }
+                }
+              ]
+            }
+            """
+                .getBytes(StandardCharsets.UTF_8));
+
+    List<GridGrindProblemDetail.Problem> problems =
+        validator.validate(analysis, ProblemContextRequestSurfaces.RequestInput.standardInput());
+
+    assertEquals(2, problems.size());
+    assertEquals("Missing required field 'steps[0].target'", problems.getFirst().message());
+    ProblemContext.ValidateRequest modeViolation =
+        assertInstanceOf(ProblemContext.ValidateRequest.class, problems.get(1).context());
+    assertEquals(
+        "execution.mode", modeViolation.json().orElseThrow().jsonPathValue().orElseThrow());
+    assertTrue(problems.get(1).message().contains("supports inspection steps only"));
+  }
+
+  @Test
   void validatesPersistenceAsSoonAsItsOwnRootDependenciesBind() {
     var analysis =
         GridGrindJson.analyzeRequest(

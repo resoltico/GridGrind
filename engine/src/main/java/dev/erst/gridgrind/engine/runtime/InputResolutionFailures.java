@@ -1,15 +1,20 @@
 package dev.erst.gridgrind.engine.runtime;
 
+import dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces.JsonLocation;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 /** Request-scoped collector for independently resolvable authored-input failures. */
 final class InputResolutionFailures {
-  private final List<Exception> failures = new ArrayList<>();
+  private final List<InputResolutionFailure> failures = new ArrayList<>();
 
-  void add(Exception failure) {
-    failures.add(Objects.requireNonNull(failure, "failure must not be null"));
+  void add(Exception exception, Optional<JsonLocation> json) {
+    failures.add(
+        new InputResolutionFailure(
+            Objects.requireNonNull(exception, "exception must not be null"),
+            Objects.requireNonNullElseGet(json, Optional::empty)));
   }
 
   void throwIfAny() throws InputResolutionBatchException {

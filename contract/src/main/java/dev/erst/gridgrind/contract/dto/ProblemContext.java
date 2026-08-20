@@ -152,10 +152,20 @@ public sealed interface ProblemContext
   }
 
   /** Context for failures that occur while resolving source-backed authored inputs. */
-  record ResolveInputs(RequestShape request, InputReference input) implements RequestShapeContext {
+  record ResolveInputs(
+      RequestShape request,
+      InputReference input,
+      @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<JsonLocation> json)
+      implements RequestShapeContext {
     public ResolveInputs {
       Objects.requireNonNull(request, "request must not be null");
       Objects.requireNonNull(input, "input must not be null");
+      json = Objects.requireNonNullElseGet(json, Optional::empty);
+    }
+
+    /** Creates an input-resolution context without a retained authored request location. */
+    public ResolveInputs(RequestShape request, InputReference input) {
+      this(request, input, Optional.empty());
     }
 
     /** Returns the authored input kind when one failing binding was identified. */

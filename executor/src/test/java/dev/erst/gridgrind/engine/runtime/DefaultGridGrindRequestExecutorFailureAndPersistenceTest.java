@@ -11,6 +11,8 @@ import dev.erst.gridgrind.contract.query.*;
 import dev.erst.gridgrind.contract.selector.*;
 import dev.erst.gridgrind.contract.step.InspectionStep;
 import dev.erst.gridgrind.contract.step.MutationStep;
+import dev.erst.gridgrind.contract.step.WorkbookStaticRequestContract;
+import dev.erst.gridgrind.contract.step.WorkbookStaticViolation;
 import dev.erst.gridgrind.contract.step.WorkbookStep;
 import dev.erst.gridgrind.excel.ExcelHyperlink;
 import dev.erst.gridgrind.excel.ExcelSheetPane;
@@ -37,6 +39,13 @@ import org.openxmlformats.schemas.spreadsheetml.x2006.main.STDataValidationType;
 /** Failure, persistence, and request-classification tests for DefaultGridGrindRequestExecutor. */
 class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
     extends DefaultGridGrindRequestExecutorTestSupport {
+  private static List<String> staticValidationMessages(WorkbookPlan request) {
+    return WorkbookStaticRequestContract.validate(WorkbookStaticRequestContract.from(request))
+        .stream()
+        .map(WorkbookStaticViolation::message)
+        .toList();
+  }
+
   @Test
   void returnsTableReadResultsForByNameSelectionAndNoneStyle() {
     WorkbookResult response =
@@ -977,10 +986,8 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
 
   @Test
   void calculationPolicyFailureRejectsMutationsAfterObservationSteps() {
-    DefaultGridGrindRequestExecutor executor = new DefaultGridGrindRequestExecutor();
-
     List<String> failures =
-        executor.calculationPolicyFailures(
+        staticValidationMessages(
             WorkbookPlan.standard(
                 new WorkbookPlan.WorkbookSource.New(),
                 new WorkbookPlan.WorkbookPersistence.None(),
@@ -1007,10 +1014,8 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
 
   @Test
   void executionModeFailureRejectsCalculationForEventReadAndStreamingWrite() {
-    DefaultGridGrindRequestExecutor executor = new DefaultGridGrindRequestExecutor();
-
     List<String> eventReadFailures =
-        executor.executionModeFailures(
+        staticValidationMessages(
             request(
                 new WorkbookPlan.WorkbookSource.ExistingFile("/tmp/book.xlsx"),
                 new WorkbookPlan.WorkbookPersistence.None(),
@@ -1023,7 +1028,7 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
                         new WorkbookSelector.Current(),
                         new WorkbookIntrospectionQuery.GetWorkbookSummary()))));
     List<String> streamingFailures =
-        executor.executionModeFailures(
+        staticValidationMessages(
             request(
                 new WorkbookPlan.WorkbookSource.New(),
                 new WorkbookPlan.WorkbookPersistence.None(),

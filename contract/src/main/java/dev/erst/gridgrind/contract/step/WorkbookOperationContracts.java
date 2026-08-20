@@ -6,6 +6,7 @@ import dev.erst.gridgrind.contract.assertion.Assertion;
 import dev.erst.gridgrind.contract.assertion.CompositeAssertion;
 import dev.erst.gridgrind.contract.catalog.ProtocolTargetingMode;
 import dev.erst.gridgrind.contract.catalog.ProtocolTypeMetadataSupport;
+import dev.erst.gridgrind.contract.dto.ExecutionModeInput;
 import dev.erst.gridgrind.contract.query.InspectionQuery;
 import dev.erst.gridgrind.contract.selector.Selector;
 import java.util.Arrays;
@@ -40,6 +41,15 @@ public final class WorkbookOperationContracts {
             boundOperation,
             target,
             ProtocolTypeMetadataSupport.requiredTypeId(boundOperation.getClass()));
+  }
+
+  /** Returns the static execution-mode incompatibility for one bound operation. */
+  public static java.util.Optional<String> executionModeViolation(
+      Object operation, ExecutionModeInput executionMode) {
+    Object boundOperation = Objects.requireNonNull(operation, "operation must not be null");
+    return contractFor(recordType(boundOperation.getClass()))
+        .executionModeViolation(
+            Objects.requireNonNull(executionMode, "executionMode must not be null"));
   }
 
   /** Returns the catalog target surface for one concrete workbook operation record. */
@@ -100,7 +110,7 @@ public final class WorkbookOperationContracts {
                       CompositeAssertion.targetSelectorsFor(
                           CompositeAssertion.class.cast(operation)));
         };
-    return new WorkbookOperationContract(targetSelectorContract);
+    return new WorkbookOperationContract(operationType, targetSelectorContract);
   }
 
   private static WorkbookOperationTargetContract derived(

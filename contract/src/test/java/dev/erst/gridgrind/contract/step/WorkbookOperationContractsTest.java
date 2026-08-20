@@ -3,9 +3,12 @@ package dev.erst.gridgrind.contract.step;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import dev.erst.gridgrind.contract.action.CellMutationAction;
 import dev.erst.gridgrind.contract.assertion.AnalysisAssertion;
 import dev.erst.gridgrind.contract.assertion.CellAssertion;
+import dev.erst.gridgrind.contract.dto.CellInput;
 import dev.erst.gridgrind.contract.dto.CellScalarValue;
+import dev.erst.gridgrind.contract.dto.ExecutionModeInput;
 import dev.erst.gridgrind.contract.selector.Selector;
 import dev.erst.gridgrind.contract.selector.WorkbookSelector;
 import java.util.List;
@@ -79,6 +82,16 @@ class WorkbookOperationContractsTest {
         WorkbookOperationContracts.targetViolation(
                 new CellAssertion.CellValue(new CellScalarValue.Text("Owner")),
                 new WorkbookSelector.Current())
+            .orElseThrow());
+  }
+
+  @Test
+  void ownsOperationModeCompatibilityAlongsideTargetCompatibility() {
+    assertEquals(
+        "execution.mode.type=EVENT_READ supports inspection steps only; unsupported step kind: MUTATION",
+        WorkbookOperationContracts.executionModeViolation(
+                new CellMutationAction.SetCell(new CellInput.NumberValue(1.0)),
+                new ExecutionModeInput.EventRead())
             .orElseThrow());
   }
 

@@ -11,6 +11,7 @@ public final class ExecutionInputBindings {
   private final Path tempRoot;
   private final Optional<StandardInputBinding> standardInput;
   private final Optional<InputResolutionFailures> inputResolutionFailures;
+  private final Optional<InputResolutionOrigins> inputResolutionOrigins;
 
   /** Creates bindings from one working directory and one explicit temp root. */
   public ExecutionInputBindings(Path workingDirectory, Path tempRoot) {
@@ -33,22 +34,25 @@ public final class ExecutionInputBindings {
 
   private ExecutionInputBindings(
       Path workingDirectory, Path tempRoot, Optional<StandardInputBinding> standardInput) {
-    this(workingDirectory, tempRoot, standardInput, Optional.empty());
+    this(workingDirectory, tempRoot, standardInput, Optional.empty(), Optional.empty());
   }
 
   private ExecutionInputBindings(
       Path workingDirectory,
       Path tempRoot,
       Optional<StandardInputBinding> standardInput,
-      Optional<InputResolutionFailures> inputResolutionFailures) {
+      Optional<InputResolutionFailures> inputResolutionFailures,
+      Optional<InputResolutionOrigins> inputResolutionOrigins) {
     Objects.requireNonNull(workingDirectory, "workingDirectory must not be null");
     Objects.requireNonNull(tempRoot, "tempRoot must not be null");
     Objects.requireNonNull(standardInput, "standardInput must not be null");
     Objects.requireNonNull(inputResolutionFailures, "inputResolutionFailures must not be null");
+    Objects.requireNonNull(inputResolutionOrigins, "inputResolutionOrigins must not be null");
     this.workingDirectory = workingDirectory.toAbsolutePath().normalize();
     this.tempRoot = tempRoot.toAbsolutePath().normalize();
     this.standardInput = standardInput;
     this.inputResolutionFailures = inputResolutionFailures;
+    this.inputResolutionOrigins = inputResolutionOrigins;
   }
 
   /** Returns the normalized working directory used to resolve relative authored input paths. */
@@ -82,14 +86,26 @@ public final class ExecutionInputBindings {
         workingDirectory,
         tempRoot,
         standardInput,
-        Optional.of(Objects.requireNonNull(failures, "failures must not be null")));
+        Optional.of(Objects.requireNonNull(failures, "failures must not be null")),
+        inputResolutionOrigins);
   }
 
-  boolean collectInputResolutionFailure(Exception failure) {
+  ExecutionInputBindings withInputResolutionOrigins(InputResolutionOrigins origins) {
+    return new ExecutionInputBindings(
+        workingDirectory,
+        tempRoot,
+        standardInput,
+        inputResolutionFailures,
+        Optional.of(Objects.requireNonNull(origins, "origins must not be null")));
+  }
+
+  boolean collectInputResolutionFailure(Exception failure, Object source) {
     if (inputResolutionFailures.isEmpty()) {
       return false;
     }
-    inputResolutionFailures.orElseThrow().add(failure);
+    inputResolutionFailures
+        .orElseThrow()
+        .add(failure, inputResolutionOrigins.flatMap(origins -> origins.locationFor(source)));
     return true;
   }
 

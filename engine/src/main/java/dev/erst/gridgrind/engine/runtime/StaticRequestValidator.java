@@ -8,11 +8,10 @@ import dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces;
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
 import dev.erst.gridgrind.contract.json.RequestAnalysis;
 import dev.erst.gridgrind.contract.json.RequestBoundFragments;
-import dev.erst.gridgrind.contract.step.AssertionStep;
-import dev.erst.gridgrind.contract.step.InspectionStep;
-import dev.erst.gridgrind.contract.step.MutationStep;
-import dev.erst.gridgrind.contract.step.WorkbookOperationContracts;
-import dev.erst.gridgrind.contract.step.WorkbookStep;
+import dev.erst.gridgrind.contract.step.WorkbookStaticRequest;
+import dev.erst.gridgrind.contract.step.WorkbookStaticRequestContract;
+import dev.erst.gridgrind.contract.step.WorkbookStaticStep;
+import dev.erst.gridgrind.contract.step.WorkbookStaticViolation;
 import dev.erst.gridgrind.engine.api.GridGrindProblems;
 import dev.erst.gridgrind.engine.api.GridGrindRequestAnalysisProblems;
 import java.util.ArrayList;
@@ -34,43 +33,11 @@ final class StaticRequestValidator {
     List<GridGrindProblemDetail.Problem> problems =
         new ArrayList<>(GridGrindRequestAnalysisProblems.project(analysis, requestInput));
     RequestBoundFragments fragments = analysis.boundFragments();
-    fragments
-        .steps()
-        .ifPresent(
-            steps ->
-                steps.forEach(
-                    step ->
-                        step.value()
-                            .flatMap(value -> targetViolation(value))
-                            .ifPresent(
-                                message ->
-                                    problems.add(
-                                        staticProblem(
-                                            requestShape(fragments),
-                                            java.util.Optional.of(analysis),
-                                            "steps[" + step.index() + "].target.type",
-                                            message)))));
-    persistenceFailureMessage(fragments.source(), fragments.persistence())
-        .ifPresent(
-            message ->
-                problems.add(
-                    staticProblem(
-                        requestShape(fragments),
-                        java.util.Optional.of(analysis),
-                        "persistence.type",
-                        message)));
-    if (fragments.execution().isPresent() && fragments.steps().isPresent()) {
-      List<RequestBoundFragments.Step> steps = fragments.steps().orElseThrow();
-      if (steps.stream().allMatch(step -> step.value().isPresent())) {
-        addExecutionRuleProblems(
-            problems,
-            fragments.execution().orElseThrow(),
-            fragments.source(),
-            steps.stream().map(step -> step.value().orElseThrow()).toList(),
-            requestShape(fragments),
-            java.util.Optional.of(analysis));
-      }
-    }
+    addContractViolations(
+        problems,
+        partialRequest(fragments),
+        requestShape(fragments),
+        java.util.Optional.of(analysis));
     return DiagnosticOrder.problems(problems);
   }
 
@@ -82,84 +49,33 @@ final class StaticRequestValidator {
   private static List<GridGrindProblemDetail.Problem> validatePlanRules(
       WorkbookPlan request, java.util.Optional<RequestAnalysis> analysis) {
     List<GridGrindProblemDetail.Problem> problems = new ArrayList<>();
-    for (int index = 0; index < request.steps().size(); index++) {
-      int stepIndex = index;
-      targetViolation(request.steps().get(index))
-          .ifPresent(
-              message ->
-                  problems.add(
-                      staticProblem(
-                          ExecutionRequestPaths.requestShape(request),
-                          analysis,
-                          "steps[" + stepIndex + "].target.type",
-                          message)));
-    }
-    addExecutionRuleProblems(
+    addContractViolations(
         problems,
-        request.execution(),
-        java.util.Optional.of(request.source()),
-        request.steps(),
+        WorkbookStaticRequestContract.from(request),
         ExecutionRequestPaths.requestShape(request),
         analysis);
-    persistenceFailureMessage(
-            java.util.Optional.of(request.source()), java.util.Optional.of(request.persistence()))
-        .ifPresent(
-            message ->
-                problems.add(
-                    staticProblem(
-                        ExecutionRequestPaths.requestShape(request),
-                        analysis,
-                        "persistence.type",
-                        message)));
     return List.copyOf(problems);
   }
 
-  private static void addExecutionRuleProblems(
+  private static void addContractViolations(
       List<GridGrindProblemDetail.Problem> problems,
-      dev.erst.gridgrind.contract.dto.ExecutionPolicyInput execution,
-      java.util.Optional<WorkbookPlan.WorkbookSource> source,
-      List<WorkbookStep> steps,
+      WorkbookStaticRequest request,
       ProblemContextRequestSurfaces.RequestShape requestShape,
       java.util.Optional<RequestAnalysis> analysis) {
-    for (String message :
-        ExecutionModeRules.calculationPolicyFailures(execution.calculation(), steps)) {
-      problems.add(staticProblem(requestShape, analysis, "execution.calculation", message));
-    }
-    for (String message :
-        ExecutionModeRules.executionModeFailures(
-            execution.mode(), execution.calculation(), source, steps)) {
-      problems.add(staticProblem(requestShape, analysis, "execution.mode", message));
+    for (WorkbookStaticViolation violation : WorkbookStaticRequestContract.validate(request)) {
+      problems.add(
+          staticProblem(requestShape, analysis, violation.jsonPath(), violation.message()));
     }
   }
 
-  private static java.util.Optional<String> targetViolation(WorkbookStep step) {
-    return switch (step) {
-      case MutationStep mutation ->
-          WorkbookOperationContracts.targetViolation(mutation.action(), mutation.target());
-      case AssertionStep assertion ->
-          WorkbookOperationContracts.targetViolation(assertion.assertion(), assertion.target());
-      case InspectionStep inspection ->
-          WorkbookOperationContracts.targetViolation(inspection.query(), inspection.target());
-    };
-  }
-
-  private static java.util.Optional<String> persistenceFailureMessage(
-      java.util.Optional<WorkbookPlan.WorkbookSource> source,
-      java.util.Optional<WorkbookPlan.WorkbookPersistence> persistence) {
-    if (source.isEmpty() || persistence.isEmpty()) {
-      return java.util.Optional.empty();
-    }
-    return switch (persistence.orElseThrow()) {
-      case WorkbookPlan.WorkbookPersistence.Overwrite _ ->
-          switch (source.orElseThrow()) {
-            case WorkbookPlan.WorkbookSource.New _ ->
-                java.util.Optional.of(
-                    "OVERWRITE persistence requires an EXISTING source; a NEW workbook has no source file to overwrite");
-            case WorkbookPlan.WorkbookSource.ExistingFile _ -> java.util.Optional.empty();
-          };
-      case WorkbookPlan.WorkbookPersistence.None _ -> java.util.Optional.empty();
-      case WorkbookPlan.WorkbookPersistence.SaveAs _ -> java.util.Optional.empty();
-    };
+  private static WorkbookStaticRequest partialRequest(RequestBoundFragments fragments) {
+    return new WorkbookStaticRequest(
+        fragments.source(),
+        fragments.persistence(),
+        fragments.execution(),
+        fragments.steps().orElseGet(List::of).stream()
+            .map(step -> new WorkbookStaticStep(step.index(), step.value()))
+            .toList());
   }
 
   private static GridGrindProblemDetail.Problem staticProblem(

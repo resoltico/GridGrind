@@ -8,14 +8,14 @@ import java.util.Objects;
 final class InputResolutionBatchException extends IOException {
   private static final long serialVersionUID = 1L;
 
-  private final List<Exception> failures;
+  private final List<InputResolutionFailure> failures;
 
-  InputResolutionBatchException(List<Exception> failures) {
+  InputResolutionBatchException(List<InputResolutionFailure> failures) {
     super("Unable to resolve one or more authored inputs");
     this.failures = List.copyOf(Objects.requireNonNull(failures, "failures must not be null"));
   }
 
-  List<Exception> failures() {
+  List<InputResolutionFailure> failures() {
     return failures;
   }
 }

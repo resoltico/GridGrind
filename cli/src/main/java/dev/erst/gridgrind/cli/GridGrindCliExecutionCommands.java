@@ -145,6 +145,7 @@ final class GridGrindCliExecutionCommands {
           CliExecutionFailureSupport.executeStarted(
               requestExecutor,
               request,
+              analysis,
               command.requestPath(),
               command.executionRootPath(),
               command.tempRootPath(),

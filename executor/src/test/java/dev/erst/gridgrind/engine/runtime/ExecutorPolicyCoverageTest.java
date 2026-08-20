@@ -41,6 +41,8 @@ import dev.erst.gridgrind.contract.selector.TableRowSelector;
 import dev.erst.gridgrind.contract.selector.TableSelector;
 import dev.erst.gridgrind.contract.selector.WorkbookSelector;
 import dev.erst.gridgrind.contract.step.MutationStep;
+import dev.erst.gridgrind.contract.step.WorkbookStaticRequestContract;
+import dev.erst.gridgrind.contract.step.WorkbookStaticViolation;
 import dev.erst.gridgrind.excel.CellNotFoundException;
 import dev.erst.gridgrind.excel.ExcelNamedRangeScope;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
@@ -66,6 +68,13 @@ import org.junit.jupiter.api.Test;
 
 /** Coverage for executor policy seams, helper extraction, and failure routing. */
 class ExecutorPolicyCoverageTest {
+  private static List<String> staticValidationMessages(WorkbookPlan request) {
+    return WorkbookStaticRequestContract.validate(WorkbookStaticRequestContract.from(request))
+        .stream()
+        .map(WorkbookStaticViolation::message)
+        .toList();
+  }
+
   @Test
   void inspectionCommandConverterRejectsUnsupportedChartTargets() {
     IllegalArgumentException failure =
@@ -288,8 +297,7 @@ class ExecutorPolicyCoverageTest {
 
   @Test
   void executorPolicyHelpersCoverExecutionModesPersistenceAndRuntimeGuards() throws IOException {
-    DefaultGridGrindRequestExecutor executor = new DefaultGridGrindRequestExecutor();
-    assertExecutionModesAndValidation(executor);
+    assertExecutionModesAndValidation();
     assertDeleteAndSourceHelpers();
     assertStreamingPersistenceBehaviors();
     assertRuntimeGuardBehaviors();
@@ -303,7 +311,7 @@ class ExecutorPolicyCoverageTest {
     assertExceptionAndStepDiagnostics();
   }
 
-  private static void assertExecutionModesAndValidation(DefaultGridGrindRequestExecutor executor) {
+  private static void assertExecutionModesAndValidation() {
     WorkbookPlan defaultModesRequest =
         request(
             new WorkbookPlan.WorkbookSource.New(),
@@ -342,8 +350,7 @@ class ExecutorPolicyCoverageTest {
                     "workbook",
                     new WorkbookSelector.Current(),
                     new WorkbookIntrospectionQuery.GetWorkbookSummary())));
-    List<String> executionModeFailures =
-        executor.executionModeFailures(streamingInspectionBeforeEnsure);
+    List<String> executionModeFailures = staticValidationMessages(streamingInspectionBeforeEnsure);
     assertTrue(
         executionModeFailures.stream()
             .anyMatch(failure -> failure.contains("before any inspection step")));

@@ -59,13 +59,13 @@ class RequestPreflightTest {
     assertFalse(result.resolvedRequest().isPresent());
     assertEquals(
         List.of(
+            GridGrindProblemCode.WORKBOOK_NOT_FOUND,
             GridGrindProblemCode.INPUT_SOURCE_NOT_FOUND,
-            GridGrindProblemCode.INPUT_SOURCE_NOT_FOUND,
-            GridGrindProblemCode.WORKBOOK_NOT_FOUND),
+            GridGrindProblemCode.INPUT_SOURCE_NOT_FOUND),
         result.problems().stream().map(GridGrindProblemDetail.Problem::code).toList());
-    assertInstanceOf(ProblemContext.ResolveInputs.class, result.problems().getFirst().context());
+    assertInstanceOf(ProblemContext.OpenWorkbook.class, result.problems().getFirst().context());
     assertInstanceOf(ProblemContext.ResolveInputs.class, result.problems().get(1).context());
-    assertInstanceOf(ProblemContext.OpenWorkbook.class, result.problems().get(2).context());
+    assertInstanceOf(ProblemContext.ResolveInputs.class, result.problems().get(2).context());
     assertFalse(Files.exists(temporaryDirectory.resolve("missing-source.xlsx")));
     assertFalse(Files.exists(tempRoot));
     assertTrue(
@@ -119,6 +119,62 @@ class RequestPreflightTest {
         report.problems().stream().map(GridGrindProblemDetail.Problem::code).toList());
     assertFalse(Files.exists(temporaryDirectory.resolve("missing-source.xlsx")));
     assertFalse(Files.exists(temporaryDirectory.resolve("scratch")));
+  }
+
+  @Test
+  void retainsExactAuthoredSourcePathsForEveryBatchedInputFailure() {
+    var analysis =
+        GridGrindJson.analyzeRequest(
+            """
+            {
+              "protocolVersion": "V2",
+              "source": { "type": "NEW" },
+              "persistence": { "type": "NONE" },
+              "steps": [
+                {
+                  "stepId": "set-values",
+                  "target": { "type": "RANGE_BY_RANGE", "sheetName": "Budget", "range": "A1:B1" },
+                  "action": {
+                    "type": "SET_RANGE",
+                    "rows": {
+                      "type": "TYPED",
+                      "cells": [[
+                        { "type": "TEXT", "source": { "type": "UTF8_FILE", "path": "missing-first.txt" } },
+                        { "type": "TEXT", "source": { "type": "UTF8_FILE", "path": "missing-second.txt" } }
+                      ]]
+                    }
+                  }
+                }
+              ]
+            }
+            """
+                .getBytes(java.nio.charset.StandardCharsets.UTF_8));
+
+    RequestPreflight.Result result =
+        RequestPreflight.verify(
+            analysis.requireCompletePlan(),
+            new ExecutionInputBindings(temporaryDirectory, temporaryDirectory.resolve("scratch")),
+            analysis);
+
+    assertEquals(2, result.problems().size());
+    assertEquals(
+        List.of(
+            "steps[0].action.rows.cells[0][0].source.path",
+            "steps[0].action.rows.cells[0][1].source.path"),
+        result.problems().stream()
+            .map(GridGrindProblemDetail.Problem::context)
+            .map(ProblemContext.ResolveInputs.class::cast)
+            .map(ProblemContext.ResolveInputs::json)
+            .map(java.util.Optional::orElseThrow)
+            .map(location -> location.jsonPathValue().orElseThrow())
+            .toList());
+    assertTrue(
+        result.problems().stream()
+            .map(GridGrindProblemDetail.Problem::context)
+            .map(ProblemContext.ResolveInputs.class::cast)
+            .map(ProblemContext.ResolveInputs::json)
+            .map(java.util.Optional::orElseThrow)
+            .allMatch(location -> location.byteOffsetValue().isPresent()));
   }
 
   @Test

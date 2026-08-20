@@ -70,7 +70,10 @@ execution-mode rules, source-backed authored input resolution, and existing work
 accessibility without mutating a workbook.
 
 - It resolves `UTF8_FILE`, `FILE`, and `STANDARD_INPUT` authored payloads early, so missing or
-  unreadable authored inputs can fail under `journal.inputResolution`.
+  unreadable authored inputs can fail under `journal.inputResolution`. Each source-resolution
+  problem carries `context.json.jsonPath` for the exact authored leaf, such as
+  `steps[0].action.rows.cells[0][1].source.path`; raw requests retain that leaf's UTF-8 byte
+  offset as well.
 - It also preflights `source.type: EXISTING` workbook access, so missing or unreadable
   `source.path` workbooks can already fail during doctoring under `OPEN_WORKBOOK`.
 - It collects every independently observable request-intake defect in one pass, including invalid UTF-8, duplicate keys, unknown fields, omitted required fields, explicit nulls, malformed scalar values, missing or unknown type discriminators, and constructor-level field validation failures. Valid sibling fragments remain available for their own operation-contract checks; a rule whose own prerequisite fragment is malformed is suppressed rather than guessed.

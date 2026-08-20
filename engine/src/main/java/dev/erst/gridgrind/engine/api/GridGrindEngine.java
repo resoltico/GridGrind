@@ -44,6 +44,19 @@ public final class GridGrindEngine {
           toInternalInputs(inputs),
           event -> GridGrindJournalSink.requireNonNull(sink).emit(event));
     }
+
+    @Override
+    public dev.erst.gridgrind.contract.dto.WorkbookResult execute(
+        RequestAnalysis analysis, GridGrindRequestInputs inputs, GridGrindJournalSink sink) {
+      Objects.requireNonNull(analysis, "analysis must not be null");
+      Objects.requireNonNull(inputs, "inputs must not be null");
+      Objects.requireNonNull(sink, "sink must not be null");
+      return delegate.execute(
+          analysis.requireCompletePlan(),
+          toInternalInputs(inputs),
+          event -> GridGrindJournalSink.requireNonNull(sink).emit(event),
+          java.util.Optional.of(analysis));
+    }
   }
 
   private record ProductionRequestDoctor(

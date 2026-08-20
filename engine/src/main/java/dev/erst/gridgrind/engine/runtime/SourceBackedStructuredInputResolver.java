@@ -52,7 +52,7 @@ final class SourceBackedStructuredInputResolver {
     if (resolvedText.isEmpty()) {
       IllegalArgumentException failure =
           new IllegalArgumentException("rich-text run must not be empty");
-      if (bindings.collectInputResolutionFailure(failure)) {
+      if (bindings.collectInputResolutionFailure(failure, run.source())) {
         return run;
       }
       throw failure;

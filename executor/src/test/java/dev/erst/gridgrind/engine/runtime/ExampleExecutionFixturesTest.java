@@ -98,7 +98,8 @@ class ExampleExecutionFixturesTest {
       assertEquals(
           expectedBlankWorkspaceFailureCode(example.id()),
           failure.problem().code(),
-          () -> "blank artifact workspace must fail with the documented problem code");
+          () ->
+              "blank artifact workspace must fail with the canonical first preflight problem code");
     }
   }
 
@@ -183,8 +184,8 @@ class ExampleExecutionFixturesTest {
 
   private static GridGrindProblemCode expectedBlankWorkspaceFailureCode(String exampleId) {
     return switch (exampleId) {
-      case "CUSTOM_XML", "SOURCE_BACKED_INPUT" -> GridGrindProblemCode.INPUT_SOURCE_NOT_FOUND;
-      case "PACKAGE_SECURITY_INSPECTION" -> GridGrindProblemCode.WORKBOOK_NOT_FOUND;
+      case "CUSTOM_XML", "PACKAGE_SECURITY_INSPECTION" -> GridGrindProblemCode.WORKBOOK_NOT_FOUND;
+      case "SOURCE_BACKED_INPUT" -> GridGrindProblemCode.INPUT_SOURCE_NOT_FOUND;
       default ->
           throw new AssertionError("Unexpected repository-asset-backed example id: " + exampleId);
     };

@@ -112,6 +112,9 @@ public final class DiagnosticOrder {
     if (problem.context() instanceof ProblemContext.ValidateRequest validateRequest) {
       return validateRequest.json().flatMap(JsonLocation::byteOffsetValue);
     }
+    if (problem.context() instanceof ProblemContext.ResolveInputs resolveInputs) {
+      return resolveInputs.json().flatMap(JsonLocation::byteOffsetValue);
+    }
     return Optional.empty();
   }
 
@@ -122,6 +125,12 @@ public final class DiagnosticOrder {
           requestInputContext.jsonPath().map(DiagnosticOrder::stepIndexFromJsonPath).orElse(-1);
       case ProblemContext.ValidateRequest validateRequest ->
           validateRequest
+              .json()
+              .flatMap(JsonLocation::jsonPathValue)
+              .map(DiagnosticOrder::stepIndexFromJsonPath)
+              .orElse(-1);
+      case ProblemContext.ResolveInputs resolveInputs ->
+          resolveInputs
               .json()
               .flatMap(JsonLocation::jsonPathValue)
               .map(DiagnosticOrder::stepIndexFromJsonPath)

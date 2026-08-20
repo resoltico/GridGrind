@@ -55,6 +55,24 @@ public record CalculationPolicyInput(
     return strategy;
   }
 
+  /** Returns whether this policy permits the constrained EVENT_READ execution family. */
+  @JsonIgnore
+  public boolean allowsEventRead() {
+    return strategy instanceof CalculationStrategyInput.DoNotCalculate && !markRecalculateOnOpen;
+  }
+
+  /** Returns whether this policy permits the constrained STREAMING_WRITE execution family. */
+  @JsonIgnore
+  public boolean allowsStreamingWrite() {
+    return strategy instanceof CalculationStrategyInput.DoNotCalculate;
+  }
+
+  /** Returns whether this policy needs all mutation steps before observation steps. */
+  @JsonIgnore
+  public boolean requiresMutationPrefix() {
+    return !(strategy instanceof CalculationStrategyInput.DoNotCalculate);
+  }
+
   /** Custom Jackson inclusion filter that omits the standard do-not-calculate policy. */
   public static final class DefaultFilter {
     @Override

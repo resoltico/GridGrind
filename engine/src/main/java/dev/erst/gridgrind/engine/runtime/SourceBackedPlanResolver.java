@@ -281,7 +281,7 @@ public final class SourceBackedPlanResolver {
     try {
       return resolution.resolve();
     } catch (IOException | RuntimeException exception) {
-      if (bindings.collectInputResolutionFailure(exception)) {
+      if (bindings.collectInputResolutionFailure(exception, source)) {
         return source;
       }
       throw exception;

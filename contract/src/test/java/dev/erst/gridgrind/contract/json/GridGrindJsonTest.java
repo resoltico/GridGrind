@@ -409,7 +409,10 @@ class GridGrindJsonTest {
                     dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces.RequestShape
                         .known("NEW", "NONE"),
                     dev.erst.gridgrind.contract.dto.ProblemContextWorkbookSurfaces.InputReference
-                        .path("cell text", "missing.txt")),
+                        .path("cell text", "missing.txt"),
+                    java.util.Optional.of(
+                        dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces.JsonLocation
+                            .pathAtByteOffset("steps[0].action.value.source.path", 73))),
                 java.util.Optional.empty(),
                 List.of()));
     WorkbookResult calculationFailure =

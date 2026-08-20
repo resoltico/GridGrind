@@ -10,6 +10,7 @@ import dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces;
 import dev.erst.gridgrind.contract.dto.RequestDoctorReport;
 import dev.erst.gridgrind.contract.dto.WorkbookResult;
 import dev.erst.gridgrind.contract.json.GridGrindJson;
+import dev.erst.gridgrind.contract.json.RequestAnalysis;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.UncheckedIOException;
@@ -93,6 +94,32 @@ class GridGrindEngineApiPreflightTest {
     assertTrue(eventReadSourceDeleted.get());
   }
 
+  @Test
+  void productionExecutorUsesTheDoctorOrderedPrimaryPreflightProblem() {
+    RequestAnalysis analysis =
+        GridGrindJson.analyzeRequest(preflightFailureRequest().getBytes(StandardCharsets.UTF_8));
+    ProblemContextRequestSurfaces.RequestInput requestInput =
+        ProblemContextRequestSurfaces.RequestInput.standardInput();
+    GridGrindRequestDoctor doctor = GridGrindEngine.requestDoctor();
+    RequestDoctorReport doctorReport = doctor.diagnose(analysis, requestInput, inputs());
+    WorkbookResult.Failure executionFailure =
+        assertInstanceOf(
+            WorkbookResult.Failure.class,
+            GridGrindEngine.requestExecutor().execute(analysis, inputs()));
+
+    assertFalse(doctorReport.valid());
+    assertEquals(doctorReport.primaryProblem().orElseThrow(), executionFailure.problem());
+    assertEquals(
+        "steps[0].action.rows.cells[0][0].source.path",
+        assertInstanceOf(
+                dev.erst.gridgrind.contract.dto.ProblemContext.ResolveInputs.class,
+                executionFailure.problem().context())
+            .json()
+            .orElseThrow()
+            .jsonPathValue()
+            .orElseThrow());
+  }
+
   private GridGrindRequestInputs inputs() {
     return new GridGrindRequestInputs(temporaryDirectory, temporaryDirectory.resolve("temp-root"));
   }
@@ -139,6 +166,32 @@ class GridGrindEngineApiPreflightTest {
         }
         """
         .formatted(mode);
+  }
+
+  private static String preflightFailureRequest() {
+    return """
+        {
+          "protocolVersion": "V2",
+          "source": { "type": "NEW" },
+          "persistence": { "type": "NONE" },
+          "steps": [
+            {
+              "stepId": "set-values",
+              "target": { "type": "RANGE_BY_RANGE", "sheetName": "Budget", "range": "A1:B1" },
+              "action": {
+                "type": "SET_RANGE",
+                "rows": {
+                  "type": "TYPED",
+                  "cells": [[
+                    { "type": "TEXT", "source": { "type": "UTF8_FILE", "path": "missing-first.txt" } },
+                    { "type": "TEXT", "source": { "type": "UTF8_FILE", "path": "missing-second.txt" } }
+                  ]]
+                }
+              }
+            }
+          ]
+        }
+        """;
   }
 
   private static GridGrindJournalSink deleteSourceAfterPreflight(
