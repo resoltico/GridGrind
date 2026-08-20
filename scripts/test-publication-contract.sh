@@ -70,10 +70,10 @@ dockerfile_copies_built_cli_jar() {
 }
 
 grep -Eq \
-    '^FROM azul/zulu-openjdk-alpine:26@sha256:[0-9a-f]{64} AS build$' \
+    '^FROM azul/zulu-openjdk:26@sha256:[0-9a-f]{64} AS build$' \
     "${dockerfile}" || die "Dockerfile builder image is not digest-pinned"
 grep -Eq \
-    '^FROM azul/zulu-openjdk-alpine:26-jre@sha256:[0-9a-f]{64}$' \
+    '^FROM azul/zulu-openjdk:26-jre@sha256:[0-9a-f]{64}$' \
     "${dockerfile}" || die "Dockerfile runtime image is not digest-pinned"
 
 git -C "${repo_root}" check-ignore -q AGENTS.md && die \
@@ -182,9 +182,9 @@ grep -Fq 'source "${bind_mount_support}"' "${docker_smoke_script}" || die \
 grep -Fq 'verify_documented_bind_mount_user_guidance "${image_tag}" "${smoke_root}" "${docker_run_user}"' \
     "${docker_smoke_script}" || die \
     "docker smoke no longer calls the documented bind-mount guidance probe"
-grep -Fq 'docker smoke no-user documented bind-mount run did not report IO_ERROR' \
+grep -Fq 'documented_no_user_exit_code=$?' \
     "${docker_smoke_bind_mount_helper}" || die \
-    "bind-mount guidance helper no longer verifies the no-user failure path on non-remapped bind mounts"
+    "bind-mount guidance helper no longer handles the platform-dependent no-user failure path"
 grep -Fq 'docker smoke no-user documented bind-mount run completed both mounted writes despite failing' \
     "${docker_smoke_bind_mount_helper}" || die \
     "bind-mount guidance helper no longer proves the no-user failure path leaves the mounted writes incomplete"

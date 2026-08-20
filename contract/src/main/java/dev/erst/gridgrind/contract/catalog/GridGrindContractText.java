@@ -110,6 +110,7 @@ public final class GridGrindContractText {
     return "Explicit formula-calculation policy."
         + " Use CalculationPolicyInput.defaults() for DO_NOT_CALCULATE with"
         + " markRecalculateOnOpen=false."
+        + " Use DEFERRED_CALCULATION to inspect capabilities without immediate evaluation,"
         + " Use EVALUATE_ALL or EVALUATE_TARGETS for immediate server-side evaluation,"
         + " CLEAR_CACHES_ONLY to strip persisted caches,"
         + " or markRecalculateOnOpen=true when Excel-compatible clients should recalculate later.";
@@ -119,8 +120,12 @@ public final class GridGrindContractText {
   public static String calculationStrategyInputSummary() {
     return "One explicit formula-calculation strategy."
         + " DO_NOT_CALCULATE leaves formulas untouched,"
-        + " EVALUATE_ALL evaluates every formula cell,"
-        + " EVALUATE_TARGETS evaluates one explicit formula-cell set,"
+        + " DEFERRED_CALCULATION reports formula capabilities but leaves evaluation to an"
+        + " Excel-compatible client,"
+        + " EVALUATE_ALL evaluates every formula cell when all are immediately evaluable and"
+        + " otherwise returns PARTIAL without fabricating computed values,"
+        + " EVALUATE_TARGETS applies the same lenient rule to one explicit formula-cell set,"
+        + " REQUIRE_EVALUATION fails when any formula cannot be evaluated immediately,"
         + " and CLEAR_CACHES_ONLY strips persisted formula caches without evaluating.";
   }
 

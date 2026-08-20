@@ -220,8 +220,12 @@ override.
   output.
 - `NORMAL` keeps the structured response journal and adds expanded resolved-target summaries plus
   observational timing telemetry.
-- `execution.calculation.strategy` accepts `DO_NOT_CALCULATE`, `EVALUATE_ALL`,
-  `EVALUATE_TARGETS`, and `CLEAR_CACHES_ONLY`.
+- `execution.calculation.strategy` accepts `DO_NOT_CALCULATE`, `DEFERRED_CALCULATION`,
+  `EVALUATE_ALL`, `EVALUATE_TARGETS`, `REQUIRE_EVALUATION`, and `CLEAR_CACHES_ONLY`.
+  `DEFERRED_CALCULATION` reports capability warnings without attempting server-side evaluation.
+  The two evaluation strategies are lenient: unevaluable formulas remain unchanged, calculation
+  reports `PARTIAL`, and each affected formula emits `FORMULA_NOT_EVALUATED`.
+  `REQUIRE_EVALUATION` instead fails when any formula cannot be evaluated immediately.
 - `execution.calculation.markRecalculateOnOpen` persists Excel's workbook-level recalc-on-open
   flag without requiring an extra mutation step.
 - `EVALUATE_TARGETS` addresses must point at existing formula cells. A missing physical cell can
@@ -607,7 +611,8 @@ Used in `SET_CELL`, `SET_RANGE`, and `APPEND_ROW`:
 }
 { "type": "NUMBER",    "number": 8.40                }
 { "type": "BOOLEAN",   "bool": true                  }
-{ "type": "FORMULA",   "source": { "type": "INLINE", "text": "SUM(B2:B3)" } }  // leading = is accepted and stripped
+{ "type": "FORMULA",   "source": { "type": "INLINE", "text": "SUM(B2:B3)" } }
+{ "type": "RAW_FORMULA", "source": { "type": "INLINE", "text": "LAMBDA(x,x+1)(A1)" } }
 { "type": "DATE",      "date": "2026-03-25"           }
 { "type": "DATE_TIME", "dateTime": "2026-03-25T10:15:30" }
 { "type": "BLANK"                                     }
@@ -621,9 +626,12 @@ empty instead of storing a string value.
 `RICH_TEXT` writes an ordered, non-empty `runs` list. Every run must have non-empty resolved text,
 and the optional `font` object reuses the same font-field vocabulary as the nested style contract:
 `bold`, `italic`, `fontName`, `fontHeight`, `fontColor`, `underline`, and `strikeout`.
+`FORMULA` and `RAW_FORMULA` text is the OOXML `<f>` body: it must not be empty or begin with `=`.
 `FORMULA` payloads are scalar only. Array-formula braces such as `{=SUM(A1:A2*B1:B2)}` are
-rejected as `INVALID_FORMULA`. Authored `LAMBDA` and `LET` currently surface as
-`UNSUPPORTED_FORMULA_CONSTRUCT` because Apache POI cannot parse them on the write path. Loaded
-formulas that POI parses but cannot evaluate surface as `UNSUPPORTED_FORMULA`.
+rejected as `INVALID_FORMULA`. `RAW_FORMULA` persists opaque XML-safe formula character data
+without routing the body through POI's write parser, so it is the explicit route for newer Excel
+syntax such as `LAMBDA` and `LET`. Invalid opaque framing or XML 1.0-forbidden character data is
+rejected as `INVALID_FORMULA_TEXT`. Loaded formulas that POI parses but cannot evaluate are kept
+unchanged under lenient evaluation and surface `FORMULA_NOT_EVALUATED`; strict evaluation fails.
 
 ---

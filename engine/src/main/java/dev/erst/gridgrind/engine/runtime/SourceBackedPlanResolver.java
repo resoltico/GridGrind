@@ -136,6 +136,12 @@ public final class SourceBackedPlanResolver {
             ? formula
             : new CellInput.Formula(resolvedSource);
       }
+      case CellInput.RawFormula rawFormula -> {
+        TextSourceInput resolvedSource = resolveRawFormulaSource(rawFormula.source(), bindings);
+        yield sameReference(resolvedSource, rawFormula.source())
+            ? rawFormula
+            : new CellInput.RawFormula(resolvedSource);
+      }
     };
   }
 
@@ -170,16 +176,22 @@ public final class SourceBackedPlanResolver {
       return source;
     }
     String resolvedText = inline.text();
-    if (resolvedText.startsWith("=")) {
-      resolvedText = resolvedText.substring(1);
+    new CellInput.Formula(new TextSourceInput.Inline(resolvedText));
+    return source instanceof TextSourceInput.Inline
+        ? source
+        : new TextSourceInput.Inline(resolvedText);
+  }
+
+  static TextSourceInput resolveRawFormulaSource(
+      TextSourceInput source, ExecutionInputBindings bindings) throws IOException {
+    TextSourceInput resolvedSource = resolveTextSource(source, bindings, true, "raw formula");
+    if (!(resolvedSource instanceof TextSourceInput.Inline inline)) {
+      return source;
     }
-    if (source instanceof TextSourceInput.Inline originalInline) {
-      if (originalInline.text().equals(resolvedText)) {
-        return source;
-      }
-      return new TextSourceInput.Inline(resolvedText);
-    }
-    return new TextSourceInput.Inline(resolvedText);
+    TextSourceInput.Inline validated =
+        (TextSourceInput.Inline)
+            new CellInput.RawFormula(new TextSourceInput.Inline(inline.text())).source();
+    return source instanceof TextSourceInput.Inline ? source : validated;
   }
 
   static BinarySourceInput resolveBinarySource(

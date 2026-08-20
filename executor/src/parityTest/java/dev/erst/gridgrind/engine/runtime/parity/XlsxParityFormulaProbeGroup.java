@@ -80,7 +80,12 @@ final class XlsxParityFormulaProbeGroup {
         XlsxParityOracle.evaluateExternalFormulaUsingCachedValue(external.workbookPath());
     WorkbookResult.Failure strictFailure =
         XlsxParityGridGrind.mutateWorkbookExpectingFailure(
-            external.workbookPath(), null, executionPolicy(calculateAll()), null, List.of());
+            external.workbookPath(),
+            null,
+            executionPolicy(
+                CalculationPolicyInput.strategy(new CalculationStrategyInput.RequireEvaluation())),
+            null,
+            List.of());
     WorkbookResult.Success cachedSuccess =
         XlsxParityGridGrind.readWorkbook(
             external.workbookPath(),

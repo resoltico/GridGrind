@@ -178,8 +178,22 @@ final class WorkbookInvariantResponseChecks {
 
   private static void requireRequestWarningShape(RequestWarning warning) {
     require(warning != null, "warning must not be null");
-    require(warning.stepIndex() >= 0, "warning stepIndex must not be negative");
-    requireNonBlank(warning.stepType(), "warning stepType");
+    switch (warning.location()) {
+      case RequestWarningLocation.Step step -> {
+        require(step.stepIndex() >= 0, "warning stepIndex must not be negative");
+        requireNonBlank(step.stepId(), "warning stepId");
+        requireNonBlank(step.stepType(), "warning stepType");
+      }
+      case RequestWarningLocation.RequestPath requestPath -> {
+        requireNonBlank(requestPath.path(), "warning request path");
+        requireNonBlank(requestPath.pathRole(), "warning request path role");
+      }
+      case RequestWarningLocation.FormulaCell formulaCell -> {
+        requireNonBlank(formulaCell.sheetName(), "warning formula sheetName");
+        requireNonBlank(formulaCell.address(), "warning formula address");
+        requireNonBlank(formulaCell.formula(), "warning formula");
+      }
+    }
     requireNonBlank(warning.message(), "warning message");
   }
 

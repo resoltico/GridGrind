@@ -17,6 +17,8 @@ class CalculationContractTypesTest {
   void validatesCalculationStrategiesAndExecutionPolicyDefaults() {
     CalculationStrategyInput.DoNotCalculate doNotCalculate =
         new CalculationStrategyInput.DoNotCalculate();
+    CalculationStrategyInput.DeferredCalculation deferredCalculation =
+        new CalculationStrategyInput.DeferredCalculation();
     CalculationStrategyInput.EvaluateAll evaluateAll = new CalculationStrategyInput.EvaluateAll();
     CalculationStrategyInput.ClearCachesOnly clearCachesOnly =
         new CalculationStrategyInput.ClearCachesOnly();
@@ -26,6 +28,8 @@ class CalculationContractTypesTest {
 
     assertTrue(doNotCalculate.isDefault());
     assertEquals("DO_NOT_CALCULATE", doNotCalculate.strategyType());
+    assertFalse(deferredCalculation.isDefault());
+    assertEquals("DEFERRED_CALCULATION", deferredCalculation.strategyType());
     assertFalse(evaluateAll.isDefault());
     assertEquals("EVALUATE_ALL", evaluateAll.strategyType());
     assertEquals("CLEAR_CACHES_ONLY", clearCachesOnly.strategyType());

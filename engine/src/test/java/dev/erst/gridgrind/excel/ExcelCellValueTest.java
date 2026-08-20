@@ -38,6 +38,12 @@ class ExcelCellValueTest {
         "SUM(A1:A3)",
         assertInstanceOf(ExcelCellValue.FormulaValue.class, ExcelCellValue.formula("SUM(A1:A3)"))
             .expression());
+    assertEquals(
+        "LAMBDA(x,x+1)(A1)",
+        assertInstanceOf(
+                ExcelCellValue.RawFormulaValue.class,
+                ExcelCellValue.rawFormula("LAMBDA(x,x+1)(A1)"))
+            .expression());
   }
 
   @Test
@@ -53,6 +59,8 @@ class ExcelCellValueTest {
     assertThrows(NullPointerException.class, () -> ExcelCellValue.dateTime(null));
     assertThrows(NullPointerException.class, () -> ExcelCellValue.formula(null));
     assertThrows(IllegalArgumentException.class, () -> ExcelCellValue.formula(" "));
+    assertThrows(NullPointerException.class, () -> ExcelCellValue.rawFormula(null));
+    assertThrows(IllegalArgumentException.class, () -> ExcelCellValue.rawFormula(" "));
   }
 
   @Test
@@ -63,5 +71,19 @@ class ExcelCellValueTest {
             () -> ExcelCellErrorLiteralSupport.toReportedWireValue(FormulaError._NO_ERROR));
 
     assertEquals("_NO_ERROR is not a publishable cell error", unsupported.getMessage());
+  }
+
+  @Test
+  void writesOpaqueFormulaValuesThroughTheSheetMutationBoundary() throws Exception {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
+      workbook
+          .getOrCreateSheet("Budget")
+          .cells()
+          .setCell("A1", ExcelCellValue.rawFormula("LAMBDA(x,x+1)(A1)"));
+
+      assertEquals(
+          "LAMBDA(x,x+1)(A1)",
+          workbook.xssfWorkbook().getSheet("Budget").getRow(0).getCell(0).getCellFormula());
+    }
   }
 }

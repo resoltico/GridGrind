@@ -47,7 +47,7 @@ class FormulaEnvironmentRequestExecutorTest {
                     new WorkbookPlan.WorkbookSource.ExistingFile(
                         scenario.workbookPath().toString()),
                     new WorkbookPlan.WorkbookPersistence.None(),
-                    executionPolicy(calculateAll()),
+                    executionPolicy(requireEvaluation()),
                     new FormulaEnvironmentInput(
                         List.of(
                             new FormulaExternalWorkbookInput(
@@ -165,7 +165,7 @@ class FormulaEnvironmentRequestExecutorTest {
                 request(
                     new WorkbookPlan.WorkbookSource.ExistingFile(workbookPath.toString()),
                     new WorkbookPlan.WorkbookPersistence.None(),
-                    executionPolicy(calculateAll()),
+                    executionPolicy(requireEvaluation()),
                     null,
                     List.of(),
                     List.of())));

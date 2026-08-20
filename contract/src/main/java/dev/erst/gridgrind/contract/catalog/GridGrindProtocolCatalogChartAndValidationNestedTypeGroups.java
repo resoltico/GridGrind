@@ -362,6 +362,11 @@ final class GridGrindProtocolCatalogChartAndValidationNestedTypeGroups {
                       "DO_NOT_CALCULATE",
                       "Skip immediate server-side formula calculation."),
                   descriptor(
+                      CalculationStrategyInput.DeferredCalculation.class,
+                      "DEFERRED_CALCULATION",
+                      "Inspect formula capabilities and defer all calculation to an"
+                          + " Excel-compatible client."),
+                  descriptor(
                       CalculationStrategyInput.EvaluateAll.class,
                       "EVALUATE_ALL",
                       "Preflight and evaluate every formula cell after mutation steps complete."),
@@ -369,6 +374,11 @@ final class GridGrindProtocolCatalogChartAndValidationNestedTypeGroups {
                       CalculationStrategyInput.EvaluateTargets.class,
                       "EVALUATE_TARGETS",
                       "Preflight and evaluate the explicit formula-cell target list only."),
+                  descriptor(
+                      CalculationStrategyInput.RequireEvaluation.class,
+                      "REQUIRE_EVALUATION",
+                      "Preflight and evaluate every formula cell, failing when any formula cannot"
+                          + " be evaluated immediately."),
                   descriptor(
                       CalculationStrategyInput.ClearCachesOnly.class,
                       "CLEAR_CACHES_ONLY",

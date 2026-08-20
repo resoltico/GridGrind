@@ -16,10 +16,16 @@ import java.util.Set;
   @JsonSubTypes.Type(
       value = CalculationStrategyInput.DoNotCalculate.class,
       name = "DO_NOT_CALCULATE"),
+  @JsonSubTypes.Type(
+      value = CalculationStrategyInput.DeferredCalculation.class,
+      name = "DEFERRED_CALCULATION"),
   @JsonSubTypes.Type(value = CalculationStrategyInput.EvaluateAll.class, name = "EVALUATE_ALL"),
   @JsonSubTypes.Type(
       value = CalculationStrategyInput.EvaluateTargets.class,
       name = "EVALUATE_TARGETS"),
+  @JsonSubTypes.Type(
+      value = CalculationStrategyInput.RequireEvaluation.class,
+      name = "REQUIRE_EVALUATION"),
   @JsonSubTypes.Type(
       value = CalculationStrategyInput.ClearCachesOnly.class,
       name = "CLEAR_CACHES_ONLY")
@@ -56,6 +62,14 @@ public sealed interface CalculationStrategyInput {
     }
   }
 
+  /** Inspect formula capabilities but defer all calculation to an Excel-compatible client. */
+  record DeferredCalculation() implements CalculationStrategyInput {
+    @Override
+    public String strategyType() {
+      return GridGrindProtocolTypeNames.calculationStrategyTypeName(DeferredCalculation.class);
+    }
+  }
+
   /** Evaluate every formula cell reachable in the workbook after mutation steps complete. */
   record EvaluateAll() implements CalculationStrategyInput {
     @Override
@@ -85,6 +99,14 @@ public sealed interface CalculationStrategyInput {
     @Override
     public String strategyType() {
       return GridGrindProtocolTypeNames.calculationStrategyTypeName(EvaluateTargets.class);
+    }
+  }
+
+  /** Evaluate every formula and fail when any formula cannot be evaluated immediately. */
+  record RequireEvaluation() implements CalculationStrategyInput {
+    @Override
+    public String strategyType() {
+      return GridGrindProtocolTypeNames.calculationStrategyTypeName(RequireEvaluation.class);
     }
   }
 

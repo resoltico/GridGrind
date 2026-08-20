@@ -83,7 +83,7 @@ class SourceBackedPlanResolverMutationInliningCoverageTest
     Files.writeString(
         workingDirectory.resolve("header-right.txt"), "Right", StandardCharsets.UTF_8);
     Files.writeString(
-        workingDirectory.resolve("formula.txt"), "=SUM(B2:B3)", StandardCharsets.UTF_8);
+        workingDirectory.resolve("formula.txt"), "SUM(B2:B3)", StandardCharsets.UTF_8);
     Files.write(
         workingDirectory.resolve("payload.bin"), "payload".getBytes(StandardCharsets.UTF_8));
     Files.write(workingDirectory.resolve("preview.bin"), pngBytes());

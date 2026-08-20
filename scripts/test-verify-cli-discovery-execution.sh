@@ -55,6 +55,7 @@ command_name="${1:-}"
 shift || true
 
 response_path=''
+request_path=''
 
 while [[ $# -gt 0 ]]; do
     case "${1}" in
@@ -62,7 +63,11 @@ while [[ $# -gt 0 ]]; do
             response_path="${2}"
             shift 2
             ;;
-        --request|--lookup)
+        --request)
+            request_path="${2}"
+            shift 2
+            ;;
+        --lookup)
             shift 2
             ;;
         *)
@@ -89,11 +94,15 @@ JSON
             printf 'missing response path for --print-recipe\n' >&2
             exit 1
         }
-        write_json_file "${response_path}" '{"request":"recipe"}'
+        write_json_file "${response_path}" '{"persistence":{"type":"SAVE_AS","path":"generated-workbooks/fake.xlsx"}}'
         ;;
     --doctor-request)
         [[ -n "${response_path}" ]] || {
             printf 'missing response path for --doctor-request\n' >&2
+            exit 1
+        }
+        [[ -d "$(dirname -- "${request_path}")/generated-workbooks" ]] || {
+            printf 'missing prepared SAVE_AS parent directory\n' >&2
             exit 1
         }
         write_json_file "${response_path}" '{"valid":true}'
@@ -122,6 +131,7 @@ command_name="${1:-}"
 shift || true
 
 response_path=''
+request_path=''
 
 while [[ $# -gt 0 ]]; do
     case "${1}" in
@@ -129,7 +139,11 @@ while [[ $# -gt 0 ]]; do
             response_path="${2}"
             shift 2
             ;;
-        --request|--lookup)
+        --request)
+            request_path="${2}"
+            shift 2
+            ;;
+        --lookup)
             shift 2
             ;;
         *)
@@ -156,11 +170,15 @@ JSON
             printf 'missing response path for --print-recipe\n' >&2
             exit 1
         }
-        write_json_file "${response_path}" '{"request":"recipe"}'
+        write_json_file "${response_path}" '{"persistence":{"type":"SAVE_AS","path":"generated-workbooks/fake.xlsx"}}'
         ;;
     --doctor-request)
         [[ -n "${response_path}" ]] || {
             printf 'missing response path for --doctor-request\n' >&2
+            exit 1
+        }
+        [[ -d "$(dirname -- "${request_path}")/generated-workbooks" ]] || {
+            printf 'missing prepared SAVE_AS parent directory\n' >&2
             exit 1
         }
         write_json_file "${response_path}" '{"valid":true}'

@@ -126,6 +126,14 @@ final class ExecutorTestPlanSupport {
     return new CalculationPolicyInput(new CalculationStrategyInput.EvaluateAll(), true);
   }
 
+  static CalculationPolicyInput deferCalculation() {
+    return CalculationPolicyInput.strategy(new CalculationStrategyInput.DeferredCalculation());
+  }
+
+  static CalculationPolicyInput requireEvaluation() {
+    return CalculationPolicyInput.strategy(new CalculationStrategyInput.RequireEvaluation());
+  }
+
   static CalculationPolicyInput calculateTargets(CellSelector.QualifiedAddress... cells) {
     return CalculationPolicyInput.strategy(
         new CalculationStrategyInput.EvaluateTargets(List.of(cells)));

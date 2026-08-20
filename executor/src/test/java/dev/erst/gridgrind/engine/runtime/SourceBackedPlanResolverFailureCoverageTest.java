@@ -3,6 +3,7 @@ package dev.erst.gridgrind.engine.runtime;
 import static dev.erst.gridgrind.engine.runtime.ExecutorTestPlanSupport.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -304,6 +305,12 @@ class SourceBackedPlanResolverFailureCoverageTest extends SourceBackedPlanResolv
     assertFalse(
         SourceBackedInputRequirements.requiresStandardInput(
             new CellInput.DateTime(LocalDateTime.of(2026, 4, 18, 12, 30))));
+    assertFalse(
+        SourceBackedInputRequirements.requiresStandardInput(
+            new CellInput.RawFormula(TextSourceInput.inline("LAMBDA(x,x+1)(A1)"))));
+    assertTrue(
+        SourceBackedInputRequirements.requiresStandardInput(
+            new CellInput.RawFormula(TextSourceInput.standardInput())));
 
     assertFalse(
         SourceBackedInputRequirements.requiresStandardInput(
@@ -445,6 +452,21 @@ class SourceBackedPlanResolverFailureCoverageTest extends SourceBackedPlanResolv
               access.materializeRead(
                   absoluteFile.toString(), "test input", "gridgrind-test-", ".txt"));
     }
+  }
+
+  @Test
+  void rawFormulaResolutionRetainsAnUnresolvedSourceForBatchPreflightCollection()
+      throws IOException {
+    Path workingDirectory = Files.createTempDirectory("gridgrind-raw-formula-resolution-");
+    TextSourceInput.Utf8File missingSource = TextSourceInput.utf8File("missing-formula.txt");
+    InputResolutionFailures failures = new InputResolutionFailures();
+    ExecutionInputBindings bindings =
+        ExecutionInputBindingsFixtureSupport.bindings(workingDirectory)
+            .collectingInputResolutionFailures(failures);
+
+    assertSame(
+        missingSource, SourceBackedPlanResolver.resolveRawFormulaSource(missingSource, bindings));
+    assertThrows(InputResolutionBatchException.class, failures::throwIfAny);
   }
 
   @Test

@@ -60,6 +60,9 @@ final class WorkbookCommandCellInputConverter {
       case CellInput.Formula formula ->
           ExcelCellValue.formula(
               WorkbookCommandSourceSupport.inlineText(formula.source(), "formula"));
+      case CellInput.RawFormula rawFormula ->
+          ExcelCellValue.rawFormula(
+              WorkbookCommandSourceSupport.inlineText(rawFormula.source(), "raw formula"));
     };
   }
 

@@ -168,6 +168,7 @@ final class SourceBackedInputRequirements {
       case CellInput.RichText richText ->
           richText.runs().stream().anyMatch(SourceBackedInputRequirements::requiresStandardInput);
       case CellInput.Formula formula -> requiresStandardInput(formula.source());
+      case CellInput.RawFormula rawFormula -> requiresStandardInput(rawFormula.source());
       default -> false;
     };
   }

@@ -310,11 +310,19 @@ Assertion mismatches attach an additional `problem.assertionFailure` payload:
 
 | Code | Trigger |
 |:-----|:--------|
-| `INVALID_FORMULA` | Formula syntax is not valid Excel formula syntax on the current request path. Scalar `SET_CELL` / `SET_RANGE` `FORMULA` values reject request-authored array-formula braces such as `{=...}`; use `SET_ARRAY_FORMULA` for contiguous array groups. |
+| `INVALID_FORMULA` | Formula syntax is not valid Excel formula syntax on the normal `FORMULA` request path. Formula text is the OOXML `<f>` body and must not begin with `=`. Scalar `SET_CELL` / `SET_RANGE` `FORMULA` values reject request-authored array-formula braces such as `{=...}`; use `SET_ARRAY_FORMULA` for contiguous array groups. |
+| `INVALID_FORMULA_TEXT` | Opaque `RAW_FORMULA` text is empty, begins with `=`, or contains a character XML 1.0 does not permit in formula character data. Use a nonempty OOXML `<f>` body with no leading `=` and no forbidden control characters. |
 | `UNSUPPORTED_FORMULA_CONSTRUCT` | The authored formula uses a valid Excel construct that Apache POI cannot parse on the write path. Authored `LAMBDA` and `LET` currently surface here. |
 | `MISSING_EXTERNAL_WORKBOOK` | Formula evaluation needs an external workbook binding that was not supplied and cached-value fallback is not enabled. |
 | `UNREGISTERED_USER_DEFINED_FUNCTION` | Formula evaluation encountered a UDF that is not registered in `formulaEnvironment`. |
 | `UNSUPPORTED_FORMULA` | Formula syntax is valid and Apache POI can load it, but the function or construct is not supported by Apache POI's evaluator. |
+
+`RAW_FORMULA` is the explicit opaque formula-body input for newer Excel syntax that POI cannot
+parse on the normal write path. It rejects only invalid framing and XML 1.0-forbidden controls;
+XML-looking formula string literals are stored as formula character data, not markup. Under lenient
+evaluation, unevaluable formulas remain unchanged and produce `FORMULA_NOT_EVALUATED` warnings;
+`DEFERRED_CALCULATION` reports the same capability warnings without immediate evaluation, and
+`REQUIRE_EVALUATION` fails instead.
 
 ### Resource (`RESOURCE` category)
 

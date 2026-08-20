@@ -99,6 +99,7 @@ final class ExecutionWorkflowSupport {
       ExecutionCalculationSupport.CalculationExecutionOutcome calculationOutcome =
           calculationSupport.executeCalculationPolicy(workbook, request, journal);
       calculation = calculationOutcome.report();
+      warnings.addAll(calculationOutcome.warnings());
       if (calculationOutcome.failure().isPresent()) {
         GridGrindProblemDetail.Problem problem = calculationOutcome.failure().orElseThrow();
         return responseSupport.closeWorkbook(
@@ -150,6 +151,7 @@ final class ExecutionWorkflowSupport {
         calculationSupport.executeCalculationPolicy(
             executionContext.workbook(), executionContext.request(), executionContext.journal());
     if (outcome.failure().isEmpty()) {
+      executionContext.warnings().addAll(outcome.warnings());
       return new CalculationCheckpoint(outcome.report(), true, null);
     }
     GridGrindProblemDetail.Problem problem = outcome.failure().orElseThrow();

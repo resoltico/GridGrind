@@ -63,6 +63,11 @@ public enum GridGrindProblemCode {
       GridGrindProblemRecovery.CHANGE_REQUEST,
       "Invalid formula",
       "Fix the formula syntax or workbook references, then retry."),
+  INVALID_FORMULA_TEXT(
+      GridGrindProblemCategory.FORMULA,
+      GridGrindProblemRecovery.CHANGE_REQUEST,
+      "Invalid opaque formula text",
+      "Provide nonempty XML 1.0 formula character data without a leading =."),
   UNSUPPORTED_FORMULA_CONSTRUCT(
       GridGrindProblemCategory.FORMULA,
       GridGrindProblemRecovery.CHANGE_REQUEST,

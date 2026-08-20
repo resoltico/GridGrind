@@ -148,6 +148,11 @@ final class GridGrindJsonProblemMessageSupport {
         payloadCause.flatMap(PayloadException::jsonLine).or(metadata::jsonLine);
     Optional<Integer> jsonColumn =
         payloadCause.flatMap(PayloadException::jsonColumn).or(metadata::jsonColumn);
+    Optional<FormulaRequestException> formulaProblem =
+        FormulaRequestProblemSupport.inputFailure(cause, jsonPath, jsonLine, jsonColumn, exception);
+    if (formulaProblem.isPresent()) {
+      return formulaProblem.orElseThrow();
+    }
     if (cause instanceof InvalidRequestShapeException shapeException) {
       return new InvalidRequestShapeException(
           (RequestProblemDescriptor.Shape) shapeException.requestProblem(),

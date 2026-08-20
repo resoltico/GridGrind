@@ -223,6 +223,8 @@ final class ExecutionJournalTargetResolver {
       case CellInput.Date date -> "Date[value=" + date.date() + "]";
       case CellInput.DateTime dateTime -> "DateTime[value=" + dateTime.dateTime() + "]";
       case CellInput.Formula formula -> "Formula[" + summarizeTextSource(formula.source()) + "]";
+      case CellInput.RawFormula rawFormula ->
+          "RawFormula[" + summarizeTextSource(rawFormula.source()) + "]";
     };
   }
 

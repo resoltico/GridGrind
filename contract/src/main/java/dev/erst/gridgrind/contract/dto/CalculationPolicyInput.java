@@ -70,7 +70,8 @@ public record CalculationPolicyInput(
   /** Returns whether this policy needs all mutation steps before observation steps. */
   @JsonIgnore
   public boolean requiresMutationPrefix() {
-    return !(strategy instanceof CalculationStrategyInput.DoNotCalculate);
+    return !(strategy instanceof CalculationStrategyInput.DoNotCalculate)
+        && !(strategy instanceof CalculationStrategyInput.DeferredCalculation);
   }
 
   /** Custom Jackson inclusion filter that omits the standard do-not-calculate policy. */

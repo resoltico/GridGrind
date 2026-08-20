@@ -18,7 +18,8 @@ import java.util.List;
   @JsonSubTypes.Type(value = CellInput.ErrorValue.class, name = "ERROR"),
   @JsonSubTypes.Type(value = CellInput.Date.class, name = "DATE"),
   @JsonSubTypes.Type(value = CellInput.DateTime.class, name = "DATE_TIME"),
-  @JsonSubTypes.Type(value = CellInput.Formula.class, name = "FORMULA")
+  @JsonSubTypes.Type(value = CellInput.Formula.class, name = "FORMULA"),
+  @JsonSubTypes.Type(value = CellInput.RawFormula.class, name = "RAW_FORMULA")
 })
 public sealed interface CellInput
     permits CellInput.Blank,
@@ -29,7 +30,8 @@ public sealed interface CellInput
         CellInput.ErrorValue,
         CellInput.Date,
         CellInput.DateTime,
-        CellInput.Formula {
+        CellInput.Formula,
+        CellInput.RawFormula {
 
   /** Blank (empty) cell input that clears the target cell. */
   record Blank() implements CellInput {}
@@ -73,13 +75,17 @@ public sealed interface CellInput
     }
   }
 
-  /**
-   * Excel formula cell input loaded from one text source. Inline sources are normalized
-   * immediately; file and standard-input sources are normalized after they resolve.
-   */
+  /** Parseable Excel formula cell input loaded from one text source. */
   record Formula(TextSourceInput source) implements CellInput {
     public Formula {
       source = Validation.normalizeFormulaSource(source, "source");
+    }
+  }
+
+  /** Opaque OOXML formula-body input that bypasses POI's normal formula parser on write. */
+  record RawFormula(TextSourceInput source) implements CellInput {
+    public RawFormula {
+      source = Validation.normalizeRawFormulaSource(source, "source");
     }
   }
 
@@ -134,14 +140,7 @@ public sealed interface CellInput
     }
 
     static String normalizeInlineFormula(String value, String fieldName) {
-      String normalized = requireNonBlank(value, fieldName);
-      if (normalized.startsWith("=")) {
-        normalized = normalized.substring(1);
-      }
-      if (normalized.isBlank()) {
-        throw new IllegalArgumentException(
-            fieldName + " must not be blank after stripping leading =");
-      }
+      String normalized = FormulaTextValidation.requireNormalFormulaBody(value, fieldName);
       FormulaInputSecurity.rejectDde(normalized); // LIM-023, LIM-031
       return normalized;
     }
@@ -150,6 +149,16 @@ public sealed interface CellInput
       required(source, fieldName);
       if (source instanceof TextSourceInput.Inline inline) {
         return TextSourceInput.inline(normalizeInlineFormula(inline.text(), fieldName + ".text"));
+      }
+      return source;
+    }
+
+    static TextSourceInput normalizeRawFormulaSource(TextSourceInput source, String fieldName) {
+      required(source, fieldName);
+      if (source instanceof TextSourceInput.Inline inline) {
+        String value =
+            FormulaTextValidation.requireRawFormulaBody(inline.text(), fieldName + ".text");
+        return TextSourceInput.inline(value);
       }
       return source;
     }

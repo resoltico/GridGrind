@@ -5,9 +5,13 @@ import dev.erst.gridgrind.contract.dto.CalculationPolicyInput;
 import dev.erst.gridgrind.contract.dto.CalculationReport;
 import dev.erst.gridgrind.contract.dto.CalculationStrategyInput;
 import dev.erst.gridgrind.contract.dto.GridGrindProblemDetail;
+import dev.erst.gridgrind.contract.dto.GridGrindWarningCode;
+import dev.erst.gridgrind.contract.dto.RequestWarning;
+import dev.erst.gridgrind.contract.dto.RequestWarningLocation;
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
 import dev.erst.gridgrind.excel.stream.ExcelStreamingWorkbookWriter;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import org.jspecify.annotations.Nullable;
@@ -38,6 +42,7 @@ final class ExecutionCalculationSupport {
 
     Optional<CalculationReport.Preflight> preflightReport = Optional.empty();
     int evaluationTargetCount = 0;
+    boolean hasUnevaluableFormula = false;
     if (!(effectivePolicy.effectiveStrategy() instanceof CalculationStrategyInput.DoNotCalculate)
         && !(effectivePolicy.effectiveStrategy()
             instanceof CalculationStrategyInput.ClearCachesOnly)) {
@@ -46,6 +51,7 @@ final class ExecutionCalculationSupport {
           CalculationPolicyExecutor.preflight(workbook, effectivePolicy);
       preflightReport = preflight.report();
       evaluationTargetCount = preflight.evaluationTargetCount();
+      hasUnevaluableFormula = preflight.hasUnevaluableFormula();
       if (preflight.failure().isPresent()) {
         CalculationPolicyExecutor.FailureDetail failure = preflight.failure().orElseThrow();
         GridGrindProblemDetail.Problem problem = calculationProblemFor(request, failure);
@@ -69,7 +75,8 @@ final class ExecutionCalculationSupport {
 
     ExecutionJournalRecorder.PhaseHandle executionPhase = journal.beginCalculationExecution();
     CalculationPolicyExecutor.ExecutionOutcome execution =
-        CalculationPolicyExecutor.execute(workbook, effectivePolicy, evaluationTargetCount);
+        CalculationPolicyExecutor.execute(
+            workbook, effectivePolicy, evaluationTargetCount, hasUnevaluableFormula);
     CalculationReport report =
         CalculationPolicyExecutor.report(effectivePolicy, preflightReport, execution.report());
     if (execution.failure().isPresent()) {
@@ -79,7 +86,8 @@ final class ExecutionCalculationSupport {
       return new CalculationExecutionOutcome(report, Optional.of(problem));
     }
     executionPhase.succeed();
-    return new CalculationExecutionOutcome(report, Optional.empty());
+    return new CalculationExecutionOutcome(
+        report, Optional.empty(), formulaWarnings(preflightReport));
   }
 
   CalculationExecutionOutcome executeStreamingCalculationPolicy(
@@ -140,6 +148,28 @@ final class ExecutionCalculationSupport {
         (Throwable) null);
   }
 
+  private static List<RequestWarning> formulaWarnings(
+      Optional<CalculationReport.Preflight> preflightReport) {
+    return preflightReport.stream()
+        .flatMap(report -> report.formulas().stream())
+        .filter(
+            capability ->
+                capability.capability()
+                    != dev.erst.gridgrind.contract.dto.FormulaCapabilityKind.EVALUABLE_NOW)
+        .map(
+            capability ->
+                new RequestWarning(
+                    GridGrindWarningCode.FORMULA_NOT_EVALUATED,
+                    new RequestWarningLocation.FormulaCell(
+                        capability.cell().sheetName(),
+                        capability.cell().address(),
+                        capability.formula()),
+                    capability
+                        .message()
+                        .orElse("Formula was not evaluated by the configured strategy.")))
+        .toList();
+  }
+
   dev.erst.gridgrind.contract.dto.ProblemContext.ExecuteCalculation calculationContextFor(
       WorkbookPlan request,
       CalculationPolicyExecutor.Phase phase,
@@ -168,10 +198,18 @@ final class ExecutionCalculationSupport {
   }
 
   record CalculationExecutionOutcome(
-      CalculationReport report, Optional<GridGrindProblemDetail.Problem> failure) {
+      CalculationReport report,
+      Optional<GridGrindProblemDetail.Problem> failure,
+      List<RequestWarning> warnings) {
     CalculationExecutionOutcome {
       Objects.requireNonNull(report, "report must not be null");
       failure = Objects.requireNonNullElseGet(failure, Optional::empty);
+      warnings = List.copyOf(Objects.requireNonNullElseGet(warnings, List::of));
+    }
+
+    CalculationExecutionOutcome(
+        CalculationReport report, Optional<GridGrindProblemDetail.Problem> failure) {
+      this(report, failure, List.of());
     }
   }
 }

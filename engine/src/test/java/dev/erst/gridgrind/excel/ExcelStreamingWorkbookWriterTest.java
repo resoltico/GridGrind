@@ -45,7 +45,8 @@ class ExcelStreamingWorkbookWriterTest {
                   ExcelCellValue.error("#REF!"),
                   ExcelCellValue.date(LocalDate.of(2026, 4, 13)),
                   ExcelCellValue.dateTime(LocalDateTime.of(2026, 4, 13, 9, 30, 15)),
-                  ExcelCellValue.formula("2+3"))));
+                  ExcelCellValue.formula("2+3"),
+                  ExcelCellValue.rawFormula("LAMBDA(x,x+1)(A1)"))));
       writer.apply(
           new WorkbookCellCommand.AppendRow(
               "Ops", List.of(ExcelCellValue.text("Hosting"), ExcelCellValue.number(9.0d))));
@@ -68,6 +69,7 @@ class ExcelStreamingWorkbookWriterTest {
       assertEquals(
           "yyyy-mm-dd hh:mm:ss", sheet.getRow(0).getCell(7).getCellStyle().getDataFormatString());
       assertEquals("2+3", sheet.getRow(0).getCell(8).getCellFormula());
+      assertEquals("LAMBDA(x,x+1)(A1)", sheet.getRow(0).getCell(9).getCellFormula());
       assertEquals("Hosting", sheet.getRow(1).getCell(0).getStringCellValue());
       assertEquals(9.0d, sheet.getRow(1).getCell(1).getNumericCellValue());
       assertTrue(workbook.getForceFormulaRecalculation());

@@ -178,8 +178,12 @@ Rules to remember:
   surface `CELL_NOT_FOUND`; existing non-formula cells are rejected as `INVALID_REQUEST`.
 - Scalar `FORMULA` cell payloads reject array-formula braces such as `{=SUM(A1:A2*B1:B2)}`.
   Use `SET_ARRAY_FORMULA` for contiguous array groups.
-- Authored `LAMBDA` and `LET` currently surface as `UNSUPPORTED_FORMULA_CONSTRUCT` because Apache
-  POI cannot parse them on the write path.
+- Formula text is the OOXML `<f>` body and must not begin with `=`. Use `RAW_FORMULA` for opaque
+  newer Excel syntax such as `LAMBDA` and `LET`; it persists XML-safe formula character data
+  without POI write parsing.
+- `DEFERRED_CALCULATION` reports formula capability warnings without server-side evaluation.
+- `EVALUATE_ALL` and `EVALUATE_TARGETS` report `PARTIAL` plus `FORMULA_NOT_EVALUATED` warnings
+  when formulas cannot be evaluated immediately. Use `REQUIRE_EVALUATION` to fail instead.
 
 ## Common Step Snippets
 

@@ -8,7 +8,8 @@ import java.util.Optional;
  * coordinates directly.
  */
 public sealed interface PayloadException
-    permits InvalidEncodingException,
+    permits FormulaRequestException,
+        InvalidEncodingException,
         InvalidJsonException,
         InvalidRequestException,
         InvalidRequestShapeException,

@@ -1,6 +1,9 @@
 package dev.erst.gridgrind.engine.runtime;
 
 import dev.erst.gridgrind.contract.dto.GridGrindProblemCode;
+import dev.erst.gridgrind.contract.dto.InvalidFormulaInputException;
+import dev.erst.gridgrind.contract.dto.InvalidRawFormulaTextException;
+import dev.erst.gridgrind.contract.json.FormulaRequestException;
 import dev.erst.gridgrind.contract.json.InvalidEncodingException;
 import dev.erst.gridgrind.contract.json.InvalidJsonException;
 import dev.erst.gridgrind.contract.json.InvalidRequestException;
@@ -49,6 +52,9 @@ final class GridGrindProblemCodeClassifier {
       case CellNotFoundException _ -> GridGrindProblemCode.CELL_NOT_FOUND;
       case InvalidCellAddressException _ -> GridGrindProblemCode.INVALID_CELL_ADDRESS;
       case InvalidRangeAddressException _ -> GridGrindProblemCode.INVALID_RANGE_ADDRESS;
+      case FormulaRequestException formula -> formula.problemCode();
+      case InvalidFormulaInputException _ -> GridGrindProblemCode.INVALID_FORMULA;
+      case InvalidRawFormulaTextException _ -> GridGrindProblemCode.INVALID_FORMULA_TEXT;
       case InvalidFormulaException _ -> GridGrindProblemCode.INVALID_FORMULA;
       case UnsupportedFormulaConstructException _ ->
           GridGrindProblemCode.UNSUPPORTED_FORMULA_CONSTRUCT;

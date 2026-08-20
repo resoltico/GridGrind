@@ -170,7 +170,10 @@ class DiagnosticOrderTest {
     RequestWarningLocation requestPathLocation =
         new RequestWarningLocation.RequestPath("/work/report.xlsx", "persistence");
     RequestWarningLocation stepLocation = new RequestWarningLocation.Step(0, "step", "SET_CELL");
+    RequestWarningLocation formulaCellLocation =
+        new RequestWarningLocation.FormulaCell("Budget", "A1", "TEXTAFTER(A1,\",\")");
     assertEquals(-1, requestPathLocation.orderingStepIndex());
+    assertEquals(-1, formulaCellLocation.orderingStepIndex());
     assertEquals(0, stepLocation.orderingStepIndex());
     assertThrows(
         IllegalArgumentException.class,

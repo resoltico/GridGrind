@@ -227,6 +227,8 @@ final class ExcelSheetCellMutationSupport {
               formulaRuntime,
               sheet.getSheetName(),
               new CellReference(rowIndex, columnIndex).formatAsString());
+      case ExcelCellValue.RawFormulaValue rawFormulaValue ->
+          ExcelFormulaWriteSupport.setOpaqueFormula(cell, rawFormulaValue.expression());
     }
   }
 

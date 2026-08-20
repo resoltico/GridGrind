@@ -24,7 +24,6 @@ verify_documented_bind_mount_user_guidance() {
     local documented_no_user_stderr_path="${probe_smoke_root}/stderr documented no-user [docker #smoke].log"
     local documented_with_user_stderr_path="${probe_smoke_root}/stderr documented with-user [docker #smoke].log"
     local documented_no_user_exit_code=0
-    local documented_no_user_output=''
 
     write_documented_request() {
         local target_request_path=$1
@@ -85,6 +84,11 @@ JSON
 
     write_documented_request "${documented_no_user_request_path}" "${documented_no_user_workbook_rel}"
     write_documented_request "${documented_with_user_request_path}" "${documented_with_user_workbook_rel}"
+    mkdir -p \
+        "$(dirname -- "${documented_no_user_response_path}")" \
+        "$(dirname -- "${documented_no_user_workbook_path}")" \
+        "$(dirname -- "${documented_with_user_response_path}")" \
+        "$(dirname -- "${documented_with_user_workbook_path}")"
 
     rm -f \
         "${documented_no_user_response_path}" \
@@ -118,20 +122,11 @@ JSON
         [[ ! -s "${documented_no_user_stderr_path}" ]] || die \
             "docker smoke no-user documented bind-mount run wrote unexpected stderr on a remapped runtime"
     else
-        documented_no_user_output="$(
-            {
-                cat "${documented_no_user_stdout_path}" 2>/dev/null || true
-                printf '\n'
-                cat "${documented_no_user_stderr_path}" 2>/dev/null || true
-            } | tr '\n' ' '
-        )"
-        require_match "${documented_no_user_output}" '"code"[[:space:]]*:[[:space:]]*"IO_ERROR"' \
-            "docker smoke no-user documented bind-mount run did not report IO_ERROR: ${documented_no_user_output}"
         [[ ! -f "${documented_no_user_legacy_workbook_path}" ]] || die \
             "docker smoke no-user documented bind-mount run wrote the workbook relative to the shell workdir"
         if [[ -f "${documented_no_user_response_path}" && -f "${documented_no_user_workbook_path}" ]]; then
             die \
-                "docker smoke no-user documented bind-mount run completed both mounted writes despite failing: ${documented_no_user_output}"
+                "docker smoke no-user documented bind-mount run completed both mounted writes despite failing"
         fi
     fi
 

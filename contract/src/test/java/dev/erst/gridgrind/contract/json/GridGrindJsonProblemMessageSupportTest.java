@@ -5,6 +5,8 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import dev.erst.gridgrind.contract.dto.GridGrindProblemCode;
+import dev.erst.gridgrind.contract.dto.InvalidRawFormulaTextException;
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -219,6 +221,17 @@ class GridGrindJsonProblemMessageSupportTest {
                 invariantCarrier, rootNode, Object.class));
     assertEquals("bad date", invariant.getMessage());
     assertEquals(Optional.empty(), invariant.jsonPath());
+
+    MismatchedInputException rawFormulaCarrier =
+        MismatchedInputException.from(parser("\"bad\""), (Class<?>) null, "bad formula text");
+    rawFormulaCarrier.initCause(
+        new InvalidRawFormulaTextException("formula text contains a forbidden XML character"));
+    FormulaRequestException rawFormula =
+        assertInstanceOf(
+            FormulaRequestException.class,
+            GridGrindJsonProblemMessageSupport.invalidPayload(
+                rawFormulaCarrier, rootNode, Object.class));
+    assertEquals(GridGrindProblemCode.INVALID_FORMULA_TEXT, rawFormula.problemCode());
   }
 
   @Test

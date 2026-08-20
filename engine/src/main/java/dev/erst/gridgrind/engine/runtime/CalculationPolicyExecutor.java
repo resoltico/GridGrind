@@ -49,27 +49,39 @@ final class CalculationPolicyExecutor {
     CalculationPolicyInput effective = normalize(policy);
     return switch (effective.effectiveStrategy()) {
       case CalculationStrategyInput.DoNotCalculate _ ->
-          new PreflightOutcome(Optional.empty(), 0, Optional.empty());
+          new PreflightOutcome(Optional.empty(), 0, false, Optional.empty());
+      case CalculationStrategyInput.DeferredCalculation _ -> preflightLenientAll(workbook);
       case CalculationStrategyInput.ClearCachesOnly _ ->
-          new PreflightOutcome(Optional.empty(), 0, Optional.empty());
-      case CalculationStrategyInput.EvaluateAll _ -> preflightAll(workbook);
+          new PreflightOutcome(Optional.empty(), 0, false, Optional.empty());
+      case CalculationStrategyInput.EvaluateAll _ -> preflightLenientAll(workbook);
       case CalculationStrategyInput.EvaluateTargets evaluateTargets ->
-          preflightTargets(workbook, evaluateTargets);
+          preflightLenientTargets(workbook, evaluateTargets);
+      case CalculationStrategyInput.RequireEvaluation _ -> preflightAll(workbook);
     };
   }
 
   static ExecutionOutcome execute(
-      ExcelWorkbook workbook, CalculationPolicyInput policy, int evaluationTargetCount) {
+      ExcelWorkbook workbook,
+      CalculationPolicyInput policy,
+      int evaluationTargetCount,
+      boolean hasUnevaluableFormula) {
     Objects.requireNonNull(workbook, "workbook must not be null");
     CalculationPolicyInput effective = normalize(policy);
     return switch (effective.effectiveStrategy()) {
       case CalculationStrategyInput.DoNotCalculate _ -> executeDoNotCalculate(workbook, effective);
+      case CalculationStrategyInput.DeferredCalculation _ -> executeDeferred(workbook, effective);
       case CalculationStrategyInput.ClearCachesOnly _ ->
           executeClearCachesOnly(workbook, effective);
       case CalculationStrategyInput.EvaluateAll _ ->
-          executeEvaluateAll(workbook, effective, evaluationTargetCount);
+          hasUnevaluableFormula
+              ? executePartial(workbook, effective)
+              : executeEvaluateAll(workbook, effective, evaluationTargetCount);
       case CalculationStrategyInput.EvaluateTargets evaluateTargets ->
-          executeEvaluateTargets(workbook, effective, evaluateTargets, evaluationTargetCount);
+          hasUnevaluableFormula
+              ? executePartial(workbook, effective)
+              : executeEvaluateTargets(workbook, effective, evaluateTargets, evaluationTargetCount);
+      case CalculationStrategyInput.RequireEvaluation _ ->
+          executeEvaluateAll(workbook, effective, evaluationTargetCount);
     };
   }
 
@@ -86,12 +98,29 @@ final class CalculationPolicyExecutor {
     return buildPreflightOutcome(CalculationReport.Scope.WORKBOOK, assessments);
   }
 
+  private static PreflightOutcome preflightLenientAll(ExcelWorkbook workbook) {
+    return withoutBlockingFailure(preflightAll(workbook));
+  }
+
   private static PreflightOutcome preflightTargets(
       ExcelWorkbook workbook, CalculationStrategyInput.EvaluateTargets strategy) {
     List<ExcelFormulaCellTarget> targets = toExcelFormulaTargets(strategy.cells());
     List<ExcelFormulaCapabilityAssessment> assessments =
         workbook.formulas().assessCapabilities(targets);
     return buildPreflightOutcome(CalculationReport.Scope.TARGETS, assessments);
+  }
+
+  private static PreflightOutcome preflightLenientTargets(
+      ExcelWorkbook workbook, CalculationStrategyInput.EvaluateTargets strategy) {
+    return withoutBlockingFailure(preflightTargets(workbook, strategy));
+  }
+
+  private static PreflightOutcome withoutBlockingFailure(PreflightOutcome outcome) {
+    return new PreflightOutcome(
+        outcome.report(),
+        outcome.evaluationTargetCount(),
+        outcome.hasUnevaluableFormula(),
+        Optional.empty());
   }
 
   private static PreflightOutcome buildPreflightOutcome(
@@ -106,6 +135,7 @@ final class CalculationPolicyExecutor {
     return new PreflightOutcome(
         Optional.of(report),
         assessments.size(),
+        blocking.isPresent(),
         blocking.map(
             assessment ->
                 new FailureDetail(
@@ -121,6 +151,19 @@ final class CalculationPolicyExecutor {
   }
 
   private static ExecutionOutcome executeDoNotCalculate(
+      ExcelWorkbook workbook, CalculationPolicyInput policy) {
+    boolean marked = false;
+    if (policy.markRecalculateOnOpen()) {
+      workbook.formulas().markRecalculateOnOpen();
+      marked = true;
+    }
+    CalculationExecutionStatus status =
+        marked ? CalculationExecutionStatus.SUCCEEDED : CalculationExecutionStatus.NOT_REQUESTED;
+    return new ExecutionOutcome(
+        new CalculationReport.Execution(status, 0, false, marked), Optional.empty());
+  }
+
+  private static ExecutionOutcome executeDeferred(
       ExcelWorkbook workbook, CalculationPolicyInput policy) {
     boolean marked = false;
     if (policy.markRecalculateOnOpen()) {
@@ -211,6 +254,18 @@ final class CalculationPolicyExecutor {
     }
   }
 
+  private static ExecutionOutcome executePartial(
+      ExcelWorkbook workbook, CalculationPolicyInput policy) {
+    boolean marked = false;
+    if (policy.markRecalculateOnOpen()) {
+      workbook.formulas().markRecalculateOnOpen();
+      marked = true;
+    }
+    return new ExecutionOutcome(
+        new CalculationReport.Execution(CalculationExecutionStatus.PARTIAL, 0, false, marked),
+        Optional.empty());
+  }
+
   private static List<ExcelFormulaCellTarget> toExcelFormulaTargets(
       List<CellSelector.QualifiedAddress> cells) {
     return cells.stream()
@@ -249,6 +304,7 @@ final class CalculationPolicyExecutor {
   record PreflightOutcome(
       Optional<CalculationReport.Preflight> report,
       int evaluationTargetCount,
+      boolean hasUnevaluableFormula,
       Optional<FailureDetail> failure) {
     PreflightOutcome {
       report = Objects.requireNonNullElseGet(report, Optional::empty);

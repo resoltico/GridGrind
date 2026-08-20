@@ -2,11 +2,13 @@ package dev.erst.gridgrind.engine.runtime;
 
 import static dev.erst.gridgrind.engine.runtime.ExecutorTestPlanSupport.calculateAll;
 import static dev.erst.gridgrind.engine.runtime.ExecutorTestPlanSupport.clearFormulaCaches;
+import static dev.erst.gridgrind.engine.runtime.ExecutorTestPlanSupport.deferCalculation;
 import static dev.erst.gridgrind.engine.runtime.ExecutorTestPlanSupport.executionPolicy;
 import static dev.erst.gridgrind.engine.runtime.ExecutorTestPlanSupport.inspect;
 import static dev.erst.gridgrind.engine.runtime.ExecutorTestPlanSupport.markRecalculateOnOpen;
 import static dev.erst.gridgrind.engine.runtime.ExecutorTestPlanSupport.mutate;
 import static dev.erst.gridgrind.engine.runtime.ExecutorTestPlanSupport.request;
+import static dev.erst.gridgrind.engine.runtime.ExecutorTestPlanSupport.requireEvaluation;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
@@ -20,6 +22,7 @@ import dev.erst.gridgrind.contract.dto.ExecutionModeInput;
 import dev.erst.gridgrind.contract.dto.FormulaEnvironmentInput;
 import dev.erst.gridgrind.contract.dto.GridGrindProblemCode;
 import dev.erst.gridgrind.contract.dto.GridGrindProblemDetail;
+import dev.erst.gridgrind.contract.dto.GridGrindWarningCode;
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
 import dev.erst.gridgrind.contract.dto.WorkbookResult;
 import dev.erst.gridgrind.contract.query.*;
@@ -47,7 +50,7 @@ class DefaultGridGrindRequestExecutorCalculationCoverageTest {
         WorkbookPlan.standard(
             new WorkbookPlan.WorkbookSource.New(),
             new WorkbookPlan.WorkbookPersistence.None(),
-            executionPolicy(calculateAll()),
+            executionPolicy(requireEvaluation()),
             FormulaEnvironmentInput.empty(),
             java.util.List.<WorkbookStep>of(
                 new MutationStep(
@@ -90,6 +93,68 @@ class DefaultGridGrindRequestExecutorCalculationCoverageTest {
     assertFalse(
         DefaultGridGrindRequestExecutor.directEventReadEligible(
             request, DefaultGridGrindRequestExecutor.executionMode(request)));
+  }
+
+  @Test
+  void lenientEvaluationReturnsPartialResultAndFormulaWarning() {
+    WorkbookPlan request =
+        request(
+            new WorkbookPlan.WorkbookSource.New(),
+            new WorkbookPlan.WorkbookPersistence.None(),
+            executionPolicy(calculateAll()),
+            null,
+            java.util.List.of(
+                mutate(new SheetSelector.ByName("Ops"), new WorkbookMutationAction.EnsureSheet()),
+                mutate(
+                    new CellSelector.ByAddress("Ops", "A1"),
+                    new CellMutationAction.SetCell(
+                        new dev.erst.gridgrind.contract.dto.CellInput.Formula(
+                            dev.erst.gridgrind.contract.source.TextSourceInput.inline(
+                                "ZZZZ(1)"))))),
+            java.util.List.of());
+
+    WorkbookResult.Success success =
+        assertInstanceOf(
+            WorkbookResult.Success.class,
+            ExecutionContextFixtureSupport.execute(new DefaultGridGrindRequestExecutor(), request));
+
+    assertEquals(CalculationExecutionStatus.PARTIAL, success.calculation().execution().status());
+    assertEquals(GridGrindWarningCode.FORMULA_NOT_EVALUATED, success.warnings().getFirst().code());
+    assertEquals(
+        "ZZZZ(1)",
+        assertInstanceOf(
+                dev.erst.gridgrind.contract.dto.RequestWarningLocation.FormulaCell.class,
+                success.warnings().getFirst().location())
+            .formula());
+  }
+
+  @Test
+  void deferredCalculationReportsFormulaWarningsWithoutServerSideEvaluation() {
+    WorkbookPlan request =
+        request(
+            new WorkbookPlan.WorkbookSource.New(),
+            new WorkbookPlan.WorkbookPersistence.None(),
+            executionPolicy(deferCalculation()),
+            null,
+            java.util.List.of(
+                mutate(new SheetSelector.ByName("Ops"), new WorkbookMutationAction.EnsureSheet()),
+                mutate(
+                    new CellSelector.ByAddress("Ops", "A1"),
+                    new CellMutationAction.SetCell(
+                        new dev.erst.gridgrind.contract.dto.CellInput.Formula(
+                            dev.erst.gridgrind.contract.source.TextSourceInput.inline(
+                                "ZZZZ(1)"))))),
+            java.util.List.of());
+
+    WorkbookResult.Success success =
+        assertInstanceOf(
+            WorkbookResult.Success.class,
+            ExecutionContextFixtureSupport.execute(new DefaultGridGrindRequestExecutor(), request));
+
+    assertEquals(
+        CalculationExecutionStatus.NOT_REQUESTED, success.calculation().execution().status());
+    assertTrue(success.calculation().preflight().isPresent());
+    assertEquals(GridGrindWarningCode.FORMULA_NOT_EVALUATED, success.warnings().getFirst().code());
   }
 
   @Test
@@ -139,7 +204,7 @@ class DefaultGridGrindRequestExecutorCalculationCoverageTest {
         request(
             new WorkbookPlan.WorkbookSource.New(),
             new WorkbookPlan.WorkbookPersistence.None(),
-            executionPolicy(calculateAll()),
+            executionPolicy(requireEvaluation()),
             null,
             java.util.List.of());
     try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
@@ -289,6 +354,42 @@ class DefaultGridGrindRequestExecutorCalculationCoverageTest {
         calculationSupport.calculationContextFor(
             preflightRequest, CalculationPolicyExecutor.Phase.EXECUTION, missingAddressField);
     assertEquals(java.util.Optional.empty(), missingAddressContext.sheetName());
+  }
+
+  @Test
+  void lenientCalculationReturnsPartialWithFormulaCellWarning() throws Exception {
+    ExecutionCalculationSupport calculationSupport =
+        new ExecutionCalculationSupport(ExcelStreamingWorkbookWriter::markRecalculateOnOpen);
+    WorkbookPlan lenientRequest =
+        request(
+            new WorkbookPlan.WorkbookSource.New(),
+            new WorkbookPlan.WorkbookPersistence.None(),
+            executionPolicy(calculateAll()),
+            null,
+            java.util.List.of());
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
+      workbook.getOrCreateSheet("Ops");
+      workbook
+          .sheet("Ops")
+          .cells()
+          .setCell("A1", ExcelCellValue.formula("TEXTAFTER(\"a,b\",\",\")"));
+
+      ExecutionCalculationSupport.CalculationExecutionOutcome outcome =
+          calculationSupport.executeCalculationPolicy(
+              workbook,
+              lenientRequest,
+              ExecutionContextFixtureSupport.startJournal(
+                  lenientRequest, ExecutionJournalSink.NOOP));
+
+      assertEquals(CalculationExecutionStatus.PARTIAL, outcome.report().execution().status());
+      assertTrue(outcome.failure().isEmpty());
+      assertEquals(
+          GridGrindWarningCode.FORMULA_NOT_EVALUATED, outcome.warnings().getFirst().code());
+      assertEquals(
+          new dev.erst.gridgrind.contract.dto.RequestWarningLocation.FormulaCell(
+              "Ops", "A1", "TEXTAFTER(\"a,b\",\",\")"),
+          outcome.warnings().getFirst().location());
+    }
   }
 
   private static WorkbookResult.Failure failure(WorkbookResult response) {

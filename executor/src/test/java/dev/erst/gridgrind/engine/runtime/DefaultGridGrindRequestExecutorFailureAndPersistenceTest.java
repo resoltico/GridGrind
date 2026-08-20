@@ -843,7 +843,7 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
                 request(
                     new WorkbookPlan.WorkbookSource.New(),
                     new WorkbookPlan.WorkbookPersistence.None(),
-                    executionPolicy(calculateAll()),
+                    executionPolicy(requireEvaluation()),
                     null,
                     mutations(
                         mutate(
@@ -871,7 +871,7 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
                 request(
                     new WorkbookPlan.WorkbookSource.New(),
                     new WorkbookPlan.WorkbookPersistence.None(),
-                    executionPolicy(calculateAll()),
+                    executionPolicy(requireEvaluation()),
                     null,
                     mutations(
                         mutate(
@@ -954,7 +954,7 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
                 request(
                     new WorkbookPlan.WorkbookSource.New(),
                     new WorkbookPlan.WorkbookPersistence.None(),
-                    executionPolicy(calculateAll()),
+                    executionPolicy(requireEvaluation()),
                     null,
                     mutations(
                         mutate(
@@ -1057,7 +1057,7 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
                 request(
                     new WorkbookPlan.WorkbookSource.New(),
                     new WorkbookPlan.WorkbookPersistence.None(),
-                    executionPolicy(calculateAll()),
+                    executionPolicy(requireEvaluation()),
                     null,
                     mutations(
                         mutate(
