@@ -11,7 +11,8 @@ public sealed interface PayloadException
     permits InvalidEncodingException,
         InvalidJsonException,
         InvalidRequestException,
-        InvalidRequestShapeException {
+        InvalidRequestShapeException,
+        NumberNotRepresentableException {
   /** Normalized JSON location variant for the payload failure. */
   PayloadLocation jsonLocation();
 

@@ -5,6 +5,7 @@ import dev.erst.gridgrind.contract.json.InvalidEncodingException;
 import dev.erst.gridgrind.contract.json.InvalidJsonException;
 import dev.erst.gridgrind.contract.json.InvalidRequestException;
 import dev.erst.gridgrind.contract.json.InvalidRequestShapeException;
+import dev.erst.gridgrind.contract.json.NumberNotRepresentableException;
 import dev.erst.gridgrind.excel.CellNotFoundException;
 import dev.erst.gridgrind.excel.InvalidCellAddressException;
 import dev.erst.gridgrind.excel.InvalidFormulaException;
@@ -33,6 +34,7 @@ final class GridGrindProblemCodeClassifier {
     return switch (exception) {
       case InvalidEncodingException _ -> GridGrindProblemCode.INVALID_ENCODING;
       case InvalidJsonException _ -> GridGrindProblemCode.INVALID_JSON;
+      case NumberNotRepresentableException _ -> GridGrindProblemCode.NUMBER_NOT_REPRESENTABLE;
       case InvalidRequestShapeException _ -> GridGrindProblemCode.INVALID_REQUEST_SHAPE;
       case InvalidRequestException _ -> GridGrindProblemCode.INVALID_REQUEST;
       case RequestPathEscapeException _ -> GridGrindProblemCode.PATH_ESCAPES_ROOT;

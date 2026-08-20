@@ -7,6 +7,7 @@ public sealed interface RequestStructuralProblem
     permits RequestInvalidEncoding,
         RequestInvalidJson,
         RequestDuplicateKey,
+        RequestNumberNotRepresentable,
         RequestShapeStructuralProblem {
 
   /** Returns the JSON path when one unambiguously identifies the malformed value. */

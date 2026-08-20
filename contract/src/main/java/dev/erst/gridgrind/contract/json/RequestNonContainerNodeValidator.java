@@ -1,6 +1,7 @@
 package dev.erst.gridgrind.contract.json;
 
 import dev.erst.gridgrind.contract.selector.Selector;
+import java.math.BigDecimal;
 import java.util.List;
 
 /** Validates the non-container request creator families after optional and collection handling. */
@@ -75,11 +76,33 @@ final class RequestNonContainerNodeValidator {
           node, jsonPath, "a JSON number", RequestJsonNumber.class, diagnosticByteOffset, problems);
       return;
     }
+    if (isIeeeNumberType(rawType) && !isExactlyRepresentable(number.value(), rawType)) {
+      problems.add(
+          new RequestNumberNotRepresentable(jsonPath, number.value(), diagnosticByteOffset));
+      return;
+    }
     if (!canBindScalar(number, rawType)) {
       problems.add(
           new RequestMalformedScalar(
               jsonPath, RequestTypeSupport.numericExpectation(rawType), diagnosticByteOffset));
     }
+  }
+
+  private static boolean isIeeeNumberType(Class<?> rawType) {
+    return rawType == double.class
+        || rawType == Double.class
+        || rawType == float.class
+        || rawType == Float.class;
+  }
+
+  private static boolean isExactlyRepresentable(String token, Class<?> rawType) {
+    BigDecimal authored = new BigDecimal(token);
+    if (rawType == float.class || rawType == Float.class) {
+      float value = Float.parseFloat(token);
+      return Float.isFinite(value) && authored.compareTo(BigDecimal.valueOf((double) value)) == 0;
+    }
+    double value = Double.parseDouble(token);
+    return Double.isFinite(value) && authored.compareTo(BigDecimal.valueOf(value)) == 0;
   }
 
   private static void validateTemporal(

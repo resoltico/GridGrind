@@ -66,6 +66,7 @@ final class RequestStructuralProblemOrder {
       case RequestInvalidEncoding _ -> GridGrindProblemCode.INVALID_ENCODING.name();
       case RequestInvalidJson _ -> GridGrindProblemCode.INVALID_JSON.name();
       case RequestDuplicateKey _ -> GridGrindProblemCode.INVALID_JSON.name();
+      case RequestNumberNotRepresentable _ -> GridGrindProblemCode.NUMBER_NOT_REPRESENTABLE.name();
       case RequestShapeStructuralProblem _ -> GridGrindProblemCode.INVALID_REQUEST_SHAPE.name();
     };
   }

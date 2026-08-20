@@ -162,12 +162,14 @@ class RequestStructuralSupportTest {
     assertEquals(
         List.of(
             "Field 'integer' must be a JSON integer between -2147483648 and 2147483647",
-            "Field 'floating' must be a finite JSON number representable as a 64-bit double",
-            "Field 'singlePrecision' must be a finite JSON number representable as a 32-bit float",
+            "Field 'floating' number '1e400' cannot be represented exactly; store identifiers or precision-sensitive values as TEXT.",
+            "Field 'singlePrecision' number '1e400' cannot be represented exactly; store identifiers or precision-sensitive values as TEXT.",
             "Field 'date' must be an ISO-8601 calendar date",
             "Field 'dateTime' must be an ISO-8601 local date-time",
             "Field 'dateKind' must be a JSON string"),
         problems.stream().map(RequestStructuralProblem::message).toList());
+    assertEquals(
+        2, problems.stream().filter(RequestNumberNotRepresentable.class::isInstance).count());
   }
 
   @Test

@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import dev.erst.gridgrind.contract.dto.GridGrindProblemCode;
 import dev.erst.gridgrind.contract.json.InvalidEncodingException;
+import dev.erst.gridgrind.contract.json.NumberNotRepresentableException;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
 
@@ -31,5 +32,13 @@ class GridGrindProblemCodeClassifierTest {
     assertEquals(
         GridGrindProblemCode.UNSAFE_PATH_ACCESS,
         GridGrindProblemCodeClassifier.codeFor(new UnsafePathAccessException("no safe binding")));
+  }
+
+  @Test
+  void mapsLossyNumericTokensToTheDedicatedProtocolCode() {
+    assertEquals(
+        GridGrindProblemCode.NUMBER_NOT_REPRESENTABLE,
+        GridGrindProblemCodeClassifier.codeFor(
+            new NumberNotRepresentableException("Use TEXT", "steps[0].action.value.number")));
   }
 }

@@ -30,6 +30,12 @@ public enum GridGrindProblemCode {
       GridGrindProblemRecovery.CHANGE_REQUEST,
       "Invalid request",
       "Fix the request data and retry the workflow."),
+  NUMBER_NOT_REPRESENTABLE(
+      GridGrindProblemCategory.REQUEST,
+      GridGrindProblemRecovery.CHANGE_REQUEST,
+      "Number cannot be represented exactly",
+      "Store identifiers or precision-sensitive values as TEXT, or use a value exactly"
+          + " representable as an IEEE-754 number."),
   PATH_ESCAPES_ROOT(
       GridGrindProblemCategory.REQUEST,
       GridGrindProblemRecovery.CHANGE_REQUEST,

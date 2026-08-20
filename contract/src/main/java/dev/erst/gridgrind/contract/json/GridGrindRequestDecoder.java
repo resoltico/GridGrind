@@ -37,6 +37,8 @@ final class GridGrindRequestDecoder {
       case RequestInvalidEncoding invalidEncoding -> invalidEncodingException(invalidEncoding);
       case RequestInvalidJson invalidJson -> invalidJsonException(invalidJson);
       case RequestDuplicateKey duplicateKey -> invalidJsonException(duplicateKey);
+      case RequestNumberNotRepresentable number ->
+          new NumberNotRepresentableException(number.message(), number.jsonPath().orElseThrow());
       case RequestShapeStructuralProblem shapeProblem -> requestShapeException(shapeProblem);
     };
   }
