@@ -81,7 +81,7 @@ class WorkbookResultTest {
     WorkbookPlan overwriteExistingRequest =
         WorkbookPlan.standard(
             new WorkbookPlan.WorkbookSource.ExistingFile("fixtures/budget.xlsx"),
-            new WorkbookPlan.WorkbookPersistence.Overwrite(),
+            new WorkbookPlan.WorkbookPersistence.Overwrite(OoxmlPersistenceSecurityInput.none()),
             ExecutionPolicyInput.defaults(),
             FormulaEnvironmentInput.empty(),
             List.of());
@@ -96,7 +96,7 @@ class WorkbookResultTest {
     WorkbookPlan impossibleOverwriteRequest =
         WorkbookPlan.standard(
             new WorkbookPlan.WorkbookSource.New(),
-            new WorkbookPlan.WorkbookPersistence.Overwrite(),
+            new WorkbookPlan.WorkbookPersistence.Overwrite(OoxmlPersistenceSecurityInput.none()),
             ExecutionPolicyInput.defaults(),
             FormulaEnvironmentInput.empty(),
             List.of());

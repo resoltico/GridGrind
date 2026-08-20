@@ -506,7 +506,8 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
             new DefaultGridGrindRequestExecutor(),
             request(
                 new WorkbookPlan.WorkbookSource.ExistingFile(workbookPath.toString()),
-                new WorkbookPlan.WorkbookPersistence.Overwrite(),
+                new WorkbookPlan.WorkbookPersistence.Overwrite(
+                    dev.erst.gridgrind.contract.dto.OoxmlPersistenceSecurityInput.none()),
                 mutations(
                     mutate(
                         new CellSelector.ByAddress("Budget", "A1"),

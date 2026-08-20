@@ -1,13 +1,16 @@
 package dev.erst.gridgrind.contract.dto;
 
-/** Optional OOXML package-encryption and package-signing settings for workbook persistence. */
+/** Total encryption and signature policy for one persisted OOXML package. */
 public record OoxmlPersistenceSecurityInput(
-    @ProtocolField(optional = true) OoxmlEncryptionInput encryption,
-    @ProtocolField(optional = true) OoxmlSignatureInput signature) {
+    OoxmlPersistenceEncryptionInput encryption, OoxmlPersistenceSignatureInput signature) {
   public OoxmlPersistenceSecurityInput {
-    if (encryption == null && signature == null) {
-      throw new IllegalArgumentException(
-          "At least one of encryption or signature must be supplied when security is present");
-    }
+    java.util.Objects.requireNonNull(encryption, "encryption must not be null");
+    java.util.Objects.requireNonNull(signature, "signature must not be null");
+  }
+
+  /** Deliberately persists plaintext without a package signature. */
+  public static OoxmlPersistenceSecurityInput none() {
+    return new OoxmlPersistenceSecurityInput(
+        new OoxmlPersistenceEncryptionInput.None(), new OoxmlPersistenceSignatureInput.None());
   }
 }

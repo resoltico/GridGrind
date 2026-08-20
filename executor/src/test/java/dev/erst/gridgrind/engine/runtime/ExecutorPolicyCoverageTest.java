@@ -386,21 +386,27 @@ class ExecutorPolicyCoverageTest {
                   "/tmp/out.xlsx",
                   WorkbookPlan.WorkbookPersistence.IfExists.REJECT,
                   new OoxmlPersistenceSecurityInput(
-                      new OoxmlEncryptionInput(
-                          "secret", ExcelOoxmlWriteCipher.AES_256, ExcelOoxmlWriteHash.SHA_512),
-                      null)),
+                      new dev.erst.gridgrind.contract.dto.OoxmlPersistenceEncryptionInput.Encrypt(
+                          new OoxmlEncryptionInput(
+                              "secret",
+                              ExcelOoxmlWriteCipher.AES_256,
+                              ExcelOoxmlWriteHash.SHA_512)),
+                      new dev.erst.gridgrind.contract.dto.OoxmlPersistenceSignatureInput.None())),
               prepared.bindings());
       ExcelOoxmlPersistenceOptions overwriteOptions =
           ExecutionRequestPaths.persistenceOptions(
               new WorkbookPlan.WorkbookPersistence.Overwrite(
                   new OoxmlPersistenceSecurityInput(
-                      new OoxmlEncryptionInput(
-                          "secret", ExcelOoxmlWriteCipher.AES_256, ExcelOoxmlWriteHash.SHA_512),
-                      null)),
+                      new dev.erst.gridgrind.contract.dto.OoxmlPersistenceEncryptionInput.Encrypt(
+                          new OoxmlEncryptionInput(
+                              "secret",
+                              ExcelOoxmlWriteCipher.AES_256,
+                              ExcelOoxmlWriteHash.SHA_512)),
+                      new dev.erst.gridgrind.contract.dto.OoxmlPersistenceSignatureInput.None())),
               prepared.bindings());
-      assertTrue(noneOptions.isEmpty());
-      assertFalse(saveAsOptions.isEmpty());
-      assertFalse(overwriteOptions.isEmpty());
+      assertTrue(noneOptions.writesPlaintextUnsigned());
+      assertFalse(saveAsOptions.writesPlaintextUnsigned());
+      assertFalse(overwriteOptions.writesPlaintextUnsigned());
     }
 
     ExcelOoxmlPackageSecuritySnapshot newSecurity =
@@ -481,7 +487,8 @@ class ExecutorPolicyCoverageTest {
               WorkbookResultPersistence.PersistenceOutcome.Overwritten.class,
               workbookSupport.persistStreamingWorkbook(
                   overwriteMaterialized,
-                  new WorkbookPlan.WorkbookPersistence.Overwrite(),
+                  new WorkbookPlan.WorkbookPersistence.Overwrite(
+                      OoxmlPersistenceSecurityInput.none()),
                   new WorkbookPlan.WorkbookSource.ExistingFile(overwriteSourcePath.toString()),
                   prepared.bindings()));
       assertEquals(
@@ -496,7 +503,8 @@ class ExecutorPolicyCoverageTest {
               () ->
                   workbookSupport.persistStreamingWorkbook(
                       materialized,
-                      new WorkbookPlan.WorkbookPersistence.Overwrite(),
+                      new WorkbookPlan.WorkbookPersistence.Overwrite(
+                          OoxmlPersistenceSecurityInput.none()),
                       new WorkbookPlan.WorkbookSource.New(),
                       prepared.bindings()));
       assertEquals(

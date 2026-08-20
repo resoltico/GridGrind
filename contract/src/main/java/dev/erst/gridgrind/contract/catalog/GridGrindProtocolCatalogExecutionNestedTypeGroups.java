@@ -6,6 +6,8 @@ import static dev.erst.gridgrind.contract.catalog.GridGrindProtocolCatalogNested
 import dev.erst.gridgrind.contract.dto.ExecutionJournal;
 import dev.erst.gridgrind.contract.dto.ExecutionModeInput;
 import dev.erst.gridgrind.contract.dto.OoxmlEncryptionReport;
+import dev.erst.gridgrind.contract.dto.OoxmlPersistenceEncryptionInput;
+import dev.erst.gridgrind.contract.dto.OoxmlPersistenceSignatureInput;
 import dev.erst.gridgrind.contract.dto.RequestWarningLocation;
 import java.util.List;
 
@@ -76,6 +78,35 @@ final class GridGrindProtocolCatalogExecutionNestedTypeGroups {
                       OoxmlEncryptionReport.Encrypted.class,
                       "ENCRYPTED",
                       "Package is encrypted with one fully specified OOXML encryption envelope."))),
+          nestedTypeGroup(
+              "ooxmlPersistenceEncryptionTypes",
+              OoxmlPersistenceEncryptionInput.class,
+              List.of(
+                  descriptor(
+                      OoxmlPersistenceEncryptionInput.None.class,
+                      "NONE",
+                      "Deliberately persist plaintext."),
+                  descriptor(
+                      OoxmlPersistenceEncryptionInput.Encrypt.class,
+                      "ENCRYPT",
+                      "Persist with one explicitly supplied OOXML encryption envelope."),
+                  descriptor(
+                      OoxmlPersistenceEncryptionInput.PreserveSource.class,
+                      "PRESERVE_SOURCE",
+                      "Reapply the verified source encryption envelope when it is compatible"
+                          + " with the AGILE write contract."))),
+          nestedTypeGroup(
+              "ooxmlPersistenceSignatureTypes",
+              OoxmlPersistenceSignatureInput.class,
+              List.of(
+                  descriptor(
+                      OoxmlPersistenceSignatureInput.None.class,
+                      "NONE",
+                      "Deliberately persist without an OOXML package signature."),
+                  descriptor(
+                      OoxmlPersistenceSignatureInput.Sign.class,
+                      "SIGN",
+                      "Sign with explicitly supplied PKCS#12 material."))),
           nestedTypeGroup(
               "requestWarningLocationTypes",
               RequestWarningLocation.class,

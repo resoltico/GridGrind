@@ -255,7 +255,8 @@ class FormulaEnvironmentRequestExecutorTest {
                 new DefaultGridGrindRequestExecutor(),
                 request(
                     new WorkbookPlan.WorkbookSource.ExistingFile(workbookPath.toString()),
-                    new WorkbookPlan.WorkbookPersistence.Overwrite(),
+                    new WorkbookPlan.WorkbookPersistence.Overwrite(
+                        dev.erst.gridgrind.contract.dto.OoxmlPersistenceSecurityInput.none()),
                     executionPolicy(clearFormulaCaches()),
                     null,
                     List.of(),

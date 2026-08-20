@@ -1,24 +1,25 @@
 package dev.erst.gridgrind.excel.ooxml;
 
 import java.util.Objects;
-import java.util.Optional;
 
-/** Optional OOXML package-security settings applied during workbook persistence. */
+/** Total OOXML package-security policy applied during workbook persistence. */
 public record ExcelOoxmlPersistenceOptions(
-    Optional<ExcelOoxmlEncryptionOptions> encryption,
-    Optional<ExcelOoxmlSignatureOptions> signature) {
+    ExcelOoxmlPersistenceEncryption encryption, ExcelOoxmlPersistenceSignature signature) {
   public ExcelOoxmlPersistenceOptions {
     Objects.requireNonNull(encryption, "encryption must not be null");
     Objects.requireNonNull(signature, "signature must not be null");
   }
 
-  /** Returns one persistence-options value that applies neither encryption nor signing. */
+  /** Returns the explicit plaintext and unsigned output policy. */
   public static ExcelOoxmlPersistenceOptions none() {
-    return new ExcelOoxmlPersistenceOptions(Optional.empty(), Optional.empty());
+    return new ExcelOoxmlPersistenceOptions(
+        new ExcelOoxmlPersistenceEncryption.Plaintext(),
+        new ExcelOoxmlPersistenceSignature.Unsigned());
   }
 
-  /** Returns whether neither encryption nor signing was requested for persistence. */
-  public boolean isEmpty() {
-    return encryption.isEmpty() && signature.isEmpty();
+  /** Returns whether the policy deliberately writes plaintext without a package signature. */
+  public boolean writesPlaintextUnsigned() {
+    return encryption instanceof ExcelOoxmlPersistenceEncryption.Plaintext
+        && signature instanceof ExcelOoxmlPersistenceSignature.Unsigned;
   }
 }

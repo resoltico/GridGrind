@@ -261,7 +261,9 @@ class ExecutionModeRequestExecutorTest {
                 request(
                     new WorkbookPlan.WorkbookSource.ExistingFile(sourcePath.toString()),
                     new WorkbookPlan.WorkbookPersistence.SaveAs(
-                        persistedCopy.toString(), WorkbookPlan.WorkbookPersistence.IfExists.REJECT),
+                        persistedCopy.toString(),
+                        WorkbookPlan.WorkbookPersistence.IfExists.REJECT,
+                        dev.erst.gridgrind.contract.dto.OoxmlPersistenceSecurityInput.none()),
                     ExecutionModeInput.eventRead(),
                     null,
                     List.of(),

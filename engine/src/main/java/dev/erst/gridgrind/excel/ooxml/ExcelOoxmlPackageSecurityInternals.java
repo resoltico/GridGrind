@@ -1,7 +1,7 @@
 package dev.erst.gridgrind.excel.ooxml;
 
-import dev.erst.gridgrind.excel.ExcelWorkbook;
 import dev.erst.gridgrind.excel.InvalidWorkbookPasswordException;
+import dev.erst.gridgrind.excel.WorkbookNotOpenableException;
 import dev.erst.gridgrind.excel.WorkbookPasswordRequiredException;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -27,7 +27,9 @@ final class ExcelOoxmlPackageSecurityInternals {
             ExcelOoxmlPrivateTempWorkbook.create("gridgrind-ooxml-decrypted-", ".xlsx");
         POIFSFileSystem fileSystem = new POIFSFileSystem(workbookPath.toFile())) {
       if (!isEncryptedOoxmlPackage(fileSystem)) {
-        throw new IllegalArgumentException("Only .xlsx workbooks are supported");
+        throw new WorkbookNotOpenableException(
+            workbookPath,
+            new IllegalArgumentException("Only encrypted OOXML .xlsx packages are supported"));
       }
       String password = openPassword(workbookPath, openOptions);
       EncryptionInfo encryptionInfo =
@@ -58,21 +60,6 @@ final class ExcelOoxmlPackageSecurityInternals {
   static void createTargetParentDirectories(Path targetPath) throws IOException {
     Path parentOrRoot = Objects.requireNonNullElse(targetPath.getParent(), targetPath.getRoot());
     Files.createDirectories(parentOrRoot);
-  }
-
-  static boolean passThroughEligible(
-      ExcelWorkbook workbook, ExcelOoxmlPersistenceOptions persistenceOptions) {
-    return workbook.persistence().sourcePath().isPresent()
-        && !workbook.persistence().wasMutatedSinceOpen()
-        && workbook.persistence().loadedPackageSecurity().isSecure()
-        && persistenceOptions.isEmpty();
-  }
-
-  static boolean requiresResigning(
-      ExcelWorkbook workbook, ExcelOoxmlPersistenceOptions persistenceOptions) {
-    return workbook.persistence().sourcePath().isPresent()
-        && !workbook.persistence().loadedPackageSecurity().signatures().isEmpty()
-        && persistenceOptions.signature().isEmpty();
   }
 
   static FileMagic fileMagic(Path workbookPath) throws IOException {

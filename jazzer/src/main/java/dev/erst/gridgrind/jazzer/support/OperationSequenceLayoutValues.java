@@ -245,7 +245,8 @@ final class OperationSequenceLayoutValues {
         writeExistingWorkbook(sourcePath, primarySheet, secondarySheet, data);
         yield new OperationSequenceValueFactory.WorkflowStorage(
             new WorkbookPlan.WorkbookSource.ExistingFile(sourcePath.toString()),
-            new WorkbookPlan.WorkbookPersistence.Overwrite(),
+            new WorkbookPlan.WorkbookPersistence.Overwrite(
+                dev.erst.gridgrind.contract.dto.OoxmlPersistenceSecurityInput.none()),
             directory);
       }
       default -> {

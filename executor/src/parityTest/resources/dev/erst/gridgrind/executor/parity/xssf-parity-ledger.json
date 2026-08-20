@@ -1331,7 +1331,7 @@
         "Encryption Support",
         "Quick Guide"
       ],
-      "notes": "GridGrind now validates package signatures, preserves unchanged signatures across copy-style save-as, requires explicit re-signing before persisting signed mutations, re-signs mutated signed sources, and authors new signed `.xlsx` outputs with signing-failure translation kept under regression coverage."
+      "notes": "GridGrind validates package signatures and requires every existing-source write to declare final encryption and signature dispositions. Signature NONE produces an intentional unsigned output, SIGN removes prior signatures before applying one fresh signature, and new signed `.xlsx` outputs retain signing-failure coverage."
     },
     {
       "sequence": 71,

@@ -332,7 +332,8 @@ class RequestPreflightTest {
     WorkbookPlan invalidOverwrite =
         WorkbookPlan.standard(
             new WorkbookPlan.WorkbookSource.New(),
-            new WorkbookPlan.WorkbookPersistence.Overwrite(),
+            new WorkbookPlan.WorkbookPersistence.Overwrite(
+                dev.erst.gridgrind.contract.dto.OoxmlPersistenceSecurityInput.none()),
             ExecutionPolicyInput.defaults(),
             FormulaEnvironmentInput.empty(),
             List.of());
@@ -353,7 +354,8 @@ class RequestPreflightTest {
     WorkbookPlan request =
         WorkbookPlan.standard(
             new WorkbookPlan.WorkbookSource.ExistingFile("missing-source.xlsx"),
-            new WorkbookPlan.WorkbookPersistence.Overwrite(),
+            new WorkbookPlan.WorkbookPersistence.Overwrite(
+                dev.erst.gridgrind.contract.dto.OoxmlPersistenceSecurityInput.none()),
             ExecutionPolicyInput.defaults(),
             new FormulaEnvironmentInput(
                 List.of(new FormulaExternalWorkbookInput("External.xlsx", "missing-external.xlsx")),

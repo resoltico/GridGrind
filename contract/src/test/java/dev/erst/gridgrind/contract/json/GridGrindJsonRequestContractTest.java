@@ -1,11 +1,15 @@
 package dev.erst.gridgrind.contract.json;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import dev.erst.gridgrind.contract.dto.ExecutionJournalLevel;
+import dev.erst.gridgrind.contract.dto.OoxmlEncryptionInput;
+import dev.erst.gridgrind.contract.dto.OoxmlPersistenceEncryptionInput;
 import dev.erst.gridgrind.contract.dto.OoxmlPersistenceSecurityInput;
+import dev.erst.gridgrind.contract.dto.OoxmlPersistenceSignatureInput;
 import dev.erst.gridgrind.contract.dto.OoxmlSignatureInput;
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
 import dev.erst.gridgrind.excel.foundation.ExcelOoxmlSignatureDigestAlgorithm;
@@ -111,14 +115,20 @@ class GridGrindJsonRequestContractTest {
 	              "persistence": {
 	                "type": "SAVE_AS",
 	                "path": "secured.xlsx",
-	                "ifExists": "REJECT",
-	                "security": {
+                "ifExists": "REJECT",
+                "security": {
                   "encryption": {
-                    "password": "persist-pass"
+                    "type": "ENCRYPT",
+                    "encryption": {
+                      "password": "persist-pass"
+                    }
                   },
                   "signature": {
-                    "pkcs12Path": "keys/signing.p12",
-                    "keystorePassword": "store-pass"
+                    "type": "SIGN",
+                    "signature": {
+                      "pkcs12Path": "keys/signing.p12",
+                      "keystorePassword": "store-pass"
+                    }
                   }
                 }
               },
@@ -136,11 +146,61 @@ class GridGrindJsonRequestContractTest {
     assertTrue(request.formulaEnvironment().isEmpty());
     OoxmlPersistenceSecurityInput security =
         ((WorkbookPlan.WorkbookPersistence.SaveAs) request.persistence()).security().orElseThrow();
-    assertEquals(ExcelOoxmlWriteCipher.AES_256, security.encryption().cipher());
-    assertEquals(ExcelOoxmlWriteHash.SHA_512, security.encryption().hash());
-    OoxmlSignatureInput signature = security.signature();
+    OoxmlEncryptionInput encryption =
+        assertInstanceOf(OoxmlPersistenceEncryptionInput.Encrypt.class, security.encryption())
+            .encryption();
+    assertEquals(ExcelOoxmlWriteCipher.AES_256, encryption.cipher());
+    assertEquals(ExcelOoxmlWriteHash.SHA_512, encryption.hash());
+    OoxmlSignatureInput signature =
+        assertInstanceOf(OoxmlPersistenceSignatureInput.Sign.class, security.signature())
+            .signature();
     assertEquals("store-pass", signature.keyPassword());
     assertEquals(ExcelOoxmlSignatureDigestAlgorithm.SHA256, signature.digestAlgorithm());
+  }
+
+  @Test
+  void requestRequiresBothExplicitPersistenceSecurityAxes() {
+    InvalidRequestShapeException missingSignature =
+        assertThrows(
+            InvalidRequestShapeException.class,
+            () ->
+                GridGrindJson.readRequest(
+                    """
+                    {
+                      "protocolVersion": "V2",
+                      "source": { "type": "NEW" },
+                      "persistence": {
+                        "type": "SAVE_AS",
+                        "path": "secured.xlsx",
+                        "ifExists": "REJECT",
+                        "security": { "encryption": { "type": "NONE" } }
+                      },
+                      "steps": []
+                    }
+                    """
+                        .getBytes(StandardCharsets.UTF_8)));
+    InvalidRequestShapeException missingEncryption =
+        assertThrows(
+            InvalidRequestShapeException.class,
+            () ->
+                GridGrindJson.readRequest(
+                    """
+                    {
+                      "protocolVersion": "V2",
+                      "source": { "type": "NEW" },
+                      "persistence": {
+                        "type": "SAVE_AS",
+                        "path": "secured.xlsx",
+                        "ifExists": "REJECT",
+                        "security": { "signature": { "type": "NONE" } }
+                      },
+                      "steps": []
+                    }
+                    """
+                        .getBytes(StandardCharsets.UTF_8)));
+
+    assertTrue(missingSignature.getMessage().contains("signature"));
+    assertTrue(missingEncryption.getMessage().contains("encryption"));
   }
 
   @Test
@@ -160,8 +220,11 @@ class GridGrindJsonRequestContractTest {
                         "ifExists": "REJECT",
                         "security": {
                           "encryption": {
-                            "password": "persist-pass",
-                            "mode": "AGILE"
+                            "type": "ENCRYPT",
+                            "encryption": {
+                              "password": "persist-pass",
+                              "mode": "AGILE"
+                            }
                           }
                         }
                       },
@@ -229,8 +292,11 @@ class GridGrindJsonRequestContractTest {
                         "ifExists": "REJECT",
                         "security": {
                           "encryption": {
-                            "password": "persist-pass",
-                            "cipher": "AES_128"
+                            "type": "ENCRYPT",
+                            "encryption": {
+                              "password": "persist-pass",
+                              "cipher": "AES_128"
+                            }
                           }
                         }
                       },
@@ -240,7 +306,7 @@ class GridGrindJsonRequestContractTest {
                         .getBytes(StandardCharsets.UTF_8)));
 
     assertEquals(
-        "Unsupported value 'AES_128' for field 'persistence.security.encryption.cipher'; expected one of: AES_256, AES_192",
+        "Unsupported value 'AES_128' for field 'persistence.security.encryption.encryption.cipher'; expected one of: AES_256, AES_192",
         exception.getMessage());
   }
 
@@ -261,8 +327,11 @@ class GridGrindJsonRequestContractTest {
                         "ifExists": "REJECT",
                         "security": {
                           "encryption": {
-                            "password": "persist-pass",
-                            "hash": "SHA_1"
+                            "type": "ENCRYPT",
+                            "encryption": {
+                              "password": "persist-pass",
+                              "hash": "SHA_1"
+                            }
                           }
                         }
                       },
@@ -272,7 +341,7 @@ class GridGrindJsonRequestContractTest {
                         .getBytes(StandardCharsets.UTF_8)));
 
     assertEquals(
-        "Unsupported value 'SHA_1' for field 'persistence.security.encryption.hash'; expected one of: SHA_512, SHA_384, SHA_256",
+        "Unsupported value 'SHA_1' for field 'persistence.security.encryption.encryption.hash'; expected one of: SHA_512, SHA_384, SHA_256",
         exception.getMessage());
   }
 

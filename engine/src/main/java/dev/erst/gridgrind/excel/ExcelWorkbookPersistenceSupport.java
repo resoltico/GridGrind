@@ -25,7 +25,8 @@ final class ExcelWorkbookPersistenceSupport {
     Objects.requireNonNull(tempFileFactory, "tempFileFactory must not be null");
     Objects.requireNonNull(persistenceOptions, "persistenceOptions must not be null");
     Objects.requireNonNull(writeDisposition, "writeDisposition must not be null");
-    if (persistenceOptions.isEmpty() && !workbook.context().loadedPackageSecurity().isSecure()) {
+    if (persistenceOptions.writesPlaintextUnsigned()
+        && !workbook.context().loadedPackageSecurity().isSecure()) {
       savePlainWorkbook(workbook, workbookPath, writeDisposition);
       return;
     }

@@ -123,6 +123,36 @@ class WorkbookStaticRequestContractTest {
             .contains("unsupported step kind: ASSERTION"));
   }
 
+  @Test
+  void rejectsExistingWorkbookWritesThatOmitTheTotalSecurityPolicy() {
+    WorkbookStaticRequest request =
+        new WorkbookStaticRequest(
+            Optional.of(new WorkbookPlan.WorkbookSource.ExistingFile("source.xlsx")),
+            Optional.of(
+                new WorkbookPlan.WorkbookPersistence.SaveAs(
+                    "output.xlsx", WorkbookPlan.WorkbookPersistence.IfExists.REJECT)),
+            Optional.of(ExecutionPolicyInput.defaults()),
+            List.of());
+
+    assertEquals(
+        List.of("persistence.security"),
+        WorkbookStaticRequestContract.validate(request).stream()
+            .map(WorkbookStaticViolation::jsonPath)
+            .toList());
+  }
+
+  @Test
+  void acceptsExistingWorkbookInMemoryRequestsWithoutAWriteSecurityPolicy() {
+    WorkbookStaticRequest request =
+        new WorkbookStaticRequest(
+            Optional.of(new WorkbookPlan.WorkbookSource.ExistingFile("source.xlsx")),
+            Optional.of(new WorkbookPlan.WorkbookPersistence.None()),
+            Optional.of(ExecutionPolicyInput.defaults()),
+            List.of());
+
+    assertTrue(WorkbookStaticPersistenceValidation.validate(request).isEmpty());
+  }
+
   private static MutationStep appendStep() {
     return new MutationStep(
         "append",

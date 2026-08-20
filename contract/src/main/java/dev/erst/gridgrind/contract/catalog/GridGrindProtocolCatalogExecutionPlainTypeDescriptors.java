@@ -135,8 +135,9 @@ final class GridGrindProtocolCatalogExecutionPlainTypeDescriptors {
               "ooxmlPersistenceSecurityInputType",
               OoxmlPersistenceSecurityInput.class,
               "OoxmlPersistenceSecurityInput",
-              "Optional OOXML package-security settings applied during persistence."
-                  + " Supply encryption, signature, or both."),
+              "Total OOXML encryption and signature policy applied during persistence."
+                  + " It is required for writing EXISTING sources; NEW writes default to"
+                  + " encryption NONE and signature NONE when security is omitted."),
           plainTypeDescriptor(
               "ooxmlEncryptionInputType",
               OoxmlEncryptionInput.class,

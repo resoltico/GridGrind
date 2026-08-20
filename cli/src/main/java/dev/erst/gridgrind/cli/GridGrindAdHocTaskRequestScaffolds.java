@@ -99,9 +99,16 @@ final class GridGrindAdHocTaskRequestScaffolds {
       TaskEntry task, WorkbookPlan.WorkbookSource source) {
     return switch (task.executionProfile().persistenceMode()) {
       case NONE -> new WorkbookPlan.WorkbookPersistence.None();
-      case SAVE_AS ->
-          new WorkbookPlan.WorkbookPersistence.SaveAs(
-              defaultOutputPath(task.id()), WorkbookPlan.WorkbookPersistence.IfExists.REPLACE);
+      case SAVE_AS -> {
+        String outputPath = defaultOutputPath(task.id());
+        yield source instanceof WorkbookPlan.WorkbookSource.ExistingFile
+            ? new WorkbookPlan.WorkbookPersistence.SaveAs(
+                outputPath,
+                WorkbookPlan.WorkbookPersistence.IfExists.REPLACE,
+                dev.erst.gridgrind.contract.dto.OoxmlPersistenceSecurityInput.none())
+            : new WorkbookPlan.WorkbookPersistence.SaveAs(
+                outputPath, WorkbookPlan.WorkbookPersistence.IfExists.REPLACE);
+      }
       case OVERWRITE -> {
         if (!(source instanceof WorkbookPlan.WorkbookSource.ExistingFile)) {
           throw new IllegalStateException(
@@ -109,7 +116,8 @@ final class GridGrindAdHocTaskRequestScaffolds {
                   + task.id()
                   + " cannot plan OVERWRITE persistence without an EXISTING source");
         }
-        yield new WorkbookPlan.WorkbookPersistence.Overwrite();
+        yield new WorkbookPlan.WorkbookPersistence.Overwrite(
+            dev.erst.gridgrind.contract.dto.OoxmlPersistenceSecurityInput.none());
       }
     };
   }

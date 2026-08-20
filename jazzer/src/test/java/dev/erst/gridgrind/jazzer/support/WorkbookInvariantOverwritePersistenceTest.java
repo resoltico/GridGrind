@@ -22,7 +22,8 @@ class WorkbookInvariantOverwritePersistenceTest {
     WorkbookPlan request =
         ProtocolStepSupport.request(
             new WorkbookPlan.WorkbookSource.New(),
-            new WorkbookPlan.WorkbookPersistence.Overwrite(),
+            new WorkbookPlan.WorkbookPersistence.Overwrite(
+                dev.erst.gridgrind.contract.dto.OoxmlPersistenceSecurityInput.none()),
             List.of(),
             List.of());
     WorkbookResult.Failure response =

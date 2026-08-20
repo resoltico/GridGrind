@@ -461,7 +461,8 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
                 new DefaultGridGrindRequestExecutor(),
                 request(
                     new WorkbookPlan.WorkbookSource.ExistingFile(workbookPath.toString()),
-                    new WorkbookPlan.WorkbookPersistence.Overwrite(),
+                    new WorkbookPlan.WorkbookPersistence.Overwrite(
+                        dev.erst.gridgrind.contract.dto.OoxmlPersistenceSecurityInput.none()),
                     mutations(
                         mutate(
                             new CellSelector.ByAddress("Budget", "C3"),
@@ -793,7 +794,8 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
                 new DefaultGridGrindRequestExecutor(),
                 request(
                     new WorkbookPlan.WorkbookSource.New(),
-                    new WorkbookPlan.WorkbookPersistence.Overwrite(),
+                    new WorkbookPlan.WorkbookPersistence.Overwrite(
+                        dev.erst.gridgrind.contract.dto.OoxmlPersistenceSecurityInput.none()),
                     List.of())));
     WorkbookResultPersistence.PersistenceOutcome.Overwritten persistence =
         assertInstanceOf(
@@ -813,7 +815,8 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
                 new DefaultGridGrindRequestExecutor(),
                 request(
                     new WorkbookPlan.WorkbookSource.New(),
-                    new WorkbookPlan.WorkbookPersistence.Overwrite(),
+                    new WorkbookPlan.WorkbookPersistence.Overwrite(
+                        dev.erst.gridgrind.contract.dto.OoxmlPersistenceSecurityInput.none()),
                     executionPolicy(ExecutionModeInput.eventRead(), calculateAll()),
                     null,
                     mutations(),

@@ -128,6 +128,11 @@ public enum GridGrindProblemCode {
       GridGrindProblemRecovery.CHANGE_REQUEST,
       "Cell not found",
       "Write the cell first or adjust the analysis target."),
+  WORKBOOK_NOT_OPENABLE(
+      GridGrindProblemCategory.REQUEST,
+      GridGrindProblemRecovery.CHANGE_REQUEST,
+      "Workbook package is not openable",
+      "Provide a valid `.xlsx` OOXML workbook package."),
   WORKBOOK_PASSWORD_REQUIRED(
       GridGrindProblemCategory.SECURITY,
       GridGrindProblemRecovery.CHANGE_REQUEST,
@@ -138,6 +143,17 @@ public enum GridGrindProblemCode {
       GridGrindProblemRecovery.CHANGE_REQUEST,
       "Invalid workbook password",
       "Supply the correct source.security.password for the encrypted workbook and retry."),
+  ENCRYPTION_SOURCE_NOT_ENCRYPTED(
+      GridGrindProblemCategory.SECURITY,
+      GridGrindProblemRecovery.CHANGE_REQUEST,
+      "Source workbook is not encrypted",
+      "Use persistence.security.encryption.type=NONE or ENCRYPT for a plaintext source workbook."),
+  ENCRYPTION_SOURCE_NOT_PRESERVABLE(
+      GridGrindProblemCategory.SECURITY,
+      GridGrindProblemRecovery.CHANGE_REQUEST,
+      "Source encryption cannot be preserved",
+      "Use persistence.security.encryption.type=NONE or ENCRYPT when the source encryption"
+          + " envelope is not compatible with GridGrind's AGILE write contract."),
   INVALID_SIGNING_CONFIGURATION(
       GridGrindProblemCategory.SECURITY,
       GridGrindProblemRecovery.CHANGE_REQUEST,

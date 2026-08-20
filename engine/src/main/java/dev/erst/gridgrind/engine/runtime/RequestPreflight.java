@@ -9,6 +9,11 @@ import dev.erst.gridgrind.contract.json.RequestAnalysis;
 import dev.erst.gridgrind.contract.step.WorkbookStep;
 import dev.erst.gridgrind.engine.api.GridGrindProblems;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
+import dev.erst.gridgrind.excel.ooxml.ExcelOoxmlPackagePersistenceSupport;
+import dev.erst.gridgrind.excel.ooxml.ExcelOoxmlPersistenceEncryption;
+import dev.erst.gridgrind.excel.ooxml.ExcelOoxmlPersistenceOptions;
+import dev.erst.gridgrind.excel.ooxml.ExcelOoxmlPersistenceSignature;
+import dev.erst.gridgrind.excel.ooxml.ExcelOoxmlSigningMaterialSupport;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -136,8 +141,38 @@ final class RequestPreflight {
         new ExecutionWorkbookSupport(bindings.tempFileFactory());
     try (ExcelWorkbook workbook = workbookSupport.openWorkbook(request.source(), null, bindings)) {
       Objects.requireNonNull(workbook, "workbook must not be null");
+      validateSourcePersistencePolicy(request, workbook);
     } catch (Exception exception) {
       problems.add(GridGrindProblems.fromException(exception, context));
+    }
+  }
+
+  private static void validateSourcePersistencePolicy(
+      WorkbookPlan request, ExcelWorkbook workbook) {
+    java.util.Optional<dev.erst.gridgrind.contract.dto.OoxmlPersistenceSecurityInput> security =
+        switch (request.persistence()) {
+          case WorkbookPlan.WorkbookPersistence.None _ -> java.util.Optional.empty();
+          case WorkbookPlan.WorkbookPersistence.SaveAs saveAs -> saveAs.security();
+          case WorkbookPlan.WorkbookPersistence.Overwrite overwrite -> overwrite.security();
+        };
+    if (security.isPresent()
+        && security.orElseThrow().encryption()
+            instanceof
+            dev.erst.gridgrind.contract.dto.OoxmlPersistenceEncryptionInput.PreserveSource
+        && workbook.persistence().loadedPackageSecurity().encryption()
+            instanceof dev.erst.gridgrind.excel.ooxml.ExcelOoxmlEncryptionSnapshot.None) {
+      throw new EncryptionSourceNotEncryptedException();
+    }
+    if (security.isPresent()
+        && security.orElseThrow().encryption()
+            instanceof
+            dev.erst.gridgrind.contract.dto.OoxmlPersistenceEncryptionInput.PreserveSource) {
+      ExcelOoxmlPackagePersistenceSupport.effectiveOptions(
+          workbook.persistence().loadedPackageSecurity(),
+          workbook.persistence().sourceEncryptionPassword(),
+          new ExcelOoxmlPersistenceOptions(
+              new ExcelOoxmlPersistenceEncryption.PreserveSource(),
+              new ExcelOoxmlPersistenceSignature.Unsigned()));
     }
   }
 
@@ -194,7 +229,11 @@ final class RequestPreflight {
       ExecutionInputBindings bindings,
       List<GridGrindProblemDetail.Problem> problems) {
     try {
-      ExecutionRequestPaths.persistenceOptions(request.persistence(), bindings);
+      ExcelOoxmlPersistenceOptions options =
+          ExecutionRequestPaths.persistenceOptions(request.persistence(), bindings);
+      if (options.signature() instanceof ExcelOoxmlPersistenceSignature.Sign sign) {
+        ExcelOoxmlSigningMaterialSupport.signingMaterial(sign.options());
+      }
     } catch (Exception exception) {
       problems.add(
           GridGrindProblems.fromException(

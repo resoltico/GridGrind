@@ -6,6 +6,8 @@ Earlier release history through `0.68.0` is archived in [docs/CHANGELOG_ARCHIVE.
 ## [Unreleased]
 
 ### Added
+- Existing-workbook persistence now has an explicit total OOXML security policy: encryption is `NONE`, `ENCRYPT`, or `PRESERVE_SOURCE`; signature is `NONE` or `SIGN`; a writing existing source must declare both axes.
+- Added `WORKBOOK_NOT_OPENABLE` for corrupted, truncated, non-zip, or non-workbook OOXML source packages and `ENCRYPTION_SOURCE_NOT_PRESERVABLE` for encrypted source envelopes outside the AGILE write contract, separating explicit request-policy failures from cryptographic failures.
 - Added `RAW_FORMULA` for opaque OOXML formula-body authoring when newer Excel syntax cannot be
   parsed by POI. Formula character data is XML-safe across full and streaming writes, while
   forbidden XML controls and invalid framing are rejected as `INVALID_FORMULA_TEXT`.
@@ -35,6 +37,7 @@ Earlier release history through `0.68.0` is archived in [docs/CHANGELOG_ARCHIVE.
 - `VERBOSE` execution journals now keep their fine-grained events exclusively in `WorkbookResult.journal.events[]`; CLI stderr is reserved for the single structured response-file fallback notice.
 
 ### Fixed
+- Existing-workbook writes no longer inherit encryption or signatures by omission. `PRESERVE_SOURCE` now rejects plaintext or write-incompatible encrypted sources during non-mutating preflight, signing material is fully validated before workbook mutation, `signature: NONE` physically removes source signatures, and `SIGN` replaces them with a fresh signature.
 - Request intake now rejects non-finite or precision-losing IEEE numeric literals as `NUMBER_NOT_REPRESENTABLE` at their exact JSON path and UTF-8 token offset, while accepting ordinary decimal forms such as `0.1`, `1e0`, and `100.00`.
 - Request-owned workbook, persistence, formula-environment, signing-material, and file-backed input paths now share one fail-closed boundary: absolute and relative escapes are rejected, all reads are materialized through no-follow descriptor bindings before mutation, and output commits recheck the bound directory topology before writing. Symlinks are never followed, and the documented residual concurrent-topology window is explicit rather than silently overstated.
 - Request doctoring now batches independent source-backed-input and existing-workbook preflight failures whenever a complete request is available, including alongside static contract findings; execution performs the same preflight only after static validation passes, and any preflight failure completes zero steps and persists no workbook. Source-backed input failures retain their exact authored `context.json.jsonPath`, and execution selects the same ordered primary preflight problem that doctoring reports.

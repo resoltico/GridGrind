@@ -20,9 +20,12 @@ import dev.erst.gridgrind.excel.ooxml.ExcelOoxmlPackagePersistenceSupport;
 import dev.erst.gridgrind.excel.ooxml.ExcelOoxmlPackageSecuritySnapshot;
 import dev.erst.gridgrind.excel.ooxml.ExcelOoxmlPackageSecuritySupport;
 import dev.erst.gridgrind.excel.ooxml.ExcelOoxmlPackageSigningSupport;
+import dev.erst.gridgrind.excel.ooxml.ExcelOoxmlPersistenceEncryption;
 import dev.erst.gridgrind.excel.ooxml.ExcelOoxmlPersistenceOptions;
+import dev.erst.gridgrind.excel.ooxml.ExcelOoxmlPersistenceSignature;
 import dev.erst.gridgrind.excel.ooxml.ExcelOoxmlSignatureOptions;
 import dev.erst.gridgrind.excel.ooxml.ExcelOoxmlSignatureSnapshot;
+import dev.erst.gridgrind.excel.ooxml.ExcelOoxmlSigningMaterialSupport;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -109,15 +112,15 @@ class ExcelOoxmlPackageSecurityCoverageTest {
       workbook.write(outputStream);
     }
 
-    IllegalArgumentException legacyFailure =
+    WorkbookNotOpenableException legacyFailure =
         assertThrows(
-            IllegalArgumentException.class,
+            WorkbookNotOpenableException.class,
             () ->
                 ExcelOoxmlPackageSecuritySupport.materializeReadableWorkbook(
                     legacyWorkbookPath,
                     new ExcelOoxmlOpenOptions.Encrypted("unused"),
                     Files::createTempFile));
-    assertEquals("Only .xlsx workbooks are supported", legacyFailure.getMessage());
+    assertTrue(legacyFailure.getMessage().contains("not openable"));
   }
 
   @Test
@@ -144,7 +147,6 @@ class ExcelOoxmlPackageSecurityCoverageTest {
           copiedWorkbookPath,
           ExcelOoxmlPackageSecuritySnapshot.none(),
           Optional.empty(),
-          false,
           WorkbookArtifactWriteDisposition.CREATE_NEW,
           ExcelOoxmlPersistenceOptions.none());
     }
@@ -270,13 +272,13 @@ class ExcelOoxmlPackageSecurityCoverageTest {
     Path unsupportedPath =
         ExcelTempFiles.createManagedTempFile("gridgrind-unsupported-magic-", ".bin");
     Files.writeString(unsupportedPath, "plain text is not an OOXML workbook");
-    IllegalArgumentException unsupportedMagicFailure =
+    WorkbookNotOpenableException unsupportedMagicFailure =
         assertThrows(
-            IllegalArgumentException.class,
+            WorkbookNotOpenableException.class,
             () ->
                 ExcelOoxmlPackageSecuritySupport.materializeReadableWorkbook(
                     unsupportedPath, null, Files::createTempFile));
-    assertTrue(unsupportedMagicFailure.getMessage().contains("unsupported package magic"));
+    assertTrue(unsupportedMagicFailure.getMessage().contains("not openable"));
 
     Path missingWorkbookPath =
         ExcelTempFiles.createManagedTempDirectory("gridgrind-materialized-missing-")
@@ -489,13 +491,13 @@ class ExcelOoxmlPackageSecurityCoverageTest {
     }
     try (POIFSFileSystem invalidFileSystem =
         new POIFSFileSystem(invalidEncryptedWorkbookPath.toFile())) {
-      IllegalArgumentException invalidEncryptionInfoFailure =
+      WorkbookNotOpenableException invalidEncryptionInfoFailure =
           assertThrows(
-              IllegalArgumentException.class,
+              WorkbookNotOpenableException.class,
               () ->
                   ExcelOoxmlPackageEncryptionSupport.readEncryptionInfo(
                       invalidFileSystem, invalidEncryptedWorkbookPath));
-      assertTrue(invalidEncryptionInfoFailure.getMessage().contains("not a supported encrypted"));
+      assertTrue(invalidEncryptionInfoFailure.getMessage().contains("not openable"));
     }
 
     WorkbookSecurityException passwordFailure =
@@ -535,13 +537,13 @@ class ExcelOoxmlPackageSecurityCoverageTest {
     Path invalidPackagePath =
         ExcelTempFiles.createManagedTempFile("gridgrind-invalid-package-", ".txt");
     Files.writeString(invalidPackagePath, "not a package");
-    WorkbookSecurityException packageInspectionFailure =
+    WorkbookNotOpenableException packageInspectionFailure =
         assertThrows(
-            WorkbookSecurityException.class,
+            WorkbookNotOpenableException.class,
             () ->
                 ExcelOoxmlPackageInspectionSupport.inspectPackageSecurity(
                     invalidPackagePath, ExcelOoxmlEncryptionSnapshot.none()));
-    assertTrue(packageInspectionFailure.getMessage().contains("inspect OOXML package signatures"));
+    assertTrue(packageInspectionFailure.getMessage().contains("not openable"));
 
     assertEquals(Optional.empty(), ExcelOoxmlPackageInspectionSupport.signerIdentity(null));
 
@@ -631,7 +633,7 @@ class ExcelOoxmlPackageSecurityCoverageTest {
         new KeyStore.PasswordProtection(signedWorkbook.keyPassword().toCharArray()));
     assertEquals(
         "only-alias",
-        ExcelOoxmlPackageSigningSupport.resolveAlias(singleAliasKeyStore, null, signatureOptions));
+        ExcelOoxmlSigningMaterialSupport.resolveAlias(singleAliasKeyStore, null, signatureOptions));
 
     Path malformedPackagePath =
         ExcelTempFiles.createManagedTempFile("gridgrind-sign-invalid-format-", ".xlsx");
@@ -701,30 +703,15 @@ class ExcelOoxmlPackageSecurityCoverageTest {
         new ExcelOoxmlPackageSecuritySnapshot(
             ExcelOoxmlEncryptionSnapshot.none(), java.util.List.of(signature));
 
-    IllegalArgumentException unsignedMutationFailure =
-        assertThrows(
-            IllegalArgumentException.class,
-            () ->
-                ExcelOoxmlPackageSecuritySupport.persistMaterializedWorkbook(
-                    plainWorkbookPath,
-                    plainWorkbookPath.resolveSibling("signed-guard-output.xlsx"),
-                    signedSecurity,
-                    Optional.empty(),
-                    true,
-                    WorkbookArtifactWriteDisposition.CREATE_NEW,
-                    ExcelOoxmlPersistenceOptions.none()));
-    assertTrue(unsignedMutationFailure.getMessage().contains("rewritten"));
-
-    Path passThroughTarget = plainWorkbookPath.resolveSibling("signed-guard-unmutated-output.xlsx");
+    Path unsignedTarget = plainWorkbookPath.resolveSibling("signed-guard-output.xlsx");
     ExcelOoxmlPackageSecuritySupport.persistMaterializedWorkbook(
         plainWorkbookPath,
-        passThroughTarget,
+        unsignedTarget,
         signedSecurity,
         Optional.empty(),
-        false,
         WorkbookArtifactWriteDisposition.CREATE_NEW,
         ExcelOoxmlPersistenceOptions.none());
-    assertTrue(Files.exists(passThroughTarget));
+    assertTrue(Files.exists(unsignedTarget));
   }
 
   @Test
@@ -766,9 +753,11 @@ class ExcelOoxmlPackageSecurityCoverageTest {
           });
     }
     assertEquals(0, tempFilesCreated.get());
-    assertArrayEquals(
-        Files.readAllBytes(signedWorkbook.workbookPath()), Files.readAllBytes(copiedWorkbookPath));
-    assertTrue(OoxmlSecurityTestSupport.signatureValid(copiedWorkbookPath));
+    assertTrue(
+        ExcelOoxmlPackageInspectionSupport.inspectPackageSecurity(
+                copiedWorkbookPath, ExcelOoxmlEncryptionSnapshot.none())
+            .signatures()
+            .isEmpty());
 
     Path resignedWorkbookPath = signedWorkbook.workbookPath().getParent().resolve("resigned.xlsx");
     try (ExcelWorkbook workbook =
@@ -779,8 +768,8 @@ class ExcelOoxmlPackageSecurityCoverageTest {
           resignedWorkbookPath,
           WorkbookArtifactWriteDisposition.CREATE_NEW,
           new ExcelOoxmlPersistenceOptions(
-              Optional.empty(),
-              Optional.of(
+              new ExcelOoxmlPersistenceEncryption.Plaintext(),
+              new ExcelOoxmlPersistenceSignature.Sign(
                   new ExcelOoxmlSignatureOptions(
                       signedWorkbook.pkcs12Path(),
                       signedWorkbook.keystorePassword(),
@@ -810,12 +799,12 @@ class ExcelOoxmlPackageSecurityCoverageTest {
           encryptedOutput,
           WorkbookArtifactWriteDisposition.CREATE_NEW,
           new ExcelOoxmlPersistenceOptions(
-              Optional.of(
+              new ExcelOoxmlPersistenceEncryption.Encrypt(
                   new ExcelOoxmlEncryptionOptions(
                       "secret-password",
                       ExcelOoxmlWriteCipher.AES_256,
                       ExcelOoxmlWriteHash.SHA_512)),
-              Optional.empty()),
+              new ExcelOoxmlPersistenceSignature.Unsigned()),
           (prefix, suffix) -> {
             tempFilesCreated.incrementAndGet();
             return ExcelTempFiles.createManagedTempFile(explicitTempRoot, prefix, suffix);
@@ -871,6 +860,18 @@ class ExcelOoxmlPackageSecurityCoverageTest {
             256,
             16,
             100_000);
+    IllegalArgumentException plaintextPreservationFailure =
+        assertThrows(
+            IllegalArgumentException.class,
+            () ->
+                ExcelOoxmlPackagePersistenceSupport.effectiveOptions(
+                    ExcelOoxmlPackageSecuritySnapshot.none(),
+                    Optional.empty(),
+                    new ExcelOoxmlPersistenceOptions(
+                        new ExcelOoxmlPersistenceEncryption.PreserveSource(),
+                        new ExcelOoxmlPersistenceSignature.Unsigned())));
+    assertTrue(plaintextPreservationFailure.getMessage().contains("requires an encrypted source"));
+
     IllegalStateException missingPasswordFailure =
         assertThrows(
             IllegalStateException.class,
@@ -878,17 +879,30 @@ class ExcelOoxmlPackageSecurityCoverageTest {
                 ExcelOoxmlPackagePersistenceSupport.effectiveOptions(
                     new ExcelOoxmlPackageSecuritySnapshot(encryptedSnapshot, java.util.List.of()),
                     Optional.empty(),
-                    ExcelOoxmlPersistenceOptions.none()));
+                    new ExcelOoxmlPersistenceOptions(
+                        new ExcelOoxmlPersistenceEncryption.PreserveSource(),
+                        new ExcelOoxmlPersistenceSignature.Unsigned())));
     assertTrue(missingPasswordFailure.getMessage().contains("verified source password"));
 
     ExcelOoxmlPersistenceOptions preservedOptions =
         ExcelOoxmlPackagePersistenceSupport.effectiveOptions(
             new ExcelOoxmlPackageSecuritySnapshot(encryptedSnapshot, java.util.List.of()),
             Optional.of("persist-pass"),
-            ExcelOoxmlPersistenceOptions.none());
+            new ExcelOoxmlPersistenceOptions(
+                new ExcelOoxmlPersistenceEncryption.PreserveSource(),
+                new ExcelOoxmlPersistenceSignature.Unsigned()));
     assertEquals(
-        ExcelOoxmlWriteCipher.AES_256, preservedOptions.encryption().orElseThrow().cipher());
-    assertEquals(ExcelOoxmlWriteHash.SHA_512, preservedOptions.encryption().orElseThrow().hash());
+        ExcelOoxmlWriteCipher.AES_256,
+        assertInstanceOf(
+                ExcelOoxmlPersistenceEncryption.Encrypt.class, preservedOptions.encryption())
+            .options()
+            .cipher());
+    assertEquals(
+        ExcelOoxmlWriteHash.SHA_512,
+        assertInstanceOf(
+                ExcelOoxmlPersistenceEncryption.Encrypt.class, preservedOptions.encryption())
+            .options()
+            .hash());
 
     ExcelOoxmlEncryptionSnapshot standardSnapshot =
         new ExcelOoxmlEncryptionSnapshot.Encrypted(
@@ -906,7 +920,9 @@ class ExcelOoxmlPackageSecurityCoverageTest {
                 ExcelOoxmlPackagePersistenceSupport.effectiveOptions(
                     new ExcelOoxmlPackageSecuritySnapshot(standardSnapshot, java.util.List.of()),
                     Optional.of("persist-pass"),
-                    ExcelOoxmlPersistenceOptions.none()));
+                    new ExcelOoxmlPersistenceOptions(
+                        new ExcelOoxmlPersistenceEncryption.PreserveSource(),
+                        new ExcelOoxmlPersistenceSignature.Unsigned())));
     assertTrue(standardPreservationFailure.getMessage().contains("not auto-preservable"));
 
     ExcelOoxmlEncryptionSnapshot nonCbcSnapshot =
@@ -925,7 +941,9 @@ class ExcelOoxmlPackageSecurityCoverageTest {
                 ExcelOoxmlPackagePersistenceSupport.effectiveOptions(
                     new ExcelOoxmlPackageSecuritySnapshot(nonCbcSnapshot, java.util.List.of()),
                     Optional.of("persist-pass"),
-                    ExcelOoxmlPersistenceOptions.none()));
+                    new ExcelOoxmlPersistenceOptions(
+                        new ExcelOoxmlPersistenceEncryption.PreserveSource(),
+                        new ExcelOoxmlPersistenceSignature.Unsigned())));
     assertTrue(nonCbcPreservationFailure.getMessage().contains("chaining mode"));
     assertTrue(nonCbcPreservationFailure.getMessage().contains("CFB"));
 
@@ -946,7 +964,9 @@ class ExcelOoxmlPackageSecurityCoverageTest {
                     new ExcelOoxmlPackageSecuritySnapshot(
                         unsupportedCipherSnapshot, java.util.List.of()),
                     Optional.of("persist-pass"),
-                    ExcelOoxmlPersistenceOptions.none()));
+                    new ExcelOoxmlPersistenceOptions(
+                        new ExcelOoxmlPersistenceEncryption.PreserveSource(),
+                        new ExcelOoxmlPersistenceSignature.Unsigned())));
     assertTrue(unsupportedCipherPreservationFailure.getMessage().contains("cipher AES_128"));
 
     ExcelOoxmlEncryptionSnapshot unsupportedHashSnapshot =
@@ -966,7 +986,9 @@ class ExcelOoxmlPackageSecurityCoverageTest {
                     new ExcelOoxmlPackageSecuritySnapshot(
                         unsupportedHashSnapshot, java.util.List.of()),
                     Optional.of("persist-pass"),
-                    ExcelOoxmlPersistenceOptions.none()));
+                    new ExcelOoxmlPersistenceOptions(
+                        new ExcelOoxmlPersistenceEncryption.PreserveSource(),
+                        new ExcelOoxmlPersistenceSignature.Unsigned())));
     assertTrue(unsupportedHashPreservationFailure.getMessage().contains("hash SHA_1"));
   }
 
@@ -975,7 +997,7 @@ class ExcelOoxmlPackageSecurityCoverageTest {
       KeyStore signingKeyStore,
       ExcelOoxmlSignatureOptions signatureOptions)
       throws IOException, GeneralSecurityException {
-    assertNotNull(ExcelOoxmlPackageSigningSupport.signingMaterial(signatureOptions));
+    assertNotNull(ExcelOoxmlSigningMaterialSupport.signingMaterial(signatureOptions));
 
     ExcelOoxmlSignatureOptions wrongKeystorePassword =
         new ExcelOoxmlSignatureOptions(
@@ -989,7 +1011,7 @@ class ExcelOoxmlPackageSecurityCoverageTest {
         assertThrows(
             InvalidSigningConfigurationException.class,
             () ->
-                ExcelOoxmlPackageSigningSupport.loadSigningKeyStore(
+                ExcelOoxmlSigningMaterialSupport.loadSigningKeyStore(
                     signedWorkbook.pkcs12Path(), wrongKeystorePassword));
     assertTrue(
         wrongKeystorePasswordFailure.getMessage().contains("Failed to load signing material"));
@@ -998,7 +1020,7 @@ class ExcelOoxmlPackageSecurityCoverageTest {
         assertThrows(
             InvalidSigningConfigurationException.class,
             () ->
-                ExcelOoxmlPackageSigningSupport.signingMaterial(
+                ExcelOoxmlSigningMaterialSupport.signingMaterial(
                     new ExcelOoxmlSignatureOptions(
                         signedWorkbook.pkcs12Path().resolveSibling("missing-signing-material.p12"),
                         signedWorkbook.keystorePassword(),
@@ -1010,14 +1032,14 @@ class ExcelOoxmlPackageSecurityCoverageTest {
 
     assertEquals(
         signedWorkbook.alias(),
-        ExcelOoxmlPackageSigningSupport.resolveAlias(
+        ExcelOoxmlSigningMaterialSupport.resolveAlias(
             signingKeyStore, signedWorkbook.alias(), signatureOptions));
 
     InvalidSigningConfigurationException missingAliasFailure =
         assertThrows(
             InvalidSigningConfigurationException.class,
             () ->
-                ExcelOoxmlPackageSigningSupport.resolveAlias(
+                ExcelOoxmlSigningMaterialSupport.resolveAlias(
                     signingKeyStore, "missing-alias", signatureOptions));
     assertTrue(missingAliasFailure.getMessage().contains("does not exist"));
 
@@ -1027,7 +1049,7 @@ class ExcelOoxmlPackageSecurityCoverageTest {
         assertThrows(
             InvalidSigningConfigurationException.class,
             () ->
-                ExcelOoxmlPackageSigningSupport.resolveAlias(
+                ExcelOoxmlSigningMaterialSupport.resolveAlias(
                     emptyKeyStore, null, signatureOptions));
     assertTrue(noKeyAliasFailure.getMessage().contains("does not contain a private-key entry"));
   }
@@ -1045,7 +1067,7 @@ class ExcelOoxmlPackageSecurityCoverageTest {
         assertThrows(
             InvalidSigningConfigurationException.class,
             () ->
-                ExcelOoxmlPackageSigningSupport.signingPrivateKey(
+                ExcelOoxmlSigningMaterialSupport.signingPrivateKey(
                     certificateOnlyKeyStore,
                     signedWorkbook.pkcs12Path(),
                     "certificate-only",
@@ -1056,7 +1078,7 @@ class ExcelOoxmlPackageSecurityCoverageTest {
         assertThrows(
             InvalidSigningConfigurationException.class,
             () ->
-                ExcelOoxmlPackageSigningSupport.signingCertificateChain(
+                ExcelOoxmlSigningMaterialSupport.signingCertificateChain(
                     certificateOnlyKeyStore, signedWorkbook.pkcs12Path(), "certificate-only"));
     assertTrue(
         certificateChainFailure
@@ -1068,7 +1090,7 @@ class ExcelOoxmlPackageSecurityCoverageTest {
         assertThrows(
             InvalidSigningConfigurationException.class,
             () ->
-                ExcelOoxmlPackageSigningSupport.resolveSigningAlias(
+                ExcelOoxmlSigningMaterialSupport.resolveSigningAlias(
                     uninitializedKeyStore, signedWorkbook.pkcs12Path(), signatureOptions));
     assertTrue(aliasInspectionFailure.getMessage().contains("Failed to inspect signing aliases"));
 
@@ -1076,7 +1098,7 @@ class ExcelOoxmlPackageSecurityCoverageTest {
         assertThrows(
             InvalidSigningConfigurationException.class,
             () ->
-                ExcelOoxmlPackageSigningSupport.signingPrivateKey(
+                ExcelOoxmlSigningMaterialSupport.signingPrivateKey(
                     uninitializedKeyStore,
                     signedWorkbook.pkcs12Path(),
                     signedWorkbook.alias(),
@@ -1088,7 +1110,7 @@ class ExcelOoxmlPackageSecurityCoverageTest {
         assertThrows(
             InvalidSigningConfigurationException.class,
             () ->
-                ExcelOoxmlPackageSigningSupport.signingCertificateChain(
+                ExcelOoxmlSigningMaterialSupport.signingCertificateChain(
                     uninitializedKeyStore, signedWorkbook.pkcs12Path(), signedWorkbook.alias()));
     assertTrue(
         chainLoadFailure.getMessage().contains("Failed to load the signing certificate chain"));
@@ -1118,7 +1140,7 @@ class ExcelOoxmlPackageSecurityCoverageTest {
         assertThrows(
             InvalidSigningConfigurationException.class,
             () ->
-                ExcelOoxmlPackageSigningSupport.resolveAlias(
+                ExcelOoxmlSigningMaterialSupport.resolveAlias(
                     multiAliasKeyStore, null, signatureOptions));
     assertTrue(multipleAliasesFailure.getMessage().contains("multiple private-key aliases"));
 
@@ -1129,7 +1151,7 @@ class ExcelOoxmlPackageSecurityCoverageTest {
         assertThrows(
             InvalidSigningConfigurationException.class,
             () ->
-                ExcelOoxmlPackageSigningSupport.resolveAlias(
+                ExcelOoxmlSigningMaterialSupport.resolveAlias(
                     certificateOnlyAliasKeyStore, null, signatureOptions));
     assertTrue(
         certificateOnlyAliasFailure.getMessage().contains("does not contain a private-key entry"));
@@ -1139,7 +1161,7 @@ class ExcelOoxmlPackageSecurityCoverageTest {
         assertThrows(
             InvalidSigningConfigurationException.class,
             () ->
-                ExcelOoxmlPackageSigningSupport.resolveAlias(
+                ExcelOoxmlSigningMaterialSupport.resolveAlias(
                     nonPrivateKeyStore, null, signatureOptions));
     assertTrue(
         nonPrivateAliasFailure.getMessage().contains("does not contain a private-key entry"));
@@ -1147,7 +1169,7 @@ class ExcelOoxmlPackageSecurityCoverageTest {
         assertThrows(
             InvalidSigningConfigurationException.class,
             () ->
-                ExcelOoxmlPackageSigningSupport.signingPrivateKey(
+                ExcelOoxmlSigningMaterialSupport.signingPrivateKey(
                     nonPrivateKeyStore, signedWorkbook.pkcs12Path(), "alias", signatureOptions));
     assertTrue(reflectedNonPrivateKeyFailure.getMessage().contains("private key"));
 
@@ -1160,7 +1182,7 @@ class ExcelOoxmlPackageSecurityCoverageTest {
         assertThrows(
             InvalidSigningConfigurationException.class,
             () ->
-                ExcelOoxmlPackageSigningSupport.signingCertificateChain(
+                ExcelOoxmlSigningMaterialSupport.signingCertificateChain(
                     nonX509ChainKeyStore, signedWorkbook.pkcs12Path(), "alias"));
     assertTrue(nonX509Failure.getMessage().contains("non-X.509 certificate"));
 
@@ -1173,7 +1195,7 @@ class ExcelOoxmlPackageSecurityCoverageTest {
         assertThrows(
             InvalidSigningConfigurationException.class,
             () ->
-                ExcelOoxmlPackageSigningSupport.signingCertificateChain(
+                ExcelOoxmlSigningMaterialSupport.signingCertificateChain(
                     emptyChainKeyStore, signedWorkbook.pkcs12Path(), "alias"));
     assertTrue(emptyChainFailure.getMessage().contains("X.509 certificate chain"));
 

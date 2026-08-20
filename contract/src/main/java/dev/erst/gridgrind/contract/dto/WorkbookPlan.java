@@ -226,11 +226,6 @@ public record WorkbookPlan(
         security = normalizePersistenceSecurity(security);
       }
 
-      /** Overwrites the source workbook with no explicit package-security persistence settings. */
-      public Overwrite() {
-        this(Optional.empty());
-      }
-
       /** Overwrites the source workbook with explicit package-security persistence settings. */
       public Overwrite(OoxmlPersistenceSecurityInput security) {
         this(Optional.of(Objects.requireNonNull(security, "security must not be null")));

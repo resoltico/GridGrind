@@ -21,7 +21,9 @@ import dev.erst.gridgrind.excel.SheetNotFoundException;
 import dev.erst.gridgrind.excel.UnregisteredUserDefinedFunctionException;
 import dev.erst.gridgrind.excel.UnsupportedFormulaConstructException;
 import dev.erst.gridgrind.excel.UnsupportedFormulaException;
+import dev.erst.gridgrind.excel.UnsupportedSourceEncryptionPreservationException;
 import dev.erst.gridgrind.excel.WorkbookNotFoundException;
+import dev.erst.gridgrind.excel.WorkbookNotOpenableException;
 import dev.erst.gridgrind.excel.WorkbookPasswordRequiredException;
 import dev.erst.gridgrind.excel.WorkbookSecurityException;
 import java.io.IOException;
@@ -50,6 +52,7 @@ final class GridGrindProblemCodeClassifier {
       case SheetNotFoundException _ -> GridGrindProblemCode.SHEET_NOT_FOUND;
       case NamedRangeNotFoundException _ -> GridGrindProblemCode.NAMED_RANGE_NOT_FOUND;
       case CellNotFoundException _ -> GridGrindProblemCode.CELL_NOT_FOUND;
+      case WorkbookNotOpenableException _ -> GridGrindProblemCode.WORKBOOK_NOT_OPENABLE;
       case InvalidCellAddressException _ -> GridGrindProblemCode.INVALID_CELL_ADDRESS;
       case InvalidRangeAddressException _ -> GridGrindProblemCode.INVALID_RANGE_ADDRESS;
       case FormulaRequestException formula -> formula.problemCode();
@@ -64,6 +67,10 @@ final class GridGrindProblemCodeClassifier {
       case UnsupportedFormulaException _ -> GridGrindProblemCode.UNSUPPORTED_FORMULA;
       case WorkbookPasswordRequiredException _ -> GridGrindProblemCode.WORKBOOK_PASSWORD_REQUIRED;
       case InvalidWorkbookPasswordException _ -> GridGrindProblemCode.INVALID_WORKBOOK_PASSWORD;
+      case EncryptionSourceNotEncryptedException _ ->
+          GridGrindProblemCode.ENCRYPTION_SOURCE_NOT_ENCRYPTED;
+      case UnsupportedSourceEncryptionPreservationException _ ->
+          GridGrindProblemCode.ENCRYPTION_SOURCE_NOT_PRESERVABLE;
       case InvalidSigningConfigurationException _ ->
           GridGrindProblemCode.INVALID_SIGNING_CONFIGURATION;
       case WorkbookSecurityException _ -> GridGrindProblemCode.WORKBOOK_SECURITY_ERROR;

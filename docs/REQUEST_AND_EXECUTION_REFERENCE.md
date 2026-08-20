@@ -129,7 +129,7 @@ needs non-default behavior.
 When the CLI reads the request from `--request <path>`, relative request-owned paths inside the
 JSON follow the request file directory. That includes `source.path`, `persistence.path`,
 source-backed `UTF8_FILE` / `FILE` payloads, `formulaEnvironment.externalWorkbooks[*].path` when
-present, and `persistence.security.signature.pkcs12Path`. The CLI flags themselves are separate:
+present, and `persistence.security.signature.signature.pkcs12Path`. The CLI flags themselves are separate:
 `--request` and `--response` still resolve from the shell working directory, as do
 `--execution-root` and `--temp-root`. Execution scratch is not request-rooted: without `--temp-root`, GridGrind
 creates one private per-run scratch directory under the OS temporary-file root; with
@@ -484,27 +484,37 @@ GridGrind can bind it through a no-follow filesystem handle before execution beg
   "ifExists": "REPLACE",
   "security": {
     "encryption": {
-      "password": "GridGrind-2026",
-      "cipher": "AES_256",
-      "hash": "SHA_512"
+      "type": "ENCRYPT",
+      "encryption": {
+        "password": "GridGrind-2026",
+        "cipher": "AES_256",
+        "hash": "SHA_512"
+      }
     },
     "signature": {
-      "pkcs12Path": "signing-material.p12",
-      "keystorePassword": "changeit",
-      "keyPassword": "changeit",
-      "alias": "gridgrind-signing"
+      "type": "SIGN",
+      "signature": {
+        "pkcs12Path": "signing-material.p12",
+        "keystorePassword": "changeit",
+        "keyPassword": "changeit",
+        "alias": "gridgrind-signing"
+      }
     }
   }
 }
 ```
 
-`security.encryption` applies OOXML package encryption to the persisted workbook. Supply the
-password. GridGrind writes AGILE packages only; `mode` is not part of the request shape.
+`security.encryption` is an explicit policy: `NONE` deliberately writes plaintext, `ENCRYPT`
+applies the nested OOXML write envelope, and `PRESERVE_SOURCE` reapplies a verified,
+write-compatible encrypted source envelope. `PRESERVE_SOURCE` rejects plaintext sources during
+preflight. GridGrind writes AGILE packages only; `mode` is not part of the request shape.
 `cipher` defaults to `AES_256`, `hash` defaults to `SHA_512`, supported ciphers are
 `AES_256` and `AES_192`, and supported hashes are `SHA_512`, `SHA_384`, and `SHA_256`.
 Legacy STANDARD packages remain readable on inspection but are not authorable.
 
-`security.signature` applies OOXML package signing during persistence using a PKCS#12 keystore.
+`security.signature` is an explicit policy: `NONE` deliberately writes an unsigned package and
+removes any source package signatures; `SIGN` removes any source package signatures and applies
+one fresh nested PKCS#12 signature during persistence.
 `pkcs12Path` must point to a readable `.p12` or `.pfx` file, and `keystorePassword` must unlock
 the keystore. `keyPassword` defaults to `keystorePassword`, `digestAlgorithm` defaults to
 `SHA256`, and `alias` may be omitted to use the sole keystore entry or the first key entry POI can
@@ -521,11 +531,12 @@ The response uses one failure-capable save result:
 - `write.status=WRITTEN` plus `write.executionPath` when the file was actually written.
 - `write.status=NOT_WRITTEN` when the run failed before any file write happened.
 
-When an encrypted source workbook is reopened and `persistence.security.encryption` is omitted,
-GridGrind auto-preserves source encryption only when the loaded package already uses an authorable
-AGILE/CBC envelope on the supported cipher/hash allowlist above. Otherwise set
-`persistence.security.encryption` explicitly to author a supported AGILE write envelope instead of
-carrying a legacy or weak source package forward implicitly.
+For every writing `EXISTING` source request, `persistence.security` must declare both encryption
+and signature policies. There is no implicit source-encryption preservation or source-signature
+carry-forward. Use `PRESERVE_SOURCE` only for a source that is encrypted with a supported AGILE
+write envelope; use `SIGN` when the output must carry a package signature. A writing `NEW` source
+may omit `security`; its declared default is `{ "encryption": { "type": "NONE" }, "signature":
+{ "type": "NONE" } }`.
 
 `ifExists=REJECT` requires the destination path to be absent. `ifExists=REPLACE` enables create-or-replace behavior while preserving the same `requestedPath` versus `executionPath` response split.
 
@@ -573,18 +584,24 @@ original source path string) whenever an `EXISTING` source path was available, a
 {
   "type": "OVERWRITE",
   "security": {
+    "encryption": {
+      "type": "PRESERVE_SOURCE"
+    },
     "signature": {
-      "pkcs12Path": "signing-material.p12",
-      "keystorePassword": "changeit",
-      "alias": "gridgrind-signing"
+      "type": "SIGN",
+      "signature": {
+        "pkcs12Path": "signing-material.p12",
+        "keystorePassword": "changeit",
+        "alias": "gridgrind-signing"
+      }
     }
   }
 }
 ```
 
-Use `OVERWRITE.security.signature` when persisting mutations to a signed source workbook. Unchanged
-signed sources can be copied or overwritten without re-signing, but once a signed workbook is
-mutated GridGrind requires explicit signature configuration before it will persist the result.
+Every `OVERWRITE` request against an existing source declares the final encryption and signature
+state. Use `signature.type=SIGN` to replace a source signature with a new signature, or
+`signature.type=NONE` to make an intentional unsigned output.
 
 Use `{ "type": "NONE" }` to run mutations, assertions, and inspections without saving.
 

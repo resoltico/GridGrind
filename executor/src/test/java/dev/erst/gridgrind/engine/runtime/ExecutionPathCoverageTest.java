@@ -66,14 +66,17 @@ class ExecutionPathCoverageTest {
         WorkbookPlan.standard(
             new WorkbookPlan.WorkbookSource.ExistingFile("input.xlsx"),
             new WorkbookPlan.WorkbookPersistence.SaveAs(
-                "out.xlsx", WorkbookPlan.WorkbookPersistence.IfExists.REJECT),
+                "out.xlsx",
+                WorkbookPlan.WorkbookPersistence.IfExists.REJECT,
+                dev.erst.gridgrind.contract.dto.OoxmlPersistenceSecurityInput.none()),
             dev.erst.gridgrind.contract.dto.ExecutionPolicyInput.defaults(),
             dev.erst.gridgrind.contract.dto.FormulaEnvironmentInput.empty(),
             List.of());
     WorkbookPlan overwriteRequest =
         WorkbookPlan.standard(
             new WorkbookPlan.WorkbookSource.ExistingFile("input.xlsx"),
-            new WorkbookPlan.WorkbookPersistence.Overwrite(),
+            new WorkbookPlan.WorkbookPersistence.Overwrite(
+                dev.erst.gridgrind.contract.dto.OoxmlPersistenceSecurityInput.none()),
             dev.erst.gridgrind.contract.dto.ExecutionPolicyInput.defaults(),
             dev.erst.gridgrind.contract.dto.FormulaEnvironmentInput.empty(),
             List.of());

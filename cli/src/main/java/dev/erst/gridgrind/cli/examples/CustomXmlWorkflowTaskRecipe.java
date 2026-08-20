@@ -120,7 +120,7 @@ final class CustomXmlWorkflowTaskRecipe {
     return ExampleWorkbookPlans.defaultExecutionPlan(
         TaskStarterRecipeSupport.taskPlanId(taskId),
         new WorkbookPlan.WorkbookSource.ExistingFile(mappingWorkbook),
-        ExampleWorkbookPlans.saveAs(TaskStarterRecipeSupport.taskWorkbookPath(taskId)),
+        ExampleWorkbookPlans.saveAsExisting(TaskStarterRecipeSupport.taskWorkbookPath(taskId)),
         ExampleSteps.read(
             "read-custom-xml-mappings",
             ExampleSelectors.workbook(),

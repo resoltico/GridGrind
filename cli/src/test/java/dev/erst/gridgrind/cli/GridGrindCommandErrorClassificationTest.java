@@ -435,7 +435,15 @@ class GridGrindCommandErrorClassificationTest extends GridGrindCliTestSupport {
             new ByteArrayInputStream(
                 requestJson(
                         "{ \"type\": \"EXISTING\", \"path\": \"/tmp/source.xlsx\" }",
-                        "{ \"type\": \"OVERWRITE\" }",
+                        """
+                        {
+                          "type": "OVERWRITE",
+                          "security": {
+                            "encryption": { "type": "NONE" },
+                            "signature": { "type": "NONE" }
+                          }
+                        }
+                        """,
                         "[]")
                     .getBytes(StandardCharsets.UTF_8)),
             stdout,
@@ -469,7 +477,17 @@ class GridGrindCommandErrorClassificationTest extends GridGrindCliTestSupport {
             new ByteArrayInputStream(
                 requestJson(
                         "{ \"type\": \"EXISTING\", \"path\": \"/tmp/source.xlsx\" }",
-                        "{ \"type\": \"SAVE_AS\", \"path\": \"/tmp/output.xlsx\", \"ifExists\": \"REJECT\" }",
+                        """
+                        {
+                          "type": "SAVE_AS",
+                          "path": "/tmp/output.xlsx",
+                          "ifExists": "REJECT",
+                          "security": {
+                            "encryption": { "type": "NONE" },
+                            "signature": { "type": "NONE" }
+                          }
+                        }
+                        """,
                         "[]")
                     .getBytes(StandardCharsets.UTF_8)),
             stdout,

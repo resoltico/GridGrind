@@ -11,7 +11,10 @@ import dev.erst.gridgrind.excel.foundation.ExcelOoxmlWriteCipher;
 import dev.erst.gridgrind.excel.foundation.ExcelOoxmlWriteHash;
 import dev.erst.gridgrind.excel.ooxml.ExcelOoxmlEncryptionSnapshot;
 import dev.erst.gridgrind.excel.ooxml.ExcelOoxmlOpenOptions;
+import dev.erst.gridgrind.excel.ooxml.ExcelOoxmlPackageInspectionSupport;
+import dev.erst.gridgrind.excel.ooxml.ExcelOoxmlPersistenceEncryption;
 import dev.erst.gridgrind.excel.ooxml.ExcelOoxmlPersistenceOptions;
+import dev.erst.gridgrind.excel.ooxml.ExcelOoxmlPersistenceSignature;
 import dev.erst.gridgrind.excel.ooxml.ExcelOoxmlSignatureOptions;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -24,6 +27,21 @@ import org.junit.jupiter.params.provider.MethodSource;
 
 /** End-to-end tests for encrypted and signed OOXML package handling. */
 class ExcelOoxmlPackageSecuritySupportTest {
+  @Test
+  void openedWorkbooksRetainTheirSourcePathForPersistenceMetadata() throws IOException {
+    OoxmlSecurityTestSupport.SignedWorkbook signedWorkbook =
+        OoxmlSecurityTestSupport.createSignedWorkbook(
+            ExcelTempFiles.createManagedTempDirectory("gridgrind-ooxml-source-path-"));
+
+    try (ExcelWorkbook workbook =
+        ExcelWorkbooks.open(
+            signedWorkbook.workbookPath(), ExcelTempFileFactoryTestSupport.tempFileFactory())) {
+      assertEquals(
+          Optional.of(signedWorkbook.workbookPath().toAbsolutePath().normalize()),
+          workbook.persistence().sourcePath());
+    }
+  }
+
   @Test
   void encryptedWorkbookOpenRequiresCorrectPasswordAndReportsEncryptionFacts() throws IOException {
     OoxmlSecurityTestSupport.EncryptedWorkbook encryptedWorkbook =
@@ -146,6 +164,9 @@ class ExcelOoxmlPackageSecuritySupportTest {
           .save(
               unchangedCopy,
               dev.erst.gridgrind.excel.WorkbookArtifactWriteDisposition.REPLACE_EXISTING,
+              new ExcelOoxmlPersistenceOptions(
+                  new ExcelOoxmlPersistenceEncryption.PreserveSource(),
+                  new ExcelOoxmlPersistenceSignature.Unsigned()),
               ExcelTempFileFactoryTestSupport.tempFileFactory());
     }
     assertEquals(
@@ -167,6 +188,9 @@ class ExcelOoxmlPackageSecuritySupportTest {
           .save(
               mutatedCopy,
               dev.erst.gridgrind.excel.WorkbookArtifactWriteDisposition.REPLACE_EXISTING,
+              new ExcelOoxmlPersistenceOptions(
+                  new ExcelOoxmlPersistenceEncryption.PreserveSource(),
+                  new ExcelOoxmlPersistenceSignature.Unsigned()),
               ExcelTempFileFactoryTestSupport.tempFileFactory());
     }
 
@@ -181,6 +205,8 @@ class ExcelOoxmlPackageSecuritySupportTest {
     OoxmlSecurityTestSupport.SignedWorkbook signedWorkbook =
         OoxmlSecurityTestSupport.createSignedWorkbook(
             ExcelTempFiles.createManagedTempDirectory("gridgrind-ooxml-signed-save-"));
+    Path unsignedOutput =
+        signedWorkbook.workbookPath().getParent().resolve("signed-unsigned-output.xlsx");
     Path resignedOutput =
         signedWorkbook.workbookPath().getParent().resolve("signed-resigned-output.xlsx");
 
@@ -213,18 +239,13 @@ class ExcelOoxmlPackageSecuritySupportTest {
           ExcelOoxmlSignatureState.INVALIDATED_BY_MUTATION,
           afterMutation.security().signatures().getFirst().state());
 
-      IllegalArgumentException unsignedSaveFailure =
-          assertThrows(
-              IllegalArgumentException.class,
-              () ->
-                  workbook
-                      .persistence()
-                      .save(
-                          resignedOutput,
-                          dev.erst.gridgrind.excel.WorkbookArtifactWriteDisposition
-                              .REPLACE_EXISTING,
-                          ExcelTempFileFactoryTestSupport.tempFileFactory()));
-      assertTrue(unsignedSaveFailure.getMessage().contains("persistence.security.signature"));
+      workbook
+          .persistence()
+          .save(
+              unsignedOutput,
+              dev.erst.gridgrind.excel.WorkbookArtifactWriteDisposition.REPLACE_EXISTING,
+              ExcelOoxmlPersistenceOptions.none(),
+              ExcelTempFileFactoryTestSupport.tempFileFactory());
 
       workbook
           .persistence()
@@ -232,8 +253,8 @@ class ExcelOoxmlPackageSecuritySupportTest {
               resignedOutput,
               dev.erst.gridgrind.excel.WorkbookArtifactWriteDisposition.REPLACE_EXISTING,
               new ExcelOoxmlPersistenceOptions(
-                  Optional.empty(),
-                  Optional.of(
+                  new ExcelOoxmlPersistenceEncryption.Plaintext(),
+                  new ExcelOoxmlPersistenceSignature.Sign(
                       new ExcelOoxmlSignatureOptions(
                           signedWorkbook.pkcs12Path(),
                           signedWorkbook.keystorePassword(),
@@ -244,6 +265,11 @@ class ExcelOoxmlPackageSecuritySupportTest {
               ExcelTempFileFactoryTestSupport.tempFileFactory());
     }
 
+    assertTrue(
+        ExcelOoxmlPackageInspectionSupport.inspectPackageSecurity(
+                unsignedOutput, ExcelOoxmlEncryptionSnapshot.none())
+            .signatures()
+            .isEmpty());
     assertTrue(OoxmlSecurityTestSupport.signatureValid(resignedOutput));
     try (ExcelWorkbook reopened =
         ExcelWorkbooks.open(resignedOutput, ExcelTempFileFactoryTestSupport.tempFileFactory())) {

@@ -123,7 +123,7 @@ final class GridGrindCliSurfaceRequestSections {
                 "Relative request-owned paths",
                 "source.path, persistence paths, source-backed file inputs,"
                     + " formulaEnvironment.externalWorkbooks[*].path, and"
-                    + " persistence.security.signature.pkcs12Path follow one rule:"
+                    + " persistence.security.signature.signature.pkcs12Path follow one rule:"
                     + " "
                     + GridGrindRequestSurfaceContractText.requestOwnedPathResolutionSummary()),
             new CliSurface.DefinitionEntry(

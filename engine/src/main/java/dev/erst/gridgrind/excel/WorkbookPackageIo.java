@@ -41,7 +41,6 @@ final class WorkbookPackageIo {
       Path targetPath,
       ExcelOoxmlPackageSecuritySnapshot sourceSecurity,
       Optional<String> sourceEncryptionPassword,
-      boolean sourceMutated,
       WorkbookArtifactWriteDisposition writeDisposition,
       ExcelOoxmlPersistenceOptions persistenceOptions)
       throws IOException {
@@ -50,7 +49,6 @@ final class WorkbookPackageIo {
         targetPath,
         sourceSecurity,
         sourceEncryptionPassword,
-        sourceMutated,
         writeDisposition,
         persistenceOptions);
   }

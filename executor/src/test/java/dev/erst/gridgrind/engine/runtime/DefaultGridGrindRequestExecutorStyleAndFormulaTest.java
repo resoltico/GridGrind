@@ -456,7 +456,9 @@ class DefaultGridGrindRequestExecutorStyleAndFormulaTest
     WorkbookPlan.WorkbookSource existingFile =
         new WorkbookPlan.WorkbookSource.ExistingFile("source.xlsx");
     WorkbookPlan.WorkbookPersistence none = new WorkbookPlan.WorkbookPersistence.None();
-    WorkbookPlan.WorkbookPersistence overwrite = new WorkbookPlan.WorkbookPersistence.Overwrite();
+    WorkbookPlan.WorkbookPersistence overwrite =
+        new WorkbookPlan.WorkbookPersistence.Overwrite(
+            dev.erst.gridgrind.contract.dto.OoxmlPersistenceSecurityInput.none());
     WorkbookPlan.WorkbookPersistence saveAs =
         new WorkbookPlan.WorkbookPersistence.SaveAs(
             "out.xlsx", WorkbookPlan.WorkbookPersistence.IfExists.REJECT);
@@ -485,7 +487,8 @@ class DefaultGridGrindRequestExecutorStyleAndFormulaTest
                   workbookSupport.persistWorkbook(
                       workbook,
                       new WorkbookPlan.WorkbookSource.New(),
-                      new WorkbookPlan.WorkbookPersistence.Overwrite(),
+                      new WorkbookPlan.WorkbookPersistence.Overwrite(
+                          dev.erst.gridgrind.contract.dto.OoxmlPersistenceSecurityInput.none()),
                       new ExecutionInputBindings(
                           workingDirectory, workingDirectory.resolve("scratch"))));
 

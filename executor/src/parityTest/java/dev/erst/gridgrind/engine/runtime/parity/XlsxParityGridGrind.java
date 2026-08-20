@@ -18,6 +18,7 @@ import dev.erst.gridgrind.engine.runtime.ExecutionJournalSink;
 import dev.erst.gridgrind.engine.runtime.parity.ParityPlanSupport.PendingMutation;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Objects;
 
 /** Small parity-test helper for executing GridGrind requests and reading the protocol catalog. */
 final class XlsxParityGridGrind {
@@ -158,7 +159,13 @@ final class XlsxParityGridGrind {
       List<PendingMutation> mutations,
       InspectionStep... inspections) {
     return executeMutateWorkbook(
-        workbookPath, null, saveAsPath, null, null, mutations, inspections);
+        workbookPath,
+        null,
+        saveAsPath,
+        OoxmlPersistenceSecurityInput.none(),
+        null,
+        mutations,
+        inspections);
   }
 
   static WorkbookResult executeMutateWorkbook(
@@ -193,7 +200,11 @@ final class XlsxParityGridGrind {
         XlsxParitySupport.executionRootFor(saveAsPath),
         ParityPlanSupport.request(
             existingWorkbookSource(workbookPath, sourceSecurity),
-            saveAsPersistence(saveAsPath, persistenceSecurity),
+            saveAsPersistence(
+                saveAsPath,
+                Objects.requireNonNull(
+                    persistenceSecurity,
+                    "EXISTING-source parity writes require an explicit security policy")),
             execution,
             formulaEnvironment,
             mutations,
@@ -231,7 +242,14 @@ final class XlsxParityGridGrind {
       Path saveAsPath,
       List<PendingMutation> mutations,
       InspectionStep... inspections) {
-    return mutateWorkbook(workbookPath, null, saveAsPath, null, null, mutations, inspections);
+    return mutateWorkbook(
+        workbookPath,
+        null,
+        saveAsPath,
+        OoxmlPersistenceSecurityInput.none(),
+        null,
+        mutations,
+        inspections);
   }
 
   static WorkbookResult.Success mutateWorkbook(
@@ -241,7 +259,13 @@ final class XlsxParityGridGrind {
       List<PendingMutation> mutations,
       InspectionStep... inspections) {
     return mutateWorkbook(
-        workbookPath, null, saveAsPath, null, formulaEnvironment, mutations, inspections);
+        workbookPath,
+        null,
+        saveAsPath,
+        OoxmlPersistenceSecurityInput.none(),
+        formulaEnvironment,
+        mutations,
+        inspections);
   }
 
   static WorkbookResult.Success mutateWorkbook(
@@ -295,7 +319,7 @@ final class XlsxParityGridGrind {
         workbookPath,
         null,
         saveAsPath,
-        null,
+        OoxmlPersistenceSecurityInput.none(),
         execution,
         formulaEnvironment,
         mutations,
@@ -367,7 +391,8 @@ final class XlsxParityGridGrind {
             XlsxParitySupport.executionRootFor(workbookPath),
             ParityPlanSupport.request(
                 new WorkbookPlan.WorkbookSource.ExistingFile(workbookPath.toString()),
-                new WorkbookPlan.WorkbookPersistence.Overwrite(),
+                new WorkbookPlan.WorkbookPersistence.Overwrite(
+                    OoxmlPersistenceSecurityInput.none()),
                 execution,
                 formulaEnvironment,
                 mutations,

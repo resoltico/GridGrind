@@ -213,7 +213,9 @@ final class XlsxParityTest {
                       new WorkbookPlan.WorkbookSource.ExistingFile(
                           scenario.workbookPath().toString()),
                       new WorkbookPlan.WorkbookPersistence.SaveAs(
-                          outputPath.toString(), WorkbookPlan.WorkbookPersistence.IfExists.REJECT),
+                          outputPath.toString(),
+                          WorkbookPlan.WorkbookPersistence.IfExists.REJECT,
+                          dev.erst.gridgrind.contract.dto.OoxmlPersistenceSecurityInput.none()),
                       ExecutionPolicyInput.calculation(
                           CalculationPolicyInput.strategy(
                               new CalculationStrategyInput.EvaluateAll())),

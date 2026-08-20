@@ -131,6 +131,38 @@ class DefaultGridGrindRequestExecutorPrivateSourceRaceTest {
     assertInstanceOf(ProblemContext.PersistWorkbook.class, failure.problem().context());
   }
 
+  @Test
+  void failsClosedWhenAFullXssfOutputParentChangesAfterPreflight() throws Exception {
+    Path outputDirectory = Files.createDirectory(root.resolve("output"));
+    Path tempRoot = Files.createDirectory(root.resolve("private-temp"));
+    WorkbookPlan request =
+        WorkbookPlan.standard(
+            new WorkbookPlan.WorkbookSource.New(),
+            new WorkbookPlan.WorkbookPersistence.SaveAs(
+                "output/result.xlsx", WorkbookPlan.WorkbookPersistence.IfExists.REJECT),
+            verbosePolicy(ExecutionModeInput.defaults()),
+            FormulaEnvironmentInput.empty(),
+            List.of(
+                new MutationStep(
+                    "ensure-sheet",
+                    new SheetSelector.ByName("Budget"),
+                    new WorkbookMutationAction.EnsureSheet())));
+    AtomicBoolean replacedOutputDirectory = new AtomicBoolean();
+
+    WorkbookResult response =
+        new DefaultGridGrindRequestExecutor()
+            .execute(
+                request,
+                new ExecutionInputBindings(root, tempRoot),
+                event ->
+                    replaceBoundOutputDirectory(event, outputDirectory, replacedOutputDirectory));
+
+    WorkbookResult.Failure failure = assertInstanceOf(WorkbookResult.Failure.class, response);
+    assertTrue(replacedOutputDirectory.get());
+    assertEquals(GridGrindProblemCode.UNSAFE_PATH_ACCESS, failure.problem().code());
+    assertInstanceOf(ProblemContext.PersistWorkbook.class, failure.problem().context());
+  }
+
   private static ExecutionPolicyInput verbosePolicy(ExecutionModeInput mode) {
     return new ExecutionPolicyInput(
         mode,

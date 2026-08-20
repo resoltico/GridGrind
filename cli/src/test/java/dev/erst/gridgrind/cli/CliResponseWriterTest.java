@@ -320,11 +320,17 @@ class CliResponseWriterTest extends GridGrindCliTestSupport {
                 "path": "secured.xlsx",
                 "ifExists": "REJECT",
                 "security": {
-                  "encryption": { "password": "persistence-secret" },
+                  "encryption": {
+                    "type": "ENCRYPT",
+                    "encryption": { "password": "persistence-secret" }
+                  },
                   "signature": {
-                    "pkcs12Path": "keys/signing.p12",
-                    "keystorePassword": "keystore-secret",
-                    "keyPassword": "key-secret"
+                    "type": "SIGN",
+                    "signature": {
+                      "pkcs12Path": "keys/signing.p12",
+                      "keystorePassword": "keystore-secret",
+                      "keyPassword": "key-secret"
+                    }
                   }
                 }
               },
@@ -338,9 +344,11 @@ class CliResponseWriterTest extends GridGrindCliTestSupport {
   private static List<SecretOwner> secretOwners() {
     return List.of(
         new SecretOwner("source.security.password", "source-secret"),
-        new SecretOwner("persistence.security.encryption.password", "persistence-secret"),
-        new SecretOwner("persistence.security.signature.keystorePassword", "keystore-secret"),
-        new SecretOwner("persistence.security.signature.keyPassword", "key-secret"));
+        new SecretOwner(
+            "persistence.security.encryption.encryption.password", "persistence-secret"),
+        new SecretOwner(
+            "persistence.security.signature.signature.keystorePassword", "keystore-secret"),
+        new SecretOwner("persistence.security.signature.signature.keyPassword", "key-secret"));
   }
 
   private static void assertSecretRedacted(SecretOwner owner, byte[]... payloads) {

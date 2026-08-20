@@ -488,7 +488,7 @@ layer; the extension check in LIM-002 remains the defense against unrecognized o
 | **Category** | Protocol |
 | **Limit** | Write-side OOXML package encryption authors AGILE only, defaults to `AES_256` / `SHA_512`, and allows only `AES_256` or `AES_192` plus `SHA_512`, `SHA_384`, or `SHA_256` |
 | **Error code** | `INVALID_REQUEST` |
-| **Applies to** | `persistence.security.encryption`; implicit encrypted-source preservation during persistence |
+| **Applies to** | `persistence.security.encryption` policy axis |
 | **Code** | `OoxmlEncryptionInput.create // LIM-038`; `ExcelOoxmlPackagePersistenceSupport.preservedSourceEncryption // LIM-038` |
 | **UX** | `GridGrindOoxmlWriteEncryptionContractText.inputSummary // LIM-038`; `GridGrindOoxmlWriteEncryptionContractText.limitSummary // LIM-038` |
 
@@ -496,11 +496,9 @@ GridGrind reads and reports broader factual OOXML encryption state than it autho
 surface legacy envelopes such as `STANDARD`, weaker AGILE variants, or non-default hashes because
 the goal on the read path is factual reporting. The write path is intentionally narrower:
 authorable persistence security owns one explicit strong-only AGILE contract and does not accept a
-`mode` field. When an encrypted source workbook is persisted without an explicit
-`persistence.security.encryption` block, GridGrind auto-preserves source encryption only if the
-loaded package already sits on the authorable AGILE/CBC allowlist; otherwise the request must
-choose one supported AGILE write envelope explicitly instead of silently carrying forward a legacy
-or weak source package. Reintroduce write-side `STANDARD` only if a named consumer proves an
+`mode` field. Existing-workbook writes declare encryption explicitly: `NONE`, `ENCRYPT`, or
+`PRESERVE_SOURCE`; omission never inherits source encryption. `PRESERVE_SOURCE` applies only to a
+verified source envelope that the strong AGILE write contract can reapply. Reintroduce write-side `STANDARD` only if a named consumer proves an
 old-Excel authoring requirement; until then readable/reportable `STANDARD` remains intentionally
 broader than the authorable write contract.
 
@@ -811,7 +809,7 @@ All other reads and mutations continue to use the normal full-XSSF in-memory exe
 | `.xls`, `.xlsm`, `.xlsb` | Not supported. See LIM-002. |
 | Streaming read/write | Supported only through `execution.mode`: `EVENT_READ` summary reads (`LIM-019`) and `STREAMING_WRITE` append-oriented `NEW` workbook authoring (`LIM-020`). |
 | Request JSON size | Capped at `16 MiB`; large authored values belong in `UTF8_FILE`, `FILE`, or `STANDARD_INPUT` sources (`LIM-021`). |
-| OOXML encryption and signing | Supported for `.xlsx` package security on the full-XSSF path. `source.security.password` is required for encrypted sources, `GET_PACKAGE_SECURITY` is unavailable in `EVENT_READ`, persisting mutations to a signed workbook requires explicit `persistence.security.signature` re-signing, and write-side OOXML encryption is the AGILE-only strong contract from LIM-038. |
+| OOXML encryption and signing | Supported for `.xlsx` package security on the full-XSSF path. `source.security.password` is required for encrypted sources, `GET_PACKAGE_SECURITY` is unavailable in `EVENT_READ`, every existing-source write declares both final `persistence.security` axes (`signature: NONE` deliberately removes signatures; `SIGN` replaces them), and write-side OOXML encryption is the AGILE-only strong contract from LIM-038. |
 
 Apache POI feature coverage: https://poi.apache.org/components/spreadsheet/
 

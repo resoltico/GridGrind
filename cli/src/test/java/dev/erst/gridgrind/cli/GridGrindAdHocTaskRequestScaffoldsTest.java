@@ -15,6 +15,7 @@ import dev.erst.gridgrind.cli.discovery.TaskPhase;
 import dev.erst.gridgrind.cli.discovery.TaskSourceMode;
 import dev.erst.gridgrind.cli.discovery.TaskTestFixtures;
 import dev.erst.gridgrind.cli.examples.GridGrindCliRecipeRegistry;
+import dev.erst.gridgrind.contract.dto.OoxmlPersistenceSecurityInput;
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
 import dev.erst.gridgrind.contract.json.GridGrindJsonOutput;
 import java.util.List;
@@ -91,6 +92,11 @@ class GridGrindAdHocTaskRequestScaffoldsTest {
     assertTrue(inputPath(request).endsWith(".xlsx"));
     assertTrue(inputPath(request).contains("overwrite-existing"));
     assertEquals("OVERWRITE", persistenceType(request));
+    assertEquals(
+        OoxmlPersistenceSecurityInput.none(),
+        ((WorkbookPlan.WorkbookPersistence.Overwrite) request.persistence())
+            .security()
+            .orElseThrow());
     assertFalse(steps(request).isEmpty());
   }
 
@@ -114,9 +120,19 @@ class GridGrindAdHocTaskRequestScaffoldsTest {
                 TaskMutationMode.MUTATING,
                 TaskAssetMode.SELF_CONTAINED),
             List.of(phase(List.of(new TaskCapabilityRef("mutationActionTypes", "SET_CELL")))));
+    TaskEntry newSaveAsTask =
+        task(
+            "AD_HOC_NEW_EXPORT",
+            new TaskExecutionProfile(
+                TaskSourceMode.NEW_WORKBOOK,
+                TaskPersistenceMode.SAVE_AS,
+                TaskMutationMode.MUTATING,
+                TaskAssetMode.SELF_CONTAINED),
+            List.of(phase(List.of(new TaskCapabilityRef("mutationActionTypes", "SET_CELL")))));
 
     WorkbookPlan noneRequest = GridGrindAdHocTaskRequestScaffolds.requestFor(noneTask);
     WorkbookPlan saveAsRequest = GridGrindAdHocTaskRequestScaffolds.requestFor(saveAsTask);
+    WorkbookPlan newSaveAsRequest = GridGrindAdHocTaskRequestScaffolds.requestFor(newSaveAsTask);
 
     assertEquals("NEW", sourceType(noneRequest));
     assertEquals("NONE", persistenceType(noneRequest));
@@ -127,6 +143,16 @@ class GridGrindAdHocTaskRequestScaffoldsTest {
     assertEquals("SAVE_AS", persistenceType(saveAsRequest));
     assertEquals("REPLACE", persistenceIfExists(saveAsRequest));
     assertEquals("starter-ad-hoc-export-output.xlsx", outputPath(saveAsRequest));
+    assertEquals(
+        OoxmlPersistenceSecurityInput.none(),
+        ((WorkbookPlan.WorkbookPersistence.SaveAs) saveAsRequest.persistence())
+            .security()
+            .orElseThrow());
+    assertEquals("NEW", sourceType(newSaveAsRequest));
+    assertTrue(
+        ((WorkbookPlan.WorkbookPersistence.SaveAs) newSaveAsRequest.persistence())
+            .security()
+            .isEmpty());
     assertFalse(steps(saveAsRequest).isEmpty());
   }
 

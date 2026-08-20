@@ -85,7 +85,7 @@
     {
       "id": "poi-signed-workbook",
       "kind": "POI_SIGNED",
-      "description": "Direct-POI workbook signed at the OOXML package layer for signature validation and preservation probes."
+      "description": "Direct-POI workbook signed at the OOXML package layer for signature validation, explicit unsigned-output, and re-signing probes."
     },
     {
       "id": "poi-invalid-signature-workbook",

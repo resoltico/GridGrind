@@ -37,4 +37,12 @@ final class ExampleWorkbookPlans {
     return new WorkbookPlan.WorkbookPersistence.SaveAs(
         path, WorkbookPlan.WorkbookPersistence.IfExists.REPLACE);
   }
+
+  /** Returns a plain and unsigned SAVE_AS policy for one existing workbook source. */
+  static WorkbookPlan.WorkbookPersistence.SaveAs saveAsExisting(String path) {
+    return new WorkbookPlan.WorkbookPersistence.SaveAs(
+        path,
+        WorkbookPlan.WorkbookPersistence.IfExists.REPLACE,
+        dev.erst.gridgrind.contract.dto.OoxmlPersistenceSecurityInput.none());
+  }
 }

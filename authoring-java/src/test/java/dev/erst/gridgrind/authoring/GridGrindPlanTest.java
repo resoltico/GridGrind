@@ -12,6 +12,7 @@ import dev.erst.gridgrind.contract.dto.ExecutionJournalLevel;
 import dev.erst.gridgrind.contract.dto.ExecutionModeInput;
 import dev.erst.gridgrind.contract.dto.ExecutionPolicyInput;
 import dev.erst.gridgrind.contract.dto.FormulaEnvironmentInput;
+import dev.erst.gridgrind.contract.dto.OoxmlPersistenceSecurityInput;
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
 import dev.erst.gridgrind.contract.dto.WorkbookResult;
 import dev.erst.gridgrind.contract.json.GridGrindJson;
@@ -164,7 +165,6 @@ class GridGrindPlanTest {
   @Test
   void conveniencePersistenceMethodsCoverInMemoryAndOverwriteBranches() {
     GridGrindPlan plan = GridGrindPlan.newWorkbook();
-    assertEquals(plan, plan.clearPlanId());
     assertInstanceOf(
         WorkbookPlan.WorkbookPersistence.None.class,
         plan.saveAs(tempDir.resolve("copy.xlsx"), WorkbookPlan.WorkbookPersistence.IfExists.REJECT)
@@ -173,7 +173,29 @@ class GridGrindPlanTest {
             .persistence());
     assertInstanceOf(
         WorkbookPlan.WorkbookPersistence.Overwrite.class,
-        GridGrindPlan.open(tempDir.resolve("source.xlsx")).overwrite().toPlan().persistence());
+        GridGrindPlan.open(tempDir.resolve("source.xlsx"))
+            .overwrite(OoxmlPersistenceSecurityInput.none())
+            .toPlan()
+            .persistence());
+    assertEquals(
+        OoxmlPersistenceSecurityInput.none(),
+        ((WorkbookPlan.WorkbookPersistence.SaveAs)
+                GridGrindPlan.open(tempDir.resolve("source.xlsx"))
+                    .saveAs(
+                        tempDir.resolve("copy.xlsx"),
+                        WorkbookPlan.WorkbookPersistence.IfExists.REJECT,
+                        OoxmlPersistenceSecurityInput.none())
+                    .toPlan()
+                    .persistence())
+            .security()
+            .orElseThrow());
+    assertThrows(
+        IllegalStateException.class,
+        () ->
+            GridGrindPlan.open(tempDir.resolve("source.xlsx"))
+                .saveAs(
+                    tempDir.resolve("copy.xlsx"),
+                    WorkbookPlan.WorkbookPersistence.IfExists.REJECT));
   }
 
   @Test

@@ -156,7 +156,9 @@ final class XlsxParitySecurityProbeGroup {
             encrypted.workbookPath(),
             sourceSecurity,
             preservedOutput,
-            null,
+            new OoxmlPersistenceSecurityInput(
+                new OoxmlPersistenceEncryptionInput.PreserveSource(),
+                new OoxmlPersistenceSignatureInput.None()),
             null,
             List.of(
                 mutate(
@@ -188,11 +190,12 @@ final class XlsxParitySecurityProbeGroup {
         XlsxParityGridGrind.writeNewWorkbook(
             authoredOutput,
             new OoxmlPersistenceSecurityInput(
-                new OoxmlEncryptionInput(
-                    XlsxParityScenarios.ENCRYPTION_PASSWORD,
-                    ExcelOoxmlWriteCipher.AES_256,
-                    ExcelOoxmlWriteHash.SHA_512),
-                null),
+                new OoxmlPersistenceEncryptionInput.Encrypt(
+                    new OoxmlEncryptionInput(
+                        XlsxParityScenarios.ENCRYPTION_PASSWORD,
+                        ExcelOoxmlWriteCipher.AES_256,
+                        ExcelOoxmlWriteHash.SHA_512)),
+                new OoxmlPersistenceSignatureInput.None()),
             (ExecutionModeInput) null,
             List.of(
                 mutate(
@@ -329,35 +332,36 @@ final class XlsxParitySecurityProbeGroup {
     SheetInspectionResult.CellsResult sourceCells =
         XlsxParityGridGrind.read(sourceRead, "cells", SheetInspectionResult.CellsResult.class);
 
-    Path preservedOutput = context.derivedWorkbook("signed-preserved");
-    WorkbookResult.Success preservedSave =
-        XlsxParityGridGrind.mutateWorkbook(signed.workbookPath(), preservedOutput, List.of());
-    boolean poiPreservedValid = XlsxParityOracle.signatureValid(preservedOutput);
-    WorkbookResult.Success preservedRead =
-        XlsxParityGridGrind.readWorkbook(
-            preservedOutput,
-            inspect(
-                "security",
-                new WorkbookSelector.Current(),
-                new WorkbookIntrospectionQuery.GetPackageSecurity()));
-    WorkbookInspectionResult.PackageSecurityResult preservedSecurityResult =
-        XlsxParityGridGrind.read(
-            preservedRead, "security", WorkbookInspectionResult.PackageSecurityResult.class);
-
     XlsxParityScenarios.MaterializedScenario unsignedMutationSource =
         context.copiedScenario(XlsxParityScenarios.SIGNED_WORKBOOK, "signed-unsigned-mutation");
     Path unsignedOutput = context.derivedWorkbook("signed-unsigned-mutation");
-    WorkbookResult unsignedMutationResponse =
-        XlsxParityGridGrind.executeMutateWorkbook(
+    WorkbookResult.Success unsignedSave =
+        XlsxParityGridGrind.mutateWorkbook(
             unsignedMutationSource.workbookPath(),
+            null,
             unsignedOutput,
+            OoxmlPersistenceSecurityInput.none(),
+            null,
             List.of(
                 mutate(
                     new CellSelector.ByAddress("Signed", "C1"),
-                    new CellMutationAction.SetCell(text("Touch")))));
-    if (!(unsignedMutationResponse instanceof WorkbookResult.Failure unsignedMutationFailure)) {
-      return fail("Mutating a signed workbook without explicit re-sign unexpectedly succeeded.");
-    }
+                    new CellMutationAction.SetCell(text("Unsigned")))));
+    WorkbookResult.Success unsignedRead =
+        XlsxParityGridGrind.readWorkbook(
+            unsignedOutput,
+            inspect(
+                "security",
+                new WorkbookSelector.Current(),
+                new WorkbookIntrospectionQuery.GetPackageSecurity()),
+            inspect(
+                "cells",
+                new CellSelector.ByAddresses("Signed", List.of("C1")),
+                allFacetCellsQuery()));
+    WorkbookInspectionResult.PackageSecurityResult unsignedSecurityResult =
+        XlsxParityGridGrind.read(
+            unsignedRead, "security", WorkbookInspectionResult.PackageSecurityResult.class);
+    SheetInspectionResult.CellsResult unsignedCells =
+        XlsxParityGridGrind.read(unsignedRead, "cells", SheetInspectionResult.CellsResult.class);
 
     XlsxParityScenarios.MaterializedScenario resignSource =
         context.copiedScenario(XlsxParityScenarios.SIGNED_WORKBOOK, "signed-resigned-source");
@@ -368,10 +372,11 @@ final class XlsxParitySecurityProbeGroup {
             null,
             resignedOutput,
             new OoxmlPersistenceSecurityInput(
-                null,
-                signingInput(
-                    resignSource.attachment(XlsxParityScenarios.SIGNING_PKCS12_ATTACHMENT),
-                    "GridGrind parity re-sign")),
+                new OoxmlPersistenceEncryptionInput.None(),
+                new OoxmlPersistenceSignatureInput.Sign(
+                    signingInput(
+                        resignSource.attachment(XlsxParityScenarios.SIGNING_PKCS12_ATTACHMENT),
+                        "GridGrind parity re-sign"))),
             null,
             List.of(
                 mutate(
@@ -400,10 +405,11 @@ final class XlsxParitySecurityProbeGroup {
         XlsxParityGridGrind.writeNewWorkbook(
             authoredOutput,
             new OoxmlPersistenceSecurityInput(
-                null,
-                signingInput(
-                    signed.attachment(XlsxParityScenarios.SIGNING_PKCS12_ATTACHMENT),
-                    "GridGrind parity authored signature")),
+                new OoxmlPersistenceEncryptionInput.None(),
+                new OoxmlPersistenceSignatureInput.Sign(
+                    signingInput(
+                        signed.attachment(XlsxParityScenarios.SIGNING_PKCS12_ATTACHMENT),
+                        "GridGrind parity authored signature"))),
             (ExecutionModeInput) null,
             List.of(
                 mutate(
@@ -433,17 +439,10 @@ final class XlsxParitySecurityProbeGroup {
             && hasSingleSignatureState(
                 sourceSecurityResult.security(), ExcelOoxmlSignatureState.VALID)
             && "Signed workbook".equals(textCell(sourceCells, "A1"))
-            && XlsxParityGridGrind.savedPath(preservedSave)
-                .equals(preservedOutput.toAbsolutePath().toString())
-            && poiPreservedValid
-            && hasSingleSignatureState(
-                preservedSecurityResult.security(), ExcelOoxmlSignatureState.VALID)
-            && unsignedMutationFailure.problem().code() == GridGrindProblemCode.INVALID_REQUEST
-            && unsignedMutationFailure
-                .problem()
-                .message()
-                .contains("persistence.security.signature")
-            && !Files.exists(unsignedOutput)
+            && XlsxParityGridGrind.savedPath(unsignedSave)
+                .equals(unsignedOutput.toAbsolutePath().toString())
+            && unsignedSecurityResult.security().signatures().isEmpty()
+            && "Unsigned".equals(textCell(unsignedCells, "C1"))
             && XlsxParityGridGrind.savedPath(resignedSave)
                 .equals(resignedOutput.toAbsolutePath().toString())
             && poiResignedValid
@@ -457,7 +456,7 @@ final class XlsxParitySecurityProbeGroup {
                 authoredSecurityResult.security(), ExcelOoxmlSignatureState.VALID)
             && "Authored signed".equals(textCell(authoredCells, "A1"))
         ? pass(
-            "OOXML signing parity is present for signature validation, unchanged signature preservation, explicit re-signing, and authored signed save-as.")
+            "OOXML signing parity is present for signature validation, explicit unsigned output, fresh re-signing, and authored signed save-as.")
         : fail(
             "OOXML signing parity mismatch."
                 + " poiSourceValid="
@@ -465,15 +464,13 @@ final class XlsxParitySecurityProbeGroup {
                 + " sourceValid="
                 + hasSingleSignatureState(
                     sourceSecurityResult.security(), ExcelOoxmlSignatureState.VALID)
-                + " poiPreservedValid="
-                + poiPreservedValid
-                + " preservedValid="
-                + hasSingleSignatureState(
-                    preservedSecurityResult.security(), ExcelOoxmlSignatureState.VALID)
-                + " unsignedFailureCode="
-                + unsignedMutationFailure.problem().code()
-                + " unsignedOutputExists="
-                + Files.exists(unsignedOutput)
+                + " unsignedSaved="
+                + XlsxParityGridGrind.savedPath(unsignedSave)
+                    .equals(unsignedOutput.toAbsolutePath().toString())
+                + " unsignedSignatureCount="
+                + unsignedSecurityResult.security().signatures().size()
+                + " unsignedCell="
+                + textCell(unsignedCells, "C1")
                 + " poiResignedValid="
                 + poiResignedValid
                 + " resignedValid="
