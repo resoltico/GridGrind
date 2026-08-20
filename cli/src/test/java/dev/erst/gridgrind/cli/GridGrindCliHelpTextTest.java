@@ -296,7 +296,7 @@ class GridGrindCliHelpTextTest extends GridGrindCliTestSupport {
     assertTrue(protocol.contains("execution.mode is a typed discriminator"));
     assertTrue(
         normalizedProtocol.contains(
-            "execution may include any subset of execution.mode, execution.journal, and execution.calculation"));
+            "execution may include any subset of execution.mode, execution.journal, execution.calculation, and execution.assertionMode"));
     assertTrue(
         normalizedProtocol.contains(
             "The bare --print-protocol-catalog command emits only the compact index."));

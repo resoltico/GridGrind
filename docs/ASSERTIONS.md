@@ -48,9 +48,11 @@ Successful responses echo passed assertion steps back through the ordered `asser
 }
 ```
 
-Failed assertions stop the workflow with `ASSERTION_FAILED` and attach a structured
-`problem.assertionFailure` payload describing the failed assertion plus the observed factual read
-results that caused the mismatch.
+`execution.assertionMode` controls assertion failure handling. The default `FAIL_FAST` mode stops
+at the first mismatch. `COLLECT` starts a terminal verification phase at the first assertion: no
+later mutation is legal, inspections may interleave, every assertion is reported in `assertions[]`,
+and the response returns the first mismatch as its canonical `ASSERTION_FAILED`
+`problem.assertionFailure` payload.
 
 Entity-presence assertions are selector-count assertions, not strict read lookups. If an exact
 sheet, named-range, chart, table, or pivot-table selector matches nothing, the assertion observes

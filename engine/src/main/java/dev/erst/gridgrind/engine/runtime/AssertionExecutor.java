@@ -36,6 +36,14 @@ final class AssertionExecutor {
   AssertionResult execute(
       AssertionStep step, ExcelWorkbook workbook, WorkbookLocation workbookLocation)
       throws AssertionFailedException {
+    return switch (executeCollecting(step, workbook, workbookLocation)) {
+      case AssertionStepExecution.Passed passed -> passed.result();
+      case AssertionStepExecution.Failed failed -> throw failed.failure();
+    };
+  }
+
+  AssertionStepExecution executeCollecting(
+      AssertionStep step, ExcelWorkbook workbook, WorkbookLocation workbookLocation) {
     Objects.requireNonNull(step, "step must not be null");
     Objects.requireNonNull(workbook, "workbook must not be null");
     Objects.requireNonNull(workbookLocation, "workbookLocation must not be null");
@@ -43,19 +51,27 @@ final class AssertionExecutor {
     AssertionEvaluation evaluation =
         evaluate(step.stepId(), step.target(), step.assertion(), workbook, workbookLocation);
     if (!evaluation.passed()) {
-      throw new AssertionFailedException(
-          evaluation.message(),
-          new AssertionFailure(
+      AssertionResult result =
+          new AssertionResult(
+              dev.erst.gridgrind.contract.assertion.AssertionOutcome.FAILED,
               step.stepId(),
-              step.assertion().assertionType(),
-              step.target(),
-              step.assertion(),
-              evaluation.observations()));
+              step.assertion().assertionType());
+      return new AssertionStepExecution.Failed(
+          result,
+          new AssertionFailedException(
+              evaluation.message(),
+              new AssertionFailure(
+                  step.stepId(),
+                  step.assertion().assertionType(),
+                  step.target(),
+                  step.assertion(),
+                  evaluation.observations())));
     }
-    return new AssertionResult(
-        dev.erst.gridgrind.contract.assertion.AssertionOutcome.PASSED,
-        step.stepId(),
-        step.assertion().assertionType());
+    return new AssertionStepExecution.Passed(
+        new AssertionResult(
+            dev.erst.gridgrind.contract.assertion.AssertionOutcome.PASSED,
+            step.stepId(),
+            step.assertion().assertionType()));
   }
 
   private AssertionEvaluation evaluate(

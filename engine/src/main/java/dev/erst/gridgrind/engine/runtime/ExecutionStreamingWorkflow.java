@@ -2,6 +2,7 @@ package dev.erst.gridgrind.engine.runtime;
 
 import dev.erst.gridgrind.contract.assertion.AssertionOutcome;
 import dev.erst.gridgrind.contract.assertion.AssertionResult;
+import dev.erst.gridgrind.contract.dto.AssertionModeInput;
 import dev.erst.gridgrind.contract.dto.CalculationReport;
 import dev.erst.gridgrind.contract.dto.ExecutionModeInput;
 import dev.erst.gridgrind.contract.dto.GridGrindProblemDetail;
@@ -58,6 +59,7 @@ final class ExecutionStreamingWorkflow {
         ExecutionRequestPaths.workbookLocationFor(
             request.source(), request.persistence(), bindings.workingDirectory());
     List<AssertionResult> assertions = new ArrayList<>();
+    CollectedAssertionFailures collectedAssertionFailures = new CollectedAssertionFailures();
     List<InspectionResult> inspections = new ArrayList<>();
     StreamingWorkflowContext workflowContext =
         new StreamingWorkflowContext(
@@ -81,8 +83,20 @@ final class ExecutionStreamingWorkflow {
         WorkbookStep step = request.steps().get(stepIndex);
         ExecutionJournalRecorder.StepHandle stepHandle = journal.beginStep(stepIndex, step);
         try {
-          executeStreamingStep(writer, workflowContext, step);
-          stepHandle.succeed();
+          java.util.Optional<AssertionFailedException> collectedFailure =
+              executeStreamingStep(writer, workflowContext, step);
+          if (collectedFailure.isPresent()) {
+            AssertionFailedException assertionFailure = collectedFailure.orElseThrow();
+            GridGrindProblemDetail.Problem problem =
+                ExecutionResponseSupport.problemFor(
+                    assertionFailure,
+                    stepSupport.executeStepContext(request, stepIndex, step, assertionFailure));
+            stepHandle.fail(
+                problem.code(), problem.category(), problem.context().stage(), problem.message());
+            collectedAssertionFailures.add(stepIndex, step.stepId(), problem);
+          } else {
+            stepHandle.succeed();
+          }
         } catch (Exception exception) {
           return closeFailedStreamingStep(
               workflowContext,
@@ -103,6 +117,16 @@ final class ExecutionStreamingWorkflow {
         GridGrindProblemDetail.Problem problem = calculationOutcome.failure().orElseThrow();
         return ExecutionResponseSupport.failureResponse(
             workflowContext.failure(calculation, problem));
+      }
+
+      if (!collectedAssertionFailures.isEmpty()) {
+        CollectedAssertionFailures.Failure firstFailure = collectedAssertionFailures.first();
+        return ExecutionResponseSupport.failureResponse(
+            workflowContext.failure(
+                calculation,
+                firstFailure.problem(),
+                firstFailure.stepIndex(),
+                firstFailure.stepId()));
       }
 
       materializedPath =
@@ -158,30 +182,46 @@ final class ExecutionStreamingWorkflow {
         List.copyOf(inspections));
   }
 
-  private void executeStreamingStep(
+  private java.util.Optional<AssertionFailedException> executeStreamingStep(
       ExcelStreamingWorkbookWriter writer,
       StreamingWorkflowContext workflowContext,
       WorkbookStep step)
       throws IOException, AssertionFailedException {
-    switch (step) {
-      case MutationStep mutationStep ->
-          stepSupport.executeStreamingMutationStep(writer, mutationStep);
-      case AssertionStep assertionStep ->
+    return switch (step) {
+      case MutationStep mutationStep -> {
+        stepSupport.executeStreamingMutationStep(writer, mutationStep);
+        yield java.util.Optional.empty();
+      }
+      case AssertionStep assertionStep -> {
+        if (workflowContext.request().assertionMode() == AssertionModeInput.FAIL_FAST) {
           workflowContext
               .assertions()
               .add(
                   stepSupport.executeStreamingAssertionStep(
                       writer, assertionStep, workflowContext.workbookLocation()));
-      case InspectionStep inspectionStep ->
-          workflowContext
-              .inspections()
-              .add(
-                  stepSupport.executeStreamingInspectionStep(
-                      writer,
-                      inspectionStep,
-                      workflowContext.workbookLocation(),
-                      workflowContext.executionMode()));
-    }
+          yield java.util.Optional.empty();
+        }
+        AssertionStepExecution assertionExecution =
+            stepSupport.executeStreamingAssertionStepCollecting(
+                writer, assertionStep, workflowContext.workbookLocation());
+        workflowContext.assertions().add(assertionExecution.result());
+        yield switch (assertionExecution) {
+          case AssertionStepExecution.Passed _ -> java.util.Optional.empty();
+          case AssertionStepExecution.Failed failed -> java.util.Optional.of(failed.failure());
+        };
+      }
+      case InspectionStep inspectionStep -> {
+        workflowContext
+            .inspections()
+            .add(
+                stepSupport.executeStreamingInspectionStep(
+                    writer,
+                    inspectionStep,
+                    workflowContext.workbookLocation(),
+                    workflowContext.executionMode()));
+        yield java.util.Optional.empty();
+      }
+    };
   }
 
   private WorkbookResult closeFailedStreamingStep(

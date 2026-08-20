@@ -12,7 +12,7 @@ succeeds.
 
 - Write `.xlsx` workbooks from JSON: sheets, cells, styles, tables, formulas, charts, drawings
 - Read facts back in the same plan: cell values, sheet layout, health analysis, pivot data
-- Assert workbook state mid-run — a failed assertion stops the plan before saving
+- Assert workbook state mid-run — fail fast by default, or collect a terminal assertion phase before saving
 - Run from Docker, the packaged `gridgrind` launcher, or a self-contained JAR, against new
   workbooks or existing `.xlsx` files
 
@@ -126,7 +126,9 @@ contract, and `--help-guidance` for workflow-oriented help.
 
 A single JSON request describes every step: create a sheet, write cells, assert workbook state,
 read facts back, and save. GridGrind executes the steps in order and writes the file only when
-every step succeeds. If an assertion fails or any step errors, no workbook is saved.
+every step succeeds. Assertions fail fast by default; `execution.assertionMode=COLLECT` instead
+runs every assertion in a terminal verification phase and then returns the first canonical
+assertion failure. Any assertion failure or step error prevents persistence.
 
 The smallest valid top-level envelope is `protocolVersion`, `source`, `persistence`, and ordered
 `steps`. `execution` and `formulaEnvironment` are optional when you want the default

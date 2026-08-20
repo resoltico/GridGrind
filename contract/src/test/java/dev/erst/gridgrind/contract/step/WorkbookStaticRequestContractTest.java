@@ -7,6 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import dev.erst.gridgrind.contract.action.CellMutationAction;
 import dev.erst.gridgrind.contract.assertion.CellAssertion;
+import dev.erst.gridgrind.contract.dto.AssertionModeInput;
 import dev.erst.gridgrind.contract.dto.CalculationPolicyInput;
 import dev.erst.gridgrind.contract.dto.CalculationStrategyInput;
 import dev.erst.gridgrind.contract.dto.CellInput;
@@ -75,7 +76,7 @@ class WorkbookStaticRequestContractTest {
                     CalculationPolicyInput.strategy(new CalculationStrategyInput.EvaluateAll()))),
             List.of(
                 new WorkbookStaticStep(0, Optional.empty()),
-                new WorkbookStaticStep(1, Optional.of(appendStep())),
+                new WorkbookStaticStep(1, Optional.of(appendStep("append"))),
                 new WorkbookStaticStep(
                     2,
                     Optional.of(
@@ -153,9 +154,59 @@ class WorkbookStaticRequestContractTest {
     assertTrue(WorkbookStaticPersistenceValidation.validate(request).isEmpty());
   }
 
-  private static MutationStep appendStep() {
+  @Test
+  void rejectsMutationsAfterTheFirstCollectedAssertion() {
+    WorkbookStaticRequest request =
+        new WorkbookStaticRequest(
+            Optional.of(new WorkbookPlan.WorkbookSource.New()),
+            Optional.of(new WorkbookPlan.WorkbookPersistence.None()),
+            Optional.of(ExecutionPolicyInput.assertionMode(AssertionModeInput.COLLECT)),
+            List.of(
+                new WorkbookStaticStep(
+                    0,
+                    Optional.of(
+                        new AssertionStep(
+                            "assert",
+                            new CellSelector.ByAddress("Ops", "A1"),
+                            new CellAssertion.CellValue(new CellScalarValue.Text("ready"))))),
+                new WorkbookStaticStep(1, Optional.of(appendStep("append"))),
+                new WorkbookStaticStep(2, Optional.of(appendStep("append-2")))));
+
+    assertEquals(
+        List.of("steps[1]", "steps[2]"),
+        WorkbookStaticRequestContract.validate(request).stream()
+            .map(WorkbookStaticViolation::jsonPath)
+            .toList());
+  }
+
+  @Test
+  void preservesCollectedAssertionOrderingAroundAnUnboundPredecessor() {
+    WorkbookStaticRequest request =
+        new WorkbookStaticRequest(
+            Optional.of(new WorkbookPlan.WorkbookSource.New()),
+            Optional.of(new WorkbookPlan.WorkbookPersistence.None()),
+            Optional.of(ExecutionPolicyInput.assertionMode(AssertionModeInput.COLLECT)),
+            List.of(
+                new WorkbookStaticStep(0, Optional.empty()),
+                new WorkbookStaticStep(
+                    1,
+                    Optional.of(
+                        new AssertionStep(
+                            "assert",
+                            new CellSelector.ByAddress("Ops", "A1"),
+                            new CellAssertion.CellValue(new CellScalarValue.Text("ready"))))),
+                new WorkbookStaticStep(2, Optional.of(appendStep("append")))));
+
+    assertEquals(
+        List.of("steps[2]"),
+        WorkbookStaticAssertionValidation.validate(request).stream()
+            .map(WorkbookStaticViolation::jsonPath)
+            .toList());
+  }
+
+  private static MutationStep appendStep(String stepId) {
     return new MutationStep(
-        "append",
+        stepId,
         new SheetSelector.ByName("Ops"),
         new CellMutationAction.AppendRow(
             new CellRowInput.Typed(List.of(new CellInput.Text(TextSourceInput.inline("owner"))))));

@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import dev.erst.gridgrind.contract.dto.AssertionModeInput;
 import dev.erst.gridgrind.contract.dto.ExecutionJournalLevel;
 import dev.erst.gridgrind.contract.dto.OoxmlEncryptionInput;
 import dev.erst.gridgrind.contract.dto.OoxmlPersistenceEncryptionInput;
@@ -101,7 +102,26 @@ class GridGrindJsonRequestContractTest {
 
     assertTrue(request.execution().isDefault());
     assertEquals(ExecutionJournalLevel.SUMMARY, request.journalLevel());
+    assertEquals(AssertionModeInput.FAIL_FAST, request.assertionMode());
     assertTrue(request.formulaEnvironment().isEmpty());
+  }
+
+  @Test
+  void requestAcceptsCollectedTerminalAssertionMode() throws Exception {
+    WorkbookPlan request =
+        GridGrindJson.readRequest(
+            """
+            {
+              "protocolVersion": "V2",
+              "source": { "type": "NEW" },
+              "persistence": { "type": "NONE" },
+              "execution": { "assertionMode": "COLLECT" },
+              "steps": []
+            }
+            """
+                .getBytes(StandardCharsets.UTF_8));
+
+    assertEquals(AssertionModeInput.COLLECT, request.assertionMode());
   }
 
   @Test

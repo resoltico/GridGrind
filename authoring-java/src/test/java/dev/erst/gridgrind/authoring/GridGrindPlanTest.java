@@ -63,14 +63,12 @@ class GridGrindPlanTest {
             .mutate(Targets.cell("Budget", "A1").set(Values.text("Owner")))
             .inspect(Targets.cell("Budget", "A1").read())
             .assertThat(Targets.cell("Budget", "A1").valueEquals(ExpectedValues.text("Owner")));
-
     WorkbookPlan canonical = plan.toPlan();
     assertEquals("budget-plan", canonical.planId().orElseThrow());
     assertEquals("mutation-001", canonical.steps().get(0).stepId());
     assertEquals("mutation-002", canonical.steps().get(1).stepId());
     assertEquals("inspection-001", canonical.steps().get(2).stepId());
     assertEquals("assertion-001", canonical.steps().get(3).stepId());
-
     WorkbookPlan reread = GridGrindJson.readRequest(plan.toJsonBytes());
     assertEquals(canonical, reread);
     assertTrue(plan.toJsonString().contains("\"planId\":\"budget-plan\""));
@@ -111,10 +109,12 @@ class GridGrindPlanTest {
             new WorkbookPlan.WorkbookSource.New(),
             new WorkbookPlan.WorkbookPersistence.None(),
             new ExecutionPolicyInput(
-                mode, new ExecutionJournalInput(ExecutionJournalLevel.NORMAL), calculation),
+                mode,
+                new ExecutionJournalInput(ExecutionJournalLevel.NORMAL),
+                calculation,
+                dev.erst.gridgrind.contract.dto.AssertionModeInput.defaults()),
             FormulaEnvironmentInput.empty(),
             List.of());
-
     WorkbookPlan journaled =
         GridGrindPlan.from(canonical).journal(ExecutionJournalLevel.VERBOSE).toPlan();
     assertEquals(mode, journaled.execution().mode());

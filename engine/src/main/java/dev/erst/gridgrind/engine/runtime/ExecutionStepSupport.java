@@ -95,6 +95,19 @@ final class ExecutionStepSupport {
         "execution.mode.type=EVENT_READ does not support assertion steps");
   }
 
+  AssertionStepExecution executeAssertionStepCollecting(
+      AssertionStep assertionStep,
+      ExcelWorkbook workbook,
+      WorkbookLocation workbookLocation,
+      ExecutionModeInput executionMode)
+      throws IOException {
+    if (!(executionMode instanceof ExecutionModeInput.EventRead)) {
+      return assertionExecutor.executeCollecting(assertionStep, workbook, workbookLocation);
+    }
+    throw new IllegalStateException(
+        "execution.mode.type=EVENT_READ does not support assertion steps");
+  }
+
   InspectionResult executeInspectionAgainstMaterializedPath(
       InspectionStep inspectionStep,
       WorkbookLocation workbookLocation,
@@ -181,6 +194,23 @@ final class ExecutionStepSupport {
     }
   }
 
+  AssertionStepExecution executeStreamingAssertionStepCollecting(
+      ExcelStreamingWorkbookWriter writer,
+      AssertionStep assertionStep,
+      WorkbookLocation workbookLocation)
+      throws IOException {
+    Path tempPath =
+        ExcelTempFileWriteTargetSupport.prepareCreateNewTarget(
+            tempFileFactory.createTempFile("gridgrind-streaming-step-", ".xlsx"));
+    try {
+      writer.save(tempPath, WorkbookArtifactWriteDisposition.CREATE_NEW);
+      return executeFullAssertionCollectingAgainstMaterializedPath(
+          assertionStep, workbookLocation, tempPath);
+    } finally {
+      ExecutionWorkbookSupport.deleteIfExists(tempPath);
+    }
+  }
+
   private InspectionResult executeFullInspectionAgainstMaterializedPath(
       InspectionStep inspectionStep, WorkbookLocation workbookLocation, Path materializedPath)
       throws IOException {
@@ -202,6 +232,18 @@ final class ExecutionStepSupport {
             dev.erst.gridgrind.excel.ExcelFormulaEnvironment.defaults(),
             tempFileFactory::createTempFile)) {
       return assertionExecutor.execute(assertionStep, workbook, workbookLocation);
+    }
+  }
+
+  private AssertionStepExecution executeFullAssertionCollectingAgainstMaterializedPath(
+      AssertionStep assertionStep, WorkbookLocation workbookLocation, Path materializedPath)
+      throws IOException {
+    try (ExcelWorkbook workbook =
+        ExcelWorkbooks.open(
+            materializedPath,
+            dev.erst.gridgrind.excel.ExcelFormulaEnvironment.defaults(),
+            tempFileFactory::createTempFile)) {
+      return assertionExecutor.executeCollecting(assertionStep, workbook, workbookLocation);
     }
   }
 

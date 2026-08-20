@@ -184,7 +184,7 @@ For `udfToolpacks.functions`, `maximumArgumentCount` is optional and defaults to
 
 `execution` is optional at the top level. Omit it when the standard `FULL_XSSF` / `SUMMARY` /
 `DO_NOT_CALCULATE` policy is intended. Supply it when the request needs a non-default execution
-mode, journal level, or calculation policy. When the block is present, each nested field may still
+mode, journal level, calculation policy, or assertion policy. When the block is present, each nested field may still
 be omitted to keep its own default, so callers can send only the execution axis they want to
 override.
 
@@ -203,6 +203,7 @@ override.
 | `mode` | No | Explicit execution-mode variant selection through `type=FULL_XSSF`, `EVENT_READ`, or `STREAMING_WRITE`. Defaults to `FULL_XSSF` when omitted. |
 | `journal` | No | Explicit structured-journal policy. Defaults to `SUMMARY` when omitted. |
 | `calculation` | No | Explicit formula-calculation policy covering immediate evaluation, cache clearing, and workbook-open recalc flags. Defaults to `DO_NOT_CALCULATE` with `markRecalculateOnOpen=false` when omitted. |
+| `assertionMode` | No | `FAIL_FAST` stops at the first failed assertion. `COLLECT` evaluates every assertion in the terminal assertion phase before returning the first canonical failure. Defaults to `FAIL_FAST`. |
 
 - `execution.mode.type: EVENT_READ` selects the low-memory XSSF event-model reader. It supports only
   `GET_WORKBOOK_SUMMARY` and `GET_SHEET_SUMMARY` (`LIM-019`).
@@ -228,6 +229,10 @@ override.
   `REQUIRE_EVALUATION` instead fails when any formula cannot be evaluated immediately.
 - `execution.calculation.markRecalculateOnOpen` persists Excel's workbook-level recalc-on-open
   flag without requiring an extra mutation step.
+- `execution.assertionMode=COLLECT` makes the first assertion step the start of a terminal
+  verification phase. No later `MUTATION` step is legal; `INSPECTION` steps may interleave, and
+  every assertion is returned as `PASSED` or `FAILED` before the run returns its canonical first
+  assertion failure.
 - `EVALUATE_TARGETS` addresses must point at existing formula cells. A missing physical cell can
   surface `CELL_NOT_FOUND`; an existing non-formula cell is rejected as `INVALID_REQUEST`.
 - `VERBOSE` keeps the `NORMAL` response journal detail and records fine-grained execution events

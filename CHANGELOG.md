@@ -6,11 +6,10 @@ Earlier release history through `0.68.0` is archived in [docs/CHANGELOG_ARCHIVE.
 ## [Unreleased]
 
 ### Added
+- Added `execution.assertionMode=COLLECT` for terminal verification phases: every assertion is evaluated and reported before the first canonical assertion failure is returned; static validation rejects any mutation after the first collected assertion.
 - Existing-workbook persistence now has an explicit total OOXML security policy: encryption is `NONE`, `ENCRYPT`, or `PRESERVE_SOURCE`; signature is `NONE` or `SIGN`; a writing existing source must declare both axes.
 - Added `WORKBOOK_NOT_OPENABLE` for corrupted, truncated, non-zip, or non-workbook OOXML source packages and `ENCRYPTION_SOURCE_NOT_PRESERVABLE` for encrypted source envelopes outside the AGILE write contract, separating explicit request-policy failures from cryptographic failures.
-- Added `RAW_FORMULA` for opaque OOXML formula-body authoring when newer Excel syntax cannot be
-  parsed by POI. Formula character data is XML-safe across full and streaming writes, while
-  forbidden XML controls and invalid framing are rejected as `INVALID_FORMULA_TEXT`.
+- Added `RAW_FORMULA` for opaque OOXML formula-body authoring when newer Excel syntax cannot be parsed by POI. Formula character data is XML-safe across full and streaming writes, while forbidden XML controls and invalid framing are rejected as `INVALID_FORMULA_TEXT`.
 - Structured request warnings now carry a typed `location`, distinguishing step-owned warnings from request-path warnings; contained absolute request paths emit `NON_PORTABLE_ABSOLUTE_PATH` with their exact path role.
 - Request doctoring now reports every independently observable request-intake defect in one response, including duplicate keys, unknown fields, omitted required fields, explicit nulls, malformed scalar values, missing or unknown type discriminators, and constructor-level field validation failures; valid sibling fragments remain available for safe preflight rather than being discarded after the first defect.
 - Protocol catalog field descriptors now publish `secret: true` for authored credential-bearing fields, allowing consumers to identify values that diagnostics and telemetry must never reproduce.
@@ -19,11 +18,7 @@ Earlier release history through `0.68.0` is archived in [docs/CHANGELOG_ARCHIVE.
 
 ### Changed
 - The Docker image now uses the glibc-based Zulu 26 runtime so mounted workspaces retain the required secure no-follow directory handles for request-owned output paths; the container workflow remains fail-closed when that capability is unavailable.
-- Formula text now uses one exact OOXML `<f>`-body convention: `FORMULA` and `RAW_FORMULA` values
-  must not begin with `=`. Lenient `EVALUATE_ALL` and `EVALUATE_TARGETS` keep unevaluable formulas
-  unchanged, report `PARTIAL`, and emit `FORMULA_NOT_EVALUATED`; `REQUIRE_EVALUATION` is the
-  explicit strict strategy, while `DEFERRED_CALCULATION` reports capabilities without attempting
-  server-side evaluation.
+- Formula text now uses one exact OOXML `<f>`-body convention: `FORMULA` and `RAW_FORMULA` values must not begin with `=`. Lenient `EVALUATE_ALL` and `EVALUATE_TARGETS` keep unevaluable formulas unchanged, report `PARTIAL`, and emit `FORMULA_NOT_EVALUATED`; `REQUIRE_EVALUATION` is the explicit strict strategy, while `DEFERRED_CALCULATION` reports capabilities without attempting server-side evaluation.
 - Static request validity now has one contract layer shared by request analysis, doctoring, normal execution, and protocol-catalog target discovery. A known selector shape now binds independently of the operation that received it, and an incompatible pair is reported at `steps[i].target.type` as `INVALID_REQUEST` instead of being mislabeled as a malformed request shape. Execution-mode compatibility, calculation ordering, and persistence compatibility use that same static contract rather than separate runtime rules.
 - The request and response contract now uses protocol version `V2` exclusively; `V1` requests are rejected. Request-side tagged unions use the uniform `type` discriminator, including colors, fills, drawing shapes, and named-range targets, while unrelated report-domain `kind` fields retain their established meanings.
 - Protocol-catalog field requirements now derive from each request record's effective JSON creator contract and selected-union discriminator, including explicit defaultable fields and JSON property names, instead of catalog-local required or optional field lists.

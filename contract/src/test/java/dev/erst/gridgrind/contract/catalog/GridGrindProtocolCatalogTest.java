@@ -247,7 +247,10 @@ class GridGrindProtocolCatalogTest {
     assertEquals(FieldRequirement.OPTIONAL, entry.field("mode").orElseThrow().requirement());
     assertEquals(FieldRequirement.OPTIONAL, entry.field("journal").orElseThrow().requirement());
     assertEquals(FieldRequirement.OPTIONAL, entry.field("calculation").orElseThrow().requirement());
+    assertEquals(
+        FieldRequirement.OPTIONAL, entry.field("assertionMode").orElseThrow().requirement());
     assertTrue(entry.summary().contains("omit any nested execution field"));
+    assertTrue(entry.summary().contains("FAIL_FAST"));
   }
 
   @Test

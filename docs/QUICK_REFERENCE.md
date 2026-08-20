@@ -128,7 +128,7 @@ workbooks always stay in private OS temp rather than the request root, execution
 
 ## Execution, Formula, And Mode Rules
 
-Add an execution block when you need non-default mode, journal, or calculation behavior. You may
+Add an execution block when you need non-default mode, journal, calculation, or assertion behavior. You may
 send only the axis you want to change; omitted nested fields keep their defaults:
 
 ```json
@@ -174,6 +174,8 @@ Rules to remember:
 - `execution.mode.type=STREAMING_WRITE` requires `source.type=NEW` and supports only
   `ENSURE_SHEET` plus `APPEND_ROW`.
 - `markRecalculateOnOpen` persists Excel's workbook-open recalculation flag.
+- `execution.assertionMode=COLLECT` evaluates every assertion in a terminal verification phase;
+  once the first assertion appears, later mutations are rejected while inspections may interleave.
 - `EVALUATE_TARGETS` addresses must point at existing formula cells. Missing physical cells can
   surface `CELL_NOT_FOUND`; existing non-formula cells are rejected as `INVALID_REQUEST`.
 - Scalar `FORMULA` cell payloads reject array-formula braces such as `{=SUM(A1:A2*B1:B2)}`.

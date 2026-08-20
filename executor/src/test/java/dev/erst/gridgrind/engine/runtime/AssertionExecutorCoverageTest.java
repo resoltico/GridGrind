@@ -1261,6 +1261,22 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
                     ExecutionModeInput.eventRead()));
     assertTrue(assertionModeFailure.getMessage().contains("does not support assertion steps"));
 
+    IllegalStateException collectingAssertionModeFailure =
+        assertThrows(
+            IllegalStateException.class,
+            () ->
+                stepSupport.executeAssertionStepCollecting(
+                    new AssertionStep(
+                        "assert",
+                        new CellSelector.ByAddress("Ops", "A1"),
+                        new CellAssertion.CellValue(
+                            new dev.erst.gridgrind.contract.dto.CellScalarValue.Text("Owner"))),
+                    null,
+                    new WorkbookLocation.UnsavedWorkbook(),
+                    ExecutionModeInput.eventRead()));
+    assertTrue(
+        collectingAssertionModeFailure.getMessage().contains("does not support assertion steps"));
+
     Path workbookPath = Files.createTempFile("gridgrind-private-event-read-", ".xlsx");
     try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       workbook.getOrCreateSheet("Ops");

@@ -220,7 +220,9 @@ Warnings use one typed `location`: `STEP` carries `stepIndex`, `stepId`, and `st
 `NON_PORTABLE_ABSOLUTE_PATH` without changing execution status; an escaping path is instead the
 blocking `PATH_ESCAPES_ROOT` problem.
 
-Assertion mismatches attach an additional `problem.assertionFailure` payload:
+Assertion mismatches attach an additional `problem.assertionFailure` payload. Under
+`execution.assertionMode=COLLECT`, the first mismatch remains canonical while `assertions[]`
+contains every terminal-phase assertion outcome:
 
 ```json
 {
@@ -304,7 +306,7 @@ Assertion mismatches attach an additional `problem.assertionFailure` payload:
 
 | Code | Trigger |
 |:-----|:--------|
-| `ASSERTION_FAILED` | One authored assertion step did not match the observed workbook state. The failure includes `problem.assertionFailure` with the failed assertion contract and the observed factual read payloads that caused the mismatch. Entity-presence assertions (`EXPECT_SHEET_PRESENT`, `EXPECT_SHEET_ABSENT`, `EXPECT_NAMED_RANGE_PRESENT`, `EXPECT_NAMED_RANGE_ABSENT`, `EXPECT_TABLE_PRESENT`, `EXPECT_TABLE_ABSENT`, `EXPECT_PIVOT_TABLE_PRESENT`, `EXPECT_PIVOT_TABLE_ABSENT`, `EXPECT_CHART_PRESENT`, `EXPECT_CHART_ABSENT`) treat selector misses as zero observed entities instead of surfacing selector-specific `*_NOT_FOUND` errors. |
+| `ASSERTION_FAILED` | One authored assertion step did not match the observed workbook state. The failure includes `problem.assertionFailure` with the canonical failed assertion contract and observed factual read payloads. Under `execution.assertionMode=COLLECT`, every terminal-phase assertion outcome is retained in `assertions[]` while the first mismatch stays canonical. Entity-presence assertions (`EXPECT_SHEET_PRESENT`, `EXPECT_SHEET_ABSENT`, `EXPECT_NAMED_RANGE_PRESENT`, `EXPECT_NAMED_RANGE_ABSENT`, `EXPECT_TABLE_PRESENT`, `EXPECT_TABLE_ABSENT`, `EXPECT_PIVOT_TABLE_PRESENT`, `EXPECT_PIVOT_TABLE_ABSENT`, `EXPECT_CHART_PRESENT`, `EXPECT_CHART_ABSENT`) treat selector misses as zero observed entities instead of surfacing selector-specific `*_NOT_FOUND` errors. |
 
 ### Formula (`FORMULA` category)
 

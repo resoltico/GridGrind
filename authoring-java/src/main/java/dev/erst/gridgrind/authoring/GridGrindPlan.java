@@ -158,7 +158,10 @@ public final class GridGrindPlan {
   public GridGrindPlan journal(ExecutionJournalLevel level) {
     this.execution =
         new ExecutionPolicyInput(
-            execution.mode(), new ExecutionJournalInput(level), execution.calculation());
+            execution.mode(),
+            new ExecutionJournalInput(level),
+            execution.calculation(),
+            execution.assertionMode());
     return this;
   }
 

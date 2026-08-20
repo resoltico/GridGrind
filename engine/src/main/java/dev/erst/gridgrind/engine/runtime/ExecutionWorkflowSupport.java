@@ -1,6 +1,7 @@
 package dev.erst.gridgrind.engine.runtime;
 
 import dev.erst.gridgrind.contract.assertion.AssertionResult;
+import dev.erst.gridgrind.contract.dto.AssertionModeInput;
 import dev.erst.gridgrind.contract.dto.CalculationReport;
 import dev.erst.gridgrind.contract.dto.ExecutionModeInput;
 import dev.erst.gridgrind.contract.dto.GridGrindProblemDetail;
@@ -65,6 +66,7 @@ final class ExecutionWorkflowSupport {
         ExecutionRequestPaths.workbookLocationFor(
             request.source(), request.persistence(), bindings.workingDirectory());
     List<AssertionResult> assertions = new ArrayList<>();
+    CollectedAssertionFailures collectedAssertionFailures = new CollectedAssertionFailures();
     List<InspectionResult> inspections = new ArrayList<>();
     CalculationReport calculation =
         CalculationPolicyExecutor.notRequestedReport(request.calculationPolicy());
@@ -86,9 +88,27 @@ final class ExecutionWorkflowSupport {
 
       ExecutionJournalRecorder.StepHandle stepHandle = journal.beginStep(stepIndex, step);
       try {
-        executeWorkbookStep(
-            workbook, workbookLocation, executionMode, assertions, inspections, step);
-        stepHandle.succeed();
+        java.util.Optional<AssertionFailedException> collectedFailure =
+            executeWorkbookStep(
+                workbook,
+                workbookLocation,
+                executionMode,
+                request.assertionMode(),
+                assertions,
+                inspections,
+                step);
+        if (collectedFailure.isPresent()) {
+          AssertionFailedException assertionFailure = collectedFailure.orElseThrow();
+          GridGrindProblemDetail.Problem problem =
+              ExecutionResponseSupport.problemFor(
+                  assertionFailure,
+                  stepSupport.executeStepContext(request, stepIndex, step, assertionFailure));
+          stepHandle.fail(
+              problem.code(), problem.category(), problem.context().stage(), problem.message());
+          collectedAssertionFailures.add(stepIndex, step.stepId(), problem);
+        } else {
+          stepHandle.succeed();
+        }
       } catch (Exception exception) {
         return closeFailedStepExecution(
             executionContext, calculation, stepIndex, step, stepHandle, exception);
@@ -112,6 +132,23 @@ final class ExecutionWorkflowSupport {
             null,
             null);
       }
+    }
+
+    if (!collectedAssertionFailures.isEmpty()) {
+      CollectedAssertionFailures.Failure firstFailure = collectedAssertionFailures.first();
+      return responseSupport.closeWorkbook(
+          workbook,
+          ExecutionResponseSupport.failureResponseWithoutPlanOutcomeEvent(
+              executionContext.failure(
+                  calculation,
+                  firstFailure.problem(),
+                  firstFailure.stepIndex(),
+                  firstFailure.stepId())),
+          request,
+          journal,
+          firstFailure.problem().code(),
+          firstFailure.stepIndex(),
+          firstFailure.stepId());
     }
 
     PersistenceResult persistenceResult = persistWorkbook(executionContext, bindings, calculation);
@@ -169,25 +206,43 @@ final class ExecutionWorkflowSupport {
             null));
   }
 
-  private void executeWorkbookStep(
+  private java.util.Optional<AssertionFailedException> executeWorkbookStep(
       ExcelWorkbook workbook,
       WorkbookLocation workbookLocation,
       ExecutionModeInput executionMode,
+      AssertionModeInput assertionMode,
       List<AssertionResult> assertions,
       List<InspectionResult> inspections,
       WorkbookStep step)
       throws IOException, AssertionFailedException {
-    switch (step) {
-      case MutationStep mutationStep -> stepSupport.executeMutationStep(workbook, mutationStep);
-      case AssertionStep assertionStep ->
+    return switch (step) {
+      case MutationStep mutationStep -> {
+        stepSupport.executeMutationStep(workbook, mutationStep);
+        yield java.util.Optional.empty();
+      }
+      case AssertionStep assertionStep -> {
+        if (assertionMode == AssertionModeInput.FAIL_FAST) {
           assertions.add(
               stepSupport.executeAssertionStep(
                   assertionStep, workbook, workbookLocation, executionMode));
-      case InspectionStep inspectionStep ->
-          inspections.add(
-              stepSupport.executeInspectionStep(
-                  inspectionStep, workbook, workbookLocation, executionMode));
-    }
+          yield java.util.Optional.empty();
+        }
+        AssertionStepExecution assertionExecution =
+            stepSupport.executeAssertionStepCollecting(
+                assertionStep, workbook, workbookLocation, executionMode);
+        assertions.add(assertionExecution.result());
+        yield switch (assertionExecution) {
+          case AssertionStepExecution.Passed _ -> java.util.Optional.empty();
+          case AssertionStepExecution.Failed failed -> java.util.Optional.of(failed.failure());
+        };
+      }
+      case InspectionStep inspectionStep -> {
+        inspections.add(
+            stepSupport.executeInspectionStep(
+                inspectionStep, workbook, workbookLocation, executionMode));
+        yield java.util.Optional.empty();
+      }
+    };
   }
 
   private WorkbookResult closeFailedStepExecution(

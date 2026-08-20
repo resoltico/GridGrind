@@ -19,8 +19,8 @@ final class GridGrindCliSurfaceRequestSections {
             "execution is optional. When omitted, GridGrind uses FULL_XSSF with"
                 + " SUMMARY journaling and DO_NOT_CALCULATE without"
                 + " markRecalculateOnOpen. When supplied, execution may include any"
-                + " subset of execution.mode, execution.journal, and"
-                + " execution.calculation. execution.mode is a typed discriminator"
+                + " subset of execution.mode, execution.journal, execution.calculation, and"
+                + " execution.assertionMode. execution.mode is a typed discriminator"
                 + " when present; choose type=FULL_XSSF, EVENT_READ, or"
                 + " STREAMING_WRITE under the limits above."
                 + " Any omitted nested execution field keeps that same default.",
@@ -35,6 +35,9 @@ final class GridGrindCliSurfaceRequestSections {
                 + " with neither strategy nor markRecalculateOnOpen, to keep the default"
                 + " DO_NOT_CALCULATE / false behavior."
                 + " markRecalculateOnOpen is otherwise independent.",
+            "execution.assertionMode defaults to FAIL_FAST. COLLECT evaluates every assertion"
+                + " after the terminal assertion phase begins; no later MUTATION step is legal,"
+                + " while INSPECTION steps may still interleave.",
             "Response telemetry is split intentionally: journal.* captures execution-phase"
                 + " timing and event chronology, while root persistence/calculation/warnings/"
                 + "assertions/inspections carry the authoritative outcome payloads.",

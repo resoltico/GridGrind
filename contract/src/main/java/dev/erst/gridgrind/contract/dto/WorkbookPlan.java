@@ -134,6 +134,11 @@ public record WorkbookPlan(
     return effectiveExecution().effectiveCalculation();
   }
 
+  /** Returns the effective assertion policy after default normalization. */
+  public AssertionModeInput assertionMode() {
+    return effectiveExecution().effectiveAssertionMode();
+  }
+
   /** Returns the authored steps partitioned by family in authored order. */
   public StepPartition stepPartition() {
     return partitionSteps(steps);

@@ -49,7 +49,8 @@ class DefaultGridGrindRequestExecutorPrivateSourceRaceTest {
             new ExecutionPolicyInput(
                 ExecutionModeInput.defaults(),
                 new ExecutionJournalInput(ExecutionJournalLevel.VERBOSE),
-                CalculationPolicyInput.defaults()),
+                CalculationPolicyInput.defaults(),
+                dev.erst.gridgrind.contract.dto.AssertionModeInput.defaults()),
             FormulaEnvironmentInput.empty(),
             List.of());
     AtomicBoolean removedPrivateSource = new AtomicBoolean();
@@ -167,7 +168,8 @@ class DefaultGridGrindRequestExecutorPrivateSourceRaceTest {
     return new ExecutionPolicyInput(
         mode,
         new ExecutionJournalInput(ExecutionJournalLevel.VERBOSE),
-        CalculationPolicyInput.defaults());
+        CalculationPolicyInput.defaults(),
+        dev.erst.gridgrind.contract.dto.AssertionModeInput.defaults());
   }
 
   private static void createWorkbook(Path source) throws java.io.IOException {

@@ -84,8 +84,8 @@ public final class GridGrindContractText {
   /** One stable catalog summary for `ExecutionPolicyInput`. */
   public static String executionPolicyInputSummary() {
     return "Optional request execution policy covering execution.mode, execution.journal,"
-        + " and execution.calculation."
-        + " Omit execution when the standard FULL_XSSF / SUMMARY / DO_NOT_CALCULATE policy"
+        + " execution.calculation, and execution.assertionMode."
+        + " Omit execution when the standard FULL_XSSF / SUMMARY / DO_NOT_CALCULATE / FAIL_FAST policy"
         + " is intended, and omit any nested execution field that should keep its own default.";
   }
 

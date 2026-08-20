@@ -25,31 +25,46 @@ public record ExecutionPolicyInput(
         @JsonInclude(
             value = JsonInclude.Include.CUSTOM,
             valueFilter = CalculationPolicyInput.DefaultFilter.class)
-        CalculationPolicyInput calculation) {
-  /** Returns the default execution policy for mode, journaling, and calculation handling. */
+        CalculationPolicyInput calculation,
+    @ProtocolField(optional = true)
+        @JsonInclude(
+            value = JsonInclude.Include.CUSTOM,
+            valueFilter = AssertionModeInput.DefaultFilter.class)
+        AssertionModeInput assertionMode) {
+  /** Returns the default execution policy for mode, journaling, calculation, and assertions. */
   public static ExecutionPolicyInput defaults() {
     return new ExecutionPolicyInput(
         ExecutionModeInput.defaults(),
         ExecutionJournalInput.defaults(),
-        CalculationPolicyInput.defaults());
+        CalculationPolicyInput.defaults(),
+        AssertionModeInput.defaults());
   }
 
   /** Returns one execution policy that only customizes calculation handling. */
   public static ExecutionPolicyInput calculation(CalculationPolicyInput calculation) {
     return new ExecutionPolicyInput(
-        ExecutionModeInput.defaults(), ExecutionJournalInput.defaults(), calculation);
+        ExecutionModeInput.defaults(),
+        ExecutionJournalInput.defaults(),
+        calculation,
+        AssertionModeInput.defaults());
   }
 
   /** Returns an execution policy that only sets the execution mode. */
   public static ExecutionPolicyInput mode(ExecutionModeInput mode) {
     return new ExecutionPolicyInput(
-        mode, ExecutionJournalInput.defaults(), CalculationPolicyInput.defaults());
+        mode,
+        ExecutionJournalInput.defaults(),
+        CalculationPolicyInput.defaults(),
+        AssertionModeInput.defaults());
   }
 
   /** Returns an execution policy that only customizes journal rendering. */
   public static ExecutionPolicyInput journal(ExecutionJournalInput journal) {
     return new ExecutionPolicyInput(
-        ExecutionModeInput.defaults(), journal, CalculationPolicyInput.defaults());
+        ExecutionModeInput.defaults(),
+        journal,
+        CalculationPolicyInput.defaults(),
+        AssertionModeInput.defaults());
   }
 
   /**
@@ -58,7 +73,8 @@ public record ExecutionPolicyInput(
    */
   public static ExecutionPolicyInput modeAndJournal(
       ExecutionModeInput mode, ExecutionJournalInput journal) {
-    return new ExecutionPolicyInput(mode, journal, CalculationPolicyInput.defaults());
+    return new ExecutionPolicyInput(
+        mode, journal, CalculationPolicyInput.defaults(), AssertionModeInput.defaults());
   }
 
   /**
@@ -67,7 +83,17 @@ public record ExecutionPolicyInput(
    */
   public static ExecutionPolicyInput modeAndCalculation(
       ExecutionModeInput mode, CalculationPolicyInput calculation) {
-    return new ExecutionPolicyInput(mode, ExecutionJournalInput.defaults(), calculation);
+    return new ExecutionPolicyInput(
+        mode, ExecutionJournalInput.defaults(), calculation, AssertionModeInput.defaults());
+  }
+
+  /** Returns an execution policy that collects every terminal-phase assertion outcome. */
+  public static ExecutionPolicyInput assertionMode(AssertionModeInput assertionMode) {
+    return new ExecutionPolicyInput(
+        ExecutionModeInput.defaults(),
+        ExecutionJournalInput.defaults(),
+        CalculationPolicyInput.defaults(),
+        assertionMode);
   }
 
   /** Reads one execution-policy block while applying the documented omission defaults. */
@@ -75,17 +101,20 @@ public record ExecutionPolicyInput(
   static ExecutionPolicyInput create(
       @JsonProperty("mode") ExecutionModeInput mode,
       @JsonProperty("journal") ExecutionJournalInput journal,
-      @JsonProperty("calculation") CalculationPolicyInput calculation) {
+      @JsonProperty("calculation") CalculationPolicyInput calculation,
+      @JsonProperty("assertionMode") AssertionModeInput assertionMode) {
     return new ExecutionPolicyInput(
         mode == null ? ExecutionModeInput.defaults() : mode,
         journal == null ? ExecutionJournalInput.defaults() : journal,
-        calculation == null ? CalculationPolicyInput.defaults() : calculation);
+        calculation == null ? CalculationPolicyInput.defaults() : calculation,
+        assertionMode == null ? AssertionModeInput.defaults() : assertionMode);
   }
 
   public ExecutionPolicyInput {
     Objects.requireNonNull(mode, "mode must not be null");
     Objects.requireNonNull(journal, "journal must not be null");
     Objects.requireNonNull(calculation, "calculation must not be null");
+    Objects.requireNonNull(assertionMode, "assertionMode must not be null");
   }
 
   /**
@@ -93,7 +122,10 @@ public record ExecutionPolicyInput(
    */
   @JsonIgnore
   public boolean isDefault() {
-    return mode.isDefault() && journal.isDefault() && calculation.isDefault();
+    return mode.isDefault()
+        && journal.isDefault()
+        && calculation.isDefault()
+        && assertionMode.isDefault();
   }
 
   /** Returns the effective execution mode after applying GridGrind defaults. */
@@ -112,6 +144,12 @@ public record ExecutionPolicyInput(
   @JsonIgnore
   public CalculationPolicyInput effectiveCalculation() {
     return calculation;
+  }
+
+  /** Returns the effective assertion mode after applying GridGrind defaults. */
+  @JsonIgnore
+  public AssertionModeInput effectiveAssertionMode() {
+    return assertionMode;
   }
 
   /** Custom Jackson inclusion filter that omits the standard default execution policy. */

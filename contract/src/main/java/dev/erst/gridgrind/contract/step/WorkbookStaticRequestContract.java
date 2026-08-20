@@ -16,6 +16,7 @@ public final class WorkbookStaticRequestContract {
     List<WorkbookStaticViolation> violations = new ArrayList<>();
     violations.addAll(WorkbookStaticTargetValidation.validate(request.steps()));
     violations.addAll(WorkbookStaticExecutionValidation.validate(request));
+    violations.addAll(WorkbookStaticAssertionValidation.validate(request));
     violations.addAll(WorkbookStaticPersistenceValidation.validate(request));
     return List.copyOf(violations);
   }
