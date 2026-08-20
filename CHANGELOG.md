@@ -6,6 +6,7 @@ Earlier release history through `0.68.0` is archived in [docs/CHANGELOG_ARCHIVE.
 ## [Unreleased]
 
 ### Added
+- Added the public conformance record for deterministic responses, fail-closed request-path capability, and the explicitly environment-sensitive signature-preview boundary.
 - Added compact JSONL live progress on stderr for `execution.journal.level=VERBOSE`. Each event carries a timestamp, lifecycle category and status, optional failed problem code, and optional authored step identity; it never carries free-form detail or declared-secret values, and `--pretty` affects only the primary payload.
 - Added `execution.assertionMode=COLLECT` for terminal verification phases: every assertion is evaluated and reported before the first canonical assertion failure is returned; static validation rejects any mutation after the first collected assertion.
 - Existing-workbook persistence now has an explicit total OOXML security policy: encryption is `NONE`, `ENCRYPT`, or `PRESERVE_SOURCE`; signature is `NONE` or `SIGN`; a writing existing source must declare both axes.
