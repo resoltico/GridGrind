@@ -12,6 +12,7 @@ public final class ExecutionInputBindings {
   private final Optional<StandardInputBinding> standardInput;
   private final Optional<InputResolutionFailures> inputResolutionFailures;
   private final Optional<InputResolutionOrigins> inputResolutionOrigins;
+  private final Optional<RequestPathAccess> requestPathAccess;
 
   /** Creates bindings from one working directory and one explicit temp root. */
   public ExecutionInputBindings(Path workingDirectory, Path tempRoot) {
@@ -34,7 +35,13 @@ public final class ExecutionInputBindings {
 
   private ExecutionInputBindings(
       Path workingDirectory, Path tempRoot, Optional<StandardInputBinding> standardInput) {
-    this(workingDirectory, tempRoot, standardInput, Optional.empty(), Optional.empty());
+    this(
+        workingDirectory,
+        tempRoot,
+        standardInput,
+        Optional.empty(),
+        Optional.empty(),
+        Optional.empty());
   }
 
   private ExecutionInputBindings(
@@ -42,17 +49,20 @@ public final class ExecutionInputBindings {
       Path tempRoot,
       Optional<StandardInputBinding> standardInput,
       Optional<InputResolutionFailures> inputResolutionFailures,
-      Optional<InputResolutionOrigins> inputResolutionOrigins) {
+      Optional<InputResolutionOrigins> inputResolutionOrigins,
+      Optional<RequestPathAccess> requestPathAccess) {
     Objects.requireNonNull(workingDirectory, "workingDirectory must not be null");
     Objects.requireNonNull(tempRoot, "tempRoot must not be null");
     Objects.requireNonNull(standardInput, "standardInput must not be null");
     Objects.requireNonNull(inputResolutionFailures, "inputResolutionFailures must not be null");
     Objects.requireNonNull(inputResolutionOrigins, "inputResolutionOrigins must not be null");
+    Objects.requireNonNull(requestPathAccess, "requestPathAccess must not be null");
     this.workingDirectory = workingDirectory.toAbsolutePath().normalize();
     this.tempRoot = tempRoot.toAbsolutePath().normalize();
     this.standardInput = standardInput;
     this.inputResolutionFailures = inputResolutionFailures;
     this.inputResolutionOrigins = inputResolutionOrigins;
+    this.requestPathAccess = requestPathAccess;
   }
 
   /** Returns the normalized working directory used to resolve relative authored input paths. */
@@ -81,13 +91,26 @@ public final class ExecutionInputBindings {
     return workbookTempFileFactory::createTempFile;
   }
 
+  /** Returns the request-scoped no-follow filesystem capability prepared during preflight. */
+  RequestPathAccess requestPathAccess() {
+    return requestPathAccess.orElseThrow(
+        () ->
+            new IllegalStateException(
+                "request-owned filesystem access requires phase-four preparation"));
+  }
+
+  boolean hasRequestPathAccess() {
+    return requestPathAccess.isPresent();
+  }
+
   ExecutionInputBindings collectingInputResolutionFailures(InputResolutionFailures failures) {
     return new ExecutionInputBindings(
         workingDirectory,
         tempRoot,
         standardInput,
         Optional.of(Objects.requireNonNull(failures, "failures must not be null")),
-        inputResolutionOrigins);
+        inputResolutionOrigins,
+        requestPathAccess);
   }
 
   ExecutionInputBindings withInputResolutionOrigins(InputResolutionOrigins origins) {
@@ -96,7 +119,21 @@ public final class ExecutionInputBindings {
         tempRoot,
         standardInput,
         inputResolutionFailures,
-        Optional.of(Objects.requireNonNull(origins, "origins must not be null")));
+        Optional.of(Objects.requireNonNull(origins, "origins must not be null")),
+        requestPathAccess);
+  }
+
+  ExecutionInputBindings withRequestPathAccess(RequestPathAccess access) {
+    if (requestPathAccess.isPresent()) {
+      throw new IllegalStateException("request-owned filesystem access is already prepared");
+    }
+    return new ExecutionInputBindings(
+        workingDirectory,
+        tempRoot,
+        standardInput,
+        inputResolutionFailures,
+        inputResolutionOrigins,
+        Optional.of(Objects.requireNonNull(access, "access must not be null")));
   }
 
   boolean collectInputResolutionFailure(Exception failure, Object source) {
@@ -105,7 +142,10 @@ public final class ExecutionInputBindings {
     }
     inputResolutionFailures
         .orElseThrow()
-        .add(failure, inputResolutionOrigins.flatMap(origins -> origins.locationFor(source)));
+        .add(
+            failure,
+            inputResolutionOrigins.flatMap(origins -> origins.locationFor(source)),
+            source);
     return true;
   }
 

@@ -199,8 +199,8 @@ class ExecutorGuardCoverageTest {
             dev.erst.gridgrind.contract.dto.ProblemContext.ResolveInputs.class,
             blankFailure.problem().context());
     assertEquals(GridGrindProblemCode.INVALID_REQUEST, blankFailure.problem().code());
-    assertEquals(java.util.Optional.empty(), blankContext.inputKind());
-    assertEquals(java.util.Optional.empty(), blankContext.inputPath());
+    assertEquals(java.util.Optional.of("source-backed text"), blankContext.inputKind());
+    assertEquals(java.util.Optional.of("blank.txt"), blankContext.inputPath());
   }
 
   @Test

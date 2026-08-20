@@ -280,7 +280,9 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
     assertEquals(GridGrindProtocolVersion.V2, success.protocolVersion());
     assertEquals(workbookPath.toAbsolutePath().toString(), savedPath(success));
     assertTrue(Files.exists(workbookPath));
-    assertEquals(List.of(), success.warnings());
+    assertEquals(
+        List.of(dev.erst.gridgrind.contract.dto.GridGrindWarningCode.NON_PORTABLE_ABSOLUTE_PATH),
+        success.warnings().stream().map(RequestWarning::code).toList());
     assertEquals(List.of("workbook", "cells", "window"), stepIds(success));
     assertEquals(1, workbook.sheetCount());
     assertEquals(List.of("Budget"), workbook.sheetNames());

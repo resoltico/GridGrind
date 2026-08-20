@@ -215,6 +215,11 @@ Every entry in `problem.causes` also carries an explicit `stage` token. Cause di
 stage-less fallbacks; they preserve the same pipeline stage vocabulary used by the primary
 `problem.context.stage` classification.
 
+Warnings use one typed `location`: `STEP` carries `stepIndex`, `stepId`, and `stepType`, while
+`REQUEST_PATH` carries the request-owned `path` and its `pathRole`. A contained absolute path emits
+`NON_PORTABLE_ABSOLUTE_PATH` without changing execution status; an escaping path is instead the
+blocking `PATH_ESCAPES_ROOT` problem.
+
 Assertion mismatches attach an additional `problem.assertionFailure` payload:
 
 ```json
@@ -290,6 +295,7 @@ Assertion mismatches attach an additional `problem.assertionFailure` payload:
 | `INVALID_REQUEST_SHAPE` | JSON is syntactically valid, but fields, discriminator IDs, explicit `null` placeholders, or token shapes do not match the GridGrind protocol schema. Messages are product-owned, classify the failure structurally at intake from the effective creator/discriminator contract, and point `context.jsonPath` at the exact offending field without leaking Jackson or Java class names. |
 | `INPUT_SOURCE_UNAVAILABLE` | A source-backed authored field requested `STANDARD_INPUT`, but no stdin bytes were bound for authored input content. On the CLI this usually means the request itself was also read from stdin instead of `--request <path>`. |
 | `INVALID_REQUEST` | JSON is valid and binds successfully, but the parsed request violates GridGrind business or cross-field validation, including non-`.xlsx` workbook paths, invalid `MOVE_SHEET` indexes, invalid/conflicting `RENAME_SHEET` targets, invalid hyperlink/comment/named-range payloads, invalid structural layout values, signed-workbook persistence requests that mutate the workbook without explicit `persistence.security.signature`, encrypted-source persistence that would implicitly carry forward a non-authorable OOXML write envelope, or `UNMERGE_CELLS` requests that do not match an existing merged region exactly. These request-owned invariants preserve exact offending-field paths and cause-specific resolutions on the public problem surface. |
+| `PATH_ESCAPES_ROOT` | A request-owned absolute or relative path resolves outside the execution root. Use a contained path; a contained absolute path is allowed but non-portable. |
 | `INVALID_CELL_ADDRESS` | A1-notation cell address is malformed. |
 | `INVALID_RANGE_ADDRESS` | A1-notation range is malformed or its dimensions do not match `rows`, including invalid `MERGE_CELLS` or `UNMERGE_CELLS` ranges. |
 
@@ -327,13 +333,14 @@ Assertion mismatches attach an additional `problem.assertionFailure` payload:
 | `INVALID_WORKBOOK_PASSWORD` | `source.security.password` was supplied for an encrypted OOXML workbook, but it did not decrypt the package. |
 | `INVALID_SIGNING_CONFIGURATION` | `persistence.security.signature` did not point to a readable PKCS#12 keystore or the configured alias/password/digest settings could not be resolved. |
 | `WORKBOOK_SECURITY_ERROR` | OOXML cryptographic inspection, encryption, or signing failed after request validation due to package or runtime security state. |
+| `UNSAFE_PATH_ACCESS` | The filesystem cannot provide GridGrind's required no-follow path binding, or a bound path topology changed before access. This failure is fail-closed. |
 
 ### I/O (`IO` category)
 
 | Code | Trigger |
 |:-----|:--------|
 | `INPUT_SOURCE_IO_ERROR` | A source-backed authored field pointed at a file that exists but could not be read, or stdin-backed source bytes could not be consumed cleanly. |
-| `IO_ERROR` | File could not be read or written. Resolutions are stage-specific: `OPEN_WORKBOOK` points at the source workbook path, `PERSIST_WORKBOOK` distinguishes overwrite versus `SAVE_AS` destinations and calls out `SAVE_AS.ifExists=REJECT` collisions separately from broader write failures, and `WRITE_RESPONSE` points at the authored `--response` path. Transport-owned write failures preserve the attempted path and, when available, the operating-system reason. |
+| `IO_ERROR` | File could not be read or written. Resolutions are stage-specific: `OPEN_WORKBOOK` points at the source workbook path, `PERSIST_WORKBOOK` distinguishes overwrite versus `SAVE_AS` destinations and calls out `SAVE_AS.ifExists=REJECT` collisions separately from broader write failures. A `SAVE_AS` destination parent must already exist because GridGrind binds that directory without following symlinks; create it before execution. `WRITE_RESPONSE` points at the authored `--response` path. Transport-owned write failures preserve the attempted path and, when available, the operating-system reason. |
 
 ### Internal (`INTERNAL` category)
 

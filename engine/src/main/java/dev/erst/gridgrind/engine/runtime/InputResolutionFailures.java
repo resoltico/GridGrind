@@ -10,11 +10,12 @@ import java.util.Optional;
 final class InputResolutionFailures {
   private final List<InputResolutionFailure> failures = new ArrayList<>();
 
-  void add(Exception exception, Optional<JsonLocation> json) {
+  void add(Exception exception, Optional<JsonLocation> json, Object source) {
     failures.add(
-        new InputResolutionFailure(
+        InputResolutionFailure.forSource(
             Objects.requireNonNull(exception, "exception must not be null"),
-            Objects.requireNonNullElseGet(json, Optional::empty)));
+            Objects.requireNonNullElseGet(json, Optional::empty),
+            source));
   }
 
   void throwIfAny() throws InputResolutionBatchException {

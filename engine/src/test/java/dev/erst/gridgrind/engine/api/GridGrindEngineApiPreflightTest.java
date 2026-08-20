@@ -68,9 +68,9 @@ class GridGrindEngineApiPreflightTest {
     Path sourcePath = temporaryDirectory.resolve("source.xlsx");
     createWorkbook(sourcePath);
     AtomicReference<Boolean> fullSourceDeleted = new AtomicReference<>(false);
-    WorkbookResult.Failure fullFailure =
+    WorkbookResult.Success fullSuccess =
         assertInstanceOf(
-            WorkbookResult.Failure.class,
+            WorkbookResult.Success.class,
             executor.execute(
                 GridGrindJson.readRequest(
                     existingSourceRequest("FULL_XSSF").getBytes(StandardCharsets.UTF_8)),
@@ -79,17 +79,27 @@ class GridGrindEngineApiPreflightTest {
 
     createWorkbook(sourcePath);
     AtomicReference<Boolean> eventReadSourceDeleted = new AtomicReference<>(false);
-    WorkbookResult.Failure eventReadFailure =
+    WorkbookResult.Success eventReadSuccess =
         assertInstanceOf(
-            WorkbookResult.Failure.class,
+            WorkbookResult.Success.class,
             executor.execute(
                 GridGrindJson.readRequest(
                     existingSourceRequest("EVENT_READ").getBytes(StandardCharsets.UTF_8)),
                 inputs(),
                 deleteSourceAfterPreflight(sourcePath, eventReadSourceDeleted)));
 
-    assertEquals(GridGrindProblemCode.WORKBOOK_NOT_FOUND, fullFailure.problem().code());
-    assertEquals(GridGrindProblemCode.WORKBOOK_NOT_FOUND, eventReadFailure.problem().code());
+    assertEquals(
+        0,
+        assertInstanceOf(
+                dev.erst.gridgrind.contract.dto.ExecutionJournal.Outcome.Succeeded.class,
+                fullSuccess.journal().outcome())
+            .completedStepCount());
+    assertEquals(
+        0,
+        assertInstanceOf(
+                dev.erst.gridgrind.contract.dto.ExecutionJournal.Outcome.Succeeded.class,
+                eventReadSuccess.journal().outcome())
+            .completedStepCount());
     assertTrue(fullSourceDeleted.get());
     assertTrue(eventReadSourceDeleted.get());
   }

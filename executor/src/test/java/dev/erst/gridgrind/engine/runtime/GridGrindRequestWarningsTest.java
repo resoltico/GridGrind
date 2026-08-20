@@ -2,6 +2,7 @@ package dev.erst.gridgrind.engine.runtime;
 
 import static dev.erst.gridgrind.engine.runtime.ExecutorTestPlanSupport.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import dev.erst.gridgrind.contract.action.CellMutationAction;
@@ -35,9 +36,13 @@ class GridGrindRequestWarningsTest {
     List<RequestWarning> warnings = GridGrindRequestWarnings.collect(request);
 
     assertEquals(1, warnings.size());
-    assertEquals(2, warnings.getFirst().stepIndex());
-    assertEquals("step-03-set-cell", warnings.getFirst().stepId());
-    assertEquals("SET_CELL", warnings.getFirst().stepType());
+    dev.erst.gridgrind.contract.dto.RequestWarningLocation.Step location =
+        assertInstanceOf(
+            dev.erst.gridgrind.contract.dto.RequestWarningLocation.Step.class,
+            warnings.getFirst().location());
+    assertEquals(2, location.stepIndex());
+    assertEquals("step-03-set-cell", location.stepId());
+    assertEquals("SET_CELL", location.stepType());
     assertTrue(warnings.getFirst().message().contains("Budget Review"));
     assertTrue(warnings.getFirst().message().contains("'Sheet Name'!A1"));
   }

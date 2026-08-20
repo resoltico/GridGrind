@@ -1,6 +1,7 @@
 package dev.erst.gridgrind.contract.dto;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces.CliArgument;
 import dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces.JsonLocation;
@@ -157,6 +158,29 @@ class DiagnosticOrderTest {
     assertEquals(
         List.of(firstSameStep, secondSameStep),
         DiagnosticOrder.warnings(List.of(firstSameStep, secondSameStep)));
+  }
+
+  @Test
+  void ordersRequestPathWarningsBeforeStepWarningsAndModelsBothLocationVariants() {
+    RequestWarning requestPath =
+        RequestWarning.nonPortableAbsolutePath("/work/report.xlsx", "persistence");
+    RequestWarning step = warning(0, "step");
+
+    assertEquals(List.of(requestPath, step), DiagnosticOrder.warnings(List.of(step, requestPath)));
+    RequestWarningLocation requestPathLocation =
+        new RequestWarningLocation.RequestPath("/work/report.xlsx", "persistence");
+    RequestWarningLocation stepLocation = new RequestWarningLocation.Step(0, "step", "SET_CELL");
+    assertEquals(-1, requestPathLocation.orderingStepIndex());
+    assertEquals(0, stepLocation.orderingStepIndex());
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new RequestWarningLocation.Step(-1, "step", "SET_CELL"));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new RequestWarningLocation.RequestPath(" ", "persistence"));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new RequestWarningLocation.RequestPath("/work/report.xlsx", " "));
   }
 
   private static GridGrindProblemDetail.Problem problem(ProblemContext context) {

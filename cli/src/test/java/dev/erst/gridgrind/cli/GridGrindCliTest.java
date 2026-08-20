@@ -332,7 +332,7 @@ class GridGrindCliTest extends GridGrindCliTestSupport {
   void returnsStructuredJsonErrorForInvalidRequest() throws IOException {
     String request =
         requestJson(
-            "{ \"type\": \"EXISTING\", \"path\": \"/tmp/does-not-exist.xlsx\" }",
+            "{ \"type\": \"EXISTING\", \"path\": \"does-not-exist.xlsx\" }",
             "{ \"type\": \"NONE\" }",
             "[]");
 

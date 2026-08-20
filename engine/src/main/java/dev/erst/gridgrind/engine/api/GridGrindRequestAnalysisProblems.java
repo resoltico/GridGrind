@@ -44,13 +44,17 @@ public final class GridGrindRequestAnalysisProblems {
 
   private static ProblemContextRequestSurfaces.JsonLocation locationFor(
       RequestBindingFailure problem) {
-    return problem
-        .byteOffset()
+    return locationFor(problem.jsonPath(), problem.byteOffset());
+  }
+
+  static ProblemContextRequestSurfaces.JsonLocation locationFor(
+      String jsonPath, java.util.Optional<Long> byteOffset) {
+    Objects.requireNonNull(jsonPath, "jsonPath must not be null");
+    Objects.requireNonNull(byteOffset, "byteOffset must not be null");
+    return byteOffset
         .map(
-            byteOffset ->
-                ProblemContextRequestSurfaces.JsonLocation.pathAtByteOffset(
-                    problem.jsonPath(), byteOffset))
-        .orElseGet(() -> ProblemContextRequestSurfaces.JsonLocation.pathOnly(problem.jsonPath()));
+            offset -> ProblemContextRequestSurfaces.JsonLocation.pathAtByteOffset(jsonPath, offset))
+        .orElseGet(() -> ProblemContextRequestSurfaces.JsonLocation.pathOnly(jsonPath));
   }
 
   private static ProblemContextRequestSurfaces.JsonLocation locationFor(

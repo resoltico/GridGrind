@@ -43,6 +43,7 @@ final class RequestPreflight {
         SourceBackedPlanResolver::resolveStep);
   }
 
+  @SuppressWarnings({"PMD.CloseResource", "PMD.UseTryWithResources"})
   private static Result verify(
       WorkbookPlan request,
       ExecutionInputBindings bindings,
@@ -53,14 +54,32 @@ final class RequestPreflight {
     Objects.requireNonNull(analysis, "analysis must not be null");
     Objects.requireNonNull(stepResolver, "stepResolver must not be null");
     List<GridGrindProblemDetail.Problem> problems = new ArrayList<>();
-    ExecutionInputBindings locatedBindings =
-        bindings.withInputResolutionOrigins(InputResolutionOrigins.forRequest(request, analysis));
-    Optional<WorkbookPlan> resolvedRequest =
-        resolveInputs(request, locatedBindings, stepResolver, problems);
-    preflightWorkbookSource(request, locatedBindings, problems);
-    return new Result(
-        problems.isEmpty() ? resolvedRequest : Optional.empty(),
-        DiagnosticOrder.problems(problems));
+    RequestPathAccess pathAccess =
+        new RequestPathAccess(bindings.workingDirectory(), bindings.tempFileFactory());
+    boolean prepared = false;
+    try {
+      ExecutionInputBindings locatedBindings =
+          bindings
+              .withRequestPathAccess(pathAccess)
+              .withInputResolutionOrigins(InputResolutionOrigins.forRequest(request, analysis));
+      Optional<WorkbookPlan> resolvedRequest =
+          resolveInputs(request, locatedBindings, stepResolver, problems);
+      preflightRequestOwnedPaths(request, locatedBindings, problems);
+      preflightWorkbookSource(request, locatedBindings, problems);
+      Result result =
+          new Result(
+              problems.isEmpty()
+                  ? resolvedRequest.map(value -> new PreparedRequest(value, locatedBindings))
+                  : Optional.empty(),
+              DiagnosticOrder.problems(problems),
+              pathAccess.warnings());
+      prepared = result.preparedRequest().isPresent();
+      return result;
+    } finally {
+      if (!prepared) {
+        closeQuietly(pathAccess);
+      }
+    }
   }
 
   private static Optional<WorkbookPlan> resolveInputs(
@@ -115,12 +134,110 @@ final class RequestPreflight {
     ProblemContext.OpenWorkbook context = openWorkbookContext(request, bindings);
     ExecutionWorkbookSupport workbookSupport =
         new ExecutionWorkbookSupport(bindings.tempFileFactory());
-    try (ExcelWorkbook workbook =
-        workbookSupport.openWorkbook(
-            request.source(), request.formulaEnvironment(), bindings.workingDirectory())) {
+    try (ExcelWorkbook workbook = workbookSupport.openWorkbook(request.source(), null, bindings)) {
       Objects.requireNonNull(workbook, "workbook must not be null");
     } catch (Exception exception) {
       problems.add(GridGrindProblems.fromException(exception, context));
+    }
+  }
+
+  private static void preflightRequestOwnedPaths(
+      WorkbookPlan request,
+      ExecutionInputBindings bindings,
+      List<GridGrindProblemDetail.Problem> problems) {
+    preflightFormulaEnvironmentPaths(request, bindings, problems);
+    preflightPersistenceMaterial(request, bindings, problems);
+    preflightPersistenceTarget(request, bindings, problems);
+  }
+
+  private static void preflightFormulaEnvironmentPaths(
+      WorkbookPlan request,
+      ExecutionInputBindings bindings,
+      List<GridGrindProblemDetail.Problem> problems) {
+    for (var externalWorkbook : request.formulaEnvironment().externalWorkbooks()) {
+      try {
+        bindings
+            .requestPathAccess()
+            .materializeRead(
+                externalWorkbook.path(),
+                "formulaEnvironment.externalWorkbooks",
+                "gridgrind-formula-workbook-",
+                ".xlsx");
+      } catch (IOException exception) {
+        addFormulaPathProblem(
+            request,
+            externalWorkbook,
+            SourceBackedPlanResolver.inputFileFailure(
+                externalWorkbook.path(), "formula external workbook", exception),
+            problems);
+      } catch (RuntimeException exception) {
+        addFormulaPathProblem(request, externalWorkbook, exception, problems);
+      }
+    }
+  }
+
+  private static void addFormulaPathProblem(
+      WorkbookPlan request,
+      dev.erst.gridgrind.contract.dto.FormulaExternalWorkbookInput externalWorkbook,
+      Exception exception,
+      List<GridGrindProblemDetail.Problem> problems) {
+    problems.add(
+        GridGrindProblems.fromException(
+            exception,
+            new ProblemContext.ResolveInputs(
+                ExecutionRequestPaths.requestShape(request),
+                InputReference.path("formula external workbook", externalWorkbook.path()))));
+  }
+
+  private static void preflightPersistenceMaterial(
+      WorkbookPlan request,
+      ExecutionInputBindings bindings,
+      List<GridGrindProblemDetail.Problem> problems) {
+    try {
+      ExecutionRequestPaths.persistenceOptions(request.persistence(), bindings);
+    } catch (Exception exception) {
+      problems.add(
+          GridGrindProblems.fromException(
+              exception,
+              new ProblemContext.PersistWorkbook(
+                  ExecutionRequestPaths.requestShape(request),
+                  ExecutionRequestPaths.persistenceReference(
+                      request, bindings.workingDirectory()))));
+    }
+  }
+
+  private static void preflightPersistenceTarget(
+      WorkbookPlan request,
+      ExecutionInputBindings bindings,
+      List<GridGrindProblemDetail.Problem> problems) {
+    String persistencePath;
+    dev.erst.gridgrind.excel.WorkbookArtifactWriteDisposition disposition;
+    switch (request.persistence()) {
+      case WorkbookPlan.WorkbookPersistence.None _ -> {
+        return;
+      }
+      case WorkbookPlan.WorkbookPersistence.SaveAs saveAs -> {
+        persistencePath = saveAs.path();
+        disposition = ExecutionRequestPaths.writeDisposition(saveAs);
+      }
+      case WorkbookPlan.WorkbookPersistence.Overwrite _ -> {
+        if (!(request.source() instanceof WorkbookPlan.WorkbookSource.ExistingFile existingFile)) {
+          return;
+        }
+        persistencePath = existingFile.path();
+        disposition = dev.erst.gridgrind.excel.WorkbookArtifactWriteDisposition.REPLACE_EXISTING;
+      }
+    }
+    try {
+      bindings.requestPathAccess().prepareOutput(persistencePath, "persistence", disposition);
+    } catch (Exception exception) {
+      problems.add(
+          GridGrindProblems.fromException(
+              exception,
+              new ProblemContext.PersistWorkbook(
+                  ExecutionRequestPaths.requestShape(request),
+                  ExecutionRequestPaths.persistenceReference(
+                      request, bindings.workingDirectory()))));
     }
   }
 
@@ -135,7 +252,7 @@ final class RequestPreflight {
                     ? InputReference.path(
                         inputSourceException.inputKind(), inputSourceException.inputPath())
                     : InputReference.kind(inputSourceException.inputKind())
-                : InputReference.unknown());
+                : failure.input());
     return failure
         .json()
         .map(
@@ -161,20 +278,58 @@ final class RequestPreflight {
 
   /** One phase-four result carrying a resolved request only when every prerequisite succeeded. */
   record Result(
-      Optional<WorkbookPlan> resolvedRequest, List<GridGrindProblemDetail.Problem> problems) {
+      Optional<PreparedRequest> preparedRequest,
+      List<GridGrindProblemDetail.Problem> problems,
+      List<dev.erst.gridgrind.contract.dto.RequestWarning> warnings) {
     Result {
-      Objects.requireNonNull(resolvedRequest, "resolvedRequest must not be null");
+      Objects.requireNonNull(preparedRequest, "preparedRequest must not be null");
       Objects.requireNonNull(problems, "problems must not be null");
+      Objects.requireNonNull(warnings, "warnings must not be null");
       problems = List.copyOf(problems);
-      if (resolvedRequest.isPresent() != problems.isEmpty()) {
+      warnings = List.copyOf(warnings);
+      if (preparedRequest.isPresent() != problems.isEmpty()) {
         throw new IllegalArgumentException(
-            "resolvedRequest must be present exactly when phase-four problems are empty");
+            "preparedRequest must be present exactly when phase-four problems are empty");
       }
     }
 
-    WorkbookPlan requireResolvedRequest() {
-      return resolvedRequest.orElseThrow(
+    PreparedRequest requirePreparedRequest() {
+      return preparedRequest.orElseThrow(
           () -> new IllegalStateException("A failed preflight cannot produce a resolved request"));
+    }
+
+    WorkbookPlan preparedPlan() {
+      return requirePreparedRequest().request();
+    }
+
+    ExecutionInputBindings preparedBindings() {
+      return requirePreparedRequest().bindings();
+    }
+
+    /** Releases request-private resources retained by one successful preflight result. */
+    void release() {
+      preparedRequest.ifPresent(RequestPreflight::closeQuietly);
+    }
+  }
+
+  record PreparedRequest(WorkbookPlan request, ExecutionInputBindings bindings)
+      implements AutoCloseable {
+    PreparedRequest {
+      Objects.requireNonNull(request, "request must not be null");
+      Objects.requireNonNull(bindings, "bindings must not be null");
+    }
+
+    @Override
+    public void close() throws IOException {
+      bindings.requestPathAccess().close();
+    }
+  }
+
+  static void closeQuietly(AutoCloseable closeable) {
+    try {
+      closeable.close();
+    } catch (Exception ignored) {
+      // The original preflight finding is always more actionable than private-resource cleanup.
     }
   }
 }

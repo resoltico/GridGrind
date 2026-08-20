@@ -14,6 +14,12 @@ public final class WorkbookNotFoundException extends java.util.NoSuchElementExce
     this.workbookPath = workbookPath;
   }
 
+  /** Creates the exception while retaining the failed filesystem-open cause. */
+  public WorkbookNotFoundException(Path workbookPath, Throwable cause) {
+    super("Workbook does not exist: " + workbookPath, cause);
+    this.workbookPath = workbookPath;
+  }
+
   public Path workbookPath() {
     return workbookPath;
   }

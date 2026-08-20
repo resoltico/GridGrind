@@ -53,10 +53,10 @@ final class ExecutionStreamingWorkflow {
       ExecutionModeInput executionMode,
       List<RequestWarning> warnings,
       ExecutionJournalRecorder journal,
-      Path workingDirectory) {
+      ExecutionInputBindings bindings) {
     WorkbookLocation workbookLocation =
         ExecutionRequestPaths.workbookLocationFor(
-            request.source(), request.persistence(), workingDirectory);
+            request.source(), request.persistence(), bindings.workingDirectory());
     List<AssertionResult> assertions = new ArrayList<>();
     List<InspectionResult> inspections = new ArrayList<>();
     StreamingWorkflowContext workflowContext =
@@ -125,7 +125,7 @@ final class ExecutionStreamingWorkflow {
     try {
       persistence =
           workbookSupport.persistStreamingWorkbook(
-              materializedPath, request.persistence(), request.source(), workingDirectory);
+              materializedPath, request.persistence(), request.source(), bindings);
       movedToPersistenceTarget =
           !(persistence instanceof WorkbookResultPersistence.PersistenceOutcome.NotSaved);
     } catch (Exception exception) {
@@ -135,7 +135,8 @@ final class ExecutionStreamingWorkflow {
               exception,
               new dev.erst.gridgrind.contract.dto.ProblemContext.PersistWorkbook(
                   ExecutionRequestPaths.requestShape(request),
-                  ExecutionRequestPaths.persistenceReference(request, workingDirectory)));
+                  ExecutionRequestPaths.persistenceReference(
+                      request, bindings.workingDirectory())));
       persistencePhase.fail("failed (" + problem.code() + ")");
       return ExecutionResponseSupport.failureResponse(
           workflowContext.failure(calculation, problem));

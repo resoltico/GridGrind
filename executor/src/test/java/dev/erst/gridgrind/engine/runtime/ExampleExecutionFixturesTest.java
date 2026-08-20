@@ -34,6 +34,7 @@ class ExampleExecutionFixturesTest {
   @Test
   void selfContainedBuiltInExamplesExecuteFromABlankArtifactWorkspace() throws IOException {
     Path workspace = Files.createDirectories(tempDir.resolve("blank-artifact-workspace"));
+    Files.createDirectory(workspace.resolve("generated-workbooks"));
 
     DefaultGridGrindRequestExecutor executor = new DefaultGridGrindRequestExecutor();
     ExecutionInputBindings workspaceBindings =

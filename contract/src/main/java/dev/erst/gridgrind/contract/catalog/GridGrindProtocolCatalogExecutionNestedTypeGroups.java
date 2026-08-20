@@ -6,6 +6,7 @@ import static dev.erst.gridgrind.contract.catalog.GridGrindProtocolCatalogNested
 import dev.erst.gridgrind.contract.dto.ExecutionJournal;
 import dev.erst.gridgrind.contract.dto.ExecutionModeInput;
 import dev.erst.gridgrind.contract.dto.OoxmlEncryptionReport;
+import dev.erst.gridgrind.contract.dto.RequestWarningLocation;
 import java.util.List;
 
 /** Owns execution-mode nested type groups published by the protocol catalog. */
@@ -74,5 +75,17 @@ final class GridGrindProtocolCatalogExecutionNestedTypeGroups {
                   descriptor(
                       OoxmlEncryptionReport.Encrypted.class,
                       "ENCRYPTED",
-                      "Package is encrypted with one fully specified OOXML encryption envelope."))));
+                      "Package is encrypted with one fully specified OOXML encryption envelope."))),
+          nestedTypeGroup(
+              "requestWarningLocationTypes",
+              RequestWarningLocation.class,
+              List.of(
+                  descriptor(
+                      RequestWarningLocation.Step.class,
+                      "STEP",
+                      "Warning located at one authored workbook step."),
+                  descriptor(
+                      RequestWarningLocation.RequestPath.class,
+                      "REQUEST_PATH",
+                      "Warning located at one request-owned filesystem path."))));
 }

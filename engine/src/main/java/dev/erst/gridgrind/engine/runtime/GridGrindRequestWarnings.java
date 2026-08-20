@@ -30,15 +30,14 @@ final class GridGrindRequestWarnings {
             .map(MutationStep.class::cast)
             .toList();
     Set<String> spacedSheetNames = sameRequestSpacedSheetNames(mutationSteps);
-    if (spacedSheetNames.isEmpty()) {
-      return List.of();
-    }
-
-    return IntStream.range(0, request.steps().size())
-        .mapToObj(
-            stepIndex -> warningFor(request.steps().get(stepIndex), stepIndex, spacedSheetNames))
-        .flatMap(Optional::stream)
-        .toList();
+    return spacedSheetNames.isEmpty()
+        ? List.of()
+        : IntStream.range(0, request.steps().size())
+            .mapToObj(
+                stepIndex ->
+                    warningFor(request.steps().get(stepIndex), stepIndex, spacedSheetNames))
+            .flatMap(Optional::stream)
+            .toList();
   }
 
   private static Set<String> sameRequestSpacedSheetNames(List<MutationStep> steps) {

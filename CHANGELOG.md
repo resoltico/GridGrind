@@ -6,6 +6,7 @@ Earlier release history through `0.68.0` is archived in [docs/CHANGELOG_ARCHIVE.
 ## [Unreleased]
 
 ### Added
+- Structured request warnings now carry a typed `location`, distinguishing step-owned warnings from request-path warnings; contained absolute request paths emit `NON_PORTABLE_ABSOLUTE_PATH` with their exact path role.
 - Request doctoring now reports every independently observable request-intake defect in one response, including duplicate keys, unknown fields, omitted required fields, explicit nulls, malformed scalar values, missing or unknown type discriminators, and constructor-level field validation failures; valid sibling fragments remain available for safe preflight rather than being discarded after the first defect.
 - Protocol catalog field descriptors now publish `secret: true` for authored credential-bearing fields, allowing consumers to identify values that diagnostics and telemetry must never reproduce.
 - Added the plural `CommandError` result for command failures before workbook execution, with `status=REJECTED` and a nonempty canonical `problems[]` collection. Request locations retain exact UTF-8 offsets and duplicate-property identity where the source contains an offending token.
@@ -25,6 +26,7 @@ Earlier release history through `0.68.0` is archived in [docs/CHANGELOG_ARCHIVE.
 - `VERBOSE` execution journals now keep their fine-grained events exclusively in `WorkbookResult.journal.events[]`; CLI stderr is reserved for the single structured response-file fallback notice.
 
 ### Fixed
+- Request-owned workbook, persistence, formula-environment, signing-material, and file-backed input paths now share one fail-closed boundary: absolute and relative escapes are rejected, all reads are materialized through no-follow descriptor bindings before mutation, and output commits recheck the bound directory topology before writing. Symlinks are never followed, and the documented residual concurrent-topology window is explicit rather than silently overstated.
 - Request doctoring now batches independent source-backed-input and existing-workbook preflight failures whenever a complete request is available, including alongside static contract findings; execution performs the same preflight only after static validation passes, and any preflight failure completes zero steps and persists no workbook. Source-backed input failures retain their exact authored `context.json.jsonPath`, and execution selects the same ordered primary preflight problem that doctoring reports.
 - Request diagnostics now distinguish `READ_REQUEST` structural intake from `BIND_REQUEST` creator-contract failures, preserving phase-first deterministic ordering even when a constructor failure appears earlier in the JSON payload.
 - Asset-backed recipe printing now keeps stderr free of ad hoc portability prose; callers discover the required workspace assets through the catalog's structured `workspaceMode` and `requiredWorkspacePaths` fields, and response-file fallback emits only its one structured transport notice.

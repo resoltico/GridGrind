@@ -21,4 +21,15 @@ class GridGrindProblemCodeClassifierTest {
                 Optional.empty(),
                 null)));
   }
+
+  @Test
+  void mapsRequestPathFailuresToTheirDedicatedProtocolCodes() {
+    assertEquals(
+        GridGrindProblemCode.PATH_ESCAPES_ROOT,
+        GridGrindProblemCodeClassifier.codeFor(
+            new RequestPathEscapeException("path escapes root")));
+    assertEquals(
+        GridGrindProblemCode.UNSAFE_PATH_ACCESS,
+        GridGrindProblemCodeClassifier.codeFor(new UnsafePathAccessException("no safe binding")));
+  }
 }

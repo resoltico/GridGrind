@@ -78,7 +78,7 @@ class ExecutionModeRequestExecutorTest {
 
     assertEquals(full.inspections(), event.inspections());
     assertEquals(full.persistence(), event.persistence());
-    assertEquals(List.of(), event.warnings());
+    assertEquals(full.warnings(), event.warnings());
   }
 
   @Test
@@ -460,7 +460,7 @@ class ExecutionModeRequestExecutorTest {
                             new WorkbookMutationAction.EnsureSheet())),
                     List.of())));
 
-    assertEquals(GridGrindProblemCode.IO_ERROR, failure.problem().code());
+    assertEquals(GridGrindProblemCode.UNSAFE_PATH_ACCESS, failure.problem().code());
     assertEquals("PERSIST_WORKBOOK", failure.problem().context().stage());
     assertEquals(
         java.util.Optional.of(workbookPath.toAbsolutePath().toString()),

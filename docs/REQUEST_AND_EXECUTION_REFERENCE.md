@@ -400,9 +400,11 @@ Use `ANALYZE_WORKBOOK_FINDINGS` as the primary workbook-health check. Pair it wi
 }
 ```
 
-Successful responses may include a `warnings` array. The current request-phase warning flags
-same-request sheet names with spaces referenced in formulas without single quotes. Use
-`'Sheet Name'!A1` syntax for those references.
+Successful responses may include a `warnings` array. Warning locations are typed: `STEP` identifies
+an authored step, while `REQUEST_PATH` identifies a request-owned file path. Current warnings flag
+same-request sheet names with spaces referenced in formulas without single quotes and contained
+absolute request paths. Use `'Sheet Name'!A1` syntax for the former; prefer relative paths for the
+latter so the request remains portable across execution roots.
 
 For batch health-plus-read workflows, see
 [`examples/workbook-health-request.json`](../examples/workbook-health-request.json) for a compact
@@ -466,7 +468,10 @@ response still reports `type=OVERWRITE` but omits `sourcePath` rather than inven
   "ifExists": "REJECT"
 }
 ```
-Write the workbook to the given path, creating parent directories as needed. `SAVE_AS.ifExists` is required: use `REJECT` to fail when the destination already exists, or `REPLACE` to allow create-or-replace writes.
+Write the workbook to the given path. The destination parent directory must already exist so
+GridGrind can bind it through a no-follow filesystem handle before execution begins.
+`SAVE_AS.ifExists` is required: use `REJECT` to fail when the destination already exists, or
+`REPLACE` to allow create-or-replace writes.
 
 ```json
 {

@@ -142,7 +142,9 @@ class EventReadExecutorCoverageTest {
 
   @Test
   void eventReadExecutionReturnsOpenWorkbookFailureWhenMaterializationFails() {
-    Path missingWorkbook = Path.of("/tmp/gridgrind-missing-event-" + System.nanoTime() + ".xlsx");
+    Path missingWorkbook =
+        ExecutionContextFixtureSupport.defaultWorkingDirectory()
+            .resolve("gridgrind-missing-event-" + System.nanoTime() + ".xlsx");
 
     WorkbookResult.Failure failure =
         assertInstanceOf(

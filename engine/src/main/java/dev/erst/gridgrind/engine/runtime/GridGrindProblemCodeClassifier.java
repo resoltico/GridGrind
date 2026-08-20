@@ -35,6 +35,8 @@ final class GridGrindProblemCodeClassifier {
       case InvalidJsonException _ -> GridGrindProblemCode.INVALID_JSON;
       case InvalidRequestShapeException _ -> GridGrindProblemCode.INVALID_REQUEST_SHAPE;
       case InvalidRequestException _ -> GridGrindProblemCode.INVALID_REQUEST;
+      case RequestPathEscapeException _ -> GridGrindProblemCode.PATH_ESCAPES_ROOT;
+      case UnsafePathAccessException _ -> GridGrindProblemCode.UNSAFE_PATH_ACCESS;
       case AssertionFailedException _ -> GridGrindProblemCode.ASSERTION_FAILED;
       case WorkbookNotFoundException _ -> GridGrindProblemCode.WORKBOOK_NOT_FOUND;
       case InputSourceNotFoundException _ -> GridGrindProblemCode.INPUT_SOURCE_NOT_FOUND;

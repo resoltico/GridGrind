@@ -47,10 +47,15 @@ class ExecutionPathCoverageTest {
     Path workingDirectory = Files.createTempDirectory("gridgrind-open-workdir-");
     ExecutionWorkbookSupport workbookSupport =
         ExecutionContextFixtureSupport.workbookSupport(workingDirectory);
-
-    try (var workbook =
-        workbookSupport.openWorkbook(
-            new WorkbookPlan.WorkbookSource.New(), null, workingDirectory)) {
+    ExecutionInputBindings bindings =
+        new ExecutionInputBindings(workingDirectory, workingDirectory.resolve("scratch"));
+    try (RequestPathAccess access =
+            new RequestPathAccess(workingDirectory, bindings.tempFileFactory());
+        var workbook =
+            workbookSupport.openWorkbook(
+                new WorkbookPlan.WorkbookSource.New(),
+                null,
+                bindings.withRequestPathAccess(access))) {
       assertNotNull(workbook);
     }
   }
@@ -121,8 +126,8 @@ class ExecutionPathCoverageTest {
     Files.createSymbolicLink(symlink, outside);
     try {
       org.junit.jupiter.api.Assertions.assertThrows(
-          IllegalArgumentException.class,
-          () -> ExecutionRequestPaths.normalizePath("escape/secret.xlsx", workDir));
+          UnsafePathAccessException.class,
+          () -> RequestPathBinding.bindExistingRead("escape/secret.xlsx", workDir));
     } finally {
       Files.delete(symlink);
       Files.delete(outside);
@@ -131,15 +136,15 @@ class ExecutionPathCoverageTest {
   }
 
   @Test
-  void symlinkWithinWorkingDirectoryIsAllowed() throws IOException {
+  void symlinkWithinWorkingDirectoryIsRejected() throws IOException {
     Path workDir = Files.createTempDirectory("gridgrind-symlink-internal-test");
     Path subDir = Files.createTempDirectory(workDir, "subdir");
     Path symlink = workDir.resolve("internal-link");
     Files.createSymbolicLink(symlink, subDir);
     try {
-      assertEquals(
-          workDir.resolve("internal-link/file.xlsx").normalize(),
-          ExecutionRequestPaths.normalizePath("internal-link/file.xlsx", workDir));
+      org.junit.jupiter.api.Assertions.assertThrows(
+          UnsafePathAccessException.class,
+          () -> RequestPathBinding.bindWriteTarget("internal-link/file.xlsx", workDir));
     } finally {
       Files.delete(symlink);
       Files.delete(subDir);
@@ -155,8 +160,8 @@ class ExecutionPathCoverageTest {
     Files.createSymbolicLink(symlink, nonExistent);
     try {
       org.junit.jupiter.api.Assertions.assertThrows(
-          IllegalArgumentException.class,
-          () -> ExecutionRequestPaths.normalizePath("dangler/file.xlsx", workDir));
+          UnsafePathAccessException.class,
+          () -> RequestPathBinding.bindWriteTarget("dangler/file.xlsx", workDir));
     } finally {
       Files.delete(symlink);
       Files.delete(workDir);
@@ -178,19 +183,29 @@ class ExecutionPathCoverageTest {
         workingDirectory.resolve("subdir/workbook.xlsx").normalize(),
         ExecutionRequestPaths.normalizePath("subdir/workbook.xlsx", workingDirectory));
 
-    // Absolute paths outside working directory remain allowed
+    RequestPathEscapeException absoluteFailure =
+        org.junit.jupiter.api.Assertions.assertThrows(
+            RequestPathEscapeException.class,
+            () ->
+                ExecutionRequestPaths.normalizePath("/tmp/other/workbook.xlsx", workingDirectory));
+    assertTrue(absoluteFailure.getMessage().contains("/tmp/other/workbook.xlsx"));
+
     assertEquals(
-        Path.of("/tmp/other/workbook.xlsx"),
-        ExecutionRequestPaths.normalizePath("/tmp/other/workbook.xlsx", workingDirectory));
+        workingDirectory.resolve("subdir/workbook.xlsx").normalize(),
+        ExecutionRequestPaths.normalizePath(
+            workingDirectory.resolve("subdir/workbook.xlsx").toString(), workingDirectory));
   }
 
   @Test
   void sourceFilePathTraversalEscapingWorkingDirectoryIsRejected() throws IOException {
     Path workDir = Files.createTempDirectory("gridgrind-source-path-test");
-    try {
+    try (RequestPathAccess access =
+        new RequestPathAccess(
+            workDir, (prefix, suffix) -> Files.createTempFile(workDir, prefix, suffix))) {
       org.junit.jupiter.api.Assertions.assertThrows(
-          InputSourceReadException.class,
-          () -> SourceBackedPathResolver.resolvePath("../../etc/passwd", workDir, "test input"));
+          RequestPathEscapeException.class,
+          () ->
+              access.materializeRead("../../etc/passwd", "test input", "gridgrind-test-", ".txt"));
     } finally {
       Files.delete(workDir);
     }
@@ -200,11 +215,15 @@ class ExecutionPathCoverageTest {
   void sourceFilePathWithinWorkingDirectoryIsAllowed() throws IOException {
     Path workDir = Files.createTempDirectory("gridgrind-source-path-allowed-test");
     Path file = Files.createTempFile(workDir, "input", ".txt");
-    try {
+    Files.writeString(file, "inside root");
+    try (RequestPathAccess access =
+        new RequestPathAccess(
+            workDir, (prefix, suffix) -> Files.createTempFile(workDir, prefix, suffix))) {
       assertEquals(
-          file.toAbsolutePath().normalize(),
-          SourceBackedPathResolver.resolvePath(
-              file.getFileName().toString(), workDir, "test input"));
+          "inside root",
+          Files.readString(
+              access.materializeRead(
+                  file.getFileName().toString(), "test input", "gridgrind-test-", ".txt")));
     } finally {
       Files.delete(file);
       Files.delete(workDir);

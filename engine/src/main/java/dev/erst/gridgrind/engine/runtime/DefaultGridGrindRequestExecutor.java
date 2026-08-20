@@ -83,94 +83,95 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
         analysis
             .map(value -> RequestPreflight.verify(authoredRequest, executionBindings, value))
             .orElseGet(() -> RequestPreflight.verify(authoredRequest, executionBindings));
-    if (!preflight.problems().isEmpty()) {
-      GridGrindProblemDetail.Problem problem = preflight.problems().getFirst();
-      inputResolutionPhase.fail("failed (" + problem.code() + ")");
-      return ExecutionResponseSupport.failureResponse(
-          protocolVersion,
-          journal,
-          authoredRequest,
-          CalculationPolicyExecutor.notRequestedReport(authoredRequest.calculationPolicy()),
-          problem,
-          null,
-          null);
-    }
-    WorkbookPlan resolvedRequest = preflight.requireResolvedRequest();
-    inputResolutionPhase.succeed();
+    try {
+      if (!preflight.problems().isEmpty()) {
+        GridGrindProblemDetail.Problem problem = preflight.problems().getFirst();
+        inputResolutionPhase.fail("failed (" + problem.code() + ")");
+        return ExecutionResponseSupport.failureResponse(
+            protocolVersion,
+            journal,
+            authoredRequest,
+            CalculationPolicyExecutor.notRequestedReport(authoredRequest.calculationPolicy()),
+            problem,
+            null,
+            null);
+      }
+      WorkbookPlan resolvedRequest = preflight.preparedPlan();
+      ExecutionInputBindings preparedBindings = preflight.preparedBindings();
+      inputResolutionPhase.succeed();
 
-    List<RequestWarning> warnings = GridGrindRequestWarnings.collect(resolvedRequest);
+      List<RequestWarning> warnings =
+          new java.util.ArrayList<>(GridGrindRequestWarnings.collect(resolvedRequest));
+      warnings.addAll(preflight.warnings());
 
-    ExecutionModeInput executionMode = executionMode(resolvedRequest);
-    if (directEventReadEligible(resolvedRequest, executionMode)) {
+      ExecutionModeInput executionMode = executionMode(resolvedRequest);
+      if (directEventReadEligible(resolvedRequest, executionMode)) {
+        return responseSupport.guardUnexpectedRuntime(
+            protocolVersion,
+            resolvedRequest,
+            journal,
+            () ->
+                workflowSupport.executeDirectEventReadWorkflow(
+                    protocolVersion, resolvedRequest, warnings, journal, preparedBindings));
+      }
+      if (executionMode instanceof ExecutionModeInput.StreamingWrite) {
+        return responseSupport.guardUnexpectedRuntime(
+            protocolVersion,
+            resolvedRequest,
+            journal,
+            () ->
+                workflowSupport.executeStreamingWorkflow(
+                    protocolVersion,
+                    resolvedRequest,
+                    executionMode,
+                    warnings,
+                    journal,
+                    preparedBindings));
+      }
+
+      ExecutionJournalRecorder.PhaseHandle openPhase = journal.beginOpen();
+      ExcelWorkbook workbook;
+      try {
+        workbook =
+            workbookSupport.openWorkbook(
+                resolvedRequest.source(), resolvedRequest.formulaEnvironment(), preparedBindings);
+      } catch (Exception exception) {
+        GridGrindProblemDetail.Problem problem =
+            ExecutionResponseSupport.problemFor(
+                exception,
+                new dev.erst.gridgrind.contract.dto.ProblemContext.OpenWorkbook(
+                    ExecutionRequestPaths.requestShape(resolvedRequest),
+                    ExecutionRequestPaths.workbookReference(
+                        resolvedRequest, preparedBindings.workingDirectory())));
+        openPhase.fail("failed (" + problem.code() + ")");
+        return ExecutionResponseSupport.failureResponse(
+            protocolVersion,
+            journal,
+            resolvedRequest,
+            CalculationPolicyExecutor.notRequestedReport(resolvedRequest.calculationPolicy()),
+            problem,
+            null,
+            null);
+      }
+      openPhase.succeed();
+
       return responseSupport.guardUnexpectedRuntime(
           protocolVersion,
           resolvedRequest,
           journal,
+          workbook,
           () ->
-              workflowSupport.executeDirectEventReadWorkflow(
+              workflowSupport.executeWorkbookWorkflow(
                   protocolVersion,
                   resolvedRequest,
-                  warnings,
-                  journal,
-                  executionBindings.workingDirectory()));
-    }
-    if (executionMode instanceof ExecutionModeInput.StreamingWrite) {
-      return responseSupport.guardUnexpectedRuntime(
-          protocolVersion,
-          resolvedRequest,
-          journal,
-          () ->
-              workflowSupport.executeStreamingWorkflow(
-                  protocolVersion,
-                  resolvedRequest,
+                  workbook,
                   executionMode,
                   warnings,
                   journal,
-                  executionBindings.workingDirectory()));
+                  preparedBindings));
+    } finally {
+      preflight.release();
     }
-
-    ExecutionJournalRecorder.PhaseHandle openPhase = journal.beginOpen();
-    ExcelWorkbook workbook;
-    try {
-      workbook =
-          workbookSupport.openWorkbook(
-              authoredRequest.source(),
-              authoredRequest.formulaEnvironment(),
-              executionBindings.workingDirectory());
-    } catch (Exception exception) {
-      GridGrindProblemDetail.Problem problem =
-          ExecutionResponseSupport.problemFor(
-              exception,
-              new dev.erst.gridgrind.contract.dto.ProblemContext.OpenWorkbook(
-                  ExecutionRequestPaths.requestShape(authoredRequest),
-                  ExecutionRequestPaths.workbookReference(
-                      authoredRequest, executionBindings.workingDirectory())));
-      openPhase.fail("failed (" + problem.code() + ")");
-      return ExecutionResponseSupport.failureResponse(
-          protocolVersion,
-          journal,
-          authoredRequest,
-          CalculationPolicyExecutor.notRequestedReport(authoredRequest.calculationPolicy()),
-          problem,
-          null,
-          null);
-    }
-    openPhase.succeed();
-
-    return responseSupport.guardUnexpectedRuntime(
-        protocolVersion,
-        resolvedRequest,
-        journal,
-        workbook,
-        () ->
-            workflowSupport.executeWorkbookWorkflow(
-                protocolVersion,
-                resolvedRequest,
-                workbook,
-                executionMode,
-                warnings,
-                journal,
-                executionBindings.workingDirectory()));
   }
 
   private static ExecutionStepSupport stepSupport(

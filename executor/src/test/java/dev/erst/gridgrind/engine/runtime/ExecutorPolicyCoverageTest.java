@@ -376,30 +376,32 @@ class ExecutorPolicyCoverageTest {
           throw new AssertionError("null paths must not invoke the deleter");
         });
 
-    ExcelOoxmlPersistenceOptions noneOptions =
-        ExecutionRequestPaths.persistenceOptions(
-            new WorkbookPlan.WorkbookPersistence.None(), workingDirectory);
-    ExcelOoxmlPersistenceOptions saveAsOptions =
-        ExecutionRequestPaths.persistenceOptions(
-            new WorkbookPlan.WorkbookPersistence.SaveAs(
-                "/tmp/out.xlsx",
-                WorkbookPlan.WorkbookPersistence.IfExists.REJECT,
-                new OoxmlPersistenceSecurityInput(
-                    new OoxmlEncryptionInput(
-                        "secret", ExcelOoxmlWriteCipher.AES_256, ExcelOoxmlWriteHash.SHA_512),
-                    null)),
-            workingDirectory);
-    ExcelOoxmlPersistenceOptions overwriteOptions =
-        ExecutionRequestPaths.persistenceOptions(
-            new WorkbookPlan.WorkbookPersistence.Overwrite(
-                new OoxmlPersistenceSecurityInput(
-                    new OoxmlEncryptionInput(
-                        "secret", ExcelOoxmlWriteCipher.AES_256, ExcelOoxmlWriteHash.SHA_512),
-                    null)),
-            workingDirectory);
-    assertTrue(noneOptions.isEmpty());
-    assertFalse(saveAsOptions.isEmpty());
-    assertFalse(overwriteOptions.isEmpty());
+    try (var prepared = ExecutionInputBindingsFixtureSupport.preparedBindings(workingDirectory)) {
+      ExcelOoxmlPersistenceOptions noneOptions =
+          ExecutionRequestPaths.persistenceOptions(
+              new WorkbookPlan.WorkbookPersistence.None(), prepared.bindings());
+      ExcelOoxmlPersistenceOptions saveAsOptions =
+          ExecutionRequestPaths.persistenceOptions(
+              new WorkbookPlan.WorkbookPersistence.SaveAs(
+                  "/tmp/out.xlsx",
+                  WorkbookPlan.WorkbookPersistence.IfExists.REJECT,
+                  new OoxmlPersistenceSecurityInput(
+                      new OoxmlEncryptionInput(
+                          "secret", ExcelOoxmlWriteCipher.AES_256, ExcelOoxmlWriteHash.SHA_512),
+                      null)),
+              prepared.bindings());
+      ExcelOoxmlPersistenceOptions overwriteOptions =
+          ExecutionRequestPaths.persistenceOptions(
+              new WorkbookPlan.WorkbookPersistence.Overwrite(
+                  new OoxmlPersistenceSecurityInput(
+                      new OoxmlEncryptionInput(
+                          "secret", ExcelOoxmlWriteCipher.AES_256, ExcelOoxmlWriteHash.SHA_512),
+                      null)),
+              prepared.bindings());
+      assertTrue(noneOptions.isEmpty());
+      assertFalse(saveAsOptions.isEmpty());
+      assertFalse(overwriteOptions.isEmpty());
+    }
 
     ExcelOoxmlPackageSecuritySnapshot newSecurity =
         ExecutionRequestPaths.sourcePackageSecurity(new WorkbookPlan.WorkbookSource.New());
@@ -427,55 +429,79 @@ class ExecutorPolicyCoverageTest {
     ExecutionWorkbookSupport workbookSupport =
         ExecutionContextFixtureSupport.workbookSupport(workingDirectory);
     Path materialized = createWorkbookFile("gridgrind-streaming-source-");
-    WorkbookResultPersistence.PersistenceOutcome notSaved =
-        workbookSupport.persistStreamingWorkbook(
-            materialized,
-            new WorkbookPlan.WorkbookPersistence.None(),
-            new WorkbookPlan.WorkbookSource.New(),
-            workingDirectory);
-    assertInstanceOf(WorkbookResultPersistence.PersistenceOutcome.NotSaved.class, notSaved);
+    try (var prepared = ExecutionInputBindingsFixtureSupport.preparedBindings(workingDirectory)) {
+      WorkbookResultPersistence.PersistenceOutcome notSaved =
+          workbookSupport.persistStreamingWorkbook(
+              materialized,
+              new WorkbookPlan.WorkbookPersistence.None(),
+              new WorkbookPlan.WorkbookSource.New(),
+              prepared.bindings());
+      assertInstanceOf(WorkbookResultPersistence.PersistenceOutcome.NotSaved.class, notSaved);
+    }
 
-    Path saveAsRoot = Files.createTempDirectory("gridgrind-streaming-saveas-");
-    Path saveAsPath = saveAsRoot.resolve("nested output").resolve("streaming save-as.xlsx");
-    WorkbookResultPersistence.PersistenceOutcome.SavedAs savedAs =
-        assertInstanceOf(
-            WorkbookResultPersistence.PersistenceOutcome.SavedAs.class,
-            workbookSupport.persistStreamingWorkbook(
-                materialized,
-                new WorkbookPlan.WorkbookPersistence.SaveAs(
-                    saveAsPath.toString(), WorkbookPlan.WorkbookPersistence.IfExists.REJECT),
-                new WorkbookPlan.WorkbookSource.New(),
-                workingDirectory));
-    assertEquals(
-        saveAsPath.toAbsolutePath().toString(),
-        DefaultGridGrindRequestExecutorTestSupport.writtenExecutionPath(savedAs));
-    assertTrue(Files.exists(saveAsPath));
+    Path outputDirectory = Files.createDirectory(workingDirectory.resolve("output"));
+    Path saveAsPath = outputDirectory.resolve("streaming-save-as.xlsx");
+    try (var prepared = ExecutionInputBindingsFixtureSupport.preparedBindings(workingDirectory)) {
+      prepared
+          .access()
+          .prepareOutput(
+              saveAsPath.toString(),
+              "persistence",
+              dev.erst.gridgrind.excel.WorkbookArtifactWriteDisposition.CREATE_NEW);
+      WorkbookResultPersistence.PersistenceOutcome.SavedAs savedAs =
+          assertInstanceOf(
+              WorkbookResultPersistence.PersistenceOutcome.SavedAs.class,
+              workbookSupport.persistStreamingWorkbook(
+                  materialized,
+                  new WorkbookPlan.WorkbookPersistence.SaveAs(
+                      saveAsPath.toString(), WorkbookPlan.WorkbookPersistence.IfExists.REJECT),
+                  new WorkbookPlan.WorkbookSource.New(),
+                  prepared.bindings()));
+      assertEquals(
+          saveAsPath.toAbsolutePath().toString(),
+          DefaultGridGrindRequestExecutorTestSupport.writtenExecutionPath(savedAs));
+      assertTrue(Files.exists(saveAsPath));
+    }
 
     Path overwriteMaterialized = createWorkbookFile("gridgrind-streaming-overwrite-materialized-");
-    Path overwriteSourcePath = createWorkbookFile("gridgrind-streaming-overwrite-source-");
-    WorkbookResultPersistence.PersistenceOutcome.Overwritten overwritten =
-        assertInstanceOf(
-            WorkbookResultPersistence.PersistenceOutcome.Overwritten.class,
-            workbookSupport.persistStreamingWorkbook(
-                overwriteMaterialized,
-                new WorkbookPlan.WorkbookPersistence.Overwrite(),
-                new WorkbookPlan.WorkbookSource.ExistingFile(overwriteSourcePath.toString()),
-                workingDirectory));
-    assertEquals(
-        overwriteSourcePath.toAbsolutePath().toString(),
-        DefaultGridGrindRequestExecutorTestSupport.writtenExecutionPath(overwritten));
+    Path overwriteSourcePath = Files.createTempFile(workingDirectory, "overwrite-source-", ".xlsx");
+    Files.copy(
+        createWorkbookFile("gridgrind-streaming-overwrite-source-"),
+        overwriteSourcePath,
+        java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+    try (var prepared = ExecutionInputBindingsFixtureSupport.preparedBindings(workingDirectory)) {
+      prepared
+          .access()
+          .prepareOutput(
+              overwriteSourcePath.toString(),
+              "persistence",
+              dev.erst.gridgrind.excel.WorkbookArtifactWriteDisposition.REPLACE_EXISTING);
+      WorkbookResultPersistence.PersistenceOutcome.Overwritten overwritten =
+          assertInstanceOf(
+              WorkbookResultPersistence.PersistenceOutcome.Overwritten.class,
+              workbookSupport.persistStreamingWorkbook(
+                  overwriteMaterialized,
+                  new WorkbookPlan.WorkbookPersistence.Overwrite(),
+                  new WorkbookPlan.WorkbookSource.ExistingFile(overwriteSourcePath.toString()),
+                  prepared.bindings()));
+      assertEquals(
+          overwriteSourcePath.toAbsolutePath().toString(),
+          DefaultGridGrindRequestExecutorTestSupport.writtenExecutionPath(overwritten));
+    }
 
-    IllegalArgumentException overwriteFailure =
-        assertThrows(
-            IllegalArgumentException.class,
-            () ->
-                workbookSupport.persistStreamingWorkbook(
-                    materialized,
-                    new WorkbookPlan.WorkbookPersistence.Overwrite(),
-                    new WorkbookPlan.WorkbookSource.New(),
-                    workingDirectory));
-    assertEquals(
-        "OVERWRITE persistence requires an EXISTING source", overwriteFailure.getMessage());
+    try (var prepared = ExecutionInputBindingsFixtureSupport.preparedBindings(workingDirectory)) {
+      IllegalArgumentException overwriteFailure =
+          assertThrows(
+              IllegalArgumentException.class,
+              () ->
+                  workbookSupport.persistStreamingWorkbook(
+                      materialized,
+                      new WorkbookPlan.WorkbookPersistence.Overwrite(),
+                      new WorkbookPlan.WorkbookSource.New(),
+                      prepared.bindings()));
+      assertEquals(
+          "OVERWRITE persistence requires an EXISTING source", overwriteFailure.getMessage());
+    }
   }
 
   private static void assertRuntimeGuardBehaviors() throws IOException {

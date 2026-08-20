@@ -15,7 +15,6 @@ import dev.erst.gridgrind.contract.step.WorkbookStep;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
@@ -39,6 +38,17 @@ public final class SourceBackedPlanResolver {
       throws IOException {
     Objects.requireNonNull(plan, "plan must not be null");
     Objects.requireNonNull(bindings, "bindings must not be null");
+    if (!bindings.hasRequestPathAccess()) {
+      try (RequestPathAccess access =
+          new RequestPathAccess(bindings.workingDirectory(), bindings.tempFileFactory())) {
+        return resolveBound(plan, bindings.withRequestPathAccess(access));
+      }
+    }
+    return resolveBound(plan, bindings);
+  }
+
+  private static WorkbookPlan resolveBound(WorkbookPlan plan, ExecutionInputBindings bindings)
+      throws IOException {
     List<WorkbookStep> resolvedSteps = new ArrayList<>(plan.steps().size());
     for (WorkbookStep step : plan.steps()) {
       resolvedSteps.add(resolveStepUnchecked(step, bindings));
@@ -135,6 +145,13 @@ public final class SourceBackedPlanResolver {
       boolean requireNonBlank,
       String inputKind)
       throws IOException {
+    if (!bindings.hasRequestPathAccess()) {
+      try (RequestPathAccess access =
+          new RequestPathAccess(bindings.workingDirectory(), bindings.tempFileFactory())) {
+        return resolveTextSource(
+            source, bindings.withRequestPathAccess(access), requireNonBlank, inputKind);
+      }
+    }
     return resolveOrCollect(
         source,
         bindings,
@@ -168,6 +185,12 @@ public final class SourceBackedPlanResolver {
   static BinarySourceInput resolveBinarySource(
       BinarySourceInput source, ExecutionInputBindings bindings, String inputKind)
       throws IOException {
+    if (!bindings.hasRequestPathAccess()) {
+      try (RequestPathAccess access =
+          new RequestPathAccess(bindings.workingDirectory(), bindings.tempFileFactory())) {
+        return resolveBinarySource(source, bindings.withRequestPathAccess(access), inputKind);
+      }
+    }
     return resolveOrCollect(
         source,
         bindings,
@@ -199,24 +222,20 @@ public final class SourceBackedPlanResolver {
     return text;
   }
 
-  private static String readUtf8File(String path, ExecutionInputBindings bindings, String inputKind)
+  private static String readUtf8File(
+      String path, ExecutionInputBindings bindings, String inputKind) // LIM-030
       throws IOException {
-    Path resolved =
-        SourceBackedPathResolver.resolvePath(path, bindings.workingDirectory(), inputKind);
     try {
-      return Files.readString(resolved, StandardCharsets.UTF_8);
-    } catch (java.nio.file.NoSuchFileException exception) {
-      throw new InputSourceNotFoundException(
-          inputKind + " file does not exist: " + resolved,
-          inputKind,
-          resolved.toString(),
-          exception);
-    } catch (IOException exception) {
+      return Files.readString(
+          bindings
+              .requestPathAccess()
+              .materializeRead(path, inputKind, "gridgrind-request-input-", ".utf8"),
+          StandardCharsets.UTF_8);
+    } catch (java.nio.file.InvalidPathException exception) {
       throw new InputSourceReadException(
-          "Failed to read " + inputKind + " file: " + resolved,
-          inputKind,
-          resolved.toString(),
-          exception);
+          "Invalid " + inputKind + " path: " + path, inputKind, path, exception);
+    } catch (IOException exception) {
+      throw inputFileFailure(path, inputKind, exception);
     }
   }
 
@@ -245,23 +264,29 @@ public final class SourceBackedPlanResolver {
 
   private static byte[] readBinaryFile(
       String path, ExecutionInputBindings bindings, String inputKind) throws IOException {
-    Path resolved =
-        SourceBackedPathResolver.resolvePath(path, bindings.workingDirectory(), inputKind);
     try {
-      return Files.readAllBytes(resolved);
-    } catch (java.nio.file.NoSuchFileException exception) {
-      throw new InputSourceNotFoundException(
-          inputKind + " file does not exist: " + resolved,
-          inputKind,
-          resolved.toString(),
-          exception);
-    } catch (IOException exception) {
+      return Files.readAllBytes(
+          bindings
+              .requestPathAccess()
+              .materializeRead(path, inputKind, "gridgrind-request-input-", ".bin"));
+    } catch (java.nio.file.InvalidPathException exception) {
       throw new InputSourceReadException(
-          "Failed to read " + inputKind + " file: " + resolved,
-          inputKind,
-          resolved.toString(),
-          exception);
+          "Invalid " + inputKind + " path: " + path, inputKind, path, exception);
+    } catch (IOException exception) {
+      throw inputFileFailure(path, inputKind, exception);
     }
+  }
+
+  static IOException inputFileFailure(String path, String inputKind, IOException exception) {
+    if (exception instanceof java.nio.file.NoSuchFileException) {
+      return new InputSourceNotFoundException(
+          inputKind + " file does not exist: " + path, inputKind, path, exception);
+    }
+    if (exception instanceof UnsafePathAccessException) {
+      return exception;
+    }
+    return new InputSourceReadException(
+        "Failed to read " + inputKind + " file: " + path, inputKind, path, exception);
   }
 
   private static byte[] standardInputBytes(ExecutionInputBindings bindings, String inputKind)

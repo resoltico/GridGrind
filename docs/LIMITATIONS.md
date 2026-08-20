@@ -235,22 +235,22 @@ step ceiling is generous enough for legitimate bulk streaming-write workflows (f
 
 ---
 
-### LIM-025 — Relative Path Traversal
+### LIM-025 — Request-Owned Path Containment
 
 | Field | Value |
 |:------|:------|
 | **Category** | GridGrind |
-| **Limit** | Relative `source.path`, `persistence.path`, and `formulaEnvironment.externalWorkbooks[*].path` values must not escape the working directory |
-| **Error** | `INVALID_REQUEST` |
-| **Message** | `path must not escape the working directory: {path}` |
-| **Applies to** | All relative path fields resolved against the execution working directory |
+| **Limit** | Every request-owned path, whether relative or absolute, must resolve beneath the execution root |
+| **Error** | `PATH_ESCAPES_ROOT` |
+| **Message** | `path must not escape the execution root: {path}` |
+| **Applies to** | Workbook source and persistence paths, formula external workbooks, signing material, and file-backed authored inputs |
 | **Code** | `ExecutionRequestPaths.normalizePath // LIM-025` |
-| **UX** | Not surfaced in help (structural protocol rule) |
+| **UX** | A contained absolute path succeeds with `NON_PORTABLE_ABSOLUTE_PATH`; an escaping absolute or relative path is rejected |
 
-Relative paths that use `../` components to escape the working directory are rejected. Absolute
-paths remain allowed as explicit references. The working directory is the directory containing the
-`--request` file, or the explicit `--execution-root` directory when the request is read from
-stdin.
+GridGrind normalizes every request-owned path against the execution root before it opens or writes
+anything. A relative traversal such as `../secret.xlsx` and an absolute path outside the root fail
+with the same code. A contained absolute path remains legal but carries a warning because it relies
+on one host-specific root layout. CLI flag paths are invocation controls, not request-owned paths.
 
 ---
 
@@ -309,43 +309,45 @@ the hyperlink is activated in a browser-based spreadsheet viewer or other host a
 
 ---
 
-### LIM-029 — Symlink Confinement
+### LIM-029 — No-Follow Request Path Binding
 
 | Field | Value |
 |:------|:------|
 | **Category** | GridGrind |
-| **Limit** | Symbolic links within the working directory must not resolve to paths outside it |
-| **Error** | `IllegalArgumentException`: path must not escape the working directory |
-| **Applies to** | All relative file paths resolved via `ExecutionRequestPaths.normalizePath` |
-| **Code** | `ExecutionRequestPaths.checkNoSymlinkEscape // LIM-029` |
-| **UX** | Not surfaced in help |
+| **Limit** | Request-owned reads and writes never follow a symbolic link and use descriptor-relative access below a verified execution root |
+| **Error** | `UNSAFE_PATH_ACCESS` |
+| **Applies to** | Workbook source and persistence paths, formula external workbooks, signing material, and file-backed authored inputs |
+| **Code** | `RequestPathDescriptorBinder.bind // LIM-029` |
+| **UX** | Doctor reports unavailable secure binding before execution; observed topology changes fail closed before commit |
 
-The lexicographic confinement check (LIM-025) prevents `../` traversal attacks but cannot detect
-symlinks. LIM-029 walks each path component from the working directory root to the target,
-checking for symbolic links using `Files.isSymbolicLink`. When a symlink is found, its resolved
-real path is verified to remain within the working directory. Paths to non-existent files are
-safely handled because `Files.isSymbolicLink` returns false for non-existent entries, so only
-existing path components are checked.
+GridGrind binds the root and every existing parent with no-follow directory descriptors, records
+their filesystem identities, copies request inputs into private staging, and commits output through
+the retained parent descriptor. Any symlink is rejected, including a link that happens to point
+inside the root. Immediately before persistence, GridGrind rechecks the recorded topology and
+fails closed if it observes a replacement, unlink, rename, or symlink transition.
+
+This protects containment while the bound filesystem topology remains stable. It does not claim
+absolute containment against a principal that can mutate that topology in the scheduling window
+between the final identity recheck and a descriptor-relative commit; Java exposes no proven,
+portable root-anchored atomic-resolve-and-commit primitive for that stronger guarantee.
 
 ---
 
-### LIM-030 — Source File Path Confinement
+### LIM-030 — File-Backed Authored Input Isolation
 
 | Field | Value |
 |:------|:------|
 | **Category** | GridGrind |
-| **Limit** | `TextSourceInput.Utf8File` and `BinarySourceInput.File` paths must not escape the working directory via relative traversal components |
-| **Error** | `InputSourceReadException`: Invalid \<kind\> path: \<path\> |
-| **Applies to** | All `TextSourceInput.Utf8File` and `BinarySourceInput.File` source references resolved via `SourceBackedPathResolver.resolvePath` |
-| **Code** | `SourceBackedPathResolver.resolvePath // LIM-030` |
-| **UX** | Not surfaced in help |
+| **Limit** | File-backed text and binary authored inputs are read only through the request-owned no-follow binding and are resolved before workbook mutation |
+| **Error** | `PATH_ESCAPES_ROOT`, `UNSAFE_PATH_ACCESS`, `INPUT_SOURCE_NOT_FOUND`, or `INPUT_SOURCE_IO_ERROR`, according to the proven fault |
+| **Applies to** | Every `TextSourceInput.Utf8File` and `BinarySourceInput.File` occurrence |
+| **Code** | `SourceBackedPlanResolver.readUtf8File // LIM-030` |
+| **UX** | Doctor batches independent file-input findings with other phase-four failures |
 
-`TextSourceInput.Utf8File` and `BinarySourceInput.File` allow callers to provide content from
-local files. Without confinement these inputs accept relative paths such as `../../etc/shadow`,
-which resolve outside the working directory and allow arbitrary server-side file reads.
-`SourceBackedPathResolver.resolvePath` now delegates to `ExecutionRequestPaths.normalizePath`
-(LIM-025, LIM-029), which rejects relative traversal and walks symlinks. Absolute paths remain
-allowed as explicit caller references, matching the policy applied to workbook source paths.
+The resolver reads each authored file through the same containment and no-follow capability used
+for workbooks and signing material, then normalizes its bytes into the in-memory plan. The later
+mutation phase never reopens an authored path string, so a source-file race cannot redirect the
+content that was validated during preflight.
 
 ---
 

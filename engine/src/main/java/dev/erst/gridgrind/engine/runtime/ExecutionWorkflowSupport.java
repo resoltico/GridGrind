@@ -17,7 +17,6 @@ import dev.erst.gridgrind.contract.step.WorkbookStep;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
 import dev.erst.gridgrind.excel.WorkbookLocation;
 import java.io.IOException;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -61,10 +60,10 @@ final class ExecutionWorkflowSupport {
       ExecutionModeInput executionMode,
       List<RequestWarning> warnings,
       ExecutionJournalRecorder journal,
-      Path workingDirectory) {
+      ExecutionInputBindings bindings) {
     WorkbookLocation workbookLocation =
         ExecutionRequestPaths.workbookLocationFor(
-            request.source(), request.persistence(), workingDirectory);
+            request.source(), request.persistence(), bindings.workingDirectory());
     List<AssertionResult> assertions = new ArrayList<>();
     List<InspectionResult> inspections = new ArrayList<>();
     CalculationReport calculation =
@@ -114,8 +113,7 @@ final class ExecutionWorkflowSupport {
       }
     }
 
-    PersistenceResult persistenceResult =
-        persistWorkbook(executionContext, workingDirectory, calculation);
+    PersistenceResult persistenceResult = persistWorkbook(executionContext, bindings, calculation);
     if (persistenceResult.failureResponse() != null) {
       return persistenceResult.failureResponse();
     }
@@ -225,7 +223,7 @@ final class ExecutionWorkflowSupport {
 
   private PersistenceResult persistWorkbook(
       WorkbookExecutionContext executionContext,
-      Path workingDirectory,
+      ExecutionInputBindings bindings,
       CalculationReport calculation) {
     ExecutionJournalRecorder.PhaseHandle persistencePhase =
         executionContext.journal().beginPersistence();
@@ -235,7 +233,7 @@ final class ExecutionWorkflowSupport {
               executionContext.workbook(),
               executionContext.request().source(),
               executionContext.request().persistence(),
-              workingDirectory);
+              bindings);
       persistencePhase.succeed();
       return new PersistenceResult(persistence, null);
     } catch (Exception exception) {
@@ -245,7 +243,7 @@ final class ExecutionWorkflowSupport {
               new dev.erst.gridgrind.contract.dto.ProblemContext.PersistWorkbook(
                   ExecutionRequestPaths.requestShape(executionContext.request()),
                   ExecutionRequestPaths.persistenceReference(
-                      executionContext.request(), workingDirectory)));
+                      executionContext.request(), bindings.workingDirectory())));
       persistencePhase.fail("failed (" + problem.code() + ")");
       return new PersistenceResult(
           null,
@@ -306,9 +304,8 @@ final class ExecutionWorkflowSupport {
       WorkbookPlan request,
       List<RequestWarning> warnings,
       ExecutionJournalRecorder journal,
-      Path workingDirectory) {
-    return directEventReadWorkflow.execute(
-        protocolVersion, request, warnings, journal, workingDirectory);
+      ExecutionInputBindings bindings) {
+    return directEventReadWorkflow.execute(protocolVersion, request, warnings, journal, bindings);
   }
 
   WorkbookResult executeStreamingWorkflow(
@@ -317,9 +314,9 @@ final class ExecutionWorkflowSupport {
       ExecutionModeInput executionMode,
       List<RequestWarning> warnings,
       ExecutionJournalRecorder journal,
-      Path workingDirectory) {
+      ExecutionInputBindings bindings) {
     return streamingWorkflow.execute(
-        protocolVersion, request, executionMode, warnings, journal, workingDirectory);
+        protocolVersion, request, executionMode, warnings, journal, bindings);
   }
 
   private static boolean shouldExecuteCalculationBeforeStep(

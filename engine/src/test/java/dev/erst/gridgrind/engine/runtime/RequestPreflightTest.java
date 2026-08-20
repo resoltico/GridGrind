@@ -11,6 +11,8 @@ import dev.erst.gridgrind.contract.dto.CellGridInput;
 import dev.erst.gridgrind.contract.dto.CellInput;
 import dev.erst.gridgrind.contract.dto.ExecutionPolicyInput;
 import dev.erst.gridgrind.contract.dto.FormulaEnvironmentInput;
+import dev.erst.gridgrind.contract.dto.FormulaExternalWorkbookInput;
+import dev.erst.gridgrind.contract.dto.FormulaMissingWorkbookPolicy;
 import dev.erst.gridgrind.contract.dto.GridGrindProblemCode;
 import dev.erst.gridgrind.contract.dto.GridGrindProblemDetail;
 import dev.erst.gridgrind.contract.dto.ProblemContext;
@@ -24,6 +26,7 @@ import dev.erst.gridgrind.contract.step.MutationStep;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -56,7 +59,7 @@ class RequestPreflightTest {
     RequestPreflight.Result result =
         RequestPreflight.verify(request, new ExecutionInputBindings(temporaryDirectory, tempRoot));
 
-    assertFalse(result.resolvedRequest().isPresent());
+    assertFalse(result.preparedRequest().isPresent());
     assertEquals(
         List.of(
             GridGrindProblemCode.WORKBOOK_NOT_FOUND,
@@ -203,16 +206,14 @@ class RequestPreflightTest {
             request,
             new ExecutionInputBindings(temporaryDirectory, temporaryDirectory.resolve("scratch")));
 
-    assertFalse(result.resolvedRequest().isPresent());
+    assertFalse(result.preparedRequest().isPresent());
     assertEquals(
         List.of(
             GridGrindProblemCode.INPUT_SOURCE_NOT_FOUND,
             GridGrindProblemCode.INPUT_SOURCE_NOT_FOUND),
         result.problems().stream().map(GridGrindProblemDetail.Problem::code).toList());
     assertEquals(
-        List.of(
-            temporaryDirectory.resolve("missing-first.txt").toString(),
-            temporaryDirectory.resolve("missing-second.txt").toString()),
+        List.of("missing-first.txt", "missing-second.txt"),
         result.problems().stream()
             .map(GridGrindProblemDetail.Problem::context)
             .map(ProblemContext.ResolveInputs.class::cast)
@@ -255,10 +256,10 @@ class RequestPreflightTest {
             request,
             new ExecutionInputBindings(temporaryDirectory, temporaryDirectory.resolve("scratch")));
 
-    assertFalse(result.resolvedRequest().isPresent());
+    assertFalse(result.preparedRequest().isPresent());
     assertEquals(
         List.of(
-            "rich-text run file does not exist: " + temporaryDirectory.resolve("missing-run.txt"),
+            "rich-text run file does not exist: missing-run.txt",
             "rich-text run must not be empty"),
         result.problems().stream().map(GridGrindProblemDetail.Problem::message).toList());
   }
@@ -287,18 +288,124 @@ class RequestPreflightTest {
               throw new IllegalStateException("resolution infrastructure unavailable");
             });
 
-    assertFalse(failed.resolvedRequest().isPresent());
+    assertFalse(failed.preparedRequest().isPresent());
     assertInstanceOf(ProblemContext.ResolveInputs.class, failed.problems().getFirst().context());
-    assertThrows(IllegalStateException.class, failed::requireResolvedRequest);
+    assertThrows(IllegalStateException.class, failed::requirePreparedRequest);
+    assertEquals(request, new RequestPreflight.PreparedRequest(request, bindings).request());
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new RequestPreflight.Result(java.util.Optional.empty(), List.of(), List.of()));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new RequestPreflight.Result(
+                java.util.Optional.of(new RequestPreflight.PreparedRequest(request, bindings)),
+                failed.problems(),
+                List.of()));
+  }
+
+  @Test
+  void warnsForContainedAbsolutePersistencePathsAndSuppressesInvalidOverwriteOutputBinding()
+      throws Exception {
+    Path absoluteOutput = temporaryDirectory.resolve("output.xlsx");
+    WorkbookPlan saveAs =
+        WorkbookPlan.standard(
+            new WorkbookPlan.WorkbookSource.New(),
+            new WorkbookPlan.WorkbookPersistence.SaveAs(
+                absoluteOutput.toString(), WorkbookPlan.WorkbookPersistence.IfExists.REJECT),
+            ExecutionPolicyInput.defaults(),
+            FormulaEnvironmentInput.empty(),
+            List.of());
+    RequestPreflight.Result saveAsResult =
+        RequestPreflight.verify(
+            saveAs,
+            new ExecutionInputBindings(temporaryDirectory, temporaryDirectory.resolve("scratch")));
+    try {
+      assertTrue(saveAsResult.problems().isEmpty());
+      assertEquals(
+          dev.erst.gridgrind.contract.dto.GridGrindWarningCode.NON_PORTABLE_ABSOLUTE_PATH,
+          saveAsResult.warnings().getFirst().code());
+    } finally {
+      saveAsResult.release();
+    }
+
+    WorkbookPlan invalidOverwrite =
+        WorkbookPlan.standard(
+            new WorkbookPlan.WorkbookSource.New(),
+            new WorkbookPlan.WorkbookPersistence.Overwrite(),
+            ExecutionPolicyInput.defaults(),
+            FormulaEnvironmentInput.empty(),
+            List.of());
+    RequestPreflight.Result invalidOverwriteResult =
+        RequestPreflight.verify(
+            invalidOverwrite,
+            new ExecutionInputBindings(temporaryDirectory, temporaryDirectory.resolve("scratch")));
+    try {
+      assertTrue(invalidOverwriteResult.problems().isEmpty());
+      assertTrue(invalidOverwriteResult.preparedRequest().isPresent());
+    } finally {
+      invalidOverwriteResult.release();
+    }
+  }
+
+  @Test
+  void batchesFormulaInputsAndPreparesOverwriteTargetsFromExistingSources() {
+    WorkbookPlan request =
+        WorkbookPlan.standard(
+            new WorkbookPlan.WorkbookSource.ExistingFile("missing-source.xlsx"),
+            new WorkbookPlan.WorkbookPersistence.Overwrite(),
+            ExecutionPolicyInput.defaults(),
+            new FormulaEnvironmentInput(
+                List.of(new FormulaExternalWorkbookInput("External.xlsx", "missing-external.xlsx")),
+                FormulaMissingWorkbookPolicy.ERROR,
+                List.of()),
+            List.of());
+
+    RequestPreflight.Result result =
+        RequestPreflight.verify(
+            request,
+            new ExecutionInputBindings(temporaryDirectory, temporaryDirectory.resolve("scratch")));
+
+    assertFalse(result.preparedRequest().isPresent());
     assertEquals(
-        request,
-        new RequestPreflight.Result(java.util.Optional.of(request), List.of())
-            .requireResolvedRequest());
-    assertThrows(
-        IllegalArgumentException.class,
-        () -> new RequestPreflight.Result(java.util.Optional.empty(), List.of()));
-    assertThrows(
-        IllegalArgumentException.class,
-        () -> new RequestPreflight.Result(java.util.Optional.of(request), failed.problems()));
+        List.of(
+            GridGrindProblemCode.INPUT_SOURCE_NOT_FOUND, GridGrindProblemCode.WORKBOOK_NOT_FOUND),
+        result.problems().stream().map(GridGrindProblemDetail.Problem::code).toList());
+  }
+
+  @Test
+  void preservesFormulaWorkbookPathEscapeDiagnostics() {
+    WorkbookPlan request =
+        WorkbookPlan.standard(
+            new WorkbookPlan.WorkbookSource.New(),
+            new WorkbookPlan.WorkbookPersistence.None(),
+            ExecutionPolicyInput.defaults(),
+            new FormulaEnvironmentInput(
+                List.of(new FormulaExternalWorkbookInput("External.xlsx", "../outside.xlsx")),
+                FormulaMissingWorkbookPolicy.ERROR,
+                List.of()),
+            List.of());
+
+    RequestPreflight.Result result =
+        RequestPreflight.verify(
+            request,
+            new ExecutionInputBindings(temporaryDirectory, temporaryDirectory.resolve("scratch")));
+
+    assertEquals(
+        List.of(GridGrindProblemCode.PATH_ESCAPES_ROOT),
+        result.problems().stream().map(GridGrindProblemDetail.Problem::code).toList());
+  }
+
+  @Test
+  void neverMasksAnEarlierPreflightProblemWithCleanupFailure() {
+    AtomicBoolean attemptedClose = new AtomicBoolean();
+
+    RequestPreflight.closeQuietly(
+        () -> {
+          attemptedClose.set(true);
+          throw new java.io.IOException("private cleanup failed");
+        });
+
+    assertTrue(attemptedClose.get());
   }
 }

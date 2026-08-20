@@ -78,7 +78,8 @@ public final class GridGrindRequestDoctor {
       Optional<RequestAnalysis> analysis,
       List<GridGrindProblemDetail.Problem> staticProblems) {
     RequestDoctorReport.Summary summary = summaryFor(request);
-    List<RequestWarning> warnings = GridGrindRequestWarnings.collect(request);
+    List<RequestWarning> warnings =
+        new java.util.ArrayList<>(GridGrindRequestWarnings.collect(request));
     List<GridGrindProblemDetail.Problem> problems = new java.util.ArrayList<>(staticProblems);
     if (bindings.isPresent()) {
       ExecutionInputBindings boundInputs = bindings.orElseThrow();
@@ -86,7 +87,12 @@ public final class GridGrindRequestDoctor {
           analysis
               .map(value -> RequestPreflight.verify(request, boundInputs, value))
               .orElseGet(() -> RequestPreflight.verify(request, boundInputs));
-      problems.addAll(preflight.problems());
+      try {
+        problems.addAll(preflight.problems());
+        warnings.addAll(preflight.warnings());
+      } finally {
+        preflight.release();
+      }
     }
     if (!problems.isEmpty()) {
       return RequestDoctorReport.invalid(summary, warnings, problems);

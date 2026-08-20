@@ -654,7 +654,7 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
                             new SheetSelector.ByName("Budget"),
                             new WorkbookMutationAction.EnsureSheet())))));
 
-    assertEquals(GridGrindProblemCode.IO_ERROR, failure.problem().code());
+    assertEquals(GridGrindProblemCode.UNSAFE_PATH_ACCESS, failure.problem().code());
     assertEquals("PERSIST_WORKBOOK", failure.problem().context().stage());
     WorkbookResultPersistence.PersistenceOutcome.SavedAs persistence =
         assertInstanceOf(
@@ -1208,8 +1208,8 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
 
   @Test
   void workbookLocationForUsesExistingSourcePathsWhenPersistenceDoesNotSave() {
-    Path existingWorkbookPath = Path.of("tmp", "existing-budget.xlsx").toAbsolutePath();
     Path workingDirectory = Path.of("/tmp/gridgrind-workbook-location");
+    Path existingWorkbookPath = workingDirectory.resolve("existing-budget.xlsx");
 
     WorkbookLocation workbookLocation =
         ExecutionRequestPaths.workbookLocationFor(

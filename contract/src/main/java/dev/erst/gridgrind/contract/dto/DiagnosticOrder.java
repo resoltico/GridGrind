@@ -55,7 +55,7 @@ public final class DiagnosticOrder {
     return Comparator.comparingInt((Allocated<RequestWarning> _) -> STATIC_VALIDATION_PHASE)
         .thenComparingInt(_ -> UNPOSITIONED_RANK)
         .thenComparingLong(_ -> UNPOSITIONED_BYTE_OFFSET)
-        .thenComparingInt(warning -> warning.value().stepIndex())
+        .thenComparingInt(warning -> warning.value().location().orderingStepIndex())
         .thenComparingInt(_ -> NON_DUPLICATE_OCCURRENCE)
         .thenComparing(warning -> warning.value().code().name())
         .thenComparingInt(Allocated::ordinal);

@@ -30,6 +30,12 @@ public enum GridGrindProblemCode {
       GridGrindProblemRecovery.CHANGE_REQUEST,
       "Invalid request",
       "Fix the request data and retry the workflow."),
+  PATH_ESCAPES_ROOT(
+      GridGrindProblemCategory.REQUEST,
+      GridGrindProblemRecovery.CHANGE_REQUEST,
+      "Path escapes execution root",
+      "Use a request-owned path inside the execution root; absolute paths are allowed only when"
+          + " they resolve inside that root."),
   ASSERTION_FAILED(
       GridGrindProblemCategory.ASSERTION,
       GridGrindProblemRecovery.CHANGE_REQUEST,
@@ -133,6 +139,12 @@ public enum GridGrindProblemCode {
       "Workbook security failure",
       "Check the secure workbook package, cryptographic material, and runtime environment before"
           + " retrying."),
+  UNSAFE_PATH_ACCESS(
+      GridGrindProblemCategory.SECURITY,
+      GridGrindProblemRecovery.CHECK_ENVIRONMENT,
+      "Unsafe path access",
+      "Use a filesystem that supports GridGrind's no-follow path binding and retry after any"
+          + " observed path topology change is resolved."),
   IO_ERROR(
       GridGrindProblemCategory.IO,
       GridGrindProblemRecovery.CHECK_ENVIRONMENT,

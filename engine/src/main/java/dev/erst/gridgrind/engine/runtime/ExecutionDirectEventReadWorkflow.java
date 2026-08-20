@@ -10,7 +10,6 @@ import dev.erst.gridgrind.contract.dto.WorkbookResultPersistence;
 import dev.erst.gridgrind.contract.query.InspectionResult;
 import dev.erst.gridgrind.contract.step.InspectionStep;
 import dev.erst.gridgrind.excel.WorkbookArtifactIo;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -38,7 +37,7 @@ final class ExecutionDirectEventReadWorkflow {
       WorkbookPlan request,
       List<RequestWarning> warnings,
       ExecutionJournalRecorder journal,
-      Path workingDirectory) {
+      ExecutionInputBindings bindings) {
     CalculationReport calculation =
         CalculationPolicyExecutor.notRequestedReport(request.calculationPolicy());
     WorkbookPlan.WorkbookSource.ExistingFile source =
@@ -52,7 +51,9 @@ final class ExecutionDirectEventReadWorkflow {
     try {
       materialized =
           WorkbookArtifactIo.materializeWorkbook(
-              ExecutionRequestPaths.normalizePath(source.path(), workingDirectory),
+              bindings
+                  .requestPathAccess()
+                  .materializeRead(source.path(), "source", "gridgrind-source-workbook-", ".xlsx"),
               OoxmlPackageSecurityConverter.toExcelOpenOptions(source.security().orElse(null)),
               tempFileFactory::createTempFile);
     } catch (Exception exception) {
@@ -61,7 +62,7 @@ final class ExecutionDirectEventReadWorkflow {
               exception,
               new dev.erst.gridgrind.contract.dto.ProblemContext.OpenWorkbook(
                   ExecutionRequestPaths.requestShape(request),
-                  ExecutionRequestPaths.workbookReference(request, workingDirectory)));
+                  ExecutionRequestPaths.workbookReference(request, bindings.workingDirectory())));
       openPhase.fail("failed (" + problem.code() + ")");
       return responseSupport.closeReadableWorkbook(
           null,

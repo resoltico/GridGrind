@@ -454,18 +454,18 @@ class DefaultGridGrindRequestExecutorStyleAndFormulaTest
     Path workingDirectory = Path.of("/tmp/gridgrind-persistence");
     WorkbookPlan.WorkbookSource newSource = new WorkbookPlan.WorkbookSource.New();
     WorkbookPlan.WorkbookSource existingFile =
-        new WorkbookPlan.WorkbookSource.ExistingFile("/tmp/source.xlsx");
+        new WorkbookPlan.WorkbookSource.ExistingFile("source.xlsx");
     WorkbookPlan.WorkbookPersistence none = new WorkbookPlan.WorkbookPersistence.None();
     WorkbookPlan.WorkbookPersistence overwrite = new WorkbookPlan.WorkbookPersistence.Overwrite();
     WorkbookPlan.WorkbookPersistence saveAs =
         new WorkbookPlan.WorkbookPersistence.SaveAs(
-            "/tmp/out.xlsx", WorkbookPlan.WorkbookPersistence.IfExists.REJECT);
+            "out.xlsx", WorkbookPlan.WorkbookPersistence.IfExists.REJECT);
 
     assertEquals(
-        Path.of("/tmp/out.xlsx").toAbsolutePath().normalize().toString(),
+        workingDirectory.resolve("out.xlsx").toString(),
         ExecutionRequestPaths.persistencePath(newSource, saveAs, workingDirectory));
     assertEquals(
-        Path.of("/tmp/source.xlsx").toAbsolutePath().normalize().toString(),
+        workingDirectory.resolve("source.xlsx").toString(),
         ExecutionRequestPaths.persistencePath(existingFile, overwrite, workingDirectory));
     assertNull(ExecutionRequestPaths.persistencePath(newSource, overwrite, workingDirectory));
     assertNull(ExecutionRequestPaths.persistencePath(newSource, none, workingDirectory));
@@ -486,7 +486,8 @@ class DefaultGridGrindRequestExecutorStyleAndFormulaTest
                       workbook,
                       new WorkbookPlan.WorkbookSource.New(),
                       new WorkbookPlan.WorkbookPersistence.Overwrite(),
-                      workingDirectory));
+                      new ExecutionInputBindings(
+                          workingDirectory, workingDirectory.resolve("scratch"))));
 
       assertEquals("OVERWRITE persistence requires an EXISTING source", exception.getMessage());
     }
@@ -498,10 +499,10 @@ class DefaultGridGrindRequestExecutorStyleAndFormulaTest
     WorkbookPlan.WorkbookSource newSource = new WorkbookPlan.WorkbookSource.New();
     WorkbookPlan.WorkbookPersistence saveAs =
         new WorkbookPlan.WorkbookPersistence.SaveAs(
-            "/tmp/subdir/../out.xlsx", WorkbookPlan.WorkbookPersistence.IfExists.REJECT);
+            "subdir/../out.xlsx", WorkbookPlan.WorkbookPersistence.IfExists.REJECT);
 
     assertEquals(
-        "/tmp/out.xlsx",
+        "/tmp/gridgrind-persistence/out.xlsx",
         ExecutionRequestPaths.persistencePath(newSource, saveAs, workingDirectory));
   }
 
@@ -512,14 +513,21 @@ class DefaultGridGrindRequestExecutorStyleAndFormulaTest
     Path subDir = Files.createDirectory(tempDir.resolve("subdir"));
     String pathWithDotDot = subDir + "/../out.xlsx";
 
-    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
+    try (var preparedBindings = ExecutionInputBindingsFixtureSupport.preparedBindings(tempDir);
+        ExcelWorkbook workbook = ExcelWorkbooks.create()) {
+      preparedBindings
+          .access()
+          .prepareOutput(
+              pathWithDotDot,
+              "persistence",
+              dev.erst.gridgrind.excel.WorkbookArtifactWriteDisposition.CREATE_NEW);
       WorkbookResultPersistence.PersistenceOutcome outcome =
           workbookSupport.persistWorkbook(
               workbook,
               new WorkbookPlan.WorkbookSource.New(),
               new WorkbookPlan.WorkbookPersistence.SaveAs(
                   pathWithDotDot, WorkbookPlan.WorkbookPersistence.IfExists.REJECT),
-              tempDir);
+              preparedBindings.bindings());
 
       WorkbookResultPersistence.PersistenceOutcome.SavedAs savedAs =
           assertInstanceOf(WorkbookResultPersistence.PersistenceOutcome.SavedAs.class, outcome);
@@ -528,6 +536,8 @@ class DefaultGridGrindRequestExecutorStyleAndFormulaTest
     } finally {
       Files.deleteIfExists(tempDir.resolve("out.xlsx"));
       Files.deleteIfExists(subDir);
+      Files.deleteIfExists(tempDir.resolve(".gridgrind/tmp"));
+      Files.deleteIfExists(tempDir.resolve(".gridgrind"));
       Files.deleteIfExists(tempDir);
     }
   }

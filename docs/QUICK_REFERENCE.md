@@ -90,7 +90,7 @@ Save to a new path:
 { "persistence": { "type": "SAVE_AS", "path": "out/report.xlsx", "ifExists": "REPLACE" } }
 ```
 
-`SAVE_AS.ifExists` is required: use `REJECT` to fail on an existing destination or `REPLACE` for create-or-replace output.
+`SAVE_AS.ifExists` is required: use `REJECT` to fail on an existing destination or `REPLACE` for create-or-replace output. Create the destination parent directory first; GridGrind binds that existing directory without following symlinks before it begins execution.
 
 Run without saving:
 

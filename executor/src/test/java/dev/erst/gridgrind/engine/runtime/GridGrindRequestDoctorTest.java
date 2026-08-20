@@ -332,9 +332,7 @@ class GridGrindRequestDoctorTest {
             report.primaryProblem().orElseThrow().context());
     assertEquals("RESOLVE_INPUTS", context.stage());
     assertEquals(java.util.Optional.of("cell text"), context.inputKind());
-    assertEquals(
-        java.util.Optional.of(workingDirectory.resolve("missing.txt").toString()),
-        context.inputPath());
+    assertEquals(java.util.Optional.of("missing.txt"), context.inputPath());
   }
 
   @Test

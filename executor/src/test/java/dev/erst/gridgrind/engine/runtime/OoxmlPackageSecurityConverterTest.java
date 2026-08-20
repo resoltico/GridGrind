@@ -1,6 +1,9 @@
 package dev.erst.gridgrind.engine.runtime;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import dev.erst.gridgrind.contract.dto.OoxmlEncryptionInput;
 import dev.erst.gridgrind.contract.dto.OoxmlOpenSecurityInput;
@@ -10,21 +13,27 @@ import dev.erst.gridgrind.excel.foundation.ExcelOoxmlSignatureDigestAlgorithm;
 import dev.erst.gridgrind.excel.foundation.ExcelOoxmlWriteCipher;
 import dev.erst.gridgrind.excel.foundation.ExcelOoxmlWriteHash;
 import dev.erst.gridgrind.excel.ooxml.ExcelOoxmlOpenOptions;
+import dev.erst.gridgrind.excel.ooxml.ExcelOoxmlPersistenceOptions;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
-/** Tests for the protocol-to-engine OOXML package-security conversion seam. */
+/** Tests the protocol-to-engine OOXML security conversion through prepared file capabilities. */
 class OoxmlPackageSecurityConverterTest {
+  @TempDir Path temporaryDirectory;
+
   @Test
-  void convertsPresentSecuritySettingsIntoEngineOptions() {
-    Path workingDirectory = Path.of("/tmp/gridgrind-ooxml-security");
+  void convertsPresentSecuritySettingsIntoEngineOptions() throws Exception {
+    Path signingMaterial =
+        Files.write(temporaryDirectory.resolve("signing-material.p12"), new byte[] {1, 2});
     OoxmlPersistenceSecurityInput input =
         new OoxmlPersistenceSecurityInput(
             new OoxmlEncryptionInput(
                 "persist-pass", ExcelOoxmlWriteCipher.AES_192, ExcelOoxmlWriteHash.SHA_384),
             new OoxmlSignatureInput(
-                "/tmp/signing-material.p12",
+                signingMaterial.getFileName().toString(),
                 "keystore-pass",
                 "key-pass",
                 Optional.of("gridgrind-signing"),
@@ -38,53 +47,24 @@ class OoxmlPackageSecurityConverterTest {
                 OoxmlPackageSecurityConverter.toExcelOpenOptions(
                     new OoxmlOpenSecurityInput(Optional.of("source-pass"))))
             .password());
-    assertEquals(
-        "persist-pass",
-        OoxmlPackageSecurityConverter.toExcelPersistenceOptions(input, workingDirectory)
-            .encryption()
-            .orElseThrow()
-            .password());
-    assertEquals(
-        ExcelOoxmlWriteCipher.AES_192,
-        OoxmlPackageSecurityConverter.toExcelPersistenceOptions(input, workingDirectory)
-            .encryption()
-            .orElseThrow()
-            .cipher());
-    assertEquals(
-        ExcelOoxmlWriteHash.SHA_384,
-        OoxmlPackageSecurityConverter.toExcelPersistenceOptions(input, workingDirectory)
-            .encryption()
-            .orElseThrow()
-            .hash());
-    assertEquals(
-        Path.of("/tmp/signing-material.p12"),
-        OoxmlPackageSecurityConverter.toExcelPersistenceOptions(input, workingDirectory)
-            .signature()
-            .orElseThrow()
-            .pkcs12Path());
-    assertEquals(
-        "key-pass",
-        OoxmlPackageSecurityConverter.toExcelPersistenceOptions(input, workingDirectory)
-            .signature()
-            .orElseThrow()
-            .keyPassword());
-    assertEquals(
-        "gridgrind-signing",
-        OoxmlPackageSecurityConverter.toExcelPersistenceOptions(input, workingDirectory)
-            .signature()
-            .orElseThrow()
-            .alias());
-    assertEquals(
-        ExcelOoxmlSignatureDigestAlgorithm.SHA512,
-        OoxmlPackageSecurityConverter.toExcelPersistenceOptions(input, workingDirectory)
-            .signature()
-            .orElseThrow()
-            .digestAlgorithm());
+    try (var prepared = ExecutionInputBindingsFixtureSupport.preparedBindings(temporaryDirectory)) {
+      ExcelOoxmlPersistenceOptions options =
+          OoxmlPackageSecurityConverter.toExcelPersistenceOptions(input, prepared.bindings());
+      assertEquals("persist-pass", options.encryption().orElseThrow().password());
+      assertEquals(ExcelOoxmlWriteCipher.AES_192, options.encryption().orElseThrow().cipher());
+      assertEquals(ExcelOoxmlWriteHash.SHA_384, options.encryption().orElseThrow().hash());
+      assertArrayEquals(
+          new byte[] {1, 2}, Files.readAllBytes(options.signature().orElseThrow().pkcs12Path()));
+      assertEquals("key-pass", options.signature().orElseThrow().keyPassword());
+      assertEquals("gridgrind-signing", options.signature().orElseThrow().alias());
+      assertEquals(
+          ExcelOoxmlSignatureDigestAlgorithm.SHA512,
+          options.signature().orElseThrow().digestAlgorithm());
+    }
   }
 
   @Test
-  void convertsMissingSecuritySettingsIntoEmptyEngineOptions() {
-    Path workingDirectory = Path.of("/tmp/gridgrind-ooxml-security");
+  void convertsMissingSecuritySettingsIntoEmptyEngineOptions() throws Exception {
     OoxmlPersistenceSecurityInput encryptionOnly =
         new OoxmlPersistenceSecurityInput(
             new OoxmlEncryptionInput(
@@ -94,16 +74,22 @@ class OoxmlPackageSecurityConverterTest {
     assertInstanceOf(
         ExcelOoxmlOpenOptions.Unencrypted.class,
         OoxmlPackageSecurityConverter.toExcelOpenOptions(null));
-    assertTrue(
-        OoxmlPackageSecurityConverter.toExcelPersistenceOptions(null, workingDirectory).isEmpty());
-    assertTrue(
-        OoxmlPackageSecurityConverter.toExcelPersistenceOptions(encryptionOnly, workingDirectory)
-            .signature()
-            .isEmpty());
+    try (var prepared = ExecutionInputBindingsFixtureSupport.preparedBindings(temporaryDirectory)) {
+      assertTrue(
+          OoxmlPackageSecurityConverter.toExcelPersistenceOptions(null, prepared.bindings())
+              .isEmpty());
+      assertTrue(
+          OoxmlPackageSecurityConverter.toExcelPersistenceOptions(
+                  encryptionOnly, prepared.bindings())
+              .signature()
+              .isEmpty());
+    }
   }
 
   @Test
-  void rootsRelativeSigningMaterialPathsInTheProvidedWorkingDirectory() {
+  void materializesRelativeSigningMaterialThroughThePreparedExecutionRoot() throws Exception {
+    Path keys = Files.createDirectory(temporaryDirectory.resolve("keys"));
+    Path signingMaterial = Files.write(keys.resolve("signing-material.p12"), new byte[] {3, 4, 5});
     OoxmlPersistenceSecurityInput input =
         new OoxmlPersistenceSecurityInput(
             null,
@@ -114,13 +100,15 @@ class OoxmlPackageSecurityConverterTest {
                 Optional.of("gridgrind-signing"),
                 ExcelOoxmlSignatureDigestAlgorithm.SHA256,
                 Optional.of("GridGrind signing test")));
-    Path workingDirectory = Path.of("/tmp/gridgrind-request-bundle");
 
-    assertEquals(
-        workingDirectory.resolve("keys/signing-material.p12").normalize(),
-        OoxmlPackageSecurityConverter.toExcelPersistenceOptions(input, workingDirectory)
-            .signature()
-            .orElseThrow()
-            .pkcs12Path());
+    try (var prepared = ExecutionInputBindingsFixtureSupport.preparedBindings(temporaryDirectory)) {
+      Path materialized =
+          OoxmlPackageSecurityConverter.toExcelPersistenceOptions(input, prepared.bindings())
+              .signature()
+              .orElseThrow()
+              .pkcs12Path();
+      assertArrayEquals(Files.readAllBytes(signingMaterial), Files.readAllBytes(materialized));
+      assertTrue(materialized.startsWith(temporaryDirectory.resolve(".gridgrind/tmp")));
+    }
   }
 }

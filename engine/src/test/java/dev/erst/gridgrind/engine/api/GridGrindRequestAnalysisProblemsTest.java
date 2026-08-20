@@ -8,6 +8,7 @@ import dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces;
 import dev.erst.gridgrind.contract.json.GridGrindJson;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.Optional;
 import org.junit.jupiter.api.Test;
 
 /** Covers the engine-owned canonical projection for tolerant request-intake findings. */
@@ -93,6 +94,13 @@ class GridGrindRequestAnalysisProblemsTest {
         ProblemContextRequestSurfaces.JsonLocation.pathAtByteOffset(
             "steps[1].stepId", secondIndexOf(completePlanFailure, "\"stepId\"")),
         completePlanContext.json());
+  }
+
+  @Test
+  void retainsPathOnlyLocationsWhenABindingFailureHasNoSourceOffset() {
+    assertEquals(
+        ProblemContextRequestSurfaces.JsonLocation.pathOnly("steps[0].target"),
+        GridGrindRequestAnalysisProblems.locationFor("steps[0].target", Optional.empty()));
   }
 
   private static ProblemContext.ReadRequest firstReadRequest(
