@@ -18,8 +18,7 @@ public record ExecutionJournal(
     Phase persistencePhase,
     Phase close,
     List<Step> steps,
-    Outcome outcome,
-    @JsonInclude(JsonInclude.Include.NON_EMPTY) List<Event> events) {
+    Outcome outcome) {
   public ExecutionJournal {
     level = Objects.requireNonNullElse(level, ExecutionJournalLevel.SUMMARY);
     Objects.requireNonNull(source, "source must not be null");
@@ -31,7 +30,6 @@ public record ExecutionJournal(
     Objects.requireNonNull(close, "close must not be null");
     steps = copyValues(steps, "steps");
     Objects.requireNonNull(outcome, "outcome must not be null");
-    events = copyValues(Objects.requireNonNullElseGet(events, List::of), "events");
   }
 
   /** Summary of the authored workbook source for one execution. */
@@ -272,26 +270,6 @@ public record ExecutionJournal(
         throw new IllegalArgumentException("failedStepIndex must be >= 0");
       }
       WorkbookPlan.requireNonBlank(failedStepId, "failedStepId");
-    }
-  }
-
-  /** Fine-grained event emitted for verbose journals and CLI live rendering. */
-  public record Event(
-      String timestamp,
-      String category,
-      String detail,
-      @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<Integer> stepIndex,
-      @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<String> stepId) {
-    public Event {
-      WorkbookPlan.requireNonBlank(timestamp, "timestamp");
-      WorkbookPlan.requireNonBlank(category, "category");
-      WorkbookPlan.requireNonBlank(detail, "detail");
-      stepIndex = Objects.requireNonNullElseGet(stepIndex, Optional::empty);
-      stepId = normalizeOptional(stepId, "stepId");
-      if (stepId.isPresent() != stepIndex.isPresent()) {
-        throw new IllegalArgumentException(
-            "stepId and stepIndex must either both be present or both be absent");
-      }
     }
   }
 

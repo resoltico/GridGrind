@@ -407,7 +407,7 @@ class ExecutionModeRequestExecutorTest {
             executor.execute(
                 request,
                 new ExecutionInputBindings(workingDirectory, tempRootFile),
-                ExecutionJournalSink.NOOP));
+                ExecutionProgressSink.NOOP));
 
     assertEquals(GridGrindProblemCode.IO_ERROR, failure.problem().code());
     assertEquals("EXECUTE_REQUEST", failure.problem().context().stage());

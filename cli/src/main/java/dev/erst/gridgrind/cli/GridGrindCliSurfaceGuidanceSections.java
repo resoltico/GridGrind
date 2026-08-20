@@ -81,7 +81,7 @@ final class GridGrindCliSurfaceGuidanceSections {
                 List.of(
                     "The unified recipe catalog includes high-level office-work task"
                         + " starters composed from exact protocol capabilities.",
-                    "Each task-starter entry publishes requestFileName, workspaceMode, and"
+                    "Each task-starter entry publishes requestFileName, advisory, and"
                         + " requiredWorkspacePaths so agents can decide whether one"
                         + " recipe is self-contained before printing it with"
                         + " --print-recipe.",

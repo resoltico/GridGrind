@@ -1,6 +1,6 @@
 package dev.erst.gridgrind.cli.examples;
 
-import dev.erst.gridgrind.cli.discovery.ExampleWorkspaceMode;
+import dev.erst.gridgrind.cli.discovery.RecipeAdvisory;
 import dev.erst.gridgrind.cli.discovery.RecipeView;
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
 import java.util.List;
@@ -13,7 +13,7 @@ public record GridGrindCliRecipe(
     RecipeView view,
     String requestFileName,
     String summary,
-    ExampleWorkspaceMode workspaceMode,
+    RecipeAdvisory advisory,
     List<String> requiredWorkspacePaths,
     List<String> intentTags,
     WorkbookPlan plan) {
@@ -25,7 +25,7 @@ public record GridGrindCliRecipe(
     Objects.requireNonNull(view, "view must not be null");
     requestFileName = requireNonBlank(requestFileName, "requestFileName");
     summary = requireNonBlank(summary, "summary");
-    Objects.requireNonNull(workspaceMode, "workspaceMode must not be null");
+    Objects.requireNonNull(advisory, "advisory must not be null");
     requiredWorkspacePaths =
         List.copyOf(
             Objects.requireNonNull(

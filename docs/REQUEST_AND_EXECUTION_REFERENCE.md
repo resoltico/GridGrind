@@ -217,7 +217,7 @@ override.
 - `execution.mode.type: FULL_XSSF` is the default full workbook read/write path with no low-memory restrictions.
 - `execution.journal.level` accepts `SUMMARY`, `NORMAL`, and `VERBOSE`.
 - `SUMMARY` is the default. It keeps the response stable by omitting phase timestamps, using
-  `durationMillis=0`, recording compact resolved-target summaries, and suppressing live event
+  `durationMillis=0`, recording compact resolved-target summaries, and suppressing live progress
   output.
 - `NORMAL` keeps the structured response journal and adds expanded resolved-target summaries plus
   observational timing telemetry.
@@ -235,8 +235,8 @@ override.
   assertion failure.
 - `EVALUATE_TARGETS` addresses must point at existing formula cells. A missing physical cell can
   surface `CELL_NOT_FOUND`; an existing non-formula cell is rejected as `INVALID_REQUEST`.
-- `VERBOSE` keeps the `NORMAL` response journal detail and records fine-grained execution events
-  in the structured response journal.
+- `VERBOSE` keeps the `NORMAL` response journal detail and streams fine-grained progress as compact
+  JSONL on stderr. Each line is an `ExecutionProgressEvent`; `--pretty` never indents those lines.
 - `EVENT_READ` can run directly against an existing workbook when the request is read-only and
   unsaved. If the request also performs full-XSSF mutations, GridGrind materializes the mutated
   workbook state and then performs the summary reads through the event model.
@@ -355,11 +355,12 @@ object. The excerpt below focuses on that canonical persistence outcome and its 
 | `validation`, `inputResolution`, `open`, `persistencePhase`, `close` | Top-level pipeline phase summaries. `SUMMARY` keeps these phases timestamp-free with `durationMillis=0`; `NORMAL` and `VERBOSE` add observational `startedAt`, `finishedAt`, and non-zero timing where applicable. `NOT_STARTED` and `NOT_REQUESTED` always omit timestamps and use `durationMillis=0`. `inputResolution` records source-backed file/stdin loading before workbook open. |
 | `calculation` | Top-level calculation telemetry. `preflight` classifies authored formulas and `execution` records the requested evaluation or cache-clearing work. |
 | `steps[]` | Ordered per-step telemetry including `resolvedTargets`, phase timing, outcome, and optional failure classification. `resolvedTargets` is compact in `SUMMARY` and expanded in `NORMAL`/`VERBOSE`. |
-| `events[]` | Fine-grained execution events. Present only when `level=VERBOSE`. |
 | `outcome` | Whole-run status plus `plannedStepCount`, `completedStepCount`, total `durationMillis`, and optional `failedStepIndex`, `failedStepId`, and `failureCode` when the run failed. |
 
-`VERBOSE` keeps the full response journal and records `events[]` in that primary structured
-payload. CLI stderr remains reserved for the structured response-file fallback notice.
+`VERBOSE` keeps the full response journal and emits one compact `ExecutionProgressEvent` JSON line
+to stderr for each lifecycle transition. The event carries `timestamp`, `category`, `status`, optional
+`problemCode`, and optional `stepIndex`/`stepId`; it never carries an unstructured `detail` string.
+When response-file fallback also occurs, its structured transport notice is one additional stderr JSON line.
 
 The top-level response `persistence` field is the canonical save outcome. The journal records
 `persistencePhase` timing only; it no longer repeats the intended or actual save target, and

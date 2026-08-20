@@ -34,7 +34,7 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
   /** Executes one complete GridGrind request with optional live verbose journal emission. */
   @Override
   public WorkbookResult execute(
-      WorkbookPlan request, ExecutionInputBindings bindings, ExecutionJournalSink sink) {
+      WorkbookPlan request, ExecutionInputBindings bindings, ExecutionProgressSink sink) {
     return execute(request, bindings, sink, Optional.empty());
   }
 
@@ -42,7 +42,7 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
   public WorkbookResult execute(
       WorkbookPlan request,
       ExecutionInputBindings bindings,
-      ExecutionJournalSink sink,
+      ExecutionProgressSink sink,
       Optional<dev.erst.gridgrind.contract.json.RequestAnalysis> analysis) {
     WorkbookPlan authoredRequest = Objects.requireNonNull(request, "request must not be null");
     ExecutionInputBindings executionBindings =
@@ -66,7 +66,7 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
     Optional<GridGrindProblemDetail.Problem> validationError =
         staticValidator.validate(authoredRequest).stream().findFirst();
     if (validationError.isPresent()) {
-      validationPhase.fail("failed (" + validationError.get().code() + ")");
+      validationPhase.fail(validationError.get().code());
       return ExecutionResponseSupport.failureResponse(
           protocolVersion,
           journal,
@@ -86,7 +86,7 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
     try {
       if (!preflight.problems().isEmpty()) {
         GridGrindProblemDetail.Problem problem = preflight.problems().getFirst();
-        inputResolutionPhase.fail("failed (" + problem.code() + ")");
+        inputResolutionPhase.fail(problem.code());
         return ExecutionResponseSupport.failureResponse(
             protocolVersion,
             journal,
@@ -143,7 +143,7 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
                     ExecutionRequestPaths.requestShape(resolvedRequest),
                     ExecutionRequestPaths.workbookReference(
                         resolvedRequest, preparedBindings.workingDirectory())));
-        openPhase.fail("failed (" + problem.code() + ")");
+        openPhase.fail(problem.code());
         return ExecutionResponseSupport.failureResponse(
             protocolVersion,
             journal,

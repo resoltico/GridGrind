@@ -454,8 +454,8 @@ Values declared `secret: true` in the request contract are protected by their ex
 path. A binding or validation problem at a declared secret path uses a generic sensitive-safe
 message, and a structured problem carrying that same path redacts its message, resolution, and
 causes. GridGrind deliberately does not use global string replacement: a short password must not
-alter unrelated workbook data or diagnostics that merely contain the same text. Live journal events
-do not carry request-field values and remain the authored engine events. Last-resort failures that
+alter unrelated workbook data or diagnostics that merely contain the same text. Live JSONL progress
+events do not carry request-field values or free-form detail. Last-resort failures that
 classify as `INTERNAL_ERROR` use the canonical internal-error title rather than reproducing
 arbitrary throwable text.
 

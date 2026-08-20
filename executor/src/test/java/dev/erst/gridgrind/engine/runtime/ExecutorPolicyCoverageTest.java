@@ -528,7 +528,7 @@ class ExecutorPolicyCoverageTest {
             responseSupport.guardUnexpectedRuntime(
                 GridGrindProtocolVersion.V2,
                 request,
-                ExecutionContextFixtureSupport.startJournal(request, ExecutionJournalSink.NOOP),
+                ExecutionContextFixtureSupport.startJournal(request, ExecutionProgressSink.NOOP),
                 () -> {
                   throw new UnsupportedOperationException("boom");
                 }));
@@ -541,7 +541,7 @@ class ExecutorPolicyCoverageTest {
               responseSupport.guardUnexpectedRuntime(
                   GridGrindProtocolVersion.V2,
                   request,
-                  ExecutionContextFixtureSupport.startJournal(request, ExecutionJournalSink.NOOP),
+                  ExecutionContextFixtureSupport.startJournal(request, ExecutionProgressSink.NOOP),
                   workbook,
                   () -> {
                     throw new UnsupportedOperationException("boom");
@@ -562,7 +562,7 @@ class ExecutorPolicyCoverageTest {
               closeFailingResponseSupport.guardUnexpectedRuntime(
                   GridGrindProtocolVersion.V2,
                   request,
-                  ExecutionContextFixtureSupport.startJournal(request, ExecutionJournalSink.NOOP),
+                  ExecutionContextFixtureSupport.startJournal(request, ExecutionProgressSink.NOOP),
                   workbook,
                   () -> {
                     throw new UnsupportedOperationException("boom");

@@ -35,26 +35,26 @@ public final class GridGrindEngine {
 
     @Override
     public dev.erst.gridgrind.contract.dto.WorkbookResult execute(
-        WorkbookPlan request, GridGrindRequestInputs inputs, GridGrindJournalSink sink) {
+        WorkbookPlan request, GridGrindRequestInputs inputs, GridGrindProgressSink sink) {
       Objects.requireNonNull(request, "request must not be null");
       Objects.requireNonNull(inputs, "inputs must not be null");
       Objects.requireNonNull(sink, "sink must not be null");
       return delegate.execute(
           request,
           toInternalInputs(inputs),
-          event -> GridGrindJournalSink.requireNonNull(sink).emit(event));
+          event -> GridGrindProgressSink.requireNonNull(sink).emit(event));
     }
 
     @Override
     public dev.erst.gridgrind.contract.dto.WorkbookResult execute(
-        RequestAnalysis analysis, GridGrindRequestInputs inputs, GridGrindJournalSink sink) {
+        RequestAnalysis analysis, GridGrindRequestInputs inputs, GridGrindProgressSink sink) {
       Objects.requireNonNull(analysis, "analysis must not be null");
       Objects.requireNonNull(inputs, "inputs must not be null");
       Objects.requireNonNull(sink, "sink must not be null");
       return delegate.execute(
           analysis.requireCompletePlan(),
           toInternalInputs(inputs),
-          event -> GridGrindJournalSink.requireNonNull(sink).emit(event),
+          event -> GridGrindProgressSink.requireNonNull(sink).emit(event),
           java.util.Optional.of(analysis));
     }
   }

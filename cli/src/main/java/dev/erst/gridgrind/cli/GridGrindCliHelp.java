@@ -177,7 +177,7 @@ public final class GridGrindCliHelp {
                     "EVALUATE_TARGETS requires strategy.cells[] and each target must identify an"
                         + " existing formula cell.",
                     "stepId must be unique within steps[] and must match [A-Za-z0-9._-]+.",
-                    "VERBOSE records fine-grained phase events in journal.events[]."))));
+                    "VERBOSE streams compact JSONL progress events to stderr."))));
   }
 
   private static String renderGuidanceHelp(CliSurface cliSurface, String containerTag) {

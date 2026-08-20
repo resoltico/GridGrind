@@ -26,7 +26,8 @@ final class GridGrindCliSurfaceRequestSections {
                 + " Any omitted nested execution field keeps that same default.",
             "execution.journal.level controls journal detail; SUMMARY is the default and"
                 + " keeps the response stable by omitting timing telemetry."
-                + " VERBOSE records fine-grained phase events in journal.events[].",
+                + " VERBOSE streams compact JSONL progress events to stderr while the primary"
+                + " response retains only its execution journal.",
             "execution.calculation controls server-side evaluation, cache clearing, and"
                 + " open-time recalc flags. strategy.type accepts DO_NOT_CALCULATE,"
                 + " EVALUATE_ALL, EVALUATE_TARGETS, and CLEAR_CACHES_ONLY."

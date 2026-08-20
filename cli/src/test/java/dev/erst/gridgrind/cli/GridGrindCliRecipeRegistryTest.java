@@ -3,8 +3,8 @@ package dev.erst.gridgrind.cli;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import dev.erst.gridgrind.cli.discovery.ExampleWorkspaceMode;
 import dev.erst.gridgrind.cli.discovery.GridGrindTaskCatalog;
+import dev.erst.gridgrind.cli.discovery.RecipeAdvisory;
 import dev.erst.gridgrind.cli.discovery.ShippedExampleEntry;
 import dev.erst.gridgrind.cli.discovery.TaskEntry;
 import dev.erst.gridgrind.cli.examples.GridGrindCliRecipe;
@@ -45,8 +45,8 @@ class GridGrindCliRecipeRegistryTest {
                 recipe -> recipe.view() == dev.erst.gridgrind.cli.discovery.RecipeView.TASK_STARTER)
             .isPresent());
     assertEquals(
-        ExampleWorkspaceMode.SELF_CONTAINED,
-        GridGrindCliRecipeRegistry.recipeFor("WORKBOOK_HEALTH").orElseThrow().workspaceMode());
+        RecipeAdvisory.SELF_CONTAINED,
+        GridGrindCliRecipeRegistry.recipeFor("WORKBOOK_HEALTH").orElseThrow().advisory());
     assertEquals(
         List.of("package-security-assets/gridgrind-package-security.xlsx"),
         GridGrindCliRecipeRegistry.recipeFor("PACKAGE_SECURITY_INSPECTION")
@@ -58,7 +58,7 @@ class GridGrindCliRecipeRegistryTest {
       assertEquals(dev.erst.gridgrind.cli.discovery.RecipeView.EXAMPLE, recipe.view());
       assertEquals(recipe.requestFileName(), entry.requestFileName());
       assertEquals(recipe.summary(), entry.summary());
-      assertEquals(recipe.workspaceMode(), entry.workspaceMode());
+      assertEquals(recipe.advisory(), entry.advisory());
       assertEquals(recipe.requiredWorkspacePaths(), entry.requiredWorkspacePaths());
     }
 
@@ -68,7 +68,7 @@ class GridGrindCliRecipeRegistryTest {
       assertEquals(entry.narrative().summary(), recipe.summary());
       assertEquals(entry.intentTags(), recipe.intentTags());
       assertEquals(entry.starter().requestFileName(), recipe.requestFileName());
-      assertEquals(entry.starter().workspaceMode(), recipe.workspaceMode());
+      assertEquals(entry.starter().advisory(), recipe.advisory());
       assertEquals(entry.starter().requiredWorkspacePaths(), recipe.requiredWorkspacePaths());
     }
   }

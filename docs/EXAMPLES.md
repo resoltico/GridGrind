@@ -83,12 +83,12 @@ copied asset paths named in `requiredWorkspacePaths`:
 | `SOURCE_BACKED_INPUT` | [`../examples/source-backed-input-request.json`](../examples/source-backed-input-request.json) | [`../examples/source-backed-input-assets/`](../examples/source-backed-input-assets/) |
 | `PACKAGE_SECURITY_INSPECTION` | [`../examples/package-security-inspect-request.json`](../examples/package-security-inspect-request.json) | [`../examples/package-security-assets/`](../examples/package-security-assets/) |
 
-The CLI help now prints each built-in example with its `workspaceMode`, and asset-backed entries
+The CLI help now prints each built-in example with its `advisory`, and asset-backed entries
 also print their exact `requiredWorkspacePaths`, so artifact-only workspaces do not silently assume every
 example is self-contained.
 
 The machine-readable CLI recipe catalog exposes stable example ids, file names, summaries, a
-portable `requestFileName` plus `workspaceMode` contract, and exact
+portable `requestFileName` plus `advisory` contract, and exact
 `requiredWorkspacePaths` for asset-backed examples.
 `SELF_CONTAINED` means the printed request runs from a blank artifact workspace;
 `REQUIRES_EXAMPLE_ASSETS` means the request expects copied `examples/` assets beside the request

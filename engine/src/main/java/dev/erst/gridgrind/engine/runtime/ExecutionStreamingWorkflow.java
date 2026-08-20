@@ -161,7 +161,7 @@ final class ExecutionStreamingWorkflow {
                   ExecutionRequestPaths.requestShape(request),
                   ExecutionRequestPaths.persistenceReference(
                       request, bindings.workingDirectory())));
-      persistencePhase.fail("failed (" + problem.code() + ")");
+      persistencePhase.fail(problem.code());
       return ExecutionResponseSupport.failureResponse(
           workflowContext.failure(calculation, problem));
     } finally {

@@ -9,12 +9,12 @@ import java.util.Objects;
 public interface GridGrindRequestExecutor {
   /** Executes the request and returns the corresponding structured response. */
   WorkbookResult execute(
-      WorkbookPlan request, ExecutionInputBindings bindings, ExecutionJournalSink sink);
+      WorkbookPlan request, ExecutionInputBindings bindings, ExecutionProgressSink sink);
 
   /** Executes the request with explicit authored-input bindings and no live journal sink. */
   default WorkbookResult execute(WorkbookPlan request, ExecutionInputBindings bindings) {
     Objects.requireNonNull(bindings, "bindings must not be null");
-    return execute(request, bindings, ExecutionJournalSink.NOOP);
+    return execute(request, bindings, ExecutionProgressSink.NOOP);
   }
 
   /** Returns an executor that rejects null delegates up front. */

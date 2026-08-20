@@ -56,7 +56,7 @@ public final class GridGrindCliRecipeRegistry {
                     recipe.id(),
                     recipe.requestFileName(),
                     recipe.summary(),
-                    recipe.workspaceMode(),
+                    recipe.advisory(),
                     recipe.requiredWorkspacePaths()))
         .toList();
   }

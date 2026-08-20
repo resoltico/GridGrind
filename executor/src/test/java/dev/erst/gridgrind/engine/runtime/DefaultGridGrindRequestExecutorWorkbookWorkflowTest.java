@@ -171,7 +171,6 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
     assertEquals(
         "Sheet Ledger", success.journal().steps().getFirst().resolvedTargets().getFirst().label());
     assertEquals(ExecutionJournal.Status.SUCCEEDED, success.journal().outcome().status());
-    assertFalse(success.journal().events().isEmpty());
   }
 
   @Test

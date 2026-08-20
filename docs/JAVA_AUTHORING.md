@@ -134,7 +134,7 @@ WorkbookResult response =
             plan.toPlan(),
             new GridGrindRequestInputs(
                 workspace, Files.createTempDirectory("gridgrind-java-")),
-            GridGrindJournalSink.NOOP);
+            GridGrindProgressSink.NOOP);
 ```
 
 `GridGrindRequestInputs.tempRoot()` is caller-owned scratch. Create one private directory outside

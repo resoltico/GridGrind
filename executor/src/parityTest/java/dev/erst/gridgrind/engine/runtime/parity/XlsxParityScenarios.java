@@ -17,7 +17,7 @@ import dev.erst.gridgrind.contract.selector.*;
 import dev.erst.gridgrind.contract.source.BinarySourceInput;
 import dev.erst.gridgrind.contract.source.TextSourceInput;
 import dev.erst.gridgrind.engine.runtime.DefaultGridGrindRequestExecutor;
-import dev.erst.gridgrind.engine.runtime.ExecutionJournalSink;
+import dev.erst.gridgrind.engine.runtime.ExecutionProgressSink;
 import dev.erst.gridgrind.excel.WorkbookSignatureSupport;
 import dev.erst.gridgrind.excel.foundation.ExcelAuthoredDrawingShapeKind;
 import dev.erst.gridgrind.excel.foundation.ExcelBorderStyle;
@@ -211,7 +211,7 @@ public final class XlsxParityScenarios {
                   .execute(
                       request,
                       XlsxParitySupport.bindings(scenarioDirectory),
-                      ExecutionJournalSink.NOOP);
+                      ExecutionProgressSink.NOOP);
           if (!(response instanceof WorkbookResult.Success)) {
             throw new IllegalStateException(
                 "Core parity workbook request must succeed: " + response);
@@ -522,7 +522,7 @@ public final class XlsxParityScenarios {
                   .execute(
                       chartAuthoringRequest(workbookPath),
                       XlsxParitySupport.bindings(scenarioDirectory),
-                      ExecutionJournalSink.NOOP);
+                      ExecutionProgressSink.NOOP);
           if (!(response instanceof WorkbookResult.Success)) {
             throw new IllegalStateException(
                 "Chart authoring parity workbook request must succeed: " + response);
@@ -637,7 +637,7 @@ public final class XlsxParityScenarios {
                   .execute(
                       pivotAuthoringRequest(workbookPath),
                       XlsxParitySupport.bindings(scenarioDirectory),
-                      ExecutionJournalSink.NOOP);
+                      ExecutionProgressSink.NOOP);
           if (!(response instanceof WorkbookResult.Success)) {
             throw new IllegalStateException(
                 "Pivot authoring parity workbook request must succeed: " + response);
@@ -693,7 +693,7 @@ public final class XlsxParityScenarios {
                   .execute(
                       drawingAuthoringRequest(workbookPath),
                       XlsxParitySupport.bindings(scenarioDirectory),
-                      ExecutionJournalSink.NOOP);
+                      ExecutionProgressSink.NOOP);
           if (!(response instanceof WorkbookResult.Success)) {
             throw new IllegalStateException(
                 "GridGrind drawing authoring parity workbook request must succeed: " + response);

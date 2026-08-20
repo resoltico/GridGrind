@@ -4,7 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import dev.erst.gridgrind.cli.discovery.ExampleWorkspaceMode;
+import dev.erst.gridgrind.cli.discovery.RecipeAdvisory;
 import dev.erst.gridgrind.cli.discovery.TaskEntry;
 import dev.erst.gridgrind.cli.discovery.TaskStarterContract;
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
@@ -16,14 +16,14 @@ import tools.jackson.databind.JsonNode;
 /** Coverage for the unified canonical recipe-definition source. */
 class GridGrindRecipeDefinitionsTest {
   @Test
-  void taskStarterContractRejectsIncompatibleWorkspaceModes() {
+  void taskStarterContractRejectsIncompatibleAdvisories() {
     IllegalArgumentException selfContainedFailure =
         assertThrows(
             IllegalArgumentException.class,
             () ->
                 new TaskStarterContract(
                     "example.json",
-                    ExampleWorkspaceMode.SELF_CONTAINED,
+                    RecipeAdvisory.SELF_CONTAINED,
                     List.of("task-starter-assets/source.xlsx")));
     assertEquals(
         "SELF_CONTAINED task starters must not publish requiredWorkspacePaths",
@@ -34,7 +34,7 @@ class GridGrindRecipeDefinitionsTest {
             IllegalArgumentException.class,
             () ->
                 new TaskStarterContract(
-                    "example.json", ExampleWorkspaceMode.REQUIRES_EXAMPLE_ASSETS, List.of()));
+                    "example.json", RecipeAdvisory.REQUIRES_EXAMPLE_ASSETS, List.of()));
     assertEquals(
         "REQUIRES_EXAMPLE_ASSETS task starters must publish requiredWorkspacePaths",
         assetBackedFailure.getMessage());
@@ -47,7 +47,7 @@ class GridGrindRecipeDefinitionsTest {
             IllegalArgumentException.class,
             () ->
                 new TaskStarterContract(
-                    "examples/example.json", ExampleWorkspaceMode.SELF_CONTAINED, List.of()));
+                    "examples/example.json", RecipeAdvisory.SELF_CONTAINED, List.of()));
     assertEquals(
         "requestFileName must be one portable file name, not a repository path",
         repositoryPath.getMessage());
@@ -57,7 +57,7 @@ class GridGrindRecipeDefinitionsTest {
             IllegalArgumentException.class,
             () ->
                 new TaskStarterContract(
-                    "examples\\example.json", ExampleWorkspaceMode.SELF_CONTAINED, List.of()));
+                    "examples\\example.json", RecipeAdvisory.SELF_CONTAINED, List.of()));
     assertEquals(
         "requestFileName must be one portable file name, not a repository path",
         windowsPath.getMessage());
@@ -65,21 +65,19 @@ class GridGrindRecipeDefinitionsTest {
     IllegalArgumentException wrongSuffix =
         assertThrows(
             IllegalArgumentException.class,
-            () ->
-                new TaskStarterContract(
-                    "example.txt", ExampleWorkspaceMode.SELF_CONTAINED, List.of()));
+            () -> new TaskStarterContract("example.txt", RecipeAdvisory.SELF_CONTAINED, List.of()));
     assertEquals("requestFileName must end with .json", wrongSuffix.getMessage());
 
     TaskStarterContract selfContained =
         TaskStarterContract.selfContained(
             TaskStarterRecipeSupport.taskRequestFileName("DASHBOARD"));
-    assertEquals(ExampleWorkspaceMode.SELF_CONTAINED, selfContained.workspaceMode());
+    assertEquals(RecipeAdvisory.SELF_CONTAINED, selfContained.advisory());
     assertEquals(List.of(), selfContained.requiredWorkspacePaths());
 
     TaskStarterContract assetBacked =
         TaskStarterContract.assetBacked(
             "example.json", "task-starter-assets/source.xlsx", "payloads/data.xml");
-    assertEquals(ExampleWorkspaceMode.REQUIRES_EXAMPLE_ASSETS, assetBacked.workspaceMode());
+    assertEquals(RecipeAdvisory.REQUIRES_EXAMPLE_ASSETS, assetBacked.advisory());
     assertEquals(
         List.of("task-starter-assets/source.xlsx", "payloads/data.xml"),
         assetBacked.requiredWorkspacePaths());

@@ -11,7 +11,7 @@ import org.junit.jupiter.api.Test;
 /** Direct validation coverage for the execution-journal contract family. */
 class ExecutionJournalTest {
   @Test
-  void defaultsLevelWarningsAndEvents() {
+  void retainsOnlyExecutionOutcomeTelemetry() {
     ExecutionJournal journal =
         new ExecutionJournal(
             ExecutionJournalLevel.NORMAL,
@@ -24,11 +24,9 @@ class ExecutionJournalTest {
             ExecutionJournal.Phase.notStarted(),
             ExecutionJournal.Phase.notStarted(),
             List.of(),
-            ExecutionJournal.Outcome.succeeded(0, 0, 0),
-            List.of());
+            ExecutionJournal.Outcome.succeeded(0, 0, 0));
 
     assertEquals(ExecutionJournalLevel.NORMAL, journal.level());
-    assertEquals(List.of(), journal.events());
   }
 
   @Test
@@ -173,16 +171,15 @@ class ExecutionJournalTest {
   }
 
   @Test
-  void eventRequiresStepIndexAndStepIdTogether() {
+  void progressEventRequiresStepIdentityAndFailureCodeWhenApplicable() {
     assertEquals(
         "stepId and stepIndex must either both be present or both be absent",
         assertThrows(
                 IllegalArgumentException.class,
                 () ->
-                    new ExecutionJournal.Event(
+                    ExecutionProgressEvent.started(
                         "2026-04-18T10:00:00Z",
-                        "STEP",
-                        "Started",
+                        ExecutionProgressEvent.Category.STEP,
                         Optional.of(1),
                         Optional.empty()))
             .getMessage());
@@ -191,11 +188,33 @@ class ExecutionJournalTest {
         assertThrows(
                 IllegalArgumentException.class,
                 () ->
-                    new ExecutionJournal.Event(
+                    ExecutionProgressEvent.started(
                         "2026-04-18T10:00:00Z",
-                        "STEP",
-                        "Started",
+                        ExecutionProgressEvent.Category.STEP,
                         Optional.empty(),
+                        Optional.of("step-1")))
+            .getMessage());
+    assertEquals(
+        "problemCode must not be null",
+        assertThrows(
+                NullPointerException.class,
+                () ->
+                    ExecutionProgressEvent.failed(
+                        "2026-04-18T10:00:00Z",
+                        ExecutionProgressEvent.Category.STEP,
+                        null,
+                        Optional.empty(),
+                        Optional.empty()))
+            .getMessage());
+    assertEquals(
+        "stepIndex must be >= 0",
+        assertThrows(
+                IllegalArgumentException.class,
+                () ->
+                    ExecutionProgressEvent.started(
+                        "2026-08-20T17:00:00Z",
+                        ExecutionProgressEvent.Category.STEP,
+                        Optional.of(-1),
                         Optional.of("step-1")))
             .getMessage());
   }

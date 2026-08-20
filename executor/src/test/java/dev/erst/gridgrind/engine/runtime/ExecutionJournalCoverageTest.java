@@ -67,7 +67,7 @@ class ExecutionJournalCoverageTest {
     assertSame(
         expected,
         executor.execute(
-            request, ExecutionContextFixtureSupport.defaultBindings(), ExecutionJournalSink.NOOP));
+            request, ExecutionContextFixtureSupport.defaultBindings(), ExecutionProgressSink.NOOP));
     assertTrue(called.get());
   }
 
@@ -290,7 +290,7 @@ class ExecutionJournalCoverageTest {
   @Test
   void recorderBuildsVerboseFailureAndGuardsPhaseReuse() {
     WorkbookPlan request = verbosePlan();
-    List<ExecutionJournal.Event> emitted = new ArrayList<>();
+    List<dev.erst.gridgrind.contract.dto.ExecutionProgressEvent> emitted = new ArrayList<>();
     ExecutionJournalRecorder recorder =
         ExecutionContextFixtureSupport.startJournal(request, emitted::add);
 
@@ -329,13 +329,12 @@ class ExecutionJournalCoverageTest {
     calculationPreflight.succeed();
     ExecutionJournalRecorder.PhaseHandle calculationExecution =
         recorder.beginCalculationExecution();
-    calculationExecution.fail("failed (IO_ERROR)");
+    calculationExecution.fail(GridGrindProblemCode.IO_ERROR);
     stepHandle.fail(
         GridGrindProblemCode.IO_ERROR, GridGrindProblemCategory.IO, "EXECUTE_STEP", "disk issue");
 
     ExecutionJournal journal = recorder.buildFailure(3, GridGrindProblemCode.IO_ERROR, 2, "step-3");
 
-    assertFalse(journal.events().isEmpty());
     assertFalse(emitted.isEmpty());
     assertEquals(ExecutionJournal.Status.SUCCEEDED, journal.calculation().preflight().status());
     assertEquals(ExecutionJournal.Status.FAILED, journal.calculation().execution().status());
@@ -348,19 +347,19 @@ class ExecutionJournalCoverageTest {
   @Test
   void recorderSupportsNullRequestAndCalculationIoFailures() throws Exception {
     ExecutionJournalRecorder recorder =
-        ExecutionContextFixtureSupport.startJournal(null, ExecutionJournalSink.NOOP);
+        ExecutionContextFixtureSupport.startJournal(null, ExecutionProgressSink.NOOP);
     ExecutionJournal unknownJournal = recorder.buildSuccess(0);
     assertEquals(java.util.Optional.empty(), unknownJournal.source().type());
 
     WorkbookPlan request = verbosePlan();
     ExecutionJournalRecorder verboseRecorder =
-        ExecutionContextFixtureSupport.startJournal(request, ExecutionJournalSink.NOOP);
+        ExecutionContextFixtureSupport.startJournal(request, ExecutionProgressSink.NOOP);
     ExecutionJournalRecorder.PhaseHandle calculationPreflight =
         verboseRecorder.beginCalculationPreflight();
     calculationPreflight.succeed();
     ExecutionJournalRecorder.PhaseHandle calculationExecution =
         verboseRecorder.beginCalculationExecution();
-    calculationExecution.fail("failed (IO_ERROR)");
+    calculationExecution.fail(GridGrindProblemCode.IO_ERROR);
     ExecutionJournalRecorder.StepHandle stepHandle =
         verboseRecorder.beginStep(
             0,
@@ -378,7 +377,7 @@ class ExecutionJournalCoverageTest {
   @Test
   void recorderOmitsFailureStepWhenPlanFailureHasNoStepIdentity() {
     ExecutionJournalRecorder recorder =
-        ExecutionContextFixtureSupport.startJournal(verbosePlan(), ExecutionJournalSink.NOOP);
+        ExecutionContextFixtureSupport.startJournal(verbosePlan(), ExecutionProgressSink.NOOP);
 
     ExecutionJournal journal =
         recorder.buildFailure(1, GridGrindProblemCode.INVALID_REQUEST, null, null);
@@ -466,7 +465,7 @@ class ExecutionJournalCoverageTest {
     ExecutionJournalRecorder recorder =
         ExecutionContextFixtureSupport.startJournal(
             planWithSteps("journal-level-" + level.name(), level, List.of(step), List.of()),
-            ExecutionJournalSink.NOOP);
+            ExecutionProgressSink.NOOP);
     recorder.beginStep(0, step).succeed();
     return recorder.buildSuccess(1);
   }

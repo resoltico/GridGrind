@@ -258,7 +258,7 @@ class DefaultGridGrindRequestExecutorTestSupport
   }
 
   static ExecutionJournalRecorder startJournal(
-      WorkbookPlan request, ExecutionJournalSink sink, Path workingDirectory) {
+      WorkbookPlan request, ExecutionProgressSink sink, Path workingDirectory) {
     return ExecutionContextFixtureSupport.startJournal(request, sink, workingDirectory);
   }
 

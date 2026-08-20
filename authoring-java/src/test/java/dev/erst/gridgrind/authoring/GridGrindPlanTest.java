@@ -21,7 +21,7 @@ import dev.erst.gridgrind.contract.step.AssertionStep;
 import dev.erst.gridgrind.contract.step.InspectionStep;
 import dev.erst.gridgrind.contract.step.MutationStep;
 import dev.erst.gridgrind.engine.api.GridGrindEngine;
-import dev.erst.gridgrind.engine.api.GridGrindJournalSink;
+import dev.erst.gridgrind.engine.api.GridGrindProgressSink;
 import dev.erst.gridgrind.engine.api.GridGrindRequestInputs;
 import java.io.ByteArrayOutputStream;
 import java.lang.reflect.Method;
@@ -242,7 +242,7 @@ class GridGrindPlanTest {
                 .execute(
                     plan.toPlan(),
                     new GridGrindRequestInputs(tempDir, tempDir.resolve("temp-root")),
-                    GridGrindJournalSink.NOOP));
+                    GridGrindProgressSink.NOOP));
 
     assertTrue(Files.exists(outputPath));
     assertEquals(1, response.assertions().size());

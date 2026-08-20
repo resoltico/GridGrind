@@ -219,7 +219,7 @@ class DefaultGridGrindRequestExecutorCalculationCoverageTest {
               workbook,
               preflightRequest,
               ExecutionContextFixtureSupport.startJournal(
-                  preflightRequest, ExecutionJournalSink.NOOP));
+                  preflightRequest, ExecutionProgressSink.NOOP));
 
       CalculationReport preflightReport = preflightOutcome.report();
       GridGrindProblemDetail.Problem preflightFailure = preflightOutcome.failure().orElseThrow();
@@ -254,7 +254,7 @@ class DefaultGridGrindRequestExecutorCalculationCoverageTest {
               workbook,
               clearCachesRequest,
               ExecutionContextFixtureSupport.startJournal(
-                  clearCachesRequest, ExecutionJournalSink.NOOP));
+                  clearCachesRequest, ExecutionProgressSink.NOOP));
 
       CalculationReport executionReport = executionOutcome.report();
       GridGrindProblemDetail.Problem executionFailure = executionOutcome.failure().orElseThrow();
@@ -288,7 +288,7 @@ class DefaultGridGrindRequestExecutorCalculationCoverageTest {
               workbook,
               markOnlyRequest,
               ExecutionContextFixtureSupport.startJournal(
-                  markOnlyRequest, ExecutionJournalSink.NOOP));
+                  markOnlyRequest, ExecutionProgressSink.NOOP));
 
       CalculationReport markOnlyReport = markOnlyOutcome.report();
       assertEquals(CalculationExecutionStatus.SUCCEEDED, markOnlyReport.execution().status());
@@ -379,7 +379,7 @@ class DefaultGridGrindRequestExecutorCalculationCoverageTest {
               workbook,
               lenientRequest,
               ExecutionContextFixtureSupport.startJournal(
-                  lenientRequest, ExecutionJournalSink.NOOP));
+                  lenientRequest, ExecutionProgressSink.NOOP));
 
       assertEquals(CalculationExecutionStatus.PARTIAL, outcome.report().execution().status());
       assertTrue(outcome.failure().isEmpty());

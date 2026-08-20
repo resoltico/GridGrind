@@ -301,7 +301,7 @@ final class ExecutionWorkflowSupport {
                   ExecutionRequestPaths.requestShape(executionContext.request()),
                   ExecutionRequestPaths.persistenceReference(
                       executionContext.request(), bindings.workingDirectory())));
-      persistencePhase.fail("failed (" + problem.code() + ")");
+      persistencePhase.fail(problem.code());
       return new PersistenceResult(
           null,
           responseSupport.closeWorkbook(

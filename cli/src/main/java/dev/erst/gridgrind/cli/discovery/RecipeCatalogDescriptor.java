@@ -14,7 +14,7 @@ public interface RecipeCatalogDescriptor {
   String summary();
 
   /** Whether the recipe is self-contained or requires copied example assets. */
-  ExampleWorkspaceMode workspaceMode();
+  RecipeAdvisory advisory();
 
   /** Workspace-relative asset paths required before executing an asset-backed recipe. */
   List<String> requiredWorkspacePaths();

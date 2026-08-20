@@ -69,11 +69,6 @@ final class GridGrindProtocolCatalogExecutionPlainTypeDescriptors {
               "Canonical failing-step reference recorded when an execution failure is attributable"
                   + " to one authored step."),
           plainTypeDescriptor(
-              "executionJournalEventType",
-              ExecutionJournal.Event.class,
-              "ExecutionJournalEvent",
-              "Fine-grained verbose execution event emitted for live CLI rendering."),
-          plainTypeDescriptor(
               "requestWarningType",
               RequestWarning.class,
               "RequestWarning",

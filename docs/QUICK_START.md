@@ -94,7 +94,7 @@ checkout, [budget-request.json](../examples/budget-request.json) is the matching
 examples are repo-asset-backed and expect the copied asset paths named by
 `requiredWorkspacePaths`; [EXAMPLES.md](./EXAMPLES.md) calls those out explicitly, and
 `--print-recipe-catalog` exposes that distinction through each example's `requestFileName`,
-`workspaceMode`, and asset-backed `requiredWorkspacePaths`.
+`advisory`, and asset-backed `requiredWorkspacePaths`.
 
 ### Docker Example
 

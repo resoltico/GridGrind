@@ -45,7 +45,7 @@ final class ExecutionResponseSupport {
               closeFailure,
               new dev.erst.gridgrind.contract.dto.ProblemContext.ExecuteRequest(
                   ExecutionRequestPaths.requestShape(request)));
-      closePhase.fail("failed (" + closeProblem.code() + ")");
+      closePhase.fail(closeProblem.code());
       return ExecutionResponseCloseFinalizer.withCloseFailure(
           response,
           request,
@@ -80,7 +80,7 @@ final class ExecutionResponseSupport {
               closeFailure,
               new dev.erst.gridgrind.contract.dto.ProblemContext.ExecuteRequest(
                   ExecutionRequestPaths.requestShape(request)));
-      closePhase.fail("failed (" + closeProblem.code() + ")");
+      closePhase.fail(closeProblem.code());
       return ExecutionResponseCloseFinalizer.withCloseFailure(
           response,
           request,

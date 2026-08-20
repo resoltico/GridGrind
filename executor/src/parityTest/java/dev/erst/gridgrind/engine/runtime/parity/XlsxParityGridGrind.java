@@ -14,7 +14,7 @@ import dev.erst.gridgrind.contract.dto.WorkbookResultPersistence;
 import dev.erst.gridgrind.contract.query.InspectionResult;
 import dev.erst.gridgrind.contract.step.InspectionStep;
 import dev.erst.gridgrind.engine.runtime.DefaultGridGrindRequestExecutor;
-import dev.erst.gridgrind.engine.runtime.ExecutionJournalSink;
+import dev.erst.gridgrind.engine.runtime.ExecutionProgressSink;
 import dev.erst.gridgrind.engine.runtime.parity.ParityPlanSupport.PendingMutation;
 import java.nio.file.Path;
 import java.util.List;
@@ -128,7 +128,7 @@ final class XlsxParityGridGrind {
 
   private static WorkbookResult execute(Path executionRoot, WorkbookPlan request) {
     return new DefaultGridGrindRequestExecutor()
-        .execute(request, XlsxParitySupport.bindings(executionRoot), ExecutionJournalSink.NOOP);
+        .execute(request, XlsxParitySupport.bindings(executionRoot), ExecutionProgressSink.NOOP);
   }
 
   private static WorkbookPlan.WorkbookSource.ExistingFile existingWorkbookSource(

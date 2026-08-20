@@ -59,19 +59,19 @@ class GridGrindCliCatalogCommandTest extends GridGrindCliTestSupport {
     assertEquals(0, exitCode);
     assertEquals(GridGrindRecipeCatalog.catalog(), catalog);
     assertEquals(
-        dev.erst.gridgrind.cli.discovery.ExampleWorkspaceMode.SELF_CONTAINED,
+        dev.erst.gridgrind.cli.discovery.RecipeAdvisory.SELF_CONTAINED,
         catalog.recipes().stream()
             .filter(recipe -> "BUDGET".equals(recipe.id()))
             .findFirst()
             .orElseThrow()
-            .workspaceMode());
+            .advisory());
     assertEquals(
-        dev.erst.gridgrind.cli.discovery.ExampleWorkspaceMode.REQUIRES_EXAMPLE_ASSETS,
+        dev.erst.gridgrind.cli.discovery.RecipeAdvisory.REQUIRES_EXAMPLE_ASSETS,
         catalog.recipes().stream()
             .filter(recipe -> "PACKAGE_SECURITY_INSPECTION".equals(recipe.id()))
             .findFirst()
             .orElseThrow()
-            .workspaceMode());
+            .advisory());
     assertEquals(
         java.util.List.of("package-security-assets/gridgrind-package-security.xlsx"),
         catalog.recipes().stream()

@@ -199,10 +199,12 @@ grep -Fq '"level": "VERBOSE"' "${docker_smoke_script}" || die \
     "docker smoke no longer exercises verbose execution journaling from the packaged artifact"
 grep -Fq 'docker smoke response did not include the structured execution journal' "${docker_smoke_script}" || die \
     "docker smoke no longer asserts response-journal presence"
-grep -Fq 'docker smoke response did not retain VERBOSE journal events' "${docker_smoke_script}" || die \
-    "docker smoke no longer asserts structured VERBOSE journal events"
-grep -Fq 'docker smoke create request wrote unexpected stderr' "${docker_smoke_script}" || die \
-    "docker smoke no longer asserts clean stderr for successful VERBOSE response-file writes"
+grep -Fq 'docker smoke response duplicated VERBOSE progress events' "${docker_smoke_script}" || die \
+    "docker smoke no longer rejects duplicated VERBOSE progress in the primary response"
+grep -Fq 'docker smoke create request did not emit compact VERBOSE progress JSONL' "${docker_smoke_script}" || die \
+    "docker smoke no longer asserts compact VERBOSE progress JSONL"
+grep -Fq 'docker smoke VERBOSE progress retained a legacy prose detail field' "${docker_smoke_script}" || die \
+    "docker smoke no longer rejects legacy verbose prose detail"
 grep -Fq 'run_verify_cli_contract "${image_name}:${expected_version}"' \
     "${container_verify_script}" || die "public container verification no longer checks the version tag contract"
 grep -Fq 'run_verify_cli_contract "${image_name}:latest"' \
@@ -217,10 +219,8 @@ grep -Fq 'scripts/test-verify-release-primary-checkout.sh' "${stage_contract_scr
     "Stage 4 contract no longer exercises the release primary-checkout regression"
 grep -Fq './scripts/verify-release-primary-checkout.sh "$PRIMARY_CHECKOUT" "X.Y.Z"' \
     "${release_protocol_doc}" || die "release protocol no longer requires the primary-checkout closeout verifier"
-
 grep -Fq 'checks: read' "${release_workflow}" || die "release workflow is missing checks: read permission"
 grep -Fq 'checks: read' "${container_workflow}" || die "container workflow is missing checks: read permission"
-
 grep -Fq 'provenance: mode=max' "${container_workflow}" || die "container workflow does not publish explicit provenance"
 grep -Fq 'sbom: true' "${container_workflow}" || die "container workflow does not publish an SBOM attestation"
 grep -Fqx '            org.opencontainers.image.licenses=MIT AND Apache-2.0 AND BSD-2-Clause AND BSD-3-Clause AND EDL-1.0' \

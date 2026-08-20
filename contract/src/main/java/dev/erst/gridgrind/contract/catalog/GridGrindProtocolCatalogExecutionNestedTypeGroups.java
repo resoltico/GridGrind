@@ -5,6 +5,7 @@ import static dev.erst.gridgrind.contract.catalog.GridGrindProtocolCatalogNested
 
 import dev.erst.gridgrind.contract.dto.ExecutionJournal;
 import dev.erst.gridgrind.contract.dto.ExecutionModeInput;
+import dev.erst.gridgrind.contract.dto.ExecutionProgressEvent;
 import dev.erst.gridgrind.contract.dto.OoxmlEncryptionReport;
 import dev.erst.gridgrind.contract.dto.OoxmlPersistenceEncryptionInput;
 import dev.erst.gridgrind.contract.dto.OoxmlPersistenceSignatureInput;
@@ -66,6 +67,23 @@ final class GridGrindProtocolCatalogExecutionNestedTypeGroups {
                       "FAILED",
                       "Execution outcome summary for a failed run, including the canonical failure"
                           + " code and an optional failing-step reference."))),
+          nestedTypeGroup(
+              "executionProgressEventTypes",
+              ExecutionProgressEvent.class,
+              List.of(
+                  descriptor(
+                      ExecutionProgressEvent.Started.class,
+                      "STARTED",
+                      "Compact JSONL lifecycle event emitted when one execution phase starts."),
+                  descriptor(
+                      ExecutionProgressEvent.Succeeded.class,
+                      "SUCCEEDED",
+                      "Compact JSONL lifecycle event emitted when one execution phase succeeds."),
+                  descriptor(
+                      ExecutionProgressEvent.Failed.class,
+                      "FAILED",
+                      "Compact JSONL lifecycle event emitted when one execution phase fails with"
+                          + " one classified problem code."))),
           nestedTypeGroup(
               "ooxmlEncryptionReportTypes",
               OoxmlEncryptionReport.class,

@@ -80,8 +80,7 @@ final class WorkbookResultSupport {
         ExecutionJournal.Phase.notStarted(),
         ExecutionJournal.Phase.notStarted(),
         List.of(),
-        outcome,
-        List.of());
+        outcome);
   }
 
   private static void validateSyntheticOutcomeRequest(

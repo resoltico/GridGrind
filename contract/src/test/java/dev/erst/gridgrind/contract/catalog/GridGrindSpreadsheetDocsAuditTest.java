@@ -398,7 +398,7 @@ class GridGrindSpreadsheetDocsAuditTest {
         () ->
             assertTrue(
                 normalizedExamples.contains(
-                    "machine-readable CLI recipe catalog exposes stable example ids, file names, summaries, a portable `requestFileName` plus `workspaceMode` contract, and exact `requiredWorkspacePaths`"),
+                    "machine-readable CLI recipe catalog exposes stable example ids, file names, summaries, a portable `requestFileName` plus `advisory` contract, and exact `requiredWorkspacePaths`"),
                 "examples guide must describe the public example-catalog portability surface"),
         () ->
             assertTrue(

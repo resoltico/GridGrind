@@ -17,7 +17,7 @@ import dev.erst.gridgrind.contract.dto.WorkbookResult;
 import dev.erst.gridgrind.contract.query.*;
 import dev.erst.gridgrind.contract.selector.*;
 import dev.erst.gridgrind.engine.runtime.DefaultGridGrindRequestExecutor;
-import dev.erst.gridgrind.engine.runtime.ExecutionJournalSink;
+import dev.erst.gridgrind.engine.runtime.ExecutionProgressSink;
 import dev.erst.gridgrind.excel.ExcelFormulaEnvironment;
 import dev.erst.gridgrind.excel.ExcelFormulaExternalWorkbookBinding;
 import dev.erst.gridgrind.excel.ExcelFormulaMissingWorkbookPolicy;
@@ -233,7 +233,7 @@ final class XlsxParityTest {
                               new CellSelector.ByAddresses("Ops", List.of("B1")),
                               XlsxParityProbeRegistry.allFacetCellsQuery()))),
                   XlsxParitySupport.bindings(temporaryRoot),
-                  ExecutionJournalSink.NOOP);
+                  ExecutionProgressSink.NOOP);
       assertInstanceOf(WorkbookResult.Success.class, response);
     } finally {
       deleteRecursively(temporaryRoot);

@@ -204,10 +204,13 @@ class GridGrindEngineApiPreflightTest {
         """;
   }
 
-  private static GridGrindJournalSink deleteSourceAfterPreflight(
+  private static GridGrindProgressSink deleteSourceAfterPreflight(
       Path sourcePath, AtomicReference<Boolean> sourceDeleted) {
     return event -> {
-      if ("RESOLVE_INPUTS".equals(event.category()) && "succeeded".equals(event.detail())) {
+      if (event.category()
+              == dev.erst.gridgrind.contract.dto.ExecutionProgressEvent.Category.RESOLVE_INPUTS
+          && event.status()
+              == dev.erst.gridgrind.contract.dto.ExecutionProgressEvent.Status.SUCCEEDED) {
         try {
           Files.delete(sourcePath);
           sourceDeleted.set(true);

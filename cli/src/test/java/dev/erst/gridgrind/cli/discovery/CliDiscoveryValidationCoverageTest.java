@@ -181,7 +181,7 @@ class CliDiscoveryValidationCoverageTest {
             "ASSET_BACKED",
             "asset-backed-request.json",
             "summary",
-            ExampleWorkspaceMode.REQUIRES_EXAMPLE_ASSETS,
+            RecipeAdvisory.REQUIRES_EXAMPLE_ASSETS,
             List.of("assets/example.xlsx"));
 
     assertEquals(
@@ -217,7 +217,7 @@ class CliDiscoveryValidationCoverageTest {
                         "BROKEN_VIEW",
                         "broken-view.json",
                         "summary",
-                        ExampleWorkspaceMode.SELF_CONTAINED,
+                        RecipeAdvisory.SELF_CONTAINED,
                         List.of()))
             .getMessage());
 
@@ -240,7 +240,7 @@ class CliDiscoveryValidationCoverageTest {
                         "BROKEN_SELF_CONTAINED",
                         "broken-self-contained.json",
                         "summary",
-                        ExampleWorkspaceMode.SELF_CONTAINED,
+                        RecipeAdvisory.SELF_CONTAINED,
                         List.of("assets/example.xlsx")))
             .getMessage());
     assertEquals(
@@ -253,7 +253,7 @@ class CliDiscoveryValidationCoverageTest {
                         "BROKEN_ASSET_BACKED",
                         "broken-asset-backed.json",
                         "summary",
-                        ExampleWorkspaceMode.REQUIRES_EXAMPLE_ASSETS,
+                        RecipeAdvisory.REQUIRES_EXAMPLE_ASSETS,
                         List.of()))
             .getMessage());
     assertEquals(
@@ -275,7 +275,7 @@ class CliDiscoveryValidationCoverageTest {
                         "BROKEN_EXAMPLE_SELF_CONTAINED",
                         "broken-example-self-contained.json",
                         "summary",
-                        ExampleWorkspaceMode.SELF_CONTAINED,
+                        RecipeAdvisory.SELF_CONTAINED,
                         List.of("assets/example.xlsx")))
             .getMessage());
     assertEquals(
@@ -287,7 +287,7 @@ class CliDiscoveryValidationCoverageTest {
                         "BROKEN_EXAMPLE_ASSET_BACKED",
                         "broken-example-asset-backed.json",
                         "summary",
-                        ExampleWorkspaceMode.REQUIRES_EXAMPLE_ASSETS,
+                        RecipeAdvisory.REQUIRES_EXAMPLE_ASSETS,
                         List.of()))
             .getMessage());
   }
@@ -393,7 +393,7 @@ class CliDiscoveryValidationCoverageTest {
                         "BROKEN",
                         Path.of("examples", "budget-request.json").toString(),
                         "summary",
-                        ExampleWorkspaceMode.SELF_CONTAINED,
+                        RecipeAdvisory.SELF_CONTAINED,
                         List.of()))
             .getMessage());
   }

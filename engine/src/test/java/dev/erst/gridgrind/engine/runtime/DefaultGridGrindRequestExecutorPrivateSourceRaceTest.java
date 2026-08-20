@@ -181,10 +181,13 @@ class DefaultGridGrindRequestExecutorPrivateSourceRaceTest {
   }
 
   private static void removeMaterializedSourceAfterPreflight(
-      dev.erst.gridgrind.contract.dto.ExecutionJournal.Event event,
+      dev.erst.gridgrind.contract.dto.ExecutionProgressEvent event,
       Path tempRoot,
       AtomicBoolean removedPrivateSource) {
-    if (!"RESOLVE_INPUTS".equals(event.category()) || !"succeeded".equals(event.detail())) {
+    if (event.category()
+            != dev.erst.gridgrind.contract.dto.ExecutionProgressEvent.Category.RESOLVE_INPUTS
+        || event.status()
+            != dev.erst.gridgrind.contract.dto.ExecutionProgressEvent.Status.SUCCEEDED) {
       return;
     }
     try (Stream<Path> files = Files.list(tempRoot)) {
@@ -207,10 +210,13 @@ class DefaultGridGrindRequestExecutorPrivateSourceRaceTest {
   }
 
   private static void replaceBoundOutputDirectory(
-      dev.erst.gridgrind.contract.dto.ExecutionJournal.Event event,
+      dev.erst.gridgrind.contract.dto.ExecutionProgressEvent event,
       Path outputDirectory,
       AtomicBoolean replacedOutputDirectory) {
-    if (!"RESOLVE_INPUTS".equals(event.category()) || !"succeeded".equals(event.detail())) {
+    if (event.category()
+            != dev.erst.gridgrind.contract.dto.ExecutionProgressEvent.Category.RESOLVE_INPUTS
+        || event.status()
+            != dev.erst.gridgrind.contract.dto.ExecutionProgressEvent.Status.SUCCEEDED) {
       return;
     }
     try {

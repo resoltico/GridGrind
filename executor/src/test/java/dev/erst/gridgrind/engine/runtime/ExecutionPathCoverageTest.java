@@ -243,7 +243,7 @@ class ExecutionPathCoverageTest {
             dev.erst.gridgrind.contract.dto.FormulaEnvironmentInput.empty(),
             List.of());
     ExecutionJournalRecorder journal =
-        ExecutionContextFixtureSupport.startJournal(request, ExecutionJournalSink.NOOP);
+        ExecutionContextFixtureSupport.startJournal(request, ExecutionProgressSink.NOOP);
     GridGrindProblemDetail.Problem problem =
         new GridGrindProblemDetail.Problem(
             GridGrindProblemCode.INVALID_REQUEST,

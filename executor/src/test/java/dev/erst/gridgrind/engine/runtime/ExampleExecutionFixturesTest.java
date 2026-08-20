@@ -5,8 +5,8 @@ import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import dev.erst.gridgrind.cli.GridGrindCli;
-import dev.erst.gridgrind.cli.discovery.ExampleWorkspaceMode;
 import dev.erst.gridgrind.cli.discovery.GridGrindCliJson;
+import dev.erst.gridgrind.cli.discovery.RecipeAdvisory;
 import dev.erst.gridgrind.cli.discovery.RecipeCatalog;
 import dev.erst.gridgrind.cli.discovery.RecipeCatalogEntry;
 import dev.erst.gridgrind.cli.discovery.RecipeView;
@@ -152,13 +152,13 @@ class ExampleExecutionFixturesTest {
 
   private static List<RecipeCatalogEntry> selfContainedExamples() throws IOException {
     return exampleEntries().stream()
-        .filter(example -> example.workspaceMode() == ExampleWorkspaceMode.SELF_CONTAINED)
+        .filter(example -> example.advisory() == RecipeAdvisory.SELF_CONTAINED)
         .toList();
   }
 
   private static List<RecipeCatalogEntry> repositoryAssetBackedExamples() throws IOException {
     return exampleEntries().stream()
-        .filter(example -> example.workspaceMode() == ExampleWorkspaceMode.REQUIRES_EXAMPLE_ASSETS)
+        .filter(example -> example.advisory() == RecipeAdvisory.REQUIRES_EXAMPLE_ASSETS)
         .toList();
   }
 

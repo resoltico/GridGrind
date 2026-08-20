@@ -255,7 +255,7 @@ public enum GridGrindProblemCode {
     if (normalized.startsWith("Unknown recipe: ")) {
       return Optional.of(
           "Use --print-recipe-catalog first when you need the stable recipe ids,"
-              + " requestFileName, workspaceMode, and requiredWorkspacePaths, or"
+              + " requestFileName, advisory, and requiredWorkspacePaths, or"
               + " use --print-recipe-keyword-match when you know the goal but not the id.");
     }
     if (normalized.startsWith("No request JSON was provided.")) {

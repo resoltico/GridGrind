@@ -307,6 +307,7 @@ class GridGrindCliHelpTextTest extends GridGrindCliTestSupport {
         normalizedProtocol.contains("Scoped --lookup payloads may annotate conditional fields"));
     assertTrue(normalizedProtocol.contains("publish shared notes"));
     assertTrue(protocol.contains("STREAMING_WRITE"));
+    assertTrue(protocol.contains("VERBOSE streams compact JSONL progress events to stderr"));
     assertTrue(protocol.contains("formulaEnvironment.missingWorkbookPolicy"));
     assertTrue(protocol.contains("USE_CACHED_VALUE"));
     assertTrue(protocol.contains("formulaEnvironment.udfToolpacks[]"));
@@ -336,6 +337,7 @@ class GridGrindCliHelpTextTest extends GridGrindCliTestSupport {
     assertFalse(guidance.contains("{{CONTAINER_TAG}}"));
     assertTrue(guidance.contains("Discovery:"));
     assertTrue(guidance.contains("Unified recipe catalog entries:"));
+    assertTrue(guidance.contains("advisory:"));
     assertTrue(guidance.contains("Print one recipe:"));
     assertTrue(guidance.contains("gridgrind --print-recipe --lookup"));
     assertTrue(

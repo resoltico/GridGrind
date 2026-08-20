@@ -149,7 +149,8 @@ final class GridGrindCliExecutionCommands {
               command.requestPath(),
               command.executionRootPath(),
               command.tempRootPath(),
-              stdin);
+              stdin,
+              new CliProgressJsonlSink(stderr));
     } catch (IOException exception) {
       return CliRequestReadFailureSupport.write(
           responseWriter,

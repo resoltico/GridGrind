@@ -7,7 +7,7 @@ import dev.erst.gridgrind.contract.dto.ExecutionJournalLevel;
 import dev.erst.gridgrind.contract.dto.WorkbookResult;
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
 import dev.erst.gridgrind.engine.api.GridGrindEngine;
-import dev.erst.gridgrind.engine.api.GridGrindJournalSink;
+import dev.erst.gridgrind.engine.api.GridGrindProgressSink;
 import dev.erst.gridgrind.engine.api.GridGrindRequestInputs;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -75,7 +75,7 @@ final class JavaAuthoringWorkflowExample {
           .execute(
               build(workspace).toPlan(),
               new GridGrindRequestInputs(workspace, tempRoot),
-              GridGrindJournalSink.NOOP);
+              GridGrindProgressSink.NOOP);
     } finally {
       deleteTreeIfExists(tempRoot);
     }

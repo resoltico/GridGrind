@@ -30,8 +30,7 @@ class GridGrindCliRecipeDiscoveryContractTest extends GridGrindCliTestSupport {
 
     assertEquals(0, exitCode);
     assertEquals(
-        List.of(
-            "id", "requestFileName", "requiredWorkspacePaths", "summary", "view", "workspaceMode"),
+        List.of("advisory", "id", "requestFileName", "requiredWorkspacePaths", "summary", "view"),
         fieldNames(example));
     assertEquals(fieldNames(example), fieldNames(task));
   }

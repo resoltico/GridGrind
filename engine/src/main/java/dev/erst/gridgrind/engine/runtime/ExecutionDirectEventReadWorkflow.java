@@ -63,7 +63,7 @@ final class ExecutionDirectEventReadWorkflow {
               new dev.erst.gridgrind.contract.dto.ProblemContext.OpenWorkbook(
                   ExecutionRequestPaths.requestShape(request),
                   ExecutionRequestPaths.workbookReference(request, bindings.workingDirectory())));
-      openPhase.fail("failed (" + problem.code() + ")");
+      openPhase.fail(problem.code());
       return responseSupport.closeReadableWorkbook(
           null,
           ExecutionResponseSupport.failureResponseWithoutPlanOutcomeEvent(

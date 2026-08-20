@@ -290,7 +290,7 @@ class GridGrindCliTest extends GridGrindCliTestSupport {
   }
 
   @Test
-  void verboseExecutionJournalKeepsEventsInTheResponseAndStderrFree() throws IOException {
+  void verboseExecutionStreamsStructuredProgressToStderr() throws IOException {
     String request =
         requestJsonWithPlanId(
             "ledger-audit",
@@ -322,10 +322,23 @@ class GridGrindCliTest extends GridGrindCliTestSupport {
     assertEquals(0, exitCode);
     assertEquals("ledger-audit", success.planId().orElseThrow());
     assertTrue(
-        success.journal().events().stream()
+        stderr
+            .toString(StandardCharsets.UTF_8)
+            .lines()
+            .map(
+                line -> {
+                  try {
+                    return dev.erst.gridgrind.cli.discovery.GridGrindCliJson.readBytes(
+                        line.getBytes(StandardCharsets.UTF_8), ExecutionProgressEvent.class);
+                  } catch (IOException exception) {
+                    throw new java.io.UncheckedIOException(exception);
+                  }
+                })
             .anyMatch(event -> event.stepId().equals(Optional.of("ensure-ledger"))),
-        "verbose journal must retain the step-scoped event in the primary response");
-    assertEquals("", stderr.toString(StandardCharsets.UTF_8));
+        "verbose execution must stream a step-scoped progress event to stderr");
+    assertFalse(
+        stdout.toString(StandardCharsets.UTF_8).contains("\"events\""),
+        "the primary response must not duplicate live progress events");
   }
 
   @Test

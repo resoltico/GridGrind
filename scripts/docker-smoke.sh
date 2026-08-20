@@ -581,10 +581,12 @@ grep -Eq '"journal"[[:space:]]*:' "${response_path}" || die \
     "docker smoke response did not include the structured execution journal"
 grep -Eq '"level"[[:space:]]*:[[:space:]]*"VERBOSE"' "${response_path}" || die \
     "docker smoke response did not preserve the requested VERBOSE journal level"
-grep -Eq '"events"[[:space:]]*:[[:space:]]*\[[[:space:]]*\{' "${response_path}" || die \
-    "docker smoke response did not retain VERBOSE journal events"
-[[ ! -s "${create_stderr_path}" ]] || die \
-    "docker smoke create request wrote unexpected stderr: $(tr '\n' ' ' < "${create_stderr_path}")"
+! grep -Eq '"events"[[:space:]]*:' "${response_path}" || die \
+    "docker smoke response duplicated VERBOSE progress events"
+grep -Eq '^\{"status":"(STARTED|SUCCEEDED|FAILED)","timestamp":"[^"]+","category":"[^"]+"' "${create_stderr_path}" || die \
+    "docker smoke create request did not emit compact VERBOSE progress JSONL"
+! grep -Eq '"detail"[[:space:]]*:' "${create_stderr_path}" || die \
+    "docker smoke VERBOSE progress retained a legacy prose detail field"
 
 printf 'Docker smoke: reopening saved workbook through EXISTING source\n'
 docker_with_repo_config run --rm \

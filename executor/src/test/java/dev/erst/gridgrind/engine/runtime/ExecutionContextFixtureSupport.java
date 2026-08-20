@@ -43,16 +43,16 @@ final class ExecutionContextFixtureSupport {
     return ExcelWorkbooks.open(workbookPath, tempFileFactoryFor(workbookPath));
   }
 
-  static ExecutionJournalRecorder startJournal(WorkbookPlan request, ExecutionJournalSink sink) {
+  static ExecutionJournalRecorder startJournal(WorkbookPlan request, ExecutionProgressSink sink) {
     return ExecutionJournalRecorder.start(request, sink, defaultWorkingDirectory());
   }
 
   static ExecutionJournalRecorder startJournal(WorkbookPlan request) {
-    return startJournal(request, ExecutionJournalSink.NOOP);
+    return startJournal(request, ExecutionProgressSink.NOOP);
   }
 
   static ExecutionJournalRecorder startJournal(
-      WorkbookPlan request, ExecutionJournalSink sink, Path workingDirectory) {
+      WorkbookPlan request, ExecutionProgressSink sink, Path workingDirectory) {
     return ExecutionJournalRecorder.start(request, sink, workingDirectory);
   }
 

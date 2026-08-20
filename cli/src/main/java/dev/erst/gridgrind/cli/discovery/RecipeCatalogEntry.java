@@ -9,7 +9,7 @@ public record RecipeCatalogEntry(
     String id,
     String requestFileName,
     String summary,
-    ExampleWorkspaceMode workspaceMode,
+    RecipeAdvisory advisory,
     List<String> requiredWorkspacePaths)
     implements RecipeCatalogDescriptor {
   public RecipeCatalogEntry {
@@ -17,11 +17,11 @@ public record RecipeCatalogEntry(
     id = CliDiscoveryValidation.requireNonBlank(id, "id");
     requestFileName = CliRecipeCatalogValidation.requirePortableRequestFileName(requestFileName);
     summary = CliDiscoveryValidation.requireNonBlank(summary, "summary");
-    Objects.requireNonNull(workspaceMode, "workspaceMode must not be null");
+    Objects.requireNonNull(advisory, "advisory must not be null");
     requiredWorkspacePaths =
         CliRecipeCatalogValidation.copyWorkspacePaths(
             requiredWorkspacePaths, "requiredWorkspacePaths");
     CliRecipeCatalogValidation.validateWorkspaceContract(
-        workspaceMode, requiredWorkspacePaths, "recipes");
+        advisory, requiredWorkspacePaths, "recipes");
   }
 }

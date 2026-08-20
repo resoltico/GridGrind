@@ -55,7 +55,7 @@ final class ExecutionCalculationSupport {
       if (preflight.failure().isPresent()) {
         CalculationPolicyExecutor.FailureDetail failure = preflight.failure().orElseThrow();
         GridGrindProblemDetail.Problem problem = calculationProblemFor(request, failure);
-        preflightPhase.fail("failed (" + problem.code() + ")");
+        preflightPhase.fail(problem.code());
         return new CalculationExecutionOutcome(
             CalculationPolicyExecutor.report(
                 effectivePolicy,
@@ -82,7 +82,7 @@ final class ExecutionCalculationSupport {
     if (execution.failure().isPresent()) {
       GridGrindProblemDetail.Problem problem =
           calculationProblemFor(request, execution.failure().orElseThrow());
-      executionPhase.fail("failed (" + problem.code() + ")");
+      executionPhase.fail(problem.code());
       return new CalculationExecutionOutcome(report, Optional.of(problem));
     }
     executionPhase.succeed();
@@ -120,7 +120,7 @@ final class ExecutionCalculationSupport {
           GridGrindProblems.fromException(
               exception,
               calculationContextFor(request, CalculationPolicyExecutor.Phase.EXECUTION, null));
-      executionPhase.fail("failed (" + problem.code() + ")");
+      executionPhase.fail(problem.code());
       return new CalculationExecutionOutcome(
           CalculationPolicyExecutor.report(
               effectivePolicy,

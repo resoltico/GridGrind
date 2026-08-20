@@ -37,7 +37,7 @@ expected_list_fields = {
     "id",
     "requestFileName",
     "summary",
-    "workspaceMode",
+    "advisory",
     "requiredWorkspacePaths",
 }
 catalog_groups = {
@@ -71,7 +71,7 @@ for recipe in shipped_examples + task_starters:
     summary = recipe.get("summary")
     guidance_snippet = normalized_text(
         f"- {recipe_id} ({view}) requestFileName: {request_file_name} "
-        + f"workspace: {recipe.get('workspaceMode')} summary: {summary}"
+        + f"advisory: {recipe.get('advisory')} summary: {summary}"
     )
     if guidance_snippet not in normalized_guidance_help_output:
         die(f"guidance help no longer lists the recipe line for {recipe_id}")
@@ -80,11 +80,11 @@ for recipe in shipped_examples + task_starters:
             f"recipe catalog {view.lower()} entry {recipe_id} exposes unexpected public fields: "
             + f"{sorted(recipe.keys())}"
         )
-    if recipe.get("workspaceMode") == "SELF_CONTAINED" and recipe.get(
+    if recipe.get("advisory") == "SELF_CONTAINED" and recipe.get(
         "requiredWorkspacePaths"
     ):
         die(f"self-contained recipe {recipe_id} must not publish requiredWorkspacePaths")
-    if recipe.get("workspaceMode") == "REQUIRES_EXAMPLE_ASSETS" and not recipe.get(
+    if recipe.get("advisory") == "REQUIRES_EXAMPLE_ASSETS" and not recipe.get(
         "requiredWorkspacePaths"
     ):
         die(f"asset-backed recipe {recipe_id} must publish requiredWorkspacePaths")

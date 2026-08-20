@@ -58,7 +58,7 @@ class GridGrindEngineApiTest {
   void requestExecutorExplicitInputsRejectNullDelegatesAndPreserveCallerBindings() {
     WorkbookPlan request = GridGrindProtocolCatalog.requestTemplate();
     AtomicReference<GridGrindRequestInputs> observedInputs = new AtomicReference<>();
-    AtomicReference<GridGrindJournalSink> observedSink = new AtomicReference<>();
+    AtomicReference<GridGrindProgressSink> observedSink = new AtomicReference<>();
     WorkbookResult success = WorkbookResults.success(List.of(), List.of(), List.of());
     GridGrindRequestExecutor executor =
         (observedRequest, inputs, sink) -> {
@@ -74,9 +74,9 @@ class GridGrindEngineApiTest {
     GridGrindRequestInputs boundInputs = inputs(Path.of("engine-api-inputs"), new byte[] {4, 5});
     assertSame(success, executor.execute(request, boundInputs));
     assertSame(boundInputs, observedInputs.get());
-    assertSame(GridGrindJournalSink.NOOP, observedSink.get());
+    assertSame(GridGrindProgressSink.NOOP, observedSink.get());
 
-    GridGrindJournalSink sink = event -> {};
+    GridGrindProgressSink sink = event -> {};
     assertSame(success, executor.execute(request, boundInputs, sink));
     assertSame(boundInputs, observedInputs.get());
     assertSame(sink, observedSink.get());
@@ -84,10 +84,10 @@ class GridGrindEngineApiTest {
 
   @Test
   void journalSinkAndDoctorNullGuardsStayCovered() {
-    GridGrindJournalSink sink = event -> {};
-    GridGrindJournalSink.NOOP.emit(null);
-    assertSame(sink, GridGrindJournalSink.requireNonNull(sink));
-    assertThrows(NullPointerException.class, () -> GridGrindJournalSink.requireNonNull(null));
+    GridGrindProgressSink sink = event -> {};
+    GridGrindProgressSink.NOOP.emit(null);
+    assertSame(sink, GridGrindProgressSink.requireNonNull(sink));
+    assertThrows(NullPointerException.class, () -> GridGrindProgressSink.requireNonNull(null));
 
     GridGrindRequestDoctor doctor =
         new GridGrindRequestDoctor() {
@@ -141,7 +141,7 @@ class GridGrindEngineApiTest {
         executor.execute(
             template,
             inputs(Path.of("engine-api-runtime"), new byte[] {7}),
-            GridGrindJournalSink.NOOP));
+            GridGrindProgressSink.NOOP));
 
     RequestDoctorReport clean = doctor.diagnose(template);
     RequestDoctorReport cleanWithInputs =
@@ -179,9 +179,9 @@ class GridGrindEngineApiTest {
   }
 
   @Test
-  void productionRequestExecutorForwardsVerboseJournalEventsToThePublicSink() throws IOException {
+  void productionRequestExecutorForwardsVerboseProgressToThePublicSink() throws IOException {
     WorkbookPlan verboseRequest = verboseRequest();
-    AtomicReference<dev.erst.gridgrind.contract.dto.ExecutionJournal.Event> observedEvent =
+    AtomicReference<dev.erst.gridgrind.contract.dto.ExecutionProgressEvent> observedEvent =
         new AtomicReference<>();
 
     WorkbookResult response =
@@ -190,7 +190,9 @@ class GridGrindEngineApiTest {
 
     assertInstanceOf(WorkbookResult.Success.class, response);
     assertNotNull(observedEvent.get());
-    assertEquals("PLAN", observedEvent.get().category());
+    assertEquals(
+        dev.erst.gridgrind.contract.dto.ExecutionProgressEvent.Category.PLAN,
+        observedEvent.get().category());
   }
 
   private static RequestDoctorReport cleanDoctorSummary() {

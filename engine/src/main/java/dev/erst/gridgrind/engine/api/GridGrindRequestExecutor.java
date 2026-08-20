@@ -10,12 +10,12 @@ import java.util.Objects;
 public interface GridGrindRequestExecutor {
   /** Executes the request and returns the corresponding structured response. */
   WorkbookResult execute(
-      WorkbookPlan request, GridGrindRequestInputs inputs, GridGrindJournalSink sink);
+      WorkbookPlan request, GridGrindRequestInputs inputs, GridGrindProgressSink sink);
 
   /** Executes the request with explicit authored-input bindings and no live journal sink. */
   default WorkbookResult execute(WorkbookPlan request, GridGrindRequestInputs inputs) {
     Objects.requireNonNull(inputs, "inputs must not be null");
-    return execute(request, inputs, GridGrindJournalSink.NOOP);
+    return execute(request, inputs, GridGrindProgressSink.NOOP);
   }
 
   /**
@@ -23,7 +23,7 @@ public interface GridGrindRequestExecutor {
    * diagnostics.
    */
   default WorkbookResult execute(
-      RequestAnalysis analysis, GridGrindRequestInputs inputs, GridGrindJournalSink sink) {
+      RequestAnalysis analysis, GridGrindRequestInputs inputs, GridGrindProgressSink sink) {
     Objects.requireNonNull(analysis, "analysis must not be null");
     Objects.requireNonNull(inputs, "inputs must not be null");
     Objects.requireNonNull(sink, "sink must not be null");
@@ -32,7 +32,7 @@ public interface GridGrindRequestExecutor {
 
   /** Executes one fully bound raw request with no live journal sink. */
   default WorkbookResult execute(RequestAnalysis analysis, GridGrindRequestInputs inputs) {
-    return execute(analysis, inputs, GridGrindJournalSink.NOOP);
+    return execute(analysis, inputs, GridGrindProgressSink.NOOP);
   }
 
   /** Returns an executor that rejects null delegates up front. */

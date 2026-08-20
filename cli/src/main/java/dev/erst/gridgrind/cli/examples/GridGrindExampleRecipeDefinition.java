@@ -1,6 +1,6 @@
 package dev.erst.gridgrind.cli.examples;
 
-import dev.erst.gridgrind.cli.discovery.ExampleWorkspaceMode;
+import dev.erst.gridgrind.cli.discovery.RecipeAdvisory;
 import dev.erst.gridgrind.cli.discovery.RecipeView;
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
 import java.util.List;
@@ -12,7 +12,7 @@ record GridGrindExampleRecipeDefinition(
     String id,
     String requestFileName,
     String summary,
-    ExampleWorkspaceMode workspaceMode,
+    RecipeAdvisory advisory,
     List<String> requiredWorkspacePaths,
     List<String> intentTags,
     WorkbookPlan builtInPlan,
@@ -25,7 +25,7 @@ record GridGrindExampleRecipeDefinition(
     }
     requestFileName = requireNonBlank(requestFileName, "requestFileName");
     summary = requireNonBlank(summary, "summary");
-    Objects.requireNonNull(workspaceMode, "workspaceMode must not be null");
+    Objects.requireNonNull(advisory, "advisory must not be null");
     requiredWorkspacePaths = List.copyOf(requiredWorkspacePaths);
     intentTags = copyNonBlankList(intentTags, "intentTags");
     Objects.requireNonNull(builtInPlan, "builtInPlan must not be null");
@@ -37,12 +37,11 @@ record GridGrindExampleRecipeDefinition(
     if (!requestFileName.endsWith(".json")) {
       throw new IllegalArgumentException("requestFileName must end with .json");
     }
-    if (workspaceMode == ExampleWorkspaceMode.SELF_CONTAINED && !requiredWorkspacePaths.isEmpty()) {
+    if (advisory == RecipeAdvisory.SELF_CONTAINED && !requiredWorkspacePaths.isEmpty()) {
       throw new IllegalArgumentException(
           "SELF_CONTAINED example recipes must not publish requiredWorkspacePaths");
     }
-    if (workspaceMode == ExampleWorkspaceMode.REQUIRES_EXAMPLE_ASSETS
-        && requiredWorkspacePaths.isEmpty()) {
+    if (advisory == RecipeAdvisory.REQUIRES_EXAMPLE_ASSETS && requiredWorkspacePaths.isEmpty()) {
       throw new IllegalArgumentException(
           "REQUIRES_EXAMPLE_ASSETS example recipes must publish requiredWorkspacePaths");
     }
@@ -54,7 +53,7 @@ record GridGrindExampleRecipeDefinition(
         RecipeView.EXAMPLE,
         requestFileName,
         summary,
-        workspaceMode,
+        advisory,
         requiredWorkspacePaths,
         intentTags,
         builtInPlan);

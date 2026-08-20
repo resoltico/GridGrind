@@ -19,7 +19,7 @@ record GridGrindTaskRecipeDefinition(TaskEntry task, WorkbookPlan starterPlan)
         RecipeView.TASK_STARTER,
         task.starter().requestFileName(),
         task.narrative().summary(),
-        task.starter().workspaceMode(),
+        task.starter().advisory(),
         task.starter().requiredWorkspacePaths(),
         task.intentTags(),
         starterPlan);

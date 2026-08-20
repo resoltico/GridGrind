@@ -254,6 +254,33 @@ class GridGrindProtocolCatalogTest {
   }
 
   @Test
+  void catalogPublishesStructuredProgressInsteadOfJournalEvents() {
+    NestedTypeGroup progress =
+        (NestedTypeGroup)
+            GridGrindProtocolCatalog.lookupValueFor("nestedTypes:executionProgressEventTypes")
+                .orElseThrow();
+    TypeEntry started =
+        progress.types().stream()
+            .filter(type -> "STARTED".equals(type.id()))
+            .findFirst()
+            .orElseThrow();
+    TypeEntry failed =
+        progress.types().stream()
+            .filter(type -> "FAILED".equals(type.id()))
+            .findFirst()
+            .orElseThrow();
+
+    assertEquals("status", progress.discriminatorField());
+    assertTrue(started.field("timestamp").isPresent());
+    assertTrue(started.field("category").orElseThrow().enumValues().contains("STEP"));
+    assertTrue(failed.field("problemCode").orElseThrow().enumValues().contains("IO_ERROR"));
+    assertFalse(started.field("problemCode").isPresent());
+    assertFalse(failed.field("detail").isPresent());
+    assertTrue(
+        GridGrindProtocolCatalog.lookupValueFor("plainTypes:executionJournalEventType").isEmpty());
+  }
+
+  @Test
   void ooxmlWriteEncryptionCatalogEntryPublishesModeLessStrongOnlyDefaults() {
     PlainTypeGroup encryption =
         (PlainTypeGroup)

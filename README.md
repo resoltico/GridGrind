@@ -107,9 +107,7 @@ gridgrind --print-protocol-catalog --lookup mutationActionTypes:SET_CELL --respo
 gridgrind --print-protocol-catalog --lookup plainTypes:cellReadProjectionType --response cell-read-projection.json
 ```
 
-The compact recipe catalog publishes `requestFileName`, `workspaceMode`, and
-`requiredWorkspacePaths`, while `--print-recipe-catalog --lookup <id>` adds the exact runnable
-request profile for that recipe. Shipped save-producing examples already use
+The compact recipe catalog publishes `requestFileName`, `advisory`, and `requiredWorkspacePaths`, while `--print-recipe-catalog --lookup <id>` adds the exact runnable request profile for that recipe. `VERBOSE` execution streams compact JSONL progress to stderr while its primary result remains on stdout or the requested response file. Shipped save-producing examples already use
 `SAVE_AS.ifExists=REPLACE`, so rerunning them does not depend on cleaning the workspace first.
 
 The bare `--print-protocol-catalog` output is the compact first-contact index. Use

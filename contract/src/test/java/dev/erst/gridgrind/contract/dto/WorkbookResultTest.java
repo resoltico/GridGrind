@@ -541,14 +541,7 @@ class WorkbookResultTest {
                 0,
                 22,
                 GridGrindProblemCode.ASSERTION_FAILED,
-                java.util.Optional.of(new ExecutionJournal.FailureStep(0, "assert-total"))),
-            List.of(
-                new ExecutionJournal.Event(
-                    "2026-04-18T10:00:00Z",
-                    "STEP",
-                    "started",
-                    java.util.Optional.of(0),
-                    java.util.Optional.of("assert-total"))));
+                java.util.Optional.of(new ExecutionJournal.FailureStep(0, "assert-total"))));
 
     assertEquals(ExecutionJournalLevel.VERBOSE, journal.level());
     assertEquals("Cell Budget!B4", journal.steps().getFirst().resolvedTargets().getFirst().label());

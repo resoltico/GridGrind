@@ -1121,8 +1121,7 @@ class ProtocolDefaultingCoverageTest {
                 "plannedStepCount": 0,
                 "completedStepCount": 0,
                 "durationMillis": 0
-              },
-              "events": []
+              }
             }
             """,
             ExecutionJournal.class);
@@ -1141,7 +1140,6 @@ class ProtocolDefaultingCoverageTest {
         new TableEntryReport.Behavior(false, false, false, false),
         defaultedBehaviorTableReport.behavior());
     assertEquals(ExecutionJournalLevel.NORMAL, journal.level());
-    assertEquals(List.of(), journal.events());
   }
 
   private static DrawingAnchorInput.TwoCell twoCellAnchor() {

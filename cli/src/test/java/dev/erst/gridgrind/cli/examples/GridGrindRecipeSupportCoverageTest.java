@@ -4,7 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import dev.erst.gridgrind.cli.discovery.ExampleWorkspaceMode;
+import dev.erst.gridgrind.cli.discovery.RecipeAdvisory;
 import dev.erst.gridgrind.cli.discovery.TaskEntry;
 import dev.erst.gridgrind.contract.catalog.GridGrindProtocolCatalog;
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
@@ -30,7 +30,7 @@ class GridGrindRecipeSupportCoverageTest {
                         dev.erst.gridgrind.cli.discovery.RecipeView.EXAMPLE,
                         "recipe.json",
                         "summary",
-                        ExampleWorkspaceMode.SELF_CONTAINED,
+                        RecipeAdvisory.SELF_CONTAINED,
                         List.of(),
                         List.of("tag"),
                         plan))
@@ -45,7 +45,7 @@ class GridGrindRecipeSupportCoverageTest {
                         dev.erst.gridgrind.cli.discovery.RecipeView.EXAMPLE,
                         " ",
                         "summary",
-                        ExampleWorkspaceMode.SELF_CONTAINED,
+                        RecipeAdvisory.SELF_CONTAINED,
                         List.of(),
                         List.of("tag"),
                         plan))
@@ -60,7 +60,7 @@ class GridGrindRecipeSupportCoverageTest {
                         dev.erst.gridgrind.cli.discovery.RecipeView.EXAMPLE,
                         "recipe.json",
                         "summary",
-                        ExampleWorkspaceMode.SELF_CONTAINED,
+                        RecipeAdvisory.SELF_CONTAINED,
                         List.of(),
                         List.of(),
                         plan))
@@ -80,7 +80,7 @@ class GridGrindRecipeSupportCoverageTest {
                         "budget",
                         "budget.json",
                         "summary",
-                        ExampleWorkspaceMode.SELF_CONTAINED,
+                        RecipeAdvisory.SELF_CONTAINED,
                         List.of(),
                         List.of("tag"),
                         plan,
@@ -95,7 +95,7 @@ class GridGrindRecipeSupportCoverageTest {
                         "BUDGET",
                         "examples/budget.json",
                         "summary",
-                        ExampleWorkspaceMode.SELF_CONTAINED,
+                        RecipeAdvisory.SELF_CONTAINED,
                         List.of(),
                         List.of("tag"),
                         plan,
@@ -110,7 +110,7 @@ class GridGrindRecipeSupportCoverageTest {
                         "BUDGET",
                         "examples\\budget.json",
                         "summary",
-                        ExampleWorkspaceMode.SELF_CONTAINED,
+                        RecipeAdvisory.SELF_CONTAINED,
                         List.of(),
                         List.of("tag"),
                         plan,
@@ -125,7 +125,7 @@ class GridGrindRecipeSupportCoverageTest {
                         "BUDGET",
                         "budget.txt",
                         "summary",
-                        ExampleWorkspaceMode.SELF_CONTAINED,
+                        RecipeAdvisory.SELF_CONTAINED,
                         List.of(),
                         List.of("tag"),
                         plan,
@@ -140,7 +140,7 @@ class GridGrindRecipeSupportCoverageTest {
                         "BUDGET",
                         "budget.json",
                         "summary",
-                        ExampleWorkspaceMode.SELF_CONTAINED,
+                        RecipeAdvisory.SELF_CONTAINED,
                         List.of("asset.xlsx"),
                         List.of("tag"),
                         plan,
@@ -155,7 +155,7 @@ class GridGrindRecipeSupportCoverageTest {
                         "CUSTOM_XML",
                         "custom-xml.json",
                         "summary",
-                        ExampleWorkspaceMode.REQUIRES_EXAMPLE_ASSETS,
+                        RecipeAdvisory.REQUIRES_EXAMPLE_ASSETS,
                         List.of(),
                         List.of("tag"),
                         plan,
@@ -170,7 +170,7 @@ class GridGrindRecipeSupportCoverageTest {
                         "BUDGET",
                         "budget.json",
                         "summary",
-                        ExampleWorkspaceMode.SELF_CONTAINED,
+                        RecipeAdvisory.SELF_CONTAINED,
                         List.of(),
                         List.of("tag"),
                         plan,
@@ -185,7 +185,7 @@ class GridGrindRecipeSupportCoverageTest {
                         "BUDGET",
                         "budget.json",
                         "summary",
-                        ExampleWorkspaceMode.SELF_CONTAINED,
+                        RecipeAdvisory.SELF_CONTAINED,
                         List.of(),
                         List.of(" "),
                         plan,
@@ -200,7 +200,7 @@ class GridGrindRecipeSupportCoverageTest {
                         "BUDGET",
                         "budget.json",
                         "summary",
-                        ExampleWorkspaceMode.SELF_CONTAINED,
+                        RecipeAdvisory.SELF_CONTAINED,
                         List.of(),
                         List.of(),
                         plan,
@@ -225,9 +225,9 @@ class GridGrindRecipeSupportCoverageTest {
     assertEquals("BUDGET", definition.id());
     assertEquals(
         List.of("budget", "authoring", "table", "formula", "inspection"), definition.intentTags());
-    assertEquals(ExampleWorkspaceMode.SELF_CONTAINED, definition.workspaceMode());
+    assertEquals(RecipeAdvisory.SELF_CONTAINED, definition.advisory());
     assertEquals(List.of(), definition.requiredWorkspacePaths());
-    assertEquals(ExampleWorkspaceMode.REQUIRES_EXAMPLE_ASSETS, customXmlDefinition.workspaceMode());
+    assertEquals(RecipeAdvisory.REQUIRES_EXAMPLE_ASSETS, customXmlDefinition.advisory());
     assertEquals(
         List.of(
             "custom-xml-assets/custom-xml-mapping.xlsx", "custom-xml-assets/custom-xml-update.xml"),
@@ -415,7 +415,7 @@ class GridGrindRecipeSupportCoverageTest {
         dev.erst.gridgrind.cli.discovery.RecipeView.EXAMPLE,
         id.toLowerCase(Locale.ROOT) + ".json",
         "summary",
-        ExampleWorkspaceMode.SELF_CONTAINED,
+        RecipeAdvisory.SELF_CONTAINED,
         List.of(),
         List.of("tag"),
         templatePlan());
