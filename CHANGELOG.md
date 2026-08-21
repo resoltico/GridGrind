@@ -5,6 +5,9 @@ Earlier release history through `0.68.0` is archived in [docs/CHANGELOG_ARCHIVE.
 
 ## [Unreleased]
 
+### Changed
+- Updated the aligned JUnit BOM, Jupiter, and Platform Launcher dependencies to `6.1.3`.
+
 ## [0.73.0] - 2026-08-21
 
 ### Added
