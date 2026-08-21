@@ -2,8 +2,8 @@
 
 GridGrind is a `.xlsx` automation engine. Describe workbook work as a JSON request — create sheets,
 write cells, build tables, assert results, read facts back. GridGrind runs the whole plan and
-returns a structured JSON response. A failed step stops the plan before persistence, so a workbook
-is committed only after successful execution.
+returns a structured JSON response. Failures prevent persistence: assertions fail fast by default,
+or `COLLECT` completes the terminal verification phase before returning its canonical failure.
 
 The usual alternative is a mix of libraries, helper scripts, and post-write checks that run after
 the file is already saved — with no clean rollback when something fails mid-run. GridGrind replaces
@@ -39,6 +39,7 @@ From a repository checkout, the shortest reliable path is:
 export PATH="$(pwd)/cli/build/install/gridgrind/bin:$PATH"
 gridgrind --help
 gridgrind --print-recipe --lookup BUDGET --response budget-request.json
+mkdir -p generated-workbooks
 gridgrind --doctor-request --request budget-request.json --response doctor-report.json
 gridgrind --request budget-request.json --response response.json
 ```

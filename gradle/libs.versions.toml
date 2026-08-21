@@ -1,15 +1,16 @@
 [versions]
 kotlin = "2.4.10"
-junit-jupiter = "6.1.1"
-junit-platform-launcher = "6.1.1"
-junit-bom = "6.1.1"
+junit-jupiter = "6.1.2"
+junit-platform-launcher = "6.1.2"
+junit-bom = "6.1.2"
 jackson-databind = "3.2.1"
 # Jackson 3.x keeps annotations on the Jackson 2.x coordinates and package namespace by design.
 jackson-annotations = "2.22"
 log4j = "2.26.1"
 poi-ooxml = "5.5.1"
 jazzer = "0.30.0"
-bouncycastle = "1.85"
+bouncycastle = "1.85.2"
+bouncycastle-pkix = "1.85"
 # Santuario xmlsec 4.x declares transitive JPMS requires on these APIs while publishing them as
 # provided dependencies, so GridGrind must own them explicitly for modular compile/runtime use.
 jakarta-activation = "2.1.4"
@@ -18,18 +19,18 @@ xmlsec = "4.0.4"
 slf4j = "2.0.18"
 errorprone = "2.50.0"
 errorprone-plugin = "5.1.0"
-jspecify = "1.0.0"
+jspecify = "1.0.1"
 nullaway = "0.13.8"
-google-java-format = "1.35.0"
+google-java-format = "1.36.1"
 jacoco = "0.8.15"
-pmd = "7.25.0"
-shadow = "9.5.1"
-spotless = "8.7.0"
+pmd = "7.26.0"
+shadow = "9.6.1"
+spotless = "8.10.0"
 
 [libraries]
-bcpkix = { module = "org.bouncycastle:bcpkix-jdk18on", version.ref = "bouncycastle" }
+bcpkix = { module = "org.bouncycastle:bcpkix-jdk18on", version.ref = "bouncycastle-pkix" }
 bcprov = { module = "org.bouncycastle:bcprov-jdk18on", version.ref = "bouncycastle" }
-bcutil = { module = "org.bouncycastle:bcutil-jdk18on", version.ref = "bouncycastle" }
+bcutil = { module = "org.bouncycastle:bcutil-jdk18on", version.ref = "bouncycastle-pkix" }
 errorprone-core = { module = "com.google.errorprone:error_prone_core", version.ref = "errorprone" }
 jspecify = { module = "org.jspecify:jspecify", version.ref = "jspecify" }
 jakarta-activation = { module = "jakarta.activation:jakarta.activation-api", version.ref = "jakarta-activation" }

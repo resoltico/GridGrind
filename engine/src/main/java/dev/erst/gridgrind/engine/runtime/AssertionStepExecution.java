@@ -4,7 +4,7 @@ import dev.erst.gridgrind.contract.assertion.AssertionResult;
 import java.util.Objects;
 
 /** One assertion outcome, retaining failure detail when terminal collection must continue. */
-sealed interface AssertionStepExecution
+public sealed interface AssertionStepExecution
     permits AssertionStepExecution.Passed, AssertionStepExecution.Failed {
   /** Returns the assertion outcome that belongs in the response assertion matrix. */
   AssertionResult result();

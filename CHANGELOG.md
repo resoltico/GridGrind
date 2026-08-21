@@ -5,11 +5,12 @@ Earlier release history through `0.68.0` is archived in [docs/CHANGELOG_ARCHIVE.
 
 ## [Unreleased]
 
+## [0.73.0] - 2026-08-21
+
 ### Added
 - Added the public conformance record for deterministic responses, fail-closed request-path capability, and the explicitly environment-sensitive signature-preview boundary.
-- Added compact JSONL live progress on stderr for `execution.journal.level=VERBOSE`. Each event carries a timestamp, lifecycle category and status, optional failed problem code, and optional authored step identity; it never carries free-form detail or declared-secret values, and `--pretty` affects only the primary payload.
+- Added compact JSONL live progress on stderr for `execution.journal.level=VERBOSE`. Each event carries a timestamp, lifecycle category, status, and optional authored step identity; `FAILED` events additionally carry their problem code. Events never carry free-form detail or declared-secret values, and `--pretty` affects only the primary payload.
 - Added `execution.assertionMode=COLLECT` for terminal verification phases: every assertion is evaluated and reported before the first canonical assertion failure is returned; static validation rejects any mutation after the first collected assertion.
-- Existing-workbook persistence now has an explicit total OOXML security policy: encryption is `NONE`, `ENCRYPT`, or `PRESERVE_SOURCE`; signature is `NONE` or `SIGN`; a writing existing source must declare both axes.
 - Added `WORKBOOK_NOT_OPENABLE` for corrupted, truncated, non-zip, or non-workbook OOXML source packages and `ENCRYPTION_SOURCE_NOT_PRESERVABLE` for encrypted source envelopes outside the AGILE write contract, separating explicit request-policy failures from cryptographic failures.
 - Added `RAW_FORMULA` for opaque OOXML formula-body authoring when newer Excel syntax cannot be parsed by POI. Formula character data is XML-safe across full and streaming writes, while forbidden XML controls and invalid framing are rejected as `INVALID_FORMULA_TEXT`.
 - Structured request warnings now carry a typed `location`, distinguishing step-owned warnings from request-path warnings; contained absolute request paths emit `NON_PORTABLE_ABSOLUTE_PATH` with their exact path role.
@@ -19,6 +20,7 @@ Earlier release history through `0.68.0` is archived in [docs/CHANGELOG_ARCHIVE.
 - Added stable `GridGrindWarningCode` values to every structured request warning so warning consumers no longer need to infer meaning from prose alone.
 
 ### Changed
+- Existing-workbook persistence now requires an explicit total OOXML security policy: encryption is `NONE`, `ENCRYPT`, or `PRESERVE_SOURCE`; signature is `NONE` or `SIGN`; a writing existing source must declare both axes.
 - The Docker image now uses the glibc-based Zulu 26 runtime so mounted workspaces retain the required secure no-follow directory handles for request-owned output paths; the container workflow remains fail-closed when that capability is unavailable.
 - Formula text now uses one exact OOXML `<f>`-body convention: `FORMULA` and `RAW_FORMULA` values must not begin with `=`. Lenient `EVALUATE_ALL` and `EVALUATE_TARGETS` keep unevaluable formulas unchanged, report `PARTIAL`, and emit `FORMULA_NOT_EVALUATED`; `REQUIRE_EVALUATION` is the explicit strict strategy, while `DEFERRED_CALCULATION` reports capabilities without attempting server-side evaluation.
 - Static request validity now has one contract layer shared by request analysis, doctoring, normal execution, and protocol-catalog target discovery. A known selector shape now binds independently of the operation that received it, and an incompatible pair is reported at `steps[i].target.type` as `INVALID_REQUEST` instead of being mislabeled as a malformed request shape. Execution-mode compatibility, calculation ordering, and persistence compatibility use that same static contract rather than separate runtime rules.
@@ -26,7 +28,7 @@ Earlier release history through `0.68.0` is archived in [docs/CHANGELOG_ARCHIVE.
 - Protocol-catalog field requirements now derive from each request record's effective JSON creator contract and selected-union discriminator, including explicit defaultable fields and JSON property names, instead of catalog-local required or optional field lists.
 - Optional boolean request fields now declare their effective wire default in the request model and protocol catalog as `defaultBoolean`, so omission resolves consistently while explicit `null` remains invalid.
 - Sensitive request diagnostics now use the contract's exact secret-owner JSON paths rather than global text replacement, so a problem at a credential path is safely generic without corrupting unrelated workbook data or diagnostic text that happens to contain a short secret; workbook, revisions, and OOXML encryption passwords are declared as secret fields, and last-resort failures use the canonical internal-error title instead of arbitrary throwable text.
-- Refreshed build and release dependencies to NullAway `0.13.8`, the Kotlin Gradle plugin `2.4.10`, Jackson Databind `3.2.1`, Bouncy Castle `1.85`, Log4j `2.26.1`, Gradle Shadow `9.5.1`, `actions/setup-java` `5.5.0`, `docker/login-action` `4.4.0`, `docker/setup-buildx-action` `4.2.0`, and `docker/metadata-action` `6.2.0`.
+- Refreshed build and release dependencies to NullAway `0.13.8`, the Kotlin Gradle plugin `2.4.10`, JUnit `6.1.2`, Jackson Databind `3.2.1`, Bouncy Castle provider `1.85.2` (with current PKIX/util artifacts at `1.85`), Log4j `2.26.1`, JSpecify `1.0.1`, Google Java Format `1.36.1`, PMD `7.26.0`, Gradle Shadow `9.6.1`, Spotless `8.10.0`, `actions/checkout` `7.0.1`, `actions/setup-java` `5.7.0`, Gradle Actions `6.3.0`, `docker/login-action` `4.6.0`, `docker/setup-buildx-action` `4.3.0`, and `docker/metadata-action` `6.2.0`.
 - Style authoring now names partial updates honestly: the catalog and request model use `CellStylePatchInput` for `APPLY_STYLE.style`, while the separate complete `CellStyleReport` remains the factual readback shape. Cell-style and conditional-formatting patches now share `BorderSideInput` and `ColorInput`, so RGB, theme, indexed, and tint color references have one consistent authoring vocabulary.
 - Command failures now use `CommandError` directly instead of a parallel CLI diagnostic wrapper. `REJECTED` describes only that workbook execution never began; the canonical problem's category continues to describe the fault domain.
 - Execution results now use `WorkbookResult` exclusively. The top-level result owns optional `planId`, common journal, persistence, warning, assertion, and inspection fields on both outcomes, and only `FAILED` carries the singular canonical `problem`.
@@ -149,7 +151,8 @@ Earlier release history through `0.68.0` is archived in [docs/CHANGELOG_ARCHIVE.
 - Standardized the packaged discovery contract around `requestFileName` plus `requiredWorkspacePaths`, and realigned the release verifier, operator guidance, and public docs to that explicit example/task portability surface instead of carrying forward stale `suggestedRequestPath` and `requiredPaths` terminology.
 - Made the Docker runtime cache layout arbitrary-user-safe: the image now points `HOME` and `XDG_CACHE_HOME` at writable tmp-backed directories so signature-line and other font-backed authoring flows stay silent under `docker run --user <uid>:<gid>` instead of leaking Fontconfig cache warnings on stderr.
 
-[Unreleased]: https://github.com/resoltico/GridGrind/compare/v0.72.0...HEAD
+[Unreleased]: https://github.com/resoltico/GridGrind/compare/v0.73.0...HEAD
+[0.73.0]: https://github.com/resoltico/GridGrind/compare/v0.72.0...v0.73.0
 [0.72.0]: https://github.com/resoltico/GridGrind/compare/v0.71.0...v0.72.0
 [0.71.0]: https://github.com/resoltico/GridGrind/compare/v0.70.0...v0.71.0
 [0.70.0]: https://github.com/resoltico/GridGrind/compare/v0.69.0...v0.70.0

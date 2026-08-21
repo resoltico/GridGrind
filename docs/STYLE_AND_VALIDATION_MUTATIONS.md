@@ -1,6 +1,6 @@
 ---
 afad: "4.0"
-version: "0.72.0"
+version: "0.73.0"
 domain: STYLE_VALIDATION_MUTATIONS
 updated: "2026-07-21"
 route:

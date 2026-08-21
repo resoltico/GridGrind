@@ -5,7 +5,7 @@ import java.util.Objects;
 import java.util.Optional;
 
 /** Parsed CLI command model for one GridGrind process invocation. */
-sealed interface CliCommand {
+public sealed interface CliCommand {
   /** One explicit help surface published by the CLI. */
   enum HelpTopic {
     OVERVIEW,
