@@ -2,7 +2,7 @@
 
 # Pin both builder and runtime manifest lists so local rebuilds and published images stay
 # reproducible across time.
-FROM azul/zulu-openjdk:26@sha256:69f91f7e23b44db6c0d3586a88372bfe44baba156c41800124aea783e30cbed5 AS build
+FROM azul/zulu-openjdk:26@sha256:456ddce6098187ea8b9069cbf141b6a124d1fdf667818c195ba95be6a0e48e70 AS build
 
 WORKDIR /workspace
 
@@ -18,7 +18,7 @@ COPY executor ./executor
 RUN chmod +x gradlew
 RUN --mount=type=cache,target=/root/.gradle ./gradlew --no-daemon :cli:shadowJar
 
-FROM azul/zulu-openjdk:26-jre@sha256:e2dbba0097223714a9cf089e12456d07bb8be5fe486240d341109515b20f85a8
+FROM azul/zulu-openjdk:26-jre@sha256:ac36910df585bf3db5a38b30695eb04791515d1bb7d78202564db560c60c3470
 
 LABEL org.opencontainers.image.licenses="MIT AND Apache-2.0 AND BSD-2-Clause AND BSD-3-Clause AND EDL-1.0"
 LABEL org.opencontainers.image.vendor="Ervins Strauhmanis"

@@ -172,6 +172,10 @@ grep -Fq ':cli:shadowJar' "${docker_smoke_script}" && die \
 grep -Fq 'docker_with_repo_config buildx build --load -t "${image_tag}" "${repo_root}" >/dev/null' \
     "${docker_smoke_script}" || die \
     "docker smoke no longer builds the repository-root Dockerfile through buildx --load"
+grep -Fq 'verify_pinned_base_image_platforms' "${docker_smoke_script}" || die \
+    "docker smoke no longer verifies the Dockerfile base-image platform contract"
+grep -Fq 'buildx imagetools inspect "${image_ref}"' "${docker_smoke_script}" || die \
+    "docker smoke no longer inspects every pinned Docker base image"
 grep -Fq '"${repo_root}/scripts/verify-cli-contract.sh" docker-image "${image_tag}"' \
     "${docker_smoke_script}" || die "docker smoke no longer verifies the local image CLI contract"
 grep -Fq '"${repo_root}/scripts/verify-cli-discovery-execution.sh" docker-image "${image_tag}"' \

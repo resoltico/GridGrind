@@ -98,6 +98,23 @@ docker_with_repo_config() {
     DOCKER_CONFIG="${anonymous_docker_config}" docker "$@"
 }
 
+verify_pinned_base_image_platforms() {
+    local image_ref=''
+    local inspection=''
+
+    while IFS= read -r image_ref; do
+        inspection="$(docker_with_repo_config buildx imagetools inspect "${image_ref}")"
+        require_match \
+            "${inspection}" \
+            'Platform:[[:space:]]+linux/amd64' \
+            "pinned Docker base image ${image_ref} does not publish linux/amd64"
+        require_match \
+            "${inspection}" \
+            'Platform:[[:space:]]+linux/arm64/v8' \
+            "pinned Docker base image ${image_ref} does not publish linux/arm64/v8"
+    done < <(awk '/^FROM / { print $2 }' "${repo_root}/Dockerfile")
+}
+
 cleanup() {
     local exit_code=$?
     # Mounted-path artifacts should stay caller-owned, but keep sudo as a defensive cleanup fallback.
@@ -135,6 +152,9 @@ if ! docker_with_repo_config buildx version >/dev/null 2>&1; then
     docker_with_repo_config buildx version >/dev/null 2>&1 || die \
         "docker buildx is not reachable through the anonymous DOCKER_CONFIG even after staging ${docker_buildx_plugin}"
 fi
+
+printf 'Docker smoke: verifying pinned base-image platform coverage\n'
+verify_pinned_base_image_platforms
 
 mkdir -p "${smoke_root}/requests odd"
 
