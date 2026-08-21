@@ -6,7 +6,7 @@ import java.util.List;
 public record FormulaSurfaceReport(
     int totalFormulaCellCount, List<SheetFormulaSurfaceReport> sheets) {
   public FormulaSurfaceReport {
-    sheets = GridGrindResponseSupport.copyValues(sheets, "sheets");
+    sheets = WorkbookResultSupport.copyValues(sheets, "sheets");
     if (totalFormulaCellCount < 0) {
       throw new IllegalArgumentException("totalFormulaCellCount must not be negative");
     }

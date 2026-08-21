@@ -1,6 +1,6 @@
 ---
 afad: "4.0"
-version: "0.72.0"
+version: "0.73.0"
 domain: CELL_VALUE_MUTATIONS
 updated: "2026-05-01"
 route:
@@ -44,9 +44,12 @@ state on the targeted cell is preserved.
 }
 ```
 
-FORMULA note: a leading `=` is accepted and stripped automatically. `"=SUM(B2:B3)"` and
-`"SUM(B2:B3)"` are equivalent. Scalar `FORMULA` values stay scalar only; use
-`SET_ARRAY_FORMULA` for contiguous array-formula groups.
+FORMULA note: text is the OOXML `<f>` body, so it must not begin with `=`. Send
+`"SUM(B2:B3)"`, not `"=SUM(B2:B3)"`. Scalar `FORMULA` values stay scalar only; use
+`SET_ARRAY_FORMULA` for contiguous array-formula groups. `RAW_FORMULA` uses the same no-leading-`=`
+OOXML formula-body framing and rejects XML 1.0-forbidden character data as `INVALID_FORMULA_TEXT`.
+Use `RAW_FORMULA` only when a newer
+Excel formula cannot be parsed by POI and you need opaque formula-body persistence.
 
 DATE / DATE_TIME note: the required Excel number format is applied without discarding any existing
 fill, border, font, alignment, or wrap state already present on the cell.

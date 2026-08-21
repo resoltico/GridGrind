@@ -4,9 +4,9 @@ import dev.erst.gridgrind.contract.catalog.Catalog;
 import dev.erst.gridgrind.contract.catalog.CatalogNote;
 import dev.erst.gridgrind.contract.catalog.TypeEntry;
 import dev.erst.gridgrind.contract.dto.GridGrindProtocolVersion;
-import dev.erst.gridgrind.contract.dto.GridGrindResponse;
 import dev.erst.gridgrind.contract.dto.RequestDoctorReport;
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
+import dev.erst.gridgrind.contract.dto.WorkbookResult;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.List;
@@ -35,12 +35,12 @@ public final class GridGrindJsonOutput {
   }
 
   /** Serializes a response to bytes. */
-  public static byte[] writeResponseBytes(GridGrindResponse response) throws IOException {
-    return writeResponseBytes(response, false);
+  public static byte[] writeWorkbookResultBytes(WorkbookResult response) throws IOException {
+    return writeWorkbookResultBytes(response, false);
   }
 
   /** Serializes a response to bytes. */
-  public static byte[] writeResponseBytes(GridGrindResponse response, boolean pretty)
+  public static byte[] writeWorkbookResultBytes(WorkbookResult response, boolean pretty)
       throws IOException {
     Objects.requireNonNull(response, "response must not be null");
     return GridGrindJsonCodecSupport.writeBytes(wireWriteMapper(pretty), response);
@@ -78,8 +78,8 @@ public final class GridGrindJsonOutput {
   }
 
   /** Writes a response to an output stream without closing the caller-owned stream. */
-  public static void writeResponse(
-      OutputStream outputStream, GridGrindResponse response, boolean pretty) throws IOException {
+  public static void writeWorkbookResult(
+      OutputStream outputStream, WorkbookResult response, boolean pretty) throws IOException {
     writeValue(outputStream, response, pretty);
   }
 

@@ -8,6 +8,6 @@ public record WorkbookFindingsReport(
     AnalysisSummaryReport summary, List<AnalysisFindingReport> findings) {
   public WorkbookFindingsReport {
     Objects.requireNonNull(summary, "summary must not be null");
-    findings = GridGrindResponseSupport.copyValues(findings, "findings");
+    findings = WorkbookResultSupport.copyValues(findings, "findings");
   }
 }

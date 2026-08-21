@@ -9,9 +9,9 @@ import java.util.Objects;
 
 /** Request-scoped formula-evaluation environment for external workbooks and UDFs. */
 public record FormulaEnvironmentInput(
-    List<FormulaExternalWorkbookInput> externalWorkbooks,
-    FormulaMissingWorkbookPolicy missingWorkbookPolicy,
-    List<FormulaUdfToolpackInput> udfToolpacks) {
+    @ProtocolField(optional = true) List<FormulaExternalWorkbookInput> externalWorkbooks,
+    @ProtocolField(optional = true) FormulaMissingWorkbookPolicy missingWorkbookPolicy,
+    @ProtocolField(optional = true) List<FormulaUdfToolpackInput> udfToolpacks) {
   /** Returns the default empty formula environment with no external workbooks or UDFs. */
   public static FormulaEnvironmentInput empty() {
     return new FormulaEnvironmentInput(List.of(), FormulaMissingWorkbookPolicy.ERROR, List.of());

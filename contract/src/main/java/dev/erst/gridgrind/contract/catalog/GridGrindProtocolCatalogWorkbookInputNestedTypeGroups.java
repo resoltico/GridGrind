@@ -63,8 +63,15 @@ final class GridGrindProtocolCatalogWorkbookInputNestedTypeGroups {
                       CellInput.Formula.class,
                       "FORMULA",
                       "Write one Excel formula from an inline, file-backed, or standard-input"
-                          + " text source. A leading = sign is accepted and stripped automatically;"
-                          + " the engine stores the formula without it."))),
+                          + " text source. Formula text is the OOXML <f> body: it must not begin"
+                          + " with = and is parsed by Apache POI."),
+                  descriptor(
+                      CellInput.RawFormula.class,
+                      "RAW_FORMULA",
+                      "Write opaque OOXML <f> character data from one text source without POI"
+                          + " formula parsing. It must be nonempty, must not begin with =, and"
+                          + " rejects XML 1.0-invalid characters as INVALID_FORMULA_TEXT;"
+                          + " XML-looking formula string literals are preserved."))),
           nestedTypeGroup(
               "cellRowInputTypes",
               CellRowInput.class,
@@ -224,8 +231,7 @@ final class GridGrindProtocolCatalogWorkbookInputNestedTypeGroups {
                       ShapeInput.SimpleShape.class,
                       "SIMPLE_SHAPE",
                       "Write one authored simple shape with required geometry token and optional"
-                          + " text payload.",
-                      "text"),
+                          + " text payload."),
                   descriptor(
                       ShapeInput.Connector.class,
                       "CONNECTOR",

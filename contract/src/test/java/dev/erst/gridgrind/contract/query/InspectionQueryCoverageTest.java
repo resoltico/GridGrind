@@ -3,10 +3,26 @@ package dev.erst.gridgrind.contract.query;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import dev.erst.gridgrind.contract.selector.WorkbookSelector;
+import java.util.List;
 import org.junit.jupiter.api.Test;
 
 /** Edge-path coverage for inspection-query selector metadata lookup. */
 class InspectionQueryCoverageTest {
+  @Test
+  void discoversTargetsFromTheCanonicalOperationContract() {
+    assertEquals(
+        List.of(WorkbookSelector.class),
+        List.of(
+            InspectionQuery.allowedTargetTypes(
+                new WorkbookIntrospectionQuery.GetWorkbookSummary())));
+    assertEquals(
+        List.of(WorkbookSelector.class),
+        List.of(
+            InspectionQuery.allowedTargetTypesForType(
+                WorkbookIntrospectionQuery.GetWorkbookSummary.class)));
+  }
+
   @Test
   void rejectsUnmappedAndMetadataFreeInspectionQueryTypes() {
     @SuppressWarnings("unchecked")

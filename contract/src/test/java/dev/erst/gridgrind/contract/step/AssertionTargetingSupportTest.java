@@ -77,34 +77,7 @@ class AssertionTargetingSupportTest {
   }
 
   @Test
-  void exposesDynamicRuleTextAndStaticMappings() {
-    assertEquals(
-        Optional.of("Matches the nested analysis query's target selectors."),
-        Assertion.dynamicTargetSelectorRuleForType(AnalysisAssertion.AnalysisMaxSeverity.class));
-    assertEquals(
-        Optional.of("Matches the intersection of every nested assertion's target selectors."),
-        Assertion.dynamicTargetSelectorRuleForType(CompositeAssertion.AllOf.class));
-    assertEquals(
-        Optional.of("Matches the nested assertion's target selectors."),
-        Assertion.targetSelectorRuleForType(CompositeAssertion.Not.class));
-    assertEquals(
-        Optional.empty(),
-        Assertion.targetSelectorRuleForType(PresenceAssertion.TablePresent.class));
-    assertEquals(
-        List.of(TableSelector.class),
-        List.of(Assertion.staticAllowedTargetTypesForType(PresenceAssertion.TablePresent.class)));
-  }
-
-  @Test
-  void rejectsDynamicMissingAndIncompatibleCompositeMappings() {
-    IllegalArgumentException dynamicFailure =
-        assertThrows(
-            IllegalArgumentException.class,
-            () -> Assertion.staticAllowedTargetTypesForType(CompositeAssertion.Not.class));
-    assertEquals(
-        "Assertion type dev.erst.gridgrind.contract.assertion.CompositeAssertion$Not derives target selectors dynamically: Matches the nested assertion's target selectors.",
-        dynamicFailure.getMessage());
-
+  void rejectsIncompatibleCompositeMappings() {
     IllegalArgumentException disjointFailure =
         assertThrows(
             IllegalArgumentException.class,

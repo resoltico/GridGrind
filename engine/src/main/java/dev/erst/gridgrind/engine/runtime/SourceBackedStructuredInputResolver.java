@@ -45,9 +45,17 @@ final class SourceBackedStructuredInputResolver {
       RichTextRunInput run, ExecutionInputBindings bindings) throws IOException {
     TextSourceInput resolvedSource =
         SourceBackedPlanResolver.resolveTextSource(run.source(), bindings, false, "rich-text run");
-    String resolvedText = ((TextSourceInput.Inline) resolvedSource).text();
+    if (!(resolvedSource instanceof TextSourceInput.Inline inline)) {
+      return run;
+    }
+    String resolvedText = inline.text();
     if (resolvedText.isEmpty()) {
-      throw new IllegalArgumentException("rich-text run must not be empty");
+      IllegalArgumentException failure =
+          new IllegalArgumentException("rich-text run must not be empty");
+      if (bindings.collectInputResolutionFailure(failure, run.source())) {
+        return run;
+      }
+      throw failure;
     }
     return sameReference(resolvedSource, run.source())
         ? run
@@ -119,15 +127,11 @@ final class SourceBackedStructuredInputResolver {
 
   private static PictureDataInput resolvePictureData(
       PictureDataInput image, ExecutionInputBindings bindings) throws IOException {
-    return sameReference(
-            SourceBackedPlanResolver.resolveBinarySource(
-                image.source(), bindings, "picture payload"),
-            image.source())
+    BinarySourceInput resolvedSource =
+        SourceBackedPlanResolver.resolveBinarySource(image.source(), bindings, "picture payload");
+    return sameReference(resolvedSource, image.source())
         ? image
-        : new PictureDataInput(
-            image.format(),
-            SourceBackedPlanResolver.resolveBinarySource(
-                image.source(), bindings, "picture payload"));
+        : new PictureDataInput(image.format(), resolvedSource);
   }
 
   static EmbeddedObjectInput resolveEmbeddedObject(

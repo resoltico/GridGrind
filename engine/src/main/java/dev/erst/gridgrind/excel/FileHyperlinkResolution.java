@@ -6,7 +6,7 @@ import java.util.Objects;
 /**
  * Captures whether a local file hyperlink path resolved cleanly in the current workbook context.
  */
-sealed interface FileHyperlinkResolution
+public sealed interface FileHyperlinkResolution
     permits FileHyperlinkResolution.MalformedPath,
         FileHyperlinkResolution.ResolvedPath,
         FileHyperlinkResolution.UnresolvedRelativePath {

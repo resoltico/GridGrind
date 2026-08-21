@@ -5,10 +5,10 @@ import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import dev.erst.gridgrind.contract.dto.CellColorReport;
+import dev.erst.gridgrind.contract.dto.BorderSideInput;
 import dev.erst.gridgrind.contract.dto.CellInput;
+import dev.erst.gridgrind.contract.dto.ColorInput;
 import dev.erst.gridgrind.contract.dto.DifferentialBorderInput;
-import dev.erst.gridgrind.contract.dto.DifferentialBorderSideInput;
 import dev.erst.gridgrind.contract.dto.ExecutionJournal;
 import dev.erst.gridgrind.contract.dto.GridGrindProblemDetail;
 import dev.erst.gridgrind.contract.dto.OoxmlOpenSecurityInput;
@@ -112,7 +112,7 @@ class ExecutorCoverageGapsTest {
 
     GridGrindRequestDoctor defaultDoctor = new GridGrindRequestDoctor();
     GridGrindRequestDoctor validationOnlyDoctor =
-        new GridGrindRequestDoctor(new ExecutionValidationSupport());
+        new GridGrindRequestDoctor(new StaticRequestValidator());
 
     assertInstanceOf(GridGrindRequestDoctor.class, defaultDoctor);
     assertInstanceOf(GridGrindRequestDoctor.class, validationOnlyDoctor);
@@ -198,9 +198,7 @@ class ExecutorCoverageGapsTest {
                 ProblemContextRequestSurfaces.JsonLocation.unavailable()));
     DifferentialBorderInput border =
         new DifferentialBorderInput(
-            Optional.of(
-                new DifferentialBorderSideInput(
-                    ExcelBorderStyle.THIN, Optional.of(CellColorReport.rgb("#aabbcc").rgb()))),
+            Optional.of(new BorderSideInput(ExcelBorderStyle.THIN, ColorInput.rgb("#aabbcc"))),
             Optional.empty(),
             Optional.empty(),
             Optional.empty(),
@@ -251,7 +249,7 @@ class ExecutorCoverageGapsTest {
         Optional.empty(),
         DefaultGridGrindRequestExecutorTestSupport.readRequestContext(unavailableProblem)
             .jsonColumn());
-    assertEquals(ExcelBorderStyle.THIN, excelBorder.all().style());
+    assertEquals(ExcelBorderStyle.THIN, excelBorder.all().style().orElseThrow());
   }
 
   private static InvalidRequestException badRequest(

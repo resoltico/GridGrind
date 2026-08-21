@@ -49,7 +49,7 @@ public sealed interface CompositeAssertion extends Assertion
   }
 
   /** Returns the selector types accepted by one composite assertion instance. */
-  static Class<? extends Selector>[] allowedTargetTypes(CompositeAssertion assertion) {
+  public static Class<? extends Selector>[] targetSelectorsFor(CompositeAssertion assertion) {
     Objects.requireNonNull(assertion, "assertion must not be null");
     return switch (assertion) {
       case AllOf allOf -> commonTargetTypes(allOf.assertions(), allOf.assertionType());

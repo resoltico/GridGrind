@@ -1,6 +1,6 @@
 package dev.erst.gridgrind.cli;
 
-import dev.erst.gridgrind.cli.discovery.CliDiagnostic;
+import dev.erst.gridgrind.cli.discovery.CommandError;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -13,32 +13,16 @@ final class CliCatalogPayloadSupport {
 
   static int writePayload(
       CliResponseWriter responseWriter,
-      String command,
-      String payloadName,
-      Optional<String> stdoutSuggestion,
       Optional<Path> responsePath,
       OutputStream stdout,
       OutputStream stderr,
-      byte[] payload,
-      boolean prettyJson)
+      byte[] payload)
       throws IOException {
-    return responseWriter.writePayload(
-        command,
-        payloadName,
-        stdoutSuggestion,
-        responsePath,
-        stdout,
-        stderr,
-        payload,
-        0,
-        prettyJson);
+    return responseWriter.writePayload(responsePath, stdout, stderr, payload, 0);
   }
 
   static int writeRenderedPayload(
       CliResponseWriter responseWriter,
-      String command,
-      String payloadName,
-      Optional<String> stdoutSuggestion,
       Optional<Path> responsePath,
       OutputStream stdout,
       OutputStream stderr,
@@ -47,27 +31,18 @@ final class CliCatalogPayloadSupport {
       throws IOException {
     ByteArrayOutputStream buffer = new ByteArrayOutputStream();
     renderer.write(buffer);
-    return responseWriter.writePayload(
-        command,
-        payloadName,
-        stdoutSuggestion,
-        responsePath,
-        stdout,
-        stderr,
-        buffer.toByteArray(),
-        0,
-        prettyJson);
+    return responseWriter.writePayload(responsePath, stdout, stderr, buffer.toByteArray(), 0);
   }
 
-  static int writeCliDiagnostic(
+  static int writeCommandError(
       CliResponseWriter responseWriter,
       Optional<Path> responsePath,
       OutputStream stdout,
       OutputStream stderr,
-      CliDiagnostic diagnostic,
+      CommandError commandError,
       boolean prettyJson)
       throws IOException {
-    return responseWriter.writeCliDiagnostic(responsePath, stdout, stderr, diagnostic, prettyJson);
+    return responseWriter.writeCommandError(responsePath, stdout, stderr, commandError, prettyJson);
   }
 
   static CliOutputFormat effectiveTextSurfaceFormat(Optional<CliOutputFormat> outputFormat) {

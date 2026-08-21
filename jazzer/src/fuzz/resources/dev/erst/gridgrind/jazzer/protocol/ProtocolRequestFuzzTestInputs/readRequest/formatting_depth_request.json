@@ -1,5 +1,5 @@
 {
-  "protocolVersion": "V1",
+  "protocolVersion": "V2",
   "source": {
     "type": "NEW"
   },
@@ -150,21 +150,21 @@
               "type": "POINTS",
               "points": 13
             },
-            "fontColor": "#FFFFFF"
+            "fontColor": { "type": "RGB", "rgb": "#FFFFFF" }
           },
           "fill": {
             "pattern": "THIN_HORIZONTAL_BANDS",
-            "foregroundColor": "#1F4E78",
-            "backgroundColor": "#D9E2F3"
+            "foregroundColor": { "type": "RGB", "rgb": "#1F4E78" },
+            "backgroundColor": { "type": "RGB", "rgb": "#D9E2F3" }
           },
           "border": {
             "all": {
               "style": "THIN",
-              "color": "#FFFFFF"
+              "color": { "type": "RGB", "rgb": "#FFFFFF" }
             },
             "bottom": {
               "style": "DOUBLE",
-              "color": "#D9E2F3"
+              "color": { "type": "RGB", "rgb": "#D9E2F3" }
             }
           },
           "protection": {
@@ -216,20 +216,20 @@
               "type": "TWIPS",
               "twips": 240
             },
-            "fontColor": "#1F1F1F"
+            "fontColor": { "type": "RGB", "rgb": "#1F1F1F" }
           },
           "fill": {
             "pattern": "SOLID",
-            "foregroundColor": "#FFF2CC"
+            "foregroundColor": { "type": "RGB", "rgb": "#FFF2CC" }
           },
           "border": {
             "all": {
               "style": "THIN",
-              "color": "#BF9000"
+              "color": { "type": "RGB", "rgb": "#BF9000" }
             },
             "top": {
               "style": "DOUBLE",
-              "color": "#7F6000"
+              "color": { "type": "RGB", "rgb": "#7F6000" }
             }
           },
           "protection": {

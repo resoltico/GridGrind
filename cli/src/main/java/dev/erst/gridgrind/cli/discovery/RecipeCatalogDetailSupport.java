@@ -23,7 +23,7 @@ final class RecipeCatalogDetailSupport {
               recipe.id(),
               recipe.requestFileName(),
               recipe.summary(),
-              recipe.workspaceMode(),
+              recipe.advisory(),
               recipe.requiredWorkspacePaths(),
               recipe.intentTags(),
               requestProfile);
@@ -38,7 +38,7 @@ final class RecipeCatalogDetailSupport {
         task.id(),
         task.starter().requestFileName(),
         task.narrative().summary(),
-        task.starter().workspaceMode(),
+        task.starter().advisory(),
         task.starter().requiredWorkspacePaths(),
         task.intentTags(),
         task.discoveryProfile(),

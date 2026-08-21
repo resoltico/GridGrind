@@ -17,6 +17,8 @@ class CalculationContractTypesTest {
   void validatesCalculationStrategiesAndExecutionPolicyDefaults() {
     CalculationStrategyInput.DoNotCalculate doNotCalculate =
         new CalculationStrategyInput.DoNotCalculate();
+    CalculationStrategyInput.DeferredCalculation deferredCalculation =
+        new CalculationStrategyInput.DeferredCalculation();
     CalculationStrategyInput.EvaluateAll evaluateAll = new CalculationStrategyInput.EvaluateAll();
     CalculationStrategyInput.ClearCachesOnly clearCachesOnly =
         new CalculationStrategyInput.ClearCachesOnly();
@@ -26,6 +28,8 @@ class CalculationContractTypesTest {
 
     assertTrue(doNotCalculate.isDefault());
     assertEquals("DO_NOT_CALCULATE", doNotCalculate.strategyType());
+    assertFalse(deferredCalculation.isDefault());
+    assertEquals("DEFERRED_CALCULATION", deferredCalculation.strategyType());
     assertFalse(evaluateAll.isDefault());
     assertEquals("EVALUATE_ALL", evaluateAll.strategyType());
     assertEquals("CLEAR_CACHES_ONLY", clearCachesOnly.strategyType());
@@ -63,13 +67,15 @@ class CalculationContractTypesTest {
         new ExecutionPolicyInput(
             ExecutionModeInput.defaults(),
             ExecutionJournalInput.defaults(),
-            CalculationPolicyInput.defaults());
+            CalculationPolicyInput.defaults(),
+            AssertionModeInput.defaults());
     ExecutionPolicyInput customExecution = ExecutionPolicyInput.calculation(markedPolicy);
 
     assertTrue(defaultExecution.isDefault());
     assertEquals(ExecutionModeInput.defaults(), defaultExecution.mode());
     assertEquals(ExecutionJournalInput.defaults(), defaultExecution.journal());
     assertEquals(CalculationPolicyInput.defaults(), defaultExecution.calculation());
+    assertEquals(AssertionModeInput.FAIL_FAST, defaultExecution.assertionMode());
     assertFalse(customExecution.isDefault());
     assertEquals(markedPolicy, customExecution.effectiveCalculation());
     assertTrue(
@@ -85,7 +91,8 @@ class CalculationContractTypesTest {
         new ExecutionPolicyInput(
             ExecutionModeInput.eventRead(),
             new ExecutionJournalInput(ExecutionJournalLevel.VERBOSE),
-            new CalculationPolicyInput(new CalculationStrategyInput.EvaluateAll(), true));
+            new CalculationPolicyInput(new CalculationStrategyInput.EvaluateAll(), true),
+            AssertionModeInput.defaults());
     ExecutionModeInput defaultMode = ExecutionModeInput.defaults();
     ExecutionModeInput customMode = ExecutionModeInput.eventRead();
     ExecutionJournalInput defaultJournal = ExecutionJournalInput.defaults();
@@ -98,17 +105,26 @@ class CalculationContractTypesTest {
     assertEquals(defaultPolicy, ExecutionPolicyInput.journal(defaultJournal));
     assertEquals(defaultPolicy, ExecutionPolicyInput.calculation(defaultCalculation));
     assertEquals(
-        new ExecutionPolicyInput(customMode, defaultJournal, defaultCalculation),
+        new ExecutionPolicyInput(
+            customMode, defaultJournal, defaultCalculation, AssertionModeInput.defaults()),
         ExecutionPolicyInput.mode(customMode));
     assertEquals(
-        new ExecutionPolicyInput(defaultMode, customJournal, defaultCalculation),
+        new ExecutionPolicyInput(
+            defaultMode, customJournal, defaultCalculation, AssertionModeInput.defaults()),
         ExecutionPolicyInput.journal(customJournal));
     assertEquals(
-        new ExecutionPolicyInput(customMode, customJournal, defaultCalculation),
+        new ExecutionPolicyInput(
+            customMode, customJournal, defaultCalculation, AssertionModeInput.defaults()),
         ExecutionPolicyInput.modeAndJournal(customMode, customJournal));
     assertEquals(
-        new ExecutionPolicyInput(customMode, defaultJournal, customCalculation),
+        new ExecutionPolicyInput(
+            customMode, defaultJournal, customCalculation, AssertionModeInput.defaults()),
         ExecutionPolicyInput.modeAndCalculation(customMode, customCalculation));
+    assertEquals(
+        new ExecutionPolicyInput(
+            defaultMode, defaultJournal, defaultCalculation, AssertionModeInput.COLLECT),
+        ExecutionPolicyInput.assertionMode(AssertionModeInput.COLLECT));
+    assertFalse(ExecutionPolicyInput.assertionMode(AssertionModeInput.COLLECT).isDefault());
     assertFalse(customPolicy.isDefault());
     assertTrue(defaultMode.isDefault());
     assertFalse(customMode.isDefault());
@@ -145,6 +161,7 @@ class CalculationContractTypesTest {
         new CalculationStrategyInput.DefaultFilter();
     CalculationPolicyInput.DefaultFilter calculationFilter =
         new CalculationPolicyInput.DefaultFilter();
+    AssertionModeInput.DefaultFilter assertionModeFilter = new AssertionModeInput.DefaultFilter();
 
     assertTrue(defaultFilterMatches(modeFilter, null));
     assertTrue(defaultFilterMatches(modeFilter, ExecutionModeInput.defaults()));
@@ -176,6 +193,12 @@ class CalculationContractTypesTest {
     assertFalse(defaultFilterMatches(calculationFilter, "not-a-calculation-policy"));
     assertEquals(
         CalculationPolicyInput.DefaultFilter.class.hashCode(), calculationFilter.hashCode());
+
+    assertTrue(defaultFilterMatches(assertionModeFilter, null));
+    assertTrue(defaultFilterMatches(assertionModeFilter, AssertionModeInput.FAIL_FAST));
+    assertFalse(defaultFilterMatches(assertionModeFilter, AssertionModeInput.COLLECT));
+    assertFalse(defaultFilterMatches(assertionModeFilter, "not-an-assertion-mode"));
+    assertEquals(AssertionModeInput.DefaultFilter.class.hashCode(), assertionModeFilter.hashCode());
   }
 
   @Test

@@ -15,6 +15,7 @@ import dev.erst.gridgrind.excel.ExcelBorderSideSnapshot;
 import dev.erst.gridgrind.excel.ExcelCellFillSnapshot;
 import dev.erst.gridgrind.excel.ExcelCellFontSnapshot;
 import dev.erst.gridgrind.excel.ExcelCellStyleSnapshot;
+import dev.erst.gridgrind.excel.ExcelColor;
 import dev.erst.gridgrind.excel.ExcelColorSnapshot;
 import dev.erst.gridgrind.excel.ExcelFontHeight;
 import dev.erst.gridgrind.excel.ExcelGradientFillSnapshot;
@@ -58,6 +59,26 @@ final class InspectionResultCellStyleReportSupport {
                       ? CellColorReport.theme(theme.theme(), theme.tint().orElseThrow())
                       : CellColorReport.theme(theme.theme());
               case ExcelColorSnapshot.Indexed indexed ->
+                  indexed.tint().isPresent()
+                      ? CellColorReport.indexed(indexed.indexed(), indexed.tint().orElseThrow())
+                      : CellColorReport.indexed(indexed.indexed());
+            });
+  }
+
+  static Optional<CellColorReport> toCellColorReport(@Nullable ExcelColor color) {
+    return color == null
+        ? Optional.empty()
+        : Optional.of(
+            switch (color) {
+              case ExcelColor.Rgb rgb ->
+                  rgb.tint().isPresent()
+                      ? CellColorReport.rgb(rgb.rgb(), rgb.tint().orElseThrow())
+                      : CellColorReport.rgb(rgb.rgb());
+              case ExcelColor.Theme theme ->
+                  theme.tint().isPresent()
+                      ? CellColorReport.theme(theme.theme(), theme.tint().orElseThrow())
+                      : CellColorReport.theme(theme.theme());
+              case ExcelColor.Indexed indexed ->
                   indexed.tint().isPresent()
                       ? CellColorReport.indexed(indexed.indexed(), indexed.tint().orElseThrow())
                       : CellColorReport.indexed(indexed.indexed());

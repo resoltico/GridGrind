@@ -9,7 +9,7 @@ import java.util.Objects;
 import java.util.Optional;
 
 /** Authoritative simple-shape or connector creation or replacement payload. */
-@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "kind")
+@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
 @JsonSubTypes({
   @JsonSubTypes.Type(value = ShapeInput.SimpleShape.class, name = "SIMPLE_SHAPE"),
   @JsonSubTypes.Type(value = ShapeInput.Connector.class, name = "CONNECTOR")

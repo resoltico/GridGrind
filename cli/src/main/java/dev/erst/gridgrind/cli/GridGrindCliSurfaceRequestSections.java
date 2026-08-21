@@ -19,15 +19,15 @@ final class GridGrindCliSurfaceRequestSections {
             "execution is optional. When omitted, GridGrind uses FULL_XSSF with"
                 + " SUMMARY journaling and DO_NOT_CALCULATE without"
                 + " markRecalculateOnOpen. When supplied, execution may include any"
-                + " subset of execution.mode, execution.journal, and"
-                + " execution.calculation. execution.mode is a typed discriminator"
+                + " subset of execution.mode, execution.journal, execution.calculation, and"
+                + " execution.assertionMode. execution.mode is a typed discriminator"
                 + " when present; choose type=FULL_XSSF, EVENT_READ, or"
                 + " STREAMING_WRITE under the limits above."
                 + " Any omitted nested execution field keeps that same default.",
             "execution.journal.level controls journal detail; SUMMARY is the default and"
                 + " keeps the response stable by omitting timing telemetry."
-                + " VERBOSE also streams live phase events to stderr as timestamped CATEGORY"
-                + " detail lines with optional stepIndex/stepId pairs.",
+                + " VERBOSE streams compact JSONL progress events to stderr while the primary"
+                + " response retains only its execution journal.",
             "execution.calculation controls server-side evaluation, cache clearing, and"
                 + " open-time recalc flags. strategy.type accepts DO_NOT_CALCULATE,"
                 + " EVALUATE_ALL, EVALUATE_TARGETS, and CLEAR_CACHES_ONLY."
@@ -36,6 +36,9 @@ final class GridGrindCliSurfaceRequestSections {
                 + " with neither strategy nor markRecalculateOnOpen, to keep the default"
                 + " DO_NOT_CALCULATE / false behavior."
                 + " markRecalculateOnOpen is otherwise independent.",
+            "execution.assertionMode defaults to FAIL_FAST. COLLECT evaluates every assertion"
+                + " after the terminal assertion phase begins; no later MUTATION step is legal,"
+                + " while INSPECTION steps may still interleave.",
             "Response telemetry is split intentionally: journal.* captures execution-phase"
                 + " timing and event chronology, while root persistence/calculation/warnings/"
                 + "assertions/inspections carry the authoritative outcome payloads.",
@@ -102,16 +105,13 @@ final class GridGrindCliSurfaceRequestSections {
                     + " created, but existing files are never replaced implicitly."
                     + " JSON-native payloads stay compact by default; pass --pretty when"
                     + " you want indented JSON."
-                    + " Without --response, CLI diagnostics and request-content diagnostics"
-                    + " stay on stderr, while executed GridGrindResponse payloads"
-                    + " stay on stdout even when status=FAILED."
-                    + " Execution writes the JSON response, doctoring writes the doctor"
-                    + " report, and help or discovery commands write their rendered text"
-                    + " or JSON payload. Non-success results also emit one structured"
-                    + " stderr CLI diagnostic whose transport block names where the"
-                    + " primary payload went: FILE plus responsePath when the response"
-                    + " file write succeeded, or STDOUT when GridGrind had to fall back"
-                    + " after a response-path write failure."),
+                    + " Without --response, the command payload is the sole stdout"
+                    + " content: CommandError for a rejected command, WorkbookResult"
+                    + " for execution, or the command's own discovery, help, or doctor"
+                    + " payload. With --response, that payload is written to the new"
+                    + " file. When stdout is writable, a response-file write failure"
+                    + " recovers the already-rendered payload there unchanged and adds one compact transport notice on stderr;"
+                    + " GridGrind never moves a primary payload to stderr."),
             new CliSurface.DefinitionEntry(
                 "source.type=EXISTING + source.path", "open an existing workbook from that path."),
             new CliSurface.DefinitionEntry(
@@ -127,7 +127,7 @@ final class GridGrindCliSurfaceRequestSections {
                 "Relative request-owned paths",
                 "source.path, persistence paths, source-backed file inputs,"
                     + " formulaEnvironment.externalWorkbooks[*].path, and"
-                    + " persistence.security.signature.pkcs12Path follow one rule:"
+                    + " persistence.security.signature.signature.pkcs12Path follow one rule:"
                     + " "
                     + GridGrindRequestSurfaceContractText.requestOwnedPathResolutionSummary()),
             new CliSurface.DefinitionEntry(
@@ -172,7 +172,8 @@ final class GridGrindCliSurfaceRequestSections {
                     + " workbook-source accessibility, and emit a machine-readable doctor"
                     + " report without mutating a workbook. The doctor response returns"
                     + " warnings plus every independently provable blocking problem it can"
-                    + " isolate safely, including multiple malformed steps in one pass."),
+                    + " isolate safely, including structural and constructor-level request"
+                    + " intake failures across multiple steps in one pass."),
             new CliSurface.DefinitionEntry(
                 "--print-request-template",
                 "Print a minimal valid request JSON document with default execution and"

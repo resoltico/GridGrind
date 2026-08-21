@@ -1,6 +1,6 @@
 ---
 afad: "4.0"
-version: "0.72.0"
+version: "0.73.0"
 domain: INDEX
 updated: "2026-06-29"
 route:
@@ -31,6 +31,7 @@ Complete map of every file in `docs/`. Files are grouped by audience and topic.
 |:-----|:---------------|
 | [REQUEST_AND_EXECUTION_REFERENCE.md](./REQUEST_AND_EXECUTION_REFERENCE.md) | Request envelope fields (`source`, `persistence`, `execution`, `formulaEnvironment`), source-backed inputs, doctor requests, coordinate systems, cell value shapes, response journal |
 | [LIMITATIONS.md](./LIMITATIONS.md) | Hard ceilings and mode restrictions (LIM-001 through LIM-037) |
+| [CONFORMANCE.md](./CONFORMANCE.md) | Evidence-backed determinism, filesystem-safety, and environment-sensitive guarantee boundaries |
 | [ERRORS.md](./ERRORS.md) | Problem model, error codes, and recovery guidance |
 
 ---

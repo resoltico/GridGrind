@@ -119,11 +119,11 @@ public final class GridGrindCliHelp {
                     "A bare gridgrind invocation expects one request JSON document on standard"
                         + " input together with --execution-root <path>, or one --request"
                         + " <path>.",
-                    "With no --response path, CLI diagnostics and request-content diagnostics"
-                        + " are emitted as structured JSON on stderr, while executed responses"
-                        + " stay on stdout. With --response, non-success stderr diagnostics"
-                        + " stay structured and use their transport block to name the persisted"
-                        + " file or stdout fallback channel.",
+                    "Without --response, the command payload is the sole stdout content. With"
+                        + " --response, GridGrind writes that payload to one new file; only a"
+                        + " response-file write failure with writable stdout recovers that already-rendered"
+                        + " payload there unchanged and emits one compact transport notice on stderr; GridGrind never"
+                        + " moves a primary payload to stderr.",
                     "Use --format structured when you want JSON help, version, or license"
                         + " discovery instead of prose.",
                     "Use --pretty when you want indented JSON instead of the compact default"
@@ -177,8 +177,7 @@ public final class GridGrindCliHelp {
                     "EVALUATE_TARGETS requires strategy.cells[] and each target must identify an"
                         + " existing formula cell.",
                     "stepId must be unique within steps[] and must match [A-Za-z0-9._-]+.",
-                    "VERBOSE stderr emits one line per phase event as timestamp CATEGORY detail"
-                        + " with optional stepIndex/stepId pairs."))));
+                    "VERBOSE streams compact JSONL progress events to stderr."))));
   }
 
   private static String renderGuidanceHelp(CliSurface cliSurface, String containerTag) {

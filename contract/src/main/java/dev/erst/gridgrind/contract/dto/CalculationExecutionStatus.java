@@ -4,6 +4,7 @@ package dev.erst.gridgrind.contract.dto;
 public enum CalculationExecutionStatus {
   NOT_REQUESTED,
   SKIPPED,
+  PARTIAL,
   SUCCEEDED,
   FAILED
 }

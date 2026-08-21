@@ -1,8 +1,8 @@
 ---
 afad: "4.0"
-version: "0.72.0"
+version: "0.73.0"
 domain: QUICK_REFERENCE
-updated: "2026-07-02"
+updated: "2026-08-08"
 route:
   keywords: [gridgrind, quick-reference, snippets, request, execution, examples, formula, workbook-health, chart, signature-line]
   questions: ["what is the quickest way to write a gridgrind request", "how do I generate a built-in gridgrind example", "what are the most common gridgrind request snippets", "where is the detailed gridgrind reference"]
@@ -33,17 +33,18 @@ gridgrind --print-request-template | gridgrind --doctor-request --execution-root
 gridgrind --doctor-request --request request.json --response doctor-report.json
 ```
 
-`--help` is the short synopsis. `--help-protocol` is the authoritative CLI/request contract, `--help-guidance` is the workflow/example playbook, and `--doctor-request` validates request shape, resolves source-backed inputs, preflights existing workbook-source access, and returns every independently provable blocking problem it can isolate safely without mutating a workbook, including multiple malformed steps in one pass. `--response <path>` works across execution, doctoring, and discovery commands, so the primary output can be captured to a file instead of stdout. Built-in example and task catalogs also publish `requestFileName`, `workspaceMode`, and `requiredWorkspacePaths` so you can see whether a printed request is self-contained before executing it.
+`--help` is the short synopsis. `--help-protocol` is the authoritative CLI/request contract, `--help-guidance` is the workflow/example playbook, and `--doctor-request` validates request shape, resolves source-backed inputs, preflights existing workbook-source access, and returns every independently provable blocking problem it can isolate safely without mutating a workbook. Request intake reports duplicate keys, unknown fields, omitted required fields, explicit nulls, malformed scalar values, missing or unknown type discriminators, and constructor-level field validation failures together while retaining valid sibling fragments for safe preflight. `--response <path>` works across execution, doctoring, and discovery commands, so the primary output can be captured to a file instead of stdout. Built-in example and task catalogs also publish `requestFileName`, `advisory`, and `requiredWorkspacePaths` so you can see whether a printed request is self-contained before executing it.
 
-The bare `--print-protocol-catalog` output is the compact first-contact index only. `--search` is the fast discovery path when you only know part of an id or summary. Use `--lookup` with one globally unique top-level id, one top-level group name, one nested/plain support-group name, `nestedTypes:<group>`, `plainTypes:<group>`, or `<topLevelGroup>:<id>` once you want one scoped machine-readable payload. Search ranks published top-level operations ahead of support-type groups, returns compact summaries by default, and adds `relatedEntryIds` or `supportingQualifiedIds` only when that lightweight context helps agents climb from a type family to the executable operation that uses it. Shared catalog rules such as request-owned path resolution are published on those scoped lookup payloads under top-level `notes`, while entry-local `noteRefs` point at the stable rule id instead of repeating the full paragraph in the bare index.
-Machine-readable request-template, discovery, doctor, and execution payloads are compact JSON by
-default; add `--pretty` when you want indented JSON instead.
+The bare `--print-protocol-catalog` output is the compact first-contact index only. `--search` is the fast discovery path when you only know part of an id or summary. Use `--lookup` with one globally unique top-level id, one top-level group name, one nested/plain support-group name, `nestedTypes:<group>`, `plainTypes:<group>`, or `<topLevelGroup>:<id>` once you want one scoped machine-readable payload. Search ranks published top-level operations ahead of support-type groups, returns compact summaries by default, and adds `relatedEntryIds` or `supportingQualifiedIds` only when that lightweight context helps agents climb from a type family to the executable operation that uses it. Shared catalog rules such as request-owned path resolution are published on those scoped lookup payloads under top-level `notes`, while entry-local `noteRefs` point at the stable rule id instead of repeating the full paragraph in the bare index. Optional boolean fields publish `defaultBoolean` only when omission has an explicit effective value; request payloads must still omit absent fields rather than sending `null`.
+Machine-readable request-template, discovery, doctor, and execution payloads are compact JSON by default; add `--pretty` when you want indented JSON instead.
+
+`execution.journal.level=VERBOSE` also emits compact `ExecutionProgressEvent` JSONL records on stderr while execution runs. `--pretty` never changes those one-line progress records.
 
 ## Smallest Valid Request
 
 ```json
 {
-  "protocolVersion": "V1",
+  "protocolVersion": "V2",
   "source": {
     "type": "NEW"
   },
@@ -54,7 +55,7 @@ default; add `--pretty` when you want indented JSON instead.
 }
 ```
 
-Every non-empty step needs a caller-defined `stepId`. `stepId` values must be unique within `steps[]` and must match `[A-Za-z0-9._-]+`. Step kind is inferred from exactly one of `action`, `assertion`, or `query`; do not send `step.type`. `gridgrind --print-request-template` emits this same canonical minimal envelope. Top-level `execution` and `formulaEnvironment` are optional: omit them for the default `FULL_XSSF` / `SUMMARY` / `DO_NOT_CALCULATE` path and the empty evaluator environment, or add them only when the request needs non-default behavior. The step snippets below are request fragments, not standalone full requests, unless the section explicitly shows the full top-level envelope. `SUMMARY` is the default journal level because it keeps the response compact and deterministic by omitting timing telemetry and live event output.
+Every non-empty step needs a caller-defined `stepId`. `stepId` values must be unique within `steps[]` and must match `[A-Za-z0-9._-]+`. Step kind is inferred from exactly one of `action`, `assertion`, or `query`; do not send `step.type`. `gridgrind --print-request-template` emits this same canonical minimal envelope. Top-level `execution` and `formulaEnvironment` are optional: omit them for the default `FULL_XSSF` / `SUMMARY` / `DO_NOT_CALCULATE` path and the empty evaluator environment, or add them only when the request needs non-default behavior. The step snippets below are request fragments, not standalone full requests, unless the section explicitly shows the full top-level envelope. `SUMMARY` is the default journal level because it keeps the response compact and deterministic by omitting timing telemetry and live progress output.
 
 ## Common Source And Persistence Shapes
 
@@ -90,7 +91,7 @@ Save to a new path:
 { "persistence": { "type": "SAVE_AS", "path": "out/report.xlsx", "ifExists": "REPLACE" } }
 ```
 
-`SAVE_AS.ifExists` is required: use `REJECT` to fail on an existing destination or `REPLACE` for create-or-replace output.
+`SAVE_AS.ifExists` is required: use `REJECT` to fail on an existing destination or `REPLACE` for create-or-replace output. Create the destination parent directory first; GridGrind binds that existing directory without following symlinks before it begins execution.
 
 Run without saving:
 
@@ -128,7 +129,7 @@ workbooks always stay in private OS temp rather than the request root, execution
 
 ## Execution, Formula, And Mode Rules
 
-Add an execution block when you need non-default mode, journal, or calculation behavior. You may
+Add an execution block when you need non-default mode, journal, calculation, or assertion behavior. You may
 send only the axis you want to change; omitted nested fields keep their defaults:
 
 ```json
@@ -174,12 +175,18 @@ Rules to remember:
 - `execution.mode.type=STREAMING_WRITE` requires `source.type=NEW` and supports only
   `ENSURE_SHEET` plus `APPEND_ROW`.
 - `markRecalculateOnOpen` persists Excel's workbook-open recalculation flag.
+- `execution.assertionMode=COLLECT` evaluates every assertion in a terminal verification phase;
+  once the first assertion appears, later mutations are rejected while inspections may interleave.
 - `EVALUATE_TARGETS` addresses must point at existing formula cells. Missing physical cells can
   surface `CELL_NOT_FOUND`; existing non-formula cells are rejected as `INVALID_REQUEST`.
 - Scalar `FORMULA` cell payloads reject array-formula braces such as `{=SUM(A1:A2*B1:B2)}`.
   Use `SET_ARRAY_FORMULA` for contiguous array groups.
-- Authored `LAMBDA` and `LET` currently surface as `UNSUPPORTED_FORMULA_CONSTRUCT` because Apache
-  POI cannot parse them on the write path.
+- Formula text is the OOXML `<f>` body and must not begin with `=`. Use `RAW_FORMULA` for opaque
+  newer Excel syntax such as `LAMBDA` and `LET`; it persists XML-safe formula character data
+  without POI write parsing.
+- `DEFERRED_CALCULATION` reports formula capability warnings without server-side evaluation.
+- `EVALUATE_ALL` and `EVALUATE_TARGETS` report `PARTIAL` plus `FORMULA_NOT_EVALUATED` warnings
+  when formulas cannot be evaluated immediately. Use `REQUIRE_EVALUATION` to fail instead.
 
 ## Common Step Snippets
 
@@ -259,7 +266,7 @@ Apply a style patch:
   "target": { "type": "RANGE_BY_RANGE", "sheetName": "Budget", "range": "A2:C2" },
   "action": {
     "type": "APPLY_STYLE",
-    "style": { "bold": true, "fill": { "pattern": "SOLID", "foregroundColor": "#D9EAF7" } }
+    "style": { "bold": true, "fill": { "pattern": "SOLID", "foregroundColor": { "type": "RGB", "rgb": "#D9EAF7" } } }
   }
 }
 ```
@@ -367,9 +374,11 @@ Run a no-save workbook-health pass by starting from the smallest valid request a
 - `ANALYZE_NAMED_RANGE_HEALTH`: `analysis.checkedNamedRangeCount`, `analysis.summary`, and
   `analysis.findings`
 - `ANALYZE_WORKBOOK_FINDINGS`: `analysis.summary` and `analysis.findings`
-- Every response, success or failure: top-level structured `journal`
-- Every response, success or failure: top-level `persistence`; `SAVE_AS` and `OVERWRITE` then
-  distinguish `write.status=WRITTEN|NOT_WRITTEN`
+- Every execution `WorkbookResult`, `SUCCEEDED` or `FAILED`: top-level structured `journal`,
+  `persistence`, `warnings`, `assertions`, and `inspections`; `FAILED` alone adds singular
+  `problem`
+- Every pre-execution command rejection, including static semantic request validation: `CommandError` with `status=REJECTED` and nonempty `problems[]`; doctor findings instead remain in `RequestDoctorReport.valid=false`
+- `SAVE_AS` and `OVERWRITE` distinguish `persistence.write.status=WRITTEN|NOT_WRITTEN`
 
 ## Detailed References
 

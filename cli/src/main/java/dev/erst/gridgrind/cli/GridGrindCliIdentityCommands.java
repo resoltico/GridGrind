@@ -22,15 +22,7 @@ final class GridGrindCliIdentityCommands {
       throws IOException {
     byte[] payload = renderHelpPayload(command, outputFormat, prettyJson);
     return CliCatalogPayloadSupport.writePayload(
-        responseWriter,
-        "help",
-        "help text",
-        Optional.of("gridgrind --help"),
-        command.responsePath(),
-        stdout,
-        stderr,
-        payload,
-        prettyJson);
+        responseWriter, command.responsePath(), stdout, stderr, payload);
   }
 
   static int version(
@@ -43,15 +35,7 @@ final class GridGrindCliIdentityCommands {
       throws IOException {
     byte[] payload = renderVersionPayload(outputFormat, prettyJson);
     return CliCatalogPayloadSupport.writePayload(
-        responseWriter,
-        "version",
-        "version output",
-        Optional.of("gridgrind --version"),
-        command.responsePath(),
-        stdout,
-        stderr,
-        payload,
-        prettyJson);
+        responseWriter, command.responsePath(), stdout, stderr, payload);
   }
 
   static int license(
@@ -64,15 +48,7 @@ final class GridGrindCliIdentityCommands {
       throws IOException {
     byte[] payload = renderLicensePayload(outputFormat, prettyJson);
     return CliCatalogPayloadSupport.writePayload(
-        responseWriter,
-        "license",
-        "license output",
-        Optional.of("gridgrind --license"),
-        command.responsePath(),
-        stdout,
-        stderr,
-        payload,
-        prettyJson);
+        responseWriter, command.responsePath(), stdout, stderr, payload);
   }
 
   static int requestTemplate(
@@ -84,15 +60,11 @@ final class GridGrindCliIdentityCommands {
       throws IOException {
     return CliCatalogPayloadSupport.writePayload(
         responseWriter,
-        "print-request-template",
-        "request template",
-        Optional.of("gridgrind --print-request-template"),
         command.responsePath(),
         stdout,
         stderr,
         GridGrindJsonOutput.writeRequestBytes(
-            GridGrindProtocolCatalog.requestTemplate(), prettyJson),
-        prettyJson);
+            GridGrindProtocolCatalog.requestTemplate(), prettyJson));
   }
 
   private static byte[] renderHelpPayload(

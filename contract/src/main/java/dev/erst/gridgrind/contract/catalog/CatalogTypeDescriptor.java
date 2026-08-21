@@ -7,26 +7,22 @@ record CatalogTypeDescriptor(
     Class<? extends Record> recordType,
     String id,
     String summary,
-    List<String> optionalFields,
     List<String> noteRefs,
     List<CatalogProjectedField> projectedFields) {
-  CatalogTypeDescriptor(
-      Class<? extends Record> recordType, String id, String summary, List<String> optionalFields) {
-    this(recordType, id, summary, optionalFields, List.of(), List.of());
+  CatalogTypeDescriptor(Class<? extends Record> recordType, String id, String summary) {
+    this(recordType, id, summary, List.of(), List.of());
   }
 
   CatalogTypeDescriptor {
     Objects.requireNonNull(recordType, "recordType must not be null");
     id = CatalogRecordValidation.requireNonBlank(id, "id");
     summary = CatalogRecordValidation.requireNonBlank(summary, "summary");
-    optionalFields = CatalogRecordValidation.copyStrings(optionalFields, "optionalFields");
     noteRefs = CatalogRecordValidation.copyUniqueStrings(noteRefs, "noteRefs");
     projectedFields =
         CatalogRecordValidation.copyProjectedFields(projectedFields, "projectedFields");
   }
 
   TypeEntry typeEntry() {
-    return CatalogTypeEntryFactory.typeEntry(
-        recordType, id, summary, optionalFields, noteRefs, projectedFields);
+    return CatalogTypeEntryFactory.typeEntry(recordType, id, summary, noteRefs, projectedFields);
   }
 }

@@ -5,14 +5,14 @@ import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import dev.erst.gridgrind.cli.GridGrindCli;
-import dev.erst.gridgrind.cli.discovery.ExampleWorkspaceMode;
 import dev.erst.gridgrind.cli.discovery.GridGrindCliJson;
+import dev.erst.gridgrind.cli.discovery.RecipeAdvisory;
 import dev.erst.gridgrind.cli.discovery.RecipeCatalog;
 import dev.erst.gridgrind.cli.discovery.RecipeCatalogEntry;
 import dev.erst.gridgrind.cli.discovery.RecipeView;
 import dev.erst.gridgrind.contract.dto.GridGrindProblemCode;
-import dev.erst.gridgrind.contract.dto.GridGrindResponse;
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
+import dev.erst.gridgrind.contract.dto.WorkbookResult;
 import dev.erst.gridgrind.contract.json.GridGrindJson;
 import dev.erst.gridgrind.contract.json.GridGrindJsonOutput;
 import java.io.ByteArrayOutputStream;
@@ -34,21 +34,22 @@ class ExampleExecutionFixturesTest {
   @Test
   void selfContainedBuiltInExamplesExecuteFromABlankArtifactWorkspace() throws IOException {
     Path workspace = Files.createDirectories(tempDir.resolve("blank-artifact-workspace"));
+    Files.createDirectory(workspace.resolve("generated-workbooks"));
 
     DefaultGridGrindRequestExecutor executor = new DefaultGridGrindRequestExecutor();
     ExecutionInputBindings workspaceBindings =
         ExecutionInputBindingsFixtureSupport.bindings(workspace);
     for (RecipeCatalogEntry example : selfContainedExamples()) {
       WorkbookPlan request = printedBuiltInExample(example.id());
-      GridGrindResponse.Success success =
+      WorkbookResult.Success success =
           assertInstanceOf(
-              GridGrindResponse.Success.class,
+              WorkbookResult.Success.class,
               executor.execute(request, workspaceBindings),
               () -> "self-contained built-in example must execute successfully: " + example.id());
       assertEquals(
           request.planId(),
-          success.journal().planId(),
-          () -> "success journal must retain the example plan id: " + example.id());
+          success.planId(),
+          () -> "success result must retain the example plan id: " + example.id());
       assertNullFreeResponse(success, example.id());
       assertPersistedWorkbookExists(request, workspace);
     }
@@ -66,15 +67,15 @@ class ExampleExecutionFixturesTest {
     for (RecipeCatalogEntry example : exampleEntries()) {
       copyRequiredExampleAssets(example, repositoryExamples, workspace);
       WorkbookPlan request = printedBuiltInExample(example.id());
-      GridGrindResponse.Success success =
+      WorkbookResult.Success success =
           assertInstanceOf(
-              GridGrindResponse.Success.class,
+              WorkbookResult.Success.class,
               executor.execute(request, workspaceBindings),
               () -> "built-in example must execute successfully: " + example.id());
       assertEquals(
           request.planId(),
-          success.journal().planId(),
-          () -> "success journal must retain the example plan id: " + example.id());
+          success.planId(),
+          () -> "success result must retain the example plan id: " + example.id());
       assertNullFreeResponse(success, example.id());
       assertPersistedWorkbookExists(request, workspace);
     }
@@ -88,9 +89,9 @@ class ExampleExecutionFixturesTest {
     ExecutionInputBindings workspaceBindings =
         ExecutionInputBindingsFixtureSupport.bindings(workspace);
     for (RecipeCatalogEntry example : repositoryAssetBackedExamples()) {
-      GridGrindResponse.Failure failure =
+      WorkbookResult.Failure failure =
           assertInstanceOf(
-              GridGrindResponse.Failure.class,
+              WorkbookResult.Failure.class,
               executor.execute(printedBuiltInExample(example.id()), workspaceBindings),
               () ->
                   "repo-asset-backed built-in example must fail without copied assets: "
@@ -98,7 +99,8 @@ class ExampleExecutionFixturesTest {
       assertEquals(
           expectedBlankWorkspaceFailureCode(example.id()),
           failure.problem().code(),
-          () -> "blank artifact workspace must fail with the documented problem code");
+          () ->
+              "blank artifact workspace must fail with the canonical first preflight problem code");
     }
   }
 
@@ -115,17 +117,17 @@ class ExampleExecutionFixturesTest {
     for (RecipeCatalogEntry example : exampleEntries()) {
       Path requestPath = examplesDirectory.resolve(example.requestFileName());
       WorkbookPlan request = GridGrindJson.readRequest(Files.readAllBytes(requestPath));
-      GridGrindResponse.Success success =
+      WorkbookResult.Success success =
           assertInstanceOf(
-              GridGrindResponse.Success.class,
+              WorkbookResult.Success.class,
               executor.execute(request, exampleBindings),
               () ->
                   "repository example must execute successfully in-place: "
                       + example.requestFileName());
       assertEquals(
           request.planId(),
-          success.journal().planId(),
-          () -> "success journal must retain the repository example plan id: " + example.id());
+          success.planId(),
+          () -> "success result must retain the repository example plan id: " + example.id());
       assertNullFreeResponse(success, example.id());
       assertPersistedWorkbookExists(request, requestPath.getParent());
     }
@@ -150,13 +152,13 @@ class ExampleExecutionFixturesTest {
 
   private static List<RecipeCatalogEntry> selfContainedExamples() throws IOException {
     return exampleEntries().stream()
-        .filter(example -> example.workspaceMode() == ExampleWorkspaceMode.SELF_CONTAINED)
+        .filter(example -> example.advisory() == RecipeAdvisory.SELF_CONTAINED)
         .toList();
   }
 
   private static List<RecipeCatalogEntry> repositoryAssetBackedExamples() throws IOException {
     return exampleEntries().stream()
-        .filter(example -> example.workspaceMode() == ExampleWorkspaceMode.REQUIRES_EXAMPLE_ASSETS)
+        .filter(example -> example.advisory() == RecipeAdvisory.REQUIRES_EXAMPLE_ASSETS)
         .toList();
   }
 
@@ -173,18 +175,18 @@ class ExampleExecutionFixturesTest {
     return GridGrindJson.readRequest(stdout.toByteArray());
   }
 
-  private static void assertNullFreeResponse(GridGrindResponse response, String exampleId)
+  private static void assertNullFreeResponse(WorkbookResult response, String exampleId)
       throws IOException {
     assertTrue(
-        !new String(GridGrindJsonOutput.writeResponseBytes(response), StandardCharsets.UTF_8)
+        !new String(GridGrindJsonOutput.writeWorkbookResultBytes(response), StandardCharsets.UTF_8)
             .contains(": null"),
         () -> "serialized response must omit explicit null properties: " + exampleId);
   }
 
   private static GridGrindProblemCode expectedBlankWorkspaceFailureCode(String exampleId) {
     return switch (exampleId) {
-      case "CUSTOM_XML", "SOURCE_BACKED_INPUT" -> GridGrindProblemCode.INPUT_SOURCE_NOT_FOUND;
-      case "PACKAGE_SECURITY_INSPECTION" -> GridGrindProblemCode.WORKBOOK_NOT_FOUND;
+      case "CUSTOM_XML", "PACKAGE_SECURITY_INSPECTION" -> GridGrindProblemCode.WORKBOOK_NOT_FOUND;
+      case "SOURCE_BACKED_INPUT" -> GridGrindProblemCode.INPUT_SOURCE_NOT_FOUND;
       default ->
           throw new AssertionError("Unexpected repository-asset-backed example id: " + exampleId);
     };

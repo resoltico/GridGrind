@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotSame;
 import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import dev.erst.gridgrind.contract.action.CellMutationAction;
 import dev.erst.gridgrind.contract.action.DrawingMutationAction;
@@ -18,6 +19,7 @@ import dev.erst.gridgrind.contract.dto.DataValidationPromptInput;
 import dev.erst.gridgrind.contract.dto.DataValidationRuleInput;
 import dev.erst.gridgrind.contract.dto.EmbeddedObjectInput;
 import dev.erst.gridgrind.contract.dto.HeaderFooterTextInput;
+import dev.erst.gridgrind.contract.dto.InvalidRawFormulaTextException;
 import dev.erst.gridgrind.contract.dto.PictureDataInput;
 import dev.erst.gridgrind.contract.dto.RichTextRunInput;
 import dev.erst.gridgrind.contract.dto.TableInput;
@@ -264,7 +266,7 @@ class SourceBackedPlanResolverCanonicalStructureCoverageTest
             "formula-inline-prefix",
             new CellSelector.ByAddress("Budget", "A1"),
             new CellMutationAction.SetCell(
-                new CellInput.Formula(TextSourceInput.inline("=SUM(B2:B3)"))));
+                new CellInput.Formula(TextSourceInput.inline("SUM(B2:B3)"))));
     MutationStep commentStep =
         new MutationStep(
             "comment-mixed",
@@ -513,25 +515,56 @@ class SourceBackedPlanResolverCanonicalStructureCoverageTest
       throws IOException {
     Path workingDirectory = Files.createTempDirectory("gridgrind-source-backed-formula-source-");
     Files.writeString(
-        workingDirectory.resolve("formula.txt"), "=SUM(C1:C2)", StandardCharsets.UTF_8);
+        workingDirectory.resolve("formula.txt"), "SUM(C1:C2)", StandardCharsets.UTF_8);
+    Files.writeString(
+        workingDirectory.resolve("raw-formula.txt"), "LAMBDA(x,x+1)(A1)", StandardCharsets.UTF_8);
+    Files.writeString(
+        workingDirectory.resolve("invalid-raw-formula.txt"),
+        "=LAMBDA(x,x+1)(A1)",
+        StandardCharsets.UTF_8);
     ExecutionInputBindings bindings =
         ExecutionInputBindingsFixtureSupport.bindings(workingDirectory);
 
     TextSourceInput.Inline stableSource = TextSourceInput.inline("SUM(A1:A2)");
     assertSame(stableSource, SourceBackedPlanResolver.resolveFormulaSource(stableSource, bindings));
 
-    TextSourceInput.Inline prefixedSource = TextSourceInput.inline("=SUM(B1:B2)");
-    assertEquals(
-        "SUM(B1:B2)",
-        ((TextSourceInput.Inline)
-                SourceBackedPlanResolver.resolveFormulaSource(prefixedSource, bindings))
-            .text());
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            SourceBackedPlanResolver.resolveFormulaSource(
+                TextSourceInput.inline("=SUM(B1:B2)"), bindings));
 
     assertEquals(
         "SUM(C1:C2)",
         ((TextSourceInput.Inline)
                 SourceBackedPlanResolver.resolveFormulaSource(
                     TextSourceInput.utf8File("formula.txt"), bindings))
+            .text());
+    assertEquals(
+        "LAMBDA(x,x+1)(A1)",
+        ((TextSourceInput.Inline)
+                SourceBackedPlanResolver.resolveRawFormulaSource(
+                    TextSourceInput.utf8File("raw-formula.txt"), bindings))
+            .text());
+    assertThrows(
+        InvalidRawFormulaTextException.class,
+        () ->
+            SourceBackedPlanResolver.resolveRawFormulaSource(
+                TextSourceInput.utf8File("invalid-raw-formula.txt"), bindings));
+    CellInput.RawFormula inlineRawFormula =
+        new CellInput.RawFormula(TextSourceInput.inline("LAMBDA(x,x+1)(A1)"));
+    assertSame(
+        inlineRawFormula, SourceBackedPlanResolver.resolveCellInput(inlineRawFormula, bindings));
+    assertEquals(
+        "LAMBDA(x,x+1)(A1)",
+        assertInstanceOf(
+                TextSourceInput.Inline.class,
+                assertInstanceOf(
+                        CellInput.RawFormula.class,
+                        SourceBackedPlanResolver.resolveCellInput(
+                            new CellInput.RawFormula(TextSourceInput.utf8File("raw-formula.txt")),
+                            bindings))
+                    .source())
             .text());
 
     MutationStep stableInline =
@@ -540,12 +573,12 @@ class SourceBackedPlanResolverCanonicalStructureCoverageTest
             new CellSelector.ByAddress("Budget", "A1"),
             new CellMutationAction.SetCell(
                 new CellInput.Formula(TextSourceInput.inline("SUM(A1:A2)"))));
-    MutationStep prefixedInline =
+    MutationStep secondInline =
         new MutationStep(
             "formula-inline-prefixed",
             new CellSelector.ByAddress("Budget", "A2"),
             new CellMutationAction.SetCell(
-                new CellInput.Formula(TextSourceInput.inline("=SUM(B1:B2)"))));
+                new CellInput.Formula(TextSourceInput.inline("SUM(B1:B2)"))));
     MutationStep fileBacked =
         new MutationStep(
             "formula-file-backed",
@@ -560,7 +593,7 @@ class SourceBackedPlanResolverCanonicalStructureCoverageTest
                 new WorkbookPlan.WorkbookPersistence.None(),
                 dev.erst.gridgrind.contract.dto.ExecutionPolicyInput.defaults(),
                 dev.erst.gridgrind.contract.dto.FormulaEnvironmentInput.empty(),
-                List.of(stableInline, prefixedInline, fileBacked)),
+                List.of(stableInline, secondInline, fileBacked)),
             bindings);
 
     assertSame(stableInline, resolved.steps().get(0));

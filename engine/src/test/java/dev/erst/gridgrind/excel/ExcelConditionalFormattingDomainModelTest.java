@@ -111,8 +111,9 @@ class ExcelConditionalFormattingDomainModelTest {
 
   @Test
   void enforcesDifferentialStyleAndBorderInvariants() {
-    ExcelDifferentialBorderSide side =
-        new ExcelDifferentialBorderSide(ExcelBorderStyle.THIN, "#102030");
+    ExcelBorderSide side =
+        new ExcelBorderSide(
+            Optional.of(ExcelBorderStyle.THIN), Optional.of(ExcelColor.rgb("#102030")));
     ExcelDifferentialBorder border = new ExcelDifferentialBorder(side, null, null, null, null);
     ExcelDifferentialStyle style =
         new ExcelDifferentialStyle(
@@ -120,10 +121,10 @@ class ExcelConditionalFormattingDomainModelTest {
             Optional.of(true),
             Optional.of(false),
             Optional.ofNullable(ExcelFontHeight.fromPoints(BigDecimal.valueOf(11))),
-            Optional.of("#223344"),
+            Optional.of(ExcelColor.theme(3, Optional.of(0.25d))),
             Optional.of(true),
             Optional.of(false),
-            Optional.of("#AABBCC"),
+            Optional.of(ExcelColor.indexed(12, Optional.empty())),
             Optional.ofNullable(border));
     List<ExcelConditionalFormattingUnsupportedFeature> unsupportedFeatures =
         new ArrayList<>(List.of(ExcelConditionalFormattingUnsupportedFeature.FONT_ATTRIBUTES));
@@ -133,16 +134,16 @@ class ExcelConditionalFormattingDomainModelTest {
             true,
             false,
             ExcelFontHeight.fromPoints(BigDecimal.valueOf(11)),
-            "#223344",
+            ExcelColor.theme(3, Optional.of(0.25d)),
             true,
             false,
-            "#AABBCC",
+            ExcelColor.indexed(12, Optional.empty()),
             border,
             unsupportedFeatures);
     unsupportedFeatures.clear();
 
-    assertEquals(Optional.of("#223344"), style.fontColor());
-    assertEquals(Optional.of("#AABBCC"), style.fillColor());
+    assertEquals(Optional.of(ExcelColor.theme(3, Optional.of(0.25d))), style.fontColor());
+    assertEquals(Optional.of(ExcelColor.indexed(12, Optional.empty())), style.fillColor());
     assertEquals(
         List.of(ExcelConditionalFormattingUnsupportedFeature.FONT_ATTRIBUTES),
         snapshot.unsupportedFeatures());

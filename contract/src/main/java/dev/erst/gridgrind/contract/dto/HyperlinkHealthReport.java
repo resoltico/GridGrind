@@ -13,6 +13,6 @@ public record HyperlinkHealthReport(
       throw new IllegalArgumentException("checkedHyperlinkCount must not be negative");
     }
     Objects.requireNonNull(summary, "summary must not be null");
-    findings = GridGrindResponseSupport.copyValues(findings, "findings");
+    findings = WorkbookResultSupport.copyValues(findings, "findings");
   }
 }

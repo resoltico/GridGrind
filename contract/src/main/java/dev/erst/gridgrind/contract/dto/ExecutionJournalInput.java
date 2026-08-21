@@ -8,7 +8,8 @@ import java.util.Objects;
 
 /** Request-side configuration for execution-journal detail and rendering policy. */
 public record ExecutionJournalInput(
-    @JsonInclude(
+    @ProtocolField(optional = true)
+        @JsonInclude(
             value = JsonInclude.Include.CUSTOM,
             valueFilter = ExecutionJournalInput.DefaultFilter.class)
         ExecutionJournalLevel level) {

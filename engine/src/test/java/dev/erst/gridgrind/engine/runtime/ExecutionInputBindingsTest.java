@@ -1,6 +1,8 @@
 package dev.erst.gridgrind.engine.runtime;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
@@ -29,5 +31,20 @@ class ExecutionInputBindingsTest {
     Path created = bindings.tempFileFactory().createTempFile("binding-", ".tmp");
 
     assertEquals(tempRoot.toAbsolutePath().normalize(), created.getParent());
+  }
+
+  @Test
+  void requestPathAccessMustBePreparedExactlyOnce() throws IOException {
+    Path root = Files.createTempDirectory("gridgrind-bindings-root-");
+    ExecutionInputBindings bindings = new ExecutionInputBindings(root, root.resolve("private"));
+    assertFalse(bindings.hasRequestPathAccess());
+    assertThrows(IllegalStateException.class, bindings::requestPathAccess);
+
+    try (RequestPathAccess access = new RequestPathAccess(root, bindings.tempFileFactory())) {
+      ExecutionInputBindings prepared = bindings.withRequestPathAccess(access);
+      assertTrue(prepared.hasRequestPathAccess());
+      assertEquals(access, prepared.requestPathAccess());
+      assertThrows(IllegalStateException.class, () -> prepared.withRequestPathAccess(access));
+    }
   }
 }

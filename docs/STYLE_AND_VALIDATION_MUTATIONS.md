@@ -1,8 +1,8 @@
 ---
 afad: "4.0"
-version: "0.72.0"
+version: "0.73.0"
 domain: STYLE_VALIDATION_MUTATIONS
-updated: "2026-05-16"
+updated: "2026-07-21"
 route:
   keywords: [gridgrind, style mutations, data validation, conditional formatting, apply-style]
   questions: ["how do i style cells in gridgrind", "how do i set data validation in gridgrind", "how do i manage conditional formatting in gridgrind"]
@@ -46,21 +46,21 @@ unspecified style properties are left untouched.
           "type": "POINTS",
           "points": 13
         },
-        "fontColor": "#FFFFFF"
+        "fontColor": { "type": "RGB", "rgb": "#FFFFFF" }
       },
       "fill": {
         "pattern": "THIN_HORIZONTAL_BANDS",
-        "foregroundColor": "#1F4E78",
-        "backgroundColor": "#D9E2F3"
+        "foregroundColor": { "type": "RGB", "rgb": "#1F4E78" },
+        "backgroundColor": { "type": "RGB", "rgb": "#D9E2F3" }
       },
       "border": {
         "all": {
           "style": "THIN",
-          "color": "#FFFFFF"
+          "color": { "type": "RGB", "rgb": "#FFFFFF" }
         },
         "bottom": {
           "style": "DOUBLE",
-          "color": "#D9E2F3"
+          "color": { "type": "RGB", "rgb": "#D9E2F3" }
         }
       },
       "protection": {
@@ -84,13 +84,13 @@ unspecified style properties are left untouched.
     "style": {
       "font": {
         "fontColor": {
-          "kind": "THEME",
+          "type": "THEME",
           "theme": 6,
           "tint": -0.35
         }
       },
       "fill": {
-        "kind": "GRADIENT",
+        "type": "GRADIENT",
         "gradient": {
           "type": "LINEAR",
           "degree": 45.0,
@@ -98,14 +98,14 @@ unspecified style properties are left untouched.
             {
               "position": 0.0,
               "color": {
-                "kind": "RGB",
+                "type": "RGB",
                 "rgb": "#1F497D"
               }
             },
             {
               "position": 1.0,
               "color": {
-                "kind": "THEME",
+                "type": "THEME",
                 "theme": 4,
                 "tint": 0.45
               }
@@ -117,7 +117,7 @@ unspecified style properties are left untouched.
         "bottom": {
           "style": "THIN",
           "color": {
-            "kind": "INDEXED",
+            "type": "INDEXED",
             "indexed": 8
           }
         }
@@ -178,10 +178,10 @@ Structured color input:
 
 | Field | Type | Values |
 |:------|:-----|:-------|
-| `*.kind` | string | `"RGB"`, `"THEME"`, or `"INDEXED"` |
-| `*.rgb` | string | Required when `kind="RGB"`. `#RRGGBB` hex string; lowercase input is normalized to uppercase. |
-| `*.theme` | integer | Required when `kind="THEME"`. Theme color index. |
-| `*.indexed` | integer | Required when `kind="INDEXED"`. Indexed color slot. |
+| `*.type` | string | `"RGB"`, `"THEME"`, or `"INDEXED"` |
+| `*.rgb` | string | Required when `type="RGB"`. `#RRGGBB` hex string; lowercase input is normalized to uppercase. |
+| `*.theme` | integer | Required when `type="THEME"`. Theme color index. |
+| `*.indexed` | integer | Required when `type="INDEXED"`. Indexed color slot. |
 | `*.tint` | number | Optional tint applied to the chosen base color. |
 
 Color-bearing write fields all reuse the same `ColorInput` object shape:
@@ -197,23 +197,23 @@ Fill patch:
 
 | Field | Type | Values |
 |:------|:-----|:-------|
-| `fill.kind` | string | `"PATTERN_ONLY"`, `"PATTERN_FOREGROUND"`, `"PATTERN_BACKGROUND"`, `"PATTERN_FOREGROUND_BACKGROUND"`, or `"GRADIENT"` |
+| `fill.type` | string | `"PATTERN_ONLY"`, `"PATTERN_FOREGROUND"`, `"PATTERN_BACKGROUND"`, `"PATTERN_FOREGROUND_BACKGROUND"`, or `"GRADIENT"` |
 | `fill.pattern` | string | Required for patterned variants. `ExcelFillPattern` value such as `"SOLID"`, `"THIN_HORIZONTAL_BANDS"`, `"SQUARES"` |
 | `fill.foregroundColor` | object | `ColorInput` object required by foreground-bearing variants |
 | `fill.backgroundColor` | object | `ColorInput` object required by background-bearing variants |
-| `fill.gradient` | object | `CellGradientFillInput` payload required when `fill.kind="GRADIENT"` |
+| `fill.gradient` | object | `CellGradientFillInput` payload required when `fill.type="GRADIENT"` |
 
 Fill notes:
 
-- `fill.kind="PATTERN_ONLY"` accepts `fill.pattern` only. `fill.pattern="NONE"` is valid here.
-- `fill.kind="PATTERN_FOREGROUND"` requires `fill.pattern` plus `fill.foregroundColor`. Use this
+- `fill.type="PATTERN_ONLY"` accepts `fill.pattern` only. `fill.pattern="NONE"` is valid here.
+- `fill.type="PATTERN_FOREGROUND"` requires `fill.pattern` plus `fill.foregroundColor`. Use this
   for solid fills.
-- `fill.kind="PATTERN_BACKGROUND"` requires `fill.pattern` plus `fill.backgroundColor`.
-- `fill.kind="PATTERN_FOREGROUND_BACKGROUND"` requires `fill.pattern`,
+- `fill.type="PATTERN_BACKGROUND"` requires `fill.pattern` plus `fill.backgroundColor`.
+- `fill.type="PATTERN_FOREGROUND_BACKGROUND"` requires `fill.pattern`,
   `fill.foregroundColor`, and `fill.backgroundColor`.
-- `fill.kind="PATTERN_BACKGROUND"` and `fill.kind="PATTERN_FOREGROUND_BACKGROUND"` reject
+- `fill.type="PATTERN_BACKGROUND"` and `fill.type="PATTERN_FOREGROUND_BACKGROUND"` reject
   `fill.pattern="SOLID"`.
-- `fill.kind="GRADIENT"` uses `fill.gradient` only and is mutually exclusive with patterned fill
+- `fill.type="GRADIENT"` uses `fill.gradient` only and is mutually exclusive with patterned fill
   fields.
 - `fill.gradient.type="LINEAR"` accepts `degree` only. `fill.gradient.type="PATH"` accepts
   `left`, `right`, `top`, and `bottom` only. Mixing the two geometry models is rejected as an
@@ -446,6 +446,10 @@ differential, not a whole-cell style patch. Supported differential-style attribu
 `numberFormat`, `bold`, `italic`, `fontHeight`, `fontColor`, `underline`, `strikeout`,
 `fillColor`, and per-side differential borders.
 
+The differential payload is intentionally a partial conditional-formatting patch, not a resolved
+cell style. It shares the same structured `ColorInput` and `BorderSideInput` vocabulary as
+`APPLY_STYLE`, while factual cell readback remains the separate complete `CellStyleReport` shape.
+
 ```json
 {
   "stepId": "set-conditional-formatting",
@@ -465,8 +469,8 @@ differential, not a whole-cell style patch. Supported differential-style attribu
           "stopIfTrue": false,
           "style": {
             "numberFormat": "0.0",
-            "fillColor": "#FDE9D9",
-            "fontColor": "#9C0006",
+            "fillColor": { "type": "RGB", "rgb": "#FDE9D9" },
+            "fontColor": { "type": "RGB", "rgb": "#9C0006" },
             "bold": true
           }
         }
@@ -508,12 +512,15 @@ differential, not a whole-cell style patch. Supported differential-style attribu
           ],
           "colors": [
             {
+              "type": "RGB",
               "rgb": "#AA2211"
             },
             {
+              "type": "RGB",
               "rgb": "#FFDD55"
             },
             {
+              "type": "RGB",
               "rgb": "#11CC66"
             }
           ]

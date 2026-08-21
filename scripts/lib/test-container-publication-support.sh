@@ -53,7 +53,7 @@ case "${command}" in
         cli_flag=${args[$((run_index + 1))]:-}
         case "${cli_flag}" in
             '')
-                emit_fixture_file "${FAKE_DOCKER_NOARGS_FAILURE_OUTPUT_FILE:?}" >&2
+                emit_fixture_file "${FAKE_DOCKER_NOARGS_FAILURE_OUTPUT_FILE:?}"
                 exit 2
                 ;;
             --version)

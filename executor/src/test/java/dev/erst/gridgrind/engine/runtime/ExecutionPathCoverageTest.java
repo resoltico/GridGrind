@@ -10,10 +10,10 @@ import dev.erst.gridgrind.contract.dto.ExecutionJournal;
 import dev.erst.gridgrind.contract.dto.GridGrindProblemCode;
 import dev.erst.gridgrind.contract.dto.GridGrindProblemDetail;
 import dev.erst.gridgrind.contract.dto.GridGrindProtocolVersion;
-import dev.erst.gridgrind.contract.dto.GridGrindResponse;
 import dev.erst.gridgrind.contract.dto.ProblemContext;
 import dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces;
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
+import dev.erst.gridgrind.contract.dto.WorkbookResult;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -47,10 +47,15 @@ class ExecutionPathCoverageTest {
     Path workingDirectory = Files.createTempDirectory("gridgrind-open-workdir-");
     ExecutionWorkbookSupport workbookSupport =
         ExecutionContextFixtureSupport.workbookSupport(workingDirectory);
-
-    try (var workbook =
-        workbookSupport.openWorkbook(
-            new WorkbookPlan.WorkbookSource.New(), null, workingDirectory)) {
+    ExecutionInputBindings bindings =
+        new ExecutionInputBindings(workingDirectory, workingDirectory.resolve("scratch"));
+    try (RequestPathAccess access =
+            new RequestPathAccess(workingDirectory, bindings.tempFileFactory());
+        var workbook =
+            workbookSupport.openWorkbook(
+                new WorkbookPlan.WorkbookSource.New(),
+                null,
+                bindings.withRequestPathAccess(access))) {
       assertNotNull(workbook);
     }
   }
@@ -61,14 +66,17 @@ class ExecutionPathCoverageTest {
         WorkbookPlan.standard(
             new WorkbookPlan.WorkbookSource.ExistingFile("input.xlsx"),
             new WorkbookPlan.WorkbookPersistence.SaveAs(
-                "out.xlsx", WorkbookPlan.WorkbookPersistence.IfExists.REJECT),
+                "out.xlsx",
+                WorkbookPlan.WorkbookPersistence.IfExists.REJECT,
+                dev.erst.gridgrind.contract.dto.OoxmlPersistenceSecurityInput.none()),
             dev.erst.gridgrind.contract.dto.ExecutionPolicyInput.defaults(),
             dev.erst.gridgrind.contract.dto.FormulaEnvironmentInput.empty(),
             List.of());
     WorkbookPlan overwriteRequest =
         WorkbookPlan.standard(
             new WorkbookPlan.WorkbookSource.ExistingFile("input.xlsx"),
-            new WorkbookPlan.WorkbookPersistence.Overwrite(),
+            new WorkbookPlan.WorkbookPersistence.Overwrite(
+                dev.erst.gridgrind.contract.dto.OoxmlPersistenceSecurityInput.none()),
             dev.erst.gridgrind.contract.dto.ExecutionPolicyInput.defaults(),
             dev.erst.gridgrind.contract.dto.FormulaEnvironmentInput.empty(),
             List.of());
@@ -121,8 +129,8 @@ class ExecutionPathCoverageTest {
     Files.createSymbolicLink(symlink, outside);
     try {
       org.junit.jupiter.api.Assertions.assertThrows(
-          IllegalArgumentException.class,
-          () -> ExecutionRequestPaths.normalizePath("escape/secret.xlsx", workDir));
+          UnsafePathAccessException.class,
+          () -> RequestPathBinding.bindExistingRead("escape/secret.xlsx", workDir));
     } finally {
       Files.delete(symlink);
       Files.delete(outside);
@@ -131,15 +139,15 @@ class ExecutionPathCoverageTest {
   }
 
   @Test
-  void symlinkWithinWorkingDirectoryIsAllowed() throws IOException {
+  void symlinkWithinWorkingDirectoryIsRejected() throws IOException {
     Path workDir = Files.createTempDirectory("gridgrind-symlink-internal-test");
     Path subDir = Files.createTempDirectory(workDir, "subdir");
     Path symlink = workDir.resolve("internal-link");
     Files.createSymbolicLink(symlink, subDir);
     try {
-      assertEquals(
-          workDir.resolve("internal-link/file.xlsx").normalize(),
-          ExecutionRequestPaths.normalizePath("internal-link/file.xlsx", workDir));
+      org.junit.jupiter.api.Assertions.assertThrows(
+          UnsafePathAccessException.class,
+          () -> RequestPathBinding.bindWriteTarget("internal-link/file.xlsx", workDir));
     } finally {
       Files.delete(symlink);
       Files.delete(subDir);
@@ -155,8 +163,8 @@ class ExecutionPathCoverageTest {
     Files.createSymbolicLink(symlink, nonExistent);
     try {
       org.junit.jupiter.api.Assertions.assertThrows(
-          IllegalArgumentException.class,
-          () -> ExecutionRequestPaths.normalizePath("dangler/file.xlsx", workDir));
+          UnsafePathAccessException.class,
+          () -> RequestPathBinding.bindWriteTarget("dangler/file.xlsx", workDir));
     } finally {
       Files.delete(symlink);
       Files.delete(workDir);
@@ -178,19 +186,29 @@ class ExecutionPathCoverageTest {
         workingDirectory.resolve("subdir/workbook.xlsx").normalize(),
         ExecutionRequestPaths.normalizePath("subdir/workbook.xlsx", workingDirectory));
 
-    // Absolute paths outside working directory remain allowed
+    RequestPathEscapeException absoluteFailure =
+        org.junit.jupiter.api.Assertions.assertThrows(
+            RequestPathEscapeException.class,
+            () ->
+                ExecutionRequestPaths.normalizePath("/tmp/other/workbook.xlsx", workingDirectory));
+    assertTrue(absoluteFailure.getMessage().contains("/tmp/other/workbook.xlsx"));
+
     assertEquals(
-        Path.of("/tmp/other/workbook.xlsx"),
-        ExecutionRequestPaths.normalizePath("/tmp/other/workbook.xlsx", workingDirectory));
+        workingDirectory.resolve("subdir/workbook.xlsx").normalize(),
+        ExecutionRequestPaths.normalizePath(
+            workingDirectory.resolve("subdir/workbook.xlsx").toString(), workingDirectory));
   }
 
   @Test
   void sourceFilePathTraversalEscapingWorkingDirectoryIsRejected() throws IOException {
     Path workDir = Files.createTempDirectory("gridgrind-source-path-test");
-    try {
+    try (RequestPathAccess access =
+        new RequestPathAccess(
+            workDir, (prefix, suffix) -> Files.createTempFile(workDir, prefix, suffix))) {
       org.junit.jupiter.api.Assertions.assertThrows(
-          InputSourceReadException.class,
-          () -> SourceBackedPathResolver.resolvePath("../../etc/passwd", workDir, "test input"));
+          RequestPathEscapeException.class,
+          () ->
+              access.materializeRead("../../etc/passwd", "test input", "gridgrind-test-", ".txt"));
     } finally {
       Files.delete(workDir);
     }
@@ -200,11 +218,15 @@ class ExecutionPathCoverageTest {
   void sourceFilePathWithinWorkingDirectoryIsAllowed() throws IOException {
     Path workDir = Files.createTempDirectory("gridgrind-source-path-allowed-test");
     Path file = Files.createTempFile(workDir, "input", ".txt");
-    try {
+    Files.writeString(file, "inside root");
+    try (RequestPathAccess access =
+        new RequestPathAccess(
+            workDir, (prefix, suffix) -> Files.createTempFile(workDir, prefix, suffix))) {
       assertEquals(
-          file.toAbsolutePath().normalize(),
-          SourceBackedPathResolver.resolvePath(
-              file.getFileName().toString(), workDir, "test input"));
+          "inside root",
+          Files.readString(
+              access.materializeRead(
+                  file.getFileName().toString(), "test input", "gridgrind-test-", ".txt")));
     } finally {
       Files.delete(file);
       Files.delete(workDir);
@@ -221,7 +243,7 @@ class ExecutionPathCoverageTest {
             dev.erst.gridgrind.contract.dto.FormulaEnvironmentInput.empty(),
             List.of());
     ExecutionJournalRecorder journal =
-        ExecutionContextFixtureSupport.startJournal(request, ExecutionJournalSink.NOOP);
+        ExecutionContextFixtureSupport.startJournal(request, ExecutionProgressSink.NOOP);
     GridGrindProblemDetail.Problem problem =
         new GridGrindProblemDetail.Problem(
             GridGrindProblemCode.INVALID_REQUEST,
@@ -234,9 +256,9 @@ class ExecutionPathCoverageTest {
             Optional.empty(),
             List.of());
 
-    GridGrindResponse.Failure failure =
+    WorkbookResult.Failure failure =
         ExecutionResponseSupport.failureResponse(
-            GridGrindProtocolVersion.V1, journal, request, problem, 1, "step-1");
+            GridGrindProtocolVersion.V2, journal, request, problem, 1, "step-1");
 
     assertEquals(CalculationReport.notRequested(), failure.calculation());
     assertEquals(problem, failure.problem());

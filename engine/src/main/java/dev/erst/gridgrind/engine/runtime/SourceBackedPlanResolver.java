@@ -15,7 +15,6 @@ import dev.erst.gridgrind.contract.step.WorkbookStep;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
@@ -39,9 +38,20 @@ public final class SourceBackedPlanResolver {
       throws IOException {
     Objects.requireNonNull(plan, "plan must not be null");
     Objects.requireNonNull(bindings, "bindings must not be null");
+    if (!bindings.hasRequestPathAccess()) {
+      try (RequestPathAccess access =
+          new RequestPathAccess(bindings.workingDirectory(), bindings.tempFileFactory())) {
+        return resolveBound(plan, bindings.withRequestPathAccess(access));
+      }
+    }
+    return resolveBound(plan, bindings);
+  }
+
+  private static WorkbookPlan resolveBound(WorkbookPlan plan, ExecutionInputBindings bindings)
+      throws IOException {
     List<WorkbookStep> resolvedSteps = new ArrayList<>(plan.steps().size());
     for (WorkbookStep step : plan.steps()) {
-      resolvedSteps.add(resolveStep(step, bindings));
+      resolvedSteps.add(resolveStepUnchecked(step, bindings));
     }
     return new WorkbookPlan(
         plan.protocolVersion(),
@@ -53,8 +63,18 @@ public final class SourceBackedPlanResolver {
         resolvedSteps);
   }
 
-  private static WorkbookStep resolveStep(WorkbookStep step, ExecutionInputBindings bindings)
+  /** Resolves one already-bound step so phase-four preflight can collect sibling input failures. */
+  static WorkbookStep resolveStep(WorkbookStep step, ExecutionInputBindings bindings)
       throws IOException {
+    InputResolutionFailures failures = new InputResolutionFailures();
+    WorkbookStep resolved =
+        resolveStepUnchecked(step, bindings.collectingInputResolutionFailures(failures));
+    failures.throwIfAny();
+    return resolved;
+  }
+
+  private static WorkbookStep resolveStepUnchecked(
+      WorkbookStep step, ExecutionInputBindings bindings) throws IOException {
     return switch (step) {
       case MutationStep mutationStep -> {
         Selector resolvedTarget =
@@ -98,13 +118,13 @@ public final class SourceBackedPlanResolver {
             ? text
             : new CellInput.Text(resolvedSource);
       }
-      case CellInput.RichText richText ->
-          sameReference(
-                  SourceBackedStructuredInputResolver.resolveRuns(richText.runs(), bindings),
-                  richText.runs())
-              ? richText
-              : new CellInput.RichText(
-                  SourceBackedStructuredInputResolver.resolveRuns(richText.runs(), bindings));
+      case CellInput.RichText richText -> {
+        var resolvedRuns =
+            SourceBackedStructuredInputResolver.resolveRuns(richText.runs(), bindings);
+        yield sameReference(resolvedRuns, richText.runs())
+            ? richText
+            : new CellInput.RichText(resolvedRuns);
+      }
       case CellInput.NumberValue numberValue -> numberValue;
       case CellInput.BooleanValue booleanValue -> booleanValue;
       case CellInput.ErrorValue errorValue -> errorValue;
@@ -116,6 +136,12 @@ public final class SourceBackedPlanResolver {
             ? formula
             : new CellInput.Formula(resolvedSource);
       }
+      case CellInput.RawFormula rawFormula -> {
+        TextSourceInput resolvedSource = resolveRawFormulaSource(rawFormula.source(), bindings);
+        yield sameReference(resolvedSource, rawFormula.source())
+            ? rawFormula
+            : new CellInput.RawFormula(resolvedSource);
+      }
     };
   }
 
@@ -125,35 +151,68 @@ public final class SourceBackedPlanResolver {
       boolean requireNonBlank,
       String inputKind)
       throws IOException {
-    String resolvedText = resolveText(source, bindings, requireNonBlank, inputKind);
+    if (!bindings.hasRequestPathAccess()) {
+      try (RequestPathAccess access =
+          new RequestPathAccess(bindings.workingDirectory(), bindings.tempFileFactory())) {
+        return resolveTextSource(
+            source, bindings.withRequestPathAccess(access), requireNonBlank, inputKind);
+      }
+    }
+    return resolveOrCollect(
+        source,
+        bindings,
+        () -> {
+          String resolvedText = resolveText(source, bindings, requireNonBlank, inputKind);
+          return source instanceof TextSourceInput.Inline
+              ? source
+              : new TextSourceInput.Inline(resolvedText);
+        });
+  }
+
+  static TextSourceInput resolveFormulaSource(
+      TextSourceInput source, ExecutionInputBindings bindings) throws IOException {
+    TextSourceInput resolvedSource = resolveTextSource(source, bindings, true, "formula");
+    if (!(resolvedSource instanceof TextSourceInput.Inline inline)) {
+      return source;
+    }
+    String resolvedText = inline.text();
+    new CellInput.Formula(new TextSourceInput.Inline(resolvedText));
     return source instanceof TextSourceInput.Inline
         ? source
         : new TextSourceInput.Inline(resolvedText);
   }
 
-  static TextSourceInput resolveFormulaSource(
+  static TextSourceInput resolveRawFormulaSource(
       TextSourceInput source, ExecutionInputBindings bindings) throws IOException {
-    String resolvedText = resolveText(source, bindings, true, "formula");
-    if (resolvedText.startsWith("=")) {
-      resolvedText = resolvedText.substring(1);
+    TextSourceInput resolvedSource = resolveTextSource(source, bindings, true, "raw formula");
+    if (!(resolvedSource instanceof TextSourceInput.Inline inline)) {
+      return source;
     }
-    if (source instanceof TextSourceInput.Inline inline) {
-      if (inline.text().equals(resolvedText)) {
-        return source;
-      }
-      return new TextSourceInput.Inline(resolvedText);
-    }
-    return new TextSourceInput.Inline(resolvedText);
+    TextSourceInput.Inline validated =
+        (TextSourceInput.Inline)
+            new CellInput.RawFormula(new TextSourceInput.Inline(inline.text())).source();
+    return source instanceof TextSourceInput.Inline ? source : validated;
   }
 
   static BinarySourceInput resolveBinarySource(
       BinarySourceInput source, ExecutionInputBindings bindings, String inputKind)
       throws IOException {
-    String resolvedBase64 = resolveBinaryBase64(source, bindings, inputKind);
-    return source instanceof BinarySourceInput.InlineBase64 inline
-            && inline.base64Data().equals(resolvedBase64)
-        ? source
-        : new BinarySourceInput.InlineBase64(resolvedBase64);
+    if (!bindings.hasRequestPathAccess()) {
+      try (RequestPathAccess access =
+          new RequestPathAccess(bindings.workingDirectory(), bindings.tempFileFactory())) {
+        return resolveBinarySource(source, bindings.withRequestPathAccess(access), inputKind);
+      }
+    }
+    return resolveOrCollect(
+        source,
+        bindings,
+        () -> {
+          String resolvedBase64 = resolveBinaryBase64(source, bindings, inputKind);
+          return source instanceof BinarySourceInput.InlineBase64 inline
+                  && inline.base64Data().equals(resolvedBase64)
+              ? source
+              : new BinarySourceInput.InlineBase64(resolvedBase64);
+        });
   }
 
   private static String resolveText(
@@ -175,24 +234,20 @@ public final class SourceBackedPlanResolver {
     return text;
   }
 
-  private static String readUtf8File(String path, ExecutionInputBindings bindings, String inputKind)
+  private static String readUtf8File(
+      String path, ExecutionInputBindings bindings, String inputKind) // LIM-030
       throws IOException {
-    Path resolved =
-        SourceBackedPathResolver.resolvePath(path, bindings.workingDirectory(), inputKind);
     try {
-      return Files.readString(resolved, StandardCharsets.UTF_8);
-    } catch (java.nio.file.NoSuchFileException exception) {
-      throw new InputSourceNotFoundException(
-          inputKind + " file does not exist: " + resolved,
-          inputKind,
-          resolved.toString(),
-          exception);
-    } catch (IOException exception) {
+      return Files.readString(
+          bindings
+              .requestPathAccess()
+              .materializeRead(path, inputKind, "gridgrind-request-input-", ".utf8"),
+          StandardCharsets.UTF_8);
+    } catch (java.nio.file.InvalidPathException exception) {
       throw new InputSourceReadException(
-          "Failed to read " + inputKind + " file: " + resolved,
-          inputKind,
-          resolved.toString(),
-          exception);
+          "Invalid " + inputKind + " path: " + path, inputKind, path, exception);
+    } catch (IOException exception) {
+      throw inputFileFailure(path, inputKind, exception);
     }
   }
 
@@ -221,23 +276,29 @@ public final class SourceBackedPlanResolver {
 
   private static byte[] readBinaryFile(
       String path, ExecutionInputBindings bindings, String inputKind) throws IOException {
-    Path resolved =
-        SourceBackedPathResolver.resolvePath(path, bindings.workingDirectory(), inputKind);
     try {
-      return Files.readAllBytes(resolved);
-    } catch (java.nio.file.NoSuchFileException exception) {
-      throw new InputSourceNotFoundException(
-          inputKind + " file does not exist: " + resolved,
-          inputKind,
-          resolved.toString(),
-          exception);
-    } catch (IOException exception) {
+      return Files.readAllBytes(
+          bindings
+              .requestPathAccess()
+              .materializeRead(path, inputKind, "gridgrind-request-input-", ".bin"));
+    } catch (java.nio.file.InvalidPathException exception) {
       throw new InputSourceReadException(
-          "Failed to read " + inputKind + " file: " + resolved,
-          inputKind,
-          resolved.toString(),
-          exception);
+          "Invalid " + inputKind + " path: " + path, inputKind, path, exception);
+    } catch (IOException exception) {
+      throw inputFileFailure(path, inputKind, exception);
     }
+  }
+
+  static IOException inputFileFailure(String path, String inputKind, IOException exception) {
+    if (exception instanceof java.nio.file.NoSuchFileException) {
+      return new InputSourceNotFoundException(
+          inputKind + " file does not exist: " + path, inputKind, path, exception);
+    }
+    if (exception instanceof UnsafePathAccessException) {
+      return exception;
+    }
+    return new InputSourceReadException(
+        "Failed to read " + inputKind + " file: " + path, inputKind, path, exception);
   }
 
   private static byte[] standardInputBytes(ExecutionInputBindings bindings, String inputKind)
@@ -249,6 +310,26 @@ public final class SourceBackedPlanResolver {
                 new InputSourceUnavailableException(
                     inputKind + " requires STANDARD_INPUT but no standard-input bytes were bound",
                     inputKind));
+  }
+
+  private static <T> T resolveOrCollect(
+      T source, ExecutionInputBindings bindings, SourceResolution<T> resolution)
+      throws IOException {
+    try {
+      return resolution.resolve();
+    } catch (IOException | RuntimeException exception) {
+      if (bindings.collectInputResolutionFailure(exception, source)) {
+        return source;
+      }
+      throw exception;
+    }
+  }
+
+  /** One source-resolution operation whose checked failure can join the current batch. */
+  @FunctionalInterface
+  private interface SourceResolution<T> {
+    /** Resolves one authored source value. */
+    T resolve() throws IOException;
   }
 
   static List<List<CellInput>> resolveRows(

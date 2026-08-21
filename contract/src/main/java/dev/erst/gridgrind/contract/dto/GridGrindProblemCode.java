@@ -15,6 +15,11 @@ public enum GridGrindProblemCode {
       GridGrindProblemRecovery.CHANGE_REQUEST,
       "Invalid JSON payload",
       "Send syntactically valid JSON."),
+  INVALID_ENCODING(
+      GridGrindProblemCategory.REQUEST,
+      GridGrindProblemRecovery.CHANGE_REQUEST,
+      "Invalid request encoding",
+      "Encode the request document as UTF-8."),
   INVALID_REQUEST_SHAPE(
       GridGrindProblemCategory.REQUEST,
       GridGrindProblemRecovery.CHANGE_REQUEST,
@@ -25,6 +30,18 @@ public enum GridGrindProblemCode {
       GridGrindProblemRecovery.CHANGE_REQUEST,
       "Invalid request",
       "Fix the request data and retry the workflow."),
+  NUMBER_NOT_REPRESENTABLE(
+      GridGrindProblemCategory.REQUEST,
+      GridGrindProblemRecovery.CHANGE_REQUEST,
+      "Number cannot be represented exactly",
+      "Store identifiers or precision-sensitive values as TEXT, or use a value exactly"
+          + " representable as an IEEE-754 number."),
+  PATH_ESCAPES_ROOT(
+      GridGrindProblemCategory.REQUEST,
+      GridGrindProblemRecovery.CHANGE_REQUEST,
+      "Path escapes execution root",
+      "Use a request-owned path inside the execution root; absolute paths are allowed only when"
+          + " they resolve inside that root."),
   ASSERTION_FAILED(
       GridGrindProblemCategory.ASSERTION,
       GridGrindProblemRecovery.CHANGE_REQUEST,
@@ -46,6 +63,11 @@ public enum GridGrindProblemCode {
       GridGrindProblemRecovery.CHANGE_REQUEST,
       "Invalid formula",
       "Fix the formula syntax or workbook references, then retry."),
+  INVALID_FORMULA_TEXT(
+      GridGrindProblemCategory.FORMULA,
+      GridGrindProblemRecovery.CHANGE_REQUEST,
+      "Invalid opaque formula text",
+      "Provide nonempty XML 1.0 formula character data without a leading =."),
   UNSUPPORTED_FORMULA_CONSTRUCT(
       GridGrindProblemCategory.FORMULA,
       GridGrindProblemRecovery.CHANGE_REQUEST,
@@ -106,6 +128,11 @@ public enum GridGrindProblemCode {
       GridGrindProblemRecovery.CHANGE_REQUEST,
       "Cell not found",
       "Write the cell first or adjust the analysis target."),
+  WORKBOOK_NOT_OPENABLE(
+      GridGrindProblemCategory.REQUEST,
+      GridGrindProblemRecovery.CHANGE_REQUEST,
+      "Workbook package is not openable",
+      "Provide a valid `.xlsx` OOXML workbook package."),
   WORKBOOK_PASSWORD_REQUIRED(
       GridGrindProblemCategory.SECURITY,
       GridGrindProblemRecovery.CHANGE_REQUEST,
@@ -116,6 +143,17 @@ public enum GridGrindProblemCode {
       GridGrindProblemRecovery.CHANGE_REQUEST,
       "Invalid workbook password",
       "Supply the correct source.security.password for the encrypted workbook and retry."),
+  ENCRYPTION_SOURCE_NOT_ENCRYPTED(
+      GridGrindProblemCategory.SECURITY,
+      GridGrindProblemRecovery.CHANGE_REQUEST,
+      "Source workbook is not encrypted",
+      "Use persistence.security.encryption.type=NONE or ENCRYPT for a plaintext source workbook."),
+  ENCRYPTION_SOURCE_NOT_PRESERVABLE(
+      GridGrindProblemCategory.SECURITY,
+      GridGrindProblemRecovery.CHANGE_REQUEST,
+      "Source encryption cannot be preserved",
+      "Use persistence.security.encryption.type=NONE or ENCRYPT when the source encryption"
+          + " envelope is not compatible with GridGrind's AGILE write contract."),
   INVALID_SIGNING_CONFIGURATION(
       GridGrindProblemCategory.SECURITY,
       GridGrindProblemRecovery.CHANGE_REQUEST,
@@ -128,6 +166,12 @@ public enum GridGrindProblemCode {
       "Workbook security failure",
       "Check the secure workbook package, cryptographic material, and runtime environment before"
           + " retrying."),
+  UNSAFE_PATH_ACCESS(
+      GridGrindProblemCategory.SECURITY,
+      GridGrindProblemRecovery.CHECK_ENVIRONMENT,
+      "Unsafe path access",
+      "Use a filesystem that supports GridGrind's no-follow path binding and retry after any"
+          + " observed path topology change is resolved."),
   IO_ERROR(
       GridGrindProblemCategory.IO,
       GridGrindProblemRecovery.CHECK_ENVIRONMENT,
@@ -211,7 +255,7 @@ public enum GridGrindProblemCode {
     if (normalized.startsWith("Unknown recipe: ")) {
       return Optional.of(
           "Use --print-recipe-catalog first when you need the stable recipe ids,"
-              + " requestFileName, workspaceMode, and requiredWorkspacePaths, or"
+              + " requestFileName, advisory, and requiredWorkspacePaths, or"
               + " use --print-recipe-keyword-match when you know the goal but not the id.");
     }
     if (normalized.startsWith("No request JSON was provided.")) {

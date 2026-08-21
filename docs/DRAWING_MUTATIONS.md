@@ -1,6 +1,6 @@
 ---
 afad: "4.0"
-version: "0.72.0"
+version: "0.73.0"
 domain: DRAWING_MUTATIONS
 updated: "2026-05-16"
 route:
@@ -125,7 +125,7 @@ Create or replace one named simple shape or connector on one sheet.
     "type": "SET_SHAPE",
     "shape": {
       "name": "OpsShape",
-      "kind": "SIMPLE_SHAPE",
+      "type": "SIMPLE_SHAPE",
       "anchor": {
         "type": "TWO_CELL",
         "from": {
@@ -163,7 +163,7 @@ Create or replace one named simple shape or connector on one sheet.
     "type": "SET_SHAPE",
     "shape": {
       "name": "OpsConnector",
-      "kind": "CONNECTOR",
+      "type": "CONNECTOR",
       "anchor": {
         "type": "TWO_CELL",
         "from": {
@@ -195,7 +195,7 @@ Create or replace one named simple shape or connector on one sheet.
 | Field | Required | Description |
 |:------|:---------|:------------|
 | `name` | Yes | Nonblank sheet-local drawing-object name. |
-| `kind` | Yes | `SIMPLE_SHAPE` or `CONNECTOR`. |
+| `type` | Yes | `SIMPLE_SHAPE` or `CONNECTOR`. |
 | `anchor` | Yes | Authored drawing anchor. The current public contract supports only `TWO_CELL`. |
 | `presetGeometryToken` | Conditional | Required nonblank preset geometry token for `SIMPLE_SHAPE`. Not allowed for `CONNECTOR`. |
 | `text` | No | Optional nonblank text for `SIMPLE_SHAPE`. Not allowed for `CONNECTOR`. |

@@ -19,7 +19,9 @@ import java.util.Optional;
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "stage")
 @JsonSubTypes({
   @JsonSubTypes.Type(value = ProblemContext.ParseArguments.class, name = "PARSE_ARGUMENTS"),
+  @JsonSubTypes.Type(value = CliRuntimeContext.class, name = "CLI_RUNTIME"),
   @JsonSubTypes.Type(value = ProblemContext.ReadRequest.class, name = "READ_REQUEST"),
+  @JsonSubTypes.Type(value = ProblemContext.BindRequest.class, name = "BIND_REQUEST"),
   @JsonSubTypes.Type(value = ProblemContext.ValidateRequest.class, name = "VALIDATE_REQUEST"),
   @JsonSubTypes.Type(value = ProblemContext.ResolveInputs.class, name = "RESOLVE_INPUTS"),
   @JsonSubTypes.Type(value = ProblemContext.OpenWorkbook.class, name = "OPEN_WORKBOOK"),
@@ -34,7 +36,15 @@ import java.util.Optional;
   @JsonSubTypes.Type(value = ProblemContext.ExecuteRequest.class, name = "EXECUTE_REQUEST"),
   @JsonSubTypes.Type(value = ProblemContext.WriteResponse.class, name = "WRITE_RESPONSE")
 })
-public sealed interface ProblemContext {
+public sealed interface ProblemContext
+    permits ProblemContext.ParseArguments,
+        CliRuntimeContext,
+        RequestInputContext,
+        ProblemContext.RequestShapeContext,
+        ProblemContext.ExecuteStep,
+        ProblemContext.PersistWorkbook,
+        ProblemContext.ExecuteRequest,
+        ProblemContext.WriteResponse {
   /** Pipeline stage in which the failure occurred. */
   String stage();
 
@@ -55,31 +65,11 @@ public sealed interface ProblemContext {
     }
   }
 
-  /** Context for failures that occur while reading and parsing the JSON request. */
-  record ReadRequest(RequestInput request, JsonLocation json) implements ProblemContext {
+  /** Context for failures that occur while reading or structurally checking the JSON request. */
+  record ReadRequest(RequestInput request, JsonLocation json) implements RequestInputContext {
     public ReadRequest {
       Objects.requireNonNull(request, "request must not be null");
       json = Objects.requireNonNullElseGet(json, JsonLocation.Unavailable::new);
-    }
-
-    /** Returns the authored request file path when the request did not come from standard input. */
-    public Optional<String> requestPath() {
-      return request.requestPathValue();
-    }
-
-    /** Returns the JSON path when parsing located one precise failing request field. */
-    public Optional<String> jsonPath() {
-      return json.jsonPathValue();
-    }
-
-    /** Returns the request JSON line when the parser exposed one concrete cursor. */
-    public Optional<Integer> jsonLine() {
-      return json.jsonLineValue();
-    }
-
-    /** Returns the request JSON column when the parser exposed one concrete cursor. */
-    public Optional<Integer> jsonColumn() {
-      return json.jsonColumnValue();
     }
 
     @Override
@@ -91,6 +81,27 @@ public sealed interface ProblemContext {
     public ReadRequest withJson(JsonLocation discovered) {
       Objects.requireNonNull(discovered, "discovered must not be null");
       return new ReadRequest(request, json instanceof JsonLocation.Unavailable ? discovered : json);
+    }
+  }
+
+  /**
+   * Context for failures that occur while binding structurally valid JSON into the request model.
+   */
+  record BindRequest(RequestInput request, JsonLocation json) implements RequestInputContext {
+    public BindRequest {
+      Objects.requireNonNull(request, "request must not be null");
+      json = Objects.requireNonNullElseGet(json, JsonLocation.Unavailable::new);
+    }
+
+    @Override
+    public String stage() {
+      return "BIND_REQUEST";
+    }
+
+    /** Returns one copy enriched with JSON cursor details when none were already present. */
+    public BindRequest withJson(JsonLocation discovered) {
+      Objects.requireNonNull(discovered, "discovered must not be null");
+      return new BindRequest(request, json instanceof JsonLocation.Unavailable ? discovered : json);
     }
   }
 
@@ -111,10 +122,27 @@ public sealed interface ProblemContext {
     }
   }
 
-  /** Context for failures that occur while validating request fields before execution. */
-  record ValidateRequest(RequestShape request) implements RequestShapeContext {
+  /** Context for failures that occur while statically validating bound request fragments. */
+  record ValidateRequest(
+      RequestShape request,
+      @com.fasterxml.jackson.annotation.JsonInclude(
+              com.fasterxml.jackson.annotation.JsonInclude.Include.NON_ABSENT)
+          Optional<JsonLocation> json)
+      implements RequestShapeContext {
     public ValidateRequest {
       Objects.requireNonNull(request, "request must not be null");
+      json = Objects.requireNonNullElseGet(json, Optional::empty);
+    }
+
+    /** Creates an unlocated static-validation context for programmatically assembled requests. */
+    public ValidateRequest(RequestShape request) {
+      this(request, Optional.empty());
+    }
+
+    /** Returns one copy carrying the authored JSON location of the static violation. */
+    public ValidateRequest withJson(JsonLocation location) {
+      return new ValidateRequest(
+          request, Optional.of(Objects.requireNonNull(location, "location must not be null")));
     }
 
     @Override
@@ -124,10 +152,20 @@ public sealed interface ProblemContext {
   }
 
   /** Context for failures that occur while resolving source-backed authored inputs. */
-  record ResolveInputs(RequestShape request, InputReference input) implements RequestShapeContext {
+  record ResolveInputs(
+      RequestShape request,
+      InputReference input,
+      @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<JsonLocation> json)
+      implements RequestShapeContext {
     public ResolveInputs {
       Objects.requireNonNull(request, "request must not be null");
       Objects.requireNonNull(input, "input must not be null");
+      json = Objects.requireNonNullElseGet(json, Optional::empty);
+    }
+
+    /** Creates an input-resolution context without a retained authored request location. */
+    public ResolveInputs(RequestShape request, InputReference input) {
+      this(request, input, Optional.empty());
     }
 
     /** Returns the authored input kind when one failing binding was identified. */

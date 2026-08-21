@@ -9,9 +9,9 @@ import dev.erst.gridgrind.contract.assertion.*;
 import dev.erst.gridgrind.contract.catalog.GridGrindContractText;
 import dev.erst.gridgrind.contract.dto.ExecutionModeInput;
 import dev.erst.gridgrind.contract.dto.GridGrindProblemCode;
-import dev.erst.gridgrind.contract.dto.GridGrindResponse;
-import dev.erst.gridgrind.contract.dto.GridGrindResponsePersistence;
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
+import dev.erst.gridgrind.contract.dto.WorkbookResult;
+import dev.erst.gridgrind.contract.dto.WorkbookResultPersistence;
 import dev.erst.gridgrind.contract.query.*;
 import dev.erst.gridgrind.contract.query.SheetInspectionResult;
 import dev.erst.gridgrind.contract.query.WorkbookInspectionResult;
@@ -55,7 +55,7 @@ class ExecutionModeRequestExecutorTest {
                 "sheet",
                 new SheetSelector.ByName("Ops"),
                 new SheetIntrospectionQuery.GetSheetSummary()));
-    GridGrindResponse.Success full =
+    WorkbookResult.Success full =
         success(
             ExecutionContextFixtureSupport.execute(
                 new DefaultGridGrindRequestExecutor(),
@@ -64,7 +64,7 @@ class ExecutionModeRequestExecutorTest {
                     new WorkbookPlan.WorkbookPersistence.None(),
                     List.of(),
                     reads)));
-    GridGrindResponse.Success event =
+    WorkbookResult.Success event =
         success(
             ExecutionContextFixtureSupport.execute(
                 new DefaultGridGrindRequestExecutor(),
@@ -78,12 +78,12 @@ class ExecutionModeRequestExecutorTest {
 
     assertEquals(full.inspections(), event.inspections());
     assertEquals(full.persistence(), event.persistence());
-    assertEquals(List.of(), event.warnings());
+    assertEquals(full.warnings(), event.warnings());
   }
 
   @Test
   void eventReadModeRejectsMutationWorkflowsUpFront() {
-    GridGrindResponse.Failure failure =
+    WorkbookResult.Failure failure =
         failure(
             ExecutionContextFixtureSupport.execute(
                 new DefaultGridGrindRequestExecutor(),
@@ -137,7 +137,7 @@ class ExecutionModeRequestExecutorTest {
                 new CellSelector.ByAddresses("Ops", List.of("A1", "B2")),
                 new SheetIntrospectionQuery.GetCells()));
 
-    GridGrindResponse.Success streaming =
+    WorkbookResult.Success streaming =
         success(
             ExecutionContextFixtureSupport.execute(
                 new DefaultGridGrindRequestExecutor(),
@@ -149,7 +149,7 @@ class ExecutionModeRequestExecutorTest {
                     null,
                     List.copyOf(operations),
                     List.copyOf(reads))));
-    GridGrindResponse.Success reopened =
+    WorkbookResult.Success reopened =
         success(
             ExecutionContextFixtureSupport.execute(
                 new DefaultGridGrindRequestExecutor(),
@@ -181,7 +181,7 @@ class ExecutionModeRequestExecutorTest {
 
   @Test
   void eventReadModeRejectsMutationInspectionWorkflow() {
-    GridGrindResponse.Failure failure =
+    WorkbookResult.Failure failure =
         failure(
             ExecutionContextFixtureSupport.execute(
                 new DefaultGridGrindRequestExecutor(),
@@ -216,7 +216,7 @@ class ExecutionModeRequestExecutorTest {
                 dev.erst.gridgrind.excel.stream.ExcelStreamingWorkbookWriter
                     ::markRecalculateOnOpen));
 
-    GridGrindResponse.Success success =
+    WorkbookResult.Success success =
         success(
             ExecutionContextFixtureSupport.execute(
                 executor,
@@ -239,7 +239,7 @@ class ExecutionModeRequestExecutorTest {
     assertEquals(0, workbookSummary.workbook().sheetCount());
     assertEquals(List.of(), workbookSummary.workbook().sheetNames());
     assertInstanceOf(
-        GridGrindResponsePersistence.PersistenceOutcome.NotSaved.class, success.persistence());
+        WorkbookResultPersistence.PersistenceOutcome.NotSaved.class, success.persistence());
   }
 
   @Test
@@ -254,14 +254,16 @@ class ExecutionModeRequestExecutorTest {
       ExecutionContextFixtureSupport.saveWorkbook(workbook, sourcePath);
     }
 
-    GridGrindResponse.Success success =
+    WorkbookResult.Success success =
         success(
             ExecutionContextFixtureSupport.execute(
                 new DefaultGridGrindRequestExecutor(),
                 request(
                     new WorkbookPlan.WorkbookSource.ExistingFile(sourcePath.toString()),
                     new WorkbookPlan.WorkbookPersistence.SaveAs(
-                        persistedCopy.toString(), WorkbookPlan.WorkbookPersistence.IfExists.REJECT),
+                        persistedCopy.toString(),
+                        WorkbookPlan.WorkbookPersistence.IfExists.REJECT,
+                        dev.erst.gridgrind.contract.dto.OoxmlPersistenceSecurityInput.none()),
                     ExecutionModeInput.eventRead(),
                     null,
                     List.of(),
@@ -274,9 +276,9 @@ class ExecutionModeRequestExecutorTest {
     WorkbookInspectionResult.WorkbookSummaryResult workbookSummary =
         assertInstanceOf(
             WorkbookInspectionResult.WorkbookSummaryResult.class, success.inspections().getFirst());
-    GridGrindResponsePersistence.PersistenceOutcome.SavedAs savedAs =
+    WorkbookResultPersistence.PersistenceOutcome.SavedAs savedAs =
         assertInstanceOf(
-            GridGrindResponsePersistence.PersistenceOutcome.SavedAs.class, success.persistence());
+            WorkbookResultPersistence.PersistenceOutcome.SavedAs.class, success.persistence());
 
     assertEquals(1, workbookSummary.workbook().sheetCount());
     assertTrue(Files.exists(persistedCopy));
@@ -291,7 +293,7 @@ class ExecutionModeRequestExecutorTest {
         Path.of(System.getProperty("java.io.tmpdir"), "gridgrind-missing-event-read.xlsx");
     Files.deleteIfExists(missingWorkbook);
 
-    GridGrindResponse.Failure failure =
+    WorkbookResult.Failure failure =
         failure(
             ExecutionContextFixtureSupport.execute(
                 new DefaultGridGrindRequestExecutor(),
@@ -313,7 +315,7 @@ class ExecutionModeRequestExecutorTest {
 
   @Test
   void eventReadModeSupportsEmptyReadListsWithoutMaterializingTempWorkbook() {
-    GridGrindResponse.Success success =
+    WorkbookResult.Success success =
         success(
             ExecutionContextFixtureSupport.execute(
                 new DefaultGridGrindRequestExecutor(),
@@ -327,12 +329,12 @@ class ExecutionModeRequestExecutorTest {
 
     assertEquals(List.of(), success.inspections());
     assertInstanceOf(
-        GridGrindResponsePersistence.PersistenceOutcome.NotSaved.class, success.persistence());
+        WorkbookResultPersistence.PersistenceOutcome.NotSaved.class, success.persistence());
   }
 
   @Test
   void eventReadModeRejectsAssertionStepsUpFront() {
-    GridGrindResponse.Failure failure =
+    WorkbookResult.Failure failure =
         failure(
             ExecutionContextFixtureSupport.execute(
                 new DefaultGridGrindRequestExecutor(),
@@ -363,7 +365,7 @@ class ExecutionModeRequestExecutorTest {
 
   @Test
   void streamingWriteModeAllowsAppendRowValidationButFailsIfTheSheetWasNeverCreated() {
-    GridGrindResponse.Failure failure =
+    WorkbookResult.Failure failure =
         failure(
             ExecutionContextFixtureSupport.execute(
                 new DefaultGridGrindRequestExecutor(),
@@ -400,12 +402,12 @@ class ExecutionModeRequestExecutorTest {
     Path workingDirectory = Files.createTempDirectory("gridgrind-streaming-temp-failure-");
     Path tempRootFile = Files.createTempFile(workingDirectory, "temp-root-blocker-", ".tmp");
 
-    GridGrindResponse.Failure failure =
+    WorkbookResult.Failure failure =
         failure(
             executor.execute(
                 request,
                 new ExecutionInputBindings(workingDirectory, tempRootFile),
-                ExecutionJournalSink.NOOP));
+                ExecutionProgressSink.NOOP));
 
     assertEquals(GridGrindProblemCode.IO_ERROR, failure.problem().code());
     assertEquals("EXECUTE_REQUEST", failure.problem().context().stage());
@@ -413,7 +415,7 @@ class ExecutionModeRequestExecutorTest {
 
   @Test
   void streamingWriteModeReturnsReadFailureAfterMaterialization() {
-    GridGrindResponse.Failure failure =
+    WorkbookResult.Failure failure =
         failure(
             ExecutionContextFixtureSupport.execute(
                 new DefaultGridGrindRequestExecutor(),
@@ -444,7 +446,7 @@ class ExecutionModeRequestExecutorTest {
     Path parentFile = Files.createTempFile("gridgrind-streaming-invalid-target-", ".tmp");
     Path workbookPath = parentFile.resolve("book.xlsx");
 
-    GridGrindResponse.Failure failure =
+    WorkbookResult.Failure failure =
         failure(
             ExecutionContextFixtureSupport.execute(
                 new DefaultGridGrindRequestExecutor(),
@@ -460,7 +462,7 @@ class ExecutionModeRequestExecutorTest {
                             new WorkbookMutationAction.EnsureSheet())),
                     List.of())));
 
-    assertEquals(GridGrindProblemCode.IO_ERROR, failure.problem().code());
+    assertEquals(GridGrindProblemCode.UNSAFE_PATH_ACCESS, failure.problem().code());
     assertEquals("PERSIST_WORKBOOK", failure.problem().context().stage());
     assertEquals(
         java.util.Optional.of(workbookPath.toAbsolutePath().toString()),
@@ -476,7 +478,7 @@ class ExecutionModeRequestExecutorTest {
       ExecutionContextFixtureSupport.saveWorkbook(workbook, workbookPath);
     }
 
-    GridGrindResponse.Failure unsupportedEventRead =
+    WorkbookResult.Failure unsupportedEventRead =
         failure(
             ExecutionContextFixtureSupport.execute(
                 new DefaultGridGrindRequestExecutor(),
@@ -494,7 +496,7 @@ class ExecutionModeRequestExecutorTest {
     assertEquals(GridGrindProblemCode.INVALID_REQUEST, unsupportedEventRead.problem().code());
     assertTrue(unsupportedEventRead.problem().message().contains("GET_CELLS"));
 
-    GridGrindResponse.Failure existingStreamingSource =
+    WorkbookResult.Failure existingStreamingSource =
         failure(
             ExecutionContextFixtureSupport.execute(
                 new DefaultGridGrindRequestExecutor(),
@@ -513,7 +515,7 @@ class ExecutionModeRequestExecutorTest {
     assertEquals(GridGrindProblemCode.INVALID_REQUEST, existingStreamingSource.problem().code());
     assertTrue(existingStreamingSource.problem().message().contains("requires source.type=NEW"));
 
-    GridGrindResponse.Failure unsupportedStreamingOperation =
+    WorkbookResult.Failure unsupportedStreamingOperation =
         failure(
             ExecutionContextFixtureSupport.execute(
                 new DefaultGridGrindRequestExecutor(),
@@ -541,7 +543,7 @@ class ExecutionModeRequestExecutorTest {
     assertFalse(
         unsupportedStreamingOperation.problem().message().contains("FORCE_FORMULA_RECALC_ON_OPEN"));
 
-    GridGrindResponse.Failure missingStreamingSheetMaterialization =
+    WorkbookResult.Failure missingStreamingSheetMaterialization =
         failure(
             ExecutionContextFixtureSupport.execute(
                 new DefaultGridGrindRequestExecutor(),
@@ -562,15 +564,15 @@ class ExecutionModeRequestExecutorTest {
             .contains("requires at least one ENSURE_SHEET mutation"));
   }
 
-  private static GridGrindResponse.Success success(GridGrindResponse response) {
-    return assertInstanceOf(GridGrindResponse.Success.class, response);
+  private static WorkbookResult.Success success(WorkbookResult response) {
+    return assertInstanceOf(WorkbookResult.Success.class, response);
   }
 
-  private static GridGrindResponse.Failure failure(GridGrindResponse response) {
-    return assertInstanceOf(GridGrindResponse.Failure.class, response);
+  private static WorkbookResult.Failure failure(WorkbookResult response) {
+    return assertInstanceOf(WorkbookResult.Failure.class, response);
   }
 
-  private static String savedPath(GridGrindResponse.Success success) {
+  private static String savedPath(WorkbookResult.Success success) {
     return DefaultGridGrindRequestExecutorTestSupport.writtenExecutionPath(success.persistence());
   }
 }

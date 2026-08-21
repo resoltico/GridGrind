@@ -138,6 +138,9 @@ run_verify_expect_failure() {
 
 run_verify_expect_success
 run_verify_expect_success_without_tmpdir
+if FAKE_GRIDGRIND_NOARGS_DESTINATION=stderr run_verify_expect_success; then
+    die "verifier accepted a no-argument command rejection on stderr"
+fi
 run_fake_gridgrind_verify_with_fixture_texts \
     false \
     "${success_help_overview}" \

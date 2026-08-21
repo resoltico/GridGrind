@@ -163,12 +163,14 @@ final class WorkbookInvariantAnalysisFormattingChecks {
         .fontColor()
         .ifPresent(
             color ->
-                WorkbookInvariantChecks.requireNonBlank(color, "conditional formatting fontColor"));
+                WorkbookInvariantCellStyleChecks.requireCellColorShape(
+                    color, "conditional formatting fontColor"));
     style
         .fillColor()
         .ifPresent(
             color ->
-                WorkbookInvariantChecks.requireNonBlank(color, "conditional formatting fillColor"));
+                WorkbookInvariantCellStyleChecks.requireCellColorShape(
+                    color, "conditional formatting fillColor"));
     style
         .border()
         .ifPresent(WorkbookInvariantAnalysisFormattingChecks::requireDifferentialBorderShape);
@@ -212,7 +214,7 @@ final class WorkbookInvariantAnalysisFormattingChecks {
     side.color()
         .ifPresent(
             color ->
-                WorkbookInvariantChecks.requireNonBlank(
+                WorkbookInvariantCellStyleChecks.requireCellColorShape(
                     color, "conditional formatting border color"));
   }
 

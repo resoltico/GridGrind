@@ -12,15 +12,16 @@ import dev.erst.gridgrind.contract.dto.ExecutionJournalLevel;
 import dev.erst.gridgrind.contract.dto.ExecutionModeInput;
 import dev.erst.gridgrind.contract.dto.ExecutionPolicyInput;
 import dev.erst.gridgrind.contract.dto.FormulaEnvironmentInput;
-import dev.erst.gridgrind.contract.dto.GridGrindResponse;
+import dev.erst.gridgrind.contract.dto.OoxmlPersistenceSecurityInput;
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
+import dev.erst.gridgrind.contract.dto.WorkbookResult;
 import dev.erst.gridgrind.contract.json.GridGrindJson;
 import dev.erst.gridgrind.contract.query.SheetInspectionResult;
 import dev.erst.gridgrind.contract.step.AssertionStep;
 import dev.erst.gridgrind.contract.step.InspectionStep;
 import dev.erst.gridgrind.contract.step.MutationStep;
 import dev.erst.gridgrind.engine.api.GridGrindEngine;
-import dev.erst.gridgrind.engine.api.GridGrindJournalSink;
+import dev.erst.gridgrind.engine.api.GridGrindProgressSink;
 import dev.erst.gridgrind.engine.api.GridGrindRequestInputs;
 import java.io.ByteArrayOutputStream;
 import java.lang.reflect.Method;
@@ -62,14 +63,12 @@ class GridGrindPlanTest {
             .mutate(Targets.cell("Budget", "A1").set(Values.text("Owner")))
             .inspect(Targets.cell("Budget", "A1").read())
             .assertThat(Targets.cell("Budget", "A1").valueEquals(ExpectedValues.text("Owner")));
-
     WorkbookPlan canonical = plan.toPlan();
     assertEquals("budget-plan", canonical.planId().orElseThrow());
     assertEquals("mutation-001", canonical.steps().get(0).stepId());
     assertEquals("mutation-002", canonical.steps().get(1).stepId());
     assertEquals("inspection-001", canonical.steps().get(2).stepId());
     assertEquals("assertion-001", canonical.steps().get(3).stepId());
-
     WorkbookPlan reread = GridGrindJson.readRequest(plan.toJsonBytes());
     assertEquals(canonical, reread);
     assertTrue(plan.toJsonString().contains("\"planId\":\"budget-plan\""));
@@ -110,10 +109,12 @@ class GridGrindPlanTest {
             new WorkbookPlan.WorkbookSource.New(),
             new WorkbookPlan.WorkbookPersistence.None(),
             new ExecutionPolicyInput(
-                mode, new ExecutionJournalInput(ExecutionJournalLevel.NORMAL), calculation),
+                mode,
+                new ExecutionJournalInput(ExecutionJournalLevel.NORMAL),
+                calculation,
+                dev.erst.gridgrind.contract.dto.AssertionModeInput.defaults()),
             FormulaEnvironmentInput.empty(),
             List.of());
-
     WorkbookPlan journaled =
         GridGrindPlan.from(canonical).journal(ExecutionJournalLevel.VERBOSE).toPlan();
     assertEquals(mode, journaled.execution().mode());
@@ -164,7 +165,6 @@ class GridGrindPlanTest {
   @Test
   void conveniencePersistenceMethodsCoverInMemoryAndOverwriteBranches() {
     GridGrindPlan plan = GridGrindPlan.newWorkbook();
-    assertEquals(plan, plan.clearPlanId());
     assertInstanceOf(
         WorkbookPlan.WorkbookPersistence.None.class,
         plan.saveAs(tempDir.resolve("copy.xlsx"), WorkbookPlan.WorkbookPersistence.IfExists.REJECT)
@@ -173,7 +173,29 @@ class GridGrindPlanTest {
             .persistence());
     assertInstanceOf(
         WorkbookPlan.WorkbookPersistence.Overwrite.class,
-        GridGrindPlan.open(tempDir.resolve("source.xlsx")).overwrite().toPlan().persistence());
+        GridGrindPlan.open(tempDir.resolve("source.xlsx"))
+            .overwrite(OoxmlPersistenceSecurityInput.none())
+            .toPlan()
+            .persistence());
+    assertEquals(
+        OoxmlPersistenceSecurityInput.none(),
+        ((WorkbookPlan.WorkbookPersistence.SaveAs)
+                GridGrindPlan.open(tempDir.resolve("source.xlsx"))
+                    .saveAs(
+                        tempDir.resolve("copy.xlsx"),
+                        WorkbookPlan.WorkbookPersistence.IfExists.REJECT,
+                        OoxmlPersistenceSecurityInput.none())
+                    .toPlan()
+                    .persistence())
+            .security()
+            .orElseThrow());
+    assertThrows(
+        IllegalStateException.class,
+        () ->
+            GridGrindPlan.open(tempDir.resolve("source.xlsx"))
+                .saveAs(
+                    tempDir.resolve("copy.xlsx"),
+                    WorkbookPlan.WorkbookPersistence.IfExists.REJECT));
   }
 
   @Test
@@ -213,14 +235,14 @@ class GridGrindPlanTest {
                     .cell("Amount")
                     .valueEquals(ExpectedValues.number(125.0)));
 
-    GridGrindResponse.Success response =
+    WorkbookResult.Success response =
         assertInstanceOf(
-            GridGrindResponse.Success.class,
+            WorkbookResult.Success.class,
             GridGrindEngine.requestExecutor()
                 .execute(
                     plan.toPlan(),
                     new GridGrindRequestInputs(tempDir, tempDir.resolve("temp-root")),
-                    GridGrindJournalSink.NOOP));
+                    GridGrindProgressSink.NOOP));
 
     assertTrue(Files.exists(outputPath));
     assertEquals(1, response.assertions().size());
@@ -249,13 +271,13 @@ class GridGrindPlanTest {
     Files.writeString(
         bridgeSourcePath,
         """
-        import dev.erst.gridgrind.contract.dto.GridGrindResponse;
+        import dev.erst.gridgrind.contract.dto.WorkbookResult;
         import java.nio.file.Path;
 
         public final class JavaAuthoringWorkflowExampleBridge {
           private JavaAuthoringWorkflowExampleBridge() {}
 
-          public static GridGrindResponse run(Path workspace) throws Exception {
+          public static WorkbookResult run(Path workspace) throws Exception {
             return JavaAuthoringWorkflowExample.run(workspace);
           }
         }
@@ -307,8 +329,8 @@ class GridGrindPlanTest {
         new URLClassLoader(new URL[] {classesDirectory.toUri().toURL()}, parentClassLoader)) {
       Class<?> exampleClass = classLoader.loadClass("JavaAuthoringWorkflowExampleBridge");
       Method runMethod = exampleClass.getMethod("run", Path.class);
-      GridGrindResponse.Success response =
-          assertInstanceOf(GridGrindResponse.Success.class, runMethod.invoke(null, tempDir));
+      WorkbookResult.Success response =
+          assertInstanceOf(WorkbookResult.Success.class, runMethod.invoke(null, tempDir));
       assertTrue(Files.exists(tempDir.resolve("budget.xlsx")));
       assertFalse(Files.exists(tempDir.resolve(".gridgrind")));
       assertEquals(1, response.assertions().size());

@@ -21,7 +21,7 @@ public record CommentReport(
   public CommentReport {
     Objects.requireNonNull(text, "text must not be null");
     Objects.requireNonNull(author, "author must not be null");
-    runs = GridGrindResponseSupport.copyOptionalValues(runs, "runs");
+    runs = WorkbookResultSupport.copyOptionalValues(runs, "runs");
     anchor = Objects.requireNonNullElseGet(anchor, Optional::empty);
     if (runs.isPresent()) {
       List<RichTextRunReport> copiedRuns = runs.orElseThrow();

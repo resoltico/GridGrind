@@ -1,13 +1,11 @@
 package dev.erst.gridgrind.engine.runtime;
 
-import dev.erst.gridgrind.contract.dto.GridGrindResponsePersistence;
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
 import dev.erst.gridgrind.excel.WorkbookArtifactWriteDisposition;
 import dev.erst.gridgrind.excel.WorkbookLocation;
 import dev.erst.gridgrind.excel.ooxml.ExcelOoxmlPackageSecuritySnapshot;
 import dev.erst.gridgrind.excel.ooxml.ExcelOoxmlPersistenceOptions;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Objects;
 import java.util.Optional;
@@ -18,15 +16,16 @@ final class ExecutionRequestPaths {
   private ExecutionRequestPaths() {}
 
   static ExcelOoxmlPersistenceOptions persistenceOptions(
-      WorkbookPlan.WorkbookPersistence persistence, Path workingDirectory) {
+      WorkbookPlan.WorkbookPersistence persistence, ExecutionInputBindings bindings)
+      throws IOException {
     return switch (persistence) {
       case WorkbookPlan.WorkbookPersistence.None _ -> ExcelOoxmlPersistenceOptions.none();
       case WorkbookPlan.WorkbookPersistence.Overwrite overwrite ->
           OoxmlPackageSecurityConverter.toExcelPersistenceOptions(
-              overwrite.security().orElse(null), workingDirectory);
+              overwrite.security().orElse(null), bindings);
       case WorkbookPlan.WorkbookPersistence.SaveAs saveAs ->
           OoxmlPackageSecurityConverter.toExcelPersistenceOptions(
-              saveAs.security().orElse(null), workingDirectory);
+              saveAs.security().orElse(null), bindings);
     };
   }
 
@@ -94,25 +93,6 @@ final class ExecutionRequestPaths {
     };
   }
 
-  static GridGrindResponsePersistence.PersistenceOutcome unwrittenPersistenceOutcome(
-      WorkbookPlan request) {
-    return switch (request.persistence()) {
-      case WorkbookPlan.WorkbookPersistence.None _ ->
-          new GridGrindResponsePersistence.PersistenceOutcome.NotSaved();
-      case WorkbookPlan.WorkbookPersistence.SaveAs saveAs ->
-          new GridGrindResponsePersistence.PersistenceOutcome.SavedAs(
-              saveAs.path(), new GridGrindResponsePersistence.WriteResult.NotWritten());
-      case WorkbookPlan.WorkbookPersistence.Overwrite _ -> {
-        if (!(request.source() instanceof WorkbookPlan.WorkbookSource.ExistingFile existingFile)) {
-          yield new GridGrindResponsePersistence.PersistenceOutcome.Overwritten(
-              Optional.empty(), new GridGrindResponsePersistence.WriteResult.NotWritten());
-        }
-        yield new GridGrindResponsePersistence.PersistenceOutcome.Overwritten(
-            existingFile.path(), new GridGrindResponsePersistence.WriteResult.NotWritten());
-      }
-    };
-  }
-
   static @Nullable String reqSourcePath(WorkbookPlan request, Path workingDirectory) {
     return switch (request.source()) {
       case WorkbookPlan.WorkbookSource.New _ -> null;
@@ -155,36 +135,15 @@ final class ExecutionRequestPaths {
 
   static Path normalizePath(String path, Path workingDirectory) {
     Path candidate = Path.of(path);
-    if (candidate.isAbsolute()) {
-      return candidate.toAbsolutePath().normalize();
-    }
     Path base = workingDirectory.toAbsolutePath().normalize();
-    Path normalized = base.resolve(candidate).normalize();
+    Path normalized =
+        candidate.isAbsolute()
+            ? candidate.toAbsolutePath().normalize()
+            : base.resolve(candidate).normalize();
     if (!normalized.startsWith(base)) { // LIM-025
-      throw new IllegalArgumentException("path must not escape the working directory: " + path);
+      throw new RequestPathEscapeException("path must not escape the execution root: " + path);
     }
-    checkNoSymlinkEscape(path, base, normalized); // LIM-029
     return normalized;
-  }
-
-  private static void checkNoSymlinkEscape(String original, Path base, Path normalized) {
-    Path current = base;
-    for (Path component : base.relativize(normalized)) { // LIM-029
-      current = current.resolve(component);
-      if (!Files.isSymbolicLink(current)) {
-        continue;
-      }
-      try {
-        Path real = current.toRealPath();
-        if (!real.startsWith(base.toRealPath())) {
-          throw new IllegalArgumentException(
-              "path must not escape the working directory: " + original);
-        }
-      } catch (IOException e) {
-        throw new IllegalArgumentException(
-            "path must not escape the working directory: " + original, e);
-      }
-    }
   }
 
   private static @Nullable String normalizedPersistencePath(

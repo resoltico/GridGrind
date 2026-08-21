@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import java.util.Objects;
 import java.util.Optional;
 
-/** Protocol-facing font patch used by {@link CellStyleInput}. */
+/** Protocol-facing font patch used by {@link CellStylePatchInput}. */
 public record CellFontInput(
     @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<Boolean> bold,
     @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<Boolean> italic,

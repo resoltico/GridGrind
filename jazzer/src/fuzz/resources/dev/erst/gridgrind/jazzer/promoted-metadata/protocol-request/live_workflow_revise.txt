@@ -10,6 +10,6 @@ Operation Count: 3
 Assertion Count: 0
 Read Count: 6
 Assertion Kinds: (none)
-Read Kinds: GET_WINDOW=2, GET_CELLS=2, GET_FORMULA_SURFACE=1, GET_WORKBOOK_SUMMARY=1
+Read Kinds: GET_CELLS=2, GET_WINDOW=2, GET_WORKBOOK_SUMMARY=1, GET_FORMULA_SURFACE=1
 Style Kinds: (none)
 Operation Kinds: SET_CELL=3

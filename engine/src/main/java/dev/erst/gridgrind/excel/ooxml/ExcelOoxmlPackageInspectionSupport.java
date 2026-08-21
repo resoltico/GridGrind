@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.excel.ooxml;
 
+import dev.erst.gridgrind.excel.WorkbookNotOpenableException;
 import dev.erst.gridgrind.excel.WorkbookSecurityException;
 import dev.erst.gridgrind.excel.foundation.ExcelOoxmlSignatureState;
 import java.io.IOException;
@@ -10,6 +11,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
 import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
+import org.apache.poi.openxml4j.exceptions.NotOfficeXmlFileException;
 import org.apache.poi.openxml4j.opc.OPCPackage;
 import org.apache.poi.openxml4j.opc.PackageAccess;
 import org.apache.poi.poifs.crypt.dsig.SignatureConfig;
@@ -24,8 +26,32 @@ public final class ExcelOoxmlPackageInspectionSupport {
   /** Reads one workbook package's signature state alongside its already-known encryption facts. */
   public static ExcelOoxmlPackageSecuritySnapshot inspectPackageSecurity(
       Path workbookPath, ExcelOoxmlEncryptionSnapshot encryption) throws IOException {
-    try (OPCPackage pkg = OPCPackage.open(workbookPath.toFile(), PackageAccess.READ)) {
-      SignatureInfo signatureInfo = ExcelOoxmlDsigProviderSupport.newSignatureInfo();
+    OPCPackage pkg;
+    try {
+      pkg = OPCPackage.open(workbookPath.toFile(), PackageAccess.READ);
+    } catch (InvalidFormatException | NotOfficeXmlFileException exception) {
+      throw new WorkbookNotOpenableException(workbookPath, exception);
+    }
+    try (pkg) {
+      return inspectOpenedPackage(pkg, workbookPath, encryption);
+    }
+  }
+
+  private static ExcelOoxmlPackageSecuritySnapshot inspectOpenedPackage(
+      OPCPackage pkg, Path workbookPath, ExcelOoxmlEncryptionSnapshot encryption)
+      throws IOException {
+    return inspectOpenedPackage(
+        pkg, workbookPath, encryption, ExcelOoxmlDsigProviderSupport::newSignatureInfo);
+  }
+
+  static ExcelOoxmlPackageSecuritySnapshot inspectOpenedPackage(
+      OPCPackage pkg,
+      Path workbookPath,
+      ExcelOoxmlEncryptionSnapshot encryption,
+      SignatureInfoFactory signatureInfoFactory)
+      throws IOException {
+    try {
+      SignatureInfo signatureInfo = signatureInfoFactory.create();
       signatureInfo.setSignatureConfig(new SignatureConfig());
       signatureInfo.setOpcPackage(pkg);
 
@@ -34,7 +60,7 @@ public final class ExcelOoxmlPackageInspectionSupport {
         signatures.add(signatureSnapshot(signaturePart));
       }
       return new ExcelOoxmlPackageSecuritySnapshot(encryption, List.copyOf(signatures));
-    } catch (InvalidFormatException | RuntimeException exception) {
+    } catch (RuntimeException exception) {
       throw new WorkbookSecurityException(
           "Failed to inspect OOXML package signatures for " + workbookPath, exception);
     }
@@ -60,5 +86,12 @@ public final class ExcelOoxmlPackageInspectionSupport {
                 signer.getSubjectX500Principal().getName(),
                 signer.getIssuerX500Principal().getName(),
                 signer.getSerialNumber().toString(16).toUpperCase(Locale.ROOT)));
+  }
+
+  /** Creates the POI signature-inspection adapter for an already-opened OOXML package. */
+  @FunctionalInterface
+  interface SignatureInfoFactory {
+    /** Returns one configured signature-inspection adapter. */
+    SignatureInfo create();
   }
 }

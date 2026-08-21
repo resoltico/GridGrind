@@ -2,6 +2,7 @@ package dev.erst.gridgrind.engine.runtime;
 
 import dev.erst.gridgrind.contract.dto.ExecutionJournal;
 import dev.erst.gridgrind.contract.dto.ExecutionJournalLevel;
+import dev.erst.gridgrind.contract.dto.ExecutionProgressEvent;
 import dev.erst.gridgrind.contract.dto.GridGrindProblemCode;
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
 import dev.erst.gridgrind.contract.step.WorkbookStep;
@@ -13,15 +14,13 @@ import java.util.Objects;
 import java.util.Optional;
 import org.jspecify.annotations.Nullable;
 
-/** Captures one structured execution journal while optionally streaming verbose events. */
+/** Captures one structured execution journal while optionally streaming verbose progress. */
 final class ExecutionJournalRecorder {
-  private final @Nullable String planId;
   private final ExecutionJournalLevel level;
   private final ExecutionJournal.SourceSummary source;
-  private final ExecutionJournalSink sink;
+  private final ExecutionProgressSink sink;
   private final long planStartNanos;
   private final List<ExecutionJournal.Step> steps = new ArrayList<>();
-  private final List<ExecutionJournal.Event> events = new ArrayList<>();
   private ExecutionJournal.Phase validation = ExecutionJournal.Phase.notStarted();
   private ExecutionJournal.Phase inputResolution = ExecutionJournal.Phase.notStarted();
   private ExecutionJournal.Phase open = ExecutionJournal.Phase.notStarted();
@@ -32,22 +31,24 @@ final class ExecutionJournalRecorder {
   private ExecutionJournal.Phase close = ExecutionJournal.Phase.notStarted();
 
   private ExecutionJournalRecorder(
-      @Nullable String planId,
       ExecutionJournalLevel level,
       ExecutionJournal.SourceSummary source,
-      ExecutionJournalSink sink) {
-    this.planId = planId;
+      ExecutionProgressSink sink) {
     this.level = level;
     this.source = source;
     this.sink = sink;
     this.planStartNanos = System.nanoTime();
-    emit("PLAN", "started", null, null);
+    emit(
+        ExecutionProgressEvent.Category.PLAN,
+        ExecutionProgressEvent.Status.STARTED,
+        null,
+        null,
+        null);
   }
 
   static ExecutionJournalRecorder start(
-      WorkbookPlan request, ExecutionJournalSink sink, Path workingDirectory) {
-    ExecutionJournalSink liveSink = ExecutionJournalSink.requireNonNull(sink);
-    String planId = request == null ? null : request.planId().orElse(null);
+      WorkbookPlan request, ExecutionProgressSink sink, Path workingDirectory) {
+    ExecutionProgressSink liveSink = ExecutionProgressSink.requireNonNull(sink);
     ExecutionJournalLevel level =
         request == null ? ExecutionJournalLevel.SUMMARY : request.journalLevel();
     ExecutionJournal.SourceSummary source =
@@ -57,32 +58,39 @@ final class ExecutionJournalRecorder {
                 Optional.of(ExecutionRequestPaths.reqSourceType(request)),
                 Optional.ofNullable(
                     ExecutionRequestPaths.reqSourcePath(request, workingDirectory)));
-    return new ExecutionJournalRecorder(planId, level, source, liveSink);
+    return new ExecutionJournalRecorder(level, source, liveSink);
   }
 
   PhaseHandle beginValidation() {
-    return new PhaseHandle("VALIDATION", null, null, phase -> validation = phase);
+    return new PhaseHandle(
+        ExecutionProgressEvent.Category.VALIDATION, null, null, phase -> validation = phase);
   }
 
   PhaseHandle beginOpen() {
-    return new PhaseHandle("OPEN", null, null, phase -> open = phase);
+    return new PhaseHandle(ExecutionProgressEvent.Category.OPEN, null, null, phase -> open = phase);
   }
 
   PhaseHandle beginInputResolution() {
-    return new PhaseHandle("RESOLVE_INPUTS", null, null, phase -> inputResolution = phase);
+    return new PhaseHandle(
+        ExecutionProgressEvent.Category.RESOLVE_INPUTS,
+        null,
+        null,
+        phase -> inputResolution = phase);
   }
 
   PhaseHandle beginPersistence() {
-    return new PhaseHandle("PERSIST", null, null, phase -> persistencePhase = phase);
+    return new PhaseHandle(
+        ExecutionProgressEvent.Category.PERSIST, null, null, phase -> persistencePhase = phase);
   }
 
   PhaseHandle beginClose() {
-    return new PhaseHandle("CLOSE", null, null, phase -> close = phase);
+    return new PhaseHandle(
+        ExecutionProgressEvent.Category.CLOSE, null, null, phase -> close = phase);
   }
 
   PhaseHandle beginCalculationPreflight() {
     return new PhaseHandle(
-        "CALCULATION_PREFLIGHT",
+        ExecutionProgressEvent.Category.CALCULATION_PREFLIGHT,
         null,
         null,
         phase -> calculation = new ExecutionJournal.Calculation(phase, calculation.execution()));
@@ -90,7 +98,7 @@ final class ExecutionJournalRecorder {
 
   PhaseHandle beginCalculationExecution() {
     return new PhaseHandle(
-        "CALCULATION_EXECUTION",
+        ExecutionProgressEvent.Category.CALCULATION_EXECUTION,
         null,
         null,
         phase -> calculation = new ExecutionJournal.Calculation(calculation.preflight(), phase));
@@ -118,10 +126,14 @@ final class ExecutionJournalRecorder {
 
   ExecutionJournal buildSuccess(int plannedStepCount, boolean emitPlanOutcomeEvent) {
     if (emitPlanOutcomeEvent) {
-      emit("PLAN", "succeeded", null, null);
+      emit(
+          ExecutionProgressEvent.Category.PLAN,
+          ExecutionProgressEvent.Status.SUCCEEDED,
+          null,
+          null,
+          null);
     }
     return new ExecutionJournal(
-        Optional.ofNullable(planId),
         level,
         source,
         validation,
@@ -132,8 +144,7 @@ final class ExecutionJournalRecorder {
         close,
         journalSteps(),
         ExecutionJournal.Outcome.succeeded(
-            plannedStepCount, completedStepCount(), outcomeDurationMillis()),
-        level == ExecutionJournalLevel.VERBOSE ? List.copyOf(events) : List.of());
+            plannedStepCount, completedStepCount(), outcomeDurationMillis()));
   }
 
   ExecutionJournal buildFailure(
@@ -151,10 +162,14 @@ final class ExecutionJournalRecorder {
       @Nullable String failedStepId,
       boolean emitPlanOutcomeEvent) {
     if (emitPlanOutcomeEvent) {
-      emit("PLAN", "failed (" + failureCode + ")", failedStepIndex, failedStepId);
+      emit(
+          ExecutionProgressEvent.Category.PLAN,
+          ExecutionProgressEvent.Status.FAILED,
+          failureCode,
+          failedStepIndex,
+          failedStepId);
     }
     return new ExecutionJournal(
-        Optional.ofNullable(planId),
         level,
         source,
         validation,
@@ -171,8 +186,7 @@ final class ExecutionJournalRecorder {
             Objects.requireNonNull(failureCode, "failureCode must not be null"),
             failedStepIndex == null || failedStepId == null
                 ? Optional.empty()
-                : Optional.of(new ExecutionJournal.FailureStep(failedStepIndex, failedStepId))),
-        level == ExecutionJournalLevel.VERBOSE ? List.copyOf(events) : List.of());
+                : Optional.of(new ExecutionJournal.FailureStep(failedStepIndex, failedStepId))));
   }
 
   private List<ExecutionJournal.Step> journalSteps() {
@@ -212,19 +226,33 @@ final class ExecutionJournalRecorder {
   }
 
   private void emit(
-      String category, String detail, @Nullable Integer stepIndex, @Nullable String stepId) {
+      ExecutionProgressEvent.Category category,
+      ExecutionProgressEvent.Status status,
+      @Nullable GridGrindProblemCode problemCode,
+      @Nullable Integer stepIndex,
+      @Nullable String stepId) {
     if (level != ExecutionJournalLevel.VERBOSE) {
       return;
     }
-    ExecutionJournal.Event event =
-        new ExecutionJournal.Event(
-            Instant.now().toString(),
-            category,
-            detail,
-            Optional.ofNullable(stepIndex),
-            Optional.ofNullable(stepId));
-    events.add(event);
-    sink.emit(event);
+    String timestamp = Instant.now().toString();
+    Optional<Integer> optionalStepIndex = Optional.ofNullable(stepIndex);
+    Optional<String> optionalStepId = Optional.ofNullable(stepId);
+    sink.emit(
+        switch (status) {
+          case STARTED ->
+              ExecutionProgressEvent.started(
+                  timestamp, category, optionalStepIndex, optionalStepId);
+          case SUCCEEDED ->
+              ExecutionProgressEvent.succeeded(
+                  timestamp, category, optionalStepIndex, optionalStepId);
+          case FAILED ->
+              ExecutionProgressEvent.failed(
+                  timestamp,
+                  category,
+                  Objects.requireNonNull(problemCode, "problemCode must not be null"),
+                  optionalStepIndex,
+                  optionalStepId);
+        });
   }
 
   private static long elapsedMillis(long startedAtNanos) {
@@ -241,7 +269,7 @@ final class ExecutionJournalRecorder {
 
   /** Mutable handle that completes one top-level or nested execution phase exactly once. */
   final class PhaseHandle {
-    private final String category;
+    private final ExecutionProgressEvent.Category category;
     private final @Nullable Integer stepIndex;
     private final @Nullable String stepId;
     private final java.util.function.Consumer<ExecutionJournal.Phase> consumer;
@@ -250,7 +278,7 @@ final class ExecutionJournalRecorder {
     private boolean finished;
 
     private PhaseHandle(
-        String category,
+        ExecutionProgressEvent.Category category,
         @Nullable Integer stepIndex,
         @Nullable String stepId,
         java.util.function.Consumer<ExecutionJournal.Phase> consumer) {
@@ -260,25 +288,29 @@ final class ExecutionJournalRecorder {
       this.consumer = consumer;
       this.startedAt = recordsTiming() ? Instant.now().toString() : null;
       this.startedAtNanos = recordsTiming() ? System.nanoTime() : 0L;
-      emit(category, "started", stepIndex, stepId);
+      emit(category, ExecutionProgressEvent.Status.STARTED, null, stepIndex, stepId);
     }
 
     ExecutionJournal.Phase succeed() {
-      return finish("succeeded", true);
+      return finish(ExecutionProgressEvent.Status.SUCCEEDED, null);
     }
 
-    ExecutionJournal.Phase fail(String detail) {
-      return finish(detail, false);
+    ExecutionJournal.Phase fail(GridGrindProblemCode problemCode) {
+      return finish(
+          ExecutionProgressEvent.Status.FAILED,
+          Objects.requireNonNull(problemCode, "problemCode must not be null"));
     }
 
-    private ExecutionJournal.Phase finish(String detail, boolean succeeded) {
+    private ExecutionJournal.Phase finish(
+        ExecutionProgressEvent.Status status, @Nullable GridGrindProblemCode problemCode) {
       if (finished) {
         throw new IllegalStateException("phase already finished: " + category);
       }
       finished = true;
-      ExecutionJournal.Phase phase = finishedPhase(succeeded);
+      ExecutionJournal.Phase phase =
+          finishedPhase(status == ExecutionProgressEvent.Status.SUCCEEDED);
       consumer.accept(phase);
-      emit(category, detail, stepIndex, stepId);
+      emit(category, status, problemCode, stepIndex, stepId);
       return phase;
     }
 
@@ -306,7 +338,9 @@ final class ExecutionJournalRecorder {
     private StepHandle(int stepIndex, WorkbookStep step) {
       this.stepIndex = stepIndex;
       this.step = step;
-      this.phaseHandle = new PhaseHandle("STEP", stepIndex, step.stepId(), phase -> {});
+      this.phaseHandle =
+          new PhaseHandle(
+              ExecutionProgressEvent.Category.STEP, stepIndex, step.stepId(), phase -> {});
     }
 
     void succeed() {
@@ -328,7 +362,7 @@ final class ExecutionJournalRecorder {
         dev.erst.gridgrind.contract.dto.GridGrindProblemCategory category,
         String stage,
         String message) {
-      ExecutionJournal.Phase phase = phaseHandle.fail("failed (" + code + ")");
+      ExecutionJournal.Phase phase = phaseHandle.fail(code);
       steps.add(
           new ExecutionJournal.Step(
               stepIndex,

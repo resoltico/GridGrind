@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
-# Keep the release-publication surface deterministic: pinned base image, guarded workflow-dispatch
-# publishing, explicit attestations, accurate OCI labels, dynamic root coverage wiring, and a
-# narrow contract compile API.
+# Keep the release-publication surface deterministic: pinned images, guarded publishing,
+# attestations, accurate OCI labels, dynamic coverage wiring, and a narrow contract compile API.
 
 set -euo pipefail
 
@@ -42,6 +41,7 @@ readonly container_verify_script="${repo_root}/scripts/verify-container-publicat
 readonly stage_contract_script="${repo_root}/scripts/check-stage-contract.sh"
 readonly release_protocol_doc="${repo_root}/docs/RELEASE_PROTOCOL.md"
 readonly temp_parent="${repo_root}/tmp/test-publication-contract"
+source "${script_dir}/lib/test-publication-contract-diagnostic-support.sh"
 test_root=''
 jar_listing_path=''
 archive_listing_path=''
@@ -51,7 +51,6 @@ cleanup() {
 }
 
 trap cleanup EXIT
-
 fixed_pattern_exists() {
     local pattern=$1
     local path=$2
@@ -71,10 +70,10 @@ dockerfile_copies_built_cli_jar() {
 }
 
 grep -Eq \
-    '^FROM azul/zulu-openjdk-alpine:26@sha256:[0-9a-f]{64} AS build$' \
+    '^FROM azul/zulu-openjdk:26@sha256:[0-9a-f]{64} AS build$' \
     "${dockerfile}" || die "Dockerfile builder image is not digest-pinned"
 grep -Eq \
-    '^FROM azul/zulu-openjdk-alpine:26-jre@sha256:[0-9a-f]{64}$' \
+    '^FROM azul/zulu-openjdk:26-jre@sha256:[0-9a-f]{64}$' \
     "${dockerfile}" || die "Dockerfile runtime image is not digest-pinned"
 
 git -C "${repo_root}" check-ignore -q AGENTS.md && die \
@@ -110,6 +109,8 @@ grep -Fq 'AGENTS.md' "${jar_listing_path}" && die \
     "CLI fat JAR unexpectedly contains /AGENTS.md"
 grep -Fq '.codex/' "${jar_listing_path}" && die \
     "CLI fat JAR unexpectedly contains /.codex/"
+
+verify_packaged_diagnostic_byte_stability "${cli_jar}" "${test_root}"
 
 cp "${gitattributes_file}" "${test_root}/archive-root/.gitattributes"
 printf '# synthetic agent entry point\n' > "${test_root}/archive-root/AGENTS.md"
@@ -160,10 +161,8 @@ dockerfile_copies_built_cli_jar "${dockerfile}" || die \
     "Dockerfile no longer copies the packaged CLI JAR from the builder stage into the runtime image"
 grep -Fq 'COPY cli/build/libs/gridgrind.jar gridgrind.jar' "${dockerfile}" && die \
     "Dockerfile reintroduced a prebuilt host-JAR dependency"
-grep -Fq 'docker buildx build --load -t gridgrind-local .' "${readme_file}" || die \
-    "README.md no longer teaches the local repository Docker build path"
-grep -Fq 'docker buildx build --load -t gridgrind-local .' "${quick_start_doc}" || die \
-    "docs/QUICK_START.md no longer teaches the local repository Docker build path"
+grep -Fq 'docker buildx build --load -t gridgrind-local .' "${readme_file}" || die "README.md no longer teaches the local repository Docker build path"
+grep -Fq 'docker buildx build --load -t gridgrind-local .' "${quick_start_doc}" || die "docs/QUICK_START.md no longer teaches the local repository Docker build path"
 grep -Fq 'cli-shadow-jar-support.sh' "${docker_smoke_script}" && die \
     "docker smoke reintroduced the host-side CLI JAR helper dependency"
 grep -Fq ':cli:shadowJar' "${docker_smoke_script}" && die \
@@ -171,6 +170,8 @@ grep -Fq ':cli:shadowJar' "${docker_smoke_script}" && die \
 grep -Fq 'docker_with_repo_config buildx build --load -t "${image_tag}" "${repo_root}" >/dev/null' \
     "${docker_smoke_script}" || die \
     "docker smoke no longer builds the repository-root Dockerfile through buildx --load"
+grep -Fq 'buildx imagetools inspect "${image_ref}"' "${docker_smoke_script}" || die \
+    "docker smoke no longer inspects every pinned Docker base image"
 grep -Fq '"${repo_root}/scripts/verify-cli-contract.sh" docker-image "${image_tag}"' \
     "${docker_smoke_script}" || die "docker smoke no longer verifies the local image CLI contract"
 grep -Fq '"${repo_root}/scripts/verify-cli-discovery-execution.sh" docker-image "${image_tag}"' \
@@ -181,9 +182,9 @@ grep -Fq 'source "${bind_mount_support}"' "${docker_smoke_script}" || die \
 grep -Fq 'verify_documented_bind_mount_user_guidance "${image_tag}" "${smoke_root}" "${docker_run_user}"' \
     "${docker_smoke_script}" || die \
     "docker smoke no longer calls the documented bind-mount guidance probe"
-grep -Fq 'docker smoke no-user documented bind-mount run did not report IO_ERROR' \
+grep -Fq 'documented_no_user_exit_code=$?' \
     "${docker_smoke_bind_mount_helper}" || die \
-    "bind-mount guidance helper no longer verifies the no-user failure path on non-remapped bind mounts"
+    "bind-mount guidance helper no longer handles the platform-dependent no-user failure path"
 grep -Fq 'docker smoke no-user documented bind-mount run completed both mounted writes despite failing' \
     "${docker_smoke_bind_mount_helper}" || die \
     "bind-mount guidance helper no longer proves the no-user failure path leaves the mounted writes incomplete"
@@ -198,8 +199,12 @@ grep -Fq '"level": "VERBOSE"' "${docker_smoke_script}" || die \
     "docker smoke no longer exercises verbose execution journaling from the packaged artifact"
 grep -Fq 'docker smoke response did not include the structured execution journal' "${docker_smoke_script}" || die \
     "docker smoke no longer asserts response-journal presence"
-grep -Fq 'docker smoke create request did not stream live verbose journal events to stderr' "${docker_smoke_script}" || die \
-    "docker smoke no longer asserts live verbose stderr journal streaming"
+grep -Fq 'docker smoke response duplicated VERBOSE progress events' "${docker_smoke_script}" || die \
+    "docker smoke no longer rejects duplicated VERBOSE progress in the primary response"
+grep -Fq 'docker smoke create request did not emit compact VERBOSE progress JSONL' "${docker_smoke_script}" || die \
+    "docker smoke no longer asserts compact VERBOSE progress JSONL"
+grep -Fq 'docker smoke VERBOSE progress retained a legacy prose detail field' "${docker_smoke_script}" || die \
+    "docker smoke no longer rejects legacy verbose prose detail"
 grep -Fq 'run_verify_cli_contract "${image_name}:${expected_version}"' \
     "${container_verify_script}" || die "public container verification no longer checks the version tag contract"
 grep -Fq 'run_verify_cli_contract "${image_name}:latest"' \
@@ -214,10 +219,8 @@ grep -Fq 'scripts/test-verify-release-primary-checkout.sh' "${stage_contract_scr
     "Stage 4 contract no longer exercises the release primary-checkout regression"
 grep -Fq './scripts/verify-release-primary-checkout.sh "$PRIMARY_CHECKOUT" "X.Y.Z"' \
     "${release_protocol_doc}" || die "release protocol no longer requires the primary-checkout closeout verifier"
-
 grep -Fq 'checks: read' "${release_workflow}" || die "release workflow is missing checks: read permission"
 grep -Fq 'checks: read' "${container_workflow}" || die "container workflow is missing checks: read permission"
-
 grep -Fq 'provenance: mode=max' "${container_workflow}" || die "container workflow does not publish explicit provenance"
 grep -Fq 'sbom: true' "${container_workflow}" || die "container workflow does not publish an SBOM attestation"
 grep -Fqx '            org.opencontainers.image.licenses=MIT AND Apache-2.0 AND BSD-2-Clause AND BSD-3-Clause AND EDL-1.0' \
@@ -245,8 +248,10 @@ fixed_pattern_exists ':protocol:jacocoTestCoverageVerification' "${root_plugin}"
     "root coverage wiring hardcodes module names"
 fixed_pattern_exists ':cli:jacocoTestCoverageVerification' "${root_plugin}" && die \
     "root coverage wiring hardcodes module names"
-fixed_pattern_exists 'taskPathsByType(coverageSubprojects, Test::class.java)' "${root_plugin}" || die \
-    "root aggregated coverage no longer discovers test tasks dynamically"
+fixed_pattern_exists 'taskPathsByName(coverageSubprojects, "jacocoTestReport")' "${root_plugin}" || die \
+    "root aggregated coverage no longer discovers module reports dynamically"
+fixed_pattern_exists 'report.dependsOn(subprojectCoverageReports)' "${root_plugin}" || die \
+    "root aggregated coverage no longer waits for dynamically discovered module reports"
 fixed_pattern_exists 'coverageSubprojects().flatMap { subproject ->' "${root_plugin}" || die \
     "root aggregated coverage no longer discovers JaCoCo execution data from all coverage subprojects"
 fixed_pattern_exists 'testTask.extensions.getByType(JacocoTaskExtension::class.java).destinationFile' "${root_plugin}" || die \

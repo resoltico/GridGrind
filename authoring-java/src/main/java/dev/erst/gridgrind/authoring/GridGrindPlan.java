@@ -5,6 +5,7 @@ import dev.erst.gridgrind.contract.dto.ExecutionJournalLevel;
 import dev.erst.gridgrind.contract.dto.ExecutionPolicyInput;
 import dev.erst.gridgrind.contract.dto.FormulaEnvironmentInput;
 import dev.erst.gridgrind.contract.dto.GridGrindProtocolVersion;
+import dev.erst.gridgrind.contract.dto.OoxmlPersistenceSecurityInput;
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
 import dev.erst.gridgrind.contract.json.GridGrindJsonOutput;
 import dev.erst.gridgrind.contract.step.AssertionStep;
@@ -122,13 +123,34 @@ public final class GridGrindPlan {
   public GridGrindPlan saveAs(Path path, WorkbookPlan.WorkbookPersistence.IfExists ifExists) {
     Objects.requireNonNull(path, "path must not be null");
     Objects.requireNonNull(ifExists, "ifExists must not be null");
+    if (source instanceof WorkbookPlan.WorkbookSource.ExistingFile) {
+      throw new IllegalStateException(
+          "EXISTING-workbook SAVE_AS requires an explicit OOXML persistence security policy");
+    }
     this.persistence = new WorkbookPlan.WorkbookPersistence.SaveAs(path.toString(), ifExists);
     return this;
   }
 
-  /** Overwrites the source workbook path. */
-  public GridGrindPlan overwrite() {
-    this.persistence = new WorkbookPlan.WorkbookPersistence.Overwrite();
+  /** Saves the resulting workbook with an explicit OOXML package-security policy. */
+  public GridGrindPlan saveAs(
+      Path path,
+      WorkbookPlan.WorkbookPersistence.IfExists ifExists,
+      OoxmlPersistenceSecurityInput security) {
+    Objects.requireNonNull(path, "path must not be null");
+    Objects.requireNonNull(ifExists, "ifExists must not be null");
+    this.persistence =
+        new WorkbookPlan.WorkbookPersistence.SaveAs(
+            path.toString(),
+            ifExists,
+            Objects.requireNonNull(security, "security must not be null"));
+    return this;
+  }
+
+  /** Overwrites the source workbook path with an explicit OOXML package-security policy. */
+  public GridGrindPlan overwrite(OoxmlPersistenceSecurityInput security) {
+    this.persistence =
+        new WorkbookPlan.WorkbookPersistence.Overwrite(
+            Objects.requireNonNull(security, "security must not be null"));
     return this;
   }
 
@@ -136,7 +158,10 @@ public final class GridGrindPlan {
   public GridGrindPlan journal(ExecutionJournalLevel level) {
     this.execution =
         new ExecutionPolicyInput(
-            execution.mode(), new ExecutionJournalInput(level), execution.calculation());
+            execution.mode(),
+            new ExecutionJournalInput(level),
+            execution.calculation(),
+            execution.assertionMode());
     return this;
   }
 

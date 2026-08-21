@@ -1,6 +1,6 @@
 ---
 afad: "4.0"
-version: "0.72.0"
+version: "0.73.0"
 domain: LIMITATIONS
 updated: "2026-07-02"
 route:
@@ -235,22 +235,22 @@ step ceiling is generous enough for legitimate bulk streaming-write workflows (f
 
 ---
 
-### LIM-025 — Relative Path Traversal
+### LIM-025 — Request-Owned Path Containment
 
 | Field | Value |
 |:------|:------|
 | **Category** | GridGrind |
-| **Limit** | Relative `source.path`, `persistence.path`, and `formulaEnvironment.externalWorkbooks[*].path` values must not escape the working directory |
-| **Error** | `INVALID_REQUEST` |
-| **Message** | `path must not escape the working directory: {path}` |
-| **Applies to** | All relative path fields resolved against the execution working directory |
+| **Limit** | Every request-owned path, whether relative or absolute, must resolve beneath the execution root |
+| **Error** | `PATH_ESCAPES_ROOT` |
+| **Message** | `path must not escape the execution root: {path}` |
+| **Applies to** | Workbook source and persistence paths, formula external workbooks, signing material, and file-backed authored inputs |
 | **Code** | `ExecutionRequestPaths.normalizePath // LIM-025` |
-| **UX** | Not surfaced in help (structural protocol rule) |
+| **UX** | A contained absolute path succeeds with `NON_PORTABLE_ABSOLUTE_PATH`; an escaping absolute or relative path is rejected |
 
-Relative paths that use `../` components to escape the working directory are rejected. Absolute
-paths remain allowed as explicit references. The working directory is the directory containing the
-`--request` file, or the explicit `--execution-root` directory when the request is read from
-stdin.
+GridGrind normalizes every request-owned path against the execution root before it opens or writes
+anything. A relative traversal such as `../secret.xlsx` and an absolute path outside the root fail
+with the same code. A contained absolute path remains legal but carries a warning because it relies
+on one host-specific root layout. CLI flag paths are invocation controls, not request-owned paths.
 
 ---
 
@@ -309,43 +309,45 @@ the hyperlink is activated in a browser-based spreadsheet viewer or other host a
 
 ---
 
-### LIM-029 — Symlink Confinement
+### LIM-029 — No-Follow Request Path Binding
 
 | Field | Value |
 |:------|:------|
 | **Category** | GridGrind |
-| **Limit** | Symbolic links within the working directory must not resolve to paths outside it |
-| **Error** | `IllegalArgumentException`: path must not escape the working directory |
-| **Applies to** | All relative file paths resolved via `ExecutionRequestPaths.normalizePath` |
-| **Code** | `ExecutionRequestPaths.checkNoSymlinkEscape // LIM-029` |
-| **UX** | Not surfaced in help |
+| **Limit** | Request-owned reads and writes never follow a symbolic link and use descriptor-relative access below a verified execution root |
+| **Error** | `UNSAFE_PATH_ACCESS` |
+| **Applies to** | Workbook source and persistence paths, formula external workbooks, signing material, and file-backed authored inputs |
+| **Code** | `RequestPathDescriptorBinder.bind // LIM-029` |
+| **UX** | Doctor reports unavailable secure binding before execution; observed topology changes fail closed before commit |
 
-The lexicographic confinement check (LIM-025) prevents `../` traversal attacks but cannot detect
-symlinks. LIM-029 walks each path component from the working directory root to the target,
-checking for symbolic links using `Files.isSymbolicLink`. When a symlink is found, its resolved
-real path is verified to remain within the working directory. Paths to non-existent files are
-safely handled because `Files.isSymbolicLink` returns false for non-existent entries, so only
-existing path components are checked.
+GridGrind binds the root and every existing parent with no-follow directory descriptors, records
+their filesystem identities, copies request inputs into private staging, and commits output through
+the retained parent descriptor. Any symlink is rejected, including a link that happens to point
+inside the root. Immediately before persistence, GridGrind rechecks the recorded topology and
+fails closed if it observes a replacement, unlink, rename, or symlink transition.
+
+This protects containment while the bound filesystem topology remains stable. It does not claim
+absolute containment against a principal that can mutate that topology in the scheduling window
+between the final identity recheck and a descriptor-relative commit; Java exposes no proven,
+portable root-anchored atomic-resolve-and-commit primitive for that stronger guarantee.
 
 ---
 
-### LIM-030 — Source File Path Confinement
+### LIM-030 — File-Backed Authored Input Isolation
 
 | Field | Value |
 |:------|:------|
 | **Category** | GridGrind |
-| **Limit** | `TextSourceInput.Utf8File` and `BinarySourceInput.File` paths must not escape the working directory via relative traversal components |
-| **Error** | `InputSourceReadException`: Invalid \<kind\> path: \<path\> |
-| **Applies to** | All `TextSourceInput.Utf8File` and `BinarySourceInput.File` source references resolved via `SourceBackedPathResolver.resolvePath` |
-| **Code** | `SourceBackedPathResolver.resolvePath // LIM-030` |
-| **UX** | Not surfaced in help |
+| **Limit** | File-backed text and binary authored inputs are read only through the request-owned no-follow binding and are resolved before workbook mutation |
+| **Error** | `PATH_ESCAPES_ROOT`, `UNSAFE_PATH_ACCESS`, `INPUT_SOURCE_NOT_FOUND`, or `INPUT_SOURCE_IO_ERROR`, according to the proven fault |
+| **Applies to** | Every `TextSourceInput.Utf8File` and `BinarySourceInput.File` occurrence |
+| **Code** | `SourceBackedPlanResolver.readUtf8File // LIM-030` |
+| **UX** | Doctor batches independent file-input findings with other phase-four failures |
 
-`TextSourceInput.Utf8File` and `BinarySourceInput.File` allow callers to provide content from
-local files. Without confinement these inputs accept relative paths such as `../../etc/shadow`,
-which resolve outside the working directory and allow arbitrary server-side file reads.
-`SourceBackedPathResolver.resolvePath` now delegates to `ExecutionRequestPaths.normalizePath`
-(LIM-025, LIM-029), which rejects relative traversal and walks symlinks. Absolute paths remain
-allowed as explicit caller references, matching the policy applied to workbook source paths.
+The resolver reads each authored file through the same containment and no-follow capability used
+for workbooks and signing material, then normalizes its bytes into the in-memory plan. The later
+mutation phase never reopens an authored path string, so a source-file race cannot redirect the
+content that was validated during preflight.
 
 ---
 
@@ -486,7 +488,7 @@ layer; the extension check in LIM-002 remains the defense against unrecognized o
 | **Category** | Protocol |
 | **Limit** | Write-side OOXML package encryption authors AGILE only, defaults to `AES_256` / `SHA_512`, and allows only `AES_256` or `AES_192` plus `SHA_512`, `SHA_384`, or `SHA_256` |
 | **Error code** | `INVALID_REQUEST` |
-| **Applies to** | `persistence.security.encryption`; implicit encrypted-source preservation during persistence |
+| **Applies to** | `persistence.security.encryption` policy axis |
 | **Code** | `OoxmlEncryptionInput.create // LIM-038`; `ExcelOoxmlPackagePersistenceSupport.preservedSourceEncryption // LIM-038` |
 | **UX** | `GridGrindOoxmlWriteEncryptionContractText.inputSummary // LIM-038`; `GridGrindOoxmlWriteEncryptionContractText.limitSummary // LIM-038` |
 
@@ -494,11 +496,9 @@ GridGrind reads and reports broader factual OOXML encryption state than it autho
 surface legacy envelopes such as `STANDARD`, weaker AGILE variants, or non-default hashes because
 the goal on the read path is factual reporting. The write path is intentionally narrower:
 authorable persistence security owns one explicit strong-only AGILE contract and does not accept a
-`mode` field. When an encrypted source workbook is persisted without an explicit
-`persistence.security.encryption` block, GridGrind auto-preserves source encryption only if the
-loaded package already sits on the authorable AGILE/CBC allowlist; otherwise the request must
-choose one supported AGILE write envelope explicitly instead of silently carrying forward a legacy
-or weak source package. Reintroduce write-side `STANDARD` only if a named consumer proves an
+`mode` field. Existing-workbook writes declare encryption explicitly: `NONE`, `ENCRYPT`, or
+`PRESERVE_SOURCE`; omission never inherits source encryption. `PRESERVE_SOURCE` applies only to a
+verified source envelope that the strong AGILE write contract can reapply. Reintroduce write-side `STANDARD` only if a named consumer proves an
 old-Excel authoring requirement; until then readable/reportable `STANDARD` remains intentionally
 broader than the authorable write contract.
 
@@ -809,7 +809,7 @@ All other reads and mutations continue to use the normal full-XSSF in-memory exe
 | `.xls`, `.xlsm`, `.xlsb` | Not supported. See LIM-002. |
 | Streaming read/write | Supported only through `execution.mode`: `EVENT_READ` summary reads (`LIM-019`) and `STREAMING_WRITE` append-oriented `NEW` workbook authoring (`LIM-020`). |
 | Request JSON size | Capped at `16 MiB`; large authored values belong in `UTF8_FILE`, `FILE`, or `STANDARD_INPUT` sources (`LIM-021`). |
-| OOXML encryption and signing | Supported for `.xlsx` package security on the full-XSSF path. `source.security.password` is required for encrypted sources, `GET_PACKAGE_SECURITY` is unavailable in `EVENT_READ`, persisting mutations to a signed workbook requires explicit `persistence.security.signature` re-signing, and write-side OOXML encryption is the AGILE-only strong contract from LIM-038. |
+| OOXML encryption and signing | Supported for `.xlsx` package security on the full-XSSF path. `source.security.password` is required for encrypted sources, `GET_PACKAGE_SECURITY` is unavailable in `EVENT_READ`, every existing-source write declares both final `persistence.security` axes (`signature: NONE` deliberately removes signatures; `SIGN` replaces them), and write-side OOXML encryption is the AGILE-only strong contract from LIM-038. |
 
 Apache POI feature coverage: https://poi.apache.org/components/spreadsheet/
 

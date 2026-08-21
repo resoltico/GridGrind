@@ -26,7 +26,6 @@ public sealed interface InspectionSurfaceQuery extends InspectionQuery.Surface
       summary =
           "Infer a simple schema from a rectangular sheet window."
               + " Omit projection for the default compact VALUE readback.",
-      optionalFields = {"projection"},
       targetSelectors = {RangeSelector.RectangularWindow.class})
   record GetSheetSchema(
       @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<CellReadProjection> projection)

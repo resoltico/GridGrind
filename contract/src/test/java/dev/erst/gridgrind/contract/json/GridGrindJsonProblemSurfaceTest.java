@@ -32,7 +32,8 @@ class GridGrindJsonProblemSurfaceTest {
             .getMessage());
     assertEquals(
         "bytes must not be null",
-        assertThrows(NullPointerException.class, () -> GridGrindJson.readResponse((byte[]) null))
+        assertThrows(
+                NullPointerException.class, () -> GridGrindJson.readWorkbookResult((byte[]) null))
             .getMessage());
     assertEquals(
         "catalog must not be null",
@@ -96,11 +97,22 @@ class GridGrindJsonProblemSurfaceTest {
   }
 
   @Test
+  void classifiesMalformedUtf8AsInvalidEncoding() {
+    byte[] malformedUtf8 = new byte[] {'{', '"', 'x', '"', ':', (byte) 0xC3, (byte) 0x28};
+
+    InvalidEncodingException failure =
+        assertThrows(
+            InvalidEncodingException.class, () -> GridGrindJson.readRequest(malformedUtf8));
+
+    assertEquals("Request bytes must be valid UTF-8", failure.getMessage());
+  }
+
+  @Test
   void readsInvalidResponsesAndCatalogsUsingPublicProblemTypes() {
     InvalidJsonException invalidResponse =
         assertThrows(
             InvalidJsonException.class,
-            () -> GridGrindJson.readResponse("{".getBytes(StandardCharsets.UTF_8)));
+            () -> GridGrindJson.readWorkbookResult("{".getBytes(StandardCharsets.UTF_8)));
     InvalidRequestShapeException invalidCatalog =
         assertThrows(
             InvalidRequestShapeException.class,
@@ -108,7 +120,7 @@ class GridGrindJsonProblemSurfaceTest {
                 GridGrindJson.readProtocolCatalog(
                     """
                     {
-                      "protocolVersion": "V1",
+                      "protocolVersion": "V2",
                       "requestTemplate": { "source": { "type": "NEW" }, "steps": [] }
                     }
                     """
@@ -169,7 +181,9 @@ class GridGrindJsonProblemSurfaceTest {
                 GridGrindJson.readRequest(
                     """
                     {
+                      "protocolVersion": "V2",
                       "source": { "type": "NEW" },
+                      "persistence": { "type": "NONE" },
                       "steps": [
                         {
                           "stepId": "typo",
@@ -195,7 +209,9 @@ class GridGrindJsonProblemSurfaceTest {
                 GridGrindJson.readRequest(
                     """
                     {
+                      "protocolVersion": "V2",
                       "source": { "type": "NEW" },
+                      "persistence": { "type": "NONE" },
                       "steps": [
                         {
                           "stepId": "bad-anchor",
@@ -232,7 +248,7 @@ class GridGrindJsonProblemSurfaceTest {
                 GridGrindJson.readRequest(
                     """
                     {
-                      "protocolVersion": "V1",
+                      "protocolVersion": "V2",
                       "source": { "type": "NEW" },
                       "persistence": { "type": "NONE" },
                       "steps": [],
@@ -247,7 +263,7 @@ class GridGrindJsonProblemSurfaceTest {
                 GridGrindJson.readRequest(
                     """
                     {
-                      "protocolVersion": "V1",
+                      "protocolVersion": "V2",
                       "source": { "type": "NEW" },
                       "persistence": { "type": "NONE" },
                       "steps": [

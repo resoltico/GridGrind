@@ -18,11 +18,11 @@ import dev.erst.gridgrind.contract.dto.CellInput;
 import dev.erst.gridgrind.contract.dto.ExecutionJournal;
 import dev.erst.gridgrind.contract.dto.GridGrindProblemCode;
 import dev.erst.gridgrind.contract.dto.GridGrindProblemDetail;
-import dev.erst.gridgrind.contract.dto.GridGrindResponse;
-import dev.erst.gridgrind.contract.dto.GridGrindResponses;
 import dev.erst.gridgrind.contract.dto.PictureDataInput;
 import dev.erst.gridgrind.contract.dto.PictureInput;
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
+import dev.erst.gridgrind.contract.dto.WorkbookResult;
+import dev.erst.gridgrind.contract.dto.WorkbookResults;
 import dev.erst.gridgrind.contract.selector.CellSelector;
 import dev.erst.gridgrind.contract.source.BinarySourceInput;
 import dev.erst.gridgrind.contract.source.TextSourceInput;
@@ -47,10 +47,10 @@ class ExecutorGuardCoverageTest {
             dev.erst.gridgrind.contract.dto.ExecutionPolicyInput.defaults(),
             dev.erst.gridgrind.contract.dto.FormulaEnvironmentInput.empty(),
             java.util.List.of());
-    GridGrindResponse.Success expected =
-        GridGrindResponses.success(java.util.List.of(), java.util.List.of(), java.util.List.of());
+    WorkbookResult.Success expected =
+        WorkbookResults.success(java.util.List.of(), java.util.List.of(), java.util.List.of());
     AtomicReference<ExecutionInputBindings> seenBindings = new AtomicReference<>();
-    AtomicReference<ExecutionJournalSink> seenSink = new AtomicReference<>();
+    AtomicReference<ExecutionProgressSink> seenSink = new AtomicReference<>();
     GridGrindRequestExecutor executor =
         (ignoredRequest, bindings, sink) -> {
           seenBindings.set(bindings);
@@ -67,12 +67,12 @@ class ExecutorGuardCoverageTest {
         explicitBindings.standardInputBytes().orElseThrow());
     assertSame(expected, executor.execute(request, explicitBindings));
     assertSame(explicitBindings, seenBindings.get());
-    assertSame(ExecutionJournalSink.NOOP, seenSink.get());
+    assertSame(ExecutionProgressSink.NOOP, seenSink.get());
     assertThrows(
         NullPointerException.class, () -> executor.execute(request, (ExecutionInputBindings) null));
 
     AtomicReference<ExecutionInputBindings> forwardedBindings = new AtomicReference<>();
-    ExecutionJournalSink sink = event -> {};
+    ExecutionProgressSink sink = event -> {};
     GridGrindRequestExecutor journalExecutor =
         (ignoredRequest, bindings, actualSink) -> {
           forwardedBindings.set(bindings);
@@ -152,7 +152,7 @@ class ExecutorGuardCoverageTest {
                     new WorkbookPlan.WorkbookPersistence.None(),
                     mutations()),
                 null,
-                ExecutionJournalSink.NOOP));
+                ExecutionProgressSink.NOOP));
     WorkbookPlan standardInputRequest =
         request(
             new WorkbookPlan.WorkbookSource.New(),
@@ -163,9 +163,9 @@ class ExecutorGuardCoverageTest {
                     new CellMutationAction.SetCell(
                         new CellInput.Text(TextSourceInput.standardInput())))));
 
-    GridGrindResponse.Failure unavailableFailure =
+    WorkbookResult.Failure unavailableFailure =
         assertInstanceOf(
-            GridGrindResponse.Failure.class,
+            WorkbookResult.Failure.class,
             ExecutionContextFixtureSupport.execute(executor, standardInputRequest));
     dev.erst.gridgrind.contract.dto.ProblemContext.ResolveInputs unavailableContext =
         assertInstanceOf(
@@ -187,20 +187,20 @@ class ExecutorGuardCoverageTest {
                     new CellSelector.ByAddress("Budget", "A1"),
                     new CellMutationAction.SetCell(
                         new CellInput.Text(TextSourceInput.utf8File("blank.txt"))))));
-    GridGrindResponse.Failure blankFailure =
+    WorkbookResult.Failure blankFailure =
         assertInstanceOf(
-            GridGrindResponse.Failure.class,
+            WorkbookResult.Failure.class,
             executor.execute(
                 blankFileRequest,
                 ExecutionInputBindingsFixtureSupport.bindings(workingDirectory),
-                ExecutionJournalSink.NOOP));
+                ExecutionProgressSink.NOOP));
     dev.erst.gridgrind.contract.dto.ProblemContext.ResolveInputs blankContext =
         assertInstanceOf(
             dev.erst.gridgrind.contract.dto.ProblemContext.ResolveInputs.class,
             blankFailure.problem().context());
     assertEquals(GridGrindProblemCode.INVALID_REQUEST, blankFailure.problem().code());
-    assertEquals(java.util.Optional.empty(), blankContext.inputKind());
-    assertEquals(java.util.Optional.empty(), blankContext.inputPath());
+    assertEquals(java.util.Optional.of("source-backed text"), blankContext.inputKind());
+    assertEquals(java.util.Optional.of("blank.txt"), blankContext.inputPath());
   }
 
   @Test

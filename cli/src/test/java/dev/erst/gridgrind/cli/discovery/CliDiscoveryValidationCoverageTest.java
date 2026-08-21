@@ -181,7 +181,7 @@ class CliDiscoveryValidationCoverageTest {
             "ASSET_BACKED",
             "asset-backed-request.json",
             "summary",
-            ExampleWorkspaceMode.REQUIRES_EXAMPLE_ASSETS,
+            RecipeAdvisory.REQUIRES_EXAMPLE_ASSETS,
             List.of("assets/example.xlsx"));
 
     assertEquals(
@@ -217,7 +217,7 @@ class CliDiscoveryValidationCoverageTest {
                         "BROKEN_VIEW",
                         "broken-view.json",
                         "summary",
-                        ExampleWorkspaceMode.SELF_CONTAINED,
+                        RecipeAdvisory.SELF_CONTAINED,
                         List.of()))
             .getMessage());
 
@@ -240,7 +240,7 @@ class CliDiscoveryValidationCoverageTest {
                         "BROKEN_SELF_CONTAINED",
                         "broken-self-contained.json",
                         "summary",
-                        ExampleWorkspaceMode.SELF_CONTAINED,
+                        RecipeAdvisory.SELF_CONTAINED,
                         List.of("assets/example.xlsx")))
             .getMessage());
     assertEquals(
@@ -253,7 +253,7 @@ class CliDiscoveryValidationCoverageTest {
                         "BROKEN_ASSET_BACKED",
                         "broken-asset-backed.json",
                         "summary",
-                        ExampleWorkspaceMode.REQUIRES_EXAMPLE_ASSETS,
+                        RecipeAdvisory.REQUIRES_EXAMPLE_ASSETS,
                         List.of()))
             .getMessage());
     assertEquals(
@@ -275,7 +275,7 @@ class CliDiscoveryValidationCoverageTest {
                         "BROKEN_EXAMPLE_SELF_CONTAINED",
                         "broken-example-self-contained.json",
                         "summary",
-                        ExampleWorkspaceMode.SELF_CONTAINED,
+                        RecipeAdvisory.SELF_CONTAINED,
                         List.of("assets/example.xlsx")))
             .getMessage());
     assertEquals(
@@ -287,7 +287,7 @@ class CliDiscoveryValidationCoverageTest {
                         "BROKEN_EXAMPLE_ASSET_BACKED",
                         "broken-example-asset-backed.json",
                         "summary",
-                        ExampleWorkspaceMode.REQUIRES_EXAMPLE_ASSETS,
+                        RecipeAdvisory.REQUIRES_EXAMPLE_ASSETS,
                         List.of()))
             .getMessage());
   }
@@ -353,66 +353,36 @@ class CliDiscoveryValidationCoverageTest {
             .getMessage());
 
     assertEquals(
-        "problem must not be null",
+        "problems must not be null",
         assertThrows(
                 NullPointerException.class,
                 () ->
-                    new CliDiagnostic(
+                    new CommandError(
                         GridGrindProtocolVersion.current(),
-                        2,
                         "print-recipe",
-                        List.of(),
-                        null,
-                        Optional.empty()))
+                        (List<GridGrindProblemDetail.Problem>) null))
             .getMessage());
     assertEquals(
-        "suggestions must not be null",
-        assertThrows(
-                NullPointerException.class,
-                () ->
-                    new CliDiagnostic(
-                        GridGrindProtocolVersion.current(),
-                        2,
-                        "print-recipe",
-                        null,
-                        problem(),
-                        Optional.empty()))
-            .getMessage());
-    assertEquals(
-        "transport must not be null",
-        assertThrows(
-                NullPointerException.class,
-                () ->
-                    new CliDiagnostic(
-                        GridGrindProtocolVersion.current(),
-                        2,
-                        "print-recipe",
-                        List.of(),
-                        problem(),
-                        null))
-            .getMessage());
-    assertEquals(
-        "exitCode must be positive",
+        "problems must not be empty",
         assertThrows(
                 IllegalArgumentException.class,
                 () ->
-                    new CliDiagnostic(
-                        GridGrindProtocolVersion.current(),
-                        0,
-                        "print-recipe",
-                        List.of(),
-                        problem(),
-                        Optional.empty()))
+                    new CommandError(GridGrindProtocolVersion.current(), "print-recipe", List.of()))
+            .getMessage());
+    assertEquals(
+        "command must not be blank",
+        assertThrows(
+                IllegalArgumentException.class,
+                () ->
+                    new CommandError(GridGrindProtocolVersion.current(), "   ", List.of(problem())))
             .getMessage());
     assertEquals(
         "responsePath must not be blank",
-        assertThrows(IllegalArgumentException.class, () -> CliTransport.responseFile("   "))
-            .getMessage());
-    assertEquals(
-        "transport must not be null",
         assertThrows(
-                NullPointerException.class,
-                () -> CliDiscoveryValidation.copyOptionalTransport(null, "transport"))
+                IllegalArgumentException.class,
+                () ->
+                    new CliTransportNotice(
+                        CliTransportNotice.Destination.STDOUT, Optional.of("   ")))
             .getMessage());
     assertEquals(
         "requestFileName must be one portable file name, not a repository path",
@@ -423,7 +393,7 @@ class CliDiscoveryValidationCoverageTest {
                         "BROKEN",
                         Path.of("examples", "budget-request.json").toString(),
                         "summary",
-                        ExampleWorkspaceMode.SELF_CONTAINED,
+                        RecipeAdvisory.SELF_CONTAINED,
                         List.of()))
             .getMessage());
   }

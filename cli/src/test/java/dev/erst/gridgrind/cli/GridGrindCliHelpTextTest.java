@@ -4,7 +4,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import dev.erst.gridgrind.cli.discovery.CliDiagnostic;
 import dev.erst.gridgrind.cli.discovery.CliHelpReport;
 import dev.erst.gridgrind.cli.discovery.CliLicenseReport;
 import dev.erst.gridgrind.cli.discovery.CliVersionReport;
@@ -12,7 +11,6 @@ import dev.erst.gridgrind.cli.discovery.GridGrindCliJson;
 import dev.erst.gridgrind.cli.discovery.ShippedExampleEntry;
 import dev.erst.gridgrind.cli.examples.GridGrindShippedExamples;
 import dev.erst.gridgrind.contract.catalog.GridGrindContainerRuntimeText;
-import dev.erst.gridgrind.contract.dto.GridGrindProblemCode;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -266,12 +264,12 @@ class GridGrindCliHelpTextTest extends GridGrindCliTestSupport {
     assertTrue(overview.contains("Use --format structured"));
     assertTrue(overview.contains("Use --pretty"));
     assertTrue(overview.contains("--pretty"));
-    assertTrue(overview.contains("CLI diagnostics and request-content diagnostics"));
-    assertTrue(overview.contains("structured JSON on stderr"));
+    assertTrue(overview.contains("Without --response"));
+    assertTrue(overview.contains("compact transport notice"));
     assertTrue(
         normalizedOverview.contains(
-            "transport block to name the persisted file or stdout fallback channel"));
-    assertTrue(overview.contains("executed responses stay on stdout."));
+            "with writable stdout recovers that already-rendered payload there unchanged"));
+    assertTrue(normalizedOverview.contains("never moves a primary payload to stderr"));
     assertTrue(overview.contains("docs/QUICK_REFERENCE.md"));
     assertFalse(overview.contains("Minimal Valid Request:"));
     assertFalse(overview.contains("Built-in generated examples:"));
@@ -298,7 +296,7 @@ class GridGrindCliHelpTextTest extends GridGrindCliTestSupport {
     assertTrue(protocol.contains("execution.mode is a typed discriminator"));
     assertTrue(
         normalizedProtocol.contains(
-            "execution may include any subset of execution.mode, execution.journal, and execution.calculation"));
+            "execution may include any subset of execution.mode, execution.journal, execution.calculation, and execution.assertionMode"));
     assertTrue(
         normalizedProtocol.contains(
             "The bare --print-protocol-catalog command emits only the compact index."));
@@ -309,19 +307,22 @@ class GridGrindCliHelpTextTest extends GridGrindCliTestSupport {
         normalizedProtocol.contains("Scoped --lookup payloads may annotate conditional fields"));
     assertTrue(normalizedProtocol.contains("publish shared notes"));
     assertTrue(protocol.contains("STREAMING_WRITE"));
+    assertTrue(protocol.contains("VERBOSE streams compact JSONL progress events to stderr"));
     assertTrue(protocol.contains("formulaEnvironment.missingWorkbookPolicy"));
     assertTrue(protocol.contains("USE_CACHED_VALUE"));
     assertTrue(protocol.contains("formulaEnvironment.udfToolpacks[]"));
     assertTrue(protocol.contains("GET_CELLS addresses"));
     assertTrue(protocol.contains("EVALUATE_TARGETS requires strategy.cells[]"));
     assertTrue(protocol.contains("stepId must be unique within steps[]"));
-    assertTrue(normalizedProtocol.contains("CLI diagnostics and request-content diagnostics"));
-    assertTrue(normalizedProtocol.contains("stay on stderr"));
-    assertTrue(normalizedProtocol.contains("structured stderr CLI diagnostic"));
-    assertTrue(normalizedProtocol.contains("transport block names where the primary payload went"));
     assertTrue(
         normalizedProtocol.contains(
-            "executed GridGrindResponse payloads stay on stdout even when status=FAILED."));
+            "Without --response, the command payload is the sole stdout content"));
+    assertTrue(
+        normalizedProtocol.contains("With --response, that payload is written to the new file"));
+    assertTrue(
+        normalizedProtocol.contains(
+            "response-file write failure recovers the already-rendered payload there unchanged and adds one compact transport notice"));
+    assertTrue(normalizedProtocol.contains("never moves a primary payload to stderr"));
     assertFalse(protocol.contains("Workflows:"));
     assertFalse(protocol.contains("Docker Example:"));
   }
@@ -336,6 +337,7 @@ class GridGrindCliHelpTextTest extends GridGrindCliTestSupport {
     assertFalse(guidance.contains("{{CONTAINER_TAG}}"));
     assertTrue(guidance.contains("Discovery:"));
     assertTrue(guidance.contains("Unified recipe catalog entries:"));
+    assertTrue(guidance.contains("advisory:"));
     assertTrue(guidance.contains("Print one recipe:"));
     assertTrue(guidance.contains("gridgrind --print-recipe --lookup"));
     assertTrue(
@@ -392,34 +394,38 @@ class GridGrindCliHelpTextTest extends GridGrindCliTestSupport {
   }
 
   @Test
-  void versionFallsBackToStructuredFailureReportWhenResponsePathAlreadyExists() throws IOException {
+  void versionResponseFileCollisionPreservesTheOriginalVersionPayload() throws IOException {
     Path responsePath = Files.createTempFile("gridgrind-version-", ".json");
     Files.writeString(responsePath, "sentinel\n");
+    ByteArrayOutputStream expected = new ByteArrayOutputStream();
     ByteArrayOutputStream stdout = new ByteArrayOutputStream();
     ByteArrayOutputStream stderr = new ByteArrayOutputStream();
+    GridGrindCli cli = new GridGrindCli();
+
+    int directExitCode =
+        cli.run(new String[] {"--version"}, new ByteArrayInputStream(new byte[0]), expected);
 
     int exitCode =
-        new GridGrindCli()
-            .run(
-                new String[] {"--version", "--response", responsePath.toString()},
-                new ByteArrayInputStream(new byte[0]),
-                stdout,
-                stderr);
+        cli.run(
+            new String[] {"--version", "--response", responsePath.toString()},
+            new ByteArrayInputStream(new byte[0]),
+            stdout,
+            stderr);
 
-    CliDiagnostic failure = GridGrindCliJson.readBytes(stdout.toByteArray(), CliDiagnostic.class);
-    CliDiagnostic stderrDiagnostic =
-        GridGrindCliJson.readBytes(stderr.toByteArray(), CliDiagnostic.class);
+    dev.erst.gridgrind.cli.discovery.CliTransportNotice transportNotice =
+        GridGrindCliJson.readBytes(
+            stderr.toByteArray(), dev.erst.gridgrind.cli.discovery.CliTransportNotice.class);
 
+    assertEquals(0, directExitCode);
     assertEquals(1, exitCode);
-    assertEquals(failure, stderrDiagnostic);
-    assertEquals(GridGrindProblemCode.IO_ERROR, failure.problem().code());
-    assertEquals("version", failure.command());
+    assertEquals(
+        expected.toString(StandardCharsets.UTF_8), stdout.toString(StandardCharsets.UTF_8));
+    assertEquals(
+        dev.erst.gridgrind.cli.discovery.CliTransportNotice.Destination.STDOUT,
+        transportNotice.wroteTo());
     assertEquals(
         java.util.Optional.of(responsePath.toAbsolutePath().toString()),
-        writeResponseContext(failure).responsePath());
-    assertTrue(
-        failure.problem().message().contains(responsePath.toAbsolutePath().toString()),
-        "fallback report should point at the rejected response path");
+        transportNotice.responsePath());
     assertEquals(
         "sentinel\n", Files.readString(responsePath), "existing response file must stay untouched");
   }

@@ -41,7 +41,11 @@ class ProblemContextCoverageTest {
     assertEquals(Optional.empty(), unavailable.jsonPathValue());
     assertEquals(Optional.empty(), unavailable.jsonLineValue());
     assertEquals(Optional.empty(), unavailable.jsonColumnValue());
+    assertEquals(Optional.empty(), unavailable.byteOffsetValue());
+    assertEquals(Optional.empty(), unavailable.duplicateKeyValue());
     assertEquals(Optional.empty(), lineColumn.jsonPathValue());
+    assertEquals(Optional.empty(), lineColumn.byteOffsetValue());
+    assertEquals(Optional.empty(), lineColumn.duplicateKeyValue());
     assertEquals(Optional.of(4), lineColumn.jsonLineValue());
     assertEquals(Optional.of(12), lineColumn.jsonColumnValue());
     assertEquals(Optional.empty(), unknownArgument.argumentValue());
@@ -57,6 +61,50 @@ class ProblemContextCoverageTest {
   }
 
   @Test
+  void structuralJsonLocationsExposeOnlyTheFactsTheirVariantOwns() {
+    ProblemContextRequestSurfaces.JsonLocation pathOnly =
+        ProblemContextRequestSurfaces.JsonLocation.pathOnly("steps[0].stepId");
+    ProblemContextRequestSurfaces.JsonLocation byteOffset =
+        ProblemContextRequestSurfaces.JsonLocation.byteOffset(18);
+    ProblemContextRequestSurfaces.JsonLocation pathAtByteOffset =
+        ProblemContextRequestSurfaces.JsonLocation.pathAtByteOffset("steps[0].stepId", 18);
+    ProblemContextRequestSurfaces.JsonLocation duplicateKey =
+        ProblemContextRequestSurfaces.JsonLocation.duplicateKey("steps[0]", "stepId", 1, 21);
+    ProblemContextRequestSurfaces.JsonLocation located =
+        ProblemContextRequestSurfaces.JsonLocation.located("steps[0].stepId", 4, 12);
+
+    assertEquals(Optional.of("steps[0].stepId"), pathOnly.jsonPathValue());
+    assertEquals(Optional.empty(), pathOnly.byteOffsetValue());
+    assertEquals(Optional.empty(), pathOnly.jsonLineValue());
+    assertEquals(Optional.empty(), pathOnly.jsonColumnValue());
+    assertEquals(Optional.empty(), pathOnly.duplicateKeyValue());
+    assertEquals(Optional.empty(), byteOffset.jsonPathValue());
+    assertEquals(Optional.of(18L), byteOffset.byteOffsetValue());
+    assertEquals(Optional.empty(), byteOffset.jsonLineValue());
+    assertEquals(Optional.empty(), byteOffset.jsonColumnValue());
+    assertEquals(Optional.empty(), byteOffset.duplicateKeyValue());
+    assertEquals(Optional.of("steps[0].stepId"), pathAtByteOffset.jsonPathValue());
+    assertEquals(Optional.of(18L), pathAtByteOffset.byteOffsetValue());
+    assertEquals(Optional.empty(), pathAtByteOffset.jsonLineValue());
+    assertEquals(Optional.empty(), pathAtByteOffset.jsonColumnValue());
+    assertEquals(Optional.empty(), pathAtByteOffset.duplicateKeyValue());
+    assertEquals(Optional.empty(), duplicateKey.jsonPathValue());
+    assertEquals(Optional.of(21L), duplicateKey.byteOffsetValue());
+    assertEquals(
+        Optional.of(1),
+        duplicateKey
+            .duplicateKeyValue()
+            .map(ProblemContextRequestSurfaces.JsonLocation.DuplicateKey::occurrenceOrdinal));
+    assertEquals(Optional.empty(), duplicateKey.jsonLineValue());
+    assertEquals(Optional.empty(), duplicateKey.jsonColumnValue());
+    assertEquals(Optional.of("steps[0].stepId"), located.jsonPathValue());
+    assertEquals(Optional.empty(), located.byteOffsetValue());
+    assertEquals(Optional.empty(), located.duplicateKeyValue());
+    assertEquals(Optional.of(4), located.jsonLineValue());
+    assertEquals(Optional.of(12), located.jsonColumnValue());
+  }
+
+  @Test
   void stageContextsExposeTypedRequestInputLocationAndOutputFacts() {
     ProblemContextRequestSurfaces.RequestShape requestShape =
         ProblemContextRequestSurfaces.RequestShape.known("EXISTING", "OVERWRITE");
@@ -64,8 +112,14 @@ class ProblemContextCoverageTest {
         new ProblemContext.ReadRequest(
                 ProblemContextRequestSurfaces.RequestInput.standardInput(), null)
             .withJson(ProblemContextRequestSurfaces.JsonLocation.lineColumn(7, 3));
+    ProblemContext.BindRequest bindRequest =
+        new ProblemContext.BindRequest(
+                ProblemContextRequestSurfaces.RequestInput.requestFile("request.json"), null)
+            .withJson(
+                ProblemContextRequestSurfaces.JsonLocation.pathAtByteOffset("source.path", 41));
     ProblemContext.ValidateRequest validateRequest =
         new ProblemContext.ValidateRequest(requestShape);
+    CliRuntimeContext cliRuntime = new CliRuntimeContext();
     ProblemContext.ResolveInputs resolveInputs =
         new ProblemContext.ResolveInputs(
             requestShape, ProblemContextWorkbookSurfaces.InputReference.kind("comment"));
@@ -103,6 +157,12 @@ class ProblemContextCoverageTest {
     assertEquals(Optional.empty(), readRequest.jsonPath());
     assertEquals(Optional.of(7), readRequest.jsonLine());
     assertEquals(Optional.of(3), readRequest.jsonColumn());
+    assertEquals("READ_REQUEST", readRequest.stage());
+    assertEquals("BIND_REQUEST", bindRequest.stage());
+    assertEquals(Optional.of("request.json"), bindRequest.requestPath());
+    assertEquals(Optional.of("source.path"), bindRequest.jsonPath());
+    assertEquals(Optional.of(41L), bindRequest.byteOffset());
+    assertEquals("CLI_RUNTIME", cliRuntime.stage());
     assertEquals(Optional.of("EXISTING"), validateRequest.sourceType());
     assertEquals(Optional.of("OVERWRITE"), validateRequest.persistenceType());
     assertEquals(Optional.of("EXISTING"), resolveInputs.sourceType());
@@ -142,6 +202,24 @@ class ProblemContextCoverageTest {
     assertEquals(Optional.of("EXISTING"), executeRequest.sourceType());
     assertEquals(Optional.of("OVERWRITE"), executeRequest.persistenceType());
     assertEquals(Optional.of("/tmp/response.json"), writeResponse.responsePath());
+  }
+
+  @Test
+  void resolveInputsContextRetainsItsOptionalAuthoredLocation() {
+    ProblemContext.ResolveInputs resolveInputs =
+        new ProblemContext.ResolveInputs(
+            ProblemContextRequestSurfaces.RequestShape.known("NEW", "NONE"),
+            ProblemContextWorkbookSurfaces.InputReference.path("cell text", "missing.txt"),
+            Optional.of(
+                ProblemContextRequestSurfaces.JsonLocation.pathAtByteOffset(
+                    "steps[2].action.comment.text.source.path", 88)));
+
+    assertEquals(Optional.of("cell text"), resolveInputs.inputKind());
+    assertEquals(Optional.of("missing.txt"), resolveInputs.inputPath());
+    assertEquals(
+        Optional.of("steps[2].action.comment.text.source.path"),
+        resolveInputs.json().orElseThrow().jsonPathValue());
+    assertEquals(Optional.of(88L), resolveInputs.json().orElseThrow().byteOffsetValue());
   }
 
   @Test
@@ -190,6 +268,18 @@ class ProblemContextCoverageTest {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> ProblemContextRequestSurfaces.JsonLocation.lineColumn(1, 0))
+            .getMessage());
+    assertEquals(
+        "occurrenceOrdinal must not be negative",
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> ProblemContextRequestSurfaces.JsonLocation.duplicateKey("", "key", -1, 0))
+            .getMessage());
+    assertEquals(
+        "byteOffset must not be negative",
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> ProblemContextRequestSurfaces.JsonLocation.byteOffset(-1))
             .getMessage());
     assertEquals(
         "jsonLine must be greater than 0",

@@ -136,6 +136,14 @@ if ! docker_with_repo_config buildx version >/dev/null 2>&1; then
         "docker buildx is not reachable through the anonymous DOCKER_CONFIG even after staging ${docker_buildx_plugin}"
 fi
 
+printf 'Docker smoke: verifying pinned base-image platform coverage\n'
+while IFS= read -r image_ref; do
+    inspection="$(docker_with_repo_config buildx imagetools inspect "${image_ref}")"
+    for platform in linux/amd64 linux/arm64/v8; do
+        require_match "${inspection}" "Platform:[[:space:]]+${platform}" "pinned Docker base image ${image_ref} does not publish ${platform}"
+    done
+done < <(awk '/^FROM / { print $2 }' "${repo_root}/Dockerfile")
+
 mkdir -p "${smoke_root}/requests odd"
 
 readonly request_rel='requests odd/request [docker #smoke].json'
@@ -244,7 +252,7 @@ JSON
 
 cat > "${request_path}" <<JSON
 {
-  "protocolVersion": "V1",
+  "protocolVersion": "V2",
   "source": {
     "type": "NEW"
   },
@@ -281,7 +289,7 @@ JSON
 
 cat > "${existing_request_path}" <<JSON
 {
-  "protocolVersion": "V1",
+  "protocolVersion": "V2",
   "source": {
     "type": "EXISTING",
     "path": "${workbook_rel}"
@@ -307,7 +315,7 @@ JSON
 
 cat > "${signature_request_path}" <<JSON
 {
-  "protocolVersion": "V1",
+  "protocolVersion": "V2",
   "source": {
     "type": "NEW"
   },
@@ -387,7 +395,7 @@ JSON
 
 cat > "${streaming_request_path}" <<JSON
 {
-  "protocolVersion": "V1",
+  "protocolVersion": "V2",
   "source": {
     "type": "NEW"
   },
@@ -484,7 +492,7 @@ JSON
 
 cat > "${streaming_read_request_path}" <<JSON
 {
-  "protocolVersion": "V1",
+  "protocolVersion": "V2",
   "source": {
     "type": "EXISTING",
     "path": "${streaming_workbook_rel}"
@@ -581,10 +589,12 @@ grep -Eq '"journal"[[:space:]]*:' "${response_path}" || die \
     "docker smoke response did not include the structured execution journal"
 grep -Eq '"level"[[:space:]]*:[[:space:]]*"VERBOSE"' "${response_path}" || die \
     "docker smoke response did not preserve the requested VERBOSE journal level"
-[[ -s "${create_stderr_path}" ]] || die \
-    "docker smoke create request did not stream live verbose journal events to stderr"
-grep -Fq '[gridgrind]' "${create_stderr_path}" || die \
-    "docker smoke create request stderr did not contain the CLI journal prefix"
+! grep -Eq '"events"[[:space:]]*:' "${response_path}" || die \
+    "docker smoke response duplicated VERBOSE progress events"
+grep -Eq '^\{"status":"(STARTED|SUCCEEDED|FAILED)","timestamp":"[^"]+","category":"[^"]+"' "${create_stderr_path}" || die \
+    "docker smoke create request did not emit compact VERBOSE progress JSONL"
+! grep -Eq '"detail"[[:space:]]*:' "${create_stderr_path}" || die \
+    "docker smoke VERBOSE progress retained a legacy prose detail field"
 
 printf 'Docker smoke: reopening saved workbook through EXISTING source\n'
 docker_with_repo_config run --rm \

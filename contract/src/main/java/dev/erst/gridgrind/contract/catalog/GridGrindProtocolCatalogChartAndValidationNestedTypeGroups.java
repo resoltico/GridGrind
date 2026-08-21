@@ -46,101 +46,73 @@ final class GridGrindProtocolCatalogChartAndValidationNestedTypeGroups {
                       "AREA",
                       "Authored area-chart plot."
                           + " Supply explicit grouping and axes, or use the Java convenience"
-                          + " constructor for the standard category/value axis pair.",
-                      "varyColors"),
+                          + " constructor for the standard category/value axis pair."),
                   descriptor(
                       ChartPlotInput.Area3D.class,
                       "AREA_3D",
                       "Authored 3D area-chart plot."
                           + " Supply explicit grouping and axes, or use the Java convenience"
-                          + " constructor for the standard category/value axis pair.",
-                      "varyColors",
-                      "gapDepth"),
+                          + " constructor for the standard category/value axis pair."),
                   descriptor(
                       ChartPlotInput.Bar.class,
                       "BAR",
                       "Authored bar-chart plot."
                           + " Supply explicit barDirection, grouping, and axes."
                           + " The Java authoring surface exposes one convenience constructor for"
-                          + " the standard category/value axis pair.",
-                      "varyColors",
-                      "gapWidth",
-                      "overlap"),
+                          + " the standard category/value axis pair."),
                   descriptor(
                       ChartPlotInput.Bar3D.class,
                       "BAR_3D",
                       "Authored 3D bar-chart plot."
                           + " Supply explicit barDirection, grouping, and axes."
                           + " The Java authoring surface exposes one convenience constructor for"
-                          + " the standard category/value axis pair.",
-                      "varyColors",
-                      "gapDepth",
-                      "gapWidth",
-                      "shape"),
+                          + " the standard category/value axis pair."),
                   descriptor(
                       ChartPlotInput.Doughnut.class,
                       "DOUGHNUT",
                       "Authored doughnut-chart plot."
-                          + " varyColors, firstSliceAngle, and holeSize are optional.",
-                      "varyColors",
-                      "firstSliceAngle",
-                      "holeSize"),
+                          + " varyColors, firstSliceAngle, and holeSize are optional."),
                   descriptor(
                       ChartPlotInput.Line.class,
                       "LINE",
                       "Authored line-chart plot."
                           + " Supply explicit grouping and axes, or use the Java convenience"
-                          + " constructor for the standard category/value axis pair.",
-                      "varyColors"),
+                          + " constructor for the standard category/value axis pair."),
                   descriptor(
                       ChartPlotInput.Line3D.class,
                       "LINE_3D",
                       "Authored 3D line-chart plot."
                           + " Supply explicit grouping and axes, or use the Java convenience"
-                          + " constructor for the standard category/value axis pair.",
-                      "varyColors",
-                      "gapDepth"),
+                          + " constructor for the standard category/value axis pair."),
                   descriptor(
                       ChartPlotInput.Pie.class,
                       "PIE",
-                      "Authored pie-chart plot." + " varyColors and firstSliceAngle are optional.",
-                      "varyColors",
-                      "firstSliceAngle"),
-                  descriptor(
-                      ChartPlotInput.Pie3D.class,
-                      "PIE_3D",
-                      "Authored 3D pie-chart plot.",
-                      "varyColors"),
+                      "Authored pie-chart plot." + " varyColors and firstSliceAngle are optional."),
+                  descriptor(ChartPlotInput.Pie3D.class, "PIE_3D", "Authored 3D pie-chart plot."),
                   descriptor(
                       ChartPlotInput.Radar.class,
                       "RADAR",
                       "Authored radar-chart plot."
                           + " Supply explicit style and axes, or use the Java convenience"
-                          + " constructor for the standard category/value axis pair.",
-                      "varyColors"),
+                          + " constructor for the standard category/value axis pair."),
                   descriptor(
                       ChartPlotInput.Scatter.class,
                       "SCATTER",
                       "Authored scatter-chart plot."
                           + " Supply explicit style and axes, or use the Java convenience"
-                          + " constructor for the standard X/Y axis pair.",
-                      "varyColors"),
+                          + " constructor for the standard X/Y axis pair."),
                   descriptor(
                       ChartPlotInput.Surface.class,
                       "SURFACE",
                       "Authored surface-chart plot."
                           + " Supply explicit axes, or use the Java convenience constructor for"
-                          + " the standard category/value/series axis set.",
-                      "varyColors",
-                      "wireframe"),
+                          + " the standard category/value/series axis set."),
                   descriptor(
                       ChartPlotInput.Surface3D.class,
                       "SURFACE_3D",
                       "Authored 3D surface-chart plot."
                           + " Supply explicit axes, or use the Java convenience constructor for"
-                          + " the standard category/value/series axis set.",
-                      "varyColors",
-                      "wireframe"))),
+                          + " the standard category/value/series axis set."))),
           nestedTypeGroup(
               "chartTitleInputTypes",
               ChartTitleInput.class,
@@ -237,32 +209,27 @@ final class GridGrindProtocolCatalogChartAndValidationNestedTypeGroups {
                       DataValidationRuleInput.WholeNumber.class,
                       "WHOLE_NUMBER",
                       "Apply a whole-number comparison rule."
-                          + " formula2 is used only for BETWEEN and NOT_BETWEEN.",
-                      "formula2"),
+                          + " formula2 is used only for BETWEEN and NOT_BETWEEN."),
                   descriptor(
                       DataValidationRuleInput.DecimalNumber.class,
                       "DECIMAL_NUMBER",
                       "Apply a decimal-number comparison rule."
-                          + " formula2 is used only for BETWEEN and NOT_BETWEEN.",
-                      "formula2"),
+                          + " formula2 is used only for BETWEEN and NOT_BETWEEN."),
                   descriptor(
                       DataValidationRuleInput.DateRule.class,
                       "DATE",
                       "Apply a date comparison rule."
-                          + " formula2 is used only for BETWEEN and NOT_BETWEEN.",
-                      "formula2"),
+                          + " formula2 is used only for BETWEEN and NOT_BETWEEN."),
                   descriptor(
                       DataValidationRuleInput.TimeRule.class,
                       "TIME",
                       "Apply a time comparison rule."
-                          + " formula2 is used only for BETWEEN and NOT_BETWEEN.",
-                      "formula2"),
+                          + " formula2 is used only for BETWEEN and NOT_BETWEEN."),
                   descriptor(
                       DataValidationRuleInput.TextLength.class,
                       "TEXT_LENGTH",
                       "Apply a text-length comparison rule."
-                          + " formula2 is used only for BETWEEN and NOT_BETWEEN.",
-                      "formula2"),
+                          + " formula2 is used only for BETWEEN and NOT_BETWEEN."),
                   descriptor(
                       DataValidationRuleInput.CustomFormula.class,
                       "CUSTOM_FORMULA",
@@ -282,9 +249,7 @@ final class GridGrindProtocolCatalogChartAndValidationNestedTypeGroups {
                   descriptor(
                       AutofilterFilterCriterionInput.Dynamic.class,
                       "DYNAMIC",
-                      "Retain rows using one dynamic-date or moving-window autofilter rule.",
-                      "value",
-                      "maxValue"),
+                      "Retain rows using one dynamic-date or moving-window autofilter rule."),
                   descriptor(
                       AutofilterFilterCriterionInput.Top10.class,
                       "TOP10",
@@ -311,8 +276,7 @@ final class GridGrindProtocolCatalogChartAndValidationNestedTypeGroups {
                       "CELL_VALUE_RULE",
                       "Apply one cell-value comparison conditional-formatting rule."
                           + " formula2 is used only for BETWEEN and NOT_BETWEEN."
-                          + " Supply one differential style.",
-                      "formula2"),
+                          + " Supply one differential style."),
                   descriptor(
                       ConditionalFormattingRuleInput.ColorScaleRule.class,
                       "COLOR_SCALE_RULE",
@@ -398,6 +362,11 @@ final class GridGrindProtocolCatalogChartAndValidationNestedTypeGroups {
                       "DO_NOT_CALCULATE",
                       "Skip immediate server-side formula calculation."),
                   descriptor(
+                      CalculationStrategyInput.DeferredCalculation.class,
+                      "DEFERRED_CALCULATION",
+                      "Inspect formula capabilities and defer all calculation to an"
+                          + " Excel-compatible client."),
+                  descriptor(
                       CalculationStrategyInput.EvaluateAll.class,
                       "EVALUATE_ALL",
                       "Preflight and evaluate every formula cell after mutation steps complete."),
@@ -405,6 +374,11 @@ final class GridGrindProtocolCatalogChartAndValidationNestedTypeGroups {
                       CalculationStrategyInput.EvaluateTargets.class,
                       "EVALUATE_TARGETS",
                       "Preflight and evaluate the explicit formula-cell target list only."),
+                  descriptor(
+                      CalculationStrategyInput.RequireEvaluation.class,
+                      "REQUIRE_EVALUATION",
+                      "Preflight and evaluate every formula cell, failing when any formula cannot"
+                          + " be evaluated immediately."),
                   descriptor(
                       CalculationStrategyInput.ClearCachesOnly.class,
                       "CLEAR_CACHES_ONLY",

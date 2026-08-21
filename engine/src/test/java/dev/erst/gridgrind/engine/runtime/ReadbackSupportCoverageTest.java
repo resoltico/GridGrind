@@ -33,6 +33,7 @@ import dev.erst.gridgrind.excel.ExcelCellReadFacet;
 import dev.erst.gridgrind.excel.ExcelCellReadProjection;
 import dev.erst.gridgrind.excel.ExcelCellSnapshot;
 import dev.erst.gridgrind.excel.ExcelCellStyleSnapshot;
+import dev.erst.gridgrind.excel.ExcelColor;
 import dev.erst.gridgrind.excel.ExcelColorSnapshot;
 import dev.erst.gridgrind.excel.ExcelCommentAnchorSnapshot;
 import dev.erst.gridgrind.excel.ExcelCommentSnapshot;
@@ -54,6 +55,34 @@ import org.junit.jupiter.api.Test;
  * Coverage tests for runtime readback helpers introduced by projection-aware cell introspection.
  */
 class ReadbackSupportCoverageTest {
+  @Test
+  void styleReportConversionPreservesEveryOwnedDifferentialColorVariant() {
+    assertEquals(
+        Optional.empty(),
+        InspectionResultCellStyleReportSupport.toCellColorReport((ExcelColor) null));
+    assertEquals(
+        Optional.of(CellColorReport.rgb("#112233")),
+        InspectionResultCellStyleReportSupport.toCellColorReport(ExcelColor.rgb("#112233")));
+    assertEquals(
+        Optional.of(CellColorReport.rgb("#112233", 0.25d)),
+        InspectionResultCellStyleReportSupport.toCellColorReport(
+            ExcelColor.rgb("#112233", Optional.of(0.25d))));
+    assertEquals(
+        Optional.of(CellColorReport.theme(4)),
+        InspectionResultCellStyleReportSupport.toCellColorReport(ExcelColor.theme(4)));
+    assertEquals(
+        Optional.of(CellColorReport.theme(4, -0.25d)),
+        InspectionResultCellStyleReportSupport.toCellColorReport(
+            ExcelColor.theme(4, Optional.of(-0.25d))));
+    assertEquals(
+        Optional.of(CellColorReport.indexed(9)),
+        InspectionResultCellStyleReportSupport.toCellColorReport(ExcelColor.indexed(9)));
+    assertEquals(
+        Optional.of(CellColorReport.indexed(9, 0.5d)),
+        InspectionResultCellStyleReportSupport.toCellColorReport(
+            ExcelColor.indexed(9, Optional.of(0.5d))));
+  }
+
   @Test
   void cellReportConversionProjectsFacetsAcrossAllSnapshotKinds() {
     ExcelCellReadProjection allFacets =

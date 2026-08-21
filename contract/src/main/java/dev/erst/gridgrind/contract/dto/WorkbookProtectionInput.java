@@ -8,11 +8,16 @@ import java.util.Optional;
 
 /** Workbook-protection payload covering workbook and revisions lock state plus passwords. */
 public record WorkbookProtectionInput(
-    boolean structureLocked,
-    boolean windowsLocked,
-    boolean revisionsLocked,
-    @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<String> workbookPassword,
-    @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<String> revisionsPassword) {
+    @ProtocolField(optional = true, booleanDefault = ProtocolBooleanDefault.FALSE)
+        boolean structureLocked,
+    @ProtocolField(optional = true, booleanDefault = ProtocolBooleanDefault.FALSE)
+        boolean windowsLocked,
+    @ProtocolField(optional = true, booleanDefault = ProtocolBooleanDefault.FALSE)
+        boolean revisionsLocked,
+    @ProtocolField(optional = true, secret = true) @JsonInclude(JsonInclude.Include.NON_ABSENT)
+        Optional<String> workbookPassword,
+    @ProtocolField(optional = true, secret = true) @JsonInclude(JsonInclude.Include.NON_ABSENT)
+        Optional<String> revisionsPassword) {
   /** Reads workbook protection while defaulting omitted booleans to false and passwords empty. */
   @JsonCreator
   public WorkbookProtectionInput(
@@ -22,9 +27,9 @@ public record WorkbookProtectionInput(
       @JsonProperty("workbookPassword") Optional<String> workbookPassword,
       @JsonProperty("revisionsPassword") Optional<String> revisionsPassword) {
     this(
-        Boolean.TRUE.equals(structureLocked),
-        Boolean.TRUE.equals(windowsLocked),
-        Boolean.TRUE.equals(revisionsLocked),
+        ProtocolBooleanDefault.FALSE.resolve(structureLocked),
+        ProtocolBooleanDefault.FALSE.resolve(windowsLocked),
+        ProtocolBooleanDefault.FALSE.resolve(revisionsLocked),
         emptyIfNull(workbookPassword),
         emptyIfNull(revisionsPassword));
   }

@@ -37,7 +37,7 @@ class GridGrindCliJsonCoverageTest {
     RecipeKeywordMatchReport taskKeywordMatchReport = sampleRecipeKeywordMatchReport();
     ShippedExampleCatalog exampleCatalog = GridGrindShippedExamples.catalog();
     ProtocolCatalogSearchReport protocolCatalogSearchReport = sampleProtocolCatalogSearchReport();
-    CliDiagnostic cliDiagnostic = sampleCliDiagnostic();
+    CommandError commandError = sampleCommandError();
 
     assertEquals(
         taskCatalog,
@@ -68,9 +68,8 @@ class GridGrindCliJsonCoverageTest {
             ProtocolCatalogCliJson.writeProtocolCatalogSearchReportBytes(
                 protocolCatalogSearchReport)));
     assertEquals(
-        cliDiagnostic,
-        GridGrindCliJson.readBytes(
-            GridGrindCliJson.writeBytes(cliDiagnostic), CliDiagnostic.class));
+        commandError,
+        GridGrindCliJson.readBytes(GridGrindCliJson.writeBytes(commandError), CommandError.class));
 
     try (TrackingInputStream taskCatalogStream =
             new TrackingInputStream(GridGrindCliJson.writeBytes(taskCatalog));
@@ -84,8 +83,8 @@ class GridGrindCliJsonCoverageTest {
             new TrackingInputStream(
                 ProtocolCatalogCliJson.writeProtocolCatalogSearchReportBytes(
                     protocolCatalogSearchReport));
-        TrackingInputStream cliDiagnosticStream =
-            new TrackingInputStream(GridGrindCliJson.writeBytes(cliDiagnostic))) {
+        TrackingInputStream commandErrorStream =
+            new TrackingInputStream(GridGrindCliJson.writeBytes(commandError))) {
       assertEquals(taskCatalog, GridGrindCliJsonStreams.readTaskCatalog(taskCatalogStream));
       assertEquals(recipeCatalog, GridGrindCliJsonStreams.readRecipeCatalog(recipeCatalogStream));
       assertEquals(
@@ -97,13 +96,13 @@ class GridGrindCliJsonCoverageTest {
           protocolCatalogSearchReport,
           GridGrindCliJsonStreams.readProtocolCatalogSearchReport(
               protocolCatalogSearchReportStream));
-      assertEquals(cliDiagnostic, GridGrindCliJsonStreams.readCliDiagnostic(cliDiagnosticStream));
+      assertEquals(commandError, GridGrindCliJsonStreams.readCommandError(commandErrorStream));
       assertFalse(taskCatalogStream.closed);
       assertFalse(recipeCatalogStream.closed);
       assertFalse(taskKeywordMatchReportStream.closed);
       assertFalse(exampleCatalogStream.closed);
       assertFalse(protocolCatalogSearchReportStream.closed);
-      assertFalse(cliDiagnosticStream.closed);
+      assertFalse(commandErrorStream.closed);
     }
   }
 
@@ -113,7 +112,7 @@ class GridGrindCliJsonCoverageTest {
     RecipeKeywordMatchReport taskKeywordMatchReport = sampleRecipeKeywordMatchReport();
     ShippedExampleCatalog exampleCatalog = GridGrindShippedExamples.catalog();
     ProtocolCatalogSearchReport protocolCatalogSearchReport = sampleProtocolCatalogSearchReport();
-    CliDiagnostic cliDiagnostic = sampleCliDiagnostic();
+    CommandError commandError = sampleCommandError();
 
     assertEquals(
         "bytes must not be null",
@@ -183,12 +182,12 @@ class GridGrindCliJsonCoverageTest {
         "bytes must not be null",
         assertThrows(
                 NullPointerException.class,
-                () -> GridGrindCliJson.readBytes(null, CliDiagnostic.class))
+                () -> GridGrindCliJson.readBytes(null, CommandError.class))
             .getMessage());
     assertEquals(
         "inputStream must not be null",
         assertThrows(
-                NullPointerException.class, () -> GridGrindCliJsonStreams.readCliDiagnostic(null))
+                NullPointerException.class, () -> GridGrindCliJsonStreams.readCommandError(null))
             .getMessage());
     assertEquals(
         "outputStream must not be null",
@@ -242,7 +241,7 @@ class GridGrindCliJsonCoverageTest {
     assertEquals(
         "outputStream must not be null",
         assertThrows(
-                NullPointerException.class, () -> GridGrindCliJson.writeValue(null, cliDiagnostic))
+                NullPointerException.class, () -> GridGrindCliJson.writeValue(null, commandError))
             .getMessage());
     assertEquals(
         "value must not be null",
@@ -287,9 +286,9 @@ class GridGrindCliJsonCoverageTest {
         protocolCatalogSearchOutput, sampleProtocolCatalogSearchReport(), false);
     assertFalse(protocolCatalogSearchOutput.toString(StandardCharsets.UTF_8).contains(": null"));
 
-    ByteArrayOutputStream cliDiagnosticOutput = new ByteArrayOutputStream();
-    GridGrindCliJson.writeValue(cliDiagnosticOutput, sampleCliDiagnostic());
-    assertFalse(cliDiagnosticOutput.toString(StandardCharsets.UTF_8).contains(": null"));
+    ByteArrayOutputStream commandErrorOutput = new ByteArrayOutputStream();
+    GridGrindCliJson.writeValue(commandErrorOutput, sampleCommandError());
+    assertFalse(commandErrorOutput.toString(StandardCharsets.UTF_8).contains(": null"));
 
     assertTrue(
         GridGrindCliJsonStreams.readTree("{\"hello\":true}".getBytes(StandardCharsets.UTF_8))
@@ -298,28 +297,23 @@ class GridGrindCliJsonCoverageTest {
   }
 
   @Test
-  void cliDiagnosticJsonKeepsTheWrapperTransportOnlyAndLeavesProblemFactsInProblemCore()
-      throws IOException {
+  void commandErrorJsonKeepsCommandFactsSeparateFromTheSharedProblemCore() throws IOException {
     JsonNode parseArgumentsDiagnostic =
-        GridGrindCliJsonStreams.readTree(GridGrindCliJson.writeBytes(sampleCliDiagnostic()));
+        GridGrindCliJsonStreams.readTree(GridGrindCliJson.writeBytes(sampleCommandError()));
+    GridGrindProblemDetail.Problem readRequestProblem =
+        GridGrindProblemDetail.Problem.of(
+            GridGrindProblemCode.INVALID_REQUEST_SHAPE,
+            "Unknown field 'bogus'",
+            new ProblemContext.ReadRequest(
+                RequestInput.standardInput(), JsonLocation.located("steps[0].target.type", 7, 13)));
     JsonNode readRequestDiagnostic =
         GridGrindCliJsonStreams.readTree(
             GridGrindCliJson.writeBytes(
-                new CliDiagnostic(
-                    GridGrindProtocolVersion.current(),
-                    1,
-                    "execute",
-                    List.of("gridgrind --doctor-request --request request.json"),
-                    GridGrindProblemDetail.Problem.of(
-                        GridGrindProblemCode.INVALID_REQUEST_SHAPE,
-                        "Unknown field 'bogus'",
-                        new ProblemContext.ReadRequest(
-                            RequestInput.standardInput(),
-                            JsonLocation.located("steps[0].target.type", 7, 13))),
-                    java.util.Optional.of(CliTransport.standardOutput()))));
+                new CommandError(
+                    GridGrindProtocolVersion.current(), "execute", List.of(readRequestProblem))));
 
     assertEquals(
-        Set.of("protocolVersion", "exitCode", "command", "suggestions", "problem", "transport"),
+        Set.of("protocolVersion", "command", "problems", "status"),
         fieldNames(parseArgumentsDiagnostic));
     assertFalse(parseArgumentsDiagnostic.has("code"));
     assertFalse(parseArgumentsDiagnostic.has("message"));
@@ -327,10 +321,14 @@ class GridGrindCliJsonCoverageTest {
     assertFalse(parseArgumentsDiagnostic.has("argument"));
     assertFalse(parseArgumentsDiagnostic.has("location"));
     assertFalse(parseArgumentsDiagnostic.has("jsonPath"));
+    assertFalse(parseArgumentsDiagnostic.has("exitCode"));
+    assertFalse(parseArgumentsDiagnostic.has("suggestions"));
+    assertFalse(parseArgumentsDiagnostic.has("transport"));
     assertEquals(
         "NAMED",
         parseArgumentsDiagnostic
-            .path("problem")
+            .path("problems")
+            .path(0)
             .path("context")
             .path("argument")
             .path("type")
@@ -338,18 +336,16 @@ class GridGrindCliJsonCoverageTest {
     assertEquals(
         "--query",
         parseArgumentsDiagnostic
-            .path("problem")
+            .path("problems")
+            .path(0)
             .path("context")
             .path("argument")
             .path("argument")
             .asText());
-    assertEquals("FILE", parseArgumentsDiagnostic.path("transport").path("wroteTo").asText());
-    assertEquals(
-        "/tmp/diagnostic.json",
-        parseArgumentsDiagnostic.path("transport").path("responsePath").asText());
+    assertEquals("REJECTED", parseArgumentsDiagnostic.path("status").asText());
 
     assertEquals(
-        Set.of("protocolVersion", "exitCode", "command", "suggestions", "problem", "transport"),
+        Set.of("protocolVersion", "command", "problems", "status"),
         fieldNames(readRequestDiagnostic));
     assertFalse(readRequestDiagnostic.has("location"));
     assertFalse(readRequestDiagnostic.has("jsonPath"));
@@ -358,18 +354,26 @@ class GridGrindCliJsonCoverageTest {
     assertEquals(
         "STANDARD_INPUT",
         readRequestDiagnostic
-            .path("problem")
+            .path("problems")
+            .path(0)
             .path("context")
             .path("request")
             .path("type")
             .asText());
     assertEquals(
         "LOCATED",
-        readRequestDiagnostic.path("problem").path("context").path("json").path("type").asText());
+        readRequestDiagnostic
+            .path("problems")
+            .path(0)
+            .path("context")
+            .path("json")
+            .path("type")
+            .asText());
     assertEquals(
         "steps[0].target.type",
         readRequestDiagnostic
-            .path("problem")
+            .path("problems")
+            .path(0)
             .path("context")
             .path("json")
             .path("jsonPath")
@@ -377,7 +381,8 @@ class GridGrindCliJsonCoverageTest {
     assertEquals(
         7,
         readRequestDiagnostic
-            .path("problem")
+            .path("problems")
+            .path(0)
             .path("context")
             .path("json")
             .path("jsonLine")
@@ -385,13 +390,13 @@ class GridGrindCliJsonCoverageTest {
     assertEquals(
         13,
         readRequestDiagnostic
-            .path("problem")
+            .path("problems")
+            .path(0)
             .path("context")
             .path("json")
             .path("jsonColumn")
             .asInt());
-    assertEquals("STDOUT", readRequestDiagnostic.path("transport").path("wroteTo").asText());
-    assertFalse(readRequestDiagnostic.path("transport").has("responsePath"));
+    assertEquals("REJECTED", readRequestDiagnostic.path("status").asText());
   }
 
   private static RecipeKeywordMatchReport sampleRecipeKeywordMatchReport() {
@@ -412,17 +417,15 @@ class GridGrindCliJsonCoverageTest {
                 List.of("summary", "discovery term"))));
   }
 
-  private static CliDiagnostic sampleCliDiagnostic() {
-    return new CliDiagnostic(
+  private static CommandError sampleCommandError() {
+    return new CommandError(
         GridGrindProtocolVersion.current(),
-        2,
         "print-recipe-keyword-match",
-        List.of("gridgrind --print-recipe-catalog"),
-        GridGrindProblemDetail.Problem.of(
-            GridGrindProblemCode.INVALID_ARGUMENTS,
-            "message",
-            new ProblemContext.ParseArguments(CliArgument.named("--query"))),
-        java.util.Optional.of(CliTransport.responseFile("/tmp/diagnostic.json")));
+        List.of(
+            GridGrindProblemDetail.Problem.of(
+                GridGrindProblemCode.INVALID_ARGUMENTS,
+                "message",
+                new ProblemContext.ParseArguments(CliArgument.named("--query")))));
   }
 
   private static ProtocolCatalogSearchReport sampleProtocolCatalogSearchReport() {

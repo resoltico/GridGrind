@@ -49,7 +49,7 @@ public final class GridGrindRecipeCatalog {
         recipe.id(),
         recipe.requestFileName(),
         recipe.summary(),
-        recipe.workspaceMode(),
+        recipe.advisory(),
         recipe.requiredWorkspacePaths());
   }
 }

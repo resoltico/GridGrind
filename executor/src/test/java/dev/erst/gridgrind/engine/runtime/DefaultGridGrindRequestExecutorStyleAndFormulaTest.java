@@ -7,7 +7,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import dev.erst.gridgrind.contract.action.CellMutationAction;
 import dev.erst.gridgrind.contract.action.WorkbookMutationAction;
 import dev.erst.gridgrind.contract.dto.*;
-import dev.erst.gridgrind.contract.dto.GridGrindResponsePersistence;
+import dev.erst.gridgrind.contract.dto.WorkbookResultPersistence;
 import dev.erst.gridgrind.contract.query.*;
 import dev.erst.gridgrind.contract.selector.*;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
@@ -36,7 +36,7 @@ class DefaultGridGrindRequestExecutorStyleAndFormulaTest
     Path workbookPath = Files.createTempFile("gridgrind-range-style-", ".xlsx");
     Files.deleteIfExists(workbookPath);
 
-    GridGrindResponse.Success success =
+    WorkbookResult.Success success =
         success(
             ExecutionContextFixtureSupport.execute(
                 new DefaultGridGrindRequestExecutor(),
@@ -126,7 +126,7 @@ class DefaultGridGrindRequestExecutorStyleAndFormulaTest
     Path workbookPath = Files.createTempFile("gridgrind-format-depth-", ".xlsx");
     Files.deleteIfExists(workbookPath);
 
-    GridGrindResponse.Success success =
+    WorkbookResult.Success success =
         success(
             ExecutionContextFixtureSupport.execute(
                 new DefaultGridGrindRequestExecutor(),
@@ -167,11 +167,11 @@ class DefaultGridGrindRequestExecutorStyleAndFormulaTest
                                         ColorInput.rgb("#DDEBF7")),
                                     new CellBorderInput(
                                         Optional.ofNullable(
-                                            new CellBorderSideInput(
+                                            new BorderSideInput(
                                                 ExcelBorderStyle.THIN, ColorInput.rgb("#102030"))),
                                         Optional.empty(),
                                         Optional.ofNullable(
-                                            new CellBorderSideInput(
+                                            new BorderSideInput(
                                                 ExcelBorderStyle.DOUBLE,
                                                 ColorInput.rgb("#203040"))),
                                         Optional.empty(),
@@ -222,7 +222,7 @@ class DefaultGridGrindRequestExecutorStyleAndFormulaTest
     Path workbookPath = Files.createTempFile("gridgrind-advanced-style-", ".xlsx");
     Files.deleteIfExists(workbookPath);
 
-    GridGrindResponse.Success success =
+    WorkbookResult.Success success =
         success(
             ExecutionContextFixtureSupport.execute(
                 new DefaultGridGrindRequestExecutor(),
@@ -263,7 +263,7 @@ class DefaultGridGrindRequestExecutorStyleAndFormulaTest
                                         Optional.empty(),
                                         Optional.empty(),
                                         Optional.ofNullable(
-                                            new CellBorderSideInput(
+                                            new BorderSideInput(
                                                 ExcelBorderStyle.THIN,
                                                 ColorInput.indexed(
                                                     Short.toUnsignedInt(
@@ -317,7 +317,7 @@ class DefaultGridGrindRequestExecutorStyleAndFormulaTest
   void preservesDistinctLinearAndPathGradientStylesInSameRequest() throws IOException {
     Path workbookPath = Files.createTempFile("gridgrind-distinct-gradients-", ".xlsx");
     assertDoesNotThrow(() -> Files.deleteIfExists(workbookPath));
-    GridGrindResponse.Success success =
+    WorkbookResult.Success success =
         success(
             ExecutionContextFixtureSupport.execute(
                 new DefaultGridGrindRequestExecutor(),
@@ -405,7 +405,7 @@ class DefaultGridGrindRequestExecutorStyleAndFormulaTest
 
   @Test
   void producesErrorReportForCellsWithErrorValues() {
-    GridGrindResponse.Success success =
+    WorkbookResult.Success success =
         success(
             ExecutionContextFixtureSupport.execute(
                 new DefaultGridGrindRequestExecutor(),
@@ -454,18 +454,20 @@ class DefaultGridGrindRequestExecutorStyleAndFormulaTest
     Path workingDirectory = Path.of("/tmp/gridgrind-persistence");
     WorkbookPlan.WorkbookSource newSource = new WorkbookPlan.WorkbookSource.New();
     WorkbookPlan.WorkbookSource existingFile =
-        new WorkbookPlan.WorkbookSource.ExistingFile("/tmp/source.xlsx");
+        new WorkbookPlan.WorkbookSource.ExistingFile("source.xlsx");
     WorkbookPlan.WorkbookPersistence none = new WorkbookPlan.WorkbookPersistence.None();
-    WorkbookPlan.WorkbookPersistence overwrite = new WorkbookPlan.WorkbookPersistence.Overwrite();
+    WorkbookPlan.WorkbookPersistence overwrite =
+        new WorkbookPlan.WorkbookPersistence.Overwrite(
+            dev.erst.gridgrind.contract.dto.OoxmlPersistenceSecurityInput.none());
     WorkbookPlan.WorkbookPersistence saveAs =
         new WorkbookPlan.WorkbookPersistence.SaveAs(
-            "/tmp/out.xlsx", WorkbookPlan.WorkbookPersistence.IfExists.REJECT);
+            "out.xlsx", WorkbookPlan.WorkbookPersistence.IfExists.REJECT);
 
     assertEquals(
-        Path.of("/tmp/out.xlsx").toAbsolutePath().normalize().toString(),
+        workingDirectory.resolve("out.xlsx").toString(),
         ExecutionRequestPaths.persistencePath(newSource, saveAs, workingDirectory));
     assertEquals(
-        Path.of("/tmp/source.xlsx").toAbsolutePath().normalize().toString(),
+        workingDirectory.resolve("source.xlsx").toString(),
         ExecutionRequestPaths.persistencePath(existingFile, overwrite, workingDirectory));
     assertNull(ExecutionRequestPaths.persistencePath(newSource, overwrite, workingDirectory));
     assertNull(ExecutionRequestPaths.persistencePath(newSource, none, workingDirectory));
@@ -485,8 +487,10 @@ class DefaultGridGrindRequestExecutorStyleAndFormulaTest
                   workbookSupport.persistWorkbook(
                       workbook,
                       new WorkbookPlan.WorkbookSource.New(),
-                      new WorkbookPlan.WorkbookPersistence.Overwrite(),
-                      workingDirectory));
+                      new WorkbookPlan.WorkbookPersistence.Overwrite(
+                          dev.erst.gridgrind.contract.dto.OoxmlPersistenceSecurityInput.none()),
+                      new ExecutionInputBindings(
+                          workingDirectory, workingDirectory.resolve("scratch"))));
 
       assertEquals("OVERWRITE persistence requires an EXISTING source", exception.getMessage());
     }
@@ -498,10 +502,10 @@ class DefaultGridGrindRequestExecutorStyleAndFormulaTest
     WorkbookPlan.WorkbookSource newSource = new WorkbookPlan.WorkbookSource.New();
     WorkbookPlan.WorkbookPersistence saveAs =
         new WorkbookPlan.WorkbookPersistence.SaveAs(
-            "/tmp/subdir/../out.xlsx", WorkbookPlan.WorkbookPersistence.IfExists.REJECT);
+            "subdir/../out.xlsx", WorkbookPlan.WorkbookPersistence.IfExists.REJECT);
 
     assertEquals(
-        "/tmp/out.xlsx",
+        "/tmp/gridgrind-persistence/out.xlsx",
         ExecutionRequestPaths.persistencePath(newSource, saveAs, workingDirectory));
   }
 
@@ -512,22 +516,31 @@ class DefaultGridGrindRequestExecutorStyleAndFormulaTest
     Path subDir = Files.createDirectory(tempDir.resolve("subdir"));
     String pathWithDotDot = subDir + "/../out.xlsx";
 
-    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
-      GridGrindResponsePersistence.PersistenceOutcome outcome =
+    try (var preparedBindings = ExecutionInputBindingsFixtureSupport.preparedBindings(tempDir);
+        ExcelWorkbook workbook = ExcelWorkbooks.create()) {
+      preparedBindings
+          .access()
+          .prepareOutput(
+              pathWithDotDot,
+              "persistence",
+              dev.erst.gridgrind.excel.WorkbookArtifactWriteDisposition.CREATE_NEW);
+      WorkbookResultPersistence.PersistenceOutcome outcome =
           workbookSupport.persistWorkbook(
               workbook,
               new WorkbookPlan.WorkbookSource.New(),
               new WorkbookPlan.WorkbookPersistence.SaveAs(
                   pathWithDotDot, WorkbookPlan.WorkbookPersistence.IfExists.REJECT),
-              tempDir);
+              preparedBindings.bindings());
 
-      GridGrindResponsePersistence.PersistenceOutcome.SavedAs savedAs =
-          assertInstanceOf(GridGrindResponsePersistence.PersistenceOutcome.SavedAs.class, outcome);
+      WorkbookResultPersistence.PersistenceOutcome.SavedAs savedAs =
+          assertInstanceOf(WorkbookResultPersistence.PersistenceOutcome.SavedAs.class, outcome);
       assertEquals(pathWithDotDot, savedAs.requestedPath());
       assertEquals(tempDir.resolve("out.xlsx").toString(), writtenExecutionPath(savedAs));
     } finally {
       Files.deleteIfExists(tempDir.resolve("out.xlsx"));
       Files.deleteIfExists(subDir);
+      Files.deleteIfExists(tempDir.resolve(".gridgrind/tmp"));
+      Files.deleteIfExists(tempDir.resolve(".gridgrind"));
       Files.deleteIfExists(tempDir);
     }
   }
@@ -550,7 +563,7 @@ class DefaultGridGrindRequestExecutorStyleAndFormulaTest
                 dev.erst.gridgrind.excel.stream.ExcelStreamingWorkbookWriter
                     ::markRecalculateOnOpen));
 
-    GridGrindResponse.Failure failure =
+    WorkbookResult.Failure failure =
         failure(
             ExecutionContextFixtureSupport.execute(
                 executor,
@@ -616,7 +629,7 @@ class DefaultGridGrindRequestExecutorStyleAndFormulaTest
 
   @Test
   void returnsStructuredFailureForAppendRowWithInvalidFormula() {
-    GridGrindResponse.Failure failure =
+    WorkbookResult.Failure failure =
         failure(
             ExecutionContextFixtureSupport.execute(
                 new DefaultGridGrindRequestExecutor(),

@@ -29,15 +29,14 @@ final class CliRecipeCatalogValidation {
   }
 
   static void validateWorkspaceContract(
-      ExampleWorkspaceMode workspaceMode, List<String> requiredWorkspacePaths, String noun) {
-    Objects.requireNonNull(workspaceMode, "workspaceMode must not be null");
+      RecipeAdvisory advisory, List<String> requiredWorkspacePaths, String noun) {
+    Objects.requireNonNull(advisory, "advisory must not be null");
     Objects.requireNonNull(requiredWorkspacePaths, "requiredWorkspacePaths must not be null");
-    if (workspaceMode == ExampleWorkspaceMode.SELF_CONTAINED && !requiredWorkspacePaths.isEmpty()) {
+    if (advisory == RecipeAdvisory.SELF_CONTAINED && !requiredWorkspacePaths.isEmpty()) {
       throw new IllegalArgumentException(
           "SELF_CONTAINED " + noun + " must not publish requiredWorkspacePaths");
     }
-    if (workspaceMode == ExampleWorkspaceMode.REQUIRES_EXAMPLE_ASSETS
-        && requiredWorkspacePaths.isEmpty()) {
+    if (advisory == RecipeAdvisory.REQUIRES_EXAMPLE_ASSETS && requiredWorkspacePaths.isEmpty()) {
       throw new IllegalArgumentException(
           "REQUIRES_EXAMPLE_ASSETS " + noun + " must publish requiredWorkspacePaths");
     }

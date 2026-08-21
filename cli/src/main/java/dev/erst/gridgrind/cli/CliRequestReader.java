@@ -1,6 +1,5 @@
 package dev.erst.gridgrind.cli;
 
-import dev.erst.gridgrind.contract.dto.WorkbookPlan;
 import dev.erst.gridgrind.contract.json.GridGrindJson;
 import java.io.IOException;
 import java.io.InputStream;
@@ -26,11 +25,6 @@ final class CliRequestReader {
     validateReadableRequestPath(normalizedRequestPath);
     GridGrindJson.requireSupportedRequestLength(Files.size(normalizedRequestPath));
     return Files.readAllBytes(normalizedRequestPath);
-  }
-
-  /** Reads the request from stdin when no path is present, otherwise from the given file path. */
-  WorkbookPlan read(Optional<Path> requestPath, InputStream stdin) throws IOException {
-    return GridGrindJson.readRequest(readBytes(requestPath, stdin));
   }
 
   private static void validateReadableRequestPath(Path requestPath) throws IOException {

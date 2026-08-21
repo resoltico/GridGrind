@@ -31,8 +31,8 @@ public record RequestDoctorReport(
     Objects.requireNonNull(protocolVersion, "protocolVersion must not be null");
     Objects.requireNonNull(severity, "severity must not be null");
     summary = Objects.requireNonNullElseGet(summary, Optional::empty);
-    warnings = copyWarnings(warnings);
-    problems = copyProblems(problems);
+    warnings = DiagnosticOrder.warnings(copyWarnings(warnings));
+    problems = DiagnosticOrder.problems(copyProblems(problems));
     if (valid && summary.isEmpty()) {
       throw new IllegalArgumentException(VALID_SUMMARY_MESSAGE);
     }

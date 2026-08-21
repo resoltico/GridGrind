@@ -1,20 +1,20 @@
 package dev.erst.gridgrind.engine.runtime;
 
-import dev.erst.gridgrind.contract.dto.GridGrindResponse;
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
+import dev.erst.gridgrind.contract.dto.WorkbookResult;
 import java.util.Objects;
 
 /** Transport-neutral execution port for one complete GridGrind request workflow. */
 @FunctionalInterface
 public interface GridGrindRequestExecutor {
   /** Executes the request and returns the corresponding structured response. */
-  GridGrindResponse execute(
-      WorkbookPlan request, ExecutionInputBindings bindings, ExecutionJournalSink sink);
+  WorkbookResult execute(
+      WorkbookPlan request, ExecutionInputBindings bindings, ExecutionProgressSink sink);
 
   /** Executes the request with explicit authored-input bindings and no live journal sink. */
-  default GridGrindResponse execute(WorkbookPlan request, ExecutionInputBindings bindings) {
+  default WorkbookResult execute(WorkbookPlan request, ExecutionInputBindings bindings) {
     Objects.requireNonNull(bindings, "bindings must not be null");
-    return execute(request, bindings, ExecutionJournalSink.NOOP);
+    return execute(request, bindings, ExecutionProgressSink.NOOP);
   }
 
   /** Returns an executor that rejects null delegates up front. */

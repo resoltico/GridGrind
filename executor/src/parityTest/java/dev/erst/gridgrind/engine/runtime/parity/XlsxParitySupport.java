@@ -9,6 +9,8 @@ import java.util.concurrent.Callable;
 /** Shared exception-wrapping support for the parity ledger, corpus, and oracle harness. */
 final class XlsxParitySupport {
   private static final Path MANAGED_TEMP_SEGMENT = Path.of(".gridgrind", "tmp");
+  private static final java.util.Set<String> CORPUS_ROOT_CHILDREN =
+      java.util.Set.of("corpus", "scenario-copies", "workbooks");
 
   private XlsxParitySupport() {}
 
@@ -23,6 +25,13 @@ final class XlsxParitySupport {
   static Path executionRootFor(Path anchoredPath) {
     Path normalized = anchoredPath.toAbsolutePath().normalize();
     Path parent = normalized.getParent();
+    for (Path current = parent; current != null; current = current.getParent()) {
+      Path name = current.getFileName();
+      if (name != null && CORPUS_ROOT_CHILDREN.contains(name.toString())) {
+        Path corpusRoot = current.getParent();
+        return corpusRoot == null ? current : corpusRoot;
+      }
+    }
     return parent == null ? normalized : parent;
   }
 

@@ -1,16 +1,16 @@
 package dev.erst.gridgrind.cli;
 
 import dev.erst.gridgrind.contract.catalog.GridGrindRequestSurfaceContractText;
-import dev.erst.gridgrind.contract.dto.GridGrindProblemDetail;
-import dev.erst.gridgrind.contract.dto.GridGrindProtocolVersion;
-import dev.erst.gridgrind.contract.dto.GridGrindResponse;
-import dev.erst.gridgrind.contract.dto.GridGrindResponses;
 import dev.erst.gridgrind.contract.dto.RequestDoctorReport;
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
+import dev.erst.gridgrind.contract.dto.WorkbookResult;
+import dev.erst.gridgrind.contract.json.GridGrindJson;
+import dev.erst.gridgrind.contract.json.InvalidEncodingException;
 import dev.erst.gridgrind.contract.json.InvalidJsonException;
 import dev.erst.gridgrind.contract.json.InvalidRequestException;
 import dev.erst.gridgrind.contract.json.InvalidRequestShapeException;
-import dev.erst.gridgrind.engine.api.GridGrindProblems;
+import dev.erst.gridgrind.contract.json.RequestAnalysis;
+import dev.erst.gridgrind.contract.json.RequestDiagnosticRedactor;
 import dev.erst.gridgrind.engine.api.GridGrindRequestDoctor;
 import dev.erst.gridgrind.engine.api.GridGrindRequestExecutor;
 import dev.erst.gridgrind.engine.api.GridGrindRequestRequirements;
@@ -19,7 +19,6 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PushbackInputStream;
 import java.nio.file.Path;
-import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.BooleanSupplier;
@@ -30,7 +29,6 @@ final class GridGrindCliExecutionCommands {
   private final GridGrindRequestDoctor requestDoctor;
   private final CliRequestReader requestReader;
   private final CliResponseWriter responseWriter;
-  private final CliJournalWriter journalWriter;
   private final BooleanSupplier standardInputIsInteractive;
   private final CliDoctorRequestAnalyzer doctorRequestAnalyzer;
 
@@ -39,13 +37,11 @@ final class GridGrindCliExecutionCommands {
       GridGrindRequestDoctor requestDoctor,
       CliRequestReader requestReader,
       CliResponseWriter responseWriter,
-      CliJournalWriter journalWriter,
       BooleanSupplier standardInputIsInteractive) {
     this.requestExecutor = GridGrindRequestExecutor.requireNonNull(requestExecutor);
     this.requestDoctor = GridGrindRequestDoctor.requireNonNull(requestDoctor);
     this.requestReader = Objects.requireNonNull(requestReader, "requestReader must not be null");
     this.responseWriter = Objects.requireNonNull(responseWriter, "responseWriter must not be null");
-    this.journalWriter = Objects.requireNonNull(journalWriter, "journalWriter must not be null");
     this.standardInputIsInteractive =
         Objects.requireNonNull(
             standardInputIsInteractive, "standardInputIsInteractive must not be null");
@@ -66,84 +62,105 @@ final class GridGrindCliExecutionCommands {
       throws IOException {
     if (requestArrivesOnStandardInput(command.requestPath())
         && command.executionRootPath().isEmpty()) {
-      return responseWriter.writeCliDiagnostic(
+      return responseWriter.writeCommandError(
           command.responsePath(), stdout, stderr, stdinExecutionRootFailure("execute"), prettyJson);
     }
 
     WorkbookPlan request;
+    RequestAnalysis analysis;
+    Optional<RequestDiagnosticRedactor> requestRedactor = Optional.empty();
     try {
-      request = requestReader.read(command.requestPath(), stdin);
-    } catch (InvalidJsonException
+      byte[] requestBytes = requestReader.readBytes(command.requestPath(), stdin);
+      analysis = GridGrindJson.analyzeRequest(requestBytes);
+      requestRedactor = Optional.of(analysis.diagnosticRedactor());
+      if (!analysis.isBindable()) {
+        RequestDoctorReport staticValidation =
+            requestDoctor.diagnose(
+                analysis, CliRequestReadFailureSupport.requestInput(command.requestPath()));
+        return responseWriter.writeCommandError(
+            command.responsePath(),
+            stdout,
+            stderr,
+            CommandErrors.readRequestFailures("execute", staticValidation.problems()),
+            requestRedactor.orElseThrow(),
+            prettyJson);
+      }
+      request = analysis.requireCompletePlan();
+    } catch (InvalidEncodingException
+        | InvalidJsonException
         | InvalidRequestShapeException
         | InvalidRequestException exception) {
-      return writeReadRequestFailure(
-          1,
+      return CliRequestReadFailureSupport.write(
+          responseWriter,
           "execute",
           command.requestPath(),
           command.responsePath(),
           stdout,
           stderr,
           exception,
+          requestRedactor,
           prettyJson);
     } catch (IOException exception) {
-      return writeReadRequestFailure(
-          1,
+      return CliRequestReadFailureSupport.write(
+          responseWriter,
           "execute",
           command.requestPath(),
           command.responsePath(),
           stdout,
           stderr,
           exception,
+          requestRedactor,
           prettyJson);
     }
 
-    GridGrindResponse response;
+    WorkbookResult response;
     if (requestArrivesOnStandardInput(command.requestPath())
         && GridGrindRequestRequirements.requiresStandardInput(request)) {
-      return responseWriter.writeCliDiagnostic(
+      return responseWriter.writeCommandError(
           command.responsePath(),
           stdout,
           stderr,
-          CliDiagnostics.invalidArguments(
-              2,
+          CommandErrors.invalidArguments(
               "execute",
               Optional.of("--request"),
-              GridGrindRequestSurfaceContractText.standardInputRequiresRequestMessage(),
-              List.of("gridgrind --request request.json", "gridgrind --help-protocol")),
+              GridGrindRequestSurfaceContractText.standardInputRequiresRequestMessage()),
+          requestRedactor.orElseThrow(),
+          prettyJson);
+    }
+    RequestDoctorReport staticValidation =
+        requestDoctor.diagnose(
+            analysis, CliRequestReadFailureSupport.requestInput(command.requestPath()));
+    if (!staticValidation.problems().isEmpty()) {
+      return responseWriter.writeCommandError(
+          command.responsePath(),
+          stdout,
+          stderr,
+          CommandErrors.readRequestFailures("execute", staticValidation.problems()),
+          requestRedactor.orElseThrow(),
           prettyJson);
     }
 
     try {
-      try (CliExecutionBindingsFactory.ManagedRequestInputs bindings =
-          CliExecutionBindingsFactory.create(
+      response =
+          CliExecutionFailureSupport.executeStarted(
+              requestExecutor,
+              request,
+              analysis,
               command.requestPath(),
               command.executionRootPath(),
               command.tempRootPath(),
-              request,
-              stdin)) {
-        try {
-          response =
-              requestExecutor.execute(
-                  request, bindings.inputs(), journalWriter.sinkFor(request, stderr));
-        } catch (Exception exception) {
-          response =
-              GridGrindResponses.failure(
-                  GridGrindProtocolVersion.current(),
-                  GridGrindProblems.fromException(
-                      exception,
-                      new dev.erst.gridgrind.contract.dto.ProblemContext.ExecuteRequest(
-                          requestShape(request))));
-        }
-      }
+              stdin,
+              new CliProgressJsonlSink(stderr));
     } catch (IOException exception) {
-      return writeReadRequestFailure(
-          1,
+      return CliRequestReadFailureSupport.write(
+          responseWriter,
           "execute",
           command.requestPath(),
           command.responsePath(),
           stdout,
           stderr,
           exception,
+          requestRedactor,
           prettyJson);
     }
 
@@ -152,7 +169,8 @@ final class GridGrindCliExecutionCommands {
         stdout,
         stderr,
         response,
-        CliResponseWriter.exitCodeFor(response),
+        CliExitCodes.forWorkbookResult(response),
+        requestRedactor.orElseThrow(),
         prettyJson);
   }
 
@@ -165,25 +183,20 @@ final class GridGrindCliExecutionCommands {
       throws IOException {
     Optional<InputStream> requestInput = standardInputIfPresent(command.requestPath(), stdin);
     if (requestInput.isEmpty()) {
-      return responseWriter.writeCliDiagnostic(
+      return responseWriter.writeCommandError(
           command.responsePath(),
           stdout,
           stderr,
-          CliDiagnostics.invalidArguments(
-              2,
+          CommandErrors.invalidArguments(
               "doctor-request",
               Optional.of("--request"),
               "No request JSON was provided. Pass --request <path> or pipe one request document"
-                  + " on standard input.",
-              List.of(
-                  "gridgrind --print-request-template --response request.json",
-                  "gridgrind --help",
-                  "gridgrind --help-protocol")),
+                  + " on standard input."),
           prettyJson);
     }
     if (requestArrivesOnStandardInput(command.requestPath())
         && command.executionRootPath().isEmpty()) {
-      return responseWriter.writeCliDiagnostic(
+      return responseWriter.writeCommandError(
           command.responsePath(),
           stdout,
           stderr,
@@ -192,66 +205,42 @@ final class GridGrindCliExecutionCommands {
     }
 
     RequestDoctorReport report;
+    Optional<RequestDiagnosticRedactor> requestRedactor = Optional.empty();
     try {
       byte[] requestBytes =
           requestReader.readBytes(command.requestPath(), requestInput.orElseThrow());
+      RequestAnalysis analysis = GridGrindJson.analyzeRequest(requestBytes);
+      requestRedactor = Optional.of(analysis.diagnosticRedactor());
       report =
           doctorRequestAnalyzer.diagnose(
               command.requestPath(),
               command.executionRootPath(),
               command.tempRootPath(),
-              requestBytes,
+              analysis,
               stdin);
     } catch (IOException exception) {
-      return writeReadRequestFailure(
-          1,
+      return CliRequestReadFailureSupport.write(
+          responseWriter,
           "doctor-request",
           command.requestPath(),
           command.responsePath(),
           stdout,
           stderr,
           exception,
+          requestRedactor,
           prettyJson);
     }
 
     return responseWriter.writeDoctorReport(
-        command.responsePath(), stdout, stderr, report, prettyJson);
+        command.responsePath(), stdout, stderr, report, requestRedactor.orElseThrow(), prettyJson);
   }
 
-  private static dev.erst.gridgrind.cli.discovery.CliDiagnostic stdinExecutionRootFailure(
+  private static dev.erst.gridgrind.cli.discovery.CommandError stdinExecutionRootFailure(
       String command) {
-    return CliDiagnostics.invalidArguments(
-        2,
+    return CommandErrors.invalidArguments(
         command,
         Optional.of("--execution-root"),
-        GridGrindRequestSurfaceContractText.stdinExecutionRootRequiredMessage(),
-        List.of(
-            "gridgrind --execution-root . < request.json",
-            "gridgrind --request request.json",
-            "gridgrind --help-protocol"));
-  }
-
-  private dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces.RequestInput requestInput(
-      Optional<Path> path) {
-    Objects.requireNonNull(path, "path must not be null");
-    return requestArrivesOnStandardInput(path)
-        ? dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces.RequestInput.standardInput()
-        : dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces.RequestInput.requestFile(
-            path.orElseThrow().toAbsolutePath().toString());
-  }
-
-  private dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces.RequestShape requestShape(
-      WorkbookPlan request) {
-    return dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces.RequestShape.known(
-        switch (request.source()) {
-          case WorkbookPlan.WorkbookSource.New _ -> "NEW";
-          case WorkbookPlan.WorkbookSource.ExistingFile _ -> "EXISTING";
-        },
-        switch (request.persistence()) {
-          case WorkbookPlan.WorkbookPersistence.None _ -> "NONE";
-          case WorkbookPlan.WorkbookPersistence.Overwrite _ -> "OVERWRITE";
-          case WorkbookPlan.WorkbookPersistence.SaveAs _ -> "SAVE_AS";
-        });
+        GridGrindRequestSurfaceContractText.stdinExecutionRootRequiredMessage());
   }
 
   private Optional<InputStream> standardInputIfPresent(
@@ -271,37 +260,6 @@ final class GridGrindCliExecutionCommands {
     }
     peekable.unread(firstByte);
     return Optional.of(peekable);
-  }
-
-  private int writeReadRequestFailure(
-      int exitCode,
-      String command,
-      Optional<Path> requestPath,
-      Optional<Path> responsePath,
-      OutputStream stdout,
-      OutputStream stderr,
-      Throwable exception,
-      boolean prettyJson)
-      throws IOException {
-    Objects.requireNonNull(command, "command must not be null");
-    Objects.requireNonNull(requestPath, "requestPath must not be null");
-    Objects.requireNonNull(responsePath, "responsePath must not be null");
-    Objects.requireNonNull(stdout, "stdout must not be null");
-    Objects.requireNonNull(stderr, "stderr must not be null");
-    Objects.requireNonNull(exception, "exception must not be null");
-    GridGrindProblemDetail.Problem problem =
-        GridGrindProblems.fromException(
-            exception,
-            new dev.erst.gridgrind.contract.dto.ProblemContext.ReadRequest(
-                requestInput(requestPath),
-                dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces.JsonLocation
-                    .unavailable()));
-    return responseWriter.writeRequestDiagnostic(
-        responsePath,
-        stdout,
-        stderr,
-        CliDiagnostics.readRequestFailure(exitCode, command, problem),
-        prettyJson);
   }
 
   private static boolean requestArrivesOnStandardInput(Optional<Path> requestPath) {

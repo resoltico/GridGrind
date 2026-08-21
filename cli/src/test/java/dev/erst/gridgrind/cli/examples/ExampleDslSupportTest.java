@@ -38,6 +38,9 @@ class ExampleDslSupportTest {
 
     assertEquals("budget-plan", plan.planId().orElseThrow());
     assertInstanceOf(WorkbookPlan.WorkbookPersistence.SaveAs.class, plan.persistence());
+    assertEquals(
+        dev.erst.gridgrind.contract.dto.OoxmlPersistenceSecurityInput.none(),
+        ExampleWorkbookPlans.saveAsExisting("existing-budget.xlsx").security().orElseThrow());
   }
 
   @Test

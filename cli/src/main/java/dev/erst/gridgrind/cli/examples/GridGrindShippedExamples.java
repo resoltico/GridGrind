@@ -1,6 +1,6 @@
 package dev.erst.gridgrind.cli.examples;
 
-import dev.erst.gridgrind.cli.discovery.ExampleWorkspaceMode;
+import dev.erst.gridgrind.cli.discovery.RecipeAdvisory;
 import dev.erst.gridgrind.cli.discovery.RecipeView;
 import dev.erst.gridgrind.cli.discovery.ShippedExampleCatalog;
 import dev.erst.gridgrind.cli.discovery.ShippedExampleEntry;
@@ -30,10 +30,9 @@ public final class GridGrindShippedExamples {
   }
 
   /** Indicates whether one built-in example is portable or requires repository assets. */
-  public record ExampleRequirements(
-      ExampleWorkspaceMode workspaceMode, List<String> requiredWorkspacePaths) {
+  public record ExampleRequirements(RecipeAdvisory advisory, List<String> requiredWorkspacePaths) {
     public ExampleRequirements {
-      Objects.requireNonNull(workspaceMode, "workspaceMode must not be null");
+      Objects.requireNonNull(advisory, "advisory must not be null");
       requiredWorkspacePaths =
           List.copyOf(
               Objects.requireNonNull(
@@ -58,9 +57,7 @@ public final class GridGrindShippedExamples {
   /** Returns built-in examples that can execute from a blank artifact workspace. */
   public static List<ShippedExample> selfContainedExamples() {
     return examples().stream()
-        .filter(
-            example ->
-                requirementsFor(example).workspaceMode() == ExampleWorkspaceMode.SELF_CONTAINED)
+        .filter(example -> requirementsFor(example).advisory() == RecipeAdvisory.SELF_CONTAINED)
         .toList();
   }
 
@@ -69,8 +66,7 @@ public final class GridGrindShippedExamples {
     return examples().stream()
         .filter(
             example ->
-                requirementsFor(example).workspaceMode()
-                    == ExampleWorkspaceMode.REQUIRES_EXAMPLE_ASSETS)
+                requirementsFor(example).advisory() == RecipeAdvisory.REQUIRES_EXAMPLE_ASSETS)
         .toList();
   }
 
@@ -94,11 +90,11 @@ public final class GridGrindShippedExamples {
   }
 
   /** Returns the portability contract for one stable built-in example id. */
-  public static Optional<ExampleWorkspaceMode> workspaceModeFor(String id) {
+  public static Optional<RecipeAdvisory> advisoryFor(String id) {
     Objects.requireNonNull(id, "id must not be null");
     return GridGrindCliRecipeRegistry.recipeFor(id)
         .filter(recipe -> recipe.view() == RecipeView.EXAMPLE)
-        .map(GridGrindCliRecipe::workspaceMode);
+        .map(GridGrindCliRecipe::advisory);
   }
 
   /** Returns the portability requirements for one concrete built-in example entry. */
@@ -111,7 +107,7 @@ public final class GridGrindShippedExamples {
                 () ->
                     new IllegalStateException(
                         "Missing shipped-example requirements for " + example.id()));
-    return new ExampleRequirements(recipe.workspaceMode(), recipe.requiredWorkspacePaths());
+    return new ExampleRequirements(recipe.advisory(), recipe.requiredWorkspacePaths());
   }
 
   private static List<GridGrindCliRecipe> exampleRecipes() {

@@ -1,7 +1,7 @@
 package dev.erst.gridgrind.cli;
 
 import dev.erst.gridgrind.contract.dto.GridGrindProblemDetail;
-import dev.erst.gridgrind.contract.dto.ProblemContext;
+import dev.erst.gridgrind.contract.dto.RequestInputContext;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.regex.Matcher;
@@ -23,9 +23,9 @@ final class CliSuggestionSupport {
       GridGrindProblemDetail.Problem problem) {
     Objects.requireNonNull(problem, "problem must not be null");
     Optional<String> contextualQuery = Optional.empty();
-    if (problem.context() instanceof ProblemContext.ReadRequest readRequest) {
+    if (problem.context() instanceof RequestInputContext requestInputContext) {
       contextualQuery =
-          searchQueryForJsonPath(readRequest.jsonPath())
+          searchQueryForJsonPath(requestInputContext.jsonPath())
               .or(() -> searchQueryFromMessage(problem.message()));
     }
     return contextualQuery.map(CliSuggestionSupport::protocolCatalogSearchCommand);

@@ -3,17 +3,17 @@ package dev.erst.gridgrind.engine.runtime;
 import dev.erst.gridgrind.contract.dto.CalculationReport;
 import dev.erst.gridgrind.contract.dto.GridGrindProblemDetail;
 import dev.erst.gridgrind.contract.dto.GridGrindProtocolVersion;
-import dev.erst.gridgrind.contract.dto.GridGrindResponse;
-import dev.erst.gridgrind.contract.dto.GridGrindResponsePersistence;
 import dev.erst.gridgrind.contract.dto.RequestWarning;
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
+import dev.erst.gridgrind.contract.dto.WorkbookResult;
+import dev.erst.gridgrind.contract.dto.WorkbookResultPersistence;
 import dev.erst.gridgrind.contract.query.InspectionResult;
 import dev.erst.gridgrind.contract.step.InspectionStep;
 import dev.erst.gridgrind.excel.WorkbookArtifactIo;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import org.jspecify.annotations.Nullable;
 
 /** Direct event-read workflow for inspection-only execution against an existing workbook file. */
 final class ExecutionDirectEventReadWorkflow {
@@ -32,23 +32,28 @@ final class ExecutionDirectEventReadWorkflow {
         Objects.requireNonNull(tempFileFactory, "tempFileFactory must not be null");
   }
 
-  GridGrindResponse execute(
+  WorkbookResult execute(
       GridGrindProtocolVersion protocolVersion,
       WorkbookPlan request,
       List<RequestWarning> warnings,
       ExecutionJournalRecorder journal,
-      Path workingDirectory) {
+      ExecutionInputBindings bindings) {
     CalculationReport calculation =
         CalculationPolicyExecutor.notRequestedReport(request.calculationPolicy());
     WorkbookPlan.WorkbookSource.ExistingFile source =
         (WorkbookPlan.WorkbookSource.ExistingFile) request.source();
     List<InspectionResult> inspections = new ArrayList<>();
+    DirectEventReadContext executionContext =
+        new DirectEventReadContext(
+            protocolVersion, request, warnings, journal, calculation, inspections);
     ExecutionJournalRecorder.PhaseHandle openPhase = journal.beginOpen();
     WorkbookArtifactIo.MaterializedWorkbook materialized;
     try {
       materialized =
           WorkbookArtifactIo.materializeWorkbook(
-              ExecutionRequestPaths.normalizePath(source.path(), workingDirectory),
+              bindings
+                  .requestPathAccess()
+                  .materializeRead(source.path(), "source", "gridgrind-source-workbook-", ".xlsx"),
               OoxmlPackageSecurityConverter.toExcelOpenOptions(source.security().orElse(null)),
               tempFileFactory::createTempFile);
     } catch (Exception exception) {
@@ -57,12 +62,12 @@ final class ExecutionDirectEventReadWorkflow {
               exception,
               new dev.erst.gridgrind.contract.dto.ProblemContext.OpenWorkbook(
                   ExecutionRequestPaths.requestShape(request),
-                  ExecutionRequestPaths.workbookReference(request, workingDirectory)));
-      openPhase.fail("failed (" + problem.code() + ")");
+                  ExecutionRequestPaths.workbookReference(request, bindings.workingDirectory())));
+      openPhase.fail(problem.code());
       return responseSupport.closeReadableWorkbook(
           null,
           ExecutionResponseSupport.failureResponseWithoutPlanOutcomeEvent(
-              protocolVersion, journal, request, calculation, problem, null, null),
+              executionContext.failure(problem)),
           request,
           journal,
           problem.code(),
@@ -88,13 +93,7 @@ final class ExecutionDirectEventReadWorkflow {
         return responseSupport.closeReadableWorkbook(
             materialized,
             ExecutionResponseSupport.failureResponseWithoutPlanOutcomeEvent(
-                protocolVersion,
-                journal,
-                request,
-                calculation,
-                problem,
-                stepIndex,
-                inspectionStep.stepId()),
+                executionContext.failure(problem, stepIndex, inspectionStep.stepId())),
             request,
             journal,
             problem.code(),
@@ -105,11 +104,12 @@ final class ExecutionDirectEventReadWorkflow {
 
     return responseSupport.closeReadableWorkbook(
         materialized,
-        new GridGrindResponse.Success(
+        new WorkbookResult.Success(
             protocolVersion,
+            request.planId(),
             journal.buildSuccess(request.steps().size(), false),
             calculation,
-            new GridGrindResponsePersistence.PersistenceOutcome.NotSaved(),
+            new WorkbookResultPersistence.PersistenceOutcome.NotSaved(),
             warnings,
             List.of(),
             List.copyOf(inspections)),
@@ -118,5 +118,32 @@ final class ExecutionDirectEventReadWorkflow {
         null,
         null,
         null);
+  }
+
+  private record DirectEventReadContext(
+      GridGrindProtocolVersion protocolVersion,
+      WorkbookPlan request,
+      List<RequestWarning> warnings,
+      ExecutionJournalRecorder journal,
+      CalculationReport calculation,
+      List<InspectionResult> inspections) {
+    private ExecutionFailure failure(GridGrindProblemDetail.Problem problem) {
+      return failure(problem, null, null);
+    }
+
+    private ExecutionFailure failure(
+        GridGrindProblemDetail.Problem problem, int failedStepIndex, String failedStepId) {
+      return failure(problem, Integer.valueOf(failedStepIndex), failedStepId);
+    }
+
+    private ExecutionFailure failure(
+        GridGrindProblemDetail.Problem problem,
+        @Nullable Integer failedStepIndex,
+        @Nullable String failedStepId) {
+      return new ExecutionFailure(
+          new ExecutionFailure.Context(protocolVersion, journal, request, calculation),
+          new ExecutionFailure.Artifacts(warnings, List.of(), inspections),
+          new ExecutionFailure.Detail(problem, failedStepIndex, failedStepId));
+    }
   }
 }

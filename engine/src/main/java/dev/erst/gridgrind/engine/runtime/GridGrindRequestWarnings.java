@@ -3,6 +3,7 @@ package dev.erst.gridgrind.engine.runtime;
 import dev.erst.gridgrind.contract.action.CellMutationAction;
 import dev.erst.gridgrind.contract.action.WorkbookMutationAction;
 import dev.erst.gridgrind.contract.dto.CellInput;
+import dev.erst.gridgrind.contract.dto.GridGrindWarningCode;
 import dev.erst.gridgrind.contract.dto.RequestWarning;
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
 import dev.erst.gridgrind.contract.step.MutationStep;
@@ -29,26 +30,26 @@ final class GridGrindRequestWarnings {
             .map(MutationStep.class::cast)
             .toList();
     Set<String> spacedSheetNames = sameRequestSpacedSheetNames(mutationSteps);
-    if (spacedSheetNames.isEmpty()) {
-      return List.of();
-    }
-
-    return IntStream.range(0, request.steps().size())
-        .mapToObj(
-            stepIndex -> warningFor(request.steps().get(stepIndex), stepIndex, spacedSheetNames))
-        .flatMap(Optional::stream)
-        .toList();
+    return spacedSheetNames.isEmpty()
+        ? List.of()
+        : IntStream.range(0, request.steps().size())
+            .mapToObj(
+                stepIndex ->
+                    warningFor(request.steps().get(stepIndex), stepIndex, spacedSheetNames))
+            .flatMap(Optional::stream)
+            .toList();
   }
 
   private static Set<String> sameRequestSpacedSheetNames(List<MutationStep> steps) {
     Set<String> sheetNames = new LinkedHashSet<>();
     for (MutationStep step : steps) {
       switch (step.action()) {
-        case WorkbookMutationAction.EnsureSheet _ ->
-            addIfSpaced(
-                sheetNames,
-                SelectorConverter.toSheetName(
-                    (dev.erst.gridgrind.contract.selector.SheetSelector.ByName) step.target()));
+        case WorkbookMutationAction.EnsureSheet _ -> {
+          if (step.target()
+              instanceof dev.erst.gridgrind.contract.selector.SheetSelector.ByName sheet) {
+            addIfSpaced(sheetNames, SelectorConverter.toSheetName(sheet));
+          }
+        }
         case WorkbookMutationAction.RenameSheet renameSheet ->
             addIfSpaced(sheetNames, renameSheet.newSheetName());
         case WorkbookMutationAction.CopySheet copySheet ->
@@ -98,6 +99,7 @@ final class GridGrindRequestWarnings {
     }
     return Optional.of(
         new RequestWarning(
+            GridGrindWarningCode.UNQUOTED_SHEET_NAME_IN_FORMULA,
             stepIndex,
             mutationStep.stepId(),
             mutationStep.action().actionType(),

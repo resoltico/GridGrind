@@ -14,10 +14,10 @@ public record DifferentialStyleReport(
     @Nullable Boolean bold,
     @Nullable Boolean italic,
     @Nullable FontHeightReport fontHeight,
-    @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<String> fontColor,
+    @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<CellColorReport> fontColor,
     @Nullable Boolean underline,
     @Nullable Boolean strikeout,
-    @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<String> fillColor,
+    @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<CellColorReport> fillColor,
     @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<DifferentialBorderReport> border,
     List<ExcelConditionalFormattingUnsupportedFeature> unsupportedFeatures) {
   public DifferentialStyleReport {
@@ -27,8 +27,6 @@ public record DifferentialStyleReport(
     Objects.requireNonNull(fontColor, "fontColor must not be null");
     Objects.requireNonNull(fillColor, "fillColor must not be null");
     Objects.requireNonNull(border, "border must not be null");
-    fontColor = fontColor.map(value -> ProtocolRgbColorSupport.requireRgbHex(value, "fontColor"));
-    fillColor = fillColor.map(value -> ProtocolRgbColorSupport.requireRgbHex(value, "fillColor"));
     Objects.requireNonNull(unsupportedFeatures, "unsupportedFeatures must not be null");
     unsupportedFeatures = List.copyOf(unsupportedFeatures);
     for (ExcelConditionalFormattingUnsupportedFeature unsupportedFeature : unsupportedFeatures) {

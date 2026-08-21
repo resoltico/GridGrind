@@ -61,11 +61,15 @@ final class GridGrindJsonProblemMessageSupport {
     }
     Optional<Throwable> validationCause = validationCause(exception);
     if (validationCause.isPresent()) {
-      return invalidValidationCause(exception, metadata, validationCause.orElseThrow());
+      return invalidValidationCause(exception, metadata, validationCause.orElseThrow(), targetType);
     }
     RequestProblemDescriptor.Shape requestProblem =
         structuralProblem.orElseGet(
-            () -> new MessageShape(message(exception), metadata.jsonPath()));
+            () ->
+                new MessageShape(
+                    RequestDiagnosticRedactor.safeValidationFailureMessage(
+                        message(exception), targetType, metadata.jsonPath()),
+                    metadata.jsonPath()));
     return new InvalidRequestShapeException(
         requestProblem,
         preciseJsonPath(requestProblem, metadata.jsonPath()),
@@ -129,7 +133,8 @@ final class GridGrindJsonProblemMessageSupport {
   private static IllegalArgumentException invalidValidationCause(
       JacksonException exception,
       GridGrindJsonPayloadMetadataSupport.PayloadMetadata metadata,
-      Throwable cause) {
+      Throwable cause,
+      Class<?> targetType) {
     Objects.requireNonNull(metadata, "metadata must not be null");
     Objects.requireNonNull(cause, "cause must not be null");
     Optional<PayloadException> payloadCause =
@@ -143,6 +148,11 @@ final class GridGrindJsonProblemMessageSupport {
         payloadCause.flatMap(PayloadException::jsonLine).or(metadata::jsonLine);
     Optional<Integer> jsonColumn =
         payloadCause.flatMap(PayloadException::jsonColumn).or(metadata::jsonColumn);
+    Optional<FormulaRequestException> formulaProblem =
+        FormulaRequestProblemSupport.inputFailure(cause, jsonPath, jsonLine, jsonColumn, exception);
+    if (formulaProblem.isPresent()) {
+      return formulaProblem.orElseThrow();
+    }
     if (cause instanceof InvalidRequestShapeException shapeException) {
       return new InvalidRequestShapeException(
           (RequestProblemDescriptor.Shape) shapeException.requestProblem(),
@@ -160,7 +170,10 @@ final class GridGrindJsonProblemMessageSupport {
           exception);
     }
     RequestProblemDescriptor.Invariant requestProblem =
-        new MessageInvariant(message(cause), jsonPath);
+        new MessageInvariant(
+            RequestDiagnosticRedactor.safeValidationFailureMessage(
+                message(cause), targetType, jsonPath),
+            jsonPath);
     return new InvalidRequestException(requestProblem, jsonPath, jsonLine, jsonColumn, exception);
   }
 

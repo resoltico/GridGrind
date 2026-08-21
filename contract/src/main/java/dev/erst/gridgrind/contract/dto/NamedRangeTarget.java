@@ -6,7 +6,7 @@ import dev.erst.gridgrind.excel.foundation.ExcelSheetNames;
 import java.util.Objects;
 
 /** Protocol-facing explicit sheet range or formula target for named-range authoring. */
-@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "kind")
+@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
 @JsonSubTypes({
   @JsonSubTypes.Type(value = NamedRangeTarget.Range.class, name = "RANGE"),
   @JsonSubTypes.Type(value = NamedRangeTarget.Formula.class, name = "FORMULA")

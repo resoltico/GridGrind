@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.contract.dto.FormulaTextValidation;
 import dev.erst.gridgrind.excel.foundation.ExcelStoredCellErrorLiteral;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -15,7 +16,8 @@ public sealed interface ExcelCellValue
         ExcelCellValue.ErrorValue,
         ExcelCellValue.DateValue,
         ExcelCellValue.DateTimeValue,
-        ExcelCellValue.FormulaValue {
+        ExcelCellValue.FormulaValue,
+        ExcelCellValue.RawFormulaValue {
 
   /** Creates an explicit blank cell value. */
   static ExcelCellValue blank() {
@@ -62,6 +64,11 @@ public sealed interface ExcelCellValue
     return new FormulaValue(expression);
   }
 
+  /** Creates one opaque OOXML formula-body value. */
+  static ExcelCellValue rawFormula(String expression) {
+    return new RawFormulaValue(expression);
+  }
+
   record BlankValue() implements ExcelCellValue {}
 
   record TextValue(String value) implements ExcelCellValue {
@@ -102,10 +109,14 @@ public sealed interface ExcelCellValue
 
   record FormulaValue(String expression) implements ExcelCellValue {
     public FormulaValue {
-      Objects.requireNonNull(expression, "expression must not be null");
-      if (expression.isBlank()) {
-        throw new IllegalArgumentException("expression must not be blank");
-      }
+      expression = FormulaTextValidation.requireNormalFormulaBody(expression, "expression");
+    }
+  }
+
+  /** Formula character data written without sending its body through POI's formula parser. */
+  record RawFormulaValue(String expression) implements ExcelCellValue {
+    public RawFormulaValue {
+      expression = FormulaTextValidation.requireRawFormulaBody(expression, "expression");
     }
   }
 }

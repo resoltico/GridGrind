@@ -609,7 +609,7 @@ class WorkbookCommandExecutorTest {
                                   Optional.of(true),
                                   Optional.empty(),
                                   Optional.empty(),
-                                  Optional.of("#112233"),
+                                  Optional.of(ExcelColor.rgb("#112233")),
                                   Optional.empty(),
                                   Optional.empty(),
                                   Optional.empty(),

@@ -5,12 +5,10 @@ import java.util.Objects;
 
 /** Portability contract for one printed task starter request emitted by the CLI. */
 public record TaskStarterContract(
-    String requestFileName,
-    ExampleWorkspaceMode workspaceMode,
-    List<String> requiredWorkspacePaths) {
+    String requestFileName, RecipeAdvisory advisory, List<String> requiredWorkspacePaths) {
   public TaskStarterContract {
     requestFileName = CliDiscoveryValidation.requireNonBlank(requestFileName, "requestFileName");
-    Objects.requireNonNull(workspaceMode, "workspaceMode must not be null");
+    Objects.requireNonNull(advisory, "advisory must not be null");
     requiredWorkspacePaths =
         CliDiscoveryValidation.copyStringsAllowEmpty(
             requiredWorkspacePaths, "requiredWorkspacePaths");
@@ -21,12 +19,11 @@ public record TaskStarterContract(
     if (!requestFileName.endsWith(".json")) {
       throw new IllegalArgumentException("requestFileName must end with .json");
     }
-    if (workspaceMode == ExampleWorkspaceMode.SELF_CONTAINED && !requiredWorkspacePaths.isEmpty()) {
+    if (advisory == RecipeAdvisory.SELF_CONTAINED && !requiredWorkspacePaths.isEmpty()) {
       throw new IllegalArgumentException(
           "SELF_CONTAINED task starters must not publish requiredWorkspacePaths");
     }
-    if (workspaceMode == ExampleWorkspaceMode.REQUIRES_EXAMPLE_ASSETS
-        && requiredWorkspacePaths.isEmpty()) {
+    if (advisory == RecipeAdvisory.REQUIRES_EXAMPLE_ASSETS && requiredWorkspacePaths.isEmpty()) {
       throw new IllegalArgumentException(
           "REQUIRES_EXAMPLE_ASSETS task starters must publish requiredWorkspacePaths");
     }
@@ -34,15 +31,13 @@ public record TaskStarterContract(
 
   /** Creates one self-contained task starter contract with one portable request file name. */
   public static TaskStarterContract selfContained(String requestFileName) {
-    return new TaskStarterContract(requestFileName, ExampleWorkspaceMode.SELF_CONTAINED, List.of());
+    return new TaskStarterContract(requestFileName, RecipeAdvisory.SELF_CONTAINED, List.of());
   }
 
   /** Creates one asset-backed task starter contract with workspace-relative asset requirements. */
   public static TaskStarterContract assetBacked(
       String requestFileName, String... requiredWorkspacePaths) {
     return new TaskStarterContract(
-        requestFileName,
-        ExampleWorkspaceMode.REQUIRES_EXAMPLE_ASSETS,
-        List.of(requiredWorkspacePaths));
+        requestFileName, RecipeAdvisory.REQUIRES_EXAMPLE_ASSETS, List.of(requiredWorkspacePaths));
   }
 }

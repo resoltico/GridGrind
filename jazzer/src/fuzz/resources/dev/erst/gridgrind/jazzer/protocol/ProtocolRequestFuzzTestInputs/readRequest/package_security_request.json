@@ -1,5 +1,5 @@
 {
-  "protocolVersion": "V1",
+  "protocolVersion": "V2",
   "source": {
     "type": "EXISTING",
     "path": "fixtures/secured-source.xlsx",
@@ -13,16 +13,22 @@
     "ifExists": "REPLACE",
     "security": {
       "encryption": {
-        "password": "GridGrind-2026",
-        "cipher": "AES_256",
-        "hash": "SHA_512"
+        "type": "ENCRYPT",
+        "encryption": {
+          "password": "GridGrind-2026",
+          "cipher": "AES_256",
+          "hash": "SHA_512"
+        }
       },
       "signature": {
-        "pkcs12Path": "fixtures/signing-material.p12",
-        "keystorePassword": "keystore-pass",
-        "keyPassword": "key-pass",
-        "alias": "gridgrind-signing",
-        "description": "Phase 9 Jazzer replay seed"
+        "type": "SIGN",
+        "signature": {
+          "pkcs12Path": "fixtures/signing-material.p12",
+          "keystorePassword": "keystore-pass",
+          "keyPassword": "key-pass",
+          "alias": "gridgrind-signing",
+          "description": "GridGrind Jazzer replay seed"
+        }
       }
     }
   },

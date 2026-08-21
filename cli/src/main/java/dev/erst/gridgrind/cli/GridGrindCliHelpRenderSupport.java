@@ -159,7 +159,7 @@ final class GridGrindCliHelpRenderSupport {
             "requestFileName: " + recipe.requestFileName(), "      ", "        ", helpTextWidth()));
     lines.add(
         wrappedText(
-            "workspace: " + recipe.workspaceMode().name(), "      ", "        ", helpTextWidth()));
+            "advisory: " + recipe.advisory().name(), "      ", "        ", helpTextWidth()));
     lines.add(wrappedText("summary: " + recipe.summary(), "      ", "        ", helpTextWidth()));
     if (!recipe.requiredWorkspacePaths().isEmpty()) {
       lines.add(

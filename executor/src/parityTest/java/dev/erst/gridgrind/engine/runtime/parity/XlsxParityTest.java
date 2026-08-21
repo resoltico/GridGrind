@@ -12,12 +12,12 @@ import dev.erst.gridgrind.contract.dto.CalculationStrategyInput;
 import dev.erst.gridgrind.contract.dto.ExecutionPolicyInput;
 import dev.erst.gridgrind.contract.dto.FormulaEnvironmentInput;
 import dev.erst.gridgrind.contract.dto.FormulaExternalWorkbookInput;
-import dev.erst.gridgrind.contract.dto.GridGrindResponse;
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
+import dev.erst.gridgrind.contract.dto.WorkbookResult;
 import dev.erst.gridgrind.contract.query.*;
 import dev.erst.gridgrind.contract.selector.*;
 import dev.erst.gridgrind.engine.runtime.DefaultGridGrindRequestExecutor;
-import dev.erst.gridgrind.engine.runtime.ExecutionJournalSink;
+import dev.erst.gridgrind.engine.runtime.ExecutionProgressSink;
 import dev.erst.gridgrind.excel.ExcelFormulaEnvironment;
 import dev.erst.gridgrind.excel.ExcelFormulaExternalWorkbookBinding;
 import dev.erst.gridgrind.excel.ExcelFormulaMissingWorkbookPolicy;
@@ -206,14 +206,16 @@ final class XlsxParityTest {
       XlsxParityScenarios.MaterializedScenario scenario =
           XlsxParityScenarios.materialize(XlsxParityScenarios.EXTERNAL_FORMULA, temporaryRoot);
       Path outputPath = temporaryRoot.resolve("output.xlsx");
-      GridGrindResponse response =
+      WorkbookResult response =
           new DefaultGridGrindRequestExecutor()
               .execute(
                   ParityPlanSupport.request(
                       new WorkbookPlan.WorkbookSource.ExistingFile(
                           scenario.workbookPath().toString()),
                       new WorkbookPlan.WorkbookPersistence.SaveAs(
-                          outputPath.toString(), WorkbookPlan.WorkbookPersistence.IfExists.REJECT),
+                          outputPath.toString(),
+                          WorkbookPlan.WorkbookPersistence.IfExists.REJECT,
+                          dev.erst.gridgrind.contract.dto.OoxmlPersistenceSecurityInput.none()),
                       ExecutionPolicyInput.calculation(
                           CalculationPolicyInput.strategy(
                               new CalculationStrategyInput.EvaluateAll())),
@@ -231,8 +233,8 @@ final class XlsxParityTest {
                               new CellSelector.ByAddresses("Ops", List.of("B1")),
                               XlsxParityProbeRegistry.allFacetCellsQuery()))),
                   XlsxParitySupport.bindings(temporaryRoot),
-                  ExecutionJournalSink.NOOP);
-      assertInstanceOf(GridGrindResponse.Success.class, response);
+                  ExecutionProgressSink.NOOP);
+      assertInstanceOf(WorkbookResult.Success.class, response);
     } finally {
       deleteRecursively(temporaryRoot);
     }

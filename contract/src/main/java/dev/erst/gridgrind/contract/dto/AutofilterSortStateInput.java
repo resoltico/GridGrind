@@ -12,8 +12,10 @@ import java.util.Optional;
 /** Authored sort-state payload nested under sheet autofilter authoring. */
 public record AutofilterSortStateInput(
     String range,
-    boolean caseSensitive,
-    boolean columnSort,
+    @ProtocolField(optional = true, booleanDefault = ProtocolBooleanDefault.FALSE)
+        boolean caseSensitive,
+    @ProtocolField(optional = true, booleanDefault = ProtocolBooleanDefault.FALSE)
+        boolean columnSort,
     @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<ExcelAutofilterSortMethod> sortMethod,
     List<AutofilterSortConditionInput> conditions) {
   /** Creates a sort-state payload with no explicit sort-method override. */
@@ -50,8 +52,8 @@ public record AutofilterSortStateInput(
       @JsonProperty("conditions") List<AutofilterSortConditionInput> conditions) {
     this(
         range,
-        Boolean.TRUE.equals(caseSensitive),
-        Boolean.TRUE.equals(columnSort),
+        ProtocolBooleanDefault.FALSE.resolve(caseSensitive),
+        ProtocolBooleanDefault.FALSE.resolve(columnSort),
         sortMethod == null ? Optional.empty() : sortMethod,
         conditions);
   }

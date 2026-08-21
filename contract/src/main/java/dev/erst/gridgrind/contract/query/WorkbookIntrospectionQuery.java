@@ -4,6 +4,8 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import dev.erst.gridgrind.contract.catalog.ProtocolTypeMetadata;
 import dev.erst.gridgrind.contract.dto.CustomXmlMappingLocator;
+import dev.erst.gridgrind.contract.dto.ProtocolBooleanDefault;
+import dev.erst.gridgrind.contract.dto.ProtocolField;
 import dev.erst.gridgrind.contract.selector.NamedRangeSelector;
 import dev.erst.gridgrind.contract.selector.WorkbookSelector;
 import java.nio.charset.StandardCharsets;
@@ -45,10 +47,12 @@ public sealed interface WorkbookIntrospectionQuery extends InspectionQuery.Intro
   @ProtocolTypeMetadata(
       id = "EXPORT_CUSTOM_XML_MAPPING",
       summary = "Export one existing workbook custom-XML mapping as serialized XML.",
-      optionalFields = {"validateSchema", "encoding"},
       targetSelectors = {WorkbookSelector.class})
   record ExportCustomXmlMapping(
-      CustomXmlMappingLocator mapping, boolean validateSchema, String encoding)
+      CustomXmlMappingLocator mapping,
+      @ProtocolField(optional = true, booleanDefault = ProtocolBooleanDefault.FALSE)
+          boolean validateSchema,
+      @ProtocolField(optional = true) String encoding)
       implements WorkbookIntrospectionQuery {
     /** Creates one UTF-8 export request without requiring the caller to pass the encoding. */
     public ExportCustomXmlMapping(CustomXmlMappingLocator mapping, boolean validateSchema) {
@@ -63,7 +67,7 @@ public sealed interface WorkbookIntrospectionQuery extends InspectionQuery.Intro
         @JsonProperty("encoding") String encoding) {
       this(
           mapping,
-          Boolean.TRUE.equals(validateSchema),
+          ProtocolBooleanDefault.FALSE.resolve(validateSchema),
           encoding == null ? StandardCharsets.UTF_8.name() : encoding);
     }
 

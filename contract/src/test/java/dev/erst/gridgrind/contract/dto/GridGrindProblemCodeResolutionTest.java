@@ -86,7 +86,7 @@ class GridGrindProblemCodeResolutionTest {
             "Requests with STANDARD_INPUT-authored payloads must be provided via --request.",
             requestArgumentContext));
     assertEquals(
-        "Use --print-recipe-catalog first when you need the stable recipe ids, requestFileName, workspaceMode, and requiredWorkspacePaths, or use --print-recipe-keyword-match when you know the goal but not the id.",
+        "Use --print-recipe-catalog first when you need the stable recipe ids, requestFileName, advisory, and requiredWorkspacePaths, or use --print-recipe-keyword-match when you know the goal but not the id.",
         GridGrindProblemCode.INVALID_ARGUMENTS.resolutionFor(
             "Unknown recipe: workbook_health", lookupArgumentContext));
     assertEquals(

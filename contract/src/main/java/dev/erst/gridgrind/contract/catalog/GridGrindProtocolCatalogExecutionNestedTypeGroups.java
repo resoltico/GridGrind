@@ -5,7 +5,11 @@ import static dev.erst.gridgrind.contract.catalog.GridGrindProtocolCatalogNested
 
 import dev.erst.gridgrind.contract.dto.ExecutionJournal;
 import dev.erst.gridgrind.contract.dto.ExecutionModeInput;
+import dev.erst.gridgrind.contract.dto.ExecutionProgressEvent;
 import dev.erst.gridgrind.contract.dto.OoxmlEncryptionReport;
+import dev.erst.gridgrind.contract.dto.OoxmlPersistenceEncryptionInput;
+import dev.erst.gridgrind.contract.dto.OoxmlPersistenceSignatureInput;
+import dev.erst.gridgrind.contract.dto.RequestWarningLocation;
 import java.util.List;
 
 /** Owns execution-mode nested type groups published by the protocol catalog. */
@@ -45,13 +49,11 @@ final class GridGrindProtocolCatalogExecutionNestedTypeGroups {
                   descriptor(
                       ExecutionJournal.Phase.Succeeded.class,
                       "SUCCEEDED",
-                      "Execution phase that completed successfully and may include one timing payload.",
-                      "timing"),
+                      "Execution phase that completed successfully and may include one timing payload."),
                   descriptor(
                       ExecutionJournal.Phase.Failed.class,
                       "FAILED",
-                      "Execution phase that ended in failure and may include one timing payload.",
-                      "timing"))),
+                      "Execution phase that ended in failure and may include one timing payload."))),
           nestedTypeGroup(
               "executionJournalOutcomeTypes",
               ExecutionJournal.Outcome.class,
@@ -64,8 +66,24 @@ final class GridGrindProtocolCatalogExecutionNestedTypeGroups {
                       ExecutionJournal.Outcome.Failed.class,
                       "FAILED",
                       "Execution outcome summary for a failed run, including the canonical failure"
-                          + " code and an optional failing-step reference.",
-                      "failedStep"))),
+                          + " code and an optional failing-step reference."))),
+          nestedTypeGroup(
+              "executionProgressEventTypes",
+              ExecutionProgressEvent.class,
+              List.of(
+                  descriptor(
+                      ExecutionProgressEvent.Started.class,
+                      "STARTED",
+                      "Compact JSONL lifecycle event emitted when one execution phase starts."),
+                  descriptor(
+                      ExecutionProgressEvent.Succeeded.class,
+                      "SUCCEEDED",
+                      "Compact JSONL lifecycle event emitted when one execution phase succeeds."),
+                  descriptor(
+                      ExecutionProgressEvent.Failed.class,
+                      "FAILED",
+                      "Compact JSONL lifecycle event emitted when one execution phase fails with"
+                          + " one classified problem code."))),
           nestedTypeGroup(
               "ooxmlEncryptionReportTypes",
               OoxmlEncryptionReport.class,
@@ -77,5 +95,50 @@ final class GridGrindProtocolCatalogExecutionNestedTypeGroups {
                   descriptor(
                       OoxmlEncryptionReport.Encrypted.class,
                       "ENCRYPTED",
-                      "Package is encrypted with one fully specified OOXML encryption envelope."))));
+                      "Package is encrypted with one fully specified OOXML encryption envelope."))),
+          nestedTypeGroup(
+              "ooxmlPersistenceEncryptionTypes",
+              OoxmlPersistenceEncryptionInput.class,
+              List.of(
+                  descriptor(
+                      OoxmlPersistenceEncryptionInput.None.class,
+                      "NONE",
+                      "Deliberately persist plaintext."),
+                  descriptor(
+                      OoxmlPersistenceEncryptionInput.Encrypt.class,
+                      "ENCRYPT",
+                      "Persist with one explicitly supplied OOXML encryption envelope."),
+                  descriptor(
+                      OoxmlPersistenceEncryptionInput.PreserveSource.class,
+                      "PRESERVE_SOURCE",
+                      "Reapply the verified source encryption envelope when it is compatible"
+                          + " with the AGILE write contract."))),
+          nestedTypeGroup(
+              "ooxmlPersistenceSignatureTypes",
+              OoxmlPersistenceSignatureInput.class,
+              List.of(
+                  descriptor(
+                      OoxmlPersistenceSignatureInput.None.class,
+                      "NONE",
+                      "Deliberately persist without an OOXML package signature."),
+                  descriptor(
+                      OoxmlPersistenceSignatureInput.Sign.class,
+                      "SIGN",
+                      "Sign with explicitly supplied PKCS#12 material."))),
+          nestedTypeGroup(
+              "requestWarningLocationTypes",
+              RequestWarningLocation.class,
+              List.of(
+                  descriptor(
+                      RequestWarningLocation.Step.class,
+                      "STEP",
+                      "Warning located at one authored workbook step."),
+                  descriptor(
+                      RequestWarningLocation.RequestPath.class,
+                      "REQUEST_PATH",
+                      "Warning located at one request-owned filesystem path."),
+                  descriptor(
+                      RequestWarningLocation.FormulaCell.class,
+                      "FORMULA_CELL",
+                      "Warning located at one formula cell assessed by calculation capability analysis."))));
 }

@@ -13,9 +13,9 @@
       "persistenceKind" : "NONE",
       "operationCount" : 3,
       "operationKinds" : {
-        "SET_CELL" : 1,
+        "SET_EMBEDDED_OBJECT" : 1,
         "ENSURE_SHEET" : 1,
-        "SET_EMBEDDED_OBJECT" : 1
+        "SET_CELL" : 1
       },
       "styleKinds" : { },
       "assertionCount" : 0,

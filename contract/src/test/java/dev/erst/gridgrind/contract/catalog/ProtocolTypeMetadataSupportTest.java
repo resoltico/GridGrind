@@ -7,6 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import dev.erst.gridgrind.contract.dto.ProtocolField;
 import dev.erst.gridgrind.contract.selector.SheetSelector;
 import java.util.List;
 import java.util.Map;
@@ -127,7 +128,9 @@ class ProtocolTypeMetadataSupportTest {
     assertEquals(1, descriptors.size());
     assertEquals("STATIC_TYPED", descriptors.getFirst().id());
     assertEquals("Static summary", descriptors.getFirst().summary());
-    assertEquals(List.of("optionalField"), descriptors.getFirst().optionalFields());
+    assertEquals(
+        List.of(FieldRequirement.OPTIONAL),
+        descriptors.getFirst().typeEntry().fields().stream().map(FieldEntry::requirement).toList());
   }
 
   @Test
@@ -181,7 +184,6 @@ class ProtocolTypeMetadataSupportTest {
   @ProtocolTypeMetadata(
       id = "STATIC_TYPED",
       summary = "Static summary",
-      optionalFields = {"optionalField"},
       targetSelectors = {SheetSelector.class})
   private record StaticLeaf() {}
 
@@ -202,9 +204,9 @@ class ProtocolTypeMetadataSupportTest {
   @ProtocolTypeMetadata(
       id = "STATIC_TYPED",
       summary = "Static summary",
-      optionalFields = {"optionalField"},
       targetSelectors = {SheetSelector.class})
-  private record SealedCatalogLeaf(String optionalField) implements SealedCatalogRoot {}
+  private record SealedCatalogLeaf(@ProtocolField(optional = true) String optionalField)
+      implements SealedCatalogRoot {}
 
   /** Sealed root used for positive catalog-descriptor discovery coverage. */
   private sealed interface SealedCatalogRoot permits SealedCatalogLeaf {}

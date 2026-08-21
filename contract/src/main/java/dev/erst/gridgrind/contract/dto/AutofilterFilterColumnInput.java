@@ -6,7 +6,10 @@ import java.util.Objects;
 
 /** One authored autofilter filter-column payload. */
 public record AutofilterFilterColumnInput(
-    long columnId, boolean showButton, AutofilterFilterCriterionInput criterion) {
+    long columnId,
+    @ProtocolField(optional = true, booleanDefault = ProtocolBooleanDefault.TRUE)
+        boolean showButton,
+    AutofilterFilterCriterionInput criterion) {
   /** Creates a filter-column payload with an explicit visible button. */
   public static AutofilterFilterColumnInput visibleButton(
       long columnId, AutofilterFilterCriterionInput criterion) {
@@ -26,6 +29,6 @@ public record AutofilterFilterColumnInput(
       @JsonProperty("columnId") long columnId,
       @JsonProperty("showButton") Boolean showButton,
       @JsonProperty("criterion") AutofilterFilterCriterionInput criterion) {
-    this(columnId, !Boolean.FALSE.equals(showButton), criterion);
+    this(columnId, ProtocolBooleanDefault.TRUE.resolve(showButton), criterion);
   }
 }

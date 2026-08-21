@@ -5,6 +5,8 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import dev.erst.gridgrind.contract.dto.GridGrindProblemCode;
+import dev.erst.gridgrind.contract.dto.InvalidRawFormulaTextException;
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -166,6 +168,25 @@ class GridGrindJsonProblemMessageSupportTest {
     assertEquals("Missing required field 'protocolVersion'", rebasedShape.getMessage());
     assertEquals(Optional.of("protocolVersion"), rebasedShape.jsonPath());
 
+    InvalidRequestException invariantCause =
+        new InvalidRequestException(
+            new MessageInvariant("invalid plan identifier", Optional.of("planId")),
+            Optional.of("planId"),
+            Optional.of(7),
+            Optional.of(9),
+            null);
+    MismatchedInputException invariantProblemCarrier =
+        MismatchedInputException.from(parser("{}"), (Class<?>) null, "Cannot deserialize value");
+    invariantProblemCarrier.initCause(invariantCause);
+
+    InvalidRequestException rebasedInvariant =
+        assertInstanceOf(
+            InvalidRequestException.class,
+            GridGrindJsonProblemMessageSupport.invalidPayload(
+                invariantProblemCarrier, rootNode, Object.class));
+    assertEquals("invalid plan identifier", rebasedInvariant.getMessage());
+    assertEquals(Optional.of("planId"), rebasedInvariant.jsonPath());
+
     InvalidRequestShapeException nestedShapeCause =
         new InvalidRequestShapeException(
             new MissingTypeDiscriminator("type"),
@@ -200,6 +221,17 @@ class GridGrindJsonProblemMessageSupportTest {
                 invariantCarrier, rootNode, Object.class));
     assertEquals("bad date", invariant.getMessage());
     assertEquals(Optional.empty(), invariant.jsonPath());
+
+    MismatchedInputException rawFormulaCarrier =
+        MismatchedInputException.from(parser("\"bad\""), (Class<?>) null, "bad formula text");
+    rawFormulaCarrier.initCause(
+        new InvalidRawFormulaTextException("formula text contains a forbidden XML character"));
+    FormulaRequestException rawFormula =
+        assertInstanceOf(
+            FormulaRequestException.class,
+            GridGrindJsonProblemMessageSupport.invalidPayload(
+                rawFormulaCarrier, rootNode, Object.class));
+    assertEquals(GridGrindProblemCode.INVALID_FORMULA_TEXT, rawFormula.problemCode());
   }
 
   @Test

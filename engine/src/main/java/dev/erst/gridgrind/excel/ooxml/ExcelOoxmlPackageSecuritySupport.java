@@ -7,6 +7,7 @@ import dev.erst.gridgrind.excel.ExcelWorkbook;
 import dev.erst.gridgrind.excel.ExcelWorkbooks;
 import dev.erst.gridgrind.excel.WorkbookArtifactWriteDisposition;
 import dev.erst.gridgrind.excel.WorkbookNotFoundException;
+import dev.erst.gridgrind.excel.WorkbookNotOpenableException;
 import dev.erst.gridgrind.excel.WorkbookTempFileFactory;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -82,8 +83,10 @@ public final class ExcelOoxmlPackageSecuritySupport {
       case OLE2 ->
           ExcelOoxmlPackageSecurityInternals.decryptWorkbook(absolutePath, effectiveOpenOptions);
       default ->
-          throw new IllegalArgumentException(
-              "Only .xlsx workbooks are supported; unsupported package magic at " + absolutePath);
+          throw new WorkbookNotOpenableException(
+              absolutePath,
+              new IllegalArgumentException(
+                  "Only .xlsx workbooks are supported; unsupported package magic"));
     };
   }
 
@@ -105,26 +108,15 @@ public final class ExcelOoxmlPackageSecuritySupport {
     ExcelOoxmlPersistenceOptions explicitOptions =
         persistenceOptions == null ? ExcelOoxmlPersistenceOptions.none() : persistenceOptions;
 
-    if (ExcelOoxmlPackageSecurityInternals.passThroughEligible(workbook, explicitOptions)) {
-      ExcelOoxmlPackageFileSupport.copySourceWorkbook(
-          workbook.persistence().sourcePath().orElseThrow(), normalizedTarget, writeDisposition);
-      return;
-    }
-
-    if (ExcelOoxmlPackageSecurityInternals.requiresResigning(workbook, explicitOptions)) {
-      throw new IllegalArgumentException(
-          "The workbook was opened from a signed OOXML package and has been mutated or"
-              + " re-emitted. Supply persistence.security.signature to sign the saved output"
-              + " instead of silently dropping signatures.");
-    }
-
     ExcelOoxmlPersistenceOptions effectiveOptions =
         ExcelOoxmlPackagePersistenceSupport.effectiveOptions(
             workbook.persistence().loadedPackageSecurity(),
             workbook.persistence().sourceEncryptionPassword(),
             explicitOptions);
-    if (effectiveOptions.isEmpty()) {
+    if (effectiveOptions.writesPlaintextUnsigned()) {
       workbook.persistence().savePlainWorkbook(normalizedTarget, writeDisposition);
+      ExcelOoxmlPackageSigningSupport.removeSignatures(normalizedTarget);
+      ExcelDeterministicWorkbookArtifactSupport.normalizeWorkbookPackage(normalizedTarget);
       return;
     }
 
@@ -140,7 +132,6 @@ public final class ExcelOoxmlPackageSecuritySupport {
           normalizedTarget,
           workbook.persistence().loadedPackageSecurity(),
           workbook.persistence().sourceEncryptionPassword(),
-          workbook.persistence().wasMutatedSinceOpen(),
           writeDisposition,
           effectiveOptions);
     }
@@ -154,7 +145,6 @@ public final class ExcelOoxmlPackageSecuritySupport {
       Path targetPath,
       ExcelOoxmlPackageSecuritySnapshot sourceSecurity,
       Optional<String> sourceEncryptionPassword,
-      boolean sourceMutated,
       WorkbookArtifactWriteDisposition writeDisposition,
       ExcelOoxmlPersistenceOptions persistenceOptions)
       throws IOException {
@@ -167,29 +157,17 @@ public final class ExcelOoxmlPackageSecuritySupport {
     Path normalizedTarget = targetPath.toAbsolutePath().normalize();
     ExcelOoxmlPackageSecurityInternals.createTargetParentDirectories(normalizedTarget);
 
-    if (!sourceSecurity.signatures().isEmpty()
-        && sourceMutated
-        && persistenceOptions.signature().isEmpty()) {
-      throw new IllegalArgumentException(
-          "The workbook was opened from a signed OOXML package and has been rewritten."
-              + " Supply persistence.security.signature to sign the saved output instead of"
-              + " silently dropping signatures.");
-    }
-
     ExcelOoxmlPersistenceOptions effectiveOptions =
         ExcelOoxmlPackagePersistenceSupport.effectiveOptions(
             sourceSecurity, sourceEncryptionPassword, persistenceOptions);
+    ExcelOoxmlPackageSigningSupport.removeSignatures(plainWorkbookPath);
     ExcelDeterministicWorkbookArtifactSupport.normalizeWorkbookPackage(plainWorkbookPath);
-    if (effectiveOptions.signature().isPresent()) {
-      ExcelOoxmlPackageSigningSupport.signWorkbook(
-          plainWorkbookPath, effectiveOptions.signature().orElseThrow());
+    if (effectiveOptions.signature() instanceof ExcelOoxmlPersistenceSignature.Sign sign) {
+      ExcelOoxmlPackageSigningSupport.signWorkbook(plainWorkbookPath, sign.options());
     }
-    if (effectiveOptions.encryption().isPresent()) {
+    if (effectiveOptions.encryption() instanceof ExcelOoxmlPersistenceEncryption.Encrypt encrypt) {
       ExcelOoxmlPackageEncryptionSupport.encryptWorkbook(
-          plainWorkbookPath,
-          normalizedTarget,
-          writeDisposition,
-          effectiveOptions.encryption().orElseThrow());
+          plainWorkbookPath, normalizedTarget, writeDisposition, encrypt.options());
     } else {
       ExcelOoxmlPackageFileSupport.moveWorkbook(
           plainWorkbookPath, normalizedTarget, writeDisposition);

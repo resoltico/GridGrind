@@ -24,7 +24,6 @@ import dev.erst.gridgrind.contract.dto.CellInput;
 import dev.erst.gridgrind.contract.dto.CellProtectionReport;
 import dev.erst.gridgrind.contract.dto.ExecutionModeInput;
 import dev.erst.gridgrind.contract.dto.FontHeightReport;
-import dev.erst.gridgrind.contract.dto.GridGrindResponse;
 import dev.erst.gridgrind.contract.dto.NamedRangeScope;
 import dev.erst.gridgrind.contract.dto.NamedRangeTarget;
 import dev.erst.gridgrind.contract.dto.TableInput;
@@ -32,6 +31,7 @@ import dev.erst.gridgrind.contract.dto.TableStyleInput;
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
 import dev.erst.gridgrind.contract.dto.WorkbookProtectionInput;
 import dev.erst.gridgrind.contract.dto.WorkbookProtectionReport;
+import dev.erst.gridgrind.contract.dto.WorkbookResult;
 import dev.erst.gridgrind.contract.json.GridGrindJson;
 import dev.erst.gridgrind.contract.query.*;
 import dev.erst.gridgrind.contract.query.InspectionResult;
@@ -50,6 +50,8 @@ import dev.erst.gridgrind.contract.selector.TableRowSelector;
 import dev.erst.gridgrind.contract.selector.TableSelector;
 import dev.erst.gridgrind.contract.selector.WorkbookSelector;
 import dev.erst.gridgrind.contract.step.AssertionStep;
+import dev.erst.gridgrind.contract.step.WorkbookStaticRequestContract;
+import dev.erst.gridgrind.contract.step.WorkbookStaticViolation;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
 import dev.erst.gridgrind.excel.ExcelWorkbooks;
 import dev.erst.gridgrind.excel.WorkbookExecutionEngine;
@@ -135,7 +137,7 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
                 List.of(),
                 List.of())));
 
-    GridGrindResponse.Success inspected =
+    WorkbookResult.Success inspected =
         success(
             ExecutionContextFixtureSupport.execute(
                 executor,
@@ -205,7 +207,7 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
             dev.erst.gridgrind.contract.dto.CellReport.FormulaReport.class, cells.cells().get(5));
     AnalysisFindingReport firstFinding = formulaHealth.analysis().findings().getFirst();
 
-    GridGrindResponse.Success asserted =
+    WorkbookResult.Success asserted =
         success(
             ExecutionContextFixtureSupport.execute(
                 executor,
@@ -459,7 +461,7 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
                 List.of(),
                 List.of())));
 
-    GridGrindResponse.Success inspected =
+    WorkbookResult.Success inspected =
         success(
             ExecutionContextFixtureSupport.execute(
                 executor,
@@ -514,7 +516,7 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
         inspection(inspected, "formulaHealth", WorkbookAnalysisResult.FormulaHealthResult.class);
     AnalysisFindingReport firstFinding = formulaHealth.analysis().findings().getFirst();
 
-    GridGrindResponse.Failure presentMissingSheet =
+    WorkbookResult.Failure presentMissingSheet =
         assertionFailure(
             executor,
             workbookPath,
@@ -534,7 +536,7 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
                     .getFirst())
             .sheetNames());
 
-    GridGrindResponse.Failure absentPresentSheet =
+    WorkbookResult.Failure absentPresentSheet =
         assertionFailure(
             executor,
             workbookPath,
@@ -543,7 +545,7 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
             new PresenceAssertion.SheetAbsent());
     assertTrue(absentPresentSheet.problem().message().contains("EXPECT_SHEET_ABSENT"));
 
-    GridGrindResponse.Failure presentMissing =
+    WorkbookResult.Failure presentMissing =
         assertionFailure(
             executor,
             workbookPath,
@@ -558,7 +560,7 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
                 presentMissing.problem().assertionFailure().orElseThrow().observations().getFirst())
             .namedRanges());
 
-    GridGrindResponse.Failure absentTable =
+    WorkbookResult.Failure absentTable =
         assertionFailure(
             executor,
             workbookPath,
@@ -567,7 +569,7 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
             new PresenceAssertion.TableAbsent());
     assertTrue(absentTable.problem().message().contains("EXPECT_TABLE_ABSENT"));
 
-    GridGrindResponse.Failure styleMismatch =
+    WorkbookResult.Failure styleMismatch =
         assertionFailure(
             executor,
             workbookPath,
@@ -583,7 +585,7 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
                     style(owner).protection())));
     assertTrue(styleMismatch.problem().message().contains("EXPECT_CELL_STYLE"));
 
-    GridGrindResponse.Failure formulaTextMismatch =
+    WorkbookResult.Failure formulaTextMismatch =
         assertionFailure(
             executor,
             workbookPath,
@@ -593,7 +595,7 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
     assertTrue(formulaTextMismatch.problem().message().contains("EXPECT_FORMULA_TEXT"));
 
     WorkbookProtectionReport expectedProtection = protection.protection();
-    GridGrindResponse.Failure protectionMismatch =
+    WorkbookResult.Failure protectionMismatch =
         assertionFailure(
             executor,
             workbookPath,
@@ -609,7 +611,7 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
     assertTrue(protectionMismatch.problem().message().contains("EXPECT_WORKBOOK_PROTECTION"));
 
     SheetSummaryReport expectedSheet = sheet.sheet();
-    GridGrindResponse.Failure sheetMismatch =
+    WorkbookResult.Failure sheetMismatch =
         assertionFailure(
             executor,
             workbookPath,
@@ -625,7 +627,7 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
                     expectedSheet.lastColumnIndex())));
     assertTrue(sheetMismatch.problem().message().contains("EXPECT_SHEET_STRUCTURE"));
 
-    GridGrindResponse.Failure namedRangeMismatch =
+    WorkbookResult.Failure namedRangeMismatch =
         assertionFailure(
             executor,
             workbookPath,
@@ -645,7 +647,7 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
                     .getFirst())
             .namedRanges());
 
-    GridGrindResponse.Failure tableMismatch =
+    WorkbookResult.Failure tableMismatch =
         assertionFailure(
             executor,
             workbookPath,
@@ -660,7 +662,7 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
                 tableMismatch.problem().assertionFailure().orElseThrow().observations().getFirst())
             .tables());
 
-    GridGrindResponse.Failure severityMismatch =
+    WorkbookResult.Failure severityMismatch =
         assertionFailure(
             executor,
             workbookPath,
@@ -670,7 +672,7 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
                 new InspectionAnalysisQuery.AnalyzeFormulaHealth(), AnalysisSeverity.WARNING));
     assertTrue(severityMismatch.problem().message().contains("EXPECT_ANALYSIS_MAX_SEVERITY"));
 
-    GridGrindResponse.Failure missingFinding =
+    WorkbookResult.Failure missingFinding =
         assertionFailure(
             executor,
             workbookPath,
@@ -683,7 +685,7 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
                 Optional.empty()));
     assertTrue(missingFinding.problem().message().contains("missing finding"));
 
-    GridGrindResponse.Failure unexpectedFinding =
+    WorkbookResult.Failure unexpectedFinding =
         assertionFailure(
             executor,
             workbookPath,
@@ -720,7 +722,7 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
                 List.of(),
                 List.of())));
 
-    GridGrindResponse.Failure formulaMismatch =
+    WorkbookResult.Failure formulaMismatch =
         failure(
             ExecutionContextFixtureSupport.execute(
                 executor,
@@ -736,7 +738,7 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
                     List.of())));
     assertTrue(formulaMismatch.problem().message().contains("EXPECT_FORMULA_TEXT"));
 
-    GridGrindResponse.Failure allOfFailure =
+    WorkbookResult.Failure allOfFailure =
         failure(
             ExecutionContextFixtureSupport.execute(
                 executor,
@@ -757,7 +759,7 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
                     List.of())));
     assertTrue(allOfFailure.problem().message().contains("ALL_OF failed"));
 
-    GridGrindResponse.Failure anyOfFailure =
+    WorkbookResult.Failure anyOfFailure =
         failure(
             ExecutionContextFixtureSupport.execute(
                 executor,
@@ -778,7 +780,7 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
                     List.of())));
     assertTrue(anyOfFailure.problem().message().contains("ANY_OF failed"));
 
-    GridGrindResponse.Failure notFailure =
+    WorkbookResult.Failure notFailure =
         failure(
             ExecutionContextFixtureSupport.execute(
                 executor,
@@ -803,7 +805,7 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
   void zeroMatchDisplayFormulaAndStyleAssertionsReturnStructuredProblems() {
     DefaultGridGrindRequestExecutor executor = new DefaultGridGrindRequestExecutor();
 
-    GridGrindResponse.Failure displayFailure =
+    WorkbookResult.Failure displayFailure =
         failure(
             ExecutionContextFixtureSupport.execute(
                 executor,
@@ -832,7 +834,7 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
                 displayFailure.problem().assertionFailure().orElseThrow().observations().getFirst())
             .cells());
 
-    GridGrindResponse.Failure formulaFailure =
+    WorkbookResult.Failure formulaFailure =
         failure(
             ExecutionContextFixtureSupport.execute(
                 executor,
@@ -855,7 +857,7 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
         "formula-missing-table-cell",
         formulaFailure.problem().assertionFailure().orElseThrow().stepId());
 
-    GridGrindResponse.Failure styleFailure =
+    WorkbookResult.Failure styleFailure =
         failure(
             ExecutionContextFixtureSupport.execute(
                 executor,
@@ -924,7 +926,7 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
             "pivots",
             WorkbookAssetInspectionResult.PivotTablesResult.class);
 
-    GridGrindResponse.Success asserted =
+    WorkbookResult.Success asserted =
         success(
             ExecutionContextFixtureSupport.execute(
                 executor,
@@ -948,7 +950,7 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
                     List.of())));
     assertEquals(3, asserted.assertions().size());
 
-    GridGrindResponse.Success pivotAssertions =
+    WorkbookResult.Success pivotAssertions =
         success(
             ExecutionContextFixtureSupport.execute(
                 executor,
@@ -972,7 +974,7 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
                     List.of())));
     assertEquals(3, pivotAssertions.assertions().size());
 
-    GridGrindResponse.Failure chartFactsMismatch =
+    WorkbookResult.Failure chartFactsMismatch =
         assertionFailure(
             executor,
             chartPath,
@@ -981,7 +983,7 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
             new WorkbookFactAssertion.ChartFacts(List.of()));
     assertTrue(chartFactsMismatch.problem().message().contains("EXPECT_CHART_FACTS"));
 
-    GridGrindResponse.Failure pivotFactsMismatch =
+    WorkbookResult.Failure pivotFactsMismatch =
         assertionFailure(
             executor,
             pivotPath,
@@ -989,94 +991,6 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
             new PivotTableSelector.All(),
             new WorkbookFactAssertion.PivotTableFacts(List.of()));
     assertTrue(pivotFactsMismatch.problem().message().contains("EXPECT_PIVOT_TABLE_FACTS"));
-  }
-
-  @Test
-  void observationHelperBranchesRejectUnsupportedTargetsAndReturnZeroMatches() throws Exception {
-    var readExecutor = new dev.erst.gridgrind.excel.WorkbookExecutionEngine();
-    AssertionExecutor assertionExecutor =
-        new AssertionExecutor(readExecutor, new SemanticSelectorResolver(readExecutor));
-
-    IllegalArgumentException unsupportedPresence =
-        assertThrows(
-            IllegalArgumentException.class,
-            () ->
-                assertionExecutor.presenceObservation(
-                    "presence", new WorkbookSelector.Current(), null, null));
-    assertTrue(unsupportedPresence.getMessage().contains("Unsupported presence assertion target"));
-
-    NullPointerException nullWorkbook =
-        assertThrows(
-            NullPointerException.class,
-            () ->
-                assertionExecutor.chartsObservation(
-                    "charts", new WorkbookSelector.Current(), null, null));
-    assertEquals("workbook must not be null", nullWorkbook.getMessage());
-
-    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
-      IllegalArgumentException unsupportedCharts =
-          assertThrows(
-              IllegalArgumentException.class,
-              () ->
-                  assertionExecutor.chartsObservation(
-                      "charts",
-                      new WorkbookSelector.Current(),
-                      workbook,
-                      new WorkbookLocation.UnsavedWorkbook()));
-      assertEquals("Unsupported chart inspection target", unsupportedCharts.getMessage());
-    }
-
-    IllegalArgumentException unsupportedObservedCount =
-        assertThrows(
-            IllegalArgumentException.class,
-            () ->
-                AssertionExecutor.observedCount(
-                    new WorkbookInspectionResult.WorkbookSummaryResult(
-                        "summary",
-                        new WorkbookSummary.WithSheets(
-                            1, List.of("Budget"), "Budget", List.of("Budget"), 0, false))));
-    assertTrue(
-        unsupportedObservedCount.getMessage().contains("Unsupported presence observation result"));
-    assertEquals(
-        List.of(),
-        assertInstanceOf(
-                WorkbookInspectionResult.NamedRangesResult.class,
-                AssertionExecutor.zeroMatchPresenceObservation(
-                    "missing-range", new NamedRangeSelector.WorkbookScope("MissingTotal")))
-            .namedRanges());
-    assertEquals(
-        List.of(),
-        assertInstanceOf(
-                WorkbookAssetInspectionResult.TablesResult.class,
-                AssertionExecutor.zeroMatchPresenceObservation(
-                    "missing-table", new TableSelector.ByName("MissingTable")))
-            .tables());
-    assertEquals(
-        List.of(),
-        assertInstanceOf(
-                WorkbookAssetInspectionResult.PivotTablesResult.class,
-                AssertionExecutor.zeroMatchPresenceObservation(
-                    "missing-pivot", new PivotTableSelector.ByName("Missing Pivot")))
-            .pivotTables());
-    assertEquals(
-        "MissingSheet",
-        assertInstanceOf(
-                WorkbookAssetInspectionResult.ChartsResult.class,
-                AssertionExecutor.zeroMatchPresenceObservation(
-                    "missing-chart-sheet", new ChartSelector.AllOnSheet("MissingSheet")))
-            .sheetName());
-    assertEquals(
-        "MissingSheet",
-        assertInstanceOf(
-                WorkbookAssetInspectionResult.ChartsResult.class,
-                AssertionExecutor.zeroMatchPresenceObservation(
-                    "missing-chart-name", new ChartSelector.ByName("MissingSheet", "MissingChart")))
-            .sheetName());
-    assertThrows(
-        IllegalArgumentException.class,
-        () ->
-            AssertionExecutor.zeroMatchPresenceObservation(
-                "unsupported-zero-match", new WorkbookSelector.Current()));
   }
 
   @Test
@@ -1123,33 +1037,36 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
                 "workbook", new WorkbookFindingsReport(summary, List.of(finding))));
 
     for (WorkbookAnalysisResult analysis : analyses) {
-      assertEquals(summary, AssertionExecutor.analysisSummary(analysis));
-      assertEquals(List.of(finding), AssertionExecutor.analysisFindings(analysis));
+      assertEquals(summary, AssertionAnalysisEvaluator.analysisSummary(analysis));
+      assertEquals(List.of(finding), AssertionAnalysisEvaluator.analysisFindings(analysis));
       assertEquals(
           java.util.Optional.of(AnalysisSeverity.ERROR),
-          AssertionExecutor.highestSeverity(analysis));
+          AssertionAnalysisEvaluator.highestSeverity(analysis));
     }
 
-    assertEquals(-1, AssertionExecutor.severityRank(java.util.Optional.empty()));
-    assertEquals(0, AssertionExecutor.severityRank(java.util.Optional.of(AnalysisSeverity.INFO)));
+    assertEquals(-1, AssertionAnalysisEvaluator.severityRank(java.util.Optional.empty()));
     assertEquals(
-        1, AssertionExecutor.severityRank(java.util.Optional.of(AnalysisSeverity.WARNING)));
-    assertEquals(2, AssertionExecutor.severityRank(java.util.Optional.of(AnalysisSeverity.ERROR)));
+        0, AssertionAnalysisEvaluator.severityRank(java.util.Optional.of(AnalysisSeverity.INFO)));
+    assertEquals(
+        1,
+        AssertionAnalysisEvaluator.severityRank(java.util.Optional.of(AnalysisSeverity.WARNING)));
+    assertEquals(
+        2, AssertionAnalysisEvaluator.severityRank(java.util.Optional.of(AnalysisSeverity.ERROR)));
     assertEquals(
         java.util.Optional.of(AnalysisSeverity.WARNING),
-        AssertionExecutor.highestSeverity(
+        AssertionAnalysisEvaluator.highestSeverity(
             new WorkbookAnalysisResult.FormulaHealthResult(
                 "warning",
                 new FormulaHealthReport(1, new AnalysisSummaryReport(1, 0, 1, 0), List.of()))));
     assertEquals(
         java.util.Optional.of(AnalysisSeverity.INFO),
-        AssertionExecutor.highestSeverity(
+        AssertionAnalysisEvaluator.highestSeverity(
             new WorkbookAnalysisResult.FormulaHealthResult(
                 "info",
                 new FormulaHealthReport(1, new AnalysisSummaryReport(1, 0, 0, 1), List.of()))));
     assertEquals(
         java.util.Optional.empty(),
-        AssertionExecutor.highestSeverity(
+        AssertionAnalysisEvaluator.highestSeverity(
             new WorkbookAnalysisResult.FormulaHealthResult(
                 "clean",
                 new FormulaHealthReport(1, new AnalysisSummaryReport(0, 0, 0, 0), List.of()))));
@@ -1180,54 +1097,67 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
         formulaReadCell(
             "E2", "42", style, "2+40", new CellValueReport.NumberValue(42.0d, Optional.empty()));
 
-    assertTrue(AssertionExecutor.matchesCellValue(blankCell, new CellScalarValue.Blank()));
-    assertFalse(AssertionExecutor.matchesCellValue(textCell, new CellScalarValue.Blank()));
-    assertFalse(AssertionExecutor.matchesCellValue(blankCell, new CellScalarValue.Text("Owner")));
-    assertTrue(AssertionExecutor.matchesCellValue(textCell, new CellScalarValue.Text("Owner")));
-    assertFalse(AssertionExecutor.matchesCellValue(textCell, new CellScalarValue.Text("Wrong")));
+    assertTrue(AssertionValueEvaluator.matchesCellValue(blankCell, new CellScalarValue.Blank()));
+    assertFalse(AssertionValueEvaluator.matchesCellValue(textCell, new CellScalarValue.Blank()));
     assertFalse(
-        AssertionExecutor.matchesCellValue(textCell, new CellScalarValue.NumberValue(42.0d)));
+        AssertionValueEvaluator.matchesCellValue(blankCell, new CellScalarValue.Text("Owner")));
     assertTrue(
-        AssertionExecutor.matchesCellValue(numberCell, new CellScalarValue.NumberValue(42.0d)));
+        AssertionValueEvaluator.matchesCellValue(textCell, new CellScalarValue.Text("Owner")));
     assertFalse(
-        AssertionExecutor.matchesCellValue(numberCell, new CellScalarValue.NumberValue(41.0d)));
+        AssertionValueEvaluator.matchesCellValue(textCell, new CellScalarValue.Text("Wrong")));
+    assertFalse(
+        AssertionValueEvaluator.matchesCellValue(textCell, new CellScalarValue.NumberValue(42.0d)));
     assertTrue(
-        AssertionExecutor.matchesCellValue(booleanCell, new CellScalarValue.BooleanValue(true)));
+        AssertionValueEvaluator.matchesCellValue(
+            numberCell, new CellScalarValue.NumberValue(42.0d)));
     assertFalse(
-        AssertionExecutor.matchesCellValue(booleanCell, new CellScalarValue.BooleanValue(false)));
-    assertFalse(
-        AssertionExecutor.matchesCellValue(numberCell, new CellScalarValue.BooleanValue(true)));
+        AssertionValueEvaluator.matchesCellValue(
+            numberCell, new CellScalarValue.NumberValue(41.0d)));
     assertTrue(
-        AssertionExecutor.matchesCellValue(errorCell, new CellScalarValue.ErrorValue("#DIV/0!")));
+        AssertionValueEvaluator.matchesCellValue(
+            booleanCell, new CellScalarValue.BooleanValue(true)));
     assertFalse(
-        AssertionExecutor.matchesCellValue(errorCell, new CellScalarValue.ErrorValue("#REF!")));
+        AssertionValueEvaluator.matchesCellValue(
+            booleanCell, new CellScalarValue.BooleanValue(false)));
     assertFalse(
-        AssertionExecutor.matchesCellValue(numberCell, new CellScalarValue.ErrorValue("#DIV/0!")));
+        AssertionValueEvaluator.matchesCellValue(
+            numberCell, new CellScalarValue.BooleanValue(true)));
     assertTrue(
-        AssertionExecutor.matchesCellValue(formulaCell, new CellScalarValue.NumberValue(42.0d)));
+        AssertionValueEvaluator.matchesCellValue(
+            errorCell, new CellScalarValue.ErrorValue("#DIV/0!")));
     assertFalse(
-        AssertionExecutor.matchesCellValue(formulaCell, new CellScalarValue.NumberValue(41.0d)));
+        AssertionValueEvaluator.matchesCellValue(
+            errorCell, new CellScalarValue.ErrorValue("#REF!")));
+    assertFalse(
+        AssertionValueEvaluator.matchesCellValue(
+            numberCell, new CellScalarValue.ErrorValue("#DIV/0!")));
+    assertTrue(
+        AssertionValueEvaluator.matchesCellValue(
+            formulaCell, new CellScalarValue.NumberValue(42.0d)));
+    assertFalse(
+        AssertionValueEvaluator.matchesCellValue(
+            formulaCell, new CellScalarValue.NumberValue(41.0d)));
 
     assertTrue(
-        AssertionExecutor.matchesFinding(
+        AssertionAnalysisEvaluator.matchesFinding(
             finding, finding.code(), Optional.of(finding.severity()), Optional.of("Division")));
     assertFalse(
-        AssertionExecutor.matchesFinding(
+        AssertionAnalysisEvaluator.matchesFinding(
             finding,
             AnalysisFindingCode.FORMULA_VOLATILE_FUNCTION,
             Optional.empty(),
             Optional.empty()));
     assertTrue(
-        AssertionExecutor.matchesFinding(
+        AssertionAnalysisEvaluator.matchesFinding(
             finding, finding.code(), Optional.empty(), Optional.empty()));
     assertFalse(
-        AssertionExecutor.matchesFinding(
+        AssertionAnalysisEvaluator.matchesFinding(
             finding,
             finding.code(),
             Optional.of(AnalysisSeverity.WARNING),
             Optional.of("Division")));
     assertFalse(
-        AssertionExecutor.matchesFinding(
+        AssertionAnalysisEvaluator.matchesFinding(
             finding,
             finding.code(),
             Optional.of(finding.severity()),
@@ -1239,7 +1169,7 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
     DefaultGridGrindRequestExecutor executor = new DefaultGridGrindRequestExecutor();
     ExecutionStepSupport stepSupport = executionStepSupport();
 
-    GridGrindResponse.Success success =
+    WorkbookResult.Success success =
         success(
             ExecutionContextFixtureSupport.execute(
                 executor,
@@ -1275,7 +1205,7 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
             .map(dev.erst.gridgrind.contract.assertion.AssertionResult::stepId)
             .toList());
 
-    GridGrindResponse.Failure streamingAssertionFailure =
+    WorkbookResult.Failure streamingAssertionFailure =
         failure(
             ExecutionContextFixtureSupport.execute(
                 executor,
@@ -1330,6 +1260,22 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
                     new WorkbookLocation.UnsavedWorkbook(),
                     ExecutionModeInput.eventRead()));
     assertTrue(assertionModeFailure.getMessage().contains("does not support assertion steps"));
+
+    IllegalStateException collectingAssertionModeFailure =
+        assertThrows(
+            IllegalStateException.class,
+            () ->
+                stepSupport.executeAssertionStepCollecting(
+                    new AssertionStep(
+                        "assert",
+                        new CellSelector.ByAddress("Ops", "A1"),
+                        new CellAssertion.CellValue(
+                            new dev.erst.gridgrind.contract.dto.CellScalarValue.Text("Owner"))),
+                    null,
+                    new WorkbookLocation.UnsavedWorkbook(),
+                    ExecutionModeInput.eventRead()));
+    assertTrue(
+        collectingAssertionModeFailure.getMessage().contains("does not support assertion steps"));
 
     Path workbookPath = Files.createTempFile("gridgrind-private-event-read-", ".xlsx");
     try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
@@ -1429,23 +1375,24 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
         ExecutionActionDiagnosticFields.formulaFor(new PresenceAssertion.TablePresent()));
 
     assertTrue(
-        executor
-            .executionModeFailures(
-                request(
-                    new WorkbookPlan.WorkbookSource.New(),
-                    new WorkbookPlan.WorkbookPersistence.None(),
-                    ExecutionModeInput.streamingWrite(),
-                    null,
-                    List.of(),
-                    List.of(
-                        assertThat(
-                            "assert-without-sheet",
-                            new CellSelector.ByAddress("Ops", "A1"),
-                            new CellAssertion.CellValue(
-                                new dev.erst.gridgrind.contract.dto.CellScalarValue.Text(
-                                    "Owner")))),
-                    List.of()))
+        WorkbookStaticRequestContract.validate(
+                WorkbookStaticRequestContract.from(
+                    request(
+                        new WorkbookPlan.WorkbookSource.New(),
+                        new WorkbookPlan.WorkbookPersistence.None(),
+                        ExecutionModeInput.streamingWrite(),
+                        null,
+                        List.of(),
+                        List.of(
+                            assertThat(
+                                "assert-without-sheet",
+                                new CellSelector.ByAddress("Ops", "A1"),
+                                new CellAssertion.CellValue(
+                                    new dev.erst.gridgrind.contract.dto.CellScalarValue.Text(
+                                        "Owner")))),
+                        List.of())))
             .stream()
+            .map(WorkbookStaticViolation::message)
             .anyMatch(
                 failure -> failure.contains("requires ENSURE_SHEET before any assertion step")));
   }
@@ -1536,28 +1483,31 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
   void directAssertionObservationHelpersExposePresenceAndChartReads() throws IOException {
     WorkbookExecutionEngine readExecutor = new WorkbookExecutionEngine();
     SemanticSelectorResolver selectorResolver = new SemanticSelectorResolver(readExecutor);
-    AssertionExecutor assertionExecutor = new AssertionExecutor(readExecutor, selectorResolver);
+    AssertionObservationExecutor observationExecutor =
+        new AssertionObservationExecutor(readExecutor, selectorResolver);
 
     try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       workbook.getOrCreateSheet("Budget");
 
       InspectionResult presence =
-          assertionExecutor.presenceObservation(
+          observationExecutor.presenceObservation(
               "named-range-present",
               new NamedRangeSelector.WorkbookScope("MissingBudgetTotal"),
               workbook,
               new WorkbookLocation.UnsavedWorkbook());
       WorkbookAssetInspectionResult.ChartsResult charts =
-          assertionExecutor.chartsObservation(
-              "charts",
-              new ChartSelector.AllOnSheet("Budget"),
-              workbook,
-              new WorkbookLocation.UnsavedWorkbook());
+          (WorkbookAssetInspectionResult.ChartsResult)
+              observationExecutor.executeObservation(
+                  "charts",
+                  new ChartSelector.AllOnSheet("Budget"),
+                  new WorkbookAssetIntrospectionQuery.GetCharts(),
+                  workbook,
+                  new WorkbookLocation.UnsavedWorkbook());
 
       assertInstanceOf(WorkbookInspectionResult.NamedRangesResult.class, presence);
       assertTrue(charts.charts().isEmpty());
-      assertEquals(0, AssertionExecutor.observedCount(presence));
-      assertEquals(0, AssertionExecutor.observedCount(charts));
+      assertEquals(0, AssertionObservationExecutor.observedCount(presence));
+      assertEquals(0, AssertionObservationExecutor.observedCount(charts));
     }
   }
 
@@ -1571,7 +1521,7 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
         Files::createTempFile);
   }
 
-  private static GridGrindResponse.Failure assertionFailure(
+  private static WorkbookResult.Failure assertionFailure(
       DefaultGridGrindRequestExecutor executor,
       Path workbookPath,
       String stepId,

@@ -1,10 +1,12 @@
 package dev.erst.gridgrind.engine.runtime;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertSame;
 
 import dev.erst.gridgrind.contract.assertion.AssertionFailure;
 import dev.erst.gridgrind.contract.assertion.CellAssertion;
 import dev.erst.gridgrind.contract.dto.CellScalarValue;
+import dev.erst.gridgrind.contract.dto.CliRuntimeContext;
 import dev.erst.gridgrind.contract.dto.GridGrindProblemCode;
 import dev.erst.gridgrind.contract.dto.GridGrindProblemDetail;
 import dev.erst.gridgrind.contract.dto.ProblemContext;
@@ -20,6 +22,14 @@ import org.junit.jupiter.api.Test;
 
 /** Covers payload-location enrichment branches in {@link GridGrindProblems}. */
 class GridGrindProblemsCoverageTest {
+  @Test
+  void enrichContextKeepsPreExecutionCliRuntimeContextUnchanged() {
+    CliRuntimeContext context = new CliRuntimeContext();
+
+    assertSame(
+        context, GridGrindProblems.enrichContext(context, new IllegalStateException("boom")));
+  }
+
   @Test
   void enrichContextMapsPayloadMetadataToEachJsonLocationShape() {
     ProblemContext.ReadRequest readContext =
@@ -78,6 +88,28 @@ class GridGrindProblemsCoverageTest {
     assertEquals(Optional.empty(), unavailableFromMissingLineContext.jsonPath());
     assertEquals(Optional.empty(), unavailableFromMissingLineContext.jsonLine());
     assertEquals(Optional.empty(), unavailableFromMissingLineContext.jsonColumn());
+  }
+
+  @Test
+  void enrichContextPreservesTheBindingStageWhileEnrichingPayloadMetadata() {
+    ProblemContext.BindRequest bindingContext =
+        new ProblemContext.BindRequest(
+            ProblemContextRequestSurfaces.RequestInput.requestFile("/tmp/request.json"),
+            ProblemContextRequestSurfaces.JsonLocation.unavailable());
+
+    ProblemContext.BindRequest locatedContext =
+        (ProblemContext.BindRequest)
+            GridGrindProblems.enrichContext(
+                bindingContext,
+                badRequest(Optional.of("source.path"), Optional.of(4), Optional.of(9)));
+
+    assertEquals("BIND_REQUEST", locatedContext.stage());
+    assertEquals(Optional.of("source.path"), locatedContext.jsonPath());
+    assertEquals(Optional.of(4), locatedContext.jsonLine());
+    assertEquals(Optional.of(9), locatedContext.jsonColumn());
+    assertSame(
+        bindingContext,
+        GridGrindProblems.enrichContext(bindingContext, new IllegalStateException("boom")));
   }
 
   @Test
@@ -143,6 +175,29 @@ class GridGrindProblemsCoverageTest {
     assertEquals(
         "Check the --response destination path, parent directory permissions, free disk space, and file locks before retrying.",
         writeResponseDenied.resolution());
+  }
+
+  @Test
+  void internalProblemsNeverExposeThrowableMessages() {
+    ProblemContext.ExecuteRequest context =
+        new ProblemContext.ExecuteRequest(ProblemContextRequestSurfaces.RequestShape.unknown());
+
+    GridGrindProblemDetail.Problem classified =
+        GridGrindProblems.fromException(new AssertionError("secret runtime detail"), context);
+    GridGrindProblemDetail.Problem explicit =
+        GridGrindProblems.problem(
+            GridGrindProblemCode.INTERNAL_ERROR,
+            "another secret runtime detail",
+            context,
+            new IllegalStateException("third secret runtime detail"));
+
+    assertEquals(GridGrindProblemCode.INTERNAL_ERROR, classified.code());
+    assertEquals(GridGrindProblemCode.INTERNAL_ERROR.title(), classified.message());
+    assertEquals(
+        GridGrindProblemCode.INTERNAL_ERROR.title(), classified.causes().getFirst().message());
+    assertEquals(GridGrindProblemCode.INTERNAL_ERROR.title(), explicit.message());
+    assertEquals(
+        GridGrindProblemCode.INTERNAL_ERROR.title(), explicit.causes().getFirst().message());
   }
 
   private static InvalidRequestException badRequest(

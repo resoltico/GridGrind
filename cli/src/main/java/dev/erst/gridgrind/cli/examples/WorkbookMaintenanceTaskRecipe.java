@@ -116,7 +116,7 @@ final class WorkbookMaintenanceTaskRecipe {
     return ExampleWorkbookPlans.defaultExecutionPlan(
         TaskStarterRecipeSupport.taskPlanId(taskId),
         new WorkbookPlan.WorkbookSource.ExistingFile(sourceAsset),
-        ExampleWorkbookPlans.saveAs(TaskStarterRecipeSupport.taskWorkbookPath(taskId)),
+        ExampleWorkbookPlans.saveAsExisting(TaskStarterRecipeSupport.taskWorkbookPath(taskId)),
         ExampleSteps.read(
             "read-source-workbook",
             ExampleSelectors.workbook(),

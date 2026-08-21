@@ -1,7 +1,9 @@
 package dev.erst.gridgrind.engine.api;
 
+import dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces.RequestInput;
 import dev.erst.gridgrind.contract.dto.RequestDoctorReport;
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
+import dev.erst.gridgrind.contract.json.RequestAnalysis;
 import java.util.Objects;
 
 /** Factory for the engine module's narrow published request-execution seam. */
@@ -32,15 +34,28 @@ public final class GridGrindEngine {
     }
 
     @Override
-    public dev.erst.gridgrind.contract.dto.GridGrindResponse execute(
-        WorkbookPlan request, GridGrindRequestInputs inputs, GridGrindJournalSink sink) {
+    public dev.erst.gridgrind.contract.dto.WorkbookResult execute(
+        WorkbookPlan request, GridGrindRequestInputs inputs, GridGrindProgressSink sink) {
       Objects.requireNonNull(request, "request must not be null");
       Objects.requireNonNull(inputs, "inputs must not be null");
       Objects.requireNonNull(sink, "sink must not be null");
       return delegate.execute(
           request,
           toInternalInputs(inputs),
-          event -> GridGrindJournalSink.requireNonNull(sink).emit(event));
+          event -> GridGrindProgressSink.requireNonNull(sink).emit(event));
+    }
+
+    @Override
+    public dev.erst.gridgrind.contract.dto.WorkbookResult execute(
+        RequestAnalysis analysis, GridGrindRequestInputs inputs, GridGrindProgressSink sink) {
+      Objects.requireNonNull(analysis, "analysis must not be null");
+      Objects.requireNonNull(inputs, "inputs must not be null");
+      Objects.requireNonNull(sink, "sink must not be null");
+      return delegate.execute(
+          analysis.requireCompletePlan(),
+          toInternalInputs(inputs),
+          event -> GridGrindProgressSink.requireNonNull(sink).emit(event),
+          java.util.Optional.of(analysis));
     }
   }
 
@@ -49,6 +64,18 @@ public final class GridGrindEngine {
       implements GridGrindRequestDoctor {
     private ProductionRequestDoctor {
       Objects.requireNonNull(delegate, "delegate must not be null");
+    }
+
+    @Override
+    public RequestDoctorReport diagnose(RequestAnalysis analysis, RequestInput requestInput) {
+      return delegate.diagnose(analysis, requestInput);
+    }
+
+    @Override
+    public RequestDoctorReport diagnose(
+        RequestAnalysis analysis, RequestInput requestInput, GridGrindRequestInputs inputs) {
+      Objects.requireNonNull(inputs, "inputs must not be null");
+      return delegate.diagnose(analysis, requestInput, toInternalInputs(inputs));
     }
 
     @Override

@@ -29,7 +29,7 @@ public interface GridGrindProblemDetail {
       Objects.requireNonNull(resolution, "resolution must not be null");
       Objects.requireNonNull(context, "context must not be null");
       assertionFailure = Objects.requireNonNullElseGet(assertionFailure, Optional::empty);
-      causes = GridGrindResponseSupport.copyProblemCauses(causes);
+      causes = WorkbookResultSupport.copyProblemCauses(causes);
     }
 
     /**

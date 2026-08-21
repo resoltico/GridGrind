@@ -4,13 +4,13 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import java.util.Objects;
 import java.util.Optional;
 
-/** Protocol-facing border patch used by {@link CellStyleInput}. */
+/** Protocol-facing border patch used by {@link CellStylePatchInput}. */
 public record CellBorderInput(
-    @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<CellBorderSideInput> all,
-    @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<CellBorderSideInput> top,
-    @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<CellBorderSideInput> right,
-    @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<CellBorderSideInput> bottom,
-    @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<CellBorderSideInput> left) {
+    @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<BorderSideInput> all,
+    @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<BorderSideInput> top,
+    @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<BorderSideInput> right,
+    @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<BorderSideInput> bottom,
+    @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<BorderSideInput> left) {
   public CellBorderInput {
     Objects.requireNonNull(all, "all must not be null");
     Objects.requireNonNull(top, "top must not be null");

@@ -37,7 +37,7 @@ expected_list_fields = {
     "id",
     "requestFileName",
     "summary",
-    "workspaceMode",
+    "advisory",
     "requiredWorkspacePaths",
 }
 catalog_groups = {
@@ -53,8 +53,8 @@ catalog_groups = {
     },
 }
 
-if recipe_catalog.get("protocolVersion") != "V1":
-    die("recipe catalog no longer emits protocolVersion=V1")
+if recipe_catalog.get("protocolVersion") != "V2":
+    die("recipe catalog no longer emits protocolVersion=V2")
 if not recipes:
     die("recipe catalog recipes is empty")
 if not shipped_examples:
@@ -71,7 +71,7 @@ for recipe in shipped_examples + task_starters:
     summary = recipe.get("summary")
     guidance_snippet = normalized_text(
         f"- {recipe_id} ({view}) requestFileName: {request_file_name} "
-        + f"workspace: {recipe.get('workspaceMode')} summary: {summary}"
+        + f"advisory: {recipe.get('advisory')} summary: {summary}"
     )
     if guidance_snippet not in normalized_guidance_help_output:
         die(f"guidance help no longer lists the recipe line for {recipe_id}")
@@ -80,11 +80,11 @@ for recipe in shipped_examples + task_starters:
             f"recipe catalog {view.lower()} entry {recipe_id} exposes unexpected public fields: "
             + f"{sorted(recipe.keys())}"
         )
-    if recipe.get("workspaceMode") == "SELF_CONTAINED" and recipe.get(
+    if recipe.get("advisory") == "SELF_CONTAINED" and recipe.get(
         "requiredWorkspacePaths"
     ):
         die(f"self-contained recipe {recipe_id} must not publish requiredWorkspacePaths")
-    if recipe.get("workspaceMode") == "REQUIRES_EXAMPLE_ASSETS" and not recipe.get(
+    if recipe.get("advisory") == "REQUIRES_EXAMPLE_ASSETS" and not recipe.get(
         "requiredWorkspacePaths"
     ):
         die(f"asset-backed recipe {recipe_id} must publish requiredWorkspacePaths")
@@ -116,8 +116,8 @@ for example_id, required_paths in expected_required_paths.items():
     if required_paths_snippet not in normalized_guidance_help_output:
         die(f"guidance help no longer lists requiredWorkspacePaths for {example_id}")
 
-if example_recipe_catalog_detail.get("protocolVersion") != "V1":
-    die("recipe catalog example lookup no longer emits protocolVersion=V1")
+if example_recipe_catalog_detail.get("protocolVersion") != "V2":
+    die("recipe catalog example lookup no longer emits protocolVersion=V2")
 if example_recipe_catalog_detail.get("id") != "BUDGET":
     die("recipe catalog example lookup no longer returns the requested BUDGET detail")
 if example_recipe_catalog_detail.get("view") != "EXAMPLE":
@@ -127,8 +127,8 @@ if not example_recipe_catalog_detail.get("intentTags"):
 if "requestProfile" not in example_recipe_catalog_detail:
     die("recipe catalog example lookup no longer publishes requestProfile")
 
-if task_recipe_catalog_detail.get("protocolVersion") != "V1":
-    die("recipe catalog task-starter lookup no longer emits protocolVersion=V1")
+if task_recipe_catalog_detail.get("protocolVersion") != "V2":
+    die("recipe catalog task-starter lookup no longer emits protocolVersion=V2")
 if task_recipe_catalog_detail.get("id") != "TABULAR_REPORT":
     die(
         "recipe catalog task-starter lookup no longer returns the requested "

@@ -488,7 +488,16 @@ class AdvancedReadEngineTypesTest {
             true,
             false,
             new ExcelDifferentialStyleSnapshot(
-                "0.00", true, null, null, "#AABBCC", null, null, null, null, List.of()));
+                "0.00",
+                true,
+                null,
+                null,
+                ExcelColor.rgb("#AABBCC"),
+                null,
+                null,
+                null,
+                null,
+                List.of()));
 
     assertEquals(Optional.empty(), normalized.presentation().comment());
     assertEquals(Optional.empty(), normalized.presentation().headerRowCellStyle());

@@ -288,7 +288,6 @@ class GridGrindRootConventionsPlugin : Plugin<Project> {
 
             gradle.projectsEvaluated {
                 val coverageSubprojects = coverageSubprojects()
-                val subprojectTestTasks = taskPathsByType(coverageSubprojects, Test::class.java)
                 val subprojectCoverageReports = taskPathsByName(coverageSubprojects, "jacocoTestReport")
                 val subprojectCoverageVerification =
                     taskPathsByName(coverageSubprojects, "jacocoTestCoverageVerification")
@@ -305,7 +304,7 @@ class GridGrindRootConventionsPlugin : Plugin<Project> {
                     }
 
                 jacocoAggregatedReport.configure { report ->
-                    report.dependsOn(subprojectTestTasks)
+                    report.dependsOn(subprojectCoverageReports)
                     report.mustRunAfter(
                         listOf("spotlessProjectFiles") + subprojectSpotlessTasks + subprojectCoverageReports,
                     )
@@ -422,11 +421,6 @@ class GridGrindRootConventionsPlugin : Plugin<Project> {
     private fun taskPathsByName(subprojects: List<Project>, taskName: String): List<String> =
         subprojects.mapNotNull { subproject ->
             subproject.tasks.findByName(taskName)?.path
-        }
-
-    private fun taskPathsByType(subprojects: List<Project>, taskType: Class<out Task>): List<String> =
-        subprojects.flatMap { subproject ->
-            subproject.tasks.withType(taskType).map(Task::getPath)
         }
 
     companion object {

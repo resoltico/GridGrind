@@ -9,22 +9,6 @@ import java.util.List;
 final class SelectorTargetingSupport {
   private SelectorTargetingSupport() {}
 
-  @SafeVarargs
-  static void requireTargetType(
-      Selector target, String stepType, Class<? extends Selector>... allowedTypes) {
-    for (Class<? extends Selector> allowedType : allowedTypes) {
-      if (allowedType.isInstance(target)) {
-        return;
-      }
-    }
-    throw new IllegalArgumentException(
-        stepType
-            + " requires target type "
-            + humanTargetTypes(allowedTypes)
-            + " but got "
-            + SelectorJsonSupport.typeIdsFor(target.getClass()).getFirst());
-  }
-
   static String humanTargetTypes(Class<? extends Selector>[] allowedTypes) {
     List<String> typeIds = new ArrayList<>();
     for (Class<? extends Selector> allowedType : allowedTypes) {

@@ -39,7 +39,7 @@ final class XlsxParityFormulaProbeGroup {
         XlsxParityOracle.evaluateExternalFormula(
             external.workbookPath(), external.attachment("referencedWorkbook"));
     Path outputPath = context.derivedWorkbook("formula-external");
-    GridGrindResponse.Success success =
+    WorkbookResult.Success success =
         XlsxParityGridGrind.mutateWorkbook(
             external.workbookPath(),
             outputPath,
@@ -78,10 +78,15 @@ final class XlsxParityFormulaProbeGroup {
         XlsxParityOracle.externalFormulaFailsWithoutBinding(external.workbookPath());
     double poiCachedValue =
         XlsxParityOracle.evaluateExternalFormulaUsingCachedValue(external.workbookPath());
-    GridGrindResponse.Failure strictFailure =
+    WorkbookResult.Failure strictFailure =
         XlsxParityGridGrind.mutateWorkbookExpectingFailure(
-            external.workbookPath(), null, executionPolicy(calculateAll()), null, List.of());
-    GridGrindResponse.Success cachedSuccess =
+            external.workbookPath(),
+            null,
+            executionPolicy(
+                CalculationPolicyInput.strategy(new CalculationStrategyInput.RequireEvaluation())),
+            null,
+            List.of());
+    WorkbookResult.Success cachedSuccess =
         XlsxParityGridGrind.readWorkbook(
             external.workbookPath(),
             missingWorkbookCachedValueEnvironment(),
@@ -120,7 +125,7 @@ final class XlsxParityFormulaProbeGroup {
         context.scenario(XlsxParityScenarios.UDF_FORMULA);
     double poiValue = XlsxParityOracle.evaluateUdfFormula(udf.workbookPath());
     Path outputPath = context.derivedWorkbook("formula-udf");
-    GridGrindResponse.Success success =
+    WorkbookResult.Success success =
         XlsxParityGridGrind.mutateWorkbook(
             udf.workbookPath(),
             outputPath,

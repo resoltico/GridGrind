@@ -234,6 +234,20 @@ def copy_required_assets(request_dir: Path, required_paths: list[str]) -> None:
         shutil.copy2(source_path, target_path)
 
 
+def prepare_save_as_parent(request_path: Path) -> None:
+    request = json.loads(request_path.read_text(encoding="utf-8"))
+    persistence = request.get("persistence", {})
+    if persistence.get("type") != "SAVE_AS":
+        return
+    destination = persistence.get("path")
+    if not isinstance(destination, str) or not destination:
+        die(f"published request {request_path} has no SAVE_AS path")
+    output_path = Path(destination)
+    if output_path.is_absolute():
+        die(f"published request {request_path} has an absolute SAVE_AS path")
+    (request_path.parent / output_path).parent.mkdir(parents=True, exist_ok=True)
+
+
 def execute_plan(
     kind: str,
     stable_id: str,
@@ -267,6 +281,7 @@ def execute_plan(
 
     progress(f"Discovery execution {kind} {ordinal}/{total}: {stable_id} copying required assets")
     copy_required_assets(request_path.parent, required_workspace_paths)
+    prepare_save_as_parent(request_path)
 
     progress(f"Discovery execution {kind} {ordinal}/{total}: {stable_id} doctoring request")
     doctor = run(

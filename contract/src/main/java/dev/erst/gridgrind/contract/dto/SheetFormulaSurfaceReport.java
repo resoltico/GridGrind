@@ -20,6 +20,6 @@ public record SheetFormulaSurfaceReport(
     if (distinctFormulaCount < 0) {
       throw new IllegalArgumentException("distinctFormulaCount must not be negative");
     }
-    formulas = GridGrindResponseSupport.copyValues(formulas, "formulas");
+    formulas = WorkbookResultSupport.copyValues(formulas, "formulas");
   }
 }

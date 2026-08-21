@@ -17,10 +17,10 @@ import dev.erst.gridgrind.contract.action.WorkbookMutationAction;
 import dev.erst.gridgrind.contract.assertion.*;
 import dev.erst.gridgrind.contract.dto.CellInput;
 import dev.erst.gridgrind.contract.dto.GridGrindProblemCode;
-import dev.erst.gridgrind.contract.dto.GridGrindResponse;
 import dev.erst.gridgrind.contract.dto.TableInput;
 import dev.erst.gridgrind.contract.dto.TableStyleInput;
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
+import dev.erst.gridgrind.contract.dto.WorkbookResult;
 import dev.erst.gridgrind.contract.query.*;
 import dev.erst.gridgrind.contract.query.SheetInspectionResult;
 import dev.erst.gridgrind.contract.selector.TableCellSelector;
@@ -33,7 +33,7 @@ import org.junit.jupiter.api.Test;
 class SemanticSelectorExecutionCoverageTest {
   @Test
   void tableCellInspectionReturnsEmptyResultWhenKeySelectorMatchesNoRow() {
-    GridGrindResponse.Success success =
+    WorkbookResult.Success success =
         success(
             ExecutionContextFixtureSupport.execute(
                 new DefaultGridGrindRequestExecutor(),
@@ -55,7 +55,7 @@ class SemanticSelectorExecutionCoverageTest {
 
   @Test
   void tableCellAssertionsFailStructurallyWhenKeySelectorMatchesNoRow() {
-    GridGrindResponse.Failure failure =
+    WorkbookResult.Failure failure =
         failure(
             ExecutionContextFixtureSupport.execute(
                 new DefaultGridGrindRequestExecutor(),
@@ -86,7 +86,7 @@ class SemanticSelectorExecutionCoverageTest {
 
   @Test
   void semanticResolverRejectsDuplicateKeyMatchesInsteadOfGuessingOneRow() {
-    GridGrindResponse.Failure failure =
+    WorkbookResult.Failure failure =
         failure(
             ExecutionContextFixtureSupport.execute(
                 new DefaultGridGrindRequestExecutor(),
@@ -164,11 +164,11 @@ class SemanticSelectorExecutionCoverageTest {
                     "BudgetTable", "Budget", "A1:B4", false, new TableStyleInput.None()))));
   }
 
-  private static GridGrindResponse.Success success(GridGrindResponse response) {
-    return assertInstanceOf(GridGrindResponse.Success.class, response);
+  private static WorkbookResult.Success success(WorkbookResult response) {
+    return assertInstanceOf(WorkbookResult.Success.class, response);
   }
 
-  private static GridGrindResponse.Failure failure(GridGrindResponse response) {
-    return assertInstanceOf(GridGrindResponse.Failure.class, response);
+  private static WorkbookResult.Failure failure(WorkbookResult response) {
+    return assertInstanceOf(WorkbookResult.Failure.class, response);
   }
 }

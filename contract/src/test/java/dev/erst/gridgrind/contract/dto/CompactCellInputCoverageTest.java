@@ -28,7 +28,7 @@ class CompactCellInputCoverageTest {
     CellGridInput.DateTimeRows dateTimeRows =
         new CellGridInput.DateTimeRows(List.of(List.of(LocalDateTime.of(2026, 6, 12, 9, 30))));
     CellGridInput.FormulaRows formulaRows =
-        new CellGridInput.FormulaRows(List.of(List.of("=SUM(A1:A2)")));
+        new CellGridInput.FormulaRows(List.of(List.of("SUM(A1:A2)")));
 
     assertEquals(
         List.of(
@@ -86,7 +86,7 @@ class CompactCellInputCoverageTest {
         ((TextSourceInput.Inline)
                 assertInstanceOf(
                         CellInput.Formula.class,
-                        new CellRowInput.FormulaValues(List.of("=SUM(B1:B2)"))
+                        new CellRowInput.FormulaValues(List.of("SUM(B1:B2)"))
                             .toCellInputs()
                             .getFirst())
                     .source())

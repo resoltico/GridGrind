@@ -1,15 +1,15 @@
 package dev.erst.gridgrind.engine.runtime;
 
 import dev.erst.gridgrind.contract.dto.ArrayFormulaInput;
+import dev.erst.gridgrind.contract.dto.BorderSideInput;
 import dev.erst.gridgrind.contract.dto.CellAlignmentInput;
 import dev.erst.gridgrind.contract.dto.CellBorderInput;
-import dev.erst.gridgrind.contract.dto.CellBorderSideInput;
 import dev.erst.gridgrind.contract.dto.CellFillInput;
 import dev.erst.gridgrind.contract.dto.CellFontInput;
 import dev.erst.gridgrind.contract.dto.CellGradientFillInput;
 import dev.erst.gridgrind.contract.dto.CellInput;
 import dev.erst.gridgrind.contract.dto.CellProtectionInput;
-import dev.erst.gridgrind.contract.dto.CellStyleInput;
+import dev.erst.gridgrind.contract.dto.CellStylePatchInput;
 import dev.erst.gridgrind.contract.dto.ColorInput;
 import dev.erst.gridgrind.contract.dto.CommentInput;
 import dev.erst.gridgrind.contract.dto.FontHeightInput;
@@ -60,6 +60,9 @@ final class WorkbookCommandCellInputConverter {
       case CellInput.Formula formula ->
           ExcelCellValue.formula(
               WorkbookCommandSourceSupport.inlineText(formula.source(), "formula"));
+      case CellInput.RawFormula rawFormula ->
+          ExcelCellValue.rawFormula(
+              WorkbookCommandSourceSupport.inlineText(rawFormula.source(), "raw formula"));
     };
   }
 
@@ -99,7 +102,7 @@ final class WorkbookCommandCellInputConverter {
         commentAnchor(comment));
   }
 
-  static ExcelCellStyle toExcelCellStyle(CellStyleInput style) {
+  static ExcelCellStyle toExcelCellStyle(CellStylePatchInput style) {
     return new ExcelCellStyle(
         style.numberFormat(),
         style.alignment().flatMap(WorkbookCommandCellInputConverter::toExcelCellAlignment),
@@ -193,7 +196,7 @@ final class WorkbookCommandCellInputConverter {
             border.left().flatMap(WorkbookCommandCellInputConverter::toExcelBorderSide)));
   }
 
-  static Optional<ExcelBorderSide> toExcelBorderSide(CellBorderSideInput side) {
+  static Optional<ExcelBorderSide> toExcelBorderSide(BorderSideInput side) {
     return side == null
         ? Optional.empty()
         : Optional.of(

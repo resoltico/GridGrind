@@ -33,7 +33,7 @@ public sealed interface WorkbookSummary permits WorkbookSummary.Empty, WorkbookS
       implements WorkbookSummary {
     public Empty {
       sheetNames =
-          GridGrindResponseSupport.validateCommonWorkbookSummaryFields(
+          WorkbookResultSupport.validateCommonWorkbookSummaryFields(
               sheetCount, sheetNames, namedRangeCount);
       if (sheetCount != 0) {
         throw new IllegalArgumentException("sheetCount must be 0 for an empty workbook");
@@ -52,14 +52,14 @@ public sealed interface WorkbookSummary permits WorkbookSummary.Empty, WorkbookS
       implements WorkbookSummary {
     public WithSheets {
       sheetNames =
-          GridGrindResponseSupport.validateCommonWorkbookSummaryFields(
+          WorkbookResultSupport.validateCommonWorkbookSummaryFields(
               sheetCount, sheetNames, namedRangeCount);
       Objects.requireNonNull(activeSheetName, "activeSheetName must not be null");
       if (activeSheetName.isBlank()) {
         throw new IllegalArgumentException("activeSheetName must not be blank");
       }
       selectedSheetNames =
-          GridGrindResponseSupport.copyDistinctStrings(selectedSheetNames, "selectedSheetNames");
+          WorkbookResultSupport.copyDistinctStrings(selectedSheetNames, "selectedSheetNames");
       if (sheetCount == 0) {
         throw new IllegalArgumentException("sheetCount must be greater than 0");
       }

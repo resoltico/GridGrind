@@ -4,7 +4,6 @@ import dev.erst.gridgrind.contract.action.MutationAction;
 import dev.erst.gridgrind.contract.assertion.Assertion;
 import dev.erst.gridgrind.contract.query.InspectionQuery;
 import dev.erst.gridgrind.contract.selector.SelectorJsonSupport;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -17,39 +16,20 @@ public final class WorkbookStepTargeting {
   public static TargetSurface forMutationActionType(
       Class<? extends MutationAction> mutationActionType) {
     Objects.requireNonNull(mutationActionType, "mutationActionType must not be null");
-    return new TargetSurface(
-        SelectorJsonSupport.familyInfosFor(
-            Arrays.asList(
-                WorkbookStepValidation.allowedTargetTypesForMutationActionType(
-                    mutationActionType))),
-        Optional.empty());
+    return WorkbookOperationContracts.targetSurfaceFor(mutationActionType);
   }
 
   /** Returns the static selector families accepted by one inspection query type. */
   public static TargetSurface forInspectionQueryType(
       Class<? extends InspectionQuery> inspectionQueryType) {
     Objects.requireNonNull(inspectionQueryType, "inspectionQueryType must not be null");
-    return new TargetSurface(
-        SelectorJsonSupport.familyInfosFor(
-            Arrays.asList(
-                WorkbookStepValidation.allowedTargetTypesForInspectionQueryType(
-                    inspectionQueryType))),
-        Optional.empty());
+    return WorkbookOperationContracts.targetSurfaceFor(inspectionQueryType);
   }
 
   /** Returns the selector-family surface accepted by one assertion type. */
   public static TargetSurface forAssertionType(Class<? extends Assertion> assertionType) {
     Objects.requireNonNull(assertionType, "assertionType must not be null");
-    Optional<String> dynamicRule =
-        WorkbookStepValidation.dynamicTargetSelectorRuleForAssertionType(assertionType);
-    if (dynamicRule.isPresent()) {
-      return new TargetSurface(List.of(), dynamicRule);
-    }
-    return new TargetSurface(
-        SelectorJsonSupport.familyInfosFor(
-            Arrays.asList(
-                WorkbookStepValidation.staticAllowedTargetTypesForAssertionType(assertionType))),
-        WorkbookStepValidation.targetSelectorRuleForAssertionType(assertionType));
+    return WorkbookOperationContracts.targetSurfaceFor(assertionType);
   }
 
   /** One target-selector surface with selector families plus any derived or disambiguation rule. */

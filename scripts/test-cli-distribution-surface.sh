@@ -46,12 +46,16 @@ readonly legacy_packaged_tar="${distribution_root}/cli-shadow-${version}.tar"
 readonly stale_zip="${distribution_root}/gridgrind-0.00.0.zip"
 readonly stale_tar="${distribution_root}/gridgrind-0.00.0.tar"
 readonly version_fallback_response_path="${distribution_root}/version-fallback-existing.json"
+readonly version_primary_stdout_path="${distribution_root}/version-primary.stdout"
+readonly version_primary_stderr_path="${distribution_root}/version-primary.stderr"
 readonly version_fallback_stdout_path="${distribution_root}/version-fallback.stdout"
 readonly version_fallback_stderr_path="${distribution_root}/version-fallback.stderr"
 
 cleanup() {
     rm -f \
         "${version_fallback_response_path}" \
+        "${version_primary_stdout_path}" \
+        "${version_primary_stderr_path}" \
         "${version_fallback_stdout_path}" \
         "${version_fallback_stderr_path}"
     rm -rf \
@@ -128,6 +132,12 @@ printf '@echo off\r\nexit /b 99\r\n' > "${old_named_legacy_windows_launcher}"
 
 "${verify_script}" binary "${packaged_launcher}" >/dev/null
 
+"${packaged_launcher}" --version \
+    > "${version_primary_stdout_path}" \
+    2> "${version_primary_stderr_path}"
+[[ ! -s "${version_primary_stderr_path}" ]] || die \
+    "packaged gridgrind --version wrote unexpected stderr without --response"
+
 printf 'sentinel\n' > "${version_fallback_response_path}"
 set +e
 "${packaged_launcher}" --version --response "${version_fallback_response_path}" \
@@ -140,17 +150,23 @@ set -e
     "packaged gridgrind --version --response existing-file exited ${version_fallback_exit_code} instead of 1"
 grep -Fqx 'sentinel' "${version_fallback_response_path}" || die \
     "packaged gridgrind --version overwrote the pre-existing response target"
-grep -Eq '"code"[[:space:]]*:[[:space:]]*"IO_ERROR"' "${version_fallback_stdout_path}" || die \
-    "packaged gridgrind --version fallback stdout no longer emits IO_ERROR"
-grep -Eq '"command"[[:space:]]*:[[:space:]]*"version"' "${version_fallback_stdout_path}" || die \
-    "packaged gridgrind --version fallback stdout no longer identifies the version command"
-grep -Eq '"stage"[[:space:]]*:[[:space:]]*"WRITE_RESPONSE"' "${version_fallback_stdout_path}" || die \
-    "packaged gridgrind --version fallback stdout no longer reports WRITE_RESPONSE context"
-grep -Eq "\"responsePath\"[[:space:]]*:[[:space:]]*\"${version_fallback_response_path//\//\\/}\"" "${version_fallback_stdout_path}" || die \
-    "packaged gridgrind --version fallback stdout no longer carries the response output path"
+cmp -s "${version_primary_stdout_path}" "${version_fallback_stdout_path}" || die \
+    "packaged gridgrind --version fallback stdout no longer preserves the primary payload"
 grep -Eq '"wroteTo"[[:space:]]*:[[:space:]]*"STDOUT"' "${version_fallback_stderr_path}" || die \
     "packaged gridgrind --version fallback stderr no longer identifies stdout fallback transport"
-cmp -s "${version_fallback_stdout_path}" "${version_fallback_stderr_path}" || die \
-    "packaged gridgrind --version fallback stderr no longer mirrors the canonical CLI diagnostic"
+python3 - "${version_fallback_stderr_path}" "${version_fallback_response_path}" <<'PY'
+import json
+import sys
+from pathlib import Path
+
+transport = json.loads(Path(sys.argv[1]).read_text())
+expected = {"wroteTo": "STDOUT", "responsePath": sys.argv[2]}
+if transport != expected:
+    print(
+        "error: packaged gridgrind --version fallback stderr is not the exact transport notice",
+        file=sys.stderr,
+    )
+    raise SystemExit(1)
+PY
 
 printf 'cli-distribution-surface regression: success\n'

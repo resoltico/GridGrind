@@ -74,7 +74,8 @@ final class WorkbookAuditExamples {
         new ExecutionPolicyInput(
             ExecutionModeInput.streamingWrite(),
             dev.erst.gridgrind.contract.dto.ExecutionJournalInput.defaults(),
-            new CalculationPolicyInput(new CalculationStrategyInput.DoNotCalculate(), true)),
+            new CalculationPolicyInput(new CalculationStrategyInput.DoNotCalculate(), true),
+            dev.erst.gridgrind.contract.dto.AssertionModeInput.defaults()),
         ExampleSteps.step(
             "step-01-ensure-sheet",
             ExampleSelectors.sheet("Ledger"),

@@ -2,8 +2,8 @@ package dev.erst.gridgrind.contract.query;
 
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import dev.erst.gridgrind.contract.catalog.GridGrindProtocolTypeNames;
-import dev.erst.gridgrind.contract.catalog.ProtocolTypeMetadataSupport;
 import dev.erst.gridgrind.contract.selector.Selector;
+import dev.erst.gridgrind.contract.step.WorkbookOperationContracts;
 import dev.erst.gridgrind.excel.foundation.ExcelReadLimits;
 import java.util.Objects;
 
@@ -42,7 +42,7 @@ public sealed interface InspectionQuery
   /** Returns the selector types accepted by one concrete inspection query instance. */
   static Class<? extends Selector>[] allowedTargetTypes(InspectionQuery query) {
     Objects.requireNonNull(query, "query must not be null");
-    return allowedTargetTypesForType(query.getClass().asSubclass(InspectionQuery.class));
+    return WorkbookOperationContracts.targetSelectorsFor(query);
   }
 
   /** Returns the selector types accepted by one concrete inspection query type. */
@@ -50,14 +50,24 @@ public sealed interface InspectionQuery
       Class<? extends InspectionQuery> queryType) {
     Objects.requireNonNull(queryType, "queryType must not be null");
     if (!queryType.isRecord()) {
-      throw new IllegalArgumentException(
-          "No target-type mapping configured for query class " + queryType.getName());
+      throw noTargetTypeMapping(queryType);
     }
     try {
-      return ProtocolTypeMetadataSupport.staticTargetSelectors(queryType);
-    } catch (IllegalStateException exception) {
-      throw new IllegalArgumentException(
-          "No target-type mapping configured for query class " + queryType.getName(), exception);
+      return WorkbookOperationContracts.staticTargetSelectorsFor(queryType);
+    } catch (IllegalArgumentException | IllegalStateException exception) {
+      throw noTargetTypeMapping(queryType, exception);
     }
+  }
+
+  private static IllegalArgumentException noTargetTypeMapping(
+      Class<? extends InspectionQuery> queryType) {
+    return new IllegalArgumentException(
+        "No target-type mapping configured for query class " + queryType.getName());
+  }
+
+  private static IllegalArgumentException noTargetTypeMapping(
+      Class<? extends InspectionQuery> queryType, RuntimeException cause) {
+    return new IllegalArgumentException(
+        "No target-type mapping configured for query class " + queryType.getName(), cause);
   }
 }

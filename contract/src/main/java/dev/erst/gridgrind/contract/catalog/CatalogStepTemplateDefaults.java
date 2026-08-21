@@ -146,7 +146,7 @@ final class CatalogStepTemplateDefaults {
 
   /** Applies one type-id-specific placeholder enrichment rule. */
   @FunctionalInterface
-  private interface TypeDefaultApplier {
+  interface TypeDefaultApplier {
     /** Mutates the placeholder object with the rule's extra defaults. */
     void apply(
         Catalog catalog,
@@ -155,7 +155,7 @@ final class CatalogStepTemplateDefaults {
         java.util.List<String> notes);
   }
 
-  private static Map<String, TypeDefaultApplier> buildTypeSpecificDefaults() {
+  static Map<String, TypeDefaultApplier> buildTypeSpecificDefaults() {
     return Map.ofEntries(
         Map.entry(
             "SET_SHEET_ZOOM",
@@ -168,7 +168,7 @@ final class CatalogStepTemplateDefaults {
                     CatalogStepTemplateSupport.nestedGroupTemplate(
                         catalog, "chartTitleInputTypes", recursionGuard, notes))),
         Map.entry(
-            "CellStyleInput",
+            "CellStylePatchInput",
             (catalog, object, recursionGuard, notes) -> object.put("numberFormat", "0.00")),
         Map.entry(
             "CustomXmlMappingLocator",

@@ -1,8 +1,9 @@
 package dev.erst.gridgrind.engine.runtime;
 
 import dev.erst.gridgrind.contract.dto.FormulaEnvironmentInput;
-import dev.erst.gridgrind.contract.dto.GridGrindResponsePersistence;
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
+import dev.erst.gridgrind.contract.dto.WorkbookResultPersistence;
+import dev.erst.gridgrind.excel.ExcelTempFileWriteTargetSupport;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
 import dev.erst.gridgrind.excel.ExcelWorkbooks;
 import dev.erst.gridgrind.excel.WorkbookArtifactIo;
@@ -24,111 +25,163 @@ final class ExecutionWorkbookSupport {
 
   ExcelWorkbook openWorkbook(
       WorkbookPlan.WorkbookSource source,
-      FormulaEnvironmentInput formulaEnvironment,
-      Path workingDirectory)
+      @Nullable FormulaEnvironmentInput formulaEnvironment,
+      ExecutionInputBindings bindings)
       throws IOException {
     return switch (source) {
       case WorkbookPlan.WorkbookSource.New _ ->
           ExcelWorkbooks.create(
-              FormulaEnvironmentConverter.toExcelFormulaEnvironment(
-                  formulaEnvironment, workingDirectory));
-      case WorkbookPlan.WorkbookSource.ExistingFile existingFile ->
-          ExcelWorkbooks.open(
-              ExecutionRequestPaths.normalizePath(existingFile.path(), workingDirectory),
-              FormulaEnvironmentConverter.toExcelFormulaEnvironment(
-                  formulaEnvironment, workingDirectory),
-              OoxmlPackageSecurityConverter.toExcelOpenOptions(
-                  existingFile.security().orElse(null)),
-              tempFileFactory::createTempFile);
+              FormulaEnvironmentConverter.toExcelFormulaEnvironment(formulaEnvironment, bindings));
+      case WorkbookPlan.WorkbookSource.ExistingFile existingFile -> {
+        Path sourcePath =
+            ExecutionRequestPaths.normalizePath(existingFile.path(), bindings.workingDirectory());
+        Path materializedSource;
+        try {
+          materializedSource =
+              bindings
+                  .requestPathAccess()
+                  .materializeRead(
+                      existingFile.path(), "source", "gridgrind-source-workbook-", ".xlsx");
+        } catch (java.nio.file.NoSuchFileException exception) {
+          throw new dev.erst.gridgrind.excel.WorkbookNotFoundException(sourcePath, exception);
+        }
+        yield ExcelWorkbooks.open(
+            materializedSource,
+            FormulaEnvironmentConverter.toExcelFormulaEnvironment(formulaEnvironment, bindings),
+            OoxmlPackageSecurityConverter.toExcelOpenOptions(existingFile.security().orElse(null)),
+            tempFileFactory::createTempFile);
+      }
     };
   }
 
-  GridGrindResponsePersistence.PersistenceOutcome persistWorkbook(
+  WorkbookResultPersistence.PersistenceOutcome persistWorkbook(
       ExcelWorkbook workbook,
       WorkbookPlan.WorkbookSource source,
       WorkbookPlan.WorkbookPersistence persistence,
-      Path workingDirectory)
+      ExecutionInputBindings bindings)
       throws IOException {
     Objects.requireNonNull(workbook, "workbook must not be null");
     return switch (persistence) {
       case WorkbookPlan.WorkbookPersistence.None _ ->
-          new GridGrindResponsePersistence.PersistenceOutcome.NotSaved();
+          new WorkbookResultPersistence.PersistenceOutcome.NotSaved();
       case WorkbookPlan.WorkbookPersistence.SaveAs saveAs -> {
-        Path executionPath = ExecutionRequestPaths.normalizePath(saveAs.path(), workingDirectory);
-        workbook
-            .persistence()
-            .save(
-                executionPath,
-                ExecutionRequestPaths.writeDisposition(saveAs),
-                ExecutionRequestPaths.persistenceOptions(saveAs, workingDirectory),
-                tempFileFactory::createTempFile);
-        yield new GridGrindResponsePersistence.PersistenceOutcome.SavedAs(
+        Path executionPath = bindings.requestPathAccess().outputPath();
+        persistToBoundOutput(
+            createStagingTarget(),
+            stagedPath ->
+                workbook
+                    .persistence()
+                    .save(
+                        stagedPath,
+                        WorkbookArtifactWriteDisposition.CREATE_NEW,
+                        ExecutionRequestPaths.persistenceOptions(saveAs, bindings),
+                        tempFileFactory::createTempFile),
+            bindings,
+            ExecutionRequestPaths.writeDisposition(saveAs));
+        yield new WorkbookResultPersistence.PersistenceOutcome.SavedAs(
             saveAs.path(),
-            new GridGrindResponsePersistence.WriteResult.Written(executionPath.toString()));
+            new WorkbookResultPersistence.WriteResult.Written(executionPath.toString()));
       }
       case WorkbookPlan.WorkbookPersistence.Overwrite overwrite -> {
         if (!(source instanceof WorkbookPlan.WorkbookSource.ExistingFile existingFile)) {
           throw new IllegalArgumentException("OVERWRITE persistence requires an EXISTING source");
         }
-        Path executionPath =
-            ExecutionRequestPaths.normalizePath(existingFile.path(), workingDirectory);
-        workbook
-            .persistence()
-            .save(
-                executionPath,
-                WorkbookArtifactWriteDisposition.REPLACE_EXISTING,
-                ExecutionRequestPaths.persistenceOptions(overwrite, workingDirectory),
-                tempFileFactory::createTempFile);
-        yield new GridGrindResponsePersistence.PersistenceOutcome.Overwritten(
+        Path executionPath = bindings.requestPathAccess().outputPath();
+        persistToBoundOutput(
+            createStagingTarget(),
+            stagedPath ->
+                workbook
+                    .persistence()
+                    .save(
+                        stagedPath,
+                        WorkbookArtifactWriteDisposition.CREATE_NEW,
+                        ExecutionRequestPaths.persistenceOptions(overwrite, bindings),
+                        tempFileFactory::createTempFile),
+            bindings,
+            WorkbookArtifactWriteDisposition.REPLACE_EXISTING);
+        yield new WorkbookResultPersistence.PersistenceOutcome.Overwritten(
             existingFile.path(),
-            new GridGrindResponsePersistence.WriteResult.Written(executionPath.toString()));
+            new WorkbookResultPersistence.WriteResult.Written(executionPath.toString()));
       }
     };
   }
 
-  GridGrindResponsePersistence.PersistenceOutcome persistStreamingWorkbook(
+  WorkbookResultPersistence.PersistenceOutcome persistStreamingWorkbook(
       Path materializedPath,
       WorkbookPlan.WorkbookPersistence persistence,
       WorkbookPlan.WorkbookSource source,
-      Path workingDirectory)
+      ExecutionInputBindings bindings)
       throws IOException {
     Objects.requireNonNull(materializedPath, "materializedPath must not be null");
     return switch (persistence) {
       case WorkbookPlan.WorkbookPersistence.None _ ->
-          new GridGrindResponsePersistence.PersistenceOutcome.NotSaved();
+          new WorkbookResultPersistence.PersistenceOutcome.NotSaved();
       case WorkbookPlan.WorkbookPersistence.SaveAs saveAs -> {
-        Path executionPath = ExecutionRequestPaths.normalizePath(saveAs.path(), workingDirectory);
-        WorkbookArtifactIo.persistMaterializedWorkbook(
-            materializedPath,
-            executionPath,
-            ExecutionRequestPaths.sourcePackageSecurity(source),
-            ExecutionRequestPaths.sourceEncryptionPassword(source),
-            true,
-            ExecutionRequestPaths.writeDisposition(saveAs),
-            ExecutionRequestPaths.persistenceOptions(saveAs, workingDirectory));
-        yield new GridGrindResponsePersistence.PersistenceOutcome.SavedAs(
+        Path executionPath = bindings.requestPathAccess().outputPath();
+        persistToBoundOutput(
+            createStagingTarget(),
+            stagedPath ->
+                WorkbookArtifactIo.persistMaterializedWorkbook(
+                    materializedPath,
+                    stagedPath,
+                    ExecutionRequestPaths.sourcePackageSecurity(source),
+                    ExecutionRequestPaths.sourceEncryptionPassword(source),
+                    WorkbookArtifactWriteDisposition.CREATE_NEW,
+                    ExecutionRequestPaths.persistenceOptions(saveAs, bindings)),
+            bindings,
+            ExecutionRequestPaths.writeDisposition(saveAs));
+        yield new WorkbookResultPersistence.PersistenceOutcome.SavedAs(
             saveAs.path(),
-            new GridGrindResponsePersistence.WriteResult.Written(executionPath.toString()));
+            new WorkbookResultPersistence.WriteResult.Written(executionPath.toString()));
       }
       case WorkbookPlan.WorkbookPersistence.Overwrite overwrite -> {
         if (!(source instanceof WorkbookPlan.WorkbookSource.ExistingFile existingFile)) {
           throw new IllegalArgumentException("OVERWRITE persistence requires an EXISTING source");
         }
-        Path executionPath =
-            ExecutionRequestPaths.normalizePath(existingFile.path(), workingDirectory);
-        WorkbookArtifactIo.persistMaterializedWorkbook(
-            materializedPath,
-            executionPath,
-            ExecutionRequestPaths.sourcePackageSecurity(source),
-            ExecutionRequestPaths.sourceEncryptionPassword(source),
-            true,
-            WorkbookArtifactWriteDisposition.REPLACE_EXISTING,
-            ExecutionRequestPaths.persistenceOptions(overwrite, workingDirectory));
-        yield new GridGrindResponsePersistence.PersistenceOutcome.Overwritten(
+        Path executionPath = bindings.requestPathAccess().outputPath();
+        persistToBoundOutput(
+            createStagingTarget(),
+            stagedPath ->
+                WorkbookArtifactIo.persistMaterializedWorkbook(
+                    materializedPath,
+                    stagedPath,
+                    ExecutionRequestPaths.sourcePackageSecurity(source),
+                    ExecutionRequestPaths.sourceEncryptionPassword(source),
+                    WorkbookArtifactWriteDisposition.CREATE_NEW,
+                    ExecutionRequestPaths.persistenceOptions(overwrite, bindings)),
+            bindings,
+            WorkbookArtifactWriteDisposition.REPLACE_EXISTING);
+        yield new WorkbookResultPersistence.PersistenceOutcome.Overwritten(
             existingFile.path(),
-            new GridGrindResponsePersistence.WriteResult.Written(executionPath.toString()));
+            new WorkbookResultPersistence.WriteResult.Written(executionPath.toString()));
       }
     };
+  }
+
+  private Path createStagingTarget() throws IOException {
+    return ExcelTempFileWriteTargetSupport.prepareCreateNewTarget(
+        tempFileFactory.createTempFile("gridgrind-persistence-stage-", ".xlsx"));
+  }
+
+  private static void persistToBoundOutput(
+      Path stagedPath,
+      StagedWorkbookWriter writer,
+      ExecutionInputBindings bindings,
+      WorkbookArtifactWriteDisposition disposition)
+      throws IOException {
+    try {
+      writer.write(stagedPath);
+      bindings.requestPathAccess().commitOutput(stagedPath, disposition);
+    } finally {
+      deleteIfExists(stagedPath);
+    }
+  }
+
+  /** Writes one complete workbook package to an executor-private staging path. */
+  @FunctionalInterface
+  private interface StagedWorkbookWriter {
+    /** Writes the staged workbook package. */
+    void write(Path stagedPath) throws IOException;
   }
 
   static void deleteIfExists(@Nullable Path path) {

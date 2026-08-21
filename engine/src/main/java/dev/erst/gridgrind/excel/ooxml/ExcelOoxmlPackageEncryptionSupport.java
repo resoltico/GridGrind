@@ -1,6 +1,7 @@
 package dev.erst.gridgrind.excel.ooxml;
 
 import dev.erst.gridgrind.excel.WorkbookArtifactWriteDisposition;
+import dev.erst.gridgrind.excel.WorkbookNotOpenableException;
 import dev.erst.gridgrind.excel.WorkbookSecurityException;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -39,11 +40,7 @@ public final class ExcelOoxmlPackageEncryptionSupport {
     try {
       return new EncryptionInfo(fileSystem);
     } catch (IOException exception) {
-      throw new IllegalArgumentException(
-          "Only OOXML .xlsx workbooks are supported; the file is not a supported encrypted"
-              + " OOXML workbook: "
-              + workbookPath,
-          exception);
+      throw new WorkbookNotOpenableException(workbookPath, exception);
     }
   }
 

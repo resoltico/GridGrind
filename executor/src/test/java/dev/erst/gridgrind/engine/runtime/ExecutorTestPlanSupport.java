@@ -12,7 +12,7 @@ import dev.erst.gridgrind.contract.dto.CellFillInput;
 import dev.erst.gridgrind.contract.dto.CellFontInput;
 import dev.erst.gridgrind.contract.dto.CellInput;
 import dev.erst.gridgrind.contract.dto.CellProtectionInput;
-import dev.erst.gridgrind.contract.dto.CellStyleInput;
+import dev.erst.gridgrind.contract.dto.CellStylePatchInput;
 import dev.erst.gridgrind.contract.dto.ColorInput;
 import dev.erst.gridgrind.contract.dto.DataValidationErrorAlertInput;
 import dev.erst.gridgrind.contract.dto.DataValidationInput;
@@ -23,7 +23,6 @@ import dev.erst.gridgrind.contract.dto.ExecutionModeInput;
 import dev.erst.gridgrind.contract.dto.ExecutionPolicyInput;
 import dev.erst.gridgrind.contract.dto.FontHeightInput;
 import dev.erst.gridgrind.contract.dto.FormulaEnvironmentInput;
-import dev.erst.gridgrind.contract.dto.GridGrindResponse;
 import dev.erst.gridgrind.contract.dto.HeaderFooterTextInput;
 import dev.erst.gridgrind.contract.dto.NamedRangeScope;
 import dev.erst.gridgrind.contract.dto.PictureDataInput;
@@ -34,6 +33,7 @@ import dev.erst.gridgrind.contract.dto.ShapeInput;
 import dev.erst.gridgrind.contract.dto.TableInput;
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
 import dev.erst.gridgrind.contract.dto.WorkbookProtectionInput;
+import dev.erst.gridgrind.contract.dto.WorkbookResult;
 import dev.erst.gridgrind.contract.query.*;
 import dev.erst.gridgrind.contract.query.InspectionResult;
 import dev.erst.gridgrind.contract.selector.CellSelector;
@@ -126,6 +126,14 @@ final class ExecutorTestPlanSupport {
     return new CalculationPolicyInput(new CalculationStrategyInput.EvaluateAll(), true);
   }
 
+  static CalculationPolicyInput deferCalculation() {
+    return CalculationPolicyInput.strategy(new CalculationStrategyInput.DeferredCalculation());
+  }
+
+  static CalculationPolicyInput requireEvaluation() {
+    return CalculationPolicyInput.strategy(new CalculationStrategyInput.RequireEvaluation());
+  }
+
   static CalculationPolicyInput calculateTargets(CellSelector.QualifiedAddress... cells) {
     return CalculationPolicyInput.strategy(
         new CalculationStrategyInput.EvaluateTargets(List.of(cells)));
@@ -178,14 +186,14 @@ final class ExecutorTestPlanSupport {
         maybe(strikeout));
   }
 
-  static CellStyleInput styleInput(
+  static CellStylePatchInput styleInput(
       String numberFormat,
       CellAlignmentInput alignment,
       CellFontInput font,
       CellFillInput fill,
       CellBorderInput border,
       CellProtectionInput protection) {
-    return new CellStyleInput(
+    return new CellStylePatchInput(
         maybe(numberFormat),
         maybe(alignment),
         maybe(font),
@@ -483,16 +491,16 @@ final class ExecutorTestPlanSupport {
         steps(mutations, inspections));
   }
 
-  static List<String> inspectionIds(GridGrindResponse.Success success) {
+  static List<String> inspectionIds(WorkbookResult.Success success) {
     return success.inspections().stream().map(InspectionResult::stepId).toList();
   }
 
-  static List<String> assertionIds(GridGrindResponse.Success success) {
+  static List<String> assertionIds(WorkbookResult.Success success) {
     return success.assertions().stream().map(AssertionResult::stepId).toList();
   }
 
   static <T extends InspectionResult> T inspection(
-      GridGrindResponse.Success success, String stepId, Class<T> type) {
+      WorkbookResult.Success success, String stepId, Class<T> type) {
     return type.cast(
         success.inspections().stream()
             .filter(result -> result.stepId().equals(stepId))

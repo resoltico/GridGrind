@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import dev.erst.gridgrind.contract.dto.CellInput;
 import dev.erst.gridgrind.contract.dto.ColorInput;
+import dev.erst.gridgrind.contract.source.TextSourceInput;
 import dev.erst.gridgrind.excel.ExcelCellValue;
 import dev.erst.gridgrind.excel.ExcelColor;
 import dev.erst.gridgrind.excel.ExcelRichText;
@@ -80,12 +81,20 @@ class CellInputTest {
             WorkbookCommandCellInputConverter.toExcelCellValue(formulaCell("SUM(B2:B4)")));
     assertEquals("SUM(B2:B4)", formulaValue.expression());
 
-    // Leading = is stripped automatically so callers can use Excel-native syntax
-    ExcelCellValue.FormulaValue strippedFormulaValue =
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> WorkbookCommandCellInputConverter.toExcelCellValue(formulaCell("=SUM(B2:B4)")));
+
+    ExcelCellValue.RawFormulaValue rawFormulaValue =
         assertInstanceOf(
-            ExcelCellValue.FormulaValue.class,
-            WorkbookCommandCellInputConverter.toExcelCellValue(formulaCell("=SUM(B2:B4)")));
-    assertEquals("SUM(B2:B4)", strippedFormulaValue.expression());
+            ExcelCellValue.RawFormulaValue.class,
+            WorkbookCommandCellInputConverter.toExcelCellValue(
+                new CellInput.RawFormula(TextSourceInput.inline("LAMBDA(x,x+1)(A1)"))));
+    assertEquals("LAMBDA(x,x+1)(A1)", rawFormulaValue.expression());
+    assertEquals(
+        "RawFormula[text=LAMBDA(x,x+1)(A1)]",
+        ExecutionJournalTargetResolver.summarizeCellInput(
+            new CellInput.RawFormula(TextSourceInput.inline("LAMBDA(x,x+1)(A1)"))));
 
     ExcelCellValue.DateValue dateValue =
         assertInstanceOf(

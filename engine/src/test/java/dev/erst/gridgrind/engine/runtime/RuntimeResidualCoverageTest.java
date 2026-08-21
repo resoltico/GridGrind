@@ -12,10 +12,10 @@ import dev.erst.gridgrind.contract.action.DrawingMutationAction;
 import dev.erst.gridgrind.contract.action.StructuredMutationAction;
 import dev.erst.gridgrind.contract.action.WorkbookMutationAction;
 import dev.erst.gridgrind.contract.dto.ArrayFormulaInput;
+import dev.erst.gridgrind.contract.dto.BorderSideInput;
 import dev.erst.gridgrind.contract.dto.CellBorderInput;
-import dev.erst.gridgrind.contract.dto.CellBorderSideInput;
 import dev.erst.gridgrind.contract.dto.CellInput;
-import dev.erst.gridgrind.contract.dto.CellStyleInput;
+import dev.erst.gridgrind.contract.dto.CellStylePatchInput;
 import dev.erst.gridgrind.contract.dto.ChartDataSourceInput;
 import dev.erst.gridgrind.contract.dto.ChartInput;
 import dev.erst.gridgrind.contract.dto.ChartLegendInput;
@@ -116,15 +116,14 @@ class RuntimeResidualCoverageTest {
     Optional<ExcelBorder> border =
         WorkbookCommandCellInputConverter.toExcelBorder(
             new CellBorderInput(
-                Optional.of(
-                    new CellBorderSideInput(ExcelBorderStyle.THIN, ColorInput.rgb("#112233"))),
+                Optional.of(new BorderSideInput(ExcelBorderStyle.THIN, ColorInput.rgb("#112233"))),
                 Optional.empty(),
                 Optional.empty(),
                 Optional.empty(),
                 Optional.empty()));
     Optional<ExcelBorderSide> borderSide =
         WorkbookCommandCellInputConverter.toExcelBorderSide(
-            new CellBorderSideInput(Optional.of(ExcelBorderStyle.DOUBLE), Optional.empty()));
+            new BorderSideInput(Optional.of(ExcelBorderStyle.DOUBLE), Optional.empty()));
     Optional<ExcelColor> color =
         WorkbookCommandCellInputConverter.toExcelColor(ColorInput.indexed(6, 0.25d));
     Optional<ExcelDataValidationPrompt> prompt =
@@ -176,7 +175,7 @@ class RuntimeResidualCoverageTest {
             new CellMutationAction.ClearHyperlink(),
             new CellMutationAction.ClearComment(),
             new CellMutationAction.ApplyStyle(
-                new CellStyleInput(
+                new CellStylePatchInput(
                     Optional.of("0.00"),
                     Optional.empty(),
                     Optional.empty(),

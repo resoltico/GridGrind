@@ -62,16 +62,6 @@ final class CliDiscoveryValidation {
     return java.util.Optional.of(normalized.orElseThrow());
   }
 
-  static java.util.Optional<CliTransport> copyOptionalTransport(
-      java.util.Optional<CliTransport> value, String fieldName) {
-    java.util.Optional<CliTransport> normalized =
-        java.util.Objects.requireNonNull(value, fieldName + " must not be null");
-    if (normalized.isEmpty()) {
-      return java.util.Optional.empty();
-    }
-    return java.util.Optional.of(normalized.orElseThrow());
-  }
-
   static List<TaskEntry> copyTaskEntries(List<TaskEntry> tasks, String fieldName) {
     return copyUnique(tasks, fieldName, TaskEntry::id);
   }

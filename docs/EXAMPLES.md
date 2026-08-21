@@ -1,6 +1,6 @@
 ---
 afad: "4.0"
-version: "0.72.0"
+version: "0.73.0"
 domain: EXAMPLES
 updated: "2026-07-02"
 route:
@@ -42,10 +42,13 @@ cell-reading example stays comfortably inside the shared deterministic 250,000-c
 
 - Built-in examples are for the packaged `gridgrind` launcher, the release JAR, the Docker image,
   or `:cli:run` when you first print the example into your own working directory.
-- Self-contained built-ins can run from a blank artifact workspace after you print the request.
+- Self-contained built-ins need no workbook or asset inputs. Create their `generated-workbooks/`
+  output directory before the first run, then execute them from an otherwise blank artifact workspace.
 - Repo-asset-backed built-ins require the matching asset paths named in `requiredWorkspacePaths` to exist
   in the working directory before you run them.
 - Any example that saves a workbook writes under `generated-workbooks/` beside the request file.
+  Create that parent directory first; GridGrind intentionally does not create it through an
+  unverified path lookup.
 - Checked-in `examples/*.json` therefore persist into `examples/generated-workbooks/` because the
   request files themselves live under `examples/`.
 - Asset-backed checked-in examples keep sibling assets beside the requests:
@@ -55,7 +58,7 @@ cell-reading example stays comfortably inside the shared deterministic 250,000-c
 
 ## Built-In Example Portability
 
-Self-contained built-ins execute from a blank artifact workspace after `--print-recipe --lookup <ID>`:
+Self-contained built-ins execute after `mkdir -p generated-workbooks` in an otherwise blank artifact workspace and `--print-recipe --lookup <ID>`:
 
 | Built-in ID | Matching fixture | Notes |
 |:------------|:-----------------|:------|
@@ -80,12 +83,12 @@ copied asset paths named in `requiredWorkspacePaths`:
 | `SOURCE_BACKED_INPUT` | [`../examples/source-backed-input-request.json`](../examples/source-backed-input-request.json) | [`../examples/source-backed-input-assets/`](../examples/source-backed-input-assets/) |
 | `PACKAGE_SECURITY_INSPECTION` | [`../examples/package-security-inspect-request.json`](../examples/package-security-inspect-request.json) | [`../examples/package-security-assets/`](../examples/package-security-assets/) |
 
-The CLI help now prints each built-in example with its `workspaceMode`, and asset-backed entries
+The CLI help now prints each built-in example with its `advisory`, and asset-backed entries
 also print their exact `requiredWorkspacePaths`, so artifact-only workspaces do not silently assume every
 example is self-contained.
 
 The machine-readable CLI recipe catalog exposes stable example ids, file names, summaries, a
-portable `requestFileName` plus `workspaceMode` contract, and exact
+portable `requestFileName` plus `advisory` contract, and exact
 `requiredWorkspacePaths` for asset-backed examples.
 `SELF_CONTAINED` means the printed request runs from a blank artifact workspace;
 `REQUIRES_EXAMPLE_ASSETS` means the request expects copied `examples/` assets beside the request

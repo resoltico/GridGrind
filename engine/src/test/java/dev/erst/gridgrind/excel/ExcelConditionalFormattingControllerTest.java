@@ -51,13 +51,11 @@ class ExcelConditionalFormattingControllerTest {
                               true,
                               false,
                               ExcelFontHeight.fromPoints(BigDecimal.valueOf(12)),
-                              "#102030",
+                              color("#102030"),
                               true,
                               true,
-                              "#E0F0AA",
-                              expandedBorder(
-                                  new ExcelDifferentialBorderSide(
-                                      ExcelBorderStyle.THIN, "#405060")),
+                              color("#E0F0AA"),
+                              expandedBorder(borderSide(ExcelBorderStyle.THIN, "#405060")),
                               List.of())),
                       new ExcelConditionalFormattingRuleSnapshot.CellValueRule(
                           2,
@@ -66,7 +64,15 @@ class ExcelConditionalFormattingControllerTest {
                           "1",
                           "9",
                           new ExcelDifferentialStyleSnapshot(
-                              null, null, true, null, null, null, null, "#AAEECC", null,
+                              null,
+                              null,
+                              true,
+                              null,
+                              null,
+                              null,
+                              null,
+                              color("#AAEECC"),
+                              null,
                               List.of())))),
               new ExcelConditionalFormattingBlockSnapshot(
                   List.of("C1:C3"),
@@ -76,7 +82,15 @@ class ExcelConditionalFormattingControllerTest {
                           false,
                           "C1=\"Ready\"",
                           new ExcelDifferentialStyleSnapshot(
-                              null, false, null, null, "#223344", null, null, null, null,
+                              null,
+                              false,
+                              null,
+                              null,
+                              color("#223344"),
+                              null,
+                              null,
+                              null,
+                              null,
                               List.of()))))),
           sheet.metadata().conditionalFormatting(new ExcelRangeSelection.All()));
 
@@ -92,7 +106,15 @@ class ExcelConditionalFormattingControllerTest {
                           false,
                           "C1=\"Ready\"",
                           new ExcelDifferentialStyleSnapshot(
-                              null, false, null, null, "#223344", null, null, null, null,
+                              null,
+                              false,
+                              null,
+                              null,
+                              color("#223344"),
+                              null,
+                              null,
+                              null,
+                              null,
                               List.of()))))),
           sheet.metadata().conditionalFormatting(new ExcelRangeSelection.All()));
 
@@ -116,7 +138,15 @@ class ExcelConditionalFormattingControllerTest {
                           false,
                           "C1=\"Ready\"",
                           new ExcelDifferentialStyleSnapshot(
-                              null, false, null, null, "#223344", null, null, null, null,
+                              null,
+                              false,
+                              null,
+                              null,
+                              color("#223344"),
+                              null,
+                              null,
+                              null,
+                              null,
                               List.of()))))),
           reopened.sheet("Ops").metadata().conditionalFormatting(new ExcelRangeSelection.All()));
     }
@@ -292,7 +322,7 @@ class ExcelConditionalFormattingControllerTest {
                               Optional.of(true),
                               Optional.empty(),
                               Optional.empty(),
-                              Optional.of("#223344"),
+                              Optional.of(color("#223344")),
                               Optional.empty(),
                               Optional.empty(),
                               Optional.empty(),
@@ -310,7 +340,15 @@ class ExcelConditionalFormattingControllerTest {
                           true,
                           true,
                           new ExcelDifferentialStyleSnapshot(
-                              null, true, null, null, "#223344", null, null, null, null,
+                              null,
+                              true,
+                              null,
+                              null,
+                              color("#223344"),
+                              null,
+                              null,
+                              null,
+                              null,
                               List.of()))))),
           controller.conditionalFormatting(sheet, new ExcelRangeSelection.All()));
     }
@@ -1151,13 +1189,13 @@ class ExcelConditionalFormattingControllerTest {
                         Optional.of(true),
                         Optional.of(false),
                         Optional.ofNullable(ExcelFontHeight.fromPoints(BigDecimal.valueOf(12))),
-                        Optional.of("#102030"),
+                        Optional.of(color("#102030")),
                         Optional.of(true),
                         Optional.of(true),
-                        Optional.of("#E0F0AA"),
+                        Optional.of(color("#E0F0AA")),
                         Optional.ofNullable(
                             new ExcelDifferentialBorder(
-                                new ExcelDifferentialBorderSide(ExcelBorderStyle.THIN, "#405060"),
+                                borderSide(ExcelBorderStyle.THIN, "#405060"),
                                 null,
                                 null,
                                 null,
@@ -1176,7 +1214,7 @@ class ExcelConditionalFormattingControllerTest {
                         Optional.empty(),
                         Optional.empty(),
                         Optional.empty(),
-                        Optional.of("#AAEECC"),
+                        Optional.of(color("#AAEECC")),
                         Optional.empty())))));
   }
 
@@ -1193,15 +1231,23 @@ class ExcelConditionalFormattingControllerTest {
                         Optional.of(false),
                         Optional.empty(),
                         Optional.empty(),
-                        Optional.of("#223344"),
+                        Optional.of(color("#223344")),
                         Optional.empty(),
                         Optional.empty(),
                         Optional.empty(),
                         Optional.empty())))));
   }
 
-  private static ExcelDifferentialBorder expandedBorder(ExcelDifferentialBorderSide side) {
+  private static ExcelDifferentialBorder expandedBorder(ExcelBorderSide side) {
     return new ExcelDifferentialBorder(null, side, side, side, side);
+  }
+
+  private static ExcelBorderSide borderSide(ExcelBorderStyle style, String rgb) {
+    return new ExcelBorderSide(Optional.of(style), Optional.of(color(rgb)));
+  }
+
+  private static ExcelColor color(String rgb) {
+    return ExcelColor.rgb(rgb);
   }
 
   private static void seedConditionalFormattingValues(XSSFSheet sheet) {

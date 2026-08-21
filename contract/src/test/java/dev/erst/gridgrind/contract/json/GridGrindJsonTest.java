@@ -18,11 +18,11 @@ import dev.erst.gridgrind.contract.dto.ExecutionPolicyInput;
 import dev.erst.gridgrind.contract.dto.FormulaEnvironmentInput;
 import dev.erst.gridgrind.contract.dto.GridGrindProblemDetail;
 import dev.erst.gridgrind.contract.dto.GridGrindProtocolVersion;
-import dev.erst.gridgrind.contract.dto.GridGrindResponse;
-import dev.erst.gridgrind.contract.dto.GridGrindResponsePersistence;
-import dev.erst.gridgrind.contract.dto.GridGrindResponses;
 import dev.erst.gridgrind.contract.dto.RequestWarning;
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
+import dev.erst.gridgrind.contract.dto.WorkbookResult;
+import dev.erst.gridgrind.contract.dto.WorkbookResultPersistence;
+import dev.erst.gridgrind.contract.dto.WorkbookResults;
 import dev.erst.gridgrind.contract.query.*;
 import dev.erst.gridgrind.contract.query.WorkbookInspectionResult;
 import dev.erst.gridgrind.contract.selector.CellSelector;
@@ -38,7 +38,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
-import tools.jackson.databind.node.ObjectNode;
 
 /** Tests for JSON serialization, parser wording, and the step-based wire shape. */
 @SuppressWarnings("NotJavadoc")
@@ -49,7 +48,7 @@ class GridGrindJsonTest {
         GridGrindJson.readRequest(
             """
             {
-              "protocolVersion": "V1",
+              "protocolVersion": "V2",
               "source": { "type": "NEW" },
               "persistence": { "type": "NONE" },
               "steps": []
@@ -57,7 +56,7 @@ class GridGrindJsonTest {
             """
                 .getBytes(StandardCharsets.UTF_8));
 
-    assertEquals(GridGrindProtocolVersion.V1, plan.protocolVersion());
+    assertEquals(GridGrindProtocolVersion.V2, plan.protocolVersion());
     assertTrue(plan.execution().isDefault());
     assertEquals(ExecutionJournalLevel.SUMMARY, plan.journalLevel());
     assertTrue(plan.formulaEnvironment().isEmpty());
@@ -93,7 +92,7 @@ class GridGrindJsonTest {
                 GridGrindJson.readRequest(
                     """
                     {
-                      "protocolVersion": "V2",
+                      "protocolVersion": "V1",
                       "source": { "type": "NEW" },
                       "persistence": { "type": "NONE" },
                       "execution": {
@@ -115,7 +114,7 @@ class GridGrindJsonTest {
                         .getBytes(StandardCharsets.UTF_8)));
 
     assertEquals(
-        "Unsupported value 'V2' for field 'protocolVersion'; expected one of: V1",
+        "Unsupported value 'V1' for field 'protocolVersion'; expected one of: V2",
         exception.getMessage());
   }
 
@@ -142,7 +141,7 @@ class GridGrindJsonTest {
                 GridGrindJson.readRequest(
                     """
                     {
-                      "protocolVersion": "V1",
+                      "protocolVersion": "V2",
                       "planId": null,
                       "source": { "type": "NEW" },
                       "persistence": { "type": "NONE" },
@@ -170,7 +169,9 @@ class GridGrindJsonTest {
                 GridGrindJson.readRequest(
                     """
                     {
+                      "protocolVersion": "V2",
                       "source": { "type": "NEW" },
+                      "persistence": { "type": "NONE" },
                       "execution": null,
                       "steps": []
                     }
@@ -183,7 +184,9 @@ class GridGrindJsonTest {
                 GridGrindJson.readRequest(
                     """
                     {
+                      "protocolVersion": "V2",
                       "source": { "type": "NEW" },
+                      "persistence": { "type": "NONE" },
                       "steps": [
                         {
                           "stepId": "summary",
@@ -254,7 +257,7 @@ class GridGrindJsonTest {
                 GridGrindJson.readRequest(
                     """
                     {
-                      "protocolVersion": "V1",
+                      "protocolVersion": "V2",
                       "source": { "type": "NEW" },
                       "persistence": { "type": "SAVE_AS", "path": "budget.xlsx" },
                       "steps": []
@@ -278,7 +281,7 @@ class GridGrindJsonTest {
                 GridGrindJson.readRequest(
                     """
                     {
-                      "protocolVersion": "V1",
+                      "protocolVersion": "V2",
                       "source": { "type": "EXISTING", "path": "budget.txt" },
                       "persistence": { "type": "NONE" },
                       "steps": []
@@ -292,7 +295,7 @@ class GridGrindJsonTest {
                 GridGrindJson.readRequest(
                     """
                     {
-                      "protocolVersion": "V1",
+                      "protocolVersion": "V2",
                       "source": { "type": "NEW" },
                       "persistence": { "type": "SAVE_AS", "path": "budget.txt", "ifExists": "REJECT" },
                       "steps": []
@@ -306,7 +309,7 @@ class GridGrindJsonTest {
                 GridGrindJson.readRequest(
                     """
                     {
-                      "protocolVersion": "V1",
+                      "protocolVersion": "V2",
                       "source": { "type": "NEW" },
                       "persistence": { "type": "NONE" },
                       "formulaEnvironment": {
@@ -351,11 +354,18 @@ class GridGrindJsonTest {
                     "summary",
                     new WorkbookSelector.Current(),
                     new WorkbookIntrospectionQuery.GetWorkbookSummary())));
-    GridGrindResponse response =
-        GridGrindResponses.success(
-            GridGrindProtocolVersion.V1,
-            new GridGrindResponsePersistence.PersistenceOutcome.NotSaved(),
-            List.of(new RequestWarning(0, "set-owner", "SET_CELL", "warning")),
+    WorkbookResult response =
+        WorkbookResults.success(
+            GridGrindProtocolVersion.V2,
+            new WorkbookResultPersistence.PersistenceOutcome.NotSaved(),
+            List.of(
+                new RequestWarning(
+                    dev.erst.gridgrind.contract.dto.GridGrindWarningCode
+                        .UNQUOTED_SHEET_NAME_IN_FORMULA,
+                    0,
+                    "set-owner",
+                    "SET_CELL",
+                    "warning")),
             List.of(
                 new AssertionResult(
                     dev.erst.gridgrind.contract.assertion.AssertionOutcome.PASSED,
@@ -371,7 +381,8 @@ class GridGrindJsonTest {
     assertEquals(
         request, GridGrindJson.readRequest(GridGrindJsonOutput.writeRequestBytes(request)));
     assertEquals(
-        response, GridGrindJson.readResponse(GridGrindJsonOutput.writeResponseBytes(response)));
+        response,
+        GridGrindJson.readWorkbookResult(GridGrindJsonOutput.writeWorkbookResultBytes(response)));
     assertEquals(
         catalog,
         GridGrindJson.readProtocolCatalog(GridGrindJsonOutput.writeProtocolCatalogBytes(catalog)));
@@ -379,11 +390,11 @@ class GridGrindJsonTest {
 
   @Test
   void roundTripsResolveInputsAndCalculationFailureContexts() throws IOException {
-    GridGrindResponse resolveInputsFailure =
-        GridGrindResponses.failure(
-            GridGrindProtocolVersion.V1,
-            new GridGrindResponsePersistence.PersistenceOutcome.SavedAs(
-                "out/report.xlsx", new GridGrindResponsePersistence.WriteResult.NotWritten()),
+    WorkbookResult resolveInputsFailure =
+        WorkbookResults.failure(
+            GridGrindProtocolVersion.V2,
+            new WorkbookResultPersistence.PersistenceOutcome.SavedAs(
+                "out/report.xlsx", new WorkbookResultPersistence.WriteResult.NotWritten()),
             new GridGrindProblemDetail.Problem(
                 dev.erst.gridgrind.contract.dto.GridGrindProblemCode.INPUT_SOURCE_NOT_FOUND,
                 dev.erst.gridgrind.contract.dto.GridGrindProblemCode.INPUT_SOURCE_NOT_FOUND
@@ -398,12 +409,15 @@ class GridGrindJsonTest {
                     dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces.RequestShape
                         .known("NEW", "NONE"),
                     dev.erst.gridgrind.contract.dto.ProblemContextWorkbookSurfaces.InputReference
-                        .path("cell text", "missing.txt")),
+                        .path("cell text", "missing.txt"),
+                    java.util.Optional.of(
+                        dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces.JsonLocation
+                            .pathAtByteOffset("steps[0].action.value.source.path", 73))),
                 java.util.Optional.empty(),
                 List.of()));
-    GridGrindResponse calculationFailure =
-        GridGrindResponses.failure(
-            GridGrindProtocolVersion.V1,
+    WorkbookResult calculationFailure =
+        WorkbookResults.failure(
+            GridGrindProtocolVersion.V2,
             new GridGrindProblemDetail.Problem(
                 dev.erst.gridgrind.contract.dto.GridGrindProblemCode.INVALID_FORMULA,
                 dev.erst.gridgrind.contract.dto.GridGrindProblemCode.INVALID_FORMULA.category(),
@@ -421,10 +435,12 @@ class GridGrindJsonTest {
 
     assertEquals(
         resolveInputsFailure,
-        GridGrindJson.readResponse(GridGrindJsonOutput.writeResponseBytes(resolveInputsFailure)));
+        GridGrindJson.readWorkbookResult(
+            GridGrindJsonOutput.writeWorkbookResultBytes(resolveInputsFailure)));
     assertEquals(
         calculationFailure,
-        GridGrindJson.readResponse(GridGrindJsonOutput.writeResponseBytes(calculationFailure)));
+        GridGrindJson.readWorkbookResult(
+            GridGrindJsonOutput.writeWorkbookResultBytes(calculationFailure)));
   }
 
   private static TextSourceInput text(String value) {
@@ -438,7 +454,7 @@ class GridGrindJsonTest {
         GridGrindJson.readRequest(
             """
             {
-              "protocolVersion": "V1",
+              "protocolVersion": "V2",
               "source": { "type": "NEW" },
               "persistence": { "type": "NONE" },
               "execution": {
@@ -474,7 +490,7 @@ class GridGrindJsonTest {
         GridGrindJson.readRequest(
             """
             {
-              "protocolVersion": "V1",
+              "protocolVersion": "V2",
               "source": { "type": "NEW" },
               "persistence": { "type": "NONE" },
               "execution": {
@@ -532,7 +548,7 @@ class GridGrindJsonTest {
         new TrackingInputStream(
             """
             {
-              "protocolVersion": "V1",
+              "protocolVersion": "V2",
               "source": { "type": "NEW" },
               "persistence": { "type": "NONE" },
               "execution": {
@@ -554,7 +570,7 @@ class GridGrindJsonTest {
                 .getBytes(StandardCharsets.UTF_8))) {
       WorkbookPlan request = GridGrindJson.readRequest(inputStream);
 
-      assertEquals(GridGrindProtocolVersion.V1, request.protocolVersion());
+      assertEquals(GridGrindProtocolVersion.V2, request.protocolVersion());
       assertFalse(inputStream.closed);
     }
   }
@@ -568,7 +584,9 @@ class GridGrindJsonTest {
                 GridGrindJson.readRequest(
                     """
                     {
+                      "protocolVersion": "V2",
                       "source": { "type": "NEW" },
+                      "persistence": { "type": "NONE" },
                       "steps": [
                         {
                           "stepId": "bad",
@@ -586,7 +604,9 @@ class GridGrindJsonTest {
                 GridGrindJson.readRequest(
                     """
                     {
+                      "protocolVersion": "V2",
                       "source": { "type": "NEW" },
+                      "persistence": { "type": "NONE" },
                       "steps": [
                         {
                           "stepId": "bad-shape",
@@ -604,7 +624,9 @@ class GridGrindJsonTest {
                 GridGrindJson.readRequest(
                     """
                     {
+                      "protocolVersion": "V2",
                       "source": { "type": "NEW" },
+                      "persistence": { "type": "NONE" },
                       "steps": [
                         {
                           "stepId": "window",
@@ -624,9 +646,12 @@ class GridGrindJsonTest {
 
     assertEquals("Unknown type value 'NO_SUCH_QUERY'", unknownType.getMessage());
     assertEquals(Optional.of("steps[0].query.type"), unknownType.jsonPath());
-    assertEquals("Field 'type' must be a string", nonStringType.getMessage());
+    assertEquals(
+        "Field 'steps[0].query.type' must be a JSON string type id", nonStringType.getMessage());
     assertEquals(Optional.of("steps[0].query.type"), nonStringType.jsonPath());
-    assertEquals("Field 'rowCount' must be an integer value", fractionalInteger.getMessage());
+    assertEquals(
+        "Field 'steps[0].target.rowCount' must be a JSON integer between -2147483648 and 2147483647",
+        fractionalInteger.getMessage());
     assertEquals(Optional.of("steps[0].target.rowCount"), fractionalInteger.jsonPath());
   }
 
@@ -639,7 +664,9 @@ class GridGrindJsonTest {
                 GridGrindJson.readRequest(
                     """
                     {
+                      "protocolVersion": "V2",
                       "source": { "type": "NEW" },
+                      "persistence": { "type": "NONE" },
                       "steps": [
                         {
                           "stepId": "legacy",
@@ -657,7 +684,9 @@ class GridGrindJsonTest {
                 GridGrindJson.readRequest(
                     """
                     {
+                      "protocolVersion": "V2",
                       "source": { "type": "NEW" },
+                      "persistence": { "type": "NONE" },
                       "steps": [
                         {
                           "stepId": "legacy-absent",
@@ -675,7 +704,9 @@ class GridGrindJsonTest {
                 GridGrindJson.readRequest(
                     """
                     {
+                      "protocolVersion": "V2",
                       "source": { "type": "NEW" },
+                      "persistence": { "type": "NONE" },
                       "steps": [
                         {
                           "stepId": "legacy-unknown",
@@ -693,10 +724,12 @@ class GridGrindJsonTest {
                 GridGrindJson.readRequest(
                     """
                     {
+                      "protocolVersion": "V2",
                       "source": {
                         "type": "FILE",
                         "path": "budget.xlsx"
                       },
+                      "persistence": { "type": "NONE" },
                       "steps": [ ]
                     }
                     """
@@ -708,10 +741,12 @@ class GridGrindJsonTest {
                 GridGrindJson.readRequest(
                     """
                     {
+                      "protocolVersion": "V2",
                       "source": {
                         "type": "ARCHIVE",
                         "path": "budget.xlsx"
                       },
+                      "persistence": { "type": "NONE" },
                       "steps": [ ]
                     }
                     """
@@ -727,29 +762,38 @@ class GridGrindJsonTest {
   }
 
   @Test
-  void rejectsMissingPolymorphicAssertionTypeWithoutCrashing() {
-    InvalidRequestShapeException missingAssertionType =
-        assertThrows(
-            InvalidRequestShapeException.class,
-            () ->
-                GridGrindJson.readRequest(
-                    """
-                    {
-                      "source": { "type": "NEW" },
-                      "steps": [
-                        {
-                          "stepId": "assertion-missing-type",
-                          "target": { "type": "WORKBOOK_CURRENT" },
-                          "assertion": { "F5pe": "EXPECT_CHART_PRESENT" }
-                        }
-                      ]
-                    }
-                    """
-                        .getBytes(StandardCharsets.UTF_8)));
+  void reportsMissingPolymorphicAssertionTypeAndUnknownMembersWithoutCrashing() {
+    byte[] request =
+        """
+        {
+          "protocolVersion": "V2",
+          "source": { "type": "NEW" },
+          "persistence": { "type": "NONE" },
+          "steps": [
+            {
+              "stepId": "assertion-missing-type",
+              "target": { "type": "WORKBOOK_CURRENT" },
+              "assertion": { "F5pe": "EXPECT_CHART_PRESENT" }
+            }
+          ]
+        }
+        """
+            .getBytes(StandardCharsets.UTF_8);
 
+    RequestAnalysis analysis = GridGrindJson.analyzeRequest(request);
     assertEquals(
-        "Missing required field 'steps[0].assertion.type'", missingAssertionType.getMessage());
-    assertEquals(Optional.of("steps[0].assertion.type"), missingAssertionType.jsonPath());
+        List.of("steps[0].assertion.F5pe", "steps[0].assertion.type"),
+        analysis.structuralProblems().stream()
+            .map(problem -> problem.jsonPath().orElseThrow())
+            .toList());
+    assertEquals(
+        List.of(RequestUnknownField.class, RequestMissingTypeDiscriminator.class),
+        analysis.structuralProblems().stream().map(Object::getClass).toList());
+
+    InvalidRequestShapeException firstProblem =
+        assertThrows(InvalidRequestShapeException.class, () -> GridGrindJson.readRequest(request));
+    assertEquals("Unknown field 'steps[0].assertion.F5pe'", firstProblem.getMessage());
+    assertEquals(Optional.of("steps[0].assertion.F5pe"), firstProblem.jsonPath());
   }
 
   @Test
@@ -761,7 +805,9 @@ class GridGrindJsonTest {
                 GridGrindJson.readRequest(
                     """
                     {
+                      "protocolVersion": "V2",
                       "source": { "type": "NEW" },
+                      "persistence": { "type": "NONE" },
                       "steps": [
                         {
                           "stepId": "bad",
@@ -777,134 +823,9 @@ class GridGrindJsonTest {
                         .getBytes(StandardCharsets.UTF_8)));
 
     assertEquals(
-        "Each step must contain exactly one of 'action', 'assertion', or 'query'",
+        "Field 'steps[0]' must be an object containing exactly one of action, assertion, or query",
         invalidStep.getMessage());
-    assertEquals(Optional.of("steps[0].query"), invalidStep.jsonPath());
-  }
-
-  @Test
-  void defaultsDataValidationPayloadsThatOmitValidationBooleans() throws IOException {
-    ObjectNode missingAllowBlank =
-        GridGrindJsonOutput.requestTree(
-            GridGrindJson.readRequest(
-                """
-                {
-                  "protocolVersion": "V1",
-                  "source": { "type": "NEW" },
-                  "persistence": { "type": "NONE" },
-                  "execution": {
-                    "mode": { "type": "FULL_XSSF" },
-                    "journal": { "level": "NORMAL" },
-                    "calculation": {
-                      "strategy": { "type": "DO_NOT_CALCULATE" },
-                      "markRecalculateOnOpen": false
-                    }
-                  },
-                  "formulaEnvironment": {
-                    "externalWorkbooks": [ ],
-                    "missingWorkbookPolicy": "ERROR",
-                    "udfToolpacks": [ ]
-                  },
-                  "steps": [
-                    {
-                      "stepId": "validation-missing-allowBlank",
-                      "target": {
-                        "type": "RANGE_BY_RANGE",
-                        "sheetName": "Intake",
-                        "range": "A2:A20"
-                      },
-                      "action": {
-                        "type": "SET_DATA_VALIDATION",
-                        "validation": {
-                          "rule": {
-                            "type": "EXPLICIT_LIST",
-                            "values": [ "Queued" ]
-                          },
-                          "suppressDropDownArrow": false
-                        }
-                      }
-                    }
-                  ]
-                }
-                """
-                    .getBytes(StandardCharsets.UTF_8)));
-    ObjectNode missingSuppressDropDownArrow =
-        GridGrindJsonOutput.requestTree(
-            GridGrindJson.readRequest(
-                """
-                {
-                  "protocolVersion": "V1",
-                  "source": { "type": "NEW" },
-                  "persistence": { "type": "NONE" },
-                  "execution": {
-                    "mode": { "type": "FULL_XSSF" },
-                    "journal": { "level": "NORMAL" },
-                    "calculation": {
-                      "strategy": { "type": "DO_NOT_CALCULATE" },
-                      "markRecalculateOnOpen": false
-                    }
-                  },
-                  "formulaEnvironment": {
-                    "externalWorkbooks": [ ],
-                    "missingWorkbookPolicy": "ERROR",
-                    "udfToolpacks": [ ]
-                  },
-                  "steps": [
-                    {
-                      "stepId": "validation-missing-suppressDropDownArrow",
-                      "target": {
-                        "type": "RANGE_BY_RANGE",
-                        "sheetName": "Intake",
-                        "range": "A2:A20"
-                      },
-                      "action": {
-                        "type": "SET_DATA_VALIDATION",
-                        "validation": {
-                          "rule": {
-                            "type": "EXPLICIT_LIST",
-                            "values": [ "Queued" ]
-                          },
-                          "allowBlank": false
-                        }
-                      }
-                    }
-                  ]
-                }
-                """
-                    .getBytes(StandardCharsets.UTF_8)));
-
-    assertFalse(
-        missingAllowBlank
-            .path("steps")
-            .path(0)
-            .path("action")
-            .path("validation")
-            .path("allowBlank")
-            .booleanValue());
-    assertFalse(
-        missingAllowBlank
-            .path("steps")
-            .path(0)
-            .path("action")
-            .path("validation")
-            .path("suppressDropDownArrow")
-            .booleanValue());
-    assertFalse(
-        missingSuppressDropDownArrow
-            .path("steps")
-            .path(0)
-            .path("action")
-            .path("validation")
-            .path("allowBlank")
-            .booleanValue());
-    assertFalse(
-        missingSuppressDropDownArrow
-            .path("steps")
-            .path(0)
-            .path("action")
-            .path("validation")
-            .path("suppressDropDownArrow")
-            .booleanValue());
+    assertEquals(Optional.of("steps[0]"), invalidStep.jsonPath());
   }
 
   /** Tracks whether the request reader closes the source stream after consuming it. */

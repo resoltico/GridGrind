@@ -9,15 +9,15 @@ import dev.erst.gridgrind.contract.action.DrawingMutationAction;
 import dev.erst.gridgrind.contract.action.StructuredMutationAction;
 import dev.erst.gridgrind.contract.action.WorkbookMutationAction;
 import dev.erst.gridgrind.contract.dto.*;
-import dev.erst.gridgrind.contract.dto.GridGrindResponse;
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
+import dev.erst.gridgrind.contract.dto.WorkbookResult;
 import dev.erst.gridgrind.contract.json.GridGrindJson;
 import dev.erst.gridgrind.contract.json.GridGrindJsonOutput;
 import dev.erst.gridgrind.contract.selector.*;
 import dev.erst.gridgrind.contract.source.BinarySourceInput;
 import dev.erst.gridgrind.contract.source.TextSourceInput;
 import dev.erst.gridgrind.engine.runtime.DefaultGridGrindRequestExecutor;
-import dev.erst.gridgrind.engine.runtime.ExecutionJournalSink;
+import dev.erst.gridgrind.engine.runtime.ExecutionProgressSink;
 import dev.erst.gridgrind.excel.WorkbookSignatureSupport;
 import dev.erst.gridgrind.excel.foundation.ExcelAuthoredDrawingShapeKind;
 import dev.erst.gridgrind.excel.foundation.ExcelBorderStyle;
@@ -206,13 +206,13 @@ public final class XlsxParityScenarios {
           Path scenarioDirectory = Files.createDirectories(temporaryRoot.resolve(CORE_WORKBOOK));
           Path workbookPath = scenarioDirectory.resolve("core.xlsx");
           WorkbookPlan request = coreWorkbookRequest(workbookPath);
-          GridGrindResponse response =
+          WorkbookResult response =
               new DefaultGridGrindRequestExecutor()
                   .execute(
                       request,
                       XlsxParitySupport.bindings(scenarioDirectory),
-                      ExecutionJournalSink.NOOP);
-          if (!(response instanceof GridGrindResponse.Success)) {
+                      ExecutionProgressSink.NOOP);
+          if (!(response instanceof WorkbookResult.Success)) {
             throw new IllegalStateException(
                 "Core parity workbook request must succeed: " + response);
           }
@@ -517,13 +517,13 @@ public final class XlsxParityScenarios {
           Path scenarioDirectory = Files.createDirectories(temporaryRoot.resolve(CHART_AUTHORING));
           Path workbookPath = scenarioDirectory.resolve("chart-authoring.xlsx");
 
-          GridGrindResponse response =
+          WorkbookResult response =
               new DefaultGridGrindRequestExecutor()
                   .execute(
                       chartAuthoringRequest(workbookPath),
                       XlsxParitySupport.bindings(scenarioDirectory),
-                      ExecutionJournalSink.NOOP);
-          if (!(response instanceof GridGrindResponse.Success)) {
+                      ExecutionProgressSink.NOOP);
+          if (!(response instanceof WorkbookResult.Success)) {
             throw new IllegalStateException(
                 "Chart authoring parity workbook request must succeed: " + response);
           }
@@ -632,13 +632,13 @@ public final class XlsxParityScenarios {
           Path scenarioDirectory = Files.createDirectories(temporaryRoot.resolve(PIVOT_AUTHORING));
           Path workbookPath = scenarioDirectory.resolve("pivot-authoring.xlsx");
 
-          GridGrindResponse response =
+          WorkbookResult response =
               new DefaultGridGrindRequestExecutor()
                   .execute(
                       pivotAuthoringRequest(workbookPath),
                       XlsxParitySupport.bindings(scenarioDirectory),
-                      ExecutionJournalSink.NOOP);
-          if (!(response instanceof GridGrindResponse.Success)) {
+                      ExecutionProgressSink.NOOP);
+          if (!(response instanceof WorkbookResult.Success)) {
             throw new IllegalStateException(
                 "Pivot authoring parity workbook request must succeed: " + response);
           }
@@ -688,13 +688,13 @@ public final class XlsxParityScenarios {
           Path scenarioDirectory =
               Files.createDirectories(temporaryRoot.resolve(DRAWING_AUTHORING));
           Path workbookPath = scenarioDirectory.resolve("drawing-authoring.xlsx");
-          GridGrindResponse response =
+          WorkbookResult response =
               new DefaultGridGrindRequestExecutor()
                   .execute(
                       drawingAuthoringRequest(workbookPath),
                       XlsxParitySupport.bindings(scenarioDirectory),
-                      ExecutionJournalSink.NOOP);
-          if (!(response instanceof GridGrindResponse.Success)) {
+                      ExecutionProgressSink.NOOP);
+          if (!(response instanceof WorkbookResult.Success)) {
             throw new IllegalStateException(
                 "GridGrind drawing authoring parity workbook request must succeed: " + response);
           }
@@ -1206,7 +1206,7 @@ public final class XlsxParityScenarios {
                 mutate(
                     new RangeSelector.ByRange("Ops", "A1:D4"),
                     new CellMutationAction.ApplyStyle(
-                        new CellStyleInput(
+                        new CellStylePatchInput(
                             Optional.empty(),
                             Optional.of(
                                 new CellAlignmentInput(
@@ -1230,7 +1230,7 @@ public final class XlsxParityScenarios {
                             Optional.of(
                                 new CellBorderInput(
                                     Optional.of(
-                                        new CellBorderSideInput(
+                                        new BorderSideInput(
                                             ExcelBorderStyle.THIN, ColorInput.rgb("#5B7C99"))),
                                     Optional.empty(),
                                     Optional.empty(),
@@ -1312,10 +1312,10 @@ public final class XlsxParityScenarios {
                                             Optional.of(true),
                                             Optional.empty(),
                                             Optional.empty(),
-                                            Optional.of("#006100"),
+                                            Optional.of(ColorInput.rgb("#006100")),
                                             Optional.empty(),
                                             Optional.empty(),
-                                            Optional.of("#C6EFCE"),
+                                            Optional.of(ColorInput.rgb("#C6EFCE")),
                                             Optional.empty()))),
                                 new ConditionalFormattingRuleInput.CellValueRule(
                                     ExcelComparisonOperator.LESS_THAN,
@@ -1328,10 +1328,10 @@ public final class XlsxParityScenarios {
                                             Optional.empty(),
                                             Optional.empty(),
                                             Optional.empty(),
-                                            Optional.of("#9C0006"),
+                                            Optional.of(ColorInput.rgb("#9C0006")),
                                             Optional.empty(),
                                             Optional.empty(),
-                                            Optional.of("#FFC7CE"),
+                                            Optional.of(ColorInput.rgb("#FFC7CE")),
                                             Optional.empty()))))))),
                 mutate(
                     new RangeSelector.ByRange("Ops", "A2:D4"),

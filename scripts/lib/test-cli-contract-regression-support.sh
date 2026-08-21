@@ -18,10 +18,22 @@ emit_fixture_file() {
 
 case "${1:-}" in
     '')
+        noargs_destination="${FAKE_GRIDGRIND_NOARGS_DESTINATION:-stdout}"
         if [[ -t 0 || -t 1 || -t 2 ]]; then
             emit_fixture_file "${FAKE_GRIDGRIND_INTERACTIVE_NOARGS_FAILURE_FILE:-${FAKE_GRIDGRIND_NOARGS_FAILURE_FILE:?}}"
         else
-            emit_fixture_file "${FAKE_GRIDGRIND_NOARGS_FAILURE_FILE:?}" >&2
+            case "${noargs_destination}" in
+                stdout)
+                    emit_fixture_file "${FAKE_GRIDGRIND_NOARGS_FAILURE_FILE:?}"
+                    ;;
+                stderr)
+                    emit_fixture_file "${FAKE_GRIDGRIND_NOARGS_FAILURE_FILE:?}" >&2
+                    ;;
+                *)
+                    printf 'unsupported fake no-arg destination: %s\n' "${noargs_destination}" >&2
+                    exit 1
+                    ;;
+            esac
         fi
         exit 2
         ;;

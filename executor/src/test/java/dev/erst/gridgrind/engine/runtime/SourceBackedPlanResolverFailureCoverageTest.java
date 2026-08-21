@@ -3,6 +3,7 @@ package dev.erst.gridgrind.engine.runtime;
 import static dev.erst.gridgrind.engine.runtime.ExecutorTestPlanSupport.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -110,7 +111,7 @@ class SourceBackedPlanResolverFailureCoverageTest extends SourceBackedPlanResolv
                 SourceBackedPlanResolver.resolve(
                     directoryPlan,
                     ExecutionInputBindingsFixtureSupport.bindings(workingDirectory)));
-    assertTrue(directoryFailure.getMessage().contains("must resolve to a file"));
+    assertTrue(directoryFailure.getMessage().contains("Failed to read cell text file"));
 
     WorkbookPlan invalidPathPlan =
         request(
@@ -139,15 +140,13 @@ class SourceBackedPlanResolverFailureCoverageTest extends SourceBackedPlanResolv
                     new CellSelector.ByAddress("Budget", "A1"),
                     new CellMutationAction.SetCell(
                         new CellInput.Text(TextSourceInput.utf8File("text-loop.txt"))))));
-    InputSourceReadException textLoopFailure =
+    UnsafePathAccessException textLoopFailure =
         assertThrows(
-            InputSourceReadException.class,
+            UnsafePathAccessException.class,
             () ->
                 SourceBackedPlanResolver.resolve(
                     textLoopPlan, ExecutionInputBindingsFixtureSupport.bindings(workingDirectory)));
-    // LIM-029: circular symlinks are caught as path-escape violations before the read stage;
-    // the message is "Invalid cell text path" rather than "Failed to read cell text file".
-    assertTrue(textLoopFailure.getMessage().contains("Invalid cell text path"));
+    assertTrue(textLoopFailure.getMessage().contains("symbolic links are not accepted"));
 
     WorkbookPlan missingBinaryPlan =
         request(
@@ -186,15 +185,14 @@ class SourceBackedPlanResolverFailureCoverageTest extends SourceBackedPlanResolv
                                 ExcelPictureFormat.PNG, BinarySourceInput.file("binary-loop.bin")),
                             twoCellAnchor(),
                             null)))));
-    InputSourceReadException binaryLoopFailure =
+    UnsafePathAccessException binaryLoopFailure =
         assertThrows(
-            InputSourceReadException.class,
+            UnsafePathAccessException.class,
             () ->
                 SourceBackedPlanResolver.resolve(
                     binaryLoopPlan,
                     ExecutionInputBindingsFixtureSupport.bindings(workingDirectory)));
-    // LIM-029: circular symlinks are caught as path-escape violations before the read stage.
-    assertTrue(binaryLoopFailure.getMessage().contains("Invalid picture payload path"));
+    assertTrue(binaryLoopFailure.getMessage().contains("symbolic links are not accepted"));
 
     // Exercise the IOException (not NoSuchFileException) path in the text and binary read helpers.
     // On POSIX systems a mode-000 file passes path-security validation but fails at the actual
@@ -307,6 +305,12 @@ class SourceBackedPlanResolverFailureCoverageTest extends SourceBackedPlanResolv
     assertFalse(
         SourceBackedInputRequirements.requiresStandardInput(
             new CellInput.DateTime(LocalDateTime.of(2026, 4, 18, 12, 30))));
+    assertFalse(
+        SourceBackedInputRequirements.requiresStandardInput(
+            new CellInput.RawFormula(TextSourceInput.inline("LAMBDA(x,x+1)(A1)"))));
+    assertTrue(
+        SourceBackedInputRequirements.requiresStandardInput(
+            new CellInput.RawFormula(TextSourceInput.standardInput())));
 
     assertFalse(
         SourceBackedInputRequirements.requiresStandardInput(
@@ -439,9 +443,30 @@ class SourceBackedPlanResolverFailureCoverageTest extends SourceBackedPlanResolv
                 TextSourceInput.standardInput())));
 
     Path absoluteFile = Files.createTempFile("gridgrind-source-backed-absolute-", ".txt");
-    assertEquals(
-        absoluteFile.toAbsolutePath().normalize(),
-        SourceBackedPathResolver.resolvePath(absoluteFile.toString(), Path.of(""), "cell text"));
+    try (RequestPathAccess access =
+        new RequestPathAccess(
+            Path.of(""), (prefix, suffix) -> Files.createTempFile(prefix, suffix))) {
+      assertThrows(
+          RequestPathEscapeException.class,
+          () ->
+              access.materializeRead(
+                  absoluteFile.toString(), "test input", "gridgrind-test-", ".txt"));
+    }
+  }
+
+  @Test
+  void rawFormulaResolutionRetainsAnUnresolvedSourceForBatchPreflightCollection()
+      throws IOException {
+    Path workingDirectory = Files.createTempDirectory("gridgrind-raw-formula-resolution-");
+    TextSourceInput.Utf8File missingSource = TextSourceInput.utf8File("missing-formula.txt");
+    InputResolutionFailures failures = new InputResolutionFailures();
+    ExecutionInputBindings bindings =
+        ExecutionInputBindingsFixtureSupport.bindings(workingDirectory)
+            .collectingInputResolutionFailures(failures);
+
+    assertSame(
+        missingSource, SourceBackedPlanResolver.resolveRawFormulaSource(missingSource, bindings));
+    assertThrows(InputResolutionBatchException.class, failures::throwIfAny);
   }
 
   @Test
@@ -482,5 +507,24 @@ class SourceBackedPlanResolverFailureCoverageTest extends SourceBackedPlanResolv
                     standardInputPlan,
                     ExecutionInputBindingsFixtureSupport.bindings(workingDirectory)));
     assertEquals("cell text", unavailable.inputKind());
+  }
+
+  @Test
+  void binaryResolutionSupportsBothScopedAndPreparedPathCapabilities() throws Exception {
+    Path workingDirectory = Files.createTempDirectory("gridgrind-source-backed-binary-");
+    BinarySourceInput.InlineBase64 inline = new BinarySourceInput.InlineBase64("AQI=");
+    ExecutionInputBindings bindings =
+        ExecutionInputBindingsFixtureSupport.bindings(workingDirectory);
+
+    assertEquals(
+        inline, SourceBackedPlanResolver.resolveBinarySource(inline, bindings, "picture payload"));
+
+    try (RequestPathAccess access =
+        new RequestPathAccess(workingDirectory, bindings.tempFileFactory())) {
+      assertEquals(
+          inline,
+          SourceBackedPlanResolver.resolveBinarySource(
+              inline, bindings.withRequestPathAccess(access), "picture payload"));
+    }
   }
 }

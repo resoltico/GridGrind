@@ -8,19 +8,12 @@ import dev.erst.gridgrind.contract.assertion.CellAssertion;
 import dev.erst.gridgrind.contract.assertion.CompositeAssertion;
 import dev.erst.gridgrind.contract.assertion.PresenceAssertion;
 import dev.erst.gridgrind.contract.assertion.WorkbookFactAssertion;
-import dev.erst.gridgrind.contract.dto.AnalysisFindingReport;
-import dev.erst.gridgrind.contract.dto.AnalysisSummaryReport;
 import dev.erst.gridgrind.contract.query.InspectionResult;
-import dev.erst.gridgrind.contract.query.WorkbookAnalysisResult;
-import dev.erst.gridgrind.contract.query.WorkbookAssetInspectionResult;
-import dev.erst.gridgrind.contract.query.WorkbookAssetIntrospectionQuery;
 import dev.erst.gridgrind.contract.selector.Selector;
 import dev.erst.gridgrind.contract.step.AssertionStep;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
 import dev.erst.gridgrind.excel.WorkbookExecutionEngine;
 import dev.erst.gridgrind.excel.WorkbookLocation;
-import dev.erst.gridgrind.excel.foundation.AnalysisFindingCode;
-import dev.erst.gridgrind.excel.foundation.AnalysisSeverity;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -43,6 +36,14 @@ final class AssertionExecutor {
   AssertionResult execute(
       AssertionStep step, ExcelWorkbook workbook, WorkbookLocation workbookLocation)
       throws AssertionFailedException {
+    return switch (executeCollecting(step, workbook, workbookLocation)) {
+      case AssertionStepExecution.Passed passed -> passed.result();
+      case AssertionStepExecution.Failed failed -> throw failed.failure();
+    };
+  }
+
+  AssertionStepExecution executeCollecting(
+      AssertionStep step, ExcelWorkbook workbook, WorkbookLocation workbookLocation) {
     Objects.requireNonNull(step, "step must not be null");
     Objects.requireNonNull(workbook, "workbook must not be null");
     Objects.requireNonNull(workbookLocation, "workbookLocation must not be null");
@@ -50,19 +51,27 @@ final class AssertionExecutor {
     AssertionEvaluation evaluation =
         evaluate(step.stepId(), step.target(), step.assertion(), workbook, workbookLocation);
     if (!evaluation.passed()) {
-      throw new AssertionFailedException(
-          evaluation.message(),
-          new AssertionFailure(
+      AssertionResult result =
+          new AssertionResult(
+              dev.erst.gridgrind.contract.assertion.AssertionOutcome.FAILED,
               step.stepId(),
-              step.assertion().assertionType(),
-              step.target(),
-              step.assertion(),
-              evaluation.observations()));
+              step.assertion().assertionType());
+      return new AssertionStepExecution.Failed(
+          result,
+          new AssertionFailedException(
+              evaluation.message(),
+              new AssertionFailure(
+                  step.stepId(),
+                  step.assertion().assertionType(),
+                  step.target(),
+                  step.assertion(),
+                  evaluation.observations())));
     }
-    return new AssertionResult(
-        dev.erst.gridgrind.contract.assertion.AssertionOutcome.PASSED,
-        step.stepId(),
-        step.assertion().assertionType());
+    return new AssertionStepExecution.Passed(
+        new AssertionResult(
+            dev.erst.gridgrind.contract.assertion.AssertionOutcome.PASSED,
+            step.stepId(),
+            step.assertion().assertionType()));
   }
 
   private AssertionEvaluation evaluate(
@@ -227,59 +236,5 @@ final class AssertionExecutor {
             evaluation.observations(),
             "NOT failed because nested assertion " + nestedAssertion.assertionType() + " passed")
         : AssertionEvaluation.pass(evaluation.observations());
-  }
-
-  InspectionResult presenceObservation(
-      String stepId, Selector target, ExcelWorkbook workbook, WorkbookLocation workbookLocation) {
-    return observations.presenceObservation(stepId, target, workbook, workbookLocation);
-  }
-
-  WorkbookAssetInspectionResult.ChartsResult chartsObservation(
-      String stepId, Selector target, ExcelWorkbook workbook, WorkbookLocation workbookLocation) {
-    return (WorkbookAssetInspectionResult.ChartsResult)
-        observations.executeObservation(
-            stepId,
-            target,
-            new WorkbookAssetIntrospectionQuery.GetCharts(),
-            workbook,
-            workbookLocation);
-  }
-
-  static InspectionResult zeroMatchPresenceObservation(String stepId, Selector target) {
-    return AssertionObservationExecutor.zeroMatchPresenceObservation(stepId, target);
-  }
-
-  static int observedCount(InspectionResult observation) {
-    return AssertionObservationExecutor.observedCount(observation);
-  }
-
-  static boolean matchesCellValue(
-      dev.erst.gridgrind.contract.dto.CellReport cell,
-      dev.erst.gridgrind.contract.dto.CellScalarValue expectedValue) {
-    return AssertionValueEvaluator.matchesCellValue(cell, expectedValue);
-  }
-
-  static java.util.Optional<AnalysisSeverity> highestSeverity(WorkbookAnalysisResult result) {
-    return AssertionAnalysisEvaluator.highestSeverity(result);
-  }
-
-  static int severityRank(java.util.Optional<AnalysisSeverity> severity) {
-    return AssertionAnalysisEvaluator.severityRank(severity);
-  }
-
-  static AnalysisSummaryReport analysisSummary(WorkbookAnalysisResult result) {
-    return AssertionAnalysisEvaluator.analysisSummary(result);
-  }
-
-  static List<AnalysisFindingReport> analysisFindings(WorkbookAnalysisResult result) {
-    return AssertionAnalysisEvaluator.analysisFindings(result);
-  }
-
-  static boolean matchesFinding(
-      AnalysisFindingReport finding,
-      AnalysisFindingCode code,
-      java.util.Optional<AnalysisSeverity> severity,
-      java.util.Optional<String> messageContains) {
-    return AssertionAnalysisEvaluator.matchesFinding(finding, code, severity, messageContains);
   }
 }

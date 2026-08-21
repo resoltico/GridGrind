@@ -109,7 +109,7 @@ class GridGrindRecipeKeywordMatcherTest {
             RecipeView.EXAMPLE,
             "ad-hoc-template",
             "summary",
-            dev.erst.gridgrind.cli.discovery.ExampleWorkspaceMode.SELF_CONTAINED,
+            dev.erst.gridgrind.cli.discovery.RecipeAdvisory.SELF_CONTAINED,
             List.of(),
             List.of("template"),
             dev.erst.gridgrind.contract.catalog.GridGrindProtocolCatalog.requestTemplate());

@@ -45,7 +45,9 @@ class AdvancedMutationProtocolTypesTest {
             ExcelOoxmlSignatureDigestAlgorithm.SHA256,
             Optional.empty());
     OoxmlPersistenceSecurityInput persistence =
-        new OoxmlPersistenceSecurityInput(encryption, signature);
+        new OoxmlPersistenceSecurityInput(
+            new OoxmlPersistenceEncryptionInput.Encrypt(encryption),
+            new OoxmlPersistenceSignatureInput.Sign(signature));
 
     assertEquals(Optional.of("source-pass"), openSecurity.password());
     assertEquals(ExcelOoxmlWriteCipher.AES_256, encryption.cipher());
@@ -54,8 +56,14 @@ class AdvancedMutationProtocolTypesTest {
     assertEquals(ExcelOoxmlSignatureDigestAlgorithm.SHA256, signature.digestAlgorithm());
     assertTrue(signature.alias().isEmpty());
     assertTrue(signature.description().isEmpty());
-    assertEquals(encryption, persistence.encryption());
-    assertEquals(signature, persistence.signature());
+    assertEquals(
+        encryption,
+        assertInstanceOf(OoxmlPersistenceEncryptionInput.Encrypt.class, persistence.encryption())
+            .encryption());
+    assertEquals(
+        signature,
+        assertInstanceOf(OoxmlPersistenceSignatureInput.Sign.class, persistence.signature())
+            .signature());
 
     assertThrows(
         IllegalArgumentException.class, () -> new OoxmlOpenSecurityInput(Optional.of(" ")));
@@ -86,34 +94,36 @@ class AdvancedMutationProtocolTypesTest {
                 Optional.of(" "),
                 ExcelOoxmlSignatureDigestAlgorithm.SHA256,
                 Optional.empty()));
-    assertThrows(
-        IllegalArgumentException.class, () -> new OoxmlPersistenceSecurityInput(null, null));
+    assertThrows(NullPointerException.class, () -> new OoxmlPersistenceSecurityInput(null, null));
   }
 
   @Test
   void ooxmlSecurityHelpersCollapseEmptyRequestState() {
     OoxmlOpenSecurityInput openSecurity = new OoxmlOpenSecurityInput(Optional.empty());
-    OoxmlPersistenceSecurityInput encryptionOnly =
+    OoxmlEncryptionInput encryption =
+        new OoxmlEncryptionInput(
+            "persist-pass", ExcelOoxmlWriteCipher.AES_192, ExcelOoxmlWriteHash.SHA_384);
+    OoxmlPersistenceSecurityInput encryptionAndUnsigned =
         new OoxmlPersistenceSecurityInput(
-            new OoxmlEncryptionInput(
-                "persist-pass", ExcelOoxmlWriteCipher.AES_192, ExcelOoxmlWriteHash.SHA_384),
-            null);
-    OoxmlPersistenceSecurityInput signatureOnly =
+            new OoxmlPersistenceEncryptionInput.Encrypt(encryption),
+            new OoxmlPersistenceSignatureInput.None());
+    OoxmlPersistenceSecurityInput plaintextAndSigned =
         new OoxmlPersistenceSecurityInput(
-            null,
-            new OoxmlSignatureInput(
-                "tmp/signing-material.p12",
-                "keystore-pass",
-                "key-pass",
-                Optional.empty(),
-                ExcelOoxmlSignatureDigestAlgorithm.SHA256,
-                Optional.empty()));
+            new OoxmlPersistenceEncryptionInput.None(),
+            new OoxmlPersistenceSignatureInput.Sign(
+                new OoxmlSignatureInput(
+                    "tmp/signing-material.p12",
+                    "keystore-pass",
+                    "key-pass",
+                    Optional.empty(),
+                    ExcelOoxmlSignatureDigestAlgorithm.SHA256,
+                    Optional.empty())));
     WorkbookPlan.WorkbookSource.ExistingFile source =
         new WorkbookPlan.WorkbookSource.ExistingFile("budget.xlsx", openSecurity);
     WorkbookPlan.WorkbookPersistence.Overwrite unsecuredOverwrite =
-        new WorkbookPlan.WorkbookPersistence.Overwrite();
+        new WorkbookPlan.WorkbookPersistence.Overwrite(Optional.empty());
     WorkbookPlan.WorkbookPersistence.Overwrite securedOverwrite =
-        new WorkbookPlan.WorkbookPersistence.Overwrite(encryptionOnly);
+        new WorkbookPlan.WorkbookPersistence.Overwrite(encryptionAndUnsigned);
 
     assertEquals(Optional.empty(), openSecurity.password());
     assertTrue(openSecurity.isEmpty());
@@ -122,11 +132,13 @@ class AdvancedMutationProtocolTypesTest {
     assertThrows(
         NullPointerException.class,
         () -> new WorkbookPlan.WorkbookPersistence.Overwrite((OoxmlPersistenceSecurityInput) null));
-    assertEquals(encryptionOnly, securedOverwrite.security().orElseThrow());
+    assertEquals(encryptionAndUnsigned, securedOverwrite.security().orElseThrow());
     assertEquals(
-        signatureOnly,
+        plaintextAndSigned,
         new WorkbookPlan.WorkbookPersistence.SaveAs(
-                "secured.xlsx", WorkbookPlan.WorkbookPersistence.IfExists.REJECT, signatureOnly)
+                "secured.xlsx",
+                WorkbookPlan.WorkbookPersistence.IfExists.REJECT,
+                plaintextAndSigned)
             .security()
             .orElseThrow());
   }
@@ -1025,18 +1037,18 @@ class AdvancedMutationProtocolTypesTest {
   }
 
   private void assertBorderSideInputsNormalizeAndValidate() {
-    CellBorderSideInput noneStyleOnly = new CellBorderSideInput(ExcelBorderStyle.NONE);
-    CellBorderSideInput borderSide = new CellBorderSideInput(null, ColorInput.theme(1, 0.15d));
-    CellBorderSideInput indexedBorderSide = new CellBorderSideInput(null, ColorInput.indexed(64));
+    BorderSideInput noneStyleOnly = new BorderSideInput(ExcelBorderStyle.NONE);
+    BorderSideInput borderSide = new BorderSideInput(null, ColorInput.theme(1, 0.15d));
+    BorderSideInput indexedBorderSide = new BorderSideInput(null, ColorInput.indexed(64));
     assertEquals(Optional.of(ExcelBorderStyle.NONE), noneStyleOnly.style());
     assertThemeColor(borderSide.color().orElseThrow(), 1, 0.15d);
     assertIndexedColor(indexedBorderSide.color().orElseThrow(), 64, null);
     assertThrows(
         IllegalArgumentException.class,
-        () -> new CellBorderSideInput(Optional.empty(), Optional.empty()));
+        () -> new BorderSideInput(Optional.empty(), Optional.empty()));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new CellBorderSideInput(ExcelBorderStyle.NONE, ColorInput.theme(1)));
+        () -> new BorderSideInput(ExcelBorderStyle.NONE, ColorInput.theme(1)));
     assertThrows(IllegalArgumentException.class, () -> ColorInput.theme(-1));
     assertThrows(IllegalArgumentException.class, () -> ColorInput.indexed(-1));
     assertThrows(

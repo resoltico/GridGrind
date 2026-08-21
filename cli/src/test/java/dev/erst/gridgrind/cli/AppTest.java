@@ -2,7 +2,7 @@ package dev.erst.gridgrind.cli;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import dev.erst.gridgrind.contract.dto.GridGrindResponse;
+import dev.erst.gridgrind.contract.dto.WorkbookResult;
 import dev.erst.gridgrind.contract.json.GridGrindJson;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -20,7 +20,7 @@ class AppTest {
   private static final String EMPTY_SUCCESS_REQUEST =
       """
       {
-        "protocolVersion": "V1",
+        "protocolVersion": "V2",
         "source": { "type": "NEW" },
         "persistence": { "type": "NONE" },
         "execution": {
@@ -90,10 +90,10 @@ class AppTest {
         capturedOut,
         capturedErr);
 
-    GridGrindResponse response = GridGrindJson.readResponse(capturedOut.toByteArray());
+    WorkbookResult response = GridGrindJson.readWorkbookResult(capturedOut.toByteArray());
 
     assertEquals(-1, observedExitCode.get());
-    assertInstanceOf(GridGrindResponse.Success.class, response);
+    assertInstanceOf(WorkbookResult.Success.class, response);
     assertTrue(capturedErr.toString(StandardCharsets.UTF_8).isBlank());
   }
 
@@ -115,8 +115,8 @@ class AppTest {
       originalStreams.restore();
     }
 
-    GridGrindResponse response = GridGrindJson.readResponse(capturedOut.toByteArray());
-    assertInstanceOf(GridGrindResponse.Success.class, response);
+    WorkbookResult response = GridGrindJson.readWorkbookResult(capturedOut.toByteArray());
+    assertInstanceOf(WorkbookResult.Success.class, response);
     assertTrue(capturedErr.toString(StandardCharsets.UTF_8).isBlank());
   }
 

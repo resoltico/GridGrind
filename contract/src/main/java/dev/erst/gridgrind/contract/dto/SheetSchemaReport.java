@@ -29,6 +29,6 @@ public record SheetSchemaReport(
     if (dataRowCount < 0) {
       throw new IllegalArgumentException("dataRowCount must not be negative");
     }
-    columns = GridGrindResponseSupport.copyValues(columns, "columns");
+    columns = WorkbookResultSupport.copyValues(columns, "columns");
   }
 }

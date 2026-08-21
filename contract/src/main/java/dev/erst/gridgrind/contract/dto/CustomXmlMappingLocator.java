@@ -3,7 +3,8 @@ package dev.erst.gridgrind.contract.dto;
 import java.util.Objects;
 
 /** Identifies one workbook custom-XML mapping by stable map id, authored name, or both. */
-public record CustomXmlMappingLocator(Long mapId, String name) {
+public record CustomXmlMappingLocator(
+    @ProtocolField(optional = true) Long mapId, @ProtocolField(optional = true) String name) {
   public CustomXmlMappingLocator {
     if (mapId == null && name == null) {
       throw new IllegalArgumentException("mapId or name must be provided");

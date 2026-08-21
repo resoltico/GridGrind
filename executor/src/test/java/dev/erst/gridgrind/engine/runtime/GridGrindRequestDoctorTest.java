@@ -97,7 +97,8 @@ class GridGrindRequestDoctorTest {
     WorkbookPlan invalidRequest =
         WorkbookPlan.standard(
             new WorkbookPlan.WorkbookSource.New(),
-            new WorkbookPlan.WorkbookPersistence.Overwrite(),
+            new WorkbookPlan.WorkbookPersistence.Overwrite(
+                dev.erst.gridgrind.contract.dto.OoxmlPersistenceSecurityInput.none()),
             dev.erst.gridgrind.contract.dto.ExecutionPolicyInput.defaults(),
             dev.erst.gridgrind.contract.dto.FormulaEnvironmentInput.empty(),
             java.util.List.of());
@@ -149,7 +150,7 @@ class GridGrindRequestDoctorTest {
             """);
 
     RequestDoctorReport report =
-        new GridGrindRequestDoctor(new ExecutionValidationSupport()).diagnose(request);
+        new GridGrindRequestDoctor(new StaticRequestValidator()).diagnose(request);
 
     assertTrue(report.valid());
     assertEquals(3, report.summary().orElseThrow().stepCount());
@@ -163,7 +164,7 @@ class GridGrindRequestDoctorTest {
     assertThrows(NullPointerException.class, () -> new GridGrindRequestDoctor().diagnose(null));
     assertThrows(
         NullPointerException.class,
-        () -> new GridGrindRequestDoctor(new ExecutionValidationSupport()).diagnose(null));
+        () -> new GridGrindRequestDoctor(new StaticRequestValidator()).diagnose(null));
     assertThrows(
         NullPointerException.class,
         () ->
@@ -332,9 +333,7 @@ class GridGrindRequestDoctorTest {
             report.primaryProblem().orElseThrow().context());
     assertEquals("RESOLVE_INPUTS", context.stage());
     assertEquals(java.util.Optional.of("cell text"), context.inputKind());
-    assertEquals(
-        java.util.Optional.of(workingDirectory.resolve("missing.txt").toString()),
-        context.inputPath());
+    assertEquals(java.util.Optional.of("missing.txt"), context.inputPath());
   }
 
   @Test

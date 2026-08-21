@@ -10,12 +10,27 @@ import dev.erst.gridgrind.contract.dto.ProblemContext;
 import dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces;
 import dev.erst.gridgrind.contract.json.FieldValidationNamingRule;
 import dev.erst.gridgrind.contract.json.FieldValidationProblem;
+import dev.erst.gridgrind.contract.selector.CellSelector;
+import dev.erst.gridgrind.contract.selector.TableCellSelector;
 import java.util.Arrays;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 
 /** Edge-path coverage for mutation-action selector metadata lookup. */
 class MutationActionCoverageTest {
+  @Test
+  void discoversTargetsFromTheCanonicalOperationContract() {
+    CellMutationAction.SetCell action =
+        new CellMutationAction.SetCell(new CellInput.NumberValue(1.0));
+
+    assertEquals(
+        List.of(CellSelector.ByAddress.class, TableCellSelector.ByColumnName.class),
+        List.of(MutationAction.allowedTargetTypes(action)));
+    assertEquals(
+        List.of(CellSelector.ByAddress.class, TableCellSelector.ByColumnName.class),
+        List.of(MutationAction.allowedTargetTypesForType(CellMutationAction.SetCell.class)));
+  }
+
   @Test
   void rejectsUnmappedAndMetadataFreeMutationActionTypes() {
     @SuppressWarnings("unchecked")

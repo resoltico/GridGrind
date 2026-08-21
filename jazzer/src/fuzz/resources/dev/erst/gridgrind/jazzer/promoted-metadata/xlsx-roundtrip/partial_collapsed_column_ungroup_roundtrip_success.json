@@ -10,9 +10,9 @@
       "inputBytes" : 94,
       "commandCount" : 6,
       "commandKinds" : {
-        "CREATE_SHEET" : 1,
+        "UNGROUP_COLUMNS" : 4,
         "CLEAR_SHEET_PROTECTION" : 1,
-        "UNGROUP_COLUMNS" : 4
+        "CREATE_SHEET" : 1
       },
       "styleKinds" : { }
     }

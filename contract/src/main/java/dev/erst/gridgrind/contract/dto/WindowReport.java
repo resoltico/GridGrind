@@ -45,7 +45,7 @@ public sealed interface WindowReport permits WindowReport.Sparse, WindowReport.D
       if (topLeftAddress.isBlank()) {
         throw new IllegalArgumentException("topLeftAddress must not be blank");
       }
-      populatedCells = GridGrindResponseSupport.copyValues(populatedCells, "populatedCells");
+      populatedCells = WorkbookResultSupport.copyValues(populatedCells, "populatedCells");
       for (CellReport cell : populatedCells) {
         if (cell instanceof CellReport.BlankReport) {
           throw new IllegalArgumentException("populatedCells must not contain blank cells");
@@ -77,7 +77,7 @@ public sealed interface WindowReport permits WindowReport.Sparse, WindowReport.D
       if (topLeftAddress.isBlank()) {
         throw new IllegalArgumentException("topLeftAddress must not be blank");
       }
-      rows = GridGrindResponseSupport.copyValues(rows, "rows");
+      rows = WorkbookResultSupport.copyValues(rows, "rows");
     }
 
     @Override

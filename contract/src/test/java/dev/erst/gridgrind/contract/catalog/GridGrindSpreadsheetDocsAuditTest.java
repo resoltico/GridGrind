@@ -378,8 +378,12 @@ class GridGrindSpreadsheetDocsAuditTest {
         () ->
             assertTrue(
                 normalizedExamples.contains(
-                    "Self-contained built-ins can run from a blank artifact workspace"),
-                "examples guide must describe self-contained built-ins"),
+                    "Self-contained built-ins need no workbook or asset inputs"),
+                "examples guide must distinguish input portability from output-directory setup"),
+        () ->
+            assertTrue(
+                normalizedExamples.contains("Create their `generated-workbooks/` output directory"),
+                "examples guide must document the verified output-parent prerequisite"),
         () ->
             assertTrue(
                 normalizedExamples.contains(
@@ -394,7 +398,7 @@ class GridGrindSpreadsheetDocsAuditTest {
         () ->
             assertTrue(
                 normalizedExamples.contains(
-                    "machine-readable CLI recipe catalog exposes stable example ids, file names, summaries, a portable `requestFileName` plus `workspaceMode` contract, and exact `requiredWorkspacePaths`"),
+                    "machine-readable CLI recipe catalog exposes stable example ids, file names, summaries, a portable `requestFileName` plus `advisory` contract, and exact `requiredWorkspacePaths`"),
                 "examples guide must describe the public example-catalog portability surface"),
         () ->
             assertTrue(

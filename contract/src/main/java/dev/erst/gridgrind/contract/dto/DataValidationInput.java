@@ -9,8 +9,10 @@ import java.util.Optional;
 /** Complete protocol-facing definition of one supported data-validation rule. */
 public record DataValidationInput(
     DataValidationRuleInput rule,
-    boolean allowBlank,
-    boolean suppressDropDownArrow,
+    @ProtocolField(optional = true, booleanDefault = ProtocolBooleanDefault.FALSE)
+        boolean allowBlank,
+    @ProtocolField(optional = true, booleanDefault = ProtocolBooleanDefault.FALSE)
+        boolean suppressDropDownArrow,
     @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<DataValidationPromptInput> prompt,
     @JsonInclude(JsonInclude.Include.NON_ABSENT)
         Optional<DataValidationErrorAlertInput> errorAlert) {
@@ -30,8 +32,8 @@ public record DataValidationInput(
       @JsonProperty("errorAlert") Optional<DataValidationErrorAlertInput> errorAlert) {
     this(
         rule,
-        Boolean.TRUE.equals(allowBlank),
-        Boolean.TRUE.equals(suppressDropDownArrow),
+        ProtocolBooleanDefault.FALSE.resolve(allowBlank),
+        ProtocolBooleanDefault.FALSE.resolve(suppressDropDownArrow),
         emptyIfNull(prompt),
         emptyIfNull(errorAlert));
   }

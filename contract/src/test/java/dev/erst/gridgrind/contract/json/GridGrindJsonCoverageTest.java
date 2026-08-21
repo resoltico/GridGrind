@@ -13,11 +13,11 @@ import dev.erst.gridgrind.contract.catalog.GridGrindProtocolCatalog;
 import dev.erst.gridgrind.contract.catalog.TypeEntry;
 import dev.erst.gridgrind.contract.dto.*;
 import dev.erst.gridgrind.contract.dto.GridGrindProblemDetail;
-import dev.erst.gridgrind.contract.dto.GridGrindResponse;
-import dev.erst.gridgrind.contract.dto.GridGrindResponses;
 import dev.erst.gridgrind.contract.dto.RequestDoctorReport;
 import dev.erst.gridgrind.contract.dto.RequestWarning;
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
+import dev.erst.gridgrind.contract.dto.WorkbookResult;
+import dev.erst.gridgrind.contract.dto.WorkbookResults;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -40,8 +40,8 @@ import tools.jackson.databind.node.ObjectNode;
 class GridGrindJsonCoverageTest {
   @Test
   void readsResponsesAndCatalogsFromStreamsWithoutClosingThem() throws IOException {
-    GridGrindResponse response =
-        GridGrindResponses.success(
+    WorkbookResult response =
+        WorkbookResults.success(
             List.of(),
             List.of(),
             List.of(
@@ -53,16 +53,23 @@ class GridGrindJsonCoverageTest {
         RequestDoctorReport.warnings(
             new RequestDoctorReport.Summary(
                 "NEW", "NONE", "FULL_XSSF", "DO_NOT_CALCULATE", false, false, 1, 1, 0, 0),
-            List.of(new RequestWarning(0, "step-1", "SET_CELL", "warning")));
+            List.of(
+                new RequestWarning(
+                    dev.erst.gridgrind.contract.dto.GridGrindWarningCode
+                        .UNQUOTED_SHEET_NAME_IN_FORMULA,
+                    0,
+                    "step-1",
+                    "SET_CELL",
+                    "warning")));
 
     try (TrackingInputStream responseStream =
-            new TrackingInputStream(GridGrindJsonOutput.writeResponseBytes(response));
+            new TrackingInputStream(GridGrindJsonOutput.writeWorkbookResultBytes(response));
         TrackingInputStream catalogStream =
             new TrackingInputStream(GridGrindJsonOutput.writeProtocolCatalogBytes(catalog));
         TrackingInputStream doctorReportStream =
             new TrackingInputStream(
                 GridGrindJsonOutput.writeRequestDoctorReportBytes(doctorReport))) {
-      assertEquals(response, GridGrindJson.readResponse(responseStream));
+      assertEquals(response, GridGrindJson.readWorkbookResult(responseStream));
       assertEquals(catalog, GridGrindJson.readProtocolCatalog(catalogStream));
       assertEquals(doctorReport, GridGrindJson.readRequestDoctorReport(doctorReportStream));
       assertEquals(
@@ -87,7 +94,7 @@ class GridGrindJsonCoverageTest {
       assertInstanceOf(
           InvalidJsonException.class,
           assertThrows(
-              InvalidJsonException.class, () -> GridGrindJson.readResponse(responseStream)));
+              InvalidJsonException.class, () -> GridGrindJson.readWorkbookResult(responseStream)));
       assertInstanceOf(
           InvalidJsonException.class,
           assertThrows(
@@ -135,7 +142,7 @@ class GridGrindJsonCoverageTest {
     ObjectNode requestTree = GridGrindJsonOutput.requestTree(request);
     ObjectNode explicitRequestTree = GridGrindJsonOutput.requestTree(explicitRequest);
 
-    assertEquals("V1", requestTree.path("protocolVersion").stringValue());
+    assertEquals("V2", requestTree.path("protocolVersion").stringValue());
     assertEquals("NEW", requestTree.path("source").path("type").stringValue());
     assertTrue(requestTree.path("steps").isArray());
     assertFalse(requestTree.has("execution"));
@@ -178,7 +185,7 @@ class GridGrindJsonCoverageTest {
                 GridGrindJson.readRequest(
                     """
                     {
-                      "protocolVersion": "V1",
+                      "protocolVersion": "V2",
                       "source": { "type": "NEW" },
                       "persistence": { "type": "NONE" },
                       "execution": null,
@@ -209,20 +216,20 @@ class GridGrindJsonCoverageTest {
         "Invalid JSON payload",
         assertThrows(
                 InvalidJsonException.class,
-                () -> GridGrindJson.readResponse(new ByteArrayInputStream(new byte[0])))
+                () -> GridGrindJson.readWorkbookResult(new ByteArrayInputStream(new byte[0])))
             .getMessage());
   }
 
   @Test
   void rejectsTopLevelAndArrayNullRequestPayloads() {
     assertEquals(
-        "JSON payload must not be null",
+        "Field 'request' must be a JSON object at the root",
         assertThrows(
                 InvalidRequestShapeException.class,
                 () -> GridGrindJson.readRequest("null".getBytes(StandardCharsets.UTF_8)))
             .getMessage());
     assertEquals(
-        "JSON payload must not be null",
+        "Field 'request' must be a JSON object at the root",
         assertThrows(
                 InvalidRequestShapeException.class,
                 () ->
@@ -237,7 +244,7 @@ class GridGrindJsonCoverageTest {
                     GridGrindJson.readRequest(
                         """
                         {
-                          "protocolVersion": "V1",
+                          "protocolVersion": "V2",
                           "source": { "type": "NEW" },
                           "persistence": { "type": "NONE" },
                           "execution": {
@@ -262,8 +269,8 @@ class GridGrindJsonCoverageTest {
 
   @Test
   void rejectsExplicitNullPlaceholdersAcrossNonRequestWireReads() throws IOException {
-    GridGrindResponse response =
-        GridGrindResponses.success(
+    WorkbookResult response =
+        WorkbookResults.success(
             List.of(),
             List.of(),
             List.of(
@@ -281,19 +288,20 @@ class GridGrindJsonCoverageTest {
         assertThrows(
                 InvalidRequestShapeException.class,
                 () ->
-                    GridGrindJson.readResponse(
+                    GridGrindJson.readWorkbookResult(
                         new ByteArrayInputStream(
                             withTopLevelNull(
-                                GridGrindJsonOutput.writeResponseBytes(response), "warnings"))))
+                                GridGrindJsonOutput.writeWorkbookResultBytes(response),
+                                "warnings"))))
             .getMessage());
     assertEquals(
         "Field 'warnings' must be omitted when absent; explicit null is not accepted.",
         assertThrows(
                 InvalidRequestShapeException.class,
                 () ->
-                    GridGrindJson.readResponse(
+                    GridGrindJson.readWorkbookResult(
                         withTopLevelNull(
-                            GridGrindJsonOutput.writeResponseBytes(response), "warnings")))
+                            GridGrindJsonOutput.writeWorkbookResultBytes(response), "warnings")))
             .getMessage());
     assertEquals(
         "Field 'plainTypes' must be omitted when absent; explicit null is not accepted.",
@@ -321,7 +329,8 @@ class GridGrindJsonCoverageTest {
     assertEquals(
         "inputStream must not be null",
         assertThrows(
-                NullPointerException.class, () -> GridGrindJson.readResponse((InputStream) null))
+                NullPointerException.class,
+                () -> GridGrindJson.readWorkbookResult((InputStream) null))
             .getMessage());
     assertEquals(
         "inputStream must not be null",
@@ -352,16 +361,18 @@ class GridGrindJsonCoverageTest {
             .getMessage());
     assertEquals(
         "response must not be null",
-        assertThrows(NullPointerException.class, () -> GridGrindJsonOutput.writeResponseBytes(null))
+        assertThrows(
+                NullPointerException.class,
+                () -> GridGrindJsonOutput.writeWorkbookResultBytes(null))
             .getMessage());
     assertEquals(
         "outputStream must not be null",
         assertThrows(
                 NullPointerException.class,
                 () ->
-                    GridGrindJsonOutput.writeResponse(
+                    GridGrindJsonOutput.writeWorkbookResult(
                         null,
-                        GridGrindResponses.failure(
+                        WorkbookResults.failure(
                             new GridGrindProblemDetail.Problem(
                                 dev.erst.gridgrind.contract.dto.GridGrindProblemCode.INVALID_JSON,
                                 dev.erst.gridgrind.contract.dto.GridGrindProblemCode.INVALID_JSON
@@ -533,7 +544,7 @@ class GridGrindJsonCoverageTest {
         GridGrindJson.readRequest(
             """
                         {
-                          "protocolVersion": "V1",
+                          "protocolVersion": "V2",
                           "source": { "type": "NEW" },
                           "persistence": { "type": "NONE" },
                           "execution": {
@@ -566,8 +577,8 @@ class GridGrindJsonCoverageTest {
                     """
                 .formatted(largeText)
                 .getBytes(StandardCharsets.UTF_8));
-    GridGrindResponse response =
-        GridGrindResponses.success(
+    WorkbookResult response =
+        WorkbookResults.success(
             List.of(),
             List.of(),
             List.of(
@@ -579,8 +590,8 @@ class GridGrindJsonCoverageTest {
         GridGrindJsonOutput.writeRequestBytes(request),
         out -> GridGrindJsonOutput.writeRequest(out, request, false));
     assertStreamSerializationMatchesBytes(
-        GridGrindJsonOutput.writeResponseBytes(response),
-        out -> GridGrindJsonOutput.writeResponse(out, response, false));
+        GridGrindJsonOutput.writeWorkbookResultBytes(response),
+        out -> GridGrindJsonOutput.writeWorkbookResult(out, response, false));
     assertStreamSerializationMatchesBytes(
         GridGrindJsonOutput.writeProtocolCatalogBytes(catalog),
         out -> GridGrindJsonOutput.writeProtocolCatalog(out, catalog, false));
@@ -590,7 +601,7 @@ class GridGrindJsonCoverageTest {
   void catalogLookupResultPrependsProtocolVersionToValueFields() throws IOException {
     TypeEntry entry = GridGrindProtocolCatalog.entryFor("GET_CELLS").orElseThrow();
     ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-    GridGrindJsonOutput.writeCatalogLookupResult(outputStream, GridGrindProtocolVersion.V1, entry);
+    GridGrindJsonOutput.writeCatalogLookupResult(outputStream, GridGrindProtocolVersion.V2, entry);
     String json = outputStream.toString(StandardCharsets.UTF_8);
     assertTrue(json.indexOf("\"protocolVersion\"") < json.indexOf("\"id\""));
     assertTrue(json.contains("\"GET_CELLS\""));
@@ -608,13 +619,13 @@ class GridGrindJsonCoverageTest {
                 NullPointerException.class,
                 () ->
                     GridGrindJsonOutput.writeCatalogLookupResult(
-                        new ByteArrayOutputStream(), GridGrindProtocolVersion.V1, null))
+                        new ByteArrayOutputStream(), GridGrindProtocolVersion.V2, null))
             .getMessage());
 
     ByteArrayOutputStream noteOutput = new ByteArrayOutputStream();
     GridGrindJsonOutput.writeCatalogLookupResult(
         noteOutput,
-        GridGrindProtocolVersion.V1,
+        GridGrindProtocolVersion.V2,
         entry,
         List.of(new CatalogNote("sharedRule", "Shared rule text.")),
         false);
@@ -628,7 +639,7 @@ class GridGrindJsonCoverageTest {
                 () ->
                     GridGrindJsonOutput.writeCatalogLookupResult(
                         new ByteArrayOutputStream(),
-                        GridGrindProtocolVersion.V1,
+                        GridGrindProtocolVersion.V2,
                         entry,
                         null,
                         false))
@@ -654,8 +665,8 @@ class GridGrindJsonCoverageTest {
   @Test
   void requestAndResponseSerializersOmitExplicitNullProperties() throws IOException {
     WorkbookPlan request = GridGrindProtocolCatalog.requestTemplate();
-    GridGrindResponse response =
-        GridGrindResponses.success(
+    WorkbookResult response =
+        WorkbookResults.success(
             List.of(),
             List.of(),
             List.of(
@@ -666,7 +677,7 @@ class GridGrindJsonCoverageTest {
     String requestJson =
         new String(GridGrindJsonOutput.writeRequestBytes(request), StandardCharsets.UTF_8);
     String responseJson =
-        new String(GridGrindJsonOutput.writeResponseBytes(response), StandardCharsets.UTF_8);
+        new String(GridGrindJsonOutput.writeWorkbookResultBytes(response), StandardCharsets.UTF_8);
 
     assertFalse(requestJson.contains(": null"));
     assertFalse(responseJson.contains(": null"));
@@ -676,8 +687,8 @@ class GridGrindJsonCoverageTest {
 
   @Test
   void compactReadbackResponsesStayWithinTheM3PayloadBudgets() throws IOException {
-    GridGrindResponse cellsResponse =
-        GridGrindResponses.success(
+    WorkbookResult cellsResponse =
+        WorkbookResults.success(
             List.of(),
             List.of(),
             List.of(
@@ -693,8 +704,8 @@ class GridGrindJsonCoverageTest {
                             Optional.empty(),
                             Optional.of("Ada"),
                             Optional.empty())))));
-    GridGrindResponse sparseWindowResponse =
-        GridGrindResponses.success(
+    WorkbookResult sparseWindowResponse =
+        WorkbookResults.success(
             List.of(),
             List.of(),
             List.of(
@@ -714,8 +725,9 @@ class GridGrindJsonCoverageTest {
                                 Optional.of("Ada"),
                                 Optional.empty()))))));
 
-    byte[] cellsResponseBytes = GridGrindJsonOutput.writeResponseBytes(cellsResponse);
-    byte[] sparseWindowResponseBytes = GridGrindJsonOutput.writeResponseBytes(sparseWindowResponse);
+    byte[] cellsResponseBytes = GridGrindJsonOutput.writeWorkbookResultBytes(cellsResponse);
+    byte[] sparseWindowResponseBytes =
+        GridGrindJsonOutput.writeWorkbookResultBytes(sparseWindowResponse);
 
     assertTrue(
         cellsResponseBytes.length < 1316,
@@ -740,7 +752,7 @@ class GridGrindJsonCoverageTest {
                 GridGrindJson.readRequest(
                     """
                     {
-                      "protocolVersion": "V1",
+                      "protocolVersion": "V2",
                       "source": { "type": "NEW" },
                       "persistence": { "type": "NONE" },
                       "execution": {

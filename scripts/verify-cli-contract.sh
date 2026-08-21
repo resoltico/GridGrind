@@ -246,9 +246,9 @@ set +e
 noargs_exit_code=$?
 set -e
 [[ ${noargs_exit_code} -eq 2 ]] || die "${label} bare invocation exited ${noargs_exit_code} instead of 2"
-[[ ! -s "${noargs_stdout_path}" ]] || die "${label} bare invocation wrote unexpected stdout"
-[[ -s "${noargs_stderr_path}" ]] || die "${label} bare invocation emitted no structured stderr"
-verify_interactive_noarg_failure "${noargs_stderr_path}" "${interactive_launcher[@]}"
+[[ -s "${noargs_stdout_path}" ]] || die "${label} bare invocation emitted no command rejection"
+[[ ! -s "${noargs_stderr_path}" ]] || die "${label} bare invocation wrote unexpected stderr"
+verify_interactive_noarg_failure "${noargs_stdout_path}" "${interactive_launcher[@]}"
 "${launcher[@]}" --print-request-template | tr -d '\r' > "${request_template_path}"
 "${launcher[@]}" --print-protocol-catalog | tr -d '\r' > "${catalog_index_path}"
 "${launcher[@]}" --print-protocol-catalog --lookup sourceTypes | tr -d '\r' > "${source_types_path}"
@@ -395,8 +395,8 @@ if "-w /workdir" in guidance_help_output:
 if '-v "$(pwd)":/work' not in guidance_help_output:
     die("guidance help no longer teaches the mounted /work Docker pattern")
 
-if catalog_index.get("protocolVersion") != "V1":
-    die("protocol catalog index no longer emits protocolVersion=V1")
+if catalog_index.get("protocolVersion") != "V2":
+    die("protocol catalog index no longer emits protocolVersion=V2")
 if catalog_index.get("discriminatorField") != "type":
     die("protocol catalog index no longer emits discriminatorField=type")
 if catalog_index.get("requestTypeId") != "WorkbookPlan":
@@ -448,8 +448,8 @@ if append_row_template.get("type") != "TYPED":
 if "cells" not in append_row_template:
     die("catalog APPEND_ROW step template no longer uses cells for the typed row payload")
 
-if request_template.get("protocolVersion") != "V1":
-    die("request template no longer emits protocolVersion=V1")
+if request_template.get("protocolVersion") != "V2":
+    die("request template no longer emits protocolVersion=V2")
 if request_template.get("source", {}).get("type") != "NEW":
     die("request template no longer emits source.type=NEW")
 if request_template.get("persistence", {}).get("type") != "NONE":

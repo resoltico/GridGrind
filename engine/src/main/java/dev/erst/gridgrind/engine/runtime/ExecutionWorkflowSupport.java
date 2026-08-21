@@ -1,14 +1,15 @@
 package dev.erst.gridgrind.engine.runtime;
 
 import dev.erst.gridgrind.contract.assertion.AssertionResult;
+import dev.erst.gridgrind.contract.dto.AssertionModeInput;
 import dev.erst.gridgrind.contract.dto.CalculationReport;
 import dev.erst.gridgrind.contract.dto.ExecutionModeInput;
 import dev.erst.gridgrind.contract.dto.GridGrindProblemDetail;
 import dev.erst.gridgrind.contract.dto.GridGrindProtocolVersion;
-import dev.erst.gridgrind.contract.dto.GridGrindResponse;
-import dev.erst.gridgrind.contract.dto.GridGrindResponsePersistence;
 import dev.erst.gridgrind.contract.dto.RequestWarning;
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
+import dev.erst.gridgrind.contract.dto.WorkbookResult;
+import dev.erst.gridgrind.contract.dto.WorkbookResultPersistence;
 import dev.erst.gridgrind.contract.query.InspectionResult;
 import dev.erst.gridgrind.contract.step.AssertionStep;
 import dev.erst.gridgrind.contract.step.InspectionStep;
@@ -17,7 +18,6 @@ import dev.erst.gridgrind.contract.step.WorkbookStep;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
 import dev.erst.gridgrind.excel.WorkbookLocation;
 import java.io.IOException;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -54,30 +54,32 @@ final class ExecutionWorkflowSupport {
             workbookSupport, calculationSupport, stepSupport, requiredTempFileFactory);
   }
 
-  GridGrindResponse executeWorkbookWorkflow(
+  WorkbookResult executeWorkbookWorkflow(
       GridGrindProtocolVersion protocolVersion,
       WorkbookPlan request,
       ExcelWorkbook workbook,
       ExecutionModeInput executionMode,
       List<RequestWarning> warnings,
       ExecutionJournalRecorder journal,
-      Path workingDirectory) {
+      ExecutionInputBindings bindings) {
     WorkbookLocation workbookLocation =
         ExecutionRequestPaths.workbookLocationFor(
-            request.source(), request.persistence(), workingDirectory);
+            request.source(), request.persistence(), bindings.workingDirectory());
     List<AssertionResult> assertions = new ArrayList<>();
+    CollectedAssertionFailures collectedAssertionFailures = new CollectedAssertionFailures();
     List<InspectionResult> inspections = new ArrayList<>();
     CalculationReport calculation =
         CalculationPolicyExecutor.notRequestedReport(request.calculationPolicy());
     boolean calculationExecuted = false;
     WorkbookExecutionContext executionContext =
-        new WorkbookExecutionContext(protocolVersion, request, workbook, journal);
+        new WorkbookExecutionContext(
+            protocolVersion, request, workbook, journal, warnings, assertions, inspections);
 
     for (int stepIndex = 0; stepIndex < request.steps().size(); stepIndex++) {
       WorkbookStep step = request.steps().get(stepIndex);
       CalculationCheckpoint calculationCheckpoint =
           executeCalculationBeforeStepIfNeeded(
-              protocolVersion, request, workbook, journal, step, calculation, calculationExecuted);
+              executionContext, step, calculation, calculationExecuted);
       calculation = calculationCheckpoint.report();
       calculationExecuted = calculationCheckpoint.executed();
       if (calculationCheckpoint.failureResponse() != null) {
@@ -86,12 +88,30 @@ final class ExecutionWorkflowSupport {
 
       ExecutionJournalRecorder.StepHandle stepHandle = journal.beginStep(stepIndex, step);
       try {
-        executeWorkbookStep(
-            workbook, workbookLocation, executionMode, assertions, inspections, step);
-        stepHandle.succeed();
+        java.util.Optional<AssertionFailedException> collectedFailure =
+            executeWorkbookStep(
+                workbook,
+                workbookLocation,
+                executionMode,
+                request.assertionMode(),
+                assertions,
+                inspections,
+                step);
+        if (collectedFailure.isPresent()) {
+          AssertionFailedException assertionFailure = collectedFailure.orElseThrow();
+          GridGrindProblemDetail.Problem problem =
+              ExecutionResponseSupport.problemFor(
+                  assertionFailure,
+                  stepSupport.executeStepContext(request, stepIndex, step, assertionFailure));
+          stepHandle.fail(
+              problem.code(), problem.category(), problem.context().stage(), problem.message());
+          collectedAssertionFailures.add(stepIndex, step.stepId(), problem);
+        } else {
+          stepHandle.succeed();
+        }
       } catch (Exception exception) {
         return closeFailedStepExecution(
-            executionContext, calculation, assertions, stepIndex, step, stepHandle, exception);
+            executionContext, calculation, stepIndex, step, stepHandle, exception);
       }
     }
 
@@ -99,12 +119,13 @@ final class ExecutionWorkflowSupport {
       ExecutionCalculationSupport.CalculationExecutionOutcome calculationOutcome =
           calculationSupport.executeCalculationPolicy(workbook, request, journal);
       calculation = calculationOutcome.report();
+      warnings.addAll(calculationOutcome.warnings());
       if (calculationOutcome.failure().isPresent()) {
         GridGrindProblemDetail.Problem problem = calculationOutcome.failure().orElseThrow();
         return responseSupport.closeWorkbook(
             workbook,
             ExecutionResponseSupport.failureResponseWithoutPlanOutcomeEvent(
-                protocolVersion, journal, request, calculation, problem, null, null),
+                executionContext.failure(calculation, problem)),
             request,
             journal,
             problem.code(),
@@ -113,16 +134,33 @@ final class ExecutionWorkflowSupport {
       }
     }
 
-    PersistenceResult persistenceResult =
-        persistWorkbook(protocolVersion, request, workbook, journal, workingDirectory, calculation);
+    if (!collectedAssertionFailures.isEmpty()) {
+      CollectedAssertionFailures.Failure firstFailure = collectedAssertionFailures.first();
+      return responseSupport.closeWorkbook(
+          workbook,
+          ExecutionResponseSupport.failureResponseWithoutPlanOutcomeEvent(
+              executionContext.failure(
+                  calculation,
+                  firstFailure.problem(),
+                  firstFailure.stepIndex(),
+                  firstFailure.stepId())),
+          request,
+          journal,
+          firstFailure.problem().code(),
+          firstFailure.stepIndex(),
+          firstFailure.stepId());
+    }
+
+    PersistenceResult persistenceResult = persistWorkbook(executionContext, bindings, calculation);
     if (persistenceResult.failureResponse() != null) {
       return persistenceResult.failureResponse();
     }
 
     return responseSupport.closeWorkbook(
         workbook,
-        new GridGrindResponse.Success(
+        new WorkbookResult.Success(
             protocolVersion,
+            request.planId(),
             journal.buildSuccess(request.steps().size(), false),
             calculation,
             Objects.requireNonNull(
@@ -138,19 +176,19 @@ final class ExecutionWorkflowSupport {
   }
 
   private CalculationCheckpoint executeCalculationBeforeStepIfNeeded(
-      GridGrindProtocolVersion protocolVersion,
-      WorkbookPlan request,
-      ExcelWorkbook workbook,
-      ExecutionJournalRecorder journal,
+      WorkbookExecutionContext executionContext,
       WorkbookStep step,
       CalculationReport currentCalculation,
       boolean calculationExecuted) {
-    if (calculationExecuted || !shouldExecuteCalculationBeforeStep(request, step)) {
+    if (calculationExecuted
+        || !shouldExecuteCalculationBeforeStep(executionContext.request(), step)) {
       return new CalculationCheckpoint(currentCalculation, calculationExecuted, null);
     }
     ExecutionCalculationSupport.CalculationExecutionOutcome outcome =
-        calculationSupport.executeCalculationPolicy(workbook, request, journal);
+        calculationSupport.executeCalculationPolicy(
+            executionContext.workbook(), executionContext.request(), executionContext.journal());
     if (outcome.failure().isEmpty()) {
+      executionContext.warnings().addAll(outcome.warnings());
       return new CalculationCheckpoint(outcome.report(), true, null);
     }
     GridGrindProblemDetail.Problem problem = outcome.failure().orElseThrow();
@@ -158,41 +196,58 @@ final class ExecutionWorkflowSupport {
         outcome.report(),
         true,
         responseSupport.closeWorkbook(
-            workbook,
+            executionContext.workbook(),
             ExecutionResponseSupport.failureResponseWithoutPlanOutcomeEvent(
-                protocolVersion, journal, request, outcome.report(), problem, null, null),
-            request,
-            journal,
+                executionContext.failure(outcome.report(), problem)),
+            executionContext.request(),
+            executionContext.journal(),
             problem.code(),
             null,
             null));
   }
 
-  private void executeWorkbookStep(
+  private java.util.Optional<AssertionFailedException> executeWorkbookStep(
       ExcelWorkbook workbook,
       WorkbookLocation workbookLocation,
       ExecutionModeInput executionMode,
+      AssertionModeInput assertionMode,
       List<AssertionResult> assertions,
       List<InspectionResult> inspections,
       WorkbookStep step)
       throws IOException, AssertionFailedException {
-    switch (step) {
-      case MutationStep mutationStep -> stepSupport.executeMutationStep(workbook, mutationStep);
-      case AssertionStep assertionStep ->
+    return switch (step) {
+      case MutationStep mutationStep -> {
+        stepSupport.executeMutationStep(workbook, mutationStep);
+        yield java.util.Optional.empty();
+      }
+      case AssertionStep assertionStep -> {
+        if (assertionMode == AssertionModeInput.FAIL_FAST) {
           assertions.add(
               stepSupport.executeAssertionStep(
                   assertionStep, workbook, workbookLocation, executionMode));
-      case InspectionStep inspectionStep ->
-          inspections.add(
-              stepSupport.executeInspectionStep(
-                  inspectionStep, workbook, workbookLocation, executionMode));
-    }
+          yield java.util.Optional.empty();
+        }
+        AssertionStepExecution assertionExecution =
+            stepSupport.executeAssertionStepCollecting(
+                assertionStep, workbook, workbookLocation, executionMode);
+        assertions.add(assertionExecution.result());
+        yield switch (assertionExecution) {
+          case AssertionStepExecution.Passed _ -> java.util.Optional.empty();
+          case AssertionStepExecution.Failed failed -> java.util.Optional.of(failed.failure());
+        };
+      }
+      case InspectionStep inspectionStep -> {
+        inspections.add(
+            stepSupport.executeInspectionStep(
+                inspectionStep, workbook, workbookLocation, executionMode));
+        yield java.util.Optional.empty();
+      }
+    };
   }
 
-  private GridGrindResponse closeFailedStepExecution(
+  private WorkbookResult closeFailedStepExecution(
       WorkbookExecutionContext executionContext,
       CalculationReport calculation,
-      List<AssertionResult> assertions,
       int stepIndex,
       WorkbookStep step,
       ExecutionJournalRecorder.StepHandle stepHandle,
@@ -204,23 +259,18 @@ final class ExecutionWorkflowSupport {
     stepHandle.fail(
         problem.code(), problem.category(), problem.context().stage(), problem.message());
     if (exception instanceof AssertionFailedException assertionFailed) {
-      assertions.add(
-          new AssertionResult(
-              dev.erst.gridgrind.contract.assertion.AssertionOutcome.FAILED,
-              assertionFailed.assertionFailure().stepId(),
-              assertionFailed.assertionFailure().assertionType()));
+      executionContext
+          .assertions()
+          .add(
+              new AssertionResult(
+                  dev.erst.gridgrind.contract.assertion.AssertionOutcome.FAILED,
+                  assertionFailed.assertionFailure().stepId(),
+                  assertionFailed.assertionFailure().assertionType()));
     }
     return responseSupport.closeWorkbook(
         executionContext.workbook(),
         ExecutionResponseSupport.failureResponseWithoutPlanOutcomeEvent(
-            executionContext.protocolVersion(),
-            executionContext.journal(),
-            executionContext.request(),
-            calculation,
-            List.copyOf(assertions),
-            problem,
-            stepIndex,
-            step.stepId()),
+            executionContext.failure(calculation, problem, stepIndex, step.stepId())),
         executionContext.request(),
         executionContext.journal(),
         problem.code(),
@@ -229,17 +279,18 @@ final class ExecutionWorkflowSupport {
   }
 
   private PersistenceResult persistWorkbook(
-      GridGrindProtocolVersion protocolVersion,
-      WorkbookPlan request,
-      ExcelWorkbook workbook,
-      ExecutionJournalRecorder journal,
-      Path workingDirectory,
+      WorkbookExecutionContext executionContext,
+      ExecutionInputBindings bindings,
       CalculationReport calculation) {
-    ExecutionJournalRecorder.PhaseHandle persistencePhase = journal.beginPersistence();
+    ExecutionJournalRecorder.PhaseHandle persistencePhase =
+        executionContext.journal().beginPersistence();
     try {
-      GridGrindResponsePersistence.PersistenceOutcome persistence =
+      WorkbookResultPersistence.PersistenceOutcome persistence =
           workbookSupport.persistWorkbook(
-              workbook, request.source(), request.persistence(), workingDirectory);
+              executionContext.workbook(),
+              executionContext.request().source(),
+              executionContext.request().persistence(),
+              bindings);
       persistencePhase.succeed();
       return new PersistenceResult(persistence, null);
     } catch (Exception exception) {
@@ -247,17 +298,18 @@ final class ExecutionWorkflowSupport {
           ExecutionResponseSupport.problemFor(
               exception,
               new dev.erst.gridgrind.contract.dto.ProblemContext.PersistWorkbook(
-                  ExecutionRequestPaths.requestShape(request),
-                  ExecutionRequestPaths.persistenceReference(request, workingDirectory)));
-      persistencePhase.fail("failed (" + problem.code() + ")");
+                  ExecutionRequestPaths.requestShape(executionContext.request()),
+                  ExecutionRequestPaths.persistenceReference(
+                      executionContext.request(), bindings.workingDirectory())));
+      persistencePhase.fail(problem.code());
       return new PersistenceResult(
           null,
           responseSupport.closeWorkbook(
-              workbook,
+              executionContext.workbook(),
               ExecutionResponseSupport.failureResponseWithoutPlanOutcomeEvent(
-                  protocolVersion, journal, request, calculation, problem, null, null),
-              request,
-              journal,
+                  executionContext.failure(calculation, problem)),
+              executionContext.request(),
+              executionContext.journal(),
               problem.code(),
               null,
               null));
@@ -265,37 +317,63 @@ final class ExecutionWorkflowSupport {
   }
 
   private record CalculationCheckpoint(
-      CalculationReport report, boolean executed, @Nullable GridGrindResponse failureResponse) {}
+      CalculationReport report, boolean executed, @Nullable WorkbookResult failureResponse) {}
 
   private record WorkbookExecutionContext(
       GridGrindProtocolVersion protocolVersion,
       WorkbookPlan request,
       ExcelWorkbook workbook,
-      ExecutionJournalRecorder journal) {}
+      ExecutionJournalRecorder journal,
+      List<RequestWarning> warnings,
+      List<AssertionResult> assertions,
+      List<InspectionResult> inspections) {
+    private ExecutionFailure failure(
+        CalculationReport calculation, GridGrindProblemDetail.Problem problem) {
+      return failure(calculation, problem, null, null);
+    }
+
+    private ExecutionFailure failure(
+        CalculationReport calculation,
+        GridGrindProblemDetail.Problem problem,
+        int failedStepIndex,
+        String failedStepId) {
+      return failure(calculation, problem, Integer.valueOf(failedStepIndex), failedStepId);
+    }
+
+    private ExecutionFailure failure(
+        CalculationReport calculation,
+        GridGrindProblemDetail.Problem problem,
+        @Nullable Integer failedStepIndex,
+        @Nullable String failedStepId) {
+      return new ExecutionFailure(
+          new ExecutionFailure.Context(protocolVersion, journal, request, calculation),
+          new ExecutionFailure.Artifacts(warnings, assertions, inspections),
+          new ExecutionFailure.Detail(problem, failedStepIndex, failedStepId));
+    }
+  }
 
   private record PersistenceResult(
-      GridGrindResponsePersistence.@Nullable PersistenceOutcome persistence,
-      @Nullable GridGrindResponse failureResponse) {}
+      WorkbookResultPersistence.@Nullable PersistenceOutcome persistence,
+      @Nullable WorkbookResult failureResponse) {}
 
-  GridGrindResponse executeDirectEventReadWorkflow(
+  WorkbookResult executeDirectEventReadWorkflow(
       GridGrindProtocolVersion protocolVersion,
       WorkbookPlan request,
       List<RequestWarning> warnings,
       ExecutionJournalRecorder journal,
-      Path workingDirectory) {
-    return directEventReadWorkflow.execute(
-        protocolVersion, request, warnings, journal, workingDirectory);
+      ExecutionInputBindings bindings) {
+    return directEventReadWorkflow.execute(protocolVersion, request, warnings, journal, bindings);
   }
 
-  GridGrindResponse executeStreamingWorkflow(
+  WorkbookResult executeStreamingWorkflow(
       GridGrindProtocolVersion protocolVersion,
       WorkbookPlan request,
       ExecutionModeInput executionMode,
       List<RequestWarning> warnings,
       ExecutionJournalRecorder journal,
-      Path workingDirectory) {
+      ExecutionInputBindings bindings) {
     return streamingWorkflow.execute(
-        protocolVersion, request, executionMode, warnings, journal, workingDirectory);
+        protocolVersion, request, executionMode, warnings, journal, bindings);
   }
 
   private static boolean shouldExecuteCalculationBeforeStep(

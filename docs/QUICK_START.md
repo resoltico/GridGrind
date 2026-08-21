@@ -1,8 +1,8 @@
 ---
 afad: "4.0"
-version: "0.72.0"
+version: "0.73.0"
 domain: QUICK_START
-updated: "2026-06-29"
+updated: "2026-08-08"
 route:
   keywords: [gridgrind, quick start, first run, docker, jar, xlsx, example, response]
   questions: ["how do i do a first run with gridgrind", "what is the fastest way to try gridgrind", "how do i run the shipped examples", "how do i get my first successful gridgrind run"]
@@ -94,7 +94,7 @@ checkout, [budget-request.json](../examples/budget-request.json) is the matching
 examples are repo-asset-backed and expect the copied asset paths named by
 `requiredWorkspacePaths`; [EXAMPLES.md](./EXAMPLES.md) calls those out explicitly, and
 `--print-recipe-catalog` exposes that distinction through each example's `requestFileName`,
-`workspaceMode`, and asset-backed `requiredWorkspacePaths`.
+`advisory`, and asset-backed `requiredWorkspacePaths`.
 
 ### Docker Example
 
@@ -158,7 +158,7 @@ After a successful run:
   - `--print-recipe-catalog --lookup DASHBOARD --response dashboard-detail.json` returns one view-specific recipe detail payload, including the exact runnable request profile for that recipe.
   - `--print-recipe --lookup DASHBOARD --response dashboard-request.json` emits one validated executable starter request for one task id.
   - `--print-recipe-keyword-match --query "monthly sales dashboard with charts" --response recipe-keyword-match.json` ranks likely recipes for one English keyword query and falls back to published intent tags when nothing matches.
-  - `--doctor-request` lints a request, resolves source-backed authored inputs, preflights existing workbook-source access, and returns a machine-readable diagnostics report with every independently provable blocking problem it can isolate safely without mutating a workbook, including multiple malformed steps in one pass.
+  - `--doctor-request` lints a request, resolves source-backed authored inputs, preflights existing workbook-source access, and returns a machine-readable diagnostics report with every independently provable blocking problem it can isolate safely without mutating a workbook. Request intake reports duplicate keys, unknown fields, omitted required fields, explicit nulls, malformed scalar values, missing or unknown type discriminators, and constructor-level field validation failures together while retaining valid sibling fragments for safe preflight.
   - `--doctor-request --request request.json --response doctor-report.json` saves that diagnostics report to disk when stdout is not the right transport.
 - Want Java instead of raw JSON: [JAVA_AUTHORING.md](./JAVA_AUTHORING.md) and
   [../examples/java-authoring-workflow.java](../examples/java-authoring-workflow.java)
@@ -175,7 +175,7 @@ After a successful run:
   working directory, while relative paths inside a `--request` file follow that request file's
   directory, and stdin-driven requests use the explicit `--execution-root`; `--temp-root` chooses
   the parent for one private per-run scratch directory rather than a request-root `.gridgrind/tmp`
-- Ignoring stderr after a failed `--response` run: GridGrind prints one line naming the written response or doctor-report file so the structured failure payload is easy to find
+- Ignoring stdout and stderr after a failed `--response` run: when stdout is writable, GridGrind recovers the already-rendered primary payload there unchanged and emits one transport-only JSON notice on stderr; it never moves the primary payload to stderr
 - Expecting GridGrind to save a workbook after a failed run
 
 For hard limits and supported boundaries, see [LIMITATIONS.md](./LIMITATIONS.md).

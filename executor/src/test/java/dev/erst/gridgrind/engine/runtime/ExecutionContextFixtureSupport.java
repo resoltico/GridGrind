@@ -1,7 +1,7 @@
 package dev.erst.gridgrind.engine.runtime;
 
-import dev.erst.gridgrind.contract.dto.GridGrindResponse;
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
+import dev.erst.gridgrind.contract.dto.WorkbookResult;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
 import dev.erst.gridgrind.excel.ExcelWorkbooks;
 import dev.erst.gridgrind.excel.WorkbookTempFileFactory;
@@ -43,24 +43,24 @@ final class ExecutionContextFixtureSupport {
     return ExcelWorkbooks.open(workbookPath, tempFileFactoryFor(workbookPath));
   }
 
-  static ExecutionJournalRecorder startJournal(WorkbookPlan request, ExecutionJournalSink sink) {
+  static ExecutionJournalRecorder startJournal(WorkbookPlan request, ExecutionProgressSink sink) {
     return ExecutionJournalRecorder.start(request, sink, defaultWorkingDirectory());
   }
 
   static ExecutionJournalRecorder startJournal(WorkbookPlan request) {
-    return startJournal(request, ExecutionJournalSink.NOOP);
+    return startJournal(request, ExecutionProgressSink.NOOP);
   }
 
   static ExecutionJournalRecorder startJournal(
-      WorkbookPlan request, ExecutionJournalSink sink, Path workingDirectory) {
+      WorkbookPlan request, ExecutionProgressSink sink, Path workingDirectory) {
     return ExecutionJournalRecorder.start(request, sink, workingDirectory);
   }
 
-  static GridGrindResponse execute(DefaultGridGrindRequestExecutor executor, WorkbookPlan request) {
+  static WorkbookResult execute(DefaultGridGrindRequestExecutor executor, WorkbookPlan request) {
     return executor.execute(request, defaultBindings());
   }
 
-  static GridGrindResponse execute(
+  static WorkbookResult execute(
       DefaultGridGrindRequestExecutor executor, WorkbookPlan request, Path workingDirectory) {
     return executor.execute(
         request, ExecutionInputBindingsFixtureSupport.bindings(workingDirectory));

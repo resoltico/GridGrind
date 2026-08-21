@@ -3,8 +3,8 @@ Input: src/fuzz/resources/dev/erst/gridgrind/jazzer/protocol/ProtocolRequestFuzz
 Harness: protocol-request
 Outcome: EXPECTED_INVALID
 Kind: InvalidRequestShapeException
-Message: Field 'steps[0].action.conditionalFormatting.rules[0].stopIfTrue' must be omitted when absent; explicit null is not accepted.
-Input Bytes: 688
+Message: Unknown field 'steps[0].action.sheetName'
+Input Bytes: 714
 Decode Outcome: INVALID_REQUEST_SHAPE
 Source Kind: NOT_PARSED
 Persistence Kind: NOT_PARSED

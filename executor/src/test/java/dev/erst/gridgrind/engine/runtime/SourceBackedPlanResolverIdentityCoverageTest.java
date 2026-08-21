@@ -65,7 +65,7 @@ class SourceBackedPlanResolverIdentityCoverageTest extends SourceBackedPlanResol
     Path formulaFile = workingDirectory.resolve("formula.txt");
     Path payloadFile = workingDirectory.resolve("payload.bin");
     Files.writeString(titleFile, "Quarterly Budget", StandardCharsets.UTF_8);
-    Files.writeString(formulaFile, "=SUM(B2:B3)", StandardCharsets.UTF_8);
+    Files.writeString(formulaFile, "SUM(B2:B3)", StandardCharsets.UTF_8);
     byte[] payloadBytes = "payload".getBytes(StandardCharsets.UTF_8);
     Files.write(payloadFile, payloadBytes);
 

@@ -79,7 +79,7 @@ class GridGrindShippedExamplesTest {
                     "WORKBOOK_HEALTH",
                     "workbook-health-request.txt",
                     "summary",
-                    ExampleWorkspaceMode.SELF_CONTAINED,
+                    RecipeAdvisory.SELF_CONTAINED,
                     java.util.List.of()));
 
     assertEquals("requestFileName must end with .json", failure.getMessage());
@@ -95,7 +95,7 @@ class GridGrindShippedExamplesTest {
                     "WORKBOOK_HEALTH",
                     "examples\\workbook-health-request.json",
                     "summary",
-                    ExampleWorkspaceMode.SELF_CONTAINED,
+                    RecipeAdvisory.SELF_CONTAINED,
                     java.util.List.of()));
 
     assertEquals(
@@ -110,12 +110,12 @@ class GridGrindShippedExamplesTest {
             "WORKBOOK_HEALTH",
             "workbook-health-request.json",
             "summary",
-            ExampleWorkspaceMode.SELF_CONTAINED,
+            RecipeAdvisory.SELF_CONTAINED,
             java.util.List.of());
     assertEquals("WORKBOOK_HEALTH", entry.id());
     assertEquals("workbook-health-request.json", entry.requestFileName());
     assertEquals("summary", entry.summary());
-    assertEquals(ExampleWorkspaceMode.SELF_CONTAINED, entry.workspaceMode());
+    assertEquals(RecipeAdvisory.SELF_CONTAINED, entry.advisory());
     assertEquals(java.util.List.of(), entry.requiredWorkspacePaths());
   }
 
@@ -129,7 +129,7 @@ class GridGrindShippedExamplesTest {
                     "WORKBOOK_HEALTH",
                     "workbook-health-request.json",
                     "summary",
-                    ExampleWorkspaceMode.SELF_CONTAINED,
+                    RecipeAdvisory.SELF_CONTAINED,
                     null));
 
     assertEquals("requiredWorkspacePaths must not be null", failure.getMessage());
@@ -181,13 +181,13 @@ class GridGrindShippedExamplesTest {
             NullPointerException.class,
             () ->
                 new GridGrindShippedExamples.ExampleRequirements(
-                    ExampleWorkspaceMode.SELF_CONTAINED, null));
+                    RecipeAdvisory.SELF_CONTAINED, null));
     assertEquals(
         "requiredWorkspacePaths must not be null", missingRequiredPathsFailure.getMessage());
   }
 
   @Test
-  void exampleLookupAndWorkspaceModeAccessorsStayBoundToExampleRecipesOnly() {
+  void exampleLookupAndAdvisoryAccessorsStayBoundToExampleRecipesOnly() {
     NullPointerException nullLookup =
         assertThrows(NullPointerException.class, () -> GridGrindShippedExamples.find(null));
     assertEquals("id must not be null", nullLookup.getMessage());
@@ -195,17 +195,15 @@ class GridGrindShippedExamplesTest {
     assertTrue(GridGrindShippedExamples.find("DASHBOARD").isEmpty());
 
     NullPointerException nullId =
-        assertThrows(
-            NullPointerException.class, () -> GridGrindShippedExamples.workspaceModeFor(null));
+        assertThrows(NullPointerException.class, () -> GridGrindShippedExamples.advisoryFor(null));
     assertEquals("id must not be null", nullId.getMessage());
 
     assertEquals(
-        java.util.Optional.of(ExampleWorkspaceMode.REQUIRES_EXAMPLE_ASSETS),
-        GridGrindShippedExamples.workspaceModeFor("PACKAGE_SECURITY_INSPECTION"));
+        java.util.Optional.of(RecipeAdvisory.REQUIRES_EXAMPLE_ASSETS),
+        GridGrindShippedExamples.advisoryFor("PACKAGE_SECURITY_INSPECTION"));
+    assertEquals(java.util.Optional.empty(), GridGrindShippedExamples.advisoryFor("DASHBOARD"));
     assertEquals(
-        java.util.Optional.empty(), GridGrindShippedExamples.workspaceModeFor("DASHBOARD"));
-    assertEquals(
-        java.util.Optional.empty(), GridGrindShippedExamples.workspaceModeFor("NO_SUCH_EXAMPLE"));
+        java.util.Optional.empty(), GridGrindShippedExamples.advisoryFor("NO_SUCH_EXAMPLE"));
   }
 
   @Test

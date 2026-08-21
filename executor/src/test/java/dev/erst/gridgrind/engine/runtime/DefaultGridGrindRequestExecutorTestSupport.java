@@ -5,7 +5,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import dev.erst.gridgrind.contract.dto.*;
 import dev.erst.gridgrind.contract.dto.GridGrindProblemDetail;
-import dev.erst.gridgrind.contract.dto.GridGrindResponsePersistence;
+import dev.erst.gridgrind.contract.dto.WorkbookResultPersistence;
 import dev.erst.gridgrind.contract.query.*;
 import dev.erst.gridgrind.contract.selector.*;
 import dev.erst.gridgrind.contract.step.InspectionStep;
@@ -127,19 +127,19 @@ class DefaultGridGrindRequestExecutorTestSupport
         source, persistence, executionMode, formulaEnvironment, mutations, inspections);
   }
 
-  static GridGrindResponse.Success success(GridGrindResponse response) {
-    return cast(GridGrindResponse.Success.class, response);
+  static WorkbookResult.Success success(WorkbookResult response) {
+    return cast(WorkbookResult.Success.class, response);
   }
 
-  static GridGrindResponse.Failure failure(GridGrindResponse response) {
-    return cast(GridGrindResponse.Failure.class, response);
+  static WorkbookResult.Failure failure(WorkbookResult response) {
+    return cast(WorkbookResult.Failure.class, response);
   }
 
   static ProblemContext.ReadRequest readRequestContext(GridGrindProblemDetail.Problem problem) {
     return cast(ProblemContext.ReadRequest.class, problem.context());
   }
 
-  static ProblemContext.ReadRequest readRequestContext(GridGrindResponse.Failure failure) {
+  static ProblemContext.ReadRequest readRequestContext(WorkbookResult.Failure failure) {
     return readRequestContext(failure.problem());
   }
 
@@ -147,7 +147,7 @@ class DefaultGridGrindRequestExecutorTestSupport
     return cast(ProblemContext.OpenWorkbook.class, problem.context());
   }
 
-  static ProblemContext.OpenWorkbook openWorkbookContext(GridGrindResponse.Failure failure) {
+  static ProblemContext.OpenWorkbook openWorkbookContext(WorkbookResult.Failure failure) {
     return openWorkbookContext(failure.problem());
   }
 
@@ -156,7 +156,7 @@ class DefaultGridGrindRequestExecutorTestSupport
     return cast(ProblemContext.PersistWorkbook.class, problem.context());
   }
 
-  static ProblemContext.PersistWorkbook persistWorkbookContext(GridGrindResponse.Failure failure) {
+  static ProblemContext.PersistWorkbook persistWorkbookContext(WorkbookResult.Failure failure) {
     return persistWorkbookContext(failure.problem());
   }
 
@@ -165,7 +165,7 @@ class DefaultGridGrindRequestExecutorTestSupport
     return cast(ProblemContext.ExecuteRequest.class, problem.context());
   }
 
-  static ProblemContext.ExecuteRequest executeRequestContext(GridGrindResponse.Failure failure) {
+  static ProblemContext.ExecuteRequest executeRequestContext(WorkbookResult.Failure failure) {
     return executeRequestContext(failure.problem());
   }
 
@@ -173,7 +173,7 @@ class DefaultGridGrindRequestExecutorTestSupport
     return cast(ProblemContext.ExecuteStep.class, problem.context());
   }
 
-  static ProblemContext.ExecuteStep executeStepContext(GridGrindResponse.Failure failure) {
+  static ProblemContext.ExecuteStep executeStepContext(WorkbookResult.Failure failure) {
     return executeStepContext(failure.problem());
   }
 
@@ -183,7 +183,7 @@ class DefaultGridGrindRequestExecutorTestSupport
   }
 
   static ProblemContext.ExecuteCalculation.Preflight calculationPreflightContext(
-      GridGrindResponse.Failure failure) {
+      WorkbookResult.Failure failure) {
     return calculationPreflightContext(failure.problem());
   }
 
@@ -193,44 +193,43 @@ class DefaultGridGrindRequestExecutorTestSupport
   }
 
   static ProblemContext.ExecuteCalculation.Execution calculationExecutionContext(
-      GridGrindResponse.Failure failure) {
+      WorkbookResult.Failure failure) {
     return calculationExecutionContext(failure.problem());
   }
 
-  static String savedPath(GridGrindResponse.Success success) {
+  static String savedPath(WorkbookResult.Success success) {
     return writtenExecutionPath(success.persistence());
   }
 
-  static String writtenExecutionPath(GridGrindResponsePersistence.PersistenceOutcome persistence) {
+  static String writtenExecutionPath(WorkbookResultPersistence.PersistenceOutcome persistence) {
     return switch (persistence) {
-      case GridGrindResponsePersistence.PersistenceOutcome.SavedAs savedAs ->
+      case WorkbookResultPersistence.PersistenceOutcome.SavedAs savedAs ->
           writtenExecutionPath(savedAs);
-      case GridGrindResponsePersistence.PersistenceOutcome.Overwritten overwritten ->
+      case WorkbookResultPersistence.PersistenceOutcome.Overwritten overwritten ->
           writtenExecutionPath(overwritten);
-      case GridGrindResponsePersistence.PersistenceOutcome.NotSaved _ ->
+      case WorkbookResultPersistence.PersistenceOutcome.NotSaved _ ->
           throw new AssertionError("expected persisted workbook");
     };
   }
 
-  static String writtenExecutionPath(
-      GridGrindResponsePersistence.PersistenceOutcome.SavedAs savedAs) {
+  static String writtenExecutionPath(WorkbookResultPersistence.PersistenceOutcome.SavedAs savedAs) {
     return writtenExecutionPath(savedAs.write());
   }
 
   static String writtenExecutionPath(
-      GridGrindResponsePersistence.PersistenceOutcome.Overwritten overwritten) {
+      WorkbookResultPersistence.PersistenceOutcome.Overwritten overwritten) {
     return writtenExecutionPath(overwritten.write());
   }
 
-  static String writtenExecutionPath(GridGrindResponsePersistence.WriteResult write) {
+  static String writtenExecutionPath(WorkbookResultPersistence.WriteResult write) {
     return switch (write) {
-      case GridGrindResponsePersistence.WriteResult.Written written -> written.executionPath();
-      case GridGrindResponsePersistence.WriteResult.NotWritten _ ->
+      case WorkbookResultPersistence.WriteResult.Written written -> written.executionPath();
+      case WorkbookResultPersistence.WriteResult.NotWritten _ ->
           throw new AssertionError("expected written workbook");
     };
   }
 
-  static List<String> stepIds(GridGrindResponse.Success success) {
+  static List<String> stepIds(WorkbookResult.Success success) {
     return inspectionIds(success);
   }
 
@@ -259,15 +258,15 @@ class DefaultGridGrindRequestExecutorTestSupport
   }
 
   static ExecutionJournalRecorder startJournal(
-      WorkbookPlan request, ExecutionJournalSink sink, Path workingDirectory) {
+      WorkbookPlan request, ExecutionProgressSink sink, Path workingDirectory) {
     return ExecutionContextFixtureSupport.startJournal(request, sink, workingDirectory);
   }
 
-  static GridGrindResponse execute(DefaultGridGrindRequestExecutor executor, WorkbookPlan request) {
+  static WorkbookResult execute(DefaultGridGrindRequestExecutor executor, WorkbookPlan request) {
     return ExecutionContextFixtureSupport.execute(executor, request);
   }
 
-  static GridGrindResponse execute(
+  static WorkbookResult execute(
       DefaultGridGrindRequestExecutor executor, WorkbookPlan request, Path workingDirectory) {
     return ExecutionContextFixtureSupport.execute(executor, request, workingDirectory);
   }

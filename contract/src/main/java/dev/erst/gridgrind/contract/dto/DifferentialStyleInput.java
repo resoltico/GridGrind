@@ -10,10 +10,10 @@ public record DifferentialStyleInput(
     @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<Boolean> bold,
     @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<Boolean> italic,
     @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<FontHeightInput> fontHeight,
-    @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<String> fontColor,
+    @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<ColorInput> fontColor,
     @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<Boolean> underline,
     @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<Boolean> strikeout,
-    @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<String> fillColor,
+    @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<ColorInput> fillColor,
     @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<DifferentialBorderInput> border) {
   public DifferentialStyleInput {
     Objects.requireNonNull(numberFormat, "numberFormat must not be null");
@@ -33,8 +33,6 @@ public record DifferentialStyleInput(
               }
               return value;
             });
-    fontColor = fontColor.map(value -> ProtocolRgbColorSupport.requireRgbHex(value, "fontColor"));
-    fillColor = fillColor.map(value -> ProtocolRgbColorSupport.requireRgbHex(value, "fillColor"));
     if (hasNoStyleAttributes(
         numberFormat,
         bold,

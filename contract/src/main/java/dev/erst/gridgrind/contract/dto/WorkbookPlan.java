@@ -26,11 +26,13 @@ public record WorkbookPlan(
     @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<String> planId,
     WorkbookSource source,
     WorkbookPersistence persistence,
-    @JsonInclude(
+    @ProtocolField(optional = true)
+        @JsonInclude(
             value = JsonInclude.Include.CUSTOM,
             valueFilter = ExecutionPolicyInput.DefaultFilter.class)
         ExecutionPolicyInput execution,
-    @JsonInclude(
+    @ProtocolField(optional = true)
+        @JsonInclude(
             value = JsonInclude.Include.CUSTOM,
             valueFilter = FormulaEnvironmentInput.EmptyFilter.class)
         FormulaEnvironmentInput formulaEnvironment,
@@ -132,6 +134,11 @@ public record WorkbookPlan(
     return effectiveExecution().effectiveCalculation();
   }
 
+  /** Returns the effective assertion policy after default normalization. */
+  public AssertionModeInput assertionMode() {
+    return effectiveExecution().effectiveAssertionMode();
+  }
+
   /** Returns the authored steps partitioned by family in authored order. */
   public StepPartition stepPartition() {
     return partitionSteps(steps);
@@ -222,11 +229,6 @@ public record WorkbookPlan(
         implements WorkbookPersistence {
       public Overwrite {
         security = normalizePersistenceSecurity(security);
-      }
-
-      /** Overwrites the source workbook with no explicit package-security persistence settings. */
-      public Overwrite() {
-        this(Optional.empty());
       }
 
       /** Overwrites the source workbook with explicit package-security persistence settings. */

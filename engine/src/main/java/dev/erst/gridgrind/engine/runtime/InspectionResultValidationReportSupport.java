@@ -11,11 +11,11 @@ import dev.erst.gridgrind.contract.dto.DifferentialBorderReport;
 import dev.erst.gridgrind.contract.dto.DifferentialBorderSideReport;
 import dev.erst.gridgrind.contract.dto.DifferentialStyleReport;
 import dev.erst.gridgrind.contract.source.TextSourceInput;
+import dev.erst.gridgrind.excel.ExcelBorderSide;
 import dev.erst.gridgrind.excel.ExcelConditionalFormattingBlockSnapshot;
 import dev.erst.gridgrind.excel.ExcelConditionalFormattingRuleSnapshot;
 import dev.erst.gridgrind.excel.ExcelConditionalFormattingThresholdSnapshot;
 import dev.erst.gridgrind.excel.ExcelDifferentialBorder;
-import dev.erst.gridgrind.excel.ExcelDifferentialBorderSide;
 import dev.erst.gridgrind.excel.ExcelDifferentialStyleSnapshot;
 import dev.erst.gridgrind.excel.validation.ExcelDataValidationDefinition;
 import dev.erst.gridgrind.excel.validation.ExcelDataValidationRule;
@@ -142,10 +142,10 @@ final class InspectionResultValidationReportSupport {
             style.fontHeight() == null
                 ? null
                 : InspectionResultCellStyleReportSupport.toFontHeightReport(style.fontHeight()),
-            Optional.ofNullable(style.fontColor()),
+            InspectionResultCellStyleReportSupport.toCellColorReport(style.fontColor()),
             style.underline(),
             style.strikeout(),
-            Optional.ofNullable(style.fillColor()),
+            InspectionResultCellStyleReportSupport.toCellColorReport(style.fillColor()),
             toDifferentialBorderReport(style.border()),
             style.unsupportedFeatures()));
   }
@@ -165,11 +165,13 @@ final class InspectionResultValidationReportSupport {
   }
 
   static Optional<DifferentialBorderSideReport> toDifferentialBorderSideReport(
-      @org.jspecify.annotations.Nullable ExcelDifferentialBorderSide side) {
+      @org.jspecify.annotations.Nullable ExcelBorderSide side) {
     return side == null
         ? Optional.empty()
         : Optional.of(
-            new DifferentialBorderSideReport(side.style(), Optional.ofNullable(side.color())));
+            new DifferentialBorderSideReport(
+                side.style(),
+                side.color().flatMap(InspectionResultCellStyleReportSupport::toCellColorReport)));
   }
 
   private static Optional<DataValidationPromptInput> promptInput(

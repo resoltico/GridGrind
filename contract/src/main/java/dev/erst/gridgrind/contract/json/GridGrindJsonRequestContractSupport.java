@@ -1,12 +1,9 @@
 package dev.erst.gridgrind.contract.json;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import dev.erst.gridgrind.contract.catalog.GridGrindProtocolContractSupport;
-import java.lang.reflect.Field;
 import java.lang.reflect.RecordComponent;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -48,13 +45,13 @@ final class GridGrindJsonRequestContractSupport {
       @SuppressWarnings("unchecked")
       Class<? extends Record> recordType = (Class<? extends Record>) targetType;
       List<String> requiredFieldNames =
-          GridGrindProtocolContractSupport.requiredFieldNames(recordType);
+          GridGrindProtocolContractSupport.effectiveObjectContract(recordType).requiredFields();
       for (RecordComponent component : recordType.getRecordComponents()) {
         if (isIgnored(component)) {
           continue;
         }
-        String wireName = wireName(component);
-        if (requiredFieldNames.contains(component.getName())) {
+        String wireName = GridGrindProtocolContractSupport.wireFieldName(component);
+        if (requiredFieldNames.contains(wireName)) {
           requiredComponents.add(new RequiredComponent(wireName, ComponentKind.FIELD));
         }
       }
@@ -63,27 +60,7 @@ final class GridGrindJsonRequestContractSupport {
   }
 
   private static boolean isIgnored(RecordComponent component) {
-    return recordField(component).isAnnotationPresent(JsonIgnore.class)
-        || component.getAccessor().isAnnotationPresent(JsonIgnore.class);
-  }
-
-  private static String wireName(RecordComponent component) {
-    JsonProperty fieldProperty = recordField(component).getAnnotation(JsonProperty.class);
-    if (fieldProperty != null && !fieldProperty.value().isBlank()) {
-      return fieldProperty.value();
-    }
-    JsonProperty accessorProperty = component.getAccessor().getAnnotation(JsonProperty.class);
-    if (accessorProperty != null && !accessorProperty.value().isBlank()) {
-      return accessorProperty.value();
-    }
-    return component.getName();
-  }
-
-  private static Field recordField(RecordComponent component) {
-    return Arrays.stream(component.getDeclaringRecord().getDeclaredFields())
-        .filter(field -> field.getName().equals(component.getName()))
-        .findFirst()
-        .orElseThrow();
+    return component.getAccessor().isAnnotationPresent(JsonIgnore.class);
   }
 
   private record RequiredComponent(String wireName, ComponentKind kind) {

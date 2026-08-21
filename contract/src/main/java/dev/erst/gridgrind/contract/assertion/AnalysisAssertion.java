@@ -35,7 +35,6 @@ public sealed interface AnalysisAssertion extends Assertion
   @ProtocolTypeMetadata(
       id = "EXPECT_ANALYSIS_FINDING_PRESENT",
       summary = "Run one analysis query and require at least one matching finding.",
-      optionalFields = {"severity", "messageContains"},
       targetingMode = ProtocolTargetingMode.ANALYSIS_QUERY,
       targetSelectorRule = ANALYSIS_RULE)
   record AnalysisFindingPresent(
@@ -63,7 +62,6 @@ public sealed interface AnalysisAssertion extends Assertion
   @ProtocolTypeMetadata(
       id = "EXPECT_ANALYSIS_FINDING_ABSENT",
       summary = "Run one analysis query and require no matching finding.",
-      optionalFields = {"severity", "messageContains"},
       targetingMode = ProtocolTargetingMode.ANALYSIS_QUERY,
       targetSelectorRule = ANALYSIS_RULE)
   record AnalysisFindingAbsent(
@@ -89,7 +87,7 @@ public sealed interface AnalysisAssertion extends Assertion
   }
 
   /** Returns the selector types accepted by one analysis assertion instance. */
-  static Class<? extends Selector>[] allowedTargetTypes(AnalysisAssertion assertion) {
+  public static Class<? extends Selector>[] targetSelectorsFor(AnalysisAssertion assertion) {
     Objects.requireNonNull(assertion, "assertion must not be null");
     return switch (assertion) {
       case AnalysisMaxSeverity analysisMaxSeverity ->

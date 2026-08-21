@@ -3,6 +3,7 @@ package dev.erst.gridgrind.engine.runtime;
 import static org.junit.jupiter.api.Assertions.*;
 
 import dev.erst.gridgrind.contract.dto.*;
+import dev.erst.gridgrind.excel.ExcelColor;
 import dev.erst.gridgrind.excel.ExcelConditionalFormattingBlockSnapshot;
 import dev.erst.gridgrind.excel.ExcelConditionalFormattingRuleSnapshot;
 import dev.erst.gridgrind.excel.ExcelConditionalFormattingThresholdSnapshot;
@@ -34,10 +35,10 @@ class ConditionalFormattingEntryReportTest {
                             true,
                             false,
                             ExcelFontHeight.fromPoints(BigDecimal.valueOf(12)),
-                            "#102030",
+                            ExcelColor.rgb("#102030"),
                             true,
                             true,
-                            "#E0F0AA",
+                            ExcelColor.rgb("#E0F0AA"),
                             null,
                             List.of())),
                     new ExcelConditionalFormattingRuleSnapshot.CellValueRule(

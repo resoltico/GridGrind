@@ -45,6 +45,24 @@ public final class SelectorJsonSupport {
     return KNOWN_TYPE_IDS.contains(typeId);
   }
 
+  /** Returns the concrete selector record represented by one shipped wire `type` id. */
+  public static java.util.Optional<Class<? extends Selector>> typeFor(String typeId) {
+    Objects.requireNonNull(typeId, "typeId must not be null");
+    return TYPE_IDS.entrySet().stream()
+        .filter(entry -> entry.getValue().equals(typeId))
+        .map(Map.Entry::getKey)
+        .<Class<? extends Selector>>map(selectorType -> selectorType.asSubclass(Selector.class))
+        .findFirst();
+  }
+
+  /** Returns every concrete selector record in stable wire-type order. */
+  public static List<Class<? extends Record>> selectorTypes() {
+    return TYPE_IDS.entrySet().stream()
+        .sorted(Map.Entry.comparingByValue())
+        .<Class<? extends Record>>map(entry -> entry.getKey().asSubclass(Record.class))
+        .toList();
+  }
+
   /** Returns the allowed wire `type` ids represented by one selector root or concrete subtype. */
   public static List<String> typeIdsFor(Class<?> selectorType) {
     JsonSubTypes jsonSubTypes = selectorType.getAnnotation(JsonSubTypes.class);

@@ -98,7 +98,7 @@ class GridGrindRequestProblemSupportTest {
             ProblemContextRequestSurfaces.JsonLocation.pathOnly("steps[0].stepId"));
 
     assertEquals(
-        "Add protocolVersion: \"V1\" at the request root.",
+        "Add protocolVersion: \"V2\" at the request root.",
         GridGrindRequestProblemSupport.resolution(
             new MissingRequiredField("protocolVersion"), requestContext));
     assertEquals(
@@ -129,7 +129,7 @@ class GridGrindRequestProblemSupportTest {
         "Provide a path ending in .xlsx for field 'source.path'.",
         GridGrindRequestProblemSupport.resolution(
             new NonXlsxPath(".xls", java.util.Optional.of("path")),
-            new ProblemContext.ReadRequest(
+            new ProblemContext.BindRequest(
                 ProblemContextRequestSurfaces.RequestInput.standardInput(),
                 ProblemContextRequestSurfaces.JsonLocation.pathOnly("source.path"))));
     assertEquals(

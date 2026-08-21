@@ -1,7 +1,11 @@
 package dev.erst.gridgrind.contract.query;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import dev.erst.gridgrind.contract.catalog.ProtocolTypeMetadata;
+import dev.erst.gridgrind.contract.dto.ProtocolBooleanDefault;
+import dev.erst.gridgrind.contract.dto.ProtocolField;
 import dev.erst.gridgrind.contract.selector.CellSelector;
 import dev.erst.gridgrind.contract.selector.RangeSelector;
 import dev.erst.gridgrind.contract.selector.SheetSelector;
@@ -41,7 +45,6 @@ public sealed interface SheetIntrospectionQuery extends InspectionQuery.Introspe
       summary =
           "Return exact cell snapshots for explicit addresses."
               + " Omit projection for the default compact VALUE readback.",
-      optionalFields = {"projection"},
       targetSelectors = {
         CellSelector.ByAddress.class,
         CellSelector.ByAddresses.class,
@@ -71,15 +74,26 @@ public sealed interface SheetIntrospectionQuery extends InspectionQuery.Introspe
           "Return a rectangular window of cell snapshots."
               + " Omit projection for the default compact VALUE readback and omit"
               + " includeBlanks for the sparse default.",
-      optionalFields = {"projection", "includeBlanks"},
       targetSelectors = {RangeSelector.RectangularWindow.class})
   record GetWindow(
       @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<CellReadProjection> projection,
-      @JsonInclude(JsonInclude.Include.NON_DEFAULT) boolean includeBlanks)
+      @ProtocolField(optional = true, booleanDefault = ProtocolBooleanDefault.FALSE)
+          @JsonInclude(JsonInclude.Include.NON_DEFAULT)
+          boolean includeBlanks)
       implements SheetIntrospectionQuery {
     /** Creates a sparse window query that relies on the default cell-read projection. */
     public GetWindow() {
       this(Optional.empty(), false);
+    }
+
+    /** Reads a window request while normalizing the omitted sparse-window flag. */
+    @JsonCreator
+    public static GetWindow create(
+        @JsonProperty("projection") Optional<CellReadProjection> projection,
+        @JsonProperty("includeBlanks") Boolean includeBlanks) {
+      return new GetWindow(
+          projection == null ? Optional.empty() : projection,
+          ProtocolBooleanDefault.FALSE.resolve(includeBlanks));
     }
 
     public GetWindow {

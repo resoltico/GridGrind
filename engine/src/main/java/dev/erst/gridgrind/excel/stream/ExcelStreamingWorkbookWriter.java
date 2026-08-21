@@ -131,6 +131,8 @@ public final class ExcelStreamingWorkbookWriter implements AutoCloseable {
       }
       case ExcelCellValue.FormulaValue formulaValue ->
           ExcelFormulaWriteSupport.setAuthoredFormula(cell, formulaValue.expression());
+      case ExcelCellValue.RawFormulaValue rawFormulaValue ->
+          ExcelFormulaWriteSupport.setOpaqueFormula(cell, rawFormulaValue.expression());
     }
   }
 }

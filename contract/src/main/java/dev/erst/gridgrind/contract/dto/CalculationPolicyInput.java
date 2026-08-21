@@ -11,11 +11,14 @@ import java.util.Objects;
  * recalc.
  */
 public record CalculationPolicyInput(
-    @JsonInclude(
+    @ProtocolField(optional = true)
+        @JsonInclude(
             value = JsonInclude.Include.CUSTOM,
             valueFilter = CalculationStrategyInput.DefaultFilter.class)
         CalculationStrategyInput strategy,
-    @JsonInclude(JsonInclude.Include.NON_DEFAULT) boolean markRecalculateOnOpen) {
+    @ProtocolField(optional = true, booleanDefault = ProtocolBooleanDefault.FALSE)
+        @JsonInclude(JsonInclude.Include.NON_DEFAULT)
+        boolean markRecalculateOnOpen) {
   /** Returns the default do-not-calculate policy with no open-time recalculation request. */
   public static CalculationPolicyInput defaults() {
     return new CalculationPolicyInput(new CalculationStrategyInput.DoNotCalculate(), false);
@@ -37,7 +40,7 @@ public record CalculationPolicyInput(
       @JsonProperty("markRecalculateOnOpen") Boolean markRecalculateOnOpen) {
     return new CalculationPolicyInput(
         strategy == null ? new CalculationStrategyInput.DoNotCalculate() : strategy,
-        Boolean.TRUE.equals(markRecalculateOnOpen));
+        ProtocolBooleanDefault.FALSE.resolve(markRecalculateOnOpen));
   }
 
   /** Returns whether this policy normalizes to the default do-not-calculate behavior. */
@@ -50,6 +53,25 @@ public record CalculationPolicyInput(
   @JsonIgnore
   public CalculationStrategyInput effectiveStrategy() {
     return strategy;
+  }
+
+  /** Returns whether this policy permits the constrained EVENT_READ execution family. */
+  @JsonIgnore
+  public boolean allowsEventRead() {
+    return strategy instanceof CalculationStrategyInput.DoNotCalculate && !markRecalculateOnOpen;
+  }
+
+  /** Returns whether this policy permits the constrained STREAMING_WRITE execution family. */
+  @JsonIgnore
+  public boolean allowsStreamingWrite() {
+    return strategy instanceof CalculationStrategyInput.DoNotCalculate;
+  }
+
+  /** Returns whether this policy needs all mutation steps before observation steps. */
+  @JsonIgnore
+  public boolean requiresMutationPrefix() {
+    return !(strategy instanceof CalculationStrategyInput.DoNotCalculate)
+        && !(strategy instanceof CalculationStrategyInput.DeferredCalculation);
   }
 
   /** Custom Jackson inclusion filter that omits the standard do-not-calculate policy. */

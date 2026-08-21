@@ -8,6 +8,6 @@ public record WindowRowReport(int rowIndex, List<CellReport> cells) {
     if (rowIndex < 0) {
       throw new IllegalArgumentException("rowIndex must not be negative");
     }
-    cells = GridGrindResponseSupport.copyValues(cells, "cells");
+    cells = WorkbookResultSupport.copyValues(cells, "cells");
   }
 }

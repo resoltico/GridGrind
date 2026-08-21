@@ -30,7 +30,7 @@ public record SchemaColumnReport(
     if (blankCellCount < 0) {
       throw new IllegalArgumentException("blankCellCount must not be negative");
     }
-    observedTypes = GridGrindResponseSupport.copyValues(observedTypes, "observedTypes");
+    observedTypes = WorkbookResultSupport.copyValues(observedTypes, "observedTypes");
     Set<String> observedTypeNames = new LinkedHashSet<>();
     int observedTypeCountTotal = 0;
     for (TypeCountReport observedType : observedTypes) {

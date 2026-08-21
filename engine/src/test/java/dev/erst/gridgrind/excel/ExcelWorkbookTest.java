@@ -373,10 +373,10 @@ class ExcelWorkbookTest {
                                   Optional.of(true),
                                   Optional.empty(),
                                   Optional.empty(),
-                                  Optional.of("#102030"),
+                                  Optional.of(ExcelColor.rgb("#102030")),
                                   Optional.empty(),
                                   Optional.empty(),
-                                  Optional.of("#E0F0AA"),
+                                  Optional.of(ExcelColor.rgb("#E0F0AA")),
                                   Optional.empty()))))));
       workbook.sheet("Source").layout().mergeCells("A1:B1");
       workbook.sheet("Source").layout().setPane(new ExcelSheetPane.Frozen(1, 1, 1, 1));
@@ -745,13 +745,13 @@ class ExcelWorkbookTest {
       workbook.write(outputStream);
     }
 
-    IllegalArgumentException exception =
+    WorkbookNotOpenableException exception =
         assertThrows(
-            IllegalArgumentException.class,
+            WorkbookNotOpenableException.class,
             () ->
                 ExcelWorkbooks.open(
                     workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory()));
-    assertEquals("Only .xlsx workbooks are supported", exception.getMessage());
+    assertTrue(exception.getMessage().contains("not openable"));
   }
 
   @SuppressWarnings({"PMD.CloseResource", "PMD.UseTryWithResources"})
@@ -781,15 +781,15 @@ class ExcelWorkbookTest {
       workbook.createSheet("Budget").createRow(0).createCell(0).setCellValue("Legacy");
       workbook.write(outputStream);
     }
-    IllegalArgumentException unsupportedFormat =
+    WorkbookNotOpenableException unsupportedFormat =
         assertThrows(
-            IllegalArgumentException.class,
+            WorkbookNotOpenableException.class,
             () ->
                 ExcelWorkbooks.open(
                     legacyWorkbookPath,
                     defaults,
                     ExcelTempFileFactoryTestSupport.tempFileFactory()));
-    assertEquals("Only .xlsx workbooks are supported", unsupportedFormat.getMessage());
+    assertTrue(unsupportedFormat.getMessage().contains("not openable"));
 
     try (ExcelWorkbook workbook = ExcelWorkbooks.create(null)) {
       assertEquals(

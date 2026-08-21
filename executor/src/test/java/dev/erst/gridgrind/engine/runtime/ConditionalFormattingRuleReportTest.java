@@ -3,10 +3,11 @@ package dev.erst.gridgrind.engine.runtime;
 import static org.junit.jupiter.api.Assertions.*;
 
 import dev.erst.gridgrind.contract.dto.*;
+import dev.erst.gridgrind.excel.ExcelBorderSide;
+import dev.erst.gridgrind.excel.ExcelColor;
 import dev.erst.gridgrind.excel.ExcelConditionalFormattingRuleSnapshot;
 import dev.erst.gridgrind.excel.ExcelConditionalFormattingThresholdSnapshot;
 import dev.erst.gridgrind.excel.ExcelDifferentialBorder;
-import dev.erst.gridgrind.excel.ExcelDifferentialBorderSide;
 import dev.erst.gridgrind.excel.ExcelDifferentialStyleSnapshot;
 import dev.erst.gridgrind.excel.foundation.ExcelBorderStyle;
 import dev.erst.gridgrind.excel.foundation.ExcelComparisonOperator;
@@ -125,21 +126,21 @@ class ConditionalFormattingRuleReportTest {
   void convertsAndValidatesDifferentialStyleAndBorderReports() {
     ExcelDifferentialBorder border =
         new ExcelDifferentialBorder(
-            new ExcelDifferentialBorderSide(ExcelBorderStyle.THIN, "#102030"),
-            new ExcelDifferentialBorderSide(ExcelBorderStyle.DASHED, "#203040"),
-            new ExcelDifferentialBorderSide(ExcelBorderStyle.DOUBLE, "#304050"),
-            new ExcelDifferentialBorderSide(ExcelBorderStyle.HAIR, "#405060"),
-            new ExcelDifferentialBorderSide(ExcelBorderStyle.DOTTED, "#506070"));
+            borderSide(ExcelBorderStyle.THIN, "#102030"),
+            borderSide(ExcelBorderStyle.DASHED, "#203040"),
+            borderSide(ExcelBorderStyle.DOUBLE, "#304050"),
+            borderSide(ExcelBorderStyle.HAIR, "#405060"),
+            borderSide(ExcelBorderStyle.DOTTED, "#506070"));
     ExcelDifferentialStyleSnapshot style =
         new ExcelDifferentialStyleSnapshot(
             null,
             true,
             false,
             null,
-            "#111111",
+            ExcelColor.rgb("#111111"),
             true,
             false,
-            "#EEEEEE",
+            ExcelColor.rgb("#EEEEEE"),
             border,
             List.of(ExcelConditionalFormattingUnsupportedFeature.ALIGNMENT));
 
@@ -150,27 +151,23 @@ class ConditionalFormattingRuleReportTest {
     DifferentialBorderReport sparseBorderReport =
         InspectionResultValidationReportSupport.toDifferentialBorderReport(
                 new ExcelDifferentialBorder(
-                    new ExcelDifferentialBorderSide(ExcelBorderStyle.THIN, "#102030"),
-                    null,
-                    null,
-                    null,
-                    null))
+                    borderSide(ExcelBorderStyle.THIN, "#102030"), null, null, null, null))
             .orElseThrow();
     DifferentialBorderSideReport borderSideReport =
         InspectionResultValidationReportSupport.toDifferentialBorderSideReport(
-                new ExcelDifferentialBorderSide(ExcelBorderStyle.THICK, "#AABBCC"))
+                borderSide(ExcelBorderStyle.THICK, "#AABBCC"))
             .orElseThrow();
 
     assertTrue(InspectionResultValidationReportSupport.toDifferentialStyleReport(null).isEmpty());
     assertTrue(InspectionResultValidationReportSupport.toDifferentialBorderReport(null).isEmpty());
-    assertEquals(Optional.of("#111111"), report.fontColor());
-    assertEquals(Optional.of("#EEEEEE"), report.fillColor());
+    assertEquals(Optional.of(CellColorReport.rgb("#111111")), report.fontColor());
+    assertEquals(Optional.of(CellColorReport.rgb("#EEEEEE")), report.fillColor());
     assertEquals(
         List.of(ExcelConditionalFormattingUnsupportedFeature.ALIGNMENT),
         report.unsupportedFeatures());
-    assertEquals(ExcelBorderStyle.DASHED, borderReport.top().orElseThrow().style());
+    assertEquals(Optional.of(ExcelBorderStyle.DASHED), borderReport.top().orElseThrow().style());
     assertTrue(sparseBorderReport.top().isEmpty());
-    assertEquals(Optional.of("#AABBCC"), borderSideReport.color());
+    assertEquals(Optional.of(CellColorReport.rgb("#AABBCC")), borderSideReport.color());
 
     assertThrows(
         IllegalArgumentException.class,
@@ -244,5 +241,9 @@ class ConditionalFormattingRuleReportTest {
     assertThrows(
         NullPointerException.class,
         () -> new ConditionalFormattingThresholdReport(null, null, null));
+  }
+
+  private static ExcelBorderSide borderSide(ExcelBorderStyle style, String rgb) {
+    return new ExcelBorderSide(Optional.of(style), Optional.of(ExcelColor.rgb(rgb)));
   }
 }

@@ -30,7 +30,7 @@ class GridGrindProtocolCatalogTest {
         GridGrindJson.readRequest(GridGrindJsonOutput.writeRequestBytes(template));
     var templateTree = GridGrindJsonOutput.requestTree(template);
 
-    assertEquals(GridGrindProtocolVersion.V1, template.protocolVersion());
+    assertEquals(GridGrindProtocolVersion.V2, template.protocolVersion());
     assertTrue(template.execution().isDefault());
     assertTrue(template.formulaEnvironment().isEmpty());
     assertTrue(template.steps().isEmpty());
@@ -162,26 +162,26 @@ class GridGrindProtocolCatalogTest {
   }
 
   @Test
-  void requiredFieldsFiltersOptionalRecordComponents() {
+  void requiredFieldsComeFromRecordMetadataRatherThanCatalogArguments() {
     assertEquals(
-        List.of("stepId", "action"),
-        CatalogTypeEntryFactory.requiredFields(MutationStep.class, List.of("target")));
+        List.of("stepId", "target", "action"),
+        CatalogTypeEntryFactory.requiredFields(MutationStep.class));
   }
 
   @Test
   void requiredFieldsExcludeCatalogAndJsonIgnoredRecordComponents() {
     assertEquals(
         List.of("visible"),
-        CatalogTypeEntryFactory.requiredFields(CatalogIgnoredComponentRecord.class, List.of()));
+        CatalogTypeEntryFactory.requiredFields(CatalogIgnoredComponentRecord.class));
     assertEquals(
         List.of("visible"),
-        CatalogTypeEntryFactory.requiredFields(CatalogIgnoredAccessorRecord.class, List.of()));
+        CatalogTypeEntryFactory.requiredFields(CatalogIgnoredAccessorRecord.class));
     assertEquals(
         List.of("visible"),
-        CatalogTypeEntryFactory.requiredFields(JsonIgnoredComponentRecord.class, List.of()));
+        CatalogTypeEntryFactory.requiredFields(JsonIgnoredComponentRecord.class));
     assertEquals(
         List.of("visible"),
-        CatalogTypeEntryFactory.requiredFields(JsonIgnoredAccessorRecord.class, List.of()));
+        CatalogTypeEntryFactory.requiredFields(JsonIgnoredAccessorRecord.class));
   }
 
   @Test
@@ -247,7 +247,37 @@ class GridGrindProtocolCatalogTest {
     assertEquals(FieldRequirement.OPTIONAL, entry.field("mode").orElseThrow().requirement());
     assertEquals(FieldRequirement.OPTIONAL, entry.field("journal").orElseThrow().requirement());
     assertEquals(FieldRequirement.OPTIONAL, entry.field("calculation").orElseThrow().requirement());
+    assertEquals(
+        FieldRequirement.OPTIONAL, entry.field("assertionMode").orElseThrow().requirement());
     assertTrue(entry.summary().contains("omit any nested execution field"));
+    assertTrue(entry.summary().contains("FAIL_FAST"));
+  }
+
+  @Test
+  void catalogPublishesStructuredProgressInsteadOfJournalEvents() {
+    NestedTypeGroup progress =
+        (NestedTypeGroup)
+            GridGrindProtocolCatalog.lookupValueFor("nestedTypes:executionProgressEventTypes")
+                .orElseThrow();
+    TypeEntry started =
+        progress.types().stream()
+            .filter(type -> "STARTED".equals(type.id()))
+            .findFirst()
+            .orElseThrow();
+    TypeEntry failed =
+        progress.types().stream()
+            .filter(type -> "FAILED".equals(type.id()))
+            .findFirst()
+            .orElseThrow();
+
+    assertEquals("status", progress.discriminatorField());
+    assertTrue(started.field("timestamp").isPresent());
+    assertTrue(started.field("category").orElseThrow().enumValues().contains("STEP"));
+    assertTrue(failed.field("problemCode").orElseThrow().enumValues().contains("IO_ERROR"));
+    assertFalse(started.field("problemCode").isPresent());
+    assertFalse(failed.field("detail").isPresent());
+    assertTrue(
+        GridGrindProtocolCatalog.lookupValueFor("plainTypes:executionJournalEventType").isEmpty());
   }
 
   @Test
@@ -259,12 +289,25 @@ class GridGrindProtocolCatalogTest {
     TypeEntry entry = encryption.type();
 
     assertTrue(entry.field("password").isPresent());
+    assertTrue(entry.field("password").orElseThrow().secret());
     assertFalse(entry.field("mode").isPresent());
     assertEquals(FieldRequirement.OPTIONAL, entry.field("cipher").orElseThrow().requirement());
     assertEquals(FieldRequirement.OPTIONAL, entry.field("hash").orElseThrow().requirement());
     assertTrue(entry.summary().contains("AGILE packages only"));
     assertTrue(entry.summary().contains("AES_256"));
     assertTrue(entry.summary().contains("SHA_512"));
+  }
+
+  @Test
+  void catalogPublishesRecordDeclaredSecretMarkers() {
+    PlainTypeGroup signature =
+        (PlainTypeGroup)
+            GridGrindProtocolCatalog.lookupValueFor("plainTypes:ooxmlSignatureInputType")
+                .orElseThrow();
+
+    assertTrue(signature.type().field("keystorePassword").orElseThrow().secret());
+    assertTrue(signature.type().field("keyPassword").orElseThrow().secret());
+    assertFalse(signature.type().field("pkcs12Path").orElseThrow().secret());
   }
 
   @Test
@@ -281,6 +324,8 @@ class GridGrindProtocolCatalogTest {
         FieldRequirement.OPTIONAL, getWindow.field("projection").orElseThrow().requirement());
     assertEquals(
         FieldRequirement.OPTIONAL, getWindow.field("includeBlanks").orElseThrow().requirement());
+    assertEquals(
+        Optional.of(false), getWindow.field("includeBlanks").orElseThrow().defaultBoolean());
     assertTrue(getWindow.summary().contains("sparse default"));
 
     assertEquals(
@@ -442,15 +487,7 @@ class GridGrindProtocolCatalogTest {
   }
 
   @Test
-  void validatesOptionalFieldDescriptorsAndCoverageFailurePaths() {
-    IllegalStateException missingOptionalField =
-        assertThrows(
-            IllegalStateException.class,
-            () -> CatalogTypeEntryFactory.requiredFields(MutationStep.class, List.of("missing")));
-    assertEquals(
-        "Catalog optional field 'missing' does not exist on " + MutationStep.class.getName(),
-        missingOptionalField.getMessage());
-
+  void validatesCatalogCoverageFailurePaths() {
     IllegalStateException missingNestedDescriptor =
         assertThrows(
             IllegalStateException.class,
@@ -517,8 +554,10 @@ class GridGrindProtocolCatalogTest {
                         FieldRequirement.REQUIRED,
                         new FieldShape.Scalar(ScalarType.STRING),
                         List.of(),
+                        Optional.empty(),
                         List.of(),
-                        List.of("FORMAT")))
+                        List.of("FORMAT"),
+                        false))
             .getMessage());
     assertEquals(
         "enumValueDocs must document every enumValues entry in published order",
@@ -530,8 +569,40 @@ class GridGrindProtocolCatalogTest {
                         FieldRequirement.REQUIRED,
                         new FieldShape.Scalar(ScalarType.STRING),
                         List.of("VALUE", "FORMAT"),
+                        Optional.empty(),
                         List.of(new EnumValueDocEntry("FORMAT", "Only format.")),
-                        List.of()))
+                        List.of(),
+                        false))
+            .getMessage());
+    assertEquals(
+        "defaultBoolean requires an OPTIONAL BOOLEAN field requirement",
+        assertThrows(
+                IllegalArgumentException.class,
+                () ->
+                    new FieldEntry(
+                        "enabled",
+                        FieldRequirement.REQUIRED,
+                        new FieldShape.Scalar(ScalarType.BOOLEAN),
+                        List.of(),
+                        Optional.of(false),
+                        List.of(),
+                        List.of(),
+                        false))
+            .getMessage());
+    assertEquals(
+        "defaultBoolean requires an OPTIONAL BOOLEAN field requirement",
+        assertThrows(
+                IllegalArgumentException.class,
+                () ->
+                    new FieldEntry(
+                        "label",
+                        FieldRequirement.OPTIONAL,
+                        new FieldShape.Scalar(ScalarType.STRING),
+                        List.of(),
+                        Optional.of(false),
+                        List.of(),
+                        List.of(),
+                        false))
             .getMessage());
 
     IllegalStateException missingProjectedField =
@@ -539,9 +610,7 @@ class GridGrindProtocolCatalogTest {
             IllegalStateException.class,
             () ->
                 CatalogTypeEntryFactory.requiredFields(
-                    MutationStep.class,
-                    List.of(),
-                    List.of(new CatalogProjectedField("missing", "FORMAT"))));
+                    MutationStep.class, List.of(new CatalogProjectedField("missing", "FORMAT"))));
     assertEquals(
         "Catalog projected field 'missing' does not exist on " + MutationStep.class.getName(),
         missingProjectedField.getMessage());

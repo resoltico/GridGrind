@@ -2,7 +2,7 @@ package dev.erst.gridgrind.cli;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import dev.erst.gridgrind.cli.discovery.CliDiagnostic;
+import dev.erst.gridgrind.cli.discovery.CommandError;
 import dev.erst.gridgrind.cli.discovery.GridGrindCliJson;
 import dev.erst.gridgrind.cli.discovery.GridGrindRecipeCatalog;
 import dev.erst.gridgrind.cli.discovery.RecipeCatalog;
@@ -59,19 +59,19 @@ class GridGrindCliCatalogCommandTest extends GridGrindCliTestSupport {
     assertEquals(0, exitCode);
     assertEquals(GridGrindRecipeCatalog.catalog(), catalog);
     assertEquals(
-        dev.erst.gridgrind.cli.discovery.ExampleWorkspaceMode.SELF_CONTAINED,
+        dev.erst.gridgrind.cli.discovery.RecipeAdvisory.SELF_CONTAINED,
         catalog.recipes().stream()
             .filter(recipe -> "BUDGET".equals(recipe.id()))
             .findFirst()
             .orElseThrow()
-            .workspaceMode());
+            .advisory());
     assertEquals(
-        dev.erst.gridgrind.cli.discovery.ExampleWorkspaceMode.REQUIRES_EXAMPLE_ASSETS,
+        dev.erst.gridgrind.cli.discovery.RecipeAdvisory.REQUIRES_EXAMPLE_ASSETS,
         catalog.recipes().stream()
             .filter(recipe -> "PACKAGE_SECURITY_INSPECTION".equals(recipe.id()))
             .findFirst()
             .orElseThrow()
-            .workspaceMode());
+            .advisory());
     assertEquals(
         java.util.List.of("package-security-assets/gridgrind-package-security.xlsx"),
         catalog.recipes().stream()
@@ -82,7 +82,7 @@ class GridGrindCliCatalogCommandTest extends GridGrindCliTestSupport {
   }
 
   @Test
-  void printAssetBackedExampleWarnsOnStderrBeforeExecution() throws IOException {
+  void printAssetBackedExampleKeepsTheRequestPayloadChannelQuiet() throws IOException {
     ByteArrayOutputStream stdout = new ByteArrayOutputStream();
     ByteArrayOutputStream stderr = new ByteArrayOutputStream();
     int exitCode =
@@ -98,16 +98,7 @@ class GridGrindCliCatalogCommandTest extends GridGrindCliTestSupport {
     assertEquals(0, exitCode);
     assertEquals(
         GridGrindShippedExamples.find("PACKAGE_SECURITY_INSPECTION").orElseThrow().plan(), request);
-    assertTrue(
-        stderr
-            .toString(StandardCharsets.UTF_8)
-            .contains("requires copied asset paths beside the request file"),
-        "asset-backed example printing must warn about copied assets");
-    assertTrue(
-        stderr
-            .toString(StandardCharsets.UTF_8)
-            .contains("package-security-assets/gridgrind-package-security.xlsx"),
-        "asset-backed example printing must name the required copied asset paths");
+    assertEquals("", stderr.toString(StandardCharsets.UTF_8));
   }
 
   @Test
@@ -121,17 +112,17 @@ class GridGrindCliCatalogCommandTest extends GridGrindCliTestSupport {
                 new ByteArrayInputStream(new byte[0]),
                 stdout,
                 stderr);
-    CliDiagnostic failure = cliDiagnosticOnStderr(stdout, stderr);
+    CommandError failure = commandErrorOnStdout(stdout, stderr);
 
     assertEquals(2, exitCode);
-    assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.problem().code());
+    assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.primaryProblem().code());
     assertEquals(java.util.Optional.of("--lookup"), parseArgumentsContext(failure).argumentName());
-    assertTrue(failure.problem().message().contains("BOGUS_EXAMPLE"));
-    assertTrue(failure.problem().message().contains("--print-recipe-catalog"));
+    assertTrue(failure.primaryProblem().message().contains("BOGUS_EXAMPLE"));
+    assertTrue(failure.primaryProblem().message().contains("--print-recipe-catalog"));
   }
 
   @Test
-  void printRecipeFlagWritesUnknownExampleFailureToResponsePathAndPointsStderrAtIt()
+  void printRecipeFlagWritesUnknownExampleFailureToResponsePathWithoutStderrDuplication()
       throws IOException {
     Path responsePath = Files.createTempFile("gridgrind-unknown-example-", ".json");
     Files.deleteIfExists(responsePath);
@@ -152,14 +143,13 @@ class GridGrindCliCatalogCommandTest extends GridGrindCliTestSupport {
                 stdout,
                 stderr);
 
-    CliDiagnostic failure = cliDiagnostic(Files.readAllBytes(responsePath));
-    CliDiagnostic stderrDiagnostic = cliDiagnosticOnStderr(stderr);
+    CommandError failure = commandError(Files.readAllBytes(responsePath));
 
     assertEquals(2, exitCode);
     assertEquals("", stdout.toString(StandardCharsets.UTF_8));
-    assertEquals(failure, stderrDiagnostic);
-    assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.problem().code());
-    assertTrue(failure.problem().message().contains("BOGUS_EXAMPLE"));
+    assertEquals("", stderr.toString(StandardCharsets.UTF_8));
+    assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.primaryProblem().code());
+    assertTrue(failure.primaryProblem().message().contains("BOGUS_EXAMPLE"));
   }
 
   @Test
@@ -204,15 +194,15 @@ class GridGrindCliCatalogCommandTest extends GridGrindCliTestSupport {
                 new ByteArrayInputStream(new byte[0]),
                 stdout,
                 stdout); // stdout passed for both streams; use the bytes overload directly
-    CliDiagnostic failure = cliDiagnostic(stdout.toByteArray());
+    CommandError failure = commandError(stdout.toByteArray());
     assertEquals(2, exitCode);
-    assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.problem().code());
+    assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.primaryProblem().code());
     assertEquals(java.util.Optional.of("--lookup"), parseArgumentsContext(failure).argumentName());
     assertTrue(
-        failure.problem().message().contains("did you mean CHART?"),
+        failure.primaryProblem().message().contains("did you mean CHART?"),
         () -> "expected CHART suggestion for authored value " + authoredValue);
     assertTrue(
-        failure.problem().message().contains("--print-recipe-catalog"),
+        failure.primaryProblem().message().contains("--print-recipe-catalog"),
         () -> "expected recovery guidance for authored value " + authoredValue);
   }
 
@@ -245,13 +235,13 @@ class GridGrindCliCatalogCommandTest extends GridGrindCliTestSupport {
                 InputStream.nullInputStream(),
                 stdout,
                 stderr);
-    CliDiagnostic failure = cliDiagnosticOnStderr(stdout, stderr);
+    CommandError failure = commandErrorOnStdout(stdout, stderr);
 
     assertEquals(2, exitCode);
-    assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.problem().code());
+    assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.primaryProblem().code());
     assertEquals("print-recipe-catalog", failure.command());
     assertEquals(java.util.Optional.of("--lookup"), parseArgumentsContext(failure).argumentName());
-    assertTrue(failure.problem().message().contains("recipe lookup id must not be blank"));
+    assertTrue(failure.primaryProblem().message().contains("recipe lookup id must not be blank"));
   }
 
   @Test
@@ -268,14 +258,14 @@ class GridGrindCliCatalogCommandTest extends GridGrindCliTestSupport {
                 stderr);
 
     assertEquals(2, exitCode);
-    CliDiagnostic failure = cliDiagnosticOnStderr(stdout, stderr);
-    assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.problem().code());
+    CommandError failure = commandErrorOnStdout(stdout, stderr);
+    assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.primaryProblem().code());
     assertEquals(java.util.Optional.of("--lookup"), parseArgumentsContext(failure).argumentName());
-    assertTrue(failure.problem().message().contains("BOGUS_TASK"));
-    assertTrue(failure.problem().message().contains("--print-recipe-catalog"));
+    assertTrue(failure.primaryProblem().message().contains("BOGUS_TASK"));
+    assertTrue(failure.primaryProblem().message().contains("--print-recipe-catalog"));
     assertTrue(
         failure
-            .problem()
+            .primaryProblem()
             .message()
             .contains("--print-recipe-keyword-match --query \"monthly sales dashboard\""));
   }
@@ -294,14 +284,14 @@ class GridGrindCliCatalogCommandTest extends GridGrindCliTestSupport {
                 stderr);
 
     assertEquals(2, exitCode);
-    CliDiagnostic failure = cliDiagnosticOnStderr(stdout, stderr);
-    assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.problem().code());
+    CommandError failure = commandErrorOnStdout(stdout, stderr);
+    assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.primaryProblem().code());
     assertEquals(java.util.Optional.of("--lookup"), parseArgumentsContext(failure).argumentName());
-    assertTrue(failure.problem().message().contains("did you mean DASHBOARD?"));
-    assertTrue(failure.problem().message().contains("--print-recipe-catalog"));
+    assertTrue(failure.primaryProblem().message().contains("did you mean DASHBOARD?"));
+    assertTrue(failure.primaryProblem().message().contains("--print-recipe-catalog"));
     assertTrue(
         failure
-            .problem()
+            .primaryProblem()
             .message()
             .contains("--print-recipe-keyword-match --query \"monthly sales dashboard\""));
   }
@@ -320,14 +310,15 @@ class GridGrindCliCatalogCommandTest extends GridGrindCliTestSupport {
                 stderr);
 
     assertEquals(2, exitCode);
-    CliDiagnostic failure = cliDiagnosticOnStderr(stdout, stderr);
-    assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.problem().code());
+    CommandError failure = commandErrorOnStdout(stdout, stderr);
+    assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.primaryProblem().code());
     assertEquals(java.util.Optional.of("--lookup"), parseArgumentsContext(failure).argumentName());
-    assertTrue(failure.problem().message().contains("did you mean AUDIT_EXISTING_WORKBOOK?"));
-    assertTrue(failure.problem().message().contains("--print-recipe-catalog"));
+    assertTrue(
+        failure.primaryProblem().message().contains("did you mean AUDIT_EXISTING_WORKBOOK?"));
+    assertTrue(failure.primaryProblem().message().contains("--print-recipe-catalog"));
     assertTrue(
         failure
-            .problem()
+            .primaryProblem()
             .message()
             .contains("--print-recipe-keyword-match --query \"monthly sales dashboard\""));
   }
@@ -346,12 +337,12 @@ class GridGrindCliCatalogCommandTest extends GridGrindCliTestSupport {
                 stderr);
 
     assertEquals(2, exitCode);
-    CliDiagnostic failure = cliDiagnosticOnStderr(stdout, stderr);
-    assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.problem().code());
+    CommandError failure = commandErrorOnStdout(stdout, stderr);
+    assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.primaryProblem().code());
     assertEquals(java.util.Optional.of("--version"), parseArgumentsContext(failure).argumentName());
     assertTrue(
         failure
-            .problem()
+            .primaryProblem()
             .message()
             .contains(
                 "Only one primary command may be used per invocation; --print-recipe-catalog"
@@ -387,7 +378,7 @@ class GridGrindCliCatalogCommandTest extends GridGrindCliTestSupport {
   }
 
   @Test
-  void printAssetBackedTaskStarterWarnsOnStderrBeforeExecution() throws IOException {
+  void printAssetBackedTaskStarterKeepsTheRequestPayloadChannelQuiet() throws IOException {
     ByteArrayOutputStream stdout = new ByteArrayOutputStream();
     ByteArrayOutputStream stderr = new ByteArrayOutputStream();
 
@@ -409,16 +400,7 @@ class GridGrindCliCatalogCommandTest extends GridGrindCliTestSupport {
 
     assertEquals(0, exitCode);
     assertEquals(recipe.plan(), request);
-    assertTrue(
-        stderr
-            .toString(StandardCharsets.UTF_8)
-            .contains("requires copied asset paths beside the request file"),
-        "asset-backed task starter printing must warn about copied assets");
-    assertTrue(
-        stderr
-            .toString(StandardCharsets.UTF_8)
-            .contains("task-starter-assets/workbook-ops-source.xlsx"),
-        "asset-backed task starter printing must name the required copied asset paths");
+    assertEquals("", stderr.toString(StandardCharsets.UTF_8));
   }
 
   @Test
@@ -435,14 +417,14 @@ class GridGrindCliCatalogCommandTest extends GridGrindCliTestSupport {
                 stderr);
 
     assertEquals(2, exitCode);
-    CliDiagnostic failure = cliDiagnosticOnStderr(stdout, stderr);
-    assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.problem().code());
+    CommandError failure = commandErrorOnStdout(stdout, stderr);
+    assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.primaryProblem().code());
     assertEquals(java.util.Optional.of("--lookup"), parseArgumentsContext(failure).argumentName());
-    assertTrue(failure.problem().message().contains("BOGUS_TASK"));
-    assertTrue(failure.problem().message().contains("--print-recipe-catalog"));
+    assertTrue(failure.primaryProblem().message().contains("BOGUS_TASK"));
+    assertTrue(failure.primaryProblem().message().contains("--print-recipe-catalog"));
     assertTrue(
         failure
-            .problem()
+            .primaryProblem()
             .message()
             .contains("--print-recipe-keyword-match --query \"monthly sales dashboard\""));
   }
@@ -461,10 +443,10 @@ class GridGrindCliCatalogCommandTest extends GridGrindCliTestSupport {
                 new ByteArrayInputStream(new byte[0]),
                 stdout,
                 stderr);
-    CliDiagnostic failure = cliDiagnosticOnStderr(stdout, stderr);
+    CommandError failure = commandErrorOnStdout(stdout, stderr);
 
     assertEquals(2, exitCode);
-    assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.problem().code());
+    assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.primaryProblem().code());
     assertEquals(java.util.Optional.of("--request"), parseArgumentsContext(failure).argumentName());
   }
 
@@ -504,10 +486,10 @@ class GridGrindCliCatalogCommandTest extends GridGrindCliTestSupport {
                 InputStream.nullInputStream(),
                 stdout,
                 stderr);
-    CliDiagnostic failure = cliDiagnosticOnStderr(stdout, stderr);
+    CommandError failure = commandErrorOnStdout(stdout, stderr);
 
     assertEquals(2, exitCode);
-    assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.problem().code());
+    assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.primaryProblem().code());
     assertEquals(java.util.Optional.of("--query"), parseArgumentsContext(failure).argumentName());
   }
 
@@ -523,12 +505,12 @@ class GridGrindCliCatalogCommandTest extends GridGrindCliTestSupport {
                 InputStream.nullInputStream(),
                 stdout,
                 stderr);
-    CliDiagnostic failure = cliDiagnosticOnStderr(stdout, stderr);
+    CommandError failure = commandErrorOnStdout(stdout, stderr);
 
     assertEquals(2, exitCode);
-    assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.problem().code());
+    assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.primaryProblem().code());
     assertEquals(java.util.Optional.of("--query"), parseArgumentsContext(failure).argumentName());
-    assertTrue(failure.problem().message().contains("searchable term after normalization"));
+    assertTrue(failure.primaryProblem().message().contains("searchable term after normalization"));
   }
 
   @Test
@@ -606,12 +588,12 @@ class GridGrindCliCatalogCommandTest extends GridGrindCliTestSupport {
     assertEquals(1, exitCode);
     assertFalse(report.valid());
     assertEquals(GridGrindProblemCode.INVALID_JSON, report.primaryProblem().orElseThrow().code());
-    assertEquals(java.util.Optional.of(1), readRequestContext(report).jsonLine());
-    assertEquals(java.util.Optional.of(2), readRequestContext(report).jsonColumn());
+    assertEquals(java.util.Optional.empty(), requestIntakeContext(report).jsonLine());
+    assertEquals(java.util.Optional.empty(), requestIntakeContext(report).jsonColumn());
   }
 
   @Test
-  void doctorRequestRejectsMissingRequestInputWithCompactCliDiagnostic() throws IOException {
+  void doctorRequestRejectsMissingRequestInputWithCompactCommandError() throws IOException {
     ByteArrayOutputStream stdout = new ByteArrayOutputStream();
     ByteArrayOutputStream stderr = new ByteArrayOutputStream();
 
@@ -619,13 +601,13 @@ class GridGrindCliCatalogCommandTest extends GridGrindCliTestSupport {
         new GridGrindCli()
             .run(new String[] {"--doctor-request"}, InputStream.nullInputStream(), stdout, stderr);
 
-    CliDiagnostic failure = cliDiagnosticOnStderr(stdout, stderr);
+    CommandError failure = commandErrorOnStdout(stdout, stderr);
 
     assertEquals(2, exitCode);
-    assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.problem().code());
+    assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.primaryProblem().code());
     assertEquals("doctor-request", failure.command());
     assertEquals(java.util.Optional.of("--request"), parseArgumentsContext(failure).argumentName());
-    assertTrue(failure.problem().message().contains("No request JSON was provided."));
+    assertTrue(failure.primaryProblem().message().contains("No request JSON was provided."));
   }
 
   @Test
@@ -687,7 +669,7 @@ class GridGrindCliCatalogCommandTest extends GridGrindCliTestSupport {
                 new ByteArrayInputStream(
                     """
                     {
-                      "protocolVersion": "V1",
+                      "protocolVersion": "V2",
                       "source": { "type": "EXISTING" },
                       "persistence": { "type": "SAVE_AS" },
                       "execution": {
@@ -734,13 +716,16 @@ class GridGrindCliCatalogCommandTest extends GridGrindCliTestSupport {
 
     assertEquals(1, exitCode);
     assertFalse(report.valid());
-    assertEquals(4, report.problems().size());
+    assertEquals(5, report.problems().size());
     assertTrue(problemMessages.contains("Missing required field 'source.path'"));
     assertTrue(problemMessages.contains("Missing required field 'persistence.path'"));
     assertTrue(problemMessages.contains("Missing required field 'persistence.ifExists'"));
     assertTrue(
-        problemMessages.stream()
-            .anyMatch(message -> message.contains("duplicate stepId values: duplicate-step")));
+        problemMessages.contains(
+            "execution.mode.type=EVENT_READ requires execution.calculation.strategy=DO_NOT_CALCULATE and markRecalculateOnOpen=false"));
+    assertTrue(
+        problemMessages.contains(
+            "execution.mode.type=EVENT_READ supports inspection steps only; unsupported step kind: ASSERTION"));
   }
 
   @Test
@@ -756,7 +741,7 @@ class GridGrindCliCatalogCommandTest extends GridGrindCliTestSupport {
                 new ByteArrayInputStream(
                     """
                     {
-                      "protocolVersion": "V1",
+                      "protocolVersion": "V2",
                       "source": { "type": "NEW" },
                       "persistence": { "type": "OVERWRITE" },
                       "execution": {

@@ -27,8 +27,7 @@ public final class GridGrindProtocolCatalog {
           WorkbookPlan.class,
           "WorkbookPlan",
           "Complete GridGrind plan for workbook source, execution policy, formula environment,"
-              + " ordered mutation, assertion, and inspection steps, and persistence.",
-          List.of("planId", "execution", "formulaEnvironment"));
+              + " ordered mutation, assertion, and inspection steps, and persistence.");
   private static final List<CatalogTypeDescriptor> STEP_TYPES =
       GridGrindProtocolCatalogTypeDescriptors.STEP_TYPES;
   private static final List<CatalogTypeDescriptor> SOURCE_TYPES =

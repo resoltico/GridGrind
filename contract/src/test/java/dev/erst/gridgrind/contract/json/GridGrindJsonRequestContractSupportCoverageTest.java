@@ -49,6 +49,14 @@ class GridGrindJsonRequestContractSupportCoverageTest {
                     .orElseThrow())
             .jsonPathValue());
     assertEquals(
+        "componentWire",
+        assertInstanceOf(
+                MissingRequiredField.class,
+                GridGrindJsonRequestContractSupport.missingRequiredComponentProblem(
+                        emptyObject, ComponentPropertyRecord.class, "componentWire")
+                    .orElseThrow())
+            .jsonPathValue());
+    assertEquals(
         "required",
         assertInstanceOf(
                 MissingRequiredField.class,

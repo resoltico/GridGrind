@@ -50,7 +50,8 @@ public sealed interface ChartPlotInput
         ChartPlotInput.Surface3D {
   /** Area chart plot. */
   record Area(
-      boolean varyColors,
+      @ProtocolField(optional = true, booleanDefault = ProtocolBooleanDefault.FALSE)
+          boolean varyColors,
       ExcelChartGrouping grouping,
       List<ChartAxisInput> axes,
       List<ChartSeriesInput> series)
@@ -79,7 +80,8 @@ public sealed interface ChartPlotInput
 
   /** 3D area chart plot. */
   record Area3D(
-      boolean varyColors,
+      @ProtocolField(optional = true, booleanDefault = ProtocolBooleanDefault.FALSE)
+          boolean varyColors,
       ExcelChartGrouping grouping,
       Optional<Integer> gapDepth,
       List<ChartAxisInput> axes,
@@ -115,7 +117,8 @@ public sealed interface ChartPlotInput
 
   /** Bar chart plot. */
   record Bar(
-      boolean varyColors,
+      @ProtocolField(optional = true, booleanDefault = ProtocolBooleanDefault.FALSE)
+          boolean varyColors,
       ExcelChartBarDirection barDirection,
       ExcelChartBarGrouping grouping,
       Optional<Integer> gapWidth,
@@ -169,7 +172,8 @@ public sealed interface ChartPlotInput
 
   /** 3D bar chart plot. */
   record Bar3D(
-      boolean varyColors,
+      @ProtocolField(optional = true, booleanDefault = ProtocolBooleanDefault.FALSE)
+          boolean varyColors,
       ExcelChartBarDirection barDirection,
       ExcelChartBarGrouping grouping,
       Optional<Integer> gapDepth,
@@ -233,7 +237,8 @@ public sealed interface ChartPlotInput
 
   /** Doughnut chart plot. */
   record Doughnut(
-      boolean varyColors,
+      @ProtocolField(optional = true, booleanDefault = ProtocolBooleanDefault.FALSE)
+          boolean varyColors,
       Optional<Integer> firstSliceAngle,
       Optional<Integer> holeSize,
       List<ChartSeriesInput> series)
@@ -261,7 +266,8 @@ public sealed interface ChartPlotInput
 
   /** Line chart plot. */
   record Line(
-      boolean varyColors,
+      @ProtocolField(optional = true, booleanDefault = ProtocolBooleanDefault.FALSE)
+          boolean varyColors,
       ExcelChartGrouping grouping,
       List<ChartAxisInput> axes,
       List<ChartSeriesInput> series)
@@ -290,7 +296,8 @@ public sealed interface ChartPlotInput
 
   /** 3D line chart plot. */
   record Line3D(
-      boolean varyColors,
+      @ProtocolField(optional = true, booleanDefault = ProtocolBooleanDefault.FALSE)
+          boolean varyColors,
       ExcelChartGrouping grouping,
       Optional<Integer> gapDepth,
       List<ChartAxisInput> axes,
@@ -325,7 +332,11 @@ public sealed interface ChartPlotInput
   }
 
   /** Pie chart plot. */
-  record Pie(boolean varyColors, Optional<Integer> firstSliceAngle, List<ChartSeriesInput> series)
+  record Pie(
+      @ProtocolField(optional = true, booleanDefault = ProtocolBooleanDefault.FALSE)
+          boolean varyColors,
+      Optional<Integer> firstSliceAngle,
+      List<ChartSeriesInput> series)
       implements ChartPlotInput {
     /** Reads one pie plot from the authored wire shape. */
     @JsonCreator
@@ -344,7 +355,11 @@ public sealed interface ChartPlotInput
   }
 
   /** 3D pie chart plot. */
-  record Pie3D(boolean varyColors, List<ChartSeriesInput> series) implements ChartPlotInput {
+  record Pie3D(
+      @ProtocolField(optional = true, booleanDefault = ProtocolBooleanDefault.FALSE)
+          boolean varyColors,
+      List<ChartSeriesInput> series)
+      implements ChartPlotInput {
     /** Reads one 3D pie plot from the authored wire shape. */
     @JsonCreator
     public Pie3D(
@@ -360,7 +375,8 @@ public sealed interface ChartPlotInput
 
   /** Radar chart plot. */
   record Radar(
-      boolean varyColors,
+      @ProtocolField(optional = true, booleanDefault = ProtocolBooleanDefault.FALSE)
+          boolean varyColors,
       dev.erst.gridgrind.excel.foundation.ExcelChartRadarStyle style,
       List<ChartAxisInput> axes,
       List<ChartSeriesInput> series)
@@ -389,7 +405,8 @@ public sealed interface ChartPlotInput
 
   /** Scatter chart plot. */
   record Scatter(
-      boolean varyColors,
+      @ProtocolField(optional = true, booleanDefault = ProtocolBooleanDefault.FALSE)
+          boolean varyColors,
       ExcelChartScatterStyle style,
       List<ChartAxisInput> axes,
       List<ChartSeriesInput> series)
@@ -419,8 +436,10 @@ public sealed interface ChartPlotInput
 
   /** Surface chart plot. */
   record Surface(
-      boolean varyColors,
-      boolean wireframe,
+      @ProtocolField(optional = true, booleanDefault = ProtocolBooleanDefault.FALSE)
+          boolean varyColors,
+      @ProtocolField(optional = true, booleanDefault = ProtocolBooleanDefault.FALSE)
+          boolean wireframe,
       List<ChartAxisInput> axes,
       List<ChartSeriesInput> series)
       implements ChartPlotInput {
@@ -447,8 +466,10 @@ public sealed interface ChartPlotInput
 
   /** 3D surface chart plot. */
   record Surface3D(
-      boolean varyColors,
-      boolean wireframe,
+      @ProtocolField(optional = true, booleanDefault = ProtocolBooleanDefault.FALSE)
+          boolean varyColors,
+      @ProtocolField(optional = true, booleanDefault = ProtocolBooleanDefault.FALSE)
+          boolean wireframe,
       List<ChartAxisInput> axes,
       List<ChartSeriesInput> series)
       implements ChartPlotInput {
@@ -529,7 +550,7 @@ public sealed interface ChartPlotInput
   }
 
   private static boolean defaultFalse(Boolean value) {
-    return Boolean.TRUE.equals(value);
+    return ProtocolBooleanDefault.FALSE.resolve(value);
   }
 
   private static <T> Optional<T> emptyIfNull(Optional<T> value) {

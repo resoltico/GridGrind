@@ -16,9 +16,9 @@ class GridGrindCliHelpUnitTest {
   @Test
   void requestTemplateTextRendersUtf8Bytes() {
     assertEquals(
-        "{\"protocolVersion\":\"V1\"}",
+        "{\"protocolVersion\":\"V2\"}",
         GridGrindCli.requestTemplateText(
-            () -> "{\"protocolVersion\":\"V1\"}".getBytes(StandardCharsets.UTF_8)));
+            () -> "{\"protocolVersion\":\"V2\"}".getBytes(StandardCharsets.UTF_8)));
   }
 
   @Test

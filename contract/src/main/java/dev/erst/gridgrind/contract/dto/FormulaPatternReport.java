@@ -13,6 +13,6 @@ public record FormulaPatternReport(String formula, int occurrenceCount, List<Str
     if (occurrenceCount <= 0) {
       throw new IllegalArgumentException("occurrenceCount must be greater than 0");
     }
-    addresses = GridGrindResponseSupport.copyStrings(addresses, "addresses");
+    addresses = WorkbookResultSupport.copyStrings(addresses, "addresses");
   }
 }

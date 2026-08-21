@@ -2,22 +2,18 @@ package dev.erst.gridgrind.cli;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import dev.erst.gridgrind.cli.discovery.CliDiagnostic;
+import dev.erst.gridgrind.cli.discovery.CommandError;
 import dev.erst.gridgrind.contract.dto.*;
-import dev.erst.gridgrind.contract.dto.ExecutionJournal;
 import dev.erst.gridgrind.contract.dto.GridGrindProblemCode;
-import dev.erst.gridgrind.contract.dto.GridGrindResponse;
-import dev.erst.gridgrind.contract.dto.WorkbookPlan;
+import dev.erst.gridgrind.contract.dto.WorkbookResult;
 import dev.erst.gridgrind.contract.json.GridGrindJson;
 import dev.erst.gridgrind.contract.query.SheetInspectionResult;
 import dev.erst.gridgrind.contract.query.WorkbookAssetInspectionResult;
 import dev.erst.gridgrind.contract.query.WorkbookInspectionResult;
-import dev.erst.gridgrind.engine.api.GridGrindJournalSink;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -62,75 +58,6 @@ class GridGrindCliTest extends GridGrindCliTestSupport {
   }
 
   @Test
-  void cliJournalWriterReturnsNoopWhenRequestIsMissing() {
-    CliJournalWriter writer = new CliJournalWriter();
-
-    assertSame(GridGrindJournalSink.NOOP, writer.sinkFor(null, OutputStream.nullOutputStream()));
-  }
-
-  @Test
-  void cliJournalWriterSwallowsBestEffortIoFailures() throws IOException {
-    WorkbookPlan request =
-        GridGrindJson.readRequest(
-            requestJson(
-                    "{ \"type\": \"NEW\" }",
-                    "{ \"type\": \"NONE\" }",
-                    verboseExecutionJson(),
-                    emptyFormulaEnvironmentJson(),
-                    "[]")
-                .getBytes(StandardCharsets.UTF_8));
-    CliJournalWriter writer = new CliJournalWriter();
-    try (OutputStream broken =
-        new OutputStream() {
-          @Override
-          public void write(int b) throws IOException {
-            throw new IOException("boom");
-          }
-        }) {
-      assertDoesNotThrow(
-          () ->
-              writer
-                  .sinkFor(request, broken)
-                  .emit(
-                      new ExecutionJournal.Event(
-                          "2026-04-18T11:45:00Z",
-                          "OPEN",
-                          "opened",
-                          Optional.empty(),
-                          Optional.empty())));
-    }
-  }
-
-  @Test
-  void cliJournalWriterIncludesStepMetadataWhenPresent() throws IOException {
-    WorkbookPlan request =
-        GridGrindJson.readRequest(
-            requestJson(
-                    "{ \"type\": \"NEW\" }",
-                    "{ \"type\": \"NONE\" }",
-                    verboseExecutionJson(),
-                    emptyFormulaEnvironmentJson(),
-                    "[]")
-                .getBytes(StandardCharsets.UTF_8));
-    ByteArrayOutputStream stderr = new ByteArrayOutputStream();
-
-    new CliJournalWriter()
-        .sinkFor(request, stderr)
-        .emit(
-            new ExecutionJournal.Event(
-                "2026-04-18T11:45:00Z",
-                "STEP",
-                "wrote cell",
-                Optional.of(7),
-                Optional.of("step-007")));
-
-    assertEquals(
-        "[gridgrind] 2026-04-18T11:45:00Z STEP stepId=step-007 stepIndex=7 wrote cell"
-            + System.lineSeparator(),
-        stderr.toString(StandardCharsets.UTF_8));
-  }
-
-  @Test
   void readsJsonRequestFromStdinAndWritesJsonResponse() throws IOException {
     String request =
         requestJson(
@@ -163,11 +90,11 @@ class GridGrindCliTest extends GridGrindCliTestSupport {
                 new ByteArrayInputStream(request.getBytes(StandardCharsets.UTF_8)),
                 stdout);
 
-    GridGrindResponse response = GridGrindJson.readResponse(stdout.toByteArray());
+    WorkbookResult response = GridGrindJson.readWorkbookResult(stdout.toByteArray());
 
     assertEquals(0, exitCode);
-    assertInstanceOf(GridGrindResponse.Success.class, response);
-    GridGrindResponse.Success success = (GridGrindResponse.Success) response;
+    assertInstanceOf(WorkbookResult.Success.class, response);
+    WorkbookResult.Success success = (WorkbookResult.Success) response;
     assertEquals(List.of(), success.warnings());
     WorkbookSummary workbook =
         ((WorkbookInspectionResult.WorkbookSummaryResult) success.inspections().get(0)).workbook();
@@ -206,9 +133,10 @@ class GridGrindCliTest extends GridGrindCliTestSupport {
     assertEquals(0, compactExitCode);
     assertEquals(0, prettyExitCode);
     assertInstanceOf(
-        GridGrindResponse.Success.class, GridGrindJson.readResponse(compactStdout.toByteArray()));
+        WorkbookResult.Success.class,
+        GridGrindJson.readWorkbookResult(compactStdout.toByteArray()));
     assertInstanceOf(
-        GridGrindResponse.Success.class, GridGrindJson.readResponse(prettyStdout.toByteArray()));
+        WorkbookResult.Success.class, GridGrindJson.readWorkbookResult(prettyStdout.toByteArray()));
     assertEquals(1L, compactStdout.toString(StandardCharsets.UTF_8).lines().count());
     assertTrue(prettyStdout.toString(StandardCharsets.UTF_8).startsWith("{\n"));
     assertTrue(prettyStdout.toString(StandardCharsets.UTF_8).contains("\n  \"status\" : "));
@@ -247,12 +175,12 @@ class GridGrindCliTest extends GridGrindCliTestSupport {
                 stdout,
                 stderr);
 
-    CliDiagnostic failure = cliDiagnosticOnStderr(stdout, stderr);
+    CommandError failure = commandErrorOnStdout(stdout, stderr);
     assertEquals(2, exitCode);
-    assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.problem().code());
+    assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.primaryProblem().code());
     assertEquals("execute", failure.command());
     assertEquals(java.util.Optional.of("--request"), parseArgumentsContext(failure).argumentName());
-    assertTrue(failure.problem().message().contains("STANDARD_INPUT"));
+    assertTrue(failure.primaryProblem().message().contains("STANDARD_INPUT"));
   }
 
   @Test
@@ -294,9 +222,9 @@ class GridGrindCliTest extends GridGrindCliTestSupport {
                 new ByteArrayInputStream("Quarterly Budget".getBytes(StandardCharsets.UTF_8)),
                 stdout);
 
-    GridGrindResponse.Success success =
+    WorkbookResult.Success success =
         assertInstanceOf(
-            GridGrindResponse.Success.class, GridGrindJson.readResponse(stdout.toByteArray()));
+            WorkbookResult.Success.class, GridGrindJson.readWorkbookResult(stdout.toByteArray()));
     SheetInspectionResult.CellsResult cells =
         assertInstanceOf(SheetInspectionResult.CellsResult.class, success.inspections().getFirst());
     dev.erst.gridgrind.contract.dto.CellReport.TextReport a1 =
@@ -319,7 +247,7 @@ class GridGrindCliTest extends GridGrindCliTestSupport {
         GridGrindCli.forTesting(
                 (request, bindings, sink) -> {
                   observedTempRoot.set(bindings.tempRoot());
-                  return GridGrindResponses.success(List.of(), List.of(), List.of());
+                  return WorkbookResults.success(List.of(), List.of(), List.of());
                 })
             .run(
                 new String[] {
@@ -355,14 +283,14 @@ class GridGrindCliTest extends GridGrindCliTestSupport {
                 stdout,
                 stderr);
 
-    CliDiagnostic failure = cliDiagnosticOnStderr(stdout, stderr);
+    CommandError failure = commandErrorOnStdout(stdout, stderr);
     assertEquals(1, exitCode);
     assertEquals("execute", failure.command());
-    assertInstanceOf(ProblemContext.ReadRequest.class, failure.problem().context());
+    assertInstanceOf(ProblemContext.ReadRequest.class, failure.primaryProblem().context());
   }
 
   @Test
-  void verboseExecutionJournalStreamsLiveEventsToStderr() throws IOException {
+  void verboseExecutionStreamsStructuredProgressToStderr() throws IOException {
     String request =
         requestJsonWithPlanId(
             "ledger-audit",
@@ -387,25 +315,37 @@ class GridGrindCliTest extends GridGrindCliTestSupport {
                 stdout,
                 stderr);
 
-    GridGrindResponse.Success success =
+    WorkbookResult.Success success =
         assertInstanceOf(
-            GridGrindResponse.Success.class, GridGrindJson.readResponse(stdout.toByteArray()));
+            WorkbookResult.Success.class, GridGrindJson.readWorkbookResult(stdout.toByteArray()));
 
     assertEquals(0, exitCode);
-    assertEquals("ledger-audit", success.journal().planId().orElseThrow());
+    assertEquals("ledger-audit", success.planId().orElseThrow());
     assertTrue(
-        stderr.toString(StandardCharsets.UTF_8).contains("[gridgrind]"),
-        "verbose journal must emit live stderr lines");
-    assertTrue(
-        stderr.toString(StandardCharsets.UTF_8).contains("ensure-ledger"),
-        "stderr must include the step id");
+        stderr
+            .toString(StandardCharsets.UTF_8)
+            .lines()
+            .map(
+                line -> {
+                  try {
+                    return dev.erst.gridgrind.cli.discovery.GridGrindCliJson.readBytes(
+                        line.getBytes(StandardCharsets.UTF_8), ExecutionProgressEvent.class);
+                  } catch (IOException exception) {
+                    throw new java.io.UncheckedIOException(exception);
+                  }
+                })
+            .anyMatch(event -> event.stepId().equals(Optional.of("ensure-ledger"))),
+        "verbose execution must stream a step-scoped progress event to stderr");
+    assertFalse(
+        stdout.toString(StandardCharsets.UTF_8).contains("\"events\""),
+        "the primary response must not duplicate live progress events");
   }
 
   @Test
   void returnsStructuredJsonErrorForInvalidRequest() throws IOException {
     String request =
         requestJson(
-            "{ \"type\": \"EXISTING\", \"path\": \"/tmp/does-not-exist.xlsx\" }",
+            "{ \"type\": \"EXISTING\", \"path\": \"does-not-exist.xlsx\" }",
             "{ \"type\": \"NONE\" }",
             "[]");
 
@@ -419,11 +359,11 @@ class GridGrindCliTest extends GridGrindCliTestSupport {
                 stdout,
                 stderr);
 
-    GridGrindResponse response = response(stdout, stderr);
+    WorkbookResult response = response(stdout, stderr);
 
     assertEquals(1, exitCode);
-    assertInstanceOf(GridGrindResponse.Failure.class, response);
-    GridGrindResponse.Failure failure = (GridGrindResponse.Failure) response;
+    assertInstanceOf(WorkbookResult.Failure.class, response);
+    WorkbookResult.Failure failure = (WorkbookResult.Failure) response;
     assertEquals(GridGrindProblemCode.WORKBOOK_NOT_FOUND, failure.problem().code());
     assertEquals("OPEN_WORKBOOK", failure.problem().context().stage());
     assertTrue(failure.problem().message().contains("Workbook does not exist"));
@@ -451,14 +391,14 @@ class GridGrindCliTest extends GridGrindCliTestSupport {
                 stdout,
                 stderr);
 
-    CliDiagnostic failure = cliDiagnosticOnStderr(stdout, stderr);
+    CommandError failure = commandErrorOnStdout(stdout, stderr);
 
-    assertEquals(1, exitCode);
-    assertEquals(GridGrindProblemCode.INVALID_REQUEST, failure.problem().code());
+    assertEquals(2, exitCode);
+    assertEquals(GridGrindProblemCode.INVALID_REQUEST, failure.primaryProblem().code());
     assertEquals("execute", failure.command());
     assertEquals(
-        java.util.Optional.of("steps[0].target.name"), readRequestContext(failure).jsonPath());
-    assertTrue(failure.problem().message().contains("invalid Excel character ':'"));
+        java.util.Optional.of("steps[0].target.name"), requestIntakeContext(failure).jsonPath());
+    assertTrue(failure.primaryProblem().message().contains("invalid Excel character ':'"));
   }
 
   @Test
@@ -529,11 +469,11 @@ class GridGrindCliTest extends GridGrindCliTestSupport {
                 new ByteArrayInputStream(request.getBytes(StandardCharsets.UTF_8)),
                 stdout);
 
-    GridGrindResponse response = GridGrindJson.readResponse(stdout.toByteArray());
+    WorkbookResult response = GridGrindJson.readWorkbookResult(stdout.toByteArray());
 
     assertEquals(0, exitCode);
-    assertInstanceOf(GridGrindResponse.Success.class, response);
-    GridGrindResponse.Success success = (GridGrindResponse.Success) response;
+    assertInstanceOf(WorkbookResult.Success.class, response);
+    WorkbookResult.Success success = (WorkbookResult.Success) response;
     WorkbookAssetInspectionResult.TablesResult tables =
         (WorkbookAssetInspectionResult.TablesResult) success.inspections().getFirst();
     assertEquals(1, tables.tables().size());
@@ -570,13 +510,13 @@ class GridGrindCliTest extends GridGrindCliTestSupport {
                 stdout,
                 stderr);
 
-    GridGrindResponse response = GridGrindJson.readResponse(Files.readAllBytes(responsePath));
+    WorkbookResult response = GridGrindJson.readWorkbookResult(Files.readAllBytes(responsePath));
 
     assertEquals(0, exitCode);
     assertEquals(0, stdout.size());
     assertEquals("", stderr.toString(StandardCharsets.UTF_8));
-    assertInstanceOf(GridGrindResponse.Success.class, response);
-    GridGrindResponse.Success success = (GridGrindResponse.Success) response;
+    assertInstanceOf(WorkbookResult.Success.class, response);
+    WorkbookResult.Success success = (WorkbookResult.Success) response;
     assertEquals(
         List.of("Budget"),
         ((WorkbookInspectionResult.WorkbookSummaryResult) success.inspections().getFirst())
@@ -612,9 +552,9 @@ class GridGrindCliTest extends GridGrindCliTestSupport {
                 stdout,
                 stderr);
 
-    GridGrindResponse.Success response =
+    WorkbookResult.Success response =
         assertInstanceOf(
-            GridGrindResponse.Success.class, GridGrindJson.readResponse(stdout.toByteArray()));
+            WorkbookResult.Success.class, GridGrindJson.readWorkbookResult(stdout.toByteArray()));
 
     assertEquals(0, exitCode);
     assertEquals("", stderr.toString(StandardCharsets.UTF_8));
@@ -623,7 +563,7 @@ class GridGrindCliTest extends GridGrindCliTestSupport {
   }
 
   @Test
-  void writesCliDiagnosticToStderrWhenExecutionFailsAndResponsePathIsConfigured()
+  void writesCommandErrorOnlyToTheResponsePathWhenExecutionIsRejectedBeforeItBegins()
       throws IOException {
     Path requestPath = Files.createTempFile("gridgrind-invalid-request-", ".json");
     Path responsePath = Files.createTempFile("gridgrind-invalid-response-", ".json");
@@ -655,14 +595,13 @@ class GridGrindCliTest extends GridGrindCliTestSupport {
                 stdout,
                 stderr);
 
-    CliDiagnostic failure = cliDiagnostic(Files.readAllBytes(responsePath));
-    CliDiagnostic stderrDiagnostic = cliDiagnosticOnStderr(stderr);
+    CommandError failure = commandError(Files.readAllBytes(responsePath));
 
-    assertEquals(1, exitCode);
+    assertEquals(2, exitCode);
     assertEquals("", stdout.toString(StandardCharsets.UTF_8));
-    assertEquals(failure, stderrDiagnostic);
-    assertEquals(GridGrindProblemCode.INVALID_REQUEST_SHAPE, failure.problem().code());
-    assertEquals(Optional.of("steps[0].target.type"), readRequestContext(failure).jsonPath());
+    assertEquals("", stderr.toString(StandardCharsets.UTF_8));
+    assertEquals(GridGrindProblemCode.INVALID_REQUEST_SHAPE, failure.primaryProblem().code());
+    assertEquals(Optional.of("steps[0].target.type"), requestIntakeContext(failure).jsonPath());
   }
 
   private static Path locateRepoRoot() {

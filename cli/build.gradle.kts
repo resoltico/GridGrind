@@ -1,3 +1,5 @@
+import org.gradle.api.file.DuplicatesStrategy
+
 plugins {
     application
     id("gridgrind.java-conventions")
@@ -96,7 +98,11 @@ tasks.named<com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar>("shadowJ
     isReproducibleFileOrder = true
 
     // Merge ServiceLoader registrations from all bundled JARs.
+    filesMatching("META-INF/services/**") {
+        duplicatesStrategy = DuplicatesStrategy.INCLUDE
+    }
     mergeServiceFiles()
+    failOnDuplicateEntries = true
 
     // Exclude per-dependency META-INF license and notice files to prevent conflicts
     // and silent overwrites. GridGrind bundles its own curated NOTICE plus the

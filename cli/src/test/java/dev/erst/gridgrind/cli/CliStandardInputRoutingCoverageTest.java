@@ -3,10 +3,10 @@ package dev.erst.gridgrind.cli;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 
-import dev.erst.gridgrind.cli.discovery.CliDiagnostic;
+import dev.erst.gridgrind.cli.discovery.CommandError;
 import dev.erst.gridgrind.contract.catalog.GridGrindRequestSurfaceContractText;
 import dev.erst.gridgrind.contract.dto.GridGrindProblemCode;
-import dev.erst.gridgrind.contract.dto.GridGrindResponse;
+import dev.erst.gridgrind.contract.dto.WorkbookResult;
 import dev.erst.gridgrind.contract.json.GridGrindJson;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -43,9 +43,9 @@ class CliStandardInputRoutingCoverageTest extends GridGrindCliTestSupport {
                         .getBytes(StandardCharsets.UTF_8)),
                 stdout);
 
-    GridGrindResponse.Success response =
+    WorkbookResult.Success response =
         assertInstanceOf(
-            GridGrindResponse.Success.class, GridGrindJson.readResponse(stdout.toByteArray()));
+            WorkbookResult.Success.class, GridGrindJson.readWorkbookResult(stdout.toByteArray()));
 
     assertEquals(0, exitCode);
     assertEquals(0, response.assertions().size());
@@ -82,13 +82,13 @@ class CliStandardInputRoutingCoverageTest extends GridGrindCliTestSupport {
                 stdout,
                 stderr);
 
-    CliDiagnostic failure = cliDiagnosticOnStderr(stdout, stderr);
+    CommandError failure = commandErrorOnStdout(stdout, stderr);
 
     assertEquals(2, exitCode);
-    assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.problem().code());
+    assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.primaryProblem().code());
     assertEquals("--request", parseArgumentsContext(failure).argumentName().orElseThrow());
     assertEquals(
         GridGrindRequestSurfaceContractText.standardInputRequiresRequestMessage(),
-        failure.problem().message());
+        failure.primaryProblem().message());
   }
 }

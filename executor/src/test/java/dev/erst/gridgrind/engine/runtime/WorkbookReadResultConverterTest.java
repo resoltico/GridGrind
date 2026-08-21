@@ -1141,6 +1141,6 @@ class InspectionResultConverterTest extends DefaultGridGrindRequestExecutorTestS
 
   private static ExcelDifferentialStyleSnapshot differentialStyle() {
     return new ExcelDifferentialStyleSnapshot(
-        "0.00", true, null, null, "#AABBCC", null, null, null, null, List.of());
+        "0.00", true, null, null, ExcelColor.rgb("#AABBCC"), null, null, null, null, List.of());
   }
 }

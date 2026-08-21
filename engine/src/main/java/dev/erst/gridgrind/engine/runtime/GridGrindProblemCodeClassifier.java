@@ -1,9 +1,14 @@
 package dev.erst.gridgrind.engine.runtime;
 
 import dev.erst.gridgrind.contract.dto.GridGrindProblemCode;
+import dev.erst.gridgrind.contract.dto.InvalidFormulaInputException;
+import dev.erst.gridgrind.contract.dto.InvalidRawFormulaTextException;
+import dev.erst.gridgrind.contract.json.FormulaRequestException;
+import dev.erst.gridgrind.contract.json.InvalidEncodingException;
 import dev.erst.gridgrind.contract.json.InvalidJsonException;
 import dev.erst.gridgrind.contract.json.InvalidRequestException;
 import dev.erst.gridgrind.contract.json.InvalidRequestShapeException;
+import dev.erst.gridgrind.contract.json.NumberNotRepresentableException;
 import dev.erst.gridgrind.excel.CellNotFoundException;
 import dev.erst.gridgrind.excel.InvalidCellAddressException;
 import dev.erst.gridgrind.excel.InvalidFormulaException;
@@ -16,7 +21,9 @@ import dev.erst.gridgrind.excel.SheetNotFoundException;
 import dev.erst.gridgrind.excel.UnregisteredUserDefinedFunctionException;
 import dev.erst.gridgrind.excel.UnsupportedFormulaConstructException;
 import dev.erst.gridgrind.excel.UnsupportedFormulaException;
+import dev.erst.gridgrind.excel.UnsupportedSourceEncryptionPreservationException;
 import dev.erst.gridgrind.excel.WorkbookNotFoundException;
+import dev.erst.gridgrind.excel.WorkbookNotOpenableException;
 import dev.erst.gridgrind.excel.WorkbookPasswordRequiredException;
 import dev.erst.gridgrind.excel.WorkbookSecurityException;
 import java.io.IOException;
@@ -30,9 +37,13 @@ final class GridGrindProblemCodeClassifier {
   static GridGrindProblemCode codeFor(Throwable exception) {
     Objects.requireNonNull(exception, "exception must not be null");
     return switch (exception) {
+      case InvalidEncodingException _ -> GridGrindProblemCode.INVALID_ENCODING;
       case InvalidJsonException _ -> GridGrindProblemCode.INVALID_JSON;
+      case NumberNotRepresentableException _ -> GridGrindProblemCode.NUMBER_NOT_REPRESENTABLE;
       case InvalidRequestShapeException _ -> GridGrindProblemCode.INVALID_REQUEST_SHAPE;
       case InvalidRequestException _ -> GridGrindProblemCode.INVALID_REQUEST;
+      case RequestPathEscapeException _ -> GridGrindProblemCode.PATH_ESCAPES_ROOT;
+      case UnsafePathAccessException _ -> GridGrindProblemCode.UNSAFE_PATH_ACCESS;
       case AssertionFailedException _ -> GridGrindProblemCode.ASSERTION_FAILED;
       case WorkbookNotFoundException _ -> GridGrindProblemCode.WORKBOOK_NOT_FOUND;
       case InputSourceNotFoundException _ -> GridGrindProblemCode.INPUT_SOURCE_NOT_FOUND;
@@ -41,8 +52,12 @@ final class GridGrindProblemCodeClassifier {
       case SheetNotFoundException _ -> GridGrindProblemCode.SHEET_NOT_FOUND;
       case NamedRangeNotFoundException _ -> GridGrindProblemCode.NAMED_RANGE_NOT_FOUND;
       case CellNotFoundException _ -> GridGrindProblemCode.CELL_NOT_FOUND;
+      case WorkbookNotOpenableException _ -> GridGrindProblemCode.WORKBOOK_NOT_OPENABLE;
       case InvalidCellAddressException _ -> GridGrindProblemCode.INVALID_CELL_ADDRESS;
       case InvalidRangeAddressException _ -> GridGrindProblemCode.INVALID_RANGE_ADDRESS;
+      case FormulaRequestException formula -> formula.problemCode();
+      case InvalidFormulaInputException _ -> GridGrindProblemCode.INVALID_FORMULA;
+      case InvalidRawFormulaTextException _ -> GridGrindProblemCode.INVALID_FORMULA_TEXT;
       case InvalidFormulaException _ -> GridGrindProblemCode.INVALID_FORMULA;
       case UnsupportedFormulaConstructException _ ->
           GridGrindProblemCode.UNSUPPORTED_FORMULA_CONSTRUCT;
@@ -52,6 +67,10 @@ final class GridGrindProblemCodeClassifier {
       case UnsupportedFormulaException _ -> GridGrindProblemCode.UNSUPPORTED_FORMULA;
       case WorkbookPasswordRequiredException _ -> GridGrindProblemCode.WORKBOOK_PASSWORD_REQUIRED;
       case InvalidWorkbookPasswordException _ -> GridGrindProblemCode.INVALID_WORKBOOK_PASSWORD;
+      case EncryptionSourceNotEncryptedException _ ->
+          GridGrindProblemCode.ENCRYPTION_SOURCE_NOT_ENCRYPTED;
+      case UnsupportedSourceEncryptionPreservationException _ ->
+          GridGrindProblemCode.ENCRYPTION_SOURCE_NOT_PRESERVABLE;
       case InvalidSigningConfigurationException _ ->
           GridGrindProblemCode.INVALID_SIGNING_CONFIGURATION;
       case WorkbookSecurityException _ -> GridGrindProblemCode.WORKBOOK_SECURITY_ERROR;

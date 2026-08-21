@@ -1,5 +1,5 @@
 {
-  "protocolVersion": "V1",
+  "protocolVersion": "V2",
   "source": {
     "type": "NEW"
   },
@@ -145,7 +145,7 @@
         "type": "SET_SHAPE",
         "shape": {
           "name": "OpsShape",
-          "kind": "SIMPLE_SHAPE",
+          "type": "SIMPLE_SHAPE",
           "anchor": {
             "type": "TWO_CELL",
             "from": {
@@ -180,7 +180,7 @@
         "type": "SET_SHAPE",
         "shape": {
           "name": "OpsConnector",
-          "kind": "CONNECTOR",
+          "type": "CONNECTOR",
           "anchor": {
             "type": "TWO_CELL",
             "from": {

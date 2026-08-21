@@ -27,11 +27,11 @@ final class GridGrindJsonSubtypeProblemSupport {
 
   static Optional<String> specificGuidance(
       tools.jackson.databind.exc.InvalidTypeIdException exception, String typeId) {
-    Optional<String> containerName =
-        GridGrindJsonPayloadMetadataSupport.terminalContainerName(exception.getPath());
-    if (containerName.isPresent()
-        && "source".equals(containerName.orElseThrow())
-        && "FILE".equals(typeId)) {
+    return specificGuidance(renderedDiscriminatorPath(exception), typeId);
+  }
+
+  static Optional<String> specificGuidance(String discriminatorPath, String typeId) {
+    if ("source.type".equals(discriminatorPath) && "FILE".equals(typeId)) {
       return Optional.of(
           "use source.type='EXISTING' to open a workbook from disk"
               + " (FILE is only valid for source-backed authored payload inputs)");
@@ -48,7 +48,7 @@ final class GridGrindJsonSubtypeProblemSupport {
     return similarTypeIds(baseType.getRawClass(), typeId);
   }
 
-  private static List<String> similarTypeIds(Class<?> baseClass, String typeId) {
+  static List<String> similarTypeIds(Class<?> baseClass, String typeId) {
     List<String> all = GridGrindJsonSubtypeSupport.typeIds(baseClass);
     String normalized = typeId.toUpperCase(java.util.Locale.ROOT);
     int threshold = Math.min(3, Math.max(1, normalized.length() / 5));
@@ -59,6 +59,15 @@ final class GridGrindJsonSubtypeProblemSupport {
                 .thenComparing(java.util.Comparator.naturalOrder()))
         .limit(3)
         .toList();
+  }
+
+  private static String renderedDiscriminatorPath(
+      tools.jackson.databind.exc.InvalidTypeIdException exception) {
+    String path = GridGrindJsonPayloadMetadataSupport.renderPath(exception.getPath());
+    if (path.endsWith(".type") || "type".equals(path)) {
+      return path;
+    }
+    return path.isBlank() ? "type" : path + ".type";
   }
 
   @SuppressWarnings("PMD.AvoidArrayLoops")

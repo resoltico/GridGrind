@@ -7,4 +7,4 @@ Message: Sheet does not exist: W
 Input Bytes: 83
 Command Count: 4
 Style Kinds: (none)
-Command Kinds: AUTO_SIZE_COLUMNS=2, CREATE_SHEET=1, SET_NAMED_RANGE=1
+Command Kinds: AUTO_SIZE_COLUMNS=2, SET_NAMED_RANGE=1, CREATE_SHEET=1

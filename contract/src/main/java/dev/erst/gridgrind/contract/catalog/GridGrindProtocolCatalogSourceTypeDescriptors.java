@@ -17,8 +17,7 @@ final class GridGrindProtocolCatalogSourceTypeDescriptors {
               "EXISTING",
               "Open an existing .xlsx workbook from disk."
                   + " source.security.password unlocks encrypted OOXML packages.",
-              GridGrindProtocolCatalogNotes.requestOwnedPathRuleRef(),
-              "security"));
+              GridGrindProtocolCatalogNotes.requestOwnedPathRuleRef()));
 
   private GridGrindProtocolCatalogSourceTypeDescriptors() {}
 }

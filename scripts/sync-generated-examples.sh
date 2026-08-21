@@ -51,7 +51,7 @@ readonly jar_path="$(ensure_cli_shadow_jar "${repo_root}")"
 
 cat > "${request_path}" <<EOF
 {
-  "protocolVersion": "V1",
+  "protocolVersion": "V2",
   "planId": "generate-package-security-asset",
   "source": {
     "type": "NEW"
@@ -170,7 +170,7 @@ java -jar "${jar_path}" \
 
 cat > "${task_request_path}" <<EOF
 {
-  "protocolVersion": "V1",
+  "protocolVersion": "V2",
   "planId": "generate-task-starter-workbook-asset",
   "source": {
     "type": "NEW"

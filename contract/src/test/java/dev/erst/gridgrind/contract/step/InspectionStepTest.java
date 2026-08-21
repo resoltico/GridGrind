@@ -1,7 +1,7 @@
 package dev.erst.gridgrind.contract.step;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import dev.erst.gridgrind.contract.query.*;
 import dev.erst.gridgrind.contract.selector.RangeSelector;
@@ -30,25 +30,12 @@ class InspectionStepTest {
   }
 
   @Test
-  void rejectsIncompatibleTargetsOrBlankStepIds() {
-    assertThrows(
-        IllegalArgumentException.class,
+  void keepsIncompatibleTargetsForTheStaticContractPhase() {
+    assertDoesNotThrow(
         () ->
             new InspectionStep(
-                " ",
-                new WorkbookSelector.Current(),
+                "bad-target",
+                new RangeSelector.ByRange("Budget", "A1:B2"),
                 new WorkbookIntrospectionQuery.GetWorkbookSummary()));
-    IllegalArgumentException incompatibleTargetFailure =
-        assertThrows(
-            IllegalArgumentException.class,
-            () ->
-                new InspectionStep(
-                    "bad-target",
-                    new RangeSelector.ByRange("Budget", "A1:B2"),
-                    new WorkbookIntrospectionQuery.GetWorkbookSummary()));
-
-    assertEquals(
-        "GET_WORKBOOK_SUMMARY requires target type WORKBOOK_CURRENT but got RANGE_BY_RANGE",
-        incompatibleTargetFailure.getMessage());
   }
 }

@@ -56,21 +56,17 @@ final class WorkbookStepJsonDeserializer extends ValueDeserializer<WorkbookStep>
     if (actionNode != null) {
       MutationAction action = deserializeField(actionNode, parser, MutationAction.class, "action");
       Selector target =
-          WorkbookStepJsonTargetSupport.deserializeTarget(
-              targetNode, parser, "target", WorkbookStepValidation.allowedTargetTypes(action));
+          WorkbookStepJsonTargetSupport.deserializeTarget(targetNode, parser, "target");
       return new MutationStep(stepId, target, action);
     }
     if (assertionNode != null) {
       Assertion assertion = deserializeField(assertionNode, parser, Assertion.class, "assertion");
       Selector target =
-          WorkbookStepJsonTargetSupport.deserializeTarget(
-              targetNode, parser, "target", WorkbookStepValidation.allowedTargetTypes(assertion));
+          WorkbookStepJsonTargetSupport.deserializeTarget(targetNode, parser, "target");
       return new AssertionStep(stepId, target, assertion);
     }
     InspectionQuery query = deserializeField(queryNode, parser, InspectionQuery.class, "query");
-    Selector target =
-        WorkbookStepJsonTargetSupport.deserializeTarget(
-            targetNode, parser, "target", WorkbookStepValidation.allowedTargetTypes(query));
+    Selector target = WorkbookStepJsonTargetSupport.deserializeTarget(targetNode, parser, "target");
     return new InspectionStep(stepId, target, query);
   }
 

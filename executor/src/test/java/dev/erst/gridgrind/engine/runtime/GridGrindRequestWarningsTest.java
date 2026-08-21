@@ -2,6 +2,7 @@ package dev.erst.gridgrind.engine.runtime;
 
 import static dev.erst.gridgrind.engine.runtime.ExecutorTestPlanSupport.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import dev.erst.gridgrind.contract.action.CellMutationAction;
@@ -35,11 +36,27 @@ class GridGrindRequestWarningsTest {
     List<RequestWarning> warnings = GridGrindRequestWarnings.collect(request);
 
     assertEquals(1, warnings.size());
-    assertEquals(2, warnings.getFirst().stepIndex());
-    assertEquals("step-03-set-cell", warnings.getFirst().stepId());
-    assertEquals("SET_CELL", warnings.getFirst().stepType());
+    dev.erst.gridgrind.contract.dto.RequestWarningLocation.Step location =
+        assertInstanceOf(
+            dev.erst.gridgrind.contract.dto.RequestWarningLocation.Step.class,
+            warnings.getFirst().location());
+    assertEquals(2, location.stepIndex());
+    assertEquals("step-03-set-cell", location.stepId());
+    assertEquals("SET_CELL", location.stepType());
     assertTrue(warnings.getFirst().message().contains("Budget Review"));
     assertTrue(warnings.getFirst().message().contains("'Sheet Name'!A1"));
+  }
+
+  @Test
+  void ignoresAnIncompatibleButStructurallyBoundEnsureSheetTarget() {
+    WorkbookPlan request =
+        request(
+            new WorkbookPlan.WorkbookSource.New(),
+            new WorkbookPlan.WorkbookPersistence.None(),
+            List.of(
+                mutate(new WorkbookSelector.Current(), new WorkbookMutationAction.EnsureSheet())));
+
+    assertEquals(List.of(), GridGrindRequestWarnings.collect(request));
   }
 
   @Test
@@ -112,6 +129,7 @@ class GridGrindRequestWarningsTest {
     assertEquals(
         List.of(
             new RequestWarning(
+                dev.erst.gridgrind.contract.dto.GridGrindWarningCode.UNQUOTED_SHEET_NAME_IN_FORMULA,
                 4,
                 "step-05-set-cell",
                 "SET_CELL",
@@ -176,11 +194,13 @@ class GridGrindRequestWarningsTest {
     assertEquals(
         List.of(
             new RequestWarning(
+                dev.erst.gridgrind.contract.dto.GridGrindWarningCode.UNQUOTED_SHEET_NAME_IN_FORMULA,
                 2,
                 "step-03-set-range",
                 "SET_RANGE",
                 "Formula references same-request sheet names with spaces without single quotes: Budget Review. Use 'Sheet Name'!A1 syntax."),
             new RequestWarning(
+                dev.erst.gridgrind.contract.dto.GridGrindWarningCode.UNQUOTED_SHEET_NAME_IN_FORMULA,
                 3,
                 "step-04-append-row",
                 "APPEND_ROW",
