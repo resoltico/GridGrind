@@ -64,6 +64,8 @@ class RequestPathBindingTest {
 
     Files.delete(input);
     Files.write(input, new byte[] {4, 5});
+    // Keep the original inode allocated so an immediate replacement cannot reuse its file key.
+    Files.createLink(root.resolve("original-input.txt"), input);
     try (RequestPathBinding read = RequestPathBinding.bindExistingRead("input.txt", root)) {
       Files.delete(input);
       Files.write(input, new byte[] {6, 7});
