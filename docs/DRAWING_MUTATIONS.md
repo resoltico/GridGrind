@@ -1,6 +1,6 @@
 ---
 afad: "4.0"
-version: "0.73.0"
+version: "0.74.0"
 domain: DRAWING_MUTATIONS
 updated: "2026-05-16"
 route:

@@ -1,8 +1,8 @@
 ---
 afad: "4.0"
-version: "0.73.0"
+version: "0.74.0"
 domain: INDEX
-updated: "2026-06-29"
+updated: "2026-08-28"
 route:
   keywords: [gridgrind, index, docs, documentation, reference, map]
   questions: ["where is the gridgrind documentation index", "what docs does gridgrind have", "how is the gridgrind documentation organized"]

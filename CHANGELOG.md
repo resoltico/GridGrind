@@ -5,13 +5,15 @@ Earlier release history through `0.68.0` is archived in [docs/CHANGELOG_ARCHIVE.
 
 ## [Unreleased]
 
+## [0.74.0] - 2026-08-28
+
 ### Added
 - Added machine-readable protocol-catalog scalar constraints and operation preconditions, including exact formats, lengths, numeric bounds, integral values, required nonblank text, and `.xlsx` path suffixes where the public contract enforces them.
 - Added caller-actionable diagnostics for circular formula evaluation, source and output paths that name directories, create-new output collisions, and a leading UTF-8 byte-order mark; diagnostics retain the relevant authored location when one exists.
 - Added typed response-transport reasons for an existing, directory, unwritable, or late-failing `--response` destination so automation can distinguish an undelivered result from a result written to stdout.
 
 ### Changed
-- Updated the aligned JUnit BOM, Jupiter, and Platform Launcher to `6.1.3`; Jackson Databind to `3.2.2`; the Error Prone Gradle plugin to `5.1.1`; and NullAway to `0.14.0`.
+- Updated the Gradle Wrapper to `9.7.1`; the aligned JUnit BOM, Jupiter, and Platform Launcher to `6.1.3`; Jackson Databind to `3.2.2`; the Error Prone Gradle plugin to `5.1.1`; and NullAway to `0.14.0`.
 - Replaced nullable `CellStyleReport.border` side facts with explicit `NONE`, `DEFAULT_COLOR`, and `COLORED` variants, allowing exact style readback to feed `EXPECT_CELL_STYLE` without null padding.
 - Replaced flat assertion outcomes with tagged `PASSED` and `FAILED` variants; each failed entry in `assertions[]` now carries its complete target, authored assertion, and observed evidence.
 - Replaced conditional-formatting threshold payloads with explicit `MIN`, `MAX`, `NUMBER`, `PERCENT`, `PERCENTILE`, and `FORMULA` variants, separating authorable threshold inputs from factual readback-only states.
@@ -182,7 +184,8 @@ Earlier release history through `0.68.0` is archived in [docs/CHANGELOG_ARCHIVE.
 - Standardized the packaged discovery contract around `requestFileName` plus `requiredWorkspacePaths`, and realigned the release verifier, operator guidance, and public docs to that explicit example/task portability surface instead of carrying forward stale `suggestedRequestPath` and `requiredPaths` terminology.
 - Made the Docker runtime cache layout arbitrary-user-safe: the image now points `HOME` and `XDG_CACHE_HOME` at writable tmp-backed directories so signature-line and other font-backed authoring flows stay silent under `docker run --user <uid>:<gid>` instead of leaking Fontconfig cache warnings on stderr.
 
-[Unreleased]: https://github.com/resoltico/GridGrind/compare/v0.73.0...HEAD
+[Unreleased]: https://github.com/resoltico/GridGrind/compare/v0.74.0...HEAD
+[0.74.0]: https://github.com/resoltico/GridGrind/compare/v0.73.0...v0.74.0
 [0.73.0]: https://github.com/resoltico/GridGrind/compare/v0.72.0...v0.73.0
 [0.72.0]: https://github.com/resoltico/GridGrind/compare/v0.71.0...v0.72.0
 [0.71.0]: https://github.com/resoltico/GridGrind/compare/v0.70.0...v0.71.0

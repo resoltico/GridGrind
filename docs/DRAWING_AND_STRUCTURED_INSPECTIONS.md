@@ -1,6 +1,6 @@
 ---
 afad: "5.0.1"
-version: "0.73.0"
+version: "0.74.0"
 domain: DRAWING_STRUCTURED_INSPECTIONS
 updated: "2026-08-27"
 route:

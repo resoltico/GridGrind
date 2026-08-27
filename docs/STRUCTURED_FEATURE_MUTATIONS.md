@@ -1,6 +1,6 @@
 ---
 afad: "4.0"
-version: "0.73.0"
+version: "0.74.0"
 domain: STRUCTURED_FEATURE_MUTATIONS
 updated: "2026-05-01"
 route:
