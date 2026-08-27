@@ -596,8 +596,129 @@ class GridGrindCliDoctorCatalogCommandTest extends GridGrindCliTestSupport {
     assertEquals(1, exitCode);
     assertFalse(report.valid());
     assertEquals(GridGrindProblemCode.INVALID_REQUEST, problem.code());
-    assertEquals(Optional.of("steps[0].action.value"), requestIntakeContext(report).jsonPath());
+    assertEquals(
+        Optional.of("steps[0].action.value.error"), requestIntakeContext(report).jsonPath());
     assertTrue(problem.message().contains("cannot be authored as stored cell values"));
+  }
+
+  @Test
+  void doctorRequestAcceptsDefaultBorderStyleReportsInExactStyleAssertions() throws IOException {
+    Path workspace = Files.createTempDirectory("gridgrind-doctor-default-border-style-");
+    ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+    ByteArrayOutputStream stderr = new ByteArrayOutputStream();
+
+    int exitCode =
+        new GridGrindCli()
+            .run(
+                new String[] {"--doctor-request", "--execution-root", workspace.toString()},
+                new ByteArrayInputStream(
+                    requestJson(
+                            "{ \"type\": \"NEW\" }",
+                            "{ \"type\": \"NONE\" }",
+                            """
+                            [
+                              {
+                                "stepId": "style",
+                                "target": {
+                                  "type": "CELL_BY_ADDRESS",
+                                  "sheetName": "Budget",
+                                  "address": "A1"
+                                },
+                                "assertion": {
+                                  "type": "EXPECT_CELL_STYLE",
+                                  "style": {
+                                    "numberFormat": "General",
+                                    "alignment": {
+                                      "wrapText": false,
+                                      "horizontalAlignment": "GENERAL",
+                                      "verticalAlignment": "BOTTOM",
+                                      "textRotation": 0,
+                                      "indentation": 0
+                                    },
+                                    "font": {
+                                      "bold": false,
+                                      "italic": false,
+                                      "fontName": "Calibri",
+                                      "fontHeight": { "twips": 220, "points": 11 },
+                                      "fontColor": { "kind": "INDEXED", "indexed": 8 },
+                                      "underline": false,
+                                      "strikeout": false
+                                    },
+                                    "fill": { "kind": "PATTERN_ONLY", "pattern": "NONE" },
+                                    "border": {
+                                      "top": { "type": "NONE" },
+                                      "right": { "type": "NONE" },
+                                      "bottom": { "type": "NONE" },
+                                      "left": { "type": "NONE" }
+                                    },
+                                    "protection": { "locked": true, "hiddenFormula": false }
+                                  }
+                                }
+                              }
+                            ]
+                            """)
+                        .getBytes(StandardCharsets.UTF_8)),
+                stdout,
+                stderr);
+
+    RequestDoctorReport report = doctorReport(stdout, stderr);
+
+    assertEquals(0, exitCode);
+    assertTrue(report.valid());
+    assertTrue(report.problems().isEmpty());
+  }
+
+  @Test
+  void doctorRequestClassifiesOversizedRequestBytesWithoutInternalError() throws IOException {
+    Path requestPath = Files.createTempFile("gridgrind-doctor-oversized-", ".json");
+    Files.write(requestPath, new byte[16 * 1024 * 1024 + 1]);
+    ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+    ByteArrayOutputStream stderr = new ByteArrayOutputStream();
+
+    int exitCode =
+        new GridGrindCli()
+            .run(
+                new String[] {"--doctor-request", "--request", requestPath.toString()},
+                InputStream.nullInputStream(),
+                stdout,
+                stderr);
+
+    RequestDoctorReport report = doctorReport(stdout, stderr);
+
+    assertEquals(1, exitCode);
+    assertFalse(report.valid());
+    assertEquals(
+        GridGrindProblemCode.INVALID_REQUEST, report.primaryProblem().orElseThrow().code());
+    assertTrue(report.primaryProblem().orElseThrow().message().contains("16 MiB"));
+  }
+
+  @Test
+  void doctorRequestClassifiesPersistencePathEscapesWithoutInternalError() throws IOException {
+    Path requestDirectory = Files.createTempDirectory("gridgrind-doctor-path-escape-");
+    Path requestPath = requestDirectory.resolve("request.json");
+    Files.writeString(
+        requestPath,
+        requestJson(
+            "{ \"type\": \"NEW\" }",
+            "{ \"type\": \"SAVE_AS\", \"path\": \"../escape.xlsx\", \"ifExists\": \"REJECT\" }",
+            "[]"));
+    ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+    ByteArrayOutputStream stderr = new ByteArrayOutputStream();
+
+    int exitCode =
+        new GridGrindCli()
+            .run(
+                new String[] {"--doctor-request", "--request", requestPath.toString()},
+                InputStream.nullInputStream(),
+                stdout,
+                stderr);
+
+    RequestDoctorReport report = doctorReport(stdout, stderr);
+
+    assertEquals(1, exitCode);
+    assertFalse(report.valid());
+    assertEquals(
+        GridGrindProblemCode.PATH_ESCAPES_ROOT, report.primaryProblem().orElseThrow().code());
   }
 
   @Test

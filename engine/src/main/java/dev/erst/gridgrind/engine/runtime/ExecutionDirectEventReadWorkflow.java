@@ -87,7 +87,8 @@ final class ExecutionDirectEventReadWorkflow {
         GridGrindProblemDetail.Problem problem =
             ExecutionResponseSupport.problemFor(
                 exception,
-                stepSupport.executeStepContext(request, stepIndex, inspectionStep, exception));
+                ExecutionStepContextFactory.contextFor(
+                    request, stepIndex, inspectionStep, exception));
         stepHandle.fail(
             problem.code(), problem.category(), problem.context().stage(), problem.message());
         return responseSupport.closeReadableWorkbook(

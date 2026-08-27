@@ -205,12 +205,20 @@ class DefaultGridGrindRequestExecutorStyleAndFormulaTest
         fillPattern(style.fill()));
     assertEquals(rgb("#FFF2CC"), fillForegroundColor(style.fill()));
     assertEquals(rgb("#DDEBF7"), fillBackgroundColor(style.fill()));
-    assertEquals(ExcelBorderStyle.THIN, style.border().top().style());
-    assertEquals(ExcelBorderStyle.DOUBLE, style.border().right().style());
-    assertEquals(ExcelBorderStyle.THIN, style.border().bottom().style());
-    assertEquals(ExcelBorderStyle.THIN, style.border().left().style());
-    assertEquals(rgb("#102030"), style.border().top().color());
-    assertEquals(rgb("#203040"), style.border().right().color());
+    CellBorderSideReport.Colored topBorder =
+        assertInstanceOf(CellBorderSideReport.Colored.class, style.border().top());
+    CellBorderSideReport.Colored rightBorder =
+        assertInstanceOf(CellBorderSideReport.Colored.class, style.border().right());
+    CellBorderSideReport.Colored bottomBorder =
+        assertInstanceOf(CellBorderSideReport.Colored.class, style.border().bottom());
+    CellBorderSideReport.Colored leftBorder =
+        assertInstanceOf(CellBorderSideReport.Colored.class, style.border().left());
+    assertEquals(ExcelBorderStyle.THIN, topBorder.style());
+    assertEquals(ExcelBorderStyle.DOUBLE, rightBorder.style());
+    assertEquals(ExcelBorderStyle.THIN, bottomBorder.style());
+    assertEquals(ExcelBorderStyle.THIN, leftBorder.style());
+    assertEquals(rgb("#102030"), topBorder.color());
+    assertEquals(rgb("#203040"), rightBorder.color());
     assertFalse(style.protection().locked());
     assertTrue(style.protection().hiddenFormula());
     assertEquals(
@@ -303,7 +311,8 @@ class DefaultGridGrindRequestExecutorStyleAndFormulaTest
     assertEquals(CellColorReport.theme(3, 0.30d), fillForegroundColor(themedStyle.fill()));
     assertEquals(
         CellColorReport.indexed(Short.toUnsignedInt(IndexedColors.DARK_RED.getIndex())),
-        themedStyle.border().bottom().color());
+        assertInstanceOf(CellBorderSideReport.Colored.class, themedStyle.border().bottom())
+            .color());
     CellGradientFillReport.Linear gradient =
         assertInstanceOf(CellGradientFillReport.Linear.class, fillGradient(gradientStyle.fill()));
     assertEquals(45.0d, gradient.degree());

@@ -72,6 +72,13 @@ class CellReadbackCoverageTest {
     assertEquals("ERROR", error.type());
     assertEquals("FORMULA", formula.type());
 
+    CellBorderSideReport.DefaultColor defaultColor =
+        new CellBorderSideReport.DefaultColor(ExcelBorderStyle.THIN);
+    assertEquals(ExcelBorderStyle.THIN, defaultColor.style());
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new CellBorderSideReport.DefaultColor(ExcelBorderStyle.NONE));
+
     assertThrows(
         IllegalArgumentException.class,
         () ->
@@ -329,7 +336,7 @@ class CellReadbackCoverageTest {
   }
 
   private static CellStyleReport style() {
-    CellBorderSideReport emptySide = new CellBorderSideReport(ExcelBorderStyle.NONE, null);
+    CellBorderSideReport emptySide = new CellBorderSideReport.None();
     return new CellStyleReport(
         "General",
         new CellAlignmentReport(

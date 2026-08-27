@@ -90,10 +90,14 @@ public final class CatalogFieldMetadataSupport {
             FieldMetadataOverride.NONE);
     ProtocolField protocolField = component.getAnnotation(ProtocolField.class);
     String fieldName = GridGrindProtocolContractSupport.wireFieldName(component);
+    FieldShape shape =
+        applyConstraints(
+            fieldShape(component.getGenericType()),
+            CatalogFieldConstraints.forComponent(component.getDeclaringRecord(), fieldName));
     return new FieldEntry(
         fieldName,
         optionalFields.contains(fieldName) ? FieldRequirement.OPTIONAL : FieldRequirement.REQUIRED,
-        fieldShape(component.getGenericType()),
+        shape,
         metadataOverride.overrideEnumValues(enumValues(component.getGenericType())),
         protocolField == null ? Optional.empty() : protocolField.booleanDefault().value(),
         metadataOverride.overrideEnumValueDocs(enumValueDocs(component.getGenericType())),
@@ -159,6 +163,14 @@ public final class CatalogFieldMetadataSupport {
 
   private static Optional<FieldShape> groupedFieldShape(Class<?> classType) {
     return CatalogFieldShapeRegistry.groupedFieldShape(classType);
+  }
+
+  private static FieldShape applyConstraints(FieldShape shape, List<FieldConstraint> constraints) {
+    if (constraints.isEmpty()) {
+      return shape;
+    }
+    FieldShape.Scalar scalar = (FieldShape.Scalar) shape;
+    return new FieldShape.Scalar(scalar.scalarType(), constraints);
   }
 
   static java.util.List<String> enumValues(Type type) {

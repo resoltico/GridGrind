@@ -46,6 +46,9 @@ final class GridGrindProblemCodeClassifier {
       case UnsafePathAccessException _ -> GridGrindProblemCode.UNSAFE_PATH_ACCESS;
       case AssertionFailedException _ -> GridGrindProblemCode.ASSERTION_FAILED;
       case WorkbookNotFoundException _ -> GridGrindProblemCode.WORKBOOK_NOT_FOUND;
+      case SourcePathIsDirectoryException _ -> GridGrindProblemCode.SOURCE_PATH_IS_DIRECTORY;
+      case OutputPathIsDirectoryException _ -> GridGrindProblemCode.OUTPUT_PATH_IS_DIRECTORY;
+      case OutputPathAlreadyExistsException _ -> GridGrindProblemCode.OUTPUT_PATH_ALREADY_EXISTS;
       case InputSourceNotFoundException _ -> GridGrindProblemCode.INPUT_SOURCE_NOT_FOUND;
       case InputSourceUnavailableException _ -> GridGrindProblemCode.INPUT_SOURCE_UNAVAILABLE;
       case InputSourceReadException _ -> GridGrindProblemCode.INPUT_SOURCE_IO_ERROR;

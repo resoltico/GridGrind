@@ -132,7 +132,8 @@ final class WorkbookAuditExamples {
                     ExampleCellValues.row(
                         ExampleCellValues.text("Label"), ExampleCellValues.text("Destination")),
                     ExampleCellValues.row(
-                        ExampleCellValues.text("Relative policy PDF"),
+                        ExampleCellValues.textFile(
+                            paths.asset("file-hyperlink-assets/request-label.txt")),
                         ExampleCellValues.text("support/expense policy 2026.pdf")),
                     ExampleCellValues.row(
                         ExampleCellValues.text("Absolute checklist URI"),

@@ -98,12 +98,14 @@ final class ExcelConditionalFormattingAuthoringSupport {
               ? sheet
                   .getSheetConditionalFormatting()
                   .createConditionalFormattingRule(
-                      ExcelComparisonOperatorPoiBridge.toPoi(cellValueRule.operator()),
+                      ExcelConditionalFormattingComparisonOperatorPoiBridge.toPoi(
+                          cellValueRule.operator()),
                       cellValueRule.formula1())
               : sheet
                   .getSheetConditionalFormatting()
                   .createConditionalFormattingRule(
-                      ExcelComparisonOperatorPoiBridge.toPoi(cellValueRule.operator()),
+                      ExcelConditionalFormattingComparisonOperatorPoiBridge.toPoi(
+                          cellValueRule.operator()),
                       cellValueRule.formula1(),
                       cellValueRule.formula2().orElseThrow());
       case ExcelConditionalFormattingRule.ColorScaleRule colorScaleRule ->

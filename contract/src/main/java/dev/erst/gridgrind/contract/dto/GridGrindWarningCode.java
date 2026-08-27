@@ -4,5 +4,6 @@ package dev.erst.gridgrind.contract.dto;
 public enum GridGrindWarningCode {
   UNQUOTED_SHEET_NAME_IN_FORMULA,
   NON_PORTABLE_ABSOLUTE_PATH,
+  UTF8_BOM_IGNORED,
   FORMULA_NOT_EVALUATED
 }

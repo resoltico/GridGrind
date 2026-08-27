@@ -1,8 +1,8 @@
 ---
-afad: "4.0"
+afad: "5.0.1"
 version: "0.73.0"
 domain: CELL_VALUE_MUTATIONS
-updated: "2026-05-01"
+updated: "2026-08-27"
 route:
   keywords: [gridgrind, cell mutations, set-cell, set-range, clear-range, array-formula]
   questions: ["how do i write cells in gridgrind", "how do i write ranges in gridgrind", "how do i use array formulas in gridgrind"]
@@ -50,6 +50,9 @@ FORMULA note: text is the OOXML `<f>` body, so it must not begin with `=`. Send
 OOXML formula-body framing and rejects XML 1.0-forbidden character data as `INVALID_FORMULA_TEXT`.
 Use `RAW_FORMULA` only when a newer
 Excel formula cannot be parsed by POI and you need opaque formula-body persistence.
+Factual readback remains available without evaluator support: `GET_FORMULA_SURFACE` groups the
+stored formula body, and `GET_CELLS` with only the `FORMULA` facet returns it for an addressed
+cell. Add `VALUE` or `FORMAT` only when you explicitly want evaluator-backed output.
 
 DATE / DATE_TIME note: the required Excel number format is applied without discarding any existing
 fill, border, font, alignment, or wrap state already present on the cell.

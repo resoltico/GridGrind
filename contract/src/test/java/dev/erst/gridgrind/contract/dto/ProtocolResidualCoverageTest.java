@@ -82,6 +82,13 @@ class ProtocolResidualCoverageTest {
     assertThrows(
         IllegalArgumentException.class,
         () ->
+            new DataValidationRuleInput.WholeNumber(
+                ExcelComparisonOperator.NOT_BETWEEN,
+                "1",
+                Optional.of("DDE(\"cmd\",\"/C calc\",\"\")")));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
             new ConditionalFormattingRuleInput.FormulaRule(
                 "DDE(\"cmd\",\"/C calc\",\"\")", false, Optional.empty()));
     assertThrows(

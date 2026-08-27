@@ -10,8 +10,8 @@
       "inputBytes" : 154,
       "commandCount" : 7,
       "commandKinds" : {
-        "MERGE_CELLS" : 1,
         "GROUP_COLUMNS" : 5,
+        "MERGE_CELLS" : 1,
         "SET_SHEET_PANE" : 1
       },
       "styleKinds" : { }

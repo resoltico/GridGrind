@@ -6,7 +6,6 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import dev.erst.gridgrind.contract.catalog.GridGrindContractText;
-import dev.erst.gridgrind.contract.selector.CellSelector;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
@@ -24,7 +23,7 @@ class CalculationContractTypesTest {
         new CalculationStrategyInput.ClearCachesOnly();
     CalculationStrategyInput.EvaluateTargets evaluateTargets =
         new CalculationStrategyInput.EvaluateTargets(
-            List.of(new CellSelector.QualifiedAddress("Budget", "B1")));
+            List.of(new FormulaCellTarget("Budget", "B1")));
 
     assertTrue(doNotCalculate.isDefault());
     assertEquals("DO_NOT_CALCULATE", doNotCalculate.strategyType());
@@ -41,16 +40,13 @@ class CalculationContractTypesTest {
         () -> new CalculationStrategyInput.EvaluateTargets(List.of()));
     assertThrows(
         NullPointerException.class,
-        () ->
-            new CalculationStrategyInput.EvaluateTargets(
-                List.of((CellSelector.QualifiedAddress) null)));
+        () -> new CalculationStrategyInput.EvaluateTargets(List.of((FormulaCellTarget) null)));
     assertThrows(
         IllegalArgumentException.class,
         () ->
             new CalculationStrategyInput.EvaluateTargets(
                 List.of(
-                    new CellSelector.QualifiedAddress("Budget", "B1"),
-                    new CellSelector.QualifiedAddress("Budget", "B1"))));
+                    new FormulaCellTarget("Budget", "B1"), new FormulaCellTarget("Budget", "B1"))));
 
     CalculationPolicyInput defaultPolicy = CalculationPolicyInput.defaults();
     CalculationPolicyInput markedPolicy =
@@ -205,14 +201,14 @@ class CalculationContractTypesTest {
   void validatesCalculationReportsAndJournalCalculationEnvelope() {
     CalculationReport.FormulaCapability evaluable =
         new CalculationReport.FormulaCapability(
-            new CellSelector.QualifiedAddress("Budget", "B1"),
+            new FormulaCellTarget("Budget", "B1"),
             "A1*2",
             FormulaCapabilityKind.EVALUABLE_NOW,
             Optional.empty(),
             Optional.empty());
     CalculationReport.FormulaCapability blocking =
         new CalculationReport.FormulaCapability(
-            new CellSelector.QualifiedAddress("Budget", "C1"),
+            new FormulaCellTarget("Budget", "C1"),
             "APP.TITLE()",
             FormulaCapabilityKind.UNEVALUABLE_NOW,
             Optional.of(GridGrindProblemCode.UNSUPPORTED_FORMULA),
@@ -292,7 +288,7 @@ class CalculationContractTypesTest {
         IllegalArgumentException.class,
         () ->
             new CalculationReport.FormulaCapability(
-                new CellSelector.QualifiedAddress("Budget", "B1"),
+                new FormulaCellTarget("Budget", "B1"),
                 "A1*2",
                 FormulaCapabilityKind.EVALUABLE_NOW,
                 Optional.of(GridGrindProblemCode.INVALID_FORMULA),
@@ -301,7 +297,7 @@ class CalculationContractTypesTest {
         IllegalArgumentException.class,
         () ->
             new CalculationReport.FormulaCapability(
-                new CellSelector.QualifiedAddress("Budget", "B1"),
+                new FormulaCellTarget("Budget", "B1"),
                 "A1*2",
                 FormulaCapabilityKind.UNPARSEABLE_BY_POI,
                 Optional.empty(),
@@ -310,7 +306,7 @@ class CalculationContractTypesTest {
         IllegalArgumentException.class,
         () ->
             new CalculationReport.FormulaCapability(
-                new CellSelector.QualifiedAddress("Budget", "B1"),
+                new FormulaCellTarget("Budget", "B1"),
                 "A1*2",
                 FormulaCapabilityKind.EVALUABLE_NOW,
                 Optional.empty(),

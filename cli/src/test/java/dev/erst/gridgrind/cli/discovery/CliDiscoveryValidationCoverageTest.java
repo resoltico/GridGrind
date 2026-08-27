@@ -382,7 +382,9 @@ class CliDiscoveryValidationCoverageTest {
                 IllegalArgumentException.class,
                 () ->
                     new CliTransportNotice(
-                        CliTransportNotice.Destination.STDOUT, Optional.of("   ")))
+                        CliTransportNotice.Reason.RESPONSE_WRITE_FAILED,
+                        CliTransportNotice.Destination.STDOUT,
+                        Optional.of("   ")))
             .getMessage());
     assertEquals(
         "requestFileName must be one portable file name, not a repository path",

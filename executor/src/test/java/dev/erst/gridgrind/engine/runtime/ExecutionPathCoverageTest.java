@@ -18,7 +18,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
-import java.util.Optional;
 import org.junit.jupiter.api.Test;
 
 /** Focused coverage for explicit execution-root path and workbook helpers. */
@@ -253,7 +252,6 @@ class ExecutionPathCoverageTest {
             "bad request",
             GridGrindProblemCode.INVALID_REQUEST.resolution(),
             new ProblemContext.ExecuteRequest(ProblemContextRequestSurfaces.RequestShape.unknown()),
-            Optional.empty(),
             List.of());
 
     WorkbookResult.Failure failure =

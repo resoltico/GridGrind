@@ -96,7 +96,7 @@ class ExcelSheetFormulaHealthCoverageTest extends ExcelSheetTestSupport {
       assertThrows(IllegalStateException.class, () -> nullEvaluatedCellSheet.cells().bool("A1"));
       assertInstanceOf(
           ExcelCellSnapshot.BlankSnapshot.class,
-          ((ExcelCellSnapshot.FormulaSnapshot) blankEvaluatedFormula).evaluation());
+          ((ExcelCellSnapshot.FormulaSnapshot) blankEvaluatedFormula).evaluation().orElseThrow());
     }
   }
 

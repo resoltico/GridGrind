@@ -3,11 +3,11 @@ package dev.erst.gridgrind.excel;
 import dev.erst.gridgrind.excel.foundation.ExcelComparisonOperator;
 import org.apache.poi.ss.usermodel.ComparisonOperator;
 
-/** Maps GridGrind comparison operators to and from Apache POI constants. */
-@SuppressWarnings("PMD.CommentRequired")
-public final class ExcelComparisonOperatorPoiBridge {
-  private ExcelComparisonOperatorPoiBridge() {}
+/** Maps conditional-formatting comparison operators to Apache POI constants. */
+public final class ExcelConditionalFormattingComparisonOperatorPoiBridge {
+  private ExcelConditionalFormattingComparisonOperatorPoiBridge() {}
 
+  /** Returns the POI conditional-formatting operator constant for one protocol operator. */
   public static byte toPoi(ExcelComparisonOperator operator) {
     return switch (operator) {
       case BETWEEN -> ComparisonOperator.BETWEEN;
@@ -21,6 +21,7 @@ public final class ExcelComparisonOperatorPoiBridge {
     };
   }
 
+  /** Returns the protocol operator represented by one POI conditional-formatting constant. */
   public static ExcelComparisonOperator fromPoi(int comparisonOperator) {
     return switch (comparisonOperator) {
       case ComparisonOperator.BETWEEN -> ExcelComparisonOperator.BETWEEN;
@@ -33,7 +34,8 @@ public final class ExcelComparisonOperatorPoiBridge {
       case ComparisonOperator.LE -> ExcelComparisonOperator.LESS_OR_EQUAL;
       default ->
           throw new IllegalArgumentException(
-              "Unsupported Apache POI comparison operator: " + comparisonOperator);
+              "Unsupported Apache POI conditional-formatting comparison operator: "
+                  + comparisonOperator);
     };
   }
 }

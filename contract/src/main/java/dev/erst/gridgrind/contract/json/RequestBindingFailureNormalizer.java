@@ -21,11 +21,39 @@ final class RequestBindingFailureNormalizer {
             failure);
     if (formulaProblem.isPresent()) {
       FormulaRequestException normalized = formulaProblem.orElseThrow();
+      Optional<String> inferredPath =
+          RequestBindingPathSupport.directChildPathForInvariant(fragment, failure);
+      if (inferredPath.isPresent()) {
+        String qualifiedPath =
+            GridGrindJsonPathSupport.qualifyPath(Optional.of(fragmentPath), inferredPath)
+                .orElse(fragmentPath);
+        FormulaRequestException rebased =
+            new FormulaRequestException(
+                normalized.problemCode(),
+                normalized.getMessage(),
+                Optional.of(qualifiedPath),
+                Optional.empty(),
+                Optional.empty(),
+                failure);
+        return new RequestBindingFailure(rebased, qualifiedPath, Optional.empty());
+      }
       return new RequestBindingFailure(
           normalized, normalized.jsonPath().orElse(fragmentPath), Optional.empty());
     }
     NormalizedFailure normalized = normalize(failure, fragment, fragmentPath, redactor);
     String qualifiedPath = normalized.payloadException().jsonPath().orElse(fragmentPath);
+    Optional<String> inferredPath =
+        RequestBindingPathSupport.directChildPathForInvariant(fragment, failure);
+    if (inferredPath.isPresent()) {
+      String inferredQualifiedPath =
+          GridGrindJsonPathSupport.qualifyPath(Optional.of(fragmentPath), inferredPath)
+              .orElse(fragmentPath);
+      return new RequestBindingFailure(
+          RequestBindingFailureRebaser.rebase(
+              normalized.exception(), inferredQualifiedPath, failure),
+          inferredQualifiedPath,
+          Optional.empty());
+    }
     return new RequestBindingFailure(normalized.exception(), qualifiedPath, Optional.empty());
   }
 
@@ -96,13 +124,17 @@ final class RequestBindingFailureNormalizer {
       RequestJsonNode fragment,
       String fragmentPath) {
     Optional<String> preciseInnerPath =
-        RequestBindingPathSupport.preciseInnerPath(
-            fragment,
-            RequestBindingPathSupport.jacksonFailure(cause)
-                .flatMap(
-                    exception ->
-                        GridGrindJsonPayloadMetadataSupport.payloadMetadata(exception).jsonPath()),
-            failure.requestProblem().jsonPath());
+        RequestBindingPathSupport.directChildPathForInvariant(fragment, cause)
+            .or(
+                () ->
+                    RequestBindingPathSupport.preciseInnerPath(
+                        fragment,
+                        RequestBindingPathSupport.jacksonFailure(cause)
+                            .flatMap(
+                                exception ->
+                                    GridGrindJsonPayloadMetadataSupport.payloadMetadata(exception)
+                                        .jsonPath()),
+                        failure.requestProblem().jsonPath()));
     Optional<String> qualifiedPath =
         GridGrindJsonPathSupport.qualifyPath(Optional.of(fragmentPath), preciseInnerPath);
     return switch (failure.requestProblem()) {

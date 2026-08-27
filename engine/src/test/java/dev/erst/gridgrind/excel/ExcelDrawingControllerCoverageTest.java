@@ -371,7 +371,7 @@ class ExcelDrawingControllerCoverageTest extends ExcelDrawingCoverageTestSupport
             String.class,
             new FixedBytesPackagePart("/xl/media/picture.png", "image/png", PNG_PIXEL_BYTES)));
     assertEquals(
-        "5be3713aa69589bb763cc4949206c21415737e47808e8646871b85e671c947d2",
+        "cae9206a9083dd9d4653e108d9de731be0f7554e93b849bf3f17517a7b8cb878",
         invoke(controller, "sha256", String.class, PNG_PIXEL_BYTES));
 
     assertArrayEquals(

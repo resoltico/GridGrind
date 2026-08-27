@@ -1,5 +1,5 @@
 ---
-afad: "4.0"
+afad: "5.0.1"
 version: "0.73.0"
 domain: RELEASE_PROTOCOL
 updated: "2026-07-02"
@@ -13,7 +13,7 @@ route:
 The entire release flow is driven by the GitHub CLI (`gh`). Every step that touches GitHub —
 PRs, CI status, merges, releases, workflow monitoring — uses `gh`, not the GitHub web UI.
 
-**BEFORE DOING ANYTHING ELSE**, run both checks:
+**Before any GitHub operation**, run both checks:
 
 ```bash
 gh --version
@@ -59,7 +59,7 @@ Requirements before continuing:
 PRIMARY_CHECKOUT=$(git rev-parse --show-toplevel)
 git fetch origin --prune --tags
 RELEASE_WORKTREE="$(mktemp -d -t gridgrind-release-XXXXXX)"
-git worktree add "$RELEASE_WORKTREE" origin/main
+git worktree add -b release/X.Y.Z "$RELEASE_WORKTREE" origin/main
 cd "$RELEASE_WORKTREE"
 ```
 
@@ -89,35 +89,28 @@ If the primary checkout has unpublished local work, decide before the release wh
 real or stale. Real work must move onto a named branch or exported patch before closeout. Stale
 work must be dropped. Never leave the primary checkout on stale `main` plus unpublished overlays.
 
-If the primary checkout contains the real release payload but release verification must happen from
-the clean release worktree, bootstrap that payload explicitly before you run any release build in
-the worktree:
-
-- preferred: move the unpublished release payload onto a local bootstrap branch, then create the
-  release worktree from that branch
-- acceptable: export one explicit patch from the primary checkout and apply it inside the clean
-  release worktree before running checks
-
-For example:
+If the primary checkout contains the real, unpublished release payload, use a bootstrap branch so
+the complete tracked and untracked payload reaches the clean worktree. Do not export a partial
+diff: it can omit staged changes or untracked files.
 
 ```bash
 PRIMARY_CHECKOUT=$(git rev-parse --show-toplevel)
-git diff --binary > /tmp/gridgrind-release-bootstrap.patch
+BOOTSTRAP_BRANCH="bootstrap/release-X.Y.Z"
+git switch -c "$BOOTSTRAP_BRANCH"
+git add -A
+git status --short
+git diff --cached --name-status
+git commit -m "release: prepare X.Y.Z payload"
 RELEASE_WORKTREE="$(mktemp -d -t gridgrind-release-XXXXXX)"
-git worktree add -b release/X.Y.Z "$RELEASE_WORKTREE" origin/main
+git worktree add -b release/X.Y.Z "$RELEASE_WORKTREE" "$BOOTSTRAP_BRANCH"
+mkdir -p "$PRIMARY_CHECKOUT/.codex/tmp/release-bootstrap"
+printf 'PRIMARY_CHECKOUT=%s\nBOOTSTRAP_BRANCH=%s\nRELEASE_WORKTREE=%s\n' "$PRIMARY_CHECKOUT" "$BOOTSTRAP_BRANCH" "$RELEASE_WORKTREE" > "$PRIMARY_CHECKOUT/.codex/tmp/release-bootstrap/X.Y.Z.env"
 cd "$RELEASE_WORKTREE"
-git apply --index /tmp/gridgrind-release-bootstrap.patch
 ```
 
-If the unpublished payload includes new untracked release files, move them explicitly too — either
-by committing them on the bootstrap branch or copying them into the release worktree before the
-Step 2 staging checkpoint. Never fall back to running release verification from the dirty or
-problematic primary checkout just because the unpublished release payload currently lives there.
-
-When you bootstrap a dirty primary checkout into a clean release worktree, record the release
-worktree path and any copied-untracked manifest under `tmp/release-bootstrap/` in the primary
-checkout before you leave it. Release closeout must be able to reconnect the published branch and
-tag work back to the user's long-lived checkout without guesswork.
+Never fall back to running release verification from the dirty or problematic primary checkout just
+because the unpublished release payload currently lives there. The bootstrap branch is temporary;
+release closeout deletes it after the primary checkout has been reconciled.
 
 Before running any build or release command, verify the local Java and Gradle runtime:
 
@@ -189,7 +182,7 @@ If any open PR is authored by Dependabot — for example `dependabot[bot]` or Gi
 identities such as `app/dependabot` — decide up front whether it changes release machinery or
 release-critical dependencies. If it does, land or reject it before cutting the release branch.
 If it does not, carry that decision forward and complete Step 10 before ending the release
-session.
+session. Apply the tiering and approval rules in [DEPENDENCY_AUTOMATION_POLICY.md](./DEPENDENCY_AUTOMATION_POLICY.md).
 
 ### Step 2 — Commit on a release branch
 
@@ -672,38 +665,5 @@ closeout:
 
 ```bash
 git -C "$PRIMARY_CHECKOUT" branch -D "$BOOTSTRAP_BRANCH"
-rm -f "$PRIMARY_CHECKOUT/tmp/release-bootstrap/X.Y.Z.env"
+rm -f "$PRIMARY_CHECKOUT/.codex/tmp/release-bootstrap/X.Y.Z.env"
 ```
-
----
-
-## Dependabot Approval Strategy
-
-GridGrind is a workbook automation engine integrated into financial and business workflows.
-**No Dependabot PR may be auto-merged.** Every update — regardless of ecosystem, scope, or
-whether it is flagged as a security fix — requires a human decision before landing on `main`.
-
-### Triage tiers
-
-| Tier | Trigger | Deadline | Action |
-|:-----|:--------|:---------|:-------|
-| **Security** | Dependabot security advisory on any direct or transitive dependency | Within 7 calendar days of PR open | Review, verify CI passes, merge or reject with documented reason |
-| **Regular** | Non-security weekly update | Before the next release | Review during Step 10 Dependabot hygiene; merge or close |
-| **Major version bump** | `semver-major` update on any ecosystem | Before the next release | Treat as a considered upgrade, not a routine bump; verify API compatibility explicitly |
-
-### Required gates before any Dependabot merge
-
-1. The full CI `Gate` check passes on the Dependabot PR head commit.
-2. For Docker base image updates: `Docker smoke` specifically passes, confirming the new base
-   image does not break the containerized runtime.
-3. For Gradle dependency updates that touch Apache POI, Log4j, or Jackson: the `Check` step that
-   exercises CLI contract verification and Jazzer regression passes cleanly.
-4. For GitHub Actions updates: the pinned commit SHA in the workflow file matches the SHA of the
-   tagged release being adopted — verify with `gh api repos/<owner>/<repo>/git/ref/tags/<tag>`.
-
-### What to never do
-
-- Never merge a Dependabot PR that has a failing or missing `Gate` check.
-- Never retag or amend a published release to absorb a post-release Dependabot merge.
-- Never leave a Dependabot PR open indefinitely without an explicit keep-open reason documented
-  in a PR comment.

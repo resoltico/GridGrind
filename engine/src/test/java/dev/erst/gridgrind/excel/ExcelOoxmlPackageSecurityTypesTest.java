@@ -292,15 +292,13 @@ class ExcelOoxmlPackageSecurityTypesTest {
     assertSame(plainSecurity, plainSecurity.afterMutation());
 
     Path workbookPath = Path.of("/tmp/security.xlsx");
-    WorkbookPasswordRequiredException passwordRequired =
-        new WorkbookPasswordRequiredException(workbookPath);
-    assertEquals(workbookPath, passwordRequired.workbookPath());
+    WorkbookPasswordRequiredException passwordRequired = new WorkbookPasswordRequiredException();
     assertTrue(passwordRequired.getMessage().contains("source.security.password"));
+    assertFalse(passwordRequired.getMessage().contains(workbookPath.toString()));
 
-    InvalidWorkbookPasswordException invalidPassword =
-        new InvalidWorkbookPasswordException(workbookPath);
-    assertEquals(workbookPath, invalidPassword.workbookPath());
-    assertTrue(invalidPassword.getMessage().contains("did not unlock the workbook"));
+    InvalidWorkbookPasswordException invalidPassword = new InvalidWorkbookPasswordException();
+    assertTrue(invalidPassword.getMessage().contains("did not unlock the source workbook"));
+    assertFalse(invalidPassword.getMessage().contains(workbookPath.toString()));
 
     IllegalStateException cause = new IllegalStateException("boom");
     InvalidSigningConfigurationException invalidSigningConfiguration =

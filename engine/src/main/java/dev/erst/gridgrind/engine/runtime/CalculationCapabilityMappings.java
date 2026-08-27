@@ -56,6 +56,7 @@ final class CalculationCapabilityMappings {
     return Optional.of(
         switch (assessment.issue()) {
           case INVALID_FORMULA -> GridGrindProblemCode.INVALID_FORMULA;
+          case CIRCULAR_REFERENCE -> GridGrindProblemCode.CIRCULAR_FORMULA_REFERENCE;
           case MISSING_EXTERNAL_WORKBOOK -> GridGrindProblemCode.MISSING_EXTERNAL_WORKBOOK;
           case UNREGISTERED_USER_DEFINED_FUNCTION ->
               GridGrindProblemCode.UNREGISTERED_USER_DEFINED_FUNCTION;
@@ -68,9 +69,10 @@ final class CalculationCapabilityMappings {
     var issue = Objects.requireNonNull(assessment.issue(), "assessment.issue must not be null");
     return switch (issue) {
       case INVALID_FORMULA -> 0;
-      case MISSING_EXTERNAL_WORKBOOK -> 1;
-      case UNREGISTERED_USER_DEFINED_FUNCTION -> 2;
-      case UNSUPPORTED_FORMULA -> 3;
+      case CIRCULAR_REFERENCE -> 1;
+      case MISSING_EXTERNAL_WORKBOOK -> 2;
+      case UNREGISTERED_USER_DEFINED_FUNCTION -> 3;
+      case UNSUPPORTED_FORMULA -> 4;
     };
   }
 }

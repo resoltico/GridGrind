@@ -14,7 +14,6 @@ import dev.erst.gridgrind.excel.validation.ExcelDataValidationSnapshot;
 import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
-import org.apache.poi.ss.usermodel.ComparisonOperator;
 import org.apache.poi.ss.usermodel.DataValidation;
 import org.apache.poi.ss.usermodel.DataValidationConstraint;
 import org.apache.poi.ss.usermodel.DataValidationHelper;
@@ -338,7 +337,7 @@ class ExcelDataValidationControllerTest {
         invokeToSnapshot(
             new StubConstraint(
                 DataValidationConstraint.ValidationType.INTEGER,
-                ComparisonOperator.GT,
+                DataValidationConstraint.OperatorType.GREATER_THAN,
                 null,
                 null,
                 null),
@@ -349,7 +348,7 @@ class ExcelDataValidationControllerTest {
         invokeToSnapshot(
             new StubConstraint(
                 DataValidationConstraint.ValidationType.INTEGER,
-                ComparisonOperator.GT,
+                DataValidationConstraint.OperatorType.GREATER_THAN,
                 null,
                 " ",
                 null),
@@ -663,37 +662,37 @@ class ExcelDataValidationControllerTest {
                 org.openxmlformats.schemas.spreadsheetml.x2006.main.STDataValidationOperator
                     .NOT_BETWEEN)));
     assertEquals(
-        ExcelComparisonOperator.NOT_EQUAL,
+        ExcelComparisonOperator.EQUAL,
         ExcelDataValidationController.comparisonOperator(
             rawWholeOperator(
                 org.openxmlformats.schemas.spreadsheetml.x2006.main.STDataValidationOperator
                     .EQUAL)));
     assertEquals(
-        ExcelComparisonOperator.EQUAL,
+        ExcelComparisonOperator.NOT_EQUAL,
         ExcelDataValidationController.comparisonOperator(
             rawWholeOperator(
                 org.openxmlformats.schemas.spreadsheetml.x2006.main.STDataValidationOperator
                     .NOT_EQUAL)));
     assertEquals(
-        ExcelComparisonOperator.LESS_THAN,
+        ExcelComparisonOperator.GREATER_THAN,
         ExcelDataValidationController.comparisonOperator(
             rawWholeOperator(
                 org.openxmlformats.schemas.spreadsheetml.x2006.main.STDataValidationOperator
                     .GREATER_THAN)));
     assertEquals(
-        ExcelComparisonOperator.GREATER_THAN,
+        ExcelComparisonOperator.LESS_THAN,
         ExcelDataValidationController.comparisonOperator(
             rawWholeOperator(
                 org.openxmlformats.schemas.spreadsheetml.x2006.main.STDataValidationOperator
                     .LESS_THAN)));
     assertEquals(
-        ExcelComparisonOperator.LESS_OR_EQUAL,
+        ExcelComparisonOperator.GREATER_OR_EQUAL,
         ExcelDataValidationController.comparisonOperator(
             rawWholeOperator(
                 org.openxmlformats.schemas.spreadsheetml.x2006.main.STDataValidationOperator
                     .GREATER_THAN_OR_EQUAL)));
     assertEquals(
-        ExcelComparisonOperator.GREATER_OR_EQUAL,
+        ExcelComparisonOperator.LESS_OR_EQUAL,
         ExcelDataValidationController.comparisonOperator(
             rawWholeOperator(
                 org.openxmlformats.schemas.spreadsheetml.x2006.main.STDataValidationOperator
@@ -723,7 +722,9 @@ class ExcelDataValidationControllerTest {
         assertThrows(
             IllegalArgumentException.class,
             () -> ExcelDataValidationController.comparisonOperator(invalidOperator));
-    assertEquals("Unsupported raw validation operator: mystery", operatorFailure.getMessage());
+    assertEquals(
+        "Unsupported OOXML data-validation comparison operator: mystery",
+        operatorFailure.getMessage());
 
     CTDataValidation invalidErrorStyle = CTDataValidation.Factory.newInstance();
     try (var cursor = invalidErrorStyle.newCursor()) {
@@ -769,7 +770,7 @@ class ExcelDataValidationControllerTest {
             invokeToSnapshot(
                 new StubConstraint(
                     DataValidationConstraint.ValidationType.DECIMAL,
-                    ComparisonOperator.GT,
+                    DataValidationConstraint.OperatorType.GREATER_THAN,
                     null,
                     "0.5",
                     null),
@@ -785,7 +786,7 @@ class ExcelDataValidationControllerTest {
             invokeToSnapshot(
                 new StubConstraint(
                     DataValidationConstraint.ValidationType.DATE,
-                    ComparisonOperator.EQUAL,
+                    DataValidationConstraint.OperatorType.EQUAL,
                     null,
                     "DATE(2026,4,1)",
                     null),
@@ -801,7 +802,7 @@ class ExcelDataValidationControllerTest {
             invokeToSnapshot(
                 new StubConstraint(
                     DataValidationConstraint.ValidationType.TIME,
-                    ComparisonOperator.GT,
+                    DataValidationConstraint.OperatorType.GREATER_THAN,
                     null,
                     "TIME(9,0,0)",
                     null),
@@ -817,7 +818,7 @@ class ExcelDataValidationControllerTest {
             invokeToSnapshot(
                 new StubConstraint(
                     DataValidationConstraint.ValidationType.TEXT_LENGTH,
-                    ComparisonOperator.LE,
+                    DataValidationConstraint.OperatorType.LESS_OR_EQUAL,
                     null,
                     "20",
                     null),
@@ -833,7 +834,7 @@ class ExcelDataValidationControllerTest {
             invokeToSnapshot(
                 new StubConstraint(
                     DataValidationConstraint.ValidationType.INTEGER,
-                    ComparisonOperator.BETWEEN,
+                    DataValidationConstraint.OperatorType.BETWEEN,
                     null,
                     "1",
                     "9"),
@@ -850,7 +851,7 @@ class ExcelDataValidationControllerTest {
         invokeToSnapshot(
             new StubConstraint(
                 DataValidationConstraint.ValidationType.INTEGER,
-                ComparisonOperator.BETWEEN,
+                DataValidationConstraint.OperatorType.BETWEEN,
                 null,
                 "1",
                 null),
@@ -863,7 +864,7 @@ class ExcelDataValidationControllerTest {
         invokeToSnapshot(
             new StubConstraint(
                 DataValidationConstraint.ValidationType.INTEGER,
-                ComparisonOperator.BETWEEN,
+                DataValidationConstraint.OperatorType.BETWEEN,
                 null,
                 "1",
                 " "),
@@ -888,7 +889,7 @@ class ExcelDataValidationControllerTest {
         invokeToSnapshot(
             new StubConstraint(
                 DataValidationConstraint.ValidationType.INTEGER,
-                ComparisonOperator.GT,
+                DataValidationConstraint.OperatorType.GREATER_THAN,
                 null,
                 " ",
                 null),
@@ -1031,29 +1032,29 @@ class ExcelDataValidationControllerTest {
     assertRawComparisonSnapshot(
         STDataValidationType.DATE,
         org.openxmlformats.schemas.spreadsheetml.x2006.main.STDataValidationOperator.EQUAL,
-        ExcelComparisonOperator.NOT_EQUAL);
+        ExcelComparisonOperator.EQUAL);
     assertRawComparisonSnapshot(
         STDataValidationType.TIME,
         org.openxmlformats.schemas.spreadsheetml.x2006.main.STDataValidationOperator.NOT_EQUAL,
-        ExcelComparisonOperator.EQUAL);
+        ExcelComparisonOperator.NOT_EQUAL);
     assertRawComparisonSnapshot(
         STDataValidationType.TEXT_LENGTH,
         org.openxmlformats.schemas.spreadsheetml.x2006.main.STDataValidationOperator.GREATER_THAN,
-        ExcelComparisonOperator.LESS_THAN);
+        ExcelComparisonOperator.GREATER_THAN);
     assertRawComparisonSnapshot(
         STDataValidationType.WHOLE,
         org.openxmlformats.schemas.spreadsheetml.x2006.main.STDataValidationOperator.LESS_THAN,
-        ExcelComparisonOperator.GREATER_THAN);
+        ExcelComparisonOperator.LESS_THAN);
     assertRawComparisonSnapshot(
         STDataValidationType.DECIMAL,
         org.openxmlformats.schemas.spreadsheetml.x2006.main.STDataValidationOperator
             .GREATER_THAN_OR_EQUAL,
-        ExcelComparisonOperator.LESS_OR_EQUAL);
+        ExcelComparisonOperator.GREATER_OR_EQUAL);
     assertRawComparisonSnapshot(
         STDataValidationType.DATE,
         org.openxmlformats.schemas.spreadsheetml.x2006.main.STDataValidationOperator
             .LESS_THAN_OR_EQUAL,
-        ExcelComparisonOperator.GREATER_OR_EQUAL);
+        ExcelComparisonOperator.LESS_OR_EQUAL);
 
     CTDataValidation custom = CTDataValidation.Factory.newInstance();
     custom.setType(STDataValidationType.CUSTOM);

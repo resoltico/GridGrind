@@ -1,6 +1,5 @@
 package dev.erst.gridgrind.engine.runtime;
 
-import dev.erst.gridgrind.contract.assertion.AssertionOutcome;
 import dev.erst.gridgrind.contract.assertion.AssertionResult;
 import dev.erst.gridgrind.contract.dto.AssertionModeInput;
 import dev.erst.gridgrind.contract.dto.CalculationReport;
@@ -90,7 +89,8 @@ final class ExecutionStreamingWorkflow {
             GridGrindProblemDetail.Problem problem =
                 ExecutionResponseSupport.problemFor(
                     assertionFailure,
-                    stepSupport.executeStepContext(request, stepIndex, step, assertionFailure));
+                    ExecutionStepContextFactory.contextFor(
+                        request, stepIndex, step, assertionFailure));
             stepHandle.fail(
                 problem.code(), problem.category(), problem.context().stage(), problem.message());
             collectedAssertionFailures.add(stepIndex, step.stepId(), problem);
@@ -189,7 +189,7 @@ final class ExecutionStreamingWorkflow {
       throws IOException, AssertionFailedException {
     return switch (step) {
       case MutationStep mutationStep -> {
-        stepSupport.executeStreamingMutationStep(writer, mutationStep);
+        stepSupport.mutationStepExecutor().executeStreaming(writer, mutationStep);
         yield java.util.Optional.empty();
       }
       case AssertionStep assertionStep -> {
@@ -236,17 +236,18 @@ final class ExecutionStreamingWorkflow {
     GridGrindProblemDetail.Problem problem =
         ExecutionResponseSupport.problemFor(
             exception,
-            stepSupport.executeStepContext(workflowContext.request(), stepIndex, step, exception));
+            ExecutionStepContextFactory.contextFor(
+                workflowContext.request(), stepIndex, step, exception));
     stepHandle.fail(
         problem.code(), problem.category(), problem.context().stage(), problem.message());
     if (exception instanceof AssertionFailedException assertionFailed) {
       workflowContext
           .assertions()
           .add(
-              new AssertionResult(
-                  AssertionOutcome.FAILED,
+              new AssertionResult.Failed(
                   assertionFailed.assertionFailure().stepId(),
-                  assertionFailed.assertionFailure().assertionType()));
+                  assertionFailed.assertionFailure().assertionType(),
+                  assertionFailed.assertionFailure()));
     }
     return ExecutionResponseSupport.failureResponse(
         workflowContext.failure(calculation, problem, stepIndex, step.stepId()));

@@ -8,10 +8,14 @@ import dev.erst.gridgrind.excel.foundation.ExcelPivotDataConsolidateFunction;
 import dev.erst.gridgrind.excel.pivot.ExcelPivotTableDefinition;
 import dev.erst.gridgrind.excel.pivot.ExcelPivotTableSelection;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
+import java.util.zip.ZipOutputStream;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.junit.jupiter.api.Test;
 
@@ -174,10 +178,7 @@ class WorkbookAnalyzerTest {
           namedRangeHealth.analysis().findings().stream()
               .map(WorkbookAnalysis.AnalysisFinding::code)
               .toList()
-              .containsAll(
-                  List.of(
-                      AnalysisFindingCode.NAMED_RANGE_BROKEN_REFERENCE,
-                      AnalysisFindingCode.NAMED_RANGE_UNRESOLVED_TARGET)));
+              .containsAll(List.of(AnalysisFindingCode.NAMED_RANGE_BROKEN_REFERENCE)));
 
       assertEquals(1, autofilterHealth.analysis().checkedAutofilterCount());
       assertEquals(
@@ -268,7 +269,10 @@ class WorkbookAnalyzerTest {
               new ExcelNamedRangeSelection.Selected(
                   List.of(new ExcelNamedRangeSelector.WorkbookScope("BudgetTotal"))));
       assertEquals(1, namedRangeHealth.checkedNamedRangeCount());
-      assertEquals(0, namedRangeHealth.summary().totalCount());
+      assertEquals(
+          0,
+          namedRangeHealth.summary().totalCount(),
+          () -> "unexpected named-range findings: " + namedRangeHealth.findings());
     }
   }
 
@@ -418,29 +422,108 @@ class WorkbookAnalyzerTest {
           new WorkbookAnalyzer().namedRangeHealth(workbook, new ExcelNamedRangeSelection.All());
 
       assertEquals(3, analysis.checkedNamedRangeCount());
-      assertEquals(1, analysis.summary().warningCount());
+      assertEquals(0, analysis.summary().warningCount());
       assertEquals(0, analysis.summary().errorCount());
-      assertEquals(
-          List.of(AnalysisFindingCode.NAMED_RANGE_UNRESOLVED_TARGET),
-          analysis.findings().stream().map(WorkbookAnalysis.AnalysisFinding::code).toList());
+      assertTrue(analysis.findings().isEmpty());
     }
   }
 
   @Test
-  void helperMethodsHandleQuotedLiteralAndDanglingReferenceShapes() throws Exception {
-    WorkbookAnalyzer analyzer = new WorkbookAnalyzer();
-    assertEquals(Optional.of("Quarter 1"), analyzer.referencedSheetName("'Quarter 1'!$A$1"));
-    assertEquals(Optional.empty(), analyzer.referencedSheetName("42"));
-    assertEquals(Optional.of("Budget"), analyzer.referencedSheetName("Budget!A1+1"));
-    assertEquals(Optional.of("'"), analyzer.referencedSheetName("'!A1"));
-    assertEquals(Optional.of("'Budget"), analyzer.referencedSheetName("'Budget!A1"));
+  void formulaNamedRangesUseWorkbookContextInsteadOfTextHeuristics() throws Exception {
+    Path workbookPath = ExcelTempFiles.createManagedTempFile("gridgrind-named-formulas-", ".xlsx");
+    Path patchedWorkbookPath =
+        ExcelTempFiles.createManagedTempFile("gridgrind-named-formulas-patched-", ".xlsx");
+    try (XSSFWorkbook workbook = new XSSFWorkbook()) {
+      workbook.createSheet("Quarter 1");
+      workbook.createSheet("O'Brien");
+      workbook.createSheet("Budget");
+      var literal = workbook.createName();
+      literal.setNameName("LiteralFormula");
+      literal.setRefersToFormula("42");
+      var quoted = workbook.createName();
+      quoted.setNameName("QuotedSheet");
+      quoted.setRefersToFormula("'Quarter 1'!$A$1");
+      var apostrophe = workbook.createName();
+      apostrophe.setNameName("ApostropheSheet");
+      apostrophe.setRefersToFormula("'O''Brien'!$A$1");
+      var multiple = workbook.createName();
+      multiple.setNameName("MultipleSheets");
+      multiple.setRefersToFormula("Budget!$A$1+'Quarter 1'!$A$1");
+      var threeDimensional = workbook.createName();
+      threeDimensional.setNameName("ThreeDimensionalSheets");
+      threeDimensional.setRefersToFormula("Budget:'Quarter 1'!$A$1");
+      var local = workbook.createName();
+      local.setNameName("LocalFormula");
+      local.setSheetIndex(workbook.getSheetIndex("Budget"));
+      local.setRefersToFormula("Budget!$A$1");
+      var localNameReference = workbook.createName();
+      localNameReference.setNameName("LocalNameReference");
+      localNameReference.setRefersToFormula("Budget!LocalFormula");
+      try (XSSFWorkbook externalWorkbook = new XSSFWorkbook()) {
+        externalWorkbook.createSheet("Ledger");
+        workbook.linkExternalWorkbook("External.xlsx", externalWorkbook);
+      }
+      var external = workbook.createName();
+      external.setNameName("ExternalFormula");
+      external.setRefersToFormula("[External.xlsx]Ledger!$A$1");
+      var missing = workbook.createName();
+      missing.setNameName("MissingSheet");
+      missing.setRefersToFormula("Missing!$A$1+Missing!$B$1");
+      try (var output = Files.newOutputStream(workbookPath)) {
+        workbook.write(output);
+      }
+    }
 
-    assertTrue(analyzer.looksLikeSheetRangeReference("Budget!$A$1"));
-    assertTrue(analyzer.looksLikeSheetRangeReference("Budget!A1:B2"));
-    assertTrue(analyzer.looksLikeSheetRangeReference("Budget!A1+1"));
-    assertFalse(analyzer.looksLikeSheetRangeReference("Budget!"));
-    assertFalse(analyzer.looksLikeSheetRangeReference("Budget!1"));
-    assertFalse(analyzer.looksLikeSheetRangeReference("42"));
+    appendUnparseableDefinedName(workbookPath, patchedWorkbookPath);
+
+    try (ExcelWorkbook workbook =
+        ExcelWorkbooks.open(
+            patchedWorkbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory())) {
+
+      WorkbookAnalysis.NamedRangeHealth analysis =
+          new WorkbookAnalyzer().namedRangeHealth(workbook, new ExcelNamedRangeSelection.All());
+
+      assertEquals(10, analysis.checkedNamedRangeCount());
+      assertEquals(
+          List.of(
+              AnalysisFindingCode.NAMED_RANGE_BROKEN_REFERENCE,
+              AnalysisFindingCode.NAMED_RANGE_UNPARSEABLE_FORMULA),
+          analysis.findings().stream().map(WorkbookAnalysis.AnalysisFinding::code).toList());
+      assertEquals(
+          "Named range refers to a sheet that does not exist: Missing",
+          analysis.findings().getFirst().message());
+    }
+  }
+
+  private static void appendUnparseableDefinedName(Path sourcePath, Path targetPath)
+      throws IOException {
+    try (ZipFile source = new ZipFile(sourcePath.toFile());
+        ZipOutputStream target = new ZipOutputStream(Files.newOutputStream(targetPath))) {
+      for (ZipEntry entry : source.stream().toList()) {
+        copyPatchedDefinedNameEntry(source, target, entry);
+      }
+    }
+  }
+
+  private static void copyPatchedDefinedNameEntry(
+      ZipFile source, ZipOutputStream target, ZipEntry entry) throws IOException {
+    target.putNextEntry(new ZipEntry(entry.getName()));
+    try (var input = source.getInputStream(entry)) {
+      if ("xl/workbook.xml".equals(entry.getName())) {
+        String xml = new String(input.readAllBytes(), StandardCharsets.UTF_8);
+        String patchedXml =
+            xml.replace(
+                "</definedNames>",
+                "<definedName name=\"UnparseableFormula\">SUM(</definedName></definedNames>");
+        if (patchedXml.equals(xml)) {
+          throw new IllegalStateException("Expected workbook.xml to contain defined names");
+        }
+        target.write(patchedXml.getBytes(StandardCharsets.UTF_8));
+      } else {
+        input.transferTo(target);
+      }
+    }
+    target.closeEntry();
   }
 
   @Test

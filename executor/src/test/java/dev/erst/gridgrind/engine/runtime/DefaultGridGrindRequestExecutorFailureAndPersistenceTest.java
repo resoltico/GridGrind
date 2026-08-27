@@ -537,6 +537,33 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
   }
 
   @Test
+  void attributesAutoSizeFormulaFailuresToTheirAuthoringStep() {
+    WorkbookResult.Failure failure =
+        failure(
+            ExecutionContextFixtureSupport.execute(
+                new DefaultGridGrindRequestExecutor(),
+                request(
+                    new WorkbookPlan.WorkbookSource.New(),
+                    new WorkbookPlan.WorkbookPersistence.None(),
+                    List.of(
+                        mutate(
+                            new SheetSelector.ByName("Budget"),
+                            new WorkbookMutationAction.EnsureSheet()),
+                        mutate(
+                            new CellSelector.ByAddress("Budget", "A1"),
+                            new CellMutationAction.SetCell(
+                                formulaCell("TEXTAFTER(\"a,b\",\",\")"))),
+                        mutate(
+                            new SheetSelector.ByName("Budget"),
+                            new WorkbookMutationAction.AutoSizeColumns())))));
+
+    assertEquals(GridGrindProblemCode.UNREGISTERED_USER_DEFINED_FUNCTION, failure.problem().code());
+    assertEquals("step-02-set-cell", executeStepContext(failure).stepId());
+    assertEquals(
+        "AUTO_SIZE_COLUMNS", executeStepContext(failure).surfacedAtStep().orElseThrow().stepType());
+  }
+
+  @Test
   void returnsStructuredFailureWithReadContext() {
     WorkbookResult.Failure failure =
         failure(
@@ -686,7 +713,7 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
                             new SheetSelector.ByName("Budget"),
                             new WorkbookMutationAction.EnsureSheet())))));
 
-    assertEquals(GridGrindProblemCode.IO_ERROR, failure.problem().code());
+    assertEquals(GridGrindProblemCode.OUTPUT_PATH_ALREADY_EXISTS, failure.problem().code());
     assertEquals("PERSIST_WORKBOOK", failure.problem().context().stage());
     WorkbookResultPersistence.PersistenceOutcome.SavedAs persistence =
         assertInstanceOf(
@@ -694,10 +721,7 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
     assertEquals(workbookPath.toString(), persistence.requestedPath());
     assertInstanceOf(WorkbookResultPersistence.WriteResult.NotWritten.class, persistence.write());
     assertEquals(
-        "Could not write workbook to "
-            + workbookPath.toAbsolutePath()
-            + ": already exists; SAVE_AS.ifExists=REJECT requires a new destination path. Use"
-            + " ifExists=REPLACE to allow create-or-replace.",
+        "Workbook output path already exists and ifExists=REJECT: " + workbookPath.toAbsolutePath(),
         failure.problem().message());
   }
 
@@ -949,7 +973,7 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
   }
 
   @Test
-  void surfacesWorkbookFormulaLocationWhenEvaluationFails() {
+  void attributesFinalCalculationFailureToTheFormulaAuthor() {
     WorkbookResult.Failure failure =
         failure(
             ExecutionContextFixtureSupport.execute(
@@ -976,15 +1000,16 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
                     inspections())));
 
     assertEquals(GridGrindProblemCode.UNREGISTERED_USER_DEFINED_FUNCTION, failure.problem().code());
-    assertEquals("CALCULATION_PREFLIGHT", failure.problem().context().stage());
+    assertEquals("EXECUTE_STEP", failure.problem().context().stage());
     assertEquals(
         "User-defined function TEXTAFTER is not registered at Data!C1: TEXTAFTER(\"a,b\",\",\")",
         failure.problem().message());
-    assertEquals(java.util.Optional.of("Data"), calculationPreflightContext(failure).sheetName());
-    assertEquals(java.util.Optional.of("C1"), calculationPreflightContext(failure).address());
+    assertEquals("step-04-set-cell", executeStepContext(failure).stepId());
+    assertEquals(java.util.Optional.of("Data"), executeStepContext(failure).sheetName());
+    assertEquals(java.util.Optional.of("C1"), executeStepContext(failure).address());
     assertEquals(
-        java.util.Optional.of("TEXTAFTER(\"a,b\",\",\")"),
-        calculationPreflightContext(failure).formula());
+        java.util.Optional.of("TEXTAFTER(\"a,b\",\",\")"), executeStepContext(failure).formula());
+    assertTrue(executeStepContext(failure).surfacedAtStep().isEmpty());
   }
 
   @Test
@@ -1052,7 +1077,7 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
   }
 
   @Test
-  void returnsCalculationFailureBeforeObservationStepsWhenBoundaryPreflightFails() {
+  void attributesBoundaryCalculationFailureToTheFormulaAuthorAndItsTrigger() {
     WorkbookResult.Failure failure =
         failure(
             ExecutionContextFixtureSupport.execute(
@@ -1076,12 +1101,13 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
                         new WorkbookIntrospectionQuery.GetWorkbookSummary()))));
 
     assertEquals(GridGrindProblemCode.UNREGISTERED_USER_DEFINED_FUNCTION, failure.problem().code());
-    assertEquals("CALCULATION_PREFLIGHT", failure.problem().context().stage());
-    assertEquals(java.util.Optional.of("Data"), calculationPreflightContext(failure).sheetName());
-    assertEquals(java.util.Optional.of("C1"), calculationPreflightContext(failure).address());
+    assertEquals("EXECUTE_STEP", failure.problem().context().stage());
+    assertEquals("step-02-set-cell", executeStepContext(failure).stepId());
+    assertEquals(java.util.Optional.of("Data"), executeStepContext(failure).sheetName());
+    assertEquals(java.util.Optional.of("C1"), executeStepContext(failure).address());
     assertEquals(
-        java.util.Optional.of("TEXTAFTER(\"a,b\",\",\")"),
-        calculationPreflightContext(failure).formula());
+        java.util.Optional.of("TEXTAFTER(\"a,b\",\",\")"), executeStepContext(failure).formula());
+    assertEquals("summary", executeStepContext(failure).surfacedAtStep().orElseThrow().stepId());
   }
 
   @Test

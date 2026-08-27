@@ -28,6 +28,16 @@ final class ExecutionCalculationSupport {
 
   CalculationExecutionOutcome executeCalculationPolicy(
       ExcelWorkbook workbook, WorkbookPlan request, ExecutionJournalRecorder journal) {
+    return executeCalculationPolicy(workbook, request, journal, null, null);
+  }
+
+  CalculationExecutionOutcome executeCalculationPolicy(
+      ExcelWorkbook workbook,
+      WorkbookPlan request,
+      ExecutionJournalRecorder journal,
+      @Nullable FormulaOriginTracker formulaOrigins,
+      dev.erst.gridgrind.contract.dto.ProblemContextWorkbookSurfaces.@Nullable StepReference
+          surfacedAtStep) {
     Objects.requireNonNull(workbook, "workbook must not be null");
     Objects.requireNonNull(request, "request must not be null");
     Objects.requireNonNull(journal, "journal must not be null");
@@ -54,7 +64,8 @@ final class ExecutionCalculationSupport {
       hasUnevaluableFormula = preflight.hasUnevaluableFormula();
       if (preflight.failure().isPresent()) {
         CalculationPolicyExecutor.FailureDetail failure = preflight.failure().orElseThrow();
-        GridGrindProblemDetail.Problem problem = calculationProblemFor(request, failure);
+        GridGrindProblemDetail.Problem problem =
+            calculationProblemFor(request, failure, formulaOrigins, surfacedAtStep);
         preflightPhase.fail(problem.code());
         return new CalculationExecutionOutcome(
             CalculationPolicyExecutor.report(
@@ -81,7 +92,8 @@ final class ExecutionCalculationSupport {
         CalculationPolicyExecutor.report(effectivePolicy, preflightReport, execution.report());
     if (execution.failure().isPresent()) {
       GridGrindProblemDetail.Problem problem =
-          calculationProblemFor(request, execution.failure().orElseThrow());
+          calculationProblemFor(
+              request, execution.failure().orElseThrow(), formulaOrigins, surfacedAtStep);
       executionPhase.fail(problem.code());
       return new CalculationExecutionOutcome(report, Optional.of(problem));
     }
@@ -137,6 +149,38 @@ final class ExecutionCalculationSupport {
 
   GridGrindProblemDetail.Problem calculationProblemFor(
       WorkbookPlan request, CalculationPolicyExecutor.FailureDetail failure) {
+    return calculationProblemFor(request, failure, null, null);
+  }
+
+  GridGrindProblemDetail.Problem calculationProblemFor(
+      WorkbookPlan request,
+      CalculationPolicyExecutor.FailureDetail failure,
+      @Nullable FormulaOriginTracker formulaOrigins,
+      dev.erst.gridgrind.contract.dto.ProblemContextWorkbookSurfaces.@Nullable StepReference
+          surfacedAtStep) {
+    java.util.Optional<dev.erst.gridgrind.contract.dto.ProblemContextWorkbookSurfaces.StepReference>
+        formulaAuthor =
+            formulaOrigins == null || failure.sheetName() == null || failure.address() == null
+                ? java.util.Optional.empty()
+                : formulaOrigins.originFor(failure.sheetName(), failure.address());
+    if (formulaAuthor.isPresent()) {
+      dev.erst.gridgrind.contract.dto.ProblemContext.ExecuteStep context =
+          new dev.erst.gridgrind.contract.dto.ProblemContext.ExecuteStep(
+              ExecutionRequestPaths.requestShape(request),
+              formulaAuthor.orElseThrow(),
+              failureLocation(failure),
+              surfacedAtStep == null || surfacedAtStep.equals(formulaAuthor.orElseThrow())
+                  ? java.util.Optional.empty()
+                  : java.util.Optional.of(surfacedAtStep));
+      if (failure.exception() != null) {
+        return GridGrindProblems.fromException(failure.exception(), context);
+      }
+      return GridGrindProblems.problem(
+          Objects.requireNonNull(failure.code(), "failure.code must not be null"),
+          failure.message(),
+          context,
+          (Throwable) null);
+    }
     if (failure.exception() != null) {
       return GridGrindProblems.fromException(
           failure.exception(), calculationContextFor(request, failure.phase(), failure));

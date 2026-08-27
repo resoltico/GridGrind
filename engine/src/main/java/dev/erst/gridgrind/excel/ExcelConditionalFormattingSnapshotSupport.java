@@ -257,7 +257,8 @@ final class ExcelConditionalFormattingSnapshotSupport {
       return new ExcelConditionalFormattingRuleSnapshot.CellValueRule(
           ctRule.getPriority(),
           ctRule.getStopIfTrue(),
-          ExcelComparisonOperatorPoiBridge.fromPoi(rule.getComparisonOperation()),
+          ExcelConditionalFormattingComparisonOperatorPoiBridge.fromPoi(
+              rule.getComparisonOperation()),
           formula1,
           rule.getFormula2(),
           style);

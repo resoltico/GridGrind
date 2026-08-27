@@ -19,6 +19,7 @@ import dev.erst.gridgrind.excel.ExcelColor;
 import dev.erst.gridgrind.excel.ExcelColorSnapshot;
 import dev.erst.gridgrind.excel.ExcelFontHeight;
 import dev.erst.gridgrind.excel.ExcelGradientFillSnapshot;
+import dev.erst.gridgrind.excel.foundation.ExcelBorderStyle;
 import java.util.Optional;
 import org.jspecify.annotations.Nullable;
 
@@ -101,7 +102,12 @@ final class InspectionResultCellStyleReportSupport {
   }
 
   static CellBorderSideReport toCellBorderSideReport(ExcelBorderSideSnapshot side) {
-    return new CellBorderSideReport(side.style(), toCellColorReport(side.color()).orElse(null));
+    if (side.style() == ExcelBorderStyle.NONE) {
+      return new CellBorderSideReport.None();
+    }
+    return toCellColorReport(side.color())
+        .<CellBorderSideReport>map(color -> new CellBorderSideReport.Colored(side.style(), color))
+        .orElseGet(() -> new CellBorderSideReport.DefaultColor(side.style()));
   }
 
   private static CellFillReport toCellFillReport(ExcelCellFillSnapshot fill) {

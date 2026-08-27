@@ -71,7 +71,7 @@ class AssertionCollectionWorkflowTest extends DefaultGridGrindRequestExecutorTes
                             allFacetCellsQuery())))));
 
     assertEquals(GridGrindProblemCode.ASSERTION_FAILED, failure.problem().code());
-    assertEquals("assert-first", failure.problem().assertionFailure().orElseThrow().stepId());
+    assertEquals("assert-first", failedAssertion(failure).stepId());
     assertEquals(
         List.of(AssertionOutcome.PASSED, AssertionOutcome.FAILED, AssertionOutcome.FAILED),
         failure.assertions().stream().map(AssertionResult::outcome).toList());
@@ -122,12 +122,23 @@ class AssertionCollectionWorkflowTest extends DefaultGridGrindRequestExecutorTes
                             allFacetCellsQuery())))));
 
     assertEquals(GridGrindProblemCode.ASSERTION_FAILED, failure.problem().code());
-    assertEquals("stream-fail", failure.problem().assertionFailure().orElseThrow().stepId());
+    assertEquals("stream-fail", failedAssertion(failure).stepId());
     assertEquals(
         List.of(AssertionOutcome.PASSED, AssertionOutcome.FAILED),
         failure.assertions().stream().map(AssertionResult::outcome).toList());
     assertEquals(
         List.of("stream-after-failure"),
         failure.inspections().stream().map(InspectionResult::stepId).toList());
+  }
+
+  private static dev.erst.gridgrind.contract.assertion.AssertionFailure failedAssertion(
+      WorkbookResult.Failure failure) {
+    return assertInstanceOf(
+            AssertionResult.Failed.class,
+            failure.assertions().stream()
+                .filter(result -> result.outcome() == AssertionOutcome.FAILED)
+                .findFirst()
+                .orElseThrow())
+        .failure();
   }
 }

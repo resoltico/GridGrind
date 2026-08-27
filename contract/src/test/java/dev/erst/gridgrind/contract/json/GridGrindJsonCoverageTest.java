@@ -387,7 +387,6 @@ class GridGrindJsonCoverageTest {
                                 new dev.erst.gridgrind.contract.dto.ProblemContext.ParseArguments(
                                     dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces
                                         .CliArgument.named("--request")),
-                                java.util.Optional.empty(),
                                 List.of())),
                         false))
             .getMessage());

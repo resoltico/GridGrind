@@ -327,7 +327,7 @@ cat > "${task_request_path}" <<EOF
             "format": "PNG",
             "source": {
               "type": "INLINE_BASE64",
-              "base64Data": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+X2kQAAAAASUVORK5CYII="
+              "base64Data": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVQI12P4//8/AAX+Av7czFnnAAAAAElFTkSuQmCC"
             }
           }
         }

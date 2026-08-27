@@ -57,9 +57,17 @@ final class CatalogSearchAggregationSupport {
             aggregates.values().stream().map(SearchAggregate::toRankedMatch),
             standalone.values().stream())
         .sorted(
-            Comparator.comparingInt(RankedSearchMatch::rank)
+            Comparator.comparingInt(CatalogSearchAggregationSupport::searchPriority)
+                .thenComparingInt(RankedSearchMatch::rank)
                 .thenComparing(match -> match.match().qualifiedId()))
         .toList();
+  }
+
+  private static int searchPriority(RankedSearchMatch rankedMatch) {
+    if (rankedMatch.rank() == 0) {
+      return 0;
+    }
+    return isOperationEntryMatch(rankedMatch.match()) ? 1 : 2;
   }
 
   private static void recordStandalone(

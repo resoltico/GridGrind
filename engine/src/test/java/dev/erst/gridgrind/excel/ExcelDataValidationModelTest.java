@@ -23,61 +23,73 @@ class ExcelDataValidationModelTest {
   void comparisonOperatorRoundTripsPoiConstants() {
     assertEquals(
         ExcelComparisonOperator.BETWEEN,
-        ExcelComparisonOperatorPoiBridge.fromPoi(ComparisonOperator.BETWEEN));
+        ExcelConditionalFormattingComparisonOperatorPoiBridge.fromPoi(ComparisonOperator.BETWEEN));
     assertEquals(
         ExcelComparisonOperator.NOT_BETWEEN,
-        ExcelComparisonOperatorPoiBridge.fromPoi(ComparisonOperator.NOT_BETWEEN));
+        ExcelConditionalFormattingComparisonOperatorPoiBridge.fromPoi(
+            ComparisonOperator.NOT_BETWEEN));
     assertEquals(
         ExcelComparisonOperator.EQUAL,
-        ExcelComparisonOperatorPoiBridge.fromPoi(ComparisonOperator.EQUAL));
+        ExcelConditionalFormattingComparisonOperatorPoiBridge.fromPoi(ComparisonOperator.EQUAL));
     assertEquals(
         ExcelComparisonOperator.NOT_EQUAL,
-        ExcelComparisonOperatorPoiBridge.fromPoi(ComparisonOperator.NOT_EQUAL));
+        ExcelConditionalFormattingComparisonOperatorPoiBridge.fromPoi(
+            ComparisonOperator.NOT_EQUAL));
     assertEquals(
         ExcelComparisonOperator.GREATER_THAN,
-        ExcelComparisonOperatorPoiBridge.fromPoi(ComparisonOperator.GT));
+        ExcelConditionalFormattingComparisonOperatorPoiBridge.fromPoi(ComparisonOperator.GT));
     assertEquals(
         ExcelComparisonOperator.LESS_THAN,
-        ExcelComparisonOperatorPoiBridge.fromPoi(ComparisonOperator.LT));
+        ExcelConditionalFormattingComparisonOperatorPoiBridge.fromPoi(ComparisonOperator.LT));
     assertEquals(
         ExcelComparisonOperator.GREATER_OR_EQUAL,
-        ExcelComparisonOperatorPoiBridge.fromPoi(ComparisonOperator.GE));
+        ExcelConditionalFormattingComparisonOperatorPoiBridge.fromPoi(ComparisonOperator.GE));
     assertEquals(
         ExcelComparisonOperator.LESS_OR_EQUAL,
-        ExcelComparisonOperatorPoiBridge.fromPoi(ComparisonOperator.LE));
+        ExcelConditionalFormattingComparisonOperatorPoiBridge.fromPoi(ComparisonOperator.LE));
     assertEquals(
         ComparisonOperator.BETWEEN,
-        ExcelComparisonOperatorPoiBridge.toPoi(ExcelComparisonOperator.BETWEEN));
+        ExcelConditionalFormattingComparisonOperatorPoiBridge.toPoi(
+            ExcelComparisonOperator.BETWEEN));
     assertEquals(
         ComparisonOperator.NOT_BETWEEN,
-        ExcelComparisonOperatorPoiBridge.toPoi(ExcelComparisonOperator.NOT_BETWEEN));
+        ExcelConditionalFormattingComparisonOperatorPoiBridge.toPoi(
+            ExcelComparisonOperator.NOT_BETWEEN));
     assertEquals(
         ComparisonOperator.EQUAL,
-        ExcelComparisonOperatorPoiBridge.toPoi(ExcelComparisonOperator.EQUAL));
+        ExcelConditionalFormattingComparisonOperatorPoiBridge.toPoi(ExcelComparisonOperator.EQUAL));
     assertEquals(
         ComparisonOperator.NOT_EQUAL,
-        ExcelComparisonOperatorPoiBridge.toPoi(ExcelComparisonOperator.NOT_EQUAL));
+        ExcelConditionalFormattingComparisonOperatorPoiBridge.toPoi(
+            ExcelComparisonOperator.NOT_EQUAL));
     assertEquals(
         ComparisonOperator.GT,
-        ExcelComparisonOperatorPoiBridge.toPoi(ExcelComparisonOperator.GREATER_THAN));
+        ExcelConditionalFormattingComparisonOperatorPoiBridge.toPoi(
+            ExcelComparisonOperator.GREATER_THAN));
     assertEquals(
         ComparisonOperator.LT,
-        ExcelComparisonOperatorPoiBridge.toPoi(ExcelComparisonOperator.LESS_THAN));
+        ExcelConditionalFormattingComparisonOperatorPoiBridge.toPoi(
+            ExcelComparisonOperator.LESS_THAN));
     assertEquals(
         ComparisonOperator.GE,
-        ExcelComparisonOperatorPoiBridge.toPoi(ExcelComparisonOperator.GREATER_OR_EQUAL));
+        ExcelConditionalFormattingComparisonOperatorPoiBridge.toPoi(
+            ExcelComparisonOperator.GREATER_OR_EQUAL));
     assertEquals(
         ComparisonOperator.LE,
-        ExcelComparisonOperatorPoiBridge.toPoi(ExcelComparisonOperator.LESS_OR_EQUAL));
+        ExcelConditionalFormattingComparisonOperatorPoiBridge.toPoi(
+            ExcelComparisonOperator.LESS_OR_EQUAL));
   }
 
   @Test
   void comparisonOperatorRejectsUnsupportedPoiValues() {
     IllegalArgumentException failure =
         assertThrows(
-            IllegalArgumentException.class, () -> ExcelComparisonOperatorPoiBridge.fromPoi(-99));
+            IllegalArgumentException.class,
+            () -> ExcelConditionalFormattingComparisonOperatorPoiBridge.fromPoi(-99));
 
-    assertEquals("Unsupported Apache POI comparison operator: -99", failure.getMessage());
+    assertEquals(
+        "Unsupported Apache POI conditional-formatting comparison operator: -99",
+        failure.getMessage());
   }
 
   @Test

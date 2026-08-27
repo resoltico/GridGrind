@@ -36,7 +36,6 @@ import dev.erst.gridgrind.contract.dto.WorkbookProtectionInput;
 import dev.erst.gridgrind.contract.dto.WorkbookResult;
 import dev.erst.gridgrind.contract.query.*;
 import dev.erst.gridgrind.contract.query.InspectionResult;
-import dev.erst.gridgrind.contract.selector.CellSelector;
 import dev.erst.gridgrind.contract.selector.NamedRangeSelector;
 import dev.erst.gridgrind.contract.selector.PivotTableSelector;
 import dev.erst.gridgrind.contract.selector.Selector;
@@ -134,7 +133,8 @@ final class ExecutorTestPlanSupport {
     return CalculationPolicyInput.strategy(new CalculationStrategyInput.RequireEvaluation());
   }
 
-  static CalculationPolicyInput calculateTargets(CellSelector.QualifiedAddress... cells) {
+  static CalculationPolicyInput calculateTargets(
+      dev.erst.gridgrind.contract.dto.FormulaCellTarget... cells) {
     return CalculationPolicyInput.strategy(
         new CalculationStrategyInput.EvaluateTargets(List.of(cells)));
   }

@@ -102,7 +102,7 @@ import org.junit.jupiter.api.Test;
 /** Focused command-converter coverage for advanced workbook-core mutation payloads. */
 class AdvancedMutationCommandConverterTest {
   private static final String PNG_PIXEL_BASE64 =
-      "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+X2kQAAAAASUVORK5CYII=";
+      "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVQI12P4//8/AAX+Av7czFnnAAAAAElFTkSuQmCC";
 
   @Test
   void convertsAdvancedCommentProtectionAutofilterAndNamedRangeOperations() {
@@ -732,10 +732,8 @@ class AdvancedMutationCommandConverterTest {
             new ConditionalFormattingRuleInput.ColorScaleRule(
                 true,
                 List.of(
-                    new ConditionalFormattingThresholdInput(
-                        ExcelConditionalFormattingThresholdType.MIN, null, null),
-                    new ConditionalFormattingThresholdInput(
-                        ExcelConditionalFormattingThresholdType.MAX, null, null)),
+                    new ConditionalFormattingThresholdInput.Min(),
+                    new ConditionalFormattingThresholdInput.Max()),
                 List.of(ColorInput.rgb("#112233"), ColorInput.rgb("#AABBCC")))));
 
     assertEquals(
@@ -756,10 +754,23 @@ class AdvancedMutationCommandConverterTest {
                 true,
                 10,
                 90,
-                new ConditionalFormattingThresholdInput(
-                    ExcelConditionalFormattingThresholdType.NUMBER, null, 0.0d),
-                new ConditionalFormattingThresholdInput(
-                    ExcelConditionalFormattingThresholdType.PERCENTILE, null, 90.0d))));
+                new ConditionalFormattingThresholdInput.Numeric(0.0d),
+                new ConditionalFormattingThresholdInput.Percentile(90.0d))));
+
+    ExcelConditionalFormattingRule.ColorScaleRule formulaThresholdRule =
+        assertInstanceOf(
+            ExcelConditionalFormattingRule.ColorScaleRule.class,
+            WorkbookCommandStructuredInputConverter.toExcelConditionalFormattingRule(
+                new ConditionalFormattingRuleInput.ColorScaleRule(
+                    false,
+                    List.of(
+                        new ConditionalFormattingThresholdInput.Formula("A1"),
+                        new ConditionalFormattingThresholdInput.Percent(100.0d)),
+                    List.of(ColorInput.rgb("#112233"), ColorInput.rgb("#AABBCC")))));
+    assertEquals(
+        new ExcelConditionalFormattingThreshold(
+            ExcelConditionalFormattingThresholdType.FORMULA, "A1", null),
+        formulaThresholdRule.thresholds().getFirst());
 
     assertEquals(
         new ExcelConditionalFormattingRule.IconSetRule(
@@ -781,12 +792,9 @@ class AdvancedMutationCommandConverterTest {
                 false,
                 true,
                 List.of(
-                    new ConditionalFormattingThresholdInput(
-                        ExcelConditionalFormattingThresholdType.PERCENT, null, 0.0d),
-                    new ConditionalFormattingThresholdInput(
-                        ExcelConditionalFormattingThresholdType.PERCENT, null, 33.0d),
-                    new ConditionalFormattingThresholdInput(
-                        ExcelConditionalFormattingThresholdType.PERCENT, null, 67.0d)))));
+                    new ConditionalFormattingThresholdInput.Percent(0.0d),
+                    new ConditionalFormattingThresholdInput.Percent(33.0d),
+                    new ConditionalFormattingThresholdInput.Percent(67.0d)))));
 
     assertEquals(
         new ExcelConditionalFormattingRule.Top10Rule(7, true, false, false, Optional.empty()),

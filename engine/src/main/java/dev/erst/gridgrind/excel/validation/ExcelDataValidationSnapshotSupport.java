@@ -1,6 +1,5 @@
 package dev.erst.gridgrind.excel.validation;
 
-import dev.erst.gridgrind.excel.ExcelComparisonOperatorPoiBridge;
 import dev.erst.gridgrind.excel.ExcelRangeSelection;
 import dev.erst.gridgrind.excel.ExcelSqrefSupport;
 import dev.erst.gridgrind.excel.foundation.ExcelComparisonOperator;
@@ -161,7 +160,7 @@ public final class ExcelDataValidationSnapshotSupport {
     }
     ExcelComparisonOperator operator;
     try {
-      operator = ExcelComparisonOperatorPoiBridge.fromPoi(constraint.getOperator());
+      operator = ExcelDataValidationComparisonOperatorPoiBridge.fromPoi(constraint.getOperator());
     } catch (IllegalArgumentException exception) {
       return new ExcelDataValidationSnapshot.Unsupported(
           ranges,
@@ -307,18 +306,7 @@ public final class ExcelDataValidationSnapshotSupport {
 
   static ExcelComparisonOperator comparisonOperator(CTDataValidation validation) {
     String operator = Objects.requireNonNullElse(rawAttribute(validation, "operator"), "between");
-    return switch (operator) {
-      case "between" -> ExcelComparisonOperator.BETWEEN;
-      case "notBetween" -> ExcelComparisonOperator.NOT_BETWEEN;
-      case "equal" -> ExcelComparisonOperator.NOT_EQUAL;
-      case "notEqual" -> ExcelComparisonOperator.EQUAL;
-      case "greaterThan" -> ExcelComparisonOperator.LESS_THAN;
-      case "lessThan" -> ExcelComparisonOperator.GREATER_THAN;
-      case "greaterThanOrEqual" -> ExcelComparisonOperator.LESS_OR_EQUAL;
-      case "lessThanOrEqual" -> ExcelComparisonOperator.GREATER_OR_EQUAL;
-      default ->
-          throw new IllegalArgumentException("Unsupported raw validation operator: " + operator);
-    };
+    return ExcelDataValidationComparisonOperatorPoiBridge.fromXml(operator);
   }
 
   static ExcelDataValidationErrorStyle errorStyle(CTDataValidation validation) {

@@ -6,7 +6,7 @@ import java.util.Objects;
 /** Shared path and asset conventions for published task-starter recipes. */
 final class TaskStarterRecipeSupport {
   private static final String ONE_PIXEL_PNG_BASE64 =
-      "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+X2kQAAAAASUVORK5CYII=";
+      "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVQI12P4//8/AAX+Av7czFnnAAAAAElFTkSuQmCC";
 
   private TaskStarterRecipeSupport() {}
 

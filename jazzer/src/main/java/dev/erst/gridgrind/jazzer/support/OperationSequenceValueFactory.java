@@ -24,7 +24,7 @@ final class OperationSequenceValueFactory {
   static final String DRAWING_CONNECTOR_NAME = "OpsConnector";
   static final String DRAWING_EMBEDDED_OBJECT_NAME = "OpsEmbed";
   static final String PNG_PIXEL_BASE64 =
-      "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+X2kQAAAAASUVORK5CYII=";
+      "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVQI12P4//8/AAX+Av7czFnnAAAAAElFTkSuQmCC";
 
   private OperationSequenceValueFactory() {}
 

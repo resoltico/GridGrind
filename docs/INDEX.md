@@ -96,6 +96,7 @@ Two-tier structure: landing pages give the overview; detail pages own the full f
 | [DEVELOPER_JAZZER_COVERAGE.md](./DEVELOPER_JAZZER_COVERAGE.md) | Jazzer corpus and coverage guidance |
 | [DEVELOPER_CONTRACT_REPLACEMENT_ADR.md](./DEVELOPER_CONTRACT_REPLACEMENT_ADR.md) | Architecture decision record: contract module replacement approach |
 | [RELEASE_PROTOCOL.md](./RELEASE_PROTOCOL.md) | Release checklist and publishing steps |
+| [DEPENDENCY_AUTOMATION_POLICY.md](./DEPENDENCY_AUTOMATION_POLICY.md) | Dependency-update triage, approval, and release hygiene policy |
 
 ---
 

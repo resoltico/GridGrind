@@ -7,7 +7,6 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import dev.erst.gridgrind.excel.WorkbookArtifactWriteDisposition;
-import java.io.IOException;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -20,17 +19,22 @@ class RequestPathBindingTest {
   @TempDir Path root;
 
   @Test
-  void rejectsMissingReadLeavesAndPathsThatNameTheRoot() throws Exception {
+  void rejectsMissingReadLeavesAndPathsThatNameTheRootWhileCreatingContainedWriteParents()
+      throws Exception {
     assertThrows(
         java.nio.file.NoSuchFileException.class,
         () -> RequestPathBinding.bindExistingRead("missing.xlsx", root));
     assertThrows(
         UnsafePathAccessException.class, () -> RequestPathBinding.bindWriteTarget(".", root));
-    IOException missingOutputParent =
-        assertThrows(
-            IOException.class,
-            () -> RequestPathBinding.bindWriteTarget("missing-parent/output.xlsx", root));
-    assertTrue(missingOutputParent.getMessage().contains("output parent does not exist"));
+    Path staged = Files.write(root.resolve("staged.xlsx"), new byte[] {6, 7, 8});
+    try (RequestPathBinding write =
+        RequestPathBinding.bindWriteTarget("missing-parent/deeper/output.xlsx", root)) {
+      assertTrue(Files.isDirectory(root.resolve("missing-parent/deeper")));
+      write.commitFrom(staged, WorkbookArtifactWriteDisposition.CREATE_NEW);
+    }
+    assertArrayEquals(
+        new byte[] {6, 7, 8},
+        Files.readAllBytes(root.resolve("missing-parent/deeper/output.xlsx")));
   }
 
   @Test

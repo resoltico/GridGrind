@@ -138,6 +138,10 @@ final class GridGrindProtocolCatalogExecutionNestedTypeGroups {
                       "REQUEST_PATH",
                       "Warning located at one request-owned filesystem path."),
                   descriptor(
+                      RequestWarningLocation.RequestByteOffset.class,
+                      "REQUEST_BYTE_OFFSET",
+                      "Warning located at one authored request byte offset."),
+                  descriptor(
                       RequestWarningLocation.FormulaCell.class,
                       "FORMULA_CELL",
                       "Warning located at one formula cell assessed by calculation capability analysis."))));

@@ -17,6 +17,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.FormulaError;
 import org.apache.poi.ss.usermodel.FormulaEvaluator;
@@ -98,14 +99,17 @@ class ExcelSheetCoreReadWriteCoverageTest extends ExcelSheetTestSupport {
       assertEquals("FORMULA", stringFormulaSnapshot.type());
       assertEquals("\"Hi\"", stringFormulaSnapshot.formula());
       assertEquals(
-          "Hi", ((ExcelCellSnapshot.TextSnapshot) stringFormulaSnapshot.evaluation()).textValue());
+          "Hi",
+          ((ExcelCellSnapshot.TextSnapshot) stringFormulaSnapshot.evaluation().orElseThrow())
+              .textValue());
 
       ExcelCellSnapshot.FormulaSnapshot errorFormulaSnapshot =
           (ExcelCellSnapshot.FormulaSnapshot) sheet.cells().snapshotCell("D2");
       assertEquals("FORMULA", errorFormulaSnapshot.type());
       assertEquals(
           "#DIV/0!",
-          ((ExcelCellSnapshot.ErrorSnapshot) errorFormulaSnapshot.evaluation()).errorValue());
+          ((ExcelCellSnapshot.ErrorSnapshot) errorFormulaSnapshot.evaluation().orElseThrow())
+              .errorValue());
 
       ExcelCellSnapshot.ErrorSnapshot errorSnapshot =
           (ExcelCellSnapshot.ErrorSnapshot) sheet.cells().snapshotCell("A4");
@@ -115,13 +119,38 @@ class ExcelSheetCoreReadWriteCoverageTest extends ExcelSheetTestSupport {
           (ExcelCellSnapshot.FormulaSnapshot) sheet.cells().snapshotCell("D3");
       assertEquals(
           "#CIRCULAR_REF!",
-          ((ExcelCellSnapshot.ErrorSnapshot) circularFormulaSnapshot.evaluation()).errorValue());
+          ((ExcelCellSnapshot.ErrorSnapshot) circularFormulaSnapshot.evaluation().orElseThrow())
+              .errorValue());
 
       List<ExcelPreviewRow> preview = sheet.cells().preview(4, 6);
       assertEquals(4, preview.size());
       assertEquals("A1", preview.get(0).cells().get(0).address());
       assertTrue(preview.get(1).cells().stream().noneMatch(cell -> "A2".equals(cell.address())));
       assertEquals("Hi", preview.get(0).cells().get(5).displayValue());
+    }
+  }
+
+  @Test
+  void projectionAwareSnapshotReadsSkipOrIncludeFormulaEvaluation() throws Exception {
+    try (XSSFWorkbook poiWorkbook = new XSSFWorkbook()) {
+      Sheet poiSheet = poiWorkbook.createSheet("Budget");
+      FormulaEvaluator evaluator = poiWorkbook.getCreationHelper().createFormulaEvaluator();
+      ExcelSheetCells cells =
+          new ExcelSheet(poiSheet, new WorkbookStyleRegistry(poiWorkbook), evaluator).cells();
+      cells.setCell("A1", ExcelCellValue.formula("1+1"));
+
+      ExcelCellReadProjection formulaOnly =
+          new ExcelCellReadProjection(Set.of(ExcelCellReadFacet.FORMULA));
+      ExcelCellReadProjection formatOnly =
+          new ExcelCellReadProjection(Set.of(ExcelCellReadFacet.FORMAT));
+      ExcelCellSnapshot.FormulaSnapshot formulaOnlySnapshot =
+          (ExcelCellSnapshot.FormulaSnapshot) cells.snapshotCell("A1", formulaOnly);
+      ExcelCellSnapshot.FormulaSnapshot formatOnlySnapshot =
+          (ExcelCellSnapshot.FormulaSnapshot) cells.snapshotCell("A1", formatOnly);
+
+      assertTrue(formulaOnlySnapshot.evaluation().isEmpty());
+      assertTrue(formatOnlySnapshot.evaluation().isPresent());
+      assertEquals(1, cells.snapshotCells(List.of("A1")).size());
     }
   }
 

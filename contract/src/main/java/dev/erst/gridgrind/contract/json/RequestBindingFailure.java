@@ -46,6 +46,29 @@ public record RequestBindingFailure(
     return new RequestBindingFailure(exception, jsonPath, byteOffset);
   }
 
+  RequestBindingFailure rebasedAt(String qualifiedPath, Optional<Long> byteOffset) {
+    IllegalArgumentException rebased =
+        switch (exception) {
+          case InvalidRequestException invalid ->
+              new InvalidRequestException(
+                  (RequestProblemDescriptor.Invariant) invalid.requestProblem(),
+                  Optional.of(qualifiedPath),
+                  Optional.empty(),
+                  Optional.empty(),
+                  invalid);
+          case FormulaRequestException formula ->
+              new FormulaRequestException(
+                  formula.problemCode(),
+                  formula.getMessage(),
+                  Optional.of(qualifiedPath),
+                  Optional.empty(),
+                  Optional.empty(),
+                  formula);
+          default -> exception;
+        };
+    return new RequestBindingFailure(rebased, qualifiedPath, byteOffset);
+  }
+
   private static String requireNonBlank(String value, String fieldName) {
     Objects.requireNonNull(value, fieldName + " must not be null");
     if (value.isBlank()) {

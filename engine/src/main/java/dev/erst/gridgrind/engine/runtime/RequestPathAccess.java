@@ -61,12 +61,16 @@ final class RequestPathAccess implements AutoCloseable {
       return existing;
     }
 
-    try (RequestPathBinding binding = RequestPathBinding.bindExistingRead(rawPath, executionRoot);
-        InputStream input = binding.openInputStream()) {
+    try (RequestPathBinding binding = RequestPathBinding.bindExistingRead(rawPath, executionRoot)) {
+      if (Files.isDirectory(binding.resolvedPath(), java.nio.file.LinkOption.NOFOLLOW_LINKS)
+          && "source".equals(pathRole)) {
+        throw new SourcePathIsDirectoryException(rawPath);
+      }
       recordAbsolutePathWarning(rawPath, pathRole, binding.resolvedPath());
       Path materialized = tempFileFactory.createTempFile(prefix, suffix);
       boolean completed = false;
-      try (OutputStream output = Files.newOutputStream(materialized)) {
+      try (InputStream input = binding.openInputStream();
+          OutputStream output = Files.newOutputStream(materialized)) {
         input.transferTo(output);
         materializedReads.put(rawPath, materialized);
         ownedMaterializations.add(materialized);
@@ -98,23 +102,41 @@ final class RequestPathAccess implements AutoCloseable {
     }
     RequestPathBinding binding = RequestPathBinding.bindWriteTarget(rawPath, executionRoot);
     recordAbsolutePathWarning(rawPath, pathRole, binding.resolvedPath());
+    if (binding.hasExistingLeaf()
+        && Files.isDirectory(binding.resolvedPath(), java.nio.file.LinkOption.NOFOLLOW_LINKS)) {
+      binding.close();
+      throw new OutputPathIsDirectoryException(rawPath);
+    }
     if (disposition == WorkbookArtifactWriteDisposition.CREATE_NEW && binding.hasExistingLeaf()) {
       binding.close();
-      throw new java.nio.file.FileAlreadyExistsException(binding.resolvedPath().toString());
+      throw new OutputPathAlreadyExistsException(rawPath);
     }
     outputBinding = Optional.of(binding);
     outputPath = Optional.of(rawPath);
   }
 
   /** Commits a private staged workbook through the phase-four-bound persistence parent. */
+  @SuppressWarnings(
+      "PMD.CloseResource") // Ownership remains with outputBinding until access closes.
   void commitOutput(Path stagedFile, WorkbookArtifactWriteDisposition disposition)
       throws IOException {
-    outputBinding
-        .orElseThrow(
+    RequestPathBinding binding =
+        outputBinding.orElseThrow(
             () ->
                 new IllegalStateException(
-                    "a persistence write requires a phase-four-bound output target"))
-        .commitFrom(stagedFile, disposition);
+                    "a persistence write requires a phase-four-bound output target"));
+    commitPreparedOutput(
+        outputPath.orElseThrow(), () -> binding.commitFrom(stagedFile, disposition));
+  }
+
+  static void commitPreparedOutput(String rawPath, OutputCommit operation) throws IOException {
+    Objects.requireNonNull(rawPath, "rawPath must not be null");
+    Objects.requireNonNull(operation, "operation must not be null");
+    try {
+      operation.commit();
+    } catch (java.nio.file.FileAlreadyExistsException exception) {
+      throw new OutputPathAlreadyExistsException(rawPath, exception);
+    }
   }
 
   /**
@@ -195,5 +217,12 @@ final class RequestPathAccess implements AutoCloseable {
   interface Cleanup {
     /** Releases this resource. */
     void close() throws IOException;
+  }
+
+  /** One checked commit operation against a prepared request-owned output binding. */
+  @FunctionalInterface
+  interface OutputCommit {
+    /** Commits one staged output, preserving any checked I/O failure. */
+    void commit() throws IOException;
   }
 }

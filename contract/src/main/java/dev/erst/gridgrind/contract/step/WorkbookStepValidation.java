@@ -2,6 +2,7 @@ package dev.erst.gridgrind.contract.step;
 
 import dev.erst.gridgrind.contract.action.MutationAction;
 import dev.erst.gridgrind.contract.assertion.Assertion;
+import dev.erst.gridgrind.contract.dto.ProtocolConstraintValues;
 import dev.erst.gridgrind.contract.query.InspectionQuery;
 import dev.erst.gridgrind.contract.selector.Selector;
 import java.util.Objects;
@@ -9,7 +10,8 @@ import java.util.regex.Pattern;
 
 /** Shared validation helpers for workbook-step compact constructors. */
 final class WorkbookStepValidation {
-  private static final Pattern STEP_ID_PATTERN = Pattern.compile("[A-Za-z0-9._-]+");
+  private static final Pattern STEP_ID_PATTERN =
+      Pattern.compile(ProtocolConstraintValues.STEP_ID_PATTERN);
 
   private WorkbookStepValidation() {}
 

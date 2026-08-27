@@ -119,6 +119,10 @@ final class ExcelSheetCellMutationSupport {
             excelRange.firstColumn(),
             excelRange.lastColumn());
     try {
+      ExcelFormulaLimits.requireSupportedFormula(
+          new ExcelFormulaLimits.CellContext(
+              xssfSheet().getWorkbook(), xssfSheet().getWorkbook().getSheetIndex(xssfSheet())),
+          formula.formula());
       xssfSheet().setArrayFormula(formula.formula(), poiRange);
     } catch (RuntimeException exception) {
       throw FormulaExceptions.wrap(

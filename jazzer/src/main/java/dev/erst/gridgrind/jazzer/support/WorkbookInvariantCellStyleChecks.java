@@ -92,9 +92,16 @@ final class WorkbookInvariantCellStyleChecks {
 
   static void requireCellBorderSideShape(CellBorderSideReport side, String label) {
     WorkbookInvariantChecks.require(side != null, label + " border side must not be null");
-    WorkbookInvariantChecks.require(side.style() != null, label + " border style must not be null");
-    if (side.color() != null) {
-      requireCellColorShape(side.color(), label + " border color");
+    switch (side) {
+      case CellBorderSideReport.None _ -> {}
+      case CellBorderSideReport.DefaultColor defaultColor ->
+          WorkbookInvariantChecks.require(
+              defaultColor.style() != null, label + " border style must not be null");
+      case CellBorderSideReport.Colored colored -> {
+        WorkbookInvariantChecks.require(
+            colored.style() != null, label + " border style must not be null");
+        requireCellColorShape(colored.color(), label + " border color");
+      }
     }
   }
 

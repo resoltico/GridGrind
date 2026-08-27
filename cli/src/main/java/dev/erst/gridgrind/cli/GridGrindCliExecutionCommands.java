@@ -17,7 +17,6 @@ import dev.erst.gridgrind.engine.api.GridGrindRequestRequirements;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.io.PushbackInputStream;
 import java.nio.file.Path;
 import java.util.Objects;
 import java.util.Optional;
@@ -30,7 +29,7 @@ final class GridGrindCliExecutionCommands {
   private final CliRequestReader requestReader;
   private final CliResponseWriter responseWriter;
   private final BooleanSupplier standardInputIsInteractive;
-  private final CliDoctorRequestAnalyzer doctorRequestAnalyzer;
+  private final GridGrindCliDoctorCommand doctorCommand;
 
   GridGrindCliExecutionCommands(
       GridGrindRequestExecutor requestExecutor,
@@ -45,7 +44,12 @@ final class GridGrindCliExecutionCommands {
     this.standardInputIsInteractive =
         Objects.requireNonNull(
             standardInputIsInteractive, "standardInputIsInteractive must not be null");
-    this.doctorRequestAnalyzer = new CliDoctorRequestAnalyzer(this.requestDoctor);
+    this.doctorCommand =
+        new GridGrindCliDoctorCommand(
+            this.requestDoctor,
+            this.requestReader,
+            this.responseWriter,
+            this.standardInputIsInteractive);
   }
 
   Optional<InputStream> standardInputIfPresent(CliCommand.Execute command, InputStream stdin)
@@ -113,7 +117,6 @@ final class GridGrindCliExecutionCommands {
           prettyJson);
     }
 
-    WorkbookResult response;
     if (requestArrivesOnStandardInput(command.requestPath())
         && GridGrindRequestRequirements.requiresStandardInput(request)) {
       return responseWriter.writeCommandError(
@@ -140,6 +143,19 @@ final class GridGrindCliExecutionCommands {
           prettyJson);
     }
 
+    if (command.responsePath().isPresent()) {
+      return executeWithReservedResponse(
+          command,
+          stdin,
+          stdout,
+          stderr,
+          prettyJson,
+          request,
+          analysis,
+          requestRedactor.orElseThrow());
+    }
+
+    WorkbookResult response;
     try {
       response =
           CliExecutionFailureSupport.executeStarted(
@@ -164,6 +180,8 @@ final class GridGrindCliExecutionCommands {
           prettyJson);
     }
 
+    response = CliResponseAnalysisWarningSupport.append(response, analysis);
+
     return responseWriter.write(
         command.responsePath(),
         stdout,
@@ -174,6 +192,72 @@ final class GridGrindCliExecutionCommands {
         prettyJson);
   }
 
+  private int executeWithReservedResponse(
+      CliCommand.Execute command,
+      InputStream stdin,
+      OutputStream stdout,
+      OutputStream stderr,
+      boolean prettyJson,
+      WorkbookPlan request,
+      RequestAnalysis analysis,
+      RequestDiagnosticRedactor requestRedactor)
+      throws IOException {
+    CliResponseReservation reservation;
+    try {
+      reservation = CliResponseReservation.reserve(command.responsePath().orElseThrow());
+    } catch (CliResponseReservation.ResponseReservationException exception) {
+      writeReservationFailureNotice(stderr, exception);
+      return 1;
+    }
+    try (reservation) {
+      WorkbookResult response = executeReservedRequest(command, stdin, stderr, request, analysis);
+      return responseWriter.writeReserved(
+          reservation,
+          stdout,
+          stderr,
+          response,
+          CliExitCodes.forWorkbookResult(response),
+          requestRedactor,
+          prettyJson);
+    }
+  }
+
+  private WorkbookResult executeReservedRequest(
+      CliCommand.Execute command,
+      InputStream stdin,
+      OutputStream stderr,
+      WorkbookPlan request,
+      RequestAnalysis analysis) {
+    try {
+      return CliResponseAnalysisWarningSupport.append(
+          CliExecutionFailureSupport.executeStarted(
+              requestExecutor,
+              request,
+              analysis,
+              command.requestPath(),
+              command.executionRootPath(),
+              command.tempRootPath(),
+              stdin,
+              new CliProgressJsonlSink(stderr)),
+          analysis);
+    } catch (IOException exception) {
+      return CliResponseAnalysisWarningSupport.append(
+          CliExecutionFailureSupport.failure(request, exception), analysis);
+    }
+  }
+
+  private static void writeReservationFailureNotice(
+      OutputStream stderr, CliResponseReservation.ResponseReservationException exception) {
+    try {
+      CliResponseTransportSupport.writeTransportNoticeToStderr(
+          stderr,
+          dev.erst.gridgrind.cli.discovery.CliTransportNotice.reservationFailure(
+              exception.reason(), exception.responsePath().toString()));
+    } catch (IOException ignored) {
+      // A failed requested transport has no primary payload to reroute before execution begins.
+    }
+  }
+
   int doctorRequest(
       CliCommand.DoctorRequest command,
       InputStream stdin,
@@ -181,58 +265,7 @@ final class GridGrindCliExecutionCommands {
       OutputStream stderr,
       boolean prettyJson)
       throws IOException {
-    Optional<InputStream> requestInput = standardInputIfPresent(command.requestPath(), stdin);
-    if (requestInput.isEmpty()) {
-      return responseWriter.writeCommandError(
-          command.responsePath(),
-          stdout,
-          stderr,
-          CommandErrors.invalidArguments(
-              "doctor-request",
-              Optional.of("--request"),
-              "No request JSON was provided. Pass --request <path> or pipe one request document"
-                  + " on standard input."),
-          prettyJson);
-    }
-    if (requestArrivesOnStandardInput(command.requestPath())
-        && command.executionRootPath().isEmpty()) {
-      return responseWriter.writeCommandError(
-          command.responsePath(),
-          stdout,
-          stderr,
-          stdinExecutionRootFailure("doctor-request"),
-          prettyJson);
-    }
-
-    RequestDoctorReport report;
-    Optional<RequestDiagnosticRedactor> requestRedactor = Optional.empty();
-    try {
-      byte[] requestBytes =
-          requestReader.readBytes(command.requestPath(), requestInput.orElseThrow());
-      RequestAnalysis analysis = GridGrindJson.analyzeRequest(requestBytes);
-      requestRedactor = Optional.of(analysis.diagnosticRedactor());
-      report =
-          doctorRequestAnalyzer.diagnose(
-              command.requestPath(),
-              command.executionRootPath(),
-              command.tempRootPath(),
-              analysis,
-              stdin);
-    } catch (IOException exception) {
-      return CliRequestReadFailureSupport.write(
-          responseWriter,
-          "doctor-request",
-          command.requestPath(),
-          command.responsePath(),
-          stdout,
-          stderr,
-          exception,
-          requestRedactor,
-          prettyJson);
-    }
-
-    return responseWriter.writeDoctorReport(
-        command.responsePath(), stdout, stderr, report, requestRedactor.orElseThrow(), prettyJson);
+    return doctorCommand.run(command, stdin, stdout, stderr, prettyJson);
   }
 
   private static dev.erst.gridgrind.cli.discovery.CommandError stdinExecutionRootFailure(
@@ -245,24 +278,10 @@ final class GridGrindCliExecutionCommands {
 
   private Optional<InputStream> standardInputIfPresent(
       Optional<Path> requestPath, InputStream stdin) throws IOException {
-    Objects.requireNonNull(requestPath, "requestPath must not be null");
-    Objects.requireNonNull(stdin, "stdin must not be null");
-    if (requestPath.isPresent()) {
-      return Optional.of(stdin);
-    }
-    if (standardInputIsInteractive.getAsBoolean()) {
-      return Optional.empty();
-    }
-    PushbackInputStream peekable = new PushbackInputStream(stdin, 1);
-    int firstByte = peekable.read();
-    if (firstByte < 0) {
-      return Optional.empty();
-    }
-    peekable.unread(firstByte);
-    return Optional.of(peekable);
+    return CliStandardInputSupport.ifPresent(requestPath, stdin, standardInputIsInteractive);
   }
 
   private static boolean requestArrivesOnStandardInput(Optional<Path> requestPath) {
-    return requestPath.isEmpty() || CliPathArguments.isStandardInputPath(requestPath);
+    return CliStandardInputSupport.requestArrivesOnStandardInput(requestPath);
   }
 }

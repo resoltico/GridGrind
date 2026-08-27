@@ -259,7 +259,6 @@ final class WorkbookInvariantInspectionResultChecks {
       case CellSelector.AllUsedInSheet all -> Optional.of(all.sheetName());
       case CellSelector.ByAddress byAddress -> Optional.of(byAddress.sheetName());
       case CellSelector.ByAddresses byAddresses -> Optional.of(byAddresses.sheetName());
-      case CellSelector.ByQualifiedAddresses _ -> Optional.empty();
     };
   }
 

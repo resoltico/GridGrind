@@ -81,6 +81,10 @@ class ReadbackSupportCoverageTest {
         Optional.of(CellColorReport.indexed(9, 0.5d)),
         InspectionResultCellStyleReportSupport.toCellColorReport(
             ExcelColor.indexed(9, Optional.of(0.5d))));
+    assertInstanceOf(
+        CellBorderSideReport.DefaultColor.class,
+        InspectionResultCellStyleReportSupport.toCellBorderSideReport(
+            new ExcelBorderSideSnapshot(ExcelBorderStyle.THIN, null)));
   }
 
   @Test
@@ -113,7 +117,12 @@ class ReadbackSupportCoverageTest {
         new ExcelCellSnapshot.BlankSnapshot("A6", "", style("General"), metadata());
     ExcelCellSnapshot.FormulaSnapshot formulaSnapshot =
         new ExcelCellSnapshot.FormulaSnapshot(
-            "A7", "Ada", style("General"), metadata(), "CONCAT(\"A\",\"da\")", textSnapshot);
+            "A7",
+            "Ada",
+            style("General"),
+            metadata(),
+            "CONCAT(\"A\",\"da\")",
+            java.util.Optional.of(textSnapshot));
 
     CellReport.TextReport textReport =
         assertInstanceOf(
@@ -237,7 +246,7 @@ class ReadbackSupportCoverageTest {
             style("General"),
             ExcelCellMetadataSnapshot.empty(),
             "SUM(A1:A2)",
-            numberSnapshot);
+            java.util.Optional.of(numberSnapshot));
     ExcelCellSnapshot.BlankSnapshot blankSnapshot =
         new ExcelCellSnapshot.BlankSnapshot(
             "A5", "", style("General"), ExcelCellMetadataSnapshot.empty());
@@ -292,7 +301,7 @@ class ReadbackSupportCoverageTest {
             style("General"),
             ExcelCellMetadataSnapshot.empty(),
             "SUM(A1:A1)",
-            evaluatedNumber);
+            java.util.Optional.of(evaluatedNumber));
 
     IllegalArgumentException exception =
         assertThrows(
@@ -304,7 +313,7 @@ class ReadbackSupportCoverageTest {
                     style("General"),
                     ExcelCellMetadataSnapshot.empty(),
                     "SUM(A1:A2)",
-                    nestedFormula));
+                    java.util.Optional.of(nestedFormula)));
     assertEquals("formula evaluation must not itself be FORMULA", exception.getMessage());
   }
 
@@ -448,7 +457,7 @@ class ReadbackSupportCoverageTest {
   }
 
   private static CellStyleReport styleReport() {
-    CellBorderSideReport emptySide = new CellBorderSideReport(ExcelBorderStyle.NONE, null);
+    CellBorderSideReport emptySide = new CellBorderSideReport.None();
     return new CellStyleReport(
         "General",
         new dev.erst.gridgrind.contract.dto.CellAlignmentReport(

@@ -13,12 +13,64 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Set;
 import org.apache.poi.poifs.crypt.HashAlgorithm;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.junit.jupiter.api.Test;
 
 /** Tests for ExcelWorkbookIntrospector workbook-fact reads and named-range selection. */
 class ExcelWorkbookIntrospectorTest {
+  @Test
+  void readsOpaqueRawFormulaFactsWithoutEvaluatorExecution() throws IOException {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
+      ExcelSheet sheet = workbook.getOrCreateSheet("Raw");
+      sheet.cells().setCell("A1", ExcelCellValue.rawFormula("_xlfn.UNIQUE({1,2,2})"));
+      ExcelSheet schemaSheet = workbook.getOrCreateSheet("Schema");
+      schemaSheet.cells().setCell("A1", ExcelCellValue.text("Count"));
+      schemaSheet.cells().setCell("A2", ExcelCellValue.formula("1+1"));
+
+      ExcelWorkbookIntrospector introspector = new ExcelWorkbookIntrospector();
+      WorkbookSurfaceResult.FormulaSurfaceResult formulaSurface =
+          assertInstanceOf(
+              WorkbookSurfaceResult.FormulaSurfaceResult.class,
+              introspector.execute(
+                  workbook,
+                  new WorkbookReadCommand.GetFormulaSurface(
+                      "formula-surface", new ExcelSheetSelection.Selected(List.of("Raw")))));
+      WorkbookSheetResult.CellsResult cells =
+          assertInstanceOf(
+              WorkbookSheetResult.CellsResult.class,
+              introspector.execute(
+                  workbook,
+                  new WorkbookReadCommand.GetCells(
+                      "formula-cell",
+                      "Raw",
+                      List.of("A1"),
+                      new ExcelCellReadProjection(Set.of(ExcelCellReadFacet.FORMULA)))));
+      WorkbookSurfaceResult.SheetSchemaResult schema =
+          assertInstanceOf(
+              WorkbookSurfaceResult.SheetSchemaResult.class,
+              introspector.execute(
+                  workbook,
+                  new WorkbookReadCommand.GetSheetSchema(
+                      "formula-schema",
+                      "Schema",
+                      new ExcelReadWindow("A1", 2, 1),
+                      new ExcelCellReadProjection(Set.of(ExcelCellReadFacet.FORMULA)))));
+
+      assertEquals(1, formulaSurface.surface().totalFormulaCellCount());
+      assertEquals(
+          "_xlfn.UNIQUE({1,2,2})",
+          formulaSurface.surface().sheets().getFirst().formulas().getFirst().formula());
+      ExcelCellSnapshot.FormulaSnapshot formulaCell =
+          assertInstanceOf(ExcelCellSnapshot.FormulaSnapshot.class, cells.cells().getFirst());
+      assertEquals("_xlfn.UNIQUE({1,2,2})", formulaCell.formula());
+      assertTrue(formulaCell.evaluation().isEmpty());
+      assertEquals(
+          "NUMBER", schema.surface().columns().getFirst().observedTypes().getFirst().type());
+    }
+  }
+
   @Test
   void executesEveryIntrospectionCommandAgainstWorkbookState() throws IOException {
     try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
@@ -222,7 +274,7 @@ class ExcelWorkbookIntrospectorTest {
                   new ExcelBinaryData(
                       java.util.Base64.getDecoder()
                           .decode(
-                              "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+X2kQAAAAASUVORK5CYII=")),
+                              "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVQI12P4//8/AAX+Av7czFnnAAAAAElFTkSuQmCC")),
                   ExcelPictureFormat.PNG,
                   new ExcelDrawingAnchor.TwoCell(
                       new ExcelDrawingMarker(1, 2),
@@ -240,7 +292,7 @@ class ExcelWorkbookIntrospectorTest {
                   new ExcelBinaryData(
                       java.util.Base64.getDecoder()
                           .decode(
-                              "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+X2kQAAAAASUVORK5CYII=")),
+                              "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVQI12P4//8/AAX+Av7czFnnAAAAAElFTkSuQmCC")),
                   new ExcelDrawingAnchor.TwoCell(
                       new ExcelDrawingMarker(5, 2),
                       new ExcelDrawingMarker(8, 6),

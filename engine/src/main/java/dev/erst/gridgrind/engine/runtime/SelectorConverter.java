@@ -12,7 +12,6 @@ import dev.erst.gridgrind.contract.selector.SheetSelector;
 import dev.erst.gridgrind.contract.selector.TableSelector;
 import dev.erst.gridgrind.excel.ExcelCellSelection;
 import dev.erst.gridgrind.excel.ExcelChartSelection;
-import dev.erst.gridgrind.excel.ExcelFormulaCellTarget;
 import dev.erst.gridgrind.excel.ExcelNamedRangeSelection;
 import dev.erst.gridgrind.excel.ExcelNamedRangeSelector;
 import dev.erst.gridgrind.excel.ExcelRangeSelection;
@@ -126,10 +125,6 @@ final class SelectorConverter {
       case CellSelector.ByAddresses byAddresses ->
           new SheetLocalCellSelection(
               byAddresses.sheetName(), new ExcelCellSelection.Selected(byAddresses.addresses()));
-      case CellSelector.ByQualifiedAddresses byQualifiedAddresses ->
-          throw new IllegalArgumentException(
-              "selector must target one sheet; cross-sheet exact cell selectors are not supported here: "
-                  + byQualifiedAddresses);
     };
   }
 
@@ -142,18 +137,7 @@ final class SelectorConverter {
       case CellSelector.AllUsedInSheet _ ->
           throw new IllegalArgumentException(
               "selector must provide exact addresses here; ALL_USED_IN_SHEET is not supported");
-      case CellSelector.ByQualifiedAddresses _ ->
-          throw new IllegalArgumentException(
-              "selector must target one sheet with exact addresses here");
     };
-  }
-
-  static QualifiedCellAddresses toQualifiedCellAddresses(
-      CellSelector.ByQualifiedAddresses selector) {
-    return new QualifiedCellAddresses(
-        selector.cells().stream()
-            .map(cell -> new ExcelFormulaCellTarget(cell.sheetName(), cell.address()))
-            .toList());
   }
 
   static SingleCellTarget toSingleCellTarget(CellSelector.ByAddress selector) {
@@ -233,10 +217,4 @@ final class SelectorConverter {
   record SingleCellTarget(String sheetName, String address) {}
 
   record SingleRangeTarget(String sheetName, String range) {}
-
-  record QualifiedCellAddresses(List<ExcelFormulaCellTarget> cells) {
-    QualifiedCellAddresses {
-      cells = List.copyOf(cells);
-    }
-  }
 }

@@ -279,7 +279,7 @@ ratio beyond 1:100 triggers a `ZipBombException`, which GridGrind translates to 
 | **Category** | GridGrind |
 | **Limit** | DDE function forbidden in all formula-bearing inputs |
 | **Error** | `IllegalArgumentException`: formula must not use the DDE function |
-| **Applies to** | `ArrayFormulaInput`, `DataValidationRuleInput` formula fields, `ConditionalFormattingRuleInput` formula fields, `ConditionalFormattingThresholdInput.formula`, `ChartDataSourceInput.Reference.formula` |
+| **Applies to** | `ArrayFormulaInput`, `DataValidationRuleInput` formula fields, `ConditionalFormattingRuleInput` formula fields, `ConditionalFormattingThresholdInput.Formula`, `ChartDataSourceInput.Reference.formula` |
 | **Code** | `FormulaInputSecurity.rejectDde // LIM-027` (applied at each formula input site) |
 | **UX** | Not surfaced in help |
 

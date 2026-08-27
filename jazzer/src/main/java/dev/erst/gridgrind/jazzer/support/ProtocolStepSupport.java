@@ -13,7 +13,6 @@ import dev.erst.gridgrind.contract.dto.TableInput;
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
 import dev.erst.gridgrind.contract.query.*;
 import dev.erst.gridgrind.contract.query.InspectionResult;
-import dev.erst.gridgrind.contract.selector.CellSelector;
 import dev.erst.gridgrind.contract.selector.NamedRangeSelector;
 import dev.erst.gridgrind.contract.selector.PivotTableSelector;
 import dev.erst.gridgrind.contract.selector.Selector;
@@ -81,7 +80,8 @@ final class ProtocolStepSupport {
     return new CalculationPolicyInput(new CalculationStrategyInput.EvaluateAll(), true);
   }
 
-  static CalculationPolicyInput calculateTargets(CellSelector.QualifiedAddress... cells) {
+  static CalculationPolicyInput calculateTargets(
+      dev.erst.gridgrind.contract.dto.FormulaCellTarget... cells) {
     return new CalculationPolicyInput(
         new CalculationStrategyInput.EvaluateTargets(List.of(cells)), false);
   }

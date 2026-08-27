@@ -2,6 +2,7 @@ package dev.erst.gridgrind.engine.runtime;
 
 import java.io.IOException;
 import java.nio.file.DirectoryStream;
+import java.nio.file.Files;
 import java.nio.file.LinkOption;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
@@ -95,7 +96,11 @@ final class RequestPathDescriptorBinder {
     try {
       return RequestPathTopology.identityOf(parent.stream(), component, childPath, true);
     } catch (NoSuchFileException exception) {
-      throw missingOutputParent(requireLeaf, childPath, exception);
+      if (requireLeaf) {
+        throw exception;
+      }
+      Files.createDirectory(childPath);
+      return RequestPathTopology.identityOf(parent.stream(), component, childPath, true);
     }
   }
 
@@ -131,14 +136,6 @@ final class RequestPathDescriptorBinder {
     stream.close();
     throw new UnsafePathAccessException(
         "filesystem does not support secure no-follow directory binding: " + directory);
-  }
-
-  private static IOException missingOutputParent(
-      boolean requireLeaf, Path parentPath, NoSuchFileException exception) {
-    if (requireLeaf) {
-      return exception;
-    }
-    return new IOException("request-owned output parent does not exist: " + parentPath, exception);
   }
 
   private static UnsafePathAccessException topologyChangedWhileBinding(

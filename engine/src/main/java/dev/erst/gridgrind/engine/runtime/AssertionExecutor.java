@@ -51,27 +51,20 @@ final class AssertionExecutor {
     AssertionEvaluation evaluation =
         evaluate(step.stepId(), step.target(), step.assertion(), workbook, workbookLocation);
     if (!evaluation.passed()) {
-      AssertionResult result =
-          new AssertionResult(
-              dev.erst.gridgrind.contract.assertion.AssertionOutcome.FAILED,
+      AssertionFailure failure =
+          new AssertionFailure(
               step.stepId(),
-              step.assertion().assertionType());
+              step.assertion().assertionType(),
+              step.target(),
+              step.assertion(),
+              evaluation.observations());
+      AssertionResult result =
+          new AssertionResult.Failed(step.stepId(), step.assertion().assertionType(), failure);
       return new AssertionStepExecution.Failed(
-          result,
-          new AssertionFailedException(
-              evaluation.message(),
-              new AssertionFailure(
-                  step.stepId(),
-                  step.assertion().assertionType(),
-                  step.target(),
-                  step.assertion(),
-                  evaluation.observations())));
+          result, new AssertionFailedException(evaluation.message(), failure));
     }
     return new AssertionStepExecution.Passed(
-        new AssertionResult(
-            dev.erst.gridgrind.contract.assertion.AssertionOutcome.PASSED,
-            step.stepId(),
-            step.assertion().assertionType()));
+        new AssertionResult.Passed(step.stepId(), step.assertion().assertionType()));
   }
 
   private AssertionEvaluation evaluate(

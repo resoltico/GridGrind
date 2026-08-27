@@ -191,7 +191,8 @@ class FormulaEnvironmentRequestExecutorTest {
                     new WorkbookPlan.WorkbookPersistence.SaveAs(
                         workbookPath.toString(), WorkbookPlan.WorkbookPersistence.IfExists.REJECT),
                     executionPolicy(
-                        calculateTargets(new CellSelector.QualifiedAddress("Budget", "B1"))),
+                        calculateTargets(
+                            new dev.erst.gridgrind.contract.dto.FormulaCellTarget("Budget", "B1"))),
                     null,
                     mutations(
                         mutate(

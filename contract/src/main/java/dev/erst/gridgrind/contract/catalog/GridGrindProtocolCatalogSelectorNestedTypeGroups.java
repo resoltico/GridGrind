@@ -47,10 +47,7 @@ final class GridGrindProtocolCatalogSelectorNestedTypeGroups {
                       "Select one exact cell on one sheet."),
                   selectorDescriptor(
                       dev.erst.gridgrind.contract.selector.CellSelector.ByAddresses.class,
-                      "Select one or more exact cells on one sheet."),
-                  selectorDescriptor(
-                      dev.erst.gridgrind.contract.selector.CellSelector.ByQualifiedAddresses.class,
-                      "Select one or more exact cells across one or more sheets."))),
+                      "Select one or more exact cells on one sheet."))),
           nestedTypeGroup(
               "rangeSelectorTypes",
               dev.erst.gridgrind.contract.selector.RangeSelector.class,

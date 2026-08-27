@@ -4,21 +4,15 @@ import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import java.util.List;
 
-/** Selects one or more cells, either on one sheet or by exact workbook-qualified addresses. */
+/** Selects one or more cells on one sheet. */
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
 @JsonSubTypes({
   @JsonSubTypes.Type(value = CellSelector.AllUsedInSheet.class, name = "CELL_ALL_USED_IN_SHEET"),
   @JsonSubTypes.Type(value = CellSelector.ByAddress.class, name = "CELL_BY_ADDRESS"),
-  @JsonSubTypes.Type(value = CellSelector.ByAddresses.class, name = "CELL_BY_ADDRESSES"),
-  @JsonSubTypes.Type(
-      value = CellSelector.ByQualifiedAddresses.class,
-      name = "CELL_BY_QUALIFIED_ADDRESSES")
+  @JsonSubTypes.Type(value = CellSelector.ByAddresses.class, name = "CELL_BY_ADDRESSES")
 })
 public sealed interface CellSelector extends Selector
-    permits CellSelector.AllUsedInSheet,
-        CellSelector.ByAddress,
-        CellSelector.ByAddresses,
-        CellSelector.ByQualifiedAddresses {
+    permits CellSelector.AllUsedInSheet, CellSelector.ByAddress, CellSelector.ByAddresses {
 
   /** Selects every physically present cell on one sheet. */
   record AllUsedInSheet(String sheetName) implements CellSelector {
@@ -55,31 +49,6 @@ public sealed interface CellSelector extends Selector
     @Override
     public SelectorCardinality cardinality() {
       return SelectorCardinality.ONE_OR_MORE;
-    }
-  }
-
-  /** Selects exact cells across one or more sheets. */
-  record ByQualifiedAddresses(List<QualifiedAddress> cells) implements CellSelector {
-    public ByQualifiedAddresses {
-      cells = SelectorListValidation.copyDistinctValues(cells, "cells");
-    }
-
-    @Override
-    public SelectorCardinality cardinality() {
-      return SelectorCardinality.ONE_OR_MORE;
-    }
-  }
-
-  /** One workbook-qualified cell address. */
-  record QualifiedAddress(String sheetName, String address) {
-    public QualifiedAddress {
-      sheetName = SelectorValueValidation.requireSheetName(sheetName, "sheetName");
-      address = SelectorValueValidation.requireAddress(address, "address");
-    }
-
-    @Override
-    public String toString() {
-      return sheetName + "!" + address;
     }
   }
 }

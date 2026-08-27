@@ -58,7 +58,6 @@ import dev.erst.gridgrind.excel.WorkbookExecutionEngine;
 import dev.erst.gridgrind.excel.WorkbookLocation;
 import dev.erst.gridgrind.excel.foundation.AnalysisFindingCode;
 import dev.erst.gridgrind.excel.foundation.AnalysisSeverity;
-import dev.erst.gridgrind.excel.foundation.ExcelBorderStyle;
 import dev.erst.gridgrind.excel.foundation.ExcelFillPattern;
 import dev.erst.gridgrind.excel.foundation.ExcelHorizontalAlignment;
 import dev.erst.gridgrind.excel.foundation.ExcelVerticalAlignment;
@@ -528,12 +527,7 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
         List.of(),
         assertInstanceOf(
                 WorkbookInspectionResult.SheetsResult.class,
-                presentMissingSheet
-                    .problem()
-                    .assertionFailure()
-                    .orElseThrow()
-                    .observations()
-                    .getFirst())
+                failedAssertion(presentMissingSheet).observations().getFirst())
             .sheetNames());
 
     WorkbookResult.Failure absentPresentSheet =
@@ -557,7 +551,7 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
         List.of(),
         assertInstanceOf(
                 WorkbookInspectionResult.NamedRangesResult.class,
-                presentMissing.problem().assertionFailure().orElseThrow().observations().getFirst())
+                failedAssertion(presentMissing).observations().getFirst())
             .namedRanges());
 
     WorkbookResult.Failure absentTable =
@@ -639,12 +633,7 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
         namedRanges.namedRanges(),
         assertInstanceOf(
                 WorkbookInspectionResult.NamedRangesResult.class,
-                namedRangeMismatch
-                    .problem()
-                    .assertionFailure()
-                    .orElseThrow()
-                    .observations()
-                    .getFirst())
+                failedAssertion(namedRangeMismatch).observations().getFirst())
             .namedRanges());
 
     WorkbookResult.Failure tableMismatch =
@@ -659,7 +648,7 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
         tables.tables(),
         assertInstanceOf(
                 WorkbookAssetInspectionResult.TablesResult.class,
-                tableMismatch.problem().assertionFailure().orElseThrow().observations().getFirst())
+                failedAssertion(tableMismatch).observations().getFirst())
             .tables());
 
     WorkbookResult.Failure severityMismatch =
@@ -798,7 +787,7 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
                                         "Owner"))))),
                     List.of())));
     assertTrue(notFailure.problem().message().contains("NOT failed"));
-    assertTrue(notFailure.problem().assertionFailure().isPresent());
+    assertEquals("not-failure", failedAssertion(notFailure).stepId());
   }
 
   @Test
@@ -824,14 +813,12 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
             .problem()
             .message()
             .contains("EXPECT_DISPLAY_VALUE resolved no matching cells"));
-    assertEquals(
-        "display-missing-table-cell",
-        displayFailure.problem().assertionFailure().orElseThrow().stepId());
+    assertEquals("display-missing-table-cell", failedAssertion(displayFailure).stepId());
     assertEquals(
         List.of(),
         assertInstanceOf(
                 SheetInspectionResult.CellsResult.class,
-                displayFailure.problem().assertionFailure().orElseThrow().observations().getFirst())
+                failedAssertion(displayFailure).observations().getFirst())
             .cells());
 
     WorkbookResult.Failure formulaFailure =
@@ -853,9 +840,7 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
             .problem()
             .message()
             .contains("EXPECT_FORMULA_TEXT resolved no matching cells"));
-    assertEquals(
-        "formula-missing-table-cell",
-        formulaFailure.problem().assertionFailure().orElseThrow().stepId());
+    assertEquals("formula-missing-table-cell", failedAssertion(formulaFailure).stepId());
 
     WorkbookResult.Failure styleFailure =
         failure(
@@ -873,9 +858,7 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
                     List.of())));
     assertTrue(
         styleFailure.problem().message().contains("EXPECT_CELL_STYLE resolved no matching cells"));
-    assertEquals(
-        "style-missing-table-cell",
-        styleFailure.problem().assertionFailure().orElseThrow().stepId());
+    assertEquals("style-missing-table-cell", failedAssertion(styleFailure).stepId());
   }
 
   @Test
@@ -1437,7 +1420,7 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
   }
 
   private static CellStyleReport style() {
-    CellBorderSideReport emptySide = new CellBorderSideReport(ExcelBorderStyle.NONE, null);
+    CellBorderSideReport emptySide = new CellBorderSideReport.None();
     return new CellStyleReport(
         "General",
         new CellAlignmentReport(
@@ -1536,5 +1519,13 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
                 List.of(),
                 List.of(assertThat(stepId, target, assertion)),
                 List.of())));
+  }
+
+  private static dev.erst.gridgrind.contract.assertion.AssertionFailure failedAssertion(
+      WorkbookResult.Failure failure) {
+    return assertInstanceOf(
+            dev.erst.gridgrind.contract.assertion.AssertionResult.Failed.class,
+            failure.assertions().getFirst())
+        .failure();
   }
 }

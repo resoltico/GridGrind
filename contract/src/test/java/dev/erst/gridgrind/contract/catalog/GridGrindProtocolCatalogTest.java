@@ -3,12 +3,14 @@ package dev.erst.gridgrind.contract.catalog;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import dev.erst.gridgrind.contract.dto.GridGrindProtocolVersion;
+import dev.erst.gridgrind.contract.dto.ProtocolConstraintValues;
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
 import dev.erst.gridgrind.contract.json.GridGrindJson;
 import dev.erst.gridgrind.contract.json.GridGrindJsonOutput;
@@ -134,6 +136,18 @@ class GridGrindProtocolCatalogTest {
   }
 
   @Test
+  void ranksPartialMultiTermCatalogMatchesInsteadOfRequiringEveryTermPerEntry() {
+    CatalogSearchResult search =
+        GridGrindProtocolCatalog.searchCatalog("encryption signature password security");
+
+    assertFalse(search.matches().isEmpty());
+    assertTrue(
+        search.matches().stream()
+            .anyMatch(
+                match -> "inspectionQueryTypes:GET_PACKAGE_SECURITY".equals(match.qualifiedId())));
+  }
+
+  @Test
   void assertionTargetSelectorsNeverReuseOneWireTypeAcrossMultipleFamilies() {
     for (TypeEntry assertionType : GridGrindProtocolCatalog.catalog().assertionTypes()) {
       assertSelectorFamiliesDoNotReuseTypeIds(assertionType);
@@ -166,6 +180,58 @@ class GridGrindProtocolCatalogTest {
     assertEquals(
         List.of("stepId", "target", "action"),
         CatalogTypeEntryFactory.requiredFields(MutationStep.class));
+  }
+
+  @Test
+  void publishesMachineReadableScalarConstraintsForValidatedAuthoringFields() {
+    Catalog catalog = GridGrindProtocolCatalog.catalog();
+    FieldShape.Scalar stepId =
+        assertInstanceOf(
+            FieldShape.Scalar.class,
+            catalog.stepTypes().getFirst().field("stepId").orElseThrow().shape());
+    assertEquals(
+        List.of(
+            new FieldConstraint.NonBlank(),
+            new FieldConstraint.StringPattern(ProtocolConstraintValues.STEP_ID_PATTERN)),
+        stepId.constraints());
+
+    FieldShape.Scalar rgb =
+        assertInstanceOf(
+            FieldShape.Scalar.class,
+            nestedType(catalog, "colorInputTypes", "RGB").field("rgb").orElseThrow().shape());
+    assertEquals(
+        List.of(new FieldConstraint.StringPattern(ProtocolConstraintValues.RGB_HEX_PATTERN)),
+        rgb.constraints());
+
+    TypeEntry dataBar = nestedType(catalog, "conditionalFormattingRuleTypes", "DATA_BAR_RULE");
+    assertEquals(
+        List.of(new FieldConstraint.Integral(), new FieldConstraint.NumberRange(0.0d, 100.0d)),
+        assertInstanceOf(FieldShape.Scalar.class, dataBar.field("widthMin").orElseThrow().shape())
+            .constraints());
+    assertEquals(
+        List.of(new FieldConstraint.PathSuffix(".xlsx")),
+        assertInstanceOf(
+                FieldShape.Scalar.class,
+                catalog.sourceTypes().stream()
+                    .filter(type -> "EXISTING".equals(type.id()))
+                    .findFirst()
+                    .orElseThrow()
+                    .field("path")
+                    .orElseThrow()
+                    .shape())
+            .constraints());
+  }
+
+  private static TypeEntry nestedType(Catalog catalog, String groupName, String typeId) {
+    return catalog.nestedTypes().stream()
+        .filter(group -> group.group().equals(groupName))
+        .findFirst()
+        .orElseThrow()
+        .types()
+        .stream()
+        .filter(type -> type.id().equals(typeId))
+        .findFirst()
+        .orElseThrow();
   }
 
   @Test
@@ -204,7 +270,11 @@ class GridGrindProtocolCatalogTest {
 
     assertEquals(
         List.of(
-            new CatalogNote(GridGrindProtocolCatalogNotes.REQUEST_OWNED_PATH_RULE_ID, noteText)),
+            new CatalogNote(GridGrindProtocolCatalogNotes.REQUEST_OWNED_PATH_RULE_ID, noteText),
+            new CatalogNote(
+                GridGrindProtocolCatalogNotes.FILE_HYPERLINK_RELATIVE_PATH_RULE_ID,
+                "Relative FILE hyperlink paths resolve against the saved workbook's directory, not"
+                    + " the request or execution root.")),
         catalog.notes());
     assertEquals(
         List.of(GridGrindProtocolCatalogNotes.REQUEST_OWNED_PATH_RULE_ID),

@@ -55,12 +55,10 @@ class GridGrindProblemsTest {
         GridGrindProblems.codeFor(new IllegalArgumentException("bad")));
     assertEquals(
         GridGrindProblemCode.WORKBOOK_PASSWORD_REQUIRED,
-        GridGrindProblems.codeFor(
-            new WorkbookPasswordRequiredException(java.nio.file.Path.of("/tmp/encrypted.xlsx"))));
+        GridGrindProblems.codeFor(new WorkbookPasswordRequiredException()));
     assertEquals(
         GridGrindProblemCode.INVALID_WORKBOOK_PASSWORD,
-        GridGrindProblems.codeFor(
-            new InvalidWorkbookPasswordException(java.nio.file.Path.of("/tmp/encrypted.xlsx"))));
+        GridGrindProblems.codeFor(new InvalidWorkbookPasswordException()));
     assertEquals(
         GridGrindProblemCode.INVALID_SIGNING_CONFIGURATION,
         GridGrindProblems.codeFor(new InvalidSigningConfigurationException("bad signing")));
@@ -168,7 +166,7 @@ class GridGrindProblemsTest {
                     1, "assert-total", "ASSERTION", "EXPECT_CELL_VALUE"),
                 ProblemContextWorkbookSurfaces.ProblemLocation.cell("Budget", "B4")));
     assertEquals(GridGrindProblemCategory.ASSERTION, assertionProblem.category());
-    assertTrue(assertionProblem.assertionFailure().isPresent());
+    assertEquals(GridGrindProblemCode.ASSERTION_FAILED, assertionProblem.code());
   }
 
   @Test

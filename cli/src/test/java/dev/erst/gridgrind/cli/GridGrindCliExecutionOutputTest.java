@@ -70,10 +70,9 @@ class GridGrindCliExecutionOutputTest extends GridGrindCliTestSupport {
     assertEquals("ASSERTION_FAILED", response.path("problem").path("code").asString());
     assertEquals("EXECUTE_STEP", response.path("problem").path("context").path("stage").asString());
     assertEquals(
-        "EXPECT_CELL_VALUE",
-        response.path("problem").path("assertionFailure").path("assertionType").asString());
-    assertEquals(
-        "assert-a1", response.path("problem").path("assertionFailure").path("stepId").asString());
+        "EXPECT_CELL_VALUE", response.path("assertions").get(0).path("assertionType").asString());
+    assertEquals("assert-a1", response.path("assertions").get(0).path("stepId").asString());
+    assertEquals("FAILED", response.path("assertions").get(0).path("outcome").asString());
   }
 
   @Test

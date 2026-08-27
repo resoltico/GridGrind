@@ -8,7 +8,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import dev.erst.gridgrind.contract.assertion.AssertionResult;
 import dev.erst.gridgrind.contract.query.InspectionResult;
 import dev.erst.gridgrind.contract.query.WorkbookInspectionResult;
-import dev.erst.gridgrind.excel.foundation.ExcelBorderStyle;
 import dev.erst.gridgrind.excel.foundation.ExcelFillPattern;
 import dev.erst.gridgrind.excel.foundation.ExcelHorizontalAlignment;
 import dev.erst.gridgrind.excel.foundation.ExcelVerticalAlignment;
@@ -450,7 +449,6 @@ class WorkbookResultTest {
                 new dev.erst.gridgrind.contract.dto.ProblemContext.ValidateRequest(
                     dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces.RequestShape
                         .known("NEW", "NONE")),
-                java.util.Optional.empty(),
                 List.of())
             .causes());
   }
@@ -458,11 +456,7 @@ class WorkbookResultTest {
   @Test
   void successCopiesAssertionsAndProblemCanCarryAssertionFailure() {
     List<AssertionResult> assertions = new ArrayList<>();
-    assertions.add(
-        new AssertionResult(
-            dev.erst.gridgrind.contract.assertion.AssertionOutcome.PASSED,
-            "assert-total",
-            "EXPECT_CELL_VALUE"));
+    assertions.add(new AssertionResult.Passed("assert-total", "EXPECT_CELL_VALUE"));
 
     WorkbookResult.Success success =
         WorkbookResults.success(
@@ -478,14 +472,6 @@ class WorkbookResultTest {
     assertEquals(1, success.assertions().size());
     assertEquals("assert-total", success.assertions().getFirst().stepId());
 
-    var failure =
-        new dev.erst.gridgrind.contract.assertion.AssertionFailure(
-            "assert-total",
-            "EXPECT_CELL_VALUE",
-            new dev.erst.gridgrind.contract.selector.CellSelector.ByAddress("Budget", "B4"),
-            new dev.erst.gridgrind.contract.assertion.CellAssertion.CellValue(
-                new dev.erst.gridgrind.contract.dto.CellScalarValue.NumberValue(42.0d)),
-            List.of());
     GridGrindProblemDetail.Problem problem =
         new GridGrindProblemDetail.Problem(
             GridGrindProblemCode.ASSERTION_FAILED,
@@ -501,9 +487,8 @@ class WorkbookResultTest {
                     0, "assert-total", "ASSERTION", "EXPECT_CELL_VALUE"),
                 dev.erst.gridgrind.contract.dto.ProblemContextWorkbookSurfaces.ProblemLocation.cell(
                     "Budget", "B4")),
-            java.util.Optional.of(failure),
             List.of());
-    assertEquals(failure, problem.assertionFailure().orElseThrow());
+    assertEquals(GridGrindProblemCode.ASSERTION_FAILED, problem.code());
   }
 
   @Test
@@ -554,7 +539,7 @@ class WorkbookResultTest {
   }
 
   private static CellStyleReport minimalStyle() {
-    CellBorderSideReport emptySide = new CellBorderSideReport(ExcelBorderStyle.NONE, null);
+    CellBorderSideReport emptySide = new CellBorderSideReport.None();
     return new CellStyleReport(
         "General",
         new CellAlignmentReport(

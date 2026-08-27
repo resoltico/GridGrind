@@ -44,7 +44,7 @@ class GridGrindProtocolCatalogLookupSupportTest {
     CatalogSearchResult result =
         GridGrindProtocolCatalogLookupSupport.search(lookupFixtureCatalog(), "source forecast");
 
-    assertEquals(List.of("sourceTypes", "sourceTypes:SOURCE_ALPHA"), qualifiedIds(result));
+    assertEquals(List.of("sourceTypes:SOURCE_ALPHA", "sourceTypes"), qualifiedIds(result));
   }
 
   @Test

@@ -104,7 +104,7 @@ class RequestPathAccessTest {
           IllegalStateException.class,
           () -> access.commitOutput(existing, WorkbookArtifactWriteDisposition.CREATE_NEW));
       assertThrows(
-          java.nio.file.FileAlreadyExistsException.class,
+          OutputPathAlreadyExistsException.class,
           () ->
               access.prepareOutput(
                   "output/existing.xlsx",
@@ -122,6 +122,41 @@ class RequestPathAccessTest {
                   "persistence",
                   WorkbookArtifactWriteDisposition.REPLACE_EXISTING));
     }
+  }
+
+  @Test
+  void keepsAnAfterPreflightOutputRaceClosedAndClassifiesDirectOutputConflicts() throws Exception {
+    Path outputDirectory = Files.createDirectory(executionRoot.resolve("output"));
+    Path staged = Files.write(executionRoot.resolve("staged.xlsx"), new byte[] {3, 2, 1});
+
+    try (RequestPathAccess access = requestPathAccess()) {
+      access.prepareOutput(
+          "output/race.xlsx", "persistence", WorkbookArtifactWriteDisposition.CREATE_NEW);
+      Files.write(outputDirectory.resolve("race.xlsx"), new byte[] {9});
+
+      assertThrows(
+          UnsafePathAccessException.class,
+          () -> access.commitOutput(staged, WorkbookArtifactWriteDisposition.CREATE_NEW));
+    }
+    assertThrows(
+        OutputPathAlreadyExistsException.class,
+        () ->
+            RequestPathAccess.commitPreparedOutput(
+                "output/race.xlsx",
+                () -> {
+                  throw new java.nio.file.FileAlreadyExistsException("race.xlsx");
+                }));
+    java.io.IOException ioFailure = new java.io.IOException("disk full");
+    assertEquals(
+        ioFailure,
+        assertThrows(
+            java.io.IOException.class,
+            () ->
+                RequestPathAccess.commitPreparedOutput(
+                    "output/race.xlsx",
+                    () -> {
+                      throw ioFailure;
+                    })));
   }
 
   @Test

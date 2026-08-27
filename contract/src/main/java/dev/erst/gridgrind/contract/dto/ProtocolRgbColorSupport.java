@@ -17,7 +17,7 @@ final class ProtocolRgbColorSupport {
     if (color.isBlank()) {
       throw new IllegalArgumentException(fieldName + " must not be blank");
     }
-    if (!color.matches("^#[0-9A-Fa-f]{6}$")) {
+    if (!color.matches(ProtocolConstraintValues.RGB_HEX_PATTERN)) {
       throw new IllegalArgumentException(fieldName + " must match #RRGGBB");
     }
     return Optional.of(color.toUpperCase(Locale.ROOT));

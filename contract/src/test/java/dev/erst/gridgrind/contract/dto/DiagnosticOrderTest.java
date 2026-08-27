@@ -172,7 +172,9 @@ class DiagnosticOrderTest {
     RequestWarningLocation stepLocation = new RequestWarningLocation.Step(0, "step", "SET_CELL");
     RequestWarningLocation formulaCellLocation =
         new RequestWarningLocation.FormulaCell("Budget", "A1", "TEXTAFTER(A1,\",\")");
+    RequestWarningLocation requestByteLocation = new RequestWarningLocation.RequestByteOffset(0);
     assertEquals(-1, requestPathLocation.orderingStepIndex());
+    assertEquals(-1, requestByteLocation.orderingStepIndex());
     assertEquals(-1, formulaCellLocation.orderingStepIndex());
     assertEquals(0, stepLocation.orderingStepIndex());
     assertThrows(
@@ -184,6 +186,8 @@ class DiagnosticOrderTest {
     assertThrows(
         IllegalArgumentException.class,
         () -> new RequestWarningLocation.RequestPath("/work/report.xlsx", " "));
+    assertThrows(
+        IllegalArgumentException.class, () -> new RequestWarningLocation.RequestByteOffset(-1));
   }
 
   private static GridGrindProblemDetail.Problem problem(ProblemContext context) {

@@ -3,7 +3,7 @@
 GridGrind is a `.xlsx` automation engine. Describe workbook work as a JSON request — create sheets,
 write cells, build tables, assert results, read facts back. GridGrind runs the whole plan and
 returns a structured JSON response. Failures prevent persistence: assertions fail fast by default,
-or `COLLECT` completes the terminal verification phase before returning its canonical failure.
+or `COLLECT` completes the terminal verification phase and preserves evidence for every failed assertion.
 
 The usual alternative is a mix of libraries, helper scripts, and post-write checks that run after
 the file is already saved — with no clean rollback when something fails mid-run. GridGrind replaces
@@ -52,9 +52,12 @@ archive, add its `bin/` directory to `PATH`; from the standalone JAR, replace `g
 Without `--response`, GridGrind writes one primary JSON payload to stdout. A command rejected
 before workbook execution uses `CommandError` with `status: "REJECTED"`; execution uses
 `WorkbookResult` with `status: "SUCCEEDED"` or `"FAILED"`. With `--response`, that payload goes
-to the requested file instead. If the file cannot be written, the already-rendered primary payload goes to stdout unchanged
-when stdout is available and stderr contains one small transport-only JSON notice. GridGrind never
-moves a primary payload to stderr.
+to the requested file instead. For execution, GridGrind reserves a new no-follow response file
+after request validation and before input binding or workbook work; an existing, directory, or
+unwritable destination prevents execution and emits a typed transport notice on stderr. If a
+reserved response file later fails while bytes are written, the already-rendered primary payload
+goes to stdout unchanged when stdout is available and stderr contains one small transport-only JSON
+notice. GridGrind never moves a primary payload to stderr or overwrites an existing response file.
 
 For first contact, prefer `--request <path>` over stdin. Stdin-driven execution and doctoring
 require `--execution-root <path>` so request-owned paths resolve from one explicit invocation root.
@@ -108,15 +111,16 @@ gridgrind --print-protocol-catalog --lookup mutationActionTypes:SET_CELL --respo
 gridgrind --print-protocol-catalog --lookup plainTypes:cellReadProjectionType --response cell-read-projection.json
 ```
 
-The compact recipe catalog publishes `requestFileName`, `advisory`, and `requiredWorkspacePaths`, while `--print-recipe-catalog --lookup <id>` adds the exact runnable request profile for that recipe. `VERBOSE` execution streams compact JSONL progress to stderr while its primary result remains on stdout or the requested response file. Shipped save-producing examples already use
-`SAVE_AS.ifExists=REPLACE`, so rerunning them does not depend on cleaning the workspace first.
+The compact recipe catalog publishes `requestFileName`, `advisory`, and `requiredWorkspacePaths`, while `--print-recipe-catalog --lookup <id>` adds the exact runnable request profile for that recipe. `VERBOSE` execution streams compact JSONL progress to stderr while its primary result remains on stdout or the requested response file. Shipped save-producing examples already use `SAVE_AS.ifExists=REPLACE`, so rerunning them does not depend on cleaning the workspace first.
 
 The bare `--print-protocol-catalog` output is the compact first-contact index. Use
 `--print-protocol-catalog --search <text>` when you know the concept but not the exact id, follow
 up with `--print-protocol-catalog --lookup <group>:<id>` when you want one authoritative payload,
-and keep discovery scoped instead of expecting one monolithic full-catalog dump. Machine-readable
-request-template, discovery, doctor, and execution payloads are compact JSON by default; add
-`--pretty` when you want indented JSON instead.
+and keep discovery scoped instead of expecting one monolithic full-catalog dump. Field descriptors
+publish enforced scalar constraints and operations publish applicable preconditions, so tools can
+validate request material without extracting rules from prose. Machine-readable request-template,
+discovery, doctor, and execution payloads are compact JSON by default; add `--pretty` when you want
+indented JSON instead.
 
 Use `--help` for the short synopsis, `--help-protocol` for the authoritative CLI and request
 contract, and `--help-guidance` for workflow-oriented help.
@@ -126,16 +130,20 @@ contract, and `--help-guidance` for workflow-oriented help.
 A single JSON request describes every step: create a sheet, write cells, assert workbook state,
 read facts back, and save. GridGrind executes the steps in order and writes the file only when
 every step succeeds. Assertions fail fast by default; `execution.assertionMode=COLLECT` instead
-runs every assertion in a terminal verification phase and then returns the first canonical
-assertion failure. Any assertion failure or step error prevents persistence.
+runs every assertion in a terminal verification phase, retains complete evidence for each failed
+assertion in `assertions[]`, and returns the first canonical failure. Any assertion failure or step
+error prevents persistence.
 
 The smallest valid top-level envelope is `protocolVersion`, `source`, `persistence`, and ordered
 `steps`. `execution` and `formulaEnvironment` are optional when you want the default
 `FULL_XSSF` / `SUMMARY` / `DO_NOT_CALCULATE` execution path and the empty evaluator environment.
 Steps can mix mutation, assertion, and inspection in the same plan. Every response also carries one
 top-level `persistence` outcome so callers can see both the requested save mode and whether a file
-was actually written. `SAVE_AS` requires an explicit `ifExists=REJECT|REPLACE` choice; use
-`REPLACE` when you want rerunnable create-or-replace output.
+was actually written. `FORMULA` and `RAW_FORMULA` values are OOXML formula bodies and must not
+begin with `=`; normal `FORMULA` values are validated when their mutation executes, while
+`RAW_FORMULA` remains the explicit opaque path for newer Excel syntax. `SAVE_AS` requires an
+explicit `ifExists=REJECT|REPLACE` choice; use `REPLACE` when you want rerunnable create-or-replace
+output.
 
 The safest way to start is to ask GridGrind to emit a valid request for you:
 

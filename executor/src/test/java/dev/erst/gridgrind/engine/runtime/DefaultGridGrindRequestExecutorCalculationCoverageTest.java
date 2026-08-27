@@ -23,6 +23,7 @@ import dev.erst.gridgrind.contract.dto.FormulaEnvironmentInput;
 import dev.erst.gridgrind.contract.dto.GridGrindProblemCode;
 import dev.erst.gridgrind.contract.dto.GridGrindProblemDetail;
 import dev.erst.gridgrind.contract.dto.GridGrindWarningCode;
+import dev.erst.gridgrind.contract.dto.ProblemContext;
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
 import dev.erst.gridgrind.contract.dto.WorkbookResult;
 import dev.erst.gridgrind.contract.query.*;
@@ -126,6 +127,41 @@ class DefaultGridGrindRequestExecutorCalculationCoverageTest {
                 dev.erst.gridgrind.contract.dto.RequestWarningLocation.FormulaCell.class,
                 success.warnings().getFirst().location())
             .formula());
+  }
+
+  @Test
+  void calculationFailureNamesTheFormulaAuthorAndRetainsItsLaterTrigger() {
+    WorkbookPlan request =
+        request(
+            new WorkbookPlan.WorkbookSource.New(),
+            new WorkbookPlan.WorkbookPersistence.None(),
+            executionPolicy(requireEvaluation()),
+            null,
+            java.util.List.of(
+                mutate(new SheetSelector.ByName("Ops"), new WorkbookMutationAction.EnsureSheet()),
+                mutate(
+                    new CellSelector.ByAddress("Ops", "A1"),
+                    new CellMutationAction.SetCell(
+                        new dev.erst.gridgrind.contract.dto.CellInput.Formula(
+                            dev.erst.gridgrind.contract.source.TextSourceInput.inline(
+                                "TEXTAFTER(\"a,b\",\",\")"))))),
+            java.util.List.of(
+                inspect(
+                    "summary",
+                    new WorkbookSelector.Current(),
+                    new WorkbookIntrospectionQuery.GetWorkbookSummary())));
+
+    WorkbookResult.Failure failure =
+        failure(
+            ExecutionContextFixtureSupport.execute(new DefaultGridGrindRequestExecutor(), request));
+
+    assertEquals(GridGrindProblemCode.UNREGISTERED_USER_DEFINED_FUNCTION, failure.problem().code());
+    ProblemContext.ExecuteStep context =
+        assertInstanceOf(ProblemContext.ExecuteStep.class, failure.problem().context());
+    assertEquals("step-02-set-cell", context.stepId());
+    assertEquals("SET_CELL", context.stepType());
+    assertEquals("summary", context.surfacedAtStep().orElseThrow().stepId());
+    assertEquals("GET_WORKBOOK_SUMMARY", context.surfacedAtStep().orElseThrow().stepType());
   }
 
   @Test

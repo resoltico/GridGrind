@@ -290,7 +290,38 @@ final class WorkbookCommandStructuredInputConverter {
 
   private static dev.erst.gridgrind.excel.ExcelConditionalFormattingThreshold
       toExcelConditionalFormattingThreshold(ConditionalFormattingThresholdInput threshold) {
-    return new dev.erst.gridgrind.excel.ExcelConditionalFormattingThreshold(
-        threshold.type(), threshold.formula(), threshold.value());
+    return switch (threshold) {
+      case ConditionalFormattingThresholdInput.Min _ ->
+          new dev.erst.gridgrind.excel.ExcelConditionalFormattingThreshold(
+              dev.erst.gridgrind.excel.foundation.ExcelConditionalFormattingThresholdType.MIN,
+              null,
+              null);
+      case ConditionalFormattingThresholdInput.Max _ ->
+          new dev.erst.gridgrind.excel.ExcelConditionalFormattingThreshold(
+              dev.erst.gridgrind.excel.foundation.ExcelConditionalFormattingThresholdType.MAX,
+              null,
+              null);
+      case ConditionalFormattingThresholdInput.Numeric number ->
+          new dev.erst.gridgrind.excel.ExcelConditionalFormattingThreshold(
+              dev.erst.gridgrind.excel.foundation.ExcelConditionalFormattingThresholdType.NUMBER,
+              null,
+              number.value());
+      case ConditionalFormattingThresholdInput.Percent percent ->
+          new dev.erst.gridgrind.excel.ExcelConditionalFormattingThreshold(
+              dev.erst.gridgrind.excel.foundation.ExcelConditionalFormattingThresholdType.PERCENT,
+              null,
+              percent.value());
+      case ConditionalFormattingThresholdInput.Percentile percentile ->
+          new dev.erst.gridgrind.excel.ExcelConditionalFormattingThreshold(
+              dev.erst.gridgrind.excel.foundation.ExcelConditionalFormattingThresholdType
+                  .PERCENTILE,
+              null,
+              percentile.value());
+      case ConditionalFormattingThresholdInput.Formula formula ->
+          new dev.erst.gridgrind.excel.ExcelConditionalFormattingThreshold(
+              dev.erst.gridgrind.excel.foundation.ExcelConditionalFormattingThresholdType.FORMULA,
+              formula.formula(),
+              null);
+    };
   }
 }

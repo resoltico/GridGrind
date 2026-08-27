@@ -762,18 +762,6 @@ class ExecutorPolicyCoverageTest {
         ExecutionSelectorDiagnosticFields.addressFor(selectorWithoutSheetOrAddress));
 
     assertEquals(
-        java.util.Optional.of("A1"),
-        ExecutionSelectorDiagnosticFields.addressFor(
-            new CellSelector.ByQualifiedAddresses(
-                List.of(new CellSelector.QualifiedAddress("Budget", "A1")))));
-    assertEquals(
-        java.util.Optional.empty(),
-        ExecutionSelectorDiagnosticFields.addressFor(
-            new CellSelector.ByQualifiedAddresses(
-                List.of(
-                    new CellSelector.QualifiedAddress("Budget", "A1"),
-                    new CellSelector.QualifiedAddress("Forecast", "A1")))));
-    assertEquals(
         java.util.Optional.of("B2"),
         ExecutionSelectorDiagnosticFields.addressFor(
             new RangeSelector.RectangularWindow("Budget", "B2", 2, 2)));
@@ -792,18 +780,6 @@ class ExecutorPolicyCoverageTest {
   }
 
   private static void assertNamedRangeSelectorDiagnostics() {
-    assertEquals(
-        Optional.of("Budget"),
-        ExecutionSelectorDiagnosticFields.singleSheetName(
-            new CellSelector.ByQualifiedAddresses(
-                List.of(new CellSelector.QualifiedAddress("Budget", "A1")))));
-    assertEquals(
-        Optional.empty(),
-        ExecutionSelectorDiagnosticFields.singleSheetName(
-            new CellSelector.ByQualifiedAddresses(
-                List.of(
-                    new CellSelector.QualifiedAddress("Budget", "A1"),
-                    new CellSelector.QualifiedAddress("Forecast", "A1")))));
     assertEquals(
         Optional.of("Budget"),
         ExecutionSelectorDiagnosticFields.singleSheetName(

@@ -104,7 +104,7 @@ class SourceBackedPlanResolverTestSupport {
     return new PictureDataInput(
         ExcelPictureFormat.PNG,
         new BinarySourceInput.InlineBase64(
-            "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+X2kQAAAAASUVORK5CYII="));
+            "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVQI12P4//8/AAX+Av7czFnnAAAAAElFTkSuQmCC"));
   }
 
   final ChartSeriesInput chartSeries() {
@@ -142,6 +142,6 @@ class SourceBackedPlanResolverTestSupport {
   final byte[] pngBytes() {
     return Base64.getDecoder()
         .decode(
-            "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+X2kQAAAAASUVORK5CYII=");
+            "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVQI12P4//8/AAX+Av7czFnnAAAAAElFTkSuQmCC");
   }
 }

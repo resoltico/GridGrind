@@ -181,7 +181,7 @@ class ProblemContextCoverageTest {
     assertEquals(Optional.of("SUM(B2:B3)"), execution.formula());
     assertEquals(Optional.of("EXISTING"), executeStep.sourceType());
     assertEquals(Optional.of("OVERWRITE"), executeStep.persistenceType());
-    assertEquals("ASSERTION", executeStep.stepKind());
+    assertEquals("ASSERTION", executeStep.step().stepKind());
     assertEquals("EXPECT_CELL_VALUE", executeStep.stepType());
     assertEquals(Optional.of("Budget"), executeStep.sheetName());
     assertEquals(Optional.of("BudgetTotal"), executeStep.namedRangeName());

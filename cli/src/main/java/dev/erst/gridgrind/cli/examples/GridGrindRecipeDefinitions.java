@@ -70,8 +70,9 @@ final class GridGrindRecipeDefinitions {
           example(
               "FILE_HYPERLINK_HEALTH",
               "file-hyperlink-health-request.json",
-              "File and document hyperlink authoring with explicit hyperlink-health analysis.",
-              RecipeAdvisory.SELF_CONTAINED,
+              "Request-asset text plus workbook-relative file and document hyperlink analysis.",
+              RecipeAdvisory.REQUIRES_EXAMPLE_ASSETS,
+              List.of("file-hyperlink-assets/request-label.txt"),
               List.of("hyperlink", "health", "analysis", "inspection"),
               WorkbookAuditExamples.fileHyperlinkHealthPlan(ExamplePathLayout.BUILT_IN),
               WorkbookAuditExamples.fileHyperlinkHealthPlan(ExamplePathLayout.REPOSITORY)),

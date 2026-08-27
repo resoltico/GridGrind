@@ -63,7 +63,6 @@ class GridGrindJsonPersistenceEnvelopeTest {
                         .known("NEW", "SAVE_AS"),
                     dev.erst.gridgrind.contract.dto.ProblemContextWorkbookSurfaces
                         .PersistenceReference.saveAs("/work/out/report.xlsx")),
-                java.util.Optional.empty(),
                 List.of()));
 
     byte[] responseBytes = GridGrindJsonOutput.writeWorkbookResultBytes(persistFailure);
@@ -99,7 +98,6 @@ class GridGrindJsonPersistenceEnvelopeTest {
                 new dev.erst.gridgrind.contract.dto.ProblemContext.ValidateRequest(
                     dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces.RequestShape
                         .known("NEW", "OVERWRITE")),
-                Optional.empty(),
                 List.of()));
 
     byte[] responseBytes = GridGrindJsonOutput.writeWorkbookResultBytes(persistFailure);

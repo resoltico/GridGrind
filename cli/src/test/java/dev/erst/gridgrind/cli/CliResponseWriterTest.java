@@ -149,6 +149,54 @@ class CliResponseWriterTest extends GridGrindCliTestSupport {
   }
 
   @Test
+  void reservedResponsesUseTheHeldDescriptorAndFallBackWhenThatDescriptorFails() throws Exception {
+    WorkbookResult.Success result = WorkbookResults.success(List.of(), List.of(), List.of());
+    Path responsePath =
+        Files.createTempDirectory("gridgrind-reserved-response-").resolve("result.json");
+    ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+    ByteArrayOutputStream stderr = new ByteArrayOutputStream();
+    try (CliResponseReservation reservation = CliResponseReservation.reserve(responsePath)) {
+      assertEquals(
+          0,
+          responseWriter.writeReserved(
+              reservation, stdout, stderr, result, 0, allSecretsRedactor(), false));
+    }
+    assertEquals(result, GridGrindJson.readWorkbookResult(Files.readAllBytes(responsePath)));
+    assertEquals("", stdout.toString(StandardCharsets.UTF_8));
+    assertEquals("", stderr.toString(StandardCharsets.UTF_8));
+
+    Path failedPath =
+        Files.createTempDirectory("gridgrind-reserved-failed-").resolve("result.json");
+    ByteArrayOutputStream fallbackStdout = new ByteArrayOutputStream();
+    ByteArrayOutputStream fallbackStderr = new ByteArrayOutputStream();
+    try (java.nio.channels.FileChannel closedChannel =
+            java.nio.channels.FileChannel.open(
+                failedPath,
+                java.nio.file.StandardOpenOption.CREATE_NEW,
+                java.nio.file.StandardOpenOption.WRITE);
+        CliResponseReservation failedReservation =
+            new CliResponseReservation(failedPath, closedChannel)) {
+      closedChannel.close();
+      assertEquals(
+          1,
+          responseWriter.writeReserved(
+              failedReservation,
+              fallbackStdout,
+              fallbackStderr,
+              result,
+              0,
+              allSecretsRedactor(),
+              false));
+    }
+    assertEquals(result, GridGrindJson.readWorkbookResult(fallbackStdout.toByteArray()));
+    CliTransportNotice notice =
+        GridGrindCliJson.readBytes(fallbackStderr.toByteArray(), CliTransportNotice.class);
+    assertEquals(CliTransportNotice.Reason.RESPONSE_WRITE_FAILED, notice.reason());
+    assertEquals(CliTransportNotice.Destination.STDOUT, notice.wroteTo());
+    assertEquals(Optional.of(failedPath.toAbsolutePath().toString()), notice.responsePath());
+  }
+
+  @Test
   void redactsEveryDeclaredSecretAcrossFilesStdoutAndFallbacks() throws Exception {
     RequestDiagnosticRedactor redactor = allSecretsRedactor();
 
@@ -186,7 +234,6 @@ class CliResponseWriterTest extends GridGrindCliTestSupport {
         "Replace secret " + owner.value() + " before retrying.",
         new ProblemContext.ReadRequest(
             RequestInput.standardInput(), JsonLocation.pathOnly(owner.jsonPath())),
-        Optional.empty(),
         List.of(
             new GridGrindProblemDetail.ProblemCause(
                 code, "Cause: " + owner.value(), "READ_REQUEST")));

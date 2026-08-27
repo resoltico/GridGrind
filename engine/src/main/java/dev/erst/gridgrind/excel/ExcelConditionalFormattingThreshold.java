@@ -2,10 +2,13 @@ package dev.erst.gridgrind.excel;
 
 import dev.erst.gridgrind.excel.foundation.ExcelConditionalFormattingThresholdType;
 import java.util.Objects;
+import org.jspecify.annotations.Nullable;
 
 /** Authored threshold used by advanced conditional-formatting rules. */
 public record ExcelConditionalFormattingThreshold(
-    ExcelConditionalFormattingThresholdType type, String formula, Double value) {
+    ExcelConditionalFormattingThresholdType type,
+    @Nullable String formula,
+    @Nullable Double value) {
   public ExcelConditionalFormattingThreshold {
     Objects.requireNonNull(type, "type must not be null");
     if (formula != null && formula.isBlank()) {

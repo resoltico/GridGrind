@@ -10,8 +10,8 @@
       "inputBytes" : 72,
       "commandCount" : 4,
       "commandKinds" : {
-        "CLEAR_SHEET_PROTECTION" : 1,
         "SET_SHEET_VISIBILITY" : 2,
+        "CLEAR_SHEET_PROTECTION" : 1,
         "CREATE_SHEET" : 1
       },
       "styleKinds" : { }

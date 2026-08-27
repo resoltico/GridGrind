@@ -169,7 +169,9 @@ final class XlsxParityFormulaProbeGroup {
     XlsxParityGridGrind.mutateWorkbook(
         lifecycle.workbookPath(),
         targetedPath,
-        executionPolicy(calculateTargets(new CellSelector.QualifiedAddress("Budget", "B1"))),
+        executionPolicy(
+            calculateTargets(
+                new dev.erst.gridgrind.contract.dto.FormulaCellTarget("Budget", "B1"))),
         null,
         List.of());
     String targetedB1 = XlsxParityOracle.cachedFormulaRawValue(targetedPath, "Budget", "B1");

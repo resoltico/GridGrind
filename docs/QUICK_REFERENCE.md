@@ -1,8 +1,8 @@
 ---
-afad: "4.0"
+afad: "5.0.1"
 version: "0.73.0"
 domain: QUICK_REFERENCE
-updated: "2026-08-08"
+updated: "2026-08-27"
 route:
   keywords: [gridgrind, quick-reference, snippets, request, execution, examples, formula, workbook-health, chart, signature-line]
   questions: ["what is the quickest way to write a gridgrind request", "how do I generate a built-in gridgrind example", "what are the most common gridgrind request snippets", "where is the detailed gridgrind reference"]
@@ -35,7 +35,7 @@ gridgrind --doctor-request --request request.json --response doctor-report.json
 
 `--help` is the short synopsis. `--help-protocol` is the authoritative CLI/request contract, `--help-guidance` is the workflow/example playbook, and `--doctor-request` validates request shape, resolves source-backed inputs, preflights existing workbook-source access, and returns every independently provable blocking problem it can isolate safely without mutating a workbook. Request intake reports duplicate keys, unknown fields, omitted required fields, explicit nulls, malformed scalar values, missing or unknown type discriminators, and constructor-level field validation failures together while retaining valid sibling fragments for safe preflight. `--response <path>` works across execution, doctoring, and discovery commands, so the primary output can be captured to a file instead of stdout. Built-in example and task catalogs also publish `requestFileName`, `advisory`, and `requiredWorkspacePaths` so you can see whether a printed request is self-contained before executing it.
 
-The bare `--print-protocol-catalog` output is the compact first-contact index only. `--search` is the fast discovery path when you only know part of an id or summary. Use `--lookup` with one globally unique top-level id, one top-level group name, one nested/plain support-group name, `nestedTypes:<group>`, `plainTypes:<group>`, or `<topLevelGroup>:<id>` once you want one scoped machine-readable payload. Search ranks published top-level operations ahead of support-type groups, returns compact summaries by default, and adds `relatedEntryIds` or `supportingQualifiedIds` only when that lightweight context helps agents climb from a type family to the executable operation that uses it. Shared catalog rules such as request-owned path resolution are published on those scoped lookup payloads under top-level `notes`, while entry-local `noteRefs` point at the stable rule id instead of repeating the full paragraph in the bare index. Optional boolean fields publish `defaultBoolean` only when omission has an explicit effective value; request payloads must still omit absent fields rather than sending `null`.
+The bare `--print-protocol-catalog` output is the compact first-contact index only. `--search` is the fast discovery path when you only know part of an id or summary. Exact identifiers rank first; multi-word searches then rank entries by how many query terms they match, so broad queries still return useful candidates. Use `--lookup` with one globally unique top-level id, one top-level group name, one nested/plain support-group name, `nestedTypes:<group>`, `plainTypes:<group>`, or `<topLevelGroup>:<id>` once you want one scoped machine-readable payload. Search ranks published top-level operations ahead of support-type groups, returns compact summaries by default, and adds `relatedEntryIds` or `supportingQualifiedIds` only when that lightweight context helps agents climb from a type family to the executable operation that uses it. Shared catalog rules such as request-owned path resolution are published on those scoped lookup payloads under top-level `notes`, while entry-local `noteRefs` point at the stable rule id instead of repeating the full paragraph in the bare index. Optional boolean fields publish `defaultBoolean` only when omission has an explicit effective value; request payloads must still omit absent fields rather than sending `null`.
 Machine-readable request-template, discovery, doctor, and execution payloads are compact JSON by default; add `--pretty` when you want indented JSON instead.
 
 `execution.journal.level=VERBOSE` also emits compact `ExecutionProgressEvent` JSONL records on stderr while execution runs. `--pretty` never changes those one-line progress records.
@@ -91,7 +91,7 @@ Save to a new path:
 { "persistence": { "type": "SAVE_AS", "path": "out/report.xlsx", "ifExists": "REPLACE" } }
 ```
 
-`SAVE_AS.ifExists` is required: use `REJECT` to fail on an existing destination or `REPLACE` for create-or-replace output. Create the destination parent directory first; GridGrind binds that existing directory without following symlinks before it begins execution.
+`SAVE_AS.ifExists` is required: use `REJECT` to fail on an existing destination or `REPLACE` for create-or-replace output. GridGrind creates a missing contained destination parent, then binds every directory without following symlinks before it begins execution.
 
 Run without saving:
 
@@ -117,15 +117,14 @@ The request JSON transport is capped at `16 MiB`. Large authored text or binary 
 
 When the CLI reads a request via `--request <path>`, relative request-owned paths such as
 `source.path`, `persistence.path`, `UTF8_FILE` / `FILE`, external workbook bindings, and signing
-material resolve from that request file's directory. When the request JSON arrives on stdin, pass
-`--execution-root <path>` and those same relative paths resolve from that explicit directory.
-`--request`, `--response`, `--execution-root`, and `--temp-root` themselves resolve from the
-shell working directory. `--temp-root` is optional; without it, GridGrind creates one private
-per-run scratch directory under the OS temporary-file root. When you pass `--temp-root <path>`,
-GridGrind creates that private per-run scratch directory under the supplied parent path and
-best-effort cleanup removes it on normal command completion. Encrypted OOXML plaintext temp
-workbooks always stay in private OS temp rather than the request root, execution root, or
-`--temp-root` parent.
+material resolve from that request file's directory. With stdin, pass `--execution-root <path>`;
+the same paths then resolve there. `--request`, `--response`, `--execution-root`, and `--temp-root`
+themselves resolve from the shell working directory. `--temp-root` creates one private per-run
+scratch directory under its parent; without it, GridGrind uses the OS temporary-file root. Encrypted
+OOXML plaintext temp workbooks always stay in private OS temp rather than any request root.
+
+`SET_HYPERLINK` is different: relative `FILE.path` targets resolve against the saved workbook's
+directory when a spreadsheet client opens it, not against the request or execution root.
 
 ## Execution, Formula, And Mode Rules
 

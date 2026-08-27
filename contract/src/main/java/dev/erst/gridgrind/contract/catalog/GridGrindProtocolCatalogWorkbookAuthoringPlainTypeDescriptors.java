@@ -13,7 +13,6 @@ import dev.erst.gridgrind.contract.dto.CellStylePatchInput;
 import dev.erst.gridgrind.contract.dto.CommentAnchorInput;
 import dev.erst.gridgrind.contract.dto.CommentInput;
 import dev.erst.gridgrind.contract.dto.ConditionalFormattingDefinitionInput;
-import dev.erst.gridgrind.contract.dto.ConditionalFormattingThresholdInput;
 import dev.erst.gridgrind.contract.dto.DataValidationErrorAlertInput;
 import dev.erst.gridgrind.contract.dto.DataValidationInput;
 import dev.erst.gridgrind.contract.dto.DataValidationPromptInput;
@@ -162,11 +161,6 @@ final class GridGrindProtocolCatalogWorkbookAuthoringPlainTypeDescriptors {
               "ConditionalFormattingDefinitionInput",
               "One authored conditional-formatting definition with an ordered rule list."
                   + " Target ranges are owned by the selector; rules must not be empty."),
-          plainTypeDescriptor(
-              "conditionalFormattingThresholdInputType",
-              ConditionalFormattingThresholdInput.class,
-              "ConditionalFormattingThresholdInput",
-              "Threshold payload shared by authored advanced conditional-formatting rules."),
           plainTypeDescriptor(
               "headerFooterTextInputType",
               HeaderFooterTextInput.class,

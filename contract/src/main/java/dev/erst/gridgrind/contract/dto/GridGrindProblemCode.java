@@ -74,6 +74,11 @@ public enum GridGrindProblemCode {
       "Unsupported formula construct",
       "Use a formula construct that Apache POI can parse on the authored request path, then"
           + " retry."),
+  CIRCULAR_FORMULA_REFERENCE(
+      GridGrindProblemCategory.FORMULA,
+      GridGrindProblemRecovery.CHANGE_REQUEST,
+      "Circular formula reference",
+      "Break the circular formula dependency or use a non-evaluating calculation strategy."),
   MISSING_EXTERNAL_WORKBOOK(
       GridGrindProblemCategory.FORMULA,
       GridGrindProblemRecovery.CHANGE_REQUEST,
@@ -133,6 +138,21 @@ public enum GridGrindProblemCode {
       GridGrindProblemRecovery.CHANGE_REQUEST,
       "Workbook package is not openable",
       "Provide a valid `.xlsx` OOXML workbook package."),
+  SOURCE_PATH_IS_DIRECTORY(
+      GridGrindProblemCategory.REQUEST,
+      GridGrindProblemRecovery.CHANGE_REQUEST,
+      "Workbook source path is a directory",
+      "Provide a workbook file path instead of a directory."),
+  OUTPUT_PATH_IS_DIRECTORY(
+      GridGrindProblemCategory.REQUEST,
+      GridGrindProblemRecovery.CHANGE_REQUEST,
+      "Workbook output path is a directory",
+      "Provide a workbook file path instead of a directory."),
+  OUTPUT_PATH_ALREADY_EXISTS(
+      GridGrindProblemCategory.REQUEST,
+      GridGrindProblemRecovery.CHANGE_REQUEST,
+      "Workbook output path already exists",
+      "Choose a new output path, use ifExists=REPLACE, or remove the conflicting file."),
   WORKBOOK_PASSWORD_REQUIRED(
       GridGrindProblemCategory.SECURITY,
       GridGrindProblemRecovery.CHANGE_REQUEST,

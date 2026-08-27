@@ -782,17 +782,14 @@ class GridGrindCommandErrorClassificationTest extends GridGrindCliTestSupport {
             stdout,
             stderr);
 
-    WorkbookResult response = response(stdout, stderr);
     CliTransportNotice transportNotice =
         dev.erst.gridgrind.cli.discovery.GridGrindCliJson.readBytes(
             stderr.toByteArray(), CliTransportNotice.class);
 
     assertEquals(1, exitCode);
-    assertInstanceOf(WorkbookResult.Failure.class, response);
-    WorkbookResult.Failure failure = (WorkbookResult.Failure) response;
-    assertEquals(GridGrindProblemCode.INTERNAL_ERROR, failure.problem().code());
-    assertEquals("EXECUTE_REQUEST", failure.problem().context().stage());
-    assertEquals(CliTransportNotice.Destination.STDOUT, transportNotice.wroteTo());
+    assertEquals("", stdout.toString(StandardCharsets.UTF_8));
+    assertEquals(CliTransportNotice.Destination.NOT_DELIVERED, transportNotice.wroteTo());
+    assertEquals(CliTransportNotice.Reason.RESPONSE_PATH_DIRECTORY, transportNotice.reason());
   }
 
   @Test

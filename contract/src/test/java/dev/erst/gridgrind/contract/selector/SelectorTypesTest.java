@@ -31,13 +31,6 @@ class SelectorTypesTest {
     assertEquals(
         SelectorCardinality.ONE_OR_MORE,
         new CellSelector.ByAddresses("Budget", List.of("A1", "B2")).cardinality());
-    assertEquals(
-        SelectorCardinality.ONE_OR_MORE,
-        new CellSelector.ByQualifiedAddresses(
-                List.of(
-                    new CellSelector.QualifiedAddress("Budget", "A1"),
-                    new CellSelector.QualifiedAddress("Ops", "B2")))
-            .cardinality());
 
     assertEquals(
         SelectorCardinality.ANY_NUMBER, new RangeSelector.AllOnSheet("Budget").cardinality());
@@ -143,12 +136,6 @@ class SelectorTypesTest {
     assertThrows(
         IllegalArgumentException.class,
         () -> new CellSelector.ByAddresses("Budget", List.of("A1", "a1")));
-    assertEquals(
-        List.of(new CellSelector.QualifiedAddress("Budget", "A1")),
-        new CellSelector.ByQualifiedAddresses(
-                List.of(new CellSelector.QualifiedAddress("Budget", "A1")))
-            .cells());
-    assertEquals("Budget!A1", new CellSelector.QualifiedAddress("Budget", "A1").toString());
 
     RangeSelector.RectangularWindow window =
         new RangeSelector.RectangularWindow("Budget", "B3", 2, 3);

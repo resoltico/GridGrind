@@ -50,7 +50,8 @@ class ExcelWorkbookFormulasTest {
           ((ExcelCellSnapshot.NumberSnapshot)
                   ((ExcelCellSnapshot.FormulaSnapshot)
                           workbook.sheet("Budget").cells().snapshotCell("B1"))
-                      .evaluation())
+                      .evaluation()
+                      .orElseThrow())
               .numberValue());
       assertEquals(
           List.of(
@@ -63,6 +64,66 @@ class ExcelWorkbookFormulasTest {
                   "Budget", "B1", "A1*2", ExcelFormulaCapabilityKind.EVALUABLE_NOW, null, null)),
           formulas.assessCapabilities(List.of(new ExcelFormulaCellTarget("Budget", "B1"))));
       assertSame(workbook, formulas.clearCaches());
+    }
+  }
+
+  @Test
+  void classifiesSelfAndMutualCircularReferencesAsUnevaluableWithoutReclassifyingOrdinaryErrors()
+      throws Exception {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
+      ExcelSheet sheet = workbook.getOrCreateSheet("Budget");
+      sheet.cells().setCell("A1", ExcelCellValue.formula("A1+1"));
+      sheet.cells().setCell("B1", ExcelCellValue.formula("C1+1"));
+      sheet.cells().setCell("C1", ExcelCellValue.formula("B1+1"));
+      sheet.cells().setCell("D1", ExcelCellValue.formula("1/0"));
+
+      List<ExcelFormulaCapabilityAssessment> assessments =
+          workbook.formulas().assessAllCapabilities();
+
+      assertEquals(
+          List.of(
+              new ExcelFormulaCapabilityAssessment(
+                  "Budget",
+                  "A1",
+                  "A1+1",
+                  ExcelFormulaCapabilityKind.UNEVALUABLE_NOW,
+                  ExcelFormulaCapabilityIssue.CIRCULAR_REFERENCE,
+                  "Formula evaluation detected a circular reference."),
+              new ExcelFormulaCapabilityAssessment(
+                  "Budget",
+                  "B1",
+                  "C1+1",
+                  ExcelFormulaCapabilityKind.UNEVALUABLE_NOW,
+                  ExcelFormulaCapabilityIssue.CIRCULAR_REFERENCE,
+                  "Formula evaluation detected a circular reference."),
+              new ExcelFormulaCapabilityAssessment(
+                  "Budget",
+                  "C1",
+                  "B1+1",
+                  ExcelFormulaCapabilityKind.UNEVALUABLE_NOW,
+                  ExcelFormulaCapabilityIssue.CIRCULAR_REFERENCE,
+                  "Formula evaluation detected a circular reference."),
+              new ExcelFormulaCapabilityAssessment(
+                  "Budget", "D1", "1/0", ExcelFormulaCapabilityKind.EVALUABLE_NOW, null, null)),
+          assessments);
+    }
+  }
+
+  @Test
+  void treatsAnEvaluatorWithoutACellValueAsNonCircular() throws Exception {
+    try (XSSFWorkbook poiWorkbook = new XSSFWorkbook();
+        ExcelWorkbook workbook =
+            new ExcelWorkbook(
+                poiWorkbook,
+                FormulaRuntimeTestDouble.nullEvaluation(
+                    poiWorkbook.getCreationHelper().createFormulaEvaluator()))) {
+      workbook.getOrCreateSheet("Budget").cells().setCell("A1", ExcelCellValue.formula("1+1"));
+
+      assertEquals(
+          List.of(
+              new ExcelFormulaCapabilityAssessment(
+                  "Budget", "A1", "1+1", ExcelFormulaCapabilityKind.EVALUABLE_NOW, null, null)),
+          workbook.formulas().assessAllCapabilities());
     }
   }
 }

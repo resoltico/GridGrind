@@ -160,7 +160,11 @@ import sys
 from pathlib import Path
 
 transport = json.loads(Path(sys.argv[1]).read_text())
-expected = {"wroteTo": "STDOUT", "responsePath": sys.argv[2]}
+expected = {
+    "reason": "RESPONSE_WRITE_FAILED",
+    "wroteTo": "STDOUT",
+    "responsePath": sys.argv[2],
+}
 if transport != expected:
     print(
         "error: packaged gridgrind --version fallback stderr is not the exact transport notice",

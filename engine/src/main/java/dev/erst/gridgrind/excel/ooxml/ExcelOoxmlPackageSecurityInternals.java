@@ -31,7 +31,7 @@ final class ExcelOoxmlPackageSecurityInternals {
             workbookPath,
             new IllegalArgumentException("Only encrypted OOXML .xlsx packages are supported"));
       }
-      String password = openPassword(workbookPath, openOptions);
+      String password = openPassword(openOptions);
       EncryptionInfo encryptionInfo =
           ExcelOoxmlPackageEncryptionSupport.readEncryptionInfo(fileSystem, workbookPath);
 
@@ -40,7 +40,7 @@ final class ExcelOoxmlPackageSecurityInternals {
           ExcelOoxmlPackageEncryptionSupport.verifyPassword(
               decryptor::verifyPassword, password, workbookPath);
       if (!unlocked) {
-        throw new InvalidWorkbookPasswordException(workbookPath);
+        throw new InvalidWorkbookPasswordException();
       }
 
       ExcelOoxmlPackageEncryptionSupport.materializeDecryptedWorkbook(
@@ -72,10 +72,9 @@ final class ExcelOoxmlPackageSecurityInternals {
     return fileSystem.getRoot().hasEntryCaseInsensitive(Decryptor.DEFAULT_POIFS_ENTRY);
   }
 
-  private static String openPassword(Path workbookPath, ExcelOoxmlOpenOptions openOptions) {
+  private static String openPassword(ExcelOoxmlOpenOptions openOptions) {
     return switch (normalizeOpenOptions(openOptions)) {
-      case ExcelOoxmlOpenOptions.Unencrypted _ ->
-          throw new WorkbookPasswordRequiredException(workbookPath);
+      case ExcelOoxmlOpenOptions.Unencrypted _ -> throw new WorkbookPasswordRequiredException();
       case ExcelOoxmlOpenOptions.Encrypted encrypted -> encrypted.password();
     };
   }

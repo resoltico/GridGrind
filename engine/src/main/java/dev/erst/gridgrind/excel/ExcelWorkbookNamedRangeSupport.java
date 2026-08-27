@@ -1,10 +1,14 @@
 package dev.erst.gridgrind.excel;
 
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 import org.apache.poi.ss.usermodel.Name;
 import org.jspecify.annotations.Nullable;
+import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTDefinedName;
+import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTDefinedNames;
 
 /** Named-range ownership and projection support for {@link ExcelWorkbook}. */
 final class ExcelWorkbookNamedRangeSupport {
@@ -30,25 +34,58 @@ final class ExcelWorkbookNamedRangeSupport {
   }
 
   static List<ExcelNamedRangeSnapshot> namedRanges(ExcelWorkbook workbook) {
+    return namedRangesFromPoi(workbook);
+  }
+
+  /** Returns raw existing names that Apache POI did not model as {@link Name} instances. */
+  static List<ExcelNamedRangeSnapshot> unmodeledObservedNamedRanges(ExcelWorkbook workbook) {
+    CTDefinedNames definedNames = workbook.context().workbook().getCTWorkbook().getDefinedNames();
+    if (definedNames == null) {
+      return List.of();
+    }
+    Set<NamedRangeIdentity> modeledNames = new LinkedHashSet<>();
+    for (ExcelNamedRangeSnapshot snapshot : namedRangesFromPoi(workbook)) {
+      modeledNames.add(new NamedRangeIdentity(snapshot.name(), snapshot.scope()));
+    }
+    List<ExcelNamedRangeSnapshot> namedRanges = new ArrayList<>();
+    for (CTDefinedName definedName : definedNames.getDefinedNameList()) {
+      String name = Objects.requireNonNullElse(definedName.getName(), "");
+      if (name.isBlank()
+          || !shouldExpose(name, definedName.getFunction(), definedName.getHidden())) {
+        continue;
+      }
+      ExcelNamedRangeScope scope = toScope(workbook, definedName);
+      if (modeledNames.add(new NamedRangeIdentity(name, scope))) {
+        namedRanges.add(
+            snapshot(name, scope, Objects.requireNonNullElse(definedName.getStringValue(), "")));
+      }
+    }
+    return List.copyOf(namedRanges);
+  }
+
+  private static List<ExcelNamedRangeSnapshot> namedRangesFromPoi(ExcelWorkbook workbook) {
     List<ExcelNamedRangeSnapshot> namedRanges = new ArrayList<>();
     for (Name name : workbook.context().workbook().getAllNames()) {
       if (!shouldExpose(name)) {
         continue;
       }
-      ExcelNamedRangeScope scope = toScope(workbook, name);
-      String refersToFormula = Objects.requireNonNullElse(name.getRefersToFormula(), "");
-      var target = ExcelNamedRangeTargets.resolveTarget(refersToFormula, scope);
-      if (target.isEmpty()) {
-        namedRanges.add(
-            new ExcelNamedRangeSnapshot.FormulaSnapshot(
-                name.getNameName(), scope, refersToFormula));
-      } else {
-        namedRanges.add(
-            new ExcelNamedRangeSnapshot.RangeSnapshot(
-                name.getNameName(), scope, refersToFormula, target.orElseThrow()));
-      }
+      namedRanges.add(
+          snapshot(
+              name.getNameName(),
+              toScope(workbook, name),
+              Objects.requireNonNullElse(name.getRefersToFormula(), "")));
     }
     return List.copyOf(namedRanges);
+  }
+
+  private static ExcelNamedRangeSnapshot snapshot(
+      String name, ExcelNamedRangeScope scope, String refersToFormula) {
+    var target = ExcelNamedRangeTargets.resolveTarget(refersToFormula, scope);
+    if (target.isEmpty()) {
+      return new ExcelNamedRangeSnapshot.FormulaSnapshot(name, scope, refersToFormula);
+    }
+    return new ExcelNamedRangeSnapshot.RangeSnapshot(
+        name, scope, refersToFormula, target.orElseThrow());
   }
 
   static boolean scopeMatches(ExcelWorkbook workbook, Name candidate, ExcelNamedRangeScope scope) {
@@ -108,4 +145,19 @@ final class ExcelWorkbookNamedRangeSupport {
     return new ExcelNamedRangeScope.SheetScope(
         workbook.context().workbook().getSheetName(sheetIndex));
   }
+
+  private static ExcelNamedRangeScope toScope(ExcelWorkbook workbook, CTDefinedName definedName) {
+    if (!definedName.isSetLocalSheetId()) {
+      return new ExcelNamedRangeScope.WorkbookScope();
+    }
+    long sheetIndex = definedName.getLocalSheetId();
+    if (sheetIndex > Integer.MAX_VALUE
+        || sheetIndex >= workbook.xssfWorkbook().getNumberOfSheets()) {
+      return new ExcelNamedRangeScope.WorkbookScope();
+    }
+    return new ExcelNamedRangeScope.SheetScope(
+        workbook.context().workbook().getSheetName((int) sheetIndex));
+  }
+
+  private record NamedRangeIdentity(String name, ExcelNamedRangeScope scope) {}
 }

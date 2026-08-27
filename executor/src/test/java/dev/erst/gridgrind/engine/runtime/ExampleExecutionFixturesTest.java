@@ -186,7 +186,8 @@ class ExampleExecutionFixturesTest {
   private static GridGrindProblemCode expectedBlankWorkspaceFailureCode(String exampleId) {
     return switch (exampleId) {
       case "CUSTOM_XML", "PACKAGE_SECURITY_INSPECTION" -> GridGrindProblemCode.WORKBOOK_NOT_FOUND;
-      case "SOURCE_BACKED_INPUT" -> GridGrindProblemCode.INPUT_SOURCE_NOT_FOUND;
+      case "SOURCE_BACKED_INPUT", "FILE_HYPERLINK_HEALTH" ->
+          GridGrindProblemCode.INPUT_SOURCE_NOT_FOUND;
       default ->
           throw new AssertionError("Unexpected repository-asset-backed example id: " + exampleId);
     };
