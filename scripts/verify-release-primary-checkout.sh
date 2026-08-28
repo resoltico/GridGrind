@@ -37,7 +37,7 @@ contains_allowed_untracked_prefix() {
 readonly primary_checkout_input=$1
 readonly expected_version=$2
 readonly default_branch="${3:-${GRIDGRIND_RELEASE_DEFAULT_BRANCH:-main}}"
-readonly allowed_untracked_csv="${GRIDGRIND_ALLOWED_RELEASE_PRIMARY_CHECKOUT_UNTRACKED:-generated/,ops/,reports/,tmp/}"
+readonly allowed_untracked_csv="${GRIDGRIND_ALLOWED_RELEASE_PRIMARY_CHECKOUT_UNTRACKED:-.codex/tmp/,generated/,ops/,reports/,tmp/}"
 
 [[ -n "${primary_checkout_input}" ]] || usage
 [[ -n "${expected_version}" ]] || usage
