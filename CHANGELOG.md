@@ -5,6 +5,9 @@ Earlier release history through `0.68.0` is archived in [docs/CHANGELOG_ARCHIVE.
 
 ## [Unreleased]
 
+### Changed
+- Release primary-checkout verification now permits the documented `.codex/tmp/` bootstrap manifest alongside the repository's other approved scratch paths.
+
 ## [0.74.0] - 2026-08-28
 
 ### Added
