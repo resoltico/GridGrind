@@ -113,7 +113,7 @@ class MutationActionCoverageTest {
         assertInstanceOf(FieldValidationProblem.class, failure.requestProblem());
 
     assertEquals(
-        "name must start with a letter or underscore and contain only letters, digits, underscore, or period",
+        "name must start with a letter, underscore, or backslash and contain only Unicode letters, Unicode numbers, underscore, period, or backslash",
         failure.getMessage());
     assertEquals(FieldValidationNamingRule.DEFINED_NAME_SYNTAX, requestProblem.rule());
     assertEquals(

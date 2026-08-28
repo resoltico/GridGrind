@@ -1,8 +1,8 @@
 ---
-afad: "4.0"
-version: "0.73.0"
+afad: "5.0.1"
+version: "0.74.0"
 domain: STYLE_VALIDATION_MUTATIONS
-updated: "2026-07-21"
+updated: "2026-08-27"
 route:
   keywords: [gridgrind, style mutations, data validation, conditional formatting, apply-style]
   questions: ["how do i style cells in gridgrind", "how do i set data validation in gridgrind", "how do i manage conditional formatting in gridgrind"]
@@ -449,6 +449,10 @@ differential, not a whole-cell style patch. Supported differential-style attribu
 The differential payload is intentionally a partial conditional-formatting patch, not a resolved
 cell style. It shares the same structured `ColorInput` and `BorderSideInput` vocabulary as
 `APPLY_STYLE`, while factual cell readback remains the separate complete `CellStyleReport` shape.
+Within that report, every border side is a tagged fact: `NONE` carries no color,
+`DEFAULT_COLOR` carries a visible style using Excel's implicit color, and `COLORED` carries both
+the visible style and its explicit `CellColorReport`. `GET_CELLS` and `EXPECT_CELL_STYLE` use the
+same shape, so readback can be reused directly for exact assertions.
 
 ```json
 {
@@ -538,9 +542,13 @@ Rule family summary:
 | `FORMULA_RULE` | `formula` | Optional `style`. |
 | `CELL_VALUE_RULE` | `operator`, `formula1` | Optional `formula2` for between/not-between operators and optional `style`. |
 | `COLOR_SCALE_RULE` | `thresholds`, `colors` | Threshold and color list sizes must match and must contain at least two control points. |
-| `DATA_BAR_RULE` | `color`, `widthMin`, `widthMax`, `minThreshold`, `maxThreshold` | `iconOnly` controls whether only the bar glyph is shown. No direction field is exposed. |
+| `DATA_BAR_RULE` | `color`, `widthMin`, `widthMax`, `minThreshold`, `maxThreshold` | Widths are integral percentages from `0` through `100`; `iconOnly` controls whether only the bar glyph is shown. No direction field is exposed. |
 | `ICON_SET_RULE` | `iconSet`, `thresholds` | Threshold count must match the chosen icon-set family. |
 | `TOP10_RULE` | `rank` | Optional `style`; `percent` and `bottom` control Top/Bottom N vs percent behavior. |
+
+Conditional-format thresholds are tagged values: payload-free `MIN` and `MAX`, finite `NUMBER`,
+`PERCENT` and `PERCENTILE` values from `0` through `100`, or a nonblank DDE-safe `FORMULA`. The
+factual readback model may report additional engine facts, but `UNALLOCATED` is not authorable.
 
 ### CLEAR_CONDITIONAL_FORMATTING
 

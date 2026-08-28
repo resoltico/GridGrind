@@ -115,16 +115,6 @@ class SelectorConverterTest {
         SelectorConverter.toSheetLocalCellAddresses(
             new CellSelector.ByAddresses("Budget", List.of("A1", "B2"))));
     assertEquals(
-        new SelectorConverter.QualifiedCellAddresses(
-            List.of(
-                new ExcelFormulaCellTarget("Budget", "A1"),
-                new ExcelFormulaCellTarget("Ops", "B2"))),
-        SelectorConverter.toQualifiedCellAddresses(
-            new CellSelector.ByQualifiedAddresses(
-                List.of(
-                    new CellSelector.QualifiedAddress("Budget", "A1"),
-                    new CellSelector.QualifiedAddress("Ops", "B2")))));
-    assertEquals(
         new SelectorConverter.SingleCellTarget("Budget", "A1"),
         SelectorConverter.toSingleCellTarget(new CellSelector.ByAddress("Budget", "A1")));
 
@@ -153,15 +143,6 @@ class SelectorConverterTest {
         SelectorConverter.toSingleRangeTarget(
             new RangeSelector.RectangularWindow("Budget", "B3", 2, 3)));
 
-    IllegalArgumentException crossSheetFailure =
-        assertThrows(
-            IllegalArgumentException.class,
-            () ->
-                SelectorConverter.toSheetLocalCellSelection(
-                    new CellSelector.ByQualifiedAddresses(
-                        List.of(new CellSelector.QualifiedAddress("Budget", "A1")))));
-    assertTrue(crossSheetFailure.getMessage().contains("cross-sheet exact cell selectors"));
-
     assertEquals(
         "selector must provide exact addresses here; ALL_USED_IN_SHEET is not supported",
         assertThrows(
@@ -169,15 +150,6 @@ class SelectorConverterTest {
                 () ->
                     SelectorConverter.toSheetLocalCellAddresses(
                         new CellSelector.AllUsedInSheet("Budget")))
-            .getMessage());
-    assertEquals(
-        "selector must target one sheet with exact addresses here",
-        assertThrows(
-                IllegalArgumentException.class,
-                () ->
-                    SelectorConverter.toSheetLocalCellAddresses(
-                        new CellSelector.ByQualifiedAddresses(
-                            List.of(new CellSelector.QualifiedAddress("Budget", "A1")))))
             .getMessage());
   }
 

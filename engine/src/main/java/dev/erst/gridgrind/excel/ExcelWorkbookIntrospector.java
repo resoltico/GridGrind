@@ -69,7 +69,10 @@ final class ExcelWorkbookIntrospector {
           new WorkbookSheetResult.CellsResult(
               getCells.stepId(),
               getCells.sheetName(),
-              sheetIntrospector.cells(workbook.sheet(getCells.sheetName()), getCells.addresses()),
+              sheetIntrospector.cells(
+                  workbook.sheet(getCells.sheetName()),
+                  getCells.addresses(),
+                  getCells.projection()),
               getCells.projection(),
               workbook.xssfWorkbook().isDate1904());
       case WorkbookReadCommand.GetWindow getWindow ->
@@ -79,7 +82,8 @@ final class ExcelWorkbookIntrospector {
                   workbook.sheet(getWindow.sheetName()),
                   getWindow.window().topLeftAddress(),
                   getWindow.window().rowCount(),
-                  getWindow.window().columnCount()),
+                  getWindow.window().columnCount(),
+                  getWindow.projection()),
               getWindow.projection(),
               getWindow.includeBlanks(),
               workbook.xssfWorkbook().isDate1904());
@@ -266,9 +270,9 @@ final class ExcelWorkbookIntrospector {
     int totalFormulaCellCount = 0;
     for (String sheetName : sheetNames) {
       ExcelSheet sheet = workbook.sheet(sheetName);
-      List<ExcelCellSnapshot.FormulaSnapshot> formulaCells = sheet.cells().formulaCells();
+      List<ExcelFormulaCell> formulaCells = ExcelFormulaFactReader.formulaCells(sheet.xssfSheet());
       Map<String, List<String>> formulas = new LinkedHashMap<>();
-      for (ExcelCellSnapshot.FormulaSnapshot formulaCell : formulaCells) {
+      for (ExcelFormulaCell formulaCell : formulaCells) {
         formulas
             .computeIfAbsent(formulaCell.formula(), _ -> new ArrayList<>())
             .add(formulaCell.address());
@@ -313,7 +317,12 @@ final class ExcelWorkbookIntrospector {
     Objects.requireNonNull(workbook, "workbook must not be null");
     ExcelSheet sheet = workbook.sheet(sheetName);
     WorkbookSheetResult.Window window =
-        sheetIntrospector.window(sheet, topLeftAddress, rowCount, columnCount);
+        sheetIntrospector.window(
+            sheet,
+            topLeftAddress,
+            rowCount,
+            columnCount,
+            projectionIncludingFormulaEvaluation(projection));
     int topLeftColumn = new CellReference(topLeftAddress).getCol();
     boolean headerRowIsBlank =
         window.rows().getFirst().cells().stream()
@@ -332,7 +341,8 @@ final class ExcelWorkbookIntrospector {
           case ExcelCellSnapshot.BlankSnapshot _ -> blankCellCount++;
           case ExcelCellSnapshot.FormulaSnapshot f -> {
             populatedCellCount++;
-            typeCounts.merge(schemaObservedType(f.evaluation(), projection), 1, Integer::sum);
+            typeCounts.merge(
+                schemaObservedType(f.evaluation().orElseThrow(), projection), 1, Integer::sum);
           }
           case ExcelCellSnapshot.TextSnapshot _ -> {
             populatedCellCount++;
@@ -465,5 +475,20 @@ final class ExcelWorkbookIntrospector {
                   case TIME -> "TIME";
                   case DATE_TIME -> "DATE_TIME";
                 });
+  }
+
+  private static ExcelCellReadProjection projectionIncludingFormulaEvaluation(
+      ExcelCellReadProjection projection) {
+    if (projection.includes(ExcelCellReadFacet.VALUE)) {
+      return projection;
+    }
+    java.util.Set<ExcelCellReadFacet> facets = java.util.EnumSet.noneOf(ExcelCellReadFacet.class);
+    for (ExcelCellReadFacet facet : ExcelCellReadFacet.values()) {
+      if (projection.includes(facet)) {
+        facets.add(facet);
+      }
+    }
+    facets.add(ExcelCellReadFacet.VALUE);
+    return new ExcelCellReadProjection(facets);
   }
 }

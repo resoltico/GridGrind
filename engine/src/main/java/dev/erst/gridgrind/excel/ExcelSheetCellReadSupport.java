@@ -93,18 +93,29 @@ final class ExcelSheetCellReadSupport {
   }
 
   ExcelCellSnapshot snapshotCell(String address) {
+    return snapshotCell(address, ExcelCellReadProjection.defaults());
+  }
+
+  ExcelCellSnapshot snapshotCell(String address, ExcelCellReadProjection projection) {
     ExcelSheet.requireNonBlank(address, "address");
+    Objects.requireNonNull(projection, "projection must not be null");
     CellReference cellReference = parseCellReference(address);
     requireValidCellReference(address, cellReference);
-    return snapshotCellOrBlank(address, cellReference.getRow(), cellReference.getCol());
+    return snapshotCellOrBlank(address, cellReference.getRow(), cellReference.getCol(), projection);
   }
 
   List<ExcelCellSnapshot> snapshotCells(List<String> addresses) {
+    return snapshotCells(addresses, ExcelCellReadProjection.defaults());
+  }
+
+  List<ExcelCellSnapshot> snapshotCells(
+      List<String> addresses, ExcelCellReadProjection projection) {
     Objects.requireNonNull(addresses, "addresses must not be null");
+    Objects.requireNonNull(projection, "projection must not be null");
     List<ExcelCellSnapshot> cells = new ArrayList<>(addresses.size());
     for (String address : List.copyOf(addresses)) {
       ExcelSheet.requireNonBlank(address, "address");
-      cells.add(snapshotCell(address));
+      cells.add(snapshotCell(address, projection));
     }
     return List.copyOf(cells);
   }
@@ -125,9 +136,15 @@ final class ExcelSheetCellReadSupport {
     return List.copyOf(previewRows);
   }
 
-  @SuppressWarnings("PMD.AvoidInstantiatingObjectsInLoops")
   WorkbookSheetResult.Window window(String topLeftAddress, int rowCount, int columnCount) {
+    return window(topLeftAddress, rowCount, columnCount, ExcelCellReadProjection.defaults());
+  }
+
+  @SuppressWarnings("PMD.AvoidInstantiatingObjectsInLoops")
+  WorkbookSheetResult.Window window(
+      String topLeftAddress, int rowCount, int columnCount, ExcelCellReadProjection projection) {
     ExcelSheet.requireNonBlank(topLeftAddress, "topLeftAddress");
+    Objects.requireNonNull(projection, "projection must not be null");
     if (rowCount <= 0) {
       throw new IllegalArgumentException("rowCount must be greater than 0");
     }
@@ -156,28 +173,12 @@ final class ExcelSheetCellReadSupport {
       for (int columnOffset = 0; columnOffset < columnCount; columnOffset++) {
         int columnIndex = topLeft.getCol() + columnOffset;
         String address = new CellReference(rowIndex, columnIndex).formatAsString();
-        cells.add(snapshotCellOrBlank(address, rowIndex, columnIndex));
+        cells.add(snapshotCellOrBlank(address, rowIndex, columnIndex, projection));
       }
       rows.add(new WorkbookSheetResult.WindowRow(rowIndex, List.copyOf(cells)));
     }
     return new WorkbookSheetResult.Window(
         sheet.getSheetName(), topLeftAddress, rowCount, columnCount, List.copyOf(rows));
-  }
-
-  List<ExcelCellSnapshot.FormulaSnapshot> formulaCells() {
-    List<ExcelCellSnapshot.FormulaSnapshot> formulas = new ArrayList<>();
-    for (Row row : sheet) {
-      for (Cell cell : row) {
-        if (cell.getCellType() == CellType.FORMULA) {
-          formulas.add(
-              (ExcelCellSnapshot.FormulaSnapshot)
-                  snapshot(
-                      new CellReference(cell.getRowIndex(), cell.getColumnIndex()).formatAsString(),
-                      cell));
-        }
-      }
-    }
-    return List.copyOf(formulas);
   }
 
   List<ExcelArrayFormulaSnapshot> arrayFormulas() {
@@ -230,14 +231,19 @@ final class ExcelSheetCellReadSupport {
       for (int columnIndex = 0; columnIndex < maxColumns; columnIndex++) {
         Cell cell = row.getCell(columnIndex);
         if (ExcelSheetStructureSupport.shouldPreview(cell)) {
-          cells.add(snapshot(new CellReference(rowIndex, columnIndex).formatAsString(), cell));
+          cells.add(
+              snapshot(
+                  new CellReference(rowIndex, columnIndex).formatAsString(),
+                  cell,
+                  ExcelCellReadProjection.defaults()));
         }
       }
     }
     return List.copyOf(cells);
   }
 
-  private ExcelCellSnapshot snapshotCellOrBlank(String address, int rowIndex, int columnIndex) {
+  private ExcelCellSnapshot snapshotCellOrBlank(
+      String address, int rowIndex, int columnIndex, ExcelCellReadProjection projection) {
     Row row = sheet.getRow(rowIndex);
     if (row == null) {
       return blankSnapshot(address);
@@ -246,28 +252,35 @@ final class ExcelSheetCellReadSupport {
     if (cell == null) {
       return blankSnapshot(address);
     }
-    return snapshot(address, cell);
+    return snapshot(address, cell, projection);
   }
 
-  private ExcelCellSnapshot snapshot(String address, Cell cell) {
+  private ExcelCellSnapshot snapshot(
+      String address, Cell cell, ExcelCellReadProjection projection) {
     CellType declaredType = cell.getCellType();
     String formulaExpression = declaredType == CellType.FORMULA ? cell.getCellFormula() : null;
-    String displayValue = displayValue(address, cell, declaredType, formulaExpression);
+    String displayValue = displayValue(address, cell, declaredType, formulaExpression, projection);
     ExcelCellStyleSnapshot style = styleRegistry.snapshot(cell);
     ExcelCellMetadataSnapshot metadata = annotationSupport.metadata(cell);
 
     if (declaredType == CellType.FORMULA) {
-      return formulaSnapshot(address, cell, displayValue, style, metadata);
+      return formulaSnapshot(address, cell, displayValue, style, metadata, projection);
     }
 
     return plainSnapshot(address, cell, declaredType, displayValue, style, metadata);
   }
 
   private String displayValue(
-      String address, Cell cell, CellType declaredType, @Nullable String formulaExpression) {
+      String address,
+      Cell cell,
+      CellType declaredType,
+      @Nullable String formulaExpression,
+      ExcelCellReadProjection projection) {
     try {
       return declaredType == CellType.FORMULA
-          ? formulaRuntime.displayValue(dataFormatter, cell)
+          ? requiresFormulaEvaluation(projection)
+              ? formulaRuntime.displayValue(dataFormatter, cell)
+              : Objects.requireNonNull(formulaExpression, "formulaExpression must not be null")
           : dataFormatter.formatCellValue(cell);
     } catch (RuntimeException exception) {
       throw FormulaExceptions.wrap(
@@ -280,16 +293,26 @@ final class ExcelSheetCellReadSupport {
       Cell cell,
       String displayValue,
       ExcelCellStyleSnapshot style,
-      ExcelCellMetadataSnapshot metadata) {
+      ExcelCellMetadataSnapshot metadata,
+      ExcelCellReadProjection projection) {
     String formula = cell.getCellFormula();
-    CellValue evaluatedCell = evaluateFormulaCell(address, formula, cell);
+    java.util.Optional<ExcelCellSnapshot> evaluation =
+        requiresFormulaEvaluation(projection)
+            ? java.util.Optional.of(
+                evaluatedFormulaSnapshot(
+                    address,
+                    displayValue,
+                    style,
+                    metadata,
+                    evaluateFormulaCell(address, formula, cell)))
+            : java.util.Optional.empty();
     return new ExcelCellSnapshot.FormulaSnapshot(
-        address,
-        displayValue,
-        style,
-        metadata,
-        formula,
-        evaluatedFormulaSnapshot(address, displayValue, style, metadata, evaluatedCell));
+        address, displayValue, style, metadata, formula, evaluation);
+  }
+
+  private static boolean requiresFormulaEvaluation(ExcelCellReadProjection projection) {
+    return projection.includes(ExcelCellReadFacet.VALUE)
+        || projection.includes(ExcelCellReadFacet.FORMAT);
   }
 
   private CellValue evaluateFormulaCell(String address, String formula, Cell cell) {

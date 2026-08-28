@@ -28,4 +28,12 @@ public record RequestWarning(
         "Absolute request-owned paths are portable only when the same execution-root layout exists: "
             + path);
   }
+
+  /** Creates the warning for one accepted leading UTF-8 byte-order mark. */
+  public static RequestWarning utf8BomIgnored() {
+    return new RequestWarning(
+        GridGrindWarningCode.UTF8_BOM_IGNORED,
+        new RequestWarningLocation.RequestByteOffset(0),
+        "Ignored one leading UTF-8 byte-order mark.");
+  }
 }

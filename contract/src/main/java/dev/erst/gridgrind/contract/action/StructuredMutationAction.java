@@ -163,7 +163,6 @@ public sealed interface StructuredMutationAction extends MutationAction {
       id = "SET_NAMED_RANGE",
       summary = "Create or replace one typed named range in workbook or sheet scope.",
       targetSelectors = {
-        NamedRangeSelector.ByName.class,
         NamedRangeSelector.WorkbookScope.class,
         NamedRangeSelector.SheetScope.class
       })
@@ -181,7 +180,6 @@ public sealed interface StructuredMutationAction extends MutationAction {
       id = "DELETE_NAMED_RANGE",
       summary = "Delete one existing named range from workbook or sheet scope.",
       targetSelectors = {
-        NamedRangeSelector.ByName.class,
         NamedRangeSelector.WorkbookScope.class,
         NamedRangeSelector.SheetScope.class
       })

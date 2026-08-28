@@ -1,6 +1,5 @@
 package dev.erst.gridgrind.engine.runtime;
 
-import dev.erst.gridgrind.contract.assertion.AssertionFailure;
 import dev.erst.gridgrind.contract.dto.GridGrindProblemCode;
 import dev.erst.gridgrind.contract.dto.GridGrindProblemDetail;
 import dev.erst.gridgrind.contract.dto.GridGrindRequestProblemSupport;
@@ -12,7 +11,6 @@ import java.nio.file.FileAlreadyExistsException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import java.util.Optional;
 import org.jspecify.annotations.Nullable;
 
 /**
@@ -33,7 +31,6 @@ public final class GridGrindProblems {
         code,
         publicMessage,
         enrichContext(context, exception),
-        Optional.ofNullable(assertionFailureFor(exception)),
         causesFor(exception, context.stage(), publicMessage),
         exception);
   }
@@ -53,7 +50,6 @@ public final class GridGrindProblems {
         code,
         publicMessage,
         context,
-        Optional.ofNullable(assertionFailureFor(cause)),
         causesFor(
             cause,
             context.stage(),
@@ -69,14 +65,13 @@ public final class GridGrindProblems {
       String message,
       dev.erst.gridgrind.contract.dto.ProblemContext context,
       List<GridGrindProblemDetail.ProblemCause> causes) {
-    return problem(code, message, context, Optional.empty(), causes, null);
+    return problem(code, message, context, causes, null);
   }
 
   private static GridGrindProblemDetail.Problem problem(
       GridGrindProblemCode code,
       String message,
       dev.erst.gridgrind.contract.dto.ProblemContext context,
-      Optional<AssertionFailure> assertionFailure,
       List<GridGrindProblemDetail.ProblemCause> causes,
       @Nullable Throwable source) {
     Objects.requireNonNull(code, "code must not be null");
@@ -89,7 +84,6 @@ public final class GridGrindProblems {
         Objects.requireNonNull(message, "message must not be null"),
         resolutionFor(code, message, context, source),
         context,
-        Objects.requireNonNull(assertionFailure, "assertionFailure must not be null"),
         List.copyOf(Objects.requireNonNull(causes, "causes must not be null")));
   }
 
@@ -120,7 +114,6 @@ public final class GridGrindProblems {
         problem.message(),
         problem.resolution(),
         problem.context(),
-        problem.assertionFailure(),
         List.copyOf(causes));
   }
 
@@ -209,12 +202,6 @@ public final class GridGrindProblems {
     }
     return List.of(
         new GridGrindProblemDetail.ProblemCause(codeFor(exception), publicMessage, stage));
-  }
-
-  private static @Nullable AssertionFailure assertionFailureFor(@Nullable Throwable exception) {
-    return exception instanceof AssertionFailedException assertionFailedException
-        ? assertionFailedException.assertionFailure()
-        : null;
   }
 
   private static String simpleName(Throwable exception) {

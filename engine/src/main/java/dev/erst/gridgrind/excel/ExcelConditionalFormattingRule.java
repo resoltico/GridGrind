@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.contract.dto.ProtocolConstraintValues;
 import dev.erst.gridgrind.excel.foundation.ExcelComparisonOperator;
 import dev.erst.gridgrind.excel.foundation.ExcelConditionalFormattingIconSet;
 import java.util.List;
@@ -73,11 +74,13 @@ public sealed interface ExcelConditionalFormattingRule
       Objects.requireNonNull(color, "color must not be null");
       Objects.requireNonNull(minThreshold, "minThreshold must not be null");
       Objects.requireNonNull(maxThreshold, "maxThreshold must not be null");
-      if (widthMin < 0) {
-        throw new IllegalArgumentException("widthMin must not be negative");
+      if (widthMin < ProtocolConstraintValues.DATA_BAR_WIDTH_MIN
+          || widthMin > ProtocolConstraintValues.DATA_BAR_WIDTH_MAX) {
+        throw new IllegalArgumentException("widthMin must be between 0 and 100 inclusive");
       }
-      if (widthMax < 0) {
-        throw new IllegalArgumentException("widthMax must not be negative");
+      if (widthMax < ProtocolConstraintValues.DATA_BAR_WIDTH_MIN
+          || widthMax > ProtocolConstraintValues.DATA_BAR_WIDTH_MAX) {
+        throw new IllegalArgumentException("widthMax must be between 0 and 100 inclusive");
       }
       if (widthMax < widthMin) {
         throw new IllegalArgumentException("widthMax must not be less than widthMin");

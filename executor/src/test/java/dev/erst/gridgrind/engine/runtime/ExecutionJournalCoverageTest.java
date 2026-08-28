@@ -85,15 +85,6 @@ class ExecutionJournalCoverageTest {
         List.of(new ExecutionJournal.Target("WORKBOOK", "Current workbook")),
         ExecutionJournalTargetResolver.resolve(workbookSummary, ExecutionJournalLevel.NORMAL));
     assertEquals(
-        List.of(
-            new ExecutionJournal.Target("CELL", "Cell Budget!B2"),
-            new ExecutionJournal.Target("CELL", "Cell Ops!C3")),
-        ExecutionJournalTargetResolver.expandedTargets(
-            new CellSelector.ByQualifiedAddresses(
-                List.of(
-                    new CellSelector.QualifiedAddress("Budget", "B2"),
-                    new CellSelector.QualifiedAddress("Ops", "C3")))));
-    assertEquals(
         new ExecutionJournal.Target("SHEET", "Sheets [Budget, Ops]"),
         summaryTarget(new SheetSelector.ByNames(List.of("Budget", "Ops"))));
     assertEquals(
@@ -110,13 +101,6 @@ class ExecutionJournalCoverageTest {
     assertEquals(
         new ExecutionJournal.Target("CELL", "Cells Budget![B2, C3]"),
         summaryTarget(new CellSelector.ByAddresses("Budget", List.of("B2", "C3"))));
-    assertEquals(
-        new ExecutionJournal.Target("CELL", "Qualified cells [Budget!B2, Ops!C3]"),
-        summaryTarget(
-            new CellSelector.ByQualifiedAddresses(
-                List.of(
-                    new CellSelector.QualifiedAddress("Budget", "B2"),
-                    new CellSelector.QualifiedAddress("Ops", "C3")))));
     assertEquals(
         new ExecutionJournal.Target("RANGE", "All ranges on Budget"),
         summaryTarget(new RangeSelector.AllOnSheet("Budget")));

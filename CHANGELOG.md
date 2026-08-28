@@ -5,8 +5,37 @@ Earlier release history through `0.68.0` is archived in [docs/CHANGELOG_ARCHIVE.
 
 ## [Unreleased]
 
+## [0.74.0] - 2026-08-28
+
+### Added
+- Added machine-readable protocol-catalog scalar constraints and operation preconditions, including exact formats, lengths, numeric bounds, integral values, required nonblank text, and `.xlsx` path suffixes where the public contract enforces them.
+- Added caller-actionable diagnostics for circular formula evaluation, source and output paths that name directories, create-new output collisions, and a leading UTF-8 byte-order mark; diagnostics retain the relevant authored location when one exists.
+- Added typed response-transport reasons for an existing, directory, unwritable, or late-failing `--response` destination so automation can distinguish an undelivered result from a result written to stdout.
+
 ### Changed
-- Updated the aligned JUnit BOM, Jupiter, and Platform Launcher dependencies to `6.1.3`.
+- Updated the Gradle Wrapper to `9.7.1`; the aligned JUnit BOM, Jupiter, and Platform Launcher to `6.1.3`; Jackson Databind to `3.2.2`; the Error Prone Gradle plugin to `5.1.1`; and NullAway to `0.14.0`.
+- Replaced nullable `CellStyleReport.border` side facts with explicit `NONE`, `DEFAULT_COLOR`, and `COLORED` variants, allowing exact style readback to feed `EXPECT_CELL_STYLE` without null padding.
+- Replaced flat assertion outcomes with tagged `PASSED` and `FAILED` variants; each failed entry in `assertions[]` now carries its complete target, authored assertion, and observed evidence.
+- Replaced conditional-formatting threshold payloads with explicit `MIN`, `MAX`, `NUMBER`, `PERCENT`, `PERCENTILE`, and `FORMULA` variants, separating authorable threshold inputs from factual readback-only states.
+- Replaced generic workbook-qualified cell addresses in formula evaluation targets with the dedicated `FormulaCellTarget` model and removed the unreachable `CELL_BY_QUALIFIED_ADDRESSES` selector from the request contract.
+- Aligned named-range operation targets, generated step templates, doctoring, execution, and protocol-catalog metadata on the same scope-specific selector contract; table-row selectors remain supported nested inputs.
+- Changed normal `FORMULA` authoring to validate after preceding mutations are present and to retain the authoring step when a later operation surfaces a formula failure; `RAW_FORMULA` remains intentionally opaque.
+- Changed `--response` execution to reserve a new no-follow destination after request validation and before input binding or workbook work, preserving the requested create-new transport contract without replacing an existing response file.
+- Improved protocol-catalog discovery so exact identifiers rank first, partial multi-term searches remain useful, and `FILE` hyperlink documentation explicitly states that relative targets are resolved from the saved workbook's directory.
+
+### Fixed
+- Corrected all data-validation comparison operators so their persisted OOXML and reopened workbook semantics match the authored Excel rule.
+- Corrected defined-name and table-name validation to accept supported Unicode identifiers, while preserving factual readback of names already stored in existing workbooks.
+- Corrected named-formula health analysis to inspect workbook-aware formula references, handling quoted sheet names, escaped apostrophes, multiple references, and unparseable formulas without guessing sheet names.
+- Corrected calculation handling for circular formulas: strict evaluation reports `CIRCULAR_FORMULA_REFERENCE`, while lenient calculation reports the unevaluable formula without treating ordinary evaluated Excel errors as unevaluable.
+- Corrected factual formula inspections so `GET_FORMULA_SURFACE` and `GET_CELLS` with only the `FORMULA` facet can read `RAW_FORMULA` cells without requesting evaluation.
+- Corrected doctoring and execution preflight to preserve caller-correctable request-size and request-path codes, detect ordered formula-and-column-edit conflicts, and reject invalid output leaves before workbook mutation.
+- Corrected response-file handling so an existing requested response path stops execution before workbook side effects and cannot leave a stale payload reported as a successful execution result.
+- Corrected request diagnostics to retain exact nested collection and tagged-union JSON paths and byte offsets instead of collapsing failures onto a broader parent or an unavailable location.
+- Corrected source and output path classification, create-new collision handling, and encrypted-workbook diagnostics so public responses use authored paths rather than private materialization paths.
+- Corrected `SAVE_AS` to create missing contained destination parents while retaining fail-closed no-follow path checks.
+- Corrected leading UTF-8 byte-order mark handling: exactly one mark at byte zero is ignored with `UTF8_BOM_IGNORED`, and later marks remain invalid JSON.
+- Corrected the shared drawing and signature PNG asset so generated workbooks open in LibreOffice without a media CRC warning.
 
 ## [0.73.0] - 2026-08-21
 
@@ -155,7 +184,8 @@ Earlier release history through `0.68.0` is archived in [docs/CHANGELOG_ARCHIVE.
 - Standardized the packaged discovery contract around `requestFileName` plus `requiredWorkspacePaths`, and realigned the release verifier, operator guidance, and public docs to that explicit example/task portability surface instead of carrying forward stale `suggestedRequestPath` and `requiredPaths` terminology.
 - Made the Docker runtime cache layout arbitrary-user-safe: the image now points `HOME` and `XDG_CACHE_HOME` at writable tmp-backed directories so signature-line and other font-backed authoring flows stay silent under `docker run --user <uid>:<gid>` instead of leaking Fontconfig cache warnings on stderr.
 
-[Unreleased]: https://github.com/resoltico/GridGrind/compare/v0.73.0...HEAD
+[Unreleased]: https://github.com/resoltico/GridGrind/compare/v0.74.0...HEAD
+[0.74.0]: https://github.com/resoltico/GridGrind/compare/v0.73.0...v0.74.0
 [0.73.0]: https://github.com/resoltico/GridGrind/compare/v0.72.0...v0.73.0
 [0.72.0]: https://github.com/resoltico/GridGrind/compare/v0.71.0...v0.72.0
 [0.71.0]: https://github.com/resoltico/GridGrind/compare/v0.70.0...v0.71.0

@@ -1,8 +1,8 @@
 ---
 afad: "4.0"
-version: "0.73.0"
+version: "0.74.0"
 domain: INDEX
-updated: "2026-06-29"
+updated: "2026-08-28"
 route:
   keywords: [gridgrind, index, docs, documentation, reference, map]
   questions: ["where is the gridgrind documentation index", "what docs does gridgrind have", "how is the gridgrind documentation organized"]
@@ -96,6 +96,7 @@ Two-tier structure: landing pages give the overview; detail pages own the full f
 | [DEVELOPER_JAZZER_COVERAGE.md](./DEVELOPER_JAZZER_COVERAGE.md) | Jazzer corpus and coverage guidance |
 | [DEVELOPER_CONTRACT_REPLACEMENT_ADR.md](./DEVELOPER_CONTRACT_REPLACEMENT_ADR.md) | Architecture decision record: contract module replacement approach |
 | [RELEASE_PROTOCOL.md](./RELEASE_PROTOCOL.md) | Release checklist and publishing steps |
+| [DEPENDENCY_AUTOMATION_POLICY.md](./DEPENDENCY_AUTOMATION_POLICY.md) | Dependency-update triage, approval, and release hygiene policy |
 
 ---
 

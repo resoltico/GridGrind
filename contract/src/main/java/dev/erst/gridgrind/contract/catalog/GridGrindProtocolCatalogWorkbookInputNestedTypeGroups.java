@@ -1,6 +1,7 @@
 package dev.erst.gridgrind.contract.catalog;
 
 import static dev.erst.gridgrind.contract.catalog.GridGrindProtocolCatalogNestedTypeGroupSupport.descriptor;
+import static dev.erst.gridgrind.contract.catalog.GridGrindProtocolCatalogNestedTypeGroupSupport.descriptorWithNotes;
 import static dev.erst.gridgrind.contract.catalog.GridGrindProtocolCatalogNestedTypeGroupSupport.nestedTypeGroup;
 
 import dev.erst.gridgrind.contract.dto.AutofilterSortConditionInput;
@@ -155,12 +156,13 @@ final class GridGrindProtocolCatalogWorkbookInputNestedTypeGroups {
                       HyperlinkTarget.Email.class,
                       "EMAIL",
                       "Attach an email target without the mailto: prefix."),
-                  descriptor(
+                  descriptorWithNotes(
                       HyperlinkTarget.File.class,
                       "FILE",
                       "Attach a local or shared file path."
                           + " Accepts plain paths or file: URIs and normalizes to a plain path"
-                          + " string."),
+                          + " string.",
+                      GridGrindProtocolCatalogNotes.fileHyperlinkRelativePathRuleRef()),
                   descriptor(
                       HyperlinkTarget.Document.class,
                       "DOCUMENT",

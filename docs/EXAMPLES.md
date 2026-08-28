@@ -1,8 +1,8 @@
 ---
-afad: "4.0"
-version: "0.73.0"
+afad: "5.0.1"
+version: "0.74.0"
 domain: EXAMPLES
-updated: "2026-07-02"
+updated: "2026-08-27"
 route:
   keywords: [gridgrind, examples, print-recipe, request fixtures, package security, java authoring]
   questions: ["what examples ship with gridgrind", "what is the difference between built-in and checked-in examples", "how do i run the java example", "how do i refresh the example fixtures"]
@@ -71,7 +71,6 @@ Self-contained built-ins execute after `mkdir -p generated-workbooks` in an othe
 | `LARGE_FILE_MODES` | [`../examples/large-file-modes-request.json`](../examples/large-file-modes-request.json) | `STREAMING_WRITE` plus summary readback |
 | `CHART` | [`../examples/chart-request.json`](../examples/chart-request.json) | supported chart authoring |
 | `PIVOT` | [`../examples/pivot-request.json`](../examples/pivot-request.json) | pivot authoring and health analysis |
-| `FILE_HYPERLINK_HEALTH` | [`../examples/file-hyperlink-health-request.json`](../examples/file-hyperlink-health-request.json) | file/document hyperlink analysis |
 | `INTROSPECTION_ANALYSIS` | [`../examples/introspection-analysis-request.json`](../examples/introspection-analysis-request.json) | inspection-heavy analysis surface |
 
 Repo-asset-backed built-ins still use `--print-recipe --lookup <ID>`, but they also require the
@@ -80,6 +79,7 @@ copied asset paths named in `requiredWorkspacePaths`:
 | Built-in ID | Matching fixture | Required assets |
 |:------------|:-----------------|:----------------|
 | `CUSTOM_XML` | [`../examples/custom-xml-request.json`](../examples/custom-xml-request.json) | [`../examples/custom-xml-assets/`](../examples/custom-xml-assets/) |
+| `FILE_HYPERLINK_HEALTH` | [`../examples/file-hyperlink-health-request.json`](../examples/file-hyperlink-health-request.json) | [`../examples/file-hyperlink-assets/request-label.txt`](../examples/file-hyperlink-assets/request-label.txt) |
 | `SOURCE_BACKED_INPUT` | [`../examples/source-backed-input-request.json`](../examples/source-backed-input-request.json) | [`../examples/source-backed-input-assets/`](../examples/source-backed-input-assets/) |
 | `PACKAGE_SECURITY_INSPECTION` | [`../examples/package-security-inspect-request.json`](../examples/package-security-inspect-request.json) | [`../examples/package-security-assets/`](../examples/package-security-assets/) |
 
@@ -106,7 +106,7 @@ Print it directly with `gridgrind --print-recipe-catalog --response recipes.json
 | [`../examples/array-formula-request.json`](../examples/array-formula-request.json) | no-save inspect | array-formula authoring and group readback |
 | [`../examples/chart-request.json`](../examples/chart-request.json) | create and save | chart authoring with factual readback |
 | [`../examples/pivot-request.json`](../examples/pivot-request.json) | create and save | pivot authoring plus pivot-health analysis |
-| [`../examples/file-hyperlink-health-request.json`](../examples/file-hyperlink-health-request.json) | create and save | hyperlink authoring and hyperlink-health analysis |
+| [`../examples/file-hyperlink-health-request.json`](../examples/file-hyperlink-health-request.json) | create and save | request-asset text plus workbook-relative hyperlink analysis |
 | [`../examples/introspection-analysis-request.json`](../examples/introspection-analysis-request.json) | create and save | inspection-heavy workbook analysis surface |
 | [`../examples/large-file-modes-request.json`](../examples/large-file-modes-request.json) | create and save | `STREAMING_WRITE` and recalculation-open flagging |
 | [`../examples/source-backed-input-request.json`](../examples/source-backed-input-request.json) | no-save inspect | sibling file-backed text, formula, and binary payloads |

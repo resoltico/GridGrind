@@ -75,13 +75,18 @@ class SemanticSelectorExecutionCoverageTest {
     assertEquals(GridGrindProblemCode.ASSERTION_FAILED, failure.problem().code());
     assertTrue(
         failure.problem().message().contains("EXPECT_CELL_VALUE resolved no matching cells"));
-    assertEquals(
-        "assert-missing-table-cell", failure.problem().assertionFailure().orElseThrow().stepId());
+    assertEquals("assert-missing-table-cell", failedAssertion(failure).stepId());
     SheetInspectionResult.CellsResult cellsResult =
         assertInstanceOf(
             SheetInspectionResult.CellsResult.class,
-            failure.problem().assertionFailure().orElseThrow().observations().getFirst());
+            failedAssertion(failure).observations().getFirst());
     assertEquals(List.of(), cellsResult.cells());
+  }
+
+  private static dev.erst.gridgrind.contract.assertion.AssertionFailure failedAssertion(
+      WorkbookResult.Failure failure) {
+    return assertInstanceOf(AssertionResult.Failed.class, failure.assertions().getFirst())
+        .failure();
   }
 
   @Test

@@ -3,18 +3,13 @@ package dev.erst.gridgrind.engine.runtime;
 import dev.erst.gridgrind.contract.assertion.AssertionResult;
 import dev.erst.gridgrind.contract.catalog.GridGrindExecutionModeMetadata;
 import dev.erst.gridgrind.contract.dto.ExecutionModeInput;
-import dev.erst.gridgrind.contract.dto.WorkbookPlan;
 import dev.erst.gridgrind.contract.query.InspectionResult;
-import dev.erst.gridgrind.contract.selector.Selector;
 import dev.erst.gridgrind.contract.step.AssertionStep;
 import dev.erst.gridgrind.contract.step.InspectionStep;
-import dev.erst.gridgrind.contract.step.MutationStep;
-import dev.erst.gridgrind.contract.step.WorkbookStep;
 import dev.erst.gridgrind.excel.ExcelTempFileWriteTargetSupport;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
 import dev.erst.gridgrind.excel.ExcelWorkbooks;
 import dev.erst.gridgrind.excel.WorkbookArtifactWriteDisposition;
-import dev.erst.gridgrind.excel.WorkbookCommand;
 import dev.erst.gridgrind.excel.WorkbookExecutionEngine;
 import dev.erst.gridgrind.excel.WorkbookLocation;
 import dev.erst.gridgrind.excel.WorkbookReadCommand;
@@ -31,6 +26,7 @@ final class ExecutionStepSupport {
   private final SemanticSelectorResolver selectorResolver;
   private final AssertionExecutor assertionExecutor;
   private final TempFileFactory tempFileFactory;
+  private final FormulaAwareMutationStepExecutor mutationStepExecutor;
 
   ExecutionStepSupport(
       WorkbookExecutionEngine workbookEngine,
@@ -44,30 +40,12 @@ final class ExecutionStepSupport {
         Objects.requireNonNull(assertionExecutor, "assertionExecutor must not be null");
     this.tempFileFactory =
         Objects.requireNonNull(tempFileFactory, "tempFileFactory must not be null");
+    this.mutationStepExecutor =
+        new FormulaAwareMutationStepExecutor(this.workbookEngine, this.selectorResolver);
   }
 
-  void executeMutationStep(ExcelWorkbook workbook, MutationStep mutationStep) throws IOException {
-    Selector resolvedTarget =
-        selectorResolver.resolveMutationTarget(
-            workbook, mutationStep.target(), mutationStep.action());
-    WorkbookCommand command =
-        WorkbookCommandConverter.toCommand(resolvedTarget, mutationStep.action());
-    workbookEngine.apply(workbook, command);
-  }
-
-  void executeStreamingMutationStep(ExcelStreamingWorkbookWriter writer, MutationStep mutationStep)
-      throws IOException {
-    WorkbookCommand command = WorkbookCommandConverter.toCommand(mutationStep);
-    writer.apply(command);
-  }
-
-  dev.erst.gridgrind.contract.dto.ProblemContext.ExecuteStep executeStepContext(
-      WorkbookPlan request, int stepIndex, WorkbookStep step, Exception exception) {
-    return new dev.erst.gridgrind.contract.dto.ProblemContext.ExecuteStep(
-        ExecutionRequestPaths.requestShape(request),
-        new dev.erst.gridgrind.contract.dto.ProblemContextWorkbookSurfaces.StepReference(
-            stepIndex, step.stepId(), step.stepKind(), ExecutionStepKinds.stepType(step)),
-        ExecutionDiagnosticFields.locationFor(step, exception));
+  FormulaAwareMutationStepExecutor mutationStepExecutor() {
+    return mutationStepExecutor;
   }
 
   InspectionResult executeInspectionStep(

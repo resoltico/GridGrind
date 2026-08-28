@@ -23,6 +23,10 @@ final class ExampleCellValues {
     return new CellInput.Text(TextSourceInput.inline(value));
   }
 
+  static CellInput.Text textFile(String path) {
+    return new CellInput.Text(TextSourceInput.utf8File(path));
+  }
+
   static CellInput.Formula formula(String value) {
     return new CellInput.Formula(TextSourceInput.inline(value));
   }

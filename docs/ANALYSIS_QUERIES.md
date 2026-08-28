@@ -1,8 +1,8 @@
 ---
-afad: "4.0"
-version: "0.73.0"
+afad: "5.0.1"
+version: "0.74.0"
 domain: ANALYSIS_QUERIES
-updated: "2026-05-01"
+updated: "2026-08-27"
 route:
   keywords: [gridgrind, analysis queries, workbook health, formula health, hyperlink health, named-range health]
   questions: ["what analysis queries does gridgrind support", "how do i run workbook health checks in gridgrind", "how do i inspect findings in gridgrind"]
@@ -194,6 +194,10 @@ relative `FILE` targets are reported as `HYPERLINK_UNRESOLVED_FILE_TARGET`.
 ### ANALYZE_NAMED_RANGE_HEALTH
 
 Reports named-range findings such as broken references, unresolved targets, and scope shadowing.
+Formula-backed names are parsed with workbook-aware POI tokens rather than string splitting, so
+quoted sheet names, escaped apostrophes, and multiple sheet references are handled as Excel stores
+them. A formula with no sheet reference is healthy; an unparseable name formula reports its own
+analysis finding rather than guessing a sheet name.
 
 ```json
 {

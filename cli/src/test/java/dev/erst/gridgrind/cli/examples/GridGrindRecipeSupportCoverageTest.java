@@ -1,6 +1,7 @@
 package dev.erst.gridgrind.cli.examples;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -8,10 +9,13 @@ import dev.erst.gridgrind.cli.discovery.RecipeAdvisory;
 import dev.erst.gridgrind.cli.discovery.TaskEntry;
 import dev.erst.gridgrind.contract.catalog.GridGrindProtocolCatalog;
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
+import java.io.ByteArrayInputStream;
+import java.util.Base64;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import javax.imageio.ImageIO;
 import org.junit.jupiter.api.Test;
 
 /** Coverage for the helper guards that feed the canonical CLI recipe registry. */
@@ -403,6 +407,13 @@ class GridGrindRecipeSupportCoverageTest {
                 IllegalArgumentException.class,
                 () -> TaskStarterRecipeSupport.taskRequestFileName(" "))
             .getMessage());
+  }
+
+  @Test
+  void taskStarterPreviewIsAStandardsValidPng() throws java.io.IOException {
+    byte[] png = Base64.getDecoder().decode(TaskStarterRecipeSupport.onePixelPngBase64());
+
+    assertNotNull(ImageIO.read(new ByteArrayInputStream(png)));
   }
 
   private static WorkbookPlan templatePlan() {

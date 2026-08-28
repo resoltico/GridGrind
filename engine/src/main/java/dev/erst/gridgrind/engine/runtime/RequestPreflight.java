@@ -7,13 +7,6 @@ import dev.erst.gridgrind.contract.dto.ProblemContextWorkbookSurfaces.InputRefer
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
 import dev.erst.gridgrind.contract.json.RequestAnalysis;
 import dev.erst.gridgrind.contract.step.WorkbookStep;
-import dev.erst.gridgrind.engine.api.GridGrindProblems;
-import dev.erst.gridgrind.excel.ExcelWorkbook;
-import dev.erst.gridgrind.excel.ooxml.ExcelOoxmlPackagePersistenceSupport;
-import dev.erst.gridgrind.excel.ooxml.ExcelOoxmlPersistenceEncryption;
-import dev.erst.gridgrind.excel.ooxml.ExcelOoxmlPersistenceOptions;
-import dev.erst.gridgrind.excel.ooxml.ExcelOoxmlPersistenceSignature;
-import dev.erst.gridgrind.excel.ooxml.ExcelOoxmlSigningMaterialSupport;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -68,9 +61,9 @@ final class RequestPreflight {
               .withRequestPathAccess(pathAccess)
               .withInputResolutionOrigins(InputResolutionOrigins.forRequest(request, analysis));
       Optional<WorkbookPlan> resolvedRequest =
-          resolveInputs(request, locatedBindings, stepResolver, problems);
-      preflightRequestOwnedPaths(request, locatedBindings, problems);
-      preflightWorkbookSource(request, locatedBindings, problems);
+          RequestPreflightInputResolver.resolve(request, locatedBindings, stepResolver, problems);
+      RequestPreflightPaths.verify(request, locatedBindings, problems);
+      RequestPreflightWorkbookSource.verify(request, locatedBindings, problems);
       Result result =
           new Result(
               problems.isEmpty()
@@ -84,199 +77,6 @@ final class RequestPreflight {
       if (!prepared) {
         closeQuietly(pathAccess);
       }
-    }
-  }
-
-  private static Optional<WorkbookPlan> resolveInputs(
-      WorkbookPlan request,
-      ExecutionInputBindings bindings,
-      StepResolver stepResolver,
-      List<GridGrindProblemDetail.Problem> problems) {
-    List<WorkbookStep> resolvedSteps = new ArrayList<>(request.steps().size());
-    boolean failed = false;
-    for (WorkbookStep step : request.steps()) {
-      try {
-        resolvedSteps.add(stepResolver.resolve(step, bindings));
-      } catch (InputResolutionBatchException exception) {
-        for (InputResolutionFailure failure : exception.failures()) {
-          problems.add(
-              GridGrindProblems.fromException(
-                  failure.exception(), resolveInputsContext(request, failure)));
-        }
-        resolvedSteps.add(step);
-        failed = true;
-      } catch (Exception exception) {
-        // One malformed external asset must not hide unrelated source-backed sibling inputs.
-        problems.add(
-            GridGrindProblems.fromException(
-                exception,
-                resolveInputsContext(request, InputResolutionFailure.unlocated(exception))));
-        resolvedSteps.add(step);
-        failed = true;
-      }
-    }
-    if (failed) {
-      return Optional.empty();
-    }
-    return Optional.of(
-        new WorkbookPlan(
-            request.protocolVersion(),
-            request.planId(),
-            request.source(),
-            request.persistence(),
-            request.execution(),
-            request.formulaEnvironment(),
-            resolvedSteps));
-  }
-
-  private static void preflightWorkbookSource(
-      WorkbookPlan request,
-      ExecutionInputBindings bindings,
-      List<GridGrindProblemDetail.Problem> problems) {
-    if (!(request.source() instanceof WorkbookPlan.WorkbookSource.ExistingFile)) {
-      return;
-    }
-    ProblemContext.OpenWorkbook context = openWorkbookContext(request, bindings);
-    ExecutionWorkbookSupport workbookSupport =
-        new ExecutionWorkbookSupport(bindings.tempFileFactory());
-    try (ExcelWorkbook workbook = workbookSupport.openWorkbook(request.source(), null, bindings)) {
-      Objects.requireNonNull(workbook, "workbook must not be null");
-      validateSourcePersistencePolicy(request, workbook);
-    } catch (Exception exception) {
-      problems.add(GridGrindProblems.fromException(exception, context));
-    }
-  }
-
-  private static void validateSourcePersistencePolicy(
-      WorkbookPlan request, ExcelWorkbook workbook) {
-    java.util.Optional<dev.erst.gridgrind.contract.dto.OoxmlPersistenceSecurityInput> security =
-        switch (request.persistence()) {
-          case WorkbookPlan.WorkbookPersistence.None _ -> java.util.Optional.empty();
-          case WorkbookPlan.WorkbookPersistence.SaveAs saveAs -> saveAs.security();
-          case WorkbookPlan.WorkbookPersistence.Overwrite overwrite -> overwrite.security();
-        };
-    if (security.isPresent()
-        && security.orElseThrow().encryption()
-            instanceof
-            dev.erst.gridgrind.contract.dto.OoxmlPersistenceEncryptionInput.PreserveSource
-        && workbook.persistence().loadedPackageSecurity().encryption()
-            instanceof dev.erst.gridgrind.excel.ooxml.ExcelOoxmlEncryptionSnapshot.None) {
-      throw new EncryptionSourceNotEncryptedException();
-    }
-    if (security.isPresent()
-        && security.orElseThrow().encryption()
-            instanceof
-            dev.erst.gridgrind.contract.dto.OoxmlPersistenceEncryptionInput.PreserveSource) {
-      ExcelOoxmlPackagePersistenceSupport.effectiveOptions(
-          workbook.persistence().loadedPackageSecurity(),
-          workbook.persistence().sourceEncryptionPassword(),
-          new ExcelOoxmlPersistenceOptions(
-              new ExcelOoxmlPersistenceEncryption.PreserveSource(),
-              new ExcelOoxmlPersistenceSignature.Unsigned()));
-    }
-  }
-
-  private static void preflightRequestOwnedPaths(
-      WorkbookPlan request,
-      ExecutionInputBindings bindings,
-      List<GridGrindProblemDetail.Problem> problems) {
-    preflightFormulaEnvironmentPaths(request, bindings, problems);
-    preflightPersistenceMaterial(request, bindings, problems);
-    preflightPersistenceTarget(request, bindings, problems);
-  }
-
-  private static void preflightFormulaEnvironmentPaths(
-      WorkbookPlan request,
-      ExecutionInputBindings bindings,
-      List<GridGrindProblemDetail.Problem> problems) {
-    for (var externalWorkbook : request.formulaEnvironment().externalWorkbooks()) {
-      try {
-        bindings
-            .requestPathAccess()
-            .materializeRead(
-                externalWorkbook.path(),
-                "formulaEnvironment.externalWorkbooks",
-                "gridgrind-formula-workbook-",
-                ".xlsx");
-      } catch (IOException exception) {
-        addFormulaPathProblem(
-            request,
-            externalWorkbook,
-            SourceBackedPlanResolver.inputFileFailure(
-                externalWorkbook.path(), "formula external workbook", exception),
-            problems);
-      } catch (RuntimeException exception) {
-        addFormulaPathProblem(request, externalWorkbook, exception, problems);
-      }
-    }
-  }
-
-  private static void addFormulaPathProblem(
-      WorkbookPlan request,
-      dev.erst.gridgrind.contract.dto.FormulaExternalWorkbookInput externalWorkbook,
-      Exception exception,
-      List<GridGrindProblemDetail.Problem> problems) {
-    problems.add(
-        GridGrindProblems.fromException(
-            exception,
-            new ProblemContext.ResolveInputs(
-                ExecutionRequestPaths.requestShape(request),
-                InputReference.path("formula external workbook", externalWorkbook.path()))));
-  }
-
-  private static void preflightPersistenceMaterial(
-      WorkbookPlan request,
-      ExecutionInputBindings bindings,
-      List<GridGrindProblemDetail.Problem> problems) {
-    try {
-      ExcelOoxmlPersistenceOptions options =
-          ExecutionRequestPaths.persistenceOptions(request.persistence(), bindings);
-      if (options.signature() instanceof ExcelOoxmlPersistenceSignature.Sign sign) {
-        ExcelOoxmlSigningMaterialSupport.signingMaterial(sign.options());
-      }
-    } catch (Exception exception) {
-      problems.add(
-          GridGrindProblems.fromException(
-              exception,
-              new ProblemContext.PersistWorkbook(
-                  ExecutionRequestPaths.requestShape(request),
-                  ExecutionRequestPaths.persistenceReference(
-                      request, bindings.workingDirectory()))));
-    }
-  }
-
-  private static void preflightPersistenceTarget(
-      WorkbookPlan request,
-      ExecutionInputBindings bindings,
-      List<GridGrindProblemDetail.Problem> problems) {
-    String persistencePath;
-    dev.erst.gridgrind.excel.WorkbookArtifactWriteDisposition disposition;
-    switch (request.persistence()) {
-      case WorkbookPlan.WorkbookPersistence.None _ -> {
-        return;
-      }
-      case WorkbookPlan.WorkbookPersistence.SaveAs saveAs -> {
-        persistencePath = saveAs.path();
-        disposition = ExecutionRequestPaths.writeDisposition(saveAs);
-      }
-      case WorkbookPlan.WorkbookPersistence.Overwrite _ -> {
-        if (!(request.source() instanceof WorkbookPlan.WorkbookSource.ExistingFile existingFile)) {
-          return;
-        }
-        persistencePath = existingFile.path();
-        disposition = dev.erst.gridgrind.excel.WorkbookArtifactWriteDisposition.REPLACE_EXISTING;
-      }
-    }
-    try {
-      bindings.requestPathAccess().prepareOutput(persistencePath, "persistence", disposition);
-    } catch (Exception exception) {
-      problems.add(
-          GridGrindProblems.fromException(
-              exception,
-              new ProblemContext.PersistWorkbook(
-                  ExecutionRequestPaths.requestShape(request),
-                  ExecutionRequestPaths.persistenceReference(
-                      request, bindings.workingDirectory()))));
     }
   }
 

@@ -148,6 +148,39 @@ class RequestSyntaxSupportTest {
   }
 
   @Test
+  void acceptsOneLeadingUtf8BomAndPreservesOriginalByteOffsets() {
+    byte[] body = "{\"value\": truth}".getBytes(StandardCharsets.UTF_8);
+    byte[] withBom = new byte[body.length + 3];
+    withBom[0] = (byte) 0xEF;
+    withBom[1] = (byte) 0xBB;
+    withBom[2] = (byte) 0xBF;
+    System.arraycopy(body, 0, withBom, 3, body.length);
+
+    RequestSyntaxParseResult parsed = TolerantRequestJsonParser.parse(withBom);
+
+    assertEquals(1, parsed.warnings().size());
+    assertEquals(
+        dev.erst.gridgrind.contract.dto.GridGrindWarningCode.UTF8_BOM_IGNORED,
+        parsed.warnings().getFirst().code());
+    assertEquals(
+        new dev.erst.gridgrind.contract.dto.RequestWarningLocation.RequestByteOffset(0),
+        parsed.warnings().getFirst().location());
+    RequestInvalidJson invalid =
+        assertInstanceOf(RequestInvalidJson.class, parsed.problems().getFirst());
+    assertEquals(13L, invalid.byteOffset().orElseThrow());
+    assertFalse(
+        TolerantRequestJsonParser.parse(new byte[] {(byte) 0xEF, (byte) 0xBB, '{'})
+            .warnings()
+            .stream()
+            .findAny()
+            .isPresent());
+    assertFalse(
+        TolerantRequestJsonParser.parse(new byte[] {(byte) 0xEF, '{', '}'}).warnings().stream()
+            .findAny()
+            .isPresent());
+  }
+
+  @Test
   void cursorRecoverySkipsNestedAndQuotedDelimitersWithoutCrossingTheCurrentContainer() {
     RequestSyntaxCursor objectCursor =
         cursorFor("ignored {\"quoted, brace }\": [1, {\"nested\": 2}]}, next");

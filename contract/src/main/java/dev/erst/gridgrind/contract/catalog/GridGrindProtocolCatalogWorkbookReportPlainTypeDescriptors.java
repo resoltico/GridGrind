@@ -3,7 +3,6 @@ package dev.erst.gridgrind.contract.catalog;
 import dev.erst.gridgrind.contract.dto.ArrayFormulaReport;
 import dev.erst.gridgrind.contract.dto.CellAlignmentReport;
 import dev.erst.gridgrind.contract.dto.CellBorderReport;
-import dev.erst.gridgrind.contract.dto.CellBorderSideReport;
 import dev.erst.gridgrind.contract.dto.CellFontReport;
 import dev.erst.gridgrind.contract.dto.CellGradientStopReport;
 import dev.erst.gridgrind.contract.dto.CellProtectionReport;
@@ -66,11 +65,6 @@ final class GridGrindProtocolCatalogWorkbookReportPlainTypeDescriptors {
               CellBorderReport.class,
               "CellBorderReport",
               "Exact four-sided cell-border report."),
-          plainTypeDescriptor(
-              "cellBorderSideReportType",
-              CellBorderSideReport.class,
-              "CellBorderSideReport",
-              "Exact one-sided cell-border report."),
           plainTypeDescriptor(
               "cellProtectionReportType",
               CellProtectionReport.class,

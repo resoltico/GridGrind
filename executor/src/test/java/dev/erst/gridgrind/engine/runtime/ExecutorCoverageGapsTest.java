@@ -66,10 +66,6 @@ class ExecutorCoverageGapsTest {
             new CellSelector.AllUsedInSheet("Budget"),
             new CellSelector.ByAddress("Budget", "A1"),
             new CellSelector.ByAddresses("Budget", List.of("A1", "B2")),
-            new CellSelector.ByQualifiedAddresses(
-                List.of(
-                    new CellSelector.QualifiedAddress("Budget", "A1"),
-                    new CellSelector.QualifiedAddress("Ops", "B2"))),
             new RangeSelector.AllOnSheet("Budget"),
             new RangeSelector.ByRange("Budget", "A1:B2"),
             new RangeSelector.ByRanges("Budget", List.of("A1:B2", "C1:D2")),
@@ -171,10 +167,6 @@ class ExecutorCoverageGapsTest {
         List.of(
             new SheetSelector.ByNames(List.of("Budget", "Ops")),
             new CellSelector.ByAddresses("Budget", List.of("A1", "B2")),
-            new CellSelector.ByQualifiedAddresses(
-                List.of(
-                    new CellSelector.QualifiedAddress("Budget", "A1"),
-                    new CellSelector.QualifiedAddress("Ops", "B2"))),
             new RangeSelector.ByRanges("Budget", List.of("A1:B2", "C1:D2")),
             new TableSelector.ByNames(List.of("BudgetTable", "OpsTable")),
             new PivotTableSelector.ByNames(List.of("BudgetPivot", "OpsPivot")),
@@ -224,9 +216,7 @@ class ExecutorCoverageGapsTest {
     assertEquals(
         2, ExecutionJournalTargetResolver.expandedTargets(expandedSelectors.get(5)).size());
     assertEquals(
-        2, ExecutionJournalTargetResolver.expandedTargets(expandedSelectors.get(6)).size());
-    assertEquals(
-        3, ExecutionJournalTargetResolver.expandedTargets(expandedSelectors.get(7)).size());
+        3, ExecutionJournalTargetResolver.expandedTargets(expandedSelectors.get(6)).size());
     assertEquals(Optional.of("Budget"), ExecutionSelectorDiagnosticFields.sheetNameFor(tableCell));
     assertEquals(
         Optional.empty(),

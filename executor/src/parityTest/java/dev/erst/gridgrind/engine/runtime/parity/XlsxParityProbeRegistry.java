@@ -14,7 +14,6 @@ import dev.erst.gridgrind.contract.source.TextSourceInput;
 import dev.erst.gridgrind.engine.runtime.parity.ParityPlanSupport.PendingMutation;
 import dev.erst.gridgrind.excel.foundation.ExcelBorderStyle;
 import dev.erst.gridgrind.excel.foundation.ExcelConditionalFormattingIconSet;
-import dev.erst.gridgrind.excel.foundation.ExcelConditionalFormattingThresholdType;
 import dev.erst.gridgrind.excel.foundation.ExcelDrawingAnchorBehavior;
 import dev.erst.gridgrind.excel.foundation.ExcelFillPattern;
 import dev.erst.gridgrind.excel.foundation.ExcelOoxmlChainingMode;
@@ -398,14 +397,9 @@ final class XlsxParityProbeRegistry {
                         new ConditionalFormattingRuleInput.ColorScaleRule(
                             false,
                             List.of(
-                                new ConditionalFormattingThresholdInput(
-                                    ExcelConditionalFormattingThresholdType.MIN, null, null),
-                                new ConditionalFormattingThresholdInput(
-                                    ExcelConditionalFormattingThresholdType.PERCENTILE,
-                                    null,
-                                    50.0d),
-                                new ConditionalFormattingThresholdInput(
-                                    ExcelConditionalFormattingThresholdType.MAX, null, null)),
+                                new ConditionalFormattingThresholdInput.Min(),
+                                new ConditionalFormattingThresholdInput.Percentile(50.0d),
+                                new ConditionalFormattingThresholdInput.Max()),
                             List.of(
                                 ColorInput.rgb("#AA2211"),
                                 ColorInput.rgb("#FFDD55"),
@@ -422,10 +416,8 @@ final class XlsxParityProbeRegistry {
                             true,
                             10,
                             90,
-                            new ConditionalFormattingThresholdInput(
-                                ExcelConditionalFormattingThresholdType.MIN, null, null),
-                            new ConditionalFormattingThresholdInput(
-                                ExcelConditionalFormattingThresholdType.MAX, null, null))))));
+                            new ConditionalFormattingThresholdInput.Min(),
+                            new ConditionalFormattingThresholdInput.Max())))));
     PendingMutation iconSet =
         mutate(
             new RangeSelector.ByRange("Advanced", "N2:N5"),
@@ -438,14 +430,9 @@ final class XlsxParityProbeRegistry {
                             true,
                             true,
                             List.of(
-                                new ConditionalFormattingThresholdInput(
-                                    ExcelConditionalFormattingThresholdType.PERCENT, null, 0.0d),
-                                new ConditionalFormattingThresholdInput(
-                                    ExcelConditionalFormattingThresholdType.PERCENT, null, 33.0d),
-                                new ConditionalFormattingThresholdInput(
-                                    ExcelConditionalFormattingThresholdType.PERCENT,
-                                    null,
-                                    67.0d)))))));
+                                new ConditionalFormattingThresholdInput.Percent(0.0d),
+                                new ConditionalFormattingThresholdInput.Percent(33.0d),
+                                new ConditionalFormattingThresholdInput.Percent(67.0d)))))));
     PendingMutation top10 =
         mutate(
             new RangeSelector.ByRange("Advanced", "K2:K5"),

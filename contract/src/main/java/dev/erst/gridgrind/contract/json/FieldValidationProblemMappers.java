@@ -40,6 +40,10 @@ public final class FieldValidationProblemMappers {
     if (violation == ProtocolDefinedNameValidation.Violation.BLANK) {
       return FieldValidationProblem.atField(fieldName, FieldValidationBasicRule.NON_BLANK);
     }
+    if (violation == ProtocolDefinedNameValidation.Violation.TOO_LONG) {
+      return FieldValidationProblem.atField(
+          fieldName, FieldValidationNamingRule.DEFINED_NAME_TOO_LONG);
+    }
     if (violation == ProtocolDefinedNameValidation.Violation.SYNTAX) {
       return FieldValidationProblem.atField(
           fieldName, FieldValidationNamingRule.DEFINED_NAME_SYNTAX);

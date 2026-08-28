@@ -1,6 +1,5 @@
 package dev.erst.gridgrind.excel.validation;
 
-import dev.erst.gridgrind.excel.ExcelComparisonOperatorPoiBridge;
 import dev.erst.gridgrind.excel.ExcelRange;
 import dev.erst.gridgrind.excel.ExcelRangeSelection;
 import java.util.List;
@@ -71,28 +70,28 @@ public final class ExcelDataValidationAuthoringSupport {
           helper.createFormulaListConstraint(formulaList.formula());
       case ExcelDataValidationRule.WholeNumber wholeNumber ->
           helper.createIntegerConstraint(
-              ExcelComparisonOperatorPoiBridge.toPoi(wholeNumber.operator()),
+              ExcelDataValidationComparisonOperatorPoiBridge.toPoi(wholeNumber.operator()),
               wholeNumber.formula1(),
               wholeNumber.formula2().orElse(null));
       case ExcelDataValidationRule.DecimalNumber decimalNumber ->
           helper.createDecimalConstraint(
-              ExcelComparisonOperatorPoiBridge.toPoi(decimalNumber.operator()),
+              ExcelDataValidationComparisonOperatorPoiBridge.toPoi(decimalNumber.operator()),
               decimalNumber.formula1(),
               decimalNumber.formula2().orElse(null));
       case ExcelDataValidationRule.DateRule dateRule ->
           helper.createDateConstraint(
-              ExcelComparisonOperatorPoiBridge.toPoi(dateRule.operator()),
+              ExcelDataValidationComparisonOperatorPoiBridge.toPoi(dateRule.operator()),
               dateRule.formula1(),
               dateRule.formula2().orElse(null),
               null);
       case ExcelDataValidationRule.TimeRule timeRule ->
           helper.createTimeConstraint(
-              ExcelComparisonOperatorPoiBridge.toPoi(timeRule.operator()),
+              ExcelDataValidationComparisonOperatorPoiBridge.toPoi(timeRule.operator()),
               timeRule.formula1(),
               timeRule.formula2().orElse(null));
       case ExcelDataValidationRule.TextLength textLength ->
           helper.createTextLengthConstraint(
-              ExcelComparisonOperatorPoiBridge.toPoi(textLength.operator()),
+              ExcelDataValidationComparisonOperatorPoiBridge.toPoi(textLength.operator()),
               textLength.formula1(),
               textLength.formula2().orElse(null));
       case ExcelDataValidationRule.CustomFormula customFormula ->

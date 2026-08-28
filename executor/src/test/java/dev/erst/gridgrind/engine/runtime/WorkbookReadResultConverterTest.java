@@ -208,7 +208,10 @@ class InspectionResultConverterTest extends DefaultGridGrindRequestExecutorTestS
         assertInstanceOf(
             dev.erst.gridgrind.contract.dto.CellReport.TextReport.class, cells.cells().getFirst());
     assertEquals(CellColorReport.theme(2, 0.25d), style(cell).font().fontColor());
-    assertEquals(CellColorReport.indexed(12), style(cell).border().bottom().color());
+    assertEquals(
+        CellColorReport.indexed(12),
+        assertInstanceOf(CellBorderSideReport.Colored.class, style(cell).border().bottom())
+            .color());
     assertEquals(
         2,
         assertInstanceOf(CellGradientFillReport.Linear.class, fillGradient(style(cell).fill()))

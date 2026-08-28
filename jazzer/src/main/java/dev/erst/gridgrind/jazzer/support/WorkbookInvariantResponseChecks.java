@@ -89,18 +89,13 @@ final class WorkbookInvariantResponseChecks {
     require(failure.problem().resolution() != null, "problem resolution must not be null");
     require(failure.problem().context() != null, "problem context must not be null");
     require(failure.problem().causes() != null, "problem causes must not be null");
-    if (failure.problem().assertionFailure().isPresent()) {
-      requireAssertionFailureShape(failure.problem().assertionFailure().orElseThrow());
+    if (failure.problem().code()
+        == dev.erst.gridgrind.contract.dto.GridGrindProblemCode.ASSERTION_FAILED) {
       require(
-          failure.problem().code()
-              == dev.erst.gridgrind.contract.dto.GridGrindProblemCode.ASSERTION_FAILED,
-          "only ASSERTION_FAILED problems may carry assertionFailure details");
-      return;
+          failure.assertions().stream()
+              .anyMatch(result -> result instanceof AssertionResult.Failed),
+          "ASSERTION_FAILED problems must carry failed assertion evidence in assertions[]");
     }
-    require(
-        failure.problem().code()
-            != dev.erst.gridgrind.contract.dto.GridGrindProblemCode.ASSERTION_FAILED,
-        "ASSERTION_FAILED problems must carry assertionFailure details");
   }
 
   private static void requirePersistenceMatchesRequest(
@@ -188,6 +183,8 @@ final class WorkbookInvariantResponseChecks {
         requireNonBlank(requestPath.path(), "warning request path");
         requireNonBlank(requestPath.pathRole(), "warning request path role");
       }
+      case RequestWarningLocation.RequestByteOffset requestByteOffset ->
+          require(requestByteOffset.byteOffset() >= 0, "warning byteOffset must not be negative");
       case RequestWarningLocation.FormulaCell formulaCell -> {
         requireNonBlank(formulaCell.sheetName(), "warning formula sheetName");
         requireNonBlank(formulaCell.address(), "warning formula address");
@@ -212,6 +209,24 @@ final class WorkbookInvariantResponseChecks {
     require(assertionResult != null, "assertion result must not be null");
     requireNonBlank(assertionResult.stepId(), "assertion stepId");
     requireNonBlank(assertionResult.assertionType(), "assertionType");
+    switch (assertionResult) {
+      case AssertionResult.Passed passed ->
+          require(
+              passed.outcome() == dev.erst.gridgrind.contract.assertion.AssertionOutcome.PASSED,
+              "passed assertion result must report PASSED");
+      case AssertionResult.Failed failed -> {
+        require(
+            failed.outcome() == dev.erst.gridgrind.contract.assertion.AssertionOutcome.FAILED,
+            "failed assertion result must report FAILED");
+        requireAssertionFailureShape(failed.failure());
+        require(
+            failed.stepId().equals(failed.failure().stepId()),
+            "failed assertion result stepId must match failure evidence");
+        require(
+            failed.assertionType().equals(failed.failure().assertionType()),
+            "failed assertion result type must match failure evidence");
+      }
+    }
   }
 
   private static void requireAssertionFailureShape(AssertionFailure assertionFailure) {

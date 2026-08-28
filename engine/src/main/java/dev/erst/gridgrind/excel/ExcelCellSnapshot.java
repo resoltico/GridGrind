@@ -1,6 +1,7 @@
 package dev.erst.gridgrind.excel;
 
 import dev.erst.gridgrind.excel.foundation.ExcelReportedCellErrorLiteral;
+import java.util.Optional;
 import org.jspecify.annotations.Nullable;
 
 /** Immutable snapshot of a cell after formatting and, when needed, formula evaluation. */
@@ -111,7 +112,7 @@ public sealed interface ExcelCellSnapshot {
       ExcelCellStyleSnapshot style,
       ExcelCellMetadataSnapshot metadata,
       String formula,
-      ExcelCellSnapshot evaluation)
+      Optional<ExcelCellSnapshot> evaluation)
       implements ExcelCellSnapshot {
     public FormulaSnapshot {
       java.util.Objects.requireNonNull(address, "address must not be null");
@@ -119,8 +120,8 @@ public sealed interface ExcelCellSnapshot {
       java.util.Objects.requireNonNull(style, "style must not be null");
       java.util.Objects.requireNonNull(metadata, "metadata must not be null");
       java.util.Objects.requireNonNull(formula, "formula must not be null");
-      java.util.Objects.requireNonNull(evaluation, "evaluation must not be null");
-      if (evaluation instanceof FormulaSnapshot) {
+      evaluation = java.util.Objects.requireNonNullElseGet(evaluation, Optional::empty);
+      if (evaluation.isPresent() && evaluation.orElseThrow() instanceof FormulaSnapshot) {
         throw new IllegalArgumentException("formula evaluation must not itself be FORMULA");
       }
     }

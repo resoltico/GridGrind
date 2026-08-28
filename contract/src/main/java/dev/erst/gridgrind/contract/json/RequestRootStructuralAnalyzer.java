@@ -34,7 +34,8 @@ final class RequestRootStructuralAnalyzer {
           problems,
           bindingFailures,
           diagnosticRedactor,
-          Optional.of(parsed.root()));
+          Optional.of(parsed.root()),
+          parsed.warnings());
     }
 
     RequestObjectMembers.Index members = RequestObjectMembers.index(root);
@@ -102,7 +103,8 @@ final class RequestRootStructuralAnalyzer {
         problems,
         bindingFailures,
         diagnosticRedactor,
-        Optional.of(parsed.root()));
+        Optional.of(parsed.root()),
+        parsed.warnings());
   }
 
   private static void validateRootScalars(

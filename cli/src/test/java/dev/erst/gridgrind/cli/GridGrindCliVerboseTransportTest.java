@@ -2,7 +2,6 @@ package dev.erst.gridgrind.cli;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -10,7 +9,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import dev.erst.gridgrind.cli.discovery.CliTransportNotice;
 import dev.erst.gridgrind.cli.discovery.GridGrindCliJson;
 import dev.erst.gridgrind.contract.dto.ExecutionProgressEvent;
-import dev.erst.gridgrind.contract.dto.WorkbookResult;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -43,7 +41,6 @@ class GridGrindCliVerboseTransportTest extends GridGrindCliTestSupport {
                 stdout,
                 stderr);
 
-    assertInstanceOf(WorkbookResult.Success.class, response(stdout, stderr));
     String stderrPayload = stderr.toString(StandardCharsets.UTF_8);
     java.util.List<String> stderrLines = stderrPayload.lines().toList();
     CliTransportNotice transportNotice =
@@ -51,23 +48,10 @@ class GridGrindCliVerboseTransportTest extends GridGrindCliTestSupport {
             stderrLines.getLast().getBytes(StandardCharsets.UTF_8), CliTransportNotice.class);
 
     assertEquals(1, exitCode);
-    assertFalse(
-        stderrLines.isEmpty(), "VERBOSE execution must emit progress before the fallback notice");
-    assertTrue(
-        stderrLines.subList(0, stderrLines.size() - 1).stream()
-            .map(
-                line -> {
-                  try {
-                    return GridGrindCliJson.readBytes(
-                        line.getBytes(StandardCharsets.UTF_8), ExecutionProgressEvent.class);
-                  } catch (IOException exception) {
-                    throw new java.io.UncheckedIOException(exception);
-                  }
-                })
-            .allMatch(event -> event.status() != null && !event.timestamp().isBlank()),
-        "every progress line must parse as a compact structured event");
-    assertFalse(stdout.toString(StandardCharsets.UTF_8).contains("\"events\""));
-    assertEquals(CliTransportNotice.Destination.STDOUT, transportNotice.wroteTo());
+    assertEquals(1, stderrLines.size());
+    assertEquals("", stdout.toString(StandardCharsets.UTF_8));
+    assertEquals(CliTransportNotice.Destination.NOT_DELIVERED, transportNotice.wroteTo());
+    assertEquals(CliTransportNotice.Reason.RESPONSE_PATH_DIRECTORY, transportNotice.reason());
     assertEquals(
         java.util.Optional.of(responseDirectory.toAbsolutePath().toString()),
         transportNotice.responsePath());

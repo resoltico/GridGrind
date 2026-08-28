@@ -25,7 +25,6 @@ import dev.erst.gridgrind.contract.query.InspectionResult;
 import dev.erst.gridgrind.contract.query.WorkbookInspectionResult;
 import dev.erst.gridgrind.excel.foundation.AnalysisFindingCode;
 import dev.erst.gridgrind.excel.foundation.AnalysisSeverity;
-import dev.erst.gridgrind.excel.foundation.ExcelBorderStyle;
 import dev.erst.gridgrind.excel.foundation.ExcelChartAxisCrosses;
 import dev.erst.gridgrind.excel.foundation.ExcelChartAxisKind;
 import dev.erst.gridgrind.excel.foundation.ExcelChartAxisPosition;
@@ -46,6 +45,29 @@ import org.junit.jupiter.api.Test;
 
 /** Exhaustive assertion-type coverage for the canonical Phase-4 verification contract. */
 class AssertionCoverageTest {
+  @Test
+  void assertionResultsExposeTaggedEvidenceAndRejectMismatchedIdentity() {
+    AssertionFailure failure =
+        new AssertionFailure(
+            "assert-cell",
+            "EXPECT_CELL_VALUE",
+            new dev.erst.gridgrind.contract.selector.CellSelector.ByAddress("Budget", "A1"),
+            new CellAssertion.CellValue(new CellScalarValue.Text("expected")),
+            List.of());
+    AssertionResult.Passed passed = new AssertionResult.Passed("assert-pass", "EXPECT_CELL_VALUE");
+    AssertionResult.Failed failed =
+        new AssertionResult.Failed("assert-cell", "EXPECT_CELL_VALUE", failure);
+    assertEquals(AssertionOutcome.PASSED, passed.outcome());
+    assertEquals(AssertionOutcome.FAILED, failed.outcome());
+    assertEquals(failure, failed.failure());
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new AssertionResult.Failed("other", "EXPECT_CELL_VALUE", failure));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new AssertionResult.Failed("assert-cell", "OTHER", failure));
+  }
+
   @Test
   void exposesStableDiscriminatorsAcrossEveryAssertionLeaf() {
     CellStyleReport style = style();
@@ -250,7 +272,7 @@ class AssertionCoverageTest {
   }
 
   private static CellStyleReport style() {
-    CellBorderSideReport emptySide = new CellBorderSideReport(ExcelBorderStyle.NONE, null);
+    CellBorderSideReport emptySide = new CellBorderSideReport.None();
     return new CellStyleReport(
         "General",
         new CellAlignmentReport(

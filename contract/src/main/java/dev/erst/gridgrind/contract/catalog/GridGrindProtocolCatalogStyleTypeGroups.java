@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.contract.catalog;
 
+import dev.erst.gridgrind.contract.dto.CellBorderSideReport;
 import dev.erst.gridgrind.contract.dto.CellColorReport;
 import dev.erst.gridgrind.contract.dto.CellFillInput;
 import dev.erst.gridgrind.contract.dto.CellFillReport;
@@ -86,6 +87,24 @@ final class GridGrindProtocolCatalogStyleTypeGroups {
                   CellColorReport.Indexed.class,
                   "INDEXED",
                   "Read one indexed-palette workbook color plus optional tint metadata.")));
+
+  static final CatalogNestedTypeDescriptor CELL_BORDER_SIDE_REPORT_TYPES =
+      CatalogTypeEntryFactory.nestedTypeGroup(
+          "cellBorderSideReportTypes",
+          CellBorderSideReport.class,
+          List.of(
+              CatalogTypeEntryFactory.descriptor(
+                  CellBorderSideReport.None.class,
+                  "NONE",
+                  "Read one border side with no visible border."),
+              CatalogTypeEntryFactory.descriptor(
+                  CellBorderSideReport.DefaultColor.class,
+                  "DEFAULT_COLOR",
+                  "Read one visible border side using Excel's implicit default color."),
+              CatalogTypeEntryFactory.descriptor(
+                  CellBorderSideReport.Colored.class,
+                  "COLORED",
+                  "Read one visible border side with an explicit color reference.")));
 
   static final CatalogNestedTypeDescriptor CELL_GRADIENT_FILL_REPORT_TYPES =
       CatalogTypeEntryFactory.nestedTypeGroup(

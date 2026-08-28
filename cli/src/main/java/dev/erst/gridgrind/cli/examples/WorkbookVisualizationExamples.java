@@ -19,9 +19,6 @@ import java.util.Optional;
 
 /** Generated examples for visual workbook surfaces such as signatures, charts, and pivots. */
 final class WorkbookVisualizationExamples {
-  private static final String ONE_PIXEL_PNG_BASE64 =
-      "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+X2kQAAAAASUVORK5CYII=";
-
   private WorkbookVisualizationExamples() {}
 
   static WorkbookPlan signatureLinePlan(ExamplePathLayout paths) {
@@ -50,7 +47,8 @@ final class WorkbookVisualizationExamples {
                     Optional.of(
                         new PictureDataInput(
                             ExcelPictureFormat.PNG,
-                            BinarySourceInput.inlineBase64(ONE_PIXEL_PNG_BASE64)))))),
+                            BinarySourceInput.inlineBase64(
+                                TaskStarterRecipeSupport.onePixelPngBase64())))))),
         ExampleSteps.read(
             "step-03-read-drawing-objects",
             new dev.erst.gridgrind.contract.selector.DrawingObjectSelector.AllOnSheet("Approvals"),

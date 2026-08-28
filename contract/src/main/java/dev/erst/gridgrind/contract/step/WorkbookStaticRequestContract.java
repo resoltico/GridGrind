@@ -16,6 +16,7 @@ public final class WorkbookStaticRequestContract {
     List<WorkbookStaticViolation> violations = new ArrayList<>();
     violations.addAll(WorkbookStaticTargetValidation.validate(request.steps()));
     violations.addAll(WorkbookStaticExecutionValidation.validate(request));
+    violations.addAll(WorkbookStaticFormulaColumnValidation.validate(request));
     violations.addAll(WorkbookStaticAssertionValidation.validate(request));
     violations.addAll(WorkbookStaticPersistenceValidation.validate(request));
     return List.copyOf(violations);
@@ -31,5 +32,12 @@ public final class WorkbookStaticRequestContract {
         java.util.stream.IntStream.range(0, plan.steps().size())
             .mapToObj(index -> new WorkbookStaticStep(index, Optional.of(plan.steps().get(index))))
             .toList());
+  }
+
+  /** Validates formula and column-edit ordering after an existing source has been inspected. */
+  public static List<WorkbookStaticViolation> validateKnownFormulaPresence(
+      WorkbookPlan plan, boolean sourceContainsFormula) {
+    return WorkbookStaticFormulaColumnValidation.validate(
+        from(Objects.requireNonNull(plan, "plan must not be null")).steps(), sourceContainsFormula);
   }
 }

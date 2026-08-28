@@ -486,7 +486,7 @@ class WorkbookCommandExecutorTest {
       byte[] pngBytes =
           java.util.Base64.getDecoder()
               .decode(
-                  "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+X2kQAAAAASUVORK5CYII=");
+                  "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVQI12P4//8/AAX+Av7czFnnAAAAAElFTkSuQmCC");
 
       executor.apply(
           workbook,

@@ -45,11 +45,16 @@ final class ExecutionWorkbookSupport {
         } catch (java.nio.file.NoSuchFileException exception) {
           throw new dev.erst.gridgrind.excel.WorkbookNotFoundException(sourcePath, exception);
         }
-        yield ExcelWorkbooks.open(
-            materializedSource,
-            FormulaEnvironmentConverter.toExcelFormulaEnvironment(formulaEnvironment, bindings),
-            OoxmlPackageSecurityConverter.toExcelOpenOptions(existingFile.security().orElse(null)),
-            tempFileFactory::createTempFile);
+        try {
+          yield ExcelWorkbooks.open(
+              materializedSource,
+              FormulaEnvironmentConverter.toExcelFormulaEnvironment(formulaEnvironment, bindings),
+              OoxmlPackageSecurityConverter.toExcelOpenOptions(
+                  existingFile.security().orElse(null)),
+              tempFileFactory::createTempFile);
+        } catch (dev.erst.gridgrind.excel.WorkbookNotOpenableException exception) {
+          throw new dev.erst.gridgrind.excel.WorkbookNotOpenableException(sourcePath, exception);
+        }
       }
     };
   }

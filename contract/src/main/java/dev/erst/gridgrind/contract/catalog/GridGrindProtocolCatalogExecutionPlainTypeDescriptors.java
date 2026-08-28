@@ -5,6 +5,7 @@ import dev.erst.gridgrind.contract.dto.CalculationReport;
 import dev.erst.gridgrind.contract.dto.ExecutionJournal;
 import dev.erst.gridgrind.contract.dto.ExecutionJournalInput;
 import dev.erst.gridgrind.contract.dto.ExecutionPolicyInput;
+import dev.erst.gridgrind.contract.dto.FormulaCellTarget;
 import dev.erst.gridgrind.contract.dto.FormulaEnvironmentInput;
 import dev.erst.gridgrind.contract.dto.FormulaExternalWorkbookInput;
 import dev.erst.gridgrind.contract.dto.FormulaUdfFunctionInput;
@@ -104,6 +105,11 @@ final class GridGrindProtocolCatalogExecutionPlainTypeDescriptors {
               CalculationReport.Summary.class,
               "CalculationPreflightSummary",
               "Aggregate counts for evaluable, unevaluable, and unparseable formulas."),
+          plainTypeDescriptor(
+              "formulaCellTargetType",
+              FormulaCellTarget.class,
+              "FormulaCellTarget",
+              "One exact workbook-qualified formula cell targeted by calculation policy."),
           plainTypeDescriptor(
               "formulaCapabilityType",
               CalculationReport.FormulaCapability.class,

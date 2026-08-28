@@ -6,17 +6,24 @@ import java.util.Objects;
 /** Reads reusable introspection facts from one sheet wrapper. */
 final class ExcelSheetIntrospector {
   /** Returns exact cell snapshots for the provided ordered addresses on one sheet. */
-  List<ExcelCellSnapshot> cells(ExcelSheet sheet, List<String> addresses) {
+  List<ExcelCellSnapshot> cells(
+      ExcelSheet sheet, List<String> addresses, ExcelCellReadProjection projection) {
     Objects.requireNonNull(sheet, "sheet must not be null");
     Objects.requireNonNull(addresses, "addresses must not be null");
-    return sheet.cells().snapshotCells(addresses);
+    Objects.requireNonNull(projection, "projection must not be null");
+    return sheet.cells().snapshotCells(addresses, projection);
   }
 
   /** Returns a rectangular window of cell snapshots anchored at one top-left address. */
   WorkbookSheetResult.Window window(
-      ExcelSheet sheet, String topLeftAddress, int rowCount, int columnCount) {
+      ExcelSheet sheet,
+      String topLeftAddress,
+      int rowCount,
+      int columnCount,
+      ExcelCellReadProjection projection) {
     Objects.requireNonNull(sheet, "sheet must not be null");
-    return sheet.cells().window(topLeftAddress, rowCount, columnCount);
+    Objects.requireNonNull(projection, "projection must not be null");
+    return sheet.cells().window(topLeftAddress, rowCount, columnCount, projection);
   }
 
   /** Returns every merged region currently defined on the sheet. */

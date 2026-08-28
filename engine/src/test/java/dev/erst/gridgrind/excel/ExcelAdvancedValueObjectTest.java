@@ -703,6 +703,16 @@ class ExcelAdvancedValueObjectTest {
     assertThrows(
         IllegalArgumentException.class,
         () ->
+            new ExcelConditionalFormattingRule.DataBarRule(
+                ExcelColor.rgb("#102030"), false, 101, 101, min, max, false));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new ExcelConditionalFormattingRule.DataBarRule(
+                ExcelColor.rgb("#102030"), false, 0, 101, min, max, false));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
             new ExcelConditionalFormattingRule.IconSetRule(
                 ExcelConditionalFormattingIconSet.GYR_3_TRAFFIC_LIGHTS,
                 false,

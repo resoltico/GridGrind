@@ -24,7 +24,6 @@ import dev.erst.gridgrind.contract.query.SheetInspectionResult;
 import dev.erst.gridgrind.contract.query.SheetIntrospectionQuery;
 import dev.erst.gridgrind.contract.selector.RangeSelector;
 import dev.erst.gridgrind.contract.step.InspectionStep;
-import dev.erst.gridgrind.excel.foundation.ExcelBorderStyle;
 import dev.erst.gridgrind.excel.foundation.ExcelFillPattern;
 import dev.erst.gridgrind.excel.foundation.ExcelHorizontalAlignment;
 import dev.erst.gridgrind.excel.foundation.ExcelVerticalAlignment;
@@ -136,7 +135,7 @@ class WorkbookInvariantM3CoverageTest {
   }
 
   private static CellStyleReport style() {
-    CellBorderSideReport emptySide = new CellBorderSideReport(ExcelBorderStyle.NONE, null);
+    CellBorderSideReport emptySide = new CellBorderSideReport.None();
     return new CellStyleReport(
         "General",
         new CellAlignmentReport(

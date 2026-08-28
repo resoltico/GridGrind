@@ -16,7 +16,6 @@ import dev.erst.gridgrind.excel.foundation.ExcelChartDisplayBlanksAs;
 import dev.erst.gridgrind.excel.foundation.ExcelChartGrouping;
 import dev.erst.gridgrind.excel.foundation.ExcelChartLegendPosition;
 import dev.erst.gridgrind.excel.foundation.ExcelConditionalFormattingIconSet;
-import dev.erst.gridgrind.excel.foundation.ExcelConditionalFormattingThresholdType;
 import dev.erst.gridgrind.excel.foundation.ExcelDrawingAnchorBehavior;
 import dev.erst.gridgrind.excel.foundation.ExcelFillPattern;
 import dev.erst.gridgrind.excel.foundation.ExcelIgnoredErrorType;
@@ -227,7 +226,7 @@ class AdvancedMutationProtocolTypesTest {
         new PictureDataInput(
             ExcelPictureFormat.PNG,
             binary(
-                "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+X2kQAAAAASUVORK5CYII="));
+                "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVQI12P4//8/AAX+Av7czFnnAAAAAElFTkSuQmCC"));
     PictureInput picture =
         new PictureInput("OpsPicture", pictureData, anchor, Optional.of(text("Queue preview")));
     ShapeInput.SimpleShape shape =
@@ -755,40 +754,33 @@ class AdvancedMutationProtocolTypesTest {
     assertThrows(
         IllegalArgumentException.class, () -> ColorInput.rgb("#AABBCC", Double.NEGATIVE_INFINITY));
 
-    ConditionalFormattingThresholdInput threshold =
-        new ConditionalFormattingThresholdInput(
-            ExcelConditionalFormattingThresholdType.PERCENTILE, "A1*2", 90.0d);
-    assertEquals(ExcelConditionalFormattingThresholdType.PERCENTILE, threshold.type());
+    ConditionalFormattingThresholdInput.Formula threshold =
+        new ConditionalFormattingThresholdInput.Formula("A1*2");
     assertEquals("A1*2", threshold.formula());
-    assertEquals(90.0d, threshold.value());
-    assertThrows(
-        NullPointerException.class,
-        () -> new ConditionalFormattingThresholdInput(null, null, null));
+    assertEquals(90.0d, new ConditionalFormattingThresholdInput.Percentile(90.0d).value());
     assertThrows(
         IllegalArgumentException.class,
-        () ->
-            new ConditionalFormattingThresholdInput(
-                ExcelConditionalFormattingThresholdType.NUMBER, " ", null));
+        () -> new ConditionalFormattingThresholdInput.Formula(null));
+    assertThrows(
+        IllegalArgumentException.class, () -> new ConditionalFormattingThresholdInput.Formula(" "));
     assertThrows(
         IllegalArgumentException.class,
-        () ->
-            new ConditionalFormattingThresholdInput(
-                ExcelConditionalFormattingThresholdType.NUMBER, null, Double.NEGATIVE_INFINITY));
+        () -> new ConditionalFormattingThresholdInput.Numeric(Double.NEGATIVE_INFINITY));
     assertThrows(
         IllegalArgumentException.class,
-        () ->
-            new ConditionalFormattingThresholdInput(
-                ExcelConditionalFormattingThresholdType.FORMULA,
-                "DDE(\"cmd\",\"/C calc\",\"\")",
-                null));
+        () -> new ConditionalFormattingThresholdInput.Percent(-0.1d));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new ConditionalFormattingThresholdInput.Percentile(100.1d));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new ConditionalFormattingThresholdInput.Formula("DDE(\"cmd\",\"/C calc\",\"\")"));
     assertThrows(
         IllegalArgumentException.class,
         () ->
             new ConditionalFormattingRuleInput.ColorScaleRule(
                 false,
-                List.of(
-                    new ConditionalFormattingThresholdInput(
-                        ExcelConditionalFormattingThresholdType.MIN, null, null)),
+                List.of(new ConditionalFormattingThresholdInput.Min()),
                 List.of(ColorInput.rgb("#112233"))));
     assertThrows(
         IllegalArgumentException.class,
@@ -796,10 +788,8 @@ class AdvancedMutationProtocolTypesTest {
             new ConditionalFormattingRuleInput.ColorScaleRule(
                 false,
                 List.of(
-                    new ConditionalFormattingThresholdInput(
-                        ExcelConditionalFormattingThresholdType.MIN, null, null),
-                    new ConditionalFormattingThresholdInput(
-                        ExcelConditionalFormattingThresholdType.MAX, null, null)),
+                    new ConditionalFormattingThresholdInput.Min(),
+                    new ConditionalFormattingThresholdInput.Max()),
                 List.of(ColorInput.rgb("#112233"))));
     assertThrows(
         IllegalArgumentException.class,
@@ -810,10 +800,8 @@ class AdvancedMutationProtocolTypesTest {
                 false,
                 -1,
                 90,
-                new ConditionalFormattingThresholdInput(
-                    ExcelConditionalFormattingThresholdType.NUMBER, null, 0.0d),
-                new ConditionalFormattingThresholdInput(
-                    ExcelConditionalFormattingThresholdType.NUMBER, null, 1.0d)));
+                new ConditionalFormattingThresholdInput.Numeric(0.0d),
+                new ConditionalFormattingThresholdInput.Numeric(1.0d)));
     assertThrows(
         IllegalArgumentException.class,
         () ->
@@ -823,10 +811,8 @@ class AdvancedMutationProtocolTypesTest {
                 false,
                 0,
                 -1,
-                new ConditionalFormattingThresholdInput(
-                    ExcelConditionalFormattingThresholdType.NUMBER, null, 0.0d),
-                new ConditionalFormattingThresholdInput(
-                    ExcelConditionalFormattingThresholdType.NUMBER, null, 1.0d)));
+                new ConditionalFormattingThresholdInput.Numeric(0.0d),
+                new ConditionalFormattingThresholdInput.Numeric(1.0d)));
     assertThrows(
         IllegalArgumentException.class,
         () ->
@@ -836,10 +822,8 @@ class AdvancedMutationProtocolTypesTest {
                 false,
                 10,
                 5,
-                new ConditionalFormattingThresholdInput(
-                    ExcelConditionalFormattingThresholdType.NUMBER, null, 0.0d),
-                new ConditionalFormattingThresholdInput(
-                    ExcelConditionalFormattingThresholdType.NUMBER, null, 1.0d)));
+                new ConditionalFormattingThresholdInput.Numeric(0.0d),
+                new ConditionalFormattingThresholdInput.Numeric(1.0d)));
     assertThrows(
         NullPointerException.class,
         () -> new ConditionalFormattingRuleInput.IconSetRule(false, null, false, false, List.of()));
@@ -852,10 +836,8 @@ class AdvancedMutationProtocolTypesTest {
                 false,
                 false,
                 List.of(
-                    new ConditionalFormattingThresholdInput(
-                        ExcelConditionalFormattingThresholdType.PERCENT, null, 0.0d),
-                    new ConditionalFormattingThresholdInput(
-                        ExcelConditionalFormattingThresholdType.PERCENT, null, 50.0d))));
+                    new ConditionalFormattingThresholdInput.Percent(0.0d),
+                    new ConditionalFormattingThresholdInput.Percent(50.0d))));
     assertThrows(
         NullPointerException.class,
         () -> new ConditionalFormattingRuleInput.Top10Rule(false, 1, true, false, null));

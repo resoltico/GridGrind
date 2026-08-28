@@ -86,9 +86,22 @@ public final class ExcelSheetCells {
     return readSupport.snapshotCell(address);
   }
 
+  /** Captures one cell snapshot while evaluating formulas only when the projection needs it. */
+  public ExcelCellSnapshot snapshotCell(String address, ExcelCellReadProjection projection) {
+    return readSupport.snapshotCell(address, projection);
+  }
+
   /** Captures exact snapshots for the provided ordered A1 addresses. */
   public List<ExcelCellSnapshot> snapshotCells(List<String> addresses) {
     return readSupport.snapshotCells(addresses);
+  }
+
+  /**
+   * Captures ordered cell snapshots while evaluating formulas only when the projection needs it.
+   */
+  public List<ExcelCellSnapshot> snapshotCells(
+      List<String> addresses, ExcelCellReadProjection projection) {
+    return readSupport.snapshotCells(addresses, projection);
   }
 
   /** Returns a compact preview of the top-left portion of the sheet. */
@@ -101,9 +114,12 @@ public final class ExcelSheetCells {
     return readSupport.window(topLeftAddress, rowCount, columnCount);
   }
 
-  /** Returns every formula cell currently present on the sheet. */
-  public List<ExcelCellSnapshot.FormulaSnapshot> formulaCells() {
-    return readSupport.formulaCells();
+  /**
+   * Captures one rectangular window while evaluating formulas only when the projection needs it.
+   */
+  public WorkbookSheetResult.Window window(
+      String topLeftAddress, int rowCount, int columnCount, ExcelCellReadProjection projection) {
+    return readSupport.window(topLeftAddress, rowCount, columnCount, projection);
   }
 
   /** Returns factual array-formula groups on this sheet. */

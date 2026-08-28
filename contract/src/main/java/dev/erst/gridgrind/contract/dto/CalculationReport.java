@@ -3,7 +3,6 @@ package dev.erst.gridgrind.contract.dto;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import dev.erst.gridgrind.contract.selector.CellSelector;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -87,7 +86,7 @@ public record CalculationReport(
 
   /** One classified formula capability entry returned by calculation preflight. */
   public record FormulaCapability(
-      CellSelector.QualifiedAddress cell,
+      FormulaCellTarget cell,
       String formula,
       FormulaCapabilityKind capability,
       @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<GridGrindProblemCode> problemCode,

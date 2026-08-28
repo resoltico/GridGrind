@@ -53,7 +53,7 @@ import org.junit.jupiter.api.Test;
 /** Regression tests for the `.xlsx` round-trip verifier itself. */
 class XlsxRoundTripVerifierTest {
   private static final String PNG_PIXEL_BASE64 =
-      "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+X2kQAAAAASUVORK5CYII=";
+      "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVQI12P4//8/AAX+Av7czFnnAAAAAElFTkSuQmCC";
 
   @Test
   void requireRoundTripReadableAcceptsGradientFills() {

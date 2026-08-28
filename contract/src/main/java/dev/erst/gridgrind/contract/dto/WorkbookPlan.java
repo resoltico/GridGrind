@@ -319,7 +319,7 @@ public record WorkbookPlan(
 
   static void requireXlsxWorkbookPath(String path) { // LIM-002
     requireNonBlank(path, "path");
-    if (!path.toLowerCase(Locale.ROOT).endsWith(".xlsx")) {
+    if (!path.toLowerCase(Locale.ROOT).endsWith(ProtocolConstraintValues.WORKBOOK_PATH_SUFFIX)) {
       // Preserve the local operand path so request decoding can qualify it precisely against
       // source.path, persistence.path, and nested formula-environment path owners.
       throw new InvalidRequestException(

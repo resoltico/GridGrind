@@ -21,9 +21,6 @@ import dev.erst.gridgrind.excel.foundation.ExcelPictureFormat;
 
 /** Generated examples for repository-backed assets, external payloads, and package workflows. */
 final class WorkbookIntegrationExamples {
-  private static final String ONE_PIXEL_PNG_BASE64 =
-      "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+X2kQAAAAASUVORK5CYII=";
-
   private WorkbookIntegrationExamples() {}
 
   static WorkbookPlan sourceBackedInputPlan(ExamplePathLayout paths) {
@@ -68,7 +65,8 @@ final class WorkbookIntegrationExamples {
                     BinarySourceInput.file(paths.asset("source-backed-input-assets/payload.bin")),
                     new PictureDataInput(
                         ExcelPictureFormat.PNG,
-                        BinarySourceInput.inlineBase64(ONE_PIXEL_PNG_BASE64)),
+                        BinarySourceInput.inlineBase64(
+                            TaskStarterRecipeSupport.onePixelPngBase64())),
                     ExampleDrawingAnchors.anchor(3, 0, 5, 4)))),
         ExampleSteps.read(
             "read-cells",

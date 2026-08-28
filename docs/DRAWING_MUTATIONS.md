@@ -1,6 +1,6 @@
 ---
 afad: "4.0"
-version: "0.73.0"
+version: "0.74.0"
 domain: DRAWING_MUTATIONS
 updated: "2026-05-16"
 route:
@@ -13,6 +13,10 @@ route:
 **Purpose**: Detailed mutation reference for pictures, shapes, embedded objects, charts,
 signature lines, drawing anchors, and drawing deletion.
 **Landing page**: [CELL_AND_DRAWING_MUTATIONS.md](./CELL_AND_DRAWING_MUTATIONS.md)
+
+For `SET_HYPERLINK` targets of type `FILE`, relative paths are intentionally resolved against the
+saved workbook's directory when the workbook is later opened or analysed. They are not resolved
+against the request file or execution root.
 **Companion references**: [REQUEST_AND_EXECUTION_REFERENCE.md](./REQUEST_AND_EXECUTION_REFERENCE.md),
 [CELL_VALUE_MUTATIONS.md](./CELL_VALUE_MUTATIONS.md),
 [LINK_AND_COMMENT_MUTATIONS.md](./LINK_AND_COMMENT_MUTATIONS.md), and
@@ -38,7 +42,7 @@ currently accept only `anchor.type = "TWO_CELL"` with zero-based `from` and `to`
         "format": "PNG",
         "source": {
           "type": "INLINE_BASE64",
-          "base64Data": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+X2kQAAAAASUVORK5CYII="
+          "base64Data": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVQI12P4//8/AAX+Av7czFnnAAAAAElFTkSuQmCC"
         }
       },
       "anchor": {
@@ -229,7 +233,7 @@ image.
         "format": "PNG",
         "source": {
           "type": "INLINE_BASE64",
-          "base64Data": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+X2kQAAAAASUVORK5CYII="
+          "base64Data": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVQI12P4//8/AAX+Av7czFnnAAAAAElFTkSuQmCC"
         }
       },
       "anchor": {
@@ -482,7 +486,7 @@ optional plain-signature preview image.
         "format": "PNG",
         "source": {
           "type": "INLINE_BASE64",
-          "base64Data": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+X2kQAAAAASUVORK5CYII="
+          "base64Data": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVQI12P4//8/AAX+Av7czFnnAAAAAElFTkSuQmCC"
         }
       }
     }

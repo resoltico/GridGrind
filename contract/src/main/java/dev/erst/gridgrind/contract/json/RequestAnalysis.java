@@ -1,6 +1,7 @@
 package dev.erst.gridgrind.contract.json;
 
 import dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces.JsonLocation;
+import dev.erst.gridgrind.contract.dto.RequestWarning;
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
 import java.util.List;
 import java.util.Objects;
@@ -14,6 +15,7 @@ public final class RequestAnalysis {
   private final Optional<WorkbookPlan> completePlan;
   private final RequestDiagnosticRedactor diagnosticRedactor;
   private final Optional<RequestJsonNode> rawRoot;
+  private final List<RequestWarning> warnings;
 
   /**
    * Creates a manually assembled analysis for focused callers that do not retain a raw parse tree.
@@ -28,7 +30,8 @@ public final class RequestAnalysis {
         structuralProblems,
         List.of(),
         RequestDiagnosticRedactor.empty(),
-        Optional.empty());
+        Optional.empty(),
+        List.of());
   }
 
   RequestAnalysis(
@@ -36,7 +39,8 @@ public final class RequestAnalysis {
       List<RequestStructuralProblem> structuralProblems,
       List<RequestBindingFailure> bindingFailures,
       RequestDiagnosticRedactor diagnosticRedactor,
-      Optional<RequestJsonNode> rawRoot) {
+      Optional<RequestJsonNode> rawRoot,
+      List<RequestWarning> warnings) {
     this.boundFragments = Objects.requireNonNull(boundFragments, "boundFragments must not be null");
     this.structuralProblems =
         RequestStructuralProblemOrder.order(
@@ -46,6 +50,7 @@ public final class RequestAnalysis {
         Objects.requireNonNull(diagnosticRedactor, "diagnosticRedactor must not be null");
     Optional<RequestJsonNode> parsedRoot = Objects.requireNonNullElseGet(rawRoot, Optional::empty);
     this.rawRoot = parsedRoot;
+    this.warnings = List.copyOf(Objects.requireNonNull(warnings, "warnings must not be null"));
     List<RequestBindingFailure> discoveredBindingFailures =
         new java.util.ArrayList<>(
             Objects.requireNonNull(bindingFailures, "bindingFailures must not be null"));
@@ -74,6 +79,11 @@ public final class RequestAnalysis {
   /** Returns the request-scoped redactor derived from this analysis's one tolerant parse. */
   public RequestDiagnosticRedactor diagnosticRedactor() {
     return diagnosticRedactor;
+  }
+
+  /** Returns non-fatal transport warnings discovered while parsing the authored request bytes. */
+  public List<RequestWarning> warnings() {
+    return warnings;
   }
 
   /** Returns the complete typed plan only when every structural fragment and constructor binds. */
@@ -138,6 +148,16 @@ public final class RequestAnalysis {
 
   private static RequestBindingFailure locateBindingFailure(
       RequestBindingFailure failure, Optional<RequestJsonNode> rawRoot) {
+    Optional<String> inferredPath =
+        rawRoot.flatMap(
+            root -> RequestBindingPathSupport.inferQualifiedInvariantFieldPath(root, failure));
+    if (inferredPath.isPresent()) {
+      String qualifiedPath = inferredPath.orElseThrow();
+      return failure.rebasedAt(
+          qualifiedPath,
+          rawRoot.flatMap(
+              root -> RequestJsonTokenLocationSupport.byteOffsetAt(root, qualifiedPath)));
+    }
     Optional<Long> byteOffset =
         rawRoot.flatMap(
             root -> RequestJsonTokenLocationSupport.byteOffsetAt(root, failure.jsonPath()));

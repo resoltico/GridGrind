@@ -10,8 +10,8 @@
       "inputBytes" : 79,
       "commandCount" : 9,
       "commandKinds" : {
-        "COPY_SHEET" : 1,
         "CREATE_SHEET" : 6,
+        "COPY_SHEET" : 1,
         "SET_PICTURE" : 2
       },
       "styleKinds" : { }

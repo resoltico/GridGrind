@@ -20,11 +20,6 @@ final class GridGrindProtocolCatalogDrawingPlainTypeDescriptors {
   static final List<CatalogPlainTypeDescriptor> DESCRIPTORS =
       List.of(
           plainTypeDescriptor(
-              "qualifiedCellAddressType",
-              dev.erst.gridgrind.contract.selector.CellSelector.QualifiedAddress.class,
-              "CellSelector.QualifiedAddress",
-              "One workbook-qualified cell address used by selector-based targeted cell workflows."),
-          plainTypeDescriptor(
               "drawingMarkerInputType",
               DrawingMarkerInput.class,
               "DrawingMarkerInput",

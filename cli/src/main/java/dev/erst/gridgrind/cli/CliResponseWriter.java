@@ -93,6 +93,35 @@ final class CliResponseWriter {
         responsePath, stdout, stderr, response, logicalExitCode, Optional.empty(), prettyJson);
   }
 
+  /** Writes one execution payload through a destination reserved before workbook side effects. */
+  int writeReserved(
+      CliResponseReservation reservation,
+      OutputStream stdout,
+      OutputStream stderr,
+      WorkbookResult response,
+      int logicalExitCode,
+      RequestDiagnosticRedactor redactor,
+      boolean prettyJson)
+      throws IOException {
+    Objects.requireNonNull(reservation, "reservation must not be null");
+    Objects.requireNonNull(stdout, "stdout must not be null");
+    Objects.requireNonNull(stderr, "stderr must not be null");
+    Objects.requireNonNull(response, "response must not be null");
+    Objects.requireNonNull(redactor, "redactor must not be null");
+    byte[] payload =
+        CliResponseTransportSupport.redact(
+            Optional.of(redactor),
+            GridGrindJsonOutput.writeWorkbookResultBytes(response, prettyJson),
+            prettyJson);
+    try {
+      reservation.write(payload);
+      return logicalExitCode;
+    } catch (IOException exception) {
+      writeStdoutFallback(stdout, stderr, payload, reservation.responsePath());
+      return 1;
+    }
+  }
+
   /** Writes one execution response after applying the request-scoped secret boundary. */
   int write(
       Optional<Path> responsePath,

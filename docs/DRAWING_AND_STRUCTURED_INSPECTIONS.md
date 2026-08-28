@@ -1,8 +1,8 @@
 ---
-afad: "4.0"
-version: "0.73.0"
+afad: "5.0.1"
+version: "0.74.0"
 domain: DRAWING_STRUCTURED_INSPECTIONS
-updated: "2026-07-02"
+updated: "2026-08-27"
 route:
   keywords: [gridgrind, inspections, get-drawing-objects, get-charts, get-tables, get-pivot-tables, get-sheet-schema]
   questions: ["how do i inspect drawings in gridgrind", "how do i inspect tables or pivots in gridgrind", "how do i inspect sheet layout or schema in gridgrind"]
@@ -460,6 +460,11 @@ also carry `function`, `displayName`, and optional `valueFormat`.
 ### GET_FORMULA_SURFACE
 
 Groups formula usage across one or more sheets.
+
+This is a factual read: it returns authored OOXML formula bodies and never asks the evaluator to
+run them. It is safe for `RAW_FORMULA` cells containing newer Excel syntax that Apache POI cannot
+evaluate. Request `GET_CELLS` with only the `FORMULA` facet for one addressed cell's authored
+text; adding `VALUE` or `FORMAT` intentionally requests evaluator-backed output.
 
 ```json
 {

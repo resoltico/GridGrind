@@ -24,6 +24,7 @@ final class CatalogStepTemplateDefaults {
           "TABLE_BY_NAME",
           "PIVOT_TABLE_BY_NAME",
           "NAMED_RANGE_BY_NAME",
+          "NAMED_RANGE_WORKBOOK_SCOPE",
           "TABLE_ROW_BY_KEY",
           "TABLE_CELL_BY_KEY");
   private static final Set<String> MULTI_SELECTOR_TYPE_IDS =

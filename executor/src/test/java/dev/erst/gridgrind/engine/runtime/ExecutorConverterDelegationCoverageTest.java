@@ -102,9 +102,11 @@ class ExecutorConverterDelegationCoverageTest {
             .fontName());
     assertEquals(
         ExcelBorderStyle.THIN,
-        InspectionResultCellStyleReportSupport.toCellBorderSideReport(
-                new ExcelBorderSideSnapshot(
-                    ExcelBorderStyle.THIN, ExcelColorSnapshot.rgb("#112233")))
+        assertInstanceOf(
+                CellBorderSideReport.Colored.class,
+                InspectionResultCellStyleReportSupport.toCellBorderSideReport(
+                    new ExcelBorderSideSnapshot(
+                        ExcelBorderStyle.THIN, ExcelColorSnapshot.rgb("#112233"))))
             .style());
   }
 

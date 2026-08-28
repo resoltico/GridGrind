@@ -72,7 +72,7 @@ class SelectorValidationSupportTest {
             .getMessage()
             .startsWith("selector "));
     assertEquals(
-        "name must start with a letter or underscore and contain only letters, digits, underscore, or period",
+        "name must start with a letter, underscore, or backslash and contain only Unicode letters, Unicode numbers, underscore, period, or backslash",
         assertThrows(
                 IllegalArgumentException.class,
                 () -> SelectorValueValidation.requireDefinedName("1bad", "name"))

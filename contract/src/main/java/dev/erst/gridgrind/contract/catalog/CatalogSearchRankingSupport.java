@@ -42,13 +42,11 @@ final class CatalogSearchRankingSupport {
     if (!topLevelEntryMatch) {
       return Optional.empty();
     }
-    if (containsAllTokens(lookupId, tokens) || containsAllTokens(qualifiedId, tokens)) {
-      return Optional.of(1);
-    }
-    if (containsAllTokens(summary, tokens)) {
-      return Optional.of(2);
-    }
-    return containsAllTokens(searchableText, tokens) ? Optional.of(3) : Optional.empty();
+    return firstPresent(
+        rankForTokens(lookupId, tokens, 1),
+        rankForTokens(qualifiedId, tokens, 1),
+        rankForTokens(summary, tokens, 2),
+        rankForTokens(searchableText, tokens, 3));
   }
 
   private static Optional<Integer> supportingRank(
@@ -61,12 +59,11 @@ final class CatalogSearchRankingSupport {
     if (!supportingEntryMatch) {
       return Optional.empty();
     }
-    if (containsAllTokens(lookupId, tokens) || containsAllTokens(qualifiedId, tokens)) {
-      return Optional.of(4);
-    }
-    return containsAllTokens(summary, tokens) || containsAllTokens(searchableText, tokens)
-        ? Optional.of(5)
-        : Optional.empty();
+    return firstPresent(
+        rankForTokens(lookupId, tokens, 4),
+        rankForTokens(qualifiedId, tokens, 4),
+        rankForTokens(summary, tokens, 5),
+        rankForTokens(searchableText, tokens, 5));
   }
 
   private static Optional<Integer> fallbackRank(
@@ -76,13 +73,12 @@ final class CatalogSearchRankingSupport {
       String summary,
       String searchableText,
       String combined) {
-    if (containsAllTokens(lookupId, tokens) || containsAllTokens(qualifiedId, tokens)) {
-      return Optional.of(6);
-    }
-    if (containsAllTokens(summary, tokens) || containsAllTokens(searchableText, tokens)) {
-      return Optional.of(7);
-    }
-    return containsAllTokens(combined, tokens) ? Optional.of(8) : Optional.empty();
+    return firstPresent(
+        rankForTokens(lookupId, tokens, 6),
+        rankForTokens(qualifiedId, tokens, 6),
+        rankForTokens(summary, tokens, 7),
+        rankForTokens(searchableText, tokens, 7),
+        rankForTokens(combined, tokens, 8));
   }
 
   @SafeVarargs
@@ -95,13 +91,23 @@ final class CatalogSearchRankingSupport {
     return Optional.empty();
   }
 
-  static boolean containsAllTokens(String haystack, List<String> tokens) {
+  private static Optional<Integer> rankForTokens(String haystack, List<String> tokens, int tier) {
+    int matches = matchedTokenCount(haystack, tokens);
+    if (matches == 0) {
+      return Optional.empty();
+    }
+    int missing = tokens.size() - matches;
+    return Optional.of(missing * 1_000 + tier * 10 - matches);
+  }
+
+  static int matchedTokenCount(String haystack, List<String> tokens) {
+    int matches = 0;
     for (String token : tokens) {
-      if (!haystack.contains(token)) {
-        return false;
+      if (haystack.contains(token)) {
+        matches++;
       }
     }
-    return true;
+    return matches;
   }
 
   static boolean isTopLevelPublishedGroup(String catalogGroup) {

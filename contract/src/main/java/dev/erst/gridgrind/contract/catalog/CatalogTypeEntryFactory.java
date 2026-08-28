@@ -3,6 +3,7 @@ package dev.erst.gridgrind.contract.catalog;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import dev.erst.gridgrind.contract.action.MutationAction;
+import dev.erst.gridgrind.contract.action.WorkbookMutationAction;
 import dev.erst.gridgrind.contract.assertion.Assertion;
 import dev.erst.gridgrind.contract.catalog.gather.CatalogGatherers;
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
@@ -84,7 +85,18 @@ final class CatalogTypeEntryFactory {
         fieldEntries(recordType, projectedFields),
         TypeEntryTargetingSupport.targetSelectorEntries(targetSurface),
         targetSurface.flatMap(WorkbookStepTargeting.TargetSurface::rule),
-        noteRefs);
+        noteRefs,
+        preconditions(recordType),
+        Optional.empty());
+  }
+
+  private static List<OperationPrecondition> preconditions(Class<? extends Record> recordType) {
+    if (recordType == WorkbookMutationAction.InsertColumns.class
+        || recordType == WorkbookMutationAction.DeleteColumns.class
+        || recordType == WorkbookMutationAction.ShiftColumns.class) {
+      return List.of(new OperationPrecondition.ColumnEditsBeforeFormulaAuthoring());
+    }
+    return List.of();
   }
 
   static List<String> requiredFields(Class<? extends Record> recordType) {

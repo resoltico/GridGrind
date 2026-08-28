@@ -1,10 +1,7 @@
 package dev.erst.gridgrind.contract.dto;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
-import dev.erst.gridgrind.contract.assertion.AssertionFailure;
 import java.util.List;
 import java.util.Objects;
-import java.util.Optional;
 
 /** Deterministic problem payloads returned for unsuccessful executions. */
 public interface GridGrindProblemDetail {
@@ -17,7 +14,6 @@ public interface GridGrindProblemDetail {
       String message,
       String resolution,
       ProblemContext context,
-      @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<AssertionFailure> assertionFailure,
       List<ProblemCause> causes) {
     /** Validates one deterministic problem payload and normalizes optional nested fields. */
     public Problem {
@@ -28,7 +24,6 @@ public interface GridGrindProblemDetail {
       Objects.requireNonNull(message, "message must not be null");
       Objects.requireNonNull(resolution, "resolution must not be null");
       Objects.requireNonNull(context, "context must not be null");
-      assertionFailure = Objects.requireNonNullElseGet(assertionFailure, Optional::empty);
       causes = WorkbookResultSupport.copyProblemCauses(causes);
     }
 
@@ -45,7 +40,6 @@ public interface GridGrindProblemDetail {
           message,
           code.resolutionFor(message, context),
           context,
-          Optional.empty(),
           List.of());
     }
   }

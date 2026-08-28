@@ -1,8 +1,8 @@
 ---
-afad: "4.0"
-version: "0.73.0"
+afad: "5.0.1"
+version: "0.74.0"
 domain: REQUEST_EXECUTION_REFERENCE
-updated: "2026-08-08"
+updated: "2026-08-27"
 route:
   keywords: [gridgrind, request, source, persistence, execution, formula-environment, source-backed, input, calculation, journal, event-read, streaming-write]
   questions: ["what does a gridgrind request look like", "how do source-backed inputs work in gridgrind", "how does execution.calculation work", "what is the response journal", "how do event read and streaming write work"]
@@ -94,6 +94,12 @@ accessibility without mutating a workbook.
   the already-rendered payload goes only to the requested file. If that file cannot be written,
   GridGrind recovers those unchanged bytes to stdout when stdout is writable and writes one
   transport-only JSON notice to stderr. GridGrind never moves a primary payload to stderr.
+- For `execute`, a requested response file is reserved with create-new and no-follow semantics
+  after request validation but before input binding or workbook work. An existing, directory, or
+  unwritable response path prevents execution; stderr receives a typed `CliTransportNotice` with
+  `reason`, `wroteTo=NOT_DELIVERED`, and `responsePath`. A reservation stays open until its one
+  rendered result is written, so GridGrind never reopens the path by name or overwrites a prior
+  response file.
 
 ---
 
@@ -411,10 +417,12 @@ Use `ANALYZE_WORKBOOK_FINDINGS` as the primary workbook-health check. Pair it wi
 ```
 
 Successful responses may include a `warnings` array. Warning locations are typed: `STEP` identifies
-an authored step, while `REQUEST_PATH` identifies a request-owned file path. Current warnings flag
-same-request sheet names with spaces referenced in formulas without single quotes and contained
-absolute request paths. Use `'Sheet Name'!A1` syntax for the former; prefer relative paths for the
-latter so the request remains portable across execution roots.
+an authored step, `REQUEST_PATH` identifies a request-owned file path, `REQUEST_BYTE_OFFSET`
+identifies an exact request-stream position, and `FORMULA_CELL` identifies one formula. Current
+warnings flag same-request sheet names with spaces referenced in formulas without single quotes,
+contained absolute request paths, and a leading UTF-8 BOM (`UTF8_BOM_IGNORED` at byte offset zero).
+Use `'Sheet Name'!A1` syntax for the former; prefer relative paths for the latter so the request
+remains portable across execution roots.
 
 For batch health-plus-read workflows, see
 [`examples/workbook-health-request.json`](../examples/workbook-health-request.json) for a compact
@@ -656,5 +664,13 @@ without routing the body through POI's write parser, so it is the explicit route
 syntax such as `LAMBDA` and `LET`. Invalid opaque framing or XML 1.0-forbidden character data is
 rejected as `INVALID_FORMULA_TEXT`. Loaded formulas that POI parses but cannot evaluate are kept
 unchanged under lenient evaluation and surface `FORMULA_NOT_EVALUATED`; strict evaluation fails.
+Normal `FORMULA` text is validated when its mutation executes, after all preceding mutations are
+present. If a later calculation, inspection, or workbook operation surfaces that formula's failure,
+the primary `problem.context.step` is the authoring mutation and optional
+`problem.context.surfacedAtStep` identifies the later trigger. `RAW_FORMULA` remains opaque in
+this path and never receives evaluator-driven attribution.
+Factual formula reads do not invoke the evaluator: use `GET_FORMULA_SURFACE` for grouped authored
+bodies or a `GET_CELLS` projection containing only `FORMULA` for exact cell text. Adding `VALUE`
+or `FORMAT` deliberately requests evaluator-backed output.
 
 ---

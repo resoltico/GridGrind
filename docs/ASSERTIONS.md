@@ -1,8 +1,8 @@
 ---
-afad: "4.0"
-version: "0.73.0"
+afad: "5.0.1"
+version: "0.74.0"
 domain: ASSERTIONS
-updated: "2026-06-05"
+updated: "2026-08-27"
 route:
   keywords: [gridgrind, assertions, expect-cell-value, expect-display-value, expect-analysis-max-severity]
   questions: ["what assertions does gridgrind support", "how do assertions work in gridgrind", "how do i verify workbook facts in gridgrind"]
@@ -51,8 +51,8 @@ Successful responses echo passed assertion steps back through the ordered `asser
 `execution.assertionMode` controls assertion failure handling. The default `FAIL_FAST` mode stops
 at the first mismatch. `COLLECT` starts a terminal verification phase at the first assertion: no
 later mutation is legal, inspections may interleave, every assertion is reported in `assertions[]`,
-and the response returns the first mismatch as its canonical `ASSERTION_FAILED`
-`problem.assertionFailure` payload.
+and the response returns the first mismatch as its canonical `ASSERTION_FAILED` problem. Every
+failed entry in `assertions[]` carries its own complete failure evidence.
 
 Entity-presence assertions are selector-count assertions, not strict read lookups. If an exact
 sheet, named-range, chart, table, or pivot-table selector matches nothing, the assertion observes
@@ -89,6 +89,12 @@ Assertion families:
 | `ALL_OF` | Any selector family shared by all nested assertions | Require every nested assertion to pass against the same target. |
 | `ANY_OF` | Any selector family shared by all nested assertions | Require at least one nested assertion to pass against the same target. |
 | `NOT` | Same selector family as the nested assertion | Invert one nested assertion. |
+
+`EXPECT_CELL_STYLE` consumes the same complete `CellStyleReport` shape returned by `GET_CELLS`.
+Each `style.border` side is explicit: `{ "type": "NONE" }` for no visible border,
+`{ "type": "DEFAULT_COLOR", "style": "THIN" }` for Excel's implicit color, or
+`{ "type": "COLORED", "style": "THIN", "color": { ... } }` for one explicit color.
+This makes a factual style response directly reusable as an exact assertion expectation.
 
 Common assertion step shapes:
 

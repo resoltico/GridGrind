@@ -7,7 +7,6 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import dev.erst.gridgrind.excel.foundation.AnalysisFindingCode;
 import dev.erst.gridgrind.excel.foundation.AnalysisSeverity;
-import dev.erst.gridgrind.excel.foundation.ExcelBorderStyle;
 import dev.erst.gridgrind.excel.foundation.ExcelFillPattern;
 import dev.erst.gridgrind.excel.foundation.ExcelHorizontalAlignment;
 import dev.erst.gridgrind.excel.foundation.ExcelPaneRegion;
@@ -218,13 +217,12 @@ class WorkbookResultNestedCoverageTest {
                         new dev.erst.gridgrind.contract.dto.ProblemContext.ValidateRequest(
                             dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces
                                 .RequestShape.known("NEW", "NONE")),
-                        java.util.Optional.empty(),
                         java.util.Arrays.asList((GridGrindProblemDetail.ProblemCause) null)))
             .getMessage());
   }
 
   private static CellStyleReport style() {
-    CellBorderSideReport emptySide = new CellBorderSideReport(ExcelBorderStyle.NONE, null);
+    CellBorderSideReport emptySide = new CellBorderSideReport.None();
     return new CellStyleReport(
         "General",
         new CellAlignmentReport(

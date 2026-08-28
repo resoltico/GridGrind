@@ -20,7 +20,7 @@ public sealed interface ExcelNamedRangeSnapshot
       String name, ExcelNamedRangeScope scope, String refersToFormula, ExcelNamedRangeTarget target)
       implements ExcelNamedRangeSnapshot {
     public RangeSnapshot {
-      name = ExcelNamedRangeDefinition.validateName(name);
+      name = ExcelNamedRangeDefinition.validateObservedName(name);
       Objects.requireNonNull(scope, "scope must not be null");
       Objects.requireNonNull(refersToFormula, "refersToFormula must not be null");
       Objects.requireNonNull(target, "target must not be null");
@@ -31,7 +31,7 @@ public sealed interface ExcelNamedRangeSnapshot
   record FormulaSnapshot(String name, ExcelNamedRangeScope scope, String refersToFormula)
       implements ExcelNamedRangeSnapshot {
     public FormulaSnapshot {
-      name = ExcelNamedRangeDefinition.validateName(name);
+      name = ExcelNamedRangeDefinition.validateObservedName(name);
       Objects.requireNonNull(scope, "scope must not be null");
       Objects.requireNonNull(refersToFormula, "refersToFormula must not be null");
     }

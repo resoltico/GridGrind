@@ -5,6 +5,8 @@ import java.util.List;
 import java.util.Objects;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellType;
+import org.apache.poi.ss.usermodel.CellValue;
+import org.apache.poi.ss.usermodel.FormulaError;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.util.CellReference;
@@ -114,7 +116,16 @@ final class ExcelWorkbookFormulaSupport {
     String address = new CellReference(cell.getRowIndex(), cell.getColumnIndex()).formatAsString();
     String formula = cell.getCellFormula();
     try {
-      workbook.context().formulaRuntime().evaluate(cell);
+      CellValue evaluated = workbook.context().formulaRuntime().evaluate(cell);
+      if (isCircularReference(evaluated)) {
+        return new ExcelFormulaCapabilityAssessment(
+            sheetName,
+            address,
+            formula,
+            ExcelFormulaCapabilityKind.UNEVALUABLE_NOW,
+            ExcelFormulaCapabilityIssue.CIRCULAR_REFERENCE,
+            "Formula evaluation detected a circular reference.");
+      }
       return new ExcelFormulaCapabilityAssessment(
           sheetName, address, formula, ExcelFormulaCapabilityKind.EVALUABLE_NOW, null, null);
     } catch (RuntimeException exception) {
@@ -157,6 +168,12 @@ final class ExcelWorkbookFormulaSupport {
         default -> throw wrapped;
       };
     }
+  }
+
+  private static boolean isCircularReference(CellValue evaluated) {
+    return evaluated != null
+        && evaluated.getCellType() == CellType.ERROR
+        && FormulaError.forInt(evaluated.getErrorValue()) == FormulaError.CIRCULAR_REF;
   }
 
   private static void clearPersistedFormulaCaches(ExcelWorkbook workbook) {

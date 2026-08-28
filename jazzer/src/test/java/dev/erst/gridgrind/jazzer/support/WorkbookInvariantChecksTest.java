@@ -92,7 +92,6 @@ import dev.erst.gridgrind.excel.drawing.ExcelDrawingAnchor;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingMarker;
 import dev.erst.gridgrind.excel.foundation.AnalysisFindingCode;
 import dev.erst.gridgrind.excel.foundation.AnalysisSeverity;
-import dev.erst.gridgrind.excel.foundation.ExcelBorderStyle;
 import dev.erst.gridgrind.excel.foundation.ExcelChartAxisCrosses;
 import dev.erst.gridgrind.excel.foundation.ExcelChartAxisKind;
 import dev.erst.gridgrind.excel.foundation.ExcelChartAxisPosition;
@@ -145,11 +144,7 @@ class WorkbookInvariantChecksTest {
                     "step-01-set-cell",
                     "SET_CELL",
                     "Formula references same-request sheet names with spaces.")),
-            List.of(
-                new AssertionResult(
-                    dev.erst.gridgrind.contract.assertion.AssertionOutcome.PASSED,
-                    "assert-total",
-                    "EXPECT_NAMED_RANGE_PRESENT")),
+            List.of(new AssertionResult.Passed("assert-total", "EXPECT_NAMED_RANGE_PRESENT")),
             List.of(
                 new WorkbookInspectionResult.WorkbookSummaryResult(
                     "summary",
@@ -679,11 +674,7 @@ class WorkbookInvariantChecksTest {
             GridGrindProtocolVersion.V2,
             writtenSaveAs(workbookPath.toString(), workbookPath),
             List.of(),
-            List.of(
-                new AssertionResult(
-                    dev.erst.gridgrind.contract.assertion.AssertionOutcome.PASSED,
-                    "assert-total",
-                    "EXPECT_ANALYSIS_MAX_SEVERITY")),
+            List.of(new AssertionResult.Passed("assert-total", "EXPECT_ANALYSIS_MAX_SEVERITY")),
             List.of(
                 new SheetInspectionResult.SheetSummaryResult(
                     "sheet",
@@ -743,10 +734,10 @@ class WorkbookInvariantChecksTest {
                         new CellGradientStopReport(0.0d, rgb("#1F497D")),
                         new CellGradientStopReport(1.0d, themed(4, 0.45d))))),
             new CellBorderReport(
-                new CellBorderSideReport(ExcelBorderStyle.NONE, indexed(16)),
-                new CellBorderSideReport(ExcelBorderStyle.NONE, null),
-                new CellBorderSideReport(ExcelBorderStyle.NONE, null),
-                new CellBorderSideReport(ExcelBorderStyle.NONE, null)),
+                new CellBorderSideReport.None(),
+                new CellBorderSideReport.None(),
+                new CellBorderSideReport.None(),
+                new CellBorderSideReport.None()),
             new CellProtectionReport(true, false));
 
     WorkbookResult.Success response =
@@ -993,7 +984,7 @@ class WorkbookInvariantChecksTest {
                         "image/png",
                         "OpsPicture.png",
                         "abc123",
-                        "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+X2kQAAAAASUVORK5CYII=",
+                        "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVQI12P4//8/AAX+Av7czFnnAAAAAElFTkSuQmCC",
                         null))));
 
     assertDoesNotThrow(
@@ -1405,10 +1396,10 @@ class WorkbookInvariantChecksTest {
             false),
         CellFillReport.pattern(ExcelFillPattern.NONE),
         new CellBorderReport(
-            new CellBorderSideReport(ExcelBorderStyle.NONE, null),
-            new CellBorderSideReport(ExcelBorderStyle.NONE, null),
-            new CellBorderSideReport(ExcelBorderStyle.NONE, null),
-            new CellBorderSideReport(ExcelBorderStyle.NONE, null)),
+            new CellBorderSideReport.None(),
+            new CellBorderSideReport.None(),
+            new CellBorderSideReport.None(),
+            new CellBorderSideReport.None()),
         new CellProtectionReport(true, false));
   }
 

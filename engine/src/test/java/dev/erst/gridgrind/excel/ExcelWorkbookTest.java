@@ -71,7 +71,9 @@ class ExcelWorkbookTest {
       assertEquals("FORMULA", totalSnapshot.type());
       assertEquals("SUM(B2:B3)", totalSnapshot.formula());
       assertEquals(
-          61.0, ((ExcelCellSnapshot.NumberSnapshot) totalSnapshot.evaluation()).numberValue());
+          61.0,
+          ((ExcelCellSnapshot.NumberSnapshot) totalSnapshot.evaluation().orElseThrow())
+              .numberValue());
 
       List<ExcelPreviewRow> preview = sheet.cells().preview(4, 2);
       assertEquals(4, preview.size());

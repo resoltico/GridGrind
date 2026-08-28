@@ -31,7 +31,7 @@ class ExcelDrawingRefactorCoverageTest {
   private static final byte[] PNG_PIXEL_BYTES =
       Base64.getDecoder()
           .decode(
-              "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+X2kQAAAAASUVORK5CYII=");
+              "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVQI12P4//8/AAX+Av7czFnnAAAAAElFTkSuQmCC");
 
   private static final byte[] INVALID_PNG_BYTES =
       Base64.getDecoder().decode("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVQ=");

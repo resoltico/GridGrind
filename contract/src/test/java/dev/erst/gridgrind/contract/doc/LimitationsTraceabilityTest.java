@@ -120,9 +120,10 @@ class LimitationsTraceabilityTest {
   }
 
   private static List<Path> discoverSourceDirs(Path rootDir) throws IOException {
-    try (Stream<Path> paths = Files.walk(rootDir)) {
-      return paths
-          .filter(p -> p.endsWith("src/main/java"))
+    try (Stream<Path> children = Files.list(rootDir)) {
+      return children
+          .filter(Files::isDirectory)
+          .map(module -> module.resolve("src/main/java"))
           .filter(Files::isDirectory)
           .filter(p -> !p.toString().contains("/build/"))
           .toList();

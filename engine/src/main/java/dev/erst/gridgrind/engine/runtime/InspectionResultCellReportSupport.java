@@ -208,9 +208,11 @@ final class InspectionResultCellReportSupport {
   }
 
   private static Optional<CellValueReport> projectedEvaluation(
-      ExcelCellSnapshot evaluation, ExcelCellReadProjection projection, boolean date1904) {
+      Optional<ExcelCellSnapshot> evaluation,
+      ExcelCellReadProjection projection,
+      boolean date1904) {
     return projection.includes(ExcelCellReadFacet.VALUE)
-        ? Optional.of(toCellValueReport(evaluation, projection, date1904))
+        ? Optional.of(toCellValueReport(evaluation.orElseThrow(), projection, date1904))
         : Optional.empty();
   }
 

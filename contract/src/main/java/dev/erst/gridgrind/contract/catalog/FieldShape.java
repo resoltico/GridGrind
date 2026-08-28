@@ -1,7 +1,10 @@
 package dev.erst.gridgrind.contract.catalog;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import java.util.Comparator;
+import java.util.List;
 import java.util.Objects;
 
 /** JSON-serializable recursive field-shape contract used by protocol discovery output. */
@@ -25,9 +28,27 @@ public sealed interface FieldShape
         FieldShape.PlainTypeGroupRef {
 
   /** Scalar JSON value type such as STRING, NUMBER, or BOOLEAN. */
-  record Scalar(ScalarType scalarType) implements FieldShape {
+  record Scalar(
+      ScalarType scalarType,
+      @JsonInclude(JsonInclude.Include.NON_EMPTY) List<FieldConstraint> constraints)
+      implements FieldShape {
+    /** Creates an unconstrained scalar field shape. */
+    public Scalar(ScalarType scalarType) {
+      this(scalarType, List.of());
+    }
+
     public Scalar {
       Objects.requireNonNull(scalarType, "scalarType must not be null");
+      constraints = List.copyOf(Objects.requireNonNullElseGet(constraints, List::of));
+      for (FieldConstraint constraint : constraints) {
+        Objects.requireNonNull(constraint, "constraints must not contain null values");
+      }
+      constraints =
+          constraints.stream()
+              .sorted(
+                  Comparator.comparing(FieldConstraint::type)
+                      .thenComparing(FieldConstraint::sortKey))
+              .toList();
     }
   }
 

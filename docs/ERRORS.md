@@ -1,8 +1,8 @@
 ---
-afad: "4.0"
-version: "0.73.0"
+afad: "5.0.1"
+version: "0.74.0"
 domain: ERRORS
-updated: "2026-08-08"
+updated: "2026-08-27"
 route:
   keywords: [gridgrind, errors, problem, code, category, recovery, failure, assertion-failed, invalid-json, invalid-request-shape, invalid-formula, unsupported-formula-construct, sheet-not-found, named-range-not-found, workbook-not-found, workbook-password-required, invalid-workbook-password, invalid-signing-configuration, workbook-security-error, input-source-not-found, input-source-unavailable, input-source-io-error, source-backed, standard_input, utf8_file, file, causes, context, sourceType, persistenceType, coordinates, rowindex, columnindex]
   questions: ["what error codes does gridgrind return", "what does a gridgrind failure response look like", "how do I handle gridgrind errors", "what is the problem model", "how do I read gridgrind error context", "how do I interpret gridgrind row or column index errors", "how does gridgrind report assertion failures", "how does gridgrind report encrypted workbook password failures", "how does gridgrind report signing failures", "how does gridgrind report source-backed input failures", "what happens if a gridgrind input file is missing"]
@@ -215,14 +215,15 @@ Every entry in `problem.causes` also carries an explicit `stage` token. Cause di
 stage-less fallbacks; they preserve the same pipeline stage vocabulary used by the primary
 `problem.context.stage` classification.
 
-Warnings use one typed `location`: `STEP` carries `stepIndex`, `stepId`, and `stepType`, while
-`REQUEST_PATH` carries the request-owned `path` and its `pathRole`. A contained absolute path emits
+Warnings use one typed `location`: `STEP` carries `stepIndex`, `stepId`, and `stepType`,
+`REQUEST_PATH` carries the request-owned `path` and its `pathRole`, `REQUEST_BYTE_OFFSET` carries
+an authored request-stream byte position, and `FORMULA_CELL` names an evaluated formula. A contained absolute path emits
 `NON_PORTABLE_ABSOLUTE_PATH` without changing execution status; an escaping path is instead the
 blocking `PATH_ESCAPES_ROOT` problem.
 
-Assertion mismatches attach an additional `problem.assertionFailure` payload. Under
-`execution.assertionMode=COLLECT`, the first mismatch remains canonical while `assertions[]`
-contains every terminal-phase assertion outcome:
+Under `execution.assertionMode=COLLECT`, the first mismatch remains canonical while
+`assertions[]` contains every terminal-phase assertion outcome. A `FAILED` entry carries its own
+target, authored assertion, and observations:
 
 ```json
 {
@@ -234,7 +235,7 @@ contains every terminal-phase assertion outcome:
     "recovery": "CHANGE_REQUEST",
     "title": "Assertion failed",
     "message": "EXPECT_CELL_VALUE mismatched effective values at B2",
-    "resolution": "Inspect problem.assertionFailure observations, then adjust the failing assertion or preceding workbook mutations and retry.",
+    "resolution": "Inspect assertions[].failure.observations, then adjust the failing assertion or preceding workbook mutations and retry.",
     "context": {
       "stage": "EXECUTE_STEP",
       "stepIndex": 3,
@@ -243,9 +244,13 @@ contains every terminal-phase assertion outcome:
       "sheetName": "Budget",
       "address": "B2"
     },
-    "assertionFailure": {
-      "stepId": "assert-total",
-      "assertionType": "EXPECT_CELL_VALUE",
+    "causes": []
+  },
+  "assertions": [{
+    "outcome": "FAILED",
+    "stepId": "assert-total",
+    "assertionType": "EXPECT_CELL_VALUE",
+    "failure": {
       "target": {
         "type": "CELL_BY_ADDRESS",
         "sheetName": "Budget",
@@ -272,9 +277,9 @@ contains every terminal-phase assertion outcome:
           ]
         }
       ]
-    },
-    "causes": []
-  }
+    }
+    }
+  }]
 }
 ```
 
@@ -306,7 +311,7 @@ contains every terminal-phase assertion outcome:
 
 | Code | Trigger |
 |:-----|:--------|
-| `ASSERTION_FAILED` | One authored assertion step did not match the observed workbook state. The failure includes `problem.assertionFailure` with the canonical failed assertion contract and observed factual read payloads. Under `execution.assertionMode=COLLECT`, every terminal-phase assertion outcome is retained in `assertions[]` while the first mismatch stays canonical. Entity-presence assertions (`EXPECT_SHEET_PRESENT`, `EXPECT_SHEET_ABSENT`, `EXPECT_NAMED_RANGE_PRESENT`, `EXPECT_NAMED_RANGE_ABSENT`, `EXPECT_TABLE_PRESENT`, `EXPECT_TABLE_ABSENT`, `EXPECT_PIVOT_TABLE_PRESENT`, `EXPECT_PIVOT_TABLE_ABSENT`, `EXPECT_CHART_PRESENT`, `EXPECT_CHART_ABSENT`) treat selector misses as zero observed entities instead of surfacing selector-specific `*_NOT_FOUND` errors. |
+| `ASSERTION_FAILED` | One authored assertion step did not match the observed workbook state. The matching `FAILED` entry in `assertions[]` carries the failed assertion contract and observed factual payloads. Under `execution.assertionMode=COLLECT`, every terminal-phase assertion outcome is retained while the first mismatch stays canonical. Entity-presence assertions (`EXPECT_SHEET_PRESENT`, `EXPECT_SHEET_ABSENT`, `EXPECT_NAMED_RANGE_PRESENT`, `EXPECT_NAMED_RANGE_ABSENT`, `EXPECT_TABLE_PRESENT`, `EXPECT_TABLE_ABSENT`, `EXPECT_PIVOT_TABLE_PRESENT`, `EXPECT_PIVOT_TABLE_ABSENT`, `EXPECT_CHART_PRESENT`, `EXPECT_CHART_ABSENT`) treat selector misses as zero observed entities instead of surfacing selector-specific `*_NOT_FOUND` errors. |
 
 ### Formula (`FORMULA` category)
 
@@ -315,6 +320,7 @@ contains every terminal-phase assertion outcome:
 | `INVALID_FORMULA` | Formula syntax is not valid Excel formula syntax on the normal `FORMULA` request path. Formula text is the OOXML `<f>` body and must not begin with `=`. Scalar `SET_CELL` / `SET_RANGE` `FORMULA` values reject request-authored array-formula braces such as `{=...}`; use `SET_ARRAY_FORMULA` for contiguous array groups. |
 | `INVALID_FORMULA_TEXT` | Opaque `RAW_FORMULA` text is empty, begins with `=`, or contains a character XML 1.0 does not permit in formula character data. Use a nonempty OOXML `<f>` body with no leading `=` and no forbidden control characters. |
 | `UNSUPPORTED_FORMULA_CONSTRUCT` | The authored formula uses a valid Excel construct that Apache POI cannot parse on the write path. Authored `LAMBDA` and `LET` currently surface here. |
+| `CIRCULAR_FORMULA_REFERENCE` | Server-side formula evaluation detected a circular reference. Break the cycle or use a non-evaluating calculation strategy. |
 | `MISSING_EXTERNAL_WORKBOOK` | Formula evaluation needs an external workbook binding that was not supplied and cached-value fallback is not enabled. |
 | `UNREGISTERED_USER_DEFINED_FUNCTION` | Formula evaluation encountered a UDF that is not registered in `formulaEnvironment`. |
 | `UNSUPPORTED_FORMULA` | Formula syntax is valid and Apache POI can load it, but the function or construct is not supported by Apache POI's evaluator. |
@@ -340,8 +346,8 @@ evaluation, unevaluable formulas remain unchanged and produce `FORMULA_NOT_EVALU
 
 | Code | Trigger |
 |:-----|:--------|
-| `WORKBOOK_PASSWORD_REQUIRED` | `source.type=EXISTING` points to an encrypted OOXML workbook and `source.security.password` was omitted. |
-| `INVALID_WORKBOOK_PASSWORD` | `source.security.password` was supplied for an encrypted OOXML workbook, but it did not decrypt the package. |
+| `WORKBOOK_PASSWORD_REQUIRED` | `source.type=EXISTING` points to an encrypted OOXML workbook and `source.security.password` was omitted. The structured `context.workbook.path` identifies the authored source; diagnostics never expose a private materialization path. |
+| `INVALID_WORKBOOK_PASSWORD` | `source.security.password` was supplied for an encrypted OOXML workbook, but it did not decrypt the package. The structured `context.workbook.path` identifies the authored source; diagnostics never expose a private materialization path. |
 | `WORKBOOK_NOT_OPENABLE` | `source.type=EXISTING` did not name a valid openable `.xlsx` OOXML package, including truncated files, non-zip inputs, and ZIP files without a workbook package. This is a request-format failure, not a cryptographic failure. |
 | `ENCRYPTION_SOURCE_NOT_ENCRYPTED` | `persistence.security.encryption.type=PRESERVE_SOURCE` was declared for a plaintext source workbook. Use `NONE` or `ENCRYPT` instead. |
 | `ENCRYPTION_SOURCE_NOT_PRESERVABLE` | `persistence.security.encryption.type=PRESERVE_SOURCE` was declared for an encrypted source whose envelope cannot be reapplied by GridGrind's AGILE write contract. Use `NONE` or `ENCRYPT` instead. |
@@ -354,7 +360,7 @@ evaluation, unevaluable formulas remain unchanged and produce `FORMULA_NOT_EVALU
 | Code | Trigger |
 |:-----|:--------|
 | `INPUT_SOURCE_IO_ERROR` | A source-backed authored field pointed at a file that exists but could not be read, or stdin-backed source bytes could not be consumed cleanly. |
-| `IO_ERROR` | File could not be read or written. Resolutions are stage-specific: `OPEN_WORKBOOK` points at the source workbook path, `PERSIST_WORKBOOK` distinguishes overwrite versus `SAVE_AS` destinations and calls out `SAVE_AS.ifExists=REJECT` collisions separately from broader write failures. A `SAVE_AS` destination parent must already exist because GridGrind binds that directory without following symlinks; create it before execution. `WRITE_RESPONSE` points at the authored `--response` path. Transport-owned write failures preserve the attempted path and, when available, the operating-system reason. |
+| `IO_ERROR` | File could not be read or written. Resolutions are stage-specific: `OPEN_WORKBOOK` points at the source workbook path, `PERSIST_WORKBOOK` distinguishes overwrite versus `SAVE_AS` destinations and calls out `SAVE_AS.ifExists=REJECT` collisions separately from broader write failures. `SAVE_AS` creates a missing contained destination parent, but rejects escapes and symlink traversal before writing. `WRITE_RESPONSE` points at the authored `--response` path. Transport-owned write failures preserve the attempted path and, when available, the operating-system reason. |
 
 ### Internal (`INTERNAL` category)
 
@@ -370,7 +376,7 @@ evaluation, unevaluable formulas remain unchanged and produce `FORMULA_NOT_EVALU
 |:---------|:--------|
 | `ARGUMENTS` | CLI argument was unrecognized or malformed. Fix the command invocation. |
 | `REQUEST` | Request JSON is malformed, does not match the protocol shape, or violates semantic validation. Fix the request. |
-| `ASSERTION` | An authored verification step did not match the observed workbook state. Inspect `problem.assertionFailure.observations`, then fix the expectation or the authored mutations. |
+| `ASSERTION` | An authored verification step did not match the observed workbook state. Inspect the matching `assertions[].failure.observations`, then fix the expectation or the authored mutations. |
 | `FORMULA` | Formula syntax is invalid, evaluation is missing required external/UDF configuration, or the construct is outside Apache POI's parser/evaluator support. Fix the formula or evaluator setup. |
 | `RESOURCE` | Referenced workbook, sheet, or cell does not exist. Fix the path or name. |
 | `SECURITY` | Workbook encryption, password, or OOXML signing failed. Fix the password or signing configuration, or inspect the workbook package and runtime crypto environment. |
@@ -443,12 +449,16 @@ nullable fields:
 
 Without `--response`, the primary `CommandError`, `WorkbookResult`, doctor report, or discovery
 payload is the sole stdout content. With `--response <path>`, that primary payload is written only
-to the requested file. GridGrind does not mirror an equivalent diagnostic on stderr. If that file
-cannot be written and stdout is writable, the already-rendered primary payload goes to stdout unchanged and stderr
-receives exactly one transport-only JSON line, `{"wroteTo":"STDOUT","responsePath":"..."}`.
-The notice has no status, exit code, or problem data and is not a second result schema. If stdout
-is unavailable or fails while a payload is being written, GridGrind exits nonzero without moving
-or retrying the primary payload on another channel.
+to the requested file. For `execute`, GridGrind reserves that destination with create-new and
+no-follow semantics before any workbook side effect. An existing, directory, or unwritable response
+path therefore prevents execution and emits one stderr-only transport notice with `reason` and
+`responsePath`; no primary payload exists at that point. If a reserved destination later fails
+while payload bytes are written and stdout is writable, the already-rendered primary payload goes
+to stdout unchanged and stderr receives exactly one transport-only JSON line such as
+`{"reason":"RESPONSE_WRITE_FAILED","wroteTo":"STDOUT","responsePath":"..."}`. The notice has
+no status, exit code, or problem data and is not a second result schema. If stdout is unavailable
+or fails while a payload is being written, GridGrind exits nonzero without moving or retrying the
+primary payload on another channel.
 
 Values declared `secret: true` in the request contract are protected by their exact JSON owner
 path. A binding or validation problem at a declared secret path uses a generic sensitive-safe
@@ -493,7 +503,8 @@ exception class names or parser-library details.
 
 ## Assertion Failure Payload
 
-When `problem.code=ASSERTION_FAILED`, `problem.assertionFailure` is always present. It carries:
+When `problem.code=ASSERTION_FAILED`, the matching `assertions[]` entry with `outcome=FAILED`
+carries:
 
 | Field | Description |
 |:------|:------------|

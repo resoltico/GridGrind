@@ -272,12 +272,22 @@ public sealed interface ProblemContext
   }
 
   /** Context for failures that occur while executing one ordered workbook step. */
-  record ExecuteStep(RequestShape request, StepReference step, ProblemLocation location)
+  record ExecuteStep(
+      RequestShape request,
+      StepReference step,
+      ProblemLocation location,
+      @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<StepReference> surfacedAtStep)
       implements ProblemContext {
     public ExecuteStep {
       Objects.requireNonNull(request, "request must not be null");
       Objects.requireNonNull(step, "step must not be null");
       Objects.requireNonNull(location, "location must not be null");
+      surfacedAtStep = Objects.requireNonNullElseGet(surfacedAtStep, Optional::empty);
+    }
+
+    /** Creates a step context whose failure surfaced while that same step executed. */
+    public ExecuteStep(RequestShape request, StepReference step, ProblemLocation location) {
+      this(request, step, location, Optional.empty());
     }
 
     /** Returns the decoded request source family when step execution reached that point. */
@@ -298,11 +308,6 @@ public sealed interface ProblemContext
     /** Returns the authored step id for the failing workbook step. */
     public String stepId() {
       return step.stepId();
-    }
-
-    /** Returns the authored step family for the failing workbook step. */
-    public String stepKind() {
-      return step.stepKind();
     }
 
     /** Returns the concrete workbook step type for the failing workbook step. */
@@ -343,7 +348,7 @@ public sealed interface ProblemContext
     /** Returns one copy enriched with exception-derived location facts. */
     public ExecuteStep withLocation(ProblemLocation discovered) {
       Objects.requireNonNull(discovered, "discovered must not be null");
-      return new ExecuteStep(request, step, mergeLocation(location, discovered));
+      return new ExecuteStep(request, step, mergeLocation(location, discovered), surfacedAtStep);
     }
   }
 

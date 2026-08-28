@@ -1,7 +1,7 @@
 package dev.erst.gridgrind.jazzer.support;
 
 import dev.erst.gridgrind.contract.dto.ExecutionPolicyInput;
-import dev.erst.gridgrind.contract.selector.CellSelector;
+import dev.erst.gridgrind.contract.dto.FormulaCellTarget;
 import dev.erst.gridgrind.contract.selector.RangeSelector;
 import java.util.List;
 
@@ -21,7 +21,7 @@ final class OperationSequenceSelectorSupport {
       case 2 ->
           ProtocolStepSupport.executionPolicy(
               ProtocolStepSupport.calculateTargets(
-                  nextQualifiedFormulaAddress(data, primarySheet, secondarySheet, validAddress)));
+                  nextFormulaTarget(data, primarySheet, secondarySheet, validAddress)));
       case 3 -> ProtocolStepSupport.executionPolicy(ProtocolStepSupport.clearFormulaCaches());
       case 4 -> ProtocolStepSupport.executionPolicy(ProtocolStepSupport.markRecalculateOnOpen());
       default ->
@@ -30,9 +30,9 @@ final class OperationSequenceSelectorSupport {
     };
   }
 
-  static CellSelector.QualifiedAddress nextQualifiedFormulaAddress(
+  static FormulaCellTarget nextFormulaTarget(
       GridGrindFuzzData data, String primarySheet, String secondarySheet, boolean validAddress) {
-    return new CellSelector.QualifiedAddress(
+    return new FormulaCellTarget(
         data.consumeBoolean() ? primarySheet : secondarySheet,
         nextFormulaTargetAddress(data, validAddress));
   }

@@ -20,7 +20,6 @@ import dev.erst.gridgrind.contract.dto.CalculationReport;
 import dev.erst.gridgrind.contract.dto.CalculationStrategyInput;
 import dev.erst.gridgrind.contract.dto.FormulaCapabilityKind;
 import dev.erst.gridgrind.contract.dto.GridGrindProblemCode;
-import dev.erst.gridgrind.contract.selector.CellSelector;
 import dev.erst.gridgrind.excel.ExcelCellValue;
 import dev.erst.gridgrind.excel.ExcelFormulaCapabilityAssessment;
 import dev.erst.gridgrind.excel.ExcelFormulaCapabilityIssue;
@@ -61,7 +60,8 @@ class CalculationPolicyExecutorTest {
     assertTrue(CalculationPolicyExecutor.requiresMutationPrefix(clearFormulaCaches()));
     assertTrue(
         CalculationPolicyExecutor.requiresMutationPrefix(
-            calculateTargets(new CellSelector.QualifiedAddress("Budget", "B1"))));
+            calculateTargets(
+                new dev.erst.gridgrind.contract.dto.FormulaCellTarget("Budget", "B1"))));
 
     CalculationReport report =
         CalculationPolicyExecutor.notRequestedReport(markRecalculateOnOpen());
@@ -122,7 +122,7 @@ class CalculationPolicyExecutorTest {
       workbook.sheet("Budget").cells().setCell("B1", ExcelCellValue.formula("A1*2"));
 
       CalculationPolicyInput targeted =
-          calculateTargets(new CellSelector.QualifiedAddress("Budget", "B1"));
+          calculateTargets(new dev.erst.gridgrind.contract.dto.FormulaCellTarget("Budget", "B1"));
       CalculationPolicyExecutor.PreflightOutcome preflight =
           CalculationPolicyExecutor.preflight(workbook, targeted);
       CalculationPolicyExecutor.ExecutionOutcome execution =
@@ -167,7 +167,7 @@ class CalculationPolicyExecutorTest {
       CalculationPolicyInput targetedAndMarked =
           new CalculationPolicyInput(
               new CalculationStrategyInput.EvaluateTargets(
-                  List.of(new CellSelector.QualifiedAddress("Budget", "B1"))),
+                  List.of(new dev.erst.gridgrind.contract.dto.FormulaCellTarget("Budget", "B1"))),
               true);
       CalculationPolicyExecutor.ExecutionOutcome execution =
           CalculationPolicyExecutor.execute(workbook, targetedAndMarked, 1, false);
@@ -197,7 +197,8 @@ class CalculationPolicyExecutorTest {
       CalculationPolicyExecutor.ExecutionOutcome targetedExecution =
           CalculationPolicyExecutor.execute(
               workbook,
-              calculateTargets(new CellSelector.QualifiedAddress("Budget", "B1")),
+              calculateTargets(
+                  new dev.erst.gridgrind.contract.dto.FormulaCellTarget("Budget", "B1")),
               1,
               false);
 
@@ -382,7 +383,7 @@ class CalculationPolicyExecutorTest {
     try (ExcelWorkbook workbook =
         ExecutionContextFixtureSupport.openWorkbook(createUnsupportedFormulaWorkbook())) {
       CalculationPolicyInput targeted =
-          calculateTargets(new CellSelector.QualifiedAddress("Ops", "A1"));
+          calculateTargets(new dev.erst.gridgrind.contract.dto.FormulaCellTarget("Ops", "A1"));
       CalculationPolicyExecutor.PreflightOutcome preflight =
           CalculationPolicyExecutor.preflight(workbook, targeted);
       CalculationPolicyExecutor.ExecutionOutcome execution =
@@ -400,6 +401,82 @@ class CalculationPolicyExecutorTest {
   }
 
   @Test
+  void circularReferencesBlockRequiredEvaluationAndRemainLenientForOtherStrategies()
+      throws Exception {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
+      var sheet = workbook.getOrCreateSheet("Budget");
+      sheet.cells().setCell("A1", ExcelCellValue.formula("A1+1"));
+      sheet.cells().setCell("B1", ExcelCellValue.formula("C1+1"));
+      sheet.cells().setCell("C1", ExcelCellValue.formula("B1+1"));
+
+      CalculationPolicyInput doNotCalculate = CalculationPolicyInput.defaults();
+      CalculationPolicyInput deferred = deferCalculation();
+      CalculationPolicyInput clearCaches = clearFormulaCaches();
+      CalculationPolicyInput evaluateAll = calculateAll();
+      CalculationPolicyInput evaluateTargets =
+          calculateTargets(new dev.erst.gridgrind.contract.dto.FormulaCellTarget("Budget", "A1"));
+      CalculationPolicyInput requireEvaluation = requireEvaluation();
+
+      assertTrue(CalculationPolicyExecutor.preflight(workbook, doNotCalculate).report().isEmpty());
+      assertTrue(CalculationPolicyExecutor.preflight(workbook, clearCaches).report().isEmpty());
+
+      CalculationPolicyExecutor.PreflightOutcome deferredPreflight =
+          CalculationPolicyExecutor.preflight(workbook, deferred);
+      CalculationPolicyExecutor.PreflightOutcome allPreflight =
+          CalculationPolicyExecutor.preflight(workbook, evaluateAll);
+      CalculationPolicyExecutor.PreflightOutcome targetPreflight =
+          CalculationPolicyExecutor.preflight(workbook, evaluateTargets);
+      CalculationPolicyExecutor.PreflightOutcome requiredPreflight =
+          CalculationPolicyExecutor.preflight(workbook, requireEvaluation);
+
+      assertTrue(deferredPreflight.failure().isEmpty());
+      assertTrue(deferredPreflight.hasUnevaluableFormula());
+      assertTrue(allPreflight.failure().isEmpty());
+      assertTrue(allPreflight.hasUnevaluableFormula());
+      assertTrue(targetPreflight.failure().isEmpty());
+      assertTrue(targetPreflight.hasUnevaluableFormula());
+      assertEquals(
+          GridGrindProblemCode.CIRCULAR_FORMULA_REFERENCE,
+          requiredPreflight.failure().orElseThrow().code());
+      assertEquals(3, requiredPreflight.report().orElseThrow().summary().unevaluableNowCount());
+
+      assertEquals(
+          CalculationExecutionStatus.NOT_REQUESTED,
+          CalculationPolicyExecutor.execute(workbook, doNotCalculate, 0, false).report().status());
+      assertEquals(
+          CalculationExecutionStatus.NOT_REQUESTED,
+          CalculationPolicyExecutor.execute(
+                  workbook,
+                  deferred,
+                  deferredPreflight.evaluationTargetCount(),
+                  deferredPreflight.hasUnevaluableFormula())
+              .report()
+              .status());
+      assertEquals(
+          CalculationExecutionStatus.SUCCEEDED,
+          CalculationPolicyExecutor.execute(workbook, clearCaches, 0, false).report().status());
+      assertEquals(
+          CalculationExecutionStatus.PARTIAL,
+          CalculationPolicyExecutor.execute(
+                  workbook,
+                  evaluateAll,
+                  allPreflight.evaluationTargetCount(),
+                  allPreflight.hasUnevaluableFormula())
+              .report()
+              .status());
+      assertEquals(
+          CalculationExecutionStatus.PARTIAL,
+          CalculationPolicyExecutor.execute(
+                  workbook,
+                  evaluateTargets,
+                  targetPreflight.evaluationTargetCount(),
+                  targetPreflight.hasUnevaluableFormula())
+              .report()
+              .status());
+    }
+  }
+
+  @Test
   void helperMappingsCoverAllCapabilityKindsAndProblemCodes() {
     ExcelFormulaCapabilityAssessment evaluable =
         new ExcelFormulaCapabilityAssessment(
@@ -412,6 +489,14 @@ class CalculationPolicyExecutorTest {
             ExcelFormulaCapabilityKind.UNEVALUABLE_NOW,
             ExcelFormulaCapabilityIssue.MISSING_EXTERNAL_WORKBOOK,
             "missing");
+    ExcelFormulaCapabilityAssessment circular =
+        new ExcelFormulaCapabilityAssessment(
+            "Budget",
+            "B2",
+            "B2+1",
+            ExcelFormulaCapabilityKind.UNEVALUABLE_NOW,
+            ExcelFormulaCapabilityIssue.CIRCULAR_REFERENCE,
+            "circular");
     ExcelFormulaCapabilityAssessment unregistered =
         new ExcelFormulaCapabilityAssessment(
             "Budget",
@@ -438,7 +523,7 @@ class CalculationPolicyExecutorTest {
             "invalid");
 
     CalculationReport.Summary summary =
-        CalculationCapabilityMappings.summaryFor(List.of(evaluable, missingExternal, invalid));
+        CalculationCapabilityMappings.summaryFor(List.of(evaluable, circular, invalid));
     assertEquals(1, summary.evaluableNowCount());
     assertEquals(1, summary.unevaluableNowCount());
     assertEquals(1, summary.unparseableByPoiCount());
@@ -446,6 +531,9 @@ class CalculationPolicyExecutorTest {
     assertEquals(
         Optional.of(GridGrindProblemCode.MISSING_EXTERNAL_WORKBOOK),
         CalculationCapabilityMappings.problemCodeFor(missingExternal));
+    assertEquals(
+        Optional.of(GridGrindProblemCode.CIRCULAR_FORMULA_REFERENCE),
+        CalculationCapabilityMappings.problemCodeFor(circular));
     assertEquals(
         Optional.of(GridGrindProblemCode.UNREGISTERED_USER_DEFINED_FUNCTION),
         CalculationCapabilityMappings.problemCodeFor(unregistered));
@@ -467,9 +555,10 @@ class CalculationPolicyExecutorTest {
         CalculationCapabilityMappings.capabilityKindFor(
             ExcelFormulaCapabilityKind.UNPARSEABLE_BY_POI));
     assertEquals(0, CalculationCapabilityMappings.severityRank(invalid));
-    assertEquals(1, CalculationCapabilityMappings.severityRank(missingExternal));
-    assertEquals(2, CalculationCapabilityMappings.severityRank(unregistered));
-    assertEquals(3, CalculationCapabilityMappings.severityRank(unsupported));
+    assertEquals(1, CalculationCapabilityMappings.severityRank(circular));
+    assertEquals(2, CalculationCapabilityMappings.severityRank(missingExternal));
+    assertEquals(3, CalculationCapabilityMappings.severityRank(unregistered));
+    assertEquals(4, CalculationCapabilityMappings.severityRank(unsupported));
     assertEquals(
         "assessment.issue must not be null",
         assertThrows(

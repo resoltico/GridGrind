@@ -236,7 +236,7 @@ class ExcelOoxmlPackageSecurityCoverageTest {
                       return ExcelTempFiles.createManagedTempFile(explicitTempRoot, prefix, suffix);
                     }));
 
-    assertEquals(encryptedWorkbook.workbookPath(), failure.workbookPath());
+    assertFalse(failure.getMessage().contains(encryptedWorkbook.workbookPath().toString()));
     assertEquals(0, tempFilesCreated.get());
     assertTrue(Files.notExists(explicitTempRoot));
   }
@@ -254,7 +254,7 @@ class ExcelOoxmlPackageSecurityCoverageTest {
                 ExcelOoxmlPackageSecuritySupport.materializeReadableWorkbook(
                     encryptedWorkbook.workbookPath(), null, Files::createTempFile));
 
-    assertEquals(encryptedWorkbook.workbookPath(), failure.workbookPath());
+    assertFalse(failure.getMessage().contains(encryptedWorkbook.workbookPath().toString()));
 
     WorkbookPasswordRequiredException nullPasswordFailure =
         assertThrows(
@@ -264,7 +264,8 @@ class ExcelOoxmlPackageSecurityCoverageTest {
                     encryptedWorkbook.workbookPath(),
                     new ExcelOoxmlOpenOptions.Unencrypted(),
                     Files::createTempFile));
-    assertEquals(encryptedWorkbook.workbookPath(), nullPasswordFailure.workbookPath());
+    assertFalse(
+        nullPasswordFailure.getMessage().contains(encryptedWorkbook.workbookPath().toString()));
   }
 
   @Test

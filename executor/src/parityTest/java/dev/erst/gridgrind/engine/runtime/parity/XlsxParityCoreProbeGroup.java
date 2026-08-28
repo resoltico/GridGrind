@@ -582,7 +582,17 @@ final class XlsxParityCoreProbeGroup {
     return style != null
         && matchesColorDescriptor(style.font().fontColor(), themed.fontColorDescriptor())
         && matchesColorDescriptor(fillForegroundColor(style.fill()), themed.fillColorDescriptor())
-        && matchesColorDescriptor(style.border().bottom().color(), themed.borderColorDescriptor());
+        && matchesColorDescriptor(
+            borderColor(style.border().bottom()), themed.borderColorDescriptor());
+  }
+
+  private static CellColorReport borderColor(
+      dev.erst.gridgrind.contract.dto.CellBorderSideReport borderSide) {
+    return switch (borderSide) {
+      case dev.erst.gridgrind.contract.dto.CellBorderSideReport.None _ -> null;
+      case dev.erst.gridgrind.contract.dto.CellBorderSideReport.DefaultColor _ -> null;
+      case dev.erst.gridgrind.contract.dto.CellBorderSideReport.Colored colored -> colored.color();
+    };
   }
 
   private static boolean matchesGradientStyle(

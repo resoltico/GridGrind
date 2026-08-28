@@ -4,7 +4,6 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import dev.erst.gridgrind.contract.catalog.GridGrindProtocolTypeNames;
-import dev.erst.gridgrind.contract.selector.CellSelector;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Objects;
@@ -79,15 +78,14 @@ public sealed interface CalculationStrategyInput {
   }
 
   /** Evaluate one explicit set of formula-cell targets after mutation steps complete. */
-  record EvaluateTargets(List<CellSelector.QualifiedAddress> cells)
-      implements CalculationStrategyInput {
+  record EvaluateTargets(List<FormulaCellTarget> cells) implements CalculationStrategyInput {
     public EvaluateTargets {
       Objects.requireNonNull(cells, "cells must not be null");
       if (cells.isEmpty()) {
         throw new IllegalArgumentException("cells must not be empty");
       }
-      Set<CellSelector.QualifiedAddress> deduplicated = new LinkedHashSet<>();
-      for (CellSelector.QualifiedAddress cell : cells) {
+      Set<FormulaCellTarget> deduplicated = new LinkedHashSet<>();
+      for (FormulaCellTarget cell : cells) {
         deduplicated.add(Objects.requireNonNull(cell, "cells must not contain nulls"));
       }
       if (deduplicated.size() != cells.size()) {

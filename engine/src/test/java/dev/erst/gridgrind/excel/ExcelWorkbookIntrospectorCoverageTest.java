@@ -29,7 +29,12 @@ class ExcelWorkbookIntrospectorCoverageTest {
         new ExcelCellSnapshot.BlankSnapshot("A4", "", style("General"), metadata());
     ExcelCellSnapshot.FormulaSnapshot formula =
         new ExcelCellSnapshot.FormulaSnapshot(
-            "A5", "42", style("General"), metadata(), "SUM(A1:A3)", plainNumber);
+            "A5",
+            "42",
+            style("General"),
+            metadata(),
+            "SUM(A1:A3)",
+            java.util.Optional.of(plainNumber));
 
     assertEquals("DATE", schemaObservedType(dateCell, temporalProjection));
     assertEquals("TIME", schemaObservedType(timeCell, temporalProjection));

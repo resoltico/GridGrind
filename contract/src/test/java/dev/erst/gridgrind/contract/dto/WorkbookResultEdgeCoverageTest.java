@@ -7,7 +7,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces.RequestShape;
 import dev.erst.gridgrind.excel.foundation.AnalysisFindingCode;
 import dev.erst.gridgrind.excel.foundation.AnalysisSeverity;
-import dev.erst.gridgrind.excel.foundation.ExcelBorderStyle;
 import dev.erst.gridgrind.excel.foundation.ExcelFillPattern;
 import dev.erst.gridgrind.excel.foundation.ExcelHorizontalAlignment;
 import dev.erst.gridgrind.excel.foundation.ExcelVerticalAlignment;
@@ -587,7 +586,7 @@ class WorkbookResultEdgeCoverageTest {
   }
 
   private static CellStyleReport style() {
-    CellBorderSideReport emptySide = new CellBorderSideReport(ExcelBorderStyle.NONE, null);
+    CellBorderSideReport emptySide = new CellBorderSideReport.None();
     return new CellStyleReport(
         "General",
         new CellAlignmentReport(

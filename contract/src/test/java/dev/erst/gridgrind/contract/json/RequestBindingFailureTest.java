@@ -163,4 +163,101 @@ class RequestBindingFailureTest {
         assertInstanceOf(FormulaRequestException.class, rebasedWithJacksonLocation.exception())
             .problemCode());
   }
+
+  @Test
+  void rebasesTypedFailuresAtOneQualifiedNestedFieldWithoutChangingGenericFailures() {
+    InvalidRequestException invariant =
+        new InvalidRequestException(
+            new MessageInvariant("name must not be blank", Optional.of("name")),
+            Optional.of("name"),
+            Optional.empty(),
+            Optional.empty(),
+            null);
+    FormulaRequestException formula =
+        new FormulaRequestException(
+            GridGrindProblemCode.INVALID_FORMULA,
+            "formula must not begin with =",
+            Optional.of("formula"),
+            Optional.empty(),
+            Optional.empty(),
+            null);
+
+    assertEquals(
+        "steps[1].action.name",
+        new RequestBindingFailure(invariant, "name", Optional.empty())
+            .rebasedAt("steps[1].action.name", Optional.of(12L))
+            .jsonPath());
+    assertEquals(
+        "steps[1].action.formula",
+        new RequestBindingFailure(formula, "formula", Optional.empty())
+            .rebasedAt("steps[1].action.formula", Optional.empty())
+            .jsonPath());
+    IllegalArgumentException generic = new IllegalArgumentException("generic");
+    assertEquals(
+        generic,
+        new RequestBindingFailure(generic, "value", Optional.empty())
+            .rebasedAt("steps[1].action.value", Optional.empty())
+            .exception());
+  }
+
+  @Test
+  void rebasesUniqueNestedFormulaAndShapeFailuresAtTheExactAuthoredField() {
+    RequestJsonObject fragment =
+        new RequestJsonObject(
+            0,
+            List.of(
+                new RequestJsonMember("formula", 1, new RequestJsonString(11, "SUM(A1)")),
+                new RequestJsonMember("nested", 22, new RequestJsonArray(31, List.of()))));
+    FormulaRequestException formula =
+        new FormulaRequestException(
+            GridGrindProblemCode.INVALID_FORMULA,
+            "formula must not begin with =",
+            Optional.of("formula"),
+            Optional.empty(),
+            Optional.empty(),
+            null);
+    InvalidRequestShapeException shape =
+        new InvalidRequestShapeException(
+            new MessageShape("formula must be a string", Optional.of("formula")),
+            Optional.of("formula"),
+            Optional.empty(),
+            Optional.empty(),
+            null);
+
+    RequestBindingFailure formulaFailure =
+        RequestBindingFailure.from(
+            formula, fragment, "steps[2].action", RequestDiagnosticRedactor.empty());
+    RequestBindingFailure inputFormulaFailure =
+        RequestBindingFailure.from(
+            new InvalidFormulaInputException("formula must not begin with ="),
+            fragment,
+            "steps[2].action",
+            RequestDiagnosticRedactor.empty());
+    RequestBindingFailure shapeFailure =
+        RequestBindingFailure.from(
+            shape, fragment, "steps[2].action", RequestDiagnosticRedactor.empty());
+
+    assertEquals("steps[2].action.formula", formulaFailure.jsonPath());
+    assertInstanceOf(FormulaRequestException.class, formulaFailure.exception());
+    assertEquals("steps[2].action.formula", inputFormulaFailure.jsonPath());
+    assertInstanceOf(FormulaRequestException.class, inputFormulaFailure.exception());
+    assertEquals("steps[2].action.formula", shapeFailure.jsonPath());
+    assertInstanceOf(InvalidRequestShapeException.class, shapeFailure.exception());
+  }
+
+  @Test
+  void resolvesOneInvariantFieldNestedInsideAnArray() {
+    RequestJsonNode fragment =
+        new RequestJsonArray(
+            0,
+            List.of(
+                new RequestJsonObject(
+                    1,
+                    List.of(new RequestJsonMember("name", 2, new RequestJsonString(9, "value"))))));
+
+    assertEquals(
+        Optional.of("[0].name"),
+        RequestBindingPathSupport.directChildPathForInvariant(
+            fragment, new IllegalArgumentException("name must not be blank")));
+  }
 }

@@ -8,8 +8,13 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.Set;
+import org.apache.poi.ss.formula.FormulaParser;
+import org.apache.poi.ss.formula.FormulaType;
+import org.apache.poi.ss.formula.ptg.Ptg;
+import org.apache.poi.ss.formula.ptg.Pxg;
+import org.apache.poi.ss.formula.ptg.Pxg3D;
+import org.apache.poi.xssf.usermodel.XSSFEvaluationWorkbook;
 
 /** Derives conclusion-bearing workbook findings from reusable workbook and sheet facts. */
 final class WorkbookAnalyzer {
@@ -157,6 +162,12 @@ final class WorkbookAnalyzer {
 
     List<ExcelNamedRangeSnapshot> namedRanges =
         workbookIntrospector.selectNamedRanges(workbook, selection);
+    if (selection instanceof ExcelNamedRangeSelection.All
+        && !workbook.wasMutatedSinceOpenInternal()) {
+      List<ExcelNamedRangeSnapshot> combined = new ArrayList<>(namedRanges);
+      combined.addAll(ExcelWorkbookNamedRangeSupport.unmodeledObservedNamedRanges(workbook));
+      namedRanges = List.copyOf(combined);
+    }
     List<WorkbookAnalysis.AnalysisFinding> findings =
         analyzeNamedRangeHealth(workbook, namedRanges);
     return new WorkbookAnalysis.NamedRangeHealth(
@@ -210,31 +221,30 @@ final class WorkbookAnalyzer {
         continue;
       }
 
-      Optional<String> referencedSheet = referencedSheetName(refersToFormula);
-      if (referencedSheet.isPresent()
-          && !workbookSheetNames.contains(referencedSheet.orElseThrow())) {
-        findings.add(
-            new WorkbookAnalysis.AnalysisFinding(
-                AnalysisFindingCode.NAMED_RANGE_BROKEN_REFERENCE,
-                AnalysisSeverity.ERROR,
-                "Named range targets a missing sheet",
-                "Named range refers to a sheet that does not exist: "
-                    + referencedSheet.orElseThrow(),
-                location,
-                List.of(refersToFormula)));
-        continue;
-      }
-
-      if (namedRange instanceof ExcelNamedRangeSnapshot.FormulaSnapshot
-          && looksLikeSheetRangeReference(refersToFormula)) {
-        findings.add(
-            new WorkbookAnalysis.AnalysisFinding(
-                AnalysisFindingCode.NAMED_RANGE_UNRESOLVED_TARGET,
-                AnalysisSeverity.WARNING,
-                "Named range target could not be normalized",
-                "Named range looks like a sheet-qualified reference but did not normalize cleanly.",
-                location,
-                List.of(refersToFormula)));
+      switch (namedFormulaReferences(workbook, namedRange)) {
+        case NamedFormulaReferences.Parsed parsed -> {
+          for (String referencedSheet : parsed.sheetNames()) {
+            if (!workbookSheetNames.contains(referencedSheet)) {
+              findings.add(
+                  new WorkbookAnalysis.AnalysisFinding(
+                      AnalysisFindingCode.NAMED_RANGE_BROKEN_REFERENCE,
+                      AnalysisSeverity.ERROR,
+                      "Named range targets a missing sheet",
+                      "Named range refers to a sheet that does not exist: " + referencedSheet,
+                      location,
+                      List.of(refersToFormula)));
+            }
+          }
+        }
+        case NamedFormulaReferences.Unparseable _ ->
+            findings.add(
+                new WorkbookAnalysis.AnalysisFinding(
+                    AnalysisFindingCode.NAMED_RANGE_UNPARSEABLE_FORMULA,
+                    AnalysisSeverity.ERROR,
+                    "Named range formula could not be parsed",
+                    "Named range formula could not be parsed with workbook context.",
+                    location,
+                    List.of(refersToFormula)));
       }
     }
 
@@ -287,30 +297,45 @@ final class WorkbookAnalyzer {
     return new WorkbookAnalysis.AnalysisLocation.NamedRange(namedRange.name(), namedRange.scope());
   }
 
-  Optional<String> referencedSheetName(String refersToFormula) {
-    int bangIndex = refersToFormula.indexOf('!');
-    if (bangIndex <= 0) {
-      return Optional.empty();
+  private NamedFormulaReferences namedFormulaReferences(
+      ExcelWorkbook workbook, ExcelNamedRangeSnapshot namedRange) {
+    int sheetIndex = sheetIndex(workbook, namedRange.scope());
+    try {
+      Ptg[] tokens =
+          FormulaParser.parse(
+              namedRange.refersToFormula(),
+              XSSFEvaluationWorkbook.create(workbook.xssfWorkbook()),
+              FormulaType.CELL,
+              sheetIndex,
+              -1);
+      Set<String> sheetNames = new LinkedHashSet<>();
+      for (Ptg token : tokens) {
+        if (token instanceof Pxg pxg && pxg.getExternalWorkbookNumber() < 1) {
+          sheetNames.add(pxg.getSheetName());
+          if (token instanceof Pxg3D pxg3D && pxg3D.getLastSheetName() != null) {
+            sheetNames.add(pxg3D.getLastSheetName());
+          }
+        }
+      }
+      return new NamedFormulaReferences.Parsed(List.copyOf(sheetNames));
+    } catch (RuntimeException exception) {
+      return new NamedFormulaReferences.Unparseable();
     }
-    String sheetName = refersToFormula.substring(0, bangIndex);
-    if (!sheetName.startsWith("'")) {
-      return Optional.of(sheetName);
-    }
-    if (!sheetName.endsWith("'")) {
-      return Optional.of(sheetName);
-    }
-    if (sheetName.length() < 2) {
-      return Optional.of(sheetName);
-    }
-    return Optional.of(sheetName.substring(1, sheetName.length() - 1).replace("''", "'"));
   }
 
-  boolean looksLikeSheetRangeReference(String formula) {
-    int bangIndex = formula.indexOf('!');
-    if (bangIndex <= 0 || bangIndex >= formula.length() - 1) {
-      return false;
-    }
-    String tail = formula.substring(bangIndex + 1);
-    return tail.contains("$") || tail.contains(":") || Character.isLetter(tail.charAt(0));
+  private static int sheetIndex(ExcelWorkbook workbook, ExcelNamedRangeScope scope) {
+    return switch (scope) {
+      case ExcelNamedRangeScope.WorkbookScope _ -> 0;
+      case ExcelNamedRangeScope.SheetScope sheetScope ->
+          Math.max(0, workbook.xssfWorkbook().getSheetIndex(sheetScope.sheetName()));
+    };
+  }
+
+  /** Parsed or unparseable sheet-reference facts for one formula-defined name. */
+  private sealed interface NamedFormulaReferences
+      permits NamedFormulaReferences.Parsed, NamedFormulaReferences.Unparseable {
+    record Parsed(List<String> sheetNames) implements NamedFormulaReferences {}
+
+    record Unparseable() implements NamedFormulaReferences {}
   }
 }

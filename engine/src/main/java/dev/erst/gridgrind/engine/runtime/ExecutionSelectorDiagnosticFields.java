@@ -46,11 +46,6 @@ final class ExecutionSelectorDiagnosticFields {
     if (selector instanceof CellSelector.ByAddress byAddress) {
       return Optional.of(byAddress.address());
     }
-    if (selector instanceof CellSelector.ByQualifiedAddresses qualifiedAddresses) {
-      return qualifiedAddresses.cells().size() == 1
-          ? Optional.of(qualifiedAddresses.cells().getFirst().address())
-          : Optional.empty();
-    }
     if (selector instanceof RangeSelector.RectangularWindow window) {
       return Optional.of(window.topLeftAddress());
     }
@@ -84,14 +79,6 @@ final class ExecutionSelectorDiagnosticFields {
       case CellSelector.AllUsedInSheet allUsedInSheet -> Optional.of(allUsedInSheet.sheetName());
       case CellSelector.ByAddress byAddress -> Optional.of(byAddress.sheetName());
       case CellSelector.ByAddresses byAddresses -> Optional.of(byAddresses.sheetName());
-      case CellSelector.ByQualifiedAddresses qualifiedAddresses ->
-          qualifiedAddresses.cells().stream()
-                      .map(CellSelector.QualifiedAddress::sheetName)
-                      .distinct()
-                      .count()
-                  == 1
-              ? Optional.of(qualifiedAddresses.cells().getFirst().sheetName())
-              : Optional.empty();
     };
   }
 

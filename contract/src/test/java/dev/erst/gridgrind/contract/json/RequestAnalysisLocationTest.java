@@ -64,6 +64,50 @@ class RequestAnalysisLocationTest {
     assertTrue(manual.byteOffsetAt("source").isEmpty());
   }
 
+  @Test
+  void locatesNestedCompactCellsAndCompositeAssertionsAtTheirAuthoredElements() {
+    RequestAnalysis gridAnalysis =
+        GridGrindJson.analyzeRequest(
+            """
+            {
+              "protocolVersion": "V2",
+              "source": { "type": "NEW" },
+              "persistence": { "type": "NONE" },
+              "steps": [{
+                "stepId": "set-range",
+                "target": { "type": "RANGE_BY_RANGE", "sheetName": "Budget", "range": "A1" },
+                "action": { "type": "SET_RANGE", "rows": { "type": "NUMBER", "cells": [[1e999]] } }
+              }]
+            }
+            """
+                .getBytes(StandardCharsets.UTF_8));
+    RequestAnalysis assertionAnalysis =
+        GridGrindJson.analyzeRequest(
+            """
+            {
+              "protocolVersion": "V2",
+              "source": { "type": "NEW" },
+              "persistence": { "type": "NONE" },
+              "steps": [{
+                "stepId": "all-of",
+                "target": { "type": "WORKBOOK_CURRENT" },
+                "assertion": { "type": "ALL_OF", "assertions": [] }
+              }]
+            }
+            """
+                .getBytes(StandardCharsets.UTF_8));
+
+    assertEquals(
+        "steps[0].action.rows.cells[0][0]",
+        gridAnalysis.structuralProblems().getFirst().jsonPath().orElseThrow());
+    assertTrue(gridAnalysis.structuralProblems().getFirst().byteOffset().isPresent());
+    assertEquals(
+        "steps[0].assertion.assertions",
+        assertionAnalysis.bindingFailures().getFirst().jsonPath(),
+        () -> assertionAnalysis.bindingFailures().getFirst().exception().toString());
+    assertTrue(assertionAnalysis.bindingFailures().getFirst().byteOffset().isPresent());
+  }
+
   private static long secondIndexOf(byte[] bytes, String token) {
     String text = new String(bytes, StandardCharsets.UTF_8);
     int firstIndex = text.indexOf(token);

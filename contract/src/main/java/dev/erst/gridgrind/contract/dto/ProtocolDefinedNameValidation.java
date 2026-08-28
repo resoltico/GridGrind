@@ -25,7 +25,11 @@ public final class ProtocolDefinedNameValidation {
     if (name.isBlank()) {
       return Optional.of(Violation.BLANK);
     }
-    if (!name.matches("^[A-Za-z_][A-Za-z0-9_.]*$")) {
+    if (name.codePointCount(0, name.length())
+        > ProtocolConstraintValues.DEFINED_NAME_MAX_CODE_POINTS) {
+      return Optional.of(Violation.TOO_LONG);
+    }
+    if (!isSupportedIdentifier(name)) {
       return Optional.of(Violation.SYNTAX);
     }
     if (name.regionMatches(true, 0, "_xlnm.", 0, "_xlnm.".length())) {
@@ -53,12 +57,40 @@ public final class ProtocolDefinedNameValidation {
     return columnNumber <= 16384;
   }
 
+  private static boolean isSupportedIdentifier(String name) {
+    int firstCodePoint = name.codePointAt(0);
+    if (!Character.isLetter(firstCodePoint) && firstCodePoint != '_' && firstCodePoint != '\\') {
+      return false;
+    }
+    int offset = Character.charCount(firstCodePoint);
+    while (offset < name.length()) {
+      int codePoint = name.codePointAt(offset);
+      if (!Character.isLetter(codePoint)
+          && !isUnicodeNumber(codePoint)
+          && codePoint != '_'
+          && codePoint != '.'
+          && codePoint != '\\') {
+        return false;
+      }
+      offset += Character.charCount(codePoint);
+    }
+    return true;
+  }
+
+  private static boolean isUnicodeNumber(int codePoint) {
+    return switch (Character.getType(codePoint)) {
+      case Character.DECIMAL_DIGIT_NUMBER, Character.LETTER_NUMBER, Character.OTHER_NUMBER -> true;
+      default -> false;
+    };
+  }
+
   private static String renderViolation(Violation violation) {
     return switch (violation) {
       case BLANK -> "name must not be blank";
+      case TOO_LONG -> "name must not exceed 255 Unicode code points";
       case SYNTAX ->
-          "name must start with a letter or underscore and contain only letters, digits,"
-              + " underscore, or period";
+          "name must start with a letter, underscore, or backslash and contain only Unicode"
+              + " letters, Unicode numbers, underscore, period, or backslash";
       case RESERVED_PREFIX -> "name must not use the reserved _xlnm. prefix";
       case A1_COLLISION -> "name must not collide with A1-style cell reference syntax";
       case R1C1_COLLISION -> "name must not collide with R1C1-style cell reference syntax";
@@ -68,6 +100,7 @@ public final class ProtocolDefinedNameValidation {
   /** Structured defined-name violation family. */
   public enum Violation {
     BLANK,
+    TOO_LONG,
     SYNTAX,
     RESERVED_PREFIX,
     A1_COLLISION,

@@ -328,7 +328,8 @@ class GridGrindJsonTest {
     assertEquals(Optional.of("persistence.path"), invalidPersistencePath.jsonPath());
     assertEquals(
         Optional.of("formulaEnvironment.externalWorkbooks[0].path"),
-        invalidExternalWorkbookPath.jsonPath());
+        invalidExternalWorkbookPath.jsonPath(),
+        invalidExternalWorkbookPath::toString);
   }
 
   @Test
@@ -366,11 +367,7 @@ class GridGrindJsonTest {
                     "set-owner",
                     "SET_CELL",
                     "warning")),
-            List.of(
-                new AssertionResult(
-                    dev.erst.gridgrind.contract.assertion.AssertionOutcome.PASSED,
-                    "assert-owner",
-                    "EXPECT_CELL_VALUE")),
+            List.of(new AssertionResult.Passed("assert-owner", "EXPECT_CELL_VALUE")),
             List.of(
                 new WorkbookInspectionResult.WorkbookSummaryResult(
                     "summary",
@@ -413,7 +410,6 @@ class GridGrindJsonTest {
                     java.util.Optional.of(
                         dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces.JsonLocation
                             .pathAtByteOffset("steps[0].action.value.source.path", 73))),
-                java.util.Optional.empty(),
                 List.of()));
     WorkbookResult calculationFailure =
         WorkbookResults.failure(
@@ -430,7 +426,6 @@ class GridGrindJsonTest {
                         .known("EXISTING", "SAVE_AS"),
                     dev.erst.gridgrind.contract.dto.ProblemContextWorkbookSurfaces.ProblemLocation
                         .formulaCell("Ops", "B1", "SUM(")),
-                java.util.Optional.empty(),
                 List.of()));
 
     assertEquals(

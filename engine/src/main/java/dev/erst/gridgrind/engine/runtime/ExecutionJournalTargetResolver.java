@@ -51,14 +51,6 @@ final class ExecutionJournalTargetResolver {
                       "CELL", "Cell " + byAddresses.sheetName() + "!" + address))
           .toList();
     }
-    if (selector instanceof CellSelector.ByQualifiedAddresses qualifiedAddresses) {
-      return qualifiedAddresses.cells().stream()
-          .map(
-              cell ->
-                  new ExecutionJournal.Target(
-                      "CELL", "Cell " + cell.sheetName() + "!" + cell.address()))
-          .toList();
-    }
     if (selector instanceof RangeSelector.ByRanges byRanges) {
       return byRanges.ranges().stream()
           .map(
@@ -139,8 +131,6 @@ final class ExecutionJournalTargetResolver {
           "Cell " + byAddress.sheetName() + "!" + byAddress.address();
       case CellSelector.ByAddresses byAddresses ->
           "Cells " + byAddresses.sheetName() + "!" + byAddresses.addresses();
-      case CellSelector.ByQualifiedAddresses qualifiedAddresses ->
-          "Qualified cells " + qualifiedAddresses.cells();
       case RangeSelector.AllOnSheet allOnSheet -> "All ranges on " + allOnSheet.sheetName();
       case RangeSelector.ByRange byRange -> "Range " + byRange.sheetName() + "!" + byRange.range();
       case RangeSelector.ByRanges byRanges ->

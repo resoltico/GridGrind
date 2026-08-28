@@ -10,6 +10,7 @@ import dev.erst.gridgrind.contract.dto.ChartLegendInput;
 import dev.erst.gridgrind.contract.dto.ChartPlotInput;
 import dev.erst.gridgrind.contract.dto.ChartTitleInput;
 import dev.erst.gridgrind.contract.dto.ConditionalFormattingRuleInput;
+import dev.erst.gridgrind.contract.dto.ConditionalFormattingThresholdInput;
 import dev.erst.gridgrind.contract.dto.DataValidationRuleInput;
 import dev.erst.gridgrind.contract.dto.DrawingAnchorInput;
 import dev.erst.gridgrind.contract.dto.FontHeightInput;
@@ -190,6 +191,7 @@ final class GridGrindProtocolCatalogChartAndValidationNestedTypeGroups {
           GridGrindProtocolCatalogStyleTypeGroups.CELL_GRADIENT_FILL_INPUT_TYPES,
           GridGrindProtocolCatalogStyleTypeGroups.CELL_FILL_INPUT_TYPES,
           GridGrindProtocolCatalogStyleTypeGroups.CELL_COLOR_REPORT_TYPES,
+          GridGrindProtocolCatalogStyleTypeGroups.CELL_BORDER_SIDE_REPORT_TYPES,
           GridGrindProtocolCatalogStyleTypeGroups.CELL_GRADIENT_FILL_REPORT_TYPES,
           GridGrindProtocolCatalogStyleTypeGroups.CELL_FILL_REPORT_TYPES,
           nestedTypeGroup(
@@ -296,6 +298,34 @@ final class GridGrindProtocolCatalogChartAndValidationNestedTypeGroups {
                       "TOP10_RULE",
                       "Apply one top/bottom-N conditional-formatting rule with a differential"
                           + " style."))),
+          nestedTypeGroup(
+              "conditionalFormattingThresholdTypes",
+              ConditionalFormattingThresholdInput.class,
+              List.of(
+                  descriptor(
+                      ConditionalFormattingThresholdInput.Min.class,
+                      "MIN",
+                      "Use the minimum value observed in the applied range."),
+                  descriptor(
+                      ConditionalFormattingThresholdInput.Max.class,
+                      "MAX",
+                      "Use the maximum value observed in the applied range."),
+                  descriptor(
+                      ConditionalFormattingThresholdInput.Numeric.class,
+                      "NUMBER",
+                      "Use one finite numeric threshold."),
+                  descriptor(
+                      ConditionalFormattingThresholdInput.Percent.class,
+                      "PERCENT",
+                      "Use one finite percentage threshold from 0 through 100."),
+                  descriptor(
+                      ConditionalFormattingThresholdInput.Percentile.class,
+                      "PERCENTILE",
+                      "Use one finite percentile threshold from 0 through 100."),
+                  descriptor(
+                      ConditionalFormattingThresholdInput.Formula.class,
+                      "FORMULA",
+                      "Use one nonblank, DDE-safe formula threshold."))),
           nestedTypeGroup(
               "printAreaTypes",
               PrintAreaInput.class,

@@ -1,6 +1,6 @@
 ---
 afad: "4.0"
-version: "0.73.0"
+version: "0.74.0"
 domain: STRUCTURED_DATA_MUTATIONS
 updated: "2026-05-15"
 route:
@@ -598,7 +598,9 @@ as its calculation-side change.
 
 ### SET_NAMED_RANGE
 
-Create or replace one named range in workbook scope or sheet scope. Targets are explicit
+Create or replace one named range in workbook scope or sheet scope. Authored names support Unicode
+letters and Unicode numbers, plus underscore, period, and backslash; the first code point must be
+a letter, underscore, or backslash, and the limit is 255 Unicode code points. Targets are explicit
 sheet-qualified cells or rectangular ranges, or formula-defined name targets.
 
 ```json

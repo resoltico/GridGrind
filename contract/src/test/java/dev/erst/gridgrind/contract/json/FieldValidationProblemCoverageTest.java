@@ -111,9 +111,14 @@ class FieldValidationProblemCoverageTest {
         "Provide a valid Excel sheet name for field 'sheetName'.");
     assertRendering(
         FieldValidationProblem.atField(
+            "definedName", FieldValidationNamingRule.DEFINED_NAME_TOO_LONG),
+        "definedName must not exceed 255 Unicode code points",
+        "Provide a valid Excel defined name for field 'definedName'.");
+    assertRendering(
+        FieldValidationProblem.atField(
             "definedName", FieldValidationNamingRule.DEFINED_NAME_SYNTAX),
-        "definedName must start with a letter or underscore and contain only letters, digits,"
-            + " underscore, or period",
+        "definedName must start with a letter, underscore, or backslash and contain only Unicode"
+            + " letters, Unicode numbers, underscore, period, or backslash",
         "Provide a valid Excel defined name for field 'definedName'.");
     assertRendering(
         FieldValidationProblem.atField(
@@ -213,10 +218,15 @@ class FieldValidationProblemCoverageTest {
         "definedName must not be blank");
     assertMapped(
         FieldValidationProblemMappers.definedName(
+            "definedName", ProtocolDefinedNameValidation.Violation.TOO_LONG),
+        FieldValidationNamingRule.DEFINED_NAME_TOO_LONG,
+        "definedName must not exceed 255 Unicode code points");
+    assertMapped(
+        FieldValidationProblemMappers.definedName(
             "definedName", ProtocolDefinedNameValidation.Violation.SYNTAX),
         FieldValidationNamingRule.DEFINED_NAME_SYNTAX,
-        "definedName must start with a letter or underscore and contain only letters, digits,"
-            + " underscore, or period");
+        "definedName must start with a letter, underscore, or backslash and contain only Unicode"
+            + " letters, Unicode numbers, underscore, period, or backslash");
     assertMapped(
         FieldValidationProblemMappers.definedName(
             "definedName", ProtocolDefinedNameValidation.Violation.RESERVED_PREFIX),

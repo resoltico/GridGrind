@@ -127,14 +127,12 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
 
     assertEquals(GridGrindProblemCode.ASSERTION_FAILED, failure.problem().code());
     assertEquals("EXECUTE_STEP", failure.problem().context().stage());
-    assertNotNull(failure.problem().assertionFailure().orElseThrow());
-    assertEquals("assert-owner", failure.problem().assertionFailure().orElseThrow().stepId());
-    assertEquals(
-        "EXPECT_CELL_VALUE", failure.problem().assertionFailure().orElseThrow().assertionType());
-    assertEquals(1, failure.problem().assertionFailure().orElseThrow().observations().size());
+    assertEquals("assert-owner", failedAssertion(failure).stepId());
+    assertEquals("EXPECT_CELL_VALUE", failedAssertion(failure).assertionType());
+    assertEquals(1, failedAssertion(failure).observations().size());
     assertInstanceOf(
         SheetInspectionResult.CellsResult.class,
-        failure.problem().assertionFailure().orElseThrow().observations().getFirst());
+        failedAssertion(failure).observations().getFirst());
   }
 
   @Test
@@ -330,7 +328,7 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
         new PictureDataInput(
             ExcelPictureFormat.PNG,
             binary(
-                "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+X2kQAAAAASUVORK5CYII="));
+                "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVQI12P4//8/AAX+Av7czFnnAAAAAElFTkSuQmCC"));
 
     WorkbookResult.Success success =
         success(
@@ -1012,8 +1010,7 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
                             new WorkbookMutationAction.InsertColumns())))));
 
     assertEquals(GridGrindProblemCode.INVALID_REQUEST, failure.problem().code());
-    assertTrue(failure.problem().message().contains("workbook formulas are present"));
-    assertTrue(failure.problem().message().contains("column structural edits"));
+    assertTrue(failure.problem().message().contains("Column insert, delete, and shift operations"));
   }
 
   @Test
@@ -1512,5 +1509,11 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
                 maybe(
                     fontInput(
                         Boolean.TRUE, null, null, null, ColorInput.rgb("#FF0000"), null, null)))));
+  }
+
+  private static dev.erst.gridgrind.contract.assertion.AssertionFailure failedAssertion(
+      WorkbookResult.Failure failure) {
+    return assertInstanceOf(AssertionResult.Failed.class, failure.assertions().getFirst())
+        .failure();
   }
 }

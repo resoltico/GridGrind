@@ -10,9 +10,9 @@
       "inputBytes" : 255,
       "commandCount" : 10,
       "commandKinds" : {
-        "APPEND_ROW" : 7,
+        "CREATE_SHEET" : 2,
         "SET_CHART" : 1,
-        "CREATE_SHEET" : 2
+        "APPEND_ROW" : 7
       },
       "styleKinds" : { }
     }
