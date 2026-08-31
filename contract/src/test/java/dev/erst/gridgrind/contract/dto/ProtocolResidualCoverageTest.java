@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.contract.dto;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
@@ -43,10 +44,10 @@ class ProtocolResidualCoverageTest {
   void conditionalFormattingAndValidationOptionalsNormalizeAtTheTypeBoundary() {
     ConditionalFormattingRuleInput.CellValueRule betweenRule =
         new ConditionalFormattingRuleInput.CellValueRule(
-            ExcelComparisonOperator.BETWEEN, "1", Optional.of(" 9 "), false, Optional.empty());
+            ExcelComparisonOperator.BETWEEN, "1", Optional.of(" 9 "), true, Optional.empty());
     ConditionalFormattingRuleInput.CellValueRule notBetweenRule =
         new ConditionalFormattingRuleInput.CellValueRule(
-            ExcelComparisonOperator.NOT_BETWEEN, "1", Optional.of(" 11 "), false, Optional.empty());
+            ExcelComparisonOperator.NOT_BETWEEN, "1", Optional.of(" 11 "), true, Optional.empty());
 
     assertEquals(Optional.of("9"), betweenRule.formula2());
     assertEquals(Optional.of("11"), notBetweenRule.formula2());
@@ -100,6 +101,129 @@ class ProtocolResidualCoverageTest {
                 Optional.of("DDE(\"cmd\",\"/C calc\",\"\")"),
                 false,
                 Optional.empty()));
+  }
+
+  @Test
+  void everyComparisonValidationSubtypeEnforcesItsCompleteFormulaContract() {
+    assertEquals(
+        Optional.of("9"),
+        new DataValidationRuleInput.WholeNumber(
+                ExcelComparisonOperator.BETWEEN, "1", Optional.of("9"))
+            .formula2());
+    assertEquals(
+        Optional.of("9"),
+        new DataValidationRuleInput.DecimalNumber(
+                ExcelComparisonOperator.BETWEEN, "1", Optional.of("9"))
+            .formula2());
+    assertEquals(
+        Optional.of("9"),
+        new DataValidationRuleInput.DateRule(ExcelComparisonOperator.BETWEEN, "1", Optional.of("9"))
+            .formula2());
+    assertEquals(
+        Optional.of("9"),
+        new DataValidationRuleInput.TimeRule(ExcelComparisonOperator.BETWEEN, "1", Optional.of("9"))
+            .formula2());
+    assertEquals(
+        Optional.of("9"),
+        new DataValidationRuleInput.TextLength(
+                ExcelComparisonOperator.BETWEEN, "1", Optional.of("9"))
+            .formula2());
+    assertEquals(
+        Optional.empty(),
+        new DataValidationRuleInput.WholeNumber(
+                ExcelComparisonOperator.GREATER_THAN, "1", Optional.empty())
+            .formula2());
+    assertEquals(
+        Optional.of("9"),
+        new DataValidationRuleInput.WholeNumber(
+                ExcelComparisonOperator.NOT_BETWEEN, "1", Optional.of("9"))
+            .formula2());
+    assertEquals("safe", new DataValidationRuleInput.FormulaList("safe").formula());
+    assertEquals("safe", new DataValidationRuleInput.CustomFormula("safe").formula());
+    assertEquals(
+        "formula2 must not be blank for between",
+        assertThrows(
+                IllegalArgumentException.class,
+                () ->
+                    new DataValidationRuleInput.WholeNumber(
+                        ExcelComparisonOperator.BETWEEN, "1", Optional.empty()))
+            .getMessage());
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new DataValidationRuleInput.WholeNumber(
+                ExcelComparisonOperator.BETWEEN,
+                "DDE(\"cmd\",\"/C calc\",\"\")",
+                Optional.of("9")));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new DataValidationRuleInput.DecimalNumber(
+                ExcelComparisonOperator.BETWEEN,
+                "DDE(\"cmd\",\"/C calc\",\"\")",
+                Optional.of("9")));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new DataValidationRuleInput.DateRule(
+                ExcelComparisonOperator.BETWEEN,
+                "DDE(\"cmd\",\"/C calc\",\"\")",
+                Optional.of("9")));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new DataValidationRuleInput.TimeRule(
+                ExcelComparisonOperator.BETWEEN,
+                "DDE(\"cmd\",\"/C calc\",\"\")",
+                Optional.of("9")));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new DataValidationRuleInput.TextLength(
+                ExcelComparisonOperator.BETWEEN,
+                "DDE(\"cmd\",\"/C calc\",\"\")",
+                Optional.of("9")));
+  }
+
+  @Test
+  void rejectsExplicitValidationListsThatExceedExcelsSerializedFormulaLimit() {
+    assertEquals(
+        "values must serialize to at most 255 characters for Excel data validation; got 260",
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> new DataValidationRuleInput.ExplicitList(List.of("x".repeat(256), "y")))
+            .getMessage());
+    assertDoesNotThrow(() -> new DataValidationRuleInput.ExplicitList(List.of("x".repeat(253))));
+    assertEquals(
+        "values must serialize to at most 255 characters for Excel data validation; got 256",
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> new DataValidationRuleInput.ExplicitList(List.of("x".repeat(254))))
+            .getMessage());
+    assertEquals(
+        "values must not contain ',' or '\"' in an explicit list; use FORMULA_LIST for values that require delimiters",
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> new DataValidationRuleInput.ExplicitList(List.of("North, East")))
+            .getMessage());
+    assertEquals(
+        "values must not contain ',' or '\"' in an explicit list; use FORMULA_LIST for values that require delimiters",
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> new DataValidationRuleInput.ExplicitList(List.of("North\" East")))
+            .getMessage());
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new DataValidationRuleInput.ExplicitList(List.of(",North")));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new DataValidationRuleInput.ExplicitList(List.of("\"North")));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new DataValidationRuleInput.ExplicitList(List.of(" ")));
+    assertEquals(
+        List.of("North", "West"),
+        new DataValidationRuleInput.ExplicitList(List.of("North", "West")).values());
   }
 
   @Test

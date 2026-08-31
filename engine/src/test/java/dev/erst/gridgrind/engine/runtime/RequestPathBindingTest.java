@@ -25,6 +25,9 @@ class RequestPathBindingTest {
         java.nio.file.NoSuchFileException.class,
         () -> RequestPathBinding.bindExistingRead("missing.xlsx", root));
     assertThrows(
+        java.nio.file.NoSuchFileException.class,
+        () -> RequestPathBinding.bindExistingRead("missing-parent/input.xlsx", root));
+    assertThrows(
         UnsafePathAccessException.class, () -> RequestPathBinding.bindWriteTarget(".", root));
     Path staged = Files.write(root.resolve("staged.xlsx"), new byte[] {6, 7, 8});
     try (RequestPathBinding write =

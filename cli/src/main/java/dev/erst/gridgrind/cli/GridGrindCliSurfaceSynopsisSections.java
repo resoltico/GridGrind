@@ -24,6 +24,7 @@ final class GridGrindCliSurfaceSynopsisSections {
                 + " [--response <path>] [--pretty] < request.json",
             "gridgrind --print-request-template [--response <path>] [--pretty]",
             "gridgrind --print-recipe --lookup <id> [--response <path>] [--pretty]",
+            "gridgrind --materialize-recipe --lookup <id> --workspace <new-directory> [--pretty]",
             "gridgrind --print-recipe-catalog [--lookup <id>] [--response <path>] [--pretty]",
             "gridgrind --print-recipe-keyword-match --query <text> [--response <path>]"
                 + " [--pretty]",
@@ -55,6 +56,8 @@ final class GridGrindCliSurfaceSynopsisSections {
                         + " --response recipes.json",
                     "Get one executable starter scenario: gridgrind --print-recipe"
                         + " --lookup DASHBOARD --response dashboard-request.json",
+                    "Publish one asset-backed scenario atomically: gridgrind"
+                        + " --materialize-recipe --lookup CUSTOM_XML --workspace custom-xml",
                     "Get the compact protocol-catalog index: gridgrind"
                         + " --print-protocol-catalog --response protocol-index.json",
                     "Search exact protocol shapes: gridgrind --print-protocol-catalog"
@@ -71,8 +74,9 @@ final class GridGrindCliSurfaceSynopsisSections {
                         + " --execution-root so request-owned paths resolve from one"
                         + " explicit invocation directory.",
                     "Use --print-recipe --lookup <id> when you want one shipped"
-                        + " executable example or task-starter scenario instead of"
-                        + " building from scratch.",
+                        + " self-contained example or task-starter scenario instead of"
+                        + " building from scratch; use --materialize-recipe for one"
+                        + " asset-backed recipe workspace.",
                     "Lint before executing: gridgrind --doctor-request --request"
                         + " request.json --response doctor.json")),
             new CliSurface.WorkflowEntry(
@@ -123,6 +127,10 @@ final class GridGrindCliSurfaceSynopsisSections {
                 "GET_SHEET_SCHEMA cells",
                 "rowCount * columnCount must not exceed 250,000 because schema inference"
                     + " still examines the full rectangular sample."),
+            new CliSurface.DefinitionEntry(
+                "Worksheet materialization",
+                "cell-range and row-materializing actions together must not materialize more"
+                    + " than 250,000 worksheet items per plan."),
             new CliSurface.DefinitionEntry(
                 "Request JSON size",
                 "request JSON must not exceed 16 MiB ("

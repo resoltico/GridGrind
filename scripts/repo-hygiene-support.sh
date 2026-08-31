@@ -16,13 +16,13 @@ readonly repo_hygiene_structural_root_entries=(
     LICENSE-APACHE-2.0
     LICENSE-BSD-2-CLAUSE
     LICENSE-BSD-3-CLAUSE
-    LICENSE-EDL-1.0
     NOTICE
     PATENTS.md
     README.md
     authoring-java
     build.gradle.kts
     check.sh
+    check_mutation.sh
     cli
     contract
     docs

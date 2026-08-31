@@ -42,6 +42,7 @@ readonly stage_contract_script="${repo_root}/scripts/check-stage-contract.sh"
 readonly release_protocol_doc="${repo_root}/docs/RELEASE_PROTOCOL.md"
 readonly temp_parent="${repo_root}/tmp/test-publication-contract"
 source "${script_dir}/lib/test-publication-contract-diagnostic-support.sh"
+source "${script_dir}/lib/test-publication-legal-support.sh"
 test_root=''
 jar_listing_path=''
 archive_listing_path=''
@@ -182,6 +183,8 @@ grep -Fq 'source "${bind_mount_support}"' "${docker_smoke_script}" || die \
 grep -Fq 'verify_documented_bind_mount_user_guidance "${image_tag}" "${smoke_root}" "${docker_run_user}"' \
     "${docker_smoke_script}" || die \
     "docker smoke no longer calls the documented bind-mount guidance probe"
+grep -Fq 'build_and_verify_image_legal_surface "${image_tag}" "${repo_root}"' "${docker_smoke_script}" || die \
+    "docker smoke no longer verifies legal-material visibility"
 grep -Fq 'documented_no_user_exit_code=$?' \
     "${docker_smoke_bind_mount_helper}" || die \
     "bind-mount guidance helper no longer handles the platform-dependent no-user failure path"
@@ -221,14 +224,7 @@ grep -Fq './scripts/verify-release-primary-checkout.sh "$PRIMARY_CHECKOUT" "X.Y.
     "${release_protocol_doc}" || die "release protocol no longer requires the primary-checkout closeout verifier"
 grep -Fq 'checks: read' "${release_workflow}" || die "release workflow is missing checks: read permission"
 grep -Fq 'checks: read' "${container_workflow}" || die "container workflow is missing checks: read permission"
-grep -Fq 'provenance: mode=max' "${container_workflow}" || die "container workflow does not publish explicit provenance"
-grep -Fq 'sbom: true' "${container_workflow}" || die "container workflow does not publish an SBOM attestation"
-grep -Fqx '            org.opencontainers.image.licenses=MIT AND Apache-2.0 AND BSD-2-Clause AND BSD-3-Clause AND EDL-1.0' \
-    "${container_workflow}" || die "container workflow still uses the wrong OCI license label"
-grep -Fqx '            org.opencontainers.image.licenses=MIT' "${container_workflow}" && die \
-    "container workflow still contains the legacy MIT-only OCI license label"
-grep -Fqx '            org.opencontainers.image.licenses=MIT AND Apache-2.0 AND BSD-3-Clause' "${container_workflow}" && die \
-    "container workflow still contains the incomplete 3-license OCI label (missing BSD-2-Clause and EDL-1.0)"
+verify_publication_legal_contract "${repo_root}" "${dockerfile}" "${container_workflow}"
 
 grep -Fq 'api(libs.jackson.annotations)' "${contract_build}" || die \
     "contract no longer exposes the Jackson annotations API needed by downstream compiles"

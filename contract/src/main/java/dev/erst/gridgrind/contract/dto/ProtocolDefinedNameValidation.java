@@ -8,6 +8,10 @@ import java.util.Optional;
 public final class ProtocolDefinedNameValidation {
   private ProtocolDefinedNameValidation() {}
 
+  static ProtocolDefinedNameValidation newForVerification() {
+    return new ProtocolDefinedNameValidation();
+  }
+
   /** Validates one protocol-facing defined-name identifier and returns its canonical text. */
   public static String validateName(String name) {
     Objects.requireNonNull(name, "name must not be null");

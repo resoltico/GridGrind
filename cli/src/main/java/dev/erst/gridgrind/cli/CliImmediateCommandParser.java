@@ -75,6 +75,9 @@ final class CliImmediateCommandParser {
     return switch (argument) {
       case "--print-recipe" ->
           Optional.of(CliLookupImmediateCommandParser.parseRecipe(args, index, responsePath));
+      case "--materialize-recipe" ->
+          Optional.of(
+              CliLookupImmediateCommandParser.parseMaterializeRecipe(args, index, responsePath));
       case "--print-recipe-catalog" ->
           Optional.of(
               CliLookupImmediateCommandParser.parseRecipeCatalog(args, index, responsePath));

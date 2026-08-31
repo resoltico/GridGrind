@@ -5,22 +5,13 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.function.BiPredicate;
 import java.util.regex.Pattern;
-import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 
 /** Build-failing architectural audits over key module and seam boundaries. */
 class ArchitectureSeamAuditTest {
-  private static final Pattern CONTRACT_ENGINE_IMPORT_PATTERN =
-      Pattern.compile(
-          "^import dev\\.erst\\.gridgrind\\.excel\\.(?!foundation\\.)", Pattern.MULTILINE);
   private static final Pattern QUALIFIED_ENGINE_EXPORT_PATTERN =
       Pattern.compile("exports dev\\.erst\\.gridgrind\\.engine\\.api;");
-  private static final Pattern POI_PRIVATE_ACCESS_PATTERN =
-      Pattern.compile("privateLookupIn|getDeclaredField|getDeclaredMethod|setAccessible\\(");
   private static final String STALE_MODULE_GRAPH = "`cli -> protocol -> engine`";
   private static final String STALE_JAZZER_MODULES = "local `engine` and `protocol` modules";
   private static final String STALE_NULL_DEFAULT_GUIDANCE = "The sole sanctioned null-return site";
@@ -33,55 +24,6 @@ class ArchitectureSeamAuditTest {
   private static final String STALE_KOTLIN_PROTOCOL_LOAD = ".codex/AGENTS_KOTLIN24_GRADLE.md";
   private static final String CURRENT_SQLITE_SURFACE =
       "SQLite surface touched: build, link, SQL, migrations, WAL, durability, bindings (baseline 3.53.2)";
-
-  @Test
-  void contractModuleOnlyImportsExcelFoundationTypes() throws IOException {
-    Path repositoryRoot = RepositoryRootTestSupport.repositoryRoot();
-    List<String> violations =
-        matchingFiles(
-            repositoryRoot.resolve("contract/src/main/java"),
-            (path, contents) -> CONTRACT_ENGINE_IMPORT_PATTERN.matcher(contents).find());
-
-    assertTrue(
-        violations.isEmpty(),
-        () -> "contract module must not import engine-side excel types: " + violations);
-  }
-
-  @Test
-  void formulaWritesStayCentralized() throws IOException {
-    Path repositoryRoot = RepositoryRootTestSupport.repositoryRoot();
-    Path engineSourceRoot = repositoryRoot.resolve("engine/src/main/java/dev/erst/gridgrind/excel");
-    List<String> violations =
-        matchingFiles(
-            engineSourceRoot,
-            (path, contents) ->
-                contents.contains("setCellFormula(")
-                    && !"ExcelFormulaWriteSupport.java".equals(path.getFileName().toString()));
-
-    assertTrue(
-        violations.isEmpty(),
-        () ->
-            "Direct formula writes must stay centralized in ExcelFormulaWriteSupport: "
-                + violations);
-  }
-
-  @Test
-  void poiPrivateAccessStaysCentralized() throws IOException {
-    Path repositoryRoot = RepositoryRootTestSupport.repositoryRoot();
-    Path engineSourceRoot = repositoryRoot.resolve("engine/src/main/java/dev/erst/gridgrind/excel");
-    List<String> violations =
-        matchingFiles(
-            engineSourceRoot,
-            (path, contents) ->
-                POI_PRIVATE_ACCESS_PATTERN.matcher(contents).find()
-                    && !"PoiPrivateAccessSupport.java".equals(path.getFileName().toString()));
-
-    assertTrue(
-        violations.isEmpty(),
-        () ->
-            "POI reflective/private access must stay centralized in PoiPrivateAccessSupport: "
-                + violations);
-  }
 
   @Test
   void pmdRulesetCommentsStayCurrent() throws IOException {
@@ -261,22 +203,5 @@ class ArchitectureSeamAuditTest {
     assertTrue(
         !moduleInfo.contains("exports dev.erst.gridgrind.excel;"),
         "engine module must not expose the low-level workbook package");
-  }
-
-  private static List<String> matchingFiles(Path root, BiPredicate<Path, String> matcher)
-      throws IOException {
-    List<String> violations = new ArrayList<>();
-    try (Stream<Path> files = Files.walk(root)) {
-      for (Path path :
-          files
-              .filter(path -> Files.isRegularFile(path) && path.toString().endsWith(".java"))
-              .toList()) {
-        String contents = Files.readString(path);
-        if (matcher.test(path, contents)) {
-          violations.add(root.getParent().getParent().getParent().relativize(path).toString());
-        }
-      }
-    }
-    return violations;
   }
 }

@@ -148,6 +148,97 @@ class RequestSyntaxSupportTest {
   }
 
   @Test
+  void retainsLineAndColumnForMultilineSyntaxFailures() {
+    RequestInvalidJson problem =
+        assertInstanceOf(
+            RequestInvalidJson.class,
+            TolerantRequestJsonParser.parse("{\n  broken\n}".getBytes(StandardCharsets.UTF_8))
+                .problems()
+                .getFirst());
+
+    assertEquals(Optional.of(2), problem.jsonLine());
+    assertEquals(Optional.of(3), problem.jsonColumn());
+  }
+
+  @Test
+  void retainsHumanCoordinatesForCrAndCrLfJsonWhitespace() {
+    RequestInvalidJson crOnly =
+        assertInstanceOf(
+            RequestInvalidJson.class,
+            TolerantRequestJsonParser.parse("{\r  broken\r}".getBytes(StandardCharsets.UTF_8))
+                .problems()
+                .getFirst());
+    RequestInvalidJson crLf =
+        assertInstanceOf(
+            RequestInvalidJson.class,
+            TolerantRequestJsonParser.parse("{\r\n  broken\r\n}".getBytes(StandardCharsets.UTF_8))
+                .problems()
+                .getFirst());
+
+    assertEquals(Optional.of(2), crOnly.jsonLine());
+    assertEquals(Optional.of(3), crOnly.jsonColumn());
+    assertEquals(Optional.of(2), crLf.jsonLine());
+    assertEquals(Optional.of(3), crLf.jsonColumn());
+  }
+
+  @Test
+  void rejectsPartialOrInvalidSyntaxLocationCoordinates() {
+    RequestInvalidJson located =
+        new RequestInvalidJson(
+            "located", Optional.empty(), Optional.of(0L), Optional.of(1), Optional.of(1));
+
+    assertEquals(Optional.of(1), located.jsonLine());
+    assertEquals(Optional.of(1), located.jsonColumn());
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new RequestInvalidJson(
+                "bad", Optional.empty(), Optional.of(0L), Optional.of(1), Optional.empty()));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new RequestInvalidJson(
+                "bad", Optional.empty(), Optional.of(0L), Optional.of(0), Optional.of(1)));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new RequestInvalidJson(
+                "bad", Optional.empty(), Optional.of(0L), Optional.of(1), Optional.of(0)));
+  }
+
+  @Test
+  void byteOffsetLineColumnLocationRetainsAllCoordinatesAndRejectsInvalidValues() {
+    var location =
+        dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces.JsonLocation
+            .byteOffsetLineColumn(7, 3, 4);
+
+    assertEquals(Optional.of(7L), location.byteOffsetValue());
+    assertEquals(Optional.of(3), location.jsonLineValue());
+    assertEquals(Optional.of(4), location.jsonColumnValue());
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces.JsonLocation
+                .byteOffsetLineColumn(-1, 1, 1));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces.JsonLocation
+                .byteOffsetLineColumn(0, 0, 1));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces.JsonLocation
+                .byteOffsetLineColumn(0, 1, 0));
+    assertThrows(
+        IllegalArgumentException.class, () -> new RequestUtf8DecodeResult.LineColumn(1, 0));
+    assertThrows(
+        IllegalArgumentException.class, () -> new RequestUtf8DecodeResult.LineColumn(0, 1));
+    RequestStructuralProblem duplicate = new RequestDuplicateKey("", "duplicate", 1, 0);
+    assertTrue(duplicate.jsonColumn().isEmpty());
+  }
+
+  @Test
   void acceptsOneLeadingUtf8BomAndPreservesOriginalByteOffsets() {
     byte[] body = "{\"value\": truth}".getBytes(StandardCharsets.UTF_8);
     byte[] withBom = new byte[body.length + 3];
@@ -376,7 +467,24 @@ class RequestSyntaxSupportTest {
     assertEquals(6L, decoded.byteOffsetAt(4));
     assertEquals(10L, decoded.byteOffsetAt(5));
     assertEquals(10L, decoded.byteOffsetAt(100));
+    assertEquals(new RequestUtf8DecodeResult.LineColumn(1, 1), decoded.lineColumnAt(-1));
+    assertEquals(new RequestUtf8DecodeResult.LineColumn(1, 5), decoded.lineColumnAt(100));
     assertTrue(decoded.problems().isEmpty());
+
+    RequestUtf8DecodeResult multiline =
+        RequestUtf8Decoder.decode("one\ntwo\nthree".getBytes(StandardCharsets.UTF_8));
+    assertEquals(new RequestUtf8DecodeResult.LineColumn(2, 1), multiline.lineColumnAt(4));
+    assertEquals(new RequestUtf8DecodeResult.LineColumn(3, 4), multiline.lineColumnAt(11));
+
+    RequestUtf8DecodeResult carriageReturns =
+        RequestUtf8Decoder.decode("one\r\ntwo\rthree".getBytes(StandardCharsets.UTF_8));
+    assertEquals(new RequestUtf8DecodeResult.LineColumn(2, 1), carriageReturns.lineColumnAt(4));
+    assertEquals(new RequestUtf8DecodeResult.LineColumn(2, 1), carriageReturns.lineColumnAt(5));
+    assertEquals(new RequestUtf8DecodeResult.LineColumn(3, 2), carriageReturns.lineColumnAt(10));
+    RequestUtf8DecodeResult terminalCarriageReturn =
+        RequestUtf8Decoder.decode("one\r".getBytes(StandardCharsets.UTF_8));
+    assertEquals(
+        new RequestUtf8DecodeResult.LineColumn(2, 1), terminalCarriageReturn.lineColumnAt(4));
 
     RequestUtf8DecodeResult malformed =
         RequestUtf8Decoder.decode(new byte[] {'{', (byte) 0xc3, (byte) 0x28});

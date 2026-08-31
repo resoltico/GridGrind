@@ -90,7 +90,7 @@ class RequestStructuralSupportTest {
             "Field 'source' must be a JSON object",
             "Missing required field 'source.type'",
             "Field 'source.type' must be a JSON string type id",
-            "Unknown type value 'UNKNOWN'"),
+            "Unknown type value 'UNKNOWN'; valid values: EXISTING, NEW"),
         problems.stream().map(RequestStructuralProblem::message).toList());
   }
 

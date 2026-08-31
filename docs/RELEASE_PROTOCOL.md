@@ -2,7 +2,7 @@
 afad: "5.0.1"
 version: "0.74.0"
 domain: RELEASE_PROTOCOL
-updated: "2026-08-28"
+updated: "2026-08-31"
 route:
   keywords: [gridgrind, release, gh, github-cli, java26, gradlew, tag, ci, container, docker]
   questions: ["how do I release gridgrind", "what is the gridgrind release procedure", "how do I verify java before a gridgrind release", "how do I publish a gridgrind tag release"]
@@ -103,14 +103,14 @@ git diff --cached --name-status
 git commit -m "release: prepare X.Y.Z payload"
 RELEASE_WORKTREE="$(mktemp -d -t gridgrind-release-XXXXXX)"
 git worktree add -b release/X.Y.Z "$RELEASE_WORKTREE" "$BOOTSTRAP_BRANCH"
-mkdir -p "$PRIMARY_CHECKOUT/.codex/tmp/release-bootstrap"
-printf 'PRIMARY_CHECKOUT=%s\nBOOTSTRAP_BRANCH=%s\nRELEASE_WORKTREE=%s\n' "$PRIMARY_CHECKOUT" "$BOOTSTRAP_BRANCH" "$RELEASE_WORKTREE" > "$PRIMARY_CHECKOUT/.codex/tmp/release-bootstrap/X.Y.Z.env"
 cd "$RELEASE_WORKTREE"
 ```
 
 Never fall back to running release verification from the dirty or problematic primary checkout just
 because the unpublished release payload currently lives there. The bootstrap branch is temporary;
-release closeout deletes it after the primary checkout has been reconciled.
+release closeout deletes it after the primary checkout has been reconciled. The current worktree
+and temporary branch remain discoverable through `git worktree list` and `git branch --list
+'bootstrap/release-*'`; do not create a second scratch manifest solely for the handoff.
 
 Before running any build or release command, verify the local Java and Gradle runtime:
 
@@ -482,6 +482,7 @@ Requirements:
 - `isDraft` is `false`.
 - `isPrerelease` is `false` unless the target release is intentionally a prerelease.
 - The fat JAR asset is present (currently `gridgrind.jar`).
+- The JAR contains `META-INF/LICENSE`, `META-INF/NOTICE`, `META-INF/PATENTS.md`, every referenced third-party license text, and Jackson Core's retained `META-INF/FastDoubleParser-LICENSE`, `META-INF/FastDoubleParser-ThirdParty-LICENSE`, and `META-INF/Schubfach-LICENSE`; its packaged Apache POI Custom XML recipe workbook matches the audited hash in `NOTICE`; `java -jar gridgrind.jar --license` reproduces the consolidated license and notice surface without requiring archive extraction. The `shadowJar` build must also have passed its fail-closed resolved-runtime legal-inventory check.
 
 If these conditions are satisfied, the GitHub Release handoff is complete even if an additional
 duplicate release workflow run failed after the release was already created.
@@ -523,6 +524,14 @@ successful `docker pull` alone is not sufficient verification. In particular: a 
 manifests have been deleted — the index manifest is still present but the image is not actually
 runnable. The `docker run --version`, CLI-contract checks, and published-example/task execution
 checks remain the definitive test.
+
+The image must expose GridGrind-specific legal files under `/usr/share/doc/gridgrind` and retain
+the base JRE and operating-system package legal material in their standard image locations. Do not
+publish `org.opencontainers.image.licenses` unless it is a complete SPDX expression for all
+contained software; the published SBOM and provenance attestations are the authoritative
+machine-readable inventory for the aggregate image. Confirm that the root `NOTICE` still points to
+the pinned Azul base-image Dockerfiles and Zulu licensing/source-availability materials whenever
+the base-image digest changes.
 
 If the verifier script fails, inspect the published state, fix the release surface, and rerun the
 same verification command. Do not switch to the operator's normal Docker config as a fallback.
@@ -665,5 +674,4 @@ closeout:
 
 ```bash
 git -C "$PRIMARY_CHECKOUT" branch -D "$BOOTSTRAP_BRANCH"
-rm -f "$PRIMARY_CHECKOUT/.codex/tmp/release-bootstrap/X.Y.Z.env"
 ```

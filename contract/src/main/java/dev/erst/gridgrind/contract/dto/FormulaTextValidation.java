@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.contract.dto;
 
+import dev.erst.gridgrind.contract.source.OoxmlTextValidation;
 import java.util.Objects;
 
 /** Canonical validation for the two V2 OOXML formula-body input contracts. */
@@ -33,26 +34,13 @@ public final class FormulaTextValidation {
 
   /** Rejects every Unicode code point that XML 1.0 forbids in character data. */
   public static void requireXml10CharacterData(String formula) {
-    Objects.requireNonNull(formula, "formula must not be null");
-    for (int index = 0;
-        index < formula.length();
-        index += Character.charCount(formula.codePointAt(index))) {
-      int codePoint = formula.codePointAt(index);
-      if (!isXml10Character(codePoint)) {
-        throw new InvalidRawFormulaTextException(
-            "formula text contains a character not permitted by XML 1.0 at code-point index "
-                + index);
-      }
+    try {
+      OoxmlTextValidation.requireXml10CharacterData(formula, "formula text");
+    } catch (IllegalArgumentException exception) {
+      throw new InvalidRawFormulaTextException(
+          Objects.requireNonNull(exception.getMessage(), "validation message must not be null"),
+          exception);
     }
-  }
-
-  private static boolean isXml10Character(int codePoint) {
-    return codePoint == 0x9
-        || codePoint == 0xA
-        || codePoint == 0xD
-        || (codePoint >= 0x20 && codePoint <= 0xD7FF)
-        || (codePoint >= 0xE000 && codePoint <= 0xFFFD)
-        || codePoint >= 0x10000;
   }
 
   private static String requireNonBlank(

@@ -23,8 +23,12 @@ dependencies {
         "net.ltgt.gradle:gradle-errorprone-plugin:${libs.versions.errorprone.plugin.get()}",
     )
     implementation("net.sourceforge.pmd:pmd-java:${libs.versions.pmd.get()}")
+    implementation(
+        "info.solidsoft.gradle.pitest:gradle-pitest-plugin:${libs.versions.pitest.gradle.plugin.get()}",
+    )
 
     testImplementation(platform(libs.junit.bom))
+    testImplementation(gradleTestKit())
     testImplementation(libs.junit.jupiter)
     testRuntimeOnly(libs.junit.platform.launcher)
 }
@@ -42,6 +46,10 @@ gradlePlugin {
         register("gridgrindJazzerConventions") {
             id = "gridgrind.jazzer-conventions"
             implementationClass = "dev.erst.gridgrind.buildlogic.GridGrindJazzerConventionsPlugin"
+        }
+        register("gridgrindMutationConventions") {
+            id = "gridgrind.mutation-conventions"
+            implementationClass = "dev.erst.gridgrind.buildlogic.GridGrindMutationConventionsPlugin"
         }
     }
 }

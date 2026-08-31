@@ -38,4 +38,38 @@ final class RequestUtf8DecodeResult {
     int boundedOffset = Math.min(Math.max(characterOffset, 0), byteOffsets.length - 1);
     return byteOffsets[boundedOffset];
   }
+
+  LineColumn lineColumnAt(int characterOffset) {
+    int boundedOffset = Math.min(Math.max(characterOffset, 0), text.length());
+    int line = 1;
+    int column = 1;
+    int index = 0;
+    while (index < boundedOffset) {
+      char current = text.charAt(index);
+      if (current == '\r') {
+        line++;
+        column = 1;
+        index = Math.incrementExact(index);
+        if (index < boundedOffset && text.charAt(index) == '\n') {
+          index = Math.incrementExact(index);
+        }
+      } else if (current == '\n') {
+        line++;
+        column = 1;
+        index = Math.incrementExact(index);
+      } else {
+        column++;
+        index += Character.charCount(text.codePointAt(index));
+      }
+    }
+    return new LineColumn(line, column);
+  }
+
+  record LineColumn(int line, int column) {
+    LineColumn {
+      if (line < 1 || column < 1) {
+        throw new IllegalArgumentException("line and column must be greater than 0");
+      }
+    }
+  }
 }

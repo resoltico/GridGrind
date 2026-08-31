@@ -205,8 +205,8 @@ assert_progress_output() {
 
     printf '%s\n' "${output}" | grep -Fq 'Discovery execution examples 1/1: BUDGET printing request' || die \
         "${mode_label}: discovery verifier no longer reports example request printing progress"
-    printf '%s\n' "${output}" | grep -Fq 'Discovery execution examples 1/1: BUDGET copying required assets' || die \
-        "${mode_label}: discovery verifier no longer reports example asset-copy progress"
+    printf '%s\n' "${output}" | grep -Fq 'Discovery execution examples 1/1: BUDGET preparing workspace' || die \
+        "${mode_label}: discovery verifier no longer reports example workspace preparation progress"
     printf '%s\n' "${output}" | grep -Fq 'Discovery execution examples 1/1: BUDGET doctoring request' || die \
         "${mode_label}: discovery verifier no longer reports example doctor progress"
     printf '%s\n' "${output}" | grep -Fq 'Discovery execution examples 1/1: BUDGET executing request' || die \
@@ -217,8 +217,8 @@ assert_progress_output() {
         "${mode_label}: discovery verifier no longer reports example success progress"
     printf '%s\n' "${output}" | grep -Fq 'Discovery execution task starters 1/1: DASHBOARD printing request' || die \
         "${mode_label}: discovery verifier no longer reports task-starter request printing progress"
-    printf '%s\n' "${output}" | grep -Fq 'Discovery execution task starters 1/1: DASHBOARD copying required assets' || die \
-        "${mode_label}: discovery verifier no longer reports task-starter asset-copy progress"
+    printf '%s\n' "${output}" | grep -Fq 'Discovery execution task starters 1/1: DASHBOARD preparing workspace' || die \
+        "${mode_label}: discovery verifier no longer reports task-starter workspace preparation progress"
     printf '%s\n' "${output}" | grep -Fq 'Discovery execution task starters 1/1: DASHBOARD doctoring request' || die \
         "${mode_label}: discovery verifier no longer reports task-starter doctor progress"
     printf '%s\n' "${output}" | grep -Fq 'Discovery execution task starters 1/1: DASHBOARD executing request' || die \

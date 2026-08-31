@@ -2,7 +2,7 @@
 afad: "4.0"
 version: "0.74.0"
 domain: DEVELOPER_DOCKER
-updated: "2026-05-26"
+updated: "2026-08-31"
 route:
   keywords: [gridgrind, docker, docker desktop, devcontainer, contributor container, docker smoke, check.sh, anonymous docker config, docker context, container]
   questions: ["how should i set up docker for gridgrind", "what is the difference between the gridgrind devcontainer and runtime container", "why should gridgrind use an anonymous docker config for docker smoke", "what docker runtime is supported for gridgrind", "how do i verify docker before running check.sh"]
@@ -48,9 +48,10 @@ Two separate container surfaces matter in this repository:
   glibc-based, full Zulu 26 JDK, official Docker-outside-of-Docker wiring so the contributor shell
   talks to the host Docker Desktop engine, and an optional VS Code overlay under
   `customizations.vscode`
-- published runtime container: `Dockerfile`, Alpine-based, minimal JRE surface that builds
-  `gridgrind.jar` inside a pinned builder stage and then copies only the packaged runtime artifact
-  into the final image
+- published runtime container: `Dockerfile`, Ubuntu-based Azul Zulu 26 JRE surface that builds
+  `gridgrind.jar` inside a pinned builder stage, installs only the fontconfig and DejaVu packages
+  required for deterministic signature rendering, and copies the packaged runtime artifact plus
+  GridGrind's legal files into the final image
 
 Do not collapse those two roles into one image. Contributor ergonomics and extension compatibility
 have different needs than the published runtime artifact.
@@ -65,6 +66,13 @@ Release-build reproducibility is part of that contract too:
   surface instead of silently dropping `SET_SIGNATURE_LINE`
 - the GHCR publication workflow emits OCI provenance and SBOM attestations for the published
   multi-arch image in addition to the runnable image tags
+- the workflow uses Docker metadata action for tags only; it deliberately does not apply that
+  action's repository-level MIT label set to the aggregate image, whose JRE, operating-system,
+  font, and application contents have several licenses
+- the image exposes GridGrind legal files under `/usr/share/doc/gridgrind`, retains the Zulu JRE
+  and Ubuntu package legal material in their standard locations, and omits
+  `org.opencontainers.image.licenses` unless a complete SPDX expression for every contained
+  component can be produced
 
 ## Why Anonymous Docker Config Matters
 
@@ -122,6 +130,8 @@ top-level verification entrypoints are intentionally serialized.
 - runs mounted-path container commands under the caller's UID:GID so response files and saved
   workbooks stay owned by the invoking operator on both macOS Docker Desktop and Linux CI runners
 - verifies `--help` and `--version`
+- verifies that GridGrind, JRE, and base-package legal files remain discoverable and that the image
+  does not publish a repository-level license as if it covered the aggregate contents
 - verifies create-from-`NEW`, reopen-from-`EXISTING`, signature-line authoring, and
   `STREAMING_WRITE` readback flows through a mounted working directory with spaces and punctuation
   in the paths

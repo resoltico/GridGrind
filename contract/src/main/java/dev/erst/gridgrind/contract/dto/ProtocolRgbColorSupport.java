@@ -8,6 +8,10 @@ import java.util.Optional;
 final class ProtocolRgbColorSupport {
   private ProtocolRgbColorSupport() {}
 
+  static ProtocolRgbColorSupport newForVerification() {
+    return new ProtocolRgbColorSupport();
+  }
+
   /** Normalizes one optional {@code #RRGGBB} literal for protocol storage and comparison. */
   static Optional<String> normalizeRgbHex(String color, String fieldName) {
     if (color == null) {

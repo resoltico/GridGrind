@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
 # Runtime-aware verification for the documented bind-mounted Docker command surface.
 
+# shellcheck source=/dev/null
+source "$(cd -P -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)/docker-smoke-legal-support.sh"
+
 verify_documented_bind_mount_user_guidance() {
     local probe_image_tag=$1
     local probe_smoke_root=$2

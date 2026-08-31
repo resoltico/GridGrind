@@ -797,9 +797,9 @@ class AdvancedMutationCommandConverterTest {
                     new ConditionalFormattingThresholdInput.Percent(67.0d)))));
 
     assertEquals(
-        new ExcelConditionalFormattingRule.Top10Rule(7, true, false, false, Optional.empty()),
+        new ExcelConditionalFormattingRule.Top10Rule(7, true, false, true, Optional.empty()),
         WorkbookCommandStructuredInputConverter.toExcelConditionalFormattingRule(
-            new ConditionalFormattingRuleInput.Top10Rule(false, 7, true, false, Optional.empty())));
+            new ConditionalFormattingRuleInput.Top10Rule(true, 7, true, false, Optional.empty())));
   }
 
   @Test

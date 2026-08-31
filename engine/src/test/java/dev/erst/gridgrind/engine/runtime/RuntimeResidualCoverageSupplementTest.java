@@ -171,7 +171,7 @@ class RuntimeResidualCoverageSupplementTest {
                         new ConditionalFormattingDefinitionInput(
                             List.of(
                                 new ConditionalFormattingRuleInput.FormulaRule(
-                                    "A1>0", false, Optional.empty()))))));
+                                    "A1>0", true, Optional.empty()))))));
 
     assertEquals(
         "SET_CONDITIONAL_FORMATTING requires explicit range targets", failure.getMessage());

@@ -51,6 +51,18 @@ class SourceBackedContractCoverageTest {
   }
 
   @Test
+  void cellTextRejectsXml10ForbiddenCharactersWithoutReplacingThem() {
+    IllegalArgumentException failure =
+        assertThrows(
+            IllegalArgumentException.class,
+            () -> new CellInput.Text(TextSourceInput.inline("A\u0007B")));
+
+    assertEquals(
+        "source.text contains XML 1.0-forbidden code point U+0007 at code-point index 1",
+        failure.getMessage());
+  }
+
+  @Test
   void sourceBackedDtosPreserveDeferredValuesAndDefaultOptionalFlags() {
     CommentInput defaultVisibleComment =
         CommentInput.plain(TextSourceInput.inline("Owner note"), "Ada", false);

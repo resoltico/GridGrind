@@ -9,7 +9,6 @@ import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.DataFormatter;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
-import org.apache.poi.ss.util.CellReference;
 
 /** Sizes columns deterministically from displayed cell content instead of host font metrics. */
 final class DeterministicColumnSizer {
@@ -19,15 +18,9 @@ final class DeterministicColumnSizer {
 
   /** Applies deterministic widths to every column that currently contains visible cell content. */
   @SuppressWarnings("PMD.UseConcurrentHashMap")
-  static void autoSize(
-      Sheet sheet,
-      String sheetName,
-      DataFormatter dataFormatter,
-      ExcelFormulaRuntime formulaRuntime) {
+  static void autoSize(Sheet sheet, DataFormatter dataFormatter) {
     Objects.requireNonNull(sheet, "sheet must not be null");
-    Objects.requireNonNull(sheetName, "sheetName must not be null");
     Objects.requireNonNull(dataFormatter, "dataFormatter must not be null");
-    Objects.requireNonNull(formulaRuntime, "formulaRuntime must not be null");
 
     Map<Integer, Double> widthsByColumn = new ConcurrentSkipListMap<>();
     for (Row row : sheet) {
@@ -35,7 +28,7 @@ final class DeterministicColumnSizer {
         if (!contributesVisibleContent(cell)) {
           continue;
         }
-        double width = displayedWidthCharacters(sheetName, cell, dataFormatter, formulaRuntime);
+        double width = displayedWidthCharacters(cell, dataFormatter);
         if (width <= 0.0d) {
           continue;
         }
@@ -56,26 +49,18 @@ final class DeterministicColumnSizer {
     return cell.getCellType() != CellType.BLANK;
   }
 
-  private static double displayedWidthCharacters(
-      String sheetName,
-      Cell cell,
-      DataFormatter dataFormatter,
-      ExcelFormulaRuntime formulaRuntime) {
-    String displayValue;
-    try {
-      displayValue =
-          cell.getCellType() == CellType.FORMULA
-              ? formulaRuntime.displayValue(dataFormatter, cell)
-              : dataFormatter.formatCellValue(cell);
-    } catch (RuntimeException exception) {
-      throw FormulaExceptions.wrap(
-          formulaRuntime,
-          sheetName,
-          new CellReference(cell.getRowIndex(), cell.getColumnIndex()).formatAsString(),
-          cell.getCellType() == CellType.FORMULA ? cell.getCellFormula() : null,
-          exception);
-    }
+  private static double displayedWidthCharacters(Cell cell, DataFormatter dataFormatter) {
+    String displayValue =
+        cell.getCellType() == CellType.FORMULA
+            ? cachedFormulaDisplayValue(cell)
+            : dataFormatter.formatCellValue(cell);
     return contentWidthCharacters(displayValue);
+  }
+
+  private static String cachedFormulaDisplayValue(Cell cell) {
+    DataFormatter cachedValueFormatter = new DataFormatter();
+    cachedValueFormatter.setUseCachedValuesForFormulaCells(true);
+    return cachedValueFormatter.formatCellValue(cell);
   }
 
   /** Returns the deterministic character width for one display string, including column padding. */

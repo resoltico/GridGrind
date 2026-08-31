@@ -2,10 +2,10 @@
 afad: "4.0"
 version: "0.74.0"
 domain: DEVELOPER_GRADLE
-updated: "2026-06-14"
+updated: "2026-08-31"
 route:
-  keywords: [gridgrind, gradle, build-logic, composite-build, version-catalog, jazzer, buildsrc, toolchain, configuration-cache, verification]
-  questions: ["how is the gridgrind gradle build structured", "why does gridgrind use gradle/build-logic instead of buildSrc", "how does the nested jazzer build consume the root project", "where are shared gradle conventions defined", "what should we review in the gradle setup"]
+  keywords: [gridgrind, gradle, build-logic, composite-build, version-catalog, archunit, architecturetest, jazzer, buildsrc, toolchain, configuration-cache, verification]
+  questions: ["how is the gridgrind gradle build structured", "how are archunit architecture rules executed", "why does gridgrind use gradle/build-logic instead of buildSrc", "how does the nested jazzer build consume the root project", "where are shared gradle conventions defined", "what should we review in the gradle setup"]
 ---
 
 # Gradle Setup Reference
@@ -24,7 +24,7 @@ GridGrind's machine-level setup rule is simple:
 - let the wrapper download the official Gradle distribution pinned by the repository
 - keep the repository checkout on the local Mac filesystem as part of the normal supported setup
 
-The wrapper version is currently `9.6.1`, as declared in
+The wrapper version is currently `9.7.1`, as declared in
 [gradle/wrapper/gradle-wrapper.properties](../gradle/wrapper/gradle-wrapper.properties).
 
 This file therefore documents build architecture and ownership boundaries, not how to install a
@@ -146,6 +146,18 @@ Jackson note:
 - keep the comment beside the version-catalog entry and the JSON round-trip regressions in place
   so this upstream Jackson rule does not get "fixed" incorrectly later
 
+Runtime legal-inventory note:
+- `:cli:verifyRuntimeLegalInventory` resolves the exact external artifacts entering the executable
+  JAR and compares them with the reviewed artifact-and-version set in `cli/build.gradle.kts`
+- it also requires the matching versioned component markers in the root `NOTICE`; both
+  `:cli:check` and `:cli:shadowJar` depend on the verification, so neither a normal gate nor a
+  direct release build can package an unaudited runtime dependency
+- the version strings in that reviewed set are compliance evidence, not dependency declarations;
+  `gradle/libs.versions.toml` remains the only resolution authority
+- every runtime dependency addition, removal, or upgrade therefore requires an artifact-level
+  license and NOTICE review followed by a deliberate update to the root legal files and the
+  reviewed set
+
 ### Thin module build scripts
 
 Large `.gradle.kts` files are hard to test, hard to refactor, and easy to let drift into mixed
@@ -202,8 +214,8 @@ release ledger after older changelog history rotates into the archive doc.
 
 Rules:
 - treat `verifyJavaSourceShape` as the authoritative repo-wide no-regression gate for handwritten
-  Java file size and API breadth across `main`, `test`, `testFixtures`, `parityTest`, and Jazzer
-  source sets
+  Java file size and API breadth across `main`, `test`, `testFixtures`, `architectureTest`,
+  `parityTest`, and Jazzer source sets
 - treat `verifyControlPlaneShape` as the authoritative repo-wide no-regression gate for
   repository-owned shell, Kotlin build-logic, and operator-control files instead of letting the
   repo-governing machinery drift outside the source-shape model
@@ -225,6 +237,40 @@ Rules:
 - document any new role family in the policy file instead of smuggling one-off ceilings into tests
 - keep seam/documentation audits in JUnit tests and keep generic structural-governance enforcement
   in build logic so the two do not drift into one mixed-purpose blob
+
+### Architecture-testing contract
+
+The verification-only `executor` project owns a dedicated `architectureTest` source set. It uses
+the verification-scoped `com.tngtech.archunit:archunit-junit6:1.5.0` integration, aligned with the repository
+JUnit `6.1.3` BOM and Platform Launcher. `executor:architectureTest` includes only the `archunit`
+engine and fails when it discovers no tests; `executor:architectureTestContract` includes only
+`junit-jupiter` and verifies the effective `archRule.failOnEmptyShould=true` setting plus the fixed
+13-rule inventory. `executor:check`, the root `architectureCheck` and `check` tasks, and
+`./check.sh` always run both tasks. Ordinary production modules and packaged distributions have no
+ArchUnit dependency. This is a permanent generally available repository gate, not an optional pilot
+or experimental profile. The targeted `architectureCheck` aggregate also runs PMD analysis for the
+architecture-test source itself.
+
+The ArchUnit import location provider supplies exactly the compiled `excel-foundation`, `contract`,
+`engine`, `authoring-java`, and `cli` modules. It also rejects test and Gradle test-fixture locations,
+so regression fixtures and verifier classes cannot become production inputs by source-set naming
+accident. The rules then check declared product package families and the acyclic graph; foundation,
+contract, engine, authoring, and CLI dependency direction; workbook mechanics below execution
+orchestration; the reviewed engine API implementation-bridge set; no runtime or unexported workbook
+implementation type in exported API supertypes, inherited members, protected extensible members, or
+generic signatures; centralized Apache POI formula writes and private access, including method
+references; and sealed-interface variants restricted to records, finite enums, sealed subinterfaces,
+or typed exception implementations. Sealed classes are reserved for typed exception bases without
+failing if the valid population is empty. The custom rule implementation is executor main code and
+therefore participates in the normal 100% JaCoCo gate and the executor PIT scope. JPMS descriptors
+still own actual exports, qualified opens, and module readability. Source-text audits remain only for
+build files, documentation, and other facts compiled bytecode cannot represent.
+
+Every architecture rule starts and remains green. Do not introduce `FreezingArchRule`,
+`ignoreDependency`, stored violation files, grandfathered baselines, or broad package exclusions.
+The source-set-owned `archunit.properties` also keeps empty `should` selections fail-closed. When a
+deliberate architecture change invalidates a rule, change the architecture and its documented model
+atomically, then express the new invariant directly.
 
 ### Coverage gate protocol
 
@@ -327,11 +373,48 @@ These are the Gradle-level invariants worth preserving:
 - active Jazzer fuzzing stays local-only; GitHub Actions must not become a live-fuzz surface
 - root `./check.sh` remains the supported whole-repo gate that sequences root verification, Jazzer
   verification, packaging, and Docker smoke checks
+- root `./check_mutation.sh` is the reproducible operator entrypoint for the separately scheduled
+  PIT gate; the mutation convention plugin owns tool versions and common policy, while each module
+  publishes an explicit reviewed class-to-test scope and measured baseline thresholds
 - the fixed `./check.sh` stage inventory and Stage 4 shell-regression coverage derive from
   `scripts/check-stage-contract.sh`, not from parallel copies in root-gate prose and execution
   wiring
 - root coverage aggregation derives its participants from JaCoCo-enabled Java subprojects and all
   of their `build/jacoco/*.exec` files rather than from a fixed module list
+
+### Mutation-testing contract
+
+Mutation testing is an independent semantic-strength gate, not another line-coverage report. Run
+`./check_mutation.sh`; do not add PIT to `./check.sh`. The wrapper requires a Java 26 JDK, shares
+the repository verification lock, rejects extra tasks and project-location overrides, and invokes
+the root-owned aggregate that requires contract, engine, and executor verification reports. Each
+scope first proves that every configured class and test pattern resolves to compiled bytecode, then
+PIT writes current-run-only reports to `contract/build/reports/pitest/`,
+`engine/build/reports/pitest/`, and `executor/build/reports/pitest/`.
+
+The reviewed scope is deliberately bounded and named explicitly in the owning module build files.
+Contract mutates defined-name validation, RGB normalization, conditional-formatting threshold
+validation, and catalog field constraints. Engine mutates formula-origin tracking, request
+persistence-path preflight, and the data-validation comparison-operator bridge. Executor mutates
+the permanent architecture location provider, rule inventory, dependency/public-surface predicates,
+domain-shape conditions, and call-site seam conditions. Every outer-class pattern includes its
+compiler-generated nested classes; every configured class and test pattern must resolve before PIT
+runs. An unlisted class is not mutation-tested and must never be described as covered by this gate.
+
+All three module scopes use PIT's explicit STRONGER mutator group and require 100% mutation score,
+100% test strength, and 100% line coverage within mutated classes. The report-verification task
+accepts only `KILLED` outcomes: survivors, uncovered mutations, run errors, and timeouts fail the
+gate. PIT's timeout constant and factor are explicit so timing policy is reviewed rather than left
+to tool defaults. A surviving mutant is work to triage, not a reason to lower a threshold or add a
+broad exclusion. Prove a mutant equivalent before applying a narrow owned filter; otherwise
+strengthen the test or simplify redundant production code.
+
+The mutation workflow runs weekly, manually, for merge-queue batches, and on pull requests that
+change mutation infrastructure or any source under the owning contract, engine, or executor module.
+It retains the HTML/XML report trees for 30 days even when the gate fails and fails if any required
+report is absent. Expand the scope whenever high-risk business logic changes or a defect shows that
+an unmutated seam had weak assertions; add its exact source and tests, establish zero-survivor
+evidence locally, then keep the scope declaration and its tests synchronized in the same change.
 
 If a proposed change breaks one of those invariants, document the reason in code comments and in
 the changelog instead of letting the system drift silently.

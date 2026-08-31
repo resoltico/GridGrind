@@ -109,7 +109,7 @@ class ExecutionDiagnosticFieldsTest {
             new ConditionalFormattingDefinitionInput(
                 List.of(
                     new ConditionalFormattingRuleInput.FormulaRule(
-                        "B2>0", false, Optional.empty()))));
+                        "B2>0", true, Optional.empty()))));
 
     assertEquals(
         new ProblemContextWorkbookSurfaces.ProblemLocation.SheetNamedRange("Budget", "BudgetTotal"),

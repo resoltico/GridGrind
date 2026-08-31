@@ -16,6 +16,10 @@ import java.util.List;
 final class RequestPreflightPaths {
   private RequestPreflightPaths() {}
 
+  static RequestPreflightPaths newForVerification() {
+    return new RequestPreflightPaths();
+  }
+
   static void verify(
       WorkbookPlan request,
       ExecutionInputBindings bindings,
@@ -64,16 +68,14 @@ final class RequestPreflightPaths {
                 InputReference.path("formula external workbook", externalWorkbook.path()))));
   }
 
-  private static void preflightPersistenceMaterial(
+  static void preflightPersistenceMaterial(
       WorkbookPlan request,
       ExecutionInputBindings bindings,
       List<GridGrindProblemDetail.Problem> problems) {
     try {
       ExcelOoxmlPersistenceOptions options =
           ExecutionRequestPaths.persistenceOptions(request.persistence(), bindings);
-      if (options.signature() instanceof ExcelOoxmlPersistenceSignature.Sign sign) {
-        ExcelOoxmlSigningMaterialSupport.signingMaterial(sign.options());
-      }
+      verifySigningMaterial(options.signature());
     } catch (Exception exception) {
       problems.add(
           GridGrindProblems.fromException(
@@ -82,6 +84,12 @@ final class RequestPreflightPaths {
                   ExecutionRequestPaths.requestShape(request),
                   ExecutionRequestPaths.persistenceReference(
                       request, bindings.workingDirectory()))));
+    }
+  }
+
+  static void verifySigningMaterial(ExcelOoxmlPersistenceSignature signature) {
+    if (signature instanceof ExcelOoxmlPersistenceSignature.Sign sign) {
+      ExcelOoxmlSigningMaterialSupport.signingMaterial(sign.options());
     }
   }
 
@@ -109,7 +117,7 @@ final class RequestPreflightPaths {
     }
   }
 
-  private static java.util.Optional<PersistenceTarget> persistenceTarget(WorkbookPlan request) {
+  static java.util.Optional<PersistenceTarget> persistenceTarget(WorkbookPlan request) {
     return switch (request.persistence()) {
       case WorkbookPlan.WorkbookPersistence.None _ -> java.util.Optional.empty();
       case WorkbookPlan.WorkbookPersistence.SaveAs saveAs ->
@@ -124,5 +132,5 @@ final class RequestPreflightPaths {
     };
   }
 
-  private record PersistenceTarget(String path, WorkbookArtifactWriteDisposition disposition) {}
+  record PersistenceTarget(String path, WorkbookArtifactWriteDisposition disposition) {}
 }

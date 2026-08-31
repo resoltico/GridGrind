@@ -89,6 +89,10 @@ class FieldValidationProblemCoverageTest {
   @Test
   void namingAndAddressRulesRenderStableMessagesAndResolutions() {
     assertRendering(
+        FieldValidationProblem.atField("range", FieldValidationAddressRule.RANGE_ORDER),
+        "range must end at or below and to the right of its start address",
+        "Order the end address at or below and to the right of the start address for field 'range'.");
+    assertRendering(
         FieldValidationProblem.atField(
             "sheetName",
             FieldValidationNamingRule.SHEET_NAME_TOO_LONG,

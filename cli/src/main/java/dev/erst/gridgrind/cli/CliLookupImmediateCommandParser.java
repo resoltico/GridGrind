@@ -21,6 +21,97 @@ final class CliLookupImmediateCommandParser {
         new CliCommand.PrintRecipe(lookupId, responsePath), nextIndex, "--print-recipe");
   }
 
+  static CliImmediateCommandParser.Result parseMaterializeRecipe(
+      String[] args, int index, Optional<Path> responsePath) {
+    if (responsePath.isPresent()) {
+      throw new CliArgumentsException(
+          "--response", "--materialize-recipe does not allow --response");
+    }
+    MaterializeRecipeArguments materializeArguments =
+        consumeMaterializeRecipeArguments(args, index);
+    return new CliImmediateCommandParser.Result(
+        new CliCommand.MaterializeRecipe(
+            materializeArguments.lookupId(), materializeArguments.workspacePath()),
+        materializeArguments.nextIndex(),
+        "--materialize-recipe");
+  }
+
+  private static MaterializeRecipeArguments consumeMaterializeRecipeArguments(
+      String[] args, int index) {
+    MaterializeRecipeArguments result = MaterializeRecipeArguments.empty(index + 1);
+    while (result.nextIndex() < args.length
+        && isMaterializeRecipeArgument(args[result.nextIndex()])) {
+      result = result.consume(args);
+    }
+    return result.requireComplete();
+  }
+
+  private static boolean isMaterializeRecipeArgument(String argument) {
+    return "--lookup".equals(argument) || "--workspace".equals(argument);
+  }
+
+  private record MaterializeRecipeArguments(
+      Optional<String> optionalLookupId, Optional<Path> optionalWorkspacePath, int nextIndex) {
+    private MaterializeRecipeArguments {
+      Objects.requireNonNull(optionalLookupId, "optionalLookupId must not be null");
+      Objects.requireNonNull(optionalWorkspacePath, "optionalWorkspacePath must not be null");
+    }
+
+    static MaterializeRecipeArguments empty(int nextIndex) {
+      return new MaterializeRecipeArguments(Optional.empty(), Optional.empty(), nextIndex);
+    }
+
+    MaterializeRecipeArguments consume(String[] args) {
+      return "--lookup".equals(args[nextIndex]) ? consumeLookup(args) : consumeWorkspace(args);
+    }
+
+    private MaterializeRecipeArguments consumeLookup(String[] args) {
+      if (optionalLookupId.isPresent()) {
+        throw new CliArgumentsException("--lookup", "Duplicate argument: --lookup");
+      }
+      int valueIndex = CliPathArguments.nextValueIndex(args, nextIndex, "--lookup");
+      return new MaterializeRecipeArguments(
+          Optional.of(
+              CliPathArguments.requireNonBlankValue(
+                  "--lookup", args[valueIndex], "recipe lookup id")),
+          optionalWorkspacePath,
+          valueIndex + 1);
+    }
+
+    private MaterializeRecipeArguments consumeWorkspace(String[] args) {
+      if (optionalWorkspacePath.isPresent()) {
+        throw new CliArgumentsException("--workspace", "Duplicate argument: --workspace");
+      }
+      int valueIndex = CliPathArguments.nextValueIndex(args, nextIndex, "--workspace");
+      return new MaterializeRecipeArguments(
+          optionalLookupId,
+          Optional.of(
+              CliPathArguments.requirePathValue(
+                  "--workspace", args[valueIndex], "workspace path", false)),
+          valueIndex + 1);
+    }
+
+    MaterializeRecipeArguments requireComplete() {
+      if (optionalLookupId.isEmpty()) {
+        throw new CliArgumentsException(
+            "--lookup", "--materialize-recipe requires --lookup and one recipe id value");
+      }
+      if (optionalWorkspacePath.isEmpty()) {
+        throw new CliArgumentsException(
+            "--workspace", "--materialize-recipe requires --workspace and one new directory path");
+      }
+      return this;
+    }
+
+    String lookupId() {
+      return optionalLookupId.orElseThrow();
+    }
+
+    Path workspacePath() {
+      return optionalWorkspacePath.orElseThrow();
+    }
+  }
+
   static CliImmediateCommandParser.Result parseRecipeCatalog(
       String[] args, int index, Optional<Path> responsePath) {
     LookupSequence lookupSequence = consumeLookupSequence(args, index, "recipe lookup id");

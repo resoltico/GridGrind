@@ -214,6 +214,8 @@ class GridGrindRootConventionsPlugin : Plugin<Project> {
                         "Fails when repo-owned production Java sources introduce unreviewed semantic-shape PMD findings."
                 }
             val verifyBuildLogicTests = gradle.includedBuild("build-logic").task(":test")
+            val architectureCheck = registerGridGrindArchitectureCheck()
+            registerGridGrindMutationCheck()
 
             tasks.named("check") { checkTask ->
                 checkTask.dependsOn("spotlessCheck")
@@ -225,6 +227,7 @@ class GridGrindRootConventionsPlugin : Plugin<Project> {
                 checkTask.dependsOn(verifyForbiddenJavaUnionShapes)
                 checkTask.dependsOn(verifyJavaSemanticShape)
                 checkTask.dependsOn(verifyBuildLogicTests)
+                checkTask.dependsOn(architectureCheck)
             }
 
             val jacocoAggregatedReport =
@@ -348,6 +351,7 @@ class GridGrindRootConventionsPlugin : Plugin<Project> {
     private fun Project.controlPlaneShapeTargets(): List<Any> =
         buildList {
             add(rootFile("check.sh"))
+            add(rootFile("check_mutation.sh"))
             add(rootFile("CHANGELOG.md"))
             add(rootFile("docs/RELEASE_PROTOCOL.md"))
             add(projectFileTree("scripts") { include("**/*.sh") })
@@ -383,12 +387,14 @@ class GridGrindRootConventionsPlugin : Plugin<Project> {
             add(rootFile("Dockerfile"))
             add(rootFile("LICENSE"))
             add(rootFile("LICENSE-APACHE-2.0"))
+            add(rootFile("LICENSE-BSD-2-CLAUSE"))
             add(rootFile("LICENSE-BSD-3-CLAUSE"))
             add(rootFile("NOTICE"))
             add(rootFile("PATENTS.md"))
             add(rootFile("README.md"))
             add(rootFile("build.gradle.kts"))
             add(rootFile("check.sh"))
+            add(rootFile("check_mutation.sh"))
             add(rootFile("gradle.properties"))
             add(rootFile("settings.gradle.kts"))
             add(rootFile("authoring-java/build.gradle.kts"))

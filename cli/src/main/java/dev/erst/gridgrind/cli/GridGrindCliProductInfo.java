@@ -99,19 +99,13 @@ final class GridGrindCliProductInfo {
         anchor.getResourceAsStream("/licenses/NOTICE"),
         anchor.getResourceAsStream("/licenses/LICENSE-APACHE-2.0"),
         anchor.getResourceAsStream("/licenses/LICENSE-BSD-2-CLAUSE"),
-        anchor.getResourceAsStream("/licenses/LICENSE-BSD-3-CLAUSE"),
-        anchor.getResourceAsStream("/licenses/LICENSE-EDL-1.0"));
+        anchor.getResourceAsStream("/licenses/LICENSE-BSD-3-CLAUSE"));
   }
 
   static String licenseText(
-      InputStream own,
-      InputStream notice,
-      InputStream apache,
-      InputStream bsd2,
-      InputStream bsd3,
-      InputStream edl) {
+      InputStream own, InputStream notice, InputStream apache, InputStream bsd2, InputStream bsd3) {
     String ownText = readLicenseStream(own);
-    String thirdParty = buildThirdParty(notice, apache, bsd2, bsd3, edl);
+    String thirdParty = buildThirdParty(notice, apache, bsd2, bsd3);
     if (ownText.isEmpty() && thirdParty.isEmpty()) {
       return "License information not available in this distribution.\n";
     }
@@ -147,18 +141,13 @@ final class GridGrindCliProductInfo {
   }
 
   private static String buildThirdParty(
-      InputStream notice, InputStream apache, InputStream bsd2, InputStream bsd3, InputStream edl) {
+      InputStream notice, InputStream apache, InputStream bsd2, InputStream bsd3) {
     String noticeText = readLicenseStream(notice);
     String apacheText = readLicenseStream(apache);
     String bsd2Text = readLicenseStream(bsd2);
     String bsd3Text = readLicenseStream(bsd3);
-    String edlText = readLicenseStream(edl);
     int capacity =
-        noticeText.length()
-            + apacheText.length()
-            + bsd2Text.length()
-            + bsd3Text.length()
-            + edlText.length();
+        noticeText.length() + apacheText.length() + bsd2Text.length() + bsd3Text.length();
     StringBuilder result = new StringBuilder(capacity);
     String sep = "";
     if (!noticeText.isEmpty()) {
@@ -175,10 +164,6 @@ final class GridGrindCliProductInfo {
     }
     if (!bsd3Text.isEmpty()) {
       result.append(sep).append(bsd3Text);
-      sep = "\n";
-    }
-    if (!edlText.isEmpty()) {
-      result.append(sep).append(edlText);
     }
     return result.toString();
   }

@@ -51,6 +51,7 @@ public sealed interface ConditionalFormattingRuleInput
       if (formula.isBlank()) {
         throw new IllegalArgumentException("formula must not be blank");
       }
+      requireStyleOrStopBarrier(style, stopIfTrue);
       FormulaInputSecurity.rejectDde(formula); // LIM-027
     }
   }
@@ -71,6 +72,7 @@ public sealed interface ConditionalFormattingRuleInput
       if (formula1.isBlank()) {
         throw new IllegalArgumentException("formula1 must not be blank");
       }
+      requireStyleOrStopBarrier(style, stopIfTrue);
       FormulaInputSecurity.rejectDde(formula1); // LIM-027
       formula2 = normalizeOptionalComparisonUpperBound(operator, formula2);
     }
@@ -156,6 +158,7 @@ public sealed interface ConditionalFormattingRuleInput
       if (rank <= 0) {
         throw new IllegalArgumentException("rank must be greater than 0");
       }
+      requireStyleOrStopBarrier(style, stopIfTrue);
     }
   }
 
@@ -196,5 +199,13 @@ public sealed interface ConditionalFormattingRuleInput
           "formula2 must be omitted unless operator is BETWEEN or NOT_BETWEEN");
     }
     return Optional.empty();
+  }
+
+  private static void requireStyleOrStopBarrier(
+      Optional<DifferentialStyleInput> style, boolean stopIfTrue) {
+    if (style.isEmpty() && !stopIfTrue) {
+      throw new IllegalArgumentException(
+          "style is required unless stopIfTrue creates a conditional-formatting barrier");
+    }
   }
 }

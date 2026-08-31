@@ -3,6 +3,8 @@ package dev.erst.gridgrind.cli;
 import dev.erst.gridgrind.cli.discovery.GridGrindCliJson;
 import dev.erst.gridgrind.cli.discovery.GridGrindRecipeCatalog;
 import dev.erst.gridgrind.cli.examples.GridGrindCliRecipeRegistry;
+import dev.erst.gridgrind.cli.examples.RecipeWorkspacePublicationException;
+import dev.erst.gridgrind.cli.examples.RecipeWorkspacePublisher;
 import dev.erst.gridgrind.contract.json.GridGrindJsonOutput;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -31,9 +33,66 @@ final class GridGrindCliRecipeDiscoveryCommands {
           CommandErrors.invalidArguments("print-recipe", Optional.of("--lookup"), message),
           prettyJson);
     }
-    byte[] requestBytes = GridGrindJsonOutput.writeRequestBytes(recipe.get().plan(), prettyJson);
+    var resolvedRecipe = recipe.get();
+    if (!resolvedRecipe.requiredWorkspacePaths().isEmpty()) {
+      return CliCatalogPayloadSupport.writeCommandError(
+          responseWriter,
+          Optional.empty(),
+          stdout,
+          stderr,
+          CommandErrors.invalidArguments(
+              "print-recipe",
+              Optional.of("--materialize-recipe"),
+              "Asset-backed recipes require --materialize-recipe --lookup "
+                  + resolvedRecipe.id()
+                  + " --workspace <new-directory>."),
+          prettyJson);
+    }
+    byte[] requestBytes = GridGrindJsonOutput.writeRequestBytes(resolvedRecipe.plan(), prettyJson);
     return CliCatalogPayloadSupport.writePayload(
         responseWriter, command.responsePath(), stdout, stderr, requestBytes);
+  }
+
+  static int materializeRecipe(
+      CliCommand.MaterializeRecipe command,
+      boolean prettyJson,
+      OutputStream stdout,
+      OutputStream stderr,
+      CliResponseWriter responseWriter)
+      throws IOException {
+    var recipe = GridGrindCliRecipeRegistry.recipeFor(command.lookupId());
+    if (recipe.isEmpty()) {
+      return CliCatalogPayloadSupport.writeCommandError(
+          responseWriter,
+          Optional.empty(),
+          stdout,
+          stderr,
+          CommandErrors.invalidArguments(
+              "materialize-recipe",
+              Optional.of("--lookup"),
+              CliCatalogCommandSupport.unknownRecipeMessage(command.lookupId())),
+          prettyJson);
+    }
+    var resolvedRecipe = recipe.orElseThrow();
+    byte[] requestBytes = GridGrindJsonOutput.writeRequestBytes(resolvedRecipe.plan(), prettyJson);
+    try {
+      RecipeWorkspacePublisher.publish(resolvedRecipe, command.workspacePath(), requestBytes);
+    } catch (RecipeWorkspacePublicationException exception) {
+      return CliCatalogPayloadSupport.writeCommandError(
+          responseWriter,
+          Optional.empty(),
+          stdout,
+          stderr,
+          CommandErrors.invalidArguments(
+              "materialize-recipe",
+              Optional.of("--workspace"),
+              Objects.requireNonNullElse(
+                  exception.getMessage(), "Recipe workspace could not be published")),
+          prettyJson);
+    }
+    CliCatalogPayloadSupport.writePayload(
+        responseWriter, Optional.empty(), stdout, stderr, requestBytes);
+    return 0;
   }
 
   static int recipeCatalog(

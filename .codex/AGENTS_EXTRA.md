@@ -128,6 +128,18 @@ surface, not as a runtime bridge. Do not reintroduce a separate runtime `executo
 Do not bypass module boundaries with broadened exports, transitive leaks, or classpath-only
 workarounds when the correct fix is to move ownership to the right module.
 
+The verification-only `executor` project owns the mandatory `architectureTest` and
+`architectureTestContract` tasks. The former runs only the ArchUnit engine over the five explicit
+compiled product-module locations; the latter runs only Jupiter and verifies the effective
+fail-closed policy plus the mandatory rule inventory. Custom rule code lives in executor main and
+is covered by both JaCoCo and the executor PIT scope, including compiler-generated condition and
+predicate classes under the explicit STRONGER mutator policy. The permanent rules inspect package ownership,
+the product dependency DAG, foundation/contract/engine/adapter direction, the narrow engine API
+bridge set, public-surface implementation leaks, closed sealed-interface variants, exception-only
+sealed classes, centralized formula writes, and centralized private POI access. Keep every rule
+immediately green: `FreezingArchRule`, ignored dependencies, stored violation baselines, and
+grandfathered exceptions are forbidden.
+
 **When to update `module-info.java`:**
 - Adding a new package that Jackson must deserialize: add `opens <pkg> to tools.jackson.databind`.
 - Adding a new package whose types are referenced by another module: add `exports <pkg>`.

@@ -10,17 +10,14 @@ import org.apache.poi.xssf.usermodel.XSSFSheet;
 /** Column operations for one sheet wrapper. */
 final class ExcelSheetColumnSupport {
   private final Sheet sheet;
-  private final ExcelFormulaRuntime formulaRuntime;
   private final DataFormatter dataFormatter;
   private final ExcelColumnStructureController columnStructureController;
 
   ExcelSheetColumnSupport(
       Sheet sheet,
-      ExcelFormulaRuntime formulaRuntime,
       DataFormatter dataFormatter,
       ExcelColumnStructureController columnStructureController) {
     this.sheet = Objects.requireNonNull(sheet, "sheet must not be null");
-    this.formulaRuntime = Objects.requireNonNull(formulaRuntime, "formulaRuntime must not be null");
     this.dataFormatter = Objects.requireNonNull(dataFormatter, "dataFormatter must not be null");
     this.columnStructureController =
         Objects.requireNonNull(
@@ -70,8 +67,8 @@ final class ExcelSheetColumnSupport {
     return columnStructureController.lastColumnIndex(xssfSheet());
   }
 
-  void autoSizeColumns(String sheetName) {
-    DeterministicColumnSizer.autoSize(sheet, sheetName, dataFormatter, formulaRuntime);
+  void autoSizeColumns() {
+    DeterministicColumnSizer.autoSize(sheet, dataFormatter);
   }
 
   private XSSFSheet xssfSheet() {

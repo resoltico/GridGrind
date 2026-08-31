@@ -96,7 +96,6 @@ trap cleanup EXIT
     "${docker_run_user}" \
     "${heartbeat_seconds}" <<'PY'
 import json
-import shutil
 import subprocess
 import sys
 import time
@@ -110,9 +109,6 @@ artifact_target = sys.argv[3]
 temp_root = Path(sys.argv[4])
 docker_run_user = sys.argv[5]
 heartbeat_seconds = max(1, int(sys.argv[6]))
-examples_root = repo_root / "examples"
-
-
 def die(message: str) -> None:
     print(f"error: {message}", file=sys.stderr)
     raise SystemExit(1)
@@ -224,16 +220,6 @@ def artifact_path(path: Path, workspace: Path) -> str:
     die(f"unsupported launcher mode {mode}")
 
 
-def copy_required_assets(request_dir: Path, required_paths: list[str]) -> None:
-    for relative_path in required_paths:
-        source_path = examples_root / relative_path
-        target_path = request_dir / relative_path
-        if not source_path.exists():
-            die(f"missing published asset {source_path}")
-        target_path.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copy2(source_path, target_path)
-
-
 def prepare_save_as_parent(request_path: Path) -> None:
     request = json.loads(request_path.read_text(encoding="utf-8"))
     persistence = request.get("persistence", {})
@@ -253,35 +239,61 @@ def execute_plan(
     stable_id: str,
     ordinal: int,
     total: int,
-    request_command: list[str],
     request_file_name: str,
     required_workspace_paths: list[str],
 ) -> None:
-    workspace = temp_root / kind / stable_id.lower()
-    workspace.mkdir(parents=True, exist_ok=True)
+    workspace_parent = temp_root / kind
+    workspace_parent.mkdir(parents=True, exist_ok=True)
+    workspace = workspace_parent / stable_id.lower()
     request_path = workspace / request_file_name
-    request_path.parent.mkdir(parents=True, exist_ok=True)
-    doctor_path = workspace / "doctor.json"
-    response_path = workspace / "response.json"
-
-    progress(f"Discovery execution {kind} {ordinal}/{total}: {stable_id} printing request")
-    printed = run(
-        [*request_command, "--response", artifact_path(request_path, workspace)],
-        workspace,
-        f"Discovery execution {kind} {ordinal}/{total}: {stable_id} printing request",
-    )
-    if printed.returncode != 0:
-        die(
-            f"{kind} {stable_id} did not print successfully\n"
-            + f"stdout: {printed.stdout}\n"
-            + f"stderr: {printed.stderr}"
+    if required_workspace_paths:
+        progress(f"Discovery execution {kind} {ordinal}/{total}: {stable_id} materializing recipe workspace")
+        materialized = run(
+            [
+                "--materialize-recipe",
+                "--lookup",
+                stable_id,
+                "--workspace",
+                artifact_path(workspace, workspace_parent),
+            ],
+            workspace_parent,
+            f"Discovery execution {kind} {ordinal}/{total}: {stable_id} materializing recipe workspace",
         )
+        if materialized.returncode != 0:
+            die(
+                f"{kind} {stable_id} did not materialize successfully\n"
+                + f"stdout: {materialized.stdout}\n"
+                + f"stderr: {materialized.stderr}"
+            )
+        if json.loads(materialized.stdout) != json.loads(request_path.read_text()):
+            die(f"{kind} {stable_id} materialized request differs from its primary output")
+    else:
+        workspace.mkdir(parents=True, exist_ok=True)
+        progress(f"Discovery execution {kind} {ordinal}/{total}: {stable_id} printing request")
+        printed = run(
+            [
+                "--print-recipe",
+                "--lookup",
+                stable_id,
+                "--response",
+                artifact_path(request_path, workspace),
+            ],
+            workspace,
+            f"Discovery execution {kind} {ordinal}/{total}: {stable_id} printing request",
+        )
+        if printed.returncode != 0:
+            die(
+                f"{kind} {stable_id} did not print successfully\n"
+                + f"stdout: {printed.stdout}\n"
+                + f"stderr: {printed.stderr}"
+            )
     if not request_path.exists():
         die(f"{kind} {stable_id} did not create request file {request_path}")
 
-    progress(f"Discovery execution {kind} {ordinal}/{total}: {stable_id} copying required assets")
-    copy_required_assets(request_path.parent, required_workspace_paths)
+    progress(f"Discovery execution {kind} {ordinal}/{total}: {stable_id} preparing workspace")
     prepare_save_as_parent(request_path)
+    doctor_path = workspace / "doctor.json"
+    response_path = workspace / "response.json"
 
     progress(f"Discovery execution {kind} {ordinal}/{total}: {stable_id} doctoring request")
     doctor = run(
@@ -351,7 +363,6 @@ for index, example in enumerate(example_entries, start=1):
         example["id"],
         index,
         len(example_entries),
-        ["--print-recipe", "--lookup", example["id"]],
         example["requestFileName"],
         example["requiredWorkspacePaths"],
     )
@@ -362,10 +373,8 @@ for index, task_starter in enumerate(task_starter_entries, start=1):
         task_starter["id"],
         index,
         len(task_starter_entries),
-        ["--print-recipe", "--lookup", task_starter["id"]],
         task_starter["requestFileName"],
         task_starter["requiredWorkspacePaths"],
     )
 PY
-
 printf 'Verified CLI discovery execution surface via %s %s\n' "${mode}" "${target}"

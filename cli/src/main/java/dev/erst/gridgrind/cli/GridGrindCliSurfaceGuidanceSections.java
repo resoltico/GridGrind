@@ -62,6 +62,7 @@ final class GridGrindCliSurfaceGuidanceSections {
             "gridgrind --doctor-request --request request.json --response doctor.json",
             "gridgrind --print-recipe-catalog --response recipes.json",
             "gridgrind --print-recipe --lookup <id> --response recipe.json",
+            "gridgrind --materialize-recipe --lookup <asset-backed-id> --workspace recipe-workspace",
             "gridgrind --print-recipe-keyword-match --query \"monthly sales dashboard with charts\""
                 + " --response recipe-keyword-match.json",
             "gridgrind --print-protocol-catalog --response protocol-index.json"),
@@ -72,8 +73,9 @@ final class GridGrindCliSurfaceGuidanceSections {
                 "Example portability",
                 List.of(
                     "SELF_CONTAINED starters execute from a blank working directory.",
-                    "REQUIRES_EXAMPLE_ASSETS starters require copied asset paths beside the"
-                        + " request file; requiredWorkspacePaths names those paths directly.",
+                    "REQUIRES_EXAMPLE_ASSETS starters require --materialize-recipe; it"
+                        + " atomically creates the request file and every declared asset beneath"
+                        + " one new workspace directory.",
                     GridGrindInspectionContractText.workbookFindingsDiscoverySummary()
                         + " Include it in any diagnostic plan with persistence.type=NONE.")),
             new CliSurface.WorkflowEntry(
@@ -83,8 +85,8 @@ final class GridGrindCliSurfaceGuidanceSections {
                         + " starters composed from exact protocol capabilities.",
                     "Each task-starter entry publishes requestFileName, advisory, and"
                         + " requiredWorkspacePaths so agents can decide whether one"
-                        + " recipe is self-contained before printing it with"
-                        + " --print-recipe.",
+                        + " recipe is self-contained before printing it with --print-recipe"
+                        + " or materializing it with --materialize-recipe.",
                     "Use --print-recipe-catalog --lookup <id> when you need the richer"
                         + " view-specific detail payload, including the exact runnable"
                         + " request profile for that recipe.")),

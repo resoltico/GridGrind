@@ -7,6 +7,10 @@ import org.apache.poi.ss.usermodel.DataValidationConstraint;
 final class ExcelDataValidationComparisonOperatorPoiBridge {
   private ExcelDataValidationComparisonOperatorPoiBridge() {}
 
+  static ExcelDataValidationComparisonOperatorPoiBridge newForVerification() {
+    return new ExcelDataValidationComparisonOperatorPoiBridge();
+  }
+
   static int toPoi(ExcelComparisonOperator operator) {
     return switch (operator) {
       case BETWEEN -> DataValidationConstraint.OperatorType.BETWEEN;

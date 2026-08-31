@@ -758,6 +758,10 @@ class AdvancedMutationProtocolTypesTest {
         new ConditionalFormattingThresholdInput.Formula("A1*2");
     assertEquals("A1*2", threshold.formula());
     assertEquals(90.0d, new ConditionalFormattingThresholdInput.Percentile(90.0d).value());
+    assertEquals(0.0d, new ConditionalFormattingThresholdInput.Percent(0.0d).value());
+    assertEquals(100.0d, new ConditionalFormattingThresholdInput.Percent(100.0d).value());
+    assertEquals(0.0d, new ConditionalFormattingThresholdInput.Percentile(0.0d).value());
+    assertEquals(100.0d, new ConditionalFormattingThresholdInput.Percentile(100.0d).value());
     assertThrows(
         IllegalArgumentException.class,
         () -> new ConditionalFormattingThresholdInput.Formula(null));
@@ -766,6 +770,12 @@ class AdvancedMutationProtocolTypesTest {
     assertThrows(
         IllegalArgumentException.class,
         () -> new ConditionalFormattingThresholdInput.Numeric(Double.NEGATIVE_INFINITY));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new ConditionalFormattingThresholdInput.Percent(Double.NaN));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new ConditionalFormattingThresholdInput.Percentile(Double.NaN));
     assertThrows(
         IllegalArgumentException.class,
         () -> new ConditionalFormattingThresholdInput.Percent(-0.1d));

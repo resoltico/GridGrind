@@ -83,7 +83,10 @@ public final class GridGrindCliHelp {
                         "Emit the canonical minimal request JSON skeleton."),
                     new CliSurface.DefinitionEntry(
                         "--print-recipe --lookup <id>",
-                        "Emit one built-in example or task-starter request by stable id."),
+                        "Emit one self-contained built-in example or task-starter request by stable id."),
+                    new CliSurface.DefinitionEntry(
+                        "--materialize-recipe --lookup <id> --workspace <new-directory>",
+                        "Atomically publish one recipe request and every declared asset."),
                     new CliSurface.DefinitionEntry(
                         "--print-recipe-catalog [--lookup <id>]",
                         "List every built-in recipe or print one recipe descriptor by id."),
@@ -199,6 +202,8 @@ public final class GridGrindCliHelp {
                         + " request.json",
                     "2. Print a task starter: gridgrind --print-recipe --lookup DASHBOARD"
                         + " --response task-request.json",
+                    "2a. Materialize an asset-backed starter: gridgrind --materialize-recipe"
+                        + " --lookup CUSTOM_XML --workspace custom-xml",
                     "3. Preflight the starter: gridgrind --doctor-request --request"
                         + " task-request.json --response doctor.json",
                     "4. Execute the request: gridgrind --request task-request.json --response"

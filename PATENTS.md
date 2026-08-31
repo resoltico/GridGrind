@@ -1,105 +1,90 @@
 ---
-afad: "3.5"
+afad: "5.0.1"
 version: "0.74.0"
 domain: LEGAL
-updated: "2026-05-05"
+updated: "2026-08-31"
 route:
-  keywords: [gridgrind, patent, patents, legal, contributors, dependencies, non-assertion, mit, apache, bsd]
-  questions: ["what is the patent posture for gridgrind", "does gridgrind include a patent non-assertion statement", "what do contributors need to know about patents"]
+  keywords: [gridgrind, patent, patents, legal, dependencies, mit, apache, bsd, container]
+  questions: ["what patent rights accompany gridgrind", "does gridgrind offer a patent non-assertion pledge", "what patent terms apply to bundled dependencies"]
 ---
 
 # Patent Considerations
 
-GridGrind is licensed under the MIT License, which does not include explicit patent grant language.
+This document describes which distributed license texts contain an express patent grant. It is
+informational only, is not a patent search or legal opinion, and does not add to or modify any
+license.
 
-## Summary
+## GridGrind Code
 
-GridGrind makes no patent claims and knowingly infringes no patents.
+GridGrind's own code is distributed under the MIT License in [LICENSE](LICENSE). That license
+contains broad copyright permissions but no express patent-license clause or patent-retaliation
+clause.
 
-If explicit patent protection is a concern for your use case, consult qualified legal counsel.
+No patent search, freedom-to-operate analysis, patent-clearance opinion, or non-infringement
+determination has been performed or is represented by this repository. Absence of a known patent
+claim is not a representation that no relevant patent exists.
 
-## GridGrind (MIT License)
+GridGrind does not provide a separate patent covenant, patent non-assertion pledge, contributor
+patent agreement, or express patent grant for its own code. If a formal patent grant is needed,
+obtain qualified legal advice rather than relying on repository prose.
 
-The MIT License grants broad permissions to use, copy, modify, merge, publish, distribute, and
-sublicense the software without restriction. It does not include an explicit patent grant or patent
-retaliation clause.
+## Bundled JAR Components
 
-| Component | License | Explicit Patent Grant |
-|:----------|:--------|:----------------------|
-| GridGrind | MIT | No (implicit only) |
-| Apache POI | Apache 2.0 | Yes |
-| Apache XMLBeans | Apache 2.0 | Yes |
-| Apache Log4j Core / API | Apache 2.0 | Yes |
-| Apache Santuario xmlsec | Apache 2.0 | Yes |
-| Apache Commons (Codec, Collections, Compress, IO, Lang, Math) | Apache 2.0 | Yes |
-| Jackson Databind / Core / Annotations | Apache 2.0 | Yes |
-| SparseBitSet | Apache 2.0 | Yes |
-| Woodstox Core | Apache 2.0 | Yes |
-| Stax2 API | BSD 2-Clause | No |
-| Jakarta Activation API | EDL 1.0 | No |
-| Jakarta XML Binding API | EDL 1.0 | No |
-| Bouncy Castle (bcpkix, bcprov, bcutil) | MIT variant | No |
-| SLF4J API | MIT | No |
-| CurvesAPI | BSD 3-Clause | No |
+The executable JAR combines separately licensed components. [NOTICE](NOTICE) identifies the
+resolved component families and preserves their attribution notices.
 
-## Bundled Dependencies
+| Component family | Distributed terms | Express patent clause |
+|:--|:--|:--|
+| GridGrind | MIT | No |
+| Apache POI, XMLBeans, Log4j, Santuario, and Commons | Apache-2.0 | Yes, Apache License 2.0 Section 3 |
+| Apache POI Custom XML recipe workbook | Apache-2.0 | Yes, Apache License 2.0 Section 3 |
+| Jackson, SparseBitSet, and Woodstox Core | Apache-2.0 | Yes, Apache License 2.0 Section 3 |
+| FastDoubleParser and Schubfach code shaded into Jackson Core | MIT, BSL-1.0, and BSD-2-Clause | No |
+| Bouncy Castle and SLF4J API | MIT-style / MIT | No |
+| Stax2 API | BSD-2-Clause | No |
+| CurvesAPI | BSD-3-Clause | No |
+| Jakarta Activation API and Jakarta XML Binding API | Eclipse Distribution License v1.0 (SPDX BSD-3-Clause) | No |
 
-GridGrind's executable JAR bundles Apache POI, Apache XMLBeans, Apache Log4j, Apache Santuario
-xmlsec, Apache Commons libraries, Jackson, SparseBitSet, Woodstox Core, Stax2 API, Jakarta
-Activation API, Jakarta XML Binding API, Bouncy Castle, SLF4J API, and CurvesAPI. See NOTICE
-for the complete list and attributions.
+The Apache License patent grant is component-specific. It applies only to patent claims licensable
+by each Apache-licensed component's contributors that are necessarily infringed by their
+contributions as described in Section 3. It does not create a patent grant for GridGrind's MIT-
+licensed code or for components under other licenses. The termination condition in Apache License
+2.0 Section 3 also remains part of those component licenses.
 
-The Apache 2.0 components include an explicit patent grant in Section 3:
+MIT and BSD licenses in this distribution do not contain an express patent-license clause. This
+document does not characterize whether any implied patent rights might arise under a particular
+jurisdiction.
 
-> Subject to the terms and conditions of this License, each Contributor hereby grants to You a
-> perpetual, worldwide, non-exclusive, no-charge, royalty-free, irrevocable patent license to
-> make, have made, use, offer to sell, sell, import, and otherwise transfer the Work...
+## Source Distribution
 
-This Apache 2.0 patent grant applies to contributions made by each respective project's
-contributors. It does not extend to GridGrind's own code, which is licensed separately under MIT.
+The public source tree also includes the Gradle wrapper under Apache-2.0. The component-specific
+Section 3 patent grant and termination terms described above apply to that artifact; they do not
+extend to GridGrind's MIT-licensed code. The Apache POI Custom XML workbook listed in the JAR table
+is also present as a source fixture. [NOTICE](NOTICE) records the exact provenance and distribution
+scope of both artifacts.
 
-The Eclipse Distribution License 1.0 used by the Jakarta Activation API and Jakarta XML Binding
-API does not include an explicit patent grant.
+## Container Image
 
-Stax2 API is licensed under the BSD 2-Clause License, which does not include an explicit patent
-grant.
+The published container image includes the GridGrind JAR, an Azul Zulu build of OpenJDK, and
+operating-system and font packages. Those additional components retain their own license and patent
+terms; they are not covered by GridGrind's MIT license or by one combined patent statement. Their
+legal materials remain in the image's JRE legal directory and package documentation directories,
+and published images include an SBOM attestation for content inventory.
 
-CurvesAPI is licensed under the BSD 3-Clause License, which does not include an explicit patent
-grant.
+## Contributors
 
-## What This Means
+The repository currently documents no contributor license agreement, developer certificate of
+origin, or separate contributor patent grant. Contributors must have the right to submit their
+work and should not submit material they know they lack permission to contribute. The legal effect
+of a contribution depends on the applicable facts and law; this document does not determine it.
 
-GridGrind is an independent implementation that uses Apache POI as a runtime library. It does not
-fork, modify, or derive algorithms from Apache POI's internal implementation. GridGrind's code is
-original work.
+## Cryptography and Jurisdiction
 
-For GridGrind users:
+GridGrind includes cryptographic functionality for OOXML encryption, signing, and XML security.
+Patent, import, export, and cryptography rules vary by jurisdiction. Users and redistributors are
+responsible for determining which requirements apply to their use or distribution.
 
-1. The Apache 2.0 patent grant from Apache POI, XMLBeans, Log4j, Commons, Jackson, SparseBitSet,
-   and Woodstox Core contributors applies to those bundled components.
-2. Jakarta Activation API and Jakarta XML Binding API (EDL 1.0), Stax2 API (BSD 2-Clause),
-   CurvesAPI (BSD 3-Clause), and GridGrind's own MIT-licensed code do not carry explicit patent
-   grants.
-3. The copyright holder (Ervins Strauhmanis) makes no patent claims on GridGrind's implementation
-   and is not aware of any patents this implementation infringes.
+## Disclaimer
 
-## Patent Non-Assertion
-
-The copyright holder states:
-
-GridGrind makes no patent claims. If the copyright holder holds any patents that relate to this
-implementation, permission is granted under the MIT License to use this implementation without
-patent liability.
-
-This is a statement of intent, not a formal legal instrument.
-
-## For Contributors
-
-By contributing to GridGrind, you grant MIT License permissions for your contributions. The MIT
-License does not include an explicit patent grant. Do not contribute code you know infringes
-patents you or others hold.
-
-## Legal Disclaimer
-
-This document is informational only and does not constitute legal advice. Patent law is complex
-and jurisdiction-specific. For patent-related concerns, consult qualified legal counsel.
+This document is not legal advice. Consult qualified counsel for patent clearance, licensing,
+redistribution, contribution, or jurisdiction-specific questions.

@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.contract.dto;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import org.junit.jupiter.api.Test;
@@ -8,6 +9,7 @@ import org.junit.jupiter.api.Test;
 class ConditionalFormattingDataBarBoundsTest {
   @Test
   void rejectsWidthsAboveOneHundredAtEitherBound() {
+    assertEquals(1.0d, new ConditionalFormattingThresholdInput.Numeric(1.0d).value());
     assertThrows(IllegalArgumentException.class, () -> newDataBarRule(101, 101));
     assertThrows(IllegalArgumentException.class, () -> newDataBarRule(0, 101));
   }

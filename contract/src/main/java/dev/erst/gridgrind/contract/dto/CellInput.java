@@ -2,6 +2,7 @@ package dev.erst.gridgrind.contract.dto;
 
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import dev.erst.gridgrind.contract.source.OoxmlTextValidation;
 import dev.erst.gridgrind.contract.source.TextSourceInput;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -120,7 +121,9 @@ public sealed interface CellInput
     static TextSourceInput requireNonBlankTextSource(TextSourceInput source, String fieldName) {
       required(source, fieldName);
       if (source instanceof TextSourceInput.Inline inline) {
-        return TextSourceInput.inline(requireNonBlank(inline.text(), fieldName + ".text"));
+        return TextSourceInput.inline(
+            OoxmlTextValidation.requireXml10CharacterData(
+                requireNonBlank(inline.text(), fieldName + ".text"), fieldName + ".text"));
       }
       return source;
     }

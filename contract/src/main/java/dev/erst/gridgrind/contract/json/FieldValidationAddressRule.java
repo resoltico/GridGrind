@@ -4,7 +4,8 @@ package dev.erst.gridgrind.contract.json;
 public enum FieldValidationAddressRule implements FieldValidationRule {
   ADDRESS_SYNTAX,
   ADDRESS_BOUNDS,
-  RANGE_RECTANGULAR_SYNTAX;
+  RANGE_RECTANGULAR_SYNTAX,
+  RANGE_ORDER;
 
   @Override
   public String message(FieldValidationProblem problem) {
@@ -13,6 +14,8 @@ public enum FieldValidationAddressRule implements FieldValidationRule {
       case ADDRESS_BOUNDS -> problem.fieldName() + " must be within Excel .xlsx bounds";
       case RANGE_RECTANGULAR_SYNTAX ->
           problem.fieldName() + " must be a rectangular A1-style range with at most one ':'";
+      case RANGE_ORDER ->
+          problem.fieldName() + " must end at or below and to the right of its start address";
     };
   }
 
@@ -26,6 +29,10 @@ public enum FieldValidationAddressRule implements FieldValidationRule {
               + "'.";
       case RANGE_RECTANGULAR_SYNTAX ->
           "Provide a rectangular A1-style range with at most one ':' for field '"
+              + problem.fieldName()
+              + "'.";
+      case RANGE_ORDER ->
+          "Order the end address at or below and to the right of the start address for field '"
               + problem.fieldName()
               + "'.";
     };

@@ -2,7 +2,7 @@
 afad: "4.0"
 version: "0.74.0"
 domain: DEVELOPER_DEVCONTAINER
-updated: "2026-05-01"
+updated: "2026-08-31"
 route:
   keywords: [gridgrind, devcontainer, vscode, docker desktop, devcontainer cli, zulu26, contributor container, local repo mount, tooling agnostic]
   questions: ["what is the preferred contributor setup for gridgrind", "how do i use the gridgrind devcontainer", "does the repo stay on macos when i use the container", "why does gridgrind prefer a devcontainer over host java tooling", "is vscode mandatory for gridgrind", "how do i use the gridgrind devcontainer without vscode"]
@@ -44,7 +44,7 @@ Industry-standard references for this model:
 
 This is a contributor environment, not the published runtime image. The contributor container is
 glibc-based and ships a full Azul Zulu 26 JDK plus verification tooling. The published runtime
-image stays a minimal Alpine JRE surface for artifact execution.
+image uses an Ubuntu-based Azul Zulu 26 JRE plus its required font stack for artifact execution.
 
 The committed owner files are:
 

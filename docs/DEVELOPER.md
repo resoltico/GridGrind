@@ -2,9 +2,9 @@
 afad: "4.0"
 version: "0.74.0"
 domain: DEVELOPER
-updated: "2026-07-01"
+updated: "2026-08-31"
 route:
-  keywords: [gridgrind, build, gradle, architecture, coverage, jacoco, pmd, errorprone, spotless, java26, devcontainer, zulu26, engine, contract, executor, authoring-java, cli]
+  keywords: [gridgrind, build, gradle, architecture, archunit, coverage, jacoco, pmd, errorprone, spotless, java26, devcontainer, zulu26, engine, contract, executor, authoring-java, cli]
   questions: ["how do I build gridgrind", "how do I run tests", "what is the preferred contributor setup for gridgrind", "what is the gridgrind architecture", "how are quality gates configured", "what are the coverage requirements"]
 ---
 
@@ -113,7 +113,7 @@ same theory boundaries as the code they own.
 The highest-churn architecture seams are intentionally split too:
 - `GridGrindProtocolCatalog` owns the top-level catalog assembly, `CatalogFieldMetadataSupport` derives nested/plain field-shape metadata from the canonical descriptor groups, and `GridGrindProtocolCatalogLookupSupport` owns exact lookup plus grouped operation-centered search behavior.
 - Jazzer request generation is no longer one monolith: the `OperationSequence*` family now splits orchestration, selector helpers, mutation/inspection/command factories, observation-side assertions, bounded payload generation, and chart payload generation into focused seams, while `WorkbookInvariantChecks` is split across workbook/cell/engine-surface invariant helpers.
-- Build-failing architecture audits protect these boundaries. Contract source must stay on `excel-foundation`, direct `Cell.setCellFormula(...)` calls must stay inside `ExcelFormulaWriteSupport`, POI reflective access must stay inside `PoiPrivateAccessSupport`, and the split hotspot files must stay below their enforced size ceilings. `PoiPrivateAccessCompatibilityTest` also fails fast if a POI upgrade stops resolving the registered private sheet-clone, picture-catalog, fill-registry, or relation-removal seams that the engine still depends on.
+- Build-failing architecture audits protect these boundaries. The verification-only `executor:architectureTest` task runs only ArchUnit over the five compiled product modules, while `executor:architectureTestContract` runs only Jupiter to prove the effective fail-closed policy and 13-rule inventory. Together they keep every product package assigned, keep the module graph acyclic, preserve foundation/contract/engine/adapter dependency direction, constrain engine API implementation bridges, reject runtime and workbook implementation types from the exported API surface including generic signatures, require closed sealed-interface variants, reserve sealed classes for typed exception bases, keep direct `Cell.setCellFormula(...)` calls inside `ExcelFormulaWriteSupport`, and keep private POI access inside `PoiPrivateAccessSupport`, including method references. The custom rule implementation lives in executor main and has 100% line, branch, and STRONGER PIT coverage, including compiler-generated conditions and predicates. JPMS remains the actual module-encapsulation boundary, while source and build audits cover facts bytecode cannot prove. The split hotspot files must also stay below their enforced size ceilings, and `PoiPrivateAccessCompatibilityTest` fails fast if a POI upgrade stops resolving the registered private sheet-clone, picture-catalog, fill-registry, or relation-removal seams that the engine still depends on.
 
 ## Contract Replacement Mode
 
@@ -132,14 +132,15 @@ transport-and-execution ownership. The accepted architecture decision record for
 | Contributor devcontainer | pinned glibc base image plus Azul Zulu 26 JDK; see [DEVELOPER_DEVCONTAINER.md](./DEVELOPER_DEVCONTAINER.md) |
 | Java | 26 |
 | Docker runtime | Docker Desktop daemon plus `docker buildx` reachable through the active shell `docker` command; smoke and release verification use an anonymous `DOCKER_CONFIG` while still targeting the active local Docker engine |
+| Architecture tests | ArchUnit 1.5.0 with its JUnit 6 integration, isolated to the paired `executor:architectureTest` and `executor:architectureTestContract` verification tasks |
 | Apache POI | 5.5.1 |
-| Jackson Databind | 3.2.0 |
-| JUnit Jupiter | 6.1.1 |
-| Log4j Core | 2.26.0 |
+| Jackson Databind | 3.2.2 |
+| JUnit Jupiter | 6.1.3 |
+| Log4j Core | 2.26.1 |
 
 GridGrind's runtime, product modules, and shared included build logic under `gradle/build-logic`
 all target Java 26 now. The included build is no longer a JVM 25 exception: it compiles with
-Kotlin `2.4.0`, emits JVM 26 bytecode directly, and stays aligned with the repository's
+Kotlin `2.4.10`, emits JVM 26 bytecode directly, and stays aligned with the repository's
 single Java baseline instead of carrying a separate bytecode-level footnote.
 
 Jackson dependency note: Jackson 3.x databind intentionally still uses the
@@ -193,6 +194,9 @@ overlay contract in `.devcontainer/devcontainer.json`.
 # Run the local full-stack gate
 ./check.sh
 
+# Run the separately scheduled critical mutation-testing gate
+./check_mutation.sh
+
 # Run the root-project CI gate
 ./gradlew check
 ./gradlew verifyJavaSourceShape
@@ -200,6 +204,8 @@ overlay contract in `.devcontainer/devcontainer.json`.
 # Targeted iteration during development
 ./gradlew test                   # tests only, no quality gates
 ./gradlew coverage               # tests + coverage verification + HTML/XML report generation
+./gradlew architectureCheck      # mandatory ArchUnit product architecture rules
+./gradlew mutationCheck          # reviewed PIT scopes; intentionally outside normal check
 ./gradlew spotlessCheck          # formatting check only
 ./gradlew spotlessApply          # auto-format in place (run before spotlessCheck)
 ./gradlew pmdMain pmdTest        # PMD only
@@ -338,7 +344,7 @@ Structural analysis plus a root-owned source-shape ratchet.
   the repository-owned source-shape gate instead of duplicated here; `CommentRequired` enforces
   class-level Javadoc only.
 - `verifyJavaSourceShape` — root build-logic task that parses every repo-owned handwritten Java
-  source set, including `main`, `test`, `testFixtures`, `parityTest`, and Jazzer surfaces,
+  source set, including `main`, `test`, `testFixtures`, `architectureTest`, `parityTest`, and Jazzer surfaces,
   writes `build/reports/source-shape/source-shape.tsv`, and enforces role-specific budgets from
   `gradle/source-shape-policy.tsv`.
 - `verifyControlPlaneShape` — root build-logic task that scans repo-owned shell, Kotlin
@@ -449,7 +455,8 @@ boundary: GridGrind does not emit a partially written workbook file.
 The shipped JSON fixtures are generated from the CLI-owned example registry in
 checkout-rooted form. Refresh them with
 [`scripts/sync-generated-examples.sh`](../scripts/sync-generated-examples.sh), or print any one of
-the artifact-native built-in examples directly with `gridgrind --print-recipe --lookup <id>`. The full
+the artifact-native built-in examples directly with `gridgrind --print-recipe --lookup <self-contained-id>`
+or materialize an asset-backed workspace with `gridgrind --materialize-recipe --lookup <id> --workspace <new-directory>`. The full
 map, path-rooting rules, and verification loop live in [EXAMPLES.md](./EXAMPLES.md). Do not
 hand-edit the checked-in `examples/*.json` fixtures or the generated package-security workbook;
 regenerate them from the CLI-owned recipe registry so the committed examples, built-in example surface,

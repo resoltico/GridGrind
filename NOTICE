@@ -1,264 +1,539 @@
 GridGrind
 Copyright (c) 2026 Ervins Strauhmanis
 
-Licensed under the MIT License. See LICENSE file for details.
+Licensed under the MIT License. See LICENSE for the complete terms.
+
+This notice describes third-party software and artifacts distributed with
+GridGrind and identifies whether they belong to the executable JAR, source
+tree, or container. The standalone GitHub release JAR contains these legal
+files in META-INF. Gradle-generated ZIP and TAR launcher distributions contain
+the same files at their root and inside the JAR. `gridgrind --license` prints
+the GridGrind license, this notice, and the applicable third-party license
+texts.
+
+The Apache License, Version 2.0 is in LICENSE-APACHE-2.0.
+The BSD 2-Clause license used by Stax2 API is in LICENSE-BSD-2-CLAUSE.
+The component-specific BSD 3-Clause licenses used by CurvesAPI, Jakarta
+Activation API, and Jakarta XML Binding API are in LICENSE-BSD-3-CLAUSE. The
+Jakarta API licenses are formally the Eclipse Distribution License v1.0; the
+Eclipse Foundation identifies that license with the SPDX identifier
+BSD-3-Clause.
+The Bouncy Castle, SLF4J, and Jackson Core shaded-code license texts are
+reproduced below with their respective copyright notices. This includes the
+Boost Software License 1.0 text used by code embedded through FastDoubleParser.
+
+PATENTS.md describes the patent posture and the limits of that description. It
+is informational and is not an additional license or patent grant.
 
 ================================================================================
-
-The Apache License, Version 2.0 full text is included in this distribution as
-LICENSE-APACHE-2.0 and is also available at:
-  https://www.apache.org/licenses/LICENSE-2.0
-
-The BSD 3-Clause License full text is included in this distribution as
-LICENSE-BSD-3-CLAUSE.
-
-The Eclipse Distribution License v. 1.0 full text is included in this
-distribution as LICENSE-EDL-1.0 and is also available at:
-  https://www.eclipse.org/org/documents/edl-v10.php
-
-The BSD 2-Clause License full text is included in this distribution as
-LICENSE-BSD-2-CLAUSE.
-
-================================================================================
-Apache Software Foundation Components
+Apache POI 5.5.1 (poi, poi-ooxml, poi-ooxml-lite, poi-ooxml-full)
 ================================================================================
 
-The following components are copyright The Apache Software Foundation and are
-licensed under the Apache License, Version 2.0 (see LICENSE-APACHE-2.0).
+Apache POI
+Copyright 2003-2025 The Apache Software Foundation
+https://poi.apache.org/
 
---------------------------------------------------------------------------------
-Apache POI (poi, poi-ooxml, poi-ooxml-lite)
-  Copyright 2001- The Apache Software Foundation
-  https://poi.apache.org/
+Licensed under the Apache License, Version 2.0.
 
-  This product includes software developed at
-  The Apache Software Foundation (https://www.apache.org/).
+This product includes software developed at
+The Apache Software Foundation (https://www.apache.org/).
 
---------------------------------------------------------------------------------
+This product contains parts that were originally based on software from BEA.
+Copyright (c) 2000-2003, BEA Systems, <http://www.bea.com/> (dead link),
+which was acquired by Oracle Corporation in 2008.
+<http://www.oracle.com/us/corporate/Acquisitions/bea/index.html>
+<https://en.wikipedia.org/wiki/BEA_Systems>
+The ASF Secretary has on hand a Software Grant Agreement from BEA Systems,
+Inc. dated 9 Sep 2003 for XMLBeans signed by their EVP/CFO.
+
+This product contains W3C XML Schema documents. Copyright 2001-2003 (c)
+World Wide Web Consortium (Massachusetts Institute of Technology, European
+Research Consortium for Informatics and Mathematics, Keio University).
+
+This product contains the chunks_parse_cmds.tbl file from the vsdump program.
+Copyright (C) 2006-2007 Valek Filippov (frob@df.ru).
+
+This product contains parts of the eID Applet project
+<http://eid-applet.googlecode.com> and <https://github.com/e-Contract/eid-applet>.
+Copyright (c) 2009-2018 FedICT (federal ICT department of Belgium),
+e-Contract.be BVBA (https://www.e-contract.be), and Bart Hanssens from FedICT.
+
+ExceptionUtils is derived from scala.util.control.NonFatal in scala-library,
+which was released under the Apache License, Version 2.0.
+
+Copyright (c) 2002-2023 EPFL
+Copyright (c) 2011-2023 Lightbend, Inc.
+
+Scala includes software developed at LAMP/EPFL (https://lamp.epfl.ch/) and
+Lightbend, Inc. (https://www.lightbend.com/).
+
+================================================================================
+Apache XMLBeans 5.3.0
+================================================================================
+
 Apache XMLBeans
-  Copyright 2004- The Apache Software Foundation
-  https://xmlbeans.apache.org/
+Copyright The Apache Software Foundation
+https://xmlbeans.apache.org/
 
-  This product includes software developed at
-  The Apache Software Foundation (https://www.apache.org/).
+Licensed under the Apache License, Version 2.0.
 
-  Portions of this software were originally based on the following:
-    - software copyright (c) 2000-2003, BEA Systems,
-      <http://www.bea.com/>.
+This product includes software developed at
+The Apache Software Foundation (http://www.apache.org/).
 
---------------------------------------------------------------------------------
-Apache Log4j Core / Apache Log4j API
-  Copyright 1999- The Apache Software Foundation
-  https://logging.apache.org/log4j/2.x/
+Portions of this software were originally based on software copyright (c)
+2000-2003, BEA Systems, <http://www.bea.com/>. The ASF Secretary has on hand a
+Software Grant Agreement from BEA Systems, Inc. dated 9 Sep 2003 for XMLBeans
+signed by their EVP/CFO.
 
-  This product includes software developed at
-  The Apache Software Foundation (https://www.apache.org/).
+Aside from contributions to the Apache XMLBeans project, this software also
+includes:
 
---------------------------------------------------------------------------------
-Apache Santuario - XML Security for Java (xmlsec)
-  Copyright 2002- The Apache Software Foundation
-  https://santuario.apache.org/
+- one or more source files from the Apache Xerces-J and Apache Axis products,
+  Copyright (c) 1999-2003 Apache Software Foundation;
+- W3C XML Schema documents, Copyright 2001-2003 (c) World Wide Web Consortium
+  (Massachusetts Institute of Technology, European Research Consortium for
+  Informatics and Mathematics, Keio University); and
+- resolver.jar from the Apache XML Commons project, Copyright (c) 2001-2003
+  Apache Software Foundation.
 
-  This product includes software developed at
-  The Apache Software Foundation (https://www.apache.org/).
+ExceptionUtils is derived from scala.util.control.NonFatal in scala-library,
+which was released under the Apache License, Version 2.0.
 
---------------------------------------------------------------------------------
-Apache Commons Codec
-  Copyright 2002- The Apache Software Foundation
-  https://commons.apache.org/proper/commons-codec/
+Copyright (c) 2002-2023 EPFL
+Copyright (c) 2011-2023 Lightbend, Inc.
 
-  This product includes software developed at
-  The Apache Software Foundation (https://www.apache.org/).
-
-  src/test/org/apache/commons/codec/language/DoubleMetaphoneTest.java
-  contains test data from http://aspell.net/test/orig/batch0.tab.
-  Copyright (C) 2002 Kevin Atkinson (kevina@gnu.org)
-
---------------------------------------------------------------------------------
-Apache Commons Collections
-  Copyright 2001- The Apache Software Foundation
-  https://commons.apache.org/proper/commons-collections/
-
-  This product includes software developed at
-  The Apache Software Foundation (https://www.apache.org/).
-
---------------------------------------------------------------------------------
-Apache Commons Compress
-  Copyright 2002- The Apache Software Foundation
-  https://commons.apache.org/proper/commons-compress/
-
-  This product includes software developed at
-  The Apache Software Foundation (https://www.apache.org/).
-
---------------------------------------------------------------------------------
-Apache Commons IO
-  Copyright 2002- The Apache Software Foundation
-  https://commons.apache.org/proper/commons-io/
-
-  This product includes software developed at
-  The Apache Software Foundation (https://www.apache.org/).
-
---------------------------------------------------------------------------------
-Apache Commons Lang
-  Copyright 2001- The Apache Software Foundation
-  https://commons.apache.org/proper/commons-lang/
-
-  This product includes software developed at
-  The Apache Software Foundation (https://www.apache.org/).
-
---------------------------------------------------------------------------------
-Apache Commons Math
-  Copyright 2001- The Apache Software Foundation
-  https://commons.apache.org/proper/commons-math/
-
-  This product includes software developed at
-  The Apache Software Foundation (https://www.apache.org/).
+Scala includes software developed at LAMP/EPFL (https://lamp.epfl.ch/) and
+Lightbend, Inc. (https://www.lightbend.com/).
 
 ================================================================================
-Non-ASF Apache 2.0 Components
+Apache Log4j
 ================================================================================
 
---------------------------------------------------------------------------------
-Jackson Databind / Jackson Core / Jackson Annotations
-  Copyright 2007- Tatu Saloranta, tatu.saloranta@iki.fi
-  https://github.com/FasterXML/jackson
+Apache Log4j API 2.26.1
+Copyright 1999-2026 The Apache Software Foundation
 
-  Licensed under the Apache License, Version 2.0 (see LICENSE-APACHE-2.0).
+Apache Log4j Core 2.26.1
+Copyright 1999-2012 Apache Software Foundation
 
-  Jackson JSON processor
-  Copyright (c) 2007- Tatu Saloranta, tatu.saloranta@iki.fi
+SLF4J 2 Provider for Log4j API 2.26.1 (log4j-slf4j2-impl)
+Copyright 1999-2026 The Apache Software Foundation
 
---------------------------------------------------------------------------------
-SparseBitSet
-  Copyright 2014- Bruce Litchfield (Zaxxer)
-  https://github.com/brettwooldridge/SparseBitSet
+https://logging.apache.org/log4j/2.x/
 
-  Licensed under the Apache License, Version 2.0 (see LICENSE-APACHE-2.0).
+Licensed under the Apache License, Version 2.0.
 
---------------------------------------------------------------------------------
-Woodstox Core
-  Copyright 2004- Tatu Saloranta, tatu.saloranta@iki.fi (FasterXML)
-  https://github.com/FasterXML/woodstox
+These products include software developed at
+The Apache Software Foundation (http://www.apache.org/).
 
-  Licensed under the Apache License, Version 2.0 (see LICENSE-APACHE-2.0).
+ResolverUtil.java
+Copyright 2005-2006 Tim Fennell
 
 ================================================================================
-Eclipse Distribution License 1.0 Components
+Apache Santuario - XML Security for Java 4.0.4 (xmlsec)
 ================================================================================
 
---------------------------------------------------------------------------------
-Jakarta Activation API (jakarta.activation-api)
-  Copyright (c) 1997, 2023 Oracle and/or its affiliates. All rights reserved.
-  https://github.com/jakartaee/jaf-api
+Apache XML Security for Java
+Copyright 2000-2025 The Apache Software Foundation
+https://santuario.apache.org/
 
-  Licensed under the Eclipse Distribution License v. 1.0 (see LICENSE-EDL-1.0).
+Licensed under the Apache License, Version 2.0.
 
---------------------------------------------------------------------------------
-Jakarta XML Binding API (jakarta.xml.bind-api)
-  Copyright (c) 2018, 2023 Oracle and/or its affiliates. All rights reserved.
-  https://github.com/jakartaee/jaxb-api
-
-  Licensed under the Eclipse Distribution License v. 1.0 (see LICENSE-EDL-1.0).
+This product includes software developed at
+The Apache Software Foundation (http://www.apache.org/).
 
 ================================================================================
-MIT-Licensed Components
+Apache Commons
 ================================================================================
 
---------------------------------------------------------------------------------
-Bouncy Castle (bcpkix-jdk18on, bcprov-jdk18on, bcutil-jdk18on)
-  Copyright (c) 2000 - 2024 The Legion of the Bouncy Castle Inc.
-  https://www.bouncycastle.org/
+Licensed under the Apache License, Version 2.0.
 
-  Licensed under the Bouncy Castle Licence (MIT variant):
+Apache Commons Codec 1.20.0
+Copyright 2002-2025 The Apache Software Foundation
+https://commons.apache.org/proper/commons-codec/
 
-  Permission is hereby granted, free of charge, to any person obtaining a copy
-  of this software and associated documentation files (the "Software"), to deal
-  in the Software without restriction, including without limitation the rights
-  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-  copies of the Software, and to permit persons to whom the Software is
-  furnished to do so, subject to the following conditions:
+Apache Commons Collections 4.5.0
+Copyright 2001-2025 The Apache Software Foundation
+https://commons.apache.org/proper/commons-collections/
 
-  The above copyright notice and this permission notice shall be included in
-  all copies or substantial portions of the Software.
+Apache Commons Compress 1.28.0
+Copyright 2002-2025 The Apache Software Foundation
+https://commons.apache.org/proper/commons-compress/
 
-  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-  SOFTWARE.
+Apache Commons IO 2.21.0
+Copyright 2002-2025 The Apache Software Foundation
+https://commons.apache.org/proper/commons-io/
 
---------------------------------------------------------------------------------
-SLF4J API (slf4j-api)
-  Copyright (c) 2004-2024 QOS.ch Sarl (Switzerland)
-  https://www.slf4j.org/
+Apache Commons Lang 3.18.0
+Copyright 2001-2025 The Apache Software Foundation
+https://commons.apache.org/proper/commons-lang/
 
-  Licensed under the MIT License:
+Apache Commons Math 3.6.1
+Copyright 2001-2016 The Apache Software Foundation
+https://commons.apache.org/proper/commons-math/
 
-  Permission is hereby granted, free of charge, to any person obtaining a copy
-  of this software and associated documentation files (the "Software"), to deal
-  in the Software without restriction, including without limitation the rights
-  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-  copies of the Software, and to permit persons to whom the Software is
-  furnished to do so, subject to the following conditions:
+These products include software developed at
+The Apache Software Foundation (https://www.apache.org/).
 
-  The above copyright notice and this permission notice shall be included in
-  all copies or substantial portions of the Software.
-
-  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-  SOFTWARE.
+Apache Commons Math also includes software developed for Orekit by
+CS Systèmes d'Information (http://www.c-s.fr/).
+Copyright 2010-2012 CS Systèmes d'Information
 
 ================================================================================
-BSD 2-Clause Components
+Other Apache License 2.0 Components
 ================================================================================
 
---------------------------------------------------------------------------------
-Stax2 API
-  Copyright 2010- FasterXML.com
-  https://github.com/FasterXML/stax2-api
+Jackson Databind 3.2.2, Jackson Core 3.2.2, and Jackson Annotations 2.22
+Copyright 2007- Tatu Saloranta, tatu.saloranta@iki.fi
+https://github.com/FasterXML/jackson
 
-  Licensed under the BSD 2-Clause License (see LICENSE-BSD-2-CLAUSE).
+Jackson Core also contains shaded FastDoubleParser and Schubfach code under
+the separate terms reproduced in the next section.
+
+SparseBitSet 1.3
+Copyright 2014- Bruce Litchfield (Zaxxer)
+https://github.com/brettwooldridge/SparseBitSet
+
+Woodstox Core 7.1.0
+Copyright 2004- Tatu Saloranta, tatu.saloranta@iki.fi
+https://github.com/FasterXML/woodstox
+
+Each component in this section is licensed under the Apache License, Version
+2.0.
+
+================================================================================
+Jackson Core Shaded Code
+================================================================================
+
+Jackson Core bundles a shaded copy of FastDoubleParser and a copy of the
+Schubfach number-writing code. The upstream Jackson Core JAR retains the three
+corresponding license files under META-INF; the GridGrind fat JAR retains those
+files unchanged and reproduces their material terms here so `--license` exposes
+the complete legal surface.
+
+Jackson Core's upstream NOTICE identifies the FastDoubleParser attribution as
+"Copyright © 2023 Werner Randelshofer, Switzerland. MIT License." The retained
+FastDoubleParser license file carries the 2024 copyright notice reproduced
+below. Both upstream statements are preserved rather than silently reconciling
+their different years.
+
+FastDoubleParser
+Copyright (c) 2024 Werner Randelshofer, Switzerland.
+https://github.com/wrandelshofer/FastDoubleParser
+
+Licensed under the MIT License:
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+FastDoubleParser derives portions from the following projects:
+
+fast_double_parser
+Copyright (c) 2022 Daniel Lemire
+https://github.com/lemire/fast_double_parser
+
+Licensed under the Boost Software License, Version 1.0:
+
+Permission is hereby granted, free of charge, to any person or organization
+obtaining a copy of the software and accompanying documentation covered by
+this license (the "Software") to use, reproduce, display, distribute,
+execute, and transmit the Software, and to prepare derivative works of the
+Software, and to permit third-parties to whom the Software is furnished to do
+so, all subject to the following:
+
+The copyright notices in the Software and this entire statement, including
+the above license grant, this restriction and the following disclaimer, must
+be included in all copies of the Software, in whole or in part, and all
+derivative works of the Software, unless such copies or derivative works are
+solely in the form of machine-executable object code generated by a source
+language processor.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE, TITLE AND NON-INFRINGEMENT. IN NO EVENT
+SHALL THE COPYRIGHT HOLDERS OR ANYONE DISTRIBUTING THE SOFTWARE BE LIABLE FOR
+ANY DAMAGES OR OTHER LIABILITY, WHETHER IN CONTRACT, TORT OR OTHERWISE,
+ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+DEALINGS IN THE SOFTWARE.
+
+fast_float
+Copyright (c) 2021 The fast_float authors
+https://github.com/fastfloat/fast_float
+
+Licensed under the MIT License:
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+bigint floatfft portions
+Copyright 2022 Tim Buktu
+https://github.com/tbuktu/bigint/tree/floatfft
+
+Licensed under the BSD 2-Clause License:
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+
+1. Redistributions of source code must retain the above copyright notice,
+   this list of conditions and the following disclaimer.
+
+2. Redistributions in binary form must reproduce the above copyright notice,
+   this list of conditions and the following disclaimer in the documentation
+   and/or other materials provided with the distribution.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+POSSIBILITY OF SUCH DAMAGE.
+
+Schubfach
+Copyright 2018-2020 Raffaello Giulietti
+https://github.com/c4f7fcce9cb06515/Schubfach
+
+Licensed under the MIT License:
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+================================================================================
+Bouncy Castle (bcpkix-jdk18on 1.85, bcprov-jdk18on 1.85.2, bcutil-jdk18on 1.85)
+================================================================================
+
+Copyright (c) 2000-2026 The Legion of the Bouncy Castle Inc.
+https://www.bouncycastle.org/
+
+Licensed under the Bouncy Castle Licence, an MIT-style license:
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sub license, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+================================================================================
+SLF4J API 2.0.17 (slf4j-api)
+================================================================================
+
+Copyright (c) 2004-2022 QOS.ch Sarl (Switzerland)
+All rights reserved.
+https://www.slf4j.org/
+
+Licensed under the MIT License:
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+================================================================================
+Stax2 API 4.2.2
+================================================================================
+
+Copyright 2010- FasterXML.com
+https://github.com/FasterXML/stax2-api
+
+Licensed under the BSD 2-Clause License. See LICENSE-BSD-2-CLAUSE.
 
 ================================================================================
 BSD 3-Clause Components
 ================================================================================
 
---------------------------------------------------------------------------------
-CurvesAPI
-  Copyright (c) 2005, Harald Kuhr
-  https://github.com/virtuald/curvesapi
+Jakarta Activation API 2.1.4 (jakarta.activation-api)
+Copyright (c) 2018 Oracle and/or its affiliates. All rights reserved.
+https://github.com/jakartaee/jaf-api
 
-  Licensed under the BSD 3-Clause License (see LICENSE-BSD-3-CLAUSE).
+The resolved binary's manifest identifies the Eclipse Distribution License
+v1.0, its bundled license reproduces the component-specific three-clause BSD
+terms, and its notice identifies those terms with the SPDX identifier
+BSD-3-Clause. GridGrind redistributes this binary under those terms.
 
-  Redistribution and use in source and binary forms, with or without
-  modification, are permitted provided that the following conditions are met:
+Jakarta Activation is a trademark of the Eclipse Foundation.
 
-  1. Redistributions of source code must retain the above copyright notice,
-     this list of conditions and the following disclaimer.
-  2. Redistributions in binary form must reproduce the above copyright notice,
-     this list of conditions and the following disclaimer in the documentation
-     and/or other materials provided with the distribution.
-  3. Neither the name of the copyright holder nor the names of its contributors
-     may be used to endorse or promote products derived from this software
-     without specific prior written permission.
+Jakarta XML Binding API 4.0.5 (jakarta.xml.bind-api)
+Copyright (c) 2017, 2018 Oracle and/or its affiliates. All rights reserved.
+https://github.com/jakartaee/jaxb-api
 
-  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-  AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-  IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-  ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
-  LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
-  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
-  SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
-  INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
-  CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
-  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
-  POSSIBILITY OF SUCH DAMAGE.
+The binary's bundled NOTICE metadata separately carries Copyright (c) 2018,
+2024 Oracle and/or its affiliates. Both upstream copyright statements are
+preserved here rather than silently collapsing their different year ranges.
+
+The resolved binary's manifest identifies the Eclipse Distribution License
+v1.0, its bundled license reproduces the component-specific three-clause BSD
+terms, and its notice identifies those terms with the SPDX identifier
+BSD-3-Clause. GridGrind redistributes this binary under those terms.
+
+Jakarta XML Binding is a trademark of the Eclipse Foundation.
+
+CurvesAPI 1.08
+Copyright (c) 2005, Harald Kuhr
+https://github.com/virtuald/curvesapi
+
+These components are licensed under their respective BSD 3-Clause texts in
+LICENSE-BSD-3-CLAUSE.
+
+================================================================================
+Additional Distributed Build and Recipe Artifacts
+================================================================================
+
+The following third-party build or recipe artifacts have distribution scopes
+that differ from ordinary runtime libraries.
+
+Gradle Wrapper 9.7.1 (gradlew, gradlew.bat, gradle/wrapper/gradle-wrapper.jar)
+Copyright © 2015 the original authors.
+https://github.com/gradle/gradle
+
+The wrapper JAR declares SPDX-License-Identifier: Apache-2.0. These files are
+licensed under the Apache License, Version 2.0. They are present in the public
+repository and its source archives, but not in the executable GridGrind JAR or
+the published runtime container.
+
+Apache POI CustomXMLMappings.xlsx test data
+https://github.com/apache/poi/blob/87cdef57b0f714369c391e625180a59507a24576/test-data/spreadsheet/CustomXMLMappings.xlsx
+
+The workbook's OOXML metadata identifies its creator and last modifier only as
+"roberto"; it does not state a copyright holder or a separate license. Its
+provenance is the byte-identical file distributed in Apache POI's test-data
+tree under that project's Apache License, Version 2.0.
+
+GridGrind retains byte-identical copies at:
+
+engine/src/test/resources/dev/erst/gridgrind/excel/CustomXMLMappings.xlsx
+examples/custom-xml-assets/custom-xml-mapping.xlsx
+
+The example copy is also embedded in the executable JAR, and therefore in the
+runtime container, at:
+
+gridgrind/recipe-assets/custom-xml-assets/custom-xml-mapping.xlsx
+
+SHA-256:
+6a5fbb160c7c9c2add5125ac07ceaf3f841d40e03d5c75025ab71946d49af289
+
+The applicable Apache POI attribution appears above, and the full license is
+in LICENSE-APACHE-2.0.
+
+================================================================================
+Container-Only Software
+================================================================================
+
+The published container image adds an Azul Zulu build of OpenJDK and operating
+system/font packages that are not part of the executable GridGrind JAR. Their
+licenses are not represented by a single GridGrind license expression. The
+runtime preserves the base image and Debian package legal material, including
+the JRE legal directory under /usr/lib/jvm and package copyright files under
+/usr/share/doc. GridGrind-specific legal files are copied to
+/usr/share/doc/gridgrind. Published images also carry provenance and an SBOM
+attestation for the resolved image contents.
+
+Published runtime base:
+azul/zulu-openjdk:26-jre@sha256:ac36910df585bf3db5a38b30695eb04791515d1bb7d78202564db560c60c3470
+
+The Dockerfile pins the Azul Zulu image by manifest-list digest. Azul publishes
+the base-image Dockerfiles and the Zulu licensing/source-availability materials
+at:
+
+https://github.com/zulu-openjdk/zulu-openjdk
+https://docs.azul.com/core/tpl
+https://www.azul.com/products/core/openjdk-terms-of-use/
+https://launchpad.net/ubuntu/+sources
+
+The image's package copyright files and published SBOM identify the additional
+Ubuntu and font packages. GridGrind does not relicense those components or
+represent their terms as part of GridGrind's MIT license. Anyone redistributing
+the aggregate image must assess and satisfy the applicable notice, source-
+availability, trademark, patent, and other license conditions for that
+distribution.
+
+GridGrind does not make a separate written source-code offer for third-party
+container components. Azul's published source-availability process and the
+Ubuntu source archive are the identified upstream source mechanisms; this
+notice does not represent that those mechanisms satisfy every commercial or
+jurisdiction-specific redistribution scenario.
+
+================================================================================
+Cryptography and Export Notice
+================================================================================
+
+The JAR and container include cryptographic software for OOXML encryption,
+signing, and XML security. Laws or policies in some countries may restrict the
+import, possession, use, or re-export of cryptographic software. Users and
+redistributors are responsible for determining which requirements apply to
+them.
 
 ================================================================================
 Trademark Notice
@@ -266,15 +541,18 @@ Trademark Notice
 
 "Apache", "Apache POI", "Apache Log4j", "Apache Commons", "Apache XMLBeans",
 "Apache Santuario", and the Apache feather logo are trademarks of The Apache
-Software Foundation. Use of these marks in this document is descriptive only
-and does not imply affiliation with or endorsement by The Apache Software
-Foundation.
+Software Foundation. Use of these marks is descriptive only and does not imply
+affiliation with or endorsement by The Apache Software Foundation.
 
-"Bouncy Castle" is a trademark of The Legion of the Bouncy Castle Inc.
-Use of this mark is descriptive only.
+"Bouncy Castle" is a trademark of The Legion of the Bouncy Castle Inc. Use of
+this mark is descriptive only.
+
+"Jakarta Activation" and "Jakarta XML Binding" are trademarks of the Eclipse
+Foundation. Use of these marks is descriptive only.
 
 "Microsoft Excel", "Excel", and related product names are trademarks of
 Microsoft Corporation. Use of these names is descriptive only.
 
 GridGrind is not affiliated with, endorsed by, or sponsored by The Apache
-Software Foundation or Microsoft Corporation.
+Software Foundation, the Eclipse Foundation, Oracle, Azul Systems, or
+Microsoft Corporation.

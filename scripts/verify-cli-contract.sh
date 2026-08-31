@@ -122,7 +122,13 @@ case "${mode}" in
         ;;
     jar)
         command -v java >/dev/null 2>&1 || die "java is required for jar verification"
+        command -v unzip >/dev/null 2>&1 || die "unzip is required for jar verification"
         [[ -f "${target}" ]] || die "missing jar target: ${target}"
+        jar_manifest="$(unzip -p "${target}" META-INF/MANIFEST.MF | tr -d '\r')"
+        require_contains "${jar_manifest}" 'Implementation-License: Multiple; see META-INF/NOTICE' \
+            "fat JAR manifest misstates or omits its aggregate multi-license posture"
+        [[ "$(unzip -p "${target}" gridgrind/recipe-assets/custom-xml-assets/custom-xml-mapping.xlsx | shasum -a 256 | awk '{print $1}')" == '6a5fbb160c7c9c2add5125ac07ceaf3f841d40e03d5c75025ab71946d49af289' ]] || die \
+            "packaged custom XML recipe workbook no longer matches its audited Apache POI provenance"
         launcher=(java -jar "${target}")
         interactive_launcher=(java -jar "${target}")
         doctor_launcher=(java -jar "${target}")
@@ -183,6 +189,18 @@ protocol_help_stderr="$(tr -d '\r' < "${help_protocol_stderr_path}")"
 guidance_help_output="$("${launcher[@]}" --help-guidance 2> "${help_guidance_stderr_path}" | tr -d '\r')"
 guidance_help_stderr="$(tr -d '\r' < "${help_guidance_stderr_path}")"
 [[ -z "${guidance_help_stderr}" ]] || die "${label} --help-guidance wrote unexpected stderr: ${guidance_help_stderr}"
+license_output="$("${launcher[@]}" --license | tr -d '\r')"
+for required_license_snippet in \
+    'Jakarta Activation API' \
+    'Jakarta XML Binding API' \
+    'Bouncy Castle' \
+    'Eclipse Distribution License v1.0' \
+    'FastDoubleParser' \
+    'Schubfach' \
+    'Boost Software License, Version 1.0'; do
+    require_contains "${license_output}" "${required_license_snippet}" \
+        "${label} license output omits required legal text: ${required_license_snippet}"
+done
 require_absent \
     "${protocol_help_output}" \
     'FORCE_FORMULA_RECALCULATION_ON_OPEN' \
@@ -355,7 +373,7 @@ required_guidance_help_snippets = (
         "guidance help no longer includes the CLI-owned featured recipe command",
     ),
     (
-        "requiredWorkspacePaths names those paths directly.",
+        "REQUIRES_EXAMPLE_ASSETS starters require --materialize-recipe; it atomically creates the request file and every declared asset beneath one new workspace directory.",
         "guidance help no longer explains asset-backed built-in example portability",
     ),
 )

@@ -125,7 +125,7 @@ final class CatalogShapeTextSupport {
       return relatedEntryIdsForFieldShape(
           catalog, new FieldShape.PlainTypeGroupRef(ref.catalogGroup()));
     }
-    return lookupValue.relatedEntryIds(catalog);
+    return CatalogLookupValueSupport.relatedEntryIds(catalog, lookupValue);
   }
 
   private static boolean shapeReferences(

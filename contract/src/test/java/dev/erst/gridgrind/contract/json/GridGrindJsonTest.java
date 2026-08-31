@@ -639,7 +639,8 @@ class GridGrindJsonTest {
                     """
                         .getBytes(StandardCharsets.UTF_8)));
 
-    assertEquals("Unknown type value 'NO_SUCH_QUERY'", unknownType.getMessage());
+    assertTrue(
+        unknownType.getMessage().startsWith("Unknown type value 'NO_SUCH_QUERY'; valid values: "));
     assertEquals(Optional.of("steps[0].query.type"), unknownType.jsonPath());
     assertEquals(
         "Field 'steps[0].query.type' must be a JSON string type id", nonStringType.getMessage());
@@ -747,13 +748,13 @@ class GridGrindJsonTest {
                     """
                         .getBytes(StandardCharsets.UTF_8)));
 
-    assertEquals("Unknown type value 'EXPECT_PRESENT'", deletedAssertionName.getMessage());
-    assertEquals("Unknown type value 'EXPECT_ABSENT'", deletedAbsentAssertionName.getMessage());
-    assertEquals("Unknown type value 'EXPECT_LEGACYISH'", unknownAssertionType.getMessage());
+    assertTrue(deletedAssertionName.getMessage().contains("valid values:"));
+    assertTrue(deletedAbsentAssertionName.getMessage().contains("valid values:"));
+    assertTrue(unknownAssertionType.getMessage().contains("valid values:"));
     assertTrue(
         wrongSourceType.getMessage().contains("source.type='EXISTING'"),
         "source type failures must teach the existing-workbook discriminator");
-    assertEquals("Unknown type value 'ARCHIVE'", unknownSourceType.getMessage());
+    assertTrue(unknownSourceType.getMessage().contains("valid values: EXISTING, NEW"));
   }
 
   @Test

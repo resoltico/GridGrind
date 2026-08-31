@@ -100,11 +100,24 @@ class GridGrindCliHelpTextTest extends GridGrindCliTestSupport {
     String mit = "MIT License\n\nCopyright (c) 2026 Ervins Strauhmanis\n";
     InputStream own = new ByteArrayInputStream(mit.getBytes(StandardCharsets.UTF_8));
 
-    String result = GridGrindCli.licenseText(own, null, null, null, null, null);
+    String result = GridGrindCli.licenseText(own, null, null, null, null);
 
     assertTrue(result.contains("MIT License"));
     assertTrue(result.contains("Ervins Strauhmanis"));
     assertFalse(result.contains("Third-party notices and licenses:"));
+  }
+
+  @Test
+  void packagedLicenseTextCoversResolvedRuntimeTerms() {
+    String result = GridGrindCli.licenseText(GridGrindCli.class);
+
+    assertTrue(result.contains("Jakarta Activation API"));
+    assertTrue(result.contains("Jakarta XML Binding API"));
+    assertTrue(result.contains("BSD 3-Clause"));
+    assertTrue(result.contains("Eclipse Distribution License v1.0"));
+    assertTrue(result.contains("FastDoubleParser"));
+    assertTrue(result.contains("Schubfach"));
+    assertTrue(result.contains("Boost Software License, Version 1.0"));
   }
 
   @Test
@@ -116,9 +129,8 @@ class GridGrindCliHelpTextTest extends GridGrindCliTestSupport {
     InputStream bsd2 =
         new ByteArrayInputStream("BSD 2-Clause License\n".getBytes(StandardCharsets.UTF_8));
     InputStream bsd3 = new ByteArrayInputStream("BSD License\n".getBytes(StandardCharsets.UTF_8));
-    InputStream edl = new ByteArrayInputStream("EDL License\n".getBytes(StandardCharsets.UTF_8));
 
-    String result = GridGrindCli.licenseText(own, notice, apache, bsd2, bsd3, edl);
+    String result = GridGrindCli.licenseText(own, notice, apache, bsd2, bsd3);
 
     assertTrue(result.contains("MIT License"));
     assertTrue(result.contains("Third-party notices and licenses:"));
@@ -126,12 +138,11 @@ class GridGrindCliHelpTextTest extends GridGrindCliTestSupport {
     assertTrue(result.contains("Apache License"));
     assertTrue(result.contains("BSD 2-Clause License"));
     assertTrue(result.contains("BSD License"));
-    assertTrue(result.contains("EDL License"));
   }
 
   @Test
   void licenseTextReturnsFallbackWhenAllResourcesAbsent() {
-    String result = GridGrindCli.licenseText(null, null, null, null, null, null);
+    String result = GridGrindCli.licenseText(null, null, null, null, null);
 
     assertFalse(result.isBlank());
     assertTrue(result.contains("not available"));
@@ -142,12 +153,12 @@ class GridGrindCliHelpTextTest extends GridGrindCliTestSupport {
     InputStream apache =
         new ByteArrayInputStream("Apache License\n".getBytes(StandardCharsets.UTF_8));
 
-    String thirdPartyOnly = GridGrindCli.licenseText(null, null, apache, null, null, null);
+    String thirdPartyOnly = GridGrindCli.licenseText(null, null, apache, null, null);
 
     assertFalse(thirdPartyOnly.contains("Third-party notices and licenses:"));
     assertTrue(thirdPartyOnly.contains("Apache License"));
     assertTrue(
-        GridGrindCli.licenseText(new ThrowingInputStream(), null, null, null, null, null)
+        GridGrindCli.licenseText(new ThrowingInputStream(), null, null, null, null)
             .contains("not available"));
   }
 
@@ -163,7 +174,6 @@ class GridGrindCliHelpTextTest extends GridGrindCliTestSupport {
     String text =
         GridGrindCli.licenseText(
             new ByteArrayInputStream("MIT License".getBytes(StandardCharsets.UTF_8)),
-            null,
             null,
             null,
             null,

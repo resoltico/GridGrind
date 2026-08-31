@@ -187,7 +187,8 @@ final class RequestUnionValidator {
                     root ->
                         GridGrindJsonSubtypeProblemSupport.similarTypeIds(root, typeValue.value()))
                 .orElse(List.of()),
-            GridGrindJsonSubtypeProblemSupport.specificGuidance(typePath, typeValue.value()),
+            GridGrindJsonSubtypeProblemSupport.specificGuidance(
+                typePath, typeValue.value(), similarityRoot),
             typeMember.nameByteOffset()));
     return Optional.empty();
   }

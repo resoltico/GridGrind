@@ -440,7 +440,7 @@ final class XlsxParityProbeRegistry {
                 new ConditionalFormattingDefinitionInput(
                     List.of(
                         new ConditionalFormattingRuleInput.Top10Rule(
-                            false, 10, false, false, java.util.Optional.empty())))));
+                            true, 10, false, false, java.util.Optional.empty())))));
     return List.of(colorScale, dataBar, iconSet, top10);
   }
 

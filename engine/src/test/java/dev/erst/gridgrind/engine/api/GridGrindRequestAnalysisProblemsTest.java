@@ -50,6 +50,16 @@ class GridGrindRequestAnalysisProblemsTest {
   }
 
   @Test
+  void projectsMalformedSyntaxWithOffsetLineAndColumn() {
+    ProblemContext.ReadRequest syntax =
+        firstReadRequest(
+            GridGrindJson.analyzeRequest("{\n  broken\n}".getBytes(StandardCharsets.UTF_8)));
+
+    assertEquals(
+        ProblemContextRequestSurfaces.JsonLocation.byteOffsetLineColumn(4, 2, 3), syntax.json());
+  }
+
+  @Test
   void projectsLocatedFragmentAndCompletePlanBindingFailures() {
     byte[] fragmentFailure =
         """

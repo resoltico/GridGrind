@@ -18,13 +18,8 @@ final class CliExitCodes {
 
   static int forCommandError(CommandError commandError) {
     Objects.requireNonNull(commandError, "commandError must not be null");
-    return switch (commandError.primaryProblem().code()) {
-      case INVALID_ARGUMENTS,
-          INVALID_JSON,
-          INVALID_ENCODING,
-          INVALID_REQUEST_SHAPE,
-          INVALID_REQUEST ->
-          2;
+    return switch (commandError.primaryProblem().category()) {
+      case ARGUMENTS, REQUEST -> 2;
       default -> 1;
     };
   }

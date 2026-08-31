@@ -39,6 +39,17 @@ final class GridGrindJsonSubtypeProblemSupport {
     return Optional.empty();
   }
 
+  static Optional<String> specificGuidance(
+      String discriminatorPath, String typeId, Optional<Class<?>> similarityRoot) {
+    Optional<String> pathSpecific = specificGuidance(discriminatorPath, typeId);
+    if (pathSpecific.isPresent() || similarityRoot.isEmpty()) {
+      return pathSpecific;
+    }
+    return Optional.of(
+        "valid values: "
+            + String.join(", ", GridGrindJsonSubtypeSupport.typeIds(similarityRoot.orElseThrow())));
+  }
+
   static List<String> similarTypeIds(
       tools.jackson.databind.exc.InvalidTypeIdException exception, String typeId) {
     tools.jackson.databind.JavaType baseType = exception.getBaseType();

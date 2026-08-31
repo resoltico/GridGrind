@@ -44,7 +44,7 @@ final class CatalogRefResolutionSupport {
                             entryRef.group(),
                             entryRef.entry().id(),
                             entryRef.qualifiedId(),
-                            new CatalogLookupValue.EntryLookupValue(entryRef.entry()))),
+                            new CatalogEntryLookupValue(entryRef.entry()))),
             catalog.nestedTypes().stream()
                 .map(
                     group ->
@@ -52,7 +52,7 @@ final class CatalogRefResolutionSupport {
                             "nestedTypes",
                             group.group(),
                             "nestedTypes:" + group.group(),
-                            new CatalogLookupValue.NestedGroupLookupValue(group))),
+                            new CatalogNestedGroupLookupValue(group))),
             catalog.plainTypes().stream()
                 .map(
                     group ->
@@ -60,7 +60,7 @@ final class CatalogRefResolutionSupport {
                             "plainTypes",
                             group.group(),
                             "plainTypes:" + group.group(),
-                            new CatalogLookupValue.PlainGroupLookupValue(group))),
+                            new CatalogPlainGroupLookupValue(group))),
             topLevelGroupRefs(catalog).stream())
         .flatMap(Function.identity())
         .toList();
@@ -74,7 +74,7 @@ final class CatalogRefResolutionSupport {
 
   private static CatalogLookupRef topLevelGroupRef(String group, List<TypeEntry> types) {
     return new CatalogLookupRef(
-        group, group, group, new CatalogLookupValue.TopLevelGroupLookupValue(group, types));
+        group, group, group, new CatalogTopLevelGroupLookupValue(group, types));
   }
 
   static List<CatalogEntryRef> matchingEntryRefs(Catalog catalog, String idOrQualifiedId) {

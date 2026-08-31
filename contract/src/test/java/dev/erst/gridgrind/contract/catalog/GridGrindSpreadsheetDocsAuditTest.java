@@ -382,12 +382,12 @@ class GridGrindSpreadsheetDocsAuditTest {
                 "examples guide must distinguish input portability from output-directory setup"),
         () ->
             assertTrue(
-                normalizedExamples.contains("Create their `generated-workbooks/` output directory"),
+                normalizedExamples.contains("Create that parent directory first"),
                 "examples guide must document the verified output-parent prerequisite"),
         () ->
             assertTrue(
                 normalizedExamples.contains(
-                    "Repo-asset-backed built-ins require the matching asset paths named in `requiredWorkspacePaths`"),
+                    "Asset-backed built-ins require `--materialize-recipe`; it atomically creates the new workspace, request file, and the paths named in `requiredWorkspacePaths`"),
                 "examples guide must describe repo-asset-backed built-ins honestly"),
         () ->
             assertTrue(

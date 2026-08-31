@@ -45,6 +45,11 @@ class FormulaExceptionsTest {
             "Budget", "A1", "A1", new org.apache.poi.ss.formula.FakeFormulaFailure(null));
     assertEquals("Invalid formula at Budget!A1: A1", nullMessage.getMessage());
 
+    RuntimeException absentFormula =
+        FormulaExceptions.wrap(
+            "Budget", "A2", null, new org.apache.poi.ss.formula.FakeFormulaFailure("bad formula"));
+    assertEquals("Invalid formula at Budget!A2: ", absentFormula.getMessage());
+
     RuntimeException missingExternalWorkbook =
         FormulaExceptions.wrap(
             "Budget",
