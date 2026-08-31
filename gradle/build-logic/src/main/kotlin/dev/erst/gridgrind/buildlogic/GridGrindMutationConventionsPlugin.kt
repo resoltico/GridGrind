@@ -48,6 +48,7 @@ class GridGrindMutationConventionsPlugin : Plugin<Project> {
             reportDir.set(reportDirectory)
             timestampedReports.set(false)
             failWhenNoMutations.set(true)
+            jvmArgs.set(listOf("--enable-native-access=ALL-UNNAMED"))
             jvmPath.set(
                 toolchains.launcherFor { spec ->
                     spec.languageVersion.set(javaVersion.map(JavaLanguageVersion::of))

@@ -1,6 +1,6 @@
 ---
 afad: "4.0"
-version: "0.74.0"
+version: "0.75.0"
 domain: CHANGELOG_ARCHIVE
 updated: "2026-07-02"
 route:

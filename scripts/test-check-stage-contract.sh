@@ -40,6 +40,8 @@ grep -Fq 'scripts/test-check-stage-contract.sh' "${stage_contract_script}" || di
     "stage contract no longer includes its own regression guard in Stage 5 coverage"
 grep -Fq 'scripts/test-verify-cli-discovery-execution.sh' "${stage_contract_script}" || die \
     "stage contract no longer includes the discovery execution heartbeat regression guard"
+grep -Fq 'scripts/test-cli-shadow-jar-support.sh' "${stage_contract_script}" || die \
+    "stage contract no longer proves stale JARs cannot mask failed artifact rebuilds"
 
 if grep -Fq "run_stage 'quality-gates'" "${root_check_script}"; then
     die "check.sh still carries a direct fixed-stage quality-gates invocation"

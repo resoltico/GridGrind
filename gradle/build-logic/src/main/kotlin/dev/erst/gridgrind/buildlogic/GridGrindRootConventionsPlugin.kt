@@ -350,8 +350,7 @@ class GridGrindRootConventionsPlugin : Plugin<Project> {
 
     private fun Project.controlPlaneShapeTargets(): List<Any> =
         buildList {
-            add(rootFile("check.sh"))
-            add(rootFile("check_mutation.sh"))
+            listOf("check.sh", "check_mutation.sh").forEach { add(rootFile(it)) }
             add(rootFile("CHANGELOG.md"))
             add(rootFile("docs/RELEASE_PROTOCOL.md"))
             add(projectFileTree("scripts") { include("**/*.sh") })
@@ -393,8 +392,7 @@ class GridGrindRootConventionsPlugin : Plugin<Project> {
             add(rootFile("PATENTS.md"))
             add(rootFile("README.md"))
             add(rootFile("build.gradle.kts"))
-            add(rootFile("check.sh"))
-            add(rootFile("check_mutation.sh"))
+            listOf("check.sh", "check_mutation.sh").forEach { add(rootFile(it)) }
             add(rootFile("gradle.properties"))
             add(rootFile("settings.gradle.kts"))
             add(rootFile("authoring-java/build.gradle.kts"))

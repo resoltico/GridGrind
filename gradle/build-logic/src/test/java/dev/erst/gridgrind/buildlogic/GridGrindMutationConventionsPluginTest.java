@@ -56,6 +56,7 @@ class GridGrindMutationConventionsPluginTest {
             println "testStrengthThreshold=${policy.testStrengthThreshold.get()}"
             println "maxSurviving=${policy.maxSurviving.get()}"
             println "failWhenNoMutations=${policy.failWhenNoMutations.get()}"
+            println "jvmArgs=${policy.jvmArgs.get()}"
             println "threads=${policy.threads.get()}"
             println "timeoutConstInMillis=${policy.timeoutConstInMillis.get()}"
             println "timeoutFactor=${policy.timeoutFactor.get()}"
@@ -72,6 +73,7 @@ class GridGrindMutationConventionsPluginTest {
     assertTrue(policy.getOutput().contains("testStrengthThreshold=100"));
     assertTrue(policy.getOutput().contains("maxSurviving=0"));
     assertTrue(policy.getOutput().contains("failWhenNoMutations=true"));
+    assertTrue(policy.getOutput().contains("jvmArgs=[--enable-native-access=ALL-UNNAMED]"));
     assertTrue(policy.getOutput().contains("threads=4"));
     assertTrue(policy.getOutput().contains("timeoutConstInMillis=10000"));
     assertTrue(policy.getOutput().contains("timeoutFactor=3.0"));

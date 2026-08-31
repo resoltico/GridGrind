@@ -46,6 +46,9 @@ case "${1:-}" in
     --help-guidance)
         emit_fixture_file "${FAKE_GRIDGRIND_HELP_GUIDANCE_FILE:?}"
         ;;
+    --license)
+        emit_fixture_file "${FAKE_GRIDGRIND_LICENSE_FILE:?}"
+        ;;
     --print-request-template)
         emit_fixture_file "${FAKE_GRIDGRIND_REQUEST_TEMPLATE_FILE:?}"
         ;;
@@ -146,6 +149,7 @@ run_fake_gridgrind_verify_with_fixture_texts() {
     local help_overview_file
     local help_protocol_file
     local help_guidance_file
+    local license_file
     local catalog_index_file
     local source_types_file
     local persistence_types_file
@@ -169,6 +173,7 @@ run_fake_gridgrind_verify_with_fixture_texts() {
     help_overview_file="$(write_case_fixture "${case_dir}" 'help-overview.txt' "${help_overview_text}")"
     help_protocol_file="$(write_case_fixture "${case_dir}" 'help-protocol.txt' "${help_protocol_text}")"
     help_guidance_file="$(write_case_fixture "${case_dir}" 'help-guidance.txt' "${help_guidance_text}")"
+    license_file="$(write_case_fixture "${case_dir}" 'license.txt' "${success_license_text}")"
     catalog_index_file="$(write_case_fixture "${case_dir}" 'protocol-catalog-index.json' "${success_catalog_index}")"
     source_types_file="$(write_case_fixture "${case_dir}" 'source-types.json' "${source_types_text}")"
     persistence_types_file="$(write_case_fixture "${case_dir}" 'persistence-types.json' "${persistence_types_text}")"
@@ -195,6 +200,7 @@ run_fake_gridgrind_verify_with_fixture_texts() {
             FAKE_GRIDGRIND_HELP_OVERVIEW_FILE="${help_overview_file}" \
             FAKE_GRIDGRIND_HELP_PROTOCOL_FILE="${help_protocol_file}" \
             FAKE_GRIDGRIND_HELP_GUIDANCE_FILE="${help_guidance_file}" \
+            FAKE_GRIDGRIND_LICENSE_FILE="${license_file}" \
             FAKE_GRIDGRIND_CATALOG_INDEX_FILE="${catalog_index_file}" \
             FAKE_GRIDGRIND_SOURCE_TYPES_FILE="${source_types_file}" \
             FAKE_GRIDGRIND_PERSISTENCE_TYPES_FILE="${persistence_types_file}" \
@@ -220,6 +226,7 @@ run_fake_gridgrind_verify_with_fixture_texts() {
     FAKE_GRIDGRIND_HELP_OVERVIEW_FILE="${help_overview_file}" \
         FAKE_GRIDGRIND_HELP_PROTOCOL_FILE="${help_protocol_file}" \
         FAKE_GRIDGRIND_HELP_GUIDANCE_FILE="${help_guidance_file}" \
+        FAKE_GRIDGRIND_LICENSE_FILE="${license_file}" \
         FAKE_GRIDGRIND_CATALOG_INDEX_FILE="${catalog_index_file}" \
         FAKE_GRIDGRIND_SOURCE_TYPES_FILE="${source_types_file}" \
         FAKE_GRIDGRIND_PERSISTENCE_TYPES_FILE="${persistence_types_file}" \

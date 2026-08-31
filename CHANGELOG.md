@@ -5,6 +5,8 @@ Earlier release history through `0.68.0` is archived in [docs/CHANGELOG_ARCHIVE.
 
 ## [Unreleased]
 
+## [0.75.0] - 2026-08-31
+
 ### Added
 - Added `--materialize-recipe --lookup <id> --workspace <new-directory>` to publish an asset-backed recipe into one new workspace atomically, including its request file and every declared asset.
 - Added a dedicated `check_mutation.sh` entrypoint and scheduled PIT `1.30.0` workflow for the reviewed contract, engine, CLI, and architecture-rule scopes; it validates configured class and test patterns against compiled bytecode, requires all four reports, and accepts only killed mutations.
@@ -24,6 +26,8 @@ Earlier release history through `0.68.0` is archived in [docs/CHANGELOG_ARCHIVE.
 - Corrected the distributed legal inventory and packaging: the Eclipse Distribution License v1.0 terms for Jakarta Activation and Jakarta XML Binding are now reproduced with their component-specific notices and identified by their `BSD-3-Clause` SPDX identifier; required upstream NOTICE attributions and Jackson Core's shaded FastDoubleParser, Schubfach, MIT, Boost 1.0, and BSD 2-Clause terms are retained; the source-only Gradle wrapper and the Apache POI Custom XML workbook embedded as a packaged recipe asset are attributed with exact provenance and distribution scope; Gradle-generated launcher archives expose legal files directly; the standalone release JAR embeds them and identifies its aggregate license posture as multiple rather than MIT-only; patent prose no longer implies an unperformed clearance or separate non-assertion pledge; and the container no longer publishes an incomplete aggregate OCI license expression.
 - Corrected the contributor foundations table so its Jackson Databind, JUnit Jupiter, Log4j Core, and Kotlin versions match the canonical Gradle version catalog.
 - Corrected contributor references that still described the published runtime image as Alpine-based and named superseded Gradle and JUnit versions.
+- Configured PIT worker JVMs with the same Java 26 native-access allowance as the packaged CLI, removing restricted-foreign-function warnings during mutation verification.
+- Made packaged JAR rebuilding fail closed so a stale artifact cannot mask a failed Gradle build during verification or publication.
 - Rejected XML 1.0-invalid authored cell and rich-text characters before workbook mutation instead of silently replacing them during OOXML persistence.
 - Rejected reversed ranges, range/grid dimension mismatches, and oversized cell- or row-materializing plans before Apache POI authoring.
 - Rejected conditional-formatting rules that neither apply a style nor act as a `stopIfTrue` barrier, and made CLI request rejections use the documented exit status consistently.
@@ -211,7 +215,8 @@ Earlier release history through `0.68.0` is archived in [docs/CHANGELOG_ARCHIVE.
 - Standardized the packaged discovery contract around `requestFileName` plus `requiredWorkspacePaths`, and realigned the release verifier, operator guidance, and public docs to that explicit example/task portability surface instead of carrying forward stale `suggestedRequestPath` and `requiredPaths` terminology.
 - Made the Docker runtime cache layout arbitrary-user-safe: the image now points `HOME` and `XDG_CACHE_HOME` at writable tmp-backed directories so signature-line and other font-backed authoring flows stay silent under `docker run --user <uid>:<gid>` instead of leaking Fontconfig cache warnings on stderr.
 
-[Unreleased]: https://github.com/resoltico/GridGrind/compare/v0.74.0...HEAD
+[Unreleased]: https://github.com/resoltico/GridGrind/compare/v0.75.0...HEAD
+[0.75.0]: https://github.com/resoltico/GridGrind/compare/v0.74.0...v0.75.0
 [0.74.0]: https://github.com/resoltico/GridGrind/compare/v0.73.0...v0.74.0
 [0.73.0]: https://github.com/resoltico/GridGrind/compare/v0.72.0...v0.73.0
 [0.72.0]: https://github.com/resoltico/GridGrind/compare/v0.71.0...v0.72.0

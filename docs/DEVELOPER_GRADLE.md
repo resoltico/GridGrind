@@ -1,6 +1,6 @@
 ---
 afad: "4.0"
-version: "0.74.0"
+version: "0.75.0"
 domain: DEVELOPER_GRADLE
 updated: "2026-08-31"
 route:
@@ -408,6 +408,11 @@ gate. PIT's timeout constant and factor are explicit so timing policy is reviewe
 to tool defaults. A surviving mutant is work to triage, not a reason to lower a threshold or add a
 broad exclusion. Prove a mutant equivalent before applying a narrow owned filter; otherwise
 strengthen the test or simplify redundant production code.
+
+PIT minion JVMs receive `--enable-native-access=ALL-UNNAMED`, matching the packaged CLI and its
+ordinary test task. This keeps the native standard-input probe warning-free on Java 26 and avoids
+shipping a mutation configuration that will become unusable when restricted foreign-function calls
+are enforced more strictly.
 
 The mutation workflow runs weekly, manually, for merge-queue batches, and on pull requests that
 change mutation infrastructure or any source under the owning contract, engine, or executor module.

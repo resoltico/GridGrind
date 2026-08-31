@@ -37,6 +37,7 @@ readonly contract_build="${repo_root}/contract/build.gradle.kts"
 readonly cli_jar="${repo_root}/cli/build/libs/gridgrind.jar"
 readonly docker_smoke_script="${repo_root}/scripts/docker-smoke.sh"
 readonly docker_smoke_bind_mount_helper="${repo_root}/scripts/lib/docker-smoke-bind-mount-support.sh"
+readonly docker_smoke_legal_helper="${repo_root}/scripts/lib/docker-smoke-legal-support.sh"
 readonly container_verify_script="${repo_root}/scripts/verify-container-publication.sh"
 readonly stage_contract_script="${repo_root}/scripts/check-stage-contract.sh"
 readonly release_protocol_doc="${repo_root}/docs/RELEASE_PROTOCOL.md"
@@ -168,8 +169,8 @@ grep -Fq 'cli-shadow-jar-support.sh' "${docker_smoke_script}" && die \
     "docker smoke reintroduced the host-side CLI JAR helper dependency"
 grep -Fq ':cli:shadowJar' "${docker_smoke_script}" && die \
     "docker smoke reintroduced a separate host-side CLI JAR rebuild"
-grep -Fq 'docker_with_repo_config buildx build --load -t "${image_tag}" "${repo_root}" >/dev/null' \
-    "${docker_smoke_script}" || die \
+grep -Fq 'docker_with_repo_config buildx build --load -t "${image_ref}" "${repository_root}" >/dev/null' \
+    "${docker_smoke_legal_helper}" || die \
     "docker smoke no longer builds the repository-root Dockerfile through buildx --load"
 grep -Fq 'buildx imagetools inspect "${image_ref}"' "${docker_smoke_script}" || die \
     "docker smoke no longer inspects every pinned Docker base image"
