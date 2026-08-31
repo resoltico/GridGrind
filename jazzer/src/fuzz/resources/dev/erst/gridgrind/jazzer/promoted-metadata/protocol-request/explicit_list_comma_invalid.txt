@@ -1,0 +1,17 @@
+Replay Result
+Input: src/fuzz/resources/dev/erst/gridgrind/jazzer/protocol/ProtocolRequestFuzzTestInputs/readRequest/explicit_list_comma_invalid.json
+Harness: protocol-request
+Outcome: EXPECTED_INVALID
+Kind: InvalidRequestException
+Message: values must not contain ',' or '"' in an explicit list; use FORMULA_LIST for values that require delimiters
+Input Bytes: 406
+Decode Outcome: INVALID_REQUEST
+Source Kind: NOT_PARSED
+Persistence Kind: NOT_PARSED
+Operation Count: 0
+Assertion Count: 0
+Read Count: 0
+Assertion Kinds: (none)
+Read Kinds: (none)
+Style Kinds: (none)
+Operation Kinds: (none)

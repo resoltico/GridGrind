@@ -68,6 +68,12 @@ public final class GridGrindRequestAnalysisProblems {
     }
     java.util.Optional<String> jsonPath = problem.jsonPath();
     java.util.Optional<Long> byteOffset = problem.byteOffset();
+    if (byteOffset.isPresent() && problem.jsonLine().isPresent()) {
+      return ProblemContextRequestSurfaces.JsonLocation.byteOffsetLineColumn(
+          byteOffset.orElseThrow(),
+          problem.jsonLine().orElseThrow(),
+          problem.jsonColumn().orElseThrow());
+    }
     if (jsonPath.isPresent() && byteOffset.isPresent()) {
       return ProblemContextRequestSurfaces.JsonLocation.pathAtByteOffset(
           jsonPath.orElseThrow(), byteOffset.orElseThrow());

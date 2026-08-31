@@ -16,6 +16,9 @@ import dev.erst.gridgrind.contract.dto.FormulaExternalWorkbookInput;
 import dev.erst.gridgrind.contract.dto.FormulaMissingWorkbookPolicy;
 import dev.erst.gridgrind.contract.dto.GridGrindProblemCode;
 import dev.erst.gridgrind.contract.dto.GridGrindProblemDetail;
+import dev.erst.gridgrind.contract.dto.OoxmlPersistenceSecurityInput;
+import dev.erst.gridgrind.contract.dto.OoxmlPersistenceSignatureInput;
+import dev.erst.gridgrind.contract.dto.OoxmlSignatureInput;
 import dev.erst.gridgrind.contract.dto.ProblemContext;
 import dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces;
 import dev.erst.gridgrind.contract.dto.ProblemContextWorkbookSurfaces;
@@ -25,9 +28,16 @@ import dev.erst.gridgrind.contract.selector.CellSelector;
 import dev.erst.gridgrind.contract.selector.ColumnBandSelector;
 import dev.erst.gridgrind.contract.source.TextSourceInput;
 import dev.erst.gridgrind.contract.step.MutationStep;
+import dev.erst.gridgrind.excel.InvalidSigningConfigurationException;
+import dev.erst.gridgrind.excel.OoxmlSecurityTestSupport;
+import dev.erst.gridgrind.excel.foundation.ExcelOoxmlSignatureDigestAlgorithm;
+import dev.erst.gridgrind.excel.ooxml.ExcelOoxmlPersistenceSignature;
+import dev.erst.gridgrind.excel.ooxml.ExcelOoxmlSignatureOptions;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.junit.jupiter.api.Test;
@@ -36,6 +46,55 @@ import org.junit.jupiter.api.io.TempDir;
 /** Verifies phase-four source checks collect independent facts without workbook mutation. */
 class RequestPreflightTest {
   @TempDir Path temporaryDirectory;
+
+  @Test
+  void preflightsSigningMaterialBeforeWorkbookExecution() throws Exception {
+    WorkbookPlan request =
+        WorkbookPlan.standard(
+            new WorkbookPlan.WorkbookSource.New(),
+            new WorkbookPlan.WorkbookPersistence.SaveAs(
+                "signed.xlsx",
+                WorkbookPlan.WorkbookPersistence.IfExists.REJECT,
+                new OoxmlPersistenceSecurityInput(
+                    new dev.erst.gridgrind.contract.dto.OoxmlPersistenceEncryptionInput.None(),
+                    new OoxmlPersistenceSignatureInput.Sign(
+                        OoxmlSignatureInput.sameKeyPassword(
+                            "missing-signing-material.p12",
+                            "password",
+                            Optional.empty(),
+                            ExcelOoxmlSignatureDigestAlgorithm.SHA256,
+                            Optional.empty())))),
+            ExecutionPolicyInput.defaults(),
+            FormulaEnvironmentInput.empty(),
+            List.of());
+
+    RequestPreflight.Result result =
+        RequestPreflight.verify(
+            request,
+            new ExecutionInputBindings(temporaryDirectory, temporaryDirectory.resolve("scratch")));
+    try {
+      assertEquals(
+          List.of(GridGrindProblemCode.INVALID_SIGNING_CONFIGURATION),
+          result.problems().stream().map(GridGrindProblemDetail.Problem::code).toList());
+      assertTrue(result.preparedRequest().isEmpty());
+    } finally {
+      result.release();
+    }
+
+    assertThrows(
+        InvalidSigningConfigurationException.class,
+        () ->
+            RequestPreflightPaths.verifySigningMaterial(
+                new ExcelOoxmlPersistenceSignature.Sign(
+                    new ExcelOoxmlSignatureOptions(
+                        temporaryDirectory.resolve("missing-signing-material.p12"),
+                        "password",
+                        "password",
+                        null,
+                        ExcelOoxmlSignatureDigestAlgorithm.SHA256,
+                        null))));
+    RequestPreflightPaths.verifySigningMaterial(new ExcelOoxmlPersistenceSignature.Unsigned());
+  }
 
   @Test
   void collectsIndependentAssetAndWorkbookSourceFailuresWithoutAResolvedPlan() throws Exception {
@@ -80,6 +139,43 @@ class RequestPreflightTest {
                 problem ->
                     problem.context().stage().endsWith("INPUTS")
                         || "OPEN_WORKBOOK".equals(problem.context().stage())));
+  }
+
+  @Test
+  void preflightsBoundSigningMaterialAfterItsPathHasBeenRead() throws Exception {
+    OoxmlSecurityTestSupport.SignedWorkbook signedWorkbook =
+        OoxmlSecurityTestSupport.createSignedWorkbook(temporaryDirectory.resolve("signing"));
+    WorkbookPlan request =
+        WorkbookPlan.standard(
+            new WorkbookPlan.WorkbookSource.New(),
+            new WorkbookPlan.WorkbookPersistence.SaveAs(
+                "signed.xlsx",
+                WorkbookPlan.WorkbookPersistence.IfExists.REJECT,
+                new OoxmlPersistenceSecurityInput(
+                    new dev.erst.gridgrind.contract.dto.OoxmlPersistenceEncryptionInput.None(),
+                    new OoxmlPersistenceSignatureInput.Sign(
+                        new OoxmlSignatureInput(
+                            signedWorkbook.pkcs12Path().toString(),
+                            "wrong-keystore-password",
+                            signedWorkbook.keyPassword(),
+                            Optional.of(signedWorkbook.alias()),
+                            ExcelOoxmlSignatureDigestAlgorithm.SHA256,
+                            Optional.empty())))),
+            ExecutionPolicyInput.defaults(),
+            FormulaEnvironmentInput.empty(),
+            List.of());
+    ExecutionInputBindings rawBindings =
+        new ExecutionInputBindings(temporaryDirectory, temporaryDirectory.resolve("scratch"));
+    List<GridGrindProblemDetail.Problem> problems = new ArrayList<>();
+
+    try (RequestPathAccess pathAccess =
+        new RequestPathAccess(rawBindings.workingDirectory(), rawBindings.tempFileFactory())) {
+      RequestPreflightPaths.preflightPersistenceMaterial(
+          request, rawBindings.withRequestPathAccess(pathAccess), problems);
+      assertEquals(
+          List.of(GridGrindProblemCode.INVALID_SIGNING_CONFIGURATION),
+          problems.stream().map(GridGrindProblemDetail.Problem::code).toList());
+    }
   }
 
   @Test
@@ -350,6 +446,26 @@ class RequestPreflightTest {
     } finally {
       invalidOverwriteResult.release();
     }
+
+    assertInstanceOf(RequestPreflightPaths.class, RequestPreflightPaths.newForVerification());
+    WorkbookPlan existingOverwrite =
+        plan(
+            new WorkbookPlan.WorkbookSource.ExistingFile("source.xlsx"),
+            new WorkbookPlan.WorkbookPersistence.Overwrite(
+                dev.erst.gridgrind.contract.dto.OoxmlPersistenceSecurityInput.none()));
+    WorkbookPlan newOverwrite =
+        plan(
+            new WorkbookPlan.WorkbookSource.New(),
+            new WorkbookPlan.WorkbookPersistence.Overwrite(
+                dev.erst.gridgrind.contract.dto.OoxmlPersistenceSecurityInput.none()));
+
+    RequestPreflightPaths.PersistenceTarget target =
+        RequestPreflightPaths.persistenceTarget(existingOverwrite).orElseThrow();
+    assertEquals("source.xlsx", target.path());
+    assertEquals(
+        dev.erst.gridgrind.excel.WorkbookArtifactWriteDisposition.REPLACE_EXISTING,
+        target.disposition());
+    assertTrue(RequestPreflightPaths.persistenceTarget(newOverwrite).isEmpty());
   }
 
   @Test

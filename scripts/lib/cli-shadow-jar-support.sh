@@ -10,7 +10,10 @@ ensure_cli_shadow_jar() {
     local helper_repo_root=$1
     local jar_path
     jar_path="$(resolve_cli_shadow_jar_path "${helper_repo_root}")"
-    "${helper_repo_root}/gradlew" --no-daemon :cli:shadowJar --rerun --console=plain >&2
+    if ! "${helper_repo_root}/gradlew" --no-daemon :cli:shadowJar --rerun --console=plain >&2; then
+        printf 'error: failed to build CLI shadow jar at %s\n' "${jar_path}" >&2
+        return 1
+    fi
     [[ -f "${jar_path}" ]] || {
         printf 'error: expected CLI shadow jar at %s after build\n' "${jar_path}" >&2
         return 1

@@ -178,6 +178,15 @@ final class CatalogStepTemplateDefaults {
             "DifferentialStyleInput",
             (catalog, object, recursionGuard, notes) -> object.put("bold", true)),
         Map.entry(
+            "FORMULA_RULE",
+            (catalog, object, recursionGuard, notes) -> object.put("stopIfTrue", true)),
+        Map.entry(
+            "CELL_VALUE_RULE",
+            (catalog, object, recursionGuard, notes) -> object.put("stopIfTrue", true)),
+        Map.entry(
+            "TOP10_RULE",
+            (catalog, object, recursionGuard, notes) -> object.put("stopIfTrue", true)),
+        Map.entry(
             "FontHeightReport",
             (catalog, object, recursionGuard, notes) -> {
               object.put("twips", 20);

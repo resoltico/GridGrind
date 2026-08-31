@@ -17,6 +17,9 @@
 !excel-foundation/
 !executor/
 
+# Asset-backed built-in recipes are copied into the CLI JAR during processResources.
+!examples/
+
 # Legal files published into the runtime image.
 !LICENSE
 !NOTICE
@@ -24,7 +27,6 @@
 !LICENSE-APACHE-2.0
 !LICENSE-BSD-2-CLAUSE
 !LICENSE-BSD-3-CLAUSE
-!LICENSE-EDL-1.0
 
 # Drop generated and local-only state from otherwise included trees.
 .gradle/

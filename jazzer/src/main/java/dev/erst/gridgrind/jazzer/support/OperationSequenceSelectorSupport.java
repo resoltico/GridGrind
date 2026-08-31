@@ -3,6 +3,7 @@ package dev.erst.gridgrind.jazzer.support;
 import dev.erst.gridgrind.contract.dto.ExecutionPolicyInput;
 import dev.erst.gridgrind.contract.dto.FormulaCellTarget;
 import dev.erst.gridgrind.contract.selector.RangeSelector;
+import dev.erst.gridgrind.contract.selector.RowBandSelector;
 import java.util.List;
 
 /** Shared selector, span, and execution-policy helpers for Jazzer operation generation. */
@@ -54,6 +55,13 @@ final class OperationSequenceSelectorSupport {
   static IndexSpan nextIndexSpan(GridGrindFuzzData data, int upperBound) {
     int first = data.consumeInt(0, upperBound - 1);
     return new IndexSpan(first, data.consumeInt(first, upperBound));
+  }
+
+  static RowBandSelector.Span nextRowHeightTarget(
+      GridGrindFuzzData data, String sheetName, IndexSpan boundedSpan) {
+    return data.consumeBoolean()
+        ? new RowBandSelector.Span(sheetName, boundedSpan.first(), boundedSpan.last())
+        : new RowBandSelector.Span(sheetName, 0, 250_000);
   }
 
   static int nextNonZeroDelta(GridGrindFuzzData data, int upperBound) {

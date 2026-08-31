@@ -1,6 +1,6 @@
 ---
 afad: "4.0"
-version: "0.74.0"
+version: "0.75.0"
 domain: STRUCTURED_DATA_MUTATIONS
 updated: "2026-05-15"
 route:

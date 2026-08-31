@@ -31,6 +31,10 @@ final class RequestSyntaxCursor {
     return input.byteOffsetAt(characterOffset);
   }
 
+  RequestUtf8DecodeResult.LineColumn lineColumnAt(int characterOffset) {
+    return input.lineColumnAt(characterOffset);
+  }
+
   boolean atEnd() {
     return index >= text.length();
   }

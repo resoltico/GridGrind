@@ -15,6 +15,7 @@ class RepositoryJavaSourceRootsTest {
     Files.createDirectories(repositoryRoot.resolve("engine/src/main/java"));
     Files.createDirectories(repositoryRoot.resolve("engine/src/test/java"));
     Files.createDirectories(repositoryRoot.resolve("engine/src/testFixtures/java"));
+    Files.createDirectories(repositoryRoot.resolve("executor/src/architectureTest/java"));
     Files.createDirectories(repositoryRoot.resolve("executor/src/parityTest/java"));
     Files.createDirectories(repositoryRoot.resolve("jazzer/src/fuzz/java"));
     Files.createDirectories(repositoryRoot.resolve("gradle/build-logic/src/test/java"));
@@ -29,6 +30,7 @@ class RepositoryJavaSourceRootsTest {
             "engine/src/main/java",
             "engine/src/test/java",
             "engine/src/testFixtures/java",
+            "executor/src/architectureTest/java",
             "executor/src/parityTest/java",
             "gradle/build-logic/src/test/java",
             "jazzer/src/fuzz/java"),

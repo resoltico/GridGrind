@@ -135,11 +135,14 @@ final class RequestTolerantSyntaxParser {
   }
 
   private void problem(String message, int characterOffset, String affectedJsonPath) {
+    RequestUtf8DecodeResult.LineColumn lineColumn = cursor.lineColumnAt(characterOffset);
     problems.add(
         new RequestInvalidJson(
             message,
             RequestStructuralProblemSupport.optionalJsonPath(affectedJsonPath),
-            java.util.Optional.of(cursor.byteOffsetAt(characterOffset))));
+            java.util.Optional.of(cursor.byteOffsetAt(characterOffset)),
+            java.util.Optional.of(lineColumn.line()),
+            java.util.Optional.of(lineColumn.column())));
   }
 
   /**

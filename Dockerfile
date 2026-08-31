@@ -8,20 +8,29 @@ WORKDIR /workspace
 
 COPY gradlew gradle.properties settings.gradle.kts build.gradle.kts ./
 COPY gradle ./gradle
+COPY LICENSE NOTICE PATENTS.md LICENSE-APACHE-2.0 LICENSE-BSD-2-CLAUSE LICENSE-BSD-3-CLAUSE ./
 COPY authoring-java ./authoring-java
 COPY cli ./cli
 COPY contract ./contract
 COPY engine ./engine
 COPY excel-foundation ./excel-foundation
 COPY executor ./executor
+COPY examples ./examples
 
 RUN chmod +x gradlew
 RUN --mount=type=cache,target=/root/.gradle ./gradlew --no-daemon :cli:shadowJar
 
 FROM azul/zulu-openjdk:26-jre@sha256:ac36910df585bf3db5a38b30695eb04791515d1bb7d78202564db560c60c3470
 
-LABEL org.opencontainers.image.licenses="MIT AND Apache-2.0 AND BSD-2-Clause AND BSD-3-Clause AND EDL-1.0"
+ARG GRIDGRIND_VERSION=unknown
+
+LABEL org.opencontainers.image.title="GridGrind"
+LABEL org.opencontainers.image.description=".xlsx workbook automation from a JSON request"
+LABEL org.opencontainers.image.version="${GRIDGRIND_VERSION}"
 LABEL org.opencontainers.image.vendor="Ervins Strauhmanis"
+LABEL org.opencontainers.image.source="https://github.com/resoltico/GridGrind"
+LABEL org.opencontainers.image.documentation="https://github.com/resoltico/GridGrind/blob/main/README.md"
+LABEL org.opencontainers.image.base.name="docker.io/azul/zulu-openjdk:26-jre"
 
 ARG GRIDGRIND_UID=65532
 ARG GRIDGRIND_GID=65532
@@ -52,7 +61,6 @@ COPY PATENTS.md /usr/share/doc/gridgrind/PATENTS.md
 COPY LICENSE-APACHE-2.0 /usr/share/doc/gridgrind/LICENSE-APACHE-2.0
 COPY LICENSE-BSD-2-CLAUSE /usr/share/doc/gridgrind/LICENSE-BSD-2-CLAUSE
 COPY LICENSE-BSD-3-CLAUSE /usr/share/doc/gridgrind/LICENSE-BSD-3-CLAUSE
-COPY LICENSE-EDL-1.0 /usr/share/doc/gridgrind/LICENSE-EDL-1.0
 
 USER gridgrind:gridgrind
 

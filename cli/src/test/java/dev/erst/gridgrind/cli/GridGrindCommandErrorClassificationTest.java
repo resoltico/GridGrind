@@ -555,8 +555,8 @@ class GridGrindCommandErrorClassificationTest extends GridGrindCliTestSupport {
     assertEquals(GridGrindProblemCode.INVALID_JSON, failure.primaryProblem().code());
     assertEquals("execute", failure.command());
     assertTrue(requestIntakeContext(failure).byteOffset().isPresent());
-    assertEquals(java.util.Optional.empty(), requestIntakeContext(failure).jsonLine());
-    assertEquals(java.util.Optional.empty(), requestIntakeContext(failure).jsonColumn());
+    assertEquals(java.util.Optional.of(1), requestIntakeContext(failure).jsonLine());
+    assertEquals(java.util.Optional.of(1), requestIntakeContext(failure).jsonColumn());
     assertEquals(java.util.Optional.empty(), requestIntakeContext(failure).jsonPath());
   }
 

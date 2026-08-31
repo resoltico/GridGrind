@@ -257,25 +257,28 @@ class ConditionalFormattingInputTest {
   }
 
   @Test
-  void allowsStyleLessDifferentialRuleFamiliesWhenPoiSupportsThem() {
+  void allowsStyleLessDifferentialRuleFamiliesOnlyAsStopIfTrueBarriers() {
     assertEquals(
-        new ExcelConditionalFormattingRule.FormulaRule("A1>0", false, Optional.empty()),
+        new ExcelConditionalFormattingRule.FormulaRule("A1>0", true, Optional.empty()),
         WorkbookCommandStructuredInputConverter.toExcelConditionalFormattingRule(
-            new ConditionalFormattingRuleInput.FormulaRule("A1>0", false, Optional.empty())));
+            new ConditionalFormattingRuleInput.FormulaRule("A1>0", true, Optional.empty())));
     assertEquals(
         new ExcelConditionalFormattingRule.CellValueRule(
-            ExcelComparisonOperator.GREATER_THAN, "1", Optional.empty(), false, Optional.empty()),
+            ExcelComparisonOperator.GREATER_THAN, "1", Optional.empty(), true, Optional.empty()),
         WorkbookCommandStructuredInputConverter.toExcelConditionalFormattingRule(
             new ConditionalFormattingRuleInput.CellValueRule(
                 ExcelComparisonOperator.GREATER_THAN,
                 "1",
                 Optional.empty(),
-                false,
+                true,
                 Optional.empty())));
     assertEquals(
-        new ExcelConditionalFormattingRule.Top10Rule(10, false, false, false, Optional.empty()),
+        new ExcelConditionalFormattingRule.Top10Rule(10, false, false, true, Optional.empty()),
         WorkbookCommandStructuredInputConverter.toExcelConditionalFormattingRule(
             new ConditionalFormattingRuleInput.Top10Rule(
-                false, 10, false, false, Optional.empty())));
+                true, 10, false, false, Optional.empty())));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new ConditionalFormattingRuleInput.FormulaRule("A1>0", false, Optional.empty()));
   }
 }

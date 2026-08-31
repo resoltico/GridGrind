@@ -4,9 +4,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 
+import dev.erst.gridgrind.cli.discovery.CommandError;
 import dev.erst.gridgrind.contract.dto.CliRuntimeContext;
 import dev.erst.gridgrind.contract.dto.GridGrindProblemCode;
-import dev.erst.gridgrind.contract.dto.WorkbookResult;
 import dev.erst.gridgrind.contract.dto.WorkbookResults;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -18,10 +18,11 @@ import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
-/** Verifies that failures after execution begins retain the execution response contract. */
+/** Verifies that fatal failures never fabricate an execution response contract. */
 class GridGrindCliUnexpectedFailureTest extends GridGrindCliTestSupport {
   @Test
-  void executionStartedErrorsProduceFailedWorkbookResults() throws Exception {
+  void executionStartedErrorsProduceRejectedCommandErrorsInsteadOfFabricatedJournals()
+      throws Exception {
     GridGrindCli cli =
         GridGrindCli.forTesting(
             (request, inputs, sink) -> {
@@ -40,13 +41,12 @@ class GridGrindCliUnexpectedFailureTest extends GridGrindCliTestSupport {
             stderr);
 
     assertEquals(1, exitCode);
-    WorkbookResult.Failure failure =
-        assertInstanceOf(WorkbookResult.Failure.class, response(stdout, stderr));
-    assertEquals(GridGrindProblemCode.INTERNAL_ERROR, failure.problem().code());
-    assertEquals(GridGrindProblemCode.INTERNAL_ERROR.title(), failure.problem().message());
+    CommandError failure = commandErrorOnStdout(stdout, stderr);
+    assertEquals(GridGrindProblemCode.INTERNAL_ERROR, failure.primaryProblem().code());
+    assertEquals(GridGrindProblemCode.INTERNAL_ERROR.title(), failure.primaryProblem().message());
     assertEquals(
         GridGrindProblemCode.INTERNAL_ERROR.title(),
-        failure.problem().causes().getFirst().message());
+        failure.primaryProblem().causes().getFirst().message());
     assertFalse(stdout.toString(StandardCharsets.UTF_8).contains("secret execution failure"));
     assertEquals("", stderr.toString(StandardCharsets.UTF_8));
   }

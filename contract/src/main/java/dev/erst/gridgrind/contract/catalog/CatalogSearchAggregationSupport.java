@@ -163,7 +163,7 @@ final class CatalogSearchAggregationSupport {
         .filter(
             ref ->
                 ref.qualifiedId().equals(qualifiedId)
-                    && ref.value() instanceof CatalogLookupValue.EntryLookupValue
+                    && ref.value() instanceof CatalogEntryLookupValue
                     && CatalogSearchRankingSupport.isTopLevelPublishedGroup(ref.catalogGroup()))
         .findFirst()
         .map(
@@ -172,8 +172,8 @@ final class CatalogSearchAggregationSupport {
                     ref.catalogGroup(),
                     ref.lookupId(),
                     ref.qualifiedId(),
-                    ref.value().kind(),
-                    ref.value().summary(),
+                    CatalogLookupValueSupport.kind(ref.value()),
+                    CatalogLookupValueSupport.summary(ref.value()),
                     CatalogSearchRankingSupport.stepTemplateFor(ref, ref.value()),
                     List.of(),
                     List.of()));
@@ -190,8 +190,8 @@ final class CatalogSearchAggregationSupport {
                     ref.catalogGroup(),
                     ref.lookupId(),
                     ref.qualifiedId(),
-                    ref.value().kind(),
-                    ref.value().summary(),
+                    CatalogLookupValueSupport.kind(ref.value()),
+                    CatalogLookupValueSupport.summary(ref.value()),
                     CatalogSearchRankingSupport.stepTemplateFor(ref, ref.value()),
                     CatalogShapeTextSupport.relatedEntryIdsFor(catalog, ref, ref.value()),
                     List.of()));

@@ -75,6 +75,7 @@ case "${command}" in
             --help-guidance)
                 emit_fixture_file "${FAKE_DOCKER_HELP_GUIDANCE_OUTPUT_FILE:?}"
                 ;;
+            --license) emit_fixture_file "${FAKE_DOCKER_LICENSE_OUTPUT_FILE:?}" ;;
             --print-request-template)
                 emit_fixture_file "${FAKE_DOCKER_REQUEST_TEMPLATE_OUTPUT_FILE:?}"
                 ;;
@@ -194,15 +195,10 @@ run_fake_docker_verify_with_fixture_texts() {
     local noargs_failure_output=${19}
     local example_recipe_catalog_detail_output=${20:-${success_example_recipe_catalog_detail}}
     local task_recipe_catalog_detail_output=${21:-${success_task_recipe_catalog_detail}}
-    local case_dir version_output_file latest_version_output_file
-    local help_overview_output_file help_protocol_output_file help_guidance_output_file
-    local catalog_index_output_file source_types_output_file persistence_types_output_file
-    local step_types_output_file mutation_action_types_output_file assertion_types_output_file
-    local inspection_query_types_output_file execution_mode_types_output_file
-    local execution_policy_input_type_output_file recipe_catalog_output_file
-    local example_recipe_catalog_detail_output_file task_recipe_catalog_detail_output_file
-    local recipe_request_output_file recipe_keyword_match_output_file
-    local request_template_output_file doctor_report_output_file noargs_failure_output_file
+    local license_output=${22:-${success_license_text}}
+    local case_dir version_output_file latest_version_output_file help_overview_output_file help_protocol_output_file help_guidance_output_file
+    local catalog_index_output_file source_types_output_file persistence_types_output_file step_types_output_file mutation_action_types_output_file assertion_types_output_file
+    local inspection_query_types_output_file execution_mode_types_output_file execution_policy_input_type_output_file recipe_catalog_output_file example_recipe_catalog_detail_output_file task_recipe_catalog_detail_output_file recipe_request_output_file recipe_keyword_match_output_file request_template_output_file doctor_report_output_file noargs_failure_output_file license_output_file
 
     case_dir="$(next_fixture_case_dir "${test_root}")"
     version_output_file="$(write_case_fixture "${case_dir}" 'version.txt' "${version_output}")"
@@ -210,6 +206,7 @@ run_fake_docker_verify_with_fixture_texts() {
     help_overview_output_file="$(write_case_fixture "${case_dir}" 'help-overview.txt' "${help_overview_output}")"
     help_protocol_output_file="$(write_case_fixture "${case_dir}" 'help-protocol.txt' "${help_protocol_output}")"
     help_guidance_output_file="$(write_case_fixture "${case_dir}" 'help-guidance.txt' "${help_guidance_output}")"
+    license_output_file="$(write_case_fixture "${case_dir}" 'license.txt' "${license_output}")"
     catalog_index_output_file="$(write_case_fixture "${case_dir}" 'protocol-catalog-index.json' "${catalog_index_output}")"
     source_types_output_file="$(write_case_fixture "${case_dir}" 'source-types.json' "${source_types_output}")"
     persistence_types_output_file="$(write_case_fixture "${case_dir}" 'persistence-types.json' "${persistence_types_output}")"
@@ -236,6 +233,7 @@ run_fake_docker_verify_with_fixture_texts() {
         FAKE_DOCKER_HELP_OVERVIEW_OUTPUT_FILE="${help_overview_output_file}" \
         FAKE_DOCKER_HELP_PROTOCOL_OUTPUT_FILE="${help_protocol_output_file}" \
         FAKE_DOCKER_HELP_GUIDANCE_OUTPUT_FILE="${help_guidance_output_file}" \
+        FAKE_DOCKER_LICENSE_OUTPUT_FILE="${license_output_file}" \
         FAKE_DOCKER_CATALOG_INDEX_OUTPUT_FILE="${catalog_index_output_file}" \
         FAKE_DOCKER_SOURCE_TYPES_OUTPUT_FILE="${source_types_output_file}" \
         FAKE_DOCKER_PERSISTENCE_TYPES_OUTPUT_FILE="${persistence_types_output_file}" \

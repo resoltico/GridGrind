@@ -7,9 +7,35 @@ plugins {
     `java-library`
     `java-test-fixtures`
     id("gridgrind.java-conventions")
+    id("gridgrind.mutation-conventions")
 }
 
 description = "Core GridGrind workbook automation and request execution engine"
+
+gridgrindMutation {
+    targetClasses.set(
+        setOf(
+            "dev.erst.gridgrind.engine.runtime.FormulaOriginTracker*",
+            "dev.erst.gridgrind.engine.runtime.RequestPreflightPaths*",
+            "dev.erst.gridgrind.excel.validation.ExcelDataValidationComparisonOperatorPoiBridge*",
+        ),
+    )
+    targetTests.set(
+        setOf(
+            "dev.erst.gridgrind.engine.runtime.FormulaOriginTrackerTest",
+            "dev.erst.gridgrind.engine.runtime.RequestPreflightTest",
+            "dev.erst.gridgrind.excel.validation.ExcelDataValidationComparisonOperatorPoiBridgeTest",
+        ),
+    )
+    mutationThreshold.set(100)
+    coverageThreshold.set(100)
+    testStrengthThreshold.set(100)
+    maxSurviving.set(0)
+}
+
+tasks.named("pitest") {
+    mustRunAfter(":contract:pitest")
+}
 
 // Engine behavior is exercised through both runtime adapters; coverage evidence must include both.
 val downstreamCoverageProjects = listOf(project(":cli"), project(":executor"))

@@ -80,6 +80,12 @@ final class SelectorTextValidation {
     requireAddress(parts[0], fieldName);
     if (parts.length == 2) {
       requireAddress(parts[1], fieldName);
+      if (SelectorAddressSupport.rowIndex(parts[1]) < SelectorAddressSupport.rowIndex(parts[0])
+          || SelectorAddressSupport.columnIndex(parts[1])
+              < SelectorAddressSupport.columnIndex(parts[0])) {
+        throw invalidField(
+            FieldValidationProblem.atField(fieldName, FieldValidationAddressRule.RANGE_ORDER));
+      }
     }
     return value;
   }

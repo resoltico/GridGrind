@@ -100,6 +100,11 @@ final class GridGrindCliSurfaceRequestSections {
             new CliSurface.DefinitionEntry(
                 "No --response flag", "write the primary command output to stdout."),
             new CliSurface.DefinitionEntry(
+                "Exit status",
+                "0 means the command completed successfully; 2 means a CLI argument or"
+                    + " request-contract rejection; 1 means an execution, resource, I/O,"
+                    + " transport, doctor-finding, or internal failure."),
+            new CliSurface.DefinitionEntry(
                 "--response <path>",
                 "write the primary command output to one new file; parent directories are"
                     + " created, but existing files are never replaced implicitly."
@@ -186,7 +191,8 @@ final class GridGrindCliSurfaceRequestSections {
                     + " including the exact runnable request profile."),
             new CliSurface.DefinitionEntry(
                 "--lookup <id>",
-                "With --print-recipe, --print-recipe-catalog, or --print-protocol-catalog,"
+                "With --print-recipe, --materialize-recipe, --print-recipe-catalog, or"
+                    + " --print-protocol-catalog,"
                     + " print one stable entry by id. With --print-protocol-catalog,"
                     + " that lookup id may also name one top-level category"
                     + " (mutationActionTypes, assertionTypes, inspectionQueryTypes,"
@@ -201,12 +207,16 @@ final class GridGrindCliSurfaceRequestSections {
                     + " repeated across multiple summaries."),
             new CliSurface.DefinitionEntry(
                 "--print-recipe --lookup <id>",
-                "Print one built-in example or executable task-starter scenario by id."),
+                "Print one self-contained built-in example or executable task-starter scenario by id."),
+            new CliSurface.DefinitionEntry(
+                "--materialize-recipe --lookup <id> --workspace <new-directory>",
+                "Atomically publish one recipe request and every declared asset into one new workspace."),
             new CliSurface.DefinitionEntry(
                 "--print-recipe-keyword-match --query <text>",
                 "Print ranked built-in recipe matches for one English keyword query."
-                    + " Use --print-recipe --lookup <id> for the executable starter"
-                    + " scenario after you choose a recipe id. After normalization, at least"
+                    + " Use --print-recipe for a self-contained starter or"
+                    + " --materialize-recipe for an asset-backed starter after you choose a"
+                    + " recipe id. After normalization, at least"
                     + " one searchable non-stop-word term must remain."),
             new CliSurface.DefinitionEntry(
                 "--print-protocol-catalog",

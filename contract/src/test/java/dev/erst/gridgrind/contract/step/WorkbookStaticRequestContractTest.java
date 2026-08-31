@@ -8,12 +8,14 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import dev.erst.gridgrind.contract.action.CellMutationAction;
 import dev.erst.gridgrind.contract.action.WorkbookMutationAction;
 import dev.erst.gridgrind.contract.assertion.CellAssertion;
+import dev.erst.gridgrind.contract.dto.ArrayFormulaInput;
 import dev.erst.gridgrind.contract.dto.AssertionModeInput;
 import dev.erst.gridgrind.contract.dto.CalculationPolicyInput;
 import dev.erst.gridgrind.contract.dto.CalculationStrategyInput;
 import dev.erst.gridgrind.contract.dto.CellInput;
 import dev.erst.gridgrind.contract.dto.CellRowInput;
 import dev.erst.gridgrind.contract.dto.CellScalarValue;
+import dev.erst.gridgrind.contract.dto.CellStylePatchInput;
 import dev.erst.gridgrind.contract.dto.ExecutionModeInput;
 import dev.erst.gridgrind.contract.dto.ExecutionPolicyInput;
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
@@ -65,6 +67,128 @@ class WorkbookStaticRequestContractTest {
         "message must not be blank",
         assertThrows(IllegalArgumentException.class, () -> new WorkbookStaticViolation("path", " "))
             .getMessage());
+  }
+
+  @Test
+  void rejectsReversedRangesBeforeWorkbookExecution() {
+    assertEquals("A1", new RangeSelector.ByRange("Ops", "A1").range());
+    assertEquals(
+        "range must end at or below and to the right of its start address",
+        assertThrows(
+                dev.erst.gridgrind.contract.json.InvalidRequestException.class,
+                () -> new RangeSelector.ByRange("Ops", "B5:A1"))
+            .getMessage());
+    assertEquals(
+        "range must end at or below and to the right of its start address",
+        assertThrows(
+                dev.erst.gridgrind.contract.json.InvalidRequestException.class,
+                () -> new RangeSelector.ByRange("Ops", "B1:A5"))
+            .getMessage());
+  }
+
+  @Test
+  void rejectsRangeMaterializationBeyondThePublishedPlanBudget() {
+    MutationStep styleWholeColumn =
+        new MutationStep(
+            "style",
+            new RangeSelector.ByRange("Ops", "A1:A250001"),
+            new CellMutationAction.ClearRange());
+
+    WorkbookStaticViolation violation =
+        WorkbookStaticRequestContract.validate(staticRequest(List.of(styleWholeColumn))).getFirst();
+
+    assertEquals("steps[0].target.range", violation.jsonPath());
+    assertEquals(
+        "materialized worksheet work must not exceed 250000 items per plan; this step raises the total to 250001",
+        violation.message());
+  }
+
+  @Test
+  void rejectsSetRangeWhoseTargetAndAuthoredGridHaveDifferentDimensions() {
+    MutationStep setRange =
+        new MutationStep(
+            "range",
+            new RangeSelector.ByRange("Ops", "A1:C3"),
+            new CellMutationAction.SetRange(
+                new dev.erst.gridgrind.contract.dto.CellGridInput.NumberRows(
+                    List.of(List.of(1.0d)))));
+
+    WorkbookStaticViolation violation =
+        WorkbookStaticRequestContract.validate(staticRequest(List.of(setRange))).getFirst();
+
+    assertEquals("steps[0].action.rows", violation.jsonPath());
+    assertEquals(
+        "range dimensions do not match provided values: A1:C3 expects 9 cells but received 1",
+        violation.message());
+  }
+
+  @Test
+  void acceptsMatchingSmallRangesAndRejectsCumulativeMaterializationOverflow() {
+    MutationStep matchingRange =
+        new MutationStep(
+            "matching",
+            new RangeSelector.ByRange("Ops", "A1:B1"),
+            new CellMutationAction.SetRange(
+                new dev.erst.gridgrind.contract.dto.CellGridInput.NumberRows(
+                    List.of(List.of(1.0d, 2.0d)))));
+    MutationStep firstLargeRange =
+        new MutationStep(
+            "first",
+            new RangeSelector.ByRange("Ops", "A1:A125000"),
+            new CellMutationAction.ClearRange());
+    MutationStep secondLargeRange =
+        new MutationStep(
+            "second",
+            new RangeSelector.ByRange("Ops", "B1:B125001"),
+            new CellMutationAction.ClearRange());
+    MutationStep arrayFormula =
+        new MutationStep(
+            "array-formula",
+            new RangeSelector.ByRange("Ops", "C1:C2"),
+            new CellMutationAction.SetArrayFormula(
+                new ArrayFormulaInput(TextSourceInput.inline("SUM(A1:A2)"))));
+    MutationStep styledRange =
+        new MutationStep(
+            "styled-range",
+            new RangeSelector.ByRange("Ops", "D1:D2"),
+            new CellMutationAction.ApplyStyle(
+                new CellStylePatchInput(
+                    Optional.of("0.00"),
+                    Optional.empty(),
+                    Optional.empty(),
+                    Optional.empty(),
+                    Optional.empty(),
+                    Optional.empty())));
+    MutationStep singleCell =
+        new MutationStep(
+            "single-cell",
+            new RangeSelector.ByRange("Ops", "E1"),
+            new CellMutationAction.SetCell(new CellInput.NumberValue(1.0d)));
+    MutationStep workbookAction =
+        new MutationStep(
+            "workbook-action",
+            new RangeSelector.ByRange("Ops", "F1"),
+            new WorkbookMutationAction.EnsureSheet());
+
+    assertTrue(
+        WorkbookStaticRequestContract.validate(
+                staticRequest(List.of(matchingRange, arrayFormula, styledRange)))
+            .isEmpty());
+    assertEquals(
+        List.of("steps[3].target.type", "steps[4].target.type"),
+        WorkbookStaticRequestContract.validate(
+                staticRequest(
+                    List.of(matchingRange, arrayFormula, styledRange, singleCell, workbookAction)))
+            .stream()
+            .map(WorkbookStaticViolation::jsonPath)
+            .toList());
+    assertEquals(
+        List.of("steps[2].target.range"),
+        WorkbookStaticRequestContract.validate(
+                staticRequest(List.of(matchingRange, firstLargeRange, secondLargeRange)))
+            .stream()
+            .map(WorkbookStaticViolation::jsonPath)
+            .toList());
   }
 
   @Test

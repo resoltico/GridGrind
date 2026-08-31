@@ -20,10 +20,45 @@ import dev.erst.gridgrind.excel.WorkbookCommand;
 import dev.erst.gridgrind.excel.WorkbookExecutionEngine;
 import dev.erst.gridgrind.excel.WorkbookSheetCommand;
 import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 import org.junit.jupiter.api.Test;
 
 /** Verifies formula-origin tracking without evaluating ordinary or opaque formula cells. */
 class FormulaOriginTrackerTest {
+  @Test
+  void plansEveryCoordinateForOffsetSetAndClearRanges() throws Exception {
+    FormulaOriginTracker tracker = new FormulaOriginTracker();
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
+      FormulaOriginTracker.FormulaWrites setWrites =
+          tracker.plannedWrites(
+              workbook,
+              new WorkbookCellCommand.SetRange(
+                  "Ops",
+                  "B2:C3",
+                  List.of(
+                      List.of(ExcelCellValue.formula("1+1"), ExcelCellValue.text("a")),
+                      List.of(ExcelCellValue.text("b"), ExcelCellValue.formula("2+2")))));
+      FormulaOriginTracker.FormulaWrites clearWrites =
+          tracker.plannedWrites(workbook, new WorkbookCellCommand.ClearRange("Ops", "B2:C3"));
+      FormulaOriginTracker.FormulaWrites clearArrayWrites =
+          tracker.plannedWrites(workbook, new WorkbookCellCommand.ClearArrayFormula("Ops", "D5"));
+
+      Set<FormulaOriginTracker.CellCoordinate> expected =
+          Set.of(
+              new FormulaOriginTracker.CellCoordinate("Ops", "B2"),
+              new FormulaOriginTracker.CellCoordinate("Ops", "C2"),
+              new FormulaOriginTracker.CellCoordinate("Ops", "B3"),
+              new FormulaOriginTracker.CellCoordinate("Ops", "C3"));
+      assertEquals(expected, setWrites.cells().keySet());
+      assertEquals(expected, clearWrites.cells().keySet());
+      assertEquals(
+          Set.of(new FormulaOriginTracker.CellCoordinate("Ops", "D5")),
+          clearArrayWrites.cells().keySet());
+      assertTrue(clearArrayWrites.cells().values().stream().allMatch(Optional::isEmpty));
+    }
+  }
+
   @Test
   void tracksEveryNormalFormulaAuthoringFamilyAndExcludesRawFormulas() throws Exception {
     FormulaOriginTracker tracker = new FormulaOriginTracker();

@@ -37,11 +37,13 @@ readonly contract_build="${repo_root}/contract/build.gradle.kts"
 readonly cli_jar="${repo_root}/cli/build/libs/gridgrind.jar"
 readonly docker_smoke_script="${repo_root}/scripts/docker-smoke.sh"
 readonly docker_smoke_bind_mount_helper="${repo_root}/scripts/lib/docker-smoke-bind-mount-support.sh"
+readonly docker_smoke_legal_helper="${repo_root}/scripts/lib/docker-smoke-legal-support.sh"
 readonly container_verify_script="${repo_root}/scripts/verify-container-publication.sh"
 readonly stage_contract_script="${repo_root}/scripts/check-stage-contract.sh"
 readonly release_protocol_doc="${repo_root}/docs/RELEASE_PROTOCOL.md"
 readonly temp_parent="${repo_root}/tmp/test-publication-contract"
 source "${script_dir}/lib/test-publication-contract-diagnostic-support.sh"
+source "${script_dir}/lib/test-publication-legal-support.sh"
 test_root=''
 jar_listing_path=''
 archive_listing_path=''
@@ -167,8 +169,8 @@ grep -Fq 'cli-shadow-jar-support.sh' "${docker_smoke_script}" && die \
     "docker smoke reintroduced the host-side CLI JAR helper dependency"
 grep -Fq ':cli:shadowJar' "${docker_smoke_script}" && die \
     "docker smoke reintroduced a separate host-side CLI JAR rebuild"
-grep -Fq 'docker_with_repo_config buildx build --load -t "${image_tag}" "${repo_root}" >/dev/null' \
-    "${docker_smoke_script}" || die \
+grep -Fq 'docker_with_repo_config buildx build --load -t "${image_ref}" "${repository_root}" >/dev/null' \
+    "${docker_smoke_legal_helper}" || die \
     "docker smoke no longer builds the repository-root Dockerfile through buildx --load"
 grep -Fq 'buildx imagetools inspect "${image_ref}"' "${docker_smoke_script}" || die \
     "docker smoke no longer inspects every pinned Docker base image"
@@ -182,6 +184,8 @@ grep -Fq 'source "${bind_mount_support}"' "${docker_smoke_script}" || die \
 grep -Fq 'verify_documented_bind_mount_user_guidance "${image_tag}" "${smoke_root}" "${docker_run_user}"' \
     "${docker_smoke_script}" || die \
     "docker smoke no longer calls the documented bind-mount guidance probe"
+grep -Fq 'build_and_verify_image_legal_surface "${image_tag}" "${repo_root}"' "${docker_smoke_script}" || die \
+    "docker smoke no longer verifies legal-material visibility"
 grep -Fq 'documented_no_user_exit_code=$?' \
     "${docker_smoke_bind_mount_helper}" || die \
     "bind-mount guidance helper no longer handles the platform-dependent no-user failure path"
@@ -221,14 +225,7 @@ grep -Fq './scripts/verify-release-primary-checkout.sh "$PRIMARY_CHECKOUT" "X.Y.
     "${release_protocol_doc}" || die "release protocol no longer requires the primary-checkout closeout verifier"
 grep -Fq 'checks: read' "${release_workflow}" || die "release workflow is missing checks: read permission"
 grep -Fq 'checks: read' "${container_workflow}" || die "container workflow is missing checks: read permission"
-grep -Fq 'provenance: mode=max' "${container_workflow}" || die "container workflow does not publish explicit provenance"
-grep -Fq 'sbom: true' "${container_workflow}" || die "container workflow does not publish an SBOM attestation"
-grep -Fqx '            org.opencontainers.image.licenses=MIT AND Apache-2.0 AND BSD-2-Clause AND BSD-3-Clause AND EDL-1.0' \
-    "${container_workflow}" || die "container workflow still uses the wrong OCI license label"
-grep -Fqx '            org.opencontainers.image.licenses=MIT' "${container_workflow}" && die \
-    "container workflow still contains the legacy MIT-only OCI license label"
-grep -Fqx '            org.opencontainers.image.licenses=MIT AND Apache-2.0 AND BSD-3-Clause' "${container_workflow}" && die \
-    "container workflow still contains the incomplete 3-license OCI label (missing BSD-2-Clause and EDL-1.0)"
+verify_publication_legal_contract "${repo_root}" "${dockerfile}" "${container_workflow}"
 
 grep -Fq 'api(libs.jackson.annotations)' "${contract_build}" || die \
     "contract no longer exposes the Jackson annotations API needed by downstream compiles"

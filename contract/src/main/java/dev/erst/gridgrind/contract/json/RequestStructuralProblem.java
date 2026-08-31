@@ -16,6 +16,16 @@ public sealed interface RequestStructuralProblem
   /** Returns the zero-based UTF-8 byte offset of the offending token when one exists. */
   Optional<Long> byteOffset();
 
+  /** Returns the one-based JSON line when syntax analysis captured it. */
+  default Optional<Integer> jsonLine() {
+    return Optional.empty();
+  }
+
+  /** Returns the one-based JSON column when syntax analysis captured it. */
+  default Optional<Integer> jsonColumn() {
+    return Optional.empty();
+  }
+
   /** Returns the stable, product-owned diagnostic message. */
   String message();
 }

@@ -1,0 +1,17 @@
+Replay Result
+Input: src/fuzz/resources/dev/erst/gridgrind/jazzer/protocol/ProtocolRequestFuzzTestInputs/readRequest/cr_only_json_syntax.json
+Harness: protocol-request
+Outcome: EXPECTED_INVALID
+Kind: InvalidJsonException
+Message: Expected an object property name
+Input Bytes: 13
+Decode Outcome: INVALID_JSON
+Source Kind: NOT_PARSED
+Persistence Kind: NOT_PARSED
+Operation Count: 0
+Assertion Count: 0
+Read Count: 0
+Assertion Kinds: (none)
+Read Kinds: (none)
+Style Kinds: (none)
+Operation Kinds: (none)

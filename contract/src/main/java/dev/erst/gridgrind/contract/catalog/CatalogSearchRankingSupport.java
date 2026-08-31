@@ -125,7 +125,7 @@ final class CatalogSearchRankingSupport {
 
   static Optional<ProtocolStepTemplate> stepTemplateFor(
       CatalogLookupRef ref, CatalogLookupValue lookupValue) {
-    if (lookupValue instanceof CatalogLookupValue.EntryLookupValue entryLookupValue
+    if (lookupValue instanceof CatalogEntryLookupValue entryLookupValue
         && isTopLevelPublishedGroup(ref.catalogGroup())) {
       return entryLookupValue.entry().stepTemplate();
     }

@@ -103,8 +103,7 @@ cleanup() {
 trap cleanup EXIT
 
 success_repo="$(create_repo "${test_root}/success" "9.9.9")"
-mkdir -p "${success_repo}/.codex/tmp/release-bootstrap" "${success_repo}/tmp/release scratch" "${success_repo}/generated"
-printf 'bootstrap\n' > "${success_repo}/.codex/tmp/release-bootstrap/9.9.9.env"
+mkdir -p "${success_repo}/tmp/release scratch" "${success_repo}/generated"
 printf 'scratch\n' > "${success_repo}/tmp/release scratch/log.txt"
 printf 'scratch\n' > "${success_repo}/generated/example.txt"
 run_verify_expect_success "${success_repo}" "9.9.9" success env

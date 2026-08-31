@@ -1,0 +1,25 @@
+{
+  "targetKey" : "protocol-request",
+  "sourcePath" : "src/fuzz/resources/dev/erst/gridgrind/jazzer/protocol/ProtocolRequestFuzzTestInputs/readRequest/explicit_list_comma_invalid.json",
+  "promotedInputPath" : "src/fuzz/resources/dev/erst/gridgrind/jazzer/protocol/ProtocolRequestFuzzTestInputs/readRequest/explicit_list_comma_invalid.json",
+  "replayOutcome" : "EXPECTED_INVALID",
+  "expectation" : {
+    "outcomeKind" : "EXPECTED_INVALID",
+    "details" : {
+      "type" : "PROTOCOL_REQUEST",
+      "inputBytes" : 406,
+      "decodeOutcome" : "INVALID_REQUEST",
+      "sourceKind" : "NOT_PARSED",
+      "persistenceKind" : "NOT_PARSED",
+      "operationCount" : 0,
+      "operationKinds" : { },
+      "styleKinds" : { },
+      "assertionCount" : 0,
+      "assertionKinds" : { },
+      "readCount" : 0,
+      "readKinds" : { }
+    }
+  },
+  "promotedAt" : "2026-08-30T16:15:48.070113Z",
+  "replayTextPath" : "src/fuzz/resources/dev/erst/gridgrind/jazzer/promoted-metadata/protocol-request/explicit_list_comma_invalid.txt"
+}

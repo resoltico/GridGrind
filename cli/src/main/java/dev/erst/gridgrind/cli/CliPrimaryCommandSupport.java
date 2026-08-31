@@ -21,6 +21,7 @@ final class CliPrimaryCommandSupport {
           Map.entry("license", "license"),
           Map.entry("--print-request-template", "print-request-template"),
           Map.entry("--print-recipe", "print-recipe"),
+          Map.entry("--materialize-recipe", "materialize-recipe"),
           Map.entry("--print-recipe-catalog", "print-recipe-catalog"),
           Map.entry("--print-recipe-keyword-match", "print-recipe-keyword-match"),
           Map.entry("--print-protocol-catalog", "print-protocol-catalog"),

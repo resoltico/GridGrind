@@ -19,7 +19,7 @@ final class GridGrindProtocolCatalogLookupSupport {
     List<CatalogLookupRef> matches =
         CatalogRefResolutionSupport.matchingLookupRefs(catalog, idOrQualifiedId);
     return matches.size() == 1
-        ? Optional.of(matches.getFirst().value().rawValue())
+        ? Optional.of(CatalogLookupValueSupport.rawValue(matches.getFirst().value()))
         : Optional.empty();
   }
 
@@ -65,17 +65,18 @@ final class GridGrindProtocolCatalogLookupSupport {
       Catalog catalog, CatalogLookupRef ref, String normalizedQuery, List<String> tokens) {
     CatalogLookupValue lookupValue = ref.value();
     boolean topLevelEntryMatch =
-        lookupValue instanceof CatalogLookupValue.EntryLookupValue
+        lookupValue instanceof CatalogEntryLookupValue
             && CatalogSearchRankingSupport.isTopLevelPublishedGroup(ref.catalogGroup());
     boolean supportingEntryMatch =
-        lookupValue instanceof CatalogLookupValue.EntryLookupValue
+        lookupValue instanceof CatalogEntryLookupValue
             && !CatalogSearchRankingSupport.isTopLevelPublishedGroup(ref.catalogGroup());
     String lookupId = ref.lookupId().toLowerCase(Locale.ROOT);
     String qualifiedId = ref.qualifiedId().toLowerCase(Locale.ROOT);
     String catalogGroup = ref.catalogGroup().toLowerCase(Locale.ROOT);
-    String summary = lookupValue.summary().toLowerCase(Locale.ROOT);
+    String summary = CatalogLookupValueSupport.summary(lookupValue).toLowerCase(Locale.ROOT);
     String searchableText =
-        lookupValue.searchableText(catalog, topLevelEntryMatch).toLowerCase(Locale.ROOT);
+        CatalogLookupValueSupport.searchableText(catalog, lookupValue, topLevelEntryMatch)
+            .toLowerCase(Locale.ROOT);
     String combined =
         lookupId + " " + qualifiedId + " " + catalogGroup + " " + summary + " " + searchableText;
     Optional<Integer> rank =
@@ -99,8 +100,8 @@ final class GridGrindProtocolCatalogLookupSupport {
                 ref.catalogGroup(),
                 ref.lookupId(),
                 ref.qualifiedId(),
-                lookupValue.kind(),
-                lookupValue.summary(),
+                CatalogLookupValueSupport.kind(lookupValue),
+                CatalogLookupValueSupport.summary(lookupValue),
                 CatalogSearchRankingSupport.stepTemplateFor(ref, lookupValue),
                 CatalogShapeTextSupport.relatedEntryIdsFor(catalog, ref, lookupValue),
                 List.of())));

@@ -126,6 +126,8 @@ final class GridGrindCliHelpRenderSupport {
         + "\n"
         + "  Print one recipe:\n"
         + "    gridgrind --print-recipe --lookup DASHBOARD --response recipe.json\n"
+        + "  Materialize one asset-backed recipe:\n"
+        + "    gridgrind --materialize-recipe --lookup CUSTOM_XML --workspace custom-xml\n"
         + renderAdvisoryEntries("Advisory notes", section.guidanceEntries());
   }
 

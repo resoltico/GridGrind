@@ -51,6 +51,9 @@ load_test_cli_contract_fixtures() {
     success_help_guidance="$(
         java -jar "${jar_path}" --help-guidance | tr -d '\r'
     )"
+    success_license_text="$(
+        java -jar "${jar_path}" --license | tr -d '\r'
+    )"
     success_catalog_index="$(
         java -jar "${jar_path}" --print-protocol-catalog | tr -d '\r'
     )"

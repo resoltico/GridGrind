@@ -537,9 +537,9 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
   }
 
   @Test
-  void attributesAutoSizeFormulaFailuresToTheirAuthoringStep() {
-    WorkbookResult.Failure failure =
-        failure(
+  void autoSizeDoesNotEvaluateUnsupportedFormulasOutsideCalculationPolicy() {
+    WorkbookResult.Success success =
+        success(
             ExecutionContextFixtureSupport.execute(
                 new DefaultGridGrindRequestExecutor(),
                 request(
@@ -557,10 +557,13 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
                             new SheetSelector.ByName("Budget"),
                             new WorkbookMutationAction.AutoSizeColumns())))));
 
-    assertEquals(GridGrindProblemCode.UNREGISTERED_USER_DEFINED_FUNCTION, failure.problem().code());
-    assertEquals("step-02-set-cell", executeStepContext(failure).stepId());
     assertEquals(
-        "AUTO_SIZE_COLUMNS", executeStepContext(failure).surfacedAtStep().orElseThrow().stepType());
+        3,
+        assertInstanceOf(
+                dev.erst.gridgrind.contract.dto.ExecutionJournal.Outcome.Succeeded.class,
+                success.journal().outcome())
+            .completedStepCount());
+    assertEquals(0, success.calculation().execution().evaluatedFormulaCount());
   }
 
   @Test

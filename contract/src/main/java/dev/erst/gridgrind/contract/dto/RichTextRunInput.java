@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.contract.dto;
 
+import dev.erst.gridgrind.contract.source.OoxmlTextValidation;
 import dev.erst.gridgrind.contract.source.TextSourceInput;
 import java.util.Objects;
 import java.util.Optional;
@@ -15,6 +16,11 @@ public record RichTextRunInput(
     Objects.requireNonNull(font, "font must not be null");
     if (source instanceof TextSourceInput.Inline inline && inline.text().isEmpty()) {
       throw new IllegalArgumentException("source must not be empty");
+    }
+    if (source instanceof TextSourceInput.Inline inline) {
+      source =
+          new TextSourceInput.Inline(
+              OoxmlTextValidation.requireXml10CharacterData(inline.text(), "source.text"));
     }
   }
 }

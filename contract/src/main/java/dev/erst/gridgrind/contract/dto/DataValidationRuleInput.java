@@ -30,6 +30,8 @@ public sealed interface DataValidationRuleInput
         DataValidationRuleInput.TextLength,
         DataValidationRuleInput.CustomFormula {
 
+  int MAX_EXPLICIT_LIST_FORMULA_LENGTH = 255; // LIM-040
+
   /** Explicit-list validation rule. */
   record ExplicitList(List<String> values) implements DataValidationRuleInput {
     public ExplicitList {
@@ -128,8 +130,25 @@ public sealed interface DataValidationRuleInput
     List<String> copy = List.copyOf(values);
     for (String value : copy) {
       requireNonBlank(value, "values");
+      if (value.indexOf(',') >= 0 || value.indexOf('"') >= 0) {
+        throw new IllegalArgumentException(
+            "values must not contain ',' or '\"' in an explicit list; use FORMULA_LIST for"
+                + " values that require delimiters");
+      }
+    }
+    int serializedLength = explicitListFormula(copy).length();
+    if (serializedLength > MAX_EXPLICIT_LIST_FORMULA_LENGTH) {
+      throw new IllegalArgumentException(
+          "values must serialize to at most "
+              + MAX_EXPLICIT_LIST_FORMULA_LENGTH
+              + " characters for Excel data validation; got "
+              + serializedLength);
     }
     return copy;
+  }
+
+  private static String explicitListFormula(List<String> values) {
+    return "\"" + String.join(",", values) + "\"";
   }
 
   private static String requireNonBlank(String value, String fieldName) {

@@ -26,6 +26,7 @@ readonly repo_root="$(cd -P -- "${script_dir}/.." && pwd)"
 readonly gradlew="${repo_root}/gradlew"
 readonly verify_script="${repo_root}/scripts/verify-cli-contract.sh"
 readonly legacy_thin_install_root="${repo_root}/cli/build/install/cli"
+readonly installed_distribution_root="${repo_root}/cli/build/install/gridgrind"
 readonly install_root="${repo_root}/cli/build/install/gridgrind/bin"
 readonly legacy_install_root="${repo_root}/cli/build/install/cli-shadow"
 readonly legacy_start_scripts_root="${repo_root}/cli/build/scripts"
@@ -33,6 +34,7 @@ readonly generated_scripts_root="${repo_root}/cli/build/scriptsShadow"
 readonly distribution_root="${repo_root}/cli/build/distributions"
 readonly version="$(awk -F= '/^version=/{print $2}' "${repo_root}/gradle.properties")"
 readonly packaged_launcher="${install_root}/gridgrind"
+readonly packaged_jar="${repo_root}/cli/build/libs/gridgrind.jar"
 readonly old_named_launcher="${install_root}/cli"
 readonly old_named_windows_launcher="${install_root}/cli.bat"
 readonly old_named_legacy_launcher="${legacy_start_scripts_root}/cli"
@@ -129,6 +131,53 @@ printf '@echo off\r\nexit /b 99\r\n' > "${old_named_legacy_windows_launcher}"
     "shadowDistZip left the stale archive behind at ${stale_zip}"
 [[ ! -e "${stale_tar}" ]] || die \
     "shadowDistTar left the stale archive behind at ${stale_tar}"
+
+legal_file_names=(
+    LICENSE
+    NOTICE
+    PATENTS.md
+    LICENSE-APACHE-2.0
+    LICENSE-BSD-2-CLAUSE
+    LICENSE-BSD-3-CLAUSE
+)
+packaged_zip_entries="$(zipinfo -1 "${packaged_zip}")"
+packaged_tar_entries="$(tar -tf "${packaged_tar}")"
+packaged_jar_entries="$(zipinfo -1 "${packaged_jar}")"
+packaged_jar_manifest="$(unzip -p "${packaged_jar}" META-INF/MANIFEST.MF | tr -d '\r')"
+for legal_file_name in "${legal_file_names[@]}"; do
+    [[ -f "${installed_distribution_root}/${legal_file_name}" ]] || die \
+        "installed distribution is missing ${legal_file_name}"
+    grep -Fqx "gridgrind-${version}/${legal_file_name}" <<<"${packaged_zip_entries}" || die \
+        "shadowDistZip is missing ${legal_file_name}"
+    grep -Fqx "gridgrind-${version}/${legal_file_name}" <<<"${packaged_tar_entries}" || die \
+        "shadowDistTar is missing ${legal_file_name}"
+done
+for legal_file_name in "${legal_file_names[@]}"; do
+    grep -Fqx "META-INF/${legal_file_name}" <<<"${packaged_jar_entries}" || die \
+        "packaged JAR is missing META-INF/${legal_file_name}"
+done
+for shaded_legal_file_name in \
+    FastDoubleParser-LICENSE \
+    FastDoubleParser-ThirdParty-LICENSE \
+    Schubfach-LICENSE; do
+    grep -Fqx "META-INF/${shaded_legal_file_name}" <<<"${packaged_jar_entries}" || die \
+        "packaged JAR is missing Jackson Core's META-INF/${shaded_legal_file_name}"
+done
+grep -Fq 'LICENSE-EDL-1.0' <<<"${packaged_jar_entries}" && die \
+    "packaged JAR contains a duplicate generic EDL file instead of the component-specific BSD-3-Clause file"
+grep -Fq 'Implementation-License: Multiple; see META-INF/NOTICE' <<<"${packaged_jar_manifest}" || die \
+    "packaged fat JAR manifest misstates or omits its aggregate multi-license posture"
+[[ "$(unzip -p "${packaged_jar}" gridgrind/recipe-assets/custom-xml-assets/custom-xml-mapping.xlsx | shasum -a 256 | awk '{print $1}')" == '6a5fbb160c7c9c2add5125ac07ceaf3f841d40e03d5c75025ab71946d49af289' ]] || die \
+    "packaged custom XML recipe workbook no longer matches its audited Apache POI provenance"
+packaged_license_output="$("${packaged_launcher}" --license)"
+grep -Fq 'Jakarta Activation API' <<<"${packaged_license_output}" || die \
+    "packaged launcher license output omits Jakarta Activation"
+grep -Fq 'Jakarta XML Binding API' <<<"${packaged_license_output}" || die \
+    "packaged launcher license output omits Jakarta XML Binding"
+grep -Fq 'Eclipse Distribution License v1.0' <<<"${packaged_license_output}" || die \
+    "packaged launcher license output omits the formal Jakarta license name"
+grep -Fq 'Boost Software License, Version 1.0' <<<"${packaged_license_output}" || die \
+    "packaged launcher license output omits Jackson Core's embedded Boost-licensed code"
 
 "${verify_script}" binary "${packaged_launcher}" >/dev/null
 

@@ -5,11 +5,9 @@ import java.util.Objects;
 
 /** Column insertion, movement, visibility, grouping, and sizing operations for one sheet. */
 public final class ExcelSheetColumns {
-  private final ExcelSheet sheet;
   private final ExcelSheetColumnSupport columnSupport;
 
-  ExcelSheetColumns(ExcelSheet sheet, ExcelSheetColumnSupport columnSupport) {
-    this.sheet = Objects.requireNonNull(sheet, "sheet must not be null");
+  ExcelSheetColumns(ExcelSheetColumnSupport columnSupport) {
     this.columnSupport = Objects.requireNonNull(columnSupport, "columnSupport must not be null");
   }
 
@@ -58,7 +56,7 @@ public final class ExcelSheetColumns {
 
   /** Auto-sizes all populated columns on this sheet to fit their content. */
   public ExcelSheetColumns autoSize() {
-    columnSupport.autoSizeColumns(sheet.name());
+    columnSupport.autoSizeColumns();
     return this;
   }
 

@@ -51,7 +51,7 @@ final class CliExecutionFailureSupport {
       return Objects.requireNonNull(
           requestExecutor.execute(analysis, bindings.inputs(), progressSink),
           "requestExecutor must not return null");
-    } catch (Throwable exception) {
+    } catch (Exception exception) {
       return failure(request, exception);
     }
   }

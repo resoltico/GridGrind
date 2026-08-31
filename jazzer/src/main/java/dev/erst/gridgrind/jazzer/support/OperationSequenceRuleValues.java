@@ -24,7 +24,7 @@ final class OperationSequenceRuleValues {
   static DataValidationInput nextDataValidationInput(GridGrindFuzzData data) {
     return new DataValidationInput(
         data.consumeBoolean()
-            ? new DataValidationRuleInput.ExplicitList(List.of("Queued", "Done"))
+            ? new DataValidationRuleInput.ExplicitList(nextExplicitValidationValues(data))
             : new DataValidationRuleInput.WholeNumber(
                 ExcelComparisonOperator.GREATER_OR_EQUAL, "1", Optional.empty()),
         data.consumeBoolean(),
@@ -67,6 +67,10 @@ final class OperationSequenceRuleValues {
                     "Use an allowed value.",
                     data.consumeBoolean()))
             : Optional.empty());
+  }
+
+  private static List<String> nextExplicitValidationValues(GridGrindFuzzData data) {
+    return data.consumeBoolean() ? List.of("Queued", "Done") : List.of("x".repeat(253));
   }
 
   static ConditionalFormattingDefinitionInput nextConditionalFormattingInput(

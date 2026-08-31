@@ -82,26 +82,6 @@ class GridGrindCliCatalogCommandTest extends GridGrindCliTestSupport {
   }
 
   @Test
-  void printAssetBackedExampleKeepsTheRequestPayloadChannelQuiet() throws IOException {
-    ByteArrayOutputStream stdout = new ByteArrayOutputStream();
-    ByteArrayOutputStream stderr = new ByteArrayOutputStream();
-    int exitCode =
-        new GridGrindCli()
-            .run(
-                new String[] {"--print-recipe", "--lookup", "PACKAGE_SECURITY_INSPECTION"},
-                InputStream.nullInputStream(),
-                stdout,
-                stderr);
-
-    WorkbookPlan request = GridGrindJson.readRequest(stdout.toByteArray());
-
-    assertEquals(0, exitCode);
-    assertEquals(
-        GridGrindShippedExamples.find("PACKAGE_SECURITY_INSPECTION").orElseThrow().plan(), request);
-    assertEquals("", stderr.toString(StandardCharsets.UTF_8));
-  }
-
-  @Test
   void printRecipeFlagRejectsUnknownExampleId() throws IOException {
     ByteArrayOutputStream stdout = new ByteArrayOutputStream();
     ByteArrayOutputStream stderr = new ByteArrayOutputStream();
@@ -378,32 +358,6 @@ class GridGrindCliCatalogCommandTest extends GridGrindCliTestSupport {
   }
 
   @Test
-  void printAssetBackedTaskStarterKeepsTheRequestPayloadChannelQuiet() throws IOException {
-    ByteArrayOutputStream stdout = new ByteArrayOutputStream();
-    ByteArrayOutputStream stderr = new ByteArrayOutputStream();
-
-    int exitCode =
-        new GridGrindCli()
-            .run(
-                new String[] {"--print-recipe", "--lookup", "AUDIT_EXISTING_WORKBOOK"},
-                InputStream.nullInputStream(),
-                stdout,
-                stderr);
-
-    WorkbookPlan request = GridGrindJson.readRequest(stdout.toByteArray());
-    GridGrindCliRecipe recipe =
-        GridGrindCliRecipeRegistry.recipeFor("AUDIT_EXISTING_WORKBOOK")
-            .filter(
-                candidate ->
-                    candidate.view() == dev.erst.gridgrind.cli.discovery.RecipeView.TASK_STARTER)
-            .orElseThrow();
-
-    assertEquals(0, exitCode);
-    assertEquals(recipe.plan(), request);
-    assertEquals("", stderr.toString(StandardCharsets.UTF_8));
-  }
-
-  @Test
   void printRecipeWithUnknownTaskReturnsError() throws IOException {
     ByteArrayOutputStream stdout = new ByteArrayOutputStream();
     ByteArrayOutputStream stderr = new ByteArrayOutputStream();
@@ -588,8 +542,8 @@ class GridGrindCliCatalogCommandTest extends GridGrindCliTestSupport {
     assertEquals(1, exitCode);
     assertFalse(report.valid());
     assertEquals(GridGrindProblemCode.INVALID_JSON, report.primaryProblem().orElseThrow().code());
-    assertEquals(java.util.Optional.empty(), requestIntakeContext(report).jsonLine());
-    assertEquals(java.util.Optional.empty(), requestIntakeContext(report).jsonColumn());
+    assertEquals(java.util.Optional.of(1), requestIntakeContext(report).jsonLine());
+    assertEquals(java.util.Optional.of(1), requestIntakeContext(report).jsonColumn());
   }
 
   @Test

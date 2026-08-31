@@ -1,6 +1,6 @@
 ---
 afad: "5.0.1"
-version: "0.74.0"
+version: "0.75.0"
 domain: ERRORS
 updated: "2026-08-27"
 route:

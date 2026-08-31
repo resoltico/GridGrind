@@ -45,9 +45,9 @@ gridgrind --request budget-request.json --response response.json
 ```
 
 The rest of this README uses `gridgrind` for the active entry point. From a repository checkout,
-the `export PATH=...` line above points that name at the packaged launcher. From a release
-archive, add its `bin/` directory to `PATH`; from the standalone JAR, replace `gridgrind` with
-`java -jar gridgrind.jar`.
+the `export PATH=...` line above points that name at the packaged launcher. From a Gradle-generated
+ZIP or TAR launcher distribution, add its `bin/` directory to `PATH`; from the standalone GitHub
+release JAR, replace `gridgrind` with `java -jar gridgrind.jar`.
 
 Without `--response`, GridGrind writes one primary JSON payload to stdout. A command rejected
 before workbook execution uses `CommandError` with `status: "REJECTED"`; execution uses
@@ -104,6 +104,7 @@ gridgrind --print-request-template --response request.json
 gridgrind --print-recipe-catalog --response recipes.json
 gridgrind --print-recipe-catalog --lookup DASHBOARD --response dashboard-detail.json
 gridgrind --print-recipe --lookup DASHBOARD --response dashboard-request.json
+gridgrind --materialize-recipe --lookup CUSTOM_XML --workspace custom-xml-workspace
 gridgrind --print-recipe-keyword-match --query "monthly sales dashboard" --response task-match.json
 gridgrind --print-protocol-catalog --response protocol-index.json
 gridgrind --print-protocol-catalog --search pivot --response pivot-search.json
@@ -111,7 +112,7 @@ gridgrind --print-protocol-catalog --lookup mutationActionTypes:SET_CELL --respo
 gridgrind --print-protocol-catalog --lookup plainTypes:cellReadProjectionType --response cell-read-projection.json
 ```
 
-The compact recipe catalog publishes `requestFileName`, `advisory`, and `requiredWorkspacePaths`, while `--print-recipe-catalog --lookup <id>` adds the exact runnable request profile for that recipe. `VERBOSE` execution streams compact JSONL progress to stderr while its primary result remains on stdout or the requested response file. Shipped save-producing examples already use `SAVE_AS.ifExists=REPLACE`, so rerunning them does not depend on cleaning the workspace first.
+The compact recipe catalog publishes `requestFileName`, `advisory`, and `requiredWorkspacePaths`, while `--print-recipe-catalog --lookup <id>` adds the exact runnable request profile for that recipe. Print self-contained recipes with `--print-recipe`; materialize asset-backed recipes with `--materialize-recipe --workspace <new-directory>`, which atomically writes the request and declared assets together. `VERBOSE` execution streams compact JSONL progress to stderr while its primary result remains on stdout or the requested response file. Shipped save-producing examples already use `SAVE_AS.ifExists=REPLACE`, so rerunning them does not depend on cleaning the workspace first.
 
 The bare `--print-protocol-catalog` output is the compact first-contact index. Use
 `--print-protocol-catalog --search <text>` when you know the concept but not the exact id, follow
@@ -164,8 +165,22 @@ gridgrind --print-recipe --lookup DASHBOARD --response dashboard-request.json
 
 ## Legal
 
-GridGrind is MIT-licensed. Its executable JAR bundles third-party components under Apache 2.0,
-BSD 2-Clause, BSD 3-Clause, and EDL 1.0 licenses. See [NOTICE](NOTICE) for the complete
-attribution list and [PATENTS.md](PATENTS.md) for patent considerations.
+GridGrind's own source code is MIT-licensed. The executable JAR also bundles separately licensed
+components under Apache 2.0, MIT-style, Boost 1.0, BSD 2-Clause, and BSD 3-Clause terms; the Jakarta
+API terms are formally the Eclipse Distribution License v1.0, whose SPDX identifier is
+`BSD-3-Clause`. The standalone GitHub release JAR embeds the legal files, while Gradle-generated ZIP
+and TAR launcher distributions also place them beside the launcher. `gridgrind --license` prints
+the GridGrind license, third-party notices, and applicable dependency license texts.
 
-[LICENSE](LICENSE) | [NOTICE](NOTICE) | [PATENTS.md](PATENTS.md) | [LICENSE-APACHE-2.0](LICENSE-APACHE-2.0) | [LICENSE-BSD-2-CLAUSE](LICENSE-BSD-2-CLAUSE) | [LICENSE-BSD-3-CLAUSE](LICENSE-BSD-3-CLAUSE) | [LICENSE-EDL-1.0](LICENSE-EDL-1.0)
+Public source archives additionally include the Apache-2.0 Gradle wrapper. A byte-identical Apache
+POI Custom XML test workbook is present both in the source tree and in the executable JAR's packaged
+recipe assets; [NOTICE](NOTICE) identifies its provenance, hash, and exact distribution scope.
+
+The published container additionally contains an Azul Zulu OpenJDK runtime and operating-system
+and font packages under their own terms. GridGrind's legal files are available at
+`/usr/share/doc/gridgrind`, while the runtime and package legal materials remain in their standard
+JRE and `/usr/share/doc` locations; published images also include provenance and an SBOM
+attestation. See [NOTICE](NOTICE) for the audited component inventory and attributions, and
+[PATENTS.md](PATENTS.md) for the deliberately limited patent statement.
+
+[LICENSE](LICENSE) | [NOTICE](NOTICE) | [PATENTS.md](PATENTS.md) | [LICENSE-APACHE-2.0](LICENSE-APACHE-2.0) | [LICENSE-BSD-2-CLAUSE](LICENSE-BSD-2-CLAUSE) | [LICENSE-BSD-3-CLAUSE](LICENSE-BSD-3-CLAUSE)

@@ -9,6 +9,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.IntStream;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.Row;
@@ -49,7 +50,6 @@ final class FormulaOriginTracker {
     Objects.requireNonNull(authoringStep, "authoringStep must not be null");
     pruneStaleOrigins(workbook);
     for (Map.Entry<CellCoordinate, Optional<String>> entry : writes.cells().entrySet()) {
-      removeAt(entry.getKey());
       entry.getValue().ifPresent(formula -> recordFormula(entry.getKey(), formula, authoringStep));
     }
   }
@@ -98,24 +98,30 @@ final class FormulaOriginTracker {
   private FormulaWrites arrayFormulaWrites(WorkbookCellCommand.SetArrayFormula setArrayFormula) {
     CellRangeAddress range = CellRangeAddress.valueOf(setArrayFormula.range());
     Map<CellCoordinate, Optional<String>> writes = new ConcurrentHashMap<>();
-    for (int row = range.getFirstRow(); row <= range.getLastRow(); row++) {
-      for (int column = range.getFirstColumn(); column <= range.getLastColumn(); column++) {
-        writes.put(
-            coordinate(setArrayFormula.sheetName(), row, column),
-            Optional.of(setArrayFormula.formula().formula()));
-      }
-    }
+    IntStream.rangeClosed(range.getFirstRow(), range.getLastRow())
+        .forEach(
+            row ->
+                IntStream.rangeClosed(range.getFirstColumn(), range.getLastColumn())
+                    .forEach(
+                        column ->
+                            writes.put(
+                                coordinate(setArrayFormula.sheetName(), row, column),
+                                Optional.of(setArrayFormula.formula().formula()))));
     return new FormulaWrites(writes);
   }
 
   private FormulaWrites clearRangeWrites(WorkbookCellCommand.ClearRange clearRange) {
     CellRangeAddress range = CellRangeAddress.valueOf(clearRange.range());
     Map<CellCoordinate, Optional<String>> writes = new ConcurrentHashMap<>();
-    for (int row = range.getFirstRow(); row <= range.getLastRow(); row++) {
-      for (int column = range.getFirstColumn(); column <= range.getLastColumn(); column++) {
-        writes.put(coordinate(clearRange.sheetName(), row, column), Optional.empty());
-      }
-    }
+    IntStream.rangeClosed(range.getFirstRow(), range.getLastRow())
+        .forEach(
+            row ->
+                IntStream.rangeClosed(range.getFirstColumn(), range.getLastColumn())
+                    .forEach(
+                        column ->
+                            writes.put(
+                                coordinate(clearRange.sheetName(), row, column),
+                                Optional.empty())));
     return new FormulaWrites(writes);
   }
 
@@ -185,18 +191,10 @@ final class FormulaOriginTracker {
             });
   }
 
-  private void removeAt(CellCoordinate coordinate) {
-    origins
-        .keySet()
-        .removeIf(
-            key ->
-                key.sheetName().equals(coordinate.sheetName())
-                    && key.address().equals(coordinate.address()));
-  }
-
   record FormulaWrites(Map<CellCoordinate, Optional<String>> cells) {
     FormulaWrites {
-      cells = Map.copyOf(Objects.requireNonNull(cells, "cells must not be null"));
+      Objects.requireNonNull(cells, "cells must not be null");
+      cells = Map.copyOf(cells);
     }
 
     static FormulaWrites none() {

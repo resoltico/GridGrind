@@ -43,6 +43,22 @@ public sealed interface RangeSelector extends Selector
     public SelectorCardinality cardinality() {
       return SelectorCardinality.EXACTLY_ONE;
     }
+
+    /** Returns the exact number of cells in this validated rectangular range. */
+    public long cellCount() {
+      String[] endpoints = range.split(":", -1);
+      String first = endpoints[0];
+      String last = endpoints.length == 1 ? first : endpoints[1];
+      long rowCount =
+          (long) SelectorAddressSupport.rowIndex(last)
+              - SelectorAddressSupport.rowIndex(first)
+              + 1L;
+      long columnCount =
+          (long) SelectorAddressSupport.columnIndex(last)
+              - SelectorAddressSupport.columnIndex(first)
+              + 1L;
+      return Math.multiplyExact(rowCount, columnCount);
+    }
   }
 
   /** Selects one or more exact rectangular ranges on one sheet. */

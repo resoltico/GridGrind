@@ -1,8 +1,8 @@
 ---
 afad: "4.0"
-version: "0.74.0"
+version: "0.75.0"
 domain: LIMITATIONS
-updated: "2026-07-02"
+updated: "2026-08-30"
 route:
   keywords: [gridgrind, limitations, limits, constraints, cell count, row count, column count, window, sheet name, memory, oom, apache poi, xlsx, excel, max rows, max columns, max cells, max styles, hyperlinks, formula, row height, column width, zoom]
   questions: ["what are the gridgrind limits", "how many rows does gridgrind support", "how many columns does gridgrind support", "what is the maximum window size", "why does gridgrind reject large windows", "what is the cell limit", "what are excel limits", "what are apache poi limits", "does gridgrind support xls", "what is the sheet name limit", "what is the column width limit", "what is the row height limit", "what is the zoom limit"]
@@ -44,6 +44,45 @@ catalog summary, or help line.
 ---
 
 ## GridGrind Operational Limits
+
+### LIM-039 — Materialized Worksheet Work per Plan
+
+| Field | Value |
+|:------|:------|
+| **Category** | GridGrind |
+| **Limit** | 250,000 worksheet items across actions that enumerate cells or create rows |
+| **Error** | `INVALID_REQUEST` |
+| **Message** | `materialized worksheet work must not exceed 250000 items per plan; this step raises the total to {n}` |
+| **Applies to** | `APPLY_STYLE`, `CLEAR_RANGE`, `SET_ARRAY_FORMULA`, `SET_RANGE`, `SET_ROW_HEIGHT`, `SET_ROW_VISIBILITY`, `GROUP_ROWS`, and `UNGROUP_ROWS` |
+| **Code** | `WorkbookStaticMaterializationValidation // LIM-039` |
+| **UX** | `--help` Limits section |
+
+GridGrind counts every action that must enumerate cells or create physical rows before the workbook
+is opened. The cumulative limit prevents a syntactically valid plan from exhausting the JVM by
+materializing an Excel-sized range or row band, including when equivalent work is spread across
+several steps.
+
+---
+
+### LIM-040 — Explicit Data-Validation List Formula Length
+
+| Field | Value |
+|:------|:------|
+| **Category** | Excel / GridGrind |
+| **Limit** | 255 characters in the complete stored list formula, including its outer quotes |
+| **Error** | `INVALID_REQUEST` |
+| **Message** | `values must serialize to at most 255 characters for Excel data validation; got {n}` |
+| **Applies to** | `EXPLICIT_LIST` data-validation rules |
+| **Code** | `DataValidationRuleInput.MAX_EXPLICIT_LIST_FORMULA_LENGTH // LIM-040` |
+| **UX** | Structured request validation before workbook execution |
+
+Excel data-validation explicit lists are stored as one quoted comma-separated formula. GridGrind
+rejects commas and quotes inside individual values because that representation cannot preserve them;
+use `FORMULA_LIST` when values require delimiters. It validates the complete stored formula before
+Apache POI authoring so callers receive the request path and computed length instead of a library
+exception.
+
+---
 
 ### LIM-001 — Cell-Returning Read Count
 

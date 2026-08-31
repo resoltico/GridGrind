@@ -153,13 +153,8 @@ public final class GridGrindCli {
    * streams are absent.
    */
   static String licenseText(
-      InputStream own,
-      InputStream notice,
-      InputStream apache,
-      InputStream bsd2,
-      InputStream bsd3,
-      InputStream edl) {
-    return GridGrindCliProductInfo.licenseText(own, notice, apache, bsd2, bsd3, edl);
+      InputStream own, InputStream notice, InputStream apache, InputStream bsd2, InputStream bsd3) {
+    return GridGrindCliProductInfo.licenseText(own, notice, apache, bsd2, bsd3);
   }
 
   /**
@@ -219,6 +214,9 @@ public final class GridGrindCli {
               cmd, prettyJson, stdout, stderr, responseWriter);
       case CliCommand.PrintRecipe cmd ->
           GridGrindCliRecipeDiscoveryCommands.recipe(
+              cmd, prettyJson, stdout, stderr, responseWriter);
+      case CliCommand.MaterializeRecipe cmd ->
+          GridGrindCliRecipeDiscoveryCommands.materializeRecipe(
               cmd, prettyJson, stdout, stderr, responseWriter);
       case CliCommand.PrintRecipeKeywordMatch cmd ->
           GridGrindCliRecipeDiscoveryCommands.recipeKeywordMatch(

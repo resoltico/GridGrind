@@ -8,6 +8,7 @@ import org.junit.jupiter.api.Test;
 class ProtocolDefinedNameValidationTest {
   @Test
   void acceptsValidNamesWithinTheShippedContract() {
+    assertNotNull(ProtocolDefinedNameValidation.newForVerification());
     assertEquals("Budget_Total", ProtocolDefinedNameValidation.validateName("Budget_Total"));
     assertEquals("XFE1", ProtocolDefinedNameValidation.validateName("XFE1"));
     assertEquals("Ieņēmumi", ProtocolDefinedNameValidation.validateName("Ieņēmumi"));
@@ -58,5 +59,52 @@ class ProtocolDefinedNameValidationTest {
     assertThrows(
         IllegalArgumentException.class,
         () -> ProtocolDefinedNameValidation.validateName("𐐀".repeat(256)));
+  }
+
+  @Test
+  void rendersEveryViolationAsAnActionableMessage() {
+    assertAll(
+        () ->
+            assertEquals(
+                "name must not be blank",
+                assertThrows(
+                        IllegalArgumentException.class,
+                        () -> ProtocolDefinedNameValidation.validateName(" "))
+                    .getMessage()),
+        () ->
+            assertEquals(
+                "name must not exceed 255 Unicode code points",
+                assertThrows(
+                        IllegalArgumentException.class,
+                        () -> ProtocolDefinedNameValidation.validateName("A".repeat(256)))
+                    .getMessage()),
+        () ->
+            assertEquals(
+                "name must start with a letter, underscore, or backslash and contain only Unicode letters, Unicode numbers, underscore, period, or backslash",
+                assertThrows(
+                        IllegalArgumentException.class,
+                        () -> ProtocolDefinedNameValidation.validateName("9Budget"))
+                    .getMessage()),
+        () ->
+            assertEquals(
+                "name must not use the reserved _xlnm. prefix",
+                assertThrows(
+                        IllegalArgumentException.class,
+                        () -> ProtocolDefinedNameValidation.validateName("_xlnm.Print_Area"))
+                    .getMessage()),
+        () ->
+            assertEquals(
+                "name must not collide with A1-style cell reference syntax",
+                assertThrows(
+                        IllegalArgumentException.class,
+                        () -> ProtocolDefinedNameValidation.validateName("A1"))
+                    .getMessage()),
+        () ->
+            assertEquals(
+                "name must not collide with R1C1-style cell reference syntax",
+                assertThrows(
+                        IllegalArgumentException.class,
+                        () -> ProtocolDefinedNameValidation.validateName("R12C3"))
+                    .getMessage()));
   }
 }

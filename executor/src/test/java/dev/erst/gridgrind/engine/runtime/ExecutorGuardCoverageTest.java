@@ -340,7 +340,7 @@ class ExecutorGuardCoverageTest {
                 new dev.erst.gridgrind.contract.dto.ConditionalFormattingDefinitionInput(
                     java.util.List.of(
                         new dev.erst.gridgrind.contract.dto.ConditionalFormattingRuleInput
-                            .FormulaRule("A1>0", false, Optional.empty())))),
+                            .FormulaRule("A1>0", true, Optional.empty())))),
             new StructuredMutationAction.SetAutofilter(),
             new WorkbookMutationAction.ClearPrintLayout(),
             new StructuredMutationAction.ClearConditionalFormatting(),

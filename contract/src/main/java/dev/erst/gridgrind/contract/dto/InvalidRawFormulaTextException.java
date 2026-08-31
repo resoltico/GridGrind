@@ -14,6 +14,12 @@ public final class InvalidRawFormulaTextException extends IllegalArgumentExcepti
     this.publicMessage = message;
   }
 
+  /** Creates one failure while retaining the lower-level validation cause. */
+  public InvalidRawFormulaTextException(String message, Throwable cause) {
+    super(Objects.requireNonNull(message, "message must not be null"), cause);
+    this.publicMessage = message;
+  }
+
   @Override
   public String publicMessage() {
     return publicMessage;

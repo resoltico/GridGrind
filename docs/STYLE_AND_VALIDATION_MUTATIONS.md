@@ -1,8 +1,8 @@
 ---
 afad: "5.0.1"
-version: "0.74.0"
+version: "0.75.0"
 domain: STYLE_VALIDATION_MUTATIONS
-updated: "2026-08-27"
+updated: "2026-08-30"
 route:
   keywords: [gridgrind, style mutations, data validation, conditional formatting, apply-style]
   questions: ["how do i style cells in gridgrind", "how do i set data validation in gridgrind", "how do i manage conditional formatting in gridgrind"]
@@ -362,7 +362,7 @@ Supported rule families:
 
 | `validation.rule.type` | Required fields | Notes |
 |:-----------------------|:----------------|:------|
-| `EXPLICIT_LIST` | `values` | One or more allowed strings. |
+| `EXPLICIT_LIST` | `values` | One or more allowed strings; values cannot contain commas or quotes, and the stored quoted list formula is limited to 255 characters. Use `FORMULA_LIST` for delimiter-bearing values. |
 | `FORMULA_LIST` | `formula` | Formula-driven list. A leading `=` is accepted and stripped automatically. |
 | `WHOLE_NUMBER` | `operator`, `formula1` | `formula2` is required only for `BETWEEN` / `NOT_BETWEEN`. |
 | `DECIMAL_NUMBER` | `operator`, `formula1` | `formula2` is required only for `BETWEEN` / `NOT_BETWEEN`. |

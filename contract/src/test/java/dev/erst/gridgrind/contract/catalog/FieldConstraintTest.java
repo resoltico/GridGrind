@@ -36,12 +36,15 @@ class FieldConstraintTest {
         constraints.stream().map(FieldConstraint::sortKey).toList());
     assertThrows(IllegalArgumentException.class, () -> new FieldConstraint.LengthRange(-1, 0));
     assertThrows(IllegalArgumentException.class, () -> new FieldConstraint.LengthRange(2, 1));
+    assertEquals(new FieldConstraint.LengthRange(0, 0), new FieldConstraint.LengthRange(0, 0));
     assertThrows(
         IllegalArgumentException.class, () -> new FieldConstraint.NumberRange(Double.NaN, 1));
     assertThrows(
         IllegalArgumentException.class,
         () -> new FieldConstraint.NumberRange(1, Double.POSITIVE_INFINITY));
     assertThrows(IllegalArgumentException.class, () -> new FieldConstraint.NumberRange(2, 1));
+    assertEquals(
+        new FieldConstraint.NumberRange(1.0d, 1.0d), new FieldConstraint.NumberRange(1.0d, 1.0d));
     assertThrows(IllegalArgumentException.class, () -> new FieldConstraint.PathSuffix("xlsx"));
   }
 

@@ -2,12 +2,21 @@ package dev.erst.gridgrind.cli;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.junit.jupiter.api.Test;
 
 /** Focused parser tests for CLI command exclusivity and argument validation. */
 class CliArgumentsTest {
+  @Test
+  void lookupAndDiscoveryDispatchUtilitiesAreNotPubliclyConstructible()
+      throws ReflectiveOperationException {
+    assertPrivateConstructor(CliLookupImmediateCommandParser.class);
+    assertPrivateConstructor(GridGrindCliRecipeDiscoveryCommands.class);
+  }
+
   @Test
   void printProtocolCatalogSearchParsesIntoDedicatedCommand() {
     CliCommand.PrintProtocolCatalogSearch command =
@@ -187,6 +196,65 @@ class CliArgumentsTest {
   }
 
   @Test
+  void materializeRecipeRequiresOneLookupAndOneNewWorkspaceWithoutResponseTransport() {
+    CliCommand.MaterializeRecipe command =
+        assertInstanceOf(
+            CliCommand.MaterializeRecipe.class,
+            CliArguments.parse(
+                new String[] {
+                  "--materialize-recipe", "--workspace", "workspace", "--lookup", "BUDGET"
+                }));
+
+    assertEquals("BUDGET", command.lookupId());
+    assertEquals(java.nio.file.Path.of("workspace"), command.workspacePath());
+
+    assertArgumentFailure(
+        new String[] {"--materialize-recipe", "--workspace", "workspace"},
+        "--lookup",
+        "--materialize-recipe requires --lookup and one recipe id value");
+    assertArgumentFailure(
+        new String[] {"--materialize-recipe", "--lookup", "BUDGET"},
+        "--workspace",
+        "--materialize-recipe requires --workspace and one new directory path");
+    assertArgumentFailure(
+        new String[] {
+          "--materialize-recipe",
+          "--lookup",
+          "BUDGET",
+          "--workspace",
+          "workspace",
+          "--response",
+          "out.json"
+        },
+        "--response",
+        "--materialize-recipe does not allow --response");
+    assertArgumentFailure(
+        new String[] {
+          "--materialize-recipe",
+          "--lookup",
+          "BUDGET",
+          "--lookup",
+          "DASHBOARD",
+          "--workspace",
+          "workspace"
+        },
+        "--lookup",
+        "Duplicate argument: --lookup");
+    assertArgumentFailure(
+        new String[] {
+          "--materialize-recipe", "--lookup", "BUDGET", "--workspace", "one", "--workspace", "two"
+        },
+        "--workspace",
+        "Duplicate argument: --workspace");
+    assertArgumentFailure(
+        new String[] {
+          "--materialize-recipe", "--lookup", "BUDGET", "--workspace", "workspace", "--unknown"
+        },
+        "--unknown",
+        "Unknown argument: --unknown");
+  }
+
+  @Test
   void printRecipeCatalogAndRecipeRejectDuplicateLookupFlags() {
     CliArgumentsException duplicate =
         assertThrows(
@@ -198,6 +266,14 @@ class CliArgumentsTest {
                     }));
     assertEquals("--lookup", duplicate.argument());
     assertEquals("Duplicate argument: --lookup", duplicate.getMessage());
+  }
+
+  private static void assertPrivateConstructor(Class<?> type) throws ReflectiveOperationException {
+    java.lang.reflect.Constructor<?> constructor = type.getDeclaredConstructor();
+
+    assertTrue(java.lang.reflect.Modifier.isPrivate(constructor.getModifiers()));
+    assertTrue(constructor.trySetAccessible());
+    assertNotNull(constructor.newInstance());
   }
 
   @Test
@@ -599,6 +675,13 @@ class CliArgumentsTest {
 
     assertEquals("--response", exception.argument());
     assertEquals("Duplicate argument: --response", exception.getMessage());
+  }
+
+  private static void assertArgumentFailure(String[] arguments, String argument, String message) {
+    CliArgumentsException exception =
+        assertThrows(CliArgumentsException.class, () -> CliArguments.parse(arguments));
+    assertEquals(argument, exception.argument());
+    assertEquals(message, exception.getMessage());
   }
 
   @Test

@@ -112,7 +112,7 @@ final class OperationSequenceMutationFactory {
                         data.consumeRegularDouble(1.0d, 20.0d)));
             case 0x3 ->
                 mutate(
-                    new RowBandSelector.Span(targetSheet, rowSpan.first(), rowSpan.last()),
+                    nextRowHeightTarget(data, targetSheet, rowSpan),
                     new WorkbookMutationAction.SetRowHeight(
                         data.consumeRegularDouble(5.0d, 40.0d)));
             case 0x4 ->

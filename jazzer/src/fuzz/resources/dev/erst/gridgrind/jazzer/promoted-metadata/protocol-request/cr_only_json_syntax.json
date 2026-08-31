@@ -1,0 +1,25 @@
+{
+  "targetKey" : "protocol-request",
+  "sourcePath" : "src/fuzz/resources/dev/erst/gridgrind/jazzer/protocol/ProtocolRequestFuzzTestInputs/readRequest/cr_only_json_syntax.json",
+  "promotedInputPath" : "src/fuzz/resources/dev/erst/gridgrind/jazzer/protocol/ProtocolRequestFuzzTestInputs/readRequest/cr_only_json_syntax.json",
+  "replayOutcome" : "EXPECTED_INVALID",
+  "expectation" : {
+    "outcomeKind" : "EXPECTED_INVALID",
+    "details" : {
+      "type" : "PROTOCOL_REQUEST",
+      "inputBytes" : 13,
+      "decodeOutcome" : "INVALID_JSON",
+      "sourceKind" : "NOT_PARSED",
+      "persistenceKind" : "NOT_PARSED",
+      "operationCount" : 0,
+      "operationKinds" : { },
+      "styleKinds" : { },
+      "assertionCount" : 0,
+      "assertionKinds" : { },
+      "readCount" : 0,
+      "readKinds" : { }
+    }
+  },
+  "promotedAt" : "2026-08-30T16:15:47.288925Z",
+  "replayTextPath" : "src/fuzz/resources/dev/erst/gridgrind/jazzer/promoted-metadata/protocol-request/cr_only_json_syntax.txt"
+}

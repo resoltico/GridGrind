@@ -67,6 +67,13 @@ final class CatalogStepTemplateSupport {
         bodyField,
         typeTemplate(catalog, entry, TypePlacement.topLevel(), new LinkedHashSet<>(), notes));
     step.set("target", targetTemplate(catalog, entry, notes));
+    if ("SET_NAMED_RANGE".equals(entry.id())) {
+      ((ObjectNode) step.get(bodyField)).put("name", "RevenueRange");
+      ((ObjectNode) step.get("target")).put("name", "RevenueRange");
+    }
+    if ("SET_RANGE".equals(entry.id())) {
+      ((ObjectNode) step.get("target")).put("range", "A1");
+    }
     return new ProtocolStepTemplate(stepKind, bodyField, step, List.copyOf(notes));
   }
 
@@ -130,24 +137,24 @@ final class CatalogStepTemplateSupport {
     Objects.requireNonNull(typePlacement, "typePlacement must not be null");
     Objects.requireNonNull(recursionGuard, "recursionGuard must not be null");
     Objects.requireNonNull(notes, "notes must not be null");
-    if (!recursionGuard.add(entry.id())) {
-      notes.add(
-          "Replace the recursive placeholder for "
-              + entry.id()
-              + " with one concrete non-recursive variant.");
-      return recursivePlaceholder(entry, typePlacement);
-    }
-    ObjectNode object = JSON.objectNode();
-    typePlacement.applyDiscriminator(object, entry.id());
-    for (FieldEntry field : entry.fields()) {
-      if (field.requirement() != FieldRequirement.REQUIRED) {
-        continue;
+    if (recursionGuard.add(entry.id())) {
+      ObjectNode object = JSON.objectNode();
+      typePlacement.applyDiscriminator(object, entry.id());
+      for (FieldEntry field : entry.fields()) {
+        if (field.requirement() != FieldRequirement.REQUIRED) {
+          continue;
+        }
+        object.set(field.name(), fieldValue(catalog, field, recursionGuard, notes));
       }
-      object.set(field.name(), fieldValue(catalog, field, recursionGuard, notes));
+      applyTypeSpecificDefaults(catalog, entry.id(), object, recursionGuard, notes);
+      recursionGuard.remove(entry.id());
+      return object;
     }
-    applyTypeSpecificDefaults(catalog, entry.id(), object, recursionGuard, notes);
-    recursionGuard.remove(entry.id());
-    return object;
+    notes.add(
+        "Replace the recursive placeholder for "
+            + entry.id()
+            + " with one concrete non-recursive variant.");
+    return recursivePlaceholder(entry, typePlacement);
   }
 
   private static JsonNode fieldValue(
@@ -174,8 +181,7 @@ final class CatalogStepTemplateSupport {
     Objects.requireNonNull(listShape, "listShape must not be null");
     Objects.requireNonNull(recursionGuard, "recursionGuard must not be null");
     Objects.requireNonNull(notes, "notes must not be null");
-    if (listShape.elementShape() instanceof FieldShape.Scalar scalar
-        && !field.enumValues().isEmpty()) {
+    if (listShape.elementShape() instanceof FieldShape.Scalar scalar) {
       return scalarValue(
           new FieldEntry(field.name(), FieldRequirement.REQUIRED, scalar, field.enumValues()),
           scalar.scalarType());

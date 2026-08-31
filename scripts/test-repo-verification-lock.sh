@@ -28,6 +28,8 @@ readonly lock_support="${repo_root}/scripts/repo-verification-lock-support.sh"
 [[ -f "${lock_support}" ]] || die "missing repo verification lock helper"
 grep -Fq 'repo-verification-lock-support.sh' "${repo_root}/check.sh" || die \
     "check.sh no longer sources the repo verification lock helper"
+grep -Fq 'repo-verification-lock-support.sh' "${repo_root}/check_mutation.sh" || die \
+    "check_mutation.sh no longer sources the repo verification lock helper"
 grep -Fq 'repo-verification-lock-support.sh' "${repo_root}/scripts/docker-smoke.sh" || die \
     "docker-smoke.sh no longer sources the repo verification lock helper"
 grep -Fq 'repo-verification-lock-support.sh' "${repo_root}/scripts/validate-devcontainer.sh" || die \

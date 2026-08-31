@@ -1801,6 +1801,7 @@ final class XlsxParityCoreProbeGroup {
                     new SheetIntrospectionQuery.GetConditionalFormatting())),
             "formatting",
             SheetInspectionResult.ConditionalFormattingResult.class);
+    expectedRead = ConditionalFormattingParityExpectations.withTop10StopBarrier(expectedRead);
     List<String> expectedKinds =
         XlsxParityOracle.conditionalFormattingKinds(source.workbookPath(), "Advanced");
 

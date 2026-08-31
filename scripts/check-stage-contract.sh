@@ -27,7 +27,9 @@ readonly check_stage5_script_paths=(
     scripts/test-check-process-support.sh
     scripts/test-check-file-support.sh
     scripts/test-check-stage-contract.sh
+    scripts/test-check-mutation.sh
     scripts/test-cli-distribution-surface.sh
+    scripts/test-cli-shadow-jar-support.sh
     scripts/test-contract-module-split.sh
     scripts/test-documentation-contract.sh
     scripts/test-explicit-import-gate.sh
@@ -60,7 +62,7 @@ check_stage_usage_lines() {
 }
 
 check_stage5_usage_command() {
-    local command='bash -n check.sh scripts/*.sh jazzer/bin/* && scripts/verify-cli-contract.sh jar ./cli/build/libs/gridgrind.jar'
+    local command='bash -n check.sh check_mutation.sh scripts/*.sh jazzer/bin/* && scripts/verify-cli-contract.sh jar ./cli/build/libs/gridgrind.jar'
     local script_path=''
     for script_path in "${check_stage5_script_paths[@]}"; do
         command="${command} && ${script_path}"
@@ -89,7 +91,7 @@ check_stage_execute() {
             run_stage "${stage_id}" "${stage_label}" "${check_repo_root}" :cli:shadowJar
             ;;
         shell-syntax)
-            local shell_syntax_targets=("${check_repo_root}/check.sh")
+            local shell_syntax_targets=("${check_repo_root}/check.sh" "${check_repo_root}/check_mutation.sh")
             local shell_script_path=''
             if [[ -d "${check_repo_root}/scripts" ]]; then
                 while IFS= read -r shell_script_path; do

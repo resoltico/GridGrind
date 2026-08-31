@@ -526,8 +526,7 @@ ${default_formula_environment_block}
 }
 JSON
 
-printf 'Docker smoke: building local image\n'
-docker_with_repo_config buildx build --load -t "${image_tag}" "${repo_root}" >/dev/null
+build_and_verify_image_legal_surface "${image_tag}" "${repo_root}"
 
 printf 'Docker smoke: verifying packaged help and catalog contract\n'
 if [[ -n "${docker_endpoint}" ]]; then

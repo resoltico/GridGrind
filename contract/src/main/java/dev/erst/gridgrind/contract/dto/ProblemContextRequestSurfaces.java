@@ -134,6 +134,9 @@ public interface ProblemContextRequestSurfaces {
     @JsonSubTypes.Type(value = JsonLocation.PathOnly.class, name = "PATH_ONLY"),
     @JsonSubTypes.Type(value = JsonLocation.ByteOffset.class, name = "BYTE_OFFSET"),
     @JsonSubTypes.Type(value = JsonLocation.PathAtByteOffset.class, name = "PATH_BYTE_OFFSET"),
+    @JsonSubTypes.Type(
+        value = JsonLocation.ByteOffsetLineColumn.class,
+        name = "BYTE_OFFSET_LINE_COLUMN"),
     @JsonSubTypes.Type(value = JsonLocation.DuplicateKey.class, name = "DUPLICATE_KEY"),
     @JsonSubTypes.Type(value = JsonLocation.LineColumn.class, name = "LINE_COLUMN"),
     @JsonSubTypes.Type(value = JsonLocation.Located.class, name = "LOCATED")
@@ -143,6 +146,7 @@ public interface ProblemContextRequestSurfaces {
           JsonLocation.PathOnly,
           JsonLocation.ByteOffset,
           JsonLocation.PathAtByteOffset,
+          JsonLocation.ByteOffsetLineColumn,
           JsonLocation.DuplicateKey,
           JsonLocation.LineColumn,
           JsonLocation.Located {
@@ -166,6 +170,11 @@ public interface ProblemContextRequestSurfaces {
     /** Returns a JSON-location variant with one exact UTF-8 byte offset. */
     static JsonLocation byteOffset(long byteOffset) {
       return new ByteOffset(byteOffset);
+    }
+
+    /** Returns a syntax location with machine-precise offset and human-editable coordinates. */
+    static JsonLocation byteOffsetLineColumn(long byteOffset, int jsonLine, int jsonColumn) {
+      return new ByteOffsetLineColumn(byteOffset, jsonLine, jsonColumn);
     }
 
     /** Returns a JSON-location variant with a path and exact UTF-8 byte offset. */
@@ -208,6 +217,9 @@ public interface ProblemContextRequestSurfaces {
       if (this instanceof PathAtByteOffset located) {
         return Optional.of(located.byteOffset());
       }
+      if (this instanceof ByteOffsetLineColumn located) {
+        return Optional.of(located.byteOffset());
+      }
       if (this instanceof DuplicateKey duplicate) {
         return Optional.of(duplicate.byteOffset());
       }
@@ -227,6 +239,9 @@ public interface ProblemContextRequestSurfaces {
       if (this instanceof Located located) {
         return Optional.of(located.jsonLine());
       }
+      if (this instanceof ByteOffsetLineColumn located) {
+        return Optional.of(located.jsonLine());
+      }
       return Optional.empty();
     }
 
@@ -236,6 +251,9 @@ public interface ProblemContextRequestSurfaces {
         return Optional.of(lineColumn.jsonColumn());
       }
       if (this instanceof Located located) {
+        return Optional.of(located.jsonColumn());
+      }
+      if (this instanceof ByteOffsetLineColumn located) {
         return Optional.of(located.jsonColumn());
       }
       return Optional.empty();
@@ -263,6 +281,17 @@ public interface ProblemContextRequestSurfaces {
       public PathAtByteOffset {
         jsonPath = requireNonBlank(jsonPath, "jsonPath");
         requireByteOffset(byteOffset);
+      }
+    }
+
+    /** A syntax location with both exact UTF-8 offset and one-based line/column coordinates. */
+    record ByteOffsetLineColumn(long byteOffset, int jsonLine, int jsonColumn)
+        implements JsonLocation {
+      public ByteOffsetLineColumn {
+        requireByteOffset(byteOffset);
+        if (jsonLine < 1 || jsonColumn < 1) {
+          throw new IllegalArgumentException("jsonLine and jsonColumn must be greater than 0");
+        }
       }
     }
 

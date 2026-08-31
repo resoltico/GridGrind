@@ -11,6 +11,9 @@ import org.junit.jupiter.api.Test;
 class ExcelDataValidationComparisonOperatorPoiBridgeTest {
   @Test
   void roundTripsEveryDataValidationOperator() {
+    assertEquals(
+        ExcelDataValidationComparisonOperatorPoiBridge.class,
+        ExcelDataValidationComparisonOperatorPoiBridge.newForVerification().getClass());
     for (ExcelComparisonOperator operator : ExcelComparisonOperator.values()) {
       assertEquals(
           operator,

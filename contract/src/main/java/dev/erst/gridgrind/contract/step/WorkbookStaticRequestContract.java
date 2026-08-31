@@ -15,6 +15,7 @@ public final class WorkbookStaticRequestContract {
     Objects.requireNonNull(request, "request must not be null");
     List<WorkbookStaticViolation> violations = new ArrayList<>();
     violations.addAll(WorkbookStaticTargetValidation.validate(request.steps()));
+    violations.addAll(WorkbookStaticMaterializationValidation.validate(request.steps()));
     violations.addAll(WorkbookStaticExecutionValidation.validate(request));
     violations.addAll(WorkbookStaticFormulaColumnValidation.validate(request));
     violations.addAll(WorkbookStaticAssertionValidation.validate(request));

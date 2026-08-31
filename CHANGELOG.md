@@ -5,8 +5,36 @@ Earlier release history through `0.68.0` is archived in [docs/CHANGELOG_ARCHIVE.
 
 ## [Unreleased]
 
+## [0.75.0] - 2026-08-31
+
+### Added
+- Added `--materialize-recipe --lookup <id> --workspace <new-directory>` to publish an asset-backed recipe into one new workspace atomically, including its request file and every declared asset.
+- Added a dedicated `check_mutation.sh` entrypoint and scheduled PIT `1.30.0` workflow for the reviewed contract, engine, CLI, and architecture-rule scopes; it validates configured class and test patterns against compiled bytecode, requires all four reports, and accepts only killed mutations.
+- Added ArchUnit `1.5.0` architecture verification to the normal repository gate, with an independent ArchUnit/Jupiter task pair that imports only the five product modules and enforces the fail-closed rule inventory for dependency direction, public-surface isolation, closed model variants, formula ownership, and POI access.
+- Added fail-closed runtime legal-inventory verification to both CLI checking and fat-JAR packaging so any resolved dependency or version drift requires an explicit artifact-license and NOTICE review before it can ship.
+
 ### Changed
-- Release primary-checkout verification now permits the documented `.codex/tmp/` bootstrap manifest alongside the repository's other approved scratch paths.
+- Updated NullAway to `0.14.1`.
+- `--print-recipe` now emits only self-contained recipes; asset-backed recipes direct callers to `--materialize-recipe`, which requires a new workspace and does not accept `--response`.
+- Formula autosizing now uses existing cached results or formula text without evaluating formulas or changing cached workbook values.
+- Invalid JSON diagnostics now include one-based line and column coordinates alongside UTF-8 byte offsets, and unknown type diagnostics list the valid values for their request union.
+- Generated named-range templates now use the matching `RevenueRange` placeholder.
+- Refactored the internal protocol-catalog lookup model into a closed record family with centralized lookup presentation and search behavior, preserving the published lookup payload while making the model boundary explicit.
+- Expanded Jazzer generation and deterministic replay with explicit-list boundary cases, delimiter-rejection cases, oversized row-work cases, and CR-only syntax inputs.
+
+### Fixed
+- Corrected the distributed legal inventory and packaging: the Eclipse Distribution License v1.0 terms for Jakarta Activation and Jakarta XML Binding are now reproduced with their component-specific notices and identified by their `BSD-3-Clause` SPDX identifier; required upstream NOTICE attributions and Jackson Core's shaded FastDoubleParser, Schubfach, MIT, Boost 1.0, and BSD 2-Clause terms are retained; the source-only Gradle wrapper and the Apache POI Custom XML workbook embedded as a packaged recipe asset are attributed with exact provenance and distribution scope; Gradle-generated launcher archives expose legal files directly; the standalone release JAR embeds them and identifies its aggregate license posture as multiple rather than MIT-only; patent prose no longer implies an unperformed clearance or separate non-assertion pledge; and the container no longer publishes an incomplete aggregate OCI license expression.
+- Corrected the contributor foundations table so its Jackson Databind, JUnit Jupiter, Log4j Core, and Kotlin versions match the canonical Gradle version catalog.
+- Corrected contributor references that still described the published runtime image as Alpine-based and named superseded Gradle and JUnit versions.
+- Configured PIT worker JVMs with the same Java 26 native-access allowance as the packaged CLI, removing restricted-foreign-function warnings during mutation verification.
+- Made packaged JAR rebuilding fail closed so a stale artifact cannot mask a failed Gradle build during verification or publication.
+- Rejected XML 1.0-invalid authored cell and rich-text characters before workbook mutation instead of silently replacing them during OOXML persistence.
+- Rejected reversed ranges, range/grid dimension mismatches, and oversized cell- or row-materializing plans before Apache POI authoring.
+- Rejected conditional-formatting rules that neither apply a style nor act as a `stopIfTrue` barrier, and made CLI request rejections use the documented exit status consistently.
+- Corrected the Docker build context so packaged asset-backed recipes, including custom-XML workflows, retain their required workspace assets in the published image.
+- Corrected explicit data-validation lists so delimiter-bearing values are rejected rather than split, and the 255-character limit applies to the complete stored formula.
+- Corrected CR-only JSON diagnostics to report the right line and column.
+- Corrected the generated `SET_RANGE` catalog template so its target and typed grid dimensions agree.
 
 ## [0.74.0] - 2026-08-28
 
@@ -187,7 +215,8 @@ Earlier release history through `0.68.0` is archived in [docs/CHANGELOG_ARCHIVE.
 - Standardized the packaged discovery contract around `requestFileName` plus `requiredWorkspacePaths`, and realigned the release verifier, operator guidance, and public docs to that explicit example/task portability surface instead of carrying forward stale `suggestedRequestPath` and `requiredPaths` terminology.
 - Made the Docker runtime cache layout arbitrary-user-safe: the image now points `HOME` and `XDG_CACHE_HOME` at writable tmp-backed directories so signature-line and other font-backed authoring flows stay silent under `docker run --user <uid>:<gid>` instead of leaking Fontconfig cache warnings on stderr.
 
-[Unreleased]: https://github.com/resoltico/GridGrind/compare/v0.74.0...HEAD
+[Unreleased]: https://github.com/resoltico/GridGrind/compare/v0.75.0...HEAD
+[0.75.0]: https://github.com/resoltico/GridGrind/compare/v0.74.0...v0.75.0
 [0.74.0]: https://github.com/resoltico/GridGrind/compare/v0.73.0...v0.74.0
 [0.73.0]: https://github.com/resoltico/GridGrind/compare/v0.72.0...v0.73.0
 [0.72.0]: https://github.com/resoltico/GridGrind/compare/v0.71.0...v0.72.0

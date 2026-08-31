@@ -250,12 +250,22 @@ class CatalogLookupSupportCoverageTest {
   void lookupValueGroupTypesPublishOwningTopLevelEntryIds() {
     Catalog catalog = lookupCoverageCatalog();
 
-    var nestedValue =
-        new CatalogLookupValue.NestedGroupLookupValue(catalog.nestedTypes().getFirst());
-    var plainValue = new CatalogLookupValue.PlainGroupLookupValue(catalog.plainTypes().getFirst());
+    var nestedValue = new CatalogNestedGroupLookupValue(catalog.nestedTypes().getFirst());
+    var plainValue = new CatalogPlainGroupLookupValue(catalog.plainTypes().getFirst());
+    List<TypeEntry> mutableTopLevelTypes = new ArrayList<>(catalog.mutationActionTypes());
+    var topLevelValue =
+        new CatalogTopLevelGroupLookupValue("mutationActionTypes", mutableTopLevelTypes);
+    mutableTopLevelTypes.clear();
 
-    assertEquals(List.of("mutationActionTypes:USE_NESTED"), nestedValue.relatedEntryIds(catalog));
-    assertEquals(List.of("inspectionQueryTypes:USE_PLAIN"), plainValue.relatedEntryIds(catalog));
+    assertEquals(
+        List.of("mutationActionTypes:USE_NESTED"),
+        CatalogLookupValueSupport.relatedEntryIds(catalog, nestedValue));
+    assertEquals(
+        List.of("inspectionQueryTypes:USE_PLAIN"),
+        CatalogLookupValueSupport.relatedEntryIds(catalog, plainValue));
+    assertEquals("TOP_LEVEL_GROUP", CatalogLookupValueSupport.kind(topLevelValue));
+    assertEquals(catalog.mutationActionTypes(), topLevelValue.types());
+    assertThrows(UnsupportedOperationException.class, () -> topLevelValue.types().clear());
   }
 
   @Test

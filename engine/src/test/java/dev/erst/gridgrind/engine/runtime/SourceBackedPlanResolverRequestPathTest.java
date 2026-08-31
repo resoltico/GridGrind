@@ -1,12 +1,15 @@
 package dev.erst.gridgrind.engine.runtime;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import dev.erst.gridgrind.contract.dto.ExecutionPolicyInput;
 import dev.erst.gridgrind.contract.dto.FormulaEnvironmentInput;
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
 import dev.erst.gridgrind.contract.source.BinarySourceInput;
+import dev.erst.gridgrind.contract.source.TextSourceInput;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
@@ -62,5 +65,22 @@ class SourceBackedPlanResolverRequestPathTest {
         () ->
             SourceBackedPlanResolver.resolveBinarySource(
                 new BinarySourceInput.File("../outside.bin"), bindings, "picture payload"));
+  }
+
+  @Test
+  void preservesUnresolvedFormulaSourcesWhileCollectingTheirIndependentFailures() throws Exception {
+    ExecutionInputBindings bindings =
+        new ExecutionInputBindings(root, Files.createDirectory(root.resolve("temp")));
+    InputResolutionFailures failures = new InputResolutionFailures();
+    TextSourceInput.Utf8File missingFormula = TextSourceInput.utf8File("missing-formula.txt");
+
+    assertSame(
+        missingFormula,
+        SourceBackedPlanResolver.resolveFormulaSource(
+            missingFormula, bindings.collectingInputResolutionFailures(failures)));
+
+    InputResolutionBatchException failure =
+        assertThrows(InputResolutionBatchException.class, failures::throwIfAny);
+    assertInstanceOf(InputSourceNotFoundException.class, failure.failures().getFirst().exception());
   }
 }

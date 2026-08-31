@@ -278,7 +278,7 @@ class RuntimeResidualCoverageTest {
                 new ConditionalFormattingDefinitionInput(
                     List.of(
                         new ConditionalFormattingRuleInput.FormulaRule(
-                            "TRUE", false, Optional.empty()))))));
+                            "TRUE", true, Optional.empty()))))));
     assertFalse(
         SourceBackedInputRequirements.requiresStandardInput(
             new StructuredMutationAction.ClearConditionalFormatting()));

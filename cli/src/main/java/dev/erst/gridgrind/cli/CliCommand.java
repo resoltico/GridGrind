@@ -59,6 +59,16 @@ public sealed interface CliCommand {
     }
   }
 
+  /**
+   * Requests that one recipe request and its declared assets be published into one new workspace.
+   */
+  record MaterializeRecipe(String lookupId, Path workspacePath) implements CliCommand {
+    public MaterializeRecipe {
+      Objects.requireNonNull(lookupId, "lookupId must not be null");
+      Objects.requireNonNull(workspacePath, "workspacePath must not be null");
+    }
+  }
+
   /** Requests that one machine-readable recipe keyword match report be emitted. */
   record PrintRecipeKeywordMatch(String query, Optional<Path> responsePath) implements CliCommand {
     public PrintRecipeKeywordMatch {

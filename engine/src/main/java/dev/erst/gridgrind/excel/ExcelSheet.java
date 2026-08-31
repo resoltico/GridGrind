@@ -55,8 +55,7 @@ public final class ExcelSheet {
             columnStructureController);
     ExcelSheetRowSupport rowSupport = new ExcelSheetRowSupport(sheet, rowStructureController);
     ExcelSheetColumnSupport columnSupport =
-        new ExcelSheetColumnSupport(
-            sheet, formulaRuntime, dataFormatter, columnStructureController);
+        new ExcelSheetColumnSupport(sheet, dataFormatter, columnStructureController);
     this.analysisSupport = new ExcelSheetAnalysisSupport(sheet, formulaRuntime);
     ExcelSheetCellMutationSupport mutationSupport =
         new ExcelSheetCellMutationSupport(sheet, styleRegistry, formulaRuntime, drawingController);
@@ -69,7 +68,7 @@ public final class ExcelSheet {
     this.metadata = new ExcelSheetMetadata(this, metadataSupport);
     this.layout = new ExcelSheetLayout(this, layoutSupport);
     this.rows = new ExcelSheetRows(this, rowSupport);
-    this.columns = new ExcelSheetColumns(this, columnSupport);
+    this.columns = new ExcelSheetColumns(columnSupport);
     this.diagnostics = new ExcelSheetDiagnostics(this, analysisSupport, metadataSupport);
   }
 
