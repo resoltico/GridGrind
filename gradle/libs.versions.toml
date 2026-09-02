@@ -29,7 +29,7 @@ pitest = "1.30.0"
 pitest-gradle-plugin = "1.19.0"
 pitest-junit5-plugin = "1.2.3"
 shadow = "9.6.1"
-spotless = "8.10.0"
+spotless = "8.10.1"
 
 [libraries]
 archunit-junit6 = { module = "com.tngtech.archunit:archunit-junit6", version.ref = "archunit" }
