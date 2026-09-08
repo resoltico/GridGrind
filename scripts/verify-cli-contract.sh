@@ -413,8 +413,8 @@ if "-w /workdir" in guidance_help_output:
 if '-v "$(pwd)":/work' not in guidance_help_output:
     die("guidance help no longer teaches the mounted /work Docker pattern")
 
-if catalog_index.get("protocolVersion") != "V2":
-    die("protocol catalog index no longer emits protocolVersion=V2")
+if catalog_index.get("protocolVersion") != "V3":
+    die("protocol catalog index no longer emits protocolVersion=V3")
 if catalog_index.get("discriminatorField") != "type":
     die("protocol catalog index no longer emits discriminatorField=type")
 if catalog_index.get("requestTypeId") != "WorkbookPlan":
@@ -466,8 +466,8 @@ if append_row_template.get("type") != "TYPED":
 if "cells" not in append_row_template:
     die("catalog APPEND_ROW step template no longer uses cells for the typed row payload")
 
-if request_template.get("protocolVersion") != "V2":
-    die("request template no longer emits protocolVersion=V2")
+if request_template.get("protocolVersion") != "V3":
+    die("request template no longer emits protocolVersion=V3")
 if request_template.get("source", {}).get("type") != "NEW":
     die("request template no longer emits source.type=NEW")
 if request_template.get("persistence", {}).get("type") != "NONE":

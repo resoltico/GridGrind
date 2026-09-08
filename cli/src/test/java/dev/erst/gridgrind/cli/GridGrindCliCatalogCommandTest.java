@@ -28,6 +28,23 @@ import org.junit.jupiter.api.Test;
 /** Catalog and discovery command integration tests for GridGrindCli. */
 class GridGrindCliCatalogCommandTest extends GridGrindCliTestSupport {
   @Test
+  void printGrantTemplateEmitsTheCanonicalFailClosedHostGrant() throws IOException {
+    ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+    int exitCode =
+        new GridGrindCli()
+            .run(new String[] {"--print-grant-template"}, InputStream.nullInputStream(), stdout);
+
+    CliExecutionGrantDocument grant =
+        GridGrindCliJson.readBytes(stdout.toByteArray(), CliExecutionGrantDocument.class);
+
+    assertEquals(0, exitCode);
+    assertTrue(grant.readableResources().isEmpty());
+    assertTrue(grant.operationIds().isEmpty());
+    assertInstanceOf(CliGrantPublicationAuthority.None.class, grant.publicationAuthority());
+    assertInstanceOf(CliGrantAcceptancePolicy.MinimumOnly.class, grant.acceptancePolicy());
+  }
+
+  @Test
   void printRecipeFlagPrintsKnownGeneratedExampleAndReturnsExitCodeZero() throws IOException {
     ByteArrayOutputStream stdout = new ByteArrayOutputStream();
     int exitCode =
@@ -623,7 +640,7 @@ class GridGrindCliCatalogCommandTest extends GridGrindCliTestSupport {
                 new ByteArrayInputStream(
                     """
                     {
-                      "protocolVersion": "V2",
+                      "protocolVersion": "V3",
                       "source": { "type": "EXISTING" },
                       "persistence": { "type": "SAVE_AS" },
                       "execution": {
@@ -695,7 +712,7 @@ class GridGrindCliCatalogCommandTest extends GridGrindCliTestSupport {
                 new ByteArrayInputStream(
                     """
                     {
-                      "protocolVersion": "V2",
+                      "protocolVersion": "V3",
                       "source": { "type": "NEW" },
                       "persistence": { "type": "OVERWRITE" },
                       "execution": {
@@ -796,6 +813,9 @@ class GridGrindCliCatalogCommandTest extends GridGrindCliTestSupport {
     Path requestPath = requestDirectory.resolve("doctor request.json");
     Path payloadPath = requestDirectory.resolve("blank.txt");
     Files.writeString(payloadPath, "");
+    Path grantPath =
+        CliGrantFixtureSupport.noPublication(
+            List.of("ENSURE_SHEET", "SET_CELL"), List.of(payloadPath));
     Files.writeString(
         requestPath,
         requestJson(
@@ -827,7 +847,13 @@ class GridGrindCliCatalogCommandTest extends GridGrindCliTestSupport {
     int exitCode =
         new GridGrindCli()
             .run(
-                new String[] {"--doctor-request", "--request", requestPath.toString()},
+                new String[] {
+                  "--doctor-request",
+                  "--request",
+                  requestPath.toString(),
+                  "--grant",
+                  grantPath.toString()
+                },
                 InputStream.nullInputStream(),
                 stdout,
                 stderr);

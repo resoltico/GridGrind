@@ -1,6 +1,5 @@
 ---
 afad: "5.0.1"
-version: "0.75.0"
 domain: OPERATIONS
 updated: "2026-08-31"
 route:
@@ -42,7 +41,7 @@ Task discovery is layered on top of that same catalog surface: `--print-recipe-c
 Under `execution.journal.level=VERBOSE`, stderr emits compact JSONL `ExecutionProgressEvent` records while execution runs. `--pretty` applies only to the primary payload and never changes those one-line progress records.
 
 Mount the host working directory at `/work` and rely on the image's prepared `WORKDIR` so relative CLI paths resolve inside that mounted directory without a separate `-w` override. Pass `--user "$(id -u):$(id -g)"` on ordinary bind mounts so response and workbook files stay owned by the calling host user; omit it only when Docker Desktop or a rootless runtime already remaps bind-mount ownership for you. The mounted-directory execution pattern is
-`docker run --rm -i --user "$(id -u):$(id -g)" -v "$(pwd)":/work ghcr.io/resoltico/gridgrind:latest --request request.json --response response.json`.
+`docker run --rm -i --user "$(id -u):$(id -g)" -v "$(pwd)":/work ghcr.io/resoltico/gridgrind:latest --request request.json --grant grant.json --response response.json`.
 This exact command shape is re-verified by the Docker smoke gate: the same bind-mounted run
 without `--user` must either succeed cleanly on an ownership-remapping runtime or fail cleanly
 with `IO_ERROR` before the mounted write flow completes; Docker Desktop or rootless runtimes that
@@ -55,7 +54,7 @@ already remap bind-mount ownership may allow both forms.
 - **Inspection query**: a `steps[]` entry carrying `query`.
 - **Persistence outcome**: the top-level response `persistence` block present on every success and
   failure response. `SAVE_AS` and `OVERWRITE` echo the request discriminator and then distinguish
-  the intended path from the actual write result through `write.status=WRITTEN|NOT_WRITTEN`.
+  the intended path from the proven publication state: `NOT_ATTEMPTED`, `NOT_PUBLISHED`, `PUBLISHED`, or `UNCERTAIN`.
   `OVERWRITE` includes `sourcePath` when the request supplied an `EXISTING` source and omits it
   when validation fails before any source path exists. Persist-workbook problem contexts point at
   `sourceWorkbookPath` or `persistencePath` directly instead of repeating a second nested

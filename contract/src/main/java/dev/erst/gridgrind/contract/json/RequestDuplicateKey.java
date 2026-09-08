@@ -9,7 +9,7 @@ public record RequestDuplicateKey(
     implements RequestStructuralProblem {
   public RequestDuplicateKey {
     Objects.requireNonNull(containingObjectPath, "containingObjectPath must not be null");
-    key = RequestStructuralProblemSupport.requireText(key, "key");
+    Objects.requireNonNull(key, "key must not be null");
     if (occurrenceOrdinal < 0) {
       throw new IllegalArgumentException("occurrenceOrdinal must not be negative");
     }

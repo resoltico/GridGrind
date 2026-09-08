@@ -10,25 +10,20 @@ import dev.erst.gridgrind.contract.dto.PrintSetupInput;
 import dev.erst.gridgrind.contract.dto.PrintTitleColumnsInput;
 import dev.erst.gridgrind.contract.dto.PrintTitleRowsInput;
 import dev.erst.gridgrind.contract.dto.SheetCopyPosition;
-import dev.erst.gridgrind.contract.dto.SheetPresentationInput;
 import dev.erst.gridgrind.contract.dto.SheetProtectionSettings;
 import dev.erst.gridgrind.contract.dto.WorkbookProtectionInput;
 import dev.erst.gridgrind.contract.selector.NamedRangeSelector;
 import dev.erst.gridgrind.excel.ExcelHeaderFooterText;
-import dev.erst.gridgrind.excel.ExcelIgnoredError;
 import dev.erst.gridgrind.excel.ExcelNamedRangeScope;
 import dev.erst.gridgrind.excel.ExcelNamedRangeTarget;
 import dev.erst.gridgrind.excel.ExcelPrintLayout;
 import dev.erst.gridgrind.excel.ExcelPrintMargins;
 import dev.erst.gridgrind.excel.ExcelPrintSetup;
 import dev.erst.gridgrind.excel.ExcelSheetCopyPosition;
-import dev.erst.gridgrind.excel.ExcelSheetDefaults;
-import dev.erst.gridgrind.excel.ExcelSheetDisplay;
-import dev.erst.gridgrind.excel.ExcelSheetOutlineSummary;
 import dev.erst.gridgrind.excel.ExcelSheetPane;
-import dev.erst.gridgrind.excel.ExcelSheetPresentation;
 import dev.erst.gridgrind.excel.ExcelSheetProtectionSettings;
 import dev.erst.gridgrind.excel.ExcelWorkbookProtectionSettings;
+import java.util.Optional;
 
 /** Converts named-range, protection, pane, and print/presentation contract inputs. */
 final class WorkbookCommandLayoutInputConverter {
@@ -93,13 +88,26 @@ final class WorkbookCommandLayoutInputConverter {
   }
 
   static ExcelWorkbookProtectionSettings toExcelWorkbookProtectionSettings(
-      WorkbookProtectionInput protection) {
+      WorkbookProtectionInput protection, ExecutionInputBindings bindings) {
     return new ExcelWorkbookProtectionSettings(
         protection.structureLocked(),
         protection.windowsLocked(),
         protection.revisionsLocked(),
-        protection.workbookPassword(),
-        protection.revisionsPassword());
+        resolveOptionalSecret(protection.workbookPasswordRef(), bindings),
+        resolveOptionalSecret(protection.revisionsPasswordRef(), bindings));
+  }
+
+  private static Optional<String> resolveOptionalSecret(
+      Optional<dev.erst.gridgrind.contract.dto.SecretReference> reference,
+      ExecutionInputBindings bindings) {
+    if (reference.isEmpty()) {
+      return Optional.empty();
+    }
+    if (bindings == null) {
+      throw new IllegalStateException(
+          "secret-bearing workbook protection requires execution bindings");
+    }
+    return Optional.of(bindings.resolveSecret(reference.orElseThrow()));
   }
 
   static ExcelSheetPane toExcelSheetPane(PaneInput pane) {
@@ -134,28 +142,6 @@ final class WorkbookCommandLayoutInputConverter {
             WorkbookCommandSourceSupport.inlineText(printLayout.footer().center(), "footer center"),
             WorkbookCommandSourceSupport.inlineText(printLayout.footer().right(), "footer right")),
         toExcelPrintSetup(printLayout.setup()));
-  }
-
-  static ExcelSheetPresentation toExcelSheetPresentation(SheetPresentationInput presentation) {
-    return new ExcelSheetPresentation(
-        new ExcelSheetDisplay(
-            presentation.display().displayGridlines(),
-            presentation.display().displayZeros(),
-            presentation.display().displayRowColHeadings(),
-            presentation.display().displayFormulas(),
-            presentation.display().rightToLeft()),
-        presentation.tabColor().flatMap(WorkbookCommandCellInputConverter::toExcelColor),
-        new ExcelSheetOutlineSummary(
-            presentation.outlineSummary().rowSumsBelow(),
-            presentation.outlineSummary().rowSumsRight()),
-        new ExcelSheetDefaults(
-            presentation.sheetDefaults().defaultColumnWidth(),
-            presentation.sheetDefaults().defaultRowHeightPoints()),
-        presentation.ignoredErrors().stream()
-            .map(
-                ignoredError ->
-                    new ExcelIgnoredError(ignoredError.range(), ignoredError.errorTypes()))
-            .toList());
   }
 
   private static ExcelPrintSetup toExcelPrintSetup(PrintSetupInput setup) {

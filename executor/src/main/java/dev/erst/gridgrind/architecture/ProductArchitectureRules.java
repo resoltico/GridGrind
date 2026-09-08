@@ -1,6 +1,7 @@
 package dev.erst.gridgrind.architecture;
 
 import com.tngtech.archunit.junit.ArchTest;
+import com.tngtech.archunit.junit.ArchTests;
 import com.tngtech.archunit.lang.ArchRule;
 import java.util.List;
 
@@ -48,16 +49,15 @@ public final class ProductArchitectureRules {
       ProductDependencyArchitectureRules.engineApiDoesNotExposeImplementationTypes();
 
   @ArchTest
-  static final ArchRule FORMULA_WRITES_STAY_CENTRALIZED =
-      ProductToolingSeamArchitectureRules.formulaWritesStayCentralized();
-
-  @ArchTest
-  static final ArchRule PRIVATE_REFLECTION_STAYS_CENTRALIZED =
-      ProductToolingSeamArchitectureRules.privateReflectionStaysCentralized();
+  static final ArchTests TOOLING_SEAMS = ArchTests.in(ProductToolingSeamArchitectureRules.class);
 
   @ArchTest
   static final ArchRule SEALED_TYPES_USE_CLOSED_DOMAIN_SHAPES =
       ProductDomainShapeArchitectureRules.sealedTypesUseClosedDomainShapes();
+
+  @ArchTest
+  static final ArchTests ASSURANCE_BOUNDARIES =
+      ArchTests.in(ProductAssuranceArchitectureRules.class);
 
   ProductArchitectureRules() {}
 
@@ -73,8 +73,11 @@ public final class ProductArchitectureRules {
         WORKBOOK_IMPLEMENTATION_DOES_NOT_DEPEND_ON_EXECUTION_RUNTIME,
         ENGINE_API_RUNTIME_DEPENDENCIES_STAY_IN_OWNED_BRIDGES,
         ENGINE_API_DOES_NOT_EXPOSE_IMPLEMENTATION_TYPES,
-        FORMULA_WRITES_STAY_CENTRALIZED,
-        PRIVATE_REFLECTION_STAYS_CENTRALIZED,
-        SEALED_TYPES_USE_CLOSED_DOMAIN_SHAPES);
+        ProductToolingSeamArchitectureRules.formulaWritesStayCentralized(),
+        ProductToolingSeamArchitectureRules.privateReflectionStaysCentralized(),
+        SEALED_TYPES_USE_CLOSED_DOMAIN_SHAPES,
+        ProductAssuranceArchitectureRules.executionUsesOneAdmittedExecutor(),
+        ProductAssuranceArchitectureRules.catalogUsesCanonicalOperationContracts(),
+        ProductAssuranceArchitectureRules.publicationIsCentralizedBehindRequestPathAccess());
   }
 }

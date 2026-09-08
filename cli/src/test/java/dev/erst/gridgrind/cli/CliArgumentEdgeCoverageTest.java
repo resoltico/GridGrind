@@ -184,7 +184,12 @@ class CliArgumentEdgeCoverageTest {
             () ->
                 CliRenderOptionValidation.validate(
                     new CliCommand.Execute(
-                        Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty()),
+                        Optional.empty(),
+                        Optional.empty(),
+                        Optional.empty(),
+                        Optional.empty(),
+                        Optional.empty(),
+                        Optional.empty()),
                     Optional.of(CliOutputFormat.TEXT)));
     assertEquals("--format", executeFormat.argument());
     assertTrue(CliRenderArguments.prettyJsonHint(new String[] {"--pretty"}));
@@ -227,5 +232,10 @@ class CliArgumentEdgeCoverageTest {
     assertEquals(
         "--execution-root cannot be combined with --request because the request file directory already owns request-root resolution",
         fileRequestConflict.getMessage());
+
+    assertDoesNotThrow(
+        () ->
+            CliExecutionArgumentValidation.validateTerminalArguments(
+                Optional.of(Path.of("request.json")), Optional.empty(), Optional.empty()));
   }
 }

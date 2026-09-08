@@ -47,9 +47,13 @@ class ExecutionPathCoverageTest {
     ExecutionWorkbookSupport workbookSupport =
         ExecutionContextFixtureSupport.workbookSupport(workingDirectory);
     ExecutionInputBindings bindings =
-        new ExecutionInputBindings(workingDirectory, workingDirectory.resolve("scratch"));
+        new ExecutionInputBindings(
+            workingDirectory,
+            workingDirectory.resolve("scratch"),
+            ExecutionInputBindingsFixtureSupport.noPublicationGrant());
     try (RequestPathAccess access =
-            new RequestPathAccess(workingDirectory, bindings.tempFileFactory());
+            new RequestPathAccess(
+                workingDirectory, bindings.tempFileFactory(), bindings.executionGrant());
         var workbook =
             workbookSupport.openWorkbook(
                 new WorkbookPlan.WorkbookSource.New(),
@@ -203,7 +207,9 @@ class ExecutionPathCoverageTest {
     Path workDir = Files.createTempDirectory("gridgrind-source-path-test");
     try (RequestPathAccess access =
         new RequestPathAccess(
-            workDir, (prefix, suffix) -> Files.createTempFile(workDir, prefix, suffix))) {
+            workDir,
+            (prefix, suffix) -> Files.createTempFile(workDir, prefix, suffix),
+            ExecutionInputBindingsFixtureSupport.noPublicationGrant())) {
       org.junit.jupiter.api.Assertions.assertThrows(
           RequestPathEscapeException.class,
           () ->
@@ -220,7 +226,9 @@ class ExecutionPathCoverageTest {
     Files.writeString(file, "inside root");
     try (RequestPathAccess access =
         new RequestPathAccess(
-            workDir, (prefix, suffix) -> Files.createTempFile(workDir, prefix, suffix))) {
+            workDir,
+            (prefix, suffix) -> Files.createTempFile(workDir, prefix, suffix),
+            ExecutionInputBindingsFixtureSupport.noPublicationGrant(List.of(), List.of(file)))) {
       assertEquals(
           "inside root",
           Files.readString(
@@ -256,7 +264,7 @@ class ExecutionPathCoverageTest {
 
     WorkbookResult.Failure failure =
         ExecutionResponseSupport.failureResponse(
-            GridGrindProtocolVersion.V2, journal, request, problem, 1, "step-1");
+            GridGrindProtocolVersion.V3, journal, request, problem, 1, "step-1");
 
     assertEquals(CalculationReport.notRequested(), failure.calculation());
     assertEquals(problem, failure.problem());

@@ -32,7 +32,7 @@ class GridGrindProtocolCatalogTest {
         GridGrindJson.readRequest(GridGrindJsonOutput.writeRequestBytes(template));
     var templateTree = GridGrindJsonOutput.requestTree(template);
 
-    assertEquals(GridGrindProtocolVersion.V2, template.protocolVersion());
+    assertEquals(GridGrindProtocolVersion.V3, template.protocolVersion());
     assertTrue(template.execution().isDefault());
     assertTrue(template.formulaEnvironment().isEmpty());
     assertTrue(template.steps().isEmpty());
@@ -133,6 +133,39 @@ class GridGrindProtocolCatalogTest {
                 List.of("TABLE_ALL", "TABLE_BY_NAME", "TABLE_BY_NAMES", "TABLE_BY_NAME_ON_SHEET"))),
         present.targetSelectors());
     assertEquals(Optional.empty(), present.targetSelectorRule());
+  }
+
+  @Test
+  void publishesCanonicalEffectsAndFootprintsForEveryWorkbookOperation() {
+    Catalog catalog = GridGrindProtocolCatalog.catalog();
+    List<TypeEntry> operations =
+        java.util.stream.Stream.of(
+                catalog.mutationActionTypes(),
+                catalog.assertionTypes(),
+                catalog.inspectionQueryTypes())
+            .flatMap(List::stream)
+            .toList();
+
+    assertTrue(
+        operations.stream()
+            .allMatch(entry -> !entry.effects().isEmpty() && entry.effectFootprint().isPresent()));
+    assertEquals(
+        List.of(
+            OperationEffect.READ_WORKBOOK,
+            OperationEffect.MUTATE_WORKBOOK,
+            OperationEffect.CELLS,
+            OperationEffect.FORMULAS,
+            OperationEffect.STYLES,
+            OperationEffect.HYPERLINKS,
+            OperationEffect.COMMENTS,
+            OperationEffect.DRAWINGS),
+        GridGrindProtocolCatalog.entryFor("SET_CELL").orElseThrow().effects());
+    assertEquals(
+        Optional.of(OperationEffectFootprint.CONSERVATIVE_WORKBOOK_WIDE),
+        GridGrindProtocolCatalog.entryFor("SET_CELL").orElseThrow().effectFootprint());
+    assertEquals(
+        List.of(new OperationPrecondition.ColumnEditsBeforeFormulaAuthoring()),
+        GridGrindProtocolCatalog.entryFor("INSERT_COLUMNS").orElseThrow().preconditions());
   }
 
   @Test
@@ -358,8 +391,8 @@ class GridGrindProtocolCatalogTest {
                 .orElseThrow();
     TypeEntry entry = encryption.type();
 
-    assertTrue(entry.field("password").isPresent());
-    assertTrue(entry.field("password").orElseThrow().secret());
+    assertTrue(entry.field("passwordRef").isPresent());
+    assertFalse(entry.field("passwordRef").orElseThrow().secret());
     assertFalse(entry.field("mode").isPresent());
     assertEquals(FieldRequirement.OPTIONAL, entry.field("cipher").orElseThrow().requirement());
     assertEquals(FieldRequirement.OPTIONAL, entry.field("hash").orElseThrow().requirement());
@@ -375,8 +408,8 @@ class GridGrindProtocolCatalogTest {
             GridGrindProtocolCatalog.lookupValueFor("plainTypes:ooxmlSignatureInputType")
                 .orElseThrow();
 
-    assertTrue(signature.type().field("keystorePassword").orElseThrow().secret());
-    assertTrue(signature.type().field("keyPassword").orElseThrow().secret());
+    assertFalse(signature.type().field("keystorePasswordRef").orElseThrow().secret());
+    assertFalse(signature.type().field("keyPasswordRef").orElseThrow().secret());
     assertFalse(signature.type().field("pkcs12Path").orElseThrow().secret());
   }
 

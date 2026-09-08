@@ -16,13 +16,13 @@ class GridGrindJsonStreamOwnershipTest {
   void requestInputStreamsRetainCallerOwnershipAcrossDecodeAndAnalysis() throws IOException {
     byte[] request =
         """
-        {"protocolVersion":"V2","source":{"type":"NEW"},"persistence":{"type":"NONE"},"steps":[]}
+        {"protocolVersion":"V3","source":{"type":"NEW"},"persistence":{"type":"NONE"},"steps":[]}
         """
             .getBytes(StandardCharsets.UTF_8);
     try (TrackingInputStream decodeStream = new TrackingInputStream(request);
         TrackingInputStream analysisStream = new TrackingInputStream(request)) {
       assertEquals(
-          GridGrindProtocolVersion.V2, GridGrindJson.readRequest(decodeStream).protocolVersion());
+          GridGrindProtocolVersion.V3, GridGrindJson.readRequest(decodeStream).protocolVersion());
       assertTrue(GridGrindJson.analyzeRequest(analysisStream).isStructurallyValid());
       assertFalse(decodeStream.closed);
       assertFalse(analysisStream.closed);

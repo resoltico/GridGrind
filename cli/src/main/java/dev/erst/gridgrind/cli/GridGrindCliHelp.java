@@ -82,6 +82,9 @@ public final class GridGrindCliHelp {
                         "--print-request-template",
                         "Emit the canonical minimal request JSON skeleton."),
                     new CliSurface.DefinitionEntry(
+                        "--print-grant-template",
+                        "Emit the canonical fail-closed host-grant JSON skeleton."),
+                    new CliSurface.DefinitionEntry(
                         "--print-recipe --lookup <id>",
                         "Emit one self-contained built-in example or task-starter request by stable id."),
                     new CliSurface.DefinitionEntry(

@@ -1,6 +1,7 @@
 package dev.erst.gridgrind.cli;
 
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
+import dev.erst.gridgrind.engine.api.GridGrindExecutionGrant;
 import dev.erst.gridgrind.engine.api.GridGrindRequestInputs;
 import dev.erst.gridgrind.engine.api.GridGrindRequestRequirements;
 import java.io.IOException;
@@ -23,23 +24,70 @@ final class CliExecutionBindingsFactory {
       Optional<Path> requestPath,
       Optional<Path> executionRootPath,
       Optional<Path> tempRootPath,
+      Optional<Path> grantPath,
+      Optional<Path> secretsProviderPath,
       WorkbookPlan request,
       InputStream stdin)
       throws IOException {
     Objects.requireNonNull(requestPath, "requestPath must not be null");
     Objects.requireNonNull(executionRootPath, "executionRootPath must not be null");
     Objects.requireNonNull(tempRootPath, "tempRootPath must not be null");
+    Objects.requireNonNull(grantPath, "grantPath must not be null");
+    Objects.requireNonNull(secretsProviderPath, "secretsProviderPath must not be null");
     Objects.requireNonNull(request, "request must not be null");
     Objects.requireNonNull(stdin, "stdin must not be null");
     Path workingDirectory = executionWorkingDirectory(requestPath, executionRootPath);
+    GridGrindExecutionGrant executionGrant =
+        grantPath
+            .map(
+                path -> {
+                  try {
+                    return CliExecutionGrantReader.read(path, Path.of(""));
+                  } catch (IOException exception) {
+                    throw new CliGrantReadException(path, exception);
+                  }
+                })
+            .orElseGet(CliExecutionGrants::denied);
+    Optional<CliFileSecretResolver> secretResolver =
+        secretsProviderPath.map(
+            path -> {
+              try {
+                return CliFileSecretResolver.open(path);
+              } catch (IOException exception) {
+                throw new CliSecretReadException(path.toString(), exception);
+              }
+            });
     ManagedTempRoot tempRoot = createManagedTempRoot(tempRootPath);
     if (!GridGrindRequestRequirements.requiresStandardInput(request)) {
       return new ManagedRequestInputs(
-          new GridGrindRequestInputs(workingDirectory, tempRoot.root()), tempRoot.createdParent());
+          secretResolver
+              .<GridGrindRequestInputs>map(
+                  resolver ->
+                      new GridGrindRequestInputs(
+                          workingDirectory, tempRoot.root(), executionGrant, resolver))
+              .orElseGet(
+                  () ->
+                      new GridGrindRequestInputs(
+                          workingDirectory, tempRoot.root(), executionGrant)),
+          tempRoot.createdParent(),
+          secretResolver);
     }
-    return new ManagedRequestInputs(
-        new GridGrindRequestInputs(workingDirectory, tempRoot.root(), stdin.readAllBytes()),
-        tempRoot.createdParent());
+    byte[] standardInputBytes = stdin.readAllBytes();
+    GridGrindRequestInputs inputs =
+        secretResolver
+            .<GridGrindRequestInputs>map(
+                resolver ->
+                    new GridGrindRequestInputs(
+                        workingDirectory,
+                        tempRoot.root(),
+                        standardInputBytes,
+                        executionGrant,
+                        resolver))
+            .orElseGet(
+                () ->
+                    new GridGrindRequestInputs(
+                        workingDirectory, tempRoot.root(), standardInputBytes, executionGrant));
+    return new ManagedRequestInputs(inputs, tempRoot.createdParent(), secretResolver);
   }
 
   static Path executionWorkingDirectory(
@@ -109,10 +157,16 @@ final class CliExecutionBindingsFactory {
   static final class ManagedRequestInputs implements AutoCloseable {
     private final GridGrindRequestInputs inputs;
     private final Optional<Path> createdParent;
+    private final Optional<CliFileSecretResolver> secretResolver;
 
-    ManagedRequestInputs(GridGrindRequestInputs inputs, Optional<Path> createdParent) {
+    ManagedRequestInputs(
+        GridGrindRequestInputs inputs,
+        Optional<Path> createdParent,
+        Optional<CliFileSecretResolver> secretResolver) {
       this.inputs = Objects.requireNonNull(inputs, "inputs must not be null");
       this.createdParent = Objects.requireNonNull(createdParent, "createdParent must not be null");
+      this.secretResolver =
+          Objects.requireNonNull(secretResolver, "secretResolver must not be null");
     }
 
     GridGrindRequestInputs inputs() {
@@ -121,8 +175,17 @@ final class CliExecutionBindingsFactory {
 
     @Override
     public void close() {
+      secretResolver.ifPresent(CliExecutionBindingsFactory::closeSecretResolver);
       deleteTreeIfExists(inputs.tempRoot());
       createdParent.ifPresent(CliExecutionBindingsFactory::deletePath);
+    }
+  }
+
+  private static void closeSecretResolver(CliFileSecretResolver resolver) {
+    try {
+      resolver.close();
+    } catch (IOException ignored) {
+      // CLI-owned provider descriptors have no useful recovery after execution ends.
     }
   }
 

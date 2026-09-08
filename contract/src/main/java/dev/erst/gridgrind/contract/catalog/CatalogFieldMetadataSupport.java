@@ -7,6 +7,7 @@ import dev.erst.gridgrind.contract.dto.CellRowInput;
 import dev.erst.gridgrind.contract.dto.CellScalarValue;
 import dev.erst.gridgrind.contract.dto.CellValueReport;
 import dev.erst.gridgrind.contract.dto.ProtocolField;
+import dev.erst.gridgrind.contract.dto.SecretReference;
 import dev.erst.gridgrind.excel.foundation.ExcelReportedCellErrorLiteral;
 import dev.erst.gridgrind.excel.foundation.ExcelStoredCellErrorLiteral;
 import java.lang.reflect.ParameterizedType;
@@ -22,7 +23,11 @@ import java.util.Set;
 /** Resolves machine-readable field metadata for protocol-catalog record components. */
 public final class CatalogFieldMetadataSupport {
   private static final Set<Class<?>> STRING_FIELD_TYPES =
-      Set.of(String.class, java.time.LocalDate.class, java.time.LocalDateTime.class);
+      Set.of(
+          String.class,
+          SecretReference.class,
+          java.time.LocalDate.class,
+          java.time.LocalDateTime.class);
   private static final Set<Class<?>> BOOLEAN_FIELD_TYPES = Set.of(boolean.class, Boolean.class);
   private static final Set<Class<?>> NUMERIC_FIELD_TYPES =
       Set.of(

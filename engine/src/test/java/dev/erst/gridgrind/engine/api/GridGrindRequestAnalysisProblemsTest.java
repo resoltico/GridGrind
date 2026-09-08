@@ -20,11 +20,11 @@ class GridGrindRequestAnalysisProblemsTest {
     ProblemContext.ReadRequest pathOnly =
         firstReadRequest(
             GridGrindJson.analyzeRequest(
-                "{\"protocolVersion\":\"V2\"}".getBytes(StandardCharsets.UTF_8)));
+                "{\"protocolVersion\":\"V3\"}".getBytes(StandardCharsets.UTF_8)));
     ProblemContext.ReadRequest pathAtByteOffset =
         firstReadRequest(GridGrindJson.analyzeRequest("null".getBytes(StandardCharsets.UTF_8)));
     byte[] duplicateRequest =
-        "{\"protocolVersion\":\"V2\",\"protocolVersion\":\"V2\"}".getBytes(StandardCharsets.UTF_8);
+        "{\"protocolVersion\":\"V3\",\"protocolVersion\":\"V3\"}".getBytes(StandardCharsets.UTF_8);
     ProblemContext.ReadRequest duplicate =
         projected(duplicateRequest).stream()
             .map(GridGrindProblemDetail.Problem::context)
@@ -64,7 +64,7 @@ class GridGrindRequestAnalysisProblemsTest {
     byte[] fragmentFailure =
         """
         {
-          "protocolVersion": "V2",
+          "protocolVersion": "V3",
           "source": { "type": "EXISTING", "path": "source.xls" },
           "persistence": { "type": "NONE" },
           "steps": []
@@ -74,7 +74,7 @@ class GridGrindRequestAnalysisProblemsTest {
     byte[] completePlanFailure =
         """
         {
-          "protocolVersion": "V2",
+          "protocolVersion": "V3",
           "source": { "type": "NEW" },
           "persistence": { "type": "NONE" },
           "steps": [

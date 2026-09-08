@@ -23,6 +23,7 @@ public sealed interface CompositeAssertion extends Assertion
   record AllOf(List<Assertion> assertions) implements CompositeAssertion {
     public AllOf {
       assertions = AssertionSupport.copyAssertions(assertions, "assertions");
+      commonTargetTypes(assertions, "ALL_OF");
     }
   }
 
@@ -34,6 +35,7 @@ public sealed interface CompositeAssertion extends Assertion
   record AnyOf(List<Assertion> assertions) implements CompositeAssertion {
     public AnyOf {
       assertions = AssertionSupport.copyAssertions(assertions, "assertions");
+      commonTargetTypes(assertions, "ANY_OF");
     }
   }
 

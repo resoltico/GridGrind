@@ -37,7 +37,7 @@ final class GridGrindJsonWindowSerializationTest {
                 GridGrindJson.readRequest(
                     """
                     {
-                      "protocolVersion": "V2",
+                      "protocolVersion": "V3",
                       "source": { "type": "NEW" },
                       "persistence": { "type": "NONE" },
                       "steps": [
@@ -61,7 +61,7 @@ final class GridGrindJsonWindowSerializationTest {
                 GridGrindJson.readRequest(
                     """
                     {
-                      "protocolVersion": "V2",
+                      "protocolVersion": "V3",
                       "source": { "type": "NEW" },
                       "persistence": { "type": "NONE" },
                       "steps": [

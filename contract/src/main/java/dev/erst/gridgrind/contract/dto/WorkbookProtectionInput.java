@@ -14,44 +14,30 @@ public record WorkbookProtectionInput(
         boolean windowsLocked,
     @ProtocolField(optional = true, booleanDefault = ProtocolBooleanDefault.FALSE)
         boolean revisionsLocked,
-    @ProtocolField(optional = true, secret = true) @JsonInclude(JsonInclude.Include.NON_ABSENT)
-        Optional<String> workbookPassword,
-    @ProtocolField(optional = true, secret = true) @JsonInclude(JsonInclude.Include.NON_ABSENT)
-        Optional<String> revisionsPassword) {
+    @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<SecretReference> workbookPasswordRef,
+    @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<SecretReference> revisionsPasswordRef) {
   /** Reads workbook protection while defaulting omitted booleans to false and passwords empty. */
   @JsonCreator
   public WorkbookProtectionInput(
       @JsonProperty("structureLocked") Boolean structureLocked,
       @JsonProperty("windowsLocked") Boolean windowsLocked,
       @JsonProperty("revisionsLocked") Boolean revisionsLocked,
-      @JsonProperty("workbookPassword") Optional<String> workbookPassword,
-      @JsonProperty("revisionsPassword") Optional<String> revisionsPassword) {
+      @JsonProperty("workbookPasswordRef") Optional<SecretReference> workbookPasswordRef,
+      @JsonProperty("revisionsPasswordRef") Optional<SecretReference> revisionsPasswordRef) {
     this(
         ProtocolBooleanDefault.FALSE.resolve(structureLocked),
         ProtocolBooleanDefault.FALSE.resolve(windowsLocked),
         ProtocolBooleanDefault.FALSE.resolve(revisionsLocked),
-        emptyIfNull(workbookPassword),
-        emptyIfNull(revisionsPassword));
+        emptyIfNull(workbookPasswordRef),
+        emptyIfNull(revisionsPasswordRef));
   }
 
   public WorkbookProtectionInput {
-    Objects.requireNonNull(workbookPassword, "workbookPassword must not be null");
-    Objects.requireNonNull(revisionsPassword, "revisionsPassword must not be null");
-    workbookPassword.ifPresent(
-        value -> {
-          if (value.isBlank()) {
-            throw new IllegalArgumentException("workbookPassword must not be blank");
-          }
-        });
-    revisionsPassword.ifPresent(
-        value -> {
-          if (value.isBlank()) {
-            throw new IllegalArgumentException("revisionsPassword must not be blank");
-          }
-        });
+    Objects.requireNonNull(workbookPasswordRef, "workbookPasswordRef must not be null");
+    Objects.requireNonNull(revisionsPasswordRef, "revisionsPasswordRef must not be null");
   }
 
-  private static Optional<String> emptyIfNull(Optional<String> value) {
+  private static Optional<SecretReference> emptyIfNull(Optional<SecretReference> value) {
     return value == null ? Optional.empty() : value;
   }
 }

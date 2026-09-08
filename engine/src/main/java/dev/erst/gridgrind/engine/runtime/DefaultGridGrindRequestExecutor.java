@@ -50,7 +50,8 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
     Objects.requireNonNull(analysis, "analysis must not be null");
     TempFileFactory tempFileFactory = executionBindings.tempFileFactory();
     ExecutionWorkbookSupport workbookSupport = new ExecutionWorkbookSupport(tempFileFactory);
-    ExecutionStepSupport stepSupport = stepSupport(this.dependencies, tempFileFactory);
+    ExecutionStepSupport stepSupport =
+        stepSupport(this.dependencies, tempFileFactory, executionBindings);
     ExecutionWorkflowSupport workflowSupport =
         new ExecutionWorkflowSupport(
             workbookSupport,
@@ -175,13 +176,19 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
   }
 
   private static ExecutionStepSupport stepSupport(
-      DefaultGridGrindRequestExecutorDependencies dependencies, TempFileFactory tempFileFactory) {
+      DefaultGridGrindRequestExecutorDependencies dependencies,
+      TempFileFactory tempFileFactory,
+      ExecutionInputBindings bindings) {
     SemanticSelectorResolver selectorResolver =
         new SemanticSelectorResolver(dependencies.workbookEngine());
     AssertionExecutor assertionExecutor =
         new AssertionExecutor(dependencies.workbookEngine(), selectorResolver);
     return new ExecutionStepSupport(
-        dependencies.workbookEngine(), selectorResolver, assertionExecutor, tempFileFactory);
+        dependencies.workbookEngine(),
+        selectorResolver,
+        assertionExecutor,
+        tempFileFactory,
+        bindings);
   }
 
   static boolean directEventReadEligible(WorkbookPlan request, ExecutionModeInput executionMode) {

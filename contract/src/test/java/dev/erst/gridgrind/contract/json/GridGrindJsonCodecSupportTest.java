@@ -18,7 +18,7 @@ class GridGrindJsonCodecSupportTest {
         GridGrindJsonMapperSupport.REQUEST_JSON_MAPPER.readTree(
             """
             {
-              "protocolVersion": "V2",
+              "protocolVersion": "V3",
               "source": { "type": "NEW" },
               "persistence": { "type": "NONE" },
               "steps": []

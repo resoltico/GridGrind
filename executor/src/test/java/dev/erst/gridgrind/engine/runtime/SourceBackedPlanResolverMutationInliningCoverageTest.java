@@ -273,7 +273,7 @@ class SourceBackedPlanResolverMutationInliningCoverageTest
         SourceBackedPlanResolver.resolve(
             plan,
             ExecutionInputBindingsFixtureSupport.bindings(
-                workingDirectory, "stdin-text".getBytes(StandardCharsets.UTF_8)));
+                workingDirectory, plan, "stdin-text".getBytes(StandardCharsets.UTF_8)));
 
     CellMutationAction.SetComment commentAction =
         assertInstanceOf(

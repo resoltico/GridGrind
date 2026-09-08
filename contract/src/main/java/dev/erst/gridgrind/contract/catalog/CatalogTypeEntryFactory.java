@@ -3,11 +3,11 @@ package dev.erst.gridgrind.contract.catalog;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import dev.erst.gridgrind.contract.action.MutationAction;
-import dev.erst.gridgrind.contract.action.WorkbookMutationAction;
 import dev.erst.gridgrind.contract.assertion.Assertion;
 import dev.erst.gridgrind.contract.catalog.gather.CatalogGatherers;
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
 import dev.erst.gridgrind.contract.query.InspectionQuery;
+import dev.erst.gridgrind.contract.step.WorkbookOperationContracts;
 import dev.erst.gridgrind.contract.step.WorkbookStep;
 import dev.erst.gridgrind.contract.step.WorkbookStepTargeting;
 import java.lang.reflect.RecordComponent;
@@ -79,6 +79,7 @@ final class CatalogTypeEntryFactory {
       List<CatalogProjectedField> projectedFields) {
     Optional<WorkbookStepTargeting.TargetSurface> targetSurface =
         TypeEntryTargetingSupport.optionalTargetSurfaceFor(recordType);
+    Optional<OperationSemantics> semantics = optionalSemantics(recordType);
     return new TypeEntry(
         canonicalTypeId(recordType, id),
         summary,
@@ -86,17 +87,20 @@ final class CatalogTypeEntryFactory {
         TypeEntryTargetingSupport.targetSelectorEntries(targetSurface),
         targetSurface.flatMap(WorkbookStepTargeting.TargetSurface::rule),
         noteRefs,
-        preconditions(recordType),
+        semantics.map(OperationSemantics::preconditions).orElseGet(List::of),
+        semantics.map(OperationSemantics::effects).orElseGet(List::of),
+        semantics.map(value -> Optional.of(value.footprint())).orElseGet(Optional::empty),
         Optional.empty());
   }
 
-  private static List<OperationPrecondition> preconditions(Class<? extends Record> recordType) {
-    if (recordType == WorkbookMutationAction.InsertColumns.class
-        || recordType == WorkbookMutationAction.DeleteColumns.class
-        || recordType == WorkbookMutationAction.ShiftColumns.class) {
-      return List.of(new OperationPrecondition.ColumnEditsBeforeFormulaAuthoring());
+  private static Optional<OperationSemantics> optionalSemantics(
+      Class<? extends Record> recordType) {
+    if (MutationAction.class.isAssignableFrom(recordType)
+        || Assertion.class.isAssignableFrom(recordType)
+        || InspectionQuery.class.isAssignableFrom(recordType)) {
+      return Optional.of(WorkbookOperationContracts.semanticsForType(recordType));
     }
-    return List.of();
+    return Optional.empty();
   }
 
   static List<String> requiredFields(Class<? extends Record> recordType) {

@@ -141,14 +141,9 @@ class AdvancedMutationCommandConverterTest {
                 new WorkbookSelector.Current(),
                 new WorkbookMutationAction.SetWorkbookProtection(
                     new WorkbookProtectionInput(
-                        false,
-                        true,
-                        false,
-                        Optional.of("book-secret"),
-                        Optional.of("review-secret")))));
+                        false, true, false, Optional.empty(), Optional.empty()))));
     assertEquals(
-        new ExcelWorkbookProtectionSettings(
-            false, true, false, Optional.of("book-secret"), Optional.of("review-secret")),
+        new ExcelWorkbookProtectionSettings(false, true, false, Optional.empty(), Optional.empty()),
         protectionCommand.protection());
 
     assertInstanceOf(
@@ -195,8 +190,10 @@ class AdvancedMutationCommandConverterTest {
             new SheetProtectionSettings(
                 true, false, false, false, false, false, false, false, false, false, false, false,
                 false, false, false),
-            "sheet-secret");
-    assertEquals(Optional.of("sheet-secret"), sheetProtection.password());
+            Optional.of(new dev.erst.gridgrind.contract.dto.SecretReference("sheet-password")));
+    assertEquals(
+        Optional.of(new dev.erst.gridgrind.contract.dto.SecretReference("sheet-password")),
+        sheetProtection.passwordRef());
     org.junit.jupiter.api.Assertions.assertThrows(
         IllegalArgumentException.class,
         () ->
@@ -204,7 +201,7 @@ class AdvancedMutationCommandConverterTest {
                 new SheetProtectionSettings(
                     true, false, false, false, false, false, false, false, false, false, false,
                     false, false, false, false),
-                " "));
+                Optional.of(new dev.erst.gridgrind.contract.dto.SecretReference(" "))));
   }
 
   @Test
@@ -807,7 +804,11 @@ class AdvancedMutationCommandConverterTest {
     WorkbookMutationAction.SetWorkbookProtection setProtection =
         new WorkbookMutationAction.SetWorkbookProtection(
             new WorkbookProtectionInput(
-                true, false, true, Optional.of("book-secret"), Optional.empty()));
+                true,
+                false,
+                true,
+                Optional.of(new dev.erst.gridgrind.contract.dto.SecretReference("book-password")),
+                Optional.empty()));
     WorkbookMutationAction.ClearWorkbookProtection clearProtection =
         new WorkbookMutationAction.ClearWorkbookProtection();
 

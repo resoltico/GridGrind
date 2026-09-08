@@ -54,6 +54,8 @@ final class CatalogStepTemplateSupport {
                     entry.targetSelectorRule(),
                     entry.noteRefs(),
                     entry.preconditions(),
+                    entry.effects(),
+                    entry.effectFootprint(),
                     Optional.of(buildTemplate(catalog, entry, stepKind, bodyField))))
         .toList();
   }

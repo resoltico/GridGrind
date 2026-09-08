@@ -7,6 +7,7 @@ import dev.erst.gridgrind.excel.ExcelWorkbooks;
 import dev.erst.gridgrind.excel.WorkbookTempFileFactory;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Objects;
 
 /** Shared explicit-root helpers for executor tests after ambient execution removal. */
 final class ExecutionContextFixtureSupport {
@@ -57,13 +58,16 @@ final class ExecutionContextFixtureSupport {
   }
 
   static WorkbookResult execute(DefaultGridGrindRequestExecutor executor, WorkbookPlan request) {
-    return executor.execute(request, defaultBindings());
+    Objects.requireNonNull(request, "request must not be null");
+    return executor.execute(
+        request, ExecutionInputBindingsFixtureSupport.bindings(defaultWorkingDirectory(), request));
   }
 
   static WorkbookResult execute(
       DefaultGridGrindRequestExecutor executor, WorkbookPlan request, Path workingDirectory) {
+    Objects.requireNonNull(request, "request must not be null");
     return executor.execute(
-        request, ExecutionInputBindingsFixtureSupport.bindings(workingDirectory));
+        request, ExecutionInputBindingsFixtureSupport.bindings(workingDirectory, request));
   }
 
   static void saveWorkbook(ExcelWorkbook workbook, Path workbookPath) throws IOException {

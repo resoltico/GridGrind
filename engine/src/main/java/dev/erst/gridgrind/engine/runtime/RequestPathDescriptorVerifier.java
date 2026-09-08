@@ -41,7 +41,7 @@ final class RequestPathDescriptorVerifier {
     return chain.directories().getLast();
   }
 
-  private static void reverifyDirectories(RequestPathDescriptorChain chain) throws IOException {
+  static void reverifyDirectories(RequestPathDescriptorChain chain) throws IOException {
     List<RequestPathBoundDirectory> directories = chain.directories();
     RequestPathBoundDirectory root = directories.getFirst();
     if (!root.identity().equals(RequestPathTopology.identityOf(root.path(), true))) {

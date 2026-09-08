@@ -15,6 +15,7 @@ import dev.erst.gridgrind.contract.dto.GridGrindProblemDetail;
 import dev.erst.gridgrind.contract.dto.ProblemContext;
 import dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces;
 import dev.erst.gridgrind.contract.dto.RequestDoctorReport;
+import dev.erst.gridgrind.contract.dto.SecretReference;
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
 import dev.erst.gridgrind.contract.dto.WorkbookResult;
 import dev.erst.gridgrind.contract.dto.WorkbookResults;
@@ -123,6 +124,45 @@ class GridGrindEngineApiTest {
   }
 
   @Test
+  void publicDoctorTranslatesBothStandardInputAndHostSecretBindings() throws IOException {
+    SecretReference reference = new SecretReference("provider-password");
+    GridGrindExecutionGrant.Bounded grant =
+        new GridGrindExecutionGrant.Bounded(
+            List.of(new GridGrindExecutionGrant.ReadAuthority.StandardInput()),
+            List.of("SET_CELL"),
+            new GridGrindExecutionGrant.WorkbookTargetAuthority.WorkbookWide(),
+            new GridGrindExecutionGrant.PublicationAuthority.None(),
+            List.of(reference),
+            GridGrindHostAcceptancePolicy.minimum());
+    GridGrindRequestInputs standardInputAndSecret =
+        new GridGrindRequestInputs(
+            Path.of("engine-api-inputs"),
+            Path.of("engine-api-temp"),
+            "Budget".getBytes(StandardCharsets.UTF_8),
+            grant,
+            requested -> "secret".toCharArray());
+    GridGrindRequestInputs secretOnly =
+        new GridGrindRequestInputs(
+            Path.of("engine-api-inputs"),
+            Path.of("engine-api-temp"),
+            grant,
+            requested -> "secret".toCharArray());
+
+    assertNotNull(
+        GridGrindEngine.requestDoctor().diagnose(standardInputRequest(), standardInputAndSecret));
+    assertNotNull(
+        GridGrindEngine.requestDoctor()
+            .diagnose(
+                WorkbookPlan.standard(
+                    new WorkbookPlan.WorkbookSource.New(),
+                    new WorkbookPlan.WorkbookPersistence.None(),
+                    dev.erst.gridgrind.contract.dto.ExecutionPolicyInput.defaults(),
+                    dev.erst.gridgrind.contract.dto.FormulaEnvironmentInput.empty(),
+                    List.of()),
+                secretOnly));
+  }
+
+  @Test
   void productionEngineAdaptersRequestRequirementsAndProblemHelpersStayCovered()
       throws IOException {
     WorkbookPlan template = GridGrindProtocolCatalog.requestTemplate();
@@ -205,7 +245,7 @@ class GridGrindEngineApiTest {
     return GridGrindJson.readRequest(
         """
         {
-          "protocolVersion": "V2",
+          "protocolVersion": "V3",
           "source": { "type": "NEW" },
           "persistence": { "type": "NONE" },
           "execution": {
@@ -240,7 +280,7 @@ class GridGrindEngineApiTest {
     return GridGrindJson.readRequest(
         """
         {
-          "protocolVersion": "V2",
+          "protocolVersion": "V3",
           "source": { "type": "NEW" },
           "persistence": { "type": "NONE" },
           "execution": {
@@ -265,7 +305,9 @@ class GridGrindEngineApiTest {
   private static GridGrindRequestInputs inputs(Path workingDirectory) {
     Path normalizedWorkingDirectory = workingDirectory.toAbsolutePath().normalize();
     return new GridGrindRequestInputs(
-        normalizedWorkingDirectory, normalizedWorkingDirectory.resolve("temp-root"));
+        normalizedWorkingDirectory,
+        normalizedWorkingDirectory.resolve("temp-root"),
+        noPublicationGrant());
   }
 
   private static GridGrindRequestInputs inputs(Path workingDirectory, byte[] standardInputBytes) {
@@ -273,6 +315,17 @@ class GridGrindEngineApiTest {
     return new GridGrindRequestInputs(
         normalizedWorkingDirectory,
         normalizedWorkingDirectory.resolve("temp-root"),
-        standardInputBytes);
+        standardInputBytes,
+        noPublicationGrant());
+  }
+
+  private static GridGrindExecutionGrant.Bounded noPublicationGrant() {
+    return new GridGrindExecutionGrant.Bounded(
+        List.of(),
+        List.of(),
+        new GridGrindExecutionGrant.WorkbookTargetAuthority.WorkbookWide(),
+        new GridGrindExecutionGrant.PublicationAuthority.None(),
+        List.of(),
+        GridGrindHostAcceptancePolicy.minimum());
   }
 }

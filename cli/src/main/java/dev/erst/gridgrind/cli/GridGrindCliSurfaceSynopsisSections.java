@@ -23,6 +23,7 @@ final class GridGrindCliSurfaceSynopsisSections {
             "gridgrind --doctor-request --execution-root <path> [--temp-root <path>]"
                 + " [--response <path>] [--pretty] < request.json",
             "gridgrind --print-request-template [--response <path>] [--pretty]",
+            "gridgrind --print-grant-template [--response <path>] [--pretty]",
             "gridgrind --print-recipe --lookup <id> [--response <path>] [--pretty]",
             "gridgrind --materialize-recipe --lookup <id> --workspace <new-directory> [--pretty]",
             "gridgrind --print-recipe-catalog [--lookup <id>] [--response <path>] [--pretty]",
@@ -70,6 +71,9 @@ final class GridGrindCliSurfaceSynopsisSections {
                 List.of(
                     "Start from the minimal request: gridgrind --print-request-template"
                         + " --response request.json",
+                    "Start from the fail-closed host grant: gridgrind --print-grant-template"
+                        + " --response grant.json, then narrow it to the request's exact"
+                        + " resources, operations, and output authority.",
                     "For stdin-driven execution or doctoring, pass one explicit"
                         + " --execution-root so request-owned paths resolve from one"
                         + " explicit invocation directory.",

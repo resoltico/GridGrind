@@ -10,16 +10,20 @@ verify_documented_bind_mount_user_guidance() {
     local probe_docker_run_user=$3
     local probe_request_dir="${probe_smoke_root}/requests odd"
     local documented_no_user_request_rel='requests odd/request documented mount no-user [docker #smoke].json'
+    local documented_no_user_grant_rel='grants odd/request documented mount no-user [docker #smoke].grant.json'
     local documented_no_user_response_rel='responses odd/nested/response documented mount no-user [docker #smoke].json'
     local documented_no_user_workbook_rel='books odd/nested/office documented mount no-user [docker #smoke].xlsx'
     local documented_with_user_request_rel='requests odd/request documented mount with-user [docker #smoke].json'
+    local documented_with_user_grant_rel='grants odd/request documented mount with-user [docker #smoke].grant.json'
     local documented_with_user_response_rel='responses odd/nested/response documented mount with-user [docker #smoke].json'
     local documented_with_user_workbook_rel='books odd/nested/office documented mount with-user [docker #smoke].xlsx'
     local documented_no_user_request_path="${probe_smoke_root}/${documented_no_user_request_rel}"
+    local documented_no_user_grant_path="${probe_smoke_root}/${documented_no_user_grant_rel}"
     local documented_no_user_response_path="${probe_smoke_root}/${documented_no_user_response_rel}"
     local documented_no_user_legacy_workbook_path="${probe_smoke_root}/${documented_no_user_workbook_rel}"
     local documented_no_user_workbook_path="${probe_request_dir}/${documented_no_user_workbook_rel}"
     local documented_with_user_request_path="${probe_smoke_root}/${documented_with_user_request_rel}"
+    local documented_with_user_grant_path="${probe_smoke_root}/${documented_with_user_grant_rel}"
     local documented_with_user_response_path="${probe_smoke_root}/${documented_with_user_response_rel}"
     local documented_with_user_legacy_workbook_path="${probe_smoke_root}/${documented_with_user_workbook_rel}"
     local documented_with_user_workbook_path="${probe_request_dir}/${documented_with_user_workbook_rel}"
@@ -34,7 +38,7 @@ verify_documented_bind_mount_user_guidance() {
 
         cat > "${target_request_path}" <<JSON
 {
-  "protocolVersion": "V2",
+  "protocolVersion": "V3",
   "source": {
     "type": "NEW"
   },
@@ -85,8 +89,35 @@ verify_documented_bind_mount_user_guidance() {
 JSON
     }
 
+    write_documented_grant() {
+        local target_grant_path=$1
+        local target_workbook_from_container_root=$2
+
+        mkdir -p "$(dirname -- "${target_grant_path}")"
+        cat > "${target_grant_path}" <<JSON
+{
+  "readableResources": [],
+  "operationIds": ["ENSURE_SHEET", "GET_WORKBOOK_SUMMARY"],
+  "targetAuthority": {"type": "WORKBOOK_WIDE"},
+  "publicationAuthority": {
+    "type": "SAVE_AS",
+    "path": "${target_workbook_from_container_root}",
+    "ifExists": "REPLACE"
+  },
+  "allowedSecretReferences": [],
+  "acceptancePolicy": {"type": "MINIMUM_ONLY"}
+}
+JSON
+    }
+
     write_documented_request "${documented_no_user_request_path}" "${documented_no_user_workbook_rel}"
     write_documented_request "${documented_with_user_request_path}" "${documented_with_user_workbook_rel}"
+    write_documented_grant \
+        "${documented_no_user_grant_path}" \
+        "requests odd/${documented_no_user_workbook_rel}"
+    write_documented_grant \
+        "${documented_with_user_grant_path}" \
+        "requests odd/${documented_with_user_workbook_rel}"
     mkdir -p \
         "$(dirname -- "${documented_no_user_response_path}")" \
         "$(dirname -- "${documented_no_user_workbook_path}")" \
@@ -108,6 +139,7 @@ JSON
         -v "${probe_smoke_root}:/work" \
         "${probe_image_tag}" \
         --request "${documented_no_user_request_rel}" \
+        --grant "${documented_no_user_grant_rel}" \
         --response "${documented_no_user_response_rel}" >"${documented_no_user_stdout_path}" \
         2>"${documented_no_user_stderr_path}"
     documented_no_user_exit_code=$?
@@ -138,6 +170,7 @@ JSON
         -v "${probe_smoke_root}:/work" \
         "${probe_image_tag}" \
         --request "${documented_with_user_request_rel}" \
+        --grant "${documented_with_user_grant_rel}" \
         --response "${documented_with_user_response_rel}" >/dev/null 2>"${documented_with_user_stderr_path}"
     [[ -f "${documented_with_user_response_path}" ]] || die \
         "docker smoke documented bind-mount run with --user did not write the response file"
@@ -151,10 +184,12 @@ JSON
         "docker smoke documented bind-mount run with --user wrote unexpected stderr: $(tr '\n' ' ' < "${documented_with_user_stderr_path}")"
     rm -f \
         "${documented_no_user_request_path}" \
+        "${documented_no_user_grant_path}" \
         "${documented_no_user_response_path}" \
         "${documented_no_user_workbook_path}" \
         "${documented_no_user_legacy_workbook_path}" \
         "${documented_with_user_request_path}" \
+        "${documented_with_user_grant_path}" \
         "${documented_with_user_response_path}" \
         "${documented_with_user_workbook_path}" \
         "${documented_with_user_legacy_workbook_path}" \

@@ -66,7 +66,7 @@ class GridGrindCliCatalogTemplateDoctorTest extends GridGrindCliTestSupport {
 
   private static ObjectNode requestFor(TypeEntry entry) {
     ObjectNode request = JSON.objectNode();
-    request.put("protocolVersion", "V2");
+    request.put("protocolVersion", "V3");
     request.set("source", type("NEW"));
     request.set("persistence", type("NONE"));
     ArrayNode steps = JSON.arrayNode();

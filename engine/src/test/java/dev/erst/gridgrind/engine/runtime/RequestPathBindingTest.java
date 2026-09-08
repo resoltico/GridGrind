@@ -1,16 +1,17 @@
 package dev.erst.gridgrind.engine.runtime;
 
-import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import dev.erst.gridgrind.excel.WorkbookArtifactWriteDisposition;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
+import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.nio.file.SecureDirectoryStream;
+import java.nio.file.StandardOpenOption;
+import java.util.Set;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -29,29 +30,21 @@ class RequestPathBindingTest {
         () -> RequestPathBinding.bindExistingRead("missing-parent/input.xlsx", root));
     assertThrows(
         UnsafePathAccessException.class, () -> RequestPathBinding.bindWriteTarget(".", root));
-    Path staged = Files.write(root.resolve("staged.xlsx"), new byte[] {6, 7, 8});
     try (RequestPathBinding write =
         RequestPathBinding.bindWriteTarget("missing-parent/deeper/output.xlsx", root)) {
       assertTrue(Files.isDirectory(root.resolve("missing-parent/deeper")));
-      write.commitFrom(staged, WorkbookArtifactWriteDisposition.CREATE_NEW);
+      assertFalse(write.hasExistingLeaf());
     }
-    assertArrayEquals(
-        new byte[] {6, 7, 8},
-        Files.readAllBytes(root.resolve("missing-parent/deeper/output.xlsx")));
   }
 
   @Test
-  void readsAndCommitsRegularFilesThroughBoundDescriptors() throws Exception {
+  void readsRegularFilesThroughBoundDescriptors() throws Exception {
     Files.write(root.resolve("input.txt"), new byte[] {4, 5});
-    Path staged = Files.write(root.resolve("staged.xlsx"), new byte[] {6, 7, 8});
     try (RequestPathBinding read = RequestPathBinding.bindExistingRead("input.txt", root)) {
-      assertArrayEquals(new byte[] {4, 5}, read.openInputStream().readAllBytes());
+      try (var input = read.openInputStream()) {
+        assertEquals(2, input.readAllBytes().length);
+      }
     }
-    try (RequestPathBinding write = RequestPathBinding.bindWriteTarget("output.xlsx", root)) {
-      assertFalse(write.hasExistingLeaf());
-      write.commitFrom(staged, WorkbookArtifactWriteDisposition.CREATE_NEW);
-    }
-    assertArrayEquals(new byte[] {6, 7, 8}, Files.readAllBytes(root.resolve("output.xlsx")));
   }
 
   @Test
@@ -82,12 +75,9 @@ class RequestPathBindingTest {
 
   @Test
   void failsCreateNewWhenTheLeafAppearsAfterOutputPreflight() throws Exception {
-    Path staged = Files.write(root.resolve("staged.xlsx"), new byte[] {6, 7, 8});
     try (RequestPathBinding write = RequestPathBinding.bindWriteTarget("output.xlsx", root)) {
       Files.write(root.resolve("output.xlsx"), new byte[] {1});
-      assertThrows(
-          UnsafePathAccessException.class,
-          () -> write.commitFrom(staged, WorkbookArtifactWriteDisposition.CREATE_NEW));
+      assertThrows(UnsafePathAccessException.class, write::reverifyPublicationTarget);
     }
   }
 
@@ -136,6 +126,22 @@ class RequestPathBindingTest {
   }
 
   @Test
+  void mapsPublishedLeafVerificationOpenFailureToUnsafeAccess() throws Exception {
+    Files.write(root.resolve("published.xlsx"), new byte[] {1});
+
+    try (RequestPathBinding binding =
+        RequestPathBinding.bindWriteTarget(
+            "published.xlsx",
+            root,
+            Files::newDirectoryStream,
+            (parent, leafName, options) -> {
+              throw new java.nio.file.NoSuchFileException(leafName.toString());
+            })) {
+      assertThrows(UnsafePathAccessException.class, binding::openPublishedReadChannel);
+    }
+  }
+
+  @Test
   void mapsDetectedDescriptorLoopsToUnsafeAccessAndPreservesOrdinaryIoFailures() throws Exception {
     Files.write(root.resolve("input.txt"), new byte[] {1});
     try (RequestPathBinding binding =
@@ -173,47 +179,6 @@ class RequestPathBindingTest {
               throw new java.nio.file.FileSystemLoopException(leafName.toString());
             })) {
       assertThrows(UnsafePathAccessException.class, binding::openInputStream);
-    }
-  }
-
-  @Test
-  void preservesCreateNewCollisionsReportedByTheBoundDescriptor() throws Exception {
-    Path staged = Files.write(root.resolve("staged.xlsx"), new byte[] {6, 7, 8});
-    try (RequestPathBinding binding =
-        RequestPathBinding.bindWriteTarget(
-            "output.xlsx",
-            root,
-            Files::newDirectoryStream,
-            (parent, leafName, options) -> {
-              throw new java.nio.file.FileAlreadyExistsException(leafName.toString());
-            })) {
-      assertThrows(
-          java.nio.file.FileAlreadyExistsException.class,
-          () -> binding.commitFrom(staged, WorkbookArtifactWriteDisposition.CREATE_NEW));
-    }
-
-    try (RequestPathBinding binding =
-        RequestPathBinding.bindWriteTarget(
-            "denied.xlsx",
-            root,
-            Files::newDirectoryStream,
-            (parent, leafName, options) -> {
-              throw new java.nio.file.AccessDeniedException(leafName.toString());
-            })) {
-      assertThrows(
-          java.nio.file.AccessDeniedException.class,
-          () -> binding.commitFrom(staged, WorkbookArtifactWriteDisposition.CREATE_NEW));
-    }
-  }
-
-  @Test
-  void preservesAStagedFileReadFailureWithoutOpeningTheRequestPathAgain() throws Exception {
-    try (RequestPathBinding binding = RequestPathBinding.bindWriteTarget("output.xlsx", root)) {
-      assertThrows(
-          java.nio.file.NoSuchFileException.class,
-          () ->
-              binding.commitFrom(
-                  root.resolve("missing-stage.xlsx"), WorkbookArtifactWriteDisposition.CREATE_NEW));
     }
   }
 
@@ -262,5 +227,32 @@ class RequestPathBindingTest {
                             (SecureDirectoryStream<Path>) Files.newDirectoryStream(directory)),
                     SecureDirectoryStream::newByteChannel));
     assertEquals(1, bindingFailure.getSuppressed().length);
+  }
+
+  @Test
+  void managesPrivateSiblingsAndReopensThePublishedLeafThroughTheRetainedParent() throws Exception {
+    try (RequestPathBinding binding = RequestPathBinding.bindWriteTarget("published.xlsx", root)) {
+      Path sibling = Path.of(".publication-sibling.xlsx");
+      try (var channel =
+          binding.openSiblingChannel(
+              sibling,
+              Set.of(
+                  StandardOpenOption.CREATE_NEW,
+                  StandardOpenOption.WRITE,
+                  LinkOption.NOFOLLOW_LINKS))) {
+        channel.write(java.nio.ByteBuffer.wrap(new byte[] {1, 2}));
+      }
+      try (var channel = binding.openSiblingReadChannel(sibling)) {
+        assertEquals(2, channel.size());
+      }
+      assertEquals(root.resolve(sibling), binding.siblingPath(sibling));
+      assertEquals(Path.of("published.xlsx"), binding.outputLeafName());
+      binding.deleteSibling(sibling);
+
+      Files.write(root.resolve("published.xlsx"), new byte[] {3, 4, 5});
+      try (var input = binding.openPublishedInputStream()) {
+        assertEquals(3, input.readAllBytes().length);
+      }
+    }
   }
 }

@@ -125,25 +125,17 @@ public sealed interface WorkbookMutationAction extends MutationAction {
       targetSelectors = {SheetSelector.ByName.class})
   record SetSheetProtection(
       SheetProtectionSettings protection,
-      @ProtocolField(optional = true, secret = true) @JsonInclude(JsonInclude.Include.NON_ABSENT)
-          Optional<String> password)
+      @JsonInclude(JsonInclude.Include.NON_ABSENT)
+          Optional<dev.erst.gridgrind.contract.dto.SecretReference> passwordRef)
       implements WorkbookMutationAction {
     /** Enables sheet protection without applying a password hash. */
     public SetSheetProtection(SheetProtectionSettings protection) {
       this(protection, Optional.empty());
     }
 
-    /** Enables sheet protection with one explicit password string. */
-    public SetSheetProtection(SheetProtectionSettings protection, String password) {
-      this(protection, Optional.ofNullable(password));
-    }
-
     public SetSheetProtection {
       Objects.requireNonNull(protection, "protection must not be null");
-      Objects.requireNonNull(password, "password must not be null");
-      if (password.isPresent() && password.orElseThrow().isBlank()) {
-        throw new IllegalArgumentException("password must not be blank");
-      }
+      Objects.requireNonNull(passwordRef, "passwordRef must not be null");
     }
   }
 

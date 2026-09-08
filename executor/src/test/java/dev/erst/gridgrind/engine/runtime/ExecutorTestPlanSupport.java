@@ -24,7 +24,6 @@ import dev.erst.gridgrind.contract.dto.ExecutionPolicyInput;
 import dev.erst.gridgrind.contract.dto.FontHeightInput;
 import dev.erst.gridgrind.contract.dto.FormulaEnvironmentInput;
 import dev.erst.gridgrind.contract.dto.HeaderFooterTextInput;
-import dev.erst.gridgrind.contract.dto.NamedRangeScope;
 import dev.erst.gridgrind.contract.dto.PictureDataInput;
 import dev.erst.gridgrind.contract.dto.PictureInput;
 import dev.erst.gridgrind.contract.dto.PivotTableInput;
@@ -36,7 +35,6 @@ import dev.erst.gridgrind.contract.dto.WorkbookProtectionInput;
 import dev.erst.gridgrind.contract.dto.WorkbookResult;
 import dev.erst.gridgrind.contract.query.*;
 import dev.erst.gridgrind.contract.query.InspectionResult;
-import dev.erst.gridgrind.contract.selector.NamedRangeSelector;
 import dev.erst.gridgrind.contract.selector.PivotTableSelector;
 import dev.erst.gridgrind.contract.selector.Selector;
 import dev.erst.gridgrind.contract.selector.TableSelector;
@@ -91,10 +89,6 @@ final class ExecutorTestPlanSupport {
     PivotTableInput pivotTable = action.pivotTable();
     return mutate(
         new PivotTableSelector.ByNameOnSheet(pivotTable.name(), pivotTable.sheetName()), action);
-  }
-
-  static PendingMutation mutate(StructuredMutationAction.SetNamedRange action) {
-    return mutate(namedRangeSelector(action.name(), action.scope()), action);
   }
 
   static PendingAssertion assertThat(String stepId, Selector target, Assertion assertion) {
@@ -166,6 +160,12 @@ final class ExecutorTestPlanSupport {
 
   static <T> Optional<T> maybe(T value) {
     return Optional.ofNullable(value);
+  }
+
+  static Optional<dev.erst.gridgrind.contract.dto.SecretReference> maybeReference(String value) {
+    return value == null || value.isBlank()
+        ? Optional.empty()
+        : Optional.of(new dev.erst.gridgrind.contract.dto.SecretReference(value));
   }
 
   static CellFontInput fontInput(
@@ -271,8 +271,8 @@ final class ExecutorTestPlanSupport {
         structureLocked,
         windowsLocked,
         revisionsLocked,
-        maybe(workbookPassword),
-        maybe(revisionsPassword));
+        maybeReference(workbookPassword),
+        maybeReference(revisionsPassword));
   }
 
   static MutationStep materializeMutation(PendingMutation mutation, int stepIndex) {
@@ -522,13 +522,5 @@ final class ExecutorTestPlanSupport {
   private static String stepIdFor(int stepIndex, MutationAction action) {
     String normalizedType = action.actionType().toLowerCase(Locale.ROOT).replace('_', '-');
     return "step-" + String.format(Locale.ROOT, "%02d", stepIndex + 1) + "-" + normalizedType;
-  }
-
-  private static Selector namedRangeSelector(String name, NamedRangeScope scope) {
-    return switch (scope) {
-      case NamedRangeScope.Workbook _ -> new NamedRangeSelector.WorkbookScope(name);
-      case NamedRangeScope.Sheet sheet ->
-          new NamedRangeSelector.SheetScope(name, sheet.sheetName());
-    };
   }
 }

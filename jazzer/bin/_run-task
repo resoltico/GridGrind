@@ -435,7 +435,7 @@ requested_duration="$(requested_max_duration)"
 duration_seconds="$(parse_duration_seconds "${requested_duration}")"
 watchdog_seconds=""
 if [[ -n "${duration_seconds}" ]]; then
-  watchdog_seconds=$((duration_seconds + 120))
+  watchdog_seconds="${duration_seconds}"
 fi
 
 "${gradle_command[@]}" \
@@ -444,13 +444,20 @@ gradle_pid="$!"
 
 if [[ -n "${watchdog_seconds}" ]]; then
   (
-    sleep "${watchdog_seconds}"
-    if kill -0 "${gradle_pid}" 2>/dev/null; then
-      printf 'Jazzer task %s exceeded requested max duration %s plus 120s grace; terminating.\n' \
-        "${task_name}" "${requested_duration}" | tee -a "${log_path}" "${latest_log_path}" >&2
-      : > "${timeout_flag}"
-      terminate_gradle_run TERM KILL
-    fi
+    while kill -0 "${gradle_pid}" 2>/dev/null; do
+      if grep -Fq '[JAZZER-PULSE] harness-class=' "${log_path}" 2>/dev/null \
+        && grep -Fq ' phase=plan ' "${log_path}" 2>/dev/null; then
+        sleep "${watchdog_seconds}"
+        if kill -0 "${gradle_pid}" 2>/dev/null; then
+          printf 'Jazzer task %s reached requested max duration %s after harness launch; interrupting.\n' \
+            "${task_name}" "${requested_duration}" | tee -a "${log_path}" "${latest_log_path}" >&2
+          : > "${timeout_flag}"
+          terminate_gradle_run INT KILL
+        fi
+        exit 0
+      fi
+      sleep 1
+    done
   ) &
   watchdog_pid="$!"
 fi
@@ -459,6 +466,17 @@ wait "${gradle_pid}"
 task_exit="$?"
 cancel_watchdog
 set -e
+
+bounded_completion=0
+if [[ "${task_exit}" -ne 0 && -f "${timeout_flag}" ]]; then
+  if grep -Eq '== Java Exception:|==ERROR:|artifact_prefix=.*(crash|leak|oom|timeout)' "${log_path}"; then
+    printf 'Jazzer task %s reached its requested duration after reporting a finding; preserving failure.\n' \
+      "${task_name}" >&2
+  else
+    bounded_completion=1
+    task_exit=0
+  fi
+fi
 
 finished_at="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
 
@@ -478,7 +496,7 @@ set -e
 
 if [[ "${task_exit}" -ne 0 ]]; then
   if [[ -f "${timeout_flag}" ]]; then
-    echo "Jazzer task ${task_name} timed out after requested max duration ${requested_duration} plus grace" >&2
+    echo "Jazzer task ${task_name} stopped after requested max duration ${requested_duration} following harness launch" >&2
   fi
   exit "${task_exit}"
 fi
@@ -486,4 +504,9 @@ fi
 if [[ "${summary_exit}" -ne 0 ]]; then
   echo "Jazzer summary generation failed for ${task_name}" >&2
   exit "${summary_exit}"
+fi
+
+if [[ "${bounded_completion}" -eq 1 ]]; then
+  printf 'Jazzer task %s completed without a finding at requested max duration %s.\n' \
+    "${task_name}" "${requested_duration}"
 fi

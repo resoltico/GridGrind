@@ -24,6 +24,7 @@ gridgrindMutation {
         setOf(
             "dev.erst.gridgrind.engine.runtime.FormulaOriginTrackerTest",
             "dev.erst.gridgrind.engine.runtime.RequestPreflightTest",
+            "dev.erst.gridgrind.engine.runtime.RequestPreflightFormulaEnvironmentTest",
             "dev.erst.gridgrind.excel.validation.ExcelDataValidationComparisonOperatorPoiBridgeTest",
         ),
     )

@@ -31,16 +31,44 @@ final class CliDoctorRequestAnalyzer {
       RequestAnalysis analysis,
       InputStream stdin)
       throws IOException {
+    return diagnose(
+        requestPath,
+        executionRootPath,
+        tempRootPath,
+        Optional.empty(),
+        Optional.empty(),
+        analysis,
+        stdin);
+  }
+
+  RequestDoctorReport diagnose(
+      Optional<Path> requestPath,
+      Optional<Path> executionRootPath,
+      Optional<Path> tempRootPath,
+      Optional<Path> grantPath,
+      Optional<Path> secretsProviderPath,
+      RequestAnalysis analysis,
+      InputStream stdin)
+      throws IOException {
     Objects.requireNonNull(requestPath, "requestPath must not be null");
     Objects.requireNonNull(executionRootPath, "executionRootPath must not be null");
     Objects.requireNonNull(tempRootPath, "tempRootPath must not be null");
+    Objects.requireNonNull(grantPath, "grantPath must not be null");
+    Objects.requireNonNull(secretsProviderPath, "secretsProviderPath must not be null");
     Objects.requireNonNull(analysis, "analysis must not be null");
     Objects.requireNonNull(stdin, "stdin must not be null");
 
     ProblemContextRequestSurfaces.RequestInput requestInput = requestInput(requestPath);
     RequestDoctorReport baseReport =
         runBaseDoctorReport(
-            requestPath, executionRootPath, tempRootPath, stdin, analysis, requestInput);
+            requestPath,
+            executionRootPath,
+            tempRootPath,
+            grantPath,
+            secretsProviderPath,
+            stdin,
+            analysis,
+            requestInput);
     if (!analysis.isBindable()) {
       return baseReport;
     }
@@ -65,6 +93,8 @@ final class CliDoctorRequestAnalyzer {
       Optional<Path> requestPath,
       Optional<Path> executionRootPath,
       Optional<Path> tempRootPath,
+      Optional<Path> grantPath,
+      Optional<Path> secretsProviderPath,
       InputStream stdin,
       RequestAnalysis analysis,
       ProblemContextRequestSurfaces.RequestInput requestInput)
@@ -72,15 +102,24 @@ final class CliDoctorRequestAnalyzer {
     if (!analysis.isBindable()) {
       return requestDoctor.diagnose(analysis, requestInput);
     }
-    WorkbookPlan request = analysis.requireCompletePlan();
-    if (requestPath.isPresent() || executionRootPath.isPresent()) {
-      try (CliExecutionBindingsFactory.ManagedRequestInputs bindings =
-          CliExecutionBindingsFactory.create(
-              requestPath, executionRootPath, tempRootPath, request, stdin)) {
-        return requestDoctor.diagnose(analysis, requestInput, bindings.inputs());
-      }
+    if (grantPath.isEmpty()) {
+      return requestDoctor.diagnose(analysis, requestInput);
     }
-    return requestDoctor.diagnose(analysis, requestInput);
+    WorkbookPlan request = analysis.requireCompletePlan();
+    if (requestPath.or(() -> executionRootPath).isEmpty()) {
+      return requestDoctor.diagnose(analysis, requestInput);
+    }
+    try (CliExecutionBindingsFactory.ManagedRequestInputs bindings =
+        CliExecutionBindingsFactory.create(
+            requestPath,
+            executionRootPath,
+            tempRootPath,
+            grantPath,
+            secretsProviderPath,
+            request,
+            stdin)) {
+      return requestDoctor.diagnose(analysis, requestInput, bindings.inputs());
+    }
   }
 
   private static ProblemContextRequestSurfaces.RequestInput requestInput(

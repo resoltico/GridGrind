@@ -45,7 +45,7 @@ class WorkbookResultEdgeCoverageTest {
                 IllegalArgumentException.class,
                 () ->
                     new WorkbookResultPersistence.PersistenceOutcome.SavedAs(
-                        "budget.xlsx", new WorkbookResultPersistence.WriteResult.Written(" ")))
+                        "budget.xlsx", published(" ")))
             .getMessage());
     assertEquals(
         "sourcePath must not be blank",
@@ -53,8 +53,7 @@ class WorkbookResultEdgeCoverageTest {
                 IllegalArgumentException.class,
                 () ->
                     new WorkbookResultPersistence.PersistenceOutcome.Overwritten(
-                        Optional.of(" "),
-                        new WorkbookResultPersistence.WriteResult.Written("/tmp/out.xlsx")))
+                        Optional.of(" "), published("/tmp/out.xlsx")))
             .getMessage());
     assertEquals(
         "sheetCount must not be negative",
@@ -169,6 +168,17 @@ class WorkbookResultEdgeCoverageTest {
                         -1,
                         -1))
             .getMessage());
+  }
+
+  private static WorkbookResultPersistence.PublicationOutcome.Published published(
+      String executionPath) {
+    return new WorkbookResultPersistence.PublicationOutcome.Published(
+        executionPath,
+        "0".repeat(64),
+        0,
+        new WorkbookResultPersistence.PublicationOutcome.StagedArtifactVerification(),
+        new WorkbookResultPersistence.PublicationOutcome.DurabilityEvidence
+            .FileSyncedDirectoryUnestablished());
   }
 
   @Test

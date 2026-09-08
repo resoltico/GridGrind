@@ -21,7 +21,7 @@ class RequestAnalysisTest {
         GridGrindJson.analyzeRequest(
             """
             {
-              "protocolVersion": "V2",
+              "protocolVersion": "V3",
               "planId": 7,
               "source": { "type": "NEW" },
               "persistence": null,
@@ -56,7 +56,7 @@ class RequestAnalysisTest {
     String request =
         """
         {
-          "protocolVersion": "V2",
+          "protocolVersion": "V3",
           "source": { "type": "EXISTING", "path": "input.xls" },
           "persistence": { "type": "SAVE_AS", "path": "output.txt", "ifExists": "REJECT" },
           "steps": []
@@ -94,7 +94,7 @@ class RequestAnalysisTest {
         GridGrindJson.analyzeRequest(
             """
             {
-              "protocolVersion": "V2",
+              "protocolVersion": "V3",
               "source" { "type": "NEW" },
               "persistence": { "type": "NONE" },
               "steps": []
@@ -125,7 +125,7 @@ class RequestAnalysisTest {
         GridGrindJson.analyzeRequest(
             """
             {
-              "protocolVersion": "V2",
+              "protocolVersion": "V3",
               "source": { "type": "NEW" },
               "persistence": { "type": "NONE" },
               "steps": []
@@ -170,7 +170,7 @@ class RequestAnalysisTest {
   void anchorsDuplicateKeysAtTheirSecondPropertyTokenInUtf8Bytes() {
     String request =
         """
-        {"protocolVersion":"V2","source":{"type":"NEW"},"persistence":{"type":"NONE"},"steps":[],"planId":"€","planId":"duplicate"}
+        {"protocolVersion":"V3","source":{"type":"NEW"},"persistence":{"type":"NONE"},"steps":[],"planId":"€","planId":"duplicate"}
         """;
     byte[] bytes = request.getBytes(StandardCharsets.UTF_8);
 
@@ -193,7 +193,7 @@ class RequestAnalysisTest {
   void distinguishesEveryDuplicateOccurrenceOfTheSameProperty() {
     String request =
         """
-        {"protocolVersion":"V2","source":{"type":"NEW"},"persistence":{"type":"NONE"},"steps":[],"planId":"one","planId":"two","planId":"three"}
+        {"protocolVersion":"V3","source":{"type":"NEW"},"persistence":{"type":"NONE"},"steps":[],"planId":"one","planId":"two","planId":"three"}
         """;
     byte[] bytes = request.getBytes(StandardCharsets.UTF_8);
 
@@ -216,7 +216,7 @@ class RequestAnalysisTest {
     String request =
         """
         {
-          "protocolVersion": "V2",
+          "protocolVersion": "V3",
           "protocolVersion": null,
           "planId": "valid",
           "planId": 7,
@@ -269,7 +269,7 @@ class RequestAnalysisTest {
     String request =
         """
         {
-          "protocolVersion": "V2",
+          "protocolVersion": "V3",
           "source": { "type": "NEW" },
           "source": null,
           "persistence": { "type": "NONE" },
@@ -313,8 +313,8 @@ class RequestAnalysisTest {
         GridGrindJson.analyzeRequest(
             """
             {
-              "protocolVersion": "V2",
-              "protocolVersion": "V2",
+              "protocolVersion": "V3",
+              "protocolVersion": "V3",
               "planId": "first",
               "planId": "second",
               "source": { "type": "NEW" },
@@ -349,7 +349,7 @@ class RequestAnalysisTest {
         GridGrindJson.analyzeRequest(
             """
             {
-              "protocolVersion": "V2",
+              "protocolVersion": "V3",
               "source": { "type": "NEW" },
               "persistence": { "type": "NONE" },
               "steps": [
@@ -399,7 +399,7 @@ class RequestAnalysisTest {
                 GridGrindJson.analyzeRequest(
                     """
                     {
-                      "protocolVersion": "V2",
+                      "protocolVersion": "V3",
                       "source": { "type": "NEW" },
                       "persistence": { "type": "NONE" },
                       "steps": [}
@@ -419,7 +419,7 @@ class RequestAnalysisTest {
     String request =
         """
         {
-          "protocolVersion": "V2",
+          "protocolVersion": "V3",
           "source": { "type": "NEW" },<non-json-whitespace>
           "persistence": { "type": "NONE" },
           "steps": []
@@ -440,7 +440,7 @@ class RequestAnalysisTest {
         GridGrindJson.analyzeRequest(
             """
             {
-              "protocolVersion": "V2",
+              "protocolVersion": "V3",
               "source": { "type": "NEW" },
               "persistence": { "type": "NONE" },
               "steps": null
@@ -461,7 +461,7 @@ class RequestAnalysisTest {
         requestOffset(
             """
             {
-              "protocolVersion": "V2",
+              "protocolVersion": "V3",
               "source": { "type": "NEW" },
               "persistence": { "type": "NONE" },
               "steps": null
@@ -512,7 +512,7 @@ class RequestAnalysisTest {
         GridGrindJson.analyzeRequest(
             """
             {
-              "protocolVersion": "V2",
+              "protocolVersion": "V3",
               "source": {},
               "persistence": { "type": "NONE" },
               "steps": []
@@ -563,7 +563,7 @@ class RequestAnalysisTest {
         GridGrindJson.analyzeRequest(
             """
             {
-              "protocolVersion": "V2",
+              "protocolVersion": "V3",
               "source": { "type": "NEW", "unexpected": true },
               "persistence": { "type": "NOT_A_PERSISTENCE_MODE" },
               "steps": [
@@ -603,7 +603,7 @@ class RequestAnalysisTest {
         GridGrindJson.analyzeRequest(
             """
             {
-              "protocolVersion": "V2",
+              "protocolVersion": "V3",
               "source": {
                 "type": null,
                 "type": "EXISTING",
@@ -637,7 +637,7 @@ class RequestAnalysisTest {
         GridGrindJson.analyzeRequest(
             """
             {
-              "protocolVersion": "V2",
+              "protocolVersion": "V3",
               "source": { "type": null, "notAllowed": true },
               "persistence": { "type": "NONE" },
               "steps": []
@@ -662,7 +662,7 @@ class RequestAnalysisTest {
         GridGrindJson.analyzeRequest(
             """
             {
-              "protocolVersion": "V2",
+              "protocolVersion": "V3",
               "source": { "type": "NEW" },
               "persistence": {
                 "type": "OVERWRITE",
@@ -697,7 +697,7 @@ class RequestAnalysisTest {
     String missingZoom =
         """
         {
-          "protocolVersion": "V2",
+          "protocolVersion": "V3",
           "source": { "type": "NEW" },
           "persistence": { "type": "NONE" },
           "steps": [
@@ -729,7 +729,7 @@ class RequestAnalysisTest {
     String request =
         """
         {
-          "protocolVersion": "V2",
+          "protocolVersion": "V3",
           "source": { "type": "NEW" },
           "persistence": { "type": "NONE" },
           "steps": [

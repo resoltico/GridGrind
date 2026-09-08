@@ -1,8 +1,7 @@
 ---
-afad: "4.0"
-version: "0.75.0"
+afad: "5.0.1"
 domain: INDEX
-updated: "2026-08-28"
+updated: "2026-09-09"
 route:
   keywords: [gridgrind, index, docs, documentation, reference, map]
   questions: ["where is the gridgrind documentation index", "what docs does gridgrind have", "how is the gridgrind documentation organized"]
@@ -29,9 +28,9 @@ Complete map of every file in `docs/`. Files are grouped by audience and topic.
 
 | File | What it covers |
 |:-----|:---------------|
-| [REQUEST_AND_EXECUTION_REFERENCE.md](./REQUEST_AND_EXECUTION_REFERENCE.md) | Request envelope fields (`source`, `persistence`, `execution`, `formulaEnvironment`), source-backed inputs, doctor requests, coordinate systems, cell value shapes, response journal |
-| [LIMITATIONS.md](./LIMITATIONS.md) | Hard ceilings and mode restrictions (LIM-001 through LIM-037) |
-| [CONFORMANCE.md](./CONFORMANCE.md) | Evidence-backed determinism, filesystem-safety, and environment-sensitive guarantee boundaries |
+| [REQUEST_AND_EXECUTION_REFERENCE.md](./REQUEST_AND_EXECUTION_REFERENCE.md) | V3 request and result contracts, host grants, typed secrets, acceptance, evidence, persistence, source-backed inputs, doctoring, and execution modes |
+| [LIMITATIONS.md](./LIMITATIONS.md) | Hard ceilings and mode restrictions (LIM-001 through LIM-040) |
+| [CONFORMANCE.md](./CONFORMANCE.md) | Evidence-backed V3 authority, publication, determinism, filesystem-safety, and environment-sensitive guarantee boundaries |
 | [ERRORS.md](./ERRORS.md) | Problem model, error codes, and recovery guidance |
 
 ---
@@ -78,7 +77,7 @@ Two-tier structure: landing pages give the overview; detail pages own the full f
 
 | File | What it covers |
 |:-----|:---------------|
-| [JAVA_AUTHORING.md](./JAVA_AUTHORING.md) | Fluent Java plan building, selector helpers, source-backed inputs, JSON emission, and optional explicit executor handoff |
+| [JAVA_AUTHORING.md](./JAVA_AUTHORING.md) | Fluent Java plan building, selector helpers, source-backed inputs, JSON emission, and explicit V3 engine execution with host grants |
 
 ---
 
@@ -86,7 +85,7 @@ Two-tier structure: landing pages give the overview; detail pages own the full f
 
 | File | What it covers |
 |:-----|:---------------|
-| [DEVELOPER.md](./DEVELOPER.md) | Architecture, module map, build commands, GitHub workflows, quality gates, JaCoCo |
+| [DEVELOPER.md](./DEVELOPER.md) | Architecture, module map, build commands, GitHub workflows, ArchUnit, JaCoCo, PIT, and quality gates |
 | [DEVELOPER_GRADLE.md](./DEVELOPER_GRADLE.md) | Gradle 9 project structure, task catalog, dependency rules |
 | [DEVELOPER_JAVA.md](./DEVELOPER_JAVA.md) | Java 26 conventions, sealed types, records, Jackson 3.x usage |
 | [DEVELOPER_DOCKER.md](./DEVELOPER_DOCKER.md) | Docker image build, run, and testing |

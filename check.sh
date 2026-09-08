@@ -383,7 +383,7 @@ stage_progress_marker() {
 stall_threshold_for_stage() {
     local stage_id=$1
     case "${stage_id}" in
-        quality-gates|jazzer-check|cli-shadowjar)
+        quality-gates|jazzer-check|cli-shadowjar|docker-smoke)
             printf '%s' "${gradle_stall_threshold_seconds}"
             ;;
         *)

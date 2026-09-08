@@ -1,6 +1,5 @@
 ---
 afad: "5.0.1"
-version: "0.75.0"
 domain: DEPENDENCY_AUTOMATION_POLICY
 updated: "2026-08-28"
 route:

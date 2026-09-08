@@ -1,6 +1,5 @@
 ---
 afad: "4.0"
-version: "0.75.0"
 domain: LIMITATIONS
 updated: "2026-08-30"
 route:
@@ -848,7 +847,7 @@ All other reads and mutations continue to use the normal full-XSSF in-memory exe
 | `.xls`, `.xlsm`, `.xlsb` | Not supported. See LIM-002. |
 | Streaming read/write | Supported only through `execution.mode`: `EVENT_READ` summary reads (`LIM-019`) and `STREAMING_WRITE` append-oriented `NEW` workbook authoring (`LIM-020`). |
 | Request JSON size | Capped at `16 MiB`; large authored values belong in `UTF8_FILE`, `FILE`, or `STANDARD_INPUT` sources (`LIM-021`). |
-| OOXML encryption and signing | Supported for `.xlsx` package security on the full-XSSF path. `source.security.password` is required for encrypted sources, `GET_PACKAGE_SECURITY` is unavailable in `EVENT_READ`, every existing-source write declares both final `persistence.security` axes (`signature: NONE` deliberately removes signatures; `SIGN` replaces them), and write-side OOXML encryption is the AGILE-only strong contract from LIM-038. |
+| OOXML encryption and signing | Supported for `.xlsx` package security on the full-XSSF path. `source.security.passwordRef` is required for encrypted sources, `GET_PACKAGE_SECURITY` is unavailable in `EVENT_READ`, every existing-source write declares both final `persistence.security` axes (`signature: NONE` deliberately removes signatures; `SIGN` replaces them), and write-side OOXML encryption is the AGILE-only strong contract from LIM-038. |
 
 Apache POI feature coverage: https://poi.apache.org/components/spreadsheet/
 

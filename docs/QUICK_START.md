@@ -1,6 +1,5 @@
 ---
 afad: "4.0"
-version: "0.75.0"
 domain: QUICK_START
 updated: "2026-08-31"
 route:
@@ -105,11 +104,16 @@ Generate the built-in request once, then run it from the current directory:
 docker run --pull=always --rm ghcr.io/resoltico/gridgrind:latest --print-recipe --lookup BUDGET \
   --response budget-request.json
 
+docker run --pull=always --rm ghcr.io/resoltico/gridgrind:latest --print-grant-template \
+  --response grant.json
+# Edit grant.json to authorize budget-request.json's exact resources, operations, and output.
+
 docker run --pull=always --rm -i \
   --user "$(id -u):$(id -g)" \
   -v "$(pwd)":/work \
   ghcr.io/resoltico/gridgrind:latest \
   --request budget-request.json \
+  --grant grant.json \
   --response response.json
 ```
 
@@ -123,11 +127,15 @@ docker buildx build --load -t gridgrind-local .
 docker run --rm gridgrind-local --print-recipe --lookup BUDGET \
   --response budget-request.json
 
+docker run --rm gridgrind-local --print-grant-template --response grant.json
+# Edit grant.json to authorize budget-request.json's exact resources, operations, and output.
+
 docker run --rm -i \
   --user "$(id -u):$(id -g)" \
   -v "$(pwd)":/work \
   gridgrind-local \
   --request budget-request.json \
+  --grant grant.json \
   --response response.json
 ```
 
@@ -138,8 +146,12 @@ Replace `gridgrind.jar` with the downloaded JAR filename if it differs on your m
 ```bash
 java -jar gridgrind.jar --print-recipe --lookup BUDGET --response budget-request.json
 
+java -jar gridgrind.jar --print-grant-template --response grant.json
+# Edit grant.json to authorize budget-request.json's exact resources, operations, and output.
+
 java -jar gridgrind.jar \
   --request budget-request.json \
+  --grant grant.json \
   --response response.json
 ```
 

@@ -8,6 +8,8 @@ module dev.erst.gridgrind.cli {
   exports dev.erst.gridgrind.cli;
   exports dev.erst.gridgrind.cli.discovery;
 
+  opens dev.erst.gridgrind.cli to
+      tools.jackson.databind;
   opens dev.erst.gridgrind.cli.discovery to
       tools.jackson.databind;
 }

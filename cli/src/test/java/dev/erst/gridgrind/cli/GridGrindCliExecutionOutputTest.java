@@ -10,6 +10,8 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
+import java.util.List;
 import org.junit.jupiter.api.Test;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.json.JsonMapper;
@@ -25,10 +27,11 @@ class GridGrindCliExecutionOutputTest extends GridGrindCliTestSupport {
             (request, bindings, sink) -> {
               throw new UnsupportedOperationException("boom");
             });
+    Path grantPath = CliGrantFixtureSupport.noPublication(List.of());
 
     int exitCode =
         cli.run(
-            stdinExecutionArguments(),
+            stdinExecutionArguments("--grant", grantPath.toString()),
             new ByteArrayInputStream(
                 requestJson("{ \"type\": \"NEW\" }", "{ \"type\": \"NONE\" }", "[]")
                     .getBytes(StandardCharsets.UTF_8)),
@@ -49,11 +52,14 @@ class GridGrindCliExecutionOutputTest extends GridGrindCliTestSupport {
   void executedAssertionFailuresStayOnStdoutWhenNoResponsePathIsConfigured() throws IOException {
     ByteArrayOutputStream stdout = new ByteArrayOutputStream();
     ByteArrayOutputStream stderr = new ByteArrayOutputStream();
+    Path grantPath =
+        CliGrantFixtureSupport.noPublication(
+            List.of("ENSURE_SHEET", "SET_CELL", "EXPECT_CELL_VALUE"));
 
     int exitCode =
         new GridGrindCli()
             .run(
-                stdinExecutionArguments(),
+                stdinExecutionArguments("--grant", grantPath.toString()),
                 new ByteArrayInputStream(
                     assertionMismatchRequestJson("actual", "expected")
                         .getBytes(StandardCharsets.UTF_8)),
@@ -79,11 +85,12 @@ class GridGrindCliExecutionOutputTest extends GridGrindCliTestSupport {
   void classifiesInvalidFormulasAsFormulaErrors() throws IOException {
     ByteArrayOutputStream stdout = new ByteArrayOutputStream();
     ByteArrayOutputStream stderr = new ByteArrayOutputStream();
+    Path grantPath = CliGrantFixtureSupport.noPublication(List.of("ENSURE_SHEET", "SET_CELL"));
 
     int exitCode =
         new GridGrindCli()
             .run(
-                stdinExecutionArguments(),
+                stdinExecutionArguments("--grant", grantPath.toString()),
                 new ByteArrayInputStream(
                     formulaRequestJson("SUM(", evaluateAllExecutionJson())
                         .getBytes(StandardCharsets.UTF_8)),
@@ -105,11 +112,12 @@ class GridGrindCliExecutionOutputTest extends GridGrindCliTestSupport {
   void classifiesUnsupportedAuthoredFormulaConstructsSeparately() throws IOException {
     ByteArrayOutputStream stdout = new ByteArrayOutputStream();
     ByteArrayOutputStream stderr = new ByteArrayOutputStream();
+    Path grantPath = CliGrantFixtureSupport.noPublication(List.of("ENSURE_SHEET", "SET_CELL"));
 
     int exitCode =
         new GridGrindCli()
             .run(
-                stdinExecutionArguments(),
+                stdinExecutionArguments("--grant", grantPath.toString()),
                 new ByteArrayInputStream(
                     formulaRequestJson("LAMBDA(x,x+1)(2)", defaultExecutionJson())
                         .getBytes(StandardCharsets.UTF_8)),

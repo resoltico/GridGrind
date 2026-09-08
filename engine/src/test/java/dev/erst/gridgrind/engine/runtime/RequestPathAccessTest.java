@@ -8,6 +8,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import dev.erst.gridgrind.contract.dto.GridGrindWarningCode;
 import dev.erst.gridgrind.contract.dto.RequestWarningLocation;
+import dev.erst.gridgrind.engine.api.GridGrindExecutionGrant;
 import dev.erst.gridgrind.excel.WorkbookArtifactWriteDisposition;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -28,6 +29,13 @@ class RequestPathAccessTest {
           access.materializeRead(source.toString(), "cell text", "gridgrind-test-", ".txt");
 
       assertArrayEquals(new byte[] {7, 8, 9}, Files.readAllBytes(materialized));
+      RequestPathAccess.MaterializedReadIdentity identity =
+          access.materializedReadIdentities().getFirst();
+      assertEquals("cell text", identity.role());
+      assertEquals(source.toString(), identity.path());
+      assertEquals(3, identity.byteSize());
+      assertEquals(
+          "66a6757151f8ee55db127716c7e3dce0be8074b64e20eda542e5c1e46ca9c41e", identity.sha256());
       assertEquals(
           GridGrindWarningCode.NON_PORTABLE_ABSOLUTE_PATH, access.warnings().getFirst().code());
       RequestWarningLocation.RequestPath location =
@@ -68,14 +76,40 @@ class RequestPathAccessTest {
   }
 
   @Test
-  void commitsOnlyThroughThePreparedParentAndRejectsObservedTopologyReplacement() throws Exception {
+  void rejectsContainedReadsThatAreOutsideTheHostGrant() throws Exception {
+    Files.write(executionRoot.resolve("source.txt"), new byte[] {1});
+    GridGrindExecutionGrant grant =
+        new GridGrindExecutionGrant.Bounded(
+            List.of(),
+            List.of(),
+            new GridGrindExecutionGrant.WorkbookTargetAuthority.WorkbookWide(),
+            new GridGrindExecutionGrant.PublicationAuthority.None(),
+            List.of(),
+            dev.erst.gridgrind.engine.api.GridGrindHostAcceptancePolicy.minimum());
+
+    try (RequestPathAccess access =
+        new RequestPathAccess(
+            executionRoot, (prefix, suffix) -> Files.createTempFile(prefix, suffix), grant)) {
+      assertThrows(
+          ExecutionAuthorityDeniedException.class,
+          () -> access.materializeRead("source.txt", "source", "gridgrind-test-", ".txt"));
+    }
+  }
+
+  @Test
+  void publishesOnlyThroughThePreparedParentAndRejectsObservedTopologyReplacement()
+      throws Exception {
     Path outputDirectory = Files.createDirectory(executionRoot.resolve("output"));
     Path staged = Files.write(executionRoot.resolve("staged.xlsx"), new byte[] {3, 2, 1});
 
     try (RequestPathAccess access = requestPathAccess()) {
       access.prepareOutput(
           "output/result.xlsx", "persistence", WorkbookArtifactWriteDisposition.CREATE_NEW);
-      access.commitOutput(staged, WorkbookArtifactWriteDisposition.CREATE_NEW);
+      access.publishOutput(
+          staged,
+          WorkbookArtifactWriteDisposition.CREATE_NEW,
+          new dev.erst.gridgrind.contract.dto.WorkbookResultPersistence.PublicationOutcome
+              .StagedArtifactVerification());
       assertArrayEquals(
           new byte[] {3, 2, 1}, Files.readAllBytes(outputDirectory.resolve("result.xlsx")));
     }
@@ -87,8 +121,13 @@ class RequestPathAccessTest {
       Files.createDirectory(outputDirectory);
 
       assertThrows(
-          UnsafePathAccessException.class,
-          () -> access.commitOutput(staged, WorkbookArtifactWriteDisposition.CREATE_NEW));
+          WorkbookPublicationException.class,
+          () ->
+              access.publishOutput(
+                  staged,
+                  WorkbookArtifactWriteDisposition.CREATE_NEW,
+                  new dev.erst.gridgrind.contract.dto.WorkbookResultPersistence.PublicationOutcome
+                      .StagedArtifactVerification()));
     }
   }
 
@@ -102,7 +141,12 @@ class RequestPathAccessTest {
       assertThrows(IllegalStateException.class, access::outputPath);
       assertThrows(
           IllegalStateException.class,
-          () -> access.commitOutput(existing, WorkbookArtifactWriteDisposition.CREATE_NEW));
+          () ->
+              access.publishOutput(
+                  existing,
+                  WorkbookArtifactWriteDisposition.CREATE_NEW,
+                  new dev.erst.gridgrind.contract.dto.WorkbookResultPersistence.PublicationOutcome
+                      .StagedArtifactVerification()));
       assertThrows(
           OutputPathAlreadyExistsException.class,
           () ->
@@ -112,6 +156,7 @@ class RequestPathAccessTest {
                   WorkbookArtifactWriteDisposition.CREATE_NEW));
       access.prepareOutput(
           "output/replaced.xlsx", "persistence", WorkbookArtifactWriteDisposition.REPLACE_EXISTING);
+      assertEquals(executionRoot.resolve("output/replaced.xlsx"), access.outputPath());
       access.prepareOutput(
           "output/replaced.xlsx", "persistence", WorkbookArtifactWriteDisposition.REPLACE_EXISTING);
       assertThrows(
@@ -125,7 +170,7 @@ class RequestPathAccessTest {
   }
 
   @Test
-  void keepsAnAfterPreflightOutputRaceClosedAndClassifiesDirectOutputConflicts() throws Exception {
+  void keepsAnAfterPreflightOutputRaceClosed() throws Exception {
     Path outputDirectory = Files.createDirectory(executionRoot.resolve("output"));
     Path staged = Files.write(executionRoot.resolve("staged.xlsx"), new byte[] {3, 2, 1});
 
@@ -135,28 +180,14 @@ class RequestPathAccessTest {
       Files.write(outputDirectory.resolve("race.xlsx"), new byte[] {9});
 
       assertThrows(
-          UnsafePathAccessException.class,
-          () -> access.commitOutput(staged, WorkbookArtifactWriteDisposition.CREATE_NEW));
+          WorkbookPublicationException.class,
+          () ->
+              access.publishOutput(
+                  staged,
+                  WorkbookArtifactWriteDisposition.CREATE_NEW,
+                  new dev.erst.gridgrind.contract.dto.WorkbookResultPersistence.PublicationOutcome
+                      .StagedArtifactVerification()));
     }
-    assertThrows(
-        OutputPathAlreadyExistsException.class,
-        () ->
-            RequestPathAccess.commitPreparedOutput(
-                "output/race.xlsx",
-                () -> {
-                  throw new java.nio.file.FileAlreadyExistsException("race.xlsx");
-                }));
-    java.io.IOException ioFailure = new java.io.IOException("disk full");
-    assertEquals(
-        ioFailure,
-        assertThrows(
-            java.io.IOException.class,
-            () ->
-                RequestPathAccess.commitPreparedOutput(
-                    "output/race.xlsx",
-                    () -> {
-                      throw ioFailure;
-                    })));
   }
 
   @Test
@@ -174,7 +205,9 @@ class RequestPathAccessTest {
         UnsafePathAccessException.class,
         () ->
             new RequestPathAccess(
-                    rootLink, (prefix, suffix) -> Files.createTempFile(prefix, suffix))
+                    rootLink,
+                    (prefix, suffix) -> Files.createTempFile(prefix, suffix),
+                    ExecutionGrantTestSupport.noPublication())
                 .materializeRead("file.txt", "cell text", "gridgrind-test-", ".txt"));
   }
 
@@ -207,7 +240,11 @@ class RequestPathAccessTest {
     Files.write(invalidMaterialization.resolve("child"), new byte[] {2});
 
     try (RequestPathAccess access =
-        new RequestPathAccess(executionRoot, (prefix, suffix) -> invalidMaterialization)) {
+        new RequestPathAccess(
+            executionRoot,
+            (prefix, suffix) -> invalidMaterialization,
+            ExecutionGrantTestSupport.noPublication(
+                List.of(), List.of(executionRoot.resolve("source.txt"))))) {
       assertThrows(
           java.nio.file.FileSystemException.class,
           () -> access.materializeRead("source.txt", "cell text", "gridgrind-test-", ".txt"));
@@ -216,9 +253,68 @@ class RequestPathAccessTest {
     assertTrue(Files.exists(invalidMaterialization));
   }
 
+  @Test
+  void treatsAnUnavailableMandatorySha256ProviderAsAnInternalRuntimeInvariantFailure()
+      throws Exception {
+    Path source = Files.write(executionRoot.resolve("source.txt"), new byte[] {1});
+
+    IllegalStateException failure =
+        assertThrows(
+            IllegalStateException.class,
+            () ->
+                RequestPathDigest.sha256(
+                    source,
+                    algorithm -> {
+                      throw new java.security.NoSuchAlgorithmException(algorithm);
+                    }));
+
+    assertEquals("SHA-256 must be available in the Java runtime", failure.getMessage());
+  }
+
+  @Test
+  void reusesPrivateMaterializationsAndRejectsDirectoryRolesAndUnknownLookupPaths()
+      throws Exception {
+    Path source = Files.write(executionRoot.resolve("source.txt"), new byte[] {1, 2});
+    Files.createDirectory(executionRoot.resolve("source-directory"));
+    Files.createDirectory(executionRoot.resolve("output-directory"));
+
+    try (RequestPathAccess access = requestPathAccess()) {
+      Path first = access.materializeRead("source.txt", "cell text", "gridgrind-test-", ".txt");
+      Path second = access.materializeRead("source.txt", "cell text", "gridgrind-test-", ".txt");
+      assertEquals(first, second);
+      assertThrows(IllegalStateException.class, () -> access.materializedReadPath("missing.txt"));
+      assertThrows(
+          SourcePathIsDirectoryException.class,
+          () -> access.materializeRead("source-directory", "source", "gridgrind-test-", ".xlsx"));
+      assertThrows(
+          OutputPathIsDirectoryException.class,
+          () ->
+              access.prepareOutput(
+                  "output-directory", "persistence", WorkbookArtifactWriteDisposition.CREATE_NEW));
+    }
+    assertTrue(Files.exists(source));
+  }
+
+  @Test
+  void closesSuccessfulPrivateMaterializationsInReverseOwnershipOrder() throws Exception {
+    Files.write(executionRoot.resolve("source.txt"), new byte[] {1, 2});
+    try (RequestPathAccess access = requestPathAccess()) {
+      Path materialized =
+          access.materializeRead("source.txt", "cell text", "gridgrind-test-", ".txt");
+
+      assertTrue(Files.isRegularFile(materialized));
+      access.close();
+
+      assertTrue(Files.notExists(materialized));
+    }
+  }
+
   private RequestPathAccess requestPathAccess() throws java.io.IOException {
     Path tempRoot = Files.createDirectories(executionRoot.resolve("private-temp"));
     return new RequestPathAccess(
-        executionRoot, (prefix, suffix) -> Files.createTempFile(tempRoot, prefix, suffix));
+        executionRoot,
+        (prefix, suffix) -> Files.createTempFile(tempRoot, prefix, suffix),
+        ExecutionGrantTestSupport.noPublication(
+            List.of(), List.of(executionRoot.resolve("source.txt"))));
   }
 }

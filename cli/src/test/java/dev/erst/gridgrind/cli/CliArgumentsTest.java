@@ -11,6 +11,32 @@ import org.junit.jupiter.api.Test;
 /** Focused parser tests for CLI command exclusivity and argument validation. */
 class CliArgumentsTest {
   @Test
+  void printGrantTemplateParsesIntoDedicatedCommand() {
+    CliGrantTemplateCommand command =
+        assertInstanceOf(
+            CliGrantTemplateCommand.class,
+            CliArguments.parse(new String[] {"--print-grant-template"}));
+
+    assertTrue(command.responsePath().isEmpty());
+  }
+
+  @Test
+  void executionParsesAnExplicitHostGrantAndKeepsItsOmissionOutOfThePlan() {
+    CliCommand.Execute command =
+        assertInstanceOf(
+            CliCommand.Execute.class,
+            CliArguments.parse(
+                new String[] {"--request", "request.json", "--grant", "host-grant.json"}));
+
+    assertEquals(java.nio.file.Path.of("host-grant.json"), command.grantPath().orElseThrow());
+    CliCommand.Execute missingGrant =
+        assertInstanceOf(
+            CliCommand.Execute.class,
+            CliArguments.parse(new String[] {"--request", "request.json"}));
+    assertTrue(missingGrant.grantPath().isEmpty());
+  }
+
+  @Test
   void lookupAndDiscoveryDispatchUtilitiesAreNotPubliclyConstructible()
       throws ReflectiveOperationException {
     assertPrivateConstructor(CliLookupImmediateCommandParser.class);
@@ -473,11 +499,19 @@ class CliArgumentsTest {
         assertInstanceOf(
             CliCommand.DoctorRequest.class,
             CliArguments.parse(
-                new String[] {"--doctor-request", "--response", "doctor-report.json"}));
+                new String[] {
+                  "--doctor-request",
+                  "--grant",
+                  "host-grant.json",
+                  "--response",
+                  "doctor-report.json"
+                }));
 
     assertEquals(java.util.Optional.empty(), command.requestPath());
     assertEquals(java.util.Optional.empty(), command.executionRootPath());
     assertEquals(java.util.Optional.empty(), command.tempRootPath());
+    assertEquals(
+        java.util.Optional.of(java.nio.file.Path.of("host-grant.json")), command.grantPath());
     assertEquals(
         java.util.Optional.of(java.nio.file.Path.of("doctor-report.json")), command.responsePath());
   }
@@ -494,6 +528,8 @@ class CliArgumentsTest {
                   "workspace",
                   "--temp-root",
                   "scratch",
+                  "--grant",
+                  "host-grant.json",
                   "--response",
                   "doctor-report.json"
                 }));
@@ -502,6 +538,8 @@ class CliArgumentsTest {
     assertEquals(
         java.util.Optional.of(java.nio.file.Path.of("workspace")), command.executionRootPath());
     assertEquals(java.util.Optional.of(java.nio.file.Path.of("scratch")), command.tempRootPath());
+    assertEquals(
+        java.util.Optional.of(java.nio.file.Path.of("host-grant.json")), command.grantPath());
     assertEquals(
         java.util.Optional.of(java.nio.file.Path.of("doctor-report.json")), command.responsePath());
   }
@@ -517,6 +555,8 @@ class CliArgumentsTest {
                   "workspace",
                   "--temp-root",
                   "scratch",
+                  "--grant",
+                  "host-grant.json",
                   "--response",
                   "run.json"
                 }));
@@ -525,6 +565,8 @@ class CliArgumentsTest {
     assertEquals(
         java.util.Optional.of(java.nio.file.Path.of("workspace")), command.executionRootPath());
     assertEquals(java.util.Optional.of(java.nio.file.Path.of("scratch")), command.tempRootPath());
+    assertEquals(
+        java.util.Optional.of(java.nio.file.Path.of("host-grant.json")), command.grantPath());
     assertEquals(java.util.Optional.of(java.nio.file.Path.of("run.json")), command.responsePath());
   }
 

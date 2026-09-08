@@ -188,6 +188,12 @@ Rules:
 - A plain heartbeat without domain progress is insufficient when the workflow can report
   meaningful units of completion.
 
+### 3.5 Workbook Execution Authority And Evidence
+
+GridGrind execution is admitted through the engine-owned host grant. Do not add Java, CLI, doctor, full-XSSF, streaming-write, or event-read execution paths that default to allow-all authority, reopen request-owned paths after preflight, bypass canonical operation semantics, or publish outside the engine-owned staged-artifact boundary.
+
+The current protocol is V3 only. Secret-bearing request fields remain typed references; resolved material never belongs in diagnostic, journal, progress, generated-example, or result surfaces. Host-required acceptance remains separate from plan-authored assertions. When it changes, keep the result evidence honest: structural, computational, task-specific, preservation, presentational, and publication facts have distinct typed claims, and a claim may not be stronger than its actual verification.
+
 ---
 
 ## 4. Serialization (Jackson 3.x)

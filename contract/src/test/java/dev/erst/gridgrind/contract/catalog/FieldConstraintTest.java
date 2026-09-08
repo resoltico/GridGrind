@@ -59,6 +59,60 @@ class FieldConstraintTest {
   }
 
   @Test
+  void typeEntryPreconditionConstructorAndEffectProjectionRemainInternallyConsistent() {
+    TypeEntry preconditionEntry =
+        new TypeEntry(
+            "TYPE",
+            "summary",
+            List.of(),
+            List.of(),
+            Optional.empty(),
+            List.of(),
+            List.of(new OperationPrecondition.ColumnEditsBeforeFormulaAuthoring()),
+            Optional.empty());
+
+    assertEquals(
+        List.of(new OperationPrecondition.ColumnEditsBeforeFormulaAuthoring()),
+        preconditionEntry.preconditions());
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new TypeEntry(
+                "TYPE",
+                "summary",
+                List.of(),
+                List.of(),
+                Optional.empty(),
+                List.of(),
+                List.of(),
+                List.of(OperationEffect.CELLS),
+                Optional.empty(),
+                Optional.empty()));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new TypeEntry(
+                "TYPE",
+                "summary",
+                List.of(),
+                List.of(),
+                Optional.empty(),
+                List.of(),
+                List.of(),
+                List.of(),
+                Optional.of(OperationEffectFootprint.TARGET_BOUNDED),
+                Optional.empty()));
+  }
+
+  @Test
+  void operationSemanticsRequireAtLeastOneDeclaredEffect() {
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new OperationSemantics(List.of(), OperationEffectFootprint.TARGET_BOUNDED, List.of()));
+  }
+
+  @Test
   void typeEntryNoteOnlyConstructorRetainsEmptyPreconditionsAndTemplate() {
     TypeEntry entry =
         new TypeEntry("TYPE", "summary", List.of(), List.of(), Optional.empty(), List.of());

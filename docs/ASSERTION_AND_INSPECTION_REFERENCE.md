@@ -1,6 +1,5 @@
 ---
 afad: "4.0"
-version: "0.75.0"
 domain: ASSERTION_INSPECTION_REFERENCE
 updated: "2026-05-01"
 route:

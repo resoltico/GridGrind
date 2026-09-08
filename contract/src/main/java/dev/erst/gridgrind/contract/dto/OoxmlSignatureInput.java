@@ -10,23 +10,23 @@ import java.util.Optional;
 /** OOXML package-signing settings applied during workbook persistence. */
 public record OoxmlSignatureInput(
     String pkcs12Path,
-    @ProtocolField(secret = true) String keystorePassword,
-    @ProtocolField(optional = true, secret = true) String keyPassword,
+    SecretReference keystorePasswordRef,
+    @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<SecretReference> keyPasswordRef,
     @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<String> alias,
     @ProtocolField(optional = true) ExcelOoxmlSignatureDigestAlgorithm digestAlgorithm,
     @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<String> description) {
   @JsonCreator
   static OoxmlSignatureInput create(
       @JsonProperty("pkcs12Path") String pkcs12Path,
-      @JsonProperty("keystorePassword") String keystorePassword,
-      @JsonProperty("keyPassword") String keyPassword,
+      @JsonProperty("keystorePasswordRef") SecretReference keystorePasswordRef,
+      @JsonProperty("keyPasswordRef") Optional<SecretReference> keyPasswordRef,
       @JsonProperty("alias") Optional<String> alias,
       @JsonProperty("digestAlgorithm") ExcelOoxmlSignatureDigestAlgorithm digestAlgorithm,
       @JsonProperty("description") Optional<String> description) {
     return new OoxmlSignatureInput(
         pkcs12Path,
-        keystorePassword,
-        keyPassword == null ? keystorePassword : keyPassword,
+        keystorePasswordRef,
+        keyPasswordRef == null ? Optional.empty() : keyPasswordRef,
         alias == null ? Optional.empty() : alias,
         digestAlgorithm == null ? ExcelOoxmlSignatureDigestAlgorithm.SHA256 : digestAlgorithm,
         description == null ? Optional.empty() : description);
@@ -34,8 +34,8 @@ public record OoxmlSignatureInput(
 
   public OoxmlSignatureInput {
     pkcs12Path = normalizeRequired(pkcs12Path, "pkcs12Path");
-    keystorePassword = normalizeRequired(keystorePassword, "keystorePassword");
-    keyPassword = normalizeRequired(keyPassword, "keyPassword");
+    Objects.requireNonNull(keystorePasswordRef, "keystorePasswordRef must not be null");
+    Objects.requireNonNull(keyPasswordRef, "keyPasswordRef must not be null");
     alias = normalizeOptional(alias, "alias");
     Objects.requireNonNull(digestAlgorithm, "digestAlgorithm must not be null");
     description = normalizeOptional(description, "description");
@@ -44,12 +44,12 @@ public record OoxmlSignatureInput(
   /** Creates one signature payload whose key password matches the keystore password. */
   public static OoxmlSignatureInput sameKeyPassword(
       String pkcs12Path,
-      String keystorePassword,
+      SecretReference keystorePasswordRef,
       Optional<String> alias,
       ExcelOoxmlSignatureDigestAlgorithm digestAlgorithm,
       Optional<String> description) {
     return new OoxmlSignatureInput(
-        pkcs12Path, keystorePassword, keystorePassword, alias, digestAlgorithm, description);
+        pkcs12Path, keystorePasswordRef, Optional.empty(), alias, digestAlgorithm, description);
   }
 
   private static String normalizeRequired(String value, String fieldName) {

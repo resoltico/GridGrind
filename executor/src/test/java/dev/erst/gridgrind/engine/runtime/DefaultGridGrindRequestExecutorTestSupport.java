@@ -213,19 +213,22 @@ class DefaultGridGrindRequestExecutorTestSupport
   }
 
   static String writtenExecutionPath(WorkbookResultPersistence.PersistenceOutcome.SavedAs savedAs) {
-    return writtenExecutionPath(savedAs.write());
+    return writtenExecutionPath(savedAs.publication());
   }
 
   static String writtenExecutionPath(
       WorkbookResultPersistence.PersistenceOutcome.Overwritten overwritten) {
-    return writtenExecutionPath(overwritten.write());
+    return writtenExecutionPath(overwritten.publication());
   }
 
-  static String writtenExecutionPath(WorkbookResultPersistence.WriteResult write) {
-    return switch (write) {
-      case WorkbookResultPersistence.WriteResult.Written written -> written.executionPath();
-      case WorkbookResultPersistence.WriteResult.NotWritten _ ->
-          throw new AssertionError("expected written workbook");
+  static String writtenExecutionPath(WorkbookResultPersistence.PublicationOutcome publication) {
+    return switch (publication) {
+      case WorkbookResultPersistence.PublicationOutcome.Published published ->
+          published.executionPath();
+      case WorkbookResultPersistence.PublicationOutcome.NotAttempted _,
+          WorkbookResultPersistence.PublicationOutcome.NotPublished _,
+          WorkbookResultPersistence.PublicationOutcome.Uncertain _ ->
+          throw new AssertionError("expected published workbook");
     };
   }
 

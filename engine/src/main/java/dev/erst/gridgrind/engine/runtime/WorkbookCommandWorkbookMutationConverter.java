@@ -9,12 +9,14 @@ import dev.erst.gridgrind.excel.WorkbookCommand;
 import dev.erst.gridgrind.excel.WorkbookLayoutCommand;
 import dev.erst.gridgrind.excel.WorkbookSheetCommand;
 import dev.erst.gridgrind.excel.WorkbookStructureCommand;
+import java.util.Optional;
 
 /** Converts workbook-, sheet-, and layout-oriented mutation families into engine commands. */
 final class WorkbookCommandWorkbookMutationConverter {
   private WorkbookCommandWorkbookMutationConverter() {}
 
-  static WorkbookCommand toCommand(Selector target, WorkbookMutationAction action) {
+  static WorkbookCommand toCommand(
+      Selector target, WorkbookMutationAction action, ExecutionInputBindings bindings) {
     return switch (action) {
       case WorkbookMutationAction.EnsureSheet _ ->
           new WorkbookSheetCommand.CreateSheet(
@@ -50,14 +52,14 @@ final class WorkbookCommandWorkbookMutationConverter {
               WorkbookCommandSelectorSupport.sheetByName(target, action).name(),
               WorkbookCommandLayoutInputConverter.toExcelSheetProtectionSettings(
                   setSheetProtection.protection()),
-              setSheetProtection.password());
+              resolveOptionalSecret(setSheetProtection.passwordRef(), bindings));
       case WorkbookMutationAction.ClearSheetProtection _ ->
           new WorkbookSheetCommand.ClearSheetProtection(
               WorkbookCommandSelectorSupport.sheetByName(target, action).name());
       case WorkbookMutationAction.SetWorkbookProtection setWorkbookProtection ->
           new WorkbookSheetCommand.SetWorkbookProtection(
               WorkbookCommandLayoutInputConverter.toExcelWorkbookProtectionSettings(
-                  setWorkbookProtection.protection()));
+                  setWorkbookProtection.protection(), bindings));
       case WorkbookMutationAction.ClearWorkbookProtection _ ->
           new WorkbookSheetCommand.ClearWorkbookProtection();
       case WorkbookMutationAction.MergeCells _ -> {
@@ -171,7 +173,7 @@ final class WorkbookCommandWorkbookMutationConverter {
       case WorkbookMutationAction.SetSheetPresentation setSheetPresentation ->
           new WorkbookLayoutCommand.SetSheetPresentation(
               WorkbookCommandSelectorSupport.sheetByName(target, action).name(),
-              WorkbookCommandLayoutInputConverter.toExcelSheetPresentation(
+              WorkbookCommandPresentationInputConverter.toExcelSheetPresentation(
                   setSheetPresentation.presentation()));
       case WorkbookMutationAction.SetPrintLayout setPrintLayout ->
           new WorkbookLayoutCommand.SetPrintLayout(
@@ -184,5 +186,21 @@ final class WorkbookCommandWorkbookMutationConverter {
           new WorkbookLayoutCommand.AutoSizeColumns(
               WorkbookCommandSelectorSupport.sheetByName(target, action).name());
     };
+  }
+
+  static WorkbookCommand toCommand(Selector target, WorkbookMutationAction action) {
+    return WorkbookCommandConverter.toCommand(target, action);
+  }
+
+  private static Optional<String> resolveOptionalSecret(
+      Optional<dev.erst.gridgrind.contract.dto.SecretReference> reference,
+      ExecutionInputBindings bindings) {
+    if (reference.isEmpty()) {
+      return Optional.empty();
+    }
+    if (bindings == null) {
+      throw new IllegalStateException("secret-bearing workbook actions require execution bindings");
+    }
+    return Optional.of(bindings.resolveSecret(reference.orElseThrow()));
   }
 }

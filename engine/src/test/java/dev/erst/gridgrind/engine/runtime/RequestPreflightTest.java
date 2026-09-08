@@ -7,13 +7,10 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import dev.erst.gridgrind.contract.action.CellMutationAction;
-import dev.erst.gridgrind.contract.action.WorkbookMutationAction;
 import dev.erst.gridgrind.contract.dto.CellGridInput;
 import dev.erst.gridgrind.contract.dto.CellInput;
 import dev.erst.gridgrind.contract.dto.ExecutionPolicyInput;
 import dev.erst.gridgrind.contract.dto.FormulaEnvironmentInput;
-import dev.erst.gridgrind.contract.dto.FormulaExternalWorkbookInput;
-import dev.erst.gridgrind.contract.dto.FormulaMissingWorkbookPolicy;
 import dev.erst.gridgrind.contract.dto.GridGrindProblemCode;
 import dev.erst.gridgrind.contract.dto.GridGrindProblemDetail;
 import dev.erst.gridgrind.contract.dto.OoxmlPersistenceSecurityInput;
@@ -25,7 +22,6 @@ import dev.erst.gridgrind.contract.dto.ProblemContextWorkbookSurfaces;
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
 import dev.erst.gridgrind.contract.json.GridGrindJson;
 import dev.erst.gridgrind.contract.selector.CellSelector;
-import dev.erst.gridgrind.contract.selector.ColumnBandSelector;
 import dev.erst.gridgrind.contract.source.TextSourceInput;
 import dev.erst.gridgrind.contract.step.MutationStep;
 import dev.erst.gridgrind.excel.InvalidSigningConfigurationException;
@@ -39,7 +35,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
-import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -60,7 +55,7 @@ class RequestPreflightTest {
                     new OoxmlPersistenceSignatureInput.Sign(
                         OoxmlSignatureInput.sameKeyPassword(
                             "missing-signing-material.p12",
-                            "password",
+                            new dev.erst.gridgrind.contract.dto.SecretReference("signing-password"),
                             Optional.empty(),
                             ExcelOoxmlSignatureDigestAlgorithm.SHA256,
                             Optional.empty())))),
@@ -71,7 +66,10 @@ class RequestPreflightTest {
     RequestPreflight.Result result =
         RequestPreflight.verify(
             request,
-            new ExecutionInputBindings(temporaryDirectory, temporaryDirectory.resolve("scratch")));
+            new ExecutionInputBindings(
+                temporaryDirectory,
+                temporaryDirectory.resolve("scratch"),
+                ExecutionGrantTestSupport.forPlan(request, temporaryDirectory)));
     try {
       assertEquals(
           List.of(GridGrindProblemCode.INVALID_SIGNING_CONFIGURATION),
@@ -119,7 +117,12 @@ class RequestPreflightTest {
     Path tempRoot = temporaryDirectory.resolve("scratch");
 
     RequestPreflight.Result result =
-        RequestPreflight.verify(request, new ExecutionInputBindings(temporaryDirectory, tempRoot));
+        RequestPreflight.verify(
+            request,
+            new ExecutionInputBindings(
+                temporaryDirectory,
+                tempRoot,
+                ExecutionGrantTestSupport.forPlan(request, temporaryDirectory)));
 
     assertFalse(result.preparedRequest().isPresent());
     assertEquals(
@@ -156,8 +159,11 @@ class RequestPreflightTest {
                     new OoxmlPersistenceSignatureInput.Sign(
                         new OoxmlSignatureInput(
                             signedWorkbook.pkcs12Path().toString(),
-                            "wrong-keystore-password",
-                            signedWorkbook.keyPassword(),
+                            new dev.erst.gridgrind.contract.dto.SecretReference(
+                                "wrong-keystore-password"),
+                            Optional.of(
+                                new dev.erst.gridgrind.contract.dto.SecretReference(
+                                    "key-password")),
                             Optional.of(signedWorkbook.alias()),
                             ExcelOoxmlSignatureDigestAlgorithm.SHA256,
                             Optional.empty())))),
@@ -165,11 +171,19 @@ class RequestPreflightTest {
             FormulaEnvironmentInput.empty(),
             List.of());
     ExecutionInputBindings rawBindings =
-        new ExecutionInputBindings(temporaryDirectory, temporaryDirectory.resolve("scratch"));
+        new ExecutionInputBindings(
+            temporaryDirectory,
+            temporaryDirectory.resolve("scratch"),
+            ExecutionGrantTestSupport.forPlan(
+                request, temporaryDirectory, signedWorkbook.pkcs12Path()),
+            reference -> "wrong-keystore-password".toCharArray());
     List<GridGrindProblemDetail.Problem> problems = new ArrayList<>();
 
     try (RequestPathAccess pathAccess =
-        new RequestPathAccess(rawBindings.workingDirectory(), rawBindings.tempFileFactory())) {
+        new RequestPathAccess(
+            rawBindings.workingDirectory(),
+            rawBindings.tempFileFactory(),
+            rawBindings.executionGrant())) {
       RequestPreflightPaths.preflightPersistenceMaterial(
           request, rawBindings.withRequestPathAccess(pathAccess), problems);
       assertEquals(
@@ -184,7 +198,7 @@ class RequestPreflightTest {
         GridGrindJson.analyzeRequest(
             """
             {
-              "protocolVersion": "V2",
+              "protocolVersion": "V3",
               "source": { "type": "EXISTING", "path": "missing-source.xlsx" },
               "persistence": { "type": "NONE" },
               "steps": [
@@ -210,7 +224,10 @@ class RequestPreflightTest {
                 analysis,
                 ProblemContextRequestSurfaces.RequestInput.standardInput(),
                 new ExecutionInputBindings(
-                    temporaryDirectory, temporaryDirectory.resolve("scratch")));
+                    temporaryDirectory,
+                    temporaryDirectory.resolve("scratch"),
+                    ExecutionGrantTestSupport.forPlan(
+                        analysis.requireCompletePlan(), temporaryDirectory)));
 
     assertFalse(report.valid());
     assertEquals(
@@ -229,7 +246,7 @@ class RequestPreflightTest {
         GridGrindJson.analyzeRequest(
             """
             {
-              "protocolVersion": "V2",
+              "protocolVersion": "V3",
               "source": { "type": "NEW" },
               "persistence": { "type": "NONE" },
               "steps": [
@@ -255,7 +272,11 @@ class RequestPreflightTest {
     RequestPreflight.Result result =
         RequestPreflight.verify(
             analysis.requireCompletePlan(),
-            new ExecutionInputBindings(temporaryDirectory, temporaryDirectory.resolve("scratch")),
+            new ExecutionInputBindings(
+                temporaryDirectory,
+                temporaryDirectory.resolve("scratch"),
+                ExecutionGrantTestSupport.forPlan(
+                    analysis.requireCompletePlan(), temporaryDirectory)),
             analysis);
 
     assertEquals(2, result.problems().size());
@@ -303,7 +324,10 @@ class RequestPreflightTest {
     RequestPreflight.Result result =
         RequestPreflight.verify(
             request,
-            new ExecutionInputBindings(temporaryDirectory, temporaryDirectory.resolve("scratch")));
+            new ExecutionInputBindings(
+                temporaryDirectory,
+                temporaryDirectory.resolve("scratch"),
+                ExecutionGrantTestSupport.forPlan(request, temporaryDirectory)));
 
     assertFalse(result.preparedRequest().isPresent());
     assertEquals(
@@ -324,7 +348,7 @@ class RequestPreflightTest {
 
   @Test
   void collectsEveryRichTextLeafFailureWithinOneBoundStep() throws Exception {
-    Files.createFile(temporaryDirectory.resolve("empty-run.txt"));
+    Path emptyRun = Files.createFile(temporaryDirectory.resolve("empty-run.txt"));
     WorkbookPlan request =
         WorkbookPlan.standard(
             new WorkbookPlan.WorkbookSource.New(),
@@ -353,7 +377,10 @@ class RequestPreflightTest {
     RequestPreflight.Result result =
         RequestPreflight.verify(
             request,
-            new ExecutionInputBindings(temporaryDirectory, temporaryDirectory.resolve("scratch")));
+            new ExecutionInputBindings(
+                temporaryDirectory,
+                temporaryDirectory.resolve("scratch"),
+                ExecutionGrantTestSupport.forPlan(request, temporaryDirectory, emptyRun)));
 
     assertFalse(result.preparedRequest().isPresent());
     assertEquals(
@@ -377,7 +404,10 @@ class RequestPreflightTest {
                     new CellSelector.ByAddress("Budget", "A1"),
                     new CellMutationAction.SetCell(new CellInput.NumberValue(1.0)))));
     ExecutionInputBindings bindings =
-        new ExecutionInputBindings(temporaryDirectory, temporaryDirectory.resolve("scratch"));
+        new ExecutionInputBindings(
+            temporaryDirectory,
+            temporaryDirectory.resolve("scratch"),
+            ExecutionGrantTestSupport.forPlan(request, temporaryDirectory));
 
     RequestPreflight.Result failed =
         RequestPreflight.verify(
@@ -404,6 +434,48 @@ class RequestPreflightTest {
   }
 
   @Test
+  void reportsOperationAndHostAcceptanceAuthorityDenialsThroughOnePreflightResult() {
+    WorkbookPlan request =
+        WorkbookPlan.standard(
+            new WorkbookPlan.WorkbookSource.New(),
+            new WorkbookPlan.WorkbookPersistence.None(),
+            ExecutionPolicyInput.defaults(),
+            FormulaEnvironmentInput.empty(),
+            List.of(
+                new MutationStep(
+                    "ensure-budget",
+                    new CellSelector.ByAddress("Budget", "A1"),
+                    new CellMutationAction.SetCell(new CellInput.NumberValue(1.0d)))));
+    ExecutionInputBindings bindings =
+        new ExecutionInputBindings(
+            temporaryDirectory,
+            temporaryDirectory.resolve("scratch"),
+            new dev.erst.gridgrind.engine.api.GridGrindExecutionGrant.Bounded(
+                List.of(),
+                List.of(),
+                new dev.erst.gridgrind.engine.api.GridGrindExecutionGrant.WorkbookTargetAuthority
+                    .WorkbookWide(),
+                new dev.erst.gridgrind.engine.api.GridGrindExecutionGrant.PublicationAuthority
+                    .None(),
+                List.of(),
+                new dev.erst.gridgrind.engine.api.GridGrindHostAcceptancePolicy.RequireAll(
+                    List.of(
+                        new dev.erst.gridgrind.engine.api.GridGrindHostAcceptancePolicy.Requirement
+                            .PreserveOpaqueOoxmlParts(List.of("/customXml/item1.xml"))))));
+
+    RequestPreflight.Result result = RequestPreflight.verify(request, bindings);
+
+    assertFalse(result.preparedRequest().isPresent());
+    assertEquals(
+        List.of(GridGrindProblemCode.AUTHORITY_DENIED, GridGrindProblemCode.INVALID_REQUEST),
+        result.problems().stream().map(GridGrindProblemDetail.Problem::code).toList());
+    assertTrue(
+        result.problems().stream()
+            .map(GridGrindProblemDetail.Problem::context)
+            .allMatch(ProblemContext.ValidateRequest.class::isInstance));
+  }
+
+  @Test
   void warnsForContainedAbsolutePersistencePathsAndSuppressesInvalidOverwriteOutputBinding()
       throws Exception {
     Path absoluteOutput = temporaryDirectory.resolve("output.xlsx");
@@ -418,7 +490,10 @@ class RequestPreflightTest {
     RequestPreflight.Result saveAsResult =
         RequestPreflight.verify(
             saveAs,
-            new ExecutionInputBindings(temporaryDirectory, temporaryDirectory.resolve("scratch")));
+            new ExecutionInputBindings(
+                temporaryDirectory,
+                temporaryDirectory.resolve("scratch"),
+                ExecutionGrantTestSupport.forPlan(saveAs, temporaryDirectory)));
     try {
       assertTrue(saveAsResult.problems().isEmpty());
       assertEquals(
@@ -439,7 +514,10 @@ class RequestPreflightTest {
     RequestPreflight.Result invalidOverwriteResult =
         RequestPreflight.verify(
             invalidOverwrite,
-            new ExecutionInputBindings(temporaryDirectory, temporaryDirectory.resolve("scratch")));
+            new ExecutionInputBindings(
+                temporaryDirectory,
+                temporaryDirectory.resolve("scratch"),
+                ExecutionGrantTestSupport.forPlan(invalidOverwrite, temporaryDirectory)));
     try {
       assertTrue(invalidOverwriteResult.problems().isEmpty());
       assertTrue(invalidOverwriteResult.preparedRequest().isPresent());
@@ -469,104 +547,59 @@ class RequestPreflightTest {
   }
 
   @Test
-  void batchesFormulaInputsAndPreparesOverwriteTargetsFromExistingSources() {
-    WorkbookPlan request =
-        WorkbookPlan.standard(
-            new WorkbookPlan.WorkbookSource.ExistingFile("missing-source.xlsx"),
-            new WorkbookPlan.WorkbookPersistence.Overwrite(
-                dev.erst.gridgrind.contract.dto.OoxmlPersistenceSecurityInput.none()),
-            ExecutionPolicyInput.defaults(),
-            new FormulaEnvironmentInput(
-                List.of(new FormulaExternalWorkbookInput("External.xlsx", "missing-external.xlsx")),
-                FormulaMissingWorkbookPolicy.ERROR,
-                List.of()),
-            List.of());
-
-    RequestPreflight.Result result =
-        RequestPreflight.verify(
-            request,
-            new ExecutionInputBindings(temporaryDirectory, temporaryDirectory.resolve("scratch")));
-
-    assertFalse(result.preparedRequest().isPresent());
-    assertEquals(
-        List.of(
-            GridGrindProblemCode.INPUT_SOURCE_NOT_FOUND, GridGrindProblemCode.WORKBOOK_NOT_FOUND),
-        result.problems().stream().map(GridGrindProblemDetail.Problem::code).toList());
-  }
-
-  @Test
-  void rejectsColumnEditsAgainstExistingSourcesThatAlreadyContainFormulas() throws Exception {
-    Path sourcePath = temporaryDirectory.resolve("existing-formulas.xlsx");
-    try (XSSFWorkbook source = new XSSFWorkbook()) {
-      source.createSheet("Ops").createRow(0).createCell(0).setCellFormula("1+1");
-      try (var output = Files.newOutputStream(sourcePath)) {
-        source.write(output);
-      }
-    }
-    WorkbookPlan request =
-        WorkbookPlan.standard(
-            new WorkbookPlan.WorkbookSource.ExistingFile(sourcePath.getFileName().toString()),
-            new WorkbookPlan.WorkbookPersistence.None(),
-            ExecutionPolicyInput.defaults(),
-            FormulaEnvironmentInput.empty(),
-            List.of(
-                new MutationStep(
-                    "insert-column",
-                    new ColumnBandSelector.Insertion("Ops", 1, 1),
-                    new WorkbookMutationAction.InsertColumns())));
-
-    RequestPreflight.Result result =
-        RequestPreflight.verify(
-            request,
-            new ExecutionInputBindings(temporaryDirectory, temporaryDirectory.resolve("scratch")));
-
-    assertFalse(result.preparedRequest().isPresent());
-    GridGrindProblemDetail.Problem problem = result.problems().getFirst();
-    assertEquals(GridGrindProblemCode.INVALID_REQUEST, problem.code());
-    assertEquals(
-        "Column insert, delete, and shift operations must appear before formula authoring because"
-            + " formula-bearing workbook column edits are unsupported.",
-        problem.message());
-    assertInstanceOf(ProblemContext.OpenWorkbook.class, problem.context());
-    assertFalse(problem.message().contains("gridgrind-source-workbook-"));
-  }
-
-  @Test
   void classifiesCallerCorrectableSourceAndOutputPathFailuresWithoutPrivateTempPaths()
       throws Exception {
     Files.createDirectory(temporaryDirectory.resolve("source-directory.xlsx"));
     Files.createDirectory(temporaryDirectory.resolve("output-directory.xlsx"));
     Files.createFile(temporaryDirectory.resolve("existing-output.xlsx"));
     Files.writeString(temporaryDirectory.resolve("corrupt-source.xlsx"), "not an OOXML package");
-    ExecutionInputBindings bindings =
-        new ExecutionInputBindings(temporaryDirectory, temporaryDirectory.resolve("scratch"));
+    WorkbookPlan sourceDirectoryPlan =
+        plan(
+            new WorkbookPlan.WorkbookSource.ExistingFile("source-directory.xlsx"),
+            new WorkbookPlan.WorkbookPersistence.None());
+    WorkbookPlan outputDirectoryPlan =
+        plan(
+            new WorkbookPlan.WorkbookSource.New(),
+            new WorkbookPlan.WorkbookPersistence.SaveAs(
+                "output-directory.xlsx", WorkbookPlan.WorkbookPersistence.IfExists.REJECT));
+    WorkbookPlan outputCollisionPlan =
+        plan(
+            new WorkbookPlan.WorkbookSource.New(),
+            new WorkbookPlan.WorkbookPersistence.SaveAs(
+                "existing-output.xlsx", WorkbookPlan.WorkbookPersistence.IfExists.REJECT));
+    WorkbookPlan corruptSourcePlan =
+        plan(
+            new WorkbookPlan.WorkbookSource.ExistingFile("corrupt-source.xlsx"),
+            new WorkbookPlan.WorkbookPersistence.None());
 
     RequestPreflight.Result sourceDirectory =
         RequestPreflight.verify(
-            plan(
-                new WorkbookPlan.WorkbookSource.ExistingFile("source-directory.xlsx"),
-                new WorkbookPlan.WorkbookPersistence.None()),
-            bindings);
+            sourceDirectoryPlan,
+            new ExecutionInputBindings(
+                temporaryDirectory,
+                temporaryDirectory.resolve("scratch"),
+                ExecutionGrantTestSupport.forPlan(sourceDirectoryPlan, temporaryDirectory)));
     RequestPreflight.Result outputDirectory =
         RequestPreflight.verify(
-            plan(
-                new WorkbookPlan.WorkbookSource.New(),
-                new WorkbookPlan.WorkbookPersistence.SaveAs(
-                    "output-directory.xlsx", WorkbookPlan.WorkbookPersistence.IfExists.REJECT)),
-            bindings);
+            outputDirectoryPlan,
+            new ExecutionInputBindings(
+                temporaryDirectory,
+                temporaryDirectory.resolve("scratch"),
+                ExecutionGrantTestSupport.forPlan(outputDirectoryPlan, temporaryDirectory)));
     RequestPreflight.Result outputCollision =
         RequestPreflight.verify(
-            plan(
-                new WorkbookPlan.WorkbookSource.New(),
-                new WorkbookPlan.WorkbookPersistence.SaveAs(
-                    "existing-output.xlsx", WorkbookPlan.WorkbookPersistence.IfExists.REJECT)),
-            bindings);
+            outputCollisionPlan,
+            new ExecutionInputBindings(
+                temporaryDirectory,
+                temporaryDirectory.resolve("scratch"),
+                ExecutionGrantTestSupport.forPlan(outputCollisionPlan, temporaryDirectory)));
     RequestPreflight.Result corruptSource =
         RequestPreflight.verify(
-            plan(
-                new WorkbookPlan.WorkbookSource.ExistingFile("corrupt-source.xlsx"),
-                new WorkbookPlan.WorkbookPersistence.None()),
-            bindings);
+            corruptSourcePlan,
+            new ExecutionInputBindings(
+                temporaryDirectory,
+                temporaryDirectory.resolve("scratch"),
+                ExecutionGrantTestSupport.forPlan(corruptSourcePlan, temporaryDirectory)));
 
     assertEquals(
         GridGrindProblemCode.SOURCE_PATH_IS_DIRECTORY,
@@ -594,29 +627,6 @@ class RequestPreflightTest {
         ExecutionPolicyInput.defaults(),
         FormulaEnvironmentInput.empty(),
         List.of());
-  }
-
-  @Test
-  void preservesFormulaWorkbookPathEscapeDiagnostics() {
-    WorkbookPlan request =
-        WorkbookPlan.standard(
-            new WorkbookPlan.WorkbookSource.New(),
-            new WorkbookPlan.WorkbookPersistence.None(),
-            ExecutionPolicyInput.defaults(),
-            new FormulaEnvironmentInput(
-                List.of(new FormulaExternalWorkbookInput("External.xlsx", "../outside.xlsx")),
-                FormulaMissingWorkbookPolicy.ERROR,
-                List.of()),
-            List.of());
-
-    RequestPreflight.Result result =
-        RequestPreflight.verify(
-            request,
-            new ExecutionInputBindings(temporaryDirectory, temporaryDirectory.resolve("scratch")));
-
-    assertEquals(
-        List.of(GridGrindProblemCode.PATH_ESCAPES_ROOT),
-        result.problems().stream().map(GridGrindProblemDetail.Problem::code).toList());
   }
 
   @Test

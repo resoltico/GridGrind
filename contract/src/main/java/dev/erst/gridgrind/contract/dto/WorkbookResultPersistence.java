@@ -20,48 +20,31 @@ public interface WorkbookResultPersistence {
           PersistenceOutcome.SavedAs,
           PersistenceOutcome.Overwritten {
 
-    /** Workbook remained in memory only and was not written to disk. */
+    /** Workbook remained in memory only and was not published to a destination. */
     record NotSaved() implements PersistenceOutcome {}
 
-    /**
-     * Workbook targeted the path supplied in the SAVE_AS persistence field.
-     *
-     * <p>{@code requestedPath} is the literal string from the request. {@code write} reports
-     * whether the file was written and, when successful, the absolute normalized path where the
-     * file was actually written.
-     */
-    record SavedAs(String requestedPath, WriteResult write) implements PersistenceOutcome {
+    /** Workbook targeted the path supplied in the SAVE_AS persistence field. */
+    record SavedAs(String requestedPath, PublicationOutcome publication)
+        implements PersistenceOutcome {
       public SavedAs {
-        Objects.requireNonNull(requestedPath, "requestedPath must not be null");
-        Objects.requireNonNull(write, "write must not be null");
-        if (requestedPath.isBlank()) {
-          throw new IllegalArgumentException("requestedPath must not be blank");
-        }
+        requestedPath = requireNonBlank(requestedPath, "requestedPath");
+        Objects.requireNonNull(publication, "publication must not be null");
       }
     }
 
-    /**
-     * Workbook targeted the opened source workbook path for overwrite persistence.
-     *
-     * <p>{@code sourcePath} echoes the path string from an {@code EXISTING} source when that source
-     * path is available. It is omitted when validation fails before any source workbook path
-     * exists, such as an invalid {@code OVERWRITE} request paired with {@code source.type=NEW}.
-     * {@code write} reports whether the target file was written and, when successful, the absolute
-     * normalized path that was updated.
-     */
+    /** Workbook targeted the opened source workbook path for overwrite persistence. */
     record Overwritten(
-        @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<String> sourcePath, WriteResult write)
+        @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<String> sourcePath,
+        PublicationOutcome publication)
         implements PersistenceOutcome {
       public Overwritten {
         sourcePath = normalizeSourcePath(sourcePath);
-        Objects.requireNonNull(write, "write must not be null");
+        Objects.requireNonNull(publication, "publication must not be null");
       }
 
-      /**
-       * Creates one overwrite outcome that echoes a known EXISTING source path from the request.
-       */
-      public Overwritten(String sourcePath, WriteResult write) {
-        this(Optional.of(sourcePath), write);
+      /** Creates one overwrite outcome that echoes a known EXISTING source path. */
+      public Overwritten(String sourcePath, PublicationOutcome publication) {
+        this(Optional.of(sourcePath), publication);
       }
 
       private static Optional<String> normalizeSourcePath(Optional<String> sourcePath) {
@@ -69,33 +52,113 @@ public interface WorkbookResultPersistence {
         if (normalized.isEmpty()) {
           return Optional.empty();
         }
-        String path = normalized.orElseThrow();
-        if (path.isBlank()) {
-          throw new IllegalArgumentException("sourcePath must not be blank");
-        }
-        return Optional.of(path);
+        return Optional.of(requireNonBlank(normalized.orElseThrow(), "sourcePath"));
       }
     }
   }
 
-  /** Reports whether the targeted workbook file was actually written. */
+  /** Reports what GridGrind established about one requested final workbook destination. */
   @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "status")
   @JsonSubTypes({
-    @JsonSubTypes.Type(value = WriteResult.Written.class, name = "WRITTEN"),
-    @JsonSubTypes.Type(value = WriteResult.NotWritten.class, name = "NOT_WRITTEN")
+    @JsonSubTypes.Type(value = PublicationOutcome.NotAttempted.class, name = "NOT_ATTEMPTED"),
+    @JsonSubTypes.Type(value = PublicationOutcome.NotPublished.class, name = "NOT_PUBLISHED"),
+    @JsonSubTypes.Type(value = PublicationOutcome.Published.class, name = "PUBLISHED"),
+    @JsonSubTypes.Type(value = PublicationOutcome.Uncertain.class, name = "UNCERTAIN")
   })
-  sealed interface WriteResult permits WriteResult.Written, WriteResult.NotWritten {
-    /** Workbook file was written successfully. */
-    record Written(String executionPath) implements WriteResult {
-      public Written {
-        Objects.requireNonNull(executionPath, "executionPath must not be null");
-        if (executionPath.isBlank()) {
-          throw new IllegalArgumentException("executionPath must not be blank");
-        }
+  sealed interface PublicationOutcome
+      permits PublicationOutcome.NotAttempted,
+          PublicationOutcome.NotPublished,
+          PublicationOutcome.Published,
+          PublicationOutcome.Uncertain {
+
+    /** Final destination mutation was never attempted. */
+    record NotAttempted() implements PublicationOutcome {}
+
+    /**
+     * Final destination remains provably absent or unchanged after publication did not complete.
+     */
+    record NotPublished(DestinationState destinationState) implements PublicationOutcome {
+      public NotPublished {
+        Objects.requireNonNull(destinationState, "destinationState must not be null");
       }
     }
 
-    /** Workbook file was not written before the run failed. */
-    record NotWritten() implements WriteResult {}
+    /** Final destination was observed with the complete verified staged artifact. */
+    record Published(
+        String executionPath,
+        String sha256,
+        long byteSize,
+        StagedArtifactVerification stagedArtifactVerification,
+        DurabilityEvidence durability)
+        implements PublicationOutcome {
+      public Published {
+        executionPath = requireNonBlank(executionPath, "executionPath");
+        sha256 = requireSha256(sha256);
+        if (byteSize < 0) {
+          throw new IllegalArgumentException("byteSize must be >= 0");
+        }
+        Objects.requireNonNull(
+            stagedArtifactVerification, "stagedArtifactVerification must not be null");
+        Objects.requireNonNull(durability, "durability must not be null");
+      }
+    }
+
+    /** Final destination may have changed, so automated retry is unsafe without inspection. */
+    record Uncertain(String executionPath, Recovery recovery) implements PublicationOutcome {
+      public Uncertain {
+        executionPath = requireNonBlank(executionPath, "executionPath");
+        Objects.requireNonNull(recovery, "recovery must not be null");
+      }
+    }
+
+    /** Known final-destination state after a publication failure. */
+    enum DestinationState {
+      ABSENT,
+      PRESERVED
+    }
+
+    /** Required operator response to an uncertain publication attempt. */
+    enum Recovery {
+      INSPECT_DESTINATION_DO_NOT_RETRY
+    }
+
+    /** Staged artifact successfully reopened with its effective package-security settings. */
+    record StagedArtifactVerification() {}
+
+    /** Durability evidence established for one published artifact. */
+    @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "level")
+    @JsonSubTypes({
+      @JsonSubTypes.Type(
+          value = DurabilityEvidence.FileAndDirectorySynced.class,
+          name = "FILE_AND_DIRECTORY_SYNCED"),
+      @JsonSubTypes.Type(
+          value = DurabilityEvidence.FileSyncedDirectoryUnestablished.class,
+          name = "FILE_SYNCED_DIRECTORY_UNESTABLISHED")
+    })
+    sealed interface DurabilityEvidence
+        permits DurabilityEvidence.FileAndDirectorySynced,
+            DurabilityEvidence.FileSyncedDirectoryUnestablished {
+      /** File data and the containing directory entry were synchronized. */
+      record FileAndDirectorySynced() implements DurabilityEvidence {}
+
+      /** File data was synchronized but directory synchronization was not established. */
+      record FileSyncedDirectoryUnestablished() implements DurabilityEvidence {}
+    }
+
+    private static String requireSha256(String value) {
+      String normalized = requireNonBlank(value, "sha256");
+      if (!normalized.matches("[0-9a-f]{64}")) {
+        throw new IllegalArgumentException("sha256 must be 64 lowercase hexadecimal characters");
+      }
+      return normalized;
+    }
+  }
+
+  private static String requireNonBlank(String value, String fieldName) {
+    Objects.requireNonNull(value, fieldName + " must not be null");
+    if (value.isBlank()) {
+      throw new IllegalArgumentException(fieldName + " must not be blank");
+    }
+    return value;
   }
 }

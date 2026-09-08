@@ -25,7 +25,7 @@ class GridGrindRequestDecoderTest {
             () ->
                 GridGrindJson.readRequest(
                     """
-                    {"protocolVersion":"V2","source":{"type":"NEW"},"persistence":{"type":"NONE"}}
+                    {"protocolVersion":"V3","source":{"type":"NEW"},"persistence":{"type":"NONE"}}
                     """)));
     assertInstanceOf(
         InvalidRequestShapeException.class,
@@ -34,7 +34,7 @@ class GridGrindRequestDecoderTest {
             () ->
                 GridGrindJson.readRequest(
                     """
-                    {"protocolVersion":"V2","source":{"type":"NEW"},"persistence":{"type":"NONE"},"steps":null}
+                    {"protocolVersion":"V3","source":{"type":"NEW"},"persistence":{"type":"NONE"},"steps":null}
                     """)));
     assertInstanceOf(
         InvalidRequestShapeException.class,
@@ -43,7 +43,7 @@ class GridGrindRequestDecoderTest {
             () ->
                 GridGrindJson.readRequest(
                     """
-                    {"protocolVersion":"V2","source":{},"persistence":{"type":"NONE"},"steps":[]}
+                    {"protocolVersion":"V3","source":{},"persistence":{"type":"NONE"},"steps":[]}
                     """)));
     assertInstanceOf(
         InvalidRequestShapeException.class,
@@ -57,7 +57,7 @@ class GridGrindRequestDecoderTest {
             () ->
                 GridGrindJson.readRequest(
                     """
-                    {"protocolVersion":"V2","source":{"type":7},"persistence":{"type":"NONE"},"steps":[]}
+                    {"protocolVersion":"V3","source":{"type":7},"persistence":{"type":"NONE"},"steps":[]}
                     """)));
   }
 
@@ -88,7 +88,7 @@ class GridGrindRequestDecoderTest {
     byte[] request =
         """
         {
-          "protocolVersion": "V2",
+          "protocolVersion": "V3",
           "source" { "type": "NEW" },
           "persistence": { "type": "NONE" },
           "steps": []
@@ -106,7 +106,7 @@ class GridGrindRequestDecoderTest {
   private static byte[] requestWith(String replacement) {
     return """
         {
-          "protocolVersion": "V2",
+          "protocolVersion": "V3",
           "source": {"type": "NEW"},
           "persistence": {"type": "NONE"},
           %s,

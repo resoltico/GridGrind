@@ -32,9 +32,13 @@ class SourceBackedPlanResolverRequestPathTest {
             FormulaEnvironmentInput.empty(),
             List.of());
     ExecutionInputBindings bindings =
-        new ExecutionInputBindings(root, Files.createDirectory(root.resolve("temp")));
+        new ExecutionInputBindings(
+            root,
+            Files.createDirectory(root.resolve("temp")),
+            ExecutionGrantTestSupport.noPublication());
 
-    try (RequestPathAccess access = new RequestPathAccess(root, bindings.tempFileFactory())) {
+    try (RequestPathAccess access =
+        new RequestPathAccess(root, bindings.tempFileFactory(), bindings.executionGrant())) {
       assertEquals(
           plan, SourceBackedPlanResolver.resolve(plan, bindings.withRequestPathAccess(access)));
     }
@@ -43,7 +47,10 @@ class SourceBackedPlanResolverRequestPathTest {
   @Test
   void reportsInvalidBinaryFilePathsWithoutBypassingPathMaterialization() throws Exception {
     ExecutionInputBindings bindings =
-        new ExecutionInputBindings(root, Files.createDirectory(root.resolve("temp")));
+        new ExecutionInputBindings(
+            root,
+            Files.createDirectory(root.resolve("temp")),
+            ExecutionGrantTestSupport.noPublication());
 
     InputSourceReadException failure =
         assertThrows(
@@ -58,7 +65,10 @@ class SourceBackedPlanResolverRequestPathTest {
   @Test
   void preservesTheDedicatedEscapeDiagnosticForSourceBackedFiles() throws Exception {
     ExecutionInputBindings bindings =
-        new ExecutionInputBindings(root, Files.createDirectory(root.resolve("temp")));
+        new ExecutionInputBindings(
+            root,
+            Files.createDirectory(root.resolve("temp")),
+            ExecutionGrantTestSupport.noPublication());
 
     assertThrows(
         RequestPathEscapeException.class,
@@ -70,7 +80,10 @@ class SourceBackedPlanResolverRequestPathTest {
   @Test
   void preservesUnresolvedFormulaSourcesWhileCollectingTheirIndependentFailures() throws Exception {
     ExecutionInputBindings bindings =
-        new ExecutionInputBindings(root, Files.createDirectory(root.resolve("temp")));
+        new ExecutionInputBindings(
+            root,
+            Files.createDirectory(root.resolve("temp")),
+            ExecutionGrantTestSupport.noPublication());
     InputResolutionFailures failures = new InputResolutionFailures();
     TextSourceInput.Utf8File missingFormula = TextSourceInput.utf8File("missing-formula.txt");
 

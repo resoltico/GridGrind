@@ -17,6 +17,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.PosixFilePermission;
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.jupiter.api.Test;
@@ -52,7 +53,7 @@ class GridGrindCliResponseReservationTest {
             new ByteArrayInputStream(
                 """
                 {
-                  "protocolVersion": "V2",
+                  "protocolVersion": "V3",
                   "source": { "type": "NEW" },
                   "persistence": { "type": "SAVE_AS", "path": "output.xlsx", "ifExists": "REJECT" },
                   "steps": []
@@ -82,7 +83,7 @@ class GridGrindCliResponseReservationTest {
     byte[] body =
         """
         {
-          "protocolVersion": "V2",
+          "protocolVersion": "V3",
           "source": { "type": "NEW" },
           "persistence": { "type": "NONE" },
           "steps": []
@@ -94,11 +95,14 @@ class GridGrindCliResponseReservationTest {
     withBom[1] = (byte) 0xBB;
     withBom[2] = (byte) 0xBF;
     System.arraycopy(body, 0, withBom, 3, body.length);
+    Path grantPath = CliGrantFixtureSupport.noPublication(List.of());
 
     int exitCode =
         new GridGrindCli()
             .run(
-                new String[] {"--execution-root", temporaryDirectory.toString()},
+                new String[] {
+                  "--execution-root", temporaryDirectory.toString(), "--grant", grantPath.toString()
+                },
                 new ByteArrayInputStream(withBom),
                 stdout,
                 stderr);
@@ -123,7 +127,7 @@ class GridGrindCliResponseReservationTest {
     byte[] body =
         """
         {
-          "protocolVersion": "V2",
+          "protocolVersion": "V3",
           "source": { "type": "NEW" },
           "persistence": { "type": "NONE" },
           "steps": []
@@ -294,7 +298,7 @@ class GridGrindCliResponseReservationTest {
   private static byte[] validRequestBytes() {
     return """
         {
-          "protocolVersion": "V2",
+          "protocolVersion": "V3",
           "source": { "type": "NEW" },
           "persistence": { "type": "NONE" },
           "steps": []

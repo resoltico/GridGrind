@@ -206,33 +206,32 @@ final class XlsxParityTest {
       XlsxParityScenarios.MaterializedScenario scenario =
           XlsxParityScenarios.materialize(XlsxParityScenarios.EXTERNAL_FORMULA, temporaryRoot);
       Path outputPath = temporaryRoot.resolve("output.xlsx");
+      WorkbookPlan request =
+          ParityPlanSupport.request(
+              new WorkbookPlan.WorkbookSource.ExistingFile(scenario.workbookPath().toString()),
+              new WorkbookPlan.WorkbookPersistence.SaveAs(
+                  outputPath.toString(),
+                  WorkbookPlan.WorkbookPersistence.IfExists.REJECT,
+                  dev.erst.gridgrind.contract.dto.OoxmlPersistenceSecurityInput.none()),
+              ExecutionPolicyInput.calculation(
+                  CalculationPolicyInput.strategy(new CalculationStrategyInput.EvaluateAll())),
+              new FormulaEnvironmentInput(
+                  List.of(
+                      new FormulaExternalWorkbookInput(
+                          "referenced.xlsx", scenario.attachment("referencedWorkbook").toString())),
+                  dev.erst.gridgrind.contract.dto.FormulaMissingWorkbookPolicy.ERROR,
+                  List.of()),
+              List.of(),
+              List.of(
+                  inspect(
+                      "cells",
+                      new CellSelector.ByAddresses("Ops", List.of("B1")),
+                      XlsxParityProbeRegistry.allFacetCellsQuery())));
       WorkbookResult response =
           new DefaultGridGrindRequestExecutor()
               .execute(
-                  ParityPlanSupport.request(
-                      new WorkbookPlan.WorkbookSource.ExistingFile(
-                          scenario.workbookPath().toString()),
-                      new WorkbookPlan.WorkbookPersistence.SaveAs(
-                          outputPath.toString(),
-                          WorkbookPlan.WorkbookPersistence.IfExists.REJECT,
-                          dev.erst.gridgrind.contract.dto.OoxmlPersistenceSecurityInput.none()),
-                      ExecutionPolicyInput.calculation(
-                          CalculationPolicyInput.strategy(
-                              new CalculationStrategyInput.EvaluateAll())),
-                      new FormulaEnvironmentInput(
-                          List.of(
-                              new FormulaExternalWorkbookInput(
-                                  "referenced.xlsx",
-                                  scenario.attachment("referencedWorkbook").toString())),
-                          dev.erst.gridgrind.contract.dto.FormulaMissingWorkbookPolicy.ERROR,
-                          List.of()),
-                      List.of(),
-                      List.of(
-                          inspect(
-                              "cells",
-                              new CellSelector.ByAddresses("Ops", List.of("B1")),
-                              XlsxParityProbeRegistry.allFacetCellsQuery()))),
-                  XlsxParitySupport.bindings(temporaryRoot),
+                  request,
+                  XlsxParitySupport.bindings(temporaryRoot, request),
                   ExecutionProgressSink.NOOP);
       assertInstanceOf(WorkbookResult.Success.class, response);
     } finally {

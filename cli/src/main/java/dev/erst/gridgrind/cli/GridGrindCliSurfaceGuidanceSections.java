@@ -45,6 +45,7 @@ final class GridGrindCliSurfaceGuidanceSections {
             "  " + GridGrindContainerRuntimeText.dockerMountedWorkdirVolumeArgument() + " \\",
             "  {{CONTAINER_TAG}} \\",
             "  --request request.json \\",
+            "  --grant grant.json \\",
             "  --response response.json"),
         Optional.of(
             GridGrindContainerRuntimeText.dockerMountedWorkdirSummary()

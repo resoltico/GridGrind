@@ -140,11 +140,13 @@ class GridGrindJazzerConventionsPlugin : Plugin<Project> {
                 dependsOn(jazzerAgentJar)
                 enableNativeAccess()
                 jvmArgs("-javaagent:${jazzerAgentJar.flatMap { it.archiveFile }.get().asFile.absolutePath}")
-                if (jazzerMaxDuration != null) {
-                    systemProperty("jazzer.max_duration", jazzerMaxDuration)
-                }
-                if (jazzerMaxExecutions != null) {
-                    systemProperty("jazzer.max_executions", jazzerMaxExecutions)
+                doFirst {
+                    if (jazzerMaxDuration != null) {
+                        systemProperty("jazzer.max_duration", jazzerMaxDuration)
+                    }
+                    if (jazzerMaxExecutions != null) {
+                        systemProperty("jazzer.max_executions", jazzerMaxExecutions)
+                    }
                 }
             }
 

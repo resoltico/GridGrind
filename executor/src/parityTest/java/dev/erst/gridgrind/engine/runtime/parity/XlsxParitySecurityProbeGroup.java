@@ -192,7 +192,7 @@ final class XlsxParitySecurityProbeGroup {
             new OoxmlPersistenceSecurityInput(
                 new OoxmlPersistenceEncryptionInput.Encrypt(
                     new OoxmlEncryptionInput(
-                        XlsxParityScenarios.ENCRYPTION_PASSWORD,
+                        new dev.erst.gridgrind.contract.dto.SecretReference("output-password"),
                         ExcelOoxmlWriteCipher.AES_256,
                         ExcelOoxmlWriteHash.SHA_512)),
                 new OoxmlPersistenceSignatureInput.None()),
@@ -280,7 +280,9 @@ final class XlsxParitySecurityProbeGroup {
     WorkbookResult wrongPasswordResponse =
         XlsxParityGridGrind.executeReadWorkbook(
             encrypted.workbookPath(),
-            new OoxmlOpenSecurityInput(java.util.Optional.of("gridgrind-phase9-wrong-password")),
+            new OoxmlOpenSecurityInput(
+                java.util.Optional.of(
+                    new dev.erst.gridgrind.contract.dto.SecretReference("wrong-password"))),
             inspect(
                 "security",
                 new WorkbookSelector.Current(),

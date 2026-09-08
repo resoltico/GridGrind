@@ -28,9 +28,9 @@ class WorkbookInvariantOverwritePersistenceTest {
             List.of());
     WorkbookResult.Failure response =
         WorkbookResults.failure(
-            GridGrindProtocolVersion.V2,
+            GridGrindProtocolVersion.V3,
             new WorkbookResultPersistence.PersistenceOutcome.Overwritten(
-                Optional.empty(), new WorkbookResultPersistence.WriteResult.NotWritten()),
+                Optional.empty(), new WorkbookResultPersistence.PublicationOutcome.NotAttempted()),
             GridGrindProblemDetail.Problem.of(
                 GridGrindProblemCode.INVALID_REQUEST,
                 "OVERWRITE persistence requires an EXISTING source; a NEW workbook has no source"

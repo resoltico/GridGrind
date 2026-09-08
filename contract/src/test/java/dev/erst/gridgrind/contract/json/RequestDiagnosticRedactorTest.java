@@ -20,11 +20,11 @@ class RequestDiagnosticRedactorTest {
   @Test
   void hidesAValidationMessageOnlyWhenItsExactRequestOwnerIsSecret() {
     assertEquals(
-        "Sensitive request value is invalid.",
+        "password source-secret is invalid",
         RequestDiagnosticRedactor.safeValidationFailureMessage(
             "password source-secret is invalid",
             WorkbookPlan.class,
-            Optional.of("source.security.password")));
+            Optional.of("source.security.passwordRef")));
     assertEquals(
         "path source-secret remains an ordinary value",
         RequestDiagnosticRedactor.safeValidationFailureMessage(
@@ -59,9 +59,9 @@ class RequestDiagnosticRedactorTest {
         GridGrindJson.analyzeRequest(
                 """
                 {
-                  "source": {"type":"EXISTING","path":"input.xlsx","security":{"password":"a"}},
+                  "source": {"type":"EXISTING","path":"input.xlsx","security":{"passwordRef":{"id":"source-open"}}},
                   "persistence": {"type":"NONE"},
-                  "protocolVersion":"V2",
+                  "protocolVersion":"V3",
                   "steps": []
                 }
                 """
@@ -81,20 +81,10 @@ class RequestDiagnosticRedactorTest {
   @Test
   void redactsAProblemOnlyWhenItsStructuredRequestContextNamesASecretField() throws IOException {
     RequestDiagnosticRedactor redactor =
-        GridGrindJson.analyzeRequest(
-                """
-                {
-                  "source": {"type":"EXISTING","path":"input.xlsx","security":{"password":"source-secret"}},
-                  "persistence": {"type":"NONE"},
-                  "protocolVersion":"V2",
-                  "steps": []
-                }
-                """
-                    .getBytes(StandardCharsets.UTF_8))
-            .diagnosticRedactor();
+        RequestDiagnosticRedactor.forRequestType(SecretCarrier.class);
     byte[] payload =
         """
-        {"message":"source-secret escaped","resolution":"retry source-secret","context":{"stage":"READ_REQUEST","json":{"type":"PATH_ONLY","jsonPath":"source.security.password"}},"causes":[{"message":"source-secret cause"}]}
+        {"message":"source-secret escaped","resolution":"retry source-secret","context":{"stage":"READ_REQUEST","json":{"type":"PATH_ONLY","jsonPath":"credential"}},"causes":[{"message":"source-secret cause"}]}
         """
             .getBytes(StandardCharsets.UTF_8);
 
@@ -115,12 +105,12 @@ class RequestDiagnosticRedactorTest {
         RequestDiagnosticRedactor.forRequestType(WorkbookPlan.class);
     byte[] nonTextualPayload =
         """
-        {"message":7,"resolution":false,"context":{"json":{"jsonPath":"source.security.password"}},"causes":[{"detail":"no message"},1]}
+        {"message":7,"resolution":false,"context":{"json":{"jsonPath":"source.security.passwordRef"}},"causes":[{"detail":"no message"},1]}
         """
             .getBytes(StandardCharsets.UTF_8);
     byte[] objectCausesPayload =
         """
-        {"message":"sensitive","context":{"json":{"jsonPath":"source.security.password"}},"causes":{}}
+        {"message":"sensitive","context":{"json":{"jsonPath":"source.security.passwordRef"}},"causes":{}}
         """
             .getBytes(StandardCharsets.UTF_8);
 
@@ -128,10 +118,37 @@ class RequestDiagnosticRedactorTest {
         new String(nonTextualPayload, StandardCharsets.UTF_8),
         new String(
             redactor.redactSerializedJson(nonTextualPayload, false), StandardCharsets.UTF_8));
-    assertFalse(
+    assertTrue(
         new String(
                 redactor.redactSerializedJson(objectCausesPayload, false), StandardCharsets.UTF_8)
             .contains("sensitive"));
+  }
+
+  @Test
+  void redactsOnlyTextualPropertiesInsideASecretOwnedCauseArray() throws IOException {
+    RequestDiagnosticRedactor redactor =
+        RequestDiagnosticRedactor.forRequestType(SecretCarrier.class);
+    byte[] payload =
+        """
+        {"context":{"json":{"jsonPath":"credential"}},"causes":[1,{"message":8},{"message":"secret"}]}
+        """
+            .getBytes(StandardCharsets.UTF_8);
+
+    String rendered =
+        new String(redactor.redactSerializedJson(payload, false), StandardCharsets.UTF_8);
+
+    assertTrue(rendered.contains("\"message\":8"));
+    assertTrue(rendered.contains("[REDACTED]"));
+    assertTrue(
+        new String(
+                redactor.redactSerializedJson(
+                    """
+                    {"message":"secret","context":{"json":{"jsonPath":"credential"}},"causes":{}}
+                    """
+                        .getBytes(StandardCharsets.UTF_8),
+                    false),
+                StandardCharsets.UTF_8)
+            .contains("[REDACTED]"));
   }
 
   @Test

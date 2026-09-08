@@ -30,7 +30,11 @@ class ExecutionStepSupportTest {
             new AssertionExecutor(workbookEngine, selectorResolver),
             (prefix, suffix) -> {
               throw new AssertionError("temp file creation should not happen for this branch");
-            });
+            },
+            new ExecutionInputBindings(
+                Path.of("."),
+                Path.of("tmp", "step-support"),
+                ExecutionGrantTestSupport.noPublication()));
     InspectionStep inspectionStep =
         new InspectionStep(
             "formula-surface",
@@ -58,7 +62,9 @@ class ExecutionStepSupportTest {
             workbookEngine,
             selectorResolver,
             new AssertionExecutor(workbookEngine, selectorResolver),
-            WorkbookTempFileFactory.rooted(tempRoot)::createTempFile);
+            WorkbookTempFileFactory.rooted(tempRoot)::createTempFile,
+            new ExecutionInputBindings(
+                tempRoot, tempRoot.resolve("private"), ExecutionGrantTestSupport.noPublication()));
     InspectionStep inspectionStep =
         new InspectionStep(
             "formula-surface",

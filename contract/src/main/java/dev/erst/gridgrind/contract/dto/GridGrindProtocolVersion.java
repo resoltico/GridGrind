@@ -2,10 +2,10 @@ package dev.erst.gridgrind.contract.dto;
 
 /** Version marker for the external GridGrind request/response contract. */
 public enum GridGrindProtocolVersion {
-  V2;
+  V3;
 
   /** Returns the protocol version used by this build of GridGrind. */
   public static GridGrindProtocolVersion current() {
-    return V2;
+    return V3;
   }
 }

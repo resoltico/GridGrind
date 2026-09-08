@@ -16,7 +16,7 @@ class RequestAnalysisLocationTest {
     String request =
         """
         {
-          "protocolVersion": "V2",
+          "protocolVersion": "V3",
           "source": { "type": "NEW" },
           "persistence": { "type": "NONE" },
           "steps": [
@@ -49,7 +49,7 @@ class RequestAnalysisLocationTest {
         GridGrindJson.analyzeRequest(
             """
             {
-              "protocolVersion": "V2",
+              "protocolVersion": "V3",
               "source": { "type": "NEW" },
               "persistence": { "type": "NONE" },
               "steps": []
@@ -70,7 +70,7 @@ class RequestAnalysisLocationTest {
         GridGrindJson.analyzeRequest(
             """
             {
-              "protocolVersion": "V2",
+              "protocolVersion": "V3",
               "source": { "type": "NEW" },
               "persistence": { "type": "NONE" },
               "steps": [{
@@ -85,7 +85,7 @@ class RequestAnalysisLocationTest {
         GridGrindJson.analyzeRequest(
             """
             {
-              "protocolVersion": "V2",
+              "protocolVersion": "V3",
               "source": { "type": "NEW" },
               "persistence": { "type": "NONE" },
               "steps": [{

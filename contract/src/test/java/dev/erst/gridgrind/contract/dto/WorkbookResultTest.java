@@ -76,7 +76,7 @@ class WorkbookResultTest {
   }
 
   @Test
-  void unwrittenPersistenceOutcomesPreserveRequestedSaveIntentWithoutInventingPaths() {
+  void notAttemptedPersistenceOutcomesPreserveRequestedSaveIntentWithoutInventingPaths() {
     WorkbookPlan overwriteExistingRequest =
         WorkbookPlan.standard(
             new WorkbookPlan.WorkbookSource.ExistingFile("fixtures/budget.xlsx"),
@@ -103,23 +103,106 @@ class WorkbookResultTest {
     WorkbookResultPersistence.PersistenceOutcome.Overwritten overwritten =
         assertInstanceOf(
             WorkbookResultPersistence.PersistenceOutcome.Overwritten.class,
-            WorkbookResults.unwrittenPersistenceOutcome(overwriteExistingRequest));
+            WorkbookResults.notAttemptedPersistenceOutcome(overwriteExistingRequest));
     WorkbookResultPersistence.PersistenceOutcome.SavedAs savedAs =
         assertInstanceOf(
             WorkbookResultPersistence.PersistenceOutcome.SavedAs.class,
-            WorkbookResults.unwrittenPersistenceOutcome(saveAsRequest));
+            WorkbookResults.notAttemptedPersistenceOutcome(saveAsRequest));
     WorkbookResultPersistence.PersistenceOutcome.Overwritten impossibleOverwrite =
         assertInstanceOf(
             WorkbookResultPersistence.PersistenceOutcome.Overwritten.class,
-            WorkbookResults.unwrittenPersistenceOutcome(impossibleOverwriteRequest));
+            WorkbookResults.notAttemptedPersistenceOutcome(impossibleOverwriteRequest));
 
     assertEquals(Optional.of("fixtures/budget.xlsx"), overwritten.sourcePath());
-    assertInstanceOf(WorkbookResultPersistence.WriteResult.NotWritten.class, overwritten.write());
+    assertInstanceOf(
+        WorkbookResultPersistence.PublicationOutcome.NotAttempted.class, overwritten.publication());
     assertEquals("fixtures/output.xlsx", savedAs.requestedPath());
-    assertInstanceOf(WorkbookResultPersistence.WriteResult.NotWritten.class, savedAs.write());
+    assertInstanceOf(
+        WorkbookResultPersistence.PublicationOutcome.NotAttempted.class, savedAs.publication());
     assertEquals(Optional.empty(), impossibleOverwrite.sourcePath());
     assertInstanceOf(
-        WorkbookResultPersistence.WriteResult.NotWritten.class, impossibleOverwrite.write());
+        WorkbookResultPersistence.PublicationOutcome.NotAttempted.class,
+        impossibleOverwrite.publication());
+  }
+
+  @Test
+  void publicationPersistenceOutcomesRetainTheRequestedDestinationAndRejectMemoryOnlyPlans() {
+    WorkbookPlan noneRequest =
+        WorkbookPlan.standard(
+            new WorkbookPlan.WorkbookSource.New(),
+            new WorkbookPlan.WorkbookPersistence.None(),
+            ExecutionPolicyInput.defaults(),
+            FormulaEnvironmentInput.empty(),
+            List.of());
+    WorkbookPlan saveAsRequest =
+        WorkbookPlan.standard(
+            new WorkbookPlan.WorkbookSource.New(),
+            new WorkbookPlan.WorkbookPersistence.SaveAs(
+                "fixtures/output.xlsx", WorkbookPlan.WorkbookPersistence.IfExists.REJECT),
+            ExecutionPolicyInput.defaults(),
+            FormulaEnvironmentInput.empty(),
+            List.of());
+    WorkbookPlan overwriteRequest =
+        WorkbookPlan.standard(
+            new WorkbookPlan.WorkbookSource.ExistingFile("fixtures/input.xlsx"),
+            new WorkbookPlan.WorkbookPersistence.Overwrite(OoxmlPersistenceSecurityInput.none()),
+            ExecutionPolicyInput.defaults(),
+            FormulaEnvironmentInput.empty(),
+            List.of());
+    WorkbookPlan overwriteNewRequest =
+        WorkbookPlan.standard(
+            new WorkbookPlan.WorkbookSource.New(),
+            new WorkbookPlan.WorkbookPersistence.Overwrite(OoxmlPersistenceSecurityInput.none()),
+            ExecutionPolicyInput.defaults(),
+            FormulaEnvironmentInput.empty(),
+            List.of());
+    WorkbookResultPersistence.PublicationOutcome publication =
+        new WorkbookResultPersistence.PublicationOutcome.NotPublished(
+            WorkbookResultPersistence.PublicationOutcome.DestinationState.PRESERVED);
+
+    WorkbookResultPersistence.PersistenceOutcome.SavedAs savedAs =
+        assertInstanceOf(
+            WorkbookResultPersistence.PersistenceOutcome.SavedAs.class,
+            WorkbookResults.publicationPersistenceOutcome(saveAsRequest, publication));
+    WorkbookResultPersistence.PersistenceOutcome.Overwritten overwritten =
+        assertInstanceOf(
+            WorkbookResultPersistence.PersistenceOutcome.Overwritten.class,
+            WorkbookResults.publicationPersistenceOutcome(overwriteRequest, publication));
+    WorkbookResultPersistence.PersistenceOutcome.Overwritten overwrittenNew =
+        assertInstanceOf(
+            WorkbookResultPersistence.PersistenceOutcome.Overwritten.class,
+            WorkbookResults.publicationPersistenceOutcome(overwriteNewRequest, publication));
+
+    assertEquals("fixtures/output.xlsx", savedAs.requestedPath());
+    assertEquals(Optional.of("fixtures/input.xlsx"), overwritten.sourcePath());
+    assertEquals(Optional.empty(), overwrittenNew.sourcePath());
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> WorkbookResults.publicationPersistenceOutcome(noneRequest, publication));
+  }
+
+  @Test
+  void publicationFactsRejectInvalidDigestAndNegativeByteCounts() {
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new WorkbookResultPersistence.PublicationOutcome.Published(
+                "output.xlsx",
+                "invalid",
+                0,
+                new WorkbookResultPersistence.PublicationOutcome.StagedArtifactVerification(),
+                new WorkbookResultPersistence.PublicationOutcome.DurabilityEvidence
+                    .FileAndDirectorySynced()));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new WorkbookResultPersistence.PublicationOutcome.Published(
+                "output.xlsx",
+                "0".repeat(64),
+                -1,
+                new WorkbookResultPersistence.PublicationOutcome.StagedArtifactVerification(),
+                new WorkbookResultPersistence.PublicationOutcome.DurabilityEvidence
+                    .FileAndDirectorySynced()));
   }
 
   @Test
@@ -397,7 +480,7 @@ class WorkbookResultTest {
                 IllegalArgumentException.class,
                 () ->
                     new WorkbookResultPersistence.PersistenceOutcome.SavedAs(
-                        " ", new WorkbookResultPersistence.WriteResult.Written("/tmp/out.xlsx")))
+                        " ", published("/tmp/out.xlsx")))
             .getMessage());
     assertEquals(
         "executionPath must not be blank",
@@ -405,7 +488,7 @@ class WorkbookResultTest {
                 IllegalArgumentException.class,
                 () ->
                     new WorkbookResultPersistence.PersistenceOutcome.Overwritten(
-                        "budget.xlsx", new WorkbookResultPersistence.WriteResult.Written(" ")))
+                        "budget.xlsx", published(" ")))
             .getMessage());
     assertEquals(
         "sheetCount must be 0 for an empty workbook",
@@ -451,6 +534,17 @@ class WorkbookResultTest {
                         .known("NEW", "NONE")),
                 List.of())
             .causes());
+  }
+
+  private static WorkbookResultPersistence.PublicationOutcome.Published published(
+      String executionPath) {
+    return new WorkbookResultPersistence.PublicationOutcome.Published(
+        executionPath,
+        "0".repeat(64),
+        0,
+        new WorkbookResultPersistence.PublicationOutcome.StagedArtifactVerification(),
+        new WorkbookResultPersistence.PublicationOutcome.DurabilityEvidence
+            .FileSyncedDirectoryUnestablished());
   }
 
   @Test

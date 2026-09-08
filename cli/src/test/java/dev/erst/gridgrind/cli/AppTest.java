@@ -11,6 +11,7 @@ import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import org.junit.jupiter.api.Test;
@@ -20,7 +21,7 @@ class AppTest {
   private static final String EMPTY_SUCCESS_REQUEST =
       """
       {
-        "protocolVersion": "V2",
+        "protocolVersion": "V3",
         "source": { "type": "NEW" },
         "persistence": { "type": "NONE" },
         "execution": {
@@ -81,11 +82,12 @@ class AppTest {
     java.io.ByteArrayOutputStream capturedErr = new java.io.ByteArrayOutputStream();
     AtomicInteger observedExitCode = new AtomicInteger(-1);
     Path workspace = Files.createTempDirectory("gridgrind-app-run-");
+    Path grant = writeNoOpGrant();
 
     App app = new App(() -> new GridGrindCli()::run, observedExitCode::set);
 
     app.run(
-        new String[] {"--execution-root", workspace.toString()},
+        new String[] {"--execution-root", workspace.toString(), "--grant", grant.toString()},
         new ByteArrayInputStream(jsonRequest),
         capturedOut,
         capturedErr);
@@ -95,6 +97,7 @@ class AppTest {
     assertEquals(-1, observedExitCode.get());
     assertInstanceOf(WorkbookResult.Success.class, response);
     assertTrue(capturedErr.toString(StandardCharsets.UTF_8).isBlank());
+    Files.deleteIfExists(grant);
   }
 
   @Test
@@ -104,15 +107,18 @@ class AppTest {
     ByteArrayOutputStream capturedOut = new ByteArrayOutputStream();
     ByteArrayOutputStream capturedErr = new ByteArrayOutputStream();
     Path workspace = Files.createTempDirectory("gridgrind-app-main-");
+    Path grant = writeNoOpGrant();
     try (PrintStream redirectedOut = new PrintStream(capturedOut, true, StandardCharsets.UTF_8);
         PrintStream redirectedErr = new PrintStream(capturedErr, true, StandardCharsets.UTF_8)) {
       System.setIn(new ByteArrayInputStream(jsonRequest));
       System.setOut(redirectedOut);
       System.setErr(redirectedErr);
 
-      App.main(new String[] {"--execution-root", workspace.toString()});
+      App.main(
+          new String[] {"--execution-root", workspace.toString(), "--grant", grant.toString()});
     } finally {
       originalStreams.restore();
+      Files.deleteIfExists(grant);
     }
 
     WorkbookResult response = GridGrindJson.readWorkbookResult(capturedOut.toByteArray());
@@ -122,6 +128,21 @@ class AppTest {
 
   private static SystemStreams captureCurrentSystemStreams() {
     return new SystemStreams(System.in, System.out, System.err);
+  }
+
+  private static Path writeNoOpGrant() throws IOException {
+    Path grant = Files.createTempFile("gridgrind-app-grant-", ".json");
+    Files.write(
+        grant,
+        dev.erst.gridgrind.cli.discovery.GridGrindCliJson.writeBytes(
+            new CliExecutionGrantDocument(
+                List.of(),
+                List.of(),
+                new CliGrantTargetAuthority.WorkbookWide(),
+                new CliGrantPublicationAuthority.None(),
+                List.of(),
+                new CliGrantAcceptancePolicy.MinimumOnly())));
+    return grant;
   }
 
   /** Preserves and restores the mutable JVM-wide process streams during App entry-point tests. */

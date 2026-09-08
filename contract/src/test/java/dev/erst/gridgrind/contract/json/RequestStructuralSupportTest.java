@@ -82,10 +82,11 @@ class RequestStructuralSupportTest {
     assertEquals(
         List.of(
             "Field 'encryption' must be a JSON object",
-            "Field 'encryption.password' must be a JSON string",
+            "Missing required field 'encryption.passwordRef'",
+            "Unknown field 'encryption.password'",
             "Field 'integer' must be a JSON number",
             "Field 'boolean' must be a JSON boolean",
-            "Unsupported value 'NOT_A_VERSION' for field 'protocolVersion'; expected one of: V2",
+            "Unsupported value 'NOT_A_VERSION' for field 'protocolVersion'; expected one of: V3",
             "Field 'protocolVersion' must be a JSON string",
             "Field 'source' must be a JSON object",
             "Missing required field 'source.type'",
@@ -130,7 +131,9 @@ class RequestStructuralSupportTest {
         List.of(
             "Field 'values' must be a JSON array",
             "Field 'values[0]' must be a JSON string",
-            "Field 'value' must be omitted when absent; explicit null is not accepted."),
+            "Field 'value' must be omitted when absent; explicit null is not accepted.",
+            "Missing required field 'encryption.passwordRef'",
+            "Unknown field 'encryption.password'"),
         problems.stream().map(RequestStructuralProblem::message).toList());
   }
 
@@ -338,7 +341,7 @@ class RequestStructuralSupportTest {
   void buildsCompletePlansOnlyFromCompleteAndConstructorValidFragments() {
     RequestBoundRoot completeRoot =
         new RequestBoundRoot(
-            Optional.of(GridGrindProtocolVersion.V2),
+            Optional.of(GridGrindProtocolVersion.V3),
             Optional.of("plan"),
             Optional.of(new WorkbookPlan.WorkbookSource.New()),
             Optional.of(new WorkbookPlan.WorkbookPersistence.None()),
@@ -349,7 +352,7 @@ class RequestStructuralSupportTest {
 
     assertTrue(complete.completePlan().isPresent());
     assertEquals("plan", complete.planId().orElseThrow());
-    assertEquals(GridGrindProtocolVersion.V2, complete.protocolVersion().orElseThrow());
+    assertEquals(GridGrindProtocolVersion.V3, complete.protocolVersion().orElseThrow());
     assertTrue(complete.source().isPresent());
     assertTrue(complete.persistence().isPresent());
     assertTrue(complete.execution().isPresent());
@@ -372,7 +375,7 @@ class RequestStructuralSupportTest {
         List.of(
             new RequestBoundFragments(
                 new RequestBoundRoot(
-                    Optional.of(GridGrindProtocolVersion.V2),
+                    Optional.of(GridGrindProtocolVersion.V3),
                     Optional.empty(),
                     Optional.empty(),
                     Optional.of(new WorkbookPlan.WorkbookPersistence.None()),
@@ -381,7 +384,7 @@ class RequestStructuralSupportTest {
                 Optional.of(List.of())),
             new RequestBoundFragments(
                 new RequestBoundRoot(
-                    Optional.of(GridGrindProtocolVersion.V2),
+                    Optional.of(GridGrindProtocolVersion.V3),
                     Optional.empty(),
                     Optional.of(new WorkbookPlan.WorkbookSource.New()),
                     Optional.empty(),
@@ -390,7 +393,7 @@ class RequestStructuralSupportTest {
                 Optional.of(List.of())),
             new RequestBoundFragments(
                 new RequestBoundRoot(
-                    Optional.of(GridGrindProtocolVersion.V2),
+                    Optional.of(GridGrindProtocolVersion.V3),
                     Optional.empty(),
                     Optional.of(new WorkbookPlan.WorkbookSource.New()),
                     Optional.of(new WorkbookPlan.WorkbookPersistence.None()),
@@ -399,7 +402,7 @@ class RequestStructuralSupportTest {
                 Optional.of(List.of())),
             new RequestBoundFragments(
                 new RequestBoundRoot(
-                    Optional.of(GridGrindProtocolVersion.V2),
+                    Optional.of(GridGrindProtocolVersion.V3),
                     Optional.empty(),
                     Optional.of(new WorkbookPlan.WorkbookSource.New()),
                     Optional.of(new WorkbookPlan.WorkbookPersistence.None()),
@@ -430,7 +433,7 @@ class RequestStructuralSupportTest {
         GridGrindJson.readRequest(
                 """
                 {
-                  "protocolVersion": "V2",
+                  "protocolVersion": "V3",
                   "source": {"type": "NEW"},
                   "persistence": {"type": "NONE"},
                   "steps": [{

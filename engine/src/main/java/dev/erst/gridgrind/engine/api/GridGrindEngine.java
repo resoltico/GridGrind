@@ -97,11 +97,39 @@ public final class GridGrindEngine {
         .standardInputBytes()
         .map(
             bytes ->
-                new dev.erst.gridgrind.engine.runtime.ExecutionInputBindings(
-                    inputs.workingDirectory(), inputs.tempRoot(), bytes))
+                inputs
+                    .secretResolver()
+                    .<dev.erst.gridgrind.engine.runtime.ExecutionInputBindings>map(
+                        resolver ->
+                            new dev.erst.gridgrind.engine.runtime.ExecutionInputBindings(
+                                inputs.workingDirectory(),
+                                inputs.tempRoot(),
+                                bytes,
+                                inputs.executionGrant(),
+                                resolver))
+                    .orElseGet(
+                        () ->
+                            new dev.erst.gridgrind.engine.runtime.ExecutionInputBindings(
+                                inputs.workingDirectory(),
+                                inputs.tempRoot(),
+                                bytes,
+                                inputs.executionGrant())))
         .orElseGet(
             () ->
-                new dev.erst.gridgrind.engine.runtime.ExecutionInputBindings(
-                    inputs.workingDirectory(), inputs.tempRoot()));
+                inputs
+                    .secretResolver()
+                    .<dev.erst.gridgrind.engine.runtime.ExecutionInputBindings>map(
+                        resolver ->
+                            new dev.erst.gridgrind.engine.runtime.ExecutionInputBindings(
+                                inputs.workingDirectory(),
+                                inputs.tempRoot(),
+                                inputs.executionGrant(),
+                                resolver))
+                    .orElseGet(
+                        () ->
+                            new dev.erst.gridgrind.engine.runtime.ExecutionInputBindings(
+                                inputs.workingDirectory(),
+                                inputs.tempRoot(),
+                                inputs.executionGrant())));
   }
 }

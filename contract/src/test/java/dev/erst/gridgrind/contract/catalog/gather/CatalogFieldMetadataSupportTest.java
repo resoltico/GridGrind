@@ -1,6 +1,7 @@
 package dev.erst.gridgrind.contract.catalog;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -165,6 +166,18 @@ class CatalogFieldMetadataSupportTest {
   }
 
   @Test
+  void marksOnlyExplicitSecretProtocolFieldsAsSecret() throws ReflectiveOperationException {
+    assertTrue(
+        CatalogFieldMetadataSupport.fieldEntry(
+                recordComponent(SecretFixture.class, "password"), Set.of())
+            .secret());
+    assertFalse(
+        CatalogFieldMetadataSupport.fieldEntry(
+                recordComponent(SecretFixture.class, "label"), Set.of())
+            .secret());
+  }
+
+  @Test
   @SuppressWarnings("PMD.UseConcurrentHashMap")
   void lookupAssignableGroupListPrefersMostSpecificAssignableGroup()
       throws ReflectiveOperationException {
@@ -318,6 +331,10 @@ class CatalogFieldMetadataSupportTest {
       return getTypeName();
     }
   }
+
+  private record SecretFixture(
+      @dev.erst.gridgrind.contract.dto.ProtocolField(secret = true) String password,
+      String label) {}
 
   /** Invalid synthetic List parameterization used to cover wrong-arity failures. */
   private static final class InvalidListParameterizedType implements ParameterizedType {

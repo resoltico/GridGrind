@@ -135,8 +135,8 @@ class WorkbookInvariantChecksTest {
 
     WorkbookResult.Success response =
         WorkbookResults.success(
-            GridGrindProtocolVersion.V2,
-            writtenSaveAs("result.xlsx", workbookPath),
+            GridGrindProtocolVersion.V3,
+            publishedSaveAs("result.xlsx", workbookPath),
             List.of(
                 new RequestWarning(
                     GridGrindWarningCode.UNQUOTED_SHEET_NAME_IN_FORMULA,
@@ -318,8 +318,8 @@ class WorkbookInvariantChecksTest {
     WorkbookPlan request = saveAsRequest(workbookPath);
     WorkbookResult.Failure response =
         WorkbookResults.failure(
-            GridGrindProtocolVersion.V2,
-            notWrittenSaveAs(workbookPath.toString()),
+            GridGrindProtocolVersion.V3,
+            notAttemptedSaveAs(workbookPath.toString()),
             GridGrindProblemDetail.Problem.of(
                 GridGrindProblemCode.IO_ERROR,
                 "Could not write workbook to " + workbookPath + ": disk full",
@@ -366,8 +366,8 @@ class WorkbookInvariantChecksTest {
                 new InspectionAnalysisQuery.AnalyzeNamedRangeHealth()));
     WorkbookResult.Success response =
         WorkbookResults.success(
-            GridGrindProtocolVersion.V2,
-            writtenSaveAs(workbookPath.toString(), workbookPath),
+            GridGrindProtocolVersion.V3,
+            publishedSaveAs(workbookPath.toString(), workbookPath),
             List.of(),
             List.of(),
             List.of(
@@ -418,8 +418,8 @@ class WorkbookInvariantChecksTest {
 
     WorkbookResult.Success response =
         WorkbookResults.success(
-            GridGrindProtocolVersion.V2,
-            writtenSaveAs(workbookPath.toString(), workbookPath),
+            GridGrindProtocolVersion.V3,
+            publishedSaveAs(workbookPath.toString(), workbookPath),
             List.of(),
             List.of(),
             List.of(
@@ -471,8 +471,8 @@ class WorkbookInvariantChecksTest {
 
     WorkbookResult.Success response =
         WorkbookResults.success(
-            GridGrindProtocolVersion.V2,
-            writtenSaveAs("result.xlsx", workbookPath),
+            GridGrindProtocolVersion.V3,
+            publishedSaveAs("result.xlsx", workbookPath),
             List.of(),
             List.of(),
             List.of(
@@ -497,8 +497,8 @@ class WorkbookInvariantChecksTest {
 
     WorkbookResult.Success response =
         WorkbookResults.success(
-            GridGrindProtocolVersion.V2,
-            writtenSaveAs("result.xlsx", workbookPath),
+            GridGrindProtocolVersion.V3,
+            publishedSaveAs("result.xlsx", workbookPath),
             List.of(),
             List.of(),
             List.of(
@@ -557,8 +557,8 @@ class WorkbookInvariantChecksTest {
                 new InspectionAnalysisQuery.AnalyzeTableHealth()));
     WorkbookResult.Success response =
         WorkbookResults.success(
-            GridGrindProtocolVersion.V2,
-            writtenSaveAs(workbookPath.toString(), workbookPath),
+            GridGrindProtocolVersion.V3,
+            publishedSaveAs(workbookPath.toString(), workbookPath),
             List.of(),
             List.of(),
             List.of(
@@ -597,8 +597,8 @@ class WorkbookInvariantChecksTest {
 
     WorkbookResult.Success response =
         WorkbookResults.success(
-            GridGrindProtocolVersion.V2,
-            writtenSaveAs("pivot.xlsx", workbookPath),
+            GridGrindProtocolVersion.V3,
+            publishedSaveAs("pivot.xlsx", workbookPath),
             List.of(),
             List.of(),
             List.of(
@@ -630,8 +630,8 @@ class WorkbookInvariantChecksTest {
                 new InspectionAnalysisQuery.AnalyzePivotTableHealth()));
     WorkbookResult.Success response =
         WorkbookResults.success(
-            GridGrindProtocolVersion.V2,
-            writtenSaveAs(workbookPath.toString(), workbookPath),
+            GridGrindProtocolVersion.V3,
+            publishedSaveAs(workbookPath.toString(), workbookPath),
             List.of(),
             List.of(),
             List.of(
@@ -671,8 +671,8 @@ class WorkbookInvariantChecksTest {
                     new SheetIntrospectionQuery.GetSheetSummary())));
     WorkbookResult.Success response =
         WorkbookResults.success(
-            GridGrindProtocolVersion.V2,
-            writtenSaveAs(workbookPath.toString(), workbookPath),
+            GridGrindProtocolVersion.V3,
+            publishedSaveAs(workbookPath.toString(), workbookPath),
             List.of(),
             List.of(new AssertionResult.Passed("assert-total", "EXPECT_ANALYSIS_MAX_SEVERITY")),
             List.of(
@@ -742,8 +742,8 @@ class WorkbookInvariantChecksTest {
 
     WorkbookResult.Success response =
         WorkbookResults.success(
-            GridGrindProtocolVersion.V2,
-            writtenSaveAs("advanced.xlsx", workbookPath),
+            GridGrindProtocolVersion.V3,
+            publishedSaveAs("advanced.xlsx", workbookPath),
             List.of(),
             List.of(),
             List.of(
@@ -874,8 +874,8 @@ class WorkbookInvariantChecksTest {
 
     WorkbookResult.Success response =
         WorkbookResults.success(
-            GridGrindProtocolVersion.V2,
-            writtenSaveAs("drawing.xlsx", workbookPath),
+            GridGrindProtocolVersion.V3,
+            publishedSaveAs("drawing.xlsx", workbookPath),
             List.of(),
             List.of(),
             List.of(
@@ -956,8 +956,8 @@ class WorkbookInvariantChecksTest {
                 new WorkbookAssetIntrospectionQuery.GetDrawingObjectPayload()));
     WorkbookResult.Success response =
         WorkbookResults.success(
-            GridGrindProtocolVersion.V2,
-            writtenSaveAs(workbookPath.toString(), workbookPath),
+            GridGrindProtocolVersion.V3,
+            publishedSaveAs(workbookPath.toString(), workbookPath),
             List.of(),
             List.of(),
             List.of(
@@ -998,8 +998,8 @@ class WorkbookInvariantChecksTest {
 
     WorkbookResult.Success response =
         WorkbookResults.success(
-            GridGrindProtocolVersion.V2,
-            writtenSaveAs("chart.xlsx", workbookPath),
+            GridGrindProtocolVersion.V3,
+            publishedSaveAs("chart.xlsx", workbookPath),
             List.of(),
             List.of(),
             List.of(
@@ -1033,8 +1033,8 @@ class WorkbookInvariantChecksTest {
                 new WorkbookAssetIntrospectionQuery.GetCharts()));
     WorkbookResult.Success response =
         WorkbookResults.success(
-            GridGrindProtocolVersion.V2,
-            writtenSaveAs(workbookPath.toString(), workbookPath),
+            GridGrindProtocolVersion.V3,
+            publishedSaveAs(workbookPath.toString(), workbookPath),
             List.of(),
             List.of(),
             List.of(
@@ -1150,14 +1150,16 @@ class WorkbookInvariantChecksTest {
             new WorkbookPlan.WorkbookSource.ExistingFile(
                 workbookPath.toString(),
                 new dev.erst.gridgrind.contract.dto.OoxmlOpenSecurityInput(
-                    java.util.Optional.of("GridGrind-2026"))),
+                    java.util.Optional.of(
+                        new dev.erst.gridgrind.contract.dto.SecretReference(
+                            "source-open-password")))),
             inspect(
                 "security",
                 new WorkbookSelector.Current(),
                 new WorkbookIntrospectionQuery.GetPackageSecurity()));
     WorkbookResult.Success response =
         WorkbookResults.success(
-            GridGrindProtocolVersion.V2,
+            GridGrindProtocolVersion.V3,
             new WorkbookResultPersistence.PersistenceOutcome.NotSaved(),
             List.of(),
             List.of(),
@@ -1214,7 +1216,7 @@ class WorkbookInvariantChecksTest {
     CustomXmlMappingReport mapping = customXmlMappingReport();
     WorkbookResult.Success response =
         WorkbookResults.success(
-            GridGrindProtocolVersion.V2,
+            GridGrindProtocolVersion.V3,
             new WorkbookResultPersistence.PersistenceOutcome.NotSaved(),
             List.of(),
             List.of(),
@@ -1333,16 +1335,23 @@ class WorkbookInvariantChecksTest {
             true));
   }
 
-  private static WorkbookResultPersistence.PersistenceOutcome.SavedAs writtenSaveAs(
+  private static WorkbookResultPersistence.PersistenceOutcome.SavedAs publishedSaveAs(
       String requestedPath, Path workbookPath) {
     return new WorkbookResultPersistence.PersistenceOutcome.SavedAs(
-        requestedPath, new WorkbookResultPersistence.WriteResult.Written(workbookPath.toString()));
+        requestedPath,
+        new WorkbookResultPersistence.PublicationOutcome.Published(
+            workbookPath.toString(),
+            "0".repeat(64),
+            0,
+            new WorkbookResultPersistence.PublicationOutcome.StagedArtifactVerification(),
+            new WorkbookResultPersistence.PublicationOutcome.DurabilityEvidence
+                .FileSyncedDirectoryUnestablished()));
   }
 
-  private static WorkbookResultPersistence.PersistenceOutcome.SavedAs notWrittenSaveAs(
+  private static WorkbookResultPersistence.PersistenceOutcome.SavedAs notAttemptedSaveAs(
       String requestedPath) {
     return new WorkbookResultPersistence.PersistenceOutcome.SavedAs(
-        requestedPath, new WorkbookResultPersistence.WriteResult.NotWritten());
+        requestedPath, new WorkbookResultPersistence.PublicationOutcome.NotAttempted());
   }
 
   @SafeVarargs

@@ -46,13 +46,31 @@ final class ExecutionRequestPaths {
     };
   }
 
-  static Optional<String> sourceEncryptionPassword(WorkbookPlan.WorkbookSource source) {
+  static Optional<String> sourceEncryptionPassword(
+      WorkbookPlan.WorkbookSource source, ExecutionInputBindings bindings) {
     return switch (source) {
       case WorkbookPlan.WorkbookSource.New _ -> Optional.empty();
       case WorkbookPlan.WorkbookSource.ExistingFile existingFile ->
           existingFile
               .security()
-              .flatMap(dev.erst.gridgrind.contract.dto.OoxmlOpenSecurityInput::password);
+              .flatMap(dev.erst.gridgrind.contract.dto.OoxmlOpenSecurityInput::passwordRef)
+              .map(bindings::resolveSecret);
+    };
+  }
+
+  static Optional<String> sourceEncryptionPassword(WorkbookPlan.WorkbookSource source) {
+    return switch (source) {
+      case WorkbookPlan.WorkbookSource.New _ -> Optional.empty();
+      case WorkbookPlan.WorkbookSource.ExistingFile existingFile -> {
+        if (existingFile
+            .security()
+            .flatMap(dev.erst.gridgrind.contract.dto.OoxmlOpenSecurityInput::passwordRef)
+            .isPresent()) {
+          throw new IllegalStateException(
+              "source encryption references require execution bindings");
+        }
+        yield Optional.empty();
+      }
     };
   }
 

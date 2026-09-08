@@ -48,6 +48,12 @@ public enum GridGrindProblemCode {
       "Assertion failed",
       "Inspect the observed workbook facts, then adjust the plan expectations or authored"
           + " mutations and retry."),
+  PRESERVATION_FAILED(
+      GridGrindProblemCategory.ASSERTION,
+      GridGrindProblemRecovery.CHANGE_REQUEST,
+      "Preservation requirement failed",
+      "Inspect the protected facts, then adjust the plan mutations or the host-required"
+          + " preservation selection and retry."),
   INVALID_CELL_ADDRESS(
       GridGrindProblemCategory.REQUEST,
       GridGrindProblemRecovery.CHANGE_REQUEST,
@@ -192,6 +198,18 @@ public enum GridGrindProblemCode {
       "Unsafe path access",
       "Use a filesystem that supports GridGrind's no-follow path binding and retry after any"
           + " observed path topology change is resolved."),
+  AUTHORITY_DENIED(
+      GridGrindProblemCategory.SECURITY,
+      GridGrindProblemRecovery.CHANGE_REQUEST,
+      "Execution authority denied",
+      "Request a host grant that explicitly permits the required resource, operation, target, or"
+          + " publication effect."),
+  PUBLICATION_UNCERTAIN(
+      GridGrindProblemCategory.IO,
+      GridGrindProblemRecovery.ESCALATE,
+      "Workbook publication state is uncertain",
+      "Inspect the destination workbook and its recorded publication evidence before any retry;"
+          + " do not rerun the plan blindly."),
   IO_ERROR(
       GridGrindProblemCategory.IO,
       GridGrindProblemRecovery.CHECK_ENVIRONMENT,

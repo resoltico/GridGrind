@@ -10,6 +10,6 @@ class ArchitectureGateContractTest {
   @Test
   void architectureTestRuntimeLoadsFailClosedPolicyAndEveryMandatoryRule() {
     assertEquals("true", ArchConfiguration.get().getProperty("archRule.failOnEmptyShould"));
-    assertEquals(13, ProductArchitectureRules.mandatoryRules().size());
+    assertEquals(16, ProductArchitectureRules.mandatoryRules().size());
   }
 }

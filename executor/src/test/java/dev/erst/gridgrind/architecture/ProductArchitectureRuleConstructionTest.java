@@ -16,6 +16,7 @@ class ProductArchitectureRuleConstructionTest {
         () -> assertNotNull(new ProductDependencyArchitectureRules()),
         () -> assertNotNull(new ProductDomainShapeArchitectureRules()),
         () -> assertNotNull(new ProductToolingSeamArchitectureRules()),
+        () -> assertNotNull(new ProductAssuranceArchitectureRules()),
         () -> assertNotNull(ProductDependencyArchitectureRules.productModulesAreFreeOfCycles()),
         () ->
             assertNotNull(ProductDependencyArchitectureRules.productClassesBelongToKnownModules()),
@@ -58,6 +59,14 @@ class ProductArchitectureRuleConstructionTest {
             assertNotNull(ProductToolingSeamArchitectureRules.privateReflectionStaysCentralized()),
         () ->
             assertNotNull(ProductToolingSeamArchitectureRules.directPoiFormulaWritesAreForbidden()),
-        () -> assertNotNull(ProductToolingSeamArchitectureRules.privateReflectionIsForbidden()));
+        () -> assertNotNull(ProductToolingSeamArchitectureRules.privateReflectionIsForbidden()),
+        () -> assertNotNull(ProductAssuranceArchitectureRules.executionUsesOneAdmittedExecutor()),
+        () ->
+            assertNotNull(
+                ProductAssuranceArchitectureRules.catalogUsesCanonicalOperationContracts()),
+        () ->
+            assertNotNull(
+                ProductAssuranceArchitectureRules
+                    .publicationIsCentralizedBehindRequestPathAccess()));
   }
 }

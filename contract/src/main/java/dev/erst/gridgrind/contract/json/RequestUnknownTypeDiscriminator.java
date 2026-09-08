@@ -1,6 +1,7 @@
 package dev.erst.gridgrind.contract.json;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 /** Reports an unrecognised sealed-input discriminator. */
@@ -13,7 +14,7 @@ record RequestUnknownTypeDiscriminator(
     implements RequestShapeStructuralProblem {
   RequestUnknownTypeDiscriminator {
     path = RequestStructuralProblemSupport.requireText(path, "path");
-    value = RequestStructuralProblemSupport.requireText(value, "value");
+    Objects.requireNonNull(value, "value must not be null");
     similarValues = RequestStructuralProblemSupport.copyStrings(similarValues, "similarValues");
     specificGuidance =
         RequestStructuralProblemSupport.copyOptionalText(specificGuidance, "specificGuidance");

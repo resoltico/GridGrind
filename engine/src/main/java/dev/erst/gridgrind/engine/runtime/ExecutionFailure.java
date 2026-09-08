@@ -34,16 +34,20 @@ record ExecutionFailure(Context context, Artifacts artifacts, Detail detail) {
 
   record Artifacts(
       List<RequestWarning> warnings,
-      List<AssertionResult> assertions,
+      List<AssertionResult> planAssertions,
+      List<AssertionResult> hostAssertions,
+      List<dev.erst.gridgrind.contract.dto.WorkbookExecutionEvidence.Preservation> preservation,
       List<InspectionResult> inspections) {
     Artifacts {
       warnings = List.copyOf(warnings);
-      assertions = List.copyOf(assertions);
+      planAssertions = List.copyOf(planAssertions);
+      hostAssertions = List.copyOf(hostAssertions);
+      preservation = List.copyOf(preservation);
       inspections = List.copyOf(inspections);
     }
 
     static Artifacts empty() {
-      return new Artifacts(List.of(), List.of(), List.of());
+      return new Artifacts(List.of(), List.of(), List.of(), List.of(), List.of());
     }
   }
 

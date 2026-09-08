@@ -1,8 +1,7 @@
 ---
-afad: "4.0"
-version: "0.75.0"
+afad: "5.0.1"
 domain: DEVELOPER_JAZZER_OPERATIONS
-updated: "2026-05-01"
+updated: "2026-09-09"
 route:
   keywords: [gridgrind, jazzer, fuzz, operations, replay, promote, corpus, findings, summaries, telemetry]
   questions: ["how do I use the jazzer scripts", "how do I replay a jazzer input", "how do I promote a jazzer input", "where do jazzer run logs and summaries go", "how do I inspect the corpus", "how do I clean jazzer state"]
@@ -316,7 +315,8 @@ Structured binary-harness replay uses GridGrind's pure-Java scalar replay cursor
 Jazzer's native replay bootstrap path, so replay remains stable in a fresh JVM.
 
 `protocol-request` and `protocol-workflow` are stable Jazzer harness names for the canonical JSON
-request surface. They are not module names; the live product split is `contract` plus `executor`.
+request surface. They are not module names; the live product runtime split is `contract` plus
+`engine`, while `executor` remains verification-only.
 Committed `protocol-workflow` binary seeds are opaque generator inputs, not human-authored semantic
 scenarios. They therefore use neutral case identifiers such as `workflow_case_01.bin`, while the
 authoritative decoded behavior lives in the refreshed replay metadata and replay text.

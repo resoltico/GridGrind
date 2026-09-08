@@ -1,6 +1,5 @@
 ---
 afad: "4.0"
-version: "0.75.0"
 domain: DEVELOPER
 updated: "2026-08-31"
 route:
@@ -212,7 +211,9 @@ overlay contract in `.devcontainer/devcontainer.json`.
 
 # Build artifacts
 ./gradlew :cli:shadowJar
-./gradlew :cli:run --args="--request examples/budget-request.json"
+./gradlew :cli:run --args="--print-grant-template --response grant.json"
+# Edit grant.json to authorize examples/budget-request.json's exact resources, operations, and output.
+./gradlew :cli:run --args="--request examples/budget-request.json --grant grant.json"
 ./gradlew :cli:run --args="--version"
 ./gradlew :cli:run --args="--print-request-template"
 ./gradlew :cli:run --args="--print-protocol-catalog"
@@ -480,10 +481,12 @@ fixtures and authoring examples cover the core surface:
 | `examples/assertion-request.json` | Ordered mutate-then-verify flow with first-class assertion steps and verbose journaling |
 | `examples/workbook-health-request.json` | Compact no-save health workflow combining sheet summary, formula health, aggregate workbook findings, and cell readback |
 
-Run any JSON fixture with:
+Run any JSON fixture through an explicit least-authority grant:
 
 ```bash
-./gradlew :cli:run --args="--request examples/<file>.json"
+./gradlew :cli:run --args="--print-grant-template --response grant.json"
+# Edit grant.json to authorize examples/<file>.json's exact resources, operations, and output.
+./gradlew :cli:run --args="--request examples/<file>.json --grant grant.json"
 ```
 
 Examples that persist a workbook write to `generated-workbooks/` beside the request file; for the

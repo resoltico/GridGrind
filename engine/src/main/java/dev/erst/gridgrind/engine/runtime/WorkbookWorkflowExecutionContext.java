@@ -18,7 +18,9 @@ record WorkbookWorkflowExecutionContext(
     ExcelWorkbook workbook,
     ExecutionJournalRecorder journal,
     List<RequestWarning> warnings,
-    List<AssertionResult> assertions,
+    List<AssertionResult> planAssertions,
+    List<AssertionResult> hostAssertions,
+    List<dev.erst.gridgrind.contract.dto.WorkbookExecutionEvidence.Preservation> preservation,
     List<InspectionResult> inspections) {
   ExecutionFailure failure(CalculationReport calculation, GridGrindProblemDetail.Problem problem) {
     return failure(calculation, problem, null, null);
@@ -39,7 +41,8 @@ record WorkbookWorkflowExecutionContext(
       @Nullable String failedStepId) {
     return new ExecutionFailure(
         new ExecutionFailure.Context(protocolVersion, journal, request, calculation),
-        new ExecutionFailure.Artifacts(warnings, assertions, inspections),
+        new ExecutionFailure.Artifacts(
+            warnings, planAssertions, hostAssertions, preservation, inspections),
         new ExecutionFailure.Detail(problem, failedStepIndex, failedStepId));
   }
 }

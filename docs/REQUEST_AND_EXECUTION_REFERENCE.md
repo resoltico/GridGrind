@@ -1,11 +1,10 @@
 ---
 afad: "5.0.1"
-version: "0.75.0"
 domain: REQUEST_EXECUTION_REFERENCE
-updated: "2026-08-27"
+updated: "2026-09-07"
 route:
-  keywords: [gridgrind, request, source, persistence, execution, formula-environment, source-backed, input, calculation, journal, event-read, streaming-write]
-  questions: ["what does a gridgrind request look like", "how do source-backed inputs work in gridgrind", "how does execution.calculation work", "what is the response journal", "how do event read and streaming write work"]
+  keywords: [gridgrind, request, source, persistence, execution, formula-environment, source-backed, input, calculation, journal, event-read, streaming-write, host-grant, acceptance, evidence, secret-reference]
+  questions: ["what does a gridgrind request look like", "how do source-backed inputs work in gridgrind", "how do I grant GridGrind authority", "how does host acceptance work", "how does execution.calculation work", "what is the response journal", "how do event read and streaming write work"]
 ---
 
 # Request And Execution Reference
@@ -26,6 +25,29 @@ focused references linked above. The Java authoring layer emits this same envelo
 `GridGrindPlan.toPlan()`, `toJsonBytes()`, and `toJsonString()`. See
 [JAVA_AUTHORING.md](./JAVA_AUTHORING.md) when you want to build the request from Java instead of
 hand-writing JSON.
+
+## Host Grants, Secrets, And Acceptance
+
+A workbook plan states requested work; it does not authorize that work. Every Java execution receives a host-owned `GridGrindExecutionGrant`, and CLI execution or bound doctoring receives the equivalent document through `--grant <path>`. A CLI invocation without a grant remains structurally analyzable, but no executable plan is admitted: it fails closed with `AUTHORITY_DENIED` before workbook mutation or publication.
+
+Start from `gridgrind --print-grant-template --response grant.json`, then grant only the exact file resources, operation IDs, workbook scope, publication destination, secret references, and acceptance policy required by the request. Grant-relative paths resolve from the CLI process working directory, independently of request-owned path resolution. The plan cannot name, broaden, or embed the grant.
+
+```json
+{
+  "readableResources": [],
+  "operationIds": [],
+  "targetAuthority": { "type": "WORKBOOK_WIDE" },
+  "publicationAuthority": { "type": "NONE" },
+  "allowedSecretReferences": [],
+  "acceptancePolicy": { "type": "MINIMUM_ONLY" }
+}
+```
+
+`MINIMUM_ONLY` always requires a persisted workbook to be staged privately, structurally reopened with its effective output security, and verified before final publication. `REQUIRE_ALL` adds typed host requirements that plan-authored steps cannot remove or weaken: `TERMINAL_ASSERTIONS` runs host-owned assertions after plan mutation and before publication; `PRESERVE_INSPECTION_FACTS` compares selected before-and-after inspection facts and requires `FULL_XSSF`; `PRESERVE_OPAQUE_OOXML_PARTS` compares each explicitly named package part byte-for-byte between the immutable materialized source and the reopened staged artifact; and `REQUIRE_CALCULATION` imposes strict all-formula evaluation after mutation and also requires `FULL_XSSF`. Opaque-part preservation additionally requires an unencrypted `EXISTING` source, a persisted artifact, and `FULL_XSSF`; it is rejected during admission when those facts cannot be established.
+
+Secret-bearing request fields use typed `...Ref` identifiers, never inline values. Supply `--secrets-provider <directory>` when the granted references need resolution. The provider opens only the exact named no-follow regular file; resolved values are never included in plans, diagnostics, journals, progress events, or result evidence.
+
+Every result carries `evidence`: admitted operation effects and materialized-input SHA-256 identities, structural and computational claims, plan-authored versus host-required assertion outcomes, preservation state, and a presentational claim that remains `NOT_ASSESSED` unless a trusted renderer supplies separate evidence. The persistence outcome remains the sole publication-state record; response-transport failure does not alter it.
 
 ## Source-Backed Authored Inputs
 
@@ -107,7 +129,7 @@ accessibility without mutating a workbook.
 
 ```json
 {
-  "protocolVersion": "V2",
+  "protocolVersion": "V3",
   "source":      { ... },
   "persistence": { ... },
   "steps": [ ... ]
@@ -116,7 +138,7 @@ accessibility without mutating a workbook.
 
 | Field | Required | Description |
 |:------|:---------|:------------|
-| `protocolVersion` | Yes | Wire-contract version. The current public value is `V2`. |
+| `protocolVersion` | Yes | Wire-contract version. The current public value is `V3`. |
 | `source` | Yes | Where the workbook comes from. |
 | `persistence` | Yes | Where and whether to save. Use `{"type":"NONE"}` for unsaved runs. |
 | `execution` | No | Optional execution policy for low-memory mode selection, structured journaling, and formula calculation handling. Omit it for the standard full-XSSF path with `SUMMARY` journaling and `DO_NOT_CALCULATE`, or supply it explicitly when you need non-default behavior. |
@@ -261,14 +283,18 @@ object. The excerpt below focuses on that canonical persistence outcome and its 
 ```json
 {
   "status": "SUCCEEDED",
-  "protocolVersion": "V2",
+  "protocolVersion": "V3",
   "planId": "budget-pass",
   "persistence": {
     "type": "SAVE_AS",
     "requestedPath": "out/budget-reviewed.xlsx",
-    "write": {
-      "status": "WRITTEN",
-      "executionPath": "/work/out/budget-reviewed.xlsx"
+    "publication": {
+      "status": "PUBLISHED",
+      "executionPath": "/work/out/budget-reviewed.xlsx",
+      "sha256": "<64-lowercase-hex-characters>",
+      "byteSize": 12345,
+      "stagedArtifactVerification": {},
+      "durability": { "level": "FILE_AND_DIRECTORY_SYNCED" }
     }
   },
   "journal": {
@@ -395,7 +421,7 @@ Use `ANALYZE_WORKBOOK_FINDINGS` as the primary workbook-health check. Pair it wi
 
 ```json
 {
-  "protocolVersion": "V2",
+  "protocolVersion": "V3",
   "source": {
     "type": "NEW"
   },
@@ -455,12 +481,12 @@ Open an existing `.xlsx` file.
   "type": "EXISTING",
   "path": "secured-workbook.xlsx",
   "security": {
-    "password": "GridGrind-2026"
+    "passwordRef": { "id": "source-open-password" }
   }
 }
 ```
 
-Open an encrypted existing `.xlsx` package by supplying `source.security.password`.
+Open an encrypted existing `.xlsx` package by supplying `source.security.passwordRef`.
 
 When the CLI reads the request via `--request <path>`, relative `path` values resolve from that
 request file's directory. When the request JSON arrives on stdin, pass
@@ -486,8 +512,7 @@ response still reports `type=OVERWRITE` but omits `sourcePath` rather than inven
   "ifExists": "REJECT"
 }
 ```
-Write the workbook to the given path. The destination parent directory must already exist so
-GridGrind can bind it through a no-follow filesystem handle before execution begins.
+Write the workbook to the given path. GridGrind creates a missing contained destination parent, then binds every directory through no-follow filesystem handles before execution begins.
 `SAVE_AS.ifExists` is required: use `REJECT` to fail when the destination already exists, or
 `REPLACE` to allow create-or-replace writes.
 
@@ -500,7 +525,7 @@ GridGrind can bind it through a no-follow filesystem handle before execution beg
     "encryption": {
       "type": "ENCRYPT",
       "encryption": {
-        "password": "GridGrind-2026",
+        "passwordRef": { "id": "output-encryption-password" },
         "cipher": "AES_256",
         "hash": "SHA_512"
       }
@@ -509,8 +534,8 @@ GridGrind can bind it through a no-follow filesystem handle before execution beg
       "type": "SIGN",
       "signature": {
         "pkcs12Path": "signing-material.p12",
-        "keystorePassword": "changeit",
-        "keyPassword": "changeit",
+        "keystorePasswordRef": { "id": "keystore-password" },
+        "keyPasswordRef": { "id": "key-password" },
         "alias": "gridgrind-signing"
       }
     }
@@ -529,8 +554,7 @@ Legacy STANDARD packages remain readable on inspection but are not authorable.
 `security.signature` is an explicit policy: `NONE` deliberately writes an unsigned package and
 removes any source package signatures; `SIGN` removes any source package signatures and applies
 one fresh nested PKCS#12 signature during persistence.
-`pkcs12Path` must point to a readable `.p12` or `.pfx` file, and `keystorePassword` must unlock
-the keystore. `keyPassword` defaults to `keystorePassword`, `digestAlgorithm` defaults to
+`pkcs12Path` must point to a readable `.p12` or `.pfx` file, and `keystorePasswordRef` identifies the approved secret that unlocks the keystore. `keyPasswordRef` may be omitted to reuse `keystorePasswordRef`, `digestAlgorithm` defaults to
 `SHA256`, and `alias` may be omitted to use the sole keystore entry or the first key entry POI can
 resolve. `pkcs12Path` follows the same request-owned path rule as other request file paths.
 
@@ -542,8 +566,10 @@ The save path must end in `.xlsx`.
 
 The response uses one failure-capable save result:
 - `requestedPath` — the literal `path` string from the request.
-- `write.status=WRITTEN` plus `write.executionPath` when the file was actually written.
-- `write.status=NOT_WRITTEN` when the run failed before any file write happened.
+- `publication.status=PUBLISHED` with `executionPath`, SHA-256, byte size, staged-artifact verification, and established durability when final publication was observed.
+- `publication.status=NOT_ATTEMPTED` when the final destination was never touched.
+- `publication.status=NOT_PUBLISHED` when a failed publication attempt left the destination provably absent or preserved.
+- `publication.status=UNCERTAIN` when GridGrind cannot establish the final destination state; inspect it without blind retry.
 
 For every writing `EXISTING` source request, `persistence.security` must declare both encryption
 and signature policies. There is no implicit source-encryption preservation or source-signature
@@ -552,7 +578,7 @@ write envelope; use `SIGN` when the output must carry a package signature. A wri
 may omit `security`; its declared default is `{ "encryption": { "type": "NONE" }, "signature":
 { "type": "NONE" } }`.
 
-`ifExists=REJECT` requires the destination path to be absent. `ifExists=REPLACE` enables create-or-replace behavior while preserving the same `requestedPath` versus `executionPath` response split.
+`ifExists=REJECT` requires the destination path to be absent at the atomic publication point. `ifExists=REPLACE` enables verified atomic create-or-replace publication.
 
 They are identical when an absolute path with no `..` segments is supplied. They differ when a
 relative path (e.g. `"report.xlsx"`) or a path containing `..` segments is used.
@@ -563,9 +589,13 @@ Successful `SAVE_AS` responses therefore look like:
 {
   "type": "SAVE_AS",
   "requestedPath": "out/report.xlsx",
-  "write": {
-    "status": "WRITTEN",
-    "executionPath": "/work/out/report.xlsx"
+  "publication": {
+    "status": "PUBLISHED",
+    "executionPath": "/work/out/report.xlsx",
+    "sha256": "<64-lowercase-hex-characters>",
+    "byteSize": 12345,
+    "stagedArtifactVerification": {},
+    "durability": { "level": "FILE_AND_DIRECTORY_SYNCED" }
   }
 }
 ```
@@ -577,9 +607,7 @@ response, but the write result becomes:
 {
   "type": "SAVE_AS",
   "requestedPath": "out/report.xlsx",
-  "write": {
-    "status": "NOT_WRITTEN"
-  }
+  "publication": { "status": "NOT_ATTEMPTED" }
 }
 ```
 
@@ -605,7 +633,7 @@ original source path string) whenever an `EXISTING` source path was available, a
       "type": "SIGN",
       "signature": {
         "pkcs12Path": "signing-material.p12",
-        "keystorePassword": "changeit",
+        "keystorePasswordRef": { "id": "keystore-password" },
         "alias": "gridgrind-signing"
       }
     }

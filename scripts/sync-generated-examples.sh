@@ -1,8 +1,6 @@
 #!/usr/bin/env bash
 # Refresh checkout-rooted example fixtures plus generated workbook assets used by discovery flows.
-
 set -euo pipefail
-
 resolve_script_dir() {
     local source_path="${BASH_SOURCE[0]}"
     while [[ -h "${source_path}" ]]; do
@@ -15,11 +13,12 @@ resolve_script_dir() {
     done
     cd -P -- "$(dirname -- "${source_path}")" && pwd
 }
-
 readonly script_dir="$(resolve_script_dir)"
 readonly repo_root="$(cd "${script_dir}/.." && pwd)"
 readonly gradlew="${repo_root}/gradlew"
 readonly cli_shadow_jar_support="${repo_root}/scripts/lib/cli-shadow-jar-support.sh"
+readonly host_input_support="${repo_root}/scripts/lib/generated-example-host-input-support.sh"
+readonly fixture_grant_writer="${repo_root}/scripts/write-fixture-grant.py"
 readonly scratch_root="${repo_root}/tmp/sync-generated-examples"
 readonly request_path="${scratch_root}/package-security-asset-request.json"
 readonly response_path="${scratch_root}/package-security-asset-response.json"
@@ -30,10 +29,11 @@ readonly task_asset_directory="${repo_root}/examples/task-starter-assets"
 readonly task_asset_path="${task_asset_directory}/workbook-ops-source.xlsx"
 readonly task_request_path="${scratch_root}/task-starter-workbook-request.json"
 readonly task_response_path="${scratch_root}/task-starter-workbook-response.json"
-
+readonly secrets_provider_root="${scratch_root}/secrets-provider"
 # shellcheck source=/dev/null
 source "${cli_shadow_jar_support}"
-
+# shellcheck source=/dev/null
+source "${host_input_support}"
 mkdir -p "${scratch_root}" "${asset_directory}" "${task_asset_directory}"
 rm -f \
     "${request_path}" \
@@ -41,17 +41,14 @@ rm -f \
     "${verify_response_path}" \
     "${task_request_path}" \
     "${task_response_path}"
-
 "${gradlew}" \
     :cli:writeRepositoryExamples \
     :cli:shadowJar \
     "$@"
-
 readonly jar_path="$(ensure_cli_shadow_jar "${repo_root}")"
-
 cat > "${request_path}" <<EOF
 {
-  "protocolVersion": "V2",
+  "protocolVersion": "V3",
   "planId": "generate-package-security-asset",
   "source": {
     "type": "NEW"
@@ -62,10 +59,14 @@ cat > "${request_path}" <<EOF
     "ifExists": "REPLACE",
     "security": {
       "encryption": {
-        "password": "GridGrind-2026",
-        "cipher": "AES_256",
-        "hash": "SHA_512"
-      }
+        "type": "ENCRYPT",
+        "encryption": {
+          "passwordRef": {"id": "output-password"},
+          "cipher": "AES_256",
+          "hash": "SHA_512"
+        }
+      },
+      "signature": {"type": "NONE"}
     }
   },
   "execution": {
@@ -163,14 +164,16 @@ cat > "${request_path}" <<EOF
   ]
 }
 EOF
-
+prepare_generated_example_host_inputs "${fixture_grant_writer}" "${scratch_root}" "${request_path}" "${task_request_path}" "${repo_root}/examples/package-security-inspect-request.json"
 java -jar "${jar_path}" \
-    --request "${request_path}" \
-    --response "${response_path}"
-
+    --request - \
+    --execution-root "${repo_root}" \
+    --grant "${scratch_root}/package-security-asset-grant.json" \
+    --secrets-provider "${secrets_provider_root}" \
+    --response "${response_path}" < "${request_path}"
 cat > "${task_request_path}" <<EOF
 {
-  "protocolVersion": "V2",
+  "protocolVersion": "V3",
   "planId": "generate-task-starter-workbook-asset",
   "source": {
     "type": "NEW"
@@ -382,13 +385,15 @@ cat > "${task_request_path}" <<EOF
   ]
 }
 EOF
-
+prepare_generated_example_host_inputs "${fixture_grant_writer}" "${scratch_root}" "${request_path}" "${task_request_path}" "${repo_root}/examples/package-security-inspect-request.json"
 java -jar "${jar_path}" \
-    --request "${task_request_path}" \
-    --response "${task_response_path}"
-
+    --request - \
+    --execution-root "${repo_root}" \
+    --grant "${scratch_root}/task-starter-workbook-grant.json" \
+    --response "${task_response_path}" < "${task_request_path}"
 java -jar "${jar_path}" \
     --request "${repo_root}/examples/package-security-inspect-request.json" \
+    --grant "${scratch_root}/package-security-inspect-grant.json" \
+    --secrets-provider "${secrets_provider_root}" \
     --response "${verify_response_path}"
-
 printf 'Refreshed example fixtures and workbook assets under %s\n' "${repo_root}/examples"

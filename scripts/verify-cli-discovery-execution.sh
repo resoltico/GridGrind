@@ -98,10 +98,7 @@ trap cleanup EXIT
 import json
 import subprocess
 import sys
-import time
-import uuid
 from pathlib import Path
-from typing import Optional
 
 repo_root = Path(sys.argv[1])
 mode = sys.argv[2]
@@ -109,130 +106,19 @@ artifact_target = sys.argv[3]
 temp_root = Path(sys.argv[4])
 docker_run_user = sys.argv[5]
 heartbeat_seconds = max(1, int(sys.argv[6]))
+sys.path.insert(0, str(repo_root / "scripts" / "lib"))
+from discovery_execution_support import ArtifactRunner
+
 def die(message: str) -> None:
     print(f"error: {message}", file=sys.stderr)
     raise SystemExit(1)
 
-
 def progress(message: str) -> None:
     print(message, flush=True)
 
-
-def launcher(command: list[str], cwd: Path) -> list[str]:
-    if mode == "binary":
-        return [artifact_target, *command]
-    if mode == "jar":
-        return ["java", "-jar", artifact_target, *command]
-    if mode == "docker-image":
-        docker_command = [
-            "docker",
-            "run",
-            "--rm",
-        ]
-        if docker_run_user:
-            docker_command.extend(["--user", docker_run_user])
-        docker_command.extend(
-            [
-                "-v",
-                f"{cwd}:/work",
-                artifact_target,
-                *command,
-            ]
-        )
-        return [
-            *docker_command,
-        ]
-    die(f"unsupported launcher mode {mode}")
-
-
-def run(
-    command: list[str],
-    cwd: Path,
-    progress_label: Optional[str] = None,
-) -> subprocess.CompletedProcess[str]:
-    logs_dir = temp_root / "_subprocess_logs"
-    logs_dir.mkdir(parents=True, exist_ok=True)
-    stdout_path = logs_dir / f"{uuid.uuid4()}-stdout.log"
-    stderr_path = logs_dir / f"{uuid.uuid4()}-stderr.log"
-    launch = launcher(command, cwd)
-    started_at = time.monotonic()
-    next_heartbeat_at = heartbeat_seconds
-    with stdout_path.open("w", encoding="utf-8") as stdout_handle, stderr_path.open(
-        "w",
-        encoding="utf-8",
-    ) as stderr_handle:
-        process = subprocess.Popen(
-            launch,
-            cwd=cwd,
-            text=True,
-            stdout=stdout_handle,
-            stderr=stderr_handle,
-        )
-        while True:
-            returncode = process.poll()
-            if returncode is not None:
-                break
-            elapsed_seconds = time.monotonic() - started_at
-            if progress_label is not None and elapsed_seconds >= next_heartbeat_at:
-                progress(
-                    f"{progress_label} (still running after {int(elapsed_seconds)}s)"
-                )
-                next_heartbeat_at += heartbeat_seconds
-            time.sleep(1)
-    stdout = stdout_path.read_text(encoding="utf-8")
-    stderr = stderr_path.read_text(encoding="utf-8")
-    stdout_path.unlink(missing_ok=True)
-    stderr_path.unlink(missing_ok=True)
-    return subprocess.CompletedProcess(
-        args=launch,
-        returncode=returncode,
-        stdout=stdout,
-        stderr=stderr,
-    )
-
-
-def run_json(
-    command: list[str],
-    cwd: Path,
-    progress_label: Optional[str] = None,
-) -> object:
-    completed = run(command, cwd, progress_label)
-    if completed.returncode != 0:
-        die(
-            f"command failed ({completed.returncode}): {' '.join(launcher(command, cwd))}\n"
-            + f"stdout: {completed.stdout}\n"
-            + f"stderr: {completed.stderr}"
-        )
-    try:
-        return json.loads(completed.stdout)
-    except json.JSONDecodeError as exc:
-        die(
-            "command did not emit JSON: "
-            + f"{' '.join(launcher(command, cwd))}\n{exc}\n{completed.stdout}"
-        )
-
-
-def artifact_path(path: Path, workspace: Path) -> str:
-    if mode in {"binary", "jar"}:
-        return str(path)
-    if mode == "docker-image":
-        return str(path.relative_to(workspace))
-    die(f"unsupported launcher mode {mode}")
-
-
-def prepare_save_as_parent(request_path: Path) -> None:
-    request = json.loads(request_path.read_text(encoding="utf-8"))
-    persistence = request.get("persistence", {})
-    if persistence.get("type") != "SAVE_AS":
-        return
-    destination = persistence.get("path")
-    if not isinstance(destination, str) or not destination:
-        die(f"published request {request_path} has no SAVE_AS path")
-    output_path = Path(destination)
-    if output_path.is_absolute():
-        die(f"published request {request_path} has an absolute SAVE_AS path")
-    (request_path.parent / output_path).parent.mkdir(parents=True, exist_ok=True)
-
+runner = ArtifactRunner(
+    mode, artifact_target, temp_root, docker_run_user, heartbeat_seconds, progress
+)
 
 def execute_plan(
     kind: str,
@@ -248,13 +134,13 @@ def execute_plan(
     request_path = workspace / request_file_name
     if required_workspace_paths:
         progress(f"Discovery execution {kind} {ordinal}/{total}: {stable_id} materializing recipe workspace")
-        materialized = run(
+        materialized = runner.run(
             [
                 "--materialize-recipe",
                 "--lookup",
                 stable_id,
                 "--workspace",
-                artifact_path(workspace, workspace_parent),
+                runner.artifact_path(workspace, workspace_parent),
             ],
             workspace_parent,
             f"Discovery execution {kind} {ordinal}/{total}: {stable_id} materializing recipe workspace",
@@ -270,13 +156,13 @@ def execute_plan(
     else:
         workspace.mkdir(parents=True, exist_ok=True)
         progress(f"Discovery execution {kind} {ordinal}/{total}: {stable_id} printing request")
-        printed = run(
+        printed = runner.run(
             [
                 "--print-recipe",
                 "--lookup",
                 stable_id,
                 "--response",
-                artifact_path(request_path, workspace),
+                runner.artifact_path(request_path, workspace),
             ],
             workspace,
             f"Discovery execution {kind} {ordinal}/{total}: {stable_id} printing request",
@@ -291,18 +177,48 @@ def execute_plan(
         die(f"{kind} {stable_id} did not create request file {request_path}")
 
     progress(f"Discovery execution {kind} {ordinal}/{total}: {stable_id} preparing workspace")
-    prepare_save_as_parent(request_path)
+    grant_path = workspace / "host-grant.json"
+    grant_working_directory_arguments = (
+        ["--grant-working-directory", str(workspace)]
+        if mode == "docker-image"
+        else []
+    )
+    prepared = subprocess.run(
+        [
+            sys.executable,
+            str(repo_root / "scripts" / "write-fixture-grant.py"),
+            "--request",
+            str(request_path),
+            "--output",
+            str(grant_path),
+            *grant_working_directory_arguments,
+            "--prepare-save-as-parent",
+        ],
+        capture_output=True,
+        encoding="utf-8",
+    )
+    if prepared.returncode != 0:
+        die(f"could not prepare {kind} {stable_id}: {prepared.stderr.strip()}")
     doctor_path = workspace / "doctor.json"
     response_path = workspace / "response.json"
+    secrets_provider = runner.fixture_secret_provider(stable_id, workspace)
+    secret_provider_arguments = (
+        ["--secrets-provider", runner.artifact_path(secrets_provider, workspace)]
+        if secrets_provider is not None
+        else []
+    )
 
     progress(f"Discovery execution {kind} {ordinal}/{total}: {stable_id} doctoring request")
-    doctor = run(
+    doctor = runner.run(
         [
             "--doctor-request",
             "--request",
-            artifact_path(request_path, workspace),
+            runner.artifact_path(request_path, workspace),
+            "--grant",
+            runner.artifact_path(grant_path, workspace),
+            *secret_provider_arguments,
             "--response",
-            artifact_path(doctor_path, workspace),
+            runner.artifact_path(doctor_path, workspace),
         ],
         workspace,
         f"Discovery execution {kind} {ordinal}/{total}: {stable_id} doctoring request",
@@ -319,12 +235,15 @@ def execute_plan(
         die(f"{kind} {stable_id} doctor report was not valid: {doctor_report}")
 
     progress(f"Discovery execution {kind} {ordinal}/{total}: {stable_id} executing request")
-    executed = run(
+    executed = runner.run(
         [
             "--request",
-            artifact_path(request_path, workspace),
+            runner.artifact_path(request_path, workspace),
+            "--grant",
+            runner.artifact_path(grant_path, workspace),
+            *secret_provider_arguments,
             "--response",
-            artifact_path(response_path, workspace),
+            runner.artifact_path(response_path, workspace),
         ],
         workspace,
         f"Discovery execution {kind} {ordinal}/{total}: {stable_id} executing request",
@@ -341,14 +260,16 @@ def execute_plan(
         die(f"{kind} {stable_id} returned a failure response: {response}")
     progress(f"Discovery execution {kind} {ordinal}/{total}: {stable_id} succeeded")
 
-
 catalog_workspace = temp_root / "_catalog"
 catalog_workspace.mkdir(parents=True, exist_ok=True)
-recipe_catalog = run_json(
-    ["--print-recipe-catalog"],
-    catalog_workspace,
-    "Discovery execution catalog: loading recipes",
-)
+try:
+    recipe_catalog = runner.run_json(
+        ["--print-recipe-catalog"],
+        catalog_workspace,
+        "Discovery execution catalog: loading recipes",
+    )
+except RuntimeError as exception:
+    die(str(exception))
 recipe_entries = recipe_catalog["recipes"]
 example_entries = [
     recipe for recipe in recipe_entries if recipe.get("view") == "EXAMPLE"

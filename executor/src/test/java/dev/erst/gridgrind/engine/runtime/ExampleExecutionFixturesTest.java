@@ -10,6 +10,7 @@ import dev.erst.gridgrind.cli.discovery.RecipeAdvisory;
 import dev.erst.gridgrind.cli.discovery.RecipeCatalog;
 import dev.erst.gridgrind.cli.discovery.RecipeCatalogEntry;
 import dev.erst.gridgrind.cli.discovery.RecipeView;
+import dev.erst.gridgrind.contract.dto.SecretReference;
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
 import dev.erst.gridgrind.contract.dto.WorkbookResult;
 import dev.erst.gridgrind.contract.json.GridGrindJson;
@@ -23,6 +24,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -43,8 +45,7 @@ class ExampleExecutionFixturesTest {
       WorkbookResult.Success success =
           assertInstanceOf(
               WorkbookResult.Success.class,
-              executor.execute(
-                  request, ExecutionInputBindingsFixtureSupport.bindings(published.workspace())),
+              executor.execute(request, bindingsForExample(published.workspace(), request)),
               () -> "self-contained built-in example must execute successfully: " + example.id());
       assertEquals(
           request.planId(),
@@ -66,8 +67,7 @@ class ExampleExecutionFixturesTest {
       WorkbookResult.Success success =
           assertInstanceOf(
               WorkbookResult.Success.class,
-              executor.execute(
-                  request, ExecutionInputBindingsFixtureSupport.bindings(published.workspace())),
+              executor.execute(request, bindingsForExample(published.workspace(), request)),
               () -> "built-in example must execute successfully: " + example.id());
       assertEquals(
           request.planId(),
@@ -91,7 +91,7 @@ class ExampleExecutionFixturesTest {
               WorkbookResult.Success.class,
               executor.execute(
                   published.request(),
-                  ExecutionInputBindingsFixtureSupport.bindings(published.workspace())),
+                  bindingsForExample(published.workspace(), published.request())),
               () ->
                   "repo-asset-backed built-in example must materialize and execute: "
                       + example.id());
@@ -110,15 +110,13 @@ class ExampleExecutionFixturesTest {
     Files.createDirectories(examplesDirectory.resolve("generated-workbooks"));
 
     DefaultGridGrindRequestExecutor executor = new DefaultGridGrindRequestExecutor();
-    ExecutionInputBindings exampleBindings =
-        ExecutionInputBindingsFixtureSupport.bindings(examplesDirectory);
     for (RecipeCatalogEntry example : exampleEntries()) {
       Path requestPath = examplesDirectory.resolve(example.requestFileName());
       WorkbookPlan request = GridGrindJson.readRequest(Files.readAllBytes(requestPath));
       WorkbookResult.Success success =
           assertInstanceOf(
               WorkbookResult.Success.class,
-              executor.execute(request, exampleBindings),
+              executor.execute(request, bindingsForExample(examplesDirectory, request)),
               () ->
                   "repository example must execute successfully in-place: "
                       + example.requestFileName());
@@ -235,5 +233,19 @@ class ExampleExecutionFixturesTest {
       throw new AssertionError("test must run inside the GridGrind repository");
     }
     return current;
+  }
+
+  private static ExecutionInputBindings bindingsForExample(Path workspace, WorkbookPlan request) {
+    if (request.source() instanceof WorkbookPlan.WorkbookSource.ExistingFile existingFile
+        && existingFile
+            .security()
+            .flatMap(dev.erst.gridgrind.contract.dto.OoxmlOpenSecurityInput::passwordRef)
+            .equals(java.util.Optional.of(new SecretReference("source-open-password")))) {
+      return ExecutionInputBindingsFixtureSupport.bindings(
+          workspace,
+          request,
+          Map.of(new SecretReference("source-open-password"), "GridGrind-2026"));
+    }
+    return ExecutionInputBindingsFixtureSupport.bindings(workspace, request);
   }
 }

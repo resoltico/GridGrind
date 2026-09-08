@@ -15,12 +15,16 @@ import java.util.Objects;
 final class FormulaAwareMutationStepExecutor {
   private final WorkbookExecutionEngine workbookEngine;
   private final SemanticSelectorResolver selectorResolver;
+  private final ExecutionInputBindings bindings;
 
   FormulaAwareMutationStepExecutor(
-      WorkbookExecutionEngine workbookEngine, SemanticSelectorResolver selectorResolver) {
+      WorkbookExecutionEngine workbookEngine,
+      SemanticSelectorResolver selectorResolver,
+      ExecutionInputBindings bindings) {
     this.workbookEngine = Objects.requireNonNull(workbookEngine, "workbookEngine must not be null");
     this.selectorResolver =
         Objects.requireNonNull(selectorResolver, "selectorResolver must not be null");
+    this.bindings = Objects.requireNonNull(bindings, "bindings must not be null");
   }
 
   void execute(
@@ -33,7 +37,8 @@ final class FormulaAwareMutationStepExecutor {
         WorkbookCommandConverter.toCommand(
             selectorResolver.resolveMutationTarget(
                 workbook, mutationStep.target(), mutationStep.action()),
-            mutationStep.action());
+            mutationStep.action(),
+            bindings);
     FormulaOriginTracker.FormulaWrites writes = formulaOrigins.plannedWrites(workbook, command);
     workbookEngine.apply(workbook, command);
     formulaOrigins.record(workbook, writes, authoringStep);
@@ -41,6 +46,6 @@ final class FormulaAwareMutationStepExecutor {
 
   void executeStreaming(ExcelStreamingWorkbookWriter writer, MutationStep mutationStep)
       throws IOException {
-    writer.apply(WorkbookCommandConverter.toCommand(mutationStep));
+    writer.apply(WorkbookCommandConverter.toCommand(mutationStep, bindings));
   }
 }

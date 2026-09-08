@@ -3,6 +3,7 @@ package dev.erst.gridgrind.jazzer.tool;
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
 import dev.erst.gridgrind.contract.dto.WorkbookResult;
 import dev.erst.gridgrind.contract.json.GridGrindJson;
+import dev.erst.gridgrind.contract.json.InvalidEncodingException;
 import dev.erst.gridgrind.contract.json.InvalidJsonException;
 import dev.erst.gridgrind.contract.json.InvalidRequestException;
 import dev.erst.gridgrind.contract.json.InvalidRequestShapeException;
@@ -77,6 +78,25 @@ public final class JazzerReplaySupport {
               SequenceIntrospection.inspectionCount(request),
               SequenceIntrospection.inspectionKinds(request.stepPartition().inspections()));
       return new ReplayOutcome.Success(JazzerHarness.protocolRequest().key(), details);
+    } catch (InvalidEncodingException expected) {
+      ProtocolRequestDetails details =
+          new ProtocolRequestDetails(
+              input.length,
+              "INVALID_ENCODING",
+              "NOT_PARSED",
+              "NOT_PARSED",
+              0,
+              Map.of(),
+              Map.of(),
+              0,
+              Map.of(),
+              0,
+              Map.of());
+      return new ReplayOutcome.ExpectedInvalid(
+          JazzerHarness.protocolRequest().key(),
+          expected.getClass().getSimpleName(),
+          Optional.ofNullable(expected.getMessage()),
+          details);
     } catch (InvalidJsonException expected) {
       ProtocolRequestDetails details =
           new ProtocolRequestDetails(

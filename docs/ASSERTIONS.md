@@ -1,6 +1,5 @@
 ---
 afad: "5.0.1"
-version: "0.75.0"
 domain: ASSERTIONS
 updated: "2026-08-27"
 route:
@@ -29,7 +28,7 @@ Successful responses echo passed assertion steps back through the ordered `asser
 ```json
 {
   "status": "SUCCEEDED",
-  "protocolVersion": "V2",
+  "protocolVersion": "V3",
   "journal": {
     "planId": "assert-budget",
     "level": "NORMAL"

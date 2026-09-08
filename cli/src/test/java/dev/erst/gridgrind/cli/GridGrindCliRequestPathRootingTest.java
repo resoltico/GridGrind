@@ -16,6 +16,7 @@ import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.Map;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.ss.usermodel.WorkbookFactory;
@@ -44,11 +45,17 @@ class GridGrindCliRequestPathRootingTest extends GridGrindCliTestSupport {
             ]
             """));
     ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+    Path grantPath =
+        CliGrantFixtureSupport.saveAs(
+            List.of("ENSURE_SHEET"),
+            List.of(),
+            requestDirectory.resolve("result.xlsx"),
+            dev.erst.gridgrind.contract.dto.WorkbookPlan.WorkbookPersistence.IfExists.REPLACE);
 
     int exitCode =
         new GridGrindCli()
             .run(
-                new String[] {"--request", requestPath.toString()},
+                new String[] {"--request", requestPath.toString(), "--grant", grantPath.toString()},
                 InputStream.nullInputStream(),
                 stdout);
 
@@ -62,7 +69,9 @@ class GridGrindCliRequestPathRootingTest extends GridGrindCliTestSupport {
     assertEquals(0, exitCode);
     assertEquals(
         requestDirectory.resolve("result.xlsx").toString(),
-        assertInstanceOf(WorkbookResultPersistence.WriteResult.Written.class, persistence.write())
+        assertInstanceOf(
+                WorkbookResultPersistence.PublicationOutcome.Published.class,
+                persistence.publication())
             .executionPath());
     assertTrue(Files.exists(requestDirectory.resolve("result.xlsx")));
   }
@@ -88,11 +97,13 @@ class GridGrindCliRequestPathRootingTest extends GridGrindCliTestSupport {
             ]
             """));
     ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+    Path grantPath =
+        CliGrantFixtureSupport.noPublication(List.of("GET_CELLS"), List.of(workbookPath));
 
     int exitCode =
         new GridGrindCli()
             .run(
-                new String[] {"--request", requestPath.toString()},
+                new String[] {"--request", requestPath.toString(), "--grant", grantPath.toString()},
                 InputStream.nullInputStream(),
                 stdout);
 
@@ -150,11 +161,15 @@ class GridGrindCliRequestPathRootingTest extends GridGrindCliTestSupport {
             ]
             """));
     ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+    Path grantPath =
+        CliGrantFixtureSupport.noPublication(
+            List.of("ENSURE_SHEET", "SET_CELL", "GET_CELLS"),
+            List.of(requestDirectory.resolve("title.txt")));
 
     int exitCode =
         new GridGrindCli()
             .run(
-                new String[] {"--request", requestPath.toString()},
+                new String[] {"--request", requestPath.toString(), "--grant", grantPath.toString()},
                 InputStream.nullInputStream(),
                 stdout);
 
@@ -204,11 +219,17 @@ class GridGrindCliRequestPathRootingTest extends GridGrindCliTestSupport {
             ]
             """));
     ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+    Path grantPath =
+        CliGrantFixtureSupport.noPublication(
+            List.of("GET_CELLS"),
+            List.of(
+                scenario.directory().resolve("external-formula.xlsx"),
+                scenario.directory().resolve("refs").resolve("referenced.xlsx")));
 
     int exitCode =
         new GridGrindCli()
             .run(
-                new String[] {"--request", requestPath.toString()},
+                new String[] {"--request", requestPath.toString(), "--grant", grantPath.toString()},
                 InputStream.nullInputStream(),
                 stdout);
 
@@ -236,11 +257,19 @@ class GridGrindCliRequestPathRootingTest extends GridGrindCliTestSupport {
   void stdinExecutionRootOwnsRelativePersistencePaths() throws IOException {
     Path workspace = Files.createTempDirectory("gridgrind-cli-stdin-root-");
     ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+    Path grantPath =
+        CliGrantFixtureSupport.saveAs(
+            List.of("ENSURE_SHEET"),
+            List.of(),
+            workspace.resolve("result.xlsx"),
+            dev.erst.gridgrind.contract.dto.WorkbookPlan.WorkbookPersistence.IfExists.REPLACE);
 
     int exitCode =
         new GridGrindCli()
             .run(
-                new String[] {"--execution-root", workspace.toString()},
+                new String[] {
+                  "--execution-root", workspace.toString(), "--grant", grantPath.toString()
+                },
                 new ByteArrayInputStream(
                     requestJson(
                             "{ \"type\": \"NEW\" }",
@@ -267,7 +296,9 @@ class GridGrindCliRequestPathRootingTest extends GridGrindCliTestSupport {
     assertEquals(0, exitCode);
     assertEquals(
         workspace.resolve("result.xlsx").toString(),
-        assertInstanceOf(WorkbookResultPersistence.WriteResult.Written.class, persistence.write())
+        assertInstanceOf(
+                WorkbookResultPersistence.PublicationOutcome.Published.class,
+                persistence.publication())
             .executionPath());
     assertTrue(Files.exists(workspace.resolve("result.xlsx")));
   }
@@ -277,11 +308,17 @@ class GridGrindCliRequestPathRootingTest extends GridGrindCliTestSupport {
     Path workspace = Files.createTempDirectory("gridgrind-cli-stdin-source-backed-");
     Files.writeString(workspace.resolve("title.txt"), "Quarterly Budget", StandardCharsets.UTF_8);
     ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+    Path grantPath =
+        CliGrantFixtureSupport.noPublication(
+            List.of("ENSURE_SHEET", "SET_CELL", "GET_CELLS"),
+            List.of(workspace.resolve("title.txt")));
 
     int exitCode =
         new GridGrindCli()
             .run(
-                new String[] {"--execution-root", workspace.toString()},
+                new String[] {
+                  "--execution-root", workspace.toString(), "--grant", grantPath.toString()
+                },
                 new ByteArrayInputStream(
                     requestJson(
                             "{ \"type\": \"NEW\" }",

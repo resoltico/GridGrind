@@ -30,26 +30,25 @@ final class CliExecutionFailureSupport {
       GridGrindRequestExecutor requestExecutor,
       WorkbookPlan request,
       RequestAnalysis analysis,
-      Optional<Path> requestPath,
-      Optional<Path> executionRootPath,
-      Optional<Path> tempRootPath,
-      InputStream stdin,
-      GridGrindProgressSink progressSink)
+      ExecutionInputs executionInputs)
       throws IOException {
     Objects.requireNonNull(requestExecutor, "requestExecutor must not be null");
     Objects.requireNonNull(request, "request must not be null");
     Objects.requireNonNull(analysis, "analysis must not be null");
-    Objects.requireNonNull(requestPath, "requestPath must not be null");
-    Objects.requireNonNull(executionRootPath, "executionRootPath must not be null");
-    Objects.requireNonNull(tempRootPath, "tempRootPath must not be null");
-    Objects.requireNonNull(stdin, "stdin must not be null");
-    Objects.requireNonNull(progressSink, "progressSink must not be null");
+    ExecutionInputs inputs =
+        Objects.requireNonNull(executionInputs, "executionInputs must not be null");
     CliExecutionBindingsFactory.ManagedRequestInputs bindings =
         CliExecutionBindingsFactory.create(
-            requestPath, executionRootPath, tempRootPath, request, stdin);
+            inputs.requestPath(),
+            inputs.executionRootPath(),
+            inputs.tempRootPath(),
+            inputs.grantPath(),
+            inputs.secretsProviderPath(),
+            request,
+            inputs.stdin());
     try (bindings) {
       return Objects.requireNonNull(
-          requestExecutor.execute(analysis, bindings.inputs(), progressSink),
+          requestExecutor.execute(analysis, bindings.inputs(), inputs.progressSink()),
           "requestExecutor must not return null");
     } catch (Exception exception) {
       return failure(request, exception);
@@ -62,7 +61,7 @@ final class CliExecutionFailureSupport {
     return WorkbookResults.failure(
         request.protocolVersion(),
         request.planId(),
-        WorkbookResults.unwrittenPersistenceOutcome(request),
+        WorkbookResults.notAttemptedPersistenceOutcome(request),
         GridGrindProblems.fromException(
             exception, new ProblemContext.ExecuteRequest(requestShape(request))));
   }
@@ -78,5 +77,24 @@ final class CliExecutionFailureSupport {
           case WorkbookPlan.WorkbookPersistence.Overwrite _ -> "OVERWRITE";
           case WorkbookPlan.WorkbookPersistence.SaveAs _ -> "SAVE_AS";
         });
+  }
+
+  record ExecutionInputs(
+      Optional<Path> requestPath,
+      Optional<Path> executionRootPath,
+      Optional<Path> tempRootPath,
+      Optional<Path> grantPath,
+      Optional<Path> secretsProviderPath,
+      InputStream stdin,
+      GridGrindProgressSink progressSink) {
+    ExecutionInputs {
+      Objects.requireNonNull(requestPath, "requestPath must not be null");
+      Objects.requireNonNull(executionRootPath, "executionRootPath must not be null");
+      Objects.requireNonNull(tempRootPath, "tempRootPath must not be null");
+      Objects.requireNonNull(grantPath, "grantPath must not be null");
+      Objects.requireNonNull(secretsProviderPath, "secretsProviderPath must not be null");
+      Objects.requireNonNull(stdin, "stdin must not be null");
+      Objects.requireNonNull(progressSink, "progressSink must not be null");
+    }
   }
 }

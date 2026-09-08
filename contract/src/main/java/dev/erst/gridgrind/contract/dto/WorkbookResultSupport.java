@@ -23,6 +23,7 @@ final class WorkbookResultSupport {
         syntheticSuccessJournal(),
         CalculationReport.notRequested(),
         Objects.requireNonNull(persistence, "persistence must not be null"),
+        WorkbookExecutionEvidence.minimum(),
         copyValues(Objects.requireNonNull(warnings, "warnings must not be null"), "warnings"),
         copyValues(Objects.requireNonNull(assertions, "assertions must not be null"), "assertions"),
         copyValues(
@@ -41,6 +42,7 @@ final class WorkbookResultSupport {
         syntheticFailureJournal(problem.code()),
         CalculationReport.notRequested(),
         Objects.requireNonNull(persistence, "persistence must not be null"),
+        WorkbookExecutionEvidence.minimum(),
         List.of(),
         List.of(),
         List.of(),

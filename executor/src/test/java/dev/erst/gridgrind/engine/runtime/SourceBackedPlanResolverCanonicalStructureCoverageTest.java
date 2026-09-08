@@ -72,7 +72,9 @@ class SourceBackedPlanResolverCanonicalStructureCoverageTest
 
     WorkbookPlan resolved =
         SourceBackedPlanResolver.resolve(
-            plan, ExecutionInputBindingsFixtureSupport.bindings(workingDirectory));
+            plan,
+            ExecutionInputBindingsFixtureSupport.bindings(
+                workingDirectory, List.of(workingDirectory.resolve("space.txt"))));
 
     CellMutationAction.SetCell richTextAction =
         assertInstanceOf(
@@ -351,22 +353,32 @@ class SourceBackedPlanResolverCanonicalStructureCoverageTest
                         TextSourceInput.inline("footer-center"),
                         TextSourceInput.inline("footer-right")))));
 
+    WorkbookPlan plan =
+        WorkbookPlan.standard(
+            new WorkbookPlan.WorkbookSource.New(),
+            new WorkbookPlan.WorkbookPersistence.None(),
+            dev.erst.gridgrind.contract.dto.ExecutionPolicyInput.defaults(),
+            dev.erst.gridgrind.contract.dto.FormulaEnvironmentInput.empty(),
+            List.of(
+                formulaStep,
+                commentStep,
+                pictureStep,
+                embeddedObjectStep,
+                promptValidationStep,
+                errorValidationStep,
+                printLayoutStep));
     WorkbookPlan resolved =
         SourceBackedPlanResolver.resolve(
-            WorkbookPlan.standard(
-                new WorkbookPlan.WorkbookSource.New(),
-                new WorkbookPlan.WorkbookPersistence.None(),
-                dev.erst.gridgrind.contract.dto.ExecutionPolicyInput.defaults(),
-                dev.erst.gridgrind.contract.dto.FormulaEnvironmentInput.empty(),
+            plan,
+            ExecutionInputBindingsFixtureSupport.bindings(
+                workingDirectory,
                 List.of(
-                    formulaStep,
-                    commentStep,
-                    pictureStep,
-                    embeddedObjectStep,
-                    promptValidationStep,
-                    errorValidationStep,
-                    printLayoutStep)),
-            ExecutionInputBindingsFixtureSupport.bindings(workingDirectory));
+                    workingDirectory.resolve("comment-run.txt"),
+                    workingDirectory.resolve("picture-description.txt"),
+                    workingDirectory.resolve("preview.bin"),
+                    workingDirectory.resolve("prompt-body.txt"),
+                    workingDirectory.resolve("error-body.txt"),
+                    workingDirectory.resolve("header-center.txt"))));
 
     CellMutationAction.SetCell resolvedFormulaAction =
         assertInstanceOf(
@@ -490,19 +502,26 @@ class SourceBackedPlanResolverCanonicalStructureCoverageTest
             new CellMutationAction.SetCell(
                 new CellInput.Formula(TextSourceInput.inline("SUM(A1:A2)"))));
 
+    WorkbookPlan plan =
+        WorkbookPlan.standard(
+            new WorkbookPlan.WorkbookSource.New(),
+            new WorkbookPlan.WorkbookPersistence.None(),
+            dev.erst.gridgrind.contract.dto.ExecutionPolicyInput.defaults(),
+            dev.erst.gridgrind.contract.dto.FormulaEnvironmentInput.empty(),
+            List.of(
+                targetAndActionChanged,
+                pictureDescriptionOnlyChanged,
+                footerOnlyChanged,
+                formulaAlreadyInline));
     WorkbookPlan resolved =
         SourceBackedPlanResolver.resolve(
-            WorkbookPlan.standard(
-                new WorkbookPlan.WorkbookSource.New(),
-                new WorkbookPlan.WorkbookPersistence.None(),
-                dev.erst.gridgrind.contract.dto.ExecutionPolicyInput.defaults(),
-                dev.erst.gridgrind.contract.dto.FormulaEnvironmentInput.empty(),
+            plan,
+            ExecutionInputBindingsFixtureSupport.bindings(
+                workingDirectory,
                 List.of(
-                    targetAndActionChanged,
-                    pictureDescriptionOnlyChanged,
-                    footerOnlyChanged,
-                    formulaAlreadyInline)),
-            ExecutionInputBindingsFixtureSupport.bindings(workingDirectory));
+                    workingDirectory.resolve("item.txt"),
+                    workingDirectory.resolve("value.txt"),
+                    workingDirectory.resolve("footer-right.txt"))));
 
     assertNotSame(targetAndActionChanged, resolved.steps().get(0));
     assertNotSame(pictureDescriptionOnlyChanged, resolved.steps().get(1));
@@ -523,7 +542,12 @@ class SourceBackedPlanResolverCanonicalStructureCoverageTest
         "=LAMBDA(x,x+1)(A1)",
         StandardCharsets.UTF_8);
     ExecutionInputBindings bindings =
-        ExecutionInputBindingsFixtureSupport.bindings(workingDirectory);
+        ExecutionInputBindingsFixtureSupport.bindings(
+            workingDirectory,
+            List.of(
+                workingDirectory.resolve("formula.txt"),
+                workingDirectory.resolve("raw-formula.txt"),
+                workingDirectory.resolve("invalid-raw-formula.txt")));
 
     TextSourceInput.Inline stableSource = TextSourceInput.inline("SUM(A1:A2)");
     assertSame(stableSource, SourceBackedPlanResolver.resolveFormulaSource(stableSource, bindings));

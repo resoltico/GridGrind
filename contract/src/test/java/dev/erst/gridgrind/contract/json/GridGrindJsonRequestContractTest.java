@@ -63,7 +63,7 @@ class GridGrindJsonRequestContractTest {
                 GridGrindJson.readRequest(
                     """
                     {
-                      "protocolVersion": "V2",
+                      "protocolVersion": "V3",
                       "source": { "type": "NEW" },
                       "execution": {
                         "mode": {"type": "FULL_XSSF"},
@@ -92,7 +92,7 @@ class GridGrindJsonRequestContractTest {
         GridGrindJson.readRequest(
             """
             {
-              "protocolVersion": "V2",
+              "protocolVersion": "V3",
               "source": { "type": "NEW" },
               "persistence": { "type": "NONE" },
               "steps": []
@@ -112,7 +112,7 @@ class GridGrindJsonRequestContractTest {
         GridGrindJson.readRequest(
             """
             {
-              "protocolVersion": "V2",
+              "protocolVersion": "V3",
               "source": { "type": "NEW" },
               "persistence": { "type": "NONE" },
               "execution": { "assertionMode": "COLLECT" },
@@ -130,7 +130,7 @@ class GridGrindJsonRequestContractTest {
         GridGrindJson.readRequest(
             """
             {
-              "protocolVersion": "V2",
+              "protocolVersion": "V3",
               "source": { "type": "NEW" },
 	              "persistence": {
 	                "type": "SAVE_AS",
@@ -140,14 +140,14 @@ class GridGrindJsonRequestContractTest {
                   "encryption": {
                     "type": "ENCRYPT",
                     "encryption": {
-                      "password": "persist-pass"
+                      "passwordRef": { "id": "persist-password" }
                     }
                   },
                   "signature": {
                     "type": "SIGN",
                     "signature": {
                       "pkcs12Path": "keys/signing.p12",
-                      "keystorePassword": "store-pass"
+                      "keystorePasswordRef": { "id": "keystore-password" }
                     }
                   }
                 }
@@ -174,7 +174,7 @@ class GridGrindJsonRequestContractTest {
     OoxmlSignatureInput signature =
         assertInstanceOf(OoxmlPersistenceSignatureInput.Sign.class, security.signature())
             .signature();
-    assertEquals("store-pass", signature.keyPassword());
+    assertEquals(Optional.empty(), signature.keyPasswordRef());
     assertEquals(ExcelOoxmlSignatureDigestAlgorithm.SHA256, signature.digestAlgorithm());
   }
 
@@ -187,7 +187,7 @@ class GridGrindJsonRequestContractTest {
                 GridGrindJson.readRequest(
                     """
                     {
-                      "protocolVersion": "V2",
+                      "protocolVersion": "V3",
                       "source": { "type": "NEW" },
                       "persistence": {
                         "type": "SAVE_AS",
@@ -206,7 +206,7 @@ class GridGrindJsonRequestContractTest {
                 GridGrindJson.readRequest(
                     """
                     {
-                      "protocolVersion": "V2",
+                      "protocolVersion": "V3",
                       "source": { "type": "NEW" },
                       "persistence": {
                         "type": "SAVE_AS",
@@ -232,7 +232,7 @@ class GridGrindJsonRequestContractTest {
                 GridGrindJson.readRequest(
                     """
                     {
-                      "protocolVersion": "V2",
+                      "protocolVersion": "V3",
                       "source": { "type": "NEW" },
                       "persistence": {
                         "type": "SAVE_AS",
@@ -242,7 +242,7 @@ class GridGrindJsonRequestContractTest {
                           "encryption": {
                             "type": "ENCRYPT",
                             "encryption": {
-                              "password": "persist-pass",
+                              "passwordRef": { "id": "persist-password" },
                               "mode": "AGILE"
                             }
                           }
@@ -265,7 +265,7 @@ class GridGrindJsonRequestContractTest {
                 GridGrindJson.readRequest(
                     """
                     {
-                      "protocolVersion": "V2",
+                      "protocolVersion": "V3",
                       "source": { "type": "NEW" },
                       "persistence": { "type": "NONE" },
                       "steps": [ {
@@ -304,7 +304,7 @@ class GridGrindJsonRequestContractTest {
                 GridGrindJson.readRequest(
                     """
                     {
-                      "protocolVersion": "V2",
+                      "protocolVersion": "V3",
                       "source": { "type": "NEW" },
                       "persistence": {
                         "type": "SAVE_AS",
@@ -314,7 +314,7 @@ class GridGrindJsonRequestContractTest {
                           "encryption": {
                             "type": "ENCRYPT",
                             "encryption": {
-                              "password": "persist-pass",
+                              "passwordRef": { "id": "persist-password" },
                               "cipher": "AES_128"
                             }
                           }
@@ -339,7 +339,7 @@ class GridGrindJsonRequestContractTest {
                 GridGrindJson.readRequest(
                     """
                     {
-                      "protocolVersion": "V2",
+                      "protocolVersion": "V3",
                       "source": { "type": "NEW" },
                       "persistence": {
                         "type": "SAVE_AS",
@@ -349,7 +349,7 @@ class GridGrindJsonRequestContractTest {
                           "encryption": {
                             "type": "ENCRYPT",
                             "encryption": {
-                              "password": "persist-pass",
+                              "passwordRef": { "id": "persist-password" },
                               "hash": "SHA_1"
                             }
                           }
@@ -374,7 +374,7 @@ class GridGrindJsonRequestContractTest {
                 GridGrindJson.readRequest(
                     """
                     {
-                      "protocolVersion": "V2",
+                      "protocolVersion": "V3",
                       "source": { "type": "NEW" },
                       "persistence": { "type": "NONE" },
                       "execution": {
@@ -430,7 +430,7 @@ class GridGrindJsonRequestContractTest {
                 GridGrindJson.readRequest(
                     """
                     {
-                      "protocolVersion": "V2",
+                      "protocolVersion": "V3",
                       "source": { "type": "NEW" },
                       "persistence": { "type": "NONE" },
                       "execution": {

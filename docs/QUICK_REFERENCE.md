@@ -1,6 +1,5 @@
 ---
 afad: "5.0.1"
-version: "0.75.0"
 domain: QUICK_REFERENCE
 updated: "2026-08-31"
 route:
@@ -19,6 +18,7 @@ gridgrind --help
 gridgrind --help-protocol
 gridgrind --help-guidance
 gridgrind --print-request-template --response request.json
+gridgrind --print-grant-template --response grant.json
 gridgrind --print-protocol-catalog --response protocol-index.json
 gridgrind --print-protocol-catalog --search validation --response validation-search.json
 gridgrind --print-protocol-catalog --lookup inspectionQueryTypes:GET_SHEET_LAYOUT
@@ -30,10 +30,10 @@ gridgrind --print-recipe --lookup SHEET_MAINTENANCE --response sheet-maintenance
 gridgrind --print-recipe --lookup WORKBOOK_HEALTH --response workbook-health.json
 gridgrind --print-recipe --lookup ASSERTION --response assertion.json
 gridgrind --print-request-template | gridgrind --doctor-request --execution-root .
-gridgrind --doctor-request --request request.json --response doctor-report.json
+gridgrind --doctor-request --request request.json --grant grant.json --response doctor-report.json
 ```
 
-`--help` is the short synopsis. `--help-protocol` is the authoritative CLI/request contract, `--help-guidance` is the workflow/example playbook, and `--doctor-request` validates request shape, resolves source-backed inputs, preflights existing workbook-source access, and returns every independently provable blocking problem it can isolate safely without mutating a workbook. Request intake reports duplicate keys, unknown fields, omitted required fields, explicit nulls, malformed scalar values, missing or unknown type discriminators, and constructor-level field validation failures together while retaining valid sibling fragments for safe preflight. `--response <path>` works across execution, doctoring, and printable discovery commands, so the primary output can be captured to a file instead of stdout. Use `--materialize-recipe --lookup <id> --workspace <new-directory>` for an asset-backed recipe; it atomically creates the request and all declared assets. Built-in example and task catalogs publish `requestFileName`, `advisory`, and `requiredWorkspacePaths` so callers can select the correct flow.
+`--help` is the short synopsis. `--help-protocol` is the authoritative CLI/request contract, `--help-guidance` is the workflow/example playbook, and `--doctor-request` validates request shape, resolves source-backed inputs, preflights existing workbook-source access, and returns every independently provable blocking problem it can isolate safely without mutating a workbook. Generate `grant.json` with `--print-grant-template`, then edit it to the request's exact resources, operations, target scope, and publication authority before bound doctoring or execution. Request intake reports duplicate keys, unknown fields, omitted required fields, explicit nulls, malformed scalar values, missing or unknown type discriminators, and constructor-level field validation failures together while retaining valid sibling fragments for safe preflight. `--response <path>` works across execution, doctoring, and printable discovery commands, so the primary output can be captured to a file instead of stdout. Use `--materialize-recipe --lookup <id> --workspace <new-directory>` for an asset-backed recipe; it atomically creates the request and all declared assets. Built-in example and task catalogs publish `requestFileName`, `advisory`, and `requiredWorkspacePaths` so callers can select the correct flow.
 
 The bare `--print-protocol-catalog` output is the compact first-contact index only. `--search` is the fast discovery path when you only know part of an id or summary. Exact identifiers rank first; multi-word searches then rank entries by how many query terms they match, so broad queries still return useful candidates. Use `--lookup` with one globally unique top-level id, one top-level group name, one nested/plain support-group name, `nestedTypes:<group>`, `plainTypes:<group>`, or `<topLevelGroup>:<id>` once you want one scoped machine-readable payload. Search ranks published top-level operations ahead of support-type groups, returns compact summaries by default, and adds `relatedEntryIds` or `supportingQualifiedIds` only when that lightweight context helps agents climb from a type family to the executable operation that uses it. Shared catalog rules such as request-owned path resolution are published on those scoped lookup payloads under top-level `notes`, while entry-local `noteRefs` point at the stable rule id instead of repeating the full paragraph in the bare index. Optional boolean fields publish `defaultBoolean` only when omission has an explicit effective value; request payloads must still omit absent fields rather than sending `null`.
 Machine-readable request-template, discovery, doctor, and execution payloads are compact JSON by default; add `--pretty` when you want indented JSON instead.
@@ -44,7 +44,7 @@ Machine-readable request-template, discovery, doctor, and execution payloads are
 
 ```json
 {
-  "protocolVersion": "V2",
+  "protocolVersion": "V3",
   "source": {
     "type": "NEW"
   },
@@ -79,7 +79,7 @@ Open an encrypted workbook:
     "type": "EXISTING",
     "path": "secured.xlsx",
     "security": {
-      "password": "GridGrind-2026"
+      "passwordRef": { "id": "source-open-password" }
     }
   }
 }
@@ -377,7 +377,7 @@ Run a no-save workbook-health pass by starting from the smallest valid request a
   `persistence`, `warnings`, `assertions`, and `inspections`; `FAILED` alone adds singular
   `problem`
 - Every pre-execution command rejection, including static semantic request validation: `CommandError` with `status=REJECTED` and nonempty `problems[]`; doctor findings instead remain in `RequestDoctorReport.valid=false`
-- `SAVE_AS` and `OVERWRITE` distinguish `persistence.write.status=WRITTEN|NOT_WRITTEN`
+- `SAVE_AS` and `OVERWRITE` expose `persistence.publication.status=NOT_ATTEMPTED|NOT_PUBLISHED|PUBLISHED|UNCERTAIN`
 
 ## Detailed References
 

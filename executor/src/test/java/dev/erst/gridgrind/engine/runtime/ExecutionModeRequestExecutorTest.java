@@ -406,7 +406,11 @@ class ExecutionModeRequestExecutorTest {
         failure(
             executor.execute(
                 request,
-                new ExecutionInputBindings(workingDirectory, tempRootFile),
+                new ExecutionInputBindings(
+                    workingDirectory,
+                    tempRootFile,
+                    ExecutionInputBindingsFixtureSupport.noPublicationGrant(
+                        List.of("ENSURE_SHEET"), List.of())),
                 ExecutionProgressSink.NOOP));
 
     assertEquals(GridGrindProblemCode.IO_ERROR, failure.problem().code());
