@@ -274,7 +274,7 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
     WindowReport window =
         read(success, "window", SheetInspectionResult.WindowResult.class).window();
 
-    assertEquals(GridGrindProtocolVersion.V2, success.protocolVersion());
+    assertEquals(GridGrindProtocolVersion.V3, success.protocolVersion());
     assertEquals(workbookPath.toAbsolutePath().toString(), savedPath(success));
     assertTrue(Files.exists(workbookPath));
     assertEquals(
@@ -1042,12 +1042,12 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
                         new CellSelector.ByAddress("Budget", "A1"),
                         new CellMutationAction.SetComment(
                             CommentInput.plain(text("Review"), "GridGrind", true))),
-                    mutate(
+                    ExecutorStructuredMutationTargets.namedRange(
                         new StructuredMutationAction.SetNamedRange(
                             "BudgetTotal",
                             new NamedRangeScope.Workbook(),
                             NamedRangeTarget.range("Budget", "B4"))),
-                    mutate(
+                    ExecutorStructuredMutationTargets.namedRange(
                         new StructuredMutationAction.SetNamedRange(
                             "LocalItem",
                             new NamedRangeScope.Sheet("Budget"),

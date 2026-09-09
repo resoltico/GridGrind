@@ -162,11 +162,14 @@ final class GridGrindCliExecutionCommands {
               requestExecutor,
               request,
               analysis,
-              command.requestPath(),
-              command.executionRootPath(),
-              command.tempRootPath(),
-              stdin,
-              new CliProgressJsonlSink(stderr));
+              new CliExecutionFailureSupport.ExecutionInputs(
+                  command.requestPath(),
+                  command.executionRootPath(),
+                  command.tempRootPath(),
+                  command.grantPath(),
+                  command.secretsProviderPath(),
+                  stdin,
+                  new CliProgressJsonlSink(stderr)));
     } catch (IOException exception) {
       return CliRequestReadFailureSupport.write(
           responseWriter,
@@ -234,11 +237,14 @@ final class GridGrindCliExecutionCommands {
               requestExecutor,
               request,
               analysis,
-              command.requestPath(),
-              command.executionRootPath(),
-              command.tempRootPath(),
-              stdin,
-              new CliProgressJsonlSink(stderr)),
+              new CliExecutionFailureSupport.ExecutionInputs(
+                  command.requestPath(),
+                  command.executionRootPath(),
+                  command.tempRootPath(),
+                  command.grantPath(),
+                  command.secretsProviderPath(),
+                  stdin,
+                  new CliProgressJsonlSink(stderr))),
           analysis);
     } catch (IOException exception) {
       return CliResponseAnalysisWarningSupport.append(

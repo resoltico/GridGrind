@@ -4,6 +4,7 @@ import com.code_intelligence.jazzer.api.FuzzedDataProvider;
 import com.code_intelligence.jazzer.junit.FuzzTest;
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
 import dev.erst.gridgrind.contract.json.GridGrindJson;
+import dev.erst.gridgrind.contract.json.InvalidEncodingException;
 import dev.erst.gridgrind.contract.json.InvalidJsonException;
 import dev.erst.gridgrind.contract.json.InvalidRequestException;
 import dev.erst.gridgrind.contract.json.InvalidRequestShapeException;
@@ -38,7 +39,8 @@ class ProtocolRequestFuzzTest {
       TELEMETRY.recordStyleKinds(
           SequenceIntrospection.styleKinds(request.stepPartition().mutations()));
       TELEMETRY.recordSuccess();
-    } catch (InvalidJsonException
+    } catch (InvalidEncodingException
+        | InvalidJsonException
         | InvalidRequestShapeException
         | InvalidRequestException expected) {
       // Expected invalid-payload classifications are the normal outcome for many fuzz inputs.

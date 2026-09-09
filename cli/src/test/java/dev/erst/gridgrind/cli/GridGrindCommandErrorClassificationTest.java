@@ -15,6 +15,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.PosixFilePermission;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -240,7 +241,7 @@ class GridGrindCommandErrorClassificationTest extends GridGrindCliTestSupport {
                 new ByteArrayInputStream(
                     """
                     {
-                      "protocolVersion": "V2",
+                      "protocolVersion": "V3",
                       "source": { "type": "NEW" },
                       "persistence": { "type": "NONE" },
                       "execution": {
@@ -716,12 +717,14 @@ class GridGrindCommandErrorClassificationTest extends GridGrindCliTestSupport {
   @Test
   void writesResponsesToPathsWithoutParentDirectories() throws IOException {
     Path responsePath = Path.of("gridgrind-cli-" + UUID.randomUUID() + ".json");
+    Path grantPath = CliGrantFixtureSupport.noPublication(List.of());
 
     try {
       int exitCode =
           new GridGrindCli()
               .run(
-                  stdinExecutionArguments("--response", responsePath.toString()),
+                  stdinExecutionArguments(
+                      "--response", responsePath.toString(), "--grant", grantPath.toString()),
                   new ByteArrayInputStream(
                       requestJson("{ \"type\": \"NEW\" }", "{ \"type\": \"NONE\" }", "[]")
                           .getBytes(StandardCharsets.UTF_8)),
@@ -800,7 +803,10 @@ class GridGrindCommandErrorClassificationTest extends GridGrindCliTestSupport {
         new TrackingInputStream(
             requestJson("{ \"type\": \"NEW\" }", "{ \"type\": \"NONE\" }", "[]")
                 .getBytes(StandardCharsets.UTF_8))) {
-      int exitCode = new GridGrindCli().run(stdinExecutionArguments(), stdin, stdout);
+      Path grantPath = CliGrantFixtureSupport.noPublication(List.of());
+      int exitCode =
+          new GridGrindCli()
+              .run(stdinExecutionArguments("--grant", grantPath.toString()), stdin, stdout);
 
       assertEquals(0, exitCode);
       assertFalse(stdin.closed());

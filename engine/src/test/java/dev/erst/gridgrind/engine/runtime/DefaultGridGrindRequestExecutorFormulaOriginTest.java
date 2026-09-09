@@ -53,7 +53,11 @@ class DefaultGridGrindRequestExecutorFormulaOriginTest {
         new DefaultGridGrindRequestExecutor()
             .execute(
                 request,
-                new ExecutionInputBindings(root, Files.createDirectory(root.resolve("temp"))),
+                new ExecutionInputBindings(
+                    root,
+                    Files.createDirectory(root.resolve("temp")),
+                    ExecutionGrantTestSupport.noPublication(
+                        List.of("ENSURE_SHEET", "SET_CELL"), List.of())),
                 ExecutionProgressSink.NOOP);
 
     WorkbookResult.Failure failure = assertInstanceOf(WorkbookResult.Failure.class, result);

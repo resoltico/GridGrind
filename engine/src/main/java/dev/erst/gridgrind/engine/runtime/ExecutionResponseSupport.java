@@ -194,15 +194,35 @@ final class ExecutionResponseSupport {
   }
 
   static WorkbookResult.Failure failureResponse(ExecutionFailure failure) {
-    return failureResponse(failure, true);
+    return failureResponse(
+        failure, WorkbookResults.notAttemptedPersistenceOutcome(failure.context().request()), true);
   }
 
   static WorkbookResult.Failure failureResponseWithoutPlanOutcomeEvent(ExecutionFailure failure) {
-    return failureResponse(failure, false);
+    return failureResponse(
+        failure,
+        WorkbookResults.notAttemptedPersistenceOutcome(failure.context().request()),
+        false);
+  }
+
+  /** Returns a failed response retaining a publisher-proven final-destination state. */
+  static WorkbookResult.Failure failureResponse(
+      ExecutionFailure failure,
+      dev.erst.gridgrind.contract.dto.WorkbookResultPersistence.PersistenceOutcome persistence) {
+    return failureResponse(failure, persistence, true);
+  }
+
+  /** Returns a failed response retaining a publisher-proven final-destination state. */
+  static WorkbookResult.Failure failureResponseWithoutPlanOutcomeEvent(
+      ExecutionFailure failure,
+      dev.erst.gridgrind.contract.dto.WorkbookResultPersistence.PersistenceOutcome persistence) {
+    return failureResponse(failure, persistence, false);
   }
 
   private static WorkbookResult.Failure failureResponse(
-      ExecutionFailure failure, boolean emitPlanOutcomeEvent) {
+      ExecutionFailure failure,
+      dev.erst.gridgrind.contract.dto.WorkbookResultPersistence.PersistenceOutcome persistence,
+      boolean emitPlanOutcomeEvent) {
     ExecutionFailure.Context context = failure.context();
     ExecutionFailure.Detail detail = failure.detail();
     return new WorkbookResult.Failure(
@@ -217,9 +237,16 @@ final class ExecutionResponseSupport {
                 detail.failedStepId(),
                 emitPlanOutcomeEvent),
         context.calculation(),
-        WorkbookResults.unwrittenPersistenceOutcome(context.request()),
+        persistence,
+        ExecutionEvidence.forExecution(
+            context.request(),
+            context.calculation(),
+            failure.artifacts().planAssertions(),
+            failure.artifacts().hostAssertions(),
+            failure.artifacts().preservation(),
+            false),
         failure.artifacts().warnings(),
-        failure.artifacts().assertions(),
+        failure.artifacts().planAssertions(),
         failure.artifacts().inspections(),
         detail.problem());
   }

@@ -5,7 +5,19 @@ import java.util.Objects;
 import java.util.Optional;
 
 /** Parsed CLI command model for one GridGrind process invocation. */
-public sealed interface CliCommand {
+public sealed interface CliCommand
+    permits CliCommand.Help,
+        CliCommand.Version,
+        CliCommand.License,
+        CliCommand.PrintRequestTemplate,
+        CliGrantTemplateCommand,
+        CliCommand.PrintRecipeCatalog,
+        CliCommand.PrintRecipe,
+        CliCommand.MaterializeRecipe,
+        CliCommand.PrintRecipeKeywordMatch,
+        CliCommand.DoctorRequest,
+        CliCommand.PrintProtocolCatalog,
+        CliCommand.Execute {
   /** One explicit help surface published by the CLI. */
   enum HelpTopic {
     OVERVIEW,
@@ -82,12 +94,16 @@ public sealed interface CliCommand {
       Optional<Path> requestPath,
       Optional<Path> executionRootPath,
       Optional<Path> tempRootPath,
+      Optional<Path> grantPath,
+      Optional<Path> secretsProviderPath,
       Optional<Path> responsePath)
       implements CliCommand {
     public DoctorRequest {
       Objects.requireNonNull(requestPath, "requestPath must not be null");
       Objects.requireNonNull(executionRootPath, "executionRootPath must not be null");
       Objects.requireNonNull(tempRootPath, "tempRootPath must not be null");
+      Objects.requireNonNull(grantPath, "grantPath must not be null");
+      Objects.requireNonNull(secretsProviderPath, "secretsProviderPath must not be null");
       Objects.requireNonNull(responsePath, "responsePath must not be null");
     }
   }
@@ -133,12 +149,16 @@ public sealed interface CliCommand {
       Optional<Path> requestPath,
       Optional<Path> executionRootPath,
       Optional<Path> tempRootPath,
+      Optional<Path> grantPath,
+      Optional<Path> secretsProviderPath,
       Optional<Path> responsePath)
       implements CliCommand {
     public Execute {
       Objects.requireNonNull(requestPath, "requestPath must not be null");
       Objects.requireNonNull(executionRootPath, "executionRootPath must not be null");
       Objects.requireNonNull(tempRootPath, "tempRootPath must not be null");
+      Objects.requireNonNull(grantPath, "grantPath must not be null");
+      Objects.requireNonNull(secretsProviderPath, "secretsProviderPath must not be null");
       Objects.requireNonNull(responsePath, "responsePath must not be null");
     }
   }

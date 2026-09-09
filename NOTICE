@@ -501,7 +501,7 @@ the JRE legal directory under /usr/lib/jvm and package copyright files under
 attestation for the resolved image contents.
 
 Published runtime base:
-azul/zulu-openjdk:26-jre@sha256:ac36910df585bf3db5a38b30695eb04791515d1bb7d78202564db560c60c3470
+azul/zulu-openjdk:26-jre@sha256:9382c343f6de2c9f2633b7f629380f9c2a9444df8768a880c690bd5ea74f51b6
 
 The Dockerfile pins the Azul Zulu image by manifest-list digest. Azul publishes
 the base-image Dockerfiles and the Zulu licensing/source-availability materials

@@ -54,13 +54,25 @@ class JazzerReplaySupportTest {
   }
 
   @Test
+  void replayClassifiesMalformedUtf8AsInvalidEncoding() {
+    ReplayOutcome outcome =
+        JazzerReplaySupport.replay(JazzerHarness.protocolRequest(), new byte[] {(byte) 0xf2});
+
+    ReplayOutcome.ExpectedInvalid expectedInvalid =
+        assertInstanceOf(ReplayOutcome.ExpectedInvalid.class, outcome);
+    assertEquals("InvalidEncodingException", expectedInvalid.invalidKind());
+    assertEquals(
+        "INVALID_ENCODING", ((ProtocolRequestDetails) expectedInvalid.details()).decodeOutcome());
+  }
+
+  @Test
   void replayClassifiesRequestShapeFailuresSeparately() {
     ReplayOutcome outcome =
         JazzerReplaySupport.replay(
             JazzerHarness.protocolRequest(),
             """
             {
-              "protocolVersion": "V2",
+              "protocolVersion": "V3",
               "source": { "type": "NEW" },
               "persistence": { "type": "NONE" },
               "steps": [
@@ -88,7 +100,7 @@ class JazzerReplaySupportTest {
             JazzerHarness.protocolRequest(),
             """
             {
-              "protocolVersion": "V2",
+              "protocolVersion": "V3",
               "source": { "type": "EXISTING", "path": "budget.xlsm" },
               "persistence": { "type": "NONE" },
               "steps": []

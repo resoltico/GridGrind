@@ -83,10 +83,13 @@ class GridGrindCliTest extends GridGrindCliTestSupport {
             """);
 
     ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+    Path grantPath =
+        CliGrantFixtureSupport.noPublication(
+            List.of("ENSURE_SHEET", "APPEND_ROW", "SET_CELL", "GET_WORKBOOK_SUMMARY", "GET_CELLS"));
     int exitCode =
         new GridGrindCli()
             .run(
-                stdinExecutionArguments(),
+                stdinExecutionArguments("--grant", grantPath.toString()),
                 new ByteArrayInputStream(request.getBytes(StandardCharsets.UTF_8)),
                 stdout);
 
@@ -113,12 +116,13 @@ class GridGrindCliTest extends GridGrindCliTestSupport {
   @Test
   void executionResponsesAreCompactByDefaultAndIndentedWithPretty() throws IOException {
     String request = requestJson("{ \"type\": \"NEW\" }", "{ \"type\": \"NONE\" }", "[]");
+    Path grantPath = CliGrantFixtureSupport.noPublication(List.of());
 
     ByteArrayOutputStream compactStdout = new ByteArrayOutputStream();
     int compactExitCode =
         new GridGrindCli()
             .run(
-                stdinExecutionArguments(),
+                stdinExecutionArguments("--grant", grantPath.toString()),
                 new ByteArrayInputStream(request.getBytes(StandardCharsets.UTF_8)),
                 compactStdout);
 
@@ -126,7 +130,7 @@ class GridGrindCliTest extends GridGrindCliTestSupport {
     int prettyExitCode =
         new GridGrindCli()
             .run(
-                stdinExecutionArguments("--pretty"),
+                stdinExecutionArguments("--pretty", "--grant", grantPath.toString()),
                 new ByteArrayInputStream(request.getBytes(StandardCharsets.UTF_8)),
                 prettyStdout);
 
@@ -215,10 +219,13 @@ class GridGrindCliTest extends GridGrindCliTestSupport {
         StandardCharsets.UTF_8);
 
     ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+    Path grantPath =
+        CliGrantFixtureSupport.noPublicationWithStandardInput(
+            List.of("ENSURE_SHEET", "SET_CELL", "GET_CELLS"));
     int exitCode =
         new GridGrindCli()
             .run(
-                new String[] {"--request", requestPath.toString()},
+                new String[] {"--request", requestPath.toString(), "--grant", grantPath.toString()},
                 new ByteArrayInputStream("Quarterly Budget".getBytes(StandardCharsets.UTF_8)),
                 stdout);
 
@@ -251,7 +258,12 @@ class GridGrindCliTest extends GridGrindCliTestSupport {
                 })
             .run(
                 new String[] {
-                  "--request", requestPath.toString(), "--temp-root", customTempRoot.toString()
+                  "--request",
+                  requestPath.toString(),
+                  "--temp-root",
+                  customTempRoot.toString(),
+                  "--grant",
+                  CliGrantFixtureSupport.noPublication(List.of()).toString()
                 },
                 InputStream.nullInputStream(),
                 new ByteArrayOutputStream());
@@ -307,10 +319,12 @@ class GridGrindCliTest extends GridGrindCliTestSupport {
 
     ByteArrayOutputStream stdout = new ByteArrayOutputStream();
     ByteArrayOutputStream stderr = new ByteArrayOutputStream();
+    Path grantPath =
+        CliGrantFixtureSupport.noPublication(List.of("ENSURE_SHEET", "GET_WORKBOOK_SUMMARY"));
     int exitCode =
         new GridGrindCli()
             .run(
-                stdinExecutionArguments(),
+                stdinExecutionArguments("--grant", grantPath.toString()),
                 new ByteArrayInputStream(request.getBytes(StandardCharsets.UTF_8)),
                 stdout,
                 stderr);
@@ -351,10 +365,16 @@ class GridGrindCliTest extends GridGrindCliTestSupport {
 
     ByteArrayOutputStream stdout = new ByteArrayOutputStream();
     ByteArrayOutputStream stderr = new ByteArrayOutputStream();
+    Path workspace = Files.createTempDirectory("gridgrind-cli-missing-source-");
+    Path grantPath =
+        CliGrantFixtureSupport.noPublication(
+            List.of(), List.of(workspace.resolve("does-not-exist.xlsx")));
     int exitCode =
         new GridGrindCli()
             .run(
-                stdinExecutionArguments(),
+                new String[] {
+                  "--execution-root", workspace.toString(), "--grant", grantPath.toString()
+                },
                 new ByteArrayInputStream(request.getBytes(StandardCharsets.UTF_8)),
                 stdout,
                 stderr);
@@ -462,10 +482,13 @@ class GridGrindCliTest extends GridGrindCliTestSupport {
             """);
 
     ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+    Path grantPath =
+        CliGrantFixtureSupport.noPublication(
+            List.of("ENSURE_SHEET", "SET_RANGE", "SET_TABLE", "GET_TABLES"));
     int exitCode =
         new GridGrindCli()
             .run(
-                stdinExecutionArguments(),
+                stdinExecutionArguments("--grant", grantPath.toString()),
                 new ByteArrayInputStream(request.getBytes(StandardCharsets.UTF_8)),
                 stdout);
 
@@ -500,11 +523,18 @@ class GridGrindCliTest extends GridGrindCliTestSupport {
 
     ByteArrayOutputStream stdout = new ByteArrayOutputStream();
     ByteArrayOutputStream stderr = new ByteArrayOutputStream();
+    Path grantPath =
+        CliGrantFixtureSupport.noPublication(List.of("ENSURE_SHEET", "GET_WORKBOOK_SUMMARY"));
     int exitCode =
         new GridGrindCli()
             .run(
                 new String[] {
-                  "--request", requestPath.toString(), "--response", responsePath.toString()
+                  "--request",
+                  requestPath.toString(),
+                  "--response",
+                  responsePath.toString(),
+                  "--grant",
+                  grantPath.toString()
                 },
                 new ByteArrayInputStream(new byte[0]),
                 stdout,
@@ -544,10 +574,24 @@ class GridGrindCliTest extends GridGrindCliTestSupport {
 
     ByteArrayOutputStream stdout = new ByteArrayOutputStream();
     ByteArrayOutputStream stderr = new ByteArrayOutputStream();
+    Path secretsProvider = Files.createDirectory(requestDirectory.resolve("secrets-provider"));
+    Files.writeString(secretsProvider.resolve("source-open-password"), "GridGrind-2026");
+    Path grantPath =
+        CliGrantFixtureSupport.noPublication(
+            List.of("GET_PACKAGE_SECURITY", "GET_CELLS"),
+            List.of(assetDirectory.resolve("gridgrind-package-security.xlsx")),
+            List.of(new dev.erst.gridgrind.contract.dto.SecretReference("source-open-password")));
     int exitCode =
         new GridGrindCli()
             .run(
-                new String[] {"--request", requestPath.toString()},
+                new String[] {
+                  "--request",
+                  requestPath.toString(),
+                  "--grant",
+                  grantPath.toString(),
+                  "--secrets-provider",
+                  secretsProvider.toString()
+                },
                 InputStream.nullInputStream(),
                 stdout,
                 stderr);

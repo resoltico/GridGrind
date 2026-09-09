@@ -40,7 +40,8 @@ public final class SourceBackedPlanResolver {
     Objects.requireNonNull(bindings, "bindings must not be null");
     if (!bindings.hasRequestPathAccess()) {
       try (RequestPathAccess access =
-          new RequestPathAccess(bindings.workingDirectory(), bindings.tempFileFactory())) {
+          new RequestPathAccess(
+              bindings.workingDirectory(), bindings.tempFileFactory(), bindings.executionGrant())) {
         return resolveBound(plan, bindings.withRequestPathAccess(access));
       }
     }
@@ -153,7 +154,8 @@ public final class SourceBackedPlanResolver {
       throws IOException {
     if (!bindings.hasRequestPathAccess()) {
       try (RequestPathAccess access =
-          new RequestPathAccess(bindings.workingDirectory(), bindings.tempFileFactory())) {
+          new RequestPathAccess(
+              bindings.workingDirectory(), bindings.tempFileFactory(), bindings.executionGrant())) {
         return resolveTextSource(
             source, bindings.withRequestPathAccess(access), requireNonBlank, inputKind);
       }
@@ -199,7 +201,8 @@ public final class SourceBackedPlanResolver {
       throws IOException {
     if (!bindings.hasRequestPathAccess()) {
       try (RequestPathAccess access =
-          new RequestPathAccess(bindings.workingDirectory(), bindings.tempFileFactory())) {
+          new RequestPathAccess(
+              bindings.workingDirectory(), bindings.tempFileFactory(), bindings.executionGrant())) {
         return resolveBinarySource(source, bindings.withRequestPathAccess(access), inputKind);
       }
     }

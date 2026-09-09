@@ -17,7 +17,7 @@ class GridGrindContainerRuntimeTextTest {
         "-v \"$(pwd)\":/work", GridGrindContainerRuntimeText.dockerMountedWorkdirVolumeArgument());
     assertEquals(
         "docker run --rm -i --user \"$(id -u):$(id -g)\" -v \"$(pwd)\":/work"
-            + " ghcr.io/resoltico/gridgrind:latest --request request.json --response"
+            + " ghcr.io/resoltico/gridgrind:latest --request request.json --grant grant.json --response"
             + " response.json",
         GridGrindContainerRuntimeText.dockerMountedWorkdirExecutionCommand(
             "ghcr.io/resoltico/gridgrind:latest"));

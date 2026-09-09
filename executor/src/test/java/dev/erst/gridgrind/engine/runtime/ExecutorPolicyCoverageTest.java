@@ -376,7 +376,13 @@ class ExecutorPolicyCoverageTest {
           throw new AssertionError("null paths must not invoke the deleter");
         });
 
-    try (var prepared = ExecutionInputBindingsFixtureSupport.preparedBindings(workingDirectory)) {
+    try (var prepared =
+        ExecutionInputBindingsFixtureSupport.preparedBindings(
+            workingDirectory,
+            List.of(),
+            java.util.Map.of(
+                new dev.erst.gridgrind.contract.dto.SecretReference("output-password"),
+                "output-secret"))) {
       ExcelOoxmlPersistenceOptions noneOptions =
           ExecutionRequestPaths.persistenceOptions(
               new WorkbookPlan.WorkbookPersistence.None(), prepared.bindings());
@@ -388,7 +394,8 @@ class ExecutorPolicyCoverageTest {
                   new OoxmlPersistenceSecurityInput(
                       new dev.erst.gridgrind.contract.dto.OoxmlPersistenceEncryptionInput.Encrypt(
                           new OoxmlEncryptionInput(
-                              "secret",
+                              new dev.erst.gridgrind.contract.dto.SecretReference(
+                                  "output-password"),
                               ExcelOoxmlWriteCipher.AES_256,
                               ExcelOoxmlWriteHash.SHA_512)),
                       new dev.erst.gridgrind.contract.dto.OoxmlPersistenceSignatureInput.None())),
@@ -399,7 +406,8 @@ class ExecutorPolicyCoverageTest {
                   new OoxmlPersistenceSecurityInput(
                       new dev.erst.gridgrind.contract.dto.OoxmlPersistenceEncryptionInput.Encrypt(
                           new OoxmlEncryptionInput(
-                              "secret",
+                              new dev.erst.gridgrind.contract.dto.SecretReference(
+                                  "output-password"),
                               ExcelOoxmlWriteCipher.AES_256,
                               ExcelOoxmlWriteHash.SHA_512)),
                       new dev.erst.gridgrind.contract.dto.OoxmlPersistenceSignatureInput.None())),
@@ -423,11 +431,15 @@ class ExecutorPolicyCoverageTest {
         Optional.empty(),
         ExecutionRequestPaths.sourceEncryptionPassword(
             new WorkbookPlan.WorkbookSource.ExistingFile("/tmp/in.xlsx")));
-    assertEquals(
-        Optional.of("open-secret"),
-        ExecutionRequestPaths.sourceEncryptionPassword(
-            new WorkbookPlan.WorkbookSource.ExistingFile(
-                "/tmp/in.xlsx", new OoxmlOpenSecurityInput(java.util.Optional.of("open-secret")))));
+    org.junit.jupiter.api.Assertions.assertThrows(
+        IllegalStateException.class,
+        () ->
+            ExecutionRequestPaths.sourceEncryptionPassword(
+                new WorkbookPlan.WorkbookSource.ExistingFile(
+                    "/tmp/in.xlsx",
+                    new OoxmlOpenSecurityInput(
+                        java.util.Optional.of(
+                            new dev.erst.gridgrind.contract.dto.SecretReference("open-secret"))))));
   }
 
   private static void assertStreamingPersistenceBehaviors() throws IOException {
@@ -441,7 +453,8 @@ class ExecutorPolicyCoverageTest {
               materialized,
               new WorkbookPlan.WorkbookPersistence.None(),
               new WorkbookPlan.WorkbookSource.New(),
-              prepared.bindings());
+              prepared.bindings(),
+              StagedArtifactAcceptance.none());
       assertInstanceOf(WorkbookResultPersistence.PersistenceOutcome.NotSaved.class, notSaved);
     }
 
@@ -462,7 +475,8 @@ class ExecutorPolicyCoverageTest {
                   new WorkbookPlan.WorkbookPersistence.SaveAs(
                       saveAsPath.toString(), WorkbookPlan.WorkbookPersistence.IfExists.REJECT),
                   new WorkbookPlan.WorkbookSource.New(),
-                  prepared.bindings()));
+                  prepared.bindings(),
+                  StagedArtifactAcceptance.none()));
       assertEquals(
           saveAsPath.toAbsolutePath().toString(),
           DefaultGridGrindRequestExecutorTestSupport.writtenExecutionPath(savedAs));
@@ -490,7 +504,8 @@ class ExecutorPolicyCoverageTest {
                   new WorkbookPlan.WorkbookPersistence.Overwrite(
                       OoxmlPersistenceSecurityInput.none()),
                   new WorkbookPlan.WorkbookSource.ExistingFile(overwriteSourcePath.toString()),
-                  prepared.bindings()));
+                  prepared.bindings(),
+                  StagedArtifactAcceptance.none()));
       assertEquals(
           overwriteSourcePath.toAbsolutePath().toString(),
           DefaultGridGrindRequestExecutorTestSupport.writtenExecutionPath(overwritten));
@@ -506,7 +521,8 @@ class ExecutorPolicyCoverageTest {
                       new WorkbookPlan.WorkbookPersistence.Overwrite(
                           OoxmlPersistenceSecurityInput.none()),
                       new WorkbookPlan.WorkbookSource.New(),
-                      prepared.bindings()));
+                      prepared.bindings(),
+                      StagedArtifactAcceptance.none()));
       assertEquals(
           "OVERWRITE persistence requires an EXISTING source", overwriteFailure.getMessage());
     }
@@ -526,7 +542,7 @@ class ExecutorPolicyCoverageTest {
         assertInstanceOf(
             WorkbookResult.Failure.class,
             responseSupport.guardUnexpectedRuntime(
-                GridGrindProtocolVersion.V2,
+                GridGrindProtocolVersion.V3,
                 request,
                 ExecutionContextFixtureSupport.startJournal(request, ExecutionProgressSink.NOOP),
                 () -> {
@@ -539,7 +555,7 @@ class ExecutorPolicyCoverageTest {
           assertInstanceOf(
               WorkbookResult.Failure.class,
               responseSupport.guardUnexpectedRuntime(
-                  GridGrindProtocolVersion.V2,
+                  GridGrindProtocolVersion.V3,
                   request,
                   ExecutionContextFixtureSupport.startJournal(request, ExecutionProgressSink.NOOP),
                   workbook,
@@ -560,7 +576,7 @@ class ExecutorPolicyCoverageTest {
           assertInstanceOf(
               WorkbookResult.Failure.class,
               closeFailingResponseSupport.guardUnexpectedRuntime(
-                  GridGrindProtocolVersion.V2,
+                  GridGrindProtocolVersion.V3,
                   request,
                   ExecutionContextFixtureSupport.startJournal(request, ExecutionProgressSink.NOOP),
                   workbook,

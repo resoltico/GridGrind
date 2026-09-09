@@ -4,6 +4,7 @@ import dev.erst.gridgrind.contract.action.MutationAction;
 import dev.erst.gridgrind.contract.assertion.AnalysisAssertion;
 import dev.erst.gridgrind.contract.assertion.Assertion;
 import dev.erst.gridgrind.contract.assertion.CompositeAssertion;
+import dev.erst.gridgrind.contract.catalog.OperationSemantics;
 import dev.erst.gridgrind.contract.catalog.ProtocolTargetingMode;
 import dev.erst.gridgrind.contract.catalog.ProtocolTypeMetadataSupport;
 import dev.erst.gridgrind.contract.dto.ExecutionModeInput;
@@ -68,6 +69,17 @@ public final class WorkbookOperationContracts {
     return contract.acceptedSelectors(operationType);
   }
 
+  /** Returns the complete static semantics for one concrete operation type. */
+  public static OperationSemantics semanticsForType(Class<?> operationType) {
+    return contractFor(recordType(operationType)).semantics();
+  }
+
+  /** Returns the complete static semantics for one bound operation instance. */
+  public static OperationSemantics semanticsFor(Object operation) {
+    Object boundOperation = Objects.requireNonNull(operation, "operation must not be null");
+    return semanticsForType(boundOperation.getClass());
+  }
+
   private static WorkbookOperationContract contractFor(Class<? extends Record> operationType) {
     return CONTRACTS.computeIfAbsent(operationType, WorkbookOperationContracts::build);
   }
@@ -110,7 +122,10 @@ public final class WorkbookOperationContracts {
                       CompositeAssertion.targetSelectorsFor(
                           CompositeAssertion.class.cast(operation)));
         };
-    return new WorkbookOperationContract(operationType, targetSelectorContract);
+    return new WorkbookOperationContract(
+        operationType,
+        targetSelectorContract,
+        WorkbookOperationSemanticsFactory.semanticsFor(operationType));
   }
 
   private static WorkbookOperationTargetContract derived(

@@ -24,7 +24,7 @@ class PromotionMetadataRefresherTest {
     byte[] input =
         """
         {
-          "protocolVersion": "V2",
+          "protocolVersion": "V3",
           "source": { "type": "NEW" },
           "persistence": { "type": "NONE" },
           "unknown": true,

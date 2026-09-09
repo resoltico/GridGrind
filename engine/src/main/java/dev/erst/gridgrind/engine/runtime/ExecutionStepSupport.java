@@ -6,6 +6,7 @@ import dev.erst.gridgrind.contract.dto.ExecutionModeInput;
 import dev.erst.gridgrind.contract.query.InspectionResult;
 import dev.erst.gridgrind.contract.step.AssertionStep;
 import dev.erst.gridgrind.contract.step.InspectionStep;
+import dev.erst.gridgrind.engine.api.GridGrindExecutionGrant;
 import dev.erst.gridgrind.excel.ExcelTempFileWriteTargetSupport;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
 import dev.erst.gridgrind.excel.ExcelWorkbooks;
@@ -32,7 +33,8 @@ final class ExecutionStepSupport {
       WorkbookExecutionEngine workbookEngine,
       SemanticSelectorResolver selectorResolver,
       AssertionExecutor assertionExecutor,
-      TempFileFactory tempFileFactory) {
+      TempFileFactory tempFileFactory,
+      ExecutionInputBindings bindings) {
     this.workbookEngine = Objects.requireNonNull(workbookEngine, "workbookEngine must not be null");
     this.selectorResolver =
         Objects.requireNonNull(selectorResolver, "selectorResolver must not be null");
@@ -41,7 +43,29 @@ final class ExecutionStepSupport {
     this.tempFileFactory =
         Objects.requireNonNull(tempFileFactory, "tempFileFactory must not be null");
     this.mutationStepExecutor =
-        new FormulaAwareMutationStepExecutor(this.workbookEngine, this.selectorResolver);
+        new FormulaAwareMutationStepExecutor(this.workbookEngine, this.selectorResolver, bindings);
+  }
+
+  ExecutionStepSupport(
+      WorkbookExecutionEngine workbookEngine,
+      SemanticSelectorResolver selectorResolver,
+      AssertionExecutor assertionExecutor,
+      TempFileFactory tempFileFactory) {
+    this(
+        workbookEngine,
+        selectorResolver,
+        assertionExecutor,
+        tempFileFactory,
+        new ExecutionInputBindings(
+            Path.of("."),
+            Path.of("tmp", "gridgrind-step-support"),
+            new GridGrindExecutionGrant.Bounded(
+                List.of(),
+                List.of(),
+                new GridGrindExecutionGrant.WorkbookTargetAuthority.WorkbookWide(),
+                new GridGrindExecutionGrant.PublicationAuthority.None(),
+                List.of(),
+                dev.erst.gridgrind.engine.api.GridGrindHostAcceptancePolicy.minimum())));
   }
 
   FormulaAwareMutationStepExecutor mutationStepExecutor() {
@@ -170,6 +194,13 @@ final class ExecutionStepSupport {
     } finally {
       ExecutionWorkbookSupport.deleteIfExists(tempPath);
     }
+  }
+
+  AssertionResult executeAssertionAgainstMaterializedPath(
+      AssertionStep assertionStep, WorkbookLocation workbookLocation, Path materializedPath)
+      throws IOException, AssertionFailedException {
+    return executeFullAssertionAgainstMaterializedPath(
+        assertionStep, workbookLocation, materializedPath);
   }
 
   AssertionStepExecution executeStreamingAssertionStepCollecting(

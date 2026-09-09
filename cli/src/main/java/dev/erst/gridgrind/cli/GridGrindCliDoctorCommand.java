@@ -86,6 +86,8 @@ final class GridGrindCliDoctorCommand {
                   command.requestPath(),
                   command.executionRootPath(),
                   command.tempRootPath(),
+                  command.grantPath(),
+                  command.secretsProviderPath(),
                   analysis,
                   stdin),
               analysis.warnings());

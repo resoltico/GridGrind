@@ -68,7 +68,8 @@ class SourceBackedPlanResolverFailureCoverageTest extends SourceBackedPlanResolv
                 () ->
                     SourceBackedPlanResolver.resolve(
                         blankCellTextPlan,
-                        ExecutionInputBindingsFixtureSupport.bindings(workingDirectory)))
+                        ExecutionInputBindingsFixtureSupport.bindings(
+                            workingDirectory, blankCellTextPlan)))
             .getMessage());
 
     WorkbookPlan emptyRichTextRunPlan =
@@ -91,7 +92,8 @@ class SourceBackedPlanResolverFailureCoverageTest extends SourceBackedPlanResolv
                 () ->
                     SourceBackedPlanResolver.resolve(
                         emptyRichTextRunPlan,
-                        ExecutionInputBindingsFixtureSupport.bindings(workingDirectory)))
+                        ExecutionInputBindingsFixtureSupport.bindings(
+                            workingDirectory, emptyRichTextRunPlan)))
             .getMessage());
 
     WorkbookPlan directoryPlan =
@@ -110,7 +112,8 @@ class SourceBackedPlanResolverFailureCoverageTest extends SourceBackedPlanResolv
             () ->
                 SourceBackedPlanResolver.resolve(
                     directoryPlan,
-                    ExecutionInputBindingsFixtureSupport.bindings(workingDirectory)));
+                    ExecutionInputBindingsFixtureSupport.bindings(
+                        workingDirectory, directoryPlan)));
     assertTrue(directoryFailure.getMessage().contains("Failed to read cell text file"));
 
     WorkbookPlan invalidPathPlan =
@@ -128,7 +131,8 @@ class SourceBackedPlanResolverFailureCoverageTest extends SourceBackedPlanResolv
             () ->
                 SourceBackedPlanResolver.resolve(
                     invalidPathPlan,
-                    ExecutionInputBindingsFixtureSupport.bindings(workingDirectory)));
+                    ExecutionInputBindingsFixtureSupport.bindings(
+                        workingDirectory, invalidPathPlan)));
     assertTrue(invalidPathFailure.getMessage().contains("Invalid cell text path"));
 
     WorkbookPlan textLoopPlan =
@@ -145,7 +149,8 @@ class SourceBackedPlanResolverFailureCoverageTest extends SourceBackedPlanResolv
             UnsafePathAccessException.class,
             () ->
                 SourceBackedPlanResolver.resolve(
-                    textLoopPlan, ExecutionInputBindingsFixtureSupport.bindings(workingDirectory)));
+                    textLoopPlan,
+                    ExecutionInputBindingsFixtureSupport.bindings(workingDirectory, textLoopPlan)));
     assertTrue(textLoopFailure.getMessage().contains("symbolic links are not accepted"));
 
     WorkbookPlan missingBinaryPlan =
@@ -168,7 +173,8 @@ class SourceBackedPlanResolverFailureCoverageTest extends SourceBackedPlanResolv
             () ->
                 SourceBackedPlanResolver.resolve(
                     missingBinaryPlan,
-                    ExecutionInputBindingsFixtureSupport.bindings(workingDirectory)));
+                    ExecutionInputBindingsFixtureSupport.bindings(
+                        workingDirectory, missingBinaryPlan)));
     assertEquals("picture payload", missingBinaryFailure.inputKind());
 
     WorkbookPlan binaryLoopPlan =
@@ -191,7 +197,8 @@ class SourceBackedPlanResolverFailureCoverageTest extends SourceBackedPlanResolv
             () ->
                 SourceBackedPlanResolver.resolve(
                     binaryLoopPlan,
-                    ExecutionInputBindingsFixtureSupport.bindings(workingDirectory)));
+                    ExecutionInputBindingsFixtureSupport.bindings(
+                        workingDirectory, binaryLoopPlan)));
     assertTrue(binaryLoopFailure.getMessage().contains("symbolic links are not accepted"));
 
     // Exercise the IOException (not NoSuchFileException) path in the text and binary read helpers.
@@ -216,7 +223,8 @@ class SourceBackedPlanResolverFailureCoverageTest extends SourceBackedPlanResolv
               () ->
                   SourceBackedPlanResolver.resolve(
                       ioTextFailurePlan,
-                      ExecutionInputBindingsFixtureSupport.bindings(workingDirectory)));
+                      ExecutionInputBindingsFixtureSupport.bindings(
+                          workingDirectory, ioTextFailurePlan)));
       assertTrue(ioTextFailure.getMessage().contains("Failed to read cell text file"));
       unreadableTextFile.toFile().setReadable(true, false);
     }
@@ -246,7 +254,8 @@ class SourceBackedPlanResolverFailureCoverageTest extends SourceBackedPlanResolv
               () ->
                   SourceBackedPlanResolver.resolve(
                       ioBinaryFailurePlan,
-                      ExecutionInputBindingsFixtureSupport.bindings(workingDirectory)));
+                      ExecutionInputBindingsFixtureSupport.bindings(
+                          workingDirectory, ioBinaryFailurePlan)));
       assertTrue(ioBinaryFailure.getMessage().contains("Failed to read picture payload file"));
       unreadableBinaryFile.toFile().setReadable(true, false);
     }
@@ -445,7 +454,9 @@ class SourceBackedPlanResolverFailureCoverageTest extends SourceBackedPlanResolv
     Path absoluteFile = Files.createTempFile("gridgrind-source-backed-absolute-", ".txt");
     try (RequestPathAccess access =
         new RequestPathAccess(
-            Path.of(""), (prefix, suffix) -> Files.createTempFile(prefix, suffix))) {
+            Path.of(""),
+            (prefix, suffix) -> Files.createTempFile(prefix, suffix),
+            ExecutionInputBindingsFixtureSupport.noPublicationGrant())) {
       assertThrows(
           RequestPathEscapeException.class,
           () ->
@@ -520,7 +531,8 @@ class SourceBackedPlanResolverFailureCoverageTest extends SourceBackedPlanResolv
         inline, SourceBackedPlanResolver.resolveBinarySource(inline, bindings, "picture payload"));
 
     try (RequestPathAccess access =
-        new RequestPathAccess(workingDirectory, bindings.tempFileFactory())) {
+        new RequestPathAccess(
+            workingDirectory, bindings.tempFileFactory(), bindings.executionGrant())) {
       assertEquals(
           inline,
           SourceBackedPlanResolver.resolveBinarySource(

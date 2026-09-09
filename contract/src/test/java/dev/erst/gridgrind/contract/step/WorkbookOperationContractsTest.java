@@ -6,6 +6,8 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import dev.erst.gridgrind.contract.action.CellMutationAction;
 import dev.erst.gridgrind.contract.assertion.AnalysisAssertion;
 import dev.erst.gridgrind.contract.assertion.CellAssertion;
+import dev.erst.gridgrind.contract.catalog.OperationEffect;
+import dev.erst.gridgrind.contract.catalog.OperationEffectFootprint;
 import dev.erst.gridgrind.contract.dto.CellInput;
 import dev.erst.gridgrind.contract.dto.CellScalarValue;
 import dev.erst.gridgrind.contract.dto.ExecutionModeInput;
@@ -93,6 +95,24 @@ class WorkbookOperationContractsTest {
                 new CellMutationAction.SetCell(new CellInput.NumberValue(1.0)),
                 new ExecutionModeInput.EventRead())
             .orElseThrow());
+  }
+
+  @Test
+  void ownsEffectsAndFootprintAlongsideTargetAndModeCompatibility() {
+    assertEquals(
+        List.of(
+            OperationEffect.READ_WORKBOOK,
+            OperationEffect.MUTATE_WORKBOOK,
+            OperationEffect.CELLS,
+            OperationEffect.FORMULAS,
+            OperationEffect.STYLES,
+            OperationEffect.HYPERLINKS,
+            OperationEffect.COMMENTS,
+            OperationEffect.DRAWINGS),
+        WorkbookOperationContracts.semanticsForType(CellMutationAction.SetCell.class).effects());
+    assertEquals(
+        OperationEffectFootprint.CONSERVATIVE_WORKBOOK_WIDE,
+        WorkbookOperationContracts.semanticsForType(CellMutationAction.SetCell.class).footprint());
   }
 
   @SuppressWarnings("unchecked")

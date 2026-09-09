@@ -38,10 +38,23 @@ final class ExecutionCalculationSupport {
       @Nullable FormulaOriginTracker formulaOrigins,
       dev.erst.gridgrind.contract.dto.ProblemContextWorkbookSurfaces.@Nullable StepReference
           surfacedAtStep) {
+    return executeCalculationPolicy(
+        workbook, request, request.calculationPolicy(), journal, formulaOrigins, surfacedAtStep);
+  }
+
+  CalculationExecutionOutcome executeCalculationPolicy(
+      ExcelWorkbook workbook,
+      WorkbookPlan request,
+      CalculationPolicyInput calculationPolicy,
+      ExecutionJournalRecorder journal,
+      @Nullable FormulaOriginTracker formulaOrigins,
+      dev.erst.gridgrind.contract.dto.ProblemContextWorkbookSurfaces.@Nullable StepReference
+          surfacedAtStep) {
     Objects.requireNonNull(workbook, "workbook must not be null");
     Objects.requireNonNull(request, "request must not be null");
+    Objects.requireNonNull(calculationPolicy, "calculationPolicy must not be null");
     Objects.requireNonNull(journal, "journal must not be null");
-    CalculationPolicyInput policy = request.calculationPolicy();
+    CalculationPolicyInput policy = calculationPolicy;
     CalculationPolicyInput effectivePolicy = CalculationPolicyExecutor.normalize(policy);
     if (effectivePolicy.isDefault()) {
       journal.markCalculationPreflightNotRequested();

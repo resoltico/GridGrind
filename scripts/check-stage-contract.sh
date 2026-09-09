@@ -114,12 +114,41 @@ check_stage_execute() {
                         shift
                     done
                     shift
-                    bash -n "${shell_syntax_targets[@]}"
-                    cli_jar_path="$(ensure_cli_shadow_jar "'"${check_repo_root}"'")"
-                    "'"${check_repo_root}"'/scripts/verify-cli-contract.sh" jar "${cli_jar_path}" >/dev/null
+                    run_with_progress() {
+                        local target="$1"
+                        shift
+                        printf "[CHECK-SHELL] phase=start target=%s\n" "${target}" >&2
+                        (
+                            while true; do
+                                sleep 15
+                                printf "[CHECK-SHELL] phase=progress target=%s\n" "${target}" >&2
+                            done
+                        ) &
+                        local progress_pid=$!
+                        local command_exit_code=0
+                        if "$@"; then
+                            command_exit_code=0
+                        else
+                            command_exit_code=$?
+                        fi
+                        kill "${progress_pid}" 2>/dev/null || true
+                        wait "${progress_pid}" 2>/dev/null || true
+                        if (( command_exit_code == 0 )); then
+                            printf "[CHECK-SHELL] phase=finish target=%s status=SUCCESS\n" "${target}" >&2
+                        else
+                            printf "[CHECK-SHELL] phase=finish target=%s status=FAILURE exit=%d\n" \
+                                "${target}" "${command_exit_code}" >&2
+                        fi
+                        return "${command_exit_code}"
+                    }
+                    run_with_progress "bash-syntax" bash -n "${shell_syntax_targets[@]}"
+                    cli_jar_path="$(run_with_progress "cli-shadow-jar" ensure_cli_shadow_jar "'"${check_repo_root}"'")"
+                    run_with_progress "verify-cli-contract" \
+                        "'"${check_repo_root}"'/scripts/verify-cli-contract.sh" jar "${cli_jar_path}" >/dev/null
                     local_script_path=""
                     for local_script_path in "$@"; do
-                        bash "'"${check_repo_root}"'/${local_script_path}"
+                        run_with_progress "${local_script_path}" \
+                            bash "'"${check_repo_root}"'/${local_script_path}"
                     done
                 ' bash "${shell_syntax_targets[@]}" -- "${check_stage5_script_paths[@]}"
             ;;

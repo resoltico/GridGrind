@@ -1,18 +1,19 @@
 package dev.erst.gridgrind.contract.json;
 
+import java.util.Objects;
 import java.util.Optional;
 
 /** Reports an object member that is not part of the applicable creator contract. */
 record RequestUnknownField(String path, long tokenByteOffset)
     implements RequestShapeStructuralProblem {
   RequestUnknownField {
-    path = RequestStructuralProblemSupport.requireText(path, "path");
+    Objects.requireNonNull(path, "path must not be null");
     RequestStructuralProblemSupport.requireByteOffset(tokenByteOffset);
   }
 
   @Override
   public Optional<String> jsonPath() {
-    return Optional.of(path);
+    return RequestStructuralProblemSupport.optionalJsonPath(path);
   }
 
   @Override

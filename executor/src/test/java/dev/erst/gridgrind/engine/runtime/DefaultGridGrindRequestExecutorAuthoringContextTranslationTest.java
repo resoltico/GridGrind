@@ -157,7 +157,7 @@ class DefaultGridGrindRequestExecutorAuthoringContextTranslationTest
         null,
         null);
     assertWriteContext(
-        mutate(
+        ExecutorStructuredMutationTargets.namedRange(
             new StructuredMutationAction.SetNamedRange(
                 "BudgetTotal",
                 new NamedRangeScope.Workbook(),

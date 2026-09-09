@@ -1,8 +1,7 @@
 ---
-afad: "4.0"
-version: "0.75.0"
+afad: "5.0.1"
 domain: WORKBOOK_SHEET_MUTATIONS
-updated: "2026-05-01"
+updated: "2026-09-09"
 route:
   keywords: [gridgrind, workbook mutations, sheet mutations, protection, copy-sheet, rename-sheet, custom-xml]
   questions: ["how do i manage sheets in gridgrind", "how do i protect workbooks in gridgrind", "how do i import custom xml mappings in gridgrind"]
@@ -257,8 +256,8 @@ last visible sheet is rejected.
 
 ### SET_SHEET_PROTECTION
 
-Enable sheet protection with the exact supported lock flags and an optional password. When
-`password` is provided, GridGrind writes a password hash into the sheet-protection XML while
+Enable sheet protection with the exact supported lock flags and an optional typed secret reference.
+When `passwordRef` is provided, GridGrind writes a password hash into the sheet-protection XML while
 preserving the explicit authored lock flags.
 
 ```json
@@ -287,7 +286,7 @@ preserving the explicit authored lock flags.
       "selectUnlockedCellsLocked": false,
       "sortLocked": true
     },
-    "password": "Sheet-2026"
+    "passwordRef": { "id": "sheet-protection-password" }
   }
 }
 ```
@@ -296,7 +295,7 @@ preserving the explicit authored lock flags.
 |:------|:---------|:------------|
 | `target` | Yes | Selector payload for the target workbook location. |
 | `protection` | Yes | Supported lock-flag payload. |
-| `password` | No | Optional nonblank sheet-protection password. Omit it to protect the sheet without a stored password hash. |
+| `passwordRef` | No | Optional approved sheet-protection secret reference. Omit it to protect the sheet without a stored password hash. |
 
 ---
 
@@ -326,8 +325,8 @@ Disable sheet protection entirely and clear any stored password hash.
 ### SET_WORKBOOK_PROTECTION
 
 Enable workbook-level protection with authoritative lock flags and optional workbook or revisions
-passwords. Omitted booleans normalize to `false`; omitted passwords clear the corresponding stored
-hash.
+secret references. Omitted booleans normalize to `false`; omitted secret references clear the
+corresponding stored hash.
 
 ```json
 {
@@ -336,15 +335,15 @@ hash.
     "structureLocked": true,
     "windowsLocked": false,
     "revisionsLocked": true,
-    "workbookPassword": "Vault-2026",
-    "revisionsPassword": "Revisions-2026"
+    "workbookPasswordRef": { "id": "workbook-protection-password" },
+    "revisionsPasswordRef": { "id": "revisions-protection-password" }
   }
 }
 ```
 
 | Field | Required | Description |
 |:------|:---------|:------------|
-| `protection` | Yes | Workbook protection payload carrying structure/windows/revisions lock flags plus optional passwords. |
+| `protection` | Yes | Workbook protection payload carrying lock flags and optional secret references. |
 
 `protection` fields:
 
@@ -353,8 +352,8 @@ hash.
 | `structureLocked` | No | Lock workbook structure. Defaults to `false`. |
 | `windowsLocked` | No | Lock workbook windows. Defaults to `false`. |
 | `revisionsLocked` | No | Lock workbook revisions. Defaults to `false`. |
-| `workbookPassword` | No | Optional nonblank workbook-protection password. Omit to clear the workbook password hash. |
-| `revisionsPassword` | No | Optional nonblank revisions-protection password. Omit to clear the revisions password hash. |
+| `workbookPasswordRef` | No | Optional approved workbook-protection secret reference. Omit to clear the workbook password hash. |
+| `revisionsPasswordRef` | No | Optional approved revisions-protection secret reference. Omit to clear the revisions password hash. |
 
 ---
 

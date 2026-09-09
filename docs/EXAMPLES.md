@@ -1,6 +1,5 @@
 ---
 afad: "5.0.1"
-version: "0.75.0"
 domain: EXAMPLES
 updated: "2026-08-30"
 route:
@@ -85,7 +84,7 @@ The created workspace contains the catalogued request file plus these declared a
 | `CUSTOM_XML` | [`../examples/custom-xml-request.json`](../examples/custom-xml-request.json) | [`../examples/custom-xml-assets/`](../examples/custom-xml-assets/) |
 | `FILE_HYPERLINK_HEALTH` | [`../examples/file-hyperlink-health-request.json`](../examples/file-hyperlink-health-request.json) | [`../examples/file-hyperlink-assets/request-label.txt`](../examples/file-hyperlink-assets/request-label.txt) |
 | `SOURCE_BACKED_INPUT` | [`../examples/source-backed-input-request.json`](../examples/source-backed-input-request.json) | [`../examples/source-backed-input-assets/`](../examples/source-backed-input-assets/) |
-| `PACKAGE_SECURITY_INSPECTION` | [`../examples/package-security-inspect-request.json`](../examples/package-security-inspect-request.json) | [`../examples/package-security-assets/`](../examples/package-security-assets/) |
+| `PACKAGE_SECURITY_INSPECTION` | [`../examples/package-security-inspect-request.json`](../examples/package-security-inspect-request.json) | [`../examples/package-security-assets/`](../examples/package-security-assets/) and a host secret provider containing `source-open-password` |
 
 The CLI help now prints each built-in example with its `advisory`, and asset-backed entries
 also print their exact `requiredWorkspacePaths`, so artifact-only workspaces do not silently assume every
@@ -98,6 +97,8 @@ portable `requestFileName` plus `advisory` contract, and exact
 `REQUIRES_EXAMPLE_ASSETS` means `--materialize-recipe` must create the request and its declared
 assets together; `requiredWorkspacePaths` names those files directly.
 Print it directly with `gridgrind --print-recipe-catalog --response recipes.json`.
+
+`PACKAGE_SECURITY_INSPECTION` keeps its password out of both the request and the materialized workspace. Its committed encrypted workbook is a public fixture: create a separate secret-provider directory with a file named `source-open-password` containing `GridGrind-2026`, authorize that reference in the host grant, and pass the directory through `--secrets-provider`. Treat this only as a fixture credential; use an independently managed secret provider and credential for any non-sample workbook.
 
 ## JSON Request Fixtures
 
@@ -146,10 +147,13 @@ The authoritative verification loop for the shipped examples is:
 ./scripts/verify-cli-discovery-execution.sh ./cli/build/libs/gridgrind.jar
 ```
 
-For a direct packaged-CLI spot check from a repository checkout, this also works:
+For a direct packaged-CLI spot check from a repository checkout, first create and narrow a host grant, then execute through it:
 
 ```bash
+java -jar cli/build/libs/gridgrind.jar --print-grant-template --response grant.json
+# Edit grant.json to authorize examples/budget-request.json's exact resources, operations, and output.
 java -jar cli/build/libs/gridgrind.jar \
   --request examples/budget-request.json \
+  --grant grant.json \
   --response tmp/example-budget-response.json
 ```

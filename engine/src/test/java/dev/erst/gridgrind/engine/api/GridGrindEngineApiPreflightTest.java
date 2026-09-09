@@ -17,6 +17,7 @@ import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.junit.jupiter.api.Test;
@@ -49,7 +50,7 @@ class GridGrindEngineApiPreflightTest {
     RequestDoctorReport structurallyInvalid =
         doctor.diagnose(
             GridGrindJson.analyzeRequest(
-                "{\"protocolVersion\":\"V2\"}".getBytes(StandardCharsets.UTF_8)),
+                "{\"protocolVersion\":\"V3\"}".getBytes(StandardCharsets.UTF_8)),
             requestInput,
             inputs());
 
@@ -131,13 +132,24 @@ class GridGrindEngineApiPreflightTest {
   }
 
   private GridGrindRequestInputs inputs() {
-    return new GridGrindRequestInputs(temporaryDirectory, temporaryDirectory.resolve("temp-root"));
+    return new GridGrindRequestInputs(
+        temporaryDirectory,
+        temporaryDirectory.resolve("temp-root"),
+        new GridGrindExecutionGrant.Bounded(
+            List.of(
+                new GridGrindExecutionGrant.ReadAuthority.File(
+                    temporaryDirectory.resolve("source.xlsx"))),
+            List.of("SET_RANGE"),
+            new GridGrindExecutionGrant.WorkbookTargetAuthority.WorkbookWide(),
+            new GridGrindExecutionGrant.PublicationAuthority.None(),
+            List.of(),
+            GridGrindHostAcceptancePolicy.minimum()));
   }
 
   private static String minimalRequest() {
     return """
         {
-          "protocolVersion": "V2",
+          "protocolVersion": "V3",
           "source": { "type": "NEW" },
           "persistence": { "type": "NONE" },
           "steps": []
@@ -148,7 +160,7 @@ class GridGrindEngineApiPreflightTest {
   private static String staticTargetMismatchRequest() {
     return """
         {
-          "protocolVersion": "V2",
+          "protocolVersion": "V3",
           "source": { "type": "NEW" },
           "persistence": { "type": "NONE" },
           "steps": [
@@ -165,7 +177,7 @@ class GridGrindEngineApiPreflightTest {
   private static String existingSourceRequest(String mode) {
     return """
         {
-          "protocolVersion": "V2",
+          "protocolVersion": "V3",
           "source": { "type": "EXISTING", "path": "source.xlsx" },
           "persistence": { "type": "NONE" },
           "execution": {
@@ -181,7 +193,7 @@ class GridGrindEngineApiPreflightTest {
   private static String preflightFailureRequest() {
     return """
         {
-          "protocolVersion": "V2",
+          "protocolVersion": "V3",
           "source": { "type": "NEW" },
           "persistence": { "type": "NONE" },
           "steps": [

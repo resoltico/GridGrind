@@ -148,20 +148,40 @@ final class WorkbookInvariantResponseChecks {
       case WorkbookResultPersistence.PersistenceOutcome.NotSaved _ -> {}
       case WorkbookResultPersistence.PersistenceOutcome.SavedAs savedAs -> {
         requireNonBlank(savedAs.requestedPath(), "requestedPath");
-        requireWriteResultShape(savedAs.write());
+        requirePublicationOutcomeShape(savedAs.publication());
       }
       case WorkbookResultPersistence.PersistenceOutcome.Overwritten overwritten -> {
         overwritten.sourcePath().ifPresent(sourcePath -> requireNonBlank(sourcePath, "sourcePath"));
-        requireWriteResultShape(overwritten.write());
+        requirePublicationOutcomeShape(overwritten.publication());
       }
     }
   }
 
-  private static void requireWriteResultShape(WorkbookResultPersistence.WriteResult write) {
-    switch (write) {
-      case WorkbookResultPersistence.WriteResult.NotWritten _ -> {}
-      case WorkbookResultPersistence.WriteResult.Written written ->
-          requireExecutionWorkbookPath(written.executionPath());
+  private static void requirePublicationOutcomeShape(
+      WorkbookResultPersistence.PublicationOutcome publication) {
+    switch (publication) {
+      case WorkbookResultPersistence.PublicationOutcome.NotAttempted _ -> {}
+      case WorkbookResultPersistence.PublicationOutcome.NotPublished notPublished ->
+          require(notPublished.destinationState() != null, "destination state must not be null");
+      case WorkbookResultPersistence.PublicationOutcome.Published published -> {
+        requireExecutionWorkbookPath(published.executionPath());
+        require(
+            published.sha256().matches("[0-9a-f]{64}"),
+            "published artifact SHA-256 must be lowercase hexadecimal");
+        require(published.byteSize() >= 0, "published artifact byteSize must not be negative");
+        require(
+            published.stagedArtifactVerification() != null,
+            "staged artifact verification must not be null");
+        require(published.durability() != null, "durability evidence must not be null");
+      }
+      case WorkbookResultPersistence.PublicationOutcome.Uncertain uncertain -> {
+        requireExecutionWorkbookPath(uncertain.executionPath());
+        require(
+            uncertain.recovery()
+                == WorkbookResultPersistence.PublicationOutcome.Recovery
+                    .INSPECT_DESTINATION_DO_NOT_RETRY,
+            "uncertain publication must prohibit blind retry");
+      }
     }
   }
 

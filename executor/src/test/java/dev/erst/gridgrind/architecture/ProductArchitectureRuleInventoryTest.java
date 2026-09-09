@@ -8,6 +8,6 @@ import org.junit.jupiter.api.Test;
 class ProductArchitectureRuleInventoryTest {
   @Test
   void retainsEveryMandatoryProductArchitectureRule() {
-    assertEquals(13, ProductArchitectureRules.mandatoryRules().size());
+    assertEquals(16, ProductArchitectureRules.mandatoryRules().size());
   }
 }

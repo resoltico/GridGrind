@@ -73,10 +73,9 @@ class GridGrindCliVerboseTransportTest extends GridGrindCliTestSupport {
                             {
                               "type": "EXISTING",
                               "path": "missing.xlsx",
-                              "security": { "password": "%s" }
+                              "security": { "passwordRef": { "id": "source-open-password" } }
                             }
-                            """
-                                .formatted(sentinel),
+                            """,
                             "{ \"type\": \"NONE\" }",
                             verboseExecutionJson(),
                             emptyFormulaEnvironmentJson(),

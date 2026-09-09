@@ -96,7 +96,8 @@ class ExecutorGuardCoverageTest {
             new ExecutionInputBindings(
                 Path.of("/tmp"),
                 Path.of("/tmp/.gridgrind/tmp"),
-                (ExecutionInputBindings.StandardInputBinding) null));
+                (ExecutionInputBindings.StandardInputBinding) null,
+                ExecutionInputBindingsFixtureSupport.noPublicationGrant()));
 
     InputSourceReadException exception =
         new InputSourceReadException("bad file", "cell text", "/tmp/cell.txt", null);
@@ -192,7 +193,7 @@ class ExecutorGuardCoverageTest {
             WorkbookResult.Failure.class,
             executor.execute(
                 blankFileRequest,
-                ExecutionInputBindingsFixtureSupport.bindings(workingDirectory),
+                ExecutionInputBindingsFixtureSupport.bindings(workingDirectory, blankFileRequest),
                 ExecutionProgressSink.NOOP));
     dev.erst.gridgrind.contract.dto.ProblemContext.ResolveInputs blankContext =
         assertInstanceOf(

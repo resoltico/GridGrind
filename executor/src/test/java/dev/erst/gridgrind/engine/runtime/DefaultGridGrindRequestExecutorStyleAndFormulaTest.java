@@ -499,7 +499,10 @@ class DefaultGridGrindRequestExecutorStyleAndFormulaTest
                       new WorkbookPlan.WorkbookPersistence.Overwrite(
                           dev.erst.gridgrind.contract.dto.OoxmlPersistenceSecurityInput.none()),
                       new ExecutionInputBindings(
-                          workingDirectory, workingDirectory.resolve("scratch"))));
+                          workingDirectory,
+                          workingDirectory.resolve("scratch"),
+                          ExecutionInputBindingsFixtureSupport.noPublicationGrant()),
+                      StagedArtifactAcceptance.none()));
 
       assertEquals("OVERWRITE persistence requires an EXISTING source", exception.getMessage());
     }
@@ -539,7 +542,8 @@ class DefaultGridGrindRequestExecutorStyleAndFormulaTest
               new WorkbookPlan.WorkbookSource.New(),
               new WorkbookPlan.WorkbookPersistence.SaveAs(
                   pathWithDotDot, WorkbookPlan.WorkbookPersistence.IfExists.REJECT),
-              preparedBindings.bindings());
+              preparedBindings.bindings(),
+              StagedArtifactAcceptance.none());
 
       WorkbookResultPersistence.PersistenceOutcome.SavedAs savedAs =
           assertInstanceOf(WorkbookResultPersistence.PersistenceOutcome.SavedAs.class, outcome);

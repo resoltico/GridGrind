@@ -6,25 +6,12 @@ import java.util.Optional;
 
 /** Optional OOXML package-open settings for encrypted existing workbook sources. */
 public record OoxmlOpenSecurityInput(
-    @ProtocolField(optional = true, secret = true) @JsonInclude(JsonInclude.Include.NON_ABSENT)
-        Optional<String> password) {
+    @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<SecretReference> passwordRef) {
   public OoxmlOpenSecurityInput {
-    password = normalizeOptional(password, "password");
+    Objects.requireNonNull(passwordRef, "passwordRef must not be null");
   }
 
   boolean isEmpty() {
-    return password.isEmpty();
-  }
-
-  private static Optional<String> normalizeOptional(Optional<String> value, String fieldName) {
-    Optional<String> normalized = Objects.requireNonNull(value, fieldName + " must not be null");
-    if (normalized.isEmpty()) {
-      return Optional.empty();
-    }
-    String presentValue = normalized.orElseThrow();
-    if (presentValue.isBlank()) {
-      throw new IllegalArgumentException(fieldName + " must not be blank");
-    }
-    return Optional.of(presentValue);
+    return passwordRef.isEmpty();
   }
 }

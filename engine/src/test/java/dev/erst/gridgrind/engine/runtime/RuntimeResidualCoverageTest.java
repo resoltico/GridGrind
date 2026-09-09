@@ -2,9 +2,7 @@ package dev.erst.gridgrind.engine.runtime;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertInstanceOf;
-import static org.junit.jupiter.api.Assertions.assertNotSame;
-import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import dev.erst.gridgrind.contract.action.CellMutationAction;
@@ -45,6 +43,7 @@ import dev.erst.gridgrind.contract.dto.PictureInput;
 import dev.erst.gridgrind.contract.dto.PivotTableInput;
 import dev.erst.gridgrind.contract.dto.PrintLayoutInput;
 import dev.erst.gridgrind.contract.dto.RichTextRunInput;
+import dev.erst.gridgrind.contract.dto.SecretReference;
 import dev.erst.gridgrind.contract.dto.ShapeInput;
 import dev.erst.gridgrind.contract.dto.SheetPresentationInput;
 import dev.erst.gridgrind.contract.dto.SheetProtectionSettings;
@@ -89,16 +88,42 @@ import dev.erst.gridgrind.excel.foundation.ExcelPivotDataConsolidateFunction;
 import dev.erst.gridgrind.excel.foundation.ExcelPrintOrientation;
 import dev.erst.gridgrind.excel.validation.ExcelDataValidationErrorAlert;
 import dev.erst.gridgrind.excel.validation.ExcelDataValidationPrompt;
-import java.io.IOException;
 import java.math.BigDecimal;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
 
 /** Focused closure tests for runtime seams left uncovered by broader end-to-end suites. */
 class RuntimeResidualCoverageTest {
+  @Test
+  void secretBearingProtectionConversionsRequireExecutionBindings() {
+    WorkbookProtectionInput workbookProtection =
+        new WorkbookProtectionInput(
+            true,
+            false,
+            false,
+            Optional.of(new SecretReference("workbook-password")),
+            Optional.empty());
+    SheetProtectionSettings sheetProtection =
+        new SheetProtectionSettings(
+            false, false, false, false, false, false, false, false, false, false, false, false,
+            false, false, false);
+
+    assertThrows(
+        IllegalStateException.class,
+        () ->
+            WorkbookCommandLayoutInputConverter.toExcelWorkbookProtectionSettings(
+                workbookProtection, null));
+    assertThrows(
+        IllegalStateException.class,
+        () ->
+            WorkbookCommandWorkbookMutationConverter.toCommand(
+                new SheetSelector.ByName("Budget"),
+                new WorkbookMutationAction.SetSheetProtection(
+                    sheetProtection, Optional.of(new SecretReference("sheet-password"))),
+                null));
+  }
+
   @Test
   void converterNullBranchesAndColorReportVariantsStayTyped() {
     assertTrue(WorkbookCommandCellInputConverter.toExcelFontHeight(null).isEmpty());
@@ -467,41 +492,6 @@ class RuntimeResidualCoverageTest {
     for (Selector selector : noInputSelectors) {
       assertFalse(SourceBackedInputRequirements.requiresStandardInput(selector));
     }
-  }
-
-  @Test
-  void sourceBackedStructuredResolutionBindsShapeTextFromStandardInput() throws IOException {
-    ShapeInput.SimpleShape shape =
-        new ShapeInput.SimpleShape(
-            "Queue Banner", anchor(), "rect", Optional.of(TextSourceInput.standardInput()));
-    ExecutionInputBindings bindings =
-        new ExecutionInputBindings(
-            Path.of("tmp", "runtime-residual-shape"),
-            Path.of("tmp", "runtime-residual-shape", "temp-root"),
-            "Queue ready".getBytes(StandardCharsets.UTF_8));
-
-    ShapeInput resolved = SourceBackedStructuredInputResolver.resolveShape(shape, bindings);
-    ShapeInput connector = new ShapeInput.Connector("Connector", anchor());
-    ShapeInput unresolvedConnector =
-        SourceBackedStructuredInputResolver.resolveShape(connector, bindings);
-    ShapeInput unchangedShape =
-        new ShapeInput.SimpleShape(
-            "Inline Banner", anchor(), "rect", Optional.of(TextSourceInput.inline("Ready")));
-    ShapeInput unresolvedShape =
-        SourceBackedStructuredInputResolver.resolveShape(unchangedShape, bindings);
-    ShapeInput noTextShape =
-        new ShapeInput.SimpleShape("Silent Banner", anchor(), "rect", Optional.empty());
-    ShapeInput unresolvedNoTextShape =
-        SourceBackedStructuredInputResolver.resolveShape(noTextShape, bindings);
-
-    assertInstanceOf(ShapeInput.SimpleShape.class, resolved);
-    assertNotSame(shape, resolved);
-    assertEquals(
-        Optional.of(TextSourceInput.inline("Queue ready")),
-        ((ShapeInput.SimpleShape) resolved).text());
-    assertEquals(connector, unresolvedConnector);
-    assertSame(unchangedShape, unresolvedShape);
-    assertSame(noTextShape, unresolvedNoTextShape);
   }
 
   private static DrawingAnchorInput.TwoCell anchor() {

@@ -8,7 +8,7 @@ verify_packaged_diagnostic_byte_stability() {
 
     cat > "${diagnostic_request_path}" <<'JSON'
 {
-  "protocolVersion": "V2",
+  "protocolVersion": "V3",
   "source": { "type": "NEW" },
   "persistence": { "type": "OVERWRITE" },
   "execution": {

@@ -17,7 +17,7 @@ final class CliExecutionCommandParser {
       index = options.consume(args, index, args[index]);
     }
     CliExecutionArgumentValidation.validateTerminalArguments(
-        options.requestPath, options.executionRootPath, options.responsePath);
+        options.requestPath, options.executionRootPath, options.grantPath, options.responsePath);
     return options.command();
   }
 
@@ -44,6 +44,8 @@ final class CliExecutionCommandParser {
     private Optional<Path> requestPath = Optional.empty();
     private Optional<Path> executionRootPath = Optional.empty();
     private Optional<Path> tempRootPath = Optional.empty();
+    private Optional<Path> grantPath = Optional.empty();
+    private Optional<Path> secretsProviderPath = Optional.empty();
     private final Optional<Path> responsePath;
     private boolean doctorRequest;
 
@@ -64,6 +66,12 @@ final class CliExecutionCommandParser {
       if ("--temp-root".equals(argument)) {
         return consumeTempRootPath(args, index);
       }
+      if ("--grant".equals(argument)) {
+        return consumeGrantPath(args, index);
+      }
+      if ("--secrets-provider".equals(argument)) {
+        return consumeSecretsProviderPath(args, index);
+      }
       if (CliPrimaryCommandSupport.isPrimaryCommandToken(argument)) {
         throw primaryCommandOrderingException(argument);
       }
@@ -72,8 +80,20 @@ final class CliExecutionCommandParser {
 
     private CliCommand command() {
       return doctorRequest
-          ? new CliCommand.DoctorRequest(requestPath, executionRootPath, tempRootPath, responsePath)
-          : new CliCommand.Execute(requestPath, executionRootPath, tempRootPath, responsePath);
+          ? new CliCommand.DoctorRequest(
+              requestPath,
+              executionRootPath,
+              tempRootPath,
+              grantPath,
+              secretsProviderPath,
+              responsePath)
+          : new CliCommand.Execute(
+              requestPath,
+              executionRootPath,
+              tempRootPath,
+              grantPath,
+              secretsProviderPath,
+              responsePath);
     }
 
     private int consumeDoctorRequest(int index) {
@@ -117,6 +137,31 @@ final class CliExecutionCommandParser {
           Optional.of(
               CliPathArguments.requirePathValue(
                   "--temp-root", args[valueIndex], "temp root path", false));
+      return valueIndex + 1;
+    }
+
+    private int consumeGrantPath(String[] args, int index) {
+      if (grantPath.isPresent()) {
+        throw new CliArgumentsException("--grant", "Duplicate argument: --grant");
+      }
+      int valueIndex = CliPathArguments.nextValueIndex(args, index, "--grant");
+      grantPath =
+          Optional.of(
+              CliPathArguments.requirePathValue(
+                  "--grant", args[valueIndex], "execution grant path", false));
+      return valueIndex + 1;
+    }
+
+    private int consumeSecretsProviderPath(String[] args, int index) {
+      if (secretsProviderPath.isPresent()) {
+        throw new CliArgumentsException(
+            "--secrets-provider", "Duplicate argument: --secrets-provider");
+      }
+      int valueIndex = CliPathArguments.nextValueIndex(args, index, "--secrets-provider");
+      secretsProviderPath =
+          Optional.of(
+              CliPathArguments.requirePathValue(
+                  "--secrets-provider", args[valueIndex], "secrets provider path", false));
       return valueIndex + 1;
     }
 

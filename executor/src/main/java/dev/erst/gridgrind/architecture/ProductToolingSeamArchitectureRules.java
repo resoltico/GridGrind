@@ -4,6 +4,7 @@ import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.classes;
 
 import com.tngtech.archunit.core.domain.JavaClass;
 import com.tngtech.archunit.core.domain.JavaCodeUnitAccess;
+import com.tngtech.archunit.junit.ArchTest;
 import com.tngtech.archunit.lang.ArchCondition;
 import com.tngtech.archunit.lang.ArchRule;
 import com.tngtech.archunit.lang.ConditionEvents;
@@ -12,8 +13,8 @@ import java.lang.invoke.MethodHandles;
 import java.util.function.Predicate;
 
 /** Defines bytecode access-site rules for GridGrind's centralized Apache POI tooling seams. */
-@SuppressWarnings("PMD.UseUtilityClass")
-final class ProductToolingSeamArchitectureRules {
+enum ProductToolingSeamArchitectureRules {
+  ;
   private static final String ENGINE_RUNTIME_PACKAGE = "dev.erst.gridgrind.engine.runtime..";
   private static final String EXCEL_PACKAGE = "dev.erst.gridgrind.excel..";
   private static final String FORMULA_WRITE_SUPPORT =
@@ -31,7 +32,10 @@ final class ProductToolingSeamArchitectureRules {
           "access private-reflection entry points directly",
           ProductToolingSeamArchitectureRules::isPrivateReflectionAccess);
 
-  ProductToolingSeamArchitectureRules() {}
+  @ArchTest static final ArchRule FORMULA_WRITES_STAY_CENTRALIZED = formulaWritesStayCentralized();
+
+  @ArchTest
+  static final ArchRule PRIVATE_REFLECTION_STAYS_CENTRALIZED = privateReflectionStaysCentralized();
 
   static ArchRule formulaWritesStayCentralized() {
     return classes()

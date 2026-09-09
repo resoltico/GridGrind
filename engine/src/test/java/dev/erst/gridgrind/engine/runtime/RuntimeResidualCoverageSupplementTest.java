@@ -117,7 +117,8 @@ class RuntimeResidualCoverageSupplementTest {
         new ExecutionInputBindings(
             Path.of("tmp", "runtime-residual-supplement"),
             Path.of("tmp", "runtime-residual-supplement", "temp-root"),
-            "unused".getBytes(StandardCharsets.UTF_8));
+            "unused".getBytes(StandardCharsets.UTF_8),
+            ExecutionGrantTestSupport.noPublicationWithStandardInput(List.of()));
     CellMutationAction.SetRange compactRange =
         new CellMutationAction.SetRange(new CellGridInput.TextRows(List.of(List.of("Ada"))));
     CellMutationAction.AppendRow compactRow =
@@ -133,7 +134,8 @@ class RuntimeResidualCoverageSupplementTest {
     ExecutionInputBindings bindings =
         new ExecutionInputBindings(
             Path.of("tmp", "runtime-residual-supplement"),
-            Path.of("tmp", "runtime-residual-supplement", "temp-root"));
+            Path.of("tmp", "runtime-residual-supplement", "temp-root"),
+            ExecutionGrantTestSupport.noPublication());
     CellInput.ErrorValue errorValue = new CellInput.ErrorValue("#REF!");
 
     assertSame(errorValue, SourceBackedPlanResolver.resolveCellInput(errorValue, bindings));

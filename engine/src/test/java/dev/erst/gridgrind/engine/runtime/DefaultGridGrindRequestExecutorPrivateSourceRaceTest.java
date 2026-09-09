@@ -59,7 +59,11 @@ class DefaultGridGrindRequestExecutorPrivateSourceRaceTest {
         new DefaultGridGrindRequestExecutor()
             .execute(
                 request,
-                new ExecutionInputBindings(root, tempRoot),
+                new ExecutionInputBindings(
+                    root,
+                    tempRoot,
+                    ExecutionGrantTestSupport.noPublication(
+                        List.of(), List.of(root.resolve("source.xlsx")))),
                 event ->
                     removeMaterializedSourceAfterPreflight(event, tempRoot, removedPrivateSource));
 
@@ -90,7 +94,11 @@ class DefaultGridGrindRequestExecutorPrivateSourceRaceTest {
         new DefaultGridGrindRequestExecutor()
             .execute(
                 request,
-                new ExecutionInputBindings(root, tempRoot),
+                new ExecutionInputBindings(
+                    root,
+                    tempRoot,
+                    ExecutionGrantTestSupport.noPublication(
+                        List.of("GET_WORKBOOK_SUMMARY"), List.of(root.resolve("source.xlsx")))),
                 event ->
                     removeMaterializedSourceAfterPreflight(event, tempRoot, removedPrivateSource));
 
@@ -122,13 +130,20 @@ class DefaultGridGrindRequestExecutorPrivateSourceRaceTest {
         new DefaultGridGrindRequestExecutor()
             .execute(
                 request,
-                new ExecutionInputBindings(root, tempRoot),
+                new ExecutionInputBindings(
+                    root,
+                    tempRoot,
+                    ExecutionGrantTestSupport.saveAs(
+                        List.of("ENSURE_SHEET"),
+                        List.of(),
+                        outputDirectory.resolve("result.xlsx"),
+                        WorkbookPlan.WorkbookPersistence.IfExists.REJECT)),
                 event ->
                     replaceBoundOutputDirectory(event, outputDirectory, replacedOutputDirectory));
 
     WorkbookResult.Failure failure = assertInstanceOf(WorkbookResult.Failure.class, response);
     assertTrue(replacedOutputDirectory.get());
-    assertEquals(GridGrindProblemCode.UNSAFE_PATH_ACCESS, failure.problem().code());
+    assertEquals(GridGrindProblemCode.PUBLICATION_UNCERTAIN, failure.problem().code());
     assertInstanceOf(ProblemContext.PersistWorkbook.class, failure.problem().context());
   }
 
@@ -154,13 +169,20 @@ class DefaultGridGrindRequestExecutorPrivateSourceRaceTest {
         new DefaultGridGrindRequestExecutor()
             .execute(
                 request,
-                new ExecutionInputBindings(root, tempRoot),
+                new ExecutionInputBindings(
+                    root,
+                    tempRoot,
+                    ExecutionGrantTestSupport.saveAs(
+                        List.of("ENSURE_SHEET"),
+                        List.of(),
+                        outputDirectory.resolve("result.xlsx"),
+                        WorkbookPlan.WorkbookPersistence.IfExists.REJECT)),
                 event ->
                     replaceBoundOutputDirectory(event, outputDirectory, replacedOutputDirectory));
 
     WorkbookResult.Failure failure = assertInstanceOf(WorkbookResult.Failure.class, response);
     assertTrue(replacedOutputDirectory.get());
-    assertEquals(GridGrindProblemCode.UNSAFE_PATH_ACCESS, failure.problem().code());
+    assertEquals(GridGrindProblemCode.PUBLICATION_UNCERTAIN, failure.problem().code());
     assertInstanceOf(ProblemContext.PersistWorkbook.class, failure.problem().context());
   }
 

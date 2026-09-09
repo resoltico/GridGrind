@@ -1,18 +1,20 @@
 # GridGrind — .xlsx workbook automation from a JSON request
 
 GridGrind is a `.xlsx` automation engine. Describe workbook work as a JSON request — create sheets,
-write cells, build tables, assert results, read facts back. GridGrind runs the whole plan and
-returns a structured JSON response. Failures prevent persistence: assertions fail fast by default,
-or `COLLECT` completes the terminal verification phase and preserves evidence for every failed assertion.
+write cells, build tables, assert results, read facts back. GridGrind runs the whole plan, privately
+stages any persisted workbook, and returns a structured JSON response with the facts it established.
+Failed steps and acceptance requirements prevent final publication; assertions fail fast by default,
+or `COLLECT` evaluates every terminal assertion and preserves evidence for each failure.
 
 The usual alternative is a mix of libraries, helper scripts, and post-write checks that run after
 the file is already saved — with no clean rollback when something fails mid-run. GridGrind replaces
-that split with one atomic pass: request in, result out, workbook written only when every step
-succeeds.
+that split with one controlled pass: request in, verified evidence out, and qualified atomic
+publication only after the requested work and host-required acceptance succeed.
 
 - Write `.xlsx` workbooks from JSON: sheets, cells, styles, tables, formulas, charts, drawings
 - Read facts back in the same plan: cell values, sheet layout, health analysis, pivot data
-- Assert workbook state mid-run — fail fast by default, or collect a terminal assertion phase before saving
+- Assert workbook state mid-run — fail fast by default, or collect all terminal assertion results before saving
+- Authorize each executable request separately with a host-owned least-authority grant
 - Run from Docker, the packaged `gridgrind` launcher, or a self-contained JAR, against new
   workbooks or existing `.xlsx` files
 
@@ -40,14 +42,23 @@ export PATH="$(pwd)/cli/build/install/gridgrind/bin:$PATH"
 gridgrind --help
 gridgrind --print-recipe --lookup BUDGET --response budget-request.json
 mkdir -p generated-workbooks
-gridgrind --doctor-request --request budget-request.json --response doctor-report.json
-gridgrind --request budget-request.json --response response.json
+gridgrind --print-grant-template --response grant.json
+# Edit grant.json to authorize budget-request.json's exact resources, operations, and output.
+gridgrind --doctor-request --request budget-request.json --grant grant.json --response doctor-report.json
+gridgrind --request budget-request.json --grant grant.json --response response.json
 ```
 
 The rest of this README uses `gridgrind` for the active entry point. From a repository checkout,
 the `export PATH=...` line above points that name at the packaged launcher. From a Gradle-generated
 ZIP or TAR launcher distribution, add its `bin/` directory to `PATH`; from the standalone GitHub
 release JAR, replace `gridgrind` with `java -jar gridgrind.jar`.
+
+Every executable request needs a separate host-owned `--grant <path>`; a plan cannot grant itself
+authority. `--print-grant-template` produces the safe starting document, and the
+[request and execution reference](docs/REQUEST_AND_EXECUTION_REFERENCE.md#host-grants-secrets-and-acceptance)
+explains how to narrow it to the request. Secrets are named references supplied through a granted
+provider, never request literals. This is deliberately explicit: an omitted grant is denied before
+workbook mutation or publication.
 
 Without `--response`, GridGrind writes one primary JSON payload to stdout. A command rejected
 before workbook execution uses `CommandError` with `status: "REJECTED"`; execution uses
@@ -92,6 +103,7 @@ docker run --pull=always --rm -i \
   -v "$(pwd)":/work \
   ghcr.io/resoltico/gridgrind:latest \
   --request request.json \
+  --grant grant.json \
   --response response.json
 ```
 
@@ -101,6 +113,7 @@ GridGrind can print valid starting material instead of making you invent request
 
 ```bash
 gridgrind --print-request-template --response request.json
+gridgrind --print-grant-template --response grant.json
 gridgrind --print-recipe-catalog --response recipes.json
 gridgrind --print-recipe-catalog --lookup DASHBOARD --response dashboard-detail.json
 gridgrind --print-recipe --lookup DASHBOARD --response dashboard-request.json
@@ -129,18 +142,19 @@ contract, and `--help-guidance` for workflow-oriented help.
 ## One Request, One Result
 
 A single JSON request describes every step: create a sheet, write cells, assert workbook state,
-read facts back, and save. GridGrind executes the steps in order and writes the file only when
-every step succeeds. Assertions fail fast by default; `execution.assertionMode=COLLECT` instead
-runs every assertion in a terminal verification phase, retains complete evidence for each failed
-assertion in `assertions[]`, and returns the first canonical failure. Any assertion failure or step
-error prevents persistence.
+read facts back, and save. GridGrind executes the steps in order, then privately stages and verifies
+any save before qualified final publication. Assertions fail fast by default;
+`execution.assertionMode=COLLECT` instead runs every assertion in a terminal pass, retains complete
+evidence for each failed assertion in `assertions[]`, and returns the first canonical failure. Any
+assertion failure, step error, or unmet host acceptance requirement prevents final publication.
 
 The smallest valid top-level envelope is `protocolVersion`, `source`, `persistence`, and ordered
 `steps`. `execution` and `formulaEnvironment` are optional when you want the default
 `FULL_XSSF` / `SUMMARY` / `DO_NOT_CALCULATE` execution path and the empty evaluator environment.
-Steps can mix mutation, assertion, and inspection in the same plan. Every response also carries one
-top-level `persistence` outcome so callers can see both the requested save mode and whether a file
-was actually written. `FORMULA` and `RAW_FORMULA` values are OOXML formula bodies and must not
+Steps can mix mutation, assertion, and inspection in the same plan. Every response carries typed
+`evidence` and one top-level `persistence` outcome. For a save, `persistence.publication` records
+whether final publication was `PUBLISHED`, `NOT_ATTEMPTED`, `NOT_PUBLISHED`, or `UNCERTAIN`; only
+`PUBLISHED` establishes the reopened artifact's identity and durability evidence. `FORMULA` and `RAW_FORMULA` values are OOXML formula bodies and must not
 begin with `=`; normal `FORMULA` values are validated when their mutation executes, while
 `RAW_FORMULA` remains the explicit opaque path for newer Excel syntax. `SAVE_AS` requires an
 explicit `ifExists=REJECT|REPLACE` choice; use `REPLACE` when you want rerunnable create-or-replace

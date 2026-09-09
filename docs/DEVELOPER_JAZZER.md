@@ -1,8 +1,7 @@
 ---
-afad: "4.0"
-version: "0.75.0"
+afad: "5.0.1"
 domain: DEVELOPER_JAZZER
-updated: "2026-08-31"
+updated: "2026-09-09"
 route:
   keywords: [gridgrind, jazzer, fuzz, fuzzing, developer, local-only, regression, corpus, replay, promote, telemetry, composite-build, gradle, junit, xlsx, architecture]
   questions: ["how does jazzer fit into gridgrind", "where does jazzer live in this repo", "how is jazzer wired into the project", "what commands exist for jazzer", "where do jazzer corpus files and summaries go", "how do replay and promotion work", "what does jazzer cover in gridgrind"]
@@ -467,19 +466,15 @@ Jazzer/JUnit:
 - the nested build pins JUnit 6.1.3 explicitly and works with Gradle 9.7.1 in practice
 
 Structured replay:
-- replay for the structured harnesses uses Jazzer's internal
-  `com.code_intelligence.jazzer.driver.FuzzedDataProviderImpl.withJavaData(byte[])`
-  so replay semantics match the live harness data-provider semantics
-- Jazzer 0.30.0's published jars omit `com.code_intelligence.jazzer.utils.UnsafeProvider`, even
-  though `FuzzedDataProviderImpl` depends on it
-- the nested build therefore vendors a minimal compatible copy of that single helper under
-  `jazzer/src/main/java/com/code_intelligence/jazzer/utils/UnsafeProvider.java`
-- this vendored helper exists only to make structured replay work in the isolated local Jazzer
-  layer
+- replay for structured harnesses uses GridGrind's `ReplayGridGrindFuzzData` scalar cursor over
+  committed raw bytes
+- the cursor exposes only the primitive consumption operations the structured generators use, so
+  deterministic replay has no dependency on Jazzer internals or native bootstrap
+- the nested build does not vendor upstream Jazzer implementation classes for replay
 
 Expected warnings:
-- active fuzzing and structured replay still emit `sun.misc.Unsafe` deprecation warnings on
-  Java 26
+- active fuzzing can emit `sun.misc.Unsafe` deprecation warnings on Java 26; deterministic replay
+  does not depend on that instrumentation path
 - these warnings are expected for Jazzer 0.30.0 and do not indicate a GridGrind defect
 
 Configuration cache:

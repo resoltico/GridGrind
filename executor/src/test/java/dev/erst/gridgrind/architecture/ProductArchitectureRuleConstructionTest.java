@@ -10,12 +10,8 @@ class ProductArchitectureRuleConstructionTest {
   @Test
   void constructsEveryMandatoryRuleAndCustomCondition() {
     assertAll(
-        () -> assertNotNull(new ProductArchitectureRules()),
         () -> assertNotNull(new EngineImplementationTypeClassifier()),
         () -> assertNotNull(new ExportedApiImplementationTypes()),
-        () -> assertNotNull(new ProductDependencyArchitectureRules()),
-        () -> assertNotNull(new ProductDomainShapeArchitectureRules()),
-        () -> assertNotNull(new ProductToolingSeamArchitectureRules()),
         () -> assertNotNull(ProductDependencyArchitectureRules.productModulesAreFreeOfCycles()),
         () ->
             assertNotNull(ProductDependencyArchitectureRules.productClassesBelongToKnownModules()),
@@ -58,6 +54,14 @@ class ProductArchitectureRuleConstructionTest {
             assertNotNull(ProductToolingSeamArchitectureRules.privateReflectionStaysCentralized()),
         () ->
             assertNotNull(ProductToolingSeamArchitectureRules.directPoiFormulaWritesAreForbidden()),
-        () -> assertNotNull(ProductToolingSeamArchitectureRules.privateReflectionIsForbidden()));
+        () -> assertNotNull(ProductToolingSeamArchitectureRules.privateReflectionIsForbidden()),
+        () -> assertNotNull(ProductAssuranceArchitectureRules.executionUsesOneAdmittedExecutor()),
+        () ->
+            assertNotNull(
+                ProductAssuranceArchitectureRules.catalogUsesCanonicalOperationContracts()),
+        () ->
+            assertNotNull(
+                ProductAssuranceArchitectureRules
+                    .publicationIsCentralizedBehindRequestPathAccess()));
   }
 }

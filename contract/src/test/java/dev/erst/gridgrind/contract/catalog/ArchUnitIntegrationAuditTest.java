@@ -116,7 +116,7 @@ class ArchUnitIntegrationAuditTest {
         "the architecture runtime contract must assert the effective fail-closed configuration");
     assertTrue(
         runtimeContract.contains(
-            "assertEquals(13, ProductArchitectureRules.mandatoryRules().size())"),
+            "assertEquals(16, ProductArchitectureRules.mandatoryRules().size())"),
         "the architecture runtime contract must ratchet the mandatory rule inventory");
   }
 

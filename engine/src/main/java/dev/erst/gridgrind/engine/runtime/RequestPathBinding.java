@@ -1,9 +1,7 @@
 package dev.erst.gridgrind.engine.runtime;
 
-import dev.erst.gridgrind.excel.WorkbookArtifactWriteDisposition;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.nio.channels.Channels;
 import java.nio.channels.SeekableByteChannel;
 import java.nio.file.DirectoryStream;
@@ -73,6 +71,75 @@ final class RequestPathBinding implements AutoCloseable {
     return descriptorChain.leaf().isPresent();
   }
 
+  /** Rechecks the bound target before a publication operation changes its leaf. */
+  void reverifyPublicationTarget() throws IOException {
+    RequestPathDescriptorVerifier.reverify(descriptorChain);
+  }
+
+  /** Rechecks the stable parent chain after publication intentionally replaces the target leaf. */
+  void reverifyPublicationParent() throws IOException {
+    RequestPathDescriptorVerifier.reverifyDirectories(descriptorChain);
+  }
+
+  /** Returns the final destination leaf name beneath the bound parent directory. */
+  Path outputLeafName() {
+    return descriptorChain.leafName();
+  }
+
+  /** Opens one private sibling entry beneath the bound parent without resolving a path string. */
+  SeekableByteChannel openSiblingChannel(Path siblingName, Set<? extends OpenOption> options)
+      throws IOException {
+    Objects.requireNonNull(siblingName, "siblingName must not be null");
+    Objects.requireNonNull(options, "options must not be null");
+    return channels.open(parentDirectory().stream(), siblingName, options);
+  }
+
+  /** Opens one private sibling entry for no-follow verification through the retained parent. */
+  SeekableByteChannel openSiblingReadChannel(Path siblingName) throws IOException {
+    Objects.requireNonNull(siblingName, "siblingName must not be null");
+    return channels.open(
+        parentDirectory().stream(),
+        siblingName,
+        Set.of(StandardOpenOption.READ, LinkOption.NOFOLLOW_LINKS));
+  }
+
+  /** Opens the published leaf through the retained parent after its intentional replacement. */
+  InputStream openPublishedInputStream() throws IOException {
+    return Channels.newInputStream(openPublishedReadChannel());
+  }
+
+  /** Opens the published leaf through the retained parent after its intentional replacement. */
+  SeekableByteChannel openPublishedReadChannel() throws IOException {
+    reverifyPublicationParent();
+    RequestPathTopology.identityOf(
+        parentDirectory().stream(), descriptorChain.leafName(), resolvedPath(), false);
+    try {
+      return channels.open(
+          parentDirectory().stream(),
+          descriptorChain.leafName(),
+          Set.of(StandardOpenOption.READ, LinkOption.NOFOLLOW_LINKS));
+    } catch (IOException exception) {
+      throw noFollowFailure("open published workbook for verification", exception);
+    }
+  }
+
+  /** Deletes one private sibling entry beneath the retained parent descriptor. */
+  void deleteSibling(Path siblingName) throws IOException {
+    Objects.requireNonNull(siblingName, "siblingName must not be null");
+    parentDirectory().stream().deleteFile(siblingName);
+  }
+
+  /** Resolves one private sibling only from the retained bound parent directory. */
+  Path siblingPath(Path siblingName) {
+    Objects.requireNonNull(siblingName, "siblingName must not be null");
+    return parentDirectory().path().resolve(siblingName);
+  }
+
+  /** Returns the verified parent path used only for a qualified same-filesystem atomic move. */
+  Path parentPath() {
+    return parentDirectory().path();
+  }
+
   InputStream openInputStream() throws IOException {
     RequestPathDescriptorVerifier.reverify(descriptorChain);
     try {
@@ -83,20 +150,6 @@ final class RequestPathBinding implements AutoCloseable {
               Set.of(StandardOpenOption.READ, LinkOption.NOFOLLOW_LINKS)));
     } catch (IOException exception) {
       throw noFollowFailure("open request-owned file for reading", exception);
-    }
-  }
-
-  void commitFrom(Path stagedFile, WorkbookArtifactWriteDisposition disposition)
-      throws IOException {
-    Objects.requireNonNull(stagedFile, "stagedFile must not be null");
-    Objects.requireNonNull(disposition, "disposition must not be null");
-    RequestPathDescriptorVerifier.reverify(descriptorChain);
-    try (OutputStream output = Channels.newOutputStream(openWriteChannel(disposition))) {
-      Files.copy(stagedFile, output);
-    } catch (java.nio.file.FileAlreadyExistsException exception) {
-      throw exception;
-    } catch (IOException exception) {
-      throw noFollowFailure("commit staged workbook", exception);
     }
   }
 
@@ -117,37 +170,12 @@ final class RequestPathBinding implements AutoCloseable {
         channels);
   }
 
-  private SeekableByteChannel openWriteChannel(WorkbookArtifactWriteDisposition disposition)
-      throws IOException {
-    Set<OpenOption> options =
-        switch (disposition) {
-          case CREATE_NEW ->
-              Set.of(
-                  StandardOpenOption.WRITE,
-                  StandardOpenOption.CREATE_NEW,
-                  LinkOption.NOFOLLOW_LINKS);
-          case REPLACE_EXISTING ->
-              Set.of(
-                  StandardOpenOption.WRITE,
-                  StandardOpenOption.CREATE,
-                  StandardOpenOption.TRUNCATE_EXISTING,
-                  LinkOption.NOFOLLOW_LINKS);
-        };
-    try {
-      return channels.open(parentDirectory().stream(), descriptorChain.leafName(), options);
-    } catch (java.nio.file.FileAlreadyExistsException exception) {
-      throw exception;
-    } catch (IOException exception) {
-      throw noFollowFailure("open request-owned file for writing", exception);
-    }
-  }
-
   private RequestPathBoundDirectory parentDirectory() {
     return RequestPathDescriptorVerifier.parentDirectory(descriptorChain);
   }
 
   private IOException noFollowFailure(String operation, IOException cause) {
-    if (cause instanceof NoSuchFileException && descriptorChain.leaf().isPresent()) {
+    if (cause instanceof NoSuchFileException) {
       return new UnsafePathAccessException(
           "request-owned path disappeared before " + operation + ": " + resolvedPath(), cause);
     }

@@ -128,7 +128,10 @@ final class XlsxParityGridGrind {
 
   private static WorkbookResult execute(Path executionRoot, WorkbookPlan request) {
     return new DefaultGridGrindRequestExecutor()
-        .execute(request, XlsxParitySupport.bindings(executionRoot), ExecutionProgressSink.NOOP);
+        .execute(
+            request,
+            XlsxParitySupport.bindings(executionRoot, request),
+            ExecutionProgressSink.NOOP);
   }
 
   private static WorkbookPlan.WorkbookSource.ExistingFile existingWorkbookSource(
@@ -449,19 +452,23 @@ final class XlsxParityGridGrind {
   static String savedPath(WorkbookResult.Success success) {
     return switch (success.persistence()) {
       case WorkbookResultPersistence.PersistenceOutcome.SavedAs savedAs ->
-          writtenExecutionPath(savedAs.write());
+          writtenExecutionPath(savedAs.publication());
       case WorkbookResultPersistence.PersistenceOutcome.Overwritten overwritten ->
-          writtenExecutionPath(overwritten.write());
+          writtenExecutionPath(overwritten.publication());
       case WorkbookResultPersistence.PersistenceOutcome.NotSaved _ ->
           throw new AssertionError("Expected the workbook to be persisted");
     };
   }
 
-  private static String writtenExecutionPath(WorkbookResultPersistence.WriteResult write) {
-    return switch (write) {
-      case WorkbookResultPersistence.WriteResult.Written written -> written.executionPath();
-      case WorkbookResultPersistence.WriteResult.NotWritten _ ->
-          throw new AssertionError("Expected the workbook to be written");
+  private static String writtenExecutionPath(
+      WorkbookResultPersistence.PublicationOutcome publication) {
+    return switch (publication) {
+      case WorkbookResultPersistence.PublicationOutcome.Published published ->
+          published.executionPath();
+      case WorkbookResultPersistence.PublicationOutcome.NotAttempted _,
+          WorkbookResultPersistence.PublicationOutcome.NotPublished _,
+          WorkbookResultPersistence.PublicationOutcome.Uncertain _ ->
+          throw new AssertionError("Expected the workbook to be published");
     };
   }
 

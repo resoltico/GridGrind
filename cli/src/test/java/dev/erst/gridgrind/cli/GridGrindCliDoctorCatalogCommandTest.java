@@ -78,7 +78,6 @@ class GridGrindCliDoctorCatalogCommandTest extends GridGrindCliTestSupport {
         """);
     ByteArrayOutputStream stdout = new ByteArrayOutputStream();
     ByteArrayOutputStream stderr = new ByteArrayOutputStream();
-
     int exitCode =
         new GridGrindCli()
             .run(
@@ -109,7 +108,7 @@ class GridGrindCliDoctorCatalogCommandTest extends GridGrindCliTestSupport {
                 new ByteArrayInputStream(
                     """
                     {
-                      "protocolVersion": "V2",
+                      "protocolVersion": "V3",
                       "source": { "type": "NEW" },
                       "persistence": { "type": "NONE" },
                       "execution": {
@@ -145,7 +144,7 @@ class GridGrindCliDoctorCatalogCommandTest extends GridGrindCliTestSupport {
                 new ByteArrayInputStream(
                     """
                     {
-                      "protocolVersion": "V2",
+                      "protocolVersion": "V3",
                       "source": { "type": "NEW" },
                       "persistence": { "type": "NONE" },
                       "execution": {
@@ -181,7 +180,7 @@ class GridGrindCliDoctorCatalogCommandTest extends GridGrindCliTestSupport {
                 new ByteArrayInputStream(
                     """
                     {
-                      "protocolVersion": "V2",
+                      "protocolVersion": "V3",
                       "source": { "type": "NEW" },
                       "persistence": { "type": "NONE" },
                       "execution": {
@@ -261,11 +260,21 @@ class GridGrindCliDoctorCatalogCommandTest extends GridGrindCliTestSupport {
             """));
     ByteArrayOutputStream stdout = new ByteArrayOutputStream();
     ByteArrayOutputStream stderr = new ByteArrayOutputStream();
+    Path grantPath =
+        CliGrantFixtureSupport.noPublication(
+            List.of("GET_WORKBOOK_SUMMARY"),
+            List.of(requestDirectory.resolve("missing-workbook.xlsx")));
 
     int exitCode =
         new GridGrindCli()
             .run(
-                new String[] {"--doctor-request", "--request", requestPath.toString()},
+                new String[] {
+                  "--doctor-request",
+                  "--request",
+                  requestPath.toString(),
+                  "--grant",
+                  grantPath.toString()
+                },
                 InputStream.nullInputStream(),
                 stdout,
                 stderr);
@@ -581,7 +590,6 @@ class GridGrindCliDoctorCatalogCommandTest extends GridGrindCliTestSupport {
             """));
     ByteArrayOutputStream stdout = new ByteArrayOutputStream();
     ByteArrayOutputStream stderr = new ByteArrayOutputStream();
-
     int exitCode =
         new GridGrindCli()
             .run(
@@ -704,11 +712,18 @@ class GridGrindCliDoctorCatalogCommandTest extends GridGrindCliTestSupport {
             "[]"));
     ByteArrayOutputStream stdout = new ByteArrayOutputStream();
     ByteArrayOutputStream stderr = new ByteArrayOutputStream();
+    Path grantPath = CliGrantFixtureSupport.noPublication(List.of());
 
     int exitCode =
         new GridGrindCli()
             .run(
-                new String[] {"--doctor-request", "--request", requestPath.toString()},
+                new String[] {
+                  "--doctor-request",
+                  "--request",
+                  requestPath.toString(),
+                  "--grant",
+                  grantPath.toString()
+                },
                 InputStream.nullInputStream(),
                 stdout,
                 stderr);

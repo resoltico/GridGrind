@@ -29,6 +29,7 @@ final class CliResponseAnalysisWarningSupport {
             success.journal(),
             success.calculation(),
             success.persistence(),
+            success.evidence(),
             warnings,
             success.assertions(),
             success.inspections());
@@ -42,6 +43,7 @@ final class CliResponseAnalysisWarningSupport {
             failure.journal(),
             failure.calculation(),
             failure.persistence(),
+            failure.evidence(),
             warnings,
             failure.assertions(),
             failure.inspections(),

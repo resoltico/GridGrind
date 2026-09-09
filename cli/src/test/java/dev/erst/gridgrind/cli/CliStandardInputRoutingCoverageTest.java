@@ -14,6 +14,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 import org.junit.jupiter.api.Test;
 
 /** Covers request-path stdin sentinel routing through the live CLI transport. */
@@ -22,11 +23,19 @@ class CliStandardInputRoutingCoverageTest extends GridGrindCliTestSupport {
   void requestDashReadsTheRequestFromStdinAndRootsExecutionAtExecutionRoot() throws IOException {
     Path workspace = Files.createTempDirectory("gridgrind-cli-request-dash-");
     ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+    Path grantPath = CliGrantFixtureSupport.noPublication(List.of("ENSURE_SHEET"));
 
     int exitCode =
         new GridGrindCli()
             .run(
-                new String[] {"--request", "-", "--execution-root", workspace.toString()},
+                new String[] {
+                  "--request",
+                  "-",
+                  "--execution-root",
+                  workspace.toString(),
+                  "--grant",
+                  grantPath.toString()
+                },
                 new ByteArrayInputStream(
                     requestJson(
                             "{ \"type\": \"NEW\" }",

@@ -82,7 +82,7 @@ class RequestIeeeNumberExactnessTest {
   private static String request(String number) {
     return """
         {
-          "protocolVersion": "V2",
+          "protocolVersion": "V3",
           "source": { "type": "NEW" },
           "persistence": { "type": "NONE" },
           "steps": [

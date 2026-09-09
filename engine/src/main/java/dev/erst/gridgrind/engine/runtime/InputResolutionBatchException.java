@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Objects;
 
 /** Aggregate raised after a source-resolution pass has collected every independent failure. */
+@SuppressWarnings("PMD.NonSerializableClass") // Descriptor-bound diagnostics are process-local.
 final class InputResolutionBatchException extends IOException {
   private static final long serialVersionUID = 1L;
 

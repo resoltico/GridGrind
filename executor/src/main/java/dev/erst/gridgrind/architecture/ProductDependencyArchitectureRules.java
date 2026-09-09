@@ -18,8 +18,8 @@ import com.tngtech.archunit.library.dependencies.SliceIdentifier;
 import java.util.Optional;
 
 /** Defines GridGrind's production module, package, and exported-surface architecture rules. */
-@SuppressWarnings("PMD.UseUtilityClass")
-final class ProductDependencyArchitectureRules {
+enum ProductDependencyArchitectureRules {
+  ;
   private static final String AUTHORING_PACKAGE = "dev.erst.gridgrind.authoring..";
   private static final String CLI_PACKAGE = "dev.erst.gridgrind.cli..";
   private static final String CONTRACT_PACKAGE = "dev.erst.gridgrind.contract..";
@@ -71,8 +71,6 @@ final class ProductDependencyArchitectureRules {
           }
         }
       };
-
-  ProductDependencyArchitectureRules() {}
 
   static ArchRule productModulesAreFreeOfCycles() {
     return slices()

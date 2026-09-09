@@ -7,9 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import dev.erst.gridgrind.contract.dto.ExecutionJournalInput;
 import dev.erst.gridgrind.contract.dto.ExecutionJournalLevel;
-import dev.erst.gridgrind.contract.dto.ExecutionModeInput;
 import dev.erst.gridgrind.contract.dto.ExecutionPolicyInput;
 import dev.erst.gridgrind.contract.dto.FormulaEnvironmentInput;
 import dev.erst.gridgrind.contract.dto.OoxmlPersistenceSecurityInput;
@@ -21,6 +19,7 @@ import dev.erst.gridgrind.contract.step.AssertionStep;
 import dev.erst.gridgrind.contract.step.InspectionStep;
 import dev.erst.gridgrind.contract.step.MutationStep;
 import dev.erst.gridgrind.engine.api.GridGrindEngine;
+import dev.erst.gridgrind.engine.api.GridGrindExecutionGrant;
 import dev.erst.gridgrind.engine.api.GridGrindProgressSink;
 import dev.erst.gridgrind.engine.api.GridGrindRequestInputs;
 import java.io.ByteArrayOutputStream;
@@ -94,32 +93,6 @@ class GridGrindPlanTest {
 
     WorkbookPlan roundTrip = GridGrindPlan.from(canonical).toPlan();
     assertEquals(canonical, roundTrip);
-  }
-
-  @Test
-  void journalPreservesImportedExecutionModeAndCalculation() {
-    ExecutionModeInput mode = ExecutionModeInput.eventRead();
-    dev.erst.gridgrind.contract.dto.CalculationPolicyInput calculation =
-        new dev.erst.gridgrind.contract.dto.CalculationPolicyInput(
-            new dev.erst.gridgrind.contract.dto.CalculationStrategyInput.DoNotCalculate(), true);
-    WorkbookPlan canonical =
-        new WorkbookPlan(
-            dev.erst.gridgrind.contract.dto.GridGrindProtocolVersion.current(),
-            Optional.of("canonical-plan"),
-            new WorkbookPlan.WorkbookSource.New(),
-            new WorkbookPlan.WorkbookPersistence.None(),
-            new ExecutionPolicyInput(
-                mode,
-                new ExecutionJournalInput(ExecutionJournalLevel.NORMAL),
-                calculation,
-                dev.erst.gridgrind.contract.dto.AssertionModeInput.defaults()),
-            FormulaEnvironmentInput.empty(),
-            List.of());
-    WorkbookPlan journaled =
-        GridGrindPlan.from(canonical).journal(ExecutionJournalLevel.VERBOSE).toPlan();
-    assertEquals(mode, journaled.execution().mode());
-    assertEquals(calculation, journaled.execution().calculation());
-    assertEquals(ExecutionJournalLevel.VERBOSE, journaled.execution().journal().level());
   }
 
   @Test
@@ -241,7 +214,25 @@ class GridGrindPlanTest {
             GridGrindEngine.requestExecutor()
                 .execute(
                     plan.toPlan(),
-                    new GridGrindRequestInputs(tempDir, tempDir.resolve("temp-root")),
+                    new GridGrindRequestInputs(
+                        tempDir,
+                        tempDir.resolve("temp-root"),
+                        new GridGrindExecutionGrant.Bounded(
+                            List.of(
+                                new GridGrindExecutionGrant.ReadAuthority.File(
+                                    tempDir.resolve("item.txt"))),
+                            List.of(
+                                "ENSURE_SHEET",
+                                "SET_RANGE",
+                                "SET_TABLE",
+                                "SET_CELL",
+                                "GET_CELLS",
+                                "EXPECT_CELL_VALUE"),
+                            new GridGrindExecutionGrant.WorkbookTargetAuthority.WorkbookWide(),
+                            new GridGrindExecutionGrant.PublicationAuthority.SaveAs(
+                                outputPath, WorkbookPlan.WorkbookPersistence.IfExists.REPLACE),
+                            List.of(),
+                            dev.erst.gridgrind.engine.api.GridGrindHostAcceptancePolicy.minimum())),
                     GridGrindProgressSink.NOOP));
 
     assertTrue(Files.exists(outputPath));

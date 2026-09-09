@@ -1520,6 +1520,7 @@ class ExcelDataValidationControllerTest {
     public void setOperator(int ignored) {}
 
     @Override
+    @SuppressWarnings("PMD.ReturnEmptyCollectionRatherThanNull")
     public String[] getExplicitListValues() {
       return explicitListValues == null ? null : explicitListValues.clone();
     }

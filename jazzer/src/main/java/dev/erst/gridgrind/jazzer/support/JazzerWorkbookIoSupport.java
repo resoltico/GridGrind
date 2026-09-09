@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.jazzer.support;
 
+import dev.erst.gridgrind.engine.api.GridGrindExecutionGrant;
 import dev.erst.gridgrind.engine.runtime.ExecutionInputBindings;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
 import dev.erst.gridgrind.excel.ExcelWorkbooks;
@@ -7,6 +8,7 @@ import dev.erst.gridgrind.excel.WorkbookArtifactWriteDisposition;
 import dev.erst.gridgrind.excel.WorkbookTempFileFactory;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.Objects;
 
 /** Explicit-root workbook IO helpers shared across Jazzer replay and round-trip support. */
@@ -19,7 +21,15 @@ public final class JazzerWorkbookIoSupport {
   public static ExecutionInputBindings executionBindings(Path workingDirectory) {
     Path normalizedWorkingDirectory = normalize(workingDirectory, "workingDirectory");
     return new ExecutionInputBindings(
-        normalizedWorkingDirectory, normalizedWorkingDirectory.resolve(MANAGED_TEMP_SEGMENT));
+        normalizedWorkingDirectory,
+        normalizedWorkingDirectory.resolve(MANAGED_TEMP_SEGMENT),
+        new GridGrindExecutionGrant.Bounded(
+            List.of(),
+            List.of(),
+            new GridGrindExecutionGrant.WorkbookTargetAuthority.WorkbookWide(),
+            new GridGrindExecutionGrant.PublicationAuthority.None(),
+            List.of(),
+            dev.erst.gridgrind.engine.api.GridGrindHostAcceptancePolicy.minimum()));
   }
 
   /** Opens one workbook using a temp factory rooted next to the workbook path. */

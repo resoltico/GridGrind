@@ -41,7 +41,7 @@ final class RequestPreflight {
         SourceBackedPlanResolver::resolveStep);
   }
 
-  @SuppressWarnings({"PMD.CloseResource", "PMD.UseTryWithResources"})
+  @SuppressWarnings("PMD.UseTryWithResources")
   private static Result verify(
       WorkbookPlan request,
       ExecutionInputBindings bindings,
@@ -53,17 +53,25 @@ final class RequestPreflight {
     Objects.requireNonNull(stepResolver, "stepResolver must not be null");
     List<GridGrindProblemDetail.Problem> problems = new ArrayList<>();
     RequestPathAccess pathAccess =
-        new RequestPathAccess(bindings.workingDirectory(), bindings.tempFileFactory());
+        new RequestPathAccess(
+            bindings.workingDirectory(), bindings.tempFileFactory(), bindings.executionGrant());
     boolean prepared = false;
     try {
       ExecutionInputBindings locatedBindings =
           bindings
               .withRequestPathAccess(pathAccess)
               .withInputResolutionOrigins(InputResolutionOrigins.forRequest(request, analysis));
-      Optional<WorkbookPlan> resolvedRequest =
-          RequestPreflightInputResolver.resolve(request, locatedBindings, stepResolver, problems);
-      RequestPreflightPaths.verify(request, locatedBindings, problems);
-      RequestPreflightWorkbookSource.verify(request, locatedBindings, problems);
+      RequestPreflightStaticPaths.validate(request, locatedBindings, problems);
+      if (problems.isEmpty()) {
+        addGrantViolations(request, locatedBindings, problems);
+      }
+      Optional<WorkbookPlan> resolvedRequest = Optional.empty();
+      if (problems.isEmpty()) {
+        resolvedRequest =
+            RequestPreflightInputResolver.resolve(request, locatedBindings, stepResolver, problems);
+        RequestPreflightPaths.verify(request, locatedBindings, problems);
+        RequestPreflightWorkbookSource.verify(request, locatedBindings, problems);
+      }
       Result result =
           new Result(
               problems.isEmpty()
@@ -99,6 +107,29 @@ final class RequestPreflight {
                 new ProblemContext.ResolveInputs(
                     context.request(), context.input(), Optional.of(location)))
         .orElse(context);
+  }
+
+  private static void addGrantViolations(
+      WorkbookPlan request,
+      ExecutionInputBindings bindings,
+      List<GridGrindProblemDetail.Problem> problems) {
+    ExecutionGrantValidator.violations(
+            request, bindings.executionGrant(), bindings.workingDirectory())
+        .forEach(
+            violation ->
+                problems.add(
+                    GridGrindProblems.fromException(
+                        violation,
+                        new ProblemContext.ValidateRequest(
+                            ExecutionRequestPaths.requestShape(request)))));
+    HostAcceptancePolicyValidator.violations(request, bindings.executionGrant())
+        .forEach(
+            violation ->
+                problems.add(
+                    GridGrindProblems.fromException(
+                        violation,
+                        new ProblemContext.ValidateRequest(
+                            ExecutionRequestPaths.requestShape(request)))));
   }
 
   static ProblemContext.OpenWorkbook openWorkbookContext(

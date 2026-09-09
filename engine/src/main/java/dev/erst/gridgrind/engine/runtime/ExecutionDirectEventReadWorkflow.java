@@ -1,23 +1,24 @@
 package dev.erst.gridgrind.engine.runtime;
 
+import dev.erst.gridgrind.contract.assertion.AssertionResult;
 import dev.erst.gridgrind.contract.dto.CalculationReport;
 import dev.erst.gridgrind.contract.dto.GridGrindProblemDetail;
 import dev.erst.gridgrind.contract.dto.GridGrindProtocolVersion;
 import dev.erst.gridgrind.contract.dto.RequestWarning;
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
 import dev.erst.gridgrind.contract.dto.WorkbookResult;
-import dev.erst.gridgrind.contract.dto.WorkbookResultPersistence;
 import dev.erst.gridgrind.contract.query.InspectionResult;
 import dev.erst.gridgrind.contract.step.InspectionStep;
 import dev.erst.gridgrind.excel.WorkbookArtifactIo;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import org.jspecify.annotations.Nullable;
 
 /** Direct event-read workflow for inspection-only execution against an existing workbook file. */
 final class ExecutionDirectEventReadWorkflow {
   private final ExecutionStepSupport stepSupport;
+  private final MaterializedTerminalAcceptance terminalAcceptance;
   private final ExecutionResponseSupport responseSupport;
   private final TempFileFactory tempFileFactory;
 
@@ -25,7 +26,23 @@ final class ExecutionDirectEventReadWorkflow {
       ExecutionStepSupport stepSupport,
       ExecutionResponseSupport responseSupport,
       TempFileFactory tempFileFactory) {
+    this(
+        stepSupport,
+        new HostAcceptanceExecutor(
+                Objects.requireNonNull(stepSupport, "stepSupport must not be null"))
+            ::verifyMaterializedTerminalAcceptance,
+        responseSupport,
+        tempFileFactory);
+  }
+
+  ExecutionDirectEventReadWorkflow(
+      ExecutionStepSupport stepSupport,
+      MaterializedTerminalAcceptance terminalAcceptance,
+      ExecutionResponseSupport responseSupport,
+      TempFileFactory tempFileFactory) {
     this.stepSupport = Objects.requireNonNull(stepSupport, "stepSupport must not be null");
+    this.terminalAcceptance =
+        Objects.requireNonNull(terminalAcceptance, "terminalAcceptance must not be null");
     this.responseSupport =
         Objects.requireNonNull(responseSupport, "responseSupport must not be null");
     this.tempFileFactory =
@@ -43,9 +60,19 @@ final class ExecutionDirectEventReadWorkflow {
     WorkbookPlan.WorkbookSource.ExistingFile source =
         (WorkbookPlan.WorkbookSource.ExistingFile) request.source();
     List<InspectionResult> inspections = new ArrayList<>();
+    List<AssertionResult> hostAssertions = new ArrayList<>();
+    List<dev.erst.gridgrind.contract.dto.WorkbookExecutionEvidence.Preservation> hostPreservation =
+        new ArrayList<>();
     DirectEventReadContext executionContext =
         new DirectEventReadContext(
-            protocolVersion, request, warnings, journal, calculation, inspections);
+            protocolVersion,
+            request,
+            warnings,
+            journal,
+            calculation,
+            hostAssertions,
+            hostPreservation,
+            inspections);
     ExecutionJournalRecorder.PhaseHandle openPhase = journal.beginOpen();
     WorkbookArtifactIo.MaterializedWorkbook materialized;
     try {
@@ -54,7 +81,8 @@ final class ExecutionDirectEventReadWorkflow {
               bindings
                   .requestPathAccess()
                   .materializeRead(source.path(), "source", "gridgrind-source-workbook-", ".xlsx"),
-              OoxmlPackageSecurityConverter.toExcelOpenOptions(source.security().orElse(null)),
+              OoxmlPackageSecurityConverter.toExcelOpenOptions(
+                  source.security().orElse(null), bindings),
               tempFileFactory::createTempFile);
     } catch (Exception exception) {
       GridGrindProblemDetail.Problem problem =
@@ -75,7 +103,9 @@ final class ExecutionDirectEventReadWorkflow {
           null);
     }
     openPhase.succeed();
-
+    dev.erst.gridgrind.engine.api.GridGrindHostAcceptancePolicy hostAcceptancePolicy =
+        ((dev.erst.gridgrind.engine.api.GridGrindExecutionGrant.Bounded) bindings.executionGrant())
+            .hostAcceptancePolicy();
     for (int stepIndex = 0; stepIndex < request.steps().size(); stepIndex++) {
       InspectionStep inspectionStep = (InspectionStep) request.steps().get(stepIndex);
       ExecutionJournalRecorder.StepHandle stepHandle = journal.beginStep(stepIndex, inspectionStep);
@@ -103,17 +133,29 @@ final class ExecutionDirectEventReadWorkflow {
       }
     }
 
+    try {
+      HostAcceptanceVerification hostAcceptance =
+          terminalAcceptance.verify(
+              hostAcceptancePolicy,
+              materialized.workbookPath(),
+              ExecutionRequestPaths.workbookLocationFor(
+                  request.source(), request.persistence(), bindings.workingDirectory()));
+      hostAssertions.addAll(hostAcceptance.assertions());
+      hostPreservation.addAll(hostAcceptance.preservation());
+    } catch (AssertionFailedException exception) {
+      hostAssertions.add(
+          new AssertionResult.Failed(
+              exception.assertionFailure().stepId(),
+              exception.assertionFailure().assertionType(),
+              exception.assertionFailure()));
+      return hostAcceptanceFailure(materialized, executionContext, exception);
+    } catch (IOException exception) {
+      return hostAcceptanceFailure(materialized, executionContext, exception);
+    }
+
     return responseSupport.closeReadableWorkbook(
         materialized,
-        new WorkbookResult.Success(
-            protocolVersion,
-            request.planId(),
-            journal.buildSuccess(request.steps().size(), false),
-            calculation,
-            new WorkbookResultPersistence.PersistenceOutcome.NotSaved(),
-            warnings,
-            List.of(),
-            List.copyOf(inspections)),
+        DirectEventReadResult.success(executionContext, bindings),
         request,
         journal,
         null,
@@ -121,30 +163,34 @@ final class ExecutionDirectEventReadWorkflow {
         null);
   }
 
-  private record DirectEventReadContext(
-      GridGrindProtocolVersion protocolVersion,
-      WorkbookPlan request,
-      List<RequestWarning> warnings,
-      ExecutionJournalRecorder journal,
-      CalculationReport calculation,
-      List<InspectionResult> inspections) {
-    private ExecutionFailure failure(GridGrindProblemDetail.Problem problem) {
-      return failure(problem, null, null);
-    }
+  private WorkbookResult hostAcceptanceFailure(
+      WorkbookArtifactIo.MaterializedWorkbook materialized,
+      DirectEventReadContext executionContext,
+      Exception exception) {
+    GridGrindProblemDetail.Problem problem =
+        ExecutionResponseSupport.problemFor(
+            exception,
+            new dev.erst.gridgrind.contract.dto.ProblemContext.ExecuteRequest(
+                ExecutionRequestPaths.requestShape(executionContext.request())));
+    return responseSupport.closeReadableWorkbook(
+        materialized,
+        ExecutionResponseSupport.failureResponseWithoutPlanOutcomeEvent(
+            executionContext.failure(problem)),
+        executionContext.request(),
+        executionContext.journal(),
+        problem.code(),
+        null,
+        null);
+  }
 
-    private ExecutionFailure failure(
-        GridGrindProblemDetail.Problem problem, int failedStepIndex, String failedStepId) {
-      return failure(problem, Integer.valueOf(failedStepIndex), failedStepId);
-    }
-
-    private ExecutionFailure failure(
-        GridGrindProblemDetail.Problem problem,
-        @Nullable Integer failedStepIndex,
-        @Nullable String failedStepId) {
-      return new ExecutionFailure(
-          new ExecutionFailure.Context(protocolVersion, journal, request, calculation),
-          new ExecutionFailure.Artifacts(warnings, List.of(), inspections),
-          new ExecutionFailure.Detail(problem, failedStepIndex, failedStepId));
-    }
+  /** Verifies terminal host acceptance against one materialized event-read workbook. */
+  @FunctionalInterface
+  interface MaterializedTerminalAcceptance {
+    /** Returns established host acceptance facts or fails before a success response is emitted. */
+    HostAcceptanceVerification verify(
+        dev.erst.gridgrind.engine.api.GridGrindHostAcceptancePolicy policy,
+        java.nio.file.Path workbookPath,
+        dev.erst.gridgrind.excel.WorkbookLocation workbookLocation)
+        throws IOException, AssertionFailedException;
   }
 }

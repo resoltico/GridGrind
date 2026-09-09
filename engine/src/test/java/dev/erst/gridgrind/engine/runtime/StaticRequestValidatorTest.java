@@ -91,7 +91,7 @@ class StaticRequestValidatorTest {
         GridGrindJson.analyzeRequest(
             """
             {
-              "protocolVersion": "V2",
+              "protocolVersion": "V3",
               "source": { "type": "NEW" },
               "persistence": { "type": "NONE" },
               "steps": [
@@ -134,7 +134,7 @@ class StaticRequestValidatorTest {
         GridGrindJson.analyzeRequest(
             """
             {
-              "protocolVersion": "V2",
+              "protocolVersion": "V3",
               "source": { "type": "EXISTING", "path": "source.xlsx" },
               "persistence": { "type": "NONE" },
               "execution": { "mode": { "type": "EVENT_READ" } },
@@ -174,7 +174,7 @@ class StaticRequestValidatorTest {
         GridGrindJson.analyzeRequest(
             """
             {
-              "protocolVersion": "V2",
+              "protocolVersion": "V3",
               "source": { "type": "NEW" },
               "persistence": { "type": "OVERWRITE" },
               "steps": [
@@ -208,7 +208,7 @@ class StaticRequestValidatorTest {
         GridGrindJson.analyzeRequest(
             """
             {
-              "protocolVersion": "V2",
+              "protocolVersion": "V3",
               "source": null,
               "persistence": { "type": "NONE" },
               "execution": {
@@ -253,7 +253,7 @@ class StaticRequestValidatorTest {
         GridGrindJson.analyzeRequest(
             """
             {
-              "protocolVersion": "V2",
+              "protocolVersion": "V3",
               "steps": [
                 {
                   "stepId": "set-cell",
@@ -268,7 +268,7 @@ class StaticRequestValidatorTest {
         GridGrindJson.analyzeRequest(
             """
             {
-              "protocolVersion": "V2",
+              "protocolVersion": "V3",
               "source": { "type": "NEW" },
               "persistence": { "type": "NONE" },
               "execution": null,
@@ -280,7 +280,7 @@ class StaticRequestValidatorTest {
         GridGrindJson.analyzeRequest(
             """
             {
-              "protocolVersion": "V2",
+              "protocolVersion": "V3",
               "source": { "type": "NEW" },
               "steps": [
                 {
@@ -296,7 +296,7 @@ class StaticRequestValidatorTest {
         GridGrindJson.analyzeRequest(
             """
             {
-              "protocolVersion": "V2",
+              "protocolVersion": "V3",
               "source": { "type": "NEW" },
               "persistence": { "type": "NONE" },
               "steps": null

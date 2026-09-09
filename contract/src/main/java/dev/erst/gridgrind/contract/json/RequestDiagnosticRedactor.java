@@ -65,7 +65,8 @@ public final class RequestDiagnosticRedactor {
         : message;
   }
 
-  static RequestDiagnosticRedactor forRequestType(Class<?> requestType) {
+  /** Returns the request-type-specific redactor for one decoded request surface. */
+  public static RequestDiagnosticRedactor forRequestType(Class<?> requestType) {
     return new RequestDiagnosticRedactor(RequestSecretFieldPaths.forRequestType(requestType));
   }
 

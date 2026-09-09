@@ -11,8 +11,17 @@ final class CliExecutionArgumentValidation {
 
   static void validateTerminalArguments(
       Optional<Path> requestPath, Optional<Path> executionRootPath, Optional<Path> responsePath) {
+    validateTerminalArguments(requestPath, executionRootPath, Optional.empty(), responsePath);
+  }
+
+  static void validateTerminalArguments(
+      Optional<Path> requestPath,
+      Optional<Path> executionRootPath,
+      Optional<Path> grantPath,
+      Optional<Path> responsePath) {
     Objects.requireNonNull(requestPath, "requestPath must not be null");
     Objects.requireNonNull(executionRootPath, "executionRootPath must not be null");
+    Objects.requireNonNull(grantPath, "grantPath must not be null");
     Objects.requireNonNull(responsePath, "responsePath must not be null");
     if (requestAndResponseSharePath(requestPath, responsePath)) {
       throw new CliArgumentsException(

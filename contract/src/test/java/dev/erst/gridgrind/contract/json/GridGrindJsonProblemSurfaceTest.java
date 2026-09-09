@@ -120,7 +120,7 @@ class GridGrindJsonProblemSurfaceTest {
                 GridGrindJson.readProtocolCatalog(
                     """
                     {
-                      "protocolVersion": "V2",
+                      "protocolVersion": "V3",
                       "requestTemplate": { "source": { "type": "NEW" }, "steps": [] }
                     }
                     """
@@ -181,7 +181,7 @@ class GridGrindJsonProblemSurfaceTest {
                 GridGrindJson.readRequest(
                     """
                     {
-                      "protocolVersion": "V2",
+                      "protocolVersion": "V3",
                       "source": { "type": "NEW" },
                       "persistence": { "type": "NONE" },
                       "steps": [
@@ -209,7 +209,7 @@ class GridGrindJsonProblemSurfaceTest {
                 GridGrindJson.readRequest(
                     """
                     {
-                      "protocolVersion": "V2",
+                      "protocolVersion": "V3",
                       "source": { "type": "NEW" },
                       "persistence": { "type": "NONE" },
                       "steps": [
@@ -248,7 +248,7 @@ class GridGrindJsonProblemSurfaceTest {
                 GridGrindJson.readRequest(
                     """
                     {
-                      "protocolVersion": "V2",
+                      "protocolVersion": "V3",
                       "source": { "type": "NEW" },
                       "persistence": { "type": "NONE" },
                       "steps": [],
@@ -263,7 +263,7 @@ class GridGrindJsonProblemSurfaceTest {
                 GridGrindJson.readRequest(
                     """
                     {
-                      "protocolVersion": "V2",
+                      "protocolVersion": "V3",
                       "source": { "type": "NEW" },
                       "persistence": { "type": "NONE" },
                       "steps": [
@@ -284,6 +284,93 @@ class GridGrindJsonProblemSurfaceTest {
     assertEquals(Optional.of("bogus"), topLevelUnknownField.jsonPath());
     assertEquals("Unknown field 'steps[0].query.extra'", nestedUnknownField.getMessage());
     assertEquals(Optional.of("steps[0].query.extra"), nestedUnknownField.jsonPath());
+  }
+
+  @Test
+  void rejectsAnEmptyRootMemberNameThroughTheNormalRequestShapeBoundary() {
+    InvalidRequestShapeException exception =
+        assertThrows(
+            InvalidRequestShapeException.class,
+            () ->
+                GridGrindJson.readRequest(
+                    """
+                    {
+                      "protocolVersion": "V3",
+                      "source": { "type": "NEW" },
+                      "persistence": { "type": "NONE" },
+                      "": {}
+                    }
+                    """));
+
+    assertEquals("Unknown field ''", exception.getMessage());
+    assertEquals(Optional.empty(), exception.jsonPath());
+  }
+
+  @Test
+  void rejectsAnEmptyUnionDiscriminatorThroughTheNormalRequestShapeBoundary() {
+    InvalidRequestShapeException exception =
+        assertThrows(
+            InvalidRequestShapeException.class,
+            () ->
+                GridGrindJson.readRequest(
+                    """
+                    {
+                      "protocolVersion": "V3",
+                      "source": { "type": "NEW" },
+                      "persistence": { "type": "NONE" },
+                      "steps": [
+                        {
+                          "stepId": "blank-target-type",
+                          "target": { "type": "" },
+                          "action": { "type": "ENSURE_SHEET" }
+                        }
+                      ]
+                    }
+                    """));
+
+    assertEquals("Unknown type value ''", exception.getMessage());
+    assertEquals(Optional.of("steps[0].target.type"), exception.jsonPath());
+  }
+
+  @Test
+  void rejectsAnEmptyDuplicateKeyPayloadThroughTheNormalRequestShapeBoundary() {
+    InvalidRequestShapeException exception =
+        assertThrows(
+            InvalidRequestShapeException.class,
+            () ->
+                GridGrindJson.readRequest(
+                    """
+                    {
+                      "protocolVersion": "V3",
+                      "source": { "type": "NEW" },
+                      "persistence": { "type": "NONE" },
+                      "": 1,
+                      "": 2
+                    }
+                    """));
+
+    assertEquals("Unknown field ''", exception.getMessage());
+    assertEquals(Optional.empty(), exception.jsonPath());
+  }
+
+  @Test
+  void rejectsAnEmptyEnumValueThroughTheNormalRequestShapeBoundary() {
+    InvalidRequestShapeException exception =
+        assertThrows(
+            InvalidRequestShapeException.class,
+            () ->
+                GridGrindJson.readRequest(
+                    """
+                    {
+                      "protocolVersion": "",
+                      "source": { "type": "NEW" },
+                      "persistence": { "type": "NONE" }
+                    }
+                    """));
+
+    assertTrue(
+        exception.getMessage().startsWith("Unsupported value '' for field 'protocolVersion'"));
+    assertEquals(Optional.of("protocolVersion"), exception.jsonPath());
   }
 
   /** Tracks whether the request writer closes the destination stream after producing JSON. */

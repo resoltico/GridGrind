@@ -19,10 +19,19 @@ import org.jspecify.annotations.Nullable;
 final class OoxmlPackageSecurityConverter {
   private OoxmlPackageSecurityConverter() {}
 
-  static ExcelOoxmlOpenOptions toExcelOpenOptions(@Nullable OoxmlOpenSecurityInput input) {
-    return input == null || input.password().isEmpty()
+  static ExcelOoxmlOpenOptions toExcelOpenOptions(
+      @Nullable OoxmlOpenSecurityInput input, ExecutionInputBindings bindings) {
+    return input == null || input.passwordRef().isEmpty()
         ? new ExcelOoxmlOpenOptions.Unencrypted()
-        : new ExcelOoxmlOpenOptions.Encrypted(input.password().orElseThrow());
+        : new ExcelOoxmlOpenOptions.Encrypted(
+            bindings.resolveSecret(input.passwordRef().orElseThrow()));
+  }
+
+  static ExcelOoxmlOpenOptions toExcelOpenOptions(@Nullable OoxmlOpenSecurityInput input) {
+    if (input == null || input.passwordRef().isEmpty()) {
+      return new ExcelOoxmlOpenOptions.Unencrypted();
+    }
+    throw new IllegalStateException("encrypted open options require execution bindings");
   }
 
   static ExcelOoxmlPersistenceOptions toExcelPersistenceOptions(
@@ -32,17 +41,18 @@ final class OoxmlPackageSecurityConverter {
       return ExcelOoxmlPersistenceOptions.none();
     }
     return new ExcelOoxmlPersistenceOptions(
-        encryptionPolicy(input.encryption()), signaturePolicy(input.signature(), bindings));
+        encryptionPolicy(input.encryption(), bindings),
+        signaturePolicy(input.signature(), bindings));
   }
 
   private static ExcelOoxmlPersistenceEncryption encryptionPolicy(
-      OoxmlPersistenceEncryptionInput input) {
+      OoxmlPersistenceEncryptionInput input, ExecutionInputBindings bindings) {
     return switch (input) {
       case OoxmlPersistenceEncryptionInput.None _ ->
           new ExcelOoxmlPersistenceEncryption.Plaintext();
       case OoxmlPersistenceEncryptionInput.Encrypt encrypt ->
           new ExcelOoxmlPersistenceEncryption.Encrypt(
-              toExcelEncryptionOptions(encrypt.encryption()));
+              toExcelEncryptionOptions(encrypt.encryption(), bindings));
       case OoxmlPersistenceEncryptionInput.PreserveSource _ ->
           new ExcelOoxmlPersistenceEncryption.PreserveSource();
     };
@@ -58,8 +68,10 @@ final class OoxmlPackageSecurityConverter {
     };
   }
 
-  private static ExcelOoxmlEncryptionOptions toExcelEncryptionOptions(OoxmlEncryptionInput input) {
-    return new ExcelOoxmlEncryptionOptions(input.password(), input.cipher(), input.hash());
+  private static ExcelOoxmlEncryptionOptions toExcelEncryptionOptions(
+      OoxmlEncryptionInput input, ExecutionInputBindings bindings) {
+    return new ExcelOoxmlEncryptionOptions(
+        bindings.resolveSecret(input.passwordRef()), input.cipher(), input.hash());
   }
 
   private static ExcelOoxmlSignatureOptions toExcelSignatureOptions(
@@ -73,8 +85,11 @@ final class OoxmlPackageSecurityConverter {
                   "persistence.security.signature.signature.pkcs12Path",
                   "gridgrind-signing-material-",
                   ".p12"),
-          input.keystorePassword(),
-          input.keyPassword(),
+          bindings.resolveSecret(input.keystorePasswordRef()),
+          input
+              .keyPasswordRef()
+              .map(bindings::resolveSecret)
+              .orElseGet(() -> bindings.resolveSecret(input.keystorePasswordRef())),
           input.alias().orElse(null),
           input.digestAlgorithm(),
           input.description().orElse(null));

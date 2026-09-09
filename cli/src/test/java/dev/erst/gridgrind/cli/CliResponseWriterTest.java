@@ -14,6 +14,7 @@ import dev.erst.gridgrind.contract.dto.ProblemContext;
 import dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces.CliArgument;
 import dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces.JsonLocation;
 import dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces.RequestInput;
+import dev.erst.gridgrind.contract.dto.ProtocolField;
 import dev.erst.gridgrind.contract.dto.RequestDoctorReport;
 import dev.erst.gridgrind.contract.dto.WorkbookResult;
 import dev.erst.gridgrind.contract.dto.WorkbookResults;
@@ -353,49 +354,11 @@ class CliResponseWriterTest extends GridGrindCliTestSupport {
   }
 
   private static RequestDiagnosticRedactor allSecretsRedactor() throws IOException {
-    return GridGrindJson.analyzeRequest(
-            """
-            {
-              "protocolVersion": "V2",
-              "source": {
-                "type": "EXISTING",
-                "path": "source.xlsx",
-                "security": { "password": "source-secret" }
-              },
-              "persistence": {
-                "type": "SAVE_AS",
-                "path": "secured.xlsx",
-                "ifExists": "REJECT",
-                "security": {
-                  "encryption": {
-                    "type": "ENCRYPT",
-                    "encryption": { "password": "persistence-secret" }
-                  },
-                  "signature": {
-                    "type": "SIGN",
-                    "signature": {
-                      "pkcs12Path": "keys/signing.p12",
-                      "keystorePassword": "keystore-secret",
-                      "keyPassword": "key-secret"
-                    }
-                  }
-                }
-              },
-              "steps": []
-            }
-            """
-                .getBytes(StandardCharsets.UTF_8))
-        .diagnosticRedactor();
+    return RequestDiagnosticRedactor.forRequestType(SecretCarrier.class);
   }
 
   private static List<SecretOwner> secretOwners() {
-    return List.of(
-        new SecretOwner("source.security.password", "source-secret"),
-        new SecretOwner(
-            "persistence.security.encryption.encryption.password", "persistence-secret"),
-        new SecretOwner(
-            "persistence.security.signature.signature.keystorePassword", "keystore-secret"),
-        new SecretOwner("persistence.security.signature.signature.keyPassword", "key-secret"));
+    return List.of(new SecretOwner("credential", "source-secret"));
   }
 
   private static void assertSecretRedacted(SecretOwner owner, byte[]... payloads) {
@@ -419,6 +382,8 @@ class CliResponseWriterTest extends GridGrindCliTestSupport {
       }
     };
   }
+
+  private record SecretCarrier(@ProtocolField(secret = true) String credential) {}
 
   private record SecretOwner(String jsonPath, String value) {}
 }

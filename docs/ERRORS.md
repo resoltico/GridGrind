@@ -1,6 +1,5 @@
 ---
 afad: "5.0.1"
-version: "0.75.0"
 domain: ERRORS
 updated: "2026-08-27"
 route:
@@ -19,14 +18,14 @@ route:
 
 ```json
 {
-  "protocolVersion": "V2",
+  "protocolVersion": "V3",
   "status": "FAILED",
   "planId": "set-total-pass",
   "persistence": {
     "type": "SAVE_AS",
     "requestedPath": "out/budget-reviewed.xlsx",
-    "write": {
-      "status": "NOT_WRITTEN"
+    "publication": {
+      "status": "NOT_ATTEMPTED"
     }
   },
   "journal": {
@@ -155,7 +154,7 @@ route:
 
 The top-level `persistence` block is always present on failed responses too. It preserves the
 requested save mode and intended path even when the run failed before any write happened, in which
-case `write.status=NOT_WRITTEN`. The `journal` block is always present as well. It records
+case `publication.status=NOT_ATTEMPTED`. A failed publication that leaves the destination provably absent or unchanged reports `NOT_PUBLISHED`; `UNCERTAIN` means the destination may have changed and its required recovery is inspection without blind retry. The `journal` block is always present as well. It records
 top-level phase timing plus ordered per-step outcomes even when the request fails before
 persistence. Source-backed text and binary loading runs first under `journal.inputResolution`,
 before the workbook is opened.
@@ -170,7 +169,7 @@ use the plural `CommandError` envelope instead of an execution result:
 
 ```json
 {
-  "protocolVersion": "V2",
+  "protocolVersion": "V3",
   "command": "execute",
   "status": "REJECTED",
   "problems": [
@@ -228,7 +227,7 @@ target, authored assertion, and observations:
 ```json
 {
   "status": "FAILED",
-  "protocolVersion": "V2",
+  "protocolVersion": "V3",
   "problem": {
     "code": "ASSERTION_FAILED",
     "category": "ASSERTION",
@@ -312,6 +311,7 @@ target, authored assertion, and observations:
 | Code | Trigger |
 |:-----|:--------|
 | `ASSERTION_FAILED` | One authored assertion step did not match the observed workbook state. The matching `FAILED` entry in `assertions[]` carries the failed assertion contract and observed factual payloads. Under `execution.assertionMode=COLLECT`, every terminal-phase assertion outcome is retained while the first mismatch stays canonical. Entity-presence assertions (`EXPECT_SHEET_PRESENT`, `EXPECT_SHEET_ABSENT`, `EXPECT_NAMED_RANGE_PRESENT`, `EXPECT_NAMED_RANGE_ABSENT`, `EXPECT_TABLE_PRESENT`, `EXPECT_TABLE_ABSENT`, `EXPECT_PIVOT_TABLE_PRESENT`, `EXPECT_PIVOT_TABLE_ABSENT`, `EXPECT_CHART_PRESENT`, `EXPECT_CHART_ABSENT`) treat selector misses as zero observed entities instead of surfacing selector-specific `*_NOT_FOUND` errors. |
+| `PRESERVATION_FAILED` | A host-required semantic comparison or byte-identity comparison for a named OOXML package part changed. Publication is not attempted; inspect `evidence.preservation` to identify the protected inspection step IDs or package part names. |
 
 ### Formula (`FORMULA` category)
 
@@ -346,20 +346,22 @@ evaluation, unevaluable formulas remain unchanged and produce `FORMULA_NOT_EVALU
 
 | Code | Trigger |
 |:-----|:--------|
-| `WORKBOOK_PASSWORD_REQUIRED` | `source.type=EXISTING` points to an encrypted OOXML workbook and `source.security.password` was omitted. The structured `context.workbook.path` identifies the authored source; diagnostics never expose a private materialization path. |
-| `INVALID_WORKBOOK_PASSWORD` | `source.security.password` was supplied for an encrypted OOXML workbook, but it did not decrypt the package. The structured `context.workbook.path` identifies the authored source; diagnostics never expose a private materialization path. |
+| `WORKBOOK_PASSWORD_REQUIRED` | `source.type=EXISTING` points to an encrypted OOXML workbook and `source.security.passwordRef` was omitted. The structured `context.workbook.path` identifies the authored source; diagnostics never expose a private materialization path. |
+| `INVALID_WORKBOOK_PASSWORD` | `source.security.passwordRef` was supplied for an encrypted OOXML workbook, but it did not decrypt the package. The structured `context.workbook.path` identifies the authored source; diagnostics never expose a private materialization path. |
 | `WORKBOOK_NOT_OPENABLE` | `source.type=EXISTING` did not name a valid openable `.xlsx` OOXML package, including truncated files, non-zip inputs, and ZIP files without a workbook package. This is a request-format failure, not a cryptographic failure. |
 | `ENCRYPTION_SOURCE_NOT_ENCRYPTED` | `persistence.security.encryption.type=PRESERVE_SOURCE` was declared for a plaintext source workbook. Use `NONE` or `ENCRYPT` instead. |
 | `ENCRYPTION_SOURCE_NOT_PRESERVABLE` | `persistence.security.encryption.type=PRESERVE_SOURCE` was declared for an encrypted source whose envelope cannot be reapplied by GridGrind's AGILE write contract. Use `NONE` or `ENCRYPT` instead. |
-| `INVALID_SIGNING_CONFIGURATION` | `persistence.security.signature` did not point to a readable PKCS#12 keystore or the configured alias/password/digest settings could not be resolved. |
+| `INVALID_SIGNING_CONFIGURATION` | `persistence.security.signature keystore, alias, secret reference, or digest settings could not be resolved. |
 | `WORKBOOK_SECURITY_ERROR` | OOXML signature inspection on an already-opened package, encryption, or signing failed after request validation due to package or runtime security state. |
 | `UNSAFE_PATH_ACCESS` | The filesystem cannot provide GridGrind's required no-follow path binding, or a bound path topology changed before access. This failure is fail-closed. |
+| `AUTHORITY_DENIED` | The host grant omitted a requested bound file resource, secret reference, operation ID, target scope, or publication authority. Generate `--print-grant-template`, narrow it deliberately, and pass it through `--grant`; authored plans cannot broaden a grant. |
 
 ### I/O (`IO` category)
 
 | Code | Trigger |
 |:-----|:--------|
 | `INPUT_SOURCE_IO_ERROR` | A source-backed authored field pointed at a file that exists but could not be read, or stdin-backed source bytes could not be consumed cleanly. |
+| `PUBLICATION_UNCERTAIN` | Final publication may have begun or completed, but GridGrind could not establish the destination's final bytes. Inspect the destination and recorded publication evidence; do not retry blindly. |
 | `IO_ERROR` | File could not be read or written. Resolutions are stage-specific: `OPEN_WORKBOOK` points at the source workbook path, `PERSIST_WORKBOOK` distinguishes overwrite versus `SAVE_AS` destinations and calls out `SAVE_AS.ifExists=REJECT` collisions separately from broader write failures. `SAVE_AS` creates a missing contained destination parent, but rejects escapes and symlink traversal before writing. `WRITE_RESPONSE` points at the authored `--response` path. Transport-owned write failures preserve the attempted path and, when available, the operating-system reason. |
 
 ### Internal (`INTERNAL` category)

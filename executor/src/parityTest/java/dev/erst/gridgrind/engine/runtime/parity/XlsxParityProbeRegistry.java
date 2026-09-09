@@ -153,14 +153,15 @@ final class XlsxParityProbeRegistry {
 
   static OoxmlOpenSecurityInput encryptedOpenSecurity() {
     return new OoxmlOpenSecurityInput(
-        java.util.Optional.of(XlsxParityScenarios.ENCRYPTION_PASSWORD));
+        java.util.Optional.of(
+            new dev.erst.gridgrind.contract.dto.SecretReference("source-password")));
   }
 
   static OoxmlSignatureInput signingInput(Path pkcs12Path, String description) {
     return new OoxmlSignatureInput(
         pkcs12Path.toAbsolutePath().toString(),
-        XlsxParityScenarios.SIGNING_KEYSTORE_PASSWORD,
-        XlsxParityScenarios.SIGNING_KEY_PASSWORD,
+        new dev.erst.gridgrind.contract.dto.SecretReference("keystore-password"),
+        java.util.Optional.of(new dev.erst.gridgrind.contract.dto.SecretReference("key-password")),
         java.util.Optional.of(XlsxParityScenarios.SIGNING_KEY_ALIAS),
         dev.erst.gridgrind.excel.foundation.ExcelOoxmlSignatureDigestAlgorithm.SHA256,
         java.util.Optional.ofNullable(description));

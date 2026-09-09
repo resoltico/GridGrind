@@ -210,7 +210,7 @@ public final class XlsxParityScenarios {
               new DefaultGridGrindRequestExecutor()
                   .execute(
                       request,
-                      XlsxParitySupport.bindings(scenarioDirectory),
+                      XlsxParitySupport.bindings(scenarioDirectory, request),
                       ExecutionProgressSink.NOOP);
           if (!(response instanceof WorkbookResult.Success)) {
             throw new IllegalStateException(
@@ -517,11 +517,12 @@ public final class XlsxParityScenarios {
           Path scenarioDirectory = Files.createDirectories(temporaryRoot.resolve(CHART_AUTHORING));
           Path workbookPath = scenarioDirectory.resolve("chart-authoring.xlsx");
 
+          WorkbookPlan request = chartAuthoringRequest(workbookPath);
           WorkbookResult response =
               new DefaultGridGrindRequestExecutor()
                   .execute(
-                      chartAuthoringRequest(workbookPath),
-                      XlsxParitySupport.bindings(scenarioDirectory),
+                      request,
+                      XlsxParitySupport.bindings(scenarioDirectory, request),
                       ExecutionProgressSink.NOOP);
           if (!(response instanceof WorkbookResult.Success)) {
             throw new IllegalStateException(
@@ -632,11 +633,12 @@ public final class XlsxParityScenarios {
           Path scenarioDirectory = Files.createDirectories(temporaryRoot.resolve(PIVOT_AUTHORING));
           Path workbookPath = scenarioDirectory.resolve("pivot-authoring.xlsx");
 
+          WorkbookPlan request = pivotAuthoringRequest(workbookPath);
           WorkbookResult response =
               new DefaultGridGrindRequestExecutor()
                   .execute(
-                      pivotAuthoringRequest(workbookPath),
-                      XlsxParitySupport.bindings(scenarioDirectory),
+                      request,
+                      XlsxParitySupport.bindings(scenarioDirectory, request),
                       ExecutionProgressSink.NOOP);
           if (!(response instanceof WorkbookResult.Success)) {
             throw new IllegalStateException(
@@ -688,11 +690,12 @@ public final class XlsxParityScenarios {
           Path scenarioDirectory =
               Files.createDirectories(temporaryRoot.resolve(DRAWING_AUTHORING));
           Path workbookPath = scenarioDirectory.resolve("drawing-authoring.xlsx");
+          WorkbookPlan request = drawingAuthoringRequest(workbookPath);
           WorkbookResult response =
               new DefaultGridGrindRequestExecutor()
                   .execute(
-                      drawingAuthoringRequest(workbookPath),
-                      XlsxParitySupport.bindings(scenarioDirectory),
+                      request,
+                      XlsxParitySupport.bindings(scenarioDirectory, request),
                       ExecutionProgressSink.NOOP);
           if (!(response instanceof WorkbookResult.Success)) {
             throw new IllegalStateException(

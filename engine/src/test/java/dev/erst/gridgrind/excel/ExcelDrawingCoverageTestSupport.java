@@ -53,9 +53,9 @@ import org.openxmlformats.schemas.drawingml.x2006.spreadsheetDrawing.STEditAs;
 @SuppressWarnings({
   "PMD.CommentRequired",
   "PMD.SignatureDeclareThrowsException",
-  "PMD.UseUtilityClass"
+  "PMD.AbstractClassWithoutAbstractMethod"
 })
-class ExcelDrawingCoverageTestSupport {
+abstract class ExcelDrawingCoverageTestSupport {
   static final byte[] PNG_PIXEL_BYTES =
       Base64.getDecoder()
           .decode(

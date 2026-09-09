@@ -30,12 +30,35 @@ python3 - <<'PY'
 from pathlib import Path
 import json
 import os
+import re
 
 root = Path(os.environ["GRIDGRIND_REPO_ROOT"])
 frontmatter_files = sorted([*root.glob("docs/*.md"), root / "jazzer/README.md"])
+live_contract_files = [
+    root / "README.md",
+    *(doc for doc in frontmatter_files if doc.name != "CHANGELOG_ARCHIVE.md"),
+]
 request_required = {"protocolVersion", "source", "persistence", "steps"}
+current_protocol_version = "V3"
+forbidden_secret_fields = {
+    "password",
+    "workbookPassword",
+    "revisionsPassword",
+    "keystorePassword",
+    "keyPassword",
+}
 
-for doc in [root / "README.md", *frontmatter_files]:
+
+def contains_forbidden_secret_field(value):
+    if isinstance(value, dict):
+        if forbidden_secret_fields.intersection(value):
+            return True
+        return any(contains_forbidden_secret_field(nested) for nested in value.values())
+    if isinstance(value, list):
+        return any(contains_forbidden_secret_field(item) for item in value)
+    return False
+
+for doc in live_contract_files:
     for line in doc.read_text(encoding="utf-8").splitlines():
         if (
             '{"source":{"type":"NEW"},"steps":[]}' in line
@@ -53,8 +76,7 @@ for doc in frontmatter_files:
     if text.find("\n---\n", 4) == -1:
         raise SystemExit(f"{doc.relative_to(root)} has unterminated AFAD frontmatter")
 
-docs_with_json = [root / "README.md", *frontmatter_files]
-for doc in docs_with_json:
+for doc in live_contract_files:
     text = doc.read_text(encoding="utf-8")
     index = 0
     while True:
@@ -70,23 +92,70 @@ for doc in docs_with_json:
             payload = json.loads(block)
         except Exception:
             continue
+        if contains_forbidden_secret_field(payload):
+            raise SystemExit(
+                f"{doc.relative_to(root)} publishes an inline secret field; use a typed secret reference"
+            )
         if isinstance(payload, dict) and "source" in payload and "steps" in payload:
             missing = sorted(request_required.difference(payload))
             if missing:
                 raise SystemExit(
                     f"{doc.relative_to(root)} publishes a request-shaped json block missing {missing}"
                 )
+            if payload["protocolVersion"] != current_protocol_version:
+                raise SystemExit(
+                    f"{doc.relative_to(root)} publishes protocolVersion="
+                    f"{payload['protocolVersion']!r}; expected {current_protocol_version!r}"
+                )
             encryption = (
                 payload.get("persistence", {})
                 .get("security", {})
                 .get("encryption")
             )
-            if isinstance(encryption, dict):
-                encryption_missing = sorted({"password", "mode"}.difference(encryption))
+            if isinstance(encryption, dict) and encryption.get("type") == "ENCRYPT":
+                settings = encryption.get("encryption")
+                if not isinstance(settings, dict):
+                    raise SystemExit(
+                        f"{doc.relative_to(root)} publishes ENCRYPT without its encryption settings"
+                    )
+                encryption_missing = sorted({"passwordRef"}.difference(settings))
                 if encryption_missing:
                     raise SystemExit(
                         f"{doc.relative_to(root)} publishes persistence encryption without {encryption_missing}"
                     )
+
+coverage_document = (root / "docs/DEVELOPER_JAZZER_COVERAGE.md").read_text(encoding="utf-8")
+fuzz_input_directories = {
+    "protocol-request": root / "jazzer/src/fuzz/resources/dev/erst/gridgrind/jazzer/protocol/ProtocolRequestFuzzTestInputs",
+    "protocol-workflow": root / "jazzer/src/fuzz/resources/dev/erst/gridgrind/jazzer/protocol/OperationWorkflowFuzzTestInputs",
+    "engine-command-sequence": root / "jazzer/src/fuzz/resources/dev/erst/gridgrind/jazzer/engine/WorkbookCommandSequenceFuzzTestInputs",
+    "xlsx-roundtrip": root / "jazzer/src/fuzz/resources/dev/erst/gridgrind/jazzer/engine/XlsxRoundTripFuzzTestInputs",
+}
+total_promoted_inputs = 0
+for target, input_directory in fuzz_input_directories.items():
+    actual_inputs = {path.name for path in input_directory.rglob("*") if path.is_file()}
+    total_promoted_inputs += len(actual_inputs)
+    summary_line = next(
+        (line for line in coverage_document.splitlines() if line.startswith(f"| `{target}` ")),
+        None,
+    )
+    if summary_line is None:
+        raise SystemExit(f"Jazzer coverage inventory is missing its {target} summary row")
+    if int(summary_line.rsplit("|", 2)[1].strip()) != len(actual_inputs):
+        raise SystemExit(f"Jazzer coverage inventory has a stale {target} summary count")
+    section = re.search(
+        rf"^### `{re.escape(target)}` \(\d+\)$(.*?)(?=^### |\Z)",
+        coverage_document,
+        re.MULTILINE | re.DOTALL,
+    )
+    if section is None:
+        raise SystemExit(f"Jazzer coverage inventory is missing its {target} input section")
+    documented_inputs = set(re.findall(r"^- `([^`]+)`$", section.group(1), re.MULTILINE))
+    if documented_inputs != actual_inputs:
+        raise SystemExit(f"Jazzer coverage inventory has a stale {target} input list")
+
+if f"{total_promoted_inputs} total across harnesses" not in coverage_document:
+    raise SystemExit("Jazzer coverage inventory has a stale total promoted-input count")
 PY
 
 printf 'documentation contract regression: success\n'

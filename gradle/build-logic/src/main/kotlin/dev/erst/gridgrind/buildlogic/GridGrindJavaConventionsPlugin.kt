@@ -235,7 +235,7 @@ class GridGrindJavaConventionsPlugin : Plugin<Project> {
             tasks.withType(Test::class.java).configureEach(
                 object : Action<Test> {
                     override fun execute(test: Test) {
-                        val jacocoDestinationFile = jacocoExecutionDataFile(repositoryLayout, test)
+                        val jacocoDestinationFile = jacocoExecutionDataFile(test)
                         val jacoco = test.extensions.getByType(JacocoTaskExtension::class.java)
                         jacoco.destinationFile = jacocoDestinationFile
                         jacocoExecutionData.from(jacocoDestinationFile)
@@ -351,23 +351,8 @@ class GridGrindJavaConventionsPlugin : Plugin<Project> {
         }
     }
 
-    private fun jacocoExecutionDataFile(
-        repositoryLayout: GridGrindRepositoryLayout,
-        test: Test,
-    ): File {
-        val repositoryId =
-            Integer.toUnsignedString(repositoryLayout.repositoryRoot.absolutePath.hashCode(), 16)
-        val buildId = test.project.rootProject.name.replace(Regex("[^A-Za-z0-9._-]"), "-")
-        val projectPath =
-            test.project.path.removePrefix(":").replace(':', File.separatorChar).ifBlank { "root" }
-        return File(
-            File(
-                File(System.getProperty("java.io.tmpdir"), "gridgrind-jacoco"),
-                "${buildId}-${repositoryId}",
-            ),
-            "${projectPath}${File.separator}${test.name}.exec",
-        )
-    }
+    private fun jacocoExecutionDataFile(test: Test): File =
+        test.project.layout.buildDirectory.file("jacoco/${test.name}.exec").get().asFile
 
     private fun cleanDirectoryContents(directory: File) {
         if (!directory.exists()) {

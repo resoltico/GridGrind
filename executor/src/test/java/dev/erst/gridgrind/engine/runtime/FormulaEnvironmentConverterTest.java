@@ -26,7 +26,9 @@ class FormulaEnvironmentConverterTest {
             FormulaMissingWorkbookPolicy.ERROR,
             List.of());
 
-    try (var prepared = ExecutionInputBindingsFixtureSupport.preparedBindings(temporaryDirectory)) {
+    try (var prepared =
+        ExecutionInputBindingsFixtureSupport.preparedBindings(
+            temporaryDirectory, List.of(externalWorkbook))) {
       Path materialized =
           FormulaEnvironmentConverter.toExcelFormulaEnvironment(input, prepared.bindings())
               .externalWorkbooks()

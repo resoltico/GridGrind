@@ -67,6 +67,29 @@ final class GridGrindCliIdentityCommands {
             GridGrindProtocolCatalog.requestTemplate(), prettyJson));
   }
 
+  static int grantTemplate(
+      CliGrantTemplateCommand command,
+      boolean prettyJson,
+      OutputStream stdout,
+      OutputStream stderr,
+      CliResponseWriter responseWriter)
+      throws IOException {
+    CliExecutionGrantDocument template =
+        new CliExecutionGrantDocument(
+            java.util.List.of(),
+            java.util.List.of(),
+            new CliGrantTargetAuthority.WorkbookWide(),
+            new CliGrantPublicationAuthority.None(),
+            java.util.List.of(),
+            new CliGrantAcceptancePolicy.MinimumOnly());
+    return CliCatalogPayloadSupport.writePayload(
+        responseWriter,
+        command.responsePath(),
+        stdout,
+        stderr,
+        GridGrindCliJson.writeBytes(template, prettyJson));
+  }
+
   private static byte[] renderHelpPayload(
       CliCommand.Help command, Optional<CliOutputFormat> outputFormat, boolean prettyJson)
       throws IOException {

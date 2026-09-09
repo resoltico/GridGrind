@@ -1,5 +1,8 @@
 package dev.erst.gridgrind.engine.runtime;
 
+import dev.erst.gridgrind.contract.dto.SecretReference;
+import dev.erst.gridgrind.engine.api.GridGrindExecutionGrant;
+import dev.erst.gridgrind.engine.api.GridGrindSecretResolver;
 import dev.erst.gridgrind.excel.WorkbookTempFileFactory;
 import java.nio.file.Path;
 import java.util.Objects;
@@ -10,35 +13,92 @@ public final class ExecutionInputBindings {
   private final Path workingDirectory;
   private final Path tempRoot;
   private final Optional<StandardInputBinding> standardInput;
+  private final GridGrindExecutionGrant executionGrant;
+  private final Optional<GridGrindSecretResolver> secretResolver;
   private final Optional<InputResolutionFailures> inputResolutionFailures;
   private final Optional<InputResolutionOrigins> inputResolutionOrigins;
   private final Optional<RequestPathAccess> requestPathAccess;
 
-  /** Creates bindings from one working directory and one explicit temp root. */
-  public ExecutionInputBindings(Path workingDirectory, Path tempRoot) {
-    this(workingDirectory, tempRoot, Optional.empty());
-  }
-
-  /** Creates bindings from one working directory, temp root, and one stdin payload. */
-  public ExecutionInputBindings(Path workingDirectory, Path tempRoot, byte[] standardInputBytes) {
-    this(workingDirectory, tempRoot, new StandardInputBinding(standardInputBytes));
-  }
-
-  /** Creates bindings from one working directory, temp root, and one stdin binding. */
+  /** Creates bindings from one working directory, temp root, and explicit host grant. */
   public ExecutionInputBindings(
-      Path workingDirectory, Path tempRoot, StandardInputBinding standardInput) {
+      Path workingDirectory, Path tempRoot, GridGrindExecutionGrant executionGrant) {
     this(
         workingDirectory,
         tempRoot,
-        Optional.of(Objects.requireNonNull(standardInput, "standardInput")));
+        Optional.empty(),
+        Objects.requireNonNull(executionGrant, "executionGrant"),
+        Optional.empty());
+  }
+
+  /** Creates bindings from one working directory, temp root, stdin payload, and host grant. */
+  public ExecutionInputBindings(
+      Path workingDirectory,
+      Path tempRoot,
+      byte[] standardInputBytes,
+      GridGrindExecutionGrant executionGrant) {
+    this(
+        workingDirectory,
+        tempRoot,
+        Optional.of(new StandardInputBinding(standardInputBytes)),
+        Objects.requireNonNull(executionGrant, "executionGrant"),
+        Optional.empty());
+  }
+
+  /** Creates stdin bindings with a host-owned resolver for plan secret references. */
+  public ExecutionInputBindings(
+      Path workingDirectory,
+      Path tempRoot,
+      byte[] standardInputBytes,
+      GridGrindExecutionGrant executionGrant,
+      GridGrindSecretResolver secretResolver) {
+    this(
+        workingDirectory,
+        tempRoot,
+        Optional.of(new StandardInputBinding(standardInputBytes)),
+        Objects.requireNonNull(executionGrant, "executionGrant"),
+        Optional.of(Objects.requireNonNull(secretResolver, "secretResolver")));
+  }
+
+  /** Creates bindings from one working directory, temp root, stdin binding, and host grant. */
+  public ExecutionInputBindings(
+      Path workingDirectory,
+      Path tempRoot,
+      StandardInputBinding standardInput,
+      GridGrindExecutionGrant executionGrant) {
+    this(
+        workingDirectory,
+        tempRoot,
+        Optional.of(Objects.requireNonNull(standardInput, "standardInput")),
+        Objects.requireNonNull(executionGrant, "executionGrant"),
+        Optional.empty());
+  }
+
+  /** Creates bindings with a host-owned resolver for plan secret references. */
+  public ExecutionInputBindings(
+      Path workingDirectory,
+      Path tempRoot,
+      GridGrindExecutionGrant executionGrant,
+      GridGrindSecretResolver secretResolver) {
+    this(
+        workingDirectory,
+        tempRoot,
+        Optional.empty(),
+        Objects.requireNonNull(executionGrant, "executionGrant"),
+        Optional.of(Objects.requireNonNull(secretResolver, "secretResolver")));
   }
 
   private ExecutionInputBindings(
-      Path workingDirectory, Path tempRoot, Optional<StandardInputBinding> standardInput) {
+      Path workingDirectory,
+      Path tempRoot,
+      Optional<StandardInputBinding> standardInput,
+      GridGrindExecutionGrant executionGrant,
+      Optional<GridGrindSecretResolver> secretResolver) {
     this(
         workingDirectory,
         tempRoot,
         standardInput,
+        executionGrant,
+        secretResolver,
         Optional.empty(),
         Optional.empty(),
         Optional.empty());
@@ -48,18 +108,24 @@ public final class ExecutionInputBindings {
       Path workingDirectory,
       Path tempRoot,
       Optional<StandardInputBinding> standardInput,
+      GridGrindExecutionGrant executionGrant,
+      Optional<GridGrindSecretResolver> secretResolver,
       Optional<InputResolutionFailures> inputResolutionFailures,
       Optional<InputResolutionOrigins> inputResolutionOrigins,
       Optional<RequestPathAccess> requestPathAccess) {
     Objects.requireNonNull(workingDirectory, "workingDirectory must not be null");
     Objects.requireNonNull(tempRoot, "tempRoot must not be null");
     Objects.requireNonNull(standardInput, "standardInput must not be null");
+    Objects.requireNonNull(executionGrant, "executionGrant must not be null");
+    Objects.requireNonNull(secretResolver, "secretResolver must not be null");
     Objects.requireNonNull(inputResolutionFailures, "inputResolutionFailures must not be null");
     Objects.requireNonNull(inputResolutionOrigins, "inputResolutionOrigins must not be null");
     Objects.requireNonNull(requestPathAccess, "requestPathAccess must not be null");
     this.workingDirectory = workingDirectory.toAbsolutePath().normalize();
     this.tempRoot = tempRoot.toAbsolutePath().normalize();
     this.standardInput = standardInput;
+    this.executionGrant = executionGrant;
+    this.secretResolver = secretResolver;
     this.inputResolutionFailures = inputResolutionFailures;
     this.inputResolutionOrigins = inputResolutionOrigins;
     this.requestPathAccess = requestPathAccess;
@@ -82,7 +148,50 @@ public final class ExecutionInputBindings {
 
   /** Returns one defensive copy of the bound stdin bytes when a stdin binding is present. */
   public Optional<byte[]> standardInputBytes() {
+    requireStandardInputAuthority(executionGrant);
     return standardInput.map(StandardInputBinding::bytes);
+  }
+
+  /** Returns the trusted host grant required for this execution. */
+  GridGrindExecutionGrant executionGrant() {
+    return executionGrant;
+  }
+
+  String resolveSecret(SecretReference reference) {
+    Objects.requireNonNull(reference, "reference must not be null");
+    GridGrindExecutionGrant.Bounded grant = (GridGrindExecutionGrant.Bounded) executionGrant;
+    if (!grant.allowedSecretReferences().contains(reference)) {
+      throw new ExecutionAuthorityDeniedException(
+          "host grant does not permit secret reference " + reference.id());
+    }
+    GridGrindSecretResolver resolver =
+        secretResolver.orElseThrow(
+            () ->
+                new ExecutionAuthorityDeniedException(
+                    "host did not supply a resolver for secret reference " + reference.id()));
+    char[] material =
+        Objects.requireNonNull(resolver.resolve(reference), "secret resolver returned null");
+    try {
+      return new String(material);
+    } finally {
+      java.util.Arrays.fill(material, '\0');
+    }
+  }
+
+  private void requireStandardInputAuthority(GridGrindExecutionGrant grant) {
+    if (standardInput.isEmpty()) {
+      return;
+    }
+    boolean allowed =
+        switch (grant) {
+          case GridGrindExecutionGrant.Bounded bounded ->
+              bounded.readableResources().stream()
+                  .anyMatch(GridGrindExecutionGrant.ReadAuthority.StandardInput.class::isInstance);
+        };
+    if (!allowed) {
+      throw new ExecutionAuthorityDeniedException(
+          "host grant does not permit reading the standard-input payload");
+    }
   }
 
   /** Returns one temp-file factory rooted at this execution's explicit temp directory. */
@@ -108,6 +217,8 @@ public final class ExecutionInputBindings {
         workingDirectory,
         tempRoot,
         standardInput,
+        executionGrant,
+        secretResolver,
         Optional.of(Objects.requireNonNull(failures, "failures must not be null")),
         inputResolutionOrigins,
         requestPathAccess);
@@ -118,6 +229,8 @@ public final class ExecutionInputBindings {
         workingDirectory,
         tempRoot,
         standardInput,
+        executionGrant,
+        secretResolver,
         inputResolutionFailures,
         Optional.of(Objects.requireNonNull(origins, "origins must not be null")),
         requestPathAccess);
@@ -131,6 +244,8 @@ public final class ExecutionInputBindings {
         workingDirectory,
         tempRoot,
         standardInput,
+        executionGrant,
+        secretResolver,
         inputResolutionFailures,
         inputResolutionOrigins,
         Optional.of(Objects.requireNonNull(access, "access must not be null")));

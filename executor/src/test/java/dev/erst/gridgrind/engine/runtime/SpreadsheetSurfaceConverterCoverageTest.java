@@ -281,21 +281,22 @@ class SpreadsheetSurfaceConverterCoverageTest {
                     new CustomXmlMappingLocator(1L, "CORSO_mapping"),
                     TextSourceInput.standardInput()))));
 
+    WorkbookPlan plan =
+        WorkbookPlan.standard(
+            new WorkbookPlan.WorkbookSource.New(),
+            new WorkbookPlan.WorkbookPersistence.None(),
+            dev.erst.gridgrind.contract.dto.ExecutionPolicyInput.defaults(),
+            dev.erst.gridgrind.contract.dto.FormulaEnvironmentInput.empty(),
+            List.of(
+                new MutationStep("set-chart", new SheetSelector.ByName("Ops"), chartAction),
+                new MutationStep("set-signature", new SheetSelector.ByName("Ops"), signatureAction),
+                new MutationStep(
+                    "import-custom-xml", new WorkbookSelector.Current(), inlineImportAction)));
     WorkbookPlan resolved =
         SourceBackedPlanResolver.resolve(
-            WorkbookPlan.standard(
-                new WorkbookPlan.WorkbookSource.New(),
-                new WorkbookPlan.WorkbookPersistence.None(),
-                dev.erst.gridgrind.contract.dto.ExecutionPolicyInput.defaults(),
-                dev.erst.gridgrind.contract.dto.FormulaEnvironmentInput.empty(),
-                List.of(
-                    new MutationStep("set-chart", new SheetSelector.ByName("Ops"), chartAction),
-                    new MutationStep(
-                        "set-signature", new SheetSelector.ByName("Ops"), signatureAction),
-                    new MutationStep(
-                        "import-custom-xml", new WorkbookSelector.Current(), inlineImportAction))),
+            plan,
             ExecutionInputBindingsFixtureSupport.bindings(
-                workingDirectory, "stdin".getBytes(StandardCharsets.UTF_8)));
+                workingDirectory, plan, "stdin".getBytes(StandardCharsets.UTF_8)));
 
     DrawingMutationAction.SetChart resolvedChartAction =
         assertInstanceOf(
@@ -313,22 +314,22 @@ class SpreadsheetSurfaceConverterCoverageTest {
     assertSame(
         inlineImportAction, assertInstanceOf(MutationStep.class, resolved.steps().get(2)).action());
 
+    WorkbookPlan stablePlan =
+        WorkbookPlan.standard(
+            new WorkbookPlan.WorkbookSource.New(),
+            new WorkbookPlan.WorkbookPersistence.None(),
+            dev.erst.gridgrind.contract.dto.ExecutionPolicyInput.defaults(),
+            dev.erst.gridgrind.contract.dto.FormulaEnvironmentInput.empty(),
+            List.of(
+                new MutationStep(
+                    "stable-chart", new SheetSelector.ByName("Ops"), stableChartAction),
+                new MutationStep(
+                    "stable-signature", new SheetSelector.ByName("Ops"), stableSignatureAction)));
     WorkbookPlan stableResolved =
         SourceBackedPlanResolver.resolve(
-            WorkbookPlan.standard(
-                new WorkbookPlan.WorkbookSource.New(),
-                new WorkbookPlan.WorkbookPersistence.None(),
-                dev.erst.gridgrind.contract.dto.ExecutionPolicyInput.defaults(),
-                dev.erst.gridgrind.contract.dto.FormulaEnvironmentInput.empty(),
-                List.of(
-                    new MutationStep(
-                        "stable-chart", new SheetSelector.ByName("Ops"), stableChartAction),
-                    new MutationStep(
-                        "stable-signature",
-                        new SheetSelector.ByName("Ops"),
-                        stableSignatureAction))),
+            stablePlan,
             ExecutionInputBindingsFixtureSupport.bindings(
-                workingDirectory, "stdin".getBytes(StandardCharsets.UTF_8)));
+                workingDirectory, stablePlan, "stdin".getBytes(StandardCharsets.UTF_8)));
 
     assertSame(
         stableChartAction,

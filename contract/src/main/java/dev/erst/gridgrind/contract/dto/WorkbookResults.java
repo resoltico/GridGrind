@@ -73,12 +73,12 @@ public final class WorkbookResults {
   }
 
   /**
-   * Describes persistence that was requested but did not write an artifact.
+   * Describes persistence that was requested but whose final destination was never touched.
    *
    * <p>This keeps every failure response truthful about the caller's save intent without inventing
    * an execution path for an artifact that was never written.
    */
-  public static WorkbookResultPersistence.PersistenceOutcome unwrittenPersistenceOutcome(
+  public static WorkbookResultPersistence.PersistenceOutcome notAttemptedPersistenceOutcome(
       WorkbookPlan request) {
     Objects.requireNonNull(request, "request must not be null");
     return switch (request.persistence()) {
@@ -86,7 +86,7 @@ public final class WorkbookResults {
           new WorkbookResultPersistence.PersistenceOutcome.NotSaved();
       case WorkbookPlan.WorkbookPersistence.SaveAs saveAs ->
           new WorkbookResultPersistence.PersistenceOutcome.SavedAs(
-              saveAs.path(), new WorkbookResultPersistence.WriteResult.NotWritten());
+              saveAs.path(), new WorkbookResultPersistence.PublicationOutcome.NotAttempted());
       case WorkbookPlan.WorkbookPersistence.Overwrite _ -> {
         Optional<String> sourcePath =
             switch (request.source()) {
@@ -95,7 +95,29 @@ public final class WorkbookResults {
                   Optional.of(existingFile.path());
             };
         yield new WorkbookResultPersistence.PersistenceOutcome.Overwritten(
-            sourcePath, new WorkbookResultPersistence.WriteResult.NotWritten());
+            sourcePath, new WorkbookResultPersistence.PublicationOutcome.NotAttempted());
+      }
+    };
+  }
+
+  /** Projects one proven or uncertain publication fact into the request's persistence intent. */
+  public static WorkbookResultPersistence.PersistenceOutcome publicationPersistenceOutcome(
+      WorkbookPlan request, WorkbookResultPersistence.PublicationOutcome publication) {
+    Objects.requireNonNull(request, "request must not be null");
+    Objects.requireNonNull(publication, "publication must not be null");
+    return switch (request.persistence()) {
+      case WorkbookPlan.WorkbookPersistence.None _ ->
+          throw new IllegalArgumentException("NONE persistence cannot carry a publication outcome");
+      case WorkbookPlan.WorkbookPersistence.SaveAs saveAs ->
+          new WorkbookResultPersistence.PersistenceOutcome.SavedAs(saveAs.path(), publication);
+      case WorkbookPlan.WorkbookPersistence.Overwrite _ -> {
+        Optional<String> sourcePath =
+            switch (request.source()) {
+              case WorkbookPlan.WorkbookSource.New _ -> Optional.empty();
+              case WorkbookPlan.WorkbookSource.ExistingFile existingFile ->
+                  Optional.of(existingFile.path());
+            };
+        yield new WorkbookResultPersistence.PersistenceOutcome.Overwritten(sourcePath, publication);
       }
     };
   }

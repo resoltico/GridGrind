@@ -42,6 +42,13 @@
         <!-- Public wire DTOs deliberately mirror the shipped JSON shape, so wrapping a few
              distinct fields into extra helper records can make the surface less truthful. -->
         <exclude name="UseObjectForClearerAPI"/>
+        <exclude name="ExcessivePublicCount"/>
+    </rule>
+
+    <rule ref="category/java/design.xml/ExcessivePublicCount">
+        <properties>
+            <property name="minimum" value="46"/>
+        </properties>
     </rule>
 
     <rule ref="category/java/multithreading.xml"/>

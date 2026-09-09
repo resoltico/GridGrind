@@ -44,7 +44,9 @@ final class GridGrindProblemCodeClassifier {
       case InvalidRequestException _ -> GridGrindProblemCode.INVALID_REQUEST;
       case RequestPathEscapeException _ -> GridGrindProblemCode.PATH_ESCAPES_ROOT;
       case UnsafePathAccessException _ -> GridGrindProblemCode.UNSAFE_PATH_ACCESS;
+      case ExecutionAuthorityDeniedException _ -> GridGrindProblemCode.AUTHORITY_DENIED;
       case AssertionFailedException _ -> GridGrindProblemCode.ASSERTION_FAILED;
+      case PreservationFailedException _ -> GridGrindProblemCode.PRESERVATION_FAILED;
       case WorkbookNotFoundException _ -> GridGrindProblemCode.WORKBOOK_NOT_FOUND;
       case SourcePathIsDirectoryException _ -> GridGrindProblemCode.SOURCE_PATH_IS_DIRECTORY;
       case OutputPathIsDirectoryException _ -> GridGrindProblemCode.OUTPUT_PATH_IS_DIRECTORY;
@@ -77,6 +79,13 @@ final class GridGrindProblemCodeClassifier {
       case InvalidSigningConfigurationException _ ->
           GridGrindProblemCode.INVALID_SIGNING_CONFIGURATION;
       case WorkbookSecurityException _ -> GridGrindProblemCode.WORKBOOK_SECURITY_ERROR;
+      case WorkbookPublicationException publication ->
+          publication.publication()
+                  instanceof
+                  dev.erst.gridgrind.contract.dto.WorkbookResultPersistence.PublicationOutcome
+                      .Uncertain
+              ? GridGrindProblemCode.PUBLICATION_UNCERTAIN
+              : GridGrindProblemCode.IO_ERROR;
       case IOException _ -> GridGrindProblemCode.IO_ERROR;
       case IllegalArgumentException _ -> GridGrindProblemCode.INVALID_REQUEST;
       case DateTimeException _ -> GridGrindProblemCode.INVALID_REQUEST;

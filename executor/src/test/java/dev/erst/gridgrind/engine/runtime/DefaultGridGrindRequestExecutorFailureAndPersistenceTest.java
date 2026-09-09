@@ -218,7 +218,7 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
                     mutate(
                         new CellSelector.ByAddress("Budget", "B4"),
                         new CellMutationAction.SetCell(formulaCell("SUM(B2:B3)"))),
-                    mutate(
+                    ExecutorStructuredMutationTargets.namedRange(
                         new StructuredMutationAction.SetNamedRange(
                             "BudgetTotal",
                             new NamedRangeScope.Workbook(),
@@ -493,14 +493,15 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
     Path workingDirectory = Files.createTempDirectory("gridgrind-missing-workbook-root-");
     DefaultGridGrindRequestExecutor executor = new DefaultGridGrindRequestExecutor();
 
+    WorkbookPlan request =
+        request(
+            new WorkbookPlan.WorkbookSource.ExistingFile(workbookPath.toString()),
+            new WorkbookPlan.WorkbookPersistence.None(),
+            List.of());
     WorkbookResult.Failure failure =
         failure(
             executor.execute(
-                request(
-                    new WorkbookPlan.WorkbookSource.ExistingFile(workbookPath.toString()),
-                    new WorkbookPlan.WorkbookPersistence.None(),
-                    List.of()),
-                ExecutionInputBindingsFixtureSupport.bindings(workingDirectory)));
+                request, ExecutionInputBindingsFixtureSupport.bindings(workingDirectory, request)));
 
     assertEquals(GridGrindProblemCode.WORKBOOK_NOT_FOUND, failure.problem().code());
     assertEquals("OPEN_WORKBOOK", failure.problem().context().stage());
@@ -691,7 +692,8 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
         assertInstanceOf(
             WorkbookResultPersistence.PersistenceOutcome.SavedAs.class, failure.persistence());
     assertEquals(workbookPath.toString(), persistence.requestedPath());
-    assertInstanceOf(WorkbookResultPersistence.WriteResult.NotWritten.class, persistence.write());
+    assertInstanceOf(
+        WorkbookResultPersistence.PublicationOutcome.NotAttempted.class, persistence.publication());
     assertEquals(
         java.util.Optional.of(workbookPath.toAbsolutePath().toString()),
         persistWorkbookContext(failure).persistencePath());
@@ -722,7 +724,8 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
         assertInstanceOf(
             WorkbookResultPersistence.PersistenceOutcome.SavedAs.class, failure.persistence());
     assertEquals(workbookPath.toString(), persistence.requestedPath());
-    assertInstanceOf(WorkbookResultPersistence.WriteResult.NotWritten.class, persistence.write());
+    assertInstanceOf(
+        WorkbookResultPersistence.PublicationOutcome.NotAttempted.class, persistence.publication());
     assertEquals(
         "Workbook output path already exists and ifExists=REJECT: " + workbookPath.toAbsolutePath(),
         failure.problem().message());
@@ -831,7 +834,8 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
     assertEquals(GridGrindProblemCode.INVALID_REQUEST, failure.problem().code());
     assertEquals("VALIDATE_REQUEST", failure.problem().context().stage());
     assertEquals(java.util.Optional.empty(), persistence.sourcePath());
-    assertInstanceOf(WorkbookResultPersistence.WriteResult.NotWritten.class, persistence.write());
+    assertInstanceOf(
+        WorkbookResultPersistence.PublicationOutcome.NotAttempted.class, persistence.publication());
   }
 
   @Test

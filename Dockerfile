@@ -2,7 +2,7 @@
 
 # Pin both builder and runtime manifest lists so local rebuilds and published images stay
 # reproducible across time.
-FROM azul/zulu-openjdk:26@sha256:456ddce6098187ea8b9069cbf141b6a124d1fdf667818c195ba95be6a0e48e70 AS build
+FROM azul/zulu-openjdk:26@sha256:7dc4483e0fc259abb8234c9c0ef87f9fc5a472c018b9238e5f6c17fb85174837 AS build
 
 WORKDIR /workspace
 
@@ -20,7 +20,7 @@ COPY examples ./examples
 RUN chmod +x gradlew
 RUN --mount=type=cache,target=/root/.gradle ./gradlew --no-daemon :cli:shadowJar
 
-FROM azul/zulu-openjdk:26-jre@sha256:ac36910df585bf3db5a38b30695eb04791515d1bb7d78202564db560c60c3470
+FROM azul/zulu-openjdk:26-jre@sha256:9382c343f6de2c9f2633b7f629380f9c2a9444df8768a880c690bd5ea74f51b6
 
 ARG GRIDGRIND_VERSION=unknown
 

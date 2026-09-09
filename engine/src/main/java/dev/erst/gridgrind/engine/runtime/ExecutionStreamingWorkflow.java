@@ -10,27 +10,25 @@ import dev.erst.gridgrind.contract.dto.RequestWarning;
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
 import dev.erst.gridgrind.contract.dto.WorkbookResult;
 import dev.erst.gridgrind.contract.dto.WorkbookResultPersistence;
-import dev.erst.gridgrind.contract.query.InspectionResult;
 import dev.erst.gridgrind.contract.step.AssertionStep;
 import dev.erst.gridgrind.contract.step.InspectionStep;
 import dev.erst.gridgrind.contract.step.MutationStep;
 import dev.erst.gridgrind.contract.step.WorkbookStep;
 import dev.erst.gridgrind.excel.ExcelTempFileWriteTargetSupport;
 import dev.erst.gridgrind.excel.WorkbookArtifactWriteDisposition;
-import dev.erst.gridgrind.excel.WorkbookLocation;
 import dev.erst.gridgrind.excel.stream.ExcelStreamingWorkbookWriter;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import org.jspecify.annotations.Nullable;
 
 /** Streaming-write workflow for mutation-first execution against a transient workbook writer. */
 final class ExecutionStreamingWorkflow {
-  private final ExecutionWorkbookSupport workbookSupport;
+  private final StreamingWorkbookPersistence streamingWorkbookPersistence;
   private final ExecutionCalculationSupport calculationSupport;
   private final ExecutionStepSupport stepSupport;
+  private final HostAcceptanceExecutor hostAcceptanceExecutor;
   private final TempFileFactory tempFileFactory;
 
   ExecutionStreamingWorkflow(
@@ -38,11 +36,26 @@ final class ExecutionStreamingWorkflow {
       ExecutionCalculationSupport calculationSupport,
       ExecutionStepSupport stepSupport,
       TempFileFactory tempFileFactory) {
-    this.workbookSupport =
-        Objects.requireNonNull(workbookSupport, "workbookSupport must not be null");
+    this(
+        Objects.requireNonNull(workbookSupport, "workbookSupport must not be null")
+            ::persistStreamingWorkbook,
+        calculationSupport,
+        stepSupport,
+        tempFileFactory);
+  }
+
+  ExecutionStreamingWorkflow(
+      StreamingWorkbookPersistence streamingWorkbookPersistence,
+      ExecutionCalculationSupport calculationSupport,
+      ExecutionStepSupport stepSupport,
+      TempFileFactory tempFileFactory) {
+    this.streamingWorkbookPersistence =
+        Objects.requireNonNull(
+            streamingWorkbookPersistence, "streamingWorkbookPersistence must not be null");
     this.calculationSupport =
         Objects.requireNonNull(calculationSupport, "calculationSupport must not be null");
     this.stepSupport = Objects.requireNonNull(stepSupport, "stepSupport must not be null");
+    this.hostAcceptanceExecutor = new HostAcceptanceExecutor(this.stepSupport);
     this.tempFileFactory =
         Objects.requireNonNull(tempFileFactory, "tempFileFactory must not be null");
   }
@@ -54,59 +67,21 @@ final class ExecutionStreamingWorkflow {
       List<RequestWarning> warnings,
       ExecutionJournalRecorder journal,
       ExecutionInputBindings bindings) {
-    WorkbookLocation workbookLocation =
-        ExecutionRequestPaths.workbookLocationFor(
-            request.source(), request.persistence(), bindings.workingDirectory());
-    List<AssertionResult> assertions = new ArrayList<>();
     CollectedAssertionFailures collectedAssertionFailures = new CollectedAssertionFailures();
-    List<InspectionResult> inspections = new ArrayList<>();
     StreamingWorkflowContext workflowContext =
-        new StreamingWorkflowContext(
-            protocolVersion,
-            request,
-            executionMode,
-            warnings,
-            journal,
-            workbookLocation,
-            assertions,
-            inspections);
+        StreamingWorkflowContext.create(
+            protocolVersion, request, executionMode, warnings, journal, bindings);
     CalculationReport calculation =
         CalculationPolicyExecutor.notRequestedReport(request.calculationPolicy());
     @Nullable Path materializedPath = null;
     boolean movedToPersistenceTarget = false;
-    ExecutionJournalRecorder.PhaseHandle openPhase = journal.beginOpen();
-    openPhase.succeed();
+    recordOpen(journal);
 
     try (ExcelStreamingWorkbookWriter writer = new ExcelStreamingWorkbookWriter()) {
-      for (int stepIndex = 0; stepIndex < request.steps().size(); stepIndex++) {
-        WorkbookStep step = request.steps().get(stepIndex);
-        ExecutionJournalRecorder.StepHandle stepHandle = journal.beginStep(stepIndex, step);
-        try {
-          java.util.Optional<AssertionFailedException> collectedFailure =
-              executeStreamingStep(writer, workflowContext, step);
-          if (collectedFailure.isPresent()) {
-            AssertionFailedException assertionFailure = collectedFailure.orElseThrow();
-            GridGrindProblemDetail.Problem problem =
-                ExecutionResponseSupport.problemFor(
-                    assertionFailure,
-                    ExecutionStepContextFactory.contextFor(
-                        request, stepIndex, step, assertionFailure));
-            stepHandle.fail(
-                problem.code(), problem.category(), problem.context().stage(), problem.message());
-            collectedAssertionFailures.add(stepIndex, step.stepId(), problem);
-          } else {
-            stepHandle.succeed();
-          }
-        } catch (Exception exception) {
-          return closeFailedStreamingStep(
-              workflowContext,
-              calculation,
-              materializedPath,
-              stepIndex,
-              step,
-              stepHandle,
-              exception);
-        }
+      java.util.Optional<WorkbookResult> stepFailure =
+          executeStreamingSteps(writer, workflowContext, calculation, collectedAssertionFailures);
+      if (stepFailure.isPresent()) {
+        return stepFailure.orElseThrow();
       }
 
       ExecutionCalculationSupport.CalculationExecutionOutcome calculationOutcome =
@@ -133,6 +108,31 @@ final class ExecutionStreamingWorkflow {
           ExcelTempFileWriteTargetSupport.prepareCreateNewTarget(
               tempFileFactory.createTempFile("gridgrind-streaming-write-", ".xlsx"));
       writer.save(materializedPath, WorkbookArtifactWriteDisposition.CREATE_NEW);
+      HostAcceptanceVerification hostAcceptance =
+          hostAcceptanceExecutor.verifyMaterializedTerminalAcceptance(
+              ((dev.erst.gridgrind.engine.api.GridGrindExecutionGrant.Bounded)
+                      bindings.executionGrant())
+                  .hostAcceptancePolicy(),
+              materializedPath,
+              workflowContext.workbookLocation());
+      workflowContext.hostAssertions().addAll(hostAcceptance.assertions());
+      workflowContext.preservation().addAll(hostAcceptance.preservation());
+    } catch (AssertionFailedException exception) {
+      ExecutionWorkbookSupport.deleteIfExists(materializedPath);
+      workflowContext
+          .hostAssertions()
+          .add(
+              new AssertionResult.Failed(
+                  exception.assertionFailure().stepId(),
+                  exception.assertionFailure().assertionType(),
+                  exception.assertionFailure()));
+      GridGrindProblemDetail.Problem problem =
+          ExecutionResponseSupport.problemFor(
+              exception,
+              new dev.erst.gridgrind.contract.dto.ProblemContext.ExecuteRequest(
+                  ExecutionRequestPaths.requestShape(request)));
+      return ExecutionResponseSupport.failureResponse(
+          workflowContext.failure(calculation, problem));
     } catch (IOException exception) {
       ExecutionWorkbookSupport.deleteIfExists(materializedPath);
       GridGrindProblemDetail.Problem problem =
@@ -148,10 +148,29 @@ final class ExecutionStreamingWorkflow {
     WorkbookResultPersistence.PersistenceOutcome persistence;
     try {
       persistence =
-          workbookSupport.persistStreamingWorkbook(
-              materializedPath, request.persistence(), request.source(), bindings);
+          streamingWorkbookPersistence.persist(
+              materializedPath,
+              request.persistence(),
+              request.source(),
+              bindings,
+              StagedArtifactAcceptance.none());
       movedToPersistenceTarget =
           !(persistence instanceof WorkbookResultPersistence.PersistenceOutcome.NotSaved);
+    } catch (WorkbookPublicationException exception) {
+      ExecutionWorkbookSupport.deleteIfExists(materializedPath);
+      GridGrindProblemDetail.Problem problem =
+          ExecutionResponseSupport.problemFor(
+              exception,
+              new dev.erst.gridgrind.contract.dto.ProblemContext.PersistWorkbook(
+                  ExecutionRequestPaths.requestShape(request),
+                  ExecutionRequestPaths.persistenceReference(
+                      request, bindings.workingDirectory())));
+      persistencePhase.fail(problem.code());
+      WorkbookResultPersistence.PersistenceOutcome failedPersistence =
+          dev.erst.gridgrind.contract.dto.WorkbookResults.publicationPersistenceOutcome(
+              request, exception.publication());
+      return ExecutionResponseSupport.failureResponse(
+          workflowContext.failure(calculation, problem), failedPersistence);
     } catch (Exception exception) {
       ExecutionWorkbookSupport.deleteIfExists(materializedPath);
       GridGrindProblemDetail.Problem problem =
@@ -171,15 +190,96 @@ final class ExecutionStreamingWorkflow {
     }
     persistencePhase.succeed();
 
-    return new WorkbookResult.Success(
-        protocolVersion,
-        request.planId(),
-        journal.buildSuccess(request.steps().size()),
-        calculation,
-        persistence,
-        warnings,
-        List.copyOf(assertions),
-        List.copyOf(inspections));
+    return StreamingWorkflowResult.success(
+        protocolVersion, request, bindings, workflowContext, calculation, persistence);
+  }
+
+  private static void recordOpen(ExecutionJournalRecorder journal) {
+    journal.beginOpen().succeed();
+  }
+
+  /** Persists one verified streaming artifact through the normal execution authority boundary. */
+  @FunctionalInterface
+  interface StreamingWorkbookPersistence {
+    /** Persists one staged streaming artifact and returns the resulting persistence fact. */
+    WorkbookResultPersistence.PersistenceOutcome persist(
+        Path stagedArtifact,
+        WorkbookPlan.WorkbookPersistence persistence,
+        WorkbookPlan.WorkbookSource source,
+        ExecutionInputBindings bindings,
+        StagedArtifactAcceptance stagedArtifactAcceptance)
+        throws IOException;
+  }
+
+  private java.util.Optional<WorkbookResult> executeStreamingSteps(
+      ExcelStreamingWorkbookWriter writer,
+      StreamingWorkflowContext workflowContext,
+      CalculationReport calculation,
+      CollectedAssertionFailures collectedAssertionFailures) {
+    List<WorkbookStep> steps = workflowContext.request().steps();
+    for (int stepIndex = 0; stepIndex < steps.size(); stepIndex++) {
+      java.util.Optional<WorkbookResult> failure =
+          executeStreamingStep(
+              writer,
+              workflowContext,
+              calculation,
+              collectedAssertionFailures,
+              stepIndex,
+              steps.get(stepIndex));
+      if (failure.isPresent()) {
+        return failure;
+      }
+    }
+    return java.util.Optional.empty();
+  }
+
+  private java.util.Optional<WorkbookResult> executeStreamingStep(
+      ExcelStreamingWorkbookWriter writer,
+      StreamingWorkflowContext workflowContext,
+      CalculationReport calculation,
+      CollectedAssertionFailures collectedAssertionFailures,
+      int stepIndex,
+      WorkbookStep step) {
+    ExecutionJournalRecorder.StepHandle stepHandle =
+        workflowContext.journal().beginStep(stepIndex, step);
+    try {
+      java.util.Optional<AssertionFailedException> collectedFailure =
+          executeStreamingStep(writer, workflowContext, step);
+      recordStreamingStepResult(
+          workflowContext,
+          collectedAssertionFailures,
+          stepIndex,
+          step,
+          stepHandle,
+          collectedFailure);
+      return java.util.Optional.empty();
+    } catch (Exception exception) {
+      return java.util.Optional.of(
+          closeFailedStreamingStep(
+              workflowContext, calculation, null, stepIndex, step, stepHandle, exception));
+    }
+  }
+
+  private static void recordStreamingStepResult(
+      StreamingWorkflowContext workflowContext,
+      CollectedAssertionFailures collectedAssertionFailures,
+      int stepIndex,
+      WorkbookStep step,
+      ExecutionJournalRecorder.StepHandle stepHandle,
+      java.util.Optional<AssertionFailedException> collectedFailure) {
+    if (collectedFailure.isEmpty()) {
+      stepHandle.succeed();
+      return;
+    }
+    AssertionFailedException assertionFailure = collectedFailure.orElseThrow();
+    GridGrindProblemDetail.Problem problem =
+        ExecutionResponseSupport.problemFor(
+            assertionFailure,
+            ExecutionStepContextFactory.contextFor(
+                workflowContext.request(), stepIndex, step, assertionFailure));
+    stepHandle.fail(
+        problem.code(), problem.category(), problem.context().stage(), problem.message());
+    collectedAssertionFailures.add(stepIndex, step.stepId(), problem);
   }
 
   private java.util.Optional<AssertionFailedException> executeStreamingStep(
@@ -195,7 +295,7 @@ final class ExecutionStreamingWorkflow {
       case AssertionStep assertionStep -> {
         if (workflowContext.request().assertionMode() == AssertionModeInput.FAIL_FAST) {
           workflowContext
-              .assertions()
+              .planAssertions()
               .add(
                   stepSupport.executeStreamingAssertionStep(
                       writer, assertionStep, workflowContext.workbookLocation()));
@@ -204,7 +304,7 @@ final class ExecutionStreamingWorkflow {
         AssertionStepExecution assertionExecution =
             stepSupport.executeStreamingAssertionStepCollecting(
                 writer, assertionStep, workflowContext.workbookLocation());
-        workflowContext.assertions().add(assertionExecution.result());
+        workflowContext.planAssertions().add(assertionExecution.result());
         yield switch (assertionExecution) {
           case AssertionStepExecution.Passed _ -> java.util.Optional.empty();
           case AssertionStepExecution.Failed failed -> java.util.Optional.of(failed.failure());
@@ -242,7 +342,7 @@ final class ExecutionStreamingWorkflow {
         problem.code(), problem.category(), problem.context().stage(), problem.message());
     if (exception instanceof AssertionFailedException assertionFailed) {
       workflowContext
-          .assertions()
+          .planAssertions()
           .add(
               new AssertionResult.Failed(
                   assertionFailed.assertionFailure().stepId(),
@@ -251,39 +351,5 @@ final class ExecutionStreamingWorkflow {
     }
     return ExecutionResponseSupport.failureResponse(
         workflowContext.failure(calculation, problem, stepIndex, step.stepId()));
-  }
-
-  private record StreamingWorkflowContext(
-      GridGrindProtocolVersion protocolVersion,
-      WorkbookPlan request,
-      ExecutionModeInput executionMode,
-      List<RequestWarning> warnings,
-      ExecutionJournalRecorder journal,
-      WorkbookLocation workbookLocation,
-      List<AssertionResult> assertions,
-      List<InspectionResult> inspections) {
-    private ExecutionFailure failure(
-        CalculationReport calculation, GridGrindProblemDetail.Problem problem) {
-      return failure(calculation, problem, null, null);
-    }
-
-    private ExecutionFailure failure(
-        CalculationReport calculation,
-        GridGrindProblemDetail.Problem problem,
-        int failedStepIndex,
-        String failedStepId) {
-      return failure(calculation, problem, Integer.valueOf(failedStepIndex), failedStepId);
-    }
-
-    private ExecutionFailure failure(
-        CalculationReport calculation,
-        GridGrindProblemDetail.Problem problem,
-        @Nullable Integer failedStepIndex,
-        @Nullable String failedStepId) {
-      return new ExecutionFailure(
-          new ExecutionFailure.Context(protocolVersion, journal, request, calculation),
-          new ExecutionFailure.Artifacts(warnings, assertions, inspections),
-          new ExecutionFailure.Detail(problem, failedStepIndex, failedStepId));
-    }
   }
 }

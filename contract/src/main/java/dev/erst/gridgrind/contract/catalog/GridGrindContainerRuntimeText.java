@@ -32,7 +32,7 @@ public final class GridGrindContainerRuntimeText {
         + DOCKER_MOUNTED_WORKDIR_VOLUME_ARGUMENT
         + " "
         + containerTag
-        + " --request request.json --response response.json";
+        + " --request request.json --grant grant.json --response response.json";
   }
 
   /** Stable wording for the mounted-directory Docker execution pattern. */

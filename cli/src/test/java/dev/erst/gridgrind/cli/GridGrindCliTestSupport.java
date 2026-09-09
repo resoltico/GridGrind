@@ -18,9 +18,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Objects;
 
-/** Shared helpers for CLI integration tests. */
-@SuppressWarnings("PMD.UseUtilityClass")
-class GridGrindCliTestSupport {
+/** Shared inherited helpers for CLI integration tests. */
+@SuppressWarnings("PMD.AbstractClassWithoutAbstractMethod")
+abstract class GridGrindCliTestSupport {
   protected GridGrindCliTestSupport() {}
 
   protected static String requestJson(String sourceJson, String persistenceJson, String stepsJson) {
@@ -36,7 +36,7 @@ class GridGrindCliTestSupport {
       String sourceJson, String persistenceJson, String stepsJson) {
     return """
         {
-          "protocolVersion": "V2",
+          "protocolVersion": "V3",
           "source": %s,
           "persistence": %s,
           "steps": %s
@@ -53,7 +53,7 @@ class GridGrindCliTestSupport {
       String stepsJson) {
     return """
         {
-          "protocolVersion": "V2",
+          "protocolVersion": "V3",
           "source": %s,
           "persistence": %s,
           "execution": %s,
@@ -73,7 +73,7 @@ class GridGrindCliTestSupport {
       String stepsJson) {
     return """
         {
-          "protocolVersion": "V2",
+          "protocolVersion": "V3",
           "planId": "%s",
           "source": %s,
           "persistence": %s,

@@ -21,10 +21,9 @@ class GridGrindJsonPersistenceEnvelopeTest {
   void successResponsesKeepPersistenceOnlyAtTheTopLevel() throws IOException {
     WorkbookResult persistSuccess =
         WorkbookResults.success(
-            GridGrindProtocolVersion.V2,
+            GridGrindProtocolVersion.V3,
             new WorkbookResultPersistence.PersistenceOutcome.SavedAs(
-                "out/report.xlsx",
-                new WorkbookResultPersistence.WriteResult.Written("/work/out/report.xlsx")),
+                "out/report.xlsx", published("/work/out/report.xlsx")),
             List.of(),
             List.of(),
             List.of());
@@ -37,10 +36,11 @@ class GridGrindJsonPersistenceEnvelopeTest {
 
     assertEquals(1, rendered.split("\"persistence\":", -1).length - 1);
     assertEquals("SAVE_AS", responseTree.path("persistence").path("type").asText());
-    assertEquals("WRITTEN", responseTree.path("persistence").path("write").path("status").asText());
+    assertEquals(
+        "PUBLISHED", responseTree.path("persistence").path("publication").path("status").asText());
     assertEquals(
         "/work/out/report.xlsx",
-        responseTree.path("persistence").path("write").path("executionPath").asText());
+        responseTree.path("persistence").path("publication").path("executionPath").asText());
     assertFalse(journal.has("persistence"));
   }
 
@@ -48,9 +48,9 @@ class GridGrindJsonPersistenceEnvelopeTest {
   void persistFailureContextsDoNotDuplicateTheTopLevelPersistenceBlock() throws IOException {
     WorkbookResult persistFailure =
         WorkbookResults.failure(
-            GridGrindProtocolVersion.V2,
+            GridGrindProtocolVersion.V3,
             new WorkbookResultPersistence.PersistenceOutcome.SavedAs(
-                "out/report.xlsx", new WorkbookResultPersistence.WriteResult.NotWritten()),
+                "out/report.xlsx", new WorkbookResultPersistence.PublicationOutcome.NotAttempted()),
             new GridGrindProblemDetail.Problem(
                 dev.erst.gridgrind.contract.dto.GridGrindProblemCode.IO_ERROR,
                 dev.erst.gridgrind.contract.dto.GridGrindProblemCode.IO_ERROR.category(),
@@ -74,7 +74,8 @@ class GridGrindJsonPersistenceEnvelopeTest {
     assertEquals(1, rendered.split("\"persistence\":", -1).length - 1);
     assertEquals("SAVE_AS", responseTree.path("persistence").path("type").asText());
     assertEquals(
-        "NOT_WRITTEN", responseTree.path("persistence").path("write").path("status").asText());
+        "NOT_ATTEMPTED",
+        responseTree.path("persistence").path("publication").path("status").asText());
     assertFalse(context.has("persistence"));
     assertEquals("/work/out/report.xlsx", context.path("persistencePath").asText());
     assertFalse(context.has("sourceWorkbookPath"));
@@ -85,9 +86,9 @@ class GridGrindJsonPersistenceEnvelopeTest {
       throws IOException {
     WorkbookResult persistFailure =
         WorkbookResults.failure(
-            GridGrindProtocolVersion.V2,
+            GridGrindProtocolVersion.V3,
             new WorkbookResultPersistence.PersistenceOutcome.Overwritten(
-                Optional.empty(), new WorkbookResultPersistence.WriteResult.NotWritten()),
+                Optional.empty(), new WorkbookResultPersistence.PublicationOutcome.NotAttempted()),
             new GridGrindProblemDetail.Problem(
                 dev.erst.gridgrind.contract.dto.GridGrindProblemCode.INVALID_REQUEST,
                 dev.erst.gridgrind.contract.dto.GridGrindProblemCode.INVALID_REQUEST.category(),
@@ -108,8 +109,20 @@ class GridGrindJsonPersistenceEnvelopeTest {
     assertEquals(1, rendered.split("\"persistence\":", -1).length - 1);
     assertEquals("OVERWRITE", responseTree.path("persistence").path("type").asText());
     assertEquals(
-        "NOT_WRITTEN", responseTree.path("persistence").path("write").path("status").asText());
+        "NOT_ATTEMPTED",
+        responseTree.path("persistence").path("publication").path("status").asText());
     assertFalse(responseTree.path("persistence").has("sourcePath"));
     assertEquals(persistFailure, GridGrindJson.readWorkbookResult(responseBytes));
+  }
+
+  private static WorkbookResultPersistence.PublicationOutcome.Published published(
+      String executionPath) {
+    return new WorkbookResultPersistence.PublicationOutcome.Published(
+        executionPath,
+        "0".repeat(64),
+        0,
+        new WorkbookResultPersistence.PublicationOutcome.StagedArtifactVerification(),
+        new WorkbookResultPersistence.PublicationOutcome.DurabilityEvidence
+            .FileSyncedDirectoryUnestablished());
   }
 }

@@ -55,7 +55,7 @@ class DefaultGridGrindRequestExecutorCommandTranslationTest
                 new CellSelector.ByAddress("Budget", "A1"), new CellMutationAction.ClearComment()));
     WorkbookCommand setNamedRange =
         command(
-            mutate(
+            ExecutorStructuredMutationTargets.namedRange(
                 new StructuredMutationAction.SetNamedRange(
                     "BudgetTotal",
                     new NamedRangeScope.Workbook(),

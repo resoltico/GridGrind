@@ -29,7 +29,7 @@ import org.junit.jupiter.api.Test;
 /** Direct coverage for tolerant doctor intake and complete-plan binding selection. */
 class CliDoctorRequestAnalyzerTest extends GridGrindCliTestSupport {
   @Test
-  void diagnoseRunsTheDoctorForACompleteMinimalV2Request() throws IOException {
+  void diagnoseRunsTheDoctorForACompleteMinimalV3Request() throws IOException {
     RecordingDoctor doctor =
         new RecordingDoctor((request, inputs) -> RequestDoctorReport.clean(summaryFor(request)));
 
@@ -55,6 +55,12 @@ class CliDoctorRequestAnalyzerTest extends GridGrindCliTestSupport {
     RecordingDoctor doctor =
         new RecordingDoctor((request, inputs) -> RequestDoctorReport.clean(summaryFor(request)));
     Path requestPath = Files.createTempFile("gridgrind-complete-request-", ".json");
+    Path grantPath =
+        CliGrantFixtureSupport.saveAs(
+            List.of(),
+            List.of(requestPath.getParent().resolve("input.xlsx")),
+            requestPath.getParent().resolve("output.xlsx"),
+            dev.erst.gridgrind.contract.dto.WorkbookPlan.WorkbookPersistence.IfExists.REJECT);
     byte[] requestBytes =
         requestJson(
                 "{ \"type\": \"EXISTING\", \"path\": \"input.xlsx\" }",
@@ -68,6 +74,8 @@ class CliDoctorRequestAnalyzerTest extends GridGrindCliTestSupport {
                 Optional.of(requestPath),
                 Optional.empty(),
                 Optional.empty(),
+                Optional.of(grantPath),
+                Optional.empty(),
                 analysis(requestBytes),
                 InputStream.nullInputStream());
 
@@ -80,13 +88,41 @@ class CliDoctorRequestAnalyzerTest extends GridGrindCliTestSupport {
   }
 
   @Test
+  void diagnoseKeepsGrantFreeFromBindingWhenNoRequestRootWasSupplied() throws IOException {
+    RecordingDoctor doctor =
+        new RecordingDoctor((request, inputs) -> RequestDoctorReport.clean(summaryFor(request)));
+    Path grantPath = CliGrantFixtureSupport.noPublication(List.of());
+
+    try {
+      RequestDoctorReport report =
+          new CliDoctorRequestAnalyzer(doctor)
+              .diagnose(
+                  Optional.empty(),
+                  Optional.empty(),
+                  Optional.empty(),
+                  Optional.of(grantPath),
+                  Optional.empty(),
+                  analysis(
+                      minimalRequestJson("{ \"type\": \"NEW\" }", "{ \"type\": \"NONE\" }", "[]")
+                          .getBytes(StandardCharsets.UTF_8)),
+                  InputStream.nullInputStream());
+
+      assertTrue(report.valid());
+      assertEquals(1, doctor.directCalls());
+      assertEquals(0, doctor.boundCalls());
+    } finally {
+      Files.deleteIfExists(grantPath);
+    }
+  }
+
+  @Test
   void diagnoseReportsIndependentStructuralFaultsWithoutSyntheticBinding() throws IOException {
     RecordingDoctor doctor =
         new RecordingDoctor((request, inputs) -> RequestDoctorReport.clean(summaryFor(request)));
     byte[] requestBytes =
         """
         {
-          "protocolVersion": "V2",
+          "protocolVersion": "V3",
           "source": { "type": "NEW", "unexpected": true },
           "persistence": null,
           "steps": [
@@ -127,7 +163,7 @@ class CliDoctorRequestAnalyzerTest extends GridGrindCliTestSupport {
         new RecordingDoctor((request, inputs) -> RequestDoctorReport.clean(summaryFor(request)));
     byte[] requestBytes =
         minimalRequestJson("{ \"type\": \"NEW\" }", "{ \"type\": \"NONE\" }", "[]")
-            .replace("\"protocolVersion\": \"V2\"", "\"protocolVersion\": \"V1\"")
+            .replace("\"protocolVersion\": \"V3\"", "\"protocolVersion\": \"V1\"")
             .getBytes(StandardCharsets.UTF_8);
 
     RequestDoctorReport report =
@@ -144,7 +180,7 @@ class CliDoctorRequestAnalyzerTest extends GridGrindCliTestSupport {
     assertTrue(
         report.problems().stream()
             .map(GridGrindProblemDetail.Problem::message)
-            .anyMatch(message -> message.contains("protocolVersion") && message.contains("V2")));
+            .anyMatch(message -> message.contains("protocolVersion") && message.contains("V3")));
   }
 
   @Test

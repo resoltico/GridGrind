@@ -525,8 +525,8 @@ class RequestSyntaxSupportTest {
                 0)
             .message());
     assertEquals(
-        "Unsupported value 'NOPE' for field 'version'; expected one of: V2",
-        new RequestUnsupportedEnumValue("version", "NOPE", List.of("V2"), 0).message());
+        "Unsupported value 'NOPE' for field 'version'; expected one of: V3",
+        new RequestUnsupportedEnumValue("version", "NOPE", List.of("V3"), 0).message());
     assertEquals(
         "Field 'field' must be a JSON string",
         new RequestMalformedScalar("field", "a JSON string", 0).message());

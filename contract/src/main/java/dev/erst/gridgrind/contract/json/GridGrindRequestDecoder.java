@@ -46,9 +46,14 @@ final class GridGrindRequestDecoder {
   private static IllegalArgumentException requestShapeException(
       RequestShapeStructuralProblem problem) {
     return switch (Objects.requireNonNull(problem, "problem must not be null")) {
-      case RequestUnknownField unknownField ->
-          invalidRequestShape(
-              new UnknownField(unknownField.jsonPath().orElseThrow()), unknownField.jsonPath());
+      case RequestUnknownField unknownField -> {
+        Optional<String> jsonPath = unknownField.jsonPath();
+        if (jsonPath.isEmpty()) {
+          yield invalidRequestShape(
+              new MessageShape(unknownField.message(), Optional.empty()), jsonPath);
+        }
+        yield invalidRequestShape(new UnknownField(jsonPath.orElseThrow()), jsonPath);
+      }
       case RequestMissingRequiredField missingRequiredField ->
           invalidRequestShape(
               new MissingRequiredField(missingRequiredField.jsonPath().orElseThrow()),
@@ -61,21 +66,34 @@ final class GridGrindRequestDecoder {
           invalidRequestShape(
               new MissingTypeDiscriminator(missingTypeDiscriminator.jsonPath().orElseThrow()),
               missingTypeDiscriminator.jsonPath());
-      case RequestUnknownTypeDiscriminator unknownTypeDiscriminator ->
-          invalidRequestShape(
-              new UnknownTypeValue(
-                  unknownTypeDiscriminator.value(),
-                  unknownTypeDiscriminator.jsonPath(),
-                  unknownTypeDiscriminator.similarValues(),
-                  unknownTypeDiscriminator.specificGuidance()),
+      case RequestUnknownTypeDiscriminator unknownTypeDiscriminator -> {
+        if (unknownTypeDiscriminator.value().isBlank()) {
+          yield invalidRequestShape(
+              new MessageShape(
+                  unknownTypeDiscriminator.message(), unknownTypeDiscriminator.jsonPath()),
               unknownTypeDiscriminator.jsonPath());
-      case RequestUnsupportedEnumValue unsupportedEnumValue ->
-          invalidRequestShape(
-              new UnsupportedValue(
-                  unsupportedEnumValue.value(),
-                  unsupportedEnumValue.jsonPath(),
-                  unsupportedEnumValue.allowedValues()),
+        }
+        yield invalidRequestShape(
+            new UnknownTypeValue(
+                unknownTypeDiscriminator.value(),
+                unknownTypeDiscriminator.jsonPath(),
+                unknownTypeDiscriminator.similarValues(),
+                unknownTypeDiscriminator.specificGuidance()),
+            unknownTypeDiscriminator.jsonPath());
+      }
+      case RequestUnsupportedEnumValue unsupportedEnumValue -> {
+        if (unsupportedEnumValue.value().isBlank()) {
+          yield invalidRequestShape(
+              new MessageShape(unsupportedEnumValue.message(), unsupportedEnumValue.jsonPath()),
               unsupportedEnumValue.jsonPath());
+        }
+        yield invalidRequestShape(
+            new UnsupportedValue(
+                unsupportedEnumValue.value(),
+                unsupportedEnumValue.jsonPath(),
+                unsupportedEnumValue.allowedValues()),
+            unsupportedEnumValue.jsonPath());
+      }
       case RequestMalformedScalar malformedScalar ->
           invalidRequestShape(shapeFor(malformedScalar), malformedScalar.jsonPath());
     };

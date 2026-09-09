@@ -1,6 +1,5 @@
 ---
 afad: "4.0"
-version: "0.75.0"
 domain: TESTING
 updated: "2026-05-01"
 route:
@@ -59,7 +58,7 @@ only for deterministic nested-build verification (`test`, `check`). The scripts 
   protection, rich comments, advanced print setup, structured style colors or gradients,
   autofilter criteria or sort state, and table metadata
 - replay of the advanced workbook-core mutation contract for promoted JSON examples, including
-  password-bearing protection, formula-defined named ranges, targeted formula evaluation, and
+  secret-reference-backed protection, formula-defined named ranges, targeted formula evaluation, and
   explicit formula-cache clearing
 
 Active fuzz launcher tasks now preload a tiny project-owned premain agent before `JazzerHarnessRunner`

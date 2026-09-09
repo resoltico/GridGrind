@@ -3,6 +3,7 @@ package dev.erst.gridgrind.contract.step;
 import dev.erst.gridgrind.contract.action.MutationAction;
 import dev.erst.gridgrind.contract.assertion.Assertion;
 import dev.erst.gridgrind.contract.catalog.GridGrindExecutionModeMetadata;
+import dev.erst.gridgrind.contract.catalog.OperationSemantics;
 import dev.erst.gridgrind.contract.catalog.ProtocolTypeMetadataSupport;
 import dev.erst.gridgrind.contract.dto.ExecutionModeInput;
 import dev.erst.gridgrind.contract.query.InspectionQuery;
@@ -26,13 +27,16 @@ final class WorkbookOperationContract {
 
   private final Class<? extends Record> operationType;
   private final WorkbookOperationTargetContract targetSelectorContract;
+  private final OperationSemantics semantics;
 
   WorkbookOperationContract(
       Class<? extends Record> operationType,
-      WorkbookOperationTargetContract targetSelectorContract) {
+      WorkbookOperationTargetContract targetSelectorContract,
+      OperationSemantics semantics) {
     this.operationType = Objects.requireNonNull(operationType, "operationType must not be null");
     Objects.requireNonNull(targetSelectorContract, "targetSelectorContract must not be null");
     this.targetSelectorContract = targetSelectorContract;
+    this.semantics = Objects.requireNonNull(semantics, "semantics must not be null");
   }
 
   /** Returns the target families published for this operation's catalog entry. */
@@ -61,6 +65,11 @@ final class WorkbookOperationContract {
 
   Class<? extends Selector>[] acceptedSelectors(Object operation) {
     return toArray(targetSelectorContract.acceptedSelectors(operation));
+  }
+
+  /** Returns the static semantics owned by this concrete operation contract. */
+  OperationSemantics semantics() {
+    return semantics;
   }
 
   /** Returns the execution-mode incompatibility for this operation when one exists. */

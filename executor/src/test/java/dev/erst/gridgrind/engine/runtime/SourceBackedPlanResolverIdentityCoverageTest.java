@@ -123,7 +123,7 @@ class SourceBackedPlanResolverIdentityCoverageTest extends SourceBackedPlanResol
         SourceBackedPlanResolver.resolve(
             plan,
             ExecutionInputBindingsFixtureSupport.bindings(
-                workingDirectory, "Queue".getBytes(StandardCharsets.UTF_8)));
+                workingDirectory, plan, "Queue".getBytes(StandardCharsets.UTF_8)));
 
     CellMutationAction.SetCell titleAction =
         assertInstanceOf(
@@ -237,7 +237,7 @@ class SourceBackedPlanResolverIdentityCoverageTest extends SourceBackedPlanResol
 
     WorkbookPlan resolved =
         SourceBackedPlanResolver.resolve(
-            plan, ExecutionInputBindingsFixtureSupport.bindings(workingDirectory));
+            plan, ExecutionInputBindingsFixtureSupport.bindings(workingDirectory, plan));
 
     StructuredMutationAction.ImportCustomXmlMapping action =
         assertInstanceOf(
@@ -278,7 +278,9 @@ class SourceBackedPlanResolverIdentityCoverageTest extends SourceBackedPlanResol
 
     WorkbookPlan resolved =
         SourceBackedPlanResolver.resolve(
-            plan, ExecutionInputBindingsFixtureSupport.bindings(workingDirectory));
+            plan,
+            ExecutionInputBindingsFixtureSupport.bindings(
+                workingDirectory, List.of(workingDirectory.resolve("item.txt"))));
 
     InspectionStep resolvedInspection =
         assertInstanceOf(InspectionStep.class, resolved.steps().get(0));
@@ -361,7 +363,12 @@ class SourceBackedPlanResolverIdentityCoverageTest extends SourceBackedPlanResol
                 dev.erst.gridgrind.contract.dto.ExecutionPolicyInput.defaults(),
                 dev.erst.gridgrind.contract.dto.FormulaEnvironmentInput.empty(),
                 List.of(rangeStep, lineChartStep, pieChartStep)),
-            ExecutionInputBindingsFixtureSupport.bindings(workingDirectory));
+            ExecutionInputBindingsFixtureSupport.bindings(
+                workingDirectory,
+                List.of(
+                    workingDirectory.resolve("range-cell.txt"),
+                    workingDirectory.resolve("line-title.txt"),
+                    workingDirectory.resolve("pie-title.txt"))));
 
     MutationStep resolvedRangeStep = assertInstanceOf(MutationStep.class, resolved.steps().get(0));
     assertNotSame(rangeStep, resolvedRangeStep);

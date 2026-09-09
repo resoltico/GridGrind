@@ -1,6 +1,7 @@
 package dev.erst.gridgrind.contract.json;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 /** Reports a scalar enum token outside the record's declared wire vocabulary. */
@@ -9,7 +10,7 @@ record RequestUnsupportedEnumValue(
     implements RequestShapeStructuralProblem {
   RequestUnsupportedEnumValue {
     path = RequestStructuralProblemSupport.requireText(path, "path");
-    value = RequestStructuralProblemSupport.requireText(value, "value");
+    Objects.requireNonNull(value, "value must not be null");
     allowedValues = RequestStructuralProblemSupport.copyStrings(allowedValues, "allowedValues");
     if (allowedValues.isEmpty()) {
       throw new IllegalArgumentException("allowedValues must not be empty");

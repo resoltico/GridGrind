@@ -59,7 +59,11 @@ final class CliImmediateCommandParser {
           Map.entry(
               "--print-request-template",
               (index, responsePath, commandToken) ->
-                  parseRequestTemplateCommand(index, responsePath)));
+                  parseRequestTemplateCommand(index, responsePath)),
+          Map.entry(
+              "--print-grant-template",
+              (index, responsePath, commandToken) ->
+                  parseGrantTemplateCommand(index, responsePath)));
 
   private CliImmediateCommandParser() {}
 
@@ -106,6 +110,11 @@ final class CliImmediateCommandParser {
   private static Result parseRequestTemplateCommand(int index, Optional<Path> responsePath) {
     return new Result(
         new CliCommand.PrintRequestTemplate(responsePath), index + 1, "--print-request-template");
+  }
+
+  private static Result parseGrantTemplateCommand(int index, Optional<Path> responsePath) {
+    return new Result(
+        new CliGrantTemplateCommand(responsePath), index + 1, "--print-grant-template");
   }
 
   record Result(CliCommand command, int nextIndex, String commandToken) {

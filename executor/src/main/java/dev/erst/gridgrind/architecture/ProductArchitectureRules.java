@@ -1,12 +1,14 @@
 package dev.erst.gridgrind.architecture;
 
 import com.tngtech.archunit.junit.ArchTest;
+import com.tngtech.archunit.junit.ArchTests;
 import com.tngtech.archunit.lang.ArchRule;
 import java.util.List;
 
 /** Declares the complete mandatory GridGrind product architecture rule inventory. */
-@SuppressWarnings("PMD.UseUtilityClass")
-public final class ProductArchitectureRules {
+public enum ProductArchitectureRules {
+  ;
+
   @ArchTest
   static final ArchRule PRODUCT_MODULES_ARE_FREE_OF_CYCLES =
       ProductDependencyArchitectureRules.productModulesAreFreeOfCycles();
@@ -48,18 +50,15 @@ public final class ProductArchitectureRules {
       ProductDependencyArchitectureRules.engineApiDoesNotExposeImplementationTypes();
 
   @ArchTest
-  static final ArchRule FORMULA_WRITES_STAY_CENTRALIZED =
-      ProductToolingSeamArchitectureRules.formulaWritesStayCentralized();
-
-  @ArchTest
-  static final ArchRule PRIVATE_REFLECTION_STAYS_CENTRALIZED =
-      ProductToolingSeamArchitectureRules.privateReflectionStaysCentralized();
+  static final ArchTests TOOLING_SEAMS = ArchTests.in(ProductToolingSeamArchitectureRules.class);
 
   @ArchTest
   static final ArchRule SEALED_TYPES_USE_CLOSED_DOMAIN_SHAPES =
       ProductDomainShapeArchitectureRules.sealedTypesUseClosedDomainShapes();
 
-  ProductArchitectureRules() {}
+  @ArchTest
+  static final ArchTests ASSURANCE_BOUNDARIES =
+      ArchTests.in(ProductAssuranceArchitectureRules.class);
 
   static List<ArchRule> mandatoryRules() {
     return List.of(
@@ -73,8 +72,11 @@ public final class ProductArchitectureRules {
         WORKBOOK_IMPLEMENTATION_DOES_NOT_DEPEND_ON_EXECUTION_RUNTIME,
         ENGINE_API_RUNTIME_DEPENDENCIES_STAY_IN_OWNED_BRIDGES,
         ENGINE_API_DOES_NOT_EXPOSE_IMPLEMENTATION_TYPES,
-        FORMULA_WRITES_STAY_CENTRALIZED,
-        PRIVATE_REFLECTION_STAYS_CENTRALIZED,
-        SEALED_TYPES_USE_CLOSED_DOMAIN_SHAPES);
+        ProductToolingSeamArchitectureRules.formulaWritesStayCentralized(),
+        ProductToolingSeamArchitectureRules.privateReflectionStaysCentralized(),
+        SEALED_TYPES_USE_CLOSED_DOMAIN_SHAPES,
+        ProductAssuranceArchitectureRules.executionUsesOneAdmittedExecutor(),
+        ProductAssuranceArchitectureRules.catalogUsesCanonicalOperationContracts(),
+        ProductAssuranceArchitectureRules.publicationIsCentralizedBehindRequestPathAccess());
   }
 }

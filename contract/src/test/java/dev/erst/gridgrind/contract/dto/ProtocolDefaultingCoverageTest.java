@@ -104,15 +104,15 @@ class ProtocolDefaultingCoverageTest {
     OoxmlSignatureInput signature =
         OoxmlSignatureInput.sameKeyPassword(
             "keys/signing.p12",
-            "store-pass",
+            new SecretReference("store-pass"),
             Optional.empty(),
             ExcelOoxmlSignatureDigestAlgorithm.SHA256,
             Optional.empty());
     OoxmlSignatureInput explicitSignature =
         OoxmlSignatureInput.create(
             "keys/signing.p12",
-            "store-pass",
-            "key-pass",
+            new SecretReference("store-pass"),
+            Optional.of(new SecretReference("key-pass")),
             Optional.of("gridgrind-signing"),
             ExcelOoxmlSignatureDigestAlgorithm.SHA512,
             Optional.of("Signed workbook"));
@@ -149,11 +149,11 @@ class ProtocolDefaultingCoverageTest {
     assertEquals(3, explicitUdfFunction.maximumArgumentCount());
     assertTrue(validationPrompt.showPromptBox());
     assertTrue(validationAlert.showErrorBox());
-    assertEquals("store-pass", signature.keyPassword());
+    assertEquals(Optional.empty(), signature.keyPasswordRef());
     assertEquals(Optional.empty(), signature.alias());
     assertEquals(ExcelOoxmlSignatureDigestAlgorithm.SHA256, signature.digestAlgorithm());
     assertEquals(Optional.empty(), signature.description());
-    assertEquals("key-pass", explicitSignature.keyPassword());
+    assertEquals(Optional.of(new SecretReference("key-pass")), explicitSignature.keyPasswordRef());
     assertEquals(Optional.of("gridgrind-signing"), explicitSignature.alias());
     assertEquals(ExcelOoxmlSignatureDigestAlgorithm.SHA512, explicitSignature.digestAlgorithm());
     assertEquals(Optional.of("Signed workbook"), explicitSignature.description());
@@ -198,7 +198,7 @@ class ProtocolDefaultingCoverageTest {
             mapper,
             """
             {
-              "password": "persist-pass"
+              "passwordRef": { "id": "persist-pass" }
             }
             """,
             OoxmlEncryptionInput.class);
@@ -208,18 +208,20 @@ class ProtocolDefaultingCoverageTest {
             """
             {
               "pkcs12Path": "keys/signing.p12",
-              "keystorePassword": "store-pass"
+              "keystorePasswordRef": { "id": "store-pass" }
             }
             """,
             OoxmlSignatureInput.class);
     OoxmlEncryptionInput explicitEncryption =
         OoxmlEncryptionInput.create(
-            "persist-pass", ExcelOoxmlWriteCipher.AES_192, ExcelOoxmlWriteHash.SHA_384);
+            new SecretReference("persist-pass"),
+            ExcelOoxmlWriteCipher.AES_192,
+            ExcelOoxmlWriteHash.SHA_384);
     OoxmlSignatureInput createdSignatureWithNullOptionals =
         OoxmlSignatureInput.create(
             "keys/signing.p12",
-            "store-pass",
-            "key-pass",
+            new SecretReference("store-pass"),
+            Optional.of(new SecretReference("key-pass")),
             nullOptional(),
             ExcelOoxmlSignatureDigestAlgorithm.SHA512,
             nullOptional());
@@ -232,11 +234,13 @@ class ProtocolDefaultingCoverageTest {
     assertEquals(ExcelOoxmlWriteHash.SHA_512, encryption.hash());
     assertEquals(ExcelOoxmlWriteCipher.AES_192, explicitEncryption.cipher());
     assertEquals(ExcelOoxmlWriteHash.SHA_384, explicitEncryption.hash());
-    assertEquals("store-pass", signature.keyPassword());
+    assertEquals(Optional.empty(), signature.keyPasswordRef());
     assertEquals(ExcelOoxmlSignatureDigestAlgorithm.SHA256, signature.digestAlgorithm());
     assertEquals(Optional.empty(), signature.alias());
     assertEquals(Optional.empty(), signature.description());
-    assertEquals("key-pass", createdSignatureWithNullOptionals.keyPassword());
+    assertEquals(
+        Optional.of(new SecretReference("key-pass")),
+        createdSignatureWithNullOptionals.keyPasswordRef());
     assertEquals(
         ExcelOoxmlSignatureDigestAlgorithm.SHA512,
         createdSignatureWithNullOptionals.digestAlgorithm());
@@ -338,8 +342,8 @@ class ProtocolDefaultingCoverageTest {
     assertFalse(protection.structureLocked());
     assertFalse(protection.windowsLocked());
     assertFalse(protection.revisionsLocked());
-    assertEquals(Optional.empty(), protection.workbookPassword());
-    assertEquals(Optional.empty(), protection.revisionsPassword());
+    assertEquals(Optional.empty(), protection.workbookPasswordRef());
+    assertEquals(Optional.empty(), protection.revisionsPasswordRef());
     assertEquals("Amount", dataField.displayName());
     assertEquals(Optional.empty(), dataField.valueFormat());
     assertEquals("", tableColumn.uniqueName());

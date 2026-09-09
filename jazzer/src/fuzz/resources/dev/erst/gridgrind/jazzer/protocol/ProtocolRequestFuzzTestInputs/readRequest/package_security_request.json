@@ -1,10 +1,10 @@
 {
-  "protocolVersion": "V2",
+  "protocolVersion": "V3",
   "source": {
     "type": "EXISTING",
     "path": "fixtures/secured-source.xlsx",
     "security": {
-      "password": "GridGrind-2026"
+      "passwordRef": { "id": "source-open-password" }
     }
   },
   "persistence": {
@@ -15,7 +15,7 @@
       "encryption": {
         "type": "ENCRYPT",
         "encryption": {
-          "password": "GridGrind-2026",
+          "passwordRef": { "id": "output-password" },
           "cipher": "AES_256",
           "hash": "SHA_512"
         }
@@ -24,8 +24,8 @@
         "type": "SIGN",
         "signature": {
           "pkcs12Path": "fixtures/signing-material.p12",
-          "keystorePassword": "keystore-pass",
-          "keyPassword": "key-pass",
+          "keystorePasswordRef": { "id": "keystore-password" },
+          "keyPasswordRef": { "id": "key-password" },
           "alias": "gridgrind-signing",
           "description": "GridGrind Jazzer replay seed"
         }

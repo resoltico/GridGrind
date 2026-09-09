@@ -36,12 +36,18 @@ grep -Fq 'check_stage_execute()' "${stage_contract_script}" || die \
     "check stage contract no longer owns the stage execution mapping"
 grep -Fq 'check_stage_execute "${stage_id}" "${stage_label}" "${repo_root}"' "${root_check_script}" || die \
     "check.sh no longer delegates fixed-stage execution through the canonical stage-contract owner"
+grep -Fq 'quality-gates|jazzer-check|cli-shadowjar|docker-smoke' "${root_check_script}" || die \
+    "docker smoke no longer receives the Gradle-aware stall threshold required for its image build"
 grep -Fq 'scripts/test-check-stage-contract.sh' "${stage_contract_script}" || die \
     "stage contract no longer includes its own regression guard in Stage 5 coverage"
 grep -Fq 'scripts/test-verify-cli-discovery-execution.sh' "${stage_contract_script}" || die \
     "stage contract no longer includes the discovery execution heartbeat regression guard"
 grep -Fq 'scripts/test-cli-shadow-jar-support.sh' "${stage_contract_script}" || die \
     "stage contract no longer proves stale JARs cannot mask failed artifact rebuilds"
+grep -Fq 'run_with_progress()' "${stage_contract_script}" || die \
+    "stage contract no longer emits liveness progress while release-surface scripts run"
+grep -Fq '[CHECK-SHELL] phase=progress' "${stage_contract_script}" || die \
+    "stage contract no longer refreshes liveness while one shell regression runs"
 
 if grep -Fq "run_stage 'quality-gates'" "${root_check_script}"; then
     die "check.sh still carries a direct fixed-stage quality-gates invocation"

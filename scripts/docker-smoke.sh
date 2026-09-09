@@ -3,24 +3,19 @@
 # working directory with weird request, response, and workbook paths, including reopening an
 # existing workbook, authoring a signature line, and low-memory streaming write readback from the
 # materialized output.
-
 set -euo pipefail
-
 die() {
     printf 'error: %s\n' "$1" >&2
     exit 1
 }
-
 require_match() {
     local text=$1
     local pattern=$2
     local message=$3
-
     if ! printf '%s\n' "${text}" | grep -Eq "${pattern}"; then
         die "${message}"
     fi
 }
-
 resolve_script_dir() {
     local source_path="${BASH_SOURCE[0]}"
     while [[ -h "${source_path}" ]]; do
@@ -33,7 +28,6 @@ resolve_script_dir() {
     done
     cd -P -- "$(dirname -- "${source_path}")" && pwd
 }
-
 readonly script_dir="$(resolve_script_dir)"
 readonly repo_root="$(cd -P -- "${script_dir}/.." && pwd)"
 readonly image_tag="gridgrind-docker-smoke:$$"
@@ -42,6 +36,7 @@ readonly docker_run_user="$(id -u):$(id -g)"
 readonly custom_container_workdir="/gridgrind-smoke-root"
 readonly repo_lock_support="${repo_root}/scripts/repo-verification-lock-support.sh"
 readonly bind_mount_support="${repo_root}/scripts/lib/docker-smoke-bind-mount-support.sh"
+readonly fixture_grant_writer="${repo_root}/scripts/write-fixture-grant.py"
 readonly lock_dir="${repo_root}/tmp/repo-verification-lock"
 readonly pid_file="${lock_dir}/pid"
 anonymous_docker_config=''
@@ -49,22 +44,21 @@ docker_endpoint=''
 [[ -f "${repo_lock_support}" ]] || die "missing repo verification lock helper at ${repo_lock_support}"
 [[ -f "${bind_mount_support}" ]] || die \
     "missing bind-mount docker smoke helper at ${bind_mount_support}"
+[[ -x "${fixture_grant_writer}" ]] || die \
+    "missing fixture grant writer at ${fixture_grant_writer}"
 # shellcheck source=/dev/null
 source "${repo_lock_support}"
 # shellcheck source=/dev/null
 source "${bind_mount_support}"
-
 resolve_docker_buildx_plugin() {
     local docker_binary=''
     local -a candidates=()
     local candidate=''
-
     if candidate="$(command -v docker-buildx 2>/dev/null || true)"; then
         if [[ -n "${candidate}" ]]; then
             candidates+=("${candidate}")
         fi
     fi
-
     docker_binary="$(command -v docker)"
     candidates+=(
         "${HOME}/.docker/cli-plugins/docker-buildx"
@@ -79,17 +73,14 @@ resolve_docker_buildx_plugin() {
         "/usr/share/docker/cli-plugins/docker-buildx"
         "$(cd -P -- "$(dirname -- "${docker_binary}")" && pwd)/docker-buildx"
     )
-
     for candidate in "${candidates[@]}"; do
         if [[ -n "${candidate}" && -x "${candidate}" ]]; then
             printf '%s\n' "${candidate}"
             return 0
         fi
     done
-
     return 1
 }
-
 docker_with_repo_config() {
     if [[ -n "${docker_endpoint}" ]]; then
         DOCKER_CONFIG="${anonymous_docker_config}" DOCKER_HOST="${docker_endpoint}" docker "$@"
@@ -97,7 +88,6 @@ docker_with_repo_config() {
     fi
     DOCKER_CONFIG="${anonymous_docker_config}" docker "$@"
 }
-
 cleanup() {
     local exit_code=$?
     # Mounted-path artifacts should stay caller-owned, but keep sudo as a defensive cleanup fallback.
@@ -109,14 +99,11 @@ cleanup() {
     cleanup_lock
     exit "${exit_code}"
 }
-
 trap cleanup EXIT
-
 command -v docker >/dev/null 2>&1 || die "docker is required for the Docker smoke gate"
 docker buildx version >/dev/null 2>&1 || die "docker buildx is required for the Docker smoke gate"
 [[ -f "${repo_root}/Dockerfile" ]] || die "missing Dockerfile at ${repo_root}/Dockerfile"
 acquire_lock
-
 docker_endpoint="${DOCKER_HOST:-}"
 if [[ -z "${docker_endpoint}" ]]; then
     docker_endpoint="$(
@@ -126,7 +113,6 @@ if [[ -z "${docker_endpoint}" ]]; then
 fi
 anonymous_docker_config="$(mktemp -d "${TMPDIR:-/tmp}/gridgrind-docker-config.XXXXXX")"
 printf '{}\n' > "${anonymous_docker_config}/config.json"
-
 if ! docker_with_repo_config buildx version >/dev/null 2>&1; then
     docker_buildx_plugin="$(resolve_docker_buildx_plugin)" || die \
         "docker buildx is available in the current shell, but no reusable docker-buildx plugin binary was found for the anonymous DOCKER_CONFIG"
@@ -135,7 +121,6 @@ if ! docker_with_repo_config buildx version >/dev/null 2>&1; then
     docker_with_repo_config buildx version >/dev/null 2>&1 || die \
         "docker buildx is not reachable through the anonymous DOCKER_CONFIG even after staging ${docker_buildx_plugin}"
 fi
-
 printf 'Docker smoke: verifying pinned base-image platform coverage\n'
 while IFS= read -r image_ref; do
     inspection="$(docker_with_repo_config buildx imagetools inspect "${image_ref}")"
@@ -143,36 +128,44 @@ while IFS= read -r image_ref; do
         require_match "${inspection}" "Platform:[[:space:]]+${platform}" "pinned Docker base image ${image_ref} does not publish ${platform}"
     done
 done < <(awk '/^FROM / { print $2 }' "${repo_root}/Dockerfile")
-
 mkdir -p "${smoke_root}/requests odd"
-
 readonly request_rel='requests odd/request [docker #smoke].json'
+readonly grant_rel='grants odd/request [docker #smoke].grant.json'
 readonly response_rel='responses odd/nested/response [docker #smoke].json'
 readonly workbook_rel='books odd/nested/office [docker #smoke].xlsx'
 readonly existing_request_rel='requests odd/request reopen [docker #smoke].json'
+readonly existing_grant_rel='grants odd/request reopen [docker #smoke].grant.json'
 readonly existing_response_rel='responses odd/nested/reopen [docker #smoke].json'
 readonly signature_request_rel='requests odd/request signature [docker #smoke].json'
+readonly signature_grant_rel='grants odd/request signature [docker #smoke].grant.json'
 readonly signature_response_rel='responses odd/nested/signature [docker #smoke].json'
 readonly signature_workbook_rel='books odd/nested/office signature [docker #smoke].xlsx'
 readonly streaming_request_rel='requests odd/request streaming [docker #smoke].json'
+readonly streaming_grant_rel='grants odd/request streaming [docker #smoke].grant.json'
 readonly streaming_response_rel='responses odd/nested/streaming [docker #smoke].json'
 readonly streaming_read_request_rel='requests odd/request streaming readback [docker #smoke].json'
+readonly streaming_read_grant_rel='grants odd/request streaming readback [docker #smoke].grant.json'
 readonly streaming_read_response_rel='responses odd/nested/streaming readback [docker #smoke].json'
 readonly streaming_workbook_rel='books odd/nested/office streaming [docker #smoke].xlsx'
 readonly request_path="${smoke_root}/${request_rel}"
+readonly grant_path="${smoke_root}/${grant_rel}"
 readonly response_path="${smoke_root}/${response_rel}"
 readonly request_dir="${smoke_root}/requests odd"
 readonly legacy_workbook_path="${smoke_root}/${workbook_rel}"
 readonly workbook_path="${request_dir}/${workbook_rel}"
 readonly existing_request_path="${smoke_root}/${existing_request_rel}"
+readonly existing_grant_path="${smoke_root}/${existing_grant_rel}"
 readonly existing_response_path="${smoke_root}/${existing_response_rel}"
 readonly signature_request_path="${smoke_root}/${signature_request_rel}"
+readonly signature_grant_path="${smoke_root}/${signature_grant_rel}"
 readonly signature_response_path="${smoke_root}/${signature_response_rel}"
 readonly legacy_signature_workbook_path="${smoke_root}/${signature_workbook_rel}"
 readonly signature_workbook_path="${request_dir}/${signature_workbook_rel}"
 readonly streaming_request_path="${smoke_root}/${streaming_request_rel}"
+readonly streaming_grant_path="${smoke_root}/${streaming_grant_rel}"
 readonly streaming_response_path="${smoke_root}/${streaming_response_rel}"
 readonly streaming_read_request_path="${smoke_root}/${streaming_read_request_rel}"
+readonly streaming_read_grant_path="${smoke_root}/${streaming_read_grant_rel}"
 readonly streaming_read_response_path="${smoke_root}/${streaming_read_response_rel}"
 readonly legacy_streaming_workbook_path="${smoke_root}/${streaming_workbook_rel}"
 readonly streaming_workbook_path="${request_dir}/${streaming_workbook_rel}"
@@ -249,10 +242,9 @@ readonly event_read_execution_block="$(cat <<'JSON'
   },
 JSON
 )"
-
 cat > "${request_path}" <<JSON
 {
-  "protocolVersion": "V2",
+  "protocolVersion": "V3",
   "source": {
     "type": "NEW"
   },
@@ -286,10 +278,9 @@ ${default_formula_environment_block}
   ]
 }
 JSON
-
 cat > "${existing_request_path}" <<JSON
 {
-  "protocolVersion": "V2",
+  "protocolVersion": "V3",
   "source": {
     "type": "EXISTING",
     "path": "${workbook_rel}"
@@ -312,10 +303,9 @@ ${default_formula_environment_block}
   ]
 }
 JSON
-
 cat > "${signature_request_path}" <<JSON
 {
-  "protocolVersion": "V2",
+  "protocolVersion": "V3",
   "source": {
     "type": "NEW"
   },
@@ -392,10 +382,9 @@ ${default_formula_environment_block}
   ]
 }
 JSON
-
 cat > "${streaming_request_path}" <<JSON
 {
-  "protocolVersion": "V2",
+  "protocolVersion": "V3",
   "source": {
     "type": "NEW"
   },
@@ -489,10 +478,9 @@ ${default_formula_environment_block}
   ]
 }
 JSON
-
 cat > "${streaming_read_request_path}" <<JSON
 {
-  "protocolVersion": "V2",
+  "protocolVersion": "V3",
   "source": {
     "type": "EXISTING",
     "path": "${streaming_workbook_rel}"
@@ -525,9 +513,20 @@ ${default_formula_environment_block}
   ]
 }
 JSON
-
+for request_and_grant in \
+    "${request_path}:${grant_path}" \
+    "${existing_request_path}:${existing_grant_path}" \
+    "${signature_request_path}:${signature_grant_path}" \
+    "${streaming_request_path}:${streaming_grant_path}" \
+    "${streaming_read_request_path}:${streaming_read_grant_path}"; do
+    request_for_grant="${request_and_grant%%:*}"
+    grant_for_request="${request_and_grant#*:}"
+    "${fixture_grant_writer}" \
+        --request "${request_for_grant}" \
+        --output "${grant_for_request}" \
+        --grant-working-directory "${smoke_root}"
+done
 build_and_verify_image_legal_surface "${image_tag}" "${repo_root}"
-
 printf 'Docker smoke: verifying packaged help and catalog contract\n'
 if [[ -n "${docker_endpoint}" ]]; then
     DOCKER_CONFIG="${anonymous_docker_config}" DOCKER_HOST="${docker_endpoint}" \
@@ -536,7 +535,6 @@ else
     DOCKER_CONFIG="${anonymous_docker_config}" \
         "${repo_root}/scripts/verify-cli-contract.sh" docker-image "${image_tag}"
 fi
-
 printf 'Docker smoke: executing published examples and task starters from the packaged image\n'
 if [[ -n "${docker_endpoint}" ]]; then
     DOCKER_CONFIG="${anonymous_docker_config}" DOCKER_HOST="${docker_endpoint}" \
@@ -545,10 +543,8 @@ else
     DOCKER_CONFIG="${anonymous_docker_config}" \
         "${repo_root}/scripts/verify-cli-discovery-execution.sh" docker-image "${image_tag}"
 fi
-
 printf 'Docker smoke: verifying bind-mount user guidance\n'
 verify_documented_bind_mount_user_guidance "${image_tag}" "${smoke_root}" "${docker_run_user}"
-
 printf 'Docker smoke: verifying custom workdir and weird paths\n'
 help_output="$(docker_with_repo_config run --rm \
     --user "${docker_run_user}" \
@@ -560,7 +556,6 @@ require_match "${help_output}" '^GridGrind ' \
     "docker smoke help output did not include the banner"
 require_match "${help_output}" '^Usage:' \
     "docker smoke help output did not include the usage section"
-
 version_output="$(docker_with_repo_config run --rm \
     --user "${docker_run_user}" \
     -w "${custom_container_workdir}" \
@@ -569,15 +564,14 @@ version_output="$(docker_with_repo_config run --rm \
     --version | tr -d '\r')"
 require_match "${version_output}" '^GridGrind ' \
     "docker smoke version output did not include the application name"
-
 docker_with_repo_config run --rm \
     --user "${docker_run_user}" \
     -w "${custom_container_workdir}" \
     -v "${smoke_root}:${custom_container_workdir}" \
     "${image_tag}" \
     --request "${request_rel}" \
+    --grant "${grant_rel}" \
     --response "${response_rel}" >/dev/null 2>"${create_stderr_path}"
-
 [[ -f "${response_path}" ]] || die "docker smoke response file was not written: ${response_path}"
 [[ -f "${workbook_path}" ]] || die "docker smoke workbook file was not written: ${workbook_path}"
 [[ ! -f "${legacy_workbook_path}" ]] || die \
@@ -594,7 +588,6 @@ grep -Eq '^\{"status":"(STARTED|SUCCEEDED|FAILED)","timestamp":"[^"]+","category
     "docker smoke create request did not emit compact VERBOSE progress JSONL"
 ! grep -Eq '"detail"[[:space:]]*:' "${create_stderr_path}" || die \
     "docker smoke VERBOSE progress retained a legacy prose detail field"
-
 printf 'Docker smoke: reopening saved workbook through EXISTING source\n'
 docker_with_repo_config run --rm \
     --user "${docker_run_user}" \
@@ -602,15 +595,14 @@ docker_with_repo_config run --rm \
     -v "${smoke_root}:${custom_container_workdir}" \
     "${image_tag}" \
     --request "${existing_request_rel}" \
+    --grant "${existing_grant_rel}" \
     --response "${existing_response_rel}" >/dev/null 2>"${existing_stderr_path}"
-
 [[ -f "${existing_response_path}" ]] || die \
     "docker smoke reopen response file was not written: ${existing_response_path}"
 grep -Eq '"status"[[:space:]]*:[[:space:]]*"SUCCEEDED"' "${existing_response_path}" || die \
     "docker smoke EXISTING-source reopen did not report SUCCEEDED"
 [[ ! -s "${existing_stderr_path}" ]] || die \
     "docker smoke EXISTING-source reopen wrote unexpected stderr: $(tr '\n' ' ' < "${existing_stderr_path}")"
-
 printf 'Docker smoke: verifying signature-line authoring under container fonts\n'
 docker_with_repo_config run --rm \
     --user "${docker_run_user}" \
@@ -618,8 +610,8 @@ docker_with_repo_config run --rm \
     -v "${smoke_root}:${custom_container_workdir}" \
     "${image_tag}" \
     --request "${signature_request_rel}" \
+    --grant "${signature_grant_rel}" \
     --response "${signature_response_rel}" >/dev/null 2>"${signature_stderr_path}"
-
 [[ -f "${signature_response_path}" ]] || die \
     "docker smoke signature response file was not written: ${signature_response_path}"
 [[ -f "${signature_workbook_path}" ]] || die \
@@ -632,7 +624,6 @@ grep -Eq '"BudgetSignature"' "${signature_response_path}" || die \
     "docker smoke signature-line response did not include the authored drawing object"
 [[ ! -s "${signature_stderr_path}" ]] || die \
     "docker smoke signature-line request wrote unexpected stderr: $(tr '\n' ' ' < "${signature_stderr_path}")"
-
 printf 'Docker smoke: verifying STREAMING_WRITE readback from materialized output\n'
 docker_with_repo_config run --rm \
     --user "${docker_run_user}" \
@@ -640,8 +631,8 @@ docker_with_repo_config run --rm \
     -v "${smoke_root}:${custom_container_workdir}" \
     "${image_tag}" \
     --request "${streaming_request_rel}" \
+    --grant "${streaming_grant_rel}" \
     --response "${streaming_response_rel}" >/dev/null 2>"${streaming_stderr_path}"
-
 [[ -f "${streaming_response_path}" ]] || die \
     "docker smoke streaming response file was not written: ${streaming_response_path}"
 [[ -f "${streaming_workbook_path}" ]] || die \
@@ -652,20 +643,18 @@ grep -Eq '"status"[[:space:]]*:[[:space:]]*"SUCCEEDED"' "${streaming_response_pa
     "docker smoke STREAMING_WRITE authoring did not report SUCCEEDED"
 [[ ! -s "${streaming_stderr_path}" ]] || die \
     "docker smoke STREAMING_WRITE authoring wrote unexpected stderr: $(tr '\n' ' ' < "${streaming_stderr_path}")"
-
 docker_with_repo_config run --rm \
     --user "${docker_run_user}" \
     -w "${custom_container_workdir}" \
     -v "${smoke_root}:${custom_container_workdir}" \
     "${image_tag}" \
     --request "${streaming_read_request_rel}" \
+    --grant "${streaming_read_grant_rel}" \
     --response "${streaming_read_response_rel}" >/dev/null 2>"${streaming_read_stderr_path}"
-
 [[ -f "${streaming_read_response_path}" ]] || die \
     "docker smoke streaming readback response file was not written: ${streaming_read_response_path}"
 grep -Eq '"status"[[:space:]]*:[[:space:]]*"SUCCEEDED"' "${streaming_read_response_path}" || die \
     "docker smoke STREAMING_WRITE readback did not report SUCCEEDED"
 [[ ! -s "${streaming_read_stderr_path}" ]] || die \
     "docker smoke STREAMING_WRITE readback wrote unexpected stderr: $(tr '\n' ' ' < "${streaming_read_stderr_path}")"
-
 printf 'Docker smoke: success\n'

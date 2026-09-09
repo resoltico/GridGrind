@@ -117,7 +117,9 @@ final class WorkbookIntegrationExamples {
         "package-security-inspection-workflow",
         new WorkbookPlan.WorkbookSource.ExistingFile(
             paths.asset("package-security-assets/gridgrind-package-security.xlsx"),
-            new OoxmlOpenSecurityInput(java.util.Optional.of("GridGrind-2026"))),
+            new OoxmlOpenSecurityInput(
+                java.util.Optional.of(
+                    new dev.erst.gridgrind.contract.dto.SecretReference("source-open-password")))),
         new WorkbookPlan.WorkbookPersistence.None(),
         ExampleSteps.read(
             "security",

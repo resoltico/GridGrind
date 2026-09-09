@@ -1,19 +1,17 @@
 package dev.erst.gridgrind.engine.runtime.parity;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.junit.jupiter.api.Test;
 
 /** Verifies that the public capability inventory stays aligned with the shipped contract. */
 final class XlsxParityDocsTest {
-  private static final Pattern FRONTMATTER_VERSION_PATTERN =
+  private static final Pattern VERSION_FRONTMATTER_PATTERN =
       Pattern.compile("(?m)^version: \"([^\"]+)\"$");
   private static final List<String> SPLIT_REFERENCE_DOCS =
       List.of(
@@ -47,13 +45,12 @@ final class XlsxParityDocsTest {
           "docs/ANALYSIS_QUERIES.md");
 
   @Test
-  void publicCapabilityInventoryTracksCurrentReleaseVersion() {
+  void publicCapabilityInventoryDoesNotDuplicateReleaseVersion() {
     Path repositoryRoot = repositoryRoot();
-    String expectedVersion = releaseVersion(repositoryRoot.resolve("gradle.properties"));
-
-    assertEquals(
-        expectedVersion,
-        frontmatterVersion(repositoryRoot.resolve("docs/POI_EXCEL_CAPABILITY_INVENTORY.md")));
+    String inventory = readDoc(repositoryRoot, "docs/POI_EXCEL_CAPABILITY_INVENTORY.md");
+    assertFalse(
+        VERSION_FRONTMATTER_PATTERN.matcher(inventory).find(),
+        "The capability inventory must not duplicate release version frontmatter; CHANGELOG.md owns release history");
   }
 
   @Test
@@ -298,17 +295,6 @@ final class XlsxParityDocsTest {
     throw new AssertionError("Could not locate the GridGrind repository root.");
   }
 
-  private static String releaseVersion(Path gradlePropertiesPath) {
-    List<String> lines =
-        XlsxParitySupport.call(
-            "read gradle.properties", () -> Files.readAllLines(gradlePropertiesPath));
-    return lines.stream()
-        .filter(line -> line.startsWith("version="))
-        .findFirst()
-        .map(line -> line.substring("version=".length()))
-        .orElseThrow(() -> new AssertionError("No version= entry found in gradle.properties"));
-  }
-
   private static String readDoc(Path repositoryRoot, String relativePath) {
     return XlsxParitySupport.call(
         "read " + relativePath, () -> Files.readString(repositoryRoot.resolve(relativePath)));
@@ -324,14 +310,5 @@ final class XlsxParityDocsTest {
 
   private static long lineCount(String document) {
     return document.lines().count();
-  }
-
-  private static String frontmatterVersion(Path documentPath) {
-    String document =
-        XlsxParitySupport.call(
-            "read " + documentPath.getFileName(), () -> Files.readString(documentPath));
-    Matcher matcher = FRONTMATTER_VERSION_PATTERN.matcher(document);
-    assertTrue(matcher.find(), "Missing frontmatter version in " + documentPath);
-    return matcher.group(1);
   }
 }

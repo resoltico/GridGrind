@@ -7,7 +7,7 @@ import com.tngtech.archunit.junit.ArchTest;
 import com.tngtech.archunit.junit.ArchTests;
 
 /** Executes the complete bytecode-level GridGrind product architecture contract. */
-@SuppressWarnings({"PMD.TestClassWithoutTestCases", "PMD.UseUtilityClass"})
+@SuppressWarnings("PMD.TestClassWithoutTestCases")
 @AnalyzeClasses(
     locations = GridGrindProductLocations.class,
     importOptions = {
@@ -15,6 +15,8 @@ import com.tngtech.archunit.junit.ArchTests;
       ImportOption.DoNotIncludeGradleTestFixtures.class
     })
 final class ProductArchitectureTest {
+  private ProductArchitectureTest() {}
+
   static {
     if (!"true".equals(ArchConfiguration.get().getProperty("archRule.failOnEmptyShould"))) {
       throw new IllegalStateException(

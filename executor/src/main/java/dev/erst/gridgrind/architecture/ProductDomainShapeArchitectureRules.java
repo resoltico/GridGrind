@@ -12,8 +12,8 @@ import com.tngtech.archunit.lang.SimpleConditionEvent;
 import java.util.List;
 
 /** Defines bytecode rules for GridGrind's closed domain-union implementation shape. */
-@SuppressWarnings("PMD.UseUtilityClass")
-final class ProductDomainShapeArchitectureRules {
+enum ProductDomainShapeArchitectureRules {
+  ;
   private static final DescribedPredicate<JavaClass> SEALED_INTERFACES =
       new DescribedPredicate<>("sealed interfaces") {
         @Override
@@ -61,8 +61,6 @@ final class ProductDomainShapeArchitectureRules {
           }
         }
       };
-
-  ProductDomainShapeArchitectureRules() {}
 
   static ArchRule sealedInterfacesUseClosedDomainVariants() {
     return classes()

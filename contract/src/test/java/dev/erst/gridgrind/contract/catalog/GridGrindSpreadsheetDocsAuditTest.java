@@ -235,21 +235,21 @@ class GridGrindSpreadsheetDocsAuditTest {
             + expectedUserArgument
             + " "
             + expectedVolumeArgument
-            + " ghcr.io/resoltico/gridgrind:latest --request request.json --response"
+            + " ghcr.io/resoltico/gridgrind:latest --request request.json --grant grant.json --response"
             + " response.json";
     String expectedQuickStartReleaseExecutionCommand =
         "docker run --pull=always --rm -i "
             + expectedUserArgument
             + " "
             + expectedVolumeArgument
-            + " ghcr.io/resoltico/gridgrind:latest --request budget-request.json --response"
+            + " ghcr.io/resoltico/gridgrind:latest --request budget-request.json --grant grant.json --response"
             + " response.json";
     String expectedQuickStartLocalExecutionCommand =
         "docker run --rm -i "
             + expectedUserArgument
             + " "
             + expectedVolumeArgument
-            + " gridgrind-local --request budget-request.json --response response.json";
+            + " gridgrind-local --request budget-request.json --grant grant.json --response response.json";
 
     assertAll(
         () ->

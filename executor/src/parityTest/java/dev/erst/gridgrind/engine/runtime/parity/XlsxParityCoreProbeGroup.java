@@ -932,7 +932,9 @@ final class XlsxParityCoreProbeGroup {
                             true,
                             true,
                             true,
-                            java.util.Optional.of(XlsxParityScenarios.WORKBOOK_PROTECTION_PASSWORD),
+                            java.util.Optional.of(
+                                new dev.erst.gridgrind.contract.dto.SecretReference(
+                                    "workbook-password")),
                             java.util.Optional.empty())))),
             inspect(
                 "protection",
@@ -1016,7 +1018,10 @@ final class XlsxParityCoreProbeGroup {
                     mutate(
                         new SheetSelector.ByName("Advanced"),
                         new WorkbookMutationAction.SetSheetProtection(
-                            expectedSettings, XlsxParityScenarios.SHEET_PROTECTION_PASSWORD))),
+                            expectedSettings,
+                            java.util.Optional.of(
+                                new dev.erst.gridgrind.contract.dto.SecretReference(
+                                    "sheet-password"))))),
                 inspect(
                     "summary",
                     new SheetSelector.ByName("Advanced"),

@@ -208,7 +208,8 @@ class GridGrindRequestDoctorTest {
 
     RequestDoctorReport report =
         new GridGrindRequestDoctor()
-            .diagnose(request, ExecutionInputBindingsFixtureSupport.bindings(workingDirectory));
+            .diagnose(
+                request, ExecutionInputBindingsFixtureSupport.bindings(workingDirectory, request));
 
     assertTrue(report.valid());
     assertEquals(AnalysisSeverity.INFO, report.severity());
@@ -243,7 +244,8 @@ class GridGrindRequestDoctorTest {
 
     RequestDoctorReport report =
         new GridGrindRequestDoctor()
-            .diagnose(request, ExecutionInputBindingsFixtureSupport.bindings(workingDirectory));
+            .diagnose(
+                request, ExecutionInputBindingsFixtureSupport.bindings(workingDirectory, request));
     dev.erst.gridgrind.contract.dto.ProblemContext.ResolveInputs context =
         (dev.erst.gridgrind.contract.dto.ProblemContext.ResolveInputs)
             report.primaryProblem().orElseThrow().context();
@@ -283,7 +285,8 @@ class GridGrindRequestDoctorTest {
     RequestDoctorReport report =
         new GridGrindRequestDoctor()
             .diagnose(
-                invalidRequest, ExecutionInputBindingsFixtureSupport.bindings(workingDirectory));
+                invalidRequest,
+                ExecutionInputBindingsFixtureSupport.bindings(workingDirectory, invalidRequest));
 
     assertFalse(report.valid());
     assertEquals(AnalysisSeverity.ERROR, report.severity());
@@ -321,7 +324,8 @@ class GridGrindRequestDoctorTest {
 
     RequestDoctorReport report =
         new GridGrindRequestDoctor()
-            .diagnose(request, ExecutionInputBindingsFixtureSupport.bindings(workingDirectory));
+            .diagnose(
+                request, ExecutionInputBindingsFixtureSupport.bindings(workingDirectory, request));
 
     assertFalse(report.valid());
     assertEquals(AnalysisSeverity.ERROR, report.severity());
@@ -356,7 +360,8 @@ class GridGrindRequestDoctorTest {
 
     RequestDoctorReport report =
         new GridGrindRequestDoctor()
-            .diagnose(request, ExecutionInputBindingsFixtureSupport.bindings(workingDirectory));
+            .diagnose(
+                request, ExecutionInputBindingsFixtureSupport.bindings(workingDirectory, request));
 
     assertFalse(report.valid());
     assertEquals(AnalysisSeverity.ERROR, report.severity());
@@ -396,7 +401,8 @@ class GridGrindRequestDoctorTest {
 
     RequestDoctorReport report =
         new GridGrindRequestDoctor()
-            .diagnose(request, ExecutionInputBindingsFixtureSupport.bindings(workingDirectory));
+            .diagnose(
+                request, ExecutionInputBindingsFixtureSupport.bindings(workingDirectory, request));
 
     assertTrue(report.valid());
     assertEquals(AnalysisSeverity.INFO, report.severity());

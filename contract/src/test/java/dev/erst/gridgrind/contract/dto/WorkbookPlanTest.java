@@ -118,7 +118,8 @@ class WorkbookPlanTest {
     assertEquals(WorkbookPlan.WorkbookPersistence.IfExists.REJECT, saveAs.ifExists());
     assertTrue(
         new WorkbookPlan.WorkbookSource.ExistingFile(
-                "budget.xlsx", new OoxmlOpenSecurityInput(Optional.of("secret")))
+                "budget.xlsx",
+                new OoxmlOpenSecurityInput(Optional.of(new SecretReference("source-open"))))
             .security()
             .isPresent());
     assertTrue(

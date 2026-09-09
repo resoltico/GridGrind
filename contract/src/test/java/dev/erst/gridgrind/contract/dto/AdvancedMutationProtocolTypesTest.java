@@ -32,14 +32,16 @@ import org.junit.jupiter.api.Test;
 /** Direct tests for advanced mutation-oriented protocol DTO families. */
 class AdvancedMutationProtocolTypesTest {
   @Test
+  @SuppressWarnings("NullOptional") // The factory deliberately normalizes absent JSON optionals.
   void ooxmlSecurityInputsNormalizeAndValidate() {
-    OoxmlOpenSecurityInput openSecurity = new OoxmlOpenSecurityInput(Optional.of("source-pass"));
-    OoxmlEncryptionInput encryption = OoxmlEncryptionInput.strong("persist-pass");
+    OoxmlOpenSecurityInput openSecurity =
+        new OoxmlOpenSecurityInput(Optional.of(ref("source-pass")));
+    OoxmlEncryptionInput encryption = OoxmlEncryptionInput.strong(ref("persist-pass"));
     OoxmlSignatureInput signature =
         new OoxmlSignatureInput(
             "tmp/signing-material.p12",
-            "keystore-pass",
-            "keystore-pass",
+            ref("keystore-pass"),
+            Optional.of(ref("key-pass")),
             Optional.empty(),
             ExcelOoxmlSignatureDigestAlgorithm.SHA256,
             Optional.empty());
@@ -48,10 +50,10 @@ class AdvancedMutationProtocolTypesTest {
             new OoxmlPersistenceEncryptionInput.Encrypt(encryption),
             new OoxmlPersistenceSignatureInput.Sign(signature));
 
-    assertEquals(Optional.of("source-pass"), openSecurity.password());
+    assertEquals(Optional.of(ref("source-pass")), openSecurity.passwordRef());
     assertEquals(ExcelOoxmlWriteCipher.AES_256, encryption.cipher());
     assertEquals(ExcelOoxmlWriteHash.SHA_512, encryption.hash());
-    assertEquals("keystore-pass", signature.keyPassword());
+    assertEquals(Optional.of(ref("key-pass")), signature.keyPasswordRef());
     assertEquals(ExcelOoxmlSignatureDigestAlgorithm.SHA256, signature.digestAlgorithm());
     assertTrue(signature.alias().isEmpty());
     assertTrue(signature.description().isEmpty());
@@ -64,35 +66,38 @@ class AdvancedMutationProtocolTypesTest {
         assertInstanceOf(OoxmlPersistenceSignatureInput.Sign.class, persistence.signature())
             .signature());
 
-    assertThrows(
-        IllegalArgumentException.class, () -> new OoxmlOpenSecurityInput(Optional.of(" ")));
-    assertThrows(IllegalArgumentException.class, () -> OoxmlEncryptionInput.strong(" "));
+    assertThrows(IllegalArgumentException.class, () -> new SecretReference(" "));
     assertThrows(
         NullPointerException.class,
-        () -> new OoxmlEncryptionInput("persist-pass", null, ExcelOoxmlWriteHash.SHA_512));
+        () -> new OoxmlEncryptionInput(ref("persist-pass"), null, ExcelOoxmlWriteHash.SHA_512));
     assertThrows(
         NullPointerException.class,
-        () -> new OoxmlEncryptionInput("persist-pass", ExcelOoxmlWriteCipher.AES_256, null));
+        () -> new OoxmlEncryptionInput(ref("persist-pass"), ExcelOoxmlWriteCipher.AES_256, null));
     assertThrows(
         IllegalArgumentException.class,
         () ->
             new OoxmlSignatureInput(
                 "tmp/signing-material.p12",
-                "keystore-pass",
-                " ",
+                ref("keystore-pass"),
                 Optional.empty(),
-                ExcelOoxmlSignatureDigestAlgorithm.SHA256,
-                Optional.empty()));
-    assertThrows(
-        IllegalArgumentException.class,
-        () ->
-            new OoxmlSignatureInput(
-                "tmp/signing-material.p12",
-                "keystore-pass",
-                "keystore-pass",
                 Optional.of(" "),
                 ExcelOoxmlSignatureDigestAlgorithm.SHA256,
                 Optional.empty()));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new OoxmlSignatureInput(
+                " ",
+                ref("keystore-pass"),
+                Optional.empty(),
+                Optional.empty(),
+                ExcelOoxmlSignatureDigestAlgorithm.SHA256,
+                Optional.empty()));
+    assertTrue(
+        OoxmlSignatureInput.create(
+                "tmp/signing-material.p12", ref("keystore-pass"), null, null, null, null)
+            .keyPasswordRef()
+            .isEmpty());
     assertThrows(NullPointerException.class, () -> new OoxmlPersistenceSecurityInput(null, null));
   }
 
@@ -101,7 +106,7 @@ class AdvancedMutationProtocolTypesTest {
     OoxmlOpenSecurityInput openSecurity = new OoxmlOpenSecurityInput(Optional.empty());
     OoxmlEncryptionInput encryption =
         new OoxmlEncryptionInput(
-            "persist-pass", ExcelOoxmlWriteCipher.AES_192, ExcelOoxmlWriteHash.SHA_384);
+            ref("persist-pass"), ExcelOoxmlWriteCipher.AES_192, ExcelOoxmlWriteHash.SHA_384);
     OoxmlPersistenceSecurityInput encryptionAndUnsigned =
         new OoxmlPersistenceSecurityInput(
             new OoxmlPersistenceEncryptionInput.Encrypt(encryption),
@@ -112,8 +117,8 @@ class AdvancedMutationProtocolTypesTest {
             new OoxmlPersistenceSignatureInput.Sign(
                 new OoxmlSignatureInput(
                     "tmp/signing-material.p12",
-                    "keystore-pass",
-                    "key-pass",
+                    ref("keystore-pass"),
+                    Optional.of(ref("key-pass")),
                     Optional.empty(),
                     ExcelOoxmlSignatureDigestAlgorithm.SHA256,
                     Optional.empty())));
@@ -124,7 +129,7 @@ class AdvancedMutationProtocolTypesTest {
     WorkbookPlan.WorkbookPersistence.Overwrite securedOverwrite =
         new WorkbookPlan.WorkbookPersistence.Overwrite(encryptionAndUnsigned);
 
-    assertEquals(Optional.empty(), openSecurity.password());
+    assertEquals(Optional.empty(), openSecurity.passwordRef());
     assertTrue(openSecurity.isEmpty());
     assertTrue(source.security().isEmpty());
     assertTrue(unsecuredOverwrite.security().isEmpty());
@@ -146,19 +151,13 @@ class AdvancedMutationProtocolTypesTest {
   void workbookProtectionNamedRangeAndCommentInputsNormalizeAndValidate() {
     WorkbookProtectionInput protection =
         new WorkbookProtectionInput(
-            false, true, false, Optional.of("book-secret"), Optional.of("review-secret"));
+            false, true, false, Optional.of(ref("book-secret")), Optional.of(ref("review-secret")));
 
     assertFalse(protection.structureLocked());
     assertTrue(protection.windowsLocked());
     assertFalse(protection.revisionsLocked());
-    assertEquals("book-secret", protection.workbookPassword().orElseThrow());
-    assertEquals("review-secret", protection.revisionsPassword().orElseThrow());
-    assertThrows(
-        IllegalArgumentException.class,
-        () -> new WorkbookProtectionInput(true, false, false, Optional.of(" "), Optional.empty()));
-    assertThrows(
-        IllegalArgumentException.class,
-        () -> new WorkbookProtectionInput(true, false, false, Optional.empty(), Optional.of(" ")));
+    assertEquals(ref("book-secret"), protection.workbookPasswordRef().orElseThrow());
+    assertEquals(ref("review-secret"), protection.revisionsPasswordRef().orElseThrow());
 
     NamedRangeTarget.Range explicit = NamedRangeTarget.range("Budget", "C3:A1");
     NamedRangeTarget.Formula formula = NamedRangeTarget.formula("SUM(Budget!A1:A3)");
@@ -213,6 +212,10 @@ class AdvancedMutationProtocolTypesTest {
                 true,
                 Optional.of(List.of(new RichTextRunInput(text("Ada"), Optional.empty()))),
                 Optional.empty()));
+  }
+
+  private static SecretReference ref(String id) {
+    return new SecretReference(id);
   }
 
   @Test

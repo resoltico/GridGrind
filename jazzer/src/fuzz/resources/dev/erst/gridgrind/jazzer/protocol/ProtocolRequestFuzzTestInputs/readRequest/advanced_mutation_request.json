@@ -1,5 +1,5 @@
 {
-  "protocolVersion": "V2",
+  "protocolVersion": "V3",
   "source": {
     "type": "NEW"
   },
@@ -1116,7 +1116,7 @@
           "selectUnlockedCellsLocked": false,
           "sortLocked": true
         },
-        "password": "Sheet-2026"
+        "passwordRef": { "id": "sheet-password" }
       },
       "target": {
         "type": "SHEET_BY_NAME",

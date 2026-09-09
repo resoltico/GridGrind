@@ -5,6 +5,29 @@ Earlier release history through `0.68.0` is archived in [docs/CHANGELOG_ARCHIVE.
 
 ## [Unreleased]
 
+## [0.76.0] - 2026-09-09
+
+### Added
+
+- Added mandatory host-owned execution grants for Java, CLI execution, and bound request doctoring. Grants narrowly authorize exact readable resources, operation IDs, workbook scope, publication intent and destination, approved secret references, and host-required acceptance conditions. The CLI provides `--print-grant-template` for the canonical fail-closed grant document.
+- Added V3 typed secret references and explicit Java/CLI secret resolvers. Secret material is resolved only for approved references, cleared from mutable buffers where possible, and excluded from plans, diagnostics, journals, progress events, generated artifacts, and result evidence.
+- Added host-required terminal assertions, strict post-mutation formula evaluation, and before-and-after semantic preservation checks. These requirements run independently of authored plan assertions and block publication when they are not established.
+- Added host-required byte preservation for explicitly named OOXML package parts. GridGrind compares the immutable materialized source part with the structurally reopened staged artifact before publication and blocks publication when the bytes differ.
+- Added typed execution evidence for admitted canonical operation effects and materialized-input identities, structural, computational, task-specific, preservation, and presentational claims. Evidence deliberately records only facts GridGrind established and never infers presentation quality from OOXML structure.
+- Added product-wide architecture, regression, mutation, and fuzzing coverage for the V3 grant, secret, operation-semantics, host-acceptance, staged-publication, and evidence boundaries, including the packaged CLI and container surfaces.
+
+### Changed
+
+- Replaced the current request and result wire contract with V3 only. V2 request handling, inline secret fields, and legacy publication-result shapes are rejected rather than translated.
+- Replaced parallel operation classification with one canonical operation-semantics model shared by generated catalog discovery, Java authoring, request analysis, doctoring, full-XSSF execution, streaming-write execution, and event-read execution. The model owns each operation's effect footprint and execution constraints.
+- Reworked Java and CLI execution around one non-bypass admission path: every executable request receives a grant, all permitted source-backed resources are materialized before workbook work, and the same authority, secret-resolution, target-scope, operation, and acceptance rules apply across every execution mode.
+- Replaced final-destination truncate-and-copy persistence with verified private staging and qualified atomic publication. `WorkbookResult.persistence.publication` now reports `NOT_ATTEMPTED`, `NOT_PUBLISHED`, `PUBLISHED`, or `UNCERTAIN`; a published result records the final path, SHA-256, byte size, staged-artifact verification, and established durability level.
+- Updated the Kotlin Gradle plugin to `2.4.20`, PMD to `7.27.0`, Spotless to `8.10.2`, `actions/setup-java` to `6.0.0`, `docker/setup-qemu-action` to `4.3.0`, and the pinned Azul Zulu 26 builder and runtime image digests.
+
+### Fixed
+
+- Corrected publication failure reporting so GridGrind never reports a destination as unpublished after it may have changed. Failures now distinguish `NOT_ATTEMPTED`, proven `NOT_PUBLISHED`, `PUBLISHED`, and `UNCERTAIN`; uncertain publication explicitly prohibits blind retry.
+
 ## [0.75.0] - 2026-08-31
 
 ### Added
@@ -215,7 +238,8 @@ Earlier release history through `0.68.0` is archived in [docs/CHANGELOG_ARCHIVE.
 - Standardized the packaged discovery contract around `requestFileName` plus `requiredWorkspacePaths`, and realigned the release verifier, operator guidance, and public docs to that explicit example/task portability surface instead of carrying forward stale `suggestedRequestPath` and `requiredPaths` terminology.
 - Made the Docker runtime cache layout arbitrary-user-safe: the image now points `HOME` and `XDG_CACHE_HOME` at writable tmp-backed directories so signature-line and other font-backed authoring flows stay silent under `docker run --user <uid>:<gid>` instead of leaking Fontconfig cache warnings on stderr.
 
-[Unreleased]: https://github.com/resoltico/GridGrind/compare/v0.75.0...HEAD
+[Unreleased]: https://github.com/resoltico/GridGrind/compare/v0.76.0...HEAD
+[0.76.0]: https://github.com/resoltico/GridGrind/compare/v0.75.0...v0.76.0
 [0.75.0]: https://github.com/resoltico/GridGrind/compare/v0.74.0...v0.75.0
 [0.74.0]: https://github.com/resoltico/GridGrind/compare/v0.73.0...v0.74.0
 [0.73.0]: https://github.com/resoltico/GridGrind/compare/v0.72.0...v0.73.0
