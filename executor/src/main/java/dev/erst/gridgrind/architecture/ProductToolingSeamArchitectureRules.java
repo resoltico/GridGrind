@@ -13,8 +13,8 @@ import java.lang.invoke.MethodHandles;
 import java.util.function.Predicate;
 
 /** Defines bytecode access-site rules for GridGrind's centralized Apache POI tooling seams. */
-@SuppressWarnings("PMD.UseUtilityClass")
-final class ProductToolingSeamArchitectureRules {
+enum ProductToolingSeamArchitectureRules {
+  ;
   private static final String ENGINE_RUNTIME_PACKAGE = "dev.erst.gridgrind.engine.runtime..";
   private static final String EXCEL_PACKAGE = "dev.erst.gridgrind.excel..";
   private static final String FORMULA_WRITE_SUPPORT =
@@ -31,8 +31,6 @@ final class ProductToolingSeamArchitectureRules {
       notAccessMethodsMatching(
           "access private-reflection entry points directly",
           ProductToolingSeamArchitectureRules::isPrivateReflectionAccess);
-
-  ProductToolingSeamArchitectureRules() {}
 
   @ArchTest static final ArchRule FORMULA_WRITES_STAY_CENTRALIZED = formulaWritesStayCentralized();
 

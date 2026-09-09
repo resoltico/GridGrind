@@ -1,7 +1,7 @@
 ---
 afad: "5.0.1"
 domain: RELEASE_PROTOCOL
-updated: "2026-08-31"
+updated: "2026-09-09"
 route:
   keywords: [gridgrind, release, gh, github-cli, java26, gradlew, tag, ci, container, docker]
   questions: ["how do I release gridgrind", "what is the gridgrind release procedure", "how do I verify java before a gridgrind release", "how do I publish a gridgrind tag release"]
@@ -160,8 +160,9 @@ Then verify every item in this checklist. All must be true before any Step 2 com
 - `CHANGELOG.md` link footer has:
   - `[Unreleased]: .../compare/vX.Y.Z...HEAD`
   - `[X.Y.Z]: .../compare/vPREV...vX.Y.Z`
-- All Markdown docs that actually carry AFAD frontmatter — `PATENTS.md`, `jazzer/README.md`, and
-  every `docs/*.md` file — have `version:` set to the target version.
+- AFAD-managed Markdown does not carry a duplicate `version:` field. `gradle.properties` owns the
+  build version and `CHANGELOG.md` owns public release history; update only those canonical
+  release surfaces and keep the Markdown audit that rejects duplicate version frontmatter green.
 - Every documented operator surface is present from the clean release checkout itself. Do not rely
   on ignored local helper scripts, generated wrappers, or other unpublished files from the primary
   checkout.

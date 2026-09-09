@@ -117,7 +117,7 @@ The highest-churn architecture seams are intentionally split too:
 ## Contract Replacement Mode
 
 The former monolithic `protocol` module is gone. GridGrind is now in hard-break contract-replacement
-mode: new top-level contract surface growth must happen through the `contract` plus `executor`
+mode: new top-level contract surface growth must happen through the `contract` plus `engine`
 split and the accepted post-replacement architecture, not by reintroducing monolithic
 transport-and-execution ownership. The accepted architecture decision record for that freeze is
 [DEVELOPER_CONTRACT_REPLACEMENT_ADR.md](./DEVELOPER_CONTRACT_REPLACEMENT_ADR.md).
@@ -139,7 +139,7 @@ transport-and-execution ownership. The accepted architecture decision record for
 
 GridGrind's runtime, product modules, and shared included build logic under `gradle/build-logic`
 all target Java 26 now. The included build is no longer a JVM 25 exception: it compiles with
-Kotlin `2.4.10`, emits JVM 26 bytecode directly, and stays aligned with the repository's
+Kotlin `2.4.20`, emits JVM 26 bytecode directly, and stays aligned with the repository's
 single Java baseline instead of carrying a separate bytecode-level footnote.
 
 Jackson dependency note: Jackson 3.x databind intentionally still uses the
@@ -380,7 +380,7 @@ cannot hide behind package-wide or indefinite allowances.
 
 ### Spotless
 
-Google Java Format 1.35.0. Removes unused imports. Run `./gradlew spotlessApply` to auto-format
+Google Java Format 1.36.1. Removes unused imports. Run `./gradlew spotlessApply` to auto-format
 before committing; `./gradlew spotlessCheck` (run by `check`) will fail if formatting is off.
 Project-file formatting intentionally excludes local-only instruction and scratch areas,
 so personal workspace state cannot destabilize the canonical quality gates.

@@ -7,7 +7,6 @@ import com.tngtech.archunit.junit.ArchTest;
 import com.tngtech.archunit.lang.ArchRule;
 
 /** Protects the single admitted executor, canonical semantics, and publication boundaries. */
-@SuppressWarnings("PMD.UseUtilityClass")
 final class ProductAssuranceArchitectureRules {
   private static final String CATALOG_FACTORY =
       "dev.erst.gridgrind.contract.catalog.CatalogTypeEntryFactory";
@@ -25,7 +24,7 @@ final class ProductAssuranceArchitectureRules {
   private static final String PUBLICATION_FILE_SUPPORT =
       "dev.erst.gridgrind.engine.runtime.RequestPathPublicationFileSupport";
 
-  ProductAssuranceArchitectureRules() {}
+  private ProductAssuranceArchitectureRules() {}
 
   @ArchTest
   static final ArchRule EXECUTION_USES_ONE_ADMITTED_EXECUTOR = executionUsesOneAdmittedExecutor();

@@ -41,7 +41,7 @@ final class RequestPreflight {
         SourceBackedPlanResolver::resolveStep);
   }
 
-  @SuppressWarnings({"PMD.CloseResource", "PMD.UseTryWithResources"})
+  @SuppressWarnings("PMD.UseTryWithResources")
   private static Result verify(
       WorkbookPlan request,
       ExecutionInputBindings bindings,

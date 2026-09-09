@@ -10,13 +10,8 @@ class ProductArchitectureRuleConstructionTest {
   @Test
   void constructsEveryMandatoryRuleAndCustomCondition() {
     assertAll(
-        () -> assertNotNull(new ProductArchitectureRules()),
         () -> assertNotNull(new EngineImplementationTypeClassifier()),
         () -> assertNotNull(new ExportedApiImplementationTypes()),
-        () -> assertNotNull(new ProductDependencyArchitectureRules()),
-        () -> assertNotNull(new ProductDomainShapeArchitectureRules()),
-        () -> assertNotNull(new ProductToolingSeamArchitectureRules()),
-        () -> assertNotNull(new ProductAssuranceArchitectureRules()),
         () -> assertNotNull(ProductDependencyArchitectureRules.productModulesAreFreeOfCycles()),
         () ->
             assertNotNull(ProductDependencyArchitectureRules.productClassesBelongToKnownModules()),

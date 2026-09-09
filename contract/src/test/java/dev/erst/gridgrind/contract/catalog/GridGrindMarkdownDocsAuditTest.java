@@ -1,6 +1,6 @@
 package dev.erst.gridgrind.contract.catalog;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
@@ -13,26 +13,24 @@ import java.util.regex.Pattern;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 
-/** Build-failing audit over public Markdown file integrity and release frontmatter. */
+/** Build-failing audit over public Markdown integrity and AFAD metadata ownership. */
 class GridGrindMarkdownDocsAuditTest {
-  private static final Pattern FRONTMATTER_VERSION_PATTERN =
+  private static final Pattern VERSION_FRONTMATTER_PATTERN =
       Pattern.compile("(?m)^version: \"([^\"]+)\"$");
   private static final Pattern MARKDOWN_LINK_PATTERN =
       Pattern.compile("\\[[^\\]]+\\]\\(([^)]+)\\)");
 
   @Test
-  void versionedMarkdownDocsTrackCurrentReleaseVersion() throws IOException {
+  void afadMarkdownDocsDoNotDuplicateReleaseVersion() throws IOException {
     Path repositoryRoot = RepositoryRootTestSupport.repositoryRoot();
-    String expectedVersion = releaseVersion(repositoryRoot.resolve("gradle.properties"));
 
-    for (Path path : versionedMarkdownDocs(repositoryRoot)) {
+    for (Path path : afadMarkdownDocs(repositoryRoot)) {
       String contents = Files.readString(path);
-      Matcher matcher = FRONTMATTER_VERSION_PATTERN.matcher(contents);
-      assertTrue(matcher.find(), () -> path + " must carry version frontmatter");
-      assertEquals(
-          expectedVersion,
-          matcher.group(1),
-          () -> path + " must track the current release version in frontmatter");
+      assertFalse(
+          VERSION_FRONTMATTER_PATTERN.matcher(contents).find(),
+          () ->
+              path
+                  + " must not duplicate release version frontmatter; CHANGELOG.md owns release history");
     }
   }
 
@@ -93,7 +91,7 @@ class GridGrindMarkdownDocsAuditTest {
         "docs/DEVELOPER.md must publish the catalog-owned Kotlin version");
   }
 
-  private static List<Path> versionedMarkdownDocs(Path repositoryRoot) throws IOException {
+  private static List<Path> afadMarkdownDocs(Path repositoryRoot) throws IOException {
     List<Path> paths = new ArrayList<>();
     paths.add(repositoryRoot.resolve("PATENTS.md"));
     paths.add(repositoryRoot.resolve("jazzer/README.md"));
@@ -117,14 +115,6 @@ class GridGrindMarkdownDocsAuditTest {
           .forEach(paths::add);
     }
     return List.copyOf(paths);
-  }
-
-  private static String releaseVersion(Path gradlePropertiesPath) throws IOException {
-    return Files.readAllLines(gradlePropertiesPath).stream()
-        .filter(line -> line.startsWith("version="))
-        .findFirst()
-        .map(line -> line.substring("version=".length()))
-        .orElseThrow(() -> new AssertionError("No version= entry found in gradle.properties"));
   }
 
   private static String catalogVersion(String versionCatalog, String key) {

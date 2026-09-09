@@ -1318,6 +1318,7 @@ class ExcelOoxmlPackageSecurityCoverageTest {
     }
 
     @Override
+    @SuppressWarnings("PMD.ReturnEmptyCollectionRatherThanNull")
     public Certificate[] engineGetCertificateChain(String alias) {
       return certificateChain == null ? null : certificateChain.clone();
     }

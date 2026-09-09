@@ -6,8 +6,9 @@ import com.tngtech.archunit.lang.ArchRule;
 import java.util.List;
 
 /** Declares the complete mandatory GridGrind product architecture rule inventory. */
-@SuppressWarnings("PMD.UseUtilityClass")
-public final class ProductArchitectureRules {
+public enum ProductArchitectureRules {
+  ;
+
   @ArchTest
   static final ArchRule PRODUCT_MODULES_ARE_FREE_OF_CYCLES =
       ProductDependencyArchitectureRules.productModulesAreFreeOfCycles();
@@ -58,8 +59,6 @@ public final class ProductArchitectureRules {
   @ArchTest
   static final ArchTests ASSURANCE_BOUNDARIES =
       ArchTests.in(ProductAssuranceArchitectureRules.class);
-
-  ProductArchitectureRules() {}
 
   static List<ArchRule> mandatoryRules() {
     return List.of(

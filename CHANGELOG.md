@@ -5,6 +5,8 @@ Earlier release history through `0.68.0` is archived in [docs/CHANGELOG_ARCHIVE.
 
 ## [Unreleased]
 
+## [0.76.0] - 2026-09-09
+
 ### Added
 
 - Added mandatory host-owned execution grants for Java, CLI execution, and bound request doctoring. Grants narrowly authorize exact readable resources, operation IDs, workbook scope, publication intent and destination, approved secret references, and host-required acceptance conditions. The CLI provides `--print-grant-template` for the canonical fail-closed grant document.
@@ -236,7 +238,8 @@ Earlier release history through `0.68.0` is archived in [docs/CHANGELOG_ARCHIVE.
 - Standardized the packaged discovery contract around `requestFileName` plus `requiredWorkspacePaths`, and realigned the release verifier, operator guidance, and public docs to that explicit example/task portability surface instead of carrying forward stale `suggestedRequestPath` and `requiredPaths` terminology.
 - Made the Docker runtime cache layout arbitrary-user-safe: the image now points `HOME` and `XDG_CACHE_HOME` at writable tmp-backed directories so signature-line and other font-backed authoring flows stay silent under `docker run --user <uid>:<gid>` instead of leaking Fontconfig cache warnings on stderr.
 
-[Unreleased]: https://github.com/resoltico/GridGrind/compare/v0.75.0...HEAD
+[Unreleased]: https://github.com/resoltico/GridGrind/compare/v0.76.0...HEAD
+[0.76.0]: https://github.com/resoltico/GridGrind/compare/v0.75.0...v0.76.0
 [0.75.0]: https://github.com/resoltico/GridGrind/compare/v0.74.0...v0.75.0
 [0.74.0]: https://github.com/resoltico/GridGrind/compare/v0.73.0...v0.74.0
 [0.73.0]: https://github.com/resoltico/GridGrind/compare/v0.72.0...v0.73.0
