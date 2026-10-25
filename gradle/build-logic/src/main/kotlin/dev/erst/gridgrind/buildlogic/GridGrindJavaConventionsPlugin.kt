@@ -69,14 +69,6 @@ class GridGrindJavaConventionsPlugin : Plugin<Project> {
                     javaExtension.sourceSets.named("test").map { sourceSet ->
                         sourceSet.allSource.files.any(File::isFile)
                     }
-                val semanticSourceFiles =
-                    mainSourceSet.map { sourceSet ->
-                        sourceSet.allJava.sourceDirectories.asFileTree
-                    }
-                val semanticCompileClasspathConfigurationName =
-                    mainSourceSet.map { sourceSet ->
-                        sourceSet.compileClasspathConfigurationName
-                    }
                 val coverageClasses =
                     mainSourceSet.map { sourceSet ->
                         sourceSet.output.classesDirs.asFileTree.matching { patternFilterable ->
@@ -107,30 +99,8 @@ class GridGrindJavaConventionsPlugin : Plugin<Project> {
                                 verification.classDirectories.setFrom(coverageClasses)
                             }
                         },
-                    )
+                )
 
-                tasks.register("pmdSemanticMain", Pmd::class.java) { pmd ->
-                    pmd.group = LifecycleBasePlugin.VERIFICATION_GROUP
-                    pmd.description =
-                        "Runs the structural semantic-shape PMD profile for reviewed production-code governance."
-                    pmd.onlyIf("project has first-party production Java sources") {
-                        semanticSourceFiles.get().files.any(File::isFile)
-                    }
-                    pmd.setSource(semanticSourceFiles)
-                    pmd.classpath =
-                        configurations.named(semanticCompileClasspathConfigurationName.get()).get()
-                    pmd.ruleSetFiles = files(repositoryLayout.semanticShapePmdRuleset)
-                    pmd.ruleSets = emptyList()
-                    pmd.ignoreFailures = true
-                    pmd.reports.xml.required.set(true)
-                    pmd.reports.xml.outputLocation.set(
-                        layout.buildDirectory.file("reports/pmd/semanticMain.xml"),
-                    )
-                    pmd.reports.html.required.set(true)
-                    pmd.reports.html.outputLocation.set(
-                        layout.buildDirectory.file("reports/pmd/semanticMain.html"),
-                    )
-                }
             }
 
             dependencies.add("errorprone", libs.findLibrary("errorprone-core").get().get())

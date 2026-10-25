@@ -10,6 +10,7 @@ import com.tngtech.archunit.lang.CompositeArchRule;
 import com.tngtech.archunit.lang.ConditionEvents;
 import com.tngtech.archunit.lang.SimpleConditionEvent;
 import java.util.List;
+import java.util.stream.Stream;
 
 /** Defines bytecode rules for GridGrind's closed domain-union implementation shape. */
 enum ProductDomainShapeArchitectureRules {
@@ -62,6 +63,49 @@ enum ProductDomainShapeArchitectureRules {
         }
       };
 
+  private static final ArchCondition<JavaClass> USE_RECORD_WIRE_VARIANTS =
+      new ArchCondition<>("use records for every concrete wire variant") {
+        @Override
+        public void check(JavaClass item, ConditionEvents events) {
+          wireVariants(item)
+              .filter(variant -> !variant.isRecord())
+              .forEach(
+                  variant ->
+                      events.add(
+                          SimpleConditionEvent.violated(
+                              item,
+                              "Wire union <"
+                                  + item.getName()
+                                  + "> has non-record variant <"
+                                  + variant.getName()
+                                  + ">")));
+        }
+      };
+
+  static ArchRule wireUnionsUseRecordVariants() {
+    return classes()
+        .that(
+            new DescribedPredicate<JavaClass>("sealed wire interfaces") {
+              @Override
+              public boolean test(JavaClass input) {
+                return input.isInterface()
+                    && input.isSealed()
+                    && input.isAnnotatedWith("com.fasterxml.jackson.annotation.JsonTypeInfo");
+              }
+            })
+        .should(USE_RECORD_WIRE_VARIANTS)
+        .because("each concrete wire alternative is one record contract");
+  }
+
+  private static Stream<JavaClass> wireVariants(JavaClass union) {
+    return union.getPermittedSubclasses().orElseThrow().stream()
+        .flatMap(
+            variant ->
+                variant.isInterface() && variant.isSealed()
+                    ? wireVariants(variant)
+                    : Stream.of(variant));
+  }
+
   static ArchRule sealedInterfacesUseClosedDomainVariants() {
     return classes()
         .that(SEALED_INTERFACES)
@@ -79,6 +123,7 @@ enum ProductDomainShapeArchitectureRules {
   static ArchRule sealedTypesUseClosedDomainShapes() {
     return CompositeArchRule.of(sealedInterfacesUseClosedDomainVariants())
         .and(sealedClassesModelOnlyExceptionBases())
+        .and(wireUnionsUseRecordVariants())
         .as("sealed types preserve closed GridGrind domain shapes");
   }
 

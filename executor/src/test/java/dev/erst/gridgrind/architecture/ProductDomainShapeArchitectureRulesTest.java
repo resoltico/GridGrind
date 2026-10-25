@@ -13,10 +13,36 @@ import dev.erst.gridgrind.architecture.fixture.ArchitectureRuntimeLeakFixture;
 import dev.erst.gridgrind.architecture.fixture.ArchitectureSealedClassViolation;
 import dev.erst.gridgrind.architecture.fixture.ArchitectureSealedUnionVariants;
 import dev.erst.gridgrind.architecture.fixture.ArchitectureSealedUnionViolation;
+import dev.erst.gridgrind.architecture.fixture.ArchitectureWireUnionVariants;
 import org.junit.jupiter.api.Test;
 
 /** Verifies the closed-domain shape conditions and empty-population-safe sealed-class rule. */
 class ProductDomainShapeArchitectureRulesTest {
+  @Test
+  void wireUnionRuleAcceptsRecordLeavesAndRejectsAnEnumAlternative() {
+    ClassFileImporter importer = new ClassFileImporter();
+    assertDoesNotThrow(
+        () ->
+            ProductDomainShapeArchitectureRules.wireUnionsUseRecordVariants()
+                .check(
+                    importer.importClasses(
+                        ArchitectureWireUnionVariants.class,
+                        ArchitectureWireUnionVariants.RecordBranch.class,
+                        ArchitectureWireUnionVariants.RecordVariant.class)));
+    AssertionError failure =
+        assertThrows(
+            AssertionError.class,
+            () ->
+                ProductDomainShapeArchitectureRules.wireUnionsUseRecordVariants()
+                    .check(
+                        importer.importClasses(
+                            ArchitectureWireUnionVariants.WithEnum.class,
+                            ArchitectureWireUnionVariants.EnumVariant.class,
+                            ArchitectureWireUnionVariants.OpenBranch.class)));
+    assertTrue(failure.getMessage().contains("EnumVariant"));
+    assertTrue(failure.getMessage().contains("OpenBranch"));
+  }
+
   @Test
   void allowsEverySupportedSealedInterfaceVariantShape() {
     assertTrue(allowed(ArchitectureSealedUnionVariants.EnumVariant.class));

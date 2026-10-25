@@ -133,3 +133,32 @@ tests. Stages 3–6 were not reached, so this run does not verify nested Jazzer,
 shell/distribution checks or Docker smoke. No gate was skipped or clock changed.
 The user's narrow Phase 0 exception covers these failures until WP-10 removes
 the obsolete mechanisms. `AGENTS.md` remains unchanged; no supplement exists yet.
+
+## WP-10 union-rule challenge and verification
+
+The current mutation and inspection roots directly permit sealed subinterfaces.
+A direct-record-only rule would require changing their model hierarchy before
+the metadata work. After the user requested QA and proceeding by engineering
+judgment, the interim rule follows permitted subclasses recursively and requires
+every concrete wire alternative to be a record. Its positive control traverses a
+sealed branch; one negative-control fixture proves rejection of both an enum and
+an open interface branch. WP-22 must enforce the final annotation-owned shape.
+
+The removed mechanisms comprise 14 Java implementations, nine tests of those
+implementations, three policy files and the dedicated PMD profile. The CPD
+dependency was used only by the deleted duplication task and is also removed.
+Standard PMD, Spotless, Error Prone/NullAway, legal inventory and JAR pruning stay.
+
+The first focused compile failed because the retained `buildSrc` rejection check
+still used the repository layout variable; that variable was restored. The first
+full check then failed on six PMD findings in the new fixture (205.13 s). A
+focused repair passed in 9 s. The final `./gradlew check --no-parallel` passed
+in 192.30 s: 2803 tests, zero failures/errors/skips, including all 141 golden
+tests. The old coverage gates were still active and passed.
+
+The current implementation and guidance contain zero references to the deleted
+policy mechanisms. A literal repository-wide text search still finds release
+history in `docs/CHANGELOG_ARCHIVE.md` and the temporary original baseline record.
+Those are retained as historical evidence, following the baseline's instruction
+to retain valid historical references. They are not active checks or guidance;
+the temporary record is removed in WP-80. No runtime golden snapshot changed.

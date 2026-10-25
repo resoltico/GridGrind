@@ -164,78 +164,18 @@ configuration-plus-implementation blobs. GridGrind therefore keeps reusable type
 `gradle/build-logic` and keeps consumer scripts thin. `jazzer/build.gradle.kts` is intentionally a
 single plugin application for exactly that reason.
 
-### Structural-governance gates
+### Build and architecture checks
 
-Root `check` now depends on `verifyJavaSourceShape`, `verifyControlPlaneShape`,
-`verifyJavaSourceDuplication`, `verifyJavaSemanticShape`, `verifyNoLegacyBuildSrc`, and the
-included-build `gradle/build-logic:test` task. The root build-logic plugin owns the generic
-structural-governance truth, and JUnit seam tests audit that wiring plus the surrounding docs.
+Root `check` runs formatting, explicit-import checks, executable architecture rules and the
+included-build `gradle/build-logic:test` task, alongside the subprojects' checks.
+`verifyNoLegacyBuildSrc` rejects `buildSrc` directories: build logic belongs in the explicit
+included build under `gradle/build-logic`.
 
-`verifyJavaSourceShape`, implemented in
-`gradle/build-logic/.../VerifyJavaSourceShapeTask.java`, parses every repo-owned handwritten Java
-source set, writes `build/reports/source-shape/source-shape.tsv`, and enforces the role-owned
-policy stored in `gradle/source-shape-policy.tsv`.
-
-`verifyControlPlaneShape`, implemented in
-`gradle/build-logic/.../VerifyRepositoryFileShapeTask.java`, scans the repository-owned control
-plane outside handwritten Java: root gate shell entrypoints, release-surface shell helpers, Kotlin
-build-logic sources, and the long-lived operator ledger/protocol files included in the task's file
-inventory. It writes `build/reports/source-shape/control-plane-shape.tsv` and enforces reviewed
-budgets from `gradle/control-plane-shape-policy.tsv`.
-
-`verifyJavaSourceDuplication`, implemented in
-`gradle/build-logic/.../VerifyJavaSourceDuplicationTask.java`, scans repo-owned handwritten Java
-sources whose
-policy row keeps `duplicationGuard=CHECK`, writes
-`build/reports/source-shape/java-duplication.tsv`, and fails on duplicated token spans large
-enough to justify a shared seam while remaining quiet on success.
-
-`verifyJavaSemanticShape`, implemented in
-`gradle/build-logic/.../VerifyJavaSemanticShapeTask.java`, aggregates `pmdSemanticMain` XML
-reports from the production-main Java subprojects, writes
-`build/reports/source-shape/java-semantic-shape.tsv`, and fails on any semantic PMD finding not
-explicitly reviewed in `gradle/semantic-shape-policy.tsv`.
-
-`verifyNoLegacyBuildSrc` fails whenever a `buildSrc` directory reappears anywhere in the checkout.
-GridGrind uses the explicit included build under `gradle/build-logic`; implicit `buildSrc`
-reactivation is treated as architectural drift.
-
-`gradle/source-shape-policy.tsv` now owns three things together:
-- role budgets for ordinary source-shape metrics
-- per-role duplication ownership through `duplicationGuard`
-- reviewed exact-surface overrides with `reviewExpiresOn` and `splitTrigger`
-
-`gradle/control-plane-shape-policy.tsv` owns the same reviewed-budget lifecycle for repository
-control-plane files that are not part of handwritten Java source sets, including the live root
-release ledger after older changelog history rotates into the archive doc.
-
-`gradle/semantic-shape-policy.tsv` separately owns semantic-shape reviewed exceptions.
-
-Rules:
-- treat `verifyJavaSourceShape` as the authoritative repo-wide no-regression gate for handwritten
-  Java file size and API breadth across `main`, `test`, `testFixtures`, `architectureTest`,
-  `parityTest`, and Jazzer source sets
-- treat `verifyControlPlaneShape` as the authoritative repo-wide no-regression gate for
-  repository-owned shell, Kotlin build-logic, and operator-control files instead of letting the
-  repo-governing machinery drift outside the source-shape model
-- treat `verifyJavaSourceDuplication` as the authoritative repo-wide duplication gate for
-  handwritten Java, instead of hiding intentional mirrors behind global exclusions
-- treat `verifyJavaSemanticShape` as the authoritative repo-wide semantic PMD gate for
-  production-main Java; the broad `pmdMain` task stays focused on always-on hygiene signal
-- keep policy ownership explicit in `gradle/source-shape-policy.tsv`; broad exceptions without a
-  stated owner are invalid
-- reviewed exact-surface overrides must tighten at least one metric beyond their broader role and
-  must keep reviewed headroom close to the current file shape so stale budgets fail fast
-- reviewed exact-surface overrides must expire individually; synchronized bulk expiry dates are not
-  acceptable
-- reviewed source-shape and semantic-shape waivers must stay near-term; build-logic tests fail if
-  a review date expires or is parked too far into the future
-- semantic-shape exceptions must stay file-exact so new files cannot inherit reviewed debt by
-  package accident
-- `buildSrc` directories are forbidden; use the explicit included build under `gradle/build-logic`
-- document any new role family in the policy file instead of smuggling one-off ceilings into tests
-- keep seam/documentation audits in JUnit tests and keep generic structural-governance enforcement
-  in build logic so the two do not drift into one mixed-purpose blob
+Standard PMD rules, Error Prone with NullAway, and Spotless provide local code-quality checks.
+ArchUnit checks the closed model shapes. For current wire unions it traverses sealed
+subinterfaces and requires every concrete variant to be a record; a negative-control fixture
+proves that an enum wire variant fails. Runtime legal-inventory verification and JAR-output
+pruning remain build tasks.
 
 ### Architecture-testing contract
 
@@ -329,7 +269,7 @@ Use this routing table before changing the build:
 |:-----------------------|:------------------|
 | root project membership, plugin resolution | `settings.gradle.kts` |
 | thin root build wiring | `build.gradle.kts` |
-| repository-wide project-file formatting, source-shape, duplication, build-logic test wiring, and aggregated coverage | `gradle/build-logic/.../GridGrindRootConventionsPlugin.kt` |
+| repository-wide project-file formatting, architecture and build-logic test wiring, and aggregated coverage | `gradle/build-logic/.../GridGrindRootConventionsPlugin.kt` |
 | shared Java subproject conventions | `gradle/build-logic/.../GridGrindJavaConventionsPlugin.kt` |
 | shared Jazzer build behavior, Jazzer task registration, Jazzer PMD and coverage profiles, cleanup tasks | `gradle/build-logic/.../GridGrindJazzerConventionsPlugin.kt` |
 | dependency versions shared across product and Jazzer | `gradle/libs.versions.toml` |

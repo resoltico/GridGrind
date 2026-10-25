@@ -9,6 +9,10 @@ Earlier release history through `0.68.0` is archived in [docs/CHANGELOG_ARCHIVE.
 
 - Added behaviour snapshots for every shipped example and recipe, discovery and diagnostic commands, and persisted workbook facts, checked through both the Java CLI entry point and packaged JAR.
 
+### Changed
+
+- Replaced custom file-size, complexity, and duplication gates with standard Java quality tools and an executable architecture rule requiring concrete wire variants to be records.
+
 ## [0.76.0] - 2026-09-09
 
 ### Added

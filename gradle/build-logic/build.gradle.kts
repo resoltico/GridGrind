@@ -22,7 +22,6 @@ dependencies {
     implementation(
         "net.ltgt.gradle:gradle-errorprone-plugin:${libs.versions.errorprone.plugin.get()}",
     )
-    implementation("net.sourceforge.pmd:pmd-java:${libs.versions.pmd.get()}")
     implementation(
         "info.solidsoft.gradle.pitest:gradle-pitest-plugin:${libs.versions.pitest.gradle.plugin.get()}",
     )
