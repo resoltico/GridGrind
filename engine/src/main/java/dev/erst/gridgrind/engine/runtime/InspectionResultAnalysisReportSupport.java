@@ -12,6 +12,7 @@ import dev.erst.gridgrind.core.result.AnalysisFindingReport;
 import dev.erst.gridgrind.core.result.AnalysisLocationReport;
 import dev.erst.gridgrind.core.result.AnalysisSummaryReport;
 import dev.erst.gridgrind.core.result.WorkbookFindingsReport;
+import dev.erst.gridgrind.core.vocabulary.SheetLabel;
 import dev.erst.gridgrind.excel.WorkbookAnalysis;
 
 /** Converts workbook-analysis snapshots into protocol health and findings reports. */
@@ -126,11 +127,11 @@ final class InspectionResultAnalysisReportSupport {
     return switch (location) {
       case WorkbookAnalysis.AnalysisLocation.Workbook _ -> new AnalysisLocationReport.Workbook();
       case WorkbookAnalysis.AnalysisLocation.Sheet sheet ->
-          new AnalysisLocationReport.Sheet(sheet.sheetName());
+          new AnalysisLocationReport.Sheet(new SheetLabel(sheet.sheetName()));
       case WorkbookAnalysis.AnalysisLocation.Cell cell ->
-          new AnalysisLocationReport.Cell(cell.sheetName(), cell.address());
+          new AnalysisLocationReport.Cell(new SheetLabel(cell.sheetName()), cell.address());
       case WorkbookAnalysis.AnalysisLocation.Range range ->
-          new AnalysisLocationReport.Range(range.sheetName(), range.range());
+          new AnalysisLocationReport.Range(new SheetLabel(range.sheetName()), range.range());
       case WorkbookAnalysis.AnalysisLocation.NamedRange namedRange ->
           new AnalysisLocationReport.NamedRange(
               namedRange.name(),

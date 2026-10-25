@@ -2,6 +2,7 @@ package dev.erst.gridgrind.core.problem;
 
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import dev.erst.gridgrind.core.vocabulary.SheetLabel;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import java.util.Optional;
 
@@ -184,8 +185,8 @@ public interface ProblemContextWorkbookSurfaces {
     }
 
     /** Returns the workbook-location variant for one whole sheet. */
-    static ProblemLocation sheet(String sheetName) {
-      return new Sheet(requireNonBlank(sheetName, "sheetName"));
+    static ProblemLocation sheet(SheetLabel sheetName) {
+      return new Sheet(java.util.Objects.requireNonNull(sheetName, "sheetName must not be null"));
     }
 
     /** Returns the workbook-location variant for one address without a resolved sheet. */
@@ -194,8 +195,10 @@ public interface ProblemContextWorkbookSurfaces {
     }
 
     /** Returns the workbook-location variant for one concrete sheet-backed cell. */
-    static ProblemLocation cell(String sheetName, String address) {
-      return new Cell(requireNonBlank(sheetName, "sheetName"), requireNonBlank(address, "address"));
+    static ProblemLocation cell(SheetLabel sheetName, String address) {
+      return new Cell(
+          java.util.Objects.requireNonNull(sheetName, "sheetName must not be null"),
+          requireNonBlank(address, "address"));
     }
 
     /** Returns the workbook-location variant for one range without a resolved sheet. */
@@ -204,8 +207,10 @@ public interface ProblemContextWorkbookSurfaces {
     }
 
     /** Returns the workbook-location variant for one concrete sheet-backed range. */
-    static ProblemLocation range(String sheetName, String range) {
-      return new Range(requireNonBlank(sheetName, "sheetName"), requireNonBlank(range, "range"));
+    static ProblemLocation range(SheetLabel sheetName, String range) {
+      return new Range(
+          java.util.Objects.requireNonNull(sheetName, "sheetName must not be null"),
+          requireNonBlank(range, "range"));
     }
 
     /** Returns the workbook-location variant for one workbook-scoped named range. */
@@ -214,21 +219,22 @@ public interface ProblemContextWorkbookSurfaces {
     }
 
     /** Returns the workbook-location variant for one sheet-scoped named range. */
-    static ProblemLocation namedRange(String sheetName, String name) {
+    static ProblemLocation namedRange(SheetLabel sheetName, String name) {
       return new SheetNamedRange(
-          requireNonBlank(sheetName, "sheetName"), requireNonBlank(name, "name"));
+          java.util.Objects.requireNonNull(sheetName, "sheetName must not be null"),
+          requireNonBlank(name, "name"));
     }
 
     /** Returns the workbook-location variant for one formula-bearing cell. */
-    static ProblemLocation formulaCell(String sheetName, String address, String formula) {
+    static ProblemLocation formulaCell(SheetLabel sheetName, String address, String formula) {
       return new FormulaCell(
-          requireNonBlank(sheetName, "sheetName"),
+          java.util.Objects.requireNonNull(sheetName, "sheetName must not be null"),
           requireNonBlank(address, "address"),
           requireNonBlank(formula, "formula"));
     }
 
     /** Returns the sheet name when the failure was localized to one sheet-backed target. */
-    default Optional<String> sheetNameValue() {
+    default Optional<SheetLabel> sheetNameValue() {
       return switch (this) {
         case Sheet sheet -> Optional.of(sheet.sheetName());
         case Address _ -> Optional.empty();
@@ -282,9 +288,9 @@ public interface ProblemContextWorkbookSurfaces {
     record Unknown() implements ProblemLocation {}
 
     /** The failure was localized to one whole sheet. */
-    record Sheet(String sheetName) implements ProblemLocation {
+    record Sheet(SheetLabel sheetName) implements ProblemLocation {
       public Sheet {
-        sheetName = requireNonBlank(sheetName, "sheetName");
+        java.util.Objects.requireNonNull(sheetName, "sheetName must not be null");
       }
     }
 
@@ -296,9 +302,9 @@ public interface ProblemContextWorkbookSurfaces {
     }
 
     /** The failure was localized to one concrete cell. */
-    record Cell(String sheetName, String address) implements ProblemLocation {
+    record Cell(SheetLabel sheetName, String address) implements ProblemLocation {
       public Cell {
-        sheetName = requireNonBlank(sheetName, "sheetName");
+        java.util.Objects.requireNonNull(sheetName, "sheetName must not be null");
         address = requireNonBlank(address, "address");
       }
     }
@@ -311,9 +317,9 @@ public interface ProblemContextWorkbookSurfaces {
     }
 
     /** The failure was localized to one concrete rectangular range. */
-    record Range(String sheetName, String range) implements ProblemLocation {
+    record Range(SheetLabel sheetName, String range) implements ProblemLocation {
       public Range {
-        sheetName = requireNonBlank(sheetName, "sheetName");
+        java.util.Objects.requireNonNull(sheetName, "sheetName must not be null");
         range = requireNonBlank(range, "range");
       }
     }
@@ -326,18 +332,18 @@ public interface ProblemContextWorkbookSurfaces {
     }
 
     /** The failure was localized to one named range scoped to one sheet. */
-    record SheetNamedRange(String sheetName, String name) implements ProblemLocation {
+    record SheetNamedRange(SheetLabel sheetName, String name) implements ProblemLocation {
       public SheetNamedRange {
-        sheetName = requireNonBlank(sheetName, "sheetName");
+        java.util.Objects.requireNonNull(sheetName, "sheetName must not be null");
         name = requireNonBlank(name, "name");
       }
     }
 
     /** The failure was localized to one formula-bearing cell. */
-    record FormulaCell(String sheetName, String address, String formula)
+    record FormulaCell(SheetLabel sheetName, String address, String formula)
         implements ProblemLocation {
       public FormulaCell {
-        sheetName = requireNonBlank(sheetName, "sheetName");
+        java.util.Objects.requireNonNull(sheetName, "sheetName must not be null");
         address = requireNonBlank(address, "address");
         formula = requireNonBlank(formula, "formula");
       }

@@ -1,12 +1,13 @@
 package dev.erst.gridgrind.core.model.formula;
 
+import dev.erst.gridgrind.core.vocabulary.SheetLabel;
 import java.util.Objects;
 
 /** Factual array-formula group metadata returned by workbook inspection. */
 public record ArrayFormulaReport(
-    String sheetName, String range, String topLeftAddress, String formula, boolean singleCell) {
+    SheetLabel sheetName, String range, String topLeftAddress, String formula, boolean singleCell) {
   public ArrayFormulaReport {
-    sheetName = requireNonBlank(sheetName, "sheetName");
+    Objects.requireNonNull(sheetName, "sheetName must not be null");
     range = requireNonBlank(range, "range");
     topLeftAddress = requireNonBlank(topLeftAddress, "topLeftAddress");
     formula = requireNonBlank(formula, "formula");

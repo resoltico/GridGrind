@@ -21,6 +21,7 @@ import dev.erst.gridgrind.core.model.protection.SheetProtectionReport;
 import dev.erst.gridgrind.core.model.protection.SheetProtectionSettings;
 import dev.erst.gridgrind.core.model.validation.IgnoredErrorReport;
 import dev.erst.gridgrind.core.model.value.CellHyperlinkReport;
+import dev.erst.gridgrind.core.vocabulary.SheetLabel;
 import dev.erst.gridgrind.excel.ExcelCellReadProjection;
 import dev.erst.gridgrind.excel.ExcelHeaderFooterText;
 import dev.erst.gridgrind.excel.ExcelPrintLayout;
@@ -31,6 +32,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 /** Converts sheet/window/layout/readback snapshots into protocol report records. */
+@SuppressWarnings(
+    "PMD.ExcessiveImports") // Corresponding backend and report types define this adapter.
 final class InspectionResultWorkbookLayoutReportSupport {
   private InspectionResultWorkbookLayoutReportSupport() {}
 
@@ -54,7 +57,7 @@ final class InspectionResultWorkbookLayoutReportSupport {
             window.rowCount(), window.columnCount());
     if (includeBlanks) {
       return new dev.erst.gridgrind.core.model.layout.WindowReport.Dense(
-          window.sheetName(),
+          new SheetLabel(window.sheetName()),
           window.topLeftAddress(),
           dimensions,
           window.rows().stream()
@@ -81,7 +84,10 @@ final class InspectionResultWorkbookLayoutReportSupport {
       }
     }
     return new dev.erst.gridgrind.core.model.layout.WindowReport.Sparse(
-        window.sheetName(), window.topLeftAddress(), dimensions, List.copyOf(populatedCells));
+        new SheetLabel(window.sheetName()),
+        window.topLeftAddress(),
+        dimensions,
+        List.copyOf(populatedCells));
   }
 
   static CellHyperlinkReport toCellHyperlinkReport(
@@ -101,7 +107,7 @@ final class InspectionResultWorkbookLayoutReportSupport {
   static SheetLayoutReport toSheetLayoutReport(
       dev.erst.gridgrind.excel.WorkbookSheetResult.SheetLayout layout) {
     return new SheetLayoutReport(
-        layout.sheetName(),
+        new SheetLabel(layout.sheetName()),
         toPaneReport(layout.pane()),
         layout.zoomPercent(),
         toSheetPresentationReport(layout.presentation()),
@@ -130,7 +136,7 @@ final class InspectionResultWorkbookLayoutReportSupport {
   static PrintLayoutReport toPrintLayoutReport(
       dev.erst.gridgrind.excel.WorkbookSheetResult.PrintLayoutResult printLayout) {
     return new PrintLayoutReport(
-        printLayout.sheetName(),
+        new SheetLabel(printLayout.sheetName()),
         toPrintAreaReport(printLayout.printLayout().layout().printArea()),
         printLayout.printLayout().layout().orientation(),
         toPrintScalingReport(printLayout.printLayout().layout().scaling()),

@@ -111,7 +111,8 @@ class AssertionObservationExecutorCoverageTest {
                 AssertionObservationExecutor.zeroMatchPresenceObservation(
                     new StepId("missing-chart-sheet"),
                     new ChartSelector.AllOnSheet(new SheetName("MissingSheet"))))
-            .sheetName());
+            .sheetName()
+            .value());
     assertEquals(
         "MissingSheet",
         assertInstanceOf(
@@ -119,7 +120,8 @@ class AssertionObservationExecutorCoverageTest {
                 AssertionObservationExecutor.zeroMatchPresenceObservation(
                     new StepId("missing-chart-name"),
                     new ChartSelector.ByName(new SheetName("MissingSheet"), "MissingChart")))
-            .sheetName());
+            .sheetName()
+            .value());
     assertThrows(
         IllegalArgumentException.class,
         () ->

@@ -2,6 +2,7 @@ package dev.erst.gridgrind.core.problem;
 
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import dev.erst.gridgrind.core.vocabulary.SheetLabel;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import java.util.Objects;
 
@@ -55,10 +56,10 @@ public sealed interface RequestWarningLocation
   }
 
   /** One warning attached to a formula cell identified during calculation capability analysis. */
-  record FormulaCell(String sheetName, String address, String formula)
+  record FormulaCell(SheetLabel sheetName, String address, String formula)
       implements RequestWarningLocation {
     public FormulaCell {
-      sheetName = requireNonBlank(sheetName, "sheetName");
+      java.util.Objects.requireNonNull(sheetName, "sheetName must not be null");
       address = requireNonBlank(address, "address");
       formula = requireNonBlank(formula, "formula");
     }

@@ -27,6 +27,7 @@ import dev.erst.gridgrind.core.plan.SheetIntrospectionQuery;
 import dev.erst.gridgrind.core.vocabulary.ExcelFillPattern;
 import dev.erst.gridgrind.core.vocabulary.ExcelHorizontalAlignment;
 import dev.erst.gridgrind.core.vocabulary.ExcelVerticalAlignment;
+import dev.erst.gridgrind.core.vocabulary.SheetLabel;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import java.math.BigDecimal;
@@ -42,7 +43,7 @@ class WorkbookInvariantM3CoverageTest {
         () ->
             WorkbookInvariantAnalysisLayoutChecks.requireWindowShape(
                 new WindowReport.Sparse(
-                    "Budget",
+                    new SheetLabel("Budget"),
                     "A1",
                     new WindowDimensionsReport(2, 2),
                     List.of(textCell("A1", "Ada")))));
@@ -50,7 +51,7 @@ class WorkbookInvariantM3CoverageTest {
         () ->
             WorkbookInvariantAnalysisLayoutChecks.requireWindowShape(
                 new WindowReport.Dense(
-                    "Budget",
+                    new SheetLabel("Budget"),
                     "A1",
                     new WindowDimensionsReport(1, 2),
                     List.of(
@@ -107,7 +108,7 @@ class WorkbookInvariantM3CoverageTest {
         new SheetInspectionResult.WindowResult(
             new StepId("window"),
             new WindowReport.Dense(
-                "Budget",
+                new SheetLabel("Budget"),
                 "A1",
                 new WindowDimensionsReport(1, 1),
                 List.of(new WindowRowReport(0, List.of(blankCell("A1"))))));

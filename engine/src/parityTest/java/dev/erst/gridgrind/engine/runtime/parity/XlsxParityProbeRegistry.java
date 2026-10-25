@@ -75,6 +75,7 @@ import dev.erst.gridgrind.core.vocabulary.ExcelOoxmlEncryptionMode;
 import dev.erst.gridgrind.core.vocabulary.ExcelOoxmlHashAlgorithm;
 import dev.erst.gridgrind.core.vocabulary.ExcelOoxmlSignatureState;
 import dev.erst.gridgrind.core.vocabulary.ExcelPrintOrientation;
+import dev.erst.gridgrind.core.vocabulary.SheetLabel;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.engine.runtime.parity.ParityPlanSupport.PendingMutation;
 import java.nio.file.Files;
@@ -302,7 +303,7 @@ final class XlsxParityProbeRegistry {
 
   static PrintLayoutReport defaultPrintLayoutReport(String sheetName) {
     return new PrintLayoutReport(
-        sheetName,
+        new SheetLabel(sheetName),
         new PrintAreaReport.None(),
         ExcelPrintOrientation.PORTRAIT,
         new PrintScalingReport.Automatic(),
@@ -526,7 +527,7 @@ final class XlsxParityProbeRegistry {
 
   static TableEntryReport findTableOnSheet(List<TableEntryReport> tables, String sheetName) {
     return tables.stream()
-        .filter(table -> sheetName.equals(table.sheetName()))
+        .filter(table -> sheetName.equals(table.sheetName().value()))
         .findFirst()
         .orElse(null);
   }
@@ -538,7 +539,7 @@ final class XlsxParityProbeRegistry {
       String expectedSheetName) {
     return observed != null
         && (expectedName == null || observed.name().equals(expectedName))
-        && (expectedSheetName == null || observed.sheetName().equals(expectedSheetName))
+        && (expectedSheetName == null || observed.sheetName().value().equals(expectedSheetName))
         && observed.range().equals(expected.range())
         && observed.structure().headerRowCount() == expected.structure().headerRowCount()
         && observed.structure().totalsRowCount() == expected.structure().totalsRowCount()

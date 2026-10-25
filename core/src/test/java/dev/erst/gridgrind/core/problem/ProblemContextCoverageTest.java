@@ -3,6 +3,7 @@ package dev.erst.gridgrind.core.problem;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import dev.erst.gridgrind.core.vocabulary.SheetLabel;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
@@ -129,18 +130,21 @@ class ProblemContextCoverageTest {
             requestShape, ProblemContextWorkbookSurfaces.WorkbookReference.newWorkbook());
     ProblemContext.ExecuteCalculation.Preflight preflight =
         new ProblemContext.ExecuteCalculation.Preflight(
-            requestShape, ProblemContextWorkbookSurfaces.ProblemLocation.range("Budget", "A1:B2"));
+            requestShape,
+            ProblemContextWorkbookSurfaces.ProblemLocation.range(
+                new SheetLabel("Budget"), "A1:B2"));
     ProblemContext.ExecuteCalculation.Execution execution =
         new ProblemContext.ExecuteCalculation.Execution(
             requestShape,
             ProblemContextWorkbookSurfaces.ProblemLocation.formulaCell(
-                "Budget", "B4", "SUM(B2:B3)"));
+                new SheetLabel("Budget"), "B4", "SUM(B2:B3)"));
     ProblemContext.ExecuteStep executeStep =
         new ProblemContext.ExecuteStep(
             requestShape,
             new ProblemContextWorkbookSurfaces.StepReference(
                 2, new StepId("step-2"), "ASSERTION", "EXPECT_CELL_VALUE"),
-            ProblemContextWorkbookSurfaces.ProblemLocation.namedRange("Budget", "BudgetTotal"));
+            ProblemContextWorkbookSurfaces.ProblemLocation.namedRange(
+                new SheetLabel("Budget"), "BudgetTotal"));
     ProblemContext.PersistWorkbook persistOverwrite =
         new ProblemContext.PersistWorkbook(
             requestShape,
@@ -175,16 +179,22 @@ class ProblemContextCoverageTest {
     assertEquals(Optional.empty(), openWorkbook.sourceWorkbookPath());
     assertEquals(Optional.of("EXISTING"), preflight.sourceType());
     assertEquals(Optional.of("OVERWRITE"), preflight.persistenceType());
-    assertEquals(Optional.of("Budget"), preflight.sheetName());
+    assertEquals(
+        Optional.of("Budget"),
+        preflight.sheetName().map(dev.erst.gridgrind.core.vocabulary.WireString::value));
     assertEquals(Optional.of("A1:B2"), preflight.range());
-    assertEquals(Optional.of("Budget"), execution.sheetName());
+    assertEquals(
+        Optional.of("Budget"),
+        execution.sheetName().map(dev.erst.gridgrind.core.vocabulary.WireString::value));
     assertEquals(Optional.of("B4"), execution.address());
     assertEquals(Optional.of("SUM(B2:B3)"), execution.formula());
     assertEquals(Optional.of("EXISTING"), executeStep.sourceType());
     assertEquals(Optional.of("OVERWRITE"), executeStep.persistenceType());
     assertEquals("ASSERTION", executeStep.step().stepKind());
     assertEquals("EXPECT_CELL_VALUE", executeStep.stepType());
-    assertEquals(Optional.of("Budget"), executeStep.sheetName());
+    assertEquals(
+        Optional.of("Budget"),
+        executeStep.sheetName().map(dev.erst.gridgrind.core.vocabulary.WireString::value));
     assertEquals(Optional.of("BudgetTotal"), executeStep.namedRangeName());
     assertEquals(
         Optional.of("BudgetTotal"),
@@ -246,7 +256,8 @@ class ProblemContextCoverageTest {
             .namedRangeNameValue());
     assertEquals(
         Optional.of("BudgetTotal"),
-        ProblemContextWorkbookSurfaces.ProblemLocation.namedRange("Budget", "BudgetTotal")
+        ProblemContextWorkbookSurfaces.ProblemLocation.namedRange(
+                new SheetLabel("Budget"), "BudgetTotal")
             .namedRangeNameValue());
     assertEquals(
         Optional.empty(), ProblemContextWorkbookSurfaces.ProblemLocation.unknown().formulaValue());

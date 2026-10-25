@@ -62,6 +62,7 @@ import dev.erst.gridgrind.core.vocabulary.ExcelFillPattern;
 import dev.erst.gridgrind.core.vocabulary.ExcelHorizontalAlignment;
 import dev.erst.gridgrind.core.vocabulary.ExcelVerticalAlignment;
 import dev.erst.gridgrind.core.vocabulary.NamedRangeScope;
+import dev.erst.gridgrind.core.vocabulary.SheetLabel;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
@@ -1001,7 +1002,7 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
             AnalysisSeverity.ERROR,
             "Formula error",
             "Division by zero",
-            new AnalysisLocationReport.Cell("Budget", "E2"),
+            new AnalysisLocationReport.Cell(new SheetLabel("Budget"), "E2"),
             List.of("E2"));
     AnalysisSummaryReport summary = new AnalysisSummaryReport(1, 1, 0, 0);
 
@@ -1080,7 +1081,7 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
             AnalysisSeverity.ERROR,
             "Formula error",
             "Division by zero",
-            new AnalysisLocationReport.Cell("Budget", "E2"),
+            new AnalysisLocationReport.Cell(new SheetLabel("Budget"), "E2"),
             List.of("E2"));
     CellStyleReport style = style();
     dev.erst.gridgrind.core.model.value.CellReport.BlankReport blankCell =

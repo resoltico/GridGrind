@@ -49,7 +49,7 @@ class SemanticSelectorExecutionCoverageTest {
 
     SheetInspectionResult.CellsResult cellsResult =
         assertInstanceOf(SheetInspectionResult.CellsResult.class, success.inspections().getFirst());
-    assertEquals("Budget", cellsResult.sheetName());
+    assertEquals("Budget", cellsResult.sheetName().value());
     assertEquals(List.of(), cellsResult.cells());
   }
 

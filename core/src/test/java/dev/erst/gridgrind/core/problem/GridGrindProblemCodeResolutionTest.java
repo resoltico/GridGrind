@@ -2,6 +2,7 @@ package dev.erst.gridgrind.core.problem;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+import dev.erst.gridgrind.core.vocabulary.SheetLabel;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import org.junit.jupiter.api.Test;
 
@@ -14,7 +15,7 @@ class GridGrindProblemCodeResolutionTest {
             ProblemContextRequestSurfaces.RequestShape.known("NEW", "NONE"),
             new ProblemContextWorkbookSurfaces.StepReference(
                 0, new StepId("assert-total"), "ASSERTION", "EXPECT_CELL_VALUE"),
-            ProblemContextWorkbookSurfaces.ProblemLocation.cell("Budget", "B2"));
+            ProblemContextWorkbookSurfaces.ProblemLocation.cell(new SheetLabel("Budget"), "B2"));
     ProblemContext.PersistWorkbook saveAsContext =
         new ProblemContext.PersistWorkbook(
             ProblemContextRequestSurfaces.RequestShape.known("EXISTING", "SAVE_AS"),

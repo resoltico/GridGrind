@@ -45,6 +45,7 @@ import dev.erst.gridgrind.core.vocabulary.ExcelPaneRegion;
 import dev.erst.gridgrind.core.vocabulary.ExcelVerticalAlignment;
 import dev.erst.gridgrind.core.vocabulary.NamedRangeBackingKind;
 import dev.erst.gridgrind.core.vocabulary.NamedRangeScope;
+import dev.erst.gridgrind.core.vocabulary.SheetLabel;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
@@ -65,8 +66,9 @@ class WorkbookResultNestedCoverageTest {
             Optional.of(List.of(new RichTextRunReport("Owner", style().font()))));
     WindowRowReport row = new WindowRowReport(0, List.of(textCell));
     WindowReport window =
-        new WindowReport.Dense("Budget", "A1", new WindowDimensionsReport(1, 1), List.of(row));
-    assertEquals("Budget", window.sheetName());
+        new WindowReport.Dense(
+            new SheetLabel("Budget"), "A1", new WindowDimensionsReport(1, 1), List.of(row));
+    assertEquals("Budget", window.sheetName().value());
     assertEquals(
         "rowCount must be greater than 0",
         assertThrows(IllegalArgumentException.class, () -> new WindowDimensionsReport(0, 1))
@@ -74,7 +76,7 @@ class WorkbookResultNestedCoverageTest {
 
     SheetLayoutReport layout =
         new SheetLayoutReport(
-            "Budget",
+            new SheetLabel("Budget"),
             new PaneReport.Split(1, 1, 0, 0, ExcelPaneRegion.LOWER_RIGHT),
             125,
             SheetPresentationReport.defaults(),
@@ -87,7 +89,7 @@ class WorkbookResultNestedCoverageTest {
                 IllegalArgumentException.class,
                 () ->
                     new SheetLayoutReport(
-                        "Budget",
+                        new SheetLabel("Budget"),
                         new PaneReport.None(),
                         401,
                         SheetPresentationReport.defaults(),
@@ -97,7 +99,7 @@ class WorkbookResultNestedCoverageTest {
 
     SheetSchemaReport schema =
         new SheetSchemaReport(
-            "Budget",
+            new SheetLabel("Budget"),
             "A1",
             2,
             1,
@@ -136,7 +138,7 @@ class WorkbookResultNestedCoverageTest {
         "formulaCellCount must not be negative",
         assertThrows(
                 IllegalArgumentException.class,
-                () -> new SheetFormulaSurfaceReport("Budget", -1, 0, List.of()))
+                () -> new SheetFormulaSurfaceReport(new SheetLabel("Budget"), -1, 0, List.of()))
             .getMessage());
     assertEquals(
         "formula must not be blank",

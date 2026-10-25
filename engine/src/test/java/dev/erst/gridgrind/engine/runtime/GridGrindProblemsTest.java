@@ -16,6 +16,7 @@ import dev.erst.gridgrind.core.problem.MessageShape;
 import dev.erst.gridgrind.core.problem.ProblemContext;
 import dev.erst.gridgrind.core.problem.ProblemContextRequestSurfaces;
 import dev.erst.gridgrind.core.problem.ProblemContextWorkbookSurfaces;
+import dev.erst.gridgrind.core.vocabulary.SheetLabel;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.excel.InvalidFormulaException;
@@ -166,7 +167,8 @@ class GridGrindProblemsTest {
                 ProblemContextRequestSurfaces.RequestShape.known("NEW", "NONE"),
                 new ProblemContextWorkbookSurfaces.StepReference(
                     1, new StepId("assert-total"), "ASSERTION", "EXPECT_CELL_VALUE"),
-                ProblemContextWorkbookSurfaces.ProblemLocation.cell("Budget", "B4")));
+                ProblemContextWorkbookSurfaces.ProblemLocation.cell(
+                    new SheetLabel("Budget"), "B4")));
     assertEquals(GridGrindProblemCategory.ASSERTION, assertionProblem.category());
     assertEquals(GridGrindProblemCode.ASSERTION_FAILED, assertionProblem.code());
   }
@@ -242,7 +244,8 @@ class GridGrindProblemsTest {
     assertEquals(
         java.util.Optional.of("Budget"),
         DefaultGridGrindRequestExecutorTestSupport.calculationPreflightContext(problem)
-            .sheetName());
+            .sheetName()
+            .map(dev.erst.gridgrind.core.vocabulary.WireString::value));
     assertEquals(
         java.util.Optional.of("B1"),
         DefaultGridGrindRequestExecutorTestSupport.calculationPreflightContext(problem).address());

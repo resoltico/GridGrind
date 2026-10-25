@@ -27,6 +27,7 @@ import dev.erst.gridgrind.core.vocabulary.ExcelPaneRegion;
 import dev.erst.gridgrind.core.vocabulary.ExcelPrintOrientation;
 import dev.erst.gridgrind.core.vocabulary.ExcelRowSpan;
 import dev.erst.gridgrind.core.vocabulary.ExcelSheetLayoutLimits;
+import dev.erst.gridgrind.core.vocabulary.SheetLabel;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import org.junit.jupiter.api.Test;
 
@@ -184,7 +185,7 @@ class StructuralLayoutProtocolTypesTest {
 
     assertEquals(
         new PrintLayoutReport(
-            "Budget",
+            new SheetLabel("Budget"),
             new PrintAreaReport.None(),
             ExcelPrintOrientation.PORTRAIT,
             new PrintScalingReport.Automatic(),
@@ -193,7 +194,7 @@ class StructuralLayoutProtocolTypesTest {
             new HeaderFooterTextReport("", "", ""),
             new HeaderFooterTextReport("", "", "")),
         new PrintLayoutReport(
-            "Budget",
+            new SheetLabel("Budget"),
             new PrintAreaReport.None(),
             ExcelPrintOrientation.PORTRAIT,
             new PrintScalingReport.Automatic(),
@@ -205,7 +206,7 @@ class StructuralLayoutProtocolTypesTest {
         IllegalArgumentException.class,
         () ->
             new PrintLayoutReport(
-                " ",
+                new SheetLabel(" "),
                 new PrintAreaReport.None(),
                 ExcelPrintOrientation.PORTRAIT,
                 new PrintScalingReport.Automatic(),
@@ -221,7 +222,7 @@ class StructuralLayoutProtocolTypesTest {
         NullPointerException.class,
         () ->
             new SheetLayoutReport(
-                "Budget",
+                new SheetLabel("Budget"),
                 null,
                 100,
                 SheetPresentationReport.defaults(),
@@ -231,7 +232,7 @@ class StructuralLayoutProtocolTypesTest {
         IllegalArgumentException.class,
         () ->
             new SheetLayoutReport(
-                "Budget",
+                new SheetLabel("Budget"),
                 new PaneReport.None(),
                 9,
                 SheetPresentationReport.defaults(),
@@ -241,7 +242,7 @@ class StructuralLayoutProtocolTypesTest {
         IllegalArgumentException.class,
         () ->
             new SheetLayoutReport(
-                "Budget",
+                new SheetLabel("Budget"),
                 new PaneReport.None(),
                 401,
                 SheetPresentationReport.defaults(),
@@ -251,7 +252,7 @@ class StructuralLayoutProtocolTypesTest {
         NullPointerException.class,
         () ->
             new SheetLayoutReport(
-                "Budget",
+                new SheetLabel("Budget"),
                 new PaneReport.None(),
                 100,
                 null,

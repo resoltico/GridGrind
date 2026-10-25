@@ -352,7 +352,7 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
     assertEquals(0, workbook.namedRangeCount());
     assertTrue(workbook.forceFormulaRecalculationOnOpen());
 
-    assertEquals("Budget", cells.sheetName());
+    assertEquals("Budget", cells.sheetName().value());
     assertEquals(
         "Item",
         cast(dev.erst.gridgrind.core.model.value.CellReport.TextReport.class, cells.cells().get(0))
@@ -373,7 +373,7 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
             .booleanValue()
             .orElseThrow());
 
-    assertEquals("Budget", window.sheetName());
+    assertEquals("Budget", window.sheetName().value());
     assertEquals("A1", window.topLeftAddress());
     assertEquals(4, window.dimensions().rowCount());
     assertEquals("A1", windowCells(window).getFirst().address());

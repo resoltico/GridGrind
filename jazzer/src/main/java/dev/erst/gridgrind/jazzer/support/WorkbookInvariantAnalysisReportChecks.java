@@ -33,7 +33,8 @@ final class WorkbookInvariantAnalysisReportChecks {
               WorkbookInvariantChecks.require(
                   sheet.sheetName() != null, "formula surface sheetName must not be null");
               WorkbookInvariantChecks.require(
-                  !sheet.sheetName().isBlank(), "formula surface sheetName must not be blank");
+                  !sheet.sheetName().value().isBlank(),
+                  "formula surface sheetName must not be blank");
               WorkbookInvariantChecks.require(
                   sheet.formulaCellCount() >= 0, "formulaCellCount must not be negative");
               WorkbookInvariantChecks.require(
@@ -59,7 +60,7 @@ final class WorkbookInvariantAnalysisReportChecks {
     WorkbookInvariantChecks.require(
         analysis.sheetName() != null, "schema sheetName must not be null");
     WorkbookInvariantChecks.require(
-        !analysis.sheetName().isBlank(), "schema sheetName must not be blank");
+        !analysis.sheetName().value().isBlank(), "schema sheetName must not be blank");
     WorkbookInvariantChecks.require(
         analysis.topLeftAddress() != null, "schema topLeftAddress must not be null");
     WorkbookInvariantChecks.require(
@@ -235,13 +236,13 @@ final class WorkbookInvariantAnalysisReportChecks {
     switch (finding.location()) {
       case AnalysisLocationReport.Workbook _ -> {}
       case AnalysisLocationReport.Sheet sheet ->
-          WorkbookInvariantChecks.requireNonBlank(sheet.sheetName(), "analysis sheetName");
+          WorkbookInvariantChecks.requireNonBlank(sheet.sheetName().value(), "analysis sheetName");
       case AnalysisLocationReport.Cell cell -> {
-        WorkbookInvariantChecks.requireNonBlank(cell.sheetName(), "analysis sheetName");
+        WorkbookInvariantChecks.requireNonBlank(cell.sheetName().value(), "analysis sheetName");
         WorkbookInvariantChecks.requireNonBlank(cell.address(), "analysis address");
       }
       case AnalysisLocationReport.Range range -> {
-        WorkbookInvariantChecks.requireNonBlank(range.sheetName(), "analysis sheetName");
+        WorkbookInvariantChecks.requireNonBlank(range.sheetName().value(), "analysis sheetName");
         WorkbookInvariantChecks.requireNonBlank(range.range(), "analysis range");
       }
       case AnalysisLocationReport.NamedRange namedRange -> {

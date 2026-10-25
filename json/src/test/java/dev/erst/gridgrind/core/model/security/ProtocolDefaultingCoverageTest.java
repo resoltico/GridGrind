@@ -96,6 +96,7 @@ import dev.erst.gridgrind.core.vocabulary.ExcelPivotDataConsolidateFunction;
 import dev.erst.gridgrind.core.vocabulary.ExcelPrintOrientation;
 import dev.erst.gridgrind.core.vocabulary.PlanId;
 import dev.erst.gridgrind.core.vocabulary.ProtocolRgbColorSupport;
+import dev.erst.gridgrind.core.vocabulary.SheetLabel;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import java.util.List;
 import java.util.Optional;
@@ -121,7 +122,7 @@ class ProtocolDefaultingCoverageTest {
 
   @Test
   void explicitRequestConstructorsPreserveAuthoredValues() {
-    JsonMapper mapper = JsonMapper.builder().build();
+    JsonMapper mapper = dev.erst.gridgrind.json.codec.GridGrindJsonMapperSupport.JSON_MAPPER;
     CalculationPolicyInput calculation =
         new CalculationPolicyInput(new CalculationStrategyInput.DoNotCalculate(), false);
     ExecutionModeInput mode = ExecutionModeInput.fullXssf();
@@ -253,7 +254,7 @@ class ProtocolDefaultingCoverageTest {
 
   @Test
   void requestJsonCreatorsApplyCatalogOwnedOmissionDefaults() {
-    JsonMapper mapper = JsonMapper.builder().build();
+    JsonMapper mapper = dev.erst.gridgrind.json.codec.GridGrindJsonMapperSupport.JSON_MAPPER;
 
     ExecutionPolicyInput execution = readJson(mapper, "{}", ExecutionPolicyInput.class);
     ExecutionJournalInput journal = readJson(mapper, "{}", ExecutionJournalInput.class);
@@ -481,7 +482,7 @@ class ProtocolDefaultingCoverageTest {
     TableEntryReport defaultedTableReport =
         new TableEntryReport(
             "BudgetTable",
-            "Budget",
+            new SheetLabel("Budget"),
             "A1:B3",
             new TableEntryReport.Structure(
                 1, 0, List.of("Owner"), List.of(new TableColumnReport(0L, "Owner"))),
@@ -542,7 +543,7 @@ class ProtocolDefaultingCoverageTest {
 
   @Test
   void validationChartPrintAndSignatureWireConstructorsCoverExplicitAndDefaultedBranches() {
-    JsonMapper mapper = JsonMapper.builder().build();
+    JsonMapper mapper = dev.erst.gridgrind.json.codec.GridGrindJsonMapperSupport.JSON_MAPPER;
     DataValidationErrorAlertInput explicitAlert =
         new DataValidationErrorAlertInput(
             ExcelDataValidationErrorStyle.STOP,
@@ -1014,7 +1015,7 @@ class ProtocolDefaultingCoverageTest {
 
   @Test
   void creatorsRequireExplicitWireValues() {
-    JsonMapper mapper = JsonMapper.builder().build();
+    JsonMapper mapper = dev.erst.gridgrind.json.codec.GridGrindJsonMapperSupport.JSON_MAPPER;
     PrintSetupInput printSetup =
         mapper.readValue(
             """
@@ -1173,21 +1174,18 @@ class ProtocolDefaultingCoverageTest {
         mapper.readValue(
             """
             {
-              "planId": "journal-plan",
               "level": "NORMAL",
               "source": { "type": "NEW" },
-              "persistence": { "type": "NONE" },
-              "validation": { "status": "NOT_STARTED", "durationMillis": 0 },
-              "inputResolution": { "status": "NOT_STARTED", "durationMillis": 0 },
-              "open": { "status": "NOT_STARTED", "durationMillis": 0 },
+              "validation": { "status": "NOT_STARTED" },
+              "inputResolution": { "status": "NOT_STARTED" },
+              "open": { "status": "NOT_STARTED" },
               "calculation": {
-                "preflight": { "status": "NOT_STARTED", "durationMillis": 0 },
-                "execution": { "status": "NOT_STARTED", "durationMillis": 0 }
+                "preflight": { "status": "NOT_STARTED" },
+                "execution": { "status": "NOT_STARTED" }
               },
-              "persistencePhase": { "status": "NOT_STARTED", "durationMillis": 0 },
-              "close": { "status": "NOT_STARTED", "durationMillis": 0 },
+              "persistencePhase": { "status": "NOT_STARTED" },
+              "close": { "status": "NOT_STARTED" },
               "steps": [],
-              "warnings": [],
               "outcome": {
                 "status": "SUCCEEDED",
                 "plannedStepCount": 0,

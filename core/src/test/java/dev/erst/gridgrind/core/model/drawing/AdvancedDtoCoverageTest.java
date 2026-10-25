@@ -48,6 +48,8 @@ import dev.erst.gridgrind.core.vocabulary.ExcelOoxmlHashAlgorithm;
 import dev.erst.gridgrind.core.vocabulary.ExcelPaneRegion;
 import dev.erst.gridgrind.core.vocabulary.ExcelPictureFormat;
 import dev.erst.gridgrind.core.vocabulary.ExcelPivotDataConsolidateFunction;
+import dev.erst.gridgrind.core.vocabulary.SheetLabel;
+import dev.erst.gridgrind.core.vocabulary.SheetName;
 import java.util.Base64;
 import java.util.List;
 import java.util.Optional;
@@ -400,9 +402,10 @@ class AdvancedDtoCoverageTest {
 
   @Test
   void arrayFormulaReportsValidateRequiredFields() {
-    ArrayFormulaReport report = new ArrayFormulaReport("Calc", "D2:D4", "D2", "B2:B4*C2:C4", false);
+    ArrayFormulaReport report =
+        new ArrayFormulaReport(new SheetLabel("Calc"), "D2:D4", "D2", "B2:B4*C2:C4", false);
 
-    assertEquals("Calc", report.sheetName());
+    assertEquals("Calc", report.sheetName().value());
     assertEquals("D2:D4", report.range());
     assertEquals("D2", report.topLeftAddress());
     assertEquals("B2:B4*C2:C4", report.formula());
@@ -411,7 +414,7 @@ class AdvancedDtoCoverageTest {
         "range must not be blank",
         assertThrows(
                 IllegalArgumentException.class,
-                () -> new ArrayFormulaReport("Calc", " ", "D2", "SUM(B2:C2)", true))
+                () -> new ArrayFormulaReport(new SheetLabel("Calc"), " ", "D2", "SUM(B2:C2)", true))
             .getMessage());
   }
 
@@ -420,7 +423,7 @@ class AdvancedDtoCoverageTest {
     CustomXmlDataBindingReport dataBinding =
         new CustomXmlDataBindingReport("binding", true, 7L, "binding.xml", 2L);
     CustomXmlLinkedCellReport linkedCell =
-        new CustomXmlLinkedCellReport("Foglio1", "A1", "/CORSO/NOME", "string");
+        new CustomXmlLinkedCellReport(new SheetLabel("Foglio1"), "A1", "/CORSO/NOME", "string");
     CustomXmlMappingReport mapping =
         mappingReport(
             null, null, null, "<xsd:schema/>", dataBinding, List.of(linkedCell), List.of());
@@ -593,9 +596,9 @@ class AdvancedDtoCoverageTest {
     PivotTableReport.Supported pivot =
         new PivotTableReport.Supported(
             "Sales Pivot 2026",
-            "Report",
+            new SheetName("Report"),
             new PivotTableReport.Anchor("C5", "C5:G9"),
-            new PivotTableReport.Source.Range("Data", "A1:D5"),
+            new PivotTableReport.Source.Range(new SheetName("Data"), "A1:D5"),
             List.of(new PivotTableReport.Field(0, "Region")),
             List.of(new PivotTableReport.Field(1, "Stage")),
             List.of(new PivotTableReport.Field(2, "Owner")),
@@ -607,7 +610,7 @@ class AdvancedDtoCoverageTest {
                     "Total Amount",
                     Optional.of("#,##0.00"))),
             true);
-    assertEquals("Report", pivot.sheetName());
+    assertEquals("Report", pivot.sheetName().value());
     assertEquals(
         "valueFormat must not be blank",
         assertThrows(
@@ -668,7 +671,7 @@ class AdvancedDtoCoverageTest {
             AnalysisSeverity.WARNING,
             "Autofilter spans multiple ranges",
             "Autofilter found on disjoint ranges.",
-            new AnalysisLocationReport.Sheet("Budget"),
+            new AnalysisLocationReport.Sheet(new SheetLabel("Budget")),
             List.of("A1:B4"));
     AutofilterHealthReport report = new AutofilterHealthReport(1, summary, List.of(finding));
     assertEquals(1, report.checkedAutofilterCount());

@@ -6,6 +6,7 @@ import dev.erst.gridgrind.core.model.drawing.DrawingObjectPayloadReport;
 import dev.erst.gridgrind.core.model.drawing.DrawingObjectReport;
 import dev.erst.gridgrind.core.model.pivot.PivotTableReport;
 import dev.erst.gridgrind.core.model.table.TableEntryReport;
+import dev.erst.gridgrind.core.vocabulary.SheetLabel;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import java.util.List;
 import java.util.Objects;
@@ -21,12 +22,12 @@ public sealed interface WorkbookAssetInspectionResult extends InspectionIntrospe
   /** Returns factual drawing-object metadata for one sheet. */
   @JsonTypeName("GET_DRAWING_OBJECTS")
   record DrawingObjectsResult(
-      StepId stepId, String sheetName, List<DrawingObjectReport> drawingObjects)
+      StepId stepId, SheetLabel sheetName, List<DrawingObjectReport> drawingObjects)
       implements WorkbookAssetInspectionResult {
     public DrawingObjectsResult {
 
       java.util.Objects.requireNonNull(stepId, "stepId must not be null");
-      sheetName = InspectionResultValidationSupport.requireNonBlank(sheetName, "sheetName");
+      java.util.Objects.requireNonNull(sheetName, "sheetName must not be null");
       drawingObjects =
           InspectionResultValidationSupport.copyValues(drawingObjects, "drawingObjects");
     }
@@ -34,12 +35,12 @@ public sealed interface WorkbookAssetInspectionResult extends InspectionIntrospe
 
   /** Returns factual chart metadata for one sheet. */
   @JsonTypeName("GET_CHARTS")
-  record ChartsResult(StepId stepId, String sheetName, List<ChartReport> charts)
+  record ChartsResult(StepId stepId, SheetLabel sheetName, List<ChartReport> charts)
       implements WorkbookAssetInspectionResult {
     public ChartsResult {
 
       java.util.Objects.requireNonNull(stepId, "stepId must not be null");
-      sheetName = InspectionResultValidationSupport.requireNonBlank(sheetName, "sheetName");
+      java.util.Objects.requireNonNull(sheetName, "sheetName must not be null");
       charts = InspectionResultValidationSupport.copyValues(charts, "charts");
     }
   }
@@ -58,12 +59,12 @@ public sealed interface WorkbookAssetInspectionResult extends InspectionIntrospe
   /** Returns the extracted binary payload for one existing drawing object. */
   @JsonTypeName("GET_DRAWING_OBJECT_PAYLOAD")
   record DrawingObjectPayloadResult(
-      StepId stepId, String sheetName, DrawingObjectPayloadReport payload)
+      StepId stepId, SheetLabel sheetName, DrawingObjectPayloadReport payload)
       implements WorkbookAssetInspectionResult {
     public DrawingObjectPayloadResult {
 
       java.util.Objects.requireNonNull(stepId, "stepId must not be null");
-      sheetName = InspectionResultValidationSupport.requireNonBlank(sheetName, "sheetName");
+      java.util.Objects.requireNonNull(sheetName, "sheetName must not be null");
       Objects.requireNonNull(payload, "payload must not be null");
     }
   }

@@ -476,7 +476,8 @@ class DefaultGridGrindRequestExecutorReadResultTranslationTest
             .location();
 
     assertInstanceOf(AnalysisLocationReport.Workbook.class, workbookLocation);
-    assertEquals("Budget", cast(AnalysisLocationReport.Sheet.class, sheetLocation).sheetName());
+    assertEquals(
+        "Budget", cast(AnalysisLocationReport.Sheet.class, sheetLocation).sheetName().value());
     assertEquals("A1:B2", cast(AnalysisLocationReport.Range.class, rangeLocation).range());
     assertEquals(
         "BudgetTotal", cast(AnalysisLocationReport.NamedRange.class, namedRangeLocation).name());

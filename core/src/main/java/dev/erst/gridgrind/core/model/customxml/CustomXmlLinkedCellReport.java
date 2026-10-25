@@ -1,12 +1,13 @@
 package dev.erst.gridgrind.core.model.customxml;
 
+import dev.erst.gridgrind.core.vocabulary.SheetLabel;
 import java.util.Objects;
 
 /** Factual single-cell mapping entry linked to one custom-XML map. */
 public record CustomXmlLinkedCellReport(
-    String sheetName, String address, String xpath, String xmlDataType) {
+    SheetLabel sheetName, String address, String xpath, String xmlDataType) {
   public CustomXmlLinkedCellReport {
-    sheetName = requireNonBlank(sheetName, "sheetName");
+    Objects.requireNonNull(sheetName, "sheetName must not be null");
     address = requireNonBlank(address, "address");
     xpath = requireNonBlank(xpath, "xpath");
     xmlDataType = requireNonBlank(xmlDataType, "xmlDataType");

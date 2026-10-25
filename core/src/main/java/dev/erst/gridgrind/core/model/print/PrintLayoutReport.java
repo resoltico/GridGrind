@@ -1,11 +1,12 @@
 package dev.erst.gridgrind.core.model.print;
 
 import dev.erst.gridgrind.core.vocabulary.ExcelPrintOrientation;
+import dev.erst.gridgrind.core.vocabulary.SheetLabel;
 import java.util.Objects;
 
 /** Supported print-layout facts for one sheet. */
 public record PrintLayoutReport(
-    String sheetName,
+    SheetLabel sheetName,
     PrintAreaReport printArea,
     ExcelPrintOrientation orientation,
     PrintScalingReport scaling,
@@ -16,7 +17,7 @@ public record PrintLayoutReport(
     PrintSetupReport setup) {
   /** Creates a print-layout report with defaulted advanced page-setup facts. */
   public PrintLayoutReport(
-      String sheetName,
+      SheetLabel sheetName,
       PrintAreaReport printArea,
       ExcelPrintOrientation orientation,
       PrintScalingReport scaling,
@@ -46,8 +47,5 @@ public record PrintLayoutReport(
     Objects.requireNonNull(header, "header must not be null");
     Objects.requireNonNull(footer, "footer must not be null");
     Objects.requireNonNull(setup, "setup must not be null");
-    if (sheetName.isBlank()) {
-      throw new IllegalArgumentException("sheetName must not be blank");
-    }
   }
 }

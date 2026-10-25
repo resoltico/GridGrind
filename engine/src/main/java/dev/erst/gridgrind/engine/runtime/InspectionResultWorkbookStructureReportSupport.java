@@ -14,6 +14,8 @@ import dev.erst.gridgrind.core.model.table.AutofilterSortStateReport;
 import dev.erst.gridgrind.core.model.table.TableColumnReport;
 import dev.erst.gridgrind.core.model.table.TableEntryReport;
 import dev.erst.gridgrind.core.model.table.TableStyleReport;
+import dev.erst.gridgrind.core.vocabulary.SheetLabel;
+import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.excel.ExcelAutofilterFilterColumnSnapshot;
 import dev.erst.gridgrind.excel.ExcelAutofilterFilterCriterionSnapshot;
 import dev.erst.gridgrind.excel.ExcelAutofilterSnapshot;
@@ -31,6 +33,8 @@ import dev.erst.gridgrind.excel.pivot.ExcelPivotTableSnapshot;
 import org.jspecify.annotations.Nullable;
 
 /** Converts workbook structure snapshots such as XML mappings, filters, tables, and pivots. */
+@SuppressWarnings(
+    "PMD.ExcessiveImports") // Corresponding backend and report types define this adapter.
 final class InspectionResultWorkbookStructureReportSupport {
   private InspectionResultWorkbookStructureReportSupport() {}
 
@@ -76,13 +80,16 @@ final class InspectionResultWorkbookStructureReportSupport {
   static CustomXmlLinkedCellReport toCustomXmlLinkedCellReport(
       ExcelCustomXmlLinkedCellSnapshot snapshot) {
     return new CustomXmlLinkedCellReport(
-        snapshot.sheetName(), snapshot.address(), snapshot.xpath(), snapshot.xmlDataType());
+        new SheetLabel(snapshot.sheetName()),
+        snapshot.address(),
+        snapshot.xpath(),
+        snapshot.xmlDataType());
   }
 
   static CustomXmlLinkedTableReport toCustomXmlLinkedTableReport(
       ExcelCustomXmlLinkedTableSnapshot snapshot) {
     return new CustomXmlLinkedTableReport(
-        snapshot.sheetName(),
+        new SheetLabel(snapshot.sheetName()),
         snapshot.tableName(),
         snapshot.tableDisplayName(),
         snapshot.range(),
@@ -100,7 +107,7 @@ final class InspectionResultWorkbookStructureReportSupport {
   static dev.erst.gridgrind.core.model.formula.ArrayFormulaReport toArrayFormulaReport(
       dev.erst.gridgrind.excel.ExcelArrayFormulaSnapshot snapshot) {
     return new dev.erst.gridgrind.core.model.formula.ArrayFormulaReport(
-        snapshot.sheetName(),
+        new SheetLabel(snapshot.sheetName()),
         snapshot.range(),
         snapshot.topLeftAddress(),
         snapshot.formula(),
@@ -140,7 +147,7 @@ final class InspectionResultWorkbookStructureReportSupport {
   static TableEntryReport toTableEntryReport(ExcelTableSnapshot snapshot) {
     return new TableEntryReport(
         snapshot.name(),
-        snapshot.sheetName(),
+        new SheetLabel(snapshot.sheetName()),
         snapshot.range(),
         new TableEntryReport.Structure(
             snapshot.structure().headerRowCount(),
@@ -167,7 +174,7 @@ final class InspectionResultWorkbookStructureReportSupport {
       case ExcelPivotTableSnapshot.Supported supported ->
           new PivotTableReport.Supported(
               supported.name(),
-              supported.sheetName(),
+              new SheetName(supported.sheetName()),
               new PivotTableReport.Anchor(
                   supported.anchor().topLeftAddress(), supported.anchor().locationRange()),
               toPivotTableSourceReport(supported.source()),
@@ -203,7 +210,7 @@ final class InspectionResultWorkbookStructureReportSupport {
       case ExcelPivotTableSnapshot.Unsupported unsupported ->
           new PivotTableReport.Unsupported(
               unsupported.name(),
-              unsupported.sheetName(),
+              new SheetName(unsupported.sheetName()),
               new PivotTableReport.Anchor(
                   unsupported.anchor().topLeftAddress(), unsupported.anchor().locationRange()),
               unsupported.detail());
@@ -214,12 +221,13 @@ final class InspectionResultWorkbookStructureReportSupport {
       ExcelPivotTableSnapshot.Source source) {
     return switch (source) {
       case ExcelPivotTableSnapshot.Source.Range range ->
-          new PivotTableReport.Source.Range(range.sheetName(), range.range());
+          new PivotTableReport.Source.Range(new SheetName(range.sheetName()), range.range());
       case ExcelPivotTableSnapshot.Source.NamedRange namedRange ->
           new PivotTableReport.Source.NamedRange(
-              namedRange.name(), namedRange.sheetName(), namedRange.range());
+              namedRange.name(), new SheetName(namedRange.sheetName()), namedRange.range());
       case ExcelPivotTableSnapshot.Source.Table table ->
-          new PivotTableReport.Source.Table(table.name(), table.sheetName(), table.range());
+          new PivotTableReport.Source.Table(
+              table.name(), new SheetName(table.sheetName()), table.range());
     };
   }
 

@@ -8,6 +8,7 @@ import dev.erst.gridgrind.core.plan.WorkbookAssetInspectionResult;
 import dev.erst.gridgrind.core.plan.WorkbookInspectionResult;
 import dev.erst.gridgrind.core.plan.WorkbookSurfaceInspectionResult;
 import dev.erst.gridgrind.core.result.SheetSummaryReport;
+import dev.erst.gridgrind.core.vocabulary.SheetLabel;
 
 /** Converts engine read results into protocol inspection-result variants. */
 final class InspectionResultReadConverter {
@@ -68,7 +69,7 @@ final class InspectionResultReadConverter {
       case dev.erst.gridgrind.excel.WorkbookSheetResult.CellsResult cells ->
           new SheetInspectionResult.CellsResult(
               cells.stepId(),
-              cells.sheetName(),
+              new SheetLabel(cells.sheetName()),
               cells.cells().stream()
                   .map(
                       cell ->
@@ -83,35 +84,35 @@ final class InspectionResultReadConverter {
       case dev.erst.gridgrind.excel.WorkbookSheetResult.MergedRegionsResult mergedRegions ->
           new SheetInspectionResult.MergedRegionsResult(
               mergedRegions.stepId(),
-              mergedRegions.sheetName(),
+              new SheetLabel(mergedRegions.sheetName()),
               mergedRegions.mergedRegions().stream()
                   .map(region -> new MergedRegionReport(region.range()))
                   .toList());
       case dev.erst.gridgrind.excel.WorkbookSheetResult.HyperlinksResult hyperlinks ->
           new SheetInspectionResult.HyperlinksResult(
               hyperlinks.stepId(),
-              hyperlinks.sheetName(),
+              new SheetLabel(hyperlinks.sheetName()),
               hyperlinks.hyperlinks().stream()
                   .map(InspectionResultWorkbookLayoutReportSupport::toCellHyperlinkReport)
                   .toList());
       case dev.erst.gridgrind.excel.WorkbookSheetResult.CommentsResult comments ->
           new SheetInspectionResult.CommentsResult(
               comments.stepId(),
-              comments.sheetName(),
+              new SheetLabel(comments.sheetName()),
               comments.comments().stream()
                   .map(InspectionResultWorkbookLayoutReportSupport::toCellCommentReport)
                   .toList());
       case dev.erst.gridgrind.excel.WorkbookDrawingResult.DrawingObjectsResult drawingObjects ->
           new WorkbookAssetInspectionResult.DrawingObjectsResult(
               drawingObjects.stepId(),
-              drawingObjects.sheetName(),
+              new SheetLabel(drawingObjects.sheetName()),
               drawingObjects.drawingObjects().stream()
                   .map(InspectionResultDrawingReportSupport::toDrawingObjectReport)
                   .toList());
       case dev.erst.gridgrind.excel.WorkbookDrawingResult.ChartsResult charts ->
           new WorkbookAssetInspectionResult.ChartsResult(
               charts.stepId(),
-              charts.sheetName(),
+              new SheetLabel(charts.sheetName()),
               charts.charts().stream()
                   .map(InspectionResultDrawingReportSupport::toChartReport)
                   .toList());
@@ -125,7 +126,7 @@ final class InspectionResultReadConverter {
               drawingPayload ->
           new WorkbookAssetInspectionResult.DrawingObjectPayloadResult(
               drawingPayload.stepId(),
-              drawingPayload.sheetName(),
+              new SheetLabel(drawingPayload.sheetName()),
               InspectionResultDrawingReportSupport.toDrawingObjectPayloadReport(
                   drawingPayload.payload()));
       case dev.erst.gridgrind.excel.WorkbookSheetResult.SheetLayoutResult sheetLayout ->
@@ -140,7 +141,7 @@ final class InspectionResultReadConverter {
       case dev.erst.gridgrind.excel.WorkbookRuleResult.DataValidationsResult dataValidations ->
           new SheetInspectionResult.DataValidationsResult(
               dataValidations.stepId(),
-              dataValidations.sheetName(),
+              new SheetLabel(dataValidations.sheetName()),
               dataValidations.validations().stream()
                   .map(InspectionResultValidationReportSupport::toDataValidationEntryReport)
                   .toList());
@@ -148,14 +149,14 @@ final class InspectionResultReadConverter {
               conditionalFormatting ->
           new SheetInspectionResult.ConditionalFormattingResult(
               conditionalFormatting.stepId(),
-              conditionalFormatting.sheetName(),
+              new SheetLabel(conditionalFormatting.sheetName()),
               conditionalFormatting.conditionalFormattingBlocks().stream()
                   .map(InspectionResultValidationReportSupport::toConditionalFormattingEntryReport)
                   .toList());
       case dev.erst.gridgrind.excel.WorkbookRuleResult.AutofiltersResult autofilters ->
           new SheetInspectionResult.AutofiltersResult(
               autofilters.stepId(),
-              autofilters.sheetName(),
+              new SheetLabel(autofilters.sheetName()),
               autofilters.autofilters().stream()
                   .map(InspectionResultWorkbookStructureReportSupport::toAutofilterEntryReport)
                   .toList());

@@ -327,14 +327,16 @@ class WorkbookResultTest {
             new dev.erst.gridgrind.core.problem.ProblemContextWorkbookSurfaces.StepReference(
                 2, new StepId("formula-health"), "INSPECTION", "ANALYZE_FORMULA_HEALTH"),
             dev.erst.gridgrind.core.problem.ProblemContextWorkbookSurfaces.ProblemLocation.sheet(
-                "Summary"));
+                new SheetLabel("Summary")));
 
     dev.erst.gridgrind.core.problem.ProblemContext.ExecuteStep enriched =
         base.withLocation(
             dev.erst.gridgrind.core.problem.ProblemContextWorkbookSurfaces.ProblemLocation
-                .formulaCell("Ignored", "B4", "SUM(B2:B3)"));
+                .formulaCell(new SheetLabel("Ignored"), "B4", "SUM(B2:B3)"));
 
-    assertEquals(java.util.Optional.of("Summary"), enriched.sheetName());
+    assertEquals(
+        java.util.Optional.of("Summary"),
+        enriched.sheetName().map(dev.erst.gridgrind.core.vocabulary.WireString::value));
     assertEquals(java.util.Optional.of("B4"), enriched.address());
     assertEquals(java.util.Optional.empty(), enriched.range());
     assertEquals(java.util.Optional.of("SUM(B2:B3)"), enriched.formula());
@@ -357,7 +359,7 @@ class WorkbookResultTest {
                 new dev.erst.gridgrind.core.problem.ProblemContextWorkbookSurfaces.StepReference(
                     1, new StepId("cells"), "INSPECTION", "GET_CELLS"),
                 dev.erst.gridgrind.core.problem.ProblemContextWorkbookSurfaces.ProblemLocation.cell(
-                    "Budget", "A1")));
+                    new SheetLabel("Budget"), "A1")));
     dev.erst.gridgrind.core.problem.ProblemContext.ExecuteStep executeStep =
         assertInstanceOf(
             dev.erst.gridgrind.core.problem.ProblemContext.ExecuteStep.class, problem.context());
@@ -368,7 +370,9 @@ class WorkbookResultTest {
     assertEquals(1, executeStep.stepIndex());
     assertEquals("cells", executeStep.stepId().value());
     assertEquals("GET_CELLS", executeStep.stepType());
-    assertEquals(java.util.Optional.of("Budget"), executeStep.sheetName());
+    assertEquals(
+        java.util.Optional.of("Budget"),
+        executeStep.sheetName().map(dev.erst.gridgrind.core.vocabulary.WireString::value));
     assertEquals(java.util.Optional.of("A1"), executeStep.address());
     assertEquals(java.util.Optional.empty(), executeStep.range());
     assertTrue(problem.title().contains("request"));
@@ -424,8 +428,10 @@ class WorkbookResultTest {
                     .unknown())
             .withLocation(
                 dev.erst.gridgrind.core.problem.ProblemContextWorkbookSurfaces.ProblemLocation
-                    .formulaCell("Budget", "A1", "SUM(A1)"));
-    assertEquals(java.util.Optional.of("Budget"), mergedExecute.sheetName());
+                    .formulaCell(new SheetLabel("Budget"), "A1", "SUM(A1)"));
+    assertEquals(
+        java.util.Optional.of("Budget"),
+        mergedExecute.sheetName().map(dev.erst.gridgrind.core.vocabulary.WireString::value));
     assertEquals(java.util.Optional.of("A1"), mergedExecute.address());
     assertEquals(java.util.Optional.empty(), mergedExecute.range());
     assertEquals(java.util.Optional.of("SUM(A1)"), mergedExecute.formula());
@@ -622,7 +628,7 @@ class WorkbookResultTest {
                 new dev.erst.gridgrind.core.problem.ProblemContextWorkbookSurfaces.StepReference(
                     0, new StepId("assert-total"), "ASSERTION", "EXPECT_CELL_VALUE"),
                 dev.erst.gridgrind.core.problem.ProblemContextWorkbookSurfaces.ProblemLocation.cell(
-                    "Budget", "B4")),
+                    new SheetLabel("Budget"), "B4")),
             List.of());
     assertEquals(GridGrindProblemCode.ASSERTION_FAILED, problem.code());
   }

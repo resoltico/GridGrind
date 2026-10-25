@@ -281,7 +281,8 @@ class WorkbookResultEdgeCoverageTest {
         assertThrows(
                 IllegalArgumentException.class,
                 () ->
-                    new WindowReport.Dense(" ", "A1", new WindowDimensionsReport(1, 1), List.of()))
+                    new WindowReport.Dense(
+                        new SheetLabel(" "), "A1", new WindowDimensionsReport(1, 1), List.of()))
             .getMessage());
     assertEquals(
         "topLeftAddress must not be blank",
@@ -289,7 +290,7 @@ class WorkbookResultEdgeCoverageTest {
                 IllegalArgumentException.class,
                 () ->
                     new WindowReport.Dense(
-                        "Budget", " ", new WindowDimensionsReport(1, 1), List.of()))
+                        new SheetLabel("Budget"), " ", new WindowDimensionsReport(1, 1), List.of()))
             .getMessage());
     assertEquals(
         "range must not be blank",
@@ -311,7 +312,7 @@ class WorkbookResultEdgeCoverageTest {
                 IllegalArgumentException.class,
                 () ->
                     new SheetLayoutReport(
-                        " ",
+                        new SheetLabel(" "),
                         new PaneReport.None(),
                         100,
                         SheetPresentationReport.defaults(),
@@ -373,13 +374,13 @@ class WorkbookResultEdgeCoverageTest {
         "sheetName must not be blank",
         assertThrows(
                 IllegalArgumentException.class,
-                () -> new SheetFormulaSurfaceReport(" ", 0, 0, List.of()))
+                () -> new SheetFormulaSurfaceReport(new SheetLabel(" "), 0, 0, List.of()))
             .getMessage());
     assertEquals(
         "distinctFormulaCount must not be negative",
         assertThrows(
                 IllegalArgumentException.class,
-                () -> new SheetFormulaSurfaceReport("Budget", 0, -1, List.of()))
+                () -> new SheetFormulaSurfaceReport(new SheetLabel("Budget"), 0, -1, List.of()))
             .getMessage());
     assertEquals(
         "columnCount must be greater than 0",
@@ -403,31 +404,31 @@ class WorkbookResultEdgeCoverageTest {
         "topLeftAddress must not be blank",
         assertThrows(
                 IllegalArgumentException.class,
-                () -> new SheetSchemaReport("Budget", " ", 1, 1, 0, List.of()))
+                () -> new SheetSchemaReport(new SheetLabel("Budget"), " ", 1, 1, 0, List.of()))
             .getMessage());
     assertEquals(
         "sheetName must not be blank",
         assertThrows(
                 IllegalArgumentException.class,
-                () -> new SheetSchemaReport(" ", "A1", 1, 1, 0, List.of()))
+                () -> new SheetSchemaReport(new SheetLabel(" "), "A1", 1, 1, 0, List.of()))
             .getMessage());
     assertEquals(
         "rowCount must be greater than 0",
         assertThrows(
                 IllegalArgumentException.class,
-                () -> new SheetSchemaReport("Budget", "A1", 0, 1, 0, List.of()))
+                () -> new SheetSchemaReport(new SheetLabel("Budget"), "A1", 0, 1, 0, List.of()))
             .getMessage());
     assertEquals(
         "columnCount must be greater than 0",
         assertThrows(
                 IllegalArgumentException.class,
-                () -> new SheetSchemaReport("Budget", "A1", 1, 0, 0, List.of()))
+                () -> new SheetSchemaReport(new SheetLabel("Budget"), "A1", 1, 0, 0, List.of()))
             .getMessage());
     assertEquals(
         "dataRowCount must not be negative",
         assertThrows(
                 IllegalArgumentException.class,
-                () -> new SheetSchemaReport("Budget", "A1", 1, 1, -1, List.of()))
+                () -> new SheetSchemaReport(new SheetLabel("Budget"), "A1", 1, 1, -1, List.of()))
             .getMessage());
     assertEquals(
         "columnAddress must not be blank",
@@ -536,30 +537,33 @@ class WorkbookResultEdgeCoverageTest {
             .getMessage());
     assertEquals(
         "sheetName must not be blank",
-        assertThrows(IllegalArgumentException.class, () -> new AnalysisLocationReport.Sheet(" "))
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> new AnalysisLocationReport.Sheet(new SheetLabel(" ")))
             .getMessage());
     assertEquals(
         "address must not be blank",
         assertThrows(
                 IllegalArgumentException.class,
-                () -> new AnalysisLocationReport.Cell("Budget", " "))
+                () -> new AnalysisLocationReport.Cell(new SheetLabel("Budget"), " "))
             .getMessage());
     assertEquals(
         "range must not be blank",
         assertThrows(
                 IllegalArgumentException.class,
-                () -> new AnalysisLocationReport.Range("Budget", " "))
-            .getMessage());
-    assertEquals(
-        "sheetName must not be blank",
-        assertThrows(
-                IllegalArgumentException.class, () -> new AnalysisLocationReport.Cell(" ", "A1"))
+                () -> new AnalysisLocationReport.Range(new SheetLabel("Budget"), " "))
             .getMessage());
     assertEquals(
         "sheetName must not be blank",
         assertThrows(
                 IllegalArgumentException.class,
-                () -> new AnalysisLocationReport.Range(" ", "A1:B2"))
+                () -> new AnalysisLocationReport.Cell(new SheetLabel(" "), "A1"))
+            .getMessage());
+    assertEquals(
+        "sheetName must not be blank",
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> new AnalysisLocationReport.Range(new SheetLabel(" "), "A1:B2"))
             .getMessage());
     assertEquals(
         "name must not be blank",

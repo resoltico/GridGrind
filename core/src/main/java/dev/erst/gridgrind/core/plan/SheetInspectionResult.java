@@ -13,6 +13,7 @@ import dev.erst.gridgrind.core.model.validation.DataValidationEntryReport;
 import dev.erst.gridgrind.core.model.value.CellHyperlinkReport;
 import dev.erst.gridgrind.core.model.value.CellReport;
 import dev.erst.gridgrind.core.result.SheetSummaryReport;
+import dev.erst.gridgrind.core.vocabulary.SheetLabel;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import java.util.List;
 import java.util.Objects;
@@ -56,12 +57,12 @@ public sealed interface SheetInspectionResult extends InspectionIntrospectionRes
 
   /** Returns exact cell snapshots for one sheet. */
   @JsonTypeName("GET_CELLS")
-  record CellsResult(StepId stepId, String sheetName, List<CellReport> cells)
+  record CellsResult(StepId stepId, SheetLabel sheetName, List<CellReport> cells)
       implements SheetInspectionResult {
     public CellsResult {
 
       java.util.Objects.requireNonNull(stepId, "stepId must not be null");
-      sheetName = InspectionResultValidationSupport.requireNonBlank(sheetName, "sheetName");
+      java.util.Objects.requireNonNull(sheetName, "sheetName must not be null");
       cells = InspectionResultValidationSupport.copyValues(cells, "cells");
     }
   }
@@ -79,36 +80,36 @@ public sealed interface SheetInspectionResult extends InspectionIntrospectionRes
   /** Returns every merged region present on one sheet. */
   @JsonTypeName("GET_MERGED_REGIONS")
   record MergedRegionsResult(
-      StepId stepId, String sheetName, List<MergedRegionReport> mergedRegions)
+      StepId stepId, SheetLabel sheetName, List<MergedRegionReport> mergedRegions)
       implements SheetInspectionResult {
     public MergedRegionsResult {
 
       java.util.Objects.requireNonNull(stepId, "stepId must not be null");
-      sheetName = InspectionResultValidationSupport.requireNonBlank(sheetName, "sheetName");
+      java.util.Objects.requireNonNull(sheetName, "sheetName must not be null");
       mergedRegions = InspectionResultValidationSupport.copyValues(mergedRegions, "mergedRegions");
     }
   }
 
   /** Returns hyperlink metadata for selected cells on one sheet. */
   @JsonTypeName("GET_HYPERLINKS")
-  record HyperlinksResult(StepId stepId, String sheetName, List<CellHyperlinkReport> hyperlinks)
+  record HyperlinksResult(StepId stepId, SheetLabel sheetName, List<CellHyperlinkReport> hyperlinks)
       implements SheetInspectionResult {
     public HyperlinksResult {
 
       java.util.Objects.requireNonNull(stepId, "stepId must not be null");
-      sheetName = InspectionResultValidationSupport.requireNonBlank(sheetName, "sheetName");
+      java.util.Objects.requireNonNull(sheetName, "sheetName must not be null");
       hyperlinks = InspectionResultValidationSupport.copyValues(hyperlinks, "hyperlinks");
     }
   }
 
   /** Returns comment metadata for selected cells on one sheet. */
   @JsonTypeName("GET_COMMENTS")
-  record CommentsResult(StepId stepId, String sheetName, List<CellCommentReport> comments)
+  record CommentsResult(StepId stepId, SheetLabel sheetName, List<CellCommentReport> comments)
       implements SheetInspectionResult {
     public CommentsResult {
 
       java.util.Objects.requireNonNull(stepId, "stepId must not be null");
-      sheetName = InspectionResultValidationSupport.requireNonBlank(sheetName, "sheetName");
+      java.util.Objects.requireNonNull(sheetName, "sheetName must not be null");
       comments = InspectionResultValidationSupport.copyValues(comments, "comments");
     }
   }
@@ -138,12 +139,12 @@ public sealed interface SheetInspectionResult extends InspectionIntrospectionRes
   /** Returns data-validation metadata for the selected ranges on one sheet. */
   @JsonTypeName("GET_DATA_VALIDATIONS")
   record DataValidationsResult(
-      StepId stepId, String sheetName, List<DataValidationEntryReport> validations)
+      StepId stepId, SheetLabel sheetName, List<DataValidationEntryReport> validations)
       implements SheetInspectionResult {
     public DataValidationsResult {
 
       java.util.Objects.requireNonNull(stepId, "stepId must not be null");
-      sheetName = InspectionResultValidationSupport.requireNonBlank(sheetName, "sheetName");
+      java.util.Objects.requireNonNull(sheetName, "sheetName must not be null");
       validations = InspectionResultValidationSupport.copyValues(validations, "validations");
     }
   }
@@ -152,13 +153,13 @@ public sealed interface SheetInspectionResult extends InspectionIntrospectionRes
   @JsonTypeName("GET_CONDITIONAL_FORMATTING")
   record ConditionalFormattingResult(
       StepId stepId,
-      String sheetName,
+      SheetLabel sheetName,
       List<ConditionalFormattingEntryReport> conditionalFormattingBlocks)
       implements SheetInspectionResult {
     public ConditionalFormattingResult {
 
       java.util.Objects.requireNonNull(stepId, "stepId must not be null");
-      sheetName = InspectionResultValidationSupport.requireNonBlank(sheetName, "sheetName");
+      java.util.Objects.requireNonNull(sheetName, "sheetName must not be null");
       conditionalFormattingBlocks =
           InspectionResultValidationSupport.copyValues(
               conditionalFormattingBlocks, "conditionalFormattingBlocks");
@@ -167,12 +168,13 @@ public sealed interface SheetInspectionResult extends InspectionIntrospectionRes
 
   /** Returns sheet- and table-owned autofilter metadata for one sheet. */
   @JsonTypeName("GET_AUTOFILTERS")
-  record AutofiltersResult(StepId stepId, String sheetName, List<AutofilterEntryReport> autofilters)
+  record AutofiltersResult(
+      StepId stepId, SheetLabel sheetName, List<AutofilterEntryReport> autofilters)
       implements SheetInspectionResult {
     public AutofiltersResult {
 
       java.util.Objects.requireNonNull(stepId, "stepId must not be null");
-      sheetName = InspectionResultValidationSupport.requireNonBlank(sheetName, "sheetName");
+      java.util.Objects.requireNonNull(sheetName, "sheetName must not be null");
       autofilters = InspectionResultValidationSupport.copyValues(autofilters, "autofilters");
     }
   }

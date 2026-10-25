@@ -446,7 +446,7 @@ class GridGrindJsonTest {
                     dev.erst.gridgrind.core.problem.ProblemContextRequestSurfaces.RequestShape
                         .known("EXISTING", "SAVE_AS"),
                     dev.erst.gridgrind.core.problem.ProblemContextWorkbookSurfaces.ProblemLocation
-                        .formulaCell("Ops", "B1", "SUM(")),
+                        .formulaCell(new SheetLabel("Ops"), "B1", "SUM(")),
                 List.of()));
 
     assertEquals(

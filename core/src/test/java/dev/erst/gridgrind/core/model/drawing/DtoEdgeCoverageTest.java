@@ -46,6 +46,8 @@ import dev.erst.gridgrind.core.vocabulary.ExcelPaneRegion;
 import dev.erst.gridgrind.core.vocabulary.ExcelPictureFormat;
 import dev.erst.gridgrind.core.vocabulary.ExcelPivotDataConsolidateFunction;
 import dev.erst.gridgrind.core.vocabulary.NamedRangeScope;
+import dev.erst.gridgrind.core.vocabulary.SheetLabel;
+import dev.erst.gridgrind.core.vocabulary.SheetName;
 import java.math.BigDecimal;
 import java.util.Arrays;
 import java.util.Base64;
@@ -602,7 +604,7 @@ class DtoEdgeCoverageTest {
                 () ->
                     new PivotTableReport.Unsupported(
                         "Sales Pivot 2026",
-                        "Report",
+                        new SheetName("Report"),
                         new PivotTableReport.Anchor("A1", "A1:B3"),
                         " "))
             .getMessage());
@@ -726,7 +728,7 @@ class DtoEdgeCoverageTest {
     TableEntryReport table =
         new TableEntryReport(
             "BudgetTable",
-            "Budget",
+            new SheetLabel("Budget"),
             "A1:B2",
             new TableEntryReport.Structure(
                 1,
@@ -755,7 +757,7 @@ class DtoEdgeCoverageTest {
                 () ->
                     new TableEntryReport(
                         "BudgetTable",
-                        "Budget",
+                        new SheetLabel("Budget"),
                         "A1:B2",
                         new TableEntryReport.Structure(
                             1, 0, Arrays.asList((String) null), List.of()),
@@ -774,7 +776,7 @@ class DtoEdgeCoverageTest {
                 () ->
                     new TableEntryReport(
                         "BudgetTable",
-                        "Budget",
+                        new SheetLabel("Budget"),
                         "A1:B2",
                         new TableEntryReport.Structure(
                             1, 0, List.of("Owner"), Arrays.asList((TableColumnReport) null)),

@@ -9,6 +9,7 @@ import dev.erst.gridgrind.core.problem.GridGrindProblemDetail;
 import dev.erst.gridgrind.core.problem.GridGrindWarningCode;
 import dev.erst.gridgrind.core.problem.RequestWarning;
 import dev.erst.gridgrind.core.problem.RequestWarningLocation;
+import dev.erst.gridgrind.core.vocabulary.SheetLabel;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
 import dev.erst.gridgrind.excel.stream.ExcelStreamingWorkbookWriter;
 import java.util.List;
@@ -218,7 +219,7 @@ final class ExecutionCalculationSupport {
                 new RequestWarning(
                     GridGrindWarningCode.FORMULA_NOT_EVALUATED,
                     new RequestWarningLocation.FormulaCell(
-                        capability.cell().sheetName().value(),
+                        new SheetLabel(capability.cell().sheetName().value()),
                         capability.cell().address(),
                         capability.formula()),
                     capability
@@ -251,7 +252,7 @@ final class ExecutionCalculationSupport {
           .unknown();
     }
     return dev.erst.gridgrind.core.problem.ProblemContextWorkbookSurfaces.ProblemLocation
-        .formulaCell(failure.sheetName(), failure.address(), failure.formula());
+        .formulaCell(new SheetLabel(failure.sheetName()), failure.address(), failure.formula());
   }
 
   record CalculationExecutionOutcome(

@@ -237,7 +237,7 @@ final class WorkbookInvariantResponseChecks {
       case RequestWarningLocation.RequestByteOffset requestByteOffset ->
           require(requestByteOffset.byteOffset() >= 0, "warning byteOffset must not be negative");
       case RequestWarningLocation.FormulaCell formulaCell -> {
-        requireNonBlank(formulaCell.sheetName(), "warning formula sheetName");
+        requireNonBlank(formulaCell.sheetName().value(), "warning formula sheetName");
         requireNonBlank(formulaCell.address(), "warning formula address");
         requireNonBlank(formulaCell.formula(), "warning formula");
       }
@@ -315,20 +315,22 @@ final class WorkbookInvariantResponseChecks {
               .forEach(
                   name ->
                       require(
-                          name != null && !name.isBlank(), "sheets sheetName must not be blank"));
+                          name != null && !name.value().isBlank(),
+                          "sheets sheetName must not be blank"));
       case SheetInspectionResult.SheetSummaryResult result ->
           requireSheetSummaryShape(result.sheet());
       case SheetInspectionResult.ArrayFormulasResult result ->
           result.arrayFormulas().forEach(WorkbookInvariantResponseChecks::requireArrayFormulaShape);
       case SheetInspectionResult.CellsResult result -> {
         require(result.sheetName() != null, "cells sheetName must not be null");
-        require(!result.sheetName().isBlank(), "cells sheetName must not be blank");
+        require(!result.sheetName().value().isBlank(), "cells sheetName must not be blank");
         result.cells().forEach(WorkbookInvariantResponseChecks::requireCellReportShape);
       }
       case SheetInspectionResult.WindowResult result -> requireWindowShape(result.window());
       case SheetInspectionResult.MergedRegionsResult result -> {
         require(result.sheetName() != null, "merged regions sheetName must not be null");
-        require(!result.sheetName().isBlank(), "merged regions sheetName must not be blank");
+        require(
+            !result.sheetName().value().isBlank(), "merged regions sheetName must not be blank");
         result
             .mergedRegions()
             .forEach(
@@ -337,29 +339,31 @@ final class WorkbookInvariantResponseChecks {
       }
       case SheetInspectionResult.HyperlinksResult result -> {
         require(result.sheetName() != null, "hyperlinks sheetName must not be null");
-        require(!result.sheetName().isBlank(), "hyperlinks sheetName must not be blank");
+        require(!result.sheetName().value().isBlank(), "hyperlinks sheetName must not be blank");
         result.hyperlinks().forEach(WorkbookInvariantResponseChecks::requireHyperlinkEntryShape);
       }
       case SheetInspectionResult.CommentsResult result -> {
         require(result.sheetName() != null, "comments sheetName must not be null");
-        require(!result.sheetName().isBlank(), "comments sheetName must not be blank");
+        require(!result.sheetName().value().isBlank(), "comments sheetName must not be blank");
         result.comments().forEach(WorkbookInvariantResponseChecks::requireCommentEntryShape);
       }
       case WorkbookAssetInspectionResult.DrawingObjectsResult result -> {
         require(result.sheetName() != null, "drawing objects sheetName must not be null");
-        require(!result.sheetName().isBlank(), "drawing objects sheetName must not be blank");
+        require(
+            !result.sheetName().value().isBlank(), "drawing objects sheetName must not be blank");
         result.drawingObjects().forEach(WorkbookInvariantResponseChecks::requireDrawingObjectShape);
       }
       case WorkbookAssetInspectionResult.ChartsResult result -> {
         require(result.sheetName() != null, "charts sheetName must not be null");
-        require(!result.sheetName().isBlank(), "charts sheetName must not be blank");
+        require(!result.sheetName().value().isBlank(), "charts sheetName must not be blank");
         result.charts().forEach(WorkbookInvariantResponseChecks::requireChartReportShape);
       }
       case WorkbookAssetInspectionResult.PivotTablesResult result ->
           result.pivotTables().forEach(WorkbookInvariantResponseChecks::requirePivotTableShape);
       case WorkbookAssetInspectionResult.DrawingObjectPayloadResult result -> {
         require(result.sheetName() != null, "drawing payload sheetName must not be null");
-        require(!result.sheetName().isBlank(), "drawing payload sheetName must not be blank");
+        require(
+            !result.sheetName().value().isBlank(), "drawing payload sheetName must not be blank");
         requireDrawingObjectPayloadShape(result.payload());
       }
       case SheetInspectionResult.SheetLayoutResult result ->
@@ -368,7 +372,8 @@ final class WorkbookInvariantResponseChecks {
           requirePrintLayoutShape(result.layout());
       case SheetInspectionResult.DataValidationsResult result -> {
         require(result.sheetName() != null, "data validations sheetName must not be null");
-        require(!result.sheetName().isBlank(), "data validations sheetName must not be blank");
+        require(
+            !result.sheetName().value().isBlank(), "data validations sheetName must not be blank");
         result
             .validations()
             .forEach(WorkbookInvariantResponseChecks::requireDataValidationEntryShape);
@@ -376,14 +381,15 @@ final class WorkbookInvariantResponseChecks {
       case SheetInspectionResult.ConditionalFormattingResult result -> {
         require(result.sheetName() != null, "conditional formatting sheetName must not be null");
         require(
-            !result.sheetName().isBlank(), "conditional formatting sheetName must not be blank");
+            !result.sheetName().value().isBlank(),
+            "conditional formatting sheetName must not be blank");
         result
             .conditionalFormattingBlocks()
             .forEach(WorkbookInvariantResponseChecks::requireConditionalFormattingEntryShape);
       }
       case SheetInspectionResult.AutofiltersResult result -> {
         require(result.sheetName() != null, "autofilters sheetName must not be null");
-        require(!result.sheetName().isBlank(), "autofilters sheetName must not be blank");
+        require(!result.sheetName().value().isBlank(), "autofilters sheetName must not be blank");
         result.autofilters().forEach(WorkbookInvariantResponseChecks::requireAutofilterEntryShape);
       }
       case WorkbookAssetInspectionResult.TablesResult result ->

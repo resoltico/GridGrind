@@ -14,6 +14,7 @@ import dev.erst.gridgrind.core.vocabulary.ExcelChartGrouping;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartLegendPosition;
 import dev.erst.gridgrind.core.vocabulary.ExcelDrawingAnchorBehavior;
 import dev.erst.gridgrind.core.vocabulary.ExcelPivotDataConsolidateFunction;
+import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.excel.WorkbookSignatureSupport;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
@@ -604,7 +605,7 @@ final class XlsxParityOracle {
 
     return new PivotTableReport.Supported(
         name,
-        ownerSheet.getSheetName(),
+        new SheetName(ownerSheet.getSheetName()),
         anchor,
         source,
         rowLabels,
@@ -743,7 +744,7 @@ final class XlsxParityOracle {
         requireNonBlank(worksheetSource.getSheet(), "Expected parity pivot source sheet name.");
     if (worksheetSource.getRef() != null && !worksheetSource.getRef().isBlank()) {
       return new PivotTableReport.Source.Range(
-          sheetName,
+          new SheetName(sheetName),
           normalizeArea(new AreaReference(worksheetSource.getRef(), SpreadsheetVersion.EXCEL2007)));
     }
 
@@ -754,7 +755,7 @@ final class XlsxParityOracle {
       AreaReference area = namedRangeArea(namedRanges.getFirst());
       return new PivotTableReport.Source.NamedRange(
           sourceName,
-          sourceSheetName(workbook, area, namedRanges.getFirst(), sheetName),
+          new SheetName(sourceSheetName(workbook, area, namedRanges.getFirst(), sheetName)),
           normalizeArea(area));
     }
     if (namedRanges.size() > 1) {
@@ -771,7 +772,7 @@ final class XlsxParityOracle {
     }
     return new PivotTableReport.Source.Table(
         sourceName,
-        table.getSheetName(),
+        new SheetName(table.getSheetName()),
         normalizeArea(
             new AreaReference(
                 table.getStartCellReference(),

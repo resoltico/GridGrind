@@ -114,7 +114,8 @@ class SemanticSelectorResolverTest {
           "Texts",
           assertInstanceOf(
                   SheetInspectionResult.CellsResult.class, cellsResult.shortCircuitResult())
-              .sheetName());
+              .sheetName()
+              .value());
 
       SemanticSelectorResolver.ResolvedInspectionTarget hyperlinksResult =
           resolver.resolveInspectionTarget(
@@ -128,7 +129,8 @@ class SemanticSelectorResolverTest {
           assertInstanceOf(
                   SheetInspectionResult.HyperlinksResult.class,
                   hyperlinksResult.shortCircuitResult())
-              .sheetName());
+              .sheetName()
+              .value());
 
       SemanticSelectorResolver.ResolvedInspectionTarget commentsResult =
           resolver.resolveInspectionTarget(
@@ -141,7 +143,8 @@ class SemanticSelectorResolverTest {
           "Texts",
           assertInstanceOf(
                   SheetInspectionResult.CommentsResult.class, commentsResult.shortCircuitResult())
-              .sheetName());
+              .sheetName()
+              .value());
     }
   }
 

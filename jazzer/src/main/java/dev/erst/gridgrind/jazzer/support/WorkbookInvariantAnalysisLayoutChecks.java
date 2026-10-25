@@ -17,7 +17,7 @@ final class WorkbookInvariantAnalysisLayoutChecks {
     WorkbookInvariantChecks.require(
         window.sheetName() != null, "window sheetName must not be null");
     WorkbookInvariantChecks.require(
-        !window.sheetName().isBlank(), "window sheetName must not be blank");
+        !window.sheetName().value().isBlank(), "window sheetName must not be blank");
     WorkbookInvariantChecks.require(
         window.topLeftAddress() != null, "window topLeftAddress must not be null");
     WorkbookInvariantChecks.require(
@@ -86,7 +86,7 @@ final class WorkbookInvariantAnalysisLayoutChecks {
     WorkbookInvariantChecks.require(
         layout.sheetName() != null, "layout sheetName must not be null");
     WorkbookInvariantChecks.require(
-        !layout.sheetName().isBlank(), "layout sheetName must not be blank");
+        !layout.sheetName().value().isBlank(), "layout sheetName must not be blank");
     WorkbookInvariantChecks.require(layout.pane() != null, "pane must not be null");
     WorkbookInvariantChecks.require(
         layout.zoomPercent() >= 10 && layout.zoomPercent() <= 400,
@@ -137,7 +137,7 @@ final class WorkbookInvariantAnalysisLayoutChecks {
     WorkbookInvariantChecks.require(
         layout.sheetName() != null, "print layout sheetName must not be null");
     WorkbookInvariantChecks.require(
-        !layout.sheetName().isBlank(), "print layout sheetName must not be blank");
+        !layout.sheetName().value().isBlank(), "print layout sheetName must not be blank");
     WorkbookInvariantChecks.require(layout.printArea() != null, "printArea must not be null");
     WorkbookInvariantChecks.require(layout.orientation() != null, "orientation must not be null");
     WorkbookInvariantChecks.require(layout.scaling() != null, "scaling must not be null");
@@ -170,7 +170,7 @@ final class WorkbookInvariantAnalysisLayoutChecks {
 
   static void requireTableEntryShape(TableEntryReport table) {
     WorkbookInvariantChecks.requireNonBlank(table.name(), "table name");
-    WorkbookInvariantChecks.requireNonBlank(table.sheetName(), "table sheetName");
+    WorkbookInvariantChecks.requireNonBlank(table.sheetName().value(), "table sheetName");
     WorkbookInvariantChecks.requireNonBlank(table.range(), "table range");
     WorkbookInvariantChecks.require(
         table.structure().headerRowCount() >= 0, "table headerRowCount must not be negative");

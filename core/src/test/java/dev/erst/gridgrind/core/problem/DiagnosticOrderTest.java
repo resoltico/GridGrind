@@ -13,6 +13,7 @@ import dev.erst.gridgrind.core.problem.ProblemContextWorkbookSurfaces.Persistenc
 import dev.erst.gridgrind.core.problem.ProblemContextWorkbookSurfaces.ProblemLocation;
 import dev.erst.gridgrind.core.problem.ProblemContextWorkbookSurfaces.StepReference;
 import dev.erst.gridgrind.core.problem.ProblemContextWorkbookSurfaces.WorkbookReference;
+import dev.erst.gridgrind.core.vocabulary.SheetLabel;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import java.util.List;
 import org.junit.jupiter.api.Test;
@@ -173,7 +174,8 @@ class DiagnosticOrderTest {
     RequestWarningLocation stepLocation =
         new RequestWarningLocation.Step(0, new StepId("step"), "SET_CELL");
     RequestWarningLocation formulaCellLocation =
-        new RequestWarningLocation.FormulaCell("Budget", "A1", "TEXTAFTER(A1,\",\")");
+        new RequestWarningLocation.FormulaCell(
+            new SheetLabel("Budget"), "A1", "TEXTAFTER(A1,\",\")");
     RequestWarningLocation requestByteLocation = new RequestWarningLocation.RequestByteOffset(0);
     assertEquals(-1, requestPathLocation.orderingStepIndex());
     assertEquals(-1, requestByteLocation.orderingStepIndex());

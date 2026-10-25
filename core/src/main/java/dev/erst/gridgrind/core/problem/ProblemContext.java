@@ -13,6 +13,7 @@ import dev.erst.gridgrind.core.problem.ProblemContextWorkbookSurfaces.InputRefer
 import dev.erst.gridgrind.core.problem.ProblemContextWorkbookSurfaces.ProblemLocation;
 import dev.erst.gridgrind.core.problem.ProblemContextWorkbookSurfaces.StepReference;
 import dev.erst.gridgrind.core.problem.ProblemContextWorkbookSurfaces.WorkbookReference;
+import dev.erst.gridgrind.core.vocabulary.SheetLabel;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import java.util.Objects;
 import java.util.Optional;
@@ -222,7 +223,7 @@ public sealed interface ProblemContext
     }
 
     /** Returns the localized sheet name when available. */
-    default Optional<String> sheetName() {
+    default Optional<SheetLabel> sheetName() {
       return location().sheetNameValue();
     }
 
@@ -318,7 +319,7 @@ public sealed interface ProblemContext
     }
 
     /** Returns the localized sheet name when the failing step resolved to one sheet target. */
-    public Optional<String> sheetName() {
+    public Optional<SheetLabel> sheetName() {
       return location.sheetNameValue();
     }
 

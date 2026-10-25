@@ -2,6 +2,7 @@ package dev.erst.gridgrind.core.model.table;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.core.vocabulary.SheetLabel;
 import java.util.ArrayList;
 import java.util.List;
 import org.junit.jupiter.api.Test;
@@ -14,7 +15,14 @@ class TableEntryReportTest {
 
     TableEntryReport report =
         new TableEntryReport(
-            "BudgetTable", "Budget", "A1:B4", 1, 1, columnNames, new TableStyleReport.None(), true);
+            "BudgetTable",
+            new SheetLabel("Budget"),
+            "A1:B4",
+            1,
+            1,
+            columnNames,
+            new TableStyleReport.None(),
+            true);
     columnNames.clear();
 
     assertEquals(List.of("Item", "Amount"), report.structure().columnNames());
@@ -23,7 +31,7 @@ class TableEntryReportTest {
         () ->
             new TableEntryReport(
                 "BudgetTable",
-                " ",
+                new SheetLabel(" "),
                 "A1:B4",
                 1,
                 1,
@@ -35,7 +43,7 @@ class TableEntryReportTest {
         () ->
             new TableEntryReport(
                 "BudgetTable",
-                "Budget",
+                new SheetLabel("Budget"),
                 "A1:B4",
                 -1,
                 1,
@@ -47,7 +55,7 @@ class TableEntryReportTest {
         () ->
             new TableEntryReport(
                 "BudgetTable",
-                "Budget",
+                new SheetLabel("Budget"),
                 "A1:B4",
                 1,
                 -1,
@@ -58,6 +66,13 @@ class TableEntryReportTest {
         NullPointerException.class,
         () ->
             new TableEntryReport(
-                "BudgetTable", "Budget", "A1:B4", 1, 1, List.of("Item"), null, true));
+                "BudgetTable",
+                new SheetLabel("Budget"),
+                "A1:B4",
+                1,
+                1,
+                List.of("Item"),
+                null,
+                true));
   }
 }

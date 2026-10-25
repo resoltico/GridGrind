@@ -38,7 +38,15 @@ class ExampleExecutionFixturesTest {
   void observedWorksheetLabelsDoNotAcquireAuthoringNameRestrictions() throws IOException {
     Path source = tempDir.resolve("observed-label.xlsx");
     try (var workbook = new org.apache.poi.xssf.usermodel.XSSFWorkbook()) {
-      workbook.createSheet("Valid");
+      var sheet = workbook.createSheet("Valid");
+      sheet.createRow(0).createCell(0).setCellValue("Item");
+      sheet.createRow(1).createCell(0).setCellValue("Observed");
+      var table =
+          sheet.createTable(
+              new org.apache.poi.ss.util.AreaReference(
+                  "A1:A2", org.apache.poi.ss.SpreadsheetVersion.EXCEL2007));
+      table.setName("ObservedTable");
+      table.setDisplayName("ObservedTable");
       workbook.getCTWorkbook().getSheets().getSheetArray(0).setName("invalid[]");
       try (OutputStream output = Files.newOutputStream(source)) {
         workbook.write(output);
@@ -47,7 +55,7 @@ class ExampleExecutionFixturesTest {
     WorkbookPlan request =
         GridGrindJson.readRequest(
             """
-        {"protocolVersion":"V3","source":{"type":"EXISTING","path":"observed-label.xlsx"},"persistence":{"type":"NONE"},"steps":[{"stepId":"summary","target":{"type":"WORKBOOK_CURRENT"},"query":{"type":"GET_WORKBOOK_SUMMARY"}}]}
+        {"protocolVersion":"V3","source":{"type":"EXISTING","path":"observed-label.xlsx"},"persistence":{"type":"NONE"},"steps":[{"stepId":"summary","target":{"type":"WORKBOOK_CURRENT"},"query":{"type":"GET_WORKBOOK_SUMMARY"}},{"stepId":"tables","target":{"type":"TABLE_ALL"},"query":{"type":"GET_TABLES"}}]}
         """);
     WorkbookResult.Success result =
         assertInstanceOf(
@@ -68,6 +76,12 @@ class ExampleExecutionFixturesTest {
             .map(dev.erst.gridgrind.core.vocabulary.SheetLabel::value)
             .toList());
     assertEquals("invalid[]", summary.activeSheetName().value());
+    var tables =
+        assertInstanceOf(
+            dev.erst.gridgrind.core.plan.WorkbookAssetInspectionResult.TablesResult.class,
+            result.inspections().get(1));
+    assertEquals("ObservedTable", tables.tables().getFirst().name());
+    assertEquals("invalid[]", tables.tables().getFirst().sheetName().value());
     var reopened =
         GridGrindJson.readWorkbookResult(GridGrindJsonOutput.writeWorkbookResultBytes(result));
     assertEquals(result, reopened);

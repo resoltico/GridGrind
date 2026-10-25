@@ -1,12 +1,17 @@
 package dev.erst.gridgrind.core.model.customxml;
 
+import dev.erst.gridgrind.core.vocabulary.SheetLabel;
 import java.util.Objects;
 
 /** Factual table mapping entry linked to one custom-XML map. */
 public record CustomXmlLinkedTableReport(
-    String sheetName, String tableName, String tableDisplayName, String range, String commonXPath) {
+    SheetLabel sheetName,
+    String tableName,
+    String tableDisplayName,
+    String range,
+    String commonXPath) {
   public CustomXmlLinkedTableReport {
-    sheetName = requireNonBlank(sheetName, "sheetName");
+    Objects.requireNonNull(sheetName, "sheetName must not be null");
     tableName = requireNonBlank(tableName, "tableName");
     tableDisplayName = requireNonBlank(tableDisplayName, "tableDisplayName");
     range = requireNonBlank(range, "range");

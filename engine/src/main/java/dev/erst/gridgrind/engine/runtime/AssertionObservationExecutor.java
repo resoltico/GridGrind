@@ -13,6 +13,7 @@ import dev.erst.gridgrind.core.plan.WorkbookAssetInspectionResult;
 import dev.erst.gridgrind.core.plan.WorkbookAssetIntrospectionQuery;
 import dev.erst.gridgrind.core.plan.WorkbookInspectionResult;
 import dev.erst.gridgrind.core.plan.WorkbookIntrospectionQuery;
+import dev.erst.gridgrind.core.vocabulary.SheetLabel;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
 import dev.erst.gridgrind.excel.NamedRangeNotFoundException;
@@ -66,12 +67,13 @@ final class AssertionObservationExecutor {
     try {
       return switch (target) {
         case SheetSelector.All _ ->
-            new WorkbookInspectionResult.SheetsResult(stepId, workbook.sheets().sheetNames());
+            new WorkbookInspectionResult.SheetsResult(
+                stepId, workbook.sheets().sheetNames().stream().map(SheetLabel::new).toList());
         case SheetSelector.ByName byName ->
             new WorkbookInspectionResult.SheetsResult(
                 stepId,
                 workbook.sheets().sheetNames().contains(byName.name().value())
-                    ? List.of(byName.name().value())
+                    ? List.of(new SheetLabel(byName.name().value()))
                     : List.of());
         case SheetSelector.ByNames byNames ->
             new WorkbookInspectionResult.SheetsResult(
@@ -79,6 +81,7 @@ final class AssertionObservationExecutor {
                 byNames.names().stream()
                     .map(dev.erst.gridgrind.core.vocabulary.WireString::value)
                     .filter(name -> workbook.sheets().sheetNames().contains(name))
+                    .map(SheetLabel::new)
                     .toList());
         case NamedRangeSelector selector ->
             executeObservation(
@@ -127,10 +130,10 @@ final class AssertionObservationExecutor {
           new WorkbookAssetInspectionResult.PivotTablesResult(stepId, List.of());
       case ChartSelector.AllOnSheet selector ->
           new WorkbookAssetInspectionResult.ChartsResult(
-              stepId, selector.sheetName().value(), List.of());
+              stepId, new SheetLabel(selector.sheetName().value()), List.of());
       case ChartSelector.ByName selector ->
           new WorkbookAssetInspectionResult.ChartsResult(
-              stepId, selector.sheetName().value(), List.of());
+              stepId, new SheetLabel(selector.sheetName().value()), List.of());
       default ->
           throw new IllegalArgumentException(
               "Unsupported presence assertion target: "

@@ -70,7 +70,8 @@ final class WorkbookInvariantInspectionResultChecks {
         SheetInspectionResult.CellsResult result = (SheetInspectionResult.CellsResult) readResult;
         require(
             Objects.equals(
-                sheetName((CellSelector) readOperation.target()).orElse(null), result.sheetName()),
+                sheetName((CellSelector) readOperation.target()).orElse(null),
+                result.sheetName().value()),
             "cells sheet mismatch");
         if (readOperation.target() instanceof CellSelector.ByAddresses byAddresses) {
           require(
@@ -85,7 +86,7 @@ final class WorkbookInvariantInspectionResultChecks {
         RangeSelector.RectangularWindow selector =
             (RangeSelector.RectangularWindow) readOperation.target();
         require(
-            selector.sheetName().value().equals(result.window().sheetName()),
+            selector.sheetName().value().equals(result.window().sheetName().value()),
             "window sheet mismatch");
         require(
             selector.topLeftAddress().equals(result.window().topLeftAddress()),
@@ -104,7 +105,7 @@ final class WorkbookInvariantInspectionResultChecks {
             ((SheetSelector.ByName) readOperation.target())
                 .name()
                 .value()
-                .equals(result.sheetName()),
+                .equals(result.sheetName().value()),
             "merged regions sheet mismatch");
       }
       case SheetIntrospectionQuery.GetHyperlinks _ -> {
@@ -112,7 +113,8 @@ final class WorkbookInvariantInspectionResultChecks {
             (SheetInspectionResult.HyperlinksResult) readResult;
         require(
             Objects.equals(
-                sheetName((CellSelector) readOperation.target()).orElse(null), result.sheetName()),
+                sheetName((CellSelector) readOperation.target()).orElse(null),
+                result.sheetName().value()),
             "hyperlinks sheet mismatch");
       }
       case SheetIntrospectionQuery.GetComments _ -> {
@@ -120,7 +122,8 @@ final class WorkbookInvariantInspectionResultChecks {
             (SheetInspectionResult.CommentsResult) readResult;
         require(
             Objects.equals(
-                sheetName((CellSelector) readOperation.target()).orElse(null), result.sheetName()),
+                sheetName((CellSelector) readOperation.target()).orElse(null),
+                result.sheetName().value()),
             "comments sheet mismatch");
       }
       case WorkbookAssetIntrospectionQuery.GetDrawingObjects _ -> {
@@ -130,7 +133,7 @@ final class WorkbookInvariantInspectionResultChecks {
             ((DrawingObjectSelector.AllOnSheet) readOperation.target())
                 .sheetName()
                 .value()
-                .equals(result.sheetName()),
+                .equals(result.sheetName().value()),
             "drawing objects sheet mismatch");
         result.drawingObjects().forEach(WorkbookInvariantResponseChecks::requireDrawingObjectShape);
       }
@@ -141,7 +144,7 @@ final class WorkbookInvariantInspectionResultChecks {
             ((ChartSelector.AllOnSheet) readOperation.target())
                 .sheetName()
                 .value()
-                .equals(result.sheetName()),
+                .equals(result.sheetName().value()),
             "charts sheet mismatch");
         result.charts().forEach(WorkbookInvariantResponseChecks::requireChartReportShape);
       }
@@ -156,7 +159,7 @@ final class WorkbookInvariantInspectionResultChecks {
         DrawingObjectSelector.ByName selector =
             (DrawingObjectSelector.ByName) readOperation.target();
         require(
-            selector.sheetName().value().equals(result.sheetName()),
+            selector.sheetName().value().equals(result.sheetName().value()),
             "drawing payload sheet mismatch");
         WorkbookInvariantResponseChecks.requireDrawingObjectPayloadShape(result.payload());
         require(
@@ -170,7 +173,7 @@ final class WorkbookInvariantInspectionResultChecks {
             ((SheetSelector.ByName) readOperation.target())
                 .name()
                 .value()
-                .equals(result.layout().sheetName()),
+                .equals(result.layout().sheetName().value()),
             "layout sheet mismatch");
       }
       case SheetIntrospectionQuery.GetPrintLayout _ -> {
@@ -180,21 +183,21 @@ final class WorkbookInvariantInspectionResultChecks {
             ((SheetSelector.ByName) readOperation.target())
                 .name()
                 .value()
-                .equals(result.layout().sheetName()),
+                .equals(result.layout().sheetName().value()),
             "print layout sheet mismatch");
       }
       case SheetIntrospectionQuery.GetDataValidations _ -> {
         SheetInspectionResult.DataValidationsResult result =
             (SheetInspectionResult.DataValidationsResult) readResult;
         require(
-            sheetName((RangeSelector) readOperation.target()).equals(result.sheetName()),
+            sheetName((RangeSelector) readOperation.target()).equals(result.sheetName().value()),
             "data validations sheet mismatch");
       }
       case SheetIntrospectionQuery.GetConditionalFormatting _ -> {
         SheetInspectionResult.ConditionalFormattingResult result =
             (SheetInspectionResult.ConditionalFormattingResult) readResult;
         require(
-            sheetName((RangeSelector) readOperation.target()).equals(result.sheetName()),
+            sheetName((RangeSelector) readOperation.target()).equals(result.sheetName().value()),
             "conditional formatting sheet mismatch");
       }
       case SheetIntrospectionQuery.GetAutofilters _ -> {
@@ -204,7 +207,7 @@ final class WorkbookInvariantInspectionResultChecks {
             ((SheetSelector.ByName) readOperation.target())
                 .name()
                 .value()
-                .equals(result.sheetName()),
+                .equals(result.sheetName().value()),
             "autofilters sheet mismatch");
       }
       case WorkbookAssetIntrospectionQuery.GetTables _ -> {
@@ -223,7 +226,7 @@ final class WorkbookInvariantInspectionResultChecks {
         RangeSelector.RectangularWindow selector =
             (RangeSelector.RectangularWindow) readOperation.target();
         require(
-            selector.sheetName().value().equals(result.surface().sheetName()),
+            selector.sheetName().value().equals(result.surface().sheetName().value()),
             "schema sheet mismatch");
         require(
             selector.topLeftAddress().equals(result.surface().topLeftAddress()),

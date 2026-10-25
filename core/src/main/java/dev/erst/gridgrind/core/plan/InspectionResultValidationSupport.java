@@ -8,14 +8,6 @@ import java.util.Objects;
 final class InspectionResultValidationSupport {
   private InspectionResultValidationSupport() {}
 
-  static String requireNonBlank(String value, String fieldName) {
-    Objects.requireNonNull(value, fieldName + " must not be null");
-    if (value.isBlank()) {
-      throw new IllegalArgumentException(fieldName + " must not be blank");
-    }
-    return value;
-  }
-
   static <T> List<T> copyValues(List<T> values, String fieldName) {
     Objects.requireNonNull(values, fieldName + " must not be null");
     List<T> copy = new ArrayList<>(values.size());

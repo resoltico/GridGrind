@@ -4,8 +4,8 @@ import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import dev.erst.gridgrind.core.vocabulary.ExcelPivotDataConsolidateFunction;
 import dev.erst.gridgrind.core.vocabulary.ExcelPivotTableNaming;
-import dev.erst.gridgrind.core.vocabulary.ExcelSheetNames;
 import dev.erst.gridgrind.core.vocabulary.ProtocolDefinedNameValidation;
+import dev.erst.gridgrind.core.vocabulary.SheetName;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -24,7 +24,7 @@ public sealed interface PivotTableReport
   String name();
 
   /** Sheet that owns the pivot table relation. */
-  String sheetName();
+  SheetName sheetName();
 
   /** Stored top-left anchor and current persisted location range. */
   Anchor anchor();
@@ -32,7 +32,7 @@ public sealed interface PivotTableReport
   /** Supported pivot-table report with first-class factual structure. */
   record Supported(
       String name,
-      String sheetName,
+      SheetName sheetName,
       Anchor anchor,
       Source source,
       List<Field> rowLabels,
@@ -52,7 +52,7 @@ public sealed interface PivotTableReport
   }
 
   /** Unsupported or malformed pivot-table report preserved for truthful readback. */
-  record Unsupported(String name, String sheetName, Anchor anchor, String detail)
+  record Unsupported(String name, SheetName sheetName, Anchor anchor, String detail)
       implements PivotTableReport {
     public Unsupported {
       validateCommon(name, sheetName, anchor);
@@ -70,27 +70,27 @@ public sealed interface PivotTableReport
   sealed interface Source permits Source.Range, Source.NamedRange, Source.Table {
 
     /** Sheet range source stored directly in the pivot cache definition. */
-    record Range(String sheetName, String range) implements Source {
+    record Range(SheetName sheetName, String range) implements Source {
       public Range {
-        ExcelSheetNames.requireValid(sheetName, "sheetName");
+        java.util.Objects.requireNonNull(sheetName, "sheetName must not be null");
         range = requireNonBlank(range, "range");
       }
     }
 
     /** Named-range-backed source plus the currently resolved source range. */
-    record NamedRange(String name, String sheetName, String range) implements Source {
+    record NamedRange(String name, SheetName sheetName, String range) implements Source {
       public NamedRange {
         name = ProtocolDefinedNameValidation.validateName(name);
-        ExcelSheetNames.requireValid(sheetName, "sheetName");
+        java.util.Objects.requireNonNull(sheetName, "sheetName must not be null");
         range = requireNonBlank(range, "range");
       }
     }
 
     /** Table-backed source plus the currently resolved table range. */
-    record Table(String name, String sheetName, String range) implements Source {
+    record Table(String name, SheetName sheetName, String range) implements Source {
       public Table {
         name = ProtocolDefinedNameValidation.validateName(name);
-        ExcelSheetNames.requireValid(sheetName, "sheetName");
+        java.util.Objects.requireNonNull(sheetName, "sheetName must not be null");
         range = requireNonBlank(range, "range");
       }
     }
@@ -135,9 +135,9 @@ public sealed interface PivotTableReport
     }
   }
 
-  private static void validateCommon(String name, String sheetName, Anchor anchor) {
+  private static void validateCommon(String name, SheetName sheetName, Anchor anchor) {
     ExcelPivotTableNaming.validateName(name);
-    ExcelSheetNames.requireValid(sheetName, "sheetName");
+    java.util.Objects.requireNonNull(sheetName, "sheetName must not be null");
     Objects.requireNonNull(anchor, "anchor must not be null");
   }
 

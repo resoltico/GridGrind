@@ -119,7 +119,7 @@ final class WorkbookInvariantCellMetadataChecks {
   static void requireCustomXmlLinkedCellShape(CustomXmlLinkedCellReport linkedCell) {
     WorkbookInvariantChecks.require(linkedCell != null, "custom XML linked cell must not be null");
     WorkbookInvariantChecks.requireNonBlank(
-        linkedCell.sheetName(), "custom XML linked cell sheetName");
+        linkedCell.sheetName().value(), "custom XML linked cell sheetName");
     WorkbookInvariantChecks.requireNonBlank(linkedCell.address(), "custom XML linked cell address");
     WorkbookInvariantChecks.requireNonBlank(linkedCell.xpath(), "custom XML linked cell xpath");
     WorkbookInvariantChecks.requireNonBlank(
@@ -130,7 +130,7 @@ final class WorkbookInvariantCellMetadataChecks {
     WorkbookInvariantChecks.require(
         linkedTable != null, "custom XML linked table must not be null");
     WorkbookInvariantChecks.requireNonBlank(
-        linkedTable.sheetName(), "custom XML linked table sheetName");
+        linkedTable.sheetName().value(), "custom XML linked table sheetName");
     WorkbookInvariantChecks.requireNonBlank(
         linkedTable.tableName(), "custom XML linked table tableName");
     WorkbookInvariantChecks.requireNonBlank(
@@ -149,7 +149,8 @@ final class WorkbookInvariantCellMetadataChecks {
 
   static void requireArrayFormulaShape(ArrayFormulaReport arrayFormula) {
     WorkbookInvariantChecks.require(arrayFormula != null, "array formula must not be null");
-    WorkbookInvariantChecks.requireNonBlank(arrayFormula.sheetName(), "array formula sheetName");
+    WorkbookInvariantChecks.requireNonBlank(
+        arrayFormula.sheetName().value(), "array formula sheetName");
     WorkbookInvariantChecks.requireNonBlank(arrayFormula.range(), "array formula range");
     WorkbookInvariantChecks.requireNonBlank(
         arrayFormula.topLeftAddress(), "array formula topLeftAddress");

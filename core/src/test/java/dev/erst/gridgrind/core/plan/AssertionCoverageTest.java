@@ -304,7 +304,7 @@ class AssertionCoverageTest {
   private static TableEntryReport tableReport() {
     return new TableEntryReport(
         "BudgetTable",
-        "Budget",
+        new SheetLabel("Budget"),
         "A1:B2",
         1,
         0,
@@ -316,9 +316,9 @@ class AssertionCoverageTest {
   private static PivotTableReport pivotReport() {
     return new PivotTableReport.Supported(
         "Sales Pivot",
-        "Report",
+        new SheetName("Report"),
         new PivotTableReport.Anchor("C5", "C5:G9"),
-        new PivotTableReport.Source.Range("Data", "A1:D5"),
+        new PivotTableReport.Source.Range(new SheetName("Data"), "A1:D5"),
         List.of(new PivotTableReport.Field(0, "Region")),
         List.of(new PivotTableReport.Field(1, "Stage")),
         List.of(new PivotTableReport.Field(2, "Owner")),

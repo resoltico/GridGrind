@@ -21,6 +21,7 @@ import dev.erst.gridgrind.core.vocabulary.AnalysisSeverity;
 import dev.erst.gridgrind.core.vocabulary.ExcelFillPattern;
 import dev.erst.gridgrind.core.vocabulary.ExcelHorizontalAlignment;
 import dev.erst.gridgrind.core.vocabulary.ExcelVerticalAlignment;
+import dev.erst.gridgrind.core.vocabulary.SheetLabel;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -31,13 +32,18 @@ import org.junit.jupiter.api.Test;
 class InspectionResultTest {
   @Test
   void sheetsResultCopiesSheetNamesAndRejectsBlankStepId() {
-    List<String> names = new ArrayList<>(List.of("Budget", "Report"));
+    List<SheetLabel> names =
+        new ArrayList<>(List.of(new SheetLabel("Budget"), new SheetLabel("Report")));
     WorkbookInspectionResult.SheetsResult result =
         new WorkbookInspectionResult.SheetsResult(new StepId("sheets"), names);
     names.clear();
 
     assertEquals("sheets", result.stepId().value());
-    assertEquals(List.of("Budget", "Report"), result.sheetNames());
+    assertEquals(
+        List.of("Budget", "Report"),
+        result.sheetNames().stream()
+            .map(dev.erst.gridgrind.core.vocabulary.WireString::value)
+            .toList());
     assertThrows(
         IllegalArgumentException.class,
         () -> new WorkbookInspectionResult.SheetsResult(new StepId(" "), List.of()));
@@ -57,7 +63,7 @@ class InspectionResultTest {
             java.util.Optional.empty(),
             java.util.Optional.empty()));
     SheetInspectionResult.CellsResult result =
-        new SheetInspectionResult.CellsResult(new StepId("cells"), "Budget", cells);
+        new SheetInspectionResult.CellsResult(new StepId("cells"), new SheetLabel("Budget"), cells);
 
     cells.clear();
 

@@ -269,7 +269,7 @@ class GridGrindPlanTest {
         assertInstanceOf(
             dev.erst.gridgrind.core.model.value.CellReport.NumberReport.class,
             cellsResult.cells().getFirst());
-    assertEquals("Budget", cellsResult.sheetName());
+    assertEquals("Budget", cellsResult.sheetName().value());
     assertEquals("B2", numberReport.address());
     assertEquals(125.0, numberReport.numberValue().orElseThrow());
   }

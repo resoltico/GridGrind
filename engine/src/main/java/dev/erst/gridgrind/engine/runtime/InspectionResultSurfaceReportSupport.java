@@ -9,6 +9,7 @@ import dev.erst.gridgrind.core.model.table.SchemaColumnReport;
 import dev.erst.gridgrind.core.model.table.SheetSchemaReport;
 import dev.erst.gridgrind.core.result.TypeCountReport;
 import dev.erst.gridgrind.core.vocabulary.NamedRangeBackingKind;
+import dev.erst.gridgrind.core.vocabulary.SheetLabel;
 import dev.erst.gridgrind.excel.ExcelCellReadProjection;
 
 /** Converts derived factual surface snapshots into protocol surface reports. */
@@ -23,7 +24,7 @@ final class InspectionResultSurfaceReportSupport {
             .map(
                 sheet ->
                     new SheetFormulaSurfaceReport(
-                        sheet.sheetName(),
+                        new SheetLabel(sheet.sheetName()),
                         sheet.formulaCellCount(),
                         sheet.distinctFormulaCount(),
                         sheet.formulas().stream()
@@ -42,7 +43,7 @@ final class InspectionResultSurfaceReportSupport {
       ExcelCellReadProjection projection,
       boolean date1904) {
     return new SheetSchemaReport(
-        surface.sheetName(),
+        new SheetLabel(surface.sheetName()),
         surface.topLeftAddress(),
         surface.rowCount(),
         surface.columnCount(),

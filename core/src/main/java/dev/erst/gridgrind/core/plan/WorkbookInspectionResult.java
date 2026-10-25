@@ -7,6 +7,7 @@ import dev.erst.gridgrind.core.model.formula.NamedRangeReport;
 import dev.erst.gridgrind.core.model.protection.WorkbookProtectionReport;
 import dev.erst.gridgrind.core.model.security.OoxmlPackageSecurityReport;
 import dev.erst.gridgrind.core.result.WorkbookSummary;
+import dev.erst.gridgrind.core.vocabulary.SheetLabel;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import java.util.List;
 import java.util.Objects;
@@ -89,7 +90,8 @@ public sealed interface WorkbookInspectionResult extends InspectionIntrospection
 
   /** Returns sheet names matched by the originating sheet-presence assertion. */
   @JsonTypeName("GET_SHEETS")
-  record SheetsResult(StepId stepId, List<String> sheetNames) implements WorkbookInspectionResult {
+  record SheetsResult(StepId stepId, List<SheetLabel> sheetNames)
+      implements WorkbookInspectionResult {
     public SheetsResult {
 
       java.util.Objects.requireNonNull(stepId, "stepId must not be null");

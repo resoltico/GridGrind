@@ -262,7 +262,9 @@ class ExecutorPolicyCoverageTest {
                         .unknown()),
                 new NamedRangeNotFoundException(
                     "LocalTotal", new ExcelNamedRangeScope.SheetScope("Budget"))));
-    assertEquals(java.util.Optional.of("Budget"), enriched.sheetName());
+    assertEquals(
+        java.util.Optional.of("Budget"),
+        enriched.sheetName().map(dev.erst.gridgrind.core.vocabulary.WireString::value));
     assertEquals(
         java.util.Optional.of("A1"),
         assertInstanceOf(

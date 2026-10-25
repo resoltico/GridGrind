@@ -511,7 +511,8 @@ final class WorkbookInvariantWorkbookSurfaceChecks {
   static void requirePivotTableShape(PivotTableReport pivotTable) {
     WorkbookInvariantChecks.require(pivotTable != null, "pivot table must not be null");
     WorkbookInvariantChecks.requireNonBlank(pivotTable.name(), "pivot table name");
-    WorkbookInvariantChecks.requireNonBlank(pivotTable.sheetName(), "pivot table sheetName");
+    WorkbookInvariantChecks.requireNonBlank(
+        pivotTable.sheetName().value(), "pivot table sheetName");
     requirePivotTableAnchorShape(pivotTable.anchor());
     switch (pivotTable) {
       case PivotTableReport.Supported supported -> {
@@ -540,19 +541,21 @@ final class WorkbookInvariantWorkbookSurfaceChecks {
     WorkbookInvariantChecks.require(source != null, "pivot table source must not be null");
     switch (source) {
       case PivotTableReport.Source.Range range -> {
-        WorkbookInvariantChecks.requireNonBlank(range.sheetName(), "pivot range source sheetName");
+        WorkbookInvariantChecks.requireNonBlank(
+            range.sheetName().value(), "pivot range source sheetName");
         WorkbookInvariantChecks.requireNonBlank(range.range(), "pivot range source range");
       }
       case PivotTableReport.Source.NamedRange namedRange -> {
         WorkbookInvariantChecks.requireNonBlank(namedRange.name(), "pivot named-range source name");
         WorkbookInvariantChecks.requireNonBlank(
-            namedRange.sheetName(), "pivot named-range source sheetName");
+            namedRange.sheetName().value(), "pivot named-range source sheetName");
         WorkbookInvariantChecks.requireNonBlank(
             namedRange.range(), "pivot named-range source range");
       }
       case PivotTableReport.Source.Table table -> {
         WorkbookInvariantChecks.requireNonBlank(table.name(), "pivot table source name");
-        WorkbookInvariantChecks.requireNonBlank(table.sheetName(), "pivot table source sheetName");
+        WorkbookInvariantChecks.requireNonBlank(
+            table.sheetName().value(), "pivot table source sheetName");
         WorkbookInvariantChecks.requireNonBlank(table.range(), "pivot table source range");
       }
     }

@@ -15,6 +15,7 @@ import dev.erst.gridgrind.core.problem.MessageInvariant;
 import dev.erst.gridgrind.core.problem.ProblemContext;
 import dev.erst.gridgrind.core.problem.ProblemContextRequestSurfaces;
 import dev.erst.gridgrind.core.problem.ProblemContextWorkbookSurfaces;
+import dev.erst.gridgrind.core.vocabulary.SheetLabel;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import java.nio.file.AccessDeniedException;
@@ -121,7 +122,7 @@ class GridGrindProblemsCoverageTest {
             ProblemContextRequestSurfaces.RequestShape.known("NEW", "NONE"),
             new ProblemContextWorkbookSurfaces.StepReference(
                 0, new StepId("assert-total"), "ASSERTION", "EXPECT_CELL_VALUE"),
-            ProblemContextWorkbookSurfaces.ProblemLocation.cell("Budget", "B2"));
+            ProblemContextWorkbookSurfaces.ProblemLocation.cell(new SheetLabel("Budget"), "B2"));
     ProblemContext.PersistWorkbook saveAsContext =
         new ProblemContext.PersistWorkbook(
             ProblemContextRequestSurfaces.RequestShape.known("EXISTING", "SAVE_AS"),

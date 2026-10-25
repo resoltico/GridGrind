@@ -627,7 +627,7 @@ class InspectionResultConverterTest extends DefaultGridGrindRequestExecutorTestS
     PivotTableReport.Supported namedRangePivot =
         assertInstanceOf(PivotTableReport.Supported.class, pivotTables.pivotTables().get(1));
 
-    assertEquals("Data", ((PivotTableReport.Source.Range) rangePivot.source()).sheetName());
+    assertEquals("Data", ((PivotTableReport.Source.Range) rangePivot.source()).sheetName().value());
     assertEquals(
         "PivotSource", ((PivotTableReport.Source.NamedRange) namedRangePivot.source()).name());
   }

@@ -46,7 +46,9 @@ class EventReadExecutorCoverageTest {
     assertEquals("EXECUTE_STEP", failure.problem().context().stage());
     assertEquals(
         java.util.Optional.of("Missing"),
-        DefaultGridGrindRequestExecutorTestSupport.executeStepContext(failure).sheetName());
+        DefaultGridGrindRequestExecutorTestSupport.executeStepContext(failure)
+            .sheetName()
+            .map(dev.erst.gridgrind.core.vocabulary.WireString::value));
   }
 
   @Test

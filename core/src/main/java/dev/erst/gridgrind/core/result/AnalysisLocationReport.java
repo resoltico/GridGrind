@@ -3,6 +3,7 @@ package dev.erst.gridgrind.core.result;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import dev.erst.gridgrind.core.vocabulary.NamedRangeScope;
+import dev.erst.gridgrind.core.vocabulary.SheetLabel;
 import java.util.Objects;
 
 /** Precise workbook location attached to one derived analysis finding. */
@@ -24,23 +25,17 @@ public sealed interface AnalysisLocationReport
   record Workbook() implements AnalysisLocationReport {}
 
   /** One whole-sheet finding. */
-  record Sheet(String sheetName) implements AnalysisLocationReport {
+  record Sheet(SheetLabel sheetName) implements AnalysisLocationReport {
     public Sheet {
       Objects.requireNonNull(sheetName, "sheetName must not be null");
-      if (sheetName.isBlank()) {
-        throw new IllegalArgumentException("sheetName must not be blank");
-      }
     }
   }
 
   /** One concrete cell finding. */
-  record Cell(String sheetName, String address) implements AnalysisLocationReport {
+  record Cell(SheetLabel sheetName, String address) implements AnalysisLocationReport {
     public Cell {
       Objects.requireNonNull(sheetName, "sheetName must not be null");
       Objects.requireNonNull(address, "address must not be null");
-      if (sheetName.isBlank()) {
-        throw new IllegalArgumentException("sheetName must not be blank");
-      }
       if (address.isBlank()) {
         throw new IllegalArgumentException("address must not be blank");
       }
@@ -48,13 +43,10 @@ public sealed interface AnalysisLocationReport
   }
 
   /** One rectangular range finding. */
-  record Range(String sheetName, String range) implements AnalysisLocationReport {
+  record Range(SheetLabel sheetName, String range) implements AnalysisLocationReport {
     public Range {
       Objects.requireNonNull(sheetName, "sheetName must not be null");
       Objects.requireNonNull(range, "range must not be null");
-      if (sheetName.isBlank()) {
-        throw new IllegalArgumentException("sheetName must not be blank");
-      }
       if (range.isBlank()) {
         throw new IllegalArgumentException("range must not be blank");
       }

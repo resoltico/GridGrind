@@ -683,7 +683,11 @@ class DefaultGridGrindRequestExecutorStyleAndFormulaTest
 
     assertEquals("EXECUTE_STEP", failure.problem().context().stage());
     assertEquals("APPEND_ROW", executeStepContext(failure).stepType());
-    assertEquals(java.util.Optional.of("Budget"), executeStepContext(failure).sheetName());
+    assertEquals(
+        java.util.Optional.of("Budget"),
+        executeStepContext(failure)
+            .sheetName()
+            .map(dev.erst.gridgrind.core.vocabulary.WireString::value));
   }
 
   @Test

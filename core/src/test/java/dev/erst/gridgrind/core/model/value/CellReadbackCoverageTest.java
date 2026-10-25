@@ -21,6 +21,7 @@ import dev.erst.gridgrind.core.vocabulary.ExcelBorderStyle;
 import dev.erst.gridgrind.core.vocabulary.ExcelFillPattern;
 import dev.erst.gridgrind.core.vocabulary.ExcelHorizontalAlignment;
 import dev.erst.gridgrind.core.vocabulary.ExcelVerticalAlignment;
+import dev.erst.gridgrind.core.vocabulary.SheetLabel;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
@@ -209,7 +210,7 @@ class CellReadbackCoverageTest {
     WindowDimensionsReport dimensions = new WindowDimensionsReport(2, 2);
     WindowReport.Sparse sparse =
         new WindowReport.Sparse(
-            "Budget",
+            new SheetLabel("Budget"),
             "A1",
             dimensions,
             List.of(
@@ -223,7 +224,7 @@ class CellReadbackCoverageTest {
                     Optional.empty())));
     WindowReport.Dense dense =
         new WindowReport.Dense(
-            "Budget",
+            new SheetLabel("Budget"),
             "A1",
             dimensions,
             List.of(
@@ -294,7 +295,7 @@ class CellReadbackCoverageTest {
         IllegalArgumentException.class,
         () ->
             new WindowReport.Sparse(
-                " ",
+                new SheetLabel(" "),
                 "A1",
                 dimensions,
                 List.of(
@@ -310,7 +311,7 @@ class CellReadbackCoverageTest {
         IllegalArgumentException.class,
         () ->
             new WindowReport.Sparse(
-                "Budget",
+                new SheetLabel("Budget"),
                 " ",
                 dimensions,
                 List.of(
@@ -326,7 +327,7 @@ class CellReadbackCoverageTest {
         IllegalArgumentException.class,
         () ->
             new WindowReport.Sparse(
-                "Budget",
+                new SheetLabel("Budget"),
                 "A1",
                 dimensions,
                 List.of(

@@ -33,6 +33,7 @@ import dev.erst.gridgrind.core.problem.GridGrindProblemDetail;
 import dev.erst.gridgrind.core.problem.GridGrindWarningCode;
 import dev.erst.gridgrind.core.problem.ProblemContext;
 import dev.erst.gridgrind.core.result.WorkbookResult;
+import dev.erst.gridgrind.core.vocabulary.SheetLabel;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.excel.ExcelCellValue;
@@ -272,7 +273,8 @@ class DefaultGridGrindRequestExecutorCalculationCoverageTest {
       assertEquals(
           java.util.Optional.of("Ops"),
           DefaultGridGrindRequestExecutorTestSupport.calculationPreflightContext(preflightFailure)
-              .sheetName());
+              .sheetName()
+              .map(dev.erst.gridgrind.core.vocabulary.WireString::value));
       assertEquals(
           java.util.Optional.of("A1"),
           DefaultGridGrindRequestExecutorTestSupport.calculationPreflightContext(preflightFailure)
@@ -429,7 +431,7 @@ class DefaultGridGrindRequestExecutorCalculationCoverageTest {
           GridGrindWarningCode.FORMULA_NOT_EVALUATED, outcome.warnings().getFirst().code());
       assertEquals(
           new dev.erst.gridgrind.core.problem.RequestWarningLocation.FormulaCell(
-              "Ops", "A1", "TEXTAFTER(\"a,b\",\",\")"),
+              new SheetLabel("Ops"), "A1", "TEXTAFTER(\"a,b\",\",\")"),
           outcome.warnings().getFirst().location());
     }
   }

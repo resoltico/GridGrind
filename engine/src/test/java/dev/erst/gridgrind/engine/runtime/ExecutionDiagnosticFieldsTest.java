@@ -25,6 +25,7 @@ import dev.erst.gridgrind.core.plan.TableSelector;
 import dev.erst.gridgrind.core.plan.WorkbookSelector;
 import dev.erst.gridgrind.core.problem.ProblemContextWorkbookSurfaces;
 import dev.erst.gridgrind.core.vocabulary.NamedRangeScope;
+import dev.erst.gridgrind.core.vocabulary.SheetLabel;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.excel.ExcelNamedRangeScope;
@@ -42,7 +43,8 @@ class ExecutionDiagnosticFieldsTest {
   @Test
   void exceptionLocationsCoverNamedRangeFormulaCellSheetAddressRangeAndUnknownVariants() {
     assertEquals(
-        new ProblemContextWorkbookSurfaces.ProblemLocation.SheetNamedRange("Budget", "BudgetTotal"),
+        new ProblemContextWorkbookSurfaces.ProblemLocation.SheetNamedRange(
+            new SheetLabel("Budget"), "BudgetTotal"),
         ExecutionDiagnosticFields.locationFor(
             new NamedRangeNotFoundException(
                 "BudgetTotal", new ExcelNamedRangeScope.SheetScope("Budget"))));
@@ -52,15 +54,16 @@ class ExecutionDiagnosticFieldsTest {
             new NamedRangeNotFoundException(
                 "BudgetTotal", new ExcelNamedRangeScope.WorkbookScope())));
     assertEquals(
-        new ProblemContextWorkbookSurfaces.ProblemLocation.FormulaCell("Budget", "B4", "SUM("),
+        new ProblemContextWorkbookSurfaces.ProblemLocation.FormulaCell(
+            new SheetLabel("Budget"), "B4", "SUM("),
         ExecutionDiagnosticFields.locationFor(
             new InvalidFormulaException("Budget", "B4", "SUM(", "bad formula", null)));
     assertEquals(
-        new ProblemContextWorkbookSurfaces.ProblemLocation.Cell("Budget", "B4"),
+        new ProblemContextWorkbookSurfaces.ProblemLocation.Cell(new SheetLabel("Budget"), "B4"),
         ExecutionDiagnosticFields.locationFor(
             new InvalidFormulaException("Budget", "B4", null, "bad formula", null)));
     assertEquals(
-        new ProblemContextWorkbookSurfaces.ProblemLocation.Sheet("Budget"),
+        new ProblemContextWorkbookSurfaces.ProblemLocation.Sheet(new SheetLabel("Budget")),
         ExecutionDiagnosticFields.locationFor(new SheetNotFoundException("Budget")));
     assertEquals(
         new ProblemContextWorkbookSurfaces.ProblemLocation.Address("B4"),
@@ -117,16 +120,17 @@ class ExecutionDiagnosticFieldsTest {
                         "B2>0", true, Optional.empty()))));
 
     assertEquals(
-        new ProblemContextWorkbookSurfaces.ProblemLocation.SheetNamedRange("Budget", "BudgetTotal"),
+        new ProblemContextWorkbookSurfaces.ProblemLocation.SheetNamedRange(
+            new SheetLabel("Budget"), "BudgetTotal"),
         ExecutionDiagnosticFields.locationFor(sheetScopedNamedRange));
     assertEquals(
         new ProblemContextWorkbookSurfaces.ProblemLocation.NamedRange("BudgetExpr"),
         ExecutionDiagnosticFields.locationFor(workbookFormulaNamedRange));
     assertEquals(
-        new ProblemContextWorkbookSurfaces.ProblemLocation.Cell("Budget", "C5"),
+        new ProblemContextWorkbookSurfaces.ProblemLocation.Cell(new SheetLabel("Budget"), "C5"),
         ExecutionDiagnosticFields.locationFor(pivot));
     assertEquals(
-        new ProblemContextWorkbookSurfaces.ProblemLocation.Range("Budget", "A1:B4"),
+        new ProblemContextWorkbookSurfaces.ProblemLocation.Range(new SheetLabel("Budget"), "A1:B4"),
         ExecutionDiagnosticFields.locationFor(table));
     assertEquals(
         ProblemContextWorkbookSurfaces.ProblemLocation.unknown(),
@@ -140,7 +144,8 @@ class ExecutionDiagnosticFieldsTest {
   @Test
   void selectorLocationsAndWorkbookStepFallbacksStayTyped() {
     assertEquals(
-        new ProblemContextWorkbookSurfaces.ProblemLocation.SheetNamedRange("Budget", "BudgetTotal"),
+        new ProblemContextWorkbookSurfaces.ProblemLocation.SheetNamedRange(
+            new SheetLabel("Budget"), "BudgetTotal"),
         ExecutionDiagnosticFields.locationFor(
             new NamedRangeSelector.SheetScope("BudgetTotal", new SheetName("Budget"))));
     assertEquals(
@@ -151,15 +156,15 @@ class ExecutionDiagnosticFieldsTest {
         ExecutionSelectorDiagnosticFields.namedRangeNameFor(
             new NamedRangeSelector.WorkbookScope("BudgetTotal")));
     assertEquals(
-        new ProblemContextWorkbookSurfaces.ProblemLocation.Cell("Budget", "B4"),
+        new ProblemContextWorkbookSurfaces.ProblemLocation.Cell(new SheetLabel("Budget"), "B4"),
         ExecutionDiagnosticFields.locationFor(
             new CellSelector.ByAddress(new SheetName("Budget"), "B4")));
     assertEquals(
-        new ProblemContextWorkbookSurfaces.ProblemLocation.Range("Budget", "A1:B2"),
+        new ProblemContextWorkbookSurfaces.ProblemLocation.Range(new SheetLabel("Budget"), "A1:B2"),
         ExecutionDiagnosticFields.locationFor(
             new RangeSelector.ByRange(new SheetName("Budget"), "A1:B2")));
     assertEquals(
-        new ProblemContextWorkbookSurfaces.ProblemLocation.Sheet("Budget"),
+        new ProblemContextWorkbookSurfaces.ProblemLocation.Sheet(new SheetLabel("Budget")),
         ExecutionDiagnosticFields.locationFor(new SheetSelector.ByName(new SheetName("Budget"))));
     assertEquals(
         ProblemContextWorkbookSurfaces.ProblemLocation.unknown(),

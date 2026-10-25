@@ -71,7 +71,9 @@ class DefaultGridGrindRequestExecutorCoverageTest
         assertInstanceOf(
             dev.erst.gridgrind.core.problem.ProblemContext.ExecuteStep.class,
             ExecutionResponseSupport.enrichContext(context, invalidFormula));
-    assertEquals(java.util.Optional.of("Budget"), enrichedFormula.sheetName());
+    assertEquals(
+        java.util.Optional.of("Budget"),
+        enrichedFormula.sheetName().map(dev.erst.gridgrind.core.vocabulary.WireString::value));
     assertEquals(java.util.Optional.of("B4"), enrichedFormula.address());
     assertEquals(java.util.Optional.of("SUM("), enrichedFormula.formula());
 
@@ -217,7 +219,7 @@ class DefaultGridGrindRequestExecutorCoverageTest
 
     assertTrue(protection.protection().structureLocked());
     assertEquals("step-02-cells", cells.stepId().value());
-    assertEquals("Budget", cells.sheetName());
+    assertEquals("Budget", cells.sheetName().value());
     assertEquals("B4", cells.cells().getFirst().address());
   }
 

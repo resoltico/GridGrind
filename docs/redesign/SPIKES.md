@@ -638,3 +638,36 @@ lines 4,583 -> 4,601. Inputs 81 (83 including source unions), reports 96, snapsh
 unchanged. Evidence: external `sheet-name-*.log`, `sheet-name-failures/`, `sheet-name-inventories/`
 and compiler-informed migration logs. `git diff main -- AGENTS.md` remains empty; no supplement.
 WP-21 continues with observed sheet labels and the remaining value-typed fields.
+
+### WP-21 observed sheet fields and diagnostic locations
+
+Fourteen report/result model files now use typed sheet fields: `SheetLabel` for factual labels,
+`SheetName` for the already-strict pivot report/source contract. Problem/warning locations and
+their sheet accessors carry `SheetLabel` as well. No core `String sheetName` or
+`List<String> sheetNames` declaration remains. Removed repeated label blank checks and the unused
+inspection-result text validator. Textual fuzz/parity or backend consumers project `.value()`.
+
+The malformed-sheet regression now persists a table before renaming its sheet to `invalid[]`;
+reopened workbook-summary and table reports preserve that label and response round-trip. During
+review, a codemod had copied a mutable test list before the constructor under test; the test now
+uses a caller-owned mutable `List<SheetLabel>` directly, retaining its defensive-copy assurance.
+The defaulting test's bare Jackson mapper could not bind scalar values; switching it to the
+canonical codec exposed stale journal fixture fields that its old permissive mapper ignored.
+The current `ExecutionJournal` has no planId/persistence/warnings fields and `Phase.NotStarted`
+has zero components. Removed those unknown fields, retaining valid outcome timing. Focused tests
+pass. Retained both failure XMLs in external `observed-sheet-failures/`.
+
+The first full check caught two parity comparisons of text with typed labels and standard PMD's
+30-import threshold in two explicit DTO adapters (30 and 31 imports). Corrected comparisons;
+scoped `PMD.ExcessiveImports` suppressions document the intrinsic backend/report correspondence,
+without changing the ruleset or fragmenting the adapters. These converters remain WP-40 deletion
+targets. Focused compilation, PMD and all 14 parity scenarios passed (27s).
+
+Final `./gradlew check` passed (3m13s): core 328, JSON 338, engine 1,510, CLI 598, architecture 35;
+2,809 tests, zero failures/skips. All 141 golden cases unchanged. Nested Jazzer check and committed
+replay passed (25s); named modules round-tripped 14 requests, catalog, response and nine scalar
+types. Inventories: blank checks 473 -> 462; main Java 126,476 -> 126,506; test Java 154,276 ->
+154,463; converters 4,601 -> 4,614 lines. Other model/subtype counts unchanged. External evidence:
+`observed-sheet-*.log`, `observed-sheet-failures/`, `observed-sheet-inventories/`, compiler migration
+logs and the classified file list. No golden re-recording, baseline or supplement changes.
+Next: cell-address fields; retain typed address remediation and range-selector endpoint ordering.

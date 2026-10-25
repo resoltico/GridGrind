@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import dev.erst.gridgrind.core.model.value.CellReport;
 import dev.erst.gridgrind.core.result.WorkbookResultSupport;
+import dev.erst.gridgrind.core.vocabulary.SheetLabel;
 import java.util.List;
 import java.util.Objects;
 
@@ -22,7 +23,7 @@ public sealed interface WindowReport permits WindowReport.Sparse, WindowReport.D
   String shape();
 
   /** Returns the sheet owning the returned window. */
-  String sheetName();
+  SheetLabel sheetName();
 
   /** Returns the top-left A1 address anchoring this window. */
   String topLeftAddress();
@@ -32,7 +33,7 @@ public sealed interface WindowReport permits WindowReport.Sparse, WindowReport.D
 
   /** Sparse window shape that omits blank cells entirely. */
   record Sparse(
-      String sheetName,
+      SheetLabel sheetName,
       String topLeftAddress,
       WindowDimensionsReport dimensions,
       List<CellReport> populatedCells)
@@ -41,9 +42,6 @@ public sealed interface WindowReport permits WindowReport.Sparse, WindowReport.D
       Objects.requireNonNull(sheetName, "sheetName must not be null");
       Objects.requireNonNull(topLeftAddress, "topLeftAddress must not be null");
       Objects.requireNonNull(dimensions, "dimensions must not be null");
-      if (sheetName.isBlank()) {
-        throw new IllegalArgumentException("sheetName must not be blank");
-      }
       if (topLeftAddress.isBlank()) {
         throw new IllegalArgumentException("topLeftAddress must not be blank");
       }
@@ -64,7 +62,7 @@ public sealed interface WindowReport permits WindowReport.Sparse, WindowReport.D
 
   /** Dense window shape that retains the explicit row grid, including blanks. */
   record Dense(
-      String sheetName,
+      SheetLabel sheetName,
       String topLeftAddress,
       WindowDimensionsReport dimensions,
       List<WindowRowReport> rows)
@@ -73,9 +71,6 @@ public sealed interface WindowReport permits WindowReport.Sparse, WindowReport.D
       Objects.requireNonNull(sheetName, "sheetName must not be null");
       Objects.requireNonNull(topLeftAddress, "topLeftAddress must not be null");
       Objects.requireNonNull(dimensions, "dimensions must not be null");
-      if (sheetName.isBlank()) {
-        throw new IllegalArgumentException("sheetName must not be blank");
-      }
       if (topLeftAddress.isBlank()) {
         throw new IllegalArgumentException("topLeftAddress must not be blank");
       }

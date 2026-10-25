@@ -18,6 +18,8 @@ import dev.erst.gridgrind.core.result.AnalysisSummaryReport;
 import dev.erst.gridgrind.core.vocabulary.AnalysisFindingCode;
 import dev.erst.gridgrind.core.vocabulary.AnalysisSeverity;
 import dev.erst.gridgrind.core.vocabulary.ExcelPivotDataConsolidateFunction;
+import dev.erst.gridgrind.core.vocabulary.SheetLabel;
+import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import java.util.List;
 import java.util.Optional;
@@ -50,9 +52,9 @@ class AdvancedInspectionProtocolTypesTest {
             List.of(
                 new PivotTableReport.Supported(
                     "Sales Pivot 2026",
-                    "Report",
+                    new SheetName("Report"),
                     new PivotTableReport.Anchor("C5", "C5:G9"),
-                    new PivotTableReport.Source.Range("Data", "A1:D5"),
+                    new PivotTableReport.Source.Range(new SheetName("Data"), "A1:D5"),
                     List.of(new PivotTableReport.Field(0, "Region")),
                     List.of(new PivotTableReport.Field(1, "Stage")),
                     List.of(new PivotTableReport.Field(2, "Owner")),
@@ -74,7 +76,7 @@ class AdvancedInspectionProtocolTypesTest {
                     AnalysisSeverity.WARNING,
                     "Pivot table name is missing",
                     "GridGrind assigned a synthetic identifier for readback.",
-                    new AnalysisLocationReport.Sheet("Report"),
+                    new AnalysisLocationReport.Sheet(new SheetLabel("Report")),
                     List.of("_GG_PIVOT_Report_A3"))));
     WorkbookAnalysisResult.PivotTableHealthResult pivotHealth =
         new WorkbookAnalysisResult.PivotTableHealthResult(new StepId("pivot-health"), health);

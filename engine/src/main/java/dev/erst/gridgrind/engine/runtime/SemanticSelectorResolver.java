@@ -14,6 +14,7 @@ import dev.erst.gridgrind.core.plan.SheetIntrospectionQuery;
 import dev.erst.gridgrind.core.plan.TableCellSelector;
 import dev.erst.gridgrind.core.plan.TableRowSelector;
 import dev.erst.gridgrind.core.plan.TableSelector;
+import dev.erst.gridgrind.core.vocabulary.SheetLabel;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.excel.ExcelCellSnapshot;
@@ -275,12 +276,13 @@ final class SemanticSelectorResolver {
   private static InspectionResult emptyInspectionResult(
       StepId stepId, String sheetName, InspectionQuery query) {
     if (query instanceof SheetIntrospectionQuery.GetCells) {
-      return new SheetInspectionResult.CellsResult(stepId, sheetName, List.of());
+      return new SheetInspectionResult.CellsResult(stepId, new SheetLabel(sheetName), List.of());
     }
     if (query instanceof SheetIntrospectionQuery.GetHyperlinks) {
-      return new SheetInspectionResult.HyperlinksResult(stepId, sheetName, List.of());
+      return new SheetInspectionResult.HyperlinksResult(
+          stepId, new SheetLabel(sheetName), List.of());
     }
-    return new SheetInspectionResult.CommentsResult(stepId, sheetName, List.of());
+    return new SheetInspectionResult.CommentsResult(stepId, new SheetLabel(sheetName), List.of());
   }
 
   record ResolvedInspectionTarget(

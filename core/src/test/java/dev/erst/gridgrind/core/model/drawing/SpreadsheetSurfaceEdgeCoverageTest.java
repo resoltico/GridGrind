@@ -32,6 +32,7 @@ import dev.erst.gridgrind.core.vocabulary.ExcelChartRadarStyle;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartScatterStyle;
 import dev.erst.gridgrind.core.vocabulary.ExcelDrawingAnchorBehavior;
 import dev.erst.gridgrind.core.vocabulary.ExcelPictureFormat;
+import dev.erst.gridgrind.core.vocabulary.SheetLabel;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
@@ -237,10 +238,16 @@ class SpreadsheetSurfaceEdgeCoverageTest {
             "schema.xsd",
             "<xsd:schema/>",
             new CustomXmlDataBindingReport("binding", true, 5L, "binding.xml", 2L),
-            List.of(new CustomXmlLinkedCellReport("Foglio1", "A1", "/CORSO/NOME", "string")),
+            List.of(
+                new CustomXmlLinkedCellReport(
+                    new SheetLabel("Foglio1"), "A1", "/CORSO/NOME", "string")),
             List.of(
                 new CustomXmlLinkedTableReport(
-                    "Foglio1", "Table1", "CourseTable", "A1:B4", "/CORSO/RIGHE/RIGA")));
+                    new SheetLabel("Foglio1"),
+                    "Table1",
+                    "CourseTable",
+                    "A1:B4",
+                    "/CORSO/RIGHE/RIGA")));
 
     assertFalse(area.varyColors());
     assertEquals(Optional.of(24), area3D.gapDepth());
@@ -368,7 +375,9 @@ class SpreadsheetSurfaceEdgeCoverageTest {
         () -> mappingReport(" ", null, null, null, null, List.of(), List.of()));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new CustomXmlLinkedTableReport("Foglio1", "Table1", " ", "A1:B4", "/rows/row"));
+        () ->
+            new CustomXmlLinkedTableReport(
+                new SheetLabel("Foglio1"), "Table1", " ", "A1:B4", "/rows/row"));
     assertThrows(
         NullPointerException.class,
         () ->
@@ -549,7 +558,8 @@ class SpreadsheetSurfaceEdgeCoverageTest {
     assertThrows(IllegalArgumentException.class, () -> new CustomXmlMappingLocator(null, " "));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new CustomXmlLinkedCellReport("Foglio1", " ", "/CORSO/NOME", "string"));
+        () ->
+            new CustomXmlLinkedCellReport(new SheetLabel("Foglio1"), " ", "/CORSO/NOME", "string"));
     assertThrows(
         IllegalArgumentException.class,
         () ->
@@ -793,7 +803,9 @@ class SpreadsheetSurfaceEdgeCoverageTest {
                 null,
                 null,
                 null,
-                List.of(new CustomXmlLinkedCellReport("Foglio1", "A1", "/CORSO/NOME", "string")),
+                List.of(
+                    new CustomXmlLinkedCellReport(
+                        new SheetLabel("Foglio1"), "A1", "/CORSO/NOME", "string")),
                 List.of())
             .schema()
             .xml());
@@ -806,7 +818,9 @@ class SpreadsheetSurfaceEdgeCoverageTest {
                 null,
                 " ",
                 null,
-                List.of(new CustomXmlLinkedCellReport("Foglio1", "A1", "/CORSO/NOME", "string")),
+                List.of(
+                    new CustomXmlLinkedCellReport(
+                        new SheetLabel("Foglio1"), "A1", "/CORSO/NOME", "string")),
                 List.of()));
     assertEquals(
         "Grace Hopper",

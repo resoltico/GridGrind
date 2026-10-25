@@ -12,6 +12,7 @@ import dev.erst.gridgrind.core.vocabulary.AnalysisFindingCode;
 import dev.erst.gridgrind.core.vocabulary.AnalysisSeverity;
 import dev.erst.gridgrind.core.vocabulary.ExcelComparisonOperator;
 import dev.erst.gridgrind.core.vocabulary.ExcelConditionalFormattingThresholdType;
+import dev.erst.gridgrind.core.vocabulary.SheetLabel;
 import dev.erst.gridgrind.excel.ExcelColor;
 import dev.erst.gridgrind.excel.ExcelConditionalFormattingBlockSnapshot;
 import dev.erst.gridgrind.excel.ExcelConditionalFormattingRuleSnapshot;
@@ -84,7 +85,7 @@ class ConditionalFormattingEntryReportTest {
                     AnalysisSeverity.WARNING,
                     "Priority collision",
                     "Conditional-formatting priorities collide.",
-                    new AnalysisLocationReport.Sheet("Ops"),
+                    new AnalysisLocationReport.Sheet(new SheetLabel("Ops")),
                     List.of("FORMULA_RULE@Ops!A1:A3"))));
 
     assertEquals(3, report.checkedConditionalFormattingBlockCount());

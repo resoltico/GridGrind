@@ -16,6 +16,7 @@ import dev.erst.gridgrind.core.problem.ProblemContextRequestSurfaces;
 import dev.erst.gridgrind.core.problem.ProblemContextWorkbookSurfaces;
 import dev.erst.gridgrind.core.result.ExecutionJournal;
 import dev.erst.gridgrind.core.result.ExecutionJournalLevel;
+import dev.erst.gridgrind.core.vocabulary.SheetLabel;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import java.util.List;
 import java.util.Optional;
@@ -356,21 +357,25 @@ class CalculationContractTypesTest {
     ProblemContext.ExecuteCalculation enriched =
         base.withLocation(
             ProblemContextWorkbookSurfaces.ProblemLocation.formulaCell(
-                "Budget", "B1", "APP.TITLE()"));
+                new SheetLabel("Budget"), "B1", "APP.TITLE()"));
     ProblemContext.ExecuteCalculation preserved =
         new ProblemContext.ExecuteCalculation.Execution(
                 ProblemContextRequestSurfaces.RequestShape.known("EXISTING", "SAVE_AS"),
                 ProblemContextWorkbookSurfaces.ProblemLocation.formulaCell(
-                    "Ops", "C4", "SUM(A1:A3)"))
+                    new SheetLabel("Ops"), "C4", "SUM(A1:A3)"))
             .withLocation(
                 ProblemContextWorkbookSurfaces.ProblemLocation.formulaCell(
-                    "Ignored", "Ignored", "Ignored"));
+                    new SheetLabel("Ignored"), "Ignored", "Ignored"));
 
     assertEquals("CALCULATION_PREFLIGHT", enriched.stage());
-    assertEquals(java.util.Optional.of("Budget"), enriched.sheetName());
+    assertEquals(
+        java.util.Optional.of("Budget"),
+        enriched.sheetName().map(dev.erst.gridgrind.core.vocabulary.WireString::value));
     assertEquals(java.util.Optional.of("B1"), enriched.address());
     assertEquals(java.util.Optional.of("APP.TITLE()"), enriched.formula());
-    assertEquals(java.util.Optional.of("Ops"), preserved.sheetName());
+    assertEquals(
+        java.util.Optional.of("Ops"),
+        preserved.sheetName().map(dev.erst.gridgrind.core.vocabulary.WireString::value));
     assertEquals(java.util.Optional.of("C4"), preserved.address());
     assertEquals(java.util.Optional.of("SUM(A1:A3)"), preserved.formula());
   }

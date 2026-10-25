@@ -3,6 +3,7 @@ package dev.erst.gridgrind.core.model.table;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import dev.erst.gridgrind.core.vocabulary.SheetLabel;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -10,7 +11,7 @@ import java.util.Optional;
 /** Protocol-facing factual report for one table loaded from a workbook. */
 public record TableEntryReport(
     String name,
-    String sheetName,
+    SheetLabel sheetName,
     String range,
     Structure structure,
     TableStyleReport style,
@@ -19,7 +20,7 @@ public record TableEntryReport(
   /** Creates a table report with defaulted per-column metadata and optional presentation state. */
   public TableEntryReport(
       String name,
-      String sheetName,
+      SheetLabel sheetName,
       String range,
       int headerRowCount,
       int totalsRowCount,
@@ -39,9 +40,6 @@ public record TableEntryReport(
   public TableEntryReport {
     Objects.requireNonNull(name, "name must not be null");
     Objects.requireNonNull(sheetName, "sheetName must not be null");
-    if (sheetName.isBlank()) {
-      throw new IllegalArgumentException("sheetName must not be blank");
-    }
     Objects.requireNonNull(range, "range must not be null");
     Objects.requireNonNull(structure, "structure must not be null");
     Objects.requireNonNull(style, "style must not be null");
@@ -52,7 +50,7 @@ public record TableEntryReport(
   @JsonCreator
   static TableEntryReport create(
       @JsonProperty("name") String name,
-      @JsonProperty("sheetName") String sheetName,
+      @JsonProperty("sheetName") SheetLabel sheetName,
       @JsonProperty("range") String range,
       @JsonProperty("structure") Structure structure,
       @JsonProperty("style") TableStyleReport style,
