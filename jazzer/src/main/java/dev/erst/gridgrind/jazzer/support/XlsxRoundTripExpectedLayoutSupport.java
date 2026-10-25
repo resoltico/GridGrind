@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.jazzer.support;
 
+import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
 import dev.erst.gridgrind.excel.WorkbookExecutionEngine;
 import dev.erst.gridgrind.excel.WorkbookReadCommand;
@@ -23,7 +24,9 @@ final class XlsxRoundTripExpectedLayoutSupport {
       WorkbookSheetResult.SheetLayoutResult layoutResult =
           (WorkbookSheetResult.SheetLayoutResult)
               readExecutor
-                  .read(workbook, new WorkbookReadCommand.GetSheetLayout("layout", sheetName))
+                  .read(
+                      workbook,
+                      new WorkbookReadCommand.GetSheetLayout(new StepId("layout"), sheetName))
                   .getFirst();
       expectedLayouts.put(sheetName, expectedSheetLayout(layoutResult.layout()));
     }

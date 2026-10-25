@@ -10,6 +10,7 @@ import dev.erst.gridgrind.core.plan.CellSelector;
 import dev.erst.gridgrind.core.plan.InspectionStep;
 import dev.erst.gridgrind.core.plan.SheetIntrospectionQuery;
 import dev.erst.gridgrind.core.plan.SheetSelector;
+import dev.erst.gridgrind.core.vocabulary.StepId;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 
@@ -22,12 +23,12 @@ class GridGrindHostAcceptancePolicyTest {
   void requirementsRejectAmbiguityAndPreserveValidHostAssertions() {
     AssertionStep assertion =
         new AssertionStep(
-            "assert-owner",
+            new StepId("assert-owner"),
             new CellSelector.ByAddress("Budget", "A1"),
             new CellAssertion.CellValue(new CellScalarValue.Text("Ada")));
     InspectionStep inspection =
         new InspectionStep(
-            "inspect-budget",
+            new StepId("inspect-budget"),
             new SheetSelector.ByName("Budget"),
             new SheetIntrospectionQuery.GetSheetSummary());
 

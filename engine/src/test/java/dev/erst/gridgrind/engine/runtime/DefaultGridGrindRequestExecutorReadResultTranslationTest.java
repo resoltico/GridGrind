@@ -20,6 +20,7 @@ import dev.erst.gridgrind.core.vocabulary.ExcelPaneRegion;
 import dev.erst.gridgrind.core.vocabulary.ExcelPrintOrientation;
 import dev.erst.gridgrind.core.vocabulary.ExcelSheetVisibility;
 import dev.erst.gridgrind.core.vocabulary.NamedRangeBackingKind;
+import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.excel.*;
 import dev.erst.gridgrind.excel.ExcelCellMetadataSnapshot;
 import dev.erst.gridgrind.excel.ExcelCellSnapshot;
@@ -47,13 +48,13 @@ class DefaultGridGrindRequestExecutorReadResultTranslationTest
     InspectionResult workbookSummary =
         InspectionResultConverter.toReadResult(
             new dev.erst.gridgrind.excel.WorkbookCoreResult.WorkbookSummaryResult(
-                "workbook",
+                new StepId("workbook"),
                 new dev.erst.gridgrind.excel.WorkbookCoreResult.WorkbookSummary.WithSheets(
                     1, List.of("Budget"), "Budget", List.of("Budget"), 1, true)));
     InspectionResult namedRanges =
         InspectionResultConverter.toReadResult(
             new dev.erst.gridgrind.excel.WorkbookCoreResult.NamedRangesResult(
-                "ranges",
+                new StepId("ranges"),
                 List.of(
                     new ExcelNamedRangeSnapshot.RangeSnapshot(
                         "BudgetTotal",
@@ -63,7 +64,7 @@ class DefaultGridGrindRequestExecutorReadResultTranslationTest
     InspectionResult sheetSummary =
         InspectionResultConverter.toReadResult(
             new dev.erst.gridgrind.excel.WorkbookSheetResult.SheetSummaryResult(
-                "sheet",
+                new StepId("sheet"),
                 new dev.erst.gridgrind.excel.WorkbookSheetResult.SheetSummary(
                     "Budget",
                     dev.erst.gridgrind.core.vocabulary.ExcelSheetVisibility.VISIBLE,
@@ -88,13 +89,13 @@ class DefaultGridGrindRequestExecutorReadResultTranslationTest
     InspectionResult merged =
         InspectionResultConverter.toReadResult(
             new dev.erst.gridgrind.excel.WorkbookSheetResult.MergedRegionsResult(
-                "merged",
+                new StepId("merged"),
                 "Budget",
                 List.of(new dev.erst.gridgrind.excel.WorkbookSheetResult.MergedRegion("A1:B2"))));
     InspectionResult hyperlinks =
         InspectionResultConverter.toReadResult(
             new dev.erst.gridgrind.excel.WorkbookSheetResult.HyperlinksResult(
-                "hyperlinks",
+                new StepId("hyperlinks"),
                 "Budget",
                 List.of(
                     new dev.erst.gridgrind.excel.WorkbookSheetResult.CellHyperlink(
@@ -102,7 +103,7 @@ class DefaultGridGrindRequestExecutorReadResultTranslationTest
     InspectionResult comments =
         InspectionResultConverter.toReadResult(
             new dev.erst.gridgrind.excel.WorkbookSheetResult.CommentsResult(
-                "comments",
+                new StepId("comments"),
                 "Budget",
                 List.of(
                     new dev.erst.gridgrind.excel.WorkbookSheetResult.CellComment(
@@ -116,7 +117,7 @@ class DefaultGridGrindRequestExecutorReadResultTranslationTest
     InspectionResult layout =
         InspectionResultConverter.toReadResult(
             new dev.erst.gridgrind.excel.WorkbookSheetResult.SheetLayoutResult(
-                "layout",
+                new StepId("layout"),
                 new dev.erst.gridgrind.excel.WorkbookSheetResult.SheetLayout(
                     "Budget",
                     new dev.erst.gridgrind.excel.ExcelSheetPane.Frozen(1, 1, 1, 1),
@@ -131,7 +132,7 @@ class DefaultGridGrindRequestExecutorReadResultTranslationTest
     InspectionResult printLayout =
         InspectionResultConverter.toReadResult(
             new dev.erst.gridgrind.excel.WorkbookSheetResult.PrintLayoutResult(
-                "printLayout",
+                new StepId("printLayout"),
                 "Budget",
                 new dev.erst.gridgrind.excel.ExcelPrintLayoutSnapshot(
                     new dev.erst.gridgrind.excel.ExcelPrintLayout(
@@ -146,7 +147,7 @@ class DefaultGridGrindRequestExecutorReadResultTranslationTest
     InspectionResult conditionalFormatting =
         InspectionResultConverter.toReadResult(
             new dev.erst.gridgrind.excel.WorkbookRuleResult.ConditionalFormattingResult(
-                "conditional-formatting",
+                new StepId("conditional-formatting"),
                 "Budget",
                 List.of(
                     new ExcelConditionalFormattingBlockSnapshot(
@@ -179,7 +180,7 @@ class DefaultGridGrindRequestExecutorReadResultTranslationTest
     InspectionResult formulaSurface =
         InspectionResultConverter.toReadResult(
             new dev.erst.gridgrind.excel.WorkbookSurfaceResult.FormulaSurfaceResult(
-                "formula",
+                new StepId("formula"),
                 new dev.erst.gridgrind.excel.WorkbookSurfaceResult.FormulaSurface(
                     1,
                     List.of(
@@ -214,7 +215,7 @@ class DefaultGridGrindRequestExecutorReadResultTranslationTest
     InspectionResult namedRangeSurface =
         InspectionResultConverter.toReadResult(
             new dev.erst.gridgrind.excel.WorkbookSurfaceResult.NamedRangeSurfaceResult(
-                "surface",
+                new StepId("surface"),
                 new dev.erst.gridgrind.excel.WorkbookSurfaceResult.NamedRangeSurface(
                     1,
                     0,
@@ -230,7 +231,7 @@ class DefaultGridGrindRequestExecutorReadResultTranslationTest
     InspectionResult formulaHealth =
         InspectionResultConverter.toReadResult(
             new dev.erst.gridgrind.excel.WorkbookAnalysisResult.FormulaHealthResult(
-                "formula-health",
+                new StepId("formula-health"),
                 new dev.erst.gridgrind.excel.WorkbookAnalysis.FormulaHealth(
                     1,
                     new dev.erst.gridgrind.excel.WorkbookAnalysis.AnalysisSummary(1, 0, 0, 1),
@@ -354,7 +355,7 @@ class DefaultGridGrindRequestExecutorReadResultTranslationTest
     InspectionResult conditionalFormattingHealth =
         InspectionResultConverter.toReadResult(
             new dev.erst.gridgrind.excel.WorkbookAnalysisResult.ConditionalFormattingHealthResult(
-                "conditional-formatting-health",
+                new StepId("conditional-formatting-health"),
                 new dev.erst.gridgrind.excel.WorkbookAnalysis.ConditionalFormattingHealth(
                     1,
                     new dev.erst.gridgrind.excel.WorkbookAnalysis.AnalysisSummary(1, 1, 0, 0),
@@ -371,7 +372,7 @@ class DefaultGridGrindRequestExecutorReadResultTranslationTest
     InspectionResult hyperlinkHealth =
         InspectionResultConverter.toReadResult(
             new dev.erst.gridgrind.excel.WorkbookAnalysisResult.HyperlinkHealthResult(
-                "hyperlink-health",
+                new StepId("hyperlink-health"),
                 new dev.erst.gridgrind.excel.WorkbookAnalysis.HyperlinkHealth(
                     2,
                     new dev.erst.gridgrind.excel.WorkbookAnalysis.AnalysisSummary(2, 1, 1, 0),
@@ -397,7 +398,7 @@ class DefaultGridGrindRequestExecutorReadResultTranslationTest
     InspectionResult namedRangeHealth =
         InspectionResultConverter.toReadResult(
             new dev.erst.gridgrind.excel.WorkbookAnalysisResult.NamedRangeHealthResult(
-                "named-range-health",
+                new StepId("named-range-health"),
                 new dev.erst.gridgrind.excel.WorkbookAnalysis.NamedRangeHealth(
                     1,
                     new dev.erst.gridgrind.excel.WorkbookAnalysis.AnalysisSummary(1, 0, 1, 0),
@@ -414,7 +415,7 @@ class DefaultGridGrindRequestExecutorReadResultTranslationTest
     InspectionResult workbookFindings =
         InspectionResultConverter.toReadResult(
             new dev.erst.gridgrind.excel.WorkbookAnalysisResult.WorkbookFindingsResult(
-                "workbook-findings",
+                new StepId("workbook-findings"),
                 new dev.erst.gridgrind.excel.WorkbookAnalysis.WorkbookFindings(
                     new dev.erst.gridgrind.excel.WorkbookAnalysis.AnalysisSummary(1, 0, 0, 1),
                     List.of(
@@ -490,7 +491,7 @@ class DefaultGridGrindRequestExecutorReadResultTranslationTest
             WorkbookSurfaceInspectionResult.NamedRangeSurfaceResult.class,
             InspectionResultConverter.toReadResult(
                 new dev.erst.gridgrind.excel.WorkbookSurfaceResult.NamedRangeSurfaceResult(
-                    "surface",
+                    new StepId("surface"),
                     new dev.erst.gridgrind.excel.WorkbookSurfaceResult.NamedRangeSurface(
                         0,
                         1,
@@ -515,7 +516,7 @@ class DefaultGridGrindRequestExecutorReadResultTranslationTest
             SheetInspectionResult.SheetLayoutResult.class,
             InspectionResultConverter.toReadResult(
                 new dev.erst.gridgrind.excel.WorkbookSheetResult.SheetLayoutResult(
-                    "layout",
+                    new StepId("layout"),
                     new dev.erst.gridgrind.excel.WorkbookSheetResult.SheetLayout(
                         "Budget",
                         new dev.erst.gridgrind.excel.ExcelSheetPane.None(),
@@ -534,7 +535,7 @@ class DefaultGridGrindRequestExecutorReadResultTranslationTest
             SheetInspectionResult.SheetLayoutResult.class,
             InspectionResultConverter.toReadResult(
                 new dev.erst.gridgrind.excel.WorkbookSheetResult.SheetLayoutResult(
-                    "layout",
+                    new StepId("layout"),
                     new dev.erst.gridgrind.excel.WorkbookSheetResult.SheetLayout(
                         "Budget",
                         new dev.erst.gridgrind.excel.ExcelSheetPane.Split(
@@ -548,7 +549,7 @@ class DefaultGridGrindRequestExecutorReadResultTranslationTest
             SheetInspectionResult.PrintLayoutResult.class,
             InspectionResultConverter.toReadResult(
                 new dev.erst.gridgrind.excel.WorkbookSheetResult.PrintLayoutResult(
-                    "print-layout",
+                    new StepId("print-layout"),
                     "Budget",
                     new dev.erst.gridgrind.excel.ExcelPrintLayoutSnapshot(
                         new dev.erst.gridgrind.excel.ExcelPrintLayout(
@@ -578,13 +579,13 @@ class DefaultGridGrindRequestExecutorReadResultTranslationTest
     InspectionResult emptyWorkbookSummary =
         InspectionResultConverter.toReadResult(
             new dev.erst.gridgrind.excel.WorkbookCoreResult.WorkbookSummaryResult(
-                "workbook",
+                new StepId("workbook"),
                 new dev.erst.gridgrind.excel.WorkbookCoreResult.WorkbookSummary.Empty(
                     0, List.of(), 0, false)));
     InspectionResult populatedWorkbookSummary =
         InspectionResultConverter.toReadResult(
             new dev.erst.gridgrind.excel.WorkbookCoreResult.WorkbookSummaryResult(
-                "workbook-2",
+                new StepId("workbook-2"),
                 new dev.erst.gridgrind.excel.WorkbookCoreResult.WorkbookSummary.WithSheets(
                     2,
                     List.of("Budget", "Archive"),
@@ -595,7 +596,7 @@ class DefaultGridGrindRequestExecutorReadResultTranslationTest
     InspectionResult protectedSheetSummary =
         InspectionResultConverter.toReadResult(
             new dev.erst.gridgrind.excel.WorkbookSheetResult.SheetSummaryResult(
-                "sheet",
+                new StepId("sheet"),
                 new dev.erst.gridgrind.excel.WorkbookSheetResult.SheetSummary(
                     "Budget",
                     dev.erst.gridgrind.core.vocabulary.ExcelSheetVisibility.VERY_HIDDEN,

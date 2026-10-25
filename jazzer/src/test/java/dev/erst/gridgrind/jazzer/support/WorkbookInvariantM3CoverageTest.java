@@ -27,6 +27,7 @@ import dev.erst.gridgrind.core.plan.SheetIntrospectionQuery;
 import dev.erst.gridgrind.core.vocabulary.ExcelFillPattern;
 import dev.erst.gridgrind.core.vocabulary.ExcelHorizontalAlignment;
 import dev.erst.gridgrind.core.vocabulary.ExcelVerticalAlignment;
+import dev.erst.gridgrind.core.vocabulary.StepId;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
@@ -98,12 +99,12 @@ class WorkbookInvariantM3CoverageTest {
   void inspectionResultMatchingUsesWindowDimensions() {
     InspectionStep step =
         new InspectionStep(
-            "window",
+            new StepId("window"),
             new RangeSelector.RectangularWindow("Budget", "A1", 1, 1),
             new SheetIntrospectionQuery.GetWindow(Optional.empty(), true));
     SheetInspectionResult.WindowResult result =
         new SheetInspectionResult.WindowResult(
-            "window",
+            new StepId("window"),
             new WindowReport.Dense(
                 "Budget",
                 "A1",

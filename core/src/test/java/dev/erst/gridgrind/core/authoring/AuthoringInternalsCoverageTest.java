@@ -13,6 +13,7 @@ import dev.erst.gridgrind.core.plan.SheetSelector;
 import dev.erst.gridgrind.core.plan.WorkbookMutationAction;
 import dev.erst.gridgrind.core.vocabulary.AnalysisFindingCode;
 import dev.erst.gridgrind.core.vocabulary.AnalysisSeverity;
+import dev.erst.gridgrind.core.vocabulary.StepId;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
 
@@ -31,73 +32,88 @@ class AuthoringInternalsCoverageTest {
     PlannedInspection unnamedInspection = new PlannedInspection(cellSelector, cellQuery);
     PlannedAssertion unnamedAssertion = new PlannedAssertion(cellSelector, present);
 
-    MutationStep generatedMutation = unnamedMutation.toStep("mutation-001");
-    InspectionStep generatedInspection = unnamedInspection.toStep("inspection-001");
-    AssertionStep generatedAssertion = unnamedAssertion.toStep("assertion-001");
-    assertEquals("mutation-001", generatedMutation.stepId());
-    assertEquals("inspection-001", generatedInspection.stepId());
-    assertEquals("assertion-001", generatedAssertion.stepId());
+    MutationStep generatedMutation = unnamedMutation.toStep(new StepId("mutation-001"));
+    InspectionStep generatedInspection = unnamedInspection.toStep(new StepId("inspection-001"));
+    AssertionStep generatedAssertion = unnamedAssertion.toStep(new StepId("assertion-001"));
+    assertEquals("mutation-001", generatedMutation.stepId().value());
+    assertEquals("inspection-001", generatedInspection.stepId().value());
+    assertEquals("assertion-001", generatedAssertion.stepId().value());
 
     assertEquals(
-        "named-mutation", unnamedMutation.named("named-mutation").toStep("ignored").stepId());
+        "named-mutation",
+        unnamedMutation
+            .named(new StepId("named-mutation"))
+            .toStep(new StepId("ignored"))
+            .stepId()
+            .value());
     assertEquals(
-        "named-inspection", unnamedInspection.named("named-inspection").toStep("ignored").stepId());
+        "named-inspection",
+        unnamedInspection
+            .named(new StepId("named-inspection"))
+            .toStep(new StepId("ignored"))
+            .stepId()
+            .value());
     assertEquals(
-        "named-assertion", unnamedAssertion.named("named-assertion").toStep("ignored").stepId());
+        "named-assertion",
+        unnamedAssertion
+            .named(new StepId("named-assertion"))
+            .toStep(new StepId("ignored"))
+            .stepId()
+            .value());
 
     assertEquals(
         "stepId must not be blank",
         assertThrows(
                 IllegalArgumentException.class,
-                () -> new PlannedMutation(Optional.of(" "), sheetSelector, ensureSheet))
+                () -> new PlannedMutation(Optional.of(new StepId(" ")), sheetSelector, ensureSheet))
             .getMessage());
     assertEquals(
         "stepId must not be blank",
         assertThrows(
                 IllegalArgumentException.class,
-                () -> new PlannedInspection(Optional.of(" "), cellSelector, cellQuery))
+                () -> new PlannedInspection(Optional.of(new StepId(" ")), cellSelector, cellQuery))
             .getMessage());
     assertEquals(
         "stepId must not be blank",
         assertThrows(
                 IllegalArgumentException.class,
-                () -> new PlannedAssertion(Optional.of(" "), cellSelector, present))
+                () -> new PlannedAssertion(Optional.of(new StepId(" ")), cellSelector, present))
             .getMessage());
     assertEquals(
         "target must not be null",
         assertThrows(
                 NullPointerException.class,
-                () -> new PlannedMutation(Optional.of("id"), null, ensureSheet))
+                () -> new PlannedMutation(Optional.of(new StepId("id")), null, ensureSheet))
             .getMessage());
     assertEquals(
         "action must not be null",
         assertThrows(
                 NullPointerException.class,
-                () -> new PlannedMutation(Optional.of("id"), sheetSelector, null))
+                () -> new PlannedMutation(Optional.of(new StepId("id")), sheetSelector, null))
             .getMessage());
     assertEquals(
         "target must not be null",
         assertThrows(
                 NullPointerException.class,
-                () -> new PlannedInspection(Optional.of("id"), null, cellQuery))
+                () -> new PlannedInspection(Optional.of(new StepId("id")), null, cellQuery))
             .getMessage());
     assertEquals(
         "query must not be null",
         assertThrows(
                 NullPointerException.class,
-                () -> new PlannedInspection(Optional.of("id"), cellSelector, null))
+                () -> new PlannedInspection(Optional.of(new StepId("id")), cellSelector, null))
             .getMessage());
     assertEquals(
         "target must not be null",
         assertThrows(
                 NullPointerException.class,
-                () -> new PlannedAssertion(Optional.of("id"), null, present))
+                () -> new PlannedAssertion(Optional.of(new StepId("id")), null, present))
             .getMessage());
     assertEquals(
         "assertion must not be null",
         assertThrows(
                 NullPointerException.class,
-                () -> new PlannedAssertion(Optional.of("id"), cellSelector, null))
+                () -> new PlannedAssertion(Optional.of(new StepId("id")), cellSelector, null))
             .getMessage());
   }
 

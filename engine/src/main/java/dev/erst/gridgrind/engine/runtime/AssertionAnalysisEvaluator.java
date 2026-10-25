@@ -7,6 +7,7 @@ import dev.erst.gridgrind.core.result.AnalysisFindingReport;
 import dev.erst.gridgrind.core.result.AnalysisSummaryReport;
 import dev.erst.gridgrind.core.vocabulary.AnalysisFindingCode;
 import dev.erst.gridgrind.core.vocabulary.AnalysisSeverity;
+import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
 import dev.erst.gridgrind.excel.WorkbookLocation;
 import java.util.List;
@@ -22,7 +23,7 @@ final class AssertionAnalysisEvaluator {
   }
 
   AssertionEvaluation evaluateAnalysisMaxSeverity(
-      String stepId,
+      StepId stepId,
       Selector target,
       InspectionQuery query,
       AnalysisSeverity maximumSeverity,
@@ -43,7 +44,7 @@ final class AssertionAnalysisEvaluator {
   }
 
   AssertionEvaluation evaluateFindingPresence(
-      String stepId,
+      StepId stepId,
       Selector target,
       InspectionQuery query,
       AnalysisFindingCode code,

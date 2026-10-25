@@ -215,7 +215,7 @@ and default row-height values can still be reported above `409.0` instead of bei
 | **Error** | `INVALID_REQUEST` |
 | **Message** | `stepId must match [A-Za-z0-9._-]+` |
 | **Applies to** | Every authored `steps[*].stepId` |
-| **Code** | `WorkbookStepValidation.requireStepId // LIM-006A` |
+| **Code** | `StepId canonical constructor // LIM-006A` |
 | **UX** | Surfaced in the protocol help, quick reference, and request reference as part of the step envelope contract |
 
 ---

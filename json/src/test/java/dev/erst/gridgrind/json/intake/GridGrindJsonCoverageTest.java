@@ -29,6 +29,7 @@ import dev.erst.gridgrind.core.problem.RequestWarning;
 import dev.erst.gridgrind.core.result.WorkbookResult;
 import dev.erst.gridgrind.core.result.WorkbookResults;
 import dev.erst.gridgrind.core.result.WorkbookSummary;
+import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.json.codec.GridGrindJson;
 import dev.erst.gridgrind.json.codec.GridGrindJsonOutput;
 import java.io.ByteArrayInputStream;
@@ -59,7 +60,7 @@ class GridGrindJsonCoverageTest {
             List.of(),
             List.of(
                 new dev.erst.gridgrind.core.plan.WorkbookInspectionResult.WorkbookSummaryResult(
-                    "summary", new WorkbookSummary.Empty(0, List.of(), 0, false))));
+                    new StepId("summary"), new WorkbookSummary.Empty(0, List.of(), 0, false))));
     Catalog catalog = GridGrindProtocolCatalog.catalog();
     RequestDoctorReport doctorReport =
         RequestDoctorReport.warnings(
@@ -70,7 +71,7 @@ class GridGrindJsonCoverageTest {
                     dev.erst.gridgrind.core.problem.GridGrindWarningCode
                         .UNQUOTED_SHEET_NAME_IN_FORMULA,
                     0,
-                    "step-1",
+                    new StepId("step-1"),
                     "SET_CELL",
                     "warning")));
 
@@ -287,7 +288,7 @@ class GridGrindJsonCoverageTest {
             List.of(),
             List.of(
                 new dev.erst.gridgrind.core.plan.WorkbookInspectionResult.WorkbookSummaryResult(
-                    "summary", new WorkbookSummary.Empty(0, List.of(), 0, false))));
+                    new StepId("summary"), new WorkbookSummary.Empty(0, List.of(), 0, false))));
     Catalog catalog = GridGrindProtocolCatalog.catalog();
     RequestDoctorReport doctorReport =
         RequestDoctorReport.clean(
@@ -600,7 +601,7 @@ class GridGrindJsonCoverageTest {
             List.of(),
             List.of(
                 new dev.erst.gridgrind.core.plan.WorkbookInspectionResult.WorkbookSummaryResult(
-                    "summary", new WorkbookSummary.Empty(0, List.of(), 0, false))));
+                    new StepId("summary"), new WorkbookSummary.Empty(0, List.of(), 0, false))));
     Catalog catalog = GridGrindProtocolCatalog.catalog();
     assertStreamSerializationMatchesBytes(
         GridGrindJsonOutput.writeRequestBytes(request),
@@ -688,7 +689,7 @@ class GridGrindJsonCoverageTest {
             List.of(),
             List.of(
                 new dev.erst.gridgrind.core.plan.WorkbookInspectionResult.WorkbookSummaryResult(
-                    "summary", new WorkbookSummary.Empty(0, List.of(), 0, false))));
+                    new StepId("summary"), new WorkbookSummary.Empty(0, List.of(), 0, false))));
 
     String requestJson =
         new String(GridGrindJsonOutput.writeRequestBytes(request), StandardCharsets.UTF_8);
@@ -709,7 +710,7 @@ class GridGrindJsonCoverageTest {
             List.of(),
             List.of(
                 new dev.erst.gridgrind.core.plan.SheetInspectionResult.CellsResult(
-                    "cells",
+                    new StepId("cells"),
                     "Budget",
                     List.of(
                         new CellReport.TextReport(
@@ -726,7 +727,7 @@ class GridGrindJsonCoverageTest {
             List.of(),
             List.of(
                 new dev.erst.gridgrind.core.plan.SheetInspectionResult.WindowResult(
-                    "window",
+                    new StepId("window"),
                     new WindowReport.Sparse(
                         "Budget",
                         "A1",

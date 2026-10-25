@@ -59,8 +59,9 @@ adds these types:
 | `GridGrindRequestExecutor` | Transport-neutral execution port returned by `GridGrindEngine.requestExecutor()` |
 
 Unnamed authored steps receive generated ids such as `mutation-001`, `inspection-001`, and
-`assertion-001`. If you need stable caller-owned ids, call `.named("...")` on a
+`assertion-001`. If you need stable caller-owned ids, call `.named(new StepId("..."))` on a
 `PlannedMutation`, `PlannedInspection`, or `PlannedAssertion` before adding it to the plan.
+`StepId` is the validated value in `dev.erst.gridgrind.core.vocabulary`.
 
 ## Compile-And-Execution-Verified Example
 

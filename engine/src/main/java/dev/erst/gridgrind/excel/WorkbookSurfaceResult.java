@@ -5,6 +5,7 @@ import static dev.erst.gridgrind.excel.WorkbookResultSupport.copyValues;
 import static dev.erst.gridgrind.excel.WorkbookResultSupport.requireNonBlank;
 
 import dev.erst.gridgrind.core.vocabulary.ExcelIndexDisplay;
+import dev.erst.gridgrind.core.vocabulary.StepId;
 import java.util.List;
 import java.util.Objects;
 import org.jspecify.annotations.Nullable;
@@ -16,30 +17,33 @@ public sealed interface WorkbookSurfaceResult extends WorkbookReadSurfaceResult
         WorkbookSurfaceResult.NamedRangeSurfaceResult {
 
   /** Returns grouped formula usage facts across one or more sheets. */
-  record FormulaSurfaceResult(String stepId, FormulaSurface surface)
+  record FormulaSurfaceResult(StepId stepId, FormulaSurface surface)
       implements WorkbookSurfaceResult {
     public FormulaSurfaceResult {
-      stepId = requireNonBlank(stepId, "stepId");
+
+      java.util.Objects.requireNonNull(stepId, "stepId must not be null");
       Objects.requireNonNull(surface, "surface must not be null");
     }
   }
 
   /** Returns inferred schema facts for one rectangular sheet window. */
   record SheetSchemaResult(
-      String stepId, SheetSchema surface, ExcelCellReadProjection projection, boolean date1904)
+      StepId stepId, SheetSchema surface, ExcelCellReadProjection projection, boolean date1904)
       implements WorkbookSurfaceResult {
     public SheetSchemaResult {
-      stepId = requireNonBlank(stepId, "stepId");
+
+      java.util.Objects.requireNonNull(stepId, "stepId must not be null");
       Objects.requireNonNull(surface, "surface must not be null");
       Objects.requireNonNull(projection, "projection must not be null");
     }
   }
 
   /** Returns high-level characterization of selected named ranges. */
-  record NamedRangeSurfaceResult(String stepId, NamedRangeSurface surface)
+  record NamedRangeSurfaceResult(StepId stepId, NamedRangeSurface surface)
       implements WorkbookSurfaceResult {
     public NamedRangeSurfaceResult {
-      stepId = requireNonBlank(stepId, "stepId");
+
+      java.util.Objects.requireNonNull(stepId, "stepId must not be null");
       Objects.requireNonNull(surface, "surface must not be null");
     }
   }

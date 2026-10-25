@@ -19,6 +19,7 @@ import dev.erst.gridgrind.core.plan.StructuredMutationAction;
 import dev.erst.gridgrind.core.plan.WorkbookAssetIntrospectionQuery;
 import dev.erst.gridgrind.core.plan.WorkbookMutationAction;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
+import dev.erst.gridgrind.core.vocabulary.StepId;
 import java.util.List;
 
 /** Published task recipe for pivot-table reporting workflows. */
@@ -116,15 +117,15 @@ final class PivotReportTaskRecipe {
         new WorkbookPlan.WorkbookSource.New(),
         ExampleWorkbookPlans.saveAs(TaskStarterRecipeSupport.taskWorkbookPath(taskId)),
         ExampleSteps.step(
-            "ensure-data",
+            new StepId("ensure-data"),
             ExampleSelectors.sheet("Data"),
             new WorkbookMutationAction.EnsureSheet()),
         ExampleSteps.step(
-            "ensure-report",
+            new StepId("ensure-report"),
             ExampleSelectors.sheet("RangeReport"),
             new WorkbookMutationAction.EnsureSheet()),
         ExampleSteps.step(
-            "seed-pivot-range",
+            new StepId("seed-pivot-range"),
             ExampleSelectors.range("Data", "A1:D5"),
             new CellMutationAction.SetRange(
                 ExampleCellValues.rows(
@@ -154,7 +155,7 @@ final class PivotReportTaskRecipe {
                         ExampleCellValues.text("Lin"),
                         ExampleCellValues.number(12.0d))))),
         ExampleSteps.step(
-            "set-source-table",
+            new StepId("set-source-table"),
             ExampleSelectors.table("PivotSource", "Data"),
             new StructuredMutationAction.SetTable(
                 TableInput.withDefaultMetadata(
@@ -164,21 +165,21 @@ final class PivotReportTaskRecipe {
                     false,
                     new TableStyleInput.Named("TableStyleMedium9", false, false, true, false)))),
         ExampleSteps.step(
-            "author-pivot",
+            new StepId("author-pivot"),
             new PivotTableSelector.ByNameOnSheet("RegionalTotals", "RangeReport"),
             new StructuredMutationAction.SetPivotTable(
                 ExamplePivotInputs.regionalTotalsPivotFromTable(
                     "RegionalTotals", "RangeReport", "PivotSource"))),
         ExampleSteps.read(
-            "read-pivots",
+            new StepId("read-pivots"),
             new PivotTableSelector.ByName("RegionalTotals"),
             new WorkbookAssetIntrospectionQuery.GetPivotTables()),
         ExampleSteps.assertStep(
-            "assert-pivot-present",
+            new StepId("assert-pivot-present"),
             new PivotTableSelector.ByName("RegionalTotals"),
             new PresenceAssertion.PivotTablePresent()),
         ExampleSteps.read(
-            "read-pivot-findings",
+            new StepId("read-pivot-findings"),
             ExampleSelectors.workbook(),
             new InspectionAnalysisQuery.AnalyzeWorkbookFindings()));
   }

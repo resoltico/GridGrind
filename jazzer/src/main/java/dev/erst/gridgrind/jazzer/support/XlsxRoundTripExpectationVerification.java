@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.jazzer.support;
 
+import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.excel.*;
 import dev.erst.gridgrind.excel.ExcelAutofilterSnapshot;
 import dev.erst.gridgrind.excel.ExcelCellSnapshot;
@@ -248,7 +249,7 @@ final class XlsxRoundTripExpectationVerification {
                         .read(
                             workbook,
                             new WorkbookReadCommand.GetSheetSummary(
-                                "sheet-summary-" + entry.getKey(), entry.getKey()))
+                                new StepId("sheet-summary"), entry.getKey()))
                         .getFirst())
                 .sheet();
         if (!entry.getValue().equals(actualSheetSummary)) {
@@ -322,7 +323,7 @@ final class XlsxRoundTripExpectationVerification {
                       .read(
                           workbook,
                           new WorkbookReadCommand.GetPivotTables(
-                              "pivots", new ExcelPivotTableSelection.All()))
+                              new StepId("pivots"), new ExcelPivotTableSelection.All()))
                       .getFirst())
               .pivotTables();
       if (!expectedWorkbookState.expectedPivots().equals(actualPivots)) {
@@ -448,7 +449,7 @@ final class XlsxRoundTripExpectationVerification {
                         .read(
                             workbook,
                             new WorkbookReadCommand.GetConditionalFormatting(
-                                "conditionalFormatting",
+                                new StepId("conditionalFormatting"),
                                 entry.getKey(),
                                 new ExcelRangeSelection.All()))
                         .getFirst())
@@ -481,7 +482,8 @@ final class XlsxRoundTripExpectationVerification {
                     readExecutor
                         .read(
                             workbook,
-                            new WorkbookReadCommand.GetAutofilters("autofilters", entry.getKey()))
+                            new WorkbookReadCommand.GetAutofilters(
+                                new StepId("autofilters"), entry.getKey()))
                         .getFirst())
                 .autofilters();
         if (!entry.getValue().equals(actual)) {
@@ -510,7 +512,7 @@ final class XlsxRoundTripExpectationVerification {
                       .read(
                           workbook,
                           new WorkbookReadCommand.GetTables(
-                              "tables", new ExcelTableSelection.All()))
+                              new StepId("tables"), new ExcelTableSelection.All()))
                       .getFirst())
               .tables();
       if (!expectedTables.equals(actual)) {

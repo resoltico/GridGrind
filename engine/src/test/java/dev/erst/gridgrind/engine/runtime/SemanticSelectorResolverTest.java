@@ -21,6 +21,7 @@ import dev.erst.gridgrind.core.plan.TableCellSelector;
 import dev.erst.gridgrind.core.plan.TableRowSelector;
 import dev.erst.gridgrind.core.plan.TableSelector;
 import dev.erst.gridgrind.core.source.TextSourceInput;
+import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.excel.ExcelCellValue;
 import dev.erst.gridgrind.excel.ExcelTableDefinition;
 import dev.erst.gridgrind.excel.ExcelTableStyle;
@@ -83,7 +84,7 @@ class SemanticSelectorResolverTest {
 
       SemanticSelectorResolver.ResolvedInspectionTarget inspectionTarget =
           resolver.resolveInspectionTarget(
-              "inspect-table-summary",
+              new StepId("inspect-table-summary"),
               workbook,
               tableCell,
               new WorkbookIntrospectionQuery.GetWorkbookSummary());
@@ -103,7 +104,7 @@ class SemanticSelectorResolverTest {
 
       SemanticSelectorResolver.ResolvedInspectionTarget cellsResult =
           resolver.resolveInspectionTarget(
-              "inspect-cells",
+              new StepId("inspect-cells"),
               workbook,
               missingTarget,
               DefaultGridGrindRequestExecutorTestSupport.allFacetCellsQuery());
@@ -116,7 +117,7 @@ class SemanticSelectorResolverTest {
 
       SemanticSelectorResolver.ResolvedInspectionTarget hyperlinksResult =
           resolver.resolveInspectionTarget(
-              "inspect-links",
+              new StepId("inspect-links"),
               workbook,
               missingTarget,
               new SheetIntrospectionQuery.GetHyperlinks());
@@ -130,7 +131,7 @@ class SemanticSelectorResolverTest {
 
       SemanticSelectorResolver.ResolvedInspectionTarget commentsResult =
           resolver.resolveInspectionTarget(
-              "inspect-comments",
+              new StepId("inspect-comments"),
               workbook,
               missingTarget,
               new SheetIntrospectionQuery.GetComments());
@@ -149,7 +150,7 @@ class SemanticSelectorResolverTest {
       assertTrue(
           resolver
               .resolveInspectionTarget(
-                  "inspect-text-type-miss",
+                  new StepId("inspect-text-type-miss"),
                   workbook,
                   new TableCellSelector.ByColumnName(
                       new TableRowSelector.ByKeyCell(
@@ -160,7 +161,7 @@ class SemanticSelectorResolverTest {
       assertTrue(
           resolver
               .resolveInspectionTarget(
-                  "inspect-blank-type-miss",
+                  new StepId("inspect-blank-type-miss"),
                   workbook,
                   new TableCellSelector.ByColumnName(
                       new TableRowSelector.ByKeyCell(
@@ -171,7 +172,7 @@ class SemanticSelectorResolverTest {
       assertTrue(
           resolver
               .resolveInspectionTarget(
-                  "inspect-number-miss",
+                  new StepId("inspect-number-miss"),
                   workbook,
                   new TableCellSelector.ByColumnName(
                       new TableRowSelector.ByKeyCell(
@@ -184,7 +185,7 @@ class SemanticSelectorResolverTest {
       assertTrue(
           resolver
               .resolveInspectionTarget(
-                  "inspect-boolean-miss",
+                  new StepId("inspect-boolean-miss"),
                   workbook,
                   new TableCellSelector.ByColumnName(
                       new TableRowSelector.ByKeyCell(
@@ -197,7 +198,7 @@ class SemanticSelectorResolverTest {
       assertTrue(
           resolver
               .resolveInspectionTarget(
-                  "inspect-formula-type-miss",
+                  new StepId("inspect-formula-type-miss"),
                   workbook,
                   new TableCellSelector.ByColumnName(
                       new TableRowSelector.ByKeyCell(
@@ -208,7 +209,7 @@ class SemanticSelectorResolverTest {
       assertTrue(
           resolver
               .resolveInspectionTarget(
-                  "inspect-formula-miss",
+                  new StepId("inspect-formula-miss"),
                   workbook,
                   new TableCellSelector.ByColumnName(
                       new TableRowSelector.ByKeyCell(
@@ -219,7 +220,7 @@ class SemanticSelectorResolverTest {
       assertTrue(
           resolver
               .resolveInspectionTarget(
-                  "inspect-number-type-miss",
+                  new StepId("inspect-number-type-miss"),
                   workbook,
                   new TableCellSelector.ByColumnName(
                       new TableRowSelector.ByKeyCell(
@@ -232,7 +233,7 @@ class SemanticSelectorResolverTest {
       assertTrue(
           resolver
               .resolveInspectionTarget(
-                  "inspect-boolean-type-miss",
+                  new StepId("inspect-boolean-type-miss"),
                   workbook,
                   new TableCellSelector.ByColumnName(
                       new TableRowSelector.ByKeyCell(
@@ -278,7 +279,7 @@ class SemanticSelectorResolverTest {
               IllegalArgumentException.class,
               () ->
                   resolver.resolveInspectionTarget(
-                      "inspect-missing-table",
+                      new StepId("inspect-missing-table"),
                       workbook,
                       new TableCellSelector.ByColumnName(
                           new TableRowSelector.ByKeyCell(
@@ -294,7 +295,7 @@ class SemanticSelectorResolverTest {
               IllegalArgumentException.class,
               () ->
                   resolver.resolveInspectionTarget(
-                      "inspect-missing-table-on-sheet",
+                      new StepId("inspect-missing-table-on-sheet"),
                       workbook,
                       new TableCellSelector.ByColumnName(
                           new TableRowSelector.ByKeyCell(
@@ -311,7 +312,7 @@ class SemanticSelectorResolverTest {
               IllegalArgumentException.class,
               () ->
                   resolver.resolveInspectionTarget(
-                      "inspect-missing-named-table-on-sheet",
+                      new StepId("inspect-missing-named-table-on-sheet"),
                       workbook,
                       new TableCellSelector.ByColumnName(
                           new TableRowSelector.ByKeyCell(
@@ -466,7 +467,7 @@ class SemanticSelectorResolverTest {
 
     SemanticSelectorResolver.ResolvedInspectionTarget inspectionTarget =
         resolver.resolveInspectionTarget(
-            "inspect-cell",
+            new StepId("inspect-cell"),
             workbook,
             target,
             DefaultGridGrindRequestExecutorTestSupport.allFacetCellsQuery());
@@ -482,7 +483,7 @@ class SemanticSelectorResolverTest {
                 CellSelector.ByAddress.class,
                 resolver
                     .resolveInspectionTarget(
-                        "inspect-links",
+                        new StepId("inspect-links"),
                         workbook,
                         target,
                         new SheetIntrospectionQuery.GetHyperlinks())
@@ -494,7 +495,7 @@ class SemanticSelectorResolverTest {
                 CellSelector.ByAddress.class,
                 resolver
                     .resolveInspectionTarget(
-                        "inspect-comments",
+                        new StepId("inspect-comments"),
                         workbook,
                         target,
                         new SheetIntrospectionQuery.GetComments())

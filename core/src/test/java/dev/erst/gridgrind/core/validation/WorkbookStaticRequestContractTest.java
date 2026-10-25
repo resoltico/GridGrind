@@ -28,6 +28,7 @@ import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import dev.erst.gridgrind.core.plan.WorkbookStep;
 import dev.erst.gridgrind.core.semantics.WorkbookOperationContracts;
 import dev.erst.gridgrind.core.source.TextSourceInput;
+import dev.erst.gridgrind.core.vocabulary.StepId;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
@@ -94,7 +95,7 @@ class WorkbookStaticRequestContractTest {
   void rejectsRangeMaterializationBeyondThePublishedPlanBudget() {
     MutationStep styleWholeColumn =
         new MutationStep(
-            "style",
+            new StepId("style"),
             new RangeSelector.ByRange("Ops", "A1:A250001"),
             new CellMutationAction.ClearRange());
 
@@ -111,7 +112,7 @@ class WorkbookStaticRequestContractTest {
   void rejectsSetRangeWhoseTargetAndAuthoredGridHaveDifferentDimensions() {
     MutationStep setRange =
         new MutationStep(
-            "range",
+            new StepId("range"),
             new RangeSelector.ByRange("Ops", "A1:C3"),
             new CellMutationAction.SetRange(
                 new dev.erst.gridgrind.core.model.value.CellGridInput.NumberRows(
@@ -130,30 +131,30 @@ class WorkbookStaticRequestContractTest {
   void acceptsMatchingSmallRangesAndRejectsCumulativeMaterializationOverflow() {
     MutationStep matchingRange =
         new MutationStep(
-            "matching",
+            new StepId("matching"),
             new RangeSelector.ByRange("Ops", "A1:B1"),
             new CellMutationAction.SetRange(
                 new dev.erst.gridgrind.core.model.value.CellGridInput.NumberRows(
                     List.of(List.of(1.0d, 2.0d)))));
     MutationStep firstLargeRange =
         new MutationStep(
-            "first",
+            new StepId("first"),
             new RangeSelector.ByRange("Ops", "A1:A125000"),
             new CellMutationAction.ClearRange());
     MutationStep secondLargeRange =
         new MutationStep(
-            "second",
+            new StepId("second"),
             new RangeSelector.ByRange("Ops", "B1:B125001"),
             new CellMutationAction.ClearRange());
     MutationStep arrayFormula =
         new MutationStep(
-            "array-formula",
+            new StepId("array-formula"),
             new RangeSelector.ByRange("Ops", "C1:C2"),
             new CellMutationAction.SetArrayFormula(
                 new ArrayFormulaInput(TextSourceInput.inline("SUM(A1:A2)"))));
     MutationStep styledRange =
         new MutationStep(
-            "styled-range",
+            new StepId("styled-range"),
             new RangeSelector.ByRange("Ops", "D1:D2"),
             new CellMutationAction.ApplyStyle(
                 new CellStylePatchInput(
@@ -165,12 +166,12 @@ class WorkbookStaticRequestContractTest {
                     Optional.empty())));
     MutationStep singleCell =
         new MutationStep(
-            "single-cell",
+            new StepId("single-cell"),
             new RangeSelector.ByRange("Ops", "E1"),
             new CellMutationAction.SetCell(new CellInput.NumberValue(1.0d)));
     MutationStep workbookAction =
         new MutationStep(
-            "workbook-action",
+            new StepId("workbook-action"),
             new RangeSelector.ByRange("Ops", "F1"),
             new WorkbookMutationAction.EnsureSheet());
 
@@ -212,7 +213,7 @@ class WorkbookStaticRequestContractTest {
                     2,
                     Optional.of(
                         new AssertionStep(
-                            "assert",
+                            new StepId("assert"),
                             new CellSelector.ByAddress("Ops", "A1"),
                             new CellAssertion.CellValue(new CellScalarValue.Text("ready")))))));
 
@@ -298,7 +299,7 @@ class WorkbookStaticRequestContractTest {
                     0,
                     Optional.of(
                         new AssertionStep(
-                            "assert",
+                            new StepId("assert"),
                             new CellSelector.ByAddress("Ops", "A1"),
                             new CellAssertion.CellValue(new CellScalarValue.Text("ready"))))),
                 new WorkbookStaticStep(1, Optional.of(appendStep("append"))),
@@ -324,7 +325,7 @@ class WorkbookStaticRequestContractTest {
                     1,
                     Optional.of(
                         new AssertionStep(
-                            "assert",
+                            new StepId("assert"),
                             new CellSelector.ByAddress("Ops", "A1"),
                             new CellAssertion.CellValue(new CellScalarValue.Text("ready"))))),
                 new WorkbookStaticStep(2, Optional.of(appendStep("append")))));
@@ -340,12 +341,12 @@ class WorkbookStaticRequestContractTest {
   void rejectsOnlyProvableFormulaThenColumnEditOrderings() {
     MutationStep formula =
         new MutationStep(
-            "formula",
+            new StepId("formula"),
             new CellSelector.ByAddress("Ops", "A1"),
             new CellMutationAction.SetCell(new CellInput.Formula(TextSourceInput.inline("1+1"))));
     MutationStep columnEdit =
         new MutationStep(
-            "insert-column",
+            new StepId("insert-column"),
             new ColumnBandSelector.Insertion("Ops", 1, 1),
             new WorkbookMutationAction.InsertColumns());
     WorkbookStaticRequest formulaThenColumn = staticRequest(List.of(formula, columnEdit));
@@ -370,14 +371,14 @@ class WorkbookStaticRequestContractTest {
                     List.of(
                         formula,
                         new MutationStep(
-                            "replace",
+                            new StepId("replace"),
                             new RangeSelector.ByRange("Ops", "A1"),
                             new CellMutationAction.ClearRange()),
                         columnEdit)))
             .isEmpty());
     MutationStep rawFormula =
         new MutationStep(
-            "raw-formula",
+            new StepId("raw-formula"),
             new CellSelector.ByAddress("Ops", "A2"),
             new CellMutationAction.SetCell(
                 new CellInput.RawFormula(TextSourceInput.inline("RAW_FORMULA()"))));
@@ -402,7 +403,7 @@ class WorkbookStaticRequestContractTest {
 
   private static MutationStep appendStep(String stepId) {
     return new MutationStep(
-        stepId,
+        new StepId(stepId),
         new SheetSelector.ByName("Ops"),
         new CellMutationAction.AppendRow(
             new CellRowInput.Typed(List.of(new CellInput.Text(TextSourceInput.inline("owner"))))));

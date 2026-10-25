@@ -61,6 +61,7 @@ import dev.erst.gridgrind.core.vocabulary.ExcelDrawingAnchorBehavior;
 import dev.erst.gridgrind.core.vocabulary.ExcelPictureFormat;
 import dev.erst.gridgrind.core.vocabulary.ExcelPivotDataConsolidateFunction;
 import dev.erst.gridgrind.core.vocabulary.NamedRangeScope;
+import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.excel.*;
 import dev.erst.gridgrind.excel.ExcelAutofilterFilterColumn;
 import dev.erst.gridgrind.excel.ExcelAutofilterFilterCriterion;
@@ -818,38 +819,48 @@ class AdvancedMutationCommandConverterTest {
         java.util.Optional.empty(),
         ExecutionDiagnosticFields.formulaFor(
             new MutationStep(
-                "step-01-set-workbook-protection", new WorkbookSelector.Current(), setProtection),
+                new StepId("step-01-set-workbook-protection"),
+                new WorkbookSelector.Current(),
+                setProtection),
             new IllegalStateException()));
     assertEquals(
         java.util.Optional.empty(),
         ExecutionDiagnosticFields.sheetNameFor(
             new MutationStep(
-                "step-01-set-workbook-protection", new WorkbookSelector.Current(), setProtection),
+                new StepId("step-01-set-workbook-protection"),
+                new WorkbookSelector.Current(),
+                setProtection),
             new IllegalStateException()));
     assertEquals(
         java.util.Optional.empty(),
         ExecutionDiagnosticFields.addressFor(
             new MutationStep(
-                "step-01-set-workbook-protection", new WorkbookSelector.Current(), setProtection),
+                new StepId("step-01-set-workbook-protection"),
+                new WorkbookSelector.Current(),
+                setProtection),
             new IllegalStateException()));
     assertEquals(
         java.util.Optional.empty(),
         ExecutionDiagnosticFields.rangeFor(
             new MutationStep(
-                "step-01-set-workbook-protection", new WorkbookSelector.Current(), setProtection),
+                new StepId("step-01-set-workbook-protection"),
+                new WorkbookSelector.Current(),
+                setProtection),
             new IllegalStateException()));
     assertEquals(
         java.util.Optional.empty(),
         ExecutionDiagnosticFields.namedRangeNameFor(
             new MutationStep(
-                "step-01-set-workbook-protection", new WorkbookSelector.Current(), setProtection),
+                new StepId("step-01-set-workbook-protection"),
+                new WorkbookSelector.Current(),
+                setProtection),
             new IllegalStateException()));
 
     assertEquals(
         java.util.Optional.empty(),
         ExecutionDiagnosticFields.formulaFor(
             new MutationStep(
-                "step-02-clear-workbook-protection",
+                new StepId("step-02-clear-workbook-protection"),
                 new WorkbookSelector.Current(),
                 clearProtection),
             new IllegalStateException()));
@@ -857,7 +868,7 @@ class AdvancedMutationCommandConverterTest {
         java.util.Optional.empty(),
         ExecutionDiagnosticFields.sheetNameFor(
             new MutationStep(
-                "step-02-clear-workbook-protection",
+                new StepId("step-02-clear-workbook-protection"),
                 new WorkbookSelector.Current(),
                 clearProtection),
             new IllegalStateException()));
@@ -865,7 +876,7 @@ class AdvancedMutationCommandConverterTest {
         java.util.Optional.empty(),
         ExecutionDiagnosticFields.addressFor(
             new MutationStep(
-                "step-02-clear-workbook-protection",
+                new StepId("step-02-clear-workbook-protection"),
                 new WorkbookSelector.Current(),
                 clearProtection),
             new IllegalStateException()));
@@ -873,7 +884,7 @@ class AdvancedMutationCommandConverterTest {
         java.util.Optional.empty(),
         ExecutionDiagnosticFields.rangeFor(
             new MutationStep(
-                "step-02-clear-workbook-protection",
+                new StepId("step-02-clear-workbook-protection"),
                 new WorkbookSelector.Current(),
                 clearProtection),
             new IllegalStateException()));
@@ -881,7 +892,7 @@ class AdvancedMutationCommandConverterTest {
         java.util.Optional.empty(),
         ExecutionDiagnosticFields.namedRangeNameFor(
             new MutationStep(
-                "step-02-clear-workbook-protection",
+                new StepId("step-02-clear-workbook-protection"),
                 new WorkbookSelector.Current(),
                 clearProtection),
             new IllegalStateException()));

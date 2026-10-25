@@ -3,6 +3,7 @@ package dev.erst.gridgrind.core.plan;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+import dev.erst.gridgrind.core.vocabulary.StepId;
 import org.junit.jupiter.api.Test;
 
 /** Tests for ordered inspection step validation and target compatibility. */
@@ -11,12 +12,12 @@ class InspectionStepTest {
   void acceptsCompatibleTargetAndQueryPairs() {
     InspectionStep workbookSummary =
         new InspectionStep(
-            "summary",
+            new StepId("summary"),
             new WorkbookSelector.Current(),
             new WorkbookIntrospectionQuery.GetWorkbookSummary());
     InspectionStep formulaHealth =
         new InspectionStep(
-            "formula-health",
+            new StepId("formula-health"),
             new SheetSelector.ByNames(java.util.List.of("Budget")),
             new InspectionAnalysisQuery.AnalyzeFormulaHealth());
 
@@ -30,7 +31,7 @@ class InspectionStepTest {
     assertDoesNotThrow(
         () ->
             new InspectionStep(
-                "bad-target",
+                new StepId("bad-target"),
                 new RangeSelector.ByRange("Budget", "A1:B2"),
                 new WorkbookIntrospectionQuery.GetWorkbookSummary()));
   }

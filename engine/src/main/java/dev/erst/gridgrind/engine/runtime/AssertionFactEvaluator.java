@@ -10,6 +10,7 @@ import dev.erst.gridgrind.core.plan.WorkbookAssetIntrospectionQuery;
 import dev.erst.gridgrind.core.plan.WorkbookInspectionResult;
 import dev.erst.gridgrind.core.plan.WorkbookIntrospectionQuery;
 import dev.erst.gridgrind.core.result.SheetSummaryReport;
+import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
 import dev.erst.gridgrind.excel.WorkbookLocation;
 import java.util.List;
@@ -24,7 +25,7 @@ final class AssertionFactEvaluator {
   }
 
   AssertionEvaluation evaluateWorkbookProtection(
-      String stepId,
+      StepId stepId,
       Selector target,
       dev.erst.gridgrind.core.model.protection.WorkbookProtectionReport expectedProtection,
       ExcelWorkbook workbook,
@@ -44,7 +45,7 @@ final class AssertionFactEvaluator {
   }
 
   AssertionEvaluation evaluateSheetStructure(
-      String stepId,
+      StepId stepId,
       Selector target,
       SheetSummaryReport expectedSheet,
       ExcelWorkbook workbook,
@@ -64,7 +65,7 @@ final class AssertionFactEvaluator {
   }
 
   AssertionEvaluation evaluateNamedRangeFacts(
-      String stepId,
+      StepId stepId,
       Selector target,
       List<NamedRangeReport> expectedNamedRanges,
       ExcelWorkbook workbook,
@@ -84,7 +85,7 @@ final class AssertionFactEvaluator {
   }
 
   AssertionEvaluation evaluateTableFacts(
-      String stepId,
+      StepId stepId,
       Selector target,
       List<dev.erst.gridgrind.core.model.table.TableEntryReport> expectedTables,
       ExcelWorkbook workbook,
@@ -104,7 +105,7 @@ final class AssertionFactEvaluator {
   }
 
   AssertionEvaluation evaluatePivotFacts(
-      String stepId,
+      StepId stepId,
       Selector target,
       List<dev.erst.gridgrind.core.model.pivot.PivotTableReport> expectedPivotTables,
       ExcelWorkbook workbook,
@@ -124,7 +125,7 @@ final class AssertionFactEvaluator {
   }
 
   AssertionEvaluation evaluateChartFacts(
-      String stepId,
+      StepId stepId,
       Selector target,
       List<ChartReport> expectedCharts,
       ExcelWorkbook workbook,

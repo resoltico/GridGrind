@@ -70,7 +70,7 @@ class EventReadExecutorCoverageTest {
                             new WorkbookIntrospectionQuery.GetWorkbookSummary())))));
 
     assertEquals(1, success.inspections().size());
-    assertEquals("summary", success.inspections().getFirst().stepId());
+    assertEquals("summary", success.inspections().getFirst().stepId().value());
   }
 
   @Test

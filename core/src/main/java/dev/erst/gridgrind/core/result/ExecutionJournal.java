@@ -6,6 +6,7 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import dev.erst.gridgrind.core.problem.GridGrindProblemCategory;
 import dev.erst.gridgrind.core.problem.GridGrindProblemCode;
+import dev.erst.gridgrind.core.vocabulary.StepId;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -147,7 +148,7 @@ public record ExecutionJournal(
   /** Per-step execution journal entry. */
   public record Step(
       int stepIndex,
-      String stepId,
+      StepId stepId,
       String stepKind,
       String stepType,
       List<Target> resolvedTargets,
@@ -158,7 +159,7 @@ public record ExecutionJournal(
       if (stepIndex < 0) {
         throw new IllegalArgumentException("stepIndex must be >= 0");
       }
-      WorkbookPlan.requireNonBlank(stepId, "stepId");
+      java.util.Objects.requireNonNull(stepId, "stepId must not be null");
       WorkbookPlan.requireNonBlank(stepKind, "stepKind");
       WorkbookPlan.requireNonBlank(stepType, "stepType");
       resolvedTargets = copyValues(resolvedTargets, "resolvedTargets");
@@ -267,12 +268,12 @@ public record ExecutionJournal(
   }
 
   /** Canonical failing-step reference when a failure is attributable to one authored step. */
-  public record FailureStep(int failedStepIndex, String failedStepId) {
+  public record FailureStep(int failedStepIndex, StepId failedStepId) {
     public FailureStep {
       if (failedStepIndex < 0) {
         throw new IllegalArgumentException("failedStepIndex must be >= 0");
       }
-      WorkbookPlan.requireNonBlank(failedStepId, "failedStepId");
+      Objects.requireNonNull(failedStepId, "failedStepId must not be null");
     }
   }
 

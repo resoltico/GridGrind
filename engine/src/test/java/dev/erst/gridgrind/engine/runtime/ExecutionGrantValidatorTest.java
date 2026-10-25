@@ -16,6 +16,7 @@ import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import dev.erst.gridgrind.core.source.SecretReference;
 import dev.erst.gridgrind.core.vocabulary.ExcelOoxmlWriteCipher;
 import dev.erst.gridgrind.core.vocabulary.ExcelOoxmlWriteHash;
+import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.engine.api.GridGrindExecutionGrant;
 import java.nio.file.Path;
 import java.util.List;
@@ -94,7 +95,7 @@ class ExecutionGrantValidatorTest {
             FormulaEnvironmentInput.empty(),
             List.of(
                 new dev.erst.gridgrind.core.plan.InspectionStep(
-                    "summary",
+                    new StepId("summary"),
                     new SheetSelector.ByName("Budget"),
                     new dev.erst.gridgrind.core.plan.SheetIntrospectionQuery.GetSheetSummary())));
     GridGrindExecutionGrant grant =
@@ -119,7 +120,7 @@ class ExecutionGrantValidatorTest {
             FormulaEnvironmentInput.empty(),
             List.of(
                 new dev.erst.gridgrind.core.plan.InspectionStep(
-                    "summary",
+                    new StepId("summary"),
                     new SheetSelector.ByName("Ledger"),
                     new dev.erst.gridgrind.core.plan.SheetIntrospectionQuery.GetSheetSummary())));
     GridGrindExecutionGrant grant =
@@ -150,7 +151,7 @@ class ExecutionGrantValidatorTest {
             FormulaEnvironmentInput.empty(),
             List.of(
                 new dev.erst.gridgrind.core.plan.InspectionStep(
-                    "summary",
+                    new StepId("summary"),
                     new SheetSelector.All(),
                     new dev.erst.gridgrind.core.plan.SheetIntrospectionQuery.GetSheetSummary())));
     GridGrindExecutionGrant grant =
@@ -299,7 +300,7 @@ class ExecutionGrantValidatorTest {
         FormulaEnvironmentInput.empty(),
         List.of(
             new MutationStep(
-                "ensure-sheet",
+                new StepId("ensure-sheet"),
                 new SheetSelector.ByName("Budget"),
                 new WorkbookMutationAction.EnsureSheet())));
   }

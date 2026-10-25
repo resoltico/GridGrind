@@ -29,9 +29,12 @@ import dev.erst.gridgrind.core.plan.WorkbookAssetIntrospectionQuery;
 import dev.erst.gridgrind.core.plan.WorkbookIntrospectionQuery;
 import dev.erst.gridgrind.core.plan.WorkbookMutationAction;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
+import dev.erst.gridgrind.core.vocabulary.StepId;
 import java.util.List;
 
 /** Published task recipe for structured worksheet reporting workflows. */
+// The recipe deliberately composes canonical types from several workbook features.
+@SuppressWarnings("PMD.ExcessiveImports")
 final class TabularReportTaskRecipe {
   private TabularReportTaskRecipe() {}
 
@@ -121,11 +124,11 @@ final class TabularReportTaskRecipe {
         new WorkbookPlan.WorkbookSource.New(),
         ExampleWorkbookPlans.saveAs(TaskStarterRecipeSupport.taskWorkbookPath(taskId)),
         ExampleSteps.step(
-            "ensure-report",
+            new StepId("ensure-report"),
             ExampleSelectors.sheet("Report"),
             new WorkbookMutationAction.EnsureSheet()),
         ExampleSteps.step(
-            "seed-report",
+            new StepId("seed-report"),
             ExampleSelectors.range("Report", "A1:C4"),
             new CellMutationAction.SetRange(
                 ExampleCellValues.rows(
@@ -146,7 +149,7 @@ final class TabularReportTaskRecipe {
                         ExampleCellValues.text("Mia"),
                         ExampleCellValues.number(90.0d))))),
         ExampleSteps.step(
-            "set-report-table",
+            new StepId("set-report-table"),
             ExampleSelectors.table("QuarterlyReport", "Report"),
             new StructuredMutationAction.SetTable(
                 TableInput.withDefaultMetadata(
@@ -156,19 +159,19 @@ final class TabularReportTaskRecipe {
                     false,
                     new TableStyleInput.Named("TableStyleMedium2", false, false, true, false)))),
         ExampleSteps.step(
-            "auto-size-report",
+            new StepId("auto-size-report"),
             ExampleSelectors.sheet("Report"),
             new WorkbookMutationAction.AutoSizeColumns()),
         ExampleSteps.read(
-            "read-report-cells",
+            new StepId("read-report-cells"),
             ExampleSelectors.cells("Report", "A1", "B2", "C4"),
             new SheetIntrospectionQuery.GetCells()),
         ExampleSteps.read(
-            "read-report-tables",
+            new StepId("read-report-tables"),
             ExampleSelectors.table("QuarterlyReport", "Report"),
             new WorkbookAssetIntrospectionQuery.GetTables()),
         ExampleSteps.read(
-            "read-report-workbook",
+            new StepId("read-report-workbook"),
             ExampleSelectors.workbook(),
             new WorkbookIntrospectionQuery.GetWorkbookSummary()));
   }

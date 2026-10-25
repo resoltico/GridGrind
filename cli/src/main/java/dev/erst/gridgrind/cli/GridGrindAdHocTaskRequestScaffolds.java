@@ -10,6 +10,7 @@ import dev.erst.gridgrind.core.catalog.ProtocolStepTemplate;
 import dev.erst.gridgrind.core.model.formula.FormulaEnvironmentInput;
 import dev.erst.gridgrind.core.plan.ExecutionPolicyInput;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
+import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.json.codec.GridGrindJson;
 import dev.erst.gridgrind.json.codec.GridGrindJsonOutput;
 import java.io.ByteArrayOutputStream;
@@ -81,8 +82,8 @@ final class GridGrindAdHocTaskRequestScaffolds {
   private static ObjectNode renderedStep(
       ProtocolStepTemplate template, int phaseIndex, int capabilityIndex) {
     ObjectNode step = GridGrindJsonOutput.stepTemplateTree(template);
-    String stepId = "phase-" + phaseIndex + "-step-" + capabilityIndex;
-    step.put("stepId", stepId);
+    StepId stepId = new StepId("phase-" + phaseIndex + "-step-" + capabilityIndex);
+    step.put("stepId", stepId.value());
     return step;
   }
 

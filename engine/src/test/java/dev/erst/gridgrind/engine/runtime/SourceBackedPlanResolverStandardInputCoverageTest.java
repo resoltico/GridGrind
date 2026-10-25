@@ -35,6 +35,7 @@ import dev.erst.gridgrind.core.source.TextSourceInput;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartDisplayBlanksAs;
 import dev.erst.gridgrind.core.vocabulary.ExcelDataValidationErrorStyle;
 import dev.erst.gridgrind.core.vocabulary.ExcelPictureFormat;
+import dev.erst.gridgrind.core.vocabulary.StepId;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -71,7 +72,7 @@ class SourceBackedPlanResolverStandardInputCoverageTest
                 dev.erst.gridgrind.core.model.formula.FormulaEnvironmentInput.empty(),
                 List.of(
                     new AssertionStep(
-                        "assert-owner",
+                        new StepId("assert-owner"),
                         new CellSelector.ByAddress("Budget", "A1"),
                         new CellAssertion.CellValue(
                             new dev.erst.gridgrind.core.model.value.CellScalarValue.Text(
@@ -85,7 +86,7 @@ class SourceBackedPlanResolverStandardInputCoverageTest
                 dev.erst.gridgrind.core.model.formula.FormulaEnvironmentInput.empty(),
                 List.of(
                     new InspectionStep(
-                        "inspect-cells",
+                        new StepId("inspect-cells"),
                         new CellSelector.ByAddress("Budget", "A1"),
                         new SheetIntrospectionQuery.GetCells())))));
 
@@ -365,7 +366,7 @@ class SourceBackedPlanResolverStandardInputCoverageTest
             dev.erst.gridgrind.core.model.formula.FormulaEnvironmentInput.empty(),
             List.of(
                 new InspectionStep(
-                    "inspect-amount",
+                    new StepId("inspect-amount"),
                     standardInputTarget,
                     new SheetIntrospectionQuery.GetCells())));
     WorkbookPlan inlinePlan =
@@ -376,7 +377,9 @@ class SourceBackedPlanResolverStandardInputCoverageTest
             dev.erst.gridgrind.core.model.formula.FormulaEnvironmentInput.empty(),
             List.of(
                 new InspectionStep(
-                    "inspect-amount", inlineTarget, new SheetIntrospectionQuery.GetCells())));
+                    new StepId("inspect-amount"),
+                    inlineTarget,
+                    new SheetIntrospectionQuery.GetCells())));
 
     assertTrue(SourceBackedPlanResolver.requiresStandardInput(standardInputPlan));
     assertFalse(SourceBackedPlanResolver.requiresStandardInput(inlinePlan));

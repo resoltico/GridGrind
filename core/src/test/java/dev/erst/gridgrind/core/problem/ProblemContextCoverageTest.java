@@ -3,6 +3,7 @@ package dev.erst.gridgrind.core.problem;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import dev.erst.gridgrind.core.vocabulary.StepId;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
 
@@ -138,7 +139,7 @@ class ProblemContextCoverageTest {
         new ProblemContext.ExecuteStep(
             requestShape,
             new ProblemContextWorkbookSurfaces.StepReference(
-                2, "step-2", "ASSERTION", "EXPECT_CELL_VALUE"),
+                2, new StepId("step-2"), "ASSERTION", "EXPECT_CELL_VALUE"),
             ProblemContextWorkbookSurfaces.ProblemLocation.namedRange("Budget", "BudgetTotal"));
     ProblemContext.PersistWorkbook persistOverwrite =
         new ProblemContext.PersistWorkbook(
@@ -255,7 +256,7 @@ class ProblemContextCoverageTest {
                 IllegalArgumentException.class,
                 () ->
                     new ProblemContextWorkbookSurfaces.StepReference(
-                        -1, "step", "MUTATION", "SET_CELL"))
+                        -1, new StepId("step"), "MUTATION", "SET_CELL"))
             .getMessage());
     assertEquals(
         "jsonLine must be greater than 0",

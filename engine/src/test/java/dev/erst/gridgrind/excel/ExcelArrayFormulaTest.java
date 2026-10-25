@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import dev.erst.gridgrind.core.vocabulary.StepId;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
@@ -89,8 +90,9 @@ class ExcelArrayFormulaTest {
               introspector.execute(
                   workbook,
                   new WorkbookReadCommand.GetArrayFormulas(
-                      "array-formulas", new ExcelSheetSelection.Selected(List.of("Calc")))));
-      assertEquals("array-formulas", result.stepId());
+                      new StepId("array-formulas"),
+                      new ExcelSheetSelection.Selected(List.of("Calc")))));
+      assertEquals("array-formulas", result.stepId().value());
       assertEquals(1, result.arrayFormulas().size());
       assertEquals("Calc", result.arrayFormulas().getFirst().sheetName());
       assertEquals("D2:D4", result.arrayFormulas().getFirst().range());

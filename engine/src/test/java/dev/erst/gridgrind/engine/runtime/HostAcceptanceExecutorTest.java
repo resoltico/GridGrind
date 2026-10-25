@@ -10,6 +10,7 @@ import dev.erst.gridgrind.core.plan.PresenceAssertion;
 import dev.erst.gridgrind.core.plan.SheetIntrospectionQuery;
 import dev.erst.gridgrind.core.plan.SheetSelector;
 import dev.erst.gridgrind.core.result.WorkbookExecutionEvidence;
+import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.engine.api.GridGrindHostAcceptancePolicy;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
 import dev.erst.gridgrind.excel.ExcelWorkbooks;
@@ -55,6 +56,9 @@ class HostAcceptanceExecutorTest {
           verification.preservation().stream()
               .map(WorkbookExecutionEvidence.Preservation.SemanticEstablished.class::cast)
               .flatMap(value -> value.inspectionStepIds().stream())
+              .toList()
+              .stream()
+              .map(dev.erst.gridgrind.core.vocabulary.WireString::value)
               .toList());
     }
   }
@@ -153,7 +157,7 @@ class HostAcceptanceExecutorTest {
     return new GridGrindHostAcceptancePolicy.Requirement.TerminalAssertions(
         List.of(
             new AssertionStep(
-                "assert-budget",
+                new StepId("assert-budget"),
                 new SheetSelector.ByName("Budget"),
                 new PresenceAssertion.SheetPresent())));
   }
@@ -162,7 +166,7 @@ class HostAcceptanceExecutorTest {
     return new GridGrindHostAcceptancePolicy.Requirement.PreserveInspectionFacts(
         List.of(
             new InspectionStep(
-                "preserve-summary",
+                new StepId("preserve-summary"),
                 new SheetSelector.ByName("Budget"),
                 new SheetIntrospectionQuery.GetSheetSummary())));
   }

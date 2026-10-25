@@ -29,6 +29,7 @@ import dev.erst.gridgrind.core.source.BinarySourceInput;
 import dev.erst.gridgrind.core.source.TextSourceInput;
 import dev.erst.gridgrind.core.vocabulary.ExcelDataValidationErrorStyle;
 import dev.erst.gridgrind.core.vocabulary.ExcelPictureFormat;
+import dev.erst.gridgrind.core.vocabulary.StepId;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -292,14 +293,14 @@ class SourceBackedPlanResolverFailureCoverageTest extends SourceBackedPlanResolv
     assertFalse(
         SourceBackedInputRequirements.requiresStandardInput(
             new AssertionStep(
-                "assert-owner",
+                new StepId("assert-owner"),
                 new CellSelector.ByAddress("Budget", "A1"),
                 new CellAssertion.CellValue(
                     new dev.erst.gridgrind.core.model.value.CellScalarValue.Text("Owner")))));
     assertFalse(
         SourceBackedInputRequirements.requiresStandardInput(
             new InspectionStep(
-                "inspect-cells",
+                new StepId("inspect-cells"),
                 new CellSelector.ByAddress("Budget", "A1"),
                 new SheetIntrospectionQuery.GetCells())));
 

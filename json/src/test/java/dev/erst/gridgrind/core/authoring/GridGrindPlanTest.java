@@ -18,6 +18,7 @@ import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import dev.erst.gridgrind.core.result.ExecutionJournalLevel;
 import dev.erst.gridgrind.core.result.WorkbookResult;
 import dev.erst.gridgrind.core.vocabulary.PlanId;
+import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.engine.api.GridGrindEngine;
 import dev.erst.gridgrind.engine.api.GridGrindExecutionGrant;
 import dev.erst.gridgrind.engine.api.GridGrindProgressSink;
@@ -67,10 +68,10 @@ class GridGrindPlanTest {
             .assertThat(Targets.cell("Budget", "A1").valueEquals(ExpectedValues.text("Owner")));
     WorkbookPlan canonical = plan.toPlan();
     assertEquals("budget-plan", canonical.planId().orElseThrow().value());
-    assertEquals("mutation-001", canonical.steps().get(0).stepId());
-    assertEquals("mutation-002", canonical.steps().get(1).stepId());
-    assertEquals("inspection-001", canonical.steps().get(2).stepId());
-    assertEquals("assertion-001", canonical.steps().get(3).stepId());
+    assertEquals("mutation-001", canonical.steps().get(0).stepId().value());
+    assertEquals("mutation-002", canonical.steps().get(1).stepId().value());
+    assertEquals("inspection-001", canonical.steps().get(2).stepId().value());
+    assertEquals("assertion-001", canonical.steps().get(3).stepId().value());
     WorkbookPlan reread =
         GridGrindJson.readRequest(
             dev.erst.gridgrind.json.codec.GridGrindJsonOutput.writeRequestBytes(plan.toPlan()));
@@ -117,15 +118,15 @@ class GridGrindPlanTest {
             FormulaEnvironmentInput.empty(),
             List.of(
                 new MutationStep(
-                    "mutation-001",
+                    new StepId("mutation-001"),
                     Targets.sheet("Budget").selector(),
                     new dev.erst.gridgrind.core.plan.WorkbookMutationAction.EnsureSheet()),
                 new InspectionStep(
-                    "inspection-001",
+                    new StepId("inspection-001"),
                     Targets.cell("Budget", "A1").selector(),
                     new dev.erst.gridgrind.core.plan.SheetIntrospectionQuery.GetCells()),
                 new AssertionStep(
-                    "assertion-001",
+                    new StepId("assertion-001"),
                     Targets.cell("Budget", "A1").selector(),
                     new dev.erst.gridgrind.core.plan.CellAssertion.CellValue(
                         ExpectedValues.toCellScalarValue(ExpectedValues.blank())))));
@@ -136,13 +137,13 @@ class GridGrindPlanTest {
             .mutate(Targets.sheet("Budget").renameTo("Budget 2026"))
             .inspect(Targets.cell("Budget 2026", "A1").read())
             .assertThat(Targets.cell("Budget 2026", "A1").valueEquals(ExpectedValues.blank()))
-            .mutate(Targets.sheet("Budget 2026").ensureExists().named("keep-sheet"))
+            .mutate(Targets.sheet("Budget 2026").ensureExists().named(new StepId("keep-sheet")))
             .toPlan();
 
-    assertEquals("mutation-002", plan.steps().get(3).stepId());
-    assertEquals("inspection-002", plan.steps().get(4).stepId());
-    assertEquals("assertion-002", plan.steps().get(5).stepId());
-    assertEquals("keep-sheet", plan.steps().get(6).stepId());
+    assertEquals("mutation-002", plan.steps().get(3).stepId().value());
+    assertEquals("inspection-002", plan.steps().get(4).stepId().value());
+    assertEquals("assertion-002", plan.steps().get(5).stepId().value());
+    assertEquals("keep-sheet", plan.steps().get(6).stepId().value());
   }
 
   @Test

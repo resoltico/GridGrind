@@ -11,6 +11,7 @@ import dev.erst.gridgrind.core.vocabulary.ExcelSheetNameProblem;
 import dev.erst.gridgrind.core.vocabulary.ExcelZoomViolation;
 import dev.erst.gridgrind.core.vocabulary.ProtocolCellAddressValidation;
 import dev.erst.gridgrind.core.vocabulary.ProtocolDefinedNameValidation;
+import dev.erst.gridgrind.core.vocabulary.StepId;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
@@ -408,8 +409,9 @@ class FieldValidationProblemCoverageTest {
         assertInstanceOf(
             DuplicateStepId.class,
             RequestProblemDescriptorSupport.withJsonPath(
-                new DuplicateStepId("dup", "steps[0].stepId"), Optional.of("steps[9].stepId")));
-    assertEquals("dup", duplicateStepId.value());
+                new DuplicateStepId(new StepId("dup"), "steps[0].stepId"),
+                Optional.of("steps[9].stepId")));
+    assertEquals("dup", duplicateStepId.value().value());
     assertEquals("steps[9].stepId", duplicateStepId.jsonPathValue());
 
     var nonXlsxPath =

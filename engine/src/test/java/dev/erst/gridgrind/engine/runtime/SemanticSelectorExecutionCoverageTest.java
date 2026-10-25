@@ -74,7 +74,7 @@ class SemanticSelectorExecutionCoverageTest {
     assertEquals(GridGrindProblemCode.ASSERTION_FAILED, failure.problem().code());
     assertTrue(
         failure.problem().message().contains("EXPECT_CELL_VALUE resolved no matching cells"));
-    assertEquals("assert-missing-table-cell", failedAssertion(failure).stepId());
+    assertEquals("assert-missing-table-cell", failedAssertion(failure).stepId().value());
     SheetInspectionResult.CellsResult cellsResult =
         assertInstanceOf(
             SheetInspectionResult.CellsResult.class,

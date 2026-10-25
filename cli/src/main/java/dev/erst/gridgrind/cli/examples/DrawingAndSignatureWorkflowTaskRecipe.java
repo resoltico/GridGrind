@@ -18,6 +18,7 @@ import dev.erst.gridgrind.core.plan.WorkbookMutationAction;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import dev.erst.gridgrind.core.source.BinarySourceInput;
 import dev.erst.gridgrind.core.vocabulary.ExcelPictureFormat;
+import dev.erst.gridgrind.core.vocabulary.StepId;
 import java.util.List;
 import java.util.Optional;
 
@@ -108,11 +109,11 @@ final class DrawingAndSignatureWorkflowTaskRecipe {
         new WorkbookPlan.WorkbookSource.New(),
         ExampleWorkbookPlans.saveAs(TaskStarterRecipeSupport.taskWorkbookPath(taskId)),
         ExampleSteps.step(
-            "ensure-approvals",
+            new StepId("ensure-approvals"),
             ExampleSelectors.sheet("Approvals"),
             new WorkbookMutationAction.EnsureSheet()),
         ExampleSteps.step(
-            "set-signature-line",
+            new StepId("set-signature-line"),
             ExampleSelectors.sheet("Approvals"),
             new DrawingMutationAction.SetSignatureLine(
                 new SignatureLineInput(
@@ -131,16 +132,16 @@ final class DrawingAndSignatureWorkflowTaskRecipe {
                             BinarySourceInput.inlineBase64(
                                 TaskStarterRecipeSupport.onePixelPngBase64())))))),
         ExampleSteps.read(
-            "read-drawing-objects",
+            new StepId("read-drawing-objects"),
             new DrawingObjectSelector.AllOnSheet("Approvals"),
             new WorkbookAssetIntrospectionQuery.GetDrawingObjects()),
         ExampleSteps.step(
-            "move-signature-line",
+            new StepId("move-signature-line"),
             new DrawingObjectSelector.ByName("Approvals", "WorkflowSignature"),
             new DrawingMutationAction.SetDrawingObjectAnchor(
                 ExampleDrawingAnchors.anchor(5, 1, 8, 6))),
         ExampleSteps.read(
-            "read-drawing-objects-after-move",
+            new StepId("read-drawing-objects-after-move"),
             new DrawingObjectSelector.AllOnSheet("Approvals"),
             new WorkbookAssetIntrospectionQuery.GetDrawingObjects()));
   }

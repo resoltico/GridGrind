@@ -11,6 +11,7 @@ import dev.erst.gridgrind.core.plan.InspectionResult;
 import dev.erst.gridgrind.core.plan.PresenceAssertion;
 import dev.erst.gridgrind.core.plan.Selector;
 import dev.erst.gridgrind.core.plan.WorkbookFactAssertion;
+import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
 import dev.erst.gridgrind.excel.WorkbookExecutionEngine;
 import dev.erst.gridgrind.excel.WorkbookLocation;
@@ -68,7 +69,7 @@ final class AssertionExecutor {
   }
 
   private AssertionEvaluation evaluate(
-      String stepId,
+      StepId stepId,
       Selector target,
       Assertion assertion,
       ExcelWorkbook workbook,
@@ -174,7 +175,7 @@ final class AssertionExecutor {
   }
 
   private AssertionEvaluation evaluateAllOf(
-      String stepId,
+      StepId stepId,
       Selector target,
       List<Assertion> assertions,
       ExcelWorkbook workbook,
@@ -196,7 +197,7 @@ final class AssertionExecutor {
   }
 
   private AssertionEvaluation evaluateAnyOf(
-      String stepId,
+      StepId stepId,
       Selector target,
       List<Assertion> assertions,
       ExcelWorkbook workbook,
@@ -217,7 +218,7 @@ final class AssertionExecutor {
   }
 
   private AssertionEvaluation evaluateNot(
-      String stepId,
+      StepId stepId,
       Selector target,
       Assertion nestedAssertion,
       ExcelWorkbook workbook,

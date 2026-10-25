@@ -15,6 +15,7 @@ import dev.erst.gridgrind.core.result.WorkbookResult;
 import dev.erst.gridgrind.core.vocabulary.ExcelBorderStyle;
 import dev.erst.gridgrind.core.vocabulary.ExcelHorizontalAlignment;
 import dev.erst.gridgrind.core.vocabulary.ExcelVerticalAlignment;
+import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.excel.*;
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -106,19 +107,19 @@ class DefaultGridGrindRequestExecutorReadSupport {
   static dev.erst.gridgrind.excel.WorkbookSheetResult.CellsResult excelCellsResult(
       String stepId, String sheetName, List<ExcelCellSnapshot> cells) {
     return new dev.erst.gridgrind.excel.WorkbookSheetResult.CellsResult(
-        stepId, sheetName, cells, projection(), false);
+        new StepId(stepId), sheetName, cells, projection(), false);
   }
 
   static dev.erst.gridgrind.excel.WorkbookSheetResult.WindowResult excelWindowResult(
       String stepId, dev.erst.gridgrind.excel.WorkbookSheetResult.Window window) {
     return new dev.erst.gridgrind.excel.WorkbookSheetResult.WindowResult(
-        stepId, window, projection(), true, false);
+        new StepId(stepId), window, projection(), true, false);
   }
 
   static dev.erst.gridgrind.excel.WorkbookSurfaceResult.SheetSchemaResult excelSheetSchemaResult(
       String stepId, dev.erst.gridgrind.excel.WorkbookSurfaceResult.SheetSchema surface) {
     return new dev.erst.gridgrind.excel.WorkbookSurfaceResult.SheetSchemaResult(
-        stepId, surface, projection(), false);
+        new StepId(stepId), surface, projection(), false);
   }
 
   static CellReport.BlankReport blankReadCell(

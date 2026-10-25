@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import dev.erst.gridgrind.core.problem.GridGrindProblemCategory;
 import dev.erst.gridgrind.core.problem.GridGrindProblemCode;
+import dev.erst.gridgrind.core.vocabulary.StepId;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
@@ -69,7 +70,7 @@ class ExecutionJournalTest {
                 () ->
                     new ExecutionJournal.Step(
                         -1,
-                        "step-1",
+                        new StepId("step-1"),
                         "ASSERTION",
                         "EXPECT_CELL_VALUE",
                         List.of(new ExecutionJournal.Target("CELL", "Cell Budget!B4")),
@@ -84,7 +85,7 @@ class ExecutionJournalTest {
                 () ->
                     new ExecutionJournal.Step(
                         0,
-                        "step-1",
+                        new StepId("step-1"),
                         "ASSERTION",
                         "EXPECT_CELL_VALUE",
                         List.of(new ExecutionJournal.Target("CELL", "Cell Budget!B4")),
@@ -99,7 +100,7 @@ class ExecutionJournalTest {
                 () ->
                     new ExecutionJournal.Step(
                         0,
-                        "step-1",
+                        new StepId("step-1"),
                         "ASSERTION",
                         "EXPECT_CELL_VALUE",
                         List.of(new ExecutionJournal.Target("CELL", "Cell Budget!B4")),
@@ -124,9 +125,9 @@ class ExecutionJournalTest {
                 1,
                 10,
                 GridGrindProblemCode.INVALID_REQUEST,
-                Optional.of(new ExecutionJournal.FailureStep(1, "step-2"))));
+                Optional.of(new ExecutionJournal.FailureStep(1, new StepId("step-2")))));
     assertEquals(GridGrindProblemCode.INVALID_REQUEST, failed.problemCode());
-    assertEquals("step-2", failed.failedStep().orElseThrow().failedStepId());
+    assertEquals("step-2", failed.failedStep().orElseThrow().failedStepId().value());
     assertEquals(
         "plannedStepCount must be >= 0",
         assertThrows(
@@ -146,7 +147,7 @@ class ExecutionJournalTest {
         "failedStepIndex must be >= 0",
         assertThrows(
                 IllegalArgumentException.class,
-                () -> new ExecutionJournal.FailureStep(-1, "step-1"))
+                () -> new ExecutionJournal.FailureStep(-1, new StepId("step-1")))
             .getMessage());
   }
 
@@ -194,7 +195,7 @@ class ExecutionJournalTest {
                         "2026-04-18T10:00:00Z",
                         ExecutionProgressEvent.Category.STEP,
                         Optional.empty(),
-                        Optional.of("step-1")))
+                        Optional.of(new StepId("step-1"))))
             .getMessage());
     assertEquals(
         "problemCode must not be null",
@@ -217,7 +218,7 @@ class ExecutionJournalTest {
                         "2026-08-20T17:00:00Z",
                         ExecutionProgressEvent.Category.STEP,
                         Optional.of(-1),
-                        Optional.of("step-1")))
+                        Optional.of(new StepId("step-1"))))
             .getMessage());
   }
 }

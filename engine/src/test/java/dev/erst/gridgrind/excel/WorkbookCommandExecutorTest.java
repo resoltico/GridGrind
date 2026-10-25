@@ -13,6 +13,7 @@ import dev.erst.gridgrind.core.vocabulary.ExcelPrintOrientation;
 import dev.erst.gridgrind.core.vocabulary.ExcelRowSpan;
 import dev.erst.gridgrind.core.vocabulary.ExcelSheetVisibility;
 import dev.erst.gridgrind.core.vocabulary.ExcelVerticalAlignment;
+import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingAnchor;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingMarker;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingObjectSnapshot;
@@ -169,14 +170,17 @@ class WorkbookCommandExecutorTest {
           assertInstanceOf(
               WorkbookRuleResult.AutofiltersResult.class,
               new ExcelWorkbookIntrospector()
-                  .execute(workbook, new WorkbookReadCommand.GetAutofilters("autofilters", "Ops")));
+                  .execute(
+                      workbook,
+                      new WorkbookReadCommand.GetAutofilters(new StepId("autofilters"), "Ops")));
       WorkbookRuleResult.TablesResult tables =
           assertInstanceOf(
               WorkbookRuleResult.TablesResult.class,
               new ExcelWorkbookIntrospector()
                   .execute(
                       workbook,
-                      new WorkbookReadCommand.GetTables("tables", new ExcelTableSelection.All())));
+                      new WorkbookReadCommand.GetTables(
+                          new StepId("tables"), new ExcelTableSelection.All())));
       assertEquals(
           List.of(
               new ExcelAutofilterSnapshot.SheetOwned("D1:E3"),
@@ -218,14 +222,17 @@ class WorkbookCommandExecutorTest {
           assertInstanceOf(
               WorkbookRuleResult.AutofiltersResult.class,
               new ExcelWorkbookIntrospector()
-                  .execute(reopened, new WorkbookReadCommand.GetAutofilters("autofilters", "Ops")));
+                  .execute(
+                      reopened,
+                      new WorkbookReadCommand.GetAutofilters(new StepId("autofilters"), "Ops")));
       WorkbookRuleResult.TablesResult tables =
           assertInstanceOf(
               WorkbookRuleResult.TablesResult.class,
               new ExcelWorkbookIntrospector()
                   .execute(
                       reopened,
-                      new WorkbookReadCommand.GetTables("tables", new ExcelTableSelection.All())));
+                      new WorkbookReadCommand.GetTables(
+                          new StepId("tables"), new ExcelTableSelection.All())));
       assertEquals(
           List.of(
               new ExcelAutofilterSnapshot.SheetOwned("D1:E3"),
@@ -447,7 +454,7 @@ class WorkbookCommandExecutorTest {
                   .execute(
                       workbook,
                       new WorkbookReadCommand.GetPivotTables(
-                          "pivots", new ExcelPivotTableSelection.All())));
+                          new StepId("pivots"), new ExcelPivotTableSelection.All())));
       ExcelPivotTableSnapshot.Supported pivot =
           assertInstanceOf(
               ExcelPivotTableSnapshot.Supported.class, pivotTables.pivotTables().getFirst());
@@ -464,7 +471,7 @@ class WorkbookCommandExecutorTest {
                   .execute(
                       workbook,
                       new WorkbookReadCommand.GetPivotTables(
-                          "pivots", new ExcelPivotTableSelection.All())));
+                          new StepId("pivots"), new ExcelPivotTableSelection.All())));
       assertEquals(List.of(), afterDelete.pivotTables());
     }
   }
@@ -622,7 +629,7 @@ class WorkbookCommandExecutorTest {
                   .execute(
                       workbook,
                       new WorkbookReadCommand.GetConditionalFormatting(
-                          "cf", "Ops", new ExcelRangeSelection.All())));
+                          new StepId("cf"), "Ops", new ExcelRangeSelection.All())));
       assertEquals(1, initial.conditionalFormattingBlocks().size());
 
       executor.apply(
@@ -637,7 +644,7 @@ class WorkbookCommandExecutorTest {
                   .execute(
                       workbook,
                       new WorkbookReadCommand.GetConditionalFormatting(
-                          "cf", "Ops", new ExcelRangeSelection.All())));
+                          new StepId("cf"), "Ops", new ExcelRangeSelection.All())));
       assertEquals(List.of(), cleared.conditionalFormattingBlocks());
     }
   }
@@ -952,7 +959,8 @@ class WorkbookCommandExecutorTest {
               WorkbookRuleResult.AutofiltersResult.class,
               new ExcelWorkbookIntrospector()
                   .execute(
-                      workbook, new WorkbookReadCommand.GetAutofilters("autofilters", "Budget")));
+                      workbook,
+                      new WorkbookReadCommand.GetAutofilters(new StepId("autofilters"), "Budget")));
       assertEquals(
           List.of(new ExcelAutofilterSnapshot.SheetOwned("A1:B2")), autofilters.autofilters());
     }

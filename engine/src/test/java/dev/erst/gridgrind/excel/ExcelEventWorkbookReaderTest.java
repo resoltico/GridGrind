@@ -3,6 +3,7 @@ package dev.erst.gridgrind.excel;
 import static org.junit.jupiter.api.Assertions.*;
 
 import dev.erst.gridgrind.core.vocabulary.ExcelSheetVisibility;
+import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.excel.event.EventReadCommandTypes;
 import dev.erst.gridgrind.excel.event.EventSheetSummary;
 import dev.erst.gridgrind.excel.event.EventSheetSummaryHandler;
@@ -63,17 +64,19 @@ class ExcelEventWorkbookReaderTest {
             .apply(
                 workbookPath,
                 List.of(
-                    new WorkbookReadCommand.GetWorkbookSummary("workbook"),
-                    new WorkbookReadCommand.GetSheetSummary("sheet", "Ops"),
-                    new WorkbookReadCommand.GetSheetSummary("sheet-again", "Ops")));
+                    new WorkbookReadCommand.GetWorkbookSummary(new StepId("workbook")),
+                    new WorkbookReadCommand.GetSheetSummary(new StepId("sheet"), "Ops"),
+                    new WorkbookReadCommand.GetSheetSummary(new StepId("sheet-again"), "Ops")));
 
     assertEquals(
-        new WorkbookCoreResult.WorkbookSummaryResult("workbook", expectedWorkbookSummary),
+        new WorkbookCoreResult.WorkbookSummaryResult(
+            new StepId("workbook"), expectedWorkbookSummary),
         reads.get(0));
     assertEquals(
-        new WorkbookSheetResult.SheetSummaryResult("sheet", expectedSheetSummary), reads.get(1));
+        new WorkbookSheetResult.SheetSummaryResult(new StepId("sheet"), expectedSheetSummary),
+        reads.get(1));
     assertEquals(
-        new WorkbookSheetResult.SheetSummaryResult("sheet-again", expectedSheetSummary),
+        new WorkbookSheetResult.SheetSummaryResult(new StepId("sheet-again"), expectedSheetSummary),
         reads.get(2));
   }
 
@@ -134,12 +137,15 @@ class ExcelEventWorkbookReaderTest {
 
     List<WorkbookReadIntrospectionResult> reads =
         new ExcelEventWorkbookReader()
-            .apply(emptyWorkbook, List.of(new WorkbookReadCommand.GetWorkbookSummary("empty")));
+            .apply(
+                emptyWorkbook,
+                List.of(new WorkbookReadCommand.GetWorkbookSummary(new StepId("empty"))));
 
     assertEquals(
         List.of(
             new WorkbookCoreResult.WorkbookSummaryResult(
-                "empty", new WorkbookCoreResult.WorkbookSummary.Empty(0, List.of(), 0, false))),
+                new StepId("empty"),
+                new WorkbookCoreResult.WorkbookSummary.Empty(0, List.of(), 0, false))),
         reads);
   }
 
@@ -179,13 +185,14 @@ class ExcelEventWorkbookReaderTest {
             .apply(
                 mutatedWorkbook,
                 List.of(
-                    new WorkbookReadCommand.GetWorkbookSummary("workbook"),
-                    new WorkbookReadCommand.GetSheetSummary("hidden", "Hidden"),
-                    new WorkbookReadCommand.GetSheetSummary("veryHidden", "VeryHidden")));
+                    new WorkbookReadCommand.GetWorkbookSummary(new StepId("workbook")),
+                    new WorkbookReadCommand.GetSheetSummary(new StepId("hidden"), "Hidden"),
+                    new WorkbookReadCommand.GetSheetSummary(
+                        new StepId("veryHidden"), "VeryHidden")));
 
     assertEquals(
         new WorkbookCoreResult.WorkbookSummaryResult(
-            "workbook",
+            new StepId("workbook"),
             new WorkbookCoreResult.WorkbookSummary.WithSheets(
                 3,
                 List.of("Visible", "Hidden", "VeryHidden"),
@@ -196,7 +203,7 @@ class ExcelEventWorkbookReaderTest {
         reads.get(0));
     assertEquals(
         new WorkbookSheetResult.SheetSummaryResult(
-            "hidden",
+            new StepId("hidden"),
             new WorkbookSheetResult.SheetSummary(
                 "Hidden",
                 ExcelSheetVisibility.HIDDEN,
@@ -207,7 +214,7 @@ class ExcelEventWorkbookReaderTest {
         reads.get(1));
     assertEquals(
         new WorkbookSheetResult.SheetSummaryResult(
-            "veryHidden",
+            new StepId("veryHidden"),
             new WorkbookSheetResult.SheetSummary(
                 "VeryHidden",
                 ExcelSheetVisibility.VERY_HIDDEN,
@@ -252,7 +259,8 @@ class ExcelEventWorkbookReaderTest {
                     new ExcelEventWorkbookReader()
                         .apply(
                             mutatedWorkbook,
-                            List.of(new WorkbookReadCommand.GetWorkbookSummary("workbook")))
+                            List.of(
+                                new WorkbookReadCommand.GetWorkbookSummary(new StepId("workbook"))))
                         .getFirst())
                 .workbook());
 
@@ -300,12 +308,12 @@ class ExcelEventWorkbookReaderTest {
         new ExcelEventWorkbookReader()
             .apply(
                 sparseWorkbook,
-                List.of(new WorkbookReadCommand.GetSheetSummary("sheet", "Sparse")));
+                List.of(new WorkbookReadCommand.GetSheetSummary(new StepId("sheet"), "Sparse")));
 
     assertEquals(
         List.of(
             new WorkbookSheetResult.SheetSummaryResult(
-                "sheet",
+                new StepId("sheet"),
                 new WorkbookSheetResult.SheetSummary(
                     "Sparse",
                     ExcelSheetVisibility.VISIBLE,
@@ -337,7 +345,9 @@ class ExcelEventWorkbookReaderTest {
                 new ExcelEventWorkbookReader()
                     .apply(
                         workbookPath,
-                        List.of(new WorkbookReadCommand.GetSheetSummary("missing", "Absent"))));
+                        List.of(
+                            new WorkbookReadCommand.GetSheetSummary(
+                                new StepId("missing"), "Absent"))));
 
     assertEquals("Sheet does not exist: Absent", failure.getMessage());
   }
@@ -355,7 +365,8 @@ class ExcelEventWorkbookReaderTest {
                 new ExcelEventWorkbookReader()
                     .apply(
                         invalidWorkbook,
-                        List.of(new WorkbookReadCommand.GetWorkbookSummary("workbook"))));
+                        List.of(
+                            new WorkbookReadCommand.GetWorkbookSummary(new StepId("workbook")))));
     assertEquals("Only .xlsx workbooks are supported", workbookFailure.getMessage());
 
     Path sourceWorkbook =
@@ -378,7 +389,8 @@ class ExcelEventWorkbookReaderTest {
                 new ExcelEventWorkbookReader()
                     .apply(
                         malformedWorkbook,
-                        List.of(new WorkbookReadCommand.GetWorkbookSummary("workbook"))));
+                        List.of(
+                            new WorkbookReadCommand.GetWorkbookSummary(new StepId("workbook")))));
     assertTrue(
         metadataFailure
             .getMessage()
@@ -405,7 +417,8 @@ class ExcelEventWorkbookReaderTest {
                 new ExcelEventWorkbookReader()
                     .apply(
                         malformedSheetWorkbook,
-                        List.of(new WorkbookReadCommand.GetSheetSummary("sheet", "Ops"))));
+                        List.of(
+                            new WorkbookReadCommand.GetSheetSummary(new StepId("sheet"), "Ops"))));
 
     assertTrue(sheetFailure.getMessage().contains("Failed to parse sheet Ops"));
   }
@@ -445,7 +458,8 @@ class ExcelEventWorkbookReaderTest {
                 new ExcelEventWorkbookReader()
                     .apply(
                         malformedSheetWorkbook,
-                        List.of(new WorkbookReadCommand.GetSheetSummary("sheet", "Ops"))));
+                        List.of(
+                            new WorkbookReadCommand.GetSheetSummary(new StepId("sheet"), "Ops"))));
 
     assertTrue(failure.getMessage().contains("Failed to parse sheet Ops"));
   }
@@ -454,13 +468,16 @@ class ExcelEventWorkbookReaderTest {
   void helperSeamsCoverSupportedSummaryCommandTypesAndEmptyMetadataGuard() {
     assertEquals(
         "GET_WORKBOOK_SUMMARY",
-        EventReadCommandTypes.commandType(new WorkbookReadCommand.GetWorkbookSummary("workbook")));
+        EventReadCommandTypes.commandType(
+            new WorkbookReadCommand.GetWorkbookSummary(new StepId("workbook"))));
     assertEquals(
         "GET_SHEET_SUMMARY",
-        EventReadCommandTypes.commandType(new WorkbookReadCommand.GetSheetSummary("sheet", "Ops")));
+        EventReadCommandTypes.commandType(
+            new WorkbookReadCommand.GetSheetSummary(new StepId("sheet"), "Ops")));
     assertEquals(
         "GET_PACKAGE_SECURITY",
-        EventReadCommandTypes.commandType(new WorkbookReadCommand.GetPackageSecurity("security")));
+        EventReadCommandTypes.commandType(
+            new WorkbookReadCommand.GetPackageSecurity(new StepId("security"))));
     assertEquals(7, invokeActiveSheetIndexWithExplicitActiveTab());
     assertEquals(0, invokeActiveSheetIndexWithoutActiveTab());
     assertEquals(0, invokeActiveSheetIndexWithEmptyBookViews());
@@ -604,8 +621,8 @@ class ExcelEventWorkbookReaderTest {
             .apply(
                 edgeCaseWorkbook,
                 List.of(
-                    new WorkbookReadCommand.GetWorkbookSummary("workbook"),
-                    new WorkbookReadCommand.GetSheetSummary("sheet", "Visible")));
+                    new WorkbookReadCommand.GetWorkbookSummary(new StepId("workbook")),
+                    new WorkbookReadCommand.GetSheetSummary(new StepId("sheet"), "Visible")));
 
     WorkbookCoreResult.WorkbookSummary.WithSheets summary =
         assertInstanceOf(

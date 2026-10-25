@@ -11,6 +11,7 @@ import dev.erst.gridgrind.core.plan.MutationStep;
 import dev.erst.gridgrind.core.plan.RowBandSelector;
 import dev.erst.gridgrind.core.plan.WorkbookMutationAction;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
+import dev.erst.gridgrind.core.vocabulary.StepId;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
@@ -49,7 +50,7 @@ class WorkbookStaticMaterializationValidationTest {
         WorkbookStaticRequestContract.validate(
             staticRequest(
                 new MutationStep(
-                    "row-work",
+                    new StepId("row-work"),
                     new RowBandSelector.Span("Ops", 10, 250_009),
                     new WorkbookMutationAction.SetRowHeight(15.0d)))));
   }
@@ -60,7 +61,7 @@ class WorkbookStaticMaterializationValidationTest {
         WorkbookStaticRequestContract.validate(
             staticRequest(
                 new MutationStep(
-                    "row-band-cell-action",
+                    new StepId("row-band-cell-action"),
                     new RowBandSelector.Span("Ops", 10, 250_010),
                     new CellMutationAction.ClearRange())));
 
@@ -73,7 +74,9 @@ class WorkbookStaticMaterializationValidationTest {
         WorkbookStaticRequestContract.validate(
                 staticRequest(
                     new MutationStep(
-                        "row-work", new RowBandSelector.Span("Ops", 10, 250_010), action)))
+                        new StepId("row-work"),
+                        new RowBandSelector.Span("Ops", 10, 250_010),
+                        action)))
             .getFirst();
 
     assertEquals("steps[0].target.lastRowIndex", violation.jsonPath());

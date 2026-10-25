@@ -2,6 +2,7 @@ package dev.erst.gridgrind.core.problem;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+import dev.erst.gridgrind.core.vocabulary.StepId;
 import org.junit.jupiter.api.Test;
 
 /** Covers cause-specific public resolution text for problem codes. */
@@ -12,7 +13,7 @@ class GridGrindProblemCodeResolutionTest {
         new ProblemContext.ExecuteStep(
             ProblemContextRequestSurfaces.RequestShape.known("NEW", "NONE"),
             new ProblemContextWorkbookSurfaces.StepReference(
-                0, "assert-total", "ASSERTION", "EXPECT_CELL_VALUE"),
+                0, new StepId("assert-total"), "ASSERTION", "EXPECT_CELL_VALUE"),
             ProblemContextWorkbookSurfaces.ProblemLocation.cell("Budget", "B2"));
     ProblemContext.PersistWorkbook saveAsContext =
         new ProblemContext.PersistWorkbook(

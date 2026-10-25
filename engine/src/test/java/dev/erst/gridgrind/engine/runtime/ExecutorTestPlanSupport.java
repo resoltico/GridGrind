@@ -26,7 +26,6 @@ import dev.erst.gridgrind.core.model.validation.DataValidationPromptInput;
 import dev.erst.gridgrind.core.model.validation.DataValidationRuleInput;
 import dev.erst.gridgrind.core.model.value.CellInput;
 import dev.erst.gridgrind.core.plan.*;
-import dev.erst.gridgrind.core.plan.AssertionResult;
 import dev.erst.gridgrind.core.plan.AssertionStep;
 import dev.erst.gridgrind.core.plan.ExecutionModeInput;
 import dev.erst.gridgrind.core.plan.ExecutionPolicyInput;
@@ -44,6 +43,7 @@ import dev.erst.gridgrind.core.result.WorkbookResult;
 import dev.erst.gridgrind.core.source.BinarySourceInput;
 import dev.erst.gridgrind.core.source.TextSourceInput;
 import dev.erst.gridgrind.core.vocabulary.ExcelDataValidationErrorStyle;
+import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.excel.ExcelCellValue;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
 import dev.erst.gridgrind.excel.ExcelWorkbooks;
@@ -95,7 +95,7 @@ final class ExecutorTestPlanSupport {
   }
 
   static InspectionStep inspect(String stepId, Selector target, InspectionQuery query) {
-    return new InspectionStep(stepId, target, query);
+    return new InspectionStep(new StepId(stepId), target, query);
   }
 
   static List<PendingMutation> mutations(PendingMutation... mutations) {
@@ -280,12 +280,13 @@ final class ExecutorTestPlanSupport {
       throw new IllegalArgumentException("stepIndex must be non-negative");
     }
     return new MutationStep(
-        stepIdFor(stepIndex, mutation.action()), mutation.target(), mutation.action());
+        new StepId(stepIdFor(stepIndex, mutation.action())), mutation.target(), mutation.action());
   }
 
   static AssertionStep materializeAssertion(PendingAssertion assertion) {
     Objects.requireNonNull(assertion, "assertion must not be null");
-    return new AssertionStep(assertion.stepId(), assertion.target(), assertion.assertion());
+    return new AssertionStep(
+        new StepId(assertion.stepId()), assertion.target(), assertion.assertion());
   }
 
   static List<WorkbookStep> steps(
@@ -491,18 +492,18 @@ final class ExecutorTestPlanSupport {
   }
 
   static List<String> inspectionIds(WorkbookResult.Success success) {
-    return success.inspections().stream().map(InspectionResult::stepId).toList();
+    return success.inspections().stream().map(result -> result.stepId().value()).toList();
   }
 
   static List<String> assertionIds(WorkbookResult.Success success) {
-    return success.assertions().stream().map(AssertionResult::stepId).toList();
+    return success.assertions().stream().map(result -> result.stepId().value()).toList();
   }
 
   static <T extends InspectionResult> T inspection(
       WorkbookResult.Success success, String stepId, Class<T> type) {
     return type.cast(
         success.inspections().stream()
-            .filter(result -> result.stepId().equals(stepId))
+            .filter(result -> result.stepId().value().equals(stepId))
             .findFirst()
             .orElseThrow(
                 () -> new AssertionError("Missing inspection result for stepId " + stepId)));

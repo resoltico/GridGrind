@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.core.problem;
 
+import dev.erst.gridgrind.core.vocabulary.StepId;
 import java.util.Objects;
 
 /** One non-fatal request warning with a truthful step or request-path location. */
@@ -16,7 +17,7 @@ public record RequestWarning(
 
   /** Creates a warning attached to one authored workbook step. */
   public RequestWarning(
-      GridGrindWarningCode code, int stepIndex, String stepId, String stepType, String message) {
+      GridGrindWarningCode code, int stepIndex, StepId stepId, String stepType, String message) {
     this(code, new RequestWarningLocation.Step(stepIndex, stepId, stepType), message);
   }
 

@@ -2,6 +2,7 @@ package dev.erst.gridgrind.core.plan;
 
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import dev.erst.gridgrind.core.vocabulary.StepId;
 import java.util.Objects;
 
 /** Ordered assertion outcome carrying complete evidence for every failed assertion step. */
@@ -15,15 +16,16 @@ public sealed interface AssertionResult permits AssertionResult.Passed, Assertio
   AssertionOutcome outcome();
 
   /** Returns the authored assertion step id. */
-  String stepId();
+  StepId stepId();
 
   /** Returns the authored assertion discriminator. */
   String assertionType();
 
   /** A passed assertion without failure evidence. */
-  record Passed(String stepId, String assertionType) implements AssertionResult {
+  record Passed(StepId stepId, String assertionType) implements AssertionResult {
     public Passed {
-      stepId = AssertionSupport.requireNonBlank(stepId, "stepId");
+
+      java.util.Objects.requireNonNull(stepId, "stepId must not be null");
       assertionType = AssertionSupport.requireNonBlank(assertionType, "assertionType");
     }
 
@@ -34,10 +36,11 @@ public sealed interface AssertionResult permits AssertionResult.Passed, Assertio
   }
 
   /** A failed assertion with the complete target, authored assertion, and observed evidence. */
-  record Failed(String stepId, String assertionType, AssertionFailure failure)
+  record Failed(StepId stepId, String assertionType, AssertionFailure failure)
       implements AssertionResult {
     public Failed {
-      stepId = AssertionSupport.requireNonBlank(stepId, "stepId");
+
+      java.util.Objects.requireNonNull(stepId, "stepId must not be null");
       assertionType = AssertionSupport.requireNonBlank(assertionType, "assertionType");
       Objects.requireNonNull(failure, "failure must not be null");
       if (!stepId.equals(failure.stepId()) || !assertionType.equals(failure.assertionType())) {

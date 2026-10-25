@@ -33,6 +33,7 @@ import dev.erst.gridgrind.core.problem.GridGrindProblemDetail;
 import dev.erst.gridgrind.core.problem.GridGrindWarningCode;
 import dev.erst.gridgrind.core.problem.ProblemContext;
 import dev.erst.gridgrind.core.result.WorkbookResult;
+import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.excel.ExcelCellValue;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
 import dev.erst.gridgrind.excel.ExcelWorkbooks;
@@ -55,15 +56,15 @@ class DefaultGridGrindRequestExecutorCalculationCoverageTest {
             FormulaEnvironmentInput.empty(),
             java.util.List.<WorkbookStep>of(
                 new MutationStep(
-                    "step-01-ensure-sheet",
+                    new StepId("step-01-ensure-sheet"),
                     new SheetSelector.ByName("Ops"),
                     new WorkbookMutationAction.EnsureSheet()),
                 new InspectionStep(
-                    "summary",
+                    new StepId("summary"),
                     new WorkbookSelector.Current(),
                     new WorkbookIntrospectionQuery.GetWorkbookSummary()),
                 new MutationStep(
-                    "step-03-set-cell",
+                    new StepId("step-03-set-cell"),
                     new CellSelector.ByAddress("Ops", "A1"),
                     new CellMutationAction.SetCell(
                         new dev.erst.gridgrind.core.model.value.CellInput.NumberValue(1.0)))));
@@ -157,9 +158,9 @@ class DefaultGridGrindRequestExecutorCalculationCoverageTest {
     assertEquals(GridGrindProblemCode.UNREGISTERED_USER_DEFINED_FUNCTION, failure.problem().code());
     ProblemContext.ExecuteStep context =
         assertInstanceOf(ProblemContext.ExecuteStep.class, failure.problem().context());
-    assertEquals("step-02-set-cell", context.stepId());
+    assertEquals("step-02-set-cell", context.stepId().value());
     assertEquals("SET_CELL", context.stepType());
-    assertEquals("summary", context.surfacedAtStep().orElseThrow().stepId());
+    assertEquals("summary", context.surfacedAtStep().orElseThrow().stepId().value());
     assertEquals("GET_WORKBOOK_SUMMARY", context.surfacedAtStep().orElseThrow().stepType());
   }
 

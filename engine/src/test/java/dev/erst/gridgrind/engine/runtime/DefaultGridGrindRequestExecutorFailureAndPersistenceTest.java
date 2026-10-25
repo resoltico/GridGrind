@@ -36,6 +36,7 @@ import dev.erst.gridgrind.core.validation.WorkbookStaticViolation;
 import dev.erst.gridgrind.core.vocabulary.ExcelSheetVisibility;
 import dev.erst.gridgrind.core.vocabulary.NamedRangeBackingKind;
 import dev.erst.gridgrind.core.vocabulary.NamedRangeScope;
+import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.excel.ExcelHyperlink;
 import dev.erst.gridgrind.excel.ExcelSheetPane;
 import dev.erst.gridgrind.excel.InvalidCellAddressException;
@@ -452,7 +453,7 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
     assertEquals("EXECUTE_STEP", failure.problem().context().stage());
     assertEquals(1, executeStepContext(failure).stepIndex());
     assertEquals("GET_NAMED_RANGES", executeStepContext(failure).stepType());
-    assertEquals("ranges", executeStepContext(failure).stepId());
+    assertEquals("ranges", executeStepContext(failure).stepId().value());
     assertEquals(
         java.util.Optional.of("BudgetTotal"), executeStepContext(failure).namedRangeName());
   }
@@ -607,7 +608,7 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
     assertEquals(GridGrindProblemCode.SHEET_NOT_FOUND, failure.problem().code());
     assertEquals("EXECUTE_STEP", failure.problem().context().stage());
     assertEquals("GET_WINDOW", executeStepContext(failure).stepType());
-    assertEquals("cells", executeStepContext(failure).stepId());
+    assertEquals("cells", executeStepContext(failure).stepId().value());
     assertEquals(java.util.Optional.of("Budget"), executeStepContext(failure).sheetName());
     assertEquals(java.util.Optional.of("A1"), executeStepContext(failure).address());
   }
@@ -630,7 +631,7 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
     assertEquals(GridGrindProblemCode.SHEET_NOT_FOUND, failure.problem().code());
     assertEquals("EXECUTE_STEP", failure.problem().context().stage());
     assertEquals("GET_SHEET_SUMMARY", executeStepContext(failure).stepType());
-    assertEquals("sheet", executeStepContext(failure).stepId());
+    assertEquals("sheet", executeStepContext(failure).stepId().value());
     assertEquals(java.util.Optional.of("Missing"), executeStepContext(failure).sheetName());
   }
 
@@ -1035,7 +1036,7 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
     assertEquals(
         "User-defined function TEXTAFTER is not registered at Data!C1: TEXTAFTER(\"a,b\",\",\")",
         failure.problem().message());
-    assertEquals("step-04-set-cell", executeStepContext(failure).stepId());
+    assertEquals("step-04-set-cell", executeStepContext(failure).stepId().value());
     assertEquals(java.util.Optional.of("Data"), executeStepContext(failure).sheetName());
     assertEquals(java.util.Optional.of("C1"), executeStepContext(failure).address());
     assertEquals(
@@ -1054,15 +1055,15 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
                 FormulaEnvironmentInput.empty(),
                 List.<WorkbookStep>of(
                     new MutationStep(
-                        "step-0",
+                        new StepId("step-0"),
                         new SheetSelector.ByName("Data"),
                         new WorkbookMutationAction.EnsureSheet()),
                     new InspectionStep(
-                        "summary",
+                        new StepId("summary"),
                         new WorkbookSelector.Current(),
                         new WorkbookIntrospectionQuery.GetWorkbookSummary()),
                     new MutationStep(
-                        "step-2",
+                        new StepId("step-2"),
                         new CellSelector.ByAddress("Data", "A1"),
                         new CellMutationAction.SetCell(new CellInput.NumberValue(1.0))))));
 
@@ -1133,12 +1134,13 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
 
     assertEquals(GridGrindProblemCode.UNREGISTERED_USER_DEFINED_FUNCTION, failure.problem().code());
     assertEquals("EXECUTE_STEP", failure.problem().context().stage());
-    assertEquals("step-02-set-cell", executeStepContext(failure).stepId());
+    assertEquals("step-02-set-cell", executeStepContext(failure).stepId().value());
     assertEquals(java.util.Optional.of("Data"), executeStepContext(failure).sheetName());
     assertEquals(java.util.Optional.of("C1"), executeStepContext(failure).address());
     assertEquals(
         java.util.Optional.of("TEXTAFTER(\"a,b\",\",\")"), executeStepContext(failure).formula());
-    assertEquals("summary", executeStepContext(failure).surfacedAtStep().orElseThrow().stepId());
+    assertEquals(
+        "summary", executeStepContext(failure).surfacedAtStep().orElseThrow().stepId().value());
   }
 
   @Test

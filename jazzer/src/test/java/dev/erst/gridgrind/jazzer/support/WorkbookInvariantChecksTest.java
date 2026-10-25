@@ -139,6 +139,7 @@ import dev.erst.gridgrind.core.vocabulary.ExcelSheetVisibility;
 import dev.erst.gridgrind.core.vocabulary.ExcelVerticalAlignment;
 import dev.erst.gridgrind.core.vocabulary.NamedRangeBackingKind;
 import dev.erst.gridgrind.core.vocabulary.NamedRangeScope;
+import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.excel.*;
 import dev.erst.gridgrind.excel.ExcelCellValue;
 import dev.erst.gridgrind.excel.ExcelChartDefinition;
@@ -174,17 +175,19 @@ class WorkbookInvariantChecksTest {
                 new RequestWarning(
                     GridGrindWarningCode.UNQUOTED_SHEET_NAME_IN_FORMULA,
                     1,
-                    "step-01-set-cell",
+                    new StepId("step-01-set-cell"),
                     "SET_CELL",
                     "Formula references same-request sheet names with spaces.")),
-            List.of(new AssertionResult.Passed("assert-total", "EXPECT_NAMED_RANGE_PRESENT")),
+            List.of(
+                new AssertionResult.Passed(
+                    new StepId("assert-total"), "EXPECT_NAMED_RANGE_PRESENT")),
             List.of(
                 new WorkbookInspectionResult.WorkbookSummaryResult(
-                    "summary",
+                    new StepId("summary"),
                     new WorkbookSummary.WithSheets(
                         1, List.of("Budget"), "Budget", List.of("Budget"), 1, false)),
                 new WorkbookInspectionResult.NamedRangesResult(
-                    "ranges",
+                    new StepId("ranges"),
                     List.of(
                         new NamedRangeReport.RangeReport(
                             "BudgetTotal",
@@ -192,7 +195,7 @@ class WorkbookInvariantChecksTest {
                             "Budget!$B$4",
                             NamedRangeTarget.range("Budget", "B4")))),
                 new SheetInspectionResult.CellsResult(
-                    "cells",
+                    new StepId("cells"),
                     "Budget",
                     List.of(
                         new dev.erst.gridgrind.core.model.value.CellReport.TextReport(
@@ -216,7 +219,7 @@ class WorkbookInvariantChecksTest {
                                             false,
                                             false))))))),
                 new SheetInspectionResult.WindowResult(
-                    "window",
+                    new StepId("window"),
                     new WindowReport.Dense(
                         "Budget",
                         "A1",
@@ -234,21 +237,21 @@ class WorkbookInvariantChecksTest {
                                         java.util.Optional.of("Report"),
                                         java.util.Optional.empty())))))),
                 new SheetInspectionResult.MergedRegionsResult(
-                    "merged", "Budget", List.of(new MergedRegionReport("A1:B1"))),
+                    new StepId("merged"), "Budget", List.of(new MergedRegionReport("A1:B1"))),
                 new SheetInspectionResult.HyperlinksResult(
-                    "hyperlinks",
+                    new StepId("hyperlinks"),
                     "Budget",
                     List.of(
                         new CellHyperlinkReport(
                             "A1", new HyperlinkTarget.Url("https://example.com/report")))),
                 new SheetInspectionResult.CommentsResult(
-                    "comments",
+                    new StepId("comments"),
                     "Budget",
                     List.of(
                         new CellCommentReport(
                             "A1", new CommentReport("Review", "GridGrind", true)))),
                 new SheetInspectionResult.SheetLayoutResult(
-                    "layout",
+                    new StepId("layout"),
                     new SheetLayoutReport(
                         "Budget",
                         new PaneReport.Frozen(1, 1, 1, 1),
@@ -257,7 +260,7 @@ class WorkbookInvariantChecksTest {
                         List.of(new ColumnLayoutReport(0, 12.5, false, 0, false)),
                         List.of(new RowLayoutReport(0, 18.0, false, 0, false)))),
                 new SheetInspectionResult.PrintLayoutResult(
-                    "print-layout",
+                    new StepId("print-layout"),
                     new PrintLayoutReport(
                         "Budget",
                         new PrintAreaReport.Range("A1:B20"),
@@ -268,7 +271,7 @@ class WorkbookInvariantChecksTest {
                         new HeaderFooterTextReport("Budget", "", ""),
                         new HeaderFooterTextReport("", "Page &P", ""))),
                 new SheetInspectionResult.DataValidationsResult(
-                    "data-validations",
+                    new StepId("data-validations"),
                     "Budget",
                     List.of(
                         new DataValidationEntryReport.Supported(
@@ -283,7 +286,7 @@ class WorkbookInvariantChecksTest {
                                 Optional.empty(),
                                 Optional.empty())))),
                 new WorkbookSurfaceInspectionResult.FormulaSurfaceResult(
-                    "formula-surface",
+                    new StepId("formula-surface"),
                     new FormulaSurfaceReport(
                         1,
                         List.of(
@@ -294,7 +297,7 @@ class WorkbookInvariantChecksTest {
                                 List.of(
                                     new FormulaPatternReport("SUM(B2:B3)", 1, List.of("B4"))))))),
                 new WorkbookSurfaceInspectionResult.SheetSchemaResult(
-                    "schema",
+                    new StepId("schema"),
                     new SheetSchemaReport(
                         "Budget",
                         "A1",
@@ -311,7 +314,7 @@ class WorkbookInvariantChecksTest {
                                 List.of(new TypeCountReport("TEXT", 1)),
                                 "TEXT")))),
                 new WorkbookSurfaceInspectionResult.NamedRangeSurfaceResult(
-                    "named-range-surface",
+                    new StepId("named-range-surface"),
                     new NamedRangeSurfaceReport(
                         1,
                         0,
@@ -324,7 +327,7 @@ class WorkbookInvariantChecksTest {
                                 "Budget!$B$4",
                                 NamedRangeBackingKind.RANGE)))),
                 new WorkbookAnalysisResult.FormulaHealthResult(
-                    "formula-health",
+                    new StepId("formula-health"),
                     new FormulaHealthReport(
                         1,
                         new AnalysisSummaryReport(1, 0, 0, 1),
@@ -337,7 +340,7 @@ class WorkbookInvariantChecksTest {
                                 new AnalysisLocationReport.Cell("Budget", "B4"),
                                 List.of("NOW()"))))),
                 new WorkbookAnalysisResult.DataValidationHealthResult(
-                    "data-validation-health",
+                    new StepId("data-validation-health"),
                     new DataValidationHealthReport(
                         1, new AnalysisSummaryReport(0, 0, 0, 0), List.of()))));
 
@@ -405,25 +408,25 @@ class WorkbookInvariantChecksTest {
             List.of(),
             List.of(
                 new WorkbookInspectionResult.WorkbookSummaryResult(
-                    "summary",
+                    new StepId("summary"),
                     new WorkbookSummary.WithSheets(
                         1, List.of("Budget"), "Budget", List.of("Budget"), 1, false)),
                 new SheetInspectionResult.CellsResult(
-                    "cells", "Budget", List.of(textCell("A1", "Report"))),
+                    new StepId("cells"), "Budget", List.of(textCell("A1", "Report"))),
                 new SheetInspectionResult.DataValidationsResult(
-                    "data-validations",
+                    new StepId("data-validations"),
                     "Budget",
                     List.of(
                         new DataValidationEntryReport.Unsupported(
                             List.of("A2:A5"), "MISSING_FORMULA", "Formula is missing"))),
                 new SheetInspectionResult.HyperlinksResult(
-                    "hyperlinks",
+                    new StepId("hyperlinks"),
                     "Budget",
                     List.of(
                         new CellHyperlinkReport(
                             "A1", new HyperlinkTarget.Url("https://example.com/report")))),
                 new WorkbookAnalysisResult.DataValidationHealthResult(
-                    "data-validation-health",
+                    new StepId("data-validation-health"),
                     new DataValidationHealthReport(
                         1,
                         new AnalysisSummaryReport(1, 1, 0, 0),
@@ -436,7 +439,7 @@ class WorkbookInvariantChecksTest {
                                 new AnalysisLocationReport.Range("Budget", "A2:A5"),
                                 List.of("A2:A5"))))),
                 new WorkbookAnalysisResult.NamedRangeHealthResult(
-                    "named-range-health",
+                    new StepId("named-range-health"),
                     new NamedRangeHealthReport(
                         1, new AnalysisSummaryReport(0, 0, 0, 0), List.of()))));
 
@@ -457,7 +460,7 @@ class WorkbookInvariantChecksTest {
             List.of(),
             List.of(
                 new SheetInspectionResult.HyperlinksResult(
-                    "hyperlinks",
+                    new StepId("hyperlinks"),
                     "Budget",
                     List.of(
                         new CellHyperlinkReport(
@@ -510,7 +513,7 @@ class WorkbookInvariantChecksTest {
             List.of(),
             List.of(
                 new SheetInspectionResult.SheetSummaryResult(
-                    "sheet",
+                    new StepId("sheet"),
                     new SheetSummaryReport(
                         "Budget",
                         ExcelSheetVisibility.VERY_HIDDEN,
@@ -536,13 +539,13 @@ class WorkbookInvariantChecksTest {
             List.of(),
             List.of(
                 new SheetInspectionResult.AutofiltersResult(
-                    "autofilters",
+                    new StepId("autofilters"),
                     "Budget",
                     List.of(
                         new AutofilterEntryReport.SheetOwned("E1:F3"),
                         new AutofilterEntryReport.TableOwned("A1:C4", "BudgetTable"))),
                 new WorkbookAssetInspectionResult.TablesResult(
-                    "tables",
+                    new StepId("tables"),
                     List.of(
                         new TableEntryReport(
                             "BudgetTable",
@@ -555,11 +558,11 @@ class WorkbookInvariantChecksTest {
                                 "TableStyleMedium2", false, false, true, false),
                             true))),
                 new WorkbookAnalysisResult.AutofilterHealthResult(
-                    "autofilter-health",
+                    new StepId("autofilter-health"),
                     new AutofilterHealthReport(
                         2, new AnalysisSummaryReport(0, 0, 0, 0), List.of())),
                 new WorkbookAnalysisResult.TableHealthResult(
-                    "table-health",
+                    new StepId("table-health"),
                     new TableHealthReport(1, new AnalysisSummaryReport(0, 0, 0, 0), List.of()))));
 
     assertDoesNotThrow(() -> WorkbookInvariantChecks.requireResponseShape(response));
@@ -596,11 +599,11 @@ class WorkbookInvariantChecksTest {
             List.of(),
             List.of(
                 new SheetInspectionResult.AutofiltersResult(
-                    "autofilters",
+                    new StepId("autofilters"),
                     "Budget",
                     List.of(new AutofilterEntryReport.SheetOwned("E1:F3"))),
                 new WorkbookAssetInspectionResult.TablesResult(
-                    "tables",
+                    new StepId("tables"),
                     List.of(
                         new TableEntryReport(
                             "BudgetTable",
@@ -612,11 +615,11 @@ class WorkbookInvariantChecksTest {
                             new TableStyleReport.None(),
                             true))),
                 new WorkbookAnalysisResult.AutofilterHealthResult(
-                    "autofilter-health",
+                    new StepId("autofilter-health"),
                     new AutofilterHealthReport(
                         1, new AnalysisSummaryReport(0, 0, 0, 0), List.of())),
                 new WorkbookAnalysisResult.TableHealthResult(
-                    "table-health",
+                    new StepId("table-health"),
                     new TableHealthReport(1, new AnalysisSummaryReport(0, 0, 0, 0), List.of()))));
 
     assertDoesNotThrow(
@@ -636,9 +639,9 @@ class WorkbookInvariantChecksTest {
             List.of(),
             List.of(
                 new WorkbookAssetInspectionResult.PivotTablesResult(
-                    "pivots", List.of(pivotReport())),
+                    new StepId("pivots"), List.of(pivotReport())),
                 new WorkbookAnalysisResult.PivotTableHealthResult(
-                    "pivot-health",
+                    new StepId("pivot-health"),
                     new PivotTableHealthReport(
                         1, new AnalysisSummaryReport(0, 0, 0, 0), List.of()))));
 
@@ -669,9 +672,9 @@ class WorkbookInvariantChecksTest {
             List.of(),
             List.of(
                 new WorkbookAssetInspectionResult.PivotTablesResult(
-                    "pivots", List.of(pivotReport())),
+                    new StepId("pivots"), List.of(pivotReport())),
                 new WorkbookAnalysisResult.PivotTableHealthResult(
-                    "pivot-health",
+                    new StepId("pivot-health"),
                     new PivotTableHealthReport(
                         1, new AnalysisSummaryReport(0, 0, 0, 0), List.of()))));
 
@@ -707,10 +710,12 @@ class WorkbookInvariantChecksTest {
             GridGrindProtocolVersion.V3,
             publishedSaveAs(workbookPath.toString(), workbookPath),
             List.of(),
-            List.of(new AssertionResult.Passed("assert-total", "EXPECT_ANALYSIS_MAX_SEVERITY")),
+            List.of(
+                new AssertionResult.Passed(
+                    new StepId("assert-total"), "EXPECT_ANALYSIS_MAX_SEVERITY")),
             List.of(
                 new SheetInspectionResult.SheetSummaryResult(
-                    "sheet",
+                    new StepId("sheet"),
                     new SheetSummaryReport(
                         "Budget",
                         ExcelSheetVisibility.VISIBLE,
@@ -781,10 +786,10 @@ class WorkbookInvariantChecksTest {
             List.of(),
             List.of(
                 new WorkbookInspectionResult.WorkbookProtectionResult(
-                    "workbook-protection",
+                    new StepId("workbook-protection"),
                     new WorkbookProtectionReport(true, false, true, true, false)),
                 new SheetInspectionResult.CellsResult(
-                    "cells",
+                    new StepId("cells"),
                     "Budget",
                     List.of(
                         new dev.erst.gridgrind.core.model.value.CellReport.TextReport(
@@ -807,9 +812,11 @@ class WorkbookInvariantChecksTest {
                                             false,
                                             false))))))),
                 new SheetInspectionResult.CommentsResult(
-                    "comments", "Budget", List.of(new CellCommentReport("A1", anchoredComment))),
+                    new StepId("comments"),
+                    "Budget",
+                    List.of(new CellCommentReport("A1", anchoredComment))),
                 new SheetInspectionResult.PrintLayoutResult(
-                    "print-layout",
+                    new StepId("print-layout"),
                     new PrintLayoutReport(
                         "Budget",
                         new PrintAreaReport.Range("A1:C20"),
@@ -833,7 +840,7 @@ class WorkbookInvariantChecksTest {
                             List.of(4, 9),
                             List.of(1)))),
                 new SheetInspectionResult.AutofiltersResult(
-                    "autofilters",
+                    new StepId("autofilters"),
                     "Budget",
                     List.of(
                         new AutofilterEntryReport.TableOwned(
@@ -855,7 +862,7 @@ class WorkbookInvariantChecksTest {
                                         new AutofilterSortConditionReport.Value(
                                             "B2:B5", true))))))),
                 new WorkbookAssetInspectionResult.TablesResult(
-                    "tables",
+                    new StepId("tables"),
                     List.of(
                         new TableEntryReport(
                             "BudgetTable",
@@ -913,7 +920,7 @@ class WorkbookInvariantChecksTest {
             List.of(),
             List.of(
                 new WorkbookAssetInspectionResult.DrawingObjectsResult(
-                    "drawing-objects",
+                    new StepId("drawing-objects"),
                     "Ops",
                     List.of(
                         new DrawingObjectReport.Picture(
@@ -956,7 +963,7 @@ class WorkbookInvariantChecksTest {
                             68L,
                             "preview789"))),
                 new WorkbookAssetInspectionResult.DrawingObjectPayloadResult(
-                    "drawing-payload",
+                    new StepId("drawing-payload"),
                     "Ops",
                     new DrawingObjectPayloadReport.EmbeddedObject(
                         "OpsEmbed",
@@ -995,7 +1002,7 @@ class WorkbookInvariantChecksTest {
             List.of(),
             List.of(
                 new WorkbookAssetInspectionResult.DrawingObjectsResult(
-                    "drawing-objects",
+                    new StepId("drawing-objects"),
                     "Ops",
                     List.of(
                         new DrawingObjectReport.Picture(
@@ -1009,7 +1016,7 @@ class WorkbookInvariantChecksTest {
                             1,
                             null))),
                 new WorkbookAssetInspectionResult.DrawingObjectPayloadResult(
-                    "drawing-payload",
+                    new StepId("drawing-payload"),
                     "Ops",
                     new DrawingObjectPayloadReport.Picture(
                         "OpsPicture",
@@ -1037,13 +1044,13 @@ class WorkbookInvariantChecksTest {
             List.of(),
             List.of(
                 new WorkbookAssetInspectionResult.DrawingObjectsResult(
-                    "drawing-objects",
+                    new StepId("drawing-objects"),
                     "Ops",
                     List.of(
                         new DrawingObjectReport.Chart(
                             "OpsChart", twoCellAnchor(), true, List.of("BAR"), "Roadmap"))),
                 new WorkbookAssetInspectionResult.ChartsResult(
-                    "charts", "Ops", List.of(chartReport()))));
+                    new StepId("charts"), "Ops", List.of(chartReport()))));
 
     assertDoesNotThrow(() -> WorkbookInvariantChecks.requireResponseShape(response));
   }
@@ -1072,13 +1079,13 @@ class WorkbookInvariantChecksTest {
             List.of(),
             List.of(
                 new WorkbookAssetInspectionResult.DrawingObjectsResult(
-                    "drawing-objects",
+                    new StepId("drawing-objects"),
                     "Ops",
                     List.of(
                         new DrawingObjectReport.Chart(
                             "OpsChart", twoCellAnchor(), true, List.of("BAR"), "Roadmap"))),
                 new WorkbookAssetInspectionResult.ChartsResult(
-                    "charts", "Ops", List.of(chartReport()))));
+                    new StepId("charts"), "Ops", List.of(chartReport()))));
 
     assertDoesNotThrow(
         () -> WorkbookInvariantChecks.requireWorkflowOutcomeShape(request, response));
@@ -1198,7 +1205,7 @@ class WorkbookInvariantChecksTest {
             List.of(),
             List.of(
                 new WorkbookInspectionResult.PackageSecurityResult(
-                    "security",
+                    new StepId("security"),
                     new dev.erst.gridgrind.core.model.security.OoxmlPackageSecurityReport(
                         new dev.erst.gridgrind.core.model.security.OoxmlEncryptionReport.Encrypted(
                             ExcelOoxmlEncryptionMode.AGILE,
@@ -1255,19 +1262,21 @@ class WorkbookInvariantChecksTest {
             List.of(),
             List.of(
                 new WorkbookInspectionResult.CustomXmlMappingsResult(
-                    "custom-xml-mappings", List.of(mapping)),
+                    new StepId("custom-xml-mappings"), List.of(mapping)),
                 new WorkbookInspectionResult.CustomXmlExportResult(
-                    "custom-xml-export",
+                    new StepId("custom-xml-export"),
                     new CustomXmlExportReport(
                         mapping,
                         "UTF-8",
                         true,
                         "<BudgetMap><Owner>Ada Lovelace</Owner></BudgetMap>")),
                 new SheetInspectionResult.ArrayFormulasResult(
-                    "array-formulas",
+                    new StepId("array-formulas"),
                     List.of(new ArrayFormulaReport("Ops", "D2:D4", "D2", "B2:B4*C2:C4", false))),
                 new WorkbookAssetInspectionResult.DrawingObjectsResult(
-                    "drawing-objects", "Ops", List.of(signatureLineDrawingObjectReport()))));
+                    new StepId("drawing-objects"),
+                    "Ops",
+                    List.of(signatureLineDrawingObjectReport()))));
 
     assertDoesNotThrow(
         () -> WorkbookInvariantChecks.requireWorkflowOutcomeShape(request, response));

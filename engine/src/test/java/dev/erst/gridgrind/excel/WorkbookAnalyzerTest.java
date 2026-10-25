@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import dev.erst.gridgrind.core.vocabulary.AnalysisFindingCode;
 import dev.erst.gridgrind.core.vocabulary.AnalysisSeverity;
 import dev.erst.gridgrind.core.vocabulary.ExcelPivotDataConsolidateFunction;
+import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.excel.pivot.ExcelPivotTableDefinition;
 import dev.erst.gridgrind.excel.pivot.ExcelPivotTableSelection;
 import java.io.IOException;
@@ -95,7 +96,7 @@ class WorkbookAnalyzerTest {
                   workbook,
                   new WorkbookLocation.StoredWorkbook(workbookPath),
                   new WorkbookReadCommand.AnalyzeFormulaHealth(
-                      "formulaHealth", new ExcelSheetSelection.All())));
+                      new StepId("formulaHealth"), new ExcelSheetSelection.All())));
       WorkbookAnalysisResult.HyperlinkHealthResult hyperlinkHealth =
           cast(
               WorkbookAnalysisResult.HyperlinkHealthResult.class,
@@ -103,7 +104,7 @@ class WorkbookAnalyzerTest {
                   workbook,
                   new WorkbookLocation.StoredWorkbook(workbookPath),
                   new WorkbookReadCommand.AnalyzeHyperlinkHealth(
-                      "hyperlinkHealth", new ExcelSheetSelection.All())));
+                      new StepId("hyperlinkHealth"), new ExcelSheetSelection.All())));
       WorkbookAnalysisResult.NamedRangeHealthResult namedRangeHealth =
           cast(
               WorkbookAnalysisResult.NamedRangeHealthResult.class,
@@ -111,7 +112,7 @@ class WorkbookAnalyzerTest {
                   workbook,
                   new WorkbookLocation.StoredWorkbook(workbookPath),
                   new WorkbookReadCommand.AnalyzeNamedRangeHealth(
-                      "namedRangeHealth", new ExcelNamedRangeSelection.All())));
+                      new StepId("namedRangeHealth"), new ExcelNamedRangeSelection.All())));
       WorkbookAnalysisResult.AutofilterHealthResult autofilterHealth =
           cast(
               WorkbookAnalysisResult.AutofilterHealthResult.class,
@@ -119,7 +120,7 @@ class WorkbookAnalyzerTest {
                   workbook,
                   new WorkbookLocation.StoredWorkbook(workbookPath),
                   new WorkbookReadCommand.AnalyzeAutofilterHealth(
-                      "autofilterHealth", new ExcelSheetSelection.All())));
+                      new StepId("autofilterHealth"), new ExcelSheetSelection.All())));
       WorkbookAnalysisResult.ConditionalFormattingHealthResult conditionalFormattingHealth =
           cast(
               WorkbookAnalysisResult.ConditionalFormattingHealthResult.class,
@@ -127,7 +128,7 @@ class WorkbookAnalyzerTest {
                   workbook,
                   new WorkbookLocation.StoredWorkbook(workbookPath),
                   new WorkbookReadCommand.AnalyzeConditionalFormattingHealth(
-                      "conditionalFormattingHealth", new ExcelSheetSelection.All())));
+                      new StepId("conditionalFormattingHealth"), new ExcelSheetSelection.All())));
       WorkbookAnalysisResult.TableHealthResult tableHealth =
           cast(
               WorkbookAnalysisResult.TableHealthResult.class,
@@ -135,7 +136,7 @@ class WorkbookAnalyzerTest {
                   workbook,
                   new WorkbookLocation.StoredWorkbook(workbookPath),
                   new WorkbookReadCommand.AnalyzeTableHealth(
-                      "tableHealth", new ExcelTableSelection.All())));
+                      new StepId("tableHealth"), new ExcelTableSelection.All())));
       WorkbookAnalysisResult.PivotTableHealthResult pivotTableHealth =
           cast(
               WorkbookAnalysisResult.PivotTableHealthResult.class,
@@ -143,14 +144,14 @@ class WorkbookAnalyzerTest {
                   workbook,
                   new WorkbookLocation.StoredWorkbook(workbookPath),
                   new WorkbookReadCommand.AnalyzePivotTableHealth(
-                      "pivotTableHealth", new ExcelPivotTableSelection.All())));
+                      new StepId("pivotTableHealth"), new ExcelPivotTableSelection.All())));
       WorkbookAnalysisResult.WorkbookFindingsResult workbookFindings =
           cast(
               WorkbookAnalysisResult.WorkbookFindingsResult.class,
               analyzer.execute(
                   workbook,
                   new WorkbookLocation.StoredWorkbook(workbookPath),
-                  new WorkbookReadCommand.AnalyzeWorkbookFindings("workbookFindings")));
+                  new WorkbookReadCommand.AnalyzeWorkbookFindings(new StepId("workbookFindings"))));
 
       assertEquals(2, formulaHealth.analysis().checkedFormulaCellCount());
       assertTrue(
@@ -287,7 +288,7 @@ class WorkbookAnalyzerTest {
                 null,
                 new WorkbookLocation.UnsavedWorkbook(),
                 new WorkbookReadCommand.AnalyzeFormulaHealth(
-                    "formulaHealth", new ExcelSheetSelection.All())));
+                    new StepId("formulaHealth"), new ExcelSheetSelection.All())));
     assertThrows(
         NullPointerException.class,
         () ->
@@ -300,7 +301,7 @@ class WorkbookAnalyzerTest {
                 ExcelWorkbooks.create(),
                 null,
                 new WorkbookReadCommand.AnalyzeFormulaHealth(
-                    "formulaHealth", new ExcelSheetSelection.All())));
+                    new StepId("formulaHealth"), new ExcelSheetSelection.All())));
     assertThrows(
         NullPointerException.class,
         () -> analyzer.formulaHealth(null, new ExcelSheetSelection.All()));

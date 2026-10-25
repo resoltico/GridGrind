@@ -7,6 +7,7 @@ import dev.erst.gridgrind.core.problem.GridGrindProblemCode;
 import dev.erst.gridgrind.core.problem.GridGrindProblemDetail;
 import dev.erst.gridgrind.core.result.WorkbookResult;
 import dev.erst.gridgrind.core.result.WorkbookResults;
+import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
 import dev.erst.gridgrind.excel.WorkbookArtifactIo;
 import java.util.Objects;
@@ -32,7 +33,7 @@ final class ExecutionResponseSupport {
       ExecutionJournalRecorder journal,
       @Nullable GridGrindProblemCode primaryFailureCode,
       @Nullable Integer failedStepIndex,
-      @Nullable String failedStepId) {
+      @Nullable StepId failedStepId) {
     ExecutionJournalRecorder.PhaseHandle closePhase = journal.beginClose();
     try {
       workbookCloser.close(workbook);
@@ -64,7 +65,7 @@ final class ExecutionResponseSupport {
       ExecutionJournalRecorder journal,
       @Nullable GridGrindProblemCode primaryFailureCode,
       @Nullable Integer failedStepIndex,
-      @Nullable String failedStepId) {
+      @Nullable StepId failedStepId) {
     if (workbook == null) {
       return response;
     }
@@ -169,7 +170,7 @@ final class ExecutionResponseSupport {
       WorkbookPlan request,
       GridGrindProblemDetail.Problem problem,
       @Nullable Integer failedStepIndex,
-      @Nullable String failedStepId) {
+      @Nullable StepId failedStepId) {
     return failureResponse(
         new ExecutionFailure(
             new ExecutionFailure.Context(
@@ -185,7 +186,7 @@ final class ExecutionResponseSupport {
       CalculationReport calculation,
       GridGrindProblemDetail.Problem problem,
       @Nullable Integer failedStepIndex,
-      @Nullable String failedStepId) {
+      @Nullable StepId failedStepId) {
     return failureResponse(
         new ExecutionFailure(
             new ExecutionFailure.Context(protocolVersion, journal, request, calculation),

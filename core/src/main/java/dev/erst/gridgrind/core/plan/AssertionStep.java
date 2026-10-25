@@ -1,14 +1,15 @@
 package dev.erst.gridgrind.core.plan;
 
 import dev.erst.gridgrind.core.catalog.GridGrindProtocolTypeNames;
+import dev.erst.gridgrind.core.vocabulary.StepId;
 
 /** One ordered assertion step that verifies workbook state through the canonical contract. */
-public record AssertionStep(String stepId, Selector target, Assertion assertion)
+public record AssertionStep(StepId stepId, Selector target, Assertion assertion)
     implements WorkbookStep {
   public AssertionStep {
-    stepId = WorkbookStepValidation.requireStepId(stepId);
-    target = WorkbookStepValidation.requireTarget(target);
-    assertion = WorkbookStepValidation.requireAssertion(assertion);
+    java.util.Objects.requireNonNull(stepId, "stepId must not be null");
+    java.util.Objects.requireNonNull(target, "target must not be null");
+    java.util.Objects.requireNonNull(assertion, "assertion must not be null");
   }
 
   @Override

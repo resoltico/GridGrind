@@ -19,6 +19,7 @@ import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import dev.erst.gridgrind.core.source.TextSourceInput;
 import dev.erst.gridgrind.core.vocabulary.NamedRangeScope;
 import dev.erst.gridgrind.core.vocabulary.PlanId;
+import dev.erst.gridgrind.core.vocabulary.StepId;
 
 /** Generated examples for inspection-heavy, health-focused, and execution-mode workflows. */
 final class WorkbookAuditExamples {
@@ -30,39 +31,39 @@ final class WorkbookAuditExamples {
         new WorkbookPlan.WorkbookSource.New(),
         new WorkbookPlan.WorkbookPersistence.None(),
         ExampleSteps.step(
-            "step-01-ensure-budget-review",
+            new StepId("step-01-ensure-budget-review"),
             ExampleSelectors.sheet("Budget Review"),
             new WorkbookMutationAction.EnsureSheet()),
         ExampleSteps.step(
-            "step-02-ensure-summary",
+            new StepId("step-02-ensure-summary"),
             ExampleSelectors.sheet("Summary"),
             new WorkbookMutationAction.EnsureSheet()),
         ExampleSteps.step(
-            "step-03-set-budget-header",
+            new StepId("step-03-set-budget-header"),
             ExampleSelectors.cell("Budget Review", "A1"),
             new CellMutationAction.SetCell(ExampleCellValues.text("Amount"))),
         ExampleSteps.step(
-            "step-04-set-budget-value",
+            new StepId("step-04-set-budget-value"),
             ExampleSelectors.cell("Budget Review", "B1"),
             new CellMutationAction.SetCell(ExampleCellValues.number(1200.0d))),
         ExampleSteps.step(
-            "step-05-set-summary-formula",
+            new StepId("step-05-set-summary-formula"),
             ExampleSelectors.cell("Summary", "A1"),
             new CellMutationAction.SetCell(ExampleCellValues.formula("'Budget Review'!B1"))),
         ExampleSteps.read(
-            "summary-sheet",
+            new StepId("summary-sheet"),
             ExampleSelectors.sheet("Summary"),
             new SheetIntrospectionQuery.GetSheetSummary()),
         ExampleSteps.read(
-            "formula-health",
+            new StepId("formula-health"),
             ExampleSelectors.sheets("Summary"),
             new InspectionAnalysisQuery.AnalyzeFormulaHealth()),
         ExampleSteps.read(
-            "lint",
+            new StepId("lint"),
             ExampleSelectors.workbook(),
             new InspectionAnalysisQuery.AnalyzeWorkbookFindings()),
         ExampleSteps.read(
-            "summary-cells",
+            new StepId("summary-cells"),
             ExampleSelectors.cells("Summary", "A1"),
             new SheetIntrospectionQuery.GetCells()));
   }
@@ -78,11 +79,11 @@ final class WorkbookAuditExamples {
             new CalculationPolicyInput(new CalculationStrategyInput.DoNotCalculate(), true),
             dev.erst.gridgrind.core.plan.AssertionModeInput.defaults()),
         ExampleSteps.step(
-            "step-01-ensure-sheet",
+            new StepId("step-01-ensure-sheet"),
             ExampleSelectors.sheet("Ledger"),
             new WorkbookMutationAction.EnsureSheet()),
         ExampleSteps.step(
-            "step-02-append-header",
+            new StepId("step-02-append-header"),
             ExampleSelectors.sheet("Ledger"),
             new CellMutationAction.AppendRow(
                 ExampleCellValues.row(
@@ -90,7 +91,7 @@ final class WorkbookAuditExamples {
                     ExampleCellValues.text("Task"),
                     ExampleCellValues.text("Hours")))),
         ExampleSteps.step(
-            "step-03-append-ops",
+            new StepId("step-03-append-ops"),
             ExampleSelectors.sheet("Ledger"),
             new CellMutationAction.AppendRow(
                 ExampleCellValues.row(
@@ -98,7 +99,7 @@ final class WorkbookAuditExamples {
                     ExampleCellValues.text("Badge prep"),
                     ExampleCellValues.number(6.5d)))),
         ExampleSteps.step(
-            "step-04-append-facilities",
+            new StepId("step-04-append-facilities"),
             ExampleSelectors.sheet("Ledger"),
             new CellMutationAction.AppendRow(
                 ExampleCellValues.row(
@@ -106,11 +107,11 @@ final class WorkbookAuditExamples {
                     ExampleCellValues.text("Desk setup"),
                     ExampleCellValues.number(4.0d)))),
         ExampleSteps.read(
-            "workbook",
+            new StepId("workbook"),
             ExampleSelectors.workbook(),
             new WorkbookIntrospectionQuery.GetWorkbookSummary()),
         ExampleSteps.read(
-            "ledger-sheet",
+            new StepId("ledger-sheet"),
             ExampleSelectors.sheet("Ledger"),
             new SheetIntrospectionQuery.GetSheetSummary()));
   }
@@ -122,11 +123,11 @@ final class WorkbookAuditExamples {
         ExampleWorkbookPlans.saveAs(
             paths.generatedWorkbook("gridgrind-file-hyperlink-health.xlsx")),
         ExampleSteps.step(
-            "step-01-ensure-sheet",
+            new StepId("step-01-ensure-sheet"),
             ExampleSelectors.sheet("Links"),
             new WorkbookMutationAction.EnsureSheet()),
         ExampleSteps.step(
-            "step-02-set-range",
+            new StepId("step-02-set-range"),
             ExampleSelectors.range("Links", "A1:B4"),
             new CellMutationAction.SetRange(
                 ExampleCellValues.rows(
@@ -143,25 +144,25 @@ final class WorkbookAuditExamples {
                         ExampleCellValues.text("Workbook section"),
                         ExampleCellValues.text("Links!B2"))))),
         ExampleSteps.step(
-            "step-03-relative-file-link",
+            new StepId("step-03-relative-file-link"),
             ExampleSelectors.cell("Links", "A2"),
             new CellMutationAction.SetHyperlink(
                 new HyperlinkTarget.File("support/expense policy 2026.pdf"))),
         ExampleSteps.step(
-            "step-04-absolute-file-link",
+            new StepId("step-04-absolute-file-link"),
             ExampleSelectors.cell("Links", "A3"),
             new CellMutationAction.SetHyperlink(
                 new HyperlinkTarget.File("file:///tmp/quarterly%20close/checklist.xlsx"))),
         ExampleSteps.step(
-            "step-05-document-link",
+            new StepId("step-05-document-link"),
             ExampleSelectors.cell("Links", "A4"),
             new CellMutationAction.SetHyperlink(new HyperlinkTarget.Document("Links!B2"))),
         ExampleSteps.read(
-            "hyperlinks",
+            new StepId("hyperlinks"),
             ExampleSelectors.cells("Links", "A2", "A3", "A4"),
             new SheetIntrospectionQuery.GetHyperlinks()),
         ExampleSteps.read(
-            "hyperlink-health",
+            new StepId("hyperlink-health"),
             ExampleSelectors.sheets("Links"),
             new InspectionAnalysisQuery.AnalyzeHyperlinkHealth()));
   }
@@ -173,11 +174,11 @@ final class WorkbookAuditExamples {
         ExampleWorkbookPlans.saveAs(
             paths.generatedWorkbook("gridgrind-introspection-analysis.xlsx")),
         ExampleSteps.step(
-            "step-01-ensure-sheet",
+            new StepId("step-01-ensure-sheet"),
             ExampleSelectors.sheet("Dashboard"),
             new WorkbookMutationAction.EnsureSheet()),
         ExampleSteps.step(
-            "step-02-set-range",
+            new StepId("step-02-set-range"),
             ExampleSelectors.range("Dashboard", "A1:C4"),
             new CellMutationAction.SetRange(
                 ExampleCellValues.rows(
@@ -198,12 +199,12 @@ final class WorkbookAuditExamples {
                         ExampleCellValues.formula("B2*(1+B3)"),
                         ExampleCellValues.text("Projected next month"))))),
         ExampleSteps.step(
-            "step-03-set-hyperlink",
+            new StepId("step-03-set-hyperlink"),
             ExampleSelectors.cell("Dashboard", "A1"),
             new CellMutationAction.SetHyperlink(
                 new HyperlinkTarget.Url("https://example.com/dashboard-handbook"))),
         ExampleSteps.step(
-            "step-04-set-comment",
+            new StepId("step-04-set-comment"),
             ExampleSelectors.cell("Dashboard", "B4"),
             new CellMutationAction.SetComment(
                 CommentInput.plain(
@@ -211,42 +212,42 @@ final class WorkbookAuditExamples {
                     "GridGrind",
                     true))),
         ExampleSteps.step(
-            "step-05-set-named-range",
+            new StepId("step-05-set-named-range"),
             new NamedRangeSelector.WorkbookScope("ForecastValue"),
             new StructuredMutationAction.SetNamedRange(
                 "ForecastValue",
                 new NamedRangeScope.Workbook(),
                 NamedRangeTarget.range("Dashboard", "B4"))),
         ExampleSteps.read(
-            "workbook",
+            new StepId("workbook"),
             ExampleSelectors.workbook(),
             new WorkbookIntrospectionQuery.GetWorkbookSummary()),
         ExampleSteps.read(
-            "formula-surface",
+            new StepId("formula-surface"),
             ExampleSelectors.sheets("Dashboard"),
             new InspectionSurfaceQuery.GetFormulaSurface()),
         ExampleSteps.read(
-            "schema",
+            new StepId("schema"),
             ExampleSelectors.window("Dashboard", "A1", 4, 3),
             new InspectionSurfaceQuery.GetSheetSchema()),
         ExampleSteps.read(
-            "named-range-surface",
+            new StepId("named-range-surface"),
             new NamedRangeSelector.ByName("ForecastValue"),
             new InspectionSurfaceQuery.GetNamedRangeSurface()),
         ExampleSteps.read(
-            "formula-health",
+            new StepId("formula-health"),
             ExampleSelectors.sheets("Dashboard"),
             new InspectionAnalysisQuery.AnalyzeFormulaHealth()),
         ExampleSteps.read(
-            "hyperlink-health",
+            new StepId("hyperlink-health"),
             ExampleSelectors.sheets("Dashboard"),
             new InspectionAnalysisQuery.AnalyzeHyperlinkHealth()),
         ExampleSteps.read(
-            "named-range-health",
+            new StepId("named-range-health"),
             new NamedRangeSelector.ByName("ForecastValue"),
             new InspectionAnalysisQuery.AnalyzeNamedRangeHealth()),
         ExampleSteps.read(
-            "workbook-findings",
+            new StepId("workbook-findings"),
             ExampleSelectors.workbook(),
             new InspectionAnalysisQuery.AnalyzeWorkbookFindings()));
   }

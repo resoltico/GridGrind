@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 import dev.erst.gridgrind.core.model.formula.FormulaSurfaceReport;
 import dev.erst.gridgrind.core.model.formula.NamedRangeSurfaceReport;
 import dev.erst.gridgrind.core.model.table.SheetSchemaReport;
+import dev.erst.gridgrind.core.vocabulary.StepId;
 import java.util.Objects;
 
 /** Derived workbook-surface summaries that remain factual reads rather than health analysis. */
@@ -14,30 +15,33 @@ public sealed interface WorkbookSurfaceInspectionResult extends InspectionSurfac
 
   /** Returns grouped formula usage facts across one or more sheets. */
   @JsonTypeName("GET_FORMULA_SURFACE")
-  record FormulaSurfaceResult(String stepId, FormulaSurfaceReport surface)
+  record FormulaSurfaceResult(StepId stepId, FormulaSurfaceReport surface)
       implements WorkbookSurfaceInspectionResult {
     public FormulaSurfaceResult {
-      stepId = InspectionResultValidationSupport.requireNonBlank(stepId, "stepId");
+
+      java.util.Objects.requireNonNull(stepId, "stepId must not be null");
       Objects.requireNonNull(surface, "surface must not be null");
     }
   }
 
   /** Returns inferred schema facts for one sheet window. */
   @JsonTypeName("GET_SHEET_SCHEMA")
-  record SheetSchemaResult(String stepId, SheetSchemaReport surface)
+  record SheetSchemaResult(StepId stepId, SheetSchemaReport surface)
       implements WorkbookSurfaceInspectionResult {
     public SheetSchemaResult {
-      stepId = InspectionResultValidationSupport.requireNonBlank(stepId, "stepId");
+
+      java.util.Objects.requireNonNull(stepId, "stepId must not be null");
       Objects.requireNonNull(surface, "surface must not be null");
     }
   }
 
   /** Returns high-level characterization of named ranges. */
   @JsonTypeName("GET_NAMED_RANGE_SURFACE")
-  record NamedRangeSurfaceResult(String stepId, NamedRangeSurfaceReport surface)
+  record NamedRangeSurfaceResult(StepId stepId, NamedRangeSurfaceReport surface)
       implements WorkbookSurfaceInspectionResult {
     public NamedRangeSurfaceResult {
-      stepId = InspectionResultValidationSupport.requireNonBlank(stepId, "stepId");
+
+      java.util.Objects.requireNonNull(stepId, "stepId must not be null");
       Objects.requireNonNull(surface, "surface must not be null");
     }
   }

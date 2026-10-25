@@ -16,6 +16,7 @@ import dev.erst.gridgrind.core.vocabulary.ExcelChartLegendPosition;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartMarkerStyle;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartRadarStyle;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartScatterStyle;
+import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingAnchor;
 import java.util.ArrayList;
 import java.util.List;
@@ -99,14 +100,19 @@ class ExcelChartValueObjectTest {
         NullPointerException.class, () -> new WorkbookDrawingCommand.SetChart("Charts", null));
 
     WorkbookReadCommand.GetCharts getCharts =
-        new WorkbookReadCommand.GetCharts("charts", new ExcelChartSelection.AllOnSheet("Charts"));
-    assertEquals("charts", getCharts.stepId());
+        new WorkbookReadCommand.GetCharts(
+            new StepId("charts"), new ExcelChartSelection.AllOnSheet("Charts"));
+    assertEquals("charts", getCharts.stepId().value());
     assertThrows(
         IllegalArgumentException.class,
-        () -> new WorkbookReadCommand.GetCharts(" ", new ExcelChartSelection.AllOnSheet("Charts")));
+        () ->
+            new WorkbookReadCommand.GetCharts(
+                new StepId(" "), new ExcelChartSelection.AllOnSheet("Charts")));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new WorkbookReadCommand.GetCharts("charts", new ExcelChartSelection.AllOnSheet(" ")));
+        () ->
+            new WorkbookReadCommand.GetCharts(
+                new StepId("charts"), new ExcelChartSelection.AllOnSheet(" ")));
   }
 
   @Test
@@ -168,7 +174,7 @@ class ExcelChartValueObjectTest {
 
     List<ExcelChartSnapshot> chartSnapshots = new ArrayList<>(List.of(lineSnapshot, unsupported));
     WorkbookDrawingResult.ChartsResult chartsResult =
-        new WorkbookDrawingResult.ChartsResult("charts", "Charts", chartSnapshots);
+        new WorkbookDrawingResult.ChartsResult(new StepId("charts"), "Charts", chartSnapshots);
     chartSnapshots.clear();
     assertEquals(2, chartsResult.charts().size());
 

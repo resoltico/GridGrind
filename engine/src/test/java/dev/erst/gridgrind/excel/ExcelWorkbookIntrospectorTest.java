@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import dev.erst.gridgrind.core.vocabulary.ExcelDrawingAnchorBehavior;
 import dev.erst.gridgrind.core.vocabulary.ExcelPictureFormat;
 import dev.erst.gridgrind.core.vocabulary.ExcelPrintOrientation;
+import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingAnchor;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingMarker;
 import dev.erst.gridgrind.excel.drawing.ExcelEmbeddedObjectDefinition;
@@ -36,14 +37,15 @@ class ExcelWorkbookIntrospectorTest {
               introspector.execute(
                   workbook,
                   new WorkbookReadCommand.GetFormulaSurface(
-                      "formula-surface", new ExcelSheetSelection.Selected(List.of("Raw")))));
+                      new StepId("formula-surface"),
+                      new ExcelSheetSelection.Selected(List.of("Raw")))));
       WorkbookSheetResult.CellsResult cells =
           assertInstanceOf(
               WorkbookSheetResult.CellsResult.class,
               introspector.execute(
                   workbook,
                   new WorkbookReadCommand.GetCells(
-                      "formula-cell",
+                      new StepId("formula-cell"),
                       "Raw",
                       List.of("A1"),
                       new ExcelCellReadProjection(Set.of(ExcelCellReadFacet.FORMULA)))));
@@ -53,7 +55,7 @@ class ExcelWorkbookIntrospectorTest {
               introspector.execute(
                   workbook,
                   new WorkbookReadCommand.GetSheetSchema(
-                      "formula-schema",
+                      new StepId("formula-schema"),
                       "Schema",
                       new ExcelReadWindow("A1", 2, 1),
                       new ExcelCellReadProjection(Set.of(ExcelCellReadFacet.FORMULA)))));
@@ -251,9 +253,10 @@ class ExcelWorkbookIntrospectorTest {
               new ExcelWorkbookIntrospector()
                   .execute(
                       workbook,
-                      new WorkbookReadCommand.GetWorkbookProtection("workbook-protection")));
+                      new WorkbookReadCommand.GetWorkbookProtection(
+                          new StepId("workbook-protection"))));
 
-      assertEquals("workbook-protection", result.stepId());
+      assertEquals("workbook-protection", result.stepId().value());
       assertTrue(result.protection().structureLocked());
       assertFalse(result.protection().windowsLocked());
       assertTrue(result.protection().revisionsLocked());
@@ -303,13 +306,15 @@ class ExcelWorkbookIntrospectorTest {
           assertInstanceOf(
               WorkbookDrawingResult.DrawingObjectsResult.class,
               introspector.execute(
-                  workbook, new WorkbookReadCommand.GetDrawingObjects("drawing", "Ops")));
+                  workbook,
+                  new WorkbookReadCommand.GetDrawingObjects(new StepId("drawing"), "Ops")));
       WorkbookDrawingResult.DrawingObjectPayloadResult drawingPayload =
           assertInstanceOf(
               WorkbookDrawingResult.DrawingObjectPayloadResult.class,
               introspector.execute(
                   workbook,
-                  new WorkbookReadCommand.GetDrawingObjectPayload("payload", "Ops", "OpsEmbed")));
+                  new WorkbookReadCommand.GetDrawingObjectPayload(
+                      new StepId("payload"), "Ops", "OpsEmbed")));
 
       assertEquals(2, drawingObjects.drawingObjects().size());
       assertEquals("OpsPicture", drawingObjects.drawingObjects().getFirst().name());
@@ -323,7 +328,9 @@ class ExcelWorkbookIntrospectorTest {
 
     assertThrows(
         NullPointerException.class,
-        () -> introspector.execute(null, new WorkbookReadCommand.GetWorkbookSummary("workbook")));
+        () ->
+            introspector.execute(
+                null, new WorkbookReadCommand.GetWorkbookSummary(new StepId("workbook"))));
     assertThrows(
         NullPointerException.class,
         () ->
@@ -378,7 +385,8 @@ class ExcelWorkbookIntrospectorTest {
               introspector.execute(
                   workbook,
                   new WorkbookReadCommand.GetFormulaSurface(
-                      "formula", new ExcelSheetSelection.Selected(List.of("Forecast")))));
+                      new StepId("formula"),
+                      new ExcelSheetSelection.Selected(List.of("Forecast")))));
       assertEquals(1, formulaSurface.surface().totalFormulaCellCount());
       assertEquals(
           List.of("Forecast"),
@@ -392,7 +400,7 @@ class ExcelWorkbookIntrospectorTest {
               introspector.execute(
                   workbook,
                   new WorkbookReadCommand.GetNamedRangeSurface(
-                      "namedRangeSurface",
+                      new StepId("namedRangeSurface"),
                       new ExcelNamedRangeSelection.Selected(
                           List.of(
                               new ExcelNamedRangeSelector.WorkbookScope("BudgetRollup"),
@@ -612,17 +620,18 @@ class ExcelWorkbookIntrospectorTest {
     return new IntrospectionReadResults(
         cast(
             WorkbookCoreResult.WorkbookSummaryResult.class,
-            introspector.execute(workbook, new WorkbookReadCommand.GetWorkbookSummary("workbook"))),
+            introspector.execute(
+                workbook, new WorkbookReadCommand.GetWorkbookSummary(new StepId("workbook")))),
         cast(
             WorkbookCoreResult.NamedRangesResult.class,
             introspector.execute(
                 workbook,
                 new WorkbookReadCommand.GetNamedRanges(
-                    "ranges", new ExcelNamedRangeSelection.All()))),
+                    new StepId("ranges"), new ExcelNamedRangeSelection.All()))),
         cast(
             WorkbookSheetResult.SheetSummaryResult.class,
             introspector.execute(
-                workbook, new WorkbookReadCommand.GetSheetSummary("sheet", "Budget"))),
+                workbook, new WorkbookReadCommand.GetSheetSummary(new StepId("sheet"), "Budget"))),
         cast(
             WorkbookSheetResult.CellsResult.class,
             introspector.execute(
@@ -635,33 +644,37 @@ class ExcelWorkbookIntrospectorTest {
         cast(
             WorkbookSheetResult.MergedRegionsResult.class,
             introspector.execute(
-                workbook, new WorkbookReadCommand.GetMergedRegions("merged", "Budget"))),
+                workbook,
+                new WorkbookReadCommand.GetMergedRegions(new StepId("merged"), "Budget"))),
         cast(
             WorkbookSheetResult.HyperlinksResult.class,
             introspector.execute(
                 workbook,
                 new WorkbookReadCommand.GetHyperlinks(
-                    "hyperlinks", "Budget", new ExcelCellSelection.Selected(List.of("A1"))))),
+                    new StepId("hyperlinks"),
+                    "Budget",
+                    new ExcelCellSelection.Selected(List.of("A1"))))),
         cast(
             WorkbookSheetResult.CommentsResult.class,
             introspector.execute(
                 workbook,
                 new WorkbookReadCommand.GetComments(
-                    "comments", "Budget", new ExcelCellSelection.AllUsedCells()))),
+                    new StepId("comments"), "Budget", new ExcelCellSelection.AllUsedCells()))),
         cast(
             WorkbookSheetResult.SheetLayoutResult.class,
             introspector.execute(
-                workbook, new WorkbookReadCommand.GetSheetLayout("layout", "Budget"))),
+                workbook, new WorkbookReadCommand.GetSheetLayout(new StepId("layout"), "Budget"))),
         cast(
             WorkbookSheetResult.PrintLayoutResult.class,
             introspector.execute(
-                workbook, new WorkbookReadCommand.GetPrintLayout("printLayout", "Budget"))),
+                workbook,
+                new WorkbookReadCommand.GetPrintLayout(new StepId("printLayout"), "Budget"))),
         cast(
             WorkbookSurfaceResult.FormulaSurfaceResult.class,
             introspector.execute(
                 workbook,
                 new WorkbookReadCommand.GetFormulaSurface(
-                    "formula", new ExcelSheetSelection.All()))),
+                    new StepId("formula"), new ExcelSheetSelection.All()))),
         cast(
             WorkbookSurfaceResult.SheetSchemaResult.class,
             introspector.execute(
@@ -671,16 +684,18 @@ class ExcelWorkbookIntrospectorTest {
             introspector.execute(
                 workbook,
                 new WorkbookReadCommand.GetNamedRangeSurface(
-                    "namedRangeSurface", new ExcelNamedRangeSelection.All()))),
+                    new StepId("namedRangeSurface"), new ExcelNamedRangeSelection.All()))),
         cast(
             WorkbookRuleResult.AutofiltersResult.class,
             introspector.execute(
-                workbook, new WorkbookReadCommand.GetAutofilters("autofilters", "Ops"))),
+                workbook,
+                new WorkbookReadCommand.GetAutofilters(new StepId("autofilters"), "Ops"))),
         cast(
             WorkbookRuleResult.TablesResult.class,
             introspector.execute(
                 workbook,
-                new WorkbookReadCommand.GetTables("tables", new ExcelTableSelection.All()))));
+                new WorkbookReadCommand.GetTables(
+                    new StepId("tables"), new ExcelTableSelection.All()))));
   }
 
   private static <T> T cast(Class<T> type, Object value) {

@@ -21,6 +21,7 @@ import dev.erst.gridgrind.core.vocabulary.ExcelFillPattern;
 import dev.erst.gridgrind.core.vocabulary.ExcelHorizontalAlignment;
 import dev.erst.gridgrind.core.vocabulary.ExcelVerticalAlignment;
 import dev.erst.gridgrind.core.vocabulary.NamedRangeScope;
+import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.excel.*;
 import dev.erst.gridgrind.excel.ExcelBorderSideSnapshot;
 import dev.erst.gridgrind.excel.ExcelBorderSnapshot;
@@ -59,7 +60,7 @@ class DefaultGridGrindRequestExecutorCoverageTest
             dev.erst.gridgrind.core.problem.ProblemContextRequestSurfaces.RequestShape.known(
                 "NEW", "NONE"),
             new dev.erst.gridgrind.core.problem.ProblemContextWorkbookSurfaces.StepReference(
-                0, "step-01-set-cell", "MUTATION", "SET_CELL"),
+                0, new StepId("step-01-set-cell"), "MUTATION", "SET_CELL"),
             dev.erst.gridgrind.core.problem.ProblemContextWorkbookSurfaces.ProblemLocation
                 .unknown());
 
@@ -94,12 +95,12 @@ class DefaultGridGrindRequestExecutorCoverageTest
   void extractsSheetAddressRangeFormulaAndNamedRangeMetadataFromSteps() {
     MutationStep setCell =
         new MutationStep(
-            "step-01-set-cell",
+            new StepId("step-01-set-cell"),
             new CellSelector.ByAddress("Budget", "B4"),
             new CellMutationAction.SetCell(formulaCell("SUM(B2:B3)")));
     MutationStep setNamedRange =
         new MutationStep(
-            "step-02-set-named-range",
+            new StepId("step-02-set-named-range"),
             new NamedRangeSelector.WorkbookScope("BudgetTotal"),
             new StructuredMutationAction.SetNamedRange(
                 "BudgetTotal",
@@ -107,12 +108,12 @@ class DefaultGridGrindRequestExecutorCoverageTest
                 NamedRangeTarget.range("Budget", "B4")));
     InspectionStep getCells =
         new InspectionStep(
-            "step-03-get-cells",
+            new StepId("step-03-get-cells"),
             new CellSelector.ByAddresses("Budget", List.of("B4")),
             new SheetIntrospectionQuery.GetCells());
     InspectionStep getNamedRanges =
         new InspectionStep(
-            "step-04-get-named-ranges",
+            new StepId("step-04-get-named-ranges"),
             new NamedRangeSelector.WorkbookScope("BudgetTotal"),
             new WorkbookIntrospectionQuery.GetNamedRanges());
 
@@ -146,7 +147,7 @@ class DefaultGridGrindRequestExecutorCoverageTest
         java.util.Optional.of("A1:B9"),
         ExecutionDiagnosticFields.rangeFor(
             new InspectionStep(
-                "step-05-get-window",
+                new StepId("step-05-get-window"),
                 new RangeSelector.RectangularWindow("Budget", "A1", 9, 2),
                 new InspectionSurfaceQuery.GetSheetSchema()),
             invalidFormula));
@@ -156,7 +157,7 @@ class DefaultGridGrindRequestExecutorCoverageTest
   void convertsStepNativeMutationsAndInspectionsIntoWorkbookCoreCommands() {
     MutationStep setNamedRange =
         new MutationStep(
-            "step-01-set-named-range",
+            new StepId("step-01-set-named-range"),
             new NamedRangeSelector.WorkbookScope("BudgetExpr"),
             new StructuredMutationAction.SetNamedRange(
                 "BudgetExpr",
@@ -164,12 +165,12 @@ class DefaultGridGrindRequestExecutorCoverageTest
                 NamedRangeTarget.formula("SUM(Budget!A1:A3)")));
     InspectionStep getNamedRanges =
         new InspectionStep(
-            "step-03-get-named-ranges",
+            new StepId("step-03-get-named-ranges"),
             new NamedRangeSelector.WorkbookScope("BudgetExpr"),
             new WorkbookIntrospectionQuery.GetNamedRanges());
     InspectionStep workbookFindings =
         new InspectionStep(
-            "step-04-workbook-findings",
+            new StepId("step-04-workbook-findings"),
             new WorkbookSelector.Current(),
             new InspectionAnalysisQuery.AnalyzeWorkbookFindings());
 
@@ -186,7 +187,7 @@ class DefaultGridGrindRequestExecutorCoverageTest
         InspectionCommandConverter.toReadCommand(workbookFindings));
 
     assertEquals("BudgetExpr", namedRangeCommand.definition().name());
-    assertEquals("step-03-get-named-ranges", namedRangesCommand.stepId());
+    assertEquals("step-03-get-named-ranges", namedRangesCommand.stepId().value());
   }
 
   @Test
@@ -196,7 +197,7 @@ class DefaultGridGrindRequestExecutorCoverageTest
             WorkbookInspectionResult.WorkbookProtectionResult.class,
             InspectionResultConverter.toReadResult(
                 new dev.erst.gridgrind.excel.WorkbookCoreResult.WorkbookProtectionResult(
-                    "step-01-protection",
+                    new StepId("step-01-protection"),
                     new ExcelWorkbookProtectionSnapshot(true, false, true, true, false))));
     SheetInspectionResult.CellsResult cells =
         assertInstanceOf(
@@ -214,7 +215,7 @@ class DefaultGridGrindRequestExecutorCoverageTest
                             61.0d)))));
 
     assertTrue(protection.protection().structureLocked());
-    assertEquals("step-02-cells", cells.stepId());
+    assertEquals("step-02-cells", cells.stepId().value());
     assertEquals("Budget", cells.sheetName());
     assertEquals("B4", cells.cells().getFirst().address());
   }

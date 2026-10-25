@@ -3,13 +3,15 @@ package dev.erst.gridgrind.core.problem;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import dev.erst.gridgrind.core.vocabulary.StepId;
 import org.junit.jupiter.api.Test;
 
 /** Direct coverage for request warning location ordering and byte-offset validation. */
 class RequestWarningLocationTest {
   @Test
   void ordersOnlyStepWarningsAndRejectsNegativeByteOffsets() {
-    assertEquals(7, new RequestWarningLocation.Step(7, "step", "SET_CELL").orderingStepIndex());
+    assertEquals(
+        7, new RequestWarningLocation.Step(7, new StepId("step"), "SET_CELL").orderingStepIndex());
     assertEquals(-1, new RequestWarningLocation.RequestByteOffset(42).orderingStepIndex());
     assertThrows(
         IllegalArgumentException.class, () -> new RequestWarningLocation.RequestByteOffset(-1));

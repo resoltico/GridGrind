@@ -15,6 +15,7 @@ import dev.erst.gridgrind.core.problem.NonXlsxPath;
 import dev.erst.gridgrind.core.result.ExecutionJournalLevel;
 import dev.erst.gridgrind.core.vocabulary.PlanId;
 import dev.erst.gridgrind.core.vocabulary.ProtocolConstraintValues;
+import dev.erst.gridgrind.core.vocabulary.StepId;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
@@ -275,7 +276,7 @@ public record WorkbookPlan(
           "steps must not exceed " + MAX_STEPS + " entries but was " + steps.size());
     }
     List<WorkbookStep> copy = new java.util.ArrayList<>(steps.size());
-    Set<String> seen = new HashSet<>();
+    Set<StepId> seen = new HashSet<>();
     for (int index = 0; index < steps.size(); index++) {
       WorkbookStep step = steps.get(index);
       String stepPath = "steps[" + index + "]";
@@ -300,7 +301,7 @@ public record WorkbookPlan(
         null);
   }
 
-  private static InvalidRequestException duplicateStepIdException(String stepId, String jsonPath) {
+  private static InvalidRequestException duplicateStepIdException(StepId stepId, String jsonPath) {
     return new InvalidRequestException(
         new DuplicateStepId(stepId, jsonPath),
         Optional.of(jsonPath),

@@ -15,6 +15,7 @@ import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import dev.erst.gridgrind.core.problem.ProblemContext;
 import dev.erst.gridgrind.core.result.WorkbookResult;
 import dev.erst.gridgrind.core.source.TextSourceInput;
+import dev.erst.gridgrind.core.vocabulary.StepId;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
@@ -35,16 +36,16 @@ class DefaultGridGrindRequestExecutorFormulaOriginTest {
             FormulaEnvironmentInput.empty(),
             List.of(
                 new MutationStep(
-                    "ensure-ops",
+                    new StepId("ensure-ops"),
                     new SheetSelector.ByName("Ops"),
                     new WorkbookMutationAction.EnsureSheet()),
                 new MutationStep(
-                    "author-formula",
+                    new StepId("author-formula"),
                     new CellSelector.ByAddress("Ops", "A1"),
                     new CellMutationAction.SetCell(
                         new CellInput.Formula(TextSourceInput.inline("1+1")))),
                 new MutationStep(
-                    "reject-formula",
+                    new StepId("reject-formula"),
                     new CellSelector.ByAddress("Ops", "A1"),
                     new CellMutationAction.SetCell(
                         new CellInput.Formula(TextSourceInput.inline("SUM("))))));
@@ -63,7 +64,7 @@ class DefaultGridGrindRequestExecutorFormulaOriginTest {
     WorkbookResult.Failure failure = assertInstanceOf(WorkbookResult.Failure.class, result);
     ProblemContext.ExecuteStep context =
         assertInstanceOf(ProblemContext.ExecuteStep.class, failure.problem().context());
-    assertEquals("author-formula", context.stepId());
-    assertEquals("reject-formula", context.surfacedAtStep().orElseThrow().stepId());
+    assertEquals("author-formula", context.stepId().value());
+    assertEquals("reject-formula", context.surfacedAtStep().orElseThrow().stepId().value());
   }
 }

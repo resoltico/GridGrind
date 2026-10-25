@@ -20,6 +20,7 @@ import dev.erst.gridgrind.core.plan.TableSelector;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import dev.erst.gridgrind.core.plan.WorkbookStep;
 import dev.erst.gridgrind.core.vocabulary.NamedRangeScope;
+import dev.erst.gridgrind.core.vocabulary.StepId;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -68,7 +69,7 @@ final class ProtocolStepSupport {
   }
 
   static InspectionStep inspect(String stepId, Selector target, InspectionQuery query) {
-    return new InspectionStep(stepId, target, query);
+    return new InspectionStep(new StepId(stepId), target, query);
   }
 
   static CalculationPolicyInput calculateAll() {
@@ -103,12 +104,13 @@ final class ProtocolStepSupport {
       throw new IllegalArgumentException("stepIndex must be non-negative");
     }
     return new MutationStep(
-        stepIdFor(stepIndex, mutation.action()), mutation.target(), mutation.action());
+        new StepId(stepIdFor(stepIndex, mutation.action())), mutation.target(), mutation.action());
   }
 
   static AssertionStep materializeAssertion(PendingAssertion assertion) {
     Objects.requireNonNull(assertion, "assertion must not be null");
-    return new AssertionStep(assertion.stepId(), assertion.target(), assertion.assertion());
+    return new AssertionStep(
+        new StepId(assertion.stepId()), assertion.target(), assertion.assertion());
   }
 
   static List<WorkbookStep> steps(
@@ -195,7 +197,7 @@ final class ProtocolStepSupport {
 
   static List<String> inspectionIds(List<? extends InspectionResult> inspections) {
     Objects.requireNonNull(inspections, "inspections must not be null");
-    return inspections.stream().map(InspectionResult::stepId).toList();
+    return inspections.stream().map(result -> result.stepId().value()).toList();
   }
 
   private static String stepIdFor(int stepIndex, MutationAction action) {

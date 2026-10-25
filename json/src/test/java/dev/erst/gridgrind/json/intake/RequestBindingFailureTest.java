@@ -15,6 +15,7 @@ import dev.erst.gridgrind.core.problem.InvalidRequestShapeException;
 import dev.erst.gridgrind.core.problem.MessageInvariant;
 import dev.erst.gridgrind.core.problem.MessageShape;
 import dev.erst.gridgrind.core.problem.RequestBindingFailure;
+import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.json.codec.RequestDiagnosticRedactor;
 import java.util.ArrayList;
 import java.util.List;
@@ -59,7 +60,7 @@ class RequestBindingFailureTest {
   void retainsACompletePlanInvariantAtItsExistingPath() {
     InvalidRequestException exception =
         new InvalidRequestException(
-            new DuplicateStepId("duplicate", "steps[1].stepId"),
+            new DuplicateStepId(new StepId("duplicate"), "steps[1].stepId"),
             java.util.Optional.of("steps[1].stepId"),
             java.util.Optional.empty(),
             java.util.Optional.empty(),

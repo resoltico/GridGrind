@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlController;
 import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlDataBindingSnapshot;
 import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlExportSnapshot;
@@ -86,18 +87,22 @@ class ExcelCustomXmlControllerTest {
       WorkbookCoreResult.CustomXmlMappingsResult mappings =
           assertInstanceOf(
               WorkbookCoreResult.CustomXmlMappingsResult.class,
-              introspector.execute(workbook, new WorkbookReadCommand.GetCustomXmlMappings("maps")));
+              introspector.execute(
+                  workbook, new WorkbookReadCommand.GetCustomXmlMappings(new StepId("maps"))));
       WorkbookCoreResult.CustomXmlExportResult exported =
           assertInstanceOf(
               WorkbookCoreResult.CustomXmlExportResult.class,
               introspector.execute(
                   workbook,
                   new WorkbookReadCommand.ExportCustomXmlMapping(
-                      "export", new ExcelCustomXmlMappingLocator(1L, null), false, "UTF-8")));
+                      new StepId("export"),
+                      new ExcelCustomXmlMappingLocator(1L, null),
+                      false,
+                      "UTF-8")));
 
-      assertEquals("maps", mappings.stepId());
+      assertEquals("maps", mappings.stepId().value());
       assertEquals(1, mappings.mappings().size());
-      assertEquals("export", exported.stepId());
+      assertEquals("export", exported.stepId().value());
       assertTrue(exported.export().xml().contains("<NOME>Grid</NOME>"));
     }
   }

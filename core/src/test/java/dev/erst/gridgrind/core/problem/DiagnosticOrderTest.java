@@ -13,6 +13,7 @@ import dev.erst.gridgrind.core.problem.ProblemContextWorkbookSurfaces.Persistenc
 import dev.erst.gridgrind.core.problem.ProblemContextWorkbookSurfaces.ProblemLocation;
 import dev.erst.gridgrind.core.problem.ProblemContextWorkbookSurfaces.StepReference;
 import dev.erst.gridgrind.core.problem.ProblemContextWorkbookSurfaces.WorkbookReference;
+import dev.erst.gridgrind.core.vocabulary.StepId;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 
@@ -48,7 +49,7 @@ class DiagnosticOrderTest {
         problem(
             new ProblemContext.ExecuteStep(
                 SHAPE,
-                new StepReference(2, "step-2", "MUTATION", "SET_CELL"),
+                new StepReference(2, new StepId("step-2"), "MUTATION", "SET_CELL"),
                 ProblemLocation.unknown()));
     GridGrindProblemDetail.Problem persistWorkbook =
         problem(new ProblemContext.PersistWorkbook(SHAPE, PersistenceReference.saveAs("out.xlsx")));
@@ -169,7 +170,8 @@ class DiagnosticOrderTest {
     assertEquals(List.of(requestPath, step), DiagnosticOrder.warnings(List.of(step, requestPath)));
     RequestWarningLocation requestPathLocation =
         new RequestWarningLocation.RequestPath("/work/report.xlsx", "persistence");
-    RequestWarningLocation stepLocation = new RequestWarningLocation.Step(0, "step", "SET_CELL");
+    RequestWarningLocation stepLocation =
+        new RequestWarningLocation.Step(0, new StepId("step"), "SET_CELL");
     RequestWarningLocation formulaCellLocation =
         new RequestWarningLocation.FormulaCell("Budget", "A1", "TEXTAFTER(A1,\",\")");
     RequestWarningLocation requestByteLocation = new RequestWarningLocation.RequestByteOffset(0);
@@ -179,7 +181,7 @@ class DiagnosticOrderTest {
     assertEquals(0, stepLocation.orderingStepIndex());
     assertThrows(
         IllegalArgumentException.class,
-        () -> new RequestWarningLocation.Step(-1, "step", "SET_CELL"));
+        () -> new RequestWarningLocation.Step(-1, new StepId("step"), "SET_CELL"));
     assertThrows(
         IllegalArgumentException.class,
         () -> new RequestWarningLocation.RequestPath(" ", "persistence"));
@@ -203,7 +205,7 @@ class DiagnosticOrderTest {
     return new RequestWarning(
         GridGrindWarningCode.UNQUOTED_SHEET_NAME_IN_FORMULA,
         stepIndex,
-        stepId,
+        new StepId(stepId),
         "SET_CELL",
         "Quote the sheet name.");
   }

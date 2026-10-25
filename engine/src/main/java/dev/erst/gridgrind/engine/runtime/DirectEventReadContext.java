@@ -8,6 +8,7 @@ import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import dev.erst.gridgrind.core.problem.GridGrindProblemDetail;
 import dev.erst.gridgrind.core.problem.RequestWarning;
 import dev.erst.gridgrind.core.result.WorkbookExecutionEvidence.Preservation;
+import dev.erst.gridgrind.core.vocabulary.StepId;
 import java.util.List;
 import org.jspecify.annotations.Nullable;
 
@@ -26,14 +27,14 @@ record DirectEventReadContext(
   }
 
   ExecutionFailure failure(
-      GridGrindProblemDetail.Problem problem, int failedStepIndex, String failedStepId) {
+      GridGrindProblemDetail.Problem problem, int failedStepIndex, StepId failedStepId) {
     return failure(problem, Integer.valueOf(failedStepIndex), failedStepId);
   }
 
   private ExecutionFailure failure(
       GridGrindProblemDetail.Problem problem,
       @Nullable Integer failedStepIndex,
-      @Nullable String failedStepId) {
+      @Nullable StepId failedStepId) {
     return new ExecutionFailure(
         new ExecutionFailure.Context(protocolVersion, journal, request, calculation),
         new ExecutionFailure.Artifacts(

@@ -18,6 +18,7 @@ import dev.erst.gridgrind.core.result.AnalysisSummaryReport;
 import dev.erst.gridgrind.core.vocabulary.AnalysisFindingCode;
 import dev.erst.gridgrind.core.vocabulary.AnalysisSeverity;
 import dev.erst.gridgrind.core.vocabulary.ExcelPivotDataConsolidateFunction;
+import dev.erst.gridgrind.core.vocabulary.StepId;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
@@ -30,21 +31,22 @@ class AdvancedInspectionProtocolTypesTest {
         new WorkbookIntrospectionQuery.GetPackageSecurity();
     WorkbookInspectionResult.PackageSecurityResult result =
         new WorkbookInspectionResult.PackageSecurityResult(
-            "security",
+            new StepId("security"),
             new OoxmlPackageSecurityReport(new OoxmlEncryptionReport.None(), List.of()));
 
     assertEquals("GET_PACKAGE_SECURITY", query.queryType());
-    assertEquals("security", result.stepId());
+    assertEquals("security", result.stepId().value());
     assertThrows(
         IllegalArgumentException.class,
-        () -> new WorkbookInspectionResult.PackageSecurityResult(" ", result.security()));
+        () ->
+            new WorkbookInspectionResult.PackageSecurityResult(new StepId(" "), result.security()));
   }
 
   @Test
   void pivotInspectionTypesRetainAnalysisPayloads() {
     WorkbookAssetInspectionResult.PivotTablesResult pivots =
         new WorkbookAssetInspectionResult.PivotTablesResult(
-            "pivots",
+            new StepId("pivots"),
             List.of(
                 new PivotTableReport.Supported(
                     "Sales Pivot 2026",
@@ -75,16 +77,16 @@ class AdvancedInspectionProtocolTypesTest {
                     new AnalysisLocationReport.Sheet("Report"),
                     List.of("_GG_PIVOT_Report_A3"))));
     WorkbookAnalysisResult.PivotTableHealthResult pivotHealth =
-        new WorkbookAnalysisResult.PivotTableHealthResult("pivot-health", health);
+        new WorkbookAnalysisResult.PivotTableHealthResult(new StepId("pivot-health"), health);
 
     assertEquals("Sales Pivot 2026", pivots.pivotTables().getFirst().name());
     assertEquals(1, pivotHealth.analysis().checkedPivotTableCount());
     assertThrows(
         NullPointerException.class,
-        () -> new WorkbookAssetInspectionResult.PivotTablesResult("pivots", null));
+        () -> new WorkbookAssetInspectionResult.PivotTablesResult(new StepId("pivots"), null));
     assertThrows(
         NullPointerException.class,
-        () -> new WorkbookAnalysisResult.PivotTableHealthResult("pivot-health", null));
+        () -> new WorkbookAnalysisResult.PivotTableHealthResult(new StepId("pivot-health"), null));
   }
 
   @Test

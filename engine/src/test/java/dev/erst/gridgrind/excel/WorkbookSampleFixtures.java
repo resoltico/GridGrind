@@ -14,6 +14,7 @@ import dev.erst.gridgrind.core.vocabulary.ExcelPrintOrientation;
 import dev.erst.gridgrind.core.vocabulary.ExcelRowSpan;
 import dev.erst.gridgrind.core.vocabulary.ExcelSheetVisibility;
 import dev.erst.gridgrind.core.vocabulary.ExcelVerticalAlignment;
+import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlImportDefinition;
 import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlMappingLocator;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingAnchor;
@@ -45,37 +46,43 @@ final class WorkbookSampleFixtures {
 
   static List<WorkbookReadCommand.Introspection> introspectionCommands() {
     return List.of(
-        new WorkbookReadCommand.GetWorkbookSummary("workbook"),
-        new WorkbookReadCommand.GetWorkbookProtection("protection"),
-        new WorkbookReadCommand.GetCustomXmlMappings("customXmlMappings"),
+        new WorkbookReadCommand.GetWorkbookSummary(new StepId("workbook")),
+        new WorkbookReadCommand.GetWorkbookProtection(new StepId("protection")),
+        new WorkbookReadCommand.GetCustomXmlMappings(new StepId("customXmlMappings")),
         new WorkbookReadCommand.ExportCustomXmlMapping(
-            "customXmlExport",
+            new StepId("customXmlExport"),
             new ExcelCustomXmlMappingLocator(1L, "CORSO_mapping"),
             false,
             StandardCharsets.UTF_8.name()),
-        new WorkbookReadCommand.GetNamedRanges("ranges", new ExcelNamedRangeSelection.All()),
-        new WorkbookReadCommand.GetSheetSummary("sheet", "Budget"),
+        new WorkbookReadCommand.GetNamedRanges(
+            new StepId("ranges"), new ExcelNamedRangeSelection.All()),
+        new WorkbookReadCommand.GetSheetSummary(new StepId("sheet"), "Budget"),
         WorkbookReadTestSupport.getCells("cells", "Budget", List.of("A1")),
         WorkbookReadTestSupport.getWindow("window", "Budget", "A1", 1, 1),
-        new WorkbookReadCommand.GetMergedRegions("merged", "Budget"),
+        new WorkbookReadCommand.GetMergedRegions(new StepId("merged"), "Budget"),
         new WorkbookReadCommand.GetHyperlinks(
-            "hyperlinks", "Budget", new ExcelCellSelection.AllUsedCells()),
+            new StepId("hyperlinks"), "Budget", new ExcelCellSelection.AllUsedCells()),
         new WorkbookReadCommand.GetComments(
-            "comments", "Budget", new ExcelCellSelection.Selected(List.of("A1"))),
-        new WorkbookReadCommand.GetDrawingObjects("drawings", "Budget"),
-        new WorkbookReadCommand.GetCharts("charts", new ExcelChartSelection.AllOnSheet("Budget")),
-        new WorkbookReadCommand.GetPivotTables("pivots", new ExcelPivotTableSelection.All()),
-        new WorkbookReadCommand.GetDrawingObjectPayload("payload", "Budget", "Object 1"),
-        new WorkbookReadCommand.GetSheetLayout("layout", "Budget"),
-        new WorkbookReadCommand.GetPrintLayout("print", "Budget"),
+            new StepId("comments"), "Budget", new ExcelCellSelection.Selected(List.of("A1"))),
+        new WorkbookReadCommand.GetDrawingObjects(new StepId("drawings"), "Budget"),
+        new WorkbookReadCommand.GetCharts(
+            new StepId("charts"), new ExcelChartSelection.AllOnSheet("Budget")),
+        new WorkbookReadCommand.GetPivotTables(
+            new StepId("pivots"), new ExcelPivotTableSelection.All()),
+        new WorkbookReadCommand.GetDrawingObjectPayload(
+            new StepId("payload"), "Budget", "Object 1"),
+        new WorkbookReadCommand.GetSheetLayout(new StepId("layout"), "Budget"),
+        new WorkbookReadCommand.GetPrintLayout(new StepId("print"), "Budget"),
         new WorkbookReadCommand.GetDataValidations(
-            "validations", "Budget", new ExcelRangeSelection.All()),
+            new StepId("validations"), "Budget", new ExcelRangeSelection.All()),
         new WorkbookReadCommand.GetConditionalFormatting(
-            "conditional", "Budget", new ExcelRangeSelection.Selected(List.of("A1:B2"))),
-        new WorkbookReadCommand.GetAutofilters("autofilters", "Budget"),
-        new WorkbookReadCommand.GetTables("tables", new ExcelTableSelection.All()),
+            new StepId("conditional"),
+            "Budget",
+            new ExcelRangeSelection.Selected(List.of("A1:B2"))),
+        new WorkbookReadCommand.GetAutofilters(new StepId("autofilters"), "Budget"),
+        new WorkbookReadCommand.GetTables(new StepId("tables"), new ExcelTableSelection.All()),
         new WorkbookReadCommand.GetArrayFormulas(
-            "arrayFormulas", new ExcelSheetSelection.Selected(List.of("Budget"))));
+            new StepId("arrayFormulas"), new ExcelSheetSelection.Selected(List.of("Budget"))));
   }
 
   static List<WorkbookCommand> workbookCommands() {

@@ -15,6 +15,7 @@ import dev.erst.gridgrind.core.problem.MessageInvariant;
 import dev.erst.gridgrind.core.problem.ProblemContext;
 import dev.erst.gridgrind.core.problem.ProblemContextRequestSurfaces;
 import dev.erst.gridgrind.core.problem.ProblemContextWorkbookSurfaces;
+import dev.erst.gridgrind.core.vocabulary.StepId;
 import java.nio.file.AccessDeniedException;
 import java.nio.file.FileAlreadyExistsException;
 import java.util.Optional;
@@ -118,7 +119,7 @@ class GridGrindProblemsCoverageTest {
         new ProblemContext.ExecuteStep(
             ProblemContextRequestSurfaces.RequestShape.known("NEW", "NONE"),
             new ProblemContextWorkbookSurfaces.StepReference(
-                0, "assert-total", "ASSERTION", "EXPECT_CELL_VALUE"),
+                0, new StepId("assert-total"), "ASSERTION", "EXPECT_CELL_VALUE"),
             ProblemContextWorkbookSurfaces.ProblemLocation.cell("Budget", "B2"));
     ProblemContext.PersistWorkbook saveAsContext =
         new ProblemContext.PersistWorkbook(
@@ -137,7 +138,7 @@ class GridGrindProblemsCoverageTest {
             new AssertionFailedException(
                 "EXPECT_CELL_VALUE mismatched effective values at B2",
                 new AssertionFailure(
-                    "assert-total",
+                    new StepId("assert-total"),
                     "EXPECT_CELL_VALUE",
                     new CellSelector.ByAddress("Budget", "B2"),
                     new CellAssertion.CellValue(new CellScalarValue.NumberValue(1200.0d)),

@@ -3,6 +3,7 @@ package dev.erst.gridgrind.excel;
 import static org.junit.jupiter.api.Assertions.*;
 
 import dev.erst.gridgrind.core.vocabulary.ExcelReadLimits;
+import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.excel.pivot.ExcelPivotTableSelection;
 import java.util.ArrayList;
 import java.util.List;
@@ -13,69 +14,73 @@ class WorkbookReadCommandTest {
   @Test
   void createsEachReadCommandVariant() {
     WorkbookReadCommand.GetWorkbookSummary workbookSummary =
-        new WorkbookReadCommand.GetWorkbookSummary("workbook");
+        new WorkbookReadCommand.GetWorkbookSummary(new StepId("workbook"));
     WorkbookReadCommand.GetNamedRanges namedRanges =
-        new WorkbookReadCommand.GetNamedRanges("ranges", new ExcelNamedRangeSelection.All());
+        new WorkbookReadCommand.GetNamedRanges(
+            new StepId("ranges"), new ExcelNamedRangeSelection.All());
     WorkbookReadCommand.GetSheetSummary sheetSummary =
-        new WorkbookReadCommand.GetSheetSummary("sheet", "Budget");
+        new WorkbookReadCommand.GetSheetSummary(new StepId("sheet"), "Budget");
     WorkbookReadCommand.GetCells cells =
         WorkbookReadTestSupport.getCells("cells", "Budget", List.of("A1"));
     WorkbookReadCommand.GetWindow window =
         WorkbookReadTestSupport.getWindow("window", "Budget", "A1", 2, 2);
     WorkbookReadCommand.GetMergedRegions mergedRegions =
-        new WorkbookReadCommand.GetMergedRegions("merged", "Budget");
+        new WorkbookReadCommand.GetMergedRegions(new StepId("merged"), "Budget");
     WorkbookReadCommand.GetHyperlinks hyperlinks =
         new WorkbookReadCommand.GetHyperlinks(
-            "hyperlinks", "Budget", new ExcelCellSelection.AllUsedCells());
+            new StepId("hyperlinks"), "Budget", new ExcelCellSelection.AllUsedCells());
     WorkbookReadCommand.GetComments comments =
         new WorkbookReadCommand.GetComments(
-            "comments", "Budget", new ExcelCellSelection.Selected(List.of("A1")));
+            new StepId("comments"), "Budget", new ExcelCellSelection.Selected(List.of("A1")));
     WorkbookReadCommand.GetSheetLayout layout =
-        new WorkbookReadCommand.GetSheetLayout("layout", "Budget");
+        new WorkbookReadCommand.GetSheetLayout(new StepId("layout"), "Budget");
     WorkbookReadCommand.GetDataValidations dataValidations =
         new WorkbookReadCommand.GetDataValidations(
-            "validations", "Budget", new ExcelRangeSelection.All());
+            new StepId("validations"), "Budget", new ExcelRangeSelection.All());
     WorkbookReadCommand.GetAutofilters autofilters =
-        new WorkbookReadCommand.GetAutofilters("autofilters", "Budget");
+        new WorkbookReadCommand.GetAutofilters(new StepId("autofilters"), "Budget");
     WorkbookReadCommand.GetTables tables =
-        new WorkbookReadCommand.GetTables("tables", new ExcelTableSelection.All());
+        new WorkbookReadCommand.GetTables(new StepId("tables"), new ExcelTableSelection.All());
     WorkbookReadCommand.GetPivotTables pivotTables =
-        new WorkbookReadCommand.GetPivotTables("pivots", new ExcelPivotTableSelection.All());
+        new WorkbookReadCommand.GetPivotTables(
+            new StepId("pivots"), new ExcelPivotTableSelection.All());
     WorkbookReadCommand.GetFormulaSurface formulaSurface =
         new WorkbookReadCommand.GetFormulaSurface(
-            "formula", new ExcelSheetSelection.Selected(List.of("Budget")));
+            new StepId("formula"), new ExcelSheetSelection.Selected(List.of("Budget")));
     WorkbookReadCommand.GetSheetSchema schema =
         WorkbookReadTestSupport.getSheetSchema("schema", "Budget", "A1", 3, 2);
     WorkbookReadCommand.GetNamedRangeSurface namedRangeSurface =
-        new WorkbookReadCommand.GetNamedRangeSurface("surface", new ExcelNamedRangeSelection.All());
+        new WorkbookReadCommand.GetNamedRangeSurface(
+            new StepId("surface"), new ExcelNamedRangeSelection.All());
     WorkbookReadCommand.AnalyzeFormulaHealth formulaHealth =
         new WorkbookReadCommand.AnalyzeFormulaHealth(
-            "formulaHealth", new ExcelSheetSelection.All());
+            new StepId("formulaHealth"), new ExcelSheetSelection.All());
     WorkbookReadCommand.AnalyzeDataValidationHealth dataValidationHealth =
         new WorkbookReadCommand.AnalyzeDataValidationHealth(
-            "dataValidationHealth", new ExcelSheetSelection.All());
+            new StepId("dataValidationHealth"), new ExcelSheetSelection.All());
     WorkbookReadCommand.AnalyzeConditionalFormattingHealth conditionalFormattingHealth =
         new WorkbookReadCommand.AnalyzeConditionalFormattingHealth(
-            "conditionalFormattingHealth", new ExcelSheetSelection.All());
+            new StepId("conditionalFormattingHealth"), new ExcelSheetSelection.All());
     WorkbookReadCommand.AnalyzeAutofilterHealth autofilterHealth =
         new WorkbookReadCommand.AnalyzeAutofilterHealth(
-            "autofilterHealth", new ExcelSheetSelection.All());
+            new StepId("autofilterHealth"), new ExcelSheetSelection.All());
     WorkbookReadCommand.AnalyzeTableHealth tableHealth =
         new WorkbookReadCommand.AnalyzeTableHealth(
-            "tableHealth", new ExcelTableSelection.ByNames(List.of("BudgetTable")));
+            new StepId("tableHealth"), new ExcelTableSelection.ByNames(List.of("BudgetTable")));
     WorkbookReadCommand.AnalyzePivotTableHealth pivotTableHealth =
         new WorkbookReadCommand.AnalyzePivotTableHealth(
-            "pivotTableHealth", new ExcelPivotTableSelection.ByNames(List.of("Budget Pivot")));
+            new StepId("pivotTableHealth"),
+            new ExcelPivotTableSelection.ByNames(List.of("Budget Pivot")));
     WorkbookReadCommand.AnalyzeHyperlinkHealth hyperlinkHealth =
         new WorkbookReadCommand.AnalyzeHyperlinkHealth(
-            "hyperlinkHealth", new ExcelSheetSelection.All());
+            new StepId("hyperlinkHealth"), new ExcelSheetSelection.All());
     WorkbookReadCommand.AnalyzeNamedRangeHealth namedRangeHealth =
         new WorkbookReadCommand.AnalyzeNamedRangeHealth(
-            "namedRangeHealth", new ExcelNamedRangeSelection.All());
+            new StepId("namedRangeHealth"), new ExcelNamedRangeSelection.All());
     WorkbookReadCommand.AnalyzeWorkbookFindings workbookFindings =
-        new WorkbookReadCommand.AnalyzeWorkbookFindings("workbookFindings");
+        new WorkbookReadCommand.AnalyzeWorkbookFindings(new StepId("workbookFindings"));
 
-    assertEquals("workbook", workbookSummary.stepId());
+    assertEquals("workbook", workbookSummary.stepId().value());
     assertInstanceOf(ExcelNamedRangeSelection.All.class, namedRanges.selection());
     assertEquals("Budget", sheetSummary.sheetName());
     assertEquals(List.of("A1"), cells.addresses());
@@ -99,7 +104,7 @@ class WorkbookReadCommandTest {
     assertInstanceOf(ExcelPivotTableSelection.ByNames.class, pivotTableHealth.selection());
     assertInstanceOf(ExcelSheetSelection.All.class, hyperlinkHealth.selection());
     assertInstanceOf(ExcelNamedRangeSelection.All.class, namedRangeHealth.selection());
-    assertEquals("workbookFindings", workbookFindings.stepId());
+    assertEquals("workbookFindings", workbookFindings.stepId().value());
   }
 
   @Test
@@ -114,11 +119,14 @@ class WorkbookReadCommandTest {
     assertThrows(
         NullPointerException.class, () -> new WorkbookReadCommand.GetWorkbookSummary(null));
     assertThrows(
-        IllegalArgumentException.class, () -> new WorkbookReadCommand.GetWorkbookSummary(" "));
+        IllegalArgumentException.class,
+        () -> new WorkbookReadCommand.GetWorkbookSummary(new StepId(" ")));
     assertThrows(
-        NullPointerException.class, () -> new WorkbookReadCommand.GetNamedRanges("ranges", null));
+        NullPointerException.class,
+        () -> new WorkbookReadCommand.GetNamedRanges(new StepId("ranges"), null));
     assertThrows(
-        NullPointerException.class, () -> new WorkbookReadCommand.GetSheetSummary("sheet", null));
+        NullPointerException.class,
+        () -> new WorkbookReadCommand.GetSheetSummary(new StepId("sheet"), null));
     assertThrows(
         IllegalArgumentException.class,
         () -> WorkbookReadTestSupport.getCells("cells", "Budget", List.of()));
@@ -155,54 +163,62 @@ class WorkbookReadCommandTest {
         () -> WorkbookReadTestSupport.getSheetSchema("schema", "Budget", "A1", 1000, 1000));
     assertThrows(
         NullPointerException.class,
-        () -> new WorkbookReadCommand.GetHyperlinks("links", "Budget", null));
+        () -> new WorkbookReadCommand.GetHyperlinks(new StepId("links"), "Budget", null));
     assertThrows(
         NullPointerException.class,
-        () -> new WorkbookReadCommand.GetComments("comments", "Budget", null));
+        () -> new WorkbookReadCommand.GetComments(new StepId("comments"), "Budget", null));
     assertThrows(
         NullPointerException.class,
-        () -> new WorkbookReadCommand.GetDataValidations("validations", "Budget", null));
+        () ->
+            new WorkbookReadCommand.GetDataValidations(new StepId("validations"), "Budget", null));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new WorkbookReadCommand.GetAutofilters("autofilters", " "));
-    assertThrows(
-        NullPointerException.class, () -> new WorkbookReadCommand.GetTables("tables", null));
-    assertThrows(
-        NullPointerException.class, () -> new WorkbookReadCommand.GetPivotTables("pivots", null));
+        () -> new WorkbookReadCommand.GetAutofilters(new StepId("autofilters"), " "));
     assertThrows(
         NullPointerException.class,
-        () -> new WorkbookReadCommand.GetFormulaSurface("formula", null));
+        () -> new WorkbookReadCommand.GetTables(new StepId("tables"), null));
+    assertThrows(
+        NullPointerException.class,
+        () -> new WorkbookReadCommand.GetPivotTables(new StepId("pivots"), null));
+    assertThrows(
+        NullPointerException.class,
+        () -> new WorkbookReadCommand.GetFormulaSurface(new StepId("formula"), null));
     assertThrows(
         IllegalArgumentException.class,
         () -> WorkbookReadTestSupport.getSheetSchema("schema", "Budget", "A1", 0, 1));
     assertThrows(
         NullPointerException.class,
-        () -> new WorkbookReadCommand.GetNamedRangeSurface("surface", null));
+        () -> new WorkbookReadCommand.GetNamedRangeSurface(new StepId("surface"), null));
     assertThrows(
         NullPointerException.class,
-        () -> new WorkbookReadCommand.AnalyzeFormulaHealth("formulaHealth", null));
+        () -> new WorkbookReadCommand.AnalyzeFormulaHealth(new StepId("formulaHealth"), null));
     assertThrows(
         NullPointerException.class,
-        () -> new WorkbookReadCommand.AnalyzeDataValidationHealth("dataValidationHealth", null));
+        () ->
+            new WorkbookReadCommand.AnalyzeDataValidationHealth(
+                new StepId("dataValidationHealth"), null));
     assertThrows(
         NullPointerException.class,
         () ->
             new WorkbookReadCommand.AnalyzeConditionalFormattingHealth(
-                "conditionalFormattingHealth", null));
+                new StepId("conditionalFormattingHealth"), null));
     assertThrows(
         NullPointerException.class,
-        () -> new WorkbookReadCommand.AnalyzeAutofilterHealth("autofilterHealth", null));
+        () ->
+            new WorkbookReadCommand.AnalyzeAutofilterHealth(new StepId("autofilterHealth"), null));
     assertThrows(
         NullPointerException.class,
-        () -> new WorkbookReadCommand.AnalyzeTableHealth("tableHealth", null));
+        () -> new WorkbookReadCommand.AnalyzeTableHealth(new StepId("tableHealth"), null));
     assertThrows(
         NullPointerException.class,
-        () -> new WorkbookReadCommand.AnalyzePivotTableHealth("pivotTableHealth", null));
+        () ->
+            new WorkbookReadCommand.AnalyzePivotTableHealth(new StepId("pivotTableHealth"), null));
     assertThrows(
         NullPointerException.class,
-        () -> new WorkbookReadCommand.AnalyzeHyperlinkHealth("hyperlinkHealth", null));
+        () -> new WorkbookReadCommand.AnalyzeHyperlinkHealth(new StepId("hyperlinkHealth"), null));
     assertThrows(
         NullPointerException.class,
-        () -> new WorkbookReadCommand.AnalyzeNamedRangeHealth("namedRangeHealth", null));
+        () ->
+            new WorkbookReadCommand.AnalyzeNamedRangeHealth(new StepId("namedRangeHealth"), null));
   }
 }

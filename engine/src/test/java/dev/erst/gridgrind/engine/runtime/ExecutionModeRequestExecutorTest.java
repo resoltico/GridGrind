@@ -233,7 +233,7 @@ class ExecutionModeRequestExecutorTest {
     WorkbookInspectionResult.WorkbookSummaryResult workbookSummary =
         assertInstanceOf(
             WorkbookInspectionResult.WorkbookSummaryResult.class, success.inspections().getFirst());
-    assertEquals("workbook", workbookSummary.stepId());
+    assertEquals("workbook", workbookSummary.stepId().value());
     assertEquals(0, workbookSummary.workbook().sheetCount());
     assertEquals(List.of(), workbookSummary.workbook().sheetNames());
     assertInstanceOf(

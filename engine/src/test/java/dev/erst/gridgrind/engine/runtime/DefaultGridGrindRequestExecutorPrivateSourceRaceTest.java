@@ -20,6 +20,7 @@ import dev.erst.gridgrind.core.problem.GridGrindProblemCode;
 import dev.erst.gridgrind.core.problem.ProblemContext;
 import dev.erst.gridgrind.core.result.ExecutionJournalLevel;
 import dev.erst.gridgrind.core.result.WorkbookResult;
+import dev.erst.gridgrind.core.vocabulary.StepId;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
@@ -85,7 +86,7 @@ class DefaultGridGrindRequestExecutorPrivateSourceRaceTest {
             FormulaEnvironmentInput.empty(),
             List.of(
                 new InspectionStep(
-                    "summary",
+                    new StepId("summary"),
                     new WorkbookSelector.Current(),
                     new WorkbookIntrospectionQuery.GetWorkbookSummary())));
     AtomicBoolean removedPrivateSource = new AtomicBoolean();
@@ -121,7 +122,7 @@ class DefaultGridGrindRequestExecutorPrivateSourceRaceTest {
             FormulaEnvironmentInput.empty(),
             List.of(
                 new MutationStep(
-                    "ensure-sheet",
+                    new StepId("ensure-sheet"),
                     new SheetSelector.ByName("Budget"),
                     new WorkbookMutationAction.EnsureSheet())));
     AtomicBoolean replacedOutputDirectory = new AtomicBoolean();
@@ -160,7 +161,7 @@ class DefaultGridGrindRequestExecutorPrivateSourceRaceTest {
             FormulaEnvironmentInput.empty(),
             List.of(
                 new MutationStep(
-                    "ensure-sheet",
+                    new StepId("ensure-sheet"),
                     new SheetSelector.ByName("Budget"),
                     new WorkbookMutationAction.EnsureSheet())));
     AtomicBoolean replacedOutputDirectory = new AtomicBoolean();

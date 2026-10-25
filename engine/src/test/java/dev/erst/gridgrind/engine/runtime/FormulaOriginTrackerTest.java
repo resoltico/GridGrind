@@ -10,6 +10,7 @@ import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import dev.erst.gridgrind.core.problem.GridGrindProblemCode;
 import dev.erst.gridgrind.core.problem.ProblemContext;
 import dev.erst.gridgrind.core.problem.ProblemContextWorkbookSurfaces.StepReference;
+import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.excel.ExcelArrayFormulaDefinition;
 import dev.erst.gridgrind.excel.ExcelCellValue;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
@@ -63,7 +64,7 @@ class FormulaOriginTrackerTest {
   void tracksEveryNormalFormulaAuthoringFamilyAndExcludesRawFormulas() throws Exception {
     FormulaOriginTracker tracker = new FormulaOriginTracker();
     WorkbookExecutionEngine engine = new WorkbookExecutionEngine();
-    StepReference author = new StepReference(3, "author", "MUTATION", "SET_CELL");
+    StepReference author = new StepReference(3, new StepId("author"), "MUTATION", "SET_CELL");
     try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       engine.apply(workbook, new WorkbookSheetCommand.CreateSheet("Ops"));
       workbook.xssfWorkbook().getSheet("Ops").createRow(7).createCell(0).setBlank();
@@ -132,7 +133,7 @@ class FormulaOriginTrackerTest {
   void removesOriginsWhenLaterMutationsReplaceOrClearFormulaCells() throws Exception {
     FormulaOriginTracker tracker = new FormulaOriginTracker();
     WorkbookExecutionEngine engine = new WorkbookExecutionEngine();
-    StepReference author = new StepReference(0, "author", "MUTATION", "SET_CELL");
+    StepReference author = new StepReference(0, new StepId("author"), "MUTATION", "SET_CELL");
     try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       engine.apply(workbook, new WorkbookSheetCommand.CreateSheet("Ops"));
       applyAndRecord(
@@ -152,19 +153,19 @@ class FormulaOriginTrackerTest {
           engine,
           workbook,
           new WorkbookCellCommand.SetCell("Ops", "A1", ExcelCellValue.text("replaced")),
-          new StepReference(1, "replace", "MUTATION", "SET_CELL"));
+          new StepReference(1, new StepId("replace"), "MUTATION", "SET_CELL"));
       applyAndRecord(
           tracker,
           engine,
           workbook,
           new WorkbookCellCommand.SetCell("Ops", "A1", ExcelCellValue.formula("2+2")),
-          new StepReference(2, "rewrite", "MUTATION", "SET_CELL"));
+          new StepReference(2, new StepId("rewrite"), "MUTATION", "SET_CELL"));
       applyAndRecord(
           tracker,
           engine,
           workbook,
           new WorkbookCellCommand.ClearRange("Ops", "A1:A1"),
-          new StepReference(3, "clear", "MUTATION", "CLEAR_RANGE"));
+          new StepReference(3, new StepId("clear"), "MUTATION", "CLEAR_RANGE"));
       assertTrue(tracker.originFor("Ops", "A1").isEmpty());
       assertTrue(
           tracker
@@ -179,7 +180,7 @@ class FormulaOriginTrackerTest {
       throws Exception {
     FormulaOriginTracker tracker = new FormulaOriginTracker();
     WorkbookExecutionEngine engine = new WorkbookExecutionEngine();
-    StepReference author = new StepReference(1, "author", "MUTATION", "SET_CELL");
+    StepReference author = new StepReference(1, new StepId("author"), "MUTATION", "SET_CELL");
     WorkbookPlan request =
         WorkbookPlan.standard(
             new WorkbookPlan.WorkbookSource.New(),
@@ -255,7 +256,7 @@ class FormulaOriginTrackerTest {
   void prunesEveryChangedFormulaTopologyBeforeRecordingTheNextMutation() throws Exception {
     FormulaOriginTracker tracker = new FormulaOriginTracker();
     WorkbookExecutionEngine engine = new WorkbookExecutionEngine();
-    StepReference author = new StepReference(0, "author", "MUTATION", "SET_CELL");
+    StepReference author = new StepReference(0, new StepId("author"), "MUTATION", "SET_CELL");
     try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       engine.apply(workbook, new WorkbookSheetCommand.CreateSheet("Ops"));
       engine.apply(workbook, new WorkbookSheetCommand.CreateSheet("Removed"));

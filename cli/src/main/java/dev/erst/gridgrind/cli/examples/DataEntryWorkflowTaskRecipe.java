@@ -23,6 +23,7 @@ import dev.erst.gridgrind.core.plan.WorkbookMutationAction;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import dev.erst.gridgrind.core.source.TextSourceInput;
 import dev.erst.gridgrind.core.vocabulary.ExcelDataValidationErrorStyle;
+import dev.erst.gridgrind.core.vocabulary.StepId;
 import java.util.List;
 import java.util.Optional;
 
@@ -123,11 +124,11 @@ final class DataEntryWorkflowTaskRecipe {
         new WorkbookPlan.WorkbookSource.New(),
         ExampleWorkbookPlans.saveAs(TaskStarterRecipeSupport.taskWorkbookPath(taskId)),
         ExampleSteps.step(
-            "ensure-intake",
+            new StepId("ensure-intake"),
             ExampleSelectors.sheet("Intake"),
             new WorkbookMutationAction.EnsureSheet()),
         ExampleSteps.step(
-            "seed-intake-headers",
+            new StepId("seed-intake-headers"),
             ExampleSelectors.range("Intake", "A1:B3"),
             new CellMutationAction.SetRange(
                 ExampleCellValues.rows(
@@ -138,7 +139,7 @@ final class DataEntryWorkflowTaskRecipe {
                     ExampleCellValues.row(
                         ExampleCellValues.text("Lin"), ExampleCellValues.text("Review"))))),
         ExampleSteps.step(
-            "comment-status-header",
+            new StepId("comment-status-header"),
             ExampleSelectors.cell("Intake", "B1"),
             new CellMutationAction.SetComment(
                 CommentInput.plain(
@@ -146,7 +147,7 @@ final class DataEntryWorkflowTaskRecipe {
                     "GridGrind",
                     true))),
         ExampleSteps.step(
-            "validate-status",
+            new StepId("validate-status"),
             ExampleSelectors.range("Intake", "B2:B25"),
             new StructuredMutationAction.SetDataValidation(
                 new DataValidationInput(
@@ -165,21 +166,21 @@ final class DataEntryWorkflowTaskRecipe {
                             TextSourceInput.inline("Use Open, Review, or Closed."),
                             true))))),
         ExampleSteps.step(
-            "protect-workbook-structure",
+            new StepId("protect-workbook-structure"),
             ExampleSelectors.workbook(),
             new WorkbookMutationAction.SetWorkbookProtection(
                 new WorkbookProtectionInput(
                     true, false, false, Optional.empty(), Optional.empty()))),
         ExampleSteps.read(
-            "read-intake-validations",
+            new StepId("read-intake-validations"),
             ExampleSelectors.range("Intake", "B2:B25"),
             new SheetIntrospectionQuery.GetDataValidations()),
         ExampleSteps.read(
-            "read-intake-comments",
+            new StepId("read-intake-comments"),
             ExampleSelectors.cells("Intake", "B1"),
             new SheetIntrospectionQuery.GetComments()),
         ExampleSteps.read(
-            "read-intake-workbook",
+            new StepId("read-intake-workbook"),
             ExampleSelectors.workbook(),
             new WorkbookIntrospectionQuery.GetWorkbookSummary()));
   }

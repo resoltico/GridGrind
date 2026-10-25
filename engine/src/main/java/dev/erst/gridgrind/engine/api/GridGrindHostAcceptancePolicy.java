@@ -37,7 +37,7 @@ public sealed interface GridGrindHostAcceptancePolicy
         if (assertions.isEmpty()) {
           throw new IllegalArgumentException("assertions must not be empty; use minimum() instead");
         }
-        Set<String> stepIds = new LinkedHashSet<>();
+        Set<dev.erst.gridgrind.core.vocabulary.StepId> stepIds = new LinkedHashSet<>();
         for (AssertionStep assertion : assertions) {
           AssertionStep required =
               Objects.requireNonNull(assertion, "assertions must not contain null values");
@@ -58,7 +58,7 @@ public sealed interface GridGrindHostAcceptancePolicy
         if (inspections.isEmpty()) {
           throw new IllegalArgumentException("inspections must not be empty");
         }
-        Set<String> stepIds = new LinkedHashSet<>();
+        Set<dev.erst.gridgrind.core.vocabulary.StepId> stepIds = new LinkedHashSet<>();
         for (InspectionStep inspection : inspections) {
           InspectionStep required =
               Objects.requireNonNull(inspection, "inspections must not contain null values");

@@ -7,6 +7,7 @@ import dev.erst.gridgrind.core.plan.InspectionResult;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import dev.erst.gridgrind.core.problem.GridGrindProblemDetail;
 import dev.erst.gridgrind.core.problem.RequestWarning;
+import dev.erst.gridgrind.core.vocabulary.StepId;
 import java.util.List;
 import java.util.Objects;
 import org.jspecify.annotations.Nullable;
@@ -54,7 +55,7 @@ record ExecutionFailure(Context context, Artifacts artifacts, Detail detail) {
   record Detail(
       GridGrindProblemDetail.Problem problem,
       @Nullable Integer failedStepIndex,
-      @Nullable String failedStepId) {
+      @Nullable StepId failedStepId) {
     Detail {
       Objects.requireNonNull(problem, "problem must not be null");
     }

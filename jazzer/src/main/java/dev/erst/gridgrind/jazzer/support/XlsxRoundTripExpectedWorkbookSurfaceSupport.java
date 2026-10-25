@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.jazzer.support;
 
+import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.excel.ExcelAutofilterSnapshot;
 import dev.erst.gridgrind.excel.ExcelCellMetadataSnapshot;
 import dev.erst.gridgrind.excel.ExcelCellSnapshot;
@@ -132,7 +133,9 @@ final class XlsxRoundTripExpectedWorkbookSurfaceSupport {
     WorkbookExecutionEngine readExecutor = new WorkbookExecutionEngine();
     return ((dev.erst.gridgrind.excel.WorkbookCoreResult.WorkbookSummaryResult)
             readExecutor
-                .read(workbook, new WorkbookReadCommand.GetWorkbookSummary("workbook-summary"))
+                .read(
+                    workbook,
+                    new WorkbookReadCommand.GetWorkbookSummary(new StepId("workbook-summary")))
                 .getFirst())
         .workbook();
   }
@@ -150,7 +153,7 @@ final class XlsxRoundTripExpectedWorkbookSurfaceSupport {
                       .read(
                           workbook,
                           new WorkbookReadCommand.GetSheetSummary(
-                              "sheet-summary-" + sheetName, sheetName))
+                              new StepId("sheet-summary"), sheetName))
                       .getFirst())
               .sheet());
     }
@@ -182,7 +185,9 @@ final class XlsxRoundTripExpectedWorkbookSurfaceSupport {
                   .read(
                       workbook,
                       new WorkbookReadCommand.GetConditionalFormatting(
-                          "conditionalFormatting", sheetName, new ExcelRangeSelection.All()))
+                          new StepId("conditionalFormatting"),
+                          sheetName,
+                          new ExcelRangeSelection.All()))
                   .getFirst();
       if (!result.conditionalFormattingBlocks().isEmpty()) {
         expected.put(sheetName, result.conditionalFormattingBlocks());
@@ -198,7 +203,9 @@ final class XlsxRoundTripExpectedWorkbookSurfaceSupport {
       var result =
           (dev.erst.gridgrind.excel.WorkbookRuleResult.AutofiltersResult)
               readExecutor
-                  .read(workbook, new WorkbookReadCommand.GetAutofilters("autofilters", sheetName))
+                  .read(
+                      workbook,
+                      new WorkbookReadCommand.GetAutofilters(new StepId("autofilters"), sheetName))
                   .getFirst();
       if (!result.autofilters().isEmpty()) {
         expected.put(sheetName, result.autofilters());
@@ -232,7 +239,7 @@ final class XlsxRoundTripExpectedWorkbookSurfaceSupport {
                 .read(
                     workbook,
                     new WorkbookReadCommand.GetPivotTables(
-                        "pivots", new ExcelPivotTableSelection.All()))
+                        new StepId("pivots"), new ExcelPivotTableSelection.All()))
                 .getFirst();
     return List.copyOf(result.pivotTables());
   }
@@ -244,7 +251,8 @@ final class XlsxRoundTripExpectedWorkbookSurfaceSupport {
             readExecutor
                 .read(
                     workbook,
-                    new WorkbookReadCommand.GetTables("tables", new ExcelTableSelection.All()))
+                    new WorkbookReadCommand.GetTables(
+                        new StepId("tables"), new ExcelTableSelection.All()))
                 .getFirst();
     return List.copyOf(result.tables());
   }

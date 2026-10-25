@@ -25,6 +25,7 @@ import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import dev.erst.gridgrind.core.plan.WorkbookStep;
 import dev.erst.gridgrind.core.problem.GridGrindProblemCode;
 import dev.erst.gridgrind.core.result.WorkbookResult;
+import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.engine.api.GridGrindHostAcceptancePolicy;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -49,7 +50,7 @@ class HostAcceptanceExecutionTest {
                 new GridGrindHostAcceptancePolicy.Requirement.TerminalAssertions(
                     List.of(
                         new AssertionStep(
-                            "host-total",
+                            new StepId("host-total"),
                             new CellSelector.ByAddress("Report", "A1"),
                             new CellAssertion.CellValue(new CellScalarValue.NumberValue(2)))))));
 
@@ -85,7 +86,7 @@ class HostAcceptanceExecutionTest {
                 new GridGrindHostAcceptancePolicy.Requirement.TerminalAssertions(
                     List.of(
                         new AssertionStep(
-                            "host-total",
+                            new StepId("host-total"),
                             new CellSelector.ByAddress("Report", "A1"),
                             new CellAssertion.CellValue(new CellScalarValue.NumberValue(1)))))));
 
@@ -145,11 +146,11 @@ class HostAcceptanceExecutionTest {
             FormulaEnvironmentInput.empty(),
             List.of(
                 new MutationStep(
-                    "ensure-report",
+                    new StepId("ensure-report"),
                     new SheetSelector.ByName("Report"),
                     new WorkbookMutationAction.EnsureSheet()),
                 new MutationStep(
-                    "append-total",
+                    new StepId("append-total"),
                     new SheetSelector.ByName("Report"),
                     new CellMutationAction.AppendRow(
                         new CellRowInput.Typed(List.of(new CellInput.NumberValue(1)))))));
@@ -184,7 +185,7 @@ class HostAcceptanceExecutionTest {
             FormulaEnvironmentInput.empty(),
             List.of(
                 new InspectionStep(
-                    "summary",
+                    new StepId("summary"),
                     new SheetSelector.ByName("Report"),
                     new SheetIntrospectionQuery.GetSheetSummary())));
 
@@ -222,7 +223,11 @@ class HostAcceptanceExecutionTest {
                 dev.erst.gridgrind.core.result.WorkbookExecutionEvidence.Preservation
                     .SemanticEstablished.class,
                 success.evidence().preservation().getFirst());
-    assertEquals(List.of("preserve-unaffected-cell"), preservation.inspectionStepIds());
+    assertEquals(
+        List.of("preserve-unaffected-cell"),
+        preservation.inspectionStepIds().stream()
+            .map(dev.erst.gridgrind.core.vocabulary.WireString::value)
+            .toList());
   }
 
   @Test
@@ -267,11 +272,11 @@ class HostAcceptanceExecutionTest {
   private static List<WorkbookStep> reportSteps() {
     return List.of(
         new MutationStep(
-            "ensure-report",
+            new StepId("ensure-report"),
             new SheetSelector.ByName("Report"),
             new WorkbookMutationAction.EnsureSheet()),
         new MutationStep(
-            "write-total",
+            new StepId("write-total"),
             new CellSelector.ByAddress("Report", "A1"),
             new CellMutationAction.SetCell(new CellInput.NumberValue(1))));
   }
@@ -282,7 +287,7 @@ class HostAcceptanceExecutionTest {
             new GridGrindHostAcceptancePolicy.Requirement.TerminalAssertions(
                 List.of(
                     new AssertionStep(
-                        "host-total",
+                        new StepId("host-total"),
                         new CellSelector.ByAddress("Report", "A1"),
                         new CellAssertion.CellValue(new CellScalarValue.NumberValue(2)))))));
   }
@@ -311,7 +316,7 @@ class HostAcceptanceExecutionTest {
         FormulaEnvironmentInput.empty(),
         List.of(
             new MutationStep(
-                "update-report",
+                new StepId("update-report"),
                 new CellSelector.ByAddress("Report", address),
                 new CellMutationAction.SetCell(new CellInput.NumberValue(value)))));
   }
@@ -322,7 +327,7 @@ class HostAcceptanceExecutionTest {
             new GridGrindHostAcceptancePolicy.Requirement.PreserveInspectionFacts(
                 List.of(
                     new InspectionStep(
-                        "preserve-unaffected-cell",
+                        new StepId("preserve-unaffected-cell"),
                         new CellSelector.ByAddress("Report", address),
                         new SheetIntrospectionQuery.GetCells())))));
   }

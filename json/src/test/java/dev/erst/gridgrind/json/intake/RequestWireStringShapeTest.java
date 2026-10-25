@@ -84,6 +84,44 @@ class RequestWireStringShapeTest {
         "planId must not be blank", blank.bindingFailures().getFirst().exception().getMessage());
   }
 
+  @Test
+  void stepIdentityBindsAndRendersAsTheAuthoredScalar() throws java.io.IOException {
+    String request = stepDocument("\"read-1\"");
+    var plan = dev.erst.gridgrind.json.codec.GridGrindJson.readRequest(request);
+    assertEquals("read-1", plan.steps().getFirst().stepId().value());
+    byte[] bytes = dev.erst.gridgrind.json.codec.GridGrindJsonOutput.writeRequestBytes(plan);
+    assertEquals(
+        "read-1",
+        dev.erst.gridgrind.json.codec.GridGrindJsonMapperSupport.JSON_MAPPER
+            .readTree(bytes)
+            .path("steps")
+            .path(0)
+            .path("stepId")
+            .stringValue());
+    assertEquals(plan, dev.erst.gridgrind.json.codec.GridGrindJson.readRequest(bytes));
+  }
+
+  @Test
+  void invalidStepIdentityRetainsTheEnvelopeMemberLocation() {
+    var intake =
+        dev.erst.gridgrind.json.codec.GridGrindJson.analyzeRequest(
+            stepDocument("\"bad id\"").getBytes(java.nio.charset.StandardCharsets.UTF_8));
+    assertFalse(intake.isBindable());
+    assertEquals(1, intake.bindingFailures().size());
+    assertEquals("steps[0].stepId", intake.bindingFailures().getFirst().jsonPath());
+    assertTrue(intake.bindingFailures().getFirst().byteOffset().isPresent());
+    assertEquals(
+        "stepId must match [A-Za-z0-9._-]+",
+        intake.bindingFailures().getFirst().exception().getMessage());
+  }
+
+  private static String stepDocument(String stepId) {
+    return """
+        {"protocolVersion":"V3","source":{"type":"NEW"},"persistence":{"type":"NONE"},"steps":[{"stepId":%s,"target":{"type":"WORKBOOK_CURRENT"},"query":{"type":"GET_WORKBOOK_SUMMARY"}}]}
+        """
+        .formatted(stepId);
+  }
+
   private static String planDocument(String extra) {
     return """
         {"protocolVersion":"V3","source":{"type":"NEW"},"persistence":{"type":"NONE"},"steps":[]%s}

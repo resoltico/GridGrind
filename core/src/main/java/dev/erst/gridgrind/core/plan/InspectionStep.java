@@ -1,14 +1,15 @@
 package dev.erst.gridgrind.core.plan;
 
 import dev.erst.gridgrind.core.catalog.GridGrindProtocolTypeNames;
+import dev.erst.gridgrind.core.vocabulary.StepId;
 
 /** One ordered workbook inspection step with stable identity and a single semantic target. */
-public record InspectionStep(String stepId, Selector target, InspectionQuery query)
+public record InspectionStep(StepId stepId, Selector target, InspectionQuery query)
     implements WorkbookStep {
   public InspectionStep {
-    stepId = WorkbookStepValidation.requireStepId(stepId);
-    target = WorkbookStepValidation.requireTarget(target);
-    query = WorkbookStepValidation.requireQuery(query);
+    java.util.Objects.requireNonNull(stepId, "stepId must not be null");
+    java.util.Objects.requireNonNull(target, "target must not be null");
+    java.util.Objects.requireNonNull(query, "query must not be null");
   }
 
   @Override

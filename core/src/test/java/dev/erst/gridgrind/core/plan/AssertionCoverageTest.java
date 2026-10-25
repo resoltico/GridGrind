@@ -39,6 +39,7 @@ import dev.erst.gridgrind.core.vocabulary.ExcelPivotDataConsolidateFunction;
 import dev.erst.gridgrind.core.vocabulary.ExcelSheetVisibility;
 import dev.erst.gridgrind.core.vocabulary.ExcelVerticalAlignment;
 import dev.erst.gridgrind.core.vocabulary.NamedRangeScope;
+import dev.erst.gridgrind.core.vocabulary.StepId;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
@@ -50,23 +51,24 @@ class AssertionCoverageTest {
   void assertionResultsExposeTaggedEvidenceAndRejectMismatchedIdentity() {
     AssertionFailure failure =
         new AssertionFailure(
-            "assert-cell",
+            new StepId("assert-cell"),
             "EXPECT_CELL_VALUE",
             new dev.erst.gridgrind.core.plan.CellSelector.ByAddress("Budget", "A1"),
             new CellAssertion.CellValue(new CellScalarValue.Text("expected")),
             List.of());
-    AssertionResult.Passed passed = new AssertionResult.Passed("assert-pass", "EXPECT_CELL_VALUE");
+    AssertionResult.Passed passed =
+        new AssertionResult.Passed(new StepId("assert-pass"), "EXPECT_CELL_VALUE");
     AssertionResult.Failed failed =
-        new AssertionResult.Failed("assert-cell", "EXPECT_CELL_VALUE", failure);
+        new AssertionResult.Failed(new StepId("assert-cell"), "EXPECT_CELL_VALUE", failure);
     assertEquals(AssertionOutcome.PASSED, passed.outcome());
     assertEquals(AssertionOutcome.FAILED, failed.outcome());
     assertEquals(failure, failed.failure());
     assertThrows(
         IllegalArgumentException.class,
-        () -> new AssertionResult.Failed("other", "EXPECT_CELL_VALUE", failure));
+        () -> new AssertionResult.Failed(new StepId("other"), "EXPECT_CELL_VALUE", failure));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new AssertionResult.Failed("assert-cell", "OTHER", failure));
+        () -> new AssertionResult.Failed(new StepId("assert-cell"), "OTHER", failure));
   }
 
   @Test
@@ -189,7 +191,7 @@ class AssertionCoverageTest {
             "BudgetExpr", new NamedRangeScope.Workbook(), "SUM(Budget!B2:B4)");
     InspectionResult observation =
         new WorkbookInspectionResult.WorkbookSummaryResult(
-            "summary",
+            new StepId("summary"),
             new WorkbookSummary.WithSheets(
                 1, List.of("Budget"), "Budget", List.of("Budget"), 1, false));
 

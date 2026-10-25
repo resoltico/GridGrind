@@ -19,6 +19,7 @@ import dev.erst.gridgrind.core.plan.TableSelector;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import dev.erst.gridgrind.core.plan.WorkbookStep;
 import dev.erst.gridgrind.core.vocabulary.NamedRangeScope;
+import dev.erst.gridgrind.core.vocabulary.StepId;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -55,7 +56,7 @@ final class ParityPlanSupport {
   }
 
   static InspectionStep inspect(String stepId, Selector target, InspectionQuery query) {
-    return new InspectionStep(stepId, target, query);
+    return new InspectionStep(new StepId(stepId), target, query);
   }
 
   static CalculationPolicyInput calculateAll() {
@@ -95,7 +96,7 @@ final class ParityPlanSupport {
       throw new IllegalArgumentException("stepIndex must be non-negative");
     }
     return new MutationStep(
-        stepIdFor(stepIndex, mutation.action()), mutation.target(), mutation.action());
+        new StepId(stepIdFor(stepIndex, mutation.action())), mutation.target(), mutation.action());
   }
 
   static List<WorkbookStep> steps(
@@ -160,7 +161,7 @@ final class ParityPlanSupport {
     Objects.requireNonNull(type, "type must not be null");
     return type.cast(
         inspections.stream()
-            .filter(result -> result.stepId().equals(stepId))
+            .filter(result -> result.stepId().value().equals(stepId))
             .findFirst()
             .orElseThrow(
                 () -> new AssertionError("Missing inspection result for stepId " + stepId)));

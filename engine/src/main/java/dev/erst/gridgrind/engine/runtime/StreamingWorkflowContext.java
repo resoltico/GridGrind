@@ -9,6 +9,7 @@ import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import dev.erst.gridgrind.core.problem.GridGrindProblemDetail;
 import dev.erst.gridgrind.core.problem.RequestWarning;
 import dev.erst.gridgrind.core.result.WorkbookExecutionEvidence.Preservation;
+import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.excel.WorkbookLocation;
 import java.util.ArrayList;
 import java.util.List;
@@ -57,7 +58,7 @@ record StreamingWorkflowContext(
       CalculationReport calculation,
       GridGrindProblemDetail.Problem problem,
       int failedStepIndex,
-      String failedStepId) {
+      StepId failedStepId) {
     return failure(calculation, problem, Integer.valueOf(failedStepIndex), failedStepId);
   }
 
@@ -65,7 +66,7 @@ record StreamingWorkflowContext(
       CalculationReport calculation,
       GridGrindProblemDetail.Problem problem,
       @Nullable Integer failedStepIndex,
-      @Nullable String failedStepId) {
+      @Nullable StepId failedStepId) {
     return new ExecutionFailure(
         new ExecutionFailure.Context(protocolVersion, journal, request, calculation),
         new ExecutionFailure.Artifacts(

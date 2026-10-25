@@ -2,6 +2,7 @@ package dev.erst.gridgrind.excel;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.core.vocabulary.StepId;
 import java.util.Arrays;
 import java.util.List;
 import org.junit.jupiter.api.Test;
@@ -27,16 +28,16 @@ class WorkbookReadExecutorTest {
       List<WorkbookReadResult> varargsResults =
           executor.apply(
               workbook,
-              new WorkbookReadCommand.GetWorkbookSummary("workbook"),
+              new WorkbookReadCommand.GetWorkbookSummary(new StepId("workbook")),
               WorkbookReadTestSupport.getCells("cells", "Budget", List.of("A1")),
               new WorkbookReadCommand.GetNamedRangeSurface(
-                  "ranges", new ExcelNamedRangeSelection.All()));
+                  new StepId("ranges"), new ExcelNamedRangeSelection.All()));
       List<WorkbookReadResult> iterableResults =
           executor.apply(
               workbook,
               List.of(
-                  new WorkbookReadCommand.GetSheetSummary("sheet", "Budget"),
-                  new WorkbookReadCommand.GetMergedRegions("merged", "Budget")));
+                  new WorkbookReadCommand.GetSheetSummary(new StepId("sheet"), "Budget"),
+                  new WorkbookReadCommand.GetMergedRegions(new StepId("merged"), "Budget")));
       List<WorkbookReadResult> explicitLocationResults =
           executor.apply(
               workbook,
@@ -64,7 +65,9 @@ class WorkbookReadExecutorTest {
           NullPointerException.class, () -> executor.apply(workbook, (WorkbookReadCommand[]) null));
       assertThrows(
           NullPointerException.class,
-          () -> executor.apply(null, new WorkbookReadCommand.GetWorkbookSummary("workbook")));
+          () ->
+              executor.apply(
+                  null, new WorkbookReadCommand.GetWorkbookSummary(new StepId("workbook"))));
       assertThrows(
           NullPointerException.class,
           () -> executor.apply(workbook, (Iterable<WorkbookReadCommand>) null));
@@ -73,27 +76,28 @@ class WorkbookReadExecutorTest {
           () ->
               executor.apply(
                   workbook,
-                  Arrays.asList(new WorkbookReadCommand.GetWorkbookSummary("workbook"), null)));
+                  Arrays.asList(
+                      new WorkbookReadCommand.GetWorkbookSummary(new StepId("workbook")), null)));
       assertThrows(
           NullPointerException.class,
           () ->
               executor.apply(
                   workbook,
                   (WorkbookLocation) null,
-                  new WorkbookReadCommand.GetWorkbookSummary("workbook")));
+                  new WorkbookReadCommand.GetWorkbookSummary(new StepId("workbook"))));
 
       List<WorkbookReadResult> analysisResults =
           executor.apply(
               workbook,
               new WorkbookReadCommand.AnalyzeFormulaHealth(
-                  "formulaHealth", new ExcelSheetSelection.All()),
-              new WorkbookReadCommand.AnalyzeWorkbookFindings("workbookFindings"));
+                  new StepId("formulaHealth"), new ExcelSheetSelection.All()),
+              new WorkbookReadCommand.AnalyzeWorkbookFindings(new StepId("workbookFindings")));
       assertInstanceOf(WorkbookAnalysisResult.FormulaHealthResult.class, analysisResults.get(0));
       assertInstanceOf(WorkbookAnalysisResult.WorkbookFindingsResult.class, analysisResults.get(1));
     }
   }
 
   private static List<String> stepIds(List<WorkbookReadResult> results) {
-    return results.stream().map(WorkbookReadResult::stepId).toList();
+    return results.stream().map(result -> result.stepId().value()).toList();
   }
 }

@@ -144,7 +144,7 @@ class WorkbookStepJsonDeserializerTest {
                     """)));
 
     assertEquals(1, request.stepPartition().assertions().size());
-    assertEquals("assert-owner", request.stepPartition().assertions().getFirst().stepId());
+    assertEquals("assert-owner", request.stepPartition().assertions().getFirst().stepId().value());
   }
 
   @Test

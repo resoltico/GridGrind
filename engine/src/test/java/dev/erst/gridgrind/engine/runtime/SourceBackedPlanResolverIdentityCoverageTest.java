@@ -36,6 +36,7 @@ import dev.erst.gridgrind.core.source.BinarySourceInput;
 import dev.erst.gridgrind.core.source.TextSourceInput;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartDisplayBlanksAs;
 import dev.erst.gridgrind.core.vocabulary.ExcelPictureFormat;
+import dev.erst.gridgrind.core.vocabulary.StepId;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -268,9 +269,9 @@ class SourceBackedPlanResolverIdentityCoverageTest extends SourceBackedPlanResol
             dev.erst.gridgrind.core.model.formula.FormulaEnvironmentInput.empty(),
             List.of(
                 new InspectionStep(
-                    "inspect-amount", selector, new SheetIntrospectionQuery.GetCells()),
+                    new StepId("inspect-amount"), selector, new SheetIntrospectionQuery.GetCells()),
                 new AssertionStep(
-                    "assert-amount",
+                    new StepId("assert-amount"),
                     selector,
                     new CellAssertion.CellValue(
                         new dev.erst.gridgrind.core.model.value.CellScalarValue.NumberValue(
@@ -317,7 +318,7 @@ class SourceBackedPlanResolverIdentityCoverageTest extends SourceBackedPlanResol
 
     MutationStep rangeStep =
         new MutationStep(
-            "set-range-file-backed",
+            new StepId("set-range-file-backed"),
             new RangeSelector.ByRange("Budget", "A1:B1"),
             new CellMutationAction.SetRange(
                 new dev.erst.gridgrind.core.model.value.CellGridInput.Typed(
@@ -327,7 +328,7 @@ class SourceBackedPlanResolverIdentityCoverageTest extends SourceBackedPlanResol
                             new CellInput.NumberValue(42.0d))))));
     MutationStep lineChartStep =
         new MutationStep(
-            "set-line-chart-file-backed",
+            new StepId("set-line-chart-file-backed"),
             new SheetSelector.ByName("Budget"),
             new DrawingMutationAction.SetChart(
                 chartInput(
@@ -343,7 +344,7 @@ class SourceBackedPlanResolverIdentityCoverageTest extends SourceBackedPlanResol
                         List.of(chartSeries())))));
     MutationStep pieChartStep =
         new MutationStep(
-            "set-pie-chart-file-backed",
+            new StepId("set-pie-chart-file-backed"),
             new SheetSelector.ByName("Budget"),
             new DrawingMutationAction.SetChart(
                 chartInput(

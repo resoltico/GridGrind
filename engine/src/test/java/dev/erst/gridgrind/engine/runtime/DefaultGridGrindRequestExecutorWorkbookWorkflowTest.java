@@ -77,6 +77,7 @@ import dev.erst.gridgrind.core.vocabulary.ExcelPictureFormat;
 import dev.erst.gridgrind.core.vocabulary.ExcelPrintOrientation;
 import dev.erst.gridgrind.core.vocabulary.NamedRangeScope;
 import dev.erst.gridgrind.core.vocabulary.PlanId;
+import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.excel.*;
 import dev.erst.gridgrind.excel.ExcelAutofilterSnapshot;
 import dev.erst.gridgrind.excel.ExcelCellValue;
@@ -185,7 +186,7 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
 
     assertEquals(GridGrindProblemCode.ASSERTION_FAILED, failure.problem().code());
     assertEquals("EXECUTE_STEP", failure.problem().context().stage());
-    assertEquals("assert-owner", failedAssertion(failure).stepId());
+    assertEquals("assert-owner", failedAssertion(failure).stepId().value());
     assertEquals("EXPECT_CELL_VALUE", failedAssertion(failure).assertionType());
     assertEquals(1, failedAssertion(failure).observations().size());
     assertInstanceOf(
@@ -245,7 +246,7 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
                     FormulaEnvironmentInput.empty(),
                     List.of(
                         new InspectionStep(
-                            "missing-sheet",
+                            new StepId("missing-sheet"),
                             new SheetSelector.ByName("Missing"),
                             new SheetIntrospectionQuery.GetSheetSummary())))));
 
@@ -254,7 +255,7 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
         assertInstanceOf(ExecutionJournal.Outcome.Failed.class, failure.journal().outcome());
     assertEquals(ExecutionJournal.Status.FAILED, outcome.status());
     assertEquals(0, outcome.failedStep().orElseThrow().failedStepIndex());
-    assertEquals("missing-sheet", outcome.failedStep().orElseThrow().failedStepId());
+    assertEquals("missing-sheet", outcome.failedStep().orElseThrow().failedStepId().value());
     assertEquals(
         GridGrindProblemCode.SHEET_NOT_FOUND,
         failure.journal().steps().getFirst().failure().orElseThrow().code());
@@ -546,7 +547,7 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
             new RequestWarning(
                 dev.erst.gridgrind.core.problem.GridGrindWarningCode.UNQUOTED_SHEET_NAME_IN_FORMULA,
                 3,
-                "step-04-set-cell",
+                new StepId("step-04-set-cell"),
                 "SET_CELL",
                 "Formula references same-request sheet names with spaces without single quotes: Budget Review. Use 'Sheet Name'!A1 syntax.")),
         success.warnings());
@@ -1355,7 +1356,7 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
                   .read(
                       workbook,
                       new WorkbookReadCommand.GetConditionalFormatting(
-                          "conditional-formatting",
+                          new StepId("conditional-formatting"),
                           "Budget",
                           new dev.erst.gridgrind.excel.ExcelRangeSelection.All()))
                   .getFirst();
@@ -1490,14 +1491,17 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
       dev.erst.gridgrind.excel.WorkbookRuleResult.AutofiltersResult reopenedFilters =
           (dev.erst.gridgrind.excel.WorkbookRuleResult.AutofiltersResult)
               readExecutor
-                  .read(workbook, new WorkbookReadCommand.GetAutofilters("filters", "Budget"))
+                  .read(
+                      workbook,
+                      new WorkbookReadCommand.GetAutofilters(new StepId("filters"), "Budget"))
                   .getFirst();
       dev.erst.gridgrind.excel.WorkbookRuleResult.TablesResult reopenedTables =
           (dev.erst.gridgrind.excel.WorkbookRuleResult.TablesResult)
               readExecutor
                   .read(
                       workbook,
-                      new WorkbookReadCommand.GetTables("tables", new ExcelTableSelection.All()))
+                      new WorkbookReadCommand.GetTables(
+                          new StepId("tables"), new ExcelTableSelection.All()))
                   .getFirst();
 
       assertEquals(

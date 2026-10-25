@@ -45,6 +45,7 @@ import dev.erst.gridgrind.core.validation.WorkbookStaticViolation;
 import dev.erst.gridgrind.core.vocabulary.ExcelOoxmlWriteCipher;
 import dev.erst.gridgrind.core.vocabulary.ExcelOoxmlWriteHash;
 import dev.erst.gridgrind.core.vocabulary.NamedRangeScope;
+import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.excel.CellNotFoundException;
 import dev.erst.gridgrind.excel.ExcelNamedRangeScope;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
@@ -82,7 +83,7 @@ class ExecutorPolicyCoverageTest {
             IllegalArgumentException.class,
             () ->
                 InspectionCommandConverter.toReadCommand(
-                    "charts",
+                    new StepId("charts"),
                     new WorkbookSelector.Current(),
                     new WorkbookAssetIntrospectionQuery.GetCharts()));
 
@@ -247,7 +248,7 @@ class ExecutorPolicyCoverageTest {
                     dev.erst.gridgrind.core.problem.ProblemContextRequestSurfaces.RequestShape
                         .known("NEW", "NONE"),
                     new dev.erst.gridgrind.core.problem.ProblemContextWorkbookSurfaces
-                        .StepReference(0, "step", "INSPECTION", "GET_NAMED_RANGES"),
+                        .StepReference(0, new StepId("step"), "INSPECTION", "GET_NAMED_RANGES"),
                     dev.erst.gridgrind.core.problem.ProblemContextWorkbookSurfaces.ProblemLocation
                         .unknown()),
                 new NamedRangeNotFoundException(
@@ -262,7 +263,7 @@ class ExecutorPolicyCoverageTest {
                         dev.erst.gridgrind.core.problem.ProblemContextRequestSurfaces.RequestShape
                             .known("NEW", "NONE"),
                         new dev.erst.gridgrind.core.problem.ProblemContextWorkbookSurfaces
-                            .StepReference(1, "cell", "MUTATION", "SET_CELL"),
+                            .StepReference(1, new StepId("cell"), "MUTATION", "SET_CELL"),
                         dev.erst.gridgrind.core.problem.ProblemContextWorkbookSurfaces
                             .ProblemLocation.unknown()),
                     new CellNotFoundException("A1")))
@@ -276,7 +277,7 @@ class ExecutorPolicyCoverageTest {
                         dev.erst.gridgrind.core.problem.ProblemContextRequestSurfaces.RequestShape
                             .known("NEW", "NONE"),
                         new dev.erst.gridgrind.core.problem.ProblemContextWorkbookSurfaces
-                            .StepReference(2, "cell", "MUTATION", "SET_CELL"),
+                            .StepReference(2, new StepId("cell"), "MUTATION", "SET_CELL"),
                         dev.erst.gridgrind.core.problem.ProblemContextWorkbookSurfaces
                             .ProblemLocation.unknown()),
                     new InvalidCellAddressException("BAD!", new IllegalArgumentException("bad"))))
@@ -899,11 +900,12 @@ class ExecutorPolicyCoverageTest {
         pivotTableAction(new PivotTableInput.Source.Range("Budget", "A1:B5"));
     MutationStep pivotStep =
         new MutationStep(
-            "pivot-step",
+            new StepId("pivot-step"),
             new PivotTableSelector.ByNameOnSheet("SalesPivot", "Budget"),
             pivotFromRange);
     MutationStep addressedCellStep =
-        new MutationStep("cell-step", new CellSelector.ByAddress("Budget", "D4"), setText);
+        new MutationStep(
+            new StepId("cell-step"), new CellSelector.ByAddress("Budget", "D4"), setText);
 
     assertEquals(
         java.util.Optional.of("Budget"),

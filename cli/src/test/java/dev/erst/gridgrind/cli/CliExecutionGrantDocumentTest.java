@@ -13,6 +13,7 @@ import dev.erst.gridgrind.core.plan.InspectionStep;
 import dev.erst.gridgrind.core.plan.SheetIntrospectionQuery;
 import dev.erst.gridgrind.core.plan.SheetSelector;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
+import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.engine.api.GridGrindExecutionGrant;
 import dev.erst.gridgrind.engine.api.GridGrindHostAcceptancePolicy;
 import java.io.IOException;
@@ -23,6 +24,46 @@ import tools.jackson.core.JacksonException;
 
 /** Covers strict CLI host-grant decoding and translation into engine authority. */
 class CliExecutionGrantDocumentTest {
+  @Test
+  void acceptanceCannotBindAnInspectionAsATerminalAssertion() {
+    String request =
+        """
+        {"type":"REQUIRE_ALL","requirements":[{"type":"TERMINAL_ASSERTIONS","assertions":[{"stepId":"wrong-kind","target":{"type":"WORKBOOK_CURRENT"},"query":{"type":"GET_WORKBOOK_SUMMARY"}}]}]}
+        """;
+    assertThrows(
+        tools.jackson.databind.exc.MismatchedInputException.class,
+        () ->
+            dev.erst.gridgrind.cli.discovery.GridGrindCliJson.readBytes(
+                request.getBytes(java.nio.charset.StandardCharsets.UTF_8),
+                CliGrantAcceptancePolicy.class));
+  }
+
+  @Test
+  void coreAcceptanceStepsRoundTripThroughTheCanonicalCodec() throws java.io.IOException {
+    var assertion =
+        new dev.erst.gridgrind.core.plan.AssertionStep(
+            new dev.erst.gridgrind.core.vocabulary.StepId("verify-sheet"),
+            new dev.erst.gridgrind.core.plan.SheetSelector.ByName("Budget"),
+            new dev.erst.gridgrind.core.plan.PresenceAssertion.SheetPresent());
+    var inspection =
+        new dev.erst.gridgrind.core.plan.InspectionStep(
+            new dev.erst.gridgrind.core.vocabulary.StepId("capture-summary"),
+            new dev.erst.gridgrind.core.plan.WorkbookSelector.Current(),
+            new dev.erst.gridgrind.core.plan.WorkbookIntrospectionQuery.GetWorkbookSummary());
+    CliGrantAcceptancePolicy policy =
+        new CliGrantAcceptancePolicy.RequireAll(
+            java.util.List.of(
+                new CliGrantAcceptancePolicy.Requirement.TerminalAssertions(
+                    java.util.List.of(assertion)),
+                new CliGrantAcceptancePolicy.Requirement.PreserveInspectionFacts(
+                    java.util.List.of(inspection))));
+    byte[] bytes = dev.erst.gridgrind.cli.discovery.GridGrindCliJson.writeBytes(policy);
+    assertEquals(
+        policy,
+        dev.erst.gridgrind.cli.discovery.GridGrindCliJson.readBytes(
+            bytes, CliGrantAcceptancePolicy.class));
+  }
+
   @Test
   void translatesExplicitDocumentPathsAgainstTheCliWorkingDirectory() throws IOException {
     CliExecutionGrantDocument document =
@@ -183,7 +224,7 @@ class CliExecutionGrantDocumentTest {
         new CliGrantAcceptancePolicy.Requirement.PreserveInspectionFacts(
             List.of(
                 new InspectionStep(
-                    "preserve-summary",
+                    new StepId("preserve-summary"),
                     new SheetSelector.ByName("Summary"),
                     new SheetIntrospectionQuery.GetSheetSummary())));
 
@@ -194,14 +235,16 @@ class CliExecutionGrantDocumentTest {
 
     assertEquals(
         List.of("preserve-summary"),
-        translated.inspections().stream().map(InspectionStep::stepId).toList());
+        translated.inspections().stream().map(InspectionStep::stepId).toList().stream()
+            .map(dev.erst.gridgrind.core.vocabulary.WireString::value)
+            .toList());
   }
 
   @Test
   void constructsTerminalAssertionRequirement() {
     AssertionStep assertion =
         new AssertionStep(
-            "assert-owner",
+            new StepId("assert-owner"),
             new CellSelector.ByAddress("Summary", "A1"),
             new CellAssertion.CellValue(new CellScalarValue.Text("Approved")));
     CliGrantAcceptancePolicy.Requirement.TerminalAssertions requirement =
@@ -214,7 +257,9 @@ class CliExecutionGrantDocumentTest {
 
     assertEquals(
         List.of("assert-owner"),
-        translated.assertions().stream().map(AssertionStep::stepId).toList());
+        translated.assertions().stream().map(AssertionStep::stepId).toList().stream()
+            .map(dev.erst.gridgrind.core.vocabulary.WireString::value)
+            .toList());
   }
 
   @Test

@@ -43,6 +43,7 @@ import dev.erst.gridgrind.core.vocabulary.ExcelChartRadarStyle;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartScatterStyle;
 import dev.erst.gridgrind.core.vocabulary.ExcelDrawingAnchorBehavior;
 import dev.erst.gridgrind.core.vocabulary.ExcelPictureFormat;
+import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.excel.*;
 import dev.erst.gridgrind.excel.ExcelChartDefinition;
 import dev.erst.gridgrind.excel.ExcelChartSnapshot;
@@ -165,7 +166,7 @@ class SpreadsheetSurfaceConverterCoverageTest {
             WorkbookInspectionResult.CustomXmlMappingsResult.class,
             InspectionResultConverter.toReadResult(
                 new WorkbookCoreResult.CustomXmlMappingsResult(
-                    "custom-xml", List.of(mappingSnapshot))));
+                    new StepId("custom-xml"), List.of(mappingSnapshot))));
 
     assertEquals(expectedReportPlotTypes(), plotTypes(chartReport.plots()));
     assertEquals(
@@ -288,10 +289,14 @@ class SpreadsheetSurfaceConverterCoverageTest {
             dev.erst.gridgrind.core.plan.ExecutionPolicyInput.defaults(),
             dev.erst.gridgrind.core.model.formula.FormulaEnvironmentInput.empty(),
             List.of(
-                new MutationStep("set-chart", new SheetSelector.ByName("Ops"), chartAction),
-                new MutationStep("set-signature", new SheetSelector.ByName("Ops"), signatureAction),
                 new MutationStep(
-                    "import-custom-xml", new WorkbookSelector.Current(), inlineImportAction)));
+                    new StepId("set-chart"), new SheetSelector.ByName("Ops"), chartAction),
+                new MutationStep(
+                    new StepId("set-signature"), new SheetSelector.ByName("Ops"), signatureAction),
+                new MutationStep(
+                    new StepId("import-custom-xml"),
+                    new WorkbookSelector.Current(),
+                    inlineImportAction)));
     WorkbookPlan resolved =
         SourceBackedPlanResolver.resolve(
             plan,
@@ -322,9 +327,11 @@ class SpreadsheetSurfaceConverterCoverageTest {
             dev.erst.gridgrind.core.model.formula.FormulaEnvironmentInput.empty(),
             List.of(
                 new MutationStep(
-                    "stable-chart", new SheetSelector.ByName("Ops"), stableChartAction),
+                    new StepId("stable-chart"), new SheetSelector.ByName("Ops"), stableChartAction),
                 new MutationStep(
-                    "stable-signature", new SheetSelector.ByName("Ops"), stableSignatureAction)));
+                    new StepId("stable-signature"),
+                    new SheetSelector.ByName("Ops"),
+                    stableSignatureAction)));
     WorkbookPlan stableResolved =
         SourceBackedPlanResolver.resolve(
             stablePlan,

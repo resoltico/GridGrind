@@ -10,6 +10,7 @@ import dev.erst.gridgrind.core.plan.InspectionStep;
 import dev.erst.gridgrind.core.plan.PivotTableSelector;
 import dev.erst.gridgrind.core.plan.SheetSelector;
 import dev.erst.gridgrind.core.plan.WorkbookSelector;
+import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.excel.ExcelChartSelection;
 import dev.erst.gridgrind.excel.WorkbookReadCommand;
 import dev.erst.gridgrind.excel.pivot.ExcelPivotTableSelection;
@@ -22,7 +23,7 @@ class InspectionCommandConverterTest {
   void convertsPackageSecurityInspectionStep() {
     InspectionStep step =
         new InspectionStep(
-            "security",
+            new StepId("security"),
             new WorkbookSelector.Current(),
             new WorkbookIntrospectionQuery.GetPackageSecurity());
     WorkbookReadCommand.GetPackageSecurity command =
@@ -30,19 +31,19 @@ class InspectionCommandConverterTest {
             WorkbookReadCommand.GetPackageSecurity.class,
             InspectionCommandConverter.toReadCommand(step));
 
-    assertEquals("security", command.stepId());
+    assertEquals("security", command.stepId().value());
   }
 
   @Test
   void convertsChartInspectionSteps() {
     InspectionStep allChartsStep =
         new InspectionStep(
-            "charts",
+            new StepId("charts"),
             new ChartSelector.AllOnSheet("Budget"),
             new WorkbookAssetIntrospectionQuery.GetCharts());
     InspectionStep namedChartStep =
         new InspectionStep(
-            "named-chart",
+            new StepId("named-chart"),
             new ChartSelector.ByName("Budget", "Revenue"),
             new WorkbookAssetIntrospectionQuery.GetCharts());
     WorkbookReadCommand.GetCharts allChartsCommand =
@@ -54,11 +55,11 @@ class InspectionCommandConverterTest {
             WorkbookReadCommand.GetCharts.class,
             InspectionCommandConverter.toReadCommand(namedChartStep));
 
-    assertEquals("charts", allChartsCommand.stepId());
+    assertEquals("charts", allChartsCommand.stepId().value());
     ExcelChartSelection.AllOnSheet allSelection =
         assertInstanceOf(ExcelChartSelection.AllOnSheet.class, allChartsCommand.selection());
     assertEquals("Budget", allSelection.sheetName());
-    assertEquals("named-chart", namedChartCommand.stepId());
+    assertEquals("named-chart", namedChartCommand.stepId().value());
     ExcelChartSelection.ByName selection =
         assertInstanceOf(ExcelChartSelection.ByName.class, namedChartCommand.selection());
     assertEquals("Budget", selection.sheetName());
@@ -69,12 +70,12 @@ class InspectionCommandConverterTest {
   void convertsPivotInspectionSteps() {
     InspectionStep pivotStep =
         new InspectionStep(
-            "pivots",
+            new StepId("pivots"),
             new PivotTableSelector.ByNames(List.of("Sales Pivot 2026")),
             new WorkbookAssetIntrospectionQuery.GetPivotTables());
     InspectionStep pivotHealthStep =
         new InspectionStep(
-            "pivot-health",
+            new StepId("pivot-health"),
             new PivotTableSelector.All(),
             new InspectionAnalysisQuery.AnalyzePivotTableHealth());
 
@@ -87,7 +88,7 @@ class InspectionCommandConverterTest {
             WorkbookReadCommand.AnalyzePivotTableHealth.class,
             InspectionCommandConverter.toReadCommand(pivotHealthStep));
 
-    assertEquals("pivots", pivotCommand.stepId());
+    assertEquals("pivots", pivotCommand.stepId().value());
     assertEquals(
         List.of("Sales Pivot 2026"),
         ((ExcelPivotTableSelection.ByNames) pivotCommand.selection()).names());
@@ -98,7 +99,7 @@ class InspectionCommandConverterTest {
   void convertsArrayFormulaInspectionFromSheetSelector() {
     InspectionStep step =
         new InspectionStep(
-            "array-formulas",
+            new StepId("array-formulas"),
             new SheetSelector.ByName("Calc"),
             new SheetIntrospectionQuery.GetArrayFormulas());
     WorkbookReadCommand.GetArrayFormulas command =
@@ -106,7 +107,7 @@ class InspectionCommandConverterTest {
             WorkbookReadCommand.GetArrayFormulas.class,
             InspectionCommandConverter.toReadCommand(step));
 
-    assertEquals("array-formulas", command.stepId());
+    assertEquals("array-formulas", command.stepId().value());
     assertEquals(
         List.of("Calc"),
         ((dev.erst.gridgrind.excel.ExcelSheetSelection.Selected) command.selection()).sheetNames());
@@ -116,12 +117,12 @@ class InspectionCommandConverterTest {
   void convertsWorkbookCustomXmlInspectionSteps() {
     InspectionStep mappingsStep =
         new InspectionStep(
-            "custom-xml-mappings",
+            new StepId("custom-xml-mappings"),
             new WorkbookSelector.Current(),
             new WorkbookIntrospectionQuery.GetCustomXmlMappings());
     InspectionStep exportStep =
         new InspectionStep(
-            "custom-xml-export",
+            new StepId("custom-xml-export"),
             new WorkbookSelector.Current(),
             new WorkbookIntrospectionQuery.ExportCustomXmlMapping(
                 new CustomXmlMappingLocator(1L, "CORSO_mapping"), true, "UTF-8"));
@@ -135,8 +136,8 @@ class InspectionCommandConverterTest {
             WorkbookReadCommand.ExportCustomXmlMapping.class,
             InspectionCommandConverter.toReadCommand(exportStep));
 
-    assertEquals("custom-xml-mappings", mappingsCommand.stepId());
-    assertEquals("custom-xml-export", exportCommand.stepId());
+    assertEquals("custom-xml-mappings", mappingsCommand.stepId().value());
+    assertEquals("custom-xml-export", exportCommand.stepId().value());
     assertEquals(1L, exportCommand.mapping().mapId());
     assertEquals("CORSO_mapping", exportCommand.mapping().name());
     assertEquals("UTF-8", exportCommand.encoding());

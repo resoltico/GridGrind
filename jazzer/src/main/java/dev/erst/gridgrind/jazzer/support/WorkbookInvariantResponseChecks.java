@@ -227,7 +227,7 @@ final class WorkbookInvariantResponseChecks {
     switch (warning.location()) {
       case RequestWarningLocation.Step step -> {
         require(step.stepIndex() >= 0, "warning stepIndex must not be negative");
-        requireNonBlank(step.stepId(), "warning stepId");
+        requireNonBlank(step.stepId().value(), "warning stepId");
         requireNonBlank(step.stepType(), "warning stepType");
       }
       case RequestWarningLocation.RequestPath requestPath -> {
@@ -257,7 +257,7 @@ final class WorkbookInvariantResponseChecks {
 
   private static void requireAssertionResultShape(AssertionResult assertionResult) {
     require(assertionResult != null, "assertion result must not be null");
-    requireNonBlank(assertionResult.stepId(), "assertion stepId");
+    requireNonBlank(assertionResult.stepId().value(), "assertion stepId");
     requireNonBlank(assertionResult.assertionType(), "assertionType");
     switch (assertionResult) {
       case AssertionResult.Passed passed ->
@@ -281,7 +281,7 @@ final class WorkbookInvariantResponseChecks {
 
   private static void requireAssertionFailureShape(AssertionFailure assertionFailure) {
     require(assertionFailure != null, "assertionFailure must not be null");
-    requireNonBlank(assertionFailure.stepId(), "assertionFailure stepId");
+    requireNonBlank(assertionFailure.stepId().value(), "assertionFailure stepId");
     requireNonBlank(assertionFailure.assertionType(), "assertionFailure assertionType");
     require(assertionFailure.target() != null, "assertionFailure target must not be null");
     require(assertionFailure.assertion() != null, "assertionFailure assertion must not be null");
@@ -294,7 +294,7 @@ final class WorkbookInvariantResponseChecks {
 
   private static void requireReadResultShape(InspectionResult readResult) {
     require(readResult.stepId() != null, "read stepId must not be null");
-    require(!readResult.stepId().isBlank(), "read stepId must not be blank");
+    require(!readResult.stepId().value().isBlank(), "read stepId must not be blank");
 
     switch (readResult) {
       case WorkbookInspectionResult.WorkbookSummaryResult result ->

@@ -27,6 +27,7 @@ import dev.erst.gridgrind.core.plan.SheetIntrospectionQuery;
 import dev.erst.gridgrind.core.plan.WorkbookAssetIntrospectionQuery;
 import dev.erst.gridgrind.core.plan.WorkbookIntrospectionQuery;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
+import dev.erst.gridgrind.core.vocabulary.StepId;
 import java.util.List;
 
 /** Published task recipe for read-only workbook audit workflows. */
@@ -106,23 +107,23 @@ final class AuditExistingWorkbookTaskRecipe {
         new WorkbookPlan.WorkbookSource.ExistingFile(sourceAsset),
         new WorkbookPlan.WorkbookPersistence.None(),
         ExampleSteps.read(
-            "read-workbook-summary",
+            new StepId("read-workbook-summary"),
             ExampleSelectors.workbook(),
             new WorkbookIntrospectionQuery.GetWorkbookSummary()),
         ExampleSteps.read(
-            "read-template-comments",
+            new StepId("read-template-comments"),
             ExampleSelectors.cells("Template", "A1"),
             new SheetIntrospectionQuery.GetComments()),
         ExampleSteps.read(
-            "read-drawing-objects",
+            new StepId("read-drawing-objects"),
             new DrawingObjectSelector.AllOnSheet("Template"),
             new WorkbookAssetIntrospectionQuery.GetDrawingObjects()),
         ExampleSteps.read(
-            "read-formula-surface",
+            new StepId("read-formula-surface"),
             ExampleSelectors.sheets("Summary"),
             new InspectionSurfaceQuery.GetFormulaSurface()),
         ExampleSteps.read(
-            "analyze-workbook-findings",
+            new StepId("analyze-workbook-findings"),
             ExampleSelectors.workbook(),
             new InspectionAnalysisQuery.AnalyzeWorkbookFindings()));
   }

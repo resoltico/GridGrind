@@ -15,6 +15,7 @@ import dev.erst.gridgrind.core.result.ExecutionJournalLevel;
 import dev.erst.gridgrind.core.source.SecretReference;
 import dev.erst.gridgrind.core.source.TextSourceInput;
 import dev.erst.gridgrind.core.vocabulary.PlanId;
+import dev.erst.gridgrind.core.vocabulary.StepId;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -57,7 +58,7 @@ class WorkbookPlanTest {
   void copiesStepsAndRejectsDuplicateStepIds() {
     WorkbookStep authoredStep =
         new MutationStep(
-            "ensure-budget",
+            new StepId("ensure-budget"),
             new SheetSelector.ByName("Budget"),
             new WorkbookMutationAction.EnsureSheet());
     List<WorkbookStep> steps = new ArrayList<>();
@@ -73,7 +74,7 @@ class WorkbookPlanTest {
     steps.clear();
 
     assertEquals(1, plan.steps().size());
-    assertEquals("ensure-budget", plan.steps().getFirst().stepId());
+    assertEquals("ensure-budget", plan.steps().getFirst().stepId().value());
     assertThrows(UnsupportedOperationException.class, () -> plan.steps().add(authoredStep));
 
     IllegalArgumentException duplicateStepFailure =
@@ -87,11 +88,11 @@ class WorkbookPlanTest {
                     FormulaEnvironmentInput.empty(),
                     List.of(
                         new MutationStep(
-                            "duplicate",
+                            new StepId("duplicate"),
                             new SheetSelector.ByName("Budget"),
                             new WorkbookMutationAction.EnsureSheet()),
                         new InspectionStep(
-                            "duplicate",
+                            new StepId("duplicate"),
                             new WorkbookSelector.Current(),
                             new WorkbookIntrospectionQuery.GetWorkbookSummary()))));
 
@@ -169,14 +170,14 @@ class WorkbookPlanTest {
             formulaEnvironment,
             List.of(
                 new MutationStep(
-                    "set-cell",
+                    new StepId("set-cell"),
                     new CellSelector.ByAddress("Budget", "A1"),
                     new CellMutationAction.SetCell(new CellInput.Text(text("Owner"))))));
 
     assertInstanceOf(ExecutionModeInput.EventRead.class, plan.executionMode());
     assertInstanceOf(ExecutionModeInput.EventRead.class, plan.effectiveExecutionMode());
     assertEquals(formulaEnvironment, plan.formulaEnvironment());
-    assertEquals("set-cell", plan.steps().getFirst().stepId());
+    assertEquals("set-cell", plan.steps().getFirst().stepId().value());
     WorkbookPlan defaultedExecutionPlan =
         new WorkbookPlan(
             GridGrindProtocolVersion.current(),
@@ -278,25 +279,25 @@ class WorkbookPlanTest {
             FormulaEnvironmentInput.empty(),
             List.of(
                 new MutationStep(
-                    "set-cell",
+                    new StepId("set-cell"),
                     new CellSelector.ByAddress("Budget", "A1"),
                     new CellMutationAction.SetCell(new CellInput.Text(text("Owner")))),
                 new AssertionStep(
-                    "assert-cell",
+                    new StepId("assert-cell"),
                     new CellSelector.ByAddress("Budget", "A1"),
                     new CellAssertion.CellValue(
                         new dev.erst.gridgrind.core.model.value.CellScalarValue.Text("Owner"))),
                 new InspectionStep(
-                    "summary",
+                    new StepId("summary"),
                     new WorkbookSelector.Current(),
                     new WorkbookIntrospectionQuery.GetWorkbookSummary())));
 
     assertEquals(1, plan.stepPartition().mutations().size());
     assertEquals(1, plan.stepPartition().assertions().size());
     assertEquals(1, plan.stepPartition().inspections().size());
-    assertEquals("set-cell", plan.stepPartition().mutations().getFirst().stepId());
-    assertEquals("assert-cell", plan.stepPartition().assertions().getFirst().stepId());
-    assertEquals("summary", plan.stepPartition().inspections().getFirst().stepId());
+    assertEquals("set-cell", plan.stepPartition().mutations().getFirst().stepId().value());
+    assertEquals("assert-cell", plan.stepPartition().assertions().getFirst().stepId().value());
+    assertEquals("summary", plan.stepPartition().inspections().getFirst().stepId().value());
     InvalidRequestException nullStepFailure =
         assertThrows(
             InvalidRequestException.class,
@@ -308,7 +309,7 @@ class WorkbookPlanTest {
                     FormulaEnvironmentInput.empty(),
                     java.util.Arrays.asList(
                         new MutationStep(
-                            "ok",
+                            new StepId("ok"),
                             new WorkbookSelector.Current(),
                             new WorkbookMutationAction.ClearWorkbookProtection()),
                         null)));
@@ -328,7 +329,7 @@ class WorkbookPlanTest {
     for (int i = 0; i <= WorkbookPlan.MAX_STEPS; i++) {
       manySteps.add(
           new MutationStep(
-              "step-" + i,
+              new StepId("step-" + i),
               new SheetSelector.ByName("Sheet1"),
               new WorkbookMutationAction.EnsureSheet()));
     }

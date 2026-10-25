@@ -5,7 +5,7 @@ public record StepId(String value) implements WireString {
   private static final java.util.regex.Pattern PATTERN =
       java.util.regex.Pattern.compile(ProtocolConstraintValues.STEP_ID_PATTERN);
 
-  public StepId {
+  public StepId { // LIM-006A
     java.util.Objects.requireNonNull(value, "stepId must not be null");
     if (value.isBlank()) {
       throw new IllegalArgumentException("stepId must not be blank");

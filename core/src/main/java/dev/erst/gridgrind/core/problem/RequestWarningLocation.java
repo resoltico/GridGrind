@@ -2,6 +2,7 @@ package dev.erst.gridgrind.core.problem;
 
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import dev.erst.gridgrind.core.vocabulary.StepId;
 import java.util.Objects;
 
 /** The authored request surface to which one non-fatal warning applies. */
@@ -25,12 +26,13 @@ public sealed interface RequestWarningLocation
   }
 
   /** One warning attached to a concrete authored workbook step. */
-  record Step(int stepIndex, String stepId, String stepType) implements RequestWarningLocation {
+  record Step(int stepIndex, StepId stepId, String stepType) implements RequestWarningLocation {
     public Step {
       if (stepIndex < 0) {
         throw new IllegalArgumentException("stepIndex must not be negative");
       }
-      stepId = requireNonBlank(stepId, "stepId");
+
+      java.util.Objects.requireNonNull(stepId, "stepId must not be null");
       stepType = requireNonBlank(stepType, "stepType");
     }
   }

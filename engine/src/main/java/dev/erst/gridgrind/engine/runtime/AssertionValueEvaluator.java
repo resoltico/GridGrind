@@ -9,6 +9,7 @@ import dev.erst.gridgrind.core.plan.InspectionResult;
 import dev.erst.gridgrind.core.plan.Selector;
 import dev.erst.gridgrind.core.plan.SheetInspectionResult;
 import dev.erst.gridgrind.core.plan.SheetIntrospectionQuery;
+import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
 import dev.erst.gridgrind.excel.WorkbookLocation;
 import java.util.List;
@@ -23,7 +24,7 @@ final class AssertionValueEvaluator {
   }
 
   AssertionEvaluation evaluateEntityPresence(
-      String stepId,
+      StepId stepId,
       Selector target,
       String assertionType,
       boolean shouldExist,
@@ -47,7 +48,7 @@ final class AssertionValueEvaluator {
   }
 
   AssertionEvaluation evaluateCellValue(
-      String stepId,
+      StepId stepId,
       Selector target,
       CellScalarValue expectedValue,
       ExcelWorkbook workbook,
@@ -78,7 +79,7 @@ final class AssertionValueEvaluator {
   }
 
   AssertionEvaluation evaluateDisplayValue(
-      String stepId,
+      StepId stepId,
       Selector target,
       String expectedDisplayValue,
       ExcelWorkbook workbook,
@@ -109,7 +110,7 @@ final class AssertionValueEvaluator {
   }
 
   AssertionEvaluation evaluateFormulaText(
-      String stepId,
+      StepId stepId,
       Selector target,
       String expectedFormula,
       ExcelWorkbook workbook,
@@ -146,7 +147,7 @@ final class AssertionValueEvaluator {
   }
 
   AssertionEvaluation evaluateCellStyle(
-      String stepId,
+      StepId stepId,
       Selector target,
       CellStyleReport expectedStyle,
       ExcelWorkbook workbook,

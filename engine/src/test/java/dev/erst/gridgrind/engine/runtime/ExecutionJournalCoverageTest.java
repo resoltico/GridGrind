@@ -40,6 +40,7 @@ import dev.erst.gridgrind.core.result.ExecutionJournalLevel;
 import dev.erst.gridgrind.core.result.WorkbookResult;
 import dev.erst.gridgrind.core.result.WorkbookResults;
 import dev.erst.gridgrind.core.vocabulary.PlanId;
+import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.json.codec.GridGrindJsonOutput;
 import java.util.ArrayList;
 import java.util.List;
@@ -76,7 +77,7 @@ class ExecutionJournalCoverageTest {
   void targetResolverSummarizesAndExpandsSelectorFamilies() {
     InspectionStep workbookSummary =
         new InspectionStep(
-            "step-1",
+            new StepId("step-1"),
             new WorkbookSelector.Current(),
             new WorkbookIntrospectionQuery.GetWorkbookSummary());
     assertEquals(
@@ -285,14 +286,14 @@ class ExecutionJournalCoverageTest {
 
     InspectionStep successStep =
         new InspectionStep(
-            "step-1",
+            new StepId("step-1"),
             new WorkbookSelector.Current(),
             new WorkbookIntrospectionQuery.GetWorkbookSummary());
     recorder.beginStep(0, successStep).succeed();
 
     InspectionStep failedWithoutCalculation =
         new InspectionStep(
-            "step-2",
+            new StepId("step-2"),
             new TableSelector.ByName("BudgetTable"),
             new WorkbookAssetIntrospectionQuery.GetTables());
     recorder
@@ -305,7 +306,7 @@ class ExecutionJournalCoverageTest {
 
     InspectionStep failedWithCalculation =
         new InspectionStep(
-            "step-3",
+            new StepId("step-3"),
             new CellSelector.ByAddress("Budget", "B2"),
             new SheetIntrospectionQuery.GetCells());
     ExecutionJournalRecorder.StepHandle stepHandle = recorder.beginStep(2, failedWithCalculation);
@@ -318,7 +319,8 @@ class ExecutionJournalCoverageTest {
     stepHandle.fail(
         GridGrindProblemCode.IO_ERROR, GridGrindProblemCategory.IO, "EXECUTE_STEP", "disk issue");
 
-    ExecutionJournal journal = recorder.buildFailure(3, GridGrindProblemCode.IO_ERROR, 2, "step-3");
+    ExecutionJournal journal =
+        recorder.buildFailure(3, GridGrindProblemCode.IO_ERROR, 2, new StepId("step-3"));
 
     assertFalse(emitted.isEmpty());
     assertEquals(ExecutionJournal.Status.SUCCEEDED, journal.calculation().preflight().status());
@@ -349,13 +351,13 @@ class ExecutionJournalCoverageTest {
         verboseRecorder.beginStep(
             0,
             new InspectionStep(
-                "step-1",
+                new StepId("step-1"),
                 new CellSelector.ByAddress("Budget", "B2"),
                 new SheetIntrospectionQuery.GetCells()));
     stepHandle.fail(
         GridGrindProblemCode.IO_ERROR, GridGrindProblemCategory.IO, "EXECUTE_STEP", "boom");
     ExecutionJournal journal =
-        verboseRecorder.buildFailure(1, GridGrindProblemCode.IO_ERROR, 0, "step-1");
+        verboseRecorder.buildFailure(1, GridGrindProblemCode.IO_ERROR, 0, new StepId("step-1"));
     assertEquals(ExecutionJournal.Status.FAILED, journal.calculation().execution().status());
   }
 
@@ -382,7 +384,7 @@ class ExecutionJournalCoverageTest {
   void recorderKeepsCompactSummaryStepsWithoutTimingAndPreservesTimedNormalVerboseSteps() {
     MutationStep selectionStep =
         new MutationStep(
-            "step-1",
+            new StepId("step-1"),
             new SheetSelector.ByNames(List.of("Budget", "Ops")),
             new WorkbookMutationAction.SetSelectedSheets());
 
@@ -461,7 +463,7 @@ class ExecutionJournalCoverageTest {
         level,
         List.of(
             new MutationStep(
-                "ensure-ledger",
+                new StepId("ensure-ledger"),
                 new SheetSelector.ByName("Ledger"),
                 new WorkbookMutationAction.EnsureSheet())),
         List.of());

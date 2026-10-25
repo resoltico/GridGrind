@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import dev.erst.gridgrind.core.problem.GridGrindProblemCode;
+import dev.erst.gridgrind.core.vocabulary.StepId;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -32,17 +33,17 @@ public sealed interface ExecutionProgressEvent
   Optional<Integer> stepIndex();
 
   /** Optional authored step id, present exactly when {@link #stepIndex()} is present. */
-  Optional<String> stepId();
+  Optional<StepId> stepId();
 
   /** Creates a started lifecycle event. */
   static Started started(
-      String timestamp, Category category, Optional<Integer> stepIndex, Optional<String> stepId) {
+      String timestamp, Category category, Optional<Integer> stepIndex, Optional<StepId> stepId) {
     return new Started(timestamp, category, stepIndex, stepId);
   }
 
   /** Creates a succeeded lifecycle event. */
   static Succeeded succeeded(
-      String timestamp, Category category, Optional<Integer> stepIndex, Optional<String> stepId) {
+      String timestamp, Category category, Optional<Integer> stepIndex, Optional<StepId> stepId) {
     return new Succeeded(timestamp, category, stepIndex, stepId);
   }
 
@@ -52,7 +53,7 @@ public sealed interface ExecutionProgressEvent
       Category category,
       GridGrindProblemCode problemCode,
       Optional<Integer> stepIndex,
-      Optional<String> stepId) {
+      Optional<StepId> stepId) {
     return new Failed(timestamp, category, problemCode, stepIndex, stepId);
   }
 
@@ -61,7 +62,7 @@ public sealed interface ExecutionProgressEvent
       String timestamp,
       Category category,
       @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<Integer> stepIndex,
-      @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<String> stepId)
+      @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<StepId> stepId)
       implements ExecutionProgressEvent {
     public Started {
       validateCommon(timestamp, category, stepIndex, stepId);
@@ -80,7 +81,7 @@ public sealed interface ExecutionProgressEvent
       String timestamp,
       Category category,
       @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<Integer> stepIndex,
-      @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<String> stepId)
+      @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<StepId> stepId)
       implements ExecutionProgressEvent {
     public Succeeded {
       validateCommon(timestamp, category, stepIndex, stepId);
@@ -100,7 +101,7 @@ public sealed interface ExecutionProgressEvent
       Category category,
       GridGrindProblemCode problemCode,
       @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<Integer> stepIndex,
-      @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<String> stepId)
+      @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<StepId> stepId)
       implements ExecutionProgressEvent {
     public Failed {
       validateCommon(timestamp, category, stepIndex, stepId);
@@ -136,11 +137,11 @@ public sealed interface ExecutionProgressEvent
   }
 
   private static void validateCommon(
-      String timestamp, Category category, Optional<Integer> stepIndex, Optional<String> stepId) {
+      String timestamp, Category category, Optional<Integer> stepIndex, Optional<StepId> stepId) {
     WorkbookPlan.requireNonBlank(timestamp, "timestamp");
     Objects.requireNonNull(category, "category must not be null");
     Optional<Integer> normalizedIndex = normalizeStepIndex(stepIndex);
-    Optional<String> normalizedId = normalizeStepId(stepId);
+    Optional<StepId> normalizedId = normalizeStepId(stepId);
     if (normalizedIndex.isPresent() != normalizedId.isPresent()) {
       throw new IllegalArgumentException(
           "stepId and stepIndex must either both be present or both be absent");
@@ -158,8 +159,7 @@ public sealed interface ExecutionProgressEvent
     return normalized;
   }
 
-  private static Optional<String> normalizeStepId(Optional<String> value) {
-    Optional<String> normalized = Objects.requireNonNullElseGet(value, Optional::empty);
-    return normalized.map(entry -> WorkbookPlan.requireNonBlank(entry, "stepId"));
+  private static Optional<StepId> normalizeStepId(Optional<StepId> value) {
+    return Objects.requireNonNullElseGet(value, Optional::empty);
   }
 }

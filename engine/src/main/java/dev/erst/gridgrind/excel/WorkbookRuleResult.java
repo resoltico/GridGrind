@@ -3,6 +3,7 @@ package dev.erst.gridgrind.excel;
 import static dev.erst.gridgrind.excel.WorkbookResultSupport.copyValues;
 import static dev.erst.gridgrind.excel.WorkbookResultSupport.requireNonBlank;
 
+import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.excel.validation.ExcelDataValidationSnapshot;
 import java.util.List;
 
@@ -15,10 +16,11 @@ public sealed interface WorkbookRuleResult extends WorkbookReadIntrospectionResu
 
   /** Returns data-validation metadata for the selected ranges on one sheet. */
   record DataValidationsResult(
-      String stepId, String sheetName, List<ExcelDataValidationSnapshot> validations)
+      StepId stepId, String sheetName, List<ExcelDataValidationSnapshot> validations)
       implements WorkbookRuleResult {
     public DataValidationsResult {
-      stepId = requireNonBlank(stepId, "stepId");
+
+      java.util.Objects.requireNonNull(stepId, "stepId must not be null");
       sheetName = requireNonBlank(sheetName, "sheetName");
       validations = copyValues(validations, "validations");
     }
@@ -26,12 +28,13 @@ public sealed interface WorkbookRuleResult extends WorkbookReadIntrospectionResu
 
   /** Returns conditional-formatting metadata for the selected ranges on one sheet. */
   record ConditionalFormattingResult(
-      String stepId,
+      StepId stepId,
       String sheetName,
       List<ExcelConditionalFormattingBlockSnapshot> conditionalFormattingBlocks)
       implements WorkbookRuleResult {
     public ConditionalFormattingResult {
-      stepId = requireNonBlank(stepId, "stepId");
+
+      java.util.Objects.requireNonNull(stepId, "stepId must not be null");
       sheetName = requireNonBlank(sheetName, "sheetName");
       conditionalFormattingBlocks =
           copyValues(conditionalFormattingBlocks, "conditionalFormattingBlocks");
@@ -40,20 +43,22 @@ public sealed interface WorkbookRuleResult extends WorkbookReadIntrospectionResu
 
   /** Returns sheet- and table-owned autofilter metadata for one sheet. */
   record AutofiltersResult(
-      String stepId, String sheetName, List<ExcelAutofilterSnapshot> autofilters)
+      StepId stepId, String sheetName, List<ExcelAutofilterSnapshot> autofilters)
       implements WorkbookRuleResult {
     public AutofiltersResult {
-      stepId = requireNonBlank(stepId, "stepId");
+
+      java.util.Objects.requireNonNull(stepId, "stepId must not be null");
       sheetName = requireNonBlank(sheetName, "sheetName");
       autofilters = copyValues(autofilters, "autofilters");
     }
   }
 
   /** Returns factual table metadata selected by workbook-global table name or all tables. */
-  record TablesResult(String stepId, List<ExcelTableSnapshot> tables)
+  record TablesResult(StepId stepId, List<ExcelTableSnapshot> tables)
       implements WorkbookRuleResult {
     public TablesResult {
-      stepId = requireNonBlank(stepId, "stepId");
+
+      java.util.Objects.requireNonNull(stepId, "stepId must not be null");
       tables = copyValues(tables, "tables");
     }
   }

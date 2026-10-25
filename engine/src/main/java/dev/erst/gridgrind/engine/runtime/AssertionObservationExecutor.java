@@ -13,6 +13,7 @@ import dev.erst.gridgrind.core.plan.WorkbookAssetInspectionResult;
 import dev.erst.gridgrind.core.plan.WorkbookAssetIntrospectionQuery;
 import dev.erst.gridgrind.core.plan.WorkbookInspectionResult;
 import dev.erst.gridgrind.core.plan.WorkbookIntrospectionQuery;
+import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
 import dev.erst.gridgrind.excel.NamedRangeNotFoundException;
 import dev.erst.gridgrind.excel.SheetNotFoundException;
@@ -35,7 +36,7 @@ final class AssertionObservationExecutor {
   }
 
   InspectionResult executeObservation(
-      String stepId,
+      StepId stepId,
       Selector target,
       InspectionQuery query,
       ExcelWorkbook workbook,
@@ -61,7 +62,7 @@ final class AssertionObservationExecutor {
   }
 
   InspectionResult presenceObservation(
-      String stepId, Selector target, ExcelWorkbook workbook, WorkbookLocation workbookLocation) {
+      StepId stepId, Selector target, ExcelWorkbook workbook, WorkbookLocation workbookLocation) {
     try {
       return switch (target) {
         case SheetSelector.All _ ->
@@ -116,7 +117,7 @@ final class AssertionObservationExecutor {
     }
   }
 
-  static InspectionResult zeroMatchPresenceObservation(String stepId, Selector target) {
+  static InspectionResult zeroMatchPresenceObservation(StepId stepId, Selector target) {
     return switch (target) {
       case NamedRangeSelector _ ->
           new WorkbookInspectionResult.NamedRangesResult(stepId, List.of());

@@ -5,6 +5,7 @@ import static dev.erst.gridgrind.excel.WorkbookResultSupport.copyValues;
 import static dev.erst.gridgrind.excel.WorkbookResultSupport.requireNonBlank;
 import static dev.erst.gridgrind.excel.WorkbookResultSupport.validateCommonWorkbookSummaryFields;
 
+import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlExportSnapshot;
 import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlMappingSnapshot;
 import dev.erst.gridgrind.excel.ooxml.ExcelOoxmlPackageSecuritySnapshot;
@@ -21,55 +22,61 @@ public sealed interface WorkbookCoreResult extends WorkbookReadIntrospectionResu
         WorkbookCoreResult.NamedRangesResult {
 
   /** Returns workbook-level summary facts. */
-  record WorkbookSummaryResult(String stepId, WorkbookSummary workbook)
+  record WorkbookSummaryResult(StepId stepId, WorkbookSummary workbook)
       implements WorkbookCoreResult {
     public WorkbookSummaryResult {
-      stepId = requireNonBlank(stepId, "stepId");
+
+      java.util.Objects.requireNonNull(stepId, "stepId must not be null");
       Objects.requireNonNull(workbook, "workbook must not be null");
     }
   }
 
   /** Returns OOXML package-encryption and package-signature facts. */
-  record PackageSecurityResult(String stepId, ExcelOoxmlPackageSecuritySnapshot security)
+  record PackageSecurityResult(StepId stepId, ExcelOoxmlPackageSecuritySnapshot security)
       implements WorkbookCoreResult {
     public PackageSecurityResult {
-      stepId = requireNonBlank(stepId, "stepId");
+
+      java.util.Objects.requireNonNull(stepId, "stepId must not be null");
       Objects.requireNonNull(security, "security must not be null");
     }
   }
 
   /** Returns workbook-level protection facts. */
-  record WorkbookProtectionResult(String stepId, ExcelWorkbookProtectionSnapshot protection)
+  record WorkbookProtectionResult(StepId stepId, ExcelWorkbookProtectionSnapshot protection)
       implements WorkbookCoreResult {
     public WorkbookProtectionResult {
-      stepId = requireNonBlank(stepId, "stepId");
+
+      java.util.Objects.requireNonNull(stepId, "stepId must not be null");
       Objects.requireNonNull(protection, "protection must not be null");
     }
   }
 
   /** Returns factual workbook custom-XML mapping metadata. */
-  record CustomXmlMappingsResult(String stepId, List<ExcelCustomXmlMappingSnapshot> mappings)
+  record CustomXmlMappingsResult(StepId stepId, List<ExcelCustomXmlMappingSnapshot> mappings)
       implements WorkbookCoreResult {
     public CustomXmlMappingsResult {
-      stepId = requireNonBlank(stepId, "stepId");
+
+      java.util.Objects.requireNonNull(stepId, "stepId must not be null");
       mappings = copyValues(mappings, "mappings");
     }
   }
 
   /** Returns XML exported from one selected workbook custom-XML mapping. */
-  record CustomXmlExportResult(String stepId, ExcelCustomXmlExportSnapshot export)
+  record CustomXmlExportResult(StepId stepId, ExcelCustomXmlExportSnapshot export)
       implements WorkbookCoreResult {
     public CustomXmlExportResult {
-      stepId = requireNonBlank(stepId, "stepId");
+
+      java.util.Objects.requireNonNull(stepId, "stepId must not be null");
       Objects.requireNonNull(export, "export must not be null");
     }
   }
 
   /** Returns selected named ranges. */
-  record NamedRangesResult(String stepId, List<ExcelNamedRangeSnapshot> namedRanges)
+  record NamedRangesResult(StepId stepId, List<ExcelNamedRangeSnapshot> namedRanges)
       implements WorkbookCoreResult {
     public NamedRangesResult {
-      stepId = requireNonBlank(stepId, "stepId");
+
+      java.util.Objects.requireNonNull(stepId, "stepId must not be null");
       namedRanges = copyValues(namedRanges, "namedRanges");
     }
   }

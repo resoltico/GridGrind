@@ -8,6 +8,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartBarDirection;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartDisplayBlanksAs;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartLegendPosition;
+import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingAnchor;
 import java.io.IOException;
 import java.util.List;
@@ -41,7 +42,7 @@ class ExcelChartMutationFlowTest {
               introspector.execute(
                   workbook,
                   new WorkbookReadCommand.GetCharts(
-                      "charts", new ExcelChartSelection.AllOnSheet("Charts"))));
+                      new StepId("charts"), new ExcelChartSelection.AllOnSheet("Charts"))));
       ExcelChartSnapshot initialLine = ExcelChartTestSupport.chart(lineRead.charts(), "OpsLine");
       assertEquals(new ExcelChartSnapshot.Title.Text("Line roadmap"), initialLine.title());
 
@@ -95,7 +96,8 @@ class ExcelChartMutationFlowTest {
               introspector.execute(
                   workbook,
                   new WorkbookReadCommand.GetCharts(
-                      "chart-by-name", new ExcelChartSelection.ByName("Charts", "OpsPie"))));
+                      new StepId("chart-by-name"),
+                      new ExcelChartSelection.ByName("Charts", "OpsPie"))));
       assertEquals(1, exactChartRead.charts().size());
       assertEquals("OpsPie", exactChartRead.charts().getFirst().name());
 

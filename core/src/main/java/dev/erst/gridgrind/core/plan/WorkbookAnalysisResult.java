@@ -10,6 +10,7 @@ import dev.erst.gridgrind.core.model.validation.ConditionalFormattingHealthRepor
 import dev.erst.gridgrind.core.model.validation.DataValidationHealthReport;
 import dev.erst.gridgrind.core.model.value.HyperlinkHealthReport;
 import dev.erst.gridgrind.core.result.WorkbookFindingsReport;
+import dev.erst.gridgrind.core.vocabulary.StepId;
 import java.util.Objects;
 
 /** Workbook health-analysis results. */
@@ -26,20 +27,22 @@ public sealed interface WorkbookAnalysisResult extends InspectionAnalysisResult
 
   /** Returns formula-health findings. */
   @JsonTypeName("ANALYZE_FORMULA_HEALTH")
-  record FormulaHealthResult(String stepId, FormulaHealthReport analysis)
+  record FormulaHealthResult(StepId stepId, FormulaHealthReport analysis)
       implements WorkbookAnalysisResult {
     public FormulaHealthResult {
-      stepId = InspectionResultValidationSupport.requireNonBlank(stepId, "stepId");
+
+      java.util.Objects.requireNonNull(stepId, "stepId must not be null");
       Objects.requireNonNull(analysis, "analysis must not be null");
     }
   }
 
   /** Returns data-validation-health findings. */
   @JsonTypeName("ANALYZE_DATA_VALIDATION_HEALTH")
-  record DataValidationHealthResult(String stepId, DataValidationHealthReport analysis)
+  record DataValidationHealthResult(StepId stepId, DataValidationHealthReport analysis)
       implements WorkbookAnalysisResult {
     public DataValidationHealthResult {
-      stepId = InspectionResultValidationSupport.requireNonBlank(stepId, "stepId");
+
+      java.util.Objects.requireNonNull(stepId, "stepId must not be null");
       Objects.requireNonNull(analysis, "analysis must not be null");
     }
   }
@@ -47,69 +50,76 @@ public sealed interface WorkbookAnalysisResult extends InspectionAnalysisResult
   /** Returns conditional-formatting-health findings. */
   @JsonTypeName("ANALYZE_CONDITIONAL_FORMATTING_HEALTH")
   record ConditionalFormattingHealthResult(
-      String stepId, ConditionalFormattingHealthReport analysis) implements WorkbookAnalysisResult {
+      StepId stepId, ConditionalFormattingHealthReport analysis) implements WorkbookAnalysisResult {
     public ConditionalFormattingHealthResult {
-      stepId = InspectionResultValidationSupport.requireNonBlank(stepId, "stepId");
+
+      java.util.Objects.requireNonNull(stepId, "stepId must not be null");
       Objects.requireNonNull(analysis, "analysis must not be null");
     }
   }
 
   /** Returns autofilter-health findings. */
   @JsonTypeName("ANALYZE_AUTOFILTER_HEALTH")
-  record AutofilterHealthResult(String stepId, AutofilterHealthReport analysis)
+  record AutofilterHealthResult(StepId stepId, AutofilterHealthReport analysis)
       implements WorkbookAnalysisResult {
     public AutofilterHealthResult {
-      stepId = InspectionResultValidationSupport.requireNonBlank(stepId, "stepId");
+
+      java.util.Objects.requireNonNull(stepId, "stepId must not be null");
       Objects.requireNonNull(analysis, "analysis must not be null");
     }
   }
 
   /** Returns table-health findings. */
   @JsonTypeName("ANALYZE_TABLE_HEALTH")
-  record TableHealthResult(String stepId, TableHealthReport analysis)
+  record TableHealthResult(StepId stepId, TableHealthReport analysis)
       implements WorkbookAnalysisResult {
     public TableHealthResult {
-      stepId = InspectionResultValidationSupport.requireNonBlank(stepId, "stepId");
+
+      java.util.Objects.requireNonNull(stepId, "stepId must not be null");
       Objects.requireNonNull(analysis, "analysis must not be null");
     }
   }
 
   /** Returns pivot-table-health findings. */
   @JsonTypeName("ANALYZE_PIVOT_TABLE_HEALTH")
-  record PivotTableHealthResult(String stepId, PivotTableHealthReport analysis)
+  record PivotTableHealthResult(StepId stepId, PivotTableHealthReport analysis)
       implements WorkbookAnalysisResult {
     public PivotTableHealthResult {
-      stepId = InspectionResultValidationSupport.requireNonBlank(stepId, "stepId");
+
+      java.util.Objects.requireNonNull(stepId, "stepId must not be null");
       Objects.requireNonNull(analysis, "analysis must not be null");
     }
   }
 
   /** Returns hyperlink-health findings. */
   @JsonTypeName("ANALYZE_HYPERLINK_HEALTH")
-  record HyperlinkHealthResult(String stepId, HyperlinkHealthReport analysis)
+  record HyperlinkHealthResult(StepId stepId, HyperlinkHealthReport analysis)
       implements WorkbookAnalysisResult {
     public HyperlinkHealthResult {
-      stepId = InspectionResultValidationSupport.requireNonBlank(stepId, "stepId");
+
+      java.util.Objects.requireNonNull(stepId, "stepId must not be null");
       Objects.requireNonNull(analysis, "analysis must not be null");
     }
   }
 
   /** Returns named-range-health findings. */
   @JsonTypeName("ANALYZE_NAMED_RANGE_HEALTH")
-  record NamedRangeHealthResult(String stepId, NamedRangeHealthReport analysis)
+  record NamedRangeHealthResult(StepId stepId, NamedRangeHealthReport analysis)
       implements WorkbookAnalysisResult {
     public NamedRangeHealthResult {
-      stepId = InspectionResultValidationSupport.requireNonBlank(stepId, "stepId");
+
+      java.util.Objects.requireNonNull(stepId, "stepId must not be null");
       Objects.requireNonNull(analysis, "analysis must not be null");
     }
   }
 
   /** Returns aggregated workbook findings. */
   @JsonTypeName("ANALYZE_WORKBOOK_FINDINGS")
-  record WorkbookFindingsResult(String stepId, WorkbookFindingsReport analysis)
+  record WorkbookFindingsResult(StepId stepId, WorkbookFindingsReport analysis)
       implements WorkbookAnalysisResult {
     public WorkbookFindingsResult {
-      stepId = InspectionResultValidationSupport.requireNonBlank(stepId, "stepId");
+
+      java.util.Objects.requireNonNull(stepId, "stepId must not be null");
       Objects.requireNonNull(analysis, "analysis must not be null");
     }
   }

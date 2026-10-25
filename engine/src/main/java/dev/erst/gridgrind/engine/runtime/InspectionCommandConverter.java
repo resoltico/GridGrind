@@ -18,6 +18,7 @@ import dev.erst.gridgrind.core.plan.SheetSelector;
 import dev.erst.gridgrind.core.plan.TableSelector;
 import dev.erst.gridgrind.core.plan.WorkbookAssetIntrospectionQuery;
 import dev.erst.gridgrind.core.plan.WorkbookIntrospectionQuery;
+import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.excel.ExcelCellReadFacet;
 import dev.erst.gridgrind.excel.ExcelCellReadProjection;
 import dev.erst.gridgrind.excel.WorkbookReadCommand;
@@ -34,7 +35,7 @@ final class InspectionCommandConverter {
   }
 
   /** Converts one inspection query and selector into the matching workbook-core read command. */
-  static WorkbookReadCommand toReadCommand(String stepId, Selector target, InspectionQuery query) {
+  static WorkbookReadCommand toReadCommand(StepId stepId, Selector target, InspectionQuery query) {
     return switch (query) {
       case WorkbookIntrospectionQuery.GetWorkbookSummary _ ->
           new WorkbookReadCommand.GetWorkbookSummary(stepId);

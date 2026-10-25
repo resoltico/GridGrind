@@ -21,6 +21,7 @@ import dev.erst.gridgrind.core.vocabulary.AnalysisSeverity;
 import dev.erst.gridgrind.core.vocabulary.ExcelFillPattern;
 import dev.erst.gridgrind.core.vocabulary.ExcelHorizontalAlignment;
 import dev.erst.gridgrind.core.vocabulary.ExcelVerticalAlignment;
+import dev.erst.gridgrind.core.vocabulary.StepId;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
@@ -32,17 +33,17 @@ class InspectionResultTest {
   void sheetsResultCopiesSheetNamesAndRejectsBlankStepId() {
     List<String> names = new ArrayList<>(List.of("Budget", "Report"));
     WorkbookInspectionResult.SheetsResult result =
-        new WorkbookInspectionResult.SheetsResult("sheets", names);
+        new WorkbookInspectionResult.SheetsResult(new StepId("sheets"), names);
     names.clear();
 
-    assertEquals("sheets", result.stepId());
+    assertEquals("sheets", result.stepId().value());
     assertEquals(List.of("Budget", "Report"), result.sheetNames());
     assertThrows(
         IllegalArgumentException.class,
-        () -> new WorkbookInspectionResult.SheetsResult(" ", List.of()));
+        () -> new WorkbookInspectionResult.SheetsResult(new StepId(" "), List.of()));
     assertThrows(
         NullPointerException.class,
-        () -> new WorkbookInspectionResult.SheetsResult("sheets", null));
+        () -> new WorkbookInspectionResult.SheetsResult(new StepId("sheets"), null));
   }
 
   @Test
@@ -56,17 +57,17 @@ class InspectionResultTest {
             java.util.Optional.empty(),
             java.util.Optional.empty()));
     SheetInspectionResult.CellsResult result =
-        new SheetInspectionResult.CellsResult("cells", "Budget", cells);
+        new SheetInspectionResult.CellsResult(new StepId("cells"), "Budget", cells);
 
     cells.clear();
 
-    assertEquals("cells", result.stepId());
+    assertEquals("cells", result.stepId().value());
     assertEquals("A1", result.cells().getFirst().address());
     assertThrows(
         IllegalArgumentException.class,
         () ->
             new WorkbookInspectionResult.WorkbookProtectionResult(
-                " ", new WorkbookProtectionReport(false, false, false, false, false)));
+                new StepId(" "), new WorkbookProtectionReport(false, false, false, false, false)));
   }
 
   @Test
@@ -82,15 +83,18 @@ class InspectionResultTest {
             List.of("NOW()"));
     WorkbookAnalysisResult.WorkbookFindingsResult findings =
         new WorkbookAnalysisResult.WorkbookFindingsResult(
-            "workbook-findings", new WorkbookFindingsReport(summary, List.of(finding)));
+            new StepId("workbook-findings"), new WorkbookFindingsReport(summary, List.of(finding)));
 
     assertEquals(1, findings.analysis().summary().totalCount());
     assertThrows(
         IllegalArgumentException.class,
-        () -> new WorkbookAnalysisResult.WorkbookFindingsResult(" ", findings.analysis()));
+        () ->
+            new WorkbookAnalysisResult.WorkbookFindingsResult(
+                new StepId(" "), findings.analysis()));
     assertThrows(
         NullPointerException.class,
-        () -> new WorkbookAnalysisResult.HyperlinkHealthResult("hyperlink-health", null));
+        () ->
+            new WorkbookAnalysisResult.HyperlinkHealthResult(new StepId("hyperlink-health"), null));
   }
 
   private static CellStyleReport minimalStyle() {

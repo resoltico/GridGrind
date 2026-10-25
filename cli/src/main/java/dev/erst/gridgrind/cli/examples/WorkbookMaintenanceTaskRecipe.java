@@ -27,6 +27,7 @@ import dev.erst.gridgrind.core.plan.WorkbookAssetIntrospectionQuery;
 import dev.erst.gridgrind.core.plan.WorkbookIntrospectionQuery;
 import dev.erst.gridgrind.core.plan.WorkbookMutationAction;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
+import dev.erst.gridgrind.core.vocabulary.StepId;
 import java.util.List;
 
 /** Published task recipe for workbook maintenance and sheet-copy workflows. */
@@ -118,23 +119,23 @@ final class WorkbookMaintenanceTaskRecipe {
         new WorkbookPlan.WorkbookSource.ExistingFile(sourceAsset),
         ExampleWorkbookPlans.saveAsExisting(TaskStarterRecipeSupport.taskWorkbookPath(taskId)),
         ExampleSteps.read(
-            "read-source-workbook",
+            new StepId("read-source-workbook"),
             ExampleSelectors.workbook(),
             new WorkbookIntrospectionQuery.GetWorkbookSummary()),
         ExampleSteps.step(
-            "copy-template-sheet",
+            new StepId("copy-template-sheet"),
             ExampleSelectors.sheet("Template"),
             new WorkbookMutationAction.CopySheet("Template Copy")),
         ExampleSteps.read(
-            "read-copied-comments",
+            new StepId("read-copied-comments"),
             new dev.erst.gridgrind.core.plan.CellSelector.AllUsedInSheet("Template Copy"),
             new SheetIntrospectionQuery.GetComments()),
         ExampleSteps.read(
-            "read-copied-drawing-objects",
+            new StepId("read-copied-drawing-objects"),
             new DrawingObjectSelector.AllOnSheet("Template Copy"),
             new WorkbookAssetIntrospectionQuery.GetDrawingObjects()),
         ExampleSteps.read(
-            "read-maintenance-findings",
+            new StepId("read-maintenance-findings"),
             ExampleSelectors.workbook(),
             new InspectionAnalysisQuery.AnalyzeWorkbookFindings()));
   }

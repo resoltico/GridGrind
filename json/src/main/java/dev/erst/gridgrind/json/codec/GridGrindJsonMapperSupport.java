@@ -69,12 +69,7 @@ public final class GridGrindJsonMapperSupport {
       JsonFactory jsonFactory, boolean omitNullValues, boolean prettyPrint) {
     JsonMapper.Builder builder =
         JsonMapper.builder(jsonFactory)
-            .addModule(
-                new SimpleModule()
-                    .setDeserializers(new WireStringDeserializers())
-                    .addSerializer(WireString.class, new WireStringSerializer())
-                    .addDeserializer(WorkbookStep.class, new WorkbookStepJsonDeserializer())
-                    .addSerializer(Selector.class, new SelectorJsonSerializer()))
+            .addModule(coreCodecs())
             .disable(StreamReadFeature.AUTO_CLOSE_SOURCE)
             .disable(StreamWriteFeature.AUTO_CLOSE_TARGET)
             .enable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
@@ -97,6 +92,24 @@ public final class GridGrindJsonMapperSupport {
           value -> value.withValueInclusion(JsonInclude.Include.NON_ABSENT));
     }
     return builder.build();
+  }
+
+  private static SimpleModule coreCodecs() {
+    SimpleModule module =
+        new SimpleModule()
+            .setDeserializers(new WireStringDeserializers())
+            .addSerializer(WireString.class, new WireStringSerializer())
+            .addSerializer(Selector.class, new SelectorJsonSerializer());
+    registerStepCodec(module, WorkbookStep.class);
+    for (Class<?> type : WorkbookStep.class.getPermittedSubclasses()) {
+      registerStepCodec(module, type.asSubclass(WorkbookStep.class));
+    }
+    return module;
+  }
+
+  private static <T extends WorkbookStep> void registerStepCodec(
+      SimpleModule module, Class<T> type) {
+    module.addDeserializer(type, new WorkbookStepJsonDeserializer<>(type));
   }
 
   private static JsonFactory unlimitedJsonFactory() {

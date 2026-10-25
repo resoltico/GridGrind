@@ -21,6 +21,7 @@ import dev.erst.gridgrind.core.plan.TableRowSelector;
 import dev.erst.gridgrind.core.plan.TableSelector;
 import dev.erst.gridgrind.core.plan.WorkbookMutationAction;
 import dev.erst.gridgrind.core.plan.WorkbookSelector;
+import dev.erst.gridgrind.core.vocabulary.StepId;
 import java.nio.file.Path;
 import java.util.List;
 import org.junit.jupiter.api.Test;
@@ -57,11 +58,12 @@ class AuthoringTargetCoverageTest {
 
   @Test
   void workbookSheetCellRangeAndWindowTargetsCoverTheirSurface() {
-    InspectionStep workbookSummary = Targets.workbook().summary().toStep("summary");
+    InspectionStep workbookSummary = Targets.workbook().summary().toStep(new StepId("summary"));
     InspectionStep workbookPackageSecurity =
-        Targets.workbook().packageSecurity().toStep("package-security");
-    InspectionStep workbookProtection = Targets.workbook().protection().toStep("protection");
-    InspectionStep workbookFindings = Targets.workbook().findings().toStep("findings");
+        Targets.workbook().packageSecurity().toStep(new StepId("package-security"));
+    InspectionStep workbookProtection =
+        Targets.workbook().protection().toStep(new StepId("protection"));
+    InspectionStep workbookFindings = Targets.workbook().findings().toStep(new StepId("findings"));
     assertInstanceOf(WorkbookIntrospectionQuery.GetWorkbookSummary.class, workbookSummary.query());
     assertInstanceOf(
         WorkbookIntrospectionQuery.GetPackageSecurity.class, workbookPackageSecurity.query());
@@ -72,97 +74,115 @@ class AuthoringTargetCoverageTest {
 
     SheetTarget sheet = Targets.sheet("Budget");
     assertInstanceOf(
-        WorkbookMutationAction.EnsureSheet.class, sheet.ensureExists().toStep("ensure").action());
+        WorkbookMutationAction.EnsureSheet.class,
+        sheet.ensureExists().toStep(new StepId("ensure")).action());
     assertInstanceOf(
         WorkbookMutationAction.RenameSheet.class,
-        sheet.renameTo("Budget 2026").toStep("rename").action());
+        sheet.renameTo("Budget 2026").toStep(new StepId("rename")).action());
     assertInstanceOf(
-        WorkbookMutationAction.DeleteSheet.class, sheet.delete().toStep("delete").action());
+        WorkbookMutationAction.DeleteSheet.class,
+        sheet.delete().toStep(new StepId("delete")).action());
     assertInstanceOf(
-        WorkbookMutationAction.SetSheetZoom.class, sheet.setZoom(125).toStep("zoom").action());
+        WorkbookMutationAction.SetSheetZoom.class,
+        sheet.setZoom(125).toStep(new StepId("zoom")).action());
     assertInstanceOf(
         WorkbookMutationAction.ClearPrintLayout.class,
-        sheet.clearPrintLayout().toStep("clear-print").action());
+        sheet.clearPrintLayout().toStep(new StepId("clear-print")).action());
     assertInstanceOf(
-        SheetIntrospectionQuery.GetSheetSummary.class, sheet.summary().toStep("summary").query());
+        SheetIntrospectionQuery.GetSheetSummary.class,
+        sheet.summary().toStep(new StepId("summary")).query());
     assertInstanceOf(
-        SheetIntrospectionQuery.GetSheetLayout.class, sheet.layout().toStep("layout").query());
+        SheetIntrospectionQuery.GetSheetLayout.class,
+        sheet.layout().toStep(new StepId("layout")).query());
     assertInstanceOf(
-        SheetIntrospectionQuery.GetPrintLayout.class, sheet.printLayout().toStep("print").query());
+        SheetIntrospectionQuery.GetPrintLayout.class,
+        sheet.printLayout().toStep(new StepId("print")).query());
     assertInstanceOf(
         SheetIntrospectionQuery.GetMergedRegions.class,
-        sheet.mergedRegions().toStep("merged").query());
+        sheet.mergedRegions().toStep(new StepId("merged")).query());
     assertInstanceOf(
         SheetIntrospectionQuery.GetAutofilters.class,
-        sheet.autofilters().toStep("autofilters").query());
+        sheet.autofilters().toStep(new StepId("autofilters")).query());
     assertInstanceOf(
-        WorkbookAssetIntrospectionQuery.GetCharts.class, sheet.charts().toStep("charts").query());
-    InspectionStep drawingObjects = sheet.drawingObjects().toStep("drawing-objects");
+        WorkbookAssetIntrospectionQuery.GetCharts.class,
+        sheet.charts().toStep(new StepId("charts")).query());
+    InspectionStep drawingObjects = sheet.drawingObjects().toStep(new StepId("drawing-objects"));
     assertInstanceOf(DrawingObjectSelector.AllOnSheet.class, drawingObjects.target());
     assertInstanceOf(
         WorkbookAssetIntrospectionQuery.GetDrawingObjects.class, drawingObjects.query());
     assertInstanceOf(
         InspectionSurfaceQuery.GetFormulaSurface.class,
-        sheet.formulaSurface().toStep("formula-surface").query());
+        sheet.formulaSurface().toStep(new StepId("formula-surface")).query());
     assertInstanceOf(
         InspectionAnalysisQuery.AnalyzeFormulaHealth.class,
-        sheet.formulaHealth().toStep("formula-health").query());
+        sheet.formulaHealth().toStep(new StepId("formula-health")).query());
 
     CellTarget cell = Targets.cell("Budget", "A1");
     assertInstanceOf(
-        CellMutationAction.SetCell.class, cell.set(Values.text("Owner")).toStep("set").action());
+        CellMutationAction.SetCell.class,
+        cell.set(Values.text("Owner")).toStep(new StepId("set")).action());
     assertInstanceOf(
         CellMutationAction.SetHyperlink.class,
-        cell.setHyperlink(Links.url("https://example.com")).toStep("hyperlink").action());
+        cell.setHyperlink(Links.url("https://example.com"))
+            .toStep(new StepId("hyperlink"))
+            .action());
     assertInstanceOf(
         CellMutationAction.ClearHyperlink.class,
-        cell.clearHyperlink().toStep("clear-link").action());
+        cell.clearHyperlink().toStep(new StepId("clear-link")).action());
     assertInstanceOf(
         CellMutationAction.SetComment.class,
-        cell.setComment(Values.comment("note", "Ada")).toStep("comment").action());
+        cell.setComment(Values.comment("note", "Ada")).toStep(new StepId("comment")).action());
     assertInstanceOf(
         CellMutationAction.ClearComment.class,
-        cell.clearComment().toStep("clear-comment").action());
-    assertInstanceOf(SheetIntrospectionQuery.GetCells.class, cell.read().toStep("read").query());
+        cell.clearComment().toStep(new StepId("clear-comment")).action());
     assertInstanceOf(
-        SheetIntrospectionQuery.GetHyperlinks.class, cell.hyperlinks().toStep("links").query());
+        SheetIntrospectionQuery.GetCells.class, cell.read().toStep(new StepId("read")).query());
     assertInstanceOf(
-        SheetIntrospectionQuery.GetComments.class, cell.comments().toStep("comments").query());
+        SheetIntrospectionQuery.GetHyperlinks.class,
+        cell.hyperlinks().toStep(new StepId("links")).query());
+    assertInstanceOf(
+        SheetIntrospectionQuery.GetComments.class,
+        cell.comments().toStep(new StepId("comments")).query());
     assertInstanceOf(
         CellAssertion.CellValue.class,
-        cell.valueEquals(ExpectedValues.text("Owner")).toStep("assert").assertion());
+        cell.valueEquals(ExpectedValues.text("Owner")).toStep(new StepId("assert")).assertion());
     assertInstanceOf(
         CellAssertion.DisplayValue.class,
-        cell.displayValueEquals("Owner").toStep("display").assertion());
+        cell.displayValueEquals("Owner").toStep(new StepId("display")).assertion());
     assertInstanceOf(
         CellAssertion.FormulaText.class,
-        cell.formulaEquals("SUM(A1:A2)").toStep("formula").assertion());
+        cell.formulaEquals("SUM(A1:A2)").toStep(new StepId("formula")).assertion());
 
     RangeTarget range = Targets.range("Budget", "A1:B2");
     MutationStep setRows =
         range
             .setRows(List.of(Values.row(Values.text("Owner"), Values.number(42.5))))
-            .toStep("rows");
+            .toStep(new StepId("rows"));
     assertInstanceOf(CellMutationAction.SetRange.class, setRows.action());
-    assertInstanceOf(CellMutationAction.ClearRange.class, range.clear().toStep("clear").action());
     assertInstanceOf(
-        WorkbookMutationAction.MergeCells.class, range.merge().toStep("merge").action());
+        CellMutationAction.ClearRange.class, range.clear().toStep(new StepId("clear")).action());
     assertInstanceOf(
-        WorkbookMutationAction.UnmergeCells.class, range.unmerge().toStep("unmerge").action());
+        WorkbookMutationAction.MergeCells.class,
+        range.merge().toStep(new StepId("merge")).action());
+    assertInstanceOf(
+        WorkbookMutationAction.UnmergeCells.class,
+        range.unmerge().toStep(new StepId("unmerge")).action());
     assertInstanceOf(
         SheetIntrospectionQuery.GetDataValidations.class,
-        range.dataValidations().toStep("validations").query());
+        range.dataValidations().toStep(new StepId("validations")).query());
     assertInstanceOf(
         SheetIntrospectionQuery.GetConditionalFormatting.class,
-        range.conditionalFormatting().toStep("formatting").query());
+        range.conditionalFormatting().toStep(new StepId("formatting")).query());
     assertEquals(
         "rows must not be null",
         assertThrows(NullPointerException.class, () -> range.setRows(null)).getMessage());
 
     WindowTarget window = Targets.window("Budget", "A1", 5, 3);
-    assertInstanceOf(SheetIntrospectionQuery.GetWindow.class, window.read().toStep("read").query());
     assertInstanceOf(
-        InspectionSurfaceQuery.GetSheetSchema.class, window.schema().toStep("schema").query());
+        SheetIntrospectionQuery.GetWindow.class, window.read().toStep(new StepId("read")).query());
+    assertInstanceOf(
+        InspectionSurfaceQuery.GetSheetSchema.class,
+        window.schema().toStep(new StepId("schema")).query());
   }
 
   @Test
@@ -179,54 +199,65 @@ class AuthoringTargetCoverageTest {
         StructuredMutationAction.SetTable.class,
         tableOnSheet
             .define(Tables.define("BudgetTable", "Budget", "A1:B3", false, Tables.noStyle()))
-            .toStep("define")
+            .toStep(new StepId("define"))
             .action());
     assertInstanceOf(
         StructuredMutationAction.DeleteTable.class,
-        tableOnSheet.delete().toStep("delete").action());
+        tableOnSheet.delete().toStep(new StepId("delete")).action());
     assertInstanceOf(
-        WorkbookAssetIntrospectionQuery.GetTables.class, table.inspect().toStep("inspect").query());
+        WorkbookAssetIntrospectionQuery.GetTables.class,
+        table.inspect().toStep(new StepId("inspect")).query());
     assertInstanceOf(
         InspectionAnalysisQuery.AnalyzeTableHealth.class,
-        table.analyzeHealth().toStep("health").query());
+        table.analyzeHealth().toStep(new StepId("health")).query());
     assertInstanceOf(
-        PresenceAssertion.TablePresent.class, table.present().toStep("present").assertion());
+        PresenceAssertion.TablePresent.class,
+        table.present().toStep(new StepId("present")).assertion());
     assertInstanceOf(
-        PresenceAssertion.TableAbsent.class, table.absent().toStep("absent").assertion());
+        PresenceAssertion.TableAbsent.class,
+        table.absent().toStep(new StepId("absent")).assertion());
 
     TableCellTarget tableCell = table.row(1).cell("Amount");
     assertInstanceOf(TableCellSelector.ByColumnName.class, tableCell.selector());
     assertInstanceOf(
         CellMutationAction.SetCell.class,
-        tableCell.set(Values.number(125.0)).toStep("set").action());
+        tableCell.set(Values.number(125.0)).toStep(new StepId("set")).action());
     assertInstanceOf(
         CellMutationAction.SetHyperlink.class,
-        tableCell.setHyperlink(Links.document("Budget!A1")).toStep("link").action());
+        tableCell.setHyperlink(Links.document("Budget!A1")).toStep(new StepId("link")).action());
     assertInstanceOf(
         CellMutationAction.ClearHyperlink.class,
-        tableCell.clearHyperlink().toStep("clear-link").action());
+        tableCell.clearHyperlink().toStep(new StepId("clear-link")).action());
     assertInstanceOf(
         CellMutationAction.SetComment.class,
-        tableCell.setComment(Values.comment("raise", "Ada")).toStep("comment").action());
+        tableCell
+            .setComment(Values.comment("raise", "Ada"))
+            .toStep(new StepId("comment"))
+            .action());
     assertInstanceOf(
         CellMutationAction.ClearComment.class,
-        tableCell.clearComment().toStep("clear-comment").action());
+        tableCell.clearComment().toStep(new StepId("clear-comment")).action());
     assertInstanceOf(
-        SheetIntrospectionQuery.GetCells.class, tableCell.read().toStep("read").query());
+        SheetIntrospectionQuery.GetCells.class,
+        tableCell.read().toStep(new StepId("read")).query());
     assertInstanceOf(
         SheetIntrospectionQuery.GetHyperlinks.class,
-        tableCell.hyperlinks().toStep("links").query());
+        tableCell.hyperlinks().toStep(new StepId("links")).query());
     assertInstanceOf(
-        SheetIntrospectionQuery.GetComments.class, tableCell.comments().toStep("comments").query());
+        SheetIntrospectionQuery.GetComments.class,
+        tableCell.comments().toStep(new StepId("comments")).query());
     assertInstanceOf(
         CellAssertion.CellValue.class,
-        tableCell.valueEquals(ExpectedValues.number(125.0)).toStep("assert").assertion());
+        tableCell
+            .valueEquals(ExpectedValues.number(125.0))
+            .toStep(new StepId("assert"))
+            .assertion());
     assertInstanceOf(
         CellAssertion.DisplayValue.class,
-        tableCell.displayValueEquals("125").toStep("display").assertion());
+        tableCell.displayValueEquals("125").toStep(new StepId("display")).assertion());
     assertInstanceOf(
         CellAssertion.FormulaText.class,
-        tableCell.formulaEquals("SUM(A1:A2)").toStep("formula").assertion());
+        tableCell.formulaEquals("SUM(A1:A2)").toStep(new StepId("formula")).assertion());
 
     NamedRangeTarget namedRange = Targets.namedRange("BudgetRange");
     NamedRangeTarget namedRangeOnSheet = Targets.namedRangeOnSheet("BudgetRange", "Budget");
@@ -236,34 +267,38 @@ class AuthoringTargetCoverageTest {
     assertInstanceOf(NamedRangeSelector.WorkbookScope.class, workbookNamedRange.selector());
     assertInstanceOf(
         StructuredMutationAction.DeleteNamedRange.class,
-        namedRange.delete().toStep("delete").action());
+        namedRange.delete().toStep(new StepId("delete")).action());
     assertInstanceOf(
         WorkbookIntrospectionQuery.GetNamedRanges.class,
-        namedRange.inspect().toStep("inspect").query());
+        namedRange.inspect().toStep(new StepId("inspect")).query());
     assertInstanceOf(
         InspectionSurfaceQuery.GetNamedRangeSurface.class,
-        namedRange.surface().toStep("surface").query());
+        namedRange.surface().toStep(new StepId("surface")).query());
     assertInstanceOf(
         InspectionAnalysisQuery.AnalyzeNamedRangeHealth.class,
-        namedRange.analyzeHealth().toStep("health").query());
+        namedRange.analyzeHealth().toStep(new StepId("health")).query());
     assertInstanceOf(
         PresenceAssertion.NamedRangePresent.class,
-        namedRange.present().toStep("present").assertion());
+        namedRange.present().toStep(new StepId("present")).assertion());
     assertInstanceOf(
-        PresenceAssertion.NamedRangeAbsent.class, namedRange.absent().toStep("absent").assertion());
+        PresenceAssertion.NamedRangeAbsent.class,
+        namedRange.absent().toStep(new StepId("absent")).assertion());
 
     ChartTarget chart = Targets.chart("Budget", "RevenueChart");
     ChartTarget allChartsOnSheet = new ChartTarget(new ChartSelector.AllOnSheet("Budget"));
-    InspectionStep namedChartInspection = chart.inspect().toStep("named-chart");
-    InspectionStep allChartsInspection = allChartsOnSheet.inspect().toStep("all-charts");
+    InspectionStep namedChartInspection = chart.inspect().toStep(new StepId("named-chart"));
+    InspectionStep allChartsInspection =
+        allChartsOnSheet.inspect().toStep(new StepId("all-charts"));
     assertInstanceOf(ChartSelector.ByName.class, namedChartInspection.target());
     assertInstanceOf(ChartSelector.AllOnSheet.class, allChartsInspection.target());
     assertInstanceOf(WorkbookAssetIntrospectionQuery.GetCharts.class, namedChartInspection.query());
     assertInstanceOf(WorkbookAssetIntrospectionQuery.GetCharts.class, allChartsInspection.query());
     assertInstanceOf(
-        PresenceAssertion.ChartPresent.class, chart.present().toStep("present").assertion());
+        PresenceAssertion.ChartPresent.class,
+        chart.present().toStep(new StepId("present")).assertion());
     assertInstanceOf(
-        PresenceAssertion.ChartAbsent.class, chart.absent().toStep("absent").assertion());
+        PresenceAssertion.ChartAbsent.class,
+        chart.absent().toStep(new StepId("absent")).assertion());
 
     PivotTableTarget pivotTable = Targets.pivotTable("RevenuePivot");
     PivotTableTarget pivotTableOnSheet = Targets.pivotTableOnSheet("RevenuePivot", "Budget");
@@ -271,18 +306,19 @@ class AuthoringTargetCoverageTest {
     assertInstanceOf(PivotTableSelector.ByNameOnSheet.class, pivotTableOnSheet.selector());
     assertInstanceOf(
         StructuredMutationAction.DeletePivotTable.class,
-        pivotTableOnSheet.delete().toStep("delete").action());
+        pivotTableOnSheet.delete().toStep(new StepId("delete")).action());
     assertInstanceOf(
         WorkbookAssetIntrospectionQuery.GetPivotTables.class,
-        pivotTable.inspect().toStep("inspect").query());
+        pivotTable.inspect().toStep(new StepId("inspect")).query());
     assertInstanceOf(
         InspectionAnalysisQuery.AnalyzePivotTableHealth.class,
-        pivotTable.analyzeHealth().toStep("health").query());
+        pivotTable.analyzeHealth().toStep(new StepId("health")).query());
     assertInstanceOf(
         PresenceAssertion.PivotTablePresent.class,
-        pivotTable.present().toStep("present").assertion());
+        pivotTable.present().toStep(new StepId("present")).assertion());
     assertInstanceOf(
-        PresenceAssertion.PivotTableAbsent.class, pivotTable.absent().toStep("absent").assertion());
+        PresenceAssertion.PivotTableAbsent.class,
+        pivotTable.absent().toStep(new StepId("absent")).assertion());
   }
 
   @Test

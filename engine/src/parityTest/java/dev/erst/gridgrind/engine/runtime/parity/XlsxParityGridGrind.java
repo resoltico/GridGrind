@@ -476,7 +476,7 @@ final class XlsxParityGridGrind {
       WorkbookResult.Success success, String stepId, Class<T> type) {
     return type.cast(
         success.inspections().stream()
-            .filter(result -> result.stepId().equals(stepId))
+            .filter(result -> result.stepId().value().equals(stepId))
             .findFirst()
             .filter(type::isInstance)
             .orElseThrow(

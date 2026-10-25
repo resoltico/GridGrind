@@ -22,6 +22,7 @@ import dev.erst.gridgrind.core.vocabulary.AnalysisSeverity;
 import dev.erst.gridgrind.core.vocabulary.ExcelHorizontalAlignment;
 import dev.erst.gridgrind.core.vocabulary.ExcelVerticalAlignment;
 import dev.erst.gridgrind.core.vocabulary.PlanId;
+import dev.erst.gridgrind.core.vocabulary.StepId;
 import java.util.Optional;
 
 /** Generated examples for core workbook authoring, maintenance, assertions, and array formulas. */
@@ -34,11 +35,11 @@ final class WorkbookAuthoringExamples {
         new WorkbookPlan.WorkbookSource.New(),
         ExampleWorkbookPlans.saveAs(paths.generatedWorkbook("gridgrind-budget.xlsx")),
         ExampleSteps.step(
-            "step-01-ensure-sheet",
+            new StepId("step-01-ensure-sheet"),
             ExampleSelectors.sheet("Budget"),
             new WorkbookMutationAction.EnsureSheet()),
         ExampleSteps.step(
-            "step-02-set-range",
+            new StepId("step-02-set-range"),
             ExampleSelectors.range("Budget", "A1:C3"),
             new CellMutationAction.SetRange(
                 ExampleCellValues.rows(
@@ -55,7 +56,7 @@ final class WorkbookAuthoringExamples {
                         ExampleCellValues.number(12.0d),
                         ExampleCellValues.bool(false))))),
         ExampleSteps.step(
-            "step-03-apply-header-style",
+            new StepId("step-03-apply-header-style"),
             ExampleSelectors.range("Budget", "A1:C1"),
             new CellMutationAction.ApplyStyle(
                 new CellStylePatchInput(
@@ -80,7 +81,7 @@ final class WorkbookAuthoringExamples {
                     Optional.empty(),
                     Optional.empty()))),
         ExampleSteps.step(
-            "step-04-apply-number-style",
+            new StepId("step-04-apply-number-style"),
             ExampleSelectors.range("Budget", "B2:B4"),
             new CellMutationAction.ApplyStyle(
                 new CellStylePatchInput(
@@ -97,35 +98,35 @@ final class WorkbookAuthoringExamples {
                     Optional.empty(),
                     Optional.empty()))),
         ExampleSteps.step(
-            "step-05-set-total-label",
+            new StepId("step-05-set-total-label"),
             ExampleSelectors.cell("Budget", "A4"),
             new CellMutationAction.SetCell(ExampleCellValues.text("Total"))),
         ExampleSteps.step(
-            "step-06-set-total-formula",
+            new StepId("step-06-set-total-formula"),
             ExampleSelectors.cell("Budget", "B4"),
             new CellMutationAction.SetCell(ExampleCellValues.formula("SUM(B2:B3)"))),
         ExampleSteps.step(
-            "step-07-auto-size",
+            new StepId("step-07-auto-size"),
             ExampleSelectors.sheet("Budget"),
             new WorkbookMutationAction.AutoSizeColumns()),
         ExampleSteps.read(
-            "workbook",
+            new StepId("workbook"),
             ExampleSelectors.workbook(),
             new WorkbookIntrospectionQuery.GetWorkbookSummary()),
         ExampleSteps.read(
-            "cells",
+            new StepId("cells"),
             ExampleSelectors.cells("Budget", "A1", "B4", "C2"),
             new SheetIntrospectionQuery.GetCells()),
         ExampleSteps.read(
-            "window",
+            new StepId("window"),
             ExampleSelectors.window("Budget", "A1", 4, 3),
             new SheetIntrospectionQuery.GetWindow()),
         ExampleSteps.read(
-            "schema",
+            new StepId("schema"),
             ExampleSelectors.window("Budget", "A1", 4, 3),
             new InspectionSurfaceQuery.GetSheetSchema()),
         ExampleSteps.read(
-            "formula-surface",
+            new StepId("formula-surface"),
             ExampleSelectors.sheets("Budget"),
             new InspectionSurfaceQuery.GetFormulaSurface()));
   }
@@ -136,11 +137,11 @@ final class WorkbookAuthoringExamples {
         new WorkbookPlan.WorkbookSource.New(),
         ExampleWorkbookPlans.saveAs(paths.generatedWorkbook("gridgrind-sheet-maintenance.xlsx")),
         ExampleSteps.step(
-            "step-01-ensure-template",
+            new StepId("step-01-ensure-template"),
             ExampleSelectors.sheet("Template"),
             new WorkbookMutationAction.EnsureSheet()),
         ExampleSteps.step(
-            "step-02-set-range",
+            new StepId("step-02-set-range"),
             ExampleSelectors.range("Template", "A1:B3"),
             new CellMutationAction.SetRange(
                 ExampleCellValues.rows(
@@ -151,21 +152,21 @@ final class WorkbookAuthoringExamples {
                     ExampleCellValues.row(
                         ExampleCellValues.text("Lin"), ExampleCellValues.text("Review"))))),
         ExampleSteps.step(
-            "step-03-set-comment",
+            new StepId("step-03-set-comment"),
             ExampleSelectors.cell("Template", "A1"),
             new CellMutationAction.SetComment(
                 CommentInput.plain(
                     TextSourceInput.inline("Template owner column"), "GridGrind", false))),
         ExampleSteps.step(
-            "step-04-copy-sheet",
+            new StepId("step-04-copy-sheet"),
             ExampleSelectors.sheet("Template"),
             new WorkbookMutationAction.CopySheet("Template Copy")),
         ExampleSteps.read(
-            "step-05-read-comments",
+            new StepId("step-05-read-comments"),
             new CellSelector.AllUsedInSheet("Template Copy"),
             new SheetIntrospectionQuery.GetComments()),
         ExampleSteps.read(
-            "step-06-read-workbook-findings",
+            new StepId("step-06-read-workbook-findings"),
             ExampleSelectors.workbook(),
             new InspectionAnalysisQuery.AnalyzeWorkbookFindings()));
   }
@@ -177,34 +178,34 @@ final class WorkbookAuthoringExamples {
         new WorkbookPlan.WorkbookPersistence.None(),
         ExecutionPolicyInput.journal(new ExecutionJournalInput(ExecutionJournalLevel.VERBOSE)),
         ExampleSteps.step(
-            "ensure-budget",
+            new StepId("ensure-budget"),
             ExampleSelectors.sheet("Budget"),
             new WorkbookMutationAction.EnsureSheet()),
         ExampleSteps.step(
-            "set-title",
+            new StepId("set-title"),
             ExampleSelectors.cell("Budget", "A1"),
             new CellMutationAction.SetCell(ExampleCellValues.text("Quarterly Budget"))),
         ExampleSteps.step(
-            "set-total",
+            new StepId("set-total"),
             ExampleSelectors.cell("Budget", "B2"),
             new CellMutationAction.SetCell(ExampleCellValues.number(1200.0d))),
         ExampleSteps.assertStep(
-            "assert-title",
+            new StepId("assert-title"),
             ExampleSelectors.cell("Budget", "A1"),
             new CellAssertion.CellValue(
                 new dev.erst.gridgrind.core.model.value.CellScalarValue.Text("Quarterly Budget"))),
         ExampleSteps.assertStep(
-            "assert-total",
+            new StepId("assert-total"),
             ExampleSelectors.cell("Budget", "B2"),
             new CellAssertion.CellValue(
                 new dev.erst.gridgrind.core.model.value.CellScalarValue.NumberValue(1200.0d))),
         ExampleSteps.assertStep(
-            "assert-formula-health",
+            new StepId("assert-formula-health"),
             ExampleSelectors.sheet("Budget"),
             new AnalysisAssertion.AnalysisMaxSeverity(
                 new InspectionAnalysisQuery.AnalyzeFormulaHealth(), AnalysisSeverity.INFO)),
         ExampleSteps.read(
-            "read-budget",
+            new StepId("read-budget"),
             ExampleSelectors.cells("Budget", "A1", "B2"),
             new SheetIntrospectionQuery.GetCells()));
   }
@@ -215,11 +216,11 @@ final class WorkbookAuthoringExamples {
         new WorkbookPlan.WorkbookSource.New(),
         new WorkbookPlan.WorkbookPersistence.None(),
         ExampleSteps.step(
-            "ensure-calc-sheet",
+            new StepId("ensure-calc-sheet"),
             ExampleSelectors.sheet("Calc"),
             new WorkbookMutationAction.EnsureSheet()),
         ExampleSteps.step(
-            "seed-source-data",
+            new StepId("seed-source-data"),
             ExampleSelectors.range("Calc", "A1:C4"),
             new CellMutationAction.SetRange(
                 ExampleCellValues.rows(
@@ -240,20 +241,20 @@ final class WorkbookAuthoringExamples {
                         ExampleCellValues.number(15.0d),
                         ExampleCellValues.number(21.0d))))),
         ExampleSteps.step(
-            "author-array-group",
+            new StepId("author-array-group"),
             ExampleSelectors.range("Calc", "D2:D4"),
             new CellMutationAction.SetArrayFormula(
                 new ArrayFormulaInput(TextSourceInput.inline("{=B2:B4*C2:C4}")))),
         ExampleSteps.read(
-            "read-array-groups",
+            new StepId("read-array-groups"),
             ExampleSelectors.sheet("Calc"),
             new SheetIntrospectionQuery.GetArrayFormulas()),
         ExampleSteps.step(
-            "clear-array-group",
+            new StepId("clear-array-group"),
             ExampleSelectors.cell("Calc", "D3"),
             new CellMutationAction.ClearArrayFormula()),
         ExampleSteps.read(
-            "read-array-groups-after-clear",
+            new StepId("read-array-groups-after-clear"),
             ExampleSelectors.sheet("Calc"),
             new SheetIntrospectionQuery.GetArrayFormulas()));
   }

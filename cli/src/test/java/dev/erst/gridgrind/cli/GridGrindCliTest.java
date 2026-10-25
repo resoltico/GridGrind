@@ -353,7 +353,12 @@ class GridGrindCliTest extends GridGrindCliTestSupport {
                     throw new java.io.UncheckedIOException(exception);
                   }
                 })
-            .anyMatch(event -> event.stepId().equals(Optional.of("ensure-ledger"))),
+            .anyMatch(
+                event ->
+                    event
+                        .stepId()
+                        .map(dev.erst.gridgrind.core.vocabulary.StepId::value)
+                        .equals(Optional.of("ensure-ledger"))),
         "verbose execution must stream a step-scoped progress event to stderr");
     assertFalse(
         stdout.toString(StandardCharsets.UTF_8).contains("\"events\""),

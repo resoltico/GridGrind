@@ -27,6 +27,7 @@ import dev.erst.gridgrind.core.plan.StructuredMutationAction;
 import dev.erst.gridgrind.core.plan.WorkbookIntrospectionQuery;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import dev.erst.gridgrind.core.source.TextSourceInput;
+import dev.erst.gridgrind.core.vocabulary.StepId;
 import java.util.List;
 
 /** Published task recipe for custom-XML import and export workflows. */
@@ -122,27 +123,27 @@ final class CustomXmlWorkflowTaskRecipe {
         new WorkbookPlan.WorkbookSource.ExistingFile(mappingWorkbook),
         ExampleWorkbookPlans.saveAsExisting(TaskStarterRecipeSupport.taskWorkbookPath(taskId)),
         ExampleSteps.read(
-            "read-custom-xml-mappings",
+            new StepId("read-custom-xml-mappings"),
             ExampleSelectors.workbook(),
             new WorkbookIntrospectionQuery.GetCustomXmlMappings()),
         ExampleSteps.read(
-            "export-custom-xml-before-import",
+            new StepId("export-custom-xml-before-import"),
             ExampleSelectors.workbook(),
             new WorkbookIntrospectionQuery.ExportCustomXmlMapping(
                 new CustomXmlMappingLocator(1L, "CORSO_mapping"), true, "UTF-8")),
         ExampleSteps.step(
-            "import-custom-xml",
+            new StepId("import-custom-xml"),
             ExampleSelectors.workbook(),
             new StructuredMutationAction.ImportCustomXmlMapping(
                 new CustomXmlImportInput(
                     new CustomXmlMappingLocator(1L, "CORSO_mapping"),
                     TextSourceInput.utf8File(updateXml)))),
         ExampleSteps.read(
-            "read-imported-cells",
+            new StepId("read-imported-cells"),
             ExampleSelectors.cells("Foglio1", "A1", "B1", "C1", "D1"),
             new SheetIntrospectionQuery.GetCells()),
         ExampleSteps.read(
-            "export-custom-xml-after-import",
+            new StepId("export-custom-xml-after-import"),
             ExampleSelectors.workbook(),
             new WorkbookIntrospectionQuery.ExportCustomXmlMapping(
                 new CustomXmlMappingLocator(1L, "CORSO_mapping"), true, "UTF-8")));

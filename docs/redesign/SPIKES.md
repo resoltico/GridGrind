@@ -531,3 +531,51 @@ catalog, response and eight-value probes passed. No golden re-recording, baselin
 change. Evidence: external `plan-id-*.log`, `plan-id-failures/`, `plan-id-inventories/`.
 Blank checks 479 → 478; main lines 126,109 → 126,145; test lines 153,173 → 153,289. Other counts
 remain unchanged. WP-21 remains open for step and workbook identifiers and obsolete-guard removal.
+
+### WP-21 step identity throughout execution
+
+StepId now flows through plan steps, authored Java steps, read commands/results, assertions,
+journals/progress, warning/problem contexts, host acceptance and semantic preservation evidence.
+The compiler-informed tool updated 908 String arguments/initializers in 107 files, followed by
+83 typed-result-to-literal-text projections in 34 assertion files. Expected literal text remains
+independent of constructor behavior. Primitive step checks were removed from containers, and
+WorkbookStepValidation was deleted; its behavioral operation-target tests remain. String labels
+remain at textual diagnostic boundaries that can represent either step IDs or OOXML part names.
+
+Production compile repairs covered the failed-step guard and typed sets/lists. Test compile repairs
+covered fixture lookups/text projections, three authoring fixture IDs and typed preservation IDs.
+Focused core/JSON/engine/parity tests passed except the missing LIM-006A marker; it now belongs to
+the canonical StepId validator, with LIMITATIONS and Java authoring guidance updated. Live request
+tests assert scalar encoding plus invalid-ID message, authored path and token offset. Focused
+checks passed (15s). One recipe crossed PMD's import threshold because of the added domain type;
+a narrow documented exception keeps that cohesive cross-feature recipe intact (focused 6s).
+
+The next full check exposed a separate CLI default mapper unable to read typed progress IDs.
+CLI-owned binding now reuses the canonical configured mapper, and its redundant non-closing stream
+wrapper was removed (the mapper already disables closing caller streams). An added grant acceptance
+round trip then found that the old custom decoder was registered only for WorkbookStep, not the
+concrete assertion/inspection types used by host grants. Step codecs are now registered from the
+sealed permits list, and the generic decoder checks the expected concrete kind. A negative grant
+control rejects an inspection in a terminal-assertion slot. Focused progress/grant/JSON/PMD checks
+passed (16s). Failure XML is retained as `step-id-progress-mapper-failure.xml` and
+`step-id-concrete-grant-failure.xml` externally.
+
+Final `./gradlew check --no-parallel` passed (2m37s): 2,796 active tests, zero failures/errors/skips,
+all 141 golden cases unchanged. Nested Jazzer support tests initially found two internal read-probe
+IDs formed from sheet labels with spaces; valid fixed probe IDs now leave labels and compared
+facts untouched. Focused seven-case round-trip verification passed (8s), then full nested `check`
+passed (10s), including committed replay. `mutationReport` passed (24s), selected core 298/298 and
+engine 82/82 mutants killed. Named-module request/catalog/response/eight-scalar probes passed.
+No golden re-recording or baseline/supplement change. Evidence: external `step-id-*.log`, failure
+XML, `step-id-jazzer-failures/` and `step-id-inventories/`.
+
+Blank-check sites 478 → 474; main lines 126,145 → 126,314; test lines 153,289 → 153,687. Converter
+lines 4,575 → 4,576 are import/format changes only. Other model/mirror/subtype counts are unchanged.
+WP-21 remains open for workbook identifiers and the remaining obsolete guards.
+
+Before that name migration, an independent malformed-workbook probe changed one existing sheet
+label to `invalid[]` without changing workbook facts. The current summary operation succeeded and
+reported that label. Authored selectors already validate Excel names; observed report labels have
+a distinct, wider contract. Preserve that diagnostic capability with a distinct observed-label
+value instead of applying authoring-name validity to observed source facts. Evidence is external
+in `observed-names/` (owned workbook copy, request/grant/result and run log).

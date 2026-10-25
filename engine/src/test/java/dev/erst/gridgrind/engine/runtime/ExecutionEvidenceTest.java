@@ -15,6 +15,7 @@ import dev.erst.gridgrind.core.plan.SheetSelector;
 import dev.erst.gridgrind.core.plan.WorkbookMutationAction;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import dev.erst.gridgrind.core.result.WorkbookExecutionEvidence;
+import dev.erst.gridgrind.core.vocabulary.StepId;
 import java.nio.file.Path;
 import java.util.List;
 import org.junit.jupiter.api.Test;
@@ -31,15 +32,15 @@ class ExecutionEvidenceTest {
             FormulaEnvironmentInput.empty(),
             List.of(
                 new MutationStep(
-                    "ensure-budget",
+                    new StepId("ensure-budget"),
                     new SheetSelector.ByName("Budget"),
                     new WorkbookMutationAction.EnsureSheet()),
                 new AssertionStep(
-                    "assert-budget",
+                    new StepId("assert-budget"),
                     new SheetSelector.ByName("Budget"),
                     new PresenceAssertion.SheetPresent()),
                 new InspectionStep(
-                    "inspect-budget",
+                    new StepId("inspect-budget"),
                     new SheetSelector.ByName("Budget"),
                     new SheetIntrospectionQuery.GetSheetSummary())));
 

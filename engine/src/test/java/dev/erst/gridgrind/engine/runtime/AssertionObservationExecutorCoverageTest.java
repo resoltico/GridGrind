@@ -14,6 +14,7 @@ import dev.erst.gridgrind.core.plan.WorkbookAssetIntrospectionQuery;
 import dev.erst.gridgrind.core.plan.WorkbookInspectionResult;
 import dev.erst.gridgrind.core.plan.WorkbookSelector;
 import dev.erst.gridgrind.core.result.WorkbookSummary;
+import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
 import dev.erst.gridgrind.excel.ExcelWorkbooks;
 import dev.erst.gridgrind.excel.WorkbookExecutionEngine;
@@ -34,7 +35,7 @@ class AssertionObservationExecutorCoverageTest {
             IllegalArgumentException.class,
             () ->
                 observationExecutor.presenceObservation(
-                    "presence", new WorkbookSelector.Current(), null, null));
+                    new StepId("presence"), new WorkbookSelector.Current(), null, null));
     assertTrue(unsupportedPresence.getMessage().contains("Unsupported presence assertion target"));
 
     NullPointerException nullWorkbook =
@@ -42,7 +43,7 @@ class AssertionObservationExecutorCoverageTest {
             NullPointerException.class,
             () ->
                 observationExecutor.executeObservation(
-                    "charts",
+                    new StepId("charts"),
                     new WorkbookSelector.Current(),
                     new WorkbookAssetIntrospectionQuery.GetCharts(),
                     null,
@@ -55,7 +56,7 @@ class AssertionObservationExecutorCoverageTest {
               IllegalArgumentException.class,
               () ->
                   observationExecutor.executeObservation(
-                      "charts",
+                      new StepId("charts"),
                       new WorkbookSelector.Current(),
                       new WorkbookAssetIntrospectionQuery.GetCharts(),
                       workbook,
@@ -69,7 +70,7 @@ class AssertionObservationExecutorCoverageTest {
             () ->
                 AssertionObservationExecutor.observedCount(
                     new WorkbookInspectionResult.WorkbookSummaryResult(
-                        "summary",
+                        new StepId("summary"),
                         new WorkbookSummary.WithSheets(
                             1, List.of("Budget"), "Budget", List.of("Budget"), 0, false))));
     assertTrue(
@@ -79,40 +80,43 @@ class AssertionObservationExecutorCoverageTest {
         assertInstanceOf(
                 WorkbookInspectionResult.NamedRangesResult.class,
                 AssertionObservationExecutor.zeroMatchPresenceObservation(
-                    "missing-range", new NamedRangeSelector.WorkbookScope("MissingTotal")))
+                    new StepId("missing-range"),
+                    new NamedRangeSelector.WorkbookScope("MissingTotal")))
             .namedRanges());
     assertEquals(
         List.of(),
         assertInstanceOf(
                 WorkbookAssetInspectionResult.TablesResult.class,
                 AssertionObservationExecutor.zeroMatchPresenceObservation(
-                    "missing-table", new TableSelector.ByName("MissingTable")))
+                    new StepId("missing-table"), new TableSelector.ByName("MissingTable")))
             .tables());
     assertEquals(
         List.of(),
         assertInstanceOf(
                 WorkbookAssetInspectionResult.PivotTablesResult.class,
                 AssertionObservationExecutor.zeroMatchPresenceObservation(
-                    "missing-pivot", new PivotTableSelector.ByName("Missing Pivot")))
+                    new StepId("missing-pivot"), new PivotTableSelector.ByName("Missing Pivot")))
             .pivotTables());
     assertEquals(
         "MissingSheet",
         assertInstanceOf(
                 WorkbookAssetInspectionResult.ChartsResult.class,
                 AssertionObservationExecutor.zeroMatchPresenceObservation(
-                    "missing-chart-sheet", new ChartSelector.AllOnSheet("MissingSheet")))
+                    new StepId("missing-chart-sheet"),
+                    new ChartSelector.AllOnSheet("MissingSheet")))
             .sheetName());
     assertEquals(
         "MissingSheet",
         assertInstanceOf(
                 WorkbookAssetInspectionResult.ChartsResult.class,
                 AssertionObservationExecutor.zeroMatchPresenceObservation(
-                    "missing-chart-name", new ChartSelector.ByName("MissingSheet", "MissingChart")))
+                    new StepId("missing-chart-name"),
+                    new ChartSelector.ByName("MissingSheet", "MissingChart")))
             .sheetName());
     assertThrows(
         IllegalArgumentException.class,
         () ->
             AssertionObservationExecutor.zeroMatchPresenceObservation(
-                "unsupported-zero-match", new WorkbookSelector.Current()));
+                new StepId("unsupported-zero-match"), new WorkbookSelector.Current()));
   }
 }

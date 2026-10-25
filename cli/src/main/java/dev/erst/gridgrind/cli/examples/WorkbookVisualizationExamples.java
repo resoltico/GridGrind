@@ -16,6 +16,7 @@ import dev.erst.gridgrind.core.source.BinarySourceInput;
 import dev.erst.gridgrind.core.vocabulary.ExcelPictureFormat;
 import dev.erst.gridgrind.core.vocabulary.NamedRangeScope;
 import dev.erst.gridgrind.core.vocabulary.PlanId;
+import dev.erst.gridgrind.core.vocabulary.StepId;
 import java.util.Optional;
 
 /** Generated examples for visual workbook surfaces such as signatures, charts, and pivots. */
@@ -28,11 +29,11 @@ final class WorkbookVisualizationExamples {
         new WorkbookPlan.WorkbookSource.New(),
         ExampleWorkbookPlans.saveAs(paths.generatedWorkbook("gridgrind-signature-line.xlsx")),
         ExampleSteps.step(
-            "step-01-ensure-sheet",
+            new StepId("step-01-ensure-sheet"),
             ExampleSelectors.sheet("Approvals"),
             new WorkbookMutationAction.EnsureSheet()),
         ExampleSteps.step(
-            "step-02-set-signature-line",
+            new StepId("step-02-set-signature-line"),
             ExampleSelectors.sheet("Approvals"),
             new DrawingMutationAction.SetSignatureLine(
                 new SignatureLineInput(
@@ -51,17 +52,17 @@ final class WorkbookVisualizationExamples {
                             BinarySourceInput.inlineBase64(
                                 TaskStarterRecipeSupport.onePixelPngBase64())))))),
         ExampleSteps.read(
-            "step-03-read-drawing-objects",
+            new StepId("step-03-read-drawing-objects"),
             new dev.erst.gridgrind.core.plan.DrawingObjectSelector.AllOnSheet("Approvals"),
             new WorkbookAssetIntrospectionQuery.GetDrawingObjects()),
         ExampleSteps.step(
-            "step-04-move-signature-line",
+            new StepId("step-04-move-signature-line"),
             new dev.erst.gridgrind.core.plan.DrawingObjectSelector.ByName(
                 "Approvals", "BudgetSignature"),
             new DrawingMutationAction.SetDrawingObjectAnchor(
                 ExampleDrawingAnchors.anchor(5, 1, 8, 6))),
         ExampleSteps.read(
-            "step-05-read-drawing-objects-after-move",
+            new StepId("step-05-read-drawing-objects-after-move"),
             new dev.erst.gridgrind.core.plan.DrawingObjectSelector.AllOnSheet("Approvals"),
             new WorkbookAssetIntrospectionQuery.GetDrawingObjects()));
   }
@@ -72,11 +73,11 @@ final class WorkbookVisualizationExamples {
         new WorkbookPlan.WorkbookSource.New(),
         ExampleWorkbookPlans.saveAs(paths.generatedWorkbook("gridgrind-chart.xlsx")),
         ExampleSteps.step(
-            "step-01-ensure-sheet",
+            new StepId("step-01-ensure-sheet"),
             ExampleSelectors.sheet("Ops"),
             new WorkbookMutationAction.EnsureSheet()),
         ExampleSteps.step(
-            "step-02-set-range",
+            new StepId("step-02-set-range"),
             ExampleSelectors.range("Ops", "A1:C4"),
             new dev.erst.gridgrind.core.plan.CellMutationAction.SetRange(
                 ExampleCellValues.rows(
@@ -97,21 +98,21 @@ final class WorkbookVisualizationExamples {
                         ExampleCellValues.number(15.0d),
                         ExampleCellValues.number(16.0d))))),
         ExampleSteps.step(
-            "step-03-set-categories",
+            new StepId("step-03-set-categories"),
             new NamedRangeSelector.WorkbookScope("ChartCategories"),
             new StructuredMutationAction.SetNamedRange(
                 "ChartCategories",
                 new NamedRangeScope.Workbook(),
                 NamedRangeTarget.range("Ops", "A2:A4"))),
         ExampleSteps.step(
-            "step-04-set-actual",
+            new StepId("step-04-set-actual"),
             new NamedRangeSelector.WorkbookScope("ChartActual"),
             new StructuredMutationAction.SetNamedRange(
                 "ChartActual",
                 new NamedRangeScope.Workbook(),
                 NamedRangeTarget.range("Ops", "C2:C4"))),
         ExampleSteps.step(
-            "step-05-set-chart",
+            new StepId("step-05-set-chart"),
             ExampleSelectors.sheet("Ops"),
             new DrawingMutationAction.SetChart(
                 ExampleChartInputs.clusteredColumnComparisonChart(
@@ -124,11 +125,11 @@ final class WorkbookVisualizationExamples {
                     "Actual",
                     "ChartActual"))),
         ExampleSteps.read(
-            "charts",
+            new StepId("charts"),
             new ChartSelector.AllOnSheet("Ops"),
             new WorkbookAssetIntrospectionQuery.GetCharts()),
         ExampleSteps.assertStep(
-            "chart-present",
+            new StepId("chart-present"),
             new ChartSelector.ByName("Ops", "OpsChart"),
             new dev.erst.gridgrind.core.plan.PresenceAssertion.ChartPresent()));
   }
@@ -139,15 +140,15 @@ final class WorkbookVisualizationExamples {
         new WorkbookPlan.WorkbookSource.New(),
         ExampleWorkbookPlans.saveAs(paths.generatedWorkbook("gridgrind-pivot.xlsx")),
         ExampleSteps.step(
-            "step-01-ensure-data",
+            new StepId("step-01-ensure-data"),
             ExampleSelectors.sheet("Data"),
             new WorkbookMutationAction.EnsureSheet()),
         ExampleSteps.step(
-            "step-02-ensure-report",
+            new StepId("step-02-ensure-report"),
             ExampleSelectors.sheet("RangeReport"),
             new WorkbookMutationAction.EnsureSheet()),
         ExampleSteps.step(
-            "step-03-set-range",
+            new StepId("step-03-set-range"),
             ExampleSelectors.range("Data", "A1:D5"),
             new dev.erst.gridgrind.core.plan.CellMutationAction.SetRange(
                 ExampleCellValues.rows(
@@ -177,17 +178,17 @@ final class WorkbookVisualizationExamples {
                         ExampleCellValues.text("Lin"),
                         ExampleCellValues.number(12.0d))))),
         ExampleSteps.step(
-            "step-04-set-pivot",
+            new StepId("step-04-set-pivot"),
             new PivotTableSelector.ByNameOnSheet("RegionalTotals", "RangeReport"),
             new StructuredMutationAction.SetPivotTable(
                 ExamplePivotInputs.regionalTotalsPivotFromRange(
                     "RegionalTotals", "RangeReport", "Data", "A1:D5"))),
         ExampleSteps.read(
-            "pivot-tables",
+            new StepId("pivot-tables"),
             new PivotTableSelector.ByName("RegionalTotals"),
             new WorkbookAssetIntrospectionQuery.GetPivotTables()),
         ExampleSteps.read(
-            "pivot-health",
+            new StepId("pivot-health"),
             new PivotTableSelector.ByName("RegionalTotals"),
             new InspectionAnalysisQuery.AnalyzePivotTableHealth()));
   }

@@ -9,6 +9,7 @@ import dev.erst.gridgrind.core.vocabulary.ExcelOoxmlSignatureDigestAlgorithm;
 import dev.erst.gridgrind.core.vocabulary.ExcelOoxmlSignatureState;
 import dev.erst.gridgrind.core.vocabulary.ExcelOoxmlWriteCipher;
 import dev.erst.gridgrind.core.vocabulary.ExcelOoxmlWriteHash;
+import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.excel.ooxml.ExcelOoxmlEncryptionSnapshot;
 import dev.erst.gridgrind.excel.ooxml.ExcelOoxmlOpenOptions;
 import dev.erst.gridgrind.excel.ooxml.ExcelOoxmlPackageInspectionSupport;
@@ -78,7 +79,8 @@ class ExcelOoxmlPackageSecuritySupportTest {
           assertInstanceOf(
               WorkbookCoreResult.PackageSecurityResult.class,
               new WorkbookReadExecutor()
-                  .apply(workbook, new WorkbookReadCommand.GetPackageSecurity("security"))
+                  .apply(
+                      workbook, new WorkbookReadCommand.GetPackageSecurity(new StepId("security")))
                   .getFirst());
       ExcelOoxmlEncryptionSnapshot.Encrypted encryption =
           assertInstanceOf(
@@ -109,7 +111,8 @@ class ExcelOoxmlPackageSecuritySupportTest {
           assertInstanceOf(
               WorkbookCoreResult.PackageSecurityResult.class,
               new WorkbookReadExecutor()
-                  .apply(workbook, new WorkbookReadCommand.GetPackageSecurity("security"))
+                  .apply(
+                      workbook, new WorkbookReadCommand.GetPackageSecurity(new StepId("security")))
                   .getFirst());
       ExcelOoxmlEncryptionSnapshot.Encrypted encryption =
           assertInstanceOf(
@@ -135,7 +138,8 @@ class ExcelOoxmlPackageSecuritySupportTest {
           assertInstanceOf(
               WorkbookCoreResult.PackageSecurityResult.class,
               new WorkbookReadExecutor()
-                  .apply(workbook, new WorkbookReadCommand.GetPackageSecurity("security"))
+                  .apply(
+                      workbook, new WorkbookReadCommand.GetPackageSecurity(new StepId("security")))
                   .getFirst());
       ExcelOoxmlEncryptionSnapshot.Encrypted encryption =
           assertInstanceOf(
@@ -217,7 +221,8 @@ class ExcelOoxmlPackageSecuritySupportTest {
           assertInstanceOf(
               WorkbookCoreResult.PackageSecurityResult.class,
               new WorkbookReadExecutor()
-                  .apply(workbook, new WorkbookReadCommand.GetPackageSecurity("security"))
+                  .apply(
+                      workbook, new WorkbookReadCommand.GetPackageSecurity(new StepId("security")))
                   .getFirst());
       assertEquals(1, beforeMutation.security().signatures().size());
       assertEquals(
@@ -233,7 +238,8 @@ class ExcelOoxmlPackageSecuritySupportTest {
           assertInstanceOf(
               WorkbookCoreResult.PackageSecurityResult.class,
               new WorkbookReadExecutor()
-                  .apply(workbook, new WorkbookReadCommand.GetPackageSecurity("security"))
+                  .apply(
+                      workbook, new WorkbookReadCommand.GetPackageSecurity(new StepId("security")))
                   .getFirst());
       assertEquals(
           ExcelOoxmlSignatureState.INVALIDATED_BY_MUTATION,
@@ -277,7 +283,8 @@ class ExcelOoxmlPackageSecuritySupportTest {
           assertInstanceOf(
               WorkbookCoreResult.PackageSecurityResult.class,
               new WorkbookReadExecutor()
-                  .apply(reopened, new WorkbookReadCommand.GetPackageSecurity("security"))
+                  .apply(
+                      reopened, new WorkbookReadCommand.GetPackageSecurity(new StepId("security")))
                   .getFirst());
       assertEquals(
           ExcelOoxmlSignatureState.VALID,
@@ -302,7 +309,8 @@ class ExcelOoxmlPackageSecuritySupportTest {
           assertInstanceOf(
               WorkbookCoreResult.PackageSecurityResult.class,
               new WorkbookReadExecutor()
-                  .apply(workbook, new WorkbookReadCommand.GetPackageSecurity("security"))
+                  .apply(
+                      workbook, new WorkbookReadCommand.GetPackageSecurity(new StepId("security")))
                   .getFirst());
       assertEquals(
           ExcelOoxmlSignatureState.INVALID,

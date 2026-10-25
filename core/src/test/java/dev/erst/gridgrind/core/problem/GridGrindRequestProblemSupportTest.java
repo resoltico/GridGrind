@@ -3,6 +3,7 @@ package dev.erst.gridgrind.core.problem;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import dev.erst.gridgrind.core.vocabulary.StepId;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
 
@@ -64,7 +65,8 @@ class GridGrindRequestProblemSupportTest {
     assertEquals(
         Optional.of("formulaEnvironment"), new ExplicitNullField("formulaEnvironment").jsonPath());
     assertEquals(
-        Optional.of("steps[1].stepId"), new DuplicateStepId("dup", "steps[1].stepId").jsonPath());
+        Optional.of("steps[1].stepId"),
+        new DuplicateStepId(new StepId("dup"), "steps[1].stepId").jsonPath());
   }
 
   @Test
@@ -109,7 +111,7 @@ class GridGrindRequestProblemSupportTest {
     assertEquals(
         "Make every stepId unique. Rename or remove the duplicate value 'dup'.",
         GridGrindRequestProblemSupport.resolution(
-            new DuplicateStepId("dup", "steps[1].stepId"), requestContext));
+            new DuplicateStepId(new StepId("dup"), "steps[1].stepId"), requestContext));
     assertEquals(
         "Provide a path ending in .xlsx for field 'source.path'.",
         GridGrindRequestProblemSupport.resolution(

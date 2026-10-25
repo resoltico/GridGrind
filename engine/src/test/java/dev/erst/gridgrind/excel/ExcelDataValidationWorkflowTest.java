@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import dev.erst.gridgrind.core.vocabulary.AnalysisFindingCode;
 import dev.erst.gridgrind.core.vocabulary.ExcelDataValidationErrorStyle;
+import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.excel.validation.ExcelDataValidationDefinition;
 import dev.erst.gridgrind.excel.validation.ExcelDataValidationErrorAlert;
 import dev.erst.gridgrind.excel.validation.ExcelDataValidationPrompt;
@@ -49,14 +50,16 @@ class ExcelDataValidationWorkflowTest {
               introspector.execute(
                   workbook,
                   new WorkbookReadCommand.GetDataValidations(
-                      "all", "Budget", new ExcelRangeSelection.All())));
+                      new StepId("all"), "Budget", new ExcelRangeSelection.All())));
       WorkbookRuleResult.DataValidationsResult selected =
           cast(
               WorkbookRuleResult.DataValidationsResult.class,
               introspector.execute(
                   workbook,
                   new WorkbookReadCommand.GetDataValidations(
-                      "selected", "Budget", new ExcelRangeSelection.Selected(List.of("B2")))));
+                      new StepId("selected"),
+                      "Budget",
+                      new ExcelRangeSelection.Selected(List.of("B2")))));
 
       assertEquals(1, beforeClear.validations().size());
       ExcelDataValidationSnapshot.Supported supported =
@@ -74,7 +77,7 @@ class ExcelDataValidationWorkflowTest {
               introspector.execute(
                   workbook,
                   new WorkbookReadCommand.GetDataValidations(
-                      "afterClear", "Budget", new ExcelRangeSelection.All())));
+                      new StepId("afterClear"), "Budget", new ExcelRangeSelection.All())));
 
       assertEquals(1, afterClear.validations().size());
       ExcelDataValidationSnapshot.Supported retained =
@@ -120,7 +123,7 @@ class ExcelDataValidationWorkflowTest {
                   workbook,
                   new WorkbookLocation.StoredWorkbook(workbookPath),
                   new WorkbookReadCommand.AnalyzeDataValidationHealth(
-                      "validationHealth", new ExcelSheetSelection.All())));
+                      new StepId("validationHealth"), new ExcelSheetSelection.All())));
       WorkbookAnalysis.WorkbookFindings workbookFindings = analyzer.workbookFindings(workbook);
 
       assertEquals(2, health.checkedValidationCount());

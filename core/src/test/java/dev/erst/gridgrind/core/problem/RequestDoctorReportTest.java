@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import dev.erst.gridgrind.core.plan.GridGrindProtocolVersion;
 import dev.erst.gridgrind.core.vocabulary.AnalysisSeverity;
+import dev.erst.gridgrind.core.vocabulary.StepId;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
@@ -20,7 +21,7 @@ class RequestDoctorReportTest {
         new RequestWarning(
             dev.erst.gridgrind.core.problem.GridGrindWarningCode.UNQUOTED_SHEET_NAME_IN_FORMULA,
             0,
-            "step-1",
+            new StepId("step-1"),
             "SET_CELL",
             "warning");
     List<RequestWarning> mutableWarnings = new java.util.ArrayList<>(List.of(warning));
@@ -40,7 +41,7 @@ class RequestDoctorReportTest {
         new RequestWarning(
             dev.erst.gridgrind.core.problem.GridGrindWarningCode.UNQUOTED_SHEET_NAME_IN_FORMULA,
             1,
-            "step-2",
+            new StepId("step-2"),
             "SET_RANGE",
             "ignored"));
 
@@ -148,7 +149,7 @@ class RequestDoctorReportTest {
                                 dev.erst.gridgrind.core.problem.GridGrindWarningCode
                                     .UNQUOTED_SHEET_NAME_IN_FORMULA,
                                 0,
-                                "step-1",
+                                new StepId("step-1"),
                                 "SET_CELL",
                                 "warning")),
                         List.of()))

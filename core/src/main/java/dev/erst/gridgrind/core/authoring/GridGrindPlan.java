@@ -12,6 +12,7 @@ import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import dev.erst.gridgrind.core.plan.WorkbookStep;
 import dev.erst.gridgrind.core.result.ExecutionJournalLevel;
 import dev.erst.gridgrind.core.vocabulary.PlanId;
+import dev.erst.gridgrind.core.vocabulary.StepId;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
@@ -188,8 +189,8 @@ public final class GridGrindPlan {
         protocolVersion, planId, source, persistence, execution, formulaEnvironment, steps);
   }
 
-  private String nextStepId(String prefix, int index) {
-    return prefix + "-" + String.format(java.util.Locale.ROOT, "%03d", index);
+  private StepId nextStepId(String prefix, int index) {
+    return new StepId(prefix + "-" + String.format(java.util.Locale.ROOT, "%03d", index));
   }
 
   private void recountStepIds(List<WorkbookStep> existingSteps) {

@@ -37,6 +37,7 @@ import dev.erst.gridgrind.core.result.WorkbookResultPersistence;
 import dev.erst.gridgrind.core.result.WorkbookResults;
 import dev.erst.gridgrind.core.result.WorkbookSummary;
 import dev.erst.gridgrind.core.source.TextSourceInput;
+import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.json.codec.GridGrindJson;
 import dev.erst.gridgrind.json.codec.GridGrindJsonOutput;
 import java.io.ByteArrayInputStream;
@@ -356,16 +357,16 @@ class GridGrindJsonTest {
             FormulaEnvironmentInput.empty(),
             List.of(
                 new MutationStep(
-                    "set-owner",
+                    new StepId("set-owner"),
                     new CellSelector.ByAddress("Budget", "A1"),
                     new CellMutationAction.SetCell(new CellInput.Text(text("Owner")))),
                 new AssertionStep(
-                    "assert-owner",
+                    new StepId("assert-owner"),
                     new CellSelector.ByAddress("Budget", "A1"),
                     new CellAssertion.CellValue(
                         new dev.erst.gridgrind.core.model.value.CellScalarValue.Text("Owner"))),
                 new InspectionStep(
-                    "summary",
+                    new StepId("summary"),
                     new WorkbookSelector.Current(),
                     new WorkbookIntrospectionQuery.GetWorkbookSummary())));
     WorkbookResult response =
@@ -377,13 +378,13 @@ class GridGrindJsonTest {
                     dev.erst.gridgrind.core.problem.GridGrindWarningCode
                         .UNQUOTED_SHEET_NAME_IN_FORMULA,
                     0,
-                    "set-owner",
+                    new StepId("set-owner"),
                     "SET_CELL",
                     "warning")),
-            List.of(new AssertionResult.Passed("assert-owner", "EXPECT_CELL_VALUE")),
+            List.of(new AssertionResult.Passed(new StepId("assert-owner"), "EXPECT_CELL_VALUE")),
             List.of(
                 new WorkbookInspectionResult.WorkbookSummaryResult(
-                    "summary",
+                    new StepId("summary"),
                     new WorkbookSummary.WithSheets(
                         1, List.of("Budget"), "Budget", List.of("Budget"), 0, false))));
     Catalog catalog = GridGrindProtocolCatalog.catalog();

@@ -62,6 +62,7 @@ import dev.erst.gridgrind.core.vocabulary.ExcelFillPattern;
 import dev.erst.gridgrind.core.vocabulary.ExcelHorizontalAlignment;
 import dev.erst.gridgrind.core.vocabulary.ExcelVerticalAlignment;
 import dev.erst.gridgrind.core.vocabulary.NamedRangeScope;
+import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
 import dev.erst.gridgrind.excel.ExcelWorkbooks;
 import dev.erst.gridgrind.excel.WorkbookExecutionEngine;
@@ -405,6 +406,9 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
             "not"),
         asserted.assertions().stream()
             .map(dev.erst.gridgrind.core.plan.AssertionResult::stepId)
+            .toList()
+            .stream()
+            .map(dev.erst.gridgrind.core.vocabulary.WireString::value)
             .toList());
   }
 
@@ -797,7 +801,7 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
                                         "Owner"))))),
                     List.of())));
     assertTrue(notFailure.problem().message().contains("NOT failed"));
-    assertEquals("not-failure", failedAssertion(notFailure).stepId());
+    assertEquals("not-failure", failedAssertion(notFailure).stepId().value());
   }
 
   @Test
@@ -823,7 +827,7 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
             .problem()
             .message()
             .contains("EXPECT_DISPLAY_VALUE resolved no matching cells"));
-    assertEquals("display-missing-table-cell", failedAssertion(displayFailure).stepId());
+    assertEquals("display-missing-table-cell", failedAssertion(displayFailure).stepId().value());
     assertEquals(
         List.of(),
         assertInstanceOf(
@@ -850,7 +854,7 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
             .problem()
             .message()
             .contains("EXPECT_FORMULA_TEXT resolved no matching cells"));
-    assertEquals("formula-missing-table-cell", failedAssertion(formulaFailure).stepId());
+    assertEquals("formula-missing-table-cell", failedAssertion(formulaFailure).stepId().value());
 
     WorkbookResult.Failure styleFailure =
         failure(
@@ -868,7 +872,7 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
                     List.of())));
     assertTrue(
         styleFailure.problem().message().contains("EXPECT_CELL_STYLE resolved no matching cells"));
-    assertEquals("style-missing-table-cell", failedAssertion(styleFailure).stepId());
+    assertEquals("style-missing-table-cell", failedAssertion(styleFailure).stepId().value());
   }
 
   @Test
@@ -1001,33 +1005,33 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
     List<WorkbookAnalysisResult> analyses =
         List.of(
             new WorkbookAnalysisResult.FormulaHealthResult(
-                "formula", new FormulaHealthReport(1, summary, List.of(finding))),
+                new StepId("formula"), new FormulaHealthReport(1, summary, List.of(finding))),
             new WorkbookAnalysisResult.DataValidationHealthResult(
-                "validation",
+                new StepId("validation"),
                 new dev.erst.gridgrind.core.model.validation.DataValidationHealthReport(
                     1, summary, List.of(finding))),
             new WorkbookAnalysisResult.ConditionalFormattingHealthResult(
-                "formatting",
+                new StepId("formatting"),
                 new dev.erst.gridgrind.core.model.validation.ConditionalFormattingHealthReport(
                     1, summary, List.of(finding))),
             new WorkbookAnalysisResult.AutofilterHealthResult(
-                "autofilter",
+                new StepId("autofilter"),
                 new dev.erst.gridgrind.core.model.table.AutofilterHealthReport(
                     1, summary, List.of(finding))),
             new WorkbookAnalysisResult.TableHealthResult(
-                "table",
+                new StepId("table"),
                 new dev.erst.gridgrind.core.model.table.TableHealthReport(
                     1, summary, List.of(finding))),
             new WorkbookAnalysisResult.PivotTableHealthResult(
-                "pivot",
+                new StepId("pivot"),
                 new dev.erst.gridgrind.core.model.pivot.PivotTableHealthReport(
                     1, summary, List.of(finding))),
             new WorkbookAnalysisResult.HyperlinkHealthResult(
-                "hyperlink", new HyperlinkHealthReport(1, summary, List.of(finding))),
+                new StepId("hyperlink"), new HyperlinkHealthReport(1, summary, List.of(finding))),
             new WorkbookAnalysisResult.NamedRangeHealthResult(
-                "namedRange", new NamedRangeHealthReport(1, summary, List.of(finding))),
+                new StepId("namedRange"), new NamedRangeHealthReport(1, summary, List.of(finding))),
             new WorkbookAnalysisResult.WorkbookFindingsResult(
-                "workbook", new WorkbookFindingsReport(summary, List.of(finding))));
+                new StepId("workbook"), new WorkbookFindingsReport(summary, List.of(finding))));
 
     for (WorkbookAnalysisResult analysis : analyses) {
       assertEquals(summary, AssertionAnalysisEvaluator.analysisSummary(analysis));
@@ -1049,19 +1053,19 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
         java.util.Optional.of(AnalysisSeverity.WARNING),
         AssertionAnalysisEvaluator.highestSeverity(
             new WorkbookAnalysisResult.FormulaHealthResult(
-                "warning",
+                new StepId("warning"),
                 new FormulaHealthReport(1, new AnalysisSummaryReport(1, 0, 1, 0), List.of()))));
     assertEquals(
         java.util.Optional.of(AnalysisSeverity.INFO),
         AssertionAnalysisEvaluator.highestSeverity(
             new WorkbookAnalysisResult.FormulaHealthResult(
-                "info",
+                new StepId("info"),
                 new FormulaHealthReport(1, new AnalysisSummaryReport(1, 0, 0, 1), List.of()))));
     assertEquals(
         java.util.Optional.empty(),
         AssertionAnalysisEvaluator.highestSeverity(
             new WorkbookAnalysisResult.FormulaHealthResult(
-                "clean",
+                new StepId("clean"),
                 new FormulaHealthReport(1, new AnalysisSummaryReport(0, 0, 0, 0), List.of()))));
   }
 
@@ -1196,6 +1200,9 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
         List.of("stream-assert"),
         success.assertions().stream()
             .map(dev.erst.gridgrind.core.plan.AssertionResult::stepId)
+            .toList()
+            .stream()
+            .map(dev.erst.gridgrind.core.vocabulary.WireString::value)
             .toList());
 
     WorkbookResult.Failure streamingAssertionFailure =
@@ -1234,11 +1241,11 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
     assertEquals(
         dev.erst.gridgrind.core.plan.AssertionOutcome.PASSED,
         streamingAssertionFailure.assertions().get(0).outcome());
-    assertEquals("stream-pass", streamingAssertionFailure.assertions().get(0).stepId());
+    assertEquals("stream-pass", streamingAssertionFailure.assertions().get(0).stepId().value());
     assertEquals(
         dev.erst.gridgrind.core.plan.AssertionOutcome.FAILED,
         streamingAssertionFailure.assertions().get(1).outcome());
-    assertEquals("stream-fail", streamingAssertionFailure.assertions().get(1).stepId());
+    assertEquals("stream-fail", streamingAssertionFailure.assertions().get(1).stepId().value());
 
     IllegalStateException assertionModeFailure =
         assertThrows(
@@ -1246,7 +1253,7 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
             () ->
                 stepSupport.executeAssertionStep(
                     new AssertionStep(
-                        "assert",
+                        new StepId("assert"),
                         new CellSelector.ByAddress("Ops", "A1"),
                         new CellAssertion.CellValue(
                             new dev.erst.gridgrind.core.model.value.CellScalarValue.Text("Owner"))),
@@ -1261,7 +1268,7 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
             () ->
                 stepSupport.executeAssertionStepCollecting(
                     new AssertionStep(
-                        "assert",
+                        new StepId("assert"),
                         new CellSelector.ByAddress("Ops", "A1"),
                         new CellAssertion.CellValue(
                             new dev.erst.gridgrind.core.model.value.CellScalarValue.Text("Owner"))),
@@ -1291,7 +1298,7 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
                 new WorkbookLocation.StoredWorkbook(workbookPath),
                 ExecutionModeInput.eventRead(),
                 workbookPath));
-    assertEquals("event-summary", eventSummary.stepId());
+    assertEquals("event-summary", eventSummary.stepId().value());
 
     assertTrue(
         DefaultGridGrindRequestExecutor.directEventReadEligible(
@@ -1485,14 +1492,14 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
 
       InspectionResult presence =
           observationExecutor.presenceObservation(
-              "named-range-present",
+              new StepId("named-range-present"),
               new NamedRangeSelector.WorkbookScope("MissingBudgetTotal"),
               workbook,
               new WorkbookLocation.UnsavedWorkbook());
       WorkbookAssetInspectionResult.ChartsResult charts =
           (WorkbookAssetInspectionResult.ChartsResult)
               observationExecutor.executeObservation(
-                  "charts",
+                  new StepId("charts"),
                   new ChartSelector.AllOnSheet("Budget"),
                   new WorkbookAssetIntrospectionQuery.GetCharts(),
                   workbook,

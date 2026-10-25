@@ -6,6 +6,7 @@ import dev.erst.gridgrind.core.model.drawing.DrawingObjectPayloadReport;
 import dev.erst.gridgrind.core.model.drawing.DrawingObjectReport;
 import dev.erst.gridgrind.core.model.pivot.PivotTableReport;
 import dev.erst.gridgrind.core.model.table.TableEntryReport;
+import dev.erst.gridgrind.core.vocabulary.StepId;
 import java.util.List;
 import java.util.Objects;
 
@@ -20,10 +21,11 @@ public sealed interface WorkbookAssetInspectionResult extends InspectionIntrospe
   /** Returns factual drawing-object metadata for one sheet. */
   @JsonTypeName("GET_DRAWING_OBJECTS")
   record DrawingObjectsResult(
-      String stepId, String sheetName, List<DrawingObjectReport> drawingObjects)
+      StepId stepId, String sheetName, List<DrawingObjectReport> drawingObjects)
       implements WorkbookAssetInspectionResult {
     public DrawingObjectsResult {
-      stepId = InspectionResultValidationSupport.requireNonBlank(stepId, "stepId");
+
+      java.util.Objects.requireNonNull(stepId, "stepId must not be null");
       sheetName = InspectionResultValidationSupport.requireNonBlank(sheetName, "sheetName");
       drawingObjects =
           InspectionResultValidationSupport.copyValues(drawingObjects, "drawingObjects");
@@ -32,10 +34,11 @@ public sealed interface WorkbookAssetInspectionResult extends InspectionIntrospe
 
   /** Returns factual chart metadata for one sheet. */
   @JsonTypeName("GET_CHARTS")
-  record ChartsResult(String stepId, String sheetName, List<ChartReport> charts)
+  record ChartsResult(StepId stepId, String sheetName, List<ChartReport> charts)
       implements WorkbookAssetInspectionResult {
     public ChartsResult {
-      stepId = InspectionResultValidationSupport.requireNonBlank(stepId, "stepId");
+
+      java.util.Objects.requireNonNull(stepId, "stepId must not be null");
       sheetName = InspectionResultValidationSupport.requireNonBlank(sheetName, "sheetName");
       charts = InspectionResultValidationSupport.copyValues(charts, "charts");
     }
@@ -43,10 +46,11 @@ public sealed interface WorkbookAssetInspectionResult extends InspectionIntrospe
 
   /** Returns factual pivot-table metadata selected by workbook-global pivot name or all pivots. */
   @JsonTypeName("GET_PIVOT_TABLES")
-  record PivotTablesResult(String stepId, List<PivotTableReport> pivotTables)
+  record PivotTablesResult(StepId stepId, List<PivotTableReport> pivotTables)
       implements WorkbookAssetInspectionResult {
     public PivotTablesResult {
-      stepId = InspectionResultValidationSupport.requireNonBlank(stepId, "stepId");
+
+      java.util.Objects.requireNonNull(stepId, "stepId must not be null");
       pivotTables = InspectionResultValidationSupport.copyValues(pivotTables, "pivotTables");
     }
   }
@@ -54,10 +58,11 @@ public sealed interface WorkbookAssetInspectionResult extends InspectionIntrospe
   /** Returns the extracted binary payload for one existing drawing object. */
   @JsonTypeName("GET_DRAWING_OBJECT_PAYLOAD")
   record DrawingObjectPayloadResult(
-      String stepId, String sheetName, DrawingObjectPayloadReport payload)
+      StepId stepId, String sheetName, DrawingObjectPayloadReport payload)
       implements WorkbookAssetInspectionResult {
     public DrawingObjectPayloadResult {
-      stepId = InspectionResultValidationSupport.requireNonBlank(stepId, "stepId");
+
+      java.util.Objects.requireNonNull(stepId, "stepId must not be null");
       sheetName = InspectionResultValidationSupport.requireNonBlank(sheetName, "sheetName");
       Objects.requireNonNull(payload, "payload must not be null");
     }
@@ -65,10 +70,11 @@ public sealed interface WorkbookAssetInspectionResult extends InspectionIntrospe
 
   /** Returns factual table metadata selected by workbook-global table name or all tables. */
   @JsonTypeName("GET_TABLES")
-  record TablesResult(String stepId, List<TableEntryReport> tables)
+  record TablesResult(StepId stepId, List<TableEntryReport> tables)
       implements WorkbookAssetInspectionResult {
     public TablesResult {
-      stepId = InspectionResultValidationSupport.requireNonBlank(stepId, "stepId");
+
+      java.util.Objects.requireNonNull(stepId, "stepId must not be null");
       tables = InspectionResultValidationSupport.copyValues(tables, "tables");
     }
   }

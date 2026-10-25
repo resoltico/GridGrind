@@ -11,6 +11,7 @@ import dev.erst.gridgrind.core.plan.WorkbookStep;
 import dev.erst.gridgrind.core.problem.ActionableShapeMessage;
 import dev.erst.gridgrind.core.problem.MissingRequiredField;
 import dev.erst.gridgrind.core.problem.UnknownField;
+import dev.erst.gridgrind.core.vocabulary.StepId;
 import java.util.Optional;
 import java.util.Set;
 import org.jspecify.annotations.Nullable;
@@ -22,12 +23,36 @@ import tools.jackson.databind.ValueDeserializer;
 import tools.jackson.databind.node.ObjectNode;
 
 /** Deserializes workbook steps from the canonical step envelope without a redundant outer type. */
-public final class WorkbookStepJsonDeserializer extends ValueDeserializer<WorkbookStep> {
+public final class WorkbookStepJsonDeserializer<T extends WorkbookStep>
+    extends ValueDeserializer<T> {
+  private final Class<T> expectedType;
   private static final Set<String> ALLOWED_FIELDS =
       Set.of("stepId", "target", "action", "assertion", "query");
 
+  /** Selects the declared union or concrete step type required by the containing document. */
+  public WorkbookStepJsonDeserializer(Class<T> expectedType) {
+    this.expectedType = expectedType;
+  }
+
   @Override
-  public WorkbookStep deserialize(JsonParser parser, DeserializationContext context) {
+  public T deserialize(JsonParser parser, DeserializationContext context) {
+    WorkbookStep step = readStep(parser, context);
+    if (!expectedType.isInstance(step)) {
+      return context.reportInputMismatch(
+          expectedType,
+          "Expected a %s step",
+          dev.erst.gridgrind.core.catalog.GridGrindProtocolTypeNames.workbookStepTypeName(
+              expectedType));
+    }
+    return expectedType.cast(step);
+  }
+
+  @Override
+  public Class<?> handledType() {
+    return expectedType;
+  }
+
+  private WorkbookStep readStep(JsonParser parser, DeserializationContext context) {
     JsonNode rawNode = parser.readValueAsTree();
     if (!(rawNode instanceof ObjectNode stepNode)) {
       throw WorkbookStepJsonFailurePathSupport.inputMismatch(
@@ -40,7 +65,8 @@ public final class WorkbookStepJsonDeserializer extends ValueDeserializer<Workbo
     }
     rejectUnknownFields(stepNode, context);
 
-    String stepId = requiredText(stepNode, "stepId", context);
+    StepId stepId =
+        deserializeField(requiredNode(stepNode, "stepId", context), parser, StepId.class, "stepId");
     JsonNode targetNode = requiredNode(stepNode, "target", context);
     JsonNode actionNode = stepNode.get("action");
     JsonNode assertionNode = stepNode.get("assertion");
@@ -93,23 +119,14 @@ public final class WorkbookStepJsonDeserializer extends ValueDeserializer<Workbo
           WorkbookStepJsonFailurePathSupport.inputMismatch(
               context.getParser(), new MissingRequiredField(fieldName)));
     }
-    return node;
-  }
-
-  private static String requiredText(
-      ObjectNode stepNode, String fieldName, DeserializationContext context) {
-    JsonNode node = requiredNode(stepNode, fieldName, context);
-    if (!node.isString()) {
+    if (node.isNull()) {
       throw WorkbookStepJsonFailurePathSupport.fieldFailure(
           fieldName,
           WorkbookStepJsonFailurePathSupport.inputMismatch(
               context.getParser(),
-              new ActionableShapeMessage(
-                  "Field '%s' must be a string".formatted(fieldName),
-                  "Replace field '%s' with a JSON string value.".formatted(fieldName),
-                  Optional.empty())));
+              new dev.erst.gridgrind.core.problem.ExplicitNullField(fieldName)));
     }
-    return node.asString();
+    return node;
   }
 
   private static <T> T deserializeNode(JsonNode node, JsonParser parser, Class<T> targetType) {

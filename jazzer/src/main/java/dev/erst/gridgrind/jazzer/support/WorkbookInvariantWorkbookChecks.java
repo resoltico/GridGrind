@@ -2,6 +2,7 @@ package dev.erst.gridgrind.jazzer.support;
 
 import dev.erst.gridgrind.core.plan.*;
 import dev.erst.gridgrind.core.source.*;
+import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.excel.*;
 import java.nio.file.*;
 import java.util.*;
@@ -16,7 +17,9 @@ final class WorkbookInvariantWorkbookChecks {
     var workbookSummary =
         ((dev.erst.gridgrind.excel.WorkbookCoreResult.WorkbookSummaryResult)
                 readExecutor
-                    .read(workbook, new WorkbookReadCommand.GetWorkbookSummary("workbook-shape"))
+                    .read(
+                        workbook,
+                        new WorkbookReadCommand.GetWorkbookSummary(new StepId("workbook-shape")))
                     .getFirst())
             .workbook();
 
@@ -32,7 +35,7 @@ final class WorkbookInvariantWorkbookChecks {
                               .read(
                                   workbook,
                                   new WorkbookReadCommand.GetSheetSummary(
-                                      "sheet-shape-" + sheetName, sheetName))
+                                      new StepId("sheet-shape-" + sheetName), sheetName))
                               .getFirst())
                       .sheet());
               ((dev.erst.gridgrind.excel.WorkbookDrawingResult.DrawingObjectsResult)
@@ -40,7 +43,7 @@ final class WorkbookInvariantWorkbookChecks {
                           .read(
                               workbook,
                               new WorkbookReadCommand.GetDrawingObjects(
-                                  "drawing-shape-" + sheetName, sheetName))
+                                  new StepId("drawing-shape-" + sheetName), sheetName))
                           .getFirst())
                   .drawingObjects()
                   .forEach(WorkbookInvariantWorkbookChecks::requireEngineDrawingObjectShape);
@@ -49,7 +52,7 @@ final class WorkbookInvariantWorkbookChecks {
                           .read(
                               workbook,
                               new WorkbookReadCommand.GetCharts(
-                                  "chart-shape-" + sheetName,
+                                  new StepId("chart-shape-" + sheetName),
                                   new dev.erst.gridgrind.excel.ExcelChartSelection.AllOnSheet(
                                       sheetName)))
                           .getFirst())
@@ -61,7 +64,7 @@ final class WorkbookInvariantWorkbookChecks {
                 .read(
                     workbook,
                     new WorkbookReadCommand.GetPivotTables(
-                        "pivot-shape",
+                        new StepId("pivot-shape"),
                         new dev.erst.gridgrind.excel.pivot.ExcelPivotTableSelection.All()))
                 .getFirst())
         .pivotTables()

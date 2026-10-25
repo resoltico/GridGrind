@@ -14,6 +14,7 @@ import dev.erst.gridgrind.core.problem.ProblemContext;
 import dev.erst.gridgrind.core.problem.ProblemContextRequestSurfaces;
 import dev.erst.gridgrind.core.result.ExecutionJournal;
 import dev.erst.gridgrind.core.result.WorkbookResult;
+import dev.erst.gridgrind.core.vocabulary.StepId;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -264,7 +265,7 @@ class ExecutionPathCoverageTest {
 
     WorkbookResult.Failure failure =
         ExecutionResponseSupport.failureResponse(
-            GridGrindProtocolVersion.V3, journal, request, problem, 1, "step-1");
+            GridGrindProtocolVersion.V3, journal, request, problem, 1, new StepId("step-1"));
 
     assertEquals(CalculationReport.notRequested(), failure.calculation());
     assertEquals(problem, failure.problem());
@@ -272,6 +273,6 @@ class ExecutionPathCoverageTest {
     ExecutionJournal.Outcome.Failed outcome =
         assertInstanceOf(ExecutionJournal.Outcome.Failed.class, failure.journal().outcome());
     assertEquals(1, outcome.failedStep().orElseThrow().failedStepIndex());
-    assertEquals("step-1", outcome.failedStep().orElseThrow().failedStepId());
+    assertEquals("step-1", outcome.failedStep().orElseThrow().failedStepId().value());
   }
 }

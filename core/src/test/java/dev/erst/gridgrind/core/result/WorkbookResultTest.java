@@ -36,6 +36,7 @@ import dev.erst.gridgrind.core.vocabulary.ExcelFillPattern;
 import dev.erst.gridgrind.core.vocabulary.ExcelHorizontalAlignment;
 import dev.erst.gridgrind.core.vocabulary.ExcelVerticalAlignment;
 import dev.erst.gridgrind.core.vocabulary.NamedRangeScope;
+import dev.erst.gridgrind.core.vocabulary.StepId;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
@@ -51,13 +52,13 @@ class WorkbookResultTest {
         new RequestWarning(
             dev.erst.gridgrind.core.problem.GridGrindWarningCode.UNQUOTED_SHEET_NAME_IN_FORMULA,
             0,
-            "set-total",
+            new StepId("set-total"),
             "SET_CELL",
             "Quote spaced sheet names in formulas."));
     List<InspectionResult> inspections = new ArrayList<>();
     inspections.add(
         new WorkbookInspectionResult.WorkbookSummaryResult(
-            "summary",
+            new StepId("summary"),
             new WorkbookSummary.WithSheets(
                 1, List.of("Budget"), "Budget", List.of("Budget"), 0, false)));
 
@@ -279,7 +280,7 @@ class WorkbookResultTest {
             new RequestWarning(
                 dev.erst.gridgrind.core.problem.GridGrindWarningCode.UNQUOTED_SHEET_NAME_IN_FORMULA,
                 -1,
-                "a",
+                new StepId("a"),
                 "SET_CELL",
                 "warn"));
     assertThrows(
@@ -288,7 +289,7 @@ class WorkbookResultTest {
             new RequestWarning(
                 dev.erst.gridgrind.core.problem.GridGrindWarningCode.UNQUOTED_SHEET_NAME_IN_FORMULA,
                 0,
-                " ",
+                new StepId(" "),
                 "SET_CELL",
                 "warn"));
     assertThrows(
@@ -297,7 +298,7 @@ class WorkbookResultTest {
             new RequestWarning(
                 dev.erst.gridgrind.core.problem.GridGrindWarningCode.UNQUOTED_SHEET_NAME_IN_FORMULA,
                 0,
-                "a",
+                new StepId("a"),
                 " ",
                 "warn"));
     assertThrows(
@@ -306,7 +307,7 @@ class WorkbookResultTest {
             new RequestWarning(
                 dev.erst.gridgrind.core.problem.GridGrindWarningCode.UNQUOTED_SHEET_NAME_IN_FORMULA,
                 0,
-                "a",
+                new StepId("a"),
                 "SET_CELL",
                 " "));
   }
@@ -318,7 +319,7 @@ class WorkbookResultTest {
             dev.erst.gridgrind.core.problem.ProblemContextRequestSurfaces.RequestShape.known(
                 "EXISTING", "SAVE_AS"),
             new dev.erst.gridgrind.core.problem.ProblemContextWorkbookSurfaces.StepReference(
-                2, "formula-health", "INSPECTION", "ANALYZE_FORMULA_HEALTH"),
+                2, new StepId("formula-health"), "INSPECTION", "ANALYZE_FORMULA_HEALTH"),
             dev.erst.gridgrind.core.problem.ProblemContextWorkbookSurfaces.ProblemLocation.sheet(
                 "Summary"));
 
@@ -348,7 +349,7 @@ class WorkbookResultTest {
                 dev.erst.gridgrind.core.problem.ProblemContextRequestSurfaces.RequestShape.known(
                     "NEW", "NONE"),
                 new dev.erst.gridgrind.core.problem.ProblemContextWorkbookSurfaces.StepReference(
-                    1, "cells", "INSPECTION", "GET_CELLS"),
+                    1, new StepId("cells"), "INSPECTION", "GET_CELLS"),
                 dev.erst.gridgrind.core.problem.ProblemContextWorkbookSurfaces.ProblemLocation.cell(
                     "Budget", "A1")));
     dev.erst.gridgrind.core.problem.ProblemContext.ExecuteStep executeStep =
@@ -359,7 +360,7 @@ class WorkbookResultTest {
     assertEquals(java.util.Optional.of("--request"), parseArguments.argumentName());
     assertEquals("EXECUTE_STEP", executeStep.stage());
     assertEquals(1, executeStep.stepIndex());
-    assertEquals("cells", executeStep.stepId());
+    assertEquals("cells", executeStep.stepId().value());
     assertEquals("GET_CELLS", executeStep.stepType());
     assertEquals(java.util.Optional.of("Budget"), executeStep.sheetName());
     assertEquals(java.util.Optional.of("A1"), executeStep.address());
@@ -412,7 +413,7 @@ class WorkbookResultTest {
                 dev.erst.gridgrind.core.problem.ProblemContextRequestSurfaces.RequestShape.known(
                     "NEW", "NONE"),
                 new dev.erst.gridgrind.core.problem.ProblemContextWorkbookSurfaces.StepReference(
-                    1, "cells", "INSPECTION", "GET_CELLS"),
+                    1, new StepId("cells"), "INSPECTION", "GET_CELLS"),
                 dev.erst.gridgrind.core.problem.ProblemContextWorkbookSurfaces.ProblemLocation
                     .unknown())
             .withLocation(
@@ -575,7 +576,7 @@ class WorkbookResultTest {
   @Test
   void successCopiesAssertionsAndProblemCanCarryAssertionFailure() {
     List<AssertionResult> assertions = new ArrayList<>();
-    assertions.add(new AssertionResult.Passed("assert-total", "EXPECT_CELL_VALUE"));
+    assertions.add(new AssertionResult.Passed(new StepId("assert-total"), "EXPECT_CELL_VALUE"));
 
     WorkbookResult.Success success =
         WorkbookResults.success(
@@ -583,13 +584,13 @@ class WorkbookResultTest {
             assertions,
             List.of(
                 new WorkbookInspectionResult.WorkbookSummaryResult(
-                    "summary",
+                    new StepId("summary"),
                     new WorkbookSummary.WithSheets(
                         1, List.of("Budget"), "Budget", List.of("Budget"), 0, false))));
     assertions.clear();
 
     assertEquals(1, success.assertions().size());
-    assertEquals("assert-total", success.assertions().getFirst().stepId());
+    assertEquals("assert-total", success.assertions().getFirst().stepId().value());
 
     GridGrindProblemDetail.Problem problem =
         new GridGrindProblemDetail.Problem(
@@ -603,7 +604,7 @@ class WorkbookResultTest {
                 dev.erst.gridgrind.core.problem.ProblemContextRequestSurfaces.RequestShape.known(
                     "NEW", "NONE"),
                 new dev.erst.gridgrind.core.problem.ProblemContextWorkbookSurfaces.StepReference(
-                    0, "assert-total", "ASSERTION", "EXPECT_CELL_VALUE"),
+                    0, new StepId("assert-total"), "ASSERTION", "EXPECT_CELL_VALUE"),
                 dev.erst.gridgrind.core.problem.ProblemContextWorkbookSurfaces.ProblemLocation.cell(
                     "Budget", "B4")),
             List.of());
@@ -628,7 +629,7 @@ class WorkbookResultTest {
             List.of(
                 new ExecutionJournal.Step(
                     0,
-                    "assert-total",
+                    new StepId("assert-total"),
                     "ASSERTION",
                     "EXPECT_CELL_VALUE",
                     List.of(new ExecutionJournal.Target("CELL", "Cell Budget!B4")),
@@ -645,7 +646,8 @@ class WorkbookResultTest {
                 0,
                 22,
                 GridGrindProblemCode.ASSERTION_FAILED,
-                java.util.Optional.of(new ExecutionJournal.FailureStep(0, "assert-total"))));
+                java.util.Optional.of(
+                    new ExecutionJournal.FailureStep(0, new StepId("assert-total")))));
 
     assertEquals(ExecutionJournalLevel.VERBOSE, journal.level());
     assertEquals("Cell Budget!B4", journal.steps().getFirst().resolvedTargets().getFirst().label());

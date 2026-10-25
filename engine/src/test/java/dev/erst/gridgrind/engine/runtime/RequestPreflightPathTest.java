@@ -16,6 +16,7 @@ import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import dev.erst.gridgrind.core.problem.GridGrindProblemCode;
 import dev.erst.gridgrind.core.problem.GridGrindProblemDetail;
 import dev.erst.gridgrind.core.problem.ProblemContext;
+import dev.erst.gridgrind.core.vocabulary.StepId;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
@@ -102,7 +103,7 @@ class RequestPreflightPathTest {
             FormulaEnvironmentInput.empty(),
             List.of(
                 new MutationStep(
-                    "insert-column",
+                    new StepId("insert-column"),
                     new ColumnBandSelector.Insertion("Ops", 1, 1),
                     new WorkbookMutationAction.InsertColumns())));
 

@@ -4,6 +4,7 @@ import static dev.erst.gridgrind.excel.ExcelStyleTestAccess.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 import dev.erst.gridgrind.core.vocabulary.ExcelFillPattern;
+import dev.erst.gridgrind.core.vocabulary.StepId;
 import java.math.BigDecimal;
 import java.util.Arrays;
 import java.util.List;
@@ -307,25 +308,30 @@ class AdvancedReadEngineTypesTest {
     ExcelWorkbookProtectionSnapshot protection =
         new ExcelWorkbookProtectionSnapshot(true, false, true, true, false);
     WorkbookReadCommand.GetWorkbookProtection read =
-        new WorkbookReadCommand.GetWorkbookProtection("workbook-protection");
+        new WorkbookReadCommand.GetWorkbookProtection(new StepId("workbook-protection"));
     WorkbookCoreResult.WorkbookProtectionResult result =
-        new WorkbookCoreResult.WorkbookProtectionResult("workbook-protection", protection);
+        new WorkbookCoreResult.WorkbookProtectionResult(
+            new StepId("workbook-protection"), protection);
 
     assertTrue(protection.structureLocked());
-    assertEquals("workbook-protection", read.stepId());
+    assertEquals("workbook-protection", read.stepId().value());
     assertTrue(result.protection().workbookPasswordHashPresent());
     assertThrows(
         NullPointerException.class, () -> new WorkbookReadCommand.GetWorkbookProtection(null));
     assertThrows(
-        IllegalArgumentException.class, () -> new WorkbookReadCommand.GetWorkbookProtection(" "));
+        IllegalArgumentException.class,
+        () -> new WorkbookReadCommand.GetWorkbookProtection(new StepId(" ")));
     assertThrows(
         NullPointerException.class,
-        () -> new WorkbookCoreResult.WorkbookProtectionResult("workbook-protection", null));
+        () ->
+            new WorkbookCoreResult.WorkbookProtectionResult(
+                new StepId("workbook-protection"), null));
     assertThrows(
         IllegalArgumentException.class,
         () ->
             new WorkbookCoreResult.WorkbookProtectionResult(
-                " ", new ExcelWorkbookProtectionSnapshot(true, false, true, true, false)));
+                new StepId(" "),
+                new ExcelWorkbookProtectionSnapshot(true, false, true, true, false)));
   }
 
   @Test

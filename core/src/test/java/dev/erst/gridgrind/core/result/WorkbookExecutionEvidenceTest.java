@@ -11,6 +11,7 @@ import dev.erst.gridgrind.core.plan.CellAssertion;
 import dev.erst.gridgrind.core.plan.CellSelector;
 import dev.erst.gridgrind.core.semantics.OperationEffect;
 import dev.erst.gridgrind.core.semantics.OperationEffectFootprint;
+import dev.erst.gridgrind.core.vocabulary.StepId;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 
@@ -41,13 +42,14 @@ class WorkbookExecutionEvidenceTest {
             "SET_CELL", List.of(OperationEffect.CELLS), OperationEffectFootprint.TARGET_BOUNDED);
     WorkbookExecutionEvidence.MaterializedInput input =
         new WorkbookExecutionEvidence.MaterializedInput("SOURCE", "input.xlsx", 3, "0".repeat(64));
-    AssertionResult.Passed passed = new AssertionResult.Passed("assert-cell", "EXPECT_CELL_VALUE");
+    AssertionResult.Passed passed =
+        new AssertionResult.Passed(new StepId("assert-cell"), "EXPECT_CELL_VALUE");
     AssertionResult.Failed failed =
         new AssertionResult.Failed(
-            "assert-cell",
+            new StepId("assert-cell"),
             "EXPECT_CELL_VALUE",
             new AssertionFailure(
-                "assert-cell",
+                new StepId("assert-cell"),
                 "EXPECT_CELL_VALUE",
                 new CellSelector.ByAddress("Summary", "A1"),
                 new CellAssertion.CellValue(new CellScalarValue.Text("Approved")),
@@ -67,7 +69,7 @@ class WorkbookExecutionEvidenceTest {
             new WorkbookExecutionEvidence.Presentational.NotAssessed(),
             List.of(
                 new WorkbookExecutionEvidence.Preservation.SemanticEstablished(
-                    List.of("preserve-summary")),
+                    List.of(new StepId("preserve-summary"))),
                 new WorkbookExecutionEvidence.Preservation.ByteEstablished(
                     List.of("/customXml/item1.xml")),
                 new WorkbookExecutionEvidence.Preservation.Failed(
@@ -108,7 +110,8 @@ class WorkbookExecutionEvidenceTest {
                 List.of(
                     new WorkbookExecutionEvidence.TaskSpecific.Assertion(
                         WorkbookExecutionEvidence.TaskSpecific.Origin.PLAN_AUTHORED,
-                        new AssertionResult.Passed("assert-cell", "EXPECT_CELL_VALUE")))));
+                        new AssertionResult.Passed(
+                            new StepId("assert-cell"), "EXPECT_CELL_VALUE")))));
     assertThrows(
         IllegalArgumentException.class,
         () -> new WorkbookExecutionEvidence.TaskSpecific.Established(List.of(failedAssertion())));
@@ -130,13 +133,13 @@ class WorkbookExecutionEvidenceTest {
   private static WorkbookExecutionEvidence.TaskSpecific.Assertion failedAssertion() {
     AssertionFailure failure =
         new AssertionFailure(
-            "assert-cell",
+            new StepId("assert-cell"),
             "EXPECT_CELL_VALUE",
             new CellSelector.ByAddress("Summary", "A1"),
             new CellAssertion.CellValue(new CellScalarValue.Text("Approved")),
             List.of());
     return new WorkbookExecutionEvidence.TaskSpecific.Assertion(
         WorkbookExecutionEvidence.TaskSpecific.Origin.HOST_REQUIRED,
-        new AssertionResult.Failed("assert-cell", "EXPECT_CELL_VALUE", failure));
+        new AssertionResult.Failed(new StepId("assert-cell"), "EXPECT_CELL_VALUE", failure));
   }
 }

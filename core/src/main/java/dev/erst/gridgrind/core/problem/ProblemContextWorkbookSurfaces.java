@@ -2,6 +2,7 @@ package dev.erst.gridgrind.core.problem;
 
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import dev.erst.gridgrind.core.vocabulary.StepId;
 import java.util.Optional;
 
 /** Workbook and step location facts reused across problem-context stages. */
@@ -344,12 +345,13 @@ public interface ProblemContextWorkbookSurfaces {
   }
 
   /** Stable step identity captured for step execution failures. */
-  record StepReference(int stepIndex, String stepId, String stepKind, String stepType) {
+  record StepReference(int stepIndex, StepId stepId, String stepKind, String stepType) {
     public StepReference {
       if (stepIndex < 0) {
         throw new IllegalArgumentException("stepIndex must be greater than or equal to 0");
       }
-      stepId = requireNonBlank(stepId, "stepId");
+
+      java.util.Objects.requireNonNull(stepId, "stepId must not be null");
       stepKind = requireNonBlank(stepKind, "stepKind");
       stepType = requireNonBlank(stepType, "stepType");
     }

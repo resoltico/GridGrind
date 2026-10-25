@@ -188,11 +188,12 @@ final class HostAcceptanceExecutor {
       List<InspectionResult> observed,
       List<WorkbookExecutionEvidence.Preservation> preservation)
       throws PreservationFailedException {
-    List<String> stepIds =
+    List<dev.erst.gridgrind.core.vocabulary.StepId> stepIds =
         facts.inspections().stream().map(inspection -> inspection.stepId()).toList();
     if (!baseline.equals(observed)) {
       throw new PreservationFailedException(
-          WorkbookExecutionEvidence.Preservation.Kind.SEMANTIC, stepIds);
+          WorkbookExecutionEvidence.Preservation.Kind.SEMANTIC,
+          stepIds.stream().map(dev.erst.gridgrind.core.vocabulary.StepId::value).toList());
     }
     preservation.add(new WorkbookExecutionEvidence.Preservation.SemanticEstablished(stepIds));
   }

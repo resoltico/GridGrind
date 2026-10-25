@@ -176,9 +176,10 @@ public record WorkbookExecutionEvidence(
 
     record NotApplicable() implements Preservation {}
 
-    record SemanticEstablished(List<String> inspectionStepIds) implements Preservation {
+    record SemanticEstablished(List<dev.erst.gridgrind.core.vocabulary.StepId> inspectionStepIds)
+        implements Preservation {
       public SemanticEstablished {
-        inspectionStepIds = copyIdentifiers(inspectionStepIds, "inspectionStepIds");
+        inspectionStepIds = copyRequiredValues(inspectionStepIds, "inspectionStepIds");
       }
     }
 
@@ -250,11 +251,16 @@ public record WorkbookExecutionEvidence(
     return digest;
   }
 
-  private static List<String> copyIdentifiers(List<String> values, String fieldName) {
-    List<String> copied = copyValues(values, fieldName);
+  private static <T> List<T> copyRequiredValues(List<T> values, String fieldName) {
+    List<T> copied = copyValues(values, fieldName);
     if (copied.isEmpty()) {
       throw new IllegalArgumentException(fieldName + " must not be empty");
     }
+    return copied;
+  }
+
+  private static List<String> copyIdentifiers(List<String> values, String fieldName) {
+    List<String> copied = copyRequiredValues(values, fieldName);
     for (String value : copied) {
       requireNonBlank(value, fieldName + " element");
     }

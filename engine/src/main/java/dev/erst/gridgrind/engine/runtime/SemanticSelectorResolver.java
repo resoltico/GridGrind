@@ -14,6 +14,7 @@ import dev.erst.gridgrind.core.plan.SheetIntrospectionQuery;
 import dev.erst.gridgrind.core.plan.TableCellSelector;
 import dev.erst.gridgrind.core.plan.TableRowSelector;
 import dev.erst.gridgrind.core.plan.TableSelector;
+import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.excel.ExcelCellSnapshot;
 import dev.erst.gridgrind.excel.ExcelSheet;
 import dev.erst.gridgrind.excel.ExcelTableSnapshot;
@@ -65,7 +66,7 @@ final class SemanticSelectorResolver {
   }
 
   ResolvedInspectionTarget resolveInspectionTarget(
-      String stepId, ExcelWorkbook workbook, Selector target, InspectionQuery query) {
+      StepId stepId, ExcelWorkbook workbook, Selector target, InspectionQuery query) {
     Objects.requireNonNull(stepId, "stepId must not be null");
     Objects.requireNonNull(workbook, "workbook must not be null");
     Objects.requireNonNull(target, "target must not be null");
@@ -95,7 +96,7 @@ final class SemanticSelectorResolver {
   }
 
   private ResolvedInspectionTarget resolveExactCellInspectionTarget(
-      String stepId, ExcelWorkbook workbook, Selector target, InspectionQuery query) {
+      StepId stepId, ExcelWorkbook workbook, Selector target, InspectionQuery query) {
     if (!(target instanceof TableCellSelector.ByColumnName tableCell)) {
       return ResolvedInspectionTarget.direct(target);
     }
@@ -206,7 +207,8 @@ final class SemanticSelectorResolver {
                 .read(
                     workbook,
                     new WorkbookReadCommand.GetTables(
-                        RESOLUTION_STEP_ID, SelectorConverter.toExcelTableSelection(selector)))
+                        new StepId(RESOLUTION_STEP_ID),
+                        SelectorConverter.toExcelTableSelection(selector)))
                 .getFirst();
     List<ExcelTableSnapshot> tables = result.tables();
     if (tables.isEmpty()) {
@@ -270,7 +272,7 @@ final class SemanticSelectorResolver {
   }
 
   private static InspectionResult emptyInspectionResult(
-      String stepId, String sheetName, InspectionQuery query) {
+      StepId stepId, String sheetName, InspectionQuery query) {
     if (query instanceof SheetIntrospectionQuery.GetCells) {
       return new SheetInspectionResult.CellsResult(stepId, sheetName, List.of());
     }

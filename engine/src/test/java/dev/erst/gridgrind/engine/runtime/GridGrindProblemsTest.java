@@ -16,6 +16,7 @@ import dev.erst.gridgrind.core.problem.MessageShape;
 import dev.erst.gridgrind.core.problem.ProblemContext;
 import dev.erst.gridgrind.core.problem.ProblemContextRequestSurfaces;
 import dev.erst.gridgrind.core.problem.ProblemContextWorkbookSurfaces;
+import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.excel.InvalidFormulaException;
 import dev.erst.gridgrind.excel.InvalidSigningConfigurationException;
 import dev.erst.gridgrind.excel.InvalidWorkbookPasswordException;
@@ -70,7 +71,7 @@ class GridGrindProblemsTest {
         GridGrindProblems.codeFor(new DateTimeException("bad date")));
     AssertionFailure assertionFailure =
         new AssertionFailure(
-            "assert-total",
+            new StepId("assert-total"),
             "EXPECT_CELL_VALUE",
             new CellSelector.ByAddress("Budget", "B4"),
             new CellAssertion.CellValue(
@@ -154,7 +155,7 @@ class GridGrindProblemsTest {
             new AssertionFailedException(
                 "assertion failed",
                 new AssertionFailure(
-                    "assert-total",
+                    new StepId("assert-total"),
                     "EXPECT_CELL_VALUE",
                     new CellSelector.ByAddress("Budget", "B4"),
                     new CellAssertion.CellValue(
@@ -163,7 +164,7 @@ class GridGrindProblemsTest {
             new ProblemContext.ExecuteStep(
                 ProblemContextRequestSurfaces.RequestShape.known("NEW", "NONE"),
                 new ProblemContextWorkbookSurfaces.StepReference(
-                    1, "assert-total", "ASSERTION", "EXPECT_CELL_VALUE"),
+                    1, new StepId("assert-total"), "ASSERTION", "EXPECT_CELL_VALUE"),
                 ProblemContextWorkbookSurfaces.ProblemLocation.cell("Budget", "B4")));
     assertEquals(GridGrindProblemCategory.ASSERTION, assertionProblem.category());
     assertEquals(GridGrindProblemCode.ASSERTION_FAILED, assertionProblem.code());
@@ -275,7 +276,8 @@ class GridGrindProblemsTest {
     ProblemContext.ExecuteStep executeStep =
         new ProblemContext.ExecuteStep(
             ProblemContextRequestSurfaces.RequestShape.unknown(),
-            new ProblemContextWorkbookSurfaces.StepReference(0, "step-0", "MUTATION", "SET_CELL"),
+            new ProblemContextWorkbookSurfaces.StepReference(
+                0, new StepId("step-0"), "MUTATION", "SET_CELL"),
             ProblemContextWorkbookSurfaces.ProblemLocation.unknown());
 
     assertSame(parseArguments, GridGrindProblems.enrichContext(parseArguments, exception));

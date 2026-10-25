@@ -9,6 +9,7 @@ import dev.erst.gridgrind.core.plan.*;
 import dev.erst.gridgrind.core.plan.ExecutionModeInput;
 import dev.erst.gridgrind.core.plan.InspectionStep;
 import dev.erst.gridgrind.core.plan.SheetSelector;
+import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.excel.WorkbookExecutionEngine;
 import dev.erst.gridgrind.excel.WorkbookLocation;
 import dev.erst.gridgrind.excel.WorkbookTempFileFactory;
@@ -37,7 +38,7 @@ class ExecutionStepSupportTest {
                 ExecutionGrantTestSupport.noPublication()));
     InspectionStep inspectionStep =
         new InspectionStep(
-            "formula-surface",
+            new StepId("formula-surface"),
             new SheetSelector.All(),
             new InspectionSurfaceQuery.GetFormulaSurface());
 
@@ -67,7 +68,7 @@ class ExecutionStepSupportTest {
                 tempRoot, tempRoot.resolve("private"), ExecutionGrantTestSupport.noPublication()));
     InspectionStep inspectionStep =
         new InspectionStep(
-            "formula-surface",
+            new StepId("formula-surface"),
             new SheetSelector.All(),
             new InspectionSurfaceQuery.GetFormulaSurface());
     Path filesystemRoot = Path.of("").toAbsolutePath().normalize().getRoot();

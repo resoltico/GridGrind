@@ -20,6 +20,7 @@ import dev.erst.gridgrind.core.problem.GridGrindProblemCode;
 import dev.erst.gridgrind.core.problem.GridGrindProblemDetail;
 import dev.erst.gridgrind.core.problem.ProblemContext;
 import dev.erst.gridgrind.core.problem.ProblemContextRequestSurfaces;
+import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.json.codec.GridGrindJson;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
@@ -39,7 +40,7 @@ class StaticRequestValidatorTest {
             FormulaEnvironmentInput.empty(),
             List.of(
                 new MutationStep(
-                    "ensure-sheet",
+                    new StepId("ensure-sheet"),
                     new SheetSelector.ByName("Budget"),
                     new WorkbookMutationAction.EnsureSheet()),
                 setCell("set-first", "A1"),
@@ -63,11 +64,11 @@ class StaticRequestValidatorTest {
             FormulaEnvironmentInput.empty(),
             List.of(
                 new MutationStep(
-                    "set-cell",
+                    new StepId("set-cell"),
                     new WorkbookSelector.Current(),
                     new CellMutationAction.SetCell(new CellInput.NumberValue(1.0))),
                 new MutationStep(
-                    "ensure-sheet",
+                    new StepId("ensure-sheet"),
                     new WorkbookSelector.Current(),
                     new WorkbookMutationAction.EnsureSheet())));
 
@@ -312,7 +313,7 @@ class StaticRequestValidatorTest {
             FormulaEnvironmentInput.empty(),
             List.of(
                 new MutationStep(
-                    "set-cell",
+                    new StepId("set-cell"),
                     new WorkbookSelector.Current(),
                     new CellMutationAction.SetCell(new CellInput.NumberValue(1.0)))));
 
@@ -350,7 +351,7 @@ class StaticRequestValidatorTest {
 
   private static MutationStep setCell(String stepId, String address) {
     return new MutationStep(
-        stepId,
+        new StepId(stepId),
         new CellSelector.ByAddress("Budget", address),
         new CellMutationAction.SetCell(new CellInput.NumberValue(1.0)));
   }

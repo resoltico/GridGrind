@@ -1,17 +1,19 @@
 package dev.erst.gridgrind.core.plan;
 
+import dev.erst.gridgrind.core.vocabulary.StepId;
 import java.util.List;
 import java.util.Objects;
 
 /** Structured assertion-mismatch payload attached to ASSERTION_FAILED problems. */
 public record AssertionFailure(
-    String stepId,
+    StepId stepId,
     String assertionType,
     Selector target,
     Assertion assertion,
     List<InspectionResult> observations) {
   public AssertionFailure {
-    stepId = AssertionSupport.requireNonBlank(stepId, "stepId");
+
+    java.util.Objects.requireNonNull(stepId, "stepId must not be null");
     assertionType = AssertionSupport.requireNonBlank(assertionType, "assertionType");
     Objects.requireNonNull(target, "target must not be null");
     Objects.requireNonNull(assertion, "assertion must not be null");

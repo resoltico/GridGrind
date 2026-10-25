@@ -13,6 +13,7 @@ import dev.erst.gridgrind.core.problem.ProblemContextWorkbookSurfaces.InputRefer
 import dev.erst.gridgrind.core.problem.ProblemContextWorkbookSurfaces.ProblemLocation;
 import dev.erst.gridgrind.core.problem.ProblemContextWorkbookSurfaces.StepReference;
 import dev.erst.gridgrind.core.problem.ProblemContextWorkbookSurfaces.WorkbookReference;
+import dev.erst.gridgrind.core.vocabulary.StepId;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -307,7 +308,7 @@ public sealed interface ProblemContext
     }
 
     /** Returns the authored step id for the failing workbook step. */
-    public String stepId() {
+    public StepId stepId() {
       return step.stepId();
     }
 

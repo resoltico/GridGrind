@@ -49,6 +49,7 @@ import dev.erst.gridgrind.core.vocabulary.ExcelHorizontalAlignment;
 import dev.erst.gridgrind.core.vocabulary.ExcelVerticalAlignment;
 import dev.erst.gridgrind.core.vocabulary.NamedRangeBackingKind;
 import dev.erst.gridgrind.core.vocabulary.NamedRangeScope;
+import dev.erst.gridgrind.core.vocabulary.StepId;
 import java.math.BigDecimal;
 import java.util.Arrays;
 import java.util.List;
@@ -67,7 +68,7 @@ class WorkbookResultEdgeCoverageTest {
             List.of(),
             List.of(
                 new dev.erst.gridgrind.core.plan.WorkbookInspectionResult.WorkbookSummaryResult(
-                    "summary", new WorkbookSummary.Empty(0, List.of(), 0, false))));
+                    new StepId("summary"), new WorkbookSummary.Empty(0, List.of(), 0, false))));
     WorkbookResult.Failure failure =
         WorkbookResults.failure(
             GridGrindProblemDetail.Problem.of(

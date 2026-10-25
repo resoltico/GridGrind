@@ -7,6 +7,7 @@ import dev.erst.gridgrind.core.model.formula.NamedRangeReport;
 import dev.erst.gridgrind.core.model.protection.WorkbookProtectionReport;
 import dev.erst.gridgrind.core.model.security.OoxmlPackageSecurityReport;
 import dev.erst.gridgrind.core.result.WorkbookSummary;
+import dev.erst.gridgrind.core.vocabulary.StepId;
 import java.util.List;
 import java.util.Objects;
 
@@ -22,69 +23,76 @@ public sealed interface WorkbookInspectionResult extends InspectionIntrospection
 
   /** Returns workbook-level summary facts. */
   @JsonTypeName("GET_WORKBOOK_SUMMARY")
-  record WorkbookSummaryResult(String stepId, WorkbookSummary workbook)
+  record WorkbookSummaryResult(StepId stepId, WorkbookSummary workbook)
       implements WorkbookInspectionResult {
     public WorkbookSummaryResult {
-      stepId = InspectionResultValidationSupport.requireNonBlank(stepId, "stepId");
+
+      java.util.Objects.requireNonNull(stepId, "stepId must not be null");
       Objects.requireNonNull(workbook, "workbook must not be null");
     }
   }
 
   /** Returns OOXML package-encryption and package-signature facts. */
   @JsonTypeName("GET_PACKAGE_SECURITY")
-  record PackageSecurityResult(String stepId, OoxmlPackageSecurityReport security)
+  record PackageSecurityResult(StepId stepId, OoxmlPackageSecurityReport security)
       implements WorkbookInspectionResult {
     public PackageSecurityResult {
-      stepId = InspectionResultValidationSupport.requireNonBlank(stepId, "stepId");
+
+      java.util.Objects.requireNonNull(stepId, "stepId must not be null");
       Objects.requireNonNull(security, "security must not be null");
     }
   }
 
   /** Returns workbook-level protection facts. */
   @JsonTypeName("GET_WORKBOOK_PROTECTION")
-  record WorkbookProtectionResult(String stepId, WorkbookProtectionReport protection)
+  record WorkbookProtectionResult(StepId stepId, WorkbookProtectionReport protection)
       implements WorkbookInspectionResult {
     public WorkbookProtectionResult {
-      stepId = InspectionResultValidationSupport.requireNonBlank(stepId, "stepId");
+
+      java.util.Objects.requireNonNull(stepId, "stepId must not be null");
       Objects.requireNonNull(protection, "protection must not be null");
     }
   }
 
   /** Returns factual workbook custom-XML mapping metadata. */
   @JsonTypeName("GET_CUSTOM_XML_MAPPINGS")
-  record CustomXmlMappingsResult(String stepId, List<CustomXmlMappingReport> mappings)
+  record CustomXmlMappingsResult(StepId stepId, List<CustomXmlMappingReport> mappings)
       implements WorkbookInspectionResult {
     public CustomXmlMappingsResult {
-      stepId = InspectionResultValidationSupport.requireNonBlank(stepId, "stepId");
+
+      java.util.Objects.requireNonNull(stepId, "stepId must not be null");
       mappings = InspectionResultValidationSupport.copyValues(mappings, "mappings");
     }
   }
 
   /** Returns XML exported from one selected workbook custom-XML mapping. */
   @JsonTypeName("EXPORT_CUSTOM_XML_MAPPING")
-  record CustomXmlExportResult(String stepId, CustomXmlExportReport export)
+  record CustomXmlExportResult(StepId stepId, CustomXmlExportReport export)
       implements WorkbookInspectionResult {
     public CustomXmlExportResult {
-      stepId = InspectionResultValidationSupport.requireNonBlank(stepId, "stepId");
+
+      java.util.Objects.requireNonNull(stepId, "stepId must not be null");
       Objects.requireNonNull(export, "export must not be null");
     }
   }
 
   /** Returns named ranges selected by the originating read operation. */
   @JsonTypeName("GET_NAMED_RANGES")
-  record NamedRangesResult(String stepId, List<NamedRangeReport> namedRanges)
+  record NamedRangesResult(StepId stepId, List<NamedRangeReport> namedRanges)
       implements WorkbookInspectionResult {
     public NamedRangesResult {
-      stepId = InspectionResultValidationSupport.requireNonBlank(stepId, "stepId");
+
+      java.util.Objects.requireNonNull(stepId, "stepId must not be null");
       namedRanges = InspectionResultValidationSupport.copyValues(namedRanges, "namedRanges");
     }
   }
 
   /** Returns sheet names matched by the originating sheet-presence assertion. */
   @JsonTypeName("GET_SHEETS")
-  record SheetsResult(String stepId, List<String> sheetNames) implements WorkbookInspectionResult {
+  record SheetsResult(StepId stepId, List<String> sheetNames) implements WorkbookInspectionResult {
     public SheetsResult {
-      stepId = InspectionResultValidationSupport.requireNonBlank(stepId, "stepId");
+
+      java.util.Objects.requireNonNull(stepId, "stepId must not be null");
       sheetNames = InspectionResultValidationSupport.copyValues(sheetNames, "sheetNames");
     }
   }

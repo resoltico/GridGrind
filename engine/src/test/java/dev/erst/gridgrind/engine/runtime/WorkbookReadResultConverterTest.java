@@ -48,6 +48,7 @@ import dev.erst.gridgrind.core.vocabulary.ExcelPictureFormat;
 import dev.erst.gridgrind.core.vocabulary.ExcelPivotDataConsolidateFunction;
 import dev.erst.gridgrind.core.vocabulary.ExcelPrintOrientation;
 import dev.erst.gridgrind.core.vocabulary.ExcelVerticalAlignment;
+import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.excel.*;
 import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlDataBindingSnapshot;
 import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlExportSnapshot;
@@ -78,7 +79,7 @@ class InspectionResultConverterTest extends DefaultGridGrindRequestExecutorTestS
             WorkbookInspectionResult.PackageSecurityResult.class,
             InspectionResultConverter.toReadResult(
                 new dev.erst.gridgrind.excel.WorkbookCoreResult.PackageSecurityResult(
-                    "security",
+                    new StepId("security"),
                     new ExcelOoxmlPackageSecuritySnapshot(
                         new ExcelOoxmlEncryptionSnapshot.Encrypted(
                             ExcelOoxmlEncryptionMode.AGILE,
@@ -112,7 +113,7 @@ class InspectionResultConverterTest extends DefaultGridGrindRequestExecutorTestS
             WorkbookInspectionResult.CustomXmlMappingsResult.class,
             InspectionResultConverter.toReadResult(
                 new dev.erst.gridgrind.excel.WorkbookCoreResult.CustomXmlMappingsResult(
-                    "custom-xml-mappings",
+                    new StepId("custom-xml-mappings"),
                     List.of(
                         customXmlMappingSnapshot(
                             1L,
@@ -141,7 +142,7 @@ class InspectionResultConverterTest extends DefaultGridGrindRequestExecutorTestS
             WorkbookInspectionResult.CustomXmlExportResult.class,
             InspectionResultConverter.toReadResult(
                 new dev.erst.gridgrind.excel.WorkbookCoreResult.CustomXmlExportResult(
-                    "custom-xml-export",
+                    new StepId("custom-xml-export"),
                     new ExcelCustomXmlExportSnapshot(
                         customXmlMappingSnapshot(
                             1L,
@@ -163,11 +164,11 @@ class InspectionResultConverterTest extends DefaultGridGrindRequestExecutorTestS
                         true,
                         "<CORSO><NOME>Grid</NOME></CORSO>"))));
 
-    assertEquals("custom-xml-mappings", mappings.stepId());
+    assertEquals("custom-xml-mappings", mappings.stepId().value());
     assertEquals("CORSO_mapping", mappings.mappings().getFirst().name());
     assertEquals(2L, mappings.mappings().getFirst().dataBinding().loadMode());
     assertEquals("A1", mappings.mappings().getFirst().linkedCells().getFirst().address());
-    assertEquals("custom-xml-export", exported.stepId());
+    assertEquals("custom-xml-export", exported.stepId().value());
     assertEquals("UTF-8", exported.export().encoding());
     assertTrue(exported.export().xml().contains("<NOME>Grid</NOME>"));
   }
@@ -208,7 +209,7 @@ class InspectionResultConverterTest extends DefaultGridGrindRequestExecutorTestS
             WorkbookInspectionResult.WorkbookProtectionResult.class,
             InspectionResultConverter.toReadResult(
                 new dev.erst.gridgrind.excel.WorkbookCoreResult.WorkbookProtectionResult(
-                    "workbook-protection",
+                    new StepId("workbook-protection"),
                     new ExcelWorkbookProtectionSnapshot(true, false, true, true, false))));
     assertTrue(protection.protection().structureLocked());
   }
@@ -247,7 +248,7 @@ class InspectionResultConverterTest extends DefaultGridGrindRequestExecutorTestS
             SheetInspectionResult.CommentsResult.class,
             InspectionResultConverter.toReadResult(
                 new dev.erst.gridgrind.excel.WorkbookSheetResult.CommentsResult(
-                    "comments",
+                    new StepId("comments"),
                     "Budget",
                     List.of(
                         new dev.erst.gridgrind.excel.WorkbookSheetResult.CellComment(
@@ -262,13 +263,13 @@ class InspectionResultConverterTest extends DefaultGridGrindRequestExecutorTestS
             SheetInspectionResult.PrintLayoutResult.class,
             InspectionResultConverter.toReadResult(
                 new dev.erst.gridgrind.excel.WorkbookSheetResult.PrintLayoutResult(
-                    "print-layout", "Budget", advancedPrintLayout())));
+                    new StepId("print-layout"), "Budget", advancedPrintLayout())));
     SheetInspectionResult.SheetLayoutResult sheetLayout =
         assertInstanceOf(
             SheetInspectionResult.SheetLayoutResult.class,
             InspectionResultConverter.toReadResult(
                 new dev.erst.gridgrind.excel.WorkbookSheetResult.SheetLayoutResult(
-                    "sheet-layout", advancedSheetLayout())));
+                    new StepId("sheet-layout"), advancedSheetLayout())));
     assertFalse(sheetLayout.layout().presentation().display().displayGridlines());
     assertEquals(
         "#112233",
@@ -292,7 +293,7 @@ class InspectionResultConverterTest extends DefaultGridGrindRequestExecutorTestS
             SheetInspectionResult.AutofiltersResult.class,
             InspectionResultConverter.toReadResult(
                 new dev.erst.gridgrind.excel.WorkbookRuleResult.AutofiltersResult(
-                    "autofilters", "Budget", advancedAutofilters())));
+                    new StepId("autofilters"), "Budget", advancedAutofilters())));
     AutofilterEntryReport.SheetOwned sheetOwned =
         assertInstanceOf(
             AutofilterEntryReport.SheetOwned.class, autofilters.autofilters().getFirst());
@@ -329,7 +330,7 @@ class InspectionResultConverterTest extends DefaultGridGrindRequestExecutorTestS
             WorkbookAssetInspectionResult.TablesResult.class,
             InspectionResultConverter.toReadResult(
                 new dev.erst.gridgrind.excel.WorkbookRuleResult.TablesResult(
-                    "tables", List.of(advancedTable(), normalizedOptionalTable()))));
+                    new StepId("tables"), List.of(advancedTable(), normalizedOptionalTable()))));
     assertEquals(
         Optional.of("HeaderStyle"), tables.tables().getFirst().presentation().headerRowCellStyle());
     assertEquals(
@@ -351,7 +352,7 @@ class InspectionResultConverterTest extends DefaultGridGrindRequestExecutorTestS
             SheetInspectionResult.ConditionalFormattingResult.class,
             InspectionResultConverter.toReadResult(
                 new dev.erst.gridgrind.excel.WorkbookRuleResult.ConditionalFormattingResult(
-                    "conditional-formatting",
+                    new StepId("conditional-formatting"),
                     "Budget",
                     List.of(
                         new ExcelConditionalFormattingBlockSnapshot(
@@ -395,7 +396,7 @@ class InspectionResultConverterTest extends DefaultGridGrindRequestExecutorTestS
             WorkbookAssetInspectionResult.DrawingObjectsResult.class,
             InspectionResultConverter.toReadResult(
                 new dev.erst.gridgrind.excel.WorkbookDrawingResult.DrawingObjectsResult(
-                    "drawing-objects",
+                    new StepId("drawing-objects"),
                     "Budget",
                     List.of(
                         new ExcelDrawingObjectSnapshot.Picture(
@@ -447,7 +448,7 @@ class InspectionResultConverterTest extends DefaultGridGrindRequestExecutorTestS
             WorkbookAssetInspectionResult.DrawingObjectPayloadResult.class,
             InspectionResultConverter.toReadResult(
                 new dev.erst.gridgrind.excel.WorkbookDrawingResult.DrawingObjectPayloadResult(
-                    "drawing-payload",
+                    new StepId("drawing-payload"),
                     "Budget",
                     new ExcelDrawingObjectPayload.EmbeddedObject(
                         "OpsEmbed",
@@ -504,7 +505,7 @@ class InspectionResultConverterTest extends DefaultGridGrindRequestExecutorTestS
             WorkbookAssetInspectionResult.PivotTablesResult.class,
             InspectionResultConverter.toReadResult(
                 new dev.erst.gridgrind.excel.WorkbookDrawingResult.PivotTablesResult(
-                    "pivots",
+                    new StepId("pivots"),
                     List.of(
                         new ExcelPivotTableSnapshot.Supported(
                             "Sales Pivot 2026",
@@ -532,7 +533,7 @@ class InspectionResultConverterTest extends DefaultGridGrindRequestExecutorTestS
             WorkbookAnalysisResult.PivotTableHealthResult.class,
             InspectionResultConverter.toReadResult(
                 new dev.erst.gridgrind.excel.WorkbookAnalysisResult.PivotTableHealthResult(
-                    "pivot-health",
+                    new StepId("pivot-health"),
                     new WorkbookAnalysis.PivotTableHealth(
                         1,
                         new WorkbookAnalysis.AnalysisSummary(1, 0, 1, 0),
@@ -567,12 +568,12 @@ class InspectionResultConverterTest extends DefaultGridGrindRequestExecutorTestS
             SheetInspectionResult.ArrayFormulasResult.class,
             InspectionResultConverter.toReadResult(
                 new dev.erst.gridgrind.excel.WorkbookSheetResult.ArrayFormulasResult(
-                    "array-formulas",
+                    new StepId("array-formulas"),
                     List.of(
                         new ExcelArrayFormulaSnapshot("Calc", "D2:D4", "D2", "B2:B4*C2:C4", false),
                         new ExcelArrayFormulaSnapshot("Calc", "F2", "F2", "SUM(B2:C2)", true)))));
 
-    assertEquals("array-formulas", arrayFormulas.stepId());
+    assertEquals("array-formulas", arrayFormulas.stepId().value());
     assertEquals(2, arrayFormulas.arrayFormulas().size());
     assertEquals("D2:D4", arrayFormulas.arrayFormulas().getFirst().range());
     assertTrue(arrayFormulas.arrayFormulas().get(1).singleCell());
@@ -585,7 +586,7 @@ class InspectionResultConverterTest extends DefaultGridGrindRequestExecutorTestS
             WorkbookAssetInspectionResult.PivotTablesResult.class,
             InspectionResultConverter.toReadResult(
                 new dev.erst.gridgrind.excel.WorkbookDrawingResult.PivotTablesResult(
-                    "pivots",
+                    new StepId("pivots"),
                     List.of(
                         new ExcelPivotTableSnapshot.Supported(
                             "Range Pivot",
@@ -778,7 +779,7 @@ class InspectionResultConverterTest extends DefaultGridGrindRequestExecutorTestS
 
   private static dev.erst.gridgrind.excel.WorkbookDrawingResult.ChartsResult baseChartsResult() {
     return new dev.erst.gridgrind.excel.WorkbookDrawingResult.ChartsResult(
-        "charts",
+        new StepId("charts"),
         "Budget",
         List.of(
             chartSnapshot(
@@ -822,7 +823,7 @@ class InspectionResultConverterTest extends DefaultGridGrindRequestExecutorTestS
   private static dev.erst.gridgrind.excel.WorkbookDrawingResult.ChartsResult
       advancedChartsResult() {
     return new dev.erst.gridgrind.excel.WorkbookDrawingResult.ChartsResult(
-        "charts-advanced",
+        new StepId("charts-advanced"),
         "Budget",
         List.of(
             chartSnapshot(

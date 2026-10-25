@@ -12,6 +12,7 @@ import dev.erst.gridgrind.core.plan.WorkbookMutationAction;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import dev.erst.gridgrind.core.problem.RequestWarning;
 import dev.erst.gridgrind.core.vocabulary.SheetCopyPosition;
+import dev.erst.gridgrind.core.vocabulary.StepId;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 
@@ -41,7 +42,7 @@ class GridGrindRequestWarningsTest {
             dev.erst.gridgrind.core.problem.RequestWarningLocation.Step.class,
             warnings.getFirst().location());
     assertEquals(2, location.stepIndex());
-    assertEquals("step-03-set-cell", location.stepId());
+    assertEquals("step-03-set-cell", location.stepId().value());
     assertEquals("SET_CELL", location.stepType());
     assertTrue(warnings.getFirst().message().contains("Budget Review"));
     assertTrue(warnings.getFirst().message().contains("'Sheet Name'!A1"));
@@ -131,7 +132,7 @@ class GridGrindRequestWarningsTest {
             new RequestWarning(
                 dev.erst.gridgrind.core.problem.GridGrindWarningCode.UNQUOTED_SHEET_NAME_IN_FORMULA,
                 4,
-                "step-05-set-cell",
+                new StepId("step-05-set-cell"),
                 "SET_CELL",
                 "Formula references same-request sheet names with spaces without single quotes: Budget Review, Annual Budget Review. Use 'Sheet Name'!A1 syntax.")),
         GridGrindRequestWarnings.collect(request));
@@ -196,13 +197,13 @@ class GridGrindRequestWarningsTest {
             new RequestWarning(
                 dev.erst.gridgrind.core.problem.GridGrindWarningCode.UNQUOTED_SHEET_NAME_IN_FORMULA,
                 2,
-                "step-03-set-range",
+                new StepId("step-03-set-range"),
                 "SET_RANGE",
                 "Formula references same-request sheet names with spaces without single quotes: Budget Review. Use 'Sheet Name'!A1 syntax."),
             new RequestWarning(
                 dev.erst.gridgrind.core.problem.GridGrindWarningCode.UNQUOTED_SHEET_NAME_IN_FORMULA,
                 3,
-                "step-04-append-row",
+                new StepId("step-04-append-row"),
                 "APPEND_ROW",
                 "Formula references same-request sheet names with spaces without single quotes: Budget Review. Use 'Sheet Name'!A1 syntax.")),
         warnings);

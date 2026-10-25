@@ -12,6 +12,7 @@ import dev.erst.gridgrind.core.vocabulary.ExcelPivotDataConsolidateFunction;
 import dev.erst.gridgrind.core.vocabulary.ExcelPrintOrientation;
 import dev.erst.gridgrind.core.vocabulary.ExcelSheetVisibility;
 import dev.erst.gridgrind.core.vocabulary.ExcelVerticalAlignment;
+import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.excel.pivot.ExcelPivotTableSnapshot;
 import dev.erst.gridgrind.excel.validation.ExcelDataValidationDefinition;
 import dev.erst.gridgrind.excel.validation.ExcelDataValidationPrompt;
@@ -50,12 +51,13 @@ class WorkbookReadResultTest {
             new WorkbookCoreResult.WorkbookSummary.WithSheets(
                 1, null, "Budget", List.of("Budget"), 0, true));
     assertThrows(
-        NullPointerException.class, () -> new WorkbookCoreResult.NamedRangesResult("ranges", null));
+        NullPointerException.class,
+        () -> new WorkbookCoreResult.NamedRangesResult(new StepId("ranges"), null));
     assertThrows(
         NullPointerException.class,
         () ->
             new WorkbookCoreResult.NamedRangesResult(
-                "ranges", List.of((ExcelNamedRangeSnapshot) null)));
+                new StepId("ranges"), List.of((ExcelNamedRangeSnapshot) null)));
     assertThrows(
         IllegalArgumentException.class,
         () ->
@@ -70,7 +72,7 @@ class WorkbookReadResultTest {
         NullPointerException.class,
         () ->
             new WorkbookSheetResult.CellsResult(
-                "cells", "Budget", null, WorkbookReadTestSupport.projection(), false));
+                new StepId("cells"), "Budget", null, WorkbookReadTestSupport.projection(), false));
     assertThrows(
         IllegalArgumentException.class,
         () -> new WorkbookSheetResult.Window("Budget", "A1", 0, 1, List.of()));
@@ -83,17 +85,20 @@ class WorkbookReadResultTest {
     assertThrows(NullPointerException.class, () -> new WorkbookSheetResult.CellComment("A1", null));
     assertThrows(
         NullPointerException.class,
-        () -> new WorkbookRuleResult.DataValidationsResult("validations", "Budget", null));
+        () ->
+            new WorkbookRuleResult.DataValidationsResult(
+                new StepId("validations"), "Budget", null));
     assertThrows(
         NullPointerException.class,
         () ->
             new WorkbookAnalysisResult.ConditionalFormattingHealthResult(
-                "conditionalFormattingHealth", null));
+                new StepId("conditionalFormattingHealth"), null));
     assertThrows(
         NullPointerException.class,
-        () -> new WorkbookRuleResult.AutofiltersResult("autofilters", "Budget", null));
+        () -> new WorkbookRuleResult.AutofiltersResult(new StepId("autofilters"), "Budget", null));
     assertThrows(
-        NullPointerException.class, () -> new WorkbookRuleResult.TablesResult("tables", null));
+        NullPointerException.class,
+        () -> new WorkbookRuleResult.TablesResult(new StepId("tables"), null));
     assertThrows(IllegalArgumentException.class, () -> new ExcelSheetPane.Frozen(-1, 0, 0, 0));
     assertThrows(IllegalArgumentException.class, () -> new ExcelSheetPane.Frozen(0, -1, 0, 0));
     assertThrows(IllegalArgumentException.class, () -> new ExcelSheetPane.Frozen(0, 0, -1, 0));
@@ -111,7 +116,7 @@ class WorkbookReadResultTest {
     assertInstanceOf(ExcelSheetPane.None.class, new ExcelSheetPane.None());
     assertThrows(
         NullPointerException.class,
-        () -> new WorkbookSheetResult.PrintLayoutResult("print", "Budget", null));
+        () -> new WorkbookSheetResult.PrintLayoutResult(new StepId("print"), "Budget", null));
     assertThrows(
         IllegalArgumentException.class,
         () -> new WorkbookSheetResult.ColumnLayout(-1, 1.0, false, 0, false));
@@ -252,18 +257,18 @@ class WorkbookReadResultTest {
             1, new WorkbookAnalysis.AnalysisSummary(1, 0, 1, 0), List.of(finding));
 
     WorkbookDrawingResult.PivotTablesResult pivotTables =
-        new WorkbookDrawingResult.PivotTablesResult("pivots", List.of(pivot));
+        new WorkbookDrawingResult.PivotTablesResult(new StepId("pivots"), List.of(pivot));
     WorkbookAnalysisResult.PivotTableHealthResult pivotTableHealth =
-        new WorkbookAnalysisResult.PivotTableHealthResult("pivot-health", health);
+        new WorkbookAnalysisResult.PivotTableHealthResult(new StepId("pivot-health"), health);
 
     assertEquals("Budget Pivot", pivotTables.pivotTables().getFirst().name());
     assertEquals(1, pivotTableHealth.analysis().checkedPivotTableCount());
     assertThrows(
         NullPointerException.class,
-        () -> new WorkbookDrawingResult.PivotTablesResult("pivots", null));
+        () -> new WorkbookDrawingResult.PivotTablesResult(new StepId("pivots"), null));
     assertThrows(
         NullPointerException.class,
-        () -> new WorkbookAnalysisResult.PivotTableHealthResult("pivot-health", null));
+        () -> new WorkbookAnalysisResult.PivotTableHealthResult(new StepId("pivot-health"), null));
   }
 
   @Test
@@ -517,12 +522,12 @@ class WorkbookReadResultTest {
         schemaColumns,
         namedRangeEntries,
         new WorkbookCoreResult.WorkbookSummaryResult(
-            "workbook",
+            new StepId("workbook"),
             new WorkbookCoreResult.WorkbookSummary.WithSheets(
                 1, sheetNames, "Budget", List.of("Budget"), 1, true)),
-        new WorkbookCoreResult.NamedRangesResult("ranges", namedRanges),
+        new WorkbookCoreResult.NamedRangesResult(new StepId("ranges"), namedRanges),
         new WorkbookSheetResult.SheetSummaryResult(
-            "sheet",
+            new StepId("sheet"),
             new WorkbookSheetResult.SheetSummary(
                 "Budget",
                 ExcelSheetVisibility.VISIBLE,
@@ -533,11 +538,11 @@ class WorkbookReadResultTest {
         WorkbookReadTestSupport.cellsResult("cells", "Budget", cells),
         WorkbookReadTestSupport.windowResult(
             "window", new WorkbookSheetResult.Window("Budget", "A1", 1, 1, rows)),
-        new WorkbookSheetResult.MergedRegionsResult("merged", "Budget", mergedRegions),
-        new WorkbookSheetResult.HyperlinksResult("hyperlinks", "Budget", hyperlinks),
-        new WorkbookSheetResult.CommentsResult("comments", "Budget", comments),
+        new WorkbookSheetResult.MergedRegionsResult(new StepId("merged"), "Budget", mergedRegions),
+        new WorkbookSheetResult.HyperlinksResult(new StepId("hyperlinks"), "Budget", hyperlinks),
+        new WorkbookSheetResult.CommentsResult(new StepId("comments"), "Budget", comments),
         new WorkbookSheetResult.SheetLayoutResult(
-            "layout",
+            new StepId("layout"),
             new WorkbookSheetResult.SheetLayout(
                 "Budget",
                 new ExcelSheetPane.Frozen(1, 1, 1, 1),
@@ -545,16 +550,18 @@ class WorkbookReadResultTest {
                 defaultSheetPresentationSnapshot(),
                 columns,
                 resultRows)),
-        new WorkbookSheetResult.PrintLayoutResult("print", "Budget", defaultPrintLayoutSnapshot()),
-        new WorkbookRuleResult.DataValidationsResult("validations", "Budget", validations),
+        new WorkbookSheetResult.PrintLayoutResult(
+            new StepId("print"), "Budget", defaultPrintLayoutSnapshot()),
+        new WorkbookRuleResult.DataValidationsResult(
+            new StepId("validations"), "Budget", validations),
         new WorkbookAnalysisResult.ConditionalFormattingHealthResult(
-            "conditionalFormattingHealth",
+            new StepId("conditionalFormattingHealth"),
             new WorkbookAnalysis.ConditionalFormattingHealth(
                 1, new WorkbookAnalysis.AnalysisSummary(0, 0, 0, 0), List.of())),
-        new WorkbookRuleResult.AutofiltersResult("autofilters", "Budget", autofilters),
-        new WorkbookRuleResult.TablesResult("tables", tables),
+        new WorkbookRuleResult.AutofiltersResult(new StepId("autofilters"), "Budget", autofilters),
+        new WorkbookRuleResult.TablesResult(new StepId("tables"), tables),
         new WorkbookSurfaceResult.FormulaSurfaceResult(
-            "formula",
+            new StepId("formula"),
             new WorkbookSurfaceResult.FormulaSurface(
                 1,
                 List.of(new WorkbookSurfaceResult.SheetFormulaSurface("Budget", 1, 1, formulas)))),
@@ -562,7 +569,8 @@ class WorkbookReadResultTest {
             "schema",
             new WorkbookSurfaceResult.SheetSchema("Budget", "A1", 3, 2, 2, schemaColumns)),
         new WorkbookSurfaceResult.NamedRangeSurfaceResult(
-            "surface", new WorkbookSurfaceResult.NamedRangeSurface(1, 0, 1, 0, namedRangeEntries)));
+            new StepId("surface"),
+            new WorkbookSurfaceResult.NamedRangeSurface(1, 0, 1, 0, namedRangeEntries)));
   }
 
   private void assertCopiedFixture(ReadResultFixture fixture) {
@@ -583,7 +591,8 @@ class WorkbookReadResultTest {
     assertEquals(
         "A2:A5", fixture.dataValidationsResult().validations().getFirst().ranges().getFirst());
     assertEquals(
-        "conditionalFormattingHealth", fixture.conditionalFormattingHealthResult().stepId());
+        "conditionalFormattingHealth",
+        fixture.conditionalFormattingHealthResult().stepId().value());
     assertEquals("E1:F4", fixture.autofiltersResult().autofilters().getFirst().range());
     assertEquals("BudgetTable", fixture.tablesResult().tables().getFirst().name());
     assertEquals(1, fixture.formulaSurfaceResult().surface().totalFormulaCellCount());
