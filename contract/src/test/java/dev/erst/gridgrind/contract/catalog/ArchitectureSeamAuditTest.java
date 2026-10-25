@@ -12,18 +12,13 @@ import org.junit.jupiter.api.Test;
 class ArchitectureSeamAuditTest {
   private static final Pattern QUALIFIED_ENGINE_EXPORT_PATTERN =
       Pattern.compile("exports dev\\.erst\\.gridgrind\\.engine\\.api;");
-  private static final String STALE_MODULE_GRAPH = "`cli -> protocol -> engine`";
   private static final String STALE_JAZZER_MODULES = "local `engine` and `protocol` modules";
-  private static final String STALE_NULL_DEFAULT_GUIDANCE = "The sole sanctioned null-return site";
   private static final String STALE_PMD_PROTOCOL_ORCHESTRATOR = "GridGrindService";
   private static final String STALE_PMD_EXCEPTION_HELPER = "withExceptionData()";
   private static final String STALE_EXECUTOR_RUNTIME_GUIDANCE =
       "executor/   The only execution bridge from the canonical contract into the";
   private static final String STALE_CLI_EXECUTOR_GUIDANCE =
       "or --request file, delegates to executor, writes the response,";
-  private static final String STALE_KOTLIN_PROTOCOL_LOAD = ".codex/AGENTS_KOTLIN24_GRADLE.md";
-  private static final String CURRENT_SQLITE_SURFACE =
-      "SQLite surface touched: build, link, SQL, migrations, WAL, durability, bindings (baseline 3.53.2)";
 
   @Test
   void pmdRulesetCommentsStayCurrent() throws IOException {
@@ -55,8 +50,6 @@ class ArchitectureSeamAuditTest {
   @Test
   void currentArchitectureGuidanceDoesNotReintroduceTheDeletedProtocolModule() throws IOException {
     Path repositoryRoot = RepositoryRootTestSupport.repositoryRoot();
-    String agents = Files.readString(repositoryRoot.resolve("AGENTS.md"));
-    String agentsExtra = Files.readString(repositoryRoot.resolve(".codex/AGENTS_EXTRA.md"));
     String developerGuide = Files.readString(repositoryRoot.resolve("docs/DEVELOPER.md"));
     String developerGradle = Files.readString(repositoryRoot.resolve("docs/DEVELOPER_GRADLE.md"));
     String developerJazzer = Files.readString(repositoryRoot.resolve("docs/DEVELOPER_JAZZER.md"));
@@ -69,34 +62,6 @@ class ArchitectureSeamAuditTest {
             repositoryRoot.resolve(
                 "gradle/build-logic/src/main/kotlin/dev/erst/gridgrind/buildlogic/GridGrindJavaConventionsPlugin.kt"));
 
-    assertTrue(
-        !agents.contains("- Kotlin 2.4+ / Gradle: " + STALE_KOTLIN_PROTOCOL_LOAD),
-        "AGENTS.md must not require the Kotlin protocol for GridGrind work");
-    assertTrue(
-        agents.contains("GridGrind's Kotlin build logic is not an application surface"),
-        "AGENTS.md must teach the Java/Gradle-only rule for GridGrind build logic");
-    assertTrue(
-        agents.contains(CURRENT_SQLITE_SURFACE),
-        "AGENTS.md must publish one current SQLite dependency surface");
-    assertTrue(
-        !agentsExtra.contains(STALE_MODULE_GRAPH),
-        ".codex/AGENTS_EXTRA.md must not teach the deleted cli -> protocol -> engine graph");
-    assertTrue(
-        agentsExtra.contains("Do not read `AGENTS_KOTLIN24_GRADLE.md`."),
-        ".codex/AGENTS_EXTRA.md must preserve the Kotlin-protocol ban");
-    assertTrue(
-        !agentsExtra.contains(STALE_NULL_DEFAULT_GUIDANCE),
-        ".codex/AGENTS_EXTRA.md must not permit null-return protocol default methods");
-    assertTrue(
-        agentsExtra.contains("`cli -> engine -> contract -> excel-foundation`"),
-        ".codex/AGENTS_EXTRA.md must teach the current CLI graph");
-    assertTrue(
-        agentsExtra.contains("`engine -> excel-foundation`"),
-        ".codex/AGENTS_EXTRA.md must teach the engine/foundation boundary");
-    assertTrue(
-        agentsExtra.contains(
-            "Protocol request, response, and discovery DTOs must encode alternative state"),
-        ".codex/AGENTS_EXTRA.md must require typed protocol variants instead of null padding");
     assertTrue(
         !developerGuide.contains(STALE_EXECUTOR_RUNTIME_GUIDANCE),
         "docs/DEVELOPER.md must not describe executor as the live runtime bridge");

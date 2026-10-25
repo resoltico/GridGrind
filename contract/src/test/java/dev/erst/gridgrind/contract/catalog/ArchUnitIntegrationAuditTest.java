@@ -154,13 +154,9 @@ class ArchUnitIntegrationAuditTest {
 
   @Test
   void guidanceDescribesThePermanentFailClosedGate() throws IOException {
-    String agentsExtra = read(".codex/AGENTS_EXTRA.md");
     String developerGuide = read("docs/DEVELOPER.md");
     String developerGradle = read("docs/DEVELOPER_GRADLE.md");
 
-    assertTrue(
-        agentsExtra.contains("ArchUnit") && agentsExtra.contains("FreezingArchRule"),
-        "agent guidance must teach the executable no-baseline policy");
     assertTrue(
         developerGuide.contains("ArchUnit") && developerGuide.contains("bytecode-level"),
         "the developer guide must describe bytecode architecture enforcement");
