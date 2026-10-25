@@ -13,6 +13,7 @@ Earlier release history through `0.68.0` is archived in [docs/CHANGELOG_ARCHIVE.
 
 - Replaced custom file-size, complexity, and duplication gates with standard Java quality tools and an executable architecture rule requiring concrete wire variants to be records.
 - Made coverage and mutation scores advisory. Coverage reports remain part of verification, and weekly/manual PIT reporting targets the model and engine without blocking pull requests.
+- Consolidated build-task implementations and conventions in Kotlin, with the included build deriving its Java target from the shared toolchain pin.
 
 ## [0.76.0] - 2026-09-09
 

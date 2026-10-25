@@ -191,3 +191,29 @@ documentation contract passed. `./gradlew check --no-parallel` passed in 168.43 
 and aggregate HTML/XML reports. All 2800 tests pass with zero errors/skips,
 including all 141 golden tests; no golden observation changed. Remote workflow
 execution was not invoked.
+
+## WP-12 scope challenge and independent WP-13 verification
+
+Seven ordinary Jazzer test files and related fuzz consumers still import engine
+internals. The bill explicitly schedules their model conversion in WP-40 and
+their build ownership in WP-60. After the user again requested QA and proceeding
+by engineering judgment, WP-12's interim import criterion is scoped to the
+executor/test migration; the Jazzer consumers remain an explicit worklist for
+WP-40/WP-60. This does not waive the final no-external-internal-import outcome.
+
+WP-13 depends only on WP-10/WP-11 and therefore ran independently before WP-12,
+as the bill permits for independent work within a phase. The legal-inventory
+and JAR-pruning tasks are Kotlin implementations with the same Gradle property
+getters and action/error behaviour. Existing legal-inventory controls remain;
+two pruning tests protect declared archives, unrelated files, nested directories
+and the missing-directory no-op. Main Java sources and Java-only compile cleanup
+are removed. Repository helper functions have a responsibility-based file name,
+and the included build derives its Java target from the root toolchain pin.
+
+A clean focused rebuild passed all four task tests in 7 s. `javap` identifies
+both action implementations' source files as `.kt` and retains their declared
+IOException contract. `compileJava` reports `NO-SOURCE`. The final
+`./gradlew check --no-parallel` passed in 271.58 s: 2802 tests, zero
+failures/errors/skips, including all 141 golden cases. Packaging exercised the
+ported tasks and no golden snapshot changed. All remaining Java under the
+included build's `src` tree is test code.

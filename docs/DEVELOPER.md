@@ -141,6 +141,8 @@ GridGrind's runtime, product modules, and shared included build logic under `gra
 all target Java 26 now. The included build is no longer a JVM 25 exception: it compiles with
 Kotlin `2.4.20`, emits JVM 26 bytecode directly, and stays aligned with the repository's
 single Java baseline instead of carrying a separate bytecode-level footnote.
+Build-task implementations and convention plugins are Kotlin; their regression tests remain
+Java. The included build reads its Java target from the root `gradle.properties` pin.
 
 Jackson dependency note: Jackson 3.x databind intentionally still uses the
 `com.fasterxml.jackson.core:jackson-annotations` artifact and package namespace. That is upstream

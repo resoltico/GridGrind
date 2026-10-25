@@ -4,6 +4,7 @@ import org.gradle.api.tasks.compile.JavaCompile
 import org.gradle.api.tasks.Delete
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+import java.util.Properties
 
 plugins {
     alias(libs.plugins.kotlin.jvm)
@@ -53,9 +54,17 @@ gradlePlugin {
     }
 }
 
-// GridGrind's runtime, product modules, and shared build logic all target Java 26.
+val javaRelease =
+    providers.fileContents(layout.projectDirectory.file("../../gradle.properties")).asText.map { text ->
+        val properties = Properties()
+        text.reader().use(properties::load)
+        properties.getProperty("gridgrindJavaVersion")?.toIntOrNull()
+            ?: error("Root gradle.properties must declare an integer gridgrindJavaVersion")
+    }.get()
+
+// The included build derives its compiler target from the same pin as the product modules.
 kotlin {
-    jvmToolchain(26)
+    jvmToolchain(javaRelease)
 }
 
 fun cleanDestinationTaskName(taskName: String): String =
@@ -76,11 +85,6 @@ val cleanCompileTestKotlinDestination =
         "compileTestKotlin",
         tasks.named<KotlinCompile>("compileTestKotlin").flatMap { it.destinationDirectory },
     )
-val cleanCompileJavaDestination =
-    registerCleanDestinationTask(
-        "compileJava",
-        tasks.named<JavaCompile>("compileJava").flatMap { it.destinationDirectory },
-    )
 val cleanCompileTestJavaDestination =
     registerCleanDestinationTask(
         "compileTestJava",
@@ -89,23 +93,18 @@ val cleanCompileTestJavaDestination =
 
 tasks.named<KotlinCompile>("compileKotlin") {
     incremental = false
-    compilerOptions.jvmTarget.set(JvmTarget.JVM_26)
+    compilerOptions.jvmTarget.set(JvmTarget.fromTarget(javaRelease.toString()))
     dependsOn(cleanCompileKotlinDestination)
 }
 
 tasks.named<KotlinCompile>("compileTestKotlin") {
     incremental = false
-    compilerOptions.jvmTarget.set(JvmTarget.JVM_26)
+    compilerOptions.jvmTarget.set(JvmTarget.fromTarget(javaRelease.toString()))
     dependsOn(cleanCompileTestKotlinDestination)
 }
 
-tasks.named<JavaCompile>("compileJava") {
-    options.release = 26
-    dependsOn(cleanCompileJavaDestination)
-}
-
 tasks.named<JavaCompile>("compileTestJava") {
-    options.release = 26
+    options.release = javaRelease
     dependsOn(cleanCompileTestJavaDestination)
 }
 
