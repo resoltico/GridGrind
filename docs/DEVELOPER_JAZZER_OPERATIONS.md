@@ -79,7 +79,7 @@ Live fuzzing is local-only. Active harness execution now hard-fails when `GITHUB
 This runs the root quality gates and coverage reports first, then the nested Jazzer `check`
 workflow, then the CLI fat-JAR packaging step, shell syntax checks, and the Docker smoke test.
 Jazzer's Stage 2 verification includes shared Spotless and PMD enforcement, deterministic support
-tests, the dedicated `jazzerCoverageVerification` gate, and committed-seed regression replay. It
+tests, advisory coverage reports, and committed-seed regression replay. It
 is the supported one-command local verification path when a change touches both the main codebase
 and the Jazzer layer.
 

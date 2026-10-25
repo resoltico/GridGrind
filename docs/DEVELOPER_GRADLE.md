@@ -200,8 +200,8 @@ implementation type in exported API supertypes, inherited members, protected ext
 generic signatures; centralized Apache POI formula writes and private access, including method
 references; and sealed-interface variants restricted to records, finite enums, sealed subinterfaces,
 or typed exception implementations. Sealed classes are reserved for typed exception bases without
-failing if the valid population is empty. The custom rule implementation is executor main code and
-therefore participates in the normal 100% JaCoCo gate and the executor PIT scope. JPMS descriptors
+failing if the valid population is empty. The custom rule implementation is executor main code, exercised by the architecture suite
+and negative controls and included in coverage reports. JPMS descriptors
 still own actual exports, qualified opens, and module readability. Source-text audits remain only for
 build files, documentation, and other facts compiled bytecode cannot represent.
 
@@ -211,53 +211,16 @@ The source-set-owned `archunit.properties` also keeps empty `should` selections 
 deliberate architecture change invalidates a rule, change the architecture and its documented model
 atomically, then express the new invariant directly.
 
-### Coverage gate protocol
+### Coverage reports
 
-GridGrind's JaCoCo wiring must be stricter than JaCoCo's defaults because this repository already
-contains more than one local `Test` task in at least one module.
+JaCoCo writes HTML/XML reports for each tested module and an aggregate report at the root.
+Report dependencies collect execution data from every local `Test` task, including parity and
+architecture tests. Contract and engine reports also include their downstream consumer tests.
+The root derives participating projects and execution-data files from the Gradle model.
 
-Rules:
-- never rely on an unnamed JaCoCo `limit {}` block for coverage meaning
-- always set `counter = "LINE"` and `counter = "BRANCH"` explicitly for verification rules
-- always set `value = "COVEREDRATIO"` explicitly for those rules
-- treat omitted `counter` as invalid build logic because JaCoCo defaults that case to
-  instruction coverage, and 100% instruction coverage does not prove 100% branch coverage
-- wire both `jacocoTestReport` and `jacocoTestCoverageVerification` to the same execution-data
-  scope so reporting and verification cannot disagree
-- collect every local `build/jacoco/*.exec` file for a module instead of hardcoding only
-  `build/jacoco/test.exec`
-- make coverage verification depend on `tasks.withType<Test>()` so any added `Test` task must run
-  before the gate evaluates
-- when a canonical module is intentionally exercised by downstream consumers, include those
-  downstream `build/jacoco/*.exec` files in that module's verification scope instead of pretending
-  module-local tests are the whole truth
-- at the root aggregated-report layer, collect every subproject `build/jacoco/*.exec` file instead
-  of assuming one `test.exec` per module
-- make the root `coverage` and `jacocoAggregatedReport` tasks derive their participating
-  subprojects and task dependencies dynamically instead of hardcoding today's module names
-
-Why this rule exists:
-- GridGrind's `executor` module defines a dedicated `parityTest` task in addition to the normal
-  `test` task
-- GridGrind's `contract` module is now validated both by local contract tests and by downstream
-  `executor` plus `cli` tests after the module split, so contract coverage must include that
-  consumer execution data explicitly
-- if JaCoCo only reads `test.exec`, parity-only execution becomes invisible to the gate
-- if JaCoCo omits `limit.counter`, the gate can appear green on instruction coverage while real
-  branch gaps remain hidden
-- when previously unseen uncovered code appears after fixing JaCoCo wiring, treat that as the gate
-  becoming truthful rather than as the code suddenly regressing
-
-Repository-specific note:
-- GridGrind must keep collecting all local `build/jacoco/*.exec` files precisely because
-  multi-`Test` execution already exists here
-- `executor:parityTest` is not a special exception to remember manually; the build logic must make
-  it impossible to forget
-- the nested Jazzer build remains intentionally separate from root product-module coverage; its own
-  `./gradlew --project-dir jazzer check` is the authoritative Jazzer coverage gate
-- Jazzer support coverage measures the deterministic support-contract surface, not the raw fuzz
-  input generator plumbing; when decoder utilities split, keep the coverage exclusions aligned so
-  helper extraction does not silently widen the measured subset
+`./gradlew check` generates per-module reports. `./gradlew coverage` adds the aggregate report.
+Neither command imposes a coverage percentage. The nested Jazzer build reports its full main
+source set and retains deterministic tests plus seed replay in `check`.
 
 ---
 
@@ -312,56 +275,30 @@ These are the Gradle-level invariants worth preserving:
 - active Jazzer fuzzing stays local-only; GitHub Actions must not become a live-fuzz surface
 - root `./check.sh` remains the supported whole-repo gate that sequences root verification, Jazzer
   verification, packaging, and Docker smoke checks
-- root `./check_mutation.sh` is the reproducible operator entrypoint for the separately scheduled
-  PIT gate; the mutation convention plugin owns tool versions and common policy, while each module
-  publishes an explicit reviewed class-to-test scope and measured baseline thresholds
+- root `./gradlew mutationReport` generates advisory PIT reports; the convention plugin owns
+  tool versions and common reporting settings, while contract and engine configure their native
+  PIT class/test scopes
 - the fixed `./check.sh` stage inventory and Stage 4 shell-regression coverage derive from
   `scripts/check-stage-contract.sh`, not from parallel copies in root-gate prose and execution
   wiring
 - root coverage aggregation derives its participants from JaCoCo-enabled Java subprojects and all
   of their `build/jacoco/*.exec` files rather than from a fixed module list
 
-### Mutation-testing contract
+### Mutation reports
 
-Mutation testing is an independent semantic-strength gate, not another line-coverage report. Run
-`./check_mutation.sh`; do not add PIT to `./check.sh`. The wrapper requires a Java 26 JDK, shares
-the repository verification lock, rejects extra tasks and project-location overrides, and invokes
-the root-owned aggregate that requires contract, engine, and executor verification reports. Each
-scope first proves that every configured class and test pattern resolves to compiled bytecode, then
-PIT writes current-run-only reports to `contract/build/reports/pitest/`,
-`engine/build/reports/pitest/`, and `executor/build/reports/pitest/`.
+Run `./gradlew mutationReport` with Java 26 to generate advisory PIT HTML/XML reports in
+`contract/build/reports/pitest/` and `engine/build/reports/pitest/`. The root task invokes the
+native PIT tasks for those two modules. Their build files declare the class/test scopes, using
+the standard `PitestPluginExtension`; there is no parallel scope or score policy model.
 
-The reviewed scope is deliberately bounded and named explicitly in the owning module build files.
-Contract mutates defined-name validation, RGB normalization, conditional-formatting threshold
-validation, and catalog field constraints. Engine mutates formula-origin tracking, request
-persistence-path preflight, and the data-validation comparison-operator bridge. Executor mutates
-the permanent architecture location provider, rule inventory, dependency/public-surface predicates,
-domain-shape conditions, and call-site seam conditions. Every outer-class pattern includes its
-compiler-generated nested classes; every configured class and test pattern must resolve before PIT
-runs. An unlisted class is not mutation-tested and must never be described as covered by this gate.
+The convention plugin pins PIT and its JUnit integration from the version catalog, uses the
+STRONGER mutators, supplies the Java 26 launcher/native-access argument, and replaces prior
+reports before each run. No mutation, coverage, test-strength or survivor threshold is configured.
+An empty mutation population remains a tool/configuration failure rather than a useful report.
 
-All three module scopes use PIT's explicit STRONGER mutator group and require 100% mutation score,
-100% test strength, and 100% line coverage within mutated classes. The report-verification task
-accepts only `KILLED` outcomes: survivors, uncovered mutations, run errors, and timeouts fail the
-gate. PIT's timeout constant and factor are explicit so timing policy is reviewed rather than left
-to tool defaults. A surviving mutant is work to triage, not a reason to lower a threshold or add a
-broad exclusion. Prove a mutant equivalent before applying a narrow owned filter; otherwise
-strengthen the test or simplify redundant production code.
-
-PIT minion JVMs receive `--enable-native-access=ALL-UNNAMED`, matching the packaged CLI and its
-ordinary test task. This keeps the native standard-input probe warning-free on Java 26 and avoids
-shipping a mutation configuration that will become unusable when restricted foreign-function calls
-are enforced more strictly.
-
-The mutation workflow runs weekly, manually, for merge-queue batches, and on pull requests that
-change mutation infrastructure or any source under the owning contract, engine, or executor module.
-It retains the HTML/XML report trees for 30 days even when the gate fails and fails if any required
-report is absent. Expand the scope whenever high-risk business logic changes or a defect shows that
-an unmutated seam had weak assertions; add its exact source and tests, establish zero-survivor
-evidence locally, then keep the scope declaration and its tests synchronized in the same change.
-
-If a proposed change breaks one of those invariants, document the reason in code comments and in
-the changelog instead of letting the system drift silently.
+The mutation workflow runs weekly and on manual dispatch, independently of pull-request and
+merge-queue validation. It uploads the two report trees for 30 days. Review surviving mutants to
+identify missing behaviour assertions or redundant code; scores are advisory.
 
 ---
 

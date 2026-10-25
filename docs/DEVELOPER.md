@@ -112,7 +112,7 @@ same theory boundaries as the code they own.
 The highest-churn architecture seams are intentionally split too:
 - `GridGrindProtocolCatalog` owns the top-level catalog assembly, `CatalogFieldMetadataSupport` derives nested/plain field-shape metadata from the canonical descriptor groups, and `GridGrindProtocolCatalogLookupSupport` owns exact lookup plus grouped operation-centered search behavior.
 - Jazzer request generation is no longer one monolith: the `OperationSequence*` family now splits orchestration, selector helpers, mutation/inspection/command factories, observation-side assertions, bounded payload generation, and chart payload generation into focused seams, while `WorkbookInvariantChecks` is split across workbook/cell/engine-surface invariant helpers.
-- Build-failing architecture audits protect these boundaries. The verification-only `executor:architectureTest` task runs only ArchUnit over the five compiled product modules, while `executor:architectureTestContract` runs only Jupiter to prove the effective fail-closed policy and 13-rule inventory. Together they keep every product package assigned, keep the module graph acyclic, preserve foundation/contract/engine/adapter dependency direction, constrain engine API implementation bridges, reject runtime and workbook implementation types from the exported API surface including generic signatures, require closed sealed-interface variants, reserve sealed classes for typed exception bases, keep direct `Cell.setCellFormula(...)` calls inside `ExcelFormulaWriteSupport`, and keep private POI access inside `PoiPrivateAccessSupport`, including method references. The custom rule implementation lives in executor main and has 100% line, branch, and STRONGER PIT coverage, including compiler-generated conditions and predicates. JPMS remains the actual module-encapsulation boundary, while source and build audits cover facts bytecode cannot prove. The split hotspot files must also stay below their enforced size ceilings, and `PoiPrivateAccessCompatibilityTest` fails fast if a POI upgrade stops resolving the registered private sheet-clone, picture-catalog, fill-registry, or relation-removal seams that the engine still depends on.
+- Executable architecture rules protect these boundaries. The verification-only `executor:architectureTest` task runs ArchUnit over the compiled product modules, while `executor:architectureTestContract` checks the effective fail-closed policy. The rules constrain dependency direction and exported implementation types, require closed domain shapes and record wire variants, centralize formula writes and private POI access, and preserve the admitted-execution and publication boundaries. JPMS owns actual module encapsulation. Coverage reports describe exercised code; the architecture rules and their negative controls establish the required properties. `PoiPrivateAccessCompatibilityTest` checks the POI private-access seams used by the engine.
 
 ## Contract Replacement Mode
 
@@ -152,7 +152,7 @@ Jackson design, not a GridGrind version-skew bug.
 
 `./gradlew check` remains the root-project code-quality gate: Spotless formatting,
 explicit-import verification, executable ArchUnit rules, Error Prone with NullAway on `@NullMarked` production packages, PMD, tests, and
-JaCoCo coverage verification for `engine`, `contract`, `executor`, `authoring-java`, and `cli`.
+JaCoCo HTML/XML reports for `engine`, `contract`, `executor`, `authoring-java`, and `cli`.
 `./check.sh` is the supported whole-repo deterministic gate: root `check` plus `coverage`,
 nested Jazzer `check`,
 `:cli:shadowJar`, architecture-split shell regressions, packaged-JAR CLI contract verification,
@@ -165,7 +165,7 @@ clean before a release-quality change is considered done. When Stage 1 reaches l
 `Test` tasks, the shared test conventions emit
 `[GRADLE-TEST-PULSE]` lines with class-start, class-complete, and throttled test-progress facts
 so the local watchdog tracks semantic execution rather than mistaking quiet test output for a
-hang. The fixed five-stage inventory and the Stage 4 shell-regression list are canonically owned
+hang. The ordered stage inventory and shell-regression list are canonically owned
 by `scripts/check-stage-contract.sh`, so root-gate usage text and execution wiring stay aligned as
 release-surface shell coverage evolves.
 
@@ -192,17 +192,17 @@ overlay contract in `.devcontainer/devcontainer.json`.
 # Run the local full-stack gate
 ./check.sh
 
-# Run the separately scheduled critical mutation-testing gate
-./check_mutation.sh
+# Generate advisory mutation reports
+./gradlew mutationReport
 
 # Run the root-project CI gate
 ./gradlew check
 
 # Targeted iteration during development
 ./gradlew test                   # tests only, no quality gates
-./gradlew coverage               # tests + coverage verification + HTML/XML report generation
+./gradlew coverage               # tests + advisory HTML/XML coverage reports
 ./gradlew architectureCheck      # mandatory ArchUnit product architecture rules
-./gradlew mutationCheck          # reviewed PIT scopes; intentionally outside normal check
+./gradlew mutationReport         # advisory PIT reports for contract and engine
 ./gradlew spotlessCheck          # formatting check only
 ./gradlew spotlessApply          # auto-format in place (run before spotlessCheck)
 ./gradlew pmdMain pmdTest        # PMD only
@@ -279,6 +279,7 @@ Release automation is split across three workflows:
   black-box verifies the published CLI help, protocol catalog, task catalog, recipe,
   task keyword matcher, and doctor surfaces from both tags before pruning older container package
   versions.
+- `Mutation testing` runs weekly or on manual dispatch and retains advisory PIT reports.
 - `Gradle wrapper validation` runs when wrapper files change and validates the checked-in wrapper
   surface.
 
@@ -362,56 +363,25 @@ so personal workspace state cannot destabilize the canonical quality gates.
 
 ### JaCoCo
 
-100% line and branch coverage required across all modules.
+Coverage is reported as HTML and XML. `./gradlew check` writes per-module reports;
+`./gradlew coverage` also writes the aggregate under `build/reports/jacoco/aggregated/`.
+Reports collect execution data from every local `Test` task, including architecture and parity
+suites, and from downstream consumers where those consumers exercise the owning model or engine.
 
-Coverage-gate protocol:
-- never rely on JaCoCo defaults for verification semantics
-- per-module verification must set both `LINE` and `BRANCH` counters explicitly
-- per-module reports and verification must read all local `build/jacoco/*.exec` files, not only
-  `test.exec`
-- aggregated root coverage must read all subproject `build/jacoco/*.exec` files as well
-
-This rule is especially important in GridGrind because `executor` already has more than one local
-`Test` task. A hardcoded `test.exec` assumption would silently exclude `parityTest` coverage from
-the gate. See [DEVELOPER_GRADLE.md](./DEVELOPER_GRADLE.md) for the canonical build-logic
-protocol.
-
-After the `contract` plus `executor` split, `contract` coverage intentionally includes downstream
-consumer execution data from `executor` and `cli` in addition to `contract`'s own tests. That is
-not a loophole: it is the correct ownership model for a canonical public contract whose behavior
-is exercised both by direct DTO/catalog tests and by the executor and CLI seams that consume it.
-
+`contract` reports include downstream consumer execution from engine, executor, authoring and CLI.
 `engine` coverage also intentionally includes downstream consumer execution data from `executor`.
-That reflects the same ownership model: the exported engine seam is proven both by local engine
-tests and by the request-execution layer that consumes it.
+The root aggregate derives participants from the JaCoCo-enabled Java subprojects.
 
-| Module | Line Coverage | Branch Coverage |
-|:-------|:-------------|:----------------|
-| `engine` | 100% | 100% |
-| `contract` | 100% | 100% |
-| `executor` | 100% | 100% |
-| `authoring-java` | 100% | 100% |
-| `cli` | 100% | 100% |
+The nested Jazzer build also produces advisory coverage reports. Its `check` runs deterministic
+support tests, committed-seed replay, Spotless and PMD. Reports include its full main source set;
+coverage percentages do not determine success.
 
-`./gradlew check` enforces the thresholds but does not write report files. Run
-`./gradlew coverage` to enforce thresholds and generate HTML/XML reports at
-`build/reports/jacoco/` in each module plus an aggregated cross-module report at
-`build/reports/jacoco/aggregated/`.
-The root coverage tasks discover participating JaCoCo-enabled Java subprojects dynamically and
-collect every module `build/jacoco/*.exec` file, so adding another product module must not
-require hand-editing a root hardcoded task list.
+PIT reports are generated by `./gradlew mutationReport` for the explicit scopes in the `contract`
+and `engine` build files. The weekly/manual mutation workflow retains HTML/XML reports for review.
+Survivors and coverage scores are advice for improving behaviour tests, with no score threshold.
 
-The table above applies only to the root product modules. The nested Jazzer build has a separate
-coverage contract because its local-only generator, telemetry, and operator classes are exercised
-primarily through regression replay and live fuzzing rather than ordinary unit tests. Run
-`./gradlew --project-dir jazzer check` to enforce Jazzer's dedicated coverage scope together with
-its shared Spotless and PMD gates. The entire extracted `OperationSequence*` generator family
-follows the same coverage scope as `OperationSequenceModel`, and direct selector-sweep seam tests
-still exercise those split generator layers so the exclusion does not mean "untested".
-
-Supported `jazzer/bin/*` wrappers are part of that operator contract too. They must remain
-compatible with stock macOS `/bin/bash` 3.2 under `set -u`; do not assume Bash 4+ empty-array
-expansion semantics in shell wrappers that contributors run directly.
+Supported `jazzer/bin/*` wrappers must remain compatible with stock macOS `/bin/bash` 3.2 under
+`set -u` until their replacement in the root fuzz build.
 
 ---
 

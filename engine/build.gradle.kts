@@ -1,6 +1,6 @@
+import info.solidsoft.gradle.pitest.PitestPluginExtension
 import org.gradle.api.tasks.testing.Test
 import org.gradle.testing.jacoco.plugins.JacocoTaskExtension
-import org.gradle.testing.jacoco.tasks.JacocoCoverageVerification
 import org.gradle.testing.jacoco.tasks.JacocoReport
 
 plugins {
@@ -12,7 +12,7 @@ plugins {
 
 description = "Core GridGrind workbook automation and request execution engine"
 
-gridgrindMutation {
+configure<PitestPluginExtension> {
     targetClasses.set(
         setOf(
             "dev.erst.gridgrind.engine.runtime.FormulaOriginTracker*",
@@ -28,10 +28,6 @@ gridgrindMutation {
             "dev.erst.gridgrind.excel.validation.ExcelDataValidationComparisonOperatorPoiBridgeTest",
         ),
     )
-    mutationThreshold.set(100)
-    coverageThreshold.set(100)
-    testStrengthThreshold.set(100)
-    maxSurviving.set(0)
 }
 
 tasks.named("pitest") {
@@ -92,13 +88,6 @@ dependencies {
 }
 
 tasks.named<JacocoReport>("jacocoTestReport") {
-    dependsOn(tasks.named<Test>("test"))
-    executionData.from(localCoverageExecutionData())
-    dependsOn(downstreamCoverageTaskPaths())
-    executionData.from(downstreamCoverageExecutionData())
-}
-
-tasks.named<JacocoCoverageVerification>("jacocoTestCoverageVerification") {
     dependsOn(tasks.named<Test>("test"))
     executionData.from(localCoverageExecutionData())
     dependsOn(downstreamCoverageTaskPaths())

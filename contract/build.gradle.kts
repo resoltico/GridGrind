@@ -1,8 +1,8 @@
+import info.solidsoft.gradle.pitest.PitestPluginExtension
 import org.gradle.api.tasks.testing.Test
 import org.gradle.api.tasks.JavaExec
 import org.gradle.api.plugins.JavaPluginExtension
 import org.gradle.testing.jacoco.plugins.JacocoTaskExtension
-import org.gradle.testing.jacoco.tasks.JacocoCoverageVerification
 import org.gradle.testing.jacoco.tasks.JacocoReport
 
 plugins {
@@ -13,7 +13,7 @@ plugins {
 
 description = "Canonical GridGrind contract model, metadata registry, and JSON codecs"
 
-gridgrindMutation {
+configure<PitestPluginExtension> {
     targetClasses.set(
         setOf(
             "dev.erst.gridgrind.contract.dto.ProtocolDefinedNameValidation*",
@@ -42,10 +42,6 @@ gridgrindMutation {
             "dev.erst.gridgrind.contract.step.WorkbookStaticRequestContractTest",
         ),
     )
-    mutationThreshold.set(100)
-    coverageThreshold.set(100)
-    testStrengthThreshold.set(100)
-    maxSurviving.set(0)
 }
 
 val downstreamCoverageProjects =
@@ -94,13 +90,6 @@ tasks.withType<Test>().configureEach {
 }
 
 tasks.named<JacocoReport>("jacocoTestReport") {
-    dependsOn(tasks.named<Test>("test"))
-    executionData.from(localCoverageExecutionData())
-    dependsOn(downstreamCoverageTaskPaths())
-    executionData.from(downstreamCoverageExecutionData())
-}
-
-tasks.named<JacocoCoverageVerification>("jacocoTestCoverageVerification") {
     dependsOn(tasks.named<Test>("test"))
     executionData.from(localCoverageExecutionData())
     dependsOn(downstreamCoverageTaskPaths())

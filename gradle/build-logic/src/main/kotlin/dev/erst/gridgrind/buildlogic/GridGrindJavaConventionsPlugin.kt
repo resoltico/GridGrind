@@ -2,7 +2,6 @@ package dev.erst.gridgrind.buildlogic
 
 import com.diffplug.gradle.spotless.SpotlessExtension
 import java.io.File
-import java.math.BigDecimal
 import net.ltgt.gradle.errorprone.CheckSeverity
 import org.gradle.api.Action
 import org.gradle.api.Plugin
@@ -22,11 +21,7 @@ import org.gradle.kotlin.dsl.getByType
 import net.ltgt.gradle.errorprone.errorprone
 import org.gradle.testing.jacoco.plugins.JacocoPluginExtension
 import org.gradle.testing.jacoco.plugins.JacocoTaskExtension
-import org.gradle.testing.jacoco.tasks.JacocoCoverageVerification
 import org.gradle.testing.jacoco.tasks.JacocoReport
-import org.gradle.testing.jacoco.tasks.rules.JacocoLimit
-import org.gradle.testing.jacoco.tasks.rules.JacocoViolationRule
-import org.gradle.testing.jacoco.tasks.rules.JacocoViolationRulesContainer
 
 class GridGrindJavaConventionsPlugin : Plugin<Project> {
     override fun apply(project: Project) {
@@ -87,20 +82,6 @@ class GridGrindJavaConventionsPlugin : Plugin<Project> {
                         }
                     },
                 )
-
-                tasks.named("jacocoTestCoverageVerification", JacocoCoverageVerification::class.java)
-                    .configure(
-                        object : Action<JacocoCoverageVerification> {
-                            override fun execute(verification: JacocoCoverageVerification) {
-                                verification.onlyIf("project has first-party test sources") {
-                                    hasOwnTestSources.get()
-                                }
-                                verification.sourceDirectories.setFrom(mainSourceSet.map { it.allJava.srcDirs })
-                                verification.classDirectories.setFrom(coverageClasses)
-                            }
-                        },
-                )
-
             }
 
             dependencies.add("errorprone", libs.findLibrary("errorprone-core").get().get())
@@ -272,52 +253,8 @@ class GridGrindJavaConventionsPlugin : Plugin<Project> {
 
             tasks.named("check").configure { checkTask ->
                 checkTask.dependsOn("spotlessCheck")
-                checkTask.dependsOn("jacocoTestCoverageVerification")
+                checkTask.dependsOn("jacocoTestReport")
             }
-
-            tasks.named("jacocoTestCoverageVerification", JacocoCoverageVerification::class.java).configure(
-                object : Action<JacocoCoverageVerification> {
-                    override fun execute(verification: JacocoCoverageVerification) {
-                        verification.dependsOn(cleanJacocoExecutionData)
-                        verification.dependsOn(tasks.withType(Test::class.java))
-                        verification.executionData.from(
-                            tasks.withType(Test::class.java).map { testTask ->
-                                testTask.extensions.getByType(JacocoTaskExtension::class.java).destinationFile
-                            },
-                        )
-                        verification.violationRules(
-                            object : Action<JacocoViolationRulesContainer> {
-                                override fun execute(rules: JacocoViolationRulesContainer) {
-                                    rules.rule(
-                                        object : Action<JacocoViolationRule> {
-                                            override fun execute(rule: JacocoViolationRule) {
-                                                rule.limit(
-                                                    object : Action<JacocoLimit> {
-                                                        override fun execute(limit: JacocoLimit) {
-                                                            limit.counter = "LINE"
-                                                            limit.value = "COVEREDRATIO"
-                                                            limit.minimum = BigDecimal("1.0")
-                                                        }
-                                                    },
-                                                )
-                                                rule.limit(
-                                                    object : Action<JacocoLimit> {
-                                                        override fun execute(limit: JacocoLimit) {
-                                                            limit.counter = "BRANCH"
-                                                            limit.value = "COVEREDRATIO"
-                                                            limit.minimum = BigDecimal("1.0")
-                                                        }
-                                                    },
-                                                )
-                                            }
-                                        },
-                                    )
-                                }
-                            },
-                        )
-                    }
-                },
-            )
         }
     }
 

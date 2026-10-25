@@ -313,8 +313,7 @@ plugins from the shared included build logic under `../gradle/build-logic`.
 - shared Spotless and PMD enforcement inherited from the main build logic
 - a Jazzer-specific PMD profile for support and operator code plus a fuzz-harness PMD profile for
   `@FuzzTest` entrypoints
-- a dedicated `jazzerCoverageVerification` gate for deterministic support-contract classes,
-  separate from the root modules' blanket 100% coverage rule
+- advisory JaCoCo HTML/XML reports over the full main source set
 - nested-build `check` coverage for deterministic Jazzer support tests plus regression replay only
 
 Single source of truth:
@@ -329,14 +328,14 @@ Single source of truth:
 Important boundary:
 - the root build must not include `jazzer/`
 - the nested build may depend on root modules through the composite build
-- the nested build may evolve independently without affecting root CI
+- root CI invokes the nested check through `./check.sh`
 
 Nested-build verification model:
 - `./gradlew --project-dir jazzer test` runs deterministic support tests only
 - `./gradlew --project-dir jazzer jazzerRegression` replays the committed seed floor through four
   isolated per-harness regression tasks
 - `./gradlew --project-dir jazzer check` runs Spotless, PMD, deterministic support tests,
-  `jazzerCoverageVerification`, and `jazzerRegression`
+  advisory coverage reports, and `jazzerRegression`
 - root `./check.sh` runs root-project verification first, then nested Jazzer `check`, then
   release-packaging smoke verification
 - active fuzz tasks remain explicit opt-in local commands and are never dependencies of nested-build

@@ -1,6 +1,5 @@
 package dev.erst.gridgrind.buildlogic
 
-import java.math.BigDecimal
 import javax.inject.Inject
 import org.gradle.api.Plugin
 import org.gradle.api.Project
@@ -23,12 +22,6 @@ import org.gradle.kotlin.dsl.newInstance
 import org.gradle.kotlin.dsl.register
 import org.gradle.process.CommandLineArgumentProvider
 import org.gradle.process.JavaForkOptions
-import org.gradle.testing.jacoco.plugins.JacocoTaskExtension
-import org.gradle.testing.jacoco.tasks.JacocoCoverageVerification
-import org.gradle.testing.jacoco.tasks.JacocoReport
-import org.gradle.testing.jacoco.tasks.rules.JacocoLimit
-import org.gradle.testing.jacoco.tasks.rules.JacocoViolationRule
-import org.gradle.testing.jacoco.tasks.rules.JacocoViolationRulesContainer
 
 class GridGrindJazzerConventionsPlugin : Plugin<Project> {
     override fun apply(project: Project) {
@@ -244,50 +237,6 @@ class GridGrindJazzerConventionsPlugin : Plugin<Project> {
                     pmd.ruleSets = emptyList()
                 }
 
-            val jazzerCoverageClasses =
-                mainSourceSet.output.classesDirs.asFileTree.matching { patternFilterable ->
-                    patternFilterable.exclude(*JAZZER_COVERAGE_EXCLUSIONS.toTypedArray())
-                }
-
-            tasks.named<JacocoReport>("jacocoTestReport") {
-                classDirectories.setFrom(jazzerCoverageClasses)
-            }
-
-            tasks.named<JacocoCoverageVerification>("jacocoTestCoverageVerification") {
-                enabled = false
-            }
-
-            val jazzerCoverageVerification =
-                tasks.register<JacocoCoverageVerification>("jazzerCoverageVerification") {
-                    description =
-                        "Verifies deterministic-unit coverage for the Jazzer support-contract subset."
-                    group = "verification"
-                    val jazzerTest = tasks.named<Test>("test")
-                    dependsOn(jazzerTest)
-                    executionData.from(
-                        provider {
-                            jazzerTest
-                                .get()
-                                .extensions
-                                .getByType(JacocoTaskExtension::class.java)
-                                .destinationFile
-                        },
-                    )
-                    sourceDirectories.setFrom(mainSourceSet.allJava.srcDirs)
-                    classDirectories.setFrom(jazzerCoverageClasses)
-                    violationRules { rules: JacocoViolationRulesContainer ->
-                        rules.rule { rule: JacocoViolationRule ->
-                            rule.limit { limit: JacocoLimit ->
-                                limit.minimum = BigDecimal(JAZZER_COVERAGE_MINIMUM)
-                            }
-                        }
-                    }
-                }
-
-            tasks.named("check") { checkTask ->
-                checkTask.dependsOn(jazzerCoverageVerification)
-            }
-
             tasks.named("check") { checkTask ->
                 checkTask.dependsOn(jazzerRegression)
             }
@@ -460,23 +409,7 @@ class GridGrindJazzerConventionsPlugin : Plugin<Project> {
     private companion object {
         private const val NATIVE_ACCESS_ARGUMENT = "--enable-native-access=ALL-UNNAMED"
         private const val JAZZER_PREMAIN_CLASS = "dev.erst.gridgrind.jazzer.tool.JazzerPremainAgent"
-        private const val JAZZER_COVERAGE_MINIMUM = "0.72"
-        private val JAZZER_COVERAGE_EXCLUSIONS =
-            listOf(
-                "dev/erst/gridgrind/jazzer/support/FuzzDataDecoders*.class",
-                "dev/erst/gridgrind/jazzer/support/FuzzAddressDecoders*.class",
-                "dev/erst/gridgrind/jazzer/support/FuzzStyleDecoders*.class",
-                "dev/erst/gridgrind/jazzer/support/FuzzValueDecoders*.class",
-                "dev/erst/gridgrind/jazzer/support/GeneratedProtocolWorkflow*.class",
-                "dev/erst/gridgrind/jazzer/support/HarnessTelemetry*.class",
-                "dev/erst/gridgrind/jazzer/support/JazzerGridGrindFuzzData*.class",
-                "dev/erst/gridgrind/jazzer/support/OperationSequence*.class",
-                "dev/erst/gridgrind/jazzer/support/StyleKindIntrospection*.class",
-                "dev/erst/gridgrind/jazzer/support/WorkbookStyleInputs*.class",
-                "dev/erst/gridgrind/jazzer/tool/JazzerCli*.class",
-                "dev/erst/gridgrind/jazzer/tool/JazzerReportSupport*.class",
-                "dev/erst/gridgrind/jazzer/tool/RunMetrics*.class",
-            )
+
     }
 
     abstract class JazzerToolArgumentsProvider

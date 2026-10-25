@@ -136,9 +136,9 @@ is true:
 Then run `./check.sh` from the clean release checkout. It must exit 0. If it fails, fix all
 failures before proceeding.
 
-When the release changes a reviewed PIT scope or its mutation/build wiring, also run
-`./check_mutation.sh` from the same clean checkout. It must exit 0 with no surviving, uncovered,
-timed-out, or errored mutant, and its test JVMs must not emit avoidable Java runtime warnings.
+For changes to the model or engine, review the advisory reports from
+`./gradlew mutationReport`. Use surviving mutants to assess missing behaviour assertions or
+redundant code; mutation and coverage scores do not gate release verification.
 
 If the release payload has not yet been cut to the target version after that first clean-checkout
 pass, make the version and release-document updates next in the same release checkout, then rerun

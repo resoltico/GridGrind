@@ -185,7 +185,7 @@ print_usage() {
         '  - Use ./check.sh --stacktrace ONLY for build-tool, plugin, environment, or filesystem' \
         '    failures when the default output does not already point to the failing source location.' \
         '' \
-        'For mutation testing, run ./check_mutation.sh.' \
+        'For advisory mutation reports, run ./gradlew mutationReport.' \
         'For anything else outside this fixed interface, run ./gradlew directly.'
 }
 

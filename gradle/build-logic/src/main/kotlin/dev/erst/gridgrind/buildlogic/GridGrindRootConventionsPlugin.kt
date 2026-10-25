@@ -127,7 +127,7 @@ class GridGrindRootConventionsPlugin : Plugin<Project> {
 
             val verifyBuildLogicTests = gradle.includedBuild("build-logic").task(":test")
             val architectureCheck = registerGridGrindArchitectureCheck()
-            registerGridGrindMutationCheck()
+            registerGridGrindMutationReport()
 
             tasks.named("check") { checkTask ->
                 checkTask.dependsOn("spotlessCheck")
@@ -186,7 +186,7 @@ class GridGrindRootConventionsPlugin : Plugin<Project> {
                 tasks.register("coverage") { coverageTask ->
                     coverageTask.group = "verification"
                     coverageTask.description =
-                        "Runs tests, enforces coverage thresholds, and generates per-module and aggregated coverage reports."
+                        "Runs tests and generates per-module and aggregated coverage reports."
                     coverageTask.dependsOn(jacocoAggregatedReport)
                 }
 
@@ -199,8 +199,6 @@ class GridGrindRootConventionsPlugin : Plugin<Project> {
             gradle.projectsEvaluated {
                 val coverageSubprojects = coverageSubprojects()
                 val subprojectCoverageReports = taskPathsByName(coverageSubprojects, "jacocoTestReport")
-                val subprojectCoverageVerification =
-                    taskPathsByName(coverageSubprojects, "jacocoTestCoverageVerification")
                 val subprojectSpotlessTasks = taskPathsByName(coverageSubprojects, "spotlessJava")
                 val projectFileSpotlessTasks =
                     listOfNotNull(
@@ -221,7 +219,7 @@ class GridGrindRootConventionsPlugin : Plugin<Project> {
                 }
 
                 coverage.configure { coverageTask ->
-                    coverageTask.dependsOn(subprojectCoverageVerification + subprojectCoverageReports)
+                    coverageTask.dependsOn(subprojectCoverageReports)
                 }
 
                 // Keep repository-wide project-file formatting on a stable file tree. The target set spans
@@ -280,7 +278,7 @@ class GridGrindRootConventionsPlugin : Plugin<Project> {
             add(rootFile("PATENTS.md"))
             add(rootFile("README.md"))
             add(rootFile("build.gradle.kts"))
-            listOf("check.sh", "check_mutation.sh").forEach { add(rootFile(it)) }
+            add(rootFile("check.sh"))
             add(rootFile("gradle.properties"))
             add(rootFile("settings.gradle.kts"))
             add(rootFile("authoring-java/build.gradle.kts"))

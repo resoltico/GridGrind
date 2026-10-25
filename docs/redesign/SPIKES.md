@@ -162,3 +162,32 @@ history in `docs/CHANGELOG_ARCHIVE.md` and the temporary original baseline recor
 Those are retained as historical evidence, following the baseline's instruction
 to retain valid historical references. They are not active checks or guidance;
 the temporary record is removed in WP-80. No runtime golden snapshot changed.
+
+## WP-11 advisory-report verification
+
+The native PIT extension now owns the two explicit module scopes. The custom
+scope model, scope/report verifier tasks and their subject-only tests are gone.
+All four mutation/coverage/test-strength/survivor thresholds are unconfigured,
+as demonstrated by the convention-plugin functional test. The workflow has only
+weekly/manual triggers and uploads contract and engine HTML/XML reports.
+
+An independent temporary project deliberately asserted only that a conditional
+return value was positive. PIT generated three mutants, killed one, and left two
+survivors (33% mutation score/test strength). The run exited successfully in 7 s,
+demonstrating advisory behaviour rather than merely inspecting configuration.
+The probe's XML/log are retained outside the repository; its source/build tree
+was removed. The actual `mutationReport` then passed in 49.26 s: contract killed
+326/326 mutants and engine killed 82/82.
+
+JaCoCo reports replace the percentage gates, including the separately discovered
+72% gate in the nested Jazzer build. Reports now include that build's full main
+source set. Test execution and committed-seed replay remain required.
+
+The first configuration compile exposed two residual closing-call delimiters
+after removing the old verifier blocks; they were corrected before testing.
+The native task graph, formatting, convention-plugin test, shell contracts and
+documentation contract passed. `./gradlew check --no-parallel` passed in 168.43 s;
+`./gradlew coverage --no-parallel` passed in 162.23 s and produced the per-module
+and aggregate HTML/XML reports. All 2800 tests pass with zero errors/skips,
+including all 141 golden tests; no golden observation changed. Remote workflow
+execution was not invoked.

@@ -22,7 +22,6 @@ readonly repo_hygiene_structural_root_entries=(
     authoring-java
     build.gradle.kts
     check.sh
-    check_mutation.sh
     cli
     contract
     docs

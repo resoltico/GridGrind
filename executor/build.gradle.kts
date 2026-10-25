@@ -5,13 +5,11 @@ import org.gradle.kotlin.dsl.getByType
 import org.gradle.kotlin.dsl.named
 import org.gradle.kotlin.dsl.register
 import org.gradle.testing.jacoco.plugins.JacocoTaskExtension
-import org.gradle.testing.jacoco.tasks.JacocoCoverageVerification
 import org.gradle.testing.jacoco.tasks.JacocoReport
 
 plugins {
     `java-library`
     id("gridgrind.java-conventions")
-    id("gridgrind.mutation-conventions")
 }
 
 description = "GridGrind parity and execution-regression verification surface"
@@ -132,10 +130,6 @@ tasks.named<JacocoReport>("jacocoTestReport") {
     executionData.from(parityCoverageExecutionData())
 }
 
-tasks.named<JacocoCoverageVerification>("jacocoTestCoverageVerification") {
-    dependsOn(parityTest)
-    executionData.from(parityCoverageExecutionData())
-}
 
 tasks.named<Pmd>("pmdParityTest") {
     ruleSetFiles = files(rootProject.file("gradle/pmd/test-ruleset.xml"))
@@ -145,37 +139,4 @@ tasks.named<Pmd>("pmdParityTest") {
 tasks.named<Pmd>("pmdArchitectureTest") {
     ruleSetFiles = files(rootProject.file("gradle/pmd/test-ruleset.xml"))
     ruleSets = emptyList()
-}
-
-gridgrindMutation {
-    targetClasses.set(
-        setOf(
-            "dev.erst.gridgrind.architecture.GridGrindProductLocations*",
-            "dev.erst.gridgrind.architecture.EngineImplementationTypeClassifier*",
-            "dev.erst.gridgrind.architecture.ExportedApiImplementationTypes*",
-            "dev.erst.gridgrind.architecture.ProductArchitectureRules*",
-            "dev.erst.gridgrind.architecture.ProductDependencyArchitectureRules*",
-            "dev.erst.gridgrind.architecture.ProductDomainShapeArchitectureRules*",
-            "dev.erst.gridgrind.architecture.ProductToolingSeamArchitectureRules*",
-        ),
-    )
-    targetTests.set(
-        setOf(
-            "dev.erst.gridgrind.architecture.GridGrindProductLocationsTest",
-            "dev.erst.gridgrind.architecture.ProductArchitectureRuleConstructionTest",
-            "dev.erst.gridgrind.architecture.ProductArchitectureRuleInventoryTest",
-            "dev.erst.gridgrind.architecture.ProductDependencyArchitectureRulesTest",
-            "dev.erst.gridgrind.architecture.ProductDomainShapeArchitectureRulesTest",
-            "dev.erst.gridgrind.architecture.ProductToolingSeamArchitectureRulesTest",
-            "dev.erst.gridgrind.architecture.ProductArchitectureRulesIntegrationTest",
-        ),
-    )
-    mutationThreshold.set(100)
-    coverageThreshold.set(100)
-    testStrengthThreshold.set(100)
-    maxSurviving.set(0)
-}
-
-tasks.named("pitest") {
-    mustRunAfter(":engine:pitest")
 }

@@ -16,7 +16,7 @@ class GridGrindMutationConventionsPluginTest {
   @TempDir Path projectDirectory;
 
   @Test
-  void wiresExplicitPitPolicyScopeVerificationAndReportCleanup() throws IOException {
+  void wiresAdvisoryPitReportsAndCleansPreviousOutput() throws IOException {
     Files.createDirectories(projectDirectory.resolve("gradle"));
     Files.writeString(projectDirectory.resolve("settings.gradle"), "rootProject.name = 'fixture'\n");
     Files.writeString(
@@ -36,13 +36,9 @@ class GridGrindMutationConventionsPluginTest {
           id 'gridgrind.mutation-conventions'
         }
 
-        gridgrindMutation {
+        pitest {
           targetClasses.set(['example.Target'] as Set)
           targetTests.set(['example.TargetTest'] as Set)
-          mutationThreshold.set(100)
-          coverageThreshold.set(95)
-          testStrengthThreshold.set(100)
-          maxSurviving.set(0)
         }
 
         tasks.register('printMutationPolicy') {
@@ -51,10 +47,10 @@ class GridGrindMutationConventionsPluginTest {
             println "pitestVersion=${policy.pitestVersion.get()}"
             println "junit5PluginVersion=${policy.junit5PluginVersion.get()}"
             println "mutators=${policy.mutators.get()}"
-            println "mutationThreshold=${policy.mutationThreshold.get()}"
-            println "coverageThreshold=${policy.coverageThreshold.get()}"
-            println "testStrengthThreshold=${policy.testStrengthThreshold.get()}"
-            println "maxSurviving=${policy.maxSurviving.get()}"
+            println "mutationThresholdConfigured=${policy.mutationThreshold.isPresent()}"
+            println "coverageThresholdConfigured=${policy.coverageThreshold.isPresent()}"
+            println "testStrengthThresholdConfigured=${policy.testStrengthThreshold.isPresent()}"
+            println "maxSurvivingConfigured=${policy.maxSurviving.isPresent()}"
             println "failWhenNoMutations=${policy.failWhenNoMutations.get()}"
             println "jvmArgs=${policy.jvmArgs.get()}"
             println "threads=${policy.threads.get()}"
@@ -68,21 +64,19 @@ class GridGrindMutationConventionsPluginTest {
     assertTrue(policy.getOutput().contains("pitestVersion=1.30.0"));
     assertTrue(policy.getOutput().contains("junit5PluginVersion=1.2.3"));
     assertTrue(policy.getOutput().contains("mutators=[STRONGER]"));
-    assertTrue(policy.getOutput().contains("mutationThreshold=100"));
-    assertTrue(policy.getOutput().contains("coverageThreshold=95"));
-    assertTrue(policy.getOutput().contains("testStrengthThreshold=100"));
-    assertTrue(policy.getOutput().contains("maxSurviving=0"));
+    assertTrue(policy.getOutput().contains("mutationThresholdConfigured=false"));
+    assertTrue(policy.getOutput().contains("coverageThresholdConfigured=false"));
+    assertTrue(policy.getOutput().contains("testStrengthThresholdConfigured=false"));
+    assertTrue(policy.getOutput().contains("maxSurvivingConfigured=false"));
     assertTrue(policy.getOutput().contains("failWhenNoMutations=true"));
     assertTrue(policy.getOutput().contains("jvmArgs=[--enable-native-access=ALL-UNNAMED]"));
     assertTrue(policy.getOutput().contains("threads=4"));
     assertTrue(policy.getOutput().contains("timeoutConstInMillis=10000"));
     assertTrue(policy.getOutput().contains("timeoutFactor=3.0"));
 
-    BuildResult dryRun = runner("verifyPitestReport", "--dry-run").build();
+    BuildResult dryRun = runner("pitest", "--dry-run").build();
     assertTrue(dryRun.getOutput().contains(":cleanPitestReport SKIPPED"));
-    assertTrue(dryRun.getOutput().contains(":verifyPitestScope SKIPPED"));
     assertTrue(dryRun.getOutput().contains(":pitest SKIPPED"));
-    assertTrue(dryRun.getOutput().contains(":verifyPitestReport SKIPPED"));
 
     Path staleReport = projectDirectory.resolve("build/reports/pitest/stale.html");
     Files.createDirectories(staleReport.getParent());

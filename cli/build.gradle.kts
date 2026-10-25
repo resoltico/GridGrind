@@ -5,7 +5,6 @@ import org.gradle.api.file.DuplicatesStrategy
 plugins {
     application
     id("gridgrind.java-conventions")
-    id("gridgrind.mutation-conventions")
     alias(libs.plugins.shadow)
 }
 
@@ -78,30 +77,6 @@ val reviewedNoticeMarkers =
 
 description = "CLI transport adapter for the GridGrind protocol"
 
-gridgrindMutation {
-    targetClasses.set(
-        setOf(
-            "dev.erst.gridgrind.cli.CliLookupImmediateCommandParser*",
-            "dev.erst.gridgrind.cli.GridGrindCliRecipeDiscoveryCommands*",
-            "dev.erst.gridgrind.cli.examples.RecipeWorkspacePublisher*",
-        ),
-    )
-    targetTests.set(
-        setOf(
-            "dev.erst.gridgrind.cli.CliArgumentsTest",
-            "dev.erst.gridgrind.cli.GridGrindCliAssetRecipeMaterializationTest",
-            "dev.erst.gridgrind.cli.GridGrindCliCatalogCommandTest",
-            "dev.erst.gridgrind.cli.GridGrindCliRecipeDiscoveryContractTest",
-            "dev.erst.gridgrind.cli.GridGrindCliRecipeTransportTest",
-            "dev.erst.gridgrind.cli.GridGrindCommandErrorClassificationTest",
-            "dev.erst.gridgrind.cli.examples.RecipeWorkspacePublisherTest",
-        ),
-    )
-    mutationThreshold.set(100)
-    coverageThreshold.set(100)
-    testStrengthThreshold.set(100)
-    maxSurviving.set(0)
-}
 
 dependencies {
     implementation(project(":contract"))
