@@ -8,6 +8,7 @@ import dev.erst.gridgrind.core.model.security.OoxmlPackageSecurityReport;
 import dev.erst.gridgrind.core.model.security.OoxmlSignatureReport;
 import dev.erst.gridgrind.core.result.WorkbookSummary;
 import dev.erst.gridgrind.core.vocabulary.NamedRangeScope;
+import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.excel.ExcelNamedRangeScope;
 import dev.erst.gridgrind.excel.ExcelNamedRangeSnapshot;
@@ -92,7 +93,7 @@ final class InspectionResultWorkbookCoreReportSupport {
               rangeSnapshot.refersToFormula(),
               NamedRangeTarget.range(
                   new SheetName(((ExcelNamedRangeTarget.Range) rangeSnapshot.target()).sheetName()),
-                  ((ExcelNamedRangeTarget.Range) rangeSnapshot.target()).range()));
+                  new RangeRef(((ExcelNamedRangeTarget.Range) rangeSnapshot.target()).range())));
       case ExcelNamedRangeSnapshot.FormulaSnapshot formulaSnapshot ->
           new NamedRangeReport.FormulaReport(
               formulaSnapshot.name(),

@@ -41,6 +41,7 @@ import dev.erst.gridgrind.core.result.WorkbookResult;
 import dev.erst.gridgrind.core.result.WorkbookResults;
 import dev.erst.gridgrind.core.vocabulary.CellAddress;
 import dev.erst.gridgrind.core.vocabulary.PlanId;
+import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.json.codec.GridGrindJsonOutput;
@@ -113,11 +114,12 @@ class ExecutionJournalCoverageTest {
         summaryTarget(new RangeSelector.AllOnSheet(new SheetName("Budget"))));
     assertEquals(
         new ExecutionJournal.Target("RANGE", "Range Budget!A1:B4"),
-        summaryTarget(new RangeSelector.ByRange(new SheetName("Budget"), "A1:B4")));
+        summaryTarget(new RangeSelector.ByRange(new SheetName("Budget"), new RangeRef("A1:B4"))));
     assertEquals(
         new ExecutionJournal.Target("RANGE", "Ranges Budget![A1:B4, D2:E3]"),
         summaryTarget(
-            new RangeSelector.ByRanges(new SheetName("Budget"), List.of("A1:B4", "D2:E3"))));
+            new RangeSelector.ByRanges(
+                new SheetName("Budget"), List.of(new RangeRef("A1:B4"), new RangeRef("D2:E3")))));
     assertEquals(
         new ExecutionJournal.Target("RANGE", "Window Budget!B2:C4"),
         summaryTarget(

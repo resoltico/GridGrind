@@ -29,6 +29,7 @@ import dev.erst.gridgrind.core.plan.WorkbookAssetIntrospectionQuery;
 import dev.erst.gridgrind.core.plan.WorkbookIntrospectionQuery;
 import dev.erst.gridgrind.core.plan.WorkbookMutationAction;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
+import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import java.util.List;
@@ -156,7 +157,7 @@ final class TabularReportTaskRecipe {
                 TableInput.withDefaultMetadata(
                     "QuarterlyReport",
                     new SheetName("Report"),
-                    "A1:C4",
+                    new RangeRef("A1:C4"),
                     false,
                     new TableStyleInput.Named("TableStyleMedium2", false, false, true, false)))),
         ExampleSteps.step(

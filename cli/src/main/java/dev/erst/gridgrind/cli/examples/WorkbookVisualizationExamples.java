@@ -16,6 +16,7 @@ import dev.erst.gridgrind.core.source.BinarySourceInput;
 import dev.erst.gridgrind.core.vocabulary.ExcelPictureFormat;
 import dev.erst.gridgrind.core.vocabulary.NamedRangeScope;
 import dev.erst.gridgrind.core.vocabulary.PlanId;
+import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import java.util.Optional;
@@ -106,14 +107,14 @@ final class WorkbookVisualizationExamples {
             new StructuredMutationAction.SetNamedRange(
                 "ChartCategories",
                 new NamedRangeScope.Workbook(),
-                NamedRangeTarget.range(new SheetName("Ops"), "A2:A4"))),
+                NamedRangeTarget.range(new SheetName("Ops"), new RangeRef("A2:A4")))),
         ExampleSteps.step(
             new StepId("step-04-set-actual"),
             new NamedRangeSelector.WorkbookScope("ChartActual"),
             new StructuredMutationAction.SetNamedRange(
                 "ChartActual",
                 new NamedRangeScope.Workbook(),
-                NamedRangeTarget.range(new SheetName("Ops"), "C2:C4"))),
+                NamedRangeTarget.range(new SheetName("Ops"), new RangeRef("C2:C4")))),
         ExampleSteps.step(
             new StepId("step-05-set-chart"),
             ExampleSelectors.sheet("Ops"),

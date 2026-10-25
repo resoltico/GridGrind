@@ -12,6 +12,7 @@ import dev.erst.gridgrind.core.plan.WorkbookMutationAction;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import dev.erst.gridgrind.core.problem.RequestWarning;
 import dev.erst.gridgrind.core.vocabulary.CellAddress;
+import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.core.vocabulary.SheetCopyPosition;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.StepId;
@@ -190,7 +191,7 @@ class GridGrindRequestWarningsTest {
                     new SheetSelector.ByName(new SheetName("Summary")),
                     new WorkbookMutationAction.EnsureSheet()),
                 mutate(
-                    new RangeSelector.ByRange(new SheetName("Summary"), "A1:B1"),
+                    new RangeSelector.ByRange(new SheetName("Summary"), new RangeRef("A1:B1")),
                     new CellMutationAction.SetRange(
                         new dev.erst.gridgrind.core.model.value.CellGridInput.Typed(
                             List.of(List.of(formulaCell("Budget Review!A1"), textCell("ok")))))),

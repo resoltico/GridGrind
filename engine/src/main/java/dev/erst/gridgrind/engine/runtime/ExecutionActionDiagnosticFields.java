@@ -48,18 +48,18 @@ final class ExecutionActionDiagnosticFields {
   static Optional<String> rangeFor(MutationAction action) {
     Objects.requireNonNull(action, "action must not be null");
     if (action instanceof StructuredMutationAction.SetTable setTable) {
-      return Optional.of(setTable.table().range());
+      return Optional.of(setTable.table().range().value());
     }
     if (action instanceof StructuredMutationAction.SetPivotTable setPivotTable) {
       if (setPivotTable.pivotTable().source() instanceof PivotTableInput.Source.Range range) {
-        return Optional.of(range.range());
+        return Optional.of(range.range().value());
       }
       return Optional.empty();
     }
     if (action instanceof StructuredMutationAction.SetNamedRange setNamedRange) {
       return switch (setNamedRange.target()) {
         case dev.erst.gridgrind.core.model.formula.NamedRangeTarget.Range range ->
-            Optional.of(range.range());
+            Optional.of(range.range().value());
         case dev.erst.gridgrind.core.model.formula.NamedRangeTarget.Formula _ -> Optional.empty();
       };
     }

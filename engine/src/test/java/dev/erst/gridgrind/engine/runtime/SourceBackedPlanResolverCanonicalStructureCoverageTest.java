@@ -39,6 +39,7 @@ import dev.erst.gridgrind.core.source.TextSourceInput;
 import dev.erst.gridgrind.core.vocabulary.CellAddress;
 import dev.erst.gridgrind.core.vocabulary.ExcelDataValidationErrorStyle;
 import dev.erst.gridgrind.core.vocabulary.ExcelPictureFormat;
+import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import java.io.IOException;
@@ -138,7 +139,7 @@ class SourceBackedPlanResolverCanonicalStructureCoverageTest
     MutationStep rangeStep =
         new MutationStep(
             new StepId("range-inline"),
-            new RangeSelector.ByRange(new SheetName("Budget"), "A1:B1"),
+            new RangeSelector.ByRange(new SheetName("Budget"), new RangeRef("A1:B1")),
             new CellMutationAction.SetRange(
                 new dev.erst.gridgrind.core.model.value.CellGridInput.Typed(
                     List.of(
@@ -173,7 +174,7 @@ class SourceBackedPlanResolverCanonicalStructureCoverageTest
     MutationStep validationStep =
         new MutationStep(
             new StepId("validation-inline"),
-            new RangeSelector.ByRange(new SheetName("Budget"), "A1"),
+            new RangeSelector.ByRange(new SheetName("Budget"), new RangeRef("A1")),
             new StructuredMutationAction.SetDataValidation(
                 dataValidation(
                     new DataValidationRuleInput.ExplicitList(List.of("Open")),
@@ -194,7 +195,7 @@ class SourceBackedPlanResolverCanonicalStructureCoverageTest
                 new TableInput(
                     "BudgetTable",
                     new dev.erst.gridgrind.core.vocabulary.SheetName("Budget"),
-                    "A1:B2",
+                    new RangeRef("A1:B2"),
                     false,
                     true,
                     new TableStyleInput.Named("TableStyleMedium2", false, false, true, false),
@@ -314,7 +315,7 @@ class SourceBackedPlanResolverCanonicalStructureCoverageTest
     MutationStep promptValidationStep =
         new MutationStep(
             new StepId("validation-prompt-mixed"),
-            new RangeSelector.ByRange(new SheetName("Budget"), "A1"),
+            new RangeSelector.ByRange(new SheetName("Budget"), new RangeRef("A1")),
             new StructuredMutationAction.SetDataValidation(
                 dataValidation(
                     new DataValidationRuleInput.ExplicitList(List.of("Open")),
@@ -328,7 +329,7 @@ class SourceBackedPlanResolverCanonicalStructureCoverageTest
     MutationStep errorValidationStep =
         new MutationStep(
             new StepId("validation-error-mixed"),
-            new RangeSelector.ByRange(new SheetName("Budget"), "B1"),
+            new RangeSelector.ByRange(new SheetName("Budget"), new RangeRef("B1")),
             new StructuredMutationAction.SetDataValidation(
                 dataValidation(
                     new DataValidationRuleInput.ExplicitList(List.of("Open")),

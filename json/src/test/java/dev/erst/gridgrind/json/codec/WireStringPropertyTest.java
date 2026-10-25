@@ -11,6 +11,7 @@ import dev.erst.gridgrind.core.problem.InvalidRequestException;
 import dev.erst.gridgrind.core.vocabulary.CellAddress;
 import dev.erst.gridgrind.core.vocabulary.DefinedName;
 import dev.erst.gridgrind.core.vocabulary.PlanId;
+import dev.erst.gridgrind.core.vocabulary.RangeLabel;
 import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.core.vocabulary.RgbHex;
 import dev.erst.gridgrind.core.vocabulary.SheetLabel;
@@ -230,6 +231,11 @@ class WireStringPropertyTest {
             invalidPlans),
         new Domain(CellAddress.class, CellAddress::new, cells, invalidCells),
         new Domain(RangeRef.class, RangeRef::new, ranges, invalidRanges),
+        new Domain(
+            RangeLabel.class,
+            RangeLabel::new,
+            List.of("A1:B2", "#REF!", "'Sheet 1'!A1", "A:A", "future-range"),
+            invalidPlans),
         new Domain(DefinedName.class, DefinedName::new, names, invalidNames),
         new Domain(TableName.class, TableName::new, names, invalidNames),
         new Domain(RgbHex.class, RgbHex::new, colors, invalidColors),

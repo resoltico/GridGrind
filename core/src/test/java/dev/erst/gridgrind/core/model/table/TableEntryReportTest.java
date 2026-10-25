@@ -2,6 +2,7 @@ package dev.erst.gridgrind.core.model.table;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.core.vocabulary.RangeLabel;
 import dev.erst.gridgrind.core.vocabulary.SheetLabel;
 import java.util.ArrayList;
 import java.util.List;
@@ -17,7 +18,7 @@ class TableEntryReportTest {
         new TableEntryReport(
             "BudgetTable",
             new SheetLabel("Budget"),
-            "A1:B4",
+            new RangeLabel("A1:B4"),
             1,
             1,
             columnNames,
@@ -32,7 +33,7 @@ class TableEntryReportTest {
             new TableEntryReport(
                 "BudgetTable",
                 new SheetLabel(" "),
-                "A1:B4",
+                new RangeLabel("A1:B4"),
                 1,
                 1,
                 List.of("Item"),
@@ -44,7 +45,7 @@ class TableEntryReportTest {
             new TableEntryReport(
                 "BudgetTable",
                 new SheetLabel("Budget"),
-                "A1:B4",
+                new RangeLabel("A1:B4"),
                 -1,
                 1,
                 List.of("Item"),
@@ -56,7 +57,7 @@ class TableEntryReportTest {
             new TableEntryReport(
                 "BudgetTable",
                 new SheetLabel("Budget"),
-                "A1:B4",
+                new RangeLabel("A1:B4"),
                 1,
                 -1,
                 List.of("Item"),
@@ -68,7 +69,7 @@ class TableEntryReportTest {
             new TableEntryReport(
                 "BudgetTable",
                 new SheetLabel("Budget"),
-                "A1:B4",
+                new RangeLabel("A1:B4"),
                 1,
                 1,
                 List.of("Item"),

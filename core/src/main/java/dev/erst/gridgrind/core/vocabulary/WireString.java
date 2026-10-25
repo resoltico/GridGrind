@@ -6,6 +6,7 @@ public sealed interface WireString
         SheetLabel,
         CellAddress,
         RangeRef,
+        RangeLabel,
         DefinedName,
         TableName,
         RgbHex,

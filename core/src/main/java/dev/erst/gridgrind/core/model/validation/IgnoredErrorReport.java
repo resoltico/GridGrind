@@ -1,18 +1,16 @@
 package dev.erst.gridgrind.core.model.validation;
 
 import dev.erst.gridgrind.core.vocabulary.ExcelIgnoredErrorType;
+import dev.erst.gridgrind.core.vocabulary.RangeLabel;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Objects;
 
 /** Factual ignored-error block reported for one A1-style range. */
-public record IgnoredErrorReport(String range, List<ExcelIgnoredErrorType> errorTypes) {
+public record IgnoredErrorReport(RangeLabel range, List<ExcelIgnoredErrorType> errorTypes) {
   public IgnoredErrorReport {
     Objects.requireNonNull(range, "range must not be null");
-    if (range.isBlank()) {
-      throw new IllegalArgumentException("range must not be blank");
-    }
     errorTypes = copyValues(errorTypes, "errorTypes");
     if (errorTypes.isEmpty()) {
       throw new IllegalArgumentException("errorTypes must not be empty");

@@ -3,6 +3,7 @@ package dev.erst.gridgrind.core.model.validation;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import dev.erst.gridgrind.core.vocabulary.RangeLabel;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -17,10 +18,10 @@ public sealed interface DataValidationEntryReport
     permits DataValidationEntryReport.Supported, DataValidationEntryReport.Unsupported {
 
   /** Covered A1-style ranges stored on the sheet for this validation structure. */
-  List<String> ranges();
+  List<RangeLabel> ranges();
 
   /** Fully supported data-validation structure. */
-  record Supported(List<String> ranges, DataValidationDefinitionReport validation)
+  record Supported(List<RangeLabel> ranges, DataValidationDefinitionReport validation)
       implements DataValidationEntryReport {
     public Supported {
       ranges = copyRanges(ranges);
@@ -29,7 +30,7 @@ public sealed interface DataValidationEntryReport
   }
 
   /** Present workbook structure that GridGrind can detect but not yet model fully. */
-  record Unsupported(List<String> ranges, String kind, String detail)
+  record Unsupported(List<RangeLabel> ranges, String kind, String detail)
       implements DataValidationEntryReport {
     public Unsupported {
       ranges = copyRanges(ranges);
@@ -53,14 +54,11 @@ public sealed interface DataValidationEntryReport
     }
   }
 
-  private static List<String> copyRanges(List<String> ranges) {
+  private static List<RangeLabel> copyRanges(List<RangeLabel> ranges) {
     Objects.requireNonNull(ranges, "ranges must not be null");
-    List<String> copy = List.copyOf(ranges);
+    List<RangeLabel> copy = List.copyOf(ranges);
     if (copy.isEmpty()) {
       throw new IllegalArgumentException("ranges must not be empty");
-    }
-    for (String range : copy) {
-      requireNonBlank(range, "ranges");
     }
     return copy;
   }

@@ -33,6 +33,7 @@ import dev.erst.gridgrind.core.vocabulary.ExcelChartRadarStyle;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartScatterStyle;
 import dev.erst.gridgrind.core.vocabulary.ExcelDrawingAnchorBehavior;
 import dev.erst.gridgrind.core.vocabulary.ExcelPictureFormat;
+import dev.erst.gridgrind.core.vocabulary.RangeLabel;
 import dev.erst.gridgrind.core.vocabulary.SheetLabel;
 import java.util.List;
 import java.util.Optional;
@@ -247,7 +248,7 @@ class SpreadsheetSurfaceEdgeCoverageTest {
                     new SheetLabel("Foglio1"),
                     "Table1",
                     "CourseTable",
-                    "A1:B4",
+                    new RangeLabel("A1:B4"),
                     "/CORSO/RIGHE/RIGA")));
 
     assertFalse(area.varyColors());
@@ -378,7 +379,7 @@ class SpreadsheetSurfaceEdgeCoverageTest {
         IllegalArgumentException.class,
         () ->
             new CustomXmlLinkedTableReport(
-                new SheetLabel("Foglio1"), "Table1", " ", "A1:B4", "/rows/row"));
+                new SheetLabel("Foglio1"), "Table1", " ", new RangeLabel("A1:B4"), "/rows/row"));
     assertThrows(
         NullPointerException.class,
         () ->

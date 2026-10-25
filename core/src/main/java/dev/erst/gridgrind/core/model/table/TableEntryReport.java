@@ -3,6 +3,7 @@ package dev.erst.gridgrind.core.model.table;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import dev.erst.gridgrind.core.vocabulary.RangeLabel;
 import dev.erst.gridgrind.core.vocabulary.SheetLabel;
 import java.util.List;
 import java.util.Objects;
@@ -12,7 +13,7 @@ import java.util.Optional;
 public record TableEntryReport(
     String name,
     SheetLabel sheetName,
-    String range,
+    RangeLabel range,
     Structure structure,
     TableStyleReport style,
     Behavior behavior,
@@ -21,7 +22,7 @@ public record TableEntryReport(
   public TableEntryReport(
       String name,
       SheetLabel sheetName,
-      String range,
+      RangeLabel range,
       int headerRowCount,
       int totalsRowCount,
       List<String> columnNames,
@@ -51,7 +52,7 @@ public record TableEntryReport(
   static TableEntryReport create(
       @JsonProperty("name") String name,
       @JsonProperty("sheetName") SheetLabel sheetName,
-      @JsonProperty("range") String range,
+      @JsonProperty("range") RangeLabel range,
       @JsonProperty("structure") Structure structure,
       @JsonProperty("style") TableStyleReport style,
       @JsonProperty("behavior") Behavior behavior,

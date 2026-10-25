@@ -8,6 +8,7 @@ import dev.erst.gridgrind.core.plan.WorkbookAssetInspectionResult;
 import dev.erst.gridgrind.core.plan.WorkbookInspectionResult;
 import dev.erst.gridgrind.core.plan.WorkbookSurfaceInspectionResult;
 import dev.erst.gridgrind.core.result.SheetSummaryReport;
+import dev.erst.gridgrind.core.vocabulary.RangeLabel;
 import dev.erst.gridgrind.core.vocabulary.SheetLabel;
 
 /** Converts engine read results into protocol inspection-result variants. */
@@ -86,7 +87,7 @@ final class InspectionResultReadConverter {
               mergedRegions.stepId(),
               new SheetLabel(mergedRegions.sheetName()),
               mergedRegions.mergedRegions().stream()
-                  .map(region -> new MergedRegionReport(region.range()))
+                  .map(region -> new MergedRegionReport(new RangeLabel(region.range())))
                   .toList());
       case dev.erst.gridgrind.excel.WorkbookSheetResult.HyperlinksResult hyperlinks ->
           new SheetInspectionResult.HyperlinksResult(

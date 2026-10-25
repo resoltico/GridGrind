@@ -20,6 +20,7 @@ import dev.erst.gridgrind.core.plan.WorkbookMutationAction;
 import dev.erst.gridgrind.core.vocabulary.ExcelIgnoredErrorType;
 import dev.erst.gridgrind.core.vocabulary.ExcelPrintOrientation;
 import dev.erst.gridgrind.core.vocabulary.ExcelSheetVisibility;
+import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.core.vocabulary.SheetCopyPosition;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.excel.*;
@@ -106,11 +107,11 @@ class DefaultGridGrindRequestExecutorMutationContextTranslationTest
     RuntimeException exception = new RuntimeException("test");
     ExecutorTestPlanSupport.PendingMutation mergeCells =
         mutate(
-            new RangeSelector.ByRange(new SheetName("Budget"), "A1:B2"),
+            new RangeSelector.ByRange(new SheetName("Budget"), new RangeRef("A1:B2")),
             new WorkbookMutationAction.MergeCells());
     ExecutorTestPlanSupport.PendingMutation unmergeCells =
         mutate(
-            new RangeSelector.ByRange(new SheetName("Budget"), "A1:B2"),
+            new RangeSelector.ByRange(new SheetName("Budget"), new RangeRef("A1:B2")),
             new WorkbookMutationAction.UnmergeCells());
     ExecutorTestPlanSupport.PendingMutation setColumnWidth =
         mutate(
@@ -187,13 +188,14 @@ class DefaultGridGrindRequestExecutorMutationContextTranslationTest
                     new SheetDefaultsInput(11, 18.5d),
                     List.of(
                         new IgnoredErrorInput(
-                            "A1:B2", List.of(ExcelIgnoredErrorType.NUMBER_STORED_AS_TEXT))))));
+                            new RangeRef("A1:B2"),
+                            List.of(ExcelIgnoredErrorType.NUMBER_STORED_AS_TEXT))))));
     ExecutorTestPlanSupport.PendingMutation setPrintLayout =
         mutate(
             new SheetSelector.ByName(new SheetName("Budget")),
             new WorkbookMutationAction.SetPrintLayout(
                 PrintLayoutInput.withDefaultSetup(
-                    new PrintAreaInput.Range("A1:B12"),
+                    new PrintAreaInput.Range(new RangeRef("A1:B12")),
                     ExcelPrintOrientation.LANDSCAPE,
                     new PrintScalingInput.Fit(1, 0),
                     new PrintTitleRowsInput.Band(0, 0),

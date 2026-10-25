@@ -15,6 +15,7 @@ import dev.erst.gridgrind.core.vocabulary.ExcelChartGrouping;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartLegendPosition;
 import dev.erst.gridgrind.core.vocabulary.ExcelDrawingAnchorBehavior;
 import dev.erst.gridgrind.core.vocabulary.ExcelPivotDataConsolidateFunction;
+import dev.erst.gridgrind.core.vocabulary.RangeLabel;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.excel.WorkbookSignatureSupport;
 import java.io.ByteArrayInputStream;
@@ -730,7 +731,7 @@ final class XlsxParityOracle {
         new CellAddress(
             new CellReference(area.getFirstCell().getRow(), area.getFirstCell().getCol())
                 .formatAsString()),
-        normalizeArea(area));
+        new RangeLabel(normalizeArea(area)));
   }
 
   private static PivotTableReport.Source pivotSource(
@@ -747,7 +748,9 @@ final class XlsxParityOracle {
     if (worksheetSource.getRef() != null && !worksheetSource.getRef().isBlank()) {
       return new PivotTableReport.Source.Range(
           new SheetName(sheetName),
-          normalizeArea(new AreaReference(worksheetSource.getRef(), SpreadsheetVersion.EXCEL2007)));
+          new RangeLabel(
+              normalizeArea(
+                  new AreaReference(worksheetSource.getRef(), SpreadsheetVersion.EXCEL2007))));
     }
 
     String sourceName =
@@ -758,7 +761,7 @@ final class XlsxParityOracle {
       return new PivotTableReport.Source.NamedRange(
           sourceName,
           new SheetName(sourceSheetName(workbook, area, namedRanges.getFirst(), sheetName)),
-          normalizeArea(area));
+          new RangeLabel(normalizeArea(area)));
     }
     if (namedRanges.size() > 1) {
       throw new IllegalStateException(
@@ -775,11 +778,12 @@ final class XlsxParityOracle {
     return new PivotTableReport.Source.Table(
         sourceName,
         new SheetName(table.getSheetName()),
-        normalizeArea(
-            new AreaReference(
-                table.getStartCellReference(),
-                table.getEndCellReference(),
-                SpreadsheetVersion.EXCEL2007)));
+        new RangeLabel(
+            normalizeArea(
+                new AreaReference(
+                    table.getStartCellReference(),
+                    table.getEndCellReference(),
+                    SpreadsheetVersion.EXCEL2007))));
   }
 
   private static List<String> pivotCacheFieldNames(XSSFPivotCacheDefinition cacheDefinition) {

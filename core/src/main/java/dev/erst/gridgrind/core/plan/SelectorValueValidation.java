@@ -16,12 +16,9 @@ final class SelectorValueValidation {
     return SelectorTextValidation.requirePivotTableName(value, fieldName);
   }
 
-  static String requireAddress(String value, String fieldName) {
-    return SelectorTextValidation.requireAddress(value, fieldName);
-  }
-
-  static String requireRange(String value, String fieldName) {
-    return SelectorTextValidation.requireRange(value, fieldName);
+  static dev.erst.gridgrind.core.vocabulary.RangeRef requireOrderedRange(
+      dev.erst.gridgrind.core.vocabulary.RangeRef value, String fieldName) {
+    return SelectorTextValidation.requireOrderedRange(value, fieldName);
   }
 
   static int requirePositive(int value, String fieldName) {

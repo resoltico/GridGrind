@@ -82,6 +82,7 @@ import dev.erst.gridgrind.core.vocabulary.ExcelPictureFormat;
 import dev.erst.gridgrind.core.vocabulary.ExcelPivotDataConsolidateFunction;
 import dev.erst.gridgrind.core.vocabulary.ExcelPrintOrientation;
 import dev.erst.gridgrind.core.vocabulary.NamedRangeScope;
+import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.excel.ExcelBorder;
 import dev.erst.gridgrind.excel.ExcelBorderSide;
@@ -484,7 +485,7 @@ class RuntimeResidualCoverageTest {
             new WorkbookSelector.Current(),
             new SheetSelector.ByName(new SheetName("Budget")),
             new CellSelector.ByAddress(new SheetName("Budget"), new CellAddress("A1")),
-            new RangeSelector.ByRange(new SheetName("Budget"), "A1:B2"),
+            new RangeSelector.ByRange(new SheetName("Budget"), new RangeRef("A1:B2")),
             new RowBandSelector.Span(new SheetName("Budget"), 0, 1),
             new ColumnBandSelector.Span(new SheetName("Budget"), 0, 1),
             new DrawingObjectSelector.ByName(new SheetName("Budget"), "Banner"),
@@ -599,7 +600,7 @@ class RuntimeResidualCoverageTest {
     return new PivotTableInput(
         "Sales Pivot 2026",
         new SheetName("Report"),
-        new PivotTableInput.Source.Range(new SheetName("Data"), "A1:D5"),
+        new PivotTableInput.Source.Range(new SheetName("Data"), new RangeRef("A1:D5")),
         new PivotTableInput.Anchor(new CellAddress("C5")),
         List.of("Region"),
         List.of("Stage"),
@@ -613,7 +614,7 @@ class RuntimeResidualCoverageTest {
     return new TableInput(
         "BudgetTable",
         new dev.erst.gridgrind.core.vocabulary.SheetName("Budget"),
-        "A1:C4",
+        new RangeRef("A1:C4"),
         false,
         false,
         new TableStyleInput.None(),

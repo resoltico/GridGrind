@@ -8,6 +8,7 @@ import dev.erst.gridgrind.core.model.value.CellInput;
 import dev.erst.gridgrind.core.semantics.WorkbookOperationContracts;
 import dev.erst.gridgrind.core.source.TextSourceInput;
 import dev.erst.gridgrind.core.vocabulary.CellAddress;
+import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import org.junit.jupiter.api.Test;
@@ -23,12 +24,12 @@ class WorkbookStepValidationTest {
         () ->
             new MutationStep(
                 new StepId("set-owner"),
-                new RangeSelector.ByRange(new SheetName("Budget"), "A1:B2"),
+                new RangeSelector.ByRange(new SheetName("Budget"), new RangeRef("A1:B2")),
                 action));
     assertEquals(
         "SET_CELL requires target type CELL_BY_ADDRESS or TABLE_CELL_BY_COLUMN_NAME but got RANGE_BY_RANGE",
         WorkbookOperationContracts.targetViolation(
-                action, new RangeSelector.ByRange(new SheetName("Budget"), "A1:B2"))
+                action, new RangeSelector.ByRange(new SheetName("Budget"), new RangeRef("A1:B2")))
             .orElseThrow());
   }
 

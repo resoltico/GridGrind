@@ -71,6 +71,7 @@ and executed by `:json:test`. A shortened excerpt:
 
 ```java
 import dev.erst.gridgrind.core.vocabulary.SheetName;
+import dev.erst.gridgrind.core.vocabulary.RangeRef;
 
 GridGrindPlan plan =
     GridGrindPlan.newWorkbook()
@@ -80,7 +81,7 @@ GridGrindPlan plan =
         .journal(ExecutionJournalLevel.VERBOSE)
         .mutate(Targets.sheet(new SheetName("Budget")).ensureExists())
         .mutate(
-            Targets.range(new SheetName("Budget"), "A1:B3")
+            Targets.range(new SheetName("Budget"), new RangeRef("A1:B3"))
                 .setRows(
                     List.of(
                         Values.row(Values.text("Item"), Values.text("Amount")),
@@ -92,7 +93,7 @@ GridGrindPlan plan =
                     Tables.define(
                         "BudgetTable",
                         new SheetName("Budget"),
-                        "A1:B3",
+                        new RangeRef("A1:B3"),
                         false,
                         Tables.noStyle())))
         .mutate(

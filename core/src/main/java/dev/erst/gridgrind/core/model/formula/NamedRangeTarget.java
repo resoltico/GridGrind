@@ -2,6 +2,7 @@ package dev.erst.gridgrind.core.model.formula;
 
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import java.util.Objects;
 
@@ -13,7 +14,7 @@ import java.util.Objects;
 })
 public sealed interface NamedRangeTarget permits NamedRangeTarget.Range, NamedRangeTarget.Formula {
   /** Creates a sheet-local cell or rectangular range target. */
-  static Range range(SheetName sheetName, String range) {
+  static Range range(SheetName sheetName, RangeRef range) {
     return new Range(sheetName, range);
   }
 
@@ -23,13 +24,10 @@ public sealed interface NamedRangeTarget permits NamedRangeTarget.Range, NamedRa
   }
 
   /** Sheet-qualified explicit cell or rectangular range target. */
-  record Range(SheetName sheetName, String range) implements NamedRangeTarget {
+  record Range(SheetName sheetName, RangeRef range) implements NamedRangeTarget {
     public Range {
       java.util.Objects.requireNonNull(sheetName, "sheetName must not be null");
       Objects.requireNonNull(range, "range must not be null");
-      if (range.isBlank()) {
-        throw new IllegalArgumentException("range must not be blank");
-      }
     }
   }
 

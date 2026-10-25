@@ -15,6 +15,7 @@ import dev.erst.gridgrind.core.plan.*;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import dev.erst.gridgrind.core.source.*;
 import dev.erst.gridgrind.core.vocabulary.*;
+import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.core.vocabulary.SheetCopyPosition;
 import dev.erst.gridgrind.excel.*;
 import java.io.*;
@@ -90,7 +91,9 @@ final class OperationSequenceLayoutValues {
 
   static PrintLayoutInput nextPrintLayoutInput(GridGrindFuzzData data) {
     return PrintLayoutInput.withDefaultSetup(
-        data.consumeBoolean() ? new PrintAreaInput.Range("A1:C20") : new PrintAreaInput.None(),
+        data.consumeBoolean()
+            ? new PrintAreaInput.Range(new RangeRef("A1:C20"))
+            : new PrintAreaInput.None(),
         data.consumeBoolean() ? ExcelPrintOrientation.LANDSCAPE : ExcelPrintOrientation.PORTRAIT,
         data.consumeBoolean()
             ? new PrintScalingInput.Fit(data.consumeInt(0, 2), data.consumeInt(0, 2))

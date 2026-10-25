@@ -47,6 +47,7 @@ import dev.erst.gridgrind.core.vocabulary.ExcelPaneRegion;
 import dev.erst.gridgrind.core.vocabulary.ExcelPictureFormat;
 import dev.erst.gridgrind.core.vocabulary.ExcelPivotDataConsolidateFunction;
 import dev.erst.gridgrind.core.vocabulary.NamedRangeScope;
+import dev.erst.gridgrind.core.vocabulary.RangeLabel;
 import dev.erst.gridgrind.core.vocabulary.SheetLabel;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import java.math.BigDecimal;
@@ -606,7 +607,7 @@ class DtoEdgeCoverageTest {
                     new PivotTableReport.Unsupported(
                         "Sales Pivot 2026",
                         new SheetName("Report"),
-                        new PivotTableReport.Anchor(new CellAddress("A1"), "A1:B3"),
+                        new PivotTableReport.Anchor(new CellAddress("A1"), new RangeLabel("A1:B3")),
                         " "))
             .getMessage());
     assertEquals(
@@ -709,13 +710,15 @@ class DtoEdgeCoverageTest {
                 NullPointerException.class,
                 () ->
                     new AutofilterEntryReport.SheetOwned(
-                        "A1:B2", Arrays.asList((AutofilterFilterColumnReport) null), null))
+                        new RangeLabel("A1:B2"),
+                        Arrays.asList((AutofilterFilterColumnReport) null),
+                        null))
             .getMessage());
     assertEquals(
         "iconId must not be negative",
         assertThrows(
                 IllegalArgumentException.class,
-                () -> new AutofilterSortConditionReport.Icon("A1:A2", false, -1))
+                () -> new AutofilterSortConditionReport.Icon(new RangeLabel("A1:A2"), false, -1))
             .getMessage());
     assertEquals(
         "conditions must not contain null values",
@@ -723,14 +726,17 @@ class DtoEdgeCoverageTest {
                 NullPointerException.class,
                 () ->
                     AutofilterSortStateReport.withoutSortMethod(
-                        "A1:B2", false, false, Arrays.asList((AutofilterSortConditionReport) null)))
+                        new RangeLabel("A1:B2"),
+                        false,
+                        false,
+                        Arrays.asList((AutofilterSortConditionReport) null)))
             .getMessage());
 
     TableEntryReport table =
         new TableEntryReport(
             "BudgetTable",
             new SheetLabel("Budget"),
-            "A1:B2",
+            new RangeLabel("A1:B2"),
             new TableEntryReport.Structure(
                 1,
                 0,
@@ -759,7 +765,7 @@ class DtoEdgeCoverageTest {
                     new TableEntryReport(
                         "BudgetTable",
                         new SheetLabel("Budget"),
-                        "A1:B2",
+                        new RangeLabel("A1:B2"),
                         new TableEntryReport.Structure(
                             1, 0, Arrays.asList((String) null), List.of()),
                         new TableStyleReport.None(),
@@ -778,7 +784,7 @@ class DtoEdgeCoverageTest {
                     new TableEntryReport(
                         "BudgetTable",
                         new SheetLabel("Budget"),
-                        "A1:B2",
+                        new RangeLabel("A1:B2"),
                         new TableEntryReport.Structure(
                             1, 0, List.of("Owner"), Arrays.asList((TableColumnReport) null)),
                         new TableStyleReport.None(),
@@ -796,7 +802,7 @@ class DtoEdgeCoverageTest {
                 IllegalArgumentException.class,
                 () ->
                     new IgnoredErrorReport(
-                        " ", List.of(ExcelIgnoredErrorType.NUMBER_STORED_AS_TEXT)))
+                        new RangeLabel(" "), List.of(ExcelIgnoredErrorType.NUMBER_STORED_AS_TEXT)))
             .getMessage());
     assertEquals(
         "errorTypes must not contain duplicates",
@@ -804,7 +810,7 @@ class DtoEdgeCoverageTest {
                 IllegalArgumentException.class,
                 () ->
                     new IgnoredErrorReport(
-                        "A1:A2",
+                        new RangeLabel("A1:A2"),
                         List.of(
                             ExcelIgnoredErrorType.NUMBER_STORED_AS_TEXT,
                             ExcelIgnoredErrorType.NUMBER_STORED_AS_TEXT)))

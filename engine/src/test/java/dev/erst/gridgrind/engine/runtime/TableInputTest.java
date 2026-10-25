@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import dev.erst.gridgrind.core.model.table.TableColumnInput;
 import dev.erst.gridgrind.core.model.table.TableInput;
 import dev.erst.gridgrind.core.model.table.TableStyleInput;
+import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.excel.ExcelTableColumnDefinition;
 import dev.erst.gridgrind.excel.ExcelTableDefinition;
@@ -20,7 +21,7 @@ class TableInputTest {
         TableInput.withDefaultMetadata(
             "BudgetTable",
             new SheetName("Budget"),
-            "A1:C4",
+            new RangeRef("A1:C4"),
             true,
             new TableStyleInput.Named("TableStyleMedium2", false, false, true, false));
 
@@ -37,33 +38,45 @@ class TableInputTest {
         IllegalArgumentException.class,
         () ->
             TableInput.withDefaultMetadata(
-                "BudgetTable", new SheetName(" "), "A1:C4", false, new TableStyleInput.None()));
-    assertThrows(
-        IllegalArgumentException.class,
-        () ->
-            TableInput.withDefaultMetadata(
                 "BudgetTable",
-                new SheetName("12345678901234567890123456789012"),
-                "A1:C4",
+                new SheetName(" "),
+                new RangeRef("A1:C4"),
                 false,
                 new TableStyleInput.None()));
     assertThrows(
         IllegalArgumentException.class,
         () ->
             TableInput.withDefaultMetadata(
-                "BudgetTable", new SheetName("Budget"), " ", false, new TableStyleInput.None()));
+                "BudgetTable",
+                new SheetName("12345678901234567890123456789012"),
+                new RangeRef("A1:C4"),
+                false,
+                new TableStyleInput.None()));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            TableInput.withDefaultMetadata(
+                "BudgetTable",
+                new SheetName("Budget"),
+                new RangeRef(" "),
+                false,
+                new TableStyleInput.None()));
     assertThrows(
         NullPointerException.class,
         () ->
             TableInput.withDefaultMetadata(
-                "BudgetTable", new SheetName("Budget"), "A1:C4", false, null));
+                "BudgetTable", new SheetName("Budget"), new RangeRef("A1:C4"), false, null));
   }
 
   @Test
   void explicitDefaultMetadataPreservesTotalsRowFlagFalse() {
     TableInput input =
         TableInput.withDefaultMetadata(
-            "BudgetTable", new SheetName("Budget"), "A1:C4", false, new TableStyleInput.None());
+            "BudgetTable",
+            new SheetName("Budget"),
+            new RangeRef("A1:C4"),
+            false,
+            new TableStyleInput.None());
 
     assertFalse(input.showTotalsRow());
     assertEquals(
@@ -78,7 +91,7 @@ class TableInputTest {
         new TableInput(
             "BudgetTable",
             new dev.erst.gridgrind.core.vocabulary.SheetName("Budget"),
-            "A1:C4",
+            new RangeRef("A1:C4"),
             true,
             true,
             new TableStyleInput.None(),

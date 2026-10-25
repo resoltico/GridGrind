@@ -6,6 +6,7 @@ import dev.erst.gridgrind.core.plan.SheetSelector;
 import dev.erst.gridgrind.core.plan.TableSelector;
 import dev.erst.gridgrind.core.plan.WorkbookSelector;
 import dev.erst.gridgrind.core.vocabulary.CellAddress;
+import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 
 /** Shared selector helpers for shipped example workbook plans. */
@@ -41,7 +42,7 @@ final class ExampleSelectors {
   }
 
   static RangeSelector.ByRange range(String sheetName, String range) {
-    return new RangeSelector.ByRange(new SheetName(sheetName), range);
+    return new RangeSelector.ByRange(new SheetName(sheetName), new RangeRef(range));
   }
 
   static RangeSelector.RectangularWindow window(

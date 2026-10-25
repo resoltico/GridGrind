@@ -543,20 +543,20 @@ final class WorkbookInvariantWorkbookSurfaceChecks {
       case PivotTableReport.Source.Range range -> {
         WorkbookInvariantChecks.requireNonBlank(
             range.sheetName().value(), "pivot range source sheetName");
-        WorkbookInvariantChecks.requireNonBlank(range.range(), "pivot range source range");
+        WorkbookInvariantChecks.requireNonBlank(range.range().value(), "pivot range source range");
       }
       case PivotTableReport.Source.NamedRange namedRange -> {
         WorkbookInvariantChecks.requireNonBlank(namedRange.name(), "pivot named-range source name");
         WorkbookInvariantChecks.requireNonBlank(
             namedRange.sheetName().value(), "pivot named-range source sheetName");
         WorkbookInvariantChecks.requireNonBlank(
-            namedRange.range(), "pivot named-range source range");
+            namedRange.range().value(), "pivot named-range source range");
       }
       case PivotTableReport.Source.Table table -> {
         WorkbookInvariantChecks.requireNonBlank(table.name(), "pivot table source name");
         WorkbookInvariantChecks.requireNonBlank(
             table.sheetName().value(), "pivot table source sheetName");
-        WorkbookInvariantChecks.requireNonBlank(table.range(), "pivot table source range");
+        WorkbookInvariantChecks.requireNonBlank(table.range().value(), "pivot table source range");
       }
     }
   }
@@ -566,7 +566,7 @@ final class WorkbookInvariantWorkbookSurfaceChecks {
     WorkbookInvariantChecks.requireNonBlank(
         anchor.topLeftAddress().value(), "pivot table anchor topLeftAddress");
     WorkbookInvariantChecks.requireNonBlank(
-        anchor.locationRange(), "pivot table anchor locationRange");
+        anchor.locationRange().value(), "pivot table anchor locationRange");
   }
 
   static void requirePivotTableFieldShape(PivotTableReport.Field field) {

@@ -33,7 +33,8 @@ public record SheetPresentationInput(
     Objects.requireNonNull(sheetDefaults, "sheetDefaults must not be null");
     ignoredErrors =
         List.copyOf(Objects.requireNonNull(ignoredErrors, "ignoredErrors must not be null"));
-    List<String> normalizedRanges = ignoredErrors.stream().map(IgnoredErrorInput::range).toList();
+    List<dev.erst.gridgrind.core.vocabulary.RangeRef> normalizedRanges =
+        ignoredErrors.stream().map(IgnoredErrorInput::range).toList();
     if (normalizedRanges.size() != new LinkedHashSet<>(normalizedRanges).size()) {
       throw new IllegalArgumentException("ignoredErrors must not contain duplicate ranges");
     }

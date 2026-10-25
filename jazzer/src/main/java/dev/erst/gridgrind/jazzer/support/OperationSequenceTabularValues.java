@@ -25,7 +25,8 @@ final class OperationSequenceTabularValues {
     return TableInput.withDefaultMetadata(
         tableName,
         new SheetName(sheetName),
-        validRange ? "A1:B3" : FuzzDataDecoders.nextNonBlankRange(data, false),
+        new dev.erst.gridgrind.core.vocabulary.RangeRef(
+            validRange ? "A1:B3" : FuzzDataDecoders.nextNonBlankRange(data, false)),
         data.consumeBoolean(),
         nextTableStyleInput(data));
   }
@@ -135,7 +136,8 @@ final class OperationSequenceTabularValues {
       case 0 ->
           new PivotTableInput.Source.Range(
               new SheetName(targetSheet),
-              validRange ? "A1:C4" : FuzzDataDecoders.nextNonBlankRange(data, false));
+              new dev.erst.gridgrind.core.vocabulary.RangeRef(
+                  validRange ? "A1:C4" : FuzzDataDecoders.nextNonBlankRange(data, false)));
       case 1 ->
           new PivotTableInput.Source.NamedRange(
               validName ? namedRangeName : nextNamedRangeName(data, false));

@@ -228,7 +228,7 @@ final class WorkbookCommandStructuredInputConverter {
     }
     return Optional.of(
         new ExcelAutofilterSortState(
-            sortState.range(),
+            sortState.range().value(),
             sortState.caseSensitive(),
             sortState.columnSort(),
             sortState.sortMethod(),
@@ -270,21 +270,22 @@ final class WorkbookCommandStructuredInputConverter {
       AutofilterSortConditionInput condition) {
     return switch (condition) {
       case AutofilterSortConditionInput.Value value ->
-          new ExcelAutofilterSortCondition.Value(value.range(), value.descending());
+          new ExcelAutofilterSortCondition.Value(value.range().value(), value.descending());
       case AutofilterSortConditionInput.CellColor cellColor ->
           new ExcelAutofilterSortCondition.CellColor(
-              cellColor.range(),
+              cellColor.range().value(),
               cellColor.descending(),
               WorkbookCommandCellInputConverter.toRequiredExcelColor(
                   cellColor.color(), "autofilter cell sort color"));
       case AutofilterSortConditionInput.FontColor fontColor ->
           new ExcelAutofilterSortCondition.FontColor(
-              fontColor.range(),
+              fontColor.range().value(),
               fontColor.descending(),
               WorkbookCommandCellInputConverter.toRequiredExcelColor(
                   fontColor.color(), "autofilter font sort color"));
       case AutofilterSortConditionInput.Icon icon ->
-          new ExcelAutofilterSortCondition.Icon(icon.range(), icon.descending(), icon.iconId());
+          new ExcelAutofilterSortCondition.Icon(
+              icon.range().value(), icon.descending(), icon.iconId());
     };
   }
 

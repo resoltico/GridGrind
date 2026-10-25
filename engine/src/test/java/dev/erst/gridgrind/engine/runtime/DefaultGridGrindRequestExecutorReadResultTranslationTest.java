@@ -298,7 +298,8 @@ class DefaultGridGrindRequestExecutorReadResultTranslationTest
         cast(SheetInspectionResult.MergedRegionsResult.class, merged)
             .mergedRegions()
             .getFirst()
-            .range());
+            .range()
+            .value());
     assertEquals(
         new HyperlinkTarget.Url("https://example.com/report"),
         cast(SheetInspectionResult.HyperlinksResult.class, hyperlinks)

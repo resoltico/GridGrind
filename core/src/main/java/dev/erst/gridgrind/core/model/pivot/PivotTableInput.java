@@ -9,6 +9,7 @@ import dev.erst.gridgrind.core.vocabulary.CellAddress;
 import dev.erst.gridgrind.core.vocabulary.ExcelPivotDataConsolidateFunction;
 import dev.erst.gridgrind.core.vocabulary.ExcelPivotTableNaming;
 import dev.erst.gridgrind.core.vocabulary.ProtocolDefinedNameValidation;
+import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
@@ -72,13 +73,10 @@ public record PivotTableInput(
   public sealed interface Source permits Source.Range, Source.NamedRange, Source.Table {
 
     /** Explicit contiguous sheet range source with a header row in the first row. */
-    record Range(SheetName sheetName, String range) implements Source {
+    record Range(SheetName sheetName, RangeRef range) implements Source {
       public Range {
         java.util.Objects.requireNonNull(sheetName, "sheetName must not be null");
         Objects.requireNonNull(range, "range must not be null");
-        if (range.isBlank()) {
-          throw new IllegalArgumentException("range must not be blank");
-        }
       }
     }
 

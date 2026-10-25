@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.core.plan;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -8,6 +9,7 @@ import dev.erst.gridgrind.core.model.style.RichTextRunInput;
 import dev.erst.gridgrind.core.model.value.CellInput;
 import dev.erst.gridgrind.core.source.TextSourceInput;
 import dev.erst.gridgrind.core.vocabulary.CellAddress;
+import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -17,6 +19,24 @@ import org.junit.jupiter.api.Test;
 
 /** Validation coverage for selector-first protocol targeting types. */
 class SelectorTypesTest {
+  @Test
+  void rectangularWindowsCannotExtendBeyondWorksheetCoordinates() {
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new RangeSelector.RectangularWindow(
+                new SheetName("Data"), new CellAddress("A1048576"), 2, 1));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new RangeSelector.RectangularWindow(
+                new SheetName("Data"), new CellAddress("XFD1"), 1, 2));
+    assertDoesNotThrow(
+        () ->
+            new RangeSelector.RectangularWindow(
+                new SheetName("Data"), new CellAddress("XFD1048576"), 1, 1));
+  }
+
   @Test
   void allSelectorFamiliesExposeExpectedCardinalityContracts() {
     assertEquals(SelectorCardinality.EXACTLY_ONE, new WorkbookSelector.Current().cardinality());
@@ -46,10 +66,11 @@ class SelectorTypesTest {
         new RangeSelector.AllOnSheet(new SheetName("Budget")).cardinality());
     assertEquals(
         SelectorCardinality.EXACTLY_ONE,
-        new RangeSelector.ByRange(new SheetName("Budget"), "A1:B2").cardinality());
+        new RangeSelector.ByRange(new SheetName("Budget"), new RangeRef("A1:B2")).cardinality());
     assertEquals(
         SelectorCardinality.ONE_OR_MORE,
-        new RangeSelector.ByRanges(new SheetName("Budget"), List.of("A1:A2", "C3:D4"))
+        new RangeSelector.ByRanges(
+                new SheetName("Budget"), List.of(new RangeRef("A1:A2"), new RangeRef("C3:D4")))
             .cardinality());
     assertEquals(
         SelectorCardinality.EXACTLY_ONE,
@@ -167,10 +188,12 @@ class SelectorTypesTest {
 
     RangeSelector.RectangularWindow window =
         new RangeSelector.RectangularWindow(new SheetName("Budget"), new CellAddress("B3"), 2, 3);
-    assertEquals("B3:D4", window.range());
+    assertEquals("B3:D4", window.range().value());
     assertThrows(
         IllegalArgumentException.class,
-        () -> new RangeSelector.ByRanges(new SheetName("Budget"), List.of("A1:A2", "A1:A2")));
+        () ->
+            new RangeSelector.ByRanges(
+                new SheetName("Budget"), List.of(new RangeRef("A1:A2"), new RangeRef("A1:A2"))));
   }
 
   @Test

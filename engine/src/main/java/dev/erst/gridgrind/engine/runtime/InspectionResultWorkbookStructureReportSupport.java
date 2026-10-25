@@ -15,6 +15,7 @@ import dev.erst.gridgrind.core.model.table.TableColumnReport;
 import dev.erst.gridgrind.core.model.table.TableEntryReport;
 import dev.erst.gridgrind.core.model.table.TableStyleReport;
 import dev.erst.gridgrind.core.vocabulary.CellAddress;
+import dev.erst.gridgrind.core.vocabulary.RangeLabel;
 import dev.erst.gridgrind.core.vocabulary.SheetLabel;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.excel.ExcelAutofilterFilterColumnSnapshot;
@@ -93,7 +94,7 @@ final class InspectionResultWorkbookStructureReportSupport {
         new SheetLabel(snapshot.sheetName()),
         snapshot.tableName(),
         snapshot.tableDisplayName(),
-        snapshot.range(),
+        new RangeLabel(snapshot.range()),
         snapshot.commonXPath());
   }
 
@@ -109,7 +110,7 @@ final class InspectionResultWorkbookStructureReportSupport {
       dev.erst.gridgrind.excel.ExcelArrayFormulaSnapshot snapshot) {
     return new dev.erst.gridgrind.core.model.formula.ArrayFormulaReport(
         new SheetLabel(snapshot.sheetName()),
-        snapshot.range(),
+        new RangeLabel(snapshot.range()),
         new CellAddress(snapshot.topLeftAddress()),
         snapshot.formula(),
         snapshot.singleCell());
@@ -119,7 +120,7 @@ final class InspectionResultWorkbookStructureReportSupport {
     return switch (snapshot) {
       case ExcelAutofilterSnapshot.SheetOwned sheetOwned ->
           new AutofilterEntryReport.SheetOwned(
-              sheetOwned.range(),
+              new RangeLabel(sheetOwned.range()),
               sheetOwned.filterColumns().stream()
                   .map(
                       InspectionResultWorkbookStructureReportSupport
@@ -131,7 +132,7 @@ final class InspectionResultWorkbookStructureReportSupport {
                       InspectionResultWorkbookStructureReportSupport::toAutofilterSortStateReport));
       case ExcelAutofilterSnapshot.TableOwned tableOwned ->
           new AutofilterEntryReport.TableOwned(
-              tableOwned.range(),
+              new RangeLabel(tableOwned.range()),
               tableOwned.tableName(),
               tableOwned.filterColumns().stream()
                   .map(
@@ -149,7 +150,7 @@ final class InspectionResultWorkbookStructureReportSupport {
     return new TableEntryReport(
         snapshot.name(),
         new SheetLabel(snapshot.sheetName()),
-        snapshot.range(),
+        new RangeLabel(snapshot.range()),
         new TableEntryReport.Structure(
             snapshot.structure().headerRowCount(),
             snapshot.structure().totalsRowCount(),
@@ -178,7 +179,7 @@ final class InspectionResultWorkbookStructureReportSupport {
               new SheetName(supported.sheetName()),
               new PivotTableReport.Anchor(
                   new CellAddress(supported.anchor().topLeftAddress()),
-                  supported.anchor().locationRange()),
+                  new RangeLabel(supported.anchor().locationRange())),
               toPivotTableSourceReport(supported.source()),
               supported.rowLabels().stream()
                   .map(
@@ -215,7 +216,7 @@ final class InspectionResultWorkbookStructureReportSupport {
               new SheetName(unsupported.sheetName()),
               new PivotTableReport.Anchor(
                   new CellAddress(unsupported.anchor().topLeftAddress()),
-                  unsupported.anchor().locationRange()),
+                  new RangeLabel(unsupported.anchor().locationRange())),
               unsupported.detail());
     };
   }
@@ -224,13 +225,16 @@ final class InspectionResultWorkbookStructureReportSupport {
       ExcelPivotTableSnapshot.Source source) {
     return switch (source) {
       case ExcelPivotTableSnapshot.Source.Range range ->
-          new PivotTableReport.Source.Range(new SheetName(range.sheetName()), range.range());
+          new PivotTableReport.Source.Range(
+              new SheetName(range.sheetName()), new RangeLabel(range.range()));
       case ExcelPivotTableSnapshot.Source.NamedRange namedRange ->
           new PivotTableReport.Source.NamedRange(
-              namedRange.name(), new SheetName(namedRange.sheetName()), namedRange.range());
+              namedRange.name(),
+              new SheetName(namedRange.sheetName()),
+              new RangeLabel(namedRange.range()));
       case ExcelPivotTableSnapshot.Source.Table table ->
           new PivotTableReport.Source.Table(
-              table.name(), new SheetName(table.sheetName()), table.range());
+              table.name(), new SheetName(table.sheetName()), new RangeLabel(table.range()));
     };
   }
 
@@ -273,7 +277,7 @@ final class InspectionResultWorkbookStructureReportSupport {
   private static AutofilterSortStateReport toAutofilterSortStateReport(
       ExcelAutofilterSortStateSnapshot sortState) {
     return new AutofilterSortStateReport(
-        sortState.range(),
+        new RangeLabel(sortState.range()),
         sortState.caseSensitive(),
         sortState.columnSort(),
         sortState.sortMethod(),
@@ -286,19 +290,21 @@ final class InspectionResultWorkbookStructureReportSupport {
       ExcelAutofilterSortConditionSnapshot condition) {
     return switch (condition) {
       case ExcelAutofilterSortConditionSnapshot.Value value ->
-          new AutofilterSortConditionReport.Value(value.range(), value.descending());
+          new AutofilterSortConditionReport.Value(
+              new RangeLabel(value.range()), value.descending());
       case ExcelAutofilterSortConditionSnapshot.CellColor cellColor ->
           new AutofilterSortConditionReport.CellColor(
-              cellColor.range(),
+              new RangeLabel(cellColor.range()),
               cellColor.descending(),
               InspectionResultCellReportSupport.toCellColorReport(cellColor.color()).orElseThrow());
       case ExcelAutofilterSortConditionSnapshot.FontColor fontColor ->
           new AutofilterSortConditionReport.FontColor(
-              fontColor.range(),
+              new RangeLabel(fontColor.range()),
               fontColor.descending(),
               InspectionResultCellReportSupport.toCellColorReport(fontColor.color()).orElseThrow());
       case ExcelAutofilterSortConditionSnapshot.Icon icon ->
-          new AutofilterSortConditionReport.Icon(icon.range(), icon.descending(), icon.iconId());
+          new AutofilterSortConditionReport.Icon(
+              new RangeLabel(icon.range()), icon.descending(), icon.iconId());
     };
   }
 

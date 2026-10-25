@@ -37,6 +37,7 @@ import dev.erst.gridgrind.core.vocabulary.ExcelFillPattern;
 import dev.erst.gridgrind.core.vocabulary.ExcelHorizontalAlignment;
 import dev.erst.gridgrind.core.vocabulary.ExcelVerticalAlignment;
 import dev.erst.gridgrind.core.vocabulary.NamedRangeScope;
+import dev.erst.gridgrind.core.vocabulary.RangeLabel;
 import dev.erst.gridgrind.core.vocabulary.SheetLabel;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import java.math.BigDecimal;
@@ -405,7 +406,9 @@ class WorkbookResultTest {
     assertEquals("BLANK", blankCell.type());
     assertEquals(java.util.Optional.empty(), blankCell.hyperlink());
     assertEquals(java.util.Optional.empty(), blankCell.comment());
-    assertEquals(Optional.empty(), new AutofilterEntryReport.SheetOwned("A1:B2").sortState());
+    assertEquals(
+        Optional.empty(),
+        new AutofilterEntryReport.SheetOwned(new RangeLabel("A1:B2")).sortState());
     assertEquals(java.util.Optional.of("/tmp/request.json"), readRequest.requestPath());
     assertEquals(java.util.Optional.of("steps[0]"), readRequest.jsonPath());
     assertEquals(java.util.Optional.of(4), readRequest.jsonLine());
@@ -503,10 +506,11 @@ class WorkbookResultTest {
   @Test
   void autofilterEntryDefaultSortStateDispatchesAcrossTableOwnedEntries() {
     AutofilterSortStateReport sortState =
-        AutofilterSortStateReport.withoutSortMethod("A1:B4", false, true, List.of());
+        AutofilterSortStateReport.withoutSortMethod(
+            new RangeLabel("A1:B4"), false, true, List.of());
     AutofilterEntryReport entry =
         new AutofilterEntryReport.TableOwned(
-            "A1:B4", "BudgetTable", List.of(), Optional.of(sortState));
+            new RangeLabel("A1:B4"), "BudgetTable", List.of(), Optional.of(sortState));
 
     assertEquals(Optional.of(sortState), entry.sortState());
   }

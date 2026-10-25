@@ -19,6 +19,7 @@ import dev.erst.gridgrind.core.plan.StructuredMutationAction;
 import dev.erst.gridgrind.core.plan.WorkbookAssetIntrospectionQuery;
 import dev.erst.gridgrind.core.plan.WorkbookMutationAction;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
+import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import java.util.List;
@@ -162,7 +163,7 @@ final class PivotReportTaskRecipe {
                 TableInput.withDefaultMetadata(
                     "PivotSource",
                     new SheetName("Data"),
-                    "A1:D5",
+                    new RangeRef("A1:D5"),
                     false,
                     new TableStyleInput.Named("TableStyleMedium9", false, false, true, false)))),
         ExampleSteps.step(

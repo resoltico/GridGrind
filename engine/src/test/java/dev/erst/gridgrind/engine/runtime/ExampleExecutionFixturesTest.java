@@ -35,6 +35,46 @@ class ExampleExecutionFixturesTest {
   @TempDir Path tempDir;
 
   @Test
+  void observedMalformedValidationRangesRemainVisible() throws IOException {
+    Path source = tempDir.resolve("observed-range.xlsx");
+    try (var workbook = new org.apache.poi.xssf.usermodel.XSSFWorkbook()) {
+      var sheet = workbook.createSheet("Data");
+      var validation = sheet.getCTWorksheet().addNewDataValidations().addNewDataValidation();
+      var node = (org.w3c.dom.Element) validation.getDomNode();
+      node.setAttribute("type", "future-validation");
+      node.setAttribute("sqref", "#REF!");
+      try (OutputStream output = Files.newOutputStream(source)) {
+        workbook.write(output);
+      }
+    }
+    WorkbookPlan request =
+        GridGrindJson.readRequest(
+            """
+        {"protocolVersion":"V3","source":{"type":"EXISTING","path":"observed-range.xlsx"},
+        "persistence":{"type":"NONE"},"steps":[{"stepId":"ranges",
+        "target":{"type":"RANGE_ALL_ON_SHEET","sheetName":"Data"},"query":{"type":"GET_DATA_VALIDATIONS"}}]}
+        """);
+    var result =
+        assertInstanceOf(
+            WorkbookResult.Success.class,
+            new DefaultGridGrindRequestExecutor()
+                .execute(request, bindingsForExample(tempDir, request)));
+    var validations =
+        assertInstanceOf(
+            dev.erst.gridgrind.core.plan.SheetInspectionResult.DataValidationsResult.class,
+            result.inspections().getFirst());
+    var unsupported =
+        assertInstanceOf(
+            dev.erst.gridgrind.core.model.validation.DataValidationEntryReport.Unsupported.class,
+            validations.validations().getFirst());
+    assertEquals("#REF!", unsupported.ranges().getFirst().value());
+    assertEquals("UNKNOWN", unsupported.kind());
+    assertEquals(
+        result,
+        GridGrindJson.readWorkbookResult(GridGrindJsonOutput.writeWorkbookResultBytes(result)));
+  }
+
+  @Test
   void observedWorksheetLabelsDoNotAcquireAuthoringNameRestrictions() throws IOException {
     Path source = tempDir.resolve("observed-label.xlsx");
     try (var workbook = new org.apache.poi.xssf.usermodel.XSSFWorkbook()) {

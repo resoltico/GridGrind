@@ -710,3 +710,43 @@ factual range-label value, alongside strict authored ranges. Keep selector-speci
 ordering (the backend rectangle parser normalizes reversed endpoints). Print-area readback was
 also inspected: it normalizes stored formulas to local rectangular references; its authoring
 path parses one rectangle, so no speculative print-area expression abstraction is needed.
+
+### WP-21 authored and factual range fields
+
+Authored model/authoring range fields now carry `RangeRef`; factual report fields carry
+`RangeLabel`, preserving raw malformed references established by the reopened-workbook probe.
+Both serialize as strings. Added generated valid/invalid range-label properties (including
+`#REF!`, qualified and future labels), and a persisted unsupported-validation regression proving
+its stored `#REF!` survives readback and complete response round-trip. The named-module response
+probe now includes that fact; ten scalar types are exercised.
+
+`RangeRef` owns syntax/bounds validation with structured range/address rules. Selector ordering
+remains a separate invariant, checked before duplicate detection in each range-list entry.
+Removed obsolete selector address/range-format helpers and their deleted-branch assertions;
+public value properties and typed syntax/remediation checks exercise the replacement. Typed
+mutable input lists preserve defensive-copy test assurance. Updated Java examples, recipes,
+fuzz producers and independent parity text projections. No aliases or snapshot re-recording.
+
+A red test confirmed that a valid anchor plus positive, size-bounded dimensions could extend past
+the last Excel row/column. Window construction now rejects this inconsistent combination and
+retains the valid `XFD1048576` 1x1 case; computed windows return `RangeRef`. The red test initially
+needed its missing assertion import fixed; `ranges-window-red-confirmed.log` and the retained XML
+show the actual intended failure before the production correction. This is a coordinate-domain
+invariant, not a new size policy. Field/count validation order and existing read-cell limits stay.
+
+Focused core/codec tests, all 14 parity cases and the persisted-range regression passed (45s).
+The first compile/check pass exposed five text/value parity comparisons and one mutable-list
+input, corrected without changing expected facts. Standard PMD's threshold also required a
+scoped `ExcessiveImports` suppression on the complete dashboard recipe (30 imports), documented
+in place; no ruleset changes or recipe fragmentation. Evidence retained in `ranges-failures/`.
+Nested fuzz support and committed replay passed (20s) after projecting factual range text and
+constructing typed conditional inputs; model constraints were not caught or bypassed.
+
+Final `./gradlew check` passed (3m20s): core 329, JSON 341, engine 1,511, CLI 598, architecture 35;
+2,814 tests, zero failures/skips; all 141 golden cases byte-identical. Named modules passed 14
+requests, catalog, response with malformed-range evidence and ten values. Inventories: blank
+checks 451 -> 440; main Java 126,567 -> 126,643; test Java 154,832 -> 155,129; model/subtype counts
+unchanged. External evidence: `ranges-*.log`, inventories, failures, red test XML, range field list,
+compiler migration logs and `range-observations/`. Baseline diff empty; no supplement.
+Next: RGB fields and remaining names. Optional fields follow the adopted `Optional<T>` rule
+(target architecture section 4); a nullable data-bar color needs that explicit representation.

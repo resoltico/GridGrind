@@ -28,6 +28,7 @@ import dev.erst.gridgrind.core.vocabulary.ExcelChartBarDirection;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartDisplayBlanksAs;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartLegendPosition;
 import dev.erst.gridgrind.core.vocabulary.ExcelDrawingAnchorBehavior;
+import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.engine.runtime.parity.XlsxParityProbeRegistry.ProbeContext;
 import dev.erst.gridgrind.engine.runtime.parity.XlsxParityProbeRegistry.ProbeResult;
@@ -731,7 +732,8 @@ final class XlsxParityDrawingChartPivotProbeGroup {
                         new PivotTableInput(
                             "Sales Pivot",
                             new SheetName("RangeReport"),
-                            new PivotTableInput.Source.Range(new SheetName("Data"), "A1:D5"),
+                            new PivotTableInput.Source.Range(
+                                new SheetName("Data"), new RangeRef("A1:D5")),
                             new PivotTableInput.Anchor(new CellAddress("D6")),
                             List.of("Stage"),
                             List.of("Region"),

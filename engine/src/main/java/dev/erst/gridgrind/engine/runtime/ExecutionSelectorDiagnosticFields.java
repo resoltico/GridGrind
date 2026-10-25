@@ -55,15 +55,15 @@ final class ExecutionSelectorDiagnosticFields {
 
   static Optional<String> rangeFor(Selector selector) {
     if (selector instanceof RangeSelector.ByRange byRange) {
-      return Optional.of(byRange.range());
+      return Optional.of(byRange.range().value());
     }
     if (selector instanceof RangeSelector.ByRanges byRanges) {
       return byRanges.ranges().size() == 1
-          ? Optional.of(byRanges.ranges().getFirst())
+          ? Optional.of(byRanges.ranges().getFirst().value())
           : Optional.empty();
     }
     if (selector instanceof RangeSelector.RectangularWindow window) {
-      return Optional.of(window.range());
+      return Optional.of(window.range().value());
     }
     return Optional.empty();
   }

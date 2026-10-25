@@ -96,6 +96,8 @@ import dev.erst.gridgrind.core.vocabulary.ExcelPivotDataConsolidateFunction;
 import dev.erst.gridgrind.core.vocabulary.ExcelPrintOrientation;
 import dev.erst.gridgrind.core.vocabulary.PlanId;
 import dev.erst.gridgrind.core.vocabulary.ProtocolRgbColorSupport;
+import dev.erst.gridgrind.core.vocabulary.RangeLabel;
+import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.core.vocabulary.SheetLabel;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import java.util.List;
@@ -137,12 +139,13 @@ class ProtocolDefaultingCoverageTest {
         new WorkbookProtectionInput(
             false, false, false, java.util.Optional.empty(), java.util.Optional.empty());
     AutofilterSortConditionInput sortCondition =
-        new AutofilterSortConditionInput.Value("A1:A2", true);
+        new AutofilterSortConditionInput.Value(new RangeRef("A1:A2"), true);
     AutofilterFilterColumnInput filterColumn =
         new AutofilterFilterColumnInput(
             1L, true, new AutofilterFilterCriterionInput.Values(List.of("Ready"), false));
     AutofilterSortStateInput sortState =
-        AutofilterSortStateInput.withoutSortMethod("A1:B2", false, false, List.of(sortCondition));
+        AutofilterSortStateInput.withoutSortMethod(
+            new RangeRef("A1:B2"), false, false, List.of(sortCondition));
     FormulaUdfFunctionInput udfFunction = new FormulaUdfFunctionInput("DOUBLE", 1, "ARG1*2");
     FormulaUdfFunctionInput explicitUdfFunction =
         new FormulaUdfFunctionInput("TRIPLE", 1, Integer.valueOf(3), "ARG1*3");
@@ -321,16 +324,17 @@ class ProtocolDefaultingCoverageTest {
     AutofilterFilterCriterionInput.Values criterion =
         new AutofilterFilterCriterionInput.Values(List.of("Ready"), false);
     AutofilterSortConditionInput valueCondition =
-        new AutofilterSortConditionInput.Value("A1:A4", true);
+        new AutofilterSortConditionInput.Value(new RangeRef("A1:A4"), true);
     AutofilterFilterColumnInput visibleButtonColumn =
         new AutofilterFilterColumnInput(2L, Boolean.TRUE, criterion);
     AutofilterFilterColumnInput hiddenButtonColumn =
         new AutofilterFilterColumnInput(2L, Boolean.FALSE, criterion);
     AutofilterSortStateInput defaultedSortState =
-        AutofilterSortStateInput.withoutSortMethod("A1:B4", false, false, List.of(valueCondition));
+        AutofilterSortStateInput.withoutSortMethod(
+            new RangeRef("A1:B4"), false, false, List.of(valueCondition));
     AutofilterSortStateInput explicitSortState =
         new AutofilterSortStateInput(
-            "A1:B4",
+            new RangeRef("A1:B4"),
             Boolean.TRUE,
             Boolean.TRUE,
             Optional.of(ExcelAutofilterSortMethod.PINYIN),
@@ -372,7 +376,11 @@ class ProtocolDefaultingCoverageTest {
     assertTrue(new AutofilterFilterColumnInput(2L, (Boolean) null, criterion).showButton());
     AutofilterSortStateInput defaultedWireSortState =
         new AutofilterSortStateInput(
-            "A1:B4", (Boolean) null, (Boolean) null, Optional.empty(), List.of(valueCondition));
+            new RangeRef("A1:B4"),
+            (Boolean) null,
+            (Boolean) null,
+            Optional.empty(),
+            List.of(valueCondition));
     assertFalse(defaultedWireSortState.caseSensitive());
     assertFalse(defaultedWireSortState.columnSort());
     assertEquals(Optional.empty(), defaultedWireSortState.sortMethod());
@@ -383,10 +391,14 @@ class ProtocolDefaultingCoverageTest {
     CommentInput comment =
         new CommentInput(text("Owner note"), "Ada", (Boolean) null, nullOptional(), nullOptional());
     AutofilterSortConditionInput valueCondition =
-        new AutofilterSortConditionInput.Value("A1:A4", true);
+        new AutofilterSortConditionInput.Value(new RangeRef("A1:A4"), true);
     AutofilterSortStateInput defaultedSortState =
         new AutofilterSortStateInput(
-            "A1:B4", Boolean.FALSE, Boolean.TRUE, nullOptional(), List.of(valueCondition));
+            new RangeRef("A1:B4"),
+            Boolean.FALSE,
+            Boolean.TRUE,
+            nullOptional(),
+            List.of(valueCondition));
     WorkbookProtectionInput protection =
         new WorkbookProtectionInput(null, null, null, nullOptional(), nullOptional());
     PivotTableInput.DataField dataField =
@@ -430,12 +442,16 @@ class ProtocolDefaultingCoverageTest {
   void tableWireConstructorsCoverExplicitAndDefaultedBranches() {
     TableInput defaultedTable =
         TableInput.withDefaultMetadata(
-            "Budget", new SheetName("Budget"), "A1:B3", false, new TableStyleInput.None());
+            "Budget",
+            new SheetName("Budget"),
+            new RangeRef("A1:B3"),
+            false,
+            new TableStyleInput.None());
     TableInput explicitTable =
         new TableInput(
             "StyledBudget",
             new dev.erst.gridgrind.core.vocabulary.SheetName("Budget"),
-            "A1:C3",
+            new RangeRef("A1:C3"),
             true,
             false,
             new TableStyleInput.Named("TableStyleMedium2", true, false, true, false),
@@ -451,7 +467,7 @@ class ProtocolDefaultingCoverageTest {
         new TableInput(
             "VisibleAutofilterBudget",
             new dev.erst.gridgrind.core.vocabulary.SheetName("Budget"),
-            "A1:C3",
+            new RangeRef("A1:C3"),
             Boolean.FALSE,
             Boolean.TRUE,
             new TableStyleInput.None(),
@@ -467,7 +483,7 @@ class ProtocolDefaultingCoverageTest {
         new TableInput(
             "TotalsWithoutAutofilterBudget",
             new dev.erst.gridgrind.core.vocabulary.SheetName("Budget"),
-            "A1:C3",
+            new RangeRef("A1:C3"),
             Boolean.TRUE,
             Boolean.FALSE,
             new TableStyleInput.None(),
@@ -483,7 +499,7 @@ class ProtocolDefaultingCoverageTest {
         new TableEntryReport(
             "BudgetTable",
             new SheetLabel("Budget"),
-            "A1:B3",
+            new RangeLabel("A1:B3"),
             new TableEntryReport.Structure(
                 1, 0, List.of("Owner"), List.of(new TableColumnReport(0L, "Owner"))),
             new TableStyleReport.None(),
@@ -517,7 +533,7 @@ class ProtocolDefaultingCoverageTest {
         new TableInput(
             "Budget",
             new SheetName("Budget"),
-            "A1:B3",
+            new RangeRef("A1:B3"),
             null,
             null,
             new TableStyleInput.None(),
@@ -707,14 +723,16 @@ class ProtocolDefaultingCoverageTest {
             List.of());
     TableColumnReport tableColumn = new TableColumnReport(4L, "Owner");
     AutofilterSortConditionReport conditionReport =
-        new AutofilterSortConditionReport.CellColor("B2:B9", false, CellColorReport.rgb("#aabbcc"));
+        new AutofilterSortConditionReport.CellColor(
+            new RangeLabel("B2:B9"), false, CellColorReport.rgb("#aabbcc"));
     AutofilterSortConditionReport createdConditionReport =
-        new AutofilterSortConditionReport.Icon("C2:C9", true, 2);
+        new AutofilterSortConditionReport.Icon(new RangeLabel("C2:C9"), true, 2);
     AutofilterSortStateReport stateReport =
-        AutofilterSortStateReport.withoutSortMethod("A1:F9", false, true, List.of(conditionReport));
+        AutofilterSortStateReport.withoutSortMethod(
+            new RangeLabel("A1:F9"), false, true, List.of(conditionReport));
     AutofilterSortStateReport createdStateReport =
         AutofilterSortStateReport.withoutSortMethod(
-            "A1:F9", true, false, List.of(createdConditionReport));
+            new RangeLabel("A1:F9"), true, false, List.of(createdConditionReport));
     BorderSideInput borderSide =
         new BorderSideInput(Optional.of(ExcelBorderStyle.THIN), Optional.empty());
     DifferentialBorderInput borderInput =
@@ -734,22 +752,22 @@ class ProtocolDefaultingCoverageTest {
             Optional.empty(),
             Optional.empty());
     AutofilterSortConditionInput explicitSortCondition =
-        new AutofilterSortConditionInput.Icon("D2:D9", false, 1);
+        new AutofilterSortConditionInput.Icon(new RangeRef("D2:D9"), false, 1);
     AutofilterFilterColumnInput explicitFilterColumn =
         new AutofilterFilterColumnInput(
             2L, false, new AutofilterFilterCriterionInput.Values(List.of("Queued"), true));
     AutofilterSortStateInput explicitSortState =
         new AutofilterSortStateInput(
-            "A1:D9",
+            new RangeRef("A1:D9"),
             true,
             true,
             Optional.of(ExcelAutofilterSortMethod.PINYIN),
             List.of(explicitSortCondition));
     AutofilterSortConditionReport explicitConditionReport =
-        new AutofilterSortConditionReport.Icon("D2:D9", false, 1);
+        new AutofilterSortConditionReport.Icon(new RangeLabel("D2:D9"), false, 1);
     AutofilterSortStateReport explicitStateReport =
         new AutofilterSortStateReport(
-            "A1:D9",
+            new RangeLabel("A1:D9"),
             true,
             true,
             Optional.of(ExcelAutofilterSortMethod.PINYIN),
@@ -765,7 +783,7 @@ class ProtocolDefaultingCoverageTest {
             explicitSheetDefaults,
             List.of(
                 new IgnoredErrorInput(
-                    "A1:A3", List.of(ExcelIgnoredErrorType.NUMBER_STORED_AS_TEXT))));
+                    new RangeRef("A1:A3"), List.of(ExcelIgnoredErrorType.NUMBER_STORED_AS_TEXT))));
     FormulaEnvironmentInput explicitEnvironment =
         new FormulaEnvironmentInput(
             List.of(new FormulaExternalWorkbookInput("Rates.xlsx", "tmp/rates.xlsx")),

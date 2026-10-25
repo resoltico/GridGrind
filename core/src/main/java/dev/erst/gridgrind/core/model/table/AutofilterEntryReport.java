@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import dev.erst.gridgrind.core.vocabulary.RangeLabel;
 import java.util.ArrayList;
 import java.util.Objects;
 import java.util.Optional;
@@ -18,7 +19,7 @@ public sealed interface AutofilterEntryReport
     permits AutofilterEntryReport.SheetOwned, AutofilterEntryReport.TableOwned {
 
   /** Raw A1-style filter range text as stored in the workbook. */
-  String range();
+  RangeLabel range();
 
   /** Persisted filter-column criteria carried by the autofilter. */
   java.util.List<AutofilterFilterColumnReport> filterColumns();
@@ -28,13 +29,13 @@ public sealed interface AutofilterEntryReport
 
   /** One sheet-owned autofilter stored directly on the worksheet. */
   record SheetOwned(
-      String range,
+      RangeLabel range,
       java.util.List<AutofilterFilterColumnReport> filterColumns,
       @JsonProperty("sortState") @JsonInclude(JsonInclude.Include.NON_ABSENT)
           Optional<AutofilterSortStateReport> sortState)
       implements AutofilterEntryReport {
     /** Creates a sheet-owned autofilter report with no persisted criteria or sort state. */
-    public SheetOwned(String range) {
+    public SheetOwned(RangeLabel range) {
       this(range, java.util.List.of(), Optional.empty());
     }
 
@@ -47,14 +48,14 @@ public sealed interface AutofilterEntryReport
 
   /** One table-owned autofilter stored on a table definition. */
   record TableOwned(
-      String range,
+      RangeLabel range,
       String tableName,
       java.util.List<AutofilterFilterColumnReport> filterColumns,
       @JsonProperty("sortState") @JsonInclude(JsonInclude.Include.NON_ABSENT)
           Optional<AutofilterSortStateReport> sortState)
       implements AutofilterEntryReport {
     /** Creates a table-owned autofilter report with no persisted criteria or sort state. */
-    public TableOwned(String range, String tableName) {
+    public TableOwned(RangeLabel range, String tableName) {
       this(range, tableName, java.util.List.of(), Optional.empty());
     }
 

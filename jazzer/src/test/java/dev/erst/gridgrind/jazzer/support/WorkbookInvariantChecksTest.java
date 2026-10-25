@@ -140,6 +140,8 @@ import dev.erst.gridgrind.core.vocabulary.ExcelSheetVisibility;
 import dev.erst.gridgrind.core.vocabulary.ExcelVerticalAlignment;
 import dev.erst.gridgrind.core.vocabulary.NamedRangeBackingKind;
 import dev.erst.gridgrind.core.vocabulary.NamedRangeScope;
+import dev.erst.gridgrind.core.vocabulary.RangeLabel;
+import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.core.vocabulary.SheetLabel;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.StepId;
@@ -201,7 +203,7 @@ class WorkbookInvariantChecksTest {
                             "BudgetTotal",
                             new NamedRangeScope.Workbook(),
                             "Budget!$B$4",
-                            NamedRangeTarget.range(new SheetName("Budget"), "B4")))),
+                            NamedRangeTarget.range(new SheetName("Budget"), new RangeRef("B4"))))),
                 new SheetInspectionResult.CellsResult(
                     new StepId("cells"),
                     new SheetLabel("Budget"),
@@ -247,7 +249,7 @@ class WorkbookInvariantChecksTest {
                 new SheetInspectionResult.MergedRegionsResult(
                     new StepId("merged"),
                     new SheetLabel("Budget"),
-                    List.of(new MergedRegionReport("A1:B1"))),
+                    List.of(new MergedRegionReport(new RangeLabel("A1:B1")))),
                 new SheetInspectionResult.HyperlinksResult(
                     new StepId("hyperlinks"),
                     new SheetLabel("Budget"),
@@ -275,7 +277,7 @@ class WorkbookInvariantChecksTest {
                     new StepId("print-layout"),
                     new PrintLayoutReport(
                         new SheetLabel("Budget"),
-                        new PrintAreaReport.Range("A1:B20"),
+                        new PrintAreaReport.Range(new RangeLabel("A1:B20")),
                         ExcelPrintOrientation.LANDSCAPE,
                         new PrintScalingReport.Fit(1, 0),
                         new PrintTitleRowsReport.Band(0, 0),
@@ -287,7 +289,7 @@ class WorkbookInvariantChecksTest {
                     new SheetLabel("Budget"),
                     List.of(
                         new DataValidationEntryReport.Supported(
-                            List.of("A2:A5"),
+                            List.of(new RangeLabel("A2:A5")),
                             new DataValidationEntryReport.DataValidationDefinitionReport(
                                 new DataValidationRuleInput.WholeNumber(
                                     ExcelComparisonOperator.GREATER_OR_EQUAL,
@@ -439,7 +441,9 @@ class WorkbookInvariantChecksTest {
                     new SheetLabel("Budget"),
                     List.of(
                         new DataValidationEntryReport.Unsupported(
-                            List.of("A2:A5"), "MISSING_FORMULA", "Formula is missing"))),
+                            List.of(new RangeLabel("A2:A5")),
+                            "MISSING_FORMULA",
+                            "Formula is missing"))),
                 new SheetInspectionResult.HyperlinksResult(
                     new StepId("hyperlinks"),
                     new SheetLabel("Budget"),
@@ -565,15 +569,16 @@ class WorkbookInvariantChecksTest {
                     new StepId("autofilters"),
                     new SheetLabel("Budget"),
                     List.of(
-                        new AutofilterEntryReport.SheetOwned("E1:F3"),
-                        new AutofilterEntryReport.TableOwned("A1:C4", "BudgetTable"))),
+                        new AutofilterEntryReport.SheetOwned(new RangeLabel("E1:F3")),
+                        new AutofilterEntryReport.TableOwned(
+                            new RangeLabel("A1:C4"), "BudgetTable"))),
                 new WorkbookAssetInspectionResult.TablesResult(
                     new StepId("tables"),
                     List.of(
                         new TableEntryReport(
                             "BudgetTable",
                             new SheetLabel("Budget"),
-                            "A1:C4",
+                            new RangeLabel("A1:C4"),
                             1,
                             0,
                             List.of("Item", "Amount", "Billable"),
@@ -624,14 +629,14 @@ class WorkbookInvariantChecksTest {
                 new SheetInspectionResult.AutofiltersResult(
                     new StepId("autofilters"),
                     new SheetLabel("Budget"),
-                    List.of(new AutofilterEntryReport.SheetOwned("E1:F3"))),
+                    List.of(new AutofilterEntryReport.SheetOwned(new RangeLabel("E1:F3")))),
                 new WorkbookAssetInspectionResult.TablesResult(
                     new StepId("tables"),
                     List.of(
                         new TableEntryReport(
                             "BudgetTable",
                             new SheetLabel("Budget"),
-                            "A1:C4",
+                            new RangeLabel("A1:C4"),
                             1,
                             0,
                             List.of("Item", "Amount", "Billable"),
@@ -842,7 +847,7 @@ class WorkbookInvariantChecksTest {
                     new StepId("print-layout"),
                     new PrintLayoutReport(
                         new SheetLabel("Budget"),
-                        new PrintAreaReport.Range("A1:C20"),
+                        new PrintAreaReport.Range(new RangeLabel("A1:C20")),
                         ExcelPrintOrientation.LANDSCAPE,
                         new PrintScalingReport.Fit(1, 0),
                         new PrintTitleRowsReport.Band(0, 0),
@@ -867,7 +872,7 @@ class WorkbookInvariantChecksTest {
                     new SheetLabel("Budget"),
                     List.of(
                         new AutofilterEntryReport.TableOwned(
-                            "A1:C5",
+                            new RangeLabel("A1:C5"),
                             "BudgetTable",
                             List.of(
                                 new AutofilterFilterColumnReport(
@@ -877,20 +882,20 @@ class WorkbookInvariantChecksTest {
                                         List.of("Open", "Closed"), true))),
                             Optional.of(
                                 new AutofilterSortStateReport(
-                                    "A2:C5",
+                                    new RangeLabel("A2:C5"),
                                     false,
                                     false,
                                     java.util.Optional.empty(),
                                     List.of(
                                         new AutofilterSortConditionReport.Value(
-                                            "B2:B5", true))))))),
+                                            new RangeLabel("B2:B5"), true))))))),
                 new WorkbookAssetInspectionResult.TablesResult(
                     new StepId("tables"),
                     List.of(
                         new TableEntryReport(
                             "BudgetTable",
                             new SheetLabel("Budget"),
-                            "A1:C5",
+                            new RangeLabel("A1:C5"),
                             new TableEntryReport.Structure(
                                 1,
                                 1,
@@ -1298,7 +1303,7 @@ class WorkbookInvariantChecksTest {
                     List.of(
                         new ArrayFormulaReport(
                             new SheetLabel("Ops"),
-                            "D2:D4",
+                            new RangeLabel("D2:D4"),
                             new CellAddress("D2"),
                             "B2:B4*C2:C4",
                             false))),
@@ -1355,7 +1360,11 @@ class WorkbookInvariantChecksTest {
                 new SheetLabel("Ops"), new CellAddress("A2"), "/BudgetMap/Owner[1]", "string")),
         List.of(
             new CustomXmlLinkedTableReport(
-                new SheetLabel("Ops"), "BudgetTable", "BudgetTable", "A1:B4", "/BudgetMap/Rows")));
+                new SheetLabel("Ops"),
+                "BudgetTable",
+                "BudgetTable",
+                new RangeLabel("A1:B4"),
+                "/BudgetMap/Rows")));
   }
 
   private static DrawingObjectReport.SignatureLine signatureLineDrawingObjectReport() {
@@ -1448,8 +1457,8 @@ class WorkbookInvariantChecksTest {
     return new PivotTableReport.Supported(
         "OpsPivot",
         new SheetName("Budget"),
-        new PivotTableReport.Anchor(new CellAddress("F4"), "F4:H8"),
-        new PivotTableReport.Source.Range(new SheetName("Budget"), "A1:C4"),
+        new PivotTableReport.Anchor(new CellAddress("F4"), new RangeLabel("F4:H8")),
+        new PivotTableReport.Source.Range(new SheetName("Budget"), new RangeLabel("A1:C4")),
         List.of(new PivotTableReport.Field(0, "Month")),
         List.of(),
         List.of(),

@@ -6,6 +6,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import dev.erst.gridgrind.core.metadata.ProtocolBooleanDefault;
 import dev.erst.gridgrind.core.metadata.ProtocolField;
 import dev.erst.gridgrind.core.vocabulary.ExcelAutofilterSortMethod;
+import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -13,7 +14,7 @@ import java.util.Optional;
 
 /** Authored sort-state payload nested under sheet autofilter authoring. */
 public record AutofilterSortStateInput(
-    String range,
+    RangeRef range,
     @ProtocolField(optional = true, booleanDefault = ProtocolBooleanDefault.FALSE)
         boolean caseSensitive,
     @ProtocolField(optional = true, booleanDefault = ProtocolBooleanDefault.FALSE)
@@ -22,7 +23,7 @@ public record AutofilterSortStateInput(
     List<AutofilterSortConditionInput> conditions) {
   /** Creates a sort-state payload with no explicit sort-method override. */
   public static AutofilterSortStateInput withoutSortMethod(
-      String range,
+      RangeRef range,
       boolean caseSensitive,
       boolean columnSort,
       List<AutofilterSortConditionInput> conditions) {
@@ -32,9 +33,6 @@ public record AutofilterSortStateInput(
 
   public AutofilterSortStateInput {
     Objects.requireNonNull(range, "range must not be null");
-    if (range.isBlank()) {
-      throw new IllegalArgumentException("range must not be blank");
-    }
     Optional<ExcelAutofilterSortMethod> normalizedSortMethod =
         Objects.requireNonNull(sortMethod, "sortMethod must not be null");
     sortMethod = normalizedSortMethod;
@@ -47,7 +45,7 @@ public record AutofilterSortStateInput(
   /** Reads one sort-state payload with explicit booleans and one typed optional sort method. */
   @JsonCreator
   public AutofilterSortStateInput(
-      @JsonProperty("range") String range,
+      @JsonProperty("range") RangeRef range,
       @JsonProperty("caseSensitive") Boolean caseSensitive,
       @JsonProperty("columnSort") Boolean columnSort,
       @JsonProperty("sortMethod") Optional<ExcelAutofilterSortMethod> sortMethod,

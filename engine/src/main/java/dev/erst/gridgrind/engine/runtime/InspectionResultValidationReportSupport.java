@@ -11,6 +11,7 @@ import dev.erst.gridgrind.core.model.validation.DataValidationErrorAlertInput;
 import dev.erst.gridgrind.core.model.validation.DataValidationPromptInput;
 import dev.erst.gridgrind.core.model.validation.DataValidationRuleInput;
 import dev.erst.gridgrind.core.source.TextSourceInput;
+import dev.erst.gridgrind.core.vocabulary.RangeLabel;
 import dev.erst.gridgrind.excel.ExcelBorderSide;
 import dev.erst.gridgrind.excel.ExcelConditionalFormattingBlockSnapshot;
 import dev.erst.gridgrind.excel.ExcelConditionalFormattingRuleSnapshot;
@@ -31,10 +32,13 @@ final class InspectionResultValidationReportSupport {
     return switch (snapshot) {
       case ExcelDataValidationSnapshot.Supported supported ->
           new DataValidationEntryReport.Supported(
-              supported.ranges(), toDataValidationDefinitionReport(supported.validation()));
+              supported.ranges().stream().map(RangeLabel::new).toList(),
+              toDataValidationDefinitionReport(supported.validation()));
       case ExcelDataValidationSnapshot.Unsupported unsupported ->
           new DataValidationEntryReport.Unsupported(
-              unsupported.ranges(), unsupported.kind(), unsupported.detail());
+              unsupported.ranges().stream().map(RangeLabel::new).toList(),
+              unsupported.kind(),
+              unsupported.detail());
     };
   }
 
@@ -51,7 +55,7 @@ final class InspectionResultValidationReportSupport {
   static ConditionalFormattingEntryReport toConditionalFormattingEntryReport(
       ExcelConditionalFormattingBlockSnapshot block) {
     return new ConditionalFormattingEntryReport(
-        block.ranges(),
+        block.ranges().stream().map(RangeLabel::new).toList(),
         block.rules().stream()
             .map(InspectionResultValidationReportSupport::toConditionalFormattingRuleReport)
             .toList());

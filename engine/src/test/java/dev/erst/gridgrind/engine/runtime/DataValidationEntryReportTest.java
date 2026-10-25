@@ -6,6 +6,7 @@ import dev.erst.gridgrind.core.model.validation.DataValidationEntryReport;
 import dev.erst.gridgrind.core.model.validation.DataValidationRuleInput;
 import dev.erst.gridgrind.core.vocabulary.ExcelComparisonOperator;
 import dev.erst.gridgrind.core.vocabulary.ExcelDataValidationErrorStyle;
+import dev.erst.gridgrind.core.vocabulary.RangeLabel;
 import dev.erst.gridgrind.excel.validation.ExcelDataValidationDefinition;
 import dev.erst.gridgrind.excel.validation.ExcelDataValidationErrorAlert;
 import dev.erst.gridgrind.excel.validation.ExcelDataValidationPrompt;
@@ -19,7 +20,7 @@ import org.junit.jupiter.api.Test;
 class DataValidationEntryReportTest {
   @Test
   void supportedAndUnsupportedEntriesCopyRangesAndValidateFields() {
-    List<String> ranges = new ArrayList<>(List.of("A1:A3"));
+    List<RangeLabel> ranges = new ArrayList<>(List.of(new RangeLabel("A1:A3")));
 
     DataValidationEntryReport.Supported supported =
         new DataValidationEntryReport.Supported(
@@ -31,10 +32,15 @@ class DataValidationEntryReportTest {
                 Optional.empty(),
                 Optional.empty()));
     DataValidationEntryReport.Unsupported unsupported =
-        new DataValidationEntryReport.Unsupported(List.of("B1:B3"), "ANY", "Not modeled");
+        new DataValidationEntryReport.Unsupported(
+            List.of(new RangeLabel("B1:B3")), "ANY", "Not modeled");
     ranges.clear();
 
-    assertEquals(List.of("A1:A3"), supported.ranges());
+    assertEquals(
+        List.of("A1:A3"),
+        supported.ranges().stream()
+            .map(dev.erst.gridgrind.core.vocabulary.WireString::value)
+            .toList());
     assertEquals("ANY", unsupported.kind());
     assertThrows(
         IllegalArgumentException.class,
@@ -49,13 +55,17 @@ class DataValidationEntryReportTest {
                     Optional.empty())));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new DataValidationEntryReport.Unsupported(List.of(" "), "ANY", "detail"));
+        () ->
+            new DataValidationEntryReport.Unsupported(
+                List.of(new RangeLabel(" ")), "ANY", "detail"));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new DataValidationEntryReport.Unsupported(List.of("A1"), " ", "detail"));
+        () ->
+            new DataValidationEntryReport.Unsupported(
+                List.of(new RangeLabel("A1")), " ", "detail"));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new DataValidationEntryReport.Unsupported(List.of("A1"), "ANY", " "));
+        () -> new DataValidationEntryReport.Unsupported(List.of(new RangeLabel("A1")), "ANY", " "));
   }
 
   @Test

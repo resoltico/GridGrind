@@ -74,6 +74,7 @@ import dev.erst.gridgrind.core.vocabulary.ExcelPrintOrientation;
 import dev.erst.gridgrind.core.vocabulary.ExcelSheetVisibility;
 import dev.erst.gridgrind.core.vocabulary.ExcelVerticalAlignment;
 import dev.erst.gridgrind.core.vocabulary.NamedRangeScope;
+import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.engine.runtime.DefaultGridGrindRequestExecutor;
 import dev.erst.gridgrind.engine.runtime.ExecutionProgressSink;
@@ -1214,10 +1215,10 @@ public final class XlsxParityScenarios {
                             true, false, false, false, false, false, false, false, false, true,
                             false, false, true, true, true))),
                 mutate(
-                    new RangeSelector.ByRange(new SheetName("Ops"), "A1:B1"),
+                    new RangeSelector.ByRange(new SheetName("Ops"), new RangeRef("A1:B1")),
                     new WorkbookMutationAction.MergeCells()),
                 mutate(
-                    new RangeSelector.ByRange(new SheetName("Ops"), "A1:D4"),
+                    new RangeSelector.ByRange(new SheetName("Ops"), new RangeRef("A1:D4")),
                     new CellMutationAction.SetRange(
                         new CellGridInput.Typed(
                             List.of(
@@ -1259,7 +1260,7 @@ public final class XlsxParityScenarios {
                                     text("Docs"),
                                     new CellInput.NumberValue(99.0d)))))),
                 mutate(
-                    new RangeSelector.ByRange(new SheetName("Ops"), "A1:D4"),
+                    new RangeSelector.ByRange(new SheetName("Ops"), new RangeRef("A1:D4")),
                     new CellMutationAction.ApplyStyle(
                         new CellStylePatchInput(
                             Optional.empty(),
@@ -1315,7 +1316,7 @@ public final class XlsxParityScenarios {
                     new SheetSelector.ByName(new SheetName("Ops")),
                     new WorkbookMutationAction.SetPrintLayout(
                         PrintLayoutInput.withDefaultSetup(
-                            new PrintAreaInput.Range("A1:D20"),
+                            new PrintAreaInput.Range(new RangeRef("A1:D20")),
                             ExcelPrintOrientation.LANDSCAPE,
                             new PrintScalingInput.Fit(1, 2),
                             new PrintTitleRowsInput.Band(0, 1),
@@ -1333,14 +1334,14 @@ public final class XlsxParityScenarios {
                     new StructuredMutationAction.SetNamedRange(
                         "OpsScore",
                         new NamedRangeScope.Workbook(),
-                        NamedRangeTarget.range(new SheetName("Ops"), "D3:D4"))),
+                        NamedRangeTarget.range(new SheetName("Ops"), new RangeRef("D3:D4")))),
                 mutate(
                     new StructuredMutationAction.SetNamedRange(
                         "QueueWindow",
                         new NamedRangeScope.Sheet(new SheetName("Queue")),
-                        NamedRangeTarget.range(new SheetName("Queue"), "A1:B3"))),
+                        NamedRangeTarget.range(new SheetName("Queue"), new RangeRef("A1:B3")))),
                 mutate(
-                    new RangeSelector.ByRange(new SheetName("Ops"), "B3:B10"),
+                    new RangeSelector.ByRange(new SheetName("Ops"), new RangeRef("B3:B10")),
                     new StructuredMutationAction.SetDataValidation(
                         new DataValidationInput(
                             new DataValidationRuleInput.WholeNumber(
@@ -1355,7 +1356,7 @@ public final class XlsxParityScenarios {
                                     "Hours must be 1-40",
                                     true))))),
                 mutate(
-                    new RangeSelector.ByRange(new SheetName("Ops"), "D3:D4"),
+                    new RangeSelector.ByRange(new SheetName("Ops"), new RangeRef("D3:D4")),
                     new StructuredMutationAction.SetConditionalFormatting(
                         new ConditionalFormattingDefinitionInput(
                             List.of(
@@ -1390,10 +1391,10 @@ public final class XlsxParityScenarios {
                                             Optional.of(ColorInput.rgb("#FFC7CE")),
                                             Optional.empty()))))))),
                 mutate(
-                    new RangeSelector.ByRange(new SheetName("Ops"), "A2:D4"),
+                    new RangeSelector.ByRange(new SheetName("Ops"), new RangeRef("A2:D4")),
                     new StructuredMutationAction.SetAutofilter()),
                 mutate(
-                    new RangeSelector.ByRange(new SheetName("Queue"), "A1:B3"),
+                    new RangeSelector.ByRange(new SheetName("Queue"), new RangeRef("A1:B3")),
                     new CellMutationAction.SetRange(
                         new CellGridInput.Typed(
                             List.of(
@@ -1405,7 +1406,7 @@ public final class XlsxParityScenarios {
                         TableInput.withDefaultMetadata(
                             "QueueTable",
                             new SheetName("Queue"),
-                            "A1:B3",
+                            new RangeRef("A1:B3"),
                             false,
                             new TableStyleInput.Named(
                                 "TableStyleMedium2", false, false, true, false))))),
@@ -1555,12 +1556,12 @@ public final class XlsxParityScenarios {
                 new StructuredMutationAction.SetNamedRange(
                     "ChartCategories",
                     new NamedRangeScope.Workbook(),
-                    NamedRangeTarget.range(new SheetName("Chart"), "A2:A4"))),
+                    NamedRangeTarget.range(new SheetName("Chart"), new RangeRef("A2:A4")))),
             mutate(
                 new StructuredMutationAction.SetNamedRange(
                     "ChartActual",
                     new NamedRangeScope.Workbook(),
-                    NamedRangeTarget.range(new SheetName("Chart"), "C2:C4"))),
+                    NamedRangeTarget.range(new SheetName("Chart"), new RangeRef("C2:C4")))),
             mutate(
                 new SheetSelector.ByName(new SheetName("Chart")),
                 new DrawingMutationAction.SetChart(opsChart))),
@@ -1651,13 +1652,13 @@ public final class XlsxParityScenarios {
                     new StructuredMutationAction.SetNamedRange(
                         "PivotSource",
                         new NamedRangeScope.Workbook(),
-                        NamedRangeTarget.range(new SheetName("Data"), "A1:D5"))),
+                        NamedRangeTarget.range(new SheetName("Data"), new RangeRef("A1:D5")))),
                 mutate(
                     new StructuredMutationAction.SetTable(
                         TableInput.withDefaultMetadata(
                             "SalesTable",
                             new SheetName("Data"),
-                            "A1:D5",
+                            new RangeRef("A1:D5"),
                             false,
                             new TableStyleInput.None()))),
                 mutate(
@@ -1665,7 +1666,8 @@ public final class XlsxParityScenarios {
                         new PivotTableInput(
                             "Sales Pivot",
                             new SheetName("RangeReport"),
-                            new PivotTableInput.Source.Range(new SheetName("Data"), "A1:D5"),
+                            new PivotTableInput.Source.Range(
+                                new SheetName("Data"), new RangeRef("A1:D5")),
                             new PivotTableInput.Anchor(new CellAddress("C5")),
                             List.of("Region"),
                             List.of("Stage"),

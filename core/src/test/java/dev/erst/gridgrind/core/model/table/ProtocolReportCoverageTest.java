@@ -13,6 +13,8 @@ import dev.erst.gridgrind.core.model.style.ColorInput;
 import dev.erst.gridgrind.core.model.validation.IgnoredErrorReport;
 import dev.erst.gridgrind.core.vocabulary.ExcelAutofilterSortMethod;
 import dev.erst.gridgrind.core.vocabulary.ExcelIgnoredErrorType;
+import dev.erst.gridgrind.core.vocabulary.RangeLabel;
+import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
@@ -23,15 +25,17 @@ class ProtocolReportCoverageTest {
   void autofilterSortConditionVariantsValidateRangesAndColors() {
     AutofilterSortConditionInput.FontColor authoredFontColor =
         new AutofilterSortConditionInput.FontColor(
-            "A1:A3", true, ColorInput.theme(4, Double.valueOf(0.15d)));
+            new RangeRef("A1:A3"), true, ColorInput.theme(4, Double.valueOf(0.15d)));
     AutofilterSortConditionReport.FontColor reportedFontColor =
-        new AutofilterSortConditionReport.FontColor("A1:A3", false, CellColorReport.rgb("#AABBCC"));
+        new AutofilterSortConditionReport.FontColor(
+            new RangeLabel("A1:A3"), false, CellColorReport.rgb("#AABBCC"));
 
-    assertEquals("A1:A3", authoredFontColor.range());
+    assertEquals("A1:A3", authoredFontColor.range().value());
     assertFalse(reportedFontColor.descending());
     assertEquals(CellColorReport.rgb("#AABBCC"), reportedFontColor.color());
     assertThrows(
-        IllegalArgumentException.class, () -> new AutofilterSortConditionReport.Value(" ", false));
+        IllegalArgumentException.class,
+        () -> new AutofilterSortConditionReport.Value(new RangeLabel(" "), false));
   }
 
   @Test
@@ -46,7 +50,8 @@ class ProtocolReportCoverageTest {
     assertEquals(Optional.empty(), normalized.calculatedColumnFormula());
 
     IgnoredErrorReport ignored =
-        new IgnoredErrorReport("A1:A2", List.of(ExcelIgnoredErrorType.NUMBER_STORED_AS_TEXT));
+        new IgnoredErrorReport(
+            new RangeLabel("A1:A2"), List.of(ExcelIgnoredErrorType.NUMBER_STORED_AS_TEXT));
     assertThrows(
         IllegalArgumentException.class,
         () ->
@@ -61,17 +66,22 @@ class ProtocolReportCoverageTest {
   @Test
   void sortStateReportCreatorCoversBlankValidationAndExplicitEmptySortMethod() {
     AutofilterSortConditionReport.FontColor reportedFontColor =
-        new AutofilterSortConditionReport.FontColor("A1:A3", false, CellColorReport.rgb("#AABBCC"));
+        new AutofilterSortConditionReport.FontColor(
+            new RangeLabel("A1:A3"), false, CellColorReport.rgb("#AABBCC"));
 
     AutofilterSortStateReport normalized =
         AutofilterSortStateReport.create(
-            "A1:A3", true, false, Optional.empty(), List.of(reportedFontColor));
+            new RangeLabel("A1:A3"), true, false, Optional.empty(), List.of(reportedFontColor));
 
     assertEquals(Optional.empty(), normalized.sortMethod());
     assertThrows(
         IllegalArgumentException.class,
         () ->
             new AutofilterSortStateReport(
-                " ", false, false, Optional.of(ExcelAutofilterSortMethod.STROKE), List.of()));
+                new RangeLabel(" "),
+                false,
+                false,
+                Optional.of(ExcelAutofilterSortMethod.STROKE),
+                List.of()));
   }
 }

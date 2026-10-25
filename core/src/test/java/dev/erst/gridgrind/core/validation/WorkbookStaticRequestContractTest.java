@@ -29,6 +29,7 @@ import dev.erst.gridgrind.core.plan.WorkbookStep;
 import dev.erst.gridgrind.core.semantics.WorkbookOperationContracts;
 import dev.erst.gridgrind.core.source.TextSourceInput;
 import dev.erst.gridgrind.core.vocabulary.CellAddress;
+import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import java.util.List;
@@ -78,18 +79,19 @@ class WorkbookStaticRequestContractTest {
 
   @Test
   void rejectsReversedRangesBeforeWorkbookExecution() {
-    assertEquals("A1", new RangeSelector.ByRange(new SheetName("Ops"), "A1").range());
+    assertEquals(
+        "A1", new RangeSelector.ByRange(new SheetName("Ops"), new RangeRef("A1")).range().value());
     assertEquals(
         "range must end at or below and to the right of its start address",
         assertThrows(
                 dev.erst.gridgrind.core.problem.InvalidRequestException.class,
-                () -> new RangeSelector.ByRange(new SheetName("Ops"), "B5:A1"))
+                () -> new RangeSelector.ByRange(new SheetName("Ops"), new RangeRef("B5:A1")))
             .getMessage());
     assertEquals(
         "range must end at or below and to the right of its start address",
         assertThrows(
                 dev.erst.gridgrind.core.problem.InvalidRequestException.class,
-                () -> new RangeSelector.ByRange(new SheetName("Ops"), "B1:A5"))
+                () -> new RangeSelector.ByRange(new SheetName("Ops"), new RangeRef("B1:A5")))
             .getMessage());
   }
 
@@ -98,7 +100,7 @@ class WorkbookStaticRequestContractTest {
     MutationStep styleWholeColumn =
         new MutationStep(
             new StepId("style"),
-            new RangeSelector.ByRange(new SheetName("Ops"), "A1:A250001"),
+            new RangeSelector.ByRange(new SheetName("Ops"), new RangeRef("A1:A250001")),
             new CellMutationAction.ClearRange());
 
     WorkbookStaticViolation violation =
@@ -115,7 +117,7 @@ class WorkbookStaticRequestContractTest {
     MutationStep setRange =
         new MutationStep(
             new StepId("range"),
-            new RangeSelector.ByRange(new SheetName("Ops"), "A1:C3"),
+            new RangeSelector.ByRange(new SheetName("Ops"), new RangeRef("A1:C3")),
             new CellMutationAction.SetRange(
                 new dev.erst.gridgrind.core.model.value.CellGridInput.NumberRows(
                     List.of(List.of(1.0d)))));
@@ -134,30 +136,30 @@ class WorkbookStaticRequestContractTest {
     MutationStep matchingRange =
         new MutationStep(
             new StepId("matching"),
-            new RangeSelector.ByRange(new SheetName("Ops"), "A1:B1"),
+            new RangeSelector.ByRange(new SheetName("Ops"), new RangeRef("A1:B1")),
             new CellMutationAction.SetRange(
                 new dev.erst.gridgrind.core.model.value.CellGridInput.NumberRows(
                     List.of(List.of(1.0d, 2.0d)))));
     MutationStep firstLargeRange =
         new MutationStep(
             new StepId("first"),
-            new RangeSelector.ByRange(new SheetName("Ops"), "A1:A125000"),
+            new RangeSelector.ByRange(new SheetName("Ops"), new RangeRef("A1:A125000")),
             new CellMutationAction.ClearRange());
     MutationStep secondLargeRange =
         new MutationStep(
             new StepId("second"),
-            new RangeSelector.ByRange(new SheetName("Ops"), "B1:B125001"),
+            new RangeSelector.ByRange(new SheetName("Ops"), new RangeRef("B1:B125001")),
             new CellMutationAction.ClearRange());
     MutationStep arrayFormula =
         new MutationStep(
             new StepId("array-formula"),
-            new RangeSelector.ByRange(new SheetName("Ops"), "C1:C2"),
+            new RangeSelector.ByRange(new SheetName("Ops"), new RangeRef("C1:C2")),
             new CellMutationAction.SetArrayFormula(
                 new ArrayFormulaInput(TextSourceInput.inline("SUM(A1:A2)"))));
     MutationStep styledRange =
         new MutationStep(
             new StepId("styled-range"),
-            new RangeSelector.ByRange(new SheetName("Ops"), "D1:D2"),
+            new RangeSelector.ByRange(new SheetName("Ops"), new RangeRef("D1:D2")),
             new CellMutationAction.ApplyStyle(
                 new CellStylePatchInput(
                     Optional.of("0.00"),
@@ -169,12 +171,12 @@ class WorkbookStaticRequestContractTest {
     MutationStep singleCell =
         new MutationStep(
             new StepId("single-cell"),
-            new RangeSelector.ByRange(new SheetName("Ops"), "E1"),
+            new RangeSelector.ByRange(new SheetName("Ops"), new RangeRef("E1")),
             new CellMutationAction.SetCell(new CellInput.NumberValue(1.0d)));
     MutationStep workbookAction =
         new MutationStep(
             new StepId("workbook-action"),
-            new RangeSelector.ByRange(new SheetName("Ops"), "F1"),
+            new RangeSelector.ByRange(new SheetName("Ops"), new RangeRef("F1")),
             new WorkbookMutationAction.EnsureSheet());
 
     assertTrue(
@@ -375,7 +377,7 @@ class WorkbookStaticRequestContractTest {
                         formula,
                         new MutationStep(
                             new StepId("replace"),
-                            new RangeSelector.ByRange(new SheetName("Ops"), "A1"),
+                            new RangeSelector.ByRange(new SheetName("Ops"), new RangeRef("A1")),
                             new CellMutationAction.ClearRange()),
                         columnEdit)))
             .isEmpty());

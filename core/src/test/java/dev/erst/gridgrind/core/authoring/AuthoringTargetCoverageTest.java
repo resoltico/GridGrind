@@ -22,6 +22,7 @@ import dev.erst.gridgrind.core.plan.TableSelector;
 import dev.erst.gridgrind.core.plan.WorkbookMutationAction;
 import dev.erst.gridgrind.core.plan.WorkbookSelector;
 import dev.erst.gridgrind.core.vocabulary.CellAddress;
+import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import java.nio.file.Path;
@@ -38,7 +39,8 @@ class AuthoringTargetCoverageTest {
         CellSelector.ByAddress.class,
         Targets.cell(new SheetName("Budget"), new CellAddress("A1")).selector());
     assertInstanceOf(
-        RangeSelector.ByRange.class, Targets.range(new SheetName("Budget"), "A1:B2").selector());
+        RangeSelector.ByRange.class,
+        Targets.range(new SheetName("Budget"), new RangeRef("A1:B2")).selector());
     assertInstanceOf(
         RangeSelector.RectangularWindow.class,
         Targets.window(new SheetName("Budget"), new CellAddress("A1"), 5, 3).selector());
@@ -160,7 +162,7 @@ class AuthoringTargetCoverageTest {
         CellAssertion.FormulaText.class,
         cell.formulaEquals("SUM(A1:A2)").toStep(new StepId("formula")).assertion());
 
-    RangeTarget range = Targets.range(new SheetName("Budget"), "A1:B2");
+    RangeTarget range = Targets.range(new SheetName("Budget"), new RangeRef("A1:B2"));
     MutationStep setRows =
         range
             .setRows(List.of(Values.row(Values.text("Owner"), Values.number(42.5))))
@@ -207,7 +209,11 @@ class AuthoringTargetCoverageTest {
         tableOnSheet
             .define(
                 Tables.define(
-                    "BudgetTable", new SheetName("Budget"), "A1:B3", false, Tables.noStyle()))
+                    "BudgetTable",
+                    new SheetName("Budget"),
+                    new RangeRef("A1:B3"),
+                    false,
+                    Tables.noStyle()))
             .toStep(new StepId("define"))
             .action());
     assertInstanceOf(

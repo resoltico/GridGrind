@@ -56,7 +56,7 @@ final class WorkbookCommandLayoutInputConverter {
     return switch (target) {
       case NamedRangeTarget.Formula formula -> ExcelNamedRangeTarget.formula(formula.formula());
       case NamedRangeTarget.Range range ->
-          ExcelNamedRangeTarget.range(range.sheetName().value(), range.range());
+          ExcelNamedRangeTarget.range(range.sheetName().value(), range.range().value());
     };
   }
 
@@ -170,7 +170,7 @@ final class WorkbookCommandLayoutInputConverter {
   private static ExcelPrintLayout.Area toExcelPrintArea(PrintAreaInput printArea) {
     return switch (printArea) {
       case PrintAreaInput.None _ -> new ExcelPrintLayout.Area.None();
-      case PrintAreaInput.Range range -> new ExcelPrintLayout.Area.Range(range.range());
+      case PrintAreaInput.Range range -> new ExcelPrintLayout.Area.Range(range.range().value());
     };
   }
 

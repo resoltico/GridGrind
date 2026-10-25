@@ -49,6 +49,7 @@ import dev.erst.gridgrind.core.vocabulary.ExcelOoxmlHashAlgorithm;
 import dev.erst.gridgrind.core.vocabulary.ExcelPaneRegion;
 import dev.erst.gridgrind.core.vocabulary.ExcelPictureFormat;
 import dev.erst.gridgrind.core.vocabulary.ExcelPivotDataConsolidateFunction;
+import dev.erst.gridgrind.core.vocabulary.RangeLabel;
 import dev.erst.gridgrind.core.vocabulary.SheetLabel;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import java.util.Base64;
@@ -405,10 +406,14 @@ class AdvancedDtoCoverageTest {
   void arrayFormulaReportsValidateRequiredFields() {
     ArrayFormulaReport report =
         new ArrayFormulaReport(
-            new SheetLabel("Calc"), "D2:D4", new CellAddress("D2"), "B2:B4*C2:C4", false);
+            new SheetLabel("Calc"),
+            new RangeLabel("D2:D4"),
+            new CellAddress("D2"),
+            "B2:B4*C2:C4",
+            false);
 
     assertEquals("Calc", report.sheetName().value());
-    assertEquals("D2:D4", report.range());
+    assertEquals("D2:D4", report.range().value());
     assertEquals("D2", report.topLeftAddress().value());
     assertEquals("B2:B4*C2:C4", report.formula());
     assertFalse(report.singleCell());
@@ -418,7 +423,11 @@ class AdvancedDtoCoverageTest {
                 IllegalArgumentException.class,
                 () ->
                     new ArrayFormulaReport(
-                        new SheetLabel("Calc"), " ", new CellAddress("D2"), "SUM(B2:C2)", true))
+                        new SheetLabel("Calc"),
+                        new RangeLabel(" "),
+                        new CellAddress("D2"),
+                        "SUM(B2:C2)",
+                        true))
             .getMessage());
   }
 
@@ -602,8 +611,8 @@ class AdvancedDtoCoverageTest {
         new PivotTableReport.Supported(
             "Sales Pivot 2026",
             new SheetName("Report"),
-            new PivotTableReport.Anchor(new CellAddress("C5"), "C5:G9"),
-            new PivotTableReport.Source.Range(new SheetName("Data"), "A1:D5"),
+            new PivotTableReport.Anchor(new CellAddress("C5"), new RangeLabel("C5:G9")),
+            new PivotTableReport.Source.Range(new SheetName("Data"), new RangeLabel("A1:D5")),
             List.of(new PivotTableReport.Field(0, "Region")),
             List.of(new PivotTableReport.Field(1, "Stage")),
             List.of(new PivotTableReport.Field(2, "Owner")),

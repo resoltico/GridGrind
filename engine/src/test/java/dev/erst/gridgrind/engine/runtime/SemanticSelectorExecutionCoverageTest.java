@@ -25,6 +25,7 @@ import dev.erst.gridgrind.core.plan.WorkbookMutationAction;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import dev.erst.gridgrind.core.problem.GridGrindProblemCode;
 import dev.erst.gridgrind.core.result.WorkbookResult;
+import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import java.util.List;
 import org.junit.jupiter.api.Test;
@@ -128,7 +129,7 @@ class SemanticSelectorExecutionCoverageTest {
             new WorkbookMutationAction.EnsureSheet()),
         mutate(
             new dev.erst.gridgrind.core.plan.RangeSelector.ByRange(
-                new SheetName("Budget"), "A1:B3"),
+                new SheetName("Budget"), new RangeRef("A1:B3")),
             new CellMutationAction.SetRange(
                 new dev.erst.gridgrind.core.model.value.CellGridInput.Typed(
                     List.of(
@@ -144,7 +145,7 @@ class SemanticSelectorExecutionCoverageTest {
                 TableInput.withDefaultMetadata(
                     "BudgetTable",
                     new SheetName("Budget"),
-                    "A1:B3",
+                    new RangeRef("A1:B3"),
                     false,
                     new TableStyleInput.None()))));
   }
@@ -156,7 +157,7 @@ class SemanticSelectorExecutionCoverageTest {
             new WorkbookMutationAction.EnsureSheet()),
         mutate(
             new dev.erst.gridgrind.core.plan.RangeSelector.ByRange(
-                new SheetName("Budget"), "A1:B4"),
+                new SheetName("Budget"), new RangeRef("A1:B4")),
             new CellMutationAction.SetRange(
                 new dev.erst.gridgrind.core.model.value.CellGridInput.Typed(
                     List.of(
@@ -174,7 +175,7 @@ class SemanticSelectorExecutionCoverageTest {
                 TableInput.withDefaultMetadata(
                     "BudgetTable",
                     new SheetName("Budget"),
-                    "A1:B4",
+                    new RangeRef("A1:B4"),
                     false,
                     new TableStyleInput.None()))));
   }

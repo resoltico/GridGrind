@@ -9,6 +9,7 @@ import dev.erst.gridgrind.core.problem.ProblemContext;
 import dev.erst.gridgrind.core.problem.ProblemContextRequestSurfaces;
 import dev.erst.gridgrind.core.vocabulary.CellAddress;
 import dev.erst.gridgrind.core.vocabulary.ExcelReadLimits;
+import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import java.util.Arrays;
 import java.util.List;
@@ -37,8 +38,9 @@ class SelectorValidationSupportTest {
     assertEquals(
         "Sales Pivot 2026",
         SelectorValueValidation.requirePivotTableName("Sales Pivot 2026", "selector"));
-    assertEquals("$B$12", SelectorValueValidation.requireAddress("$B$12", "selector"));
-    assertEquals("A1:B3", SelectorValueValidation.requireRange("A1:B3", "selector"));
+    assertEquals(
+        "A1:B3",
+        SelectorValueValidation.requireOrderedRange(new RangeRef("A1:B3"), "selector").value());
     assertEquals(4, SelectorValueValidation.requirePositive(4, "count"));
     assertEquals(0, SelectorValueValidation.requireNonNegative(0, "index"));
     assertEquals(-2, SelectorValueValidation.requireNonZero(-2, "delta"));
@@ -84,24 +86,6 @@ class SelectorValidationSupportTest {
                 () -> SelectorValueValidation.requirePivotTableName(" ", "selector"))
             .getMessage()
             .startsWith("selector "));
-    assertTrue(
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> SelectorValueValidation.requireAddress("A0", "selector"))
-            .getMessage()
-            .startsWith("selector "));
-    assertEquals(
-        "selector must not be blank",
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> SelectorValueValidation.requireRange(" ", "selector"))
-            .getMessage());
-    assertEquals(
-        "selector must be a rectangular A1-style range with at most one ':'",
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> SelectorValueValidation.requireRange("A1:B2:C3", "selector"))
-            .getMessage());
     assertEquals(
         "count must be greater than 0",
         assertThrows(
@@ -168,7 +152,10 @@ class SelectorValidationSupportTest {
             .map(CellAddress::value)
             .toList());
     assertEquals(
-        List.of("A1:B2"), SelectorListValidation.copyDistinctRanges(List.of("A1:B2"), "ranges"));
+        List.of("A1:B2"),
+        SelectorListValidation.copyDistinctRanges(List.of(new RangeRef("A1:B2")), "ranges").stream()
+            .map(RangeRef::value)
+            .toList());
     assertEquals(
         List.of("Budget", "Ops"),
         SelectorListValidation.copyDistinctSheetNames(
@@ -207,7 +194,8 @@ class SelectorValidationSupportTest {
         assertThrows(
                 IllegalArgumentException.class,
                 () ->
-                    SelectorListValidation.copyDistinctRanges(List.of("A1:B2", "A1:B2"), "ranges"))
+                    SelectorListValidation.copyDistinctRanges(
+                        List.of(new RangeRef("A1:B2"), new RangeRef("A1:B2")), "ranges"))
             .getMessage());
     assertEquals(
         "sheetNames must not contain duplicates",
@@ -300,10 +288,11 @@ class SelectorValidationSupportTest {
   }
 
   @Test
-  void selectorInvalidFieldCarriesTypedAddressGuidance() {
+  void cellAddressCarriesTypedSyntaxGuidance() {
     var failure =
-        SelectorTextValidation.invalidField(
-            FieldValidationProblem.atField("address", FieldValidationAddressRule.ADDRESS_SYNTAX));
+        assertThrows(
+            dev.erst.gridgrind.core.problem.InvalidRequestException.class,
+            () -> new CellAddress("A0"));
     FieldValidationProblem requestProblem =
         assertInstanceOf(FieldValidationProblem.class, failure.requestProblem());
 

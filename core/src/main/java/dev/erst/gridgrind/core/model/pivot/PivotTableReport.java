@@ -6,6 +6,7 @@ import dev.erst.gridgrind.core.vocabulary.CellAddress;
 import dev.erst.gridgrind.core.vocabulary.ExcelPivotDataConsolidateFunction;
 import dev.erst.gridgrind.core.vocabulary.ExcelPivotTableNaming;
 import dev.erst.gridgrind.core.vocabulary.ProtocolDefinedNameValidation;
+import dev.erst.gridgrind.core.vocabulary.RangeLabel;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import java.util.ArrayList;
 import java.util.List;
@@ -71,37 +72,37 @@ public sealed interface PivotTableReport
   sealed interface Source permits Source.Range, Source.NamedRange, Source.Table {
 
     /** Sheet range source stored directly in the pivot cache definition. */
-    record Range(SheetName sheetName, String range) implements Source {
+    record Range(SheetName sheetName, RangeLabel range) implements Source {
       public Range {
         java.util.Objects.requireNonNull(sheetName, "sheetName must not be null");
-        range = requireNonBlank(range, "range");
+        java.util.Objects.requireNonNull(range, "range must not be null");
       }
     }
 
     /** Named-range-backed source plus the currently resolved source range. */
-    record NamedRange(String name, SheetName sheetName, String range) implements Source {
+    record NamedRange(String name, SheetName sheetName, RangeLabel range) implements Source {
       public NamedRange {
         name = ProtocolDefinedNameValidation.validateName(name);
         java.util.Objects.requireNonNull(sheetName, "sheetName must not be null");
-        range = requireNonBlank(range, "range");
+        java.util.Objects.requireNonNull(range, "range must not be null");
       }
     }
 
     /** Table-backed source plus the currently resolved table range. */
-    record Table(String name, SheetName sheetName, String range) implements Source {
+    record Table(String name, SheetName sheetName, RangeLabel range) implements Source {
       public Table {
         name = ProtocolDefinedNameValidation.validateName(name);
         java.util.Objects.requireNonNull(sheetName, "sheetName must not be null");
-        range = requireNonBlank(range, "range");
+        java.util.Objects.requireNonNull(range, "range must not be null");
       }
     }
   }
 
   /** Factual stored destination anchor and persisted location range. */
-  record Anchor(CellAddress topLeftAddress, String locationRange) {
+  record Anchor(CellAddress topLeftAddress, RangeLabel locationRange) {
     public Anchor {
       java.util.Objects.requireNonNull(topLeftAddress, "topLeftAddress must not be null");
-      locationRange = requireNonBlank(locationRange, "locationRange");
+      java.util.Objects.requireNonNull(locationRange, "locationRange must not be null");
     }
   }
 

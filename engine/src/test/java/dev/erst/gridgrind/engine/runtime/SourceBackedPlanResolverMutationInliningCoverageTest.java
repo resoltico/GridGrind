@@ -39,6 +39,7 @@ import dev.erst.gridgrind.core.vocabulary.ExcelChartDisplayBlanksAs;
 import dev.erst.gridgrind.core.vocabulary.ExcelComparisonOperator;
 import dev.erst.gridgrind.core.vocabulary.ExcelDataValidationErrorStyle;
 import dev.erst.gridgrind.core.vocabulary.ExcelPictureFormat;
+import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import java.io.IOException;
@@ -206,7 +207,7 @@ class SourceBackedPlanResolverMutationInliningCoverageTest
                             twoCellAnchor()))),
                 new MutationStep(
                     new StepId("step-08-set-validation"),
-                    new RangeSelector.ByRange(new SheetName("Budget"), "A1"),
+                    new RangeSelector.ByRange(new SheetName("Budget"), new RangeRef("A1")),
                     new StructuredMutationAction.SetDataValidation(
                         dataValidation(
                             new DataValidationRuleInput.WholeNumber(
@@ -230,7 +231,7 @@ class SourceBackedPlanResolverMutationInliningCoverageTest
                         new TableInput(
                             "BudgetTable",
                             new dev.erst.gridgrind.core.vocabulary.SheetName("Budget"),
-                            "A1:B2",
+                            new RangeRef("A1:B2"),
                             false,
                             true,
                             new TableStyleInput.Named(

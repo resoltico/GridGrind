@@ -6,6 +6,7 @@ import dev.erst.gridgrind.core.plan.*;
 import dev.erst.gridgrind.core.vocabulary.CellAddress;
 import dev.erst.gridgrind.core.vocabulary.ExcelColumnSpan;
 import dev.erst.gridgrind.core.vocabulary.ExcelRowSpan;
+import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.excel.*;
 import dev.erst.gridgrind.excel.pivot.ExcelPivotTableSelection;
@@ -134,12 +135,13 @@ class SelectorConverterTest {
         new SelectorConverter.SheetLocalRangeSelection(
             "Budget", new ExcelRangeSelection.Selected(List.of("A1:B2"))),
         SelectorConverter.toSheetLocalRangeSelection(
-            new RangeSelector.ByRange(new SheetName("Budget"), "A1:B2")));
+            new RangeSelector.ByRange(new SheetName("Budget"), new RangeRef("A1:B2"))));
     assertEquals(
         new SelectorConverter.SheetLocalRangeSelection(
             "Budget", new ExcelRangeSelection.Selected(List.of("A1:B2", "D4:E5"))),
         SelectorConverter.toSheetLocalRangeSelection(
-            new RangeSelector.ByRanges(new SheetName("Budget"), List.of("A1:B2", "D4:E5"))));
+            new RangeSelector.ByRanges(
+                new SheetName("Budget"), List.of(new RangeRef("A1:B2"), new RangeRef("D4:E5")))));
     assertEquals(
         new SelectorConverter.SheetLocalRangeSelection(
             "Budget", new ExcelRangeSelection.Selected(List.of("B3:D4"))),
@@ -149,7 +151,7 @@ class SelectorConverterTest {
     assertEquals(
         new SelectorConverter.SingleRangeTarget("Budget", "A1:B2"),
         SelectorConverter.toSingleRangeTarget(
-            new RangeSelector.ByRange(new SheetName("Budget"), "A1:B2")));
+            new RangeSelector.ByRange(new SheetName("Budget"), new RangeRef("A1:B2"))));
     assertEquals(
         new SelectorConverter.SingleRangeTarget("Budget", "B3:D4"),
         SelectorConverter.toSingleRangeTarget(

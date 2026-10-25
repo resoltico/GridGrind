@@ -3,6 +3,7 @@ package dev.erst.gridgrind.core.model.table;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import dev.erst.gridgrind.core.model.style.ColorInput;
+import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import java.util.Objects;
 
 /** One authored autofilter sort condition expressed as an explicit variant. */
@@ -19,52 +20,44 @@ public sealed interface AutofilterSortConditionInput
         AutofilterSortConditionInput.FontColor,
         AutofilterSortConditionInput.Icon {
   /** Worksheet-local range covered by this sort condition. */
-  String range();
+  RangeRef range();
 
   /** Whether the condition sorts descending instead of ascending. */
   boolean descending();
 
   /** Sorts by the ordinary cell value with no auxiliary discriminator payload. */
-  record Value(String range, boolean descending) implements AutofilterSortConditionInput {
+  record Value(RangeRef range, boolean descending) implements AutofilterSortConditionInput {
     public Value {
-      range = requireRange(range);
+      java.util.Objects.requireNonNull(range, "range must not be null");
     }
   }
 
   /** Sorts by the cell fill color referenced by one explicit RGB/theme color. */
-  record CellColor(String range, boolean descending, ColorInput color)
+  record CellColor(RangeRef range, boolean descending, ColorInput color)
       implements AutofilterSortConditionInput {
     public CellColor {
-      range = requireRange(range);
+      java.util.Objects.requireNonNull(range, "range must not be null");
       Objects.requireNonNull(color, "color must not be null");
     }
   }
 
   /** Sorts by the rendered font color referenced by one explicit RGB/theme color. */
-  record FontColor(String range, boolean descending, ColorInput color)
+  record FontColor(RangeRef range, boolean descending, ColorInput color)
       implements AutofilterSortConditionInput {
     public FontColor {
-      range = requireRange(range);
+      java.util.Objects.requireNonNull(range, "range must not be null");
       Objects.requireNonNull(color, "color must not be null");
     }
   }
 
   /** Sorts by the icon identifier inside the active icon-set definition. */
-  record Icon(String range, boolean descending, int iconId)
+  record Icon(RangeRef range, boolean descending, int iconId)
       implements AutofilterSortConditionInput {
     public Icon {
-      range = requireRange(range);
+      java.util.Objects.requireNonNull(range, "range must not be null");
       if (iconId < 0) {
         throw new IllegalArgumentException("iconId must not be negative");
       }
     }
-  }
-
-  private static String requireRange(String range) {
-    Objects.requireNonNull(range, "range must not be null");
-    if (range.isBlank()) {
-      throw new IllegalArgumentException("range must not be blank");
-    }
-    return range;
   }
 }

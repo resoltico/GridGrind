@@ -2,6 +2,7 @@ package dev.erst.gridgrind.core.authoring;
 
 import dev.erst.gridgrind.core.model.table.TableInput;
 import dev.erst.gridgrind.core.model.table.TableStyleInput;
+import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import java.util.Objects;
 
@@ -28,7 +29,7 @@ public final class Tables {
 
   /** Table-definition wrapper for fluent authoring. */
   public record Definition(
-      String name, SheetName sheetName, String range, boolean totalsRowShown, Style style) {
+      String name, SheetName sheetName, RangeRef range, boolean totalsRowShown, Style style) {
     public Definition {
       Objects.requireNonNull(name, "name must not be null");
       Objects.requireNonNull(sheetName, "sheetName must not be null");
@@ -56,7 +57,7 @@ public final class Tables {
 
   /** Returns a focused table definition. */
   public static Definition define(
-      String name, SheetName sheetName, String range, boolean totalsRowShown, Style style) {
+      String name, SheetName sheetName, RangeRef range, boolean totalsRowShown, Style style) {
     return new Definition(name, sheetName, range, totalsRowShown, style);
   }
 

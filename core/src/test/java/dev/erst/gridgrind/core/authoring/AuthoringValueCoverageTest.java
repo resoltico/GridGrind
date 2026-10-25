@@ -13,6 +13,7 @@ import dev.erst.gridgrind.core.model.value.CellInput;
 import dev.erst.gridgrind.core.model.value.CellScalarValue;
 import dev.erst.gridgrind.core.model.value.HyperlinkTarget;
 import dev.erst.gridgrind.core.source.TextSourceInput;
+import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import java.nio.file.Path;
 import java.time.LocalDate;
@@ -74,13 +75,19 @@ class AuthoringValueCoverageTest {
                 NullPointerException.class,
                 () ->
                     new Tables.Definition(
-                        null, new SheetName("Budget"), "A1:B2", false, Tables.noStyle()))
+                        null,
+                        new SheetName("Budget"),
+                        new RangeRef("A1:B2"),
+                        false,
+                        Tables.noStyle()))
             .getMessage());
     assertEquals(
         "sheetName must not be null",
         assertThrows(
                 NullPointerException.class,
-                () -> new Tables.Definition("BudgetTable", null, "A1:B2", false, Tables.noStyle()))
+                () ->
+                    new Tables.Definition(
+                        "BudgetTable", null, new RangeRef("A1:B2"), false, Tables.noStyle()))
             .getMessage());
     assertEquals(
         "range must not be null",
@@ -96,17 +103,22 @@ class AuthoringValueCoverageTest {
                 NullPointerException.class,
                 () ->
                     new Tables.Definition(
-                        "BudgetTable", new SheetName("Budget"), "A1:B2", false, null))
+                        "BudgetTable", new SheetName("Budget"), new RangeRef("A1:B2"), false, null))
             .getMessage());
 
     TableInput noStyleTable =
         Tables.toTableInput(
             Tables.define(
-                "BudgetTable", new SheetName("Budget"), "A1:B2", false, Tables.noStyle()));
+                "BudgetTable",
+                new SheetName("Budget"),
+                new RangeRef("A1:B2"),
+                false,
+                Tables.noStyle()));
     Tables.Style namedStyle = Tables.namedStyle("TableStyleMedium2", true, false, true, false);
     TableInput styledTable =
         Tables.toTableInput(
-            Tables.define("BudgetTable", new SheetName("Budget"), "A1:B2", true, namedStyle));
+            Tables.define(
+                "BudgetTable", new SheetName("Budget"), new RangeRef("A1:B2"), true, namedStyle));
     assertInstanceOf(TableStyleInput.None.class, noStyleTable.style());
     TableStyleInput.Named named =
         assertInstanceOf(TableStyleInput.Named.class, styledTable.style());

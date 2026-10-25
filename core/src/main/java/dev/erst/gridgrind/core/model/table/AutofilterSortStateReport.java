@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import dev.erst.gridgrind.core.vocabulary.ExcelAutofilterSortMethod;
+import dev.erst.gridgrind.core.vocabulary.RangeLabel;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -11,14 +12,14 @@ import java.util.Optional;
 
 /** Factual sort-state metadata stored on one autofilter definition. */
 public record AutofilterSortStateReport(
-    String range,
+    RangeLabel range,
     boolean caseSensitive,
     boolean columnSort,
     @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<ExcelAutofilterSortMethod> sortMethod,
     List<AutofilterSortConditionReport> conditions) {
   /** Creates a report sort-state with no explicit sort-method override. */
   public static AutofilterSortStateReport withoutSortMethod(
-      String range,
+      RangeLabel range,
       boolean caseSensitive,
       boolean columnSort,
       List<AutofilterSortConditionReport> conditions) {
@@ -28,9 +29,6 @@ public record AutofilterSortStateReport(
 
   public AutofilterSortStateReport {
     Objects.requireNonNull(range, "range must not be null");
-    if (range.isBlank()) {
-      throw new IllegalArgumentException("range must not be blank");
-    }
     Optional<ExcelAutofilterSortMethod> normalizedSortMethod =
         Objects.requireNonNull(sortMethod, "sortMethod must not be null");
     sortMethod = normalizedSortMethod;
@@ -39,7 +37,7 @@ public record AutofilterSortStateReport(
 
   @JsonCreator
   static AutofilterSortStateReport create(
-      @JsonProperty("range") String range,
+      @JsonProperty("range") RangeLabel range,
       @JsonProperty("caseSensitive") boolean caseSensitive,
       @JsonProperty("columnSort") boolean columnSort,
       @JsonProperty("sortMethod") Optional<ExcelAutofilterSortMethod> sortMethod,

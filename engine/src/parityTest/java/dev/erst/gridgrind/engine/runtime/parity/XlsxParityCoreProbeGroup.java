@@ -39,6 +39,7 @@ import dev.erst.gridgrind.core.result.WorkbookResult;
 import dev.erst.gridgrind.core.result.WorkbookSummary;
 import dev.erst.gridgrind.core.vocabulary.CellAddress;
 import dev.erst.gridgrind.core.vocabulary.NamedRangeScope;
+import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.core.vocabulary.SheetCopyPosition;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.engine.runtime.parity.XlsxParityProbeRegistry.ProbeContext;
@@ -232,6 +233,7 @@ final class XlsxParityCoreProbeGroup {
         .mergedRegions()
         .getFirst()
         .range()
+        .value()
         .equals(observation.direct().mergedRegion())) {
       mismatches.add(
           "mergedRegion=%s direct=%s"
@@ -391,6 +393,7 @@ final class XlsxParityCoreProbeGroup {
         .autofilters()
         .getFirst()
         .range()
+        .value()
         .equals(observation.direct().sheetAutofilterRange())) {
       mismatches.add(
           "opsAutofilterRange=%s direct=%s"
@@ -767,7 +770,7 @@ final class XlsxParityCoreProbeGroup {
     boolean parityAchieved =
         filters.autofilters().size() == 1
             && filters.autofilters().getFirst() instanceof AutofilterEntryReport.SheetOwned observed
-            && observed.range().equals(direct.range())
+            && observed.range().value().equals(direct.range())
             && observed.filterColumns().size() == direct.filterColumns().size()
             && observed.filterColumns().getFirst().columnId()
                 == direct.filterColumns().getFirst().columnId()
@@ -776,7 +779,7 @@ final class XlsxParityCoreProbeGroup {
             && values.values().equals(direct.filterColumns().getFirst().values())
             && values.includeBlank() == direct.filterColumns().getFirst().includeBlank()
             && observed.sortState().isPresent()
-            && observed.sortState().orElseThrow().range().equals(direct.sortState().range())
+            && observed.sortState().orElseThrow().range().value().equals(direct.sortState().range())
             && observed.sortState().orElseThrow().conditions().size()
                 == direct.sortState().conditions().size()
             && sortConditionsMatch(
@@ -1470,17 +1473,17 @@ final class XlsxParityCoreProbeGroup {
                 styledPath,
                 List.of(
                     mutate(
-                        new RangeSelector.ByRange(new SheetName("Ops"), "A5:A6"),
+                        new RangeSelector.ByRange(new SheetName("Ops"), new RangeRef("A5:A6")),
                         new CellMutationAction.SetRange(
                             new CellGridInput.Typed(
                                 List.of(
                                     List.of(text("ThemeTintStyle")),
                                     List.of(text("GradientFillStyle")))))),
                     mutate(
-                        new RangeSelector.ByRange(new SheetName("Ops"), "A5"),
+                        new RangeSelector.ByRange(new SheetName("Ops"), new RangeRef("A5")),
                         new CellMutationAction.ApplyStyle(advancedThemedStyleInput())),
                     mutate(
-                        new RangeSelector.ByRange(new SheetName("Ops"), "A6"),
+                        new RangeSelector.ByRange(new SheetName("Ops"), new RangeRef("A6")),
                         new CellMutationAction.ApplyStyle(advancedGradientStyleInput()))),
                 inspect(
                     "cells",
@@ -1506,7 +1509,7 @@ final class XlsxParityCoreProbeGroup {
                 clearedPath,
                 List.of(
                     mutate(
-                        new RangeSelector.ByRange(new SheetName("Ops"), "A5:A6"),
+                        new RangeSelector.ByRange(new SheetName("Ops"), new RangeRef("A5:A6")),
                         new CellMutationAction.ClearRange())),
                 inspect(
                     "cells",
@@ -1739,7 +1742,7 @@ final class XlsxParityCoreProbeGroup {
                 restoredPath,
                 List.of(
                     mutate(
-                        new RangeSelector.ByRange(new SheetName("Advanced"), "A1:C5"),
+                        new RangeSelector.ByRange(new SheetName("Advanced"), new RangeRef("A1:C5")),
                         new StructuredMutationAction.SetAutofilter(
                             List.of(
                                 new AutofilterFilterColumnInput(
@@ -1748,11 +1751,13 @@ final class XlsxParityCoreProbeGroup {
                                     new AutofilterFilterCriterionInput.Values(
                                         List.of("R1C0"), false))),
                             new AutofilterSortStateInput(
-                                "A2:C5",
+                                new RangeRef("A2:C5"),
                                 false,
                                 false,
                                 java.util.Optional.empty(),
-                                List.of(new AutofilterSortConditionInput.Value("B2:B5", true)))))),
+                                List.of(
+                                    new AutofilterSortConditionInput.Value(
+                                        new RangeRef("B2:B5"), true)))))),
                 inspect(
                     "filters",
                     new SheetSelector.ByName(new SheetName("Advanced")),

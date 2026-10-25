@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.core.model.customxml;
 
+import dev.erst.gridgrind.core.vocabulary.RangeLabel;
 import dev.erst.gridgrind.core.vocabulary.SheetLabel;
 import java.util.Objects;
 
@@ -8,13 +9,13 @@ public record CustomXmlLinkedTableReport(
     SheetLabel sheetName,
     String tableName,
     String tableDisplayName,
-    String range,
+    RangeLabel range,
     String commonXPath) {
   public CustomXmlLinkedTableReport {
     Objects.requireNonNull(sheetName, "sheetName must not be null");
     tableName = requireNonBlank(tableName, "tableName");
     tableDisplayName = requireNonBlank(tableDisplayName, "tableDisplayName");
-    range = requireNonBlank(range, "range");
+    java.util.Objects.requireNonNull(range, "range must not be null");
     commonXPath = requireNonBlank(commonXPath, "commonXPath");
   }
 

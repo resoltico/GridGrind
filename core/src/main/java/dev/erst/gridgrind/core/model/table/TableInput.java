@@ -6,6 +6,7 @@ import dev.erst.gridgrind.core.metadata.ProtocolBooleanDefault;
 import dev.erst.gridgrind.core.metadata.ProtocolField;
 import dev.erst.gridgrind.core.source.TextSourceInput;
 import dev.erst.gridgrind.core.vocabulary.ProtocolDefinedNameValidation;
+import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import java.util.Objects;
 
@@ -13,7 +14,7 @@ import java.util.Objects;
 public record TableInput(
     String name,
     SheetName sheetName,
-    String range,
+    RangeRef range,
     @ProtocolField(optional = true, booleanDefault = ProtocolBooleanDefault.FALSE)
         boolean showTotalsRow,
     @ProtocolField(optional = true, booleanDefault = ProtocolBooleanDefault.TRUE)
@@ -34,7 +35,7 @@ public record TableInput(
   public static TableInput withDefaultMetadata(
       String name,
       SheetName sheetName,
-      String range,
+      RangeRef range,
       boolean showTotalsRow,
       TableStyleInput style) {
     return new TableInput(
@@ -58,9 +59,6 @@ public record TableInput(
     name = ProtocolDefinedNameValidation.validateName(name);
     java.util.Objects.requireNonNull(sheetName, "sheetName must not be null");
     Objects.requireNonNull(range, "range must not be null");
-    if (range.isBlank()) {
-      throw new IllegalArgumentException("range must not be blank");
-    }
     Objects.requireNonNull(style, "style must not be null");
     Objects.requireNonNull(comment, "comment must not be null");
     Objects.requireNonNull(headerRowCellStyle, "headerRowCellStyle must not be null");
@@ -78,7 +76,7 @@ public record TableInput(
   public TableInput(
       @JsonProperty("name") String name,
       @JsonProperty("sheetName") SheetName sheetName,
-      @JsonProperty("range") String range,
+      @JsonProperty("range") RangeRef range,
       @JsonProperty("showTotalsRow") Boolean showTotalsRow,
       @JsonProperty("hasAutofilter") Boolean hasAutofilter,
       @JsonProperty("style") TableStyleInput style,

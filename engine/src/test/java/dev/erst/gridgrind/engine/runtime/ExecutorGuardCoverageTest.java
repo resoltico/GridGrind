@@ -28,6 +28,7 @@ import dev.erst.gridgrind.core.source.BinarySourceInput;
 import dev.erst.gridgrind.core.source.TextSourceInput;
 import dev.erst.gridgrind.core.vocabulary.CellAddress;
 import dev.erst.gridgrind.core.vocabulary.ExcelPictureFormat;
+import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -368,7 +369,7 @@ class ExecutorGuardCoverageTest {
             "BudgetWindow",
             new dev.erst.gridgrind.core.vocabulary.NamedRangeScope.Sheet(new SheetName("Budget")),
             dev.erst.gridgrind.core.model.formula.NamedRangeTarget.range(
-                new SheetName("Budget"), "A1:B2"));
+                new SheetName("Budget"), new RangeRef("A1:B2")));
     assertEquals(
         Optional.of("Budget"),
         ExecutionActionDiagnosticFields.sheetNameFor(rangeDefinedNamedRange));
@@ -385,7 +386,7 @@ class ExecutorGuardCoverageTest {
             dev.erst.gridgrind.core.model.table.TableInput.withDefaultMetadata(
                 "BudgetTable",
                 new SheetName("Budget"),
-                "A1:B5",
+                new RangeRef("A1:B5"),
                 false,
                 new dev.erst.gridgrind.core.model.table.TableStyleInput.None()));
     assertEquals(Optional.of("Budget"), ExecutionActionDiagnosticFields.sheetNameFor(setTable));
@@ -398,7 +399,7 @@ class ExecutorGuardCoverageTest {
         ExecutionSelectorDiagnosticFields.singleSheetName(
             (dev.erst.gridgrind.core.plan.RangeSelector)
                 new dev.erst.gridgrind.core.plan.RangeSelector.ByRange(
-                    new SheetName("Budget"), "A1:B2")));
+                    new SheetName("Budget"), new RangeRef("A1:B2"))));
   }
 
   @Test

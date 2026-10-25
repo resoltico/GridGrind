@@ -28,7 +28,7 @@ final class WorkbookCommandCellMutationConverter {
             WorkbookCommandSelectorSupport.rangeByRange(target, action);
         yield new WorkbookCellCommand.SetRange(
             selector.sheetName().value(),
-            selector.range(),
+            selector.range().value(),
             setRange.rows().toCellInputRows().stream()
                 .map(
                     row ->
@@ -40,14 +40,15 @@ final class WorkbookCommandCellMutationConverter {
       case CellMutationAction.ClearRange _ -> {
         RangeSelector.ByRange selector =
             WorkbookCommandSelectorSupport.rangeByRange(target, action);
-        yield new WorkbookCellCommand.ClearRange(selector.sheetName().value(), selector.range());
+        yield new WorkbookCellCommand.ClearRange(
+            selector.sheetName().value(), selector.range().value());
       }
       case CellMutationAction.SetArrayFormula setArrayFormula -> {
         RangeSelector.ByRange selector =
             WorkbookCommandSelectorSupport.rangeByRange(target, action);
         yield new WorkbookCellCommand.SetArrayFormula(
             selector.sheetName().value(),
-            selector.range(),
+            selector.range().value(),
             WorkbookCommandCellInputConverter.toExcelArrayFormulaDefinition(
                 setArrayFormula.formula()));
       }
@@ -95,7 +96,7 @@ final class WorkbookCommandCellMutationConverter {
             WorkbookCommandSelectorSupport.rangeByRange(target, action);
         yield new WorkbookFormattingCommand.ApplyStyle(
             selector.sheetName().value(),
-            selector.range(),
+            selector.range().value(),
             WorkbookCommandCellInputConverter.toExcelCellStyle(applyStyle.style()));
       }
       case CellMutationAction.AppendRow appendRow ->

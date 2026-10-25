@@ -29,7 +29,7 @@ final class WorkbookCommandPresentationInputConverter {
         presentation.ignoredErrors().stream()
             .map(
                 ignoredError ->
-                    new ExcelIgnoredError(ignoredError.range(), ignoredError.errorTypes()))
+                    new ExcelIgnoredError(ignoredError.range().value(), ignoredError.errorTypes()))
             .toList());
   }
 }

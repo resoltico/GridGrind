@@ -27,6 +27,8 @@ import dev.erst.gridgrind.core.vocabulary.ExcelPaneRegion;
 import dev.erst.gridgrind.core.vocabulary.ExcelPrintOrientation;
 import dev.erst.gridgrind.core.vocabulary.ExcelRowSpan;
 import dev.erst.gridgrind.core.vocabulary.ExcelSheetLayoutLimits;
+import dev.erst.gridgrind.core.vocabulary.RangeLabel;
+import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.core.vocabulary.SheetLabel;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import org.junit.jupiter.api.Test;
@@ -120,8 +122,10 @@ class StructuralLayoutProtocolTypesTest {
   @Test
   void printAreaAndScalingInputsCoverDefaultsAndBounds() {
     assertEquals(new PrintAreaInput.None(), new PrintAreaInput.None());
-    assertEquals(new PrintAreaInput.Range("A1:C10"), new PrintAreaInput.Range("A1:C10"));
-    assertThrows(IllegalArgumentException.class, () -> new PrintAreaInput.Range(" "));
+    assertEquals(
+        new PrintAreaInput.Range(new RangeRef("A1:C10")),
+        new PrintAreaInput.Range(new RangeRef("A1:C10")));
+    assertThrows(IllegalArgumentException.class, () -> new PrintAreaInput.Range(new RangeRef(" ")));
 
     assertEquals(new PrintScalingInput.Automatic(), new PrintScalingInput.Automatic());
     assertEquals(new PrintScalingInput.Fit(1, 0), new PrintScalingInput.Fit(1, 0));
@@ -173,8 +177,11 @@ class StructuralLayoutProtocolTypesTest {
     assertThrows(NullPointerException.class, () -> new PaneReport.Split(1, 1, 0, 0, null));
 
     assertEquals(new PrintAreaReport.None(), new PrintAreaReport.None());
-    assertEquals(new PrintAreaReport.Range("A1:B20"), new PrintAreaReport.Range("A1:B20"));
-    assertThrows(IllegalArgumentException.class, () -> new PrintAreaReport.Range(" "));
+    assertEquals(
+        new PrintAreaReport.Range(new RangeLabel("A1:B20")),
+        new PrintAreaReport.Range(new RangeLabel("A1:B20")));
+    assertThrows(
+        IllegalArgumentException.class, () -> new PrintAreaReport.Range(new RangeLabel(" ")));
     assertEquals(new PrintScalingReport.Automatic(), new PrintScalingReport.Automatic());
     assertEquals(new PrintTitleRowsReport.None(), new PrintTitleRowsReport.None());
     assertEquals(new PrintTitleColumnsReport.None(), new PrintTitleColumnsReport.None());
@@ -271,7 +278,7 @@ class StructuralLayoutProtocolTypesTest {
             new SheetDefaultsInput(11, 18.5d),
             java.util.List.of(
                 new IgnoredErrorInput(
-                    "A1:B2",
+                    new RangeRef("A1:B2"),
                     java.util.List.of(
                         dev.erst.gridgrind.core.vocabulary.ExcelIgnoredErrorType.FORMULA))));
 
@@ -287,7 +294,8 @@ class StructuralLayoutProtocolTypesTest {
     assertEquals(new SheetDefaultsInput(11, 18.5d), explicitPresentation.sheetDefaults());
     assertEquals(
         java.util.List.of(
-            new IgnoredErrorInput("A1:B2", java.util.List.of(ExcelIgnoredErrorType.FORMULA))),
+            new IgnoredErrorInput(
+                new RangeRef("A1:B2"), java.util.List.of(ExcelIgnoredErrorType.FORMULA))),
         explicitPresentation.ignoredErrors());
     assertEquals(
         new SheetPresentationReport(
@@ -304,7 +312,8 @@ class StructuralLayoutProtocolTypesTest {
             new SheetOutlineSummaryReport(false, false),
             new SheetDefaultsReport(11, 18.5d),
             java.util.List.of(
-                new IgnoredErrorReport("A1:B2", java.util.List.of(ExcelIgnoredErrorType.FORMULA)))),
+                new IgnoredErrorReport(
+                    new RangeLabel("A1:B2"), java.util.List.of(ExcelIgnoredErrorType.FORMULA)))),
         new SheetPresentationReport(
             new SheetDisplayReport(false, false, false, true, true),
             java.util.Optional.of(CellColorReport.rgb("#112233")),
@@ -312,7 +321,7 @@ class StructuralLayoutProtocolTypesTest {
             new SheetDefaultsReport(11, 18.5d),
             java.util.List.of(
                 new IgnoredErrorReport(
-                    "A1:B2", java.util.List.of(ExcelIgnoredErrorType.FORMULA)))));
+                    new RangeLabel("A1:B2"), java.util.List.of(ExcelIgnoredErrorType.FORMULA)))));
     assertThrows(IllegalArgumentException.class, () -> new SheetDefaultsInput(0, 15.0d));
     assertThrows(
         IllegalArgumentException.class,
@@ -330,14 +339,16 @@ class StructuralLayoutProtocolTypesTest {
                 SheetOutlineSummaryInput.defaults(),
                 SheetDefaultsInput.defaults(),
                 java.util.List.of(
-                    new IgnoredErrorInput("A1", java.util.List.of(ExcelIgnoredErrorType.FORMULA)),
                     new IgnoredErrorInput(
-                        "A1", java.util.List.of(ExcelIgnoredErrorType.EVALUATION_ERROR)))));
+                        new RangeRef("A1"), java.util.List.of(ExcelIgnoredErrorType.FORMULA)),
+                    new IgnoredErrorInput(
+                        new RangeRef("A1"),
+                        java.util.List.of(ExcelIgnoredErrorType.EVALUATION_ERROR)))));
     assertThrows(
         IllegalArgumentException.class,
         () ->
             new IgnoredErrorInput(
-                "A1",
+                new RangeRef("A1"),
                 java.util.List.of(ExcelIgnoredErrorType.FORMULA, ExcelIgnoredErrorType.FORMULA)));
     assertThrows(
         NullPointerException.class,
@@ -360,9 +371,11 @@ class StructuralLayoutProtocolTypesTest {
                         SheetDefaultsReport.defaults(),
                         java.util.List.of(
                             new IgnoredErrorReport(
-                                "A1", java.util.List.of(ExcelIgnoredErrorType.FORMULA)),
+                                new RangeLabel("A1"),
+                                java.util.List.of(ExcelIgnoredErrorType.FORMULA)),
                             new IgnoredErrorReport(
-                                "A1", java.util.List.of(ExcelIgnoredErrorType.EVALUATION_ERROR)))))
+                                new RangeLabel("A1"),
+                                java.util.List.of(ExcelIgnoredErrorType.EVALUATION_ERROR)))))
             .getMessage());
   }
 
@@ -396,21 +409,31 @@ class StructuralLayoutProtocolTypesTest {
         () -> new IgnoredErrorInput(null, java.util.List.of(ExcelIgnoredErrorType.FORMULA)));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new IgnoredErrorInput(" ", java.util.List.of(ExcelIgnoredErrorType.FORMULA)));
-    assertThrows(NullPointerException.class, () -> new IgnoredErrorInput("A1", null));
+        () ->
+            new IgnoredErrorInput(
+                new RangeRef(" "), java.util.List.of(ExcelIgnoredErrorType.FORMULA)));
+    assertThrows(NullPointerException.class, () -> new IgnoredErrorInput(new RangeRef("A1"), null));
     assertThrows(
-        IllegalArgumentException.class, () -> new IgnoredErrorInput("A1", java.util.List.of()));
-    assertThrows(NullPointerException.class, () -> new IgnoredErrorInput("A1", errorTypesWithNull));
+        IllegalArgumentException.class,
+        () -> new IgnoredErrorInput(new RangeRef("A1"), java.util.List.of()));
+    assertThrows(
+        NullPointerException.class,
+        () -> new IgnoredErrorInput(new RangeRef("A1"), errorTypesWithNull));
     assertThrows(
         NullPointerException.class,
         () -> new IgnoredErrorReport(null, java.util.List.of(ExcelIgnoredErrorType.FORMULA)));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new IgnoredErrorReport(" ", java.util.List.of(ExcelIgnoredErrorType.FORMULA)));
-    assertThrows(NullPointerException.class, () -> new IgnoredErrorReport("A1", null));
+        () ->
+            new IgnoredErrorReport(
+                new RangeLabel(" "), java.util.List.of(ExcelIgnoredErrorType.FORMULA)));
     assertThrows(
-        IllegalArgumentException.class, () -> new IgnoredErrorReport("A1", java.util.List.of()));
+        NullPointerException.class, () -> new IgnoredErrorReport(new RangeLabel("A1"), null));
     assertThrows(
-        NullPointerException.class, () -> new IgnoredErrorReport("A1", errorTypesWithNull));
+        IllegalArgumentException.class,
+        () -> new IgnoredErrorReport(new RangeLabel("A1"), java.util.List.of()));
+    assertThrows(
+        NullPointerException.class,
+        () -> new IgnoredErrorReport(new RangeLabel("A1"), errorTypesWithNull));
   }
 }

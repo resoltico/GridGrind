@@ -23,6 +23,7 @@ import dev.erst.gridgrind.core.plan.WorkbookMutationAction;
 import dev.erst.gridgrind.core.plan.WorkbookSelector;
 import dev.erst.gridgrind.core.vocabulary.CellAddress;
 import dev.erst.gridgrind.core.vocabulary.NamedRangeScope;
+import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import java.util.Optional;
 
@@ -105,13 +106,13 @@ final class OperationSequenceMutationFactory {
                 mutate(
                     new RangeSelector.ByRange(
                         new SheetName(targetSheet),
-                        FuzzDataDecoders.nextNonBlankRange(data, validRange)),
+                        new RangeRef(FuzzDataDecoders.nextNonBlankRange(data, validRange))),
                     new WorkbookMutationAction.MergeCells());
             case 0x1 ->
                 mutate(
                     new RangeSelector.ByRange(
                         new SheetName(targetSheet),
-                        FuzzDataDecoders.nextNonBlankRange(data, validRange)),
+                        new RangeRef(FuzzDataDecoders.nextNonBlankRange(data, validRange))),
                     new WorkbookMutationAction.UnmergeCells());
             case 0x2 ->
                 mutate(
@@ -153,14 +154,14 @@ final class OperationSequenceMutationFactory {
             case 0x1 -> {
               String range = validRange ? "A1:B2" : FuzzDataDecoders.nextNonBlankRange(data, false);
               yield mutate(
-                  new RangeSelector.ByRange(new SheetName(targetSheet), range),
+                  new RangeSelector.ByRange(new SheetName(targetSheet), new RangeRef(range)),
                   new CellMutationAction.SetRange(FuzzDataDecoders.nextProtocolGrid(data, 2, 2)));
             }
             case 0x2 ->
                 mutate(
                     new RangeSelector.ByRange(
                         new SheetName(targetSheet),
-                        FuzzDataDecoders.nextNonBlankRange(data, validRange)),
+                        new RangeRef(FuzzDataDecoders.nextNonBlankRange(data, validRange))),
                     new CellMutationAction.ClearRange());
             default ->
                 mutate(
@@ -227,7 +228,10 @@ final class OperationSequenceMutationFactory {
                 mutate(
                     new RangeSelector.ByRange(
                         new SheetName(targetSheet),
-                        validRange ? "A1:B2" : FuzzDataDecoders.nextNonBlankRange(data, false)),
+                        new RangeRef(
+                            validRange
+                                ? "A1:B2"
+                                : FuzzDataDecoders.nextNonBlankRange(data, false))),
                     new CellMutationAction.ApplyStyle(WorkbookStyleInputs.nextStyleInput(data)));
           };
       case 0x4 ->
@@ -236,7 +240,10 @@ final class OperationSequenceMutationFactory {
                 mutate(
                     new RangeSelector.ByRange(
                         new SheetName(targetSheet),
-                        validRange ? "A1:A4" : FuzzDataDecoders.nextNonBlankRange(data, false)),
+                        new RangeRef(
+                            validRange
+                                ? "A1:A4"
+                                : FuzzDataDecoders.nextNonBlankRange(data, false))),
                     new StructuredMutationAction.SetDataValidation(nextDataValidationInput(data)));
             case 0x1 ->
                 mutate(
@@ -257,7 +264,7 @@ final class OperationSequenceMutationFactory {
             case 0x0 ->
                 mutate(
                     new RangeSelector.ByRange(
-                        new SheetName(targetSheet), nextAutofilterRange(validRange)),
+                        new SheetName(targetSheet), new RangeRef(nextAutofilterRange(validRange))),
                     new StructuredMutationAction.SetAutofilter());
             case 0x1 ->
                 mutate(
@@ -300,9 +307,10 @@ final class OperationSequenceMutationFactory {
                             : new NamedRangeScope.Sheet(new SheetName(targetSheet)),
                         NamedRangeTarget.range(
                             new SheetName(targetSheet),
-                            validRange
-                                ? "A1:B2"
-                                : FuzzDataDecoders.nextNonBlankRange(data, false))));
+                            new RangeRef(
+                                validRange
+                                    ? "A1:B2"
+                                    : FuzzDataDecoders.nextNonBlankRange(data, false)))));
             default ->
                 mutate(
                     data.consumeBoolean()

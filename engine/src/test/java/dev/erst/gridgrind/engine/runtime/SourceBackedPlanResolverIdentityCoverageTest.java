@@ -37,6 +37,7 @@ import dev.erst.gridgrind.core.source.TextSourceInput;
 import dev.erst.gridgrind.core.vocabulary.CellAddress;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartDisplayBlanksAs;
 import dev.erst.gridgrind.core.vocabulary.ExcelPictureFormat;
+import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import java.io.IOException;
@@ -321,7 +322,7 @@ class SourceBackedPlanResolverIdentityCoverageTest extends SourceBackedPlanResol
     MutationStep rangeStep =
         new MutationStep(
             new StepId("set-range-file-backed"),
-            new RangeSelector.ByRange(new SheetName("Budget"), "A1:B1"),
+            new RangeSelector.ByRange(new SheetName("Budget"), new RangeRef("A1:B1")),
             new CellMutationAction.SetRange(
                 new dev.erst.gridgrind.core.model.value.CellGridInput.Typed(
                     List.of(

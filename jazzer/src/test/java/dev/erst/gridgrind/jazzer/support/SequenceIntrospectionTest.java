@@ -62,6 +62,7 @@ import dev.erst.gridgrind.core.vocabulary.ExcelPictureFormat;
 import dev.erst.gridgrind.core.vocabulary.ExcelPivotDataConsolidateFunction;
 import dev.erst.gridgrind.core.vocabulary.ExcelSheetVisibility;
 import dev.erst.gridgrind.core.vocabulary.NamedRangeScope;
+import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.core.vocabulary.SheetCopyPosition;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.excel.*;
@@ -213,7 +214,7 @@ class SequenceIntrospectionTest {
                 new StructuredMutationAction.SetNamedRange(
                     "BudgetTotal",
                     new NamedRangeScope.Workbook(),
-                    NamedRangeTarget.range(new SheetName("Budget"), "B4")))));
+                    NamedRangeTarget.range(new SheetName("Budget"), new RangeRef("B4"))))));
     assertEquals(
         "DELETE_NAMED_RANGE",
         mutationKind(
@@ -224,7 +225,7 @@ class SequenceIntrospectionTest {
         "SET_DATA_VALIDATION",
         mutationKind(
             mutate(
-                new RangeSelector.ByRange(new SheetName("Budget"), "A2:A5"),
+                new RangeSelector.ByRange(new SheetName("Budget"), new RangeRef("A2:A5")),
                 new StructuredMutationAction.SetDataValidation(
                     new DataValidationInput(
                         new DataValidationRuleInput.WholeNumber(
@@ -237,13 +238,13 @@ class SequenceIntrospectionTest {
         "CLEAR_DATA_VALIDATIONS",
         mutationKind(
             mutate(
-                new RangeSelector.ByRanges(new SheetName("Budget"), List.of("A2:A5")),
+                new RangeSelector.ByRanges(new SheetName("Budget"), List.of(new RangeRef("A2:A5"))),
                 new StructuredMutationAction.ClearDataValidations())));
     assertEquals(
         "SET_CONDITIONAL_FORMATTING",
         mutationKind(
             mutate(
-                new RangeSelector.ByRange(new SheetName("Budget"), "A2:A5"),
+                new RangeSelector.ByRange(new SheetName("Budget"), new RangeRef("A2:A5")),
                 new StructuredMutationAction.SetConditionalFormatting(
                     new ConditionalFormattingDefinitionInput(
                         List.of(
@@ -265,13 +266,13 @@ class SequenceIntrospectionTest {
         "CLEAR_CONDITIONAL_FORMATTING",
         mutationKind(
             mutate(
-                new RangeSelector.ByRanges(new SheetName("Budget"), List.of("A2:A5")),
+                new RangeSelector.ByRanges(new SheetName("Budget"), List.of(new RangeRef("A2:A5"))),
                 new StructuredMutationAction.ClearConditionalFormatting())));
     assertEquals(
         "SET_AUTOFILTER",
         mutationKind(
             mutate(
-                new RangeSelector.ByRange(new SheetName("Budget"), "E1:F4"),
+                new RangeSelector.ByRange(new SheetName("Budget"), new RangeRef("E1:F4")),
                 new StructuredMutationAction.SetAutofilter())));
     assertEquals(
         "CLEAR_AUTOFILTER",
@@ -287,7 +288,7 @@ class SequenceIntrospectionTest {
                     TableInput.withDefaultMetadata(
                         "BudgetTable",
                         new SheetName("Budget"),
-                        "A1:C4",
+                        new RangeRef("A1:C4"),
                         false,
                         new TableStyleInput.Named(
                             "TableStyleMedium2", false, false, true, false))))));
@@ -779,7 +780,7 @@ class SequenceIntrospectionTest {
     return new PivotTableInput(
         "OpsPivot",
         new SheetName("Budget"),
-        new PivotTableInput.Source.Range(new SheetName("Budget"), "A1:C4"),
+        new PivotTableInput.Source.Range(new SheetName("Budget"), new RangeRef("A1:C4")),
         new PivotTableInput.Anchor(new CellAddress("F4")),
         List.of("Month"),
         List.of(),

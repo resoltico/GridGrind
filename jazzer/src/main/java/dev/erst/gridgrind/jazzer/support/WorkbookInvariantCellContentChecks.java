@@ -188,7 +188,7 @@ final class WorkbookInvariantCellContentChecks {
         WorkbookInvariantChecks.require(
             !target.sheetName().value().isBlank(), "namedRange target sheet must not be blank");
         WorkbookInvariantChecks.require(
-            !target.range().isBlank(), "namedRange target range must not be blank");
+            !target.range().value().isBlank(), "namedRange target range must not be blank");
       }
       case NamedRangeReport.FormulaReport _ -> {}
     }

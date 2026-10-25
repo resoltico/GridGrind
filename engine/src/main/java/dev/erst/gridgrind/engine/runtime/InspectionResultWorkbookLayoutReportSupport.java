@@ -22,6 +22,7 @@ import dev.erst.gridgrind.core.model.protection.SheetProtectionSettings;
 import dev.erst.gridgrind.core.model.validation.IgnoredErrorReport;
 import dev.erst.gridgrind.core.model.value.CellHyperlinkReport;
 import dev.erst.gridgrind.core.vocabulary.CellAddress;
+import dev.erst.gridgrind.core.vocabulary.RangeLabel;
 import dev.erst.gridgrind.core.vocabulary.SheetLabel;
 import dev.erst.gridgrind.excel.ExcelCellReadProjection;
 import dev.erst.gridgrind.excel.ExcelHeaderFooterText;
@@ -185,7 +186,8 @@ final class InspectionResultWorkbookLayoutReportSupport {
         presentation.ignoredErrors().stream()
             .map(
                 ignoredError ->
-                    new IgnoredErrorReport(ignoredError.range(), ignoredError.errorTypes()))
+                    new IgnoredErrorReport(
+                        new RangeLabel(ignoredError.range()), ignoredError.errorTypes()))
             .toList());
   }
 
@@ -208,7 +210,8 @@ final class InspectionResultWorkbookLayoutReportSupport {
   static PrintAreaReport toPrintAreaReport(ExcelPrintLayout.Area printArea) {
     return switch (printArea) {
       case ExcelPrintLayout.Area.None _ -> new PrintAreaReport.None();
-      case ExcelPrintLayout.Area.Range range -> new PrintAreaReport.Range(range.range());
+      case ExcelPrintLayout.Area.Range range ->
+          new PrintAreaReport.Range(new RangeLabel(range.range()));
     };
   }
 

@@ -79,6 +79,7 @@ import dev.erst.gridgrind.core.vocabulary.ExcelPictureFormat;
 import dev.erst.gridgrind.core.vocabulary.ExcelPivotDataConsolidateFunction;
 import dev.erst.gridgrind.core.vocabulary.ExcelPrintOrientation;
 import dev.erst.gridgrind.core.vocabulary.ProtocolCellAddressValidation;
+import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import java.util.List;
 import java.util.Optional;
@@ -213,15 +214,18 @@ class AdvancedMutationProtocolTypesTest {
     assertEquals(ref("book-secret"), protection.workbookPasswordRef().orElseThrow());
     assertEquals(ref("review-secret"), protection.revisionsPasswordRef().orElseThrow());
 
-    NamedRangeTarget.Range explicit = NamedRangeTarget.range(new SheetName("Budget"), "C3:A1");
+    NamedRangeTarget.Range explicit =
+        NamedRangeTarget.range(new SheetName("Budget"), new RangeRef("C3:A1"));
     NamedRangeTarget.Formula formula = NamedRangeTarget.formula("SUM(Budget!A1:A3)");
     assertEquals("Budget", explicit.sheetName().value());
-    assertEquals("C3:A1", explicit.range());
+    assertEquals("C3:A1", explicit.range().value());
     assertEquals("SUM(Budget!A1:A3)", formula.formula());
     assertThrows(IllegalArgumentException.class, () -> NamedRangeTarget.formula(" "));
     assertThrows(
-        IllegalArgumentException.class, () -> NamedRangeTarget.range(new SheetName("Budget"), " "));
-    assertThrows(NullPointerException.class, () -> new NamedRangeTarget.Range(null, "A1"));
+        IllegalArgumentException.class,
+        () -> NamedRangeTarget.range(new SheetName("Budget"), new RangeRef(" ")));
+    assertThrows(
+        NullPointerException.class, () -> new NamedRangeTarget.Range(null, new RangeRef("A1")));
 
     CommentAnchorInput anchor = new CommentAnchorInput(1, 2, 4, 6);
     assertEquals(1, anchor.firstColumn());
@@ -667,15 +671,16 @@ class AdvancedMutationProtocolTypesTest {
   @Test
   void autofilterInputsNormalizeAndValidateAcrossAllCriterionFamilies() {
     AutofilterSortConditionInput colorSort =
-        new AutofilterSortConditionInput.CellColor("B2:B9", true, ColorInput.rgb("#aabbcc"));
+        new AutofilterSortConditionInput.CellColor(
+            new RangeRef("B2:B9"), true, ColorInput.rgb("#aabbcc"));
     AutofilterSortConditionInput iconSort =
-        new AutofilterSortConditionInput.Icon("C2:C9", false, 2);
+        new AutofilterSortConditionInput.Icon(new RangeRef("C2:C9"), false, 2);
     AutofilterSortStateInput sortState =
         AutofilterSortStateInput.withoutSortMethod(
-            "A1:F9", false, true, List.of(colorSort, iconSort));
+            new RangeRef("A1:F9"), false, true, List.of(colorSort, iconSort));
     AutofilterSortStateInput sortStateWithMethod =
         new AutofilterSortStateInput(
-            "A1:F9",
+            new RangeRef("A1:F9"),
             true,
             false,
             Optional.of(dev.erst.gridgrind.core.vocabulary.ExcelAutofilterSortMethod.PINYIN),
@@ -701,25 +706,30 @@ class AdvancedMutationProtocolTypesTest {
         NullPointerException.class, () -> new AutofilterSortConditionInput.Value(null, false));
     assertThrows(
         IllegalArgumentException.class,
-        () -> AutofilterSortStateInput.withoutSortMethod(" ", false, false, List.of(colorSort)));
-    assertThrows(
-        IllegalArgumentException.class, () -> new AutofilterSortConditionInput.Value(" ", false));
+        () ->
+            AutofilterSortStateInput.withoutSortMethod(
+                new RangeRef(" "), false, false, List.of(colorSort)));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new AutofilterSortConditionInput.Icon("A1:A2", false, -1));
+        () -> new AutofilterSortConditionInput.Value(new RangeRef(" "), false));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new AutofilterSortConditionInput.Icon(new RangeRef("A1:A2"), false, -1));
     assertThrows(
         NullPointerException.class,
         () ->
             AutofilterSortStateInput.withoutSortMethod(
-                "A1:F9", false, false, (List<AutofilterSortConditionInput>) null));
+                new RangeRef("A1:F9"), false, false, (List<AutofilterSortConditionInput>) null));
     assertThrows(
         IllegalArgumentException.class,
-        () -> AutofilterSortStateInput.withoutSortMethod("A1:F9", false, false, List.of()));
+        () ->
+            AutofilterSortStateInput.withoutSortMethod(
+                new RangeRef("A1:F9"), false, false, List.of()));
     assertThrows(
         NullPointerException.class,
         () ->
             AutofilterSortStateInput.withoutSortMethod(
-                "A1:F9", false, false, List.of((AutofilterSortConditionInput) null)));
+                new RangeRef("A1:F9"), false, false, List.of((AutofilterSortConditionInput) null)));
 
     AutofilterFilterCriterionInput.Values values =
         new AutofilterFilterCriterionInput.Values(List.of("Queued", "Ready"), true);
@@ -1226,7 +1236,7 @@ class AdvancedMutationProtocolTypesTest {
         new TableInput(
             "BudgetTable",
             new dev.erst.gridgrind.core.vocabulary.SheetName("Budget"),
-            "A1:C4",
+            new RangeRef("A1:C4"),
             false,
             true,
             new TableStyleInput.None(),
@@ -1242,7 +1252,7 @@ class AdvancedMutationProtocolTypesTest {
         new TableInput(
             "BudgetTable",
             new dev.erst.gridgrind.core.vocabulary.SheetName("Budget"),
-            "A1:C4",
+            new RangeRef("A1:C4"),
             false,
             false,
             new TableStyleInput.None(),
@@ -1268,7 +1278,7 @@ class AdvancedMutationProtocolTypesTest {
             new TableInput(
                 "BudgetTable",
                 new dev.erst.gridgrind.core.vocabulary.SheetName("Budget"),
-                "A1:C4",
+                new RangeRef("A1:C4"),
                 false,
                 true,
                 new TableStyleInput.None(),
@@ -1292,7 +1302,7 @@ class AdvancedMutationProtocolTypesTest {
             new SheetDefaultsInput(12, 18.5d),
             List.of(
                 new IgnoredErrorInput(
-                    "B2:B12",
+                    new RangeRef("B2:B12"),
                     List.of(
                         ExcelIgnoredErrorType.NUMBER_STORED_AS_TEXT,
                         ExcelIgnoredErrorType.FORMULA))));
@@ -1310,7 +1320,7 @@ class AdvancedMutationProtocolTypesTest {
         IllegalArgumentException.class,
         () ->
             new IgnoredErrorInput(
-                "B2:B12",
+                new RangeRef("B2:B12"),
                 List.of(
                     ExcelIgnoredErrorType.NUMBER_STORED_AS_TEXT,
                     ExcelIgnoredErrorType.NUMBER_STORED_AS_TEXT)));
@@ -1324,8 +1334,10 @@ class AdvancedMutationProtocolTypesTest {
                 SheetDefaultsInput.defaults(),
                 List.of(
                     new IgnoredErrorInput(
-                        "B2:B12", List.of(ExcelIgnoredErrorType.NUMBER_STORED_AS_TEXT)),
-                    new IgnoredErrorInput("B2:B12", List.of(ExcelIgnoredErrorType.FORMULA)))));
+                        new RangeRef("B2:B12"),
+                        List.of(ExcelIgnoredErrorType.NUMBER_STORED_AS_TEXT)),
+                    new IgnoredErrorInput(
+                        new RangeRef("B2:B12"), List.of(ExcelIgnoredErrorType.FORMULA)))));
   }
 
   @Test
@@ -1334,7 +1346,7 @@ class AdvancedMutationProtocolTypesTest {
         new PivotTableInput(
             "Sales Pivot 2026",
             new SheetName("Report"),
-            new PivotTableInput.Source.Range(new SheetName("Data"), "A1:D5"),
+            new PivotTableInput.Source.Range(new SheetName("Data"), new RangeRef("A1:D5")),
             new PivotTableInput.Anchor(new CellAddress("$C$5")),
             List.of("Region"),
             List.of("Stage"),
@@ -1387,14 +1399,14 @@ class AdvancedMutationProtocolTypesTest {
         () -> new PivotTableInput.Source.Range(new SheetName("Data"), null));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new PivotTableInput.Source.Range(new SheetName("Data"), " "));
+        () -> new PivotTableInput.Source.Range(new SheetName("Data"), new RangeRef(" ")));
     assertThrows(
         IllegalArgumentException.class,
         () ->
             new PivotTableInput(
                 "Sales Pivot 2026",
                 new SheetName("Report"),
-                new PivotTableInput.Source.Range(new SheetName("Data"), "A1:D5"),
+                new PivotTableInput.Source.Range(new SheetName("Data"), new RangeRef("A1:D5")),
                 new PivotTableInput.Anchor(new CellAddress("C5")),
                 List.of("Region"),
                 List.of("Stage"),
@@ -1411,7 +1423,7 @@ class AdvancedMutationProtocolTypesTest {
             new PivotTableInput(
                 "Sales Pivot 2026",
                 new SheetName("Report"),
-                new PivotTableInput.Source.Range(new SheetName("Data"), "A1:D5"),
+                new PivotTableInput.Source.Range(new SheetName("Data"), new RangeRef("A1:D5")),
                 new PivotTableInput.Anchor(new CellAddress("C5")),
                 List.of("Region", "region"),
                 List.of(),
@@ -1428,7 +1440,7 @@ class AdvancedMutationProtocolTypesTest {
             new PivotTableInput(
                 "Sales Pivot 2026",
                 new SheetName("Report"),
-                new PivotTableInput.Source.Range(new SheetName("Data"), "A1:D5"),
+                new PivotTableInput.Source.Range(new SheetName("Data"), new RangeRef("A1:D5")),
                 new PivotTableInput.Anchor(new CellAddress("C5")),
                 List.of("Region"),
                 List.of("region"),
@@ -1445,7 +1457,7 @@ class AdvancedMutationProtocolTypesTest {
             new PivotTableInput(
                 "Sales Pivot 2026",
                 new SheetName("Report"),
-                new PivotTableInput.Source.Range(new SheetName("Data"), "A1:D5"),
+                new PivotTableInput.Source.Range(new SheetName("Data"), new RangeRef("A1:D5")),
                 new PivotTableInput.Anchor(new CellAddress("C5")),
                 List.of((String) null),
                 List.of(),
@@ -1462,7 +1474,7 @@ class AdvancedMutationProtocolTypesTest {
             new PivotTableInput(
                 "Sales Pivot 2026",
                 new SheetName("Report"),
-                new PivotTableInput.Source.Range(new SheetName("Data"), "A1:D5"),
+                new PivotTableInput.Source.Range(new SheetName("Data"), new RangeRef("A1:D5")),
                 new PivotTableInput.Anchor(new CellAddress("C5")),
                 List.of(" "),
                 List.of(),
@@ -1479,7 +1491,7 @@ class AdvancedMutationProtocolTypesTest {
             new PivotTableInput(
                 "Sales Pivot 2026",
                 new SheetName("Report"),
-                new PivotTableInput.Source.Range(new SheetName("Data"), "A1:D5"),
+                new PivotTableInput.Source.Range(new SheetName("Data"), new RangeRef("A1:D5")),
                 new PivotTableInput.Anchor(new CellAddress("C5")),
                 List.of(),
                 List.of(),
@@ -1491,7 +1503,7 @@ class AdvancedMutationProtocolTypesTest {
             new PivotTableInput(
                 "Sales Pivot 2026",
                 new SheetName("Report"),
-                new PivotTableInput.Source.Range(new SheetName("Data"), "A1:D5"),
+                new PivotTableInput.Source.Range(new SheetName("Data"), new RangeRef("A1:D5")),
                 new PivotTableInput.Anchor(new CellAddress("C5")),
                 List.of(),
                 List.of(),

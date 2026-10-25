@@ -27,11 +27,14 @@ import dev.erst.gridgrind.core.plan.StructuredMutationAction;
 import dev.erst.gridgrind.core.plan.WorkbookAssetIntrospectionQuery;
 import dev.erst.gridgrind.core.plan.WorkbookMutationAction;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
+import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import java.util.List;
 
 /** Published task recipe for executive dashboard workflows. */
+@SuppressWarnings(
+    "PMD.ExcessiveImports") // A complete dashboard recipe composes these model features.
 final class DashboardTaskRecipe {
   private DashboardTaskRecipe() {}
 
@@ -164,7 +167,7 @@ final class DashboardTaskRecipe {
                 "DashboardCategories",
                 new dev.erst.gridgrind.core.vocabulary.NamedRangeScope.Workbook(),
                 dev.erst.gridgrind.core.model.formula.NamedRangeTarget.range(
-                    new SheetName("Ops"), "A2:A4"))),
+                    new SheetName("Ops"), new RangeRef("A2:A4")))),
         ExampleSteps.step(
             new StepId("define-dashboard-actual"),
             new NamedRangeSelector.WorkbookScope("DashboardActual"),
@@ -172,7 +175,7 @@ final class DashboardTaskRecipe {
                 "DashboardActual",
                 new dev.erst.gridgrind.core.vocabulary.NamedRangeScope.Workbook(),
                 dev.erst.gridgrind.core.model.formula.NamedRangeTarget.range(
-                    new SheetName("Ops"), "C2:C4"))),
+                    new SheetName("Ops"), new RangeRef("C2:C4")))),
         ExampleSteps.step(
             new StepId("author-dashboard-chart"),
             ExampleSelectors.sheet("Ops"),

@@ -22,6 +22,7 @@ import dev.erst.gridgrind.core.vocabulary.ExcelFillPattern;
 import dev.erst.gridgrind.core.vocabulary.ExcelHorizontalAlignment;
 import dev.erst.gridgrind.core.vocabulary.ExcelVerticalAlignment;
 import dev.erst.gridgrind.core.vocabulary.NamedRangeScope;
+import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.excel.*;
@@ -109,7 +110,7 @@ class DefaultGridGrindRequestExecutorCoverageTest
             new StructuredMutationAction.SetNamedRange(
                 "BudgetTotal",
                 new NamedRangeScope.Workbook(),
-                NamedRangeTarget.range(new SheetName("Budget"), "B4")));
+                NamedRangeTarget.range(new SheetName("Budget"), new RangeRef("B4"))));
     InspectionStep getCells =
         new InspectionStep(
             new StepId("step-03-get-cells"),

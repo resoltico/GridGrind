@@ -63,6 +63,7 @@ import dev.erst.gridgrind.core.vocabulary.ExcelFillPattern;
 import dev.erst.gridgrind.core.vocabulary.ExcelHorizontalAlignment;
 import dev.erst.gridgrind.core.vocabulary.ExcelVerticalAlignment;
 import dev.erst.gridgrind.core.vocabulary.NamedRangeScope;
+import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.core.vocabulary.SheetLabel;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.StepId;
@@ -133,14 +134,14 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
                         new StructuredMutationAction.SetNamedRange(
                             "BudgetTotal",
                             new NamedRangeScope.Workbook(),
-                            NamedRangeTarget.range(new SheetName("Budget"), "F2"))),
+                            NamedRangeTarget.range(new SheetName("Budget"), new RangeRef("F2")))),
                     mutate(
                         new TableSelector.ByNameOnSheet("BudgetTable", new SheetName("Budget")),
                         new StructuredMutationAction.SetTable(
                             TableInput.withDefaultMetadata(
                                 "BudgetTable",
                                 new SheetName("Budget"),
-                                "A1:B2",
+                                new RangeRef("A1:B2"),
                                 false,
                                 new TableStyleInput.None())))),
                 List.of(),
@@ -483,14 +484,14 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
                         new StructuredMutationAction.SetNamedRange(
                             "BudgetTotal",
                             new NamedRangeScope.Workbook(),
-                            NamedRangeTarget.range(new SheetName("Budget"), "F2"))),
+                            NamedRangeTarget.range(new SheetName("Budget"), new RangeRef("F2")))),
                     mutate(
                         new TableSelector.ByNameOnSheet("BudgetTable", new SheetName("Budget")),
                         new StructuredMutationAction.SetTable(
                             TableInput.withDefaultMetadata(
                                 "BudgetTable",
                                 new SheetName("Budget"),
-                                "A1:B2",
+                                new RangeRef("A1:B2"),
                                 false,
                                 new TableStyleInput.None())))),
                 List.of(),
@@ -1500,7 +1501,7 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
             new WorkbookMutationAction.EnsureSheet()),
         mutate(
             new dev.erst.gridgrind.core.plan.RangeSelector.ByRange(
-                new SheetName("Budget"), "A1:B3"),
+                new SheetName("Budget"), new RangeRef("A1:B3")),
             new CellMutationAction.SetRange(
                 new dev.erst.gridgrind.core.model.value.CellGridInput.Typed(
                     List.of(
@@ -1512,7 +1513,7 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
                 TableInput.withDefaultMetadata(
                     "BudgetTable",
                     new SheetName("Budget"),
-                    "A1:B3",
+                    new RangeRef("A1:B3"),
                     false,
                     new TableStyleInput.None()))));
   }

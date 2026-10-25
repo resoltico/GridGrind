@@ -136,7 +136,8 @@ final class WorkbookInvariantCellMetadataChecks {
         linkedTable.tableName(), "custom XML linked table tableName");
     WorkbookInvariantChecks.requireNonBlank(
         linkedTable.tableDisplayName(), "custom XML linked table tableDisplayName");
-    WorkbookInvariantChecks.requireNonBlank(linkedTable.range(), "custom XML linked table range");
+    WorkbookInvariantChecks.requireNonBlank(
+        linkedTable.range().value(), "custom XML linked table range");
     WorkbookInvariantChecks.requireNonBlank(
         linkedTable.commonXPath(), "custom XML linked table commonXPath");
   }
@@ -152,7 +153,7 @@ final class WorkbookInvariantCellMetadataChecks {
     WorkbookInvariantChecks.require(arrayFormula != null, "array formula must not be null");
     WorkbookInvariantChecks.requireNonBlank(
         arrayFormula.sheetName().value(), "array formula sheetName");
-    WorkbookInvariantChecks.requireNonBlank(arrayFormula.range(), "array formula range");
+    WorkbookInvariantChecks.requireNonBlank(arrayFormula.range().value(), "array formula range");
     WorkbookInvariantChecks.requireNonBlank(
         arrayFormula.topLeftAddress().value(), "array formula topLeftAddress");
     WorkbookInvariantChecks.requireNonBlank(arrayFormula.formula(), "array formula formula");
@@ -273,7 +274,8 @@ final class WorkbookInvariantCellMetadataChecks {
 
   static void requireAutofilterSortStateShape(AutofilterSortStateReport sortState) {
     WorkbookInvariantChecks.require(sortState != null, "autofilter sortState must not be null");
-    WorkbookInvariantChecks.requireNonBlank(sortState.range(), "autofilter sortState range");
+    WorkbookInvariantChecks.requireNonBlank(
+        sortState.range().value(), "autofilter sortState range");
     WorkbookInvariantChecks.require(
         sortState.conditions() != null, "autofilter sortState conditions must not be null");
     sortState
@@ -284,7 +286,8 @@ final class WorkbookInvariantCellMetadataChecks {
   static void requireAutofilterSortConditionShape(AutofilterSortConditionReport condition) {
     WorkbookInvariantChecks.require(
         condition != null, "autofilter sort condition must not be null");
-    WorkbookInvariantChecks.requireNonBlank(condition.range(), "autofilter sort condition range");
+    WorkbookInvariantChecks.requireNonBlank(
+        condition.range().value(), "autofilter sort condition range");
     switch (condition) {
       case AutofilterSortConditionReport.Value _ -> {
         // No auxiliary payload.

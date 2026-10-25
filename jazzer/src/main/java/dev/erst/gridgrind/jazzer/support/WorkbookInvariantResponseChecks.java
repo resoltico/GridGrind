@@ -335,7 +335,9 @@ final class WorkbookInvariantResponseChecks {
             .mergedRegions()
             .forEach(
                 region ->
-                    require(!region.range().isBlank(), "merged region range must not be blank"));
+                    require(
+                        !region.range().value().isBlank(),
+                        "merged region range must not be blank"));
       }
       case SheetInspectionResult.HyperlinksResult result -> {
         require(result.sheetName() != null, "hyperlinks sheetName must not be null");

@@ -2,6 +2,7 @@ package dev.erst.gridgrind.core.model.print;
 
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import dev.erst.gridgrind.core.vocabulary.RangeLabel;
 import java.util.Objects;
 
 /** Print-area state captured from one sheet. */
@@ -15,12 +16,9 @@ public sealed interface PrintAreaReport permits PrintAreaReport.None, PrintAreaR
   record None() implements PrintAreaReport {}
 
   /** Sheet prints the provided rectangular A1-style range. */
-  record Range(String range) implements PrintAreaReport {
+  record Range(RangeLabel range) implements PrintAreaReport {
     public Range {
       Objects.requireNonNull(range, "range must not be null");
-      if (range.isBlank()) {
-        throw new IllegalArgumentException("range must not be blank");
-      }
     }
   }
 }

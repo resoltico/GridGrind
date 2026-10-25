@@ -26,6 +26,7 @@ import dev.erst.gridgrind.core.vocabulary.CellAddress;
 import dev.erst.gridgrind.core.vocabulary.ExcelComparisonOperator;
 import dev.erst.gridgrind.core.vocabulary.ExcelPrintOrientation;
 import dev.erst.gridgrind.core.vocabulary.NamedRangeScope;
+import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.excel.*;
 import dev.erst.gridgrind.excel.ExcelNamedRangeScope;
@@ -83,7 +84,7 @@ class DefaultGridGrindRequestExecutorAuthoringContextTranslationTest
         null);
     assertWriteContext(
         mutate(
-            new RangeSelector.ByRange(new SheetName("Budget"), "A1:B2"),
+            new RangeSelector.ByRange(new SheetName("Budget"), new RangeRef("A1:B2")),
             new CellMutationAction.ApplyStyle(
                 styleInput(
                     null,
@@ -99,7 +100,7 @@ class DefaultGridGrindRequestExecutorAuthoringContextTranslationTest
         null);
     assertWriteContext(
         mutate(
-            new RangeSelector.ByRange(new SheetName("Budget"), "B2:B5"),
+            new RangeSelector.ByRange(new SheetName("Budget"), new RangeRef("B2:B5")),
             new StructuredMutationAction.SetDataValidation(
                 dataValidation(
                     new DataValidationRuleInput.TextLength(
@@ -124,7 +125,7 @@ class DefaultGridGrindRequestExecutorAuthoringContextTranslationTest
         null);
     assertWriteContext(
         mutate(
-            new RangeSelector.ByRange(new SheetName("Budget"), "B2:B5"),
+            new RangeSelector.ByRange(new SheetName("Budget"), new RangeRef("B2:B5")),
             new StructuredMutationAction.SetConditionalFormatting(
                 singleFormulaConditionalFormattingBlock())),
         exception,
@@ -143,7 +144,7 @@ class DefaultGridGrindRequestExecutorAuthoringContextTranslationTest
         null);
     assertWriteContext(
         mutate(
-            new RangeSelector.ByRange(new SheetName("Budget"), "A1:C4"),
+            new RangeSelector.ByRange(new SheetName("Budget"), new RangeRef("A1:C4")),
             new StructuredMutationAction.SetAutofilter()),
         exception,
         "Budget",
@@ -165,7 +166,7 @@ class DefaultGridGrindRequestExecutorAuthoringContextTranslationTest
                 TableInput.withDefaultMetadata(
                     "BudgetTable",
                     new SheetName("Budget"),
-                    "A1:C4",
+                    new RangeRef("A1:C4"),
                     false,
                     new TableStyleInput.None()))),
         exception,
@@ -187,7 +188,7 @@ class DefaultGridGrindRequestExecutorAuthoringContextTranslationTest
             new StructuredMutationAction.SetNamedRange(
                 "BudgetTotal",
                 new NamedRangeScope.Workbook(),
-                NamedRangeTarget.range(new SheetName("Budget"), "B4"))),
+                NamedRangeTarget.range(new SheetName("Budget"), new RangeRef("B4")))),
         exception,
         "Budget",
         null,
@@ -253,7 +254,7 @@ class DefaultGridGrindRequestExecutorAuthoringContextTranslationTest
         "C1:D2",
         rangeFor(
             mutate(
-                new RangeSelector.ByRange(new SheetName("Budget"), "C1:D2"),
+                new RangeSelector.ByRange(new SheetName("Budget"), new RangeRef("C1:D2")),
                 new CellMutationAction.SetRange(
                     new dev.erst.gridgrind.core.model.value.CellGridInput.Typed(
                         List.of(List.of(textCell("x")))))),
@@ -262,21 +263,22 @@ class DefaultGridGrindRequestExecutorAuthoringContextTranslationTest
         "E1:E2",
         rangeFor(
             mutate(
-                new RangeSelector.ByRange(new SheetName("Budget"), "E1:E2"),
+                new RangeSelector.ByRange(new SheetName("Budget"), new RangeRef("E1:E2")),
                 new CellMutationAction.ClearRange()),
             invalidFormula));
     assertEquals(
         "B2:B5",
         rangeFor(
             mutate(
-                new RangeSelector.ByRange(new SheetName("Budget"), "B2:B5"),
+                new RangeSelector.ByRange(new SheetName("Budget"), new RangeRef("B2:B5")),
                 new StructuredMutationAction.SetConditionalFormatting(
                     singleFormulaConditionalFormattingBlock())),
             invalidFormula));
     assertNull(
         rangeFor(
             mutate(
-                new RangeSelector.ByRanges(new SheetName("Budget"), List.of("B2:B5", "D2:D5")),
+                new RangeSelector.ByRanges(
+                    new SheetName("Budget"), List.of(new RangeRef("B2:B5"), new RangeRef("D2:D5"))),
                 new StructuredMutationAction.SetConditionalFormatting(
                     singleFormulaConditionalFormattingBlock())),
             invalidFormula));
@@ -329,10 +331,10 @@ class DefaultGridGrindRequestExecutorAuthoringContextTranslationTest
                 new SheetSelector.ByName(new SheetName("Budget")),
                 new WorkbookMutationAction.MoveSheet(0)),
             mutate(
-                new RangeSelector.ByRange(new SheetName("Budget"), "A1:B2"),
+                new RangeSelector.ByRange(new SheetName("Budget"), new RangeRef("A1:B2")),
                 new WorkbookMutationAction.MergeCells()),
             mutate(
-                new RangeSelector.ByRange(new SheetName("Budget"), "A1:B2"),
+                new RangeSelector.ByRange(new SheetName("Budget"), new RangeRef("A1:B2")),
                 new WorkbookMutationAction.UnmergeCells()),
             mutate(
                 new ColumnBandSelector.Span(new SheetName("Budget"), 0, 1),
@@ -386,7 +388,7 @@ class DefaultGridGrindRequestExecutorAuthoringContextTranslationTest
                 new SheetSelector.ByName(new SheetName("Budget")),
                 new WorkbookMutationAction.SetPrintLayout(
                     PrintLayoutInput.withDefaultSetup(
-                        new PrintAreaInput.Range("A1:B12"),
+                        new PrintAreaInput.Range(new RangeRef("A1:B12")),
                         ExcelPrintOrientation.LANDSCAPE,
                         new PrintScalingInput.Fit(1, 0),
                         new PrintTitleRowsInput.Band(0, 0),
@@ -400,12 +402,12 @@ class DefaultGridGrindRequestExecutorAuthoringContextTranslationTest
                 new CellSelector.ByAddress(new SheetName("Budget"), new CellAddress("A1")),
                 new CellMutationAction.SetCell(textCell("x"))),
             mutate(
-                new RangeSelector.ByRange(new SheetName("Budget"), "A1:B1"),
+                new RangeSelector.ByRange(new SheetName("Budget"), new RangeRef("A1:B1")),
                 new CellMutationAction.SetRange(
                     new dev.erst.gridgrind.core.model.value.CellGridInput.Typed(
                         List.of(List.of(textCell("x")))))),
             mutate(
-                new RangeSelector.ByRange(new SheetName("Budget"), "A1:B1"),
+                new RangeSelector.ByRange(new SheetName("Budget"), new RangeRef("A1:B1")),
                 new CellMutationAction.ClearRange()),
             mutate(
                 new CellSelector.ByAddress(new SheetName("Budget"), new CellAddress("A1")),
@@ -422,7 +424,7 @@ class DefaultGridGrindRequestExecutorAuthoringContextTranslationTest
                 new CellSelector.ByAddress(new SheetName("Budget"), new CellAddress("A1")),
                 new CellMutationAction.ClearComment()),
             mutate(
-                new RangeSelector.ByRange(new SheetName("Budget"), "A1:B2"),
+                new RangeSelector.ByRange(new SheetName("Budget"), new RangeRef("A1:B2")),
                 new CellMutationAction.ApplyStyle(
                     styleInput(
                         null,
@@ -432,7 +434,7 @@ class DefaultGridGrindRequestExecutorAuthoringContextTranslationTest
                         null,
                         null))),
             mutate(
-                new RangeSelector.ByRange(new SheetName("Budget"), "B2:B5"),
+                new RangeSelector.ByRange(new SheetName("Budget"), new RangeRef("B2:B5")),
                 new StructuredMutationAction.SetDataValidation(
                     dataValidation(
                         new DataValidationRuleInput.TextLength(
@@ -447,14 +449,14 @@ class DefaultGridGrindRequestExecutorAuthoringContextTranslationTest
                 new RangeSelector.AllOnSheet(new SheetName("Budget")),
                 new StructuredMutationAction.ClearDataValidations()),
             mutate(
-                new RangeSelector.ByRange(new SheetName("Budget"), "B2:B5"),
+                new RangeSelector.ByRange(new SheetName("Budget"), new RangeRef("B2:B5")),
                 new StructuredMutationAction.SetConditionalFormatting(
                     singleFormulaConditionalFormattingBlock())),
             mutate(
                 new RangeSelector.AllOnSheet(new SheetName("Budget")),
                 new StructuredMutationAction.ClearConditionalFormatting()),
             mutate(
-                new RangeSelector.ByRange(new SheetName("Budget"), "A1:C4"),
+                new RangeSelector.ByRange(new SheetName("Budget"), new RangeRef("A1:C4")),
                 new StructuredMutationAction.SetAutofilter()),
             mutate(
                 new SheetSelector.ByName(new SheetName("Budget")),
@@ -464,7 +466,7 @@ class DefaultGridGrindRequestExecutorAuthoringContextTranslationTest
                     TableInput.withDefaultMetadata(
                         "BudgetTable",
                         new SheetName("Budget"),
-                        "A1:C4",
+                        new RangeRef("A1:C4"),
                         false,
                         new TableStyleInput.None()))),
             mutate(

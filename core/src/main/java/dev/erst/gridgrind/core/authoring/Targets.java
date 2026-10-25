@@ -9,6 +9,7 @@ import dev.erst.gridgrind.core.plan.SheetSelector;
 import dev.erst.gridgrind.core.plan.TableSelector;
 import dev.erst.gridgrind.core.plan.WorkbookSelector;
 import dev.erst.gridgrind.core.vocabulary.CellAddress;
+import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 
 /** Selector builders for the fluent Java authoring API. */
@@ -31,7 +32,7 @@ public final class Targets {
   }
 
   /** Returns one exact range target by sheet name and A1 range. */
-  public static RangeTarget range(SheetName sheetName, String range) {
+  public static RangeTarget range(SheetName sheetName, RangeRef range) {
     return new RangeTarget(new RangeSelector.ByRange(sheetName, range));
   }
 

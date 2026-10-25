@@ -36,6 +36,7 @@ import dev.erst.gridgrind.core.vocabulary.CellAddress;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartDisplayBlanksAs;
 import dev.erst.gridgrind.core.vocabulary.ExcelDataValidationErrorStyle;
 import dev.erst.gridgrind.core.vocabulary.ExcelPictureFormat;
+import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import java.time.LocalDate;
@@ -99,7 +100,7 @@ class SourceBackedPlanResolverStandardInputCoverageTest
                 new WorkbookPlan.WorkbookPersistence.None(),
                 mutations(
                     mutate(
-                        new RangeSelector.ByRange(new SheetName("Budget"), "A1:G1"),
+                        new RangeSelector.ByRange(new SheetName("Budget"), new RangeRef("A1:G1")),
                         fullyInlineRange)))));
     assertFalse(requiresStandardInputFor(new WorkbookMutationAction.EnsureSheet()));
     assertFalse(
@@ -294,7 +295,7 @@ class SourceBackedPlanResolverStandardInputCoverageTest
                 new TableInput(
                     "BudgetTable",
                     new dev.erst.gridgrind.core.vocabulary.SheetName("Budget"),
-                    "A1:B2",
+                    new RangeRef("A1:B2"),
                     false,
                     true,
                     new TableStyleInput.Named("TableStyleMedium2", false, false, true, false),

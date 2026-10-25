@@ -62,6 +62,7 @@ import dev.erst.gridgrind.core.vocabulary.ExcelDrawingAnchorBehavior;
 import dev.erst.gridgrind.core.vocabulary.ExcelPictureFormat;
 import dev.erst.gridgrind.core.vocabulary.ExcelPivotDataConsolidateFunction;
 import dev.erst.gridgrind.core.vocabulary.NamedRangeScope;
+import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.excel.*;
@@ -158,7 +159,7 @@ class AdvancedMutationCommandConverterTest {
         assertInstanceOf(
             WorkbookTabularCommand.SetAutofilter.class,
             WorkbookCommandConverter.toCommand(
-                new RangeSelector.ByRange(new SheetName("Budget"), "A1:C4"),
+                new RangeSelector.ByRange(new SheetName("Budget"), new RangeRef("A1:C4")),
                 new StructuredMutationAction.SetAutofilter()));
     assertEquals(List.of(), simpleAutofilter.criteria());
     assertEquals(Optional.empty(), simpleAutofilter.sortState());
@@ -168,7 +169,7 @@ class AdvancedMutationCommandConverterTest {
         assertInstanceOf(
             WorkbookTabularCommand.SetAutofilter.class,
             WorkbookCommandConverter.toCommand(
-                new RangeSelector.ByRange(new SheetName("Budget"), "A1:F9"),
+                new RangeSelector.ByRange(new SheetName("Budget"), new RangeRef("A1:F9")),
                 advancedAutofilterAction()));
     assertEquals(expectedAutofilterCriteria(), advancedAutofilter.criteria());
     assertEquals(Optional.of(expectedAutofilterSortState()), advancedAutofilter.sortState());
@@ -341,7 +342,7 @@ class AdvancedMutationCommandConverterTest {
         assertInstanceOf(
             WorkbookCellCommand.SetArrayFormula.class,
             WorkbookCommandConverter.toCommand(
-                new RangeSelector.ByRange(new SheetName("Calc"), "D2:D4"),
+                new RangeSelector.ByRange(new SheetName("Calc"), new RangeRef("D2:D4")),
                 new CellMutationAction.SetArrayFormula(
                     new ArrayFormulaInput(text("{=B2:B4*C2:C4}")))));
     WorkbookCellCommand.ClearArrayFormula clearArrayFormula =
@@ -388,7 +389,8 @@ class AdvancedMutationCommandConverterTest {
                     new PivotTableInput(
                         "Sales Pivot 2026",
                         new SheetName("Report"),
-                        new PivotTableInput.Source.Range(new SheetName("Data"), "A1:D5"),
+                        new PivotTableInput.Source.Range(
+                            new SheetName("Data"), new RangeRef("A1:D5")),
                         new PivotTableInput.Anchor(new CellAddress("C5")),
                         List.of("Region"),
                         List.of("Stage"),
@@ -929,15 +931,15 @@ class AdvancedMutationCommandConverterTest {
             new AutofilterFilterColumnInput(
                 5L, true, new AutofilterFilterCriterionInput.Icon("3TrafficLights1", 2))),
         AutofilterSortStateInput.withoutSortMethod(
-            "A2:F9",
+            new RangeRef("A2:F9"),
             false,
             true,
             List.of(
                 new AutofilterSortConditionInput.CellColor(
-                    "B2:B9", true, ColorInput.rgb("#AABBCC")),
+                    new RangeRef("B2:B9"), true, ColorInput.rgb("#AABBCC")),
                 new AutofilterSortConditionInput.FontColor(
-                    "C2:C9", false, ColorInput.theme(4, 0.15d)),
-                new AutofilterSortConditionInput.Icon("C2:C9", false, 2))));
+                    new RangeRef("C2:C9"), false, ColorInput.theme(4, 0.15d)),
+                new AutofilterSortConditionInput.Icon(new RangeRef("C2:C9"), false, 2))));
   }
 
   private static TextSourceInput text(String value) {

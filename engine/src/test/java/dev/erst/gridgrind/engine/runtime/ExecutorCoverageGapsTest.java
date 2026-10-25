@@ -33,6 +33,7 @@ import dev.erst.gridgrind.core.result.ExecutionJournal;
 import dev.erst.gridgrind.core.source.TextSourceInput;
 import dev.erst.gridgrind.core.vocabulary.CellAddress;
 import dev.erst.gridgrind.core.vocabulary.ExcelBorderStyle;
+import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.excel.ExcelDifferentialBorder;
 import dev.erst.gridgrind.excel.ooxml.ExcelOoxmlOpenOptions;
@@ -70,8 +71,9 @@ class ExecutorCoverageGapsTest {
             new CellSelector.ByAddresses(
                 new SheetName("Budget"), List.of(new CellAddress("A1"), new CellAddress("B2"))),
             new RangeSelector.AllOnSheet(new SheetName("Budget")),
-            new RangeSelector.ByRange(new SheetName("Budget"), "A1:B2"),
-            new RangeSelector.ByRanges(new SheetName("Budget"), List.of("A1:B2", "C1:D2")),
+            new RangeSelector.ByRange(new SheetName("Budget"), new RangeRef("A1:B2")),
+            new RangeSelector.ByRanges(
+                new SheetName("Budget"), List.of(new RangeRef("A1:B2"), new RangeRef("C1:D2"))),
             new RowBandSelector.Span(new SheetName("Budget"), 0, 1),
             new ColumnBandSelector.Insertion(new SheetName("Budget"), 1, 2),
             new DrawingObjectSelector.AllOnSheet(new SheetName("Budget")),
@@ -142,7 +144,7 @@ class ExecutorCoverageGapsTest {
             new CellSelector.AllUsedInSheet(new SheetName("Budget")),
             new CellSelector.ByAddress(new SheetName("Budget"), new CellAddress("A1")),
             new RangeSelector.AllOnSheet(new SheetName("Budget")),
-            new RangeSelector.ByRange(new SheetName("Budget"), "A1:B2"),
+            new RangeSelector.ByRange(new SheetName("Budget"), new RangeRef("A1:B2")),
             new RangeSelector.RectangularWindow(
                 new SheetName("Budget"), new CellAddress("A1"), 2, 2),
             new RowBandSelector.Span(new SheetName("Budget"), 0, 1),
@@ -172,7 +174,8 @@ class ExecutorCoverageGapsTest {
             new SheetSelector.ByNames(List.of(new SheetName("Budget"), new SheetName("Ops"))),
             new CellSelector.ByAddresses(
                 new SheetName("Budget"), List.of(new CellAddress("A1"), new CellAddress("B2"))),
-            new RangeSelector.ByRanges(new SheetName("Budget"), List.of("A1:B2", "C1:D2")),
+            new RangeSelector.ByRanges(
+                new SheetName("Budget"), List.of(new RangeRef("A1:B2"), new RangeRef("C1:D2"))),
             new TableSelector.ByNames(List.of("BudgetTable", "OpsTable")),
             new PivotTableSelector.ByNames(List.of("BudgetPivot", "OpsPivot")),
             new NamedRangeSelector.ByNames(List.of("BudgetTotal", "OpsTotal")),

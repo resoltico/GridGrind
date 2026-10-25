@@ -40,6 +40,8 @@ import dev.erst.gridgrind.core.vocabulary.ExcelPivotDataConsolidateFunction;
 import dev.erst.gridgrind.core.vocabulary.ExcelSheetVisibility;
 import dev.erst.gridgrind.core.vocabulary.ExcelVerticalAlignment;
 import dev.erst.gridgrind.core.vocabulary.NamedRangeScope;
+import dev.erst.gridgrind.core.vocabulary.RangeLabel;
+import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.core.vocabulary.SheetLabel;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.StepId;
@@ -84,7 +86,7 @@ class AssertionCoverageTest {
             new NamedRangeScope.Workbook(),
             "Budget!B2",
             dev.erst.gridgrind.core.model.formula.NamedRangeTarget.range(
-                new SheetName("Budget"), "B2"));
+                new SheetName("Budget"), new RangeRef("B2")));
 
     assertEquals("EXPECT_SHEET_PRESENT", new PresenceAssertion.SheetPresent().assertionType());
     assertEquals("EXPECT_SHEET_ABSENT", new PresenceAssertion.SheetAbsent().assertionType());
@@ -307,7 +309,7 @@ class AssertionCoverageTest {
     return new TableEntryReport(
         "BudgetTable",
         new SheetLabel("Budget"),
-        "A1:B2",
+        new RangeLabel("A1:B2"),
         1,
         0,
         List.of("Owner", "Amount"),
@@ -319,8 +321,8 @@ class AssertionCoverageTest {
     return new PivotTableReport.Supported(
         "Sales Pivot",
         new SheetName("Report"),
-        new PivotTableReport.Anchor(new CellAddress("C5"), "C5:G9"),
-        new PivotTableReport.Source.Range(new SheetName("Data"), "A1:D5"),
+        new PivotTableReport.Anchor(new CellAddress("C5"), new RangeLabel("C5:G9")),
+        new PivotTableReport.Source.Range(new SheetName("Data"), new RangeLabel("A1:D5")),
         List.of(new PivotTableReport.Field(0, "Region")),
         List.of(new PivotTableReport.Field(1, "Stage")),
         List.of(new PivotTableReport.Field(2, "Owner")),

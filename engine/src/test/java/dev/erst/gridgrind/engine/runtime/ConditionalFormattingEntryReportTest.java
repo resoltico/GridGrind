@@ -12,6 +12,7 @@ import dev.erst.gridgrind.core.vocabulary.AnalysisFindingCode;
 import dev.erst.gridgrind.core.vocabulary.AnalysisSeverity;
 import dev.erst.gridgrind.core.vocabulary.ExcelComparisonOperator;
 import dev.erst.gridgrind.core.vocabulary.ExcelConditionalFormattingThresholdType;
+import dev.erst.gridgrind.core.vocabulary.RangeLabel;
 import dev.erst.gridgrind.core.vocabulary.SheetLabel;
 import dev.erst.gridgrind.excel.ExcelColor;
 import dev.erst.gridgrind.excel.ExcelConditionalFormattingBlockSnapshot;
@@ -61,7 +62,9 @@ class ConditionalFormattingEntryReportTest {
                     new ExcelConditionalFormattingRuleSnapshot.UnsupportedRule(
                         4, false, "FORMULA", "Formula rule is missing formula text."))));
 
-    assertEquals(List.of("A1:A3"), entry.ranges());
+    assertEquals(
+        List.of("A1:A3"),
+        entry.ranges().stream().map(dev.erst.gridgrind.core.vocabulary.WireString::value).toList());
     assertEquals(4, entry.rules().size());
     assertInstanceOf(ConditionalFormattingRuleReport.FormulaRule.class, entry.rules().get(0));
     assertInstanceOf(ConditionalFormattingRuleReport.CellValueRule.class, entry.rules().get(1));
@@ -93,7 +96,7 @@ class ConditionalFormattingEntryReportTest {
         IllegalArgumentException.class,
         () ->
             new ConditionalFormattingEntryReport(
-                List.of(" "),
+                List.of(new RangeLabel(" ")),
                 List.of(
                     new ConditionalFormattingRuleReport.UnsupportedRule(
                         1, false, "FORMULA", "Missing formula text"))));

@@ -68,13 +68,13 @@ final class WorkbookCommandWorkbookMutationConverter {
         RangeSelector.ByRange selector =
             WorkbookCommandSelectorSupport.rangeByRange(target, action);
         yield new WorkbookStructureCommand.MergeCells(
-            selector.sheetName().value(), selector.range());
+            selector.sheetName().value(), selector.range().value());
       }
       case WorkbookMutationAction.UnmergeCells _ -> {
         RangeSelector.ByRange selector =
             WorkbookCommandSelectorSupport.rangeByRange(target, action);
         yield new WorkbookStructureCommand.UnmergeCells(
-            selector.sheetName().value(), selector.range());
+            selector.sheetName().value(), selector.range().value());
       }
       case WorkbookMutationAction.SetColumnWidth setColumnWidth -> {
         ColumnBandSelector.Span selector =

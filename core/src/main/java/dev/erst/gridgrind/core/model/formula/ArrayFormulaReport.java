@@ -1,19 +1,20 @@
 package dev.erst.gridgrind.core.model.formula;
 
 import dev.erst.gridgrind.core.vocabulary.CellAddress;
+import dev.erst.gridgrind.core.vocabulary.RangeLabel;
 import dev.erst.gridgrind.core.vocabulary.SheetLabel;
 import java.util.Objects;
 
 /** Factual array-formula group metadata returned by workbook inspection. */
 public record ArrayFormulaReport(
     SheetLabel sheetName,
-    String range,
+    RangeLabel range,
     CellAddress topLeftAddress,
     String formula,
     boolean singleCell) {
   public ArrayFormulaReport {
     Objects.requireNonNull(sheetName, "sheetName must not be null");
-    range = requireNonBlank(range, "range");
+    java.util.Objects.requireNonNull(range, "range must not be null");
     java.util.Objects.requireNonNull(topLeftAddress, "topLeftAddress must not be null");
     formula = requireNonBlank(formula, "formula");
   }

@@ -50,6 +50,8 @@ import dev.erst.gridgrind.core.vocabulary.ExcelHorizontalAlignment;
 import dev.erst.gridgrind.core.vocabulary.ExcelVerticalAlignment;
 import dev.erst.gridgrind.core.vocabulary.NamedRangeBackingKind;
 import dev.erst.gridgrind.core.vocabulary.NamedRangeScope;
+import dev.erst.gridgrind.core.vocabulary.RangeLabel;
+import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.core.vocabulary.SheetLabel;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.StepId;
@@ -198,7 +200,7 @@ class WorkbookResultEdgeCoverageTest {
                         " ",
                         new NamedRangeScope.Workbook(),
                         "Budget!A1",
-                        NamedRangeTarget.range(new SheetName("Budget"), "A1")))
+                        NamedRangeTarget.range(new SheetName("Budget"), new RangeRef("A1"))))
             .getMessage());
     assertEquals(
         "refersToFormula must not be blank",
@@ -209,7 +211,7 @@ class WorkbookResultEdgeCoverageTest {
                         "BudgetTotal",
                         new NamedRangeScope.Workbook(),
                         " ",
-                        NamedRangeTarget.range(new SheetName("Budget"), "A1")))
+                        NamedRangeTarget.range(new SheetName("Budget"), new RangeRef("A1"))))
             .getMessage());
     assertEquals(
         "refersToFormula must not be blank",
@@ -301,7 +303,8 @@ class WorkbookResultEdgeCoverageTest {
             .getMessage());
     assertEquals(
         "range must not be blank",
-        assertThrows(IllegalArgumentException.class, () -> new MergedRegionReport(" "))
+        assertThrows(
+                IllegalArgumentException.class, () -> new MergedRegionReport(new RangeLabel(" ")))
             .getMessage());
     assertEquals(
         "address must not be blank",

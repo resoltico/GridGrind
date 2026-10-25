@@ -34,7 +34,7 @@ final class WorkbookCommandStructuredMutationConverter {
             WorkbookCommandSelectorSupport.rangeByRange(target, action);
         yield new WorkbookFormattingCommand.SetDataValidation(
             selector.sheetName().value(),
-            selector.range(),
+            selector.range().value(),
             WorkbookCommandStructuredInputConverter.toExcelDataValidationDefinition(
                 setDataValidation.validation()));
       }
@@ -70,7 +70,7 @@ final class WorkbookCommandStructuredMutationConverter {
             WorkbookCommandSelectorSupport.rangeByRange(target, action);
         yield new WorkbookTabularCommand.SetAutofilter(
             selector.sheetName().value(),
-            selector.range(),
+            selector.range().value(),
             setAutofilter.criteria().stream()
                 .map(WorkbookCommandStructuredInputConverter::toExcelAutofilterFilterColumn)
                 .toList(),

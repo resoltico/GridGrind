@@ -32,6 +32,7 @@ import dev.erst.gridgrind.core.vocabulary.CellAddress;
 import dev.erst.gridgrind.core.vocabulary.ExcelBorderStyle;
 import dev.erst.gridgrind.core.vocabulary.ExcelHorizontalAlignment;
 import dev.erst.gridgrind.core.vocabulary.ExcelVerticalAlignment;
+import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
 import dev.erst.gridgrind.excel.ExcelWorkbooks;
@@ -71,7 +72,8 @@ class DefaultGridGrindRequestExecutorStyleAndFormulaTest
                             new SheetSelector.ByName(new SheetName("Budget")),
                             new WorkbookMutationAction.EnsureSheet()),
                         mutate(
-                            new RangeSelector.ByRange(new SheetName("Budget"), "A1:B2"),
+                            new RangeSelector.ByRange(
+                                new SheetName("Budget"), new RangeRef("A1:B2")),
                             new CellMutationAction.SetRange(
                                 new dev.erst.gridgrind.core.model.value.CellGridInput.Typed(
                                     List.of(
@@ -80,7 +82,8 @@ class DefaultGridGrindRequestExecutorStyleAndFormulaTest
                                             textCell("Hosting"),
                                             new CellInput.NumberValue(49.0)))))),
                         mutate(
-                            new RangeSelector.ByRange(new SheetName("Budget"), "A1:B1"),
+                            new RangeSelector.ByRange(
+                                new SheetName("Budget"), new RangeRef("A1:B1")),
                             new CellMutationAction.ApplyStyle(
                                 styleInput(
                                     "#,##0.00",
@@ -95,7 +98,7 @@ class DefaultGridGrindRequestExecutorStyleAndFormulaTest
                                     null,
                                     null))),
                         mutate(
-                            new RangeSelector.ByRange(new SheetName("Budget"), "C1"),
+                            new RangeSelector.ByRange(new SheetName("Budget"), new RangeRef("C1")),
                             new CellMutationAction.ApplyStyle(
                                 styleInput(
                                     null,
@@ -114,7 +117,7 @@ class DefaultGridGrindRequestExecutorStyleAndFormulaTest
                                 new SheetName("Budget"), new CellAddress("B3")),
                             new CellMutationAction.SetCell(formulaCell("SUM(B2:B2)"))),
                         mutate(
-                            new RangeSelector.ByRange(new SheetName("Budget"), "A2"),
+                            new RangeSelector.ByRange(new SheetName("Budget"), new RangeRef("A2")),
                             new CellMutationAction.ClearRange())),
                     inspect(
                         "cells",
@@ -171,7 +174,7 @@ class DefaultGridGrindRequestExecutorStyleAndFormulaTest
                                 new SheetName("Budget"), new CellAddress("A1")),
                             new CellMutationAction.SetCell(textCell("Item"))),
                         mutate(
-                            new RangeSelector.ByRange(new SheetName("Budget"), "A1"),
+                            new RangeSelector.ByRange(new SheetName("Budget"), new RangeRef("A1")),
                             new CellMutationAction.ApplyStyle(
                                 styleInput(
                                     null,
@@ -273,14 +276,15 @@ class DefaultGridGrindRequestExecutorStyleAndFormulaTest
                             new SheetSelector.ByName(new SheetName("Budget")),
                             new WorkbookMutationAction.EnsureSheet()),
                         mutate(
-                            new RangeSelector.ByRange(new SheetName("Budget"), "A1:A2"),
+                            new RangeSelector.ByRange(
+                                new SheetName("Budget"), new RangeRef("A1:A2")),
                             new CellMutationAction.SetRange(
                                 new dev.erst.gridgrind.core.model.value.CellGridInput.Typed(
                                     List.of(
                                         List.of(textCell("ThemeTintStyle")),
                                         List.of(textCell("GradientFillStyle")))))),
                         mutate(
-                            new RangeSelector.ByRange(new SheetName("Budget"), "A1"),
+                            new RangeSelector.ByRange(new SheetName("Budget"), new RangeRef("A1")),
                             new CellMutationAction.ApplyStyle(
                                 styleInput(
                                     null,
@@ -309,7 +313,7 @@ class DefaultGridGrindRequestExecutorStyleAndFormulaTest
                                         Optional.empty()),
                                     null))),
                         mutate(
-                            new RangeSelector.ByRange(new SheetName("Budget"), "A2"),
+                            new RangeSelector.ByRange(new SheetName("Budget"), new RangeRef("A2")),
                             new CellMutationAction.ApplyStyle(
                                 styleInput(
                                     null,
@@ -375,7 +379,7 @@ class DefaultGridGrindRequestExecutorStyleAndFormulaTest
                                 new SheetName("Budget"), new CellAddress("A2")),
                             new CellMutationAction.SetCell(textCell("Linear gradient"))),
                         mutate(
-                            new RangeSelector.ByRange(new SheetName("Budget"), "A2"),
+                            new RangeSelector.ByRange(new SheetName("Budget"), new RangeRef("A2")),
                             new CellMutationAction.ApplyStyle(
                                 styleInput(
                                     null,
@@ -397,7 +401,7 @@ class DefaultGridGrindRequestExecutorStyleAndFormulaTest
                                 new SheetName("Budget"), new CellAddress("A3")),
                             new CellMutationAction.SetCell(textCell("Path gradient"))),
                         mutate(
-                            new RangeSelector.ByRange(new SheetName("Budget"), "A3"),
+                            new RangeSelector.ByRange(new SheetName("Budget"), new RangeRef("A3")),
                             new CellMutationAction.ApplyStyle(
                                 styleInput(
                                     null,
@@ -639,7 +643,7 @@ class DefaultGridGrindRequestExecutorStyleAndFormulaTest
             IllegalArgumentException.class,
             () ->
                 mutate(
-                    new RangeSelector.ByRange(new SheetName("Budget"), "A1:"),
+                    new RangeSelector.ByRange(new SheetName("Budget"), new RangeRef("A1:")),
                     new CellMutationAction.ClearRange()));
 
     assertEquals("range must not be blank", failure.getMessage());
@@ -652,7 +656,7 @@ class DefaultGridGrindRequestExecutorStyleAndFormulaTest
             IllegalArgumentException.class,
             () ->
                 mutate(
-                    new RangeSelector.ByRange(new SheetName("Budget"), "A1:"),
+                    new RangeSelector.ByRange(new SheetName("Budget"), new RangeRef("A1:")),
                     new CellMutationAction.SetRange(
                         new dev.erst.gridgrind.core.model.value.CellGridInput.Typed(
                             List.of(List.of(textCell("x")))))));
@@ -667,7 +671,7 @@ class DefaultGridGrindRequestExecutorStyleAndFormulaTest
             IllegalArgumentException.class,
             () ->
                 mutate(
-                    new RangeSelector.ByRange(new SheetName("Budget"), "A1:"),
+                    new RangeSelector.ByRange(new SheetName("Budget"), new RangeRef("A1:")),
                     new CellMutationAction.ApplyStyle(
                         styleInput(
                             null,

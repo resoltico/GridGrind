@@ -33,6 +33,7 @@ import dev.erst.gridgrind.core.vocabulary.ExcelPaneRegion;
 import dev.erst.gridgrind.core.vocabulary.ExcelPrintOrientation;
 import dev.erst.gridgrind.core.vocabulary.ExcelSheetVisibility;
 import dev.erst.gridgrind.core.vocabulary.NamedRangeScope;
+import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.core.vocabulary.SheetCopyPosition;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.excel.*;
@@ -82,7 +83,7 @@ class DefaultGridGrindRequestExecutorCommandTranslationTest
                 new StructuredMutationAction.SetNamedRange(
                     "BudgetTotal",
                     new NamedRangeScope.Workbook(),
-                    NamedRangeTarget.range(new SheetName("Budget"), "B4"))));
+                    NamedRangeTarget.range(new SheetName("Budget"), new RangeRef("B4")))));
     WorkbookCommand deleteNamedRange =
         command(
             mutate(
@@ -143,13 +144,13 @@ class DefaultGridGrindRequestExecutorCommandTranslationTest
         WorkbookStructureCommand.MergeCells.class,
         command(
             mutate(
-                new RangeSelector.ByRange(new SheetName("Budget"), "A1:B2"),
+                new RangeSelector.ByRange(new SheetName("Budget"), new RangeRef("A1:B2")),
                 new WorkbookMutationAction.MergeCells())));
     assertInstanceOf(
         WorkbookStructureCommand.UnmergeCells.class,
         command(
             mutate(
-                new RangeSelector.ByRange(new SheetName("Budget"), "A1:B2"),
+                new RangeSelector.ByRange(new SheetName("Budget"), new RangeRef("A1:B2")),
                 new WorkbookMutationAction.UnmergeCells())));
     assertInstanceOf(
         WorkbookStructureCommand.SetColumnWidth.class,
@@ -260,7 +261,7 @@ class DefaultGridGrindRequestExecutorCommandTranslationTest
                         new SheetDefaultsInput(11, 18.5d),
                         List.of(
                             new IgnoredErrorInput(
-                                "A1:B2",
+                                new RangeRef("A1:B2"),
                                 List.of(ExcelIgnoredErrorType.NUMBER_STORED_AS_TEXT))))))));
     assertInstanceOf(
         WorkbookLayoutCommand.SetPrintLayout.class,
@@ -269,7 +270,7 @@ class DefaultGridGrindRequestExecutorCommandTranslationTest
                 new SheetSelector.ByName(new SheetName("Budget")),
                 new WorkbookMutationAction.SetPrintLayout(
                     PrintLayoutInput.withDefaultSetup(
-                        new PrintAreaInput.Range("A1:B12"),
+                        new PrintAreaInput.Range(new RangeRef("A1:B12")),
                         ExcelPrintOrientation.LANDSCAPE,
                         new PrintScalingInput.Fit(1, 0),
                         new PrintTitleRowsInput.Band(0, 0),
@@ -292,7 +293,7 @@ class DefaultGridGrindRequestExecutorCommandTranslationTest
         WorkbookCellCommand.SetRange.class,
         command(
             mutate(
-                new RangeSelector.ByRange(new SheetName("Budget"), "A1:B1"),
+                new RangeSelector.ByRange(new SheetName("Budget"), new RangeRef("A1:B1")),
                 new CellMutationAction.SetRange(
                     new dev.erst.gridgrind.core.model.value.CellGridInput.Typed(
                         List.of(List.of(textCell("x"))))))));
@@ -300,13 +301,13 @@ class DefaultGridGrindRequestExecutorCommandTranslationTest
         WorkbookCellCommand.ClearRange.class,
         command(
             mutate(
-                new RangeSelector.ByRange(new SheetName("Budget"), "A1:B1"),
+                new RangeSelector.ByRange(new SheetName("Budget"), new RangeRef("A1:B1")),
                 new CellMutationAction.ClearRange())));
     assertInstanceOf(
         WorkbookFormattingCommand.SetConditionalFormatting.class,
         command(
             mutate(
-                new RangeSelector.ByRange(new SheetName("Budget"), "A1:A3"),
+                new RangeSelector.ByRange(new SheetName("Budget"), new RangeRef("A1:A3")),
                 new StructuredMutationAction.SetConditionalFormatting(
                     commandTranslationConditionalFormattingBlock()))));
     assertInstanceOf(
@@ -319,7 +320,7 @@ class DefaultGridGrindRequestExecutorCommandTranslationTest
         WorkbookTabularCommand.SetAutofilter.class,
         command(
             mutate(
-                new RangeSelector.ByRange(new SheetName("Budget"), "A1:B4"),
+                new RangeSelector.ByRange(new SheetName("Budget"), new RangeRef("A1:B4")),
                 new StructuredMutationAction.SetAutofilter())));
     assertInstanceOf(
         WorkbookTabularCommand.ClearAutofilter.class,
@@ -335,7 +336,7 @@ class DefaultGridGrindRequestExecutorCommandTranslationTest
                     TableInput.withDefaultMetadata(
                         "BudgetTable",
                         new SheetName("Budget"),
-                        "A1:B4",
+                        new RangeRef("A1:B4"),
                         false,
                         new TableStyleInput.None())))));
     assertInstanceOf(
@@ -492,7 +493,7 @@ class DefaultGridGrindRequestExecutorCommandTranslationTest
         readCommand(
             inspect(
                 "conditionalFormatting",
-                new RangeSelector.ByRanges(new SheetName("Budget"), List.of("A1:A3")),
+                new RangeSelector.ByRanges(new SheetName("Budget"), List.of(new RangeRef("A1:A3"))),
                 new SheetIntrospectionQuery.GetConditionalFormatting()));
     WorkbookReadCommand autofilters =
         readCommand(

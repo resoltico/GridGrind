@@ -3,6 +3,7 @@ package dev.erst.gridgrind.core.plan;
 import dev.erst.gridgrind.core.problem.FieldValidationBasicRule;
 import dev.erst.gridgrind.core.problem.FieldValidationProblem;
 import dev.erst.gridgrind.core.vocabulary.CellAddress;
+import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.WireString;
 import java.util.ArrayList;
@@ -22,9 +23,24 @@ final class SelectorListValidation {
     return copyDistinctCaseInsensitive(addresses, fieldName);
   }
 
-  static List<String> copyDistinctRanges(List<String> ranges, String fieldName) {
+  static List<RangeRef> copyDistinctRanges(List<RangeRef> ranges, String fieldName) {
     Objects.requireNonNull(ranges, fieldName + " must not be null");
-    return copyDistinctValues(ranges, fieldName, true);
+    List<RangeRef> copy = new ArrayList<>(ranges);
+    if (copy.isEmpty()) {
+      throw SelectorTextValidation.invalidField(
+          FieldValidationProblem.atField(fieldName, FieldValidationBasicRule.NON_EMPTY));
+    }
+    Set<String> unique = new LinkedHashSet<>();
+    for (int index = 0; index < copy.size(); index++) {
+      RangeRef range =
+          SelectorValueValidation.requireOrderedRange(
+              copy.get(index), fieldName + "[" + index + "]");
+      if (!unique.add(range.value().toUpperCase(Locale.ROOT))) {
+        throw SelectorTextValidation.invalidField(
+            FieldValidationProblem.atField(fieldName, FieldValidationBasicRule.DUPLICATES));
+      }
+    }
+    return List.copyOf(copy);
   }
 
   static List<SheetName> copyDistinctSheetNames(List<SheetName> sheetNames, String fieldName) {
@@ -51,7 +67,23 @@ final class SelectorListValidation {
 
   static List<String> copyDistinctDefinedNames(List<String> names, String fieldName) {
     Objects.requireNonNull(names, fieldName + " must not be null");
-    return copyDistinctValues(names, fieldName, false);
+    List<String> copy = new ArrayList<>(names);
+    if (copy.isEmpty()) {
+      throw SelectorTextValidation.invalidField(
+          FieldValidationProblem.atField(fieldName, FieldValidationBasicRule.NON_EMPTY));
+    }
+    Set<String> unique = new LinkedHashSet<>();
+    for (int index = 0; index < copy.size(); index++) {
+      String indexedFieldName = fieldName + "[" + index + "]";
+      String validated =
+          SelectorValueValidation.requireDefinedName(copy.get(index), indexedFieldName);
+      String key = validated.toUpperCase(Locale.ROOT);
+      if (!unique.add(key)) {
+        throw SelectorTextValidation.invalidField(
+            FieldValidationProblem.atField(fieldName, FieldValidationBasicRule.DUPLICATES));
+      }
+    }
+    return List.copyOf(copy);
   }
 
   static List<String> copyDistinctPivotTableNames(List<String> names, String fieldName) {
@@ -126,28 +158,5 @@ final class SelectorListValidation {
               + "|"
               + sheetScope.name().toUpperCase(Locale.ROOT);
     };
-  }
-
-  private static List<String> copyDistinctValues(
-      List<String> values, String fieldName, boolean ranges) {
-    List<String> copy = new ArrayList<>(values);
-    if (copy.isEmpty()) {
-      throw SelectorTextValidation.invalidField(
-          FieldValidationProblem.atField(fieldName, FieldValidationBasicRule.NON_EMPTY));
-    }
-    Set<String> unique = new LinkedHashSet<>();
-    for (int index = 0; index < copy.size(); index++) {
-      String indexedFieldName = fieldName + "[" + index + "]";
-      String validated =
-          ranges
-              ? SelectorValueValidation.requireRange(copy.get(index), indexedFieldName)
-              : SelectorValueValidation.requireDefinedName(copy.get(index), indexedFieldName);
-      String key = validated.toUpperCase(Locale.ROOT);
-      if (!unique.add(key)) {
-        throw SelectorTextValidation.invalidField(
-            FieldValidationProblem.atField(fieldName, FieldValidationBasicRule.DUPLICATES));
-      }
-    }
-    return List.copyOf(copy);
   }
 }

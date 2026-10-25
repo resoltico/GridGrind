@@ -278,7 +278,8 @@ class InspectionResultConverterTest extends DefaultGridGrindRequestExecutorTestS
                 sheetLayout.layout().presentation().tabColor().orElseThrow())
             .rgb());
     assertEquals(12, sheetLayout.layout().presentation().sheetDefaults().defaultColumnWidth());
-    assertEquals("B2:B12", sheetLayout.layout().presentation().ignoredErrors().getFirst().range());
+    assertEquals(
+        "B2:B12", sheetLayout.layout().presentation().ignoredErrors().getFirst().range().value());
     assertEquals(
         ExcelIgnoredErrorType.NUMBER_STORED_AS_TEXT,
         sheetLayout.layout().presentation().ignoredErrors().getFirst().errorTypes().getFirst());
@@ -310,7 +311,7 @@ class InspectionResultConverterTest extends DefaultGridGrindRequestExecutorTestS
         AutofilterFilterCriterionReport.Color.class, sheetOwned.filterColumns().get(4).criterion());
     assertInstanceOf(
         AutofilterFilterCriterionReport.Icon.class, sheetOwned.filterColumns().get(5).criterion());
-    assertEquals("A1:F5", sheetOwned.sortState().orElseThrow().range());
+    assertEquals("A1:F5", sheetOwned.sortState().orElseThrow().range().value());
     assertEquals(3, sheetOwned.sortState().orElseThrow().conditions().size());
     assertInstanceOf(
         AutofilterSortConditionReport.CellColor.class,
@@ -575,7 +576,7 @@ class InspectionResultConverterTest extends DefaultGridGrindRequestExecutorTestS
 
     assertEquals("array-formulas", arrayFormulas.stepId().value());
     assertEquals(2, arrayFormulas.arrayFormulas().size());
-    assertEquals("D2:D4", arrayFormulas.arrayFormulas().getFirst().range());
+    assertEquals("D2:D4", arrayFormulas.arrayFormulas().getFirst().range().value());
     assertTrue(arrayFormulas.arrayFormulas().get(1).singleCell());
   }
 

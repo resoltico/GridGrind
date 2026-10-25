@@ -174,23 +174,33 @@ final class SelectorConverter {
       case RangeSelector.ByRange byRange ->
           new SheetLocalRangeSelection(
               byRange.sheetName().value(),
-              new ExcelRangeSelection.Selected(List.of(byRange.range())));
+              new ExcelRangeSelection.Selected(
+                  List.of(byRange.range()).stream()
+                      .map(dev.erst.gridgrind.core.vocabulary.WireString::value)
+                      .toList()));
       case RangeSelector.ByRanges byRanges ->
           new SheetLocalRangeSelection(
-              byRanges.sheetName().value(), new ExcelRangeSelection.Selected(byRanges.ranges()));
+              byRanges.sheetName().value(),
+              new ExcelRangeSelection.Selected(
+                  byRanges.ranges().stream()
+                      .map(dev.erst.gridgrind.core.vocabulary.WireString::value)
+                      .toList()));
       case RangeSelector.RectangularWindow window ->
           new SheetLocalRangeSelection(
               window.sheetName().value(),
-              new ExcelRangeSelection.Selected(List.of(window.range())));
+              new ExcelRangeSelection.Selected(
+                  List.of(window.range()).stream()
+                      .map(dev.erst.gridgrind.core.vocabulary.WireString::value)
+                      .toList()));
     };
   }
 
   static SingleRangeTarget toSingleRangeTarget(RangeSelector.ByRange selector) {
-    return new SingleRangeTarget(selector.sheetName().value(), selector.range());
+    return new SingleRangeTarget(selector.sheetName().value(), selector.range().value());
   }
 
   static SingleRangeTarget toSingleRangeTarget(RangeSelector.RectangularWindow selector) {
-    return new SingleRangeTarget(selector.sheetName().value(), selector.range());
+    return new SingleRangeTarget(selector.sheetName().value(), selector.range().value());
   }
 
   static String toSheetName(RangeSelector.AllOnSheet selector) {

@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import dev.erst.gridgrind.core.plan.*;
 import dev.erst.gridgrind.core.plan.InspectionStep;
 import dev.erst.gridgrind.core.vocabulary.CellAddress;
+import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.excel.*;
 import dev.erst.gridgrind.excel.ExcelNamedRangeScope;
@@ -250,12 +251,12 @@ class DefaultGridGrindRequestExecutorReadContextTranslationTest
     InspectionStep validations =
         inspect(
             "validations",
-            new RangeSelector.ByRanges(new SheetName("Budget"), List.of("A1:A3")),
+            new RangeSelector.ByRanges(new SheetName("Budget"), List.of(new RangeRef("A1:A3"))),
             new SheetIntrospectionQuery.GetDataValidations());
     InspectionStep conditionalFormatting =
         inspect(
             "conditional-formatting",
-            new RangeSelector.ByRanges(new SheetName("Budget"), List.of("B2:B5")),
+            new RangeSelector.ByRanges(new SheetName("Budget"), List.of(new RangeRef("B2:B5"))),
             new SheetIntrospectionQuery.GetConditionalFormatting());
     InspectionStep autofilters =
         inspect(

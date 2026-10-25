@@ -3,6 +3,7 @@ package dev.erst.gridgrind.core.plan;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import org.junit.jupiter.api.Test;
@@ -33,7 +34,7 @@ class InspectionStepTest {
         () ->
             new InspectionStep(
                 new StepId("bad-target"),
-                new RangeSelector.ByRange(new SheetName("Budget"), "A1:B2"),
+                new RangeSelector.ByRange(new SheetName("Budget"), new RangeRef("A1:B2")),
                 new WorkbookIntrospectionQuery.GetWorkbookSummary()));
   }
 }

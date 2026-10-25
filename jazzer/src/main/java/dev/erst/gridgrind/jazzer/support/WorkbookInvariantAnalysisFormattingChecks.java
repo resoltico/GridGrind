@@ -19,7 +19,9 @@ final class WorkbookInvariantAnalysisFormattingChecks {
         !validation.ranges().isEmpty(), "data validation ranges must not be empty");
     validation
         .ranges()
-        .forEach(range -> WorkbookInvariantChecks.requireNonBlank(range, "data validation range"));
+        .forEach(
+            range ->
+                WorkbookInvariantChecks.requireNonBlank(range.value(), "data validation range"));
 
     switch (validation) {
       case DataValidationEntryReport.Supported supported ->
@@ -43,7 +45,8 @@ final class WorkbookInvariantAnalysisFormattingChecks {
         .ranges()
         .forEach(
             range ->
-                WorkbookInvariantChecks.requireNonBlank(range, "conditional formatting range"));
+                WorkbookInvariantChecks.requireNonBlank(
+                    range.value(), "conditional formatting range"));
     WorkbookInvariantChecks.require(
         conditionalFormatting.rules() != null, "conditional formatting rules must not be null");
     WorkbookInvariantChecks.require(

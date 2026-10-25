@@ -151,7 +151,7 @@ final class WorkbookInvariantAnalysisLayoutChecks {
   }
 
   static void requireAutofilterEntryShape(AutofilterEntryReport autofilter) {
-    WorkbookInvariantChecks.requireNonBlank(autofilter.range(), "autofilter range");
+    WorkbookInvariantChecks.requireNonBlank(autofilter.range().value(), "autofilter range");
     WorkbookInvariantChecks.require(
         autofilter.filterColumns() != null, "autofilter filterColumns must not be null");
     autofilter
@@ -171,7 +171,7 @@ final class WorkbookInvariantAnalysisLayoutChecks {
   static void requireTableEntryShape(TableEntryReport table) {
     WorkbookInvariantChecks.requireNonBlank(table.name(), "table name");
     WorkbookInvariantChecks.requireNonBlank(table.sheetName().value(), "table sheetName");
-    WorkbookInvariantChecks.requireNonBlank(table.range(), "table range");
+    WorkbookInvariantChecks.requireNonBlank(table.range().value(), "table range");
     WorkbookInvariantChecks.require(
         table.structure().headerRowCount() >= 0, "table headerRowCount must not be negative");
     WorkbookInvariantChecks.require(

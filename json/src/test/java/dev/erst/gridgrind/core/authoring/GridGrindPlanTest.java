@@ -19,6 +19,7 @@ import dev.erst.gridgrind.core.result.ExecutionJournalLevel;
 import dev.erst.gridgrind.core.result.WorkbookResult;
 import dev.erst.gridgrind.core.vocabulary.CellAddress;
 import dev.erst.gridgrind.core.vocabulary.PlanId;
+import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.engine.api.GridGrindEngine;
@@ -204,7 +205,7 @@ class GridGrindPlanTest {
             .journal(ExecutionJournalLevel.VERBOSE)
             .mutate(Targets.sheet(new SheetName("Budget")).ensureExists())
             .mutate(
-                Targets.range(new SheetName("Budget"), "A1:B3")
+                Targets.range(new SheetName("Budget"), new RangeRef("A1:B3"))
                     .setRows(
                         List.of(
                             Values.row(Values.text("Item"), Values.text("Amount")),
@@ -216,7 +217,7 @@ class GridGrindPlanTest {
                         Tables.define(
                             "BudgetTable",
                             new SheetName("Budget"),
-                            "A1:B3",
+                            new RangeRef("A1:B3"),
                             false,
                             Tables.noStyle())))
             .mutate(

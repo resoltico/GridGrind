@@ -46,6 +46,7 @@ import dev.erst.gridgrind.core.vocabulary.CellAddress;
 import dev.erst.gridgrind.core.vocabulary.ExcelOoxmlWriteCipher;
 import dev.erst.gridgrind.core.vocabulary.ExcelOoxmlWriteHash;
 import dev.erst.gridgrind.core.vocabulary.NamedRangeScope;
+import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.excel.CellNotFoundException;
@@ -104,7 +105,7 @@ class ExecutorPolicyCoverageTest {
                         TableInput.withDefaultMetadata(
                             "BudgetTable",
                             new SheetName("Budget"),
-                            "A1:B2",
+                            new RangeRef("A1:B2"),
                             false,
                             new TableStyleInput.None()))));
     assertEquals(
@@ -120,7 +121,7 @@ class ExecutorPolicyCoverageTest {
                         TableInput.withDefaultMetadata(
                             "BudgetTable",
                             new SheetName("Budget"),
-                            "A1:B2",
+                            new RangeRef("A1:B2"),
                             false,
                             new TableStyleInput.None()))));
     assertEquals(
@@ -188,7 +189,7 @@ class ExecutorPolicyCoverageTest {
                     new StructuredMutationAction.SetNamedRange(
                         "BudgetTotal",
                         new NamedRangeScope.Sheet(new SheetName("Budget")),
-                        NamedRangeTarget.range(new SheetName("Budget"), "B4"))));
+                        NamedRangeTarget.range(new SheetName("Budget"), new RangeRef("B4")))));
     assertEquals(
         "SET_NAMED_RANGE target must match action name and scope", namedRangeMismatch.getMessage());
 
@@ -201,7 +202,7 @@ class ExecutorPolicyCoverageTest {
                     new StructuredMutationAction.SetNamedRange(
                         "BudgetTotal",
                         new NamedRangeScope.Sheet(new SheetName("Budget")),
-                        NamedRangeTarget.range(new SheetName("Budget"), "B4"))));
+                        NamedRangeTarget.range(new SheetName("Budget"), new RangeRef("B4")))));
     assertEquals(
         "SET_NAMED_RANGE target must match action name and scope",
         namedRangeNameMismatch.getMessage());
@@ -215,7 +216,7 @@ class ExecutorPolicyCoverageTest {
                     new StructuredMutationAction.SetNamedRange(
                         "BudgetTotal",
                         new NamedRangeScope.Sheet(new SheetName("Budget")),
-                        NamedRangeTarget.range(new SheetName("Budget"), "B4"))));
+                        NamedRangeTarget.range(new SheetName("Budget"), new RangeRef("B4")))));
     assertEquals(
         "SET_NAMED_RANGE target must match action name and scope",
         workbookScopeMismatch.getMessage());
@@ -620,7 +621,8 @@ class ExecutorPolicyCoverageTest {
     CellMutationAction.SetCell setFormula =
         new CellMutationAction.SetCell(formulaCell("SUM(A1:A2)"));
     StructuredMutationAction.SetPivotTable pivotFromRange =
-        pivotTableAction(new PivotTableInput.Source.Range(new SheetName("Budget"), "A1:B5"));
+        pivotTableAction(
+            new PivotTableInput.Source.Range(new SheetName("Budget"), new RangeRef("A1:B5")));
     StructuredMutationAction.SetPivotTable pivotFromNamedRange =
         pivotTableAction(new PivotTableInput.Source.NamedRange("BudgetSource"));
     StructuredMutationAction.SetPivotTable pivotFromTable =
@@ -803,11 +805,12 @@ class ExecutorPolicyCoverageTest {
     assertEquals(
         java.util.Optional.of("A1:B2"),
         ExecutionSelectorDiagnosticFields.rangeFor(
-            new RangeSelector.ByRanges(new SheetName("Budget"), List.of("A1:B2"))));
+            new RangeSelector.ByRanges(new SheetName("Budget"), List.of(new RangeRef("A1:B2")))));
     assertEquals(
         java.util.Optional.empty(),
         ExecutionSelectorDiagnosticFields.rangeFor(
-            new RangeSelector.ByRanges(new SheetName("Budget"), List.of("A1:B2", "C1:D2"))));
+            new RangeSelector.ByRanges(
+                new SheetName("Budget"), List.of(new RangeRef("A1:B2"), new RangeRef("C1:D2")))));
     assertEquals(
         java.util.Optional.of("B2:C3"),
         ExecutionSelectorDiagnosticFields.rangeFor(
@@ -921,7 +924,8 @@ class ExecutorPolicyCoverageTest {
   private static void assertExceptionAndStepDiagnostics() {
     CellMutationAction.SetCell setText = new CellMutationAction.SetCell(textCell("plain text"));
     StructuredMutationAction.SetPivotTable pivotFromRange =
-        pivotTableAction(new PivotTableInput.Source.Range(new SheetName("Budget"), "A1:B5"));
+        pivotTableAction(
+            new PivotTableInput.Source.Range(new SheetName("Budget"), new RangeRef("A1:B5")));
     MutationStep pivotStep =
         new MutationStep(
             new StepId("pivot-step"),

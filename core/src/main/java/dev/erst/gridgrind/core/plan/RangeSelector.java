@@ -3,6 +3,7 @@ package dev.erst.gridgrind.core.plan;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import dev.erst.gridgrind.core.vocabulary.CellAddress;
+import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import java.util.List;
 
@@ -35,10 +36,10 @@ public sealed interface RangeSelector extends Selector
   }
 
   /** Selects one exact rectangular range on one sheet. */
-  record ByRange(SheetName sheetName, String range) implements RangeSelector {
+  record ByRange(SheetName sheetName, RangeRef range) implements RangeSelector {
     public ByRange {
       java.util.Objects.requireNonNull(sheetName, "sheetName must not be null");
-      range = SelectorValueValidation.requireRange(range, "range");
+      range = SelectorValueValidation.requireOrderedRange(range, "range");
     }
 
     @Override
@@ -48,7 +49,7 @@ public sealed interface RangeSelector extends Selector
 
     /** Returns the exact number of cells in this validated rectangular range. */
     public long cellCount() {
-      String[] endpoints = range.split(":", -1);
+      String[] endpoints = range.value().split(":", -1);
       String first = endpoints[0];
       String last = endpoints.length == 1 ? first : endpoints[1];
       long rowCount =
@@ -64,7 +65,7 @@ public sealed interface RangeSelector extends Selector
   }
 
   /** Selects one or more exact rectangular ranges on one sheet. */
-  record ByRanges(SheetName sheetName, List<String> ranges) implements RangeSelector {
+  record ByRanges(SheetName sheetName, List<RangeRef> ranges) implements RangeSelector {
     public ByRanges {
       java.util.Objects.requireNonNull(sheetName, "sheetName must not be null");
       ranges = SelectorListValidation.copyDistinctRanges(ranges, "ranges");
@@ -86,15 +87,30 @@ public sealed interface RangeSelector extends Selector
       rowCount = SelectorValueValidation.requirePositive(rowCount, "rowCount");
       columnCount = SelectorValueValidation.requirePositive(columnCount, "columnCount");
       SelectorValueValidation.requireWindowSize(rowCount, columnCount);
+      if (SelectorAddressSupport.rowIndex(topLeftAddress.value()) + rowCount - 1
+              > dev.erst.gridgrind.core.vocabulary.ExcelRowSpan.MAX_ROW_INDEX
+          || SelectorAddressSupport.columnIndex(topLeftAddress.value()) + columnCount - 1
+              > dev.erst.gridgrind.core.vocabulary.ExcelColumnSpan.MAX_COLUMN_INDEX) {
+        throw new dev.erst.gridgrind.core.problem.InvalidRequestException(
+            new dev.erst.gridgrind.core.problem.ActionableInvariantMessage(
+                "window must end within Excel .xlsx bounds",
+                "Choose a top-left address and dimensions that keep the entire window inside the worksheet.",
+                java.util.Optional.empty()),
+            java.util.Optional.empty(),
+            java.util.Optional.empty(),
+            java.util.Optional.empty(),
+            null);
+      }
     }
 
     /** Returns the exact A1-style rectangular range implied by this window. */
-    public String range() {
+    public RangeRef range() {
       int firstRow = SelectorAddressSupport.rowIndex(topLeftAddress.value());
       int firstColumn = SelectorAddressSupport.columnIndex(topLeftAddress.value());
       int lastRow = firstRow + rowCount - 1;
       int lastColumn = firstColumn + columnCount - 1;
-      return topLeftAddress + ":" + SelectorAddressSupport.absoluteA1Address(lastRow, lastColumn);
+      return new RangeRef(
+          topLeftAddress + ":" + SelectorAddressSupport.absoluteA1Address(lastRow, lastColumn));
     }
 
     @Override

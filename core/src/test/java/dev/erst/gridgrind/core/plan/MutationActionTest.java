@@ -10,6 +10,7 @@ import dev.erst.gridgrind.core.source.TextSourceInput;
 import dev.erst.gridgrind.core.vocabulary.ExcelColumnSpan;
 import dev.erst.gridgrind.core.vocabulary.ExcelRowSpan;
 import dev.erst.gridgrind.core.vocabulary.NamedRangeScope;
+import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.core.vocabulary.SheetCopyPosition;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import java.util.ArrayList;
@@ -72,7 +73,7 @@ class MutationActionTest {
         new StructuredMutationAction.SetNamedRange(
                 "BudgetTotal",
                 new NamedRangeScope.Workbook(),
-                NamedRangeTarget.range(new SheetName("Budget"), "B4"))
+                NamedRangeTarget.range(new SheetName("Budget"), new RangeRef("B4")))
             .name());
 
     assertThrows(
@@ -87,7 +88,7 @@ class MutationActionTest {
             new StructuredMutationAction.SetNamedRange(
                 " ",
                 new NamedRangeScope.Workbook(),
-                NamedRangeTarget.range(new SheetName("Budget"), "B4")));
+                NamedRangeTarget.range(new SheetName("Budget"), new RangeRef("B4"))));
 
     assertThrows(
         NullPointerException.class,

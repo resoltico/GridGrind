@@ -37,6 +37,7 @@ import dev.erst.gridgrind.core.vocabulary.CellAddress;
 import dev.erst.gridgrind.core.vocabulary.ExcelSheetVisibility;
 import dev.erst.gridgrind.core.vocabulary.NamedRangeBackingKind;
 import dev.erst.gridgrind.core.vocabulary.NamedRangeScope;
+import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.excel.ExcelHyperlink;
@@ -83,7 +84,7 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
                         new SheetSelector.ByName(new SheetName("Budget")),
                         new WorkbookMutationAction.EnsureSheet()),
                     mutate(
-                        new RangeSelector.ByRange(new SheetName("Budget"), "A1:B2"),
+                        new RangeSelector.ByRange(new SheetName("Budget"), new RangeRef("A1:B2")),
                         new CellMutationAction.SetRange(
                             new dev.erst.gridgrind.core.model.value.CellGridInput.Typed(
                                 List.of(
@@ -95,7 +96,7 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
                             TableInput.withDefaultMetadata(
                                 "BudgetTable",
                                 new SheetName("Budget"),
-                                "A1:B2",
+                                new RangeRef("A1:B2"),
                                 false,
                                 new TableStyleInput.None())))),
                 inspect(
@@ -148,7 +149,11 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
         assertInstanceOf(
             DataValidationEntryReport.Unsupported.class, validations.validations().getFirst());
 
-    assertEquals(List.of("A1"), unsupported.ranges());
+    assertEquals(
+        List.of("A1"),
+        unsupported.ranges().stream()
+            .map(dev.erst.gridgrind.core.vocabulary.WireString::value)
+            .toList());
     assertEquals("ANY", unsupported.kind());
   }
 
@@ -248,7 +253,7 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
                         new StructuredMutationAction.SetNamedRange(
                             "BudgetTotal",
                             new NamedRangeScope.Workbook(),
-                            NamedRangeTarget.range(new SheetName("Budget"), "B4")))),
+                            NamedRangeTarget.range(new SheetName("Budget"), new RangeRef("B4"))))),
                 inspect(
                     "formula",
                     new SheetSelector.All(),
@@ -399,7 +404,7 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
             IllegalArgumentException.class,
             () ->
                 mutate(
-                    new RangeSelector.ByRange(new SheetName("Budget"), "A1:"),
+                    new RangeSelector.ByRange(new SheetName("Budget"), new RangeRef("A1:")),
                     new WorkbookMutationAction.MergeCells()));
 
     assertEquals("range must not be blank", failure.getMessage());
@@ -419,7 +424,8 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
                             new SheetSelector.ByName(new SheetName("Budget")),
                             new WorkbookMutationAction.EnsureSheet()),
                         mutate(
-                            new RangeSelector.ByRange(new SheetName("Budget"), "A1:B2"),
+                            new RangeSelector.ByRange(
+                                new SheetName("Budget"), new RangeRef("A1:B2")),
                             new WorkbookMutationAction.UnmergeCells())))));
 
     assertEquals(GridGrindProblemCode.INVALID_REQUEST, failure.problem().code());

@@ -5,6 +5,7 @@ import dev.erst.gridgrind.core.plan.ExecutionPolicyInput;
 import dev.erst.gridgrind.core.plan.RangeSelector;
 import dev.erst.gridgrind.core.plan.RowBandSelector;
 import dev.erst.gridgrind.core.vocabulary.CellAddress;
+import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import java.util.List;
 
@@ -49,10 +50,11 @@ final class OperationSequenceSelectorSupport {
       GridGrindFuzzData data, String sheetName, boolean validRange) {
     String firstRange = validRange ? "A1:A4" : FuzzDataDecoders.nextNonBlankRange(data, false);
     if (data.consumeBoolean()) {
-      return new RangeSelector.ByRange(new SheetName(sheetName), firstRange);
+      return new RangeSelector.ByRange(new SheetName(sheetName), new RangeRef(firstRange));
     }
     String secondRange = validRange ? "C1:C4" : FuzzDataDecoders.nextNonBlankRange(data, false);
-    return new RangeSelector.ByRanges(new SheetName(sheetName), List.of(firstRange, secondRange));
+    return new RangeSelector.ByRanges(
+        new SheetName(sheetName), List.of(new RangeRef(firstRange), new RangeRef(secondRange)));
   }
 
   static IndexSpan nextIndexSpan(GridGrindFuzzData data, int upperBound) {

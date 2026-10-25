@@ -1,4 +1,5 @@
 import dev.erst.gridgrind.core.vocabulary.SheetName;
+import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.core.authoring.GridGrindPlan;
 import dev.erst.gridgrind.core.authoring.ExpectedValues;
 import dev.erst.gridgrind.core.authoring.Tables;
@@ -34,7 +35,7 @@ final class JavaAuthoringWorkflowExample {
         .journal(ExecutionJournalLevel.VERBOSE)
         .mutate(Targets.sheet(new SheetName("Budget")).ensureExists())
         .mutate(
-            Targets.range(new SheetName("Budget"), "A1:B3")
+            Targets.range(new SheetName("Budget"), new RangeRef("A1:B3"))
                 .setRows(
                     List.of(
                         Values.row(Values.text("Item"), Values.text("Amount")),
@@ -46,7 +47,7 @@ final class JavaAuthoringWorkflowExample {
                     Tables.define(
                         "BudgetTable",
                         new SheetName("Budget"),
-                        "A1:B3",
+                        new RangeRef("A1:B3"),
                         false,
                         Tables.noStyle())))
         .mutate(
