@@ -5,6 +5,7 @@ import dev.erst.gridgrind.core.problem.InvalidRequestException;
 import dev.erst.gridgrind.core.problem.InvalidRequestShapeException;
 import dev.erst.gridgrind.core.problem.MessageInvariant;
 import dev.erst.gridgrind.core.problem.PayloadException;
+import dev.erst.gridgrind.core.problem.RequestBindingFailure;
 import dev.erst.gridgrind.core.problem.RequestProblemDescriptor;
 import dev.erst.gridgrind.core.problem.RequestProblemSource;
 import java.util.Objects;
@@ -19,6 +20,11 @@ final class RequestBindingFailureNormalizer {
       RequestJsonNode fragment,
       String fragmentPath,
       RequestDiagnosticRedactor redactor) {
+    Objects.requireNonNull(failure, "failure must not be null");
+    Objects.requireNonNull(fragment, "fragment must not be null");
+    Objects.requireNonNull(fragmentPath, "fragmentPath must not be null");
+    Objects.requireNonNull(redactor, "redactor must not be null");
+
     Optional<FormulaRequestException> formulaProblem =
         FormulaRequestProblemSupport.inputFailure(
             failure,
@@ -66,6 +72,9 @@ final class RequestBindingFailureNormalizer {
 
   static RequestBindingFailure fromCompletePlan(
       RuntimeException failure, RequestDiagnosticRedactor redactor) {
+    Objects.requireNonNull(failure, "failure must not be null");
+    Objects.requireNonNull(redactor, "redactor must not be null");
+
     Optional<FormulaRequestException> formulaProblem =
         FormulaRequestProblemSupport.inputFailure(
             failure, Optional.of("request"), Optional.empty(), Optional.empty(), failure);

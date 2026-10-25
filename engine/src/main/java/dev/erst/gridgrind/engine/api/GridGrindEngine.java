@@ -3,7 +3,7 @@ package dev.erst.gridgrind.engine.api;
 import dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces.RequestInput;
 import dev.erst.gridgrind.contract.dto.RequestDoctorReport;
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
-import dev.erst.gridgrind.contract.json.RequestAnalysis;
+import dev.erst.gridgrind.core.problem.RequestIntake;
 import java.util.Objects;
 
 /** Factory for the engine module's narrow published request-execution seam. */
@@ -47,7 +47,7 @@ public final class GridGrindEngine {
 
     @Override
     public dev.erst.gridgrind.contract.dto.WorkbookResult execute(
-        RequestAnalysis analysis, GridGrindRequestInputs inputs, GridGrindProgressSink sink) {
+        RequestIntake analysis, GridGrindRequestInputs inputs, GridGrindProgressSink sink) {
       Objects.requireNonNull(analysis, "analysis must not be null");
       Objects.requireNonNull(inputs, "inputs must not be null");
       Objects.requireNonNull(sink, "sink must not be null");
@@ -67,13 +67,13 @@ public final class GridGrindEngine {
     }
 
     @Override
-    public RequestDoctorReport diagnose(RequestAnalysis analysis, RequestInput requestInput) {
+    public RequestDoctorReport diagnose(RequestIntake analysis, RequestInput requestInput) {
       return delegate.diagnose(analysis, requestInput);
     }
 
     @Override
     public RequestDoctorReport diagnose(
-        RequestAnalysis analysis, RequestInput requestInput, GridGrindRequestInputs inputs) {
+        RequestIntake analysis, RequestInput requestInput, GridGrindRequestInputs inputs) {
       Objects.requireNonNull(inputs, "inputs must not be null");
       return delegate.diagnose(analysis, requestInput, toInternalInputs(inputs));
     }

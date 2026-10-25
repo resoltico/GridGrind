@@ -4,6 +4,7 @@ import dev.erst.gridgrind.contract.action.MutationAction;
 import dev.erst.gridgrind.contract.assertion.Assertion;
 import dev.erst.gridgrind.contract.selector.Selector;
 import dev.erst.gridgrind.contract.step.WorkbookStep;
+import dev.erst.gridgrind.core.problem.RequestBindingFailure;
 import dev.erst.gridgrind.core.problem.RequestBoundFragments;
 import dev.erst.gridgrind.core.problem.RequestExplicitNullField;
 import dev.erst.gridgrind.core.problem.RequestMalformedScalar;

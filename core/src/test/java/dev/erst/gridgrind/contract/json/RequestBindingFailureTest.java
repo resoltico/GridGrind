@@ -14,6 +14,7 @@ import dev.erst.gridgrind.core.problem.InvalidRequestException;
 import dev.erst.gridgrind.core.problem.InvalidRequestShapeException;
 import dev.erst.gridgrind.core.problem.MessageInvariant;
 import dev.erst.gridgrind.core.problem.MessageShape;
+import dev.erst.gridgrind.core.problem.RequestBindingFailure;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -25,7 +26,7 @@ class RequestBindingFailureTest {
   @Test
   void normalizesADirectConstructorFailureAtTheFragmentOwner() {
     RequestBindingFailure failure =
-        RequestBindingFailure.from(
+        RequestBindingFailureNormalizer.from(
             new IllegalArgumentException("direct failure"),
             new RequestJsonString(0, "value"),
             "source.path",
@@ -64,7 +65,8 @@ class RequestBindingFailureTest {
             null);
 
     RequestBindingFailure failure =
-        RequestBindingFailure.fromCompletePlan(exception, RequestDiagnosticRedactor.empty());
+        RequestBindingFailureNormalizer.fromCompletePlan(
+            exception, RequestDiagnosticRedactor.empty());
 
     assertEquals("steps[1].stepId", failure.jsonPath());
     assertEquals(exception.getMessage(), failure.exception().getMessage());
@@ -82,7 +84,8 @@ class RequestBindingFailureTest {
             null);
 
     RequestBindingFailure failure =
-        RequestBindingFailure.fromCompletePlan(exception, RequestDiagnosticRedactor.empty());
+        RequestBindingFailureNormalizer.fromCompletePlan(
+            exception, RequestDiagnosticRedactor.empty());
 
     assertEquals("steps", failure.jsonPath());
     assertEquals(exception.getMessage(), failure.exception().getMessage());
@@ -92,7 +95,7 @@ class RequestBindingFailureTest {
   @Test
   void normalizesAnUnstructuredCompletePlanFailureAtTheRequestRoot() {
     RequestBindingFailure failure =
-        RequestBindingFailure.fromCompletePlan(
+        RequestBindingFailureNormalizer.fromCompletePlan(
             new IllegalArgumentException("complete plan failure"),
             RequestDiagnosticRedactor.empty());
 
@@ -115,13 +118,13 @@ class RequestBindingFailureTest {
   @Test
   void preservesFormulaSpecificFailuresAcrossFragmentAndCompletePlanNormalization() {
     RequestBindingFailure normal =
-        RequestBindingFailure.from(
+        RequestBindingFailureNormalizer.from(
             new InvalidFormulaInputException("formula must not begin with ="),
             new RequestJsonString(0, "formula"),
             "steps[0].action.value",
             RequestDiagnosticRedactor.empty());
     RequestBindingFailure raw =
-        RequestBindingFailure.fromCompletePlan(
+        RequestBindingFailureNormalizer.fromCompletePlan(
             new InvalidRawFormulaTextException("raw formula contains a forbidden XML character"),
             RequestDiagnosticRedactor.empty());
     FormulaRequestException wrappedFormula =
@@ -133,7 +136,7 @@ class RequestBindingFailureTest {
             Optional.empty(),
             null);
     RequestBindingFailure rebased =
-        RequestBindingFailure.from(
+        RequestBindingFailureNormalizer.from(
             new IllegalArgumentException(wrappedFormula),
             new RequestJsonObject(0, List.of()),
             "steps[0].action.value",
@@ -149,7 +152,7 @@ class RequestBindingFailureTest {
             Optional.empty(),
             jacksonCause);
     RequestBindingFailure rebasedWithJacksonLocation =
-        RequestBindingFailure.from(
+        RequestBindingFailureNormalizer.from(
             new IllegalArgumentException(jacksonWrappedFormula),
             new RequestJsonObject(0, List.of()),
             "steps[0].action.value",
@@ -231,16 +234,16 @@ class RequestBindingFailureTest {
             null);
 
     RequestBindingFailure formulaFailure =
-        RequestBindingFailure.from(
+        RequestBindingFailureNormalizer.from(
             formula, fragment, "steps[2].action", RequestDiagnosticRedactor.empty());
     RequestBindingFailure inputFormulaFailure =
-        RequestBindingFailure.from(
+        RequestBindingFailureNormalizer.from(
             new InvalidFormulaInputException("formula must not begin with ="),
             fragment,
             "steps[2].action",
             RequestDiagnosticRedactor.empty());
     RequestBindingFailure shapeFailure =
-        RequestBindingFailure.from(
+        RequestBindingFailureNormalizer.from(
             shape, fragment, "steps[2].action", RequestDiagnosticRedactor.empty());
 
     assertEquals("steps[2].action.formula", formulaFailure.jsonPath());

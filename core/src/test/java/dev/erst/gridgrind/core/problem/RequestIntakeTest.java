@@ -1,0 +1,60 @@
+package dev.erst.gridgrind.core.problem;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import dev.erst.gridgrind.contract.dto.ExecutionPolicyInput;
+import dev.erst.gridgrind.contract.dto.FormulaEnvironmentInput;
+import dev.erst.gridgrind.contract.dto.GridGrindProtocolVersion;
+import dev.erst.gridgrind.contract.dto.WorkbookPlan;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import org.junit.jupiter.api.Test;
+
+/** Checks the parser-independent intake value at the engine handoff boundary. */
+class RequestIntakeTest {
+  @Test
+  @SuppressWarnings("PMD.UseConcurrentHashMap") // Local mutable input proves defensive ownership.
+  void ownsTokenOffsetsAndRejectsACompletePlanAlongsideProblems() {
+    WorkbookPlan plan =
+        WorkbookPlan.standard(
+            new WorkbookPlan.WorkbookSource.New(),
+            new WorkbookPlan.WorkbookPersistence.None(),
+            ExecutionPolicyInput.defaults(),
+            FormulaEnvironmentInput.empty(),
+            List.of());
+    RequestBoundFragments fragments =
+        new RequestBoundFragments(
+            new RequestBoundRoot(
+                Optional.of(GridGrindProtocolVersion.current()),
+                Optional.empty(),
+                Optional.of(plan.source()),
+                Optional.of(plan.persistence()),
+                Optional.of(plan.execution()),
+                Optional.of(plan.formulaEnvironment())),
+            Optional.of(List.of()));
+    Map<String, Long> offsets = new HashMap<>();
+    offsets.put("source", 10L);
+    RequestIntake intake =
+        new RequestIntake(fragments, List.of(), List.of(), Optional.of(plan), offsets, List.of());
+    offsets.clear();
+    assertEquals(Optional.of(10L), intake.byteOffsetAt("source"));
+    assertTrue(intake.byteOffsetAt("missing").isEmpty());
+    assertThrows(UnsupportedOperationException.class, () -> intake.tokenOffsets().clear());
+    assertEquals(plan, intake.requireCompletePlan());
+    assertTrue(intake.isBindable());
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new RequestIntake(
+                fragments,
+                List.of(new RequestUnknownField("extra", 20)),
+                List.of(),
+                Optional.of(plan),
+                Map.of(),
+                List.of()));
+  }
+}

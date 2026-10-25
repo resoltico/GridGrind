@@ -9,10 +9,12 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import dev.erst.gridgrind.core.problem.InvalidRequestException;
 import dev.erst.gridgrind.core.problem.InvalidRequestShapeException;
+import dev.erst.gridgrind.core.problem.RequestBindingFailure;
 import dev.erst.gridgrind.core.problem.RequestBoundFragments;
 import dev.erst.gridgrind.core.problem.RequestBoundRoot;
 import dev.erst.gridgrind.core.problem.RequestDuplicateKey;
 import dev.erst.gridgrind.core.problem.RequestExplicitNullField;
+import dev.erst.gridgrind.core.problem.RequestIntake;
 import dev.erst.gridgrind.core.problem.RequestInvalidEncoding;
 import dev.erst.gridgrind.core.problem.RequestInvalidJson;
 import dev.erst.gridgrind.core.problem.RequestMalformedScalar;
@@ -28,10 +30,10 @@ import java.util.Optional;
 import org.junit.jupiter.api.Test;
 
 /** Direct contract coverage for tolerant request intake and independently bound fragments. */
-class RequestAnalysisTest {
+class RequestIntakeBindingTest {
   @Test
   void retainsValidSiblingFragmentsWhileCollectingIndependentShapeProblems() {
-    RequestAnalysis analysis =
+    RequestIntake analysis =
         GridGrindJson.analyzeRequest(
             """
             {
@@ -77,8 +79,7 @@ class RequestAnalysisTest {
         }
         """;
 
-    RequestAnalysis analysis =
-        GridGrindJson.analyzeRequest(request.getBytes(StandardCharsets.UTF_8));
+    RequestIntake analysis = GridGrindJson.analyzeRequest(request.getBytes(StandardCharsets.UTF_8));
 
     assertTrue(analysis.isStructurallyValid());
     assertFalse(analysis.isBindable());
@@ -104,7 +105,7 @@ class RequestAnalysisTest {
 
   @Test
   void excludesASyntacticallyMalformedBranchWhileRetainingItsValidSiblings() {
-    RequestAnalysis analysis =
+    RequestIntake analysis =
         GridGrindJson.analyzeRequest(
             """
             {
@@ -130,12 +131,12 @@ class RequestAnalysisTest {
 
   @Test
   void distinguishesNonObjectRequestsFromSyntaxFailuresAndRetainsTheManualAnalysisInvariant() {
-    RequestAnalysis scalarAnalysis =
+    RequestIntake scalarAnalysis =
         GridGrindJson.analyzeRequest("[]".getBytes(StandardCharsets.UTF_8));
 
     assertInstanceOf(RequestMalformedScalar.class, scalarAnalysis.structuralProblems().getFirst());
 
-    RequestAnalysis decodedAnalysis =
+    RequestIntake decodedAnalysis =
         GridGrindJson.analyzeRequest(
             """
             {
@@ -148,11 +149,11 @@ class RequestAnalysisTest {
                 .getBytes(StandardCharsets.UTF_8));
     assertEquals(
         decodedAnalysis.completePlan().orElseThrow(),
-        new RequestAnalysis(decodedAnalysis.boundFragments(), List.of()).requireCompletePlan());
+        manualIntake(decodedAnalysis.boundFragments(), List.of()).requireCompletePlan());
     assertTrue(decodedAnalysis.isBindable());
 
-    RequestAnalysis incompleteManualAnalysis =
-        new RequestAnalysis(
+    RequestIntake incompleteManualAnalysis =
+        manualIntake(
             new RequestBoundFragments(
                 new RequestBoundRoot(
                     java.util.Optional.empty(),
@@ -169,7 +170,7 @@ class RequestAnalysisTest {
 
   @Test
   void preservesPreexistingNonJsonFindingsWhenTheRootIsNotAnObject() {
-    RequestAnalysis analysis =
+    RequestIntake analysis =
         RequestRootStructuralAnalyzer.analyze(
             new RequestSyntaxParseResult(
                 new RequestJsonString(0, "not-an-object"),
@@ -188,7 +189,7 @@ class RequestAnalysisTest {
         """;
     byte[] bytes = request.getBytes(StandardCharsets.UTF_8);
 
-    RequestAnalysis analysis = GridGrindJson.analyzeRequest(bytes);
+    RequestIntake analysis = GridGrindJson.analyzeRequest(bytes);
 
     RequestDuplicateKey duplicate =
         assertInstanceOf(
@@ -241,8 +242,7 @@ class RequestAnalysisTest {
         }
         """;
 
-    RequestAnalysis analysis =
-        GridGrindJson.analyzeRequest(request.getBytes(StandardCharsets.UTF_8));
+    RequestIntake analysis = GridGrindJson.analyzeRequest(request.getBytes(StandardCharsets.UTF_8));
 
     assertEquals(
         List.of(
@@ -298,8 +298,7 @@ class RequestAnalysisTest {
         }
         """;
 
-    RequestAnalysis analysis =
-        GridGrindJson.analyzeRequest(request.getBytes(StandardCharsets.UTF_8));
+    RequestIntake analysis = GridGrindJson.analyzeRequest(request.getBytes(StandardCharsets.UTF_8));
 
     assertEquals(
         List.of(
@@ -323,7 +322,7 @@ class RequestAnalysisTest {
 
   @Test
   void excludesEveryAmbiguousRootFragmentWhileRetainingUnrelatedSiblings() {
-    RequestAnalysis analysis =
+    RequestIntake analysis =
         GridGrindJson.analyzeRequest(
             """
             {
@@ -359,7 +358,7 @@ class RequestAnalysisTest {
 
   @Test
   void validatesEveryAuthoredPayloadFamilyWhenStepPayloadCardinalityIsInvalid() {
-    RequestAnalysis analysis =
+    RequestIntake analysis =
         GridGrindJson.analyzeRequest(
             """
             {
@@ -395,7 +394,7 @@ class RequestAnalysisTest {
   @Test
   void rejectsNonUtf8WithoutTryingToDecodeOrBindIt() {
     byte[] bytes = new byte[] {'{', '"', 'x', '"', ':', (byte) 0xC3, (byte) 0x28};
-    RequestAnalysis analysis = GridGrindJson.analyzeRequest(bytes);
+    RequestIntake analysis = GridGrindJson.analyzeRequest(bytes);
 
     assertEquals(1, analysis.structuralProblems().size());
     RequestInvalidEncoding invalidEncoding =
@@ -406,7 +405,7 @@ class RequestAnalysisTest {
 
   @Test
   void terminatesAndReportsMalformedNestedContainersWithoutConsumingTheEnclosingCloser() {
-    RequestAnalysis analysis =
+    RequestIntake analysis =
         assertTimeoutPreemptively(
             Duration.ofSeconds(1),
             () ->
@@ -440,8 +439,7 @@ class RequestAnalysisTest {
         }
         """
             .replace("<non-json-whitespace>", Character.toString(0x0B));
-    RequestAnalysis analysis =
-        GridGrindJson.analyzeRequest(request.getBytes(StandardCharsets.UTF_8));
+    RequestIntake analysis = GridGrindJson.analyzeRequest(request.getBytes(StandardCharsets.UTF_8));
 
     assertFalse(analysis.isStructurallyValid());
     assertTrue(
@@ -450,7 +448,7 @@ class RequestAnalysisTest {
 
   @Test
   void distinguishesMissingFieldsFromExplicitNullWithoutInventingTokenOffsets() {
-    RequestAnalysis analysis =
+    RequestIntake analysis =
         GridGrindJson.analyzeRequest(
             """
             {
@@ -496,8 +494,7 @@ class RequestAnalysisTest {
           "steps": []
         }
         """;
-    RequestAnalysis analysis =
-        GridGrindJson.analyzeRequest(request.getBytes(StandardCharsets.UTF_8));
+    RequestIntake analysis = GridGrindJson.analyzeRequest(request.getBytes(StandardCharsets.UTF_8));
 
     List<RequestExplicitNullField> nullFields =
         analysis.structuralProblems().stream()
@@ -522,7 +519,7 @@ class RequestAnalysisTest {
 
   @Test
   void treatsMissingTypeIdsAsRequiredDiscriminatorsRatherThanRecordFields() {
-    RequestAnalysis analysis =
+    RequestIntake analysis =
         GridGrindJson.analyzeRequest(
             """
             {
@@ -573,7 +570,7 @@ class RequestAnalysisTest {
 
   @Test
   void collectsIndependentUnionAndScalarFailuresWhileBindingValidSiblingSteps() {
-    RequestAnalysis analysis =
+    RequestIntake analysis =
         GridGrindJson.analyzeRequest(
             """
             {
@@ -613,7 +610,7 @@ class RequestAnalysisTest {
 
   @Test
   void collectsFieldsFromLaterValidUnionBranchesAfterTheFirstTypeIsMalformed() {
-    RequestAnalysis analysis =
+    RequestIntake analysis =
         GridGrindJson.analyzeRequest(
             """
             {
@@ -647,7 +644,7 @@ class RequestAnalysisTest {
 
   @Test
   void collectsFieldsUnknownToEveryUnionVariantWhenNoTypeValueCanSelectABranch() {
-    RequestAnalysis analysis =
+    RequestIntake analysis =
         GridGrindJson.analyzeRequest(
             """
             {
@@ -672,7 +669,7 @@ class RequestAnalysisTest {
 
   @Test
   void deDuplicatesSharedProblemsFromMultipleValidUnionBranches() {
-    RequestAnalysis analysis =
+    RequestIntake analysis =
         GridGrindJson.analyzeRequest(
             """
             {
@@ -760,7 +757,7 @@ class RequestAnalysisTest {
         """;
     byte[] bytes = request.getBytes(StandardCharsets.UTF_8);
 
-    RequestAnalysis analysis = GridGrindJson.analyzeRequest(bytes);
+    RequestIntake analysis = GridGrindJson.analyzeRequest(bytes);
 
     RequestMalformedScalar problem =
         assertInstanceOf(
@@ -929,5 +926,17 @@ class RequestAnalysisTest {
         .filter(problem -> problem.jsonPath().filter(jsonPath::equals).isPresent())
         .findFirst()
         .orElseThrow();
+  }
+
+  private static RequestIntake manualIntake(
+      dev.erst.gridgrind.core.problem.RequestBoundFragments fragments,
+      java.util.List<dev.erst.gridgrind.core.problem.RequestStructuralProblem> problems) {
+    return RequestIntakeBinder.bind(
+        fragments,
+        problems,
+        java.util.List.of(),
+        RequestDiagnosticRedactor.empty(),
+        java.util.Optional.empty(),
+        java.util.List.of());
   }
 }

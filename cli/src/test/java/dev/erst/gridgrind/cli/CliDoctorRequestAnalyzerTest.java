@@ -12,7 +12,7 @@ import dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces;
 import dev.erst.gridgrind.contract.dto.RequestDoctorReport;
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
 import dev.erst.gridgrind.contract.json.GridGrindJson;
-import dev.erst.gridgrind.contract.json.RequestAnalysis;
+import dev.erst.gridgrind.core.problem.RequestIntake;
 import dev.erst.gridgrind.engine.api.GridGrindProblems;
 import dev.erst.gridgrind.engine.api.GridGrindRequestDoctor;
 import dev.erst.gridgrind.engine.api.GridGrindRequestInputs;
@@ -361,7 +361,7 @@ class CliDoctorRequestAnalyzerTest extends GridGrindCliTestSupport {
             List.of()));
   }
 
-  private static RequestAnalysis analysis(byte[] requestBytes) {
+  private static RequestIntake analysis(byte[] requestBytes) {
     return GridGrindJson.analyzeRequest(requestBytes);
   }
 
@@ -417,7 +417,7 @@ class CliDoctorRequestAnalyzerTest extends GridGrindCliTestSupport {
 
     @Override
     public RequestDoctorReport diagnose(
-        dev.erst.gridgrind.contract.json.RequestAnalysis analysis,
+        dev.erst.gridgrind.core.problem.RequestIntake analysis,
         dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces.RequestInput requestInput) {
       directCalls++;
       if (!analysis.isBindable()) {
@@ -432,7 +432,7 @@ class CliDoctorRequestAnalyzerTest extends GridGrindCliTestSupport {
 
     @Override
     public RequestDoctorReport diagnose(
-        dev.erst.gridgrind.contract.json.RequestAnalysis analysis,
+        dev.erst.gridgrind.core.problem.RequestIntake analysis,
         dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces.RequestInput requestInput,
         GridGrindRequestInputs inputs) {
       boundCalls++;

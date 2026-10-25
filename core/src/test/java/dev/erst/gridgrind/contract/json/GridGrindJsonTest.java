@@ -34,6 +34,7 @@ import dev.erst.gridgrind.contract.step.MutationStep;
 import dev.erst.gridgrind.core.problem.InvalidRequestException;
 import dev.erst.gridgrind.core.problem.InvalidRequestShapeException;
 import dev.erst.gridgrind.core.problem.PayloadException;
+import dev.erst.gridgrind.core.problem.RequestIntake;
 import dev.erst.gridgrind.core.problem.RequestMissingTypeDiscriminator;
 import dev.erst.gridgrind.core.problem.RequestUnknownField;
 import java.io.ByteArrayInputStream;
@@ -800,7 +801,7 @@ class GridGrindJsonTest {
         """
             .getBytes(StandardCharsets.UTF_8);
 
-    RequestAnalysis analysis = GridGrindJson.analyzeRequest(request);
+    RequestIntake analysis = GridGrindJson.analyzeRequest(request);
     assertEquals(
         List.of("steps[0].assertion.F5pe", "steps[0].assertion.type"),
         analysis.structuralProblems().stream()

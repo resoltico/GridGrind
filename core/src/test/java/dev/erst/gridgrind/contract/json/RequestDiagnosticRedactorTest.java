@@ -56,17 +56,8 @@ class RequestDiagnosticRedactorTest {
   @Test
   void doesNotCorruptUnrelatedTextWhenAValidSecretHasOneCharacter() throws IOException {
     RequestDiagnosticRedactor redactor =
-        GridGrindJson.analyzeRequest(
-                """
-                {
-                  "source": {"type":"EXISTING","path":"input.xlsx","security":{"passwordRef":{"id":"source-open"}}},
-                  "persistence": {"type":"NONE"},
-                  "protocolVersion":"V3",
-                  "steps": []
-                }
-                """
-                    .getBytes(StandardCharsets.UTF_8))
-            .diagnosticRedactor();
+        RequestDiagnosticRedactor.forRequestType(
+            dev.erst.gridgrind.contract.dto.WorkbookPlan.class);
     byte[] payload =
         """
         {"message":"a harmless path detail","resolution":"Use a valid path","context":{"stage":"READ_REQUEST","json":{"type":"PATH_ONLY","jsonPath":"source.path"}},"causes":[{"message":"a harmless cause"}]}

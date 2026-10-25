@@ -8,6 +8,7 @@ import dev.erst.gridgrind.core.problem.InvalidEncodingException;
 import dev.erst.gridgrind.core.problem.InvalidJsonException;
 import dev.erst.gridgrind.core.problem.InvalidRequestShapeException;
 import dev.erst.gridgrind.core.problem.RequestDuplicateKey;
+import dev.erst.gridgrind.core.problem.RequestIntake;
 import dev.erst.gridgrind.core.problem.RequestInvalidJson;
 import java.nio.charset.StandardCharsets;
 import org.junit.jupiter.api.Test;
@@ -99,7 +100,7 @@ class GridGrindRequestDecoderTest {
         }
         """
             .getBytes(StandardCharsets.UTF_8);
-    RequestAnalysis analysis = GridGrindJson.analyzeRequest(request);
+    RequestIntake analysis = GridGrindJson.analyzeRequest(request);
 
     InvalidJsonException failure =
         assertThrows(InvalidJsonException.class, () -> GridGrindJson.readRequest(request));

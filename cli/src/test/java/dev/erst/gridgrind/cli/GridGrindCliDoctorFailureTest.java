@@ -7,7 +7,7 @@ import dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces.RequestInpu
 import dev.erst.gridgrind.contract.dto.RequestDoctorReport;
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
 import dev.erst.gridgrind.contract.json.GridGrindJson;
-import dev.erst.gridgrind.contract.json.RequestAnalysis;
+import dev.erst.gridgrind.core.problem.RequestIntake;
 import dev.erst.gridgrind.engine.api.GridGrindRequestDoctor;
 import dev.erst.gridgrind.engine.api.GridGrindRequestInputs;
 import java.io.ByteArrayInputStream;
@@ -55,13 +55,13 @@ class GridGrindCliDoctorFailureTest extends GridGrindCliTestSupport {
   /** Doctor double that demonstrates containment of unexpected analysis failures. */
   private static final class FailingDoctor implements GridGrindRequestDoctor {
     @Override
-    public RequestDoctorReport diagnose(RequestAnalysis analysis, RequestInput requestInput) {
+    public RequestDoctorReport diagnose(RequestIntake analysis, RequestInput requestInput) {
       throw failure();
     }
 
     @Override
     public RequestDoctorReport diagnose(
-        RequestAnalysis analysis, RequestInput requestInput, GridGrindRequestInputs inputs) {
+        RequestIntake analysis, RequestInput requestInput, GridGrindRequestInputs inputs) {
       throw failure();
     }
 

@@ -43,7 +43,7 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
       WorkbookPlan request,
       ExecutionInputBindings bindings,
       ExecutionProgressSink sink,
-      Optional<dev.erst.gridgrind.contract.json.RequestAnalysis> analysis) {
+      Optional<dev.erst.gridgrind.core.problem.RequestIntake> analysis) {
     WorkbookPlan authoredRequest = Objects.requireNonNull(request, "request must not be null");
     ExecutionInputBindings executionBindings =
         Objects.requireNonNull(bindings, "bindings must not be null");

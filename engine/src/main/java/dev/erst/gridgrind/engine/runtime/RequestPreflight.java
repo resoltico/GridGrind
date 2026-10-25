@@ -5,8 +5,8 @@ import dev.erst.gridgrind.contract.dto.GridGrindProblemDetail;
 import dev.erst.gridgrind.contract.dto.ProblemContext;
 import dev.erst.gridgrind.contract.dto.ProblemContextWorkbookSurfaces.InputReference;
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
-import dev.erst.gridgrind.contract.json.RequestAnalysis;
 import dev.erst.gridgrind.contract.step.WorkbookStep;
+import dev.erst.gridgrind.core.problem.RequestIntake;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -33,7 +33,7 @@ final class RequestPreflight {
   }
 
   static Result verify(
-      WorkbookPlan request, ExecutionInputBindings bindings, RequestAnalysis analysis) {
+      WorkbookPlan request, ExecutionInputBindings bindings, RequestIntake analysis) {
     return verify(
         request,
         bindings,
@@ -45,7 +45,7 @@ final class RequestPreflight {
   private static Result verify(
       WorkbookPlan request,
       ExecutionInputBindings bindings,
-      Optional<RequestAnalysis> analysis,
+      Optional<RequestIntake> analysis,
       StepResolver stepResolver) {
     Objects.requireNonNull(request, "request must not be null");
     Objects.requireNonNull(bindings, "bindings must not be null");

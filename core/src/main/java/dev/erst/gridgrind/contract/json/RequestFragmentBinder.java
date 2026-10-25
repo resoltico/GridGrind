@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.contract.json;
 
+import dev.erst.gridgrind.core.problem.RequestBindingFailure;
 import dev.erst.gridgrind.core.problem.RequestDuplicateKey;
 import dev.erst.gridgrind.core.problem.RequestStructuralProblem;
 import java.math.BigDecimal;
@@ -48,7 +49,7 @@ final class RequestFragmentBinder {
           GridGrindJsonMapperSupport.REQUEST_JSON_MAPPER.treeToValue(toJsonNode(node), type));
     } catch (RuntimeException exception) {
       bindingFailures.add(
-          RequestBindingFailure.from(exception, node, jsonPath, diagnosticRedactor));
+          RequestBindingFailureNormalizer.from(exception, node, jsonPath, diagnosticRedactor));
       return Optional.empty();
     }
   }

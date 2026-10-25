@@ -5,8 +5,10 @@ import dev.erst.gridgrind.contract.dto.ExecutionPolicyInput;
 import dev.erst.gridgrind.contract.dto.FormulaEnvironmentInput;
 import dev.erst.gridgrind.contract.dto.GridGrindProtocolVersion;
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
+import dev.erst.gridgrind.core.problem.RequestBindingFailure;
 import dev.erst.gridgrind.core.problem.RequestBoundFragments;
 import dev.erst.gridgrind.core.problem.RequestBoundRoot;
+import dev.erst.gridgrind.core.problem.RequestIntake;
 import dev.erst.gridgrind.core.problem.RequestInvalidEncoding;
 import dev.erst.gridgrind.core.problem.RequestInvalidJson;
 import dev.erst.gridgrind.core.problem.RequestMalformedScalar;
@@ -20,7 +22,7 @@ import java.util.Optional;
 final class RequestRootStructuralAnalyzer {
   private RequestRootStructuralAnalyzer() {}
 
-  static RequestAnalysis analyze(RequestSyntaxParseResult parsed) {
+  static RequestIntake analyze(RequestSyntaxParseResult parsed) {
     List<RequestStructuralProblem> problems = new ArrayList<>(parsed.problems());
     List<RequestBindingFailure> bindingFailures = new ArrayList<>();
     RequestDiagnosticRedactor diagnosticRedactor =
@@ -35,7 +37,7 @@ final class RequestRootStructuralAnalyzer {
             new RequestMalformedScalar(
                 "request", "a JSON object at the root", parsed.root().byteOffset()));
       }
-      return new RequestAnalysis(
+      return RequestIntakeBinder.bind(
           emptyFragments(),
           problems,
           bindingFailures,
@@ -57,7 +59,7 @@ final class RequestRootStructuralAnalyzer {
     List<RequestJsonMember> stepMembers = members.membersNamed("steps");
     RequestStepFragmentCollector.validateAll(stepMembers, problems);
 
-    return new RequestAnalysis(
+    return RequestIntakeBinder.bind(
         new RequestBoundFragments(
             new RequestBoundRoot(
                 RequestFragmentBinder.bindMember(

@@ -10,7 +10,7 @@ import dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces;
 import dev.erst.gridgrind.contract.dto.RequestDoctorReport;
 import dev.erst.gridgrind.contract.dto.WorkbookResult;
 import dev.erst.gridgrind.contract.json.GridGrindJson;
-import dev.erst.gridgrind.contract.json.RequestAnalysis;
+import dev.erst.gridgrind.core.problem.RequestIntake;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.UncheckedIOException;
@@ -107,7 +107,7 @@ class GridGrindEngineApiPreflightTest {
 
   @Test
   void productionExecutorUsesTheDoctorOrderedPrimaryPreflightProblem() {
-    RequestAnalysis analysis =
+    RequestIntake analysis =
         GridGrindJson.analyzeRequest(preflightFailureRequest().getBytes(StandardCharsets.UTF_8));
     ProblemContextRequestSurfaces.RequestInput requestInput =
         ProblemContextRequestSurfaces.RequestInput.standardInput();

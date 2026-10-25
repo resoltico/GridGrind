@@ -4,12 +4,12 @@ import dev.erst.gridgrind.contract.dto.ProblemContext;
 import dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces;
 import dev.erst.gridgrind.contract.dto.RequestDoctorReport;
 import dev.erst.gridgrind.contract.json.GridGrindJson;
-import dev.erst.gridgrind.contract.json.RequestAnalysis;
 import dev.erst.gridgrind.contract.json.RequestDiagnosticRedactor;
 import dev.erst.gridgrind.core.problem.InvalidEncodingException;
 import dev.erst.gridgrind.core.problem.InvalidJsonException;
 import dev.erst.gridgrind.core.problem.InvalidRequestException;
 import dev.erst.gridgrind.core.problem.InvalidRequestShapeException;
+import dev.erst.gridgrind.core.problem.RequestIntake;
 import dev.erst.gridgrind.engine.api.GridGrindProblems;
 import dev.erst.gridgrind.engine.api.GridGrindRequestDoctor;
 import java.io.IOException;
@@ -78,8 +78,11 @@ final class GridGrindCliDoctorCommand {
     try {
       byte[] requestBytes =
           requestReader.readBytes(command.requestPath(), requestInput.orElseThrow());
-      RequestAnalysis analysis = GridGrindJson.analyzeRequest(requestBytes);
-      requestRedactor = Optional.of(analysis.diagnosticRedactor());
+      RequestIntake analysis = GridGrindJson.analyzeRequest(requestBytes);
+      requestRedactor =
+          Optional.of(
+              RequestDiagnosticRedactor.forRequestType(
+                  dev.erst.gridgrind.contract.dto.WorkbookPlan.class));
       report =
           appendAnalysisWarnings(
               doctorRequestAnalyzer.diagnose(

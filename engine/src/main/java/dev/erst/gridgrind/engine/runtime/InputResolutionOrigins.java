@@ -3,9 +3,9 @@ package dev.erst.gridgrind.engine.runtime;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces.JsonLocation;
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
-import dev.erst.gridgrind.contract.json.RequestAnalysis;
 import dev.erst.gridgrind.contract.source.BinarySourceInput;
 import dev.erst.gridgrind.contract.source.TextSourceInput;
+import dev.erst.gridgrind.core.problem.RequestIntake;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.RecordComponent;
 import java.util.IdentityHashMap;
@@ -26,7 +26,7 @@ final class InputResolutionOrigins {
   }
 
   static InputResolutionOrigins forRequest(
-      WorkbookPlan request, Optional<RequestAnalysis> requestAnalysis) {
+      WorkbookPlan request, Optional<RequestIntake> requestAnalysis) {
     Objects.requireNonNull(request, "request must not be null");
     Objects.requireNonNull(requestAnalysis, "requestAnalysis must not be null");
     IdentityHashMap<Object, JsonLocation> locations = new IdentityHashMap<>();
@@ -42,7 +42,7 @@ final class InputResolutionOrigins {
   private static void collect(
       Object value,
       String jsonPath,
-      Optional<RequestAnalysis> requestAnalysis,
+      Optional<RequestIntake> requestAnalysis,
       IdentityHashMap<Object, JsonLocation> locations) {
     if (value == null) {
       return;
@@ -78,17 +78,17 @@ final class InputResolutionOrigins {
   }
 
   private static JsonLocation locationFor(
-      TextSourceInput source, String sourcePath, Optional<RequestAnalysis> requestAnalysis) {
+      TextSourceInput source, String sourcePath, Optional<RequestIntake> requestAnalysis) {
     return locationFor(sourcePath, sourceField(source), requestAnalysis);
   }
 
   private static JsonLocation locationFor(
-      BinarySourceInput source, String sourcePath, Optional<RequestAnalysis> requestAnalysis) {
+      BinarySourceInput source, String sourcePath, Optional<RequestIntake> requestAnalysis) {
     return locationFor(sourcePath, sourceField(source), requestAnalysis);
   }
 
   private static JsonLocation locationFor(
-      String sourcePath, String fieldName, Optional<RequestAnalysis> requestAnalysis) {
+      String sourcePath, String fieldName, Optional<RequestIntake> requestAnalysis) {
     String jsonPath = append(sourcePath, fieldName);
     return requestAnalysis
         .map(analysis -> analysis.jsonLocationAt(jsonPath))

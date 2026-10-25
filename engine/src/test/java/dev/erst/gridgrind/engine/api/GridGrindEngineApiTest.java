@@ -94,7 +94,7 @@ class GridGrindEngineApiTest {
         new GridGrindRequestDoctor() {
           @Override
           public RequestDoctorReport diagnose(
-              dev.erst.gridgrind.contract.json.RequestAnalysis analysis,
+              dev.erst.gridgrind.core.problem.RequestIntake analysis,
               dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces.RequestInput
                   requestInput) {
             return cleanDoctorSummary();
@@ -102,7 +102,7 @@ class GridGrindEngineApiTest {
 
           @Override
           public RequestDoctorReport diagnose(
-              dev.erst.gridgrind.contract.json.RequestAnalysis analysis,
+              dev.erst.gridgrind.core.problem.RequestIntake analysis,
               dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces.RequestInput
                   requestInput,
               GridGrindRequestInputs inputs) {

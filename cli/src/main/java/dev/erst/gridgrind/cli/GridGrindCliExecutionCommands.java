@@ -5,12 +5,12 @@ import dev.erst.gridgrind.contract.dto.RequestDoctorReport;
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
 import dev.erst.gridgrind.contract.dto.WorkbookResult;
 import dev.erst.gridgrind.contract.json.GridGrindJson;
-import dev.erst.gridgrind.contract.json.RequestAnalysis;
 import dev.erst.gridgrind.contract.json.RequestDiagnosticRedactor;
 import dev.erst.gridgrind.core.problem.InvalidEncodingException;
 import dev.erst.gridgrind.core.problem.InvalidJsonException;
 import dev.erst.gridgrind.core.problem.InvalidRequestException;
 import dev.erst.gridgrind.core.problem.InvalidRequestShapeException;
+import dev.erst.gridgrind.core.problem.RequestIntake;
 import dev.erst.gridgrind.engine.api.GridGrindRequestDoctor;
 import dev.erst.gridgrind.engine.api.GridGrindRequestExecutor;
 import dev.erst.gridgrind.engine.api.GridGrindRequestRequirements;
@@ -71,12 +71,15 @@ final class GridGrindCliExecutionCommands {
     }
 
     WorkbookPlan request;
-    RequestAnalysis analysis;
+    RequestIntake analysis;
     Optional<RequestDiagnosticRedactor> requestRedactor = Optional.empty();
     try {
       byte[] requestBytes = requestReader.readBytes(command.requestPath(), stdin);
       analysis = GridGrindJson.analyzeRequest(requestBytes);
-      requestRedactor = Optional.of(analysis.diagnosticRedactor());
+      requestRedactor =
+          Optional.of(
+              RequestDiagnosticRedactor.forRequestType(
+                  dev.erst.gridgrind.contract.dto.WorkbookPlan.class));
       if (!analysis.isBindable()) {
         RequestDoctorReport staticValidation =
             requestDoctor.diagnose(
@@ -202,7 +205,7 @@ final class GridGrindCliExecutionCommands {
       OutputStream stderr,
       boolean prettyJson,
       WorkbookPlan request,
-      RequestAnalysis analysis,
+      RequestIntake analysis,
       RequestDiagnosticRedactor requestRedactor)
       throws IOException {
     CliResponseReservation reservation;
@@ -230,7 +233,7 @@ final class GridGrindCliExecutionCommands {
       InputStream stdin,
       OutputStream stderr,
       WorkbookPlan request,
-      RequestAnalysis analysis) {
+      RequestIntake analysis) {
     try {
       return CliResponseAnalysisWarningSupport.append(
           CliExecutionFailureSupport.executeStarted(

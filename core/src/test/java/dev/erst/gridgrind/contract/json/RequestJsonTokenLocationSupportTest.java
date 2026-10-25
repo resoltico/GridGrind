@@ -9,6 +9,53 @@ import org.junit.jupiter.api.Test;
 /** Exercises exact token resolution and its safe absence cases independently from binding. */
 class RequestJsonTokenLocationSupportTest {
   @Test
+  void indexesCanonicalPathsWithoutRetainingParserNodes() {
+    assertEquals(
+        java.util.Map.ofEntries(
+            java.util.Map.entry("request", 0L),
+            java.util.Map.entry("source", 10L),
+            java.util.Map.entry("source.path", 30L),
+            java.util.Map.entry("steps", 50L),
+            java.util.Map.entry("steps[0]", 70L),
+            java.util.Map.entry("steps[0].stepId", 80L),
+            java.util.Map.entry("array", 100L),
+            java.util.Map.entry("array[0]", 120L),
+            java.util.Map.entry("array[0].field", 130L),
+            java.util.Map.entry("array[0].field[0]", 150L),
+            java.util.Map.entry("scalar", 160L)),
+        RequestJsonTokenLocationSupport.index(root()));
+  }
+
+  @Test
+  void indexKeepsTheFirstDuplicateMemberAndTheRootRequestLocation() {
+    RequestJsonObject root =
+        new RequestJsonObject(
+            0,
+            List.of(
+                new RequestJsonMember(
+                    "source",
+                    10,
+                    new RequestJsonObject(
+                        20,
+                        List.of(
+                            new RequestJsonMember(
+                                "path", 30, new RequestJsonString(40, "first"))))),
+                new RequestJsonMember(
+                    "source",
+                    50,
+                    new RequestJsonObject(
+                        60,
+                        List.of(
+                            new RequestJsonMember(
+                                "extra", 70, new RequestJsonString(80, "second"))))),
+                new RequestJsonMember("request", 90, new RequestJsonString(100, "field")),
+                new RequestJsonMember("a.b", 110, new RequestJsonString(120, "ambiguous"))));
+    assertEquals(
+        java.util.Map.of("request", 0L, "source", 10L, "source.path", 30L),
+        RequestJsonTokenLocationSupport.index(root));
+  }
+
+  @Test
   void locatesRootMembersNestedMembersAndArrayElements() {
     RequestJsonObject root = root();
 

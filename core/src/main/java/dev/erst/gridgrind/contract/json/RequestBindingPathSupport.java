@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.contract.json;
 
+import dev.erst.gridgrind.core.problem.RequestBindingFailure;
 import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;

@@ -114,7 +114,7 @@ class GridGrindRequestAnalysisProblemsTest {
   }
 
   private static ProblemContext.ReadRequest firstReadRequest(
-      dev.erst.gridgrind.contract.json.RequestAnalysis analysis) {
+      dev.erst.gridgrind.core.problem.RequestIntake analysis) {
     return projected(analysis).stream()
         .map(GridGrindProblemDetail.Problem::context)
         .filter(ProblemContext.ReadRequest.class::isInstance)
@@ -137,7 +137,7 @@ class GridGrindRequestAnalysisProblemsTest {
   }
 
   private static List<GridGrindProblemDetail.Problem> projected(
-      dev.erst.gridgrind.contract.json.RequestAnalysis analysis) {
+      dev.erst.gridgrind.core.problem.RequestIntake analysis) {
     return GridGrindRequestAnalysisProblems.project(
         analysis, ProblemContextRequestSurfaces.RequestInput.standardInput());
   }

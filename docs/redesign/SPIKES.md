@@ -337,3 +337,25 @@ The private required-component constructor no longer repeats the blank-name chec
 its valid Java record-component name. Its null guard remains. This removes no authored-input
 validation. Old JSON package files: 104 → 57; pure problem files: 47 plus package annotation.
 Main Java lines: 125,610 → 125,704. Model/converter/union counts remain unchanged.
+
+### WP-20 parser-independent intake handoff
+
+Replaced parser-backed `RequestAnalysis` with the pure `core.problem.RequestIntake` record.
+It retains independently bound siblings, ordered findings, optional complete plan, warnings and
+an immutable canonical-path/token-offset index. JSON owns final binding, invariant failure
+location and normalization. The old analysis object and binding-record normalization aliases
+were removed. Engine main code now has zero imports of the JSON package. CLI redaction uses
+`forRequestType(WorkbookPlan.class)`, exactly the metadata source previously selected inside
+analysis; it never needed request values or parser state.
+
+New regression controls independently assert the complete nested offset index, first-member
+selection for duplicate keys, the reserved root location and ambiguous-name omission. A pure
+handoff test checks offset ownership and rejects a complete plan alongside problems. Existing
+binding, redaction, partial-sibling and source-location assertions remain. Focused PMD and intake
+checks passed (6s); full `./gradlew check --no-parallel` passed (2m46s), 2,769 active tests,
+zero failures/errors/skips, including unchanged 141 golden cases. Nested formatting passed.
+Evidence: external `evidence/wp-20/intake-*.log` and `intake-inventories/`.
+
+Old JSON package files: 57 → 56 (analysis plus binding data retired; binder added).
+Main Java lines: 125,704 → 125,716. No golden re-recording, baseline or supplement change.
+Next: physically separate JSON, move codecs out of core and normalize packages before WP-20 closes.

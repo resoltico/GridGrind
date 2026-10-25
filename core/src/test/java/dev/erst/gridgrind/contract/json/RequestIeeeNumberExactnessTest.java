@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import dev.erst.gridgrind.core.problem.NumberNotRepresentableException;
+import dev.erst.gridgrind.core.problem.RequestIntake;
 import dev.erst.gridgrind.core.problem.RequestInvalidJson;
 import dev.erst.gridgrind.core.problem.RequestNumberNotRepresentable;
 import dev.erst.gridgrind.core.problem.RequestStructuralProblem;
@@ -28,7 +29,7 @@ class RequestIeeeNumberExactnessTest {
   void rejectsNonFiniteAndLossyDoubleTokensAtTheirAuthoredField() {
     for (String token : List.of("1e400", "12345678901234567")) {
       byte[] bytes = request(token).getBytes(StandardCharsets.UTF_8);
-      RequestAnalysis analysis = GridGrindJson.analyzeRequest(bytes);
+      RequestIntake analysis = GridGrindJson.analyzeRequest(bytes);
 
       RequestNumberNotRepresentable problem =
           assertInstanceOf(

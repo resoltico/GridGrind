@@ -4,13 +4,15 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces;
+import dev.erst.gridgrind.core.problem.RequestBindingFailure;
+import dev.erst.gridgrind.core.problem.RequestIntake;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
 
 /** Verifies that constructor failures retain the request token named by their qualified path. */
-class RequestAnalysisLocationTest {
+class RequestIntakeLocationTest {
   @Test
   void locatesCompletePlanBindingFailuresAtTheOffendingStepMember() {
     String request =
@@ -35,7 +37,7 @@ class RequestAnalysisLocationTest {
         """;
     byte[] bytes = request.getBytes(StandardCharsets.UTF_8);
 
-    RequestAnalysis analysis = GridGrindJson.analyzeRequest(bytes);
+    RequestIntake analysis = GridGrindJson.analyzeRequest(bytes);
 
     RequestBindingFailure failure = analysis.bindingFailures().getFirst();
     assertEquals("steps[1].stepId", failure.jsonPath());
@@ -45,7 +47,7 @@ class RequestAnalysisLocationTest {
 
   @Test
   void returnsPathOnlyWhenAManuallyAssembledAnalysisHasNoRawRequestTree() {
-    RequestAnalysis decoded =
+    RequestIntake decoded =
         GridGrindJson.analyzeRequest(
             """
             {
@@ -56,7 +58,7 @@ class RequestAnalysisLocationTest {
             }
             """
                 .getBytes(StandardCharsets.UTF_8));
-    RequestAnalysis manual = new RequestAnalysis(decoded.boundFragments(), List.of());
+    RequestIntake manual = manualIntake(decoded.boundFragments(), List.of());
 
     assertEquals(
         ProblemContextRequestSurfaces.JsonLocation.pathOnly("source"),
@@ -66,7 +68,7 @@ class RequestAnalysisLocationTest {
 
   @Test
   void locatesNestedCompactCellsAndCompositeAssertionsAtTheirAuthoredElements() {
-    RequestAnalysis gridAnalysis =
+    RequestIntake gridAnalysis =
         GridGrindJson.analyzeRequest(
             """
             {
@@ -81,7 +83,7 @@ class RequestAnalysisLocationTest {
             }
             """
                 .getBytes(StandardCharsets.UTF_8));
-    RequestAnalysis assertionAnalysis =
+    RequestIntake assertionAnalysis =
         GridGrindJson.analyzeRequest(
             """
             {
@@ -112,5 +114,17 @@ class RequestAnalysisLocationTest {
     String text = new String(bytes, StandardCharsets.UTF_8);
     int firstIndex = text.indexOf(token);
     return text.indexOf(token, firstIndex + token.length());
+  }
+
+  private static RequestIntake manualIntake(
+      dev.erst.gridgrind.core.problem.RequestBoundFragments fragments,
+      java.util.List<dev.erst.gridgrind.core.problem.RequestStructuralProblem> problems) {
+    return RequestIntakeBinder.bind(
+        fragments,
+        problems,
+        java.util.List.of(),
+        RequestDiagnosticRedactor.empty(),
+        java.util.Optional.empty(),
+        java.util.List.of());
   }
 }

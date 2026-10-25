@@ -2,7 +2,7 @@ package dev.erst.gridgrind.cli;
 
 import dev.erst.gridgrind.contract.dto.RequestWarning;
 import dev.erst.gridgrind.contract.dto.WorkbookResult;
-import dev.erst.gridgrind.contract.json.RequestAnalysis;
+import dev.erst.gridgrind.core.problem.RequestIntake;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -10,7 +10,7 @@ import java.util.List;
 final class CliResponseAnalysisWarningSupport {
   private CliResponseAnalysisWarningSupport() {}
 
-  static WorkbookResult append(WorkbookResult response, RequestAnalysis analysis) {
+  static WorkbookResult append(WorkbookResult response, RequestIntake analysis) {
     return append(response, analysis.warnings());
   }
 

@@ -20,6 +20,7 @@ import dev.erst.gridgrind.core.problem.RequestBoundFragments;
 import dev.erst.gridgrind.core.problem.RequestBoundRoot;
 import dev.erst.gridgrind.core.problem.RequestDuplicateKey;
 import dev.erst.gridgrind.core.problem.RequestExplicitNullField;
+import dev.erst.gridgrind.core.problem.RequestIntake;
 import dev.erst.gridgrind.core.problem.RequestInvalidEncoding;
 import dev.erst.gridgrind.core.problem.RequestInvalidJson;
 import dev.erst.gridgrind.core.problem.RequestMalformedScalar;
@@ -439,12 +440,11 @@ class RequestStructuralSupportTest {
     assertThrows(
         IllegalArgumentException.class, () -> new RequestBoundFragments.Step(-1, Optional.empty()));
 
-    RequestAnalysis invalid =
-        new RequestAnalysis(complete, List.of(new RequestUnknownField("extra", 0)));
+    RequestIntake invalid = manualIntake(complete, List.of(new RequestUnknownField("extra", 0)));
     assertFalse(invalid.isStructurallyValid());
     assertTrue(invalid.completePlan().isEmpty());
-    assertTrue(new RequestAnalysis(complete, List.of()).isStructurallyValid());
-    assertEquals(complete.completePlan(), new RequestAnalysis(complete, List.of()).completePlan());
+    assertTrue(manualIntake(complete, List.of()).isStructurallyValid());
+    assertEquals(complete.completePlan(), manualIntake(complete, List.of()).completePlan());
 
     var duplicateStep =
         GridGrindJson.readRequest(
@@ -469,7 +469,7 @@ class RequestStructuralSupportTest {
                 List.of(
                     new RequestBoundFragments.Step(0, Optional.of(duplicateStep)),
                     new RequestBoundFragments.Step(1, Optional.of(duplicateStep)))));
-    assertTrue(new RequestAnalysis(constructorInvalid, List.of()).completePlan().isEmpty());
+    assertTrue(manualIntake(constructorInvalid, List.of()).completePlan().isEmpty());
     assertThrows(InvalidRequestException.class, constructorInvalid::completePlan);
   }
 
@@ -589,4 +589,16 @@ class RequestStructuralSupportTest {
   private sealed interface UndiscriminatedUnion permits UndiscriminatedVariant {}
 
   private record UndiscriminatedVariant(String value) implements UndiscriminatedUnion {}
+
+  private static RequestIntake manualIntake(
+      dev.erst.gridgrind.core.problem.RequestBoundFragments fragments,
+      java.util.List<dev.erst.gridgrind.core.problem.RequestStructuralProblem> problems) {
+    return RequestIntakeBinder.bind(
+        fragments,
+        problems,
+        java.util.List.of(),
+        RequestDiagnosticRedactor.empty(),
+        java.util.Optional.empty(),
+        java.util.List.of());
+  }
 }

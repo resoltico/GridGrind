@@ -4,6 +4,7 @@ import dev.erst.gridgrind.contract.catalog.Catalog;
 import dev.erst.gridgrind.contract.dto.RequestDoctorReport;
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
 import dev.erst.gridgrind.contract.dto.WorkbookResult;
+import dev.erst.gridgrind.core.problem.RequestIntake;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Objects;
@@ -34,13 +35,13 @@ public final class GridGrindJson {
   }
 
   /** Analyses one request byte stream without discarding valid sibling fragments after a defect. */
-  public static RequestAnalysis analyzeRequest(InputStream inputStream) throws IOException {
+  public static RequestIntake analyzeRequest(InputStream inputStream) throws IOException {
     Objects.requireNonNull(inputStream, "inputStream must not be null");
     return analyzeRequest(inputStream.readAllBytes());
   }
 
   /** Analyses one UTF-8 request document into bound fragments and every structural problem. */
-  public static RequestAnalysis analyzeRequest(byte[] bytes) {
+  public static RequestIntake analyzeRequest(byte[] bytes) {
     Objects.requireNonNull(bytes, "bytes must not be null");
     return GridGrindRequestDecoder.analyze(bytes);
   }

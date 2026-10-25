@@ -1,6 +1,7 @@
 package dev.erst.gridgrind.contract.json;
 
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
+import dev.erst.gridgrind.core.problem.RequestIntake;
 import java.nio.charset.StandardCharsets;
 
 /** Owns request-specific analysis, early structural rejection, and typed DTO decoding. */
@@ -15,7 +16,7 @@ final class GridGrindRequestDecoder {
     return completePlan(analyze(json.getBytes(StandardCharsets.UTF_8)));
   }
 
-  private static WorkbookPlan completePlan(RequestAnalysis analysis) {
+  private static WorkbookPlan completePlan(RequestIntake analysis) {
     analysis.structuralProblems().stream()
         .findFirst()
         .ifPresent(
@@ -25,7 +26,7 @@ final class GridGrindRequestDecoder {
     return analysis.requireCompletePlan();
   }
 
-  static RequestAnalysis analyze(byte[] bytes) {
+  static RequestIntake analyze(byte[] bytes) {
     GridGrindJsonMapperSupport.requireSupportedRequestLength(bytes.length);
     return RequestStructuralAnalyzer.analyze(bytes);
   }

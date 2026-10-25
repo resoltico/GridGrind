@@ -1,11 +1,53 @@
 package dev.erst.gridgrind.contract.json;
 
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 
 /** Resolves one product-owned JSON path to its authored member or value token. */
 final class RequestJsonTokenLocationSupport {
   private RequestJsonTokenLocationSupport() {}
+
+  // The mutable index is confined to this call and frozen before leaving the parser boundary.
+  @SuppressWarnings("PMD.UseConcurrentHashMap")
+  static Map<String, Long> index(RequestJsonNode root) {
+    Map<String, Long> offsets = new LinkedHashMap<>();
+    offsets.put("request", root.byteOffset());
+    collectOffsets(root, "", offsets);
+    return Map.copyOf(offsets);
+  }
+
+  private static void collectOffsets(RequestJsonNode node, String path, Map<String, Long> offsets) {
+    switch (node) {
+      case RequestJsonObject object -> {
+        Set<String> seen = new HashSet<>();
+        for (RequestJsonMember member : object.members()) {
+          String name = member.name();
+          if (!seen.add(name) || name.isEmpty() || name.contains(".") || name.contains("[")) {
+            continue;
+          }
+          String fieldPath = path.isEmpty() ? name : path + "." + name;
+          if (fieldPath.isBlank()) {
+            continue;
+          }
+          offsets.putIfAbsent(fieldPath, member.nameByteOffset());
+          collectOffsets(member.value(), fieldPath, offsets);
+        }
+      }
+      case RequestJsonArray array -> {
+        for (int index = 0; index < array.elements().size(); index++) {
+          RequestJsonNode element = array.elements().get(index);
+          String elementPath = path + "[" + index + "]";
+          offsets.putIfAbsent(elementPath, element.byteOffset());
+          collectOffsets(element, elementPath, offsets);
+        }
+      }
+      default -> {}
+    }
+  }
 
   /**
    * Returns the property-name token for an object field, the value token for an array element, or

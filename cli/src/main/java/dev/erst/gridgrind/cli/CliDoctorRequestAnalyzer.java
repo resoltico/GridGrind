@@ -5,7 +5,7 @@ import dev.erst.gridgrind.contract.dto.GridGrindProblemDetail;
 import dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces;
 import dev.erst.gridgrind.contract.dto.RequestDoctorReport;
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
-import dev.erst.gridgrind.contract.json.RequestAnalysis;
+import dev.erst.gridgrind.core.problem.RequestIntake;
 import dev.erst.gridgrind.engine.api.GridGrindRequestDoctor;
 import dev.erst.gridgrind.engine.api.GridGrindRequestRequirements;
 import java.io.IOException;
@@ -28,7 +28,7 @@ final class CliDoctorRequestAnalyzer {
       Optional<Path> requestPath,
       Optional<Path> executionRootPath,
       Optional<Path> tempRootPath,
-      RequestAnalysis analysis,
+      RequestIntake analysis,
       InputStream stdin)
       throws IOException {
     return diagnose(
@@ -47,7 +47,7 @@ final class CliDoctorRequestAnalyzer {
       Optional<Path> tempRootPath,
       Optional<Path> grantPath,
       Optional<Path> secretsProviderPath,
-      RequestAnalysis analysis,
+      RequestIntake analysis,
       InputStream stdin)
       throws IOException {
     Objects.requireNonNull(requestPath, "requestPath must not be null");
@@ -96,7 +96,7 @@ final class CliDoctorRequestAnalyzer {
       Optional<Path> grantPath,
       Optional<Path> secretsProviderPath,
       InputStream stdin,
-      RequestAnalysis analysis,
+      RequestIntake analysis,
       ProblemContextRequestSurfaces.RequestInput requestInput)
       throws IOException {
     if (!analysis.isBindable()) {
