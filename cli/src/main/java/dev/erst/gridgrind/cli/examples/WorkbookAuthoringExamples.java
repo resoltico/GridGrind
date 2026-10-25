@@ -21,6 +21,7 @@ import dev.erst.gridgrind.core.source.TextSourceInput;
 import dev.erst.gridgrind.core.vocabulary.AnalysisSeverity;
 import dev.erst.gridgrind.core.vocabulary.ExcelHorizontalAlignment;
 import dev.erst.gridgrind.core.vocabulary.ExcelVerticalAlignment;
+import dev.erst.gridgrind.core.vocabulary.PlanId;
 import java.util.Optional;
 
 /** Generated examples for core workbook authoring, maintenance, assertions, and array formulas. */
@@ -29,7 +30,7 @@ final class WorkbookAuthoringExamples {
 
   static WorkbookPlan budgetPlan(ExamplePathLayout paths) {
     return ExampleWorkbookPlans.defaultExecutionPlan(
-        "budget-workflow",
+        new PlanId("budget-workflow"),
         new WorkbookPlan.WorkbookSource.New(),
         ExampleWorkbookPlans.saveAs(paths.generatedWorkbook("gridgrind-budget.xlsx")),
         ExampleSteps.step(
@@ -131,7 +132,7 @@ final class WorkbookAuthoringExamples {
 
   static WorkbookPlan sheetMaintenancePlan(ExamplePathLayout paths) {
     return ExampleWorkbookPlans.defaultExecutionPlan(
-        "sheet-maintenance-workflow",
+        new PlanId("sheet-maintenance-workflow"),
         new WorkbookPlan.WorkbookSource.New(),
         ExampleWorkbookPlans.saveAs(paths.generatedWorkbook("gridgrind-sheet-maintenance.xlsx")),
         ExampleSteps.step(
@@ -171,7 +172,7 @@ final class WorkbookAuthoringExamples {
 
   static WorkbookPlan assertionPlan(ExamplePathLayout paths) {
     return ExampleWorkbookPlans.plan(
-        "assertion-workflow",
+        new PlanId("assertion-workflow"),
         new WorkbookPlan.WorkbookSource.New(),
         new WorkbookPlan.WorkbookPersistence.None(),
         ExecutionPolicyInput.journal(new ExecutionJournalInput(ExecutionJournalLevel.VERBOSE)),
@@ -210,7 +211,7 @@ final class WorkbookAuthoringExamples {
 
   static WorkbookPlan arrayFormulaPlan(ExamplePathLayout paths) {
     return ExampleWorkbookPlans.defaultExecutionPlan(
-        "array-formula-workflow",
+        new PlanId("array-formula-workflow"),
         new WorkbookPlan.WorkbookSource.New(),
         new WorkbookPlan.WorkbookPersistence.None(),
         ExampleSteps.step(

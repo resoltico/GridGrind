@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import dev.erst.gridgrind.core.problem.InvalidRequestException;
 import dev.erst.gridgrind.core.vocabulary.CellAddress;
 import dev.erst.gridgrind.core.vocabulary.DefinedName;
 import dev.erst.gridgrind.core.vocabulary.PlanId;
@@ -71,7 +72,7 @@ class WireStringPropertyTest {
                             String json =
                                 GridGrindJsonMapperSupport.JSON_MAPPER.writeValueAsString(text);
                             assertThrows(
-                                JacksonException.class,
+                                InvalidRequestException.class,
                                 () ->
                                     GridGrindJsonMapperSupport.JSON_MAPPER.readValue(
                                         json, domain.type()),

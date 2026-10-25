@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.cli.examples;
 
+import dev.erst.gridgrind.core.vocabulary.PlanId;
 import java.util.Locale;
 import java.util.Objects;
 
@@ -14,8 +15,8 @@ final class TaskStarterRecipeSupport {
     return slug(taskId) + "-request.json";
   }
 
-  static String taskPlanId(String taskId) {
-    return slug(taskId) + "-starter";
+  static PlanId taskPlanId(String taskId) {
+    return new PlanId(slug(taskId) + "-starter");
   }
 
   static String taskWorkbookPath(String taskId) {

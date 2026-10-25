@@ -17,6 +17,7 @@ import dev.erst.gridgrind.core.plan.SheetInspectionResult;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import dev.erst.gridgrind.core.result.ExecutionJournalLevel;
 import dev.erst.gridgrind.core.result.WorkbookResult;
+import dev.erst.gridgrind.core.vocabulary.PlanId;
 import dev.erst.gridgrind.engine.api.GridGrindEngine;
 import dev.erst.gridgrind.engine.api.GridGrindExecutionGrant;
 import dev.erst.gridgrind.engine.api.GridGrindProgressSink;
@@ -49,12 +50,14 @@ class GridGrindPlanTest {
   void serializesOneFluentPlanBackToTheCanonicalWorkbookPlan() throws Exception {
     assertEquals(
         "planId must not be blank",
-        assertThrows(IllegalArgumentException.class, () -> GridGrindPlan.newWorkbook().planId(" "))
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> GridGrindPlan.newWorkbook().planId(new PlanId(" ")))
             .getMessage());
 
     GridGrindPlan plan =
         GridGrindPlan.newWorkbook()
-            .planId("budget-plan")
+            .planId(new PlanId("budget-plan"))
             .saveAs(
                 tempDir.resolve("budget.xlsx"), WorkbookPlan.WorkbookPersistence.IfExists.REJECT)
             .journal(ExecutionJournalLevel.VERBOSE)
@@ -63,7 +66,7 @@ class GridGrindPlanTest {
             .inspect(Targets.cell("Budget", "A1").read())
             .assertThat(Targets.cell("Budget", "A1").valueEquals(ExpectedValues.text("Owner")));
     WorkbookPlan canonical = plan.toPlan();
-    assertEquals("budget-plan", canonical.planId().orElseThrow());
+    assertEquals("budget-plan", canonical.planId().orElseThrow().value());
     assertEquals("mutation-001", canonical.steps().get(0).stepId());
     assertEquals("mutation-002", canonical.steps().get(1).stepId());
     assertEquals("inspection-001", canonical.steps().get(2).stepId());
@@ -89,7 +92,7 @@ class GridGrindPlanTest {
     WorkbookPlan canonical =
         new WorkbookPlan(
             dev.erst.gridgrind.core.plan.GridGrindProtocolVersion.current(),
-            Optional.of("canonical-plan"),
+            Optional.of(new PlanId("canonical-plan")),
             new WorkbookPlan.WorkbookSource.New(),
             new WorkbookPlan.WorkbookPersistence.None(),
             ExecutionPolicyInput.journal(
@@ -107,7 +110,7 @@ class GridGrindPlanTest {
     WorkbookPlan imported =
         WorkbookPlan.identified(
             dev.erst.gridgrind.core.plan.GridGrindProtocolVersion.current(),
-            "imported",
+            new PlanId("imported"),
             new WorkbookPlan.WorkbookSource.New(),
             new WorkbookPlan.WorkbookPersistence.None(),
             ExecutionPolicyInput.defaults(),

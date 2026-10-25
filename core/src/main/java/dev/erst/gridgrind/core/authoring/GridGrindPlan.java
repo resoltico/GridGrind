@@ -11,6 +11,7 @@ import dev.erst.gridgrind.core.plan.MutationStep;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import dev.erst.gridgrind.core.plan.WorkbookStep;
 import dev.erst.gridgrind.core.result.ExecutionJournalLevel;
+import dev.erst.gridgrind.core.vocabulary.PlanId;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
@@ -27,7 +28,7 @@ import java.util.Optional;
  */
 public final class GridGrindPlan {
   private GridGrindProtocolVersion protocolVersion;
-  private Optional<String> planId;
+  private Optional<PlanId> planId;
   private WorkbookPlan.WorkbookSource source;
   private WorkbookPlan.WorkbookPersistence persistence;
   private ExecutionPolicyInput execution;
@@ -50,7 +51,7 @@ public final class GridGrindPlan {
 
   private GridGrindPlan(
       GridGrindProtocolVersion protocolVersion,
-      Optional<String> planId,
+      Optional<PlanId> planId,
       WorkbookPlan.WorkbookSource source,
       WorkbookPlan.WorkbookPersistence persistence,
       ExecutionPolicyInput execution,
@@ -58,7 +59,7 @@ public final class GridGrindPlan {
       List<WorkbookStep> steps) {
     this.protocolVersion =
         Objects.requireNonNullElse(protocolVersion, GridGrindProtocolVersion.current());
-    this.planId = Objects.requireNonNullElseGet(planId, Optional::empty);
+    this.planId = planId;
     this.source = Objects.requireNonNull(source, "source must not be null");
     this.persistence =
         Objects.requireNonNullElseGet(persistence, WorkbookPlan.WorkbookPersistence.None::new);
@@ -94,11 +95,7 @@ public final class GridGrindPlan {
   }
 
   /** Sets an explicit plan id for journaling and external correlation. */
-  public GridGrindPlan planId(String newPlanId) {
-    Objects.requireNonNull(newPlanId, "newPlanId must not be null");
-    if (newPlanId.isBlank()) {
-      throw new IllegalArgumentException("planId must not be blank");
-    }
+  public GridGrindPlan planId(PlanId newPlanId) {
     this.planId = Optional.of(newPlanId);
     return this;
   }

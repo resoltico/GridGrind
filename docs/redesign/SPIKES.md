@@ -492,3 +492,42 @@ main Java lines 125,883 → 126,109, test lines 152,970 → 153,173, JSON files 
 subtype/catalog counts are unchanged. Evidence: `value-inventories/` and `values-*.log` externally.
 Baseline diff is empty; no supplement change. Next: teach scalar metadata/intake consumers about
 WireString, migrate identifiers across model/engine/hosts, and delete the superseded guards.
+
+### WP-21 scalar metadata and plan identity
+
+One `WireString.isValueType` predicate now drives catalog scalar shapes, request-object graph
+traversal, tolerant token-kind validation, secret-path traversal, source-origin traversal and the
+scalar codec. Domain values stay strings rather than acquiring a synthetic `.value` object path.
+Tests cover every permitted scalar shape, explicit-null Optional input, and exclusion of scalar
+records from the request-object graph.
+
+`PlanId` now flows through plans, partial fragments, Java authoring, result factories/results and
+CLI example/starter construction. Duplicate blank checks and result-plan-id normalization were
+removed; canonical value construction owns validity. Container null guards remain. No String
+constructor alias was added. Tests compare literal expected ID text through `.value()`; an
+existing materialized-example self-comparison was corrected to compare against the authored
+request. New live intake tests check omission, string serialization, invalid values and exact
+path/token locations.
+
+A temporary compiler-informed argument tool outside the repo resolves actual qualified symbols
+across 2,020 source files with the 40 resolved library JARs, then rewrites only String-to-domain
+arguments/initializers. It reports no edits on the unchanged baseline. It also handles empty/poly
+factory inference rather than treating standalone inferred Object collections as incompatible.
+The first classpath collector hit Gradle's cross-project resolution lock; per-project collector
+tasks fixed that. No product build task or dependency was added for the tool.
+
+Initial Gradle compilation identified two obsolete self-assignments after removing normalization;
+those now use ordinary non-null checks. Focused runs then found four expected String-vs-PlanId
+assertion mismatches and an implementation-name wrapper in the new invalid-ID diagnostic. The
+codec now emits an owned invariant for expected untyped constructor failures, retaining the
+original cause and preserving already typed problem sources. No Jackson-message regex was added.
+The new scalar properties assert that owned failure type; non-string token failures remain codec
+shape errors. Repaired focused checks passed (28s).
+
+Full `./gradlew check --no-parallel` passed (2m56s): 2,792 active tests, zero failures/errors/skips,
+including all 141 unchanged golden cases. Nested Jazzer check passed (17s). `mutationReport`
+passed (21s), selected core 298/298 and engine 82/82 mutants killed. Actual named-module request,
+catalog, response and eight-value probes passed. No golden re-recording, baseline or supplement
+change. Evidence: external `plan-id-*.log`, `plan-id-failures/`, `plan-id-inventories/`.
+Blank checks 479 → 478; main lines 126,109 → 126,145; test lines 153,173 → 153,289. Other counts
+remain unchanged. WP-21 remains open for step and workbook identifiers and obsolete-guard removal.

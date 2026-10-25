@@ -6,6 +6,7 @@ import dev.erst.gridgrind.core.plan.InspectionResult;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import dev.erst.gridgrind.core.problem.GridGrindProblemDetail;
 import dev.erst.gridgrind.core.problem.RequestWarning;
+import dev.erst.gridgrind.core.vocabulary.PlanId;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -55,7 +56,7 @@ public final class WorkbookResults {
   /** Creates a failure result with the request's optional stable plan identifier. */
   public static WorkbookResult.Failure failure(
       GridGrindProtocolVersion protocolVersion,
-      Optional<String> planId,
+      Optional<PlanId> planId,
       WorkbookResultPersistence.PersistenceOutcome persistence,
       GridGrindProblemDetail.Problem problem) {
     return WorkbookResultSupport.failure(protocolVersion, planId, persistence, problem);

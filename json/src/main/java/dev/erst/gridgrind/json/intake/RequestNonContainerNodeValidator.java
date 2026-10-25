@@ -4,6 +4,7 @@ import dev.erst.gridgrind.core.plan.Selector;
 import dev.erst.gridgrind.core.problem.RequestMalformedScalar;
 import dev.erst.gridgrind.core.problem.RequestNumberNotRepresentable;
 import dev.erst.gridgrind.core.problem.RequestStructuralProblem;
+import dev.erst.gridgrind.core.vocabulary.WireString;
 import dev.erst.gridgrind.json.codec.GridGrindJsonMapperSupport;
 import java.math.BigDecimal;
 import java.util.List;
@@ -22,7 +23,9 @@ final class RequestNonContainerNodeValidator {
       RequestNodeValidator.validateEnum(node, rawType, jsonPath, diagnosticByteOffset, problems);
       return;
     }
-    if (rawType == String.class || CharSequence.class.isAssignableFrom(rawType)) {
+    if (rawType == String.class
+        || CharSequence.class.isAssignableFrom(rawType)
+        || WireString.isValueType(rawType)) {
       requireNodeKind(
           node, jsonPath, "a JSON string", RequestJsonString.class, diagnosticByteOffset, problems);
       return;

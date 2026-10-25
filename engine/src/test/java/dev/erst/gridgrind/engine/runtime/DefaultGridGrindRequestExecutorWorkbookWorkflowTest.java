@@ -76,6 +76,7 @@ import dev.erst.gridgrind.core.vocabulary.ExcelIgnoredErrorType;
 import dev.erst.gridgrind.core.vocabulary.ExcelPictureFormat;
 import dev.erst.gridgrind.core.vocabulary.ExcelPrintOrientation;
 import dev.erst.gridgrind.core.vocabulary.NamedRangeScope;
+import dev.erst.gridgrind.core.vocabulary.PlanId;
 import dev.erst.gridgrind.excel.*;
 import dev.erst.gridgrind.excel.ExcelAutofilterSnapshot;
 import dev.erst.gridgrind.excel.ExcelCellValue;
@@ -200,7 +201,7 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
                 new DefaultGridGrindRequestExecutor(),
                 WorkbookPlan.identified(
                     GridGrindProtocolVersion.current(),
-                    "ledger-audit",
+                    new PlanId("ledger-audit"),
                     new WorkbookPlan.WorkbookSource.New(),
                     new WorkbookPlan.WorkbookPersistence.None(),
                     ExecutionPolicyInput.journal(
@@ -217,7 +218,7 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
                                 new WorkbookSelector.Current(),
                                 new WorkbookIntrospectionQuery.GetWorkbookSummary()))))));
 
-    assertEquals("ledger-audit", success.planId().orElseThrow());
+    assertEquals("ledger-audit", success.planId().orElseThrow().value());
     assertEquals(ExecutionJournalLevel.VERBOSE, success.journal().level());
     assertEquals(2, success.journal().steps().size());
     assertEquals("ENSURE_SHEET", success.journal().steps().getFirst().stepType());
@@ -236,7 +237,7 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
                 new DefaultGridGrindRequestExecutor(),
                 WorkbookPlan.identified(
                     GridGrindProtocolVersion.current(),
-                    "bad-open",
+                    new PlanId("bad-open"),
                     new WorkbookPlan.WorkbookSource.New(),
                     new WorkbookPlan.WorkbookPersistence.None(),
                     ExecutionPolicyInput.journal(

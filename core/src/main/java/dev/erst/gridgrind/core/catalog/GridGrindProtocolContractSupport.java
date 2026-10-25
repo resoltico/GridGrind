@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import dev.erst.gridgrind.core.metadata.ProtocolField;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
+import dev.erst.gridgrind.core.vocabulary.WireString;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.RecordComponent;
 import java.lang.reflect.Type;
@@ -154,6 +155,9 @@ public final class GridGrindProtocolContractSupport {
       return;
     }
     if (!(type instanceof Class<?> classType)) {
+      return;
+    }
+    if (WireString.isValueType(classType)) {
       return;
     }
     if (classType.isRecord()) {

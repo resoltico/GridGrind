@@ -13,6 +13,7 @@ import dev.erst.gridgrind.core.problem.InvalidRequestException;
 import dev.erst.gridgrind.core.problem.MessageInvariant;
 import dev.erst.gridgrind.core.problem.NonXlsxPath;
 import dev.erst.gridgrind.core.result.ExecutionJournalLevel;
+import dev.erst.gridgrind.core.vocabulary.PlanId;
 import dev.erst.gridgrind.core.vocabulary.ProtocolConstraintValues;
 import java.util.HashSet;
 import java.util.List;
@@ -26,7 +27,7 @@ import java.util.Set;
  */
 public record WorkbookPlan(
     GridGrindProtocolVersion protocolVersion,
-    @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<String> planId,
+    @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<PlanId> planId,
     WorkbookSource source,
     WorkbookPersistence persistence,
     @ProtocolField(optional = true)
@@ -43,11 +44,7 @@ public record WorkbookPlan(
   /** Normalizes one authored plan instance. */
   public WorkbookPlan {
     Objects.requireNonNull(protocolVersion, "protocolVersion must not be null");
-    Optional<String> normalizedPlanId = Objects.requireNonNull(planId, "planId must not be null");
-    if (normalizedPlanId.isPresent()) {
-      normalizedPlanId = Optional.of(requireNonBlank(normalizedPlanId.orElseThrow(), "planId"));
-    }
-    planId = normalizedPlanId;
+    Objects.requireNonNull(planId, "planId must not be null");
     Objects.requireNonNull(source, "source must not be null");
     Objects.requireNonNull(persistence, "persistence must not be null");
     execution = execution == null ? ExecutionPolicyInput.defaults() : execution;
@@ -77,7 +74,7 @@ public record WorkbookPlan(
 
   /** Creates one caller-identified canonical plan on the current protocol version. */
   public static WorkbookPlan identified(
-      String planId,
+      PlanId planId,
       WorkbookSource source,
       WorkbookPersistence persistence,
       ExecutionPolicyInput execution,
@@ -85,7 +82,7 @@ public record WorkbookPlan(
       List<WorkbookStep> steps) {
     return new WorkbookPlan(
         GridGrindProtocolVersion.current(),
-        Optional.of(requireNonBlank(planId, "planId")),
+        Optional.of(planId),
         source,
         persistence,
         execution,
@@ -96,7 +93,7 @@ public record WorkbookPlan(
   /** Creates one caller-identified canonical plan on an explicit protocol version. */
   public static WorkbookPlan identified(
       GridGrindProtocolVersion protocolVersion,
-      String planId,
+      PlanId planId,
       WorkbookSource source,
       WorkbookPersistence persistence,
       ExecutionPolicyInput execution,
@@ -104,7 +101,7 @@ public record WorkbookPlan(
       List<WorkbookStep> steps) {
     return new WorkbookPlan(
         protocolVersion,
-        Optional.of(requireNonBlank(planId, "planId")),
+        Optional.of(planId),
         source,
         persistence,
         execution,

@@ -18,6 +18,7 @@ import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import dev.erst.gridgrind.core.source.BinarySourceInput;
 import dev.erst.gridgrind.core.source.TextSourceInput;
 import dev.erst.gridgrind.core.vocabulary.ExcelPictureFormat;
+import dev.erst.gridgrind.core.vocabulary.PlanId;
 
 /** Generated examples for repository-backed assets, external payloads, and package workflows. */
 final class WorkbookIntegrationExamples {
@@ -25,7 +26,7 @@ final class WorkbookIntegrationExamples {
 
   static WorkbookPlan sourceBackedInputPlan(ExamplePathLayout paths) {
     return ExampleWorkbookPlans.defaultExecutionPlan(
-        "source-backed-input-workflow",
+        new PlanId("source-backed-input-workflow"),
         new WorkbookPlan.WorkbookSource.New(),
         new WorkbookPlan.WorkbookPersistence.None(),
         ExampleSteps.step(
@@ -80,7 +81,7 @@ final class WorkbookIntegrationExamples {
 
   static WorkbookPlan customXmlPlan(ExamplePathLayout paths) {
     return ExampleWorkbookPlans.defaultExecutionPlan(
-        "custom-xml-workflow",
+        new PlanId("custom-xml-workflow"),
         new WorkbookPlan.WorkbookSource.ExistingFile(
             paths.asset("custom-xml-assets/custom-xml-mapping.xlsx")),
         new WorkbookPlan.WorkbookPersistence.None(),
@@ -114,7 +115,7 @@ final class WorkbookIntegrationExamples {
 
   static WorkbookPlan packageSecurityInspectionPlan(ExamplePathLayout paths) {
     return ExampleWorkbookPlans.defaultExecutionPlan(
-        "package-security-inspection-workflow",
+        new PlanId("package-security-inspection-workflow"),
         new WorkbookPlan.WorkbookSource.ExistingFile(
             paths.asset("package-security-assets/gridgrind-package-security.xlsx"),
             new OoxmlOpenSecurityInput(

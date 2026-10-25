@@ -8,6 +8,7 @@ import dev.erst.gridgrind.core.model.chart.ChartInput;
 import dev.erst.gridgrind.core.model.pivot.PivotTableInput;
 import dev.erst.gridgrind.core.plan.TableSelector;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
+import dev.erst.gridgrind.core.vocabulary.PlanId;
 import org.junit.jupiter.api.Test;
 
 /** Focused tests for package-private example DSL helpers. */
@@ -32,11 +33,11 @@ class ExampleDslSupportTest {
   void defaultExecutionPlanBuildsIdentifiedPlansWithRequestedPersistence() {
     WorkbookPlan plan =
         ExampleWorkbookPlans.defaultExecutionPlan(
-            "budget-plan",
+            new PlanId("budget-plan"),
             new WorkbookPlan.WorkbookSource.New(),
             ExampleWorkbookPlans.saveAs("budget.xlsx"));
 
-    assertEquals("budget-plan", plan.planId().orElseThrow());
+    assertEquals("budget-plan", plan.planId().orElseThrow().value());
     assertInstanceOf(WorkbookPlan.WorkbookPersistence.SaveAs.class, plan.persistence());
     assertEquals(
         dev.erst.gridgrind.core.model.security.OoxmlPersistenceSecurityInput.none(),

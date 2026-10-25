@@ -18,6 +18,7 @@ import dev.erst.gridgrind.core.plan.WorkbookMutationAction;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import dev.erst.gridgrind.core.source.TextSourceInput;
 import dev.erst.gridgrind.core.vocabulary.NamedRangeScope;
+import dev.erst.gridgrind.core.vocabulary.PlanId;
 
 /** Generated examples for inspection-heavy, health-focused, and execution-mode workflows. */
 final class WorkbookAuditExamples {
@@ -25,7 +26,7 @@ final class WorkbookAuditExamples {
 
   static WorkbookPlan workbookHealthPlan(ExamplePathLayout paths) {
     return ExampleWorkbookPlans.defaultExecutionPlan(
-        "workbook-health-workflow",
+        new PlanId("workbook-health-workflow"),
         new WorkbookPlan.WorkbookSource.New(),
         new WorkbookPlan.WorkbookPersistence.None(),
         ExampleSteps.step(
@@ -68,7 +69,7 @@ final class WorkbookAuditExamples {
 
   static WorkbookPlan largeFileModesPlan(ExamplePathLayout paths) {
     return ExampleWorkbookPlans.plan(
-        "large-file-modes-workflow",
+        new PlanId("large-file-modes-workflow"),
         new WorkbookPlan.WorkbookSource.New(),
         ExampleWorkbookPlans.saveAs(paths.generatedWorkbook("gridgrind-large-file-modes.xlsx")),
         new ExecutionPolicyInput(
@@ -116,7 +117,7 @@ final class WorkbookAuditExamples {
 
   static WorkbookPlan fileHyperlinkHealthPlan(ExamplePathLayout paths) {
     return ExampleWorkbookPlans.defaultExecutionPlan(
-        "file-hyperlink-health-workflow",
+        new PlanId("file-hyperlink-health-workflow"),
         new WorkbookPlan.WorkbookSource.New(),
         ExampleWorkbookPlans.saveAs(
             paths.generatedWorkbook("gridgrind-file-hyperlink-health.xlsx")),
@@ -167,7 +168,7 @@ final class WorkbookAuditExamples {
 
   static WorkbookPlan introspectionAnalysisPlan(ExamplePathLayout paths) {
     return ExampleWorkbookPlans.defaultExecutionPlan(
-        "introspection-analysis-workflow",
+        new PlanId("introspection-analysis-workflow"),
         new WorkbookPlan.WorkbookSource.New(),
         ExampleWorkbookPlans.saveAs(
             paths.generatedWorkbook("gridgrind-introspection-analysis.xlsx")),

@@ -15,6 +15,7 @@ import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import dev.erst.gridgrind.core.source.BinarySourceInput;
 import dev.erst.gridgrind.core.vocabulary.ExcelPictureFormat;
 import dev.erst.gridgrind.core.vocabulary.NamedRangeScope;
+import dev.erst.gridgrind.core.vocabulary.PlanId;
 import java.util.Optional;
 
 /** Generated examples for visual workbook surfaces such as signatures, charts, and pivots. */
@@ -23,7 +24,7 @@ final class WorkbookVisualizationExamples {
 
   static WorkbookPlan signatureLinePlan(ExamplePathLayout paths) {
     return ExampleWorkbookPlans.defaultExecutionPlan(
-        "signature-line-workflow",
+        new PlanId("signature-line-workflow"),
         new WorkbookPlan.WorkbookSource.New(),
         ExampleWorkbookPlans.saveAs(paths.generatedWorkbook("gridgrind-signature-line.xlsx")),
         ExampleSteps.step(
@@ -67,7 +68,7 @@ final class WorkbookVisualizationExamples {
 
   static WorkbookPlan chartPlan(ExamplePathLayout paths) {
     return ExampleWorkbookPlans.defaultExecutionPlan(
-        "chart-workflow",
+        new PlanId("chart-workflow"),
         new WorkbookPlan.WorkbookSource.New(),
         ExampleWorkbookPlans.saveAs(paths.generatedWorkbook("gridgrind-chart.xlsx")),
         ExampleSteps.step(
@@ -134,7 +135,7 @@ final class WorkbookVisualizationExamples {
 
   static WorkbookPlan pivotPlan(ExamplePathLayout paths) {
     return ExampleWorkbookPlans.defaultExecutionPlan(
-        "pivot-workflow",
+        new PlanId("pivot-workflow"),
         new WorkbookPlan.WorkbookSource.New(),
         ExampleWorkbookPlans.saveAs(paths.generatedWorkbook("gridgrind-pivot.xlsx")),
         ExampleSteps.step(

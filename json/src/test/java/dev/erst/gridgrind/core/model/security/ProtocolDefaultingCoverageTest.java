@@ -94,6 +94,7 @@ import dev.erst.gridgrind.core.vocabulary.ExcelOoxmlWriteCipher;
 import dev.erst.gridgrind.core.vocabulary.ExcelOoxmlWriteHash;
 import dev.erst.gridgrind.core.vocabulary.ExcelPivotDataConsolidateFunction;
 import dev.erst.gridgrind.core.vocabulary.ExcelPrintOrientation;
+import dev.erst.gridgrind.core.vocabulary.PlanId;
 import dev.erst.gridgrind.core.vocabulary.ProtocolRgbColorSupport;
 import java.util.List;
 import java.util.Optional;
@@ -678,7 +679,7 @@ class ProtocolDefaultingCoverageTest {
     WorkbookPlan defaultPlan =
         WorkbookPlan.identified(
             GridGrindProtocolVersion.current(),
-            "budget-defaults",
+            new PlanId("budget-defaults"),
             new WorkbookPlan.WorkbookSource.New(),
             new WorkbookPlan.WorkbookPersistence.None(),
             ExecutionPolicyInput.defaults(),
@@ -687,7 +688,7 @@ class ProtocolDefaultingCoverageTest {
     WorkbookPlan explicitExecutionPlan =
         WorkbookPlan.identified(
             GridGrindProtocolVersion.current(),
-            "budget-execution",
+            new PlanId("budget-execution"),
             new WorkbookPlan.WorkbookSource.New(),
             new WorkbookPlan.WorkbookPersistence.None(),
             ExecutionPolicyInput.journal(new ExecutionJournalInput(ExecutionJournalLevel.VERBOSE)),

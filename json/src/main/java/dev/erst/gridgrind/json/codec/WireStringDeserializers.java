@@ -16,7 +16,7 @@ final class WireStringDeserializers extends SimpleDeserializers {
   public @Nullable ValueDeserializer<?> findBeanDeserializer(
       JavaType type, DeserializationConfig config, BeanDescription.Supplier beanDescription) {
     Class<?> rawType = type.getRawClass();
-    if (rawType != WireString.class && WireString.class.isAssignableFrom(rawType)) {
+    if (WireString.isValueType(rawType)) {
       return new WireStringDeserializer(rawType.asSubclass(WireString.class));
     }
     return super.findBeanDeserializer(type, config, beanDescription);

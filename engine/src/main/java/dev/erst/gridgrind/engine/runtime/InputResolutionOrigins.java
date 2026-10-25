@@ -5,6 +5,7 @@ import dev.erst.gridgrind.core.problem.ProblemContextRequestSurfaces.JsonLocatio
 import dev.erst.gridgrind.core.problem.RequestIntake;
 import dev.erst.gridgrind.core.source.BinarySourceInput;
 import dev.erst.gridgrind.core.source.TextSourceInput;
+import dev.erst.gridgrind.core.vocabulary.WireString;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.RecordComponent;
 import java.util.IdentityHashMap;
@@ -43,7 +44,7 @@ final class InputResolutionOrigins {
       String jsonPath,
       Optional<RequestIntake> requestAnalysis,
       IdentityHashMap<Object, JsonLocation> locations) {
-    if (value == null) {
+    if (value == null || value instanceof WireString) {
       return;
     }
     if (value instanceof TextSourceInput textSource) {

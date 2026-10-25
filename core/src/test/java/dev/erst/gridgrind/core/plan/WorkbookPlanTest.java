@@ -14,6 +14,7 @@ import dev.erst.gridgrind.core.problem.InvalidRequestException;
 import dev.erst.gridgrind.core.result.ExecutionJournalLevel;
 import dev.erst.gridgrind.core.source.SecretReference;
 import dev.erst.gridgrind.core.source.TextSourceInput;
+import dev.erst.gridgrind.core.vocabulary.PlanId;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -195,7 +196,7 @@ class WorkbookPlanTest {
     WorkbookPlan plan =
         WorkbookPlan.identified(
             GridGrindProtocolVersion.current(),
-            "budget-audit",
+            new PlanId("budget-audit"),
             new WorkbookPlan.WorkbookSource.New(),
             new WorkbookPlan.WorkbookPersistence.None(),
             ExecutionPolicyInput.modeAndJournal(
@@ -204,7 +205,7 @@ class WorkbookPlanTest {
             FormulaEnvironmentInput.empty(),
             List.of());
 
-    assertEquals("budget-audit", plan.planId().orElseThrow());
+    assertEquals("budget-audit", plan.planId().orElseThrow().value());
     assertEquals(ExecutionJournalLevel.VERBOSE, plan.journalLevel());
     assertEquals(ExecutionJournalLevel.VERBOSE, plan.execution().journal().level());
     assertInstanceOf(ExecutionModeInput.FullXssf.class, plan.effectiveExecutionMode());
@@ -215,7 +216,7 @@ class WorkbookPlanTest {
                 () ->
                     WorkbookPlan.identified(
                         GridGrindProtocolVersion.current(),
-                        " ",
+                        new PlanId(" "),
                         new WorkbookPlan.WorkbookSource.New(),
                         new WorkbookPlan.WorkbookPersistence.None(),
                         ExecutionPolicyInput.defaults(),

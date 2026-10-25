@@ -5,6 +5,7 @@ import dev.erst.gridgrind.core.plan.ExecutionPolicyInput;
 import dev.erst.gridgrind.core.plan.GridGrindProtocolVersion;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import dev.erst.gridgrind.core.plan.WorkbookStep;
+import dev.erst.gridgrind.core.vocabulary.PlanId;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -26,7 +27,7 @@ public final class RequestBoundFragments {
   }
 
   /** Returns the independently bound optional plan identifier. */
-  public Optional<String> planId() {
+  public Optional<PlanId> planId() {
     return root.planId();
   }
 

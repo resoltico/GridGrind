@@ -24,6 +24,14 @@ import org.junit.jupiter.api.Test;
 /** Covers record-owned optionality for protocol-contract required-field support. */
 class GridGrindProtocolContractSupportCoverageTest {
   @Test
+  void domainStringsDoNotExpandIntoRequestObjectRecords() {
+    Set<Class<? extends Record>> records = new HashSet<>();
+    GridGrindProtocolContractSupport.collectRequestTypes(
+        PlanHeader.class, records, new HashSet<>());
+    assertEquals(Set.of(PlanHeader.class), records);
+  }
+
+  @Test
   void requiredFieldsComeFromTheEffectiveCreatorContract() {
     assertTrue(recordContractTypes().contains(OptionalFallbackRecord.class));
     assertEquals(
@@ -391,4 +399,6 @@ class GridGrindProtocolContractSupportCoverageTest {
 
   private record RequestCatalogDescriptor(
       Class<? extends Record> recordType, TypeEntry catalogEntry) {}
+
+  private record PlanHeader(Optional<dev.erst.gridgrind.core.vocabulary.PlanId> planId) {}
 }

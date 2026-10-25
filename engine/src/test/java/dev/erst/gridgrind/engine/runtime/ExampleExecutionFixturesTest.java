@@ -96,7 +96,7 @@ class ExampleExecutionFixturesTest {
                   "repo-asset-backed built-in example must materialize and execute: "
                       + example.id());
       assertEquals(
-          success.planId(),
+          published.request().planId(),
           success.planId(),
           () -> "materialized built-in example must retain its plan id");
     }

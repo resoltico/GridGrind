@@ -72,7 +72,7 @@ final class RequestRootStructuralAnalyzer {
                     diagnosticRedactor),
                 RequestFragmentBinder.bindMember(
                     members.member("planId"),
-                    String.class,
+                    dev.erst.gridgrind.core.vocabulary.PlanId.class,
                     "planId",
                     problems,
                     bindingFailures,
@@ -126,7 +126,7 @@ final class RequestRootStructuralAnalyzer {
           member.nameByteOffset(),
           problems);
     }
-    validateRootMembers(root, "planId", String.class, problems);
+    validateRootMembers(root, "planId", dev.erst.gridgrind.core.vocabulary.PlanId.class, problems);
   }
 
   private static void validateRootMembers(

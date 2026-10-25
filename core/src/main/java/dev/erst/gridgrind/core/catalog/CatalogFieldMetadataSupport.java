@@ -10,6 +10,7 @@ import dev.erst.gridgrind.core.model.value.CellValueReport;
 import dev.erst.gridgrind.core.source.SecretReference;
 import dev.erst.gridgrind.core.vocabulary.ExcelReportedCellErrorLiteral;
 import dev.erst.gridgrind.core.vocabulary.ExcelStoredCellErrorLiteral;
+import dev.erst.gridgrind.core.vocabulary.WireString;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.RecordComponent;
 import java.lang.reflect.Type;
@@ -154,7 +155,9 @@ public final class CatalogFieldMetadataSupport {
   }
 
   private static Optional<FieldShape> scalarFieldShape(Class<?> classType) {
-    if (STRING_FIELD_TYPES.contains(classType) || classType.isEnum()) {
+    if (STRING_FIELD_TYPES.contains(classType)
+        || classType.isEnum()
+        || WireString.isValueType(classType)) {
       return Optional.of(new FieldShape.Scalar(ScalarType.STRING));
     }
     if (BOOLEAN_FIELD_TYPES.contains(classType)) {

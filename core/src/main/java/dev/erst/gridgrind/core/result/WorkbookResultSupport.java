@@ -4,10 +4,10 @@ import dev.erst.gridgrind.core.model.formula.CalculationReport;
 import dev.erst.gridgrind.core.plan.AssertionResult;
 import dev.erst.gridgrind.core.plan.GridGrindProtocolVersion;
 import dev.erst.gridgrind.core.plan.InspectionResult;
-import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import dev.erst.gridgrind.core.problem.GridGrindProblemCode;
 import dev.erst.gridgrind.core.problem.GridGrindProblemDetail;
 import dev.erst.gridgrind.core.problem.RequestWarning;
+import dev.erst.gridgrind.core.vocabulary.PlanId;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -38,13 +38,13 @@ public final class WorkbookResultSupport {
 
   static WorkbookResult.Failure failure(
       GridGrindProtocolVersion protocolVersion,
-      Optional<String> planId,
+      Optional<PlanId> planId,
       WorkbookResultPersistence.PersistenceOutcome persistence,
       GridGrindProblemDetail.Problem problem) {
     Objects.requireNonNull(problem, "problem must not be null");
     return new WorkbookResult.Failure(
         Objects.requireNonNull(protocolVersion, "protocolVersion must not be null"),
-        optionalPlanId(planId),
+        planId,
         syntheticFailureJournal(problem.code()),
         CalculationReport.notRequested(),
         Objects.requireNonNull(persistence, "persistence must not be null"),
@@ -57,11 +57,6 @@ public final class WorkbookResultSupport {
 
   static ExecutionJournal syntheticSuccessJournal() {
     return syntheticJournal(ExecutionJournal.Status.SUCCEEDED, Optional.empty());
-  }
-
-  static Optional<String> optionalPlanId(Optional<String> planId) {
-    Optional<String> normalized = Objects.requireNonNullElseGet(planId, Optional::empty);
-    return normalized.map(value -> WorkbookPlan.requireNonBlank(value, "planId"));
   }
 
   static ExecutionJournal syntheticFailureJournal(GridGrindProblemCode failureCode) {

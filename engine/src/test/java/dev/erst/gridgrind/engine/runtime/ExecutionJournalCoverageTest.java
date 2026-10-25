@@ -39,6 +39,7 @@ import dev.erst.gridgrind.core.result.ExecutionJournal;
 import dev.erst.gridgrind.core.result.ExecutionJournalLevel;
 import dev.erst.gridgrind.core.result.WorkbookResult;
 import dev.erst.gridgrind.core.result.WorkbookResults;
+import dev.erst.gridgrind.core.vocabulary.PlanId;
 import dev.erst.gridgrind.json.codec.GridGrindJsonOutput;
 import java.util.ArrayList;
 import java.util.List;
@@ -475,7 +476,7 @@ class ExecutionJournalCoverageTest {
     steps.addAll(inspections);
     return WorkbookPlan.identified(
         GridGrindProtocolVersion.current(),
-        planId,
+        new PlanId(planId),
         new WorkbookPlan.WorkbookSource.New(),
         new WorkbookPlan.WorkbookPersistence.None(),
         ExecutionPolicyInput.modeAndJournal(

@@ -339,7 +339,7 @@ class GridGrindCliTest extends GridGrindCliTestSupport {
             WorkbookResult.Success.class, GridGrindJson.readWorkbookResult(stdout.toByteArray()));
 
     assertEquals(0, exitCode);
-    assertEquals("ledger-audit", success.planId().orElseThrow());
+    assertEquals("ledger-audit", success.planId().orElseThrow().value());
     assertTrue(
         stderr
             .toString(StandardCharsets.UTF_8)

@@ -1,8 +1,12 @@
 package dev.erst.gridgrind.json.codec;
 
+import dev.erst.gridgrind.core.problem.InvalidRequestException;
+import dev.erst.gridgrind.core.problem.MessageInvariant;
+import dev.erst.gridgrind.core.problem.RequestProblemSource;
 import dev.erst.gridgrind.core.vocabulary.WireString;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
+import java.util.Optional;
 import tools.jackson.core.JsonParser;
 import tools.jackson.core.JsonToken;
 import tools.jackson.databind.DeserializationContext;
@@ -31,6 +35,19 @@ final class WireStringDeserializer extends ValueDeserializer<WireString> {
       return constructor.newInstance(text);
     } catch (InvocationTargetException exception) {
       Throwable cause = exception.getCause();
+      if (cause instanceof IllegalArgumentException invalid
+          && !(cause instanceof RequestProblemSource)) {
+        String message = invalid.getMessage();
+        if (message == null || message.isBlank()) {
+          message = "Domain value is invalid.";
+        }
+        throw new InvalidRequestException(
+            new MessageInvariant(message, Optional.empty()),
+            Optional.empty(),
+            Optional.empty(),
+            Optional.empty(),
+            exception);
+      }
       return (WireString)
           context.handleInstantiationProblem(
               handledType(), text, cause == null ? exception : cause);

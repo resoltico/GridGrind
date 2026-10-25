@@ -4,13 +4,14 @@ import dev.erst.gridgrind.core.model.formula.FormulaEnvironmentInput;
 import dev.erst.gridgrind.core.plan.ExecutionPolicyInput;
 import dev.erst.gridgrind.core.plan.GridGrindProtocolVersion;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
+import dev.erst.gridgrind.core.vocabulary.PlanId;
 import java.util.Objects;
 import java.util.Optional;
 
 /** Bound root-level request components, separate from independently decoded steps. */
 public record RequestBoundRoot(
     Optional<GridGrindProtocolVersion> protocolVersion,
-    Optional<String> planId,
+    Optional<PlanId> planId,
     Optional<WorkbookPlan.WorkbookSource> source,
     Optional<WorkbookPlan.WorkbookPersistence> persistence,
     Optional<ExecutionPolicyInput> execution,

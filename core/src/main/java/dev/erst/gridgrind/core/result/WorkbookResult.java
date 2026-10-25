@@ -11,6 +11,7 @@ import dev.erst.gridgrind.core.problem.GridGrindProblemCode;
 import dev.erst.gridgrind.core.problem.GridGrindProblemDetail.Problem;
 import dev.erst.gridgrind.core.problem.RequestWarning;
 import dev.erst.gridgrind.core.result.WorkbookResultPersistence.PersistenceOutcome;
+import dev.erst.gridgrind.core.vocabulary.PlanId;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -28,7 +29,7 @@ public sealed interface WorkbookResult {
   /**
    * Optional caller-supplied plan identifier, owned by the result rather than execution telemetry.
    */
-  Optional<String> planId();
+  Optional<PlanId> planId();
 
   /** Structured execution journal captured for this run, even when it failed. */
   ExecutionJournal journal();
@@ -46,7 +47,7 @@ public sealed interface WorkbookResult {
       GridGrindProtocolVersion protocolVersion,
       @com.fasterxml.jackson.annotation.JsonInclude(
               com.fasterxml.jackson.annotation.JsonInclude.Include.NON_ABSENT)
-          Optional<String> planId,
+          Optional<PlanId> planId,
       ExecutionJournal journal,
       CalculationReport calculation,
       PersistenceOutcome persistence,
@@ -57,7 +58,7 @@ public sealed interface WorkbookResult {
       implements WorkbookResult {
     public Success {
       Objects.requireNonNull(protocolVersion, "protocolVersion must not be null");
-      planId = WorkbookResultSupport.optionalPlanId(planId);
+      Objects.requireNonNull(planId, "planId must not be null");
       Objects.requireNonNull(journal, "journal must not be null");
       Objects.requireNonNull(calculation, "calculation must not be null");
       Objects.requireNonNull(persistence, "persistence must not be null");
@@ -78,7 +79,7 @@ public sealed interface WorkbookResult {
       GridGrindProtocolVersion protocolVersion,
       @com.fasterxml.jackson.annotation.JsonInclude(
               com.fasterxml.jackson.annotation.JsonInclude.Include.NON_ABSENT)
-          Optional<String> planId,
+          Optional<PlanId> planId,
       ExecutionJournal journal,
       CalculationReport calculation,
       PersistenceOutcome persistence,
@@ -90,7 +91,7 @@ public sealed interface WorkbookResult {
       implements WorkbookResult {
     public Failure {
       Objects.requireNonNull(protocolVersion, "protocolVersion must not be null");
-      planId = WorkbookResultSupport.optionalPlanId(planId);
+      Objects.requireNonNull(planId, "planId must not be null");
       Objects.requireNonNull(journal, "journal must not be null");
       Objects.requireNonNull(calculation, "calculation must not be null");
       Objects.requireNonNull(persistence, "persistence must not be null");

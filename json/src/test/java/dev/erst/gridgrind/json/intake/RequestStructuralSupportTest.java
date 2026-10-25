@@ -30,6 +30,7 @@ import dev.erst.gridgrind.core.problem.RequestNumberNotRepresentable;
 import dev.erst.gridgrind.core.problem.RequestStructuralProblem;
 import dev.erst.gridgrind.core.problem.RequestUnknownField;
 import dev.erst.gridgrind.core.problem.RequestUnknownTypeDiscriminator;
+import dev.erst.gridgrind.core.vocabulary.PlanId;
 import dev.erst.gridgrind.json.codec.GridGrindJson;
 import dev.erst.gridgrind.json.codec.RequestDiagnosticRedactor;
 import java.nio.charset.StandardCharsets;
@@ -362,7 +363,7 @@ class RequestStructuralSupportTest {
     RequestBoundRoot completeRoot =
         new RequestBoundRoot(
             Optional.of(GridGrindProtocolVersion.V3),
-            Optional.of("plan"),
+            Optional.of(new PlanId("plan")),
             Optional.of(new WorkbookPlan.WorkbookSource.New()),
             Optional.of(new WorkbookPlan.WorkbookPersistence.None()),
             Optional.of(ExecutionPolicyInput.defaults()),
@@ -371,7 +372,7 @@ class RequestStructuralSupportTest {
         new RequestBoundFragments(completeRoot, Optional.of(List.of()));
 
     assertTrue(complete.completePlan().isPresent());
-    assertEquals("plan", complete.planId().orElseThrow());
+    assertEquals("plan", complete.planId().orElseThrow().value());
     assertEquals(GridGrindProtocolVersion.V3, complete.protocolVersion().orElseThrow());
     assertTrue(complete.source().isPresent());
     assertTrue(complete.persistence().isPresent());

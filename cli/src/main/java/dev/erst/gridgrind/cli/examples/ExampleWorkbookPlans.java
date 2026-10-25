@@ -3,6 +3,7 @@ package dev.erst.gridgrind.cli.examples;
 import dev.erst.gridgrind.core.plan.ExecutionPolicyInput;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import dev.erst.gridgrind.core.plan.WorkbookStep;
+import dev.erst.gridgrind.core.vocabulary.PlanId;
 import java.util.List;
 import java.util.Objects;
 
@@ -11,7 +12,7 @@ final class ExampleWorkbookPlans {
   private ExampleWorkbookPlans() {}
 
   static WorkbookPlan plan(
-      String planId,
+      PlanId planId,
       WorkbookPlan.WorkbookSource source,
       WorkbookPlan.WorkbookPersistence persistence,
       ExecutionPolicyInput execution,
@@ -26,7 +27,7 @@ final class ExampleWorkbookPlans {
   }
 
   static WorkbookPlan defaultExecutionPlan(
-      String planId,
+      PlanId planId,
       WorkbookPlan.WorkbookSource source,
       WorkbookPlan.WorkbookPersistence persistence,
       WorkbookStep... steps) {

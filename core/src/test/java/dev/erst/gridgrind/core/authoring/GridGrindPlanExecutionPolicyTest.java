@@ -8,6 +8,7 @@ import dev.erst.gridgrind.core.plan.ExecutionModeInput;
 import dev.erst.gridgrind.core.plan.ExecutionPolicyInput;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import dev.erst.gridgrind.core.result.ExecutionJournalLevel;
+import dev.erst.gridgrind.core.vocabulary.PlanId;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
@@ -26,7 +27,7 @@ class GridGrindPlanExecutionPolicyTest {
     WorkbookPlan canonical =
         new WorkbookPlan(
             dev.erst.gridgrind.core.plan.GridGrindProtocolVersion.current(),
-            Optional.of("canonical-plan"),
+            Optional.of(new PlanId("canonical-plan")),
             new WorkbookPlan.WorkbookSource.New(),
             new WorkbookPlan.WorkbookPersistence.None(),
             new ExecutionPolicyInput(
