@@ -33,6 +33,7 @@ import dev.erst.gridgrind.core.problem.GridGrindProblemDetail;
 import dev.erst.gridgrind.core.problem.GridGrindWarningCode;
 import dev.erst.gridgrind.core.problem.ProblemContext;
 import dev.erst.gridgrind.core.result.WorkbookResult;
+import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.excel.ExcelCellValue;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
@@ -57,7 +58,7 @@ class DefaultGridGrindRequestExecutorCalculationCoverageTest {
             java.util.List.<WorkbookStep>of(
                 new MutationStep(
                     new StepId("step-01-ensure-sheet"),
-                    new SheetSelector.ByName("Ops"),
+                    new SheetSelector.ByName(new SheetName("Ops")),
                     new WorkbookMutationAction.EnsureSheet()),
                 new InspectionStep(
                     new StepId("summary"),
@@ -65,7 +66,7 @@ class DefaultGridGrindRequestExecutorCalculationCoverageTest {
                     new WorkbookIntrospectionQuery.GetWorkbookSummary()),
                 new MutationStep(
                     new StepId("step-03-set-cell"),
-                    new CellSelector.ByAddress("Ops", "A1"),
+                    new CellSelector.ByAddress(new SheetName("Ops"), "A1"),
                     new CellMutationAction.SetCell(
                         new dev.erst.gridgrind.core.model.value.CellInput.NumberValue(1.0)))));
     WorkbookResult.Failure failure =
@@ -106,9 +107,11 @@ class DefaultGridGrindRequestExecutorCalculationCoverageTest {
             executionPolicy(calculateAll()),
             null,
             java.util.List.of(
-                mutate(new SheetSelector.ByName("Ops"), new WorkbookMutationAction.EnsureSheet()),
                 mutate(
-                    new CellSelector.ByAddress("Ops", "A1"),
+                    new SheetSelector.ByName(new SheetName("Ops")),
+                    new WorkbookMutationAction.EnsureSheet()),
+                mutate(
+                    new CellSelector.ByAddress(new SheetName("Ops"), "A1"),
                     new CellMutationAction.SetCell(
                         new dev.erst.gridgrind.core.model.value.CellInput.Formula(
                             dev.erst.gridgrind.core.source.TextSourceInput.inline("ZZZZ(1)"))))),
@@ -138,9 +141,11 @@ class DefaultGridGrindRequestExecutorCalculationCoverageTest {
             executionPolicy(requireEvaluation()),
             null,
             java.util.List.of(
-                mutate(new SheetSelector.ByName("Ops"), new WorkbookMutationAction.EnsureSheet()),
                 mutate(
-                    new CellSelector.ByAddress("Ops", "A1"),
+                    new SheetSelector.ByName(new SheetName("Ops")),
+                    new WorkbookMutationAction.EnsureSheet()),
+                mutate(
+                    new CellSelector.ByAddress(new SheetName("Ops"), "A1"),
                     new CellMutationAction.SetCell(
                         new dev.erst.gridgrind.core.model.value.CellInput.Formula(
                             dev.erst.gridgrind.core.source.TextSourceInput.inline(
@@ -173,9 +178,11 @@ class DefaultGridGrindRequestExecutorCalculationCoverageTest {
             executionPolicy(deferCalculation()),
             null,
             java.util.List.of(
-                mutate(new SheetSelector.ByName("Ops"), new WorkbookMutationAction.EnsureSheet()),
                 mutate(
-                    new CellSelector.ByAddress("Ops", "A1"),
+                    new SheetSelector.ByName(new SheetName("Ops")),
+                    new WorkbookMutationAction.EnsureSheet()),
+                mutate(
+                    new CellSelector.ByAddress(new SheetName("Ops"), "A1"),
                     new CellMutationAction.SetCell(
                         new dev.erst.gridgrind.core.model.value.CellInput.Formula(
                             dev.erst.gridgrind.core.source.TextSourceInput.inline("ZZZZ(1)"))))),
@@ -215,7 +222,7 @@ class DefaultGridGrindRequestExecutorCalculationCoverageTest {
                     null,
                     java.util.List.of(
                         mutate(
-                            new SheetSelector.ByName("Ops"),
+                            new SheetSelector.ByName(new SheetName("Ops")),
                             new WorkbookMutationAction.EnsureSheet())),
                     java.util.List.of())));
 

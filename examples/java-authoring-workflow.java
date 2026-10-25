@@ -1,3 +1,4 @@
+import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.authoring.GridGrindPlan;
 import dev.erst.gridgrind.core.authoring.ExpectedValues;
 import dev.erst.gridgrind.core.authoring.Tables;
@@ -31,20 +32,20 @@ final class JavaAuthoringWorkflowExample {
     return GridGrindPlan.newWorkbook()
         .saveAs(workspace.resolve("budget.xlsx"), WorkbookPlan.WorkbookPersistence.IfExists.REPLACE)
         .journal(ExecutionJournalLevel.VERBOSE)
-        .mutate(Targets.sheet("Budget").ensureExists())
+        .mutate(Targets.sheet(new SheetName("Budget")).ensureExists())
         .mutate(
-            Targets.range("Budget", "A1:B3")
+            Targets.range(new SheetName("Budget"), "A1:B3")
                 .setRows(
                     List.of(
                         Values.row(Values.text("Item"), Values.text("Amount")),
                         Values.row(Values.text("Hosting"), Values.number(100.0)),
                         Values.row(Values.text("Travel"), Values.number(50.0)))))
         .mutate(
-            Targets.tableOnSheet("BudgetTable", "Budget")
+            Targets.tableOnSheet("BudgetTable", new SheetName("Budget"))
                 .define(
                     Tables.define(
                         "BudgetTable",
-                        "Budget",
+                        new SheetName("Budget"),
                         "A1:B3",
                         false,
                         Tables.noStyle())))

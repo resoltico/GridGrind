@@ -11,6 +11,7 @@ import dev.erst.gridgrind.core.plan.SheetSelector;
 import dev.erst.gridgrind.core.plan.WorkbookMutationAction;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import dev.erst.gridgrind.core.result.WorkbookResult;
+import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import java.nio.file.Path;
 import java.util.List;
@@ -99,7 +100,7 @@ class GridGrindEngineGrantTest {
         List.of(
             new MutationStep(
                 new StepId("ensure-sheet"),
-                new SheetSelector.ByName("Budget"),
+                new SheetSelector.ByName(new SheetName("Budget")),
                 new WorkbookMutationAction.EnsureSheet())));
   }
 }

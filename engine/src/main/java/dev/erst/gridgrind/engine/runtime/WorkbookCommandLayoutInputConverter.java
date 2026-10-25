@@ -32,7 +32,8 @@ final class WorkbookCommandLayoutInputConverter {
   static ExcelNamedRangeScope toExcelNamedRangeScope(NamedRangeScope scope) {
     return switch (scope) {
       case NamedRangeScope.Workbook _ -> new ExcelNamedRangeScope.WorkbookScope();
-      case NamedRangeScope.Sheet sheet -> new ExcelNamedRangeScope.SheetScope(sheet.sheetName());
+      case NamedRangeScope.Sheet sheet ->
+          new ExcelNamedRangeScope.SheetScope(sheet.sheetName().value());
     };
   }
 
@@ -40,7 +41,7 @@ final class WorkbookCommandLayoutInputConverter {
     return switch (selector) {
       case NamedRangeSelector.WorkbookScope _ -> new ExcelNamedRangeScope.WorkbookScope();
       case NamedRangeSelector.SheetScope sheet ->
-          new ExcelNamedRangeScope.SheetScope(sheet.sheetName());
+          new ExcelNamedRangeScope.SheetScope(sheet.sheetName().value());
     };
   }
 
@@ -55,7 +56,7 @@ final class WorkbookCommandLayoutInputConverter {
     return switch (target) {
       case NamedRangeTarget.Formula formula -> ExcelNamedRangeTarget.formula(formula.formula());
       case NamedRangeTarget.Range range ->
-          ExcelNamedRangeTarget.range(range.sheetName(), range.range());
+          ExcelNamedRangeTarget.range(range.sheetName().value(), range.range());
     };
   }
 

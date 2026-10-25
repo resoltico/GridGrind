@@ -19,6 +19,7 @@ import dev.erst.gridgrind.core.source.BinarySourceInput;
 import dev.erst.gridgrind.core.source.TextSourceInput;
 import dev.erst.gridgrind.core.vocabulary.ExcelPictureFormat;
 import dev.erst.gridgrind.core.vocabulary.PlanId;
+import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 
 /** Generated examples for repository-backed assets, external payloads, and package workflows. */
@@ -76,7 +77,7 @@ final class WorkbookIntegrationExamples {
             new SheetIntrospectionQuery.GetCells()),
         ExampleSteps.read(
             new StepId("read-payload"),
-            new DrawingObjectSelector.ByName("Inputs", "InputsPayload"),
+            new DrawingObjectSelector.ByName(new SheetName("Inputs"), "InputsPayload"),
             new WorkbookAssetIntrospectionQuery.GetDrawingObjectPayload()));
   }
 

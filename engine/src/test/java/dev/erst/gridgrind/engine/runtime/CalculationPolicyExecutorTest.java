@@ -20,6 +20,7 @@ import dev.erst.gridgrind.core.model.formula.CalculationReport;
 import dev.erst.gridgrind.core.model.formula.CalculationStrategyInput;
 import dev.erst.gridgrind.core.model.formula.FormulaCapabilityKind;
 import dev.erst.gridgrind.core.problem.GridGrindProblemCode;
+import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.excel.ExcelCellValue;
 import dev.erst.gridgrind.excel.ExcelFormulaCapabilityAssessment;
 import dev.erst.gridgrind.excel.ExcelFormulaCapabilityIssue;
@@ -61,7 +62,8 @@ class CalculationPolicyExecutorTest {
     assertTrue(
         CalculationPolicyExecutor.requiresMutationPrefix(
             calculateTargets(
-                new dev.erst.gridgrind.core.model.formula.FormulaCellTarget("Budget", "B1"))));
+                new dev.erst.gridgrind.core.model.formula.FormulaCellTarget(
+                    new SheetName("Budget"), "B1"))));
 
     CalculationReport report =
         CalculationPolicyExecutor.notRequestedReport(markRecalculateOnOpen());
@@ -123,7 +125,8 @@ class CalculationPolicyExecutorTest {
 
       CalculationPolicyInput targeted =
           calculateTargets(
-              new dev.erst.gridgrind.core.model.formula.FormulaCellTarget("Budget", "B1"));
+              new dev.erst.gridgrind.core.model.formula.FormulaCellTarget(
+                  new SheetName("Budget"), "B1"));
       CalculationPolicyExecutor.PreflightOutcome preflight =
           CalculationPolicyExecutor.preflight(workbook, targeted);
       CalculationPolicyExecutor.ExecutionOutcome execution =
@@ -169,7 +172,8 @@ class CalculationPolicyExecutorTest {
           new CalculationPolicyInput(
               new CalculationStrategyInput.EvaluateTargets(
                   List.of(
-                      new dev.erst.gridgrind.core.model.formula.FormulaCellTarget("Budget", "B1"))),
+                      new dev.erst.gridgrind.core.model.formula.FormulaCellTarget(
+                          new SheetName("Budget"), "B1"))),
               true);
       CalculationPolicyExecutor.ExecutionOutcome execution =
           CalculationPolicyExecutor.execute(workbook, targetedAndMarked, 1, false);
@@ -200,7 +204,8 @@ class CalculationPolicyExecutorTest {
           CalculationPolicyExecutor.execute(
               workbook,
               calculateTargets(
-                  new dev.erst.gridgrind.core.model.formula.FormulaCellTarget("Budget", "B1")),
+                  new dev.erst.gridgrind.core.model.formula.FormulaCellTarget(
+                      new SheetName("Budget"), "B1")),
               1,
               false);
 
@@ -386,7 +391,8 @@ class CalculationPolicyExecutorTest {
         ExecutionContextFixtureSupport.openWorkbook(createUnsupportedFormulaWorkbook())) {
       CalculationPolicyInput targeted =
           calculateTargets(
-              new dev.erst.gridgrind.core.model.formula.FormulaCellTarget("Ops", "A1"));
+              new dev.erst.gridgrind.core.model.formula.FormulaCellTarget(
+                  new SheetName("Ops"), "A1"));
       CalculationPolicyExecutor.PreflightOutcome preflight =
           CalculationPolicyExecutor.preflight(workbook, targeted);
       CalculationPolicyExecutor.ExecutionOutcome execution =
@@ -418,7 +424,8 @@ class CalculationPolicyExecutorTest {
       CalculationPolicyInput evaluateAll = calculateAll();
       CalculationPolicyInput evaluateTargets =
           calculateTargets(
-              new dev.erst.gridgrind.core.model.formula.FormulaCellTarget("Budget", "A1"));
+              new dev.erst.gridgrind.core.model.formula.FormulaCellTarget(
+                  new SheetName("Budget"), "A1"));
       CalculationPolicyInput requireEvaluation = requireEvaluation();
 
       assertTrue(CalculationPolicyExecutor.preflight(workbook, doNotCalculate).report().isEmpty());

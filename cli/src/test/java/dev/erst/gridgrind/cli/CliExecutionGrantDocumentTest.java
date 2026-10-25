@@ -13,6 +13,7 @@ import dev.erst.gridgrind.core.plan.InspectionStep;
 import dev.erst.gridgrind.core.plan.SheetIntrospectionQuery;
 import dev.erst.gridgrind.core.plan.SheetSelector;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
+import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.engine.api.GridGrindExecutionGrant;
 import dev.erst.gridgrind.engine.api.GridGrindHostAcceptancePolicy;
@@ -43,7 +44,7 @@ class CliExecutionGrantDocumentTest {
     var assertion =
         new dev.erst.gridgrind.core.plan.AssertionStep(
             new dev.erst.gridgrind.core.vocabulary.StepId("verify-sheet"),
-            new dev.erst.gridgrind.core.plan.SheetSelector.ByName("Budget"),
+            new dev.erst.gridgrind.core.plan.SheetSelector.ByName(new SheetName("Budget")),
             new dev.erst.gridgrind.core.plan.PresenceAssertion.SheetPresent());
     var inspection =
         new dev.erst.gridgrind.core.plan.InspectionStep(
@@ -225,7 +226,7 @@ class CliExecutionGrantDocumentTest {
             List.of(
                 new InspectionStep(
                     new StepId("preserve-summary"),
-                    new SheetSelector.ByName("Summary"),
+                    new SheetSelector.ByName(new SheetName("Summary")),
                     new SheetIntrospectionQuery.GetSheetSummary())));
 
     GridGrindHostAcceptancePolicy.Requirement.PreserveInspectionFacts translated =
@@ -245,7 +246,7 @@ class CliExecutionGrantDocumentTest {
     AssertionStep assertion =
         new AssertionStep(
             new StepId("assert-owner"),
-            new CellSelector.ByAddress("Summary", "A1"),
+            new CellSelector.ByAddress(new SheetName("Summary"), "A1"),
             new CellAssertion.CellValue(new CellScalarValue.Text("Approved")));
     CliGrantAcceptancePolicy.Requirement.TerminalAssertions requirement =
         new CliGrantAcceptancePolicy.Requirement.TerminalAssertions(List.of(assertion));

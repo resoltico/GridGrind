@@ -11,6 +11,7 @@ import dev.erst.gridgrind.core.plan.MutationStep;
 import dev.erst.gridgrind.core.plan.RowBandSelector;
 import dev.erst.gridgrind.core.plan.WorkbookMutationAction;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
+import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import java.util.List;
 import java.util.Optional;
@@ -51,7 +52,7 @@ class WorkbookStaticMaterializationValidationTest {
             staticRequest(
                 new MutationStep(
                     new StepId("row-work"),
-                    new RowBandSelector.Span("Ops", 10, 250_009),
+                    new RowBandSelector.Span(new SheetName("Ops"), 10, 250_009),
                     new WorkbookMutationAction.SetRowHeight(15.0d)))));
   }
 
@@ -62,7 +63,7 @@ class WorkbookStaticMaterializationValidationTest {
             staticRequest(
                 new MutationStep(
                     new StepId("row-band-cell-action"),
-                    new RowBandSelector.Span("Ops", 10, 250_010),
+                    new RowBandSelector.Span(new SheetName("Ops"), 10, 250_010),
                     new CellMutationAction.ClearRange())));
 
     assertFalse(
@@ -75,7 +76,7 @@ class WorkbookStaticMaterializationValidationTest {
                 staticRequest(
                     new MutationStep(
                         new StepId("row-work"),
-                        new RowBandSelector.Span("Ops", 10, 250_010),
+                        new RowBandSelector.Span(new SheetName("Ops"), 10, 250_010),
                         action)))
             .getFirst();
 

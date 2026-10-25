@@ -10,6 +10,7 @@ import dev.erst.gridgrind.core.plan.InspectionStep;
 import dev.erst.gridgrind.core.plan.PivotTableSelector;
 import dev.erst.gridgrind.core.plan.SheetSelector;
 import dev.erst.gridgrind.core.plan.WorkbookSelector;
+import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.excel.ExcelChartSelection;
 import dev.erst.gridgrind.excel.WorkbookReadCommand;
@@ -39,12 +40,12 @@ class InspectionCommandConverterTest {
     InspectionStep allChartsStep =
         new InspectionStep(
             new StepId("charts"),
-            new ChartSelector.AllOnSheet("Budget"),
+            new ChartSelector.AllOnSheet(new SheetName("Budget")),
             new WorkbookAssetIntrospectionQuery.GetCharts());
     InspectionStep namedChartStep =
         new InspectionStep(
             new StepId("named-chart"),
-            new ChartSelector.ByName("Budget", "Revenue"),
+            new ChartSelector.ByName(new SheetName("Budget"), "Revenue"),
             new WorkbookAssetIntrospectionQuery.GetCharts());
     WorkbookReadCommand.GetCharts allChartsCommand =
         assertInstanceOf(
@@ -100,7 +101,7 @@ class InspectionCommandConverterTest {
     InspectionStep step =
         new InspectionStep(
             new StepId("array-formulas"),
-            new SheetSelector.ByName("Calc"),
+            new SheetSelector.ByName(new SheetName("Calc")),
             new SheetIntrospectionQuery.GetArrayFormulas());
     WorkbookReadCommand.GetArrayFormulas command =
         assertInstanceOf(

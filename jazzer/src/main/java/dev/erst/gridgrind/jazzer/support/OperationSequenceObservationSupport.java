@@ -16,6 +16,7 @@ import dev.erst.gridgrind.core.vocabulary.AnalysisFindingCode;
 import dev.erst.gridgrind.core.vocabulary.AnalysisSeverity;
 import dev.erst.gridgrind.core.vocabulary.ExcelSheetVisibility;
 import dev.erst.gridgrind.core.vocabulary.SheetLabel;
+import dev.erst.gridgrind.core.vocabulary.SheetName;
 import java.util.List;
 import java.util.Optional;
 
@@ -39,7 +40,7 @@ final class OperationSequenceObservationSupport {
           assertThat(
               stepId,
               new CellSelector.ByAddresses(
-                  targetSheet,
+                  new SheetName(targetSheet),
                   List.of(
                       FuzzDataDecoders.nextNonBlankCellAddress(data, true),
                       data.consumeBoolean() ? "A1" : "C2")),
@@ -51,7 +52,9 @@ final class OperationSequenceObservationSupport {
               nextNamedRangeAssertion(data));
       case 3 ->
           assertThat(
-              stepId, new SheetSelector.ByName(targetSheet), nextSheetAssertion(data, targetSheet));
+              stepId,
+              new SheetSelector.ByName(new SheetName(targetSheet)),
+              nextSheetAssertion(data, targetSheet));
       case 4 ->
           assertThat(
               stepId,
@@ -63,7 +66,10 @@ final class OperationSequenceObservationSupport {
               nextPivotTableSelector(data, primarySheet, secondarySheet, pivotTableName, true),
               nextPivotTableAssertion(data));
       default ->
-          assertThat(stepId, new ChartSelector.AllOnSheet(targetSheet), nextChartAssertion(data));
+          assertThat(
+              stepId,
+              new ChartSelector.AllOnSheet(new SheetName(targetSheet)),
+              nextChartAssertion(data));
     };
   }
 
@@ -83,15 +89,17 @@ final class OperationSequenceObservationSupport {
                           validName ? workbookNamedRange : nextNamedRangeName(data, false))
                       : new NamedRangeSelector.SheetScope(
                           validName ? sheetNamedRange : nextNamedRangeName(data, false),
-                          sheetName)));
+                          new SheetName(sheetName))));
     };
   }
 
   static CellSelector nextCellSelector(
       GridGrindFuzzData data, String sheetName, boolean validAddress) {
     return switch (selectorSlot(nextSelectorByte(data))) {
-      case 0 -> new CellSelector.AllUsedInSheet(sheetName);
-      default -> new CellSelector.ByAddresses(sheetName, nextReadAddresses(data, validAddress));
+      case 0 -> new CellSelector.AllUsedInSheet(new SheetName(sheetName));
+      default ->
+          new CellSelector.ByAddresses(
+              new SheetName(sheetName), nextReadAddresses(data, validAddress));
     };
   }
 
@@ -102,8 +110,12 @@ final class OperationSequenceObservationSupport {
       default ->
           new SheetSelector.ByNames(
               data.consumeBoolean()
-                  ? List.of(primarySheet, secondarySheet)
-                  : List.of(secondarySheet, primarySheet));
+                  ? List.of(
+                      new dev.erst.gridgrind.core.vocabulary.SheetName(primarySheet),
+                      new dev.erst.gridgrind.core.vocabulary.SheetName(secondarySheet))
+                  : List.of(
+                      new dev.erst.gridgrind.core.vocabulary.SheetName(secondarySheet),
+                      new dev.erst.gridgrind.core.vocabulary.SheetName(primarySheet)));
     };
   }
 

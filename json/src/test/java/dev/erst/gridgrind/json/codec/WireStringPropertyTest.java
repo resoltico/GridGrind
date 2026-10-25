@@ -2,6 +2,7 @@ package dev.erst.gridgrind.json.codec;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import dev.erst.gridgrind.core.problem.InvalidRequestException;
@@ -72,12 +73,14 @@ class WireStringPropertyTest {
                                 text);
                             String json =
                                 GridGrindJsonMapperSupport.JSON_MAPPER.writeValueAsString(text);
-                            assertThrows(
-                                InvalidRequestException.class,
-                                () ->
-                                    GridGrindJsonMapperSupport.JSON_MAPPER.readValue(
-                                        json, domain.type()),
-                                text);
+                            JacksonException failure =
+                                assertThrows(
+                                    JacksonException.class,
+                                    () ->
+                                        GridGrindJsonMapperSupport.JSON_MAPPER.readValue(
+                                            json, domain.type()),
+                                    text);
+                            assertInstanceOf(InvalidRequestException.class, failure.getCause());
                           }
                           for (String json : List.of("1", "true", "{}", "[]")) {
                             assertThrows(
@@ -123,6 +126,19 @@ class WireStringPropertyTest {
             "[\"Budget\",\"Forecast\"]", new TypeReference<List<SheetName>>() {});
     assertEquals(List.of(new SheetName("Budget"), new SheetName("Forecast")), sheets);
     assertEquals("B2:A1", new RangeRef("B2:A1").value());
+  }
+
+  @Test
+  void invalidNestedValuesRetainTheirFieldAndArrayIndex() {
+    JacksonException failure =
+        assertThrows(
+            JacksonException.class,
+            () ->
+                GridGrindJsonMapperSupport.JSON_MAPPER.readValue(
+                    "{\"sheet\":\"Budget\",\"cells\":[\"A1\",\"XFE1\"]}", Envelope.class));
+    assertInstanceOf(InvalidRequestException.class, failure.getCause());
+    assertEquals("cells", failure.getPath().getFirst().getPropertyName());
+    assertEquals(1, failure.getPath().getLast().getIndex());
   }
 
   private static List<Domain> domains() {

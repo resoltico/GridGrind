@@ -16,6 +16,7 @@ import dev.erst.gridgrind.core.problem.GridGrindProblemCode;
 import dev.erst.gridgrind.core.result.WorkbookResult;
 import dev.erst.gridgrind.core.result.WorkbookResultPersistence;
 import dev.erst.gridgrind.core.vocabulary.ExcelSheetVisibility;
+import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.excel.ExcelCellValue;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
 import dev.erst.gridgrind.excel.ExcelWorkbooks;
@@ -51,7 +52,7 @@ class ExecutionModeRequestExecutorTest {
                 new WorkbookIntrospectionQuery.GetWorkbookSummary()),
             inspect(
                 "sheet",
-                new SheetSelector.ByName("Ops"),
+                new SheetSelector.ByName(new SheetName("Ops")),
                 new SheetIntrospectionQuery.GetSheetSummary()));
     WorkbookResult.Success full =
         success(
@@ -92,7 +93,7 @@ class ExecutionModeRequestExecutorTest {
                     null,
                     List.of(
                         mutate(
-                            new SheetSelector.ByName("Ops"),
+                            new SheetSelector.ByName(new SheetName("Ops")),
                             new WorkbookMutationAction.EnsureSheet())),
                     List.of(
                         inspect(
@@ -113,14 +114,16 @@ class ExecutionModeRequestExecutorTest {
 
     List<ExecutorTestPlanSupport.PendingMutation> operations =
         List.of(
-            mutate(new SheetSelector.ByName("Ops"), new WorkbookMutationAction.EnsureSheet()),
             mutate(
-                new SheetSelector.ByName("Ops"),
+                new SheetSelector.ByName(new SheetName("Ops")),
+                new WorkbookMutationAction.EnsureSheet()),
+            mutate(
+                new SheetSelector.ByName(new SheetName("Ops")),
                 new CellMutationAction.AppendRow(
                     new dev.erst.gridgrind.core.model.value.CellRowInput.Typed(
                         List.of(textCell("Item"), textCell("Total"))))),
             mutate(
-                new SheetSelector.ByName("Ops"),
+                new SheetSelector.ByName(new SheetName("Ops")),
                 new CellMutationAction.AppendRow(
                     new dev.erst.gridgrind.core.model.value.CellRowInput.Typed(
                         List.of(textCell("Hosting"), formulaCell("2+3"))))));
@@ -132,7 +135,7 @@ class ExecutionModeRequestExecutorTest {
                 new WorkbookIntrospectionQuery.GetWorkbookSummary()),
             inspect(
                 "cells",
-                new CellSelector.ByAddresses("Ops", List.of("A1", "B2")),
+                new CellSelector.ByAddresses(new SheetName("Ops"), List.of("A1", "B2")),
                 new SheetIntrospectionQuery.GetCells()));
 
     WorkbookResult.Success streaming =
@@ -190,7 +193,7 @@ class ExecutionModeRequestExecutorTest {
                     null,
                     List.of(
                         mutate(
-                            new SheetSelector.ByName("Ops"),
+                            new SheetSelector.ByName(new SheetName("Ops")),
                             new WorkbookMutationAction.EnsureSheet())),
                     List.of(
                         inspect(
@@ -346,7 +349,7 @@ class ExecutionModeRequestExecutorTest {
                     List.of(
                         assertThat(
                             "assert-owner",
-                            new CellSelector.ByAddress("Ops", "A1"),
+                            new CellSelector.ByAddress(new SheetName("Ops"), "A1"),
                             new CellAssertion.CellValue(
                                 new dev.erst.gridgrind.core.model.value.CellScalarValue.Text(
                                     "Owner")))),
@@ -375,7 +378,7 @@ class ExecutionModeRequestExecutorTest {
                     null,
                     List.of(
                         mutate(
-                            new SheetSelector.ByName("Ops"),
+                            new SheetSelector.ByName(new SheetName("Ops")),
                             new CellMutationAction.AppendRow(
                                 new dev.erst.gridgrind.core.model.value.CellRowInput.Typed(
                                     List.of(textCell("x")))))),
@@ -396,7 +399,9 @@ class ExecutionModeRequestExecutorTest {
             ExecutionModeInput.streamingWrite(),
             null,
             List.of(
-                mutate(new SheetSelector.ByName("Ops"), new WorkbookMutationAction.EnsureSheet())),
+                mutate(
+                    new SheetSelector.ByName(new SheetName("Ops")),
+                    new WorkbookMutationAction.EnsureSheet())),
             List.of());
     Path workingDirectory = Files.createTempDirectory("gridgrind-streaming-temp-failure-");
     Path tempRootFile = Files.createTempFile(workingDirectory, "temp-root-blocker-", ".tmp");
@@ -429,12 +434,12 @@ class ExecutionModeRequestExecutorTest {
                     null,
                     List.of(
                         mutate(
-                            new SheetSelector.ByName("Ops"),
+                            new SheetSelector.ByName(new SheetName("Ops")),
                             new WorkbookMutationAction.EnsureSheet())),
                     List.of(
                         inspect(
                             "cells",
-                            new CellSelector.ByAddresses("Missing", List.of("A1")),
+                            new CellSelector.ByAddresses(new SheetName("Missing"), List.of("A1")),
                             new SheetIntrospectionQuery.GetCells())))));
 
     assertEquals(GridGrindProblemCode.SHEET_NOT_FOUND, failure.problem().code());
@@ -461,7 +466,7 @@ class ExecutionModeRequestExecutorTest {
                     null,
                     List.of(
                         mutate(
-                            new SheetSelector.ByName("Ops"),
+                            new SheetSelector.ByName(new SheetName("Ops")),
                             new WorkbookMutationAction.EnsureSheet())),
                     List.of())));
 
@@ -494,7 +499,7 @@ class ExecutionModeRequestExecutorTest {
                     List.of(
                         inspect(
                             "cells",
-                            new CellSelector.ByAddresses("Ops", List.of("A1")),
+                            new CellSelector.ByAddresses(new SheetName("Ops"), List.of("A1")),
                             new SheetIntrospectionQuery.GetCells())))));
     assertEquals(GridGrindProblemCode.INVALID_REQUEST, unsupportedEventRead.problem().code());
     assertTrue(unsupportedEventRead.problem().message().contains("GET_CELLS"));
@@ -510,7 +515,7 @@ class ExecutionModeRequestExecutorTest {
                     null,
                     mutations(
                         mutate(
-                            new SheetSelector.ByName("Ops"),
+                            new SheetSelector.ByName(new SheetName("Ops")),
                             new CellMutationAction.AppendRow(
                                 new dev.erst.gridgrind.core.model.value.CellRowInput.Typed(
                                     List.of(textCell("x")))))),
@@ -529,10 +534,10 @@ class ExecutionModeRequestExecutorTest {
                     null,
                     List.of(
                         mutate(
-                            new SheetSelector.ByName("Ops"),
+                            new SheetSelector.ByName(new SheetName("Ops")),
                             new WorkbookMutationAction.EnsureSheet()),
                         mutate(
-                            new CellSelector.ByAddress("Ops", "A1"),
+                            new CellSelector.ByAddress(new SheetName("Ops"), "A1"),
                             new CellMutationAction.SetCell(textCell("x")))),
                     inspections())));
     assertEquals(

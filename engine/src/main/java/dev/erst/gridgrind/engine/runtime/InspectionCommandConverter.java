@@ -75,7 +75,7 @@ final class InspectionCommandConverter {
         RangeSelector.RectangularWindow selector = (RangeSelector.RectangularWindow) target;
         yield new WorkbookReadCommand.GetWindow(
             stepId,
-            selector.sheetName(),
+            selector.sheetName().value(),
             new dev.erst.gridgrind.excel.ExcelReadWindow(
                 selector.topLeftAddress(), selector.rowCount(), selector.columnCount()),
             toExcelProjection(getWindow.resolvedProjection()),
@@ -112,7 +112,7 @@ final class InspectionCommandConverter {
       case WorkbookAssetIntrospectionQuery.GetDrawingObjectPayload _ -> {
         DrawingObjectSelector.ByName selector = (DrawingObjectSelector.ByName) target;
         yield new WorkbookReadCommand.GetDrawingObjectPayload(
-            stepId, selector.sheetName(), selector.objectName());
+            stepId, selector.sheetName().value(), selector.objectName());
       }
       case SheetIntrospectionQuery.GetSheetLayout _ ->
           new WorkbookReadCommand.GetSheetLayout(
@@ -147,7 +147,7 @@ final class InspectionCommandConverter {
         RangeSelector.RectangularWindow selector = (RangeSelector.RectangularWindow) target;
         yield new WorkbookReadCommand.GetSheetSchema(
             stepId,
-            selector.sheetName(),
+            selector.sheetName().value(),
             new dev.erst.gridgrind.excel.ExcelReadWindow(
                 selector.topLeftAddress(), selector.rowCount(), selector.columnCount()),
             toExcelProjection(getSheetSchema.resolvedProjection()));

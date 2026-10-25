@@ -27,6 +27,7 @@ import dev.erst.gridgrind.core.result.WorkbookResults;
 import dev.erst.gridgrind.core.source.BinarySourceInput;
 import dev.erst.gridgrind.core.source.TextSourceInput;
 import dev.erst.gridgrind.core.vocabulary.ExcelPictureFormat;
+import dev.erst.gridgrind.core.vocabulary.SheetName;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -160,7 +161,7 @@ class ExecutorGuardCoverageTest {
             new WorkbookPlan.WorkbookPersistence.None(),
             mutations(
                 mutate(
-                    new CellSelector.ByAddress("Budget", "A1"),
+                    new CellSelector.ByAddress(new SheetName("Budget"), "A1"),
                     new CellMutationAction.SetCell(
                         new CellInput.Text(TextSourceInput.standardInput())))));
 
@@ -185,7 +186,7 @@ class ExecutorGuardCoverageTest {
             new WorkbookPlan.WorkbookPersistence.None(),
             mutations(
                 mutate(
-                    new CellSelector.ByAddress("Budget", "A1"),
+                    new CellSelector.ByAddress(new SheetName("Budget"), "A1"),
                     new CellMutationAction.SetCell(
                         new CellInput.Text(TextSourceInput.utf8File("blank.txt"))))));
     WorkbookResult.Failure blankFailure =
@@ -260,11 +261,11 @@ class ExecutorGuardCoverageTest {
     for (MutationAction action :
         java.util.List.of(
             new WorkbookMutationAction.EnsureSheet(),
-            new WorkbookMutationAction.RenameSheet("Budget Copy"),
+            new WorkbookMutationAction.RenameSheet(new SheetName("Budget Copy")),
             new WorkbookMutationAction.DeleteSheet(),
             new WorkbookMutationAction.MoveSheet(0),
             new WorkbookMutationAction.CopySheet(
-                "Budget Copy",
+                new SheetName("Budget Copy"),
                 new dev.erst.gridgrind.core.vocabulary.SheetCopyPosition.AppendAtEnd()),
             new WorkbookMutationAction.SetActiveSheet(),
             new WorkbookMutationAction.SetSelectedSheets(),
@@ -364,8 +365,9 @@ class ExecutorGuardCoverageTest {
     StructuredMutationAction.SetNamedRange rangeDefinedNamedRange =
         new StructuredMutationAction.SetNamedRange(
             "BudgetWindow",
-            new dev.erst.gridgrind.core.vocabulary.NamedRangeScope.Sheet("Budget"),
-            dev.erst.gridgrind.core.model.formula.NamedRangeTarget.range("Budget", "A1:B2"));
+            new dev.erst.gridgrind.core.vocabulary.NamedRangeScope.Sheet(new SheetName("Budget")),
+            dev.erst.gridgrind.core.model.formula.NamedRangeTarget.range(
+                new SheetName("Budget"), "A1:B2"));
     assertEquals(
         Optional.of("Budget"),
         ExecutionActionDiagnosticFields.sheetNameFor(rangeDefinedNamedRange));
@@ -381,7 +383,7 @@ class ExecutorGuardCoverageTest {
         new StructuredMutationAction.SetTable(
             dev.erst.gridgrind.core.model.table.TableInput.withDefaultMetadata(
                 "BudgetTable",
-                "Budget",
+                new SheetName("Budget"),
                 "A1:B5",
                 false,
                 new dev.erst.gridgrind.core.model.table.TableStyleInput.None()));
@@ -394,7 +396,8 @@ class ExecutorGuardCoverageTest {
         Optional.of("Budget"),
         ExecutionSelectorDiagnosticFields.singleSheetName(
             (dev.erst.gridgrind.core.plan.RangeSelector)
-                new dev.erst.gridgrind.core.plan.RangeSelector.ByRange("Budget", "A1:B2")));
+                new dev.erst.gridgrind.core.plan.RangeSelector.ByRange(
+                    new SheetName("Budget"), "A1:B2")));
   }
 
   @Test

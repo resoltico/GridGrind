@@ -78,6 +78,7 @@ import dev.erst.gridgrind.core.vocabulary.ExcelPictureFormat;
 import dev.erst.gridgrind.core.vocabulary.ExcelPivotDataConsolidateFunction;
 import dev.erst.gridgrind.core.vocabulary.ExcelPrintOrientation;
 import dev.erst.gridgrind.core.vocabulary.ProtocolCellAddressValidation;
+import dev.erst.gridgrind.core.vocabulary.SheetName;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
@@ -211,13 +212,14 @@ class AdvancedMutationProtocolTypesTest {
     assertEquals(ref("book-secret"), protection.workbookPasswordRef().orElseThrow());
     assertEquals(ref("review-secret"), protection.revisionsPasswordRef().orElseThrow());
 
-    NamedRangeTarget.Range explicit = NamedRangeTarget.range("Budget", "C3:A1");
+    NamedRangeTarget.Range explicit = NamedRangeTarget.range(new SheetName("Budget"), "C3:A1");
     NamedRangeTarget.Formula formula = NamedRangeTarget.formula("SUM(Budget!A1:A3)");
-    assertEquals("Budget", explicit.sheetName());
+    assertEquals("Budget", explicit.sheetName().value());
     assertEquals("C3:A1", explicit.range());
     assertEquals("SUM(Budget!A1:A3)", formula.formula());
     assertThrows(IllegalArgumentException.class, () -> NamedRangeTarget.formula(" "));
-    assertThrows(IllegalArgumentException.class, () -> NamedRangeTarget.range("Budget", " "));
+    assertThrows(
+        IllegalArgumentException.class, () -> NamedRangeTarget.range(new SheetName("Budget"), " "));
     assertThrows(NullPointerException.class, () -> new NamedRangeTarget.Range(null, "A1"));
 
     CommentAnchorInput anchor = new CommentAnchorInput(1, 2, 4, 6);
@@ -1222,7 +1224,7 @@ class AdvancedMutationProtocolTypesTest {
     TableInput defaultedTable =
         new TableInput(
             "BudgetTable",
-            "Budget",
+            new dev.erst.gridgrind.core.vocabulary.SheetName("Budget"),
             "A1:C4",
             false,
             true,
@@ -1238,7 +1240,7 @@ class AdvancedMutationProtocolTypesTest {
     TableInput explicitTable =
         new TableInput(
             "BudgetTable",
-            "Budget",
+            new dev.erst.gridgrind.core.vocabulary.SheetName("Budget"),
             "A1:C4",
             false,
             false,
@@ -1264,7 +1266,7 @@ class AdvancedMutationProtocolTypesTest {
         () ->
             new TableInput(
                 "BudgetTable",
-                "Budget",
+                new dev.erst.gridgrind.core.vocabulary.SheetName("Budget"),
                 "A1:C4",
                 false,
                 true,
@@ -1330,8 +1332,8 @@ class AdvancedMutationProtocolTypesTest {
     PivotTableInput input =
         new PivotTableInput(
             "Sales Pivot 2026",
-            "Report",
-            new PivotTableInput.Source.Range("Data", "A1:D5"),
+            new SheetName("Report"),
+            new PivotTableInput.Source.Range(new SheetName("Data"), "A1:D5"),
             new PivotTableInput.Anchor("$C$5"),
             List.of("Region"),
             List.of("Stage"),
@@ -1345,7 +1347,7 @@ class AdvancedMutationProtocolTypesTest {
     PivotTableInput tableSourceInput =
         new PivotTableInput(
             "Sales Table Pivot",
-            "Report",
+            new SheetName("Report"),
             new PivotTableInput.Source.Table("SalesTable2026"),
             new PivotTableInput.Anchor("D7"),
             List.of(),
@@ -1379,16 +1381,19 @@ class AdvancedMutationProtocolTypesTest {
         () -> new PivotTableInput.Source.NamedRange("Sales Pivot 2026"));
     assertThrows(
         IllegalArgumentException.class, () -> new PivotTableInput.Source.Table("Sales Table"));
-    assertThrows(NullPointerException.class, () -> new PivotTableInput.Source.Range("Data", null));
     assertThrows(
-        IllegalArgumentException.class, () -> new PivotTableInput.Source.Range("Data", " "));
+        NullPointerException.class,
+        () -> new PivotTableInput.Source.Range(new SheetName("Data"), null));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new PivotTableInput.Source.Range(new SheetName("Data"), " "));
     assertThrows(
         IllegalArgumentException.class,
         () ->
             new PivotTableInput(
                 "Sales Pivot 2026",
-                "Report",
-                new PivotTableInput.Source.Range("Data", "A1:D5"),
+                new SheetName("Report"),
+                new PivotTableInput.Source.Range(new SheetName("Data"), "A1:D5"),
                 new PivotTableInput.Anchor("C5"),
                 List.of("Region"),
                 List.of("Stage"),
@@ -1404,8 +1409,8 @@ class AdvancedMutationProtocolTypesTest {
         () ->
             new PivotTableInput(
                 "Sales Pivot 2026",
-                "Report",
-                new PivotTableInput.Source.Range("Data", "A1:D5"),
+                new SheetName("Report"),
+                new PivotTableInput.Source.Range(new SheetName("Data"), "A1:D5"),
                 new PivotTableInput.Anchor("C5"),
                 List.of("Region", "region"),
                 List.of(),
@@ -1421,8 +1426,8 @@ class AdvancedMutationProtocolTypesTest {
         () ->
             new PivotTableInput(
                 "Sales Pivot 2026",
-                "Report",
-                new PivotTableInput.Source.Range("Data", "A1:D5"),
+                new SheetName("Report"),
+                new PivotTableInput.Source.Range(new SheetName("Data"), "A1:D5"),
                 new PivotTableInput.Anchor("C5"),
                 List.of("Region"),
                 List.of("region"),
@@ -1438,8 +1443,8 @@ class AdvancedMutationProtocolTypesTest {
         () ->
             new PivotTableInput(
                 "Sales Pivot 2026",
-                "Report",
-                new PivotTableInput.Source.Range("Data", "A1:D5"),
+                new SheetName("Report"),
+                new PivotTableInput.Source.Range(new SheetName("Data"), "A1:D5"),
                 new PivotTableInput.Anchor("C5"),
                 List.of((String) null),
                 List.of(),
@@ -1455,8 +1460,8 @@ class AdvancedMutationProtocolTypesTest {
         () ->
             new PivotTableInput(
                 "Sales Pivot 2026",
-                "Report",
-                new PivotTableInput.Source.Range("Data", "A1:D5"),
+                new SheetName("Report"),
+                new PivotTableInput.Source.Range(new SheetName("Data"), "A1:D5"),
                 new PivotTableInput.Anchor("C5"),
                 List.of(" "),
                 List.of(),
@@ -1472,8 +1477,8 @@ class AdvancedMutationProtocolTypesTest {
         () ->
             new PivotTableInput(
                 "Sales Pivot 2026",
-                "Report",
-                new PivotTableInput.Source.Range("Data", "A1:D5"),
+                new SheetName("Report"),
+                new PivotTableInput.Source.Range(new SheetName("Data"), "A1:D5"),
                 new PivotTableInput.Anchor("C5"),
                 List.of(),
                 List.of(),
@@ -1484,8 +1489,8 @@ class AdvancedMutationProtocolTypesTest {
         () ->
             new PivotTableInput(
                 "Sales Pivot 2026",
-                "Report",
-                new PivotTableInput.Source.Range("Data", "A1:D5"),
+                new SheetName("Report"),
+                new PivotTableInput.Source.Range(new SheetName("Data"), "A1:D5"),
                 new PivotTableInput.Anchor("C5"),
                 List.of(),
                 List.of(),

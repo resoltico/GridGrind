@@ -16,6 +16,7 @@ import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import dev.erst.gridgrind.core.source.SecretReference;
 import dev.erst.gridgrind.core.vocabulary.ExcelOoxmlWriteCipher;
 import dev.erst.gridgrind.core.vocabulary.ExcelOoxmlWriteHash;
+import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.engine.api.GridGrindExecutionGrant;
 import java.nio.file.Path;
@@ -96,7 +97,7 @@ class ExecutionGrantValidatorTest {
             List.of(
                 new dev.erst.gridgrind.core.plan.InspectionStep(
                     new StepId("summary"),
-                    new SheetSelector.ByName("Budget"),
+                    new SheetSelector.ByName(new SheetName("Budget")),
                     new dev.erst.gridgrind.core.plan.SheetIntrospectionQuery.GetSheetSummary())));
     GridGrindExecutionGrant grant =
         new GridGrindExecutionGrant.Bounded(
@@ -121,7 +122,7 @@ class ExecutionGrantValidatorTest {
             List.of(
                 new dev.erst.gridgrind.core.plan.InspectionStep(
                     new StepId("summary"),
-                    new SheetSelector.ByName("Ledger"),
+                    new SheetSelector.ByName(new SheetName("Ledger")),
                     new dev.erst.gridgrind.core.plan.SheetIntrospectionQuery.GetSheetSummary())));
     GridGrindExecutionGrant grant =
         new GridGrindExecutionGrant.Bounded(
@@ -301,7 +302,7 @@ class ExecutionGrantValidatorTest {
         List.of(
             new MutationStep(
                 new StepId("ensure-sheet"),
-                new SheetSelector.ByName("Budget"),
+                new SheetSelector.ByName(new SheetName("Budget")),
                 new WorkbookMutationAction.EnsureSheet())));
   }
 }

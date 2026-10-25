@@ -12,6 +12,7 @@ import dev.erst.gridgrind.core.plan.InspectionStep;
 import dev.erst.gridgrind.core.plan.RangeSelector;
 import dev.erst.gridgrind.core.plan.SheetSelector;
 import dev.erst.gridgrind.core.plan.WorkbookSelector;
+import dev.erst.gridgrind.core.vocabulary.SheetName;
 
 /** Builds bounded inspection steps for protocol-workflow Jazzer generation. */
 final class OperationSequenceInspectionFactory {
@@ -43,7 +44,7 @@ final class OperationSequenceInspectionFactory {
             case 0x1 ->
                 inspect(
                     requestId,
-                    new SheetSelector.ByName(targetSheet),
+                    new SheetSelector.ByName(new SheetName(targetSheet)),
                     new SheetIntrospectionQuery.GetSheetSummary());
             case 0x2 ->
                 inspect(
@@ -64,14 +65,14 @@ final class OperationSequenceInspectionFactory {
                 inspect(
                     requestId,
                     new CellSelector.ByAddresses(
-                        targetSheet,
+                        new SheetName(targetSheet),
                         OperationSequenceObservationSupport.nextReadAddresses(data, validAddress)),
                     new SheetIntrospectionQuery.GetCells());
             case 0x1 ->
                 inspect(
                     requestId,
                     new RangeSelector.RectangularWindow(
-                        targetSheet,
+                        new SheetName(targetSheet),
                         FuzzDataDecoders.nextNonBlankCellAddress(data, validAddress),
                         data.consumeInt(1, 4),
                         data.consumeInt(1, 4)),
@@ -79,13 +80,13 @@ final class OperationSequenceInspectionFactory {
             case 0x2 ->
                 inspect(
                     requestId,
-                    new SheetSelector.ByName(targetSheet),
+                    new SheetSelector.ByName(new SheetName(targetSheet)),
                     new SheetIntrospectionQuery.GetSheetLayout());
             default ->
                 inspect(
                     requestId,
                     new RangeSelector.RectangularWindow(
-                        targetSheet,
+                        new SheetName(targetSheet),
                         validAddress ? "A1" : FuzzDataDecoders.nextNonBlankCellAddress(data, false),
                         data.consumeInt(1, 5),
                         data.consumeInt(1, 4)),
@@ -96,7 +97,7 @@ final class OperationSequenceInspectionFactory {
             case 0x0 ->
                 inspect(
                     requestId,
-                    new SheetSelector.ByName(targetSheet),
+                    new SheetSelector.ByName(new SheetName(targetSheet)),
                     new SheetIntrospectionQuery.GetMergedRegions());
             case 0x1 ->
                 inspect(
@@ -113,23 +114,23 @@ final class OperationSequenceInspectionFactory {
             case 0x3 ->
                 inspect(
                     requestId,
-                    new DrawingObjectSelector.AllOnSheet(targetSheet),
+                    new DrawingObjectSelector.AllOnSheet(new SheetName(targetSheet)),
                     new WorkbookAssetIntrospectionQuery.GetDrawingObjects());
             case 0x4 ->
                 inspect(
                     requestId,
                     new DrawingObjectSelector.ByName(
-                        targetSheet, nextDrawingBinaryObjectName(data)),
+                        new SheetName(targetSheet), nextDrawingBinaryObjectName(data)),
                     new WorkbookAssetIntrospectionQuery.GetDrawingObjectPayload());
             case 0x5 ->
                 inspect(
                     requestId,
-                    new ChartSelector.AllOnSheet(targetSheet),
+                    new ChartSelector.AllOnSheet(new SheetName(targetSheet)),
                     new WorkbookAssetIntrospectionQuery.GetCharts());
             case 0x6 ->
                 inspect(
                     requestId,
-                    new SheetSelector.ByName(targetSheet),
+                    new SheetSelector.ByName(new SheetName(targetSheet)),
                     new SheetIntrospectionQuery.GetPrintLayout());
             default ->
                 inspect(
@@ -153,7 +154,7 @@ final class OperationSequenceInspectionFactory {
             default ->
                 inspect(
                     requestId,
-                    new SheetSelector.ByName(targetSheet),
+                    new SheetSelector.ByName(new SheetName(targetSheet)),
                     new SheetIntrospectionQuery.GetAutofilters());
           };
       case 0x4 ->

@@ -25,6 +25,7 @@ import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import dev.erst.gridgrind.core.plan.WorkbookStep;
 import dev.erst.gridgrind.core.problem.GridGrindProblemCode;
 import dev.erst.gridgrind.core.result.WorkbookResult;
+import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.engine.api.GridGrindHostAcceptancePolicy;
 import java.nio.file.Files;
@@ -51,7 +52,7 @@ class HostAcceptanceExecutionTest {
                     List.of(
                         new AssertionStep(
                             new StepId("host-total"),
-                            new CellSelector.ByAddress("Report", "A1"),
+                            new CellSelector.ByAddress(new SheetName("Report"), "A1"),
                             new CellAssertion.CellValue(new CellScalarValue.NumberValue(2)))))));
 
     WorkbookResult.Failure failure =
@@ -87,7 +88,7 @@ class HostAcceptanceExecutionTest {
                     List.of(
                         new AssertionStep(
                             new StepId("host-total"),
-                            new CellSelector.ByAddress("Report", "A1"),
+                            new CellSelector.ByAddress(new SheetName("Report"), "A1"),
                             new CellAssertion.CellValue(new CellScalarValue.NumberValue(1)))))));
 
     WorkbookResult.Success success =
@@ -147,11 +148,11 @@ class HostAcceptanceExecutionTest {
             List.of(
                 new MutationStep(
                     new StepId("ensure-report"),
-                    new SheetSelector.ByName("Report"),
+                    new SheetSelector.ByName(new SheetName("Report")),
                     new WorkbookMutationAction.EnsureSheet()),
                 new MutationStep(
                     new StepId("append-total"),
-                    new SheetSelector.ByName("Report"),
+                    new SheetSelector.ByName(new SheetName("Report")),
                     new CellMutationAction.AppendRow(
                         new CellRowInput.Typed(List.of(new CellInput.NumberValue(1)))))));
 
@@ -186,7 +187,7 @@ class HostAcceptanceExecutionTest {
             List.of(
                 new InspectionStep(
                     new StepId("summary"),
-                    new SheetSelector.ByName("Report"),
+                    new SheetSelector.ByName(new SheetName("Report")),
                     new SheetIntrospectionQuery.GetSheetSummary())));
 
     WorkbookResult.Failure failure =
@@ -273,11 +274,11 @@ class HostAcceptanceExecutionTest {
     return List.of(
         new MutationStep(
             new StepId("ensure-report"),
-            new SheetSelector.ByName("Report"),
+            new SheetSelector.ByName(new SheetName("Report")),
             new WorkbookMutationAction.EnsureSheet()),
         new MutationStep(
             new StepId("write-total"),
-            new CellSelector.ByAddress("Report", "A1"),
+            new CellSelector.ByAddress(new SheetName("Report"), "A1"),
             new CellMutationAction.SetCell(new CellInput.NumberValue(1))));
   }
 
@@ -288,7 +289,7 @@ class HostAcceptanceExecutionTest {
                 List.of(
                     new AssertionStep(
                         new StepId("host-total"),
-                        new CellSelector.ByAddress("Report", "A1"),
+                        new CellSelector.ByAddress(new SheetName("Report"), "A1"),
                         new CellAssertion.CellValue(new CellScalarValue.NumberValue(2)))))));
   }
 
@@ -317,7 +318,7 @@ class HostAcceptanceExecutionTest {
         List.of(
             new MutationStep(
                 new StepId("update-report"),
-                new CellSelector.ByAddress("Report", address),
+                new CellSelector.ByAddress(new SheetName("Report"), address),
                 new CellMutationAction.SetCell(new CellInput.NumberValue(value)))));
   }
 
@@ -328,7 +329,7 @@ class HostAcceptanceExecutionTest {
                 List.of(
                     new InspectionStep(
                         new StepId("preserve-unaffected-cell"),
-                        new CellSelector.ByAddress("Report", address),
+                        new CellSelector.ByAddress(new SheetName("Report"), address),
                         new SheetIntrospectionQuery.GetCells())))));
   }
 }

@@ -11,6 +11,7 @@ import dev.erst.gridgrind.core.vocabulary.ExcelColumnSpan;
 import dev.erst.gridgrind.core.vocabulary.ExcelRowSpan;
 import dev.erst.gridgrind.core.vocabulary.NamedRangeScope;
 import dev.erst.gridgrind.core.vocabulary.SheetCopyPosition;
+import dev.erst.gridgrind.core.vocabulary.SheetName;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -65,28 +66,32 @@ class MutationActionTest {
     assertFalse(WorkbookMutationAction.GroupColumns.expanded().collapsed());
     assertEquals(
         new SheetCopyPosition.AppendAtEnd(),
-        new WorkbookMutationAction.CopySheet("Budget Copy").position());
+        new WorkbookMutationAction.CopySheet(new SheetName("Budget Copy")).position());
     assertEquals(
         "BudgetTotal",
         new StructuredMutationAction.SetNamedRange(
                 "BudgetTotal",
                 new NamedRangeScope.Workbook(),
-                NamedRangeTarget.range("Budget", "B4"))
+                NamedRangeTarget.range(new SheetName("Budget"), "B4"))
             .name());
 
     assertThrows(
         IllegalArgumentException.class, () -> new WorkbookMutationAction.SetSheetZoom(401));
-    assertThrows(IllegalArgumentException.class, () -> new WorkbookMutationAction.RenameSheet(" "));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new WorkbookMutationAction.RenameSheet(new SheetName(" ")));
     assertThrows(IllegalArgumentException.class, () -> new WorkbookMutationAction.MoveSheet(-1));
     assertThrows(
         IllegalArgumentException.class,
         () ->
             new StructuredMutationAction.SetNamedRange(
-                " ", new NamedRangeScope.Workbook(), NamedRangeTarget.range("Budget", "B4")));
+                " ",
+                new NamedRangeScope.Workbook(),
+                NamedRangeTarget.range(new SheetName("Budget"), "B4")));
 
     assertThrows(
         NullPointerException.class,
-        () -> new WorkbookMutationAction.CopySheet("Budget Copy", null));
+        () -> new WorkbookMutationAction.CopySheet(new SheetName("Budget Copy"), null));
     assertThrows(
         NullPointerException.class, () -> new WorkbookMutationAction.GroupRows((Boolean) null));
     assertThrows(
@@ -209,7 +214,11 @@ class MutationActionTest {
     MutationAction.Validation.requireDistinct(List.of("a", "b"), "sheetNames");
     assertEquals(
         List.of("Budget", "Ops"),
-        MutationAction.Validation.copySheetNames(List.of("Budget", "Ops"), "sheetNames"));
+        MutationAction.Validation.copySheetNames(
+                List.of(new SheetName("Budget"), new SheetName("Ops")), "sheetNames")
+            .stream()
+            .map(dev.erst.gridgrind.core.vocabulary.WireString::value)
+            .toList());
     assertEquals(
         "name must not be blank",
         assertThrows(

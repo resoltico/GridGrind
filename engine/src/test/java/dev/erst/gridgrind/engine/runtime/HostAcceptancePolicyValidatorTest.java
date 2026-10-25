@@ -13,6 +13,7 @@ import dev.erst.gridgrind.core.plan.PresenceAssertion;
 import dev.erst.gridgrind.core.plan.SheetIntrospectionQuery;
 import dev.erst.gridgrind.core.plan.SheetSelector;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
+import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.engine.api.GridGrindHostAcceptancePolicy;
 import java.util.List;
@@ -161,7 +162,7 @@ class HostAcceptancePolicyValidatorTest {
                     List.of(
                         new AssertionStep(
                             new StepId("assert-report"),
-                            new SheetSelector.ByName("Report"),
+                            new SheetSelector.ByName(new SheetName("Report")),
                             new PresenceAssertion.SheetPresent())))));
 
     assertTrue(
@@ -220,7 +221,7 @@ class HostAcceptancePolicyValidatorTest {
                 List.of(
                     new InspectionStep(
                         new StepId("preserve-cell"),
-                        new CellSelector.ByAddress("Report", "B2"),
+                        new CellSelector.ByAddress(new SheetName("Report"), "B2"),
                         new SheetIntrospectionQuery.GetCells())))));
   }
 

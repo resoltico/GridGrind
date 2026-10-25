@@ -20,42 +20,44 @@ final class WorkbookCommandWorkbookMutationConverter {
     return switch (action) {
       case WorkbookMutationAction.EnsureSheet _ ->
           new WorkbookSheetCommand.CreateSheet(
-              WorkbookCommandSelectorSupport.sheetByName(target, action).name());
+              WorkbookCommandSelectorSupport.sheetByName(target, action).name().value());
       case WorkbookMutationAction.RenameSheet renameSheet ->
           new WorkbookSheetCommand.RenameSheet(
-              WorkbookCommandSelectorSupport.sheetByName(target, action).name(),
-              renameSheet.newSheetName());
+              WorkbookCommandSelectorSupport.sheetByName(target, action).name().value(),
+              renameSheet.newSheetName().value());
       case WorkbookMutationAction.DeleteSheet _ ->
           new WorkbookSheetCommand.DeleteSheet(
-              WorkbookCommandSelectorSupport.sheetByName(target, action).name());
+              WorkbookCommandSelectorSupport.sheetByName(target, action).name().value());
       case WorkbookMutationAction.MoveSheet moveSheet ->
           new WorkbookSheetCommand.MoveSheet(
-              WorkbookCommandSelectorSupport.sheetByName(target, action).name(),
+              WorkbookCommandSelectorSupport.sheetByName(target, action).name().value(),
               moveSheet.targetIndex());
       case WorkbookMutationAction.CopySheet copySheet ->
           new WorkbookSheetCommand.CopySheet(
-              WorkbookCommandSelectorSupport.sheetByName(target, action).name(),
-              copySheet.newSheetName(),
+              WorkbookCommandSelectorSupport.sheetByName(target, action).name().value(),
+              copySheet.newSheetName().value(),
               WorkbookCommandLayoutInputConverter.toExcelSheetCopyPosition(copySheet.position()));
       case WorkbookMutationAction.SetActiveSheet _ ->
           new WorkbookSheetCommand.SetActiveSheet(
-              WorkbookCommandSelectorSupport.sheetByName(target, action).name());
+              WorkbookCommandSelectorSupport.sheetByName(target, action).name().value());
       case WorkbookMutationAction.SetSelectedSheets _ ->
           new WorkbookSheetCommand.SetSelectedSheets(
-              WorkbookCommandSelectorSupport.sheetByNames(target, action).names());
+              WorkbookCommandSelectorSupport.sheetByNames(target, action).names().stream()
+                  .map(dev.erst.gridgrind.core.vocabulary.WireString::value)
+                  .toList());
       case WorkbookMutationAction.SetSheetVisibility setSheetVisibility ->
           new WorkbookSheetCommand.SetSheetVisibility(
-              WorkbookCommandSelectorSupport.sheetByName(target, action).name(),
+              WorkbookCommandSelectorSupport.sheetByName(target, action).name().value(),
               setSheetVisibility.visibility());
       case WorkbookMutationAction.SetSheetProtection setSheetProtection ->
           new WorkbookSheetCommand.SetSheetProtection(
-              WorkbookCommandSelectorSupport.sheetByName(target, action).name(),
+              WorkbookCommandSelectorSupport.sheetByName(target, action).name().value(),
               WorkbookCommandLayoutInputConverter.toExcelSheetProtectionSettings(
                   setSheetProtection.protection()),
               resolveOptionalSecret(setSheetProtection.passwordRef(), bindings));
       case WorkbookMutationAction.ClearSheetProtection _ ->
           new WorkbookSheetCommand.ClearSheetProtection(
-              WorkbookCommandSelectorSupport.sheetByName(target, action).name());
+              WorkbookCommandSelectorSupport.sheetByName(target, action).name().value());
       case WorkbookMutationAction.SetWorkbookProtection setWorkbookProtection ->
           new WorkbookSheetCommand.SetWorkbookProtection(
               WorkbookCommandLayoutInputConverter.toExcelWorkbookProtectionSettings(
@@ -65,18 +67,20 @@ final class WorkbookCommandWorkbookMutationConverter {
       case WorkbookMutationAction.MergeCells _ -> {
         RangeSelector.ByRange selector =
             WorkbookCommandSelectorSupport.rangeByRange(target, action);
-        yield new WorkbookStructureCommand.MergeCells(selector.sheetName(), selector.range());
+        yield new WorkbookStructureCommand.MergeCells(
+            selector.sheetName().value(), selector.range());
       }
       case WorkbookMutationAction.UnmergeCells _ -> {
         RangeSelector.ByRange selector =
             WorkbookCommandSelectorSupport.rangeByRange(target, action);
-        yield new WorkbookStructureCommand.UnmergeCells(selector.sheetName(), selector.range());
+        yield new WorkbookStructureCommand.UnmergeCells(
+            selector.sheetName().value(), selector.range());
       }
       case WorkbookMutationAction.SetColumnWidth setColumnWidth -> {
         ColumnBandSelector.Span selector =
             WorkbookCommandSelectorSupport.columnSpan(target, action);
         yield new WorkbookStructureCommand.SetColumnWidth(
-            selector.sheetName(),
+            selector.sheetName().value(),
             selector.firstColumnIndex(),
             selector.lastColumnIndex(),
             setColumnWidth.widthCharacters());
@@ -84,7 +88,7 @@ final class WorkbookCommandWorkbookMutationConverter {
       case WorkbookMutationAction.SetRowHeight setRowHeight -> {
         RowBandSelector.Span selector = WorkbookCommandSelectorSupport.rowSpan(target, action);
         yield new WorkbookStructureCommand.SetRowHeight(
-            selector.sheetName(),
+            selector.sheetName().value(),
             selector.firstRowIndex(),
             selector.lastRowIndex(),
             setRowHeight.heightPoints());
@@ -93,7 +97,7 @@ final class WorkbookCommandWorkbookMutationConverter {
         RowBandSelector.Insertion selector =
             WorkbookCommandSelectorSupport.rowInsertion(target, action);
         yield new WorkbookStructureCommand.InsertRows(
-            selector.sheetName(), selector.beforeRowIndex(), selector.rowCount());
+            selector.sheetName().value(), selector.beforeRowIndex(), selector.rowCount());
       }
       case WorkbookMutationAction.DeleteRows _ ->
           new WorkbookStructureCommand.DeleteRows(
@@ -110,7 +114,7 @@ final class WorkbookCommandWorkbookMutationConverter {
         ColumnBandSelector.Insertion selector =
             WorkbookCommandSelectorSupport.columnInsertion(target, action);
         yield new WorkbookStructureCommand.InsertColumns(
-            selector.sheetName(), selector.beforeColumnIndex(), selector.columnCount());
+            selector.sheetName().value(), selector.beforeColumnIndex(), selector.columnCount());
       }
       case WorkbookMutationAction.DeleteColumns _ ->
           new WorkbookStructureCommand.DeleteColumns(
@@ -164,27 +168,27 @@ final class WorkbookCommandWorkbookMutationConverter {
                   WorkbookCommandSelectorSupport.columnSpan(target, action)));
       case WorkbookMutationAction.SetSheetPane setSheetPane ->
           new WorkbookLayoutCommand.SetSheetPane(
-              WorkbookCommandSelectorSupport.sheetByName(target, action).name(),
+              WorkbookCommandSelectorSupport.sheetByName(target, action).name().value(),
               WorkbookCommandLayoutInputConverter.toExcelSheetPane(setSheetPane.pane()));
       case WorkbookMutationAction.SetSheetZoom setSheetZoom ->
           new WorkbookLayoutCommand.SetSheetZoom(
-              WorkbookCommandSelectorSupport.sheetByName(target, action).name(),
+              WorkbookCommandSelectorSupport.sheetByName(target, action).name().value(),
               setSheetZoom.zoomPercent());
       case WorkbookMutationAction.SetSheetPresentation setSheetPresentation ->
           new WorkbookLayoutCommand.SetSheetPresentation(
-              WorkbookCommandSelectorSupport.sheetByName(target, action).name(),
+              WorkbookCommandSelectorSupport.sheetByName(target, action).name().value(),
               WorkbookCommandPresentationInputConverter.toExcelSheetPresentation(
                   setSheetPresentation.presentation()));
       case WorkbookMutationAction.SetPrintLayout setPrintLayout ->
           new WorkbookLayoutCommand.SetPrintLayout(
-              WorkbookCommandSelectorSupport.sheetByName(target, action).name(),
+              WorkbookCommandSelectorSupport.sheetByName(target, action).name().value(),
               WorkbookCommandLayoutInputConverter.toExcelPrintLayout(setPrintLayout.printLayout()));
       case WorkbookMutationAction.ClearPrintLayout _ ->
           new WorkbookLayoutCommand.ClearPrintLayout(
-              WorkbookCommandSelectorSupport.sheetByName(target, action).name());
+              WorkbookCommandSelectorSupport.sheetByName(target, action).name().value());
       case WorkbookMutationAction.AutoSizeColumns _ ->
           new WorkbookLayoutCommand.AutoSizeColumns(
-              WorkbookCommandSelectorSupport.sheetByName(target, action).name());
+              WorkbookCommandSelectorSupport.sheetByName(target, action).name().value());
     };
   }
 

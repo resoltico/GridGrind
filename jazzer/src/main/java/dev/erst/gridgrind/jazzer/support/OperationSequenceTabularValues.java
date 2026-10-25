@@ -9,6 +9,7 @@ import dev.erst.gridgrind.core.model.table.TableStyleInput;
 import dev.erst.gridgrind.core.plan.*;
 import dev.erst.gridgrind.core.source.*;
 import dev.erst.gridgrind.core.vocabulary.*;
+import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.excel.*;
 import dev.erst.gridgrind.excel.pivot.ExcelPivotTableDefinition;
 import java.io.*;
@@ -23,7 +24,7 @@ final class OperationSequenceTabularValues {
       GridGrindFuzzData data, String sheetName, String tableName, boolean validRange) {
     return TableInput.withDefaultMetadata(
         tableName,
-        sheetName,
+        new SheetName(sheetName),
         validRange ? "A1:B3" : FuzzDataDecoders.nextNonBlankRange(data, false),
         data.consumeBoolean(),
         nextTableStyleInput(data));
@@ -89,9 +90,11 @@ final class OperationSequenceTabularValues {
       default ->
           data.consumeBoolean()
               ? new PivotTableSelector.ByNameOnSheet(
-                  validName ? pivotTableName : nextPivotTableName(data, false), primarySheet)
+                  validName ? pivotTableName : nextPivotTableName(data, false),
+                  new SheetName(primarySheet))
               : new PivotTableSelector.ByNameOnSheet(
-                  validName ? pivotTableName : nextPivotTableName(data, false), secondarySheet);
+                  validName ? pivotTableName : nextPivotTableName(data, false),
+                  new SheetName(secondarySheet));
     };
   }
 
@@ -105,7 +108,7 @@ final class OperationSequenceTabularValues {
       boolean validRange) {
     return new PivotTableInput(
         validName ? pivotTableName : nextPivotTableName(data, false),
-        targetSheet,
+        new SheetName(targetSheet),
         nextPivotTableSource(data, targetSheet, namedRangeName, tableName, validName, validRange),
         new PivotTableInput.Anchor(data.consumeBoolean() ? "F4" : "A6"),
         List.of("Month"),
@@ -129,7 +132,8 @@ final class OperationSequenceTabularValues {
     return switch (selectorSlot(nextSelectorByte(data)) % 3) {
       case 0 ->
           new PivotTableInput.Source.Range(
-              targetSheet, validRange ? "A1:C4" : FuzzDataDecoders.nextNonBlankRange(data, false));
+              new SheetName(targetSheet),
+              validRange ? "A1:C4" : FuzzDataDecoders.nextNonBlankRange(data, false));
       case 1 ->
           new PivotTableInput.Source.NamedRange(
               validName ? namedRangeName : nextNamedRangeName(data, false));

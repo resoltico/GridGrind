@@ -21,6 +21,7 @@ import dev.erst.gridgrind.core.plan.TableRowSelector;
 import dev.erst.gridgrind.core.plan.TableSelector;
 import dev.erst.gridgrind.core.plan.WorkbookMutationAction;
 import dev.erst.gridgrind.core.plan.WorkbookSelector;
+import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import java.nio.file.Path;
 import java.util.List;
@@ -31,29 +32,33 @@ class AuthoringTargetCoverageTest {
   @Test
   void targetFactoriesExposeTheExpectedSelectors() {
     assertInstanceOf(WorkbookSelector.Current.class, Targets.workbook().selector());
-    assertInstanceOf(SheetSelector.ByName.class, Targets.sheet("Budget").selector());
-    assertInstanceOf(CellSelector.ByAddress.class, Targets.cell("Budget", "A1").selector());
-    assertInstanceOf(RangeSelector.ByRange.class, Targets.range("Budget", "A1:B2").selector());
+    assertInstanceOf(SheetSelector.ByName.class, Targets.sheet(new SheetName("Budget")).selector());
     assertInstanceOf(
-        RangeSelector.RectangularWindow.class, Targets.window("Budget", "A1", 5, 3).selector());
+        CellSelector.ByAddress.class, Targets.cell(new SheetName("Budget"), "A1").selector());
+    assertInstanceOf(
+        RangeSelector.ByRange.class, Targets.range(new SheetName("Budget"), "A1:B2").selector());
+    assertInstanceOf(
+        RangeSelector.RectangularWindow.class,
+        Targets.window(new SheetName("Budget"), "A1", 5, 3).selector());
     assertInstanceOf(TableSelector.ByName.class, Targets.table("BudgetTable").selector());
     assertInstanceOf(
         TableSelector.ByNameOnSheet.class,
-        Targets.tableOnSheet("BudgetTable", "Budget").selector());
+        Targets.tableOnSheet("BudgetTable", new SheetName("Budget")).selector());
     assertInstanceOf(NamedRangeSelector.ByName.class, Targets.namedRange("BudgetRange").selector());
     assertInstanceOf(
         NamedRangeSelector.SheetScope.class,
-        Targets.namedRangeOnSheet("BudgetRange", "Budget").selector());
+        Targets.namedRangeOnSheet("BudgetRange", new SheetName("Budget")).selector());
     assertInstanceOf(
         NamedRangeSelector.WorkbookScope.class,
         Targets.workbookNamedRange("BudgetRange").selector());
     assertInstanceOf(
-        ChartSelector.ByName.class, Targets.chart("Budget", "RevenueChart").selector());
+        ChartSelector.ByName.class,
+        Targets.chart(new SheetName("Budget"), "RevenueChart").selector());
     assertInstanceOf(
         PivotTableSelector.ByName.class, Targets.pivotTable("RevenuePivot").selector());
     assertInstanceOf(
         PivotTableSelector.ByNameOnSheet.class,
-        Targets.pivotTableOnSheet("RevenuePivot", "Budget").selector());
+        Targets.pivotTableOnSheet("RevenuePivot", new SheetName("Budget")).selector());
   }
 
   @Test
@@ -72,13 +77,13 @@ class AuthoringTargetCoverageTest {
     assertInstanceOf(
         InspectionAnalysisQuery.AnalyzeWorkbookFindings.class, workbookFindings.query());
 
-    SheetTarget sheet = Targets.sheet("Budget");
+    SheetTarget sheet = Targets.sheet(new SheetName("Budget"));
     assertInstanceOf(
         WorkbookMutationAction.EnsureSheet.class,
         sheet.ensureExists().toStep(new StepId("ensure")).action());
     assertInstanceOf(
         WorkbookMutationAction.RenameSheet.class,
-        sheet.renameTo("Budget 2026").toStep(new StepId("rename")).action());
+        sheet.renameTo(new SheetName("Budget 2026")).toStep(new StepId("rename")).action());
     assertInstanceOf(
         WorkbookMutationAction.DeleteSheet.class,
         sheet.delete().toStep(new StepId("delete")).action());
@@ -117,7 +122,7 @@ class AuthoringTargetCoverageTest {
         InspectionAnalysisQuery.AnalyzeFormulaHealth.class,
         sheet.formulaHealth().toStep(new StepId("formula-health")).query());
 
-    CellTarget cell = Targets.cell("Budget", "A1");
+    CellTarget cell = Targets.cell(new SheetName("Budget"), "A1");
     assertInstanceOf(
         CellMutationAction.SetCell.class,
         cell.set(Values.text("Owner")).toStep(new StepId("set")).action());
@@ -153,7 +158,7 @@ class AuthoringTargetCoverageTest {
         CellAssertion.FormulaText.class,
         cell.formulaEquals("SUM(A1:A2)").toStep(new StepId("formula")).assertion());
 
-    RangeTarget range = Targets.range("Budget", "A1:B2");
+    RangeTarget range = Targets.range(new SheetName("Budget"), "A1:B2");
     MutationStep setRows =
         range
             .setRows(List.of(Values.row(Values.text("Owner"), Values.number(42.5))))
@@ -177,7 +182,7 @@ class AuthoringTargetCoverageTest {
         "rows must not be null",
         assertThrows(NullPointerException.class, () -> range.setRows(null)).getMessage());
 
-    WindowTarget window = Targets.window("Budget", "A1", 5, 3);
+    WindowTarget window = Targets.window(new SheetName("Budget"), "A1", 5, 3);
     assertInstanceOf(
         SheetIntrospectionQuery.GetWindow.class, window.read().toStep(new StepId("read")).query());
     assertInstanceOf(
@@ -188,7 +193,7 @@ class AuthoringTargetCoverageTest {
   @Test
   void tableNamedRangeChartAndPivotTargetsCoverTheirSurface() {
     TableTarget table = Targets.table("BudgetTable");
-    TableTarget tableOnSheet = Targets.tableOnSheet("BudgetTable", "Budget");
+    TableTarget tableOnSheet = Targets.tableOnSheet("BudgetTable", new SheetName("Budget"));
     assertInstanceOf(TableSelector.ByName.class, table.selector());
     assertInstanceOf(TableSelector.ByNameOnSheet.class, tableOnSheet.selector());
     assertInstanceOf(TableRowSelector.ByIndex.class, table.row(2).selector());
@@ -198,7 +203,9 @@ class AuthoringTargetCoverageTest {
     assertInstanceOf(
         StructuredMutationAction.SetTable.class,
         tableOnSheet
-            .define(Tables.define("BudgetTable", "Budget", "A1:B3", false, Tables.noStyle()))
+            .define(
+                Tables.define(
+                    "BudgetTable", new SheetName("Budget"), "A1:B3", false, Tables.noStyle()))
             .toStep(new StepId("define"))
             .action());
     assertInstanceOf(
@@ -260,7 +267,8 @@ class AuthoringTargetCoverageTest {
         tableCell.formulaEquals("SUM(A1:A2)").toStep(new StepId("formula")).assertion());
 
     NamedRangeTarget namedRange = Targets.namedRange("BudgetRange");
-    NamedRangeTarget namedRangeOnSheet = Targets.namedRangeOnSheet("BudgetRange", "Budget");
+    NamedRangeTarget namedRangeOnSheet =
+        Targets.namedRangeOnSheet("BudgetRange", new SheetName("Budget"));
     NamedRangeTarget workbookNamedRange = Targets.workbookNamedRange("BudgetRange");
     assertInstanceOf(NamedRangeSelector.ByName.class, namedRange.selector());
     assertInstanceOf(NamedRangeSelector.SheetScope.class, namedRangeOnSheet.selector());
@@ -284,8 +292,9 @@ class AuthoringTargetCoverageTest {
         PresenceAssertion.NamedRangeAbsent.class,
         namedRange.absent().toStep(new StepId("absent")).assertion());
 
-    ChartTarget chart = Targets.chart("Budget", "RevenueChart");
-    ChartTarget allChartsOnSheet = new ChartTarget(new ChartSelector.AllOnSheet("Budget"));
+    ChartTarget chart = Targets.chart(new SheetName("Budget"), "RevenueChart");
+    ChartTarget allChartsOnSheet =
+        new ChartTarget(new ChartSelector.AllOnSheet(new SheetName("Budget")));
     InspectionStep namedChartInspection = chart.inspect().toStep(new StepId("named-chart"));
     InspectionStep allChartsInspection =
         allChartsOnSheet.inspect().toStep(new StepId("all-charts"));
@@ -301,7 +310,8 @@ class AuthoringTargetCoverageTest {
         chart.absent().toStep(new StepId("absent")).assertion());
 
     PivotTableTarget pivotTable = Targets.pivotTable("RevenuePivot");
-    PivotTableTarget pivotTableOnSheet = Targets.pivotTableOnSheet("RevenuePivot", "Budget");
+    PivotTableTarget pivotTableOnSheet =
+        Targets.pivotTableOnSheet("RevenuePivot", new SheetName("Budget"));
     assertInstanceOf(PivotTableSelector.ByName.class, pivotTable.selector());
     assertInstanceOf(PivotTableSelector.ByNameOnSheet.class, pivotTableOnSheet.selector());
     assertInstanceOf(

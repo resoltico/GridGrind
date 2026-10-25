@@ -24,6 +24,7 @@ import dev.erst.gridgrind.core.problem.ProblemContextRequestSurfaces;
 import dev.erst.gridgrind.core.problem.ProblemContextWorkbookSurfaces;
 import dev.erst.gridgrind.core.source.TextSourceInput;
 import dev.erst.gridgrind.core.vocabulary.ExcelOoxmlSignatureDigestAlgorithm;
+import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.excel.InvalidSigningConfigurationException;
 import dev.erst.gridgrind.excel.OoxmlSecurityTestSupport;
@@ -107,12 +108,12 @@ class RequestPreflightTest {
             List.of(
                 new MutationStep(
                     new StepId("set-title"),
-                    new CellSelector.ByAddress("Budget", "A1"),
+                    new CellSelector.ByAddress(new SheetName("Budget"), "A1"),
                     new CellMutationAction.SetCell(
                         new CellInput.Text(new TextSourceInput.Utf8File("missing-title.txt")))),
                 new MutationStep(
                     new StepId("set-subtitle"),
-                    new CellSelector.ByAddress("Budget", "A2"),
+                    new CellSelector.ByAddress(new SheetName("Budget"), "A2"),
                     new CellMutationAction.SetCell(
                         new CellInput.Text(
                             new TextSourceInput.Utf8File("missing-subtitle.txt"))))));
@@ -313,7 +314,7 @@ class RequestPreflightTest {
             List.of(
                 new MutationStep(
                     new StepId("set-values"),
-                    new CellSelector.ByAddress("Budget", "A1"),
+                    new CellSelector.ByAddress(new SheetName("Budget"), "A1"),
                     new CellMutationAction.SetRange(
                         new CellGridInput.Typed(
                             List.of(
@@ -360,7 +361,7 @@ class RequestPreflightTest {
             List.of(
                 new MutationStep(
                     new StepId("set-rich-text"),
-                    new CellSelector.ByAddress("Budget", "A1"),
+                    new CellSelector.ByAddress(new SheetName("Budget"), "A1"),
                     new CellMutationAction.SetRange(
                         new CellGridInput.Typed(
                             List.of(
@@ -405,7 +406,7 @@ class RequestPreflightTest {
             List.of(
                 new MutationStep(
                     new StepId("set-value"),
-                    new CellSelector.ByAddress("Budget", "A1"),
+                    new CellSelector.ByAddress(new SheetName("Budget"), "A1"),
                     new CellMutationAction.SetCell(new CellInput.NumberValue(1.0)))));
     ExecutionInputBindings bindings =
         new ExecutionInputBindings(
@@ -448,7 +449,7 @@ class RequestPreflightTest {
             List.of(
                 new MutationStep(
                     new StepId("ensure-budget"),
-                    new CellSelector.ByAddress("Budget", "A1"),
+                    new CellSelector.ByAddress(new SheetName("Budget"), "A1"),
                     new CellMutationAction.SetCell(new CellInput.NumberValue(1.0d)))));
     ExecutionInputBindings bindings =
         new ExecutionInputBindings(

@@ -11,6 +11,7 @@ import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import dev.erst.gridgrind.core.plan.WorkbookSelector;
 import dev.erst.gridgrind.core.problem.GridGrindProblemCode;
 import dev.erst.gridgrind.core.result.WorkbookResult;
+import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
 import dev.erst.gridgrind.excel.WorkbookExecutionEngine;
 import java.io.IOException;
@@ -38,7 +39,7 @@ class EventReadExecutorCoverageTest {
                     List.of(
                         inspect(
                             "missing-sheet",
-                            new SheetSelector.ByName("Missing"),
+                            new SheetSelector.ByName(new SheetName("Missing")),
                             new SheetIntrospectionQuery.GetSheetSummary())))));
 
     assertEquals(GridGrindProblemCode.SHEET_NOT_FOUND, failure.problem().code());
@@ -132,7 +133,7 @@ class EventReadExecutorCoverageTest {
                     List.of(
                         inspect(
                             "missing-sheet",
-                            new SheetSelector.ByName("Missing"),
+                            new SheetSelector.ByName(new SheetName("Missing")),
                             new SheetIntrospectionQuery.GetSheetSummary())))));
 
     assertEquals(GridGrindProblemCode.SHEET_NOT_FOUND, failure.problem().code());

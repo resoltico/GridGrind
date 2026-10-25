@@ -143,7 +143,7 @@ contract even though Apache POI can preserve and extract VBA-bearing `.xlsm` pac
 | **Error** | `INVALID_REQUEST` |
 | **Message** | `sheetName must not exceed 31 characters: {name}` or `sheetName contains invalid Excel character ':' at position 4: Bad:Name` |
 | **Applies to** | All operations with a `sheetName` field |
-| **Code** | `ExcelSheetNames.requireValid`; `MutationAction.Validation.requireSheetName`; `ExcelWorkbookSheetSupport.requireSheetName` |
+| **Code** | `SheetName`; `ExcelSheetNames.requireValid`; `ExcelWorkbookSheetSupport.requireSheetName` |
 | **UX** | `--help` Limits section; `ENSURE_SHEET` and `RENAME_SHEET` catalog summaries |
 
 The 31-character ceiling and reserved-character rules are Excel hard limits. GridGrind validates

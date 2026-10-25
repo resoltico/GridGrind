@@ -27,6 +27,7 @@ import dev.erst.gridgrind.core.plan.SheetIntrospectionQuery;
 import dev.erst.gridgrind.core.plan.WorkbookAssetIntrospectionQuery;
 import dev.erst.gridgrind.core.plan.WorkbookIntrospectionQuery;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
+import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import java.util.List;
 
@@ -116,7 +117,7 @@ final class AuditExistingWorkbookTaskRecipe {
             new SheetIntrospectionQuery.GetComments()),
         ExampleSteps.read(
             new StepId("read-drawing-objects"),
-            new DrawingObjectSelector.AllOnSheet("Template"),
+            new DrawingObjectSelector.AllOnSheet(new SheetName("Template")),
             new WorkbookAssetIntrospectionQuery.GetDrawingObjects()),
         ExampleSteps.read(
             new StepId("read-formula-surface"),

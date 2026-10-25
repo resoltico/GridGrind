@@ -75,6 +75,7 @@ import dev.erst.gridgrind.core.vocabulary.ExcelOoxmlEncryptionMode;
 import dev.erst.gridgrind.core.vocabulary.ExcelOoxmlHashAlgorithm;
 import dev.erst.gridgrind.core.vocabulary.ExcelOoxmlSignatureState;
 import dev.erst.gridgrind.core.vocabulary.ExcelPrintOrientation;
+import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.engine.runtime.parity.ParityPlanSupport.PendingMutation;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -424,7 +425,7 @@ final class XlsxParityProbeRegistry {
   static TableInput advancedTableInput() {
     return new TableInput(
         "AdvancedTable",
-        "Advanced",
+        new dev.erst.gridgrind.core.vocabulary.SheetName("Advanced"),
         "H1:J5",
         true,
         false,
@@ -445,7 +446,7 @@ final class XlsxParityProbeRegistry {
   static List<PendingMutation> advancedConditionalFormattingMutations() {
     PendingMutation colorScale =
         mutate(
-            new RangeSelector.ByRange("Advanced", "L2:L5"),
+            new RangeSelector.ByRange(new SheetName("Advanced"), "L2:L5"),
             new StructuredMutationAction.SetConditionalFormatting(
                 new ConditionalFormattingDefinitionInput(
                     List.of(
@@ -461,7 +462,7 @@ final class XlsxParityProbeRegistry {
                                 ColorInput.rgb("#11CC66")))))));
     PendingMutation dataBar =
         mutate(
-            new RangeSelector.ByRange("Advanced", "M2:M5"),
+            new RangeSelector.ByRange(new SheetName("Advanced"), "M2:M5"),
             new StructuredMutationAction.SetConditionalFormatting(
                 new ConditionalFormattingDefinitionInput(
                     List.of(
@@ -475,7 +476,7 @@ final class XlsxParityProbeRegistry {
                             new ConditionalFormattingThresholdInput.Max())))));
     PendingMutation iconSet =
         mutate(
-            new RangeSelector.ByRange("Advanced", "N2:N5"),
+            new RangeSelector.ByRange(new SheetName("Advanced"), "N2:N5"),
             new StructuredMutationAction.SetConditionalFormatting(
                 new ConditionalFormattingDefinitionInput(
                     List.of(
@@ -490,7 +491,7 @@ final class XlsxParityProbeRegistry {
                                 new ConditionalFormattingThresholdInput.Percent(67.0d)))))));
     PendingMutation top10 =
         mutate(
-            new RangeSelector.ByRange("Advanced", "K2:K5"),
+            new RangeSelector.ByRange(new SheetName("Advanced"), "K2:K5"),
             new StructuredMutationAction.SetConditionalFormatting(
                 new ConditionalFormattingDefinitionInput(
                     List.of(

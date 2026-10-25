@@ -27,6 +27,7 @@ import dev.erst.gridgrind.core.plan.StructuredMutationAction;
 import dev.erst.gridgrind.core.plan.WorkbookAssetIntrospectionQuery;
 import dev.erst.gridgrind.core.plan.WorkbookMutationAction;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
+import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import java.util.List;
 
@@ -162,14 +163,16 @@ final class DashboardTaskRecipe {
             new StructuredMutationAction.SetNamedRange(
                 "DashboardCategories",
                 new dev.erst.gridgrind.core.vocabulary.NamedRangeScope.Workbook(),
-                dev.erst.gridgrind.core.model.formula.NamedRangeTarget.range("Ops", "A2:A4"))),
+                dev.erst.gridgrind.core.model.formula.NamedRangeTarget.range(
+                    new SheetName("Ops"), "A2:A4"))),
         ExampleSteps.step(
             new StepId("define-dashboard-actual"),
             new NamedRangeSelector.WorkbookScope("DashboardActual"),
             new StructuredMutationAction.SetNamedRange(
                 "DashboardActual",
                 new dev.erst.gridgrind.core.vocabulary.NamedRangeScope.Workbook(),
-                dev.erst.gridgrind.core.model.formula.NamedRangeTarget.range("Ops", "C2:C4"))),
+                dev.erst.gridgrind.core.model.formula.NamedRangeTarget.range(
+                    new SheetName("Ops"), "C2:C4"))),
         ExampleSteps.step(
             new StepId("author-dashboard-chart"),
             ExampleSelectors.sheet("Ops"),
@@ -185,11 +188,12 @@ final class DashboardTaskRecipe {
                     "DashboardActual"))),
         ExampleSteps.read(
             new StepId("read-dashboard-charts"),
-            new dev.erst.gridgrind.core.plan.ChartSelector.AllOnSheet("Ops"),
+            new dev.erst.gridgrind.core.plan.ChartSelector.AllOnSheet(new SheetName("Ops")),
             new WorkbookAssetIntrospectionQuery.GetCharts()),
         ExampleSteps.assertStep(
             new StepId("assert-dashboard-chart"),
-            new dev.erst.gridgrind.core.plan.ChartSelector.ByName("Ops", "DashboardChart"),
+            new dev.erst.gridgrind.core.plan.ChartSelector.ByName(
+                new SheetName("Ops"), "DashboardChart"),
             new dev.erst.gridgrind.core.plan.PresenceAssertion.ChartPresent()));
   }
 }

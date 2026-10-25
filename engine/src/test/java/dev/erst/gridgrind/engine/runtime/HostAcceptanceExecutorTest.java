@@ -10,6 +10,7 @@ import dev.erst.gridgrind.core.plan.PresenceAssertion;
 import dev.erst.gridgrind.core.plan.SheetIntrospectionQuery;
 import dev.erst.gridgrind.core.plan.SheetSelector;
 import dev.erst.gridgrind.core.result.WorkbookExecutionEvidence;
+import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.engine.api.GridGrindHostAcceptancePolicy;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
@@ -158,7 +159,7 @@ class HostAcceptanceExecutorTest {
         List.of(
             new AssertionStep(
                 new StepId("assert-budget"),
-                new SheetSelector.ByName("Budget"),
+                new SheetSelector.ByName(new SheetName("Budget")),
                 new PresenceAssertion.SheetPresent())));
   }
 
@@ -167,7 +168,7 @@ class HostAcceptanceExecutorTest {
         List.of(
             new InspectionStep(
                 new StepId("preserve-summary"),
-                new SheetSelector.ByName("Budget"),
+                new SheetSelector.ByName(new SheetName("Budget")),
                 new SheetIntrospectionQuery.GetSheetSummary())));
   }
 

@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import dev.erst.gridgrind.core.plan.NamedRangeSelector;
 import dev.erst.gridgrind.core.vocabulary.NamedRangeScope;
+import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.excel.ExcelNamedRangeScope;
 import org.junit.jupiter.api.Test;
 
@@ -17,7 +18,7 @@ class NamedRangeScopeTest {
     assertEquals(
         new ExcelNamedRangeScope.SheetScope("Budget"),
         WorkbookCommandLayoutInputConverter.toExcelNamedRangeScope(
-            new NamedRangeScope.Sheet("Budget")));
+            new NamedRangeScope.Sheet(new SheetName("Budget"))));
   }
 
   @Test
@@ -29,7 +30,7 @@ class NamedRangeScopeTest {
     assertEquals(
         new ExcelNamedRangeScope.SheetScope("Budget"),
         WorkbookCommandLayoutInputConverter.toExcelNamedRangeScope(
-            new NamedRangeSelector.SheetScope("LocalItem", "Budget")));
+            new NamedRangeSelector.SheetScope("LocalItem", new SheetName("Budget"))));
     assertEquals(
         "BudgetTotal",
         WorkbookCommandLayoutInputConverter.toExcelNamedRangeName(
@@ -37,12 +38,13 @@ class NamedRangeScopeTest {
     assertEquals(
         "LocalItem",
         WorkbookCommandLayoutInputConverter.toExcelNamedRangeName(
-            new NamedRangeSelector.SheetScope("LocalItem", "Budget")));
+            new NamedRangeSelector.SheetScope("LocalItem", new SheetName("Budget"))));
   }
 
   @Test
   void validatesSheetScopeInput() {
     assertThrows(NullPointerException.class, () -> new NamedRangeScope.Sheet(null));
-    assertThrows(IllegalArgumentException.class, () -> new NamedRangeScope.Sheet(" "));
+    assertThrows(
+        IllegalArgumentException.class, () -> new NamedRangeScope.Sheet(new SheetName(" ")));
   }
 }

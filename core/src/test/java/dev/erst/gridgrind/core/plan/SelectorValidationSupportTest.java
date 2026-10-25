@@ -8,6 +8,7 @@ import dev.erst.gridgrind.core.problem.GridGrindRequestProblemSupport;
 import dev.erst.gridgrind.core.problem.ProblemContext;
 import dev.erst.gridgrind.core.problem.ProblemContextRequestSurfaces;
 import dev.erst.gridgrind.core.vocabulary.ExcelReadLimits;
+import dev.erst.gridgrind.core.vocabulary.SheetName;
 import java.util.Arrays;
 import java.util.List;
 import org.junit.jupiter.api.Test;
@@ -30,7 +31,6 @@ class SelectorValidationSupportTest {
   @Test
   void selectorSupportValidatesScalarFieldsAndA1Geometry() {
     assertEquals("Budget", SelectorValueValidation.requireNonBlank("Budget", "field"));
-    assertEquals("Budget", SelectorValueValidation.requireSheetName("Budget", "sheetName"));
     assertEquals(
         "Budget_Total", SelectorValueValidation.requireDefinedName("Budget_Total", "selector"));
     assertEquals(
@@ -159,7 +159,11 @@ class SelectorValidationSupportTest {
         List.of("A1:B2"), SelectorListValidation.copyDistinctRanges(List.of("A1:B2"), "ranges"));
     assertEquals(
         List.of("Budget", "Ops"),
-        SelectorListValidation.copyDistinctSheetNames(List.of("Budget", "Ops"), "sheetNames"));
+        SelectorListValidation.copyDistinctSheetNames(
+                List.of(new SheetName("Budget"), new SheetName("Ops")), "sheetNames")
+            .stream()
+            .map(dev.erst.gridgrind.core.vocabulary.WireString::value)
+            .toList());
     assertEquals(
         List.of("BudgetTotal"),
         SelectorListValidation.copyDistinctDefinedNames(List.of("BudgetTotal"), "names"));
@@ -171,11 +175,11 @@ class SelectorValidationSupportTest {
     assertEquals(
         List.of(
             new NamedRangeSelector.WorkbookScope("BudgetTotal"),
-            new NamedRangeSelector.SheetScope("LocalItem", "Budget")),
+            new NamedRangeSelector.SheetScope("LocalItem", new SheetName("Budget"))),
         SelectorListValidation.copyDistinctNamedRangeRefs(
             List.of(
                 new NamedRangeSelector.WorkbookScope("BudgetTotal"),
-                new NamedRangeSelector.SheetScope("LocalItem", "Budget")),
+                new NamedRangeSelector.SheetScope("LocalItem", new SheetName("Budget"))),
             "selectors"));
 
     assertEquals(
@@ -204,7 +208,7 @@ class SelectorValidationSupportTest {
                 IllegalArgumentException.class,
                 () ->
                     SelectorListValidation.copyDistinctSheetNames(
-                        List.of("Budget", "Budget"), "sheetNames"))
+                        List.of(new SheetName("Budget"), new SheetName("Budget")), "sheetNames"))
             .getMessage());
     assertEquals(
         "names must not contain duplicates",

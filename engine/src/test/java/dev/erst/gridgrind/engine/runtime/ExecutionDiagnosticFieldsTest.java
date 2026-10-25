@@ -25,6 +25,7 @@ import dev.erst.gridgrind.core.plan.TableSelector;
 import dev.erst.gridgrind.core.plan.WorkbookSelector;
 import dev.erst.gridgrind.core.problem.ProblemContextWorkbookSurfaces;
 import dev.erst.gridgrind.core.vocabulary.NamedRangeScope;
+import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.excel.ExcelNamedRangeScope;
 import dev.erst.gridgrind.excel.InvalidCellAddressException;
@@ -77,8 +78,8 @@ class ExecutionDiagnosticFieldsTest {
     StructuredMutationAction.SetNamedRange sheetScopedNamedRange =
         new StructuredMutationAction.SetNamedRange(
             "BudgetTotal",
-            new NamedRangeScope.Sheet("Budget"),
-            NamedRangeTarget.range("Budget", "B4"));
+            new NamedRangeScope.Sheet(new SheetName("Budget")),
+            NamedRangeTarget.range(new SheetName("Budget"), "B4"));
     StructuredMutationAction.SetNamedRange workbookFormulaNamedRange =
         new StructuredMutationAction.SetNamedRange(
             "BudgetExpr",
@@ -88,8 +89,8 @@ class ExecutionDiagnosticFieldsTest {
         new StructuredMutationAction.SetPivotTable(
             new PivotTableInput(
                 "SalesPivot",
-                "Budget",
-                new PivotTableInput.Source.Range("Budget", "A1:B5"),
+                new SheetName("Budget"),
+                new PivotTableInput.Source.Range(new SheetName("Budget"), "A1:B5"),
                 new PivotTableInput.Anchor("C5"),
                 List.of(),
                 List.of(),
@@ -103,7 +104,11 @@ class ExecutionDiagnosticFieldsTest {
     StructuredMutationAction.SetTable table =
         new StructuredMutationAction.SetTable(
             TableInput.withDefaultMetadata(
-                "BudgetTable", "Budget", "A1:B4", false, new TableStyleInput.None()));
+                "BudgetTable",
+                new SheetName("Budget"),
+                "A1:B4",
+                false,
+                new TableStyleInput.None()));
     StructuredMutationAction.SetConditionalFormatting conditionalFormatting =
         new StructuredMutationAction.SetConditionalFormatting(
             new ConditionalFormattingDefinitionInput(
@@ -137,7 +142,7 @@ class ExecutionDiagnosticFieldsTest {
     assertEquals(
         new ProblemContextWorkbookSurfaces.ProblemLocation.SheetNamedRange("Budget", "BudgetTotal"),
         ExecutionDiagnosticFields.locationFor(
-            new NamedRangeSelector.SheetScope("BudgetTotal", "Budget")));
+            new NamedRangeSelector.SheetScope("BudgetTotal", new SheetName("Budget"))));
     assertEquals(
         new ProblemContextWorkbookSurfaces.ProblemLocation.NamedRange("BudgetTotal"),
         ExecutionDiagnosticFields.locationFor(new NamedRangeSelector.WorkbookScope("BudgetTotal")));
@@ -147,13 +152,15 @@ class ExecutionDiagnosticFieldsTest {
             new NamedRangeSelector.WorkbookScope("BudgetTotal")));
     assertEquals(
         new ProblemContextWorkbookSurfaces.ProblemLocation.Cell("Budget", "B4"),
-        ExecutionDiagnosticFields.locationFor(new CellSelector.ByAddress("Budget", "B4")));
+        ExecutionDiagnosticFields.locationFor(
+            new CellSelector.ByAddress(new SheetName("Budget"), "B4")));
     assertEquals(
         new ProblemContextWorkbookSurfaces.ProblemLocation.Range("Budget", "A1:B2"),
-        ExecutionDiagnosticFields.locationFor(new RangeSelector.ByRange("Budget", "A1:B2")));
+        ExecutionDiagnosticFields.locationFor(
+            new RangeSelector.ByRange(new SheetName("Budget"), "A1:B2")));
     assertEquals(
         new ProblemContextWorkbookSurfaces.ProblemLocation.Sheet("Budget"),
-        ExecutionDiagnosticFields.locationFor(new SheetSelector.ByName("Budget")));
+        ExecutionDiagnosticFields.locationFor(new SheetSelector.ByName(new SheetName("Budget"))));
     assertEquals(
         ProblemContextWorkbookSurfaces.ProblemLocation.unknown(),
         ExecutionDiagnosticFields.locationFor(new WorkbookSelector.Current()));
@@ -164,12 +171,12 @@ class ExecutionDiagnosticFieldsTest {
     MutationStep pivotAddressStep =
         new MutationStep(
             new StepId("set-pivot"),
-            new PivotTableSelector.ByNameOnSheet("SalesPivot", "Budget"),
+            new PivotTableSelector.ByNameOnSheet("SalesPivot", new SheetName("Budget")),
             new StructuredMutationAction.SetPivotTable(
                 new PivotTableInput(
                     "SalesPivot",
-                    "Budget",
-                    new PivotTableInput.Source.Range("Budget", "A1:B5"),
+                    new SheetName("Budget"),
+                    new PivotTableInput.Source.Range(new SheetName("Budget"), "A1:B5"),
                     new PivotTableInput.Anchor("C5"),
                     List.of(),
                     List.of(),
@@ -184,11 +191,11 @@ class ExecutionDiagnosticFieldsTest {
     MutationStep pivotNamedRangeStep =
         new MutationStep(
             new StepId("set-pivot-named-range"),
-            new PivotTableSelector.ByNameOnSheet("SalesPivot", "Budget"),
+            new PivotTableSelector.ByNameOnSheet("SalesPivot", new SheetName("Budget")),
             new StructuredMutationAction.SetPivotTable(
                 new PivotTableInput(
                     "SalesPivot",
-                    "Budget",
+                    new SheetName("Budget"),
                     new PivotTableInput.Source.NamedRange("BudgetSource"),
                     new PivotTableInput.Anchor("C5"),
                     List.of(),
@@ -204,10 +211,14 @@ class ExecutionDiagnosticFieldsTest {
     MutationStep tableStep =
         new MutationStep(
             new StepId("set-table"),
-            new TableSelector.ByNameOnSheet("BudgetTable", "Budget"),
+            new TableSelector.ByNameOnSheet("BudgetTable", new SheetName("Budget")),
             new StructuredMutationAction.SetTable(
                 TableInput.withDefaultMetadata(
-                    "BudgetTable", "Budget", "A1:B4", false, new TableStyleInput.None())));
+                    "BudgetTable",
+                    new SheetName("Budget"),
+                    "A1:B4",
+                    false,
+                    new TableStyleInput.None())));
     MutationStep formulaNamedRangeStep =
         new MutationStep(
             new StepId("set-name"),
@@ -219,7 +230,7 @@ class ExecutionDiagnosticFieldsTest {
     AssertionStep formulaAssertionStep =
         new AssertionStep(
             new StepId("assert-formula"),
-            new CellSelector.ByAddress("Budget", "B4"),
+            new CellSelector.ByAddress(new SheetName("Budget"), "B4"),
             new CellAssertion.FormulaText("SUM(A1:A2)"));
     InspectionStep workbookInspection =
         new InspectionStep(
@@ -287,7 +298,7 @@ class ExecutionDiagnosticFieldsTest {
         ExecutionDiagnosticFields.locationFor(
             new MutationStep(
                 new StepId("set-formula"),
-                new CellSelector.ByAddress("Budget", "B4"),
+                new CellSelector.ByAddress(new SheetName("Budget"), "B4"),
                 new CellMutationAction.SetCell(formulaCell("SUM(A1:A2)"))),
             new InvalidFormulaException("Budget", "B4", "SUM(A1:A2)", "bad", null)));
   }

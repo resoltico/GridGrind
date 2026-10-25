@@ -25,6 +25,7 @@ import dev.erst.gridgrind.core.plan.WorkbookMutationAction;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import dev.erst.gridgrind.core.problem.GridGrindProblemCode;
 import dev.erst.gridgrind.core.result.WorkbookResult;
+import dev.erst.gridgrind.core.vocabulary.SheetName;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 
@@ -123,10 +124,11 @@ class SemanticSelectorExecutionCoverageTest {
   private static List<ExecutorTestPlanSupport.PendingMutation> budgetTableMutations() {
     return mutations(
         mutate(
-            new dev.erst.gridgrind.core.plan.SheetSelector.ByName("Budget"),
+            new dev.erst.gridgrind.core.plan.SheetSelector.ByName(new SheetName("Budget")),
             new WorkbookMutationAction.EnsureSheet()),
         mutate(
-            new dev.erst.gridgrind.core.plan.RangeSelector.ByRange("Budget", "A1:B3"),
+            new dev.erst.gridgrind.core.plan.RangeSelector.ByRange(
+                new SheetName("Budget"), "A1:B3"),
             new CellMutationAction.SetRange(
                 new dev.erst.gridgrind.core.model.value.CellGridInput.Typed(
                     List.of(
@@ -140,16 +142,21 @@ class SemanticSelectorExecutionCoverageTest {
         mutate(
             new StructuredMutationAction.SetTable(
                 TableInput.withDefaultMetadata(
-                    "BudgetTable", "Budget", "A1:B3", false, new TableStyleInput.None()))));
+                    "BudgetTable",
+                    new SheetName("Budget"),
+                    "A1:B3",
+                    false,
+                    new TableStyleInput.None()))));
   }
 
   private static List<ExecutorTestPlanSupport.PendingMutation> duplicateBudgetTableMutations() {
     return mutations(
         mutate(
-            new dev.erst.gridgrind.core.plan.SheetSelector.ByName("Budget"),
+            new dev.erst.gridgrind.core.plan.SheetSelector.ByName(new SheetName("Budget")),
             new WorkbookMutationAction.EnsureSheet()),
         mutate(
-            new dev.erst.gridgrind.core.plan.RangeSelector.ByRange("Budget", "A1:B4"),
+            new dev.erst.gridgrind.core.plan.RangeSelector.ByRange(
+                new SheetName("Budget"), "A1:B4"),
             new CellMutationAction.SetRange(
                 new dev.erst.gridgrind.core.model.value.CellGridInput.Typed(
                     List.of(
@@ -165,7 +172,11 @@ class SemanticSelectorExecutionCoverageTest {
         mutate(
             new StructuredMutationAction.SetTable(
                 TableInput.withDefaultMetadata(
-                    "BudgetTable", "Budget", "A1:B4", false, new TableStyleInput.None()))));
+                    "BudgetTable",
+                    new SheetName("Budget"),
+                    "A1:B4",
+                    false,
+                    new TableStyleInput.None()))));
   }
 
   private static WorkbookResult.Success success(WorkbookResult response) {

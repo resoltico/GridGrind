@@ -41,12 +41,16 @@ final class WireStringDeserializer extends ValueDeserializer<WireString> {
         if (message == null || message.isBlank()) {
           message = "Domain value is invalid.";
         }
-        throw new InvalidRequestException(
-            new MessageInvariant(message, Optional.empty()),
-            Optional.empty(),
-            Optional.empty(),
-            Optional.empty(),
-            exception);
+        return (WireString)
+            context.handleInstantiationProblem(
+                handledType(),
+                text,
+                new InvalidRequestException(
+                    new MessageInvariant(message, Optional.empty()),
+                    Optional.empty(),
+                    Optional.empty(),
+                    Optional.empty(),
+                    exception));
       }
       return (WireString)
           context.handleInstantiationProblem(

@@ -38,6 +38,7 @@ import dev.erst.gridgrind.core.vocabulary.ExcelChartDisplayBlanksAs;
 import dev.erst.gridgrind.core.vocabulary.ExcelComparisonOperator;
 import dev.erst.gridgrind.core.vocabulary.ExcelDataValidationErrorStyle;
 import dev.erst.gridgrind.core.vocabulary.ExcelPictureFormat;
+import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -91,13 +92,13 @@ class SourceBackedPlanResolverMutationInliningCoverageTest
     AssertionStep assertion =
         new AssertionStep(
             new StepId("assert-budget"),
-            new CellSelector.ByAddress("Budget", "A1"),
+            new CellSelector.ByAddress(new SheetName("Budget"), "A1"),
             new CellAssertion.CellValue(
                 new dev.erst.gridgrind.core.model.value.CellScalarValue.Text("Quarterly Budget")));
     InspectionStep inspection =
         new InspectionStep(
             new StepId("inspect-budget"),
-            new CellSelector.ByAddress("Budget", "A1"),
+            new CellSelector.ByAddress(new SheetName("Budget"), "A1"),
             new SheetIntrospectionQuery.GetCells());
 
     WorkbookPlan plan =
@@ -109,7 +110,7 @@ class SourceBackedPlanResolverMutationInliningCoverageTest
             List.of(
                 new MutationStep(
                     new StepId("step-01-set-comment"),
-                    new CellSelector.ByAddress("Budget", "A1"),
+                    new CellSelector.ByAddress(new SheetName("Budget"), "A1"),
                     new CellMutationAction.SetComment(
                         new CommentInput(
                             TextSourceInput.utf8File("comment.txt"),
@@ -126,7 +127,7 @@ class SourceBackedPlanResolverMutationInliningCoverageTest
                             java.util.Optional.empty()))),
                 new MutationStep(
                     new StepId("step-02-set-picture"),
-                    new SheetSelector.ByName("Budget"),
+                    new SheetSelector.ByName(new SheetName("Budget")),
                     new DrawingMutationAction.SetPicture(
                         picture(
                             "Logo",
@@ -136,7 +137,7 @@ class SourceBackedPlanResolverMutationInliningCoverageTest
                             TextSourceInput.utf8File("picture-description.txt")))),
                 new MutationStep(
                     new StepId("step-03-set-bar-chart"),
-                    new SheetSelector.ByName("Budget"),
+                    new SheetSelector.ByName(new SheetName("Budget")),
                     new DrawingMutationAction.SetChart(
                         chartInput(
                             "Bar",
@@ -154,7 +155,7 @@ class SourceBackedPlanResolverMutationInliningCoverageTest
                                 List.of(chartSeries()))))),
                 new MutationStep(
                     new StepId("step-04-set-line-chart"),
-                    new SheetSelector.ByName("Budget"),
+                    new SheetSelector.ByName(new SheetName("Budget")),
                     new DrawingMutationAction.SetChart(
                         chartInput(
                             "Line",
@@ -169,7 +170,7 @@ class SourceBackedPlanResolverMutationInliningCoverageTest
                                 List.of(chartSeries()))))),
                 new MutationStep(
                     new StepId("step-05-set-pie-chart"),
-                    new SheetSelector.ByName("Budget"),
+                    new SheetSelector.ByName(new SheetName("Budget")),
                     new DrawingMutationAction.SetChart(
                         chartInput(
                             "Pie",
@@ -182,7 +183,7 @@ class SourceBackedPlanResolverMutationInliningCoverageTest
                                 false, Optional.of(0), List.of(chartSeries()))))),
                 new MutationStep(
                     new StepId("step-06-set-shape"),
-                    new SheetSelector.ByName("Budget"),
+                    new SheetSelector.ByName(new SheetName("Budget")),
                     new DrawingMutationAction.SetShape(
                         simpleShape(
                             "Shape",
@@ -191,7 +192,7 @@ class SourceBackedPlanResolverMutationInliningCoverageTest
                             TextSourceInput.utf8File("shape.txt")))),
                 new MutationStep(
                     new StepId("step-07-set-embedded"),
-                    new SheetSelector.ByName("Budget"),
+                    new SheetSelector.ByName(new SheetName("Budget")),
                     new DrawingMutationAction.SetEmbeddedObject(
                         new EmbeddedObjectInput(
                             "Payload",
@@ -204,7 +205,7 @@ class SourceBackedPlanResolverMutationInliningCoverageTest
                             twoCellAnchor()))),
                 new MutationStep(
                     new StepId("step-08-set-validation"),
-                    new RangeSelector.ByRange("Budget", "A1"),
+                    new RangeSelector.ByRange(new SheetName("Budget"), "A1"),
                     new StructuredMutationAction.SetDataValidation(
                         dataValidation(
                             new DataValidationRuleInput.WholeNumber(
@@ -223,11 +224,11 @@ class SourceBackedPlanResolverMutationInliningCoverageTest
                 new MutationStep(
                     new StepId("step-09-set-table"),
                     new dev.erst.gridgrind.core.plan.TableSelector.ByNameOnSheet(
-                        "BudgetTable", "Budget"),
+                        "BudgetTable", new SheetName("Budget")),
                     new StructuredMutationAction.SetTable(
                         new TableInput(
                             "BudgetTable",
-                            "Budget",
+                            new dev.erst.gridgrind.core.vocabulary.SheetName("Budget"),
                             "A1:B2",
                             false,
                             true,
@@ -243,7 +244,7 @@ class SourceBackedPlanResolverMutationInliningCoverageTest
                             List.of()))),
                 new MutationStep(
                     new StepId("step-10-append-row"),
-                    new SheetSelector.ByName("Budget"),
+                    new SheetSelector.ByName(new SheetName("Budget")),
                     new CellMutationAction.AppendRow(
                         new dev.erst.gridgrind.core.model.value.CellRowInput.Typed(
                             List.of(
@@ -259,7 +260,7 @@ class SourceBackedPlanResolverMutationInliningCoverageTest
                                 new CellInput.Formula(TextSourceInput.utf8File("formula.txt")))))),
                 new MutationStep(
                     new StepId("step-11-print-layout"),
-                    new SheetSelector.ByName("Budget"),
+                    new SheetSelector.ByName(new SheetName("Budget")),
                     new WorkbookMutationAction.SetPrintLayout(
                         printLayoutWithHeader(
                             new HeaderFooterTextInput(

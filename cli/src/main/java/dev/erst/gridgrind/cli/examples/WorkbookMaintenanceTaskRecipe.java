@@ -27,6 +27,7 @@ import dev.erst.gridgrind.core.plan.WorkbookAssetIntrospectionQuery;
 import dev.erst.gridgrind.core.plan.WorkbookIntrospectionQuery;
 import dev.erst.gridgrind.core.plan.WorkbookMutationAction;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
+import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import java.util.List;
 
@@ -125,14 +126,15 @@ final class WorkbookMaintenanceTaskRecipe {
         ExampleSteps.step(
             new StepId("copy-template-sheet"),
             ExampleSelectors.sheet("Template"),
-            new WorkbookMutationAction.CopySheet("Template Copy")),
+            new WorkbookMutationAction.CopySheet(new SheetName("Template Copy"))),
         ExampleSteps.read(
             new StepId("read-copied-comments"),
-            new dev.erst.gridgrind.core.plan.CellSelector.AllUsedInSheet("Template Copy"),
+            new dev.erst.gridgrind.core.plan.CellSelector.AllUsedInSheet(
+                new SheetName("Template Copy")),
             new SheetIntrospectionQuery.GetComments()),
         ExampleSteps.read(
             new StepId("read-copied-drawing-objects"),
-            new DrawingObjectSelector.AllOnSheet("Template Copy"),
+            new DrawingObjectSelector.AllOnSheet(new SheetName("Template Copy")),
             new WorkbookAssetIntrospectionQuery.GetDrawingObjects()),
         ExampleSteps.read(
             new StepId("read-maintenance-findings"),

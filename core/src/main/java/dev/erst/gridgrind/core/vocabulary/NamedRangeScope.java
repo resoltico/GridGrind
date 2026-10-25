@@ -15,9 +15,9 @@ public sealed interface NamedRangeScope permits NamedRangeScope.Workbook, NamedR
   record Workbook() implements NamedRangeScope {}
 
   /** Sheet-local named-range scope bound to one sheet name. */
-  record Sheet(String sheetName) implements NamedRangeScope {
+  record Sheet(SheetName sheetName) implements NamedRangeScope {
     public Sheet {
-      ExcelSheetNames.requireValid(sheetName, "sheetName");
+      java.util.Objects.requireNonNull(sheetName, "sheetName must not be null");
     }
   }
 }

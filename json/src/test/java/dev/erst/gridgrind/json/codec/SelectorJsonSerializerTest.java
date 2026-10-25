@@ -18,6 +18,7 @@ import dev.erst.gridgrind.core.plan.TableCellSelector;
 import dev.erst.gridgrind.core.plan.TableRowSelector;
 import dev.erst.gridgrind.core.plan.TableSelector;
 import dev.erst.gridgrind.core.plan.WorkbookSelector;
+import dev.erst.gridgrind.core.vocabulary.SheetName;
 import org.junit.jupiter.api.Test;
 
 /** Serializer coverage for selector runtime encoding and reflective access failures. */
@@ -26,7 +27,7 @@ class SelectorJsonSerializerTest {
   void serializesCanonicalRecordSelectorsWithTypeAndFields() throws Exception {
     String json =
         GridGrindJsonMapperSupport.JSON_MAPPER.writeValueAsString(
-            new SelectorEnvelope(new CellSelector.ByAddress("Budget", "A1")));
+            new SelectorEnvelope(new CellSelector.ByAddress(new SheetName("Budget"), "A1")));
 
     assertTrue(json.contains("\"selector\":{\"type\":\"CELL_BY_ADDRESS\""));
     assertTrue(json.contains("\"sheetName\":\"Budget\""));
@@ -61,7 +62,7 @@ class SelectorJsonSerializerTest {
             IllegalStateException.class,
             () ->
                 SelectorJsonSerializer.readComponent(
-                    new SheetSelector.ByName("Budget"), component));
+                    new SheetSelector.ByName(new SheetName("Budget")), component));
     assertEquals(
         "Unable to read selector component sheetName from " + SheetSelector.ByName.class.getName(),
         invocationTargetException.getMessage());

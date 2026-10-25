@@ -36,6 +36,7 @@ import dev.erst.gridgrind.core.source.BinarySourceInput;
 import dev.erst.gridgrind.core.source.TextSourceInput;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartDisplayBlanksAs;
 import dev.erst.gridgrind.core.vocabulary.ExcelPictureFormat;
+import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -75,15 +76,15 @@ class SourceBackedPlanResolverIdentityCoverageTest extends SourceBackedPlanResol
             new WorkbookPlan.WorkbookPersistence.None(),
             mutations(
                 mutate(
-                    new CellSelector.ByAddress("Budget", "A1"),
+                    new CellSelector.ByAddress(new SheetName("Budget"), "A1"),
                     new CellMutationAction.SetCell(
                         new CellInput.Text(new TextSourceInput.Utf8File("title.txt")))),
                 mutate(
-                    new CellSelector.ByAddress("Budget", "A2"),
+                    new CellSelector.ByAddress(new SheetName("Budget"), "A2"),
                     new CellMutationAction.SetCell(
                         new CellInput.Formula(new TextSourceInput.Utf8File("formula.txt")))),
                 mutate(
-                    new SheetSelector.ByName("Budget"),
+                    new SheetSelector.ByName(new SheetName("Budget")),
                     new DrawingMutationAction.SetShape(
                         simpleShape(
                             "QueueShape",
@@ -91,7 +92,7 @@ class SourceBackedPlanResolverIdentityCoverageTest extends SourceBackedPlanResol
                             "roundRect",
                             new TextSourceInput.StandardInput()))),
                 mutate(
-                    new SheetSelector.ByName("Budget"),
+                    new SheetSelector.ByName(new SheetName("Budget")),
                     new DrawingMutationAction.SetEmbeddedObject(
                         new EmbeddedObjectInput(
                             "OpsPayload",
@@ -102,7 +103,7 @@ class SourceBackedPlanResolverIdentityCoverageTest extends SourceBackedPlanResol
                             inlinePictureData(),
                             twoCellAnchor()))),
                 mutate(
-                    new SheetSelector.ByName("Budget"),
+                    new SheetSelector.ByName(new SheetName("Budget")),
                     new DrawingMutationAction.SetSignatureLine(
                         new SignatureLineInput(
                             "OpsSignature",
@@ -181,11 +182,11 @@ class SourceBackedPlanResolverIdentityCoverageTest extends SourceBackedPlanResol
             new WorkbookPlan.WorkbookPersistence.None(),
             mutations(
                 mutate(
-                    new CellSelector.ByAddress("Budget", "A1"),
+                    new CellSelector.ByAddress(new SheetName("Budget"), "A1"),
                     new CellMutationAction.SetCell(
                         new CellInput.Text(new TextSourceInput.StandardInput()))),
                 mutate(
-                    new SheetSelector.ByName("Budget"),
+                    new SheetSelector.ByName(new SheetName("Budget")),
                     new DrawingMutationAction.SetSignatureLine(
                         new SignatureLineInput(
                             "OpsSignature",
@@ -207,7 +208,7 @@ class SourceBackedPlanResolverIdentityCoverageTest extends SourceBackedPlanResol
             new WorkbookPlan.WorkbookPersistence.None(),
             mutations(
                 mutate(
-                    new CellSelector.ByAddress("Budget", "A1"),
+                    new CellSelector.ByAddress(new SheetName("Budget"), "A1"),
                     new CellMutationAction.SetCell(
                         new CellInput.Text(new TextSourceInput.Utf8File("title.txt"))))));
 
@@ -319,7 +320,7 @@ class SourceBackedPlanResolverIdentityCoverageTest extends SourceBackedPlanResol
     MutationStep rangeStep =
         new MutationStep(
             new StepId("set-range-file-backed"),
-            new RangeSelector.ByRange("Budget", "A1:B1"),
+            new RangeSelector.ByRange(new SheetName("Budget"), "A1:B1"),
             new CellMutationAction.SetRange(
                 new dev.erst.gridgrind.core.model.value.CellGridInput.Typed(
                     List.of(
@@ -329,7 +330,7 @@ class SourceBackedPlanResolverIdentityCoverageTest extends SourceBackedPlanResol
     MutationStep lineChartStep =
         new MutationStep(
             new StepId("set-line-chart-file-backed"),
-            new SheetSelector.ByName("Budget"),
+            new SheetSelector.ByName(new SheetName("Budget")),
             new DrawingMutationAction.SetChart(
                 chartInput(
                     "Line",
@@ -345,7 +346,7 @@ class SourceBackedPlanResolverIdentityCoverageTest extends SourceBackedPlanResol
     MutationStep pieChartStep =
         new MutationStep(
             new StepId("set-pie-chart-file-backed"),
-            new SheetSelector.ByName("Budget"),
+            new SheetSelector.ByName(new SheetName("Budget")),
             new DrawingMutationAction.SetChart(
                 chartInput(
                     "Pie",

@@ -15,6 +15,7 @@ import dev.erst.gridgrind.core.problem.MessageInvariant;
 import dev.erst.gridgrind.core.problem.ProblemContext;
 import dev.erst.gridgrind.core.problem.ProblemContextRequestSurfaces;
 import dev.erst.gridgrind.core.problem.ProblemContextWorkbookSurfaces;
+import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import java.nio.file.AccessDeniedException;
 import java.nio.file.FileAlreadyExistsException;
@@ -140,7 +141,7 @@ class GridGrindProblemsCoverageTest {
                 new AssertionFailure(
                     new StepId("assert-total"),
                     "EXPECT_CELL_VALUE",
-                    new CellSelector.ByAddress("Budget", "B2"),
+                    new CellSelector.ByAddress(new SheetName("Budget"), "B2"),
                     new CellAssertion.CellValue(new CellScalarValue.NumberValue(1200.0d)),
                     java.util.List.of())),
             assertionContext);

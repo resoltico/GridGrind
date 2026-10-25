@@ -22,26 +22,35 @@ final class ExecutionTargetScope {
 
   static Optional<List<String>> exactSheetNames(Selector selector) {
     return switch (selector) {
-      case SheetSelector.ByName byName -> Optional.of(List.of(byName.name()));
-      case SheetSelector.ByNames byNames -> Optional.of(byNames.names());
-      case CellSelector.AllUsedInSheet cell -> Optional.of(List.of(cell.sheetName()));
-      case CellSelector.ByAddress cell -> Optional.of(List.of(cell.sheetName()));
-      case CellSelector.ByAddresses cell -> Optional.of(List.of(cell.sheetName()));
-      case RangeSelector.AllOnSheet range -> Optional.of(List.of(range.sheetName()));
-      case RangeSelector.ByRange range -> Optional.of(List.of(range.sheetName()));
-      case RangeSelector.ByRanges range -> Optional.of(List.of(range.sheetName()));
-      case RangeSelector.RectangularWindow range -> Optional.of(List.of(range.sheetName()));
-      case RowBandSelector.Span rows -> Optional.of(List.of(rows.sheetName()));
-      case RowBandSelector.Insertion rows -> Optional.of(List.of(rows.sheetName()));
-      case ColumnBandSelector.Span columns -> Optional.of(List.of(columns.sheetName()));
-      case ColumnBandSelector.Insertion columns -> Optional.of(List.of(columns.sheetName()));
-      case DrawingObjectSelector.AllOnSheet drawing -> Optional.of(List.of(drawing.sheetName()));
-      case DrawingObjectSelector.ByName drawing -> Optional.of(List.of(drawing.sheetName()));
-      case ChartSelector.AllOnSheet chart -> Optional.of(List.of(chart.sheetName()));
-      case ChartSelector.ByName chart -> Optional.of(List.of(chart.sheetName()));
-      case TableSelector.ByNameOnSheet table -> Optional.of(List.of(table.sheetName()));
-      case PivotTableSelector.ByNameOnSheet pivot -> Optional.of(List.of(pivot.sheetName()));
-      case NamedRangeSelector.SheetScope namedRange -> Optional.of(List.of(namedRange.sheetName()));
+      case SheetSelector.ByName byName -> Optional.of(List.of(byName.name().value()));
+      case SheetSelector.ByNames byNames ->
+          Optional.of(
+              byNames.names().stream()
+                  .map(dev.erst.gridgrind.core.vocabulary.WireString::value)
+                  .toList());
+      case CellSelector.AllUsedInSheet cell -> Optional.of(List.of(cell.sheetName().value()));
+      case CellSelector.ByAddress cell -> Optional.of(List.of(cell.sheetName().value()));
+      case CellSelector.ByAddresses cell -> Optional.of(List.of(cell.sheetName().value()));
+      case RangeSelector.AllOnSheet range -> Optional.of(List.of(range.sheetName().value()));
+      case RangeSelector.ByRange range -> Optional.of(List.of(range.sheetName().value()));
+      case RangeSelector.ByRanges range -> Optional.of(List.of(range.sheetName().value()));
+      case RangeSelector.RectangularWindow range -> Optional.of(List.of(range.sheetName().value()));
+      case RowBandSelector.Span rows -> Optional.of(List.of(rows.sheetName().value()));
+      case RowBandSelector.Insertion rows -> Optional.of(List.of(rows.sheetName().value()));
+      case ColumnBandSelector.Span columns -> Optional.of(List.of(columns.sheetName().value()));
+      case ColumnBandSelector.Insertion columns ->
+          Optional.of(List.of(columns.sheetName().value()));
+      case DrawingObjectSelector.AllOnSheet drawing ->
+          Optional.of(List.of(drawing.sheetName().value()));
+      case DrawingObjectSelector.ByName drawing ->
+          Optional.of(List.of(drawing.sheetName().value()));
+      case ChartSelector.AllOnSheet chart -> Optional.of(List.of(chart.sheetName().value()));
+      case ChartSelector.ByName chart -> Optional.of(List.of(chart.sheetName().value()));
+      case TableSelector.ByNameOnSheet table -> Optional.of(List.of(table.sheetName().value()));
+      case PivotTableSelector.ByNameOnSheet pivot ->
+          Optional.of(List.of(pivot.sheetName().value()));
+      case NamedRangeSelector.SheetScope namedRange ->
+          Optional.of(List.of(namedRange.sheetName().value()));
       case TableRowSelector.AllRows rows -> exactSheetNames(rows.table());
       case TableRowSelector.ByIndex rows -> exactSheetNames(rows.table());
       case TableRowSelector.ByKeyCell rows -> exactSheetNames(rows.table());

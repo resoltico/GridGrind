@@ -4,6 +4,7 @@ import dev.erst.gridgrind.core.model.formula.FormulaCellTarget;
 import dev.erst.gridgrind.core.plan.ExecutionPolicyInput;
 import dev.erst.gridgrind.core.plan.RangeSelector;
 import dev.erst.gridgrind.core.plan.RowBandSelector;
+import dev.erst.gridgrind.core.vocabulary.SheetName;
 import java.util.List;
 
 /** Shared selector, span, and execution-policy helpers for Jazzer operation generation. */
@@ -34,7 +35,8 @@ final class OperationSequenceSelectorSupport {
   static FormulaCellTarget nextFormulaTarget(
       GridGrindFuzzData data, String primarySheet, String secondarySheet, boolean validAddress) {
     return new FormulaCellTarget(
-        data.consumeBoolean() ? primarySheet : secondarySheet,
+        new dev.erst.gridgrind.core.vocabulary.SheetName(
+            data.consumeBoolean() ? primarySheet : secondarySheet),
         nextFormulaTargetAddress(data, validAddress));
   }
 
@@ -46,10 +48,10 @@ final class OperationSequenceSelectorSupport {
       GridGrindFuzzData data, String sheetName, boolean validRange) {
     String firstRange = validRange ? "A1:A4" : FuzzDataDecoders.nextNonBlankRange(data, false);
     if (data.consumeBoolean()) {
-      return new RangeSelector.ByRange(sheetName, firstRange);
+      return new RangeSelector.ByRange(new SheetName(sheetName), firstRange);
     }
     String secondRange = validRange ? "C1:C4" : FuzzDataDecoders.nextNonBlankRange(data, false);
-    return new RangeSelector.ByRanges(sheetName, List.of(firstRange, secondRange));
+    return new RangeSelector.ByRanges(new SheetName(sheetName), List.of(firstRange, secondRange));
   }
 
   static IndexSpan nextIndexSpan(GridGrindFuzzData data, int upperBound) {
@@ -60,8 +62,9 @@ final class OperationSequenceSelectorSupport {
   static RowBandSelector.Span nextRowHeightTarget(
       GridGrindFuzzData data, String sheetName, IndexSpan boundedSpan) {
     return data.consumeBoolean()
-        ? new RowBandSelector.Span(sheetName, boundedSpan.first(), boundedSpan.last())
-        : new RowBandSelector.Span(sheetName, 0, 250_000);
+        ? new RowBandSelector.Span(
+            new SheetName(sheetName), boundedSpan.first(), boundedSpan.last())
+        : new RowBandSelector.Span(new SheetName(sheetName), 0, 250_000);
   }
 
   static int nextNonZeroDelta(GridGrindFuzzData data, int upperBound) {

@@ -2,6 +2,7 @@ package dev.erst.gridgrind.core.plan;
 
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import dev.erst.gridgrind.core.vocabulary.SheetName;
 import java.util.List;
 
 /** Selects one or more cells on one sheet. */
@@ -15,9 +16,9 @@ public sealed interface CellSelector extends Selector
     permits CellSelector.AllUsedInSheet, CellSelector.ByAddress, CellSelector.ByAddresses {
 
   /** Selects every physically present cell on one sheet. */
-  record AllUsedInSheet(String sheetName) implements CellSelector {
+  record AllUsedInSheet(SheetName sheetName) implements CellSelector {
     public AllUsedInSheet {
-      sheetName = SelectorValueValidation.requireSheetName(sheetName, "sheetName");
+      java.util.Objects.requireNonNull(sheetName, "sheetName must not be null");
     }
 
     @Override
@@ -27,9 +28,9 @@ public sealed interface CellSelector extends Selector
   }
 
   /** Selects one exact cell on one sheet. */
-  record ByAddress(String sheetName, String address) implements CellSelector {
+  record ByAddress(SheetName sheetName, String address) implements CellSelector {
     public ByAddress {
-      sheetName = SelectorValueValidation.requireSheetName(sheetName, "sheetName");
+      java.util.Objects.requireNonNull(sheetName, "sheetName must not be null");
       address = SelectorValueValidation.requireAddress(address, "address");
     }
 
@@ -40,9 +41,9 @@ public sealed interface CellSelector extends Selector
   }
 
   /** Selects one or more exact cells on one sheet. */
-  record ByAddresses(String sheetName, List<String> addresses) implements CellSelector {
+  record ByAddresses(SheetName sheetName, List<String> addresses) implements CellSelector {
     public ByAddresses {
-      sheetName = SelectorValueValidation.requireSheetName(sheetName, "sheetName");
+      java.util.Objects.requireNonNull(sheetName, "sheetName must not be null");
       addresses = SelectorListValidation.copyDistinctAddresses(addresses, "addresses");
     }
 

@@ -18,6 +18,7 @@ import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import dev.erst.gridgrind.core.result.ExecutionJournalLevel;
 import dev.erst.gridgrind.core.result.WorkbookResult;
 import dev.erst.gridgrind.core.vocabulary.PlanId;
+import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.engine.api.GridGrindEngine;
 import dev.erst.gridgrind.engine.api.GridGrindExecutionGrant;
@@ -62,10 +63,12 @@ class GridGrindPlanTest {
             .saveAs(
                 tempDir.resolve("budget.xlsx"), WorkbookPlan.WorkbookPersistence.IfExists.REJECT)
             .journal(ExecutionJournalLevel.VERBOSE)
-            .mutate(Targets.sheet("Budget").ensureExists())
-            .mutate(Targets.cell("Budget", "A1").set(Values.text("Owner")))
-            .inspect(Targets.cell("Budget", "A1").read())
-            .assertThat(Targets.cell("Budget", "A1").valueEquals(ExpectedValues.text("Owner")));
+            .mutate(Targets.sheet(new SheetName("Budget")).ensureExists())
+            .mutate(Targets.cell(new SheetName("Budget"), "A1").set(Values.text("Owner")))
+            .inspect(Targets.cell(new SheetName("Budget"), "A1").read())
+            .assertThat(
+                Targets.cell(new SheetName("Budget"), "A1")
+                    .valueEquals(ExpectedValues.text("Owner")));
     WorkbookPlan canonical = plan.toPlan();
     assertEquals("budget-plan", canonical.planId().orElseThrow().value());
     assertEquals("mutation-001", canonical.steps().get(0).stepId().value());
@@ -119,25 +122,30 @@ class GridGrindPlanTest {
             List.of(
                 new MutationStep(
                     new StepId("mutation-001"),
-                    Targets.sheet("Budget").selector(),
+                    Targets.sheet(new SheetName("Budget")).selector(),
                     new dev.erst.gridgrind.core.plan.WorkbookMutationAction.EnsureSheet()),
                 new InspectionStep(
                     new StepId("inspection-001"),
-                    Targets.cell("Budget", "A1").selector(),
+                    Targets.cell(new SheetName("Budget"), "A1").selector(),
                     new dev.erst.gridgrind.core.plan.SheetIntrospectionQuery.GetCells()),
                 new AssertionStep(
                     new StepId("assertion-001"),
-                    Targets.cell("Budget", "A1").selector(),
+                    Targets.cell(new SheetName("Budget"), "A1").selector(),
                     new dev.erst.gridgrind.core.plan.CellAssertion.CellValue(
                         ExpectedValues.toCellScalarValue(ExpectedValues.blank())))));
 
     WorkbookPlan plan =
         GridGrindPlan.from(imported)
             .clearPlanId()
-            .mutate(Targets.sheet("Budget").renameTo("Budget 2026"))
-            .inspect(Targets.cell("Budget 2026", "A1").read())
-            .assertThat(Targets.cell("Budget 2026", "A1").valueEquals(ExpectedValues.blank()))
-            .mutate(Targets.sheet("Budget 2026").ensureExists().named(new StepId("keep-sheet")))
+            .mutate(Targets.sheet(new SheetName("Budget")).renameTo(new SheetName("Budget 2026")))
+            .inspect(Targets.cell(new SheetName("Budget 2026"), "A1").read())
+            .assertThat(
+                Targets.cell(new SheetName("Budget 2026"), "A1")
+                    .valueEquals(ExpectedValues.blank()))
+            .mutate(
+                Targets.sheet(new SheetName("Budget 2026"))
+                    .ensureExists()
+                    .named(new StepId("keep-sheet")))
             .toPlan();
 
     assertEquals("mutation-002", plan.steps().get(3).stepId().value());
@@ -191,18 +199,23 @@ class GridGrindPlanTest {
         GridGrindPlan.newWorkbook()
             .saveAs(outputPath, WorkbookPlan.WorkbookPersistence.IfExists.REPLACE)
             .journal(ExecutionJournalLevel.VERBOSE)
-            .mutate(Targets.sheet("Budget").ensureExists())
+            .mutate(Targets.sheet(new SheetName("Budget")).ensureExists())
             .mutate(
-                Targets.range("Budget", "A1:B3")
+                Targets.range(new SheetName("Budget"), "A1:B3")
                     .setRows(
                         List.of(
                             Values.row(Values.text("Item"), Values.text("Amount")),
                             Values.row(Values.text("Hosting"), Values.number(100.0)),
                             Values.row(Values.text("Travel"), Values.number(50.0)))))
             .mutate(
-                Targets.tableOnSheet("BudgetTable", "Budget")
+                Targets.tableOnSheet("BudgetTable", new SheetName("Budget"))
                     .define(
-                        Tables.define("BudgetTable", "Budget", "A1:B3", false, Tables.noStyle())))
+                        Tables.define(
+                            "BudgetTable",
+                            new SheetName("Budget"),
+                            "A1:B3",
+                            false,
+                            Tables.noStyle())))
             .mutate(
                 Targets.table("BudgetTable")
                     .rowByKey("Item", Values.textFile(Path.of("item.txt")))

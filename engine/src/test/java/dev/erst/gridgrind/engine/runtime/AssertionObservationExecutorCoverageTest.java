@@ -15,6 +15,7 @@ import dev.erst.gridgrind.core.plan.WorkbookInspectionResult;
 import dev.erst.gridgrind.core.plan.WorkbookSelector;
 import dev.erst.gridgrind.core.result.WorkbookSummary;
 import dev.erst.gridgrind.core.vocabulary.SheetLabel;
+import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
 import dev.erst.gridgrind.excel.ExcelWorkbooks;
@@ -109,7 +110,7 @@ class AssertionObservationExecutorCoverageTest {
                 WorkbookAssetInspectionResult.ChartsResult.class,
                 AssertionObservationExecutor.zeroMatchPresenceObservation(
                     new StepId("missing-chart-sheet"),
-                    new ChartSelector.AllOnSheet("MissingSheet")))
+                    new ChartSelector.AllOnSheet(new SheetName("MissingSheet"))))
             .sheetName());
     assertEquals(
         "MissingSheet",
@@ -117,7 +118,7 @@ class AssertionObservationExecutorCoverageTest {
                 WorkbookAssetInspectionResult.ChartsResult.class,
                 AssertionObservationExecutor.zeroMatchPresenceObservation(
                     new StepId("missing-chart-name"),
-                    new ChartSelector.ByName("MissingSheet", "MissingChart")))
+                    new ChartSelector.ByName(new SheetName("MissingSheet"), "MissingChart")))
             .sheetName());
     assertThrows(
         IllegalArgumentException.class,

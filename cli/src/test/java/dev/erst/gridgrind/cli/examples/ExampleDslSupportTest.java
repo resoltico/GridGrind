@@ -26,7 +26,7 @@ class ExampleDslSupportTest {
     TableSelector.ByNameOnSheet selector = ExampleSelectors.table(BUDGET_TABLE, BUDGET_SHEET);
 
     assertEquals(BUDGET_TABLE, selector.name());
-    assertEquals(BUDGET_SHEET, selector.sheetName());
+    assertEquals(BUDGET_SHEET, selector.sheetName().value());
   }
 
   @Test

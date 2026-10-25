@@ -57,6 +57,7 @@ final class WorkbookInvariantInspectionResultChecks {
         require(
             ((SheetSelector.ByName) readOperation.target())
                 .name()
+                .value()
                 .equals(result.sheet().sheetName().value()),
             "sheet summary sheet mismatch");
       }
@@ -83,7 +84,9 @@ final class WorkbookInvariantInspectionResultChecks {
         SheetInspectionResult.WindowResult result = (SheetInspectionResult.WindowResult) readResult;
         RangeSelector.RectangularWindow selector =
             (RangeSelector.RectangularWindow) readOperation.target();
-        require(selector.sheetName().equals(result.window().sheetName()), "window sheet mismatch");
+        require(
+            selector.sheetName().value().equals(result.window().sheetName()),
+            "window sheet mismatch");
         require(
             selector.topLeftAddress().equals(result.window().topLeftAddress()),
             "window topLeftAddress mismatch");
@@ -98,7 +101,10 @@ final class WorkbookInvariantInspectionResultChecks {
         SheetInspectionResult.MergedRegionsResult result =
             (SheetInspectionResult.MergedRegionsResult) readResult;
         require(
-            ((SheetSelector.ByName) readOperation.target()).name().equals(result.sheetName()),
+            ((SheetSelector.ByName) readOperation.target())
+                .name()
+                .value()
+                .equals(result.sheetName()),
             "merged regions sheet mismatch");
       }
       case SheetIntrospectionQuery.GetHyperlinks _ -> {
@@ -123,6 +129,7 @@ final class WorkbookInvariantInspectionResultChecks {
         require(
             ((DrawingObjectSelector.AllOnSheet) readOperation.target())
                 .sheetName()
+                .value()
                 .equals(result.sheetName()),
             "drawing objects sheet mismatch");
         result.drawingObjects().forEach(WorkbookInvariantResponseChecks::requireDrawingObjectShape);
@@ -133,6 +140,7 @@ final class WorkbookInvariantInspectionResultChecks {
         require(
             ((ChartSelector.AllOnSheet) readOperation.target())
                 .sheetName()
+                .value()
                 .equals(result.sheetName()),
             "charts sheet mismatch");
         result.charts().forEach(WorkbookInvariantResponseChecks::requireChartReportShape);
@@ -147,7 +155,9 @@ final class WorkbookInvariantInspectionResultChecks {
             (WorkbookAssetInspectionResult.DrawingObjectPayloadResult) readResult;
         DrawingObjectSelector.ByName selector =
             (DrawingObjectSelector.ByName) readOperation.target();
-        require(selector.sheetName().equals(result.sheetName()), "drawing payload sheet mismatch");
+        require(
+            selector.sheetName().value().equals(result.sheetName()),
+            "drawing payload sheet mismatch");
         WorkbookInvariantResponseChecks.requireDrawingObjectPayloadShape(result.payload());
         require(
             selector.objectName().equals(result.payload().name()),
@@ -159,6 +169,7 @@ final class WorkbookInvariantInspectionResultChecks {
         require(
             ((SheetSelector.ByName) readOperation.target())
                 .name()
+                .value()
                 .equals(result.layout().sheetName()),
             "layout sheet mismatch");
       }
@@ -168,6 +179,7 @@ final class WorkbookInvariantInspectionResultChecks {
         require(
             ((SheetSelector.ByName) readOperation.target())
                 .name()
+                .value()
                 .equals(result.layout().sheetName()),
             "print layout sheet mismatch");
       }
@@ -189,7 +201,10 @@ final class WorkbookInvariantInspectionResultChecks {
         SheetInspectionResult.AutofiltersResult result =
             (SheetInspectionResult.AutofiltersResult) readResult;
         require(
-            ((SheetSelector.ByName) readOperation.target()).name().equals(result.sheetName()),
+            ((SheetSelector.ByName) readOperation.target())
+                .name()
+                .value()
+                .equals(result.sheetName()),
             "autofilters sheet mismatch");
       }
       case WorkbookAssetIntrospectionQuery.GetTables _ -> {
@@ -207,7 +222,9 @@ final class WorkbookInvariantInspectionResultChecks {
             (WorkbookSurfaceInspectionResult.SheetSchemaResult) readResult;
         RangeSelector.RectangularWindow selector =
             (RangeSelector.RectangularWindow) readOperation.target();
-        require(selector.sheetName().equals(result.surface().sheetName()), "schema sheet mismatch");
+        require(
+            selector.sheetName().value().equals(result.surface().sheetName()),
+            "schema sheet mismatch");
         require(
             selector.topLeftAddress().equals(result.surface().topLeftAddress()),
             "schema topLeftAddress mismatch");
@@ -254,18 +271,18 @@ final class WorkbookInvariantInspectionResultChecks {
 
   private static Optional<String> sheetName(CellSelector selector) {
     return switch (selector) {
-      case CellSelector.AllUsedInSheet all -> Optional.of(all.sheetName());
-      case CellSelector.ByAddress byAddress -> Optional.of(byAddress.sheetName());
-      case CellSelector.ByAddresses byAddresses -> Optional.of(byAddresses.sheetName());
+      case CellSelector.AllUsedInSheet all -> Optional.of(all.sheetName().value());
+      case CellSelector.ByAddress byAddress -> Optional.of(byAddress.sheetName().value());
+      case CellSelector.ByAddresses byAddresses -> Optional.of(byAddresses.sheetName().value());
     };
   }
 
   private static String sheetName(RangeSelector selector) {
     return switch (selector) {
-      case RangeSelector.AllOnSheet allOnSheet -> allOnSheet.sheetName();
-      case RangeSelector.ByRange byRange -> byRange.sheetName();
-      case RangeSelector.ByRanges byRanges -> byRanges.sheetName();
-      case RangeSelector.RectangularWindow window -> window.sheetName();
+      case RangeSelector.AllOnSheet allOnSheet -> allOnSheet.sheetName().value();
+      case RangeSelector.ByRange byRange -> byRange.sheetName().value();
+      case RangeSelector.ByRanges byRanges -> byRanges.sheetName().value();
+      case RangeSelector.RectangularWindow window -> window.sheetName().value();
     };
   }
 

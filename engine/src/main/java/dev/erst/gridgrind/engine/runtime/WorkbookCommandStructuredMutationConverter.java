@@ -33,7 +33,7 @@ final class WorkbookCommandStructuredMutationConverter {
         RangeSelector.ByRange selector =
             WorkbookCommandSelectorSupport.rangeByRange(target, action);
         yield new WorkbookFormattingCommand.SetDataValidation(
-            selector.sheetName(),
+            selector.sheetName().value(),
             selector.range(),
             WorkbookCommandStructuredInputConverter.toExcelDataValidationDefinition(
                 setDataValidation.validation()));
@@ -69,7 +69,7 @@ final class WorkbookCommandStructuredMutationConverter {
         RangeSelector.ByRange selector =
             WorkbookCommandSelectorSupport.rangeByRange(target, action);
         yield new WorkbookTabularCommand.SetAutofilter(
-            selector.sheetName(),
+            selector.sheetName().value(),
             selector.range(),
             setAutofilter.criteria().stream()
                 .map(WorkbookCommandStructuredInputConverter::toExcelAutofilterFilterColumn)
@@ -80,7 +80,7 @@ final class WorkbookCommandStructuredMutationConverter {
       }
       case StructuredMutationAction.ClearAutofilter _ ->
           new WorkbookTabularCommand.ClearAutofilter(
-              WorkbookCommandSelectorSupport.sheetByName(target, action).name());
+              WorkbookCommandSelectorSupport.sheetByName(target, action).name().value());
       case StructuredMutationAction.SetTable setTable -> {
         WorkbookCommandSelectorSupport.ensureTableIdentity(target, setTable);
         yield new WorkbookTabularCommand.SetTable(
@@ -89,12 +89,13 @@ final class WorkbookCommandStructuredMutationConverter {
       case StructuredMutationAction.DeleteTable _ -> {
         TableSelector.ByNameOnSheet selector =
             WorkbookCommandSelectorSupport.tableByNameOnSheet(target, action);
-        yield new WorkbookTabularCommand.DeleteTable(selector.name(), selector.sheetName());
+        yield new WorkbookTabularCommand.DeleteTable(selector.name(), selector.sheetName().value());
       }
       case StructuredMutationAction.DeletePivotTable _ -> {
         PivotTableSelector.ByNameOnSheet selector =
             WorkbookCommandSelectorSupport.pivotTableByNameOnSheet(target, action);
-        yield new WorkbookTabularCommand.DeletePivotTable(selector.name(), selector.sheetName());
+        yield new WorkbookTabularCommand.DeletePivotTable(
+            selector.name(), selector.sheetName().value());
       }
       case StructuredMutationAction.SetNamedRange setNamedRange -> {
         WorkbookCommandSelectorSupport.ensureNamedRangeIdentity(target, setNamedRange);

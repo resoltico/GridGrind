@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import dev.erst.gridgrind.core.model.value.CellInput;
 import dev.erst.gridgrind.core.source.TextSourceInput;
+import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import org.junit.jupiter.api.Test;
 
@@ -16,12 +17,12 @@ class MutationStepTest {
     MutationStep ensureSheet =
         new MutationStep(
             new StepId("ensure-budget"),
-            new SheetSelector.ByName("Budget"),
+            new SheetSelector.ByName(new SheetName("Budget")),
             new WorkbookMutationAction.EnsureSheet());
     MutationStep setCell =
         new MutationStep(
             new StepId("set-owner"),
-            new CellSelector.ByAddress("Budget", "A1"),
+            new CellSelector.ByAddress(new SheetName("Budget"), "A1"),
             new CellMutationAction.SetCell(new CellInput.Text(text("Owner"))));
     MutationStep clearWorkbookProtection =
         new MutationStep(
@@ -41,7 +42,7 @@ class MutationStepTest {
         () ->
             new MutationStep(
                 new StepId("bad-target"),
-                new RangeSelector.ByRange("Budget", "A1:B2"),
+                new RangeSelector.ByRange(new SheetName("Budget"), "A1:B2"),
                 new CellMutationAction.SetCell(new CellInput.Text(text("Owner")))));
   }
 
@@ -54,7 +55,7 @@ class MutationStepTest {
                 () ->
                     new MutationStep(
                         new StepId(" "),
-                        new SheetSelector.ByName("Budget"),
+                        new SheetSelector.ByName(new SheetName("Budget")),
                         new WorkbookMutationAction.EnsureSheet()))
             .getMessage());
     assertEquals(
@@ -64,7 +65,7 @@ class MutationStepTest {
                 () ->
                     new MutationStep(
                         new StepId("not valid"),
-                        new SheetSelector.ByName("Budget"),
+                        new SheetSelector.ByName(new SheetName("Budget")),
                         new WorkbookMutationAction.EnsureSheet()))
             .getMessage());
   }

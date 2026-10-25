@@ -61,7 +61,7 @@ adds these types:
 Unnamed authored steps receive generated ids such as `mutation-001`, `inspection-001`, and
 `assertion-001`. If you need stable caller-owned ids, call `.named(new StepId("..."))` on a
 `PlannedMutation`, `PlannedInspection`, or `PlannedAssertion` before adding it to the plan.
-`StepId` is the validated value in `dev.erst.gridgrind.core.vocabulary`.
+`SheetName` and `StepId` are validated values in `dev.erst.gridgrind.core.vocabulary`.
 
 ## Compile-And-Execution-Verified Example
 
@@ -70,26 +70,28 @@ The checked-in example under
 and executed by `:json:test`. A shortened excerpt:
 
 ```java
+import dev.erst.gridgrind.core.vocabulary.SheetName;
+
 GridGrindPlan plan =
     GridGrindPlan.newWorkbook()
         .saveAs(
             workspace.resolve("budget.xlsx"),
             WorkbookPlan.WorkbookPersistence.IfExists.REPLACE)
         .journal(ExecutionJournalLevel.VERBOSE)
-        .mutate(Targets.sheet("Budget").ensureExists())
+        .mutate(Targets.sheet(new SheetName("Budget")).ensureExists())
         .mutate(
-            Targets.range("Budget", "A1:B3")
+            Targets.range(new SheetName("Budget"), "A1:B3")
                 .setRows(
                     List.of(
                         Values.row(Values.text("Item"), Values.text("Amount")),
                         Values.row(Values.text("Hosting"), Values.number(100.0)),
                         Values.row(Values.text("Travel"), Values.number(50.0)))))
         .mutate(
-            Targets.tableOnSheet("BudgetTable", "Budget")
+            Targets.tableOnSheet("BudgetTable", new SheetName("Budget"))
                 .define(
                     Tables.define(
                         "BudgetTable",
-                        "Budget",
+                        new SheetName("Budget"),
                         "A1:B3",
                         false,
                         Tables.noStyle())))

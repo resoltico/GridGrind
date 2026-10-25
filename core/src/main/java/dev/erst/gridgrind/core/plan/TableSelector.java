@@ -2,6 +2,7 @@ package dev.erst.gridgrind.core.plan;
 
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import dev.erst.gridgrind.core.vocabulary.SheetName;
 import java.util.List;
 
 /** Selects one or more tables by workbook-global identity. */
@@ -51,10 +52,10 @@ public sealed interface TableSelector extends Selector
   }
 
   /** Selects one workbook-global table and asserts its expected owning sheet. */
-  record ByNameOnSheet(String name, String sheetName) implements TableSelector {
+  record ByNameOnSheet(String name, SheetName sheetName) implements TableSelector {
     public ByNameOnSheet {
       name = SelectorValueValidation.requireDefinedName(name, "name");
-      sheetName = SelectorValueValidation.requireSheetName(sheetName, "sheetName");
+      java.util.Objects.requireNonNull(sheetName, "sheetName must not be null");
     }
 
     @Override

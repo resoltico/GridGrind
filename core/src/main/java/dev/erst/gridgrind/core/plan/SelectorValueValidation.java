@@ -8,10 +8,6 @@ final class SelectorValueValidation {
     return SelectorTextValidation.requireNonBlank(value, fieldName);
   }
 
-  static String requireSheetName(String value, String fieldName) {
-    return SelectorTextValidation.requireSheetName(value, fieldName);
-  }
-
   static String requireDefinedName(String value, String fieldName) {
     return SelectorTextValidation.requireDefinedName(value, fieldName);
   }

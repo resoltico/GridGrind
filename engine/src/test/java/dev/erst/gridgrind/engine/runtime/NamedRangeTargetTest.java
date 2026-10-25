@@ -3,6 +3,7 @@ package dev.erst.gridgrind.engine.runtime;
 import static org.junit.jupiter.api.Assertions.*;
 
 import dev.erst.gridgrind.core.model.formula.NamedRangeTarget;
+import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.excel.ExcelNamedRangeTarget;
 import org.junit.jupiter.api.Test;
 
@@ -10,7 +11,7 @@ import org.junit.jupiter.api.Test;
 class NamedRangeTargetTest {
   @Test
   void preservesProtocolRangeTextUntilEngineConversion() {
-    NamedRangeTarget.Range target = NamedRangeTarget.range("Budget", "B4:A1");
+    NamedRangeTarget.Range target = NamedRangeTarget.range(new SheetName("Budget"), "B4:A1");
 
     assertEquals("B4:A1", target.range());
     assertEquals(
@@ -20,7 +21,7 @@ class NamedRangeTargetTest {
 
   @Test
   void convertsNamedRangeTargetToEngineType() {
-    NamedRangeTarget.Range target = NamedRangeTarget.range("Budget", "B4:C5");
+    NamedRangeTarget.Range target = NamedRangeTarget.range(new SheetName("Budget"), "B4:C5");
 
     assertEquals(
         ExcelNamedRangeTarget.range("Budget", "B4:C5"),
@@ -30,11 +31,14 @@ class NamedRangeTargetTest {
   @Test
   void validatesNamedRangeTargetInputs() {
     assertThrows(NullPointerException.class, () -> NamedRangeTarget.range(null, "A1"));
-    assertThrows(IllegalArgumentException.class, () -> NamedRangeTarget.range(" ", "A1"));
+    assertThrows(
+        IllegalArgumentException.class, () -> NamedRangeTarget.range(new SheetName(" "), "A1"));
     assertThrows(
         IllegalArgumentException.class,
-        () -> NamedRangeTarget.range("ThisSheetNameIsFarTooLongForExcel", "A1"));
-    assertThrows(NullPointerException.class, () -> NamedRangeTarget.range("Budget", null));
-    assertThrows(IllegalArgumentException.class, () -> NamedRangeTarget.range("Budget", " "));
+        () -> NamedRangeTarget.range(new SheetName("ThisSheetNameIsFarTooLongForExcel"), "A1"));
+    assertThrows(
+        NullPointerException.class, () -> NamedRangeTarget.range(new SheetName("Budget"), null));
+    assertThrows(
+        IllegalArgumentException.class, () -> NamedRangeTarget.range(new SheetName("Budget"), " "));
   }
 }

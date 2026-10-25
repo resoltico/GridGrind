@@ -16,6 +16,7 @@ import dev.erst.gridgrind.core.source.BinarySourceInput;
 import dev.erst.gridgrind.core.vocabulary.ExcelPictureFormat;
 import dev.erst.gridgrind.core.vocabulary.NamedRangeScope;
 import dev.erst.gridgrind.core.vocabulary.PlanId;
+import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import java.util.Optional;
 
@@ -53,17 +54,19 @@ final class WorkbookVisualizationExamples {
                                 TaskStarterRecipeSupport.onePixelPngBase64())))))),
         ExampleSteps.read(
             new StepId("step-03-read-drawing-objects"),
-            new dev.erst.gridgrind.core.plan.DrawingObjectSelector.AllOnSheet("Approvals"),
+            new dev.erst.gridgrind.core.plan.DrawingObjectSelector.AllOnSheet(
+                new SheetName("Approvals")),
             new WorkbookAssetIntrospectionQuery.GetDrawingObjects()),
         ExampleSteps.step(
             new StepId("step-04-move-signature-line"),
             new dev.erst.gridgrind.core.plan.DrawingObjectSelector.ByName(
-                "Approvals", "BudgetSignature"),
+                new SheetName("Approvals"), "BudgetSignature"),
             new DrawingMutationAction.SetDrawingObjectAnchor(
                 ExampleDrawingAnchors.anchor(5, 1, 8, 6))),
         ExampleSteps.read(
             new StepId("step-05-read-drawing-objects-after-move"),
-            new dev.erst.gridgrind.core.plan.DrawingObjectSelector.AllOnSheet("Approvals"),
+            new dev.erst.gridgrind.core.plan.DrawingObjectSelector.AllOnSheet(
+                new SheetName("Approvals")),
             new WorkbookAssetIntrospectionQuery.GetDrawingObjects()));
   }
 
@@ -103,14 +106,14 @@ final class WorkbookVisualizationExamples {
             new StructuredMutationAction.SetNamedRange(
                 "ChartCategories",
                 new NamedRangeScope.Workbook(),
-                NamedRangeTarget.range("Ops", "A2:A4"))),
+                NamedRangeTarget.range(new SheetName("Ops"), "A2:A4"))),
         ExampleSteps.step(
             new StepId("step-04-set-actual"),
             new NamedRangeSelector.WorkbookScope("ChartActual"),
             new StructuredMutationAction.SetNamedRange(
                 "ChartActual",
                 new NamedRangeScope.Workbook(),
-                NamedRangeTarget.range("Ops", "C2:C4"))),
+                NamedRangeTarget.range(new SheetName("Ops"), "C2:C4"))),
         ExampleSteps.step(
             new StepId("step-05-set-chart"),
             ExampleSelectors.sheet("Ops"),
@@ -126,11 +129,11 @@ final class WorkbookVisualizationExamples {
                     "ChartActual"))),
         ExampleSteps.read(
             new StepId("charts"),
-            new ChartSelector.AllOnSheet("Ops"),
+            new ChartSelector.AllOnSheet(new SheetName("Ops")),
             new WorkbookAssetIntrospectionQuery.GetCharts()),
         ExampleSteps.assertStep(
             new StepId("chart-present"),
-            new ChartSelector.ByName("Ops", "OpsChart"),
+            new ChartSelector.ByName(new SheetName("Ops"), "OpsChart"),
             new dev.erst.gridgrind.core.plan.PresenceAssertion.ChartPresent()));
   }
 
@@ -179,7 +182,7 @@ final class WorkbookVisualizationExamples {
                         ExampleCellValues.number(12.0d))))),
         ExampleSteps.step(
             new StepId("step-04-set-pivot"),
-            new PivotTableSelector.ByNameOnSheet("RegionalTotals", "RangeReport"),
+            new PivotTableSelector.ByNameOnSheet("RegionalTotals", new SheetName("RangeReport")),
             new StructuredMutationAction.SetPivotTable(
                 ExamplePivotInputs.regionalTotalsPivotFromRange(
                     "RegionalTotals", "RangeReport", "Data", "A1:D5"))),

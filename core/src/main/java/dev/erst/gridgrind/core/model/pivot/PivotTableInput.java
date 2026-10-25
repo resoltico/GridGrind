@@ -7,9 +7,9 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import dev.erst.gridgrind.core.metadata.ProtocolField;
 import dev.erst.gridgrind.core.vocabulary.ExcelPivotDataConsolidateFunction;
 import dev.erst.gridgrind.core.vocabulary.ExcelPivotTableNaming;
-import dev.erst.gridgrind.core.vocabulary.ExcelSheetNames;
 import dev.erst.gridgrind.core.vocabulary.ProtocolCellAddressValidation;
 import dev.erst.gridgrind.core.vocabulary.ProtocolDefinedNameValidation;
+import dev.erst.gridgrind.core.vocabulary.SheetName;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -21,7 +21,7 @@ import java.util.Set;
 /** Protocol-facing authored pivot-table definition. */
 public record PivotTableInput(
     String name,
-    String sheetName,
+    SheetName sheetName,
     Source source,
     Anchor anchor,
     @ProtocolField(optional = true) List<String> rowLabels,
@@ -32,7 +32,7 @@ public record PivotTableInput(
   @JsonCreator
   public static PivotTableInput create(
       @JsonProperty("name") String name,
-      @JsonProperty("sheetName") String sheetName,
+      @JsonProperty("sheetName") SheetName sheetName,
       @JsonProperty("source") Source source,
       @JsonProperty("anchor") Anchor anchor,
       @JsonProperty("rowLabels") List<String> rowLabels,
@@ -52,7 +52,7 @@ public record PivotTableInput(
 
   public PivotTableInput {
     name = ExcelPivotTableNaming.validateName(name);
-    ExcelSheetNames.requireValid(sheetName, "sheetName");
+    java.util.Objects.requireNonNull(sheetName, "sheetName must not be null");
     Objects.requireNonNull(source, "source must not be null");
     Objects.requireNonNull(anchor, "anchor must not be null");
     rowLabels = copyDistinctNames(rowLabels, "rowLabels");
@@ -72,9 +72,9 @@ public record PivotTableInput(
   public sealed interface Source permits Source.Range, Source.NamedRange, Source.Table {
 
     /** Explicit contiguous sheet range source with a header row in the first row. */
-    record Range(String sheetName, String range) implements Source {
+    record Range(SheetName sheetName, String range) implements Source {
       public Range {
-        ExcelSheetNames.requireValid(sheetName, "sheetName");
+        java.util.Objects.requireNonNull(sheetName, "sheetName must not be null");
         Objects.requireNonNull(range, "range must not be null");
         if (range.isBlank()) {
           throw new IllegalArgumentException("range must not be blank");

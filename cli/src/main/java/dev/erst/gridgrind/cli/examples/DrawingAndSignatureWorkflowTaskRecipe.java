@@ -18,6 +18,7 @@ import dev.erst.gridgrind.core.plan.WorkbookMutationAction;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import dev.erst.gridgrind.core.source.BinarySourceInput;
 import dev.erst.gridgrind.core.vocabulary.ExcelPictureFormat;
+import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import java.util.List;
 import java.util.Optional;
@@ -133,16 +134,16 @@ final class DrawingAndSignatureWorkflowTaskRecipe {
                                 TaskStarterRecipeSupport.onePixelPngBase64())))))),
         ExampleSteps.read(
             new StepId("read-drawing-objects"),
-            new DrawingObjectSelector.AllOnSheet("Approvals"),
+            new DrawingObjectSelector.AllOnSheet(new SheetName("Approvals")),
             new WorkbookAssetIntrospectionQuery.GetDrawingObjects()),
         ExampleSteps.step(
             new StepId("move-signature-line"),
-            new DrawingObjectSelector.ByName("Approvals", "WorkflowSignature"),
+            new DrawingObjectSelector.ByName(new SheetName("Approvals"), "WorkflowSignature"),
             new DrawingMutationAction.SetDrawingObjectAnchor(
                 ExampleDrawingAnchors.anchor(5, 1, 8, 6))),
         ExampleSteps.read(
             new StepId("read-drawing-objects-after-move"),
-            new DrawingObjectSelector.AllOnSheet("Approvals"),
+            new DrawingObjectSelector.AllOnSheet(new SheetName("Approvals")),
             new WorkbookAssetIntrospectionQuery.GetDrawingObjects()));
   }
 }

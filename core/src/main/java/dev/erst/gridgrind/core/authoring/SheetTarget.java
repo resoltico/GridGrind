@@ -4,6 +4,7 @@ import dev.erst.gridgrind.core.plan.ChartSelector;
 import dev.erst.gridgrind.core.plan.DrawingObjectSelector;
 import dev.erst.gridgrind.core.plan.SheetSelector;
 import dev.erst.gridgrind.core.plan.WorkbookMutationAction;
+import dev.erst.gridgrind.core.vocabulary.SheetName;
 import java.util.Objects;
 
 /** Sheet-scoped fluent target. */
@@ -24,7 +25,7 @@ public final class SheetTarget {
   }
 
   /** Returns one sheet-rename mutation step. */
-  public PlannedMutation renameTo(String newSheetName) {
+  public PlannedMutation renameTo(SheetName newSheetName) {
     return new PlannedMutation(selector, new WorkbookMutationAction.RenameSheet(newSheetName));
   }
 

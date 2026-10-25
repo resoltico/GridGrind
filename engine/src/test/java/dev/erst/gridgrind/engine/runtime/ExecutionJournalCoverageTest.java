@@ -40,6 +40,7 @@ import dev.erst.gridgrind.core.result.ExecutionJournalLevel;
 import dev.erst.gridgrind.core.result.WorkbookResult;
 import dev.erst.gridgrind.core.result.WorkbookResults;
 import dev.erst.gridgrind.core.vocabulary.PlanId;
+import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.json.codec.GridGrindJsonOutput;
 import java.util.ArrayList;
@@ -88,57 +89,59 @@ class ExecutionJournalCoverageTest {
         ExecutionJournalTargetResolver.resolve(workbookSummary, ExecutionJournalLevel.NORMAL));
     assertEquals(
         new ExecutionJournal.Target("SHEET", "Sheets [Budget, Ops]"),
-        summaryTarget(new SheetSelector.ByNames(List.of("Budget", "Ops"))));
+        summaryTarget(
+            new SheetSelector.ByNames(List.of(new SheetName("Budget"), new SheetName("Ops")))));
     assertEquals(
         new ExecutionJournal.Target("SHEET", "All sheets"), summaryTarget(new SheetSelector.All()));
     assertEquals(
         new ExecutionJournal.Target("SHEET", "Sheet Budget"),
-        summaryTarget(new SheetSelector.ByName("Budget")));
+        summaryTarget(new SheetSelector.ByName(new SheetName("Budget"))));
     assertEquals(
         new ExecutionJournal.Target("CELL", "All used cells on Budget"),
-        summaryTarget(new CellSelector.AllUsedInSheet("Budget")));
+        summaryTarget(new CellSelector.AllUsedInSheet(new SheetName("Budget"))));
     assertEquals(
         new ExecutionJournal.Target("CELL", "Cell Budget!B2"),
-        summaryTarget(new CellSelector.ByAddress("Budget", "B2")));
+        summaryTarget(new CellSelector.ByAddress(new SheetName("Budget"), "B2")));
     assertEquals(
         new ExecutionJournal.Target("CELL", "Cells Budget![B2, C3]"),
-        summaryTarget(new CellSelector.ByAddresses("Budget", List.of("B2", "C3"))));
+        summaryTarget(new CellSelector.ByAddresses(new SheetName("Budget"), List.of("B2", "C3"))));
     assertEquals(
         new ExecutionJournal.Target("RANGE", "All ranges on Budget"),
-        summaryTarget(new RangeSelector.AllOnSheet("Budget")));
+        summaryTarget(new RangeSelector.AllOnSheet(new SheetName("Budget"))));
     assertEquals(
         new ExecutionJournal.Target("RANGE", "Range Budget!A1:B4"),
-        summaryTarget(new RangeSelector.ByRange("Budget", "A1:B4")));
+        summaryTarget(new RangeSelector.ByRange(new SheetName("Budget"), "A1:B4")));
     assertEquals(
         new ExecutionJournal.Target("RANGE", "Ranges Budget![A1:B4, D2:E3]"),
-        summaryTarget(new RangeSelector.ByRanges("Budget", List.of("A1:B4", "D2:E3"))));
+        summaryTarget(
+            new RangeSelector.ByRanges(new SheetName("Budget"), List.of("A1:B4", "D2:E3"))));
     assertEquals(
         new ExecutionJournal.Target("RANGE", "Window Budget!B2:C4"),
-        summaryTarget(new RangeSelector.RectangularWindow("Budget", "B2", 3, 2)));
+        summaryTarget(new RangeSelector.RectangularWindow(new SheetName("Budget"), "B2", 3, 2)));
     assertEquals(
         new ExecutionJournal.Target("ROW_BAND", "Rows Budget[1:3]"),
-        summaryTarget(new RowBandSelector.Span("Budget", 1, 3)));
+        summaryTarget(new RowBandSelector.Span(new SheetName("Budget"), 1, 3)));
     assertEquals(
         new ExecutionJournal.Target("ROW_BAND", "Row insertion Budget[before=2, count=4]"),
-        summaryTarget(new RowBandSelector.Insertion("Budget", 2, 4)));
+        summaryTarget(new RowBandSelector.Insertion(new SheetName("Budget"), 2, 4)));
     assertEquals(
         new ExecutionJournal.Target("COLUMN_BAND", "Columns Budget[1:3]"),
-        summaryTarget(new ColumnBandSelector.Span("Budget", 1, 3)));
+        summaryTarget(new ColumnBandSelector.Span(new SheetName("Budget"), 1, 3)));
     assertEquals(
         new ExecutionJournal.Target("COLUMN_BAND", "Column insertion Budget[before=2, count=4]"),
-        summaryTarget(new ColumnBandSelector.Insertion("Budget", 2, 4)));
+        summaryTarget(new ColumnBandSelector.Insertion(new SheetName("Budget"), 2, 4)));
     assertEquals(
         new ExecutionJournal.Target("DRAWING", "All drawing objects on Budget"),
-        summaryTarget(new DrawingObjectSelector.AllOnSheet("Budget")));
+        summaryTarget(new DrawingObjectSelector.AllOnSheet(new SheetName("Budget"))));
     assertEquals(
         new ExecutionJournal.Target("DRAWING", "Drawing object Budget!Logo"),
-        summaryTarget(new DrawingObjectSelector.ByName("Budget", "Logo")));
+        summaryTarget(new DrawingObjectSelector.ByName(new SheetName("Budget"), "Logo")));
     assertEquals(
         new ExecutionJournal.Target("CHART", "All charts on Budget"),
-        summaryTarget(new ChartSelector.AllOnSheet("Budget")));
+        summaryTarget(new ChartSelector.AllOnSheet(new SheetName("Budget"))));
     assertEquals(
         new ExecutionJournal.Target("CHART", "Chart Budget!Revenue"),
-        summaryTarget(new ChartSelector.ByName("Budget", "Revenue")));
+        summaryTarget(new ChartSelector.ByName(new SheetName("Budget"), "Revenue")));
     assertEquals(
         new ExecutionJournal.Target("TABLE", "Tables [BudgetTable, OpsTable]"),
         summaryTarget(new TableSelector.ByNames(List.of("BudgetTable", "OpsTable"))));
@@ -149,7 +152,7 @@ class ExecutionJournalCoverageTest {
         summaryTarget(new TableSelector.ByName("BudgetTable")));
     assertEquals(
         new ExecutionJournal.Target("TABLE", "Table Budget!BudgetTable"),
-        summaryTarget(new TableSelector.ByNameOnSheet("BudgetTable", "Budget")));
+        summaryTarget(new TableSelector.ByNameOnSheet("BudgetTable", new SheetName("Budget"))));
     assertEquals(
         new ExecutionJournal.Target("PIVOT_TABLE", "Pivot tables [RevenuePivot, CostPivot]"),
         summaryTarget(new PivotTableSelector.ByNames(List.of("RevenuePivot", "CostPivot"))));
@@ -161,7 +164,8 @@ class ExecutionJournalCoverageTest {
         summaryTarget(new PivotTableSelector.ByName("RevenuePivot")));
     assertEquals(
         new ExecutionJournal.Target("PIVOT_TABLE", "Pivot table Budget!RevenuePivot"),
-        summaryTarget(new PivotTableSelector.ByNameOnSheet("RevenuePivot", "Budget")));
+        summaryTarget(
+            new PivotTableSelector.ByNameOnSheet("RevenuePivot", new SheetName("Budget"))));
     assertEquals(
         new ExecutionJournal.Target("NAMED_RANGE", "Named ranges [Gross, Margin]"),
         summaryTarget(new NamedRangeSelector.ByNames(List.of("Gross", "Margin"))));
@@ -176,7 +180,7 @@ class ExecutionJournalCoverageTest {
         summaryTarget(new NamedRangeSelector.WorkbookScope("Gross")));
     assertEquals(
         new ExecutionJournal.Target("NAMED_RANGE", "Sheet-scoped named range Budget!Margin"),
-        summaryTarget(new NamedRangeSelector.SheetScope("Margin", "Budget")));
+        summaryTarget(new NamedRangeSelector.SheetScope("Margin", new SheetName("Budget"))));
 
     ExecutionJournal.Target anyOfSummary =
         summaryTarget(
@@ -184,7 +188,7 @@ class ExecutionJournalCoverageTest {
                 List.of(
                     new NamedRangeSelector.ByName("Gross"),
                     new NamedRangeSelector.WorkbookScope("Margin"),
-                    new NamedRangeSelector.SheetScope("Net", "Budget"))));
+                    new NamedRangeSelector.SheetScope("Net", new SheetName("Budget")))));
     assertEquals("NAMED_RANGE", anyOfSummary.kind());
     assertTrue(anyOfSummary.label().startsWith("Named range selector ["));
 
@@ -260,7 +264,7 @@ class ExecutionJournalCoverageTest {
                 List.of(
                     new NamedRangeSelector.ByName("Gross"),
                     new NamedRangeSelector.WorkbookScope("Margin"),
-                    new NamedRangeSelector.SheetScope("Net", "Budget"))));
+                    new NamedRangeSelector.SheetScope("Net", new SheetName("Budget")))));
     assertEquals(
         List.of(
             new ExecutionJournal.Target("NAMED_RANGE", "Named range Gross"),
@@ -307,7 +311,7 @@ class ExecutionJournalCoverageTest {
     InspectionStep failedWithCalculation =
         new InspectionStep(
             new StepId("step-3"),
-            new CellSelector.ByAddress("Budget", "B2"),
+            new CellSelector.ByAddress(new SheetName("Budget"), "B2"),
             new SheetIntrospectionQuery.GetCells());
     ExecutionJournalRecorder.StepHandle stepHandle = recorder.beginStep(2, failedWithCalculation);
     ExecutionJournalRecorder.PhaseHandle calculationPreflight =
@@ -352,7 +356,7 @@ class ExecutionJournalCoverageTest {
             0,
             new InspectionStep(
                 new StepId("step-1"),
-                new CellSelector.ByAddress("Budget", "B2"),
+                new CellSelector.ByAddress(new SheetName("Budget"), "B2"),
                 new SheetIntrospectionQuery.GetCells()));
     stepHandle.fail(
         GridGrindProblemCode.IO_ERROR, GridGrindProblemCategory.IO, "EXECUTE_STEP", "boom");
@@ -385,7 +389,7 @@ class ExecutionJournalCoverageTest {
     MutationStep selectionStep =
         new MutationStep(
             new StepId("step-1"),
-            new SheetSelector.ByNames(List.of("Budget", "Ops")),
+            new SheetSelector.ByNames(List.of(new SheetName("Budget"), new SheetName("Ops"))),
             new WorkbookMutationAction.SetSelectedSheets());
 
     ExecutionJournal summary = completedJournal(ExecutionJournalLevel.SUMMARY, selectionStep);
@@ -464,7 +468,7 @@ class ExecutionJournalCoverageTest {
         List.of(
             new MutationStep(
                 new StepId("ensure-ledger"),
-                new SheetSelector.ByName("Ledger"),
+                new SheetSelector.ByName(new SheetName("Ledger")),
                 new WorkbookMutationAction.EnsureSheet())),
         List.of());
   }

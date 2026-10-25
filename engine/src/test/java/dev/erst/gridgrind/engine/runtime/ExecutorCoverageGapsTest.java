@@ -32,6 +32,7 @@ import dev.erst.gridgrind.core.problem.ProblemContextRequestSurfaces;
 import dev.erst.gridgrind.core.result.ExecutionJournal;
 import dev.erst.gridgrind.core.source.TextSourceInput;
 import dev.erst.gridgrind.core.vocabulary.ExcelBorderStyle;
+import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.excel.ExcelDifferentialBorder;
 import dev.erst.gridgrind.excel.ooxml.ExcelOoxmlOpenOptions;
 import java.io.IOException;
@@ -61,20 +62,20 @@ class ExecutorCoverageGapsTest {
         List.of(
             workbookSelector,
             new SheetSelector.All(),
-            new SheetSelector.ByName("Budget"),
-            new SheetSelector.ByNames(List.of("Budget", "Ops")),
-            new CellSelector.AllUsedInSheet("Budget"),
-            new CellSelector.ByAddress("Budget", "A1"),
-            new CellSelector.ByAddresses("Budget", List.of("A1", "B2")),
-            new RangeSelector.AllOnSheet("Budget"),
-            new RangeSelector.ByRange("Budget", "A1:B2"),
-            new RangeSelector.ByRanges("Budget", List.of("A1:B2", "C1:D2")),
-            new RowBandSelector.Span("Budget", 0, 1),
-            new ColumnBandSelector.Insertion("Budget", 1, 2),
-            new DrawingObjectSelector.AllOnSheet("Budget"),
-            new DrawingObjectSelector.ByName("Budget", "Logo"),
-            new ChartSelector.AllOnSheet("Budget"),
-            new ChartSelector.ByName("Budget", "OpsChart"),
+            new SheetSelector.ByName(new SheetName("Budget")),
+            new SheetSelector.ByNames(List.of(new SheetName("Budget"), new SheetName("Ops"))),
+            new CellSelector.AllUsedInSheet(new SheetName("Budget")),
+            new CellSelector.ByAddress(new SheetName("Budget"), "A1"),
+            new CellSelector.ByAddresses(new SheetName("Budget"), List.of("A1", "B2")),
+            new RangeSelector.AllOnSheet(new SheetName("Budget")),
+            new RangeSelector.ByRange(new SheetName("Budget"), "A1:B2"),
+            new RangeSelector.ByRanges(new SheetName("Budget"), List.of("A1:B2", "C1:D2")),
+            new RowBandSelector.Span(new SheetName("Budget"), 0, 1),
+            new ColumnBandSelector.Insertion(new SheetName("Budget"), 1, 2),
+            new DrawingObjectSelector.AllOnSheet(new SheetName("Budget")),
+            new DrawingObjectSelector.ByName(new SheetName("Budget"), "Logo"),
+            new ChartSelector.AllOnSheet(new SheetName("Budget")),
+            new ChartSelector.ByName(new SheetName("Budget"), "OpsChart"),
             new TableSelector.All(),
             new TableSelector.ByName("BudgetTable"),
             new TableSelector.ByNames(List.of("BudgetTable")),
@@ -88,7 +89,7 @@ class ExecutorCoverageGapsTest {
             new NamedRangeSelector.AnyOf(
                 List.of(
                     new NamedRangeSelector.ByName("BudgetTotal"),
-                    new NamedRangeSelector.SheetScope("OpsTotal", "Ops"))),
+                    new NamedRangeSelector.SheetScope("OpsTotal", new SheetName("Ops")))),
             new TableRowSelector.AllRows(new TableSelector.ByName("BudgetTable")),
             new TableRowSelector.ByIndex(new TableSelector.ByName("BudgetTable"), 0),
             keyedRow,
@@ -124,7 +125,7 @@ class ExecutorCoverageGapsTest {
     TableCellSelector.ByColumnName tableCell =
         new TableCellSelector.ByColumnName(
             new TableRowSelector.ByIndex(
-                new TableSelector.ByNameOnSheet("BudgetTable", "Budget"), 0),
+                new TableSelector.ByNameOnSheet("BudgetTable", new SheetName("Budget")), 0),
             "Owner");
     TableRowSelector.ByKeyCell keyedRow =
         new TableRowSelector.ByKeyCell(
@@ -135,39 +136,39 @@ class ExecutorCoverageGapsTest {
         List.of(
             new WorkbookSelector.Current(),
             new SheetSelector.All(),
-            new SheetSelector.ByName("Budget"),
-            new CellSelector.AllUsedInSheet("Budget"),
-            new CellSelector.ByAddress("Budget", "A1"),
-            new RangeSelector.AllOnSheet("Budget"),
-            new RangeSelector.ByRange("Budget", "A1:B2"),
-            new RangeSelector.RectangularWindow("Budget", "A1", 2, 2),
-            new RowBandSelector.Span("Budget", 0, 1),
-            new RowBandSelector.Insertion("Budget", 1, 2),
-            new ColumnBandSelector.Span("Budget", 0, 1),
-            new ColumnBandSelector.Insertion("Budget", 1, 2),
-            new DrawingObjectSelector.AllOnSheet("Budget"),
-            new DrawingObjectSelector.ByName("Budget", "Logo"),
-            new ChartSelector.AllOnSheet("Budget"),
-            new ChartSelector.ByName("Budget", "OpsChart"),
+            new SheetSelector.ByName(new SheetName("Budget")),
+            new CellSelector.AllUsedInSheet(new SheetName("Budget")),
+            new CellSelector.ByAddress(new SheetName("Budget"), "A1"),
+            new RangeSelector.AllOnSheet(new SheetName("Budget")),
+            new RangeSelector.ByRange(new SheetName("Budget"), "A1:B2"),
+            new RangeSelector.RectangularWindow(new SheetName("Budget"), "A1", 2, 2),
+            new RowBandSelector.Span(new SheetName("Budget"), 0, 1),
+            new RowBandSelector.Insertion(new SheetName("Budget"), 1, 2),
+            new ColumnBandSelector.Span(new SheetName("Budget"), 0, 1),
+            new ColumnBandSelector.Insertion(new SheetName("Budget"), 1, 2),
+            new DrawingObjectSelector.AllOnSheet(new SheetName("Budget")),
+            new DrawingObjectSelector.ByName(new SheetName("Budget"), "Logo"),
+            new ChartSelector.AllOnSheet(new SheetName("Budget")),
+            new ChartSelector.ByName(new SheetName("Budget"), "OpsChart"),
             new TableSelector.All(),
             new TableSelector.ByName("BudgetTable"),
-            new TableSelector.ByNameOnSheet("BudgetTable", "Budget"),
+            new TableSelector.ByNameOnSheet("BudgetTable", new SheetName("Budget")),
             new PivotTableSelector.All(),
             new PivotTableSelector.ByName("BudgetPivot"),
-            new PivotTableSelector.ByNameOnSheet("BudgetPivot", "Budget"),
+            new PivotTableSelector.ByNameOnSheet("BudgetPivot", new SheetName("Budget")),
             new NamedRangeSelector.All(),
             new NamedRangeSelector.ByName("BudgetTotal"),
             new NamedRangeSelector.WorkbookScope("BudgetTotal"),
-            new NamedRangeSelector.SheetScope("BudgetTotal", "Budget"),
+            new NamedRangeSelector.SheetScope("BudgetTotal", new SheetName("Budget")),
             new TableRowSelector.AllRows(new TableSelector.ByName("BudgetTable")),
             new TableRowSelector.ByIndex(new TableSelector.ByName("BudgetTable"), 0),
             keyedRow,
             tableCell);
     List<Selector> expandedSelectors =
         List.of(
-            new SheetSelector.ByNames(List.of("Budget", "Ops")),
-            new CellSelector.ByAddresses("Budget", List.of("A1", "B2")),
-            new RangeSelector.ByRanges("Budget", List.of("A1:B2", "C1:D2")),
+            new SheetSelector.ByNames(List.of(new SheetName("Budget"), new SheetName("Ops"))),
+            new CellSelector.ByAddresses(new SheetName("Budget"), List.of("A1", "B2")),
+            new RangeSelector.ByRanges(new SheetName("Budget"), List.of("A1:B2", "C1:D2")),
             new TableSelector.ByNames(List.of("BudgetTable", "OpsTable")),
             new PivotTableSelector.ByNames(List.of("BudgetPivot", "OpsPivot")),
             new NamedRangeSelector.ByNames(List.of("BudgetTotal", "OpsTotal")),
@@ -175,7 +176,7 @@ class ExecutorCoverageGapsTest {
                 List.of(
                     new NamedRangeSelector.ByName("BudgetTotal"),
                     new NamedRangeSelector.WorkbookScope("GrandTotal"),
-                    new NamedRangeSelector.SheetScope("OpsTotal", "Ops"))));
+                    new NamedRangeSelector.SheetScope("OpsTotal", new SheetName("Ops")))));
     GridGrindProblemDetail.Problem problem =
         GridGrindProblems.fromException(
             badRequest(Optional.empty(), Optional.of(11), Optional.empty()),

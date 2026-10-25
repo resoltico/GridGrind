@@ -96,6 +96,7 @@ import dev.erst.gridgrind.core.vocabulary.ExcelPivotDataConsolidateFunction;
 import dev.erst.gridgrind.core.vocabulary.ExcelPrintOrientation;
 import dev.erst.gridgrind.core.vocabulary.PlanId;
 import dev.erst.gridgrind.core.vocabulary.ProtocolRgbColorSupport;
+import dev.erst.gridgrind.core.vocabulary.SheetName;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
@@ -428,11 +429,11 @@ class ProtocolDefaultingCoverageTest {
   void tableWireConstructorsCoverExplicitAndDefaultedBranches() {
     TableInput defaultedTable =
         TableInput.withDefaultMetadata(
-            "Budget", "Budget", "A1:B3", false, new TableStyleInput.None());
+            "Budget", new SheetName("Budget"), "A1:B3", false, new TableStyleInput.None());
     TableInput explicitTable =
         new TableInput(
             "StyledBudget",
-            "Budget",
+            new dev.erst.gridgrind.core.vocabulary.SheetName("Budget"),
             "A1:C3",
             true,
             false,
@@ -448,7 +449,7 @@ class ProtocolDefaultingCoverageTest {
     TableInput explicitAutofilterTable =
         new TableInput(
             "VisibleAutofilterBudget",
-            "Budget",
+            new dev.erst.gridgrind.core.vocabulary.SheetName("Budget"),
             "A1:C3",
             Boolean.FALSE,
             Boolean.TRUE,
@@ -464,7 +465,7 @@ class ProtocolDefaultingCoverageTest {
     TableInput explicitTotalsAndNoAutofilterTable =
         new TableInput(
             "TotalsWithoutAutofilterBudget",
-            "Budget",
+            new dev.erst.gridgrind.core.vocabulary.SheetName("Budget"),
             "A1:C3",
             Boolean.TRUE,
             Boolean.FALSE,
@@ -514,7 +515,7 @@ class ProtocolDefaultingCoverageTest {
     TableInput defaultedWireTable =
         new TableInput(
             "Budget",
-            "Budget",
+            new SheetName("Budget"),
             "A1:B3",
             null,
             null,

@@ -31,6 +31,7 @@ import dev.erst.gridgrind.core.result.WorkbookResultPersistence;
 import dev.erst.gridgrind.core.vocabulary.ExcelBorderStyle;
 import dev.erst.gridgrind.core.vocabulary.ExcelHorizontalAlignment;
 import dev.erst.gridgrind.core.vocabulary.ExcelVerticalAlignment;
+import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
 import dev.erst.gridgrind.excel.ExcelWorkbooks;
 import dev.erst.gridgrind.excel.WorkbookExecutionEngine;
@@ -66,10 +67,10 @@ class DefaultGridGrindRequestExecutorStyleAndFormulaTest
                     null,
                     mutations(
                         mutate(
-                            new SheetSelector.ByName("Budget"),
+                            new SheetSelector.ByName(new SheetName("Budget")),
                             new WorkbookMutationAction.EnsureSheet()),
                         mutate(
-                            new RangeSelector.ByRange("Budget", "A1:B2"),
+                            new RangeSelector.ByRange(new SheetName("Budget"), "A1:B2"),
                             new CellMutationAction.SetRange(
                                 new dev.erst.gridgrind.core.model.value.CellGridInput.Typed(
                                     List.of(
@@ -78,7 +79,7 @@ class DefaultGridGrindRequestExecutorStyleAndFormulaTest
                                             textCell("Hosting"),
                                             new CellInput.NumberValue(49.0)))))),
                         mutate(
-                            new RangeSelector.ByRange("Budget", "A1:B1"),
+                            new RangeSelector.ByRange(new SheetName("Budget"), "A1:B1"),
                             new CellMutationAction.ApplyStyle(
                                 styleInput(
                                     "#,##0.00",
@@ -93,7 +94,7 @@ class DefaultGridGrindRequestExecutorStyleAndFormulaTest
                                     null,
                                     null))),
                         mutate(
-                            new RangeSelector.ByRange("Budget", "C1"),
+                            new RangeSelector.ByRange(new SheetName("Budget"), "C1"),
                             new CellMutationAction.ApplyStyle(
                                 styleInput(
                                     null,
@@ -108,18 +109,19 @@ class DefaultGridGrindRequestExecutorStyleAndFormulaTest
                                     null,
                                     null))),
                         mutate(
-                            new CellSelector.ByAddress("Budget", "B3"),
+                            new CellSelector.ByAddress(new SheetName("Budget"), "B3"),
                             new CellMutationAction.SetCell(formulaCell("SUM(B2:B2)"))),
                         mutate(
-                            new RangeSelector.ByRange("Budget", "A2"),
+                            new RangeSelector.ByRange(new SheetName("Budget"), "A2"),
                             new CellMutationAction.ClearRange())),
                     inspect(
                         "cells",
-                        new CellSelector.ByAddresses("Budget", List.of("A1", "A2", "B3", "C1")),
+                        new CellSelector.ByAddresses(
+                            new SheetName("Budget"), List.of("A1", "A2", "B3", "C1")),
                         allFacetCellsQuery()),
                     inspect(
                         "window",
-                        new RangeSelector.RectangularWindow("Budget", "A1", 3, 3),
+                        new RangeSelector.RectangularWindow(new SheetName("Budget"), "A1", 3, 3),
                         new SheetIntrospectionQuery.GetWindow()))));
 
     SheetInspectionResult.CellsResult cells =
@@ -154,13 +156,13 @@ class DefaultGridGrindRequestExecutorStyleAndFormulaTest
                         workbookPath.toString(), WorkbookPlan.WorkbookPersistence.IfExists.REJECT),
                     mutations(
                         mutate(
-                            new SheetSelector.ByName("Budget"),
+                            new SheetSelector.ByName(new SheetName("Budget")),
                             new WorkbookMutationAction.EnsureSheet()),
                         mutate(
-                            new CellSelector.ByAddress("Budget", "A1"),
+                            new CellSelector.ByAddress(new SheetName("Budget"), "A1"),
                             new CellMutationAction.SetCell(textCell("Item"))),
                         mutate(
-                            new RangeSelector.ByRange("Budget", "A1"),
+                            new RangeSelector.ByRange(new SheetName("Budget"), "A1"),
                             new CellMutationAction.ApplyStyle(
                                 styleInput(
                                     null,
@@ -198,7 +200,7 @@ class DefaultGridGrindRequestExecutorStyleAndFormulaTest
                                         Optional.of(false), Optional.of(true)))))),
                     inspect(
                         "cells",
-                        new CellSelector.ByAddresses("Budget", List.of("A1")),
+                        new CellSelector.ByAddresses(new SheetName("Budget"), List.of("A1")),
                         allFacetCellsQuery()))));
 
     CellStyleReport style =
@@ -258,17 +260,17 @@ class DefaultGridGrindRequestExecutorStyleAndFormulaTest
                         workbookPath.toString(), WorkbookPlan.WorkbookPersistence.IfExists.REJECT),
                     mutations(
                         mutate(
-                            new SheetSelector.ByName("Budget"),
+                            new SheetSelector.ByName(new SheetName("Budget")),
                             new WorkbookMutationAction.EnsureSheet()),
                         mutate(
-                            new RangeSelector.ByRange("Budget", "A1:A2"),
+                            new RangeSelector.ByRange(new SheetName("Budget"), "A1:A2"),
                             new CellMutationAction.SetRange(
                                 new dev.erst.gridgrind.core.model.value.CellGridInput.Typed(
                                     List.of(
                                         List.of(textCell("ThemeTintStyle")),
                                         List.of(textCell("GradientFillStyle")))))),
                         mutate(
-                            new RangeSelector.ByRange("Budget", "A1"),
+                            new RangeSelector.ByRange(new SheetName("Budget"), "A1"),
                             new CellMutationAction.ApplyStyle(
                                 styleInput(
                                     null,
@@ -297,7 +299,7 @@ class DefaultGridGrindRequestExecutorStyleAndFormulaTest
                                         Optional.empty()),
                                     null))),
                         mutate(
-                            new RangeSelector.ByRange("Budget", "A2"),
+                            new RangeSelector.ByRange(new SheetName("Budget"), "A2"),
                             new CellMutationAction.ApplyStyle(
                                 styleInput(
                                     null,
@@ -316,7 +318,7 @@ class DefaultGridGrindRequestExecutorStyleAndFormulaTest
                                         Optional.of(true), Optional.of(true)))))),
                     inspect(
                         "cells",
-                        new CellSelector.ByAddresses("Budget", List.of("A1", "A2")),
+                        new CellSelector.ByAddresses(new SheetName("Budget"), List.of("A1", "A2")),
                         allFacetCellsQuery()))));
 
     SheetInspectionResult.CellsResult cells =
@@ -354,13 +356,13 @@ class DefaultGridGrindRequestExecutorStyleAndFormulaTest
                         workbookPath.toString(), WorkbookPlan.WorkbookPersistence.IfExists.REJECT),
                     mutations(
                         mutate(
-                            new SheetSelector.ByName("Budget"),
+                            new SheetSelector.ByName(new SheetName("Budget")),
                             new WorkbookMutationAction.EnsureSheet()),
                         mutate(
-                            new CellSelector.ByAddress("Budget", "A2"),
+                            new CellSelector.ByAddress(new SheetName("Budget"), "A2"),
                             new CellMutationAction.SetCell(textCell("Linear gradient"))),
                         mutate(
-                            new RangeSelector.ByRange("Budget", "A2"),
+                            new RangeSelector.ByRange(new SheetName("Budget"), "A2"),
                             new CellMutationAction.ApplyStyle(
                                 styleInput(
                                     null,
@@ -378,10 +380,10 @@ class DefaultGridGrindRequestExecutorStyleAndFormulaTest
                                     new CellProtectionInput(
                                         Optional.of(true), Optional.of(true))))),
                         mutate(
-                            new CellSelector.ByAddress("Budget", "A3"),
+                            new CellSelector.ByAddress(new SheetName("Budget"), "A3"),
                             new CellMutationAction.SetCell(textCell("Path gradient"))),
                         mutate(
-                            new RangeSelector.ByRange("Budget", "A3"),
+                            new RangeSelector.ByRange(new SheetName("Budget"), "A3"),
                             new CellMutationAction.ApplyStyle(
                                 styleInput(
                                     null,
@@ -406,7 +408,7 @@ class DefaultGridGrindRequestExecutorStyleAndFormulaTest
                                         Optional.of(false), Optional.of(true)))))),
                     inspect(
                         "cells",
-                        new CellSelector.ByAddresses("Budget", List.of("A2", "A3")),
+                        new CellSelector.ByAddresses(new SheetName("Budget"), List.of("A2", "A3")),
                         allFacetCellsQuery()))));
 
     SheetInspectionResult.CellsResult cells =
@@ -443,14 +445,14 @@ class DefaultGridGrindRequestExecutorStyleAndFormulaTest
                     null,
                     mutations(
                         mutate(
-                            new SheetSelector.ByName("Data"),
+                            new SheetSelector.ByName(new SheetName("Data")),
                             new WorkbookMutationAction.EnsureSheet()),
                         mutate(
-                            new CellSelector.ByAddress("Data", "A1"),
+                            new CellSelector.ByAddress(new SheetName("Data"), "A1"),
                             new CellMutationAction.SetCell(formulaCell("1/0")))),
                     inspect(
                         "cells",
-                        new CellSelector.ByAddresses("Data", List.of("A1")),
+                        new CellSelector.ByAddresses(new SheetName("Data"), List.of("A1")),
                         allFacetCellsQuery()))));
 
     dev.erst.gridgrind.core.model.value.CellReport cell =
@@ -468,7 +470,7 @@ class DefaultGridGrindRequestExecutorStyleAndFormulaTest
     RuntimeException exception = new RuntimeException("test");
     ExecutorTestPlanSupport.PendingMutation operation =
         mutate(
-            new CellSelector.ByAddress("Data", "A1"),
+            new CellSelector.ByAddress(new SheetName("Data"), "A1"),
             new CellMutationAction.SetCell(formulaCell("SUM(B1:B2)")));
 
     assertEquals("SUM(B1:B2)", formulaFor(operation, exception));
@@ -605,7 +607,7 @@ class DefaultGridGrindRequestExecutorStyleAndFormulaTest
                     new WorkbookPlan.WorkbookPersistence.None(),
                     List.of(
                         mutate(
-                            new SheetSelector.ByName("Budget"),
+                            new SheetSelector.ByName(new SheetName("Budget")),
                             new WorkbookMutationAction.EnsureSheet())))));
 
     assertEquals(GridGrindProblemCode.INTERNAL_ERROR, failure.problem().code());
@@ -619,7 +621,7 @@ class DefaultGridGrindRequestExecutorStyleAndFormulaTest
             IllegalArgumentException.class,
             () ->
                 mutate(
-                    new RangeSelector.ByRange("Budget", "A1:"),
+                    new RangeSelector.ByRange(new SheetName("Budget"), "A1:"),
                     new CellMutationAction.ClearRange()));
 
     assertEquals("range must not be blank", failure.getMessage());
@@ -632,7 +634,7 @@ class DefaultGridGrindRequestExecutorStyleAndFormulaTest
             IllegalArgumentException.class,
             () ->
                 mutate(
-                    new RangeSelector.ByRange("Budget", "A1:"),
+                    new RangeSelector.ByRange(new SheetName("Budget"), "A1:"),
                     new CellMutationAction.SetRange(
                         new dev.erst.gridgrind.core.model.value.CellGridInput.Typed(
                             List.of(List.of(textCell("x")))))));
@@ -647,7 +649,7 @@ class DefaultGridGrindRequestExecutorStyleAndFormulaTest
             IllegalArgumentException.class,
             () ->
                 mutate(
-                    new RangeSelector.ByRange("Budget", "A1:"),
+                    new RangeSelector.ByRange(new SheetName("Budget"), "A1:"),
                     new CellMutationAction.ApplyStyle(
                         styleInput(
                             null,
@@ -671,10 +673,10 @@ class DefaultGridGrindRequestExecutorStyleAndFormulaTest
                     new WorkbookPlan.WorkbookPersistence.None(),
                     mutations(
                         mutate(
-                            new SheetSelector.ByName("Budget"),
+                            new SheetSelector.ByName(new SheetName("Budget")),
                             new WorkbookMutationAction.EnsureSheet()),
                         mutate(
-                            new SheetSelector.ByName("Budget"),
+                            new SheetSelector.ByName(new SheetName("Budget")),
                             new CellMutationAction.AppendRow(
                                 new dev.erst.gridgrind.core.model.value.CellRowInput.Typed(
                                     List.of(formulaCell("SUM(")))))))));
@@ -697,12 +699,14 @@ class DefaultGridGrindRequestExecutorStyleAndFormulaTest
                 workbookProtection(true, false, false, null, null)));
     ExecutorTestPlanSupport.PendingMutation appendRow =
         mutate(
-            new SheetSelector.ByName("Budget"),
+            new SheetSelector.ByName(new SheetName("Budget")),
             new CellMutationAction.AppendRow(
                 new dev.erst.gridgrind.core.model.value.CellRowInput.Typed(
                     List.of(textCell("x")))));
     ExecutorTestPlanSupport.PendingMutation ensureSheet =
-        mutate(new SheetSelector.ByName("Budget"), new WorkbookMutationAction.EnsureSheet());
+        mutate(
+            new SheetSelector.ByName(new SheetName("Budget")),
+            new WorkbookMutationAction.EnsureSheet());
 
     assertNull(formulaFor(clearWorkbookProtection, exception));
     assertNull(formulaFor(setWorkbookProtection, exception));
@@ -721,7 +725,7 @@ class DefaultGridGrindRequestExecutorStyleAndFormulaTest
     RuntimeException exception = new RuntimeException("test");
     ExecutorTestPlanSupport.PendingMutation operation =
         mutate(
-            new CellSelector.ByAddress("Budget", "A1"),
+            new CellSelector.ByAddress(new SheetName("Budget"), "A1"),
             new CellMutationAction.SetCell(textCell("hello")));
 
     assertNull(formulaFor(operation, exception));
@@ -737,19 +741,19 @@ class DefaultGridGrindRequestExecutorStyleAndFormulaTest
     assertNull(
         formulaFor(
             mutate(
-                new CellSelector.ByAddress("S", "A1"),
+                new CellSelector.ByAddress(new SheetName("S"), "A1"),
                 new CellMutationAction.SetCell(new CellInput.Blank())),
             exception));
     assertNull(
         formulaFor(
             mutate(
-                new CellSelector.ByAddress("S", "A1"),
+                new CellSelector.ByAddress(new SheetName("S"), "A1"),
                 new CellMutationAction.SetCell(textCell("hello"))),
             exception));
     assertNull(
         formulaFor(
             mutate(
-                new CellSelector.ByAddress("S", "A1"),
+                new CellSelector.ByAddress(new SheetName("S"), "A1"),
                 new CellMutationAction.SetCell(
                     new CellInput.RichText(
                         List.of(
@@ -769,25 +773,25 @@ class DefaultGridGrindRequestExecutorStyleAndFormulaTest
     assertNull(
         formulaFor(
             mutate(
-                new CellSelector.ByAddress("S", "A1"),
+                new CellSelector.ByAddress(new SheetName("S"), "A1"),
                 new CellMutationAction.SetCell(new CellInput.NumberValue(1.0))),
             exception));
     assertNull(
         formulaFor(
             mutate(
-                new CellSelector.ByAddress("S", "A1"),
+                new CellSelector.ByAddress(new SheetName("S"), "A1"),
                 new CellMutationAction.SetCell(new CellInput.BooleanValue(true))),
             exception));
     assertNull(
         formulaFor(
             mutate(
-                new CellSelector.ByAddress("S", "A1"),
+                new CellSelector.ByAddress(new SheetName("S"), "A1"),
                 new CellMutationAction.SetCell(new CellInput.Date(LocalDate.of(2024, 1, 1)))),
             exception));
     assertNull(
         formulaFor(
             mutate(
-                new CellSelector.ByAddress("S", "A1"),
+                new CellSelector.ByAddress(new SheetName("S"), "A1"),
                 new CellMutationAction.SetCell(
                     new CellInput.DateTime(LocalDateTime.of(2024, 1, 1, 0, 0)))),
             exception));

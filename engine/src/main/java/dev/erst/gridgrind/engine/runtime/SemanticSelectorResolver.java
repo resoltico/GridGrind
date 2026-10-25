@@ -14,6 +14,7 @@ import dev.erst.gridgrind.core.plan.SheetIntrospectionQuery;
 import dev.erst.gridgrind.core.plan.TableCellSelector;
 import dev.erst.gridgrind.core.plan.TableRowSelector;
 import dev.erst.gridgrind.core.plan.TableSelector;
+import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.excel.ExcelCellSnapshot;
 import dev.erst.gridgrind.excel.ExcelSheet;
@@ -89,7 +90,7 @@ final class SemanticSelectorResolver {
     if (target instanceof TableCellSelector.ByColumnName tableCell) {
       ResolvedTableCell resolvedCell = resolveTableCell(workbook, tableCell, false);
       return new CellSelector.ByAddress(
-          resolvedCell.sheetName(),
+          new SheetName(resolvedCell.sheetName()),
           Objects.requireNonNull(resolvedCell.address(), "resolved cell address must be present"));
     }
     return target;
@@ -107,7 +108,7 @@ final class SemanticSelectorResolver {
     }
     return ResolvedInspectionTarget.direct(
         new CellSelector.ByAddress(
-            resolvedCell.sheetName(),
+            new SheetName(resolvedCell.sheetName()),
             Objects.requireNonNull(
                 resolvedCell.address(), "resolved cell address must be present")));
   }
@@ -224,7 +225,7 @@ final class SemanticSelectorResolver {
     }
     ExcelTableSnapshot table = tables.getFirst();
     if (selector instanceof TableSelector.ByNameOnSheet byNameOnSheet
-        && !table.sheetName().equals(byNameOnSheet.sheetName())) {
+        && !table.sheetName().equals(byNameOnSheet.sheetName().value())) {
       throw new IllegalArgumentException(
           "table not found on expected sheet: "
               + byNameOnSheet.name()

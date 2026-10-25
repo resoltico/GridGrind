@@ -2,6 +2,7 @@ package dev.erst.gridgrind.core.plan;
 
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import dev.erst.gridgrind.core.vocabulary.SheetName;
 import java.util.List;
 
 /** Selects one or more pivot tables by workbook-global identity. */
@@ -53,10 +54,10 @@ public sealed interface PivotTableSelector extends Selector
   }
 
   /** Selects one pivot table by workbook-global name and asserts its owning sheet. */
-  record ByNameOnSheet(String name, String sheetName) implements PivotTableSelector {
+  record ByNameOnSheet(String name, SheetName sheetName) implements PivotTableSelector {
     public ByNameOnSheet {
       name = SelectorValueValidation.requirePivotTableName(name, "name");
-      sheetName = SelectorValueValidation.requireSheetName(sheetName, "sheetName");
+      java.util.Objects.requireNonNull(sheetName, "sheetName must not be null");
     }
 
     @Override

@@ -12,6 +12,7 @@ import dev.erst.gridgrind.core.model.protection.SheetProtectionSettings;
 import dev.erst.gridgrind.core.model.protection.WorkbookProtectionInput;
 import dev.erst.gridgrind.core.vocabulary.ExcelSheetVisibility;
 import dev.erst.gridgrind.core.vocabulary.SheetCopyPosition;
+import dev.erst.gridgrind.core.vocabulary.SheetName;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -31,9 +32,9 @@ public sealed interface WorkbookMutationAction extends MutationAction {
       id = "RENAME_SHEET",
       summary = "Rename an existing sheet.",
       targetSelectors = {SheetSelector.ByName.class})
-  record RenameSheet(String newSheetName) implements WorkbookMutationAction {
+  record RenameSheet(SheetName newSheetName) implements WorkbookMutationAction {
     public RenameSheet {
-      MutationAction.Validation.requireSheetName(newSheetName, "newSheetName");
+      java.util.Objects.requireNonNull(newSheetName, "newSheetName must not be null");
     }
   }
 
@@ -62,24 +63,25 @@ public sealed interface WorkbookMutationAction extends MutationAction {
       id = "COPY_SHEET",
       summary = "Copy one sheet into a new visible, unselected sheet.",
       targetSelectors = {SheetSelector.ByName.class})
-  record CopySheet(String newSheetName, @ProtocolField(optional = true) SheetCopyPosition position)
+  record CopySheet(
+      SheetName newSheetName, @ProtocolField(optional = true) SheetCopyPosition position)
       implements WorkbookMutationAction {
     /** Copies one sheet to the end of the workbook. */
-    public CopySheet(String newSheetName) {
+    public CopySheet(SheetName newSheetName) {
       this(newSheetName, new SheetCopyPosition.AppendAtEnd());
     }
 
     /** Reads a copy-sheet request while defaulting an omitted position to append-at-end. */
     @JsonCreator
     public static CopySheet create(
-        @JsonProperty("newSheetName") String newSheetName,
+        @JsonProperty("newSheetName") SheetName newSheetName,
         @JsonProperty("position") SheetCopyPosition position) {
       return new CopySheet(
           newSheetName, position == null ? new SheetCopyPosition.AppendAtEnd() : position);
     }
 
     public CopySheet {
-      MutationAction.Validation.requireSheetName(newSheetName, "newSheetName");
+      java.util.Objects.requireNonNull(newSheetName, "newSheetName must not be null");
       Objects.requireNonNull(position, "position must not be null");
     }
   }

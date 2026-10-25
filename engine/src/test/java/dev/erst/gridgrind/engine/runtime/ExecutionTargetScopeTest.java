@@ -17,6 +17,7 @@ import dev.erst.gridgrind.core.plan.TableCellSelector;
 import dev.erst.gridgrind.core.plan.TableRowSelector;
 import dev.erst.gridgrind.core.plan.TableSelector;
 import dev.erst.gridgrind.core.plan.WorkbookSelector;
+import dev.erst.gridgrind.core.vocabulary.SheetName;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
@@ -27,34 +28,36 @@ class ExecutionTargetScopeTest {
   void derivesExactSheetNamesOnlyForSelectorsThatStateThemCompletely() {
     List<Selector> budgetSelectors =
         List.of(
-            new SheetSelector.ByName("Budget"),
-            new CellSelector.AllUsedInSheet("Budget"),
-            new CellSelector.ByAddress("Budget", "A1"),
-            new CellSelector.ByAddresses("Budget", List.of("A1")),
-            new RangeSelector.AllOnSheet("Budget"),
-            new RangeSelector.ByRange("Budget", "A1:B2"),
-            new RangeSelector.ByRanges("Budget", List.of("A1:A1", "B1:B1")),
-            new RangeSelector.RectangularWindow("Budget", "A1", 1, 1),
-            new RowBandSelector.Span("Budget", 0, 0),
-            new RowBandSelector.Insertion("Budget", 0, 1),
-            new ColumnBandSelector.Span("Budget", 0, 0),
-            new ColumnBandSelector.Insertion("Budget", 0, 1),
-            new DrawingObjectSelector.AllOnSheet("Budget"),
-            new DrawingObjectSelector.ByName("Budget", "Logo"),
-            new ChartSelector.AllOnSheet("Budget"),
-            new ChartSelector.ByName("Budget", "Revenue"),
-            new TableSelector.ByNameOnSheet("Ledger", "Budget"),
-            new PivotTableSelector.ByNameOnSheet("Pivot", "Budget"),
-            new NamedRangeSelector.SheetScope("Total", "Budget"),
-            new TableRowSelector.AllRows(new TableSelector.ByNameOnSheet("Ledger", "Budget")),
-            new TableRowSelector.ByIndex(new TableSelector.ByNameOnSheet("Ledger", "Budget"), 0),
+            new SheetSelector.ByName(new SheetName("Budget")),
+            new CellSelector.AllUsedInSheet(new SheetName("Budget")),
+            new CellSelector.ByAddress(new SheetName("Budget"), "A1"),
+            new CellSelector.ByAddresses(new SheetName("Budget"), List.of("A1")),
+            new RangeSelector.AllOnSheet(new SheetName("Budget")),
+            new RangeSelector.ByRange(new SheetName("Budget"), "A1:B2"),
+            new RangeSelector.ByRanges(new SheetName("Budget"), List.of("A1:A1", "B1:B1")),
+            new RangeSelector.RectangularWindow(new SheetName("Budget"), "A1", 1, 1),
+            new RowBandSelector.Span(new SheetName("Budget"), 0, 0),
+            new RowBandSelector.Insertion(new SheetName("Budget"), 0, 1),
+            new ColumnBandSelector.Span(new SheetName("Budget"), 0, 0),
+            new ColumnBandSelector.Insertion(new SheetName("Budget"), 0, 1),
+            new DrawingObjectSelector.AllOnSheet(new SheetName("Budget")),
+            new DrawingObjectSelector.ByName(new SheetName("Budget"), "Logo"),
+            new ChartSelector.AllOnSheet(new SheetName("Budget")),
+            new ChartSelector.ByName(new SheetName("Budget"), "Revenue"),
+            new TableSelector.ByNameOnSheet("Ledger", new SheetName("Budget")),
+            new PivotTableSelector.ByNameOnSheet("Pivot", new SheetName("Budget")),
+            new NamedRangeSelector.SheetScope("Total", new SheetName("Budget")),
+            new TableRowSelector.AllRows(
+                new TableSelector.ByNameOnSheet("Ledger", new SheetName("Budget"))),
+            new TableRowSelector.ByIndex(
+                new TableSelector.ByNameOnSheet("Ledger", new SheetName("Budget")), 0),
             new TableRowSelector.ByKeyCell(
-                new TableSelector.ByNameOnSheet("Ledger", "Budget"),
+                new TableSelector.ByNameOnSheet("Ledger", new SheetName("Budget")),
                 "Owner",
                 new CellInput.Blank()),
             new TableCellSelector.ByColumnName(
                 new TableRowSelector.ByIndex(
-                    new TableSelector.ByNameOnSheet("Ledger", "Budget"), 0),
+                    new TableSelector.ByNameOnSheet("Ledger", new SheetName("Budget")), 0),
                 "Amount"));
 
     for (Selector selector : budgetSelectors) {
@@ -63,7 +66,7 @@ class ExecutionTargetScopeTest {
     assertEquals(
         Optional.of(List.of("Budget", "Ledger")),
         ExecutionTargetScope.exactSheetNames(
-            new SheetSelector.ByNames(List.of("Budget", "Ledger"))));
+            new SheetSelector.ByNames(List.of(new SheetName("Budget"), new SheetName("Ledger")))));
     for (Selector selector :
         List.of(
             new SheetSelector.All(),

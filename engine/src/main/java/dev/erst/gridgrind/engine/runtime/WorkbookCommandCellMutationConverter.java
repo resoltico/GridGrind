@@ -27,7 +27,7 @@ final class WorkbookCommandCellMutationConverter {
         RangeSelector.ByRange selector =
             WorkbookCommandSelectorSupport.rangeByRange(target, action);
         yield new WorkbookCellCommand.SetRange(
-            selector.sheetName(),
+            selector.sheetName().value(),
             selector.range(),
             setRange.rows().toCellInputRows().stream()
                 .map(
@@ -40,13 +40,13 @@ final class WorkbookCommandCellMutationConverter {
       case CellMutationAction.ClearRange _ -> {
         RangeSelector.ByRange selector =
             WorkbookCommandSelectorSupport.rangeByRange(target, action);
-        yield new WorkbookCellCommand.ClearRange(selector.sheetName(), selector.range());
+        yield new WorkbookCellCommand.ClearRange(selector.sheetName().value(), selector.range());
       }
       case CellMutationAction.SetArrayFormula setArrayFormula -> {
         RangeSelector.ByRange selector =
             WorkbookCommandSelectorSupport.rangeByRange(target, action);
         yield new WorkbookCellCommand.SetArrayFormula(
-            selector.sheetName(),
+            selector.sheetName().value(),
             selector.range(),
             WorkbookCommandCellInputConverter.toExcelArrayFormulaDefinition(
                 setArrayFormula.formula()));
@@ -94,13 +94,13 @@ final class WorkbookCommandCellMutationConverter {
         RangeSelector.ByRange selector =
             WorkbookCommandSelectorSupport.rangeByRange(target, action);
         yield new WorkbookFormattingCommand.ApplyStyle(
-            selector.sheetName(),
+            selector.sheetName().value(),
             selector.range(),
             WorkbookCommandCellInputConverter.toExcelCellStyle(applyStyle.style()));
       }
       case CellMutationAction.AppendRow appendRow ->
           new WorkbookCellCommand.AppendRow(
-              WorkbookCommandSelectorSupport.sheetByName(target, action).name(),
+              WorkbookCommandSelectorSupport.sheetByName(target, action).name().value(),
               appendRow.values().toCellInputs().stream()
                   .map(WorkbookCommandCellInputConverter::toExcelCellValue)
                   .toList());

@@ -50,9 +50,9 @@ final class GridGrindRequestWarnings {
           }
         }
         case WorkbookMutationAction.RenameSheet renameSheet ->
-            addIfSpaced(sheetNames, renameSheet.newSheetName());
+            addIfSpaced(sheetNames, renameSheet.newSheetName().value());
         case WorkbookMutationAction.CopySheet copySheet ->
-            addIfSpaced(sheetNames, copySheet.newSheetName());
+            addIfSpaced(sheetNames, copySheet.newSheetName().value());
         default -> {}
       }
     }

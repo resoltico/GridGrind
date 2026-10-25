@@ -17,21 +17,21 @@ final class ExecutionActionDiagnosticFields {
   static Optional<String> sheetNameFor(MutationAction action) {
     Objects.requireNonNull(action, "action must not be null");
     if (action instanceof StructuredMutationAction.SetTable setTable) {
-      return Optional.of(setTable.table().sheetName());
+      return Optional.of(setTable.table().sheetName().value());
     }
     if (action instanceof StructuredMutationAction.SetPivotTable setPivotTable) {
-      return Optional.of(setPivotTable.pivotTable().sheetName());
+      return Optional.of(setPivotTable.pivotTable().sheetName().value());
     }
     if (action instanceof StructuredMutationAction.SetNamedRange setNamedRange) {
       return switch (setNamedRange.target()) {
         case dev.erst.gridgrind.core.model.formula.NamedRangeTarget.Range range ->
-            Optional.of(range.sheetName());
+            Optional.of(range.sheetName().value());
         case dev.erst.gridgrind.core.model.formula.NamedRangeTarget.Formula _ ->
             switch (setNamedRange.scope()) {
               case dev.erst.gridgrind.core.vocabulary.NamedRangeScope.Workbook _ ->
                   Optional.empty();
               case dev.erst.gridgrind.core.vocabulary.NamedRangeScope.Sheet sheet ->
-                  Optional.of(sheet.sheetName());
+                  Optional.of(sheet.sheetName().value());
             };
       };
     }

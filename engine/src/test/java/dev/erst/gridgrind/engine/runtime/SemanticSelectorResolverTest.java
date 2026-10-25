@@ -21,6 +21,7 @@ import dev.erst.gridgrind.core.plan.TableCellSelector;
 import dev.erst.gridgrind.core.plan.TableRowSelector;
 import dev.erst.gridgrind.core.plan.TableSelector;
 import dev.erst.gridgrind.core.source.TextSourceInput;
+import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.excel.ExcelCellValue;
 import dev.erst.gridgrind.excel.ExcelTableDefinition;
@@ -55,7 +56,7 @@ class SemanticSelectorResolverTest {
                       new TableRowSelector.ByIndex(new TableSelector.ByName("TextTable"), 0),
                       "Amount"),
                   new CellMutationAction.SetCell(textCell("Updated"))));
-      assertEquals("Texts", indexedRowTarget.sheetName());
+      assertEquals("Texts", indexedRowTarget.sheetName().value());
       assertEquals("B2", indexedRowTarget.address());
     }
   }
@@ -63,7 +64,7 @@ class SemanticSelectorResolverTest {
   @Test
   void returnsDirectTargetsWhenResolutionIsNotRequired() throws IOException {
     try (ExcelWorkbook workbook = workbookWithSemanticTables()) {
-      CellSelector.ByAddress directCell = new CellSelector.ByAddress("Budget", "A1");
+      CellSelector.ByAddress directCell = new CellSelector.ByAddress(new SheetName("Budget"), "A1");
       assertSame(
           directCell,
           resolver.resolveMutationTarget(
@@ -299,7 +300,7 @@ class SemanticSelectorResolverTest {
                       workbook,
                       new TableCellSelector.ByColumnName(
                           new TableRowSelector.ByKeyCell(
-                              new TableSelector.ByNameOnSheet("TextTable", "Budget"),
+                              new TableSelector.ByNameOnSheet("TextTable", new SheetName("Budget")),
                               "Item",
                               textCell("Hosting")),
                           "Amount"),
@@ -316,7 +317,8 @@ class SemanticSelectorResolverTest {
                       workbook,
                       new TableCellSelector.ByColumnName(
                           new TableRowSelector.ByKeyCell(
-                              new TableSelector.ByNameOnSheet("MissingTable", "Budget"),
+                              new TableSelector.ByNameOnSheet(
+                                  "MissingTable", new SheetName("Budget")),
                               "Item",
                               textCell("Hosting")),
                           "Amount"),
@@ -381,7 +383,7 @@ class SemanticSelectorResolverTest {
             CellSelector.ByAddress.class,
             resolver.resolveMutationTarget(
                 workbook, target, new CellMutationAction.SetCell(textCell("Updated"))));
-    assertEquals(expectedSheet, mutationTarget.sheetName());
+    assertEquals(expectedSheet, mutationTarget.sheetName().value());
     assertEquals(expectedAddress, mutationTarget.address());
 
     CellSelector.ByAddress assertionTarget =
@@ -389,7 +391,7 @@ class SemanticSelectorResolverTest {
             CellSelector.ByAddress.class,
             resolver.resolveAssertionTarget(
                 workbook, target, new CellAssertion.DisplayValue("100")));
-    assertEquals(expectedSheet, assertionTarget.sheetName());
+    assertEquals(expectedSheet, assertionTarget.sheetName().value());
     assertEquals(expectedAddress, assertionTarget.address());
 
     CellStyleReport expectedStyle =
@@ -474,7 +476,7 @@ class SemanticSelectorResolverTest {
     assertFalse(inspectionTarget.isShortCircuit());
     CellSelector.ByAddress inspectionAddress =
         assertInstanceOf(CellSelector.ByAddress.class, inspectionTarget.selector());
-    assertEquals(expectedSheet, inspectionAddress.sheetName());
+    assertEquals(expectedSheet, inspectionAddress.sheetName().value());
     assertEquals(expectedAddress, inspectionAddress.address());
 
     assertEquals(
@@ -513,7 +515,9 @@ class SemanticSelectorResolverTest {
   private static TableCellSelector.ByColumnName textAmountCellTargetOnSheet() {
     return new TableCellSelector.ByColumnName(
         new TableRowSelector.ByKeyCell(
-            new TableSelector.ByNameOnSheet("TextTable", "Texts"), "Item", textCell("Hosting")),
+            new TableSelector.ByNameOnSheet("TextTable", new SheetName("Texts")),
+            "Item",
+            textCell("Hosting")),
         "Amount");
   }
 

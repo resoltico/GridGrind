@@ -14,6 +14,7 @@ import dev.erst.gridgrind.core.model.validation.DataValidationRuleInput;
 import dev.erst.gridgrind.core.plan.*;
 import dev.erst.gridgrind.core.source.*;
 import dev.erst.gridgrind.core.vocabulary.*;
+import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.excel.*;
 import dev.erst.gridgrind.excel.validation.ExcelDataValidationDefinition;
 import dev.erst.gridgrind.excel.validation.ExcelDataValidationErrorAlert;
@@ -190,10 +191,10 @@ final class OperationSequenceRuleValues {
   static RangeSelector nextRangeSelector(
       GridGrindFuzzData data, String sheetName, boolean validRange) {
     return switch (selectorSlot(nextSelectorByte(data))) {
-      case 0 -> new RangeSelector.AllOnSheet(sheetName);
+      case 0 -> new RangeSelector.AllOnSheet(new SheetName(sheetName));
       default ->
           new RangeSelector.ByRanges(
-              sheetName,
+              new SheetName(sheetName),
               List.of(validRange ? "A1:A4" : FuzzDataDecoders.nextNonBlankRange(data, false)));
     };
   }

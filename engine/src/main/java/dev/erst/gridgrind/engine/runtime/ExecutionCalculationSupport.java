@@ -218,7 +218,7 @@ final class ExecutionCalculationSupport {
                 new RequestWarning(
                     GridGrindWarningCode.FORMULA_NOT_EVALUATED,
                     new RequestWarningLocation.FormulaCell(
-                        capability.cell().sheetName(),
+                        capability.cell().sheetName().value(),
                         capability.cell().address(),
                         capability.formula()),
                     capability

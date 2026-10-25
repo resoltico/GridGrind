@@ -19,6 +19,7 @@ import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import dev.erst.gridgrind.core.source.TextSourceInput;
 import dev.erst.gridgrind.core.vocabulary.NamedRangeScope;
 import dev.erst.gridgrind.core.vocabulary.PlanId;
+import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 
 /** Generated examples for inspection-heavy, health-focused, and execution-mode workflows. */
@@ -217,7 +218,7 @@ final class WorkbookAuditExamples {
             new StructuredMutationAction.SetNamedRange(
                 "ForecastValue",
                 new NamedRangeScope.Workbook(),
-                NamedRangeTarget.range("Dashboard", "B4"))),
+                NamedRangeTarget.range(new SheetName("Dashboard"), "B4"))),
         ExampleSteps.read(
             new StepId("workbook"),
             ExampleSelectors.workbook(),

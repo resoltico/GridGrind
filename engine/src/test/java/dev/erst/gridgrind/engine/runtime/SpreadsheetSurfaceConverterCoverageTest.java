@@ -43,6 +43,7 @@ import dev.erst.gridgrind.core.vocabulary.ExcelChartRadarStyle;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartScatterStyle;
 import dev.erst.gridgrind.core.vocabulary.ExcelDrawingAnchorBehavior;
 import dev.erst.gridgrind.core.vocabulary.ExcelPictureFormat;
+import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.excel.*;
 import dev.erst.gridgrind.excel.ExcelChartDefinition;
@@ -84,7 +85,8 @@ class SpreadsheetSurfaceConverterCoverageTest {
         assertInstanceOf(
             WorkbookDrawingCommand.SetChart.class,
             WorkbookCommandConverter.toCommand(
-                new SheetSelector.ByName("Ops"), new DrawingMutationAction.SetChart(chart)));
+                new SheetSelector.ByName(new SheetName("Ops")),
+                new DrawingMutationAction.SetChart(chart)));
     ExcelSignatureLineDefinition signatureLine =
         WorkbookCommandDrawingInputConverter.toExcelSignatureLineDefinition(
             new SignatureLineInput(
@@ -290,9 +292,13 @@ class SpreadsheetSurfaceConverterCoverageTest {
             dev.erst.gridgrind.core.model.formula.FormulaEnvironmentInput.empty(),
             List.of(
                 new MutationStep(
-                    new StepId("set-chart"), new SheetSelector.ByName("Ops"), chartAction),
+                    new StepId("set-chart"),
+                    new SheetSelector.ByName(new SheetName("Ops")),
+                    chartAction),
                 new MutationStep(
-                    new StepId("set-signature"), new SheetSelector.ByName("Ops"), signatureAction),
+                    new StepId("set-signature"),
+                    new SheetSelector.ByName(new SheetName("Ops")),
+                    signatureAction),
                 new MutationStep(
                     new StepId("import-custom-xml"),
                     new WorkbookSelector.Current(),
@@ -327,10 +333,12 @@ class SpreadsheetSurfaceConverterCoverageTest {
             dev.erst.gridgrind.core.model.formula.FormulaEnvironmentInput.empty(),
             List.of(
                 new MutationStep(
-                    new StepId("stable-chart"), new SheetSelector.ByName("Ops"), stableChartAction),
+                    new StepId("stable-chart"),
+                    new SheetSelector.ByName(new SheetName("Ops")),
+                    stableChartAction),
                 new MutationStep(
                     new StepId("stable-signature"),
-                    new SheetSelector.ByName("Ops"),
+                    new SheetSelector.ByName(new SheetName("Ops")),
                     stableSignatureAction)));
     WorkbookPlan stableResolved =
         SourceBackedPlanResolver.resolve(

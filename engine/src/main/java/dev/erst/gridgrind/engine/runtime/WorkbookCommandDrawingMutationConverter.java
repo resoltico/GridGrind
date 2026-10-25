@@ -14,31 +14,31 @@ final class WorkbookCommandDrawingMutationConverter {
     return switch (action) {
       case DrawingMutationAction.SetPicture setPicture ->
           new WorkbookDrawingCommand.SetPicture(
-              WorkbookCommandSelectorSupport.sheetByName(target, action).name(),
+              WorkbookCommandSelectorSupport.sheetByName(target, action).name().value(),
               WorkbookCommandDrawingInputConverter.toExcelPictureDefinition(setPicture.picture()));
       case DrawingMutationAction.SetSignatureLine setSignatureLine ->
           new WorkbookDrawingCommand.SetSignatureLine(
-              WorkbookCommandSelectorSupport.sheetByName(target, action).name(),
+              WorkbookCommandSelectorSupport.sheetByName(target, action).name().value(),
               WorkbookCommandDrawingInputConverter.toExcelSignatureLineDefinition(
                   setSignatureLine.signatureLine()));
       case DrawingMutationAction.SetChart setChart ->
           new WorkbookDrawingCommand.SetChart(
-              WorkbookCommandSelectorSupport.sheetByName(target, action).name(),
+              WorkbookCommandSelectorSupport.sheetByName(target, action).name().value(),
               WorkbookCommandDrawingInputConverter.toExcelChartDefinition(setChart.chart()));
       case DrawingMutationAction.SetShape setShape ->
           new WorkbookDrawingCommand.SetShape(
-              WorkbookCommandSelectorSupport.sheetByName(target, action).name(),
+              WorkbookCommandSelectorSupport.sheetByName(target, action).name().value(),
               WorkbookCommandDrawingInputConverter.toExcelShapeDefinition(setShape.shape()));
       case DrawingMutationAction.SetEmbeddedObject setEmbeddedObject ->
           new WorkbookDrawingCommand.SetEmbeddedObject(
-              WorkbookCommandSelectorSupport.sheetByName(target, action).name(),
+              WorkbookCommandSelectorSupport.sheetByName(target, action).name().value(),
               WorkbookCommandDrawingInputConverter.toExcelEmbeddedObjectDefinition(
                   setEmbeddedObject.embeddedObject()));
       case DrawingMutationAction.SetDrawingObjectAnchor setDrawingObjectAnchor -> {
         DrawingObjectSelector.ByName selector =
             WorkbookCommandSelectorSupport.drawingObjectByName(target, action);
         yield new WorkbookDrawingCommand.SetDrawingObjectAnchor(
-            selector.sheetName(),
+            selector.sheetName().value(),
             selector.objectName(),
             WorkbookCommandDrawingInputConverter.toExcelDrawingAnchor(
                 setDrawingObjectAnchor.anchor()));
@@ -47,7 +47,7 @@ final class WorkbookCommandDrawingMutationConverter {
         DrawingObjectSelector.ByName selector =
             WorkbookCommandSelectorSupport.drawingObjectByName(target, action);
         yield new WorkbookDrawingCommand.DeleteDrawingObject(
-            selector.sheetName(), selector.objectName());
+            selector.sheetName().value(), selector.objectName());
       }
     };
   }

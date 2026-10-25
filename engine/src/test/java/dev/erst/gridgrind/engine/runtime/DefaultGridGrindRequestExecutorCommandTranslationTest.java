@@ -33,6 +33,7 @@ import dev.erst.gridgrind.core.vocabulary.ExcelPrintOrientation;
 import dev.erst.gridgrind.core.vocabulary.ExcelSheetVisibility;
 import dev.erst.gridgrind.core.vocabulary.NamedRangeScope;
 import dev.erst.gridgrind.core.vocabulary.SheetCopyPosition;
+import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.excel.*;
 import dev.erst.gridgrind.excel.ExcelComment;
 import dev.erst.gridgrind.excel.ExcelHyperlink;
@@ -55,36 +56,37 @@ class DefaultGridGrindRequestExecutorCommandTranslationTest
     WorkbookCommand setHyperlink =
         command(
             mutate(
-                new CellSelector.ByAddress("Budget", "A1"),
+                new CellSelector.ByAddress(new SheetName("Budget"), "A1"),
                 new CellMutationAction.SetHyperlink(
                     new HyperlinkTarget.Url("https://example.com/report"))));
     WorkbookCommand clearHyperlink =
         command(
             mutate(
-                new CellSelector.ByAddress("Budget", "A1"),
+                new CellSelector.ByAddress(new SheetName("Budget"), "A1"),
                 new CellMutationAction.ClearHyperlink()));
     WorkbookCommand setComment =
         command(
             mutate(
-                new CellSelector.ByAddress("Budget", "A1"),
+                new CellSelector.ByAddress(new SheetName("Budget"), "A1"),
                 new CellMutationAction.SetComment(
                     CommentInput.plain(text("Review"), "GridGrind", false))));
     WorkbookCommand clearComment =
         command(
             mutate(
-                new CellSelector.ByAddress("Budget", "A1"), new CellMutationAction.ClearComment()));
+                new CellSelector.ByAddress(new SheetName("Budget"), "A1"),
+                new CellMutationAction.ClearComment()));
     WorkbookCommand setNamedRange =
         command(
             ExecutorStructuredMutationTargets.namedRange(
                 new StructuredMutationAction.SetNamedRange(
                     "BudgetTotal",
                     new NamedRangeScope.Workbook(),
-                    NamedRangeTarget.range("Budget", "B4"))));
+                    NamedRangeTarget.range(new SheetName("Budget"), "B4"))));
     WorkbookCommand deleteNamedRange =
         command(
             mutate(
                 new dev.erst.gridgrind.core.plan.NamedRangeSelector.SheetScope(
-                    "BudgetTotal", "Budget"),
+                    "BudgetTotal", new SheetName("Budget")),
                 new StructuredMutationAction.DeleteNamedRange()));
 
     assertInstanceOf(WorkbookAnnotationCommand.SetHyperlink.class, setHyperlink);
@@ -115,133 +117,140 @@ class DefaultGridGrindRequestExecutorCommandTranslationTest
     assertInstanceOf(
         WorkbookSheetCommand.CreateSheet.class,
         command(
-            mutate(new SheetSelector.ByName("Budget"), new WorkbookMutationAction.EnsureSheet())));
+            mutate(
+                new SheetSelector.ByName(new SheetName("Budget")),
+                new WorkbookMutationAction.EnsureSheet())));
     assertInstanceOf(
         WorkbookSheetCommand.RenameSheet.class,
         command(
             mutate(
-                new SheetSelector.ByName("Budget"),
-                new WorkbookMutationAction.RenameSheet("Summary"))));
+                new SheetSelector.ByName(new SheetName("Budget")),
+                new WorkbookMutationAction.RenameSheet(new SheetName("Summary")))));
     assertInstanceOf(
         WorkbookSheetCommand.DeleteSheet.class,
         command(
-            mutate(new SheetSelector.ByName("Budget"), new WorkbookMutationAction.DeleteSheet())));
+            mutate(
+                new SheetSelector.ByName(new SheetName("Budget")),
+                new WorkbookMutationAction.DeleteSheet())));
     assertInstanceOf(
         WorkbookSheetCommand.MoveSheet.class,
         command(
-            mutate(new SheetSelector.ByName("Budget"), new WorkbookMutationAction.MoveSheet(0))));
+            mutate(
+                new SheetSelector.ByName(new SheetName("Budget")),
+                new WorkbookMutationAction.MoveSheet(0))));
     assertInstanceOf(
         WorkbookStructureCommand.MergeCells.class,
         command(
             mutate(
-                new RangeSelector.ByRange("Budget", "A1:B2"),
+                new RangeSelector.ByRange(new SheetName("Budget"), "A1:B2"),
                 new WorkbookMutationAction.MergeCells())));
     assertInstanceOf(
         WorkbookStructureCommand.UnmergeCells.class,
         command(
             mutate(
-                new RangeSelector.ByRange("Budget", "A1:B2"),
+                new RangeSelector.ByRange(new SheetName("Budget"), "A1:B2"),
                 new WorkbookMutationAction.UnmergeCells())));
     assertInstanceOf(
         WorkbookStructureCommand.SetColumnWidth.class,
         command(
             mutate(
-                new ColumnBandSelector.Span("Budget", 0, 1),
+                new ColumnBandSelector.Span(new SheetName("Budget"), 0, 1),
                 new WorkbookMutationAction.SetColumnWidth(16.0))));
     assertInstanceOf(
         WorkbookStructureCommand.SetRowHeight.class,
         command(
             mutate(
-                new RowBandSelector.Span("Budget", 0, 1),
+                new RowBandSelector.Span(new SheetName("Budget"), 0, 1),
                 new WorkbookMutationAction.SetRowHeight(28.5))));
     assertInstanceOf(
         WorkbookStructureCommand.InsertRows.class,
         command(
             mutate(
-                new RowBandSelector.Insertion("Budget", 1, 2),
+                new RowBandSelector.Insertion(new SheetName("Budget"), 1, 2),
                 new WorkbookMutationAction.InsertRows())));
     assertInstanceOf(
         WorkbookStructureCommand.DeleteRows.class,
         command(
             mutate(
-                new RowBandSelector.Span("Budget", 1, 2),
+                new RowBandSelector.Span(new SheetName("Budget"), 1, 2),
                 new WorkbookMutationAction.DeleteRows())));
     assertInstanceOf(
         WorkbookStructureCommand.ShiftRows.class,
         command(
             mutate(
-                new RowBandSelector.Span("Budget", 1, 2),
+                new RowBandSelector.Span(new SheetName("Budget"), 1, 2),
                 new WorkbookMutationAction.ShiftRows(1))));
     assertInstanceOf(
         WorkbookStructureCommand.InsertColumns.class,
         command(
             mutate(
-                new ColumnBandSelector.Insertion("Budget", 1, 2),
+                new ColumnBandSelector.Insertion(new SheetName("Budget"), 1, 2),
                 new WorkbookMutationAction.InsertColumns())));
     assertInstanceOf(
         WorkbookStructureCommand.DeleteColumns.class,
         command(
             mutate(
-                new ColumnBandSelector.Span("Budget", 1, 2),
+                new ColumnBandSelector.Span(new SheetName("Budget"), 1, 2),
                 new WorkbookMutationAction.DeleteColumns())));
     assertInstanceOf(
         WorkbookStructureCommand.ShiftColumns.class,
         command(
             mutate(
-                new ColumnBandSelector.Span("Budget", 1, 2),
+                new ColumnBandSelector.Span(new SheetName("Budget"), 1, 2),
                 new WorkbookMutationAction.ShiftColumns(-1))));
     assertInstanceOf(
         WorkbookStructureCommand.SetRowVisibility.class,
         command(
             mutate(
-                new RowBandSelector.Span("Budget", 1, 2),
+                new RowBandSelector.Span(new SheetName("Budget"), 1, 2),
                 new WorkbookMutationAction.SetRowVisibility(true))));
     assertInstanceOf(
         WorkbookStructureCommand.SetColumnVisibility.class,
         command(
             mutate(
-                new ColumnBandSelector.Span("Budget", 1, 2),
+                new ColumnBandSelector.Span(new SheetName("Budget"), 1, 2),
                 new WorkbookMutationAction.SetColumnVisibility(true))));
     assertInstanceOf(
         WorkbookStructureCommand.GroupRows.class,
         command(
             mutate(
-                new RowBandSelector.Span("Budget", 1, 2),
+                new RowBandSelector.Span(new SheetName("Budget"), 1, 2),
                 new WorkbookMutationAction.GroupRows(false))));
     assertInstanceOf(
         WorkbookStructureCommand.UngroupRows.class,
         command(
             mutate(
-                new RowBandSelector.Span("Budget", 1, 2),
+                new RowBandSelector.Span(new SheetName("Budget"), 1, 2),
                 new WorkbookMutationAction.UngroupRows())));
     assertInstanceOf(
         WorkbookStructureCommand.GroupColumns.class,
         command(
             mutate(
-                new ColumnBandSelector.Span("Budget", 1, 2),
+                new ColumnBandSelector.Span(new SheetName("Budget"), 1, 2),
                 new WorkbookMutationAction.GroupColumns(false))));
     assertInstanceOf(
         WorkbookStructureCommand.UngroupColumns.class,
         command(
             mutate(
-                new ColumnBandSelector.Span("Budget", 1, 2),
+                new ColumnBandSelector.Span(new SheetName("Budget"), 1, 2),
                 new WorkbookMutationAction.UngroupColumns())));
     assertInstanceOf(
         WorkbookLayoutCommand.SetSheetPane.class,
         command(
             mutate(
-                new SheetSelector.ByName("Budget"),
+                new SheetSelector.ByName(new SheetName("Budget")),
                 new WorkbookMutationAction.SetSheetPane(new PaneInput.Frozen(1, 1, 1, 1)))));
     assertInstanceOf(
         WorkbookLayoutCommand.SetSheetZoom.class,
         command(
             mutate(
-                new SheetSelector.ByName("Budget"), new WorkbookMutationAction.SetSheetZoom(125))));
+                new SheetSelector.ByName(new SheetName("Budget")),
+                new WorkbookMutationAction.SetSheetZoom(125))));
     assertInstanceOf(
         WorkbookLayoutCommand.SetSheetPresentation.class,
         command(
             mutate(
-                new SheetSelector.ByName("Budget"),
+                new SheetSelector.ByName(new SheetName("Budget")),
                 new WorkbookMutationAction.SetSheetPresentation(
                     new SheetPresentationInput(
                         new SheetDisplayInput(false, false, false, true, true),
@@ -256,7 +265,7 @@ class DefaultGridGrindRequestExecutorCommandTranslationTest
         WorkbookLayoutCommand.SetPrintLayout.class,
         command(
             mutate(
-                new SheetSelector.ByName("Budget"),
+                new SheetSelector.ByName(new SheetName("Budget")),
                 new WorkbookMutationAction.SetPrintLayout(
                     PrintLayoutInput.withDefaultSetup(
                         new PrintAreaInput.Range("A1:B12"),
@@ -270,19 +279,19 @@ class DefaultGridGrindRequestExecutorCommandTranslationTest
         WorkbookLayoutCommand.ClearPrintLayout.class,
         command(
             mutate(
-                new SheetSelector.ByName("Budget"),
+                new SheetSelector.ByName(new SheetName("Budget")),
                 new WorkbookMutationAction.ClearPrintLayout())));
     assertInstanceOf(
         WorkbookCellCommand.SetCell.class,
         command(
             mutate(
-                new CellSelector.ByAddress("Budget", "A1"),
+                new CellSelector.ByAddress(new SheetName("Budget"), "A1"),
                 new CellMutationAction.SetCell(textCell("x")))));
     assertInstanceOf(
         WorkbookCellCommand.SetRange.class,
         command(
             mutate(
-                new RangeSelector.ByRange("Budget", "A1:B1"),
+                new RangeSelector.ByRange(new SheetName("Budget"), "A1:B1"),
                 new CellMutationAction.SetRange(
                     new dev.erst.gridgrind.core.model.value.CellGridInput.Typed(
                         List.of(List.of(textCell("x"))))))));
@@ -290,32 +299,32 @@ class DefaultGridGrindRequestExecutorCommandTranslationTest
         WorkbookCellCommand.ClearRange.class,
         command(
             mutate(
-                new RangeSelector.ByRange("Budget", "A1:B1"),
+                new RangeSelector.ByRange(new SheetName("Budget"), "A1:B1"),
                 new CellMutationAction.ClearRange())));
     assertInstanceOf(
         WorkbookFormattingCommand.SetConditionalFormatting.class,
         command(
             mutate(
-                new RangeSelector.ByRange("Budget", "A1:A3"),
+                new RangeSelector.ByRange(new SheetName("Budget"), "A1:A3"),
                 new StructuredMutationAction.SetConditionalFormatting(
                     commandTranslationConditionalFormattingBlock()))));
     assertInstanceOf(
         WorkbookFormattingCommand.ClearConditionalFormatting.class,
         command(
             mutate(
-                new RangeSelector.AllOnSheet("Budget"),
+                new RangeSelector.AllOnSheet(new SheetName("Budget")),
                 new StructuredMutationAction.ClearConditionalFormatting())));
     assertInstanceOf(
         WorkbookTabularCommand.SetAutofilter.class,
         command(
             mutate(
-                new RangeSelector.ByRange("Budget", "A1:B4"),
+                new RangeSelector.ByRange(new SheetName("Budget"), "A1:B4"),
                 new StructuredMutationAction.SetAutofilter())));
     assertInstanceOf(
         WorkbookTabularCommand.ClearAutofilter.class,
         command(
             mutate(
-                new SheetSelector.ByName("Budget"),
+                new SheetSelector.ByName(new SheetName("Budget")),
                 new StructuredMutationAction.ClearAutofilter())));
     assertInstanceOf(
         WorkbookTabularCommand.SetTable.class,
@@ -323,18 +332,22 @@ class DefaultGridGrindRequestExecutorCommandTranslationTest
             mutate(
                 new StructuredMutationAction.SetTable(
                     TableInput.withDefaultMetadata(
-                        "BudgetTable", "Budget", "A1:B4", false, new TableStyleInput.None())))));
+                        "BudgetTable",
+                        new SheetName("Budget"),
+                        "A1:B4",
+                        false,
+                        new TableStyleInput.None())))));
     assertInstanceOf(
         WorkbookTabularCommand.DeleteTable.class,
         command(
             mutate(
-                new TableSelector.ByNameOnSheet("BudgetTable", "Budget"),
+                new TableSelector.ByNameOnSheet("BudgetTable", new SheetName("Budget")),
                 new StructuredMutationAction.DeleteTable())));
     assertInstanceOf(
         WorkbookCellCommand.AppendRow.class,
         command(
             mutate(
-                new SheetSelector.ByName("Budget"),
+                new SheetSelector.ByName(new SheetName("Budget")),
                 new CellMutationAction.AppendRow(
                     new dev.erst.gridgrind.core.model.value.CellRowInput.Typed(
                         List.of(textCell("x")))))));
@@ -342,21 +355,22 @@ class DefaultGridGrindRequestExecutorCommandTranslationTest
         WorkbookLayoutCommand.AutoSizeColumns.class,
         command(
             mutate(
-                new SheetSelector.ByName("Budget"), new WorkbookMutationAction.AutoSizeColumns())));
+                new SheetSelector.ByName(new SheetName("Budget")),
+                new WorkbookMutationAction.AutoSizeColumns())));
 
     WorkbookLayoutCommand.SetSheetPane setSheetPaneNone =
         cast(
             WorkbookLayoutCommand.SetSheetPane.class,
             command(
                 mutate(
-                    new SheetSelector.ByName("Budget"),
+                    new SheetSelector.ByName(new SheetName("Budget")),
                     new WorkbookMutationAction.SetSheetPane(new PaneInput.None()))));
     WorkbookLayoutCommand.SetSheetPane setSheetPaneSplit =
         cast(
             WorkbookLayoutCommand.SetSheetPane.class,
             command(
                 mutate(
-                    new SheetSelector.ByName("Budget"),
+                    new SheetSelector.ByName(new SheetName("Budget")),
                     new WorkbookMutationAction.SetSheetPane(
                         new PaneInput.Split(1200, 2400, 3, 4, ExcelPaneRegion.LOWER_RIGHT)))));
     WorkbookLayoutCommand.SetPrintLayout defaultPrintLayout =
@@ -364,14 +378,14 @@ class DefaultGridGrindRequestExecutorCommandTranslationTest
             WorkbookLayoutCommand.SetPrintLayout.class,
             command(
                 mutate(
-                    new SheetSelector.ByName("Budget"),
+                    new SheetSelector.ByName(new SheetName("Budget")),
                     new WorkbookMutationAction.SetPrintLayout(PrintLayoutInput.defaults()))));
     WorkbookLayoutCommand.SetSheetPresentation defaultSheetPresentation =
         cast(
             WorkbookLayoutCommand.SetSheetPresentation.class,
             command(
                 mutate(
-                    new SheetSelector.ByName("Budget"),
+                    new SheetSelector.ByName(new SheetName("Budget")),
                     new WorkbookMutationAction.SetSheetPresentation(
                         SheetPresentationInput.defaults()))));
 
@@ -414,73 +428,73 @@ class DefaultGridGrindRequestExecutorCommandTranslationTest
                     List.of(
                         new dev.erst.gridgrind.core.plan.NamedRangeSelector.ByName("BudgetTotal"),
                         new dev.erst.gridgrind.core.plan.NamedRangeSelector.SheetScope(
-                            "LocalItem", "Budget"))),
+                            "LocalItem", new SheetName("Budget")))),
                 new WorkbookIntrospectionQuery.GetNamedRanges()));
     WorkbookReadCommand sheetSummary =
         readCommand(
             inspect(
                 "sheet",
-                new SheetSelector.ByName("Budget"),
+                new SheetSelector.ByName(new SheetName("Budget")),
                 new SheetIntrospectionQuery.GetSheetSummary()));
     WorkbookReadCommand cells =
         readCommand(
             inspect(
                 "cells",
-                new CellSelector.ByAddresses("Budget", List.of("A1")),
+                new CellSelector.ByAddresses(new SheetName("Budget"), List.of("A1")),
                 new SheetIntrospectionQuery.GetCells()));
     WorkbookReadCommand window =
         readCommand(
             inspect(
                 "window",
-                new RangeSelector.RectangularWindow("Budget", "A1", 2, 2),
+                new RangeSelector.RectangularWindow(new SheetName("Budget"), "A1", 2, 2),
                 new SheetIntrospectionQuery.GetWindow()));
     WorkbookReadCommand merged =
         readCommand(
             inspect(
                 "merged",
-                new SheetSelector.ByName("Budget"),
+                new SheetSelector.ByName(new SheetName("Budget")),
                 new SheetIntrospectionQuery.GetMergedRegions()));
     WorkbookReadCommand hyperlinks =
         readCommand(
             inspect(
                 "hyperlinks",
-                new CellSelector.AllUsedInSheet("Budget"),
+                new CellSelector.AllUsedInSheet(new SheetName("Budget")),
                 new SheetIntrospectionQuery.GetHyperlinks()));
     WorkbookReadCommand comments =
         readCommand(
             inspect(
                 "comments",
-                new CellSelector.ByAddresses("Budget", List.of("A1")),
+                new CellSelector.ByAddresses(new SheetName("Budget"), List.of("A1")),
                 new SheetIntrospectionQuery.GetComments()));
     WorkbookReadCommand layout =
         readCommand(
             inspect(
                 "layout",
-                new SheetSelector.ByName("Budget"),
+                new SheetSelector.ByName(new SheetName("Budget")),
                 new SheetIntrospectionQuery.GetSheetLayout()));
     WorkbookReadCommand printLayout =
         readCommand(
             inspect(
                 "printLayout",
-                new SheetSelector.ByName("Budget"),
+                new SheetSelector.ByName(new SheetName("Budget")),
                 new SheetIntrospectionQuery.GetPrintLayout()));
     WorkbookReadCommand validations =
         readCommand(
             inspect(
                 "validations",
-                new RangeSelector.AllOnSheet("Budget"),
+                new RangeSelector.AllOnSheet(new SheetName("Budget")),
                 new SheetIntrospectionQuery.GetDataValidations()));
     WorkbookReadCommand conditionalFormatting =
         readCommand(
             inspect(
                 "conditionalFormatting",
-                new RangeSelector.ByRanges("Budget", List.of("A1:A3")),
+                new RangeSelector.ByRanges(new SheetName("Budget"), List.of("A1:A3")),
                 new SheetIntrospectionQuery.GetConditionalFormatting()));
     WorkbookReadCommand autofilters =
         readCommand(
             inspect(
                 "autofilters",
-                new SheetSelector.ByName("Budget"),
+                new SheetSelector.ByName(new SheetName("Budget")),
                 new SheetIntrospectionQuery.GetAutofilters()));
     WorkbookReadCommand tables =
         readCommand(
@@ -492,13 +506,13 @@ class DefaultGridGrindRequestExecutorCommandTranslationTest
         readCommand(
             inspect(
                 "formula",
-                new SheetSelector.ByNames(List.of("Budget")),
+                new SheetSelector.ByNames(List.of(new SheetName("Budget"))),
                 new InspectionSurfaceQuery.GetFormulaSurface()));
     WorkbookReadCommand schema =
         readCommand(
             inspect(
                 "schema",
-                new RangeSelector.RectangularWindow("Budget", "A1", 3, 2),
+                new RangeSelector.RectangularWindow(new SheetName("Budget"), "A1", 3, 2),
                 new InspectionSurfaceQuery.GetSheetSchema()));
     WorkbookReadCommand namedRangeSurface =
         readCommand(
@@ -570,13 +584,13 @@ class DefaultGridGrindRequestExecutorCommandTranslationTest
         readCommand(
             inspect(
                 "conditionalFormattingHealth",
-                new SheetSelector.ByNames(List.of("Budget")),
+                new SheetSelector.ByNames(List.of(new SheetName("Budget"))),
                 new InspectionAnalysisQuery.AnalyzeConditionalFormattingHealth()));
     WorkbookReadCommand autofilterHealth =
         readCommand(
             inspect(
                 "autofilterHealth",
-                new SheetSelector.ByNames(List.of("Budget")),
+                new SheetSelector.ByNames(List.of(new SheetName("Budget"))),
                 new InspectionAnalysisQuery.AnalyzeAutofilterHealth()));
     WorkbookReadCommand tableHealth =
         readCommand(
@@ -627,43 +641,44 @@ class DefaultGridGrindRequestExecutorCommandTranslationTest
             WorkbookSheetCommand.CopySheet.class,
             command(
                 mutate(
-                    new SheetSelector.ByName("Budget"),
+                    new SheetSelector.ByName(new SheetName("Budget")),
                     new WorkbookMutationAction.CopySheet(
-                        "Budget Copy", new SheetCopyPosition.AtIndex(1)))));
+                        new SheetName("Budget Copy"), new SheetCopyPosition.AtIndex(1)))));
     WorkbookSheetCommand.SetActiveSheet setActiveSheet =
         cast(
             WorkbookSheetCommand.SetActiveSheet.class,
             command(
                 mutate(
-                    new SheetSelector.ByName("Budget Copy"),
+                    new SheetSelector.ByName(new SheetName("Budget Copy")),
                     new WorkbookMutationAction.SetActiveSheet())));
     WorkbookSheetCommand.SetSelectedSheets setSelectedSheets =
         cast(
             WorkbookSheetCommand.SetSelectedSheets.class,
             command(
                 mutate(
-                    new SheetSelector.ByNames(List.of("Budget", "Budget Copy")),
+                    new SheetSelector.ByNames(
+                        List.of(new SheetName("Budget"), new SheetName("Budget Copy"))),
                     new WorkbookMutationAction.SetSelectedSheets())));
     WorkbookSheetCommand.SetSheetVisibility setSheetVisibility =
         cast(
             WorkbookSheetCommand.SetSheetVisibility.class,
             command(
                 mutate(
-                    new SheetSelector.ByName("Budget"),
+                    new SheetSelector.ByName(new SheetName("Budget")),
                     new WorkbookMutationAction.SetSheetVisibility(ExcelSheetVisibility.HIDDEN))));
     WorkbookSheetCommand.SetSheetProtection setSheetProtection =
         cast(
             WorkbookSheetCommand.SetSheetProtection.class,
             command(
                 mutate(
-                    new SheetSelector.ByName("Budget"),
+                    new SheetSelector.ByName(new SheetName("Budget")),
                     new WorkbookMutationAction.SetSheetProtection(protectionSettings()))));
     WorkbookSheetCommand.ClearSheetProtection clearSheetProtection =
         cast(
             WorkbookSheetCommand.ClearSheetProtection.class,
             command(
                 mutate(
-                    new SheetSelector.ByName("Budget"),
+                    new SheetSelector.ByName(new SheetName("Budget")),
                     new WorkbookMutationAction.ClearSheetProtection())));
 
     ExcelSheetCopyPosition.AtIndex position =

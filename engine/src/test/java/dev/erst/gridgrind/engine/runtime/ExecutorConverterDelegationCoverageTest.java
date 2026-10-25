@@ -29,6 +29,7 @@ import dev.erst.gridgrind.core.vocabulary.ExcelDrawingAnchorBehavior;
 import dev.erst.gridgrind.core.vocabulary.ExcelFillPattern;
 import dev.erst.gridgrind.core.vocabulary.ExcelHorizontalAlignment;
 import dev.erst.gridgrind.core.vocabulary.ExcelVerticalAlignment;
+import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.excel.*;
 import dev.erst.gridgrind.excel.ExcelBorderSideSnapshot;
 import dev.erst.gridgrind.excel.ExcelBorderSnapshot;
@@ -161,23 +162,24 @@ class ExecutorConverterDelegationCoverageTest {
         assertInstanceOf(
             WorkbookSheetCommand.CreateSheet.class,
             WorkbookCommandWorkbookMutationConverter.toCommand(
-                new SheetSelector.ByName("Budget"), new WorkbookMutationAction.EnsureSheet()));
+                new SheetSelector.ByName(new SheetName("Budget")),
+                new WorkbookMutationAction.EnsureSheet()));
     WorkbookCellCommand.SetCell convertedCell =
         assertInstanceOf(
             WorkbookCellCommand.SetCell.class,
             WorkbookCommandCellMutationConverter.toCommand(
-                new CellSelector.ByAddress("Budget", "A1"), setCell));
+                new CellSelector.ByAddress(new SheetName("Budget"), "A1"), setCell));
     WorkbookDrawingCommand.DeleteDrawingObject deleteDrawingObject =
         assertInstanceOf(
             WorkbookDrawingCommand.DeleteDrawingObject.class,
             WorkbookCommandDrawingMutationConverter.toCommand(
-                new DrawingObjectSelector.ByName("Budget", "Logo"),
+                new DrawingObjectSelector.ByName(new SheetName("Budget"), "Logo"),
                 new DrawingMutationAction.DeleteDrawingObject()));
     WorkbookTabularCommand.ClearAutofilter clearAutofilter =
         assertInstanceOf(
             WorkbookTabularCommand.ClearAutofilter.class,
             WorkbookCommandStructuredMutationConverter.toCommand(
-                new SheetSelector.ByName("Budget"),
+                new SheetSelector.ByName(new SheetName("Budget")),
                 new StructuredMutationAction.ClearAutofilter()));
 
     assertEquals("Budget", createSheet.sheetName());

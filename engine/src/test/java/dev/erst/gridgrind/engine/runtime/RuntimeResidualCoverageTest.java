@@ -81,6 +81,7 @@ import dev.erst.gridgrind.core.vocabulary.ExcelPictureFormat;
 import dev.erst.gridgrind.core.vocabulary.ExcelPivotDataConsolidateFunction;
 import dev.erst.gridgrind.core.vocabulary.ExcelPrintOrientation;
 import dev.erst.gridgrind.core.vocabulary.NamedRangeScope;
+import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.excel.ExcelBorder;
 import dev.erst.gridgrind.excel.ExcelBorderSide;
 import dev.erst.gridgrind.excel.ExcelColor;
@@ -118,7 +119,7 @@ class RuntimeResidualCoverageTest {
         IllegalStateException.class,
         () ->
             WorkbookCommandWorkbookMutationConverter.toCommand(
-                new SheetSelector.ByName("Budget"),
+                new SheetSelector.ByName(new SheetName("Budget")),
                 new WorkbookMutationAction.SetSheetProtection(
                     sheetProtection, Optional.of(new SecretReference("sheet-password"))),
                 null));
@@ -336,10 +337,10 @@ class RuntimeResidualCoverageTest {
     List<WorkbookMutationAction> noInputWorkbookActions =
         List.of(
             new WorkbookMutationAction.EnsureSheet(),
-            new WorkbookMutationAction.RenameSheet("Renamed"),
+            new WorkbookMutationAction.RenameSheet(new SheetName("Renamed")),
             new WorkbookMutationAction.DeleteSheet(),
             new WorkbookMutationAction.MoveSheet(1),
-            new WorkbookMutationAction.CopySheet("Budget Copy"),
+            new WorkbookMutationAction.CopySheet(new SheetName("Budget Copy")),
             new WorkbookMutationAction.SetActiveSheet(),
             new WorkbookMutationAction.SetSelectedSheets(),
             new WorkbookMutationAction.SetSheetVisibility(
@@ -480,13 +481,13 @@ class RuntimeResidualCoverageTest {
             new TableRowSelector.AllRows(new TableSelector.ByName("BudgetTable")),
             new TableRowSelector.ByIndex(new TableSelector.ByName("BudgetTable"), 1),
             new WorkbookSelector.Current(),
-            new SheetSelector.ByName("Budget"),
-            new CellSelector.ByAddress("Budget", "A1"),
-            new RangeSelector.ByRange("Budget", "A1:B2"),
-            new RowBandSelector.Span("Budget", 0, 1),
-            new ColumnBandSelector.Span("Budget", 0, 1),
-            new DrawingObjectSelector.ByName("Budget", "Banner"),
-            new ChartSelector.ByName("Budget", "LoadChart"),
+            new SheetSelector.ByName(new SheetName("Budget")),
+            new CellSelector.ByAddress(new SheetName("Budget"), "A1"),
+            new RangeSelector.ByRange(new SheetName("Budget"), "A1:B2"),
+            new RowBandSelector.Span(new SheetName("Budget"), 0, 1),
+            new ColumnBandSelector.Span(new SheetName("Budget"), 0, 1),
+            new DrawingObjectSelector.ByName(new SheetName("Budget"), "Banner"),
+            new ChartSelector.ByName(new SheetName("Budget"), "LoadChart"),
             new TableSelector.ByName("BudgetTable"),
             new PivotTableSelector.ByName("Sales Pivot"),
             new NamedRangeSelector.ByName("BudgetRange"));
@@ -596,8 +597,8 @@ class RuntimeResidualCoverageTest {
   private static PivotTableInput pivotTable() {
     return new PivotTableInput(
         "Sales Pivot 2026",
-        "Report",
-        new PivotTableInput.Source.Range("Data", "A1:D5"),
+        new SheetName("Report"),
+        new PivotTableInput.Source.Range(new SheetName("Data"), "A1:D5"),
         new PivotTableInput.Anchor("C5"),
         List.of("Region"),
         List.of("Stage"),
@@ -610,7 +611,7 @@ class RuntimeResidualCoverageTest {
   private static TableInput table(TextSourceInput comment) {
     return new TableInput(
         "BudgetTable",
-        "Budget",
+        new dev.erst.gridgrind.core.vocabulary.SheetName("Budget"),
         "A1:C4",
         false,
         false,

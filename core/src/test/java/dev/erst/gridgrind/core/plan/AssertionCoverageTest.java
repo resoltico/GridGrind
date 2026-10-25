@@ -40,6 +40,7 @@ import dev.erst.gridgrind.core.vocabulary.ExcelSheetVisibility;
 import dev.erst.gridgrind.core.vocabulary.ExcelVerticalAlignment;
 import dev.erst.gridgrind.core.vocabulary.NamedRangeScope;
 import dev.erst.gridgrind.core.vocabulary.SheetLabel;
+import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import java.math.BigDecimal;
 import java.util.List;
@@ -54,7 +55,7 @@ class AssertionCoverageTest {
         new AssertionFailure(
             new StepId("assert-cell"),
             "EXPECT_CELL_VALUE",
-            new dev.erst.gridgrind.core.plan.CellSelector.ByAddress("Budget", "A1"),
+            new dev.erst.gridgrind.core.plan.CellSelector.ByAddress(new SheetName("Budget"), "A1"),
             new CellAssertion.CellValue(new CellScalarValue.Text("expected")),
             List.of());
     AssertionResult.Passed passed =
@@ -80,7 +81,8 @@ class AssertionCoverageTest {
             "BudgetTotal",
             new NamedRangeScope.Workbook(),
             "Budget!B2",
-            dev.erst.gridgrind.core.model.formula.NamedRangeTarget.range("Budget", "B2"));
+            dev.erst.gridgrind.core.model.formula.NamedRangeTarget.range(
+                new SheetName("Budget"), "B2"));
 
     assertEquals("EXPECT_SHEET_PRESENT", new PresenceAssertion.SheetPresent().assertionType());
     assertEquals("EXPECT_SHEET_ABSENT", new PresenceAssertion.SheetAbsent().assertionType());

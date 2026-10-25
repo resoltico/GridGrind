@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import dev.erst.gridgrind.core.catalog.GridGrindProtocolTypeNames;
 import dev.erst.gridgrind.core.model.value.CellInput;
 import dev.erst.gridgrind.core.semantics.WorkbookOperationContracts;
+import dev.erst.gridgrind.core.vocabulary.SheetName;
 import java.util.List;
 import java.util.Objects;
 
@@ -60,10 +61,6 @@ public sealed interface MutationAction
       MutationActionNameValidation.requireNonBlank(value, fieldName);
     }
 
-    static void requireSheetName(String value, String fieldName) { // LIM-003
-      MutationActionNameValidation.requireSheetName(value, fieldName);
-    }
-
     static void requireNonNegative(int value, String fieldName) {
       MutationActionNumericValidation.requireNonNegative(value, fieldName);
     }
@@ -118,7 +115,7 @@ public sealed interface MutationAction
       return MutationActionCollectionValidation.freezeRows(rows);
     }
 
-    static List<String> copySheetNames(List<String> sheetNames, String fieldName) {
+    static List<SheetName> copySheetNames(List<SheetName> sheetNames, String fieldName) {
       return MutationActionCollectionValidation.copySheetNames(sheetNames, fieldName);
     }
 

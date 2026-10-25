@@ -13,6 +13,7 @@ import dev.erst.gridgrind.core.plan.SheetSelector;
 import dev.erst.gridgrind.core.plan.WorkbookMutationAction;
 import dev.erst.gridgrind.core.vocabulary.AnalysisFindingCode;
 import dev.erst.gridgrind.core.vocabulary.AnalysisSeverity;
+import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
@@ -21,8 +22,8 @@ import org.junit.jupiter.api.Test;
 class AuthoringInternalsCoverageTest {
   @Test
   void plannedStepsPreserveExplicitIdsAndRejectInvalidInputs() {
-    SheetSelector.ByName sheetSelector = new SheetSelector.ByName("Budget");
-    CellSelector.ByAddress cellSelector = new CellSelector.ByAddress("Budget", "A1");
+    SheetSelector.ByName sheetSelector = new SheetSelector.ByName(new SheetName("Budget"));
+    CellSelector.ByAddress cellSelector = new CellSelector.ByAddress(new SheetName("Budget"), "A1");
     WorkbookMutationAction.EnsureSheet ensureSheet = new WorkbookMutationAction.EnsureSheet();
     SheetIntrospectionQuery.GetCells cellQuery = new SheetIntrospectionQuery.GetCells();
     CellAssertion.CellValue present =

@@ -2,6 +2,7 @@ package dev.erst.gridgrind.core.plan;
 
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import dev.erst.gridgrind.core.vocabulary.SheetName;
 import java.util.List;
 
 /** Selects one or more A1-style rectangular ranges on one sheet. */
@@ -21,9 +22,9 @@ public sealed interface RangeSelector extends Selector
         RangeSelector.RectangularWindow {
 
   /** Selects all matching ranged structures on one sheet. */
-  record AllOnSheet(String sheetName) implements RangeSelector {
+  record AllOnSheet(SheetName sheetName) implements RangeSelector {
     public AllOnSheet {
-      sheetName = SelectorValueValidation.requireSheetName(sheetName, "sheetName");
+      java.util.Objects.requireNonNull(sheetName, "sheetName must not be null");
     }
 
     @Override
@@ -33,9 +34,9 @@ public sealed interface RangeSelector extends Selector
   }
 
   /** Selects one exact rectangular range on one sheet. */
-  record ByRange(String sheetName, String range) implements RangeSelector {
+  record ByRange(SheetName sheetName, String range) implements RangeSelector {
     public ByRange {
-      sheetName = SelectorValueValidation.requireSheetName(sheetName, "sheetName");
+      java.util.Objects.requireNonNull(sheetName, "sheetName must not be null");
       range = SelectorValueValidation.requireRange(range, "range");
     }
 
@@ -62,9 +63,9 @@ public sealed interface RangeSelector extends Selector
   }
 
   /** Selects one or more exact rectangular ranges on one sheet. */
-  record ByRanges(String sheetName, List<String> ranges) implements RangeSelector {
+  record ByRanges(SheetName sheetName, List<String> ranges) implements RangeSelector {
     public ByRanges {
-      sheetName = SelectorValueValidation.requireSheetName(sheetName, "sheetName");
+      java.util.Objects.requireNonNull(sheetName, "sheetName must not be null");
       ranges = SelectorListValidation.copyDistinctRanges(ranges, "ranges");
     }
 
@@ -75,10 +76,11 @@ public sealed interface RangeSelector extends Selector
   }
 
   /** Selects one rectangular window anchored at a top-left cell. */
-  record RectangularWindow(String sheetName, String topLeftAddress, int rowCount, int columnCount)
+  record RectangularWindow(
+      SheetName sheetName, String topLeftAddress, int rowCount, int columnCount)
       implements RangeSelector {
     public RectangularWindow {
-      sheetName = SelectorValueValidation.requireSheetName(sheetName, "sheetName");
+      java.util.Objects.requireNonNull(sheetName, "sheetName must not be null");
       topLeftAddress = SelectorValueValidation.requireAddress(topLeftAddress, "topLeftAddress");
       rowCount = SelectorValueValidation.requirePositive(rowCount, "rowCount");
       columnCount = SelectorValueValidation.requirePositive(columnCount, "columnCount");

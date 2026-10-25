@@ -2,6 +2,7 @@ package dev.erst.gridgrind.core.plan;
 
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import dev.erst.gridgrind.core.vocabulary.SheetName;
 import java.util.List;
 
 /** Selects one or more named ranges by scope-aware identity. */
@@ -80,10 +81,10 @@ public sealed interface NamedRangeSelector extends Selector
   }
 
   /** Selects one sheet-scoped named range by exact name and exact sheet. */
-  record SheetScope(String name, String sheetName) implements ScopedExact, Ref {
+  record SheetScope(String name, SheetName sheetName) implements ScopedExact, Ref {
     public SheetScope {
       name = SelectorValueValidation.requireDefinedName(name, "name");
-      sheetName = SelectorValueValidation.requireSheetName(sheetName, "sheetName");
+      java.util.Objects.requireNonNull(sheetName, "sheetName must not be null");
     }
 
     @Override

@@ -186,7 +186,7 @@ final class WorkbookInvariantCellContentChecks {
         WorkbookInvariantChecks.require(
             target.range() != null, "namedRange target range must not be null");
         WorkbookInvariantChecks.require(
-            !target.sheetName().isBlank(), "namedRange target sheet must not be blank");
+            !target.sheetName().value().isBlank(), "namedRange target sheet must not be blank");
         WorkbookInvariantChecks.require(
             !target.range().isBlank(), "namedRange target range must not be blank");
       }

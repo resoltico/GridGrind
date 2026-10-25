@@ -27,6 +27,7 @@ import dev.erst.gridgrind.core.vocabulary.ExcelChartBarDirection;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartDisplayBlanksAs;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartLegendPosition;
 import dev.erst.gridgrind.core.vocabulary.ExcelDrawingAnchorBehavior;
+import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.engine.runtime.parity.XlsxParityProbeRegistry.ProbeContext;
 import dev.erst.gridgrind.engine.runtime.parity.XlsxParityProbeRegistry.ProbeResult;
 import java.nio.file.Path;
@@ -49,11 +50,11 @@ final class XlsxParityDrawingChartPivotProbeGroup {
             drawing.workbookPath(),
             inspect(
                 "drawing",
-                new DrawingObjectSelector.AllOnSheet("Ops"),
+                new DrawingObjectSelector.AllOnSheet(new SheetName("Ops")),
                 new WorkbookAssetIntrospectionQuery.GetDrawingObjects()),
             inspect(
                 "payload",
-                new DrawingObjectSelector.ByName("Ops", "OpsPicture"),
+                new DrawingObjectSelector.ByName(new SheetName("Ops"), "OpsPicture"),
                 new WorkbookAssetIntrospectionQuery.GetDrawingObjectPayload()));
     WorkbookAssetInspectionResult.DrawingObjectsResult drawingObjects =
         XlsxParityGridGrind.read(
@@ -98,15 +99,15 @@ final class XlsxParityDrawingChartPivotProbeGroup {
             drawing.workbookPath(),
             inspect(
                 "drawing",
-                new DrawingObjectSelector.AllOnSheet("Ops"),
+                new DrawingObjectSelector.AllOnSheet(new SheetName("Ops")),
                 new WorkbookAssetIntrospectionQuery.GetDrawingObjects()),
             inspect(
                 "picture-payload",
-                new DrawingObjectSelector.ByName("Ops", "OpsPicture"),
+                new DrawingObjectSelector.ByName(new SheetName("Ops"), "OpsPicture"),
                 new WorkbookAssetIntrospectionQuery.GetDrawingObjectPayload()),
             inspect(
                 "embed-payload",
-                new DrawingObjectSelector.ByName("Ops", "OpsEmbed"),
+                new DrawingObjectSelector.ByName(new SheetName("Ops"), "OpsEmbed"),
                 new WorkbookAssetIntrospectionQuery.GetDrawingObjectPayload()));
     WorkbookAssetInspectionResult.DrawingObjectsResult drawingObjects =
         XlsxParityGridGrind.read(
@@ -198,10 +199,11 @@ final class XlsxParityDrawingChartPivotProbeGroup {
         outputPath,
         List.of(
             mutate(
-                new CellSelector.ByAddress("Ops", "B2"),
+                new CellSelector.ByAddress(new SheetName("Ops"), "B2"),
                 new CellMutationAction.SetComment(comment("Transient", "GridGrind", false))),
             mutate(
-                new CellSelector.ByAddress("Ops", "B2"), new CellMutationAction.ClearComment())));
+                new CellSelector.ByAddress(new SheetName("Ops"), "B2"),
+                new CellMutationAction.ClearComment())));
     XlsxParityOracle.DrawingSheetSnapshot after = XlsxParityOracle.drawingSheet(outputPath, "Ops");
     return before.equals(after)
         ? pass(
@@ -221,7 +223,7 @@ final class XlsxParityDrawingChartPivotProbeGroup {
         outputPath,
         List.of(
             mutate(
-                new CellSelector.ByAddress("Ops", "F8"),
+                new CellSelector.ByAddress(new SheetName("Ops"), "F8"),
                 new CellMutationAction.SetCell(text("Touch")))));
     XlsxParityOracle.DrawingSheetSnapshot after = XlsxParityOracle.drawingSheet(outputPath, "Ops");
     return !before.mergedRegions().isEmpty() && before.equals(after)
@@ -239,11 +241,11 @@ final class XlsxParityDrawingChartPivotProbeGroup {
             embedded.workbookPath(),
             inspect(
                 "drawing",
-                new DrawingObjectSelector.AllOnSheet("Objects"),
+                new DrawingObjectSelector.AllOnSheet(new SheetName("Objects")),
                 new WorkbookAssetIntrospectionQuery.GetDrawingObjects()),
             inspect(
                 "payload",
-                new DrawingObjectSelector.ByName("Objects", "OpsEmbed"),
+                new DrawingObjectSelector.ByName(new SheetName("Objects"), "OpsEmbed"),
                 new WorkbookAssetIntrospectionQuery.GetDrawingObjectPayload()));
     WorkbookAssetInspectionResult.DrawingObjectsResult drawingObjects =
         XlsxParityGridGrind.read(
@@ -257,7 +259,7 @@ final class XlsxParityDrawingChartPivotProbeGroup {
         outputPath,
         List.of(
             mutate(
-                new CellSelector.ByAddress("Objects", "G1"),
+                new CellSelector.ByAddress(new SheetName("Objects"), "G1"),
                 new CellMutationAction.SetCell(text("Touch")))));
     XlsxParityOracle.DrawingSheetSnapshot after =
         XlsxParityOracle.drawingSheet(outputPath, "Objects");
@@ -295,11 +297,11 @@ final class XlsxParityDrawingChartPivotProbeGroup {
             chart.workbookPath(),
             inspect(
                 "charts",
-                new ChartSelector.AllOnSheet("Chart"),
+                new ChartSelector.AllOnSheet(new SheetName("Chart")),
                 new WorkbookAssetIntrospectionQuery.GetCharts()),
             inspect(
                 "drawing",
-                new DrawingObjectSelector.AllOnSheet("Chart"),
+                new DrawingObjectSelector.AllOnSheet(new SheetName("Chart")),
                 new WorkbookAssetIntrospectionQuery.GetDrawingObjects()));
     WorkbookAssetInspectionResult.ChartsResult charts =
         XlsxParityGridGrind.read(
@@ -346,11 +348,11 @@ final class XlsxParityDrawingChartPivotProbeGroup {
             chart.workbookPath(),
             inspect(
                 "charts",
-                new ChartSelector.AllOnSheet("Chart"),
+                new ChartSelector.AllOnSheet(new SheetName("Chart")),
                 new WorkbookAssetIntrospectionQuery.GetCharts()),
             inspect(
                 "drawing",
-                new DrawingObjectSelector.AllOnSheet("Chart"),
+                new DrawingObjectSelector.AllOnSheet(new SheetName("Chart")),
                 new WorkbookAssetIntrospectionQuery.GetDrawingObjects()));
     WorkbookAssetInspectionResult.ChartsResult charts =
         XlsxParityGridGrind.read(
@@ -433,18 +435,18 @@ final class XlsxParityDrawingChartPivotProbeGroup {
             outputPath,
             List.of(
                 mutate(
-                    new CellSelector.ByAddress("Chart", "F1"),
+                    new CellSelector.ByAddress(new SheetName("Chart"), "F1"),
                     new CellMutationAction.SetCell(text("Touch"))),
                 mutate(
-                    new SheetSelector.ByName("Chart"),
+                    new SheetSelector.ByName(new SheetName("Chart")),
                     new DrawingMutationAction.SetChart(actualFocusChart))),
             inspect(
                 "charts",
-                new ChartSelector.AllOnSheet("Chart"),
+                new ChartSelector.AllOnSheet(new SheetName("Chart")),
                 new WorkbookAssetIntrospectionQuery.GetCharts()),
             inspect(
                 "drawing",
-                new DrawingObjectSelector.AllOnSheet("Chart"),
+                new DrawingObjectSelector.AllOnSheet(new SheetName("Chart")),
                 new WorkbookAssetIntrospectionQuery.GetDrawingObjects()));
     List<ChartReport> directCharts = XlsxParityOracle.charts(outputPath, "Chart");
     XlsxParityOracle.DrawingSheetSnapshot directDrawing =
@@ -501,7 +503,7 @@ final class XlsxParityDrawingChartPivotProbeGroup {
           outputPath,
           List.of(
               mutate(
-                  new CellSelector.ByAddress("Chart", "F8"),
+                  new CellSelector.ByAddress(new SheetName("Chart"), "F8"),
                   new CellMutationAction.SetCell(text("Touch")))));
       List<ChartReport> afterCharts = XlsxParityOracle.charts(outputPath, "Chart");
       XlsxParityOracle.DrawingSheetSnapshot afterDrawing =
@@ -527,11 +529,11 @@ final class XlsxParityDrawingChartPivotProbeGroup {
             chart.workbookPath(),
             inspect(
                 "charts",
-                new ChartSelector.AllOnSheet("Chart"),
+                new ChartSelector.AllOnSheet(new SheetName("Chart")),
                 new WorkbookAssetIntrospectionQuery.GetCharts()),
             inspect(
                 "drawing",
-                new DrawingObjectSelector.AllOnSheet("Chart"),
+                new DrawingObjectSelector.AllOnSheet(new SheetName("Chart")),
                 new WorkbookAssetIntrospectionQuery.GetDrawingObjects()));
     WorkbookAssetInspectionResult.ChartsResult charts =
         XlsxParityGridGrind.read(
@@ -569,7 +571,7 @@ final class XlsxParityDrawingChartPivotProbeGroup {
         replacementPath,
         List.of(
             mutate(
-                new SheetSelector.ByName("Chart"),
+                new SheetSelector.ByName(new SheetName("Chart")),
                 new DrawingMutationAction.SetChart(replacementChart))));
     if (directCharts.size() != 1
         || directCharts.getFirst().plots().size() != 2
@@ -589,7 +591,7 @@ final class XlsxParityDrawingChartPivotProbeGroup {
                 replacementPath,
                 inspect(
                     "charts",
-                    new ChartSelector.AllOnSheet("Chart"),
+                    new ChartSelector.AllOnSheet(new SheetName("Chart")),
                     new WorkbookAssetIntrospectionQuery.GetCharts())),
             "charts",
             WorkbookAssetInspectionResult.ChartsResult.class);
@@ -617,9 +619,11 @@ final class XlsxParityDrawingChartPivotProbeGroup {
           pivot.workbookPath(),
           outputPath,
           List.of(
-              mutate(new SheetSelector.ByName("Scratch"), new WorkbookMutationAction.EnsureSheet()),
               mutate(
-                  new CellSelector.ByAddress("Scratch", "A1"),
+                  new SheetSelector.ByName(new SheetName("Scratch")),
+                  new WorkbookMutationAction.EnsureSheet()),
+              mutate(
+                  new CellSelector.ByAddress(new SheetName("Scratch"), "A1"),
                   new CellMutationAction.SetCell(text("Touch")))));
       List<PivotTableReport> after = XlsxParityOracle.pivotTables(outputPath);
       if (!before.equals(after)) {
@@ -725,8 +729,8 @@ final class XlsxParityDrawingChartPivotProbeGroup {
                     new StructuredMutationAction.SetPivotTable(
                         new PivotTableInput(
                             "Sales Pivot",
-                            "RangeReport",
-                            new PivotTableInput.Source.Range("Data", "A1:D5"),
+                            new SheetName("RangeReport"),
+                            new PivotTableInput.Source.Range(new SheetName("Data"), "A1:D5"),
                             new PivotTableInput.Anchor("D6"),
                             List.of("Stage"),
                             List.of("Region"),
@@ -739,7 +743,8 @@ final class XlsxParityDrawingChartPivotProbeGroup {
                                     "Total Amount",
                                     Optional.of("#,##0.00")))))),
                 mutate(
-                    new PivotTableSelector.ByNameOnSheet("Table Pivot", "TableReport"),
+                    new PivotTableSelector.ByNameOnSheet(
+                        "Table Pivot", new SheetName("TableReport")),
                     new StructuredMutationAction.DeletePivotTable())),
             inspect(
                 "pivots",

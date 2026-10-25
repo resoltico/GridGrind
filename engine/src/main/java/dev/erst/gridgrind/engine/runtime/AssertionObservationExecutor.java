@@ -70,13 +70,14 @@ final class AssertionObservationExecutor {
         case SheetSelector.ByName byName ->
             new WorkbookInspectionResult.SheetsResult(
                 stepId,
-                workbook.sheets().sheetNames().contains(byName.name())
-                    ? List.of(byName.name())
+                workbook.sheets().sheetNames().contains(byName.name().value())
+                    ? List.of(byName.name().value())
                     : List.of());
         case SheetSelector.ByNames byNames ->
             new WorkbookInspectionResult.SheetsResult(
                 stepId,
                 byNames.names().stream()
+                    .map(dev.erst.gridgrind.core.vocabulary.WireString::value)
                     .filter(name -> workbook.sheets().sheetNames().contains(name))
                     .toList());
         case NamedRangeSelector selector ->
@@ -125,9 +126,11 @@ final class AssertionObservationExecutor {
       case PivotTableSelector _ ->
           new WorkbookAssetInspectionResult.PivotTablesResult(stepId, List.of());
       case ChartSelector.AllOnSheet selector ->
-          new WorkbookAssetInspectionResult.ChartsResult(stepId, selector.sheetName(), List.of());
+          new WorkbookAssetInspectionResult.ChartsResult(
+              stepId, selector.sheetName().value(), List.of());
       case ChartSelector.ByName selector ->
-          new WorkbookAssetInspectionResult.ChartsResult(stepId, selector.sheetName(), List.of());
+          new WorkbookAssetInspectionResult.ChartsResult(
+              stepId, selector.sheetName().value(), List.of());
       default ->
           throw new IllegalArgumentException(
               "Unsupported presence assertion target: "

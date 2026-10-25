@@ -27,31 +27,36 @@ final class SelectorConverter {
   private SelectorConverter() {}
 
   static String toSheetName(SheetSelector.ByName selector) {
-    return selector.name();
+    return selector.name().value();
   }
 
   static String toSheetName(DrawingObjectSelector.AllOnSheet selector) {
-    return selector.sheetName();
+    return selector.sheetName().value();
   }
 
   static String toSheetName(DrawingObjectSelector.ByName selector) {
-    return selector.sheetName();
+    return selector.sheetName().value();
   }
 
   static ExcelChartSelection toExcelChartSelection(ChartSelector selector) {
     return switch (selector) {
       case ChartSelector.AllOnSheet allOnSheet ->
-          new ExcelChartSelection.AllOnSheet(allOnSheet.sheetName());
+          new ExcelChartSelection.AllOnSheet(allOnSheet.sheetName().value());
       case ChartSelector.ByName byName ->
-          new ExcelChartSelection.ByName(byName.sheetName(), byName.chartName());
+          new ExcelChartSelection.ByName(byName.sheetName().value(), byName.chartName());
     };
   }
 
   static ExcelSheetSelection toExcelSheetSelection(SheetSelector selector) {
     return switch (selector) {
       case SheetSelector.All _ -> new ExcelSheetSelection.All();
-      case SheetSelector.ByName byName -> new ExcelSheetSelection.Selected(List.of(byName.name()));
-      case SheetSelector.ByNames byNames -> new ExcelSheetSelection.Selected(byNames.names());
+      case SheetSelector.ByName byName ->
+          new ExcelSheetSelection.Selected(List.of(byName.name().value()));
+      case SheetSelector.ByNames byNames ->
+          new ExcelSheetSelection.Selected(
+              byNames.names().stream()
+                  .map(dev.erst.gridgrind.core.vocabulary.WireString::value)
+                  .toList());
     };
   }
 
@@ -78,7 +83,7 @@ final class SelectorConverter {
           new ExcelNamedRangeSelection.Selected(
               List.of(
                   new ExcelNamedRangeSelector.SheetScope(
-                      sheetScope.name(), sheetScope.sheetName())));
+                      sheetScope.name(), sheetScope.sheetName().value())));
     };
   }
 
@@ -89,7 +94,7 @@ final class SelectorConverter {
       case NamedRangeSelector.WorkbookScope workbookScope ->
           new ExcelNamedRangeSelector.WorkbookScope(workbookScope.name());
       case NamedRangeSelector.SheetScope sheetScope ->
-          new ExcelNamedRangeSelector.SheetScope(sheetScope.name(), sheetScope.sheetName());
+          new ExcelNamedRangeSelector.SheetScope(sheetScope.name(), sheetScope.sheetName().value());
     };
   }
 
@@ -118,22 +123,25 @@ final class SelectorConverter {
   static SheetLocalCellSelection toSheetLocalCellSelection(CellSelector selector) {
     return switch (selector) {
       case CellSelector.AllUsedInSheet all ->
-          new SheetLocalCellSelection(all.sheetName(), new ExcelCellSelection.AllUsedCells());
+          new SheetLocalCellSelection(
+              all.sheetName().value(), new ExcelCellSelection.AllUsedCells());
       case CellSelector.ByAddress byAddress ->
           new SheetLocalCellSelection(
-              byAddress.sheetName(), new ExcelCellSelection.Selected(List.of(byAddress.address())));
+              byAddress.sheetName().value(),
+              new ExcelCellSelection.Selected(List.of(byAddress.address())));
       case CellSelector.ByAddresses byAddresses ->
           new SheetLocalCellSelection(
-              byAddresses.sheetName(), new ExcelCellSelection.Selected(byAddresses.addresses()));
+              byAddresses.sheetName().value(),
+              new ExcelCellSelection.Selected(byAddresses.addresses()));
     };
   }
 
   static SheetLocalCellAddresses toSheetLocalCellAddresses(CellSelector selector) {
     return switch (selector) {
       case CellSelector.ByAddress byAddress ->
-          new SheetLocalCellAddresses(byAddress.sheetName(), List.of(byAddress.address()));
+          new SheetLocalCellAddresses(byAddress.sheetName().value(), List.of(byAddress.address()));
       case CellSelector.ByAddresses byAddresses ->
-          new SheetLocalCellAddresses(byAddresses.sheetName(), byAddresses.addresses());
+          new SheetLocalCellAddresses(byAddresses.sheetName().value(), byAddresses.addresses());
       case CellSelector.AllUsedInSheet _ ->
           throw new IllegalArgumentException(
               "selector must provide exact addresses here; ALL_USED_IN_SHEET is not supported");
@@ -141,51 +149,54 @@ final class SelectorConverter {
   }
 
   static SingleCellTarget toSingleCellTarget(CellSelector.ByAddress selector) {
-    return new SingleCellTarget(selector.sheetName(), selector.address());
+    return new SingleCellTarget(selector.sheetName().value(), selector.address());
   }
 
   static SheetLocalRangeSelection toSheetLocalRangeSelection(RangeSelector selector) {
     return switch (selector) {
       case RangeSelector.AllOnSheet allOnSheet ->
-          new SheetLocalRangeSelection(allOnSheet.sheetName(), new ExcelRangeSelection.All());
+          new SheetLocalRangeSelection(
+              allOnSheet.sheetName().value(), new ExcelRangeSelection.All());
       case RangeSelector.ByRange byRange ->
           new SheetLocalRangeSelection(
-              byRange.sheetName(), new ExcelRangeSelection.Selected(List.of(byRange.range())));
+              byRange.sheetName().value(),
+              new ExcelRangeSelection.Selected(List.of(byRange.range())));
       case RangeSelector.ByRanges byRanges ->
           new SheetLocalRangeSelection(
-              byRanges.sheetName(), new ExcelRangeSelection.Selected(byRanges.ranges()));
+              byRanges.sheetName().value(), new ExcelRangeSelection.Selected(byRanges.ranges()));
       case RangeSelector.RectangularWindow window ->
           new SheetLocalRangeSelection(
-              window.sheetName(), new ExcelRangeSelection.Selected(List.of(window.range())));
+              window.sheetName().value(),
+              new ExcelRangeSelection.Selected(List.of(window.range())));
     };
   }
 
   static SingleRangeTarget toSingleRangeTarget(RangeSelector.ByRange selector) {
-    return new SingleRangeTarget(selector.sheetName(), selector.range());
+    return new SingleRangeTarget(selector.sheetName().value(), selector.range());
   }
 
   static SingleRangeTarget toSingleRangeTarget(RangeSelector.RectangularWindow selector) {
-    return new SingleRangeTarget(selector.sheetName(), selector.range());
+    return new SingleRangeTarget(selector.sheetName().value(), selector.range());
   }
 
   static String toSheetName(RangeSelector.AllOnSheet selector) {
-    return selector.sheetName();
+    return selector.sheetName().value();
   }
 
   static String toSheetName(RowBandSelector.Span selector) {
-    return selector.sheetName();
+    return selector.sheetName().value();
   }
 
   static String toSheetName(RowBandSelector.Insertion selector) {
-    return selector.sheetName();
+    return selector.sheetName().value();
   }
 
   static String toSheetName(ColumnBandSelector.Span selector) {
-    return selector.sheetName();
+    return selector.sheetName().value();
   }
 
   static String toSheetName(ColumnBandSelector.Insertion selector) {
-    return selector.sheetName();
+    return selector.sheetName().value();
   }
 
   static ExcelRowSpan toExcelRowSpan(RowBandSelector.Span selector) {
@@ -197,11 +208,11 @@ final class SelectorConverter {
   }
 
   static String toSheetName(TableSelector.ByNameOnSheet selector) {
-    return selector.sheetName();
+    return selector.sheetName().value();
   }
 
   static String toSheetName(PivotTableSelector.ByNameOnSheet selector) {
-    return selector.sheetName();
+    return selector.sheetName().value();
   }
 
   record SheetLocalCellSelection(String sheetName, ExcelCellSelection selection) {}

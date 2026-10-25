@@ -38,6 +38,7 @@ import dev.erst.gridgrind.core.source.BinarySourceInput;
 import dev.erst.gridgrind.core.source.TextSourceInput;
 import dev.erst.gridgrind.core.vocabulary.ExcelDataValidationErrorStyle;
 import dev.erst.gridgrind.core.vocabulary.ExcelPictureFormat;
+import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -62,7 +63,7 @@ class SourceBackedPlanResolverCanonicalStructureCoverageTest
             new WorkbookPlan.WorkbookPersistence.None(),
             mutations(
                 mutate(
-                    new CellSelector.ByAddress("Budget", "A1"),
+                    new CellSelector.ByAddress(new SheetName("Budget"), "A1"),
                     new CellMutationAction.SetCell(
                         new CellInput.RichText(
                             List.of(
@@ -91,7 +92,7 @@ class SourceBackedPlanResolverCanonicalStructureCoverageTest
     MutationStep mutationStep =
         new MutationStep(
             new StepId("mutate-inline"),
-            new CellSelector.ByAddress("Budget", "A1"),
+            new CellSelector.ByAddress(new SheetName("Budget"), "A1"),
             new CellMutationAction.SetCell(new CellInput.Text(TextSourceInput.inline("Owner"))));
     InspectionStep inspectionStep =
         new InspectionStep(
@@ -136,7 +137,7 @@ class SourceBackedPlanResolverCanonicalStructureCoverageTest
     MutationStep rangeStep =
         new MutationStep(
             new StepId("range-inline"),
-            new RangeSelector.ByRange("Budget", "A1:B1"),
+            new RangeSelector.ByRange(new SheetName("Budget"), "A1:B1"),
             new CellMutationAction.SetRange(
                 new dev.erst.gridgrind.core.model.value.CellGridInput.Typed(
                     List.of(
@@ -146,7 +147,7 @@ class SourceBackedPlanResolverCanonicalStructureCoverageTest
     MutationStep commentStep =
         new MutationStep(
             new StepId("comment-inline"),
-            new CellSelector.ByAddress("Budget", "A1"),
+            new CellSelector.ByAddress(new SheetName("Budget"), "A1"),
             new CellMutationAction.SetComment(
                 new CommentInput(
                     TextSourceInput.inline("Ada"),
@@ -157,21 +158,21 @@ class SourceBackedPlanResolverCanonicalStructureCoverageTest
     MutationStep pictureStep =
         new MutationStep(
             new StepId("picture-inline"),
-            new SheetSelector.ByName("Budget"),
+            new SheetSelector.ByName(new SheetName("Budget")),
             new DrawingMutationAction.SetPicture(
                 picture(
                     "Logo", inlinePictureData(), twoCellAnchor(), TextSourceInput.inline("Logo"))));
     MutationStep shapeStep =
         new MutationStep(
             new StepId("shape-inline"),
-            new SheetSelector.ByName("Budget"),
+            new SheetSelector.ByName(new SheetName("Budget")),
             new DrawingMutationAction.SetShape(
                 simpleShape(
                     "Shape", twoCellAnchor(), "roundRect", TextSourceInput.inline("Shape"))));
     MutationStep validationStep =
         new MutationStep(
             new StepId("validation-inline"),
-            new RangeSelector.ByRange("Budget", "A1"),
+            new RangeSelector.ByRange(new SheetName("Budget"), "A1"),
             new StructuredMutationAction.SetDataValidation(
                 dataValidation(
                     new DataValidationRuleInput.ExplicitList(List.of("Open")),
@@ -187,11 +188,11 @@ class SourceBackedPlanResolverCanonicalStructureCoverageTest
     MutationStep tableStep =
         new MutationStep(
             new StepId("table-inline"),
-            new TableSelector.ByNameOnSheet("BudgetTable", "Budget"),
+            new TableSelector.ByNameOnSheet("BudgetTable", new SheetName("Budget")),
             new StructuredMutationAction.SetTable(
                 new TableInput(
                     "BudgetTable",
-                    "Budget",
+                    new dev.erst.gridgrind.core.vocabulary.SheetName("Budget"),
                     "A1:B2",
                     false,
                     true,
@@ -207,7 +208,7 @@ class SourceBackedPlanResolverCanonicalStructureCoverageTest
     MutationStep printLayoutStep =
         new MutationStep(
             new StepId("print-layout-inline"),
-            new SheetSelector.ByName("Budget"),
+            new SheetSelector.ByName(new SheetName("Budget")),
             new WorkbookMutationAction.SetPrintLayout(
                 printLayoutWithHeaderAndFooter(
                     new HeaderFooterTextInput(
@@ -266,13 +267,13 @@ class SourceBackedPlanResolverCanonicalStructureCoverageTest
     MutationStep formulaStep =
         new MutationStep(
             new StepId("formula-inline-prefix"),
-            new CellSelector.ByAddress("Budget", "A1"),
+            new CellSelector.ByAddress(new SheetName("Budget"), "A1"),
             new CellMutationAction.SetCell(
                 new CellInput.Formula(TextSourceInput.inline("SUM(B2:B3)"))));
     MutationStep commentStep =
         new MutationStep(
             new StepId("comment-mixed"),
-            new CellSelector.ByAddress("Budget", "A1"),
+            new CellSelector.ByAddress(new SheetName("Budget"), "A1"),
             new CellMutationAction.SetComment(
                 new CommentInput(
                     TextSourceInput.inline("Ada Lovelace"),
@@ -287,7 +288,7 @@ class SourceBackedPlanResolverCanonicalStructureCoverageTest
     MutationStep pictureStep =
         new MutationStep(
             new StepId("picture-mixed"),
-            new SheetSelector.ByName("Budget"),
+            new SheetSelector.ByName(new SheetName("Budget")),
             new DrawingMutationAction.SetPicture(
                 picture(
                     "Logo",
@@ -298,7 +299,7 @@ class SourceBackedPlanResolverCanonicalStructureCoverageTest
     MutationStep embeddedObjectStep =
         new MutationStep(
             new StepId("embedded-mixed"),
-            new SheetSelector.ByName("Budget"),
+            new SheetSelector.ByName(new SheetName("Budget")),
             new DrawingMutationAction.SetEmbeddedObject(
                 new EmbeddedObjectInput(
                     "Payload",
@@ -312,7 +313,7 @@ class SourceBackedPlanResolverCanonicalStructureCoverageTest
     MutationStep promptValidationStep =
         new MutationStep(
             new StepId("validation-prompt-mixed"),
-            new RangeSelector.ByRange("Budget", "A1"),
+            new RangeSelector.ByRange(new SheetName("Budget"), "A1"),
             new StructuredMutationAction.SetDataValidation(
                 dataValidation(
                     new DataValidationRuleInput.ExplicitList(List.of("Open")),
@@ -326,7 +327,7 @@ class SourceBackedPlanResolverCanonicalStructureCoverageTest
     MutationStep errorValidationStep =
         new MutationStep(
             new StepId("validation-error-mixed"),
-            new RangeSelector.ByRange("Budget", "B1"),
+            new RangeSelector.ByRange(new SheetName("Budget"), "B1"),
             new StructuredMutationAction.SetDataValidation(
                 dataValidation(
                     new DataValidationRuleInput.ExplicitList(List.of("Open")),
@@ -341,7 +342,7 @@ class SourceBackedPlanResolverCanonicalStructureCoverageTest
     MutationStep printLayoutStep =
         new MutationStep(
             new StepId("print-layout-mixed"),
-            new SheetSelector.ByName("Budget"),
+            new SheetSelector.ByName(new SheetName("Budget")),
             new WorkbookMutationAction.SetPrintLayout(
                 printLayoutWithHeaderAndFooter(
                     new HeaderFooterTextInput(
@@ -474,7 +475,7 @@ class SourceBackedPlanResolverCanonicalStructureCoverageTest
     MutationStep pictureDescriptionOnlyChanged =
         new MutationStep(
             new StepId("picture-description-only"),
-            new SheetSelector.ByName("Budget"),
+            new SheetSelector.ByName(new SheetName("Budget")),
             new DrawingMutationAction.SetPicture(
                 picture(
                     "Logo",
@@ -484,7 +485,7 @@ class SourceBackedPlanResolverCanonicalStructureCoverageTest
     MutationStep footerOnlyChanged =
         new MutationStep(
             new StepId("footer-only-changed"),
-            new SheetSelector.ByName("Budget"),
+            new SheetSelector.ByName(new SheetName("Budget")),
             new WorkbookMutationAction.SetPrintLayout(
                 printLayoutWithHeaderAndFooter(
                     new HeaderFooterTextInput(
@@ -498,7 +499,7 @@ class SourceBackedPlanResolverCanonicalStructureCoverageTest
     MutationStep formulaAlreadyInline =
         new MutationStep(
             new StepId("formula-inline-stable"),
-            new CellSelector.ByAddress("Budget", "B2"),
+            new CellSelector.ByAddress(new SheetName("Budget"), "B2"),
             new CellMutationAction.SetCell(
                 new CellInput.Formula(TextSourceInput.inline("SUM(A1:A2)"))));
 
@@ -594,19 +595,19 @@ class SourceBackedPlanResolverCanonicalStructureCoverageTest
     MutationStep stableInline =
         new MutationStep(
             new StepId("formula-inline-stable"),
-            new CellSelector.ByAddress("Budget", "A1"),
+            new CellSelector.ByAddress(new SheetName("Budget"), "A1"),
             new CellMutationAction.SetCell(
                 new CellInput.Formula(TextSourceInput.inline("SUM(A1:A2)"))));
     MutationStep secondInline =
         new MutationStep(
             new StepId("formula-inline-prefixed"),
-            new CellSelector.ByAddress("Budget", "A2"),
+            new CellSelector.ByAddress(new SheetName("Budget"), "A2"),
             new CellMutationAction.SetCell(
                 new CellInput.Formula(TextSourceInput.inline("SUM(B1:B2)"))));
     MutationStep fileBacked =
         new MutationStep(
             new StepId("formula-file-backed"),
-            new CellSelector.ByAddress("Budget", "A3"),
+            new CellSelector.ByAddress(new SheetName("Budget"), "A3"),
             new CellMutationAction.SetCell(
                 new CellInput.Formula(TextSourceInput.utf8File("formula.txt"))));
 

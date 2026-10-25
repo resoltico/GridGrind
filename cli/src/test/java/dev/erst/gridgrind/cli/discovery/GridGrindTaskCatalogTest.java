@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import dev.erst.gridgrind.core.vocabulary.SheetName;
 import java.io.IOException;
 import org.junit.jupiter.api.Test;
 
@@ -142,10 +143,11 @@ class GridGrindTaskCatalogTest {
   @Test
   void examplePlanSupportBuildsSheetScopedTableSelectors() {
     var table =
-        new dev.erst.gridgrind.core.plan.TableSelector.ByNameOnSheet("BudgetTable", "Budget");
+        new dev.erst.gridgrind.core.plan.TableSelector.ByNameOnSheet(
+            "BudgetTable", new SheetName("Budget"));
 
     assertEquals("BudgetTable", table.name());
-    assertEquals("Budget", table.sheetName());
+    assertEquals("Budget", table.sheetName().value());
   }
 
   private static TaskExecutionProfile profile() {

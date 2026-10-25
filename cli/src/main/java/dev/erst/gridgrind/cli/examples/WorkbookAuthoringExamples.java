@@ -22,6 +22,7 @@ import dev.erst.gridgrind.core.vocabulary.AnalysisSeverity;
 import dev.erst.gridgrind.core.vocabulary.ExcelHorizontalAlignment;
 import dev.erst.gridgrind.core.vocabulary.ExcelVerticalAlignment;
 import dev.erst.gridgrind.core.vocabulary.PlanId;
+import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import java.util.Optional;
 
@@ -160,10 +161,10 @@ final class WorkbookAuthoringExamples {
         ExampleSteps.step(
             new StepId("step-04-copy-sheet"),
             ExampleSelectors.sheet("Template"),
-            new WorkbookMutationAction.CopySheet("Template Copy")),
+            new WorkbookMutationAction.CopySheet(new SheetName("Template Copy"))),
         ExampleSteps.read(
             new StepId("step-05-read-comments"),
-            new CellSelector.AllUsedInSheet("Template Copy"),
+            new CellSelector.AllUsedInSheet(new SheetName("Template Copy")),
             new SheetIntrospectionQuery.GetComments()),
         ExampleSteps.read(
             new StepId("step-06-read-workbook-findings"),

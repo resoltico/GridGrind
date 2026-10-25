@@ -27,6 +27,7 @@ import dev.erst.gridgrind.core.vocabulary.ExcelPaneRegion;
 import dev.erst.gridgrind.core.vocabulary.ExcelPrintOrientation;
 import dev.erst.gridgrind.core.vocabulary.ExcelRowSpan;
 import dev.erst.gridgrind.core.vocabulary.ExcelSheetLayoutLimits;
+import dev.erst.gridgrind.core.vocabulary.SheetName;
 import org.junit.jupiter.api.Test;
 
 /** Direct tests for the structural-layout protocol input and report families. */
@@ -34,46 +35,64 @@ class StructuralLayoutProtocolTypesTest {
   @Test
   void rowAndColumnSpanInputsValidateBounds() {
     assertEquals(
-        new RowBandSelector.Span("Budget", 0, 2), new RowBandSelector.Span("Budget", 0, 2));
+        new RowBandSelector.Span(new SheetName("Budget"), 0, 2),
+        new RowBandSelector.Span(new SheetName("Budget"), 0, 2));
     assertEquals(
-        new ColumnBandSelector.Span("Budget", 1, 3), new ColumnBandSelector.Span("Budget", 1, 3));
+        new ColumnBandSelector.Span(new SheetName("Budget"), 1, 3),
+        new ColumnBandSelector.Span(new SheetName("Budget"), 1, 3));
     assertEquals(
-        new RowBandSelector.Insertion("Budget", 2, 1),
-        new RowBandSelector.Insertion("Budget", 2, 1));
+        new RowBandSelector.Insertion(new SheetName("Budget"), 2, 1),
+        new RowBandSelector.Insertion(new SheetName("Budget"), 2, 1));
     assertEquals(
-        new ColumnBandSelector.Insertion("Budget", 3, 2),
-        new ColumnBandSelector.Insertion("Budget", 3, 2));
+        new ColumnBandSelector.Insertion(new SheetName("Budget"), 3, 2),
+        new ColumnBandSelector.Insertion(new SheetName("Budget"), 3, 2));
 
-    assertThrows(IllegalArgumentException.class, () -> new RowBandSelector.Span("Budget", -1, 0));
-    assertThrows(IllegalArgumentException.class, () -> new RowBandSelector.Span("Budget", 0, -1));
-    assertThrows(IllegalArgumentException.class, () -> new RowBandSelector.Span("Budget", 2, 1));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new RowBandSelector.Span(new SheetName("Budget"), -1, 0));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new RowBandSelector.Span(new SheetName("Budget"), 0, -1));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new RowBandSelector.Span(new SheetName("Budget"), 2, 1));
     assertThrows(
         IllegalArgumentException.class,
         () ->
             new RowBandSelector.Span(
-                "Budget", ExcelRowSpan.MAX_ROW_INDEX + 1, ExcelRowSpan.MAX_ROW_INDEX + 1));
+                new SheetName("Budget"),
+                ExcelRowSpan.MAX_ROW_INDEX + 1,
+                ExcelRowSpan.MAX_ROW_INDEX + 1));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new RowBandSelector.Span("Budget", 0, ExcelRowSpan.MAX_ROW_INDEX + 1));
+        () -> new RowBandSelector.Span(new SheetName("Budget"), 0, ExcelRowSpan.MAX_ROW_INDEX + 1));
     assertThrows(
-        IllegalArgumentException.class, () -> new ColumnBandSelector.Span("Budget", -1, 0));
+        IllegalArgumentException.class,
+        () -> new ColumnBandSelector.Span(new SheetName("Budget"), -1, 0));
     assertThrows(
-        IllegalArgumentException.class, () -> new ColumnBandSelector.Span("Budget", 0, -1));
-    assertThrows(IllegalArgumentException.class, () -> new ColumnBandSelector.Span("Budget", 2, 1));
+        IllegalArgumentException.class,
+        () -> new ColumnBandSelector.Span(new SheetName("Budget"), 0, -1));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new ColumnBandSelector.Span(new SheetName("Budget"), 2, 1));
     assertThrows(
         IllegalArgumentException.class,
         () ->
             new ColumnBandSelector.Span(
-                "Budget",
+                new SheetName("Budget"),
                 ExcelColumnSpan.MAX_COLUMN_INDEX + 1,
                 ExcelColumnSpan.MAX_COLUMN_INDEX + 1));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new ColumnBandSelector.Span("Budget", 0, ExcelColumnSpan.MAX_COLUMN_INDEX + 1));
+        () ->
+            new ColumnBandSelector.Span(
+                new SheetName("Budget"), 0, ExcelColumnSpan.MAX_COLUMN_INDEX + 1));
     assertThrows(
-        IllegalArgumentException.class, () -> new RowBandSelector.Insertion("Budget", 0, 0));
+        IllegalArgumentException.class,
+        () -> new RowBandSelector.Insertion(new SheetName("Budget"), 0, 0));
     assertThrows(
-        IllegalArgumentException.class, () -> new ColumnBandSelector.Insertion("Budget", 0, 0));
+        IllegalArgumentException.class,
+        () -> new ColumnBandSelector.Insertion(new SheetName("Budget"), 0, 0));
   }
 
   @Test

@@ -15,22 +15,35 @@ final class SelectorListValidation {
 
   static List<String> copyDistinctAddresses(List<String> addresses, String fieldName) {
     Objects.requireNonNull(addresses, fieldName + " must not be null");
-    return copyDistinctValues(addresses, fieldName, false, true, false);
+    return copyDistinctValues(addresses, fieldName, true, false);
   }
 
   static List<String> copyDistinctRanges(List<String> ranges, String fieldName) {
     Objects.requireNonNull(ranges, fieldName + " must not be null");
-    return copyDistinctValues(ranges, fieldName, false, false, true);
+    return copyDistinctValues(ranges, fieldName, false, true);
   }
 
-  static List<String> copyDistinctSheetNames(List<String> sheetNames, String fieldName) {
+  static List<dev.erst.gridgrind.core.vocabulary.SheetName> copyDistinctSheetNames(
+      List<dev.erst.gridgrind.core.vocabulary.SheetName> sheetNames, String fieldName) {
     Objects.requireNonNull(sheetNames, fieldName + " must not be null");
-    return copyDistinctValues(sheetNames, fieldName, true, false, false);
+    if (sheetNames.isEmpty()) {
+      throw SelectorTextValidation.invalidField(
+          FieldValidationProblem.atField(fieldName, FieldValidationBasicRule.NON_EMPTY));
+    }
+    Set<String> unique = new LinkedHashSet<>();
+    for (var name : sheetNames) {
+      Objects.requireNonNull(name, fieldName + " must not contain nulls");
+      if (!unique.add(name.value().toUpperCase(Locale.ROOT))) {
+        throw SelectorTextValidation.invalidField(
+            FieldValidationProblem.atField(fieldName, FieldValidationBasicRule.DUPLICATES));
+      }
+    }
+    return List.copyOf(sheetNames);
   }
 
   static List<String> copyDistinctDefinedNames(List<String> names, String fieldName) {
     Objects.requireNonNull(names, fieldName + " must not be null");
-    return copyDistinctValues(names, fieldName, false, false, false);
+    return copyDistinctValues(names, fieldName, false, false);
   }
 
   static List<String> copyDistinctPivotTableNames(List<String> names, String fieldName) {
@@ -101,18 +114,14 @@ final class SelectorListValidation {
           "NAMED_RANGE_WORKBOOK_SCOPE|" + workbookScope.name().toUpperCase(Locale.ROOT);
       case NamedRangeSelector.SheetScope sheetScope ->
           "NAMED_RANGE_SHEET_SCOPE|"
-              + sheetScope.sheetName().toUpperCase(Locale.ROOT)
+              + sheetScope.sheetName().value().toUpperCase(Locale.ROOT)
               + "|"
               + sheetScope.name().toUpperCase(Locale.ROOT);
     };
   }
 
   private static List<String> copyDistinctValues(
-      List<String> values,
-      String fieldName,
-      boolean sheetNames,
-      boolean addresses,
-      boolean ranges) {
+      List<String> values, String fieldName, boolean addresses, boolean ranges) {
     List<String> copy = new ArrayList<>(values);
     if (copy.isEmpty()) {
       throw SelectorTextValidation.invalidField(
@@ -125,14 +134,11 @@ final class SelectorListValidation {
     for (int index = 0; index < copy.size(); index++) {
       String indexedFieldName = fieldName + "[" + index + "]";
       String validated =
-          sheetNames
-              ? SelectorValueValidation.requireSheetName(copy.get(index), indexedFieldName)
-              : addresses
-                  ? SelectorValueValidation.requireAddress(copy.get(index), indexedFieldName)
-                  : ranges
-                      ? SelectorValueValidation.requireRange(copy.get(index), indexedFieldName)
-                      : SelectorValueValidation.requireDefinedName(
-                          copy.get(index), indexedFieldName);
+          addresses
+              ? SelectorValueValidation.requireAddress(copy.get(index), indexedFieldName)
+              : ranges
+                  ? SelectorValueValidation.requireRange(copy.get(index), indexedFieldName)
+                  : SelectorValueValidation.requireDefinedName(copy.get(index), indexedFieldName);
       String key = validated.toUpperCase(Locale.ROOT);
       if (!unique.add(key)) {
         throw SelectorTextValidation.invalidField(

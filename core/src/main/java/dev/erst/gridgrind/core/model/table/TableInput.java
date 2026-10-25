@@ -5,14 +5,14 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import dev.erst.gridgrind.core.metadata.ProtocolBooleanDefault;
 import dev.erst.gridgrind.core.metadata.ProtocolField;
 import dev.erst.gridgrind.core.source.TextSourceInput;
-import dev.erst.gridgrind.core.vocabulary.ExcelSheetNames;
 import dev.erst.gridgrind.core.vocabulary.ProtocolDefinedNameValidation;
+import dev.erst.gridgrind.core.vocabulary.SheetName;
 import java.util.Objects;
 
 /** Protocol-facing table definition attached to one table authoring request. */
 public record TableInput(
     String name,
-    String sheetName,
+    SheetName sheetName,
     String range,
     @ProtocolField(optional = true, booleanDefault = ProtocolBooleanDefault.FALSE)
         boolean showTotalsRow,
@@ -32,7 +32,11 @@ public record TableInput(
     @ProtocolField(optional = true) java.util.List<TableColumnInput> columns) {
   /** Creates a table payload with explicit standard metadata. */
   public static TableInput withDefaultMetadata(
-      String name, String sheetName, String range, boolean showTotalsRow, TableStyleInput style) {
+      String name,
+      SheetName sheetName,
+      String range,
+      boolean showTotalsRow,
+      TableStyleInput style) {
     return new TableInput(
         name,
         sheetName,
@@ -52,7 +56,7 @@ public record TableInput(
 
   public TableInput {
     name = ProtocolDefinedNameValidation.validateName(name);
-    ExcelSheetNames.requireValid(sheetName, "sheetName");
+    java.util.Objects.requireNonNull(sheetName, "sheetName must not be null");
     Objects.requireNonNull(range, "range must not be null");
     if (range.isBlank()) {
       throw new IllegalArgumentException("range must not be blank");
@@ -73,7 +77,7 @@ public record TableInput(
   @SuppressWarnings("PMD.ExcessiveParameterList")
   public TableInput(
       @JsonProperty("name") String name,
-      @JsonProperty("sheetName") String sheetName,
+      @JsonProperty("sheetName") SheetName sheetName,
       @JsonProperty("range") String range,
       @JsonProperty("showTotalsRow") Boolean showTotalsRow,
       @JsonProperty("hasAutofilter") Boolean hasAutofilter,

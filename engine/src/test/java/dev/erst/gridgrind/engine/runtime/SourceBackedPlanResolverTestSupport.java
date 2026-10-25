@@ -26,6 +26,7 @@ import dev.erst.gridgrind.core.source.BinarySourceInput;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartDisplayBlanksAs;
 import dev.erst.gridgrind.core.vocabulary.ExcelDrawingAnchorBehavior;
 import dev.erst.gridgrind.core.vocabulary.ExcelPictureFormat;
+import dev.erst.gridgrind.core.vocabulary.SheetName;
 import java.util.Base64;
 import java.util.List;
 
@@ -82,15 +83,18 @@ class SourceBackedPlanResolverTestSupport {
   final boolean requiresStandardInputFor(MutationAction action) {
     Object target =
         switch (action) {
-          case CellMutationAction.SetCell _ -> new CellSelector.ByAddress("Budget", "A1");
-          case CellMutationAction.SetRange _ -> new RangeSelector.ByRange("Budget", "A1:B2");
-          case CellMutationAction.SetComment _ -> new CellSelector.ByAddress("Budget", "A1");
+          case CellMutationAction.SetCell _ ->
+              new CellSelector.ByAddress(new SheetName("Budget"), "A1");
+          case CellMutationAction.SetRange _ ->
+              new RangeSelector.ByRange(new SheetName("Budget"), "A1:B2");
+          case CellMutationAction.SetComment _ ->
+              new CellSelector.ByAddress(new SheetName("Budget"), "A1");
           case StructuredMutationAction.SetDataValidation _ ->
-              new RangeSelector.ByRange("Budget", "A1");
+              new RangeSelector.ByRange(new SheetName("Budget"), "A1");
           case StructuredMutationAction.SetTable setTable ->
               new dev.erst.gridgrind.core.plan.TableSelector.ByNameOnSheet(
                   setTable.table().name(), setTable.table().sheetName());
-          default -> new SheetSelector.ByName("Budget");
+          default -> new SheetSelector.ByName(new SheetName("Budget"));
         };
     WorkbookPlan plan =
         request(

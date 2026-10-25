@@ -7,6 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import dev.erst.gridgrind.core.model.style.RichTextRunInput;
 import dev.erst.gridgrind.core.model.value.CellInput;
 import dev.erst.gridgrind.core.source.TextSourceInput;
+import dev.erst.gridgrind.core.vocabulary.SheetName;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -19,41 +20,50 @@ class SelectorTypesTest {
   void allSelectorFamiliesExposeExpectedCardinalityContracts() {
     assertEquals(SelectorCardinality.EXACTLY_ONE, new WorkbookSelector.Current().cardinality());
     assertEquals(SelectorCardinality.ANY_NUMBER, new SheetSelector.All().cardinality());
-    assertEquals(SelectorCardinality.EXACTLY_ONE, new SheetSelector.ByName("Budget").cardinality());
+    assertEquals(
+        SelectorCardinality.EXACTLY_ONE,
+        new SheetSelector.ByName(new SheetName("Budget")).cardinality());
     assertEquals(
         SelectorCardinality.ONE_OR_MORE,
-        new SheetSelector.ByNames(List.of("Budget", "Ops")).cardinality());
+        new SheetSelector.ByNames(List.of(new SheetName("Budget"), new SheetName("Ops")))
+            .cardinality());
 
     assertEquals(
-        SelectorCardinality.ANY_NUMBER, new CellSelector.AllUsedInSheet("Budget").cardinality());
+        SelectorCardinality.ANY_NUMBER,
+        new CellSelector.AllUsedInSheet(new SheetName("Budget")).cardinality());
     assertEquals(
-        SelectorCardinality.EXACTLY_ONE, new CellSelector.ByAddress("Budget", "A1").cardinality());
+        SelectorCardinality.EXACTLY_ONE,
+        new CellSelector.ByAddress(new SheetName("Budget"), "A1").cardinality());
     assertEquals(
         SelectorCardinality.ONE_OR_MORE,
-        new CellSelector.ByAddresses("Budget", List.of("A1", "B2")).cardinality());
+        new CellSelector.ByAddresses(new SheetName("Budget"), List.of("A1", "B2")).cardinality());
 
     assertEquals(
-        SelectorCardinality.ANY_NUMBER, new RangeSelector.AllOnSheet("Budget").cardinality());
+        SelectorCardinality.ANY_NUMBER,
+        new RangeSelector.AllOnSheet(new SheetName("Budget")).cardinality());
     assertEquals(
         SelectorCardinality.EXACTLY_ONE,
-        new RangeSelector.ByRange("Budget", "A1:B2").cardinality());
+        new RangeSelector.ByRange(new SheetName("Budget"), "A1:B2").cardinality());
     assertEquals(
         SelectorCardinality.ONE_OR_MORE,
-        new RangeSelector.ByRanges("Budget", List.of("A1:A2", "C3:D4")).cardinality());
+        new RangeSelector.ByRanges(new SheetName("Budget"), List.of("A1:A2", "C3:D4"))
+            .cardinality());
     assertEquals(
         SelectorCardinality.EXACTLY_ONE,
-        new RangeSelector.RectangularWindow("Budget", "B3", 2, 3).cardinality());
+        new RangeSelector.RectangularWindow(new SheetName("Budget"), "B3", 2, 3).cardinality());
 
     assertEquals(
-        SelectorCardinality.EXACTLY_ONE, new RowBandSelector.Span("Budget", 0, 2).cardinality());
+        SelectorCardinality.EXACTLY_ONE,
+        new RowBandSelector.Span(new SheetName("Budget"), 0, 2).cardinality());
     assertEquals(
         SelectorCardinality.EXACTLY_ONE,
-        new RowBandSelector.Insertion("Budget", 5, 2).cardinality());
-    assertEquals(
-        SelectorCardinality.EXACTLY_ONE, new ColumnBandSelector.Span("Budget", 1, 3).cardinality());
+        new RowBandSelector.Insertion(new SheetName("Budget"), 5, 2).cardinality());
     assertEquals(
         SelectorCardinality.EXACTLY_ONE,
-        new ColumnBandSelector.Insertion("Budget", 4, 1).cardinality());
+        new ColumnBandSelector.Span(new SheetName("Budget"), 1, 3).cardinality());
+    assertEquals(
+        SelectorCardinality.EXACTLY_ONE,
+        new ColumnBandSelector.Insertion(new SheetName("Budget"), 4, 1).cardinality());
 
     assertEquals(SelectorCardinality.ANY_NUMBER, new TableSelector.All().cardinality());
     assertEquals(
@@ -63,7 +73,7 @@ class SelectorTypesTest {
         new TableSelector.ByNames(List.of("BudgetTable", "OpsTable")).cardinality());
     assertEquals(
         SelectorCardinality.EXACTLY_ONE,
-        new TableSelector.ByNameOnSheet("BudgetTable", "Budget").cardinality());
+        new TableSelector.ByNameOnSheet("BudgetTable", new SheetName("Budget")).cardinality());
 
     TableSelector.ByName table = new TableSelector.ByName("BudgetTable");
     assertEquals(SelectorCardinality.ANY_NUMBER, new TableRowSelector.AllRows(table).cardinality());
@@ -90,26 +100,27 @@ class SelectorTypesTest {
         new NamedRangeSelector.WorkbookScope("BudgetTotal").cardinality());
     assertEquals(
         SelectorCardinality.EXACTLY_ONE,
-        new NamedRangeSelector.SheetScope("LocalItem", "Budget").cardinality());
+        new NamedRangeSelector.SheetScope("LocalItem", new SheetName("Budget")).cardinality());
     assertEquals(
         SelectorCardinality.ONE_OR_MORE,
         new NamedRangeSelector.AnyOf(
                 List.of(
                     new NamedRangeSelector.WorkbookScope("BudgetTotal"),
-                    new NamedRangeSelector.SheetScope("LocalItem", "Budget")))
+                    new NamedRangeSelector.SheetScope("LocalItem", new SheetName("Budget"))))
             .cardinality());
 
     assertEquals(
         SelectorCardinality.ANY_NUMBER,
-        new DrawingObjectSelector.AllOnSheet("Budget").cardinality());
+        new DrawingObjectSelector.AllOnSheet(new SheetName("Budget")).cardinality());
     assertEquals(
         SelectorCardinality.EXACTLY_ONE,
-        new DrawingObjectSelector.ByName("Budget", "OpsPicture").cardinality());
+        new DrawingObjectSelector.ByName(new SheetName("Budget"), "OpsPicture").cardinality());
     assertEquals(
-        SelectorCardinality.ANY_NUMBER, new ChartSelector.AllOnSheet("Budget").cardinality());
+        SelectorCardinality.ANY_NUMBER,
+        new ChartSelector.AllOnSheet(new SheetName("Budget")).cardinality());
     assertEquals(
         SelectorCardinality.EXACTLY_ONE,
-        new ChartSelector.ByName("Budget", "OpsChart").cardinality());
+        new ChartSelector.ByName(new SheetName("Budget"), "OpsChart").cardinality());
     assertEquals(SelectorCardinality.ANY_NUMBER, new PivotTableSelector.All().cardinality());
     assertEquals(
         SelectorCardinality.EXACTLY_ONE,
@@ -119,54 +130,71 @@ class SelectorTypesTest {
         new PivotTableSelector.ByNames(List.of("Sales Pivot 2026", "Ops Pivot")).cardinality());
     assertEquals(
         SelectorCardinality.EXACTLY_ONE,
-        new PivotTableSelector.ByNameOnSheet("Sales Pivot 2026", "Report").cardinality());
+        new PivotTableSelector.ByNameOnSheet("Sales Pivot 2026", new SheetName("Report"))
+            .cardinality());
   }
 
   @Test
   void sheetCellAndRangeSelectorsValidateAndNormalize() {
     assertEquals(new SheetSelector.All(), new SheetSelector.All());
-    assertEquals(new SheetSelector.ByName("Budget"), new SheetSelector.ByName("Budget"));
     assertEquals(
-        List.of("Budget", "Ops"), new SheetSelector.ByNames(List.of("Budget", "Ops")).names());
+        new SheetSelector.ByName(new SheetName("Budget")),
+        new SheetSelector.ByName(new SheetName("Budget")));
+    assertEquals(
+        List.of("Budget", "Ops"),
+        new SheetSelector.ByNames(List.of(new SheetName("Budget"), new SheetName("Ops")))
+            .names().stream().map(dev.erst.gridgrind.core.vocabulary.WireString::value).toList());
     assertThrows(IllegalArgumentException.class, () -> new SheetSelector.ByNames(List.of()));
 
-    CellSelector.ByAddresses cells = new CellSelector.ByAddresses("Budget", List.of("A1", "$B$2"));
-    assertEquals("Budget", cells.sheetName());
+    CellSelector.ByAddresses cells =
+        new CellSelector.ByAddresses(new SheetName("Budget"), List.of("A1", "$B$2"));
+    assertEquals("Budget", cells.sheetName().value());
     assertEquals(List.of("A1", "$B$2"), cells.addresses());
     assertThrows(
         IllegalArgumentException.class,
-        () -> new CellSelector.ByAddresses("Budget", List.of("A1", "a1")));
+        () -> new CellSelector.ByAddresses(new SheetName("Budget"), List.of("A1", "a1")));
 
     RangeSelector.RectangularWindow window =
-        new RangeSelector.RectangularWindow("Budget", "B3", 2, 3);
+        new RangeSelector.RectangularWindow(new SheetName("Budget"), "B3", 2, 3);
     assertEquals("B3:D4", window.range());
     assertThrows(
         IllegalArgumentException.class,
-        () -> new RangeSelector.ByRanges("Budget", List.of("A1:A2", "A1:A2")));
+        () -> new RangeSelector.ByRanges(new SheetName("Budget"), List.of("A1:A2", "A1:A2")));
   }
 
   @Test
   void rowAndColumnBandSelectorsValidateBounds() {
     assertEquals(
-        new RowBandSelector.Span("Budget", 0, 2), new RowBandSelector.Span("Budget", 0, 2));
+        new RowBandSelector.Span(new SheetName("Budget"), 0, 2),
+        new RowBandSelector.Span(new SheetName("Budget"), 0, 2));
     assertEquals(
-        new ColumnBandSelector.Span("Budget", 1, 3), new ColumnBandSelector.Span("Budget", 1, 3));
+        new ColumnBandSelector.Span(new SheetName("Budget"), 1, 3),
+        new ColumnBandSelector.Span(new SheetName("Budget"), 1, 3));
     assertEquals(
-        new RowBandSelector.Insertion("Budget", 5, 2),
-        new RowBandSelector.Insertion("Budget", 5, 2));
+        new RowBandSelector.Insertion(new SheetName("Budget"), 5, 2),
+        new RowBandSelector.Insertion(new SheetName("Budget"), 5, 2));
     assertEquals(
-        new ColumnBandSelector.Insertion("Budget", 4, 1),
-        new ColumnBandSelector.Insertion("Budget", 4, 1));
+        new ColumnBandSelector.Insertion(new SheetName("Budget"), 4, 1),
+        new ColumnBandSelector.Insertion(new SheetName("Budget"), 4, 1));
 
-    assertThrows(IllegalArgumentException.class, () -> new RowBandSelector.Span("Budget", -1, 0));
-    assertThrows(IllegalArgumentException.class, () -> new RowBandSelector.Span("Budget", 2, 1));
     assertThrows(
-        IllegalArgumentException.class, () -> new ColumnBandSelector.Span("Budget", -1, 0));
-    assertThrows(IllegalArgumentException.class, () -> new ColumnBandSelector.Span("Budget", 2, 1));
+        IllegalArgumentException.class,
+        () -> new RowBandSelector.Span(new SheetName("Budget"), -1, 0));
     assertThrows(
-        IllegalArgumentException.class, () -> new RowBandSelector.Insertion("Budget", 0, 0));
+        IllegalArgumentException.class,
+        () -> new RowBandSelector.Span(new SheetName("Budget"), 2, 1));
     assertThrows(
-        IllegalArgumentException.class, () -> new ColumnBandSelector.Insertion("Budget", 0, 0));
+        IllegalArgumentException.class,
+        () -> new ColumnBandSelector.Span(new SheetName("Budget"), -1, 0));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new ColumnBandSelector.Span(new SheetName("Budget"), 2, 1));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new RowBandSelector.Insertion(new SheetName("Budget"), 0, 0));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new ColumnBandSelector.Insertion(new SheetName("Budget"), 0, 0));
   }
 
   @Test
@@ -174,8 +202,8 @@ class SelectorTypesTest {
     assertEquals(new TableSelector.All(), new TableSelector.All());
     assertEquals(List.of("BudgetTable"), new TableSelector.ByNames(List.of("BudgetTable")).names());
     assertEquals(
-        new TableSelector.ByNameOnSheet("BudgetTable", "Budget"),
-        new TableSelector.ByNameOnSheet("BudgetTable", "Budget"));
+        new TableSelector.ByNameOnSheet("BudgetTable", new SheetName("Budget")),
+        new TableSelector.ByNameOnSheet("BudgetTable", new SheetName("Budget")));
     assertThrows(IllegalArgumentException.class, () -> new TableSelector.ByNames(List.of()));
 
     PivotTableSelector.ByNames pivots =
@@ -189,7 +217,7 @@ class SelectorTypesTest {
         new NamedRangeSelector.AnyOf(
             List.of(
                 new NamedRangeSelector.WorkbookScope("BudgetTotal"),
-                new NamedRangeSelector.SheetScope("LocalItem", "Budget")));
+                new NamedRangeSelector.SheetScope("LocalItem", new SheetName("Budget"))));
     assertEquals(2, selector.selectors().size());
     assertInstanceOf(NamedRangeSelector.SheetScope.class, selector.selectors().get(1));
     assertThrows(

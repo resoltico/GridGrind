@@ -2,6 +2,7 @@ package dev.erst.gridgrind.core.plan;
 
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import dev.erst.gridgrind.core.vocabulary.SheetName;
 
 /** Selects a row band or one row-band insertion point on one sheet. */
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
@@ -13,9 +14,9 @@ public sealed interface RowBandSelector extends Selector
     permits RowBandSelector.Span, RowBandSelector.Insertion {
 
   /** Selects one inclusive zero-based row span on one sheet. */
-  record Span(String sheetName, int firstRowIndex, int lastRowIndex) implements RowBandSelector {
+  record Span(SheetName sheetName, int firstRowIndex, int lastRowIndex) implements RowBandSelector {
     public Span {
-      sheetName = SelectorValueValidation.requireSheetName(sheetName, "sheetName");
+      java.util.Objects.requireNonNull(sheetName, "sheetName must not be null");
       firstRowIndex =
           SelectorValueValidation.requireRowIndexWithinBounds(firstRowIndex, "firstRowIndex");
       lastRowIndex =
@@ -32,9 +33,10 @@ public sealed interface RowBandSelector extends Selector
   }
 
   /** Selects one row insertion point and band count on one sheet. */
-  record Insertion(String sheetName, int beforeRowIndex, int rowCount) implements RowBandSelector {
+  record Insertion(SheetName sheetName, int beforeRowIndex, int rowCount)
+      implements RowBandSelector {
     public Insertion {
-      sheetName = SelectorValueValidation.requireSheetName(sheetName, "sheetName");
+      java.util.Objects.requireNonNull(sheetName, "sheetName must not be null");
       beforeRowIndex =
           SelectorValueValidation.requireRowIndexWithinBounds(beforeRowIndex, "beforeRowIndex");
       rowCount = SelectorValueValidation.requirePositive(rowCount, "rowCount");

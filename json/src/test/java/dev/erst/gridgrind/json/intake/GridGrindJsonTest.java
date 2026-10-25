@@ -38,6 +38,7 @@ import dev.erst.gridgrind.core.result.WorkbookResults;
 import dev.erst.gridgrind.core.result.WorkbookSummary;
 import dev.erst.gridgrind.core.source.TextSourceInput;
 import dev.erst.gridgrind.core.vocabulary.SheetLabel;
+import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.json.codec.GridGrindJson;
 import dev.erst.gridgrind.json.codec.GridGrindJsonOutput;
@@ -359,11 +360,11 @@ class GridGrindJsonTest {
             List.of(
                 new MutationStep(
                     new StepId("set-owner"),
-                    new CellSelector.ByAddress("Budget", "A1"),
+                    new CellSelector.ByAddress(new SheetName("Budget"), "A1"),
                     new CellMutationAction.SetCell(new CellInput.Text(text("Owner")))),
                 new AssertionStep(
                     new StepId("assert-owner"),
-                    new CellSelector.ByAddress("Budget", "A1"),
+                    new CellSelector.ByAddress(new SheetName("Budget"), "A1"),
                     new CellAssertion.CellValue(
                         new dev.erst.gridgrind.core.model.value.CellScalarValue.Text("Owner"))),
                 new InspectionStep(

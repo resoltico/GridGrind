@@ -3,6 +3,7 @@ package dev.erst.gridgrind.core.plan;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import org.junit.jupiter.api.Test;
 
@@ -15,7 +16,9 @@ class AssertionStepTest {
             new dev.erst.gridgrind.core.model.value.CellScalarValue.Text("Owner"));
     AssertionStep step =
         new AssertionStep(
-            new StepId("assert-owner"), new CellSelector.ByAddress("Budget", "A1"), assertion);
+            new StepId("assert-owner"),
+            new CellSelector.ByAddress(new SheetName("Budget"), "A1"),
+            assertion);
 
     assertEquals("assert-owner", step.stepId().value());
     assertEquals("ASSERTION", step.stepKind());

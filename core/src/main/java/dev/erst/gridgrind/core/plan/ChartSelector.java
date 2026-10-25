@@ -2,6 +2,7 @@ package dev.erst.gridgrind.core.plan;
 
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import dev.erst.gridgrind.core.vocabulary.SheetName;
 
 /** Selects one or more sheet-local charts. */
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
@@ -13,9 +14,9 @@ public sealed interface ChartSelector extends Selector
     permits ChartSelector.AllOnSheet, ChartSelector.ByName {
 
   /** Selects every chart on one sheet. */
-  record AllOnSheet(String sheetName) implements ChartSelector {
+  record AllOnSheet(SheetName sheetName) implements ChartSelector {
     public AllOnSheet {
-      sheetName = SelectorValueValidation.requireSheetName(sheetName, "sheetName");
+      java.util.Objects.requireNonNull(sheetName, "sheetName must not be null");
     }
 
     @Override
@@ -25,9 +26,9 @@ public sealed interface ChartSelector extends Selector
   }
 
   /** Selects one chart by sheet-local chart name. */
-  record ByName(String sheetName, String chartName) implements ChartSelector {
+  record ByName(SheetName sheetName, String chartName) implements ChartSelector {
     public ByName {
-      sheetName = SelectorValueValidation.requireSheetName(sheetName, "sheetName");
+      java.util.Objects.requireNonNull(sheetName, "sheetName must not be null");
       chartName = SelectorValueValidation.requireNonBlank(chartName, "chartName");
     }
 

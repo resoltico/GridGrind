@@ -61,6 +61,7 @@ import dev.erst.gridgrind.core.vocabulary.ExcelDrawingAnchorBehavior;
 import dev.erst.gridgrind.core.vocabulary.ExcelPictureFormat;
 import dev.erst.gridgrind.core.vocabulary.ExcelPivotDataConsolidateFunction;
 import dev.erst.gridgrind.core.vocabulary.NamedRangeScope;
+import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.excel.*;
 import dev.erst.gridgrind.excel.ExcelAutofilterFilterColumn;
@@ -111,7 +112,7 @@ class AdvancedMutationCommandConverterTest {
         assertInstanceOf(
             WorkbookAnnotationCommand.SetComment.class,
             WorkbookCommandConverter.toCommand(
-                new CellSelector.ByAddress("Budget", "B4"),
+                new CellSelector.ByAddress(new SheetName("Budget"), "B4"),
                 new CellMutationAction.SetComment(
                     new CommentInput(
                         text("Ada Lovelace"),
@@ -156,7 +157,7 @@ class AdvancedMutationCommandConverterTest {
         assertInstanceOf(
             WorkbookTabularCommand.SetAutofilter.class,
             WorkbookCommandConverter.toCommand(
-                new RangeSelector.ByRange("Budget", "A1:C4"),
+                new RangeSelector.ByRange(new SheetName("Budget"), "A1:C4"),
                 new StructuredMutationAction.SetAutofilter()));
     assertEquals(List.of(), simpleAutofilter.criteria());
     assertEquals(Optional.empty(), simpleAutofilter.sortState());
@@ -166,7 +167,8 @@ class AdvancedMutationCommandConverterTest {
         assertInstanceOf(
             WorkbookTabularCommand.SetAutofilter.class,
             WorkbookCommandConverter.toCommand(
-                new RangeSelector.ByRange("Budget", "A1:F9"), advancedAutofilterAction()));
+                new RangeSelector.ByRange(new SheetName("Budget"), "A1:F9"),
+                advancedAutofilterAction()));
     assertEquals(expectedAutofilterCriteria(), advancedAutofilter.criteria());
     assertEquals(Optional.of(expectedAutofilterSortState()), advancedAutofilter.sortState());
 
@@ -219,7 +221,7 @@ class AdvancedMutationCommandConverterTest {
         assertInstanceOf(
             WorkbookDrawingCommand.SetPicture.class,
             WorkbookCommandConverter.toCommand(
-                new SheetSelector.ByName("Ops"),
+                new SheetSelector.ByName(new SheetName("Ops")),
                 new DrawingMutationAction.SetPicture(
                     new PictureInput(
                         "OpsPicture", pictureData, anchor, Optional.of(text("Queue preview"))))));
@@ -227,7 +229,7 @@ class AdvancedMutationCommandConverterTest {
         assertInstanceOf(
             WorkbookDrawingCommand.SetSignatureLine.class,
             WorkbookCommandConverter.toCommand(
-                new SheetSelector.ByName("Ops"),
+                new SheetSelector.ByName(new SheetName("Ops")),
                 new DrawingMutationAction.SetSignatureLine(
                     new SignatureLineInput(
                         "OpsSignature",
@@ -244,7 +246,7 @@ class AdvancedMutationCommandConverterTest {
         assertInstanceOf(
             WorkbookDrawingCommand.SetShape.class,
             WorkbookCommandConverter.toCommand(
-                new SheetSelector.ByName("Ops"),
+                new SheetSelector.ByName(new SheetName("Ops")),
                 new DrawingMutationAction.SetShape(
                     new ShapeInput.SimpleShape(
                         "OpsShape", anchor, "rect", Optional.of(text("Queue"))))));
@@ -252,7 +254,7 @@ class AdvancedMutationCommandConverterTest {
         assertInstanceOf(
             WorkbookDrawingCommand.SetEmbeddedObject.class,
             WorkbookCommandConverter.toCommand(
-                new SheetSelector.ByName("Ops"),
+                new SheetSelector.ByName(new SheetName("Ops")),
                 new DrawingMutationAction.SetEmbeddedObject(
                     new EmbeddedObjectInput(
                         "OpsEmbed",
@@ -266,13 +268,13 @@ class AdvancedMutationCommandConverterTest {
         assertInstanceOf(
             WorkbookDrawingCommand.SetDrawingObjectAnchor.class,
             WorkbookCommandConverter.toCommand(
-                new DrawingObjectSelector.ByName("Ops", "OpsPicture"),
+                new DrawingObjectSelector.ByName(new SheetName("Ops"), "OpsPicture"),
                 new DrawingMutationAction.SetDrawingObjectAnchor(anchor)));
     WorkbookDrawingCommand.DeleteDrawingObject deleteCommand =
         assertInstanceOf(
             WorkbookDrawingCommand.DeleteDrawingObject.class,
             WorkbookCommandConverter.toCommand(
-                new DrawingObjectSelector.ByName("Ops", "OpsPicture"),
+                new DrawingObjectSelector.ByName(new SheetName("Ops"), "OpsPicture"),
                 new DrawingMutationAction.DeleteDrawingObject()));
 
     assertEquals(
@@ -338,14 +340,14 @@ class AdvancedMutationCommandConverterTest {
         assertInstanceOf(
             WorkbookCellCommand.SetArrayFormula.class,
             WorkbookCommandConverter.toCommand(
-                new RangeSelector.ByRange("Calc", "D2:D4"),
+                new RangeSelector.ByRange(new SheetName("Calc"), "D2:D4"),
                 new CellMutationAction.SetArrayFormula(
                     new ArrayFormulaInput(text("{=B2:B4*C2:C4}")))));
     WorkbookCellCommand.ClearArrayFormula clearArrayFormula =
         assertInstanceOf(
             WorkbookCellCommand.ClearArrayFormula.class,
             WorkbookCommandConverter.toCommand(
-                new CellSelector.ByAddress("Calc", "D3"),
+                new CellSelector.ByAddress(new SheetName("Calc"), "D3"),
                 new CellMutationAction.ClearArrayFormula()));
 
     assertEquals("Calc", setArrayFormula.sheetName());
@@ -380,12 +382,12 @@ class AdvancedMutationCommandConverterTest {
         assertInstanceOf(
             WorkbookTabularCommand.SetPivotTable.class,
             WorkbookCommandConverter.toCommand(
-                new PivotTableSelector.ByNameOnSheet("Sales Pivot 2026", "Report"),
+                new PivotTableSelector.ByNameOnSheet("Sales Pivot 2026", new SheetName("Report")),
                 new StructuredMutationAction.SetPivotTable(
                     new PivotTableInput(
                         "Sales Pivot 2026",
-                        "Report",
-                        new PivotTableInput.Source.Range("Data", "A1:D5"),
+                        new SheetName("Report"),
+                        new PivotTableInput.Source.Range(new SheetName("Data"), "A1:D5"),
                         new PivotTableInput.Anchor("C5"),
                         List.of("Region"),
                         List.of("Stage"),
@@ -400,11 +402,11 @@ class AdvancedMutationCommandConverterTest {
         assertInstanceOf(
             WorkbookTabularCommand.SetPivotTable.class,
             WorkbookCommandConverter.toCommand(
-                new PivotTableSelector.ByNameOnSheet("Named Source Pivot", "Report"),
+                new PivotTableSelector.ByNameOnSheet("Named Source Pivot", new SheetName("Report")),
                 new StructuredMutationAction.SetPivotTable(
                     new PivotTableInput(
                         "Named Source Pivot",
-                        "Report",
+                        new SheetName("Report"),
                         new PivotTableInput.Source.NamedRange("PivotSource"),
                         new PivotTableInput.Anchor("A3"),
                         List.of("Region"),
@@ -420,11 +422,11 @@ class AdvancedMutationCommandConverterTest {
         assertInstanceOf(
             WorkbookTabularCommand.SetPivotTable.class,
             WorkbookCommandConverter.toCommand(
-                new PivotTableSelector.ByNameOnSheet("Table Source Pivot", "Report"),
+                new PivotTableSelector.ByNameOnSheet("Table Source Pivot", new SheetName("Report")),
                 new StructuredMutationAction.SetPivotTable(
                     new PivotTableInput(
                         "Table Source Pivot",
-                        "Report",
+                        new SheetName("Report"),
                         new PivotTableInput.Source.Table("SalesTable2026"),
                         new PivotTableInput.Anchor("G4"),
                         List.of("Region"),
@@ -440,7 +442,7 @@ class AdvancedMutationCommandConverterTest {
         assertInstanceOf(
             WorkbookTabularCommand.DeletePivotTable.class,
             WorkbookCommandConverter.toCommand(
-                new PivotTableSelector.ByNameOnSheet("Sales Pivot 2026", "Report"),
+                new PivotTableSelector.ByNameOnSheet("Sales Pivot 2026", new SheetName("Report")),
                 new StructuredMutationAction.DeletePivotTable()));
 
     assertEquals(
@@ -484,7 +486,7 @@ class AdvancedMutationCommandConverterTest {
         assertInstanceOf(
             WorkbookDrawingCommand.SetChart.class,
             WorkbookCommandConverter.toCommand(
-                new SheetSelector.ByName("Ops"),
+                new SheetSelector.ByName(new SheetName("Ops")),
                 new DrawingMutationAction.SetChart(
                     chartInput(
                         "TrendChart",
@@ -499,7 +501,7 @@ class AdvancedMutationCommandConverterTest {
         assertInstanceOf(
             WorkbookDrawingCommand.SetChart.class,
             WorkbookCommandConverter.toCommand(
-                new SheetSelector.ByName("Ops"),
+                new SheetSelector.ByName(new SheetName("Ops")),
                 new DrawingMutationAction.SetChart(
                     chartInput(
                         "ShareChart",
@@ -614,7 +616,8 @@ class AdvancedMutationCommandConverterTest {
         assertInstanceOf(
             WorkbookDrawingCommand.SetChart.class,
             WorkbookCommandConverter.toCommand(
-                new SheetSelector.ByName("Ops"), new DrawingMutationAction.SetChart(barInput)));
+                new SheetSelector.ByName(new SheetName("Ops")),
+                new DrawingMutationAction.SetChart(barInput)));
 
     assertEquals(new ExcelChartDefinition.Title.Formula("Summary!$B$1"), bar.title());
     assertEquals(

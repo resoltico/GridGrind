@@ -15,6 +15,7 @@ import dev.erst.gridgrind.core.plan.*;
 import dev.erst.gridgrind.core.plan.ExecutionPolicyInput;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import dev.erst.gridgrind.core.result.WorkbookResult;
+import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.engine.runtime.DefaultGridGrindRequestExecutor;
 import dev.erst.gridgrind.engine.runtime.ExecutionProgressSink;
 import dev.erst.gridgrind.excel.ExcelFormulaEnvironment;
@@ -224,7 +225,7 @@ final class XlsxParityTest {
               List.of(
                   inspect(
                       "cells",
-                      new CellSelector.ByAddresses("Ops", List.of("B1")),
+                      new CellSelector.ByAddresses(new SheetName("Ops"), List.of("B1")),
                       XlsxParityProbeRegistry.allFacetCellsQuery())));
       WorkbookResult response =
           new DefaultGridGrindRequestExecutor()

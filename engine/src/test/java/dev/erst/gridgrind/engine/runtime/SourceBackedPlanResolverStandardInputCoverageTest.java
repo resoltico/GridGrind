@@ -35,6 +35,7 @@ import dev.erst.gridgrind.core.source.TextSourceInput;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartDisplayBlanksAs;
 import dev.erst.gridgrind.core.vocabulary.ExcelDataValidationErrorStyle;
 import dev.erst.gridgrind.core.vocabulary.ExcelPictureFormat;
+import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -73,7 +74,7 @@ class SourceBackedPlanResolverStandardInputCoverageTest
                 List.of(
                     new AssertionStep(
                         new StepId("assert-owner"),
-                        new CellSelector.ByAddress("Budget", "A1"),
+                        new CellSelector.ByAddress(new SheetName("Budget"), "A1"),
                         new CellAssertion.CellValue(
                             new dev.erst.gridgrind.core.model.value.CellScalarValue.Text(
                                 "Owner")))))));
@@ -87,7 +88,7 @@ class SourceBackedPlanResolverStandardInputCoverageTest
                 List.of(
                     new InspectionStep(
                         new StepId("inspect-cells"),
-                        new CellSelector.ByAddress("Budget", "A1"),
+                        new CellSelector.ByAddress(new SheetName("Budget"), "A1"),
                         new SheetIntrospectionQuery.GetCells())))));
 
     assertFalse(
@@ -96,7 +97,9 @@ class SourceBackedPlanResolverStandardInputCoverageTest
                 new WorkbookPlan.WorkbookSource.New(),
                 new WorkbookPlan.WorkbookPersistence.None(),
                 mutations(
-                    mutate(new RangeSelector.ByRange("Budget", "A1:G1"), fullyInlineRange)))));
+                    mutate(
+                        new RangeSelector.ByRange(new SheetName("Budget"), "A1:G1"),
+                        fullyInlineRange)))));
     assertFalse(requiresStandardInputFor(new WorkbookMutationAction.EnsureSheet()));
     assertFalse(
         requiresStandardInputFor(new CellMutationAction.SetCell(new CellInput.NumberValue(1.0d))));
@@ -289,7 +292,7 @@ class SourceBackedPlanResolverStandardInputCoverageTest
             new StructuredMutationAction.SetTable(
                 new TableInput(
                     "BudgetTable",
-                    "Budget",
+                    new dev.erst.gridgrind.core.vocabulary.SheetName("Budget"),
                     "A1:B2",
                     false,
                     true,

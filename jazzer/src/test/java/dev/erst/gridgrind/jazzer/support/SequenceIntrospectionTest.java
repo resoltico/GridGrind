@@ -62,6 +62,7 @@ import dev.erst.gridgrind.core.vocabulary.ExcelPivotDataConsolidateFunction;
 import dev.erst.gridgrind.core.vocabulary.ExcelSheetVisibility;
 import dev.erst.gridgrind.core.vocabulary.NamedRangeScope;
 import dev.erst.gridgrind.core.vocabulary.SheetCopyPosition;
+import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.excel.*;
 import dev.erst.gridgrind.excel.ExcelArrayFormulaDefinition;
 import dev.erst.gridgrind.excel.ExcelBinaryData;
@@ -104,87 +105,89 @@ class SequenceIntrospectionTest {
         "COPY_SHEET",
         mutationKind(
             mutate(
-                new SheetSelector.ByName("Budget"),
+                new SheetSelector.ByName(new SheetName("Budget")),
                 new WorkbookMutationAction.CopySheet(
-                    "Budget Copy", new SheetCopyPosition.AppendAtEnd()))));
+                    new SheetName("Budget Copy"), new SheetCopyPosition.AppendAtEnd()))));
     assertEquals(
         "SET_ACTIVE_SHEET",
         mutationKind(
             mutate(
-                new SheetSelector.ByName("Budget"), new WorkbookMutationAction.SetActiveSheet())));
+                new SheetSelector.ByName(new SheetName("Budget")),
+                new WorkbookMutationAction.SetActiveSheet())));
     assertEquals(
         "SET_SELECTED_SHEETS",
         mutationKind(
             mutate(
-                new SheetSelector.ByNames(List.of("Budget", "Archive")),
+                new SheetSelector.ByNames(
+                    List.of(new SheetName("Budget"), new SheetName("Archive"))),
                 new WorkbookMutationAction.SetSelectedSheets())));
     assertEquals(
         "SET_SHEET_VISIBILITY",
         mutationKind(
             mutate(
-                new SheetSelector.ByName("Budget"),
+                new SheetSelector.ByName(new SheetName("Budget")),
                 new WorkbookMutationAction.SetSheetVisibility(ExcelSheetVisibility.HIDDEN))));
     assertEquals(
         "SET_SHEET_PROTECTION",
         mutationKind(
             mutate(
-                new SheetSelector.ByName("Budget"),
+                new SheetSelector.ByName(new SheetName("Budget")),
                 new WorkbookMutationAction.SetSheetProtection(protocolProtectionSettings()))));
     assertEquals(
         "CLEAR_SHEET_PROTECTION",
         mutationKind(
             mutate(
-                new SheetSelector.ByName("Budget"),
+                new SheetSelector.ByName(new SheetName("Budget")),
                 new WorkbookMutationAction.ClearSheetProtection())));
     assertEquals(
         "SET_HYPERLINK",
         mutationKind(
             mutate(
-                new CellSelector.ByAddress("Budget", "A1"),
+                new CellSelector.ByAddress(new SheetName("Budget"), "A1"),
                 new CellMutationAction.SetHyperlink(
                     new HyperlinkTarget.Url("https://example.com")))));
     assertEquals(
         "CLEAR_HYPERLINK",
         mutationKind(
             mutate(
-                new CellSelector.ByAddress("Budget", "A1"),
+                new CellSelector.ByAddress(new SheetName("Budget"), "A1"),
                 new CellMutationAction.ClearHyperlink())));
     assertEquals(
         "SET_COMMENT",
         mutationKind(
             mutate(
-                new CellSelector.ByAddress("Budget", "A1"),
+                new CellSelector.ByAddress(new SheetName("Budget"), "A1"),
                 new CellMutationAction.SetComment(
                     CommentInput.plain(TextSourceInput.inline("Review"), "GridGrind", false)))));
     assertEquals(
         "CLEAR_COMMENT",
         mutationKind(
             mutate(
-                new CellSelector.ByAddress("Budget", "A1"),
+                new CellSelector.ByAddress(new SheetName("Budget"), "A1"),
                 new CellMutationAction.ClearComment())));
     assertEquals(
         "SET_PICTURE",
         mutationKind(
             mutate(
-                new SheetSelector.ByName("Budget"),
+                new SheetSelector.ByName(new SheetName("Budget")),
                 new DrawingMutationAction.SetPicture(protocolPictureInput()))));
     assertEquals(
         "SET_SHAPE",
         mutationKind(
             mutate(
-                new SheetSelector.ByName("Budget"),
+                new SheetSelector.ByName(new SheetName("Budget")),
                 new DrawingMutationAction.SetShape(protocolShapeInput()))));
     assertEquals(
         "SET_EMBEDDED_OBJECT",
         mutationKind(
             mutate(
-                new SheetSelector.ByName("Budget"),
+                new SheetSelector.ByName(new SheetName("Budget")),
                 new DrawingMutationAction.SetEmbeddedObject(protocolEmbeddedObjectInput()))));
     assertEquals(
         "SET_CHART",
         mutationKind(
             mutate(
-                new SheetSelector.ByName("Budget"),
+                new SheetSelector.ByName(new SheetName("Budget")),
                 new DrawingMutationAction.SetChart(protocolChartInput()))));
     assertEquals(
         "SET_PIVOT_TABLE",
@@ -194,13 +197,13 @@ class SequenceIntrospectionTest {
         "SET_DRAWING_OBJECT_ANCHOR",
         mutationKind(
             mutate(
-                new DrawingObjectSelector.ByName("Budget", "OpsPicture"),
+                new DrawingObjectSelector.ByName(new SheetName("Budget"), "OpsPicture"),
                 new DrawingMutationAction.SetDrawingObjectAnchor(protocolAnchor()))));
     assertEquals(
         "DELETE_DRAWING_OBJECT",
         mutationKind(
             mutate(
-                new DrawingObjectSelector.ByName("Budget", "OpsPicture"),
+                new DrawingObjectSelector.ByName(new SheetName("Budget"), "OpsPicture"),
                 new DrawingMutationAction.DeleteDrawingObject())));
     assertEquals(
         "SET_NAMED_RANGE",
@@ -209,7 +212,7 @@ class SequenceIntrospectionTest {
                 new StructuredMutationAction.SetNamedRange(
                     "BudgetTotal",
                     new NamedRangeScope.Workbook(),
-                    NamedRangeTarget.range("Budget", "B4")))));
+                    NamedRangeTarget.range(new SheetName("Budget"), "B4")))));
     assertEquals(
         "DELETE_NAMED_RANGE",
         mutationKind(
@@ -220,7 +223,7 @@ class SequenceIntrospectionTest {
         "SET_DATA_VALIDATION",
         mutationKind(
             mutate(
-                new RangeSelector.ByRange("Budget", "A2:A5"),
+                new RangeSelector.ByRange(new SheetName("Budget"), "A2:A5"),
                 new StructuredMutationAction.SetDataValidation(
                     new DataValidationInput(
                         new DataValidationRuleInput.WholeNumber(
@@ -233,13 +236,13 @@ class SequenceIntrospectionTest {
         "CLEAR_DATA_VALIDATIONS",
         mutationKind(
             mutate(
-                new RangeSelector.ByRanges("Budget", List.of("A2:A5")),
+                new RangeSelector.ByRanges(new SheetName("Budget"), List.of("A2:A5")),
                 new StructuredMutationAction.ClearDataValidations())));
     assertEquals(
         "SET_CONDITIONAL_FORMATTING",
         mutationKind(
             mutate(
-                new RangeSelector.ByRange("Budget", "A2:A5"),
+                new RangeSelector.ByRange(new SheetName("Budget"), "A2:A5"),
                 new StructuredMutationAction.SetConditionalFormatting(
                     new ConditionalFormattingDefinitionInput(
                         List.of(
@@ -261,19 +264,19 @@ class SequenceIntrospectionTest {
         "CLEAR_CONDITIONAL_FORMATTING",
         mutationKind(
             mutate(
-                new RangeSelector.ByRanges("Budget", List.of("A2:A5")),
+                new RangeSelector.ByRanges(new SheetName("Budget"), List.of("A2:A5")),
                 new StructuredMutationAction.ClearConditionalFormatting())));
     assertEquals(
         "SET_AUTOFILTER",
         mutationKind(
             mutate(
-                new RangeSelector.ByRange("Budget", "E1:F4"),
+                new RangeSelector.ByRange(new SheetName("Budget"), "E1:F4"),
                 new StructuredMutationAction.SetAutofilter())));
     assertEquals(
         "CLEAR_AUTOFILTER",
         mutationKind(
             mutate(
-                new SheetSelector.ByName("Budget"),
+                new SheetSelector.ByName(new SheetName("Budget")),
                 new StructuredMutationAction.ClearAutofilter())));
     assertEquals(
         "SET_TABLE",
@@ -282,7 +285,7 @@ class SequenceIntrospectionTest {
                 new StructuredMutationAction.SetTable(
                     TableInput.withDefaultMetadata(
                         "BudgetTable",
-                        "Budget",
+                        new SheetName("Budget"),
                         "A1:C4",
                         false,
                         new TableStyleInput.Named(
@@ -291,13 +294,13 @@ class SequenceIntrospectionTest {
         "DELETE_TABLE",
         mutationKind(
             mutate(
-                new TableSelector.ByNameOnSheet("BudgetTable", "Budget"),
+                new TableSelector.ByNameOnSheet("BudgetTable", new SheetName("Budget")),
                 new StructuredMutationAction.DeleteTable())));
     assertEquals(
         "DELETE_PIVOT_TABLE",
         mutationKind(
             mutate(
-                new PivotTableSelector.ByNameOnSheet("OpsPivot", "Budget"),
+                new PivotTableSelector.ByNameOnSheet("OpsPivot", new SheetName("Budget")),
                 new StructuredMutationAction.DeletePivotTable())));
     assertEquals(
         "SET_WORKBOOK_PROTECTION",
@@ -317,7 +320,7 @@ class SequenceIntrospectionTest {
         "SET_SHEET_PRESENTATION",
         mutationKind(
             mutate(
-                new SheetSelector.ByName("Budget"),
+                new SheetSelector.ByName(new SheetName("Budget")),
                 new WorkbookMutationAction.SetSheetPresentation(
                     SheetPresentationInput.defaults()))));
 
@@ -326,7 +329,7 @@ class SequenceIntrospectionTest {
         mutationKinds(
                 List.of(
                     mutate(
-                        new CellSelector.ByAddress("Budget", "A1"),
+                        new CellSelector.ByAddress(new SheetName("Budget"), "A1"),
                         new CellMutationAction.SetHyperlink(
                             new HyperlinkTarget.Url("https://example.com")))))
             .get("SET_HYPERLINK"));
@@ -562,23 +565,23 @@ class SequenceIntrospectionTest {
                         "UTF-8")),
                 inspect(
                     "cells",
-                    new CellSelector.ByAddresses("Budget", List.of("A1")),
+                    new CellSelector.ByAddresses(new SheetName("Budget"), List.of("A1")),
                     new SheetIntrospectionQuery.GetCells()),
                 inspect(
                     "array-formulas",
-                    new SheetSelector.ByName("Budget"),
+                    new SheetSelector.ByName(new SheetName("Budget")),
                     new SheetIntrospectionQuery.GetArrayFormulas()),
                 inspect(
                     "drawing-objects",
-                    new DrawingObjectSelector.AllOnSheet("Budget"),
+                    new DrawingObjectSelector.AllOnSheet(new SheetName("Budget")),
                     new WorkbookAssetIntrospectionQuery.GetDrawingObjects()),
                 inspect(
                     "drawing-payload",
-                    new DrawingObjectSelector.ByName("Budget", "OpsPicture"),
+                    new DrawingObjectSelector.ByName(new SheetName("Budget"), "OpsPicture"),
                     new WorkbookAssetIntrospectionQuery.GetDrawingObjectPayload()),
                 inspect(
                     "charts",
-                    new ChartSelector.AllOnSheet("Budget"),
+                    new ChartSelector.AllOnSheet(new SheetName("Budget")),
                     new WorkbookAssetIntrospectionQuery.GetCharts()),
                 inspect(
                     "pivots",
@@ -586,15 +589,15 @@ class SequenceIntrospectionTest {
                     new WorkbookAssetIntrospectionQuery.GetPivotTables()),
                 inspect(
                     "validations",
-                    new RangeSelector.AllOnSheet("Budget"),
+                    new RangeSelector.AllOnSheet(new SheetName("Budget")),
                     new SheetIntrospectionQuery.GetDataValidations()),
                 inspect(
                     "conditional-formatting",
-                    new RangeSelector.AllOnSheet("Budget"),
+                    new RangeSelector.AllOnSheet(new SheetName("Budget")),
                     new SheetIntrospectionQuery.GetConditionalFormatting()),
                 inspect(
                     "autofilters",
-                    new SheetSelector.ByName("Budget"),
+                    new SheetSelector.ByName(new SheetName("Budget")),
                     new SheetIntrospectionQuery.GetAutofilters()),
                 inspect(
                     "tables",
@@ -773,8 +776,8 @@ class SequenceIntrospectionTest {
   private static PivotTableInput protocolPivotTableInput() {
     return new PivotTableInput(
         "OpsPivot",
-        "Budget",
-        new PivotTableInput.Source.Range("Budget", "A1:C4"),
+        new SheetName("Budget"),
+        new PivotTableInput.Source.Range(new SheetName("Budget"), "A1:C4"),
         new PivotTableInput.Anchor("F4"),
         List.of("Month"),
         List.of(),

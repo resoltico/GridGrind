@@ -140,6 +140,7 @@ import dev.erst.gridgrind.core.vocabulary.ExcelVerticalAlignment;
 import dev.erst.gridgrind.core.vocabulary.NamedRangeBackingKind;
 import dev.erst.gridgrind.core.vocabulary.NamedRangeScope;
 import dev.erst.gridgrind.core.vocabulary.SheetLabel;
+import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.excel.*;
 import dev.erst.gridgrind.excel.ExcelCellValue;
@@ -199,7 +200,7 @@ class WorkbookInvariantChecksTest {
                             "BudgetTotal",
                             new NamedRangeScope.Workbook(),
                             "Budget!$B$4",
-                            NamedRangeTarget.range("Budget", "B4")))),
+                            NamedRangeTarget.range(new SheetName("Budget"), "B4")))),
                 new SheetInspectionResult.CellsResult(
                     new StepId("cells"),
                     "Budget",
@@ -388,15 +389,15 @@ class WorkbookInvariantChecksTest {
                 new WorkbookIntrospectionQuery.GetWorkbookSummary()),
             inspect(
                 "cells",
-                new CellSelector.ByAddresses("Budget", List.of("A1")),
+                new CellSelector.ByAddresses(new SheetName("Budget"), List.of("A1")),
                 new SheetIntrospectionQuery.GetCells()),
             inspect(
                 "data-validations",
-                new RangeSelector.AllOnSheet("Budget"),
+                new RangeSelector.AllOnSheet(new SheetName("Budget")),
                 new SheetIntrospectionQuery.GetDataValidations()),
             inspect(
                 "hyperlinks",
-                new CellSelector.AllUsedInSheet("Budget"),
+                new CellSelector.AllUsedInSheet(new SheetName("Budget")),
                 new SheetIntrospectionQuery.GetHyperlinks()),
             inspect(
                 "data-validation-health",
@@ -590,7 +591,7 @@ class WorkbookInvariantChecksTest {
             workbookPath,
             inspect(
                 "autofilters",
-                new SheetSelector.ByName("Budget"),
+                new SheetSelector.ByName(new SheetName("Budget")),
                 new SheetIntrospectionQuery.GetAutofilters()),
             inspect(
                 "tables", new TableSelector.All(), new WorkbookAssetIntrospectionQuery.GetTables()),
@@ -707,14 +708,14 @@ class WorkbookInvariantChecksTest {
             List.of(
                 assertThat(
                     "assert-total",
-                    new SheetSelector.ByName("Budget"),
+                    new SheetSelector.ByName(new SheetName("Budget")),
                     new AnalysisAssertion.AnalysisMaxSeverity(
                         new InspectionAnalysisQuery.AnalyzeFormulaHealth(),
                         AnalysisSeverity.ERROR))),
             List.of(
                 inspect(
                     "sheet",
-                    new SheetSelector.ByName("Budget"),
+                    new SheetSelector.ByName(new SheetName("Budget")),
                     new SheetIntrospectionQuery.GetSheetSummary())));
     WorkbookResult.Success response =
         WorkbookResults.success(
@@ -999,11 +1000,11 @@ class WorkbookInvariantChecksTest {
             workbookPath,
             inspect(
                 "drawing-objects",
-                new DrawingObjectSelector.AllOnSheet("Ops"),
+                new DrawingObjectSelector.AllOnSheet(new SheetName("Ops")),
                 new WorkbookAssetIntrospectionQuery.GetDrawingObjects()),
             inspect(
                 "drawing-payload",
-                new DrawingObjectSelector.ByName("Ops", "OpsPicture"),
+                new DrawingObjectSelector.ByName(new SheetName("Ops"), "OpsPicture"),
                 new WorkbookAssetIntrospectionQuery.GetDrawingObjectPayload()));
     WorkbookResult.Success response =
         WorkbookResults.success(
@@ -1076,11 +1077,11 @@ class WorkbookInvariantChecksTest {
             workbookPath,
             inspect(
                 "drawing-objects",
-                new DrawingObjectSelector.AllOnSheet("Ops"),
+                new DrawingObjectSelector.AllOnSheet(new SheetName("Ops")),
                 new WorkbookAssetIntrospectionQuery.GetDrawingObjects()),
             inspect(
                 "charts",
-                new ChartSelector.AllOnSheet("Ops"),
+                new ChartSelector.AllOnSheet(new SheetName("Ops")),
                 new WorkbookAssetIntrospectionQuery.GetCharts()));
     WorkbookResult.Success response =
         WorkbookResults.success(
@@ -1258,11 +1259,11 @@ class WorkbookInvariantChecksTest {
                     new CustomXmlMappingLocator(1L, "BudgetMap"), true, "UTF-8")),
             inspect(
                 "array-formulas",
-                new SheetSelector.ByName("Ops"),
+                new SheetSelector.ByName(new SheetName("Ops")),
                 new SheetIntrospectionQuery.GetArrayFormulas()),
             inspect(
                 "drawing-objects",
-                new DrawingObjectSelector.AllOnSheet("Ops"),
+                new DrawingObjectSelector.AllOnSheet(new SheetName("Ops")),
                 new WorkbookAssetIntrospectionQuery.GetDrawingObjects()));
     CustomXmlMappingReport mapping = customXmlMappingReport();
     WorkbookResult.Success response =

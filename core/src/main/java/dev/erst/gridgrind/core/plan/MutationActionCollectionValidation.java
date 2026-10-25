@@ -4,6 +4,7 @@ import dev.erst.gridgrind.core.model.value.CellInput;
 import dev.erst.gridgrind.core.problem.FieldValidationBasicRule;
 import dev.erst.gridgrind.core.problem.FieldValidationBoundRule;
 import dev.erst.gridgrind.core.problem.FieldValidationProblem;
+import dev.erst.gridgrind.core.vocabulary.SheetName;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -26,11 +27,11 @@ final class MutationActionCollectionValidation {
     return rows.stream().map(List::copyOf).toList();
   }
 
-  static List<String> copySheetNames(List<String> sheetNames, String fieldName) {
+  static List<SheetName> copySheetNames(List<SheetName> sheetNames, String fieldName) {
     Objects.requireNonNull(sheetNames, fieldName + " must not be null");
-    List<String> copy = new ArrayList<>(sheetNames);
+    List<SheetName> copy = new ArrayList<>(sheetNames);
     for (int index = 0; index < copy.size(); index++) {
-      MutationActionNameValidation.requireSheetName(copy.get(index), fieldName + "[" + index + "]");
+      Objects.requireNonNull(copy.get(index), fieldName + "[" + index + "] must not be null");
     }
     return List.copyOf(copy);
   }

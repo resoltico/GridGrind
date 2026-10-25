@@ -60,7 +60,9 @@ final class WorkbookStepJsonFailurePathSupport {
     String qualifiedFieldName = qualifiedFieldName(fieldName, node, targetType, exception);
     if (validationCause instanceof InvalidRequestException requestException) {
       String qualifiedRequestProblemPath =
-          qualifiedFieldName(fieldName, null, Object.class, requestException);
+          exception.getPath().isEmpty()
+              ? qualifiedFieldName(fieldName, null, Object.class, requestException)
+              : qualifiedFieldName;
       return Optional.of(
           new InvalidRequestException(
               (dev.erst.gridgrind.core.problem.RequestProblemDescriptor.Invariant)

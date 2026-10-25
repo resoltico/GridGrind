@@ -27,6 +27,7 @@ import dev.erst.gridgrind.core.vocabulary.ExcelOoxmlEncryptionMode;
 import dev.erst.gridgrind.core.vocabulary.ExcelOoxmlHashAlgorithm;
 import dev.erst.gridgrind.core.vocabulary.ExcelOoxmlWriteCipher;
 import dev.erst.gridgrind.core.vocabulary.ExcelOoxmlWriteHash;
+import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
 import dev.erst.gridgrind.excel.ExcelWorkbooks;
 import dev.erst.gridgrind.excel.OoxmlSecurityTestSupport;
@@ -64,7 +65,7 @@ class OoxmlSecurityRequestExecutorTest extends DefaultGridGrindRequestExecutorTe
                             new WorkbookIntrospectionQuery.GetPackageSecurity()),
                         inspect(
                             "cells",
-                            new CellSelector.ByAddresses("Encrypted", List.of("A1")),
+                            new CellSelector.ByAddresses(new SheetName("Encrypted"), List.of("A1")),
                             new SheetIntrospectionQuery.GetCells())))));
 
     WorkbookInspectionResult.PackageSecurityResult security =
@@ -213,7 +214,7 @@ class OoxmlSecurityRequestExecutorTest extends DefaultGridGrindRequestExecutorTe
                         OoxmlPersistenceSecurityInput.none()),
                     mutations(
                         mutate(
-                            new CellSelector.ByAddress("Signed", "B1"),
+                            new CellSelector.ByAddress(new SheetName("Signed"), "B1"),
                             new CellMutationAction.SetCell(textCell("unsigned")))),
                     inspections())));
     assertEquals(output.toAbsolutePath().toString(), savedPath(persisted));
@@ -252,7 +253,7 @@ class OoxmlSecurityRequestExecutorTest extends DefaultGridGrindRequestExecutorTe
                         output.toString(), WorkbookPlan.WorkbookPersistence.IfExists.REJECT),
                     mutations(
                         mutate(
-                            new SheetSelector.ByName("New"),
+                            new SheetSelector.ByName(new SheetName("New")),
                             new WorkbookMutationAction.EnsureSheet())),
                     inspections())));
     assertEquals(output.toAbsolutePath().toString(), savedPath(persisted));
@@ -302,7 +303,7 @@ class OoxmlSecurityRequestExecutorTest extends DefaultGridGrindRequestExecutorTe
                             new OoxmlPersistenceSignatureInput.None())),
                     mutations(
                         mutate(
-                            new SheetSelector.ByName("Source"),
+                            new SheetSelector.ByName(new SheetName("Source")),
                             new WorkbookMutationAction.EnsureSheet())))));
 
     assertEquals(GridGrindProblemCode.ENCRYPTION_SOURCE_NOT_ENCRYPTED, failure.problem().code());
@@ -343,7 +344,8 @@ class OoxmlSecurityRequestExecutorTest extends DefaultGridGrindRequestExecutorTe
                             java.util.Optional.empty())))),
             mutations(
                 mutate(
-                    new SheetSelector.ByName("Source"), new WorkbookMutationAction.EnsureSheet())),
+                    new SheetSelector.ByName(new SheetName("Source")),
+                    new WorkbookMutationAction.EnsureSheet())),
             inspections());
 
     RequestDoctorReport report =
@@ -391,7 +393,7 @@ class OoxmlSecurityRequestExecutorTest extends DefaultGridGrindRequestExecutorTe
                             java.util.Optional.empty())))),
             mutations(
                 mutate(
-                    new CellSelector.ByAddress("Encrypted", "B1"),
+                    new CellSelector.ByAddress(new SheetName("Encrypted"), "B1"),
                     new CellMutationAction.SetCell(textCell("not written")))),
             inspections());
 
@@ -440,7 +442,7 @@ class OoxmlSecurityRequestExecutorTest extends DefaultGridGrindRequestExecutorTe
                             new OoxmlPersistenceSignatureInput.None())),
                     mutations(
                         mutate(
-                            new CellSelector.ByAddress("Encrypted", "B1"),
+                            new CellSelector.ByAddress(new SheetName("Encrypted"), "B1"),
                             new CellMutationAction.SetCell(textCell("changed")))),
                     inspections())));
 
@@ -469,7 +471,7 @@ class OoxmlSecurityRequestExecutorTest extends DefaultGridGrindRequestExecutorTe
                         outputPath.toString(), WorkbookPlan.WorkbookPersistence.IfExists.REJECT),
                     mutations(
                         mutate(
-                            new CellSelector.ByAddress("Signed", "C1"),
+                            new CellSelector.ByAddress(new SheetName("Signed"), "C1"),
                             new CellMutationAction.SetCell(textCell("Touch")))),
                     inspections())));
 
@@ -517,10 +519,10 @@ class OoxmlSecurityRequestExecutorTest extends DefaultGridGrindRequestExecutorTe
                                     java.util.Optional.of("GridGrind protocol signing test"))))),
                     mutations(
                         mutate(
-                            new SheetSelector.ByName("Secure"),
+                            new SheetSelector.ByName(new SheetName("Secure")),
                             new WorkbookMutationAction.EnsureSheet()),
                         mutate(
-                            new CellSelector.ByAddress("Secure", "A1"),
+                            new CellSelector.ByAddress(new SheetName("Secure"), "A1"),
                             new CellMutationAction.SetCell(textCell("Secured")))),
                     inspections())));
 
@@ -546,7 +548,7 @@ class OoxmlSecurityRequestExecutorTest extends DefaultGridGrindRequestExecutorTe
                             new WorkbookIntrospectionQuery.GetPackageSecurity()),
                         inspect(
                             "cells",
-                            new CellSelector.ByAddresses("Secure", List.of("A1")),
+                            new CellSelector.ByAddresses(new SheetName("Secure"), List.of("A1")),
                             new SheetIntrospectionQuery.GetCells())))));
 
     WorkbookInspectionResult.PackageSecurityResult security =
@@ -613,7 +615,7 @@ class OoxmlSecurityRequestExecutorTest extends DefaultGridGrindRequestExecutorTe
                                     java.util.Optional.empty())))),
                     List.of(
                         mutate(
-                            new SheetSelector.ByName("Secure"),
+                            new SheetSelector.ByName(new SheetName("Secure")),
                             new WorkbookMutationAction.EnsureSheet())),
                     List.of())));
 

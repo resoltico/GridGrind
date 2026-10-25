@@ -15,7 +15,7 @@ final class WorkbookCommandTabularInputConverter {
   static ExcelTableDefinition toExcelTableDefinition(TableInput table) {
     return new ExcelTableDefinition(
         table.name(),
-        table.sheetName(),
+        table.sheetName().value(),
         table.range(),
         table.showTotalsRow(),
         table.hasAutofilter(),
@@ -42,7 +42,7 @@ final class WorkbookCommandTabularInputConverter {
   static ExcelPivotTableDefinition toExcelPivotTableDefinition(PivotTableInput pivotTable) {
     return new ExcelPivotTableDefinition(
         pivotTable.name(),
-        pivotTable.sheetName(),
+        pivotTable.sheetName().value(),
         toExcelPivotTableSource(pivotTable.source()),
         new ExcelPivotTableDefinition.Anchor(pivotTable.anchor().topLeftAddress()),
         pivotTable.rowLabels(),
@@ -70,7 +70,7 @@ final class WorkbookCommandTabularInputConverter {
       PivotTableInput.Source source) {
     return switch (source) {
       case PivotTableInput.Source.Range range ->
-          new ExcelPivotTableDefinition.Source.Range(range.sheetName(), range.range());
+          new ExcelPivotTableDefinition.Source.Range(range.sheetName().value(), range.range());
       case PivotTableInput.Source.NamedRange namedRange ->
           new ExcelPivotTableDefinition.Source.NamedRange(namedRange.name());
       case PivotTableInput.Source.Table table ->

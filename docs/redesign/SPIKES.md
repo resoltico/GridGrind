@@ -608,3 +608,33 @@ Evidence: external `sheet-label-*.log`, `sheet-label-failures/`, `sheet-label-in
 original `observed-names/` probe. Blank checks 474 → 473; main lines 126,314 → 126,344; test lines
 153,687 → 153,826; converters 4,576 → 4,583 (boundary scalar construction, mirrors still pending
 WP-40). Other model/subtype counts remain unchanged. Next: authored sheet identifiers.
+
+### WP-21 authored sheet identifiers
+
+Authored selectors, actions, fluent targets, table/pivot/calculation payloads and named-range
+scopes now carry `SheetName`. Backend adapters and diagnostic projections extract text at their
+boundaries. Case-insensitive selected-sheet duplicate detection remains. The obsolete plan-layer
+sheet-name validators and their forwarding assertion were deleted; LIM-003 now marks the value
+constructor and the limitations reference points to it. Shipped Java examples, recipes and fuzz
+producers use the typed API.
+
+The first full check detected two regressions: the compile-verified Java example still supplied
+strings, and an invalid selector name lost its precise `target.name` path. The scalar codec now
+lets Jackson retain field/index references around the owned validation cause, and step failure
+projection retains that stronger path. The generated-invalid properties independently assert the
+owned cause, and an invalid second cell-address regression asserts both the field and array index.
+Focused example/property/CLI checks passed after repair. Nested Jazzer compilation also detected
+ten comparisons of typed authored names with textual observed facts; these now compare their
+text, preserving the independent response checks. Nested check plus committed replay passed (18s).
+All earlier failures remain in external logs/XML.
+
+Full `./gradlew check` passed (2m52s), followed by the final check after the limit-marker/comment
+and documentation correction (3m26s): core 328, JSON 338, engine 1,510, CLI 598, architecture 35;
+2,809 tests total, zero failures/skips. All 141 golden cases passed without snapshot changes.
+Named-module probes passed 14 requests, catalog, response and nine scalar types. Inventories:
+blank checks 473 unchanged; main Java 126,344 -> 126,476; test Java 153,826 -> 154,276; converter
+lines 4,583 -> 4,601. Inputs 81 (83 including source unions), reports 96, snapshots 51, definitions
+13, subtype files 99, hand-written catalog lines 2,849, JSON files 66 and Support files 220 remain
+unchanged. Evidence: external `sheet-name-*.log`, `sheet-name-failures/`, `sheet-name-inventories/`
+and compiler-informed migration logs. `git diff main -- AGENTS.md` remains empty; no supplement.
+WP-21 continues with observed sheet labels and the remaining value-typed fields.

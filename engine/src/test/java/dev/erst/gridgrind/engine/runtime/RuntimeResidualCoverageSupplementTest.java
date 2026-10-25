@@ -20,6 +20,7 @@ import dev.erst.gridgrind.core.plan.TableRowSelector;
 import dev.erst.gridgrind.core.plan.TableSelector;
 import dev.erst.gridgrind.core.result.ExecutionJournal;
 import dev.erst.gridgrind.core.source.TextSourceInput;
+import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.excel.ExcelCellSnapshot;
 import dev.erst.gridgrind.excel.ExcelCellValue;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
@@ -168,7 +169,7 @@ class RuntimeResidualCoverageSupplementTest {
             IllegalArgumentException.class,
             () ->
                 WorkbookCommandStructuredMutationConverter.toCommand(
-                    new RangeSelector.AllOnSheet("Budget"),
+                    new RangeSelector.AllOnSheet(new SheetName("Budget")),
                     new StructuredMutationAction.SetConditionalFormatting(
                         new ConditionalFormattingDefinitionInput(
                             List.of(

@@ -62,6 +62,7 @@ import dev.erst.gridgrind.core.vocabulary.ExcelFillPattern;
 import dev.erst.gridgrind.core.vocabulary.ExcelHorizontalAlignment;
 import dev.erst.gridgrind.core.vocabulary.ExcelVerticalAlignment;
 import dev.erst.gridgrind.core.vocabulary.NamedRangeScope;
+import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
 import dev.erst.gridgrind.excel.ExcelWorkbooks;
@@ -93,28 +94,28 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
                     workbookPath.toString(), WorkbookPlan.WorkbookPersistence.IfExists.REJECT),
                 List.of(
                     mutate(
-                        new SheetSelector.ByName("Budget"),
+                        new SheetSelector.ByName(new SheetName("Budget")),
                         new WorkbookMutationAction.EnsureSheet()),
                     mutate(
-                        new CellSelector.ByAddress("Budget", "A1"),
+                        new CellSelector.ByAddress(new SheetName("Budget"), "A1"),
                         new CellMutationAction.SetCell(textCell("Owner"))),
                     mutate(
-                        new CellSelector.ByAddress("Budget", "B1"),
+                        new CellSelector.ByAddress(new SheetName("Budget"), "B1"),
                         new CellMutationAction.SetCell(textCell("Amount"))),
                     mutate(
-                        new CellSelector.ByAddress("Budget", "A2"),
+                        new CellSelector.ByAddress(new SheetName("Budget"), "A2"),
                         new CellMutationAction.SetCell(textCell("Ada"))),
                     mutate(
-                        new CellSelector.ByAddress("Budget", "B2"),
+                        new CellSelector.ByAddress(new SheetName("Budget"), "B2"),
                         new CellMutationAction.SetCell(new CellInput.NumberValue(42.0d))),
                     mutate(
-                        new CellSelector.ByAddress("Budget", "C2"),
+                        new CellSelector.ByAddress(new SheetName("Budget"), "C2"),
                         new CellMutationAction.SetCell(new CellInput.BooleanValue(true))),
                     mutate(
-                        new CellSelector.ByAddress("Budget", "E2"),
+                        new CellSelector.ByAddress(new SheetName("Budget"), "E2"),
                         new CellMutationAction.SetCell(formulaCell("1/0"))),
                     mutate(
-                        new CellSelector.ByAddress("Budget", "F2"),
+                        new CellSelector.ByAddress(new SheetName("Budget"), "F2"),
                         new CellMutationAction.SetCell(formulaCell("2+3"))),
                     mutate(
                         new WorkbookSelector.Current(),
@@ -130,13 +131,13 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
                         new StructuredMutationAction.SetNamedRange(
                             "BudgetTotal",
                             new NamedRangeScope.Workbook(),
-                            NamedRangeTarget.range("Budget", "F2"))),
+                            NamedRangeTarget.range(new SheetName("Budget"), "F2"))),
                     mutate(
-                        new TableSelector.ByNameOnSheet("BudgetTable", "Budget"),
+                        new TableSelector.ByNameOnSheet("BudgetTable", new SheetName("Budget")),
                         new StructuredMutationAction.SetTable(
                             TableInput.withDefaultMetadata(
                                 "BudgetTable",
-                                "Budget",
+                                new SheetName("Budget"),
                                 "A1:B2",
                                 false,
                                 new TableStyleInput.None())))),
@@ -157,7 +158,8 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
                         inspect(
                             "cells",
                             new CellSelector.ByAddresses(
-                                "Budget", List.of("A2", "B2", "C2", "D2", "E2", "F2")),
+                                new SheetName("Budget"),
+                                List.of("A2", "B2", "C2", "D2", "E2", "F2")),
                             allFacetCellsQuery()),
                         inspect(
                             "protection",
@@ -165,7 +167,7 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
                             new WorkbookIntrospectionQuery.GetWorkbookProtection()),
                         inspect(
                             "sheet",
-                            new SheetSelector.ByName("Budget"),
+                            new SheetSelector.ByName(new SheetName("Budget")),
                             new SheetIntrospectionQuery.GetSheetSummary()),
                         inspect(
                             "namedRanges",
@@ -173,11 +175,11 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
                             new WorkbookIntrospectionQuery.GetNamedRanges()),
                         inspect(
                             "tables",
-                            new TableSelector.ByNameOnSheet("BudgetTable", "Budget"),
+                            new TableSelector.ByNameOnSheet("BudgetTable", new SheetName("Budget")),
                             new WorkbookAssetIntrospectionQuery.GetTables()),
                         inspect(
                             "formulaHealth",
-                            new SheetSelector.ByName("Budget"),
+                            new SheetSelector.ByName(new SheetName("Budget")),
                             new InspectionAnalysisQuery.AnalyzeFormulaHealth())))));
 
     SheetInspectionResult.CellsResult cells =
@@ -232,15 +234,15 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
                             new PresenceAssertion.SheetPresent()),
                         assertThat(
                             "present-sheet-by-name",
-                            new SheetSelector.ByName("Budget"),
+                            new SheetSelector.ByName(new SheetName("Budget")),
                             new PresenceAssertion.SheetPresent()),
                         assertThat(
                             "absent-sheet-by-name",
-                            new SheetSelector.ByName("NonExistent"),
+                            new SheetSelector.ByName(new SheetName("NonExistent")),
                             new PresenceAssertion.SheetAbsent()),
                         assertThat(
                             "present-sheet-by-names",
-                            new SheetSelector.ByNames(List.of("Budget")),
+                            new SheetSelector.ByNames(List.of(new SheetName("Budget"))),
                             new PresenceAssertion.SheetPresent()),
                         assertThat(
                             "present-named-range",
@@ -256,30 +258,30 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
                             new PresenceAssertion.TablePresent()),
                         assertThat(
                             "cell-text",
-                            new CellSelector.ByAddress("Budget", "A2"),
+                            new CellSelector.ByAddress(new SheetName("Budget"), "A2"),
                             new CellAssertion.CellValue(
                                 new dev.erst.gridgrind.core.model.value.CellScalarValue.Text(
                                     textValue(owner)))),
                         assertThat(
                             "cell-number",
-                            new CellSelector.ByAddress("Budget", "B2"),
+                            new CellSelector.ByAddress(new SheetName("Budget"), "B2"),
                             new CellAssertion.CellValue(
                                 new dev.erst.gridgrind.core.model.value.CellScalarValue.NumberValue(
                                     numberValue(amount)))),
                         assertThat(
                             "cell-boolean",
-                            new CellSelector.ByAddress("Budget", "C2"),
+                            new CellSelector.ByAddress(new SheetName("Budget"), "C2"),
                             new CellAssertion.CellValue(
                                 new dev.erst.gridgrind.core.model.value.CellScalarValue
                                     .BooleanValue(booleanValue(enabled)))),
                         assertThat(
                             "cell-blank",
-                            new CellSelector.ByAddress("Budget", "D2"),
+                            new CellSelector.ByAddress(new SheetName("Budget"), "D2"),
                             new CellAssertion.CellValue(
                                 new dev.erst.gridgrind.core.model.value.CellScalarValue.Blank())),
                         assertThat(
                             "cell-error",
-                            new CellSelector.ByAddress("Budget", "E2"),
+                            new CellSelector.ByAddress(new SheetName("Budget"), "E2"),
                             new CellAssertion.CellValue(
                                 new dev.erst.gridgrind.core.model.value.CellScalarValue.ErrorValue(
                                     assertInstanceOf(
@@ -289,7 +291,7 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
                                         .errorValue()))),
                         assertThat(
                             "cell-formula-evaluation",
-                            new CellSelector.ByAddress("Budget", "F2"),
+                            new CellSelector.ByAddress(new SheetName("Budget"), "F2"),
                             new CellAssertion.CellValue(
                                 new dev.erst.gridgrind.core.model.value.CellScalarValue.NumberValue(
                                     assertInstanceOf(
@@ -299,15 +301,15 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
                                         .numberValue()))),
                         assertThat(
                             "display-value",
-                            new CellSelector.ByAddress("Budget", "B2"),
+                            new CellSelector.ByAddress(new SheetName("Budget"), "B2"),
                             new CellAssertion.DisplayValue(displayValue(amount))),
                         assertThat(
                             "formula-text",
-                            new CellSelector.ByAddress("Budget", "F2"),
+                            new CellSelector.ByAddress(new SheetName("Budget"), "F2"),
                             new CellAssertion.FormulaText(formulaText(totalFormula))),
                         assertThat(
                             "cell-style",
-                            new CellSelector.ByAddress("Budget", "A2"),
+                            new CellSelector.ByAddress(new SheetName("Budget"), "A2"),
                             new CellAssertion.CellStyle(style(owner))),
                         assertThat(
                             "workbook-protection",
@@ -316,7 +318,7 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
                                 protection.protection())),
                         assertThat(
                             "sheet-structure",
-                            new SheetSelector.ByName("Budget"),
+                            new SheetSelector.ByName(new SheetName("Budget")),
                             new WorkbookFactAssertion.SheetStructureFacts(sheet.sheet())),
                         assertThat(
                             "named-range-facts",
@@ -328,13 +330,13 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
                             new WorkbookFactAssertion.TableFacts(tables.tables())),
                         assertThat(
                             "analysis-max-severity",
-                            new SheetSelector.ByName("Budget"),
+                            new SheetSelector.ByName(new SheetName("Budget")),
                             new AnalysisAssertion.AnalysisMaxSeverity(
                                 new InspectionAnalysisQuery.AnalyzeFormulaHealth(),
                                 highestSeverity(formulaHealth.analysis().summary()))),
                         assertThat(
                             "analysis-finding-present",
-                            new SheetSelector.ByName("Budget"),
+                            new SheetSelector.ByName(new SheetName("Budget")),
                             new AnalysisAssertion.AnalysisFindingPresent(
                                 new InspectionAnalysisQuery.AnalyzeFormulaHealth(),
                                 firstFinding.code(),
@@ -342,7 +344,7 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
                                 Optional.of(firstFinding.message().substring(0, 3)))),
                         assertThat(
                             "analysis-finding-absent",
-                            new SheetSelector.ByName("Budget"),
+                            new SheetSelector.ByName(new SheetName("Budget")),
                             new AnalysisAssertion.AnalysisFindingAbsent(
                                 new InspectionAnalysisQuery.AnalyzeFormulaHealth(),
                                 AnalysisFindingCode.FORMULA_VOLATILE_FUNCTION,
@@ -350,7 +352,7 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
                                 Optional.empty())),
                         assertThat(
                             "all-of",
-                            new CellSelector.ByAddress("Budget", "A2"),
+                            new CellSelector.ByAddress(new SheetName("Budget"), "A2"),
                             new CompositeAssertion.AllOf(
                                 List.of(
                                     new CellAssertion.CellValue(
@@ -359,7 +361,7 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
                                     new CellAssertion.DisplayValue(displayValue(owner))))),
                         assertThat(
                             "any-of",
-                            new CellSelector.ByAddress("Budget", "A2"),
+                            new CellSelector.ByAddress(new SheetName("Budget"), "A2"),
                             new CompositeAssertion.AnyOf(
                                 List.of(
                                     new CellAssertion.DisplayValue("Wrong"),
@@ -368,7 +370,7 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
                                             .Text(textValue(owner)))))),
                         assertThat(
                             "not",
-                            new CellSelector.ByAddress("Budget", "A2"),
+                            new CellSelector.ByAddress(new SheetName("Budget"), "A2"),
                             new CompositeAssertion.Not(
                                 new CellAssertion.CellValue(
                                     new dev.erst.gridgrind.core.model.value.CellScalarValue.Text(
@@ -427,25 +429,25 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
                     workbookPath.toString(), WorkbookPlan.WorkbookPersistence.IfExists.REJECT),
                 List.of(
                     mutate(
-                        new SheetSelector.ByName("Budget"),
+                        new SheetSelector.ByName(new SheetName("Budget")),
                         new WorkbookMutationAction.EnsureSheet()),
                     mutate(
-                        new CellSelector.ByAddress("Budget", "A1"),
+                        new CellSelector.ByAddress(new SheetName("Budget"), "A1"),
                         new CellMutationAction.SetCell(textCell("Owner"))),
                     mutate(
-                        new CellSelector.ByAddress("Budget", "B1"),
+                        new CellSelector.ByAddress(new SheetName("Budget"), "B1"),
                         new CellMutationAction.SetCell(textCell("Amount"))),
                     mutate(
-                        new CellSelector.ByAddress("Budget", "A2"),
+                        new CellSelector.ByAddress(new SheetName("Budget"), "A2"),
                         new CellMutationAction.SetCell(textCell("Ada"))),
                     mutate(
-                        new CellSelector.ByAddress("Budget", "B2"),
+                        new CellSelector.ByAddress(new SheetName("Budget"), "B2"),
                         new CellMutationAction.SetCell(new CellInput.NumberValue(42.0d))),
                     mutate(
-                        new CellSelector.ByAddress("Budget", "E2"),
+                        new CellSelector.ByAddress(new SheetName("Budget"), "E2"),
                         new CellMutationAction.SetCell(formulaCell("1/0"))),
                     mutate(
-                        new CellSelector.ByAddress("Budget", "F2"),
+                        new CellSelector.ByAddress(new SheetName("Budget"), "F2"),
                         new CellMutationAction.SetCell(formulaCell("2+3"))),
                     mutate(
                         new WorkbookSelector.Current(),
@@ -461,13 +463,13 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
                         new StructuredMutationAction.SetNamedRange(
                             "BudgetTotal",
                             new NamedRangeScope.Workbook(),
-                            NamedRangeTarget.range("Budget", "F2"))),
+                            NamedRangeTarget.range(new SheetName("Budget"), "F2"))),
                     mutate(
-                        new TableSelector.ByNameOnSheet("BudgetTable", "Budget"),
+                        new TableSelector.ByNameOnSheet("BudgetTable", new SheetName("Budget")),
                         new StructuredMutationAction.SetTable(
                             TableInput.withDefaultMetadata(
                                 "BudgetTable",
-                                "Budget",
+                                new SheetName("Budget"),
                                 "A1:B2",
                                 false,
                                 new TableStyleInput.None())))),
@@ -487,7 +489,7 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
                     List.of(
                         inspect(
                             "cells",
-                            new CellSelector.ByAddress("Budget", "A2"),
+                            new CellSelector.ByAddress(new SheetName("Budget"), "A2"),
                             allFacetCellsQuery()),
                         inspect(
                             "protection",
@@ -495,7 +497,7 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
                             new WorkbookIntrospectionQuery.GetWorkbookProtection()),
                         inspect(
                             "sheet",
-                            new SheetSelector.ByName("Budget"),
+                            new SheetSelector.ByName(new SheetName("Budget")),
                             new SheetIntrospectionQuery.GetSheetSummary()),
                         inspect(
                             "namedRanges",
@@ -507,7 +509,7 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
                             new WorkbookAssetIntrospectionQuery.GetTables()),
                         inspect(
                             "formulaHealth",
-                            new SheetSelector.ByName("Budget"),
+                            new SheetSelector.ByName(new SheetName("Budget")),
                             new InspectionAnalysisQuery.AnalyzeFormulaHealth())))));
 
     dev.erst.gridgrind.core.model.value.CellReport.TextReport owner =
@@ -534,7 +536,7 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
             executor,
             workbookPath,
             "present-missing-sheet",
-            new SheetSelector.ByName("NonExistent"),
+            new SheetSelector.ByName(new SheetName("NonExistent")),
             new PresenceAssertion.SheetPresent());
     assertTrue(presentMissingSheet.problem().message().contains("EXPECT_SHEET_PRESENT"));
     assertEquals(
@@ -549,7 +551,7 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
             executor,
             workbookPath,
             "absent-present-sheet",
-            new SheetSelector.ByName("Budget"),
+            new SheetSelector.ByName(new SheetName("Budget")),
             new PresenceAssertion.SheetAbsent());
     assertTrue(absentPresentSheet.problem().message().contains("EXPECT_SHEET_ABSENT"));
 
@@ -582,7 +584,7 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
             executor,
             workbookPath,
             "style-mismatch",
-            new CellSelector.ByAddress("Budget", "A2"),
+            new CellSelector.ByAddress(new SheetName("Budget"), "A2"),
             new CellAssertion.CellStyle(
                 new CellStyleReport(
                     "0",
@@ -598,7 +600,7 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
             executor,
             workbookPath,
             "formula-text-mismatch",
-            new CellSelector.ByAddress("Budget", "F2"),
+            new CellSelector.ByAddress(new SheetName("Budget"), "F2"),
             new CellAssertion.FormulaText("1+1"));
     assertTrue(formulaTextMismatch.problem().message().contains("EXPECT_FORMULA_TEXT"));
 
@@ -624,7 +626,7 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
             executor,
             workbookPath,
             "sheet-structure-mismatch",
-            new SheetSelector.ByName("Budget"),
+            new SheetSelector.ByName(new SheetName("Budget")),
             new WorkbookFactAssertion.SheetStructureFacts(
                 new SheetSummaryReport(
                     expectedSheet.sheetName(),
@@ -670,7 +672,7 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
             executor,
             workbookPath,
             "analysis-max-severity-mismatch",
-            new SheetSelector.ByName("Budget"),
+            new SheetSelector.ByName(new SheetName("Budget")),
             new AnalysisAssertion.AnalysisMaxSeverity(
                 new InspectionAnalysisQuery.AnalyzeFormulaHealth(), AnalysisSeverity.WARNING));
     assertTrue(severityMismatch.problem().message().contains("EXPECT_ANALYSIS_MAX_SEVERITY"));
@@ -680,7 +682,7 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
             executor,
             workbookPath,
             "analysis-finding-present-missing",
-            new SheetSelector.ByName("Budget"),
+            new SheetSelector.ByName(new SheetName("Budget")),
             new AnalysisAssertion.AnalysisFindingPresent(
                 new InspectionAnalysisQuery.AnalyzeFormulaHealth(),
                 AnalysisFindingCode.FORMULA_VOLATILE_FUNCTION,
@@ -693,7 +695,7 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
             executor,
             workbookPath,
             "analysis-finding-absent-unexpected",
-            new SheetSelector.ByName("Budget"),
+            new SheetSelector.ByName(new SheetName("Budget")),
             new AnalysisAssertion.AnalysisFindingAbsent(
                 new InspectionAnalysisQuery.AnalyzeFormulaHealth(),
                 firstFinding.code(),
@@ -717,10 +719,10 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
                     workbookPath.toString(), WorkbookPlan.WorkbookPersistence.IfExists.REJECT),
                 List.of(
                     mutate(
-                        new SheetSelector.ByName("Budget"),
+                        new SheetSelector.ByName(new SheetName("Budget")),
                         new WorkbookMutationAction.EnsureSheet()),
                     mutate(
-                        new CellSelector.ByAddress("Budget", "A1"),
+                        new CellSelector.ByAddress(new SheetName("Budget"), "A1"),
                         new CellMutationAction.SetCell(textCell("Owner")))),
                 List.of(),
                 List.of())));
@@ -736,7 +738,7 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
                     List.of(
                         assertThat(
                             "formula-mismatch",
-                            new CellSelector.ByAddress("Budget", "A1"),
+                            new CellSelector.ByAddress(new SheetName("Budget"), "A1"),
                             new CellAssertion.FormulaText("1+1"))),
                     List.of())));
     assertTrue(formulaMismatch.problem().message().contains("EXPECT_FORMULA_TEXT"));
@@ -752,7 +754,7 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
                     List.of(
                         assertThat(
                             "all-of-failure",
-                            new CellSelector.ByAddress("Budget", "A1"),
+                            new CellSelector.ByAddress(new SheetName("Budget"), "A1"),
                             new CompositeAssertion.AllOf(
                                 List.of(
                                     new CellAssertion.CellValue(
@@ -773,7 +775,7 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
                     List.of(
                         assertThat(
                             "any-of-failure",
-                            new CellSelector.ByAddress("Budget", "A1"),
+                            new CellSelector.ByAddress(new SheetName("Budget"), "A1"),
                             new CompositeAssertion.AnyOf(
                                 List.of(
                                     new CellAssertion.DisplayValue("Wrong"),
@@ -794,7 +796,7 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
                     List.of(
                         assertThat(
                             "not-failure",
-                            new CellSelector.ByAddress("Budget", "A1"),
+                            new CellSelector.ByAddress(new SheetName("Budget"), "A1"),
                             new CompositeAssertion.Not(
                                 new CellAssertion.CellValue(
                                     new dev.erst.gridgrind.core.model.value.CellScalarValue.Text(
@@ -902,7 +904,7 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
                         List.of(
                             inspect(
                                 "charts",
-                                new ChartSelector.AllOnSheet("Ops"),
+                                new ChartSelector.AllOnSheet(new SheetName("Ops")),
                                 new WorkbookAssetIntrospectionQuery.GetCharts()))))),
             "charts",
             WorkbookAssetInspectionResult.ChartsResult.class);
@@ -934,15 +936,16 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
                     List.of(
                         assertThat(
                             "chart-facts",
-                            new ChartSelector.AllOnSheet("Ops"),
+                            new ChartSelector.AllOnSheet(new SheetName("Ops")),
                             new WorkbookFactAssertion.ChartFacts(charts.charts())),
                         assertThat(
                             "chart-present",
-                            new ChartSelector.ByName("Ops", charts.charts().getFirst().name()),
+                            new ChartSelector.ByName(
+                                new SheetName("Ops"), charts.charts().getFirst().name()),
                             new PresenceAssertion.ChartPresent()),
                         assertThat(
                             "chart-absent",
-                            new ChartSelector.ByName("Ops", "MissingChart"),
+                            new ChartSelector.ByName(new SheetName("Ops"), "MissingChart"),
                             new PresenceAssertion.ChartAbsent())),
                     List.of())));
     assertEquals(3, asserted.assertions().size());
@@ -976,7 +979,7 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
             executor,
             chartPath,
             "chart-facts-mismatch",
-            new ChartSelector.AllOnSheet("Ops"),
+            new ChartSelector.AllOnSheet(new SheetName("Ops")),
             new WorkbookFactAssertion.ChartFacts(List.of()));
     assertTrue(chartFactsMismatch.problem().message().contains("EXPECT_CHART_FACTS"));
 
@@ -1177,24 +1180,24 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
                     null,
                     List.of(
                         mutate(
-                            new SheetSelector.ByName("Ops"),
+                            new SheetSelector.ByName(new SheetName("Ops")),
                             new WorkbookMutationAction.EnsureSheet()),
                         mutate(
-                            new SheetSelector.ByName("Ops"),
+                            new SheetSelector.ByName(new SheetName("Ops")),
                             new CellMutationAction.AppendRow(
                                 new dev.erst.gridgrind.core.model.value.CellRowInput.Typed(
                                     List.of(textCell("Owner"), textCell("Ada")))))),
                     List.of(
                         assertThat(
                             "stream-assert",
-                            new CellSelector.ByAddress("Ops", "A1"),
+                            new CellSelector.ByAddress(new SheetName("Ops"), "A1"),
                             new CellAssertion.CellValue(
                                 new dev.erst.gridgrind.core.model.value.CellScalarValue.Text(
                                     "Owner")))),
                     List.of(
                         inspect(
                             "stream-read",
-                            new CellSelector.ByAddress("Ops", "A1"),
+                            new CellSelector.ByAddress(new SheetName("Ops"), "A1"),
                             allFacetCellsQuery())))));
     assertEquals(
         List.of("stream-assert"),
@@ -1216,23 +1219,23 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
                     null,
                     List.of(
                         mutate(
-                            new SheetSelector.ByName("Ops"),
+                            new SheetSelector.ByName(new SheetName("Ops")),
                             new WorkbookMutationAction.EnsureSheet()),
                         mutate(
-                            new SheetSelector.ByName("Ops"),
+                            new SheetSelector.ByName(new SheetName("Ops")),
                             new CellMutationAction.AppendRow(
                                 new dev.erst.gridgrind.core.model.value.CellRowInput.Typed(
                                     List.of(textCell("Owner"), textCell("Ada")))))),
                     List.of(
                         assertThat(
                             "stream-pass",
-                            new CellSelector.ByAddress("Ops", "A1"),
+                            new CellSelector.ByAddress(new SheetName("Ops"), "A1"),
                             new CellAssertion.CellValue(
                                 new dev.erst.gridgrind.core.model.value.CellScalarValue.Text(
                                     "Owner"))),
                         assertThat(
                             "stream-fail",
-                            new CellSelector.ByAddress("Ops", "A1"),
+                            new CellSelector.ByAddress(new SheetName("Ops"), "A1"),
                             new CellAssertion.CellValue(
                                 new dev.erst.gridgrind.core.model.value.CellScalarValue.Text(
                                     "WrongValue")))),
@@ -1254,7 +1257,7 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
                 stepSupport.executeAssertionStep(
                     new AssertionStep(
                         new StepId("assert"),
-                        new CellSelector.ByAddress("Ops", "A1"),
+                        new CellSelector.ByAddress(new SheetName("Ops"), "A1"),
                         new CellAssertion.CellValue(
                             new dev.erst.gridgrind.core.model.value.CellScalarValue.Text("Owner"))),
                     null,
@@ -1269,7 +1272,7 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
                 stepSupport.executeAssertionStepCollecting(
                     new AssertionStep(
                         new StepId("assert"),
-                        new CellSelector.ByAddress("Ops", "A1"),
+                        new CellSelector.ByAddress(new SheetName("Ops"), "A1"),
                         new CellAssertion.CellValue(
                             new dev.erst.gridgrind.core.model.value.CellScalarValue.Text("Owner"))),
                     null,
@@ -1340,7 +1343,8 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
                 new WorkbookPlan.WorkbookPersistence.None(),
                 List.of(
                     mutate(
-                        new SheetSelector.ByName("Ops"), new WorkbookMutationAction.EnsureSheet())),
+                        new SheetSelector.ByName(new SheetName("Ops")),
+                        new WorkbookMutationAction.EnsureSheet())),
                 List.of()),
             ExecutionModeInput.eventRead()));
     assertFalse(
@@ -1387,7 +1391,7 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
                         List.of(
                             assertThat(
                                 "assert-without-sheet",
-                                new CellSelector.ByAddress("Ops", "A1"),
+                                new CellSelector.ByAddress(new SheetName("Ops"), "A1"),
                                 new CellAssertion.CellValue(
                                     new dev.erst.gridgrind.core.model.value.CellScalarValue.Text(
                                         "Owner")))),
@@ -1465,9 +1469,12 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
 
   private static List<ExecutorTestPlanSupport.PendingMutation> budgetTableMutations() {
     return mutations(
-        mutate(new SheetSelector.ByName("Budget"), new WorkbookMutationAction.EnsureSheet()),
         mutate(
-            new dev.erst.gridgrind.core.plan.RangeSelector.ByRange("Budget", "A1:B3"),
+            new SheetSelector.ByName(new SheetName("Budget")),
+            new WorkbookMutationAction.EnsureSheet()),
+        mutate(
+            new dev.erst.gridgrind.core.plan.RangeSelector.ByRange(
+                new SheetName("Budget"), "A1:B3"),
             new CellMutationAction.SetRange(
                 new dev.erst.gridgrind.core.model.value.CellGridInput.Typed(
                     List.of(
@@ -1477,7 +1484,11 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
         mutate(
             new StructuredMutationAction.SetTable(
                 TableInput.withDefaultMetadata(
-                    "BudgetTable", "Budget", "A1:B3", false, new TableStyleInput.None()))));
+                    "BudgetTable",
+                    new SheetName("Budget"),
+                    "A1:B3",
+                    false,
+                    new TableStyleInput.None()))));
   }
 
   @Test
@@ -1500,7 +1511,7 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
           (WorkbookAssetInspectionResult.ChartsResult)
               observationExecutor.executeObservation(
                   new StepId("charts"),
-                  new ChartSelector.AllOnSheet("Budget"),
+                  new ChartSelector.AllOnSheet(new SheetName("Budget")),
                   new WorkbookAssetIntrospectionQuery.GetCharts(),
                   workbook,
                   new WorkbookLocation.UnsavedWorkbook());

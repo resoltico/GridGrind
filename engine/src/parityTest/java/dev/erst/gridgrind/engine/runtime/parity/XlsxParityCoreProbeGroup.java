@@ -39,6 +39,7 @@ import dev.erst.gridgrind.core.result.WorkbookResult;
 import dev.erst.gridgrind.core.result.WorkbookSummary;
 import dev.erst.gridgrind.core.vocabulary.NamedRangeScope;
 import dev.erst.gridgrind.core.vocabulary.SheetCopyPosition;
+import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.engine.runtime.parity.XlsxParityProbeRegistry.ProbeContext;
 import dev.erst.gridgrind.engine.runtime.parity.XlsxParityProbeRegistry.ProbeResult;
 import java.nio.file.Path;
@@ -79,51 +80,51 @@ final class XlsxParityCoreProbeGroup {
                 new WorkbookIntrospectionQuery.GetWorkbookSummary()),
             inspect(
                 "ops-summary",
-                new SheetSelector.ByName("Ops"),
+                new SheetSelector.ByName(new SheetName("Ops")),
                 new SheetIntrospectionQuery.GetSheetSummary()),
             inspect(
                 "queue-summary",
-                new SheetSelector.ByName("Queue"),
+                new SheetSelector.ByName(new SheetName("Queue")),
                 new SheetIntrospectionQuery.GetSheetSummary()),
             inspect(
                 "cells",
-                new CellSelector.ByAddresses("Ops", List.of("A3", "B3", "C3", "D3")),
+                new CellSelector.ByAddresses(new SheetName("Ops"), List.of("A3", "B3", "C3", "D3")),
                 allFacetCellsQuery()),
             inspect(
                 "merged",
-                new SheetSelector.ByName("Ops"),
+                new SheetSelector.ByName(new SheetName("Ops")),
                 new SheetIntrospectionQuery.GetMergedRegions()),
             inspect(
                 "links",
-                new CellSelector.ByAddresses("Ops", List.of("C4")),
+                new CellSelector.ByAddresses(new SheetName("Ops"), List.of("C4")),
                 new SheetIntrospectionQuery.GetHyperlinks()),
             inspect(
                 "comments",
-                new CellSelector.ByAddresses("Ops", List.of("C4")),
+                new CellSelector.ByAddresses(new SheetName("Ops"), List.of("C4")),
                 new SheetIntrospectionQuery.GetComments()),
             inspect(
                 "layout",
-                new SheetSelector.ByName("Ops"),
+                new SheetSelector.ByName(new SheetName("Ops")),
                 new SheetIntrospectionQuery.GetSheetLayout()),
             inspect(
                 "print",
-                new SheetSelector.ByName("Ops"),
+                new SheetSelector.ByName(new SheetName("Ops")),
                 new SheetIntrospectionQuery.GetPrintLayout()),
             inspect(
                 "validations",
-                new RangeSelector.AllOnSheet("Ops"),
+                new RangeSelector.AllOnSheet(new SheetName("Ops")),
                 new SheetIntrospectionQuery.GetDataValidations()),
             inspect(
                 "formatting",
-                new RangeSelector.AllOnSheet("Ops"),
+                new RangeSelector.AllOnSheet(new SheetName("Ops")),
                 new SheetIntrospectionQuery.GetConditionalFormatting()),
             inspect(
                 "filters-ops",
-                new SheetSelector.ByName("Ops"),
+                new SheetSelector.ByName(new SheetName("Ops")),
                 new SheetIntrospectionQuery.GetAutofilters()),
             inspect(
                 "filters-queue",
-                new SheetSelector.ByName("Queue"),
+                new SheetSelector.ByName(new SheetName("Queue")),
                 new SheetIntrospectionQuery.GetAutofilters()),
             inspect(
                 "tables",
@@ -541,7 +542,7 @@ final class XlsxParityCoreProbeGroup {
             context.scenario(XlsxParityScenarios.ADVANCED_NONDRAWING).workbookPath(),
             inspect(
                 "print",
-                new SheetSelector.ByName("Advanced"),
+                new SheetSelector.ByName(new SheetName("Advanced")),
                 new SheetIntrospectionQuery.GetPrintLayout()));
     SheetInspectionResult.PrintLayoutResult print =
         XlsxParityGridGrind.read(success, "print", SheetInspectionResult.PrintLayoutResult.class);
@@ -583,7 +584,7 @@ final class XlsxParityCoreProbeGroup {
             advanced.workbookPath(),
             inspect(
                 "cells",
-                new CellSelector.ByAddresses("Advanced", List.of("A3", "A4")),
+                new CellSelector.ByAddresses(new SheetName("Advanced"), List.of("A3", "A4")),
                 allFacetCellsQuery()));
     SheetInspectionResult.CellsResult cells =
         XlsxParityGridGrind.read(success, "cells", SheetInspectionResult.CellsResult.class);
@@ -668,7 +669,7 @@ final class XlsxParityCoreProbeGroup {
             advanced.workbookPath(),
             inspect(
                 "comments",
-                new CellSelector.ByAddresses("Advanced", List.of("E2")),
+                new CellSelector.ByAddresses(new SheetName("Advanced"), List.of("E2")),
                 new SheetIntrospectionQuery.GetComments()));
     SheetInspectionResult.CommentsResult comments =
         XlsxParityGridGrind.read(success, "comments", SheetInspectionResult.CommentsResult.class);
@@ -709,7 +710,7 @@ final class XlsxParityCoreProbeGroup {
             advanced.workbookPath(),
             inspect(
                 "health",
-                new SheetSelector.ByNames(List.of("Advanced")),
+                new SheetSelector.ByNames(List.of(new SheetName("Advanced"))),
                 new InspectionAnalysisQuery.AnalyzeDataValidationHealth()));
     if (response instanceof WorkbookResult.Failure failure) {
       return fail(
@@ -745,7 +746,7 @@ final class XlsxParityCoreProbeGroup {
             advanced.workbookPath(),
             inspect(
                 "filters",
-                new SheetSelector.ByName("Advanced"),
+                new SheetSelector.ByName(new SheetName("Advanced")),
                 new SheetIntrospectionQuery.GetAutofilters()));
     SheetInspectionResult.AutofiltersResult filters =
         XlsxParityGridGrind.read(success, "filters", SheetInspectionResult.AutofiltersResult.class);
@@ -840,7 +841,7 @@ final class XlsxParityCoreProbeGroup {
             advanced.workbookPath(),
             inspect(
                 "formatting",
-                new RangeSelector.AllOnSheet("Advanced"),
+                new RangeSelector.AllOnSheet(new SheetName("Advanced")),
                 new SheetIntrospectionQuery.GetConditionalFormatting()));
     SheetInspectionResult.ConditionalFormattingResult formatting =
         XlsxParityGridGrind.read(
@@ -870,7 +871,7 @@ final class XlsxParityCoreProbeGroup {
             advanced.workbookPath(),
             inspect(
                 "formatting",
-                new RangeSelector.AllOnSheet("Advanced"),
+                new RangeSelector.AllOnSheet(new SheetName("Advanced")),
                 new SheetIntrospectionQuery.GetConditionalFormatting()));
     SheetInspectionResult.ConditionalFormattingResult formatting =
         XlsxParityGridGrind.read(
@@ -1011,7 +1012,7 @@ final class XlsxParityCoreProbeGroup {
                 advanced.workbookPath(),
                 inspect(
                     "summary",
-                    new SheetSelector.ByName("Advanced"),
+                    new SheetSelector.ByName(new SheetName("Advanced")),
                     new SheetIntrospectionQuery.GetSheetSummary())),
             "summary",
             SheetInspectionResult.SheetSummaryResult.class);
@@ -1030,11 +1031,11 @@ final class XlsxParityCoreProbeGroup {
                 clearedPath,
                 List.of(
                     mutate(
-                        new SheetSelector.ByName("Advanced"),
+                        new SheetSelector.ByName(new SheetName("Advanced")),
                         new WorkbookMutationAction.ClearSheetProtection())),
                 inspect(
                     "summary",
-                    new SheetSelector.ByName("Advanced"),
+                    new SheetSelector.ByName(new SheetName("Advanced")),
                     new SheetIntrospectionQuery.GetSheetSummary())),
             "summary",
             SheetInspectionResult.SheetSummaryResult.class);
@@ -1051,7 +1052,7 @@ final class XlsxParityCoreProbeGroup {
                 restoredPath,
                 List.of(
                     mutate(
-                        new SheetSelector.ByName("Advanced"),
+                        new SheetSelector.ByName(new SheetName("Advanced")),
                         new WorkbookMutationAction.SetSheetProtection(
                             expectedSettings,
                             java.util.Optional.of(
@@ -1059,7 +1060,7 @@ final class XlsxParityCoreProbeGroup {
                                     "sheet-password"))))),
                 inspect(
                     "summary",
-                    new SheetSelector.ByName("Advanced"),
+                    new SheetSelector.ByName(new SheetName("Advanced")),
                     new SheetIntrospectionQuery.GetSheetSummary())),
             "summary",
             SheetInspectionResult.SheetSummaryResult.class);
@@ -1111,7 +1112,7 @@ final class XlsxParityCoreProbeGroup {
                 source.workbookPath(),
                 inspect(
                     "comments",
-                    new CellSelector.ByAddresses("Advanced", List.of("E2")),
+                    new CellSelector.ByAddresses(new SheetName("Advanced"), List.of("E2")),
                     new SheetIntrospectionQuery.GetComments())),
             "comments",
             SheetInspectionResult.CommentsResult.class);
@@ -1121,7 +1122,7 @@ final class XlsxParityCoreProbeGroup {
                 source.workbookPath(),
                 inspect(
                     "filters",
-                    new SheetSelector.ByName("Advanced"),
+                    new SheetSelector.ByName(new SheetName("Advanced")),
                     new SheetIntrospectionQuery.GetAutofilters())),
             "filters",
             SheetInspectionResult.AutofiltersResult.class);
@@ -1131,7 +1132,7 @@ final class XlsxParityCoreProbeGroup {
                 source.workbookPath(),
                 inspect(
                     "formatting",
-                    new RangeSelector.AllOnSheet("Advanced"),
+                    new RangeSelector.AllOnSheet(new SheetName("Advanced")),
                     new SheetIntrospectionQuery.GetConditionalFormatting())),
             "formatting",
             SheetInspectionResult.ConditionalFormattingResult.class);
@@ -1151,7 +1152,7 @@ final class XlsxParityCoreProbeGroup {
                 source.workbookPath(),
                 inspect(
                     "summary",
-                    new SheetSelector.ByName("Advanced"),
+                    new SheetSelector.ByName(new SheetName("Advanced")),
                     new SheetIntrospectionQuery.GetSheetSummary())),
             "summary",
             SheetInspectionResult.SheetSummaryResult.class);
@@ -1177,28 +1178,28 @@ final class XlsxParityCoreProbeGroup {
             copiedPath,
             List.of(
                 mutate(
-                    new SheetSelector.ByName("Advanced"),
+                    new SheetSelector.ByName(new SheetName("Advanced")),
                     new WorkbookMutationAction.CopySheet(
-                        "Advanced Replica", new SheetCopyPosition.AppendAtEnd()))),
+                        new SheetName("Advanced Replica"), new SheetCopyPosition.AppendAtEnd()))),
             inspect(
                 "workbook",
                 new WorkbookSelector.Current(),
                 new WorkbookIntrospectionQuery.GetWorkbookSummary()),
             inspect(
                 "summary",
-                new SheetSelector.ByName("Advanced Replica"),
+                new SheetSelector.ByName(new SheetName("Advanced Replica")),
                 new SheetIntrospectionQuery.GetSheetSummary()),
             inspect(
                 "comments",
-                new CellSelector.ByAddresses("Advanced Replica", List.of("E2")),
+                new CellSelector.ByAddresses(new SheetName("Advanced Replica"), List.of("E2")),
                 new SheetIntrospectionQuery.GetComments()),
             inspect(
                 "filters",
-                new SheetSelector.ByName("Advanced Replica"),
+                new SheetSelector.ByName(new SheetName("Advanced Replica")),
                 new SheetIntrospectionQuery.GetAutofilters()),
             inspect(
                 "formatting",
-                new RangeSelector.AllOnSheet("Advanced Replica"),
+                new RangeSelector.AllOnSheet(new SheetName("Advanced Replica")),
                 new SheetIntrospectionQuery.GetConditionalFormatting()),
             inspect(
                 "tables",
@@ -1384,7 +1385,7 @@ final class XlsxParityCoreProbeGroup {
                 source.workbookPath(),
                 inspect(
                     "print",
-                    new SheetSelector.ByName("Advanced"),
+                    new SheetSelector.ByName(new SheetName("Advanced")),
                     new SheetIntrospectionQuery.GetPrintLayout())),
             "print",
             SheetInspectionResult.PrintLayoutResult.class);
@@ -1397,11 +1398,11 @@ final class XlsxParityCoreProbeGroup {
                 clearedPath,
                 List.of(
                     mutate(
-                        new SheetSelector.ByName("Advanced"),
+                        new SheetSelector.ByName(new SheetName("Advanced")),
                         new WorkbookMutationAction.ClearPrintLayout())),
                 inspect(
                     "print",
-                    new SheetSelector.ByName("Advanced"),
+                    new SheetSelector.ByName(new SheetName("Advanced")),
                     new SheetIntrospectionQuery.GetPrintLayout())),
             "print",
             SheetInspectionResult.PrintLayoutResult.class);
@@ -1415,11 +1416,11 @@ final class XlsxParityCoreProbeGroup {
                 restoredPath,
                 List.of(
                     mutate(
-                        new SheetSelector.ByName("Advanced"),
+                        new SheetSelector.ByName(new SheetName("Advanced")),
                         new WorkbookMutationAction.SetPrintLayout(advancedPrintLayoutInput()))),
                 inspect(
                     "print",
-                    new SheetSelector.ByName("Advanced"),
+                    new SheetSelector.ByName(new SheetName("Advanced")),
                     new SheetIntrospectionQuery.GetPrintLayout())),
             "print",
             SheetInspectionResult.PrintLayoutResult.class);
@@ -1457,21 +1458,21 @@ final class XlsxParityCoreProbeGroup {
                 styledPath,
                 List.of(
                     mutate(
-                        new RangeSelector.ByRange("Ops", "A5:A6"),
+                        new RangeSelector.ByRange(new SheetName("Ops"), "A5:A6"),
                         new CellMutationAction.SetRange(
                             new CellGridInput.Typed(
                                 List.of(
                                     List.of(text("ThemeTintStyle")),
                                     List.of(text("GradientFillStyle")))))),
                     mutate(
-                        new RangeSelector.ByRange("Ops", "A5"),
+                        new RangeSelector.ByRange(new SheetName("Ops"), "A5"),
                         new CellMutationAction.ApplyStyle(advancedThemedStyleInput())),
                     mutate(
-                        new RangeSelector.ByRange("Ops", "A6"),
+                        new RangeSelector.ByRange(new SheetName("Ops"), "A6"),
                         new CellMutationAction.ApplyStyle(advancedGradientStyleInput()))),
                 inspect(
                     "cells",
-                    new CellSelector.ByAddresses("Ops", List.of("A5", "A6")),
+                    new CellSelector.ByAddresses(new SheetName("Ops"), List.of("A5", "A6")),
                     allFacetCellsQuery())),
             "cells",
             SheetInspectionResult.CellsResult.class);
@@ -1491,11 +1492,11 @@ final class XlsxParityCoreProbeGroup {
                 clearedPath,
                 List.of(
                     mutate(
-                        new RangeSelector.ByRange("Ops", "A5:A6"),
+                        new RangeSelector.ByRange(new SheetName("Ops"), "A5:A6"),
                         new CellMutationAction.ClearRange())),
                 inspect(
                     "cells",
-                    new CellSelector.ByAddresses("Ops", List.of("A5", "A6")),
+                    new CellSelector.ByAddresses(new SheetName("Ops"), List.of("A5", "A6")),
                     allFacetCellsQuery())),
             "cells",
             SheetInspectionResult.CellsResult.class);
@@ -1529,7 +1530,7 @@ final class XlsxParityCoreProbeGroup {
                 source.workbookPath(),
                 inspect(
                     "comments",
-                    new CellSelector.ByAddresses("Advanced", List.of("E2")),
+                    new CellSelector.ByAddresses(new SheetName("Advanced"), List.of("E2")),
                     new SheetIntrospectionQuery.GetComments())),
             "comments",
             SheetInspectionResult.CommentsResult.class);
@@ -1542,11 +1543,11 @@ final class XlsxParityCoreProbeGroup {
                 clearedPath,
                 List.of(
                     mutate(
-                        new CellSelector.ByAddress("Advanced", "E2"),
+                        new CellSelector.ByAddress(new SheetName("Advanced"), "E2"),
                         new CellMutationAction.ClearComment())),
                 inspect(
                     "comments",
-                    new CellSelector.ByAddresses("Advanced", List.of("E2")),
+                    new CellSelector.ByAddresses(new SheetName("Advanced"), List.of("E2")),
                     new SheetIntrospectionQuery.GetComments())),
             "comments",
             SheetInspectionResult.CommentsResult.class);
@@ -1560,11 +1561,11 @@ final class XlsxParityCoreProbeGroup {
                 restoredPath,
                 List.of(
                     mutate(
-                        new CellSelector.ByAddress("Advanced", "E2"),
+                        new CellSelector.ByAddress(new SheetName("Advanced"), "E2"),
                         new CellMutationAction.SetComment(advancedCommentInput()))),
                 inspect(
                     "comments",
-                    new CellSelector.ByAddresses("Advanced", List.of("E2")),
+                    new CellSelector.ByAddresses(new SheetName("Advanced"), List.of("E2")),
                     new SheetIntrospectionQuery.GetComments())),
             "comments",
             SheetInspectionResult.CommentsResult.class);
@@ -1616,7 +1617,7 @@ final class XlsxParityCoreProbeGroup {
                         new StructuredMutationAction.DeleteNamedRange()),
                     mutate(
                         new dev.erst.gridgrind.core.plan.NamedRangeSelector.SheetScope(
-                            "SheetScopedFormulaBudget", "Advanced"),
+                            "SheetScopedFormulaBudget", new SheetName("Advanced")),
                         new StructuredMutationAction.DeleteNamedRange())),
                 inspect(
                     "names",
@@ -1646,7 +1647,7 @@ final class XlsxParityCoreProbeGroup {
                     mutate(
                         new StructuredMutationAction.SetNamedRange(
                             "SheetScopedFormulaBudget",
-                            new NamedRangeScope.Sheet("Advanced"),
+                            new NamedRangeScope.Sheet(new SheetName("Advanced")),
                             NamedRangeTarget.formula("SUM(Advanced!$C$2:$C$5)")))),
                 inspect(
                     "names",
@@ -1683,7 +1684,7 @@ final class XlsxParityCoreProbeGroup {
                 source.workbookPath(),
                 inspect(
                     "filters",
-                    new SheetSelector.ByName("Advanced"),
+                    new SheetSelector.ByName(new SheetName("Advanced")),
                     new SheetIntrospectionQuery.GetAutofilters())),
             "filters",
             SheetInspectionResult.AutofiltersResult.class);
@@ -1696,11 +1697,11 @@ final class XlsxParityCoreProbeGroup {
                 clearedPath,
                 List.of(
                     mutate(
-                        new SheetSelector.ByName("Advanced"),
+                        new SheetSelector.ByName(new SheetName("Advanced")),
                         new StructuredMutationAction.ClearAutofilter())),
                 inspect(
                     "filters",
-                    new SheetSelector.ByName("Advanced"),
+                    new SheetSelector.ByName(new SheetName("Advanced")),
                     new SheetIntrospectionQuery.GetAutofilters())),
             "filters",
             SheetInspectionResult.AutofiltersResult.class);
@@ -1717,7 +1718,7 @@ final class XlsxParityCoreProbeGroup {
                 restoredPath,
                 List.of(
                     mutate(
-                        new RangeSelector.ByRange("Advanced", "A1:C5"),
+                        new RangeSelector.ByRange(new SheetName("Advanced"), "A1:C5"),
                         new StructuredMutationAction.SetAutofilter(
                             List.of(
                                 new AutofilterFilterColumnInput(
@@ -1733,7 +1734,7 @@ final class XlsxParityCoreProbeGroup {
                                 List.of(new AutofilterSortConditionInput.Value("B2:B5", true)))))),
                 inspect(
                     "filters",
-                    new SheetSelector.ByName("Advanced"),
+                    new SheetSelector.ByName(new SheetName("Advanced")),
                     new SheetIntrospectionQuery.GetAutofilters())),
             "filters",
             SheetInspectionResult.AutofiltersResult.class);
@@ -1782,7 +1783,7 @@ final class XlsxParityCoreProbeGroup {
                 clearedPath,
                 List.of(
                     mutate(
-                        new TableSelector.ByNameOnSheet("AdvancedTable", "Advanced"),
+                        new TableSelector.ByNameOnSheet("AdvancedTable", new SheetName("Advanced")),
                         new StructuredMutationAction.DeleteTable())),
                 inspect(
                     "tables",
@@ -1840,7 +1841,7 @@ final class XlsxParityCoreProbeGroup {
                 source.workbookPath(),
                 inspect(
                     "formatting",
-                    new RangeSelector.AllOnSheet("Advanced"),
+                    new RangeSelector.AllOnSheet(new SheetName("Advanced")),
                     new SheetIntrospectionQuery.GetConditionalFormatting())),
             "formatting",
             SheetInspectionResult.ConditionalFormattingResult.class);
@@ -1856,11 +1857,11 @@ final class XlsxParityCoreProbeGroup {
                 clearedPath,
                 List.of(
                     mutate(
-                        new RangeSelector.AllOnSheet("Advanced"),
+                        new RangeSelector.AllOnSheet(new SheetName("Advanced")),
                         new StructuredMutationAction.ClearConditionalFormatting())),
                 inspect(
                     "formatting",
-                    new RangeSelector.AllOnSheet("Advanced"),
+                    new RangeSelector.AllOnSheet(new SheetName("Advanced")),
                     new SheetIntrospectionQuery.GetConditionalFormatting())),
             "formatting",
             SheetInspectionResult.ConditionalFormattingResult.class);
@@ -1875,7 +1876,7 @@ final class XlsxParityCoreProbeGroup {
                 advancedConditionalFormattingMutations(),
                 inspect(
                     "formatting",
-                    new RangeSelector.AllOnSheet("Advanced"),
+                    new RangeSelector.AllOnSheet(new SheetName("Advanced")),
                     new SheetIntrospectionQuery.GetConditionalFormatting())),
             "formatting",
             SheetInspectionResult.ConditionalFormattingResult.class);

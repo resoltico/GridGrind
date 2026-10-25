@@ -2,6 +2,7 @@ package dev.erst.gridgrind.core.plan;
 
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import dev.erst.gridgrind.core.vocabulary.SheetName;
 
 /** Selects one or more sheet-local drawing objects. */
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
@@ -15,9 +16,9 @@ public sealed interface DrawingObjectSelector extends Selector
     permits DrawingObjectSelector.AllOnSheet, DrawingObjectSelector.ByName {
 
   /** Selects every drawing object on one sheet. */
-  record AllOnSheet(String sheetName) implements DrawingObjectSelector {
+  record AllOnSheet(SheetName sheetName) implements DrawingObjectSelector {
     public AllOnSheet {
-      sheetName = SelectorValueValidation.requireSheetName(sheetName, "sheetName");
+      java.util.Objects.requireNonNull(sheetName, "sheetName must not be null");
     }
 
     @Override
@@ -27,9 +28,9 @@ public sealed interface DrawingObjectSelector extends Selector
   }
 
   /** Selects one drawing object by sheet-local object name. */
-  record ByName(String sheetName, String objectName) implements DrawingObjectSelector {
+  record ByName(SheetName sheetName, String objectName) implements DrawingObjectSelector {
     public ByName {
-      sheetName = SelectorValueValidation.requireSheetName(sheetName, "sheetName");
+      java.util.Objects.requireNonNull(sheetName, "sheetName must not be null");
       objectName = SelectorValueValidation.requireNonBlank(objectName, "objectName");
     }
 

@@ -19,6 +19,7 @@ import dev.erst.gridgrind.core.plan.StructuredMutationAction;
 import dev.erst.gridgrind.core.plan.WorkbookAssetIntrospectionQuery;
 import dev.erst.gridgrind.core.plan.WorkbookMutationAction;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
+import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import java.util.List;
 
@@ -160,13 +161,13 @@ final class PivotReportTaskRecipe {
             new StructuredMutationAction.SetTable(
                 TableInput.withDefaultMetadata(
                     "PivotSource",
-                    "Data",
+                    new SheetName("Data"),
                     "A1:D5",
                     false,
                     new TableStyleInput.Named("TableStyleMedium9", false, false, true, false)))),
         ExampleSteps.step(
             new StepId("author-pivot"),
-            new PivotTableSelector.ByNameOnSheet("RegionalTotals", "RangeReport"),
+            new PivotTableSelector.ByNameOnSheet("RegionalTotals", new SheetName("RangeReport")),
             new StructuredMutationAction.SetPivotTable(
                 ExamplePivotInputs.regionalTotalsPivotFromTable(
                     "RegionalTotals", "RangeReport", "PivotSource"))),

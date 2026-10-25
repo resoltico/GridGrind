@@ -2,6 +2,7 @@ package dev.erst.gridgrind.core.plan;
 
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import dev.erst.gridgrind.core.vocabulary.SheetName;
 
 /** Selects a column band or one column-band insertion point on one sheet. */
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
@@ -13,10 +14,10 @@ public sealed interface ColumnBandSelector extends Selector
     permits ColumnBandSelector.Span, ColumnBandSelector.Insertion {
 
   /** Selects one inclusive zero-based column span on one sheet. */
-  record Span(String sheetName, int firstColumnIndex, int lastColumnIndex)
+  record Span(SheetName sheetName, int firstColumnIndex, int lastColumnIndex)
       implements ColumnBandSelector {
     public Span {
-      sheetName = SelectorValueValidation.requireSheetName(sheetName, "sheetName");
+      java.util.Objects.requireNonNull(sheetName, "sheetName must not be null");
       firstColumnIndex =
           SelectorValueValidation.requireColumnIndexWithinBounds(
               firstColumnIndex, "firstColumnIndex");
@@ -36,10 +37,10 @@ public sealed interface ColumnBandSelector extends Selector
   }
 
   /** Selects one column insertion point and band count on one sheet. */
-  record Insertion(String sheetName, int beforeColumnIndex, int columnCount)
+  record Insertion(SheetName sheetName, int beforeColumnIndex, int columnCount)
       implements ColumnBandSelector {
     public Insertion {
-      sheetName = SelectorValueValidation.requireSheetName(sheetName, "sheetName");
+      java.util.Objects.requireNonNull(sheetName, "sheetName must not be null");
       beforeColumnIndex =
           SelectorValueValidation.requireColumnIndexWithinBounds(
               beforeColumnIndex, "beforeColumnIndex");

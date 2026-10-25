@@ -29,6 +29,7 @@ import dev.erst.gridgrind.core.source.BinarySourceInput;
 import dev.erst.gridgrind.core.source.TextSourceInput;
 import dev.erst.gridgrind.core.vocabulary.ExcelDataValidationErrorStyle;
 import dev.erst.gridgrind.core.vocabulary.ExcelPictureFormat;
+import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -58,7 +59,7 @@ class SourceBackedPlanResolverFailureCoverageTest extends SourceBackedPlanResolv
             new WorkbookPlan.WorkbookPersistence.None(),
             mutations(
                 mutate(
-                    new CellSelector.ByAddress("Budget", "A1"),
+                    new CellSelector.ByAddress(new SheetName("Budget"), "A1"),
                     new CellMutationAction.SetCell(
                         new CellInput.Text(TextSourceInput.utf8File("blank.txt"))))));
     assertEquals(
@@ -78,7 +79,7 @@ class SourceBackedPlanResolverFailureCoverageTest extends SourceBackedPlanResolv
             new WorkbookPlan.WorkbookPersistence.None(),
             mutations(
                 mutate(
-                    new CellSelector.ByAddress("Budget", "A1"),
+                    new CellSelector.ByAddress(new SheetName("Budget"), "A1"),
                     new CellMutationAction.SetCell(
                         new CellInput.RichText(
                             List.of(
@@ -102,7 +103,7 @@ class SourceBackedPlanResolverFailureCoverageTest extends SourceBackedPlanResolv
             new WorkbookPlan.WorkbookPersistence.None(),
             mutations(
                 mutate(
-                    new CellSelector.ByAddress("Budget", "A1"),
+                    new CellSelector.ByAddress(new SheetName("Budget"), "A1"),
                     new CellMutationAction.SetCell(
                         new CellInput.Text(
                             TextSourceInput.utf8File(directory.getFileName().toString()))))));
@@ -122,7 +123,7 @@ class SourceBackedPlanResolverFailureCoverageTest extends SourceBackedPlanResolv
             new WorkbookPlan.WorkbookPersistence.None(),
             mutations(
                 mutate(
-                    new CellSelector.ByAddress("Budget", "A1"),
+                    new CellSelector.ByAddress(new SheetName("Budget"), "A1"),
                     new CellMutationAction.SetCell(
                         new CellInput.Text(TextSourceInput.utf8File("\0bad"))))));
     InputSourceReadException invalidPathFailure =
@@ -141,7 +142,7 @@ class SourceBackedPlanResolverFailureCoverageTest extends SourceBackedPlanResolv
             new WorkbookPlan.WorkbookPersistence.None(),
             mutations(
                 mutate(
-                    new CellSelector.ByAddress("Budget", "A1"),
+                    new CellSelector.ByAddress(new SheetName("Budget"), "A1"),
                     new CellMutationAction.SetCell(
                         new CellInput.Text(TextSourceInput.utf8File("text-loop.txt"))))));
     UnsafePathAccessException textLoopFailure =
@@ -159,7 +160,7 @@ class SourceBackedPlanResolverFailureCoverageTest extends SourceBackedPlanResolv
             new WorkbookPlan.WorkbookPersistence.None(),
             mutations(
                 mutate(
-                    new SheetSelector.ByName("Budget"),
+                    new SheetSelector.ByName(new SheetName("Budget")),
                     new DrawingMutationAction.SetPicture(
                         picture(
                             "Logo",
@@ -183,7 +184,7 @@ class SourceBackedPlanResolverFailureCoverageTest extends SourceBackedPlanResolv
             new WorkbookPlan.WorkbookPersistence.None(),
             mutations(
                 mutate(
-                    new SheetSelector.ByName("Budget"),
+                    new SheetSelector.ByName(new SheetName("Budget")),
                     new DrawingMutationAction.SetPicture(
                         picture(
                             "Logo",
@@ -214,7 +215,7 @@ class SourceBackedPlanResolverFailureCoverageTest extends SourceBackedPlanResolv
               new WorkbookPlan.WorkbookPersistence.None(),
               mutations(
                   mutate(
-                      new CellSelector.ByAddress("Budget", "A1"),
+                      new CellSelector.ByAddress(new SheetName("Budget"), "A1"),
                       new CellMutationAction.SetCell(
                           new CellInput.Text(TextSourceInput.utf8File("unreadable-text.txt"))))));
       InputSourceReadException ioTextFailure =
@@ -239,7 +240,7 @@ class SourceBackedPlanResolverFailureCoverageTest extends SourceBackedPlanResolv
               new WorkbookPlan.WorkbookPersistence.None(),
               mutations(
                   mutate(
-                      new SheetSelector.ByName("Budget"),
+                      new SheetSelector.ByName(new SheetName("Budget")),
                       new DrawingMutationAction.SetPicture(
                           picture(
                               "Logo",
@@ -266,7 +267,7 @@ class SourceBackedPlanResolverFailureCoverageTest extends SourceBackedPlanResolv
             new WorkbookPlan.WorkbookPersistence.None(),
             mutations(
                 mutate(
-                    new SheetSelector.ByName("Budget"),
+                    new SheetSelector.ByName(new SheetName("Budget")),
                     new DrawingMutationAction.SetEmbeddedObject(
                         new EmbeddedObjectInput(
                             "Payload",
@@ -294,14 +295,14 @@ class SourceBackedPlanResolverFailureCoverageTest extends SourceBackedPlanResolv
         SourceBackedInputRequirements.requiresStandardInput(
             new AssertionStep(
                 new StepId("assert-owner"),
-                new CellSelector.ByAddress("Budget", "A1"),
+                new CellSelector.ByAddress(new SheetName("Budget"), "A1"),
                 new CellAssertion.CellValue(
                     new dev.erst.gridgrind.core.model.value.CellScalarValue.Text("Owner")))));
     assertFalse(
         SourceBackedInputRequirements.requiresStandardInput(
             new InspectionStep(
                 new StepId("inspect-cells"),
-                new CellSelector.ByAddress("Budget", "A1"),
+                new CellSelector.ByAddress(new SheetName("Budget"), "A1"),
                 new SheetIntrospectionQuery.GetCells())));
 
     assertFalse(
@@ -489,7 +490,7 @@ class SourceBackedPlanResolverFailureCoverageTest extends SourceBackedPlanResolv
             new WorkbookPlan.WorkbookPersistence.None(),
             mutations(
                 mutate(
-                    new CellSelector.ByAddress("Budget", "A1"),
+                    new CellSelector.ByAddress(new SheetName("Budget"), "A1"),
                     new CellMutationAction.SetCell(
                         new CellInput.Text(new TextSourceInput.Utf8File("missing.txt"))))));
     InputSourceNotFoundException notFound =
@@ -507,7 +508,7 @@ class SourceBackedPlanResolverFailureCoverageTest extends SourceBackedPlanResolv
             new WorkbookPlan.WorkbookPersistence.None(),
             mutations(
                 mutate(
-                    new CellSelector.ByAddress("Budget", "A1"),
+                    new CellSelector.ByAddress(new SheetName("Budget"), "A1"),
                     new CellMutationAction.SetCell(
                         new CellInput.Text(new TextSourceInput.StandardInput())))));
     InputSourceUnavailableException unavailable =

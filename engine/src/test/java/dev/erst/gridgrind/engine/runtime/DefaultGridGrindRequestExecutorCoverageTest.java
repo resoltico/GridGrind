@@ -21,6 +21,7 @@ import dev.erst.gridgrind.core.vocabulary.ExcelFillPattern;
 import dev.erst.gridgrind.core.vocabulary.ExcelHorizontalAlignment;
 import dev.erst.gridgrind.core.vocabulary.ExcelVerticalAlignment;
 import dev.erst.gridgrind.core.vocabulary.NamedRangeScope;
+import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.excel.*;
 import dev.erst.gridgrind.excel.ExcelBorderSideSnapshot;
@@ -96,7 +97,7 @@ class DefaultGridGrindRequestExecutorCoverageTest
     MutationStep setCell =
         new MutationStep(
             new StepId("step-01-set-cell"),
-            new CellSelector.ByAddress("Budget", "B4"),
+            new CellSelector.ByAddress(new SheetName("Budget"), "B4"),
             new CellMutationAction.SetCell(formulaCell("SUM(B2:B3)")));
     MutationStep setNamedRange =
         new MutationStep(
@@ -105,11 +106,11 @@ class DefaultGridGrindRequestExecutorCoverageTest
             new StructuredMutationAction.SetNamedRange(
                 "BudgetTotal",
                 new NamedRangeScope.Workbook(),
-                NamedRangeTarget.range("Budget", "B4")));
+                NamedRangeTarget.range(new SheetName("Budget"), "B4")));
     InspectionStep getCells =
         new InspectionStep(
             new StepId("step-03-get-cells"),
-            new CellSelector.ByAddresses("Budget", List.of("B4")),
+            new CellSelector.ByAddresses(new SheetName("Budget"), List.of("B4")),
             new SheetIntrospectionQuery.GetCells());
     InspectionStep getNamedRanges =
         new InspectionStep(
@@ -148,7 +149,7 @@ class DefaultGridGrindRequestExecutorCoverageTest
         ExecutionDiagnosticFields.rangeFor(
             new InspectionStep(
                 new StepId("step-05-get-window"),
-                new RangeSelector.RectangularWindow("Budget", "A1", 9, 2),
+                new RangeSelector.RectangularWindow(new SheetName("Budget"), "A1", 9, 2),
                 new InspectionSurfaceQuery.GetSheetSchema()),
             invalidFormula));
   }

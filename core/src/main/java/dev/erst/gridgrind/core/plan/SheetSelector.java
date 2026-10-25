@@ -2,6 +2,7 @@ package dev.erst.gridgrind.core.plan;
 
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import dev.erst.gridgrind.core.vocabulary.SheetName;
 import java.util.List;
 
 /** Selects one or more sheets. */
@@ -23,9 +24,9 @@ public sealed interface SheetSelector extends Selector
   }
 
   /** Selects one sheet by exact sheet name. */
-  record ByName(String name) implements SheetSelector {
+  record ByName(SheetName name) implements SheetSelector {
     public ByName {
-      name = SelectorValueValidation.requireSheetName(name, "name");
+      java.util.Objects.requireNonNull(name, "name must not be null");
     }
 
     @Override
@@ -35,7 +36,7 @@ public sealed interface SheetSelector extends Selector
   }
 
   /** Selects one or more sheets by exact sheet names. */
-  record ByNames(List<String> names) implements SheetSelector {
+  record ByNames(List<SheetName> names) implements SheetSelector {
     public ByNames {
       names = SelectorListValidation.copyDistinctSheetNames(names, "names");
     }

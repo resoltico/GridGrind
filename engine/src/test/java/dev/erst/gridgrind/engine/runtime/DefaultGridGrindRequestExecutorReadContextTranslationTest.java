@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import dev.erst.gridgrind.core.plan.*;
 import dev.erst.gridgrind.core.plan.InspectionStep;
+import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.excel.*;
 import dev.erst.gridgrind.excel.ExcelNamedRangeScope;
 import dev.erst.gridgrind.excel.InvalidCellAddressException;
@@ -64,57 +65,57 @@ class DefaultGridGrindRequestExecutorReadContextTranslationTest
             readType(
                 inspect(
                     "sheet",
-                    new SheetSelector.ByName("Budget"),
+                    new SheetSelector.ByName(new SheetName("Budget")),
                     new SheetIntrospectionQuery.GetSheetSummary())),
             readType(
                 inspect(
                     "cells",
-                    new CellSelector.ByAddresses("Budget", List.of("A1")),
+                    new CellSelector.ByAddresses(new SheetName("Budget"), List.of("A1")),
                     new SheetIntrospectionQuery.GetCells())),
             readType(
                 inspect(
                     "window",
-                    new RangeSelector.RectangularWindow("Budget", "A1", 1, 1),
+                    new RangeSelector.RectangularWindow(new SheetName("Budget"), "A1", 1, 1),
                     new SheetIntrospectionQuery.GetWindow())),
             readType(
                 inspect(
                     "merged",
-                    new SheetSelector.ByName("Budget"),
+                    new SheetSelector.ByName(new SheetName("Budget")),
                     new SheetIntrospectionQuery.GetMergedRegions())),
             readType(
                 inspect(
                     "hyperlinks",
-                    new CellSelector.AllUsedInSheet("Budget"),
+                    new CellSelector.AllUsedInSheet(new SheetName("Budget")),
                     new SheetIntrospectionQuery.GetHyperlinks())),
             readType(
                 inspect(
                     "comments",
-                    new CellSelector.AllUsedInSheet("Budget"),
+                    new CellSelector.AllUsedInSheet(new SheetName("Budget")),
                     new SheetIntrospectionQuery.GetComments())),
             readType(
                 inspect(
                     "layout",
-                    new SheetSelector.ByName("Budget"),
+                    new SheetSelector.ByName(new SheetName("Budget")),
                     new SheetIntrospectionQuery.GetSheetLayout())),
             readType(
                 inspect(
                     "print-layout",
-                    new SheetSelector.ByName("Budget"),
+                    new SheetSelector.ByName(new SheetName("Budget")),
                     new SheetIntrospectionQuery.GetPrintLayout())),
             readType(
                 inspect(
                     "validations",
-                    new RangeSelector.AllOnSheet("Budget"),
+                    new RangeSelector.AllOnSheet(new SheetName("Budget")),
                     new SheetIntrospectionQuery.GetDataValidations())),
             readType(
                 inspect(
                     "conditional-formatting",
-                    new RangeSelector.AllOnSheet("Budget"),
+                    new RangeSelector.AllOnSheet(new SheetName("Budget")),
                     new SheetIntrospectionQuery.GetConditionalFormatting())),
             readType(
                 inspect(
                     "autofilters",
-                    new SheetSelector.ByName("Budget"),
+                    new SheetSelector.ByName(new SheetName("Budget")),
                     new SheetIntrospectionQuery.GetAutofilters())),
             readType(
                 inspect(
@@ -129,7 +130,7 @@ class DefaultGridGrindRequestExecutorReadContextTranslationTest
             readType(
                 inspect(
                     "schema",
-                    new RangeSelector.RectangularWindow("Budget", "A1", 1, 1),
+                    new RangeSelector.RectangularWindow(new SheetName("Budget"), "A1", 1, 1),
                     new InspectionSurfaceQuery.GetSheetSchema())),
             readType(
                 inspect(
@@ -204,57 +205,57 @@ class DefaultGridGrindRequestExecutorReadContextTranslationTest
     InspectionStep sheet =
         inspect(
             "sheet",
-            new SheetSelector.ByName("Budget"),
+            new SheetSelector.ByName(new SheetName("Budget")),
             new SheetIntrospectionQuery.GetSheetSummary());
     InspectionStep cells =
         inspect(
             "cells",
-            new CellSelector.ByAddresses("Budget", List.of("A1")),
+            new CellSelector.ByAddresses(new SheetName("Budget"), List.of("A1")),
             new SheetIntrospectionQuery.GetCells());
     InspectionStep window =
         inspect(
             "window",
-            new RangeSelector.RectangularWindow("Budget", "B2", 2, 2),
+            new RangeSelector.RectangularWindow(new SheetName("Budget"), "B2", 2, 2),
             new SheetIntrospectionQuery.GetWindow());
     InspectionStep merged =
         inspect(
             "merged",
-            new SheetSelector.ByName("Budget"),
+            new SheetSelector.ByName(new SheetName("Budget")),
             new SheetIntrospectionQuery.GetMergedRegions());
     InspectionStep hyperlinks =
         inspect(
             "hyperlinks",
-            new CellSelector.AllUsedInSheet("Budget"),
+            new CellSelector.AllUsedInSheet(new SheetName("Budget")),
             new SheetIntrospectionQuery.GetHyperlinks());
     InspectionStep comments =
         inspect(
             "comments",
-            new CellSelector.ByAddresses("Budget", List.of("A1")),
+            new CellSelector.ByAddresses(new SheetName("Budget"), List.of("A1")),
             new SheetIntrospectionQuery.GetComments());
     InspectionStep layout =
         inspect(
             "layout",
-            new SheetSelector.ByName("Budget"),
+            new SheetSelector.ByName(new SheetName("Budget")),
             new SheetIntrospectionQuery.GetSheetLayout());
     InspectionStep printLayout =
         inspect(
             "print-layout",
-            new SheetSelector.ByName("Budget"),
+            new SheetSelector.ByName(new SheetName("Budget")),
             new SheetIntrospectionQuery.GetPrintLayout());
     InspectionStep validations =
         inspect(
             "validations",
-            new RangeSelector.ByRanges("Budget", List.of("A1:A3")),
+            new RangeSelector.ByRanges(new SheetName("Budget"), List.of("A1:A3")),
             new SheetIntrospectionQuery.GetDataValidations());
     InspectionStep conditionalFormatting =
         inspect(
             "conditional-formatting",
-            new RangeSelector.ByRanges("Budget", List.of("B2:B5")),
+            new RangeSelector.ByRanges(new SheetName("Budget"), List.of("B2:B5")),
             new SheetIntrospectionQuery.GetConditionalFormatting());
     InspectionStep autofilters =
         inspect(
             "autofilters",
-            new SheetSelector.ByName("Budget"),
+            new SheetSelector.ByName(new SheetName("Budget")),
             new SheetIntrospectionQuery.GetAutofilters());
     InspectionStep tables =
         inspect(
@@ -266,7 +267,7 @@ class DefaultGridGrindRequestExecutorReadContextTranslationTest
     InspectionStep schema =
         inspect(
             "schema",
-            new RangeSelector.RectangularWindow("Budget", "C3", 2, 2),
+            new RangeSelector.RectangularWindow(new SheetName("Budget"), "C3", 2, 2),
             new InspectionSurfaceQuery.GetSheetSchema());
     InspectionStep surface =
         inspect(
@@ -276,22 +277,22 @@ class DefaultGridGrindRequestExecutorReadContextTranslationTest
     InspectionStep formulaHealth =
         inspect(
             "formula-health",
-            new SheetSelector.ByNames(List.of("Budget")),
+            new SheetSelector.ByNames(List.of(new SheetName("Budget"))),
             new InspectionAnalysisQuery.AnalyzeFormulaHealth());
     InspectionStep validationHealth =
         inspect(
             "validation-health",
-            new SheetSelector.ByNames(List.of("Budget")),
+            new SheetSelector.ByNames(List.of(new SheetName("Budget"))),
             new InspectionAnalysisQuery.AnalyzeDataValidationHealth());
     InspectionStep conditionalFormattingHealth =
         inspect(
             "conditional-formatting-health",
-            new SheetSelector.ByNames(List.of("Budget")),
+            new SheetSelector.ByNames(List.of(new SheetName("Budget"))),
             new InspectionAnalysisQuery.AnalyzeConditionalFormattingHealth());
     InspectionStep autofilterHealth =
         inspect(
             "autofilter-health",
-            new SheetSelector.ByNames(List.of("Budget")),
+            new SheetSelector.ByNames(List.of(new SheetName("Budget"))),
             new InspectionAnalysisQuery.AnalyzeAutofilterHealth());
     InspectionStep tableHealth =
         inspect(
@@ -356,13 +357,14 @@ class DefaultGridGrindRequestExecutorReadContextTranslationTest
         sheetNameFor(
             inspect(
                 "formula",
-                new SheetSelector.ByNames(List.of("Budget")),
+                new SheetSelector.ByNames(List.of(new SheetName("Budget"))),
                 new InspectionSurfaceQuery.GetFormulaSurface())));
     assertNull(
         sheetNameFor(
             inspect(
                 "hyperlink-health",
-                new SheetSelector.ByNames(List.of("Budget", "Forecast")),
+                new SheetSelector.ByNames(
+                    List.of(new SheetName("Budget"), new SheetName("Forecast"))),
                 new InspectionAnalysisQuery.AnalyzeHyperlinkHealth())));
 
     assertEquals(
@@ -383,7 +385,7 @@ class DefaultGridGrindRequestExecutorReadContextTranslationTest
                 new dev.erst.gridgrind.core.plan.NamedRangeSelector.AnyOf(
                     List.of(
                         new dev.erst.gridgrind.core.plan.NamedRangeSelector.SheetScope(
-                            "BudgetTotal", "Budget"))),
+                            "BudgetTotal", new SheetName("Budget")))),
                 new InspectionSurfaceQuery.GetNamedRangeSurface()),
             new RuntimeException("x")));
     assertNull(
@@ -412,7 +414,7 @@ class DefaultGridGrindRequestExecutorReadContextTranslationTest
         addressFor(
             inspect(
                 "schema",
-                new RangeSelector.RectangularWindow("Budget", "C3", 2, 2),
+                new RangeSelector.RectangularWindow(new SheetName("Budget"), "C3", 2, 2),
                 new InspectionSurfaceQuery.GetSheetSchema()),
             invalidAddress));
     assertEquals(
