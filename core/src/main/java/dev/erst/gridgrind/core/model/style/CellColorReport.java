@@ -3,6 +3,7 @@ package dev.erst.gridgrind.core.model.style;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import dev.erst.gridgrind.core.vocabulary.ProtocolRgbColorSupport;
 import java.util.Objects;
 import java.util.Optional;
 

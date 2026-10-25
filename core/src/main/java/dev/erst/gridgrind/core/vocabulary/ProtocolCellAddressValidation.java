@@ -6,8 +6,9 @@ import java.util.Optional;
 
 /** Protocol-owned validation helpers for single-cell A1-style addresses. */
 public final class ProtocolCellAddressValidation {
-  private static final int MAX_COLUMN_INDEX = 16_384;
-  private static final int MAX_ROW_INDEX = 1_048_576;
+  private static final int MAX_COLUMN_NUMBER = 16_384;
+  private static final int MAX_ROW_NUMBER = 1_048_576;
+  private static final int MAX_ROW_DIGITS = Integer.toString(MAX_ROW_NUMBER).length();
 
   private ProtocolCellAddressValidation() {}
 
@@ -39,8 +40,12 @@ public final class ProtocolCellAddressValidation {
     }
 
     String columnLabel = normalized.substring(0, splitIndex);
-    int rowNumber = Integer.parseInt(normalized.substring(splitIndex));
-    if (columnNumber(columnLabel) > MAX_COLUMN_INDEX || rowNumber > MAX_ROW_INDEX) {
+    String rowDigits = normalized.substring(splitIndex);
+    if (rowDigits.length() > MAX_ROW_DIGITS) {
+      return Optional.of(Violation.BOUNDS);
+    }
+    int rowNumber = Integer.parseInt(rowDigits);
+    if (columnNumber(columnLabel) > MAX_COLUMN_NUMBER || rowNumber > MAX_ROW_NUMBER) {
       return Optional.of(Violation.BOUNDS);
     }
     return Optional.empty();

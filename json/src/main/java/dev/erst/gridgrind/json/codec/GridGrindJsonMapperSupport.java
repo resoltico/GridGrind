@@ -10,6 +10,7 @@ import dev.erst.gridgrind.core.plan.Selector;
 import dev.erst.gridgrind.core.plan.WorkbookStep;
 import dev.erst.gridgrind.core.problem.InvalidRequestException;
 import dev.erst.gridgrind.core.problem.MessageInvariant;
+import dev.erst.gridgrind.core.vocabulary.WireString;
 import dev.erst.gridgrind.json.intake.WorkbookStepJsonDeserializer;
 import org.jspecify.annotations.Nullable;
 import tools.jackson.core.StreamReadConstraints;
@@ -70,6 +71,8 @@ public final class GridGrindJsonMapperSupport {
         JsonMapper.builder(jsonFactory)
             .addModule(
                 new SimpleModule()
+                    .setDeserializers(new WireStringDeserializers())
+                    .addSerializer(WireString.class, new WireStringSerializer())
                     .addDeserializer(WorkbookStep.class, new WorkbookStepJsonDeserializer())
                     .addSerializer(Selector.class, new SelectorJsonSerializer()))
             .disable(StreamReadFeature.AUTO_CLOSE_SOURCE)

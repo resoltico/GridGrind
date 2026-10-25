@@ -1,4 +1,4 @@
-package dev.erst.gridgrind.core.model.style;
+package dev.erst.gridgrind.core.vocabulary;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;

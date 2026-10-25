@@ -1,6 +1,5 @@
-package dev.erst.gridgrind.core.model.style;
+package dev.erst.gridgrind.core.vocabulary;
 
-import dev.erst.gridgrind.core.vocabulary.ProtocolConstraintValues;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.Optional;

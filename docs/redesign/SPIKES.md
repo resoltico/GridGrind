@@ -448,3 +448,47 @@ core's explicitly allowed temporary dependency, unchanged golden output, complet
 and regenerated `package-inventories/`. Evidence is external in `evidence/wp-20/packages-*.log`,
 `jpms-probe.log` and inventories. Baseline diff is empty; no supplement exists yet. Next: WP-21
 value objects, then WP-22/WP-24 metadata/defaults and WP-23 vocabulary normalization.
+
+## WP-21 validated scalar foundation checkpoint
+
+Added sealed `WireString` and the eight required values: SheetName, CellAddress, RangeRef,
+DefinedName, TableName, RgbHex, StepId and PlanId. They preserve authored spelling/endpoint order;
+RGB retains the existing uppercase canonical form. Validation reuses the existing vocabulary
+rules; RGB rules and their tests moved from style into vocabulary to avoid an upward dependency.
+JSON has one generic constructor-backed scalar deserializer and one serializer, with no Jackson
+annotation on the value records. This checkpoint does not yet retarget model/caller fields or
+close WP-21: stringly inventories and duplicated guards still need to be drained.
+
+Deterministic generated/edge cases exercise 1,049 valid values and 1,335 invalid values across the
+eight types. Each valid value round-trips and its bytes are compared with the independently
+expected primitive string (rather than an expectation read back from the value object). Invalid
+values fail both constructors and codec binding; number/boolean/object/array tokens are rejected.
+Optional omission and collection elements retain their scalar shape. One dynamic-factory PMD
+false positive is narrowly documented: assertions run in each generated callback.
+
+The initial focused run flagged throwing an unwrapped reflected cause; the codec now delegates
+constructor failures to Jackson's instantiation handler, retaining the original domain cause.
+A subsequent run exposed a missing-Optional bug: rejecting from `getNullValue` also rejects
+absence through Jackson's Optional deserializer. The low-level codec now keeps the standard null
+provider; explicit-null request rejection remains in intake, as D6 requires. Test quoting edits
+also failed formatting/compilation and were repaired; all failure logs remain in `evidence/wp-21`.
+Focused property/PMD checks passed (5s).
+
+An independent oversized-row regression then failed with NumberFormatException on the existing
+address validator. It now checks digit length before parsing, returning the existing BOUNDS
+violation and domain message. The red log/XML and repaired focused run (15s) are retained. Bounds
+constant names now correctly describe one-based row/column numbers. No supported valid address
+or wire spelling changed.
+
+Final `./gradlew check --no-parallel` passed (3m23s): 2,787 active tests, zero failures/errors/skips,
+including all 141 unchanged golden cases. Nested Jazzer check passed (21s), including committed
+regression replay. Native core PIT passed (11s), 298/298 selected mutants killed. The actual named-
+module probe passed all 14 requests, catalog, response and all eight scalar values; vocabulary is
+exported but not opened to databind, so the public validating constructors work without private
+reflection access. No snapshots were re-recorded and no runtime dependency was added.
+
+Inventories: blank checks 477 → 479 (new PlanId/StepId constructors before caller migration),
+main Java lines 125,883 → 126,109, test lines 152,970 → 153,173, JSON files 63 → 66. Model/mirror/
+subtype/catalog counts are unchanged. Evidence: `value-inventories/` and `values-*.log` externally.
+Baseline diff is empty; no supplement change. Next: teach scalar metadata/intake consumers about
+WireString, migrate identifiers across model/engine/hosts, and delete the superseded guards.

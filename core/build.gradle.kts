@@ -18,7 +18,7 @@ configure<PitestPluginExtension> {
     targetClasses.set(
         setOf(
             "dev.erst.gridgrind.core.vocabulary.ProtocolDefinedNameValidation*",
-            "dev.erst.gridgrind.core.model.style.ProtocolRgbColorSupport*",
+            "dev.erst.gridgrind.core.vocabulary.ProtocolRgbColorSupport*",
             "dev.erst.gridgrind.core.model.validation.ConditionalFormattingThresholdInput*",
             "dev.erst.gridgrind.core.model.validation.DataValidationRuleInput*",
             "dev.erst.gridgrind.core.catalog.FieldConstraint*",
@@ -36,7 +36,7 @@ configure<PitestPluginExtension> {
             "dev.erst.gridgrind.core.model.validation.ProtocolResidualCoverageTest",
             "dev.erst.gridgrind.core.catalog.FieldConstraintTest",
             "dev.erst.gridgrind.core.catalog.CatalogStepTemplateSupportTest",
-            "dev.erst.gridgrind.core.model.style.ProtocolRgbColorSupportTest",
+            "dev.erst.gridgrind.core.vocabulary.ProtocolRgbColorSupportTest",
             "dev.erst.gridgrind.core.validation.WorkbookStaticMaterializationValidationTest",
             "dev.erst.gridgrind.core.validation.WorkbookStaticRequestContractTest",
         ),
