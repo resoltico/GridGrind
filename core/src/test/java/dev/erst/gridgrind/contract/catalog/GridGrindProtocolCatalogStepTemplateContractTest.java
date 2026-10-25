@@ -68,31 +68,25 @@ class GridGrindProtocolCatalogStepTemplateContractTest {
 
     assertEquals(
         "TYPED",
-        setRange
-            .stepTemplate()
-            .orElseThrow()
-            .template()
+        tree(setRange.stepTemplate().orElseThrow().template())
             .path("action")
             .path("rows")
             .path("type")
             .asText());
     assertTrue(
-        setRange.stepTemplate().orElseThrow().template().path("action").path("rows").has("cells"));
+        tree(setRange.stepTemplate().orElseThrow().template())
+            .path("action")
+            .path("rows")
+            .has("cells"));
     assertEquals(
         "TYPED",
-        appendRow
-            .stepTemplate()
-            .orElseThrow()
-            .template()
+        tree(appendRow.stepTemplate().orElseThrow().template())
             .path("action")
             .path("values")
             .path("type")
             .asText());
     assertTrue(
-        appendRow
-            .stepTemplate()
-            .orElseThrow()
-            .template()
+        tree(appendRow.stepTemplate().orElseThrow().template())
             .path("action")
             .path("values")
             .has("cells"));
@@ -117,7 +111,7 @@ class GridGrindProtocolCatalogStepTemplateContractTest {
                 FormulaEnvironmentInput.empty(),
                 List.of()));
     ArrayNode steps = request.putArray("steps");
-    steps.add(template.template());
+    steps.add(tree(template.template()));
     ByteArrayOutputStream buffer = new ByteArrayOutputStream();
     GridGrindJsonOutput.writeCatalogLookupValue(buffer, request);
     return buffer.toByteArray();
@@ -128,5 +122,9 @@ class GridGrindProtocolCatalogStepTemplateContractTest {
         .filter(entry -> entry.id().equals(id))
         .findFirst()
         .orElseThrow(() -> new IllegalStateException("Catalog is missing type " + id));
+  }
+
+  private static ObjectNode tree(Object value) {
+    return tools.jackson.databind.json.JsonMapper.builder().build().valueToTree(value);
   }
 }

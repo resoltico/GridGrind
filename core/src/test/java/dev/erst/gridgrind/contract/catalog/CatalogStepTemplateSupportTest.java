@@ -17,6 +17,39 @@ import tools.jackson.databind.node.ObjectNode;
  */
 class CatalogStepTemplateSupportTest {
   @Test
+  // These maps are local fixture builders, never shared between threads.
+  @SuppressWarnings("PMD.UseConcurrentHashMap")
+  void templateOwnsAnImmutableCopyOfNestedObjectsAndLists() {
+    java.util.Map<String, Object> action = new java.util.LinkedHashMap<>();
+    java.util.List<String> values = new java.util.ArrayList<>(List.of("authored"));
+    action.put("values", values);
+    java.util.Map<String, Object> source = new java.util.LinkedHashMap<>();
+    source.put("action", action);
+    ProtocolStepTemplate template =
+        new ProtocolStepTemplate("MUTATION", "action", source, List.of());
+    values.set(0, "changed");
+    action.put("extra", true);
+    source.clear();
+    assertEquals(
+        java.util.Map.of("action", java.util.Map.of("values", List.of("authored"))),
+        template.template());
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new ProtocolStepTemplate(
+                "MUTATION",
+                "action",
+                java.util.Map.of("value", new java.util.concurrent.atomic.AtomicInteger(1)),
+                List.of()));
+    assertThrows(UnsupportedOperationException.class, () -> template.template().clear());
+    java.util.Map<?, ?> storedAction = (java.util.Map<?, ?>) template.template().get("action");
+    assertThrows(UnsupportedOperationException.class, storedAction::clear);
+    assertThrows(
+        UnsupportedOperationException.class,
+        () -> ((java.util.List<?>) storedAction.get("values")).clear());
+  }
+
+  @Test
   void templateUtilitiesRemainInternalOnly() throws ReflectiveOperationException {
     assertPrivateConstructor(CatalogStepTemplateSupport.class);
     assertPrivateConstructor(CatalogStepTemplateDefaults.class);
@@ -52,7 +85,7 @@ class CatalogStepTemplateSupportTest {
     Catalog attached = CatalogStepTemplateSupport.attach(richFixtureCatalog());
     TypeEntry action = attached.mutationActionTypes().getFirst();
     ProtocolStepTemplate template = action.stepTemplate().orElseThrow();
-    ObjectNode step = template.template();
+    ObjectNode step = tree(template.template());
     ObjectNode target = (ObjectNode) step.path("target");
     ObjectNode actionBody = (ObjectNode) step.path("action");
 
@@ -115,8 +148,10 @@ class CatalogStepTemplateSupportTest {
   }
 
   @Test
+  // These maps are local fixture builders, never shared between threads.
+  @SuppressWarnings("PMD.UseConcurrentHashMap")
   void differentialStyleTemplateDefaultProducesAnExecutableStylePlaceholder() {
-    ObjectNode style = tools.jackson.databind.node.JsonNodeFactory.instance.objectNode();
+    java.util.Map<String, Object> style = new java.util.LinkedHashMap<>();
     CatalogStepTemplateDefaults.buildTypeSpecificDefaults()
         .get("DifferentialStyleInput")
         .apply(
@@ -125,7 +160,7 @@ class CatalogStepTemplateSupportTest {
             new java.util.HashSet<>(),
             new java.util.ArrayList<>());
 
-    assertTrue(style.path("bold").booleanValue());
+    assertTrue(tree(style).path("bold").booleanValue());
   }
 
   @Test
@@ -147,10 +182,7 @@ class CatalogStepTemplateSupportTest {
 
     assertEquals(
         "A1",
-        setRange
-            .stepTemplate()
-            .orElseThrow()
-            .template()
+        tree(setRange.stepTemplate().orElseThrow().template())
             .path("target")
             .path("range")
             .stringValue());
@@ -165,7 +197,7 @@ class CatalogStepTemplateSupportTest {
             .filter(entry -> "SET_NAMED_RANGE".equals(entry.id()))
             .findFirst()
             .orElseThrow();
-    ObjectNode template = setNamedRange.stepTemplate().orElseThrow().template();
+    ObjectNode template = tree(setNamedRange.stepTemplate().orElseThrow().template());
 
     assertEquals("RevenueRange", template.path("action").path("name").stringValue());
     assertEquals("RevenueRange", template.path("target").path("name").stringValue());
@@ -175,23 +207,26 @@ class CatalogStepTemplateSupportTest {
   void templateChoiceHonorsPlainNestedAndRecursiveUnionSelectionRules() {
     Catalog catalog = richFixtureCatalog();
     ObjectNode preferredNested =
-        (ObjectNode)
+        tree(
             CatalogStepTemplateSupport.nestedGroupTemplate(
-                catalog, "preferenceGroup", new java.util.HashSet<>(), new java.util.ArrayList<>());
+                catalog,
+                "preferenceGroup",
+                new java.util.HashSet<>(),
+                new java.util.ArrayList<>()));
     ObjectNode recursiveFallback =
-        (ObjectNode)
+        tree(
             CatalogStepTemplateSupport.nestedGroupTemplate(
                 catalog,
                 "preferenceGroup",
                 new java.util.HashSet<>(List.of("CUSTOM_NESTED", "INLINE")),
-                new java.util.ArrayList<>());
+                new java.util.ArrayList<>()));
     ObjectNode plain =
-        (ObjectNode)
+        tree(
             CatalogStepTemplateSupport.typeTemplateById(
-                catalog, "PLAIN_LABEL", new java.util.HashSet<>(), new java.util.ArrayList<>());
+                catalog, "PLAIN_LABEL", new java.util.HashSet<>(), new java.util.ArrayList<>()));
     TypeEntry action = CatalogStepTemplateSupport.attach(catalog).mutationActionTypes().getFirst();
     ObjectNode actionBody =
-        (ObjectNode) action.stepTemplate().orElseThrow().template().path("action");
+        (ObjectNode) tree(action.stepTemplate().orElseThrow().template()).path("action");
 
     assertEquals("INLINE", preferredNested.path("kind").stringValue());
     assertEquals("INLINE", recursiveFallback.path("kind").stringValue());
@@ -200,9 +235,9 @@ class CatalogStepTemplateSupportTest {
         "UNION_AVAILABLE", actionBody.path("nestedUnionPreferred").path("kind").stringValue());
     java.util.List<String> notes = new java.util.ArrayList<>();
     ObjectNode recursive =
-        (ObjectNode)
+        tree(
             CatalogStepTemplateSupport.typeTemplateById(
-                catalog, "RECURSIVE", new java.util.HashSet<>(), notes);
+                catalog, "RECURSIVE", new java.util.HashSet<>(), notes));
     assertEquals("RECURSIVE", recursive.path("self").path("kind").stringValue());
     assertEquals(
         List.of(
@@ -218,8 +253,10 @@ class CatalogStepTemplateSupportTest {
     assertTrue(singleTargetAction.stepTemplate().orElseThrow().notes().isEmpty());
   }
 
+  // These maps are local fixture builders, never shared between threads.
+  @SuppressWarnings("PMD.UseConcurrentHashMap")
   private static void assertStopBarrierTemplate(String typeId) {
-    ObjectNode rule = tools.jackson.databind.node.JsonNodeFactory.instance.objectNode();
+    java.util.Map<String, Object> rule = new java.util.LinkedHashMap<>();
     CatalogStepTemplateDefaults.buildTypeSpecificDefaults()
         .get(typeId)
         .apply(
@@ -228,7 +265,7 @@ class CatalogStepTemplateSupportTest {
             new java.util.HashSet<>(),
             new java.util.ArrayList<>());
 
-    assertTrue(rule.path("stopIfTrue").booleanValue());
+    assertTrue(tree(rule).path("stopIfTrue").booleanValue());
   }
 
   private static Object assertPrivateConstructor(Class<?> type)
@@ -256,7 +293,7 @@ class CatalogStepTemplateSupportTest {
 
     assertEquals(
         "WORKBOOK_CURRENT",
-        targetRuleTemplate.template().path("target").path("type").stringValue());
+        tree(targetRuleTemplate.template()).path("target").path("type").stringValue());
     assertTrue(targetRuleTemplate.notes().contains("Target rule: Matches the nested target."));
 
     assertEquals(
@@ -311,7 +348,7 @@ class CatalogStepTemplateSupportTest {
 
     assertEquals(
         "WORKBOOK_CURRENT",
-        workbookTargetTemplate.template().path("target").path("type").stringValue());
+        tree(workbookTargetTemplate.template()).path("target").path("type").stringValue());
   }
 
   private static Catalog richFixtureCatalog() {
@@ -743,5 +780,9 @@ class CatalogStepTemplateSupportTest {
 
   private static FieldEntry field(String name, FieldShape shape) {
     return new FieldEntry(name, FieldRequirement.REQUIRED, shape, List.of());
+  }
+
+  private static ObjectNode tree(Object value) {
+    return tools.jackson.databind.json.JsonMapper.builder().build().valueToTree(value);
   }
 }

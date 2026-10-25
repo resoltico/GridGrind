@@ -4,20 +4,16 @@ import dev.erst.gridgrind.contract.step.AssertionStep;
 import dev.erst.gridgrind.contract.step.InspectionStep;
 import dev.erst.gridgrind.contract.step.MutationStep;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
-import tools.jackson.databind.JsonNode;
-import tools.jackson.databind.node.ArrayNode;
-import tools.jackson.databind.node.JsonNodeFactory;
-import tools.jackson.databind.node.ObjectNode;
-import tools.jackson.databind.node.StringNode;
 
 /** Synthesizes executable step templates from the published protocol catalog metadata. */
 final class CatalogStepTemplateSupport {
-  private static final JsonNodeFactory JSON = JsonNodeFactory.instance;
 
   private CatalogStepTemplateSupport() {}
 
@@ -60,26 +56,30 @@ final class CatalogStepTemplateSupport {
         .toList();
   }
 
+  // Ordered builders are confined to this invocation and copied before publication.
+  @SuppressWarnings("PMD.UseConcurrentHashMap")
   private static ProtocolStepTemplate buildTemplate(
       Catalog catalog, TypeEntry entry, String stepKind, String bodyField) {
     List<String> notes = new ArrayList<>();
-    ObjectNode step = JSON.objectNode();
+    Map<String, Object> step = new LinkedHashMap<>();
     step.put("stepId", "step-" + entry.id().toLowerCase(java.util.Locale.ROOT).replace('_', '-'));
-    step.set(
-        bodyField,
-        typeTemplate(catalog, entry, TypePlacement.topLevel(), new LinkedHashSet<>(), notes));
-    step.set("target", targetTemplate(catalog, entry, notes));
+    Map<String, Object> body =
+        typeTemplate(catalog, entry, TypePlacement.topLevel(), new LinkedHashSet<>(), notes);
+    Map<String, Object> target = targetTemplate(catalog, entry, notes);
+    step.put(bodyField, body);
+    step.put("target", target);
     if ("SET_NAMED_RANGE".equals(entry.id())) {
-      ((ObjectNode) step.get(bodyField)).put("name", "RevenueRange");
-      ((ObjectNode) step.get("target")).put("name", "RevenueRange");
+      body.put("name", "RevenueRange");
+      target.put("name", "RevenueRange");
     }
     if ("SET_RANGE".equals(entry.id())) {
-      ((ObjectNode) step.get("target")).put("range", "A1");
+      target.put("range", "A1");
     }
     return new ProtocolStepTemplate(stepKind, bodyField, step, List.copyOf(notes));
   }
 
-  private static JsonNode targetTemplate(Catalog catalog, TypeEntry entry, List<String> notes) {
+  private static Map<String, Object> targetTemplate(
+      Catalog catalog, TypeEntry entry, List<String> notes) {
     Objects.requireNonNull(catalog, "catalog must not be null");
     Objects.requireNonNull(entry, "entry must not be null");
     Objects.requireNonNull(notes, "notes must not be null");
@@ -128,7 +128,9 @@ final class CatalogStepTemplateSupport {
         notes);
   }
 
-  private static JsonNode typeTemplate(
+  // Ordered builders are confined to this invocation and copied before publication.
+  @SuppressWarnings("PMD.UseConcurrentHashMap")
+  private static Map<String, Object> typeTemplate(
       Catalog catalog,
       TypeEntry entry,
       TypePlacement typePlacement,
@@ -140,13 +142,13 @@ final class CatalogStepTemplateSupport {
     Objects.requireNonNull(recursionGuard, "recursionGuard must not be null");
     Objects.requireNonNull(notes, "notes must not be null");
     if (recursionGuard.add(entry.id())) {
-      ObjectNode object = JSON.objectNode();
+      Map<String, Object> object = new LinkedHashMap<>();
       typePlacement.applyDiscriminator(object, entry.id());
       for (FieldEntry field : entry.fields()) {
         if (field.requirement() != FieldRequirement.REQUIRED) {
           continue;
         }
-        object.set(field.name(), fieldValue(catalog, field, recursionGuard, notes));
+        object.put(field.name(), fieldValue(catalog, field, recursionGuard, notes));
       }
       applyTypeSpecificDefaults(catalog, entry.id(), object, recursionGuard, notes);
       recursionGuard.remove(entry.id());
@@ -159,12 +161,12 @@ final class CatalogStepTemplateSupport {
     return recursivePlaceholder(entry, typePlacement);
   }
 
-  private static JsonNode fieldValue(
+  private static Object fieldValue(
       Catalog catalog, FieldEntry field, Set<String> recursionGuard, List<String> notes) {
     return switch (field.shape()) {
       case FieldShape.Scalar scalar -> scalarValue(field, scalar.scalarType());
       case FieldShape.ListShape listShape -> {
-        ArrayNode array = JSON.arrayNode();
+        List<Object> array = new ArrayList<>();
         array.add(listElementValue(catalog, field, listShape, recursionGuard, notes));
         yield array;
       }
@@ -172,7 +174,7 @@ final class CatalogStepTemplateSupport {
     };
   }
 
-  private static JsonNode listElementValue(
+  private static Object listElementValue(
       Catalog catalog,
       FieldEntry field,
       FieldShape.ListShape listShape,
@@ -191,7 +193,7 @@ final class CatalogStepTemplateSupport {
     return shapeValue(catalog, field.name(), listShape.elementShape(), recursionGuard, notes);
   }
 
-  private static JsonNode shapeValue(
+  private static Object shapeValue(
       Catalog catalog,
       String fieldName,
       FieldShape shape,
@@ -203,7 +205,7 @@ final class CatalogStepTemplateSupport {
               new FieldEntry(fieldName, FieldRequirement.REQUIRED, shape, List.of()),
               scalar.scalarType());
       case FieldShape.ListShape listShape -> {
-        ArrayNode array = JSON.arrayNode();
+        List<Object> array = new ArrayList<>();
         array.add(shapeValue(catalog, fieldName, listShape.elementShape(), recursionGuard, notes));
         yield array;
       }
@@ -222,12 +224,12 @@ final class CatalogStepTemplateSupport {
     };
   }
 
-  private static JsonNode topLevelTemplate(
+  private static Map<String, Object> topLevelTemplate(
       Catalog catalog, TypeEntry entry, Set<String> recursionGuard, List<String> notes) {
     return typeTemplate(catalog, entry, TypePlacement.topLevel(), recursionGuard, notes);
   }
 
-  static JsonNode nestedGroupTemplate(
+  static Map<String, Object> nestedGroupTemplate(
       Catalog catalog, String groupName, Set<String> recursionGuard, List<String> notes) {
     NestedTypeGroup group = nestedGroup(catalog, groupName);
     return typeTemplate(
@@ -238,7 +240,7 @@ final class CatalogStepTemplateSupport {
         notes);
   }
 
-  private static JsonNode nestedUnionTemplate(
+  private static Map<String, Object> nestedUnionTemplate(
       Catalog catalog, List<String> groupNames, Set<String> recursionGuard, List<String> notes) {
     for (String groupName : groupNames) {
       NestedTypeGroup group = nestedGroup(catalog, groupName);
@@ -264,7 +266,7 @@ final class CatalogStepTemplateSupport {
         notes);
   }
 
-  private static JsonNode plainGroupTemplate(
+  private static Map<String, Object> plainGroupTemplate(
       Catalog catalog, String groupName, Set<String> recursionGuard, List<String> notes) {
     return typeTemplate(
         catalog,
@@ -274,16 +276,14 @@ final class CatalogStepTemplateSupport {
         notes);
   }
 
-  private static JsonNode scalarValue(FieldEntry field, ScalarType scalarType) {
+  private static Object scalarValue(FieldEntry field, ScalarType scalarType) {
     if (!field.enumValues().isEmpty()) {
-      return StringNode.valueOf(field.enumValues().getFirst());
+      return field.enumValues().getFirst();
     }
     return switch (scalarType) {
-      case STRING ->
-          StringNode.valueOf(CatalogStepTemplateDefaults.stringPlaceholder(field.name()));
-      case NUMBER -> JSON.numberNode(CatalogStepTemplateDefaults.numberPlaceholder(field.name()));
-      case BOOLEAN ->
-          JSON.booleanNode(CatalogStepTemplateDefaults.booleanPlaceholder(field.name()));
+      case STRING -> CatalogStepTemplateDefaults.stringPlaceholder(field.name());
+      case NUMBER -> CatalogStepTemplateDefaults.numberPlaceholder(field.name());
+      case BOOLEAN -> CatalogStepTemplateDefaults.booleanPlaceholder(field.name());
     };
   }
 
@@ -370,8 +370,11 @@ final class CatalogStepTemplateSupport {
     return List.copyOf(entries);
   }
 
-  private static JsonNode recursivePlaceholder(TypeEntry entry, TypePlacement typePlacement) {
-    ObjectNode placeholder = JSON.objectNode();
+  // Ordered builders are confined to this invocation and copied before publication.
+  @SuppressWarnings("PMD.UseConcurrentHashMap")
+  private static Map<String, Object> recursivePlaceholder(
+      TypeEntry entry, TypePlacement typePlacement) {
+    Map<String, Object> placeholder = new LinkedHashMap<>();
     typePlacement.applyDiscriminator(placeholder, entry.id());
     return placeholder;
   }
@@ -379,7 +382,7 @@ final class CatalogStepTemplateSupport {
   private static void applyTypeSpecificDefaults(
       Catalog catalog,
       String typeId,
-      ObjectNode object,
+      Map<String, Object> object,
       Set<String> recursionGuard,
       List<String> notes) {
     Objects.requireNonNull(catalog, "catalog must not be null");
@@ -391,7 +394,7 @@ final class CatalogStepTemplateSupport {
         catalog, typeId, object, recursionGuard, notes);
   }
 
-  static JsonNode typeTemplateById(
+  static Map<String, Object> typeTemplateById(
       Catalog catalog, String typeId, Set<String> recursionGuard, List<String> notes) {
     return typeTemplate(
         catalog,
@@ -419,7 +422,7 @@ final class CatalogStepTemplateSupport {
       return new TypePlacement(Optional.empty());
     }
 
-    void applyDiscriminator(ObjectNode object, String typeId) {
+    void applyDiscriminator(Map<String, Object> object, String typeId) {
       Objects.requireNonNull(object, "object must not be null");
       Objects.requireNonNull(typeId, "typeId must not be null");
       discriminatorField.ifPresent(field -> object.put(field, typeId));

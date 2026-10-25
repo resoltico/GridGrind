@@ -654,10 +654,7 @@ class CatalogLookupSupportCoverageTest {
     return new FieldShape.Scalar(ScalarType.STRING);
   }
 
-  private static tools.jackson.databind.node.ObjectNode objectTemplate(String typeId) {
-    tools.jackson.databind.node.ObjectNode node =
-        tools.jackson.databind.node.JsonNodeFactory.instance.objectNode();
-    node.put("type", typeId);
-    return node;
+  private static java.util.Map<String, Object> objectTemplate(String typeId) {
+    return java.util.Map.of("type", typeId);
   }
 }

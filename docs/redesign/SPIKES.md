@@ -299,3 +299,19 @@ Input/report/model/converter/union/catalog counts remain unchanged (81/96/51 sna
 13 definitions/4,576 converter lines/99 subtype files/2,849 descriptor lines).
 `git diff main -- AGENTS.md` remains empty. Next: separate pure intake/problem data from JSON
 parse state and remove databind from core before completing WP-20.
+
+### WP-20 catalog template dependency removal
+
+Catalog step templates now contain deeply immutable JDK maps/lists/scalars instead of Jackson
+nodes. JSON conversion belongs to the output codec; CLI scaffold rendering requests a mutable
+JSON copy there. Existing deterministic placeholder, executable round-trip and doctor tests are
+preserved. A new regression changes nested source objects/lists after construction and attempts
+mutation through published accessors, and rejects a mutable numeric object.
+
+Focused catalog/doctor tests passed (26s). The first full check failed solely on eight PMD
+`UseConcurrentHashMap` findings on local ordered builders. Narrow method suppressions document
+thread confinement and immutable publication, matching existing catalog practice. Focused PMD
+and template checks passed (14s); repaired full `./gradlew check --no-parallel` passed (2m44s),
+2,766 active tests with zero failures/errors/skips, including unchanged 141 golden cases.
+Evidence: external `evidence/wp-20/templates-*.log`. No golden snapshot was re-recorded.
+Main Java lines 125,570 → 125,610; all model/converter/union counts remain unchanged.

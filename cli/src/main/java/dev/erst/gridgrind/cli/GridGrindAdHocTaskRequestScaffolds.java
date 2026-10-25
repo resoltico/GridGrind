@@ -80,7 +80,7 @@ final class GridGrindAdHocTaskRequestScaffolds {
 
   private static ObjectNode renderedStep(
       ProtocolStepTemplate template, int phaseIndex, int capabilityIndex) {
-    ObjectNode step = template.template().deepCopy();
+    ObjectNode step = GridGrindJsonOutput.stepTemplateTree(template);
     String stepId = "phase-" + phaseIndex + "-step-" + capabilityIndex;
     step.put("stepId", stepId);
     return step;

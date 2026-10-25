@@ -2,6 +2,7 @@ package dev.erst.gridgrind.contract.json;
 
 import dev.erst.gridgrind.contract.catalog.Catalog;
 import dev.erst.gridgrind.contract.catalog.CatalogNote;
+import dev.erst.gridgrind.contract.catalog.ProtocolStepTemplate;
 import dev.erst.gridgrind.contract.catalog.TypeEntry;
 import dev.erst.gridgrind.contract.dto.GridGrindProtocolVersion;
 import dev.erst.gridgrind.contract.dto.RequestDoctorReport;
@@ -21,6 +22,12 @@ public final class GridGrindJsonOutput {
   public static ObjectNode requestTree(WorkbookPlan request) {
     Objects.requireNonNull(request, "request must not be null");
     return GridGrindJsonMapperSupport.WIRE_JSON_MAPPER.valueToTree(request);
+  }
+
+  /** Renders a catalog step template as an independently mutable JSON object. */
+  public static ObjectNode stepTemplateTree(ProtocolStepTemplate template) {
+    Objects.requireNonNull(template, "template must not be null");
+    return GridGrindJsonMapperSupport.WIRE_JSON_MAPPER.valueToTree(template.template());
   }
 
   /** Serializes a request to bytes. */

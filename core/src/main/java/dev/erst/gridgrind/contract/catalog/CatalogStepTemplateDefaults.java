@@ -2,9 +2,6 @@ package dev.erst.gridgrind.contract.catalog;
 
 import java.util.Map;
 import java.util.Set;
-import tools.jackson.databind.node.ArrayNode;
-import tools.jackson.databind.node.JsonNodeFactory;
-import tools.jackson.databind.node.ObjectNode;
 
 /**
  * Owns preference tables and placeholder defaults used while synthesizing catalog step templates.
@@ -90,7 +87,6 @@ final class CatalogStepTemplateDefaults {
       Set.of("visible", "locked", "hidden");
   private static final Map<String, TypeDefaultApplier> TYPE_SPECIFIC_DEFAULTS =
       buildTypeSpecificDefaults();
-  private static final JsonNodeFactory JSON = JsonNodeFactory.instance;
 
   private CatalogStepTemplateDefaults() {}
 
@@ -136,7 +132,7 @@ final class CatalogStepTemplateDefaults {
   static void applyTypeSpecificDefaults(
       Catalog catalog,
       String typeId,
-      ObjectNode object,
+      Map<String, Object> object,
       Set<String> recursionGuard,
       java.util.List<String> notes) {
     TypeDefaultApplier defaultApplier = TYPE_SPECIFIC_DEFAULTS.get(typeId);
@@ -151,7 +147,7 @@ final class CatalogStepTemplateDefaults {
     /** Mutates the placeholder object with the rule's extra defaults. */
     void apply(
         Catalog catalog,
-        ObjectNode object,
+        Map<String, Object> object,
         Set<String> recursionGuard,
         java.util.List<String> notes);
   }
@@ -164,7 +160,7 @@ final class CatalogStepTemplateDefaults {
         Map.entry(
             "ChartSeriesInput",
             (catalog, object, recursionGuard, notes) ->
-                object.set(
+                object.put(
                     "title",
                     CatalogStepTemplateSupport.nestedGroupTemplate(
                         catalog, "chartTitleInputTypes", recursionGuard, notes))),
@@ -212,7 +208,7 @@ final class CatalogStepTemplateDefaults {
         Map.entry(
             "NOT",
             (catalog, object, recursionGuard, notes) ->
-                object.set(
+                object.put(
                     "assertion",
                     CatalogStepTemplateSupport.typeTemplateById(
                         catalog, "EXPECT_ANALYSIS_MAX_SEVERITY", recursionGuard, notes))));
@@ -220,10 +216,10 @@ final class CatalogStepTemplateDefaults {
 
   private static void applyAnalysisQueryDefault(
       Catalog catalog,
-      ObjectNode object,
+      Map<String, Object> object,
       Set<String> recursionGuard,
       java.util.List<String> notes) {
-    object.set(
+    object.put(
         "query",
         CatalogStepTemplateSupport.typeTemplateById(
             catalog, "ANALYZE_WORKBOOK_FINDINGS", recursionGuard, notes));
@@ -231,13 +227,13 @@ final class CatalogStepTemplateDefaults {
 
   private static void applyAssertionCollectionDefault(
       Catalog catalog,
-      ObjectNode object,
+      Map<String, Object> object,
       Set<String> recursionGuard,
       java.util.List<String> notes) {
-    ArrayNode assertions = JSON.arrayNode();
+    java.util.List<Object> assertions = new java.util.ArrayList<>();
     assertions.add(
         CatalogStepTemplateSupport.typeTemplateById(
             catalog, "EXPECT_ANALYSIS_MAX_SEVERITY", recursionGuard, notes));
-    object.set("assertions", assertions);
+    object.put("assertions", assertions);
   }
 }
