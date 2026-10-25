@@ -172,7 +172,7 @@ Currently not exposed:
 | Conditional-format authoring for formula, cell-value, color-scale, data-bar, icon-set, and top-10 families | Documented guide/API support | `COMPLETE` | `contract/dto/ConditionalFormattingRuleInput.java`, `engine/excel/ExcelConditionalFormattingController.java`, `engine/src/test/java/dev/erst/gridgrind/excel/ExcelConditionalFormattingControllerTest.java`, `engine/src/test/java/dev/erst/gridgrind/engine/runtime/ConditionalFormattingInputTest.java` | GridGrind exposes supported conditional-format families honestly and rejects unsupported authored semantics instead of pretending to preserve them. |
 | Conditional-format factual reads and health analysis for loaded rules | POI can load richer rule families | `COMPLETE` | `contract/dto/ConditionalFormattingRuleReport.java`, `contract/query/InspectionQuery.java`, `engine/excel/ExcelConditionalFormattingController.java`, `engine/src/test/java/dev/erst/gridgrind/excel/WorkbookAnalyzerTest.java` | Reads and health analysis report formula, cell-value, color-scale, data-bar, icon-set, top-10, and unsupported-rule structures already present in a workbook. Healthy multi-formula rules stay distinct from actually broken formulas, so no-finding branches remain truthful. |
 | Sheet schema inference | GridGrind-derived read over cell snapshots | `COMPLETE` | `contract/query/InspectionQuery.java`, `engine/excel/WorkbookAnalyzer.java`, `engine/src/test/java/dev/erst/gridgrind/engine/runtime/DefaultGridGrindRequestExecutorFailureAndPersistenceTest.java`, `examples/introspection-analysis-request.json` | `GET_SHEET_SCHEMA` infers header names and dominant types from a rectangular window. Formula cells contribute their evaluated result type, not `FORMULA`, to dominant-type reporting. |
-| Aggregate workbook findings | GridGrind-derived aggregate over all shipped health families | `COMPLETE` | `contract/query/InspectionQuery.java`, `engine/excel/WorkbookAnalyzer.java`, `contract/src/main/java/dev/erst/gridgrind/contract/catalog/GridGrindProtocolCatalog.java`, `examples/workbook-health-request.json` | `ANALYZE_WORKBOOK_FINDINGS` runs formula, data-validation, conditional-formatting, autofilter, table, pivot-table, hyperlink, and named-range health across the workbook and returns one flat aggregated finding list. |
+| Aggregate workbook findings | GridGrind-derived aggregate over all shipped health families | `COMPLETE` | `contract/query/InspectionQuery.java`, `engine/excel/WorkbookAnalyzer.java`, `core/src/main/java/dev/erst/gridgrind/contract/catalog/GridGrindProtocolCatalog.java`, `examples/workbook-health-request.json` | `ANALYZE_WORKBOOK_FINDINGS` runs formula, data-validation, conditional-formatting, autofilter, table, pivot-table, hyperlink, and named-range health across the workbook and returns one flat aggregated finding list. |
 
 ### Large-File Modes and Package Security
 
@@ -198,7 +198,7 @@ Currently not exposed:
   in the audited REL_5_5_1 tag; generated OOXML schema classes alone are treated as
   implementation scaffolding, not an end-user capability surface.
 - Evidence paths in the matrix use module-relative shorthand for production sources. For example,
-  `contract/dto/...` means `contract/src/main/java/dev/erst/gridgrind/...`, `engine/excel/...`
+  `contract/dto/...` means `core/src/main/java/dev/erst/gridgrind/...`, `engine/excel/...`
   means `engine/src/main/java/dev/erst/gridgrind/...`, and explicit test paths are already written
   as repo-relative test-source locations.
 

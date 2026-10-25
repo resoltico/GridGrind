@@ -11,7 +11,7 @@ plugins {
     id("gridgrind.mutation-conventions")
 }
 
-description = "Canonical GridGrind contract model, metadata registry, and JSON codecs"
+description = "Canonical workbook model, vocabulary, authoring and wire codecs"
 
 configure<PitestPluginExtension> {
     targetClasses.set(
@@ -45,7 +45,7 @@ configure<PitestPluginExtension> {
 }
 
 val downstreamCoverageProjects =
-    listOf(project(":engine"), project(":authoring-java"), project(":cli"))
+    listOf(project(":engine"), project(":cli"))
 
 fun downstreamCoverageTaskPaths(): List<String> =
     downstreamCoverageProjects.flatMap { downstreamProject ->
@@ -73,7 +73,6 @@ fun localCoverageExecutionData() =
     }
 
 dependencies {
-    api(project(":excel-foundation"))
     // Jackson 3.x still owns annotations via the Jackson 2.x coordinates and package namespace.
     api(libs.jackson.annotations)
     implementation(libs.jackson.databind)

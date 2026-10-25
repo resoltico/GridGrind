@@ -79,9 +79,8 @@ description = "CLI transport adapter for the GridGrind protocol"
 
 
 dependencies {
-    implementation(project(":contract"))
+    implementation(project(":core"))
     implementation(project(":engine"))
-    implementation(project(":excel-foundation"))
     implementation(libs.jackson.databind)
     testImplementation(libs.junit.jupiter)
     testImplementation(libs.poi.ooxml)

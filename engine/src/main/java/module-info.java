@@ -1,6 +1,5 @@
 module dev.erst.gridgrind.engine {
-  requires transitive dev.erst.gridgrind.contract;
-  requires dev.erst.gridgrind.excel.foundation;
+  requires transitive dev.erst.gridgrind.core;
   requires java.desktop;
   requires java.xml;
   requires java.xml.crypto;

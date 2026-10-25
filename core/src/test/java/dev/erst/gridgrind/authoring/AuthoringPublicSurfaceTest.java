@@ -2,7 +2,6 @@ package dev.erst.gridgrind.authoring;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.lang.module.ModuleDescriptor;
 import java.lang.module.ModuleFinder;
@@ -38,19 +37,19 @@ class AuthoringPublicSurfaceTest {
           "dev.erst.gridgrind.contract.source.TextSourceInput");
 
   @Test
-  void compiledAuthoringModuleNoLongerRequiresEngineTransitively() throws Exception {
+  void coreAuthoringDoesNotRequireEngineOrPoi() throws Exception {
     Path compiledOutput =
         Path.of(GridGrindPlan.class.getProtectionDomain().getCodeSource().getLocation().toURI());
     ModuleDescriptor descriptor =
         ModuleFinder.of(compiledOutput)
-            .find("dev.erst.gridgrind.authoring")
-            .orElseThrow(() -> new AssertionError("compiled authoring module descriptor not found"))
+            .find("dev.erst.gridgrind.core")
+            .orElseThrow(() -> new AssertionError("compiled core module descriptor not found"))
             .descriptor();
     assertNotNull(descriptor);
     List<String> requiredModules =
         descriptor.requires().stream().map(ModuleDescriptor.Requires::name).toList();
 
-    assertTrue(requiredModules.contains("dev.erst.gridgrind.contract"));
+    assertFalse(requiredModules.stream().anyMatch(name -> name.startsWith("org.apache.poi")));
     assertFalse(requiredModules.contains("dev.erst.gridgrind.engine"));
   }
 

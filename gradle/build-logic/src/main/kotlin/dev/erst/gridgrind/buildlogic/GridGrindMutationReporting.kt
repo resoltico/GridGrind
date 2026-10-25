@@ -9,6 +9,6 @@ internal fun Project.registerGridGrindMutationReport(): TaskProvider<Task> =
     tasks.register("mutationReport") { reportTask ->
         reportTask.group = "verification"
         reportTask.description = "Generates advisory mutation reports for the model and engine."
-        reportTask.dependsOn(":contract:pitest")
+        reportTask.dependsOn(":core:pitest")
         reportTask.dependsOn(":engine:pitest")
     }

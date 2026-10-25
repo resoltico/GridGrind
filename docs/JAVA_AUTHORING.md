@@ -25,10 +25,9 @@ execution engine and does not bypass request validation, execution-mode rules, o
 checks. It authors the canonical plan; in-process execution is owned by the engine API and requires
 a separate host-owned `GridGrindExecutionGrant`.
 
-Within the repository's JPMS layout, `dev.erst.gridgrind.authoring` requires transitive
-`dev.erst.gridgrind.contract`. Applications that execute plans additionally depend on
-`dev.erst.gridgrind.engine`; applications that only emit plan JSON do not inherit that runtime
-graph. The `architecture-tests` project contains verification rules; runtime and parity tests live in `engine`.
+The authoring API and canonical model belong to `dev.erst.gridgrind.core`. Applications that
+execute plans additionally depend on `dev.erst.gridgrind.engine`; applications that only emit
+plan JSON do not inherit the execution runtime. Architecture tests protect the public boundary.
 
 ## Authoring Types
 
@@ -67,7 +66,7 @@ Unnamed authored steps receive generated ids such as `mutation-001`, `inspection
 
 The checked-in example under
 [../examples/java-authoring-workflow.java](../examples/java-authoring-workflow.java) is compiled
-and executed by `:authoring-java:test`. A shortened excerpt:
+and executed by `:core:test`. A shortened excerpt:
 
 ```java
 GridGrindPlan plan =

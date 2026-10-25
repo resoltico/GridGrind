@@ -1,7 +1,6 @@
 module dev.erst.gridgrind.cli {
-  requires dev.erst.gridgrind.contract;
+  requires dev.erst.gridgrind.core;
   requires dev.erst.gridgrind.engine;
-  requires dev.erst.gridgrind.excel.foundation;
   requires static org.jspecify;
   requires tools.jackson.databind;
 

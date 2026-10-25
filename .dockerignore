@@ -10,11 +10,9 @@
 !gradle/
 
 # Production modules needed for :cli:shadowJar.
-!authoring-java/
 !cli/
-!contract/
+!core/
 !engine/
-!excel-foundation/
 !architecture-tests/
 
 # Asset-backed built-in recipes are copied into the CLI JAR during processResources.

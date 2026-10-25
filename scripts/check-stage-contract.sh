@@ -29,7 +29,6 @@ readonly check_stage5_script_paths=(
     scripts/test-check-stage-contract.sh
     scripts/test-cli-distribution-surface.sh
     scripts/test-cli-shadow-jar-support.sh
-    scripts/test-contract-module-split.sh
     scripts/test-documentation-contract.sh
     scripts/test-explicit-import-gate.sh
     scripts/test-jazzer-public-surface.sh

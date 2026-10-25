@@ -32,7 +32,7 @@ jobs:
         with:
           name: mutation-reports
           path: |
-            contract/build/reports/pitest
+            core/build/reports/pitest
             engine/build/reports/pitest
           if-no-files-found: warn
           retention-days: 30

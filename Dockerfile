@@ -9,11 +9,9 @@ WORKDIR /workspace
 COPY gradlew gradle.properties settings.gradle.kts build.gradle.kts ./
 COPY gradle ./gradle
 COPY LICENSE NOTICE PATENTS.md LICENSE-APACHE-2.0 LICENSE-BSD-2-CLAUSE LICENSE-BSD-3-CLAUSE ./
-COPY authoring-java ./authoring-java
 COPY cli ./cli
-COPY contract ./contract
+COPY core ./core
 COPY engine ./engine
-COPY excel-foundation ./excel-foundation
 COPY architecture-tests ./architecture-tests
 COPY examples ./examples
 

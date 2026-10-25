@@ -122,7 +122,7 @@ Print it directly with `gridgrind --print-recipe-catalog --response recipes.json
 ## Java Authoring Example
 
 The Java-first example lives at [../examples/java-authoring-workflow.java](../examples/java-authoring-workflow.java).
-It is compiled and executed by `:authoring-java:test`, not merely syntax-checked.
+It is compiled and executed by `:core:test`, not merely syntax-checked.
 
 If you want to run that example against the repository checkout directly, pass the `examples/`
 directory as the workspace root so the example can read the committed
@@ -143,7 +143,7 @@ The authoritative verification loop for the shipped examples is:
 ```bash
 ./gradlew :cli:test --tests dev.erst.gridgrind.cli.discovery.ExampleRequestFixturesTest
 ./gradlew :engine:test --tests dev.erst.gridgrind.engine.runtime.ExampleExecutionFixturesTest
-./gradlew :authoring-java:test --tests dev.erst.gridgrind.authoring.GridGrindPlanTest
+./gradlew :core:test --tests dev.erst.gridgrind.authoring.GridGrindPlanTest
 ./scripts/verify-cli-discovery-execution.sh ./cli/build/libs/gridgrind.jar
 ```
 

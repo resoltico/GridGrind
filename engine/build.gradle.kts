@@ -31,7 +31,7 @@ configure<PitestPluginExtension> {
 }
 
 tasks.named("pitest") {
-    mustRunAfter(":contract:pitest")
+    mustRunAfter(":core:pitest")
 }
 
 // Engine behavior is exercised through both runtime adapters; coverage evidence must include both.
@@ -63,8 +63,7 @@ fun localCoverageExecutionData() =
     }
 
 dependencies {
-    api(project(":contract"))
-    api(project(":excel-foundation"))
+    api(project(":core"))
     implementation(libs.jakarta.activation)
     implementation(libs.jakarta.xml.bind)
     implementation(libs.poi.ooxml)

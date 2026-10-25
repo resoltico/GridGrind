@@ -315,7 +315,7 @@ Structured binary-harness replay uses GridGrind's pure-Java scalar replay cursor
 Jazzer's native replay bootstrap path, so replay remains stable in a fresh JVM.
 
 `protocol-request` and `protocol-workflow` are stable Jazzer harness names for the canonical JSON
-request surface. They are not module names; the live product runtime split is `contract` plus
+request surface. They are not module names; the live product runtime split is `core` plus
 `engine`, while `architecture-tests` contains verification rules.
 Committed `protocol-workflow` binary seeds are opaque generator inputs, not human-authored semantic
 scenarios. They therefore use neutral case identifiers such as `workflow_case_01.bin`, while the

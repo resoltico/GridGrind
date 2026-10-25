@@ -19,15 +19,13 @@ readonly repo_hygiene_structural_root_entries=(
     NOTICE
     PATENTS.md
     README.md
-    authoring-java
     build.gradle.kts
     check.sh
     cli
-    contract
+    core
     docs
     engine
     examples
-    excel-foundation
     architecture-tests
     gradle
     gradle.properties

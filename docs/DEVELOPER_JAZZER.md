@@ -280,7 +280,7 @@ Tree rules:
 - `jazzer/src/test/java` contains deterministic tests for the Jazzer support and reporting layer.
 - `protocol-request` and `protocol-workflow` remain harness names for the canonical JSON request
   surface; they are not references to a live top-level `protocol` Gradle module. The product
-  runtime split is `contract` plus `engine`, while architecture rules live in
+  runtime split is `core` plus `engine`, while architecture rules live in
   `architecture-tests` and parity tests live in `engine`. The Jazzer harness names intentionally stay stable so historical findings,
   corpora, and promoted metadata paths remain coherent.
 - `jazzer/src/fuzz/java` contains only fuzz harness classes.
@@ -292,7 +292,7 @@ Tree rules:
 ## Build Model
 
 `jazzer/settings.gradle.kts` uses `includeBuild("..")`, so the nested build consumes the live
-local engine and contract modules without
+local engine and core modules without
 publishing snapshots. It also imports
 the shared root version catalog from `../gradle/libs.versions.toml` and resolves `gridgrind.*`
 plugins from the shared included build logic under `../gradle/build-logic`.

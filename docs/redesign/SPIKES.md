@@ -276,3 +276,26 @@ fat-JAR packaging, all shell contracts and actual Docker smoke. Docker's stage
 passed in 121 s. The complete delivered-state log is retained as
 `evidence/phase-1/check-repaired.log`. The earlier 607.43-second failure remains
 recorded above and in its original log. No golden snapshot changed.
+
+## WP-20 module consolidation checkpoint
+
+The first reviewable WP-20 commit consolidates contract, Excel foundation and Java authoring
+into `core`, preserving Java type identities and wire behaviour. This checkpoint deliberately
+retains the codec dependency: WP-20 is not complete until the subsequent JSON extraction and
+package normalization establish its final dependency rules. Docker, coverage, mutation, composite
+fuzz consumption and current documentation now reference the consolidated project. The retired
+three-project shape checker and obsolete architecture ADR were removed.
+
+Production compilation passed after repairing a mechanically damaged CLI qualified `opens`
+directive. A combined format/test invocation then triggered an internal Error Prone 2.50.0
+`StringConcatToTextBlock` crash; isolated compilation passed with the check enabled, followed by
+core tests and full `./gradlew check --no-parallel` (3m). The active suites contain 2,765 tests,
+zero failures/errors/skips, including all 141 golden cases; no snapshots changed. Publication
+contract regression passed. Evidence is external in `evidence/wp-20/`.
+
+Regenerated inventories track the new core paths, avoiding false zeros from retired paths.
+Main Java lines: 125,584 → 125,570 (redundant module descriptors); shell lines: 10,975 → 10,831.
+Input/report/model/converter/union/catalog counts remain unchanged (81/96/51 snapshots/
+13 definitions/4,576 converter lines/99 subtype files/2,849 descriptor lines).
+`git diff main -- AGENTS.md` remains empty. Next: separate pure intake/problem data from JSON
+parse state and remove databind from core before completing WP-20.

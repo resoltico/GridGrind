@@ -73,9 +73,8 @@ gradle/
         ├── ScheduledPulseTestListener.kt
         └── ...
 engine/
-contract/
+core/
 architecture-tests/
-authoring-java/
 cli/
 jazzer/
 ├── settings.gradle.kts
@@ -84,7 +83,7 @@ jazzer/
 
 Each layer owns a different concern:
 
-- root product build: builds and verifies `engine`, `contract`, `architecture-tests`, `authoring-java`,
+- root product build: builds and verifies `core`, `engine`, `architecture-tests`,
   and `cli`
 - shared included build logic: houses reusable Gradle plugins and typed build logic
 - nested Jazzer build: runs Jazzer support tests, regression replay, and local fuzzing flows
@@ -120,7 +119,7 @@ compile time.
 ### Composite build for Jazzer
 
 `jazzer/settings.gradle.kts` uses `includeBuild("..")` so the nested build can consume the live
-local engine and contract modules without publishing snapshots. This keeps Jazzer
+local engine and core modules without publishing snapshots. This keeps Jazzer
 iteration fast and ensures fuzzing runs against the exact working tree under review.
 
 ### One dependency authority
@@ -195,7 +194,7 @@ belong to `engine`; `engine:parityTest` remains included in `check` and coverage
 
 JaCoCo writes HTML/XML reports for each tested module and an aggregate report at the root.
 Report dependencies collect execution data from every local `Test` task, including parity and
-architecture tests. Contract and engine reports also include their downstream consumer tests.
+architecture tests. Core and engine reports also include their downstream consumer tests.
 The root derives participating projects and execution-data files from the Gradle model.
 
 `./gradlew check` generates per-module reports. `./gradlew coverage` adds the aggregate report.
@@ -236,7 +235,7 @@ Rules:
 
 These are the Gradle-level invariants worth preserving:
 
-- `engine`, `contract`, `architecture-tests`, `authoring-java`, and `cli` remain ordinary root subprojects
+- `core`, `engine`, `architecture-tests`, and `cli` remain ordinary root subprojects
 - `jazzer/` remains a nested build, not a root subproject
 - `gradle/build-logic` remains the only home for shared typed Gradle logic
 - the nested Jazzer build imports `../gradle/libs.versions.toml`
@@ -256,7 +255,7 @@ These are the Gradle-level invariants worth preserving:
 - root `./check.sh` remains the supported whole-repo gate that sequences root verification, Jazzer
   verification, packaging, and Docker smoke checks
 - root `./gradlew mutationReport` generates advisory PIT reports; the convention plugin owns
-  tool versions and common reporting settings, while contract and engine configure their native
+  tool versions and common reporting settings, while core and engine configure their native
   PIT class/test scopes
 - the fixed `./check.sh` stage inventory and Stage 4 shell-regression coverage derive from
   `scripts/check-stage-contract.sh`, not from parallel copies in root-gate prose and execution
@@ -267,7 +266,7 @@ These are the Gradle-level invariants worth preserving:
 ### Mutation reports
 
 Run `./gradlew mutationReport` with Java 26 to generate advisory PIT HTML/XML reports in
-`contract/build/reports/pitest/` and `engine/build/reports/pitest/`. The root task invokes the
+`core/build/reports/pitest/` and `engine/build/reports/pitest/`. The root task invokes the
 native PIT tasks for those two modules. Their build files declare the class/test scopes, using
 the standard `PitestPluginExtension`; there is no parallel scope or score policy model.
 
