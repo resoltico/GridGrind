@@ -13,6 +13,7 @@ import dev.erst.gridgrind.contract.dto.OoxmlPersistenceSecurityInput;
 import dev.erst.gridgrind.contract.dto.OoxmlPersistenceSignatureInput;
 import dev.erst.gridgrind.contract.dto.OoxmlSignatureInput;
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
+import dev.erst.gridgrind.core.problem.InvalidRequestShapeException;
 import dev.erst.gridgrind.excel.foundation.ExcelOoxmlSignatureDigestAlgorithm;
 import dev.erst.gridgrind.excel.foundation.ExcelOoxmlWriteCipher;
 import dev.erst.gridgrind.excel.foundation.ExcelOoxmlWriteHash;

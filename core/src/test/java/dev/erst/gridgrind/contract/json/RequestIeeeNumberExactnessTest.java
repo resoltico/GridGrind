@@ -5,6 +5,10 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import dev.erst.gridgrind.core.problem.NumberNotRepresentableException;
+import dev.erst.gridgrind.core.problem.RequestInvalidJson;
+import dev.erst.gridgrind.core.problem.RequestNumberNotRepresentable;
+import dev.erst.gridgrind.core.problem.RequestStructuralProblem;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;

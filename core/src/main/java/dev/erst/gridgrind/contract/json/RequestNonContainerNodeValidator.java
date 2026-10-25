@@ -1,6 +1,9 @@
 package dev.erst.gridgrind.contract.json;
 
 import dev.erst.gridgrind.contract.selector.Selector;
+import dev.erst.gridgrind.core.problem.RequestMalformedScalar;
+import dev.erst.gridgrind.core.problem.RequestNumberNotRepresentable;
+import dev.erst.gridgrind.core.problem.RequestStructuralProblem;
 import java.math.BigDecimal;
 import java.util.List;
 

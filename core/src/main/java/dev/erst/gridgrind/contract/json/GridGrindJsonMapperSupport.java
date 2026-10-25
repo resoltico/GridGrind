@@ -6,6 +6,8 @@ import dev.erst.gridgrind.contract.assertion.Assertion;
 import dev.erst.gridgrind.contract.catalog.GridGrindRequestSurfaceContractText;
 import dev.erst.gridgrind.contract.query.InspectionQuery;
 import dev.erst.gridgrind.contract.query.InspectionResult;
+import dev.erst.gridgrind.core.problem.InvalidRequestException;
+import dev.erst.gridgrind.core.problem.MessageInvariant;
 import org.jspecify.annotations.Nullable;
 import tools.jackson.core.StreamReadConstraints;
 import tools.jackson.core.StreamReadFeature;

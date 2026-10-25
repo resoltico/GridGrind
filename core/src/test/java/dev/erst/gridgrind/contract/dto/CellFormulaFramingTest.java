@@ -6,10 +6,10 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import dev.erst.gridgrind.contract.action.CellMutationAction;
-import dev.erst.gridgrind.contract.json.FormulaRequestException;
 import dev.erst.gridgrind.contract.json.GridGrindJson;
 import dev.erst.gridgrind.contract.source.TextSourceInput;
 import dev.erst.gridgrind.contract.step.MutationStep;
+import dev.erst.gridgrind.core.problem.FormulaRequestException;
 import org.junit.jupiter.api.Test;
 
 /** Locks the shared OOXML formula-body framing for parsed and opaque cell formulas. */

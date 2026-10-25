@@ -1,6 +1,9 @@
 package dev.erst.gridgrind.contract.json;
 
+import dev.erst.gridgrind.core.problem.RequestInvalidJson;
+import dev.erst.gridgrind.core.problem.RequestStructuralProblem;
 import java.util.List;
+import java.util.Optional;
 
 /** Reads JSON scalar values while retaining syntax diagnostics and input byte offsets. */
 final class RequestJsonScalarReader {
@@ -163,7 +166,7 @@ final class RequestJsonScalarReader {
     problems.add(
         new RequestInvalidJson(
             message,
-            RequestStructuralProblemSupport.optionalJsonPath(jsonPath),
+            jsonPath.isEmpty() ? Optional.empty() : Optional.of(jsonPath),
             java.util.Optional.of(cursor.byteOffsetAt(characterOffset))));
   }
 

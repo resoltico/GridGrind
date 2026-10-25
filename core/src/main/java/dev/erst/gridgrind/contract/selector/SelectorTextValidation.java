@@ -2,11 +2,11 @@ package dev.erst.gridgrind.contract.selector;
 
 import dev.erst.gridgrind.contract.dto.ProtocolCellAddressValidation;
 import dev.erst.gridgrind.contract.dto.ProtocolDefinedNameValidation;
-import dev.erst.gridgrind.contract.json.FieldValidationAddressRule;
-import dev.erst.gridgrind.contract.json.FieldValidationBasicRule;
-import dev.erst.gridgrind.contract.json.FieldValidationProblem;
-import dev.erst.gridgrind.contract.json.FieldValidationProblemMappers;
-import dev.erst.gridgrind.contract.json.InvalidRequestException;
+import dev.erst.gridgrind.core.problem.FieldValidationAddressRule;
+import dev.erst.gridgrind.core.problem.FieldValidationBasicRule;
+import dev.erst.gridgrind.core.problem.FieldValidationProblem;
+import dev.erst.gridgrind.core.problem.FieldValidationProblemMappers;
+import dev.erst.gridgrind.core.problem.InvalidRequestException;
 import dev.erst.gridgrind.excel.foundation.ExcelPivotTableNaming;
 import dev.erst.gridgrind.excel.foundation.ExcelSheetNames;
 import java.util.Objects;

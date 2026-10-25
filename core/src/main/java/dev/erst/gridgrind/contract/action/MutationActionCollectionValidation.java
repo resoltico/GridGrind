@@ -1,9 +1,9 @@
 package dev.erst.gridgrind.contract.action;
 
 import dev.erst.gridgrind.contract.dto.CellInput;
-import dev.erst.gridgrind.contract.json.FieldValidationBasicRule;
-import dev.erst.gridgrind.contract.json.FieldValidationBoundRule;
-import dev.erst.gridgrind.contract.json.FieldValidationProblem;
+import dev.erst.gridgrind.core.problem.FieldValidationBasicRule;
+import dev.erst.gridgrind.core.problem.FieldValidationBoundRule;
+import dev.erst.gridgrind.core.problem.FieldValidationProblem;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;

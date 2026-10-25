@@ -1,5 +1,9 @@
 package dev.erst.gridgrind.contract.json;
 
+import dev.erst.gridgrind.core.problem.ExplicitNullField;
+import dev.erst.gridgrind.core.problem.InvalidJsonException;
+import dev.erst.gridgrind.core.problem.InvalidRequestShapeException;
+import dev.erst.gridgrind.core.problem.MessageShape;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Optional;

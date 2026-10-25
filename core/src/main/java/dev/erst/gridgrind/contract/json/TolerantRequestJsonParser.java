@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.contract.json;
 
+import dev.erst.gridgrind.core.problem.RequestInvalidJson;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;

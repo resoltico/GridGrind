@@ -4,6 +4,11 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import dev.erst.gridgrind.core.problem.InvalidEncodingException;
+import dev.erst.gridgrind.core.problem.InvalidJsonException;
+import dev.erst.gridgrind.core.problem.InvalidRequestShapeException;
+import dev.erst.gridgrind.core.problem.RequestDuplicateKey;
+import dev.erst.gridgrind.core.problem.RequestInvalidJson;
 import java.nio.charset.StandardCharsets;
 import org.junit.jupiter.api.Test;
 
@@ -75,12 +80,11 @@ class GridGrindRequestDecoderTest {
   void mapsBothInvalidJsonSourcesThroughTheSameCanonicalExceptionFamily() {
     assertInstanceOf(
         InvalidJsonException.class,
-        GridGrindRequestDecoder.structuralException(
-            new RequestInvalidJson(
-                "invalid JSON", java.util.Optional.empty(), java.util.Optional.of(0L))));
+        new RequestInvalidJson(
+                "invalid JSON", java.util.Optional.empty(), java.util.Optional.of(0L))
+            .exception());
     assertInstanceOf(
-        InvalidJsonException.class,
-        GridGrindRequestDecoder.structuralException(new RequestDuplicateKey("", "planId", 0, 0)));
+        InvalidJsonException.class, new RequestDuplicateKey("", "planId", 0, 0).exception());
   }
 
   @Test

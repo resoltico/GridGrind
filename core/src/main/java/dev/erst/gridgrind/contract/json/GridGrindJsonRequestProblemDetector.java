@@ -1,5 +1,7 @@
 package dev.erst.gridgrind.contract.json;
 
+import dev.erst.gridgrind.core.problem.RequestProblemDescriptor;
+import dev.erst.gridgrind.core.problem.UnknownField;
 import java.util.Objects;
 import java.util.Optional;
 import tools.jackson.core.JacksonException;

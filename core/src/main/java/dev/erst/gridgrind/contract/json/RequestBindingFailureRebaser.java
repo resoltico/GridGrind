@@ -1,5 +1,8 @@
 package dev.erst.gridgrind.contract.json;
 
+import dev.erst.gridgrind.core.problem.FormulaRequestException;
+import dev.erst.gridgrind.core.problem.InvalidRequestException;
+import dev.erst.gridgrind.core.problem.RequestProblemDescriptor;
 import java.util.Optional;
 
 /** Reattaches one typed binding failure to a more precise authored request path. */

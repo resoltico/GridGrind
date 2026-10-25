@@ -1,9 +1,13 @@
 package dev.erst.gridgrind.contract.json;
 
+import dev.erst.gridgrind.core.problem.RequestDuplicateKey;
+import dev.erst.gridgrind.core.problem.RequestInvalidJson;
+import dev.erst.gridgrind.core.problem.RequestStructuralProblem;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 /** Builds a recoverable request syntax tree while preserving duplicate object members. */
 final class RequestTolerantSyntaxParser {
@@ -139,7 +143,7 @@ final class RequestTolerantSyntaxParser {
     problems.add(
         new RequestInvalidJson(
             message,
-            RequestStructuralProblemSupport.optionalJsonPath(affectedJsonPath),
+            affectedJsonPath.isEmpty() ? Optional.empty() : Optional.of(affectedJsonPath),
             java.util.Optional.of(cursor.byteOffsetAt(characterOffset)),
             java.util.Optional.of(lineColumn.line()),
             java.util.Optional.of(lineColumn.column())));

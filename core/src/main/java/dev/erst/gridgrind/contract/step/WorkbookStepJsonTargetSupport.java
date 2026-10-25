@@ -1,9 +1,9 @@
 package dev.erst.gridgrind.contract.step;
 
-import dev.erst.gridgrind.contract.json.ActionableShapeMessage;
-import dev.erst.gridgrind.contract.json.MissingTypeDiscriminator;
 import dev.erst.gridgrind.contract.selector.Selector;
 import dev.erst.gridgrind.contract.selector.SelectorJsonSupport;
+import dev.erst.gridgrind.core.problem.ActionableShapeMessage;
+import dev.erst.gridgrind.core.problem.MissingTypeDiscriminator;
 import java.util.Optional;
 import tools.jackson.core.JsonParser;
 import tools.jackson.databind.JsonNode;

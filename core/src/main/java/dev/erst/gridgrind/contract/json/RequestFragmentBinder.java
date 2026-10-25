@@ -1,5 +1,7 @@
 package dev.erst.gridgrind.contract.json;
 
+import dev.erst.gridgrind.core.problem.RequestDuplicateKey;
+import dev.erst.gridgrind.core.problem.RequestStructuralProblem;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.List;

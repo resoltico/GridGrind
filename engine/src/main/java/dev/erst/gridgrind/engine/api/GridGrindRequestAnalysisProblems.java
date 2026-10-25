@@ -3,11 +3,10 @@ package dev.erst.gridgrind.engine.api;
 import dev.erst.gridgrind.contract.dto.GridGrindProblemDetail;
 import dev.erst.gridgrind.contract.dto.ProblemContext;
 import dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces;
-import dev.erst.gridgrind.contract.json.GridGrindJson;
 import dev.erst.gridgrind.contract.json.RequestAnalysis;
 import dev.erst.gridgrind.contract.json.RequestBindingFailure;
-import dev.erst.gridgrind.contract.json.RequestDuplicateKey;
-import dev.erst.gridgrind.contract.json.RequestStructuralProblem;
+import dev.erst.gridgrind.core.problem.RequestDuplicateKey;
+import dev.erst.gridgrind.core.problem.RequestStructuralProblem;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Stream;
@@ -32,8 +31,7 @@ public final class GridGrindRequestAnalysisProblems {
   private static GridGrindProblemDetail.Problem structuralProblem(
       RequestStructuralProblem problem, ProblemContextRequestSurfaces.RequestInput requestInput) {
     return GridGrindProblems.fromException(
-        GridGrindJson.structuralException(problem),
-        new ProblemContext.ReadRequest(requestInput, locationFor(problem)));
+        problem.exception(), new ProblemContext.ReadRequest(requestInput, locationFor(problem)));
   }
 
   private static GridGrindProblemDetail.Problem bindingProblem(

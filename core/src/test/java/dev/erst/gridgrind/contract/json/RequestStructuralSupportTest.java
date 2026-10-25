@@ -12,6 +12,23 @@ import dev.erst.gridgrind.contract.dto.GridGrindProtocolVersion;
 import dev.erst.gridgrind.contract.dto.OoxmlEncryptionInput;
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
 import dev.erst.gridgrind.contract.selector.Selector;
+import dev.erst.gridgrind.core.problem.InvalidEncodingException;
+import dev.erst.gridgrind.core.problem.InvalidJsonException;
+import dev.erst.gridgrind.core.problem.InvalidRequestException;
+import dev.erst.gridgrind.core.problem.InvalidRequestShapeException;
+import dev.erst.gridgrind.core.problem.RequestBoundFragments;
+import dev.erst.gridgrind.core.problem.RequestBoundRoot;
+import dev.erst.gridgrind.core.problem.RequestDuplicateKey;
+import dev.erst.gridgrind.core.problem.RequestExplicitNullField;
+import dev.erst.gridgrind.core.problem.RequestInvalidEncoding;
+import dev.erst.gridgrind.core.problem.RequestInvalidJson;
+import dev.erst.gridgrind.core.problem.RequestMalformedScalar;
+import dev.erst.gridgrind.core.problem.RequestMissingRequiredField;
+import dev.erst.gridgrind.core.problem.RequestMissingTypeDiscriminator;
+import dev.erst.gridgrind.core.problem.RequestNumberNotRepresentable;
+import dev.erst.gridgrind.core.problem.RequestStructuralProblem;
+import dev.erst.gridgrind.core.problem.RequestUnknownField;
+import dev.erst.gridgrind.core.problem.RequestUnknownTypeDiscriminator;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -486,15 +503,12 @@ class RequestStructuralSupportTest {
   @Test
   void mapsEveryStructuralProblemToTheSingularExecutionExceptionContract() {
     assertInstanceOf(
-        InvalidEncodingException.class,
-        GridGrindJson.structuralException(new RequestInvalidEncoding("bad encoding", 0)));
+        InvalidEncodingException.class, new RequestInvalidEncoding("bad encoding", 0).exception());
     assertInstanceOf(
         InvalidJsonException.class,
-        GridGrindJson.structuralException(
-            new RequestInvalidJson("bad JSON", Optional.empty(), Optional.empty())));
+        new RequestInvalidJson("bad JSON", Optional.empty(), Optional.empty()).exception());
     assertInstanceOf(
-        InvalidJsonException.class,
-        GridGrindJson.structuralException(new RequestDuplicateKey("", "duplicate", 0, 0)));
+        InvalidJsonException.class, new RequestDuplicateKey("", "duplicate", 0, 0).exception());
     for (RequestStructuralProblem problem :
         List.of(
             new RequestUnknownField("unknown", 0),
@@ -504,8 +518,7 @@ class RequestStructuralSupportTest {
             new RequestUnknownTypeDiscriminator("type", "UNKNOWN", 0),
             new RequestMalformedScalar("type", "a JSON string type id", 0),
             new RequestMalformedScalar("number", "a JSON number", 0))) {
-      assertInstanceOf(
-          InvalidRequestShapeException.class, GridGrindJson.structuralException(problem));
+      assertInstanceOf(InvalidRequestShapeException.class, problem.exception());
     }
     assertEquals(Optional.of("unknown"), new RequestUnknownField("unknown", 0).jsonPath());
     assertEquals(Optional.of(0L), new RequestUnknownField("unknown", 0).byteOffset());

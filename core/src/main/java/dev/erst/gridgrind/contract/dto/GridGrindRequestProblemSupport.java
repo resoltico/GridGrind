@@ -1,19 +1,19 @@
 package dev.erst.gridgrind.contract.dto;
 
-import dev.erst.gridgrind.contract.json.ActionableInvariantMessage;
-import dev.erst.gridgrind.contract.json.ActionableShapeMessage;
-import dev.erst.gridgrind.contract.json.DuplicateStepId;
-import dev.erst.gridgrind.contract.json.ExplicitNullField;
-import dev.erst.gridgrind.contract.json.FieldValidationProblem;
-import dev.erst.gridgrind.contract.json.MessageInvariant;
-import dev.erst.gridgrind.contract.json.MessageShape;
-import dev.erst.gridgrind.contract.json.MissingRequiredField;
-import dev.erst.gridgrind.contract.json.MissingTypeDiscriminator;
-import dev.erst.gridgrind.contract.json.NonXlsxPath;
-import dev.erst.gridgrind.contract.json.RequestProblemDescriptor;
-import dev.erst.gridgrind.contract.json.UnknownField;
-import dev.erst.gridgrind.contract.json.UnknownTypeValue;
-import dev.erst.gridgrind.contract.json.UnsupportedValue;
+import dev.erst.gridgrind.core.problem.ActionableInvariantMessage;
+import dev.erst.gridgrind.core.problem.ActionableShapeMessage;
+import dev.erst.gridgrind.core.problem.DuplicateStepId;
+import dev.erst.gridgrind.core.problem.ExplicitNullField;
+import dev.erst.gridgrind.core.problem.FieldValidationProblem;
+import dev.erst.gridgrind.core.problem.MessageInvariant;
+import dev.erst.gridgrind.core.problem.MessageShape;
+import dev.erst.gridgrind.core.problem.MissingRequiredField;
+import dev.erst.gridgrind.core.problem.MissingTypeDiscriminator;
+import dev.erst.gridgrind.core.problem.NonXlsxPath;
+import dev.erst.gridgrind.core.problem.RequestProblemDescriptor;
+import dev.erst.gridgrind.core.problem.UnknownField;
+import dev.erst.gridgrind.core.problem.UnknownTypeValue;
+import dev.erst.gridgrind.core.problem.UnsupportedValue;
 import java.util.Objects;
 import java.util.Optional;
 

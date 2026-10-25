@@ -315,3 +315,25 @@ and template checks passed (14s); repaired full `./gradlew check --no-parallel` 
 2,766 active tests with zero failures/errors/skips, including unchanged 141 golden cases.
 Evidence: external `evidence/wp-20/templates-*.log`. No golden snapshot was re-recorded.
 Main Java lines 125,570 → 125,610; all model/converter/union counts remain unchanged.
+
+### WP-20 pure intake/problem data ownership
+
+Moved 47 problem, field-validation and partial-fragment types into `core.problem`, with their
+pure tests and all consumers. Structural findings now expose their typed exception classification
+in core; the JSON facade/decoder projection aliases were deleted. Engine classification no
+longer calls the JSON codec. Parser-owned `RequestAnalysis` and binding normalization still need
+the next extraction before the final module split. No Jackson import exists in `core.problem`.
+
+The expanded move initially failed compilation on a duplicate export and package-private helper
+references; a second focused compilation exposed missing Optional imports and a still-needed
+private helper. Those were repaired without widening helper visibility. Focused behavioral tests
+passed, but PMD required documentation on two newly public convenience constructors. Repaired
+focused PMD passed (19s). Full `./gradlew check --no-parallel` passed (3m18s), 2,766 active tests,
+zero failures/errors/skips, including unchanged 141 golden cases. Nested Jazzer formatting passed.
+Logs and regenerated inventories are retained externally under `evidence/wp-20/`.
+
+The private required-component constructor no longer repeats the blank-name check:
+`GridGrindProtocolContractSupport.wireFieldName` already returns a nonblank annotation value or
+its valid Java record-component name. Its null guard remains. This removes no authored-input
+validation. Old JSON package files: 104 → 57; pure problem files: 47 plus package annotation.
+Main Java lines: 125,610 → 125,704. Model/converter/union counts remain unchanged.

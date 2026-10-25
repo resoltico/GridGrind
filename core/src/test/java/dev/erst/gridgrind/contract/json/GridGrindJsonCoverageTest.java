@@ -18,6 +18,8 @@ import dev.erst.gridgrind.contract.dto.RequestWarning;
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
 import dev.erst.gridgrind.contract.dto.WorkbookResult;
 import dev.erst.gridgrind.contract.dto.WorkbookResults;
+import dev.erst.gridgrind.core.problem.InvalidJsonException;
+import dev.erst.gridgrind.core.problem.InvalidRequestShapeException;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;

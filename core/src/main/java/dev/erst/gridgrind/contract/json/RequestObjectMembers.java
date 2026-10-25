@@ -2,6 +2,9 @@ package dev.erst.gridgrind.contract.json;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import dev.erst.gridgrind.contract.catalog.GridGrindProtocolContractSupport;
+import dev.erst.gridgrind.core.problem.RequestMissingRequiredField;
+import dev.erst.gridgrind.core.problem.RequestStructuralProblem;
+import dev.erst.gridgrind.core.problem.RequestUnknownField;
 import java.lang.reflect.RecordComponent;
 import java.util.ArrayList;
 import java.util.Collections;

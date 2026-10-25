@@ -3,7 +3,7 @@ package dev.erst.gridgrind.cli;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces.JsonLocation;
-import dev.erst.gridgrind.contract.json.InvalidJsonException;
+import dev.erst.gridgrind.core.problem.InvalidJsonException;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
 

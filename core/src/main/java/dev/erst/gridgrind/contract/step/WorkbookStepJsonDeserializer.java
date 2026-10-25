@@ -2,11 +2,11 @@ package dev.erst.gridgrind.contract.step;
 
 import dev.erst.gridgrind.contract.action.MutationAction;
 import dev.erst.gridgrind.contract.assertion.Assertion;
-import dev.erst.gridgrind.contract.json.ActionableShapeMessage;
-import dev.erst.gridgrind.contract.json.MissingRequiredField;
-import dev.erst.gridgrind.contract.json.UnknownField;
 import dev.erst.gridgrind.contract.query.InspectionQuery;
 import dev.erst.gridgrind.contract.selector.Selector;
+import dev.erst.gridgrind.core.problem.ActionableShapeMessage;
+import dev.erst.gridgrind.core.problem.MissingRequiredField;
+import dev.erst.gridgrind.core.problem.UnknownField;
 import java.util.Optional;
 import java.util.Set;
 import org.jspecify.annotations.Nullable;
@@ -119,7 +119,7 @@ final class WorkbookStepJsonDeserializer extends ValueDeserializer<WorkbookStep>
     try {
       return deserializeNode(node, parser, targetType);
     } catch (JacksonException exception) {
-      Optional<dev.erst.gridgrind.contract.json.InvalidRequestException> validationFailure =
+      Optional<dev.erst.gridgrind.core.problem.InvalidRequestException> validationFailure =
           WorkbookStepJsonFailurePathSupport.wrapValidationJacksonFailure(
               fieldName, node, targetType, exception);
       if (validationFailure.isPresent()) {

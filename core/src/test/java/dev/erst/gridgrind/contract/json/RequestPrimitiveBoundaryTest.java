@@ -4,6 +4,9 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import dev.erst.gridgrind.contract.catalog.GridGrindProtocolContractSupport;
+import dev.erst.gridgrind.core.problem.RequestExplicitNullField;
+import dev.erst.gridgrind.core.problem.RequestMissingRequiredField;
+import dev.erst.gridgrind.core.problem.RequestStructuralProblem;
 import java.util.ArrayList;
 import java.util.List;
 import org.junit.jupiter.api.Test;

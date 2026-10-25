@@ -7,6 +7,16 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import dev.erst.gridgrind.core.problem.RequestDuplicateKey;
+import dev.erst.gridgrind.core.problem.RequestExplicitNullField;
+import dev.erst.gridgrind.core.problem.RequestInvalidEncoding;
+import dev.erst.gridgrind.core.problem.RequestInvalidJson;
+import dev.erst.gridgrind.core.problem.RequestMalformedScalar;
+import dev.erst.gridgrind.core.problem.RequestMissingRequiredField;
+import dev.erst.gridgrind.core.problem.RequestStructuralProblem;
+import dev.erst.gridgrind.core.problem.RequestUnknownField;
+import dev.erst.gridgrind.core.problem.RequestUnknownTypeDiscriminator;
+import dev.erst.gridgrind.core.problem.RequestUnsupportedEnumValue;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.math.BigDecimal;

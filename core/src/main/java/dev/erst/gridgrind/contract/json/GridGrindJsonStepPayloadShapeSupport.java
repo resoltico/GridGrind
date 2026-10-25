@@ -1,5 +1,7 @@
 package dev.erst.gridgrind.contract.json;
 
+import dev.erst.gridgrind.core.problem.InvalidRequestShapeException;
+import dev.erst.gridgrind.core.problem.MessageShape;
 import java.util.Optional;
 import tools.jackson.databind.JsonNode;
 

@@ -1,7 +1,7 @@
 package dev.erst.gridgrind.contract.selector;
 
-import dev.erst.gridgrind.contract.json.FieldValidationBasicRule;
-import dev.erst.gridgrind.contract.json.FieldValidationProblem;
+import dev.erst.gridgrind.core.problem.FieldValidationBasicRule;
+import dev.erst.gridgrind.core.problem.FieldValidationProblem;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;

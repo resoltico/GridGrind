@@ -1,7 +1,7 @@
 package dev.erst.gridgrind.contract.step;
 
 import dev.erst.gridgrind.contract.json.GridGrindJsonRequestProblemDetector;
-import dev.erst.gridgrind.contract.json.RequestProblemSource;
+import dev.erst.gridgrind.core.problem.RequestProblemSource;
 import java.util.Optional;
 import org.jspecify.annotations.Nullable;
 import tools.jackson.core.JacksonException;

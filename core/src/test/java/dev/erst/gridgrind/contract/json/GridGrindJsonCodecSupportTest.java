@@ -5,6 +5,9 @@ import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
+import dev.erst.gridgrind.core.problem.ExplicitNullField;
+import dev.erst.gridgrind.core.problem.InvalidRequestShapeException;
+import dev.erst.gridgrind.core.problem.MissingRequiredField;
 import java.io.IOException;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;

@@ -1,9 +1,9 @@
 package dev.erst.gridgrind.contract.step;
 
-import dev.erst.gridgrind.contract.json.InvalidRequestException;
-import dev.erst.gridgrind.contract.json.InvalidRequestShapeException;
-import dev.erst.gridgrind.contract.json.MessageInvariant;
-import dev.erst.gridgrind.contract.json.RequestProblemDescriptor;
+import dev.erst.gridgrind.core.problem.InvalidRequestException;
+import dev.erst.gridgrind.core.problem.InvalidRequestShapeException;
+import dev.erst.gridgrind.core.problem.MessageInvariant;
+import dev.erst.gridgrind.core.problem.RequestProblemDescriptor;
 import java.util.Objects;
 import java.util.Optional;
 import org.jspecify.annotations.Nullable;
@@ -62,7 +62,7 @@ final class WorkbookStepJsonFailurePathSupport {
           qualifiedFieldName(fieldName, null, Object.class, requestException);
       return Optional.of(
           new InvalidRequestException(
-              (dev.erst.gridgrind.contract.json.RequestProblemDescriptor.Invariant)
+              (dev.erst.gridgrind.core.problem.RequestProblemDescriptor.Invariant)
                   requestException.requestProblem(),
               Optional.of(qualifiedRequestProblemPath),
               Optional.empty(),

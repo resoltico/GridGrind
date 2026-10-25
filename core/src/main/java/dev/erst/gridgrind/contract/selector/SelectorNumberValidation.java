@@ -1,9 +1,9 @@
 package dev.erst.gridgrind.contract.selector;
 
-import dev.erst.gridgrind.contract.json.FieldValidationBasicRule;
-import dev.erst.gridgrind.contract.json.FieldValidationBoundRule;
-import dev.erst.gridgrind.contract.json.FieldValidationProblem;
-import dev.erst.gridgrind.contract.json.InvalidRequestException;
+import dev.erst.gridgrind.core.problem.FieldValidationBasicRule;
+import dev.erst.gridgrind.core.problem.FieldValidationBoundRule;
+import dev.erst.gridgrind.core.problem.FieldValidationProblem;
+import dev.erst.gridgrind.core.problem.InvalidRequestException;
 import dev.erst.gridgrind.excel.foundation.ExcelColumnSpan;
 import dev.erst.gridgrind.excel.foundation.ExcelReadLimits;
 import dev.erst.gridgrind.excel.foundation.ExcelRowSpan;

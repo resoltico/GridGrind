@@ -5,9 +5,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import dev.erst.gridgrind.contract.dto.GridGrindProblemCode;
 import dev.erst.gridgrind.contract.dto.InvalidFormulaInputException;
 import dev.erst.gridgrind.contract.dto.InvalidRawFormulaTextException;
-import dev.erst.gridgrind.contract.json.FormulaRequestException;
-import dev.erst.gridgrind.contract.json.InvalidEncodingException;
-import dev.erst.gridgrind.contract.json.NumberNotRepresentableException;
+import dev.erst.gridgrind.core.problem.FormulaRequestException;
+import dev.erst.gridgrind.core.problem.InvalidEncodingException;
+import dev.erst.gridgrind.core.problem.NumberNotRepresentableException;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
 

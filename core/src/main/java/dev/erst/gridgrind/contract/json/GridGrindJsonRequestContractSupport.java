@@ -2,6 +2,9 @@ package dev.erst.gridgrind.contract.json;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import dev.erst.gridgrind.contract.catalog.GridGrindProtocolContractSupport;
+import dev.erst.gridgrind.core.problem.MissingRequiredField;
+import dev.erst.gridgrind.core.problem.MissingTypeDiscriminator;
+import dev.erst.gridgrind.core.problem.RequestProblemDescriptor;
 import java.lang.reflect.RecordComponent;
 import java.util.ArrayList;
 import java.util.List;
@@ -65,7 +68,7 @@ final class GridGrindJsonRequestContractSupport {
 
   private record RequiredComponent(String wireName, ComponentKind kind) {
     private RequiredComponent {
-      wireName = RequestProblemDescriptorSupport.requireNonBlank(wireName, "wireName");
+      Objects.requireNonNull(wireName, "wireName must not be null");
       Objects.requireNonNull(kind, "kind must not be null");
     }
 

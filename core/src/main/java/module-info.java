@@ -10,6 +10,7 @@ module dev.erst.gridgrind.core {
   exports dev.erst.gridgrind.contract.action;
   exports dev.erst.gridgrind.contract.dto;
   exports dev.erst.gridgrind.contract.json;
+  exports dev.erst.gridgrind.core.problem;
   exports dev.erst.gridgrind.contract.query;
   exports dev.erst.gridgrind.contract.selector;
   exports dev.erst.gridgrind.contract.source;

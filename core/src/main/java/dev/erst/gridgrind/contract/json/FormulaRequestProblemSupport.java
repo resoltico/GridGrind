@@ -4,6 +4,7 @@ import dev.erst.gridgrind.contract.dto.FormulaInputException;
 import dev.erst.gridgrind.contract.dto.GridGrindProblemCode;
 import dev.erst.gridgrind.contract.dto.InvalidFormulaInputException;
 import dev.erst.gridgrind.contract.dto.InvalidRawFormulaTextException;
+import dev.erst.gridgrind.core.problem.FormulaRequestException;
 import java.util.Optional;
 import org.jspecify.annotations.Nullable;
 

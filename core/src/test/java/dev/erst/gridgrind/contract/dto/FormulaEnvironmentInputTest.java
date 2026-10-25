@@ -2,7 +2,7 @@ package dev.erst.gridgrind.contract.dto;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import dev.erst.gridgrind.contract.json.InvalidRequestException;
+import dev.erst.gridgrind.core.problem.InvalidRequestException;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;

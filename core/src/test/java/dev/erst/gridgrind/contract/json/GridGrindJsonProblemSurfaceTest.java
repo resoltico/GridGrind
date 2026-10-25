@@ -6,6 +6,10 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
+import dev.erst.gridgrind.core.problem.InvalidEncodingException;
+import dev.erst.gridgrind.core.problem.InvalidJsonException;
+import dev.erst.gridgrind.core.problem.InvalidRequestException;
+import dev.erst.gridgrind.core.problem.InvalidRequestShapeException;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;

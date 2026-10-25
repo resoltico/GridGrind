@@ -140,10 +140,4 @@ public final class GridGrindJson {
   static java.util.Optional<Integer> jsonColumn(TokenStreamLocation location) {
     return GridGrindJsonPayloadMetadataSupport.jsonColumn(location);
   }
-
-  /** Converts one tolerant-parser finding into a canonical classified exception. */
-  public static IllegalArgumentException structuralException(RequestStructuralProblem problem) {
-    Objects.requireNonNull(problem, "problem must not be null");
-    return GridGrindRequestDecoder.structuralException(problem);
-  }
 }

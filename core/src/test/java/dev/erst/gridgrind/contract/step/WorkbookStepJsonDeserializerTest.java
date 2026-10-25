@@ -8,19 +8,19 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import dev.erst.gridgrind.contract.dto.GridGrindRequestProblemSupport;
 import dev.erst.gridgrind.contract.dto.ProblemContext;
 import dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces;
-import dev.erst.gridgrind.contract.json.ActionableShapeMessage;
-import dev.erst.gridgrind.contract.json.FieldValidationAddressRule;
-import dev.erst.gridgrind.contract.json.FieldValidationLayoutRule;
-import dev.erst.gridgrind.contract.json.FieldValidationProblem;
 import dev.erst.gridgrind.contract.json.GridGrindJson;
-import dev.erst.gridgrind.contract.json.InvalidRequestException;
-import dev.erst.gridgrind.contract.json.InvalidRequestShapeException;
-import dev.erst.gridgrind.contract.json.MissingRequiredField;
-import dev.erst.gridgrind.contract.json.MissingTypeDiscriminator;
-import dev.erst.gridgrind.contract.json.UnknownField;
 import dev.erst.gridgrind.contract.selector.Selector;
 import dev.erst.gridgrind.contract.selector.SelectorJsonSupport;
 import dev.erst.gridgrind.contract.selector.TableSelector;
+import dev.erst.gridgrind.core.problem.ActionableShapeMessage;
+import dev.erst.gridgrind.core.problem.FieldValidationAddressRule;
+import dev.erst.gridgrind.core.problem.FieldValidationLayoutRule;
+import dev.erst.gridgrind.core.problem.FieldValidationProblem;
+import dev.erst.gridgrind.core.problem.InvalidRequestException;
+import dev.erst.gridgrind.core.problem.InvalidRequestShapeException;
+import dev.erst.gridgrind.core.problem.MissingRequiredField;
+import dev.erst.gridgrind.core.problem.MissingTypeDiscriminator;
+import dev.erst.gridgrind.core.problem.UnknownField;
 import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
@@ -123,7 +123,7 @@ class WorkbookStepJsonDeserializerTest {
     assertEquals("Field 'steps[0].stepId' must be a JSON string", nonStringStepId.getMessage());
     assertEquals(Optional.of("steps[0].stepId"), nonStringStepId.jsonPath());
     assertInstanceOf(
-        dev.erst.gridgrind.contract.json.MessageShape.class, nonStringStepId.requestProblem());
+        dev.erst.gridgrind.core.problem.MessageShape.class, nonStringStepId.requestProblem());
   }
 
   @Test
@@ -224,7 +224,7 @@ class WorkbookStepJsonDeserializerTest {
     assertEquals("Field 'steps[0].target' must be a JSON object", nonObjectTarget.getMessage());
     assertEquals(Optional.of("steps[0].target"), nonObjectTarget.jsonPath());
     assertInstanceOf(
-        dev.erst.gridgrind.contract.json.MessageShape.class, nonObjectTarget.requestProblem());
+        dev.erst.gridgrind.core.problem.MessageShape.class, nonObjectTarget.requestProblem());
     assertEquals("Missing required field 'steps[0].target.type'", missingTargetType.getMessage());
     assertEquals(Optional.of("steps[0].target.type"), missingTargetType.jsonPath());
     assertInstanceOf(MissingTypeDiscriminator.class, missingTargetType.requestProblem());
@@ -236,8 +236,7 @@ class WorkbookStepJsonDeserializerTest {
     assertEquals("Unknown type value 'BY_RIDDLE'", unknownTargetType.getMessage());
     assertEquals(Optional.of("steps[0].target.type"), unknownTargetType.jsonPath());
     assertInstanceOf(
-        dev.erst.gridgrind.contract.json.UnknownTypeValue.class,
-        unknownTargetType.requestProblem());
+        dev.erst.gridgrind.core.problem.UnknownTypeValue.class, unknownTargetType.requestProblem());
   }
 
   @Test

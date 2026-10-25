@@ -75,13 +75,13 @@ class WorkbookStaticRequestContractTest {
     assertEquals(
         "range must end at or below and to the right of its start address",
         assertThrows(
-                dev.erst.gridgrind.contract.json.InvalidRequestException.class,
+                dev.erst.gridgrind.core.problem.InvalidRequestException.class,
                 () -> new RangeSelector.ByRange("Ops", "B5:A1"))
             .getMessage());
     assertEquals(
         "range must end at or below and to the right of its start address",
         assertThrows(
-                dev.erst.gridgrind.contract.json.InvalidRequestException.class,
+                dev.erst.gridgrind.core.problem.InvalidRequestException.class,
                 () -> new RangeSelector.ByRange("Ops", "B1:A5"))
             .getMessage());
   }

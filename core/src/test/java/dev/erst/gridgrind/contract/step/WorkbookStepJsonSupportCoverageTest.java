@@ -6,11 +6,11 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import dev.erst.gridgrind.contract.json.InvalidRequestException;
-import dev.erst.gridgrind.contract.json.InvalidRequestShapeException;
-import dev.erst.gridgrind.contract.json.MessageInvariant;
-import dev.erst.gridgrind.contract.json.MessageShape;
-import dev.erst.gridgrind.contract.json.MissingTypeDiscriminator;
+import dev.erst.gridgrind.core.problem.InvalidRequestException;
+import dev.erst.gridgrind.core.problem.InvalidRequestShapeException;
+import dev.erst.gridgrind.core.problem.MessageInvariant;
+import dev.erst.gridgrind.core.problem.MessageShape;
+import dev.erst.gridgrind.core.problem.MissingTypeDiscriminator;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;

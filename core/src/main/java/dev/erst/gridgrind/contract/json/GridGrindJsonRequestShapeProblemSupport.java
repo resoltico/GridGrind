@@ -1,5 +1,7 @@
 package dev.erst.gridgrind.contract.json;
 
+import dev.erst.gridgrind.core.problem.MessageShape;
+import dev.erst.gridgrind.core.problem.RequestProblemDescriptor;
 import java.util.Optional;
 import tools.jackson.core.JsonToken;
 import tools.jackson.databind.JsonNode;

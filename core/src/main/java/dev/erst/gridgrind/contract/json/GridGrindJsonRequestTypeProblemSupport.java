@@ -1,6 +1,12 @@
 package dev.erst.gridgrind.contract.json;
 
 import dev.erst.gridgrind.contract.catalog.GridGrindProtocolContractSupport;
+import dev.erst.gridgrind.core.problem.ActionableShapeMessage;
+import dev.erst.gridgrind.core.problem.MessageShape;
+import dev.erst.gridgrind.core.problem.MissingTypeDiscriminator;
+import dev.erst.gridgrind.core.problem.RequestProblemDescriptor;
+import dev.erst.gridgrind.core.problem.UnknownTypeValue;
+import dev.erst.gridgrind.core.problem.UnsupportedValue;
 import java.util.Arrays;
 import java.util.Optional;
 import tools.jackson.core.JacksonException;

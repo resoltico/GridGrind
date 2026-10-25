@@ -1,5 +1,9 @@
 package dev.erst.gridgrind.contract.json;
 
+import dev.erst.gridgrind.core.problem.RequestExplicitNullField;
+import dev.erst.gridgrind.core.problem.RequestMalformedScalar;
+import dev.erst.gridgrind.core.problem.RequestStructuralProblem;
+import dev.erst.gridgrind.core.problem.RequestUnsupportedEnumValue;
 import java.lang.reflect.Type;
 import java.util.Arrays;
 import java.util.List;

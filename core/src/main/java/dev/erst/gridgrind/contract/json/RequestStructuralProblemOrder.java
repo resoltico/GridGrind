@@ -1,6 +1,12 @@
 package dev.erst.gridgrind.contract.json;
 
 import dev.erst.gridgrind.contract.dto.GridGrindProblemCode;
+import dev.erst.gridgrind.core.problem.RequestDuplicateKey;
+import dev.erst.gridgrind.core.problem.RequestInvalidEncoding;
+import dev.erst.gridgrind.core.problem.RequestInvalidJson;
+import dev.erst.gridgrind.core.problem.RequestNumberNotRepresentable;
+import dev.erst.gridgrind.core.problem.RequestShapeStructuralProblem;
+import dev.erst.gridgrind.core.problem.RequestStructuralProblem;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;

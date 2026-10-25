@@ -1,5 +1,12 @@
 package dev.erst.gridgrind.contract.json;
 
+import dev.erst.gridgrind.core.problem.FormulaRequestException;
+import dev.erst.gridgrind.core.problem.InvalidRequestException;
+import dev.erst.gridgrind.core.problem.InvalidRequestShapeException;
+import dev.erst.gridgrind.core.problem.MessageInvariant;
+import dev.erst.gridgrind.core.problem.PayloadException;
+import dev.erst.gridgrind.core.problem.RequestProblemDescriptor;
+import dev.erst.gridgrind.core.problem.RequestProblemSource;
 import java.util.Objects;
 import java.util.Optional;
 
