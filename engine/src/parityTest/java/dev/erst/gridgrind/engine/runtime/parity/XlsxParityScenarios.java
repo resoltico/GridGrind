@@ -58,6 +58,7 @@ import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import dev.erst.gridgrind.core.result.WorkbookResult;
 import dev.erst.gridgrind.core.source.BinarySourceInput;
 import dev.erst.gridgrind.core.source.TextSourceInput;
+import dev.erst.gridgrind.core.vocabulary.CellAddress;
 import dev.erst.gridgrind.core.vocabulary.ExcelAuthoredDrawingShapeKind;
 import dev.erst.gridgrind.core.vocabulary.ExcelBorderStyle;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartBarDirection;
@@ -1322,11 +1323,11 @@ public final class XlsxParityScenarios {
                             headerFooter("Ops", "Quarterly", "2026"),
                             headerFooter("GridGrind", "Parity", "1")))),
                 mutate(
-                    new CellSelector.ByAddress(new SheetName("Ops"), "C4"),
+                    new CellSelector.ByAddress(new SheetName("Ops"), new CellAddress("C4")),
                     new CellMutationAction.SetHyperlink(
                         new HyperlinkTarget.Url("https://example.com/docs"))),
                 mutate(
-                    new CellSelector.ByAddress(new SheetName("Ops"), "C4"),
+                    new CellSelector.ByAddress(new SheetName("Ops"), new CellAddress("C4")),
                     new CellMutationAction.SetComment(comment("Review docs", "GridGrind", true))),
                 mutate(
                     new StructuredMutationAction.SetNamedRange(
@@ -1515,40 +1516,40 @@ public final class XlsxParityScenarios {
                 new SheetSelector.ByName(new SheetName("Chart")),
                 new WorkbookMutationAction.EnsureSheet()),
             mutate(
-                new CellSelector.ByAddress(new SheetName("Chart"), "A1"),
+                new CellSelector.ByAddress(new SheetName("Chart"), new CellAddress("A1")),
                 new CellMutationAction.SetCell(text("Month"))),
             mutate(
-                new CellSelector.ByAddress(new SheetName("Chart"), "B1"),
+                new CellSelector.ByAddress(new SheetName("Chart"), new CellAddress("B1")),
                 new CellMutationAction.SetCell(text("Plan"))),
             mutate(
-                new CellSelector.ByAddress(new SheetName("Chart"), "C1"),
+                new CellSelector.ByAddress(new SheetName("Chart"), new CellAddress("C1")),
                 new CellMutationAction.SetCell(text("Actual"))),
             mutate(
-                new CellSelector.ByAddress(new SheetName("Chart"), "A2"),
+                new CellSelector.ByAddress(new SheetName("Chart"), new CellAddress("A2")),
                 new CellMutationAction.SetCell(text("Jan"))),
             mutate(
-                new CellSelector.ByAddress(new SheetName("Chart"), "B2"),
+                new CellSelector.ByAddress(new SheetName("Chart"), new CellAddress("B2")),
                 new CellMutationAction.SetCell(new CellInput.NumberValue(10d))),
             mutate(
-                new CellSelector.ByAddress(new SheetName("Chart"), "C2"),
+                new CellSelector.ByAddress(new SheetName("Chart"), new CellAddress("C2")),
                 new CellMutationAction.SetCell(new CellInput.NumberValue(12d))),
             mutate(
-                new CellSelector.ByAddress(new SheetName("Chart"), "A3"),
+                new CellSelector.ByAddress(new SheetName("Chart"), new CellAddress("A3")),
                 new CellMutationAction.SetCell(text("Feb"))),
             mutate(
-                new CellSelector.ByAddress(new SheetName("Chart"), "B3"),
+                new CellSelector.ByAddress(new SheetName("Chart"), new CellAddress("B3")),
                 new CellMutationAction.SetCell(new CellInput.NumberValue(18d))),
             mutate(
-                new CellSelector.ByAddress(new SheetName("Chart"), "C3"),
+                new CellSelector.ByAddress(new SheetName("Chart"), new CellAddress("C3")),
                 new CellMutationAction.SetCell(new CellInput.NumberValue(16d))),
             mutate(
-                new CellSelector.ByAddress(new SheetName("Chart"), "A4"),
+                new CellSelector.ByAddress(new SheetName("Chart"), new CellAddress("A4")),
                 new CellMutationAction.SetCell(text("Mar"))),
             mutate(
-                new CellSelector.ByAddress(new SheetName("Chart"), "B4"),
+                new CellSelector.ByAddress(new SheetName("Chart"), new CellAddress("B4")),
                 new CellMutationAction.SetCell(new CellInput.NumberValue(15d))),
             mutate(
-                new CellSelector.ByAddress(new SheetName("Chart"), "C4"),
+                new CellSelector.ByAddress(new SheetName("Chart"), new CellAddress("C4")),
                 new CellMutationAction.SetCell(new CellInput.NumberValue(21d))),
             mutate(
                 new StructuredMutationAction.SetNamedRange(
@@ -1587,64 +1588,64 @@ public final class XlsxParityScenarios {
                     new SheetSelector.ByName(new SheetName("TableReport")),
                     new WorkbookMutationAction.EnsureSheet()),
                 mutate(
-                    new CellSelector.ByAddress(new SheetName("Data"), "A1"),
+                    new CellSelector.ByAddress(new SheetName("Data"), new CellAddress("A1")),
                     new CellMutationAction.SetCell(text("Region"))),
                 mutate(
-                    new CellSelector.ByAddress(new SheetName("Data"), "B1"),
+                    new CellSelector.ByAddress(new SheetName("Data"), new CellAddress("B1")),
                     new CellMutationAction.SetCell(text("Stage"))),
                 mutate(
-                    new CellSelector.ByAddress(new SheetName("Data"), "C1"),
+                    new CellSelector.ByAddress(new SheetName("Data"), new CellAddress("C1")),
                     new CellMutationAction.SetCell(text("Owner"))),
                 mutate(
-                    new CellSelector.ByAddress(new SheetName("Data"), "D1"),
+                    new CellSelector.ByAddress(new SheetName("Data"), new CellAddress("D1")),
                     new CellMutationAction.SetCell(text("Amount"))),
                 mutate(
-                    new CellSelector.ByAddress(new SheetName("Data"), "A2"),
+                    new CellSelector.ByAddress(new SheetName("Data"), new CellAddress("A2")),
                     new CellMutationAction.SetCell(text("North"))),
                 mutate(
-                    new CellSelector.ByAddress(new SheetName("Data"), "B2"),
+                    new CellSelector.ByAddress(new SheetName("Data"), new CellAddress("B2")),
                     new CellMutationAction.SetCell(text("Plan"))),
                 mutate(
-                    new CellSelector.ByAddress(new SheetName("Data"), "C2"),
+                    new CellSelector.ByAddress(new SheetName("Data"), new CellAddress("C2")),
                     new CellMutationAction.SetCell(text("Ada"))),
                 mutate(
-                    new CellSelector.ByAddress(new SheetName("Data"), "D2"),
+                    new CellSelector.ByAddress(new SheetName("Data"), new CellAddress("D2")),
                     new CellMutationAction.SetCell(new CellInput.NumberValue(10d))),
                 mutate(
-                    new CellSelector.ByAddress(new SheetName("Data"), "A3"),
+                    new CellSelector.ByAddress(new SheetName("Data"), new CellAddress("A3")),
                     new CellMutationAction.SetCell(text("North"))),
                 mutate(
-                    new CellSelector.ByAddress(new SheetName("Data"), "B3"),
+                    new CellSelector.ByAddress(new SheetName("Data"), new CellAddress("B3")),
                     new CellMutationAction.SetCell(text("Do"))),
                 mutate(
-                    new CellSelector.ByAddress(new SheetName("Data"), "C3"),
+                    new CellSelector.ByAddress(new SheetName("Data"), new CellAddress("C3")),
                     new CellMutationAction.SetCell(text("Ada"))),
                 mutate(
-                    new CellSelector.ByAddress(new SheetName("Data"), "D3"),
+                    new CellSelector.ByAddress(new SheetName("Data"), new CellAddress("D3")),
                     new CellMutationAction.SetCell(new CellInput.NumberValue(15d))),
                 mutate(
-                    new CellSelector.ByAddress(new SheetName("Data"), "A4"),
+                    new CellSelector.ByAddress(new SheetName("Data"), new CellAddress("A4")),
                     new CellMutationAction.SetCell(text("South"))),
                 mutate(
-                    new CellSelector.ByAddress(new SheetName("Data"), "B4"),
+                    new CellSelector.ByAddress(new SheetName("Data"), new CellAddress("B4")),
                     new CellMutationAction.SetCell(text("Plan"))),
                 mutate(
-                    new CellSelector.ByAddress(new SheetName("Data"), "C4"),
+                    new CellSelector.ByAddress(new SheetName("Data"), new CellAddress("C4")),
                     new CellMutationAction.SetCell(text("Lin"))),
                 mutate(
-                    new CellSelector.ByAddress(new SheetName("Data"), "D4"),
+                    new CellSelector.ByAddress(new SheetName("Data"), new CellAddress("D4")),
                     new CellMutationAction.SetCell(new CellInput.NumberValue(7d))),
                 mutate(
-                    new CellSelector.ByAddress(new SheetName("Data"), "A5"),
+                    new CellSelector.ByAddress(new SheetName("Data"), new CellAddress("A5")),
                     new CellMutationAction.SetCell(text("South"))),
                 mutate(
-                    new CellSelector.ByAddress(new SheetName("Data"), "B5"),
+                    new CellSelector.ByAddress(new SheetName("Data"), new CellAddress("B5")),
                     new CellMutationAction.SetCell(text("Do"))),
                 mutate(
-                    new CellSelector.ByAddress(new SheetName("Data"), "C5"),
+                    new CellSelector.ByAddress(new SheetName("Data"), new CellAddress("C5")),
                     new CellMutationAction.SetCell(text("Lin"))),
                 mutate(
-                    new CellSelector.ByAddress(new SheetName("Data"), "D5"),
+                    new CellSelector.ByAddress(new SheetName("Data"), new CellAddress("D5")),
                     new CellMutationAction.SetCell(new CellInput.NumberValue(12d))),
                 mutate(
                     new StructuredMutationAction.SetNamedRange(
@@ -1665,7 +1666,7 @@ public final class XlsxParityScenarios {
                             "Sales Pivot",
                             new SheetName("RangeReport"),
                             new PivotTableInput.Source.Range(new SheetName("Data"), "A1:D5"),
-                            new PivotTableInput.Anchor("C5"),
+                            new PivotTableInput.Anchor(new CellAddress("C5")),
                             List.of("Region"),
                             List.of("Stage"),
                             List.of(),
@@ -1676,7 +1677,7 @@ public final class XlsxParityScenarios {
                             "Named Pivot",
                             new SheetName("NamedReport"),
                             new PivotTableInput.Source.NamedRange("PivotSource"),
-                            new PivotTableInput.Anchor("A3"),
+                            new PivotTableInput.Anchor(new CellAddress("A3")),
                             List.of("Region"),
                             List.of(),
                             List.of("Owner"),
@@ -1687,7 +1688,7 @@ public final class XlsxParityScenarios {
                             "Table Pivot",
                             new SheetName("TableReport"),
                             new PivotTableInput.Source.Table("SalesTable"),
-                            new PivotTableInput.Anchor("F4"),
+                            new PivotTableInput.Anchor(new CellAddress("F4")),
                             List.of("Stage"),
                             List.of(),
                             List.of(),

@@ -48,6 +48,7 @@ import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import dev.erst.gridgrind.core.plan.WorkbookSelector;
 import dev.erst.gridgrind.core.source.BinarySourceInput;
 import dev.erst.gridgrind.core.source.TextSourceInput;
+import dev.erst.gridgrind.core.vocabulary.CellAddress;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartAxisCrosses;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartAxisKind;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartAxisPosition;
@@ -143,27 +144,27 @@ class SequenceIntrospectionTest {
         "SET_HYPERLINK",
         mutationKind(
             mutate(
-                new CellSelector.ByAddress(new SheetName("Budget"), "A1"),
+                new CellSelector.ByAddress(new SheetName("Budget"), new CellAddress("A1")),
                 new CellMutationAction.SetHyperlink(
                     new HyperlinkTarget.Url("https://example.com")))));
     assertEquals(
         "CLEAR_HYPERLINK",
         mutationKind(
             mutate(
-                new CellSelector.ByAddress(new SheetName("Budget"), "A1"),
+                new CellSelector.ByAddress(new SheetName("Budget"), new CellAddress("A1")),
                 new CellMutationAction.ClearHyperlink())));
     assertEquals(
         "SET_COMMENT",
         mutationKind(
             mutate(
-                new CellSelector.ByAddress(new SheetName("Budget"), "A1"),
+                new CellSelector.ByAddress(new SheetName("Budget"), new CellAddress("A1")),
                 new CellMutationAction.SetComment(
                     CommentInput.plain(TextSourceInput.inline("Review"), "GridGrind", false)))));
     assertEquals(
         "CLEAR_COMMENT",
         mutationKind(
             mutate(
-                new CellSelector.ByAddress(new SheetName("Budget"), "A1"),
+                new CellSelector.ByAddress(new SheetName("Budget"), new CellAddress("A1")),
                 new CellMutationAction.ClearComment())));
     assertEquals(
         "SET_PICTURE",
@@ -329,7 +330,7 @@ class SequenceIntrospectionTest {
         mutationKinds(
                 List.of(
                     mutate(
-                        new CellSelector.ByAddress(new SheetName("Budget"), "A1"),
+                        new CellSelector.ByAddress(new SheetName("Budget"), new CellAddress("A1")),
                         new CellMutationAction.SetHyperlink(
                             new HyperlinkTarget.Url("https://example.com")))))
             .get("SET_HYPERLINK"));
@@ -565,7 +566,8 @@ class SequenceIntrospectionTest {
                         "UTF-8")),
                 inspect(
                     "cells",
-                    new CellSelector.ByAddresses(new SheetName("Budget"), List.of("A1")),
+                    new CellSelector.ByAddresses(
+                        new SheetName("Budget"), List.of(new CellAddress("A1"))),
                     new SheetIntrospectionQuery.GetCells()),
                 inspect(
                     "array-formulas",
@@ -778,7 +780,7 @@ class SequenceIntrospectionTest {
         "OpsPivot",
         new SheetName("Budget"),
         new PivotTableInput.Source.Range(new SheetName("Budget"), "A1:C4"),
-        new PivotTableInput.Anchor("F4"),
+        new PivotTableInput.Anchor(new CellAddress("F4")),
         List.of("Month"),
         List.of(),
         List.of(),

@@ -24,6 +24,7 @@ import dev.erst.gridgrind.core.plan.InspectionStep;
 import dev.erst.gridgrind.core.plan.RangeSelector;
 import dev.erst.gridgrind.core.plan.SheetInspectionResult;
 import dev.erst.gridgrind.core.plan.SheetIntrospectionQuery;
+import dev.erst.gridgrind.core.vocabulary.CellAddress;
 import dev.erst.gridgrind.core.vocabulary.ExcelFillPattern;
 import dev.erst.gridgrind.core.vocabulary.ExcelHorizontalAlignment;
 import dev.erst.gridgrind.core.vocabulary.ExcelVerticalAlignment;
@@ -44,7 +45,7 @@ class WorkbookInvariantM3CoverageTest {
             WorkbookInvariantAnalysisLayoutChecks.requireWindowShape(
                 new WindowReport.Sparse(
                     new SheetLabel("Budget"),
-                    "A1",
+                    new CellAddress("A1"),
                     new WindowDimensionsReport(2, 2),
                     List.of(textCell("A1", "Ada")))));
     assertDoesNotThrow(
@@ -52,7 +53,7 @@ class WorkbookInvariantM3CoverageTest {
             WorkbookInvariantAnalysisLayoutChecks.requireWindowShape(
                 new WindowReport.Dense(
                     new SheetLabel("Budget"),
-                    "A1",
+                    new CellAddress("A1"),
                     new WindowDimensionsReport(1, 2),
                     List.of(
                         new WindowRowReport(0, List.of(blankCell("A1"), textCell("B1", "Ada")))))));
@@ -64,7 +65,7 @@ class WorkbookInvariantM3CoverageTest {
         () ->
             WorkbookInvariantCellContentChecks.requireCellReportShape(
                 new CellReport.TextReport(
-                    "A1",
+                    new CellAddress("A1"),
                     Optional.of("Ada"),
                     Optional.of(style()),
                     Optional.of(new HyperlinkTarget.Url("https://example.com/report")),
@@ -75,7 +76,7 @@ class WorkbookInvariantM3CoverageTest {
         () ->
             WorkbookInvariantCellContentChecks.requireCellReportShape(
                 new CellReport.NumberReport(
-                    "A2",
+                    new CellAddress("A2"),
                     Optional.of("7/1/2026"),
                     Optional.of(style()),
                     Optional.empty(),
@@ -87,7 +88,7 @@ class WorkbookInvariantM3CoverageTest {
         () ->
             WorkbookInvariantCellContentChecks.requireCellReportShape(
                 new CellReport.FormulaReport(
-                    "A3",
+                    new CellAddress("A3"),
                     Optional.of("Ada"),
                     Optional.of(style()),
                     Optional.empty(),
@@ -102,14 +103,15 @@ class WorkbookInvariantM3CoverageTest {
     InspectionStep step =
         new InspectionStep(
             new StepId("window"),
-            new RangeSelector.RectangularWindow(new SheetName("Budget"), "A1", 1, 1),
+            new RangeSelector.RectangularWindow(
+                new SheetName("Budget"), new CellAddress("A1"), 1, 1),
             new SheetIntrospectionQuery.GetWindow(Optional.empty(), true));
     SheetInspectionResult.WindowResult result =
         new SheetInspectionResult.WindowResult(
             new StepId("window"),
             new WindowReport.Dense(
                 new SheetLabel("Budget"),
-                "A1",
+                new CellAddress("A1"),
                 new WindowDimensionsReport(1, 1),
                 List.of(new WindowRowReport(0, List.of(blankCell("A1"))))));
 
@@ -119,12 +121,16 @@ class WorkbookInvariantM3CoverageTest {
 
   private static CellReport.BlankReport blankCell(String address) {
     return new CellReport.BlankReport(
-        address, Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty());
+        new CellAddress(address),
+        Optional.empty(),
+        Optional.empty(),
+        Optional.empty(),
+        Optional.empty());
   }
 
   private static CellReport.TextReport textCell(String address, String value) {
     return new CellReport.TextReport(
-        address,
+        new CellAddress(address),
         Optional.of(value),
         Optional.of(style()),
         Optional.empty(),

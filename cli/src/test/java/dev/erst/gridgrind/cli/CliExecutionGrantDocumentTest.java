@@ -13,6 +13,7 @@ import dev.erst.gridgrind.core.plan.InspectionStep;
 import dev.erst.gridgrind.core.plan.SheetIntrospectionQuery;
 import dev.erst.gridgrind.core.plan.SheetSelector;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
+import dev.erst.gridgrind.core.vocabulary.CellAddress;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.engine.api.GridGrindExecutionGrant;
@@ -246,7 +247,7 @@ class CliExecutionGrantDocumentTest {
     AssertionStep assertion =
         new AssertionStep(
             new StepId("assert-owner"),
-            new CellSelector.ByAddress(new SheetName("Summary"), "A1"),
+            new CellSelector.ByAddress(new SheetName("Summary"), new CellAddress("A1")),
             new CellAssertion.CellValue(new CellScalarValue.Text("Approved")));
     CliGrantAcceptancePolicy.Requirement.TerminalAssertions requirement =
         new CliGrantAcceptancePolicy.Requirement.TerminalAssertions(List.of(assertion));

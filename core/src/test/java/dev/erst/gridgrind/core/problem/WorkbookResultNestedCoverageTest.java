@@ -39,6 +39,7 @@ import dev.erst.gridgrind.core.result.TypeCountReport;
 import dev.erst.gridgrind.core.result.WorkbookFindingsReport;
 import dev.erst.gridgrind.core.vocabulary.AnalysisFindingCode;
 import dev.erst.gridgrind.core.vocabulary.AnalysisSeverity;
+import dev.erst.gridgrind.core.vocabulary.CellAddress;
 import dev.erst.gridgrind.core.vocabulary.ExcelFillPattern;
 import dev.erst.gridgrind.core.vocabulary.ExcelHorizontalAlignment;
 import dev.erst.gridgrind.core.vocabulary.ExcelPaneRegion;
@@ -57,7 +58,7 @@ class WorkbookResultNestedCoverageTest {
   void windowLayoutSchemaAndAnalysisReportsValidateAndCopyCollections() {
     dev.erst.gridgrind.core.model.value.CellReport textCell =
         new dev.erst.gridgrind.core.model.value.CellReport.TextReport(
-            "A1",
+            new CellAddress("A1"),
             Optional.of("Owner"),
             Optional.of(style()),
             Optional.empty(),
@@ -67,7 +68,10 @@ class WorkbookResultNestedCoverageTest {
     WindowRowReport row = new WindowRowReport(0, List.of(textCell));
     WindowReport window =
         new WindowReport.Dense(
-            new SheetLabel("Budget"), "A1", new WindowDimensionsReport(1, 1), List.of(row));
+            new SheetLabel("Budget"),
+            new CellAddress("A1"),
+            new WindowDimensionsReport(1, 1),
+            List.of(row));
     assertEquals("Budget", window.sheetName().value());
     assertEquals(
         "rowCount must be greater than 0",
@@ -100,7 +104,7 @@ class WorkbookResultNestedCoverageTest {
     SheetSchemaReport schema =
         new SheetSchemaReport(
             new SheetLabel("Budget"),
-            "A1",
+            new CellAddress("A1"),
             2,
             1,
             1,
@@ -144,7 +148,7 @@ class WorkbookResultNestedCoverageTest {
         "formula must not be blank",
         assertThrows(
                 IllegalArgumentException.class,
-                () -> new FormulaPatternReport(" ", 1, List.of("A1")))
+                () -> new FormulaPatternReport(" ", 1, List.of(new CellAddress("A1"))))
             .getMessage());
 
     AnalysisSummaryReport summary = new AnalysisSummaryReport(1, 0, 1, 0);
@@ -188,7 +192,7 @@ class WorkbookResultNestedCoverageTest {
 
     dev.erst.gridgrind.core.model.value.CellReport.NumberReport numberCell =
         new dev.erst.gridgrind.core.model.value.CellReport.NumberReport(
-            "A1",
+            new CellAddress("A1"),
             java.util.Optional.of("1"),
             java.util.Optional.of(style()),
             java.util.Optional.empty(),
@@ -197,7 +201,7 @@ class WorkbookResultNestedCoverageTest {
             java.util.Optional.empty());
     dev.erst.gridgrind.core.model.value.CellReport.BooleanReport booleanCell =
         new dev.erst.gridgrind.core.model.value.CellReport.BooleanReport(
-            "A2",
+            new CellAddress("A2"),
             java.util.Optional.of("TRUE"),
             java.util.Optional.of(style()),
             java.util.Optional.empty(),
@@ -205,7 +209,7 @@ class WorkbookResultNestedCoverageTest {
             java.util.Optional.of(true));
     dev.erst.gridgrind.core.model.value.CellReport.ErrorReport errorCell =
         new dev.erst.gridgrind.core.model.value.CellReport.ErrorReport(
-            "A3",
+            new CellAddress("A3"),
             java.util.Optional.of("#DIV/0!"),
             java.util.Optional.of(style()),
             java.util.Optional.empty(),
@@ -213,7 +217,7 @@ class WorkbookResultNestedCoverageTest {
             java.util.Optional.of("#DIV/0!"));
     dev.erst.gridgrind.core.model.value.CellReport.FormulaReport formulaCell =
         new dev.erst.gridgrind.core.model.value.CellReport.FormulaReport(
-            "A4",
+            new CellAddress("A4"),
             java.util.Optional.of("1"),
             java.util.Optional.of(style()),
             java.util.Optional.empty(),

@@ -4,6 +4,7 @@ import dev.erst.gridgrind.core.model.formula.FormulaCellTarget;
 import dev.erst.gridgrind.core.plan.ExecutionPolicyInput;
 import dev.erst.gridgrind.core.plan.RangeSelector;
 import dev.erst.gridgrind.core.plan.RowBandSelector;
+import dev.erst.gridgrind.core.vocabulary.CellAddress;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import java.util.List;
 
@@ -37,7 +38,7 @@ final class OperationSequenceSelectorSupport {
     return new FormulaCellTarget(
         new dev.erst.gridgrind.core.vocabulary.SheetName(
             data.consumeBoolean() ? primarySheet : secondarySheet),
-        nextFormulaTargetAddress(data, validAddress));
+        new CellAddress(nextFormulaTargetAddress(data, validAddress)));
   }
 
   static String nextFormulaTargetAddress(GridGrindFuzzData data, boolean validAddress) {

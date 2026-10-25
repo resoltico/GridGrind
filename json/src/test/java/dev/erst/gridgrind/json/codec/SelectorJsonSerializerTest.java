@@ -18,6 +18,7 @@ import dev.erst.gridgrind.core.plan.TableCellSelector;
 import dev.erst.gridgrind.core.plan.TableRowSelector;
 import dev.erst.gridgrind.core.plan.TableSelector;
 import dev.erst.gridgrind.core.plan.WorkbookSelector;
+import dev.erst.gridgrind.core.vocabulary.CellAddress;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import org.junit.jupiter.api.Test;
 
@@ -27,7 +28,8 @@ class SelectorJsonSerializerTest {
   void serializesCanonicalRecordSelectorsWithTypeAndFields() throws Exception {
     String json =
         GridGrindJsonMapperSupport.JSON_MAPPER.writeValueAsString(
-            new SelectorEnvelope(new CellSelector.ByAddress(new SheetName("Budget"), "A1")));
+            new SelectorEnvelope(
+                new CellSelector.ByAddress(new SheetName("Budget"), new CellAddress("A1"))));
 
     assertTrue(json.contains("\"selector\":{\"type\":\"CELL_BY_ADDRESS\""));
     assertTrue(json.contains("\"sheetName\":\"Budget\""));

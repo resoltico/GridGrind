@@ -11,6 +11,7 @@ import dev.erst.gridgrind.core.plan.CellAssertion;
 import dev.erst.gridgrind.core.plan.CellSelector;
 import dev.erst.gridgrind.core.semantics.OperationEffect;
 import dev.erst.gridgrind.core.semantics.OperationEffectFootprint;
+import dev.erst.gridgrind.core.vocabulary.CellAddress;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import java.util.List;
@@ -52,7 +53,7 @@ class WorkbookExecutionEvidenceTest {
             new AssertionFailure(
                 new StepId("assert-cell"),
                 "EXPECT_CELL_VALUE",
-                new CellSelector.ByAddress(new SheetName("Summary"), "A1"),
+                new CellSelector.ByAddress(new SheetName("Summary"), new CellAddress("A1")),
                 new CellAssertion.CellValue(new CellScalarValue.Text("Approved")),
                 List.of()));
     WorkbookExecutionEvidence.TaskSpecific.Assertion passedAssertion =
@@ -136,7 +137,7 @@ class WorkbookExecutionEvidenceTest {
         new AssertionFailure(
             new StepId("assert-cell"),
             "EXPECT_CELL_VALUE",
-            new CellSelector.ByAddress(new SheetName("Summary"), "A1"),
+            new CellSelector.ByAddress(new SheetName("Summary"), new CellAddress("A1")),
             new CellAssertion.CellValue(new CellScalarValue.Text("Approved")),
             List.of());
     return new WorkbookExecutionEvidence.TaskSpecific.Assertion(

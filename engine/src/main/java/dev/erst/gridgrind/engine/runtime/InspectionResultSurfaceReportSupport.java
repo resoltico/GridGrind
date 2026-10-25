@@ -8,6 +8,7 @@ import dev.erst.gridgrind.core.model.formula.SheetFormulaSurfaceReport;
 import dev.erst.gridgrind.core.model.table.SchemaColumnReport;
 import dev.erst.gridgrind.core.model.table.SheetSchemaReport;
 import dev.erst.gridgrind.core.result.TypeCountReport;
+import dev.erst.gridgrind.core.vocabulary.CellAddress;
 import dev.erst.gridgrind.core.vocabulary.NamedRangeBackingKind;
 import dev.erst.gridgrind.core.vocabulary.SheetLabel;
 import dev.erst.gridgrind.excel.ExcelCellReadProjection;
@@ -33,7 +34,9 @@ final class InspectionResultSurfaceReportSupport {
                                     new FormulaPatternReport(
                                         formula.formula(),
                                         formula.occurrenceCount(),
-                                        formula.addresses()))
+                                        formula.addresses().stream()
+                                            .map(CellAddress::new)
+                                            .toList()))
                             .toList()))
             .toList());
   }
@@ -44,7 +47,7 @@ final class InspectionResultSurfaceReportSupport {
       boolean date1904) {
     return new SheetSchemaReport(
         new SheetLabel(surface.sheetName()),
-        surface.topLeftAddress(),
+        new CellAddress(surface.topLeftAddress()),
         surface.rowCount(),
         surface.columnCount(),
         surface.dataRowCount(),

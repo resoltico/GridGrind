@@ -14,7 +14,7 @@ final class WorkbookInvariantCellContentChecks {
   static void requireCellReportShape(dev.erst.gridgrind.core.model.value.CellReport cellReport) {
     WorkbookInvariantChecks.require(cellReport.address() != null, "cell address must not be null");
     WorkbookInvariantChecks.require(
-        !cellReport.address().isBlank(), "cell address must not be blank");
+        !cellReport.address().value().isBlank(), "cell address must not be blank");
     WorkbookInvariantChecks.require(cellReport.type() != null, "cell type must not be null");
     WorkbookInvariantChecks.require(!cellReport.type().isBlank(), "cell type must not be blank");
     WorkbookInvariantChecks.require(

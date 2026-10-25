@@ -285,12 +285,14 @@ class DefaultGridGrindRequestExecutorReadResultTranslationTest
             .sheetName()
             .value());
     assertEquals(
-        "A1", cast(SheetInspectionResult.CellsResult.class, cells).cells().getFirst().address());
+        "A1",
+        cast(SheetInspectionResult.CellsResult.class, cells).cells().getFirst().address().value());
     assertEquals(
         "A1",
         windowCells(cast(SheetInspectionResult.WindowResult.class, window).window())
             .getFirst()
-            .address());
+            .address()
+            .value());
     assertEquals(
         "A1:B2",
         cast(SheetInspectionResult.MergedRegionsResult.class, merged)

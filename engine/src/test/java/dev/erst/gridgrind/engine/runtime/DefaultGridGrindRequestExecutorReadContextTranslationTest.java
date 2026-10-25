@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import dev.erst.gridgrind.core.plan.*;
 import dev.erst.gridgrind.core.plan.InspectionStep;
+import dev.erst.gridgrind.core.vocabulary.CellAddress;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.excel.*;
 import dev.erst.gridgrind.excel.ExcelNamedRangeScope;
@@ -70,12 +71,14 @@ class DefaultGridGrindRequestExecutorReadContextTranslationTest
             readType(
                 inspect(
                     "cells",
-                    new CellSelector.ByAddresses(new SheetName("Budget"), List.of("A1")),
+                    new CellSelector.ByAddresses(
+                        new SheetName("Budget"), List.of(new CellAddress("A1"))),
                     new SheetIntrospectionQuery.GetCells())),
             readType(
                 inspect(
                     "window",
-                    new RangeSelector.RectangularWindow(new SheetName("Budget"), "A1", 1, 1),
+                    new RangeSelector.RectangularWindow(
+                        new SheetName("Budget"), new CellAddress("A1"), 1, 1),
                     new SheetIntrospectionQuery.GetWindow())),
             readType(
                 inspect(
@@ -130,7 +133,8 @@ class DefaultGridGrindRequestExecutorReadContextTranslationTest
             readType(
                 inspect(
                     "schema",
-                    new RangeSelector.RectangularWindow(new SheetName("Budget"), "A1", 1, 1),
+                    new RangeSelector.RectangularWindow(
+                        new SheetName("Budget"), new CellAddress("A1"), 1, 1),
                     new InspectionSurfaceQuery.GetSheetSchema())),
             readType(
                 inspect(
@@ -210,12 +214,13 @@ class DefaultGridGrindRequestExecutorReadContextTranslationTest
     InspectionStep cells =
         inspect(
             "cells",
-            new CellSelector.ByAddresses(new SheetName("Budget"), List.of("A1")),
+            new CellSelector.ByAddresses(new SheetName("Budget"), List.of(new CellAddress("A1"))),
             new SheetIntrospectionQuery.GetCells());
     InspectionStep window =
         inspect(
             "window",
-            new RangeSelector.RectangularWindow(new SheetName("Budget"), "B2", 2, 2),
+            new RangeSelector.RectangularWindow(
+                new SheetName("Budget"), new CellAddress("B2"), 2, 2),
             new SheetIntrospectionQuery.GetWindow());
     InspectionStep merged =
         inspect(
@@ -230,7 +235,7 @@ class DefaultGridGrindRequestExecutorReadContextTranslationTest
     InspectionStep comments =
         inspect(
             "comments",
-            new CellSelector.ByAddresses(new SheetName("Budget"), List.of("A1")),
+            new CellSelector.ByAddresses(new SheetName("Budget"), List.of(new CellAddress("A1"))),
             new SheetIntrospectionQuery.GetComments());
     InspectionStep layout =
         inspect(
@@ -267,7 +272,8 @@ class DefaultGridGrindRequestExecutorReadContextTranslationTest
     InspectionStep schema =
         inspect(
             "schema",
-            new RangeSelector.RectangularWindow(new SheetName("Budget"), "C3", 2, 2),
+            new RangeSelector.RectangularWindow(
+                new SheetName("Budget"), new CellAddress("C3"), 2, 2),
             new InspectionSurfaceQuery.GetSheetSchema());
     InspectionStep surface =
         inspect(
@@ -414,7 +420,8 @@ class DefaultGridGrindRequestExecutorReadContextTranslationTest
         addressFor(
             inspect(
                 "schema",
-                new RangeSelector.RectangularWindow(new SheetName("Budget"), "C3", 2, 2),
+                new RangeSelector.RectangularWindow(
+                    new SheetName("Budget"), new CellAddress("C3"), 2, 2),
                 new InspectionSurfaceQuery.GetSheetSchema()),
             invalidAddress));
     assertEquals(

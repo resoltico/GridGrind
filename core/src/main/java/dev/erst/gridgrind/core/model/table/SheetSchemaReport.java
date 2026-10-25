@@ -1,6 +1,7 @@
 package dev.erst.gridgrind.core.model.table;
 
 import dev.erst.gridgrind.core.result.WorkbookResultSupport;
+import dev.erst.gridgrind.core.vocabulary.CellAddress;
 import dev.erst.gridgrind.core.vocabulary.SheetLabel;
 import java.util.List;
 import java.util.Objects;
@@ -8,7 +9,7 @@ import java.util.Objects;
 /** Inferred schema facts for one rectangular sheet window. */
 public record SheetSchemaReport(
     SheetLabel sheetName,
-    String topLeftAddress,
+    CellAddress topLeftAddress,
     int rowCount,
     int columnCount,
     int dataRowCount,
@@ -16,9 +17,6 @@ public record SheetSchemaReport(
   public SheetSchemaReport {
     Objects.requireNonNull(sheetName, "sheetName must not be null");
     Objects.requireNonNull(topLeftAddress, "topLeftAddress must not be null");
-    if (topLeftAddress.isBlank()) {
-      throw new IllegalArgumentException("topLeftAddress must not be blank");
-    }
     if (rowCount <= 0) {
       throw new IllegalArgumentException("rowCount must be greater than 0");
     }

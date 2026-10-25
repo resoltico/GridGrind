@@ -564,7 +564,7 @@ final class WorkbookInvariantWorkbookSurfaceChecks {
   static void requirePivotTableAnchorShape(PivotTableReport.Anchor anchor) {
     WorkbookInvariantChecks.require(anchor != null, "pivot table anchor must not be null");
     WorkbookInvariantChecks.requireNonBlank(
-        anchor.topLeftAddress(), "pivot table anchor topLeftAddress");
+        anchor.topLeftAddress().value(), "pivot table anchor topLeftAddress");
     WorkbookInvariantChecks.requireNonBlank(
         anchor.locationRange(), "pivot table anchor locationRange");
   }

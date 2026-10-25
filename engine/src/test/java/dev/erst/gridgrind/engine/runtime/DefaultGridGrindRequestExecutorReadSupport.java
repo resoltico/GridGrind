@@ -12,6 +12,7 @@ import dev.erst.gridgrind.core.model.value.CellReport;
 import dev.erst.gridgrind.core.model.value.CellValueReport;
 import dev.erst.gridgrind.core.plan.*;
 import dev.erst.gridgrind.core.result.WorkbookResult;
+import dev.erst.gridgrind.core.vocabulary.CellAddress;
 import dev.erst.gridgrind.core.vocabulary.ExcelBorderStyle;
 import dev.erst.gridgrind.core.vocabulary.ExcelHorizontalAlignment;
 import dev.erst.gridgrind.core.vocabulary.ExcelVerticalAlignment;
@@ -125,13 +126,17 @@ class DefaultGridGrindRequestExecutorReadSupport {
   static CellReport.BlankReport blankReadCell(
       String address, String displayValue, CellStyleReport style) {
     return new CellReport.BlankReport(
-        address, Optional.of(displayValue), Optional.of(style), Optional.empty(), Optional.empty());
+        new CellAddress(address),
+        Optional.of(displayValue),
+        Optional.of(style),
+        Optional.empty(),
+        Optional.empty());
   }
 
   static CellReport.TextReport textReadCell(
       String address, String displayValue, CellStyleReport style, String textValue) {
     return new CellReport.TextReport(
-        address,
+        new CellAddress(address),
         Optional.of(displayValue),
         Optional.of(style),
         Optional.empty(),
@@ -143,7 +148,7 @@ class DefaultGridGrindRequestExecutorReadSupport {
   static CellReport.NumberReport numberReadCell(
       String address, String displayValue, CellStyleReport style, double numberValue) {
     return new CellReport.NumberReport(
-        address,
+        new CellAddress(address),
         Optional.of(displayValue),
         Optional.of(style),
         Optional.empty(),
@@ -155,7 +160,7 @@ class DefaultGridGrindRequestExecutorReadSupport {
   static CellReport.BooleanReport booleanReadCell(
       String address, String displayValue, CellStyleReport style, boolean booleanValue) {
     return new CellReport.BooleanReport(
-        address,
+        new CellAddress(address),
         Optional.of(displayValue),
         Optional.of(style),
         Optional.empty(),
@@ -166,7 +171,7 @@ class DefaultGridGrindRequestExecutorReadSupport {
   static CellReport.ErrorReport errorReadCell(
       String address, String displayValue, CellStyleReport style, String errorValue) {
     return new CellReport.ErrorReport(
-        address,
+        new CellAddress(address),
         Optional.of(displayValue),
         Optional.of(style),
         Optional.empty(),
@@ -181,7 +186,7 @@ class DefaultGridGrindRequestExecutorReadSupport {
       String formula,
       CellValueReport evaluation) {
     return new CellReport.FormulaReport(
-        address,
+        new CellAddress(address),
         Optional.of(displayValue),
         Optional.of(style),
         Optional.empty(),

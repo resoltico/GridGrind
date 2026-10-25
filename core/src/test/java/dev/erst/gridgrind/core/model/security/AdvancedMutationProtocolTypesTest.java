@@ -60,6 +60,7 @@ import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import dev.erst.gridgrind.core.source.BinarySourceInput;
 import dev.erst.gridgrind.core.source.SecretReference;
 import dev.erst.gridgrind.core.source.TextSourceInput;
+import dev.erst.gridgrind.core.vocabulary.CellAddress;
 import dev.erst.gridgrind.core.vocabulary.ExcelAuthoredDrawingShapeKind;
 import dev.erst.gridgrind.core.vocabulary.ExcelBorderStyle;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartBarDirection;
@@ -1334,7 +1335,7 @@ class AdvancedMutationProtocolTypesTest {
             "Sales Pivot 2026",
             new SheetName("Report"),
             new PivotTableInput.Source.Range(new SheetName("Data"), "A1:D5"),
-            new PivotTableInput.Anchor("$C$5"),
+            new PivotTableInput.Anchor(new CellAddress("$C$5")),
             List.of("Region"),
             List.of("Stage"),
             List.of("Owner"),
@@ -1349,7 +1350,7 @@ class AdvancedMutationProtocolTypesTest {
             "Sales Table Pivot",
             new SheetName("Report"),
             new PivotTableInput.Source.Table("SalesTable2026"),
-            new PivotTableInput.Anchor("D7"),
+            new PivotTableInput.Anchor(new CellAddress("D7")),
             List.of(),
             List.of(),
             List.of(),
@@ -1363,7 +1364,7 @@ class AdvancedMutationProtocolTypesTest {
         new dev.erst.gridgrind.core.plan.PivotTableSelector.ByNames(
             List.of("Sales Pivot 2026", "Ops Pivot"));
 
-    assertEquals("$C$5", input.anchor().topLeftAddress());
+    assertEquals("$C$5", input.anchor().topLeftAddress().value());
     assertEquals("Amount", input.dataFields().getFirst().displayName());
     assertEquals(List.of("Sales Pivot 2026", "Ops Pivot"), selection.names());
     assertEquals(List.of(), tableSourceInput.rowLabels());
@@ -1394,7 +1395,7 @@ class AdvancedMutationProtocolTypesTest {
                 "Sales Pivot 2026",
                 new SheetName("Report"),
                 new PivotTableInput.Source.Range(new SheetName("Data"), "A1:D5"),
-                new PivotTableInput.Anchor("C5"),
+                new PivotTableInput.Anchor(new CellAddress("C5")),
                 List.of("Region"),
                 List.of("Stage"),
                 List.of("Owner"),
@@ -1411,7 +1412,7 @@ class AdvancedMutationProtocolTypesTest {
                 "Sales Pivot 2026",
                 new SheetName("Report"),
                 new PivotTableInput.Source.Range(new SheetName("Data"), "A1:D5"),
-                new PivotTableInput.Anchor("C5"),
+                new PivotTableInput.Anchor(new CellAddress("C5")),
                 List.of("Region", "region"),
                 List.of(),
                 List.of(),
@@ -1428,7 +1429,7 @@ class AdvancedMutationProtocolTypesTest {
                 "Sales Pivot 2026",
                 new SheetName("Report"),
                 new PivotTableInput.Source.Range(new SheetName("Data"), "A1:D5"),
-                new PivotTableInput.Anchor("C5"),
+                new PivotTableInput.Anchor(new CellAddress("C5")),
                 List.of("Region"),
                 List.of("region"),
                 List.of(),
@@ -1445,7 +1446,7 @@ class AdvancedMutationProtocolTypesTest {
                 "Sales Pivot 2026",
                 new SheetName("Report"),
                 new PivotTableInput.Source.Range(new SheetName("Data"), "A1:D5"),
-                new PivotTableInput.Anchor("C5"),
+                new PivotTableInput.Anchor(new CellAddress("C5")),
                 List.of((String) null),
                 List.of(),
                 List.of(),
@@ -1462,7 +1463,7 @@ class AdvancedMutationProtocolTypesTest {
                 "Sales Pivot 2026",
                 new SheetName("Report"),
                 new PivotTableInput.Source.Range(new SheetName("Data"), "A1:D5"),
-                new PivotTableInput.Anchor("C5"),
+                new PivotTableInput.Anchor(new CellAddress("C5")),
                 List.of(" "),
                 List.of(),
                 List.of(),
@@ -1479,7 +1480,7 @@ class AdvancedMutationProtocolTypesTest {
                 "Sales Pivot 2026",
                 new SheetName("Report"),
                 new PivotTableInput.Source.Range(new SheetName("Data"), "A1:D5"),
-                new PivotTableInput.Anchor("C5"),
+                new PivotTableInput.Anchor(new CellAddress("C5")),
                 List.of(),
                 List.of(),
                 List.of(),
@@ -1491,7 +1492,7 @@ class AdvancedMutationProtocolTypesTest {
                 "Sales Pivot 2026",
                 new SheetName("Report"),
                 new PivotTableInput.Source.Range(new SheetName("Data"), "A1:D5"),
-                new PivotTableInput.Anchor("C5"),
+                new PivotTableInput.Anchor(new CellAddress("C5")),
                 List.of(),
                 List.of(),
                 List.of(),
@@ -1514,7 +1515,9 @@ class AdvancedMutationProtocolTypesTest {
         () ->
             new PivotTableInput.DataField(
                 "Amount", ExcelPivotDataConsolidateFunction.SUM, "Total", Optional.of(" ")));
-    assertThrows(IllegalArgumentException.class, () -> new PivotTableInput.Anchor("Sheet1!A1"));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new PivotTableInput.Anchor(new CellAddress("Sheet1!A1")));
     assertThrows(
         NullPointerException.class, () -> ProtocolCellAddressValidation.validateAddress(null));
     assertThrows(

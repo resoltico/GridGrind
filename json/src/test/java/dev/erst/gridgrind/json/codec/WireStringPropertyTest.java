@@ -5,6 +5,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import dev.erst.gridgrind.core.problem.FieldValidationAddressRule;
+import dev.erst.gridgrind.core.problem.FieldValidationProblem;
 import dev.erst.gridgrind.core.problem.InvalidRequestException;
 import dev.erst.gridgrind.core.vocabulary.CellAddress;
 import dev.erst.gridgrind.core.vocabulary.DefinedName;
@@ -136,9 +138,28 @@ class WireStringPropertyTest {
             () ->
                 GridGrindJsonMapperSupport.JSON_MAPPER.readValue(
                     "{\"sheet\":\"Budget\",\"cells\":[\"A1\",\"XFE1\"]}", Envelope.class));
-    assertInstanceOf(InvalidRequestException.class, failure.getCause());
+    var invalid = assertInstanceOf(InvalidRequestException.class, failure.getCause());
+    var problem = assertInstanceOf(FieldValidationProblem.class, invalid.requestProblem());
+    assertEquals(FieldValidationAddressRule.ADDRESS_BOUNDS, problem.rule());
     assertEquals("cells", failure.getPath().getFirst().getPropertyName());
     assertEquals(1, failure.getPath().getLast().getIndex());
+  }
+
+  @Test
+  void invalidAuthoredAddressListRetainsItsRequestFieldAndArrayIndex() {
+    InvalidRequestException failure =
+        assertThrows(
+            InvalidRequestException.class,
+            () ->
+                GridGrindJson.readRequest(
+                    """
+            {"protocolVersion":"V3","source":{"type":"NEW"},"persistence":{"type":"NONE"},
+            "steps":[{"stepId":"cells","target":{"type":"CELL_BY_ADDRESSES","sheetName":"Data",
+            "addresses":["A1","A0"]},"query":{"type":"GET_CELLS"}}]}
+            """));
+    assertEquals(Optional.of("steps[0].target.addresses[1]"), failure.jsonPath());
+    var problem = assertInstanceOf(FieldValidationProblem.class, failure.requestProblem());
+    assertEquals(FieldValidationAddressRule.ADDRESS_SYNTAX, problem.rule());
   }
 
   private static List<Domain> domains() {

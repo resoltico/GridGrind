@@ -13,6 +13,7 @@ import dev.erst.gridgrind.core.plan.*;
 import dev.erst.gridgrind.core.plan.SheetInspectionResult;
 import dev.erst.gridgrind.core.problem.GridGrindProblemCode;
 import dev.erst.gridgrind.core.result.WorkbookResult;
+import dev.erst.gridgrind.core.vocabulary.CellAddress;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.engine.runtime.parity.XlsxParityProbeRegistry.ProbeContext;
 import dev.erst.gridgrind.engine.runtime.parity.XlsxParityProbeRegistry.ProbeResult;
@@ -51,7 +52,7 @@ final class XlsxParityFormulaProbeGroup {
             List.of(),
             inspect(
                 "cells",
-                new CellSelector.ByAddresses(new SheetName("Ops"), List.of("B1")),
+                new CellSelector.ByAddresses(new SheetName("Ops"), List.of(new CellAddress("B1"))),
                 allFacetCellsQuery()));
     dev.erst.gridgrind.core.model.value.CellReport.FormulaReport formula =
         cast(
@@ -97,7 +98,7 @@ final class XlsxParityFormulaProbeGroup {
             missingWorkbookCachedValueEnvironment(),
             inspect(
                 "cells",
-                new CellSelector.ByAddresses(new SheetName("Ops"), List.of("B1")),
+                new CellSelector.ByAddresses(new SheetName("Ops"), List.of(new CellAddress("B1"))),
                 allFacetCellsQuery()));
     dev.erst.gridgrind.core.model.value.CellReport.FormulaReport cachedFormula =
         cast(
@@ -141,7 +142,7 @@ final class XlsxParityFormulaProbeGroup {
             List.of(),
             inspect(
                 "cells",
-                new CellSelector.ByAddresses(new SheetName("Ops"), List.of("B1")),
+                new CellSelector.ByAddresses(new SheetName("Ops"), List.of(new CellAddress("B1"))),
                 allFacetCellsQuery()));
     dev.erst.gridgrind.core.model.value.CellReport.FormulaReport formula =
         cast(
@@ -181,7 +182,7 @@ final class XlsxParityFormulaProbeGroup {
         executionPolicy(
             calculateTargets(
                 new dev.erst.gridgrind.core.model.formula.FormulaCellTarget(
-                    new SheetName("Budget"), "B1"))),
+                    new SheetName("Budget"), new CellAddress("B1")))),
         null,
         List.of());
     String targetedB1 = XlsxParityOracle.cachedFormulaRawValue(targetedPath, "Budget", "B1");

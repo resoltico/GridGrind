@@ -14,6 +14,7 @@ import dev.erst.gridgrind.core.plan.SheetIntrospectionQuery;
 import dev.erst.gridgrind.core.plan.TableCellSelector;
 import dev.erst.gridgrind.core.plan.TableRowSelector;
 import dev.erst.gridgrind.core.plan.TableSelector;
+import dev.erst.gridgrind.core.vocabulary.CellAddress;
 import dev.erst.gridgrind.core.vocabulary.SheetLabel;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.StepId;
@@ -31,6 +32,8 @@ import java.util.Set;
 import org.jspecify.annotations.Nullable;
 
 /** Resolves semantic selectors into exact executable targets without inventing new semantics. */
+@SuppressWarnings(
+    "PMD.ExcessiveImports") // Selector variants and backend facts define this resolver.
 final class SemanticSelectorResolver {
   private static final String RESOLUTION_STEP_ID = "__semantic-selector-resolution__";
   private static final Set<Class<? extends MutationAction>> EXACT_CELL_MUTATION_ACTIONS =
@@ -92,7 +95,9 @@ final class SemanticSelectorResolver {
       ResolvedTableCell resolvedCell = resolveTableCell(workbook, tableCell, false);
       return new CellSelector.ByAddress(
           new SheetName(resolvedCell.sheetName()),
-          Objects.requireNonNull(resolvedCell.address(), "resolved cell address must be present"));
+          new CellAddress(
+              Objects.requireNonNull(
+                  resolvedCell.address(), "resolved cell address must be present")));
     }
     return target;
   }
@@ -110,8 +115,9 @@ final class SemanticSelectorResolver {
     return ResolvedInspectionTarget.direct(
         new CellSelector.ByAddress(
             new SheetName(resolvedCell.sheetName()),
-            Objects.requireNonNull(
-                resolvedCell.address(), "resolved cell address must be present")));
+            new CellAddress(
+                Objects.requireNonNull(
+                    resolvedCell.address(), "resolved cell address must be present"))));
   }
 
   private ResolvedTableCell resolveTableCell(
@@ -340,8 +346,8 @@ final class SemanticSelectorResolver {
   private record RangeBounds(int firstRow, int lastRow, int firstColumn, int lastColumn) {
     static RangeBounds parse(String range) {
       String[] parts = Objects.requireNonNull(range, "range must not be null").split(":", -1);
-      CellAddress first = CellAddress.parse(parts[0]);
-      CellAddress last = CellAddress.parse(parts[parts.length - 1]);
+      CellCoordinates first = CellCoordinates.parse(parts[0]);
+      CellCoordinates last = CellCoordinates.parse(parts[parts.length - 1]);
       return new RangeBounds(
           Math.min(first.rowIndex(), last.rowIndex()),
           Math.max(first.rowIndex(), last.rowIndex()),
@@ -350,8 +356,8 @@ final class SemanticSelectorResolver {
     }
   }
 
-  private record CellAddress(int rowIndex, int columnIndex) {
-    static CellAddress parse(String address) {
+  private record CellCoordinates(int rowIndex, int columnIndex) {
+    static CellCoordinates parse(String address) {
       String normalized = address.replace("$", "").toUpperCase(Locale.ROOT);
       String columnText = normalized.replaceAll("[0-9].*$", "");
       int columnIndex = 0;
@@ -359,7 +365,7 @@ final class SemanticSelectorResolver {
         columnIndex = (columnIndex * 26) + (columnText.charAt(index) - 'A' + 1);
       }
       int rowIndex = Integer.parseInt(normalized.substring(columnText.length())) - 1;
-      return new CellAddress(rowIndex, columnIndex - 1);
+      return new CellCoordinates(rowIndex, columnIndex - 1);
     }
   }
 }

@@ -21,7 +21,7 @@ final class WorkbookInvariantAnalysisLayoutChecks {
     WorkbookInvariantChecks.require(
         window.topLeftAddress() != null, "window topLeftAddress must not be null");
     WorkbookInvariantChecks.require(
-        !window.topLeftAddress().isBlank(), "window topLeftAddress must not be blank");
+        !window.topLeftAddress().value().isBlank(), "window topLeftAddress must not be blank");
     WorkbookInvariantChecks.require(
         window.dimensions() != null, "window dimensions must not be null");
     WorkbookInvariantChecks.require(
@@ -68,7 +68,7 @@ final class WorkbookInvariantAnalysisLayoutChecks {
     WorkbookInvariantChecks.require(
         hyperlink.address() != null, "hyperlink address must not be null");
     WorkbookInvariantChecks.require(
-        !hyperlink.address().isBlank(), "hyperlink address must not be blank");
+        !hyperlink.address().value().isBlank(), "hyperlink address must not be blank");
     WorkbookInvariantChecks.require(
         hyperlink.hyperlink() != null, "hyperlink metadata must not be null");
     WorkbookInvariantCellSurfaceChecks.requireHyperlinkShape(hyperlink.hyperlink());
@@ -77,7 +77,7 @@ final class WorkbookInvariantAnalysisLayoutChecks {
   static void requireCommentEntryShape(CellCommentReport comment) {
     WorkbookInvariantChecks.require(comment.address() != null, "comment address must not be null");
     WorkbookInvariantChecks.require(
-        !comment.address().isBlank(), "comment address must not be blank");
+        !comment.address().value().isBlank(), "comment address must not be blank");
     WorkbookInvariantChecks.require(comment.comment() != null, "comment metadata must not be null");
     WorkbookInvariantCellSurfaceChecks.requireCommentReportShape(comment.comment());
   }

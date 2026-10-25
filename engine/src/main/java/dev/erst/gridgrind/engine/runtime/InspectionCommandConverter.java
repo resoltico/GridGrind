@@ -77,7 +77,7 @@ final class InspectionCommandConverter {
             stepId,
             selector.sheetName().value(),
             new dev.erst.gridgrind.excel.ExcelReadWindow(
-                selector.topLeftAddress(), selector.rowCount(), selector.columnCount()),
+                selector.topLeftAddress().value(), selector.rowCount(), selector.columnCount()),
             toExcelProjection(getWindow.resolvedProjection()),
             getWindow.includeBlanks());
       }
@@ -149,7 +149,7 @@ final class InspectionCommandConverter {
             stepId,
             selector.sheetName().value(),
             new dev.erst.gridgrind.excel.ExcelReadWindow(
-                selector.topLeftAddress(), selector.rowCount(), selector.columnCount()),
+                selector.topLeftAddress().value(), selector.rowCount(), selector.columnCount()),
             toExcelProjection(getSheetSchema.resolvedProjection()));
       }
       case InspectionSurfaceQuery.GetNamedRangeSurface _ ->

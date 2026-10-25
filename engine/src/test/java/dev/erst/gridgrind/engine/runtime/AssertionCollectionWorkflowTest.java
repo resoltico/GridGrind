@@ -28,6 +28,7 @@ import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import dev.erst.gridgrind.core.problem.GridGrindProblemCode;
 import dev.erst.gridgrind.core.result.WorkbookResult;
 import dev.erst.gridgrind.core.result.WorkbookResultPersistence;
+import dev.erst.gridgrind.core.vocabulary.CellAddress;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import java.util.List;
 import org.junit.jupiter.api.Test;
@@ -50,25 +51,30 @@ class AssertionCollectionWorkflowTest extends DefaultGridGrindRequestExecutorTes
                             new SheetSelector.ByName(new SheetName("Budget")),
                             new WorkbookMutationAction.EnsureSheet()),
                         mutate(
-                            new CellSelector.ByAddress(new SheetName("Budget"), "A1"),
+                            new CellSelector.ByAddress(
+                                new SheetName("Budget"), new CellAddress("A1")),
                             new CellMutationAction.SetCell(textCell("Owner")))),
                     assertions(
                         assertThat(
                             "assert-pass",
-                            new CellSelector.ByAddress(new SheetName("Budget"), "A1"),
+                            new CellSelector.ByAddress(
+                                new SheetName("Budget"), new CellAddress("A1")),
                             new CellAssertion.CellValue(new CellScalarValue.Text("Owner"))),
                         assertThat(
                             "assert-first",
-                            new CellSelector.ByAddress(new SheetName("Budget"), "A1"),
+                            new CellSelector.ByAddress(
+                                new SheetName("Budget"), new CellAddress("A1")),
                             new CellAssertion.CellValue(new CellScalarValue.Text("Wrong first"))),
                         assertThat(
                             "assert-second",
-                            new CellSelector.ByAddress(new SheetName("Budget"), "A1"),
+                            new CellSelector.ByAddress(
+                                new SheetName("Budget"), new CellAddress("A1")),
                             new CellAssertion.CellValue(new CellScalarValue.Text("Wrong second")))),
                     inspections(
                         inspect(
                             "cells-after-assertions",
-                            new CellSelector.ByAddresses(new SheetName("Budget"), List.of("A1")),
+                            new CellSelector.ByAddresses(
+                                new SheetName("Budget"), List.of(new CellAddress("A1"))),
                             allFacetCellsQuery())))));
 
     assertEquals(GridGrindProblemCode.ASSERTION_FAILED, failure.problem().code());
@@ -112,16 +118,19 @@ class AssertionCollectionWorkflowTest extends DefaultGridGrindRequestExecutorTes
                     assertions(
                         assertThat(
                             "stream-pass",
-                            new CellSelector.ByAddress(new SheetName("Stream"), "A1"),
+                            new CellSelector.ByAddress(
+                                new SheetName("Stream"), new CellAddress("A1")),
                             new CellAssertion.CellValue(new CellScalarValue.Text("Owner"))),
                         assertThat(
                             "stream-fail",
-                            new CellSelector.ByAddress(new SheetName("Stream"), "A1"),
+                            new CellSelector.ByAddress(
+                                new SheetName("Stream"), new CellAddress("A1")),
                             new CellAssertion.CellValue(new CellScalarValue.Text("Wrong")))),
                     inspections(
                         inspect(
                             "stream-after-failure",
-                            new CellSelector.ByAddress(new SheetName("Stream"), "A1"),
+                            new CellSelector.ByAddress(
+                                new SheetName("Stream"), new CellAddress("A1")),
                             allFacetCellsQuery())))));
 
     assertEquals(GridGrindProblemCode.ASSERTION_FAILED, failure.problem().code());

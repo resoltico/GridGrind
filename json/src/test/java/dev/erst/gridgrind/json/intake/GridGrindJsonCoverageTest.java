@@ -29,6 +29,7 @@ import dev.erst.gridgrind.core.problem.RequestWarning;
 import dev.erst.gridgrind.core.result.WorkbookResult;
 import dev.erst.gridgrind.core.result.WorkbookResults;
 import dev.erst.gridgrind.core.result.WorkbookSummary;
+import dev.erst.gridgrind.core.vocabulary.CellAddress;
 import dev.erst.gridgrind.core.vocabulary.SheetLabel;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.json.codec.GridGrindJson;
@@ -715,7 +716,7 @@ class GridGrindJsonCoverageTest {
                     new SheetLabel("Budget"),
                     List.of(
                         new CellReport.TextReport(
-                            "A1",
+                            new CellAddress("A1"),
                             Optional.empty(),
                             Optional.empty(),
                             Optional.empty(),
@@ -731,11 +732,11 @@ class GridGrindJsonCoverageTest {
                     new StepId("window"),
                     new WindowReport.Sparse(
                         new SheetLabel("Budget"),
-                        "A1",
+                        new CellAddress("A1"),
                         new WindowDimensionsReport(50, 50),
                         List.of(
                             new CellReport.TextReport(
-                                "A1",
+                                new CellAddress("A1"),
                                 Optional.empty(),
                                 Optional.empty(),
                                 Optional.empty(),

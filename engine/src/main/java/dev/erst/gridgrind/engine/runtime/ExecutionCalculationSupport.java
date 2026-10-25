@@ -220,7 +220,7 @@ final class ExecutionCalculationSupport {
                     GridGrindWarningCode.FORMULA_NOT_EVALUATED,
                     new RequestWarningLocation.FormulaCell(
                         new SheetLabel(capability.cell().sheetName().value()),
-                        capability.cell().address(),
+                        capability.cell().address().value(),
                         capability.formula()),
                     capability
                         .message()

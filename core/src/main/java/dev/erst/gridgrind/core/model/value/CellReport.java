@@ -7,6 +7,7 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import dev.erst.gridgrind.core.model.drawing.CommentReport;
 import dev.erst.gridgrind.core.model.style.CellStyleReport;
 import dev.erst.gridgrind.core.model.style.RichTextRunReport;
+import dev.erst.gridgrind.core.vocabulary.CellAddress;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -27,7 +28,7 @@ import java.util.Optional;
 })
 public sealed interface CellReport {
   /** Cell address in A1 notation. */
-  String address();
+  CellAddress address();
 
   /** Canonical published cell type. */
   String type();
@@ -46,7 +47,7 @@ public sealed interface CellReport {
 
   /** Cell report for a cell with no value or formula. */
   record BlankReport(
-      String address,
+      CellAddress address,
       @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<String> displayValue,
       @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<CellStyleReport> style,
       @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<HyperlinkTarget> hyperlink,
@@ -54,9 +55,6 @@ public sealed interface CellReport {
       implements CellReport {
     public BlankReport {
       Objects.requireNonNull(address, "address must not be null");
-      if (address.isBlank()) {
-        throw new IllegalArgumentException("address must not be blank");
-      }
       displayValue = normalizeOptional(displayValue, "displayValue");
       style = normalizeOptional(style, "style");
       hyperlink = normalizeOptional(hyperlink, "hyperlink");
@@ -72,7 +70,7 @@ public sealed interface CellReport {
 
   /** Cell report for a cell containing a plain text value. */
   record TextReport(
-      String address,
+      CellAddress address,
       @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<String> displayValue,
       @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<CellStyleReport> style,
       @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<HyperlinkTarget> hyperlink,
@@ -82,9 +80,6 @@ public sealed interface CellReport {
       implements CellReport {
     public TextReport {
       Objects.requireNonNull(address, "address must not be null");
-      if (address.isBlank()) {
-        throw new IllegalArgumentException("address must not be blank");
-      }
       displayValue = normalizeOptional(displayValue, "displayValue");
       style = normalizeOptional(style, "style");
       hyperlink = normalizeOptional(hyperlink, "hyperlink");
@@ -110,7 +105,7 @@ public sealed interface CellReport {
 
   /** Cell report for a cell containing a numeric value. */
   record NumberReport(
-      String address,
+      CellAddress address,
       @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<String> displayValue,
       @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<CellStyleReport> style,
       @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<HyperlinkTarget> hyperlink,
@@ -120,9 +115,6 @@ public sealed interface CellReport {
       implements CellReport {
     public NumberReport {
       Objects.requireNonNull(address, "address must not be null");
-      if (address.isBlank()) {
-        throw new IllegalArgumentException("address must not be blank");
-      }
       displayValue = normalizeOptional(displayValue, "displayValue");
       style = normalizeOptional(style, "style");
       hyperlink = normalizeOptional(hyperlink, "hyperlink");
@@ -140,7 +132,7 @@ public sealed interface CellReport {
 
   /** Cell report for a cell containing a boolean value. */
   record BooleanReport(
-      String address,
+      CellAddress address,
       @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<String> displayValue,
       @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<CellStyleReport> style,
       @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<HyperlinkTarget> hyperlink,
@@ -149,9 +141,6 @@ public sealed interface CellReport {
       implements CellReport {
     public BooleanReport {
       Objects.requireNonNull(address, "address must not be null");
-      if (address.isBlank()) {
-        throw new IllegalArgumentException("address must not be blank");
-      }
       displayValue = normalizeOptional(displayValue, "displayValue");
       style = normalizeOptional(style, "style");
       hyperlink = normalizeOptional(hyperlink, "hyperlink");
@@ -168,7 +157,7 @@ public sealed interface CellReport {
 
   /** Cell report for a cell in a reported error state, including evaluation-only states. */
   record ErrorReport(
-      String address,
+      CellAddress address,
       @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<String> displayValue,
       @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<CellStyleReport> style,
       @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<HyperlinkTarget> hyperlink,
@@ -177,9 +166,6 @@ public sealed interface CellReport {
       implements CellReport {
     public ErrorReport {
       Objects.requireNonNull(address, "address must not be null");
-      if (address.isBlank()) {
-        throw new IllegalArgumentException("address must not be blank");
-      }
       displayValue = normalizeOptional(displayValue, "displayValue");
       style = normalizeOptional(style, "style");
       hyperlink = normalizeOptional(hyperlink, "hyperlink");
@@ -200,7 +186,7 @@ public sealed interface CellReport {
 
   /** Cell report for a cell containing a formula. */
   record FormulaReport(
-      String address,
+      CellAddress address,
       @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<String> displayValue,
       @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<CellStyleReport> style,
       @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<HyperlinkTarget> hyperlink,
@@ -210,9 +196,6 @@ public sealed interface CellReport {
       implements CellReport {
     public FormulaReport {
       Objects.requireNonNull(address, "address must not be null");
-      if (address.isBlank()) {
-        throw new IllegalArgumentException("address must not be blank");
-      }
       displayValue = normalizeOptional(displayValue, "displayValue");
       style = normalizeOptional(style, "style");
       hyperlink = normalizeOptional(hyperlink, "hyperlink");

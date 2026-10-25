@@ -34,6 +34,7 @@ import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import dev.erst.gridgrind.core.plan.WorkbookSelector;
 import dev.erst.gridgrind.core.source.BinarySourceInput;
 import dev.erst.gridgrind.core.source.TextSourceInput;
+import dev.erst.gridgrind.core.vocabulary.CellAddress;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartDisplayBlanksAs;
 import dev.erst.gridgrind.core.vocabulary.ExcelPictureFormat;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
@@ -76,11 +77,11 @@ class SourceBackedPlanResolverIdentityCoverageTest extends SourceBackedPlanResol
             new WorkbookPlan.WorkbookPersistence.None(),
             mutations(
                 mutate(
-                    new CellSelector.ByAddress(new SheetName("Budget"), "A1"),
+                    new CellSelector.ByAddress(new SheetName("Budget"), new CellAddress("A1")),
                     new CellMutationAction.SetCell(
                         new CellInput.Text(new TextSourceInput.Utf8File("title.txt")))),
                 mutate(
-                    new CellSelector.ByAddress(new SheetName("Budget"), "A2"),
+                    new CellSelector.ByAddress(new SheetName("Budget"), new CellAddress("A2")),
                     new CellMutationAction.SetCell(
                         new CellInput.Formula(new TextSourceInput.Utf8File("formula.txt")))),
                 mutate(
@@ -182,7 +183,7 @@ class SourceBackedPlanResolverIdentityCoverageTest extends SourceBackedPlanResol
             new WorkbookPlan.WorkbookPersistence.None(),
             mutations(
                 mutate(
-                    new CellSelector.ByAddress(new SheetName("Budget"), "A1"),
+                    new CellSelector.ByAddress(new SheetName("Budget"), new CellAddress("A1")),
                     new CellMutationAction.SetCell(
                         new CellInput.Text(new TextSourceInput.StandardInput()))),
                 mutate(
@@ -208,7 +209,7 @@ class SourceBackedPlanResolverIdentityCoverageTest extends SourceBackedPlanResol
             new WorkbookPlan.WorkbookPersistence.None(),
             mutations(
                 mutate(
-                    new CellSelector.ByAddress(new SheetName("Budget"), "A1"),
+                    new CellSelector.ByAddress(new SheetName("Budget"), new CellAddress("A1")),
                     new CellMutationAction.SetCell(
                         new CellInput.Text(new TextSourceInput.Utf8File("title.txt"))))));
 

@@ -18,6 +18,7 @@ import dev.erst.gridgrind.core.result.AnalysisSummaryReport;
 import dev.erst.gridgrind.core.result.WorkbookFindingsReport;
 import dev.erst.gridgrind.core.vocabulary.AnalysisFindingCode;
 import dev.erst.gridgrind.core.vocabulary.AnalysisSeverity;
+import dev.erst.gridgrind.core.vocabulary.CellAddress;
 import dev.erst.gridgrind.core.vocabulary.ExcelFillPattern;
 import dev.erst.gridgrind.core.vocabulary.ExcelHorizontalAlignment;
 import dev.erst.gridgrind.core.vocabulary.ExcelVerticalAlignment;
@@ -57,7 +58,7 @@ class InspectionResultTest {
     List<dev.erst.gridgrind.core.model.value.CellReport> cells = new ArrayList<>();
     cells.add(
         new dev.erst.gridgrind.core.model.value.CellReport.BlankReport(
-            "A1",
+            new CellAddress("A1"),
             java.util.Optional.of(""),
             java.util.Optional.of(minimalStyle()),
             java.util.Optional.empty(),
@@ -68,7 +69,7 @@ class InspectionResultTest {
     cells.clear();
 
     assertEquals("cells", result.stepId().value());
-    assertEquals("A1", result.cells().getFirst().address());
+    assertEquals("A1", result.cells().getFirst().address().value());
     assertThrows(
         IllegalArgumentException.class,
         () ->

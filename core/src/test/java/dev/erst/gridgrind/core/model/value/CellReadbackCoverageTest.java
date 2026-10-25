@@ -17,6 +17,7 @@ import dev.erst.gridgrind.core.model.style.CellFontReport;
 import dev.erst.gridgrind.core.model.style.CellStyleReport;
 import dev.erst.gridgrind.core.model.style.FontHeightReport;
 import dev.erst.gridgrind.core.model.style.RichTextRunReport;
+import dev.erst.gridgrind.core.vocabulary.CellAddress;
 import dev.erst.gridgrind.core.vocabulary.ExcelBorderStyle;
 import dev.erst.gridgrind.core.vocabulary.ExcelFillPattern;
 import dev.erst.gridgrind.core.vocabulary.ExcelHorizontalAlignment;
@@ -33,10 +34,14 @@ class CellReadbackCoverageTest {
   void cellReadbackReportsExposePublishedTypesAndValidateConstructors() {
     CellReport.BlankReport blank =
         new CellReport.BlankReport(
-            "A1", Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty());
+            new CellAddress("A1"),
+            Optional.empty(),
+            Optional.empty(),
+            Optional.empty(),
+            Optional.empty());
     CellReport.TextReport text =
         new CellReport.TextReport(
-            "A2",
+            new CellAddress("A2"),
             Optional.of("Ada"),
             Optional.of(style()),
             Optional.empty(),
@@ -45,7 +50,7 @@ class CellReadbackCoverageTest {
             Optional.of(List.of(run("Ada"))));
     CellReport.NumberReport number =
         new CellReport.NumberReport(
-            "A3",
+            new CellAddress("A3"),
             Optional.empty(),
             Optional.empty(),
             Optional.empty(),
@@ -54,7 +59,7 @@ class CellReadbackCoverageTest {
             Optional.empty());
     CellReport.BooleanReport bool =
         new CellReport.BooleanReport(
-            "A4",
+            new CellAddress("A4"),
             Optional.empty(),
             Optional.empty(),
             Optional.empty(),
@@ -62,7 +67,7 @@ class CellReadbackCoverageTest {
             Optional.of(true));
     CellReport.ErrorReport error =
         new CellReport.ErrorReport(
-            "A5",
+            new CellAddress("A5"),
             Optional.empty(),
             Optional.empty(),
             Optional.empty(),
@@ -70,7 +75,7 @@ class CellReadbackCoverageTest {
             Optional.of("#REF!"));
     CellReport.FormulaReport formula =
         new CellReport.FormulaReport(
-            "A6",
+            new CellAddress("A6"),
             Optional.empty(),
             Optional.empty(),
             Optional.empty(),
@@ -96,12 +101,16 @@ class CellReadbackCoverageTest {
         IllegalArgumentException.class,
         () ->
             new CellReport.BlankReport(
-                " ", Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty()));
+                new CellAddress(" "),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty()));
     assertThrows(
         IllegalArgumentException.class,
         () ->
             new CellReport.TextReport(
-                " ",
+                new CellAddress(" "),
                 Optional.empty(),
                 Optional.empty(),
                 Optional.empty(),
@@ -112,7 +121,7 @@ class CellReadbackCoverageTest {
         IllegalArgumentException.class,
         () ->
             new CellReport.NumberReport(
-                " ",
+                new CellAddress(" "),
                 Optional.empty(),
                 Optional.empty(),
                 Optional.empty(),
@@ -123,7 +132,7 @@ class CellReadbackCoverageTest {
         IllegalArgumentException.class,
         () ->
             new CellReport.BooleanReport(
-                " ",
+                new CellAddress(" "),
                 Optional.empty(),
                 Optional.empty(),
                 Optional.empty(),
@@ -133,7 +142,7 @@ class CellReadbackCoverageTest {
         IllegalArgumentException.class,
         () ->
             new CellReport.ErrorReport(
-                " ",
+                new CellAddress(" "),
                 Optional.empty(),
                 Optional.empty(),
                 Optional.empty(),
@@ -143,7 +152,7 @@ class CellReadbackCoverageTest {
         IllegalArgumentException.class,
         () ->
             new CellReport.FormulaReport(
-                " ",
+                new CellAddress(" "),
                 Optional.empty(),
                 Optional.empty(),
                 Optional.empty(),
@@ -155,7 +164,7 @@ class CellReadbackCoverageTest {
         IllegalArgumentException.class,
         () ->
             new CellReport.TextReport(
-                "A1",
+                new CellAddress("A1"),
                 Optional.empty(),
                 Optional.empty(),
                 Optional.empty(),
@@ -166,7 +175,7 @@ class CellReadbackCoverageTest {
         IllegalArgumentException.class,
         () ->
             new CellReport.TextReport(
-                "A1",
+                new CellAddress("A1"),
                 Optional.empty(),
                 Optional.empty(),
                 Optional.empty(),
@@ -177,7 +186,7 @@ class CellReadbackCoverageTest {
         IllegalArgumentException.class,
         () ->
             new CellReport.TextReport(
-                "A1",
+                new CellAddress("A1"),
                 Optional.empty(),
                 Optional.empty(),
                 Optional.empty(),
@@ -188,7 +197,7 @@ class CellReadbackCoverageTest {
         NullPointerException.class,
         () ->
             new CellReport.TextReport(
-                "A1",
+                new CellAddress("A1"),
                 Optional.empty(),
                 Optional.empty(),
                 Optional.empty(),
@@ -211,11 +220,11 @@ class CellReadbackCoverageTest {
     WindowReport.Sparse sparse =
         new WindowReport.Sparse(
             new SheetLabel("Budget"),
-            "A1",
+            new CellAddress("A1"),
             dimensions,
             List.of(
                 new CellReport.TextReport(
-                    "A1",
+                    new CellAddress("A1"),
                     Optional.of("Ada"),
                     Optional.of(style()),
                     Optional.empty(),
@@ -225,14 +234,14 @@ class CellReadbackCoverageTest {
     WindowReport.Dense dense =
         new WindowReport.Dense(
             new SheetLabel("Budget"),
-            "A1",
+            new CellAddress("A1"),
             dimensions,
             List.of(
                 new WindowRowReport(
                     0,
                     List.of(
                         new CellReport.BlankReport(
-                            "A1",
+                            new CellAddress("A1"),
                             Optional.empty(),
                             Optional.empty(),
                             Optional.empty(),
@@ -259,7 +268,7 @@ class CellReadbackCoverageTest {
         IllegalArgumentException.class,
         () ->
             new CellReport.ErrorReport(
-                "A1",
+                new CellAddress("A1"),
                 Optional.empty(),
                 Optional.empty(),
                 Optional.empty(),
@@ -296,11 +305,11 @@ class CellReadbackCoverageTest {
         () ->
             new WindowReport.Sparse(
                 new SheetLabel(" "),
-                "A1",
+                new CellAddress("A1"),
                 dimensions,
                 List.of(
                     new CellReport.TextReport(
-                        "A1",
+                        new CellAddress("A1"),
                         Optional.of("Ada"),
                         Optional.of(style()),
                         Optional.empty(),
@@ -312,11 +321,11 @@ class CellReadbackCoverageTest {
         () ->
             new WindowReport.Sparse(
                 new SheetLabel("Budget"),
-                " ",
+                new CellAddress(" "),
                 dimensions,
                 List.of(
                     new CellReport.TextReport(
-                        "A1",
+                        new CellAddress("A1"),
                         Optional.of("Ada"),
                         Optional.of(style()),
                         Optional.empty(),
@@ -328,11 +337,11 @@ class CellReadbackCoverageTest {
         () ->
             new WindowReport.Sparse(
                 new SheetLabel("Budget"),
-                "A1",
+                new CellAddress("A1"),
                 dimensions,
                 List.of(
                     new CellReport.BlankReport(
-                        "A1",
+                        new CellAddress("A1"),
                         Optional.empty(),
                         Optional.empty(),
                         Optional.empty(),

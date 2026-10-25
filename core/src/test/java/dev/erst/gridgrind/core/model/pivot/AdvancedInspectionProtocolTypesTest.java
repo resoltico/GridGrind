@@ -17,6 +17,7 @@ import dev.erst.gridgrind.core.result.AnalysisLocationReport;
 import dev.erst.gridgrind.core.result.AnalysisSummaryReport;
 import dev.erst.gridgrind.core.vocabulary.AnalysisFindingCode;
 import dev.erst.gridgrind.core.vocabulary.AnalysisSeverity;
+import dev.erst.gridgrind.core.vocabulary.CellAddress;
 import dev.erst.gridgrind.core.vocabulary.ExcelPivotDataConsolidateFunction;
 import dev.erst.gridgrind.core.vocabulary.SheetLabel;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
@@ -53,7 +54,7 @@ class AdvancedInspectionProtocolTypesTest {
                 new PivotTableReport.Supported(
                     "Sales Pivot 2026",
                     new SheetName("Report"),
-                    new PivotTableReport.Anchor("C5", "C5:G9"),
+                    new PivotTableReport.Anchor(new CellAddress("C5"), "C5:G9"),
                     new PivotTableReport.Source.Range(new SheetName("Data"), "A1:D5"),
                     List.of(new PivotTableReport.Field(0, "Region")),
                     List.of(new PivotTableReport.Field(1, "Stage")),

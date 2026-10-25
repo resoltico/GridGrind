@@ -69,7 +69,7 @@ final class AssertionValueEvaluator {
     List<String> mismatches =
         cellsResult.cells().stream()
             .filter(cell -> !matchesCellValue(cell, expectedValue))
-            .map(dev.erst.gridgrind.core.model.value.CellReport::address)
+            .map(cell -> cell.address().value())
             .toList();
     return mismatches.isEmpty()
         ? AssertionEvaluation.pass(List.of(cellsResult))
@@ -100,7 +100,7 @@ final class AssertionValueEvaluator {
     List<String> mismatches =
         cellsResult.cells().stream()
             .filter(cell -> !cell.displayValue().orElseThrow().equals(expectedDisplayValue))
-            .map(dev.erst.gridgrind.core.model.value.CellReport::address)
+            .map(cell -> cell.address().value())
             .toList();
     return mismatches.isEmpty()
         ? AssertionEvaluation.pass(List.of(cellsResult))
@@ -137,7 +137,7 @@ final class AssertionValueEvaluator {
                             dev.erst.gridgrind.core.model.value.CellReport.FormulaReport
                                 formulaReport)
                         || !formulaReport.formula().orElseThrow().equals(expectedFormula))
-            .map(dev.erst.gridgrind.core.model.value.CellReport::address)
+            .map(cell -> cell.address().value())
             .toList();
     return mismatches.isEmpty()
         ? AssertionEvaluation.pass(List.of(cellsResult))
@@ -168,7 +168,7 @@ final class AssertionValueEvaluator {
     List<String> mismatches =
         cellsResult.cells().stream()
             .filter(cell -> !cell.style().orElseThrow().equals(expectedStyle))
-            .map(dev.erst.gridgrind.core.model.value.CellReport::address)
+            .map(cell -> cell.address().value())
             .toList();
     return mismatches.isEmpty()
         ? AssertionEvaluation.pass(List.of(cellsResult))

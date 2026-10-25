@@ -20,6 +20,7 @@ import dev.erst.gridgrind.core.model.customxml.CustomXmlMappingReport;
 import dev.erst.gridgrind.core.model.formula.ArrayFormulaInput;
 import dev.erst.gridgrind.core.plan.*;
 import dev.erst.gridgrind.core.source.TextSourceInput;
+import dev.erst.gridgrind.core.vocabulary.CellAddress;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartAxisCrosses;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartAxisKind;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartAxisPosition;
@@ -240,7 +241,7 @@ class SpreadsheetSurfaceEdgeCoverageTest {
             new CustomXmlDataBindingReport("binding", true, 5L, "binding.xml", 2L),
             List.of(
                 new CustomXmlLinkedCellReport(
-                    new SheetLabel("Foglio1"), "A1", "/CORSO/NOME", "string")),
+                    new SheetLabel("Foglio1"), new CellAddress("A1"), "/CORSO/NOME", "string")),
             List.of(
                 new CustomXmlLinkedTableReport(
                     new SheetLabel("Foglio1"),
@@ -559,7 +560,8 @@ class SpreadsheetSurfaceEdgeCoverageTest {
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new CustomXmlLinkedCellReport(new SheetLabel("Foglio1"), " ", "/CORSO/NOME", "string"));
+            new CustomXmlLinkedCellReport(
+                new SheetLabel("Foglio1"), new CellAddress(" "), "/CORSO/NOME", "string"));
     assertThrows(
         IllegalArgumentException.class,
         () ->
@@ -805,7 +807,7 @@ class SpreadsheetSurfaceEdgeCoverageTest {
                 null,
                 List.of(
                     new CustomXmlLinkedCellReport(
-                        new SheetLabel("Foglio1"), "A1", "/CORSO/NOME", "string")),
+                        new SheetLabel("Foglio1"), new CellAddress("A1"), "/CORSO/NOME", "string")),
                 List.of())
             .schema()
             .xml());
@@ -820,7 +822,7 @@ class SpreadsheetSurfaceEdgeCoverageTest {
                 null,
                 List.of(
                     new CustomXmlLinkedCellReport(
-                        new SheetLabel("Foglio1"), "A1", "/CORSO/NOME", "string")),
+                        new SheetLabel("Foglio1"), new CellAddress("A1"), "/CORSO/NOME", "string")),
                 List.of()));
     assertEquals(
         "Grace Hopper",

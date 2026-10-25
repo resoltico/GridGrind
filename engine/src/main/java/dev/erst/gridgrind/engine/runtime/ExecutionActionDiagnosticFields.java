@@ -40,7 +40,7 @@ final class ExecutionActionDiagnosticFields {
 
   static Optional<String> addressFor(MutationAction action) {
     if (action instanceof StructuredMutationAction.SetPivotTable setPivotTable) {
-      return Optional.of(setPivotTable.pivotTable().anchor().topLeftAddress());
+      return Optional.of(setPivotTable.pivotTable().anchor().topLeftAddress().value());
     }
     return Optional.empty();
   }

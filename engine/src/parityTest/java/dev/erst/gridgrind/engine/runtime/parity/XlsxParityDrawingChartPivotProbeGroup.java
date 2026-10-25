@@ -23,6 +23,7 @@ import dev.erst.gridgrind.core.plan.WorkbookAnalysisResult;
 import dev.erst.gridgrind.core.plan.WorkbookAssetInspectionResult;
 import dev.erst.gridgrind.core.plan.WorkbookMutationAction;
 import dev.erst.gridgrind.core.result.WorkbookResult;
+import dev.erst.gridgrind.core.vocabulary.CellAddress;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartBarDirection;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartDisplayBlanksAs;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartLegendPosition;
@@ -199,10 +200,10 @@ final class XlsxParityDrawingChartPivotProbeGroup {
         outputPath,
         List.of(
             mutate(
-                new CellSelector.ByAddress(new SheetName("Ops"), "B2"),
+                new CellSelector.ByAddress(new SheetName("Ops"), new CellAddress("B2")),
                 new CellMutationAction.SetComment(comment("Transient", "GridGrind", false))),
             mutate(
-                new CellSelector.ByAddress(new SheetName("Ops"), "B2"),
+                new CellSelector.ByAddress(new SheetName("Ops"), new CellAddress("B2")),
                 new CellMutationAction.ClearComment())));
     XlsxParityOracle.DrawingSheetSnapshot after = XlsxParityOracle.drawingSheet(outputPath, "Ops");
     return before.equals(after)
@@ -223,7 +224,7 @@ final class XlsxParityDrawingChartPivotProbeGroup {
         outputPath,
         List.of(
             mutate(
-                new CellSelector.ByAddress(new SheetName("Ops"), "F8"),
+                new CellSelector.ByAddress(new SheetName("Ops"), new CellAddress("F8")),
                 new CellMutationAction.SetCell(text("Touch")))));
     XlsxParityOracle.DrawingSheetSnapshot after = XlsxParityOracle.drawingSheet(outputPath, "Ops");
     return !before.mergedRegions().isEmpty() && before.equals(after)
@@ -259,7 +260,7 @@ final class XlsxParityDrawingChartPivotProbeGroup {
         outputPath,
         List.of(
             mutate(
-                new CellSelector.ByAddress(new SheetName("Objects"), "G1"),
+                new CellSelector.ByAddress(new SheetName("Objects"), new CellAddress("G1")),
                 new CellMutationAction.SetCell(text("Touch")))));
     XlsxParityOracle.DrawingSheetSnapshot after =
         XlsxParityOracle.drawingSheet(outputPath, "Objects");
@@ -435,7 +436,7 @@ final class XlsxParityDrawingChartPivotProbeGroup {
             outputPath,
             List.of(
                 mutate(
-                    new CellSelector.ByAddress(new SheetName("Chart"), "F1"),
+                    new CellSelector.ByAddress(new SheetName("Chart"), new CellAddress("F1")),
                     new CellMutationAction.SetCell(text("Touch"))),
                 mutate(
                     new SheetSelector.ByName(new SheetName("Chart")),
@@ -503,7 +504,7 @@ final class XlsxParityDrawingChartPivotProbeGroup {
           outputPath,
           List.of(
               mutate(
-                  new CellSelector.ByAddress(new SheetName("Chart"), "F8"),
+                  new CellSelector.ByAddress(new SheetName("Chart"), new CellAddress("F8")),
                   new CellMutationAction.SetCell(text("Touch")))));
       List<ChartReport> afterCharts = XlsxParityOracle.charts(outputPath, "Chart");
       XlsxParityOracle.DrawingSheetSnapshot afterDrawing =
@@ -623,7 +624,7 @@ final class XlsxParityDrawingChartPivotProbeGroup {
                   new SheetSelector.ByName(new SheetName("Scratch")),
                   new WorkbookMutationAction.EnsureSheet()),
               mutate(
-                  new CellSelector.ByAddress(new SheetName("Scratch"), "A1"),
+                  new CellSelector.ByAddress(new SheetName("Scratch"), new CellAddress("A1")),
                   new CellMutationAction.SetCell(text("Touch")))));
       List<PivotTableReport> after = XlsxParityOracle.pivotTables(outputPath);
       if (!before.equals(after)) {
@@ -731,7 +732,7 @@ final class XlsxParityDrawingChartPivotProbeGroup {
                             "Sales Pivot",
                             new SheetName("RangeReport"),
                             new PivotTableInput.Source.Range(new SheetName("Data"), "A1:D5"),
-                            new PivotTableInput.Anchor("D6"),
+                            new PivotTableInput.Anchor(new CellAddress("D6")),
                             List.of("Stage"),
                             List.of("Region"),
                             List.of(),
@@ -764,7 +765,7 @@ final class XlsxParityDrawingChartPivotProbeGroup {
     PivotTableReport.Supported salesPivot = supportedPivotByName(directPivots, "Sales Pivot");
     if (directPivots.size() != 2
         || salesPivot == null
-        || !"D6".equals(salesPivot.anchor().topLeftAddress())
+        || !"D6".equals(salesPivot.anchor().topLeftAddress().value())
         || !salesPivot.rowLabels().equals(List.of(new PivotTableReport.Field(1, "Stage")))
         || !salesPivot.columnLabels().equals(List.of(new PivotTableReport.Field(0, "Region")))
         || supportedPivotByName(directPivots, "Table Pivot") != null) {

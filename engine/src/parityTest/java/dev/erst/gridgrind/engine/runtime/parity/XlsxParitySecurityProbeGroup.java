@@ -20,6 +20,7 @@ import dev.erst.gridgrind.core.plan.WorkbookMutationAction;
 import dev.erst.gridgrind.core.problem.GridGrindProblemCategory;
 import dev.erst.gridgrind.core.problem.GridGrindProblemCode;
 import dev.erst.gridgrind.core.result.WorkbookResult;
+import dev.erst.gridgrind.core.vocabulary.CellAddress;
 import dev.erst.gridgrind.core.vocabulary.ExcelOoxmlSignatureState;
 import dev.erst.gridgrind.core.vocabulary.ExcelOoxmlWriteCipher;
 import dev.erst.gridgrind.core.vocabulary.ExcelOoxmlWriteHash;
@@ -154,7 +155,8 @@ final class XlsxParitySecurityProbeGroup {
                 new WorkbookIntrospectionQuery.GetPackageSecurity()),
             inspect(
                 "cells",
-                new CellSelector.ByAddresses(new SheetName("Encrypted"), List.of("A1")),
+                new CellSelector.ByAddresses(
+                    new SheetName("Encrypted"), List.of(new CellAddress("A1"))),
                 allFacetCellsQuery()));
     WorkbookInspectionResult.PackageSecurityResult sourceSecurityResult =
         XlsxParityGridGrind.read(
@@ -174,7 +176,7 @@ final class XlsxParitySecurityProbeGroup {
             null,
             List.of(
                 mutate(
-                    new CellSelector.ByAddress(new SheetName("Encrypted"), "A2"),
+                    new CellSelector.ByAddress(new SheetName("Encrypted"), new CellAddress("A2")),
                     new CellMutationAction.SetCell(text("Preserved encryption")))));
     boolean poiPreservedOpens = XlsxParityOracle.encryptedWorkbookOpens(preservedOutput);
     String poiPreservedText =
@@ -189,7 +191,9 @@ final class XlsxParitySecurityProbeGroup {
                 new WorkbookIntrospectionQuery.GetPackageSecurity()),
             inspect(
                 "cells",
-                new CellSelector.ByAddresses(new SheetName("Encrypted"), List.of("A1", "A2")),
+                new CellSelector.ByAddresses(
+                    new SheetName("Encrypted"),
+                    List.of(new CellAddress("A1"), new CellAddress("A2"))),
                 allFacetCellsQuery()));
     WorkbookInspectionResult.PackageSecurityResult preservedSecurityResult =
         XlsxParityGridGrind.read(
@@ -214,7 +218,7 @@ final class XlsxParitySecurityProbeGroup {
                     new SheetSelector.ByName(new SheetName("Secure")),
                     new WorkbookMutationAction.EnsureSheet()),
                 mutate(
-                    new CellSelector.ByAddress(new SheetName("Secure"), "A1"),
+                    new CellSelector.ByAddress(new SheetName("Secure"), new CellAddress("A1")),
                     new CellMutationAction.SetCell(text("Authored encrypted")))));
     String poiAuthoredText = XlsxParityOracle.encryptedStringCell(authoredOutput, "Secure", "A1");
     WorkbookResult.Success authoredRead =
@@ -227,7 +231,8 @@ final class XlsxParitySecurityProbeGroup {
                 new WorkbookIntrospectionQuery.GetPackageSecurity()),
             inspect(
                 "cells",
-                new CellSelector.ByAddresses(new SheetName("Secure"), List.of("A1")),
+                new CellSelector.ByAddresses(
+                    new SheetName("Secure"), List.of(new CellAddress("A1"))),
                 allFacetCellsQuery()));
     WorkbookInspectionResult.PackageSecurityResult authoredSecurityResult =
         XlsxParityGridGrind.read(
@@ -339,7 +344,8 @@ final class XlsxParitySecurityProbeGroup {
                 new WorkbookIntrospectionQuery.GetPackageSecurity()),
             inspect(
                 "cells",
-                new CellSelector.ByAddresses(new SheetName("Signed"), List.of("A1")),
+                new CellSelector.ByAddresses(
+                    new SheetName("Signed"), List.of(new CellAddress("A1"))),
                 allFacetCellsQuery()));
     WorkbookInspectionResult.PackageSecurityResult sourceSecurityResult =
         XlsxParityGridGrind.read(
@@ -359,7 +365,7 @@ final class XlsxParitySecurityProbeGroup {
             null,
             List.of(
                 mutate(
-                    new CellSelector.ByAddress(new SheetName("Signed"), "C1"),
+                    new CellSelector.ByAddress(new SheetName("Signed"), new CellAddress("C1")),
                     new CellMutationAction.SetCell(text("Unsigned")))));
     WorkbookResult.Success unsignedRead =
         XlsxParityGridGrind.readWorkbook(
@@ -370,7 +376,8 @@ final class XlsxParitySecurityProbeGroup {
                 new WorkbookIntrospectionQuery.GetPackageSecurity()),
             inspect(
                 "cells",
-                new CellSelector.ByAddresses(new SheetName("Signed"), List.of("C1")),
+                new CellSelector.ByAddresses(
+                    new SheetName("Signed"), List.of(new CellAddress("C1"))),
                 allFacetCellsQuery()));
     WorkbookInspectionResult.PackageSecurityResult unsignedSecurityResult =
         XlsxParityGridGrind.read(
@@ -395,7 +402,7 @@ final class XlsxParitySecurityProbeGroup {
             null,
             List.of(
                 mutate(
-                    new CellSelector.ByAddress(new SheetName("Signed"), "C1"),
+                    new CellSelector.ByAddress(new SheetName("Signed"), new CellAddress("C1")),
                     new CellMutationAction.SetCell(text("Re-signed")))));
     boolean poiResignedValid = XlsxParityOracle.signatureValid(resignedOutput);
     WorkbookResult.Success resignedRead =
@@ -407,7 +414,8 @@ final class XlsxParitySecurityProbeGroup {
                 new WorkbookIntrospectionQuery.GetPackageSecurity()),
             inspect(
                 "cells",
-                new CellSelector.ByAddresses(new SheetName("Signed"), List.of("C1")),
+                new CellSelector.ByAddresses(
+                    new SheetName("Signed"), List.of(new CellAddress("C1"))),
                 allFacetCellsQuery()));
     WorkbookInspectionResult.PackageSecurityResult resignedSecurityResult =
         XlsxParityGridGrind.read(
@@ -431,7 +439,7 @@ final class XlsxParitySecurityProbeGroup {
                     new SheetSelector.ByName(new SheetName("Signed")),
                     new WorkbookMutationAction.EnsureSheet()),
                 mutate(
-                    new CellSelector.ByAddress(new SheetName("Signed"), "A1"),
+                    new CellSelector.ByAddress(new SheetName("Signed"), new CellAddress("A1")),
                     new CellMutationAction.SetCell(text("Authored signed")))));
     boolean poiAuthoredValid = XlsxParityOracle.signatureValid(authoredOutput);
     WorkbookResult.Success authoredRead =
@@ -443,7 +451,8 @@ final class XlsxParitySecurityProbeGroup {
                 new WorkbookIntrospectionQuery.GetPackageSecurity()),
             inspect(
                 "cells",
-                new CellSelector.ByAddresses(new SheetName("Signed"), List.of("A1")),
+                new CellSelector.ByAddresses(
+                    new SheetName("Signed"), List.of(new CellAddress("A1"))),
                 allFacetCellsQuery()));
     WorkbookInspectionResult.PackageSecurityResult authoredSecurityResult =
         XlsxParityGridGrind.read(
@@ -512,7 +521,8 @@ final class XlsxParitySecurityProbeGroup {
                 new WorkbookIntrospectionQuery.GetPackageSecurity()),
             inspect(
                 "cells",
-                new CellSelector.ByAddresses(new SheetName("Signed"), List.of("A1")),
+                new CellSelector.ByAddresses(
+                    new SheetName("Signed"), List.of(new CellAddress("A1"))),
                 allFacetCellsQuery()));
     WorkbookInspectionResult.PackageSecurityResult security =
         XlsxParityGridGrind.read(

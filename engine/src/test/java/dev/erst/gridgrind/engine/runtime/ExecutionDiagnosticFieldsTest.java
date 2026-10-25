@@ -24,6 +24,7 @@ import dev.erst.gridgrind.core.plan.StructuredMutationAction;
 import dev.erst.gridgrind.core.plan.TableSelector;
 import dev.erst.gridgrind.core.plan.WorkbookSelector;
 import dev.erst.gridgrind.core.problem.ProblemContextWorkbookSurfaces;
+import dev.erst.gridgrind.core.vocabulary.CellAddress;
 import dev.erst.gridgrind.core.vocabulary.NamedRangeScope;
 import dev.erst.gridgrind.core.vocabulary.SheetLabel;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
@@ -94,7 +95,7 @@ class ExecutionDiagnosticFieldsTest {
                 "SalesPivot",
                 new SheetName("Budget"),
                 new PivotTableInput.Source.Range(new SheetName("Budget"), "A1:B5"),
-                new PivotTableInput.Anchor("C5"),
+                new PivotTableInput.Anchor(new CellAddress("C5")),
                 List.of(),
                 List.of(),
                 List.of(),
@@ -158,7 +159,7 @@ class ExecutionDiagnosticFieldsTest {
     assertEquals(
         new ProblemContextWorkbookSurfaces.ProblemLocation.Cell(new SheetLabel("Budget"), "B4"),
         ExecutionDiagnosticFields.locationFor(
-            new CellSelector.ByAddress(new SheetName("Budget"), "B4")));
+            new CellSelector.ByAddress(new SheetName("Budget"), new CellAddress("B4"))));
     assertEquals(
         new ProblemContextWorkbookSurfaces.ProblemLocation.Range(new SheetLabel("Budget"), "A1:B2"),
         ExecutionDiagnosticFields.locationFor(
@@ -182,7 +183,7 @@ class ExecutionDiagnosticFieldsTest {
                     "SalesPivot",
                     new SheetName("Budget"),
                     new PivotTableInput.Source.Range(new SheetName("Budget"), "A1:B5"),
-                    new PivotTableInput.Anchor("C5"),
+                    new PivotTableInput.Anchor(new CellAddress("C5")),
                     List.of(),
                     List.of(),
                     List.of(),
@@ -202,7 +203,7 @@ class ExecutionDiagnosticFieldsTest {
                     "SalesPivot",
                     new SheetName("Budget"),
                     new PivotTableInput.Source.NamedRange("BudgetSource"),
-                    new PivotTableInput.Anchor("C5"),
+                    new PivotTableInput.Anchor(new CellAddress("C5")),
                     List.of(),
                     List.of(),
                     List.of(),
@@ -235,7 +236,7 @@ class ExecutionDiagnosticFieldsTest {
     AssertionStep formulaAssertionStep =
         new AssertionStep(
             new StepId("assert-formula"),
-            new CellSelector.ByAddress(new SheetName("Budget"), "B4"),
+            new CellSelector.ByAddress(new SheetName("Budget"), new CellAddress("B4")),
             new CellAssertion.FormulaText("SUM(A1:A2)"));
     InspectionStep workbookInspection =
         new InspectionStep(
@@ -303,7 +304,7 @@ class ExecutionDiagnosticFieldsTest {
         ExecutionDiagnosticFields.locationFor(
             new MutationStep(
                 new StepId("set-formula"),
-                new CellSelector.ByAddress(new SheetName("Budget"), "B4"),
+                new CellSelector.ByAddress(new SheetName("Budget"), new CellAddress("B4")),
                 new CellMutationAction.SetCell(formulaCell("SUM(A1:A2)"))),
             new InvalidFormulaException("Budget", "B4", "SUM(A1:A2)", "bad", null)));
   }

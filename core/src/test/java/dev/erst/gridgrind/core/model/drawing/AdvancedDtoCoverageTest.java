@@ -29,6 +29,7 @@ import dev.erst.gridgrind.core.result.AnalysisLocationReport;
 import dev.erst.gridgrind.core.result.AnalysisSummaryReport;
 import dev.erst.gridgrind.core.vocabulary.AnalysisFindingCode;
 import dev.erst.gridgrind.core.vocabulary.AnalysisSeverity;
+import dev.erst.gridgrind.core.vocabulary.CellAddress;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartAxisCrosses;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartAxisKind;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartAxisPosition;
@@ -403,18 +404,21 @@ class AdvancedDtoCoverageTest {
   @Test
   void arrayFormulaReportsValidateRequiredFields() {
     ArrayFormulaReport report =
-        new ArrayFormulaReport(new SheetLabel("Calc"), "D2:D4", "D2", "B2:B4*C2:C4", false);
+        new ArrayFormulaReport(
+            new SheetLabel("Calc"), "D2:D4", new CellAddress("D2"), "B2:B4*C2:C4", false);
 
     assertEquals("Calc", report.sheetName().value());
     assertEquals("D2:D4", report.range());
-    assertEquals("D2", report.topLeftAddress());
+    assertEquals("D2", report.topLeftAddress().value());
     assertEquals("B2:B4*C2:C4", report.formula());
     assertFalse(report.singleCell());
     assertEquals(
         "range must not be blank",
         assertThrows(
                 IllegalArgumentException.class,
-                () -> new ArrayFormulaReport(new SheetLabel("Calc"), " ", "D2", "SUM(B2:C2)", true))
+                () ->
+                    new ArrayFormulaReport(
+                        new SheetLabel("Calc"), " ", new CellAddress("D2"), "SUM(B2:C2)", true))
             .getMessage());
   }
 
@@ -423,7 +427,8 @@ class AdvancedDtoCoverageTest {
     CustomXmlDataBindingReport dataBinding =
         new CustomXmlDataBindingReport("binding", true, 7L, "binding.xml", 2L);
     CustomXmlLinkedCellReport linkedCell =
-        new CustomXmlLinkedCellReport(new SheetLabel("Foglio1"), "A1", "/CORSO/NOME", "string");
+        new CustomXmlLinkedCellReport(
+            new SheetLabel("Foglio1"), new CellAddress("A1"), "/CORSO/NOME", "string");
     CustomXmlMappingReport mapping =
         mappingReport(
             null, null, null, "<xsd:schema/>", dataBinding, List.of(linkedCell), List.of());
@@ -431,7 +436,7 @@ class AdvancedDtoCoverageTest {
         new CustomXmlExportReport(mapping, "UTF-8", true, "<CORSO><NOME>Grid</NOME></CORSO>");
 
     assertEquals(2L, dataBinding.loadMode());
-    assertEquals("A1", mapping.linkedCells().getFirst().address());
+    assertEquals("A1", mapping.linkedCells().getFirst().address().value());
     assertEquals("UTF-8", exported.encoding());
     assertEquals(
         "mapId must be greater than 0",
@@ -597,7 +602,7 @@ class AdvancedDtoCoverageTest {
         new PivotTableReport.Supported(
             "Sales Pivot 2026",
             new SheetName("Report"),
-            new PivotTableReport.Anchor("C5", "C5:G9"),
+            new PivotTableReport.Anchor(new CellAddress("C5"), "C5:G9"),
             new PivotTableReport.Source.Range(new SheetName("Data"), "A1:D5"),
             List.of(new PivotTableReport.Field(0, "Region")),
             List.of(new PivotTableReport.Field(1, "Stage")),

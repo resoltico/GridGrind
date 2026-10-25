@@ -1,11 +1,13 @@
 package dev.erst.gridgrind.core.model.formula;
 
 import dev.erst.gridgrind.core.result.WorkbookResultSupport;
+import dev.erst.gridgrind.core.vocabulary.CellAddress;
 import java.util.List;
 import java.util.Objects;
 
 /** One grouped formula pattern and the addresses where it appears. */
-public record FormulaPatternReport(String formula, int occurrenceCount, List<String> addresses) {
+public record FormulaPatternReport(
+    String formula, int occurrenceCount, List<CellAddress> addresses) {
   public FormulaPatternReport {
     Objects.requireNonNull(formula, "formula must not be null");
     if (formula.isBlank()) {
@@ -14,6 +16,6 @@ public record FormulaPatternReport(String formula, int occurrenceCount, List<Str
     if (occurrenceCount <= 0) {
       throw new IllegalArgumentException("occurrenceCount must be greater than 0");
     }
-    addresses = WorkbookResultSupport.copyStrings(addresses, "addresses");
+    addresses = WorkbookResultSupport.copyValues(addresses, "addresses");
   }
 }

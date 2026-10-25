@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import dev.erst.gridgrind.core.model.value.CellInput;
 import dev.erst.gridgrind.core.source.TextSourceInput;
+import dev.erst.gridgrind.core.vocabulary.CellAddress;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import org.junit.jupiter.api.Test;
@@ -22,7 +23,7 @@ class MutationStepTest {
     MutationStep setCell =
         new MutationStep(
             new StepId("set-owner"),
-            new CellSelector.ByAddress(new SheetName("Budget"), "A1"),
+            new CellSelector.ByAddress(new SheetName("Budget"), new CellAddress("A1")),
             new CellMutationAction.SetCell(new CellInput.Text(text("Owner"))));
     MutationStep clearWorkbookProtection =
         new MutationStep(
@@ -32,7 +33,7 @@ class MutationStepTest {
 
     assertEquals("MUTATION", ensureSheet.stepKind());
     assertEquals("ENSURE_SHEET", ensureSheet.action().actionType());
-    assertEquals("A1", ((CellSelector.ByAddress) setCell.target()).address());
+    assertEquals("A1", ((CellSelector.ByAddress) setCell.target()).address().value());
     assertEquals("CLEAR_WORKBOOK_PROTECTION", clearWorkbookProtection.action().actionType());
   }
 

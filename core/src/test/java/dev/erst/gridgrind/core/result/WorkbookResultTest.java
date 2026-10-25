@@ -32,6 +32,7 @@ import dev.erst.gridgrind.core.problem.GridGrindProblemCategory;
 import dev.erst.gridgrind.core.problem.GridGrindProblemCode;
 import dev.erst.gridgrind.core.problem.GridGrindProblemDetail;
 import dev.erst.gridgrind.core.problem.RequestWarning;
+import dev.erst.gridgrind.core.vocabulary.CellAddress;
 import dev.erst.gridgrind.core.vocabulary.ExcelFillPattern;
 import dev.erst.gridgrind.core.vocabulary.ExcelHorizontalAlignment;
 import dev.erst.gridgrind.core.vocabulary.ExcelVerticalAlignment;
@@ -386,7 +387,7 @@ class WorkbookResultTest {
     SheetProtectionReport.Unprotected unprotected = new SheetProtectionReport.Unprotected();
     dev.erst.gridgrind.core.model.value.CellReport.BlankReport blankCell =
         new dev.erst.gridgrind.core.model.value.CellReport.BlankReport(
-            "A1",
+            new CellAddress("A1"),
             java.util.Optional.of(""),
             java.util.Optional.of(minimalStyle()),
             java.util.Optional.empty(),
@@ -444,7 +445,7 @@ class WorkbookResultTest {
     CommentReport comment = new CommentReport("Reviewed", "Alice", true);
     dev.erst.gridgrind.core.model.value.CellReport textCell =
         new dev.erst.gridgrind.core.model.value.CellReport.TextReport(
-            "A1",
+            new CellAddress("A1"),
             java.util.Optional.of("Reviewed"),
             java.util.Optional.of(minimalStyle()),
             java.util.Optional.of(hyperlink),
@@ -453,7 +454,7 @@ class WorkbookResultTest {
             java.util.Optional.empty());
     dev.erst.gridgrind.core.model.value.CellReport numberCell =
         new dev.erst.gridgrind.core.model.value.CellReport.NumberReport(
-            "A2",
+            new CellAddress("A2"),
             java.util.Optional.of("42"),
             java.util.Optional.of(minimalStyle()),
             java.util.Optional.of(hyperlink),
@@ -462,7 +463,7 @@ class WorkbookResultTest {
             java.util.Optional.empty());
     dev.erst.gridgrind.core.model.value.CellReport booleanCell =
         new dev.erst.gridgrind.core.model.value.CellReport.BooleanReport(
-            "A3",
+            new CellAddress("A3"),
             java.util.Optional.of("TRUE"),
             java.util.Optional.of(minimalStyle()),
             java.util.Optional.of(hyperlink),
@@ -470,7 +471,7 @@ class WorkbookResultTest {
             java.util.Optional.of(true));
     dev.erst.gridgrind.core.model.value.CellReport errorCell =
         new dev.erst.gridgrind.core.model.value.CellReport.ErrorReport(
-            "A4",
+            new CellAddress("A4"),
             java.util.Optional.of("#REF!"),
             java.util.Optional.of(minimalStyle()),
             java.util.Optional.of(hyperlink),
@@ -478,7 +479,7 @@ class WorkbookResultTest {
             java.util.Optional.of("#REF!"));
     dev.erst.gridgrind.core.model.value.CellReport formulaCell =
         new dev.erst.gridgrind.core.model.value.CellReport.FormulaReport(
-            "A5",
+            new CellAddress("A5"),
             java.util.Optional.of("42"),
             java.util.Optional.of(minimalStyle()),
             java.util.Optional.of(hyperlink),

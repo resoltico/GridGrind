@@ -1,6 +1,7 @@
 package dev.erst.gridgrind.cli.examples;
 
 import dev.erst.gridgrind.core.model.pivot.PivotTableInput;
+import dev.erst.gridgrind.core.vocabulary.CellAddress;
 import dev.erst.gridgrind.core.vocabulary.ExcelPivotDataConsolidateFunction;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import java.util.List;
@@ -30,7 +31,7 @@ final class ExamplePivotInputs {
         pivotName,
         new SheetName(reportSheetName),
         source,
-        new PivotTableInput.Anchor("A3"),
+        new PivotTableInput.Anchor(new CellAddress("A3")),
         List.of("Region"),
         List.of("Stage"),
         List.of(),

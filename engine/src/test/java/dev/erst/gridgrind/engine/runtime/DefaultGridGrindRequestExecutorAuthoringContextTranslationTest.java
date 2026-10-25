@@ -22,6 +22,7 @@ import dev.erst.gridgrind.core.plan.*;
 import dev.erst.gridgrind.core.plan.CellMutationAction;
 import dev.erst.gridgrind.core.plan.StructuredMutationAction;
 import dev.erst.gridgrind.core.plan.WorkbookMutationAction;
+import dev.erst.gridgrind.core.vocabulary.CellAddress;
 import dev.erst.gridgrind.core.vocabulary.ExcelComparisonOperator;
 import dev.erst.gridgrind.core.vocabulary.ExcelPrintOrientation;
 import dev.erst.gridgrind.core.vocabulary.NamedRangeScope;
@@ -44,7 +45,7 @@ class DefaultGridGrindRequestExecutorAuthoringContextTranslationTest
     RuntimeException exception = new RuntimeException("test");
     assertWriteContext(
         mutate(
-            new CellSelector.ByAddress(new SheetName("Budget"), "A1"),
+            new CellSelector.ByAddress(new SheetName("Budget"), new CellAddress("A1")),
             new CellMutationAction.SetHyperlink(
                 new HyperlinkTarget.Url("https://example.com/report"))),
         exception,
@@ -54,7 +55,7 @@ class DefaultGridGrindRequestExecutorAuthoringContextTranslationTest
         null);
     assertWriteContext(
         mutate(
-            new CellSelector.ByAddress(new SheetName("Budget"), "A1"),
+            new CellSelector.ByAddress(new SheetName("Budget"), new CellAddress("A1")),
             new CellMutationAction.ClearHyperlink()),
         exception,
         "Budget",
@@ -63,7 +64,7 @@ class DefaultGridGrindRequestExecutorAuthoringContextTranslationTest
         null);
     assertWriteContext(
         mutate(
-            new CellSelector.ByAddress(new SheetName("Budget"), "A1"),
+            new CellSelector.ByAddress(new SheetName("Budget"), new CellAddress("A1")),
             new CellMutationAction.SetComment(
                 CommentInput.plain(text("Review"), "GridGrind", false))),
         exception,
@@ -73,7 +74,7 @@ class DefaultGridGrindRequestExecutorAuthoringContextTranslationTest
         null);
     assertWriteContext(
         mutate(
-            new CellSelector.ByAddress(new SheetName("Budget"), "A1"),
+            new CellSelector.ByAddress(new SheetName("Budget"), new CellAddress("A1")),
             new CellMutationAction.ClearComment()),
         exception,
         "Budget",
@@ -282,27 +283,27 @@ class DefaultGridGrindRequestExecutorAuthoringContextTranslationTest
     assertNull(
         rangeFor(
             mutate(
-                new CellSelector.ByAddress(new SheetName("Budget"), "A1"),
+                new CellSelector.ByAddress(new SheetName("Budget"), new CellAddress("A1")),
                 new CellMutationAction.SetHyperlink(
                     new HyperlinkTarget.Url("https://example.com/report"))),
             invalidFormula));
     assertNull(
         rangeFor(
             mutate(
-                new CellSelector.ByAddress(new SheetName("Budget"), "A1"),
+                new CellSelector.ByAddress(new SheetName("Budget"), new CellAddress("A1")),
                 new CellMutationAction.ClearHyperlink()),
             invalidFormula));
     assertNull(
         rangeFor(
             mutate(
-                new CellSelector.ByAddress(new SheetName("Budget"), "A1"),
+                new CellSelector.ByAddress(new SheetName("Budget"), new CellAddress("A1")),
                 new CellMutationAction.SetComment(
                     CommentInput.plain(text("Review"), "GridGrind", false))),
             invalidFormula));
     assertNull(
         rangeFor(
             mutate(
-                new CellSelector.ByAddress(new SheetName("Budget"), "A1"),
+                new CellSelector.ByAddress(new SheetName("Budget"), new CellAddress("A1")),
                 new CellMutationAction.ClearComment()),
             invalidFormula));
     assertEquals(
@@ -396,7 +397,7 @@ class DefaultGridGrindRequestExecutorAuthoringContextTranslationTest
                 new SheetSelector.ByName(new SheetName("Budget")),
                 new WorkbookMutationAction.ClearPrintLayout()),
             mutate(
-                new CellSelector.ByAddress(new SheetName("Budget"), "A1"),
+                new CellSelector.ByAddress(new SheetName("Budget"), new CellAddress("A1")),
                 new CellMutationAction.SetCell(textCell("x"))),
             mutate(
                 new RangeSelector.ByRange(new SheetName("Budget"), "A1:B1"),
@@ -407,18 +408,18 @@ class DefaultGridGrindRequestExecutorAuthoringContextTranslationTest
                 new RangeSelector.ByRange(new SheetName("Budget"), "A1:B1"),
                 new CellMutationAction.ClearRange()),
             mutate(
-                new CellSelector.ByAddress(new SheetName("Budget"), "A1"),
+                new CellSelector.ByAddress(new SheetName("Budget"), new CellAddress("A1")),
                 new CellMutationAction.SetHyperlink(
                     new HyperlinkTarget.Url("https://example.com/report"))),
             mutate(
-                new CellSelector.ByAddress(new SheetName("Budget"), "A1"),
+                new CellSelector.ByAddress(new SheetName("Budget"), new CellAddress("A1")),
                 new CellMutationAction.ClearHyperlink()),
             mutate(
-                new CellSelector.ByAddress(new SheetName("Budget"), "A1"),
+                new CellSelector.ByAddress(new SheetName("Budget"), new CellAddress("A1")),
                 new CellMutationAction.SetComment(
                     CommentInput.plain(text("Review"), "GridGrind", false))),
             mutate(
-                new CellSelector.ByAddress(new SheetName("Budget"), "A1"),
+                new CellSelector.ByAddress(new SheetName("Budget"), new CellAddress("A1")),
                 new CellMutationAction.ClearComment()),
             mutate(
                 new RangeSelector.ByRange(new SheetName("Budget"), "A1:B2"),

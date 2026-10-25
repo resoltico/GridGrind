@@ -24,6 +24,7 @@ import dev.erst.gridgrind.core.plan.SheetSelector;
 import dev.erst.gridgrind.core.plan.StructuredMutationAction;
 import dev.erst.gridgrind.core.plan.WorkbookMutationAction;
 import dev.erst.gridgrind.core.source.TextSourceInput;
+import dev.erst.gridgrind.core.vocabulary.CellAddress;
 import dev.erst.gridgrind.core.vocabulary.ExcelBorderStyle;
 import dev.erst.gridgrind.core.vocabulary.ExcelDrawingAnchorBehavior;
 import dev.erst.gridgrind.core.vocabulary.ExcelFillPattern;
@@ -168,7 +169,8 @@ class ExecutorConverterDelegationCoverageTest {
         assertInstanceOf(
             WorkbookCellCommand.SetCell.class,
             WorkbookCommandCellMutationConverter.toCommand(
-                new CellSelector.ByAddress(new SheetName("Budget"), "A1"), setCell));
+                new CellSelector.ByAddress(new SheetName("Budget"), new CellAddress("A1")),
+                setCell));
     WorkbookDrawingCommand.DeleteDrawingObject deleteDrawingObject =
         assertInstanceOf(
             WorkbookDrawingCommand.DeleteDrawingObject.class,

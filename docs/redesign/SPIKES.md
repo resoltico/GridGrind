@@ -671,3 +671,42 @@ types. Inventories: blank checks 473 -> 462; main Java 126,476 -> 126,506; test 
 `observed-sheet-*.log`, `observed-sheet-failures/`, `observed-sheet-inventories/`, compiler migration
 logs and the classified file list. No golden re-recording, baseline or supplement changes.
 Next: cell-address fields; retain typed address remediation and range-selector endpoint ordering.
+
+### WP-21 cell addresses
+
+Fourteen model/authoring files now carry `CellAddress`: cell selectors and lists, window anchors,
+cell/readback reports, formula targets and pivot anchors. Constructor validation uses the shared
+address problem mapper, retaining typed rules and remediation with no invented owner path.
+Case-insensitive address/name list copying shares one typed helper; the read count limit remains.
+Removed the obsolete list address-format branch and its unreachable helper-only assertion.
+The resolver's private numeric row/column pair is now `CellCoordinates`, avoiding confusion with
+the wire value. Invalid diagnostic tokens remain text; backend/rendering/parity/fuzz consumers
+extract scalar values at their boundaries.
+
+Focused tests caught old list-index/direct-topLeftAddress message expectations: the value now
+names `address`, while the public intake owns field/index location. A public request regression
+asserts `steps[0].target.addresses[1]` and the syntax rule; nested codec regression asserts the
+bounds rule and array path. The doctor out-of-bounds golden message/remediation/location remain
+byte-identical. A full check exposed synthetic `A2b`/`A2c` addresses in a facet-conversion fixture;
+replaced them with distinct valid `A8`/`A9`, preserving all facet assertions. Mixed text/value
+comparisons and a parity map projection were corrected. Standard PMD's import threshold required
+one scoped, documented `ExcessiveImports` suppression on the semantic selector resolver (30
+imports); its selector/backend input contract is cohesive. No ruleset changes or new fragments.
+Earlier failures retained externally, including XML in `cell-address-failures/`.
+
+Final `./gradlew check` passed (3m02s): core 328, JSON 339, engine 1,510, CLI 598, architecture 35;
+2,810 tests with zero failures/skips and all 141 unchanged golden cases. Doctor-only corpus passed
+independently (12s). Nested Jazzer check and replay passed (23s), focused parity all 14 cases, and
+named modules round-tripped 14 requests, catalog, response and nine scalars. Inventories: blank
+checks 462 -> 451; main Java 126,506 -> 126,567; test Java 154,463 -> 154,832; model/subtype counts
+unchanged. Evidence: external `cell-address-*.log`, inventories, failures, classified file list and
+compiler-informed migration logs. Baseline diff remains empty; no supplement or golden re-record.
+
+Range follow-up QA: a direct reopened-workbook experiment stores `sqref="#REF!"` on a future-type
+validation. Current product exits 0 and reports `UNSUPPORTED` with ranges `["#REF!"]` truthfully.
+Evidence: external `range-observations/` Java producer, workbook, request/grant and result/logs.
+An authored local `RangeRef` cannot represent that observed fact. Preserve it with a nonblank
+factual range-label value, alongside strict authored ranges. Keep selector-specific endpoint
+ordering (the backend rectangle parser normalizes reversed endpoints). Print-area readback was
+also inspected: it normalizes stored formulas to local rectangular references; its authoring
+path parses one rectangle, so no speculative print-area expression abstraction is needed.

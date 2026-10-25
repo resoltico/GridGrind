@@ -7,6 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import dev.erst.gridgrind.core.model.style.RichTextRunInput;
 import dev.erst.gridgrind.core.model.value.CellInput;
 import dev.erst.gridgrind.core.source.TextSourceInput;
+import dev.erst.gridgrind.core.vocabulary.CellAddress;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -33,10 +34,12 @@ class SelectorTypesTest {
         new CellSelector.AllUsedInSheet(new SheetName("Budget")).cardinality());
     assertEquals(
         SelectorCardinality.EXACTLY_ONE,
-        new CellSelector.ByAddress(new SheetName("Budget"), "A1").cardinality());
+        new CellSelector.ByAddress(new SheetName("Budget"), new CellAddress("A1")).cardinality());
     assertEquals(
         SelectorCardinality.ONE_OR_MORE,
-        new CellSelector.ByAddresses(new SheetName("Budget"), List.of("A1", "B2")).cardinality());
+        new CellSelector.ByAddresses(
+                new SheetName("Budget"), List.of(new CellAddress("A1"), new CellAddress("B2")))
+            .cardinality());
 
     assertEquals(
         SelectorCardinality.ANY_NUMBER,
@@ -50,7 +53,8 @@ class SelectorTypesTest {
             .cardinality());
     assertEquals(
         SelectorCardinality.EXACTLY_ONE,
-        new RangeSelector.RectangularWindow(new SheetName("Budget"), "B3", 2, 3).cardinality());
+        new RangeSelector.RectangularWindow(new SheetName("Budget"), new CellAddress("B3"), 2, 3)
+            .cardinality());
 
     assertEquals(
         SelectorCardinality.EXACTLY_ONE,
@@ -147,15 +151,22 @@ class SelectorTypesTest {
     assertThrows(IllegalArgumentException.class, () -> new SheetSelector.ByNames(List.of()));
 
     CellSelector.ByAddresses cells =
-        new CellSelector.ByAddresses(new SheetName("Budget"), List.of("A1", "$B$2"));
+        new CellSelector.ByAddresses(
+            new SheetName("Budget"), List.of(new CellAddress("A1"), new CellAddress("$B$2")));
     assertEquals("Budget", cells.sheetName().value());
-    assertEquals(List.of("A1", "$B$2"), cells.addresses());
+    assertEquals(
+        List.of("A1", "$B$2"),
+        cells.addresses().stream()
+            .map(dev.erst.gridgrind.core.vocabulary.WireString::value)
+            .toList());
     assertThrows(
         IllegalArgumentException.class,
-        () -> new CellSelector.ByAddresses(new SheetName("Budget"), List.of("A1", "a1")));
+        () ->
+            new CellSelector.ByAddresses(
+                new SheetName("Budget"), List.of(new CellAddress("A1"), new CellAddress("a1"))));
 
     RangeSelector.RectangularWindow window =
-        new RangeSelector.RectangularWindow(new SheetName("Budget"), "B3", 2, 3);
+        new RangeSelector.RectangularWindow(new SheetName("Budget"), new CellAddress("B3"), 2, 3);
     assertEquals("B3:D4", window.range());
     assertThrows(
         IllegalArgumentException.class,

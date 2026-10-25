@@ -21,6 +21,7 @@ import dev.erst.gridgrind.core.plan.StructuredMutationAction;
 import dev.erst.gridgrind.core.plan.TableSelector;
 import dev.erst.gridgrind.core.plan.WorkbookMutationAction;
 import dev.erst.gridgrind.core.plan.WorkbookSelector;
+import dev.erst.gridgrind.core.vocabulary.CellAddress;
 import dev.erst.gridgrind.core.vocabulary.NamedRangeScope;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import java.util.Optional;
@@ -146,7 +147,8 @@ final class OperationSequenceMutationFactory {
                 mutate(
                     new CellSelector.ByAddress(
                         new SheetName(targetSheet),
-                        FuzzDataDecoders.nextNonBlankCellAddress(data, validAddress)),
+                        new CellAddress(
+                            FuzzDataDecoders.nextNonBlankCellAddress(data, validAddress))),
                     new CellMutationAction.SetCell(FuzzDataDecoders.nextCellInput(data)));
             case 0x1 -> {
               String range = validRange ? "A1:B2" : FuzzDataDecoders.nextNonBlankRange(data, false);
@@ -171,25 +173,29 @@ final class OperationSequenceMutationFactory {
                 mutate(
                     new CellSelector.ByAddress(
                         new SheetName(targetSheet),
-                        FuzzDataDecoders.nextNonBlankCellAddress(data, validAddress)),
+                        new CellAddress(
+                            FuzzDataDecoders.nextNonBlankCellAddress(data, validAddress))),
                     new CellMutationAction.SetHyperlink(nextHyperlinkTarget(data)));
             case 0x1 ->
                 mutate(
                     new CellSelector.ByAddress(
                         new SheetName(targetSheet),
-                        FuzzDataDecoders.nextNonBlankCellAddress(data, validAddress)),
+                        new CellAddress(
+                            FuzzDataDecoders.nextNonBlankCellAddress(data, validAddress))),
                     new CellMutationAction.ClearHyperlink());
             case 0x2 ->
                 mutate(
                     new CellSelector.ByAddress(
                         new SheetName(targetSheet),
-                        FuzzDataDecoders.nextNonBlankCellAddress(data, validAddress)),
+                        new CellAddress(
+                            FuzzDataDecoders.nextNonBlankCellAddress(data, validAddress))),
                     new CellMutationAction.SetComment(nextCommentInput(data)));
             case 0x3 ->
                 mutate(
                     new CellSelector.ByAddress(
                         new SheetName(targetSheet),
-                        FuzzDataDecoders.nextNonBlankCellAddress(data, validAddress)),
+                        new CellAddress(
+                            FuzzDataDecoders.nextNonBlankCellAddress(data, validAddress))),
                     new CellMutationAction.ClearComment());
             case 0x4 ->
                 mutate(

@@ -16,6 +16,7 @@ import dev.erst.gridgrind.core.plan.StructuredMutationAction;
 import dev.erst.gridgrind.core.plan.WorkbookInspectionResult;
 import dev.erst.gridgrind.core.plan.WorkbookSelector;
 import dev.erst.gridgrind.core.problem.GridGrindProblemCode;
+import dev.erst.gridgrind.core.vocabulary.CellAddress;
 import dev.erst.gridgrind.core.vocabulary.ExcelBorderStyle;
 import dev.erst.gridgrind.core.vocabulary.ExcelFillPattern;
 import dev.erst.gridgrind.core.vocabulary.ExcelHorizontalAlignment;
@@ -99,7 +100,7 @@ class DefaultGridGrindRequestExecutorCoverageTest
     MutationStep setCell =
         new MutationStep(
             new StepId("step-01-set-cell"),
-            new CellSelector.ByAddress(new SheetName("Budget"), "B4"),
+            new CellSelector.ByAddress(new SheetName("Budget"), new CellAddress("B4")),
             new CellMutationAction.SetCell(formulaCell("SUM(B2:B3)")));
     MutationStep setNamedRange =
         new MutationStep(
@@ -112,7 +113,7 @@ class DefaultGridGrindRequestExecutorCoverageTest
     InspectionStep getCells =
         new InspectionStep(
             new StepId("step-03-get-cells"),
-            new CellSelector.ByAddresses(new SheetName("Budget"), List.of("B4")),
+            new CellSelector.ByAddresses(new SheetName("Budget"), List.of(new CellAddress("B4"))),
             new SheetIntrospectionQuery.GetCells());
     InspectionStep getNamedRanges =
         new InspectionStep(
@@ -151,7 +152,8 @@ class DefaultGridGrindRequestExecutorCoverageTest
         ExecutionDiagnosticFields.rangeFor(
             new InspectionStep(
                 new StepId("step-05-get-window"),
-                new RangeSelector.RectangularWindow(new SheetName("Budget"), "A1", 9, 2),
+                new RangeSelector.RectangularWindow(
+                    new SheetName("Budget"), new CellAddress("A1"), 9, 2),
                 new InspectionSurfaceQuery.GetSheetSchema()),
             invalidFormula));
   }
@@ -220,7 +222,7 @@ class DefaultGridGrindRequestExecutorCoverageTest
     assertTrue(protection.protection().structureLocked());
     assertEquals("step-02-cells", cells.stepId().value());
     assertEquals("Budget", cells.sheetName().value());
-    assertEquals("B4", cells.cells().getFirst().address());
+    assertEquals("B4", cells.cells().getFirst().address().value());
   }
 
   static ExcelCellStyleSnapshot defaultStyle() {

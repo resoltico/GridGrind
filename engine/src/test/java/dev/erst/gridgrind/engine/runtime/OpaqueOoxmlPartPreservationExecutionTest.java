@@ -15,6 +15,7 @@ import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import dev.erst.gridgrind.core.problem.GridGrindProblemCode;
 import dev.erst.gridgrind.core.result.WorkbookExecutionEvidence.Preservation;
 import dev.erst.gridgrind.core.result.WorkbookResult;
+import dev.erst.gridgrind.core.vocabulary.CellAddress;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.engine.api.GridGrindHostAcceptancePolicy;
@@ -109,7 +110,7 @@ class OpaqueOoxmlPartPreservationExecutionTest {
         List.of(
             new MutationStep(
                 new StepId("update-report"),
-                new CellSelector.ByAddress(new SheetName("Report"), "A1"),
+                new CellSelector.ByAddress(new SheetName("Report"), new CellAddress("A1")),
                 new CellMutationAction.SetCell(new CellInput.NumberValue(2)))));
   }
 

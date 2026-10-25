@@ -14,6 +14,7 @@ import dev.erst.gridgrind.core.problem.InvalidRequestException;
 import dev.erst.gridgrind.core.result.ExecutionJournalLevel;
 import dev.erst.gridgrind.core.source.SecretReference;
 import dev.erst.gridgrind.core.source.TextSourceInput;
+import dev.erst.gridgrind.core.vocabulary.CellAddress;
 import dev.erst.gridgrind.core.vocabulary.PlanId;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.StepId;
@@ -172,7 +173,7 @@ class WorkbookPlanTest {
             List.of(
                 new MutationStep(
                     new StepId("set-cell"),
-                    new CellSelector.ByAddress(new SheetName("Budget"), "A1"),
+                    new CellSelector.ByAddress(new SheetName("Budget"), new CellAddress("A1")),
                     new CellMutationAction.SetCell(new CellInput.Text(text("Owner"))))));
 
     assertInstanceOf(ExecutionModeInput.EventRead.class, plan.executionMode());
@@ -281,11 +282,11 @@ class WorkbookPlanTest {
             List.of(
                 new MutationStep(
                     new StepId("set-cell"),
-                    new CellSelector.ByAddress(new SheetName("Budget"), "A1"),
+                    new CellSelector.ByAddress(new SheetName("Budget"), new CellAddress("A1")),
                     new CellMutationAction.SetCell(new CellInput.Text(text("Owner")))),
                 new AssertionStep(
                     new StepId("assert-cell"),
-                    new CellSelector.ByAddress(new SheetName("Budget"), "A1"),
+                    new CellSelector.ByAddress(new SheetName("Budget"), new CellAddress("A1")),
                     new CellAssertion.CellValue(
                         new dev.erst.gridgrind.core.model.value.CellScalarValue.Text("Owner"))),
                 new InspectionStep(

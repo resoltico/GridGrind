@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import dev.erst.gridgrind.core.model.value.CellReport;
 import dev.erst.gridgrind.core.result.WorkbookResultSupport;
+import dev.erst.gridgrind.core.vocabulary.CellAddress;
 import dev.erst.gridgrind.core.vocabulary.SheetLabel;
 import java.util.List;
 import java.util.Objects;
@@ -26,7 +27,7 @@ public sealed interface WindowReport permits WindowReport.Sparse, WindowReport.D
   SheetLabel sheetName();
 
   /** Returns the top-left A1 address anchoring this window. */
-  String topLeftAddress();
+  CellAddress topLeftAddress();
 
   /** Returns the requested rectangular dimensions of this window. */
   WindowDimensionsReport dimensions();
@@ -34,7 +35,7 @@ public sealed interface WindowReport permits WindowReport.Sparse, WindowReport.D
   /** Sparse window shape that omits blank cells entirely. */
   record Sparse(
       SheetLabel sheetName,
-      String topLeftAddress,
+      CellAddress topLeftAddress,
       WindowDimensionsReport dimensions,
       List<CellReport> populatedCells)
       implements WindowReport {
@@ -42,9 +43,6 @@ public sealed interface WindowReport permits WindowReport.Sparse, WindowReport.D
       Objects.requireNonNull(sheetName, "sheetName must not be null");
       Objects.requireNonNull(topLeftAddress, "topLeftAddress must not be null");
       Objects.requireNonNull(dimensions, "dimensions must not be null");
-      if (topLeftAddress.isBlank()) {
-        throw new IllegalArgumentException("topLeftAddress must not be blank");
-      }
       populatedCells = WorkbookResultSupport.copyValues(populatedCells, "populatedCells");
       for (CellReport cell : populatedCells) {
         if (cell instanceof CellReport.BlankReport) {
@@ -63,7 +61,7 @@ public sealed interface WindowReport permits WindowReport.Sparse, WindowReport.D
   /** Dense window shape that retains the explicit row grid, including blanks. */
   record Dense(
       SheetLabel sheetName,
-      String topLeftAddress,
+      CellAddress topLeftAddress,
       WindowDimensionsReport dimensions,
       List<WindowRowReport> rows)
       implements WindowReport {
@@ -71,9 +69,6 @@ public sealed interface WindowReport permits WindowReport.Sparse, WindowReport.D
       Objects.requireNonNull(sheetName, "sheetName must not be null");
       Objects.requireNonNull(topLeftAddress, "topLeftAddress must not be null");
       Objects.requireNonNull(dimensions, "dimensions must not be null");
-      if (topLeftAddress.isBlank()) {
-        throw new IllegalArgumentException("topLeftAddress must not be blank");
-      }
       rows = WorkbookResultSupport.copyValues(rows, "rows");
     }
 

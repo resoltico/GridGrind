@@ -28,6 +28,7 @@ import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import dev.erst.gridgrind.core.plan.WorkbookStep;
 import dev.erst.gridgrind.core.semantics.WorkbookOperationContracts;
 import dev.erst.gridgrind.core.source.TextSourceInput;
+import dev.erst.gridgrind.core.vocabulary.CellAddress;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import java.util.List;
@@ -215,7 +216,7 @@ class WorkbookStaticRequestContractTest {
                     Optional.of(
                         new AssertionStep(
                             new StepId("assert"),
-                            new CellSelector.ByAddress(new SheetName("Ops"), "A1"),
+                            new CellSelector.ByAddress(new SheetName("Ops"), new CellAddress("A1")),
                             new CellAssertion.CellValue(new CellScalarValue.Text("ready")))))));
 
     List<String> messages =
@@ -239,7 +240,7 @@ class WorkbookStaticRequestContractTest {
                 new CalculationStrategyInput.EvaluateTargets(
                     List.of(
                         new dev.erst.gridgrind.core.model.formula.FormulaCellTarget(
-                            new SheetName("Ops"), "A1"))))
+                            new SheetName("Ops"), new CellAddress("A1")))))
             .requiresMutationPrefix());
     assertTrue(
         WorkbookOperationContracts.executionModeViolation(
@@ -302,7 +303,7 @@ class WorkbookStaticRequestContractTest {
                     Optional.of(
                         new AssertionStep(
                             new StepId("assert"),
-                            new CellSelector.ByAddress(new SheetName("Ops"), "A1"),
+                            new CellSelector.ByAddress(new SheetName("Ops"), new CellAddress("A1")),
                             new CellAssertion.CellValue(new CellScalarValue.Text("ready"))))),
                 new WorkbookStaticStep(1, Optional.of(appendStep("append"))),
                 new WorkbookStaticStep(2, Optional.of(appendStep("append-2")))));
@@ -328,7 +329,7 @@ class WorkbookStaticRequestContractTest {
                     Optional.of(
                         new AssertionStep(
                             new StepId("assert"),
-                            new CellSelector.ByAddress(new SheetName("Ops"), "A1"),
+                            new CellSelector.ByAddress(new SheetName("Ops"), new CellAddress("A1")),
                             new CellAssertion.CellValue(new CellScalarValue.Text("ready"))))),
                 new WorkbookStaticStep(2, Optional.of(appendStep("append")))));
 
@@ -344,7 +345,7 @@ class WorkbookStaticRequestContractTest {
     MutationStep formula =
         new MutationStep(
             new StepId("formula"),
-            new CellSelector.ByAddress(new SheetName("Ops"), "A1"),
+            new CellSelector.ByAddress(new SheetName("Ops"), new CellAddress("A1")),
             new CellMutationAction.SetCell(new CellInput.Formula(TextSourceInput.inline("1+1"))));
     MutationStep columnEdit =
         new MutationStep(
@@ -381,7 +382,7 @@ class WorkbookStaticRequestContractTest {
     MutationStep rawFormula =
         new MutationStep(
             new StepId("raw-formula"),
-            new CellSelector.ByAddress(new SheetName("Ops"), "A2"),
+            new CellSelector.ByAddress(new SheetName("Ops"), new CellAddress("A2")),
             new CellMutationAction.SetCell(
                 new CellInput.RawFormula(TextSourceInput.inline("RAW_FORMULA()"))));
     assertEquals(

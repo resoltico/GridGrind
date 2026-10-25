@@ -66,6 +66,7 @@ import dev.erst.gridgrind.core.plan.WorkbookSelector;
 import dev.erst.gridgrind.core.source.BinarySourceInput;
 import dev.erst.gridgrind.core.source.SecretReference;
 import dev.erst.gridgrind.core.source.TextSourceInput;
+import dev.erst.gridgrind.core.vocabulary.CellAddress;
 import dev.erst.gridgrind.core.vocabulary.ExcelBorderStyle;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartBarDirection;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartBarGrouping;
@@ -482,7 +483,7 @@ class RuntimeResidualCoverageTest {
             new TableRowSelector.ByIndex(new TableSelector.ByName("BudgetTable"), 1),
             new WorkbookSelector.Current(),
             new SheetSelector.ByName(new SheetName("Budget")),
-            new CellSelector.ByAddress(new SheetName("Budget"), "A1"),
+            new CellSelector.ByAddress(new SheetName("Budget"), new CellAddress("A1")),
             new RangeSelector.ByRange(new SheetName("Budget"), "A1:B2"),
             new RowBandSelector.Span(new SheetName("Budget"), 0, 1),
             new ColumnBandSelector.Span(new SheetName("Budget"), 0, 1),
@@ -599,7 +600,7 @@ class RuntimeResidualCoverageTest {
         "Sales Pivot 2026",
         new SheetName("Report"),
         new PivotTableInput.Source.Range(new SheetName("Data"), "A1:D5"),
-        new PivotTableInput.Anchor("C5"),
+        new PivotTableInput.Anchor(new CellAddress("C5")),
         List.of("Region"),
         List.of("Stage"),
         List.of(),

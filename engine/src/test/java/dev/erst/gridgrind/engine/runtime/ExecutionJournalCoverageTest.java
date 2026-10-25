@@ -39,6 +39,7 @@ import dev.erst.gridgrind.core.result.ExecutionJournal;
 import dev.erst.gridgrind.core.result.ExecutionJournalLevel;
 import dev.erst.gridgrind.core.result.WorkbookResult;
 import dev.erst.gridgrind.core.result.WorkbookResults;
+import dev.erst.gridgrind.core.vocabulary.CellAddress;
 import dev.erst.gridgrind.core.vocabulary.PlanId;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.StepId;
@@ -101,10 +102,12 @@ class ExecutionJournalCoverageTest {
         summaryTarget(new CellSelector.AllUsedInSheet(new SheetName("Budget"))));
     assertEquals(
         new ExecutionJournal.Target("CELL", "Cell Budget!B2"),
-        summaryTarget(new CellSelector.ByAddress(new SheetName("Budget"), "B2")));
+        summaryTarget(new CellSelector.ByAddress(new SheetName("Budget"), new CellAddress("B2"))));
     assertEquals(
         new ExecutionJournal.Target("CELL", "Cells Budget![B2, C3]"),
-        summaryTarget(new CellSelector.ByAddresses(new SheetName("Budget"), List.of("B2", "C3"))));
+        summaryTarget(
+            new CellSelector.ByAddresses(
+                new SheetName("Budget"), List.of(new CellAddress("B2"), new CellAddress("C3")))));
     assertEquals(
         new ExecutionJournal.Target("RANGE", "All ranges on Budget"),
         summaryTarget(new RangeSelector.AllOnSheet(new SheetName("Budget"))));
@@ -117,7 +120,9 @@ class ExecutionJournalCoverageTest {
             new RangeSelector.ByRanges(new SheetName("Budget"), List.of("A1:B4", "D2:E3"))));
     assertEquals(
         new ExecutionJournal.Target("RANGE", "Window Budget!B2:C4"),
-        summaryTarget(new RangeSelector.RectangularWindow(new SheetName("Budget"), "B2", 3, 2)));
+        summaryTarget(
+            new RangeSelector.RectangularWindow(
+                new SheetName("Budget"), new CellAddress("B2"), 3, 2)));
     assertEquals(
         new ExecutionJournal.Target("ROW_BAND", "Rows Budget[1:3]"),
         summaryTarget(new RowBandSelector.Span(new SheetName("Budget"), 1, 3)));
@@ -311,7 +316,7 @@ class ExecutionJournalCoverageTest {
     InspectionStep failedWithCalculation =
         new InspectionStep(
             new StepId("step-3"),
-            new CellSelector.ByAddress(new SheetName("Budget"), "B2"),
+            new CellSelector.ByAddress(new SheetName("Budget"), new CellAddress("B2")),
             new SheetIntrospectionQuery.GetCells());
     ExecutionJournalRecorder.StepHandle stepHandle = recorder.beginStep(2, failedWithCalculation);
     ExecutionJournalRecorder.PhaseHandle calculationPreflight =
@@ -356,7 +361,7 @@ class ExecutionJournalCoverageTest {
             0,
             new InspectionStep(
                 new StepId("step-1"),
-                new CellSelector.ByAddress(new SheetName("Budget"), "B2"),
+                new CellSelector.ByAddress(new SheetName("Budget"), new CellAddress("B2")),
                 new SheetIntrospectionQuery.GetCells()));
     stepHandle.fail(
         GridGrindProblemCode.IO_ERROR, GridGrindProblemCategory.IO, "EXECUTE_STEP", "boom");

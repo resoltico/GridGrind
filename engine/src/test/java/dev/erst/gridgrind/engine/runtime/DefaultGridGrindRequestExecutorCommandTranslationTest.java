@@ -27,6 +27,7 @@ import dev.erst.gridgrind.core.plan.*;
 import dev.erst.gridgrind.core.plan.CellMutationAction;
 import dev.erst.gridgrind.core.plan.StructuredMutationAction;
 import dev.erst.gridgrind.core.plan.WorkbookMutationAction;
+import dev.erst.gridgrind.core.vocabulary.CellAddress;
 import dev.erst.gridgrind.core.vocabulary.ExcelIgnoredErrorType;
 import dev.erst.gridgrind.core.vocabulary.ExcelPaneRegion;
 import dev.erst.gridgrind.core.vocabulary.ExcelPrintOrientation;
@@ -56,24 +57,24 @@ class DefaultGridGrindRequestExecutorCommandTranslationTest
     WorkbookCommand setHyperlink =
         command(
             mutate(
-                new CellSelector.ByAddress(new SheetName("Budget"), "A1"),
+                new CellSelector.ByAddress(new SheetName("Budget"), new CellAddress("A1")),
                 new CellMutationAction.SetHyperlink(
                     new HyperlinkTarget.Url("https://example.com/report"))));
     WorkbookCommand clearHyperlink =
         command(
             mutate(
-                new CellSelector.ByAddress(new SheetName("Budget"), "A1"),
+                new CellSelector.ByAddress(new SheetName("Budget"), new CellAddress("A1")),
                 new CellMutationAction.ClearHyperlink()));
     WorkbookCommand setComment =
         command(
             mutate(
-                new CellSelector.ByAddress(new SheetName("Budget"), "A1"),
+                new CellSelector.ByAddress(new SheetName("Budget"), new CellAddress("A1")),
                 new CellMutationAction.SetComment(
                     CommentInput.plain(text("Review"), "GridGrind", false))));
     WorkbookCommand clearComment =
         command(
             mutate(
-                new CellSelector.ByAddress(new SheetName("Budget"), "A1"),
+                new CellSelector.ByAddress(new SheetName("Budget"), new CellAddress("A1")),
                 new CellMutationAction.ClearComment()));
     WorkbookCommand setNamedRange =
         command(
@@ -285,7 +286,7 @@ class DefaultGridGrindRequestExecutorCommandTranslationTest
         WorkbookCellCommand.SetCell.class,
         command(
             mutate(
-                new CellSelector.ByAddress(new SheetName("Budget"), "A1"),
+                new CellSelector.ByAddress(new SheetName("Budget"), new CellAddress("A1")),
                 new CellMutationAction.SetCell(textCell("x")))));
     assertInstanceOf(
         WorkbookCellCommand.SetRange.class,
@@ -440,13 +441,15 @@ class DefaultGridGrindRequestExecutorCommandTranslationTest
         readCommand(
             inspect(
                 "cells",
-                new CellSelector.ByAddresses(new SheetName("Budget"), List.of("A1")),
+                new CellSelector.ByAddresses(
+                    new SheetName("Budget"), List.of(new CellAddress("A1"))),
                 new SheetIntrospectionQuery.GetCells()));
     WorkbookReadCommand window =
         readCommand(
             inspect(
                 "window",
-                new RangeSelector.RectangularWindow(new SheetName("Budget"), "A1", 2, 2),
+                new RangeSelector.RectangularWindow(
+                    new SheetName("Budget"), new CellAddress("A1"), 2, 2),
                 new SheetIntrospectionQuery.GetWindow()));
     WorkbookReadCommand merged =
         readCommand(
@@ -464,7 +467,8 @@ class DefaultGridGrindRequestExecutorCommandTranslationTest
         readCommand(
             inspect(
                 "comments",
-                new CellSelector.ByAddresses(new SheetName("Budget"), List.of("A1")),
+                new CellSelector.ByAddresses(
+                    new SheetName("Budget"), List.of(new CellAddress("A1"))),
                 new SheetIntrospectionQuery.GetComments()));
     WorkbookReadCommand layout =
         readCommand(
@@ -512,7 +516,8 @@ class DefaultGridGrindRequestExecutorCommandTranslationTest
         readCommand(
             inspect(
                 "schema",
-                new RangeSelector.RectangularWindow(new SheetName("Budget"), "A1", 3, 2),
+                new RangeSelector.RectangularWindow(
+                    new SheetName("Budget"), new CellAddress("A1"), 3, 2),
                 new InspectionSurfaceQuery.GetSheetSchema()));
     WorkbookReadCommand namedRangeSurface =
         readCommand(

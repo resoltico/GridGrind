@@ -14,6 +14,7 @@ import dev.erst.gridgrind.core.plan.SheetSelector;
 import dev.erst.gridgrind.core.plan.WorkbookSelector;
 import dev.erst.gridgrind.core.vocabulary.AnalysisFindingCode;
 import dev.erst.gridgrind.core.vocabulary.AnalysisSeverity;
+import dev.erst.gridgrind.core.vocabulary.CellAddress;
 import dev.erst.gridgrind.core.vocabulary.ExcelSheetVisibility;
 import dev.erst.gridgrind.core.vocabulary.SheetLabel;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
@@ -42,8 +43,8 @@ final class OperationSequenceObservationSupport {
               new CellSelector.ByAddresses(
                   new SheetName(targetSheet),
                   List.of(
-                      FuzzDataDecoders.nextNonBlankCellAddress(data, true),
-                      data.consumeBoolean() ? "A1" : "C2")),
+                      new CellAddress(FuzzDataDecoders.nextNonBlankCellAddress(data, true)),
+                      new CellAddress(data.consumeBoolean() ? "A1" : "C2"))),
               nextCellAssertion(data));
       case 2 ->
           assertThat(
@@ -99,7 +100,8 @@ final class OperationSequenceObservationSupport {
       case 0 -> new CellSelector.AllUsedInSheet(new SheetName(sheetName));
       default ->
           new CellSelector.ByAddresses(
-              new SheetName(sheetName), nextReadAddresses(data, validAddress));
+              new SheetName(sheetName),
+              nextReadAddresses(data, validAddress).stream().map(CellAddress::new).toList());
     };
   }
 

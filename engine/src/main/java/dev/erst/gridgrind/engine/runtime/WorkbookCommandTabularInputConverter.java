@@ -44,7 +44,7 @@ final class WorkbookCommandTabularInputConverter {
         pivotTable.name(),
         pivotTable.sheetName().value(),
         toExcelPivotTableSource(pivotTable.source()),
-        new ExcelPivotTableDefinition.Anchor(pivotTable.anchor().topLeftAddress()),
+        new ExcelPivotTableDefinition.Anchor(pivotTable.anchor().topLeftAddress().value()),
         pivotTable.rowLabels(),
         pivotTable.columnLabels(),
         pivotTable.reportFilters(),

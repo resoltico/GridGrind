@@ -34,6 +34,7 @@ import dev.erst.gridgrind.core.plan.WorkbookMutationAction;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import dev.erst.gridgrind.core.source.BinarySourceInput;
 import dev.erst.gridgrind.core.source.TextSourceInput;
+import dev.erst.gridgrind.core.vocabulary.CellAddress;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartDisplayBlanksAs;
 import dev.erst.gridgrind.core.vocabulary.ExcelComparisonOperator;
 import dev.erst.gridgrind.core.vocabulary.ExcelDataValidationErrorStyle;
@@ -92,13 +93,13 @@ class SourceBackedPlanResolverMutationInliningCoverageTest
     AssertionStep assertion =
         new AssertionStep(
             new StepId("assert-budget"),
-            new CellSelector.ByAddress(new SheetName("Budget"), "A1"),
+            new CellSelector.ByAddress(new SheetName("Budget"), new CellAddress("A1")),
             new CellAssertion.CellValue(
                 new dev.erst.gridgrind.core.model.value.CellScalarValue.Text("Quarterly Budget")));
     InspectionStep inspection =
         new InspectionStep(
             new StepId("inspect-budget"),
-            new CellSelector.ByAddress(new SheetName("Budget"), "A1"),
+            new CellSelector.ByAddress(new SheetName("Budget"), new CellAddress("A1")),
             new SheetIntrospectionQuery.GetCells());
 
     WorkbookPlan plan =
@@ -110,7 +111,7 @@ class SourceBackedPlanResolverMutationInliningCoverageTest
             List.of(
                 new MutationStep(
                     new StepId("step-01-set-comment"),
-                    new CellSelector.ByAddress(new SheetName("Budget"), "A1"),
+                    new CellSelector.ByAddress(new SheetName("Budget"), new CellAddress("A1")),
                     new CellMutationAction.SetComment(
                         new CommentInput(
                             TextSourceInput.utf8File("comment.txt"),

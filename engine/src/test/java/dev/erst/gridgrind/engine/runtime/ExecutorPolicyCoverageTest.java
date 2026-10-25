@@ -42,6 +42,7 @@ import dev.erst.gridgrind.core.result.WorkbookResult;
 import dev.erst.gridgrind.core.result.WorkbookResultPersistence;
 import dev.erst.gridgrind.core.validation.WorkbookStaticRequestContract;
 import dev.erst.gridgrind.core.validation.WorkbookStaticViolation;
+import dev.erst.gridgrind.core.vocabulary.CellAddress;
 import dev.erst.gridgrind.core.vocabulary.ExcelOoxmlWriteCipher;
 import dev.erst.gridgrind.core.vocabulary.ExcelOoxmlWriteHash;
 import dev.erst.gridgrind.core.vocabulary.NamedRangeScope;
@@ -137,7 +138,7 @@ class ExecutorPolicyCoverageTest {
                             "SalesPivot",
                             new SheetName("Budget"),
                             new PivotTableInput.Source.NamedRange("BudgetSource"),
-                            new PivotTableInput.Anchor("B3"),
+                            new PivotTableInput.Anchor(new CellAddress("B3")),
                             List.of(),
                             List.of(),
                             List.of(),
@@ -163,7 +164,7 @@ class ExecutorPolicyCoverageTest {
                             "SalesPivot",
                             new SheetName("Budget"),
                             new PivotTableInput.Source.NamedRange("BudgetSource"),
-                            new PivotTableInput.Anchor("B3"),
+                            new PivotTableInput.Anchor(new CellAddress("B3")),
                             List.of(),
                             List.of(),
                             List.of(),
@@ -797,7 +798,8 @@ class ExecutorPolicyCoverageTest {
     assertEquals(
         java.util.Optional.of("B2"),
         ExecutionSelectorDiagnosticFields.addressFor(
-            new RangeSelector.RectangularWindow(new SheetName("Budget"), "B2", 2, 2)));
+            new RangeSelector.RectangularWindow(
+                new SheetName("Budget"), new CellAddress("B2"), 2, 2)));
     assertEquals(
         java.util.Optional.of("A1:B2"),
         ExecutionSelectorDiagnosticFields.rangeFor(
@@ -809,7 +811,8 @@ class ExecutorPolicyCoverageTest {
     assertEquals(
         java.util.Optional.of("B2:C3"),
         ExecutionSelectorDiagnosticFields.rangeFor(
-            new RangeSelector.RectangularWindow(new SheetName("Budget"), "B2", 2, 2)));
+            new RangeSelector.RectangularWindow(
+                new SheetName("Budget"), new CellAddress("B2"), 2, 2)));
   }
 
   private static void assertNamedRangeSelectorDiagnostics() {
@@ -927,7 +930,7 @@ class ExecutorPolicyCoverageTest {
     MutationStep addressedCellStep =
         new MutationStep(
             new StepId("cell-step"),
-            new CellSelector.ByAddress(new SheetName("Budget"), "D4"),
+            new CellSelector.ByAddress(new SheetName("Budget"), new CellAddress("D4")),
             setText);
 
     assertEquals(
@@ -968,7 +971,7 @@ class ExecutorPolicyCoverageTest {
             "SalesPivot",
             new SheetName("Budget"),
             source,
-            new PivotTableInput.Anchor("C5"),
+            new PivotTableInput.Anchor(new CellAddress("C5")),
             List.of(),
             List.of(),
             List.of(),

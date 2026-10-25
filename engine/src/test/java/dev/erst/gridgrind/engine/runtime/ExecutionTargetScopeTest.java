@@ -17,6 +17,7 @@ import dev.erst.gridgrind.core.plan.TableCellSelector;
 import dev.erst.gridgrind.core.plan.TableRowSelector;
 import dev.erst.gridgrind.core.plan.TableSelector;
 import dev.erst.gridgrind.core.plan.WorkbookSelector;
+import dev.erst.gridgrind.core.vocabulary.CellAddress;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import java.util.List;
 import java.util.Optional;
@@ -30,12 +31,13 @@ class ExecutionTargetScopeTest {
         List.of(
             new SheetSelector.ByName(new SheetName("Budget")),
             new CellSelector.AllUsedInSheet(new SheetName("Budget")),
-            new CellSelector.ByAddress(new SheetName("Budget"), "A1"),
-            new CellSelector.ByAddresses(new SheetName("Budget"), List.of("A1")),
+            new CellSelector.ByAddress(new SheetName("Budget"), new CellAddress("A1")),
+            new CellSelector.ByAddresses(new SheetName("Budget"), List.of(new CellAddress("A1"))),
             new RangeSelector.AllOnSheet(new SheetName("Budget")),
             new RangeSelector.ByRange(new SheetName("Budget"), "A1:B2"),
             new RangeSelector.ByRanges(new SheetName("Budget"), List.of("A1:A1", "B1:B1")),
-            new RangeSelector.RectangularWindow(new SheetName("Budget"), "A1", 1, 1),
+            new RangeSelector.RectangularWindow(
+                new SheetName("Budget"), new CellAddress("A1"), 1, 1),
             new RowBandSelector.Span(new SheetName("Budget"), 0, 0),
             new RowBandSelector.Insertion(new SheetName("Budget"), 0, 1),
             new ColumnBandSelector.Span(new SheetName("Budget"), 0, 0),

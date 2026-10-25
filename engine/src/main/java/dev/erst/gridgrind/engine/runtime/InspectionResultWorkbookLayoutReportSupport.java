@@ -21,6 +21,7 @@ import dev.erst.gridgrind.core.model.protection.SheetProtectionReport;
 import dev.erst.gridgrind.core.model.protection.SheetProtectionSettings;
 import dev.erst.gridgrind.core.model.validation.IgnoredErrorReport;
 import dev.erst.gridgrind.core.model.value.CellHyperlinkReport;
+import dev.erst.gridgrind.core.vocabulary.CellAddress;
 import dev.erst.gridgrind.core.vocabulary.SheetLabel;
 import dev.erst.gridgrind.excel.ExcelCellReadProjection;
 import dev.erst.gridgrind.excel.ExcelHeaderFooterText;
@@ -58,7 +59,7 @@ final class InspectionResultWorkbookLayoutReportSupport {
     if (includeBlanks) {
       return new dev.erst.gridgrind.core.model.layout.WindowReport.Dense(
           new SheetLabel(window.sheetName()),
-          window.topLeftAddress(),
+          new CellAddress(window.topLeftAddress()),
           dimensions,
           window.rows().stream()
               .map(
@@ -85,7 +86,7 @@ final class InspectionResultWorkbookLayoutReportSupport {
     }
     return new dev.erst.gridgrind.core.model.layout.WindowReport.Sparse(
         new SheetLabel(window.sheetName()),
-        window.topLeftAddress(),
+        new CellAddress(window.topLeftAddress()),
         dimensions,
         List.copyOf(populatedCells));
   }
@@ -93,14 +94,14 @@ final class InspectionResultWorkbookLayoutReportSupport {
   static CellHyperlinkReport toCellHyperlinkReport(
       dev.erst.gridgrind.excel.WorkbookSheetResult.CellHyperlink hyperlink) {
     return new CellHyperlinkReport(
-        hyperlink.address(),
+        new CellAddress(hyperlink.address()),
         InspectionResultCellReportSupport.toHyperlinkTarget(hyperlink.hyperlink()).orElseThrow());
   }
 
   static CellCommentReport toCellCommentReport(
       dev.erst.gridgrind.excel.WorkbookSheetResult.CellComment comment) {
     return new CellCommentReport(
-        comment.address(),
+        new CellAddress(comment.address()),
         InspectionResultCellReportSupport.toCommentReport(comment.comment()).orElseThrow());
   }
 

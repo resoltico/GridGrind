@@ -32,6 +32,7 @@ import dev.erst.gridgrind.core.plan.WorkbookMutationAction;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import dev.erst.gridgrind.core.source.BinarySourceInput;
 import dev.erst.gridgrind.core.source.TextSourceInput;
+import dev.erst.gridgrind.core.vocabulary.CellAddress;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartDisplayBlanksAs;
 import dev.erst.gridgrind.core.vocabulary.ExcelDataValidationErrorStyle;
 import dev.erst.gridgrind.core.vocabulary.ExcelPictureFormat;
@@ -74,7 +75,7 @@ class SourceBackedPlanResolverStandardInputCoverageTest
                 List.of(
                     new AssertionStep(
                         new StepId("assert-owner"),
-                        new CellSelector.ByAddress(new SheetName("Budget"), "A1"),
+                        new CellSelector.ByAddress(new SheetName("Budget"), new CellAddress("A1")),
                         new CellAssertion.CellValue(
                             new dev.erst.gridgrind.core.model.value.CellScalarValue.Text(
                                 "Owner")))))));
@@ -88,7 +89,7 @@ class SourceBackedPlanResolverStandardInputCoverageTest
                 List.of(
                     new InspectionStep(
                         new StepId("inspect-cells"),
-                        new CellSelector.ByAddress(new SheetName("Budget"), "A1"),
+                        new CellSelector.ByAddress(new SheetName("Budget"), new CellAddress("A1")),
                         new SheetIntrospectionQuery.GetCells())))));
 
     assertFalse(

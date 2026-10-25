@@ -2,6 +2,7 @@ package dev.erst.gridgrind.core.model.pivot;
 
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import dev.erst.gridgrind.core.vocabulary.CellAddress;
 import dev.erst.gridgrind.core.vocabulary.ExcelPivotDataConsolidateFunction;
 import dev.erst.gridgrind.core.vocabulary.ExcelPivotTableNaming;
 import dev.erst.gridgrind.core.vocabulary.ProtocolDefinedNameValidation;
@@ -97,9 +98,9 @@ public sealed interface PivotTableReport
   }
 
   /** Factual stored destination anchor and persisted location range. */
-  record Anchor(String topLeftAddress, String locationRange) {
+  record Anchor(CellAddress topLeftAddress, String locationRange) {
     public Anchor {
-      topLeftAddress = requireNonBlank(topLeftAddress, "topLeftAddress");
+      java.util.Objects.requireNonNull(topLeftAddress, "topLeftAddress must not be null");
       locationRange = requireNonBlank(locationRange, "locationRange");
     }
   }

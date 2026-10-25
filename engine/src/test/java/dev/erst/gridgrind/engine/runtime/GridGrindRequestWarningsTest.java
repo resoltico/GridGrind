@@ -11,6 +11,7 @@ import dev.erst.gridgrind.core.plan.CellMutationAction;
 import dev.erst.gridgrind.core.plan.WorkbookMutationAction;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import dev.erst.gridgrind.core.problem.RequestWarning;
+import dev.erst.gridgrind.core.vocabulary.CellAddress;
 import dev.erst.gridgrind.core.vocabulary.SheetCopyPosition;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.StepId;
@@ -33,7 +34,7 @@ class GridGrindRequestWarningsTest {
                     new SheetSelector.ByName(new SheetName("Summary")),
                     new WorkbookMutationAction.EnsureSheet()),
                 mutate(
-                    new CellSelector.ByAddress(new SheetName("Summary"), "A1"),
+                    new CellSelector.ByAddress(new SheetName("Summary"), new CellAddress("A1")),
                     new CellMutationAction.SetCell(formulaCell("SUM(Budget Review!A1)")))));
 
     List<RequestWarning> warnings = GridGrindRequestWarnings.collect(request);
@@ -76,10 +77,10 @@ class GridGrindRequestWarningsTest {
                     new SheetSelector.ByName(new SheetName("Summary")),
                     new WorkbookMutationAction.EnsureSheet()),
                 mutate(
-                    new CellSelector.ByAddress(new SheetName("Summary"), "A1"),
+                    new CellSelector.ByAddress(new SheetName("Summary"), new CellAddress("A1")),
                     new CellMutationAction.SetCell(formulaCell("SUM('Budget Review'!A1)"))),
                 mutate(
-                    new CellSelector.ByAddress(new SheetName("Summary"), "A2"),
+                    new CellSelector.ByAddress(new SheetName("Summary"), new CellAddress("A2")),
                     new CellMutationAction.SetCell(
                         formulaCell("INDIRECT(\"Budget Review!A1\")")))));
 
@@ -100,7 +101,7 @@ class GridGrindRequestWarningsTest {
                     new SheetSelector.ByName(new SheetName("Summary")),
                     new WorkbookMutationAction.EnsureSheet()),
                 mutate(
-                    new CellSelector.ByAddress(new SheetName("Summary"), "A1"),
+                    new CellSelector.ByAddress(new SheetName("Summary"), new CellAddress("A1")),
                     new CellMutationAction.SetCell(formulaCell("SUM(Annual Budget Review!A1)")))));
 
     assertEquals(List.of(), GridGrindRequestWarnings.collect(request));
@@ -128,7 +129,7 @@ class GridGrindRequestWarningsTest {
                     new SheetSelector.ByName(new SheetName("Summary")),
                     new WorkbookMutationAction.EnsureSheet()),
                 mutate(
-                    new CellSelector.ByAddress(new SheetName("Summary"), "A1"),
+                    new CellSelector.ByAddress(new SheetName("Summary"), new CellAddress("A1")),
                     new CellMutationAction.SetCell(
                         new CellInput.Formula(
                             dev.erst.gridgrind.core.source.TextSourceInput.inline(
@@ -159,17 +160,17 @@ class GridGrindRequestWarningsTest {
                     new SheetSelector.ByName(new SheetName("Summary")),
                     new WorkbookMutationAction.EnsureSheet()),
                 mutate(
-                    new CellSelector.ByAddress(new SheetName("Summary"), "A1"),
+                    new CellSelector.ByAddress(new SheetName("Summary"), new CellAddress("A1")),
                     new CellMutationAction.SetCell(formulaCell("Budget Review!"))),
                 mutate(
-                    new CellSelector.ByAddress(new SheetName("Summary"), "A2"),
+                    new CellSelector.ByAddress(new SheetName("Summary"), new CellAddress("A2")),
                     new CellMutationAction.SetCell(formulaCell("T(Budget Review!1)"))),
                 mutate(
-                    new CellSelector.ByAddress(new SheetName("Summary"), "A3"),
+                    new CellSelector.ByAddress(new SheetName("Summary"), new CellAddress("A3")),
                     new CellMutationAction.SetCell(
                         formulaCell("T(\"Budget Review!A1\"\" suffix\")"))),
                 mutate(
-                    new CellSelector.ByAddress(new SheetName("Summary"), "A4"),
+                    new CellSelector.ByAddress(new SheetName("Summary"), new CellAddress("A4")),
                     new CellMutationAction.SetCell(formulaCell("\"Budget Review!A1\"")))));
 
     assertEquals(List.of(), GridGrindRequestWarnings.collect(request));
@@ -232,7 +233,7 @@ class GridGrindRequestWarningsTest {
                     new SheetSelector.ByName(new SheetName("Summary")),
                     new WorkbookMutationAction.EnsureSheet()),
                 mutate(
-                    new CellSelector.ByAddress(new SheetName("Summary"), "A1"),
+                    new CellSelector.ByAddress(new SheetName("Summary"), new CellAddress("A1")),
                     new CellMutationAction.SetCell(
                         new CellInput.Formula(
                             dev.erst.gridgrind.core.source.TextSourceInput.utf8File(

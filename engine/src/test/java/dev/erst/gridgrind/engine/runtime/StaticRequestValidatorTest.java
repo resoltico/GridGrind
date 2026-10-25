@@ -20,6 +20,7 @@ import dev.erst.gridgrind.core.problem.GridGrindProblemCode;
 import dev.erst.gridgrind.core.problem.GridGrindProblemDetail;
 import dev.erst.gridgrind.core.problem.ProblemContext;
 import dev.erst.gridgrind.core.problem.ProblemContextRequestSurfaces;
+import dev.erst.gridgrind.core.vocabulary.CellAddress;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.json.codec.GridGrindJson;
@@ -353,7 +354,7 @@ class StaticRequestValidatorTest {
   private static MutationStep setCell(String stepId, String address) {
     return new MutationStep(
         new StepId(stepId),
-        new CellSelector.ByAddress(new SheetName("Budget"), address),
+        new CellSelector.ByAddress(new SheetName("Budget"), new CellAddress(address)),
         new CellMutationAction.SetCell(new CellInput.NumberValue(1.0)));
   }
 }

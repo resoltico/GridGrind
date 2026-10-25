@@ -10,6 +10,7 @@ import dev.erst.gridgrind.core.plan.CellSelector;
 import dev.erst.gridgrind.core.plan.InspectionStep;
 import dev.erst.gridgrind.core.plan.SheetIntrospectionQuery;
 import dev.erst.gridgrind.core.plan.SheetSelector;
+import dev.erst.gridgrind.core.vocabulary.CellAddress;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import java.util.List;
@@ -25,7 +26,7 @@ class GridGrindHostAcceptancePolicyTest {
     AssertionStep assertion =
         new AssertionStep(
             new StepId("assert-owner"),
-            new CellSelector.ByAddress(new SheetName("Budget"), "A1"),
+            new CellSelector.ByAddress(new SheetName("Budget"), new CellAddress("A1")),
             new CellAssertion.CellValue(new CellScalarValue.Text("Ada")));
     InspectionStep inspection =
         new InspectionStep(

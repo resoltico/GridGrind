@@ -7,6 +7,7 @@ import dev.erst.gridgrind.core.model.formula.CalculationStrategyInput;
 import dev.erst.gridgrind.core.model.formula.FormulaCapabilityKind;
 import dev.erst.gridgrind.core.model.formula.FormulaCellTarget;
 import dev.erst.gridgrind.core.problem.GridGrindProblemCode;
+import dev.erst.gridgrind.core.vocabulary.CellAddress;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.excel.ExcelFormulaCapabilityAssessment;
 import dev.erst.gridgrind.excel.ExcelFormulaCapabilityKind;
@@ -269,7 +270,7 @@ final class CalculationPolicyExecutor {
 
   private static List<ExcelFormulaCellTarget> toExcelFormulaTargets(List<FormulaCellTarget> cells) {
     return cells.stream()
-        .map(cell -> new ExcelFormulaCellTarget(cell.sheetName().value(), cell.address()))
+        .map(cell -> new ExcelFormulaCellTarget(cell.sheetName().value(), cell.address().value()))
         .toList();
   }
 
@@ -286,7 +287,7 @@ final class CalculationPolicyExecutor {
                       : Optional.ofNullable(assessment.message());
               return new CalculationReport.FormulaCapability(
                   new FormulaCellTarget(
-                      new SheetName(assessment.sheetName()), assessment.address()),
+                      new SheetName(assessment.sheetName()), new CellAddress(assessment.address())),
                   assessment.formula(),
                   capability,
                   CalculationCapabilityMappings.problemCodeFor(assessment),

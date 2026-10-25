@@ -25,6 +25,7 @@ import dev.erst.gridgrind.core.result.SheetSummaryReport;
 import dev.erst.gridgrind.core.result.WorkbookSummary;
 import dev.erst.gridgrind.core.vocabulary.AnalysisFindingCode;
 import dev.erst.gridgrind.core.vocabulary.AnalysisSeverity;
+import dev.erst.gridgrind.core.vocabulary.CellAddress;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartAxisCrosses;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartAxisKind;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartAxisPosition;
@@ -55,7 +56,8 @@ class AssertionCoverageTest {
         new AssertionFailure(
             new StepId("assert-cell"),
             "EXPECT_CELL_VALUE",
-            new dev.erst.gridgrind.core.plan.CellSelector.ByAddress(new SheetName("Budget"), "A1"),
+            new dev.erst.gridgrind.core.plan.CellSelector.ByAddress(
+                new SheetName("Budget"), new CellAddress("A1")),
             new CellAssertion.CellValue(new CellScalarValue.Text("expected")),
             List.of());
     AssertionResult.Passed passed =
@@ -317,7 +319,7 @@ class AssertionCoverageTest {
     return new PivotTableReport.Supported(
         "Sales Pivot",
         new SheetName("Report"),
-        new PivotTableReport.Anchor("C5", "C5:G9"),
+        new PivotTableReport.Anchor(new CellAddress("C5"), "C5:G9"),
         new PivotTableReport.Source.Range(new SheetName("Data"), "A1:D5"),
         List.of(new PivotTableReport.Field(0, "Region")),
         List.of(new PivotTableReport.Field(1, "Stage")),

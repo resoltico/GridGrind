@@ -44,6 +44,7 @@ import dev.erst.gridgrind.core.problem.GridGrindProblemDetail;
 import dev.erst.gridgrind.core.problem.ProblemContextRequestSurfaces.RequestShape;
 import dev.erst.gridgrind.core.vocabulary.AnalysisFindingCode;
 import dev.erst.gridgrind.core.vocabulary.AnalysisSeverity;
+import dev.erst.gridgrind.core.vocabulary.CellAddress;
 import dev.erst.gridgrind.core.vocabulary.ExcelFillPattern;
 import dev.erst.gridgrind.core.vocabulary.ExcelHorizontalAlignment;
 import dev.erst.gridgrind.core.vocabulary.ExcelVerticalAlignment;
@@ -254,7 +255,7 @@ class WorkbookResultEdgeCoverageTest {
                 IllegalArgumentException.class,
                 () ->
                     new dev.erst.gridgrind.core.model.value.CellReport.TextReport(
-                        "A1",
+                        new CellAddress("A1"),
                         Optional.of("Owner"),
                         Optional.of(style()),
                         Optional.empty(),
@@ -268,7 +269,7 @@ class WorkbookResultEdgeCoverageTest {
                 IllegalArgumentException.class,
                 () ->
                     new dev.erst.gridgrind.core.model.value.CellReport.TextReport(
-                        "A1",
+                        new CellAddress("A1"),
                         Optional.of("Owner"),
                         Optional.of(style()),
                         Optional.empty(),
@@ -282,15 +283,21 @@ class WorkbookResultEdgeCoverageTest {
                 IllegalArgumentException.class,
                 () ->
                     new WindowReport.Dense(
-                        new SheetLabel(" "), "A1", new WindowDimensionsReport(1, 1), List.of()))
+                        new SheetLabel(" "),
+                        new CellAddress("A1"),
+                        new WindowDimensionsReport(1, 1),
+                        List.of()))
             .getMessage());
     assertEquals(
-        "topLeftAddress must not be blank",
+        "address must not be blank",
         assertThrows(
                 IllegalArgumentException.class,
                 () ->
                     new WindowReport.Dense(
-                        new SheetLabel("Budget"), " ", new WindowDimensionsReport(1, 1), List.of()))
+                        new SheetLabel("Budget"),
+                        new CellAddress(" "),
+                        new WindowDimensionsReport(1, 1),
+                        List.of()))
             .getMessage());
     assertEquals(
         "range must not be blank",
@@ -300,11 +307,15 @@ class WorkbookResultEdgeCoverageTest {
         "address must not be blank",
         assertThrows(
                 IllegalArgumentException.class,
-                () -> new CellHyperlinkReport(" ", new HyperlinkTarget.Url("https://example.com")))
+                () ->
+                    new CellHyperlinkReport(
+                        new CellAddress(" "), new HyperlinkTarget.Url("https://example.com")))
             .getMessage());
     assertEquals(
         "address must not be blank",
-        assertThrows(IllegalArgumentException.class, () -> new CellCommentReport(" ", comment))
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> new CellCommentReport(new CellAddress(" "), comment))
             .getMessage());
     assertEquals(
         "sheetName must not be blank",
@@ -390,7 +401,7 @@ class WorkbookResultEdgeCoverageTest {
         "occurrenceCount must be greater than 0",
         assertThrows(
                 IllegalArgumentException.class,
-                () -> new FormulaPatternReport("SUM(A1)", 0, List.of("A1")))
+                () -> new FormulaPatternReport("SUM(A1)", 0, List.of(new CellAddress("A1"))))
             .getMessage());
     assertEquals(
         "type must not be blank",
@@ -401,34 +412,44 @@ class WorkbookResultEdgeCoverageTest {
         assertThrows(IllegalArgumentException.class, () -> new TypeCountReport("STRING", 1))
             .getMessage());
     assertEquals(
-        "topLeftAddress must not be blank",
+        "address must not be blank",
         assertThrows(
                 IllegalArgumentException.class,
-                () -> new SheetSchemaReport(new SheetLabel("Budget"), " ", 1, 1, 0, List.of()))
+                () ->
+                    new SheetSchemaReport(
+                        new SheetLabel("Budget"), new CellAddress(" "), 1, 1, 0, List.of()))
             .getMessage());
     assertEquals(
         "sheetName must not be blank",
         assertThrows(
                 IllegalArgumentException.class,
-                () -> new SheetSchemaReport(new SheetLabel(" "), "A1", 1, 1, 0, List.of()))
+                () ->
+                    new SheetSchemaReport(
+                        new SheetLabel(" "), new CellAddress("A1"), 1, 1, 0, List.of()))
             .getMessage());
     assertEquals(
         "rowCount must be greater than 0",
         assertThrows(
                 IllegalArgumentException.class,
-                () -> new SheetSchemaReport(new SheetLabel("Budget"), "A1", 0, 1, 0, List.of()))
+                () ->
+                    new SheetSchemaReport(
+                        new SheetLabel("Budget"), new CellAddress("A1"), 0, 1, 0, List.of()))
             .getMessage());
     assertEquals(
         "columnCount must be greater than 0",
         assertThrows(
                 IllegalArgumentException.class,
-                () -> new SheetSchemaReport(new SheetLabel("Budget"), "A1", 1, 0, 0, List.of()))
+                () ->
+                    new SheetSchemaReport(
+                        new SheetLabel("Budget"), new CellAddress("A1"), 1, 0, 0, List.of()))
             .getMessage());
     assertEquals(
         "dataRowCount must not be negative",
         assertThrows(
                 IllegalArgumentException.class,
-                () -> new SheetSchemaReport(new SheetLabel("Budget"), "A1", 1, 1, -1, List.of()))
+                () ->
+                    new SheetSchemaReport(
+                        new SheetLabel("Budget"), new CellAddress("A1"), 1, 1, -1, List.of()))
             .getMessage());
     assertEquals(
         "columnAddress must not be blank",
@@ -641,7 +662,7 @@ class WorkbookResultEdgeCoverageTest {
                 "--request"));
     dev.erst.gridgrind.core.model.value.CellReport.BooleanReport booleanCell =
         new dev.erst.gridgrind.core.model.value.CellReport.BooleanReport(
-            "A2",
+            new CellAddress("A2"),
             java.util.Optional.of("TRUE"),
             java.util.Optional.of(style()),
             java.util.Optional.empty(),
@@ -649,7 +670,7 @@ class WorkbookResultEdgeCoverageTest {
             java.util.Optional.of(true));
     dev.erst.gridgrind.core.model.value.CellReport.ErrorReport errorCell =
         new dev.erst.gridgrind.core.model.value.CellReport.ErrorReport(
-            "A3",
+            new CellAddress("A3"),
             java.util.Optional.of("#DIV/0!"),
             java.util.Optional.of(style()),
             java.util.Optional.empty(),

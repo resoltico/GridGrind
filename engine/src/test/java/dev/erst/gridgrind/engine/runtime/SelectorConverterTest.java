@@ -3,6 +3,7 @@ package dev.erst.gridgrind.engine.runtime;
 import static org.junit.jupiter.api.Assertions.*;
 
 import dev.erst.gridgrind.core.plan.*;
+import dev.erst.gridgrind.core.vocabulary.CellAddress;
 import dev.erst.gridgrind.core.vocabulary.ExcelColumnSpan;
 import dev.erst.gridgrind.core.vocabulary.ExcelRowSpan;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
@@ -104,24 +105,26 @@ class SelectorConverterTest {
         new SelectorConverter.SheetLocalCellSelection(
             "Budget", new ExcelCellSelection.Selected(List.of("A1"))),
         SelectorConverter.toSheetLocalCellSelection(
-            new CellSelector.ByAddress(new SheetName("Budget"), "A1")));
+            new CellSelector.ByAddress(new SheetName("Budget"), new CellAddress("A1"))));
     assertEquals(
         new SelectorConverter.SheetLocalCellSelection(
             "Budget", new ExcelCellSelection.Selected(List.of("A1", "B2"))),
         SelectorConverter.toSheetLocalCellSelection(
-            new CellSelector.ByAddresses(new SheetName("Budget"), List.of("A1", "B2"))));
+            new CellSelector.ByAddresses(
+                new SheetName("Budget"), List.of(new CellAddress("A1"), new CellAddress("B2")))));
     assertEquals(
         new SelectorConverter.SheetLocalCellAddresses("Budget", List.of("A1")),
         SelectorConverter.toSheetLocalCellAddresses(
-            new CellSelector.ByAddress(new SheetName("Budget"), "A1")));
+            new CellSelector.ByAddress(new SheetName("Budget"), new CellAddress("A1"))));
     assertEquals(
         new SelectorConverter.SheetLocalCellAddresses("Budget", List.of("A1", "B2")),
         SelectorConverter.toSheetLocalCellAddresses(
-            new CellSelector.ByAddresses(new SheetName("Budget"), List.of("A1", "B2"))));
+            new CellSelector.ByAddresses(
+                new SheetName("Budget"), List.of(new CellAddress("A1"), new CellAddress("B2")))));
     assertEquals(
         new SelectorConverter.SingleCellTarget("Budget", "A1"),
         SelectorConverter.toSingleCellTarget(
-            new CellSelector.ByAddress(new SheetName("Budget"), "A1")));
+            new CellSelector.ByAddress(new SheetName("Budget"), new CellAddress("A1"))));
 
     assertEquals(
         new SelectorConverter.SheetLocalRangeSelection("Budget", new ExcelRangeSelection.All()),
@@ -141,7 +144,8 @@ class SelectorConverterTest {
         new SelectorConverter.SheetLocalRangeSelection(
             "Budget", new ExcelRangeSelection.Selected(List.of("B3:D4"))),
         SelectorConverter.toSheetLocalRangeSelection(
-            new RangeSelector.RectangularWindow(new SheetName("Budget"), "B3", 2, 3)));
+            new RangeSelector.RectangularWindow(
+                new SheetName("Budget"), new CellAddress("B3"), 2, 3)));
     assertEquals(
         new SelectorConverter.SingleRangeTarget("Budget", "A1:B2"),
         SelectorConverter.toSingleRangeTarget(
@@ -149,7 +153,8 @@ class SelectorConverterTest {
     assertEquals(
         new SelectorConverter.SingleRangeTarget("Budget", "B3:D4"),
         SelectorConverter.toSingleRangeTarget(
-            new RangeSelector.RectangularWindow(new SheetName("Budget"), "B3", 2, 3)));
+            new RangeSelector.RectangularWindow(
+                new SheetName("Budget"), new CellAddress("B3"), 2, 3)));
 
     assertEquals(
         "selector must provide exact addresses here; ALL_USED_IN_SHEET is not supported",

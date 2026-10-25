@@ -4,6 +4,7 @@ import dev.erst.gridgrind.core.model.chart.ChartReport;
 import dev.erst.gridgrind.core.model.drawing.DrawingAnchorReport;
 import dev.erst.gridgrind.core.model.drawing.DrawingMarkerReport;
 import dev.erst.gridgrind.core.model.pivot.PivotTableReport;
+import dev.erst.gridgrind.core.vocabulary.CellAddress;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartAxisCrosses;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartAxisKind;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartAxisPosition;
@@ -726,8 +727,9 @@ final class XlsxParityOracle {
     AreaReference area =
         new AreaReference(definition.getLocation().getRef(), SpreadsheetVersion.EXCEL2007);
     return new PivotTableReport.Anchor(
-        new CellReference(area.getFirstCell().getRow(), area.getFirstCell().getCol())
-            .formatAsString(),
+        new CellAddress(
+            new CellReference(area.getFirstCell().getRow(), area.getFirstCell().getCol())
+                .formatAsString()),
         normalizeArea(area));
   }
 

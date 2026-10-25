@@ -110,7 +110,9 @@ final class OperationSequenceTabularValues {
         validName ? pivotTableName : nextPivotTableName(data, false),
         new SheetName(targetSheet),
         nextPivotTableSource(data, targetSheet, namedRangeName, tableName, validName, validRange),
-        new PivotTableInput.Anchor(data.consumeBoolean() ? "F4" : "A6"),
+        new PivotTableInput.Anchor(
+            new dev.erst.gridgrind.core.vocabulary.CellAddress(
+                data.consumeBoolean() ? "F4" : "A6")),
         List.of("Month"),
         List.of(),
         List.of(),

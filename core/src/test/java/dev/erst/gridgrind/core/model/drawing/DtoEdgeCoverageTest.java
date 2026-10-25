@@ -33,6 +33,7 @@ import dev.erst.gridgrind.core.model.validation.ConditionalFormattingRuleReport;
 import dev.erst.gridgrind.core.model.validation.DataValidationHealthReport;
 import dev.erst.gridgrind.core.model.validation.IgnoredErrorReport;
 import dev.erst.gridgrind.core.result.AnalysisSummaryReport;
+import dev.erst.gridgrind.core.vocabulary.CellAddress;
 import dev.erst.gridgrind.core.vocabulary.ExcelDrawingAnchorBehavior;
 import dev.erst.gridgrind.core.vocabulary.ExcelDrawingShapeKind;
 import dev.erst.gridgrind.core.vocabulary.ExcelEmbeddedObjectPackagingKind;
@@ -605,7 +606,7 @@ class DtoEdgeCoverageTest {
                     new PivotTableReport.Unsupported(
                         "Sales Pivot 2026",
                         new SheetName("Report"),
-                        new PivotTableReport.Anchor("A1", "A1:B3"),
+                        new PivotTableReport.Anchor(new CellAddress("A1"), "A1:B3"),
                         " "))
             .getMessage());
     assertEquals(

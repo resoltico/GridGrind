@@ -7,6 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import dev.erst.gridgrind.core.model.value.CellInput;
 import dev.erst.gridgrind.core.semantics.WorkbookOperationContracts;
 import dev.erst.gridgrind.core.source.TextSourceInput;
+import dev.erst.gridgrind.core.vocabulary.CellAddress;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import org.junit.jupiter.api.Test;
@@ -38,7 +39,7 @@ class WorkbookStepValidationTest {
 
     assertTrue(
         WorkbookOperationContracts.targetViolation(
-                action, new CellSelector.ByAddress(new SheetName("Budget"), "A1"))
+                action, new CellSelector.ByAddress(new SheetName("Budget"), new CellAddress("A1")))
             .isEmpty());
     assertTrue(
         WorkbookOperationContracts.targetViolation(

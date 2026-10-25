@@ -22,6 +22,7 @@ import dev.erst.gridgrind.core.model.value.CellTemporalReport;
 import dev.erst.gridgrind.core.model.value.CellValueReport;
 import dev.erst.gridgrind.core.model.value.HyperlinkTarget;
 import dev.erst.gridgrind.core.source.TextSourceInput;
+import dev.erst.gridgrind.core.vocabulary.CellAddress;
 import dev.erst.gridgrind.core.vocabulary.ExcelBorderStyle;
 import dev.erst.gridgrind.core.vocabulary.ExcelFillPattern;
 import dev.erst.gridgrind.core.vocabulary.ExcelHorizontalAlignment;
@@ -104,9 +105,9 @@ class ReadbackSupportCoverageTest {
             "A2", "7/1/2025", style("m/d/yyyy"), metadata(), 45839.0d);
     ExcelCellSnapshot.NumberSnapshot dateTimeSnapshot =
         new ExcelCellSnapshot.NumberSnapshot(
-            "A2b", "7/1/2025 12:00", style("m/d/yyyy h:mm"), metadata(), 45839.5d);
+            "A8", "7/1/2025 12:00", style("m/d/yyyy h:mm"), metadata(), 45839.5d);
     ExcelCellSnapshot.NumberSnapshot timeSnapshot =
-        new ExcelCellSnapshot.NumberSnapshot("A2c", "12:00", style("h:mm"), metadata(), 0.5d);
+        new ExcelCellSnapshot.NumberSnapshot("A9", "12:00", style("h:mm"), metadata(), 0.5d);
     ExcelCellSnapshot.NumberSnapshot plainNumberSnapshot =
         new ExcelCellSnapshot.NumberSnapshot("A3", "42", style("0.00"), metadata(), 42.0d);
     ExcelCellSnapshot.BooleanSnapshot booleanSnapshot =
@@ -323,7 +324,7 @@ class ReadbackSupportCoverageTest {
     CellStyleReport style = styleReport();
     CellReport.FormulaReport blankFormula =
         new CellReport.FormulaReport(
-            "A1",
+            new CellAddress("A1"),
             Optional.empty(),
             Optional.of(style),
             Optional.empty(),
@@ -332,7 +333,7 @@ class ReadbackSupportCoverageTest {
             Optional.of(new CellValueReport.BlankValue()));
     CellReport.FormulaReport textFormula =
         new CellReport.FormulaReport(
-            "A2",
+            new CellAddress("A2"),
             Optional.empty(),
             Optional.of(style),
             Optional.empty(),
@@ -342,7 +343,7 @@ class ReadbackSupportCoverageTest {
                 new CellValueReport.TextValue("Ada", Optional.of(List.of(runReport("Ada"))))));
     CellReport.FormulaReport numberFormula =
         new CellReport.FormulaReport(
-            "A3",
+            new CellAddress("A3"),
             Optional.empty(),
             Optional.of(style),
             Optional.empty(),
@@ -355,7 +356,7 @@ class ReadbackSupportCoverageTest {
                         CellTemporalReport.temporal(CellTemporalKind.DATE, "2026-07-01")))));
     CellReport.FormulaReport booleanFormula =
         new CellReport.FormulaReport(
-            "A4",
+            new CellAddress("A4"),
             Optional.empty(),
             Optional.of(style),
             Optional.empty(),
@@ -364,7 +365,7 @@ class ReadbackSupportCoverageTest {
             Optional.of(new CellValueReport.BooleanValue(true)));
     CellReport.FormulaReport errorFormula =
         new CellReport.FormulaReport(
-            "A5",
+            new CellAddress("A5"),
             Optional.empty(),
             Optional.of(style),
             Optional.empty(),
@@ -373,7 +374,7 @@ class ReadbackSupportCoverageTest {
             Optional.of(new CellValueReport.ErrorValue("#REF!")));
     CellReport.FormulaReport missingEvaluation =
         new CellReport.FormulaReport(
-            "A6",
+            new CellAddress("A6"),
             Optional.empty(),
             Optional.of(style),
             Optional.empty(),

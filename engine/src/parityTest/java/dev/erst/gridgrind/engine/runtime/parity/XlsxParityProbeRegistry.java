@@ -268,9 +268,7 @@ final class XlsxParityProbeRegistry {
   static Map<String, dev.erst.gridgrind.core.model.value.CellReport> byAddress(
       List<dev.erst.gridgrind.core.model.value.CellReport> cells) {
     return cells.stream()
-        .collect(
-            Collectors.toUnmodifiableMap(
-                dev.erst.gridgrind.core.model.value.CellReport::address, Function.identity()));
+        .collect(Collectors.toUnmodifiableMap(cell -> cell.address().value(), Function.identity()));
   }
 
   static boolean matchesWorkbookProtectionReport(

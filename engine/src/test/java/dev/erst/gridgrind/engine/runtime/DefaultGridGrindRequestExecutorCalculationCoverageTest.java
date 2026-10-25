@@ -33,6 +33,7 @@ import dev.erst.gridgrind.core.problem.GridGrindProblemDetail;
 import dev.erst.gridgrind.core.problem.GridGrindWarningCode;
 import dev.erst.gridgrind.core.problem.ProblemContext;
 import dev.erst.gridgrind.core.result.WorkbookResult;
+import dev.erst.gridgrind.core.vocabulary.CellAddress;
 import dev.erst.gridgrind.core.vocabulary.SheetLabel;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.StepId;
@@ -67,7 +68,7 @@ class DefaultGridGrindRequestExecutorCalculationCoverageTest {
                     new WorkbookIntrospectionQuery.GetWorkbookSummary()),
                 new MutationStep(
                     new StepId("step-03-set-cell"),
-                    new CellSelector.ByAddress(new SheetName("Ops"), "A1"),
+                    new CellSelector.ByAddress(new SheetName("Ops"), new CellAddress("A1")),
                     new CellMutationAction.SetCell(
                         new dev.erst.gridgrind.core.model.value.CellInput.NumberValue(1.0)))));
     WorkbookResult.Failure failure =
@@ -112,7 +113,7 @@ class DefaultGridGrindRequestExecutorCalculationCoverageTest {
                     new SheetSelector.ByName(new SheetName("Ops")),
                     new WorkbookMutationAction.EnsureSheet()),
                 mutate(
-                    new CellSelector.ByAddress(new SheetName("Ops"), "A1"),
+                    new CellSelector.ByAddress(new SheetName("Ops"), new CellAddress("A1")),
                     new CellMutationAction.SetCell(
                         new dev.erst.gridgrind.core.model.value.CellInput.Formula(
                             dev.erst.gridgrind.core.source.TextSourceInput.inline("ZZZZ(1)"))))),
@@ -146,7 +147,7 @@ class DefaultGridGrindRequestExecutorCalculationCoverageTest {
                     new SheetSelector.ByName(new SheetName("Ops")),
                     new WorkbookMutationAction.EnsureSheet()),
                 mutate(
-                    new CellSelector.ByAddress(new SheetName("Ops"), "A1"),
+                    new CellSelector.ByAddress(new SheetName("Ops"), new CellAddress("A1")),
                     new CellMutationAction.SetCell(
                         new dev.erst.gridgrind.core.model.value.CellInput.Formula(
                             dev.erst.gridgrind.core.source.TextSourceInput.inline(
@@ -183,7 +184,7 @@ class DefaultGridGrindRequestExecutorCalculationCoverageTest {
                     new SheetSelector.ByName(new SheetName("Ops")),
                     new WorkbookMutationAction.EnsureSheet()),
                 mutate(
-                    new CellSelector.ByAddress(new SheetName("Ops"), "A1"),
+                    new CellSelector.ByAddress(new SheetName("Ops"), new CellAddress("A1")),
                     new CellMutationAction.SetCell(
                         new dev.erst.gridgrind.core.model.value.CellInput.Formula(
                             dev.erst.gridgrind.core.source.TextSourceInput.inline("ZZZZ(1)"))))),

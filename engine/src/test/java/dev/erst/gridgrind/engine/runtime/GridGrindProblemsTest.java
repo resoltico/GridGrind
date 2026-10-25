@@ -16,6 +16,7 @@ import dev.erst.gridgrind.core.problem.MessageShape;
 import dev.erst.gridgrind.core.problem.ProblemContext;
 import dev.erst.gridgrind.core.problem.ProblemContextRequestSurfaces;
 import dev.erst.gridgrind.core.problem.ProblemContextWorkbookSurfaces;
+import dev.erst.gridgrind.core.vocabulary.CellAddress;
 import dev.erst.gridgrind.core.vocabulary.SheetLabel;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.StepId;
@@ -75,7 +76,7 @@ class GridGrindProblemsTest {
         new AssertionFailure(
             new StepId("assert-total"),
             "EXPECT_CELL_VALUE",
-            new CellSelector.ByAddress(new SheetName("Budget"), "B4"),
+            new CellSelector.ByAddress(new SheetName("Budget"), new CellAddress("B4")),
             new CellAssertion.CellValue(
                 new dev.erst.gridgrind.core.model.value.CellScalarValue.NumberValue(42.0d)),
             List.of());
@@ -159,7 +160,7 @@ class GridGrindProblemsTest {
                 new AssertionFailure(
                     new StepId("assert-total"),
                     "EXPECT_CELL_VALUE",
-                    new CellSelector.ByAddress(new SheetName("Budget"), "B4"),
+                    new CellSelector.ByAddress(new SheetName("Budget"), new CellAddress("B4")),
                     new CellAssertion.CellValue(
                         new dev.erst.gridgrind.core.model.value.CellScalarValue.NumberValue(42.0d)),
                     List.of())),

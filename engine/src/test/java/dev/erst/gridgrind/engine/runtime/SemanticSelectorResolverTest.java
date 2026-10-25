@@ -21,6 +21,7 @@ import dev.erst.gridgrind.core.plan.TableCellSelector;
 import dev.erst.gridgrind.core.plan.TableRowSelector;
 import dev.erst.gridgrind.core.plan.TableSelector;
 import dev.erst.gridgrind.core.source.TextSourceInput;
+import dev.erst.gridgrind.core.vocabulary.CellAddress;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.excel.ExcelCellValue;
@@ -57,14 +58,15 @@ class SemanticSelectorResolverTest {
                       "Amount"),
                   new CellMutationAction.SetCell(textCell("Updated"))));
       assertEquals("Texts", indexedRowTarget.sheetName().value());
-      assertEquals("B2", indexedRowTarget.address());
+      assertEquals("B2", indexedRowTarget.address().value());
     }
   }
 
   @Test
   void returnsDirectTargetsWhenResolutionIsNotRequired() throws IOException {
     try (ExcelWorkbook workbook = workbookWithSemanticTables()) {
-      CellSelector.ByAddress directCell = new CellSelector.ByAddress(new SheetName("Budget"), "A1");
+      CellSelector.ByAddress directCell =
+          new CellSelector.ByAddress(new SheetName("Budget"), new CellAddress("A1"));
       assertSame(
           directCell,
           resolver.resolveMutationTarget(
@@ -387,7 +389,7 @@ class SemanticSelectorResolverTest {
             resolver.resolveMutationTarget(
                 workbook, target, new CellMutationAction.SetCell(textCell("Updated"))));
     assertEquals(expectedSheet, mutationTarget.sheetName().value());
-    assertEquals(expectedAddress, mutationTarget.address());
+    assertEquals(expectedAddress, mutationTarget.address().value());
 
     CellSelector.ByAddress assertionTarget =
         assertInstanceOf(
@@ -395,7 +397,7 @@ class SemanticSelectorResolverTest {
             resolver.resolveAssertionTarget(
                 workbook, target, new CellAssertion.DisplayValue("100")));
     assertEquals(expectedSheet, assertionTarget.sheetName().value());
-    assertEquals(expectedAddress, assertionTarget.address());
+    assertEquals(expectedAddress, assertionTarget.address().value());
 
     CellStyleReport expectedStyle =
         InspectionResultCellReportSupport.toCellReport(
@@ -413,14 +415,16 @@ class SemanticSelectorResolverTest {
                     target,
                     new CellMutationAction.SetHyperlink(
                         new HyperlinkTarget.Url("https://example.com"))))
-            .address());
+            .address()
+            .value());
     assertEquals(
         expectedAddress,
         assertInstanceOf(
                 CellSelector.ByAddress.class,
                 resolver.resolveMutationTarget(
                     workbook, target, new CellMutationAction.ClearHyperlink()))
-            .address());
+            .address()
+            .value());
     assertEquals(
         expectedAddress,
         assertInstanceOf(
@@ -435,14 +439,16 @@ class SemanticSelectorResolverTest {
                             false,
                             java.util.Optional.empty(),
                             java.util.Optional.empty()))))
-            .address());
+            .address()
+            .value());
     assertEquals(
         expectedAddress,
         assertInstanceOf(
                 CellSelector.ByAddress.class,
                 resolver.resolveMutationTarget(
                     workbook, target, new CellMutationAction.ClearComment()))
-            .address());
+            .address()
+            .value());
 
     assertEquals(
         expectedAddress,
@@ -454,21 +460,24 @@ class SemanticSelectorResolverTest {
                     new CellAssertion.CellValue(
                         new dev.erst.gridgrind.core.model.value.CellScalarValue.NumberValue(
                             100.0d))))
-            .address());
+            .address()
+            .value());
     assertEquals(
         expectedAddress,
         assertInstanceOf(
                 CellSelector.ByAddress.class,
                 resolver.resolveAssertionTarget(
                     workbook, target, new CellAssertion.FormulaText("2+2")))
-            .address());
+            .address()
+            .value());
     assertEquals(
         expectedAddress,
         assertInstanceOf(
                 CellSelector.ByAddress.class,
                 resolver.resolveAssertionTarget(
                     workbook, target, new CellAssertion.CellStyle(expectedStyle)))
-            .address());
+            .address()
+            .value());
 
     SemanticSelectorResolver.ResolvedInspectionTarget inspectionTarget =
         resolver.resolveInspectionTarget(
@@ -480,7 +489,7 @@ class SemanticSelectorResolverTest {
     CellSelector.ByAddress inspectionAddress =
         assertInstanceOf(CellSelector.ByAddress.class, inspectionTarget.selector());
     assertEquals(expectedSheet, inspectionAddress.sheetName().value());
-    assertEquals(expectedAddress, inspectionAddress.address());
+    assertEquals(expectedAddress, inspectionAddress.address().value());
 
     assertEquals(
         expectedAddress,
@@ -493,7 +502,8 @@ class SemanticSelectorResolverTest {
                         target,
                         new SheetIntrospectionQuery.GetHyperlinks())
                     .selector())
-            .address());
+            .address()
+            .value());
     assertEquals(
         expectedAddress,
         assertInstanceOf(
@@ -505,7 +515,8 @@ class SemanticSelectorResolverTest {
                         target,
                         new SheetIntrospectionQuery.GetComments())
                     .selector())
-            .address());
+            .address()
+            .value());
   }
 
   private static TableCellSelector.ByColumnName textAmountCellTarget() {

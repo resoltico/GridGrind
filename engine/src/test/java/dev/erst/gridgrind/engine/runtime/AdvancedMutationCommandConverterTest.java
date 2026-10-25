@@ -50,6 +50,7 @@ import dev.erst.gridgrind.core.plan.StructuredMutationAction;
 import dev.erst.gridgrind.core.plan.WorkbookMutationAction;
 import dev.erst.gridgrind.core.source.BinarySourceInput;
 import dev.erst.gridgrind.core.source.TextSourceInput;
+import dev.erst.gridgrind.core.vocabulary.CellAddress;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartBarDirection;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartBarGrouping;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartDisplayBlanksAs;
@@ -112,7 +113,7 @@ class AdvancedMutationCommandConverterTest {
         assertInstanceOf(
             WorkbookAnnotationCommand.SetComment.class,
             WorkbookCommandConverter.toCommand(
-                new CellSelector.ByAddress(new SheetName("Budget"), "B4"),
+                new CellSelector.ByAddress(new SheetName("Budget"), new CellAddress("B4")),
                 new CellMutationAction.SetComment(
                     new CommentInput(
                         text("Ada Lovelace"),
@@ -347,7 +348,7 @@ class AdvancedMutationCommandConverterTest {
         assertInstanceOf(
             WorkbookCellCommand.ClearArrayFormula.class,
             WorkbookCommandConverter.toCommand(
-                new CellSelector.ByAddress(new SheetName("Calc"), "D3"),
+                new CellSelector.ByAddress(new SheetName("Calc"), new CellAddress("D3")),
                 new CellMutationAction.ClearArrayFormula()));
 
     assertEquals("Calc", setArrayFormula.sheetName());
@@ -388,7 +389,7 @@ class AdvancedMutationCommandConverterTest {
                         "Sales Pivot 2026",
                         new SheetName("Report"),
                         new PivotTableInput.Source.Range(new SheetName("Data"), "A1:D5"),
-                        new PivotTableInput.Anchor("C5"),
+                        new PivotTableInput.Anchor(new CellAddress("C5")),
                         List.of("Region"),
                         List.of("Stage"),
                         List.of("Owner"),
@@ -408,7 +409,7 @@ class AdvancedMutationCommandConverterTest {
                         "Named Source Pivot",
                         new SheetName("Report"),
                         new PivotTableInput.Source.NamedRange("PivotSource"),
-                        new PivotTableInput.Anchor("A3"),
+                        new PivotTableInput.Anchor(new CellAddress("A3")),
                         List.of("Region"),
                         List.of(),
                         List.of(),
@@ -428,7 +429,7 @@ class AdvancedMutationCommandConverterTest {
                         "Table Source Pivot",
                         new SheetName("Report"),
                         new PivotTableInput.Source.Table("SalesTable2026"),
-                        new PivotTableInput.Anchor("G4"),
+                        new PivotTableInput.Anchor(new CellAddress("G4")),
                         List.of("Region"),
                         List.of(),
                         List.of(),

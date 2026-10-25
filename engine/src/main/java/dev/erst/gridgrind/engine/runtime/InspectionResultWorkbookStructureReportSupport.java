@@ -14,6 +14,7 @@ import dev.erst.gridgrind.core.model.table.AutofilterSortStateReport;
 import dev.erst.gridgrind.core.model.table.TableColumnReport;
 import dev.erst.gridgrind.core.model.table.TableEntryReport;
 import dev.erst.gridgrind.core.model.table.TableStyleReport;
+import dev.erst.gridgrind.core.vocabulary.CellAddress;
 import dev.erst.gridgrind.core.vocabulary.SheetLabel;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.excel.ExcelAutofilterFilterColumnSnapshot;
@@ -81,7 +82,7 @@ final class InspectionResultWorkbookStructureReportSupport {
       ExcelCustomXmlLinkedCellSnapshot snapshot) {
     return new CustomXmlLinkedCellReport(
         new SheetLabel(snapshot.sheetName()),
-        snapshot.address(),
+        new CellAddress(snapshot.address()),
         snapshot.xpath(),
         snapshot.xmlDataType());
   }
@@ -109,7 +110,7 @@ final class InspectionResultWorkbookStructureReportSupport {
     return new dev.erst.gridgrind.core.model.formula.ArrayFormulaReport(
         new SheetLabel(snapshot.sheetName()),
         snapshot.range(),
-        snapshot.topLeftAddress(),
+        new CellAddress(snapshot.topLeftAddress()),
         snapshot.formula(),
         snapshot.singleCell());
   }
@@ -176,7 +177,8 @@ final class InspectionResultWorkbookStructureReportSupport {
               supported.name(),
               new SheetName(supported.sheetName()),
               new PivotTableReport.Anchor(
-                  supported.anchor().topLeftAddress(), supported.anchor().locationRange()),
+                  new CellAddress(supported.anchor().topLeftAddress()),
+                  supported.anchor().locationRange()),
               toPivotTableSourceReport(supported.source()),
               supported.rowLabels().stream()
                   .map(
@@ -212,7 +214,8 @@ final class InspectionResultWorkbookStructureReportSupport {
               unsupported.name(),
               new SheetName(unsupported.sheetName()),
               new PivotTableReport.Anchor(
-                  unsupported.anchor().topLeftAddress(), unsupported.anchor().locationRange()),
+                  new CellAddress(unsupported.anchor().topLeftAddress()),
+                  unsupported.anchor().locationRange()),
               unsupported.detail());
     };
   }

@@ -21,6 +21,7 @@ import dev.erst.gridgrind.core.plan.TableRowSelector;
 import dev.erst.gridgrind.core.plan.TableSelector;
 import dev.erst.gridgrind.core.plan.WorkbookMutationAction;
 import dev.erst.gridgrind.core.plan.WorkbookSelector;
+import dev.erst.gridgrind.core.vocabulary.CellAddress;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import java.nio.file.Path;
@@ -34,12 +35,13 @@ class AuthoringTargetCoverageTest {
     assertInstanceOf(WorkbookSelector.Current.class, Targets.workbook().selector());
     assertInstanceOf(SheetSelector.ByName.class, Targets.sheet(new SheetName("Budget")).selector());
     assertInstanceOf(
-        CellSelector.ByAddress.class, Targets.cell(new SheetName("Budget"), "A1").selector());
+        CellSelector.ByAddress.class,
+        Targets.cell(new SheetName("Budget"), new CellAddress("A1")).selector());
     assertInstanceOf(
         RangeSelector.ByRange.class, Targets.range(new SheetName("Budget"), "A1:B2").selector());
     assertInstanceOf(
         RangeSelector.RectangularWindow.class,
-        Targets.window(new SheetName("Budget"), "A1", 5, 3).selector());
+        Targets.window(new SheetName("Budget"), new CellAddress("A1"), 5, 3).selector());
     assertInstanceOf(TableSelector.ByName.class, Targets.table("BudgetTable").selector());
     assertInstanceOf(
         TableSelector.ByNameOnSheet.class,
@@ -122,7 +124,7 @@ class AuthoringTargetCoverageTest {
         InspectionAnalysisQuery.AnalyzeFormulaHealth.class,
         sheet.formulaHealth().toStep(new StepId("formula-health")).query());
 
-    CellTarget cell = Targets.cell(new SheetName("Budget"), "A1");
+    CellTarget cell = Targets.cell(new SheetName("Budget"), new CellAddress("A1"));
     assertInstanceOf(
         CellMutationAction.SetCell.class,
         cell.set(Values.text("Owner")).toStep(new StepId("set")).action());
@@ -182,7 +184,7 @@ class AuthoringTargetCoverageTest {
         "rows must not be null",
         assertThrows(NullPointerException.class, () -> range.setRows(null)).getMessage());
 
-    WindowTarget window = Targets.window(new SheetName("Budget"), "A1", 5, 3);
+    WindowTarget window = Targets.window(new SheetName("Budget"), new CellAddress("A1"), 5, 3);
     assertInstanceOf(
         SheetIntrospectionQuery.GetWindow.class, window.read().toStep(new StepId("read")).query());
     assertInstanceOf(

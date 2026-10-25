@@ -167,7 +167,7 @@ class InspectionResultConverterTest extends DefaultGridGrindRequestExecutorTestS
     assertEquals("custom-xml-mappings", mappings.stepId().value());
     assertEquals("CORSO_mapping", mappings.mappings().getFirst().name());
     assertEquals(2L, mappings.mappings().getFirst().dataBinding().loadMode());
-    assertEquals("A1", mappings.mappings().getFirst().linkedCells().getFirst().address());
+    assertEquals("A1", mappings.mappings().getFirst().linkedCells().getFirst().address().value());
     assertEquals("custom-xml-export", exported.stepId().value());
     assertEquals("UTF-8", exported.export().encoding());
     assertTrue(exported.export().xml().contains("<NOME>Grid</NOME>"));

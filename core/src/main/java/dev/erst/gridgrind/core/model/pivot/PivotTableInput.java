@@ -5,9 +5,9 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import dev.erst.gridgrind.core.metadata.ProtocolField;
+import dev.erst.gridgrind.core.vocabulary.CellAddress;
 import dev.erst.gridgrind.core.vocabulary.ExcelPivotDataConsolidateFunction;
 import dev.erst.gridgrind.core.vocabulary.ExcelPivotTableNaming;
-import dev.erst.gridgrind.core.vocabulary.ProtocolCellAddressValidation;
 import dev.erst.gridgrind.core.vocabulary.ProtocolDefinedNameValidation;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import java.util.ArrayList;
@@ -98,9 +98,9 @@ public record PivotTableInput(
   }
 
   /** Authored top-left destination anchor for one pivot table. */
-  public record Anchor(String topLeftAddress) {
+  public record Anchor(CellAddress topLeftAddress) {
     public Anchor {
-      topLeftAddress = ProtocolCellAddressValidation.validateAddress(topLeftAddress);
+      java.util.Objects.requireNonNull(topLeftAddress, "topLeftAddress must not be null");
     }
   }
 

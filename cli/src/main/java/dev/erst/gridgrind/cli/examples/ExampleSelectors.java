@@ -5,8 +5,8 @@ import dev.erst.gridgrind.core.plan.RangeSelector;
 import dev.erst.gridgrind.core.plan.SheetSelector;
 import dev.erst.gridgrind.core.plan.TableSelector;
 import dev.erst.gridgrind.core.plan.WorkbookSelector;
+import dev.erst.gridgrind.core.vocabulary.CellAddress;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
-import java.util.List;
 
 /** Shared selector helpers for shipped example workbook plans. */
 final class ExampleSelectors {
@@ -29,11 +29,15 @@ final class ExampleSelectors {
   }
 
   static CellSelector.ByAddress cell(String sheetName, String address) {
-    return new CellSelector.ByAddress(new SheetName(sheetName), address);
+    return new CellSelector.ByAddress(new SheetName(sheetName), new CellAddress(address));
   }
 
   static CellSelector.ByAddresses cells(String sheetName, String... addresses) {
-    return new CellSelector.ByAddresses(new SheetName(sheetName), List.of(addresses));
+    return new CellSelector.ByAddresses(
+        new SheetName(sheetName),
+        java.util.Arrays.stream(addresses)
+            .map(dev.erst.gridgrind.core.vocabulary.CellAddress::new)
+            .toList());
   }
 
   static RangeSelector.ByRange range(String sheetName, String range) {
@@ -43,6 +47,6 @@ final class ExampleSelectors {
   static RangeSelector.RectangularWindow window(
       String sheetName, String topLeftAddress, int rowCount, int columnCount) {
     return new RangeSelector.RectangularWindow(
-        new SheetName(sheetName), topLeftAddress, rowCount, columnCount);
+        new SheetName(sheetName), new CellAddress(topLeftAddress), rowCount, columnCount);
   }
 }

@@ -45,10 +45,10 @@ final class ExecutionSelectorDiagnosticFields {
 
   static Optional<String> addressFor(Selector selector) {
     if (selector instanceof CellSelector.ByAddress byAddress) {
-      return Optional.of(byAddress.address());
+      return Optional.of(byAddress.address().value());
     }
     if (selector instanceof RangeSelector.RectangularWindow window) {
-      return Optional.of(window.topLeftAddress());
+      return Optional.of(window.topLeftAddress().value());
     }
     return Optional.empty();
   }

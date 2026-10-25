@@ -2,6 +2,7 @@ package dev.erst.gridgrind.core.plan;
 
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import dev.erst.gridgrind.core.vocabulary.CellAddress;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import java.util.List;
 
@@ -77,11 +78,11 @@ public sealed interface RangeSelector extends Selector
 
   /** Selects one rectangular window anchored at a top-left cell. */
   record RectangularWindow(
-      SheetName sheetName, String topLeftAddress, int rowCount, int columnCount)
+      SheetName sheetName, CellAddress topLeftAddress, int rowCount, int columnCount)
       implements RangeSelector {
     public RectangularWindow {
       java.util.Objects.requireNonNull(sheetName, "sheetName must not be null");
-      topLeftAddress = SelectorValueValidation.requireAddress(topLeftAddress, "topLeftAddress");
+      java.util.Objects.requireNonNull(topLeftAddress, "topLeftAddress must not be null");
       rowCount = SelectorValueValidation.requirePositive(rowCount, "rowCount");
       columnCount = SelectorValueValidation.requirePositive(columnCount, "columnCount");
       SelectorValueValidation.requireWindowSize(rowCount, columnCount);
@@ -89,8 +90,8 @@ public sealed interface RangeSelector extends Selector
 
     /** Returns the exact A1-style rectangular range implied by this window. */
     public String range() {
-      int firstRow = SelectorAddressSupport.rowIndex(topLeftAddress);
-      int firstColumn = SelectorAddressSupport.columnIndex(topLeftAddress);
+      int firstRow = SelectorAddressSupport.rowIndex(topLeftAddress.value());
+      int firstColumn = SelectorAddressSupport.columnIndex(topLeftAddress.value());
       int lastRow = firstRow + rowCount - 1;
       int lastColumn = firstColumn + columnCount - 1;
       return topLeftAddress + ":" + SelectorAddressSupport.absoluteA1Address(lastRow, lastColumn);

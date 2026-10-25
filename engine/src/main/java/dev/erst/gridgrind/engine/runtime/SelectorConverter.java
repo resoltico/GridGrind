@@ -128,20 +128,34 @@ final class SelectorConverter {
       case CellSelector.ByAddress byAddress ->
           new SheetLocalCellSelection(
               byAddress.sheetName().value(),
-              new ExcelCellSelection.Selected(List.of(byAddress.address())));
+              new ExcelCellSelection.Selected(
+                  List.of(byAddress.address()).stream()
+                      .map(dev.erst.gridgrind.core.vocabulary.WireString::value)
+                      .toList()));
       case CellSelector.ByAddresses byAddresses ->
           new SheetLocalCellSelection(
               byAddresses.sheetName().value(),
-              new ExcelCellSelection.Selected(byAddresses.addresses()));
+              new ExcelCellSelection.Selected(
+                  byAddresses.addresses().stream()
+                      .map(dev.erst.gridgrind.core.vocabulary.WireString::value)
+                      .toList()));
     };
   }
 
   static SheetLocalCellAddresses toSheetLocalCellAddresses(CellSelector selector) {
     return switch (selector) {
       case CellSelector.ByAddress byAddress ->
-          new SheetLocalCellAddresses(byAddress.sheetName().value(), List.of(byAddress.address()));
+          new SheetLocalCellAddresses(
+              byAddress.sheetName().value(),
+              List.of(byAddress.address()).stream()
+                  .map(dev.erst.gridgrind.core.vocabulary.WireString::value)
+                  .toList());
       case CellSelector.ByAddresses byAddresses ->
-          new SheetLocalCellAddresses(byAddresses.sheetName().value(), byAddresses.addresses());
+          new SheetLocalCellAddresses(
+              byAddresses.sheetName().value(),
+              byAddresses.addresses().stream()
+                  .map(dev.erst.gridgrind.core.vocabulary.WireString::value)
+                  .toList());
       case CellSelector.AllUsedInSheet _ ->
           throw new IllegalArgumentException(
               "selector must provide exact addresses here; ALL_USED_IN_SHEET is not supported");
@@ -149,7 +163,7 @@ final class SelectorConverter {
   }
 
   static SingleCellTarget toSingleCellTarget(CellSelector.ByAddress selector) {
-    return new SingleCellTarget(selector.sheetName().value(), selector.address());
+    return new SingleCellTarget(selector.sheetName().value(), selector.address().value());
   }
 
   static SheetLocalRangeSelection toSheetLocalRangeSelection(RangeSelector selector) {

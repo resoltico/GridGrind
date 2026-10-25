@@ -114,6 +114,7 @@ import dev.erst.gridgrind.core.result.WorkbookResults;
 import dev.erst.gridgrind.core.result.WorkbookSummary;
 import dev.erst.gridgrind.core.vocabulary.AnalysisFindingCode;
 import dev.erst.gridgrind.core.vocabulary.AnalysisSeverity;
+import dev.erst.gridgrind.core.vocabulary.CellAddress;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartAxisCrosses;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartAxisKind;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartAxisPosition;
@@ -206,7 +207,7 @@ class WorkbookInvariantChecksTest {
                     new SheetLabel("Budget"),
                     List.of(
                         new dev.erst.gridgrind.core.model.value.CellReport.TextReport(
-                            "A1",
+                            new CellAddress("A1"),
                             java.util.Optional.of("Report"),
                             java.util.Optional.of(style),
                             java.util.Optional.of(
@@ -229,14 +230,14 @@ class WorkbookInvariantChecksTest {
                     new StepId("window"),
                     new WindowReport.Dense(
                         new SheetLabel("Budget"),
-                        "A1",
+                        new CellAddress("A1"),
                         new WindowDimensionsReport(1, 1),
                         List.of(
                             new WindowRowReport(
                                 0,
                                 List.of(
                                     new dev.erst.gridgrind.core.model.value.CellReport.TextReport(
-                                        "A1",
+                                        new CellAddress("A1"),
                                         java.util.Optional.empty(),
                                         java.util.Optional.of(style),
                                         java.util.Optional.empty(),
@@ -252,13 +253,15 @@ class WorkbookInvariantChecksTest {
                     new SheetLabel("Budget"),
                     List.of(
                         new CellHyperlinkReport(
-                            "A1", new HyperlinkTarget.Url("https://example.com/report")))),
+                            new CellAddress("A1"),
+                            new HyperlinkTarget.Url("https://example.com/report")))),
                 new SheetInspectionResult.CommentsResult(
                     new StepId("comments"),
                     new SheetLabel("Budget"),
                     List.of(
                         new CellCommentReport(
-                            "A1", new CommentReport("Review", "GridGrind", true)))),
+                            new CellAddress("A1"),
+                            new CommentReport("Review", "GridGrind", true)))),
                 new SheetInspectionResult.SheetLayoutResult(
                     new StepId("layout"),
                     new SheetLayoutReport(
@@ -304,12 +307,13 @@ class WorkbookInvariantChecksTest {
                                 1,
                                 1,
                                 List.of(
-                                    new FormulaPatternReport("SUM(B2:B3)", 1, List.of("B4"))))))),
+                                    new FormulaPatternReport(
+                                        "SUM(B2:B3)", 1, List.of(new CellAddress("B4")))))))),
                 new WorkbookSurfaceInspectionResult.SheetSchemaResult(
                     new StepId("schema"),
                     new SheetSchemaReport(
                         new SheetLabel("Budget"),
-                        "A1",
+                        new CellAddress("A1"),
                         2,
                         1,
                         1,
@@ -391,7 +395,8 @@ class WorkbookInvariantChecksTest {
                 new WorkbookIntrospectionQuery.GetWorkbookSummary()),
             inspect(
                 "cells",
-                new CellSelector.ByAddresses(new SheetName("Budget"), List.of("A1")),
+                new CellSelector.ByAddresses(
+                    new SheetName("Budget"), List.of(new CellAddress("A1"))),
                 new SheetIntrospectionQuery.GetCells()),
             inspect(
                 "data-validations",
@@ -440,7 +445,8 @@ class WorkbookInvariantChecksTest {
                     new SheetLabel("Budget"),
                     List.of(
                         new CellHyperlinkReport(
-                            "A1", new HyperlinkTarget.Url("https://example.com/report")))),
+                            new CellAddress("A1"),
+                            new HyperlinkTarget.Url("https://example.com/report")))),
                 new WorkbookAnalysisResult.DataValidationHealthResult(
                     new StepId("data-validation-health"),
                     new DataValidationHealthReport(
@@ -480,7 +486,8 @@ class WorkbookInvariantChecksTest {
                     new SheetLabel("Budget"),
                     List.of(
                         new CellHyperlinkReport(
-                            "A1", new HyperlinkTarget.File("/tmp/report.xlsx"))))));
+                            new CellAddress("A1"),
+                            new HyperlinkTarget.File("/tmp/report.xlsx"))))));
 
     assertDoesNotThrow(() -> WorkbookInvariantChecks.requireResponseShape(response));
   }
@@ -809,7 +816,7 @@ class WorkbookInvariantChecksTest {
                     new SheetLabel("Budget"),
                     List.of(
                         new dev.erst.gridgrind.core.model.value.CellReport.TextReport(
-                            "A1",
+                            new CellAddress("A1"),
                             java.util.Optional.empty(),
                             java.util.Optional.of(advancedStyle),
                             java.util.Optional.empty(),
@@ -830,7 +837,7 @@ class WorkbookInvariantChecksTest {
                 new SheetInspectionResult.CommentsResult(
                     new StepId("comments"),
                     new SheetLabel("Budget"),
-                    List.of(new CellCommentReport("A1", anchoredComment))),
+                    List.of(new CellCommentReport(new CellAddress("A1"), anchoredComment))),
                 new SheetInspectionResult.PrintLayoutResult(
                     new StepId("print-layout"),
                     new PrintLayoutReport(
@@ -1290,7 +1297,11 @@ class WorkbookInvariantChecksTest {
                     new StepId("array-formulas"),
                     List.of(
                         new ArrayFormulaReport(
-                            new SheetLabel("Ops"), "D2:D4", "D2", "B2:B4*C2:C4", false))),
+                            new SheetLabel("Ops"),
+                            "D2:D4",
+                            new CellAddress("D2"),
+                            "B2:B4*C2:C4",
+                            false))),
                 new WorkbookAssetInspectionResult.DrawingObjectsResult(
                     new StepId("drawing-objects"),
                     new SheetLabel("Ops"),
@@ -1341,7 +1352,7 @@ class WorkbookInvariantChecksTest {
         new CustomXmlDataBindingReport("BudgetBinding", false, 42L, "budget.xml", 1L),
         List.of(
             new CustomXmlLinkedCellReport(
-                new SheetLabel("Ops"), "A2", "/BudgetMap/Owner[1]", "string")),
+                new SheetLabel("Ops"), new CellAddress("A2"), "/BudgetMap/Owner[1]", "string")),
         List.of(
             new CustomXmlLinkedTableReport(
                 new SheetLabel("Ops"), "BudgetTable", "BudgetTable", "A1:B4", "/BudgetMap/Rows")));
@@ -1437,7 +1448,7 @@ class WorkbookInvariantChecksTest {
     return new PivotTableReport.Supported(
         "OpsPivot",
         new SheetName("Budget"),
-        new PivotTableReport.Anchor("F4", "F4:H8"),
+        new PivotTableReport.Anchor(new CellAddress("F4"), "F4:H8"),
         new PivotTableReport.Source.Range(new SheetName("Budget"), "A1:C4"),
         List.of(new PivotTableReport.Field(0, "Month")),
         List.of(),
@@ -1477,7 +1488,7 @@ class WorkbookInvariantChecksTest {
   private static dev.erst.gridgrind.core.model.value.CellReport.TextReport textCell(
       String address, String value) {
     return new dev.erst.gridgrind.core.model.value.CellReport.TextReport(
-        address,
+        new CellAddress(address),
         java.util.Optional.of(value),
         java.util.Optional.of(defaultStyle()),
         java.util.Optional.empty(),

@@ -10,6 +10,7 @@ import dev.erst.gridgrind.core.model.value.CellTemporalKind;
 import dev.erst.gridgrind.core.model.value.CellTemporalReport;
 import dev.erst.gridgrind.core.model.value.CellValueReport;
 import dev.erst.gridgrind.core.model.value.HyperlinkTarget;
+import dev.erst.gridgrind.core.vocabulary.CellAddress;
 import dev.erst.gridgrind.excel.ExcelCellReadFacet;
 import dev.erst.gridgrind.excel.ExcelCellReadProjection;
 import dev.erst.gridgrind.excel.ExcelCellSnapshot;
@@ -75,10 +76,11 @@ final class InspectionResultCellReportSupport {
 
     return switch (snapshot) {
       case ExcelCellSnapshot.BlankSnapshot s ->
-          new CellReport.BlankReport(s.address(), displayValue, style, hyperlink, comment);
+          new CellReport.BlankReport(
+              new CellAddress(s.address()), displayValue, style, hyperlink, comment);
       case ExcelCellSnapshot.TextSnapshot s ->
           new CellReport.TextReport(
-              s.address(),
+              new CellAddress(s.address()),
               displayValue,
               style,
               hyperlink,
@@ -87,7 +89,7 @@ final class InspectionResultCellReportSupport {
               projectedRuns(projection, s.richText()));
       case ExcelCellSnapshot.NumberSnapshot s ->
           new CellReport.NumberReport(
-              s.address(),
+              new CellAddress(s.address()),
               displayValue,
               style,
               hyperlink,
@@ -96,7 +98,7 @@ final class InspectionResultCellReportSupport {
               projectedTemporal(s, projection, date1904));
       case ExcelCellSnapshot.BooleanSnapshot s ->
           new CellReport.BooleanReport(
-              s.address(),
+              new CellAddress(s.address()),
               displayValue,
               style,
               hyperlink,
@@ -104,7 +106,7 @@ final class InspectionResultCellReportSupport {
               projectedValue(projection, s.booleanValue()));
       case ExcelCellSnapshot.ErrorSnapshot s ->
           new CellReport.ErrorReport(
-              s.address(),
+              new CellAddress(s.address()),
               displayValue,
               style,
               hyperlink,
@@ -112,7 +114,7 @@ final class InspectionResultCellReportSupport {
               projectedValue(projection, s.errorValue()));
       case ExcelCellSnapshot.FormulaSnapshot s ->
           new CellReport.FormulaReport(
-              s.address(),
+              new CellAddress(s.address()),
               displayValue,
               style,
               hyperlink,

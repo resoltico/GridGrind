@@ -12,6 +12,7 @@ import dev.erst.gridgrind.core.plan.InspectionStep;
 import dev.erst.gridgrind.core.plan.RangeSelector;
 import dev.erst.gridgrind.core.plan.SheetSelector;
 import dev.erst.gridgrind.core.plan.WorkbookSelector;
+import dev.erst.gridgrind.core.vocabulary.CellAddress;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 
 /** Builds bounded inspection steps for protocol-workflow Jazzer generation. */
@@ -66,14 +67,18 @@ final class OperationSequenceInspectionFactory {
                     requestId,
                     new CellSelector.ByAddresses(
                         new SheetName(targetSheet),
-                        OperationSequenceObservationSupport.nextReadAddresses(data, validAddress)),
+                        OperationSequenceObservationSupport.nextReadAddresses(data, validAddress)
+                            .stream()
+                            .map(CellAddress::new)
+                            .toList()),
                     new SheetIntrospectionQuery.GetCells());
             case 0x1 ->
                 inspect(
                     requestId,
                     new RangeSelector.RectangularWindow(
                         new SheetName(targetSheet),
-                        FuzzDataDecoders.nextNonBlankCellAddress(data, validAddress),
+                        new CellAddress(
+                            FuzzDataDecoders.nextNonBlankCellAddress(data, validAddress)),
                         data.consumeInt(1, 4),
                         data.consumeInt(1, 4)),
                     new SheetIntrospectionQuery.GetWindow());
@@ -87,7 +92,10 @@ final class OperationSequenceInspectionFactory {
                     requestId,
                     new RangeSelector.RectangularWindow(
                         new SheetName(targetSheet),
-                        validAddress ? "A1" : FuzzDataDecoders.nextNonBlankCellAddress(data, false),
+                        new dev.erst.gridgrind.core.vocabulary.CellAddress(
+                            validAddress
+                                ? "A1"
+                                : FuzzDataDecoders.nextNonBlankCellAddress(data, false)),
                         data.consumeInt(1, 5),
                         data.consumeInt(1, 4)),
                     new InspectionSurfaceQuery.GetSheetSchema());

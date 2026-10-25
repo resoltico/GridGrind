@@ -23,6 +23,7 @@ import dev.erst.gridgrind.core.plan.SheetSelector;
 import dev.erst.gridgrind.core.plan.StructuredMutationAction;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import dev.erst.gridgrind.core.source.BinarySourceInput;
+import dev.erst.gridgrind.core.vocabulary.CellAddress;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartDisplayBlanksAs;
 import dev.erst.gridgrind.core.vocabulary.ExcelDrawingAnchorBehavior;
 import dev.erst.gridgrind.core.vocabulary.ExcelPictureFormat;
@@ -84,11 +85,11 @@ class SourceBackedPlanResolverTestSupport {
     Object target =
         switch (action) {
           case CellMutationAction.SetCell _ ->
-              new CellSelector.ByAddress(new SheetName("Budget"), "A1");
+              new CellSelector.ByAddress(new SheetName("Budget"), new CellAddress("A1"));
           case CellMutationAction.SetRange _ ->
               new RangeSelector.ByRange(new SheetName("Budget"), "A1:B2");
           case CellMutationAction.SetComment _ ->
-              new CellSelector.ByAddress(new SheetName("Budget"), "A1");
+              new CellSelector.ByAddress(new SheetName("Budget"), new CellAddress("A1"));
           case StructuredMutationAction.SetDataValidation _ ->
               new RangeSelector.ByRange(new SheetName("Budget"), "A1");
           case StructuredMutationAction.SetTable setTable ->

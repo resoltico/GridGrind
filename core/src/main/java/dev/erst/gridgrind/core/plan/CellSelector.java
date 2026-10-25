@@ -2,6 +2,7 @@ package dev.erst.gridgrind.core.plan;
 
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import dev.erst.gridgrind.core.vocabulary.CellAddress;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import java.util.List;
 
@@ -28,10 +29,10 @@ public sealed interface CellSelector extends Selector
   }
 
   /** Selects one exact cell on one sheet. */
-  record ByAddress(SheetName sheetName, String address) implements CellSelector {
+  record ByAddress(SheetName sheetName, CellAddress address) implements CellSelector {
     public ByAddress {
       java.util.Objects.requireNonNull(sheetName, "sheetName must not be null");
-      address = SelectorValueValidation.requireAddress(address, "address");
+      java.util.Objects.requireNonNull(address, "address must not be null");
     }
 
     @Override
@@ -41,7 +42,7 @@ public sealed interface CellSelector extends Selector
   }
 
   /** Selects one or more exact cells on one sheet. */
-  record ByAddresses(SheetName sheetName, List<String> addresses) implements CellSelector {
+  record ByAddresses(SheetName sheetName, List<CellAddress> addresses) implements CellSelector {
     public ByAddresses {
       java.util.Objects.requireNonNull(sheetName, "sheetName must not be null");
       addresses = SelectorListValidation.copyDistinctAddresses(addresses, "addresses");

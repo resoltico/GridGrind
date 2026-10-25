@@ -15,6 +15,7 @@ import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import dev.erst.gridgrind.core.problem.ProblemContext;
 import dev.erst.gridgrind.core.result.WorkbookResult;
 import dev.erst.gridgrind.core.source.TextSourceInput;
+import dev.erst.gridgrind.core.vocabulary.CellAddress;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import java.nio.file.Files;
@@ -42,12 +43,12 @@ class DefaultGridGrindRequestExecutorFormulaOriginTest {
                     new WorkbookMutationAction.EnsureSheet()),
                 new MutationStep(
                     new StepId("author-formula"),
-                    new CellSelector.ByAddress(new SheetName("Ops"), "A1"),
+                    new CellSelector.ByAddress(new SheetName("Ops"), new CellAddress("A1")),
                     new CellMutationAction.SetCell(
                         new CellInput.Formula(TextSourceInput.inline("1+1")))),
                 new MutationStep(
                     new StepId("reject-formula"),
-                    new CellSelector.ByAddress(new SheetName("Ops"), "A1"),
+                    new CellSelector.ByAddress(new SheetName("Ops"), new CellAddress("A1")),
                     new CellMutationAction.SetCell(
                         new CellInput.Formula(TextSourceInput.inline("SUM("))))));
 

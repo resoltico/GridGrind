@@ -13,6 +13,7 @@ import dev.erst.gridgrind.core.plan.SheetSelector;
 import dev.erst.gridgrind.core.plan.WorkbookMutationAction;
 import dev.erst.gridgrind.core.vocabulary.AnalysisFindingCode;
 import dev.erst.gridgrind.core.vocabulary.AnalysisSeverity;
+import dev.erst.gridgrind.core.vocabulary.CellAddress;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import java.util.Optional;
@@ -23,7 +24,8 @@ class AuthoringInternalsCoverageTest {
   @Test
   void plannedStepsPreserveExplicitIdsAndRejectInvalidInputs() {
     SheetSelector.ByName sheetSelector = new SheetSelector.ByName(new SheetName("Budget"));
-    CellSelector.ByAddress cellSelector = new CellSelector.ByAddress(new SheetName("Budget"), "A1");
+    CellSelector.ByAddress cellSelector =
+        new CellSelector.ByAddress(new SheetName("Budget"), new CellAddress("A1"));
     WorkbookMutationAction.EnsureSheet ensureSheet = new WorkbookMutationAction.EnsureSheet();
     SheetIntrospectionQuery.GetCells cellQuery = new SheetIntrospectionQuery.GetCells();
     CellAssertion.CellValue present =

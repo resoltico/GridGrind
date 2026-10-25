@@ -13,6 +13,7 @@ import dev.erst.gridgrind.core.plan.PresenceAssertion;
 import dev.erst.gridgrind.core.plan.SheetIntrospectionQuery;
 import dev.erst.gridgrind.core.plan.SheetSelector;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
+import dev.erst.gridgrind.core.vocabulary.CellAddress;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.engine.api.GridGrindHostAcceptancePolicy;
@@ -221,7 +222,7 @@ class HostAcceptancePolicyValidatorTest {
                 List.of(
                     new InspectionStep(
                         new StepId("preserve-cell"),
-                        new CellSelector.ByAddress(new SheetName("Report"), "B2"),
+                        new CellSelector.ByAddress(new SheetName("Report"), new CellAddress("B2")),
                         new SheetIntrospectionQuery.GetCells())))));
   }
 

@@ -18,6 +18,7 @@ import dev.erst.gridgrind.core.plan.WorkbookMutationAction;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import dev.erst.gridgrind.core.problem.GridGrindProblemCode;
 import dev.erst.gridgrind.core.result.WorkbookResult;
+import dev.erst.gridgrind.core.vocabulary.CellAddress;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -58,7 +59,8 @@ class FormulaEnvironmentRequestExecutorTest {
                     List.of(
                         inspect(
                             "cells",
-                            new CellSelector.ByAddresses(new SheetName("Ops"), List.of("B1")),
+                            new CellSelector.ByAddresses(
+                                new SheetName("Ops"), List.of(new CellAddress("B1"))),
                             DefaultGridGrindRequestExecutorTestSupport.allFacetCellsQuery())))));
 
     dev.erst.gridgrind.core.model.value.CellReport.FormulaReport formula =
@@ -95,7 +97,8 @@ class FormulaEnvironmentRequestExecutorTest {
                     List.of(
                         inspect(
                             "cells",
-                            new CellSelector.ByAddresses(new SheetName("Ops"), List.of("B1")),
+                            new CellSelector.ByAddresses(
+                                new SheetName("Ops"), List.of(new CellAddress("B1"))),
                             DefaultGridGrindRequestExecutorTestSupport.allFacetCellsQuery())))));
 
     dev.erst.gridgrind.core.model.value.CellReport.FormulaReport formula =
@@ -136,7 +139,8 @@ class FormulaEnvironmentRequestExecutorTest {
                     List.of(
                         inspect(
                             "cells",
-                            new CellSelector.ByAddresses(new SheetName("Ops"), List.of("B1")),
+                            new CellSelector.ByAddresses(
+                                new SheetName("Ops"), List.of(new CellAddress("B1"))),
                             DefaultGridGrindRequestExecutorTestSupport.allFacetCellsQuery())))));
 
     dev.erst.gridgrind.core.model.value.CellReport.FormulaReport formula =
@@ -193,23 +197,27 @@ class FormulaEnvironmentRequestExecutorTest {
                     executionPolicy(
                         calculateTargets(
                             new dev.erst.gridgrind.core.model.formula.FormulaCellTarget(
-                                new SheetName("Budget"), "B1"))),
+                                new SheetName("Budget"), new CellAddress("B1")))),
                     null,
                     mutations(
                         mutate(
                             new SheetSelector.ByName(new SheetName("Budget")),
                             new WorkbookMutationAction.EnsureSheet()),
                         mutate(
-                            new CellSelector.ByAddress(new SheetName("Budget"), "A1"),
+                            new CellSelector.ByAddress(
+                                new SheetName("Budget"), new CellAddress("A1")),
                             new CellMutationAction.SetCell(new CellInput.NumberValue(2.0d))),
                         mutate(
-                            new CellSelector.ByAddress(new SheetName("Budget"), "B1"),
+                            new CellSelector.ByAddress(
+                                new SheetName("Budget"), new CellAddress("B1")),
                             new CellMutationAction.SetCell(formulaCell("A1*2"))),
                         mutate(
-                            new CellSelector.ByAddress(new SheetName("Budget"), "C1"),
+                            new CellSelector.ByAddress(
+                                new SheetName("Budget"), new CellAddress("C1")),
                             new CellMutationAction.SetCell(formulaCell("A1*3"))),
                         mutate(
-                            new CellSelector.ByAddress(new SheetName("Budget"), "A1"),
+                            new CellSelector.ByAddress(
+                                new SheetName("Budget"), new CellAddress("A1")),
                             new CellMutationAction.SetCell(new CellInput.NumberValue(4.0d)))),
                     inspections())));
 
@@ -239,13 +247,16 @@ class FormulaEnvironmentRequestExecutorTest {
                             new SheetSelector.ByName(new SheetName("Budget")),
                             new WorkbookMutationAction.EnsureSheet()),
                         mutate(
-                            new CellSelector.ByAddress(new SheetName("Budget"), "A1"),
+                            new CellSelector.ByAddress(
+                                new SheetName("Budget"), new CellAddress("A1")),
                             new CellMutationAction.SetCell(new CellInput.NumberValue(2.0d))),
                         mutate(
-                            new CellSelector.ByAddress(new SheetName("Budget"), "B1"),
+                            new CellSelector.ByAddress(
+                                new SheetName("Budget"), new CellAddress("B1")),
                             new CellMutationAction.SetCell(formulaCell("A1*2"))),
                         mutate(
-                            new CellSelector.ByAddress(new SheetName("Budget"), "C1"),
+                            new CellSelector.ByAddress(
+                                new SheetName("Budget"), new CellAddress("C1")),
                             new CellMutationAction.SetCell(formulaCell("A1*3")))),
                     inspections())));
     assertEquals(workbookPath.toAbsolutePath().toString(), savedPath(seeded));

@@ -8,6 +8,7 @@ import dev.erst.gridgrind.core.plan.RangeSelector;
 import dev.erst.gridgrind.core.plan.SheetSelector;
 import dev.erst.gridgrind.core.plan.TableSelector;
 import dev.erst.gridgrind.core.plan.WorkbookSelector;
+import dev.erst.gridgrind.core.vocabulary.CellAddress;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 
 /** Selector builders for the fluent Java authoring API. */
@@ -25,7 +26,7 @@ public final class Targets {
   }
 
   /** Returns one exact cell target by sheet name and A1 address. */
-  public static CellTarget cell(SheetName sheetName, String address) {
+  public static CellTarget cell(SheetName sheetName, CellAddress address) {
     return new CellTarget(new CellSelector.ByAddress(sheetName, address));
   }
 
@@ -36,7 +37,7 @@ public final class Targets {
 
   /** Returns one rectangular window target from a top-left cell plus dimensions. */
   public static WindowTarget window(
-      SheetName sheetName, String topLeftAddress, int rowCount, int columnCount) {
+      SheetName sheetName, CellAddress topLeftAddress, int rowCount, int columnCount) {
     return new WindowTarget(
         new RangeSelector.RectangularWindow(sheetName, topLeftAddress, rowCount, columnCount));
   }

@@ -64,7 +64,7 @@ final class WorkbookInvariantAnalysisReportChecks {
     WorkbookInvariantChecks.require(
         analysis.topLeftAddress() != null, "schema topLeftAddress must not be null");
     WorkbookInvariantChecks.require(
-        !analysis.topLeftAddress().isBlank(), "schema topLeftAddress must not be blank");
+        !analysis.topLeftAddress().value().isBlank(), "schema topLeftAddress must not be blank");
     WorkbookInvariantChecks.require(
         analysis.rowCount() > 0, "schema rowCount must be greater than 0");
     WorkbookInvariantChecks.require(

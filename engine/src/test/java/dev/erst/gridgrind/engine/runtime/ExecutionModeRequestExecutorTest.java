@@ -15,6 +15,7 @@ import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import dev.erst.gridgrind.core.problem.GridGrindProblemCode;
 import dev.erst.gridgrind.core.result.WorkbookResult;
 import dev.erst.gridgrind.core.result.WorkbookResultPersistence;
+import dev.erst.gridgrind.core.vocabulary.CellAddress;
 import dev.erst.gridgrind.core.vocabulary.ExcelSheetVisibility;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.excel.ExcelCellValue;
@@ -135,7 +136,8 @@ class ExecutionModeRequestExecutorTest {
                 new WorkbookIntrospectionQuery.GetWorkbookSummary()),
             inspect(
                 "cells",
-                new CellSelector.ByAddresses(new SheetName("Ops"), List.of("A1", "B2")),
+                new CellSelector.ByAddresses(
+                    new SheetName("Ops"), List.of(new CellAddress("A1"), new CellAddress("B2"))),
                 new SheetIntrospectionQuery.GetCells()));
 
     WorkbookResult.Success streaming =
@@ -349,7 +351,7 @@ class ExecutionModeRequestExecutorTest {
                     List.of(
                         assertThat(
                             "assert-owner",
-                            new CellSelector.ByAddress(new SheetName("Ops"), "A1"),
+                            new CellSelector.ByAddress(new SheetName("Ops"), new CellAddress("A1")),
                             new CellAssertion.CellValue(
                                 new dev.erst.gridgrind.core.model.value.CellScalarValue.Text(
                                     "Owner")))),
@@ -439,7 +441,8 @@ class ExecutionModeRequestExecutorTest {
                     List.of(
                         inspect(
                             "cells",
-                            new CellSelector.ByAddresses(new SheetName("Missing"), List.of("A1")),
+                            new CellSelector.ByAddresses(
+                                new SheetName("Missing"), List.of(new CellAddress("A1"))),
                             new SheetIntrospectionQuery.GetCells())))));
 
     assertEquals(GridGrindProblemCode.SHEET_NOT_FOUND, failure.problem().code());
@@ -501,7 +504,8 @@ class ExecutionModeRequestExecutorTest {
                     List.of(
                         inspect(
                             "cells",
-                            new CellSelector.ByAddresses(new SheetName("Ops"), List.of("A1")),
+                            new CellSelector.ByAddresses(
+                                new SheetName("Ops"), List.of(new CellAddress("A1"))),
                             new SheetIntrospectionQuery.GetCells())))));
     assertEquals(GridGrindProblemCode.INVALID_REQUEST, unsupportedEventRead.problem().code());
     assertTrue(unsupportedEventRead.problem().message().contains("GET_CELLS"));
@@ -539,7 +543,7 @@ class ExecutionModeRequestExecutorTest {
                             new SheetSelector.ByName(new SheetName("Ops")),
                             new WorkbookMutationAction.EnsureSheet()),
                         mutate(
-                            new CellSelector.ByAddress(new SheetName("Ops"), "A1"),
+                            new CellSelector.ByAddress(new SheetName("Ops"), new CellAddress("A1")),
                             new CellMutationAction.SetCell(textCell("x")))),
                     inspections())));
     assertEquals(

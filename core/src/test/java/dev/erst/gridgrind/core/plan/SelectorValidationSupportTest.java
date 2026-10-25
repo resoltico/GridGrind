@@ -7,6 +7,7 @@ import dev.erst.gridgrind.core.problem.FieldValidationProblem;
 import dev.erst.gridgrind.core.problem.GridGrindRequestProblemSupport;
 import dev.erst.gridgrind.core.problem.ProblemContext;
 import dev.erst.gridgrind.core.problem.ProblemContextRequestSurfaces;
+import dev.erst.gridgrind.core.vocabulary.CellAddress;
 import dev.erst.gridgrind.core.vocabulary.ExcelReadLimits;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import java.util.Arrays;
@@ -143,7 +144,10 @@ class SelectorValidationSupportTest {
                 IllegalArgumentException.class,
                 () ->
                     SelectorListValidation.copyDistinctAddresses(
-                        exactAddresses(ExcelReadLimits.MAX_READ_CELLS + 1), "addresses"))
+                        exactAddresses(ExcelReadLimits.MAX_READ_CELLS + 1).stream()
+                            .map(CellAddress::new)
+                            .toList(),
+                        "addresses"))
             .getMessage());
   }
 
@@ -151,10 +155,18 @@ class SelectorValidationSupportTest {
   void selectorSupportCopiesDistinctCollectionsAndRejectsDuplicateOrNullEntries() {
     assertEquals(
         List.of("A1", "B2"),
-        SelectorListValidation.copyDistinctAddresses(List.of("A1", "B2"), "addresses"));
+        SelectorListValidation.copyDistinctAddresses(
+                List.of(new CellAddress("A1"), new CellAddress("B2")), "addresses")
+            .stream()
+            .map(CellAddress::value)
+            .toList());
     assertEquals(
         List.of("A1", "B2"),
-        SelectorListValidation.copyDistinctAddresses(List.of("A1", "B2"), "cells"));
+        SelectorListValidation.copyDistinctAddresses(
+                List.of(new CellAddress("A1"), new CellAddress("B2")), "cells")
+            .stream()
+            .map(CellAddress::value)
+            .toList());
     assertEquals(
         List.of("A1:B2"), SelectorListValidation.copyDistinctRanges(List.of("A1:B2"), "ranges"));
     assertEquals(
@@ -187,14 +199,9 @@ class SelectorValidationSupportTest {
         assertThrows(
                 IllegalArgumentException.class,
                 () ->
-                    SelectorListValidation.copyDistinctAddresses(List.of("A1", "A1"), "addresses"))
+                    SelectorListValidation.copyDistinctAddresses(
+                        List.of(new CellAddress("A1"), new CellAddress("A1")), "addresses"))
             .getMessage());
-    assertTrue(
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> SelectorListValidation.copyDistinctAddresses(List.of("A0"), "cells"))
-            .getMessage()
-            .startsWith("cells[0] must be a single-cell A1-style address"));
     assertEquals(
         "ranges must not contain duplicates",
         assertThrows(
