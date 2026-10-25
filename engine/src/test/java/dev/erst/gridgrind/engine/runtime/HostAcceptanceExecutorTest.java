@@ -4,12 +4,12 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import dev.erst.gridgrind.contract.assertion.PresenceAssertion;
-import dev.erst.gridgrind.contract.dto.WorkbookExecutionEvidence;
-import dev.erst.gridgrind.contract.query.SheetIntrospectionQuery;
-import dev.erst.gridgrind.contract.selector.SheetSelector;
-import dev.erst.gridgrind.contract.step.AssertionStep;
-import dev.erst.gridgrind.contract.step.InspectionStep;
+import dev.erst.gridgrind.core.plan.AssertionStep;
+import dev.erst.gridgrind.core.plan.InspectionStep;
+import dev.erst.gridgrind.core.plan.PresenceAssertion;
+import dev.erst.gridgrind.core.plan.SheetIntrospectionQuery;
+import dev.erst.gridgrind.core.plan.SheetSelector;
+import dev.erst.gridgrind.core.result.WorkbookExecutionEvidence;
 import dev.erst.gridgrind.engine.api.GridGrindHostAcceptancePolicy;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
 import dev.erst.gridgrind.excel.ExcelWorkbooks;

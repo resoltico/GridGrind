@@ -3,7 +3,7 @@ package dev.erst.gridgrind.engine.runtime;
 import static dev.erst.gridgrind.engine.runtime.ExecutorTestPlanSupport.text;
 import static org.junit.jupiter.api.Assertions.*;
 
-import dev.erst.gridgrind.contract.dto.CommentInput;
+import dev.erst.gridgrind.core.model.drawing.CommentInput;
 import dev.erst.gridgrind.excel.ExcelComment;
 import org.junit.jupiter.api.Test;
 

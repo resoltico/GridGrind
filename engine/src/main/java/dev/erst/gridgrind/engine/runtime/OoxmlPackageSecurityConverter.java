@@ -1,11 +1,11 @@
 package dev.erst.gridgrind.engine.runtime;
 
-import dev.erst.gridgrind.contract.dto.OoxmlEncryptionInput;
-import dev.erst.gridgrind.contract.dto.OoxmlOpenSecurityInput;
-import dev.erst.gridgrind.contract.dto.OoxmlPersistenceEncryptionInput;
-import dev.erst.gridgrind.contract.dto.OoxmlPersistenceSecurityInput;
-import dev.erst.gridgrind.contract.dto.OoxmlPersistenceSignatureInput;
-import dev.erst.gridgrind.contract.dto.OoxmlSignatureInput;
+import dev.erst.gridgrind.core.model.security.OoxmlEncryptionInput;
+import dev.erst.gridgrind.core.model.security.OoxmlOpenSecurityInput;
+import dev.erst.gridgrind.core.model.security.OoxmlPersistenceEncryptionInput;
+import dev.erst.gridgrind.core.model.security.OoxmlPersistenceSecurityInput;
+import dev.erst.gridgrind.core.model.security.OoxmlPersistenceSignatureInput;
+import dev.erst.gridgrind.core.model.security.OoxmlSignatureInput;
 import dev.erst.gridgrind.excel.ooxml.ExcelOoxmlEncryptionOptions;
 import dev.erst.gridgrind.excel.ooxml.ExcelOoxmlOpenOptions;
 import dev.erst.gridgrind.excel.ooxml.ExcelOoxmlPersistenceEncryption;

@@ -1,11 +1,11 @@
 package dev.erst.gridgrind.engine.runtime;
 
-import dev.erst.gridgrind.contract.dto.ExecutionModeInput;
-import dev.erst.gridgrind.contract.dto.GridGrindProblemDetail;
-import dev.erst.gridgrind.contract.dto.GridGrindProtocolVersion;
-import dev.erst.gridgrind.contract.dto.RequestWarning;
-import dev.erst.gridgrind.contract.dto.WorkbookPlan;
-import dev.erst.gridgrind.contract.dto.WorkbookResult;
+import dev.erst.gridgrind.core.plan.ExecutionModeInput;
+import dev.erst.gridgrind.core.plan.GridGrindProtocolVersion;
+import dev.erst.gridgrind.core.plan.WorkbookPlan;
+import dev.erst.gridgrind.core.problem.GridGrindProblemDetail;
+import dev.erst.gridgrind.core.problem.RequestWarning;
+import dev.erst.gridgrind.core.result.WorkbookResult;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
 import java.util.List;
 import java.util.Objects;
@@ -140,7 +140,7 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
         GridGrindProblemDetail.Problem problem =
             ExecutionResponseSupport.problemFor(
                 exception,
-                new dev.erst.gridgrind.contract.dto.ProblemContext.OpenWorkbook(
+                new dev.erst.gridgrind.core.problem.ProblemContext.OpenWorkbook(
                     ExecutionRequestPaths.requestShape(resolvedRequest),
                     ExecutionRequestPaths.workbookReference(
                         resolvedRequest, preparedBindings.workingDirectory())));

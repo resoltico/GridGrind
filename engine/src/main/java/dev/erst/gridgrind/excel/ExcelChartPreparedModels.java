@@ -1,8 +1,8 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.core.vocabulary.ExcelChartBarDirection;
+import dev.erst.gridgrind.core.vocabulary.ExcelChartDisplayBlanksAs;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingAnchor;
-import dev.erst.gridgrind.excel.foundation.ExcelChartBarDirection;
-import dev.erst.gridgrind.excel.foundation.ExcelChartDisplayBlanksAs;
 import java.util.List;
 import java.util.Objects;
 import org.apache.poi.ss.util.AreaReference;

@@ -1,7 +1,7 @@
 package dev.erst.gridgrind.excel;
 
-import dev.erst.gridgrind.contract.dto.FormulaTextValidation;
-import dev.erst.gridgrind.excel.foundation.ExcelStoredCellErrorLiteral;
+import dev.erst.gridgrind.core.model.formula.FormulaTextValidation;
+import dev.erst.gridgrind.core.vocabulary.ExcelStoredCellErrorLiteral;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Objects;

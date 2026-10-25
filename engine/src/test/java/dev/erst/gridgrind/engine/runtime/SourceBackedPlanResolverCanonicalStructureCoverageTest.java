@@ -7,38 +7,37 @@ import static org.junit.jupiter.api.Assertions.assertNotSame;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import dev.erst.gridgrind.contract.action.CellMutationAction;
-import dev.erst.gridgrind.contract.action.DrawingMutationAction;
-import dev.erst.gridgrind.contract.action.StructuredMutationAction;
-import dev.erst.gridgrind.contract.action.WorkbookMutationAction;
-import dev.erst.gridgrind.contract.assertion.*;
-import dev.erst.gridgrind.contract.dto.CellInput;
-import dev.erst.gridgrind.contract.dto.CommentInput;
-import dev.erst.gridgrind.contract.dto.DataValidationErrorAlertInput;
-import dev.erst.gridgrind.contract.dto.DataValidationPromptInput;
-import dev.erst.gridgrind.contract.dto.DataValidationRuleInput;
-import dev.erst.gridgrind.contract.dto.EmbeddedObjectInput;
-import dev.erst.gridgrind.contract.dto.HeaderFooterTextInput;
-import dev.erst.gridgrind.contract.dto.InvalidRawFormulaTextException;
-import dev.erst.gridgrind.contract.dto.PictureDataInput;
-import dev.erst.gridgrind.contract.dto.RichTextRunInput;
-import dev.erst.gridgrind.contract.dto.TableInput;
-import dev.erst.gridgrind.contract.dto.TableStyleInput;
-import dev.erst.gridgrind.contract.dto.WorkbookPlan;
-import dev.erst.gridgrind.contract.query.*;
-import dev.erst.gridgrind.contract.selector.CellSelector;
-import dev.erst.gridgrind.contract.selector.RangeSelector;
-import dev.erst.gridgrind.contract.selector.SheetSelector;
-import dev.erst.gridgrind.contract.selector.TableCellSelector;
-import dev.erst.gridgrind.contract.selector.TableRowSelector;
-import dev.erst.gridgrind.contract.selector.TableSelector;
-import dev.erst.gridgrind.contract.source.BinarySourceInput;
-import dev.erst.gridgrind.contract.source.TextSourceInput;
-import dev.erst.gridgrind.contract.step.AssertionStep;
-import dev.erst.gridgrind.contract.step.InspectionStep;
-import dev.erst.gridgrind.contract.step.MutationStep;
-import dev.erst.gridgrind.excel.foundation.ExcelDataValidationErrorStyle;
-import dev.erst.gridgrind.excel.foundation.ExcelPictureFormat;
+import dev.erst.gridgrind.core.model.drawing.CommentInput;
+import dev.erst.gridgrind.core.model.drawing.EmbeddedObjectInput;
+import dev.erst.gridgrind.core.model.drawing.PictureDataInput;
+import dev.erst.gridgrind.core.model.formula.InvalidRawFormulaTextException;
+import dev.erst.gridgrind.core.model.print.HeaderFooterTextInput;
+import dev.erst.gridgrind.core.model.style.RichTextRunInput;
+import dev.erst.gridgrind.core.model.table.TableInput;
+import dev.erst.gridgrind.core.model.table.TableStyleInput;
+import dev.erst.gridgrind.core.model.validation.DataValidationErrorAlertInput;
+import dev.erst.gridgrind.core.model.validation.DataValidationPromptInput;
+import dev.erst.gridgrind.core.model.validation.DataValidationRuleInput;
+import dev.erst.gridgrind.core.model.value.CellInput;
+import dev.erst.gridgrind.core.plan.*;
+import dev.erst.gridgrind.core.plan.AssertionStep;
+import dev.erst.gridgrind.core.plan.CellMutationAction;
+import dev.erst.gridgrind.core.plan.CellSelector;
+import dev.erst.gridgrind.core.plan.DrawingMutationAction;
+import dev.erst.gridgrind.core.plan.InspectionStep;
+import dev.erst.gridgrind.core.plan.MutationStep;
+import dev.erst.gridgrind.core.plan.RangeSelector;
+import dev.erst.gridgrind.core.plan.SheetSelector;
+import dev.erst.gridgrind.core.plan.StructuredMutationAction;
+import dev.erst.gridgrind.core.plan.TableCellSelector;
+import dev.erst.gridgrind.core.plan.TableRowSelector;
+import dev.erst.gridgrind.core.plan.TableSelector;
+import dev.erst.gridgrind.core.plan.WorkbookMutationAction;
+import dev.erst.gridgrind.core.plan.WorkbookPlan;
+import dev.erst.gridgrind.core.source.BinarySourceInput;
+import dev.erst.gridgrind.core.source.TextSourceInput;
+import dev.erst.gridgrind.core.vocabulary.ExcelDataValidationErrorStyle;
+import dev.erst.gridgrind.core.vocabulary.ExcelPictureFormat;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -113,15 +112,15 @@ class SourceBackedPlanResolverCanonicalStructureCoverageTest
                     new CellInput.Text(TextSourceInput.inline("Hosting"))),
                 "Amount"),
             new CellAssertion.CellValue(
-                new dev.erst.gridgrind.contract.dto.CellScalarValue.NumberValue(125.0)));
+                new dev.erst.gridgrind.core.model.value.CellScalarValue.NumberValue(125.0)));
 
     WorkbookPlan resolved =
         SourceBackedPlanResolver.resolve(
             WorkbookPlan.standard(
                 new WorkbookPlan.WorkbookSource.New(),
                 new WorkbookPlan.WorkbookPersistence.None(),
-                dev.erst.gridgrind.contract.dto.ExecutionPolicyInput.defaults(),
-                dev.erst.gridgrind.contract.dto.FormulaEnvironmentInput.empty(),
+                dev.erst.gridgrind.core.plan.ExecutionPolicyInput.defaults(),
+                dev.erst.gridgrind.core.model.formula.FormulaEnvironmentInput.empty(),
                 List.of(mutationStep, inspectionStep, assertionStep)),
             ExecutionInputBindingsFixtureSupport.bindings(workingDirectory));
 
@@ -138,7 +137,7 @@ class SourceBackedPlanResolverCanonicalStructureCoverageTest
             "range-inline",
             new RangeSelector.ByRange("Budget", "A1:B1"),
             new CellMutationAction.SetRange(
-                new dev.erst.gridgrind.contract.dto.CellGridInput.Typed(
+                new dev.erst.gridgrind.core.model.value.CellGridInput.Typed(
                     List.of(
                         List.of(
                             new CellInput.Text(TextSourceInput.inline("Owner")),
@@ -224,8 +223,8 @@ class SourceBackedPlanResolverCanonicalStructureCoverageTest
             WorkbookPlan.standard(
                 new WorkbookPlan.WorkbookSource.New(),
                 new WorkbookPlan.WorkbookPersistence.None(),
-                dev.erst.gridgrind.contract.dto.ExecutionPolicyInput.defaults(),
-                dev.erst.gridgrind.contract.dto.FormulaEnvironmentInput.empty(),
+                dev.erst.gridgrind.core.plan.ExecutionPolicyInput.defaults(),
+                dev.erst.gridgrind.core.model.formula.FormulaEnvironmentInput.empty(),
                 List.of(
                     rangeStep,
                     commentStep,
@@ -357,8 +356,8 @@ class SourceBackedPlanResolverCanonicalStructureCoverageTest
         WorkbookPlan.standard(
             new WorkbookPlan.WorkbookSource.New(),
             new WorkbookPlan.WorkbookPersistence.None(),
-            dev.erst.gridgrind.contract.dto.ExecutionPolicyInput.defaults(),
-            dev.erst.gridgrind.contract.dto.FormulaEnvironmentInput.empty(),
+            dev.erst.gridgrind.core.plan.ExecutionPolicyInput.defaults(),
+            dev.erst.gridgrind.core.model.formula.FormulaEnvironmentInput.empty(),
             List.of(
                 formulaStep,
                 commentStep,
@@ -506,8 +505,8 @@ class SourceBackedPlanResolverCanonicalStructureCoverageTest
         WorkbookPlan.standard(
             new WorkbookPlan.WorkbookSource.New(),
             new WorkbookPlan.WorkbookPersistence.None(),
-            dev.erst.gridgrind.contract.dto.ExecutionPolicyInput.defaults(),
-            dev.erst.gridgrind.contract.dto.FormulaEnvironmentInput.empty(),
+            dev.erst.gridgrind.core.plan.ExecutionPolicyInput.defaults(),
+            dev.erst.gridgrind.core.model.formula.FormulaEnvironmentInput.empty(),
             List.of(
                 targetAndActionChanged,
                 pictureDescriptionOnlyChanged,
@@ -615,8 +614,8 @@ class SourceBackedPlanResolverCanonicalStructureCoverageTest
             WorkbookPlan.standard(
                 new WorkbookPlan.WorkbookSource.New(),
                 new WorkbookPlan.WorkbookPersistence.None(),
-                dev.erst.gridgrind.contract.dto.ExecutionPolicyInput.defaults(),
-                dev.erst.gridgrind.contract.dto.FormulaEnvironmentInput.empty(),
+                dev.erst.gridgrind.core.plan.ExecutionPolicyInput.defaults(),
+                dev.erst.gridgrind.core.model.formula.FormulaEnvironmentInput.empty(),
                 List.of(stableInline, secondInline, fileBacked)),
             bindings);
 

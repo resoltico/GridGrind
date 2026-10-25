@@ -1,10 +1,10 @@
 package dev.erst.gridgrind.json.codec;
 
-import dev.erst.gridgrind.contract.catalog.Catalog;
-import dev.erst.gridgrind.contract.dto.RequestDoctorReport;
-import dev.erst.gridgrind.contract.dto.WorkbookPlan;
-import dev.erst.gridgrind.contract.dto.WorkbookResult;
+import dev.erst.gridgrind.core.catalog.Catalog;
+import dev.erst.gridgrind.core.plan.WorkbookPlan;
+import dev.erst.gridgrind.core.problem.RequestDoctorReport;
 import dev.erst.gridgrind.core.problem.RequestIntake;
+import dev.erst.gridgrind.core.result.WorkbookResult;
 import dev.erst.gridgrind.json.intake.GridGrindJsonProblemMessageSupport;
 import dev.erst.gridgrind.json.intake.GridGrindRequestDecoder;
 import java.io.IOException;

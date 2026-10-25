@@ -1,6 +1,6 @@
 package dev.erst.gridgrind.engine.runtime;
 
-import dev.erst.gridgrind.contract.dto.GridGrindProblemDetail;
+import dev.erst.gridgrind.core.problem.GridGrindProblemDetail;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;

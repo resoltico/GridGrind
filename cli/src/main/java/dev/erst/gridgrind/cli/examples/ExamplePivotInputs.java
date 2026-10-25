@@ -1,7 +1,7 @@
 package dev.erst.gridgrind.cli.examples;
 
-import dev.erst.gridgrind.contract.dto.PivotTableInput;
-import dev.erst.gridgrind.excel.foundation.ExcelPivotDataConsolidateFunction;
+import dev.erst.gridgrind.core.model.pivot.PivotTableInput;
+import dev.erst.gridgrind.core.vocabulary.ExcelPivotDataConsolidateFunction;
 import java.util.List;
 import java.util.Optional;
 

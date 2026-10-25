@@ -1,12 +1,12 @@
 package dev.erst.gridgrind.engine.runtime;
 
-import dev.erst.gridgrind.contract.action.CellMutationAction;
-import dev.erst.gridgrind.contract.action.DrawingMutationAction;
-import dev.erst.gridgrind.contract.action.MutationAction;
-import dev.erst.gridgrind.contract.action.StructuredMutationAction;
-import dev.erst.gridgrind.contract.action.WorkbookMutationAction;
-import dev.erst.gridgrind.contract.selector.Selector;
-import dev.erst.gridgrind.contract.step.MutationStep;
+import dev.erst.gridgrind.core.plan.CellMutationAction;
+import dev.erst.gridgrind.core.plan.DrawingMutationAction;
+import dev.erst.gridgrind.core.plan.MutationAction;
+import dev.erst.gridgrind.core.plan.MutationStep;
+import dev.erst.gridgrind.core.plan.Selector;
+import dev.erst.gridgrind.core.plan.StructuredMutationAction;
+import dev.erst.gridgrind.core.plan.WorkbookMutationAction;
 import dev.erst.gridgrind.engine.api.GridGrindExecutionGrant;
 import dev.erst.gridgrind.excel.WorkbookCommand;
 import java.nio.file.Path;

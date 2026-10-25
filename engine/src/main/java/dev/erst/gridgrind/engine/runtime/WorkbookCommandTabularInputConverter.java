@@ -1,8 +1,8 @@
 package dev.erst.gridgrind.engine.runtime;
 
-import dev.erst.gridgrind.contract.dto.PivotTableInput;
-import dev.erst.gridgrind.contract.dto.TableInput;
-import dev.erst.gridgrind.contract.dto.TableStyleInput;
+import dev.erst.gridgrind.core.model.pivot.PivotTableInput;
+import dev.erst.gridgrind.core.model.table.TableInput;
+import dev.erst.gridgrind.core.model.table.TableStyleInput;
 import dev.erst.gridgrind.excel.ExcelTableColumnDefinition;
 import dev.erst.gridgrind.excel.ExcelTableDefinition;
 import dev.erst.gridgrind.excel.ExcelTableStyle;

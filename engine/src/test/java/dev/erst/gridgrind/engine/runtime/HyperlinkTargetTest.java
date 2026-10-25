@@ -2,7 +2,7 @@ package dev.erst.gridgrind.engine.runtime;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import dev.erst.gridgrind.contract.dto.HyperlinkTarget;
+import dev.erst.gridgrind.core.model.value.HyperlinkTarget;
 import dev.erst.gridgrind.excel.ExcelHyperlink;
 import org.junit.jupiter.api.Test;
 

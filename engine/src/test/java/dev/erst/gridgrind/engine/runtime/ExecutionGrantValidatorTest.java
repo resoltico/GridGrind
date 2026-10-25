@@ -3,20 +3,20 @@ package dev.erst.gridgrind.engine.runtime;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import dev.erst.gridgrind.contract.action.WorkbookMutationAction;
-import dev.erst.gridgrind.contract.dto.ExecutionPolicyInput;
-import dev.erst.gridgrind.contract.dto.FormulaEnvironmentInput;
-import dev.erst.gridgrind.contract.dto.OoxmlEncryptionInput;
-import dev.erst.gridgrind.contract.dto.OoxmlPersistenceEncryptionInput;
-import dev.erst.gridgrind.contract.dto.OoxmlPersistenceSecurityInput;
-import dev.erst.gridgrind.contract.dto.OoxmlPersistenceSignatureInput;
-import dev.erst.gridgrind.contract.dto.SecretReference;
-import dev.erst.gridgrind.contract.dto.WorkbookPlan;
-import dev.erst.gridgrind.contract.selector.SheetSelector;
-import dev.erst.gridgrind.contract.step.MutationStep;
+import dev.erst.gridgrind.core.model.formula.FormulaEnvironmentInput;
+import dev.erst.gridgrind.core.model.security.OoxmlEncryptionInput;
+import dev.erst.gridgrind.core.model.security.OoxmlPersistenceEncryptionInput;
+import dev.erst.gridgrind.core.model.security.OoxmlPersistenceSecurityInput;
+import dev.erst.gridgrind.core.model.security.OoxmlPersistenceSignatureInput;
+import dev.erst.gridgrind.core.plan.ExecutionPolicyInput;
+import dev.erst.gridgrind.core.plan.MutationStep;
+import dev.erst.gridgrind.core.plan.SheetSelector;
+import dev.erst.gridgrind.core.plan.WorkbookMutationAction;
+import dev.erst.gridgrind.core.plan.WorkbookPlan;
+import dev.erst.gridgrind.core.source.SecretReference;
+import dev.erst.gridgrind.core.vocabulary.ExcelOoxmlWriteCipher;
+import dev.erst.gridgrind.core.vocabulary.ExcelOoxmlWriteHash;
 import dev.erst.gridgrind.engine.api.GridGrindExecutionGrant;
-import dev.erst.gridgrind.excel.foundation.ExcelOoxmlWriteCipher;
-import dev.erst.gridgrind.excel.foundation.ExcelOoxmlWriteHash;
 import java.nio.file.Path;
 import java.util.List;
 import org.junit.jupiter.api.Test;
@@ -93,11 +93,10 @@ class ExecutionGrantValidatorTest {
             ExecutionPolicyInput.defaults(),
             FormulaEnvironmentInput.empty(),
             List.of(
-                new dev.erst.gridgrind.contract.step.InspectionStep(
+                new dev.erst.gridgrind.core.plan.InspectionStep(
                     "summary",
                     new SheetSelector.ByName("Budget"),
-                    new dev.erst.gridgrind.contract.query.SheetIntrospectionQuery
-                        .GetSheetSummary())));
+                    new dev.erst.gridgrind.core.plan.SheetIntrospectionQuery.GetSheetSummary())));
     GridGrindExecutionGrant grant =
         new GridGrindExecutionGrant.Bounded(
             List.of(),
@@ -119,11 +118,10 @@ class ExecutionGrantValidatorTest {
             ExecutionPolicyInput.defaults(),
             FormulaEnvironmentInput.empty(),
             List.of(
-                new dev.erst.gridgrind.contract.step.InspectionStep(
+                new dev.erst.gridgrind.core.plan.InspectionStep(
                     "summary",
                     new SheetSelector.ByName("Ledger"),
-                    new dev.erst.gridgrind.contract.query.SheetIntrospectionQuery
-                        .GetSheetSummary())));
+                    new dev.erst.gridgrind.core.plan.SheetIntrospectionQuery.GetSheetSummary())));
     GridGrindExecutionGrant grant =
         new GridGrindExecutionGrant.Bounded(
             List.of(),
@@ -151,11 +149,10 @@ class ExecutionGrantValidatorTest {
             ExecutionPolicyInput.defaults(),
             FormulaEnvironmentInput.empty(),
             List.of(
-                new dev.erst.gridgrind.contract.step.InspectionStep(
+                new dev.erst.gridgrind.core.plan.InspectionStep(
                     "summary",
                     new SheetSelector.All(),
-                    new dev.erst.gridgrind.contract.query.SheetIntrospectionQuery
-                        .GetSheetSummary())));
+                    new dev.erst.gridgrind.core.plan.SheetIntrospectionQuery.GetSheetSummary())));
     GridGrindExecutionGrant grant =
         new GridGrindExecutionGrant.Bounded(
             List.of(),

@@ -13,7 +13,7 @@ import dev.erst.gridgrind.cli.discovery.TaskPhase;
 import dev.erst.gridgrind.cli.discovery.TaskVerificationKind;
 import dev.erst.gridgrind.cli.examples.GridGrindCliRecipe;
 import dev.erst.gridgrind.cli.examples.GridGrindCliRecipeRegistry;
-import dev.erst.gridgrind.contract.catalog.GridGrindProtocolCatalog;
+import dev.erst.gridgrind.core.catalog.GridGrindProtocolCatalog;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Objects;

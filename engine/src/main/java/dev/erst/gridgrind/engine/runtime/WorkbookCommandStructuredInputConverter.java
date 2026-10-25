@@ -1,18 +1,18 @@
 package dev.erst.gridgrind.engine.runtime;
 
-import dev.erst.gridgrind.contract.dto.AutofilterFilterColumnInput;
-import dev.erst.gridgrind.contract.dto.AutofilterFilterCriterionInput;
-import dev.erst.gridgrind.contract.dto.AutofilterSortConditionInput;
-import dev.erst.gridgrind.contract.dto.AutofilterSortStateInput;
-import dev.erst.gridgrind.contract.dto.ConditionalFormattingDefinitionInput;
-import dev.erst.gridgrind.contract.dto.ConditionalFormattingRuleInput;
-import dev.erst.gridgrind.contract.dto.ConditionalFormattingThresholdInput;
-import dev.erst.gridgrind.contract.dto.DataValidationErrorAlertInput;
-import dev.erst.gridgrind.contract.dto.DataValidationInput;
-import dev.erst.gridgrind.contract.dto.DataValidationPromptInput;
-import dev.erst.gridgrind.contract.dto.DataValidationRuleInput;
-import dev.erst.gridgrind.contract.dto.DifferentialBorderInput;
-import dev.erst.gridgrind.contract.dto.DifferentialStyleInput;
+import dev.erst.gridgrind.core.model.style.DifferentialBorderInput;
+import dev.erst.gridgrind.core.model.style.DifferentialStyleInput;
+import dev.erst.gridgrind.core.model.table.AutofilterFilterColumnInput;
+import dev.erst.gridgrind.core.model.table.AutofilterFilterCriterionInput;
+import dev.erst.gridgrind.core.model.table.AutofilterSortConditionInput;
+import dev.erst.gridgrind.core.model.table.AutofilterSortStateInput;
+import dev.erst.gridgrind.core.model.validation.ConditionalFormattingDefinitionInput;
+import dev.erst.gridgrind.core.model.validation.ConditionalFormattingRuleInput;
+import dev.erst.gridgrind.core.model.validation.ConditionalFormattingThresholdInput;
+import dev.erst.gridgrind.core.model.validation.DataValidationErrorAlertInput;
+import dev.erst.gridgrind.core.model.validation.DataValidationInput;
+import dev.erst.gridgrind.core.model.validation.DataValidationPromptInput;
+import dev.erst.gridgrind.core.model.validation.DataValidationRuleInput;
 import dev.erst.gridgrind.excel.ExcelAutofilterFilterColumn;
 import dev.erst.gridgrind.excel.ExcelAutofilterFilterCriterion;
 import dev.erst.gridgrind.excel.ExcelAutofilterSortCondition;
@@ -293,33 +293,32 @@ final class WorkbookCommandStructuredInputConverter {
     return switch (threshold) {
       case ConditionalFormattingThresholdInput.Min _ ->
           new dev.erst.gridgrind.excel.ExcelConditionalFormattingThreshold(
-              dev.erst.gridgrind.excel.foundation.ExcelConditionalFormattingThresholdType.MIN,
+              dev.erst.gridgrind.core.vocabulary.ExcelConditionalFormattingThresholdType.MIN,
               null,
               null);
       case ConditionalFormattingThresholdInput.Max _ ->
           new dev.erst.gridgrind.excel.ExcelConditionalFormattingThreshold(
-              dev.erst.gridgrind.excel.foundation.ExcelConditionalFormattingThresholdType.MAX,
+              dev.erst.gridgrind.core.vocabulary.ExcelConditionalFormattingThresholdType.MAX,
               null,
               null);
       case ConditionalFormattingThresholdInput.Numeric number ->
           new dev.erst.gridgrind.excel.ExcelConditionalFormattingThreshold(
-              dev.erst.gridgrind.excel.foundation.ExcelConditionalFormattingThresholdType.NUMBER,
+              dev.erst.gridgrind.core.vocabulary.ExcelConditionalFormattingThresholdType.NUMBER,
               null,
               number.value());
       case ConditionalFormattingThresholdInput.Percent percent ->
           new dev.erst.gridgrind.excel.ExcelConditionalFormattingThreshold(
-              dev.erst.gridgrind.excel.foundation.ExcelConditionalFormattingThresholdType.PERCENT,
+              dev.erst.gridgrind.core.vocabulary.ExcelConditionalFormattingThresholdType.PERCENT,
               null,
               percent.value());
       case ConditionalFormattingThresholdInput.Percentile percentile ->
           new dev.erst.gridgrind.excel.ExcelConditionalFormattingThreshold(
-              dev.erst.gridgrind.excel.foundation.ExcelConditionalFormattingThresholdType
-                  .PERCENTILE,
+              dev.erst.gridgrind.core.vocabulary.ExcelConditionalFormattingThresholdType.PERCENTILE,
               null,
               percentile.value());
       case ConditionalFormattingThresholdInput.Formula formula ->
           new dev.erst.gridgrind.excel.ExcelConditionalFormattingThreshold(
-              dev.erst.gridgrind.excel.foundation.ExcelConditionalFormattingThresholdType.FORMULA,
+              dev.erst.gridgrind.core.vocabulary.ExcelConditionalFormattingThresholdType.FORMULA,
               formula.formula(),
               null);
     };

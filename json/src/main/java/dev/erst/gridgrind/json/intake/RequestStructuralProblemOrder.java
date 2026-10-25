@@ -1,6 +1,6 @@
 package dev.erst.gridgrind.json.intake;
 
-import dev.erst.gridgrind.contract.dto.GridGrindProblemCode;
+import dev.erst.gridgrind.core.problem.GridGrindProblemCode;
 import dev.erst.gridgrind.core.problem.RequestDuplicateKey;
 import dev.erst.gridgrind.core.problem.RequestInvalidEncoding;
 import dev.erst.gridgrind.core.problem.RequestInvalidJson;

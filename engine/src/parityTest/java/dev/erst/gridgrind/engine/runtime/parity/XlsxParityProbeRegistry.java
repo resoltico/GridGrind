@@ -2,26 +2,80 @@ package dev.erst.gridgrind.engine.runtime.parity;
 
 import static dev.erst.gridgrind.engine.runtime.parity.ParityPlanSupport.mutate;
 
-import dev.erst.gridgrind.contract.action.StructuredMutationAction;
-import dev.erst.gridgrind.contract.dto.*;
-import dev.erst.gridgrind.contract.query.CellReadFacet;
-import dev.erst.gridgrind.contract.query.CellReadProjection;
-import dev.erst.gridgrind.contract.query.SheetInspectionResult;
-import dev.erst.gridgrind.contract.query.SheetIntrospectionQuery;
-import dev.erst.gridgrind.contract.query.WorkbookAssetInspectionResult;
-import dev.erst.gridgrind.contract.selector.*;
-import dev.erst.gridgrind.contract.source.TextSourceInput;
+import dev.erst.gridgrind.core.model.chart.ChartReport;
+import dev.erst.gridgrind.core.model.chart.ChartTitleInput;
+import dev.erst.gridgrind.core.model.drawing.CommentAnchorInput;
+import dev.erst.gridgrind.core.model.drawing.CommentInput;
+import dev.erst.gridgrind.core.model.drawing.DrawingAnchorInput;
+import dev.erst.gridgrind.core.model.drawing.DrawingAnchorReport;
+import dev.erst.gridgrind.core.model.drawing.DrawingMarkerInput;
+import dev.erst.gridgrind.core.model.drawing.DrawingObjectReport;
+import dev.erst.gridgrind.core.model.formula.FormulaEnvironmentInput;
+import dev.erst.gridgrind.core.model.formula.FormulaExternalWorkbookInput;
+import dev.erst.gridgrind.core.model.formula.FormulaMissingWorkbookPolicy;
+import dev.erst.gridgrind.core.model.formula.FormulaUdfFunctionInput;
+import dev.erst.gridgrind.core.model.formula.FormulaUdfToolpackInput;
+import dev.erst.gridgrind.core.model.print.HeaderFooterTextInput;
+import dev.erst.gridgrind.core.model.print.HeaderFooterTextReport;
+import dev.erst.gridgrind.core.model.print.PrintAreaInput;
+import dev.erst.gridgrind.core.model.print.PrintAreaReport;
+import dev.erst.gridgrind.core.model.print.PrintLayoutInput;
+import dev.erst.gridgrind.core.model.print.PrintLayoutReport;
+import dev.erst.gridgrind.core.model.print.PrintMarginsInput;
+import dev.erst.gridgrind.core.model.print.PrintScalingInput;
+import dev.erst.gridgrind.core.model.print.PrintScalingReport;
+import dev.erst.gridgrind.core.model.print.PrintSetupInput;
+import dev.erst.gridgrind.core.model.print.PrintSetupReport;
+import dev.erst.gridgrind.core.model.print.PrintTitleColumnsInput;
+import dev.erst.gridgrind.core.model.print.PrintTitleColumnsReport;
+import dev.erst.gridgrind.core.model.print.PrintTitleRowsInput;
+import dev.erst.gridgrind.core.model.print.PrintTitleRowsReport;
+import dev.erst.gridgrind.core.model.protection.SheetProtectionReport;
+import dev.erst.gridgrind.core.model.protection.SheetProtectionSettings;
+import dev.erst.gridgrind.core.model.protection.WorkbookProtectionReport;
+import dev.erst.gridgrind.core.model.security.OoxmlEncryptionReport;
+import dev.erst.gridgrind.core.model.security.OoxmlOpenSecurityInput;
+import dev.erst.gridgrind.core.model.security.OoxmlPackageSecurityReport;
+import dev.erst.gridgrind.core.model.security.OoxmlSignatureInput;
+import dev.erst.gridgrind.core.model.style.BorderSideInput;
+import dev.erst.gridgrind.core.model.style.CellBorderInput;
+import dev.erst.gridgrind.core.model.style.CellColorReport;
+import dev.erst.gridgrind.core.model.style.CellFillInput;
+import dev.erst.gridgrind.core.model.style.CellFontInput;
+import dev.erst.gridgrind.core.model.style.CellGradientFillInput;
+import dev.erst.gridgrind.core.model.style.CellGradientStopInput;
+import dev.erst.gridgrind.core.model.style.CellStylePatchInput;
+import dev.erst.gridgrind.core.model.style.ColorInput;
+import dev.erst.gridgrind.core.model.style.RichTextRunInput;
+import dev.erst.gridgrind.core.model.table.AutofilterSortConditionReport;
+import dev.erst.gridgrind.core.model.table.TableColumnInput;
+import dev.erst.gridgrind.core.model.table.TableColumnReport;
+import dev.erst.gridgrind.core.model.table.TableEntryReport;
+import dev.erst.gridgrind.core.model.table.TableInput;
+import dev.erst.gridgrind.core.model.table.TableStyleInput;
+import dev.erst.gridgrind.core.model.validation.ConditionalFormattingDefinitionInput;
+import dev.erst.gridgrind.core.model.validation.ConditionalFormattingRuleInput;
+import dev.erst.gridgrind.core.model.validation.ConditionalFormattingThresholdInput;
+import dev.erst.gridgrind.core.model.value.CellInput;
+import dev.erst.gridgrind.core.plan.*;
+import dev.erst.gridgrind.core.plan.CellReadFacet;
+import dev.erst.gridgrind.core.plan.CellReadProjection;
+import dev.erst.gridgrind.core.plan.SheetInspectionResult;
+import dev.erst.gridgrind.core.plan.SheetIntrospectionQuery;
+import dev.erst.gridgrind.core.plan.StructuredMutationAction;
+import dev.erst.gridgrind.core.plan.WorkbookAssetInspectionResult;
+import dev.erst.gridgrind.core.source.TextSourceInput;
+import dev.erst.gridgrind.core.vocabulary.ExcelBorderStyle;
+import dev.erst.gridgrind.core.vocabulary.ExcelConditionalFormattingIconSet;
+import dev.erst.gridgrind.core.vocabulary.ExcelDrawingAnchorBehavior;
+import dev.erst.gridgrind.core.vocabulary.ExcelFillPattern;
+import dev.erst.gridgrind.core.vocabulary.ExcelOoxmlChainingMode;
+import dev.erst.gridgrind.core.vocabulary.ExcelOoxmlCipherAlgorithm;
+import dev.erst.gridgrind.core.vocabulary.ExcelOoxmlEncryptionMode;
+import dev.erst.gridgrind.core.vocabulary.ExcelOoxmlHashAlgorithm;
+import dev.erst.gridgrind.core.vocabulary.ExcelOoxmlSignatureState;
+import dev.erst.gridgrind.core.vocabulary.ExcelPrintOrientation;
 import dev.erst.gridgrind.engine.runtime.parity.ParityPlanSupport.PendingMutation;
-import dev.erst.gridgrind.excel.foundation.ExcelBorderStyle;
-import dev.erst.gridgrind.excel.foundation.ExcelConditionalFormattingIconSet;
-import dev.erst.gridgrind.excel.foundation.ExcelDrawingAnchorBehavior;
-import dev.erst.gridgrind.excel.foundation.ExcelFillPattern;
-import dev.erst.gridgrind.excel.foundation.ExcelOoxmlChainingMode;
-import dev.erst.gridgrind.excel.foundation.ExcelOoxmlCipherAlgorithm;
-import dev.erst.gridgrind.excel.foundation.ExcelOoxmlEncryptionMode;
-import dev.erst.gridgrind.excel.foundation.ExcelOoxmlHashAlgorithm;
-import dev.erst.gridgrind.excel.foundation.ExcelOoxmlSignatureState;
-import dev.erst.gridgrind.excel.foundation.ExcelPrintOrientation;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
@@ -154,16 +208,16 @@ final class XlsxParityProbeRegistry {
   static OoxmlOpenSecurityInput encryptedOpenSecurity() {
     return new OoxmlOpenSecurityInput(
         java.util.Optional.of(
-            new dev.erst.gridgrind.contract.dto.SecretReference("source-password")));
+            new dev.erst.gridgrind.core.source.SecretReference("source-password")));
   }
 
   static OoxmlSignatureInput signingInput(Path pkcs12Path, String description) {
     return new OoxmlSignatureInput(
         pkcs12Path.toAbsolutePath().toString(),
-        new dev.erst.gridgrind.contract.dto.SecretReference("keystore-password"),
-        java.util.Optional.of(new dev.erst.gridgrind.contract.dto.SecretReference("key-password")),
+        new dev.erst.gridgrind.core.source.SecretReference("keystore-password"),
+        java.util.Optional.of(new dev.erst.gridgrind.core.source.SecretReference("key-password")),
         java.util.Optional.of(XlsxParityScenarios.SIGNING_KEY_ALIAS),
-        dev.erst.gridgrind.excel.foundation.ExcelOoxmlSignatureDigestAlgorithm.SHA256,
+        dev.erst.gridgrind.core.vocabulary.ExcelOoxmlSignatureDigestAlgorithm.SHA256,
         java.util.Optional.ofNullable(description));
   }
 
@@ -189,7 +243,7 @@ final class XlsxParityProbeRegistry {
 
   static String textCell(SheetInspectionResult.CellsResult cells, String address) {
     return cast(
-            dev.erst.gridgrind.contract.dto.CellReport.TextReport.class,
+            dev.erst.gridgrind.core.model.value.CellReport.TextReport.class,
             byAddress(cells.cells()).get(address))
         .textValue()
         .orElseThrow();
@@ -209,12 +263,12 @@ final class XlsxParityProbeRegistry {
                 CellReadFacet.TEMPORAL)));
   }
 
-  static Map<String, dev.erst.gridgrind.contract.dto.CellReport> byAddress(
-      List<dev.erst.gridgrind.contract.dto.CellReport> cells) {
+  static Map<String, dev.erst.gridgrind.core.model.value.CellReport> byAddress(
+      List<dev.erst.gridgrind.core.model.value.CellReport> cells) {
     return cells.stream()
         .collect(
             Collectors.toUnmodifiableMap(
-                dev.erst.gridgrind.contract.dto.CellReport::address, Function.identity()));
+                dev.erst.gridgrind.core.model.value.CellReport::address, Function.identity()));
   }
 
   static boolean matchesWorkbookProtectionReport(
@@ -606,7 +660,7 @@ final class XlsxParityProbeRegistry {
   }
 
   static boolean matchesColorDescriptor(
-      dev.erst.gridgrind.contract.dto.CellColorReport color, String descriptor) {
+      dev.erst.gridgrind.core.model.style.CellColorReport color, String descriptor) {
     if (descriptor == null || descriptor.isBlank()) {
       return color == null;
     }

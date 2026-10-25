@@ -1,8 +1,8 @@
 package dev.erst.gridgrind.engine.runtime;
 
-import dev.erst.gridgrind.contract.dto.GridGrindProblemDetail;
-import dev.erst.gridgrind.contract.dto.WorkbookResult;
-import dev.erst.gridgrind.contract.step.WorkbookStep;
+import dev.erst.gridgrind.core.plan.WorkbookStep;
+import dev.erst.gridgrind.core.problem.GridGrindProblemDetail;
+import dev.erst.gridgrind.core.result.WorkbookResult;
 import java.util.List;
 import java.util.Optional;
 
@@ -18,8 +18,7 @@ final class FullXssfStepLoop {
   }
 
   Optional<WorkbookResult> execute(
-      FullXssfWorkflowState state,
-      dev.erst.gridgrind.contract.dto.ExecutionModeInput executionMode) {
+      FullXssfWorkflowState state, dev.erst.gridgrind.core.plan.ExecutionModeInput executionMode) {
     List<WorkbookStep> steps = state.executionContext().request().steps();
     for (int stepIndex = 0; stepIndex < steps.size(); stepIndex++) {
       Optional<WorkbookResult> failure =
@@ -33,7 +32,7 @@ final class FullXssfStepLoop {
 
   private Optional<WorkbookResult> executeStep(
       FullXssfWorkflowState state,
-      dev.erst.gridgrind.contract.dto.ExecutionModeInput executionMode,
+      dev.erst.gridgrind.core.plan.ExecutionModeInput executionMode,
       int stepIndex,
       WorkbookStep step) {
     FullXssfCalculationCheckpoint.Result checkpoint =

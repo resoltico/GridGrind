@@ -1,18 +1,18 @@
 package dev.erst.gridgrind.engine.runtime;
 
-import dev.erst.gridgrind.contract.action.MutationAction;
-import dev.erst.gridgrind.contract.action.StructuredMutationAction;
-import dev.erst.gridgrind.contract.selector.CellSelector;
-import dev.erst.gridgrind.contract.selector.ColumnBandSelector;
-import dev.erst.gridgrind.contract.selector.DrawingObjectSelector;
-import dev.erst.gridgrind.contract.selector.NamedRangeSelector;
-import dev.erst.gridgrind.contract.selector.PivotTableSelector;
-import dev.erst.gridgrind.contract.selector.RangeSelector;
-import dev.erst.gridgrind.contract.selector.RowBandSelector;
-import dev.erst.gridgrind.contract.selector.Selector;
-import dev.erst.gridgrind.contract.selector.SelectorJsonSupport;
-import dev.erst.gridgrind.contract.selector.SheetSelector;
-import dev.erst.gridgrind.contract.selector.TableSelector;
+import dev.erst.gridgrind.core.plan.CellSelector;
+import dev.erst.gridgrind.core.plan.ColumnBandSelector;
+import dev.erst.gridgrind.core.plan.DrawingObjectSelector;
+import dev.erst.gridgrind.core.plan.MutationAction;
+import dev.erst.gridgrind.core.plan.NamedRangeSelector;
+import dev.erst.gridgrind.core.plan.PivotTableSelector;
+import dev.erst.gridgrind.core.plan.RangeSelector;
+import dev.erst.gridgrind.core.plan.RowBandSelector;
+import dev.erst.gridgrind.core.plan.Selector;
+import dev.erst.gridgrind.core.plan.SelectorJsonSupport;
+import dev.erst.gridgrind.core.plan.SheetSelector;
+import dev.erst.gridgrind.core.plan.StructuredMutationAction;
+import dev.erst.gridgrind.core.plan.TableSelector;
 
 /** Centralizes selector coercion and identity validation for mutation-command translation. */
 final class WorkbookCommandSelectorSupport {

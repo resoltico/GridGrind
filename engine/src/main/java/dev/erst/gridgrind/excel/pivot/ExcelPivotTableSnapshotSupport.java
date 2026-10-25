@@ -1,6 +1,6 @@
 package dev.erst.gridgrind.excel.pivot;
 
-import dev.erst.gridgrind.excel.foundation.ExcelPivotDataConsolidateFunction;
+import dev.erst.gridgrind.core.vocabulary.ExcelPivotDataConsolidateFunction;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;

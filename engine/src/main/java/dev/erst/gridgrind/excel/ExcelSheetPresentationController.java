@@ -1,7 +1,7 @@
 package dev.erst.gridgrind.excel;
 
-import dev.erst.gridgrind.excel.foundation.ExcelIgnoredErrorType;
-import dev.erst.gridgrind.excel.foundation.ExcelSheetLayoutLimits;
+import dev.erst.gridgrind.core.vocabulary.ExcelIgnoredErrorType;
+import dev.erst.gridgrind.core.vocabulary.ExcelSheetLayoutLimits;
 import java.util.Comparator;
 import java.util.EnumSet;
 import java.util.List;

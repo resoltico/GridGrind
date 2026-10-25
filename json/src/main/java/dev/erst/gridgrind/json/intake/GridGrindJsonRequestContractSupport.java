@@ -1,7 +1,7 @@
 package dev.erst.gridgrind.json.intake;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import dev.erst.gridgrind.contract.catalog.GridGrindProtocolContractSupport;
+import dev.erst.gridgrind.core.catalog.GridGrindProtocolContractSupport;
 import dev.erst.gridgrind.core.problem.MissingRequiredField;
 import dev.erst.gridgrind.core.problem.MissingTypeDiscriminator;
 import dev.erst.gridgrind.core.problem.RequestProblemDescriptor;

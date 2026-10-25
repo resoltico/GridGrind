@@ -1,7 +1,7 @@
 package dev.erst.gridgrind.engine.runtime;
 
-import dev.erst.gridgrind.contract.dto.WorkbookResult;
-import dev.erst.gridgrind.contract.dto.WorkbookResultPersistence;
+import dev.erst.gridgrind.core.result.WorkbookResult;
+import dev.erst.gridgrind.core.result.WorkbookResultPersistence;
 import java.util.List;
 
 /** Assembles a successful admitted direct-event-read result without a publication claim. */

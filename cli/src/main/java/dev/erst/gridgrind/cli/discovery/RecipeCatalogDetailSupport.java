@@ -2,11 +2,11 @@ package dev.erst.gridgrind.cli.discovery;
 
 import dev.erst.gridgrind.cli.examples.GridGrindCliRecipe;
 import dev.erst.gridgrind.cli.examples.GridGrindCliRecipeRegistry;
-import dev.erst.gridgrind.contract.catalog.GridGrindProtocolTypeNames;
-import dev.erst.gridgrind.contract.dto.WorkbookPlan;
-import dev.erst.gridgrind.contract.step.AssertionStep;
-import dev.erst.gridgrind.contract.step.InspectionStep;
-import dev.erst.gridgrind.contract.step.MutationStep;
+import dev.erst.gridgrind.core.catalog.GridGrindProtocolTypeNames;
+import dev.erst.gridgrind.core.plan.AssertionStep;
+import dev.erst.gridgrind.core.plan.InspectionStep;
+import dev.erst.gridgrind.core.plan.MutationStep;
+import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;

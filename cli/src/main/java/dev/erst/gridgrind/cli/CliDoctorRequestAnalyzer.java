@@ -1,10 +1,10 @@
 package dev.erst.gridgrind.cli;
 
-import dev.erst.gridgrind.contract.catalog.GridGrindRequestSurfaceContractText;
-import dev.erst.gridgrind.contract.dto.GridGrindProblemDetail;
-import dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces;
-import dev.erst.gridgrind.contract.dto.RequestDoctorReport;
-import dev.erst.gridgrind.contract.dto.WorkbookPlan;
+import dev.erst.gridgrind.core.catalog.GridGrindRequestSurfaceContractText;
+import dev.erst.gridgrind.core.plan.WorkbookPlan;
+import dev.erst.gridgrind.core.problem.GridGrindProblemDetail;
+import dev.erst.gridgrind.core.problem.ProblemContextRequestSurfaces;
+import dev.erst.gridgrind.core.problem.RequestDoctorReport;
 import dev.erst.gridgrind.core.problem.RequestIntake;
 import dev.erst.gridgrind.engine.api.GridGrindRequestDoctor;
 import dev.erst.gridgrind.engine.api.GridGrindRequestRequirements;
@@ -76,9 +76,9 @@ final class CliDoctorRequestAnalyzer {
     if (requestPath.isEmpty() && GridGrindRequestRequirements.requiresStandardInput(boundRequest)) {
       GridGrindProblemDetail.Problem standardInputProblem =
           dev.erst.gridgrind.engine.api.GridGrindProblems.problem(
-              dev.erst.gridgrind.contract.dto.GridGrindProblemCode.INVALID_REQUEST,
+              dev.erst.gridgrind.core.problem.GridGrindProblemCode.INVALID_REQUEST,
               GridGrindRequestSurfaceContractText.standardInputRequiresRequestMessage(),
-              new dev.erst.gridgrind.contract.dto.ProblemContext.ValidateRequest(
+              new dev.erst.gridgrind.core.problem.ProblemContext.ValidateRequest(
                   requestShape(boundRequest)),
               List.of());
       return RequestDoctorReport.invalid(

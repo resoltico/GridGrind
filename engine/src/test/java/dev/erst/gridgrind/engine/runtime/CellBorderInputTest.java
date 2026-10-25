@@ -2,10 +2,10 @@ package dev.erst.gridgrind.engine.runtime;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import dev.erst.gridgrind.contract.dto.BorderSideInput;
-import dev.erst.gridgrind.contract.dto.CellBorderInput;
-import dev.erst.gridgrind.contract.dto.ColorInput;
-import dev.erst.gridgrind.excel.foundation.ExcelBorderStyle;
+import dev.erst.gridgrind.core.model.style.BorderSideInput;
+import dev.erst.gridgrind.core.model.style.CellBorderInput;
+import dev.erst.gridgrind.core.model.style.ColorInput;
+import dev.erst.gridgrind.core.vocabulary.ExcelBorderStyle;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
 

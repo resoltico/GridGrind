@@ -2,7 +2,7 @@ package dev.erst.gridgrind.cli.examples;
 
 import dev.erst.gridgrind.cli.discovery.RecipeAdvisory;
 import dev.erst.gridgrind.cli.discovery.RecipeView;
-import dev.erst.gridgrind.contract.dto.WorkbookPlan;
+import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;

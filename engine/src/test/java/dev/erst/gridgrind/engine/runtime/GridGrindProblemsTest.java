@@ -2,20 +2,20 @@ package dev.erst.gridgrind.engine.runtime;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import dev.erst.gridgrind.contract.assertion.*;
-import dev.erst.gridgrind.contract.assertion.AssertionFailure;
-import dev.erst.gridgrind.contract.dto.GridGrindProblemCategory;
-import dev.erst.gridgrind.contract.dto.GridGrindProblemCode;
-import dev.erst.gridgrind.contract.dto.GridGrindProblemDetail;
-import dev.erst.gridgrind.contract.dto.ProblemContext;
-import dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces;
-import dev.erst.gridgrind.contract.dto.ProblemContextWorkbookSurfaces;
-import dev.erst.gridgrind.contract.selector.CellSelector;
+import dev.erst.gridgrind.core.plan.*;
+import dev.erst.gridgrind.core.plan.AssertionFailure;
+import dev.erst.gridgrind.core.plan.CellSelector;
+import dev.erst.gridgrind.core.problem.GridGrindProblemCategory;
+import dev.erst.gridgrind.core.problem.GridGrindProblemCode;
+import dev.erst.gridgrind.core.problem.GridGrindProblemDetail;
 import dev.erst.gridgrind.core.problem.InvalidJsonException;
 import dev.erst.gridgrind.core.problem.InvalidRequestException;
 import dev.erst.gridgrind.core.problem.InvalidRequestShapeException;
 import dev.erst.gridgrind.core.problem.MessageInvariant;
 import dev.erst.gridgrind.core.problem.MessageShape;
+import dev.erst.gridgrind.core.problem.ProblemContext;
+import dev.erst.gridgrind.core.problem.ProblemContextRequestSurfaces;
+import dev.erst.gridgrind.core.problem.ProblemContextWorkbookSurfaces;
 import dev.erst.gridgrind.excel.InvalidFormulaException;
 import dev.erst.gridgrind.excel.InvalidSigningConfigurationException;
 import dev.erst.gridgrind.excel.InvalidWorkbookPasswordException;
@@ -74,7 +74,7 @@ class GridGrindProblemsTest {
             "EXPECT_CELL_VALUE",
             new CellSelector.ByAddress("Budget", "B4"),
             new CellAssertion.CellValue(
-                new dev.erst.gridgrind.contract.dto.CellScalarValue.NumberValue(42.0d)),
+                new dev.erst.gridgrind.core.model.value.CellScalarValue.NumberValue(42.0d)),
             List.of());
     assertEquals(
         GridGrindProblemCode.ASSERTION_FAILED,
@@ -158,7 +158,7 @@ class GridGrindProblemsTest {
                     "EXPECT_CELL_VALUE",
                     new CellSelector.ByAddress("Budget", "B4"),
                     new CellAssertion.CellValue(
-                        new dev.erst.gridgrind.contract.dto.CellScalarValue.NumberValue(42.0d)),
+                        new dev.erst.gridgrind.core.model.value.CellScalarValue.NumberValue(42.0d)),
                     List.of())),
             new ProblemContext.ExecuteStep(
                 ProblemContextRequestSurfaces.RequestShape.known("NEW", "NONE"),

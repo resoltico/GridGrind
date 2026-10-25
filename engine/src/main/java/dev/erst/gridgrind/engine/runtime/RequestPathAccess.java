@@ -1,7 +1,7 @@
 package dev.erst.gridgrind.engine.runtime;
 
-import dev.erst.gridgrind.contract.dto.RequestWarning;
-import dev.erst.gridgrind.contract.dto.WorkbookResultPersistence.PublicationOutcome;
+import dev.erst.gridgrind.core.problem.RequestWarning;
+import dev.erst.gridgrind.core.result.WorkbookResultPersistence.PublicationOutcome;
 import dev.erst.gridgrind.engine.api.GridGrindExecutionGrant;
 import dev.erst.gridgrind.excel.WorkbookArtifactWriteDisposition;
 import java.io.IOException;

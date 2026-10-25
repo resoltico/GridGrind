@@ -123,7 +123,7 @@ final class ExcelSheetCopyPictureSupport {
   record PictureCopyPlan(
       String objectName,
       String sourcePartName,
-      dev.erst.gridgrind.excel.foundation.ExcelPictureFormat format) {
+      dev.erst.gridgrind.core.vocabulary.ExcelPictureFormat format) {
     PictureCopyPlan {
       Objects.requireNonNull(objectName, "objectName must not be null");
       if (objectName.isBlank()) {

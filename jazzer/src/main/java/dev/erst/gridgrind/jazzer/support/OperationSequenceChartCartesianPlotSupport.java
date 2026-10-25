@@ -1,8 +1,8 @@
 package dev.erst.gridgrind.jazzer.support;
 
-import dev.erst.gridgrind.contract.dto.ChartAxisInput;
-import dev.erst.gridgrind.contract.dto.ChartPlotInput;
-import dev.erst.gridgrind.contract.dto.ChartSeriesInput;
+import dev.erst.gridgrind.core.model.chart.ChartAxisInput;
+import dev.erst.gridgrind.core.model.chart.ChartPlotInput;
+import dev.erst.gridgrind.core.model.chart.ChartSeriesInput;
 import dev.erst.gridgrind.excel.ExcelChartDefinition;
 import java.util.Optional;
 

@@ -2,7 +2,15 @@ package dev.erst.gridgrind.engine.runtime;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import dev.erst.gridgrind.contract.dto.*;
+import dev.erst.gridgrind.core.model.style.BorderSideInput;
+import dev.erst.gridgrind.core.model.style.ColorInput;
+import dev.erst.gridgrind.core.model.style.DifferentialBorderInput;
+import dev.erst.gridgrind.core.model.style.DifferentialStyleInput;
+import dev.erst.gridgrind.core.model.style.FontHeightInput;
+import dev.erst.gridgrind.core.model.validation.ConditionalFormattingDefinitionInput;
+import dev.erst.gridgrind.core.model.validation.ConditionalFormattingRuleInput;
+import dev.erst.gridgrind.core.vocabulary.ExcelBorderStyle;
+import dev.erst.gridgrind.core.vocabulary.ExcelComparisonOperator;
 import dev.erst.gridgrind.excel.ExcelBorderSide;
 import dev.erst.gridgrind.excel.ExcelColor;
 import dev.erst.gridgrind.excel.ExcelConditionalFormattingBlockDefinition;
@@ -10,8 +18,6 @@ import dev.erst.gridgrind.excel.ExcelConditionalFormattingRule;
 import dev.erst.gridgrind.excel.ExcelDifferentialBorder;
 import dev.erst.gridgrind.excel.ExcelDifferentialStyle;
 import dev.erst.gridgrind.excel.ExcelFontHeight;
-import dev.erst.gridgrind.excel.foundation.ExcelBorderStyle;
-import dev.erst.gridgrind.excel.foundation.ExcelComparisonOperator;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;

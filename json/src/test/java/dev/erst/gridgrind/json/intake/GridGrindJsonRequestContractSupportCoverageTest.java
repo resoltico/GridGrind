@@ -5,7 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import dev.erst.gridgrind.contract.query.InspectionQuery;
+import dev.erst.gridgrind.core.plan.InspectionQuery;
 import dev.erst.gridgrind.core.problem.MissingRequiredField;
 import dev.erst.gridgrind.core.problem.MissingTypeDiscriminator;
 import org.junit.jupiter.api.Test;

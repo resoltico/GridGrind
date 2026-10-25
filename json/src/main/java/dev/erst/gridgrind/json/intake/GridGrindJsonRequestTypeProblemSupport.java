@@ -1,6 +1,6 @@
 package dev.erst.gridgrind.json.intake;
 
-import dev.erst.gridgrind.contract.catalog.GridGrindProtocolContractSupport;
+import dev.erst.gridgrind.core.catalog.GridGrindProtocolContractSupport;
 import dev.erst.gridgrind.core.problem.ActionableShapeMessage;
 import dev.erst.gridgrind.core.problem.MessageShape;
 import dev.erst.gridgrind.core.problem.MissingTypeDiscriminator;

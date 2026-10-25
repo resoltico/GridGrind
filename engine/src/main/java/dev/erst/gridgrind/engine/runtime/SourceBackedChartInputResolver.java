@@ -2,11 +2,11 @@ package dev.erst.gridgrind.engine.runtime;
 
 import static dev.erst.gridgrind.engine.runtime.SourceBackedResolutionIdentitySupport.sameReference;
 
-import dev.erst.gridgrind.contract.dto.ChartInput;
-import dev.erst.gridgrind.contract.dto.ChartPlotInput;
-import dev.erst.gridgrind.contract.dto.ChartSeriesInput;
-import dev.erst.gridgrind.contract.dto.ChartTitleInput;
-import dev.erst.gridgrind.contract.source.TextSourceInput;
+import dev.erst.gridgrind.core.model.chart.ChartInput;
+import dev.erst.gridgrind.core.model.chart.ChartPlotInput;
+import dev.erst.gridgrind.core.model.chart.ChartSeriesInput;
+import dev.erst.gridgrind.core.model.chart.ChartTitleInput;
+import dev.erst.gridgrind.core.source.TextSourceInput;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;

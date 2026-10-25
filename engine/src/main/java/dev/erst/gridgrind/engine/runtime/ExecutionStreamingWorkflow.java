@@ -1,19 +1,19 @@
 package dev.erst.gridgrind.engine.runtime;
 
-import dev.erst.gridgrind.contract.assertion.AssertionResult;
-import dev.erst.gridgrind.contract.dto.AssertionModeInput;
-import dev.erst.gridgrind.contract.dto.CalculationReport;
-import dev.erst.gridgrind.contract.dto.ExecutionModeInput;
-import dev.erst.gridgrind.contract.dto.GridGrindProblemDetail;
-import dev.erst.gridgrind.contract.dto.GridGrindProtocolVersion;
-import dev.erst.gridgrind.contract.dto.RequestWarning;
-import dev.erst.gridgrind.contract.dto.WorkbookPlan;
-import dev.erst.gridgrind.contract.dto.WorkbookResult;
-import dev.erst.gridgrind.contract.dto.WorkbookResultPersistence;
-import dev.erst.gridgrind.contract.step.AssertionStep;
-import dev.erst.gridgrind.contract.step.InspectionStep;
-import dev.erst.gridgrind.contract.step.MutationStep;
-import dev.erst.gridgrind.contract.step.WorkbookStep;
+import dev.erst.gridgrind.core.model.formula.CalculationReport;
+import dev.erst.gridgrind.core.plan.AssertionModeInput;
+import dev.erst.gridgrind.core.plan.AssertionResult;
+import dev.erst.gridgrind.core.plan.AssertionStep;
+import dev.erst.gridgrind.core.plan.ExecutionModeInput;
+import dev.erst.gridgrind.core.plan.GridGrindProtocolVersion;
+import dev.erst.gridgrind.core.plan.InspectionStep;
+import dev.erst.gridgrind.core.plan.MutationStep;
+import dev.erst.gridgrind.core.plan.WorkbookPlan;
+import dev.erst.gridgrind.core.plan.WorkbookStep;
+import dev.erst.gridgrind.core.problem.GridGrindProblemDetail;
+import dev.erst.gridgrind.core.problem.RequestWarning;
+import dev.erst.gridgrind.core.result.WorkbookResult;
+import dev.erst.gridgrind.core.result.WorkbookResultPersistence;
 import dev.erst.gridgrind.excel.ExcelTempFileWriteTargetSupport;
 import dev.erst.gridgrind.excel.WorkbookArtifactWriteDisposition;
 import dev.erst.gridgrind.excel.stream.ExcelStreamingWorkbookWriter;
@@ -129,7 +129,7 @@ final class ExecutionStreamingWorkflow {
       GridGrindProblemDetail.Problem problem =
           ExecutionResponseSupport.problemFor(
               exception,
-              new dev.erst.gridgrind.contract.dto.ProblemContext.ExecuteRequest(
+              new dev.erst.gridgrind.core.problem.ProblemContext.ExecuteRequest(
                   ExecutionRequestPaths.requestShape(request)));
       return ExecutionResponseSupport.failureResponse(
           workflowContext.failure(calculation, problem));
@@ -138,7 +138,7 @@ final class ExecutionStreamingWorkflow {
       GridGrindProblemDetail.Problem problem =
           ExecutionResponseSupport.problemFor(
               exception,
-              new dev.erst.gridgrind.contract.dto.ProblemContext.ExecuteRequest(
+              new dev.erst.gridgrind.core.problem.ProblemContext.ExecuteRequest(
                   ExecutionRequestPaths.requestShape(request)));
       return ExecutionResponseSupport.failureResponse(
           workflowContext.failure(calculation, problem));
@@ -161,13 +161,13 @@ final class ExecutionStreamingWorkflow {
       GridGrindProblemDetail.Problem problem =
           ExecutionResponseSupport.problemFor(
               exception,
-              new dev.erst.gridgrind.contract.dto.ProblemContext.PersistWorkbook(
+              new dev.erst.gridgrind.core.problem.ProblemContext.PersistWorkbook(
                   ExecutionRequestPaths.requestShape(request),
                   ExecutionRequestPaths.persistenceReference(
                       request, bindings.workingDirectory())));
       persistencePhase.fail(problem.code());
       WorkbookResultPersistence.PersistenceOutcome failedPersistence =
-          dev.erst.gridgrind.contract.dto.WorkbookResults.publicationPersistenceOutcome(
+          dev.erst.gridgrind.core.result.WorkbookResults.publicationPersistenceOutcome(
               request, exception.publication());
       return ExecutionResponseSupport.failureResponse(
           workflowContext.failure(calculation, problem), failedPersistence);
@@ -176,7 +176,7 @@ final class ExecutionStreamingWorkflow {
       GridGrindProblemDetail.Problem problem =
           ExecutionResponseSupport.problemFor(
               exception,
-              new dev.erst.gridgrind.contract.dto.ProblemContext.PersistWorkbook(
+              new dev.erst.gridgrind.core.problem.ProblemContext.PersistWorkbook(
                   ExecutionRequestPaths.requestShape(request),
                   ExecutionRequestPaths.persistenceReference(
                       request, bindings.workingDirectory())));

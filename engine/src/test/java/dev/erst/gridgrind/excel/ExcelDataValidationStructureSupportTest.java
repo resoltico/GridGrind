@@ -5,8 +5,8 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import dev.erst.gridgrind.excel.foundation.ExcelColumnSpan;
-import dev.erst.gridgrind.excel.foundation.ExcelRowSpan;
+import dev.erst.gridgrind.core.vocabulary.ExcelColumnSpan;
+import dev.erst.gridgrind.core.vocabulary.ExcelRowSpan;
 import dev.erst.gridgrind.excel.validation.ExcelDataValidationStructureSupport;
 import java.util.List;
 import org.apache.poi.ss.SpreadsheetVersion;

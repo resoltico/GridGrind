@@ -6,37 +6,37 @@ import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import dev.erst.gridgrind.contract.action.CellMutationAction;
-import dev.erst.gridgrind.contract.assertion.*;
-import dev.erst.gridgrind.contract.assertion.AssertionResult;
-import dev.erst.gridgrind.contract.catalog.Catalog;
-import dev.erst.gridgrind.contract.catalog.GridGrindProtocolCatalog;
-import dev.erst.gridgrind.contract.dto.*;
-import dev.erst.gridgrind.contract.dto.CellInput;
-import dev.erst.gridgrind.contract.dto.ExecutionModeInput;
-import dev.erst.gridgrind.contract.dto.ExecutionPolicyInput;
-import dev.erst.gridgrind.contract.dto.FormulaEnvironmentInput;
-import dev.erst.gridgrind.contract.dto.GridGrindProblemDetail;
-import dev.erst.gridgrind.contract.dto.GridGrindProtocolVersion;
-import dev.erst.gridgrind.contract.dto.RequestWarning;
-import dev.erst.gridgrind.contract.dto.WorkbookPlan;
-import dev.erst.gridgrind.contract.dto.WorkbookResult;
-import dev.erst.gridgrind.contract.dto.WorkbookResultPersistence;
-import dev.erst.gridgrind.contract.dto.WorkbookResults;
-import dev.erst.gridgrind.contract.query.*;
-import dev.erst.gridgrind.contract.query.WorkbookInspectionResult;
-import dev.erst.gridgrind.contract.selector.CellSelector;
-import dev.erst.gridgrind.contract.selector.WorkbookSelector;
-import dev.erst.gridgrind.contract.source.TextSourceInput;
-import dev.erst.gridgrind.contract.step.AssertionStep;
-import dev.erst.gridgrind.contract.step.InspectionStep;
-import dev.erst.gridgrind.contract.step.MutationStep;
+import dev.erst.gridgrind.core.catalog.Catalog;
+import dev.erst.gridgrind.core.catalog.GridGrindProtocolCatalog;
+import dev.erst.gridgrind.core.model.formula.FormulaEnvironmentInput;
+import dev.erst.gridgrind.core.model.value.CellInput;
+import dev.erst.gridgrind.core.plan.*;
+import dev.erst.gridgrind.core.plan.AssertionResult;
+import dev.erst.gridgrind.core.plan.AssertionStep;
+import dev.erst.gridgrind.core.plan.CellMutationAction;
+import dev.erst.gridgrind.core.plan.CellSelector;
+import dev.erst.gridgrind.core.plan.ExecutionModeInput;
+import dev.erst.gridgrind.core.plan.ExecutionPolicyInput;
+import dev.erst.gridgrind.core.plan.GridGrindProtocolVersion;
+import dev.erst.gridgrind.core.plan.InspectionStep;
+import dev.erst.gridgrind.core.plan.MutationStep;
+import dev.erst.gridgrind.core.plan.WorkbookInspectionResult;
+import dev.erst.gridgrind.core.plan.WorkbookPlan;
+import dev.erst.gridgrind.core.plan.WorkbookSelector;
+import dev.erst.gridgrind.core.problem.GridGrindProblemDetail;
 import dev.erst.gridgrind.core.problem.InvalidRequestException;
 import dev.erst.gridgrind.core.problem.InvalidRequestShapeException;
 import dev.erst.gridgrind.core.problem.PayloadException;
 import dev.erst.gridgrind.core.problem.RequestIntake;
 import dev.erst.gridgrind.core.problem.RequestMissingTypeDiscriminator;
 import dev.erst.gridgrind.core.problem.RequestUnknownField;
+import dev.erst.gridgrind.core.problem.RequestWarning;
+import dev.erst.gridgrind.core.result.ExecutionJournalLevel;
+import dev.erst.gridgrind.core.result.WorkbookResult;
+import dev.erst.gridgrind.core.result.WorkbookResultPersistence;
+import dev.erst.gridgrind.core.result.WorkbookResults;
+import dev.erst.gridgrind.core.result.WorkbookSummary;
+import dev.erst.gridgrind.core.source.TextSourceInput;
 import dev.erst.gridgrind.json.codec.GridGrindJson;
 import dev.erst.gridgrind.json.codec.GridGrindJsonOutput;
 import java.io.ByteArrayInputStream;
@@ -363,7 +363,7 @@ class GridGrindJsonTest {
                     "assert-owner",
                     new CellSelector.ByAddress("Budget", "A1"),
                     new CellAssertion.CellValue(
-                        new dev.erst.gridgrind.contract.dto.CellScalarValue.Text("Owner"))),
+                        new dev.erst.gridgrind.core.model.value.CellScalarValue.Text("Owner"))),
                 new InspectionStep(
                     "summary",
                     new WorkbookSelector.Current(),
@@ -374,7 +374,7 @@ class GridGrindJsonTest {
             new WorkbookResultPersistence.PersistenceOutcome.NotSaved(),
             List.of(
                 new RequestWarning(
-                    dev.erst.gridgrind.contract.dto.GridGrindWarningCode
+                    dev.erst.gridgrind.core.problem.GridGrindWarningCode
                         .UNQUOTED_SHEET_NAME_IN_FORMULA,
                     0,
                     "set-owner",
@@ -406,38 +406,38 @@ class GridGrindJsonTest {
             new WorkbookResultPersistence.PersistenceOutcome.SavedAs(
                 "out/report.xlsx", new WorkbookResultPersistence.PublicationOutcome.NotAttempted()),
             new GridGrindProblemDetail.Problem(
-                dev.erst.gridgrind.contract.dto.GridGrindProblemCode.INPUT_SOURCE_NOT_FOUND,
-                dev.erst.gridgrind.contract.dto.GridGrindProblemCode.INPUT_SOURCE_NOT_FOUND
+                dev.erst.gridgrind.core.problem.GridGrindProblemCode.INPUT_SOURCE_NOT_FOUND,
+                dev.erst.gridgrind.core.problem.GridGrindProblemCode.INPUT_SOURCE_NOT_FOUND
                     .category(),
-                dev.erst.gridgrind.contract.dto.GridGrindProblemCode.INPUT_SOURCE_NOT_FOUND
+                dev.erst.gridgrind.core.problem.GridGrindProblemCode.INPUT_SOURCE_NOT_FOUND
                     .recovery(),
-                dev.erst.gridgrind.contract.dto.GridGrindProblemCode.INPUT_SOURCE_NOT_FOUND.title(),
+                dev.erst.gridgrind.core.problem.GridGrindProblemCode.INPUT_SOURCE_NOT_FOUND.title(),
                 "missing payload",
-                dev.erst.gridgrind.contract.dto.GridGrindProblemCode.INPUT_SOURCE_NOT_FOUND
+                dev.erst.gridgrind.core.problem.GridGrindProblemCode.INPUT_SOURCE_NOT_FOUND
                     .resolution(),
-                new dev.erst.gridgrind.contract.dto.ProblemContext.ResolveInputs(
-                    dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces.RequestShape
+                new dev.erst.gridgrind.core.problem.ProblemContext.ResolveInputs(
+                    dev.erst.gridgrind.core.problem.ProblemContextRequestSurfaces.RequestShape
                         .known("NEW", "NONE"),
-                    dev.erst.gridgrind.contract.dto.ProblemContextWorkbookSurfaces.InputReference
+                    dev.erst.gridgrind.core.problem.ProblemContextWorkbookSurfaces.InputReference
                         .path("cell text", "missing.txt"),
                     java.util.Optional.of(
-                        dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces.JsonLocation
+                        dev.erst.gridgrind.core.problem.ProblemContextRequestSurfaces.JsonLocation
                             .pathAtByteOffset("steps[0].action.value.source.path", 73))),
                 List.of()));
     WorkbookResult calculationFailure =
         WorkbookResults.failure(
             GridGrindProtocolVersion.V3,
             new GridGrindProblemDetail.Problem(
-                dev.erst.gridgrind.contract.dto.GridGrindProblemCode.INVALID_FORMULA,
-                dev.erst.gridgrind.contract.dto.GridGrindProblemCode.INVALID_FORMULA.category(),
-                dev.erst.gridgrind.contract.dto.GridGrindProblemCode.INVALID_FORMULA.recovery(),
-                dev.erst.gridgrind.contract.dto.GridGrindProblemCode.INVALID_FORMULA.title(),
+                dev.erst.gridgrind.core.problem.GridGrindProblemCode.INVALID_FORMULA,
+                dev.erst.gridgrind.core.problem.GridGrindProblemCode.INVALID_FORMULA.category(),
+                dev.erst.gridgrind.core.problem.GridGrindProblemCode.INVALID_FORMULA.recovery(),
+                dev.erst.gridgrind.core.problem.GridGrindProblemCode.INVALID_FORMULA.title(),
                 "bad formula",
-                dev.erst.gridgrind.contract.dto.GridGrindProblemCode.INVALID_FORMULA.resolution(),
-                new dev.erst.gridgrind.contract.dto.ProblemContext.ExecuteCalculation.Preflight(
-                    dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces.RequestShape
+                dev.erst.gridgrind.core.problem.GridGrindProblemCode.INVALID_FORMULA.resolution(),
+                new dev.erst.gridgrind.core.problem.ProblemContext.ExecuteCalculation.Preflight(
+                    dev.erst.gridgrind.core.problem.ProblemContextRequestSurfaces.RequestShape
                         .known("EXISTING", "SAVE_AS"),
-                    dev.erst.gridgrind.contract.dto.ProblemContextWorkbookSurfaces.ProblemLocation
+                    dev.erst.gridgrind.core.problem.ProblemContextWorkbookSurfaces.ProblemLocation
                         .formulaCell("Ops", "B1", "SUM(")),
                 List.of()));
 

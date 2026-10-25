@@ -1,49 +1,51 @@
 package dev.erst.gridgrind.jazzer.support;
 
-import dev.erst.gridgrind.contract.dto.ArrayFormulaReport;
-import dev.erst.gridgrind.contract.dto.AutofilterFilterColumnReport;
-import dev.erst.gridgrind.contract.dto.AutofilterFilterCriterionReport;
-import dev.erst.gridgrind.contract.dto.AutofilterSortConditionReport;
-import dev.erst.gridgrind.contract.dto.AutofilterSortStateReport;
-import dev.erst.gridgrind.contract.dto.CellAlignmentReport;
-import dev.erst.gridgrind.contract.dto.CellBorderReport;
-import dev.erst.gridgrind.contract.dto.CellBorderSideReport;
-import dev.erst.gridgrind.contract.dto.CellColorReport;
-import dev.erst.gridgrind.contract.dto.CellFillReport;
-import dev.erst.gridgrind.contract.dto.CellFontReport;
-import dev.erst.gridgrind.contract.dto.CellGradientFillReport;
-import dev.erst.gridgrind.contract.dto.CellProtectionReport;
-import dev.erst.gridgrind.contract.dto.CellStyleReport;
-import dev.erst.gridgrind.contract.dto.CommentAnchorReport;
-import dev.erst.gridgrind.contract.dto.CustomXmlDataBindingReport;
-import dev.erst.gridgrind.contract.dto.CustomXmlExportReport;
-import dev.erst.gridgrind.contract.dto.CustomXmlLinkedCellReport;
-import dev.erst.gridgrind.contract.dto.CustomXmlLinkedTableReport;
-import dev.erst.gridgrind.contract.dto.CustomXmlMappingReport;
-import dev.erst.gridgrind.contract.dto.FontHeightReport;
-import dev.erst.gridgrind.contract.dto.OoxmlPackageSecurityReport;
-import dev.erst.gridgrind.contract.dto.PrintMarginsReport;
-import dev.erst.gridgrind.contract.dto.PrintSetupReport;
-import dev.erst.gridgrind.contract.dto.TableColumnReport;
-import dev.erst.gridgrind.contract.dto.WorkbookProtectionReport;
+import dev.erst.gridgrind.core.model.customxml.CustomXmlDataBindingReport;
+import dev.erst.gridgrind.core.model.customxml.CustomXmlExportReport;
+import dev.erst.gridgrind.core.model.customxml.CustomXmlLinkedCellReport;
+import dev.erst.gridgrind.core.model.customxml.CustomXmlLinkedTableReport;
+import dev.erst.gridgrind.core.model.customxml.CustomXmlMappingReport;
+import dev.erst.gridgrind.core.model.drawing.CommentAnchorReport;
+import dev.erst.gridgrind.core.model.formula.ArrayFormulaReport;
+import dev.erst.gridgrind.core.model.print.PrintMarginsReport;
+import dev.erst.gridgrind.core.model.print.PrintSetupReport;
+import dev.erst.gridgrind.core.model.protection.CellProtectionReport;
+import dev.erst.gridgrind.core.model.protection.WorkbookProtectionReport;
+import dev.erst.gridgrind.core.model.security.OoxmlPackageSecurityReport;
+import dev.erst.gridgrind.core.model.style.CellAlignmentReport;
+import dev.erst.gridgrind.core.model.style.CellBorderReport;
+import dev.erst.gridgrind.core.model.style.CellBorderSideReport;
+import dev.erst.gridgrind.core.model.style.CellColorReport;
+import dev.erst.gridgrind.core.model.style.CellFillReport;
+import dev.erst.gridgrind.core.model.style.CellFontReport;
+import dev.erst.gridgrind.core.model.style.CellGradientFillReport;
+import dev.erst.gridgrind.core.model.style.CellStyleReport;
+import dev.erst.gridgrind.core.model.style.FontHeightReport;
+import dev.erst.gridgrind.core.model.table.AutofilterFilterColumnReport;
+import dev.erst.gridgrind.core.model.table.AutofilterFilterCriterionReport;
+import dev.erst.gridgrind.core.model.table.AutofilterSortConditionReport;
+import dev.erst.gridgrind.core.model.table.AutofilterSortStateReport;
+import dev.erst.gridgrind.core.model.table.TableColumnReport;
 
 /** Owns cell-surface invariant checks for reports, styles, security, and XML-linked metadata. */
 final class WorkbookInvariantCellSurfaceChecks {
   private WorkbookInvariantCellSurfaceChecks() {}
 
-  static void requireCellReportShape(dev.erst.gridgrind.contract.dto.CellReport cellReport) {
+  static void requireCellReportShape(dev.erst.gridgrind.core.model.value.CellReport cellReport) {
     WorkbookInvariantCellContentChecks.requireCellReportShape(cellReport);
   }
 
-  static void requireCommentReportShape(dev.erst.gridgrind.contract.dto.CommentReport comment) {
+  static void requireCommentReportShape(
+      dev.erst.gridgrind.core.model.drawing.CommentReport comment) {
     WorkbookInvariantCellContentChecks.requireCommentReportShape(comment);
   }
 
-  static void requireNamedRangeShape(dev.erst.gridgrind.contract.dto.NamedRangeReport namedRange) {
+  static void requireNamedRangeShape(
+      dev.erst.gridgrind.core.model.formula.NamedRangeReport namedRange) {
     WorkbookInvariantCellContentChecks.requireNamedRangeShape(namedRange);
   }
 
-  static void requireHyperlinkShape(dev.erst.gridgrind.contract.dto.HyperlinkTarget hyperlink) {
+  static void requireHyperlinkShape(dev.erst.gridgrind.core.model.value.HyperlinkTarget hyperlink) {
     WorkbookInvariantCellContentChecks.requireHyperlinkShape(hyperlink);
   }
 

@@ -1,6 +1,6 @@
 package dev.erst.gridgrind.engine.runtime;
 
-import dev.erst.gridgrind.contract.query.InspectionResult;
+import dev.erst.gridgrind.core.plan.InspectionResult;
 
 /** Thin facade over the split inspection-result conversion supports. */
 final class InspectionResultConverter {

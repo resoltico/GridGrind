@@ -3,7 +3,7 @@ package dev.erst.gridgrind.json.intake;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces;
+import dev.erst.gridgrind.core.problem.ProblemContextRequestSurfaces;
 import dev.erst.gridgrind.core.problem.RequestBindingFailure;
 import dev.erst.gridgrind.core.problem.RequestIntake;
 import dev.erst.gridgrind.json.codec.GridGrindJson;

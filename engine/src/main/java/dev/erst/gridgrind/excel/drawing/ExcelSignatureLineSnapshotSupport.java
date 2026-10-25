@@ -3,7 +3,7 @@ package dev.erst.gridgrind.excel.drawing;
 import com.microsoft.schemas.office.office.CTSignatureLine;
 import com.microsoft.schemas.vml.CTImageData;
 import com.microsoft.schemas.vml.CTShape;
-import dev.erst.gridgrind.excel.foundation.ExcelPictureFormat;
+import dev.erst.gridgrind.core.vocabulary.ExcelPictureFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;

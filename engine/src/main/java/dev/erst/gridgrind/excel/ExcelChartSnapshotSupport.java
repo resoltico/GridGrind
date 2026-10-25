@@ -1,8 +1,8 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.core.vocabulary.ExcelChartDisplayBlanksAs;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingAnchorSupport;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingObjectSnapshot;
-import dev.erst.gridgrind.excel.foundation.ExcelChartDisplayBlanksAs;
 import java.util.ArrayList;
 import java.util.List;
 import org.apache.poi.xddf.usermodel.chart.XDDFChartData;

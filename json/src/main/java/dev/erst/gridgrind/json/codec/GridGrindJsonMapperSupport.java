@@ -1,13 +1,13 @@
 package dev.erst.gridgrind.json.codec;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import dev.erst.gridgrind.contract.action.MutationAction;
-import dev.erst.gridgrind.contract.assertion.Assertion;
-import dev.erst.gridgrind.contract.catalog.GridGrindRequestSurfaceContractText;
-import dev.erst.gridgrind.contract.query.InspectionQuery;
-import dev.erst.gridgrind.contract.query.InspectionResult;
-import dev.erst.gridgrind.contract.selector.Selector;
-import dev.erst.gridgrind.contract.step.WorkbookStep;
+import dev.erst.gridgrind.core.catalog.GridGrindRequestSurfaceContractText;
+import dev.erst.gridgrind.core.plan.Assertion;
+import dev.erst.gridgrind.core.plan.InspectionQuery;
+import dev.erst.gridgrind.core.plan.InspectionResult;
+import dev.erst.gridgrind.core.plan.MutationAction;
+import dev.erst.gridgrind.core.plan.Selector;
+import dev.erst.gridgrind.core.plan.WorkbookStep;
 import dev.erst.gridgrind.core.problem.InvalidRequestException;
 import dev.erst.gridgrind.core.problem.MessageInvariant;
 import dev.erst.gridgrind.json.intake.WorkbookStepJsonDeserializer;

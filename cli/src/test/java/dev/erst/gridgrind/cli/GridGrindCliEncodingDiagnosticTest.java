@@ -3,7 +3,7 @@ package dev.erst.gridgrind.cli;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import dev.erst.gridgrind.cli.discovery.CommandError;
-import dev.erst.gridgrind.contract.dto.GridGrindProblemCode;
+import dev.erst.gridgrind.core.problem.GridGrindProblemCode;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;

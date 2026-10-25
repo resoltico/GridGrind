@@ -1,7 +1,7 @@
 package dev.erst.gridgrind.cli.discovery;
 
 import dev.erst.gridgrind.cli.CliSurface;
-import dev.erst.gridgrind.contract.dto.GridGrindProtocolVersion;
+import dev.erst.gridgrind.core.plan.GridGrindProtocolVersion;
 import java.util.Objects;
 
 /** Structured help payload for one CLI help surface. */

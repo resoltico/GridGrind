@@ -9,19 +9,18 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import dev.erst.gridgrind.contract.action.CellMutationAction;
-import dev.erst.gridgrind.contract.assertion.*;
-import dev.erst.gridgrind.contract.dto.*;
-import dev.erst.gridgrind.contract.dto.CellInput;
-import dev.erst.gridgrind.contract.dto.CommentInput;
-import dev.erst.gridgrind.contract.dto.HyperlinkTarget;
-import dev.erst.gridgrind.contract.query.*;
-import dev.erst.gridgrind.contract.query.SheetInspectionResult;
-import dev.erst.gridgrind.contract.selector.CellSelector;
-import dev.erst.gridgrind.contract.selector.TableCellSelector;
-import dev.erst.gridgrind.contract.selector.TableRowSelector;
-import dev.erst.gridgrind.contract.selector.TableSelector;
-import dev.erst.gridgrind.contract.source.TextSourceInput;
+import dev.erst.gridgrind.core.model.drawing.CommentInput;
+import dev.erst.gridgrind.core.model.style.CellStyleReport;
+import dev.erst.gridgrind.core.model.value.CellInput;
+import dev.erst.gridgrind.core.model.value.HyperlinkTarget;
+import dev.erst.gridgrind.core.plan.*;
+import dev.erst.gridgrind.core.plan.CellMutationAction;
+import dev.erst.gridgrind.core.plan.CellSelector;
+import dev.erst.gridgrind.core.plan.SheetInspectionResult;
+import dev.erst.gridgrind.core.plan.TableCellSelector;
+import dev.erst.gridgrind.core.plan.TableRowSelector;
+import dev.erst.gridgrind.core.plan.TableSelector;
+import dev.erst.gridgrind.core.source.TextSourceInput;
 import dev.erst.gridgrind.excel.ExcelCellValue;
 import dev.erst.gridgrind.excel.ExcelTableDefinition;
 import dev.erst.gridgrind.excel.ExcelTableStyle;
@@ -80,7 +79,7 @@ class SemanticSelectorResolverTest {
               tableCell,
               new CompositeAssertion.Not(
                   new CellAssertion.CellValue(
-                      new dev.erst.gridgrind.contract.dto.CellScalarValue.Text("Updated")))));
+                      new dev.erst.gridgrind.core.model.value.CellScalarValue.Text("Updated")))));
 
       SemanticSelectorResolver.ResolvedInspectionTarget inspectionTarget =
           resolver.resolveInspectionTarget(
@@ -447,7 +446,8 @@ class SemanticSelectorResolverTest {
                     workbook,
                     target,
                     new CellAssertion.CellValue(
-                        new dev.erst.gridgrind.contract.dto.CellScalarValue.NumberValue(100.0d))))
+                        new dev.erst.gridgrind.core.model.value.CellScalarValue.NumberValue(
+                            100.0d))))
             .address());
     assertEquals(
         expectedAddress,

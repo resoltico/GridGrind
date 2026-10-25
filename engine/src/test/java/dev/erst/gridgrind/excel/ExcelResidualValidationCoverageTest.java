@@ -5,6 +5,7 @@ import static dev.erst.gridgrind.excel.ExcelSignatureLineSnapshotTestSupport.sig
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import dev.erst.gridgrind.core.vocabulary.ExcelPictureFormat;
 import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlExportSnapshot;
 import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlImportDefinition;
 import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlLinkedCellSnapshot;
@@ -15,7 +16,6 @@ import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlMappingSnapshot;
 import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlSchemaSnapshot;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingAnchor;
 import dev.erst.gridgrind.excel.drawing.ExcelSignatureLineDefinition;
-import dev.erst.gridgrind.excel.foundation.ExcelPictureFormat;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;

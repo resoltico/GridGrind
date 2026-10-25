@@ -2,7 +2,7 @@ package dev.erst.gridgrind.excel;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import dev.erst.gridgrind.excel.foundation.ExcelComparisonOperator;
+import dev.erst.gridgrind.core.vocabulary.ExcelComparisonOperator;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;

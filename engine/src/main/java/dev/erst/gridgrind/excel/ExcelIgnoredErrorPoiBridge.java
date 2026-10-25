@@ -1,6 +1,6 @@
 package dev.erst.gridgrind.excel;
 
-import dev.erst.gridgrind.excel.foundation.ExcelIgnoredErrorType;
+import dev.erst.gridgrind.core.vocabulary.ExcelIgnoredErrorType;
 import java.util.Objects;
 import org.apache.poi.ss.usermodel.IgnoredErrorType;
 

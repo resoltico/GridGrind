@@ -5,10 +5,10 @@ import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 
 import dev.erst.gridgrind.cli.discovery.CommandError;
 import dev.erst.gridgrind.cli.discovery.GridGrindCliJson;
-import dev.erst.gridgrind.contract.dto.ProblemContext;
-import dev.erst.gridgrind.contract.dto.RequestDoctorReport;
-import dev.erst.gridgrind.contract.dto.RequestInputContext;
-import dev.erst.gridgrind.contract.dto.WorkbookResult;
+import dev.erst.gridgrind.core.problem.ProblemContext;
+import dev.erst.gridgrind.core.problem.RequestDoctorReport;
+import dev.erst.gridgrind.core.problem.RequestInputContext;
+import dev.erst.gridgrind.core.result.WorkbookResult;
 import dev.erst.gridgrind.json.codec.GridGrindJson;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;

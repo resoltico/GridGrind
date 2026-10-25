@@ -1,8 +1,8 @@
 package dev.erst.gridgrind.excel.ooxml;
 
+import dev.erst.gridgrind.core.vocabulary.ExcelOoxmlSignatureState;
 import dev.erst.gridgrind.excel.WorkbookNotOpenableException;
 import dev.erst.gridgrind.excel.WorkbookSecurityException;
-import dev.erst.gridgrind.excel.foundation.ExcelOoxmlSignatureState;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.security.cert.X509Certificate;

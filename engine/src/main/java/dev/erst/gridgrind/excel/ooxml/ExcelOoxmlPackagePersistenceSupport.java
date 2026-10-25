@@ -35,7 +35,7 @@ public final class ExcelOoxmlPackagePersistenceSupport {
           "Encrypted source workbooks must retain their verified source password while open");
     }
     if (sourceEncryption.mode()
-        != dev.erst.gridgrind.excel.foundation.ExcelOoxmlEncryptionMode.AGILE) {
+        != dev.erst.gridgrind.core.vocabulary.ExcelOoxmlEncryptionMode.AGILE) {
       throw new UnsupportedSourceEncryptionPreservationException(
           "Source workbook encryption mode "
               + sourceEncryption.mode()
@@ -44,7 +44,7 @@ public final class ExcelOoxmlPackagePersistenceSupport {
               + " package instead.");
     }
     if (sourceEncryption.chainingMode()
-        != dev.erst.gridgrind.excel.foundation.ExcelOoxmlChainingMode.CBC) {
+        != dev.erst.gridgrind.core.vocabulary.ExcelOoxmlChainingMode.CBC) {
       throw new UnsupportedSourceEncryptionPreservationException(
           "Source workbook encryption chaining mode "
               + sourceEncryption.chainingMode()

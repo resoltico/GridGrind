@@ -1,10 +1,10 @@
 package dev.erst.gridgrind.engine.runtime;
 
-import dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces.JsonLocation;
-import dev.erst.gridgrind.contract.dto.WorkbookPlan;
-import dev.erst.gridgrind.contract.source.BinarySourceInput;
-import dev.erst.gridgrind.contract.source.TextSourceInput;
+import dev.erst.gridgrind.core.plan.WorkbookPlan;
+import dev.erst.gridgrind.core.problem.ProblemContextRequestSurfaces.JsonLocation;
 import dev.erst.gridgrind.core.problem.RequestIntake;
+import dev.erst.gridgrind.core.source.BinarySourceInput;
+import dev.erst.gridgrind.core.source.TextSourceInput;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.RecordComponent;
 import java.util.IdentityHashMap;
@@ -120,7 +120,7 @@ final class InputResolutionOrigins {
   }
 
   static String jsonFieldName(RecordComponent component) {
-    return dev.erst.gridgrind.contract.catalog.GridGrindProtocolContractSupport.wireFieldName(
+    return dev.erst.gridgrind.core.catalog.GridGrindProtocolContractSupport.wireFieldName(
         component);
   }
 

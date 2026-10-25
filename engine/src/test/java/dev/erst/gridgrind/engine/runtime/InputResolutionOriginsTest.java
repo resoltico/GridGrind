@@ -2,7 +2,7 @@ package dev.erst.gridgrind.engine.runtime;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import dev.erst.gridgrind.contract.source.BinarySourceInput;
+import dev.erst.gridgrind.core.source.BinarySourceInput;
 import org.junit.jupiter.api.Test;
 
 /** Verifies source-origin field selection for binary transport-only inputs. */

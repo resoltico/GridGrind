@@ -1,12 +1,12 @@
 package dev.erst.gridgrind.engine.runtime;
 
-import dev.erst.gridgrind.contract.assertion.AssertionResult;
-import dev.erst.gridgrind.contract.dto.CalculationReport;
-import dev.erst.gridgrind.contract.dto.GridGrindProblemDetail;
-import dev.erst.gridgrind.contract.dto.GridGrindProtocolVersion;
-import dev.erst.gridgrind.contract.dto.RequestWarning;
-import dev.erst.gridgrind.contract.dto.WorkbookPlan;
-import dev.erst.gridgrind.contract.query.InspectionResult;
+import dev.erst.gridgrind.core.model.formula.CalculationReport;
+import dev.erst.gridgrind.core.plan.AssertionResult;
+import dev.erst.gridgrind.core.plan.GridGrindProtocolVersion;
+import dev.erst.gridgrind.core.plan.InspectionResult;
+import dev.erst.gridgrind.core.plan.WorkbookPlan;
+import dev.erst.gridgrind.core.problem.GridGrindProblemDetail;
+import dev.erst.gridgrind.core.problem.RequestWarning;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
 import java.util.List;
 import org.jspecify.annotations.Nullable;
@@ -20,7 +20,7 @@ record WorkbookWorkflowExecutionContext(
     List<RequestWarning> warnings,
     List<AssertionResult> planAssertions,
     List<AssertionResult> hostAssertions,
-    List<dev.erst.gridgrind.contract.dto.WorkbookExecutionEvidence.Preservation> preservation,
+    List<dev.erst.gridgrind.core.result.WorkbookExecutionEvidence.Preservation> preservation,
     List<InspectionResult> inspections) {
   ExecutionFailure failure(CalculationReport calculation, GridGrindProblemDetail.Problem problem) {
     return failure(calculation, problem, null, null);

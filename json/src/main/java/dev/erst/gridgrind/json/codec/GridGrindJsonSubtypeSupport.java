@@ -1,7 +1,7 @@
 package dev.erst.gridgrind.json.codec;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
-import dev.erst.gridgrind.contract.catalog.ProtocolTypeMetadataSupport;
+import dev.erst.gridgrind.core.catalog.ProtocolTypeMetadataSupport;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
@@ -40,8 +40,8 @@ public final class GridGrindJsonSubtypeSupport {
     if (typeName != null && !typeName.value().isBlank()) {
       return Optional.of(typeName.value());
     }
-    dev.erst.gridgrind.contract.catalog.ProtocolTypeMetadata metadata =
-        subtype.getAnnotation(dev.erst.gridgrind.contract.catalog.ProtocolTypeMetadata.class);
+    dev.erst.gridgrind.core.metadata.ProtocolTypeMetadata metadata =
+        subtype.getAnnotation(dev.erst.gridgrind.core.metadata.ProtocolTypeMetadata.class);
     if (metadata != null && !metadata.id().isBlank()) {
       return Optional.of(metadata.id());
     }

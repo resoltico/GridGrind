@@ -1,9 +1,9 @@
 package dev.erst.gridgrind.excel.validation;
 
+import dev.erst.gridgrind.core.vocabulary.ExcelComparisonOperator;
+import dev.erst.gridgrind.core.vocabulary.ExcelDataValidationErrorStyle;
 import dev.erst.gridgrind.excel.ExcelRangeSelection;
 import dev.erst.gridgrind.excel.WorkbookAnalysis;
-import dev.erst.gridgrind.excel.foundation.ExcelComparisonOperator;
-import dev.erst.gridgrind.excel.foundation.ExcelDataValidationErrorStyle;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;

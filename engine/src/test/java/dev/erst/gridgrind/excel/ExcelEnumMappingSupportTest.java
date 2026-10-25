@@ -4,7 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import dev.erst.gridgrind.excel.foundation.ExcelFillPattern;
+import dev.erst.gridgrind.core.vocabulary.ExcelFillPattern;
 import java.util.Map;
 import org.apache.poi.ss.usermodel.FillPatternType;
 import org.apache.poi.xddf.usermodel.chart.ChartTypes;

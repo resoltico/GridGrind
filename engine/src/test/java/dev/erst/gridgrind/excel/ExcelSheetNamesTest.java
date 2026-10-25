@@ -4,7 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import dev.erst.gridgrind.excel.foundation.ExcelSheetNames;
+import dev.erst.gridgrind.core.vocabulary.ExcelSheetNames;
 import org.junit.jupiter.api.Test;
 
 /** Tests for the shared Excel sheet-name validation contract. */

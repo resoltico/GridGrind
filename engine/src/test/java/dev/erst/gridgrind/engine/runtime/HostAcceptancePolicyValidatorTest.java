@@ -3,16 +3,16 @@ package dev.erst.gridgrind.engine.runtime;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import dev.erst.gridgrind.contract.assertion.PresenceAssertion;
-import dev.erst.gridgrind.contract.dto.ExecutionModeInput;
-import dev.erst.gridgrind.contract.dto.ExecutionPolicyInput;
-import dev.erst.gridgrind.contract.dto.FormulaEnvironmentInput;
-import dev.erst.gridgrind.contract.dto.WorkbookPlan;
-import dev.erst.gridgrind.contract.query.SheetIntrospectionQuery;
-import dev.erst.gridgrind.contract.selector.CellSelector;
-import dev.erst.gridgrind.contract.selector.SheetSelector;
-import dev.erst.gridgrind.contract.step.AssertionStep;
-import dev.erst.gridgrind.contract.step.InspectionStep;
+import dev.erst.gridgrind.core.model.formula.FormulaEnvironmentInput;
+import dev.erst.gridgrind.core.plan.AssertionStep;
+import dev.erst.gridgrind.core.plan.CellSelector;
+import dev.erst.gridgrind.core.plan.ExecutionModeInput;
+import dev.erst.gridgrind.core.plan.ExecutionPolicyInput;
+import dev.erst.gridgrind.core.plan.InspectionStep;
+import dev.erst.gridgrind.core.plan.PresenceAssertion;
+import dev.erst.gridgrind.core.plan.SheetIntrospectionQuery;
+import dev.erst.gridgrind.core.plan.SheetSelector;
+import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import dev.erst.gridgrind.engine.api.GridGrindHostAcceptancePolicy;
 import java.util.List;
 import org.junit.jupiter.api.Test;
@@ -121,9 +121,9 @@ class HostAcceptancePolicyValidatorTest {
             WorkbookPlan.standard(
                 new WorkbookPlan.WorkbookSource.ExistingFile(
                     "input.xlsx",
-                    new dev.erst.gridgrind.contract.dto.OoxmlOpenSecurityInput(
+                    new dev.erst.gridgrind.core.model.security.OoxmlOpenSecurityInput(
                         java.util.Optional.of(
-                            new dev.erst.gridgrind.contract.dto.SecretReference(
+                            new dev.erst.gridgrind.core.source.SecretReference(
                                 "source-password")))),
                 new WorkbookPlan.WorkbookPersistence.SaveAs(
                     "output.xlsx", WorkbookPlan.WorkbookPersistence.IfExists.REJECT),

@@ -2,6 +2,8 @@ package dev.erst.gridgrind.excel;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.core.vocabulary.ExcelDrawingAnchorBehavior;
+import dev.erst.gridgrind.core.vocabulary.ExcelPictureFormat;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingAnchor;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingAnchorSupport;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingMarker;
@@ -9,8 +11,6 @@ import dev.erst.gridgrind.excel.drawing.ExcelDrawingObjectPayload;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingObjectSnapshot;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingPictureSupport;
 import dev.erst.gridgrind.excel.drawing.ExcelPictureDefinition;
-import dev.erst.gridgrind.excel.foundation.ExcelDrawingAnchorBehavior;
-import dev.erst.gridgrind.excel.foundation.ExcelPictureFormat;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Base64;

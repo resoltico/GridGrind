@@ -3,12 +3,16 @@ package dev.erst.gridgrind.cli;
 import static org.junit.jupiter.api.Assertions.*;
 
 import dev.erst.gridgrind.cli.discovery.CommandError;
-import dev.erst.gridgrind.contract.dto.*;
-import dev.erst.gridgrind.contract.dto.GridGrindProblemCode;
-import dev.erst.gridgrind.contract.dto.WorkbookResult;
-import dev.erst.gridgrind.contract.query.SheetInspectionResult;
-import dev.erst.gridgrind.contract.query.WorkbookAssetInspectionResult;
-import dev.erst.gridgrind.contract.query.WorkbookInspectionResult;
+import dev.erst.gridgrind.core.model.value.CellValueReport;
+import dev.erst.gridgrind.core.plan.SheetInspectionResult;
+import dev.erst.gridgrind.core.plan.WorkbookAssetInspectionResult;
+import dev.erst.gridgrind.core.plan.WorkbookInspectionResult;
+import dev.erst.gridgrind.core.problem.GridGrindProblemCode;
+import dev.erst.gridgrind.core.problem.ProblemContext;
+import dev.erst.gridgrind.core.result.ExecutionProgressEvent;
+import dev.erst.gridgrind.core.result.WorkbookResult;
+import dev.erst.gridgrind.core.result.WorkbookResults;
+import dev.erst.gridgrind.core.result.WorkbookSummary;
 import dev.erst.gridgrind.json.codec.GridGrindJson;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -104,8 +108,8 @@ class GridGrindCliTest extends GridGrindCliTestSupport {
     assertEquals("Budget", workbook.sheetNames().get(0));
     SheetInspectionResult.CellsResult cells =
         (SheetInspectionResult.CellsResult) success.inspections().get(1);
-    dev.erst.gridgrind.contract.dto.CellReport.FormulaReport b3Cell =
-        (dev.erst.gridgrind.contract.dto.CellReport.FormulaReport) cells.cells().get(1);
+    dev.erst.gridgrind.core.model.value.CellReport.FormulaReport b3Cell =
+        (dev.erst.gridgrind.core.model.value.CellReport.FormulaReport) cells.cells().get(1);
     assertEquals("SUM(B2:B2)", b3Cell.formula().orElseThrow());
     assertEquals(
         49.0,
@@ -234,9 +238,10 @@ class GridGrindCliTest extends GridGrindCliTestSupport {
             WorkbookResult.Success.class, GridGrindJson.readWorkbookResult(stdout.toByteArray()));
     SheetInspectionResult.CellsResult cells =
         assertInstanceOf(SheetInspectionResult.CellsResult.class, success.inspections().getFirst());
-    dev.erst.gridgrind.contract.dto.CellReport.TextReport a1 =
+    dev.erst.gridgrind.core.model.value.CellReport.TextReport a1 =
         assertInstanceOf(
-            dev.erst.gridgrind.contract.dto.CellReport.TextReport.class, cells.cells().getFirst());
+            dev.erst.gridgrind.core.model.value.CellReport.TextReport.class,
+            cells.cells().getFirst());
     assertEquals(0, exitCode);
     assertEquals("Quarterly Budget", a1.textValue().orElseThrow());
   }
@@ -580,7 +585,7 @@ class GridGrindCliTest extends GridGrindCliTestSupport {
         CliGrantFixtureSupport.noPublication(
             List.of("GET_PACKAGE_SECURITY", "GET_CELLS"),
             List.of(assetDirectory.resolve("gridgrind-package-security.xlsx")),
-            List.of(new dev.erst.gridgrind.contract.dto.SecretReference("source-open-password")));
+            List.of(new dev.erst.gridgrind.core.source.SecretReference("source-open-password")));
     int exitCode =
         new GridGrindCli()
             .run(

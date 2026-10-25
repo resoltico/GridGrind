@@ -2,12 +2,12 @@ package dev.erst.gridgrind.cli;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import dev.erst.gridgrind.contract.dto.GridGrindProblemCode;
-import dev.erst.gridgrind.contract.dto.GridGrindProblemDetail;
-import dev.erst.gridgrind.contract.dto.ProblemContext;
-import dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces.JsonLocation;
-import dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces.RequestInput;
-import dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces.RequestShape;
+import dev.erst.gridgrind.core.problem.GridGrindProblemCode;
+import dev.erst.gridgrind.core.problem.GridGrindProblemDetail;
+import dev.erst.gridgrind.core.problem.ProblemContext;
+import dev.erst.gridgrind.core.problem.ProblemContextRequestSurfaces.JsonLocation;
+import dev.erst.gridgrind.core.problem.ProblemContextRequestSurfaces.RequestInput;
+import dev.erst.gridgrind.core.problem.ProblemContextRequestSurfaces.RequestShape;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
 

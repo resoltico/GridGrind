@@ -1,13 +1,13 @@
 package dev.erst.gridgrind.engine.runtime;
 
-import dev.erst.gridgrind.contract.dto.MergedRegionReport;
-import dev.erst.gridgrind.contract.dto.SheetSummaryReport;
-import dev.erst.gridgrind.contract.query.InspectionResult;
-import dev.erst.gridgrind.contract.query.SheetInspectionResult;
-import dev.erst.gridgrind.contract.query.WorkbookAnalysisResult;
-import dev.erst.gridgrind.contract.query.WorkbookAssetInspectionResult;
-import dev.erst.gridgrind.contract.query.WorkbookInspectionResult;
-import dev.erst.gridgrind.contract.query.WorkbookSurfaceInspectionResult;
+import dev.erst.gridgrind.core.model.layout.MergedRegionReport;
+import dev.erst.gridgrind.core.plan.InspectionResult;
+import dev.erst.gridgrind.core.plan.SheetInspectionResult;
+import dev.erst.gridgrind.core.plan.WorkbookAnalysisResult;
+import dev.erst.gridgrind.core.plan.WorkbookAssetInspectionResult;
+import dev.erst.gridgrind.core.plan.WorkbookInspectionResult;
+import dev.erst.gridgrind.core.plan.WorkbookSurfaceInspectionResult;
+import dev.erst.gridgrind.core.result.SheetSummaryReport;
 
 /** Converts engine read results into protocol inspection-result variants. */
 final class InspectionResultReadConverter {

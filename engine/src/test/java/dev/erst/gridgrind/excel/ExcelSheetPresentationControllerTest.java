@@ -6,8 +6,8 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import dev.erst.gridgrind.excel.foundation.ExcelIgnoredErrorType;
-import dev.erst.gridgrind.excel.foundation.ExcelSheetLayoutLimits;
+import dev.erst.gridgrind.core.vocabulary.ExcelIgnoredErrorType;
+import dev.erst.gridgrind.core.vocabulary.ExcelSheetLayoutLimits;
 import java.util.List;
 import java.util.Optional;
 import org.apache.poi.xssf.usermodel.XSSFSheet;

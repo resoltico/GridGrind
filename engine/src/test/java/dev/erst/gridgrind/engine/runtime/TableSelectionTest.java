@@ -2,7 +2,7 @@ package dev.erst.gridgrind.engine.runtime;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import dev.erst.gridgrind.contract.selector.TableSelector;
+import dev.erst.gridgrind.core.plan.TableSelector;
 import dev.erst.gridgrind.excel.ExcelTableSelection;
 import java.util.List;
 import org.junit.jupiter.api.Test;

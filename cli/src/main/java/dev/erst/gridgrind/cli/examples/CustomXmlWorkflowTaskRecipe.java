@@ -20,13 +20,13 @@ import dev.erst.gridgrind.cli.discovery.TaskPersistenceMode;
 import dev.erst.gridgrind.cli.discovery.TaskPhasePurpose;
 import dev.erst.gridgrind.cli.discovery.TaskSourceMode;
 import dev.erst.gridgrind.cli.discovery.TaskVerificationKind;
-import dev.erst.gridgrind.contract.action.StructuredMutationAction;
-import dev.erst.gridgrind.contract.dto.CustomXmlImportInput;
-import dev.erst.gridgrind.contract.dto.CustomXmlMappingLocator;
-import dev.erst.gridgrind.contract.dto.WorkbookPlan;
-import dev.erst.gridgrind.contract.query.SheetIntrospectionQuery;
-import dev.erst.gridgrind.contract.query.WorkbookIntrospectionQuery;
-import dev.erst.gridgrind.contract.source.TextSourceInput;
+import dev.erst.gridgrind.core.model.customxml.CustomXmlImportInput;
+import dev.erst.gridgrind.core.model.customxml.CustomXmlMappingLocator;
+import dev.erst.gridgrind.core.plan.SheetIntrospectionQuery;
+import dev.erst.gridgrind.core.plan.StructuredMutationAction;
+import dev.erst.gridgrind.core.plan.WorkbookIntrospectionQuery;
+import dev.erst.gridgrind.core.plan.WorkbookPlan;
+import dev.erst.gridgrind.core.source.TextSourceInput;
 import java.util.List;
 
 /** Published task recipe for custom-XML import and export workflows. */

@@ -1,10 +1,10 @@
 package dev.erst.gridgrind.excel.pivot;
 
+import dev.erst.gridgrind.core.vocabulary.ExcelPivotDataConsolidateFunction;
+import dev.erst.gridgrind.core.vocabulary.ExcelPivotTableNaming;
+import dev.erst.gridgrind.core.vocabulary.ExcelSheetNames;
 import dev.erst.gridgrind.excel.ExcelNamedRangeDefinition;
 import dev.erst.gridgrind.excel.ExcelTableDefinition;
-import dev.erst.gridgrind.excel.foundation.ExcelPivotDataConsolidateFunction;
-import dev.erst.gridgrind.excel.foundation.ExcelPivotTableNaming;
-import dev.erst.gridgrind.excel.foundation.ExcelSheetNames;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;

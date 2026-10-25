@@ -1,13 +1,13 @@
 package dev.erst.gridgrind.json.codec;
 
-import dev.erst.gridgrind.contract.catalog.Catalog;
-import dev.erst.gridgrind.contract.catalog.CatalogNote;
-import dev.erst.gridgrind.contract.catalog.ProtocolStepTemplate;
-import dev.erst.gridgrind.contract.catalog.TypeEntry;
-import dev.erst.gridgrind.contract.dto.GridGrindProtocolVersion;
-import dev.erst.gridgrind.contract.dto.RequestDoctorReport;
-import dev.erst.gridgrind.contract.dto.WorkbookPlan;
-import dev.erst.gridgrind.contract.dto.WorkbookResult;
+import dev.erst.gridgrind.core.catalog.Catalog;
+import dev.erst.gridgrind.core.catalog.CatalogNote;
+import dev.erst.gridgrind.core.catalog.ProtocolStepTemplate;
+import dev.erst.gridgrind.core.catalog.TypeEntry;
+import dev.erst.gridgrind.core.plan.GridGrindProtocolVersion;
+import dev.erst.gridgrind.core.plan.WorkbookPlan;
+import dev.erst.gridgrind.core.problem.RequestDoctorReport;
+import dev.erst.gridgrind.core.result.WorkbookResult;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.List;

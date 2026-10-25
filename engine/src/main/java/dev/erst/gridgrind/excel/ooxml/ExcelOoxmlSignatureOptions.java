@@ -1,6 +1,6 @@
 package dev.erst.gridgrind.excel.ooxml;
 
-import dev.erst.gridgrind.excel.foundation.ExcelOoxmlSignatureDigestAlgorithm;
+import dev.erst.gridgrind.core.vocabulary.ExcelOoxmlSignatureDigestAlgorithm;
 import java.nio.file.Path;
 import java.util.Objects;
 import java.util.Optional;

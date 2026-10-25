@@ -19,7 +19,7 @@ import dev.erst.gridgrind.cli.discovery.TaskSourceMode;
 import dev.erst.gridgrind.cli.discovery.TaskStarterContract;
 import dev.erst.gridgrind.cli.discovery.TaskVerificationKind;
 import dev.erst.gridgrind.cli.discovery.TaskWorkflow;
-import dev.erst.gridgrind.contract.dto.WorkbookPlan;
+import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import java.util.List;
 
 /** Shared builders for the canonical published task-recipe definitions. */

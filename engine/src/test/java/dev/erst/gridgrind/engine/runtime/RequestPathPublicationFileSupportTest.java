@@ -6,7 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import dev.erst.gridgrind.contract.dto.WorkbookResultPersistence.PublicationOutcome;
+import dev.erst.gridgrind.core.result.WorkbookResultPersistence.PublicationOutcome;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.nio.channels.FileChannel;

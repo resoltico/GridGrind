@@ -1,7 +1,7 @@
 package dev.erst.gridgrind.excel.drawing;
 
+import dev.erst.gridgrind.core.vocabulary.ExcelDrawingShapeKind;
 import dev.erst.gridgrind.excel.ExcelFormulaRuntime;
-import dev.erst.gridgrind.excel.foundation.ExcelDrawingShapeKind;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;

@@ -1,6 +1,6 @@
 package dev.erst.gridgrind.excel;
 
-import dev.erst.gridgrind.excel.foundation.ExcelFillPattern;
+import dev.erst.gridgrind.core.vocabulary.ExcelFillPattern;
 
 /** Test-only helpers for inspecting sealed engine style variants. */
 final class ExcelStyleTestAccess {

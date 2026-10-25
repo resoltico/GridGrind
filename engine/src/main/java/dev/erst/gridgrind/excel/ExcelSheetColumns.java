@@ -1,6 +1,6 @@
 package dev.erst.gridgrind.excel;
 
-import dev.erst.gridgrind.excel.foundation.ExcelColumnSpan;
+import dev.erst.gridgrind.core.vocabulary.ExcelColumnSpan;
 import java.util.Objects;
 
 /** Column insertion, movement, visibility, grouping, and sizing operations for one sheet. */

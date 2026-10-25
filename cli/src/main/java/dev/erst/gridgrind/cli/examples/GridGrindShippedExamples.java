@@ -4,7 +4,7 @@ import dev.erst.gridgrind.cli.discovery.RecipeAdvisory;
 import dev.erst.gridgrind.cli.discovery.RecipeView;
 import dev.erst.gridgrind.cli.discovery.ShippedExampleCatalog;
 import dev.erst.gridgrind.cli.discovery.ShippedExampleEntry;
-import dev.erst.gridgrind.contract.dto.WorkbookPlan;
+import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
@@ -78,7 +78,7 @@ public final class GridGrindShippedExamples {
   /** Returns the machine-readable example catalog for CLI discovery. */
   public static ShippedExampleCatalog catalog() {
     return new ShippedExampleCatalog(
-        dev.erst.gridgrind.contract.dto.GridGrindProtocolVersion.current(), catalogEntries());
+        dev.erst.gridgrind.core.plan.GridGrindProtocolVersion.current(), catalogEntries());
   }
 
   /** Finds one built-in example by its stable upper-case id. */

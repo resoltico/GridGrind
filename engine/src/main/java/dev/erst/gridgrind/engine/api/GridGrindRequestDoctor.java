@@ -1,8 +1,8 @@
 package dev.erst.gridgrind.engine.api;
 
-import dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces.RequestInput;
-import dev.erst.gridgrind.contract.dto.RequestDoctorReport;
-import dev.erst.gridgrind.contract.dto.WorkbookPlan;
+import dev.erst.gridgrind.core.plan.WorkbookPlan;
+import dev.erst.gridgrind.core.problem.ProblemContextRequestSurfaces.RequestInput;
+import dev.erst.gridgrind.core.problem.RequestDoctorReport;
 import dev.erst.gridgrind.core.problem.RequestIntake;
 import java.util.Objects;
 

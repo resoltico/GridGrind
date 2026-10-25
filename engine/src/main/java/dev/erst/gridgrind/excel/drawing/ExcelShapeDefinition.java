@@ -1,6 +1,6 @@
 package dev.erst.gridgrind.excel.drawing;
 
-import dev.erst.gridgrind.excel.foundation.ExcelAuthoredDrawingShapeKind;
+import dev.erst.gridgrind.core.vocabulary.ExcelAuthoredDrawingShapeKind;
 import java.util.Objects;
 import java.util.Optional;
 

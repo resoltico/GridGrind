@@ -4,33 +4,78 @@ import static dev.erst.gridgrind.engine.runtime.parity.ParityPlanSupport.calcula
 import static dev.erst.gridgrind.engine.runtime.parity.ParityPlanSupport.executionPolicy;
 import static dev.erst.gridgrind.engine.runtime.parity.ParityPlanSupport.mutate;
 
-import dev.erst.gridgrind.contract.action.CellMutationAction;
-import dev.erst.gridgrind.contract.action.DrawingMutationAction;
-import dev.erst.gridgrind.contract.action.StructuredMutationAction;
-import dev.erst.gridgrind.contract.action.WorkbookMutationAction;
-import dev.erst.gridgrind.contract.dto.*;
-import dev.erst.gridgrind.contract.dto.WorkbookPlan;
-import dev.erst.gridgrind.contract.dto.WorkbookResult;
-import dev.erst.gridgrind.contract.selector.*;
-import dev.erst.gridgrind.contract.source.BinarySourceInput;
-import dev.erst.gridgrind.contract.source.TextSourceInput;
+import dev.erst.gridgrind.core.model.chart.ChartDataSourceInput;
+import dev.erst.gridgrind.core.model.chart.ChartInput;
+import dev.erst.gridgrind.core.model.chart.ChartLegendInput;
+import dev.erst.gridgrind.core.model.chart.ChartPlotInput;
+import dev.erst.gridgrind.core.model.chart.ChartSeriesInput;
+import dev.erst.gridgrind.core.model.chart.ChartTitleInput;
+import dev.erst.gridgrind.core.model.drawing.CommentInput;
+import dev.erst.gridgrind.core.model.drawing.DrawingAnchorInput;
+import dev.erst.gridgrind.core.model.drawing.DrawingMarkerInput;
+import dev.erst.gridgrind.core.model.drawing.EmbeddedObjectInput;
+import dev.erst.gridgrind.core.model.drawing.PictureDataInput;
+import dev.erst.gridgrind.core.model.drawing.PictureInput;
+import dev.erst.gridgrind.core.model.drawing.ShapeInput;
+import dev.erst.gridgrind.core.model.formula.NamedRangeTarget;
+import dev.erst.gridgrind.core.model.layout.PaneInput;
+import dev.erst.gridgrind.core.model.pivot.PivotTableInput;
+import dev.erst.gridgrind.core.model.print.HeaderFooterTextInput;
+import dev.erst.gridgrind.core.model.print.PrintAreaInput;
+import dev.erst.gridgrind.core.model.print.PrintLayoutInput;
+import dev.erst.gridgrind.core.model.print.PrintScalingInput;
+import dev.erst.gridgrind.core.model.print.PrintTitleColumnsInput;
+import dev.erst.gridgrind.core.model.print.PrintTitleRowsInput;
+import dev.erst.gridgrind.core.model.protection.CellProtectionInput;
+import dev.erst.gridgrind.core.model.protection.SheetProtectionSettings;
+import dev.erst.gridgrind.core.model.style.BorderSideInput;
+import dev.erst.gridgrind.core.model.style.CellAlignmentInput;
+import dev.erst.gridgrind.core.model.style.CellBorderInput;
+import dev.erst.gridgrind.core.model.style.CellFillInput;
+import dev.erst.gridgrind.core.model.style.CellFontInput;
+import dev.erst.gridgrind.core.model.style.CellStylePatchInput;
+import dev.erst.gridgrind.core.model.style.ColorInput;
+import dev.erst.gridgrind.core.model.style.DifferentialStyleInput;
+import dev.erst.gridgrind.core.model.style.FontHeightInput;
+import dev.erst.gridgrind.core.model.style.RichTextRunInput;
+import dev.erst.gridgrind.core.model.table.TableInput;
+import dev.erst.gridgrind.core.model.table.TableStyleInput;
+import dev.erst.gridgrind.core.model.validation.ConditionalFormattingDefinitionInput;
+import dev.erst.gridgrind.core.model.validation.ConditionalFormattingRuleInput;
+import dev.erst.gridgrind.core.model.validation.DataValidationErrorAlertInput;
+import dev.erst.gridgrind.core.model.validation.DataValidationInput;
+import dev.erst.gridgrind.core.model.validation.DataValidationPromptInput;
+import dev.erst.gridgrind.core.model.validation.DataValidationRuleInput;
+import dev.erst.gridgrind.core.model.value.CellGridInput;
+import dev.erst.gridgrind.core.model.value.CellInput;
+import dev.erst.gridgrind.core.model.value.HyperlinkTarget;
+import dev.erst.gridgrind.core.plan.*;
+import dev.erst.gridgrind.core.plan.CellMutationAction;
+import dev.erst.gridgrind.core.plan.DrawingMutationAction;
+import dev.erst.gridgrind.core.plan.StructuredMutationAction;
+import dev.erst.gridgrind.core.plan.WorkbookMutationAction;
+import dev.erst.gridgrind.core.plan.WorkbookPlan;
+import dev.erst.gridgrind.core.result.WorkbookResult;
+import dev.erst.gridgrind.core.source.BinarySourceInput;
+import dev.erst.gridgrind.core.source.TextSourceInput;
+import dev.erst.gridgrind.core.vocabulary.ExcelAuthoredDrawingShapeKind;
+import dev.erst.gridgrind.core.vocabulary.ExcelBorderStyle;
+import dev.erst.gridgrind.core.vocabulary.ExcelChartBarDirection;
+import dev.erst.gridgrind.core.vocabulary.ExcelChartDisplayBlanksAs;
+import dev.erst.gridgrind.core.vocabulary.ExcelChartLegendPosition;
+import dev.erst.gridgrind.core.vocabulary.ExcelComparisonOperator;
+import dev.erst.gridgrind.core.vocabulary.ExcelDataValidationErrorStyle;
+import dev.erst.gridgrind.core.vocabulary.ExcelDrawingAnchorBehavior;
+import dev.erst.gridgrind.core.vocabulary.ExcelFillPattern;
+import dev.erst.gridgrind.core.vocabulary.ExcelHorizontalAlignment;
+import dev.erst.gridgrind.core.vocabulary.ExcelPictureFormat;
+import dev.erst.gridgrind.core.vocabulary.ExcelPrintOrientation;
+import dev.erst.gridgrind.core.vocabulary.ExcelSheetVisibility;
+import dev.erst.gridgrind.core.vocabulary.ExcelVerticalAlignment;
+import dev.erst.gridgrind.core.vocabulary.NamedRangeScope;
 import dev.erst.gridgrind.engine.runtime.DefaultGridGrindRequestExecutor;
 import dev.erst.gridgrind.engine.runtime.ExecutionProgressSink;
 import dev.erst.gridgrind.excel.WorkbookSignatureSupport;
-import dev.erst.gridgrind.excel.foundation.ExcelAuthoredDrawingShapeKind;
-import dev.erst.gridgrind.excel.foundation.ExcelBorderStyle;
-import dev.erst.gridgrind.excel.foundation.ExcelChartBarDirection;
-import dev.erst.gridgrind.excel.foundation.ExcelChartDisplayBlanksAs;
-import dev.erst.gridgrind.excel.foundation.ExcelChartLegendPosition;
-import dev.erst.gridgrind.excel.foundation.ExcelComparisonOperator;
-import dev.erst.gridgrind.excel.foundation.ExcelDataValidationErrorStyle;
-import dev.erst.gridgrind.excel.foundation.ExcelDrawingAnchorBehavior;
-import dev.erst.gridgrind.excel.foundation.ExcelFillPattern;
-import dev.erst.gridgrind.excel.foundation.ExcelHorizontalAlignment;
-import dev.erst.gridgrind.excel.foundation.ExcelPictureFormat;
-import dev.erst.gridgrind.excel.foundation.ExcelPrintOrientation;
-import dev.erst.gridgrind.excel.foundation.ExcelSheetVisibility;
-import dev.erst.gridgrind.excel.foundation.ExcelVerticalAlignment;
 import dev.erst.gridgrind.json.codec.GridGrindJson;
 import dev.erst.gridgrind.json.codec.GridGrindJsonOutput;
 import java.io.ByteArrayOutputStream;
@@ -1431,7 +1476,7 @@ public final class XlsxParityScenarios {
                 new ChartPlotInput.Bar(
                     true,
                     ExcelChartBarDirection.COLUMN,
-                    dev.erst.gridgrind.excel.foundation.ExcelChartBarGrouping.CLUSTERED,
+                    dev.erst.gridgrind.core.vocabulary.ExcelChartBarGrouping.CLUSTERED,
                     Optional.empty(),
                     Optional.empty(),
                     List.of(
@@ -1635,7 +1680,7 @@ public final class XlsxParityScenarios {
   private static PivotTableInput.DataField defaultPivotDataFieldInput() {
     return new PivotTableInput.DataField(
         "Amount",
-        dev.erst.gridgrind.excel.foundation.ExcelPivotDataConsolidateFunction.SUM,
+        dev.erst.gridgrind.core.vocabulary.ExcelPivotDataConsolidateFunction.SUM,
         "Total Amount",
         Optional.of("#,##0.00"));
   }

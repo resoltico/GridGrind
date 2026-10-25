@@ -7,59 +7,65 @@ import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import dev.erst.gridgrind.contract.action.CellMutationAction;
-import dev.erst.gridgrind.contract.action.StructuredMutationAction;
-import dev.erst.gridgrind.contract.action.WorkbookMutationAction;
-import dev.erst.gridgrind.contract.assertion.*;
-import dev.erst.gridgrind.contract.dto.*;
-import dev.erst.gridgrind.contract.dto.AnalysisFindingReport;
-import dev.erst.gridgrind.contract.dto.AnalysisLocationReport;
-import dev.erst.gridgrind.contract.dto.AnalysisSummaryReport;
-import dev.erst.gridgrind.contract.dto.CellAlignmentReport;
-import dev.erst.gridgrind.contract.dto.CellBorderReport;
-import dev.erst.gridgrind.contract.dto.CellBorderSideReport;
-import dev.erst.gridgrind.contract.dto.CellFillReport;
-import dev.erst.gridgrind.contract.dto.CellFontReport;
-import dev.erst.gridgrind.contract.dto.CellInput;
-import dev.erst.gridgrind.contract.dto.CellProtectionReport;
-import dev.erst.gridgrind.contract.dto.ExecutionModeInput;
-import dev.erst.gridgrind.contract.dto.FontHeightReport;
-import dev.erst.gridgrind.contract.dto.NamedRangeScope;
-import dev.erst.gridgrind.contract.dto.NamedRangeTarget;
-import dev.erst.gridgrind.contract.dto.TableInput;
-import dev.erst.gridgrind.contract.dto.TableStyleInput;
-import dev.erst.gridgrind.contract.dto.WorkbookPlan;
-import dev.erst.gridgrind.contract.dto.WorkbookProtectionInput;
-import dev.erst.gridgrind.contract.dto.WorkbookProtectionReport;
-import dev.erst.gridgrind.contract.dto.WorkbookResult;
-import dev.erst.gridgrind.contract.query.*;
-import dev.erst.gridgrind.contract.query.InspectionResult;
-import dev.erst.gridgrind.contract.query.SheetInspectionResult;
-import dev.erst.gridgrind.contract.query.WorkbookAnalysisResult;
-import dev.erst.gridgrind.contract.query.WorkbookAssetInspectionResult;
-import dev.erst.gridgrind.contract.query.WorkbookInspectionResult;
-import dev.erst.gridgrind.contract.selector.CellSelector;
-import dev.erst.gridgrind.contract.selector.ChartSelector;
-import dev.erst.gridgrind.contract.selector.NamedRangeSelector;
-import dev.erst.gridgrind.contract.selector.PivotTableSelector;
-import dev.erst.gridgrind.contract.selector.Selector;
-import dev.erst.gridgrind.contract.selector.SheetSelector;
-import dev.erst.gridgrind.contract.selector.TableCellSelector;
-import dev.erst.gridgrind.contract.selector.TableRowSelector;
-import dev.erst.gridgrind.contract.selector.TableSelector;
-import dev.erst.gridgrind.contract.selector.WorkbookSelector;
-import dev.erst.gridgrind.contract.step.AssertionStep;
-import dev.erst.gridgrind.contract.step.WorkbookStaticRequestContract;
-import dev.erst.gridgrind.contract.step.WorkbookStaticViolation;
+import dev.erst.gridgrind.core.model.formula.FormulaHealthReport;
+import dev.erst.gridgrind.core.model.formula.NamedRangeHealthReport;
+import dev.erst.gridgrind.core.model.formula.NamedRangeTarget;
+import dev.erst.gridgrind.core.model.protection.CellProtectionReport;
+import dev.erst.gridgrind.core.model.protection.WorkbookProtectionInput;
+import dev.erst.gridgrind.core.model.protection.WorkbookProtectionReport;
+import dev.erst.gridgrind.core.model.style.CellAlignmentReport;
+import dev.erst.gridgrind.core.model.style.CellBorderReport;
+import dev.erst.gridgrind.core.model.style.CellBorderSideReport;
+import dev.erst.gridgrind.core.model.style.CellFillReport;
+import dev.erst.gridgrind.core.model.style.CellFontReport;
+import dev.erst.gridgrind.core.model.style.CellStyleReport;
+import dev.erst.gridgrind.core.model.style.FontHeightReport;
+import dev.erst.gridgrind.core.model.table.TableInput;
+import dev.erst.gridgrind.core.model.table.TableStyleInput;
+import dev.erst.gridgrind.core.model.value.CellInput;
+import dev.erst.gridgrind.core.model.value.CellScalarValue;
+import dev.erst.gridgrind.core.model.value.CellValueReport;
+import dev.erst.gridgrind.core.model.value.HyperlinkHealthReport;
+import dev.erst.gridgrind.core.plan.*;
+import dev.erst.gridgrind.core.plan.AssertionStep;
+import dev.erst.gridgrind.core.plan.CellMutationAction;
+import dev.erst.gridgrind.core.plan.CellSelector;
+import dev.erst.gridgrind.core.plan.ChartSelector;
+import dev.erst.gridgrind.core.plan.ExecutionModeInput;
+import dev.erst.gridgrind.core.plan.InspectionResult;
+import dev.erst.gridgrind.core.plan.NamedRangeSelector;
+import dev.erst.gridgrind.core.plan.PivotTableSelector;
+import dev.erst.gridgrind.core.plan.Selector;
+import dev.erst.gridgrind.core.plan.SheetInspectionResult;
+import dev.erst.gridgrind.core.plan.SheetSelector;
+import dev.erst.gridgrind.core.plan.StructuredMutationAction;
+import dev.erst.gridgrind.core.plan.TableCellSelector;
+import dev.erst.gridgrind.core.plan.TableRowSelector;
+import dev.erst.gridgrind.core.plan.TableSelector;
+import dev.erst.gridgrind.core.plan.WorkbookAnalysisResult;
+import dev.erst.gridgrind.core.plan.WorkbookAssetInspectionResult;
+import dev.erst.gridgrind.core.plan.WorkbookInspectionResult;
+import dev.erst.gridgrind.core.plan.WorkbookMutationAction;
+import dev.erst.gridgrind.core.plan.WorkbookPlan;
+import dev.erst.gridgrind.core.plan.WorkbookSelector;
+import dev.erst.gridgrind.core.result.AnalysisFindingReport;
+import dev.erst.gridgrind.core.result.AnalysisLocationReport;
+import dev.erst.gridgrind.core.result.AnalysisSummaryReport;
+import dev.erst.gridgrind.core.result.SheetSummaryReport;
+import dev.erst.gridgrind.core.result.WorkbookFindingsReport;
+import dev.erst.gridgrind.core.result.WorkbookResult;
+import dev.erst.gridgrind.core.validation.WorkbookStaticRequestContract;
+import dev.erst.gridgrind.core.validation.WorkbookStaticViolation;
+import dev.erst.gridgrind.core.vocabulary.AnalysisFindingCode;
+import dev.erst.gridgrind.core.vocabulary.AnalysisSeverity;
+import dev.erst.gridgrind.core.vocabulary.ExcelFillPattern;
+import dev.erst.gridgrind.core.vocabulary.ExcelHorizontalAlignment;
+import dev.erst.gridgrind.core.vocabulary.ExcelVerticalAlignment;
+import dev.erst.gridgrind.core.vocabulary.NamedRangeScope;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
 import dev.erst.gridgrind.excel.ExcelWorkbooks;
 import dev.erst.gridgrind.excel.WorkbookExecutionEngine;
 import dev.erst.gridgrind.excel.WorkbookLocation;
-import dev.erst.gridgrind.excel.foundation.AnalysisFindingCode;
-import dev.erst.gridgrind.excel.foundation.AnalysisSeverity;
-import dev.erst.gridgrind.excel.foundation.ExcelFillPattern;
-import dev.erst.gridgrind.excel.foundation.ExcelHorizontalAlignment;
-import dev.erst.gridgrind.excel.foundation.ExcelVerticalAlignment;
 import dev.erst.gridgrind.json.codec.GridGrindJson;
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -187,23 +193,27 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
     WorkbookAnalysisResult.FormulaHealthResult formulaHealth =
         inspection(inspected, "formulaHealth", WorkbookAnalysisResult.FormulaHealthResult.class);
 
-    dev.erst.gridgrind.contract.dto.CellReport.TextReport owner =
+    dev.erst.gridgrind.core.model.value.CellReport.TextReport owner =
         assertInstanceOf(
-            dev.erst.gridgrind.contract.dto.CellReport.TextReport.class, cells.cells().get(0));
-    dev.erst.gridgrind.contract.dto.CellReport.NumberReport amount =
+            dev.erst.gridgrind.core.model.value.CellReport.TextReport.class, cells.cells().get(0));
+    dev.erst.gridgrind.core.model.value.CellReport.NumberReport amount =
         assertInstanceOf(
-            dev.erst.gridgrind.contract.dto.CellReport.NumberReport.class, cells.cells().get(1));
-    dev.erst.gridgrind.contract.dto.CellReport.BooleanReport enabled =
+            dev.erst.gridgrind.core.model.value.CellReport.NumberReport.class,
+            cells.cells().get(1));
+    dev.erst.gridgrind.core.model.value.CellReport.BooleanReport enabled =
         assertInstanceOf(
-            dev.erst.gridgrind.contract.dto.CellReport.BooleanReport.class, cells.cells().get(2));
+            dev.erst.gridgrind.core.model.value.CellReport.BooleanReport.class,
+            cells.cells().get(2));
     assertInstanceOf(
-        dev.erst.gridgrind.contract.dto.CellReport.BlankReport.class, cells.cells().get(3));
-    dev.erst.gridgrind.contract.dto.CellReport.FormulaReport errorFormula =
+        dev.erst.gridgrind.core.model.value.CellReport.BlankReport.class, cells.cells().get(3));
+    dev.erst.gridgrind.core.model.value.CellReport.FormulaReport errorFormula =
         assertInstanceOf(
-            dev.erst.gridgrind.contract.dto.CellReport.FormulaReport.class, cells.cells().get(4));
-    dev.erst.gridgrind.contract.dto.CellReport.FormulaReport totalFormula =
+            dev.erst.gridgrind.core.model.value.CellReport.FormulaReport.class,
+            cells.cells().get(4));
+    dev.erst.gridgrind.core.model.value.CellReport.FormulaReport totalFormula =
         assertInstanceOf(
-            dev.erst.gridgrind.contract.dto.CellReport.FormulaReport.class, cells.cells().get(5));
+            dev.erst.gridgrind.core.model.value.CellReport.FormulaReport.class,
+            cells.cells().get(5));
     AnalysisFindingReport firstFinding = formulaHealth.analysis().findings().getFirst();
 
     WorkbookResult.Success asserted =
@@ -247,32 +257,32 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
                             "cell-text",
                             new CellSelector.ByAddress("Budget", "A2"),
                             new CellAssertion.CellValue(
-                                new dev.erst.gridgrind.contract.dto.CellScalarValue.Text(
+                                new dev.erst.gridgrind.core.model.value.CellScalarValue.Text(
                                     textValue(owner)))),
                         assertThat(
                             "cell-number",
                             new CellSelector.ByAddress("Budget", "B2"),
                             new CellAssertion.CellValue(
-                                new dev.erst.gridgrind.contract.dto.CellScalarValue.NumberValue(
+                                new dev.erst.gridgrind.core.model.value.CellScalarValue.NumberValue(
                                     numberValue(amount)))),
                         assertThat(
                             "cell-boolean",
                             new CellSelector.ByAddress("Budget", "C2"),
                             new CellAssertion.CellValue(
-                                new dev.erst.gridgrind.contract.dto.CellScalarValue.BooleanValue(
-                                    booleanValue(enabled)))),
+                                new dev.erst.gridgrind.core.model.value.CellScalarValue
+                                    .BooleanValue(booleanValue(enabled)))),
                         assertThat(
                             "cell-blank",
                             new CellSelector.ByAddress("Budget", "D2"),
                             new CellAssertion.CellValue(
-                                new dev.erst.gridgrind.contract.dto.CellScalarValue.Blank())),
+                                new dev.erst.gridgrind.core.model.value.CellScalarValue.Blank())),
                         assertThat(
                             "cell-error",
                             new CellSelector.ByAddress("Budget", "E2"),
                             new CellAssertion.CellValue(
-                                new dev.erst.gridgrind.contract.dto.CellScalarValue.ErrorValue(
+                                new dev.erst.gridgrind.core.model.value.CellScalarValue.ErrorValue(
                                     assertInstanceOf(
-                                            dev.erst.gridgrind.contract.dto.CellValueReport
+                                            dev.erst.gridgrind.core.model.value.CellValueReport
                                                 .ErrorValue.class,
                                             evaluation(errorFormula))
                                         .errorValue()))),
@@ -280,9 +290,9 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
                             "cell-formula-evaluation",
                             new CellSelector.ByAddress("Budget", "F2"),
                             new CellAssertion.CellValue(
-                                new dev.erst.gridgrind.contract.dto.CellScalarValue.NumberValue(
+                                new dev.erst.gridgrind.core.model.value.CellScalarValue.NumberValue(
                                     assertInstanceOf(
-                                            dev.erst.gridgrind.contract.dto.CellValueReport
+                                            dev.erst.gridgrind.core.model.value.CellValueReport
                                                 .NumberValue.class,
                                             evaluation(totalFormula))
                                         .numberValue()))),
@@ -343,8 +353,8 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
                             new CompositeAssertion.AllOf(
                                 List.of(
                                     new CellAssertion.CellValue(
-                                        new dev.erst.gridgrind.contract.dto.CellScalarValue.Text(
-                                            textValue(owner))),
+                                        new dev.erst.gridgrind.core.model.value.CellScalarValue
+                                            .Text(textValue(owner))),
                                     new CellAssertion.DisplayValue(displayValue(owner))))),
                         assertThat(
                             "any-of",
@@ -353,14 +363,14 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
                                 List.of(
                                     new CellAssertion.DisplayValue("Wrong"),
                                     new CellAssertion.CellValue(
-                                        new dev.erst.gridgrind.contract.dto.CellScalarValue.Text(
-                                            textValue(owner)))))),
+                                        new dev.erst.gridgrind.core.model.value.CellScalarValue
+                                            .Text(textValue(owner)))))),
                         assertThat(
                             "not",
                             new CellSelector.ByAddress("Budget", "A2"),
                             new CompositeAssertion.Not(
                                 new CellAssertion.CellValue(
-                                    new dev.erst.gridgrind.contract.dto.CellScalarValue.Text(
+                                    new dev.erst.gridgrind.core.model.value.CellScalarValue.Text(
                                         "Wrong"))))),
                     List.of())));
 
@@ -394,7 +404,7 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
             "any-of",
             "not"),
         asserted.assertions().stream()
-            .map(dev.erst.gridgrind.contract.assertion.AssertionResult::stepId)
+            .map(dev.erst.gridgrind.core.plan.AssertionResult::stepId)
             .toList());
   }
 
@@ -496,9 +506,9 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
                             new SheetSelector.ByName("Budget"),
                             new InspectionAnalysisQuery.AnalyzeFormulaHealth())))));
 
-    dev.erst.gridgrind.contract.dto.CellReport.TextReport owner =
+    dev.erst.gridgrind.core.model.value.CellReport.TextReport owner =
         assertInstanceOf(
-            dev.erst.gridgrind.contract.dto.CellReport.TextReport.class,
+            dev.erst.gridgrind.core.model.value.CellReport.TextReport.class,
             inspection(inspected, "cells", SheetInspectionResult.CellsResult.class)
                 .cells()
                 .getFirst());
@@ -742,8 +752,8 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
                             new CompositeAssertion.AllOf(
                                 List.of(
                                     new CellAssertion.CellValue(
-                                        new dev.erst.gridgrind.contract.dto.CellScalarValue.Text(
-                                            "Owner")),
+                                        new dev.erst.gridgrind.core.model.value.CellScalarValue
+                                            .Text("Owner")),
                                     new CellAssertion.DisplayValue("Wrong"))))),
                     List.of())));
     assertTrue(allOfFailure.problem().message().contains("ALL_OF failed"));
@@ -764,8 +774,8 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
                                 List.of(
                                     new CellAssertion.DisplayValue("Wrong"),
                                     new CellAssertion.CellValue(
-                                        new dev.erst.gridgrind.contract.dto.CellScalarValue.Text(
-                                            "Also wrong")))))),
+                                        new dev.erst.gridgrind.core.model.value.CellScalarValue
+                                            .Text("Also wrong")))))),
                     List.of())));
     assertTrue(anyOfFailure.problem().message().contains("ANY_OF failed"));
 
@@ -783,7 +793,7 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
                             new CellSelector.ByAddress("Budget", "A1"),
                             new CompositeAssertion.Not(
                                 new CellAssertion.CellValue(
-                                    new dev.erst.gridgrind.contract.dto.CellScalarValue.Text(
+                                    new dev.erst.gridgrind.core.model.value.CellScalarValue.Text(
                                         "Owner"))))),
                     List.of())));
     assertTrue(notFailure.problem().message().contains("NOT failed"));
@@ -994,23 +1004,23 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
                 "formula", new FormulaHealthReport(1, summary, List.of(finding))),
             new WorkbookAnalysisResult.DataValidationHealthResult(
                 "validation",
-                new dev.erst.gridgrind.contract.dto.DataValidationHealthReport(
+                new dev.erst.gridgrind.core.model.validation.DataValidationHealthReport(
                     1, summary, List.of(finding))),
             new WorkbookAnalysisResult.ConditionalFormattingHealthResult(
                 "formatting",
-                new dev.erst.gridgrind.contract.dto.ConditionalFormattingHealthReport(
+                new dev.erst.gridgrind.core.model.validation.ConditionalFormattingHealthReport(
                     1, summary, List.of(finding))),
             new WorkbookAnalysisResult.AutofilterHealthResult(
                 "autofilter",
-                new dev.erst.gridgrind.contract.dto.AutofilterHealthReport(
+                new dev.erst.gridgrind.core.model.table.AutofilterHealthReport(
                     1, summary, List.of(finding))),
             new WorkbookAnalysisResult.TableHealthResult(
                 "table",
-                new dev.erst.gridgrind.contract.dto.TableHealthReport(
+                new dev.erst.gridgrind.core.model.table.TableHealthReport(
                     1, summary, List.of(finding))),
             new WorkbookAnalysisResult.PivotTableHealthResult(
                 "pivot",
-                new dev.erst.gridgrind.contract.dto.PivotTableHealthReport(
+                new dev.erst.gridgrind.core.model.pivot.PivotTableHealthReport(
                     1, summary, List.of(finding))),
             new WorkbookAnalysisResult.HyperlinkHealthResult(
                 "hyperlink", new HyperlinkHealthReport(1, summary, List.of(finding))),
@@ -1066,17 +1076,17 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
             new AnalysisLocationReport.Cell("Budget", "E2"),
             List.of("E2"));
     CellStyleReport style = style();
-    dev.erst.gridgrind.contract.dto.CellReport.BlankReport blankCell =
+    dev.erst.gridgrind.core.model.value.CellReport.BlankReport blankCell =
         blankReadCell("A1", "", style);
-    dev.erst.gridgrind.contract.dto.CellReport.TextReport textCell =
+    dev.erst.gridgrind.core.model.value.CellReport.TextReport textCell =
         textReadCell("A2", "Owner", style, "Owner");
-    dev.erst.gridgrind.contract.dto.CellReport.NumberReport numberCell =
+    dev.erst.gridgrind.core.model.value.CellReport.NumberReport numberCell =
         numberReadCell("B2", "42", style, 42.0d);
-    dev.erst.gridgrind.contract.dto.CellReport.BooleanReport booleanCell =
+    dev.erst.gridgrind.core.model.value.CellReport.BooleanReport booleanCell =
         booleanReadCell("C2", "TRUE", style, true);
-    dev.erst.gridgrind.contract.dto.CellReport.ErrorReport errorCell =
+    dev.erst.gridgrind.core.model.value.CellReport.ErrorReport errorCell =
         errorReadCell("D2", "#DIV/0!", style, "#DIV/0!");
-    dev.erst.gridgrind.contract.dto.CellReport.FormulaReport formulaCell =
+    dev.erst.gridgrind.core.model.value.CellReport.FormulaReport formulaCell =
         formulaReadCell(
             "E2", "42", style, "2+40", new CellValueReport.NumberValue(42.0d, Optional.empty()));
 
@@ -1168,14 +1178,14 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
                         mutate(
                             new SheetSelector.ByName("Ops"),
                             new CellMutationAction.AppendRow(
-                                new dev.erst.gridgrind.contract.dto.CellRowInput.Typed(
+                                new dev.erst.gridgrind.core.model.value.CellRowInput.Typed(
                                     List.of(textCell("Owner"), textCell("Ada")))))),
                     List.of(
                         assertThat(
                             "stream-assert",
                             new CellSelector.ByAddress("Ops", "A1"),
                             new CellAssertion.CellValue(
-                                new dev.erst.gridgrind.contract.dto.CellScalarValue.Text(
+                                new dev.erst.gridgrind.core.model.value.CellScalarValue.Text(
                                     "Owner")))),
                     List.of(
                         inspect(
@@ -1185,7 +1195,7 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
     assertEquals(
         List.of("stream-assert"),
         success.assertions().stream()
-            .map(dev.erst.gridgrind.contract.assertion.AssertionResult::stepId)
+            .map(dev.erst.gridgrind.core.plan.AssertionResult::stepId)
             .toList());
 
     WorkbookResult.Failure streamingAssertionFailure =
@@ -1204,28 +1214,29 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
                         mutate(
                             new SheetSelector.ByName("Ops"),
                             new CellMutationAction.AppendRow(
-                                new dev.erst.gridgrind.contract.dto.CellRowInput.Typed(
+                                new dev.erst.gridgrind.core.model.value.CellRowInput.Typed(
                                     List.of(textCell("Owner"), textCell("Ada")))))),
                     List.of(
                         assertThat(
                             "stream-pass",
                             new CellSelector.ByAddress("Ops", "A1"),
                             new CellAssertion.CellValue(
-                                new dev.erst.gridgrind.contract.dto.CellScalarValue.Text("Owner"))),
+                                new dev.erst.gridgrind.core.model.value.CellScalarValue.Text(
+                                    "Owner"))),
                         assertThat(
                             "stream-fail",
                             new CellSelector.ByAddress("Ops", "A1"),
                             new CellAssertion.CellValue(
-                                new dev.erst.gridgrind.contract.dto.CellScalarValue.Text(
+                                new dev.erst.gridgrind.core.model.value.CellScalarValue.Text(
                                     "WrongValue")))),
                     List.of())));
     assertEquals(2, streamingAssertionFailure.assertions().size());
     assertEquals(
-        dev.erst.gridgrind.contract.assertion.AssertionOutcome.PASSED,
+        dev.erst.gridgrind.core.plan.AssertionOutcome.PASSED,
         streamingAssertionFailure.assertions().get(0).outcome());
     assertEquals("stream-pass", streamingAssertionFailure.assertions().get(0).stepId());
     assertEquals(
-        dev.erst.gridgrind.contract.assertion.AssertionOutcome.FAILED,
+        dev.erst.gridgrind.core.plan.AssertionOutcome.FAILED,
         streamingAssertionFailure.assertions().get(1).outcome());
     assertEquals("stream-fail", streamingAssertionFailure.assertions().get(1).stepId());
 
@@ -1238,7 +1249,7 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
                         "assert",
                         new CellSelector.ByAddress("Ops", "A1"),
                         new CellAssertion.CellValue(
-                            new dev.erst.gridgrind.contract.dto.CellScalarValue.Text("Owner"))),
+                            new dev.erst.gridgrind.core.model.value.CellScalarValue.Text("Owner"))),
                     null,
                     new WorkbookLocation.UnsavedWorkbook(),
                     ExecutionModeInput.eventRead()));
@@ -1253,7 +1264,7 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
                         "assert",
                         new CellSelector.ByAddress("Ops", "A1"),
                         new CellAssertion.CellValue(
-                            new dev.erst.gridgrind.contract.dto.CellScalarValue.Text("Owner"))),
+                            new dev.erst.gridgrind.core.model.value.CellScalarValue.Text("Owner"))),
                     null,
                     new WorkbookLocation.UnsavedWorkbook(),
                     ExecutionModeInput.eventRead()));
@@ -1371,7 +1382,7 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
                                 "assert-without-sheet",
                                 new CellSelector.ByAddress("Ops", "A1"),
                                 new CellAssertion.CellValue(
-                                    new dev.erst.gridgrind.contract.dto.CellScalarValue.Text(
+                                    new dev.erst.gridgrind.core.model.value.CellScalarValue.Text(
                                         "Owner")))),
                         List.of())))
             .stream()
@@ -1449,9 +1460,9 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
     return mutations(
         mutate(new SheetSelector.ByName("Budget"), new WorkbookMutationAction.EnsureSheet()),
         mutate(
-            new dev.erst.gridgrind.contract.selector.RangeSelector.ByRange("Budget", "A1:B3"),
+            new dev.erst.gridgrind.core.plan.RangeSelector.ByRange("Budget", "A1:B3"),
             new CellMutationAction.SetRange(
-                new dev.erst.gridgrind.contract.dto.CellGridInput.Typed(
+                new dev.erst.gridgrind.core.model.value.CellGridInput.Typed(
                     List.of(
                         List.of(textCell("Item"), textCell("Amount")),
                         List.of(textCell("Hosting"), new CellInput.NumberValue(100.0)),
@@ -1521,10 +1532,10 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
                 List.of())));
   }
 
-  private static dev.erst.gridgrind.contract.assertion.AssertionFailure failedAssertion(
+  private static dev.erst.gridgrind.core.plan.AssertionFailure failedAssertion(
       WorkbookResult.Failure failure) {
     return assertInstanceOf(
-            dev.erst.gridgrind.contract.assertion.AssertionResult.Failed.class,
+            dev.erst.gridgrind.core.plan.AssertionResult.Failed.class,
             failure.assertions().getFirst())
         .failure();
   }

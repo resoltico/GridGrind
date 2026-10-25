@@ -1,9 +1,9 @@
 package dev.erst.gridgrind.cli.examples;
 
-import dev.erst.gridgrind.contract.dto.CellGridInput;
-import dev.erst.gridgrind.contract.dto.CellInput;
-import dev.erst.gridgrind.contract.dto.CellRowInput;
-import dev.erst.gridgrind.contract.source.TextSourceInput;
+import dev.erst.gridgrind.core.model.value.CellGridInput;
+import dev.erst.gridgrind.core.model.value.CellInput;
+import dev.erst.gridgrind.core.model.value.CellRowInput;
+import dev.erst.gridgrind.core.source.TextSourceInput;
 import java.util.List;
 
 /** Shared cell and row literal helpers for shipped example workbook plans. */

@@ -1,9 +1,9 @@
 package dev.erst.gridgrind.cli;
 
-import dev.erst.gridgrind.contract.catalog.GridGrindExecutionModeMetadata;
-import dev.erst.gridgrind.contract.catalog.GridGrindInspectionContractText;
-import dev.erst.gridgrind.contract.catalog.GridGrindOoxmlWriteEncryptionContractText;
-import dev.erst.gridgrind.contract.catalog.GridGrindRequestSurfaceContractText;
+import dev.erst.gridgrind.core.catalog.GridGrindExecutionModeMetadata;
+import dev.erst.gridgrind.core.catalog.GridGrindInspectionContractText;
+import dev.erst.gridgrind.core.catalog.GridGrindOoxmlWriteEncryptionContractText;
+import dev.erst.gridgrind.core.catalog.GridGrindRequestSurfaceContractText;
 import java.util.List;
 
 /** Synopsis-first CLI help sections. */
@@ -154,20 +154,20 @@ final class GridGrindCliSurfaceSynopsisSections {
                 "Default sheet sizing",
                 "authored defaultColumnWidth must be > 0 and <= 255;"
                     + " authored defaultRowHeightPoints must be > 0 and <= "
-                    + dev.erst.gridgrind.excel.foundation.ExcelSheetLayoutLimits
+                    + dev.erst.gridgrind.core.vocabulary.ExcelSheetLayoutLimits
                         .MAX_ROW_HEIGHT_POINTS
                     + " (Excel limits)."),
             new CliSurface.DefinitionEntry(
                 "Row heightPoints",
                 "authored heightPoints > 0 and <= "
-                    + dev.erst.gridgrind.excel.foundation.ExcelSheetLayoutLimits
+                    + dev.erst.gridgrind.core.vocabulary.ExcelSheetLayoutLimits
                         .MAX_ROW_HEIGHT_POINTS
                     + " (Excel row height limit)."),
             new CliSurface.DefinitionEntry(
                 "Zoom percent",
-                dev.erst.gridgrind.excel.foundation.ExcelSheetLayoutLimits.MIN_ZOOM_PERCENT
+                dev.erst.gridgrind.core.vocabulary.ExcelSheetLayoutLimits.MIN_ZOOM_PERCENT
                     + " to "
-                    + dev.erst.gridgrind.excel.foundation.ExcelSheetLayoutLimits.MAX_ZOOM_PERCENT
+                    + dev.erst.gridgrind.core.vocabulary.ExcelSheetLayoutLimits.MAX_ZOOM_PERCENT
                     + " inclusive (Excel zoom limit)."),
             new CliSurface.DefinitionEntry(
                 "Row structural edits",

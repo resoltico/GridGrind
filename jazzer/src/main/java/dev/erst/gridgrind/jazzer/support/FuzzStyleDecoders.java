@@ -1,8 +1,12 @@
 package dev.erst.gridgrind.jazzer.support;
 
-import dev.erst.gridgrind.contract.dto.CellFontInput;
-import dev.erst.gridgrind.contract.dto.ColorInput;
-import dev.erst.gridgrind.contract.dto.FontHeightInput;
+import dev.erst.gridgrind.core.model.style.CellFontInput;
+import dev.erst.gridgrind.core.model.style.ColorInput;
+import dev.erst.gridgrind.core.model.style.FontHeightInput;
+import dev.erst.gridgrind.core.vocabulary.ExcelBorderStyle;
+import dev.erst.gridgrind.core.vocabulary.ExcelFillPattern;
+import dev.erst.gridgrind.core.vocabulary.ExcelHorizontalAlignment;
+import dev.erst.gridgrind.core.vocabulary.ExcelVerticalAlignment;
 import dev.erst.gridgrind.excel.ExcelBorder;
 import dev.erst.gridgrind.excel.ExcelBorderSide;
 import dev.erst.gridgrind.excel.ExcelCellAlignment;
@@ -14,10 +18,6 @@ import dev.erst.gridgrind.excel.ExcelColor;
 import dev.erst.gridgrind.excel.ExcelFontHeight;
 import dev.erst.gridgrind.excel.ExcelGradientFill;
 import dev.erst.gridgrind.excel.ExcelGradientStop;
-import dev.erst.gridgrind.excel.foundation.ExcelBorderStyle;
-import dev.erst.gridgrind.excel.foundation.ExcelFillPattern;
-import dev.erst.gridgrind.excel.foundation.ExcelHorizontalAlignment;
-import dev.erst.gridgrind.excel.foundation.ExcelVerticalAlignment;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Objects;

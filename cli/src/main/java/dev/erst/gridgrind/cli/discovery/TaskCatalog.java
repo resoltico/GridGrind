@@ -1,6 +1,6 @@
 package dev.erst.gridgrind.cli.discovery;
 
-import dev.erst.gridgrind.contract.dto.GridGrindProtocolVersion;
+import dev.erst.gridgrind.core.plan.GridGrindProtocolVersion;
 import java.util.List;
 import java.util.Objects;
 

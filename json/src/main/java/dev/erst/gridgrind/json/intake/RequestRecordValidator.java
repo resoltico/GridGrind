@@ -1,6 +1,6 @@
 package dev.erst.gridgrind.json.intake;
 
-import dev.erst.gridgrind.contract.catalog.GridGrindProtocolContractSupport;
+import dev.erst.gridgrind.core.catalog.GridGrindProtocolContractSupport;
 import dev.erst.gridgrind.core.problem.RequestMalformedScalar;
 import dev.erst.gridgrind.core.problem.RequestStructuralProblem;
 import java.lang.reflect.RecordComponent;

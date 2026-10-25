@@ -1,6 +1,6 @@
 package dev.erst.gridgrind.engine.runtime;
 
-import dev.erst.gridgrind.contract.dto.WorkbookExecutionEvidence.Preservation;
+import dev.erst.gridgrind.core.result.WorkbookExecutionEvidence.Preservation;
 import java.io.IOException;
 import java.util.List;
 

@@ -1,9 +1,9 @@
 package dev.erst.gridgrind.engine.runtime;
 
-import dev.erst.gridgrind.contract.dto.ProblemContext;
-import dev.erst.gridgrind.contract.dto.ProblemContextWorkbookSurfaces.StepReference;
-import dev.erst.gridgrind.contract.dto.WorkbookPlan;
-import dev.erst.gridgrind.contract.step.WorkbookStep;
+import dev.erst.gridgrind.core.plan.WorkbookPlan;
+import dev.erst.gridgrind.core.plan.WorkbookStep;
+import dev.erst.gridgrind.core.problem.ProblemContext;
+import dev.erst.gridgrind.core.problem.ProblemContextWorkbookSurfaces.StepReference;
 
 /** Creates consistent step references and diagnostic contexts for execution failures. */
 final class ExecutionStepContextFactory {

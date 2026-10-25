@@ -3,10 +3,10 @@ package dev.erst.gridgrind.excel;
 import static dev.erst.gridgrind.excel.ExcelStyleTestAccess.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-import dev.erst.gridgrind.excel.foundation.ExcelBorderStyle;
-import dev.erst.gridgrind.excel.foundation.ExcelFillPattern;
-import dev.erst.gridgrind.excel.foundation.ExcelHorizontalAlignment;
-import dev.erst.gridgrind.excel.foundation.ExcelVerticalAlignment;
+import dev.erst.gridgrind.core.vocabulary.ExcelBorderStyle;
+import dev.erst.gridgrind.core.vocabulary.ExcelFillPattern;
+import dev.erst.gridgrind.core.vocabulary.ExcelHorizontalAlignment;
+import dev.erst.gridgrind.core.vocabulary.ExcelVerticalAlignment;
 import java.math.BigDecimal;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;

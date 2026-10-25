@@ -2,9 +2,9 @@ package dev.erst.gridgrind.excel;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import dev.erst.gridgrind.excel.foundation.AnalysisFindingCode;
-import dev.erst.gridgrind.excel.foundation.AnalysisSeverity;
-import dev.erst.gridgrind.excel.foundation.ExcelPivotDataConsolidateFunction;
+import dev.erst.gridgrind.core.vocabulary.AnalysisFindingCode;
+import dev.erst.gridgrind.core.vocabulary.AnalysisSeverity;
+import dev.erst.gridgrind.core.vocabulary.ExcelPivotDataConsolidateFunction;
 import dev.erst.gridgrind.excel.pivot.ColumnAxisSnapshot;
 import dev.erst.gridgrind.excel.pivot.ExcelPivotTableAnalysisSupport;
 import dev.erst.gridgrind.excel.pivot.ExcelPivotTableController;

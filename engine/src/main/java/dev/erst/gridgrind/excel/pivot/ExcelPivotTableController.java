@@ -1,9 +1,9 @@
 package dev.erst.gridgrind.excel.pivot;
 
+import dev.erst.gridgrind.core.vocabulary.ExcelPivotTableNaming;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
 import dev.erst.gridgrind.excel.PoiRelationRemoval;
 import dev.erst.gridgrind.excel.WorkbookAnalysis;
-import dev.erst.gridgrind.excel.foundation.ExcelPivotTableNaming;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -104,7 +104,7 @@ public final class ExcelPivotTableController {
   public void deletePivotTable(ExcelWorkbook workbook, String name, String sheetName) {
     Objects.requireNonNull(workbook, "workbook must not be null");
     String validatedName = ExcelPivotTableNaming.validateName(name);
-    dev.erst.gridgrind.excel.foundation.ExcelSheetNames.requireValid(sheetName, "sheetName");
+    dev.erst.gridgrind.core.vocabulary.ExcelSheetNames.requireValid(sheetName, "sheetName");
 
     Optional<PivotHandle> handle = pivotByName(workbook, validatedName);
     if (handle.isEmpty() || !handle.orElseThrow().sheetName().equals(sheetName)) {

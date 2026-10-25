@@ -1,8 +1,8 @@
 package dev.erst.gridgrind.cli;
 
-import dev.erst.gridgrind.contract.dto.RequestWarning;
-import dev.erst.gridgrind.contract.dto.WorkbookResult;
 import dev.erst.gridgrind.core.problem.RequestIntake;
+import dev.erst.gridgrind.core.problem.RequestWarning;
+import dev.erst.gridgrind.core.result.WorkbookResult;
 import java.util.ArrayList;
 import java.util.List;
 

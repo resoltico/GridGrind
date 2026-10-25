@@ -1,7 +1,7 @@
 package dev.erst.gridgrind.json.intake;
 
-import dev.erst.gridgrind.contract.dto.RequestWarning;
 import dev.erst.gridgrind.core.problem.RequestInvalidEncoding;
+import dev.erst.gridgrind.core.problem.RequestWarning;
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
 import java.nio.charset.CharacterCodingException;

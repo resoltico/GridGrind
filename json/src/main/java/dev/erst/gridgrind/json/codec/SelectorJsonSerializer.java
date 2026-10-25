@@ -1,7 +1,7 @@
 package dev.erst.gridgrind.json.codec;
 
-import dev.erst.gridgrind.contract.selector.Selector;
-import dev.erst.gridgrind.contract.selector.SelectorJsonSupport;
+import dev.erst.gridgrind.core.plan.Selector;
+import dev.erst.gridgrind.core.plan.SelectorJsonSupport;
 import java.lang.reflect.RecordComponent;
 import tools.jackson.core.JsonGenerator;
 import tools.jackson.databind.SerializationContext;

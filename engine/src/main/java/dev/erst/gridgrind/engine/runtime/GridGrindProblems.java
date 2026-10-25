@@ -1,11 +1,11 @@
 package dev.erst.gridgrind.engine.runtime;
 
-import dev.erst.gridgrind.contract.dto.GridGrindProblemCode;
-import dev.erst.gridgrind.contract.dto.GridGrindProblemDetail;
-import dev.erst.gridgrind.contract.dto.GridGrindRequestProblemSupport;
-import dev.erst.gridgrind.contract.dto.ProblemContext;
+import dev.erst.gridgrind.core.problem.GridGrindProblemCode;
+import dev.erst.gridgrind.core.problem.GridGrindProblemDetail;
+import dev.erst.gridgrind.core.problem.GridGrindRequestProblemSupport;
 import dev.erst.gridgrind.core.problem.PayloadException;
 import dev.erst.gridgrind.core.problem.PayloadLocation;
+import dev.erst.gridgrind.core.problem.ProblemContext;
 import dev.erst.gridgrind.core.problem.RequestProblemSource;
 import java.nio.file.FileAlreadyExistsException;
 import java.util.ArrayList;
@@ -22,7 +22,7 @@ public final class GridGrindProblems {
 
   /** Builds a fully populated problem from a classified exception. */
   public static GridGrindProblemDetail.Problem fromException(
-      Throwable exception, dev.erst.gridgrind.contract.dto.ProblemContext context) {
+      Throwable exception, dev.erst.gridgrind.core.problem.ProblemContext context) {
     Objects.requireNonNull(exception, "exception must not be null");
     Objects.requireNonNull(context, "context must not be null");
     GridGrindProblemCode code = codeFor(exception);
@@ -39,7 +39,7 @@ public final class GridGrindProblems {
   public static GridGrindProblemDetail.Problem problem(
       GridGrindProblemCode code,
       String message,
-      dev.erst.gridgrind.contract.dto.ProblemContext context,
+      dev.erst.gridgrind.core.problem.ProblemContext context,
       @Nullable Throwable cause) {
     Objects.requireNonNull(context, "context must not be null");
     String publicMessage =
@@ -63,7 +63,7 @@ public final class GridGrindProblems {
   public static GridGrindProblemDetail.Problem problem(
       GridGrindProblemCode code,
       String message,
-      dev.erst.gridgrind.contract.dto.ProblemContext context,
+      dev.erst.gridgrind.core.problem.ProblemContext context,
       List<GridGrindProblemDetail.ProblemCause> causes) {
     return problem(code, message, context, causes, null);
   }
@@ -71,7 +71,7 @@ public final class GridGrindProblems {
   private static GridGrindProblemDetail.Problem problem(
       GridGrindProblemCode code,
       String message,
-      dev.erst.gridgrind.contract.dto.ProblemContext context,
+      dev.erst.gridgrind.core.problem.ProblemContext context,
       List<GridGrindProblemDetail.ProblemCause> causes,
       @Nullable Throwable source) {
     Objects.requireNonNull(code, "code must not be null");
@@ -90,7 +90,7 @@ public final class GridGrindProblems {
   private static String resolutionFor(
       GridGrindProblemCode code,
       String message,
-      dev.erst.gridgrind.contract.dto.ProblemContext context,
+      dev.erst.gridgrind.core.problem.ProblemContext context,
       @Nullable Throwable source) {
     if (source instanceof RequestProblemSource requestProblemSource) {
       return GridGrindRequestProblemSupport.resolution(
@@ -150,7 +150,7 @@ public final class GridGrindProblems {
   }
 
   static String messageFor(
-      Throwable exception, dev.erst.gridgrind.contract.dto.ProblemContext context) {
+      Throwable exception, dev.erst.gridgrind.core.problem.ProblemContext context) {
     Objects.requireNonNull(exception, "exception must not be null");
     Objects.requireNonNull(context, "context must not be null");
     if (exception instanceof FileAlreadyExistsException) {
@@ -174,7 +174,7 @@ public final class GridGrindProblems {
   private static String publicMessageFor(
       GridGrindProblemCode code,
       Throwable exception,
-      dev.erst.gridgrind.contract.dto.ProblemContext context) {
+      dev.erst.gridgrind.core.problem.ProblemContext context) {
     return code == GridGrindProblemCode.INTERNAL_ERROR
         ? code.title()
         : messageFor(exception, context);
@@ -214,54 +214,54 @@ public final class GridGrindProblems {
    * type are paired for request-intake failures (e.g., PayloadException in a ReadRequest or
    * BindRequest context).
    */
-  static dev.erst.gridgrind.contract.dto.ProblemContext enrichContext(
-      dev.erst.gridgrind.contract.dto.ProblemContext context, Throwable exception) {
+  static dev.erst.gridgrind.core.problem.ProblemContext enrichContext(
+      dev.erst.gridgrind.core.problem.ProblemContext context, Throwable exception) {
     return switch (context) {
-      case dev.erst.gridgrind.contract.dto.ProblemContext.ReadRequest rc -> {
+      case dev.erst.gridgrind.core.problem.ProblemContext.ReadRequest rc -> {
         if (exception instanceof PayloadException pe) {
           yield rc.withJson(jsonLocationFor(pe));
         }
         yield context;
       }
-      case dev.erst.gridgrind.contract.dto.ProblemContext.BindRequest bc -> {
+      case dev.erst.gridgrind.core.problem.ProblemContext.BindRequest bc -> {
         if (exception instanceof PayloadException pe) {
           yield bc.withJson(jsonLocationFor(pe));
         }
         yield context;
       }
-      case dev.erst.gridgrind.contract.dto.ProblemContext.ExecuteCalculation executeCalculation ->
+      case dev.erst.gridgrind.core.problem.ProblemContext.ExecuteCalculation executeCalculation ->
           exception instanceof Exception resolved
               ? executeCalculation.withLocation(ExecutionDiagnosticFields.locationFor(resolved))
               : context;
-      case dev.erst.gridgrind.contract.dto.ProblemContext.ExecuteStep executeStep ->
+      case dev.erst.gridgrind.core.problem.ProblemContext.ExecuteStep executeStep ->
           exception instanceof Exception resolved
               ? executeStep.withLocation(ExecutionDiagnosticFields.locationFor(resolved))
               : context;
-      case dev.erst.gridgrind.contract.dto.ProblemContext.ParseArguments _ -> context;
-      case dev.erst.gridgrind.contract.dto.CliRuntimeContext _ -> context;
-      case dev.erst.gridgrind.contract.dto.ProblemContext.ValidateRequest _ -> context;
-      case dev.erst.gridgrind.contract.dto.ProblemContext.ResolveInputs _ -> context;
-      case dev.erst.gridgrind.contract.dto.ProblemContext.OpenWorkbook _ -> context;
-      case dev.erst.gridgrind.contract.dto.ProblemContext.PersistWorkbook _ -> context;
-      case dev.erst.gridgrind.contract.dto.ProblemContext.ExecuteRequest _ -> context;
-      case dev.erst.gridgrind.contract.dto.ProblemContext.WriteResponse _ -> context;
+      case dev.erst.gridgrind.core.problem.ProblemContext.ParseArguments _ -> context;
+      case dev.erst.gridgrind.core.problem.CliRuntimeContext _ -> context;
+      case dev.erst.gridgrind.core.problem.ProblemContext.ValidateRequest _ -> context;
+      case dev.erst.gridgrind.core.problem.ProblemContext.ResolveInputs _ -> context;
+      case dev.erst.gridgrind.core.problem.ProblemContext.OpenWorkbook _ -> context;
+      case dev.erst.gridgrind.core.problem.ProblemContext.PersistWorkbook _ -> context;
+      case dev.erst.gridgrind.core.problem.ProblemContext.ExecuteRequest _ -> context;
+      case dev.erst.gridgrind.core.problem.ProblemContext.WriteResponse _ -> context;
     };
   }
 
-  private static dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces.JsonLocation
+  private static dev.erst.gridgrind.core.problem.ProblemContextRequestSurfaces.JsonLocation
       jsonLocationFor(PayloadException exception) {
     return switch (exception.jsonLocation()) {
       case PayloadLocation.PathOnly pathOnly ->
-          dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces.JsonLocation.pathOnly(
+          dev.erst.gridgrind.core.problem.ProblemContextRequestSurfaces.JsonLocation.pathOnly(
               pathOnly.jsonPathValue());
       case PayloadLocation.LineColumn lineColumn ->
-          dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces.JsonLocation.lineColumn(
+          dev.erst.gridgrind.core.problem.ProblemContextRequestSurfaces.JsonLocation.lineColumn(
               lineColumn.jsonLineValue(), lineColumn.jsonColumnValue());
       case PayloadLocation.Located located ->
-          dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces.JsonLocation.located(
+          dev.erst.gridgrind.core.problem.ProblemContextRequestSurfaces.JsonLocation.located(
               located.jsonPathValue(), located.jsonLineValue(), located.jsonColumnValue());
       case PayloadLocation.Unavailable _ ->
-          dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces.JsonLocation.unavailable();
+          dev.erst.gridgrind.core.problem.ProblemContextRequestSurfaces.JsonLocation.unavailable();
     };
   }
 }

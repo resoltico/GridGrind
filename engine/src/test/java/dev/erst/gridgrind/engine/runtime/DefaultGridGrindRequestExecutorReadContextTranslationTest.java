@@ -3,10 +3,8 @@ package dev.erst.gridgrind.engine.runtime;
 import static dev.erst.gridgrind.engine.runtime.ExecutorTestPlanSupport.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-import dev.erst.gridgrind.contract.dto.*;
-import dev.erst.gridgrind.contract.query.*;
-import dev.erst.gridgrind.contract.selector.*;
-import dev.erst.gridgrind.contract.step.InspectionStep;
+import dev.erst.gridgrind.core.plan.*;
+import dev.erst.gridgrind.core.plan.InspectionStep;
 import dev.erst.gridgrind.excel.*;
 import dev.erst.gridgrind.excel.ExcelNamedRangeScope;
 import dev.erst.gridgrind.excel.InvalidCellAddressException;
@@ -61,7 +59,7 @@ class DefaultGridGrindRequestExecutorReadContextTranslationTest
             readType(
                 inspect(
                     "ranges",
-                    new dev.erst.gridgrind.contract.selector.NamedRangeSelector.All(),
+                    new dev.erst.gridgrind.core.plan.NamedRangeSelector.All(),
                     new WorkbookIntrospectionQuery.GetNamedRanges())),
             readType(
                 inspect(
@@ -136,7 +134,7 @@ class DefaultGridGrindRequestExecutorReadContextTranslationTest
             readType(
                 inspect(
                     "surface",
-                    new dev.erst.gridgrind.contract.selector.NamedRangeSelector.All(),
+                    new dev.erst.gridgrind.core.plan.NamedRangeSelector.All(),
                     new InspectionSurfaceQuery.GetNamedRangeSurface())),
             readType(
                 inspect(
@@ -171,7 +169,7 @@ class DefaultGridGrindRequestExecutorReadContextTranslationTest
             readType(
                 inspect(
                     "named-range-health",
-                    new dev.erst.gridgrind.contract.selector.NamedRangeSelector.All(),
+                    new dev.erst.gridgrind.core.plan.NamedRangeSelector.All(),
                     new InspectionAnalysisQuery.AnalyzeNamedRangeHealth())),
             readType(
                 inspect(
@@ -201,7 +199,7 @@ class DefaultGridGrindRequestExecutorReadContextTranslationTest
     InspectionStep namedRanges =
         inspect(
             "ranges",
-            new dev.erst.gridgrind.contract.selector.NamedRangeSelector.All(),
+            new dev.erst.gridgrind.core.plan.NamedRangeSelector.All(),
             new WorkbookIntrospectionQuery.GetNamedRanges());
     InspectionStep sheet =
         inspect(
@@ -273,7 +271,7 @@ class DefaultGridGrindRequestExecutorReadContextTranslationTest
     InspectionStep surface =
         inspect(
             "surface",
-            new dev.erst.gridgrind.contract.selector.NamedRangeSelector.All(),
+            new dev.erst.gridgrind.core.plan.NamedRangeSelector.All(),
             new InspectionSurfaceQuery.GetNamedRangeSurface());
     InspectionStep formulaHealth =
         inspect(
@@ -308,9 +306,9 @@ class DefaultGridGrindRequestExecutorReadContextTranslationTest
     InspectionStep namedRangeHealth =
         inspect(
             "named-range-health",
-            new dev.erst.gridgrind.contract.selector.NamedRangeSelector.AnyOf(
+            new dev.erst.gridgrind.core.plan.NamedRangeSelector.AnyOf(
                 List.of(
-                    new dev.erst.gridgrind.contract.selector.NamedRangeSelector.WorkbookScope(
+                    new dev.erst.gridgrind.core.plan.NamedRangeSelector.WorkbookScope(
                         "BudgetTotal"))),
             new InspectionAnalysisQuery.AnalyzeNamedRangeHealth());
     InspectionStep workbookFindings =
@@ -372,10 +370,9 @@ class DefaultGridGrindRequestExecutorReadContextTranslationTest
         namedRangeNameFor(
             inspect(
                 "surface",
-                new dev.erst.gridgrind.contract.selector.NamedRangeSelector.AnyOf(
+                new dev.erst.gridgrind.core.plan.NamedRangeSelector.AnyOf(
                     List.of(
-                        new dev.erst.gridgrind.contract.selector.NamedRangeSelector.ByName(
-                            "BudgetTotal"))),
+                        new dev.erst.gridgrind.core.plan.NamedRangeSelector.ByName("BudgetTotal"))),
                 new InspectionSurfaceQuery.GetNamedRangeSurface()),
             new RuntimeException("x")));
     assertEquals(
@@ -383,9 +380,9 @@ class DefaultGridGrindRequestExecutorReadContextTranslationTest
         namedRangeNameFor(
             inspect(
                 "surface",
-                new dev.erst.gridgrind.contract.selector.NamedRangeSelector.AnyOf(
+                new dev.erst.gridgrind.core.plan.NamedRangeSelector.AnyOf(
                     List.of(
-                        new dev.erst.gridgrind.contract.selector.NamedRangeSelector.SheetScope(
+                        new dev.erst.gridgrind.core.plan.NamedRangeSelector.SheetScope(
                             "BudgetTotal", "Budget"))),
                 new InspectionSurfaceQuery.GetNamedRangeSurface()),
             new RuntimeException("x")));
@@ -393,11 +390,11 @@ class DefaultGridGrindRequestExecutorReadContextTranslationTest
         namedRangeNameFor(
             inspect(
                 "surface",
-                new dev.erst.gridgrind.contract.selector.NamedRangeSelector.AnyOf(
+                new dev.erst.gridgrind.core.plan.NamedRangeSelector.AnyOf(
                     List.of(
-                        new dev.erst.gridgrind.contract.selector.NamedRangeSelector.WorkbookScope(
+                        new dev.erst.gridgrind.core.plan.NamedRangeSelector.WorkbookScope(
                             "BudgetTotal"),
-                        new dev.erst.gridgrind.contract.selector.NamedRangeSelector.WorkbookScope(
+                        new dev.erst.gridgrind.core.plan.NamedRangeSelector.WorkbookScope(
                             "ForecastTotal"))),
                 new InspectionSurfaceQuery.GetNamedRangeSurface()),
             new RuntimeException("x")));
@@ -423,7 +420,7 @@ class DefaultGridGrindRequestExecutorReadContextTranslationTest
         namedRangeNameFor(
             inspect(
                 "surface",
-                new dev.erst.gridgrind.contract.selector.NamedRangeSelector.All(),
+                new dev.erst.gridgrind.core.plan.NamedRangeSelector.All(),
                 new InspectionSurfaceQuery.GetNamedRangeSurface()),
             missingNamedRange));
   }

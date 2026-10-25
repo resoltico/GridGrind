@@ -1,8 +1,8 @@
 package dev.erst.gridgrind.json.intake;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import dev.erst.gridgrind.contract.catalog.GridGrindProtocolContractSupport;
-import dev.erst.gridgrind.contract.dto.ProtocolField;
+import dev.erst.gridgrind.core.catalog.GridGrindProtocolContractSupport;
+import dev.erst.gridgrind.core.metadata.ProtocolField;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.RecordComponent;
 import java.lang.reflect.Type;

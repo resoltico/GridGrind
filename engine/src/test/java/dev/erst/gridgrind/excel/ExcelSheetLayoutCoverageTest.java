@@ -3,9 +3,9 @@ package dev.erst.gridgrind.excel;
 import static dev.erst.gridgrind.excel.ExcelStyleTestAccess.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-import dev.erst.gridgrind.excel.foundation.ExcelPaneRegion;
-import dev.erst.gridgrind.excel.foundation.ExcelPrintOrientation;
-import dev.erst.gridgrind.excel.foundation.ExcelSheetLayoutLimits;
+import dev.erst.gridgrind.core.vocabulary.ExcelPaneRegion;
+import dev.erst.gridgrind.core.vocabulary.ExcelPrintOrientation;
+import dev.erst.gridgrind.core.vocabulary.ExcelSheetLayoutLimits;
 import org.apache.poi.ss.usermodel.FormulaEvaluator;
 import org.apache.poi.ss.usermodel.PaneType;
 import org.apache.poi.ss.usermodel.Sheet;

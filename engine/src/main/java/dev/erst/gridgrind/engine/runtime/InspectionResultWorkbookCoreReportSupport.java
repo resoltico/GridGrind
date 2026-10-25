@@ -1,13 +1,13 @@
 package dev.erst.gridgrind.engine.runtime;
 
-import dev.erst.gridgrind.contract.dto.NamedRangeReport;
-import dev.erst.gridgrind.contract.dto.NamedRangeScope;
-import dev.erst.gridgrind.contract.dto.NamedRangeTarget;
-import dev.erst.gridgrind.contract.dto.OoxmlEncryptionReport;
-import dev.erst.gridgrind.contract.dto.OoxmlPackageSecurityReport;
-import dev.erst.gridgrind.contract.dto.OoxmlSignatureReport;
-import dev.erst.gridgrind.contract.dto.WorkbookProtectionReport;
-import dev.erst.gridgrind.contract.dto.WorkbookSummary;
+import dev.erst.gridgrind.core.model.formula.NamedRangeReport;
+import dev.erst.gridgrind.core.model.formula.NamedRangeTarget;
+import dev.erst.gridgrind.core.model.protection.WorkbookProtectionReport;
+import dev.erst.gridgrind.core.model.security.OoxmlEncryptionReport;
+import dev.erst.gridgrind.core.model.security.OoxmlPackageSecurityReport;
+import dev.erst.gridgrind.core.model.security.OoxmlSignatureReport;
+import dev.erst.gridgrind.core.result.WorkbookSummary;
+import dev.erst.gridgrind.core.vocabulary.NamedRangeScope;
 import dev.erst.gridgrind.excel.ExcelNamedRangeScope;
 import dev.erst.gridgrind.excel.ExcelNamedRangeSnapshot;
 import dev.erst.gridgrind.excel.ExcelNamedRangeTarget;

@@ -9,36 +9,36 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import dev.erst.gridgrind.contract.action.WorkbookMutationAction;
-import dev.erst.gridgrind.contract.dto.CellInput;
-import dev.erst.gridgrind.contract.dto.ExecutionJournal;
-import dev.erst.gridgrind.contract.dto.ExecutionJournalInput;
-import dev.erst.gridgrind.contract.dto.ExecutionJournalLevel;
-import dev.erst.gridgrind.contract.dto.ExecutionModeInput;
-import dev.erst.gridgrind.contract.dto.ExecutionPolicyInput;
-import dev.erst.gridgrind.contract.dto.GridGrindProblemCategory;
-import dev.erst.gridgrind.contract.dto.GridGrindProblemCode;
-import dev.erst.gridgrind.contract.dto.GridGrindProtocolVersion;
-import dev.erst.gridgrind.contract.dto.WorkbookPlan;
-import dev.erst.gridgrind.contract.dto.WorkbookResult;
-import dev.erst.gridgrind.contract.dto.WorkbookResults;
-import dev.erst.gridgrind.contract.query.*;
-import dev.erst.gridgrind.contract.selector.CellSelector;
-import dev.erst.gridgrind.contract.selector.ChartSelector;
-import dev.erst.gridgrind.contract.selector.ColumnBandSelector;
-import dev.erst.gridgrind.contract.selector.DrawingObjectSelector;
-import dev.erst.gridgrind.contract.selector.NamedRangeSelector;
-import dev.erst.gridgrind.contract.selector.PivotTableSelector;
-import dev.erst.gridgrind.contract.selector.RangeSelector;
-import dev.erst.gridgrind.contract.selector.RowBandSelector;
-import dev.erst.gridgrind.contract.selector.Selector;
-import dev.erst.gridgrind.contract.selector.SheetSelector;
-import dev.erst.gridgrind.contract.selector.TableCellSelector;
-import dev.erst.gridgrind.contract.selector.TableRowSelector;
-import dev.erst.gridgrind.contract.selector.TableSelector;
-import dev.erst.gridgrind.contract.selector.WorkbookSelector;
-import dev.erst.gridgrind.contract.step.InspectionStep;
-import dev.erst.gridgrind.contract.step.MutationStep;
+import dev.erst.gridgrind.core.model.value.CellInput;
+import dev.erst.gridgrind.core.plan.*;
+import dev.erst.gridgrind.core.plan.CellSelector;
+import dev.erst.gridgrind.core.plan.ChartSelector;
+import dev.erst.gridgrind.core.plan.ColumnBandSelector;
+import dev.erst.gridgrind.core.plan.DrawingObjectSelector;
+import dev.erst.gridgrind.core.plan.ExecutionJournalInput;
+import dev.erst.gridgrind.core.plan.ExecutionModeInput;
+import dev.erst.gridgrind.core.plan.ExecutionPolicyInput;
+import dev.erst.gridgrind.core.plan.GridGrindProtocolVersion;
+import dev.erst.gridgrind.core.plan.InspectionStep;
+import dev.erst.gridgrind.core.plan.MutationStep;
+import dev.erst.gridgrind.core.plan.NamedRangeSelector;
+import dev.erst.gridgrind.core.plan.PivotTableSelector;
+import dev.erst.gridgrind.core.plan.RangeSelector;
+import dev.erst.gridgrind.core.plan.RowBandSelector;
+import dev.erst.gridgrind.core.plan.Selector;
+import dev.erst.gridgrind.core.plan.SheetSelector;
+import dev.erst.gridgrind.core.plan.TableCellSelector;
+import dev.erst.gridgrind.core.plan.TableRowSelector;
+import dev.erst.gridgrind.core.plan.TableSelector;
+import dev.erst.gridgrind.core.plan.WorkbookMutationAction;
+import dev.erst.gridgrind.core.plan.WorkbookPlan;
+import dev.erst.gridgrind.core.plan.WorkbookSelector;
+import dev.erst.gridgrind.core.problem.GridGrindProblemCategory;
+import dev.erst.gridgrind.core.problem.GridGrindProblemCode;
+import dev.erst.gridgrind.core.result.ExecutionJournal;
+import dev.erst.gridgrind.core.result.ExecutionJournalLevel;
+import dev.erst.gridgrind.core.result.WorkbookResult;
+import dev.erst.gridgrind.core.result.WorkbookResults;
 import dev.erst.gridgrind.json.codec.GridGrindJsonOutput;
 import java.util.ArrayList;
 import java.util.List;
@@ -53,8 +53,8 @@ class ExecutionJournalCoverageTest {
         WorkbookPlan.standard(
             new WorkbookPlan.WorkbookSource.New(),
             new WorkbookPlan.WorkbookPersistence.None(),
-            dev.erst.gridgrind.contract.dto.ExecutionPolicyInput.defaults(),
-            dev.erst.gridgrind.contract.dto.FormulaEnvironmentInput.empty(),
+            dev.erst.gridgrind.core.plan.ExecutionPolicyInput.defaults(),
+            dev.erst.gridgrind.core.model.formula.FormulaEnvironmentInput.empty(),
             List.of());
     WorkbookResult.Success expected = WorkbookResults.success(List.of(), List.of(), List.of());
     AtomicBoolean called = new AtomicBoolean(false);
@@ -274,7 +274,7 @@ class ExecutionJournalCoverageTest {
   @Test
   void recorderBuildsVerboseFailureAndGuardsPhaseReuse() {
     WorkbookPlan request = verbosePlan();
-    List<dev.erst.gridgrind.contract.dto.ExecutionProgressEvent> emitted = new ArrayList<>();
+    List<dev.erst.gridgrind.core.result.ExecutionProgressEvent> emitted = new ArrayList<>();
     ExecutionJournalRecorder recorder =
         ExecutionContextFixtureSupport.startJournal(request, emitted::add);
 
@@ -445,7 +445,7 @@ class ExecutionJournalCoverageTest {
   }
 
   private static ExecutionJournal completedJournal(
-      ExecutionJournalLevel level, dev.erst.gridgrind.contract.step.WorkbookStep step) {
+      ExecutionJournalLevel level, dev.erst.gridgrind.core.plan.WorkbookStep step) {
     ExecutionJournalRecorder recorder =
         ExecutionContextFixtureSupport.startJournal(
             planWithSteps("journal-level-" + level.name(), level, List.of(step), List.of()),
@@ -469,10 +469,9 @@ class ExecutionJournalCoverageTest {
   private static WorkbookPlan planWithSteps(
       String planId,
       ExecutionJournalLevel level,
-      List<dev.erst.gridgrind.contract.step.WorkbookStep> mutationsAndAssertions,
+      List<dev.erst.gridgrind.core.plan.WorkbookStep> mutationsAndAssertions,
       List<InspectionStep> inspections) {
-    List<dev.erst.gridgrind.contract.step.WorkbookStep> steps =
-        new ArrayList<>(mutationsAndAssertions);
+    List<dev.erst.gridgrind.core.plan.WorkbookStep> steps = new ArrayList<>(mutationsAndAssertions);
     steps.addAll(inspections);
     return WorkbookPlan.identified(
         GridGrindProtocolVersion.current(),
@@ -481,7 +480,7 @@ class ExecutionJournalCoverageTest {
         new WorkbookPlan.WorkbookPersistence.None(),
         ExecutionPolicyInput.modeAndJournal(
             ExecutionModeInput.defaults(), new ExecutionJournalInput(level)),
-        dev.erst.gridgrind.contract.dto.FormulaEnvironmentInput.empty(),
+        dev.erst.gridgrind.core.model.formula.FormulaEnvironmentInput.empty(),
         List.copyOf(steps));
   }
 
@@ -493,7 +492,7 @@ class ExecutionJournalCoverageTest {
     return ExecutionJournalTargetResolver.summaryTarget(selector);
   }
 
-  private static dev.erst.gridgrind.contract.source.TextSourceInput text(String value) {
-    return dev.erst.gridgrind.contract.source.TextSourceInput.inline(value);
+  private static dev.erst.gridgrind.core.source.TextSourceInput text(String value) {
+    return dev.erst.gridgrind.core.source.TextSourceInput.inline(value);
   }
 }

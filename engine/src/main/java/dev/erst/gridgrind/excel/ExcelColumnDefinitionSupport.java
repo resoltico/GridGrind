@@ -1,6 +1,6 @@
 package dev.erst.gridgrind.excel;
 
-import dev.erst.gridgrind.excel.foundation.ExcelColumnSpan;
+import dev.erst.gridgrind.core.vocabulary.ExcelColumnSpan;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;

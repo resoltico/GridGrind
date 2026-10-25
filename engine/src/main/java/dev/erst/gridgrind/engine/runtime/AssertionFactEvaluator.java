@@ -1,15 +1,15 @@
 package dev.erst.gridgrind.engine.runtime;
 
-import dev.erst.gridgrind.contract.dto.ChartReport;
-import dev.erst.gridgrind.contract.dto.NamedRangeReport;
-import dev.erst.gridgrind.contract.dto.SheetSummaryReport;
-import dev.erst.gridgrind.contract.query.SheetInspectionResult;
-import dev.erst.gridgrind.contract.query.SheetIntrospectionQuery;
-import dev.erst.gridgrind.contract.query.WorkbookAssetInspectionResult;
-import dev.erst.gridgrind.contract.query.WorkbookAssetIntrospectionQuery;
-import dev.erst.gridgrind.contract.query.WorkbookInspectionResult;
-import dev.erst.gridgrind.contract.query.WorkbookIntrospectionQuery;
-import dev.erst.gridgrind.contract.selector.Selector;
+import dev.erst.gridgrind.core.model.chart.ChartReport;
+import dev.erst.gridgrind.core.model.formula.NamedRangeReport;
+import dev.erst.gridgrind.core.plan.Selector;
+import dev.erst.gridgrind.core.plan.SheetInspectionResult;
+import dev.erst.gridgrind.core.plan.SheetIntrospectionQuery;
+import dev.erst.gridgrind.core.plan.WorkbookAssetInspectionResult;
+import dev.erst.gridgrind.core.plan.WorkbookAssetIntrospectionQuery;
+import dev.erst.gridgrind.core.plan.WorkbookInspectionResult;
+import dev.erst.gridgrind.core.plan.WorkbookIntrospectionQuery;
+import dev.erst.gridgrind.core.result.SheetSummaryReport;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
 import dev.erst.gridgrind.excel.WorkbookLocation;
 import java.util.List;
@@ -26,7 +26,7 @@ final class AssertionFactEvaluator {
   AssertionEvaluation evaluateWorkbookProtection(
       String stepId,
       Selector target,
-      dev.erst.gridgrind.contract.dto.WorkbookProtectionReport expectedProtection,
+      dev.erst.gridgrind.core.model.protection.WorkbookProtectionReport expectedProtection,
       ExcelWorkbook workbook,
       WorkbookLocation workbookLocation) {
     WorkbookInspectionResult.WorkbookProtectionResult result =
@@ -86,7 +86,7 @@ final class AssertionFactEvaluator {
   AssertionEvaluation evaluateTableFacts(
       String stepId,
       Selector target,
-      List<dev.erst.gridgrind.contract.dto.TableEntryReport> expectedTables,
+      List<dev.erst.gridgrind.core.model.table.TableEntryReport> expectedTables,
       ExcelWorkbook workbook,
       WorkbookLocation workbookLocation) {
     WorkbookAssetInspectionResult.TablesResult result =
@@ -106,7 +106,7 @@ final class AssertionFactEvaluator {
   AssertionEvaluation evaluatePivotFacts(
       String stepId,
       Selector target,
-      List<dev.erst.gridgrind.contract.dto.PivotTableReport> expectedPivotTables,
+      List<dev.erst.gridgrind.core.model.pivot.PivotTableReport> expectedPivotTables,
       ExcelWorkbook workbook,
       WorkbookLocation workbookLocation) {
     WorkbookAssetInspectionResult.PivotTablesResult result =

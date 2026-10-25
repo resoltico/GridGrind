@@ -1,8 +1,8 @@
 package dev.erst.gridgrind.cli.examples;
 
-import dev.erst.gridgrind.contract.dto.ExecutionPolicyInput;
-import dev.erst.gridgrind.contract.dto.WorkbookPlan;
-import dev.erst.gridgrind.contract.step.WorkbookStep;
+import dev.erst.gridgrind.core.plan.ExecutionPolicyInput;
+import dev.erst.gridgrind.core.plan.WorkbookPlan;
+import dev.erst.gridgrind.core.plan.WorkbookStep;
 import java.util.List;
 import java.util.Objects;
 
@@ -21,7 +21,7 @@ final class ExampleWorkbookPlans {
         source,
         persistence,
         Objects.requireNonNull(execution, "execution must not be null"),
-        dev.erst.gridgrind.contract.dto.FormulaEnvironmentInput.empty(),
+        dev.erst.gridgrind.core.model.formula.FormulaEnvironmentInput.empty(),
         List.of(steps));
   }
 
@@ -43,6 +43,6 @@ final class ExampleWorkbookPlans {
     return new WorkbookPlan.WorkbookPersistence.SaveAs(
         path,
         WorkbookPlan.WorkbookPersistence.IfExists.REPLACE,
-        dev.erst.gridgrind.contract.dto.OoxmlPersistenceSecurityInput.none());
+        dev.erst.gridgrind.core.model.security.OoxmlPersistenceSecurityInput.none());
   }
 }

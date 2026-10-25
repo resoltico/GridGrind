@@ -3,17 +3,39 @@ package dev.erst.gridgrind.engine.runtime;
 import static dev.erst.gridgrind.engine.runtime.ExecutorTestPlanSupport.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-import dev.erst.gridgrind.contract.action.CellMutationAction;
-import dev.erst.gridgrind.contract.action.StructuredMutationAction;
-import dev.erst.gridgrind.contract.action.WorkbookMutationAction;
-import dev.erst.gridgrind.contract.dto.*;
-import dev.erst.gridgrind.contract.query.*;
-import dev.erst.gridgrind.contract.selector.*;
-import dev.erst.gridgrind.contract.step.InspectionStep;
-import dev.erst.gridgrind.contract.step.MutationStep;
-import dev.erst.gridgrind.contract.step.WorkbookStaticRequestContract;
-import dev.erst.gridgrind.contract.step.WorkbookStaticViolation;
-import dev.erst.gridgrind.contract.step.WorkbookStep;
+import dev.erst.gridgrind.core.model.formula.FormulaEnvironmentInput;
+import dev.erst.gridgrind.core.model.formula.FormulaHealthReport;
+import dev.erst.gridgrind.core.model.formula.FormulaSurfaceReport;
+import dev.erst.gridgrind.core.model.formula.NamedRangeSurfaceReport;
+import dev.erst.gridgrind.core.model.formula.NamedRangeTarget;
+import dev.erst.gridgrind.core.model.layout.PaneInput;
+import dev.erst.gridgrind.core.model.table.SheetSchemaReport;
+import dev.erst.gridgrind.core.model.table.TableInput;
+import dev.erst.gridgrind.core.model.table.TableStyleInput;
+import dev.erst.gridgrind.core.model.table.TableStyleReport;
+import dev.erst.gridgrind.core.model.validation.DataValidationEntryReport;
+import dev.erst.gridgrind.core.model.value.CellInput;
+import dev.erst.gridgrind.core.model.value.HyperlinkTarget;
+import dev.erst.gridgrind.core.plan.*;
+import dev.erst.gridgrind.core.plan.CellMutationAction;
+import dev.erst.gridgrind.core.plan.ExecutionModeInput;
+import dev.erst.gridgrind.core.plan.InspectionStep;
+import dev.erst.gridgrind.core.plan.MutationStep;
+import dev.erst.gridgrind.core.plan.StructuredMutationAction;
+import dev.erst.gridgrind.core.plan.WorkbookMutationAction;
+import dev.erst.gridgrind.core.plan.WorkbookPlan;
+import dev.erst.gridgrind.core.plan.WorkbookStep;
+import dev.erst.gridgrind.core.problem.GridGrindProblemCategory;
+import dev.erst.gridgrind.core.problem.GridGrindProblemCode;
+import dev.erst.gridgrind.core.problem.GridGrindProblemRecovery;
+import dev.erst.gridgrind.core.result.ExecutionJournal;
+import dev.erst.gridgrind.core.result.WorkbookResult;
+import dev.erst.gridgrind.core.result.WorkbookResultPersistence;
+import dev.erst.gridgrind.core.validation.WorkbookStaticRequestContract;
+import dev.erst.gridgrind.core.validation.WorkbookStaticViolation;
+import dev.erst.gridgrind.core.vocabulary.ExcelSheetVisibility;
+import dev.erst.gridgrind.core.vocabulary.NamedRangeBackingKind;
+import dev.erst.gridgrind.core.vocabulary.NamedRangeScope;
 import dev.erst.gridgrind.excel.ExcelHyperlink;
 import dev.erst.gridgrind.excel.ExcelSheetPane;
 import dev.erst.gridgrind.excel.InvalidCellAddressException;
@@ -25,7 +47,6 @@ import dev.erst.gridgrind.excel.WorkbookExecutionEngine;
 import dev.erst.gridgrind.excel.WorkbookLocation;
 import dev.erst.gridgrind.excel.WorkbookNotFoundException;
 import dev.erst.gridgrind.excel.XlsxRoundTrip;
-import dev.erst.gridgrind.excel.foundation.ExcelSheetVisibility;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -61,7 +82,7 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
                     mutate(
                         new RangeSelector.ByRange("Budget", "A1:B2"),
                         new CellMutationAction.SetRange(
-                            new dev.erst.gridgrind.contract.dto.CellGridInput.Typed(
+                            new dev.erst.gridgrind.core.model.value.CellGridInput.Typed(
                                 List.of(
                                     List.of(textCell("Item"), textCell("Amount")),
                                     List.of(
@@ -161,9 +182,9 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
                     new SheetIntrospectionQuery.GetHyperlinks())));
 
     WorkbookResult.Success success = success(response);
-    dev.erst.gridgrind.contract.dto.CellReport.TextReport linkedCell =
+    dev.erst.gridgrind.core.model.value.CellReport.TextReport linkedCell =
         cast(
-            dev.erst.gridgrind.contract.dto.CellReport.TextReport.class,
+            dev.erst.gridgrind.core.model.value.CellReport.TextReport.class,
             read(success, "cells", SheetInspectionResult.CellsResult.class).cells().getFirst());
     SheetInspectionResult.HyperlinksResult hyperlinks =
         read(success, "hyperlinks", SheetInspectionResult.HyperlinksResult.class);
@@ -203,17 +224,17 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
                     mutate(
                         new SheetSelector.ByName("Budget"),
                         new CellMutationAction.AppendRow(
-                            new dev.erst.gridgrind.contract.dto.CellRowInput.Typed(
+                            new dev.erst.gridgrind.core.model.value.CellRowInput.Typed(
                                 List.of(textCell("Item"), textCell("Amount"))))),
                     mutate(
                         new SheetSelector.ByName("Budget"),
                         new CellMutationAction.AppendRow(
-                            new dev.erst.gridgrind.contract.dto.CellRowInput.Typed(
+                            new dev.erst.gridgrind.core.model.value.CellRowInput.Typed(
                                 List.of(textCell("Hosting"), new CellInput.NumberValue(49.0))))),
                     mutate(
                         new SheetSelector.ByName("Budget"),
                         new CellMutationAction.AppendRow(
-                            new dev.erst.gridgrind.contract.dto.CellRowInput.Typed(
+                            new dev.erst.gridgrind.core.model.value.CellRowInput.Typed(
                                 List.of(textCell("Domain"), new CellInput.NumberValue(12.0))))),
                     mutate(
                         new CellSelector.ByAddress("Budget", "B4"),
@@ -233,7 +254,7 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
                     new InspectionSurfaceQuery.GetSheetSchema()),
                 inspect(
                     "ranges",
-                    new dev.erst.gridgrind.contract.selector.NamedRangeSelector.All(),
+                    new dev.erst.gridgrind.core.plan.NamedRangeSelector.All(),
                     new InspectionSurfaceQuery.GetNamedRangeSurface()),
                 inspect(
                     "formula-health",
@@ -421,10 +442,10 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
                             new WorkbookMutationAction.EnsureSheet())),
                     inspect(
                         "ranges",
-                        new dev.erst.gridgrind.contract.selector.NamedRangeSelector.AnyOf(
+                        new dev.erst.gridgrind.core.plan.NamedRangeSelector.AnyOf(
                             List.of(
-                                new dev.erst.gridgrind.contract.selector.NamedRangeSelector
-                                    .WorkbookScope("BudgetTotal"))),
+                                new dev.erst.gridgrind.core.plan.NamedRangeSelector.WorkbookScope(
+                                    "BudgetTotal"))),
                         new WorkbookIntrospectionQuery.GetNamedRanges()))));
 
     assertEquals(GridGrindProblemCode.NAMED_RANGE_NOT_FOUND, failure.problem().code());
@@ -462,7 +483,8 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
                 request(
                     new WorkbookPlan.WorkbookSource.ExistingFile(workbookPath.toString()),
                     new WorkbookPlan.WorkbookPersistence.Overwrite(
-                        dev.erst.gridgrind.contract.dto.OoxmlPersistenceSecurityInput.none()),
+                        dev.erst.gridgrind.core.model.security.OoxmlPersistenceSecurityInput
+                            .none()),
                     mutations(
                         mutate(
                             new CellSelector.ByAddress("Budget", "C3"),
@@ -476,7 +498,7 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
     assertEquals(
         "After",
         cast(
-                dev.erst.gridgrind.contract.dto.CellReport.TextReport.class,
+                dev.erst.gridgrind.core.model.value.CellReport.TextReport.class,
                 read(success, "cells", SheetInspectionResult.CellsResult.class).cells().getFirst())
             .textValue()
             .orElseThrow());
@@ -561,7 +583,7 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
     assertEquals(
         3,
         assertInstanceOf(
-                dev.erst.gridgrind.contract.dto.ExecutionJournal.Outcome.Succeeded.class,
+                dev.erst.gridgrind.core.result.ExecutionJournal.Outcome.Succeeded.class,
                 success.journal().outcome())
             .completedStepCount());
     assertEquals(0, success.calculation().execution().evaluatedFormulaCount());
@@ -825,7 +847,8 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
                 request(
                     new WorkbookPlan.WorkbookSource.New(),
                     new WorkbookPlan.WorkbookPersistence.Overwrite(
-                        dev.erst.gridgrind.contract.dto.OoxmlPersistenceSecurityInput.none()),
+                        dev.erst.gridgrind.core.model.security.OoxmlPersistenceSecurityInput
+                            .none()),
                     List.of())));
     WorkbookResultPersistence.PersistenceOutcome.Overwritten persistence =
         assertInstanceOf(
@@ -847,7 +870,8 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
                 request(
                     new WorkbookPlan.WorkbookSource.New(),
                     new WorkbookPlan.WorkbookPersistence.Overwrite(
-                        dev.erst.gridgrind.contract.dto.OoxmlPersistenceSecurityInput.none()),
+                        dev.erst.gridgrind.core.model.security.OoxmlPersistenceSecurityInput
+                            .none()),
                     executionPolicy(ExecutionModeInput.eventRead(), calculateAll()),
                     null,
                     mutations(),

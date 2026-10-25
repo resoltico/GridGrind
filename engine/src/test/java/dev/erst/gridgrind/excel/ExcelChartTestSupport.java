@@ -1,15 +1,15 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.core.vocabulary.ExcelChartAxisCrosses;
+import dev.erst.gridgrind.core.vocabulary.ExcelChartAxisKind;
+import dev.erst.gridgrind.core.vocabulary.ExcelChartAxisPosition;
+import dev.erst.gridgrind.core.vocabulary.ExcelChartBarDirection;
+import dev.erst.gridgrind.core.vocabulary.ExcelChartBarGrouping;
+import dev.erst.gridgrind.core.vocabulary.ExcelChartDisplayBlanksAs;
+import dev.erst.gridgrind.core.vocabulary.ExcelChartGrouping;
+import dev.erst.gridgrind.core.vocabulary.ExcelDrawingAnchorBehavior;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingAnchor;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingMarker;
-import dev.erst.gridgrind.excel.foundation.ExcelChartAxisCrosses;
-import dev.erst.gridgrind.excel.foundation.ExcelChartAxisKind;
-import dev.erst.gridgrind.excel.foundation.ExcelChartAxisPosition;
-import dev.erst.gridgrind.excel.foundation.ExcelChartBarDirection;
-import dev.erst.gridgrind.excel.foundation.ExcelChartBarGrouping;
-import dev.erst.gridgrind.excel.foundation.ExcelChartDisplayBlanksAs;
-import dev.erst.gridgrind.excel.foundation.ExcelChartGrouping;
-import dev.erst.gridgrind.excel.foundation.ExcelDrawingAnchorBehavior;
 import java.util.List;
 import java.util.Optional;
 

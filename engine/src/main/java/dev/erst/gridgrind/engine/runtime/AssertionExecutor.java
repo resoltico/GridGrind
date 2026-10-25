@@ -1,16 +1,16 @@
 package dev.erst.gridgrind.engine.runtime;
 
-import dev.erst.gridgrind.contract.assertion.AnalysisAssertion;
-import dev.erst.gridgrind.contract.assertion.Assertion;
-import dev.erst.gridgrind.contract.assertion.AssertionFailure;
-import dev.erst.gridgrind.contract.assertion.AssertionResult;
-import dev.erst.gridgrind.contract.assertion.CellAssertion;
-import dev.erst.gridgrind.contract.assertion.CompositeAssertion;
-import dev.erst.gridgrind.contract.assertion.PresenceAssertion;
-import dev.erst.gridgrind.contract.assertion.WorkbookFactAssertion;
-import dev.erst.gridgrind.contract.query.InspectionResult;
-import dev.erst.gridgrind.contract.selector.Selector;
-import dev.erst.gridgrind.contract.step.AssertionStep;
+import dev.erst.gridgrind.core.plan.AnalysisAssertion;
+import dev.erst.gridgrind.core.plan.Assertion;
+import dev.erst.gridgrind.core.plan.AssertionFailure;
+import dev.erst.gridgrind.core.plan.AssertionResult;
+import dev.erst.gridgrind.core.plan.AssertionStep;
+import dev.erst.gridgrind.core.plan.CellAssertion;
+import dev.erst.gridgrind.core.plan.CompositeAssertion;
+import dev.erst.gridgrind.core.plan.InspectionResult;
+import dev.erst.gridgrind.core.plan.PresenceAssertion;
+import dev.erst.gridgrind.core.plan.Selector;
+import dev.erst.gridgrind.core.plan.WorkbookFactAssertion;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
 import dev.erst.gridgrind.excel.WorkbookExecutionEngine;
 import dev.erst.gridgrind.excel.WorkbookLocation;

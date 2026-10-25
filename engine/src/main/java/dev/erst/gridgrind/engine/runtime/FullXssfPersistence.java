@@ -1,10 +1,10 @@
 package dev.erst.gridgrind.engine.runtime;
 
-import dev.erst.gridgrind.contract.dto.CalculationReport;
-import dev.erst.gridgrind.contract.dto.GridGrindProblemDetail;
-import dev.erst.gridgrind.contract.dto.WorkbookPlan;
-import dev.erst.gridgrind.contract.dto.WorkbookResult;
-import dev.erst.gridgrind.contract.dto.WorkbookResultPersistence;
+import dev.erst.gridgrind.core.model.formula.CalculationReport;
+import dev.erst.gridgrind.core.plan.WorkbookPlan;
+import dev.erst.gridgrind.core.problem.GridGrindProblemDetail;
+import dev.erst.gridgrind.core.result.WorkbookResult;
+import dev.erst.gridgrind.core.result.WorkbookResultPersistence;
 import java.util.Objects;
 import org.jspecify.annotations.Nullable;
 
@@ -50,12 +50,12 @@ final class FullXssfPersistence {
       executionContext
           .preservation()
           .add(
-              new dev.erst.gridgrind.contract.dto.WorkbookExecutionEvidence.Preservation.Failed(
+              new dev.erst.gridgrind.core.result.WorkbookExecutionEvidence.Preservation.Failed(
                   exception.kind(), exception.identifiers()));
       return failure(executionContext, bindings, calculation, persistencePhase, exception, null);
     } catch (WorkbookPublicationException exception) {
       WorkbookResultPersistence.PersistenceOutcome persistence =
-          dev.erst.gridgrind.contract.dto.WorkbookResults.publicationPersistenceOutcome(
+          dev.erst.gridgrind.core.result.WorkbookResults.publicationPersistenceOutcome(
               executionContext.request(), exception.publication());
       return failure(
           executionContext, bindings, calculation, persistencePhase, exception, persistence);
@@ -74,7 +74,7 @@ final class FullXssfPersistence {
     GridGrindProblemDetail.Problem problem =
         ExecutionResponseSupport.problemFor(
             exception,
-            new dev.erst.gridgrind.contract.dto.ProblemContext.PersistWorkbook(
+            new dev.erst.gridgrind.core.problem.ProblemContext.PersistWorkbook(
                 ExecutionRequestPaths.requestShape(executionContext.request()),
                 ExecutionRequestPaths.persistenceReference(
                     executionContext.request(), bindings.workingDirectory())));

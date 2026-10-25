@@ -1,6 +1,6 @@
 package dev.erst.gridgrind.excel.drawing;
 
-import dev.erst.gridgrind.excel.foundation.ExcelDrawingAnchorBehavior;
+import dev.erst.gridgrind.core.vocabulary.ExcelDrawingAnchorBehavior;
 import java.util.Optional;
 import org.apache.poi.ss.usermodel.ClientAnchor;
 import org.apache.poi.xssf.usermodel.XSSFDrawing;

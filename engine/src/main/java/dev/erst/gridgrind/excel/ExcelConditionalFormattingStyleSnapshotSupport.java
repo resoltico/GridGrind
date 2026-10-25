@@ -1,10 +1,10 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.core.vocabulary.ExcelBorderStyle;
+import dev.erst.gridgrind.core.vocabulary.ExcelConditionalFormattingUnsupportedFeature;
 import dev.erst.gridgrind.excel.ExcelConditionalFormattingStyleSupport.BorderSnapshot;
 import dev.erst.gridgrind.excel.ExcelConditionalFormattingStyleSupport.FillSnapshot;
 import dev.erst.gridgrind.excel.ExcelConditionalFormattingStyleSupport.FontSnapshot;
-import dev.erst.gridgrind.excel.foundation.ExcelBorderStyle;
-import dev.erst.gridgrind.excel.foundation.ExcelConditionalFormattingUnsupportedFeature;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;

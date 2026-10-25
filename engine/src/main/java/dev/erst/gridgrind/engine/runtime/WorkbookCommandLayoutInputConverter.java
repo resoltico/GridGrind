@@ -1,18 +1,18 @@
 package dev.erst.gridgrind.engine.runtime;
 
-import dev.erst.gridgrind.contract.dto.NamedRangeScope;
-import dev.erst.gridgrind.contract.dto.NamedRangeTarget;
-import dev.erst.gridgrind.contract.dto.PaneInput;
-import dev.erst.gridgrind.contract.dto.PrintAreaInput;
-import dev.erst.gridgrind.contract.dto.PrintLayoutInput;
-import dev.erst.gridgrind.contract.dto.PrintScalingInput;
-import dev.erst.gridgrind.contract.dto.PrintSetupInput;
-import dev.erst.gridgrind.contract.dto.PrintTitleColumnsInput;
-import dev.erst.gridgrind.contract.dto.PrintTitleRowsInput;
-import dev.erst.gridgrind.contract.dto.SheetCopyPosition;
-import dev.erst.gridgrind.contract.dto.SheetProtectionSettings;
-import dev.erst.gridgrind.contract.dto.WorkbookProtectionInput;
-import dev.erst.gridgrind.contract.selector.NamedRangeSelector;
+import dev.erst.gridgrind.core.model.formula.NamedRangeTarget;
+import dev.erst.gridgrind.core.model.layout.PaneInput;
+import dev.erst.gridgrind.core.model.print.PrintAreaInput;
+import dev.erst.gridgrind.core.model.print.PrintLayoutInput;
+import dev.erst.gridgrind.core.model.print.PrintScalingInput;
+import dev.erst.gridgrind.core.model.print.PrintSetupInput;
+import dev.erst.gridgrind.core.model.print.PrintTitleColumnsInput;
+import dev.erst.gridgrind.core.model.print.PrintTitleRowsInput;
+import dev.erst.gridgrind.core.model.protection.SheetProtectionSettings;
+import dev.erst.gridgrind.core.model.protection.WorkbookProtectionInput;
+import dev.erst.gridgrind.core.plan.NamedRangeSelector;
+import dev.erst.gridgrind.core.vocabulary.NamedRangeScope;
+import dev.erst.gridgrind.core.vocabulary.SheetCopyPosition;
 import dev.erst.gridgrind.excel.ExcelHeaderFooterText;
 import dev.erst.gridgrind.excel.ExcelNamedRangeScope;
 import dev.erst.gridgrind.excel.ExcelNamedRangeTarget;
@@ -98,7 +98,7 @@ final class WorkbookCommandLayoutInputConverter {
   }
 
   private static Optional<String> resolveOptionalSecret(
-      Optional<dev.erst.gridgrind.contract.dto.SecretReference> reference,
+      Optional<dev.erst.gridgrind.core.source.SecretReference> reference,
       ExecutionInputBindings bindings) {
     if (reference.isEmpty()) {
       return Optional.empty();

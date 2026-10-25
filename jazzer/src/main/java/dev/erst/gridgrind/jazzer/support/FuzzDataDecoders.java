@@ -1,8 +1,8 @@
 package dev.erst.gridgrind.jazzer.support;
 
-import dev.erst.gridgrind.contract.dto.CellGridInput;
-import dev.erst.gridgrind.contract.dto.CellInput;
-import dev.erst.gridgrind.contract.dto.CellRowInput;
+import dev.erst.gridgrind.core.model.value.CellGridInput;
+import dev.erst.gridgrind.core.model.value.CellInput;
+import dev.erst.gridgrind.core.model.value.CellRowInput;
 import dev.erst.gridgrind.excel.ExcelCellStyle;
 import dev.erst.gridgrind.excel.ExcelCellValue;
 import java.util.List;

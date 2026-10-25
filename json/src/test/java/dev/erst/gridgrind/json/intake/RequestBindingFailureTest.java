@@ -5,11 +5,11 @@ import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import dev.erst.gridgrind.contract.dto.GridGrindProblemCode;
-import dev.erst.gridgrind.contract.dto.InvalidFormulaInputException;
-import dev.erst.gridgrind.contract.dto.InvalidRawFormulaTextException;
+import dev.erst.gridgrind.core.model.formula.InvalidFormulaInputException;
+import dev.erst.gridgrind.core.model.formula.InvalidRawFormulaTextException;
 import dev.erst.gridgrind.core.problem.DuplicateStepId;
 import dev.erst.gridgrind.core.problem.FormulaRequestException;
+import dev.erst.gridgrind.core.problem.GridGrindProblemCode;
 import dev.erst.gridgrind.core.problem.InvalidRequestException;
 import dev.erst.gridgrind.core.problem.InvalidRequestShapeException;
 import dev.erst.gridgrind.core.problem.MessageInvariant;

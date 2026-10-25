@@ -1,12 +1,14 @@
 package dev.erst.gridgrind.jazzer.support;
 
-import dev.erst.gridgrind.contract.dto.*;
-import dev.erst.gridgrind.contract.dto.ChartReport;
-import dev.erst.gridgrind.contract.dto.DrawingAnchorReport;
-import dev.erst.gridgrind.contract.dto.DrawingMarkerReport;
-import dev.erst.gridgrind.contract.dto.DrawingObjectPayloadReport;
-import dev.erst.gridgrind.contract.dto.DrawingObjectReport;
-import dev.erst.gridgrind.contract.dto.PivotTableReport;
+import dev.erst.gridgrind.core.model.chart.ChartReport;
+import dev.erst.gridgrind.core.model.drawing.DrawingAnchorReport;
+import dev.erst.gridgrind.core.model.drawing.DrawingMarkerReport;
+import dev.erst.gridgrind.core.model.drawing.DrawingObjectPayloadReport;
+import dev.erst.gridgrind.core.model.drawing.DrawingObjectReport;
+import dev.erst.gridgrind.core.model.pivot.PivotTableReport;
+import dev.erst.gridgrind.core.model.protection.SheetProtectionReport;
+import dev.erst.gridgrind.core.result.SheetSummaryReport;
+import dev.erst.gridgrind.core.result.WorkbookSummary;
 import java.util.HashSet;
 
 /**

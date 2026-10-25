@@ -1,6 +1,6 @@
 package dev.erst.gridgrind.excel;
 
-import dev.erst.gridgrind.excel.foundation.ExcelPaneRegion;
+import dev.erst.gridgrind.core.vocabulary.ExcelPaneRegion;
 import java.util.Objects;
 
 /** One explicit sheet pane state captured or authored through the workbook model. */

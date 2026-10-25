@@ -1,15 +1,15 @@
 package dev.erst.gridgrind.engine.runtime;
 
-import dev.erst.gridgrind.contract.dto.CellColorReport;
-import dev.erst.gridgrind.contract.dto.CellReport;
-import dev.erst.gridgrind.contract.dto.CellStyleReport;
-import dev.erst.gridgrind.contract.dto.CellTemporalKind;
-import dev.erst.gridgrind.contract.dto.CellTemporalReport;
-import dev.erst.gridgrind.contract.dto.CellValueReport;
-import dev.erst.gridgrind.contract.dto.CommentAnchorReport;
-import dev.erst.gridgrind.contract.dto.CommentReport;
-import dev.erst.gridgrind.contract.dto.HyperlinkTarget;
-import dev.erst.gridgrind.contract.dto.RichTextRunReport;
+import dev.erst.gridgrind.core.model.drawing.CommentAnchorReport;
+import dev.erst.gridgrind.core.model.drawing.CommentReport;
+import dev.erst.gridgrind.core.model.style.CellColorReport;
+import dev.erst.gridgrind.core.model.style.CellStyleReport;
+import dev.erst.gridgrind.core.model.style.RichTextRunReport;
+import dev.erst.gridgrind.core.model.value.CellReport;
+import dev.erst.gridgrind.core.model.value.CellTemporalKind;
+import dev.erst.gridgrind.core.model.value.CellTemporalReport;
+import dev.erst.gridgrind.core.model.value.CellValueReport;
+import dev.erst.gridgrind.core.model.value.HyperlinkTarget;
 import dev.erst.gridgrind.excel.ExcelCellReadFacet;
 import dev.erst.gridgrind.excel.ExcelCellReadProjection;
 import dev.erst.gridgrind.excel.ExcelCellSnapshot;

@@ -1,6 +1,6 @@
 package dev.erst.gridgrind.engine.runtime;
 
-import dev.erst.gridgrind.contract.query.InspectionResult;
+import dev.erst.gridgrind.core.plan.InspectionResult;
 import java.util.List;
 import java.util.Objects;
 

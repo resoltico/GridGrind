@@ -1,26 +1,26 @@
 package dev.erst.gridgrind.engine.runtime;
 
-import dev.erst.gridgrind.contract.dto.CellCommentReport;
-import dev.erst.gridgrind.contract.dto.CellHyperlinkReport;
-import dev.erst.gridgrind.contract.dto.ColumnLayoutReport;
-import dev.erst.gridgrind.contract.dto.HeaderFooterTextReport;
-import dev.erst.gridgrind.contract.dto.IgnoredErrorReport;
-import dev.erst.gridgrind.contract.dto.PaneReport;
-import dev.erst.gridgrind.contract.dto.PrintAreaReport;
-import dev.erst.gridgrind.contract.dto.PrintLayoutReport;
-import dev.erst.gridgrind.contract.dto.PrintMarginsReport;
-import dev.erst.gridgrind.contract.dto.PrintScalingReport;
-import dev.erst.gridgrind.contract.dto.PrintSetupReport;
-import dev.erst.gridgrind.contract.dto.PrintTitleColumnsReport;
-import dev.erst.gridgrind.contract.dto.PrintTitleRowsReport;
-import dev.erst.gridgrind.contract.dto.RowLayoutReport;
-import dev.erst.gridgrind.contract.dto.SheetDefaultsReport;
-import dev.erst.gridgrind.contract.dto.SheetDisplayReport;
-import dev.erst.gridgrind.contract.dto.SheetLayoutReport;
-import dev.erst.gridgrind.contract.dto.SheetOutlineSummaryReport;
-import dev.erst.gridgrind.contract.dto.SheetPresentationReport;
-import dev.erst.gridgrind.contract.dto.SheetProtectionReport;
-import dev.erst.gridgrind.contract.dto.SheetProtectionSettings;
+import dev.erst.gridgrind.core.model.drawing.CellCommentReport;
+import dev.erst.gridgrind.core.model.layout.ColumnLayoutReport;
+import dev.erst.gridgrind.core.model.layout.PaneReport;
+import dev.erst.gridgrind.core.model.layout.RowLayoutReport;
+import dev.erst.gridgrind.core.model.layout.SheetDefaultsReport;
+import dev.erst.gridgrind.core.model.layout.SheetDisplayReport;
+import dev.erst.gridgrind.core.model.layout.SheetLayoutReport;
+import dev.erst.gridgrind.core.model.layout.SheetOutlineSummaryReport;
+import dev.erst.gridgrind.core.model.layout.SheetPresentationReport;
+import dev.erst.gridgrind.core.model.print.HeaderFooterTextReport;
+import dev.erst.gridgrind.core.model.print.PrintAreaReport;
+import dev.erst.gridgrind.core.model.print.PrintLayoutReport;
+import dev.erst.gridgrind.core.model.print.PrintMarginsReport;
+import dev.erst.gridgrind.core.model.print.PrintScalingReport;
+import dev.erst.gridgrind.core.model.print.PrintSetupReport;
+import dev.erst.gridgrind.core.model.print.PrintTitleColumnsReport;
+import dev.erst.gridgrind.core.model.print.PrintTitleRowsReport;
+import dev.erst.gridgrind.core.model.protection.SheetProtectionReport;
+import dev.erst.gridgrind.core.model.protection.SheetProtectionSettings;
+import dev.erst.gridgrind.core.model.validation.IgnoredErrorReport;
+import dev.erst.gridgrind.core.model.value.CellHyperlinkReport;
 import dev.erst.gridgrind.excel.ExcelCellReadProjection;
 import dev.erst.gridgrind.excel.ExcelHeaderFooterText;
 import dev.erst.gridgrind.excel.ExcelPrintLayout;
@@ -44,23 +44,23 @@ final class InspectionResultWorkbookLayoutReportSupport {
     };
   }
 
-  static dev.erst.gridgrind.contract.dto.WindowReport toWindowReport(
+  static dev.erst.gridgrind.core.model.layout.WindowReport toWindowReport(
       dev.erst.gridgrind.excel.WorkbookSheetResult.Window window,
       ExcelCellReadProjection projection,
       boolean includeBlanks,
       boolean date1904) {
-    dev.erst.gridgrind.contract.dto.WindowDimensionsReport dimensions =
-        new dev.erst.gridgrind.contract.dto.WindowDimensionsReport(
+    dev.erst.gridgrind.core.model.layout.WindowDimensionsReport dimensions =
+        new dev.erst.gridgrind.core.model.layout.WindowDimensionsReport(
             window.rowCount(), window.columnCount());
     if (includeBlanks) {
-      return new dev.erst.gridgrind.contract.dto.WindowReport.Dense(
+      return new dev.erst.gridgrind.core.model.layout.WindowReport.Dense(
           window.sheetName(),
           window.topLeftAddress(),
           dimensions,
           window.rows().stream()
               .map(
                   row ->
-                      new dev.erst.gridgrind.contract.dto.WindowRowReport(
+                      new dev.erst.gridgrind.core.model.layout.WindowRowReport(
                           row.rowIndex(),
                           row.cells().stream()
                               .map(
@@ -70,7 +70,7 @@ final class InspectionResultWorkbookLayoutReportSupport {
                               .toList()))
               .toList());
     }
-    List<dev.erst.gridgrind.contract.dto.CellReport> populatedCells = new ArrayList<>();
+    List<dev.erst.gridgrind.core.model.value.CellReport> populatedCells = new ArrayList<>();
     for (dev.erst.gridgrind.excel.WorkbookSheetResult.WindowRow row : window.rows()) {
       for (dev.erst.gridgrind.excel.ExcelCellSnapshot cell : row.cells()) {
         if (cell instanceof dev.erst.gridgrind.excel.ExcelCellSnapshot.BlankSnapshot) {
@@ -80,7 +80,7 @@ final class InspectionResultWorkbookLayoutReportSupport {
             InspectionResultCellReportSupport.toCellReport(cell, projection, date1904));
       }
     }
-    return new dev.erst.gridgrind.contract.dto.WindowReport.Sparse(
+    return new dev.erst.gridgrind.core.model.layout.WindowReport.Sparse(
         window.sheetName(), window.topLeftAddress(), dimensions, List.copyOf(populatedCells));
   }
 

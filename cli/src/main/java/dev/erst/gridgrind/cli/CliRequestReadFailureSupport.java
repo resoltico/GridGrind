@@ -1,7 +1,7 @@
 package dev.erst.gridgrind.cli;
 
-import dev.erst.gridgrind.contract.dto.ProblemContext;
-import dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces.RequestInput;
+import dev.erst.gridgrind.core.problem.ProblemContext;
+import dev.erst.gridgrind.core.problem.ProblemContextRequestSurfaces.RequestInput;
 import dev.erst.gridgrind.engine.api.GridGrindProblems;
 import dev.erst.gridgrind.json.codec.RequestDiagnosticRedactor;
 import java.io.IOException;

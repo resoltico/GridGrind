@@ -1,8 +1,8 @@
 package dev.erst.gridgrind.engine.runtime.parity;
 
-import dev.erst.gridgrind.contract.dto.ConditionalFormattingEntryReport;
-import dev.erst.gridgrind.contract.dto.ConditionalFormattingRuleReport;
-import dev.erst.gridgrind.contract.query.SheetInspectionResult;
+import dev.erst.gridgrind.core.model.validation.ConditionalFormattingEntryReport;
+import dev.erst.gridgrind.core.model.validation.ConditionalFormattingRuleReport;
+import dev.erst.gridgrind.core.plan.SheetInspectionResult;
 
 /** Adjusts factual source formatting into the current authoring contract's expected form. */
 final class ConditionalFormattingParityExpectations {

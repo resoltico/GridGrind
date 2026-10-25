@@ -1,8 +1,8 @@
 package dev.erst.gridgrind.cli;
 
-import dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces.JsonLocation;
 import dev.erst.gridgrind.core.problem.PayloadException;
 import dev.erst.gridgrind.core.problem.PayloadLocation;
+import dev.erst.gridgrind.core.problem.ProblemContextRequestSurfaces.JsonLocation;
 import java.util.Optional;
 
 /** Projects a payload exception's owned location into the public CLI diagnostic context. */

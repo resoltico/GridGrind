@@ -1,12 +1,12 @@
 package dev.erst.gridgrind.engine.runtime;
 
-import dev.erst.gridgrind.contract.dto.CalculationExecutionStatus;
-import dev.erst.gridgrind.contract.dto.CalculationPolicyInput;
-import dev.erst.gridgrind.contract.dto.CalculationReport;
-import dev.erst.gridgrind.contract.dto.CalculationStrategyInput;
-import dev.erst.gridgrind.contract.dto.FormulaCapabilityKind;
-import dev.erst.gridgrind.contract.dto.FormulaCellTarget;
-import dev.erst.gridgrind.contract.dto.GridGrindProblemCode;
+import dev.erst.gridgrind.core.model.formula.CalculationExecutionStatus;
+import dev.erst.gridgrind.core.model.formula.CalculationPolicyInput;
+import dev.erst.gridgrind.core.model.formula.CalculationReport;
+import dev.erst.gridgrind.core.model.formula.CalculationStrategyInput;
+import dev.erst.gridgrind.core.model.formula.FormulaCapabilityKind;
+import dev.erst.gridgrind.core.model.formula.FormulaCellTarget;
+import dev.erst.gridgrind.core.problem.GridGrindProblemCode;
 import dev.erst.gridgrind.excel.ExcelFormulaCapabilityAssessment;
 import dev.erst.gridgrind.excel.ExcelFormulaCapabilityKind;
 import dev.erst.gridgrind.excel.ExcelFormulaCellTarget;

@@ -6,29 +6,43 @@ import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import dev.erst.gridgrind.contract.action.DrawingMutationAction;
-import dev.erst.gridgrind.contract.action.StructuredMutationAction;
-import dev.erst.gridgrind.contract.dto.ChartAxisInput;
-import dev.erst.gridgrind.contract.dto.ChartDataSourceInput;
-import dev.erst.gridgrind.contract.dto.ChartInput;
-import dev.erst.gridgrind.contract.dto.ChartLegendInput;
-import dev.erst.gridgrind.contract.dto.ChartPlotInput;
-import dev.erst.gridgrind.contract.dto.ChartReport;
-import dev.erst.gridgrind.contract.dto.ChartSeriesInput;
-import dev.erst.gridgrind.contract.dto.ChartTitleInput;
-import dev.erst.gridgrind.contract.dto.CustomXmlImportInput;
-import dev.erst.gridgrind.contract.dto.CustomXmlMappingLocator;
-import dev.erst.gridgrind.contract.dto.DrawingAnchorInput;
-import dev.erst.gridgrind.contract.dto.DrawingMarkerInput;
-import dev.erst.gridgrind.contract.dto.PictureDataInput;
-import dev.erst.gridgrind.contract.dto.SignatureLineInput;
-import dev.erst.gridgrind.contract.dto.WorkbookPlan;
-import dev.erst.gridgrind.contract.query.WorkbookInspectionResult;
-import dev.erst.gridgrind.contract.selector.SheetSelector;
-import dev.erst.gridgrind.contract.selector.WorkbookSelector;
-import dev.erst.gridgrind.contract.source.BinarySourceInput;
-import dev.erst.gridgrind.contract.source.TextSourceInput;
-import dev.erst.gridgrind.contract.step.MutationStep;
+import dev.erst.gridgrind.core.model.chart.ChartAxisInput;
+import dev.erst.gridgrind.core.model.chart.ChartDataSourceInput;
+import dev.erst.gridgrind.core.model.chart.ChartInput;
+import dev.erst.gridgrind.core.model.chart.ChartLegendInput;
+import dev.erst.gridgrind.core.model.chart.ChartPlotInput;
+import dev.erst.gridgrind.core.model.chart.ChartReport;
+import dev.erst.gridgrind.core.model.chart.ChartSeriesInput;
+import dev.erst.gridgrind.core.model.chart.ChartTitleInput;
+import dev.erst.gridgrind.core.model.customxml.CustomXmlImportInput;
+import dev.erst.gridgrind.core.model.customxml.CustomXmlMappingLocator;
+import dev.erst.gridgrind.core.model.drawing.DrawingAnchorInput;
+import dev.erst.gridgrind.core.model.drawing.DrawingMarkerInput;
+import dev.erst.gridgrind.core.model.drawing.PictureDataInput;
+import dev.erst.gridgrind.core.model.drawing.SignatureLineInput;
+import dev.erst.gridgrind.core.plan.DrawingMutationAction;
+import dev.erst.gridgrind.core.plan.MutationStep;
+import dev.erst.gridgrind.core.plan.SheetSelector;
+import dev.erst.gridgrind.core.plan.StructuredMutationAction;
+import dev.erst.gridgrind.core.plan.WorkbookInspectionResult;
+import dev.erst.gridgrind.core.plan.WorkbookPlan;
+import dev.erst.gridgrind.core.plan.WorkbookSelector;
+import dev.erst.gridgrind.core.source.BinarySourceInput;
+import dev.erst.gridgrind.core.source.TextSourceInput;
+import dev.erst.gridgrind.core.vocabulary.ExcelChartAxisCrosses;
+import dev.erst.gridgrind.core.vocabulary.ExcelChartAxisKind;
+import dev.erst.gridgrind.core.vocabulary.ExcelChartAxisPosition;
+import dev.erst.gridgrind.core.vocabulary.ExcelChartBarDirection;
+import dev.erst.gridgrind.core.vocabulary.ExcelChartBarGrouping;
+import dev.erst.gridgrind.core.vocabulary.ExcelChartBarShape;
+import dev.erst.gridgrind.core.vocabulary.ExcelChartDisplayBlanksAs;
+import dev.erst.gridgrind.core.vocabulary.ExcelChartGrouping;
+import dev.erst.gridgrind.core.vocabulary.ExcelChartLegendPosition;
+import dev.erst.gridgrind.core.vocabulary.ExcelChartMarkerStyle;
+import dev.erst.gridgrind.core.vocabulary.ExcelChartRadarStyle;
+import dev.erst.gridgrind.core.vocabulary.ExcelChartScatterStyle;
+import dev.erst.gridgrind.core.vocabulary.ExcelDrawingAnchorBehavior;
+import dev.erst.gridgrind.core.vocabulary.ExcelPictureFormat;
 import dev.erst.gridgrind.excel.*;
 import dev.erst.gridgrind.excel.ExcelChartDefinition;
 import dev.erst.gridgrind.excel.ExcelChartSnapshot;
@@ -41,20 +55,6 @@ import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlSchemaSnapshot;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingAnchor;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingMarker;
 import dev.erst.gridgrind.excel.drawing.ExcelSignatureLineDefinition;
-import dev.erst.gridgrind.excel.foundation.ExcelChartAxisCrosses;
-import dev.erst.gridgrind.excel.foundation.ExcelChartAxisKind;
-import dev.erst.gridgrind.excel.foundation.ExcelChartAxisPosition;
-import dev.erst.gridgrind.excel.foundation.ExcelChartBarDirection;
-import dev.erst.gridgrind.excel.foundation.ExcelChartBarGrouping;
-import dev.erst.gridgrind.excel.foundation.ExcelChartBarShape;
-import dev.erst.gridgrind.excel.foundation.ExcelChartDisplayBlanksAs;
-import dev.erst.gridgrind.excel.foundation.ExcelChartGrouping;
-import dev.erst.gridgrind.excel.foundation.ExcelChartLegendPosition;
-import dev.erst.gridgrind.excel.foundation.ExcelChartMarkerStyle;
-import dev.erst.gridgrind.excel.foundation.ExcelChartRadarStyle;
-import dev.erst.gridgrind.excel.foundation.ExcelChartScatterStyle;
-import dev.erst.gridgrind.excel.foundation.ExcelDrawingAnchorBehavior;
-import dev.erst.gridgrind.excel.foundation.ExcelPictureFormat;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -285,8 +285,8 @@ class SpreadsheetSurfaceConverterCoverageTest {
         WorkbookPlan.standard(
             new WorkbookPlan.WorkbookSource.New(),
             new WorkbookPlan.WorkbookPersistence.None(),
-            dev.erst.gridgrind.contract.dto.ExecutionPolicyInput.defaults(),
-            dev.erst.gridgrind.contract.dto.FormulaEnvironmentInput.empty(),
+            dev.erst.gridgrind.core.plan.ExecutionPolicyInput.defaults(),
+            dev.erst.gridgrind.core.model.formula.FormulaEnvironmentInput.empty(),
             List.of(
                 new MutationStep("set-chart", new SheetSelector.ByName("Ops"), chartAction),
                 new MutationStep("set-signature", new SheetSelector.ByName("Ops"), signatureAction),
@@ -318,8 +318,8 @@ class SpreadsheetSurfaceConverterCoverageTest {
         WorkbookPlan.standard(
             new WorkbookPlan.WorkbookSource.New(),
             new WorkbookPlan.WorkbookPersistence.None(),
-            dev.erst.gridgrind.contract.dto.ExecutionPolicyInput.defaults(),
-            dev.erst.gridgrind.contract.dto.FormulaEnvironmentInput.empty(),
+            dev.erst.gridgrind.core.plan.ExecutionPolicyInput.defaults(),
+            dev.erst.gridgrind.core.model.formula.FormulaEnvironmentInput.empty(),
             List.of(
                 new MutationStep(
                     "stable-chart", new SheetSelector.ByName("Ops"), stableChartAction),

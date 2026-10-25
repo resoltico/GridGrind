@@ -1,23 +1,23 @@
 package dev.erst.gridgrind.engine.runtime;
 
-import dev.erst.gridgrind.contract.query.CellReadFacet;
-import dev.erst.gridgrind.contract.query.CellReadProjection;
-import dev.erst.gridgrind.contract.query.InspectionAnalysisQuery;
-import dev.erst.gridgrind.contract.query.InspectionQuery;
-import dev.erst.gridgrind.contract.query.InspectionSurfaceQuery;
-import dev.erst.gridgrind.contract.query.SheetIntrospectionQuery;
-import dev.erst.gridgrind.contract.query.WorkbookAssetIntrospectionQuery;
-import dev.erst.gridgrind.contract.query.WorkbookIntrospectionQuery;
-import dev.erst.gridgrind.contract.selector.CellSelector;
-import dev.erst.gridgrind.contract.selector.ChartSelector;
-import dev.erst.gridgrind.contract.selector.DrawingObjectSelector;
-import dev.erst.gridgrind.contract.selector.NamedRangeSelector;
-import dev.erst.gridgrind.contract.selector.PivotTableSelector;
-import dev.erst.gridgrind.contract.selector.RangeSelector;
-import dev.erst.gridgrind.contract.selector.Selector;
-import dev.erst.gridgrind.contract.selector.SheetSelector;
-import dev.erst.gridgrind.contract.selector.TableSelector;
-import dev.erst.gridgrind.contract.step.InspectionStep;
+import dev.erst.gridgrind.core.plan.CellReadFacet;
+import dev.erst.gridgrind.core.plan.CellReadProjection;
+import dev.erst.gridgrind.core.plan.CellSelector;
+import dev.erst.gridgrind.core.plan.ChartSelector;
+import dev.erst.gridgrind.core.plan.DrawingObjectSelector;
+import dev.erst.gridgrind.core.plan.InspectionAnalysisQuery;
+import dev.erst.gridgrind.core.plan.InspectionQuery;
+import dev.erst.gridgrind.core.plan.InspectionStep;
+import dev.erst.gridgrind.core.plan.InspectionSurfaceQuery;
+import dev.erst.gridgrind.core.plan.NamedRangeSelector;
+import dev.erst.gridgrind.core.plan.PivotTableSelector;
+import dev.erst.gridgrind.core.plan.RangeSelector;
+import dev.erst.gridgrind.core.plan.Selector;
+import dev.erst.gridgrind.core.plan.SheetIntrospectionQuery;
+import dev.erst.gridgrind.core.plan.SheetSelector;
+import dev.erst.gridgrind.core.plan.TableSelector;
+import dev.erst.gridgrind.core.plan.WorkbookAssetIntrospectionQuery;
+import dev.erst.gridgrind.core.plan.WorkbookIntrospectionQuery;
 import dev.erst.gridgrind.excel.ExcelCellReadFacet;
 import dev.erst.gridgrind.excel.ExcelCellReadProjection;
 import dev.erst.gridgrind.excel.WorkbookReadCommand;
@@ -185,7 +185,7 @@ final class InspectionCommandConverter {
 
   private static dev.erst.gridgrind.excel.customxml.ExcelCustomXmlMappingLocator
       toExcelCustomXmlMappingLocator(
-          dev.erst.gridgrind.contract.dto.CustomXmlMappingLocator locator) {
+          dev.erst.gridgrind.core.model.customxml.CustomXmlMappingLocator locator) {
     return new dev.erst.gridgrind.excel.customxml.ExcelCustomXmlMappingLocator(
         locator.mapId(), locator.name());
   }

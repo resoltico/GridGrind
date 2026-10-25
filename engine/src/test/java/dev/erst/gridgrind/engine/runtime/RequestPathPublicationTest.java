@@ -9,8 +9,8 @@ import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import dev.erst.gridgrind.contract.dto.GridGrindProblemCode;
-import dev.erst.gridgrind.contract.dto.WorkbookResultPersistence.PublicationOutcome;
+import dev.erst.gridgrind.core.problem.GridGrindProblemCode;
+import dev.erst.gridgrind.core.result.WorkbookResultPersistence.PublicationOutcome;
 import dev.erst.gridgrind.excel.WorkbookArtifactWriteDisposition;
 import java.io.IOException;
 import java.nio.file.Files;

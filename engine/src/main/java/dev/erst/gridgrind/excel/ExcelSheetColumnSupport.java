@@ -1,7 +1,7 @@
 package dev.erst.gridgrind.excel;
 
-import dev.erst.gridgrind.excel.foundation.ExcelColumnSpan;
-import dev.erst.gridgrind.excel.foundation.ExcelIndexDisplay;
+import dev.erst.gridgrind.core.vocabulary.ExcelColumnSpan;
+import dev.erst.gridgrind.core.vocabulary.ExcelIndexDisplay;
 import java.util.Objects;
 import org.apache.poi.ss.usermodel.DataFormatter;
 import org.apache.poi.ss.usermodel.Sheet;

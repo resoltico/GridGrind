@@ -1,8 +1,8 @@
 package dev.erst.gridgrind.excel.drawing;
 
+import dev.erst.gridgrind.core.vocabulary.ExcelPictureFormat;
 import dev.erst.gridgrind.excel.ExcelBinaryData;
 import dev.erst.gridgrind.excel.ExcelWorkbookImageCatalogSupport;
-import dev.erst.gridgrind.excel.foundation.ExcelPictureFormat;
 import java.util.Objects;
 import java.util.Optional;
 import org.apache.poi.ooxml.POIXMLDocumentPart.RelationPart;

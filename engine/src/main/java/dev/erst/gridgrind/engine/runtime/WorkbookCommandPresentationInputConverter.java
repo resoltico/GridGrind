@@ -1,6 +1,6 @@
 package dev.erst.gridgrind.engine.runtime;
 
-import dev.erst.gridgrind.contract.dto.SheetPresentationInput;
+import dev.erst.gridgrind.core.model.layout.SheetPresentationInput;
 import dev.erst.gridgrind.excel.ExcelIgnoredError;
 import dev.erst.gridgrind.excel.ExcelSheetDefaults;
 import dev.erst.gridgrind.excel.ExcelSheetDisplay;

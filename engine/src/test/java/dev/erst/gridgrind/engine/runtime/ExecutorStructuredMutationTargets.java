@@ -1,8 +1,8 @@
 package dev.erst.gridgrind.engine.runtime;
 
-import dev.erst.gridgrind.contract.action.StructuredMutationAction;
-import dev.erst.gridgrind.contract.dto.NamedRangeScope;
-import dev.erst.gridgrind.contract.selector.NamedRangeSelector;
+import dev.erst.gridgrind.core.plan.NamedRangeSelector;
+import dev.erst.gridgrind.core.plan.StructuredMutationAction;
+import dev.erst.gridgrind.core.vocabulary.NamedRangeScope;
 
 /**
  * Derives semantic test targets for structured mutations whose target is embedded in the action.

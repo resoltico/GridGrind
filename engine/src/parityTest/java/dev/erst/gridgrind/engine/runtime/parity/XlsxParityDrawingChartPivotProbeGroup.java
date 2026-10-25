@@ -4,21 +4,31 @@ import static dev.erst.gridgrind.engine.runtime.parity.ParityPlanSupport.inspect
 import static dev.erst.gridgrind.engine.runtime.parity.ParityPlanSupport.mutate;
 import static dev.erst.gridgrind.engine.runtime.parity.XlsxParityProbeRegistry.*;
 
-import dev.erst.gridgrind.contract.action.CellMutationAction;
-import dev.erst.gridgrind.contract.action.DrawingMutationAction;
-import dev.erst.gridgrind.contract.action.StructuredMutationAction;
-import dev.erst.gridgrind.contract.action.WorkbookMutationAction;
-import dev.erst.gridgrind.contract.dto.*;
-import dev.erst.gridgrind.contract.query.*;
-import dev.erst.gridgrind.contract.query.WorkbookAnalysisResult;
-import dev.erst.gridgrind.contract.query.WorkbookAssetInspectionResult;
-import dev.erst.gridgrind.contract.selector.*;
+import dev.erst.gridgrind.core.model.chart.ChartDataSourceInput;
+import dev.erst.gridgrind.core.model.chart.ChartInput;
+import dev.erst.gridgrind.core.model.chart.ChartLegendInput;
+import dev.erst.gridgrind.core.model.chart.ChartPlotInput;
+import dev.erst.gridgrind.core.model.chart.ChartReport;
+import dev.erst.gridgrind.core.model.chart.ChartSeriesInput;
+import dev.erst.gridgrind.core.model.chart.ChartTitleInput;
+import dev.erst.gridgrind.core.model.drawing.DrawingObjectPayloadReport;
+import dev.erst.gridgrind.core.model.drawing.DrawingObjectReport;
+import dev.erst.gridgrind.core.model.pivot.PivotTableInput;
+import dev.erst.gridgrind.core.model.pivot.PivotTableReport;
+import dev.erst.gridgrind.core.plan.*;
+import dev.erst.gridgrind.core.plan.CellMutationAction;
+import dev.erst.gridgrind.core.plan.DrawingMutationAction;
+import dev.erst.gridgrind.core.plan.StructuredMutationAction;
+import dev.erst.gridgrind.core.plan.WorkbookAnalysisResult;
+import dev.erst.gridgrind.core.plan.WorkbookAssetInspectionResult;
+import dev.erst.gridgrind.core.plan.WorkbookMutationAction;
+import dev.erst.gridgrind.core.result.WorkbookResult;
+import dev.erst.gridgrind.core.vocabulary.ExcelChartBarDirection;
+import dev.erst.gridgrind.core.vocabulary.ExcelChartDisplayBlanksAs;
+import dev.erst.gridgrind.core.vocabulary.ExcelChartLegendPosition;
+import dev.erst.gridgrind.core.vocabulary.ExcelDrawingAnchorBehavior;
 import dev.erst.gridgrind.engine.runtime.parity.XlsxParityProbeRegistry.ProbeContext;
 import dev.erst.gridgrind.engine.runtime.parity.XlsxParityProbeRegistry.ProbeResult;
-import dev.erst.gridgrind.excel.foundation.ExcelChartBarDirection;
-import dev.erst.gridgrind.excel.foundation.ExcelChartDisplayBlanksAs;
-import dev.erst.gridgrind.excel.foundation.ExcelChartLegendPosition;
-import dev.erst.gridgrind.excel.foundation.ExcelDrawingAnchorBehavior;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
@@ -164,7 +174,7 @@ final class XlsxParityDrawingChartPivotProbeGroup {
             && matchesAnchor(reportShape.anchor(), directShape.anchor())
             && "SIMPLE_SHAPE".equals(directShape.kind())
             && reportShape.kind()
-                == dev.erst.gridgrind.excel.foundation.ExcelDrawingShapeKind.SIMPLE_SHAPE
+                == dev.erst.gridgrind.core.vocabulary.ExcelDrawingShapeKind.SIMPLE_SHAPE
             && Objects.equals(directShape.presetGeometryToken(), reportShape.presetGeometryToken())
             && Objects.equals(directShape.text(), reportShape.text())
             && matchesAnchor(reportEmbedded.anchor(), directEmbedded.anchor())
@@ -405,7 +415,7 @@ final class XlsxParityDrawingChartPivotProbeGroup {
                 new ChartPlotInput.Bar(
                     false,
                     ExcelChartBarDirection.BAR,
-                    dev.erst.gridgrind.excel.foundation.ExcelChartBarGrouping.CLUSTERED,
+                    dev.erst.gridgrind.core.vocabulary.ExcelChartBarGrouping.CLUSTERED,
                     Optional.empty(),
                     Optional.empty(),
                     List.of(
@@ -542,7 +552,7 @@ final class XlsxParityDrawingChartPivotProbeGroup {
                 new ChartPlotInput.Bar(
                     true,
                     ExcelChartBarDirection.COLUMN,
-                    dev.erst.gridgrind.excel.foundation.ExcelChartBarGrouping.CLUSTERED,
+                    dev.erst.gridgrind.core.vocabulary.ExcelChartBarGrouping.CLUSTERED,
                     Optional.empty(),
                     Optional.empty(),
                     List.of(
@@ -724,7 +734,7 @@ final class XlsxParityDrawingChartPivotProbeGroup {
                             List.of(
                                 new PivotTableInput.DataField(
                                     "Amount",
-                                    dev.erst.gridgrind.excel.foundation
+                                    dev.erst.gridgrind.core.vocabulary
                                         .ExcelPivotDataConsolidateFunction.SUM,
                                     "Total Amount",
                                     Optional.of("#,##0.00")))))),

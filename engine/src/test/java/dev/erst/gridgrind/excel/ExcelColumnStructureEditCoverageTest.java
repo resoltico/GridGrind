@@ -2,8 +2,8 @@ package dev.erst.gridgrind.excel;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import dev.erst.gridgrind.excel.foundation.ExcelColumnSpan;
-import dev.erst.gridgrind.excel.foundation.ExcelRowSpan;
+import dev.erst.gridgrind.core.vocabulary.ExcelColumnSpan;
+import dev.erst.gridgrind.core.vocabulary.ExcelRowSpan;
 import java.util.List;
 import org.apache.poi.ss.usermodel.Name;
 import org.apache.poi.xssf.usermodel.XSSFSheet;

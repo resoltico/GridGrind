@@ -3,7 +3,7 @@ package dev.erst.gridgrind.excel;
 import static dev.erst.gridgrind.excel.ExcelStyleTestAccess.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-import dev.erst.gridgrind.excel.foundation.ExcelFillPattern;
+import dev.erst.gridgrind.core.vocabulary.ExcelFillPattern;
 import java.math.BigDecimal;
 import java.util.Arrays;
 import java.util.List;

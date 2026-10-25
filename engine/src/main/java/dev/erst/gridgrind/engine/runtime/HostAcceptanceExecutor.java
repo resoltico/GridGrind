@@ -1,9 +1,9 @@
 package dev.erst.gridgrind.engine.runtime;
 
-import dev.erst.gridgrind.contract.assertion.AssertionResult;
-import dev.erst.gridgrind.contract.dto.ExecutionModeInput;
-import dev.erst.gridgrind.contract.dto.WorkbookExecutionEvidence;
-import dev.erst.gridgrind.contract.query.InspectionResult;
+import dev.erst.gridgrind.core.plan.AssertionResult;
+import dev.erst.gridgrind.core.plan.ExecutionModeInput;
+import dev.erst.gridgrind.core.plan.InspectionResult;
+import dev.erst.gridgrind.core.result.WorkbookExecutionEvidence;
 import dev.erst.gridgrind.engine.api.GridGrindHostAcceptancePolicy;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
 import dev.erst.gridgrind.excel.WorkbookLocation;
@@ -198,7 +198,7 @@ final class HostAcceptanceExecutor {
   }
 
   private List<InspectionResult> captureWorkbookInspections(
-      List<dev.erst.gridgrind.contract.step.InspectionStep> inspections,
+      List<dev.erst.gridgrind.core.plan.InspectionStep> inspections,
       ExcelWorkbook workbook,
       WorkbookLocation workbookLocation)
       throws IOException {

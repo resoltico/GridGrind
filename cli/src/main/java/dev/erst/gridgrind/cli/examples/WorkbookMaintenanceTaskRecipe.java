@@ -20,13 +20,13 @@ import dev.erst.gridgrind.cli.discovery.TaskPersistenceMode;
 import dev.erst.gridgrind.cli.discovery.TaskPhasePurpose;
 import dev.erst.gridgrind.cli.discovery.TaskSourceMode;
 import dev.erst.gridgrind.cli.discovery.TaskVerificationKind;
-import dev.erst.gridgrind.contract.action.WorkbookMutationAction;
-import dev.erst.gridgrind.contract.dto.WorkbookPlan;
-import dev.erst.gridgrind.contract.query.InspectionAnalysisQuery;
-import dev.erst.gridgrind.contract.query.SheetIntrospectionQuery;
-import dev.erst.gridgrind.contract.query.WorkbookAssetIntrospectionQuery;
-import dev.erst.gridgrind.contract.query.WorkbookIntrospectionQuery;
-import dev.erst.gridgrind.contract.selector.DrawingObjectSelector;
+import dev.erst.gridgrind.core.plan.DrawingObjectSelector;
+import dev.erst.gridgrind.core.plan.InspectionAnalysisQuery;
+import dev.erst.gridgrind.core.plan.SheetIntrospectionQuery;
+import dev.erst.gridgrind.core.plan.WorkbookAssetIntrospectionQuery;
+import dev.erst.gridgrind.core.plan.WorkbookIntrospectionQuery;
+import dev.erst.gridgrind.core.plan.WorkbookMutationAction;
+import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import java.util.List;
 
 /** Published task recipe for workbook maintenance and sheet-copy workflows. */
@@ -127,7 +127,7 @@ final class WorkbookMaintenanceTaskRecipe {
             new WorkbookMutationAction.CopySheet("Template Copy")),
         ExampleSteps.read(
             "read-copied-comments",
-            new dev.erst.gridgrind.contract.selector.CellSelector.AllUsedInSheet("Template Copy"),
+            new dev.erst.gridgrind.core.plan.CellSelector.AllUsedInSheet("Template Copy"),
             new SheetIntrospectionQuery.GetComments()),
         ExampleSteps.read(
             "read-copied-drawing-objects",

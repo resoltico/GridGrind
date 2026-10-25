@@ -3,9 +3,23 @@ package dev.erst.gridgrind.engine.runtime;
 import static dev.erst.gridgrind.engine.runtime.ExecutorTestPlanSupport.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-import dev.erst.gridgrind.contract.dto.*;
-import dev.erst.gridgrind.contract.query.*;
-import dev.erst.gridgrind.contract.selector.*;
+import dev.erst.gridgrind.core.model.formula.NamedRangeReport;
+import dev.erst.gridgrind.core.model.layout.PaneReport;
+import dev.erst.gridgrind.core.model.print.PrintAreaReport;
+import dev.erst.gridgrind.core.model.print.PrintScalingReport;
+import dev.erst.gridgrind.core.model.print.PrintTitleColumnsReport;
+import dev.erst.gridgrind.core.model.print.PrintTitleRowsReport;
+import dev.erst.gridgrind.core.model.protection.SheetProtectionReport;
+import dev.erst.gridgrind.core.model.value.HyperlinkTarget;
+import dev.erst.gridgrind.core.plan.*;
+import dev.erst.gridgrind.core.result.AnalysisLocationReport;
+import dev.erst.gridgrind.core.result.SheetSummaryReport;
+import dev.erst.gridgrind.core.result.WorkbookSummary;
+import dev.erst.gridgrind.core.vocabulary.ExcelConditionalFormattingThresholdType;
+import dev.erst.gridgrind.core.vocabulary.ExcelPaneRegion;
+import dev.erst.gridgrind.core.vocabulary.ExcelPrintOrientation;
+import dev.erst.gridgrind.core.vocabulary.ExcelSheetVisibility;
+import dev.erst.gridgrind.core.vocabulary.NamedRangeBackingKind;
 import dev.erst.gridgrind.excel.*;
 import dev.erst.gridgrind.excel.ExcelCellMetadataSnapshot;
 import dev.erst.gridgrind.excel.ExcelCellSnapshot;
@@ -18,10 +32,6 @@ import dev.erst.gridgrind.excel.ExcelHyperlink;
 import dev.erst.gridgrind.excel.ExcelNamedRangeScope;
 import dev.erst.gridgrind.excel.ExcelNamedRangeSnapshot;
 import dev.erst.gridgrind.excel.ExcelNamedRangeTarget;
-import dev.erst.gridgrind.excel.foundation.ExcelConditionalFormattingThresholdType;
-import dev.erst.gridgrind.excel.foundation.ExcelPaneRegion;
-import dev.erst.gridgrind.excel.foundation.ExcelPrintOrientation;
-import dev.erst.gridgrind.excel.foundation.ExcelSheetVisibility;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 
@@ -56,7 +66,7 @@ class DefaultGridGrindRequestExecutorReadResultTranslationTest
                 "sheet",
                 new dev.erst.gridgrind.excel.WorkbookSheetResult.SheetSummary(
                     "Budget",
-                    dev.erst.gridgrind.excel.foundation.ExcelSheetVisibility.VISIBLE,
+                    dev.erst.gridgrind.core.vocabulary.ExcelSheetVisibility.VISIBLE,
                     new dev.erst.gridgrind.excel.WorkbookSheetResult.SheetProtection.Unprotected(),
                     4,
                     3,
@@ -226,9 +236,9 @@ class DefaultGridGrindRequestExecutorReadResultTranslationTest
                     new dev.erst.gridgrind.excel.WorkbookAnalysis.AnalysisSummary(1, 0, 0, 1),
                     List.of(
                         new dev.erst.gridgrind.excel.WorkbookAnalysis.AnalysisFinding(
-                            dev.erst.gridgrind.excel.foundation.AnalysisFindingCode
+                            dev.erst.gridgrind.core.vocabulary.AnalysisFindingCode
                                 .FORMULA_VOLATILE_FUNCTION,
-                            dev.erst.gridgrind.excel.foundation.AnalysisSeverity.INFO,
+                            dev.erst.gridgrind.core.vocabulary.AnalysisSeverity.INFO,
                             "Volatile formula",
                             "Formula uses NOW().",
                             new dev.erst.gridgrind.excel.WorkbookAnalysis.AnalysisLocation.Cell(
@@ -252,7 +262,7 @@ class DefaultGridGrindRequestExecutorReadResultTranslationTest
     assertInstanceOf(
         WorkbookSurfaceInspectionResult.NamedRangeSurfaceResult.class, namedRangeSurface);
     assertInstanceOf(
-        dev.erst.gridgrind.contract.query.WorkbookAnalysisResult.FormulaHealthResult.class,
+        dev.erst.gridgrind.core.plan.WorkbookAnalysisResult.FormulaHealthResult.class,
         formulaHealth);
     assertEquals(
         "Budget",
@@ -332,7 +342,7 @@ class DefaultGridGrindRequestExecutorReadResultTranslationTest
     assertEquals(
         1,
         cast(
-                dev.erst.gridgrind.contract.query.WorkbookAnalysisResult.FormulaHealthResult.class,
+                dev.erst.gridgrind.core.plan.WorkbookAnalysisResult.FormulaHealthResult.class,
                 formulaHealth)
             .analysis()
             .summary()
@@ -350,9 +360,9 @@ class DefaultGridGrindRequestExecutorReadResultTranslationTest
                     new dev.erst.gridgrind.excel.WorkbookAnalysis.AnalysisSummary(1, 1, 0, 0),
                     List.of(
                         new dev.erst.gridgrind.excel.WorkbookAnalysis.AnalysisFinding(
-                            dev.erst.gridgrind.excel.foundation.AnalysisFindingCode
+                            dev.erst.gridgrind.core.vocabulary.AnalysisFindingCode
                                 .CONDITIONAL_FORMATTING_PRIORITY_COLLISION,
-                            dev.erst.gridgrind.excel.foundation.AnalysisSeverity.ERROR,
+                            dev.erst.gridgrind.core.vocabulary.AnalysisSeverity.ERROR,
                             "Priority collision",
                             "Conditional-formatting priorities collide.",
                             new dev.erst.gridgrind.excel.WorkbookAnalysis.AnalysisLocation.Sheet(
@@ -367,18 +377,18 @@ class DefaultGridGrindRequestExecutorReadResultTranslationTest
                     new dev.erst.gridgrind.excel.WorkbookAnalysis.AnalysisSummary(2, 1, 1, 0),
                     List.of(
                         new dev.erst.gridgrind.excel.WorkbookAnalysis.AnalysisFinding(
-                            dev.erst.gridgrind.excel.foundation.AnalysisFindingCode
+                            dev.erst.gridgrind.core.vocabulary.AnalysisFindingCode
                                 .HYPERLINK_MALFORMED_TARGET,
-                            dev.erst.gridgrind.excel.foundation.AnalysisSeverity.ERROR,
+                            dev.erst.gridgrind.core.vocabulary.AnalysisSeverity.ERROR,
                             "Malformed hyperlink target",
                             "Hyperlink target is malformed.",
                             new dev.erst.gridgrind.excel.WorkbookAnalysis.AnalysisLocation
                                 .Workbook(),
                             List.of("mailto:")),
                         new dev.erst.gridgrind.excel.WorkbookAnalysis.AnalysisFinding(
-                            dev.erst.gridgrind.excel.foundation.AnalysisFindingCode
+                            dev.erst.gridgrind.core.vocabulary.AnalysisFindingCode
                                 .HYPERLINK_MISSING_DOCUMENT_SHEET,
-                            dev.erst.gridgrind.excel.foundation.AnalysisSeverity.WARNING,
+                            dev.erst.gridgrind.core.vocabulary.AnalysisSeverity.WARNING,
                             "Missing target sheet",
                             "Sheet is missing.",
                             new dev.erst.gridgrind.excel.WorkbookAnalysis.AnalysisLocation.Sheet(
@@ -393,9 +403,9 @@ class DefaultGridGrindRequestExecutorReadResultTranslationTest
                     new dev.erst.gridgrind.excel.WorkbookAnalysis.AnalysisSummary(1, 0, 1, 0),
                     List.of(
                         new dev.erst.gridgrind.excel.WorkbookAnalysis.AnalysisFinding(
-                            dev.erst.gridgrind.excel.foundation.AnalysisFindingCode
+                            dev.erst.gridgrind.core.vocabulary.AnalysisFindingCode
                                 .NAMED_RANGE_BROKEN_REFERENCE,
-                            dev.erst.gridgrind.excel.foundation.AnalysisSeverity.WARNING,
+                            dev.erst.gridgrind.core.vocabulary.AnalysisSeverity.WARNING,
                             "Broken named range",
                             "Named range contains #REF!.",
                             new dev.erst.gridgrind.excel.WorkbookAnalysis.AnalysisLocation.Range(
@@ -409,9 +419,9 @@ class DefaultGridGrindRequestExecutorReadResultTranslationTest
                     new dev.erst.gridgrind.excel.WorkbookAnalysis.AnalysisSummary(1, 0, 0, 1),
                     List.of(
                         new dev.erst.gridgrind.excel.WorkbookAnalysis.AnalysisFinding(
-                            dev.erst.gridgrind.excel.foundation.AnalysisFindingCode
+                            dev.erst.gridgrind.core.vocabulary.AnalysisFindingCode
                                 .NAMED_RANGE_SCOPE_SHADOWING,
-                            dev.erst.gridgrind.excel.foundation.AnalysisSeverity.INFO,
+                            dev.erst.gridgrind.core.vocabulary.AnalysisSeverity.INFO,
                             "Scope shadowing",
                             "Name exists in more than one scope.",
                             new dev.erst.gridgrind.excel.WorkbookAnalysis.AnalysisLocation
@@ -422,15 +432,14 @@ class DefaultGridGrindRequestExecutorReadResultTranslationTest
     assertEquals(
         1,
         cast(
-                dev.erst.gridgrind.contract.query.WorkbookAnalysisResult
+                dev.erst.gridgrind.core.plan.WorkbookAnalysisResult
                     .ConditionalFormattingHealthResult.class,
                 conditionalFormattingHealth)
             .analysis()
             .checkedConditionalFormattingBlockCount());
     AnalysisLocationReport workbookLocation =
         cast(
-                dev.erst.gridgrind.contract.query.WorkbookAnalysisResult.HyperlinkHealthResult
-                    .class,
+                dev.erst.gridgrind.core.plan.WorkbookAnalysisResult.HyperlinkHealthResult.class,
                 hyperlinkHealth)
             .analysis()
             .findings()
@@ -438,8 +447,7 @@ class DefaultGridGrindRequestExecutorReadResultTranslationTest
             .location();
     AnalysisLocationReport sheetLocation =
         cast(
-                dev.erst.gridgrind.contract.query.WorkbookAnalysisResult.HyperlinkHealthResult
-                    .class,
+                dev.erst.gridgrind.core.plan.WorkbookAnalysisResult.HyperlinkHealthResult.class,
                 hyperlinkHealth)
             .analysis()
             .findings()
@@ -447,8 +455,7 @@ class DefaultGridGrindRequestExecutorReadResultTranslationTest
             .location();
     AnalysisLocationReport rangeLocation =
         cast(
-                dev.erst.gridgrind.contract.query.WorkbookAnalysisResult.NamedRangeHealthResult
-                    .class,
+                dev.erst.gridgrind.core.plan.WorkbookAnalysisResult.NamedRangeHealthResult.class,
                 namedRangeHealth)
             .analysis()
             .findings()
@@ -456,8 +463,7 @@ class DefaultGridGrindRequestExecutorReadResultTranslationTest
             .location();
     AnalysisLocationReport namedRangeLocation =
         cast(
-                dev.erst.gridgrind.contract.query.WorkbookAnalysisResult.WorkbookFindingsResult
-                    .class,
+                dev.erst.gridgrind.core.plan.WorkbookAnalysisResult.WorkbookFindingsResult.class,
                 workbookFindings)
             .analysis()
             .findings()
@@ -592,7 +598,7 @@ class DefaultGridGrindRequestExecutorReadResultTranslationTest
                 "sheet",
                 new dev.erst.gridgrind.excel.WorkbookSheetResult.SheetSummary(
                     "Budget",
-                    dev.erst.gridgrind.excel.foundation.ExcelSheetVisibility.VERY_HIDDEN,
+                    dev.erst.gridgrind.core.vocabulary.ExcelSheetVisibility.VERY_HIDDEN,
                     new dev.erst.gridgrind.excel.WorkbookSheetResult.SheetProtection.Protected(
                         excelProtectionSettings()),
                     4,

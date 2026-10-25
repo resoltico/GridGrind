@@ -1,6 +1,6 @@
 package dev.erst.gridgrind.excel.ooxml;
 
-import dev.erst.gridgrind.excel.foundation.ExcelOoxmlSignatureState;
+import dev.erst.gridgrind.core.vocabulary.ExcelOoxmlSignatureState;
 import java.util.Objects;
 import java.util.Optional;
 

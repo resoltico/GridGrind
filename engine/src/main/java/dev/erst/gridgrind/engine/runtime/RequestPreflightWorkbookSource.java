@@ -1,9 +1,9 @@
 package dev.erst.gridgrind.engine.runtime;
 
-import dev.erst.gridgrind.contract.dto.GridGrindProblemDetail;
-import dev.erst.gridgrind.contract.dto.WorkbookPlan;
-import dev.erst.gridgrind.contract.step.WorkbookStaticRequestContract;
-import dev.erst.gridgrind.contract.step.WorkbookStaticViolation;
+import dev.erst.gridgrind.core.plan.WorkbookPlan;
+import dev.erst.gridgrind.core.problem.GridGrindProblemDetail;
+import dev.erst.gridgrind.core.validation.WorkbookStaticRequestContract;
+import dev.erst.gridgrind.core.validation.WorkbookStaticViolation;
 import dev.erst.gridgrind.engine.api.GridGrindProblems;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
 import dev.erst.gridgrind.excel.ooxml.ExcelOoxmlPackagePersistenceSupport;
@@ -46,7 +46,7 @@ final class RequestPreflightWorkbookSource {
             request, containsFormula(workbook))) {
       problems.add(
           GridGrindProblems.problem(
-              dev.erst.gridgrind.contract.dto.GridGrindProblemCode.INVALID_REQUEST,
+              dev.erst.gridgrind.core.problem.GridGrindProblemCode.INVALID_REQUEST,
               violation.message(),
               RequestPreflight.openWorkbookContext(request, bindings),
               List.of()));
@@ -68,16 +68,17 @@ final class RequestPreflightWorkbookSource {
 
   private static void validateSourcePersistencePolicy(
       WorkbookPlan request, ExcelWorkbook workbook) {
-    java.util.Optional<dev.erst.gridgrind.contract.dto.OoxmlPersistenceSecurityInput> security =
-        switch (request.persistence()) {
-          case WorkbookPlan.WorkbookPersistence.None _ -> java.util.Optional.empty();
-          case WorkbookPlan.WorkbookPersistence.SaveAs saveAs -> saveAs.security();
-          case WorkbookPlan.WorkbookPersistence.Overwrite overwrite -> overwrite.security();
-        };
+    java.util.Optional<dev.erst.gridgrind.core.model.security.OoxmlPersistenceSecurityInput>
+        security =
+            switch (request.persistence()) {
+              case WorkbookPlan.WorkbookPersistence.None _ -> java.util.Optional.empty();
+              case WorkbookPlan.WorkbookPersistence.SaveAs saveAs -> saveAs.security();
+              case WorkbookPlan.WorkbookPersistence.Overwrite overwrite -> overwrite.security();
+            };
     if (security.isPresent()
         && security.orElseThrow().encryption()
             instanceof
-            dev.erst.gridgrind.contract.dto.OoxmlPersistenceEncryptionInput.PreserveSource
+            dev.erst.gridgrind.core.model.security.OoxmlPersistenceEncryptionInput.PreserveSource
         && workbook.persistence().loadedPackageSecurity().encryption()
             instanceof dev.erst.gridgrind.excel.ooxml.ExcelOoxmlEncryptionSnapshot.None) {
       throw new EncryptionSourceNotEncryptedException();
@@ -85,7 +86,7 @@ final class RequestPreflightWorkbookSource {
     if (security.isPresent()
         && security.orElseThrow().encryption()
             instanceof
-            dev.erst.gridgrind.contract.dto.OoxmlPersistenceEncryptionInput.PreserveSource) {
+            dev.erst.gridgrind.core.model.security.OoxmlPersistenceEncryptionInput.PreserveSource) {
       ExcelOoxmlPackagePersistenceSupport.effectiveOptions(
           workbook.persistence().loadedPackageSecurity(),
           workbook.persistence().sourceEncryptionPassword(),

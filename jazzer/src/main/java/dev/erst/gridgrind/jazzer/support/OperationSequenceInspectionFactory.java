@@ -4,14 +4,14 @@ import static dev.erst.gridgrind.jazzer.support.OperationSequenceSelectorSupport
 import static dev.erst.gridgrind.jazzer.support.OperationSequenceValueFactory.*;
 import static dev.erst.gridgrind.jazzer.support.ProtocolStepSupport.inspect;
 
-import dev.erst.gridgrind.contract.query.*;
-import dev.erst.gridgrind.contract.selector.CellSelector;
-import dev.erst.gridgrind.contract.selector.ChartSelector;
-import dev.erst.gridgrind.contract.selector.DrawingObjectSelector;
-import dev.erst.gridgrind.contract.selector.RangeSelector;
-import dev.erst.gridgrind.contract.selector.SheetSelector;
-import dev.erst.gridgrind.contract.selector.WorkbookSelector;
-import dev.erst.gridgrind.contract.step.InspectionStep;
+import dev.erst.gridgrind.core.plan.*;
+import dev.erst.gridgrind.core.plan.CellSelector;
+import dev.erst.gridgrind.core.plan.ChartSelector;
+import dev.erst.gridgrind.core.plan.DrawingObjectSelector;
+import dev.erst.gridgrind.core.plan.InspectionStep;
+import dev.erst.gridgrind.core.plan.RangeSelector;
+import dev.erst.gridgrind.core.plan.SheetSelector;
+import dev.erst.gridgrind.core.plan.WorkbookSelector;
 
 /** Builds bounded inspection steps for protocol-workflow Jazzer generation. */
 final class OperationSequenceInspectionFactory {

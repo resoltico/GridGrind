@@ -1,9 +1,9 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.core.vocabulary.ExcelPictureFormat;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingAnchor;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingObjectSnapshot;
 import dev.erst.gridgrind.excel.drawing.ExcelSignatureLineSnapshot;
-import dev.erst.gridgrind.excel.foundation.ExcelPictureFormat;
 import java.util.Optional;
 import org.jspecify.annotations.Nullable;
 

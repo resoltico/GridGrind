@@ -1,7 +1,7 @@
 package dev.erst.gridgrind.json.intake;
 
-import dev.erst.gridgrind.contract.dto.RequestWarning;
 import dev.erst.gridgrind.core.problem.RequestStructuralProblem;
+import dev.erst.gridgrind.core.problem.RequestWarning;
 import java.util.List;
 import java.util.Objects;
 

@@ -5,11 +5,11 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import dev.erst.gridgrind.contract.dto.GridGrindProblemCode;
-import dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces;
-import dev.erst.gridgrind.contract.dto.RequestDoctorReport;
-import dev.erst.gridgrind.contract.dto.WorkbookResult;
+import dev.erst.gridgrind.core.problem.GridGrindProblemCode;
+import dev.erst.gridgrind.core.problem.ProblemContextRequestSurfaces;
+import dev.erst.gridgrind.core.problem.RequestDoctorReport;
 import dev.erst.gridgrind.core.problem.RequestIntake;
+import dev.erst.gridgrind.core.result.WorkbookResult;
 import dev.erst.gridgrind.json.codec.GridGrindJson;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -92,13 +92,13 @@ class GridGrindEngineApiPreflightTest {
     assertEquals(
         0,
         assertInstanceOf(
-                dev.erst.gridgrind.contract.dto.ExecutionJournal.Outcome.Succeeded.class,
+                dev.erst.gridgrind.core.result.ExecutionJournal.Outcome.Succeeded.class,
                 fullSuccess.journal().outcome())
             .completedStepCount());
     assertEquals(
         0,
         assertInstanceOf(
-                dev.erst.gridgrind.contract.dto.ExecutionJournal.Outcome.Succeeded.class,
+                dev.erst.gridgrind.core.result.ExecutionJournal.Outcome.Succeeded.class,
                 eventReadSuccess.journal().outcome())
             .completedStepCount());
     assertTrue(fullSourceDeleted.get());
@@ -123,7 +123,7 @@ class GridGrindEngineApiPreflightTest {
     assertEquals(
         "steps[0].action.rows.cells[0][0].source.path",
         assertInstanceOf(
-                dev.erst.gridgrind.contract.dto.ProblemContext.ResolveInputs.class,
+                dev.erst.gridgrind.core.problem.ProblemContext.ResolveInputs.class,
                 executionFailure.problem().context())
             .json()
             .orElseThrow()
@@ -220,9 +220,9 @@ class GridGrindEngineApiPreflightTest {
       Path sourcePath, AtomicReference<Boolean> sourceDeleted) {
     return event -> {
       if (event.category()
-              == dev.erst.gridgrind.contract.dto.ExecutionProgressEvent.Category.RESOLVE_INPUTS
+              == dev.erst.gridgrind.core.result.ExecutionProgressEvent.Category.RESOLVE_INPUTS
           && event.status()
-              == dev.erst.gridgrind.contract.dto.ExecutionProgressEvent.Status.SUCCEEDED) {
+              == dev.erst.gridgrind.core.result.ExecutionProgressEvent.Status.SUCCEEDED) {
         try {
           Files.delete(sourcePath);
           sourceDeleted.set(true);

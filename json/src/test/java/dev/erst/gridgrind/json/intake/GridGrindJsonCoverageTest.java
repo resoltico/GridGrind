@@ -7,19 +7,28 @@ import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import dev.erst.gridgrind.contract.catalog.Catalog;
-import dev.erst.gridgrind.contract.catalog.CatalogNote;
-import dev.erst.gridgrind.contract.catalog.GridGrindProtocolCatalog;
-import dev.erst.gridgrind.contract.catalog.TypeEntry;
-import dev.erst.gridgrind.contract.dto.*;
-import dev.erst.gridgrind.contract.dto.GridGrindProblemDetail;
-import dev.erst.gridgrind.contract.dto.RequestDoctorReport;
-import dev.erst.gridgrind.contract.dto.RequestWarning;
-import dev.erst.gridgrind.contract.dto.WorkbookPlan;
-import dev.erst.gridgrind.contract.dto.WorkbookResult;
-import dev.erst.gridgrind.contract.dto.WorkbookResults;
+import dev.erst.gridgrind.core.catalog.Catalog;
+import dev.erst.gridgrind.core.catalog.CatalogNote;
+import dev.erst.gridgrind.core.catalog.GridGrindProtocolCatalog;
+import dev.erst.gridgrind.core.catalog.TypeEntry;
+import dev.erst.gridgrind.core.model.formula.FormulaEnvironmentInput;
+import dev.erst.gridgrind.core.model.formula.FormulaExternalWorkbookInput;
+import dev.erst.gridgrind.core.model.formula.FormulaMissingWorkbookPolicy;
+import dev.erst.gridgrind.core.model.layout.WindowDimensionsReport;
+import dev.erst.gridgrind.core.model.layout.WindowReport;
+import dev.erst.gridgrind.core.model.value.CellReport;
+import dev.erst.gridgrind.core.plan.ExecutionModeInput;
+import dev.erst.gridgrind.core.plan.ExecutionPolicyInput;
+import dev.erst.gridgrind.core.plan.GridGrindProtocolVersion;
+import dev.erst.gridgrind.core.plan.WorkbookPlan;
+import dev.erst.gridgrind.core.problem.GridGrindProblemDetail;
 import dev.erst.gridgrind.core.problem.InvalidJsonException;
 import dev.erst.gridgrind.core.problem.InvalidRequestShapeException;
+import dev.erst.gridgrind.core.problem.RequestDoctorReport;
+import dev.erst.gridgrind.core.problem.RequestWarning;
+import dev.erst.gridgrind.core.result.WorkbookResult;
+import dev.erst.gridgrind.core.result.WorkbookResults;
+import dev.erst.gridgrind.core.result.WorkbookSummary;
 import dev.erst.gridgrind.json.codec.GridGrindJson;
 import dev.erst.gridgrind.json.codec.GridGrindJsonOutput;
 import java.io.ByteArrayInputStream;
@@ -49,8 +58,7 @@ class GridGrindJsonCoverageTest {
             List.of(),
             List.of(),
             List.of(
-                new dev.erst.gridgrind.contract.query.WorkbookInspectionResult
-                    .WorkbookSummaryResult(
+                new dev.erst.gridgrind.core.plan.WorkbookInspectionResult.WorkbookSummaryResult(
                     "summary", new WorkbookSummary.Empty(0, List.of(), 0, false))));
     Catalog catalog = GridGrindProtocolCatalog.catalog();
     RequestDoctorReport doctorReport =
@@ -59,7 +67,7 @@ class GridGrindJsonCoverageTest {
                 "NEW", "NONE", "FULL_XSSF", "DO_NOT_CALCULATE", false, false, 1, 1, 0, 0),
             List.of(
                 new RequestWarning(
-                    dev.erst.gridgrind.contract.dto.GridGrindWarningCode
+                    dev.erst.gridgrind.core.problem.GridGrindWarningCode
                         .UNQUOTED_SHEET_NAME_IN_FORMULA,
                     0,
                     "step-1",
@@ -278,8 +286,7 @@ class GridGrindJsonCoverageTest {
             List.of(),
             List.of(),
             List.of(
-                new dev.erst.gridgrind.contract.query.WorkbookInspectionResult
-                    .WorkbookSummaryResult(
+                new dev.erst.gridgrind.core.plan.WorkbookInspectionResult.WorkbookSummaryResult(
                     "summary", new WorkbookSummary.Empty(0, List.of(), 0, false))));
     Catalog catalog = GridGrindProtocolCatalog.catalog();
     RequestDoctorReport doctorReport =
@@ -378,18 +385,18 @@ class GridGrindJsonCoverageTest {
                         null,
                         WorkbookResults.failure(
                             new GridGrindProblemDetail.Problem(
-                                dev.erst.gridgrind.contract.dto.GridGrindProblemCode.INVALID_JSON,
-                                dev.erst.gridgrind.contract.dto.GridGrindProblemCode.INVALID_JSON
+                                dev.erst.gridgrind.core.problem.GridGrindProblemCode.INVALID_JSON,
+                                dev.erst.gridgrind.core.problem.GridGrindProblemCode.INVALID_JSON
                                     .category(),
-                                dev.erst.gridgrind.contract.dto.GridGrindProblemCode.INVALID_JSON
+                                dev.erst.gridgrind.core.problem.GridGrindProblemCode.INVALID_JSON
                                     .recovery(),
-                                dev.erst.gridgrind.contract.dto.GridGrindProblemCode.INVALID_JSON
+                                dev.erst.gridgrind.core.problem.GridGrindProblemCode.INVALID_JSON
                                     .title(),
                                 "bad",
-                                dev.erst.gridgrind.contract.dto.GridGrindProblemCode.INVALID_JSON
+                                dev.erst.gridgrind.core.problem.GridGrindProblemCode.INVALID_JSON
                                     .resolution(),
-                                new dev.erst.gridgrind.contract.dto.ProblemContext.ParseArguments(
-                                    dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces
+                                new dev.erst.gridgrind.core.problem.ProblemContext.ParseArguments(
+                                    dev.erst.gridgrind.core.problem.ProblemContextRequestSurfaces
                                         .CliArgument.named("--request")),
                                 List.of())),
                         false))
@@ -592,8 +599,7 @@ class GridGrindJsonCoverageTest {
             List.of(),
             List.of(),
             List.of(
-                new dev.erst.gridgrind.contract.query.WorkbookInspectionResult
-                    .WorkbookSummaryResult(
+                new dev.erst.gridgrind.core.plan.WorkbookInspectionResult.WorkbookSummaryResult(
                     "summary", new WorkbookSummary.Empty(0, List.of(), 0, false))));
     Catalog catalog = GridGrindProtocolCatalog.catalog();
     assertStreamSerializationMatchesBytes(
@@ -681,8 +687,7 @@ class GridGrindJsonCoverageTest {
             List.of(),
             List.of(),
             List.of(
-                new dev.erst.gridgrind.contract.query.WorkbookInspectionResult
-                    .WorkbookSummaryResult(
+                new dev.erst.gridgrind.core.plan.WorkbookInspectionResult.WorkbookSummaryResult(
                     "summary", new WorkbookSummary.Empty(0, List.of(), 0, false))));
 
     String requestJson =
@@ -703,7 +708,7 @@ class GridGrindJsonCoverageTest {
             List.of(),
             List.of(),
             List.of(
-                new dev.erst.gridgrind.contract.query.SheetInspectionResult.CellsResult(
+                new dev.erst.gridgrind.core.plan.SheetInspectionResult.CellsResult(
                     "cells",
                     "Budget",
                     List.of(
@@ -720,7 +725,7 @@ class GridGrindJsonCoverageTest {
             List.of(),
             List.of(),
             List.of(
-                new dev.erst.gridgrind.contract.query.SheetInspectionResult.WindowResult(
+                new dev.erst.gridgrind.core.plan.SheetInspectionResult.WindowResult(
                     "window",
                     new WindowReport.Sparse(
                         "Budget",

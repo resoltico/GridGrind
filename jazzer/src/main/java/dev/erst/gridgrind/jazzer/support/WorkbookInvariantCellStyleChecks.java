@@ -1,18 +1,18 @@
 package dev.erst.gridgrind.jazzer.support;
 
-import dev.erst.gridgrind.contract.dto.CellAlignmentReport;
-import dev.erst.gridgrind.contract.dto.CellBorderReport;
-import dev.erst.gridgrind.contract.dto.CellBorderSideReport;
-import dev.erst.gridgrind.contract.dto.CellColorReport;
-import dev.erst.gridgrind.contract.dto.CellFillReport;
-import dev.erst.gridgrind.contract.dto.CellFontReport;
-import dev.erst.gridgrind.contract.dto.CellGradientFillReport;
-import dev.erst.gridgrind.contract.dto.CellGradientStopReport;
-import dev.erst.gridgrind.contract.dto.CellProtectionReport;
-import dev.erst.gridgrind.contract.dto.CellStyleReport;
-import dev.erst.gridgrind.contract.dto.FontHeightReport;
+import dev.erst.gridgrind.core.model.protection.CellProtectionReport;
+import dev.erst.gridgrind.core.model.style.CellAlignmentReport;
+import dev.erst.gridgrind.core.model.style.CellBorderReport;
+import dev.erst.gridgrind.core.model.style.CellBorderSideReport;
+import dev.erst.gridgrind.core.model.style.CellColorReport;
+import dev.erst.gridgrind.core.model.style.CellFillReport;
+import dev.erst.gridgrind.core.model.style.CellFontReport;
+import dev.erst.gridgrind.core.model.style.CellGradientFillReport;
+import dev.erst.gridgrind.core.model.style.CellGradientStopReport;
+import dev.erst.gridgrind.core.model.style.CellStyleReport;
+import dev.erst.gridgrind.core.model.style.FontHeightReport;
+import dev.erst.gridgrind.core.vocabulary.ExcelFillPattern;
 import dev.erst.gridgrind.excel.ExcelFontHeight;
-import dev.erst.gridgrind.excel.foundation.ExcelFillPattern;
 import org.jspecify.annotations.Nullable;
 
 /** Owns invariant checks for cell style, color, border, gradient, and font payloads. */

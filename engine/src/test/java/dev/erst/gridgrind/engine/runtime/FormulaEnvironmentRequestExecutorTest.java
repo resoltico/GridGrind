@@ -5,20 +5,19 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
-import dev.erst.gridgrind.contract.action.CellMutationAction;
-import dev.erst.gridgrind.contract.action.WorkbookMutationAction;
-import dev.erst.gridgrind.contract.dto.CellInput;
-import dev.erst.gridgrind.contract.dto.FormulaEnvironmentInput;
-import dev.erst.gridgrind.contract.dto.FormulaExternalWorkbookInput;
-import dev.erst.gridgrind.contract.dto.FormulaMissingWorkbookPolicy;
-import dev.erst.gridgrind.contract.dto.FormulaUdfFunctionInput;
-import dev.erst.gridgrind.contract.dto.FormulaUdfToolpackInput;
-import dev.erst.gridgrind.contract.dto.GridGrindProblemCode;
-import dev.erst.gridgrind.contract.dto.WorkbookPlan;
-import dev.erst.gridgrind.contract.dto.WorkbookResult;
-import dev.erst.gridgrind.contract.query.*;
-import dev.erst.gridgrind.contract.query.SheetInspectionResult;
-import dev.erst.gridgrind.contract.selector.*;
+import dev.erst.gridgrind.core.model.formula.FormulaEnvironmentInput;
+import dev.erst.gridgrind.core.model.formula.FormulaExternalWorkbookInput;
+import dev.erst.gridgrind.core.model.formula.FormulaMissingWorkbookPolicy;
+import dev.erst.gridgrind.core.model.formula.FormulaUdfFunctionInput;
+import dev.erst.gridgrind.core.model.formula.FormulaUdfToolpackInput;
+import dev.erst.gridgrind.core.model.value.CellInput;
+import dev.erst.gridgrind.core.plan.*;
+import dev.erst.gridgrind.core.plan.CellMutationAction;
+import dev.erst.gridgrind.core.plan.SheetInspectionResult;
+import dev.erst.gridgrind.core.plan.WorkbookMutationAction;
+import dev.erst.gridgrind.core.plan.WorkbookPlan;
+import dev.erst.gridgrind.core.problem.GridGrindProblemCode;
+import dev.erst.gridgrind.core.result.WorkbookResult;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.file.Files;
@@ -61,16 +60,16 @@ class FormulaEnvironmentRequestExecutorTest {
                             new CellSelector.ByAddresses("Ops", List.of("B1")),
                             DefaultGridGrindRequestExecutorTestSupport.allFacetCellsQuery())))));
 
-    dev.erst.gridgrind.contract.dto.CellReport.FormulaReport formula =
+    dev.erst.gridgrind.core.model.value.CellReport.FormulaReport formula =
         assertInstanceOf(
-            dev.erst.gridgrind.contract.dto.CellReport.FormulaReport.class,
+            dev.erst.gridgrind.core.model.value.CellReport.FormulaReport.class,
             ((SheetInspectionResult.CellsResult) success.inspections().getFirst())
                 .cells()
                 .getFirst());
     assertEquals(
         7.5d,
         assertInstanceOf(
-                dev.erst.gridgrind.contract.dto.CellValueReport.NumberValue.class,
+                dev.erst.gridgrind.core.model.value.CellValueReport.NumberValue.class,
                 formula.evaluation().orElseThrow())
             .numberValue());
   }
@@ -98,16 +97,16 @@ class FormulaEnvironmentRequestExecutorTest {
                             new CellSelector.ByAddresses("Ops", List.of("B1")),
                             DefaultGridGrindRequestExecutorTestSupport.allFacetCellsQuery())))));
 
-    dev.erst.gridgrind.contract.dto.CellReport.FormulaReport formula =
+    dev.erst.gridgrind.core.model.value.CellReport.FormulaReport formula =
         assertInstanceOf(
-            dev.erst.gridgrind.contract.dto.CellReport.FormulaReport.class,
+            dev.erst.gridgrind.core.model.value.CellReport.FormulaReport.class,
             ((SheetInspectionResult.CellsResult) success.inspections().getFirst())
                 .cells()
                 .getFirst());
     assertEquals(
         7.5d,
         assertInstanceOf(
-                dev.erst.gridgrind.contract.dto.CellValueReport.NumberValue.class,
+                dev.erst.gridgrind.core.model.value.CellValueReport.NumberValue.class,
                 formula.evaluation().orElseThrow())
             .numberValue());
   }
@@ -139,16 +138,16 @@ class FormulaEnvironmentRequestExecutorTest {
                             new CellSelector.ByAddresses("Ops", List.of("B1")),
                             DefaultGridGrindRequestExecutorTestSupport.allFacetCellsQuery())))));
 
-    dev.erst.gridgrind.contract.dto.CellReport.FormulaReport formula =
+    dev.erst.gridgrind.core.model.value.CellReport.FormulaReport formula =
         assertInstanceOf(
-            dev.erst.gridgrind.contract.dto.CellReport.FormulaReport.class,
+            dev.erst.gridgrind.core.model.value.CellReport.FormulaReport.class,
             ((SheetInspectionResult.CellsResult) success.inspections().getFirst())
                 .cells()
                 .getFirst());
     assertEquals(
         42.0d,
         assertInstanceOf(
-                dev.erst.gridgrind.contract.dto.CellValueReport.NumberValue.class,
+                dev.erst.gridgrind.core.model.value.CellValueReport.NumberValue.class,
                 formula.evaluation().orElseThrow())
             .numberValue());
   }
@@ -192,7 +191,8 @@ class FormulaEnvironmentRequestExecutorTest {
                         workbookPath.toString(), WorkbookPlan.WorkbookPersistence.IfExists.REJECT),
                     executionPolicy(
                         calculateTargets(
-                            new dev.erst.gridgrind.contract.dto.FormulaCellTarget("Budget", "B1"))),
+                            new dev.erst.gridgrind.core.model.formula.FormulaCellTarget(
+                                "Budget", "B1"))),
                     null,
                     mutations(
                         mutate(
@@ -257,7 +257,8 @@ class FormulaEnvironmentRequestExecutorTest {
                 request(
                     new WorkbookPlan.WorkbookSource.ExistingFile(workbookPath.toString()),
                     new WorkbookPlan.WorkbookPersistence.Overwrite(
-                        dev.erst.gridgrind.contract.dto.OoxmlPersistenceSecurityInput.none()),
+                        dev.erst.gridgrind.core.model.security.OoxmlPersistenceSecurityInput
+                            .none()),
                     executionPolicy(clearFormulaCaches()),
                     null,
                     List.of(),

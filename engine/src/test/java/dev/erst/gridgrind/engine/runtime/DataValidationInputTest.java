@@ -3,12 +3,12 @@ package dev.erst.gridgrind.engine.runtime;
 import static dev.erst.gridgrind.engine.runtime.ExecutorTestPlanSupport.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-import dev.erst.gridgrind.contract.dto.DataValidationErrorAlertInput;
-import dev.erst.gridgrind.contract.dto.DataValidationInput;
-import dev.erst.gridgrind.contract.dto.DataValidationPromptInput;
-import dev.erst.gridgrind.contract.dto.DataValidationRuleInput;
-import dev.erst.gridgrind.excel.foundation.ExcelComparisonOperator;
-import dev.erst.gridgrind.excel.foundation.ExcelDataValidationErrorStyle;
+import dev.erst.gridgrind.core.model.validation.DataValidationErrorAlertInput;
+import dev.erst.gridgrind.core.model.validation.DataValidationInput;
+import dev.erst.gridgrind.core.model.validation.DataValidationPromptInput;
+import dev.erst.gridgrind.core.model.validation.DataValidationRuleInput;
+import dev.erst.gridgrind.core.vocabulary.ExcelComparisonOperator;
+import dev.erst.gridgrind.core.vocabulary.ExcelDataValidationErrorStyle;
 import dev.erst.gridgrind.excel.validation.ExcelDataValidationDefinition;
 import dev.erst.gridgrind.excel.validation.ExcelDataValidationErrorAlert;
 import dev.erst.gridgrind.excel.validation.ExcelDataValidationPrompt;

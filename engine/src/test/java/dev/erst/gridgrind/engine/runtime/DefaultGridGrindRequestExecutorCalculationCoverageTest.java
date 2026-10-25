@@ -14,25 +14,25 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import dev.erst.gridgrind.contract.action.CellMutationAction;
-import dev.erst.gridgrind.contract.action.WorkbookMutationAction;
-import dev.erst.gridgrind.contract.dto.CalculationExecutionStatus;
-import dev.erst.gridgrind.contract.dto.CalculationReport;
-import dev.erst.gridgrind.contract.dto.ExecutionModeInput;
-import dev.erst.gridgrind.contract.dto.FormulaEnvironmentInput;
-import dev.erst.gridgrind.contract.dto.GridGrindProblemCode;
-import dev.erst.gridgrind.contract.dto.GridGrindProblemDetail;
-import dev.erst.gridgrind.contract.dto.GridGrindWarningCode;
-import dev.erst.gridgrind.contract.dto.ProblemContext;
-import dev.erst.gridgrind.contract.dto.WorkbookPlan;
-import dev.erst.gridgrind.contract.dto.WorkbookResult;
-import dev.erst.gridgrind.contract.query.*;
-import dev.erst.gridgrind.contract.selector.CellSelector;
-import dev.erst.gridgrind.contract.selector.SheetSelector;
-import dev.erst.gridgrind.contract.selector.WorkbookSelector;
-import dev.erst.gridgrind.contract.step.InspectionStep;
-import dev.erst.gridgrind.contract.step.MutationStep;
-import dev.erst.gridgrind.contract.step.WorkbookStep;
+import dev.erst.gridgrind.core.model.formula.CalculationExecutionStatus;
+import dev.erst.gridgrind.core.model.formula.CalculationReport;
+import dev.erst.gridgrind.core.model.formula.FormulaEnvironmentInput;
+import dev.erst.gridgrind.core.plan.*;
+import dev.erst.gridgrind.core.plan.CellMutationAction;
+import dev.erst.gridgrind.core.plan.CellSelector;
+import dev.erst.gridgrind.core.plan.ExecutionModeInput;
+import dev.erst.gridgrind.core.plan.InspectionStep;
+import dev.erst.gridgrind.core.plan.MutationStep;
+import dev.erst.gridgrind.core.plan.SheetSelector;
+import dev.erst.gridgrind.core.plan.WorkbookMutationAction;
+import dev.erst.gridgrind.core.plan.WorkbookPlan;
+import dev.erst.gridgrind.core.plan.WorkbookSelector;
+import dev.erst.gridgrind.core.plan.WorkbookStep;
+import dev.erst.gridgrind.core.problem.GridGrindProblemCode;
+import dev.erst.gridgrind.core.problem.GridGrindProblemDetail;
+import dev.erst.gridgrind.core.problem.GridGrindWarningCode;
+import dev.erst.gridgrind.core.problem.ProblemContext;
+import dev.erst.gridgrind.core.result.WorkbookResult;
 import dev.erst.gridgrind.excel.ExcelCellValue;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
 import dev.erst.gridgrind.excel.ExcelWorkbooks;
@@ -66,7 +66,7 @@ class DefaultGridGrindRequestExecutorCalculationCoverageTest {
                     "step-03-set-cell",
                     new CellSelector.ByAddress("Ops", "A1"),
                     new CellMutationAction.SetCell(
-                        new dev.erst.gridgrind.contract.dto.CellInput.NumberValue(1.0)))));
+                        new dev.erst.gridgrind.core.model.value.CellInput.NumberValue(1.0)))));
     WorkbookResult.Failure failure =
         failure(
             ExecutionContextFixtureSupport.execute(new DefaultGridGrindRequestExecutor(), request));
@@ -109,9 +109,8 @@ class DefaultGridGrindRequestExecutorCalculationCoverageTest {
                 mutate(
                     new CellSelector.ByAddress("Ops", "A1"),
                     new CellMutationAction.SetCell(
-                        new dev.erst.gridgrind.contract.dto.CellInput.Formula(
-                            dev.erst.gridgrind.contract.source.TextSourceInput.inline(
-                                "ZZZZ(1)"))))),
+                        new dev.erst.gridgrind.core.model.value.CellInput.Formula(
+                            dev.erst.gridgrind.core.source.TextSourceInput.inline("ZZZZ(1)"))))),
             java.util.List.of());
 
     WorkbookResult.Success success =
@@ -124,7 +123,7 @@ class DefaultGridGrindRequestExecutorCalculationCoverageTest {
     assertEquals(
         "ZZZZ(1)",
         assertInstanceOf(
-                dev.erst.gridgrind.contract.dto.RequestWarningLocation.FormulaCell.class,
+                dev.erst.gridgrind.core.problem.RequestWarningLocation.FormulaCell.class,
                 success.warnings().getFirst().location())
             .formula());
   }
@@ -142,8 +141,8 @@ class DefaultGridGrindRequestExecutorCalculationCoverageTest {
                 mutate(
                     new CellSelector.ByAddress("Ops", "A1"),
                     new CellMutationAction.SetCell(
-                        new dev.erst.gridgrind.contract.dto.CellInput.Formula(
-                            dev.erst.gridgrind.contract.source.TextSourceInput.inline(
+                        new dev.erst.gridgrind.core.model.value.CellInput.Formula(
+                            dev.erst.gridgrind.core.source.TextSourceInput.inline(
                                 "TEXTAFTER(\"a,b\",\",\")"))))),
             java.util.List.of(
                 inspect(
@@ -177,9 +176,8 @@ class DefaultGridGrindRequestExecutorCalculationCoverageTest {
                 mutate(
                     new CellSelector.ByAddress("Ops", "A1"),
                     new CellMutationAction.SetCell(
-                        new dev.erst.gridgrind.contract.dto.CellInput.Formula(
-                            dev.erst.gridgrind.contract.source.TextSourceInput.inline(
-                                "ZZZZ(1)"))))),
+                        new dev.erst.gridgrind.core.model.value.CellInput.Formula(
+                            dev.erst.gridgrind.core.source.TextSourceInput.inline("ZZZZ(1)"))))),
             java.util.List.of());
 
     WorkbookResult.Success success =
@@ -346,7 +344,7 @@ class DefaultGridGrindRequestExecutorCalculationCoverageTest {
     assertEquals(GridGrindProblemCode.INVALID_FORMULA, mappedCodeFailure.code());
     assertEquals("CALCULATION_PREFLIGHT", mappedCodeFailure.context().stage());
 
-    dev.erst.gridgrind.contract.dto.ProblemContext.ExecuteCalculation nullFailureContext =
+    dev.erst.gridgrind.core.problem.ProblemContext.ExecuteCalculation nullFailureContext =
         calculationSupport.calculationContextFor(
             preflightRequest, CalculationPolicyExecutor.Phase.EXECUTION, null);
     assertEquals("CALCULATION_EXECUTION", nullFailureContext.stage());
@@ -354,7 +352,7 @@ class DefaultGridGrindRequestExecutorCalculationCoverageTest {
     assertEquals(java.util.Optional.empty(), nullFailureContext.address());
     assertEquals(java.util.Optional.empty(), nullFailureContext.formula());
 
-    dev.erst.gridgrind.contract.dto.ProblemContext.ExecuteCalculation preflightNullFailureContext =
+    dev.erst.gridgrind.core.problem.ProblemContext.ExecuteCalculation preflightNullFailureContext =
         calculationSupport.calculationContextFor(
             preflightRequest, CalculationPolicyExecutor.Phase.PREFLIGHT, null);
     assertEquals("CALCULATION_PREFLIGHT", preflightNullFailureContext.stage());
@@ -371,7 +369,7 @@ class DefaultGridGrindRequestExecutorCalculationCoverageTest {
             null,
             "invalid formula",
             null);
-    dev.erst.gridgrind.contract.dto.ProblemContext.ExecuteCalculation missingFormulaContext =
+    dev.erst.gridgrind.core.problem.ProblemContext.ExecuteCalculation missingFormulaContext =
         calculationSupport.calculationContextFor(
             preflightRequest, CalculationPolicyExecutor.Phase.EXECUTION, missingFormulaField);
     assertEquals(java.util.Optional.empty(), missingFormulaContext.sheetName());
@@ -386,7 +384,7 @@ class DefaultGridGrindRequestExecutorCalculationCoverageTest {
             "SUM(",
             "invalid formula",
             null);
-    dev.erst.gridgrind.contract.dto.ProblemContext.ExecuteCalculation missingAddressContext =
+    dev.erst.gridgrind.core.problem.ProblemContext.ExecuteCalculation missingAddressContext =
         calculationSupport.calculationContextFor(
             preflightRequest, CalculationPolicyExecutor.Phase.EXECUTION, missingAddressField);
     assertEquals(java.util.Optional.empty(), missingAddressContext.sheetName());
@@ -422,7 +420,7 @@ class DefaultGridGrindRequestExecutorCalculationCoverageTest {
       assertEquals(
           GridGrindWarningCode.FORMULA_NOT_EVALUATED, outcome.warnings().getFirst().code());
       assertEquals(
-          new dev.erst.gridgrind.contract.dto.RequestWarningLocation.FormulaCell(
+          new dev.erst.gridgrind.core.problem.RequestWarningLocation.FormulaCell(
               "Ops", "A1", "TEXTAFTER(\"a,b\",\",\")"),
           outcome.warnings().getFirst().location());
     }

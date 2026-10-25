@@ -1,9 +1,9 @@
 package dev.erst.gridgrind.engine.runtime;
 
-import dev.erst.gridgrind.contract.dto.FormulaEnvironmentInput;
-import dev.erst.gridgrind.contract.dto.FormulaExternalWorkbookInput;
-import dev.erst.gridgrind.contract.dto.FormulaUdfFunctionInput;
-import dev.erst.gridgrind.contract.dto.FormulaUdfToolpackInput;
+import dev.erst.gridgrind.core.model.formula.FormulaEnvironmentInput;
+import dev.erst.gridgrind.core.model.formula.FormulaExternalWorkbookInput;
+import dev.erst.gridgrind.core.model.formula.FormulaUdfFunctionInput;
+import dev.erst.gridgrind.core.model.formula.FormulaUdfToolpackInput;
 import dev.erst.gridgrind.excel.ExcelFormulaEnvironment;
 import dev.erst.gridgrind.excel.ExcelFormulaExternalWorkbookBinding;
 import dev.erst.gridgrind.excel.ExcelFormulaMissingWorkbookPolicy;
@@ -54,8 +54,8 @@ final class FormulaEnvironmentConverter {
   }
 
   private static ExcelFormulaMissingWorkbookPolicy toExcelMissingWorkbookPolicy(
-      dev.erst.gridgrind.contract.dto.FormulaMissingWorkbookPolicy policy) {
-    if (policy == dev.erst.gridgrind.contract.dto.FormulaMissingWorkbookPolicy.ERROR) {
+      dev.erst.gridgrind.core.model.formula.FormulaMissingWorkbookPolicy policy) {
+    if (policy == dev.erst.gridgrind.core.model.formula.FormulaMissingWorkbookPolicy.ERROR) {
       return ExcelFormulaMissingWorkbookPolicy.ERROR;
     }
     return ExcelFormulaMissingWorkbookPolicy.USE_CACHED_VALUE;

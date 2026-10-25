@@ -1,7 +1,7 @@
 package dev.erst.gridgrind.excel.validation;
 
+import dev.erst.gridgrind.core.vocabulary.ExcelComparisonOperator;
 import dev.erst.gridgrind.excel.ExcelComparisonFormulaSupport;
-import dev.erst.gridgrind.excel.foundation.ExcelComparisonOperator;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;

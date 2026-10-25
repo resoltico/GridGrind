@@ -1,7 +1,7 @@
 package dev.erst.gridgrind.cli;
 
-import dev.erst.gridgrind.contract.dto.GridGrindProblemDetail;
-import dev.erst.gridgrind.contract.dto.RequestInputContext;
+import dev.erst.gridgrind.core.problem.GridGrindProblemDetail;
+import dev.erst.gridgrind.core.problem.RequestInputContext;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.regex.Matcher;

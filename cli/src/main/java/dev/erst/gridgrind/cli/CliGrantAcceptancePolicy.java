@@ -2,8 +2,8 @@ package dev.erst.gridgrind.cli;
 
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import dev.erst.gridgrind.contract.step.AssertionStep;
-import dev.erst.gridgrind.contract.step.InspectionStep;
+import dev.erst.gridgrind.core.plan.AssertionStep;
+import dev.erst.gridgrind.core.plan.InspectionStep;
 import dev.erst.gridgrind.engine.api.GridGrindHostAcceptancePolicy;
 import java.util.ArrayList;
 import java.util.List;

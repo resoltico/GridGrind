@@ -2,8 +2,8 @@ package dev.erst.gridgrind.cli;
 
 import dev.erst.gridgrind.cli.discovery.CliTransportNotice;
 import dev.erst.gridgrind.cli.discovery.CommandError;
-import dev.erst.gridgrind.contract.dto.RequestDoctorReport;
-import dev.erst.gridgrind.contract.dto.WorkbookResult;
+import dev.erst.gridgrind.core.problem.RequestDoctorReport;
+import dev.erst.gridgrind.core.result.WorkbookResult;
 import dev.erst.gridgrind.json.codec.GridGrindJsonOutput;
 import dev.erst.gridgrind.json.codec.RequestDiagnosticRedactor;
 import java.io.IOException;

@@ -1,6 +1,6 @@
 package dev.erst.gridgrind.cli;
 
-import dev.erst.gridgrind.contract.catalog.GridGrindRequestSurfaceContractText;
+import dev.erst.gridgrind.core.catalog.GridGrindRequestSurfaceContractText;
 
 /** Owns the CLI/help surface published by the command-line transport. */
 final class GridGrindProtocolCatalogCliSurface {

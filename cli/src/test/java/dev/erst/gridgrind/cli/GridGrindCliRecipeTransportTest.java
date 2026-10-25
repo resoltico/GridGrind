@@ -59,7 +59,7 @@ class GridGrindCliRecipeTransportTest extends GridGrindCliTestSupport {
               stderr);
       assertEquals(2, exitCode);
       assertEquals(
-          dev.erst.gridgrind.contract.dto.GridGrindProblemCode.INVALID_ARGUMENTS,
+          dev.erst.gridgrind.core.problem.GridGrindProblemCode.INVALID_ARGUMENTS,
           commandErrorOnStdout(stdout, stderr).primaryProblem().code());
       assertEquals("sentinel\n", Files.readString(responsePath));
     } finally {

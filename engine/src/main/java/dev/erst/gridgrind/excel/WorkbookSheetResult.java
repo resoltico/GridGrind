@@ -3,8 +3,8 @@ package dev.erst.gridgrind.excel;
 import static dev.erst.gridgrind.excel.WorkbookResultSupport.copyValues;
 import static dev.erst.gridgrind.excel.WorkbookResultSupport.requireNonBlank;
 
-import dev.erst.gridgrind.excel.foundation.ExcelIndexDisplay;
-import dev.erst.gridgrind.excel.foundation.ExcelSheetVisibility;
+import dev.erst.gridgrind.core.vocabulary.ExcelIndexDisplay;
+import dev.erst.gridgrind.core.vocabulary.ExcelSheetVisibility;
 import java.util.List;
 import java.util.Objects;
 

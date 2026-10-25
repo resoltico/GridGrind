@@ -4,10 +4,10 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import dev.erst.gridgrind.cli.discovery.GridGrindCliJson;
-import dev.erst.gridgrind.contract.catalog.Catalog;
-import dev.erst.gridgrind.contract.catalog.GridGrindProtocolCatalog;
-import dev.erst.gridgrind.contract.catalog.TypeEntry;
-import dev.erst.gridgrind.contract.dto.RequestDoctorReport;
+import dev.erst.gridgrind.core.catalog.Catalog;
+import dev.erst.gridgrind.core.catalog.GridGrindProtocolCatalog;
+import dev.erst.gridgrind.core.catalog.TypeEntry;
+import dev.erst.gridgrind.core.problem.RequestDoctorReport;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.nio.file.Files;

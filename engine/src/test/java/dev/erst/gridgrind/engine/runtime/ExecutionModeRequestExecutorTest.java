@@ -3,25 +3,23 @@ package dev.erst.gridgrind.engine.runtime;
 import static dev.erst.gridgrind.engine.runtime.ExecutorTestPlanSupport.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-import dev.erst.gridgrind.contract.action.CellMutationAction;
-import dev.erst.gridgrind.contract.action.WorkbookMutationAction;
-import dev.erst.gridgrind.contract.assertion.*;
-import dev.erst.gridgrind.contract.catalog.GridGrindContractText;
-import dev.erst.gridgrind.contract.dto.ExecutionModeInput;
-import dev.erst.gridgrind.contract.dto.GridGrindProblemCode;
-import dev.erst.gridgrind.contract.dto.WorkbookPlan;
-import dev.erst.gridgrind.contract.dto.WorkbookResult;
-import dev.erst.gridgrind.contract.dto.WorkbookResultPersistence;
-import dev.erst.gridgrind.contract.query.*;
-import dev.erst.gridgrind.contract.query.SheetInspectionResult;
-import dev.erst.gridgrind.contract.query.WorkbookInspectionResult;
-import dev.erst.gridgrind.contract.selector.*;
-import dev.erst.gridgrind.contract.step.InspectionStep;
+import dev.erst.gridgrind.core.catalog.GridGrindContractText;
+import dev.erst.gridgrind.core.plan.*;
+import dev.erst.gridgrind.core.plan.CellMutationAction;
+import dev.erst.gridgrind.core.plan.ExecutionModeInput;
+import dev.erst.gridgrind.core.plan.InspectionStep;
+import dev.erst.gridgrind.core.plan.SheetInspectionResult;
+import dev.erst.gridgrind.core.plan.WorkbookInspectionResult;
+import dev.erst.gridgrind.core.plan.WorkbookMutationAction;
+import dev.erst.gridgrind.core.plan.WorkbookPlan;
+import dev.erst.gridgrind.core.problem.GridGrindProblemCode;
+import dev.erst.gridgrind.core.result.WorkbookResult;
+import dev.erst.gridgrind.core.result.WorkbookResultPersistence;
+import dev.erst.gridgrind.core.vocabulary.ExcelSheetVisibility;
 import dev.erst.gridgrind.excel.ExcelCellValue;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
 import dev.erst.gridgrind.excel.ExcelWorkbooks;
 import dev.erst.gridgrind.excel.WorkbookExecutionEngine;
-import dev.erst.gridgrind.excel.foundation.ExcelSheetVisibility;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -119,12 +117,12 @@ class ExecutionModeRequestExecutorTest {
             mutate(
                 new SheetSelector.ByName("Ops"),
                 new CellMutationAction.AppendRow(
-                    new dev.erst.gridgrind.contract.dto.CellRowInput.Typed(
+                    new dev.erst.gridgrind.core.model.value.CellRowInput.Typed(
                         List.of(textCell("Item"), textCell("Total"))))),
             mutate(
                 new SheetSelector.ByName("Ops"),
                 new CellMutationAction.AppendRow(
-                    new dev.erst.gridgrind.contract.dto.CellRowInput.Typed(
+                    new dev.erst.gridgrind.core.model.value.CellRowInput.Typed(
                         List.of(textCell("Hosting"), formulaCell("2+3"))))));
     List<InspectionStep> reads =
         List.of(
@@ -263,7 +261,8 @@ class ExecutionModeRequestExecutorTest {
                     new WorkbookPlan.WorkbookPersistence.SaveAs(
                         persistedCopy.toString(),
                         WorkbookPlan.WorkbookPersistence.IfExists.REJECT,
-                        dev.erst.gridgrind.contract.dto.OoxmlPersistenceSecurityInput.none()),
+                        dev.erst.gridgrind.core.model.security.OoxmlPersistenceSecurityInput
+                            .none()),
                     ExecutionModeInput.eventRead(),
                     null,
                     List.of(),
@@ -349,7 +348,7 @@ class ExecutionModeRequestExecutorTest {
                             "assert-owner",
                             new CellSelector.ByAddress("Ops", "A1"),
                             new CellAssertion.CellValue(
-                                new dev.erst.gridgrind.contract.dto.CellScalarValue.Text(
+                                new dev.erst.gridgrind.core.model.value.CellScalarValue.Text(
                                     "Owner")))),
                     List.of(
                         inspect(
@@ -378,7 +377,7 @@ class ExecutionModeRequestExecutorTest {
                         mutate(
                             new SheetSelector.ByName("Ops"),
                             new CellMutationAction.AppendRow(
-                                new dev.erst.gridgrind.contract.dto.CellRowInput.Typed(
+                                new dev.erst.gridgrind.core.model.value.CellRowInput.Typed(
                                     List.of(textCell("x")))))),
                     List.of())));
 
@@ -513,7 +512,7 @@ class ExecutionModeRequestExecutorTest {
                         mutate(
                             new SheetSelector.ByName("Ops"),
                             new CellMutationAction.AppendRow(
-                                new dev.erst.gridgrind.contract.dto.CellRowInput.Typed(
+                                new dev.erst.gridgrind.core.model.value.CellRowInput.Typed(
                                     List.of(textCell("x")))))),
                     inspections())));
     assertEquals(GridGrindProblemCode.INVALID_REQUEST, existingStreamingSource.problem().code());

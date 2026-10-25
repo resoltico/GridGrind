@@ -1,12 +1,12 @@
 package dev.erst.gridgrind.engine.runtime;
 
-import dev.erst.gridgrind.contract.dto.CalculationReport;
-import dev.erst.gridgrind.contract.dto.GridGrindProblemCode;
-import dev.erst.gridgrind.contract.dto.GridGrindProblemDetail;
-import dev.erst.gridgrind.contract.dto.GridGrindProtocolVersion;
-import dev.erst.gridgrind.contract.dto.WorkbookPlan;
-import dev.erst.gridgrind.contract.dto.WorkbookResult;
-import dev.erst.gridgrind.contract.dto.WorkbookResults;
+import dev.erst.gridgrind.core.model.formula.CalculationReport;
+import dev.erst.gridgrind.core.plan.GridGrindProtocolVersion;
+import dev.erst.gridgrind.core.plan.WorkbookPlan;
+import dev.erst.gridgrind.core.problem.GridGrindProblemCode;
+import dev.erst.gridgrind.core.problem.GridGrindProblemDetail;
+import dev.erst.gridgrind.core.result.WorkbookResult;
+import dev.erst.gridgrind.core.result.WorkbookResults;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
 import dev.erst.gridgrind.excel.WorkbookArtifactIo;
 import java.util.Objects;
@@ -43,7 +43,7 @@ final class ExecutionResponseSupport {
       GridGrindProblemDetail.Problem closeProblem =
           problemFor(
               closeFailure,
-              new dev.erst.gridgrind.contract.dto.ProblemContext.ExecuteRequest(
+              new dev.erst.gridgrind.core.problem.ProblemContext.ExecuteRequest(
                   ExecutionRequestPaths.requestShape(request)));
       closePhase.fail(closeProblem.code());
       return ExecutionResponseCloseFinalizer.withCloseFailure(
@@ -78,7 +78,7 @@ final class ExecutionResponseSupport {
       GridGrindProblemDetail.Problem closeProblem =
           problemFor(
               closeFailure,
-              new dev.erst.gridgrind.contract.dto.ProblemContext.ExecuteRequest(
+              new dev.erst.gridgrind.core.problem.ProblemContext.ExecuteRequest(
                   ExecutionRequestPaths.requestShape(request)));
       closePhase.fail(closeProblem.code());
       return ExecutionResponseCloseFinalizer.withCloseFailure(
@@ -103,7 +103,7 @@ final class ExecutionResponseSupport {
       GridGrindProblemDetail.Problem problem =
           problemFor(
               exception,
-              new dev.erst.gridgrind.contract.dto.ProblemContext.ExecuteRequest(
+              new dev.erst.gridgrind.core.problem.ProblemContext.ExecuteRequest(
                   ExecutionRequestPaths.requestShape(request)));
       return failureResponse(
           protocolVersion,
@@ -128,7 +128,7 @@ final class ExecutionResponseSupport {
       GridGrindProblemDetail.Problem problem =
           problemFor(
               exception,
-              new dev.erst.gridgrind.contract.dto.ProblemContext.ExecuteRequest(
+              new dev.erst.gridgrind.core.problem.ProblemContext.ExecuteRequest(
                   ExecutionRequestPaths.requestShape(request)));
       return closeWorkbook(
           workbook,
@@ -153,13 +153,13 @@ final class ExecutionResponseSupport {
     return GridGrindProblems.codeFor(exception);
   }
 
-  static dev.erst.gridgrind.contract.dto.ProblemContext enrichContext(
-      dev.erst.gridgrind.contract.dto.ProblemContext context, Throwable exception) {
+  static dev.erst.gridgrind.core.problem.ProblemContext enrichContext(
+      dev.erst.gridgrind.core.problem.ProblemContext context, Throwable exception) {
     return GridGrindProblems.enrichContext(context, exception);
   }
 
   static GridGrindProblemDetail.Problem problemFor(
-      Throwable exception, dev.erst.gridgrind.contract.dto.ProblemContext context) {
+      Throwable exception, dev.erst.gridgrind.core.problem.ProblemContext context) {
     return GridGrindProblems.fromException(exception, context);
   }
 
@@ -208,20 +208,20 @@ final class ExecutionResponseSupport {
   /** Returns a failed response retaining a publisher-proven final-destination state. */
   static WorkbookResult.Failure failureResponse(
       ExecutionFailure failure,
-      dev.erst.gridgrind.contract.dto.WorkbookResultPersistence.PersistenceOutcome persistence) {
+      dev.erst.gridgrind.core.result.WorkbookResultPersistence.PersistenceOutcome persistence) {
     return failureResponse(failure, persistence, true);
   }
 
   /** Returns a failed response retaining a publisher-proven final-destination state. */
   static WorkbookResult.Failure failureResponseWithoutPlanOutcomeEvent(
       ExecutionFailure failure,
-      dev.erst.gridgrind.contract.dto.WorkbookResultPersistence.PersistenceOutcome persistence) {
+      dev.erst.gridgrind.core.result.WorkbookResultPersistence.PersistenceOutcome persistence) {
     return failureResponse(failure, persistence, false);
   }
 
   private static WorkbookResult.Failure failureResponse(
       ExecutionFailure failure,
-      dev.erst.gridgrind.contract.dto.WorkbookResultPersistence.PersistenceOutcome persistence,
+      dev.erst.gridgrind.core.result.WorkbookResultPersistence.PersistenceOutcome persistence,
       boolean emitPlanOutcomeEvent) {
     ExecutionFailure.Context context = failure.context();
     ExecutionFailure.Detail detail = failure.detail();

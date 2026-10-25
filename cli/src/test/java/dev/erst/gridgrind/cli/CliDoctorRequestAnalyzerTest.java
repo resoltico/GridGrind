@@ -5,12 +5,12 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import dev.erst.gridgrind.contract.dto.GridGrindProblemCode;
-import dev.erst.gridgrind.contract.dto.GridGrindProblemDetail;
-import dev.erst.gridgrind.contract.dto.ProblemContext;
-import dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces;
-import dev.erst.gridgrind.contract.dto.RequestDoctorReport;
-import dev.erst.gridgrind.contract.dto.WorkbookPlan;
+import dev.erst.gridgrind.core.plan.WorkbookPlan;
+import dev.erst.gridgrind.core.problem.GridGrindProblemCode;
+import dev.erst.gridgrind.core.problem.GridGrindProblemDetail;
+import dev.erst.gridgrind.core.problem.ProblemContext;
+import dev.erst.gridgrind.core.problem.ProblemContextRequestSurfaces;
+import dev.erst.gridgrind.core.problem.RequestDoctorReport;
 import dev.erst.gridgrind.core.problem.RequestIntake;
 import dev.erst.gridgrind.engine.api.GridGrindProblems;
 import dev.erst.gridgrind.engine.api.GridGrindRequestDoctor;
@@ -60,7 +60,7 @@ class CliDoctorRequestAnalyzerTest extends GridGrindCliTestSupport {
             List.of(),
             List.of(requestPath.getParent().resolve("input.xlsx")),
             requestPath.getParent().resolve("output.xlsx"),
-            dev.erst.gridgrind.contract.dto.WorkbookPlan.WorkbookPersistence.IfExists.REJECT);
+            dev.erst.gridgrind.core.plan.WorkbookPlan.WorkbookPersistence.IfExists.REJECT);
     byte[] requestBytes =
         requestJson(
                 "{ \"type\": \"EXISTING\", \"path\": \"input.xlsx\" }",
@@ -418,7 +418,7 @@ class CliDoctorRequestAnalyzerTest extends GridGrindCliTestSupport {
     @Override
     public RequestDoctorReport diagnose(
         dev.erst.gridgrind.core.problem.RequestIntake analysis,
-        dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces.RequestInput requestInput) {
+        dev.erst.gridgrind.core.problem.ProblemContextRequestSurfaces.RequestInput requestInput) {
       directCalls++;
       if (!analysis.isBindable()) {
         return RequestDoctorReport.invalid(
@@ -433,7 +433,7 @@ class CliDoctorRequestAnalyzerTest extends GridGrindCliTestSupport {
     @Override
     public RequestDoctorReport diagnose(
         dev.erst.gridgrind.core.problem.RequestIntake analysis,
-        dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces.RequestInput requestInput,
+        dev.erst.gridgrind.core.problem.ProblemContextRequestSurfaces.RequestInput requestInput,
         GridGrindRequestInputs inputs) {
       boundCalls++;
       lastInputs = Optional.of(inputs);

@@ -10,24 +10,24 @@ import static dev.erst.gridgrind.engine.runtime.ExecutorTestPlanSupport.textCell
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 
-import dev.erst.gridgrind.contract.action.CellMutationAction;
-import dev.erst.gridgrind.contract.action.WorkbookMutationAction;
-import dev.erst.gridgrind.contract.assertion.AssertionOutcome;
-import dev.erst.gridgrind.contract.assertion.AssertionResult;
-import dev.erst.gridgrind.contract.assertion.CellAssertion;
-import dev.erst.gridgrind.contract.dto.AssertionModeInput;
-import dev.erst.gridgrind.contract.dto.CalculationPolicyInput;
-import dev.erst.gridgrind.contract.dto.CellScalarValue;
-import dev.erst.gridgrind.contract.dto.ExecutionJournalInput;
-import dev.erst.gridgrind.contract.dto.ExecutionModeInput;
-import dev.erst.gridgrind.contract.dto.ExecutionPolicyInput;
-import dev.erst.gridgrind.contract.dto.GridGrindProblemCode;
-import dev.erst.gridgrind.contract.dto.WorkbookPlan;
-import dev.erst.gridgrind.contract.dto.WorkbookResult;
-import dev.erst.gridgrind.contract.dto.WorkbookResultPersistence;
-import dev.erst.gridgrind.contract.query.InspectionResult;
-import dev.erst.gridgrind.contract.selector.CellSelector;
-import dev.erst.gridgrind.contract.selector.SheetSelector;
+import dev.erst.gridgrind.core.model.formula.CalculationPolicyInput;
+import dev.erst.gridgrind.core.model.value.CellScalarValue;
+import dev.erst.gridgrind.core.plan.AssertionModeInput;
+import dev.erst.gridgrind.core.plan.AssertionOutcome;
+import dev.erst.gridgrind.core.plan.AssertionResult;
+import dev.erst.gridgrind.core.plan.CellAssertion;
+import dev.erst.gridgrind.core.plan.CellMutationAction;
+import dev.erst.gridgrind.core.plan.CellSelector;
+import dev.erst.gridgrind.core.plan.ExecutionJournalInput;
+import dev.erst.gridgrind.core.plan.ExecutionModeInput;
+import dev.erst.gridgrind.core.plan.ExecutionPolicyInput;
+import dev.erst.gridgrind.core.plan.InspectionResult;
+import dev.erst.gridgrind.core.plan.SheetSelector;
+import dev.erst.gridgrind.core.plan.WorkbookMutationAction;
+import dev.erst.gridgrind.core.plan.WorkbookPlan;
+import dev.erst.gridgrind.core.problem.GridGrindProblemCode;
+import dev.erst.gridgrind.core.result.WorkbookResult;
+import dev.erst.gridgrind.core.result.WorkbookResultPersistence;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 
@@ -104,7 +104,7 @@ class AssertionCollectionWorkflowTest extends DefaultGridGrindRequestExecutorTes
                         mutate(
                             new SheetSelector.ByName("Stream"),
                             new CellMutationAction.AppendRow(
-                                new dev.erst.gridgrind.contract.dto.CellRowInput.Typed(
+                                new dev.erst.gridgrind.core.model.value.CellRowInput.Typed(
                                     List.of(textCell("Owner"), textCell("Ada")))))),
                     assertions(
                         assertThat(
@@ -131,7 +131,7 @@ class AssertionCollectionWorkflowTest extends DefaultGridGrindRequestExecutorTes
         failure.inspections().stream().map(InspectionResult::stepId).toList());
   }
 
-  private static dev.erst.gridgrind.contract.assertion.AssertionFailure failedAssertion(
+  private static dev.erst.gridgrind.core.plan.AssertionFailure failedAssertion(
       WorkbookResult.Failure failure) {
     return assertInstanceOf(
             AssertionResult.Failed.class,

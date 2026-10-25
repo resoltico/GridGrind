@@ -1,7 +1,7 @@
 package dev.erst.gridgrind.cli.discovery;
 
-import dev.erst.gridgrind.contract.catalog.TypeEntry;
-import dev.erst.gridgrind.contract.dto.GridGrindProtocolVersion;
+import dev.erst.gridgrind.core.catalog.TypeEntry;
+import dev.erst.gridgrind.core.plan.GridGrindProtocolVersion;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;

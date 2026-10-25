@@ -13,9 +13,9 @@ import com.tngtech.archunit.lang.conditions.ArchConditions;
 /** Protects the single admitted executor, canonical semantics, and publication boundaries. */
 final class ProductAssuranceArchitectureRules {
   private static final String CATALOG_FACTORY =
-      "dev.erst.gridgrind.contract.catalog.CatalogTypeEntryFactory";
+      "dev.erst.gridgrind.core.catalog.CatalogTypeEntryFactory";
   private static final String CANONICAL_OPERATION_CONTRACTS =
-      "dev.erst.gridgrind.contract.step.WorkbookOperationContracts";
+      "dev.erst.gridgrind.core.semantics.WorkbookOperationContracts";
   private static final String REQUEST_EXECUTOR =
       "dev.erst.gridgrind.engine.runtime.GridGrindRequestExecutor";
   private static final String ADMITTED_EXECUTOR =

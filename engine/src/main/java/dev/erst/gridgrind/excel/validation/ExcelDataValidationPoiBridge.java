@@ -1,6 +1,6 @@
 package dev.erst.gridgrind.excel.validation;
 
-import dev.erst.gridgrind.excel.foundation.ExcelDataValidationErrorStyle;
+import dev.erst.gridgrind.core.vocabulary.ExcelDataValidationErrorStyle;
 import org.apache.poi.ss.usermodel.DataValidation;
 
 /** Maps data-validation enums between GridGrind and Apache POI. */

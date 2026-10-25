@@ -18,7 +18,7 @@ and [OPERATIONS.md](./OPERATIONS.md)
 GridGrind has two first-class authoring surfaces:
 
 - JSON request documents for the CLI, fat JAR, and Docker image
-- the `dev.erst.gridgrind.authoring` package in core for selector-first fluent Java workflows
+- the `dev.erst.gridgrind.core.authoring` package in core for selector-first fluent Java workflows
 
 Both surfaces compile to the same canonical `WorkbookPlan`. The Java layer is not a separate
 execution engine and does not bypass request validation, execution-mode rules, or workbook safety

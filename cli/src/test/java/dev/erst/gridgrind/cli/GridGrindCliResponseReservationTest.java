@@ -7,8 +7,8 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import dev.erst.gridgrind.cli.discovery.CliTransportNotice;
 import dev.erst.gridgrind.cli.discovery.GridGrindCliJson;
-import dev.erst.gridgrind.contract.dto.WorkbookResult;
-import dev.erst.gridgrind.contract.dto.WorkbookResults;
+import dev.erst.gridgrind.core.result.WorkbookResult;
+import dev.erst.gridgrind.core.result.WorkbookResults;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -107,14 +107,14 @@ class GridGrindCliResponseReservationTest {
                 stdout,
                 stderr);
 
-    dev.erst.gridgrind.contract.dto.WorkbookResult.Success response =
+    dev.erst.gridgrind.core.result.WorkbookResult.Success response =
         org.junit.jupiter.api.Assertions.assertInstanceOf(
-            dev.erst.gridgrind.contract.dto.WorkbookResult.Success.class,
+            dev.erst.gridgrind.core.result.WorkbookResult.Success.class,
             dev.erst.gridgrind.json.codec.GridGrindJson.readWorkbookResult(stdout.toByteArray()));
     assertEquals(0, exitCode);
     assertEquals(1, response.warnings().size());
     assertEquals(
-        dev.erst.gridgrind.contract.dto.GridGrindWarningCode.UTF8_BOM_IGNORED,
+        dev.erst.gridgrind.core.problem.GridGrindWarningCode.UTF8_BOM_IGNORED,
         response.warnings().getFirst().code());
     assertEquals("", stderr.toString(StandardCharsets.UTF_8));
   }
@@ -149,12 +149,12 @@ class GridGrindCliResponseReservationTest {
                 stdout,
                 stderr);
 
-    dev.erst.gridgrind.contract.dto.RequestDoctorReport report =
+    dev.erst.gridgrind.core.problem.RequestDoctorReport report =
         dev.erst.gridgrind.json.codec.GridGrindJson.readRequestDoctorReport(stdout.toByteArray());
     assertEquals(0, exitCode);
     assertEquals(1, report.warnings().size());
     assertEquals(
-        dev.erst.gridgrind.contract.dto.GridGrindWarningCode.UTF8_BOM_IGNORED,
+        dev.erst.gridgrind.core.problem.GridGrindWarningCode.UTF8_BOM_IGNORED,
         report.warnings().getFirst().code());
     assertEquals("", stderr.toString(StandardCharsets.UTF_8));
   }
@@ -233,7 +233,7 @@ class GridGrindCliResponseReservationTest {
                 executionStdout.toByteArray()));
     assertEquals(1, executionExitCode);
     assertEquals(
-        dev.erst.gridgrind.contract.dto.GridGrindWarningCode.UTF8_BOM_IGNORED,
+        dev.erst.gridgrind.core.problem.GridGrindWarningCode.UTF8_BOM_IGNORED,
         failure.warnings().getFirst().code());
 
     ByteArrayOutputStream doctorStdout = new ByteArrayOutputStream();
@@ -246,13 +246,13 @@ class GridGrindCliResponseReservationTest {
                 new ByteArrayInputStream(withBom("{}".getBytes(StandardCharsets.UTF_8))),
                 doctorStdout,
                 new ByteArrayOutputStream());
-    dev.erst.gridgrind.contract.dto.RequestDoctorReport doctor =
+    dev.erst.gridgrind.core.problem.RequestDoctorReport doctor =
         dev.erst.gridgrind.json.codec.GridGrindJson.readRequestDoctorReport(
             doctorStdout.toByteArray());
     assertEquals(1, doctorExitCode);
     assertFalse(doctor.valid());
     assertEquals(
-        dev.erst.gridgrind.contract.dto.GridGrindWarningCode.UTF8_BOM_IGNORED,
+        dev.erst.gridgrind.core.problem.GridGrindWarningCode.UTF8_BOM_IGNORED,
         doctor.warnings().getFirst().code());
   }
 

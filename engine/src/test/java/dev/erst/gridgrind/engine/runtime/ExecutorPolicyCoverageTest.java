@@ -7,42 +7,44 @@ import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import dev.erst.gridgrind.contract.action.CellMutationAction;
-import dev.erst.gridgrind.contract.action.StructuredMutationAction;
-import dev.erst.gridgrind.contract.dto.CellInput;
-import dev.erst.gridgrind.contract.dto.ConditionalFormattingDefinitionInput;
-import dev.erst.gridgrind.contract.dto.ConditionalFormattingRuleInput;
-import dev.erst.gridgrind.contract.dto.DifferentialStyleInput;
-import dev.erst.gridgrind.contract.dto.ExecutionModeInput;
-import dev.erst.gridgrind.contract.dto.GridGrindProblemCode;
-import dev.erst.gridgrind.contract.dto.GridGrindProtocolVersion;
-import dev.erst.gridgrind.contract.dto.NamedRangeScope;
-import dev.erst.gridgrind.contract.dto.NamedRangeTarget;
-import dev.erst.gridgrind.contract.dto.OoxmlEncryptionInput;
-import dev.erst.gridgrind.contract.dto.OoxmlOpenSecurityInput;
-import dev.erst.gridgrind.contract.dto.OoxmlPersistenceSecurityInput;
-import dev.erst.gridgrind.contract.dto.PivotTableInput;
-import dev.erst.gridgrind.contract.dto.TableInput;
-import dev.erst.gridgrind.contract.dto.TableStyleInput;
-import dev.erst.gridgrind.contract.dto.WorkbookPlan;
-import dev.erst.gridgrind.contract.dto.WorkbookResult;
-import dev.erst.gridgrind.contract.dto.WorkbookResultPersistence;
-import dev.erst.gridgrind.contract.query.*;
-import dev.erst.gridgrind.contract.selector.CellSelector;
-import dev.erst.gridgrind.contract.selector.ChartSelector;
-import dev.erst.gridgrind.contract.selector.DrawingObjectSelector;
-import dev.erst.gridgrind.contract.selector.NamedRangeSelector;
-import dev.erst.gridgrind.contract.selector.PivotTableSelector;
-import dev.erst.gridgrind.contract.selector.RangeSelector;
-import dev.erst.gridgrind.contract.selector.Selector;
-import dev.erst.gridgrind.contract.selector.SheetSelector;
-import dev.erst.gridgrind.contract.selector.TableCellSelector;
-import dev.erst.gridgrind.contract.selector.TableRowSelector;
-import dev.erst.gridgrind.contract.selector.TableSelector;
-import dev.erst.gridgrind.contract.selector.WorkbookSelector;
-import dev.erst.gridgrind.contract.step.MutationStep;
-import dev.erst.gridgrind.contract.step.WorkbookStaticRequestContract;
-import dev.erst.gridgrind.contract.step.WorkbookStaticViolation;
+import dev.erst.gridgrind.core.model.formula.NamedRangeTarget;
+import dev.erst.gridgrind.core.model.pivot.PivotTableInput;
+import dev.erst.gridgrind.core.model.security.OoxmlEncryptionInput;
+import dev.erst.gridgrind.core.model.security.OoxmlOpenSecurityInput;
+import dev.erst.gridgrind.core.model.security.OoxmlPersistenceSecurityInput;
+import dev.erst.gridgrind.core.model.style.DifferentialStyleInput;
+import dev.erst.gridgrind.core.model.table.TableInput;
+import dev.erst.gridgrind.core.model.table.TableStyleInput;
+import dev.erst.gridgrind.core.model.validation.ConditionalFormattingDefinitionInput;
+import dev.erst.gridgrind.core.model.validation.ConditionalFormattingRuleInput;
+import dev.erst.gridgrind.core.model.value.CellInput;
+import dev.erst.gridgrind.core.plan.*;
+import dev.erst.gridgrind.core.plan.CellMutationAction;
+import dev.erst.gridgrind.core.plan.CellSelector;
+import dev.erst.gridgrind.core.plan.ChartSelector;
+import dev.erst.gridgrind.core.plan.DrawingObjectSelector;
+import dev.erst.gridgrind.core.plan.ExecutionModeInput;
+import dev.erst.gridgrind.core.plan.GridGrindProtocolVersion;
+import dev.erst.gridgrind.core.plan.MutationStep;
+import dev.erst.gridgrind.core.plan.NamedRangeSelector;
+import dev.erst.gridgrind.core.plan.PivotTableSelector;
+import dev.erst.gridgrind.core.plan.RangeSelector;
+import dev.erst.gridgrind.core.plan.Selector;
+import dev.erst.gridgrind.core.plan.SheetSelector;
+import dev.erst.gridgrind.core.plan.StructuredMutationAction;
+import dev.erst.gridgrind.core.plan.TableCellSelector;
+import dev.erst.gridgrind.core.plan.TableRowSelector;
+import dev.erst.gridgrind.core.plan.TableSelector;
+import dev.erst.gridgrind.core.plan.WorkbookPlan;
+import dev.erst.gridgrind.core.plan.WorkbookSelector;
+import dev.erst.gridgrind.core.problem.GridGrindProblemCode;
+import dev.erst.gridgrind.core.result.WorkbookResult;
+import dev.erst.gridgrind.core.result.WorkbookResultPersistence;
+import dev.erst.gridgrind.core.validation.WorkbookStaticRequestContract;
+import dev.erst.gridgrind.core.validation.WorkbookStaticViolation;
+import dev.erst.gridgrind.core.vocabulary.ExcelOoxmlWriteCipher;
+import dev.erst.gridgrind.core.vocabulary.ExcelOoxmlWriteHash;
+import dev.erst.gridgrind.core.vocabulary.NamedRangeScope;
 import dev.erst.gridgrind.excel.CellNotFoundException;
 import dev.erst.gridgrind.excel.ExcelNamedRangeScope;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
@@ -53,8 +55,6 @@ import dev.erst.gridgrind.excel.NamedRangeNotFoundException;
 import dev.erst.gridgrind.excel.SheetNotFoundException;
 import dev.erst.gridgrind.excel.UnregisteredUserDefinedFunctionException;
 import dev.erst.gridgrind.excel.WorkbookArtifactIo;
-import dev.erst.gridgrind.excel.foundation.ExcelOoxmlWriteCipher;
-import dev.erst.gridgrind.excel.foundation.ExcelOoxmlWriteHash;
 import dev.erst.gridgrind.excel.ooxml.ExcelOoxmlPackageSecuritySnapshot;
 import dev.erst.gridgrind.excel.ooxml.ExcelOoxmlPersistenceOptions;
 import java.io.IOException;
@@ -134,7 +134,7 @@ class ExecutorPolicyCoverageTest {
                             List.of(
                                 new PivotTableInput.DataField(
                                     "Amount",
-                                    dev.erst.gridgrind.excel.foundation
+                                    dev.erst.gridgrind.core.vocabulary
                                         .ExcelPivotDataConsolidateFunction.SUM,
                                     "Amount",
                                     Optional.empty()))))));
@@ -160,7 +160,7 @@ class ExecutorPolicyCoverageTest {
                             List.of(
                                 new PivotTableInput.DataField(
                                     "Amount",
-                                    dev.erst.gridgrind.excel.foundation
+                                    dev.erst.gridgrind.core.vocabulary
                                         .ExcelPivotDataConsolidateFunction.SUM,
                                     "Amount",
                                     Optional.empty()))))));
@@ -239,16 +239,16 @@ class ExecutorPolicyCoverageTest {
                 "Budget", "B4", "FOO(A1)", "FOO", "missing udf", null)));
     assertEquals(List.of(), GridGrindProblems.causesFor(null));
 
-    dev.erst.gridgrind.contract.dto.ProblemContext.ExecuteStep enriched =
+    dev.erst.gridgrind.core.problem.ProblemContext.ExecuteStep enriched =
         assertInstanceOf(
-            dev.erst.gridgrind.contract.dto.ProblemContext.ExecuteStep.class,
+            dev.erst.gridgrind.core.problem.ProblemContext.ExecuteStep.class,
             GridGrindProblems.enrichContext(
-                new dev.erst.gridgrind.contract.dto.ProblemContext.ExecuteStep(
-                    dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces.RequestShape
+                new dev.erst.gridgrind.core.problem.ProblemContext.ExecuteStep(
+                    dev.erst.gridgrind.core.problem.ProblemContextRequestSurfaces.RequestShape
                         .known("NEW", "NONE"),
-                    new dev.erst.gridgrind.contract.dto.ProblemContextWorkbookSurfaces
+                    new dev.erst.gridgrind.core.problem.ProblemContextWorkbookSurfaces
                         .StepReference(0, "step", "INSPECTION", "GET_NAMED_RANGES"),
-                    dev.erst.gridgrind.contract.dto.ProblemContextWorkbookSurfaces.ProblemLocation
+                    dev.erst.gridgrind.core.problem.ProblemContextWorkbookSurfaces.ProblemLocation
                         .unknown()),
                 new NamedRangeNotFoundException(
                     "LocalTotal", new ExcelNamedRangeScope.SheetScope("Budget"))));
@@ -256,28 +256,28 @@ class ExecutorPolicyCoverageTest {
     assertEquals(
         java.util.Optional.of("A1"),
         assertInstanceOf(
-                dev.erst.gridgrind.contract.dto.ProblemContext.ExecuteStep.class,
+                dev.erst.gridgrind.core.problem.ProblemContext.ExecuteStep.class,
                 GridGrindProblems.enrichContext(
-                    new dev.erst.gridgrind.contract.dto.ProblemContext.ExecuteStep(
-                        dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces.RequestShape
+                    new dev.erst.gridgrind.core.problem.ProblemContext.ExecuteStep(
+                        dev.erst.gridgrind.core.problem.ProblemContextRequestSurfaces.RequestShape
                             .known("NEW", "NONE"),
-                        new dev.erst.gridgrind.contract.dto.ProblemContextWorkbookSurfaces
+                        new dev.erst.gridgrind.core.problem.ProblemContextWorkbookSurfaces
                             .StepReference(1, "cell", "MUTATION", "SET_CELL"),
-                        dev.erst.gridgrind.contract.dto.ProblemContextWorkbookSurfaces
+                        dev.erst.gridgrind.core.problem.ProblemContextWorkbookSurfaces
                             .ProblemLocation.unknown()),
                     new CellNotFoundException("A1")))
             .address());
     assertEquals(
         java.util.Optional.of("BAD!"),
         assertInstanceOf(
-                dev.erst.gridgrind.contract.dto.ProblemContext.ExecuteStep.class,
+                dev.erst.gridgrind.core.problem.ProblemContext.ExecuteStep.class,
                 GridGrindProblems.enrichContext(
-                    new dev.erst.gridgrind.contract.dto.ProblemContext.ExecuteStep(
-                        dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces.RequestShape
+                    new dev.erst.gridgrind.core.problem.ProblemContext.ExecuteStep(
+                        dev.erst.gridgrind.core.problem.ProblemContextRequestSurfaces.RequestShape
                             .known("NEW", "NONE"),
-                        new dev.erst.gridgrind.contract.dto.ProblemContextWorkbookSurfaces
+                        new dev.erst.gridgrind.core.problem.ProblemContextWorkbookSurfaces
                             .StepReference(2, "cell", "MUTATION", "SET_CELL"),
-                        dev.erst.gridgrind.contract.dto.ProblemContextWorkbookSurfaces
+                        dev.erst.gridgrind.core.problem.ProblemContextWorkbookSurfaces
                             .ProblemLocation.unknown()),
                     new InvalidCellAddressException("BAD!", new IllegalArgumentException("bad"))))
             .address());
@@ -381,7 +381,7 @@ class ExecutorPolicyCoverageTest {
             workingDirectory,
             List.of(),
             java.util.Map.of(
-                new dev.erst.gridgrind.contract.dto.SecretReference("output-password"),
+                new dev.erst.gridgrind.core.source.SecretReference("output-password"),
                 "output-secret"))) {
       ExcelOoxmlPersistenceOptions noneOptions =
           ExecutionRequestPaths.persistenceOptions(
@@ -392,25 +392,27 @@ class ExecutorPolicyCoverageTest {
                   "/tmp/out.xlsx",
                   WorkbookPlan.WorkbookPersistence.IfExists.REJECT,
                   new OoxmlPersistenceSecurityInput(
-                      new dev.erst.gridgrind.contract.dto.OoxmlPersistenceEncryptionInput.Encrypt(
+                      new dev.erst.gridgrind.core.model.security.OoxmlPersistenceEncryptionInput
+                          .Encrypt(
                           new OoxmlEncryptionInput(
-                              new dev.erst.gridgrind.contract.dto.SecretReference(
-                                  "output-password"),
+                              new dev.erst.gridgrind.core.source.SecretReference("output-password"),
                               ExcelOoxmlWriteCipher.AES_256,
                               ExcelOoxmlWriteHash.SHA_512)),
-                      new dev.erst.gridgrind.contract.dto.OoxmlPersistenceSignatureInput.None())),
+                      new dev.erst.gridgrind.core.model.security.OoxmlPersistenceSignatureInput
+                          .None())),
               prepared.bindings());
       ExcelOoxmlPersistenceOptions overwriteOptions =
           ExecutionRequestPaths.persistenceOptions(
               new WorkbookPlan.WorkbookPersistence.Overwrite(
                   new OoxmlPersistenceSecurityInput(
-                      new dev.erst.gridgrind.contract.dto.OoxmlPersistenceEncryptionInput.Encrypt(
+                      new dev.erst.gridgrind.core.model.security.OoxmlPersistenceEncryptionInput
+                          .Encrypt(
                           new OoxmlEncryptionInput(
-                              new dev.erst.gridgrind.contract.dto.SecretReference(
-                                  "output-password"),
+                              new dev.erst.gridgrind.core.source.SecretReference("output-password"),
                               ExcelOoxmlWriteCipher.AES_256,
                               ExcelOoxmlWriteHash.SHA_512)),
-                      new dev.erst.gridgrind.contract.dto.OoxmlPersistenceSignatureInput.None())),
+                      new dev.erst.gridgrind.core.model.security.OoxmlPersistenceSignatureInput
+                          .None())),
               prepared.bindings());
       assertTrue(noneOptions.writesPlaintextUnsigned());
       assertFalse(saveAsOptions.writesPlaintextUnsigned());
@@ -439,7 +441,7 @@ class ExecutorPolicyCoverageTest {
                     "/tmp/in.xlsx",
                     new OoxmlOpenSecurityInput(
                         java.util.Optional.of(
-                            new dev.erst.gridgrind.contract.dto.SecretReference("open-secret"))))));
+                            new dev.erst.gridgrind.core.source.SecretReference("open-secret"))))));
   }
 
   private static void assertStreamingPersistenceBehaviors() throws IOException {
@@ -948,7 +950,7 @@ class ExecutorPolicyCoverageTest {
             List.of(
                 new PivotTableInput.DataField(
                     "Amount",
-                    dev.erst.gridgrind.excel.foundation.ExcelPivotDataConsolidateFunction.SUM,
+                    dev.erst.gridgrind.core.vocabulary.ExcelPivotDataConsolidateFunction.SUM,
                     "Amount",
                     Optional.empty()))));
   }

@@ -6,8 +6,8 @@ import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import dev.erst.gridgrind.contract.dto.GridGrindWarningCode;
-import dev.erst.gridgrind.contract.dto.RequestWarningLocation;
+import dev.erst.gridgrind.core.problem.GridGrindWarningCode;
+import dev.erst.gridgrind.core.problem.RequestWarningLocation;
 import dev.erst.gridgrind.engine.api.GridGrindExecutionGrant;
 import dev.erst.gridgrind.excel.WorkbookArtifactWriteDisposition;
 import java.nio.file.Files;
@@ -108,7 +108,7 @@ class RequestPathAccessTest {
       access.publishOutput(
           staged,
           WorkbookArtifactWriteDisposition.CREATE_NEW,
-          new dev.erst.gridgrind.contract.dto.WorkbookResultPersistence.PublicationOutcome
+          new dev.erst.gridgrind.core.result.WorkbookResultPersistence.PublicationOutcome
               .StagedArtifactVerification());
       assertArrayEquals(
           new byte[] {3, 2, 1}, Files.readAllBytes(outputDirectory.resolve("result.xlsx")));
@@ -126,7 +126,7 @@ class RequestPathAccessTest {
               access.publishOutput(
                   staged,
                   WorkbookArtifactWriteDisposition.CREATE_NEW,
-                  new dev.erst.gridgrind.contract.dto.WorkbookResultPersistence.PublicationOutcome
+                  new dev.erst.gridgrind.core.result.WorkbookResultPersistence.PublicationOutcome
                       .StagedArtifactVerification()));
     }
   }
@@ -145,7 +145,7 @@ class RequestPathAccessTest {
               access.publishOutput(
                   existing,
                   WorkbookArtifactWriteDisposition.CREATE_NEW,
-                  new dev.erst.gridgrind.contract.dto.WorkbookResultPersistence.PublicationOutcome
+                  new dev.erst.gridgrind.core.result.WorkbookResultPersistence.PublicationOutcome
                       .StagedArtifactVerification()));
       assertThrows(
           OutputPathAlreadyExistsException.class,
@@ -185,7 +185,7 @@ class RequestPathAccessTest {
               access.publishOutput(
                   staged,
                   WorkbookArtifactWriteDisposition.CREATE_NEW,
-                  new dev.erst.gridgrind.contract.dto.WorkbookResultPersistence.PublicationOutcome
+                  new dev.erst.gridgrind.core.result.WorkbookResultPersistence.PublicationOutcome
                       .StagedArtifactVerification()));
     }
   }

@@ -4,19 +4,37 @@ import static dev.erst.gridgrind.engine.runtime.ExecutorTestPlanSupport.*;
 import static dev.erst.gridgrind.engine.runtime.ProtocolStyleTestAccess.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-import dev.erst.gridgrind.contract.action.CellMutationAction;
-import dev.erst.gridgrind.contract.action.WorkbookMutationAction;
-import dev.erst.gridgrind.contract.dto.*;
-import dev.erst.gridgrind.contract.dto.WorkbookResultPersistence;
-import dev.erst.gridgrind.contract.query.*;
-import dev.erst.gridgrind.contract.selector.*;
+import dev.erst.gridgrind.core.model.layout.WindowReport;
+import dev.erst.gridgrind.core.model.protection.CellProtectionInput;
+import dev.erst.gridgrind.core.model.style.BorderSideInput;
+import dev.erst.gridgrind.core.model.style.CellAlignmentInput;
+import dev.erst.gridgrind.core.model.style.CellBorderInput;
+import dev.erst.gridgrind.core.model.style.CellBorderSideReport;
+import dev.erst.gridgrind.core.model.style.CellColorReport;
+import dev.erst.gridgrind.core.model.style.CellFillInput;
+import dev.erst.gridgrind.core.model.style.CellGradientFillInput;
+import dev.erst.gridgrind.core.model.style.CellGradientFillReport;
+import dev.erst.gridgrind.core.model.style.CellGradientStopInput;
+import dev.erst.gridgrind.core.model.style.CellStyleReport;
+import dev.erst.gridgrind.core.model.style.ColorInput;
+import dev.erst.gridgrind.core.model.style.FontHeightInput;
+import dev.erst.gridgrind.core.model.style.RichTextRunInput;
+import dev.erst.gridgrind.core.model.value.CellInput;
+import dev.erst.gridgrind.core.model.value.CellValueReport;
+import dev.erst.gridgrind.core.plan.*;
+import dev.erst.gridgrind.core.plan.CellMutationAction;
+import dev.erst.gridgrind.core.plan.WorkbookMutationAction;
+import dev.erst.gridgrind.core.plan.WorkbookPlan;
+import dev.erst.gridgrind.core.problem.GridGrindProblemCode;
+import dev.erst.gridgrind.core.result.WorkbookResult;
+import dev.erst.gridgrind.core.result.WorkbookResultPersistence;
+import dev.erst.gridgrind.core.vocabulary.ExcelBorderStyle;
+import dev.erst.gridgrind.core.vocabulary.ExcelHorizontalAlignment;
+import dev.erst.gridgrind.core.vocabulary.ExcelVerticalAlignment;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
 import dev.erst.gridgrind.excel.ExcelWorkbooks;
 import dev.erst.gridgrind.excel.WorkbookExecutionEngine;
 import dev.erst.gridgrind.excel.XlsxRoundTrip;
-import dev.erst.gridgrind.excel.foundation.ExcelBorderStyle;
-import dev.erst.gridgrind.excel.foundation.ExcelHorizontalAlignment;
-import dev.erst.gridgrind.excel.foundation.ExcelVerticalAlignment;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.nio.file.Files;
@@ -53,7 +71,7 @@ class DefaultGridGrindRequestExecutorStyleAndFormulaTest
                         mutate(
                             new RangeSelector.ByRange("Budget", "A1:B2"),
                             new CellMutationAction.SetRange(
-                                new dev.erst.gridgrind.contract.dto.CellGridInput.Typed(
+                                new dev.erst.gridgrind.core.model.value.CellGridInput.Typed(
                                     List.of(
                                         List.of(textCell("Item"), textCell("Amount")),
                                         List.of(
@@ -161,7 +179,7 @@ class DefaultGridGrindRequestExecutorStyleAndFormulaTest
                                         true,
                                         true),
                                     CellFillInput.patternColors(
-                                        dev.erst.gridgrind.excel.foundation.ExcelFillPattern
+                                        dev.erst.gridgrind.core.vocabulary.ExcelFillPattern
                                             .THIN_HORIZONTAL_BANDS,
                                         ColorInput.rgb("#FFF2CC"),
                                         ColorInput.rgb("#DDEBF7")),
@@ -201,7 +219,7 @@ class DefaultGridGrindRequestExecutorStyleAndFormulaTest
     assertTrue(style.font().underline());
     assertTrue(style.font().strikeout());
     assertEquals(
-        dev.erst.gridgrind.excel.foundation.ExcelFillPattern.THIN_HORIZONTAL_BANDS,
+        dev.erst.gridgrind.core.vocabulary.ExcelFillPattern.THIN_HORIZONTAL_BANDS,
         fillPattern(style.fill()));
     assertEquals(rgb("#FFF2CC"), fillForegroundColor(style.fill()));
     assertEquals(rgb("#DDEBF7"), fillBackgroundColor(style.fill()));
@@ -245,7 +263,7 @@ class DefaultGridGrindRequestExecutorStyleAndFormulaTest
                         mutate(
                             new RangeSelector.ByRange("Budget", "A1:A2"),
                             new CellMutationAction.SetRange(
-                                new dev.erst.gridgrind.contract.dto.CellGridInput.Typed(
+                                new dev.erst.gridgrind.core.model.value.CellGridInput.Typed(
                                     List.of(
                                         List.of(textCell("ThemeTintStyle")),
                                         List.of(textCell("GradientFillStyle")))))),
@@ -264,7 +282,7 @@ class DefaultGridGrindRequestExecutorStyleAndFormulaTest
                                         null,
                                         null),
                                     CellFillInput.patternForeground(
-                                        dev.erst.gridgrind.excel.foundation.ExcelFillPattern.SOLID,
+                                        dev.erst.gridgrind.core.vocabulary.ExcelFillPattern.SOLID,
                                         ColorInput.theme(3, 0.30d)),
                                     new CellBorderInput(
                                         Optional.empty(),
@@ -435,12 +453,13 @@ class DefaultGridGrindRequestExecutorStyleAndFormulaTest
                         new CellSelector.ByAddresses("Data", List.of("A1")),
                         allFacetCellsQuery()))));
 
-    dev.erst.gridgrind.contract.dto.CellReport cell =
+    dev.erst.gridgrind.core.model.value.CellReport cell =
         read(success, "cells", SheetInspectionResult.CellsResult.class).cells().getFirst();
-    assertInstanceOf(dev.erst.gridgrind.contract.dto.CellReport.FormulaReport.class, cell);
+    assertInstanceOf(dev.erst.gridgrind.core.model.value.CellReport.FormulaReport.class, cell);
     CellValueReport evaluation =
-        evaluation(cast(dev.erst.gridgrind.contract.dto.CellReport.FormulaReport.class, cell));
-    assertInstanceOf(dev.erst.gridgrind.contract.dto.CellValueReport.ErrorValue.class, evaluation);
+        evaluation(cast(dev.erst.gridgrind.core.model.value.CellReport.FormulaReport.class, cell));
+    assertInstanceOf(
+        dev.erst.gridgrind.core.model.value.CellValueReport.ErrorValue.class, evaluation);
     assertEquals("ERROR", evaluation.type());
   }
 
@@ -467,7 +486,7 @@ class DefaultGridGrindRequestExecutorStyleAndFormulaTest
     WorkbookPlan.WorkbookPersistence none = new WorkbookPlan.WorkbookPersistence.None();
     WorkbookPlan.WorkbookPersistence overwrite =
         new WorkbookPlan.WorkbookPersistence.Overwrite(
-            dev.erst.gridgrind.contract.dto.OoxmlPersistenceSecurityInput.none());
+            dev.erst.gridgrind.core.model.security.OoxmlPersistenceSecurityInput.none());
     WorkbookPlan.WorkbookPersistence saveAs =
         new WorkbookPlan.WorkbookPersistence.SaveAs(
             "out.xlsx", WorkbookPlan.WorkbookPersistence.IfExists.REJECT);
@@ -497,7 +516,8 @@ class DefaultGridGrindRequestExecutorStyleAndFormulaTest
                       workbook,
                       new WorkbookPlan.WorkbookSource.New(),
                       new WorkbookPlan.WorkbookPersistence.Overwrite(
-                          dev.erst.gridgrind.contract.dto.OoxmlPersistenceSecurityInput.none()),
+                          dev.erst.gridgrind.core.model.security.OoxmlPersistenceSecurityInput
+                              .none()),
                       new ExecutionInputBindings(
                           workingDirectory,
                           workingDirectory.resolve("scratch"),
@@ -614,7 +634,7 @@ class DefaultGridGrindRequestExecutorStyleAndFormulaTest
                 mutate(
                     new RangeSelector.ByRange("Budget", "A1:"),
                     new CellMutationAction.SetRange(
-                        new dev.erst.gridgrind.contract.dto.CellGridInput.Typed(
+                        new dev.erst.gridgrind.core.model.value.CellGridInput.Typed(
                             List.of(List.of(textCell("x")))))));
 
     assertEquals("range must not be blank", failure.getMessage());
@@ -656,7 +676,7 @@ class DefaultGridGrindRequestExecutorStyleAndFormulaTest
                         mutate(
                             new SheetSelector.ByName("Budget"),
                             new CellMutationAction.AppendRow(
-                                new dev.erst.gridgrind.contract.dto.CellRowInput.Typed(
+                                new dev.erst.gridgrind.core.model.value.CellRowInput.Typed(
                                     List.of(formulaCell("SUM(")))))))));
 
     assertEquals("EXECUTE_STEP", failure.problem().context().stage());
@@ -679,7 +699,8 @@ class DefaultGridGrindRequestExecutorStyleAndFormulaTest
         mutate(
             new SheetSelector.ByName("Budget"),
             new CellMutationAction.AppendRow(
-                new dev.erst.gridgrind.contract.dto.CellRowInput.Typed(List.of(textCell("x")))));
+                new dev.erst.gridgrind.core.model.value.CellRowInput.Typed(
+                    List.of(textCell("x")))));
     ExecutorTestPlanSupport.PendingMutation ensureSheet =
         mutate(new SheetSelector.ByName("Budget"), new WorkbookMutationAction.EnsureSheet());
 

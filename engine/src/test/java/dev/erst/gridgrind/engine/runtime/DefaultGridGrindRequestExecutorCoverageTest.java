@@ -3,20 +3,24 @@ package dev.erst.gridgrind.engine.runtime;
 import static dev.erst.gridgrind.engine.runtime.ExecutorTestPlanSupport.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-import dev.erst.gridgrind.contract.action.CellMutationAction;
-import dev.erst.gridgrind.contract.action.StructuredMutationAction;
-import dev.erst.gridgrind.contract.dto.GridGrindProblemCode;
-import dev.erst.gridgrind.contract.dto.NamedRangeScope;
-import dev.erst.gridgrind.contract.dto.NamedRangeTarget;
-import dev.erst.gridgrind.contract.query.*;
-import dev.erst.gridgrind.contract.query.SheetInspectionResult;
-import dev.erst.gridgrind.contract.query.WorkbookInspectionResult;
-import dev.erst.gridgrind.contract.selector.CellSelector;
-import dev.erst.gridgrind.contract.selector.NamedRangeSelector;
-import dev.erst.gridgrind.contract.selector.RangeSelector;
-import dev.erst.gridgrind.contract.selector.WorkbookSelector;
-import dev.erst.gridgrind.contract.step.InspectionStep;
-import dev.erst.gridgrind.contract.step.MutationStep;
+import dev.erst.gridgrind.core.model.formula.NamedRangeTarget;
+import dev.erst.gridgrind.core.plan.*;
+import dev.erst.gridgrind.core.plan.CellMutationAction;
+import dev.erst.gridgrind.core.plan.CellSelector;
+import dev.erst.gridgrind.core.plan.InspectionStep;
+import dev.erst.gridgrind.core.plan.MutationStep;
+import dev.erst.gridgrind.core.plan.NamedRangeSelector;
+import dev.erst.gridgrind.core.plan.RangeSelector;
+import dev.erst.gridgrind.core.plan.SheetInspectionResult;
+import dev.erst.gridgrind.core.plan.StructuredMutationAction;
+import dev.erst.gridgrind.core.plan.WorkbookInspectionResult;
+import dev.erst.gridgrind.core.plan.WorkbookSelector;
+import dev.erst.gridgrind.core.problem.GridGrindProblemCode;
+import dev.erst.gridgrind.core.vocabulary.ExcelBorderStyle;
+import dev.erst.gridgrind.core.vocabulary.ExcelFillPattern;
+import dev.erst.gridgrind.core.vocabulary.ExcelHorizontalAlignment;
+import dev.erst.gridgrind.core.vocabulary.ExcelVerticalAlignment;
+import dev.erst.gridgrind.core.vocabulary.NamedRangeScope;
 import dev.erst.gridgrind.excel.*;
 import dev.erst.gridgrind.excel.ExcelBorderSideSnapshot;
 import dev.erst.gridgrind.excel.ExcelBorderSnapshot;
@@ -35,10 +39,6 @@ import dev.erst.gridgrind.excel.InvalidRangeAddressException;
 import dev.erst.gridgrind.excel.NamedRangeNotFoundException;
 import dev.erst.gridgrind.excel.WorkbookNotFoundException;
 import dev.erst.gridgrind.excel.WorkbookReadCommand;
-import dev.erst.gridgrind.excel.foundation.ExcelBorderStyle;
-import dev.erst.gridgrind.excel.foundation.ExcelFillPattern;
-import dev.erst.gridgrind.excel.foundation.ExcelHorizontalAlignment;
-import dev.erst.gridgrind.excel.foundation.ExcelVerticalAlignment;
 import java.math.BigDecimal;
 import java.nio.file.Path;
 import java.util.List;
@@ -54,35 +54,35 @@ class DefaultGridGrindRequestExecutorCoverageTest
         ExecutionResponseSupport.problemCodeFor(
             new WorkbookNotFoundException(Path.of("/tmp/missing.xlsx"))));
 
-    dev.erst.gridgrind.contract.dto.ProblemContext.ExecuteStep context =
-        new dev.erst.gridgrind.contract.dto.ProblemContext.ExecuteStep(
-            dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces.RequestShape.known(
+    dev.erst.gridgrind.core.problem.ProblemContext.ExecuteStep context =
+        new dev.erst.gridgrind.core.problem.ProblemContext.ExecuteStep(
+            dev.erst.gridgrind.core.problem.ProblemContextRequestSurfaces.RequestShape.known(
                 "NEW", "NONE"),
-            new dev.erst.gridgrind.contract.dto.ProblemContextWorkbookSurfaces.StepReference(
+            new dev.erst.gridgrind.core.problem.ProblemContextWorkbookSurfaces.StepReference(
                 0, "step-01-set-cell", "MUTATION", "SET_CELL"),
-            dev.erst.gridgrind.contract.dto.ProblemContextWorkbookSurfaces.ProblemLocation
+            dev.erst.gridgrind.core.problem.ProblemContextWorkbookSurfaces.ProblemLocation
                 .unknown());
 
     InvalidFormulaException invalidFormula =
         new InvalidFormulaException("Budget", "B4", "SUM(", "invalid", null);
-    dev.erst.gridgrind.contract.dto.ProblemContext.ExecuteStep enrichedFormula =
+    dev.erst.gridgrind.core.problem.ProblemContext.ExecuteStep enrichedFormula =
         assertInstanceOf(
-            dev.erst.gridgrind.contract.dto.ProblemContext.ExecuteStep.class,
+            dev.erst.gridgrind.core.problem.ProblemContext.ExecuteStep.class,
             ExecutionResponseSupport.enrichContext(context, invalidFormula));
     assertEquals(java.util.Optional.of("Budget"), enrichedFormula.sheetName());
     assertEquals(java.util.Optional.of("B4"), enrichedFormula.address());
     assertEquals(java.util.Optional.of("SUM("), enrichedFormula.formula());
 
-    dev.erst.gridgrind.contract.dto.ProblemContext.ExecuteStep enrichedRange =
+    dev.erst.gridgrind.core.problem.ProblemContext.ExecuteStep enrichedRange =
         assertInstanceOf(
-            dev.erst.gridgrind.contract.dto.ProblemContext.ExecuteStep.class,
+            dev.erst.gridgrind.core.problem.ProblemContext.ExecuteStep.class,
             ExecutionResponseSupport.enrichContext(
                 context, new InvalidRangeAddressException("A1:B2", null)));
     assertEquals(java.util.Optional.of("A1:B2"), enrichedRange.range());
 
-    dev.erst.gridgrind.contract.dto.ProblemContext.ExecuteStep enrichedNamedRange =
+    dev.erst.gridgrind.core.problem.ProblemContext.ExecuteStep enrichedNamedRange =
         assertInstanceOf(
-            dev.erst.gridgrind.contract.dto.ProblemContext.ExecuteStep.class,
+            dev.erst.gridgrind.core.problem.ProblemContext.ExecuteStep.class,
             ExecutionResponseSupport.enrichContext(
                 context,
                 new NamedRangeNotFoundException(

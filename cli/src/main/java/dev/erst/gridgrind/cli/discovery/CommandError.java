@@ -3,9 +3,9 @@ package dev.erst.gridgrind.cli.discovery;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import dev.erst.gridgrind.contract.dto.DiagnosticOrder;
-import dev.erst.gridgrind.contract.dto.GridGrindProblemDetail;
-import dev.erst.gridgrind.contract.dto.GridGrindProtocolVersion;
+import dev.erst.gridgrind.core.plan.GridGrindProtocolVersion;
+import dev.erst.gridgrind.core.problem.DiagnosticOrder;
+import dev.erst.gridgrind.core.problem.GridGrindProblemDetail;
 import java.util.List;
 import java.util.Objects;
 

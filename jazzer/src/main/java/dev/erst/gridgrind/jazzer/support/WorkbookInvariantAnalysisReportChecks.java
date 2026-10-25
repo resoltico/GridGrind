@@ -1,20 +1,20 @@
 package dev.erst.gridgrind.jazzer.support;
 
-import dev.erst.gridgrind.contract.dto.AnalysisFindingReport;
-import dev.erst.gridgrind.contract.dto.AnalysisLocationReport;
-import dev.erst.gridgrind.contract.dto.AnalysisSummaryReport;
-import dev.erst.gridgrind.contract.dto.AutofilterHealthReport;
-import dev.erst.gridgrind.contract.dto.ConditionalFormattingHealthReport;
-import dev.erst.gridgrind.contract.dto.FormulaHealthReport;
-import dev.erst.gridgrind.contract.dto.FormulaSurfaceReport;
-import dev.erst.gridgrind.contract.dto.HyperlinkHealthReport;
-import dev.erst.gridgrind.contract.dto.NamedRangeHealthReport;
-import dev.erst.gridgrind.contract.dto.NamedRangeSurfaceReport;
-import dev.erst.gridgrind.contract.dto.PivotTableHealthReport;
-import dev.erst.gridgrind.contract.dto.SheetSchemaReport;
-import dev.erst.gridgrind.contract.dto.TableHealthReport;
-import dev.erst.gridgrind.contract.dto.TypeCountReport;
-import dev.erst.gridgrind.contract.dto.WorkbookFindingsReport;
+import dev.erst.gridgrind.core.model.formula.FormulaHealthReport;
+import dev.erst.gridgrind.core.model.formula.FormulaSurfaceReport;
+import dev.erst.gridgrind.core.model.formula.NamedRangeHealthReport;
+import dev.erst.gridgrind.core.model.formula.NamedRangeSurfaceReport;
+import dev.erst.gridgrind.core.model.pivot.PivotTableHealthReport;
+import dev.erst.gridgrind.core.model.table.AutofilterHealthReport;
+import dev.erst.gridgrind.core.model.table.SheetSchemaReport;
+import dev.erst.gridgrind.core.model.table.TableHealthReport;
+import dev.erst.gridgrind.core.model.validation.ConditionalFormattingHealthReport;
+import dev.erst.gridgrind.core.model.value.HyperlinkHealthReport;
+import dev.erst.gridgrind.core.result.AnalysisFindingReport;
+import dev.erst.gridgrind.core.result.AnalysisLocationReport;
+import dev.erst.gridgrind.core.result.AnalysisSummaryReport;
+import dev.erst.gridgrind.core.result.TypeCountReport;
+import dev.erst.gridgrind.core.result.WorkbookFindingsReport;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -149,7 +149,7 @@ final class WorkbookInvariantAnalysisReportChecks {
   }
 
   static void requireDataValidationHealthShape(
-      dev.erst.gridgrind.contract.dto.DataValidationHealthReport analysis) {
+      dev.erst.gridgrind.core.model.validation.DataValidationHealthReport analysis) {
     WorkbookInvariantChecks.require(
         analysis.checkedValidationCount() >= 0, "checkedValidationCount must not be negative");
     requireAnalysisSummaryShape(analysis.summary(), analysis.findings());

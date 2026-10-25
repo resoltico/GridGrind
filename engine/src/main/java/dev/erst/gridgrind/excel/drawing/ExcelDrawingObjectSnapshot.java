@@ -1,8 +1,8 @@
 package dev.erst.gridgrind.excel.drawing;
 
-import dev.erst.gridgrind.excel.foundation.ExcelDrawingShapeKind;
-import dev.erst.gridgrind.excel.foundation.ExcelEmbeddedObjectPackagingKind;
-import dev.erst.gridgrind.excel.foundation.ExcelPictureFormat;
+import dev.erst.gridgrind.core.vocabulary.ExcelDrawingShapeKind;
+import dev.erst.gridgrind.core.vocabulary.ExcelEmbeddedObjectPackagingKind;
+import dev.erst.gridgrind.core.vocabulary.ExcelPictureFormat;
 import java.util.List;
 import java.util.Objects;
 import org.jspecify.annotations.Nullable;

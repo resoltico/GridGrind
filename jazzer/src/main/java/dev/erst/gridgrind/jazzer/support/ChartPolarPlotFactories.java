@@ -1,7 +1,7 @@
 package dev.erst.gridgrind.jazzer.support;
 
-import dev.erst.gridgrind.excel.foundation.ExcelChartRadarStyle;
-import dev.erst.gridgrind.excel.foundation.ExcelChartScatterStyle;
+import dev.erst.gridgrind.core.vocabulary.ExcelChartRadarStyle;
+import dev.erst.gridgrind.core.vocabulary.ExcelChartScatterStyle;
 import java.util.List;
 
 /** Shared constructor signatures for radar and scatter chart plots. */

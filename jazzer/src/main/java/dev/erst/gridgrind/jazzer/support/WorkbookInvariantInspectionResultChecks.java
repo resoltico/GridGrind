@@ -2,16 +2,14 @@ package dev.erst.gridgrind.jazzer.support;
 
 import static dev.erst.gridgrind.jazzer.support.WorkbookInvariantChecks.require;
 
-import dev.erst.gridgrind.contract.dto.*;
-import dev.erst.gridgrind.contract.query.*;
-import dev.erst.gridgrind.contract.query.InspectionResult;
-import dev.erst.gridgrind.contract.query.SheetInspectionResult;
-import dev.erst.gridgrind.contract.query.WorkbookAnalysisResult;
-import dev.erst.gridgrind.contract.query.WorkbookAssetInspectionResult;
-import dev.erst.gridgrind.contract.query.WorkbookInspectionResult;
-import dev.erst.gridgrind.contract.query.WorkbookSurfaceInspectionResult;
-import dev.erst.gridgrind.contract.selector.*;
-import dev.erst.gridgrind.contract.step.InspectionStep;
+import dev.erst.gridgrind.core.plan.*;
+import dev.erst.gridgrind.core.plan.InspectionResult;
+import dev.erst.gridgrind.core.plan.InspectionStep;
+import dev.erst.gridgrind.core.plan.SheetInspectionResult;
+import dev.erst.gridgrind.core.plan.WorkbookAnalysisResult;
+import dev.erst.gridgrind.core.plan.WorkbookAssetInspectionResult;
+import dev.erst.gridgrind.core.plan.WorkbookInspectionResult;
+import dev.erst.gridgrind.core.plan.WorkbookSurfaceInspectionResult;
 import java.util.Objects;
 import java.util.Optional;
 

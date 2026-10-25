@@ -1,7 +1,7 @@
 package dev.erst.gridgrind.cli;
 
 import dev.erst.gridgrind.cli.discovery.GridGrindCliJson;
-import dev.erst.gridgrind.contract.dto.ExecutionProgressEvent;
+import dev.erst.gridgrind.core.result.ExecutionProgressEvent;
 import dev.erst.gridgrind.engine.api.GridGrindProgressSink;
 import java.io.IOException;
 import java.io.OutputStream;

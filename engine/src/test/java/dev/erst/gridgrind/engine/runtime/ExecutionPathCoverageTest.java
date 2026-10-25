@@ -5,15 +5,15 @@ import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import dev.erst.gridgrind.contract.dto.CalculationReport;
-import dev.erst.gridgrind.contract.dto.ExecutionJournal;
-import dev.erst.gridgrind.contract.dto.GridGrindProblemCode;
-import dev.erst.gridgrind.contract.dto.GridGrindProblemDetail;
-import dev.erst.gridgrind.contract.dto.GridGrindProtocolVersion;
-import dev.erst.gridgrind.contract.dto.ProblemContext;
-import dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces;
-import dev.erst.gridgrind.contract.dto.WorkbookPlan;
-import dev.erst.gridgrind.contract.dto.WorkbookResult;
+import dev.erst.gridgrind.core.model.formula.CalculationReport;
+import dev.erst.gridgrind.core.plan.GridGrindProtocolVersion;
+import dev.erst.gridgrind.core.plan.WorkbookPlan;
+import dev.erst.gridgrind.core.problem.GridGrindProblemCode;
+import dev.erst.gridgrind.core.problem.GridGrindProblemDetail;
+import dev.erst.gridgrind.core.problem.ProblemContext;
+import dev.erst.gridgrind.core.problem.ProblemContextRequestSurfaces;
+import dev.erst.gridgrind.core.result.ExecutionJournal;
+import dev.erst.gridgrind.core.result.WorkbookResult;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -28,8 +28,8 @@ class ExecutionPathCoverageTest {
         WorkbookPlan.standard(
             new WorkbookPlan.WorkbookSource.ExistingFile("input.xlsx"),
             new WorkbookPlan.WorkbookPersistence.None(),
-            dev.erst.gridgrind.contract.dto.ExecutionPolicyInput.defaults(),
-            dev.erst.gridgrind.contract.dto.FormulaEnvironmentInput.empty(),
+            dev.erst.gridgrind.core.plan.ExecutionPolicyInput.defaults(),
+            dev.erst.gridgrind.core.model.formula.FormulaEnvironmentInput.empty(),
             List.of());
     Path workingDirectory = Path.of("/tmp/gridgrind-explicit-root");
 
@@ -71,41 +71,41 @@ class ExecutionPathCoverageTest {
             new WorkbookPlan.WorkbookPersistence.SaveAs(
                 "out.xlsx",
                 WorkbookPlan.WorkbookPersistence.IfExists.REJECT,
-                dev.erst.gridgrind.contract.dto.OoxmlPersistenceSecurityInput.none()),
-            dev.erst.gridgrind.contract.dto.ExecutionPolicyInput.defaults(),
-            dev.erst.gridgrind.contract.dto.FormulaEnvironmentInput.empty(),
+                dev.erst.gridgrind.core.model.security.OoxmlPersistenceSecurityInput.none()),
+            dev.erst.gridgrind.core.plan.ExecutionPolicyInput.defaults(),
+            dev.erst.gridgrind.core.model.formula.FormulaEnvironmentInput.empty(),
             List.of());
     WorkbookPlan overwriteRequest =
         WorkbookPlan.standard(
             new WorkbookPlan.WorkbookSource.ExistingFile("input.xlsx"),
             new WorkbookPlan.WorkbookPersistence.Overwrite(
-                dev.erst.gridgrind.contract.dto.OoxmlPersistenceSecurityInput.none()),
-            dev.erst.gridgrind.contract.dto.ExecutionPolicyInput.defaults(),
-            dev.erst.gridgrind.contract.dto.FormulaEnvironmentInput.empty(),
+                dev.erst.gridgrind.core.model.security.OoxmlPersistenceSecurityInput.none()),
+            dev.erst.gridgrind.core.plan.ExecutionPolicyInput.defaults(),
+            dev.erst.gridgrind.core.model.formula.FormulaEnvironmentInput.empty(),
             List.of());
     Path workingDirectory = Path.of("/tmp/gridgrind");
 
     assertEquals(
-        new dev.erst.gridgrind.contract.dto.ProblemContextWorkbookSurfaces.WorkbookReference
+        new dev.erst.gridgrind.core.problem.ProblemContextWorkbookSurfaces.WorkbookReference
             .NewWorkbook(),
         ExecutionRequestPaths.workbookReference(
             WorkbookPlan.standard(
                 new WorkbookPlan.WorkbookSource.New(),
                 new WorkbookPlan.WorkbookPersistence.None(),
-                dev.erst.gridgrind.contract.dto.ExecutionPolicyInput.defaults(),
-                dev.erst.gridgrind.contract.dto.FormulaEnvironmentInput.empty(),
+                dev.erst.gridgrind.core.plan.ExecutionPolicyInput.defaults(),
+                dev.erst.gridgrind.core.model.formula.FormulaEnvironmentInput.empty(),
                 List.of()),
             workingDirectory));
     assertEquals(
-        new dev.erst.gridgrind.contract.dto.ProblemContextWorkbookSurfaces.WorkbookReference
+        new dev.erst.gridgrind.core.problem.ProblemContextWorkbookSurfaces.WorkbookReference
             .ExistingFile("/tmp/gridgrind/input.xlsx"),
         ExecutionRequestPaths.workbookReference(existingSaveAsRequest, workingDirectory));
     assertEquals(
-        new dev.erst.gridgrind.contract.dto.ProblemContextWorkbookSurfaces.PersistenceReference
+        new dev.erst.gridgrind.core.problem.ProblemContextWorkbookSurfaces.PersistenceReference
             .SaveAs("/tmp/gridgrind/out.xlsx"),
         ExecutionRequestPaths.persistenceReference(existingSaveAsRequest, workingDirectory));
     assertEquals(
-        new dev.erst.gridgrind.contract.dto.ProblemContextWorkbookSurfaces.PersistenceReference
+        new dev.erst.gridgrind.core.problem.ProblemContextWorkbookSurfaces.PersistenceReference
             .Overwrite("/tmp/gridgrind/input.xlsx"),
         ExecutionRequestPaths.persistenceReference(overwriteRequest, workingDirectory));
     assertEquals(
@@ -117,8 +117,8 @@ class ExecutionPathCoverageTest {
                         WorkbookPlan.standard(
                             new WorkbookPlan.WorkbookSource.New(),
                             new WorkbookPlan.WorkbookPersistence.None(),
-                            dev.erst.gridgrind.contract.dto.ExecutionPolicyInput.defaults(),
-                            dev.erst.gridgrind.contract.dto.FormulaEnvironmentInput.empty(),
+                            dev.erst.gridgrind.core.plan.ExecutionPolicyInput.defaults(),
+                            dev.erst.gridgrind.core.model.formula.FormulaEnvironmentInput.empty(),
                             List.of()),
                         workingDirectory))
             .getMessage());
@@ -246,8 +246,8 @@ class ExecutionPathCoverageTest {
         WorkbookPlan.standard(
             new WorkbookPlan.WorkbookSource.New(),
             new WorkbookPlan.WorkbookPersistence.None(),
-            dev.erst.gridgrind.contract.dto.ExecutionPolicyInput.defaults(),
-            dev.erst.gridgrind.contract.dto.FormulaEnvironmentInput.empty(),
+            dev.erst.gridgrind.core.plan.ExecutionPolicyInput.defaults(),
+            dev.erst.gridgrind.core.model.formula.FormulaEnvironmentInput.empty(),
             List.of());
     ExecutionJournalRecorder journal =
         ExecutionContextFixtureSupport.startJournal(request, ExecutionProgressSink.NOOP);

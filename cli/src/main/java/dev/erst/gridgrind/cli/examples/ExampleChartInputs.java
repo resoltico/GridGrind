@@ -1,17 +1,17 @@
 package dev.erst.gridgrind.cli.examples;
 
-import dev.erst.gridgrind.contract.dto.ChartDataSourceInput;
-import dev.erst.gridgrind.contract.dto.ChartInput;
-import dev.erst.gridgrind.contract.dto.ChartLegendInput;
-import dev.erst.gridgrind.contract.dto.ChartPlotInput;
-import dev.erst.gridgrind.contract.dto.ChartSeriesInput;
-import dev.erst.gridgrind.contract.dto.ChartTitleInput;
-import dev.erst.gridgrind.contract.dto.DrawingAnchorInput;
-import dev.erst.gridgrind.contract.source.TextSourceInput;
-import dev.erst.gridgrind.excel.foundation.ExcelChartBarDirection;
-import dev.erst.gridgrind.excel.foundation.ExcelChartBarGrouping;
-import dev.erst.gridgrind.excel.foundation.ExcelChartDisplayBlanksAs;
-import dev.erst.gridgrind.excel.foundation.ExcelChartLegendPosition;
+import dev.erst.gridgrind.core.model.chart.ChartDataSourceInput;
+import dev.erst.gridgrind.core.model.chart.ChartInput;
+import dev.erst.gridgrind.core.model.chart.ChartLegendInput;
+import dev.erst.gridgrind.core.model.chart.ChartPlotInput;
+import dev.erst.gridgrind.core.model.chart.ChartSeriesInput;
+import dev.erst.gridgrind.core.model.chart.ChartTitleInput;
+import dev.erst.gridgrind.core.model.drawing.DrawingAnchorInput;
+import dev.erst.gridgrind.core.source.TextSourceInput;
+import dev.erst.gridgrind.core.vocabulary.ExcelChartBarDirection;
+import dev.erst.gridgrind.core.vocabulary.ExcelChartBarGrouping;
+import dev.erst.gridgrind.core.vocabulary.ExcelChartDisplayBlanksAs;
+import dev.erst.gridgrind.core.vocabulary.ExcelChartLegendPosition;
 import java.util.List;
 import java.util.Optional;
 

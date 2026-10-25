@@ -1,8 +1,8 @@
 package dev.erst.gridgrind.cli.examples;
 
-import dev.erst.gridgrind.contract.dto.DrawingAnchorInput;
-import dev.erst.gridgrind.contract.dto.DrawingMarkerInput;
-import dev.erst.gridgrind.excel.foundation.ExcelDrawingAnchorBehavior;
+import dev.erst.gridgrind.core.model.drawing.DrawingAnchorInput;
+import dev.erst.gridgrind.core.model.drawing.DrawingMarkerInput;
+import dev.erst.gridgrind.core.vocabulary.ExcelDrawingAnchorBehavior;
 
 /** Shared drawing anchor helpers for shipped example workbook plans. */
 final class ExampleDrawingAnchors {

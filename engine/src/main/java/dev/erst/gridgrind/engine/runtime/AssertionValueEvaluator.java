@@ -1,14 +1,14 @@
 package dev.erst.gridgrind.engine.runtime;
 
-import dev.erst.gridgrind.contract.dto.CellScalarValue;
-import dev.erst.gridgrind.contract.dto.CellStyleReport;
-import dev.erst.gridgrind.contract.dto.CellValueReport;
-import dev.erst.gridgrind.contract.query.CellReadFacet;
-import dev.erst.gridgrind.contract.query.CellReadProjection;
-import dev.erst.gridgrind.contract.query.InspectionResult;
-import dev.erst.gridgrind.contract.query.SheetInspectionResult;
-import dev.erst.gridgrind.contract.query.SheetIntrospectionQuery;
-import dev.erst.gridgrind.contract.selector.Selector;
+import dev.erst.gridgrind.core.model.style.CellStyleReport;
+import dev.erst.gridgrind.core.model.value.CellScalarValue;
+import dev.erst.gridgrind.core.model.value.CellValueReport;
+import dev.erst.gridgrind.core.plan.CellReadFacet;
+import dev.erst.gridgrind.core.plan.CellReadProjection;
+import dev.erst.gridgrind.core.plan.InspectionResult;
+import dev.erst.gridgrind.core.plan.Selector;
+import dev.erst.gridgrind.core.plan.SheetInspectionResult;
+import dev.erst.gridgrind.core.plan.SheetIntrospectionQuery;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
 import dev.erst.gridgrind.excel.WorkbookLocation;
 import java.util.List;
@@ -68,7 +68,7 @@ final class AssertionValueEvaluator {
     List<String> mismatches =
         cellsResult.cells().stream()
             .filter(cell -> !matchesCellValue(cell, expectedValue))
-            .map(dev.erst.gridgrind.contract.dto.CellReport::address)
+            .map(dev.erst.gridgrind.core.model.value.CellReport::address)
             .toList();
     return mismatches.isEmpty()
         ? AssertionEvaluation.pass(List.of(cellsResult))
@@ -99,7 +99,7 @@ final class AssertionValueEvaluator {
     List<String> mismatches =
         cellsResult.cells().stream()
             .filter(cell -> !cell.displayValue().orElseThrow().equals(expectedDisplayValue))
-            .map(dev.erst.gridgrind.contract.dto.CellReport::address)
+            .map(dev.erst.gridgrind.core.model.value.CellReport::address)
             .toList();
     return mismatches.isEmpty()
         ? AssertionEvaluation.pass(List.of(cellsResult))
@@ -133,9 +133,10 @@ final class AssertionValueEvaluator {
                 cell ->
                     !(cell
                             instanceof
-                            dev.erst.gridgrind.contract.dto.CellReport.FormulaReport formulaReport)
+                            dev.erst.gridgrind.core.model.value.CellReport.FormulaReport
+                                formulaReport)
                         || !formulaReport.formula().orElseThrow().equals(expectedFormula))
-            .map(dev.erst.gridgrind.contract.dto.CellReport::address)
+            .map(dev.erst.gridgrind.core.model.value.CellReport::address)
             .toList();
     return mismatches.isEmpty()
         ? AssertionEvaluation.pass(List.of(cellsResult))
@@ -166,7 +167,7 @@ final class AssertionValueEvaluator {
     List<String> mismatches =
         cellsResult.cells().stream()
             .filter(cell -> !cell.style().orElseThrow().equals(expectedStyle))
-            .map(dev.erst.gridgrind.contract.dto.CellReport::address)
+            .map(dev.erst.gridgrind.core.model.value.CellReport::address)
             .toList();
     return mismatches.isEmpty()
         ? AssertionEvaluation.pass(List.of(cellsResult))
@@ -176,26 +177,27 @@ final class AssertionValueEvaluator {
   }
 
   static boolean matchesCellValue(
-      dev.erst.gridgrind.contract.dto.CellReport cell, CellScalarValue expectedValue) {
-    if (cell instanceof dev.erst.gridgrind.contract.dto.CellReport.FormulaReport formulaReport) {
+      dev.erst.gridgrind.core.model.value.CellReport cell, CellScalarValue expectedValue) {
+    if (cell
+        instanceof dev.erst.gridgrind.core.model.value.CellReport.FormulaReport formulaReport) {
       return formulaReport.evaluation().isPresent()
           && matchesCellValue(formulaReport.evaluation().orElseThrow(), expectedValue);
     }
     return switch (expectedValue) {
       case CellScalarValue.Blank _ ->
-          cell instanceof dev.erst.gridgrind.contract.dto.CellReport.BlankReport;
+          cell instanceof dev.erst.gridgrind.core.model.value.CellReport.BlankReport;
       case CellScalarValue.Text expectedText ->
-          cell instanceof dev.erst.gridgrind.contract.dto.CellReport.TextReport textReport
+          cell instanceof dev.erst.gridgrind.core.model.value.CellReport.TextReport textReport
               && textReport.textValue().orElseThrow().equals(expectedText.text());
       case CellScalarValue.NumberValue expectedNumber ->
-          cell instanceof dev.erst.gridgrind.contract.dto.CellReport.NumberReport numberReport
+          cell instanceof dev.erst.gridgrind.core.model.value.CellReport.NumberReport numberReport
               && Double.compare(numberReport.numberValue().orElseThrow(), expectedNumber.number())
                   == 0;
       case CellScalarValue.BooleanValue expectedBoolean ->
-          cell instanceof dev.erst.gridgrind.contract.dto.CellReport.BooleanReport booleanReport
+          cell instanceof dev.erst.gridgrind.core.model.value.CellReport.BooleanReport booleanReport
               && booleanReport.booleanValue().orElseThrow().equals(expectedBoolean.bool());
       case CellScalarValue.ErrorValue expectedError ->
-          cell instanceof dev.erst.gridgrind.contract.dto.CellReport.ErrorReport errorReport
+          cell instanceof dev.erst.gridgrind.core.model.value.CellReport.ErrorReport errorReport
               && errorReport.errorValue().orElseThrow().equals(expectedError.error());
     };
   }

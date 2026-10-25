@@ -1,11 +1,7 @@
 package dev.erst.gridgrind.jazzer.support;
 
-import dev.erst.gridgrind.contract.assertion.*;
-import dev.erst.gridgrind.contract.dto.*;
-import dev.erst.gridgrind.contract.query.*;
-import dev.erst.gridgrind.contract.selector.*;
-import dev.erst.gridgrind.contract.source.*;
-import dev.erst.gridgrind.contract.step.*;
+import dev.erst.gridgrind.core.plan.*;
+import dev.erst.gridgrind.core.source.*;
 import dev.erst.gridgrind.excel.*;
 import java.nio.file.*;
 import java.util.*;

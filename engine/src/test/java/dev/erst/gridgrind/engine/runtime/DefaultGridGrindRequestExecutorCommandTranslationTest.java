@@ -3,12 +3,36 @@ package dev.erst.gridgrind.engine.runtime;
 import static dev.erst.gridgrind.engine.runtime.ExecutorTestPlanSupport.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-import dev.erst.gridgrind.contract.action.CellMutationAction;
-import dev.erst.gridgrind.contract.action.StructuredMutationAction;
-import dev.erst.gridgrind.contract.action.WorkbookMutationAction;
-import dev.erst.gridgrind.contract.dto.*;
-import dev.erst.gridgrind.contract.query.*;
-import dev.erst.gridgrind.contract.selector.*;
+import dev.erst.gridgrind.core.model.drawing.CommentInput;
+import dev.erst.gridgrind.core.model.formula.NamedRangeTarget;
+import dev.erst.gridgrind.core.model.layout.PaneInput;
+import dev.erst.gridgrind.core.model.layout.SheetDefaultsInput;
+import dev.erst.gridgrind.core.model.layout.SheetDisplayInput;
+import dev.erst.gridgrind.core.model.layout.SheetOutlineSummaryInput;
+import dev.erst.gridgrind.core.model.layout.SheetPresentationInput;
+import dev.erst.gridgrind.core.model.print.PrintAreaInput;
+import dev.erst.gridgrind.core.model.print.PrintLayoutInput;
+import dev.erst.gridgrind.core.model.print.PrintScalingInput;
+import dev.erst.gridgrind.core.model.print.PrintTitleColumnsInput;
+import dev.erst.gridgrind.core.model.print.PrintTitleRowsInput;
+import dev.erst.gridgrind.core.model.style.ColorInput;
+import dev.erst.gridgrind.core.model.style.DifferentialStyleInput;
+import dev.erst.gridgrind.core.model.table.TableInput;
+import dev.erst.gridgrind.core.model.table.TableStyleInput;
+import dev.erst.gridgrind.core.model.validation.ConditionalFormattingDefinitionInput;
+import dev.erst.gridgrind.core.model.validation.ConditionalFormattingRuleInput;
+import dev.erst.gridgrind.core.model.validation.IgnoredErrorInput;
+import dev.erst.gridgrind.core.model.value.HyperlinkTarget;
+import dev.erst.gridgrind.core.plan.*;
+import dev.erst.gridgrind.core.plan.CellMutationAction;
+import dev.erst.gridgrind.core.plan.StructuredMutationAction;
+import dev.erst.gridgrind.core.plan.WorkbookMutationAction;
+import dev.erst.gridgrind.core.vocabulary.ExcelIgnoredErrorType;
+import dev.erst.gridgrind.core.vocabulary.ExcelPaneRegion;
+import dev.erst.gridgrind.core.vocabulary.ExcelPrintOrientation;
+import dev.erst.gridgrind.core.vocabulary.ExcelSheetVisibility;
+import dev.erst.gridgrind.core.vocabulary.NamedRangeScope;
+import dev.erst.gridgrind.core.vocabulary.SheetCopyPosition;
 import dev.erst.gridgrind.excel.*;
 import dev.erst.gridgrind.excel.ExcelComment;
 import dev.erst.gridgrind.excel.ExcelHyperlink;
@@ -19,10 +43,6 @@ import dev.erst.gridgrind.excel.ExcelSheetCopyPosition;
 import dev.erst.gridgrind.excel.ExcelSheetPane;
 import dev.erst.gridgrind.excel.ExcelSheetPresentation;
 import dev.erst.gridgrind.excel.WorkbookReadCommand;
-import dev.erst.gridgrind.excel.foundation.ExcelIgnoredErrorType;
-import dev.erst.gridgrind.excel.foundation.ExcelPaneRegion;
-import dev.erst.gridgrind.excel.foundation.ExcelPrintOrientation;
-import dev.erst.gridgrind.excel.foundation.ExcelSheetVisibility;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
@@ -63,7 +83,7 @@ class DefaultGridGrindRequestExecutorCommandTranslationTest
     WorkbookCommand deleteNamedRange =
         command(
             mutate(
-                new dev.erst.gridgrind.contract.selector.NamedRangeSelector.SheetScope(
+                new dev.erst.gridgrind.core.plan.NamedRangeSelector.SheetScope(
                     "BudgetTotal", "Budget"),
                 new StructuredMutationAction.DeleteNamedRange()));
 
@@ -264,7 +284,7 @@ class DefaultGridGrindRequestExecutorCommandTranslationTest
             mutate(
                 new RangeSelector.ByRange("Budget", "A1:B1"),
                 new CellMutationAction.SetRange(
-                    new dev.erst.gridgrind.contract.dto.CellGridInput.Typed(
+                    new dev.erst.gridgrind.core.model.value.CellGridInput.Typed(
                         List.of(List.of(textCell("x"))))))));
     assertInstanceOf(
         WorkbookCellCommand.ClearRange.class,
@@ -316,7 +336,7 @@ class DefaultGridGrindRequestExecutorCommandTranslationTest
             mutate(
                 new SheetSelector.ByName("Budget"),
                 new CellMutationAction.AppendRow(
-                    new dev.erst.gridgrind.contract.dto.CellRowInput.Typed(
+                    new dev.erst.gridgrind.core.model.value.CellRowInput.Typed(
                         List.of(textCell("x")))))));
     assertInstanceOf(
         WorkbookLayoutCommand.AutoSizeColumns.class,
@@ -390,11 +410,10 @@ class DefaultGridGrindRequestExecutorCommandTranslationTest
         readCommand(
             inspect(
                 "ranges",
-                new dev.erst.gridgrind.contract.selector.NamedRangeSelector.AnyOf(
+                new dev.erst.gridgrind.core.plan.NamedRangeSelector.AnyOf(
                     List.of(
-                        new dev.erst.gridgrind.contract.selector.NamedRangeSelector.ByName(
-                            "BudgetTotal"),
-                        new dev.erst.gridgrind.contract.selector.NamedRangeSelector.SheetScope(
+                        new dev.erst.gridgrind.core.plan.NamedRangeSelector.ByName("BudgetTotal"),
+                        new dev.erst.gridgrind.core.plan.NamedRangeSelector.SheetScope(
                             "LocalItem", "Budget"))),
                 new WorkbookIntrospectionQuery.GetNamedRanges()));
     WorkbookReadCommand sheetSummary =
@@ -485,7 +504,7 @@ class DefaultGridGrindRequestExecutorCommandTranslationTest
         readCommand(
             inspect(
                 "surface",
-                new dev.erst.gridgrind.contract.selector.NamedRangeSelector.All(),
+                new dev.erst.gridgrind.core.plan.NamedRangeSelector.All(),
                 new InspectionSurfaceQuery.GetNamedRangeSurface()));
 
     assertInstanceOf(WorkbookReadCommand.GetWorkbookSummary.class, workbookSummary);
@@ -575,7 +594,7 @@ class DefaultGridGrindRequestExecutorCommandTranslationTest
         readCommand(
             inspect(
                 "namedRangeHealth",
-                new dev.erst.gridgrind.contract.selector.NamedRangeSelector.All(),
+                new dev.erst.gridgrind.core.plan.NamedRangeSelector.All(),
                 new InspectionAnalysisQuery.AnalyzeNamedRangeHealth()));
     WorkbookReadCommand workbookFindings =
         readCommand(

@@ -1,7 +1,7 @@
 package dev.erst.gridgrind.excel;
 
-import dev.erst.gridgrind.excel.foundation.ExcelChartAxisKind;
-import dev.erst.gridgrind.excel.foundation.ExcelChartAxisPosition;
+import dev.erst.gridgrind.core.vocabulary.ExcelChartAxisKind;
+import dev.erst.gridgrind.core.vocabulary.ExcelChartAxisPosition;
 import java.util.Objects;
 import org.apache.poi.xddf.usermodel.chart.XDDFCategoryAxis;
 import org.apache.poi.xddf.usermodel.chart.XDDFChart;

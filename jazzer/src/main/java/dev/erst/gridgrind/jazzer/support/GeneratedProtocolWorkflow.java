@@ -1,6 +1,6 @@
 package dev.erst.gridgrind.jazzer.support;
 
-import dev.erst.gridgrind.contract.dto.WorkbookPlan;
+import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Objects;

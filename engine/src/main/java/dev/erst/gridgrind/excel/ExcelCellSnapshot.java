@@ -1,6 +1,6 @@
 package dev.erst.gridgrind.excel;
 
-import dev.erst.gridgrind.excel.foundation.ExcelReportedCellErrorLiteral;
+import dev.erst.gridgrind.core.vocabulary.ExcelReportedCellErrorLiteral;
 import java.util.Optional;
 import org.jspecify.annotations.Nullable;
 

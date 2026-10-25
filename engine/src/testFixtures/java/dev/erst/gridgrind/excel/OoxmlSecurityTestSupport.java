@@ -1,7 +1,7 @@
 package dev.erst.gridgrind.excel;
 
-import dev.erst.gridgrind.excel.foundation.ExcelOoxmlWriteCipher;
-import dev.erst.gridgrind.excel.foundation.ExcelOoxmlWriteHash;
+import dev.erst.gridgrind.core.vocabulary.ExcelOoxmlWriteCipher;
+import dev.erst.gridgrind.core.vocabulary.ExcelOoxmlWriteHash;
 import dev.erst.gridgrind.excel.ooxml.ExcelOoxmlSecurityPoiBridge;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -74,7 +74,7 @@ public final class OoxmlSecurityTestSupport {
               cipherAlgorithm.defaultKeySize,
               cipherAlgorithm.blockSize,
               ExcelOoxmlSecurityPoiBridge.toPoi(
-                  dev.erst.gridgrind.excel.foundation.ExcelOoxmlChainingMode.CBC)));
+                  dev.erst.gridgrind.core.vocabulary.ExcelOoxmlChainingMode.CBC)));
       return new EncryptedWorkbook(workbookPath, ENCRYPTION_PASSWORD);
     } catch (GeneralSecurityException exception) {
       throw new IOException("Failed to create encrypted workbook fixture", exception);

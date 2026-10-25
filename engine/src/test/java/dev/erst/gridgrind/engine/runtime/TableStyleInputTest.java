@@ -2,7 +2,7 @@ package dev.erst.gridgrind.engine.runtime;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import dev.erst.gridgrind.contract.dto.TableStyleInput;
+import dev.erst.gridgrind.core.model.table.TableStyleInput;
 import dev.erst.gridgrind.excel.ExcelTableStyle;
 import org.junit.jupiter.api.Test;
 

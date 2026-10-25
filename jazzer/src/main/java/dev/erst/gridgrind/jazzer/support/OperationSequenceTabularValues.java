@@ -3,11 +3,13 @@ package dev.erst.gridgrind.jazzer.support;
 import static dev.erst.gridgrind.jazzer.support.OperationSequenceSelectorSupport.*;
 import static dev.erst.gridgrind.jazzer.support.OperationSequenceValueFactory.*;
 
-import dev.erst.gridgrind.contract.dto.*;
-import dev.erst.gridgrind.contract.selector.*;
-import dev.erst.gridgrind.contract.source.*;
+import dev.erst.gridgrind.core.model.pivot.PivotTableInput;
+import dev.erst.gridgrind.core.model.table.TableInput;
+import dev.erst.gridgrind.core.model.table.TableStyleInput;
+import dev.erst.gridgrind.core.plan.*;
+import dev.erst.gridgrind.core.source.*;
+import dev.erst.gridgrind.core.vocabulary.*;
 import dev.erst.gridgrind.excel.*;
-import dev.erst.gridgrind.excel.foundation.*;
 import dev.erst.gridgrind.excel.pivot.ExcelPivotTableDefinition;
 import java.io.*;
 import java.nio.file.*;

@@ -1,6 +1,6 @@
 package dev.erst.gridgrind.cli;
 
-import dev.erst.gridgrind.contract.catalog.GridGrindRequestSurfaceContractText;
+import dev.erst.gridgrind.core.catalog.GridGrindRequestSurfaceContractText;
 import java.util.List;
 
 /** Request and flag-oriented CLI help sections. */

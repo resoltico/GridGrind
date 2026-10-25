@@ -3,11 +3,20 @@ package dev.erst.gridgrind.jazzer.support;
 import static dev.erst.gridgrind.jazzer.support.OperationSequenceSelectorSupport.*;
 import static dev.erst.gridgrind.jazzer.support.OperationSequenceValueFactory.*;
 
-import dev.erst.gridgrind.contract.dto.*;
-import dev.erst.gridgrind.contract.selector.*;
-import dev.erst.gridgrind.contract.source.*;
+import dev.erst.gridgrind.core.model.layout.PaneInput;
+import dev.erst.gridgrind.core.model.print.HeaderFooterTextInput;
+import dev.erst.gridgrind.core.model.print.PrintAreaInput;
+import dev.erst.gridgrind.core.model.print.PrintLayoutInput;
+import dev.erst.gridgrind.core.model.print.PrintScalingInput;
+import dev.erst.gridgrind.core.model.print.PrintTitleColumnsInput;
+import dev.erst.gridgrind.core.model.print.PrintTitleRowsInput;
+import dev.erst.gridgrind.core.model.protection.SheetProtectionSettings;
+import dev.erst.gridgrind.core.plan.*;
+import dev.erst.gridgrind.core.plan.WorkbookPlan;
+import dev.erst.gridgrind.core.source.*;
+import dev.erst.gridgrind.core.vocabulary.*;
+import dev.erst.gridgrind.core.vocabulary.SheetCopyPosition;
 import dev.erst.gridgrind.excel.*;
-import dev.erst.gridgrind.excel.foundation.*;
 import java.io.*;
 import java.nio.file.*;
 import java.util.*;
@@ -246,7 +255,7 @@ final class OperationSequenceLayoutValues {
         yield new OperationSequenceValueFactory.WorkflowStorage(
             new WorkbookPlan.WorkbookSource.ExistingFile(sourcePath.toString()),
             new WorkbookPlan.WorkbookPersistence.Overwrite(
-                dev.erst.gridgrind.contract.dto.OoxmlPersistenceSecurityInput.none()),
+                dev.erst.gridgrind.core.model.security.OoxmlPersistenceSecurityInput.none()),
             directory);
       }
       default -> {

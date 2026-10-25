@@ -2,12 +2,12 @@ package dev.erst.gridgrind.excel;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.core.vocabulary.ExcelSheetVisibility;
 import dev.erst.gridgrind.excel.event.EventReadCommandTypes;
 import dev.erst.gridgrind.excel.event.EventSheetSummary;
 import dev.erst.gridgrind.excel.event.EventSheetSummaryHandler;
 import dev.erst.gridgrind.excel.event.EventWorkbookMetadata;
 import dev.erst.gridgrind.excel.event.ExcelEventWorkbookReader;
-import dev.erst.gridgrind.excel.foundation.ExcelSheetVisibility;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;

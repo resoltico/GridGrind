@@ -1,6 +1,6 @@
 package dev.erst.gridgrind.excel.pivot;
 
-import dev.erst.gridgrind.excel.foundation.ExcelPivotDataConsolidateFunction;
+import dev.erst.gridgrind.core.vocabulary.ExcelPivotDataConsolidateFunction;
 import org.apache.poi.ss.usermodel.DataConsolidateFunction;
 
 /** Maps pivot data aggregation functions between GridGrind and Apache POI. */

@@ -17,28 +17,28 @@ configure<PitestPluginExtension> {
     })
     targetClasses.set(
         setOf(
-            "dev.erst.gridgrind.contract.dto.ProtocolDefinedNameValidation*",
-            "dev.erst.gridgrind.contract.dto.ProtocolRgbColorSupport*",
-            "dev.erst.gridgrind.contract.dto.ConditionalFormattingThresholdInput*",
-            "dev.erst.gridgrind.contract.dto.DataValidationRuleInput*",
-            "dev.erst.gridgrind.contract.catalog.FieldConstraint*",
-            "dev.erst.gridgrind.contract.catalog.CatalogStepTemplateDefaults*",
-            "dev.erst.gridgrind.contract.catalog.CatalogStepTemplateSupport*",
-            "dev.erst.gridgrind.contract.step.WorkbookStaticMaterializationValidation*",
+            "dev.erst.gridgrind.core.vocabulary.ProtocolDefinedNameValidation*",
+            "dev.erst.gridgrind.core.model.style.ProtocolRgbColorSupport*",
+            "dev.erst.gridgrind.core.model.validation.ConditionalFormattingThresholdInput*",
+            "dev.erst.gridgrind.core.model.validation.DataValidationRuleInput*",
+            "dev.erst.gridgrind.core.catalog.FieldConstraint*",
+            "dev.erst.gridgrind.core.catalog.CatalogStepTemplateDefaults*",
+            "dev.erst.gridgrind.core.catalog.CatalogStepTemplateSupport*",
+            "dev.erst.gridgrind.core.validation.WorkbookStaticMaterializationValidation*",
         ),
     )
     targetTests.set(
         setOf(
-            "dev.erst.gridgrind.contract.dto.ProtocolDefinedNameValidationTest",
-            "dev.erst.gridgrind.contract.dto.AdvancedMutationProtocolTypesTest",
-            "dev.erst.gridgrind.contract.dto.ConditionalFormattingDataBarBoundsTest",
-            "dev.erst.gridgrind.contract.dto.ProtocolDefaultingCoverageTest",
-            "dev.erst.gridgrind.contract.dto.ProtocolResidualCoverageTest",
-            "dev.erst.gridgrind.contract.catalog.FieldConstraintTest",
-            "dev.erst.gridgrind.contract.catalog.CatalogStepTemplateSupportTest",
-            "dev.erst.gridgrind.contract.dto.ProtocolRgbColorSupportTest",
-            "dev.erst.gridgrind.contract.step.WorkbookStaticMaterializationValidationTest",
-            "dev.erst.gridgrind.contract.step.WorkbookStaticRequestContractTest",
+            "dev.erst.gridgrind.core.vocabulary.ProtocolDefinedNameValidationTest",
+            "dev.erst.gridgrind.core.model.security.AdvancedMutationProtocolTypesTest",
+            "dev.erst.gridgrind.core.model.validation.ConditionalFormattingDataBarBoundsTest",
+            "dev.erst.gridgrind.core.model.security.ProtocolDefaultingCoverageTest",
+            "dev.erst.gridgrind.core.model.validation.ProtocolResidualCoverageTest",
+            "dev.erst.gridgrind.core.catalog.FieldConstraintTest",
+            "dev.erst.gridgrind.core.catalog.CatalogStepTemplateSupportTest",
+            "dev.erst.gridgrind.core.model.style.ProtocolRgbColorSupportTest",
+            "dev.erst.gridgrind.core.validation.WorkbookStaticMaterializationValidationTest",
+            "dev.erst.gridgrind.core.validation.WorkbookStaticRequestContractTest",
         ),
     )
 }

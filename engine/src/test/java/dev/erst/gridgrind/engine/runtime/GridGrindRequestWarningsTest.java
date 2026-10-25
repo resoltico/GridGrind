@@ -5,13 +5,13 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import dev.erst.gridgrind.contract.action.CellMutationAction;
-import dev.erst.gridgrind.contract.action.WorkbookMutationAction;
-import dev.erst.gridgrind.contract.dto.CellInput;
-import dev.erst.gridgrind.contract.dto.RequestWarning;
-import dev.erst.gridgrind.contract.dto.SheetCopyPosition;
-import dev.erst.gridgrind.contract.dto.WorkbookPlan;
-import dev.erst.gridgrind.contract.selector.*;
+import dev.erst.gridgrind.core.model.value.CellInput;
+import dev.erst.gridgrind.core.plan.*;
+import dev.erst.gridgrind.core.plan.CellMutationAction;
+import dev.erst.gridgrind.core.plan.WorkbookMutationAction;
+import dev.erst.gridgrind.core.plan.WorkbookPlan;
+import dev.erst.gridgrind.core.problem.RequestWarning;
+import dev.erst.gridgrind.core.vocabulary.SheetCopyPosition;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 
@@ -36,9 +36,9 @@ class GridGrindRequestWarningsTest {
     List<RequestWarning> warnings = GridGrindRequestWarnings.collect(request);
 
     assertEquals(1, warnings.size());
-    dev.erst.gridgrind.contract.dto.RequestWarningLocation.Step location =
+    dev.erst.gridgrind.core.problem.RequestWarningLocation.Step location =
         assertInstanceOf(
-            dev.erst.gridgrind.contract.dto.RequestWarningLocation.Step.class,
+            dev.erst.gridgrind.core.problem.RequestWarningLocation.Step.class,
             warnings.getFirst().location());
     assertEquals(2, location.stepIndex());
     assertEquals("step-03-set-cell", location.stepId());
@@ -123,13 +123,13 @@ class GridGrindRequestWarningsTest {
                     new CellSelector.ByAddress("Summary", "A1"),
                     new CellMutationAction.SetCell(
                         new CellInput.Formula(
-                            dev.erst.gridgrind.contract.source.TextSourceInput.inline(
+                            dev.erst.gridgrind.core.source.TextSourceInput.inline(
                                 "SUM(Budget Review!A1,Annual Budget Review!$A$1)"))))));
 
     assertEquals(
         List.of(
             new RequestWarning(
-                dev.erst.gridgrind.contract.dto.GridGrindWarningCode.UNQUOTED_SHEET_NAME_IN_FORMULA,
+                dev.erst.gridgrind.core.problem.GridGrindWarningCode.UNQUOTED_SHEET_NAME_IN_FORMULA,
                 4,
                 "step-05-set-cell",
                 "SET_CELL",
@@ -181,12 +181,12 @@ class GridGrindRequestWarningsTest {
                 mutate(
                     new RangeSelector.ByRange("Summary", "A1:B1"),
                     new CellMutationAction.SetRange(
-                        new dev.erst.gridgrind.contract.dto.CellGridInput.Typed(
+                        new dev.erst.gridgrind.core.model.value.CellGridInput.Typed(
                             List.of(List.of(formulaCell("Budget Review!A1"), textCell("ok")))))),
                 mutate(
                     new SheetSelector.ByName("Summary"),
                     new CellMutationAction.AppendRow(
-                        new dev.erst.gridgrind.contract.dto.CellRowInput.Typed(
+                        new dev.erst.gridgrind.core.model.value.CellRowInput.Typed(
                             List.of(textCell("Total"), formulaCell("SUM(Budget Review!A1)")))))));
 
     List<RequestWarning> warnings = GridGrindRequestWarnings.collect(request);
@@ -194,13 +194,13 @@ class GridGrindRequestWarningsTest {
     assertEquals(
         List.of(
             new RequestWarning(
-                dev.erst.gridgrind.contract.dto.GridGrindWarningCode.UNQUOTED_SHEET_NAME_IN_FORMULA,
+                dev.erst.gridgrind.core.problem.GridGrindWarningCode.UNQUOTED_SHEET_NAME_IN_FORMULA,
                 2,
                 "step-03-set-range",
                 "SET_RANGE",
                 "Formula references same-request sheet names with spaces without single quotes: Budget Review. Use 'Sheet Name'!A1 syntax."),
             new RequestWarning(
-                dev.erst.gridgrind.contract.dto.GridGrindWarningCode.UNQUOTED_SHEET_NAME_IN_FORMULA,
+                dev.erst.gridgrind.core.problem.GridGrindWarningCode.UNQUOTED_SHEET_NAME_IN_FORMULA,
                 3,
                 "step-04-append-row",
                 "APPEND_ROW",
@@ -224,7 +224,7 @@ class GridGrindRequestWarningsTest {
                     new CellSelector.ByAddress("Summary", "A1"),
                     new CellMutationAction.SetCell(
                         new CellInput.Formula(
-                            dev.erst.gridgrind.contract.source.TextSourceInput.utf8File(
+                            dev.erst.gridgrind.core.source.TextSourceInput.utf8File(
                                 "formula.txt"))))));
 
     assertEquals(List.of(), GridGrindRequestWarnings.collect(request));

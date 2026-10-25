@@ -6,7 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import dev.erst.gridgrind.contract.dto.SecretReference;
+import dev.erst.gridgrind.core.source.SecretReference;
 import java.io.IOException;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;

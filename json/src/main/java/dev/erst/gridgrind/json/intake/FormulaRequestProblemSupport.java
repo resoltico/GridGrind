@@ -1,10 +1,10 @@
 package dev.erst.gridgrind.json.intake;
 
-import dev.erst.gridgrind.contract.dto.FormulaInputException;
-import dev.erst.gridgrind.contract.dto.GridGrindProblemCode;
-import dev.erst.gridgrind.contract.dto.InvalidFormulaInputException;
-import dev.erst.gridgrind.contract.dto.InvalidRawFormulaTextException;
+import dev.erst.gridgrind.core.model.formula.FormulaInputException;
+import dev.erst.gridgrind.core.model.formula.InvalidFormulaInputException;
+import dev.erst.gridgrind.core.model.formula.InvalidRawFormulaTextException;
 import dev.erst.gridgrind.core.problem.FormulaRequestException;
+import dev.erst.gridgrind.core.problem.GridGrindProblemCode;
 import java.util.Optional;
 import org.jspecify.annotations.Nullable;
 

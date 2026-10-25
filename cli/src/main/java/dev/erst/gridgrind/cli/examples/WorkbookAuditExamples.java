@@ -1,23 +1,23 @@
 package dev.erst.gridgrind.cli.examples;
 
-import dev.erst.gridgrind.contract.action.CellMutationAction;
-import dev.erst.gridgrind.contract.action.StructuredMutationAction;
-import dev.erst.gridgrind.contract.action.WorkbookMutationAction;
-import dev.erst.gridgrind.contract.dto.CalculationPolicyInput;
-import dev.erst.gridgrind.contract.dto.CalculationStrategyInput;
-import dev.erst.gridgrind.contract.dto.CommentInput;
-import dev.erst.gridgrind.contract.dto.ExecutionModeInput;
-import dev.erst.gridgrind.contract.dto.ExecutionPolicyInput;
-import dev.erst.gridgrind.contract.dto.HyperlinkTarget;
-import dev.erst.gridgrind.contract.dto.NamedRangeScope;
-import dev.erst.gridgrind.contract.dto.NamedRangeTarget;
-import dev.erst.gridgrind.contract.dto.WorkbookPlan;
-import dev.erst.gridgrind.contract.query.InspectionAnalysisQuery;
-import dev.erst.gridgrind.contract.query.InspectionSurfaceQuery;
-import dev.erst.gridgrind.contract.query.SheetIntrospectionQuery;
-import dev.erst.gridgrind.contract.query.WorkbookIntrospectionQuery;
-import dev.erst.gridgrind.contract.selector.NamedRangeSelector;
-import dev.erst.gridgrind.contract.source.TextSourceInput;
+import dev.erst.gridgrind.core.model.drawing.CommentInput;
+import dev.erst.gridgrind.core.model.formula.CalculationPolicyInput;
+import dev.erst.gridgrind.core.model.formula.CalculationStrategyInput;
+import dev.erst.gridgrind.core.model.formula.NamedRangeTarget;
+import dev.erst.gridgrind.core.model.value.HyperlinkTarget;
+import dev.erst.gridgrind.core.plan.CellMutationAction;
+import dev.erst.gridgrind.core.plan.ExecutionModeInput;
+import dev.erst.gridgrind.core.plan.ExecutionPolicyInput;
+import dev.erst.gridgrind.core.plan.InspectionAnalysisQuery;
+import dev.erst.gridgrind.core.plan.InspectionSurfaceQuery;
+import dev.erst.gridgrind.core.plan.NamedRangeSelector;
+import dev.erst.gridgrind.core.plan.SheetIntrospectionQuery;
+import dev.erst.gridgrind.core.plan.StructuredMutationAction;
+import dev.erst.gridgrind.core.plan.WorkbookIntrospectionQuery;
+import dev.erst.gridgrind.core.plan.WorkbookMutationAction;
+import dev.erst.gridgrind.core.plan.WorkbookPlan;
+import dev.erst.gridgrind.core.source.TextSourceInput;
+import dev.erst.gridgrind.core.vocabulary.NamedRangeScope;
 
 /** Generated examples for inspection-heavy, health-focused, and execution-mode workflows. */
 final class WorkbookAuditExamples {
@@ -73,9 +73,9 @@ final class WorkbookAuditExamples {
         ExampleWorkbookPlans.saveAs(paths.generatedWorkbook("gridgrind-large-file-modes.xlsx")),
         new ExecutionPolicyInput(
             ExecutionModeInput.streamingWrite(),
-            dev.erst.gridgrind.contract.dto.ExecutionJournalInput.defaults(),
+            dev.erst.gridgrind.core.plan.ExecutionJournalInput.defaults(),
             new CalculationPolicyInput(new CalculationStrategyInput.DoNotCalculate(), true),
-            dev.erst.gridgrind.contract.dto.AssertionModeInput.defaults()),
+            dev.erst.gridgrind.core.plan.AssertionModeInput.defaults()),
         ExampleSteps.step(
             "step-01-ensure-sheet",
             ExampleSelectors.sheet("Ledger"),

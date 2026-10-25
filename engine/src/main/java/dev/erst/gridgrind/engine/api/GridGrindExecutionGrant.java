@@ -1,7 +1,7 @@
 package dev.erst.gridgrind.engine.api;
 
-import dev.erst.gridgrind.contract.dto.SecretReference;
-import dev.erst.gridgrind.contract.dto.WorkbookPlan;
+import dev.erst.gridgrind.core.plan.WorkbookPlan;
+import dev.erst.gridgrind.core.source.SecretReference;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;

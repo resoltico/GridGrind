@@ -3,7 +3,7 @@ package dev.erst.gridgrind.excel.validation;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import dev.erst.gridgrind.excel.foundation.ExcelComparisonOperator;
+import dev.erst.gridgrind.core.vocabulary.ExcelComparisonOperator;
 import org.apache.poi.ss.usermodel.DataValidationConstraint;
 import org.junit.jupiter.api.Test;
 

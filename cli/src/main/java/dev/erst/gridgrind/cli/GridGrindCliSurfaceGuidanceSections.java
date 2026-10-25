@@ -1,8 +1,8 @@
 package dev.erst.gridgrind.cli;
 
 import dev.erst.gridgrind.cli.examples.GridGrindShippedExamples;
-import dev.erst.gridgrind.contract.catalog.GridGrindContainerRuntimeText;
-import dev.erst.gridgrind.contract.catalog.GridGrindInspectionContractText;
+import dev.erst.gridgrind.core.catalog.GridGrindContainerRuntimeText;
+import dev.erst.gridgrind.core.catalog.GridGrindInspectionContractText;
 import java.util.List;
 import java.util.Optional;
 

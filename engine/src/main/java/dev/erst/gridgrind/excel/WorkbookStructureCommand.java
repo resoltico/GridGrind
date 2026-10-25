@@ -1,9 +1,9 @@
 package dev.erst.gridgrind.excel;
 
-import dev.erst.gridgrind.excel.foundation.ExcelColumnSpan;
-import dev.erst.gridgrind.excel.foundation.ExcelIndexDisplay;
-import dev.erst.gridgrind.excel.foundation.ExcelRowSpan;
-import dev.erst.gridgrind.excel.foundation.ExcelSheetLayoutLimits;
+import dev.erst.gridgrind.core.vocabulary.ExcelColumnSpan;
+import dev.erst.gridgrind.core.vocabulary.ExcelIndexDisplay;
+import dev.erst.gridgrind.core.vocabulary.ExcelRowSpan;
+import dev.erst.gridgrind.core.vocabulary.ExcelSheetLayoutLimits;
 import java.util.Objects;
 
 /** Structural sheet commands that change geometry, grouping, and visibility bands. */

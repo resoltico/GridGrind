@@ -3,7 +3,7 @@ package dev.erst.gridgrind.excel;
 import static dev.erst.gridgrind.excel.ExcelStyleTestAccess.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-import dev.erst.gridgrind.excel.foundation.AnalysisFindingCode;
+import dev.erst.gridgrind.core.vocabulary.AnalysisFindingCode;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;

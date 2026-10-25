@@ -1,8 +1,8 @@
 package dev.erst.gridgrind.engine.runtime;
 
-import dev.erst.gridgrind.contract.action.CellMutationAction;
-import dev.erst.gridgrind.contract.selector.RangeSelector;
-import dev.erst.gridgrind.contract.selector.Selector;
+import dev.erst.gridgrind.core.plan.CellMutationAction;
+import dev.erst.gridgrind.core.plan.RangeSelector;
+import dev.erst.gridgrind.core.plan.Selector;
 import dev.erst.gridgrind.excel.WorkbookAnnotationCommand;
 import dev.erst.gridgrind.excel.WorkbookCellCommand;
 import dev.erst.gridgrind.excel.WorkbookCommand;

@@ -1,7 +1,7 @@
 package dev.erst.gridgrind.excel;
 
-import dev.erst.gridgrind.excel.foundation.ExcelReportedCellErrorLiteral;
-import dev.erst.gridgrind.excel.foundation.ExcelStoredCellErrorLiteral;
+import dev.erst.gridgrind.core.vocabulary.ExcelReportedCellErrorLiteral;
+import dev.erst.gridgrind.core.vocabulary.ExcelStoredCellErrorLiteral;
 import java.util.Map;
 import org.apache.poi.ss.usermodel.FormulaError;
 

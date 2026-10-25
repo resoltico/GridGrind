@@ -5,8 +5,8 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import dev.erst.gridgrind.contract.dto.ProtocolField;
-import dev.erst.gridgrind.contract.dto.WorkbookPlan;
+import dev.erst.gridgrind.core.metadata.ProtocolField;
+import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import dev.erst.gridgrind.json.codec.RequestDiagnosticRedactor;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -57,8 +57,7 @@ class RequestDiagnosticRedactorTest {
   @Test
   void doesNotCorruptUnrelatedDiagnosticText() throws IOException {
     RequestDiagnosticRedactor redactor =
-        RequestDiagnosticRedactor.forRequestType(
-            dev.erst.gridgrind.contract.dto.WorkbookPlan.class);
+        RequestDiagnosticRedactor.forRequestType(dev.erst.gridgrind.core.plan.WorkbookPlan.class);
     byte[] payload =
         """
         {"message":"a harmless path detail","resolution":"Use a valid path","context":{"stage":"READ_REQUEST","json":{"type":"PATH_ONLY","jsonPath":"source.path"}},"causes":[{"message":"a harmless cause"}]}

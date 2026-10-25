@@ -2,7 +2,7 @@ package dev.erst.gridgrind.cli;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import dev.erst.gridgrind.contract.catalog.GridGrindContractVocabulary;
+import dev.erst.gridgrind.core.catalog.GridGrindContractVocabulary;
 import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.regex.Matcher;

@@ -1,12 +1,12 @@
 package dev.erst.gridgrind.cli;
 
-import dev.erst.gridgrind.contract.dto.ProblemContext;
-import dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces;
-import dev.erst.gridgrind.contract.dto.RequestDoctorReport;
 import dev.erst.gridgrind.core.problem.InvalidEncodingException;
 import dev.erst.gridgrind.core.problem.InvalidJsonException;
 import dev.erst.gridgrind.core.problem.InvalidRequestException;
 import dev.erst.gridgrind.core.problem.InvalidRequestShapeException;
+import dev.erst.gridgrind.core.problem.ProblemContext;
+import dev.erst.gridgrind.core.problem.ProblemContextRequestSurfaces;
+import dev.erst.gridgrind.core.problem.RequestDoctorReport;
 import dev.erst.gridgrind.core.problem.RequestIntake;
 import dev.erst.gridgrind.engine.api.GridGrindProblems;
 import dev.erst.gridgrind.engine.api.GridGrindRequestDoctor;
@@ -68,7 +68,7 @@ final class GridGrindCliDoctorCommand {
           CommandErrors.invalidArguments(
               "doctor-request",
               Optional.of("--execution-root"),
-              dev.erst.gridgrind.contract.catalog.GridGrindRequestSurfaceContractText
+              dev.erst.gridgrind.core.catalog.GridGrindRequestSurfaceContractText
                   .stdinExecutionRootRequiredMessage()),
           prettyJson);
     }
@@ -82,7 +82,7 @@ final class GridGrindCliDoctorCommand {
       requestRedactor =
           Optional.of(
               RequestDiagnosticRedactor.forRequestType(
-                  dev.erst.gridgrind.contract.dto.WorkbookPlan.class));
+                  dev.erst.gridgrind.core.plan.WorkbookPlan.class));
       report =
           appendAnalysisWarnings(
               doctorRequestAnalyzer.diagnose(
@@ -149,11 +149,11 @@ final class GridGrindCliDoctorCommand {
 
   private static RequestDoctorReport appendAnalysisWarnings(
       RequestDoctorReport report,
-      java.util.List<dev.erst.gridgrind.contract.dto.RequestWarning> analysisWarnings) {
+      java.util.List<dev.erst.gridgrind.core.problem.RequestWarning> analysisWarnings) {
     if (analysisWarnings.isEmpty()) {
       return report;
     }
-    java.util.List<dev.erst.gridgrind.contract.dto.RequestWarning> warnings =
+    java.util.List<dev.erst.gridgrind.core.problem.RequestWarning> warnings =
         new java.util.ArrayList<>(report.warnings());
     warnings.addAll(analysisWarnings);
     return report.valid()

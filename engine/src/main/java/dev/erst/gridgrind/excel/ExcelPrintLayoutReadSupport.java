@@ -1,6 +1,6 @@
 package dev.erst.gridgrind.excel;
 
-import dev.erst.gridgrind.excel.foundation.ExcelPrintOrientation;
+import dev.erst.gridgrind.core.vocabulary.ExcelPrintOrientation;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.IntStream;

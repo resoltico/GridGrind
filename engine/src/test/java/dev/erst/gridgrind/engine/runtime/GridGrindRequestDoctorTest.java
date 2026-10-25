@@ -6,13 +6,13 @@ import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import dev.erst.gridgrind.contract.dto.GridGrindProblemCode;
-import dev.erst.gridgrind.contract.dto.GridGrindProtocolVersion;
-import dev.erst.gridgrind.contract.dto.RequestDoctorReport;
-import dev.erst.gridgrind.contract.dto.WorkbookPlan;
+import dev.erst.gridgrind.core.plan.GridGrindProtocolVersion;
+import dev.erst.gridgrind.core.plan.WorkbookPlan;
+import dev.erst.gridgrind.core.problem.GridGrindProblemCode;
+import dev.erst.gridgrind.core.problem.RequestDoctorReport;
+import dev.erst.gridgrind.core.vocabulary.AnalysisSeverity;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
 import dev.erst.gridgrind.excel.ExcelWorkbooks;
-import dev.erst.gridgrind.excel.foundation.AnalysisSeverity;
 import dev.erst.gridgrind.json.codec.GridGrindJson;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -98,9 +98,9 @@ class GridGrindRequestDoctorTest {
         WorkbookPlan.standard(
             new WorkbookPlan.WorkbookSource.New(),
             new WorkbookPlan.WorkbookPersistence.Overwrite(
-                dev.erst.gridgrind.contract.dto.OoxmlPersistenceSecurityInput.none()),
-            dev.erst.gridgrind.contract.dto.ExecutionPolicyInput.defaults(),
-            dev.erst.gridgrind.contract.dto.FormulaEnvironmentInput.empty(),
+                dev.erst.gridgrind.core.model.security.OoxmlPersistenceSecurityInput.none()),
+            dev.erst.gridgrind.core.plan.ExecutionPolicyInput.defaults(),
+            dev.erst.gridgrind.core.model.formula.FormulaEnvironmentInput.empty(),
             java.util.List.of());
 
     RequestDoctorReport warningReport = new GridGrindRequestDoctor().diagnose(warningRequest);
@@ -173,8 +173,8 @@ class GridGrindRequestDoctorTest {
                     WorkbookPlan.standard(
                         new WorkbookPlan.WorkbookSource.New(),
                         new WorkbookPlan.WorkbookPersistence.None(),
-                        dev.erst.gridgrind.contract.dto.ExecutionPolicyInput.defaults(),
-                        dev.erst.gridgrind.contract.dto.FormulaEnvironmentInput.empty(),
+                        dev.erst.gridgrind.core.plan.ExecutionPolicyInput.defaults(),
+                        dev.erst.gridgrind.core.model.formula.FormulaEnvironmentInput.empty(),
                         java.util.List.of()),
                     null));
   }
@@ -246,8 +246,8 @@ class GridGrindRequestDoctorTest {
         new GridGrindRequestDoctor()
             .diagnose(
                 request, ExecutionInputBindingsFixtureSupport.bindings(workingDirectory, request));
-    dev.erst.gridgrind.contract.dto.ProblemContext.ResolveInputs context =
-        (dev.erst.gridgrind.contract.dto.ProblemContext.ResolveInputs)
+    dev.erst.gridgrind.core.problem.ProblemContext.ResolveInputs context =
+        (dev.erst.gridgrind.core.problem.ProblemContext.ResolveInputs)
             report.primaryProblem().orElseThrow().context();
 
     assertFalse(report.valid());
@@ -333,7 +333,7 @@ class GridGrindRequestDoctorTest {
         GridGrindProblemCode.INPUT_SOURCE_NOT_FOUND, report.primaryProblem().orElseThrow().code());
     var context =
         assertInstanceOf(
-            dev.erst.gridgrind.contract.dto.ProblemContext.ResolveInputs.class,
+            dev.erst.gridgrind.core.problem.ProblemContext.ResolveInputs.class,
             report.primaryProblem().orElseThrow().context());
     assertEquals("RESOLVE_INPUTS", context.stage());
     assertEquals(java.util.Optional.of("cell text"), context.inputKind());
@@ -369,7 +369,7 @@ class GridGrindRequestDoctorTest {
         GridGrindProblemCode.WORKBOOK_NOT_FOUND, report.primaryProblem().orElseThrow().code());
     var context =
         assertInstanceOf(
-            dev.erst.gridgrind.contract.dto.ProblemContext.OpenWorkbook.class,
+            dev.erst.gridgrind.core.problem.ProblemContext.OpenWorkbook.class,
             report.primaryProblem().orElseThrow().context());
     assertEquals("OPEN_WORKBOOK", context.stage());
     assertEquals(

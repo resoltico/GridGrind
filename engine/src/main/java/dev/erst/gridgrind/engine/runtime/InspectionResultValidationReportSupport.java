@@ -1,16 +1,16 @@
 package dev.erst.gridgrind.engine.runtime;
 
-import dev.erst.gridgrind.contract.dto.ConditionalFormattingEntryReport;
-import dev.erst.gridgrind.contract.dto.ConditionalFormattingRuleReport;
-import dev.erst.gridgrind.contract.dto.ConditionalFormattingThresholdReport;
-import dev.erst.gridgrind.contract.dto.DataValidationEntryReport;
-import dev.erst.gridgrind.contract.dto.DataValidationErrorAlertInput;
-import dev.erst.gridgrind.contract.dto.DataValidationPromptInput;
-import dev.erst.gridgrind.contract.dto.DataValidationRuleInput;
-import dev.erst.gridgrind.contract.dto.DifferentialBorderReport;
-import dev.erst.gridgrind.contract.dto.DifferentialBorderSideReport;
-import dev.erst.gridgrind.contract.dto.DifferentialStyleReport;
-import dev.erst.gridgrind.contract.source.TextSourceInput;
+import dev.erst.gridgrind.core.model.style.DifferentialBorderReport;
+import dev.erst.gridgrind.core.model.style.DifferentialBorderSideReport;
+import dev.erst.gridgrind.core.model.style.DifferentialStyleReport;
+import dev.erst.gridgrind.core.model.validation.ConditionalFormattingEntryReport;
+import dev.erst.gridgrind.core.model.validation.ConditionalFormattingRuleReport;
+import dev.erst.gridgrind.core.model.validation.ConditionalFormattingThresholdReport;
+import dev.erst.gridgrind.core.model.validation.DataValidationEntryReport;
+import dev.erst.gridgrind.core.model.validation.DataValidationErrorAlertInput;
+import dev.erst.gridgrind.core.model.validation.DataValidationPromptInput;
+import dev.erst.gridgrind.core.model.validation.DataValidationRuleInput;
+import dev.erst.gridgrind.core.source.TextSourceInput;
 import dev.erst.gridgrind.excel.ExcelBorderSide;
 import dev.erst.gridgrind.excel.ExcelConditionalFormattingBlockSnapshot;
 import dev.erst.gridgrind.excel.ExcelConditionalFormattingRuleSnapshot;

@@ -555,12 +555,12 @@ final class XlsxRoundTripExpectationVerification {
     return sheetView.isSetZoomScale() ? Math.toIntExact(sheetView.getZoomScale()) : 100;
   }
 
-  static dev.erst.gridgrind.excel.foundation.ExcelPaneRegion paneRegion(PaneType paneType) {
+  static dev.erst.gridgrind.core.vocabulary.ExcelPaneRegion paneRegion(PaneType paneType) {
     return switch (paneType) {
-      case UPPER_LEFT -> dev.erst.gridgrind.excel.foundation.ExcelPaneRegion.UPPER_LEFT;
-      case UPPER_RIGHT -> dev.erst.gridgrind.excel.foundation.ExcelPaneRegion.UPPER_RIGHT;
-      case LOWER_LEFT -> dev.erst.gridgrind.excel.foundation.ExcelPaneRegion.LOWER_LEFT;
-      case LOWER_RIGHT -> dev.erst.gridgrind.excel.foundation.ExcelPaneRegion.LOWER_RIGHT;
+      case UPPER_LEFT -> dev.erst.gridgrind.core.vocabulary.ExcelPaneRegion.UPPER_LEFT;
+      case UPPER_RIGHT -> dev.erst.gridgrind.core.vocabulary.ExcelPaneRegion.UPPER_RIGHT;
+      case LOWER_LEFT -> dev.erst.gridgrind.core.vocabulary.ExcelPaneRegion.LOWER_LEFT;
+      case LOWER_RIGHT -> dev.erst.gridgrind.core.vocabulary.ExcelPaneRegion.LOWER_RIGHT;
     };
   }
 

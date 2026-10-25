@@ -4,22 +4,22 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import dev.erst.gridgrind.contract.action.WorkbookMutationAction;
-import dev.erst.gridgrind.contract.dto.CalculationPolicyInput;
-import dev.erst.gridgrind.contract.dto.ExecutionJournalInput;
-import dev.erst.gridgrind.contract.dto.ExecutionJournalLevel;
-import dev.erst.gridgrind.contract.dto.ExecutionModeInput;
-import dev.erst.gridgrind.contract.dto.ExecutionPolicyInput;
-import dev.erst.gridgrind.contract.dto.FormulaEnvironmentInput;
-import dev.erst.gridgrind.contract.dto.GridGrindProblemCode;
-import dev.erst.gridgrind.contract.dto.ProblemContext;
-import dev.erst.gridgrind.contract.dto.WorkbookPlan;
-import dev.erst.gridgrind.contract.dto.WorkbookResult;
-import dev.erst.gridgrind.contract.query.WorkbookIntrospectionQuery;
-import dev.erst.gridgrind.contract.selector.SheetSelector;
-import dev.erst.gridgrind.contract.selector.WorkbookSelector;
-import dev.erst.gridgrind.contract.step.InspectionStep;
-import dev.erst.gridgrind.contract.step.MutationStep;
+import dev.erst.gridgrind.core.model.formula.CalculationPolicyInput;
+import dev.erst.gridgrind.core.model.formula.FormulaEnvironmentInput;
+import dev.erst.gridgrind.core.plan.ExecutionJournalInput;
+import dev.erst.gridgrind.core.plan.ExecutionModeInput;
+import dev.erst.gridgrind.core.plan.ExecutionPolicyInput;
+import dev.erst.gridgrind.core.plan.InspectionStep;
+import dev.erst.gridgrind.core.plan.MutationStep;
+import dev.erst.gridgrind.core.plan.SheetSelector;
+import dev.erst.gridgrind.core.plan.WorkbookIntrospectionQuery;
+import dev.erst.gridgrind.core.plan.WorkbookMutationAction;
+import dev.erst.gridgrind.core.plan.WorkbookPlan;
+import dev.erst.gridgrind.core.plan.WorkbookSelector;
+import dev.erst.gridgrind.core.problem.GridGrindProblemCode;
+import dev.erst.gridgrind.core.problem.ProblemContext;
+import dev.erst.gridgrind.core.result.ExecutionJournalLevel;
+import dev.erst.gridgrind.core.result.WorkbookResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
@@ -50,7 +50,7 @@ class DefaultGridGrindRequestExecutorPrivateSourceRaceTest {
                 ExecutionModeInput.defaults(),
                 new ExecutionJournalInput(ExecutionJournalLevel.VERBOSE),
                 CalculationPolicyInput.defaults(),
-                dev.erst.gridgrind.contract.dto.AssertionModeInput.defaults()),
+                dev.erst.gridgrind.core.plan.AssertionModeInput.defaults()),
             FormulaEnvironmentInput.empty(),
             List.of());
     AtomicBoolean removedPrivateSource = new AtomicBoolean();
@@ -191,7 +191,7 @@ class DefaultGridGrindRequestExecutorPrivateSourceRaceTest {
         mode,
         new ExecutionJournalInput(ExecutionJournalLevel.VERBOSE),
         CalculationPolicyInput.defaults(),
-        dev.erst.gridgrind.contract.dto.AssertionModeInput.defaults());
+        dev.erst.gridgrind.core.plan.AssertionModeInput.defaults());
   }
 
   private static void createWorkbook(Path source) throws java.io.IOException {
@@ -203,13 +203,13 @@ class DefaultGridGrindRequestExecutorPrivateSourceRaceTest {
   }
 
   private static void removeMaterializedSourceAfterPreflight(
-      dev.erst.gridgrind.contract.dto.ExecutionProgressEvent event,
+      dev.erst.gridgrind.core.result.ExecutionProgressEvent event,
       Path tempRoot,
       AtomicBoolean removedPrivateSource) {
     if (event.category()
-            != dev.erst.gridgrind.contract.dto.ExecutionProgressEvent.Category.RESOLVE_INPUTS
+            != dev.erst.gridgrind.core.result.ExecutionProgressEvent.Category.RESOLVE_INPUTS
         || event.status()
-            != dev.erst.gridgrind.contract.dto.ExecutionProgressEvent.Status.SUCCEEDED) {
+            != dev.erst.gridgrind.core.result.ExecutionProgressEvent.Status.SUCCEEDED) {
       return;
     }
     try (Stream<Path> files = Files.list(tempRoot)) {
@@ -232,13 +232,13 @@ class DefaultGridGrindRequestExecutorPrivateSourceRaceTest {
   }
 
   private static void replaceBoundOutputDirectory(
-      dev.erst.gridgrind.contract.dto.ExecutionProgressEvent event,
+      dev.erst.gridgrind.core.result.ExecutionProgressEvent event,
       Path outputDirectory,
       AtomicBoolean replacedOutputDirectory) {
     if (event.category()
-            != dev.erst.gridgrind.contract.dto.ExecutionProgressEvent.Category.RESOLVE_INPUTS
+            != dev.erst.gridgrind.core.result.ExecutionProgressEvent.Category.RESOLVE_INPUTS
         || event.status()
-            != dev.erst.gridgrind.contract.dto.ExecutionProgressEvent.Status.SUCCEEDED) {
+            != dev.erst.gridgrind.core.result.ExecutionProgressEvent.Status.SUCCEEDED) {
       return;
     }
     try {

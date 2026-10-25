@@ -1,0 +1,74 @@
+package dev.erst.gridgrind.core.plan;
+
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+
+import dev.erst.gridgrind.core.model.value.CellInput;
+import dev.erst.gridgrind.core.source.TextSourceInput;
+import org.junit.jupiter.api.Test;
+
+/** Tests for ordered mutation step validation and target compatibility. */
+class MutationStepTest {
+  @Test
+  void acceptsCompatibleTargetAndActionPairs() {
+    MutationStep ensureSheet =
+        new MutationStep(
+            "ensure-budget",
+            new SheetSelector.ByName("Budget"),
+            new WorkbookMutationAction.EnsureSheet());
+    MutationStep setCell =
+        new MutationStep(
+            "set-owner",
+            new CellSelector.ByAddress("Budget", "A1"),
+            new CellMutationAction.SetCell(new CellInput.Text(text("Owner"))));
+    MutationStep clearWorkbookProtection =
+        new MutationStep(
+            "clear-book-protection",
+            new WorkbookSelector.Current(),
+            new WorkbookMutationAction.ClearWorkbookProtection());
+
+    assertEquals("MUTATION", ensureSheet.stepKind());
+    assertEquals("ENSURE_SHEET", ensureSheet.action().actionType());
+    assertEquals("A1", ((CellSelector.ByAddress) setCell.target()).address());
+    assertEquals("CLEAR_WORKBOOK_PROTECTION", clearWorkbookProtection.action().actionType());
+  }
+
+  @Test
+  void keepsIncompatibleTargetsForTheStaticContractPhase() {
+    assertDoesNotThrow(
+        () ->
+            new MutationStep(
+                "bad-target",
+                new RangeSelector.ByRange("Budget", "A1:B2"),
+                new CellMutationAction.SetCell(new CellInput.Text(text("Owner")))));
+  }
+
+  @Test
+  void rejectsBlankAndMalformedStepIdentifiersAtTheRecordBoundary() {
+    assertEquals(
+        "stepId must not be blank",
+        assertThrows(
+                IllegalArgumentException.class,
+                () ->
+                    new MutationStep(
+                        " ",
+                        new SheetSelector.ByName("Budget"),
+                        new WorkbookMutationAction.EnsureSheet()))
+            .getMessage());
+    assertEquals(
+        "stepId must match [A-Za-z0-9._-]+",
+        assertThrows(
+                IllegalArgumentException.class,
+                () ->
+                    new MutationStep(
+                        "not valid",
+                        new SheetSelector.ByName("Budget"),
+                        new WorkbookMutationAction.EnsureSheet()))
+            .getMessage());
+  }
+
+  private static TextSourceInput text(String value) {
+    return TextSourceInput.inline(value);
+  }
+}

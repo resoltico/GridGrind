@@ -1,17 +1,17 @@
 package dev.erst.gridgrind.jazzer.support;
 
-import dev.erst.gridgrind.contract.dto.CellTemporalReport;
-import dev.erst.gridgrind.contract.dto.CellValueReport;
-import dev.erst.gridgrind.contract.dto.CommentReport;
-import dev.erst.gridgrind.contract.dto.NamedRangeReport;
-import dev.erst.gridgrind.contract.dto.NamedRangeTarget;
-import dev.erst.gridgrind.contract.dto.RichTextRunReport;
+import dev.erst.gridgrind.core.model.drawing.CommentReport;
+import dev.erst.gridgrind.core.model.formula.NamedRangeReport;
+import dev.erst.gridgrind.core.model.formula.NamedRangeTarget;
+import dev.erst.gridgrind.core.model.style.RichTextRunReport;
+import dev.erst.gridgrind.core.model.value.CellTemporalReport;
+import dev.erst.gridgrind.core.model.value.CellValueReport;
 
 /** Owns invariant checks for cell content, comments, hyperlinks, and named ranges. */
 final class WorkbookInvariantCellContentChecks {
   private WorkbookInvariantCellContentChecks() {}
 
-  static void requireCellReportShape(dev.erst.gridgrind.contract.dto.CellReport cellReport) {
+  static void requireCellReportShape(dev.erst.gridgrind.core.model.value.CellReport cellReport) {
     WorkbookInvariantChecks.require(cellReport.address() != null, "cell address must not be null");
     WorkbookInvariantChecks.require(
         !cellReport.address().isBlank(), "cell address must not be blank");
@@ -25,8 +25,8 @@ final class WorkbookInvariantCellContentChecks {
     WorkbookInvariantChecks.require(cellReport.comment() != null, "comment must not be null");
 
     switch (cellReport) {
-      case dev.erst.gridgrind.contract.dto.CellReport.BlankReport _ -> {}
-      case dev.erst.gridgrind.contract.dto.CellReport.TextReport text -> {
+      case dev.erst.gridgrind.core.model.value.CellReport.BlankReport _ -> {}
+      case dev.erst.gridgrind.core.model.value.CellReport.TextReport text -> {
         WorkbookInvariantChecks.require(text.textValue() != null, "textValue must not be null");
         WorkbookInvariantChecks.require(text.runs() != null, "runs must not be null");
         if (text.runs().isPresent()) {
@@ -48,19 +48,19 @@ final class WorkbookInvariantCellContentChecks {
               "richText run text must concatenate to textValue");
         }
       }
-      case dev.erst.gridgrind.contract.dto.CellReport.NumberReport number -> {
+      case dev.erst.gridgrind.core.model.value.CellReport.NumberReport number -> {
         WorkbookInvariantChecks.require(
             number.numberValue() != null, "numberValue must not be null");
         WorkbookInvariantChecks.require(number.temporal() != null, "temporal must not be null");
         number.temporal().ifPresent(WorkbookInvariantCellContentChecks::requireTemporalShape);
       }
-      case dev.erst.gridgrind.contract.dto.CellReport.BooleanReport bool ->
+      case dev.erst.gridgrind.core.model.value.CellReport.BooleanReport bool ->
           WorkbookInvariantChecks.require(
               bool.booleanValue() != null, "booleanValue must not be null");
-      case dev.erst.gridgrind.contract.dto.CellReport.ErrorReport error ->
+      case dev.erst.gridgrind.core.model.value.CellReport.ErrorReport error ->
           WorkbookInvariantChecks.require(
               error.errorValue() != null, "errorValue must not be null");
-      case dev.erst.gridgrind.contract.dto.CellReport.FormulaReport formula -> {
+      case dev.erst.gridgrind.core.model.value.CellReport.FormulaReport formula -> {
         WorkbookInvariantChecks.require(formula.formula() != null, "formula must not be null");
         WorkbookInvariantChecks.require(
             formula.evaluation() != null, "formula evaluation must not be null");
@@ -194,10 +194,10 @@ final class WorkbookInvariantCellContentChecks {
     }
   }
 
-  static void requireHyperlinkShape(dev.erst.gridgrind.contract.dto.HyperlinkTarget hyperlink) {
+  static void requireHyperlinkShape(dev.erst.gridgrind.core.model.value.HyperlinkTarget hyperlink) {
     WorkbookInvariantChecks.require(hyperlink != null, "hyperlink must not be null");
     switch (hyperlink) {
-      case dev.erst.gridgrind.contract.dto.HyperlinkTarget.Url url -> {
+      case dev.erst.gridgrind.core.model.value.HyperlinkTarget.Url url -> {
         WorkbookInvariantChecks.require(url.target() != null, "hyperlink target must not be null");
         WorkbookInvariantChecks.require(
             !url.target().isBlank(), "hyperlink target must not be blank");
@@ -208,7 +208,7 @@ final class WorkbookInvariantCellContentChecks {
             !url.target().regionMatches(true, 0, "mailto:", 0, 7),
             "URL hyperlink targets must not use mailto: schemes");
       }
-      case dev.erst.gridgrind.contract.dto.HyperlinkTarget.Email email -> {
+      case dev.erst.gridgrind.core.model.value.HyperlinkTarget.Email email -> {
         WorkbookInvariantChecks.require(email.email() != null, "hyperlink email must not be null");
         WorkbookInvariantChecks.require(
             !email.email().isBlank(), "hyperlink email must not be blank");
@@ -216,14 +216,14 @@ final class WorkbookInvariantCellContentChecks {
             !email.email().regionMatches(true, 0, "mailto:", 0, 7),
             "EMAIL hyperlink targets must omit the mailto: prefix");
       }
-      case dev.erst.gridgrind.contract.dto.HyperlinkTarget.File file -> {
+      case dev.erst.gridgrind.core.model.value.HyperlinkTarget.File file -> {
         WorkbookInvariantChecks.require(file.path() != null, "hyperlink path must not be null");
         WorkbookInvariantChecks.require(!file.path().isBlank(), "hyperlink path must not be blank");
         WorkbookInvariantChecks.require(
             !file.path().regionMatches(true, 0, "file:", 0, 5),
             "FILE hyperlink targets must be normalized path strings");
       }
-      case dev.erst.gridgrind.contract.dto.HyperlinkTarget.Document document -> {
+      case dev.erst.gridgrind.core.model.value.HyperlinkTarget.Document document -> {
         WorkbookInvariantChecks.require(
             document.target() != null, "hyperlink target must not be null");
         WorkbookInvariantChecks.require(

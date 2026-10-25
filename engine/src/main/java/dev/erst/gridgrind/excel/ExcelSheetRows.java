@@ -1,6 +1,6 @@
 package dev.erst.gridgrind.excel;
 
-import dev.erst.gridgrind.excel.foundation.ExcelRowSpan;
+import dev.erst.gridgrind.core.vocabulary.ExcelRowSpan;
 import java.util.Objects;
 
 /** Row insertion, movement, visibility, and grouping operations for one sheet. */

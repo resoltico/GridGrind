@@ -1,6 +1,6 @@
 package dev.erst.gridgrind.excel;
 
-import dev.erst.gridgrind.excel.foundation.ExcelFillPattern;
+import dev.erst.gridgrind.core.vocabulary.ExcelFillPattern;
 import java.util.Objects;
 
 /** Immutable snapshot of the fill currently applied to a cell. */

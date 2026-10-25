@@ -1,7 +1,7 @@
 package dev.erst.gridgrind.excel.event;
 
+import dev.erst.gridgrind.core.vocabulary.ExcelSheetVisibility;
 import dev.erst.gridgrind.excel.ExcelWorkbookNames;
-import dev.erst.gridgrind.excel.foundation.ExcelSheetVisibility;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;

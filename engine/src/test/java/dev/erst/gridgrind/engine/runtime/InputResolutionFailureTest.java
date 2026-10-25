@@ -2,9 +2,9 @@ package dev.erst.gridgrind.engine.runtime;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import dev.erst.gridgrind.contract.dto.ProblemContextWorkbookSurfaces.InputReference;
-import dev.erst.gridgrind.contract.source.BinarySourceInput;
-import dev.erst.gridgrind.contract.source.TextSourceInput;
+import dev.erst.gridgrind.core.problem.ProblemContextWorkbookSurfaces.InputReference;
+import dev.erst.gridgrind.core.source.BinarySourceInput;
+import dev.erst.gridgrind.core.source.TextSourceInput;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
 

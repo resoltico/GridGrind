@@ -1,14 +1,14 @@
 package dev.erst.gridgrind.engine.runtime;
 
-import dev.erst.gridgrind.contract.catalog.OperationEffectFootprint;
-import dev.erst.gridgrind.contract.catalog.OperationSemantics;
-import dev.erst.gridgrind.contract.dto.SecretReference;
-import dev.erst.gridgrind.contract.dto.WorkbookPlan;
-import dev.erst.gridgrind.contract.step.AssertionStep;
-import dev.erst.gridgrind.contract.step.InspectionStep;
-import dev.erst.gridgrind.contract.step.MutationStep;
-import dev.erst.gridgrind.contract.step.WorkbookOperationContracts;
-import dev.erst.gridgrind.contract.step.WorkbookStep;
+import dev.erst.gridgrind.core.plan.AssertionStep;
+import dev.erst.gridgrind.core.plan.InspectionStep;
+import dev.erst.gridgrind.core.plan.MutationStep;
+import dev.erst.gridgrind.core.plan.WorkbookPlan;
+import dev.erst.gridgrind.core.plan.WorkbookStep;
+import dev.erst.gridgrind.core.semantics.OperationEffectFootprint;
+import dev.erst.gridgrind.core.semantics.OperationSemantics;
+import dev.erst.gridgrind.core.semantics.WorkbookOperationContracts;
+import dev.erst.gridgrind.core.source.SecretReference;
 import dev.erst.gridgrind.engine.api.GridGrindExecutionGrant;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -52,7 +52,7 @@ final class ExecutionGrantValidator {
     if (request.source() instanceof WorkbookPlan.WorkbookSource.ExistingFile existingFile) {
       existingFile
           .security()
-          .flatMap(dev.erst.gridgrind.contract.dto.OoxmlOpenSecurityInput::passwordRef)
+          .flatMap(dev.erst.gridgrind.core.model.security.OoxmlOpenSecurityInput::passwordRef)
           .ifPresent(references::add);
     }
     switch (request.persistence()) {
@@ -65,10 +65,9 @@ final class ExecutionGrantValidator {
     for (WorkbookStep step : request.steps()) {
       if (step instanceof MutationStep mutation) {
         switch (mutation.action()) {
-          case dev.erst.gridgrind.contract.action.WorkbookMutationAction.SetSheetProtection
-                  protection ->
+          case dev.erst.gridgrind.core.plan.WorkbookMutationAction.SetSheetProtection protection ->
               protection.passwordRef().ifPresent(references::add);
-          case dev.erst.gridgrind.contract.action.WorkbookMutationAction.SetWorkbookProtection
+          case dev.erst.gridgrind.core.plan.WorkbookMutationAction.SetWorkbookProtection
                   protection -> {
             protection.protection().workbookPasswordRef().ifPresent(references::add);
             protection.protection().revisionsPasswordRef().ifPresent(references::add);
@@ -81,20 +80,24 @@ final class ExecutionGrantValidator {
   }
 
   private static void addPersistenceSecrets(
-      java.util.Optional<dev.erst.gridgrind.contract.dto.OoxmlPersistenceSecurityInput> security,
+      java.util.Optional<dev.erst.gridgrind.core.model.security.OoxmlPersistenceSecurityInput>
+          security,
       List<SecretReference> references) {
     security.ifPresent(
         value -> {
           switch (value.encryption()) {
-            case dev.erst.gridgrind.contract.dto.OoxmlPersistenceEncryptionInput.None _ -> {}
-            case dev.erst.gridgrind.contract.dto.OoxmlPersistenceEncryptionInput.PreserveSource
+            case dev.erst.gridgrind.core.model.security.OoxmlPersistenceEncryptionInput.None _ -> {}
+            case dev.erst.gridgrind.core.model.security.OoxmlPersistenceEncryptionInput
+                        .PreserveSource
                     _ -> {}
-            case dev.erst.gridgrind.contract.dto.OoxmlPersistenceEncryptionInput.Encrypt encrypt ->
+            case dev.erst.gridgrind.core.model.security.OoxmlPersistenceEncryptionInput.Encrypt
+                    encrypt ->
                 references.add(encrypt.encryption().passwordRef());
           }
           switch (value.signature()) {
-            case dev.erst.gridgrind.contract.dto.OoxmlPersistenceSignatureInput.None _ -> {}
-            case dev.erst.gridgrind.contract.dto.OoxmlPersistenceSignatureInput.Sign sign -> {
+            case dev.erst.gridgrind.core.model.security.OoxmlPersistenceSignatureInput.None _ -> {}
+            case dev.erst.gridgrind.core.model.security.OoxmlPersistenceSignatureInput.Sign
+                    sign -> {
               references.add(sign.signature().keystorePasswordRef());
               sign.signature().keyPasswordRef().ifPresent(references::add);
             }

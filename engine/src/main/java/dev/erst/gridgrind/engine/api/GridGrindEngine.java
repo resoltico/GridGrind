@@ -1,8 +1,8 @@
 package dev.erst.gridgrind.engine.api;
 
-import dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces.RequestInput;
-import dev.erst.gridgrind.contract.dto.RequestDoctorReport;
-import dev.erst.gridgrind.contract.dto.WorkbookPlan;
+import dev.erst.gridgrind.core.plan.WorkbookPlan;
+import dev.erst.gridgrind.core.problem.ProblemContextRequestSurfaces.RequestInput;
+import dev.erst.gridgrind.core.problem.RequestDoctorReport;
 import dev.erst.gridgrind.core.problem.RequestIntake;
 import java.util.Objects;
 
@@ -34,7 +34,7 @@ public final class GridGrindEngine {
     }
 
     @Override
-    public dev.erst.gridgrind.contract.dto.WorkbookResult execute(
+    public dev.erst.gridgrind.core.result.WorkbookResult execute(
         WorkbookPlan request, GridGrindRequestInputs inputs, GridGrindProgressSink sink) {
       Objects.requireNonNull(request, "request must not be null");
       Objects.requireNonNull(inputs, "inputs must not be null");
@@ -46,7 +46,7 @@ public final class GridGrindEngine {
     }
 
     @Override
-    public dev.erst.gridgrind.contract.dto.WorkbookResult execute(
+    public dev.erst.gridgrind.core.result.WorkbookResult execute(
         RequestIntake analysis, GridGrindRequestInputs inputs, GridGrindProgressSink sink) {
       Objects.requireNonNull(analysis, "analysis must not be null");
       Objects.requireNonNull(inputs, "inputs must not be null");

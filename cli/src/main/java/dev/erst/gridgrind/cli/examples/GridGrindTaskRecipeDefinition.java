@@ -2,7 +2,7 @@ package dev.erst.gridgrind.cli.examples;
 
 import dev.erst.gridgrind.cli.discovery.RecipeView;
 import dev.erst.gridgrind.cli.discovery.TaskEntry;
-import dev.erst.gridgrind.contract.dto.WorkbookPlan;
+import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import java.util.Objects;
 
 /** Canonical published task recipe carrying both discovery metadata and the starter plan. */

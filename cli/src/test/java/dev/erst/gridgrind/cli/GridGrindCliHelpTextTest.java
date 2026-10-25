@@ -10,7 +10,7 @@ import dev.erst.gridgrind.cli.discovery.CliVersionReport;
 import dev.erst.gridgrind.cli.discovery.GridGrindCliJson;
 import dev.erst.gridgrind.cli.discovery.ShippedExampleEntry;
 import dev.erst.gridgrind.cli.examples.GridGrindShippedExamples;
-import dev.erst.gridgrind.contract.catalog.GridGrindContainerRuntimeText;
+import dev.erst.gridgrind.core.catalog.GridGrindContainerRuntimeText;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;

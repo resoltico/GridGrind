@@ -1,6 +1,6 @@
 package dev.erst.gridgrind.engine.runtime;
 
-import dev.erst.gridgrind.contract.dto.SecretReference;
+import dev.erst.gridgrind.core.source.SecretReference;
 import dev.erst.gridgrind.engine.api.GridGrindExecutionGrant;
 import dev.erst.gridgrind.engine.api.GridGrindSecretResolver;
 import dev.erst.gridgrind.excel.WorkbookTempFileFactory;

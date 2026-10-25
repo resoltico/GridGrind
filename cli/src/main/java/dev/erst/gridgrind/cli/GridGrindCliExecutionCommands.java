@@ -1,14 +1,14 @@
 package dev.erst.gridgrind.cli;
 
-import dev.erst.gridgrind.contract.catalog.GridGrindRequestSurfaceContractText;
-import dev.erst.gridgrind.contract.dto.RequestDoctorReport;
-import dev.erst.gridgrind.contract.dto.WorkbookPlan;
-import dev.erst.gridgrind.contract.dto.WorkbookResult;
+import dev.erst.gridgrind.core.catalog.GridGrindRequestSurfaceContractText;
+import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import dev.erst.gridgrind.core.problem.InvalidEncodingException;
 import dev.erst.gridgrind.core.problem.InvalidJsonException;
 import dev.erst.gridgrind.core.problem.InvalidRequestException;
 import dev.erst.gridgrind.core.problem.InvalidRequestShapeException;
+import dev.erst.gridgrind.core.problem.RequestDoctorReport;
 import dev.erst.gridgrind.core.problem.RequestIntake;
+import dev.erst.gridgrind.core.result.WorkbookResult;
 import dev.erst.gridgrind.engine.api.GridGrindRequestDoctor;
 import dev.erst.gridgrind.engine.api.GridGrindRequestExecutor;
 import dev.erst.gridgrind.engine.api.GridGrindRequestRequirements;
@@ -79,7 +79,7 @@ final class GridGrindCliExecutionCommands {
       requestRedactor =
           Optional.of(
               RequestDiagnosticRedactor.forRequestType(
-                  dev.erst.gridgrind.contract.dto.WorkbookPlan.class));
+                  dev.erst.gridgrind.core.plan.WorkbookPlan.class));
       if (!analysis.isBindable()) {
         RequestDoctorReport staticValidation =
             requestDoctor.diagnose(

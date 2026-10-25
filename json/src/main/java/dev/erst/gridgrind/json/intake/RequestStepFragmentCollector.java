@@ -1,9 +1,9 @@
 package dev.erst.gridgrind.json.intake;
 
-import dev.erst.gridgrind.contract.action.MutationAction;
-import dev.erst.gridgrind.contract.assertion.Assertion;
-import dev.erst.gridgrind.contract.selector.Selector;
-import dev.erst.gridgrind.contract.step.WorkbookStep;
+import dev.erst.gridgrind.core.plan.Assertion;
+import dev.erst.gridgrind.core.plan.MutationAction;
+import dev.erst.gridgrind.core.plan.Selector;
+import dev.erst.gridgrind.core.plan.WorkbookStep;
 import dev.erst.gridgrind.core.problem.RequestBindingFailure;
 import dev.erst.gridgrind.core.problem.RequestBoundFragments;
 import dev.erst.gridgrind.core.problem.RequestExplicitNullField;
@@ -134,7 +134,7 @@ final class RequestStepFragmentCollector {
     return switch (payloadField) {
       case "action" -> MutationAction.class;
       case "assertion" -> Assertion.class;
-      case "query" -> dev.erst.gridgrind.contract.query.InspectionQuery.class;
+      case "query" -> dev.erst.gridgrind.core.plan.InspectionQuery.class;
       default -> throw new IllegalStateException("Unknown step payload field: " + payloadField);
     };
   }

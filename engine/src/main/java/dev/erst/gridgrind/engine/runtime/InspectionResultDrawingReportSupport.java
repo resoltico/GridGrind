@@ -1,10 +1,10 @@
 package dev.erst.gridgrind.engine.runtime;
 
-import dev.erst.gridgrind.contract.dto.ChartReport;
-import dev.erst.gridgrind.contract.dto.DrawingAnchorReport;
-import dev.erst.gridgrind.contract.dto.DrawingMarkerReport;
-import dev.erst.gridgrind.contract.dto.DrawingObjectPayloadReport;
-import dev.erst.gridgrind.contract.dto.DrawingObjectReport;
+import dev.erst.gridgrind.core.model.chart.ChartReport;
+import dev.erst.gridgrind.core.model.drawing.DrawingAnchorReport;
+import dev.erst.gridgrind.core.model.drawing.DrawingMarkerReport;
+import dev.erst.gridgrind.core.model.drawing.DrawingObjectPayloadReport;
+import dev.erst.gridgrind.core.model.drawing.DrawingObjectReport;
 import dev.erst.gridgrind.excel.ExcelChartSnapshot;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingAnchor;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingMarker;

@@ -1,6 +1,6 @@
 package dev.erst.gridgrind.excel;
 
-import dev.erst.gridgrind.excel.foundation.ExcelIndexDisplay;
+import dev.erst.gridgrind.core.vocabulary.ExcelIndexDisplay;
 import java.util.BitSet;
 import java.util.Map;
 import java.util.Objects;

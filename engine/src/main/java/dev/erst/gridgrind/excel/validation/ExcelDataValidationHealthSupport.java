@@ -1,9 +1,9 @@
 package dev.erst.gridgrind.excel.validation;
 
+import dev.erst.gridgrind.core.vocabulary.AnalysisFindingCode;
+import dev.erst.gridgrind.core.vocabulary.AnalysisSeverity;
 import dev.erst.gridgrind.excel.ExcelRange;
 import dev.erst.gridgrind.excel.WorkbookAnalysis;
-import dev.erst.gridgrind.excel.foundation.AnalysisFindingCode;
-import dev.erst.gridgrind.excel.foundation.AnalysisSeverity;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;

@@ -6,22 +6,26 @@ import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import dev.erst.gridgrind.contract.dto.CellBorderReport;
-import dev.erst.gridgrind.contract.dto.CellBorderSideReport;
-import dev.erst.gridgrind.contract.dto.CellColorReport;
-import dev.erst.gridgrind.contract.dto.CellFillReport;
-import dev.erst.gridgrind.contract.dto.CellFontReport;
-import dev.erst.gridgrind.contract.dto.CellProtectionReport;
-import dev.erst.gridgrind.contract.dto.CellReport;
-import dev.erst.gridgrind.contract.dto.CellScalarValue;
-import dev.erst.gridgrind.contract.dto.CellStyleReport;
-import dev.erst.gridgrind.contract.dto.CellTemporalKind;
-import dev.erst.gridgrind.contract.dto.CellTemporalReport;
-import dev.erst.gridgrind.contract.dto.CellValueReport;
-import dev.erst.gridgrind.contract.dto.FontHeightReport;
-import dev.erst.gridgrind.contract.dto.HyperlinkTarget;
-import dev.erst.gridgrind.contract.dto.RichTextRunReport;
-import dev.erst.gridgrind.contract.source.TextSourceInput;
+import dev.erst.gridgrind.core.model.protection.CellProtectionReport;
+import dev.erst.gridgrind.core.model.style.CellBorderReport;
+import dev.erst.gridgrind.core.model.style.CellBorderSideReport;
+import dev.erst.gridgrind.core.model.style.CellColorReport;
+import dev.erst.gridgrind.core.model.style.CellFillReport;
+import dev.erst.gridgrind.core.model.style.CellFontReport;
+import dev.erst.gridgrind.core.model.style.CellStyleReport;
+import dev.erst.gridgrind.core.model.style.FontHeightReport;
+import dev.erst.gridgrind.core.model.style.RichTextRunReport;
+import dev.erst.gridgrind.core.model.value.CellReport;
+import dev.erst.gridgrind.core.model.value.CellScalarValue;
+import dev.erst.gridgrind.core.model.value.CellTemporalKind;
+import dev.erst.gridgrind.core.model.value.CellTemporalReport;
+import dev.erst.gridgrind.core.model.value.CellValueReport;
+import dev.erst.gridgrind.core.model.value.HyperlinkTarget;
+import dev.erst.gridgrind.core.source.TextSourceInput;
+import dev.erst.gridgrind.core.vocabulary.ExcelBorderStyle;
+import dev.erst.gridgrind.core.vocabulary.ExcelFillPattern;
+import dev.erst.gridgrind.core.vocabulary.ExcelHorizontalAlignment;
+import dev.erst.gridgrind.core.vocabulary.ExcelVerticalAlignment;
 import dev.erst.gridgrind.excel.ExcelBorderSideSnapshot;
 import dev.erst.gridgrind.excel.ExcelBorderSnapshot;
 import dev.erst.gridgrind.excel.ExcelCellAlignmentSnapshot;
@@ -41,10 +45,6 @@ import dev.erst.gridgrind.excel.ExcelFontHeight;
 import dev.erst.gridgrind.excel.ExcelHyperlink;
 import dev.erst.gridgrind.excel.ExcelRichTextRunSnapshot;
 import dev.erst.gridgrind.excel.ExcelRichTextSnapshot;
-import dev.erst.gridgrind.excel.foundation.ExcelBorderStyle;
-import dev.erst.gridgrind.excel.foundation.ExcelFillPattern;
-import dev.erst.gridgrind.excel.foundation.ExcelHorizontalAlignment;
-import dev.erst.gridgrind.excel.foundation.ExcelVerticalAlignment;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
@@ -254,38 +254,39 @@ class ReadbackSupportCoverageTest {
     assertTrue(
         SemanticSelectorKeyMatchSupport.matchesKeyCell(
             textSnapshot,
-            new dev.erst.gridgrind.contract.dto.CellInput.Text(TextSourceInput.inline("Ada")),
+            new dev.erst.gridgrind.core.model.value.CellInput.Text(TextSourceInput.inline("Ada")),
             false));
     assertTrue(
         SemanticSelectorKeyMatchSupport.matchesKeyCell(
             numberSnapshot,
-            new dev.erst.gridgrind.contract.dto.CellInput.NumberValue(42.0d),
+            new dev.erst.gridgrind.core.model.value.CellInput.NumberValue(42.0d),
             false));
     assertTrue(
         SemanticSelectorKeyMatchSupport.matchesKeyCell(
             booleanSnapshot,
-            new dev.erst.gridgrind.contract.dto.CellInput.BooleanValue(true),
+            new dev.erst.gridgrind.core.model.value.CellInput.BooleanValue(true),
             false));
     assertTrue(
         SemanticSelectorKeyMatchSupport.matchesKeyCell(
             formulaSnapshot,
-            new dev.erst.gridgrind.contract.dto.CellInput.Formula(
+            new dev.erst.gridgrind.core.model.value.CellInput.Formula(
                 TextSourceInput.inline("SUM(A1:A2)")),
             false));
     assertTrue(
         SemanticSelectorKeyMatchSupport.matchesKeyCell(
-            blankSnapshot, new dev.erst.gridgrind.contract.dto.CellInput.Blank(), false));
+            blankSnapshot, new dev.erst.gridgrind.core.model.value.CellInput.Blank(), false));
     assertFalse(
         SemanticSelectorKeyMatchSupport.matchesKeyCell(
             textSnapshot,
-            new dev.erst.gridgrind.contract.dto.CellInput.Text(TextSourceInput.inline("Grace")),
+            new dev.erst.gridgrind.core.model.value.CellInput.Text(TextSourceInput.inline("Grace")),
             false));
     assertThrows(
         IllegalStateException.class,
         () ->
             SemanticSelectorKeyMatchSupport.matchesKeyCell(
                 textSnapshot,
-                new dev.erst.gridgrind.contract.dto.CellInput.Text(TextSourceInput.standardInput()),
+                new dev.erst.gridgrind.core.model.value.CellInput.Text(
+                    TextSourceInput.standardInput()),
                 false));
   }
 
@@ -460,7 +461,7 @@ class ReadbackSupportCoverageTest {
     CellBorderSideReport emptySide = new CellBorderSideReport.None();
     return new CellStyleReport(
         "General",
-        new dev.erst.gridgrind.contract.dto.CellAlignmentReport(
+        new dev.erst.gridgrind.core.model.style.CellAlignmentReport(
             false, ExcelHorizontalAlignment.GENERAL, ExcelVerticalAlignment.BOTTOM, 0, 0),
         new CellFontReport(
             false,

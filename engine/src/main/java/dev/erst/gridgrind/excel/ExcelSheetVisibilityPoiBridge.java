@@ -1,6 +1,6 @@
 package dev.erst.gridgrind.excel;
 
-import dev.erst.gridgrind.excel.foundation.ExcelSheetVisibility;
+import dev.erst.gridgrind.core.vocabulary.ExcelSheetVisibility;
 import java.util.Objects;
 import org.apache.poi.ss.usermodel.SheetVisibility;
 

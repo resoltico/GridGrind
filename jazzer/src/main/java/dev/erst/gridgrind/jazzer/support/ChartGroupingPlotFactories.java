@@ -1,6 +1,6 @@
 package dev.erst.gridgrind.jazzer.support;
 
-import dev.erst.gridgrind.excel.foundation.ExcelChartGrouping;
+import dev.erst.gridgrind.core.vocabulary.ExcelChartGrouping;
 import java.util.List;
 import java.util.Optional;
 

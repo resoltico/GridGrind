@@ -4,83 +4,141 @@ import static dev.erst.gridgrind.jazzer.support.ProtocolStepSupport.assertThat;
 import static dev.erst.gridgrind.jazzer.support.ProtocolStepSupport.inspect;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 
-import dev.erst.gridgrind.contract.assertion.*;
-import dev.erst.gridgrind.contract.assertion.AssertionResult;
-import dev.erst.gridgrind.contract.dto.*;
-import dev.erst.gridgrind.contract.dto.ArrayFormulaReport;
-import dev.erst.gridgrind.contract.dto.AutofilterEntryReport;
-import dev.erst.gridgrind.contract.dto.AutofilterFilterColumnReport;
-import dev.erst.gridgrind.contract.dto.AutofilterFilterCriterionReport;
-import dev.erst.gridgrind.contract.dto.AutofilterHealthReport;
-import dev.erst.gridgrind.contract.dto.AutofilterSortConditionReport;
-import dev.erst.gridgrind.contract.dto.AutofilterSortStateReport;
-import dev.erst.gridgrind.contract.dto.CellAlignmentReport;
-import dev.erst.gridgrind.contract.dto.CellBorderReport;
-import dev.erst.gridgrind.contract.dto.CellBorderSideReport;
-import dev.erst.gridgrind.contract.dto.CellColorReport;
-import dev.erst.gridgrind.contract.dto.CellFillReport;
-import dev.erst.gridgrind.contract.dto.CellFontReport;
-import dev.erst.gridgrind.contract.dto.CellGradientFillReport;
-import dev.erst.gridgrind.contract.dto.CellGradientStopReport;
-import dev.erst.gridgrind.contract.dto.CellProtectionReport;
-import dev.erst.gridgrind.contract.dto.ChartReport;
-import dev.erst.gridgrind.contract.dto.CommentAnchorReport;
-import dev.erst.gridgrind.contract.dto.CustomXmlDataBindingReport;
-import dev.erst.gridgrind.contract.dto.CustomXmlExportReport;
-import dev.erst.gridgrind.contract.dto.CustomXmlLinkedCellReport;
-import dev.erst.gridgrind.contract.dto.CustomXmlLinkedTableReport;
-import dev.erst.gridgrind.contract.dto.CustomXmlMappingLocator;
-import dev.erst.gridgrind.contract.dto.CustomXmlMappingReport;
-import dev.erst.gridgrind.contract.dto.DataValidationEntryReport;
-import dev.erst.gridgrind.contract.dto.DataValidationHealthReport;
-import dev.erst.gridgrind.contract.dto.DataValidationRuleInput;
-import dev.erst.gridgrind.contract.dto.DrawingAnchorReport;
-import dev.erst.gridgrind.contract.dto.DrawingMarkerReport;
-import dev.erst.gridgrind.contract.dto.DrawingObjectPayloadReport;
-import dev.erst.gridgrind.contract.dto.DrawingObjectReport;
-import dev.erst.gridgrind.contract.dto.FontHeightReport;
-import dev.erst.gridgrind.contract.dto.GridGrindProtocolVersion;
-import dev.erst.gridgrind.contract.dto.HeaderFooterTextReport;
-import dev.erst.gridgrind.contract.dto.HyperlinkTarget;
-import dev.erst.gridgrind.contract.dto.NamedRangeScope;
-import dev.erst.gridgrind.contract.dto.NamedRangeTarget;
-import dev.erst.gridgrind.contract.dto.PaneReport;
-import dev.erst.gridgrind.contract.dto.PivotTableHealthReport;
-import dev.erst.gridgrind.contract.dto.PivotTableReport;
-import dev.erst.gridgrind.contract.dto.PrintAreaReport;
-import dev.erst.gridgrind.contract.dto.PrintLayoutReport;
-import dev.erst.gridgrind.contract.dto.PrintMarginsReport;
-import dev.erst.gridgrind.contract.dto.PrintScalingReport;
-import dev.erst.gridgrind.contract.dto.PrintSetupReport;
-import dev.erst.gridgrind.contract.dto.PrintTitleColumnsReport;
-import dev.erst.gridgrind.contract.dto.PrintTitleRowsReport;
-import dev.erst.gridgrind.contract.dto.RequestWarning;
-import dev.erst.gridgrind.contract.dto.RichTextRunReport;
-import dev.erst.gridgrind.contract.dto.SheetProtectionSettings;
-import dev.erst.gridgrind.contract.dto.TableColumnReport;
-import dev.erst.gridgrind.contract.dto.TableEntryReport;
-import dev.erst.gridgrind.contract.dto.TableHealthReport;
-import dev.erst.gridgrind.contract.dto.TableStyleReport;
-import dev.erst.gridgrind.contract.dto.WorkbookPlan;
-import dev.erst.gridgrind.contract.dto.WorkbookProtectionReport;
-import dev.erst.gridgrind.contract.dto.WorkbookResult;
-import dev.erst.gridgrind.contract.dto.WorkbookResultPersistence;
-import dev.erst.gridgrind.contract.dto.WorkbookResults;
-import dev.erst.gridgrind.contract.query.*;
-import dev.erst.gridgrind.contract.query.SheetInspectionResult;
-import dev.erst.gridgrind.contract.query.WorkbookAnalysisResult;
-import dev.erst.gridgrind.contract.query.WorkbookAssetInspectionResult;
-import dev.erst.gridgrind.contract.query.WorkbookInspectionResult;
-import dev.erst.gridgrind.contract.query.WorkbookSurfaceInspectionResult;
-import dev.erst.gridgrind.contract.selector.CellSelector;
-import dev.erst.gridgrind.contract.selector.ChartSelector;
-import dev.erst.gridgrind.contract.selector.DrawingObjectSelector;
-import dev.erst.gridgrind.contract.selector.PivotTableSelector;
-import dev.erst.gridgrind.contract.selector.RangeSelector;
-import dev.erst.gridgrind.contract.selector.SheetSelector;
-import dev.erst.gridgrind.contract.selector.TableSelector;
-import dev.erst.gridgrind.contract.selector.WorkbookSelector;
-import dev.erst.gridgrind.contract.step.InspectionStep;
+import dev.erst.gridgrind.core.model.chart.ChartReport;
+import dev.erst.gridgrind.core.model.customxml.CustomXmlDataBindingReport;
+import dev.erst.gridgrind.core.model.customxml.CustomXmlExportReport;
+import dev.erst.gridgrind.core.model.customxml.CustomXmlLinkedCellReport;
+import dev.erst.gridgrind.core.model.customxml.CustomXmlLinkedTableReport;
+import dev.erst.gridgrind.core.model.customxml.CustomXmlMappingLocator;
+import dev.erst.gridgrind.core.model.customxml.CustomXmlMappingReport;
+import dev.erst.gridgrind.core.model.drawing.CellCommentReport;
+import dev.erst.gridgrind.core.model.drawing.CommentAnchorReport;
+import dev.erst.gridgrind.core.model.drawing.CommentReport;
+import dev.erst.gridgrind.core.model.drawing.DrawingAnchorReport;
+import dev.erst.gridgrind.core.model.drawing.DrawingMarkerReport;
+import dev.erst.gridgrind.core.model.drawing.DrawingObjectPayloadReport;
+import dev.erst.gridgrind.core.model.drawing.DrawingObjectReport;
+import dev.erst.gridgrind.core.model.formula.ArrayFormulaReport;
+import dev.erst.gridgrind.core.model.formula.FormulaHealthReport;
+import dev.erst.gridgrind.core.model.formula.FormulaPatternReport;
+import dev.erst.gridgrind.core.model.formula.FormulaSurfaceReport;
+import dev.erst.gridgrind.core.model.formula.NamedRangeHealthReport;
+import dev.erst.gridgrind.core.model.formula.NamedRangeReport;
+import dev.erst.gridgrind.core.model.formula.NamedRangeSurfaceEntryReport;
+import dev.erst.gridgrind.core.model.formula.NamedRangeSurfaceReport;
+import dev.erst.gridgrind.core.model.formula.NamedRangeTarget;
+import dev.erst.gridgrind.core.model.formula.SheetFormulaSurfaceReport;
+import dev.erst.gridgrind.core.model.layout.ColumnLayoutReport;
+import dev.erst.gridgrind.core.model.layout.MergedRegionReport;
+import dev.erst.gridgrind.core.model.layout.PaneReport;
+import dev.erst.gridgrind.core.model.layout.RowLayoutReport;
+import dev.erst.gridgrind.core.model.layout.SheetLayoutReport;
+import dev.erst.gridgrind.core.model.layout.WindowDimensionsReport;
+import dev.erst.gridgrind.core.model.layout.WindowReport;
+import dev.erst.gridgrind.core.model.layout.WindowRowReport;
+import dev.erst.gridgrind.core.model.pivot.PivotTableHealthReport;
+import dev.erst.gridgrind.core.model.pivot.PivotTableReport;
+import dev.erst.gridgrind.core.model.print.HeaderFooterTextReport;
+import dev.erst.gridgrind.core.model.print.PrintAreaReport;
+import dev.erst.gridgrind.core.model.print.PrintLayoutReport;
+import dev.erst.gridgrind.core.model.print.PrintMarginsReport;
+import dev.erst.gridgrind.core.model.print.PrintScalingReport;
+import dev.erst.gridgrind.core.model.print.PrintSetupReport;
+import dev.erst.gridgrind.core.model.print.PrintTitleColumnsReport;
+import dev.erst.gridgrind.core.model.print.PrintTitleRowsReport;
+import dev.erst.gridgrind.core.model.protection.CellProtectionReport;
+import dev.erst.gridgrind.core.model.protection.SheetProtectionReport;
+import dev.erst.gridgrind.core.model.protection.SheetProtectionSettings;
+import dev.erst.gridgrind.core.model.protection.WorkbookProtectionReport;
+import dev.erst.gridgrind.core.model.style.CellAlignmentReport;
+import dev.erst.gridgrind.core.model.style.CellBorderReport;
+import dev.erst.gridgrind.core.model.style.CellBorderSideReport;
+import dev.erst.gridgrind.core.model.style.CellColorReport;
+import dev.erst.gridgrind.core.model.style.CellFillReport;
+import dev.erst.gridgrind.core.model.style.CellFontReport;
+import dev.erst.gridgrind.core.model.style.CellGradientFillReport;
+import dev.erst.gridgrind.core.model.style.CellGradientStopReport;
+import dev.erst.gridgrind.core.model.style.CellStyleReport;
+import dev.erst.gridgrind.core.model.style.FontHeightReport;
+import dev.erst.gridgrind.core.model.style.RichTextRunReport;
+import dev.erst.gridgrind.core.model.table.AutofilterEntryReport;
+import dev.erst.gridgrind.core.model.table.AutofilterFilterColumnReport;
+import dev.erst.gridgrind.core.model.table.AutofilterFilterCriterionReport;
+import dev.erst.gridgrind.core.model.table.AutofilterHealthReport;
+import dev.erst.gridgrind.core.model.table.AutofilterSortConditionReport;
+import dev.erst.gridgrind.core.model.table.AutofilterSortStateReport;
+import dev.erst.gridgrind.core.model.table.SchemaColumnReport;
+import dev.erst.gridgrind.core.model.table.SheetSchemaReport;
+import dev.erst.gridgrind.core.model.table.TableColumnReport;
+import dev.erst.gridgrind.core.model.table.TableEntryReport;
+import dev.erst.gridgrind.core.model.table.TableHealthReport;
+import dev.erst.gridgrind.core.model.table.TableStyleReport;
+import dev.erst.gridgrind.core.model.validation.DataValidationEntryReport;
+import dev.erst.gridgrind.core.model.validation.DataValidationHealthReport;
+import dev.erst.gridgrind.core.model.validation.DataValidationRuleInput;
+import dev.erst.gridgrind.core.model.value.CellHyperlinkReport;
+import dev.erst.gridgrind.core.model.value.HyperlinkTarget;
+import dev.erst.gridgrind.core.plan.*;
+import dev.erst.gridgrind.core.plan.AssertionResult;
+import dev.erst.gridgrind.core.plan.CellSelector;
+import dev.erst.gridgrind.core.plan.ChartSelector;
+import dev.erst.gridgrind.core.plan.DrawingObjectSelector;
+import dev.erst.gridgrind.core.plan.GridGrindProtocolVersion;
+import dev.erst.gridgrind.core.plan.InspectionStep;
+import dev.erst.gridgrind.core.plan.PivotTableSelector;
+import dev.erst.gridgrind.core.plan.RangeSelector;
+import dev.erst.gridgrind.core.plan.SheetInspectionResult;
+import dev.erst.gridgrind.core.plan.SheetSelector;
+import dev.erst.gridgrind.core.plan.TableSelector;
+import dev.erst.gridgrind.core.plan.WorkbookAnalysisResult;
+import dev.erst.gridgrind.core.plan.WorkbookAssetInspectionResult;
+import dev.erst.gridgrind.core.plan.WorkbookInspectionResult;
+import dev.erst.gridgrind.core.plan.WorkbookPlan;
+import dev.erst.gridgrind.core.plan.WorkbookSelector;
+import dev.erst.gridgrind.core.plan.WorkbookSurfaceInspectionResult;
+import dev.erst.gridgrind.core.problem.GridGrindProblemCode;
+import dev.erst.gridgrind.core.problem.GridGrindProblemDetail;
+import dev.erst.gridgrind.core.problem.GridGrindWarningCode;
+import dev.erst.gridgrind.core.problem.ProblemContext;
+import dev.erst.gridgrind.core.problem.ProblemContextRequestSurfaces;
+import dev.erst.gridgrind.core.problem.ProblemContextWorkbookSurfaces;
+import dev.erst.gridgrind.core.problem.RequestWarning;
+import dev.erst.gridgrind.core.result.AnalysisFindingReport;
+import dev.erst.gridgrind.core.result.AnalysisLocationReport;
+import dev.erst.gridgrind.core.result.AnalysisSummaryReport;
+import dev.erst.gridgrind.core.result.SheetSummaryReport;
+import dev.erst.gridgrind.core.result.TypeCountReport;
+import dev.erst.gridgrind.core.result.WorkbookResult;
+import dev.erst.gridgrind.core.result.WorkbookResultPersistence;
+import dev.erst.gridgrind.core.result.WorkbookResults;
+import dev.erst.gridgrind.core.result.WorkbookSummary;
+import dev.erst.gridgrind.core.vocabulary.AnalysisFindingCode;
+import dev.erst.gridgrind.core.vocabulary.AnalysisSeverity;
+import dev.erst.gridgrind.core.vocabulary.ExcelChartAxisCrosses;
+import dev.erst.gridgrind.core.vocabulary.ExcelChartAxisKind;
+import dev.erst.gridgrind.core.vocabulary.ExcelChartAxisPosition;
+import dev.erst.gridgrind.core.vocabulary.ExcelChartBarDirection;
+import dev.erst.gridgrind.core.vocabulary.ExcelChartBarGrouping;
+import dev.erst.gridgrind.core.vocabulary.ExcelChartDisplayBlanksAs;
+import dev.erst.gridgrind.core.vocabulary.ExcelChartLegendPosition;
+import dev.erst.gridgrind.core.vocabulary.ExcelComparisonOperator;
+import dev.erst.gridgrind.core.vocabulary.ExcelDrawingAnchorBehavior;
+import dev.erst.gridgrind.core.vocabulary.ExcelDrawingShapeKind;
+import dev.erst.gridgrind.core.vocabulary.ExcelEmbeddedObjectPackagingKind;
+import dev.erst.gridgrind.core.vocabulary.ExcelFillPattern;
+import dev.erst.gridgrind.core.vocabulary.ExcelHorizontalAlignment;
+import dev.erst.gridgrind.core.vocabulary.ExcelOoxmlChainingMode;
+import dev.erst.gridgrind.core.vocabulary.ExcelOoxmlCipherAlgorithm;
+import dev.erst.gridgrind.core.vocabulary.ExcelOoxmlEncryptionMode;
+import dev.erst.gridgrind.core.vocabulary.ExcelOoxmlHashAlgorithm;
+import dev.erst.gridgrind.core.vocabulary.ExcelOoxmlSignatureState;
+import dev.erst.gridgrind.core.vocabulary.ExcelPictureFormat;
+import dev.erst.gridgrind.core.vocabulary.ExcelPivotDataConsolidateFunction;
+import dev.erst.gridgrind.core.vocabulary.ExcelPrintOrientation;
+import dev.erst.gridgrind.core.vocabulary.ExcelSheetVisibility;
+import dev.erst.gridgrind.core.vocabulary.ExcelVerticalAlignment;
+import dev.erst.gridgrind.core.vocabulary.NamedRangeBackingKind;
+import dev.erst.gridgrind.core.vocabulary.NamedRangeScope;
 import dev.erst.gridgrind.excel.*;
 import dev.erst.gridgrind.excel.ExcelCellValue;
 import dev.erst.gridgrind.excel.ExcelChartDefinition;
@@ -90,31 +148,6 @@ import dev.erst.gridgrind.excel.ExcelWorkbooks;
 import dev.erst.gridgrind.excel.WorkbookExecutionEngine;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingAnchor;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingMarker;
-import dev.erst.gridgrind.excel.foundation.AnalysisFindingCode;
-import dev.erst.gridgrind.excel.foundation.AnalysisSeverity;
-import dev.erst.gridgrind.excel.foundation.ExcelChartAxisCrosses;
-import dev.erst.gridgrind.excel.foundation.ExcelChartAxisKind;
-import dev.erst.gridgrind.excel.foundation.ExcelChartAxisPosition;
-import dev.erst.gridgrind.excel.foundation.ExcelChartBarDirection;
-import dev.erst.gridgrind.excel.foundation.ExcelChartBarGrouping;
-import dev.erst.gridgrind.excel.foundation.ExcelChartDisplayBlanksAs;
-import dev.erst.gridgrind.excel.foundation.ExcelChartLegendPosition;
-import dev.erst.gridgrind.excel.foundation.ExcelComparisonOperator;
-import dev.erst.gridgrind.excel.foundation.ExcelDrawingAnchorBehavior;
-import dev.erst.gridgrind.excel.foundation.ExcelDrawingShapeKind;
-import dev.erst.gridgrind.excel.foundation.ExcelEmbeddedObjectPackagingKind;
-import dev.erst.gridgrind.excel.foundation.ExcelFillPattern;
-import dev.erst.gridgrind.excel.foundation.ExcelHorizontalAlignment;
-import dev.erst.gridgrind.excel.foundation.ExcelOoxmlChainingMode;
-import dev.erst.gridgrind.excel.foundation.ExcelOoxmlCipherAlgorithm;
-import dev.erst.gridgrind.excel.foundation.ExcelOoxmlEncryptionMode;
-import dev.erst.gridgrind.excel.foundation.ExcelOoxmlHashAlgorithm;
-import dev.erst.gridgrind.excel.foundation.ExcelOoxmlSignatureState;
-import dev.erst.gridgrind.excel.foundation.ExcelPictureFormat;
-import dev.erst.gridgrind.excel.foundation.ExcelPivotDataConsolidateFunction;
-import dev.erst.gridgrind.excel.foundation.ExcelPrintOrientation;
-import dev.erst.gridgrind.excel.foundation.ExcelSheetVisibility;
-import dev.erst.gridgrind.excel.foundation.ExcelVerticalAlignment;
 import dev.erst.gridgrind.excel.pivot.ExcelPivotTableDefinition;
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -162,7 +195,7 @@ class WorkbookInvariantChecksTest {
                     "cells",
                     "Budget",
                     List.of(
-                        new dev.erst.gridgrind.contract.dto.CellReport.TextReport(
+                        new dev.erst.gridgrind.core.model.value.CellReport.TextReport(
                             "A1",
                             java.util.Optional.of("Report"),
                             java.util.Optional.of(style),
@@ -192,7 +225,7 @@ class WorkbookInvariantChecksTest {
                             new WindowRowReport(
                                 0,
                                 List.of(
-                                    new dev.erst.gridgrind.contract.dto.CellReport.TextReport(
+                                    new dev.erst.gridgrind.core.model.value.CellReport.TextReport(
                                         "A1",
                                         java.util.Optional.empty(),
                                         java.util.Optional.of(style),
@@ -220,7 +253,7 @@ class WorkbookInvariantChecksTest {
                         "Budget",
                         new PaneReport.Frozen(1, 1, 1, 1),
                         125,
-                        dev.erst.gridgrind.contract.dto.SheetPresentationReport.defaults(),
+                        dev.erst.gridgrind.core.model.layout.SheetPresentationReport.defaults(),
                         List.of(new ColumnLayoutReport(0, 12.5, false, 0, false)),
                         List.of(new RowLayoutReport(0, 18.0, false, 0, false)))),
                 new SheetInspectionResult.PrintLayoutResult(
@@ -362,7 +395,7 @@ class WorkbookInvariantChecksTest {
                 new InspectionAnalysisQuery.AnalyzeDataValidationHealth()),
             inspect(
                 "named-range-health",
-                new dev.erst.gridgrind.contract.selector.NamedRangeSelector.All(),
+                new dev.erst.gridgrind.core.plan.NamedRangeSelector.All(),
                 new InspectionAnalysisQuery.AnalyzeNamedRangeHealth()));
     WorkbookResult.Success response =
         WorkbookResults.success(
@@ -754,7 +787,7 @@ class WorkbookInvariantChecksTest {
                     "cells",
                     "Budget",
                     List.of(
-                        new dev.erst.gridgrind.contract.dto.CellReport.TextReport(
+                        new dev.erst.gridgrind.core.model.value.CellReport.TextReport(
                             "A1",
                             java.util.Optional.empty(),
                             java.util.Optional.of(advancedStyle),
@@ -1149,9 +1182,9 @@ class WorkbookInvariantChecksTest {
         existingRequest(
             new WorkbookPlan.WorkbookSource.ExistingFile(
                 workbookPath.toString(),
-                new dev.erst.gridgrind.contract.dto.OoxmlOpenSecurityInput(
+                new dev.erst.gridgrind.core.model.security.OoxmlOpenSecurityInput(
                     java.util.Optional.of(
-                        new dev.erst.gridgrind.contract.dto.SecretReference(
+                        new dev.erst.gridgrind.core.source.SecretReference(
                             "source-open-password")))),
             inspect(
                 "security",
@@ -1166,8 +1199,8 @@ class WorkbookInvariantChecksTest {
             List.of(
                 new WorkbookInspectionResult.PackageSecurityResult(
                     "security",
-                    new dev.erst.gridgrind.contract.dto.OoxmlPackageSecurityReport(
-                        new dev.erst.gridgrind.contract.dto.OoxmlEncryptionReport.Encrypted(
+                    new dev.erst.gridgrind.core.model.security.OoxmlPackageSecurityReport(
+                        new dev.erst.gridgrind.core.model.security.OoxmlEncryptionReport.Encrypted(
                             ExcelOoxmlEncryptionMode.AGILE,
                             ExcelOoxmlCipherAlgorithm.AES_256,
                             ExcelOoxmlHashAlgorithm.SHA_512,
@@ -1176,7 +1209,7 @@ class WorkbookInvariantChecksTest {
                             16,
                             100000),
                         List.of(
-                            new dev.erst.gridgrind.contract.dto.OoxmlSignatureReport(
+                            new dev.erst.gridgrind.core.model.security.OoxmlSignatureReport(
                                 "/_xmlsignatures/sig1.xml",
                                 Optional.of("CN=GridGrind Signing"),
                                 Optional.of("CN=GridGrind Signing"),
@@ -1412,9 +1445,9 @@ class WorkbookInvariantChecksTest {
         new CellProtectionReport(true, false));
   }
 
-  private static dev.erst.gridgrind.contract.dto.CellReport.TextReport textCell(
+  private static dev.erst.gridgrind.core.model.value.CellReport.TextReport textCell(
       String address, String value) {
-    return new dev.erst.gridgrind.contract.dto.CellReport.TextReport(
+    return new dev.erst.gridgrind.core.model.value.CellReport.TextReport(
         address,
         java.util.Optional.of(value),
         java.util.Optional.of(defaultStyle()),

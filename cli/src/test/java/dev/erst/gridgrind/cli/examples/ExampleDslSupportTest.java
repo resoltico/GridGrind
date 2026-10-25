@@ -4,10 +4,10 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import dev.erst.gridgrind.contract.dto.ChartInput;
-import dev.erst.gridgrind.contract.dto.PivotTableInput;
-import dev.erst.gridgrind.contract.dto.WorkbookPlan;
-import dev.erst.gridgrind.contract.selector.TableSelector;
+import dev.erst.gridgrind.core.model.chart.ChartInput;
+import dev.erst.gridgrind.core.model.pivot.PivotTableInput;
+import dev.erst.gridgrind.core.plan.TableSelector;
+import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import org.junit.jupiter.api.Test;
 
 /** Focused tests for package-private example DSL helpers. */
@@ -39,7 +39,7 @@ class ExampleDslSupportTest {
     assertEquals("budget-plan", plan.planId().orElseThrow());
     assertInstanceOf(WorkbookPlan.WorkbookPersistence.SaveAs.class, plan.persistence());
     assertEquals(
-        dev.erst.gridgrind.contract.dto.OoxmlPersistenceSecurityInput.none(),
+        dev.erst.gridgrind.core.model.security.OoxmlPersistenceSecurityInput.none(),
         ExampleWorkbookPlans.saveAsExisting("existing-budget.xlsx").security().orElseThrow());
   }
 
@@ -60,7 +60,7 @@ class ExampleDslSupportTest {
     assertEquals(1, chart.plots().size());
     assertEquals(
         2,
-        ((dev.erst.gridgrind.contract.dto.ChartPlotInput.Bar) chart.plots().getFirst())
+        ((dev.erst.gridgrind.core.model.chart.ChartPlotInput.Bar) chart.plots().getFirst())
             .series()
             .size());
   }

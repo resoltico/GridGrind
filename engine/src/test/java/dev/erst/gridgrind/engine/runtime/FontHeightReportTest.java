@@ -2,7 +2,7 @@ package dev.erst.gridgrind.engine.runtime;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import dev.erst.gridgrind.contract.dto.FontHeightReport;
+import dev.erst.gridgrind.core.model.style.FontHeightReport;
 import dev.erst.gridgrind.excel.ExcelFontHeight;
 import java.math.BigDecimal;
 import org.junit.jupiter.api.Test;

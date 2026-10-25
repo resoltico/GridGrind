@@ -6,26 +6,26 @@ import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import dev.erst.gridgrind.contract.action.CellMutationAction;
-import dev.erst.gridgrind.contract.dto.CellGridInput;
-import dev.erst.gridgrind.contract.dto.CellInput;
-import dev.erst.gridgrind.contract.dto.ExecutionPolicyInput;
-import dev.erst.gridgrind.contract.dto.FormulaEnvironmentInput;
-import dev.erst.gridgrind.contract.dto.GridGrindProblemCode;
-import dev.erst.gridgrind.contract.dto.GridGrindProblemDetail;
-import dev.erst.gridgrind.contract.dto.OoxmlPersistenceSecurityInput;
-import dev.erst.gridgrind.contract.dto.OoxmlPersistenceSignatureInput;
-import dev.erst.gridgrind.contract.dto.OoxmlSignatureInput;
-import dev.erst.gridgrind.contract.dto.ProblemContext;
-import dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces;
-import dev.erst.gridgrind.contract.dto.ProblemContextWorkbookSurfaces;
-import dev.erst.gridgrind.contract.dto.WorkbookPlan;
-import dev.erst.gridgrind.contract.selector.CellSelector;
-import dev.erst.gridgrind.contract.source.TextSourceInput;
-import dev.erst.gridgrind.contract.step.MutationStep;
+import dev.erst.gridgrind.core.model.formula.FormulaEnvironmentInput;
+import dev.erst.gridgrind.core.model.security.OoxmlPersistenceSecurityInput;
+import dev.erst.gridgrind.core.model.security.OoxmlPersistenceSignatureInput;
+import dev.erst.gridgrind.core.model.security.OoxmlSignatureInput;
+import dev.erst.gridgrind.core.model.value.CellGridInput;
+import dev.erst.gridgrind.core.model.value.CellInput;
+import dev.erst.gridgrind.core.plan.CellMutationAction;
+import dev.erst.gridgrind.core.plan.CellSelector;
+import dev.erst.gridgrind.core.plan.ExecutionPolicyInput;
+import dev.erst.gridgrind.core.plan.MutationStep;
+import dev.erst.gridgrind.core.plan.WorkbookPlan;
+import dev.erst.gridgrind.core.problem.GridGrindProblemCode;
+import dev.erst.gridgrind.core.problem.GridGrindProblemDetail;
+import dev.erst.gridgrind.core.problem.ProblemContext;
+import dev.erst.gridgrind.core.problem.ProblemContextRequestSurfaces;
+import dev.erst.gridgrind.core.problem.ProblemContextWorkbookSurfaces;
+import dev.erst.gridgrind.core.source.TextSourceInput;
+import dev.erst.gridgrind.core.vocabulary.ExcelOoxmlSignatureDigestAlgorithm;
 import dev.erst.gridgrind.excel.InvalidSigningConfigurationException;
 import dev.erst.gridgrind.excel.OoxmlSecurityTestSupport;
-import dev.erst.gridgrind.excel.foundation.ExcelOoxmlSignatureDigestAlgorithm;
 import dev.erst.gridgrind.excel.ooxml.ExcelOoxmlPersistenceSignature;
 import dev.erst.gridgrind.excel.ooxml.ExcelOoxmlSignatureOptions;
 import dev.erst.gridgrind.json.codec.GridGrindJson;
@@ -51,11 +51,12 @@ class RequestPreflightTest {
                 "signed.xlsx",
                 WorkbookPlan.WorkbookPersistence.IfExists.REJECT,
                 new OoxmlPersistenceSecurityInput(
-                    new dev.erst.gridgrind.contract.dto.OoxmlPersistenceEncryptionInput.None(),
+                    new dev.erst.gridgrind.core.model.security.OoxmlPersistenceEncryptionInput
+                        .None(),
                     new OoxmlPersistenceSignatureInput.Sign(
                         OoxmlSignatureInput.sameKeyPassword(
                             "missing-signing-material.p12",
-                            new dev.erst.gridgrind.contract.dto.SecretReference("signing-password"),
+                            new dev.erst.gridgrind.core.source.SecretReference("signing-password"),
                             Optional.empty(),
                             ExcelOoxmlSignatureDigestAlgorithm.SHA256,
                             Optional.empty())))),
@@ -155,15 +156,15 @@ class RequestPreflightTest {
                 "signed.xlsx",
                 WorkbookPlan.WorkbookPersistence.IfExists.REJECT,
                 new OoxmlPersistenceSecurityInput(
-                    new dev.erst.gridgrind.contract.dto.OoxmlPersistenceEncryptionInput.None(),
+                    new dev.erst.gridgrind.core.model.security.OoxmlPersistenceEncryptionInput
+                        .None(),
                     new OoxmlPersistenceSignatureInput.Sign(
                         new OoxmlSignatureInput(
                             signedWorkbook.pkcs12Path().toString(),
-                            new dev.erst.gridgrind.contract.dto.SecretReference(
+                            new dev.erst.gridgrind.core.source.SecretReference(
                                 "wrong-keystore-password"),
                             Optional.of(
-                                new dev.erst.gridgrind.contract.dto.SecretReference(
-                                    "key-password")),
+                                new dev.erst.gridgrind.core.source.SecretReference("key-password")),
                             Optional.of(signedWorkbook.alias()),
                             ExcelOoxmlSignatureDigestAlgorithm.SHA256,
                             Optional.empty())))),
@@ -365,12 +366,14 @@ class RequestPreflightTest {
                                 List.of(
                                     new CellInput.RichText(
                                         List.of(
-                                            new dev.erst.gridgrind.contract.dto.RichTextRunInput(
+                                            new dev.erst.gridgrind.core.model.style
+                                                .RichTextRunInput(
                                                 new TextSourceInput.Utf8File("missing-run.txt"),
                                                 java.util.Optional.empty()))),
                                     new CellInput.RichText(
                                         List.of(
-                                            new dev.erst.gridgrind.contract.dto.RichTextRunInput(
+                                            new dev.erst.gridgrind.core.model.style
+                                                .RichTextRunInput(
                                                 new TextSourceInput.Utf8File("empty-run.txt"),
                                                 java.util.Optional.empty()))))))))));
 
@@ -497,7 +500,7 @@ class RequestPreflightTest {
     try {
       assertTrue(saveAsResult.problems().isEmpty());
       assertEquals(
-          dev.erst.gridgrind.contract.dto.GridGrindWarningCode.NON_PORTABLE_ABSOLUTE_PATH,
+          dev.erst.gridgrind.core.problem.GridGrindWarningCode.NON_PORTABLE_ABSOLUTE_PATH,
           saveAsResult.warnings().getFirst().code());
     } finally {
       saveAsResult.release();
@@ -507,7 +510,7 @@ class RequestPreflightTest {
         WorkbookPlan.standard(
             new WorkbookPlan.WorkbookSource.New(),
             new WorkbookPlan.WorkbookPersistence.Overwrite(
-                dev.erst.gridgrind.contract.dto.OoxmlPersistenceSecurityInput.none()),
+                dev.erst.gridgrind.core.model.security.OoxmlPersistenceSecurityInput.none()),
             ExecutionPolicyInput.defaults(),
             FormulaEnvironmentInput.empty(),
             List.of());
@@ -530,12 +533,12 @@ class RequestPreflightTest {
         plan(
             new WorkbookPlan.WorkbookSource.ExistingFile("source.xlsx"),
             new WorkbookPlan.WorkbookPersistence.Overwrite(
-                dev.erst.gridgrind.contract.dto.OoxmlPersistenceSecurityInput.none()));
+                dev.erst.gridgrind.core.model.security.OoxmlPersistenceSecurityInput.none()));
     WorkbookPlan newOverwrite =
         plan(
             new WorkbookPlan.WorkbookSource.New(),
             new WorkbookPlan.WorkbookPersistence.Overwrite(
-                dev.erst.gridgrind.contract.dto.OoxmlPersistenceSecurityInput.none()));
+                dev.erst.gridgrind.core.model.security.OoxmlPersistenceSecurityInput.none()));
 
     RequestPreflightPaths.PersistenceTarget target =
         RequestPreflightPaths.persistenceTarget(existingOverwrite).orElseThrow();

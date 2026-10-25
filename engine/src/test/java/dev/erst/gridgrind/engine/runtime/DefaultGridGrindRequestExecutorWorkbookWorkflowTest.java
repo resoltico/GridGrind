@@ -3,16 +3,79 @@ package dev.erst.gridgrind.engine.runtime;
 import static dev.erst.gridgrind.engine.runtime.ExecutorTestPlanSupport.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-import dev.erst.gridgrind.contract.action.CellMutationAction;
-import dev.erst.gridgrind.contract.action.DrawingMutationAction;
-import dev.erst.gridgrind.contract.action.StructuredMutationAction;
-import dev.erst.gridgrind.contract.action.WorkbookMutationAction;
-import dev.erst.gridgrind.contract.assertion.*;
-import dev.erst.gridgrind.contract.dto.*;
-import dev.erst.gridgrind.contract.dto.CellInput;
-import dev.erst.gridgrind.contract.query.*;
-import dev.erst.gridgrind.contract.selector.*;
-import dev.erst.gridgrind.contract.step.InspectionStep;
+import dev.erst.gridgrind.core.model.drawing.CommentInput;
+import dev.erst.gridgrind.core.model.drawing.DrawingAnchorInput;
+import dev.erst.gridgrind.core.model.drawing.DrawingAnchorReport;
+import dev.erst.gridgrind.core.model.drawing.DrawingMarkerInput;
+import dev.erst.gridgrind.core.model.drawing.DrawingObjectReport;
+import dev.erst.gridgrind.core.model.drawing.EmbeddedObjectInput;
+import dev.erst.gridgrind.core.model.drawing.PictureDataInput;
+import dev.erst.gridgrind.core.model.formula.FormulaEnvironmentInput;
+import dev.erst.gridgrind.core.model.formula.NamedRangeReport;
+import dev.erst.gridgrind.core.model.formula.NamedRangeTarget;
+import dev.erst.gridgrind.core.model.layout.MergedRegionReport;
+import dev.erst.gridgrind.core.model.layout.PaneInput;
+import dev.erst.gridgrind.core.model.layout.PaneReport;
+import dev.erst.gridgrind.core.model.layout.SheetDefaultsInput;
+import dev.erst.gridgrind.core.model.layout.SheetDefaultsReport;
+import dev.erst.gridgrind.core.model.layout.SheetDisplayInput;
+import dev.erst.gridgrind.core.model.layout.SheetDisplayReport;
+import dev.erst.gridgrind.core.model.layout.SheetLayoutReport;
+import dev.erst.gridgrind.core.model.layout.SheetOutlineSummaryInput;
+import dev.erst.gridgrind.core.model.layout.SheetOutlineSummaryReport;
+import dev.erst.gridgrind.core.model.layout.SheetPresentationInput;
+import dev.erst.gridgrind.core.model.layout.WindowReport;
+import dev.erst.gridgrind.core.model.print.PrintAreaInput;
+import dev.erst.gridgrind.core.model.print.PrintLayoutInput;
+import dev.erst.gridgrind.core.model.print.PrintLayoutReport;
+import dev.erst.gridgrind.core.model.print.PrintScalingInput;
+import dev.erst.gridgrind.core.model.print.PrintSetupInput;
+import dev.erst.gridgrind.core.model.print.PrintTitleColumnsInput;
+import dev.erst.gridgrind.core.model.print.PrintTitleRowsInput;
+import dev.erst.gridgrind.core.model.style.ColorInput;
+import dev.erst.gridgrind.core.model.style.DifferentialStyleInput;
+import dev.erst.gridgrind.core.model.style.FontHeightInput;
+import dev.erst.gridgrind.core.model.style.RichTextRunInput;
+import dev.erst.gridgrind.core.model.table.AutofilterEntryReport;
+import dev.erst.gridgrind.core.model.table.TableEntryReport;
+import dev.erst.gridgrind.core.model.table.TableInput;
+import dev.erst.gridgrind.core.model.table.TableStyleInput;
+import dev.erst.gridgrind.core.model.table.TableStyleReport;
+import dev.erst.gridgrind.core.model.validation.ConditionalFormattingDefinitionInput;
+import dev.erst.gridgrind.core.model.validation.ConditionalFormattingEntryReport;
+import dev.erst.gridgrind.core.model.validation.ConditionalFormattingRuleInput;
+import dev.erst.gridgrind.core.model.validation.ConditionalFormattingRuleReport;
+import dev.erst.gridgrind.core.model.validation.DataValidationEntryReport;
+import dev.erst.gridgrind.core.model.validation.DataValidationRuleInput;
+import dev.erst.gridgrind.core.model.validation.IgnoredErrorInput;
+import dev.erst.gridgrind.core.model.validation.IgnoredErrorReport;
+import dev.erst.gridgrind.core.model.value.CellInput;
+import dev.erst.gridgrind.core.model.value.CellValueReport;
+import dev.erst.gridgrind.core.model.value.HyperlinkTarget;
+import dev.erst.gridgrind.core.plan.*;
+import dev.erst.gridgrind.core.plan.CellMutationAction;
+import dev.erst.gridgrind.core.plan.DrawingMutationAction;
+import dev.erst.gridgrind.core.plan.ExecutionJournalInput;
+import dev.erst.gridgrind.core.plan.ExecutionPolicyInput;
+import dev.erst.gridgrind.core.plan.GridGrindProtocolVersion;
+import dev.erst.gridgrind.core.plan.InspectionStep;
+import dev.erst.gridgrind.core.plan.StructuredMutationAction;
+import dev.erst.gridgrind.core.plan.WorkbookMutationAction;
+import dev.erst.gridgrind.core.plan.WorkbookPlan;
+import dev.erst.gridgrind.core.problem.GridGrindProblemCode;
+import dev.erst.gridgrind.core.problem.RequestWarning;
+import dev.erst.gridgrind.core.result.ExecutionJournal;
+import dev.erst.gridgrind.core.result.ExecutionJournalLevel;
+import dev.erst.gridgrind.core.result.WorkbookResult;
+import dev.erst.gridgrind.core.result.WorkbookSummary;
+import dev.erst.gridgrind.core.vocabulary.AnalysisFindingCode;
+import dev.erst.gridgrind.core.vocabulary.ExcelComparisonOperator;
+import dev.erst.gridgrind.core.vocabulary.ExcelDataValidationErrorStyle;
+import dev.erst.gridgrind.core.vocabulary.ExcelDrawingAnchorBehavior;
+import dev.erst.gridgrind.core.vocabulary.ExcelIgnoredErrorType;
+import dev.erst.gridgrind.core.vocabulary.ExcelPictureFormat;
+import dev.erst.gridgrind.core.vocabulary.ExcelPrintOrientation;
+import dev.erst.gridgrind.core.vocabulary.NamedRangeScope;
 import dev.erst.gridgrind.excel.*;
 import dev.erst.gridgrind.excel.ExcelAutofilterSnapshot;
 import dev.erst.gridgrind.excel.ExcelCellValue;
@@ -33,13 +96,6 @@ import dev.erst.gridgrind.excel.ExcelWorkbooks;
 import dev.erst.gridgrind.excel.WorkbookExecutionEngine;
 import dev.erst.gridgrind.excel.WorkbookReadCommand;
 import dev.erst.gridgrind.excel.XlsxRoundTrip;
-import dev.erst.gridgrind.excel.foundation.AnalysisFindingCode;
-import dev.erst.gridgrind.excel.foundation.ExcelComparisonOperator;
-import dev.erst.gridgrind.excel.foundation.ExcelDataValidationErrorStyle;
-import dev.erst.gridgrind.excel.foundation.ExcelDrawingAnchorBehavior;
-import dev.erst.gridgrind.excel.foundation.ExcelIgnoredErrorType;
-import dev.erst.gridgrind.excel.foundation.ExcelPictureFormat;
-import dev.erst.gridgrind.excel.foundation.ExcelPrintOrientation;
 import dev.erst.gridgrind.excel.validation.ExcelDataValidationSnapshot;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -78,7 +134,8 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
                             "assert-owner",
                             new CellSelector.ByAddress("Budget", "A1"),
                             new CellAssertion.CellValue(
-                                new dev.erst.gridgrind.contract.dto.CellScalarValue.Text("Owner"))),
+                                new dev.erst.gridgrind.core.model.value.CellScalarValue.Text(
+                                    "Owner"))),
                         assertThat(
                             "assert-formula",
                             new CellSelector.ByAddress("Budget", "B2"),
@@ -95,7 +152,7 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
         inspection(success, "cells", SheetInspectionResult.CellsResult.class);
     assertEquals(
         "Owner",
-        cast(dev.erst.gridgrind.contract.dto.CellReport.TextReport.class, cells.cells().get(0))
+        cast(dev.erst.gridgrind.core.model.value.CellReport.TextReport.class, cells.cells().get(0))
             .textValue()
             .orElseThrow());
   }
@@ -121,7 +178,7 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
                             "assert-owner",
                             new CellSelector.ByAddress("Budget", "A1"),
                             new CellAssertion.CellValue(
-                                new dev.erst.gridgrind.contract.dto.CellScalarValue.Text(
+                                new dev.erst.gridgrind.core.model.value.CellScalarValue.Text(
                                     "Wrong")))),
                     inspections())));
 
@@ -225,13 +282,13 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
                     mutate(
                         new SheetSelector.ByName("Budget"),
                         new CellMutationAction.AppendRow(
-                            new dev.erst.gridgrind.contract.dto.CellRowInput.Typed(
+                            new dev.erst.gridgrind.core.model.value.CellRowInput.Typed(
                                 List.of(
                                     textCell("Item"), textCell("Amount"), textCell("Billable"))))),
                     mutate(
                         new SheetSelector.ByName("Budget"),
                         new CellMutationAction.AppendRow(
-                            new dev.erst.gridgrind.contract.dto.CellRowInput.Typed(
+                            new dev.erst.gridgrind.core.model.value.CellRowInput.Typed(
                                 List.of(
                                     textCell("Hosting"),
                                     new CellInput.NumberValue(49.0),
@@ -239,7 +296,7 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
                     mutate(
                         new SheetSelector.ByName("Budget"),
                         new CellMutationAction.AppendRow(
-                            new dev.erst.gridgrind.contract.dto.CellRowInput.Typed(
+                            new dev.erst.gridgrind.core.model.value.CellRowInput.Typed(
                                 List.of(
                                     textCell("Domain"),
                                     new CellInput.NumberValue(12.0),
@@ -278,7 +335,7 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
     assertEquals(workbookPath.toAbsolutePath().toString(), savedPath(success));
     assertTrue(Files.exists(workbookPath));
     assertEquals(
-        List.of(dev.erst.gridgrind.contract.dto.GridGrindWarningCode.NON_PORTABLE_ABSOLUTE_PATH),
+        List.of(dev.erst.gridgrind.core.problem.GridGrindWarningCode.NON_PORTABLE_ABSOLUTE_PATH),
         success.warnings().stream().map(RequestWarning::code).toList());
     assertEquals(List.of("workbook", "cells", "window"), stepIds(success));
     assertEquals(1, workbook.sheetCount());
@@ -289,17 +346,21 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
     assertEquals("Budget", cells.sheetName());
     assertEquals(
         "Item",
-        cast(dev.erst.gridgrind.contract.dto.CellReport.TextReport.class, cells.cells().get(0))
+        cast(dev.erst.gridgrind.core.model.value.CellReport.TextReport.class, cells.cells().get(0))
             .textValue()
             .orElseThrow());
-    dev.erst.gridgrind.contract.dto.CellReport.FormulaReport formulaCell =
-        cast(dev.erst.gridgrind.contract.dto.CellReport.FormulaReport.class, cells.cells().get(1));
+    dev.erst.gridgrind.core.model.value.CellReport.FormulaReport formulaCell =
+        cast(
+            dev.erst.gridgrind.core.model.value.CellReport.FormulaReport.class,
+            cells.cells().get(1));
     assertEquals("SUM(B2:B3)", formulaText(formulaCell));
     assertEquals(
         61.0,
         assertInstanceOf(CellValueReport.NumberValue.class, evaluation(formulaCell)).numberValue());
     assertTrue(
-        cast(dev.erst.gridgrind.contract.dto.CellReport.BooleanReport.class, cells.cells().get(2))
+        cast(
+                dev.erst.gridgrind.core.model.value.CellReport.BooleanReport.class,
+                cells.cells().get(2))
             .booleanValue()
             .orElseThrow());
 
@@ -436,8 +497,10 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
     WorkbookResult.Success success = success(response);
     SheetInspectionResult.CellsResult cells =
         read(success, "cells", SheetInspectionResult.CellsResult.class);
-    dev.erst.gridgrind.contract.dto.CellReport.TextReport cell =
-        cast(dev.erst.gridgrind.contract.dto.CellReport.TextReport.class, cells.cells().getFirst());
+    dev.erst.gridgrind.core.model.value.CellReport.TextReport cell =
+        cast(
+            dev.erst.gridgrind.core.model.value.CellReport.TextReport.class,
+            cells.cells().getFirst());
 
     assertEquals("Budget FY26", textValue(cell));
     assertEquals(2, runs(cell).size());
@@ -480,7 +543,7 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
     assertEquals(
         List.of(
             new RequestWarning(
-                dev.erst.gridgrind.contract.dto.GridGrindWarningCode.UNQUOTED_SHEET_NAME_IN_FORMULA,
+                dev.erst.gridgrind.core.problem.GridGrindWarningCode.UNQUOTED_SHEET_NAME_IN_FORMULA,
                 3,
                 "step-04-set-cell",
                 "SET_CELL",
@@ -504,7 +567,7 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
             request(
                 new WorkbookPlan.WorkbookSource.ExistingFile(workbookPath.toString()),
                 new WorkbookPlan.WorkbookPersistence.Overwrite(
-                    dev.erst.gridgrind.contract.dto.OoxmlPersistenceSecurityInput.none()),
+                    dev.erst.gridgrind.core.model.security.OoxmlPersistenceSecurityInput.none()),
                 mutations(
                     mutate(
                         new CellSelector.ByAddress("Budget", "A1"),
@@ -524,12 +587,14 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
     assertEquals(workbookPath.toAbsolutePath().toString(), savedPath(success));
     assertEquals(
         "After",
-        cast(dev.erst.gridgrind.contract.dto.CellReport.TextReport.class, cells.cells().get(0))
+        cast(dev.erst.gridgrind.core.model.value.CellReport.TextReport.class, cells.cells().get(0))
             .textValue()
             .orElseThrow());
     assertEquals(
         12.0,
-        cast(dev.erst.gridgrind.contract.dto.CellReport.NumberReport.class, cells.cells().get(1))
+        cast(
+                dev.erst.gridgrind.core.model.value.CellReport.NumberReport.class,
+                cells.cells().get(1))
             .numberValue()
             .orElseThrow());
   }
@@ -639,7 +704,9 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
     assertEquals(workbookPath.toAbsolutePath().toString(), savedPath(success));
     assertEquals(
         "Quarterly",
-        cast(dev.erst.gridgrind.contract.dto.CellReport.TextReport.class, cells.cells().getFirst())
+        cast(
+                dev.erst.gridgrind.core.model.value.CellReport.TextReport.class,
+                cells.cells().getFirst())
             .textValue()
             .orElseThrow());
     assertEquals(
@@ -705,7 +772,7 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
                     mutate(
                         new RangeSelector.ByRange("Layout", "A1:F6"),
                         new CellMutationAction.SetRange(
-                            new dev.erst.gridgrind.contract.dto.CellGridInput.Typed(
+                            new dev.erst.gridgrind.core.model.value.CellGridInput.Typed(
                                 List.of(
                                     List.of(
                                         textCell("Item"),
@@ -859,7 +926,7 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
                     mutate(
                         new RangeSelector.ByRange("Moves", "A1:D3"),
                         new CellMutationAction.SetRange(
-                            new dev.erst.gridgrind.contract.dto.CellGridInput.Typed(
+                            new dev.erst.gridgrind.core.model.value.CellGridInput.Typed(
                                 List.of(
                                     List.of(
                                         textCell("Item"),
@@ -912,27 +979,29 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
     assertEquals(workbookPath.toAbsolutePath().toString(), savedPath(success));
     assertEquals(
         "Spacer",
-        cast(dev.erst.gridgrind.contract.dto.CellReport.TextReport.class, cells.cells().get(0))
+        cast(dev.erst.gridgrind.core.model.value.CellReport.TextReport.class, cells.cells().get(0))
             .textValue()
             .orElseThrow());
     assertEquals(
         "Pad",
-        cast(dev.erst.gridgrind.contract.dto.CellReport.TextReport.class, cells.cells().get(1))
+        cast(dev.erst.gridgrind.core.model.value.CellReport.TextReport.class, cells.cells().get(1))
             .textValue()
             .orElseThrow());
     assertEquals(
         "Hosting",
-        cast(dev.erst.gridgrind.contract.dto.CellReport.TextReport.class, cells.cells().get(2))
+        cast(dev.erst.gridgrind.core.model.value.CellReport.TextReport.class, cells.cells().get(2))
             .textValue()
             .orElseThrow());
     assertEquals(
         42.0,
-        cast(dev.erst.gridgrind.contract.dto.CellReport.NumberReport.class, cells.cells().get(3))
+        cast(
+                dev.erst.gridgrind.core.model.value.CellReport.NumberReport.class,
+                cells.cells().get(3))
             .numberValue()
             .orElseThrow());
     assertEquals(
         "Beta",
-        cast(dev.erst.gridgrind.contract.dto.CellReport.TextReport.class, cells.cells().get(4))
+        cast(dev.erst.gridgrind.core.model.value.CellReport.TextReport.class, cells.cells().get(4))
             .textValue()
             .orElseThrow());
 
@@ -961,7 +1030,7 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
                         mutate(
                             new RangeSelector.ByRange("Budget", "A1:B3"),
                             new CellMutationAction.SetRange(
-                                new dev.erst.gridgrind.contract.dto.CellGridInput.Typed(
+                                new dev.erst.gridgrind.core.model.value.CellGridInput.Typed(
                                     List.of(
                                         List.of(textCell("Item"), textCell("Qty")),
                                         List.of(
@@ -1066,13 +1135,13 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
                     new SheetIntrospectionQuery.GetComments()),
                 inspect(
                     "ranges",
-                    new dev.erst.gridgrind.contract.selector.NamedRangeSelector.All(),
+                    new dev.erst.gridgrind.core.plan.NamedRangeSelector.All(),
                     new WorkbookIntrospectionQuery.GetNamedRanges())));
 
     WorkbookResult.Success success = success(response);
-    dev.erst.gridgrind.contract.dto.CellReport.TextReport linkedCell =
+    dev.erst.gridgrind.core.model.value.CellReport.TextReport linkedCell =
         cast(
-            dev.erst.gridgrind.contract.dto.CellReport.TextReport.class,
+            dev.erst.gridgrind.core.model.value.CellReport.TextReport.class,
             read(success, "cells", SheetInspectionResult.CellsResult.class).cells().getFirst());
     SheetInspectionResult.HyperlinksResult hyperlinks =
         read(success, "hyperlinks", SheetInspectionResult.HyperlinksResult.class);
@@ -1183,12 +1252,11 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
     WorkbookResult.Success success = success(response);
     SheetInspectionResult.DataValidationsResult validations =
         read(success, "validations", SheetInspectionResult.DataValidationsResult.class);
-    dev.erst.gridgrind.contract.query.WorkbookAnalysisResult.DataValidationHealthResult health =
+    dev.erst.gridgrind.core.plan.WorkbookAnalysisResult.DataValidationHealthResult health =
         read(
             success,
             "health",
-            dev.erst.gridgrind.contract.query.WorkbookAnalysisResult.DataValidationHealthResult
-                .class);
+            dev.erst.gridgrind.core.plan.WorkbookAnalysisResult.DataValidationHealthResult.class);
     List<ExcelDataValidationSnapshot> persisted =
         XlsxRoundTrip.dataValidations(workbookPath, "Budget");
 
@@ -1234,7 +1302,7 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
                     mutate(
                         new RangeSelector.ByRange("Budget", "A1:B5"),
                         new CellMutationAction.SetRange(
-                            new dev.erst.gridgrind.contract.dto.CellGridInput.Typed(
+                            new dev.erst.gridgrind.core.model.value.CellGridInput.Typed(
                                 List.of(
                                     List.of(textCell("Status"), textCell("Amount")),
                                     List.of(textCell("Queued"), new CellInput.NumberValue(1.0)),
@@ -1260,13 +1328,12 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
             success,
             "conditional-formatting",
             SheetInspectionResult.ConditionalFormattingResult.class);
-    dev.erst.gridgrind.contract.query.WorkbookAnalysisResult.ConditionalFormattingHealthResult
-        health =
-            read(
-                success,
-                "conditional-formatting-health",
-                dev.erst.gridgrind.contract.query.WorkbookAnalysisResult
-                    .ConditionalFormattingHealthResult.class);
+    dev.erst.gridgrind.core.plan.WorkbookAnalysisResult.ConditionalFormattingHealthResult health =
+        read(
+            success,
+            "conditional-formatting-health",
+            dev.erst.gridgrind.core.plan.WorkbookAnalysisResult.ConditionalFormattingHealthResult
+                .class);
 
     assertEquals(workbookPath.toAbsolutePath().toString(), savedPath(success));
     assertEquals(1, conditionalFormatting.conditionalFormattingBlocks().size());
@@ -1330,7 +1397,7 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
                     mutate(
                         new RangeSelector.ByRange("Budget", "A1:C4"),
                         new CellMutationAction.SetRange(
-                            new dev.erst.gridgrind.contract.dto.CellGridInput.Typed(
+                            new dev.erst.gridgrind.core.model.value.CellGridInput.Typed(
                                 List.of(
                                     List.of(
                                         textCell("Item"), textCell("Amount"), textCell("Billable")),
@@ -1349,7 +1416,7 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
                     mutate(
                         new RangeSelector.ByRange("Budget", "E1:F3"),
                         new CellMutationAction.SetRange(
-                            new dev.erst.gridgrind.contract.dto.CellGridInput.Typed(
+                            new dev.erst.gridgrind.core.model.value.CellGridInput.Typed(
                                 List.of(
                                     List.of(textCell("Queue"), textCell("Owner")),
                                     List.of(textCell("Late invoices"), textCell("Marta")),
@@ -1388,18 +1455,16 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
         read(success, "filters", SheetInspectionResult.AutofiltersResult.class);
     WorkbookAssetInspectionResult.TablesResult tables =
         read(success, "tables", WorkbookAssetInspectionResult.TablesResult.class);
-    dev.erst.gridgrind.contract.query.WorkbookAnalysisResult.AutofilterHealthResult
-        autofilterHealth =
-            read(
-                success,
-                "autofilter-health",
-                dev.erst.gridgrind.contract.query.WorkbookAnalysisResult.AutofilterHealthResult
-                    .class);
-    dev.erst.gridgrind.contract.query.WorkbookAnalysisResult.TableHealthResult tableHealth =
+    dev.erst.gridgrind.core.plan.WorkbookAnalysisResult.AutofilterHealthResult autofilterHealth =
+        read(
+            success,
+            "autofilter-health",
+            dev.erst.gridgrind.core.plan.WorkbookAnalysisResult.AutofilterHealthResult.class);
+    dev.erst.gridgrind.core.plan.WorkbookAnalysisResult.TableHealthResult tableHealth =
         read(
             success,
             "table-health",
-            dev.erst.gridgrind.contract.query.WorkbookAnalysisResult.TableHealthResult.class);
+            dev.erst.gridgrind.core.plan.WorkbookAnalysisResult.TableHealthResult.class);
 
     assertEquals(workbookPath.toAbsolutePath().toString(), savedPath(success));
     assertEquals(
@@ -1511,7 +1576,7 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
                         Boolean.TRUE, null, null, null, ColorInput.rgb("#FF0000"), null, null)))));
   }
 
-  private static dev.erst.gridgrind.contract.assertion.AssertionFailure failedAssertion(
+  private static dev.erst.gridgrind.core.plan.AssertionFailure failedAssertion(
       WorkbookResult.Failure failure) {
     return assertInstanceOf(AssertionResult.Failed.class, failure.assertions().getFirst())
         .failure();

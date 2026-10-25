@@ -10,10 +10,10 @@ import dev.erst.gridgrind.cli.discovery.RecipeKeywordMatchReport;
 import dev.erst.gridgrind.cli.examples.GridGrindCliRecipe;
 import dev.erst.gridgrind.cli.examples.GridGrindCliRecipeRegistry;
 import dev.erst.gridgrind.cli.examples.GridGrindShippedExamples;
-import dev.erst.gridgrind.contract.dto.GridGrindProblemCode;
-import dev.erst.gridgrind.contract.dto.GridGrindProblemDetail;
-import dev.erst.gridgrind.contract.dto.RequestDoctorReport;
-import dev.erst.gridgrind.contract.dto.WorkbookPlan;
+import dev.erst.gridgrind.core.plan.WorkbookPlan;
+import dev.erst.gridgrind.core.problem.GridGrindProblemCode;
+import dev.erst.gridgrind.core.problem.GridGrindProblemDetail;
+import dev.erst.gridgrind.core.problem.RequestDoctorReport;
 import dev.erst.gridgrind.json.codec.GridGrindJson;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -492,7 +492,7 @@ class GridGrindCliCatalogCommandTest extends GridGrindCliTestSupport {
         new GridGrindCli()
             .run(new String[] {"--print-request-template"}, InputStream.nullInputStream(), stdout);
 
-    dev.erst.gridgrind.contract.dto.WorkbookPlan template =
+    dev.erst.gridgrind.core.plan.WorkbookPlan template =
         GridGrindJson.readRequest(stdout.toByteArray());
     String rendered = stdout.toString(StandardCharsets.UTF_8);
 

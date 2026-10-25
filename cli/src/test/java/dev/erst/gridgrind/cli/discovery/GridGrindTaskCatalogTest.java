@@ -76,7 +76,7 @@ class GridGrindTaskCatalogTest {
             IllegalArgumentException.class,
             () ->
                 new TaskCatalog(
-                    dev.erst.gridgrind.contract.dto.GridGrindProtocolVersion.current(),
+                    dev.erst.gridgrind.core.plan.GridGrindProtocolVersion.current(),
                     java.util.List.of(left, right)));
     assertEquals("tasks must not contain duplicate DUPLICATE", duplicateTasks.getMessage());
 
@@ -120,7 +120,7 @@ class GridGrindTaskCatalogTest {
             () ->
                 GridGrindTaskCatalog.validateCapabilityReferences(
                     new TaskCatalog(
-                        dev.erst.gridgrind.contract.dto.GridGrindProtocolVersion.current(),
+                        dev.erst.gridgrind.core.plan.GridGrindProtocolVersion.current(),
                         java.util.List.of(brokenTask()))));
     assertTrue(
         danglingReference
@@ -142,8 +142,7 @@ class GridGrindTaskCatalogTest {
   @Test
   void examplePlanSupportBuildsSheetScopedTableSelectors() {
     var table =
-        new dev.erst.gridgrind.contract.selector.TableSelector.ByNameOnSheet(
-            "BudgetTable", "Budget");
+        new dev.erst.gridgrind.core.plan.TableSelector.ByNameOnSheet("BudgetTable", "Budget");
 
     assertEquals("BudgetTable", table.name());
     assertEquals("Budget", table.sheetName());

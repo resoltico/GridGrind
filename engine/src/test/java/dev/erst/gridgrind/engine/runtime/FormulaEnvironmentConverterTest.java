@@ -3,9 +3,9 @@ package dev.erst.gridgrind.engine.runtime;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import dev.erst.gridgrind.contract.dto.FormulaEnvironmentInput;
-import dev.erst.gridgrind.contract.dto.FormulaExternalWorkbookInput;
-import dev.erst.gridgrind.contract.dto.FormulaMissingWorkbookPolicy;
+import dev.erst.gridgrind.core.model.formula.FormulaEnvironmentInput;
+import dev.erst.gridgrind.core.model.formula.FormulaExternalWorkbookInput;
+import dev.erst.gridgrind.core.model.formula.FormulaMissingWorkbookPolicy;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;

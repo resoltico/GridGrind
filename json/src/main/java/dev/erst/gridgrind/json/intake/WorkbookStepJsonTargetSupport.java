@@ -1,7 +1,7 @@
 package dev.erst.gridgrind.json.intake;
 
-import dev.erst.gridgrind.contract.selector.Selector;
-import dev.erst.gridgrind.contract.selector.SelectorJsonSupport;
+import dev.erst.gridgrind.core.plan.Selector;
+import dev.erst.gridgrind.core.plan.SelectorJsonSupport;
 import dev.erst.gridgrind.core.problem.ActionableShapeMessage;
 import dev.erst.gridgrind.core.problem.MissingTypeDiscriminator;
 import java.util.Optional;

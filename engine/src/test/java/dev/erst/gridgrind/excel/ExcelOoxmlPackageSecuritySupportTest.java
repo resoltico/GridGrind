@@ -2,13 +2,13 @@ package dev.erst.gridgrind.excel;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import dev.erst.gridgrind.excel.foundation.ExcelOoxmlCipherAlgorithm;
-import dev.erst.gridgrind.excel.foundation.ExcelOoxmlEncryptionMode;
-import dev.erst.gridgrind.excel.foundation.ExcelOoxmlHashAlgorithm;
-import dev.erst.gridgrind.excel.foundation.ExcelOoxmlSignatureDigestAlgorithm;
-import dev.erst.gridgrind.excel.foundation.ExcelOoxmlSignatureState;
-import dev.erst.gridgrind.excel.foundation.ExcelOoxmlWriteCipher;
-import dev.erst.gridgrind.excel.foundation.ExcelOoxmlWriteHash;
+import dev.erst.gridgrind.core.vocabulary.ExcelOoxmlCipherAlgorithm;
+import dev.erst.gridgrind.core.vocabulary.ExcelOoxmlEncryptionMode;
+import dev.erst.gridgrind.core.vocabulary.ExcelOoxmlHashAlgorithm;
+import dev.erst.gridgrind.core.vocabulary.ExcelOoxmlSignatureDigestAlgorithm;
+import dev.erst.gridgrind.core.vocabulary.ExcelOoxmlSignatureState;
+import dev.erst.gridgrind.core.vocabulary.ExcelOoxmlWriteCipher;
+import dev.erst.gridgrind.core.vocabulary.ExcelOoxmlWriteHash;
 import dev.erst.gridgrind.excel.ooxml.ExcelOoxmlEncryptionSnapshot;
 import dev.erst.gridgrind.excel.ooxml.ExcelOoxmlOpenOptions;
 import dev.erst.gridgrind.excel.ooxml.ExcelOoxmlPackageInspectionSupport;

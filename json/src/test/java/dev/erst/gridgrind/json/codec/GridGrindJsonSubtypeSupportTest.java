@@ -6,7 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeName;
-import dev.erst.gridgrind.contract.catalog.ProtocolTypeMetadata;
+import dev.erst.gridgrind.core.metadata.ProtocolTypeMetadata;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 

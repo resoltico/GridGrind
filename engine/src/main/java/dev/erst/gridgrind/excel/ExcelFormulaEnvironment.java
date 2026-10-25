@@ -1,6 +1,6 @@
 package dev.erst.gridgrind.excel;
 
-import dev.erst.gridgrind.excel.foundation.FormulaEnvironmentSupport;
+import dev.erst.gridgrind.core.vocabulary.FormulaEnvironmentSupport;
 import java.util.List;
 
 /** Workbook-scoped formula-evaluation environment with external workbook bindings and UDFs. */

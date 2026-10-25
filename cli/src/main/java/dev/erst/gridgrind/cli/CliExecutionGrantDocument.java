@@ -2,7 +2,7 @@ package dev.erst.gridgrind.cli;
 
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import dev.erst.gridgrind.contract.dto.SecretReference;
+import dev.erst.gridgrind.core.source.SecretReference;
 import dev.erst.gridgrind.engine.api.GridGrindExecutionGrant;
 import java.nio.file.Path;
 import java.util.List;

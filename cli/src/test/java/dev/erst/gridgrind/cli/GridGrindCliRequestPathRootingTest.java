@@ -4,9 +4,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import dev.erst.gridgrind.contract.dto.WorkbookResult;
-import dev.erst.gridgrind.contract.dto.WorkbookResultPersistence;
-import dev.erst.gridgrind.contract.query.SheetInspectionResult;
+import dev.erst.gridgrind.core.plan.SheetInspectionResult;
+import dev.erst.gridgrind.core.result.WorkbookResult;
+import dev.erst.gridgrind.core.result.WorkbookResultPersistence;
 import dev.erst.gridgrind.json.codec.GridGrindJson;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -50,7 +50,7 @@ class GridGrindCliRequestPathRootingTest extends GridGrindCliTestSupport {
             List.of("ENSURE_SHEET"),
             List.of(),
             requestDirectory.resolve("result.xlsx"),
-            dev.erst.gridgrind.contract.dto.WorkbookPlan.WorkbookPersistence.IfExists.REPLACE);
+            dev.erst.gridgrind.core.plan.WorkbookPlan.WorkbookPersistence.IfExists.REPLACE);
 
     int exitCode =
         new GridGrindCli()
@@ -118,7 +118,7 @@ class GridGrindCliRequestPathRootingTest extends GridGrindCliTestSupport {
     assertEquals(
         "Quarterly Budget",
         assertInstanceOf(
-                dev.erst.gridgrind.contract.dto.CellReport.TextReport.class,
+                dev.erst.gridgrind.core.model.value.CellReport.TextReport.class,
                 cells.cells().getFirst())
             .textValue()
             .orElseThrow());
@@ -184,7 +184,7 @@ class GridGrindCliRequestPathRootingTest extends GridGrindCliTestSupport {
     assertEquals(
         "Quarterly Budget",
         assertInstanceOf(
-                dev.erst.gridgrind.contract.dto.CellReport.TextReport.class,
+                dev.erst.gridgrind.core.model.value.CellReport.TextReport.class,
                 cells.cells().getFirst())
             .textValue()
             .orElseThrow());
@@ -239,16 +239,16 @@ class GridGrindCliRequestPathRootingTest extends GridGrindCliTestSupport {
     SheetInspectionResult.CellsResult cells =
         assertInstanceOf(
             SheetInspectionResult.CellsResult.class, response.inspections().getFirst());
-    dev.erst.gridgrind.contract.dto.CellReport.FormulaReport formula =
+    dev.erst.gridgrind.core.model.value.CellReport.FormulaReport formula =
         assertInstanceOf(
-            dev.erst.gridgrind.contract.dto.CellReport.FormulaReport.class,
+            dev.erst.gridgrind.core.model.value.CellReport.FormulaReport.class,
             cells.cells().getFirst());
 
     assertEquals(0, exitCode);
     assertEquals(
         7.5d,
         assertInstanceOf(
-                dev.erst.gridgrind.contract.dto.CellValueReport.NumberValue.class,
+                dev.erst.gridgrind.core.model.value.CellValueReport.NumberValue.class,
                 formula.evaluation().orElseThrow())
             .numberValue());
   }
@@ -262,7 +262,7 @@ class GridGrindCliRequestPathRootingTest extends GridGrindCliTestSupport {
             List.of("ENSURE_SHEET"),
             List.of(),
             workspace.resolve("result.xlsx"),
-            dev.erst.gridgrind.contract.dto.WorkbookPlan.WorkbookPersistence.IfExists.REPLACE);
+            dev.erst.gridgrind.core.plan.WorkbookPlan.WorkbookPersistence.IfExists.REPLACE);
 
     int exitCode =
         new GridGrindCli()
@@ -362,7 +362,7 @@ class GridGrindCliRequestPathRootingTest extends GridGrindCliTestSupport {
     assertEquals(
         "Quarterly Budget",
         assertInstanceOf(
-                dev.erst.gridgrind.contract.dto.CellReport.TextReport.class,
+                dev.erst.gridgrind.core.model.value.CellReport.TextReport.class,
                 cells.cells().getFirst())
             .textValue()
             .orElseThrow());

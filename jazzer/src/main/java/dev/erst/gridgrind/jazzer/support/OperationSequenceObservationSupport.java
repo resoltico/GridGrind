@@ -5,17 +5,16 @@ import static dev.erst.gridgrind.jazzer.support.OperationSequenceValueFactory.ne
 import static dev.erst.gridgrind.jazzer.support.OperationSequenceValueFactory.nextTableSelector;
 import static dev.erst.gridgrind.jazzer.support.ProtocolStepSupport.assertThat;
 
-import dev.erst.gridgrind.contract.assertion.*;
-import dev.erst.gridgrind.contract.dto.*;
-import dev.erst.gridgrind.contract.query.*;
-import dev.erst.gridgrind.contract.selector.CellSelector;
-import dev.erst.gridgrind.contract.selector.ChartSelector;
-import dev.erst.gridgrind.contract.selector.NamedRangeSelector;
-import dev.erst.gridgrind.contract.selector.SheetSelector;
-import dev.erst.gridgrind.contract.selector.WorkbookSelector;
-import dev.erst.gridgrind.excel.foundation.AnalysisFindingCode;
-import dev.erst.gridgrind.excel.foundation.AnalysisSeverity;
-import dev.erst.gridgrind.excel.foundation.ExcelSheetVisibility;
+import dev.erst.gridgrind.core.model.value.CellScalarValue;
+import dev.erst.gridgrind.core.plan.*;
+import dev.erst.gridgrind.core.plan.CellSelector;
+import dev.erst.gridgrind.core.plan.ChartSelector;
+import dev.erst.gridgrind.core.plan.NamedRangeSelector;
+import dev.erst.gridgrind.core.plan.SheetSelector;
+import dev.erst.gridgrind.core.plan.WorkbookSelector;
+import dev.erst.gridgrind.core.vocabulary.AnalysisFindingCode;
+import dev.erst.gridgrind.core.vocabulary.AnalysisSeverity;
+import dev.erst.gridgrind.core.vocabulary.ExcelSheetVisibility;
 import java.util.List;
 import java.util.Optional;
 
@@ -121,7 +120,7 @@ final class OperationSequenceObservationSupport {
         switch (selectorSlot(nextSelectorByte(data)) % 3) {
           case 0 ->
               new WorkbookFactAssertion.WorkbookProtectionFacts(
-                  new dev.erst.gridgrind.contract.dto.WorkbookProtectionReport(
+                  new dev.erst.gridgrind.core.model.protection.WorkbookProtectionReport(
                       false, false, false, false, false));
           case 1 ->
               new AnalysisAssertion.AnalysisMaxSeverity(
@@ -204,10 +203,11 @@ final class OperationSequenceObservationSupport {
                   Optional.empty());
           default ->
               new WorkbookFactAssertion.SheetStructureFacts(
-                  new dev.erst.gridgrind.contract.dto.SheetSummaryReport(
+                  new dev.erst.gridgrind.core.result.SheetSummaryReport(
                       sheetName,
                       ExcelSheetVisibility.VISIBLE,
-                      new dev.erst.gridgrind.contract.dto.SheetProtectionReport.Unprotected(),
+                      new dev.erst.gridgrind.core.model.protection.SheetProtectionReport
+                          .Unprotected(),
                       0,
                       -1,
                       -1));

@@ -7,7 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import dev.erst.gridgrind.cli.discovery.CommandError;
-import dev.erst.gridgrind.contract.dto.GridGrindProblemCode;
+import dev.erst.gridgrind.core.problem.GridGrindProblemCode;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.util.concurrent.atomic.AtomicBoolean;

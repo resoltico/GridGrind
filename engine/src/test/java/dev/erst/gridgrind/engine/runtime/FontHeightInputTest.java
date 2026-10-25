@@ -2,7 +2,7 @@ package dev.erst.gridgrind.engine.runtime;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import dev.erst.gridgrind.contract.dto.FontHeightInput;
+import dev.erst.gridgrind.core.model.style.FontHeightInput;
 import java.math.BigDecimal;
 import org.junit.jupiter.api.Test;
 

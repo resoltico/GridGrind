@@ -1,8 +1,8 @@
 package dev.erst.gridgrind.excel;
 
-import dev.erst.gridgrind.contract.dto.ProtocolConstraintValues;
-import dev.erst.gridgrind.excel.foundation.ExcelComparisonOperator;
-import dev.erst.gridgrind.excel.foundation.ExcelConditionalFormattingIconSet;
+import dev.erst.gridgrind.core.vocabulary.ExcelComparisonOperator;
+import dev.erst.gridgrind.core.vocabulary.ExcelConditionalFormattingIconSet;
+import dev.erst.gridgrind.core.vocabulary.ProtocolConstraintValues;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;

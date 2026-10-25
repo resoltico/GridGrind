@@ -112,7 +112,7 @@ class GridGrindRecipeKeywordMatcherTest {
             dev.erst.gridgrind.cli.discovery.RecipeAdvisory.SELF_CONTAINED,
             List.of(),
             List.of("template"),
-            dev.erst.gridgrind.contract.catalog.GridGrindProtocolCatalog.requestTemplate());
+            dev.erst.gridgrind.core.catalog.GridGrindProtocolCatalog.requestTemplate());
 
     RecipeKeywordMatchReport.Candidate candidate =
         GridGrindRecipeKeywordCandidateScorer.candidateFor(

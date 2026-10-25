@@ -1,9 +1,9 @@
 package dev.erst.gridgrind.jazzer.support;
 
-import dev.erst.gridgrind.contract.dto.ExecutionPolicyInput;
-import dev.erst.gridgrind.contract.dto.FormulaCellTarget;
-import dev.erst.gridgrind.contract.selector.RangeSelector;
-import dev.erst.gridgrind.contract.selector.RowBandSelector;
+import dev.erst.gridgrind.core.model.formula.FormulaCellTarget;
+import dev.erst.gridgrind.core.plan.ExecutionPolicyInput;
+import dev.erst.gridgrind.core.plan.RangeSelector;
+import dev.erst.gridgrind.core.plan.RowBandSelector;
 import java.util.List;
 
 /** Shared selector, span, and execution-policy helpers for Jazzer operation generation. */

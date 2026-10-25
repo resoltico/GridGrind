@@ -35,7 +35,7 @@ tasks.named("pitest") {
 }
 
 // Engine behavior is exercised through both runtime adapters; coverage evidence must include both.
-val downstreamCoverageProjects = listOf(project(":cli"))
+val downstreamCoverageProjects = listOf(project(":json"), project(":cli"))
 
 fun downstreamCoverageTaskPaths(): List<String> =
     downstreamCoverageProjects.flatMap { downstreamProject ->

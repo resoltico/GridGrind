@@ -8,7 +8,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import dev.erst.gridgrind.contract.dto.WorkbookPlan;
+import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import dev.erst.gridgrind.engine.api.GridGrindExecutionGrant;
 import dev.erst.gridgrind.json.codec.GridGrindJson;
 import java.io.ByteArrayInputStream;
@@ -91,7 +91,7 @@ class CliExecutionBindingsFactoryTest extends GridGrindCliTestSupport {
             Optional.empty(),
             Optional.of(grantPath),
             Optional.empty(),
-            dev.erst.gridgrind.contract.catalog.GridGrindProtocolCatalog.requestTemplate(),
+            dev.erst.gridgrind.core.catalog.GridGrindProtocolCatalog.requestTemplate(),
             java.io.InputStream.nullInputStream())) {
       tempRoot = bindings.inputs().tempRoot();
 
@@ -114,7 +114,7 @@ class CliExecutionBindingsFactoryTest extends GridGrindCliTestSupport {
             Optional.of(explicitParent),
             Optional.of(grantPath),
             Optional.empty(),
-            dev.erst.gridgrind.contract.catalog.GridGrindProtocolCatalog.requestTemplate(),
+            dev.erst.gridgrind.core.catalog.GridGrindProtocolCatalog.requestTemplate(),
             java.io.InputStream.nullInputStream())) {
       assertTrue(Files.isDirectory(bindings.inputs().tempRoot()));
     }
@@ -225,7 +225,7 @@ class CliExecutionBindingsFactoryTest extends GridGrindCliTestSupport {
               .inputs()
               .secretResolver()
               .orElseThrow()
-              .resolve(new dev.erst.gridgrind.contract.dto.SecretReference("report-password")));
+              .resolve(new dev.erst.gridgrind.core.source.SecretReference("report-password")));
     } finally {
       CliExecutionBindingsFactory.deleteTreeIfExists(workspace);
     }

@@ -1,17 +1,17 @@
 package dev.erst.gridgrind.engine.runtime;
 
-import dev.erst.gridgrind.contract.dto.DiagnosticOrder;
-import dev.erst.gridgrind.contract.dto.GridGrindProblemCode;
-import dev.erst.gridgrind.contract.dto.GridGrindProblemDetail;
-import dev.erst.gridgrind.contract.dto.ProblemContext;
-import dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces;
-import dev.erst.gridgrind.contract.dto.WorkbookPlan;
-import dev.erst.gridgrind.contract.step.WorkbookStaticRequest;
-import dev.erst.gridgrind.contract.step.WorkbookStaticRequestContract;
-import dev.erst.gridgrind.contract.step.WorkbookStaticStep;
-import dev.erst.gridgrind.contract.step.WorkbookStaticViolation;
+import dev.erst.gridgrind.core.plan.WorkbookPlan;
+import dev.erst.gridgrind.core.problem.DiagnosticOrder;
+import dev.erst.gridgrind.core.problem.GridGrindProblemCode;
+import dev.erst.gridgrind.core.problem.GridGrindProblemDetail;
+import dev.erst.gridgrind.core.problem.ProblemContext;
+import dev.erst.gridgrind.core.problem.ProblemContextRequestSurfaces;
 import dev.erst.gridgrind.core.problem.RequestBoundFragments;
 import dev.erst.gridgrind.core.problem.RequestIntake;
+import dev.erst.gridgrind.core.validation.WorkbookStaticRequest;
+import dev.erst.gridgrind.core.validation.WorkbookStaticRequestContract;
+import dev.erst.gridgrind.core.validation.WorkbookStaticStep;
+import dev.erst.gridgrind.core.validation.WorkbookStaticViolation;
 import dev.erst.gridgrind.engine.api.GridGrindProblems;
 import dev.erst.gridgrind.engine.api.GridGrindRequestAnalysisProblems;
 import java.util.ArrayList;

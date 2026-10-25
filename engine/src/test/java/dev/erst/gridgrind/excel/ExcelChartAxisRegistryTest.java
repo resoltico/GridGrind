@@ -4,9 +4,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import dev.erst.gridgrind.excel.foundation.ExcelChartAxisCrosses;
-import dev.erst.gridgrind.excel.foundation.ExcelChartAxisKind;
-import dev.erst.gridgrind.excel.foundation.ExcelChartAxisPosition;
+import dev.erst.gridgrind.core.vocabulary.ExcelChartAxisCrosses;
+import dev.erst.gridgrind.core.vocabulary.ExcelChartAxisKind;
+import dev.erst.gridgrind.core.vocabulary.ExcelChartAxisPosition;
 import java.io.IOException;
 import java.util.List;
 import org.apache.poi.xddf.usermodel.chart.AxisPosition;

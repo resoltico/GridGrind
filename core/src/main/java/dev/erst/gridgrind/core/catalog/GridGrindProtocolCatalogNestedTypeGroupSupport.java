@@ -1,0 +1,38 @@
+package dev.erst.gridgrind.core.catalog;
+
+import dev.erst.gridgrind.core.plan.Selector;
+import dev.erst.gridgrind.core.plan.SelectorJsonSupport;
+import java.util.List;
+
+/** Shared descriptor helpers for the nested-type catalog registries. */
+final class GridGrindProtocolCatalogNestedTypeGroupSupport {
+  private GridGrindProtocolCatalogNestedTypeGroupSupport() {}
+
+  static CatalogNestedTypeDescriptor nestedTypeGroup(
+      String group, Class<?> sealedType, List<CatalogTypeDescriptor> typeDescriptors) {
+    return CatalogTypeEntryFactory.nestedTypeGroup(group, sealedType, typeDescriptors);
+  }
+
+  static CatalogTypeDescriptor descriptor(
+      Class<? extends Record> recordType, String id, String summary) {
+    return CatalogTypeEntryFactory.descriptor(recordType, id, summary);
+  }
+
+  static CatalogTypeDescriptor descriptorWithNotes(
+      Class<? extends Record> recordType, String id, String summary, List<String> noteRefs) {
+    return CatalogTypeEntryFactory.descriptorWithNotes(recordType, id, summary, noteRefs);
+  }
+
+  static CatalogTypeDescriptor descriptor(
+      Class<? extends Record> recordType,
+      String id,
+      String summary,
+      CatalogProjectedField... projectedFields) {
+    return CatalogTypeEntryFactory.descriptor(recordType, id, summary, projectedFields);
+  }
+
+  static <T extends Record & Selector> CatalogTypeDescriptor selectorDescriptor(
+      Class<T> recordType, String summary) {
+    return descriptor(recordType, SelectorJsonSupport.typeIdFor(recordType), summary);
+  }
+}

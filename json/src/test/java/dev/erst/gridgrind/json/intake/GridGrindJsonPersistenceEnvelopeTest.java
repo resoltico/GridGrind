@@ -3,11 +3,11 @@ package dev.erst.gridgrind.json.intake;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 
-import dev.erst.gridgrind.contract.dto.GridGrindProblemDetail;
-import dev.erst.gridgrind.contract.dto.GridGrindProtocolVersion;
-import dev.erst.gridgrind.contract.dto.WorkbookResult;
-import dev.erst.gridgrind.contract.dto.WorkbookResultPersistence;
-import dev.erst.gridgrind.contract.dto.WorkbookResults;
+import dev.erst.gridgrind.core.plan.GridGrindProtocolVersion;
+import dev.erst.gridgrind.core.problem.GridGrindProblemDetail;
+import dev.erst.gridgrind.core.result.WorkbookResult;
+import dev.erst.gridgrind.core.result.WorkbookResultPersistence;
+import dev.erst.gridgrind.core.result.WorkbookResults;
 import dev.erst.gridgrind.json.codec.GridGrindJson;
 import dev.erst.gridgrind.json.codec.GridGrindJsonMapperSupport;
 import dev.erst.gridgrind.json.codec.GridGrindJsonOutput;
@@ -55,16 +55,16 @@ class GridGrindJsonPersistenceEnvelopeTest {
             new WorkbookResultPersistence.PersistenceOutcome.SavedAs(
                 "out/report.xlsx", new WorkbookResultPersistence.PublicationOutcome.NotAttempted()),
             new GridGrindProblemDetail.Problem(
-                dev.erst.gridgrind.contract.dto.GridGrindProblemCode.IO_ERROR,
-                dev.erst.gridgrind.contract.dto.GridGrindProblemCode.IO_ERROR.category(),
-                dev.erst.gridgrind.contract.dto.GridGrindProblemCode.IO_ERROR.recovery(),
-                dev.erst.gridgrind.contract.dto.GridGrindProblemCode.IO_ERROR.title(),
+                dev.erst.gridgrind.core.problem.GridGrindProblemCode.IO_ERROR,
+                dev.erst.gridgrind.core.problem.GridGrindProblemCode.IO_ERROR.category(),
+                dev.erst.gridgrind.core.problem.GridGrindProblemCode.IO_ERROR.recovery(),
+                dev.erst.gridgrind.core.problem.GridGrindProblemCode.IO_ERROR.title(),
                 "write failed",
-                dev.erst.gridgrind.contract.dto.GridGrindProblemCode.IO_ERROR.resolution(),
-                new dev.erst.gridgrind.contract.dto.ProblemContext.PersistWorkbook(
-                    dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces.RequestShape
+                dev.erst.gridgrind.core.problem.GridGrindProblemCode.IO_ERROR.resolution(),
+                new dev.erst.gridgrind.core.problem.ProblemContext.PersistWorkbook(
+                    dev.erst.gridgrind.core.problem.ProblemContextRequestSurfaces.RequestShape
                         .known("NEW", "SAVE_AS"),
-                    dev.erst.gridgrind.contract.dto.ProblemContextWorkbookSurfaces
+                    dev.erst.gridgrind.core.problem.ProblemContextWorkbookSurfaces
                         .PersistenceReference.saveAs("/work/out/report.xlsx")),
                 List.of()));
 
@@ -93,14 +93,14 @@ class GridGrindJsonPersistenceEnvelopeTest {
             new WorkbookResultPersistence.PersistenceOutcome.Overwritten(
                 Optional.empty(), new WorkbookResultPersistence.PublicationOutcome.NotAttempted()),
             new GridGrindProblemDetail.Problem(
-                dev.erst.gridgrind.contract.dto.GridGrindProblemCode.INVALID_REQUEST,
-                dev.erst.gridgrind.contract.dto.GridGrindProblemCode.INVALID_REQUEST.category(),
-                dev.erst.gridgrind.contract.dto.GridGrindProblemCode.INVALID_REQUEST.recovery(),
-                dev.erst.gridgrind.contract.dto.GridGrindProblemCode.INVALID_REQUEST.title(),
+                dev.erst.gridgrind.core.problem.GridGrindProblemCode.INVALID_REQUEST,
+                dev.erst.gridgrind.core.problem.GridGrindProblemCode.INVALID_REQUEST.category(),
+                dev.erst.gridgrind.core.problem.GridGrindProblemCode.INVALID_REQUEST.recovery(),
+                dev.erst.gridgrind.core.problem.GridGrindProblemCode.INVALID_REQUEST.title(),
                 "OVERWRITE persistence requires an EXISTING source",
-                dev.erst.gridgrind.contract.dto.GridGrindProblemCode.INVALID_REQUEST.resolution(),
-                new dev.erst.gridgrind.contract.dto.ProblemContext.ValidateRequest(
-                    dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces.RequestShape
+                dev.erst.gridgrind.core.problem.GridGrindProblemCode.INVALID_REQUEST.resolution(),
+                new dev.erst.gridgrind.core.problem.ProblemContext.ValidateRequest(
+                    dev.erst.gridgrind.core.problem.ProblemContextRequestSurfaces.RequestShape
                         .known("NEW", "OVERWRITE")),
                 List.of()));
 

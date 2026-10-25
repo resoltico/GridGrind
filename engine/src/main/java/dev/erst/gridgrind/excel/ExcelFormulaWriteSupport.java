@@ -1,6 +1,6 @@
 package dev.erst.gridgrind.excel;
 
-import dev.erst.gridgrind.contract.dto.FormulaTextValidation;
+import dev.erst.gridgrind.core.model.formula.FormulaTextValidation;
 import java.util.Objects;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.xssf.streaming.SXSSFCell;

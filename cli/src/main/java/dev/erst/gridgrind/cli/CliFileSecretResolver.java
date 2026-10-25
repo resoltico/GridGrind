@@ -1,6 +1,6 @@
 package dev.erst.gridgrind.cli;
 
-import dev.erst.gridgrind.contract.dto.SecretReference;
+import dev.erst.gridgrind.core.source.SecretReference;
 import dev.erst.gridgrind.engine.api.GridGrindSecretResolver;
 import java.io.IOException;
 import java.nio.ByteBuffer;

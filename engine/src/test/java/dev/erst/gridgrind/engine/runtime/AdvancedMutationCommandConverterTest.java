@@ -5,52 +5,62 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import dev.erst.gridgrind.contract.action.CellMutationAction;
-import dev.erst.gridgrind.contract.action.DrawingMutationAction;
-import dev.erst.gridgrind.contract.action.StructuredMutationAction;
-import dev.erst.gridgrind.contract.action.WorkbookMutationAction;
-import dev.erst.gridgrind.contract.dto.ArrayFormulaInput;
-import dev.erst.gridgrind.contract.dto.AutofilterFilterColumnInput;
-import dev.erst.gridgrind.contract.dto.AutofilterFilterCriterionInput;
-import dev.erst.gridgrind.contract.dto.AutofilterSortConditionInput;
-import dev.erst.gridgrind.contract.dto.AutofilterSortStateInput;
-import dev.erst.gridgrind.contract.dto.BorderSideInput;
-import dev.erst.gridgrind.contract.dto.CellBorderInput;
-import dev.erst.gridgrind.contract.dto.CellFillInput;
-import dev.erst.gridgrind.contract.dto.CellFontInput;
-import dev.erst.gridgrind.contract.dto.CellGradientFillInput;
-import dev.erst.gridgrind.contract.dto.CellGradientStopInput;
-import dev.erst.gridgrind.contract.dto.CellStylePatchInput;
-import dev.erst.gridgrind.contract.dto.ChartDataSourceInput;
-import dev.erst.gridgrind.contract.dto.ChartInput;
-import dev.erst.gridgrind.contract.dto.ChartLegendInput;
-import dev.erst.gridgrind.contract.dto.ChartPlotInput;
-import dev.erst.gridgrind.contract.dto.ChartSeriesInput;
-import dev.erst.gridgrind.contract.dto.ChartTitleInput;
-import dev.erst.gridgrind.contract.dto.ColorInput;
-import dev.erst.gridgrind.contract.dto.CommentAnchorInput;
-import dev.erst.gridgrind.contract.dto.CommentInput;
-import dev.erst.gridgrind.contract.dto.ConditionalFormattingRuleInput;
-import dev.erst.gridgrind.contract.dto.ConditionalFormattingThresholdInput;
-import dev.erst.gridgrind.contract.dto.CustomXmlImportInput;
-import dev.erst.gridgrind.contract.dto.CustomXmlMappingLocator;
-import dev.erst.gridgrind.contract.dto.DrawingAnchorInput;
-import dev.erst.gridgrind.contract.dto.DrawingMarkerInput;
-import dev.erst.gridgrind.contract.dto.EmbeddedObjectInput;
-import dev.erst.gridgrind.contract.dto.NamedRangeScope;
-import dev.erst.gridgrind.contract.dto.NamedRangeTarget;
-import dev.erst.gridgrind.contract.dto.PictureDataInput;
-import dev.erst.gridgrind.contract.dto.PictureInput;
-import dev.erst.gridgrind.contract.dto.PivotTableInput;
-import dev.erst.gridgrind.contract.dto.RichTextRunInput;
-import dev.erst.gridgrind.contract.dto.ShapeInput;
-import dev.erst.gridgrind.contract.dto.SheetProtectionSettings;
-import dev.erst.gridgrind.contract.dto.SignatureLineInput;
-import dev.erst.gridgrind.contract.dto.WorkbookProtectionInput;
-import dev.erst.gridgrind.contract.selector.*;
-import dev.erst.gridgrind.contract.source.BinarySourceInput;
-import dev.erst.gridgrind.contract.source.TextSourceInput;
-import dev.erst.gridgrind.contract.step.MutationStep;
+import dev.erst.gridgrind.core.model.chart.ChartDataSourceInput;
+import dev.erst.gridgrind.core.model.chart.ChartInput;
+import dev.erst.gridgrind.core.model.chart.ChartLegendInput;
+import dev.erst.gridgrind.core.model.chart.ChartPlotInput;
+import dev.erst.gridgrind.core.model.chart.ChartSeriesInput;
+import dev.erst.gridgrind.core.model.chart.ChartTitleInput;
+import dev.erst.gridgrind.core.model.customxml.CustomXmlImportInput;
+import dev.erst.gridgrind.core.model.customxml.CustomXmlMappingLocator;
+import dev.erst.gridgrind.core.model.drawing.CommentAnchorInput;
+import dev.erst.gridgrind.core.model.drawing.CommentInput;
+import dev.erst.gridgrind.core.model.drawing.DrawingAnchorInput;
+import dev.erst.gridgrind.core.model.drawing.DrawingMarkerInput;
+import dev.erst.gridgrind.core.model.drawing.EmbeddedObjectInput;
+import dev.erst.gridgrind.core.model.drawing.PictureDataInput;
+import dev.erst.gridgrind.core.model.drawing.PictureInput;
+import dev.erst.gridgrind.core.model.drawing.ShapeInput;
+import dev.erst.gridgrind.core.model.drawing.SignatureLineInput;
+import dev.erst.gridgrind.core.model.formula.ArrayFormulaInput;
+import dev.erst.gridgrind.core.model.formula.NamedRangeTarget;
+import dev.erst.gridgrind.core.model.pivot.PivotTableInput;
+import dev.erst.gridgrind.core.model.protection.SheetProtectionSettings;
+import dev.erst.gridgrind.core.model.protection.WorkbookProtectionInput;
+import dev.erst.gridgrind.core.model.style.BorderSideInput;
+import dev.erst.gridgrind.core.model.style.CellBorderInput;
+import dev.erst.gridgrind.core.model.style.CellFillInput;
+import dev.erst.gridgrind.core.model.style.CellFontInput;
+import dev.erst.gridgrind.core.model.style.CellGradientFillInput;
+import dev.erst.gridgrind.core.model.style.CellGradientStopInput;
+import dev.erst.gridgrind.core.model.style.CellStylePatchInput;
+import dev.erst.gridgrind.core.model.style.ColorInput;
+import dev.erst.gridgrind.core.model.style.RichTextRunInput;
+import dev.erst.gridgrind.core.model.table.AutofilterFilterColumnInput;
+import dev.erst.gridgrind.core.model.table.AutofilterFilterCriterionInput;
+import dev.erst.gridgrind.core.model.table.AutofilterSortConditionInput;
+import dev.erst.gridgrind.core.model.table.AutofilterSortStateInput;
+import dev.erst.gridgrind.core.model.validation.ConditionalFormattingRuleInput;
+import dev.erst.gridgrind.core.model.validation.ConditionalFormattingThresholdInput;
+import dev.erst.gridgrind.core.plan.*;
+import dev.erst.gridgrind.core.plan.CellMutationAction;
+import dev.erst.gridgrind.core.plan.DrawingMutationAction;
+import dev.erst.gridgrind.core.plan.MutationStep;
+import dev.erst.gridgrind.core.plan.StructuredMutationAction;
+import dev.erst.gridgrind.core.plan.WorkbookMutationAction;
+import dev.erst.gridgrind.core.source.BinarySourceInput;
+import dev.erst.gridgrind.core.source.TextSourceInput;
+import dev.erst.gridgrind.core.vocabulary.ExcelChartBarDirection;
+import dev.erst.gridgrind.core.vocabulary.ExcelChartBarGrouping;
+import dev.erst.gridgrind.core.vocabulary.ExcelChartDisplayBlanksAs;
+import dev.erst.gridgrind.core.vocabulary.ExcelChartGrouping;
+import dev.erst.gridgrind.core.vocabulary.ExcelChartLegendPosition;
+import dev.erst.gridgrind.core.vocabulary.ExcelConditionalFormattingIconSet;
+import dev.erst.gridgrind.core.vocabulary.ExcelConditionalFormattingThresholdType;
+import dev.erst.gridgrind.core.vocabulary.ExcelDrawingAnchorBehavior;
+import dev.erst.gridgrind.core.vocabulary.ExcelPictureFormat;
+import dev.erst.gridgrind.core.vocabulary.ExcelPivotDataConsolidateFunction;
+import dev.erst.gridgrind.core.vocabulary.NamedRangeScope;
 import dev.erst.gridgrind.excel.*;
 import dev.erst.gridgrind.excel.ExcelAutofilterFilterColumn;
 import dev.erst.gridgrind.excel.ExcelAutofilterFilterCriterion;
@@ -84,16 +94,6 @@ import dev.erst.gridgrind.excel.drawing.ExcelEmbeddedObjectDefinition;
 import dev.erst.gridgrind.excel.drawing.ExcelPictureDefinition;
 import dev.erst.gridgrind.excel.drawing.ExcelShapeDefinition;
 import dev.erst.gridgrind.excel.drawing.ExcelSignatureLineDefinition;
-import dev.erst.gridgrind.excel.foundation.ExcelChartBarDirection;
-import dev.erst.gridgrind.excel.foundation.ExcelChartBarGrouping;
-import dev.erst.gridgrind.excel.foundation.ExcelChartDisplayBlanksAs;
-import dev.erst.gridgrind.excel.foundation.ExcelChartGrouping;
-import dev.erst.gridgrind.excel.foundation.ExcelChartLegendPosition;
-import dev.erst.gridgrind.excel.foundation.ExcelConditionalFormattingIconSet;
-import dev.erst.gridgrind.excel.foundation.ExcelConditionalFormattingThresholdType;
-import dev.erst.gridgrind.excel.foundation.ExcelDrawingAnchorBehavior;
-import dev.erst.gridgrind.excel.foundation.ExcelPictureFormat;
-import dev.erst.gridgrind.excel.foundation.ExcelPivotDataConsolidateFunction;
 import dev.erst.gridgrind.excel.pivot.ExcelPivotTableDefinition;
 import java.util.List;
 import java.util.Optional;
@@ -190,9 +190,9 @@ class AdvancedMutationCommandConverterTest {
             new SheetProtectionSettings(
                 true, false, false, false, false, false, false, false, false, false, false, false,
                 false, false, false),
-            Optional.of(new dev.erst.gridgrind.contract.dto.SecretReference("sheet-password")));
+            Optional.of(new dev.erst.gridgrind.core.source.SecretReference("sheet-password")));
     assertEquals(
-        Optional.of(new dev.erst.gridgrind.contract.dto.SecretReference("sheet-password")),
+        Optional.of(new dev.erst.gridgrind.core.source.SecretReference("sheet-password")),
         sheetProtection.passwordRef());
     org.junit.jupiter.api.Assertions.assertThrows(
         IllegalArgumentException.class,
@@ -201,7 +201,7 @@ class AdvancedMutationCommandConverterTest {
                 new SheetProtectionSettings(
                     true, false, false, false, false, false, false, false, false, false, false,
                     false, false, false, false),
-                Optional.of(new dev.erst.gridgrind.contract.dto.SecretReference(" "))));
+                Optional.of(new dev.erst.gridgrind.core.source.SecretReference(" "))));
   }
 
   @Test
@@ -807,7 +807,7 @@ class AdvancedMutationCommandConverterTest {
                 true,
                 false,
                 true,
-                Optional.of(new dev.erst.gridgrind.contract.dto.SecretReference("book-password")),
+                Optional.of(new dev.erst.gridgrind.core.source.SecretReference("book-password")),
                 Optional.empty()));
     WorkbookMutationAction.ClearWorkbookProtection clearProtection =
         new WorkbookMutationAction.ClearWorkbookProtection();

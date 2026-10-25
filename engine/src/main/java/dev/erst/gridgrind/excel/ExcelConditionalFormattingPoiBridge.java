@@ -1,7 +1,7 @@
 package dev.erst.gridgrind.excel;
 
-import dev.erst.gridgrind.excel.foundation.ExcelConditionalFormattingIconSet;
-import dev.erst.gridgrind.excel.foundation.ExcelConditionalFormattingThresholdType;
+import dev.erst.gridgrind.core.vocabulary.ExcelConditionalFormattingIconSet;
+import dev.erst.gridgrind.core.vocabulary.ExcelConditionalFormattingThresholdType;
 import java.util.Objects;
 import org.apache.poi.ss.usermodel.ConditionalFormattingThreshold;
 import org.apache.poi.ss.usermodel.IconMultiStateFormatting;

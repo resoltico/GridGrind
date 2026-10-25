@@ -6,11 +6,11 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import dev.erst.gridgrind.cli.discovery.CommandError;
 import dev.erst.gridgrind.cli.discovery.GridGrindCliJson;
-import dev.erst.gridgrind.contract.dto.GridGrindProblemCode;
-import dev.erst.gridgrind.contract.dto.GridGrindProblemDetail;
-import dev.erst.gridgrind.contract.dto.ProblemContext;
-import dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces.JsonLocation;
-import dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces.RequestInput;
+import dev.erst.gridgrind.core.problem.GridGrindProblemCode;
+import dev.erst.gridgrind.core.problem.GridGrindProblemDetail;
+import dev.erst.gridgrind.core.problem.ProblemContext;
+import dev.erst.gridgrind.core.problem.ProblemContextRequestSurfaces.JsonLocation;
+import dev.erst.gridgrind.core.problem.ProblemContextRequestSurfaces.RequestInput;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import org.junit.jupiter.api.Test;
@@ -125,7 +125,7 @@ class CommandErrorTest {
             .getMessage());
   }
 
-  private static dev.erst.gridgrind.contract.dto.GridGrindProtocolVersion errorVersion() {
-    return dev.erst.gridgrind.contract.dto.GridGrindProtocolVersion.current();
+  private static dev.erst.gridgrind.core.plan.GridGrindProtocolVersion errorVersion() {
+    return dev.erst.gridgrind.core.plan.GridGrindProtocolVersion.current();
   }
 }

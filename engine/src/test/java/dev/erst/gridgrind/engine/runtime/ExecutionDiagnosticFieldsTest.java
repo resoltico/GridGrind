@@ -4,28 +4,27 @@ import static dev.erst.gridgrind.engine.runtime.ExecutorTestPlanSupport.formulaC
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 
-import dev.erst.gridgrind.contract.action.CellMutationAction;
-import dev.erst.gridgrind.contract.action.StructuredMutationAction;
-import dev.erst.gridgrind.contract.assertion.*;
-import dev.erst.gridgrind.contract.dto.ConditionalFormattingDefinitionInput;
-import dev.erst.gridgrind.contract.dto.ConditionalFormattingRuleInput;
-import dev.erst.gridgrind.contract.dto.NamedRangeScope;
-import dev.erst.gridgrind.contract.dto.NamedRangeTarget;
-import dev.erst.gridgrind.contract.dto.PivotTableInput;
-import dev.erst.gridgrind.contract.dto.ProblemContextWorkbookSurfaces;
-import dev.erst.gridgrind.contract.dto.TableInput;
-import dev.erst.gridgrind.contract.dto.TableStyleInput;
-import dev.erst.gridgrind.contract.query.*;
-import dev.erst.gridgrind.contract.selector.CellSelector;
-import dev.erst.gridgrind.contract.selector.NamedRangeSelector;
-import dev.erst.gridgrind.contract.selector.PivotTableSelector;
-import dev.erst.gridgrind.contract.selector.RangeSelector;
-import dev.erst.gridgrind.contract.selector.SheetSelector;
-import dev.erst.gridgrind.contract.selector.TableSelector;
-import dev.erst.gridgrind.contract.selector.WorkbookSelector;
-import dev.erst.gridgrind.contract.step.AssertionStep;
-import dev.erst.gridgrind.contract.step.InspectionStep;
-import dev.erst.gridgrind.contract.step.MutationStep;
+import dev.erst.gridgrind.core.model.formula.NamedRangeTarget;
+import dev.erst.gridgrind.core.model.pivot.PivotTableInput;
+import dev.erst.gridgrind.core.model.table.TableInput;
+import dev.erst.gridgrind.core.model.table.TableStyleInput;
+import dev.erst.gridgrind.core.model.validation.ConditionalFormattingDefinitionInput;
+import dev.erst.gridgrind.core.model.validation.ConditionalFormattingRuleInput;
+import dev.erst.gridgrind.core.plan.*;
+import dev.erst.gridgrind.core.plan.AssertionStep;
+import dev.erst.gridgrind.core.plan.CellMutationAction;
+import dev.erst.gridgrind.core.plan.CellSelector;
+import dev.erst.gridgrind.core.plan.InspectionStep;
+import dev.erst.gridgrind.core.plan.MutationStep;
+import dev.erst.gridgrind.core.plan.NamedRangeSelector;
+import dev.erst.gridgrind.core.plan.PivotTableSelector;
+import dev.erst.gridgrind.core.plan.RangeSelector;
+import dev.erst.gridgrind.core.plan.SheetSelector;
+import dev.erst.gridgrind.core.plan.StructuredMutationAction;
+import dev.erst.gridgrind.core.plan.TableSelector;
+import dev.erst.gridgrind.core.plan.WorkbookSelector;
+import dev.erst.gridgrind.core.problem.ProblemContextWorkbookSurfaces;
+import dev.erst.gridgrind.core.vocabulary.NamedRangeScope;
 import dev.erst.gridgrind.excel.ExcelNamedRangeScope;
 import dev.erst.gridgrind.excel.InvalidCellAddressException;
 import dev.erst.gridgrind.excel.InvalidFormulaException;
@@ -97,7 +96,7 @@ class ExecutionDiagnosticFieldsTest {
                 List.of(
                     new PivotTableInput.DataField(
                         "Amount",
-                        dev.erst.gridgrind.excel.foundation.ExcelPivotDataConsolidateFunction.SUM,
+                        dev.erst.gridgrind.core.vocabulary.ExcelPivotDataConsolidateFunction.SUM,
                         "Amount",
                         Optional.empty()))));
     StructuredMutationAction.SetTable table =
@@ -177,7 +176,7 @@ class ExecutionDiagnosticFieldsTest {
                     List.of(
                         new PivotTableInput.DataField(
                             "Amount",
-                            dev.erst.gridgrind.excel.foundation.ExcelPivotDataConsolidateFunction
+                            dev.erst.gridgrind.core.vocabulary.ExcelPivotDataConsolidateFunction
                                 .SUM,
                             "Amount",
                             Optional.empty())))));
@@ -197,7 +196,7 @@ class ExecutionDiagnosticFieldsTest {
                     List.of(
                         new PivotTableInput.DataField(
                             "Amount",
-                            dev.erst.gridgrind.excel.foundation.ExcelPivotDataConsolidateFunction
+                            dev.erst.gridgrind.core.vocabulary.ExcelPivotDataConsolidateFunction
                                 .SUM,
                             "Amount",
                             Optional.empty())))));

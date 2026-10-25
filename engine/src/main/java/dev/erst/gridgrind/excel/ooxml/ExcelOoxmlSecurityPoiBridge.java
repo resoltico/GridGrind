@@ -1,13 +1,13 @@
 package dev.erst.gridgrind.excel.ooxml;
 
+import dev.erst.gridgrind.core.vocabulary.ExcelOoxmlChainingMode;
+import dev.erst.gridgrind.core.vocabulary.ExcelOoxmlCipherAlgorithm;
+import dev.erst.gridgrind.core.vocabulary.ExcelOoxmlEncryptionMode;
+import dev.erst.gridgrind.core.vocabulary.ExcelOoxmlHashAlgorithm;
+import dev.erst.gridgrind.core.vocabulary.ExcelOoxmlSignatureDigestAlgorithm;
+import dev.erst.gridgrind.core.vocabulary.ExcelOoxmlWriteCipher;
+import dev.erst.gridgrind.core.vocabulary.ExcelOoxmlWriteHash;
 import dev.erst.gridgrind.excel.ExcelEnumMappingSupport;
-import dev.erst.gridgrind.excel.foundation.ExcelOoxmlChainingMode;
-import dev.erst.gridgrind.excel.foundation.ExcelOoxmlCipherAlgorithm;
-import dev.erst.gridgrind.excel.foundation.ExcelOoxmlEncryptionMode;
-import dev.erst.gridgrind.excel.foundation.ExcelOoxmlHashAlgorithm;
-import dev.erst.gridgrind.excel.foundation.ExcelOoxmlSignatureDigestAlgorithm;
-import dev.erst.gridgrind.excel.foundation.ExcelOoxmlWriteCipher;
-import dev.erst.gridgrind.excel.foundation.ExcelOoxmlWriteHash;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;

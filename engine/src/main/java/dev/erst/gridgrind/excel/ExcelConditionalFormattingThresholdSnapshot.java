@@ -1,6 +1,6 @@
 package dev.erst.gridgrind.excel;
 
-import dev.erst.gridgrind.excel.foundation.ExcelConditionalFormattingThresholdType;
+import dev.erst.gridgrind.core.vocabulary.ExcelConditionalFormattingThresholdType;
 import java.util.Objects;
 
 /** Factual threshold metadata loaded from an advanced conditional-formatting rule. */

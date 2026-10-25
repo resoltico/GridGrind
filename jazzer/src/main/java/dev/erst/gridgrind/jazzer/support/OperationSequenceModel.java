@@ -2,8 +2,8 @@ package dev.erst.gridgrind.jazzer.support;
 
 import static dev.erst.gridgrind.jazzer.support.OperationSequenceValueFactory.*;
 
-import dev.erst.gridgrind.contract.dto.FormulaEnvironmentInput;
-import dev.erst.gridgrind.contract.step.InspectionStep;
+import dev.erst.gridgrind.core.model.formula.FormulaEnvironmentInput;
+import dev.erst.gridgrind.core.plan.InspectionStep;
 import dev.erst.gridgrind.excel.WorkbookCommand;
 import dev.erst.gridgrind.jazzer.support.OperationSequenceValueFactory.WorkflowStorage;
 import java.io.IOException;

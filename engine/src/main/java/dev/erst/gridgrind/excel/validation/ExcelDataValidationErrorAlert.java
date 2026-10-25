@@ -1,6 +1,6 @@
 package dev.erst.gridgrind.excel.validation;
 
-import dev.erst.gridgrind.excel.foundation.ExcelDataValidationErrorStyle;
+import dev.erst.gridgrind.core.vocabulary.ExcelDataValidationErrorStyle;
 import java.util.Objects;
 
 /** Error-box configuration attached to one data-validation rule. */

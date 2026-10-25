@@ -6,13 +6,13 @@ import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import dev.erst.gridgrind.contract.dto.OoxmlEncryptionInput;
-import dev.erst.gridgrind.contract.dto.OoxmlOpenSecurityInput;
-import dev.erst.gridgrind.contract.dto.OoxmlPersistenceSecurityInput;
-import dev.erst.gridgrind.contract.dto.OoxmlSignatureInput;
-import dev.erst.gridgrind.excel.foundation.ExcelOoxmlSignatureDigestAlgorithm;
-import dev.erst.gridgrind.excel.foundation.ExcelOoxmlWriteCipher;
-import dev.erst.gridgrind.excel.foundation.ExcelOoxmlWriteHash;
+import dev.erst.gridgrind.core.model.security.OoxmlEncryptionInput;
+import dev.erst.gridgrind.core.model.security.OoxmlOpenSecurityInput;
+import dev.erst.gridgrind.core.model.security.OoxmlPersistenceSecurityInput;
+import dev.erst.gridgrind.core.model.security.OoxmlSignatureInput;
+import dev.erst.gridgrind.core.vocabulary.ExcelOoxmlSignatureDigestAlgorithm;
+import dev.erst.gridgrind.core.vocabulary.ExcelOoxmlWriteCipher;
+import dev.erst.gridgrind.core.vocabulary.ExcelOoxmlWriteHash;
 import dev.erst.gridgrind.excel.ooxml.ExcelOoxmlOpenOptions;
 import dev.erst.gridgrind.excel.ooxml.ExcelOoxmlPersistenceEncryption;
 import dev.erst.gridgrind.excel.ooxml.ExcelOoxmlPersistenceOptions;
@@ -34,17 +34,16 @@ class OoxmlPackageSecurityConverterTest {
         Files.write(temporaryDirectory.resolve("signing-material.p12"), new byte[] {1, 2});
     OoxmlPersistenceSecurityInput input =
         new OoxmlPersistenceSecurityInput(
-            new dev.erst.gridgrind.contract.dto.OoxmlPersistenceEncryptionInput.Encrypt(
+            new dev.erst.gridgrind.core.model.security.OoxmlPersistenceEncryptionInput.Encrypt(
                 new OoxmlEncryptionInput(
-                    new dev.erst.gridgrind.contract.dto.SecretReference("persist-pass"),
+                    new dev.erst.gridgrind.core.source.SecretReference("persist-pass"),
                     ExcelOoxmlWriteCipher.AES_192,
                     ExcelOoxmlWriteHash.SHA_384)),
-            new dev.erst.gridgrind.contract.dto.OoxmlPersistenceSignatureInput.Sign(
+            new dev.erst.gridgrind.core.model.security.OoxmlPersistenceSignatureInput.Sign(
                 new OoxmlSignatureInput(
                     signingMaterial.getFileName().toString(),
-                    new dev.erst.gridgrind.contract.dto.SecretReference("keystore-password"),
-                    Optional.of(
-                        new dev.erst.gridgrind.contract.dto.SecretReference("key-password")),
+                    new dev.erst.gridgrind.core.source.SecretReference("keystore-password"),
+                    Optional.of(new dev.erst.gridgrind.core.source.SecretReference("key-password")),
                     Optional.of("gridgrind-signing"),
                     ExcelOoxmlSignatureDigestAlgorithm.SHA512,
                     Optional.of("GridGrind signing test"))));
@@ -54,13 +53,13 @@ class OoxmlPackageSecurityConverterTest {
             temporaryDirectory,
             List.of(signingMaterial),
             java.util.Map.of(
-                new dev.erst.gridgrind.contract.dto.SecretReference("persist-pass"),
+                new dev.erst.gridgrind.core.source.SecretReference("persist-pass"),
                 "persist-pass",
-                new dev.erst.gridgrind.contract.dto.SecretReference("keystore-password"),
+                new dev.erst.gridgrind.core.source.SecretReference("keystore-password"),
                 "keystore-pass",
-                new dev.erst.gridgrind.contract.dto.SecretReference("key-password"),
+                new dev.erst.gridgrind.core.source.SecretReference("key-password"),
                 "key-pass",
-                new dev.erst.gridgrind.contract.dto.SecretReference("source-pass"),
+                new dev.erst.gridgrind.core.source.SecretReference("source-pass"),
                 "source-pass"))) {
       assertEquals(
           "source-pass",
@@ -69,7 +68,7 @@ class OoxmlPackageSecurityConverterTest {
                   OoxmlPackageSecurityConverter.toExcelOpenOptions(
                       new OoxmlOpenSecurityInput(
                           Optional.of(
-                              new dev.erst.gridgrind.contract.dto.SecretReference("source-pass"))),
+                              new dev.erst.gridgrind.core.source.SecretReference("source-pass"))),
                       prepared.bindings()))
               .password());
       ExcelOoxmlPersistenceOptions options =
@@ -94,8 +93,8 @@ class OoxmlPackageSecurityConverterTest {
   void convertsExplicitNoneSecuritySettingsIntoPlaintextEngineOptions() throws Exception {
     OoxmlPersistenceSecurityInput explicitNone =
         new OoxmlPersistenceSecurityInput(
-            new dev.erst.gridgrind.contract.dto.OoxmlPersistenceEncryptionInput.None(),
-            new dev.erst.gridgrind.contract.dto.OoxmlPersistenceSignatureInput.None());
+            new dev.erst.gridgrind.core.model.security.OoxmlPersistenceEncryptionInput.None(),
+            new dev.erst.gridgrind.core.model.security.OoxmlPersistenceSignatureInput.None());
 
     assertInstanceOf(
         ExcelOoxmlOpenOptions.Unencrypted.class,
@@ -110,7 +109,7 @@ class OoxmlPackageSecurityConverterTest {
             OoxmlPackageSecurityConverter.toExcelOpenOptions(
                 new OoxmlOpenSecurityInput(
                     Optional.of(
-                        new dev.erst.gridgrind.contract.dto.SecretReference("source-pass")))));
+                        new dev.erst.gridgrind.core.source.SecretReference("source-pass")))));
     try (var prepared = ExecutionInputBindingsFixtureSupport.preparedBindings(temporaryDirectory)) {
       assertInstanceOf(
           ExcelOoxmlOpenOptions.Unencrypted.class,
@@ -132,13 +131,12 @@ class OoxmlPackageSecurityConverterTest {
     Path signingMaterial = Files.write(keys.resolve("signing-material.p12"), new byte[] {3, 4, 5});
     OoxmlPersistenceSecurityInput input =
         new OoxmlPersistenceSecurityInput(
-            new dev.erst.gridgrind.contract.dto.OoxmlPersistenceEncryptionInput.None(),
-            new dev.erst.gridgrind.contract.dto.OoxmlPersistenceSignatureInput.Sign(
+            new dev.erst.gridgrind.core.model.security.OoxmlPersistenceEncryptionInput.None(),
+            new dev.erst.gridgrind.core.model.security.OoxmlPersistenceSignatureInput.Sign(
                 new OoxmlSignatureInput(
                     "keys/signing-material.p12",
-                    new dev.erst.gridgrind.contract.dto.SecretReference("keystore-password"),
-                    Optional.of(
-                        new dev.erst.gridgrind.contract.dto.SecretReference("key-password")),
+                    new dev.erst.gridgrind.core.source.SecretReference("keystore-password"),
+                    Optional.of(new dev.erst.gridgrind.core.source.SecretReference("key-password")),
                     Optional.of("gridgrind-signing"),
                     ExcelOoxmlSignatureDigestAlgorithm.SHA256,
                     Optional.of("GridGrind signing test"))));
@@ -148,9 +146,9 @@ class OoxmlPackageSecurityConverterTest {
             temporaryDirectory,
             List.of(signingMaterial),
             java.util.Map.of(
-                new dev.erst.gridgrind.contract.dto.SecretReference("keystore-password"),
+                new dev.erst.gridgrind.core.source.SecretReference("keystore-password"),
                 "keystore-pass",
-                new dev.erst.gridgrind.contract.dto.SecretReference("key-password"),
+                new dev.erst.gridgrind.core.source.SecretReference("key-password"),
                 "key-pass"))) {
       Path materialized =
           assertInstanceOf(
@@ -171,11 +169,11 @@ class OoxmlPackageSecurityConverterTest {
         Files.write(temporaryDirectory.resolve("signing-material.p12"), new byte[] {1});
     OoxmlPersistenceSecurityInput input =
         new OoxmlPersistenceSecurityInput(
-            new dev.erst.gridgrind.contract.dto.OoxmlPersistenceEncryptionInput.None(),
-            new dev.erst.gridgrind.contract.dto.OoxmlPersistenceSignatureInput.Sign(
+            new dev.erst.gridgrind.core.model.security.OoxmlPersistenceEncryptionInput.None(),
+            new dev.erst.gridgrind.core.model.security.OoxmlPersistenceSignatureInput.Sign(
                 OoxmlSignatureInput.sameKeyPassword(
                     signingMaterial.getFileName().toString(),
-                    new dev.erst.gridgrind.contract.dto.SecretReference("keystore-password"),
+                    new dev.erst.gridgrind.core.source.SecretReference("keystore-password"),
                     Optional.empty(),
                     ExcelOoxmlSignatureDigestAlgorithm.SHA256,
                     Optional.empty())));
@@ -185,7 +183,7 @@ class OoxmlPackageSecurityConverterTest {
             temporaryDirectory,
             List.of(signingMaterial),
             java.util.Map.of(
-                new dev.erst.gridgrind.contract.dto.SecretReference("keystore-password"),
+                new dev.erst.gridgrind.core.source.SecretReference("keystore-password"),
                 "keystore-pass"))) {
       assertEquals(
           "keystore-pass",

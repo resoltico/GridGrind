@@ -1,13 +1,13 @@
 package dev.erst.gridgrind.engine.runtime;
 
-import dev.erst.gridgrind.contract.action.CellMutationAction;
-import dev.erst.gridgrind.contract.action.WorkbookMutationAction;
-import dev.erst.gridgrind.contract.dto.CellInput;
-import dev.erst.gridgrind.contract.dto.GridGrindWarningCode;
-import dev.erst.gridgrind.contract.dto.RequestWarning;
-import dev.erst.gridgrind.contract.dto.WorkbookPlan;
-import dev.erst.gridgrind.contract.step.MutationStep;
-import dev.erst.gridgrind.contract.step.WorkbookStep;
+import dev.erst.gridgrind.core.model.value.CellInput;
+import dev.erst.gridgrind.core.plan.CellMutationAction;
+import dev.erst.gridgrind.core.plan.MutationStep;
+import dev.erst.gridgrind.core.plan.WorkbookMutationAction;
+import dev.erst.gridgrind.core.plan.WorkbookPlan;
+import dev.erst.gridgrind.core.plan.WorkbookStep;
+import dev.erst.gridgrind.core.problem.GridGrindWarningCode;
+import dev.erst.gridgrind.core.problem.RequestWarning;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Objects;
@@ -45,8 +45,7 @@ final class GridGrindRequestWarnings {
     for (MutationStep step : steps) {
       switch (step.action()) {
         case WorkbookMutationAction.EnsureSheet _ -> {
-          if (step.target()
-              instanceof dev.erst.gridgrind.contract.selector.SheetSelector.ByName sheet) {
+          if (step.target() instanceof dev.erst.gridgrind.core.plan.SheetSelector.ByName sheet) {
             addIfSpaced(sheetNames, SelectorConverter.toSheetName(sheet));
           }
         }
@@ -114,7 +113,7 @@ final class GridGrindRequestWarnings {
       return;
     }
     if (!(formula.source()
-        instanceof dev.erst.gridgrind.contract.source.TextSourceInput.Inline inline)) {
+        instanceof dev.erst.gridgrind.core.source.TextSourceInput.Inline inline)) {
       return;
     }
     String formulaText = inline.text();

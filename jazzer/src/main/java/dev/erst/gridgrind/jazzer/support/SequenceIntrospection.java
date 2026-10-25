@@ -1,10 +1,10 @@
 package dev.erst.gridgrind.jazzer.support;
 
-import dev.erst.gridgrind.contract.dto.WorkbookPlan;
-import dev.erst.gridgrind.contract.dto.WorkbookResult;
-import dev.erst.gridgrind.contract.step.AssertionStep;
-import dev.erst.gridgrind.contract.step.InspectionStep;
-import dev.erst.gridgrind.contract.step.MutationStep;
+import dev.erst.gridgrind.core.plan.AssertionStep;
+import dev.erst.gridgrind.core.plan.InspectionStep;
+import dev.erst.gridgrind.core.plan.MutationStep;
+import dev.erst.gridgrind.core.plan.WorkbookPlan;
+import dev.erst.gridgrind.core.result.WorkbookResult;
 import dev.erst.gridgrind.excel.*;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -54,8 +54,7 @@ public final class SequenceIntrospection {
     mutations.forEach(
         mutation -> {
           if (mutation.action()
-              instanceof
-              dev.erst.gridgrind.contract.action.CellMutationAction.ApplyStyle applyStyle) {
+              instanceof dev.erst.gridgrind.core.plan.CellMutationAction.ApplyStyle applyStyle) {
             StyleKindIntrospection.styleKinds(applyStyle.style())
                 .forEach((key, value) -> counts.merge(key, value, Long::sum));
           }

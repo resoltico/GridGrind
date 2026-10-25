@@ -1,6 +1,6 @@
 package dev.erst.gridgrind.jazzer.support;
 
-import dev.erst.gridgrind.contract.dto.ChartPlotInput;
+import dev.erst.gridgrind.core.model.chart.ChartPlotInput;
 import dev.erst.gridgrind.excel.ExcelChartDefinition;
 
 /** Samples pie-like chart plot families for paired protocol and engine surfaces. */

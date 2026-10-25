@@ -1,6 +1,6 @@
 package dev.erst.gridgrind.json.intake;
 
-import dev.erst.gridgrind.contract.dto.WorkbookPlan;
+import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import dev.erst.gridgrind.core.problem.RequestIntake;
 import dev.erst.gridgrind.json.codec.GridGrindJsonMapperSupport;
 import java.nio.charset.StandardCharsets;

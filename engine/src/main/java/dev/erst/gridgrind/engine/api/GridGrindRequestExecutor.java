@@ -1,8 +1,8 @@
 package dev.erst.gridgrind.engine.api;
 
-import dev.erst.gridgrind.contract.dto.WorkbookPlan;
-import dev.erst.gridgrind.contract.dto.WorkbookResult;
+import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import dev.erst.gridgrind.core.problem.RequestIntake;
+import dev.erst.gridgrind.core.result.WorkbookResult;
 import java.util.Objects;
 
 /** Transport-neutral execution port for one complete GridGrind request workflow. */

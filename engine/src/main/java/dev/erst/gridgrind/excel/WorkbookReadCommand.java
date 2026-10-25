@@ -1,8 +1,8 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.core.vocabulary.ExcelAddressLists;
+import dev.erst.gridgrind.core.vocabulary.ExcelReadLimits;
 import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlMappingLocator;
-import dev.erst.gridgrind.excel.foundation.ExcelAddressLists;
-import dev.erst.gridgrind.excel.foundation.ExcelReadLimits;
 import dev.erst.gridgrind.excel.pivot.ExcelPivotTableSelection;
 import java.util.List;
 import java.util.Objects;

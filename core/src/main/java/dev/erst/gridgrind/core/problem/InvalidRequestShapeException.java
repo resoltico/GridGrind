@@ -1,6 +1,5 @@
 package dev.erst.gridgrind.core.problem;
 
-import dev.erst.gridgrind.contract.dto.GridGrindRequestProblemSupport;
 import java.util.Optional;
 import org.jspecify.annotations.Nullable;
 

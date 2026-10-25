@@ -5,16 +5,16 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 
-import dev.erst.gridgrind.contract.action.CellMutationAction;
-import dev.erst.gridgrind.contract.dto.CellInput;
-import dev.erst.gridgrind.contract.dto.ExecutionPolicyInput;
-import dev.erst.gridgrind.contract.dto.FormulaEnvironmentInput;
-import dev.erst.gridgrind.contract.dto.GridGrindProblemCode;
-import dev.erst.gridgrind.contract.dto.WorkbookExecutionEvidence.Preservation;
-import dev.erst.gridgrind.contract.dto.WorkbookPlan;
-import dev.erst.gridgrind.contract.dto.WorkbookResult;
-import dev.erst.gridgrind.contract.selector.CellSelector;
-import dev.erst.gridgrind.contract.step.MutationStep;
+import dev.erst.gridgrind.core.model.formula.FormulaEnvironmentInput;
+import dev.erst.gridgrind.core.model.value.CellInput;
+import dev.erst.gridgrind.core.plan.CellMutationAction;
+import dev.erst.gridgrind.core.plan.CellSelector;
+import dev.erst.gridgrind.core.plan.ExecutionPolicyInput;
+import dev.erst.gridgrind.core.plan.MutationStep;
+import dev.erst.gridgrind.core.plan.WorkbookPlan;
+import dev.erst.gridgrind.core.problem.GridGrindProblemCode;
+import dev.erst.gridgrind.core.result.WorkbookExecutionEvidence.Preservation;
+import dev.erst.gridgrind.core.result.WorkbookResult;
 import dev.erst.gridgrind.engine.api.GridGrindHostAcceptancePolicy;
 import java.io.IOException;
 import java.io.InputStream;
@@ -101,7 +101,7 @@ class OpaqueOoxmlPartPreservationExecutionTest {
         new WorkbookPlan.WorkbookPersistence.SaveAs(
             output.toString(),
             WorkbookPlan.WorkbookPersistence.IfExists.REJECT,
-            dev.erst.gridgrind.contract.dto.OoxmlPersistenceSecurityInput.none()),
+            dev.erst.gridgrind.core.model.security.OoxmlPersistenceSecurityInput.none()),
         ExecutionPolicyInput.defaults(),
         FormulaEnvironmentInput.empty(),
         List.of(

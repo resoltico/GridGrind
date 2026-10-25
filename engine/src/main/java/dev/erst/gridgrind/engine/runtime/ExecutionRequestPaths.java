@@ -1,6 +1,6 @@
 package dev.erst.gridgrind.engine.runtime;
 
-import dev.erst.gridgrind.contract.dto.WorkbookPlan;
+import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import dev.erst.gridgrind.excel.WorkbookArtifactWriteDisposition;
 import dev.erst.gridgrind.excel.WorkbookLocation;
 import dev.erst.gridgrind.excel.ooxml.ExcelOoxmlPackageSecuritySnapshot;
@@ -53,7 +53,7 @@ final class ExecutionRequestPaths {
       case WorkbookPlan.WorkbookSource.ExistingFile existingFile ->
           existingFile
               .security()
-              .flatMap(dev.erst.gridgrind.contract.dto.OoxmlOpenSecurityInput::passwordRef)
+              .flatMap(dev.erst.gridgrind.core.model.security.OoxmlOpenSecurityInput::passwordRef)
               .map(bindings::resolveSecret);
     };
   }
@@ -64,7 +64,7 @@ final class ExecutionRequestPaths {
       case WorkbookPlan.WorkbookSource.ExistingFile existingFile -> {
         if (existingFile
             .security()
-            .flatMap(dev.erst.gridgrind.contract.dto.OoxmlOpenSecurityInput::passwordRef)
+            .flatMap(dev.erst.gridgrind.core.model.security.OoxmlOpenSecurityInput::passwordRef)
             .isPresent()) {
           throw new IllegalStateException(
               "source encryption references require execution bindings");
@@ -119,32 +119,32 @@ final class ExecutionRequestPaths {
     };
   }
 
-  static dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces.RequestShape requestShape(
+  static dev.erst.gridgrind.core.problem.ProblemContextRequestSurfaces.RequestShape requestShape(
       WorkbookPlan request) {
-    return dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces.RequestShape.known(
+    return dev.erst.gridgrind.core.problem.ProblemContextRequestSurfaces.RequestShape.known(
         reqSourceType(request), reqPersistenceType(request));
   }
 
-  static dev.erst.gridgrind.contract.dto.ProblemContextWorkbookSurfaces.WorkbookReference
+  static dev.erst.gridgrind.core.problem.ProblemContextWorkbookSurfaces.WorkbookReference
       workbookReference(WorkbookPlan request, Path workingDirectory) {
     return switch (request.source()) {
       case WorkbookPlan.WorkbookSource.New _ ->
-          dev.erst.gridgrind.contract.dto.ProblemContextWorkbookSurfaces.WorkbookReference
+          dev.erst.gridgrind.core.problem.ProblemContextWorkbookSurfaces.WorkbookReference
               .newWorkbook();
       case WorkbookPlan.WorkbookSource.ExistingFile existingFile ->
-          dev.erst.gridgrind.contract.dto.ProblemContextWorkbookSurfaces.WorkbookReference
+          dev.erst.gridgrind.core.problem.ProblemContextWorkbookSurfaces.WorkbookReference
               .existingFile(normalizePath(existingFile.path(), workingDirectory).toString());
     };
   }
 
-  static dev.erst.gridgrind.contract.dto.ProblemContextWorkbookSurfaces.PersistenceReference
+  static dev.erst.gridgrind.core.problem.ProblemContextWorkbookSurfaces.PersistenceReference
       persistenceReference(WorkbookPlan request, Path workingDirectory) {
     return switch (request.persistence()) {
       case WorkbookPlan.WorkbookPersistence.Overwrite _ ->
-          dev.erst.gridgrind.contract.dto.ProblemContextWorkbookSurfaces.PersistenceReference
+          dev.erst.gridgrind.core.problem.ProblemContextWorkbookSurfaces.PersistenceReference
               .overwrite(Objects.requireNonNull(reqSourcePath(request, workingDirectory)));
       case WorkbookPlan.WorkbookPersistence.SaveAs saveAs ->
-          dev.erst.gridgrind.contract.dto.ProblemContextWorkbookSurfaces.PersistenceReference
+          dev.erst.gridgrind.core.problem.ProblemContextWorkbookSurfaces.PersistenceReference
               .saveAs(normalizePath(saveAs.path(), workingDirectory).toString());
       case WorkbookPlan.WorkbookPersistence.None _ ->
           throw new IllegalArgumentException("persistence reference requires a saving policy");

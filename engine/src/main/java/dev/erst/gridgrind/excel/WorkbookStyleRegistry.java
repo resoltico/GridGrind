@@ -1,6 +1,6 @@
 package dev.erst.gridgrind.excel;
 
-import dev.erst.gridgrind.excel.foundation.ExcelFillPattern;
+import dev.erst.gridgrind.core.vocabulary.ExcelFillPattern;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;

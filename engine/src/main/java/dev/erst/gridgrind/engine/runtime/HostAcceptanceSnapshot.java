@@ -1,6 +1,6 @@
 package dev.erst.gridgrind.engine.runtime;
 
-import dev.erst.gridgrind.contract.query.InspectionResult;
+import dev.erst.gridgrind.core.plan.InspectionResult;
 import dev.erst.gridgrind.engine.api.GridGrindHostAcceptancePolicy;
 import java.nio.file.Path;
 import java.util.List;

@@ -1,7 +1,7 @@
 package dev.erst.gridgrind.engine.runtime;
 
-import dev.erst.gridgrind.contract.assertion.AssertionResult;
-import dev.erst.gridgrind.contract.dto.WorkbookExecutionEvidence.Preservation;
+import dev.erst.gridgrind.core.plan.AssertionResult;
+import dev.erst.gridgrind.core.result.WorkbookExecutionEvidence.Preservation;
 import java.util.List;
 
 /** Host-acceptance outcomes established after plan execution and before publication. */

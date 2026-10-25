@@ -1,7 +1,7 @@
 package dev.erst.gridgrind.cli.discovery;
 
 import dev.erst.gridgrind.cli.examples.GridGrindCliRecipeRegistry;
-import dev.erst.gridgrind.contract.catalog.GridGrindProtocolCatalog;
+import dev.erst.gridgrind.core.catalog.GridGrindProtocolCatalog;
 import java.util.List;
 import java.util.Optional;
 
@@ -12,7 +12,7 @@ public final class GridGrindTaskCatalog {
   /** Returns the full task catalog. */
   public static TaskCatalog catalog() {
     return new TaskCatalog(
-        dev.erst.gridgrind.contract.dto.GridGrindProtocolVersion.current(), taskEntries());
+        dev.erst.gridgrind.core.plan.GridGrindProtocolVersion.current(), taskEntries());
   }
 
   /** Returns one task entry by its stable id, or empty when unknown. */

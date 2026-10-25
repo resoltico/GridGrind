@@ -1,11 +1,11 @@
 package dev.erst.gridgrind.engine.runtime;
 
-import dev.erst.gridgrind.contract.dto.DiagnosticOrder;
-import dev.erst.gridgrind.contract.dto.GridGrindProblemDetail;
-import dev.erst.gridgrind.contract.dto.ProblemContext;
-import dev.erst.gridgrind.contract.dto.ProblemContextWorkbookSurfaces.InputReference;
-import dev.erst.gridgrind.contract.dto.WorkbookPlan;
-import dev.erst.gridgrind.contract.step.WorkbookStep;
+import dev.erst.gridgrind.core.plan.WorkbookPlan;
+import dev.erst.gridgrind.core.plan.WorkbookStep;
+import dev.erst.gridgrind.core.problem.DiagnosticOrder;
+import dev.erst.gridgrind.core.problem.GridGrindProblemDetail;
+import dev.erst.gridgrind.core.problem.ProblemContext;
+import dev.erst.gridgrind.core.problem.ProblemContextWorkbookSurfaces.InputReference;
 import dev.erst.gridgrind.core.problem.RequestIntake;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -150,7 +150,7 @@ final class RequestPreflight {
   record Result(
       Optional<PreparedRequest> preparedRequest,
       List<GridGrindProblemDetail.Problem> problems,
-      List<dev.erst.gridgrind.contract.dto.RequestWarning> warnings) {
+      List<dev.erst.gridgrind.core.problem.RequestWarning> warnings) {
     Result {
       Objects.requireNonNull(preparedRequest, "preparedRequest must not be null");
       Objects.requireNonNull(problems, "problems must not be null");

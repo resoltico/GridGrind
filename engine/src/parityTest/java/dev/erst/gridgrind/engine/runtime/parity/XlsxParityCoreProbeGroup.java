@@ -4,16 +4,41 @@ import static dev.erst.gridgrind.engine.runtime.parity.ParityPlanSupport.inspect
 import static dev.erst.gridgrind.engine.runtime.parity.ParityPlanSupport.mutate;
 import static dev.erst.gridgrind.engine.runtime.parity.XlsxParityProbeRegistry.*;
 
-import dev.erst.gridgrind.contract.action.CellMutationAction;
-import dev.erst.gridgrind.contract.action.StructuredMutationAction;
-import dev.erst.gridgrind.contract.action.WorkbookMutationAction;
-import dev.erst.gridgrind.contract.dto.*;
-import dev.erst.gridgrind.contract.query.*;
-import dev.erst.gridgrind.contract.query.SheetInspectionResult;
-import dev.erst.gridgrind.contract.query.WorkbookAnalysisResult;
-import dev.erst.gridgrind.contract.query.WorkbookAssetInspectionResult;
-import dev.erst.gridgrind.contract.query.WorkbookInspectionResult;
-import dev.erst.gridgrind.contract.selector.*;
+import dev.erst.gridgrind.core.model.drawing.CommentAnchorReport;
+import dev.erst.gridgrind.core.model.drawing.CommentReport;
+import dev.erst.gridgrind.core.model.formula.NamedRangeReport;
+import dev.erst.gridgrind.core.model.formula.NamedRangeTarget;
+import dev.erst.gridgrind.core.model.protection.SheetProtectionReport;
+import dev.erst.gridgrind.core.model.protection.SheetProtectionSettings;
+import dev.erst.gridgrind.core.model.protection.WorkbookProtectionInput;
+import dev.erst.gridgrind.core.model.protection.WorkbookProtectionReport;
+import dev.erst.gridgrind.core.model.style.CellColorReport;
+import dev.erst.gridgrind.core.model.style.CellFillReport;
+import dev.erst.gridgrind.core.model.style.CellGradientFillReport;
+import dev.erst.gridgrind.core.model.style.CellStyleReport;
+import dev.erst.gridgrind.core.model.table.AutofilterEntryReport;
+import dev.erst.gridgrind.core.model.table.AutofilterFilterColumnInput;
+import dev.erst.gridgrind.core.model.table.AutofilterFilterCriterionInput;
+import dev.erst.gridgrind.core.model.table.AutofilterFilterCriterionReport;
+import dev.erst.gridgrind.core.model.table.AutofilterSortConditionInput;
+import dev.erst.gridgrind.core.model.table.AutofilterSortStateInput;
+import dev.erst.gridgrind.core.model.table.TableEntryReport;
+import dev.erst.gridgrind.core.model.validation.ConditionalFormattingRuleReport;
+import dev.erst.gridgrind.core.model.validation.DataValidationEntryReport;
+import dev.erst.gridgrind.core.model.value.CellGridInput;
+import dev.erst.gridgrind.core.model.value.HyperlinkTarget;
+import dev.erst.gridgrind.core.plan.*;
+import dev.erst.gridgrind.core.plan.CellMutationAction;
+import dev.erst.gridgrind.core.plan.SheetInspectionResult;
+import dev.erst.gridgrind.core.plan.StructuredMutationAction;
+import dev.erst.gridgrind.core.plan.WorkbookAnalysisResult;
+import dev.erst.gridgrind.core.plan.WorkbookAssetInspectionResult;
+import dev.erst.gridgrind.core.plan.WorkbookInspectionResult;
+import dev.erst.gridgrind.core.plan.WorkbookMutationAction;
+import dev.erst.gridgrind.core.result.WorkbookResult;
+import dev.erst.gridgrind.core.result.WorkbookSummary;
+import dev.erst.gridgrind.core.vocabulary.NamedRangeScope;
+import dev.erst.gridgrind.core.vocabulary.SheetCopyPosition;
 import dev.erst.gridgrind.engine.runtime.parity.XlsxParityProbeRegistry.ProbeContext;
 import dev.erst.gridgrind.engine.runtime.parity.XlsxParityProbeRegistry.ProbeResult;
 import java.nio.file.Path;
@@ -168,7 +193,7 @@ final class XlsxParityCoreProbeGroup {
       mismatches.add("ops sheet protection did not report Protected");
     }
     if (observation.queueSummary().sheet().visibility()
-        != dev.erst.gridgrind.excel.foundation.ExcelSheetVisibility.HIDDEN) {
+        != dev.erst.gridgrind.core.vocabulary.ExcelSheetVisibility.HIDDEN) {
       mismatches.add(
           "queue visibility=%s".formatted(observation.queueSummary().sheet().visibility()));
     }
@@ -176,7 +201,7 @@ final class XlsxParityCoreProbeGroup {
 
   private static void compareCoreWorkbookCells(
       CoreReadObservation observation, List<String> mismatches) {
-    Map<String, dev.erst.gridgrind.contract.dto.CellReport> cellsByAddress =
+    Map<String, dev.erst.gridgrind.core.model.value.CellReport> cellsByAddress =
         byAddress(observation.cells().cells());
     compareCoreMergedRegion(observation, mismatches);
     compareCoreRichTextCell(cellsByAddress, mismatches);
@@ -203,10 +228,12 @@ final class XlsxParityCoreProbeGroup {
   }
 
   private static void compareCoreRichTextCell(
-      Map<String, dev.erst.gridgrind.contract.dto.CellReport> cellsByAddress,
+      Map<String, dev.erst.gridgrind.core.model.value.CellReport> cellsByAddress,
       List<String> mismatches) {
-    dev.erst.gridgrind.contract.dto.CellReport.TextReport richTextCell =
-        cast(dev.erst.gridgrind.contract.dto.CellReport.TextReport.class, cellsByAddress.get("A3"));
+    dev.erst.gridgrind.core.model.value.CellReport.TextReport richTextCell =
+        cast(
+            dev.erst.gridgrind.core.model.value.CellReport.TextReport.class,
+            cellsByAddress.get("A3"));
     if (!"Ada Lovelace".equals(richTextCell.textValue().orElse(null))) {
       mismatches.add("richTextCell.textValue=%s".formatted(richTextCell.textValue()));
     }
@@ -216,15 +243,15 @@ final class XlsxParityCoreProbeGroup {
   }
 
   private static void compareCorePrimitiveCells(
-      Map<String, dev.erst.gridgrind.contract.dto.CellReport> cellsByAddress,
+      Map<String, dev.erst.gridgrind.core.model.value.CellReport> cellsByAddress,
       List<String> mismatches) {
-    dev.erst.gridgrind.contract.dto.CellReport.NumberReport numericCell =
+    dev.erst.gridgrind.core.model.value.CellReport.NumberReport numericCell =
         cast(
-            dev.erst.gridgrind.contract.dto.CellReport.NumberReport.class,
+            dev.erst.gridgrind.core.model.value.CellReport.NumberReport.class,
             cellsByAddress.get("B3"));
-    dev.erst.gridgrind.contract.dto.CellReport.BooleanReport booleanCell =
+    dev.erst.gridgrind.core.model.value.CellReport.BooleanReport booleanCell =
         cast(
-            dev.erst.gridgrind.contract.dto.CellReport.BooleanReport.class,
+            dev.erst.gridgrind.core.model.value.CellReport.BooleanReport.class,
             cellsByAddress.get("C3"));
     if (numericCell.numberValue().orElse(Double.NaN) != 12.5d) {
       mismatches.add("numericCell=%s".formatted(numericCell.numberValue()));
@@ -236,15 +263,15 @@ final class XlsxParityCoreProbeGroup {
 
   private static void compareCoreFormulaCell(
       CoreReadObservation observation,
-      Map<String, dev.erst.gridgrind.contract.dto.CellReport> cellsByAddress,
+      Map<String, dev.erst.gridgrind.core.model.value.CellReport> cellsByAddress,
       List<String> mismatches) {
-    dev.erst.gridgrind.contract.dto.CellReport.FormulaReport formulaCell =
+    dev.erst.gridgrind.core.model.value.CellReport.FormulaReport formulaCell =
         cast(
-            dev.erst.gridgrind.contract.dto.CellReport.FormulaReport.class,
+            dev.erst.gridgrind.core.model.value.CellReport.FormulaReport.class,
             cellsByAddress.get("D3"));
-    dev.erst.gridgrind.contract.dto.CellValueReport.NumberValue formulaEvaluation =
+    dev.erst.gridgrind.core.model.value.CellValueReport.NumberValue formulaEvaluation =
         cast(
-            dev.erst.gridgrind.contract.dto.CellValueReport.NumberValue.class,
+            dev.erst.gridgrind.core.model.value.CellValueReport.NumberValue.class,
             formulaCell.evaluation().orElseThrow());
     if (!observation.direct().formulaText().equals(formulaCell.formula().orElse(null))) {
       mismatches.add(
@@ -311,11 +338,11 @@ final class XlsxParityCoreProbeGroup {
                   observation.layout().layout().zoomPercent(), observation.direct().zoomPercent()));
     }
     if (!(observation.layout().layout().pane()
-        instanceof dev.erst.gridgrind.contract.dto.PaneReport.Frozen)) {
+        instanceof dev.erst.gridgrind.core.model.layout.PaneReport.Frozen)) {
       mismatches.add("pane=%s".formatted(observation.layout().layout().pane()));
     }
     if (observation.print().layout().orientation()
-        != dev.erst.gridgrind.excel.foundation.ExcelPrintOrientation.LANDSCAPE) {
+        != dev.erst.gridgrind.core.vocabulary.ExcelPrintOrientation.LANDSCAPE) {
       mismatches.add("printOrientation=%s".formatted(observation.print().layout().orientation()));
     }
   }
@@ -419,7 +446,7 @@ final class XlsxParityCoreProbeGroup {
                 core.workbookPath(),
                 inspect(
                     "names",
-                    new dev.erst.gridgrind.contract.selector.NamedRangeSelector.All(),
+                    new dev.erst.gridgrind.core.plan.NamedRangeSelector.All(),
                     new WorkbookIntrospectionQuery.GetNamedRanges())),
             "names",
             WorkbookInspectionResult.NamedRangesResult.class);
@@ -429,7 +456,7 @@ final class XlsxParityCoreProbeGroup {
                 advanced.workbookPath(),
                 inspect(
                     "names",
-                    new dev.erst.gridgrind.contract.selector.NamedRangeSelector.All(),
+                    new dev.erst.gridgrind.core.plan.NamedRangeSelector.All(),
                     new WorkbookIntrospectionQuery.GetNamedRanges())),
             "names",
             WorkbookInspectionResult.NamedRangesResult.class);
@@ -554,9 +581,10 @@ final class XlsxParityCoreProbeGroup {
                 allFacetCellsQuery()));
     SheetInspectionResult.CellsResult cells =
         XlsxParityGridGrind.read(success, "cells", SheetInspectionResult.CellsResult.class);
-    Map<String, dev.erst.gridgrind.contract.dto.CellReport> byAddress = byAddress(cells.cells());
-    dev.erst.gridgrind.contract.dto.CellReport themedCell = byAddress.get("A3");
-    dev.erst.gridgrind.contract.dto.CellReport gradientCell = byAddress.get("A4");
+    Map<String, dev.erst.gridgrind.core.model.value.CellReport> byAddress =
+        byAddress(cells.cells());
+    dev.erst.gridgrind.core.model.value.CellReport themedCell = byAddress.get("A3");
+    dev.erst.gridgrind.core.model.value.CellReport gradientCell = byAddress.get("A4");
     boolean themedOk = matchesThemedStyle(themedCell, themed);
     boolean gradientOk = matchesGradientStyle(gradientCell, gradient);
     return themedOk && gradientOk
@@ -576,7 +604,7 @@ final class XlsxParityCoreProbeGroup {
   }
 
   private static boolean matchesThemedStyle(
-      dev.erst.gridgrind.contract.dto.CellReport themedCell,
+      dev.erst.gridgrind.core.model.value.CellReport themedCell,
       XlsxParityOracle.StyleSnapshot themed) {
     CellStyleReport style = themedCell == null ? null : themedCell.style().orElse(null);
     return style != null
@@ -587,16 +615,17 @@ final class XlsxParityCoreProbeGroup {
   }
 
   private static CellColorReport borderColor(
-      dev.erst.gridgrind.contract.dto.CellBorderSideReport borderSide) {
+      dev.erst.gridgrind.core.model.style.CellBorderSideReport borderSide) {
     return switch (borderSide) {
-      case dev.erst.gridgrind.contract.dto.CellBorderSideReport.None _ -> null;
-      case dev.erst.gridgrind.contract.dto.CellBorderSideReport.DefaultColor _ -> null;
-      case dev.erst.gridgrind.contract.dto.CellBorderSideReport.Colored colored -> colored.color();
+      case dev.erst.gridgrind.core.model.style.CellBorderSideReport.None _ -> null;
+      case dev.erst.gridgrind.core.model.style.CellBorderSideReport.DefaultColor _ -> null;
+      case dev.erst.gridgrind.core.model.style.CellBorderSideReport.Colored colored ->
+          colored.color();
     };
   }
 
   private static boolean matchesGradientStyle(
-      dev.erst.gridgrind.contract.dto.CellReport gradientCell,
+      dev.erst.gridgrind.core.model.value.CellReport gradientCell,
       XlsxParityOracle.StyleSnapshot gradient) {
     CellStyleReport style = gradientCell == null ? null : gradientCell.style().orElse(null);
     CellGradientFillReport fillGradient = style == null ? null : fillGradient(style.fill());
@@ -933,7 +962,7 @@ final class XlsxParityCoreProbeGroup {
                             true,
                             true,
                             java.util.Optional.of(
-                                new dev.erst.gridgrind.contract.dto.SecretReference(
+                                new dev.erst.gridgrind.core.source.SecretReference(
                                     "workbook-password")),
                             java.util.Optional.empty())))),
             inspect(
@@ -1020,7 +1049,7 @@ final class XlsxParityCoreProbeGroup {
                         new WorkbookMutationAction.SetSheetProtection(
                             expectedSettings,
                             java.util.Optional.of(
-                                new dev.erst.gridgrind.contract.dto.SecretReference(
+                                new dev.erst.gridgrind.core.source.SecretReference(
                                     "sheet-password"))))),
                 inspect(
                     "summary",
@@ -1437,7 +1466,7 @@ final class XlsxParityCoreProbeGroup {
                     allFacetCellsQuery())),
             "cells",
             SheetInspectionResult.CellsResult.class);
-    Map<String, dev.erst.gridgrind.contract.dto.CellReport> styledByAddress =
+    Map<String, dev.erst.gridgrind.core.model.value.CellReport> styledByAddress =
         byAddress(styledCells.cells());
     boolean authoredOk =
         XlsxParityOracle.style(styledPath, "Ops", "A5").equals(expectedThemed)
@@ -1463,7 +1492,7 @@ final class XlsxParityCoreProbeGroup {
             SheetInspectionResult.CellsResult.class);
     boolean clearedOk =
         clearedCells.cells().stream()
-            .allMatch(dev.erst.gridgrind.contract.dto.CellReport.BlankReport.class::isInstance);
+            .allMatch(dev.erst.gridgrind.core.model.value.CellReport.BlankReport.class::isInstance);
 
     return authoredOk && clearedOk
         ? pass("Advanced style mutation parity is present.")
@@ -1560,7 +1589,7 @@ final class XlsxParityCoreProbeGroup {
                 source.workbookPath(),
                 inspect(
                     "names",
-                    new dev.erst.gridgrind.contract.selector.NamedRangeSelector.All(),
+                    new dev.erst.gridgrind.core.plan.NamedRangeSelector.All(),
                     new WorkbookIntrospectionQuery.GetNamedRanges())),
             "names",
             WorkbookInspectionResult.NamedRangesResult.class);
@@ -1573,16 +1602,16 @@ final class XlsxParityCoreProbeGroup {
                 clearedPath,
                 List.of(
                     mutate(
-                        new dev.erst.gridgrind.contract.selector.NamedRangeSelector.WorkbookScope(
+                        new dev.erst.gridgrind.core.plan.NamedRangeSelector.WorkbookScope(
                             "WorkbookFormulaBudget"),
                         new StructuredMutationAction.DeleteNamedRange()),
                     mutate(
-                        new dev.erst.gridgrind.contract.selector.NamedRangeSelector.SheetScope(
+                        new dev.erst.gridgrind.core.plan.NamedRangeSelector.SheetScope(
                             "SheetScopedFormulaBudget", "Advanced"),
                         new StructuredMutationAction.DeleteNamedRange())),
                 inspect(
                     "names",
-                    new dev.erst.gridgrind.contract.selector.NamedRangeSelector.All(),
+                    new dev.erst.gridgrind.core.plan.NamedRangeSelector.All(),
                     new WorkbookIntrospectionQuery.GetNamedRanges())),
             "names",
             WorkbookInspectionResult.NamedRangesResult.class);
@@ -1612,7 +1641,7 @@ final class XlsxParityCoreProbeGroup {
                             NamedRangeTarget.formula("SUM(Advanced!$C$2:$C$5)")))),
                 inspect(
                     "names",
-                    new dev.erst.gridgrind.contract.selector.NamedRangeSelector.All(),
+                    new dev.erst.gridgrind.core.plan.NamedRangeSelector.All(),
                     new WorkbookIntrospectionQuery.GetNamedRanges())),
             "names",
             WorkbookInspectionResult.NamedRangesResult.class);

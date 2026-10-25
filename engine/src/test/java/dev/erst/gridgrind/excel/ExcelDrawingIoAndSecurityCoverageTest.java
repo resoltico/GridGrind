@@ -2,12 +2,12 @@ package dev.erst.gridgrind.excel;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.core.vocabulary.ExcelEmbeddedObjectPackagingKind;
+import dev.erst.gridgrind.core.vocabulary.ExcelPictureFormat;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingController;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingObjectPayload;
 import dev.erst.gridgrind.excel.drawing.ExcelEmbeddedObjectDefinition;
 import dev.erst.gridgrind.excel.drawing.ExcelPictureDefinition;
-import dev.erst.gridgrind.excel.foundation.ExcelEmbeddedObjectPackagingKind;
-import dev.erst.gridgrind.excel.foundation.ExcelPictureFormat;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;

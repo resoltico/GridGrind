@@ -1,7 +1,7 @@
 package dev.erst.gridgrind.engine.api;
 
-import dev.erst.gridgrind.contract.step.AssertionStep;
-import dev.erst.gridgrind.contract.step.InspectionStep;
+import dev.erst.gridgrind.core.plan.AssertionStep;
+import dev.erst.gridgrind.core.plan.InspectionStep;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Objects;

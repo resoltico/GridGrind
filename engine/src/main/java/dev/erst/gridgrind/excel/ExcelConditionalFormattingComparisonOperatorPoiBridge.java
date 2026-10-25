@@ -1,6 +1,6 @@
 package dev.erst.gridgrind.excel;
 
-import dev.erst.gridgrind.excel.foundation.ExcelComparisonOperator;
+import dev.erst.gridgrind.core.vocabulary.ExcelComparisonOperator;
 import org.apache.poi.ss.usermodel.ComparisonOperator;
 
 /** Maps conditional-formatting comparison operators to Apache POI constants. */

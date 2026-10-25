@@ -1,6 +1,6 @@
 package dev.erst.gridgrind.excel;
 
-import dev.erst.gridgrind.excel.foundation.ExcelGradientFillGeometry;
+import dev.erst.gridgrind.core.vocabulary.ExcelGradientFillGeometry;
 import java.util.Optional;
 import org.apache.poi.ss.usermodel.BorderStyle;
 import org.apache.poi.ss.usermodel.FontUnderline;
@@ -78,13 +78,13 @@ final class ExcelCellStyleSnapshotSupport {
           gradientFillSnapshot(fill.getCTFill().getGradientFill()));
     }
     var pattern = ExcelCellStylePoiBridge.fromPoi(style.getFillPattern());
-    if (pattern == dev.erst.gridgrind.excel.foundation.ExcelFillPattern.NONE) {
+    if (pattern == dev.erst.gridgrind.core.vocabulary.ExcelFillPattern.NONE) {
       return ExcelCellFillSnapshot.pattern(pattern);
     }
     Optional<ExcelColorSnapshot> foreground =
         ExcelColorSnapshotSupport.snapshot(style.getFillForegroundColorColor());
     Optional<ExcelColorSnapshot> background =
-        pattern == dev.erst.gridgrind.excel.foundation.ExcelFillPattern.SOLID
+        pattern == dev.erst.gridgrind.core.vocabulary.ExcelFillPattern.SOLID
             ? Optional.empty()
             : ExcelColorSnapshotSupport.snapshot(style.getFillBackgroundColorColor());
     if (foreground.isPresent() && background.isPresent()) {

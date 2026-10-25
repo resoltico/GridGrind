@@ -4,28 +4,28 @@ import static dev.erst.gridgrind.engine.runtime.ExecutorTestPlanSupport.mutate;
 import static dev.erst.gridgrind.engine.runtime.ExecutorTestPlanSupport.mutations;
 import static dev.erst.gridgrind.engine.runtime.ExecutorTestPlanSupport.request;
 
-import dev.erst.gridgrind.contract.action.CellMutationAction;
-import dev.erst.gridgrind.contract.action.MutationAction;
-import dev.erst.gridgrind.contract.action.StructuredMutationAction;
-import dev.erst.gridgrind.contract.dto.ChartDataSourceInput;
-import dev.erst.gridgrind.contract.dto.ChartInput;
-import dev.erst.gridgrind.contract.dto.ChartLegendInput;
-import dev.erst.gridgrind.contract.dto.ChartPlotInput;
-import dev.erst.gridgrind.contract.dto.ChartSeriesInput;
-import dev.erst.gridgrind.contract.dto.ChartTitleInput;
-import dev.erst.gridgrind.contract.dto.DrawingAnchorInput;
-import dev.erst.gridgrind.contract.dto.DrawingMarkerInput;
-import dev.erst.gridgrind.contract.dto.HeaderFooterTextInput;
-import dev.erst.gridgrind.contract.dto.PictureDataInput;
-import dev.erst.gridgrind.contract.dto.PrintLayoutInput;
-import dev.erst.gridgrind.contract.dto.WorkbookPlan;
-import dev.erst.gridgrind.contract.selector.CellSelector;
-import dev.erst.gridgrind.contract.selector.RangeSelector;
-import dev.erst.gridgrind.contract.selector.SheetSelector;
-import dev.erst.gridgrind.contract.source.BinarySourceInput;
-import dev.erst.gridgrind.excel.foundation.ExcelChartDisplayBlanksAs;
-import dev.erst.gridgrind.excel.foundation.ExcelDrawingAnchorBehavior;
-import dev.erst.gridgrind.excel.foundation.ExcelPictureFormat;
+import dev.erst.gridgrind.core.model.chart.ChartDataSourceInput;
+import dev.erst.gridgrind.core.model.chart.ChartInput;
+import dev.erst.gridgrind.core.model.chart.ChartLegendInput;
+import dev.erst.gridgrind.core.model.chart.ChartPlotInput;
+import dev.erst.gridgrind.core.model.chart.ChartSeriesInput;
+import dev.erst.gridgrind.core.model.chart.ChartTitleInput;
+import dev.erst.gridgrind.core.model.drawing.DrawingAnchorInput;
+import dev.erst.gridgrind.core.model.drawing.DrawingMarkerInput;
+import dev.erst.gridgrind.core.model.drawing.PictureDataInput;
+import dev.erst.gridgrind.core.model.print.HeaderFooterTextInput;
+import dev.erst.gridgrind.core.model.print.PrintLayoutInput;
+import dev.erst.gridgrind.core.plan.CellMutationAction;
+import dev.erst.gridgrind.core.plan.CellSelector;
+import dev.erst.gridgrind.core.plan.MutationAction;
+import dev.erst.gridgrind.core.plan.RangeSelector;
+import dev.erst.gridgrind.core.plan.SheetSelector;
+import dev.erst.gridgrind.core.plan.StructuredMutationAction;
+import dev.erst.gridgrind.core.plan.WorkbookPlan;
+import dev.erst.gridgrind.core.source.BinarySourceInput;
+import dev.erst.gridgrind.core.vocabulary.ExcelChartDisplayBlanksAs;
+import dev.erst.gridgrind.core.vocabulary.ExcelDrawingAnchorBehavior;
+import dev.erst.gridgrind.core.vocabulary.ExcelPictureFormat;
 import java.util.Base64;
 import java.util.List;
 
@@ -88,7 +88,7 @@ class SourceBackedPlanResolverTestSupport {
           case StructuredMutationAction.SetDataValidation _ ->
               new RangeSelector.ByRange("Budget", "A1");
           case StructuredMutationAction.SetTable setTable ->
-              new dev.erst.gridgrind.contract.selector.TableSelector.ByNameOnSheet(
+              new dev.erst.gridgrind.core.plan.TableSelector.ByNameOnSheet(
                   setTable.table().name(), setTable.table().sheetName());
           default -> new SheetSelector.ByName("Budget");
         };
@@ -96,7 +96,7 @@ class SourceBackedPlanResolverTestSupport {
         request(
             new WorkbookPlan.WorkbookSource.New(),
             new WorkbookPlan.WorkbookPersistence.None(),
-            mutations(mutate((dev.erst.gridgrind.contract.selector.Selector) target, action)));
+            mutations(mutate((dev.erst.gridgrind.core.plan.Selector) target, action)));
     return SourceBackedPlanResolver.requiresStandardInput(plan);
   }
 
@@ -132,7 +132,7 @@ class SourceBackedPlanResolverTestSupport {
         title == null ? new ChartTitleInput.None() : title,
         legend == null
             ? new ChartLegendInput.Visible(
-                dev.erst.gridgrind.excel.foundation.ExcelChartLegendPosition.RIGHT)
+                dev.erst.gridgrind.core.vocabulary.ExcelChartLegendPosition.RIGHT)
             : legend,
         displayBlanksAs == null ? ExcelChartDisplayBlanksAs.GAP : displayBlanksAs,
         plotOnlyVisibleCells == null ? Boolean.TRUE : plotOnlyVisibleCells,

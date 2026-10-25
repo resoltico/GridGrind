@@ -1,13 +1,13 @@
 package dev.erst.gridgrind.core.problem;
 
-import dev.erst.gridgrind.contract.dto.ProtocolCellAddressValidation;
-import dev.erst.gridgrind.contract.dto.ProtocolDefinedNameValidation;
-import dev.erst.gridgrind.excel.foundation.ExcelColumnWidthViolation;
-import dev.erst.gridgrind.excel.foundation.ExcelRowHeightViolation;
-import dev.erst.gridgrind.excel.foundation.ExcelSheetLayoutLimits;
-import dev.erst.gridgrind.excel.foundation.ExcelSheetNameProblem;
-import dev.erst.gridgrind.excel.foundation.ExcelSheetNameRule;
-import dev.erst.gridgrind.excel.foundation.ExcelZoomViolation;
+import dev.erst.gridgrind.core.vocabulary.ExcelColumnWidthViolation;
+import dev.erst.gridgrind.core.vocabulary.ExcelRowHeightViolation;
+import dev.erst.gridgrind.core.vocabulary.ExcelSheetLayoutLimits;
+import dev.erst.gridgrind.core.vocabulary.ExcelSheetNameProblem;
+import dev.erst.gridgrind.core.vocabulary.ExcelSheetNameRule;
+import dev.erst.gridgrind.core.vocabulary.ExcelZoomViolation;
+import dev.erst.gridgrind.core.vocabulary.ProtocolCellAddressValidation;
+import dev.erst.gridgrind.core.vocabulary.ProtocolDefinedNameValidation;
 
 /** Converts upstream typed validation failures into request-problem descriptors. */
 public final class FieldValidationProblemMappers {

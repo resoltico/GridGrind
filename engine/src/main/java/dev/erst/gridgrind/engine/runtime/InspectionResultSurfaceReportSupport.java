@@ -1,14 +1,14 @@
 package dev.erst.gridgrind.engine.runtime;
 
-import dev.erst.gridgrind.contract.dto.FormulaPatternReport;
-import dev.erst.gridgrind.contract.dto.FormulaSurfaceReport;
-import dev.erst.gridgrind.contract.dto.NamedRangeBackingKind;
-import dev.erst.gridgrind.contract.dto.NamedRangeSurfaceEntryReport;
-import dev.erst.gridgrind.contract.dto.NamedRangeSurfaceReport;
-import dev.erst.gridgrind.contract.dto.SchemaColumnReport;
-import dev.erst.gridgrind.contract.dto.SheetFormulaSurfaceReport;
-import dev.erst.gridgrind.contract.dto.SheetSchemaReport;
-import dev.erst.gridgrind.contract.dto.TypeCountReport;
+import dev.erst.gridgrind.core.model.formula.FormulaPatternReport;
+import dev.erst.gridgrind.core.model.formula.FormulaSurfaceReport;
+import dev.erst.gridgrind.core.model.formula.NamedRangeSurfaceEntryReport;
+import dev.erst.gridgrind.core.model.formula.NamedRangeSurfaceReport;
+import dev.erst.gridgrind.core.model.formula.SheetFormulaSurfaceReport;
+import dev.erst.gridgrind.core.model.table.SchemaColumnReport;
+import dev.erst.gridgrind.core.model.table.SheetSchemaReport;
+import dev.erst.gridgrind.core.result.TypeCountReport;
+import dev.erst.gridgrind.core.vocabulary.NamedRangeBackingKind;
 import dev.erst.gridgrind.excel.ExcelCellReadProjection;
 
 /** Converts derived factual surface snapshots into protocol surface reports. */

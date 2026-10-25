@@ -1,7 +1,7 @@
 package dev.erst.gridgrind.excel.ooxml;
 
-import dev.erst.gridgrind.excel.foundation.ExcelOoxmlWriteCipher;
-import dev.erst.gridgrind.excel.foundation.ExcelOoxmlWriteHash;
+import dev.erst.gridgrind.core.vocabulary.ExcelOoxmlWriteCipher;
+import dev.erst.gridgrind.core.vocabulary.ExcelOoxmlWriteHash;
 import java.util.Objects;
 
 /** OOXML package-encryption settings applied during workbook persistence. */

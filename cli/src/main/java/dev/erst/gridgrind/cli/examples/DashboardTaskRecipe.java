@@ -20,13 +20,13 @@ import dev.erst.gridgrind.cli.discovery.TaskPersistenceMode;
 import dev.erst.gridgrind.cli.discovery.TaskPhasePurpose;
 import dev.erst.gridgrind.cli.discovery.TaskSourceMode;
 import dev.erst.gridgrind.cli.discovery.TaskVerificationKind;
-import dev.erst.gridgrind.contract.action.CellMutationAction;
-import dev.erst.gridgrind.contract.action.DrawingMutationAction;
-import dev.erst.gridgrind.contract.action.StructuredMutationAction;
-import dev.erst.gridgrind.contract.action.WorkbookMutationAction;
-import dev.erst.gridgrind.contract.dto.WorkbookPlan;
-import dev.erst.gridgrind.contract.query.WorkbookAssetIntrospectionQuery;
-import dev.erst.gridgrind.contract.selector.NamedRangeSelector;
+import dev.erst.gridgrind.core.plan.CellMutationAction;
+import dev.erst.gridgrind.core.plan.DrawingMutationAction;
+import dev.erst.gridgrind.core.plan.NamedRangeSelector;
+import dev.erst.gridgrind.core.plan.StructuredMutationAction;
+import dev.erst.gridgrind.core.plan.WorkbookAssetIntrospectionQuery;
+import dev.erst.gridgrind.core.plan.WorkbookMutationAction;
+import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import java.util.List;
 
 /** Published task recipe for executive dashboard workflows. */
@@ -158,15 +158,15 @@ final class DashboardTaskRecipe {
             new NamedRangeSelector.WorkbookScope("DashboardCategories"),
             new StructuredMutationAction.SetNamedRange(
                 "DashboardCategories",
-                new dev.erst.gridgrind.contract.dto.NamedRangeScope.Workbook(),
-                dev.erst.gridgrind.contract.dto.NamedRangeTarget.range("Ops", "A2:A4"))),
+                new dev.erst.gridgrind.core.vocabulary.NamedRangeScope.Workbook(),
+                dev.erst.gridgrind.core.model.formula.NamedRangeTarget.range("Ops", "A2:A4"))),
         ExampleSteps.step(
             "define-dashboard-actual",
             new NamedRangeSelector.WorkbookScope("DashboardActual"),
             new StructuredMutationAction.SetNamedRange(
                 "DashboardActual",
-                new dev.erst.gridgrind.contract.dto.NamedRangeScope.Workbook(),
-                dev.erst.gridgrind.contract.dto.NamedRangeTarget.range("Ops", "C2:C4"))),
+                new dev.erst.gridgrind.core.vocabulary.NamedRangeScope.Workbook(),
+                dev.erst.gridgrind.core.model.formula.NamedRangeTarget.range("Ops", "C2:C4"))),
         ExampleSteps.step(
             "author-dashboard-chart",
             ExampleSelectors.sheet("Ops"),
@@ -182,11 +182,11 @@ final class DashboardTaskRecipe {
                     "DashboardActual"))),
         ExampleSteps.read(
             "read-dashboard-charts",
-            new dev.erst.gridgrind.contract.selector.ChartSelector.AllOnSheet("Ops"),
+            new dev.erst.gridgrind.core.plan.ChartSelector.AllOnSheet("Ops"),
             new WorkbookAssetIntrospectionQuery.GetCharts()),
         ExampleSteps.assertStep(
             "assert-dashboard-chart",
-            new dev.erst.gridgrind.contract.selector.ChartSelector.ByName("Ops", "DashboardChart"),
-            new dev.erst.gridgrind.contract.assertion.PresenceAssertion.ChartPresent()));
+            new dev.erst.gridgrind.core.plan.ChartSelector.ByName("Ops", "DashboardChart"),
+            new dev.erst.gridgrind.core.plan.PresenceAssertion.ChartPresent()));
   }
 }

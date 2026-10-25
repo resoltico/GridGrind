@@ -2,7 +2,7 @@ package dev.erst.gridgrind.excel;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import dev.erst.gridgrind.excel.foundation.ExcelBorderStyle;
+import dev.erst.gridgrind.core.vocabulary.ExcelBorderStyle;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
 

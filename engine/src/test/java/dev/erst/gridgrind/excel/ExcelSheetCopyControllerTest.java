@@ -2,17 +2,17 @@ package dev.erst.gridgrind.excel;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.core.vocabulary.ExcelChartBarDirection;
+import dev.erst.gridgrind.core.vocabulary.ExcelChartDisplayBlanksAs;
+import dev.erst.gridgrind.core.vocabulary.ExcelChartLegendPosition;
+import dev.erst.gridgrind.core.vocabulary.ExcelComparisonOperator;
+import dev.erst.gridgrind.core.vocabulary.ExcelConditionalFormattingIconSet;
+import dev.erst.gridgrind.core.vocabulary.ExcelConditionalFormattingThresholdType;
+import dev.erst.gridgrind.core.vocabulary.ExcelConditionalFormattingUnsupportedFeature;
+import dev.erst.gridgrind.core.vocabulary.ExcelPictureFormat;
+import dev.erst.gridgrind.core.vocabulary.ExcelPrintOrientation;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingObjectSnapshot;
 import dev.erst.gridgrind.excel.drawing.ExcelPictureDefinition;
-import dev.erst.gridgrind.excel.foundation.ExcelChartBarDirection;
-import dev.erst.gridgrind.excel.foundation.ExcelChartDisplayBlanksAs;
-import dev.erst.gridgrind.excel.foundation.ExcelChartLegendPosition;
-import dev.erst.gridgrind.excel.foundation.ExcelComparisonOperator;
-import dev.erst.gridgrind.excel.foundation.ExcelConditionalFormattingIconSet;
-import dev.erst.gridgrind.excel.foundation.ExcelConditionalFormattingThresholdType;
-import dev.erst.gridgrind.excel.foundation.ExcelConditionalFormattingUnsupportedFeature;
-import dev.erst.gridgrind.excel.foundation.ExcelPictureFormat;
-import dev.erst.gridgrind.excel.foundation.ExcelPrintOrientation;
 import dev.erst.gridgrind.excel.validation.ExcelDataValidationDefinition;
 import dev.erst.gridgrind.excel.validation.ExcelDataValidationRule;
 import dev.erst.gridgrind.excel.validation.ExcelDataValidationSnapshot;
@@ -471,7 +471,7 @@ class ExcelSheetCopyControllerTest {
                           true,
                           true,
                           java.util.Optional.of(
-                              dev.erst.gridgrind.excel.foundation.ExcelAutofilterSortMethod.STROKE),
+                              dev.erst.gridgrind.core.vocabulary.ExcelAutofilterSortMethod.STROKE),
                           List.of(
                               new ExcelAutofilterSortConditionSnapshot.CellColor(
                                   "A2:A3", true, ExcelColorSnapshot.rgb("#102030")),
@@ -1262,7 +1262,7 @@ class ExcelSheetCopyControllerTest {
         "A1:F3",
         true,
         true,
-        java.util.Optional.of(dev.erst.gridgrind.excel.foundation.ExcelAutofilterSortMethod.STROKE),
+        java.util.Optional.of(dev.erst.gridgrind.core.vocabulary.ExcelAutofilterSortMethod.STROKE),
         List.of(
             new ExcelAutofilterSortCondition.CellColor("A2:A3", true, ExcelColor.rgb("#102030")),
             new ExcelAutofilterSortCondition.Icon("B2:B3", false, 4)));

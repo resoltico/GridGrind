@@ -6,25 +6,25 @@ import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import dev.erst.gridgrind.contract.action.CellMutationAction;
-import dev.erst.gridgrind.contract.action.WorkbookMutationAction;
-import dev.erst.gridgrind.contract.assertion.CellAssertion;
-import dev.erst.gridgrind.contract.dto.CellInput;
-import dev.erst.gridgrind.contract.dto.CellRowInput;
-import dev.erst.gridgrind.contract.dto.CellScalarValue;
-import dev.erst.gridgrind.contract.dto.ExecutionModeInput;
-import dev.erst.gridgrind.contract.dto.ExecutionPolicyInput;
-import dev.erst.gridgrind.contract.dto.FormulaEnvironmentInput;
-import dev.erst.gridgrind.contract.dto.GridGrindProblemCode;
-import dev.erst.gridgrind.contract.dto.WorkbookPlan;
-import dev.erst.gridgrind.contract.dto.WorkbookResult;
-import dev.erst.gridgrind.contract.query.SheetIntrospectionQuery;
-import dev.erst.gridgrind.contract.selector.CellSelector;
-import dev.erst.gridgrind.contract.selector.SheetSelector;
-import dev.erst.gridgrind.contract.step.AssertionStep;
-import dev.erst.gridgrind.contract.step.InspectionStep;
-import dev.erst.gridgrind.contract.step.MutationStep;
-import dev.erst.gridgrind.contract.step.WorkbookStep;
+import dev.erst.gridgrind.core.model.formula.FormulaEnvironmentInput;
+import dev.erst.gridgrind.core.model.value.CellInput;
+import dev.erst.gridgrind.core.model.value.CellRowInput;
+import dev.erst.gridgrind.core.model.value.CellScalarValue;
+import dev.erst.gridgrind.core.plan.AssertionStep;
+import dev.erst.gridgrind.core.plan.CellAssertion;
+import dev.erst.gridgrind.core.plan.CellMutationAction;
+import dev.erst.gridgrind.core.plan.CellSelector;
+import dev.erst.gridgrind.core.plan.ExecutionModeInput;
+import dev.erst.gridgrind.core.plan.ExecutionPolicyInput;
+import dev.erst.gridgrind.core.plan.InspectionStep;
+import dev.erst.gridgrind.core.plan.MutationStep;
+import dev.erst.gridgrind.core.plan.SheetIntrospectionQuery;
+import dev.erst.gridgrind.core.plan.SheetSelector;
+import dev.erst.gridgrind.core.plan.WorkbookMutationAction;
+import dev.erst.gridgrind.core.plan.WorkbookPlan;
+import dev.erst.gridgrind.core.plan.WorkbookStep;
+import dev.erst.gridgrind.core.problem.GridGrindProblemCode;
+import dev.erst.gridgrind.core.result.WorkbookResult;
 import dev.erst.gridgrind.engine.api.GridGrindHostAcceptancePolicy;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -63,14 +63,14 @@ class HostAcceptanceExecutionTest {
                     ExecutionProgressSink.NOOP));
 
     assertEquals(GridGrindProblemCode.ASSERTION_FAILED, failure.problem().code());
-    dev.erst.gridgrind.contract.dto.WorkbookExecutionEvidence.TaskSpecific.Failed evidence =
+    dev.erst.gridgrind.core.result.WorkbookExecutionEvidence.TaskSpecific.Failed evidence =
         assertInstanceOf(
-            dev.erst.gridgrind.contract.dto.WorkbookExecutionEvidence.TaskSpecific.Failed.class,
+            dev.erst.gridgrind.core.result.WorkbookExecutionEvidence.TaskSpecific.Failed.class,
             failure.evidence().taskSpecific());
     assertFalse(Files.exists(output));
     assertEquals(
         List.of(
-            dev.erst.gridgrind.contract.dto.WorkbookExecutionEvidence.TaskSpecific.Origin
+            dev.erst.gridgrind.core.result.WorkbookExecutionEvidence.TaskSpecific.Origin
                 .HOST_REQUIRED),
         evidence.assertions().stream().map(value -> value.origin()).toList());
   }
@@ -98,15 +98,14 @@ class HostAcceptanceExecutionTest {
                     ExecutionInputBindingsFixtureSupport.bindings(root, request, policy),
                     ExecutionProgressSink.NOOP));
 
-    dev.erst.gridgrind.contract.dto.WorkbookExecutionEvidence.TaskSpecific.Established evidence =
+    dev.erst.gridgrind.core.result.WorkbookExecutionEvidence.TaskSpecific.Established evidence =
         assertInstanceOf(
-            dev.erst.gridgrind.contract.dto.WorkbookExecutionEvidence.TaskSpecific.Established
-                .class,
+            dev.erst.gridgrind.core.result.WorkbookExecutionEvidence.TaskSpecific.Established.class,
             success.evidence().taskSpecific());
     assertTrue(Files.isRegularFile(output));
     assertEquals(
         List.of(
-            dev.erst.gridgrind.contract.dto.WorkbookExecutionEvidence.TaskSpecific.Origin
+            dev.erst.gridgrind.core.result.WorkbookExecutionEvidence.TaskSpecific.Origin
                 .HOST_REQUIRED),
         evidence.assertions().stream().map(value -> value.origin()).toList());
   }
@@ -130,7 +129,7 @@ class HostAcceptanceExecutionTest {
 
     assertTrue(Files.isRegularFile(output));
     assertNotEquals(
-        dev.erst.gridgrind.contract.dto.CalculationExecutionStatus.NOT_REQUESTED,
+        dev.erst.gridgrind.core.model.formula.CalculationExecutionStatus.NOT_REQUESTED,
         success.calculation().execution().status());
   }
 
@@ -217,10 +216,10 @@ class HostAcceptanceExecutionTest {
     WorkbookResult.Success success =
         assertInstanceOf(WorkbookResult.Success.class, result, () -> result.toString());
 
-    dev.erst.gridgrind.contract.dto.WorkbookExecutionEvidence.Preservation.SemanticEstablished
+    dev.erst.gridgrind.core.result.WorkbookExecutionEvidence.Preservation.SemanticEstablished
         preservation =
             assertInstanceOf(
-                dev.erst.gridgrind.contract.dto.WorkbookExecutionEvidence.Preservation
+                dev.erst.gridgrind.core.result.WorkbookExecutionEvidence.Preservation
                     .SemanticEstablished.class,
                 success.evidence().preservation().getFirst());
     assertEquals(List.of("preserve-unaffected-cell"), preservation.inspectionStepIds());
@@ -244,12 +243,12 @@ class HostAcceptanceExecutionTest {
 
     assertEquals(GridGrindProblemCode.PRESERVATION_FAILED, failure.problem().code());
     assertFalse(Files.exists(output));
-    dev.erst.gridgrind.contract.dto.WorkbookExecutionEvidence.Preservation.Failed preservation =
+    dev.erst.gridgrind.core.result.WorkbookExecutionEvidence.Preservation.Failed preservation =
         assertInstanceOf(
-            dev.erst.gridgrind.contract.dto.WorkbookExecutionEvidence.Preservation.Failed.class,
+            dev.erst.gridgrind.core.result.WorkbookExecutionEvidence.Preservation.Failed.class,
             failure.evidence().preservation().getFirst());
     assertEquals(
-        dev.erst.gridgrind.contract.dto.WorkbookExecutionEvidence.Preservation.Kind.SEMANTIC,
+        dev.erst.gridgrind.core.result.WorkbookExecutionEvidence.Preservation.Kind.SEMANTIC,
         preservation.kind());
   }
 
@@ -259,7 +258,7 @@ class HostAcceptanceExecutionTest {
         new WorkbookPlan.WorkbookPersistence.SaveAs(
             output.toString(),
             WorkbookPlan.WorkbookPersistence.IfExists.REJECT,
-            dev.erst.gridgrind.contract.dto.OoxmlPersistenceSecurityInput.none()),
+            dev.erst.gridgrind.core.model.security.OoxmlPersistenceSecurityInput.none()),
         ExecutionPolicyInput.defaults(),
         FormulaEnvironmentInput.empty(),
         reportSteps());
@@ -307,7 +306,7 @@ class HostAcceptanceExecutionTest {
         new WorkbookPlan.WorkbookPersistence.SaveAs(
             output.toString(),
             WorkbookPlan.WorkbookPersistence.IfExists.REJECT,
-            dev.erst.gridgrind.contract.dto.OoxmlPersistenceSecurityInput.none()),
+            dev.erst.gridgrind.core.model.security.OoxmlPersistenceSecurityInput.none()),
         ExecutionPolicyInput.defaults(),
         FormulaEnvironmentInput.empty(),
         List.of(

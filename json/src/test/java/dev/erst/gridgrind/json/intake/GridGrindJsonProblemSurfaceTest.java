@@ -5,7 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import dev.erst.gridgrind.contract.dto.WorkbookPlan;
+import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import dev.erst.gridgrind.core.problem.InvalidEncodingException;
 import dev.erst.gridgrind.core.problem.InvalidJsonException;
 import dev.erst.gridgrind.core.problem.InvalidRequestException;
@@ -60,8 +60,8 @@ class GridGrindJsonProblemSurfaceTest {
           WorkbookPlan.standard(
               new WorkbookPlan.WorkbookSource.New(),
               new WorkbookPlan.WorkbookPersistence.None(),
-              dev.erst.gridgrind.contract.dto.ExecutionPolicyInput.defaults(),
-              dev.erst.gridgrind.contract.dto.FormulaEnvironmentInput.empty(),
+              dev.erst.gridgrind.core.plan.ExecutionPolicyInput.defaults(),
+              dev.erst.gridgrind.core.model.formula.FormulaEnvironmentInput.empty(),
               List.of()),
           false);
       assertFalse(outputStream.closed);

@@ -1,13 +1,13 @@
 package dev.erst.gridgrind.jazzer.support;
 
-import dev.erst.gridgrind.contract.dto.AutofilterEntryReport;
-import dev.erst.gridgrind.contract.dto.CellCommentReport;
-import dev.erst.gridgrind.contract.dto.CellHyperlinkReport;
-import dev.erst.gridgrind.contract.dto.PivotTableReport;
-import dev.erst.gridgrind.contract.dto.PrintLayoutReport;
-import dev.erst.gridgrind.contract.dto.SheetLayoutReport;
-import dev.erst.gridgrind.contract.dto.TableEntryReport;
-import dev.erst.gridgrind.contract.dto.WindowReport;
+import dev.erst.gridgrind.core.model.drawing.CellCommentReport;
+import dev.erst.gridgrind.core.model.layout.SheetLayoutReport;
+import dev.erst.gridgrind.core.model.layout.WindowReport;
+import dev.erst.gridgrind.core.model.pivot.PivotTableReport;
+import dev.erst.gridgrind.core.model.print.PrintLayoutReport;
+import dev.erst.gridgrind.core.model.table.AutofilterEntryReport;
+import dev.erst.gridgrind.core.model.table.TableEntryReport;
+import dev.erst.gridgrind.core.model.value.CellHyperlinkReport;
 
 /** Owns invariant checks for analysis entry payloads tied to workbook layout and sheet state. */
 final class WorkbookInvariantAnalysisLayoutChecks {
@@ -38,7 +38,7 @@ final class WorkbookInvariantAnalysisLayoutChecks {
                 cell -> {
                   WorkbookInvariantCellSurfaceChecks.requireCellReportShape(cell);
                   WorkbookInvariantChecks.require(
-                      !(cell instanceof dev.erst.gridgrind.contract.dto.CellReport.BlankReport),
+                      !(cell instanceof dev.erst.gridgrind.core.model.value.CellReport.BlankReport),
                       "sparse windows must not contain blank cells");
                 });
       }
@@ -92,8 +92,8 @@ final class WorkbookInvariantAnalysisLayoutChecks {
         layout.zoomPercent() >= 10 && layout.zoomPercent() <= 400,
         "zoomPercent must be between 10 and 400 inclusive");
     switch (layout.pane()) {
-      case dev.erst.gridgrind.contract.dto.PaneReport.None _ -> {}
-      case dev.erst.gridgrind.contract.dto.PaneReport.Frozen frozen -> {
+      case dev.erst.gridgrind.core.model.layout.PaneReport.None _ -> {}
+      case dev.erst.gridgrind.core.model.layout.PaneReport.Frozen frozen -> {
         WorkbookInvariantChecks.require(
             frozen.splitColumn() >= 0, "splitColumn must not be negative");
         WorkbookInvariantChecks.require(frozen.splitRow() >= 0, "splitRow must not be negative");
@@ -101,7 +101,7 @@ final class WorkbookInvariantAnalysisLayoutChecks {
             frozen.leftmostColumn() >= 0, "leftmostColumn must not be negative");
         WorkbookInvariantChecks.require(frozen.topRow() >= 0, "topRow must not be negative");
       }
-      case dev.erst.gridgrind.contract.dto.PaneReport.Split split -> {
+      case dev.erst.gridgrind.core.model.layout.PaneReport.Split split -> {
         WorkbookInvariantChecks.require(
             split.xSplitPosition() >= 0, "xSplitPosition must not be negative");
         WorkbookInvariantChecks.require(

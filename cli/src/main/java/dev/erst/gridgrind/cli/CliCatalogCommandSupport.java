@@ -8,9 +8,9 @@ import dev.erst.gridgrind.cli.discovery.ProtocolCatalogSearchHit;
 import dev.erst.gridgrind.cli.discovery.ProtocolCatalogSearchReport;
 import dev.erst.gridgrind.cli.examples.GridGrindCliRecipe;
 import dev.erst.gridgrind.cli.examples.GridGrindCliRecipeRegistry;
-import dev.erst.gridgrind.contract.catalog.Catalog;
-import dev.erst.gridgrind.contract.catalog.CatalogSearchMatch;
-import dev.erst.gridgrind.contract.catalog.GridGrindProtocolCatalog;
+import dev.erst.gridgrind.core.catalog.Catalog;
+import dev.erst.gridgrind.core.catalog.CatalogSearchMatch;
+import dev.erst.gridgrind.core.catalog.GridGrindProtocolCatalog;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
@@ -114,8 +114,8 @@ final class CliCatalogCommandSupport {
         match.supportingMatches().stream().map(CatalogSearchMatch::qualifiedId).toList());
   }
 
-  private static List<String> typeIds(List<dev.erst.gridgrind.contract.catalog.TypeEntry> types) {
-    return types.stream().map(dev.erst.gridgrind.contract.catalog.TypeEntry::id).toList();
+  private static List<String> typeIds(List<dev.erst.gridgrind.core.catalog.TypeEntry> types) {
+    return types.stream().map(dev.erst.gridgrind.core.catalog.TypeEntry::id).toList();
   }
 
   private static Optional<String> suggestedRecipeId(String recipeId) {

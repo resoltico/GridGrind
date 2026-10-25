@@ -1,12 +1,12 @@
 package dev.erst.gridgrind.jazzer.support;
 
-import dev.erst.gridgrind.contract.dto.ConditionalFormattingRuleReport;
-import dev.erst.gridgrind.contract.dto.ConditionalFormattingThresholdReport;
-import dev.erst.gridgrind.contract.dto.DataValidationEntryReport;
-import dev.erst.gridgrind.contract.dto.DifferentialBorderReport;
-import dev.erst.gridgrind.contract.dto.DifferentialBorderSideReport;
-import dev.erst.gridgrind.contract.dto.DifferentialStyleReport;
-import dev.erst.gridgrind.contract.dto.TableStyleReport;
+import dev.erst.gridgrind.core.model.style.DifferentialBorderReport;
+import dev.erst.gridgrind.core.model.style.DifferentialBorderSideReport;
+import dev.erst.gridgrind.core.model.style.DifferentialStyleReport;
+import dev.erst.gridgrind.core.model.table.TableStyleReport;
+import dev.erst.gridgrind.core.model.validation.ConditionalFormattingRuleReport;
+import dev.erst.gridgrind.core.model.validation.ConditionalFormattingThresholdReport;
+import dev.erst.gridgrind.core.model.validation.DataValidationEntryReport;
 
 /** Owns invariant checks for validation and conditional-formatting rule payloads. */
 final class WorkbookInvariantAnalysisFormattingChecks {
@@ -32,7 +32,8 @@ final class WorkbookInvariantAnalysisFormattingChecks {
   }
 
   static void requireConditionalFormattingEntryShape(
-      dev.erst.gridgrind.contract.dto.ConditionalFormattingEntryReport conditionalFormatting) {
+      dev.erst.gridgrind.core.model.validation.ConditionalFormattingEntryReport
+          conditionalFormatting) {
     WorkbookInvariantChecks.require(
         conditionalFormatting.ranges() != null, "conditional formatting ranges must not be null");
     WorkbookInvariantChecks.require(
@@ -233,7 +234,8 @@ final class WorkbookInvariantAnalysisFormattingChecks {
     WorkbookInvariantChecks.require(
         validation.rule() != null, "data validation rule must not be null");
     switch (validation.rule()) {
-      case dev.erst.gridgrind.contract.dto.DataValidationRuleInput.ExplicitList explicitList -> {
+      case dev.erst.gridgrind.core.model.validation.DataValidationRuleInput.ExplicitList
+              explicitList -> {
         WorkbookInvariantChecks.require(
             explicitList.values() != null, "explicit list values must not be null");
         explicitList
@@ -241,19 +243,23 @@ final class WorkbookInvariantAnalysisFormattingChecks {
             .forEach(
                 value -> WorkbookInvariantChecks.requireNonBlank(value, "explicit list value"));
       }
-      case dev.erst.gridgrind.contract.dto.DataValidationRuleInput.FormulaList formulaList ->
+      case dev.erst.gridgrind.core.model.validation.DataValidationRuleInput.FormulaList
+              formulaList ->
           WorkbookInvariantChecks.requireNonBlank(formulaList.formula(), "formula list formula");
-      case dev.erst.gridgrind.contract.dto.DataValidationRuleInput.WholeNumber wholeNumber ->
+      case dev.erst.gridgrind.core.model.validation.DataValidationRuleInput.WholeNumber
+              wholeNumber ->
           requireComparisonRuleShape(wholeNumber.operator(), wholeNumber.formula1());
-      case dev.erst.gridgrind.contract.dto.DataValidationRuleInput.DecimalNumber decimalNumber ->
+      case dev.erst.gridgrind.core.model.validation.DataValidationRuleInput.DecimalNumber
+              decimalNumber ->
           requireComparisonRuleShape(decimalNumber.operator(), decimalNumber.formula1());
-      case dev.erst.gridgrind.contract.dto.DataValidationRuleInput.DateRule dateRule ->
+      case dev.erst.gridgrind.core.model.validation.DataValidationRuleInput.DateRule dateRule ->
           requireComparisonRuleShape(dateRule.operator(), dateRule.formula1());
-      case dev.erst.gridgrind.contract.dto.DataValidationRuleInput.TimeRule timeRule ->
+      case dev.erst.gridgrind.core.model.validation.DataValidationRuleInput.TimeRule timeRule ->
           requireComparisonRuleShape(timeRule.operator(), timeRule.formula1());
-      case dev.erst.gridgrind.contract.dto.DataValidationRuleInput.TextLength textLength ->
+      case dev.erst.gridgrind.core.model.validation.DataValidationRuleInput.TextLength textLength ->
           requireComparisonRuleShape(textLength.operator(), textLength.formula1());
-      case dev.erst.gridgrind.contract.dto.DataValidationRuleInput.CustomFormula customFormula ->
+      case dev.erst.gridgrind.core.model.validation.DataValidationRuleInput.CustomFormula
+              customFormula ->
           WorkbookInvariantChecks.requireNonBlank(
               customFormula.formula(), "custom validation formula");
     }

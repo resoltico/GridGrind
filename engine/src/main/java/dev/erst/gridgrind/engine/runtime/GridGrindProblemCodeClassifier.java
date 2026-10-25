@@ -1,9 +1,9 @@
 package dev.erst.gridgrind.engine.runtime;
 
-import dev.erst.gridgrind.contract.dto.GridGrindProblemCode;
-import dev.erst.gridgrind.contract.dto.InvalidFormulaInputException;
-import dev.erst.gridgrind.contract.dto.InvalidRawFormulaTextException;
+import dev.erst.gridgrind.core.model.formula.InvalidFormulaInputException;
+import dev.erst.gridgrind.core.model.formula.InvalidRawFormulaTextException;
 import dev.erst.gridgrind.core.problem.FormulaRequestException;
+import dev.erst.gridgrind.core.problem.GridGrindProblemCode;
 import dev.erst.gridgrind.core.problem.InvalidEncodingException;
 import dev.erst.gridgrind.core.problem.InvalidJsonException;
 import dev.erst.gridgrind.core.problem.InvalidRequestException;
@@ -82,7 +82,7 @@ final class GridGrindProblemCodeClassifier {
       case WorkbookPublicationException publication ->
           publication.publication()
                   instanceof
-                  dev.erst.gridgrind.contract.dto.WorkbookResultPersistence.PublicationOutcome
+                  dev.erst.gridgrind.core.result.WorkbookResultPersistence.PublicationOutcome
                       .Uncertain
               ? GridGrindProblemCode.PUBLICATION_UNCERTAIN
               : GridGrindProblemCode.IO_ERROR;

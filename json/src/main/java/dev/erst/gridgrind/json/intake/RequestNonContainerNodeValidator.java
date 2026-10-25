@@ -1,6 +1,6 @@
 package dev.erst.gridgrind.json.intake;
 
-import dev.erst.gridgrind.contract.selector.Selector;
+import dev.erst.gridgrind.core.plan.Selector;
 import dev.erst.gridgrind.core.problem.RequestMalformedScalar;
 import dev.erst.gridgrind.core.problem.RequestNumberNotRepresentable;
 import dev.erst.gridgrind.core.problem.RequestStructuralProblem;

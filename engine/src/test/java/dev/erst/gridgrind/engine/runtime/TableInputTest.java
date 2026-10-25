@@ -2,9 +2,9 @@ package dev.erst.gridgrind.engine.runtime;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import dev.erst.gridgrind.contract.dto.TableColumnInput;
-import dev.erst.gridgrind.contract.dto.TableInput;
-import dev.erst.gridgrind.contract.dto.TableStyleInput;
+import dev.erst.gridgrind.core.model.table.TableColumnInput;
+import dev.erst.gridgrind.core.model.table.TableInput;
+import dev.erst.gridgrind.core.model.table.TableStyleInput;
 import dev.erst.gridgrind.excel.ExcelTableColumnDefinition;
 import dev.erst.gridgrind.excel.ExcelTableDefinition;
 import dev.erst.gridgrind.excel.ExcelTableStyle;
@@ -79,7 +79,7 @@ class TableInputTest {
             true,
             true,
             new TableStyleInput.None(),
-            dev.erst.gridgrind.contract.source.TextSourceInput.inline(""),
+            dev.erst.gridgrind.core.source.TextSourceInput.inline(""),
             false,
             false,
             false,

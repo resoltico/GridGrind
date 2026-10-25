@@ -219,7 +219,7 @@ class RequestSyntaxSupportTest {
   @Test
   void byteOffsetLineColumnLocationRetainsAllCoordinatesAndRejectsInvalidValues() {
     var location =
-        dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces.JsonLocation
+        dev.erst.gridgrind.core.problem.ProblemContextRequestSurfaces.JsonLocation
             .byteOffsetLineColumn(7, 3, 4);
 
     assertEquals(Optional.of(7L), location.byteOffsetValue());
@@ -228,17 +228,17 @@ class RequestSyntaxSupportTest {
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces.JsonLocation
+            dev.erst.gridgrind.core.problem.ProblemContextRequestSurfaces.JsonLocation
                 .byteOffsetLineColumn(-1, 1, 1));
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces.JsonLocation
+            dev.erst.gridgrind.core.problem.ProblemContextRequestSurfaces.JsonLocation
                 .byteOffsetLineColumn(0, 0, 1));
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces.JsonLocation
+            dev.erst.gridgrind.core.problem.ProblemContextRequestSurfaces.JsonLocation
                 .byteOffsetLineColumn(0, 1, 0));
     assertThrows(
         IllegalArgumentException.class, () -> new RequestUtf8DecodeResult.LineColumn(1, 0));
@@ -261,10 +261,10 @@ class RequestSyntaxSupportTest {
 
     assertEquals(1, parsed.warnings().size());
     assertEquals(
-        dev.erst.gridgrind.contract.dto.GridGrindWarningCode.UTF8_BOM_IGNORED,
+        dev.erst.gridgrind.core.problem.GridGrindWarningCode.UTF8_BOM_IGNORED,
         parsed.warnings().getFirst().code());
     assertEquals(
-        new dev.erst.gridgrind.contract.dto.RequestWarningLocation.RequestByteOffset(0),
+        new dev.erst.gridgrind.core.problem.RequestWarningLocation.RequestByteOffset(0),
         parsed.warnings().getFirst().location());
     RequestInvalidJson invalid =
         assertInstanceOf(RequestInvalidJson.class, parsed.problems().getFirst());

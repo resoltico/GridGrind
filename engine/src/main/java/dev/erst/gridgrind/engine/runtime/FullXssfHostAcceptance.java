@@ -1,10 +1,10 @@
 package dev.erst.gridgrind.engine.runtime;
 
-import dev.erst.gridgrind.contract.assertion.AssertionResult;
-import dev.erst.gridgrind.contract.dto.CalculationPolicyInput;
-import dev.erst.gridgrind.contract.dto.CalculationStrategyInput;
-import dev.erst.gridgrind.contract.dto.WorkbookExecutionEvidence.Preservation;
-import dev.erst.gridgrind.contract.dto.WorkbookPlan;
+import dev.erst.gridgrind.core.model.formula.CalculationPolicyInput;
+import dev.erst.gridgrind.core.model.formula.CalculationStrategyInput;
+import dev.erst.gridgrind.core.plan.AssertionResult;
+import dev.erst.gridgrind.core.plan.WorkbookPlan;
+import dev.erst.gridgrind.core.result.WorkbookExecutionEvidence.Preservation;
 import dev.erst.gridgrind.engine.api.GridGrindExecutionGrant;
 import dev.erst.gridgrind.engine.api.GridGrindHostAcceptancePolicy;
 import java.io.IOException;
@@ -35,7 +35,7 @@ final class FullXssfHostAcceptance {
     return new Context(policy);
   }
 
-  Optional<dev.erst.gridgrind.contract.dto.GridGrindProblemDetail.Problem> requireCalculation(
+  Optional<dev.erst.gridgrind.core.problem.GridGrindProblemDetail.Problem> requireCalculation(
       FullXssfWorkflowState state, Context context) {
     if (!requiresStrictCalculation(context.policy())) {
       return Optional.empty();

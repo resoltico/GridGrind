@@ -1,26 +1,26 @@
 package dev.erst.gridgrind.cli.examples;
 
-import dev.erst.gridgrind.contract.action.CellMutationAction;
-import dev.erst.gridgrind.contract.action.WorkbookMutationAction;
-import dev.erst.gridgrind.contract.assertion.AnalysisAssertion;
-import dev.erst.gridgrind.contract.assertion.CellAssertion;
-import dev.erst.gridgrind.contract.dto.ArrayFormulaInput;
-import dev.erst.gridgrind.contract.dto.CellAlignmentInput;
-import dev.erst.gridgrind.contract.dto.CellStylePatchInput;
-import dev.erst.gridgrind.contract.dto.CommentInput;
-import dev.erst.gridgrind.contract.dto.ExecutionJournalInput;
-import dev.erst.gridgrind.contract.dto.ExecutionJournalLevel;
-import dev.erst.gridgrind.contract.dto.ExecutionPolicyInput;
-import dev.erst.gridgrind.contract.dto.WorkbookPlan;
-import dev.erst.gridgrind.contract.query.InspectionAnalysisQuery;
-import dev.erst.gridgrind.contract.query.InspectionSurfaceQuery;
-import dev.erst.gridgrind.contract.query.SheetIntrospectionQuery;
-import dev.erst.gridgrind.contract.query.WorkbookIntrospectionQuery;
-import dev.erst.gridgrind.contract.selector.CellSelector;
-import dev.erst.gridgrind.contract.source.TextSourceInput;
-import dev.erst.gridgrind.excel.foundation.AnalysisSeverity;
-import dev.erst.gridgrind.excel.foundation.ExcelHorizontalAlignment;
-import dev.erst.gridgrind.excel.foundation.ExcelVerticalAlignment;
+import dev.erst.gridgrind.core.model.drawing.CommentInput;
+import dev.erst.gridgrind.core.model.formula.ArrayFormulaInput;
+import dev.erst.gridgrind.core.model.style.CellAlignmentInput;
+import dev.erst.gridgrind.core.model.style.CellStylePatchInput;
+import dev.erst.gridgrind.core.plan.AnalysisAssertion;
+import dev.erst.gridgrind.core.plan.CellAssertion;
+import dev.erst.gridgrind.core.plan.CellMutationAction;
+import dev.erst.gridgrind.core.plan.CellSelector;
+import dev.erst.gridgrind.core.plan.ExecutionJournalInput;
+import dev.erst.gridgrind.core.plan.ExecutionPolicyInput;
+import dev.erst.gridgrind.core.plan.InspectionAnalysisQuery;
+import dev.erst.gridgrind.core.plan.InspectionSurfaceQuery;
+import dev.erst.gridgrind.core.plan.SheetIntrospectionQuery;
+import dev.erst.gridgrind.core.plan.WorkbookIntrospectionQuery;
+import dev.erst.gridgrind.core.plan.WorkbookMutationAction;
+import dev.erst.gridgrind.core.plan.WorkbookPlan;
+import dev.erst.gridgrind.core.result.ExecutionJournalLevel;
+import dev.erst.gridgrind.core.source.TextSourceInput;
+import dev.erst.gridgrind.core.vocabulary.AnalysisSeverity;
+import dev.erst.gridgrind.core.vocabulary.ExcelHorizontalAlignment;
+import dev.erst.gridgrind.core.vocabulary.ExcelVerticalAlignment;
 import java.util.Optional;
 
 /** Generated examples for core workbook authoring, maintenance, assertions, and array formulas. */
@@ -67,7 +67,7 @@ final class WorkbookAuthoringExamples {
                             Optional.empty(),
                             Optional.empty())),
                     Optional.of(
-                        new dev.erst.gridgrind.contract.dto.CellFontInput(
+                        new dev.erst.gridgrind.core.model.style.CellFontInput(
                             Optional.of(true),
                             Optional.empty(),
                             Optional.empty(),
@@ -191,12 +191,12 @@ final class WorkbookAuthoringExamples {
             "assert-title",
             ExampleSelectors.cell("Budget", "A1"),
             new CellAssertion.CellValue(
-                new dev.erst.gridgrind.contract.dto.CellScalarValue.Text("Quarterly Budget"))),
+                new dev.erst.gridgrind.core.model.value.CellScalarValue.Text("Quarterly Budget"))),
         ExampleSteps.assertStep(
             "assert-total",
             ExampleSelectors.cell("Budget", "B2"),
             new CellAssertion.CellValue(
-                new dev.erst.gridgrind.contract.dto.CellScalarValue.NumberValue(1200.0d))),
+                new dev.erst.gridgrind.core.model.value.CellScalarValue.NumberValue(1200.0d))),
         ExampleSteps.assertStep(
             "assert-formula-health",
             ExampleSelectors.sheet("Budget"),

@@ -9,16 +9,16 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import dev.erst.gridgrind.contract.catalog.GridGrindProtocolCatalog;
-import dev.erst.gridgrind.contract.dto.GridGrindProblemCode;
-import dev.erst.gridgrind.contract.dto.GridGrindProblemDetail;
-import dev.erst.gridgrind.contract.dto.ProblemContext;
-import dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces;
-import dev.erst.gridgrind.contract.dto.RequestDoctorReport;
-import dev.erst.gridgrind.contract.dto.SecretReference;
-import dev.erst.gridgrind.contract.dto.WorkbookPlan;
-import dev.erst.gridgrind.contract.dto.WorkbookResult;
-import dev.erst.gridgrind.contract.dto.WorkbookResults;
+import dev.erst.gridgrind.core.catalog.GridGrindProtocolCatalog;
+import dev.erst.gridgrind.core.plan.WorkbookPlan;
+import dev.erst.gridgrind.core.problem.GridGrindProblemCode;
+import dev.erst.gridgrind.core.problem.GridGrindProblemDetail;
+import dev.erst.gridgrind.core.problem.ProblemContext;
+import dev.erst.gridgrind.core.problem.ProblemContextRequestSurfaces;
+import dev.erst.gridgrind.core.problem.RequestDoctorReport;
+import dev.erst.gridgrind.core.result.WorkbookResult;
+import dev.erst.gridgrind.core.result.WorkbookResults;
+import dev.erst.gridgrind.core.source.SecretReference;
 import dev.erst.gridgrind.json.codec.GridGrindJson;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -95,7 +95,7 @@ class GridGrindEngineApiTest {
           @Override
           public RequestDoctorReport diagnose(
               dev.erst.gridgrind.core.problem.RequestIntake analysis,
-              dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces.RequestInput
+              dev.erst.gridgrind.core.problem.ProblemContextRequestSurfaces.RequestInput
                   requestInput) {
             return cleanDoctorSummary();
           }
@@ -103,7 +103,7 @@ class GridGrindEngineApiTest {
           @Override
           public RequestDoctorReport diagnose(
               dev.erst.gridgrind.core.problem.RequestIntake analysis,
-              dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces.RequestInput
+              dev.erst.gridgrind.core.problem.ProblemContextRequestSurfaces.RequestInput
                   requestInput,
               GridGrindRequestInputs inputs) {
             return cleanDoctorSummary();
@@ -156,8 +156,8 @@ class GridGrindEngineApiTest {
                 WorkbookPlan.standard(
                     new WorkbookPlan.WorkbookSource.New(),
                     new WorkbookPlan.WorkbookPersistence.None(),
-                    dev.erst.gridgrind.contract.dto.ExecutionPolicyInput.defaults(),
-                    dev.erst.gridgrind.contract.dto.FormulaEnvironmentInput.empty(),
+                    dev.erst.gridgrind.core.plan.ExecutionPolicyInput.defaults(),
+                    dev.erst.gridgrind.core.model.formula.FormulaEnvironmentInput.empty(),
                     List.of()),
                 secretOnly));
   }
@@ -221,7 +221,7 @@ class GridGrindEngineApiTest {
   @Test
   void productionRequestExecutorForwardsVerboseProgressToThePublicSink() throws IOException {
     WorkbookPlan verboseRequest = verboseRequest();
-    AtomicReference<dev.erst.gridgrind.contract.dto.ExecutionProgressEvent> observedEvent =
+    AtomicReference<dev.erst.gridgrind.core.result.ExecutionProgressEvent> observedEvent =
         new AtomicReference<>();
 
     WorkbookResult response =
@@ -231,7 +231,7 @@ class GridGrindEngineApiTest {
     assertInstanceOf(WorkbookResult.Success.class, response);
     assertNotNull(observedEvent.get());
     assertEquals(
-        dev.erst.gridgrind.contract.dto.ExecutionProgressEvent.Category.PLAN,
+        dev.erst.gridgrind.core.result.ExecutionProgressEvent.Category.PLAN,
         observedEvent.get().category());
   }
 

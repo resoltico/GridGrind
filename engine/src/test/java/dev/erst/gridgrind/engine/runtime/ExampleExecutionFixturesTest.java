@@ -10,9 +10,9 @@ import dev.erst.gridgrind.cli.discovery.RecipeAdvisory;
 import dev.erst.gridgrind.cli.discovery.RecipeCatalog;
 import dev.erst.gridgrind.cli.discovery.RecipeCatalogEntry;
 import dev.erst.gridgrind.cli.discovery.RecipeView;
-import dev.erst.gridgrind.contract.dto.SecretReference;
-import dev.erst.gridgrind.contract.dto.WorkbookPlan;
-import dev.erst.gridgrind.contract.dto.WorkbookResult;
+import dev.erst.gridgrind.core.plan.WorkbookPlan;
+import dev.erst.gridgrind.core.result.WorkbookResult;
+import dev.erst.gridgrind.core.source.SecretReference;
 import dev.erst.gridgrind.json.codec.GridGrindJson;
 import dev.erst.gridgrind.json.codec.GridGrindJsonOutput;
 import java.io.ByteArrayOutputStream;
@@ -239,7 +239,7 @@ class ExampleExecutionFixturesTest {
     if (request.source() instanceof WorkbookPlan.WorkbookSource.ExistingFile existingFile
         && existingFile
             .security()
-            .flatMap(dev.erst.gridgrind.contract.dto.OoxmlOpenSecurityInput::passwordRef)
+            .flatMap(dev.erst.gridgrind.core.model.security.OoxmlOpenSecurityInput::passwordRef)
             .equals(java.util.Optional.of(new SecretReference("source-open-password")))) {
       return ExecutionInputBindingsFixtureSupport.bindings(
           workspace,

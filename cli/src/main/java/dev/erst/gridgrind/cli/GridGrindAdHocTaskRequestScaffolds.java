@@ -5,11 +5,11 @@ import dev.erst.gridgrind.cli.discovery.TaskEntry;
 import dev.erst.gridgrind.cli.discovery.TaskExecutionProfile;
 import dev.erst.gridgrind.cli.discovery.TaskPhase;
 import dev.erst.gridgrind.cli.examples.GridGrindCliRecipeRegistry;
-import dev.erst.gridgrind.contract.catalog.GridGrindProtocolCatalog;
-import dev.erst.gridgrind.contract.catalog.ProtocolStepTemplate;
-import dev.erst.gridgrind.contract.dto.ExecutionPolicyInput;
-import dev.erst.gridgrind.contract.dto.FormulaEnvironmentInput;
-import dev.erst.gridgrind.contract.dto.WorkbookPlan;
+import dev.erst.gridgrind.core.catalog.GridGrindProtocolCatalog;
+import dev.erst.gridgrind.core.catalog.ProtocolStepTemplate;
+import dev.erst.gridgrind.core.model.formula.FormulaEnvironmentInput;
+import dev.erst.gridgrind.core.plan.ExecutionPolicyInput;
+import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import dev.erst.gridgrind.json.codec.GridGrindJson;
 import dev.erst.gridgrind.json.codec.GridGrindJsonOutput;
 import java.io.ByteArrayOutputStream;
@@ -105,7 +105,7 @@ final class GridGrindAdHocTaskRequestScaffolds {
             ? new WorkbookPlan.WorkbookPersistence.SaveAs(
                 outputPath,
                 WorkbookPlan.WorkbookPersistence.IfExists.REPLACE,
-                dev.erst.gridgrind.contract.dto.OoxmlPersistenceSecurityInput.none())
+                dev.erst.gridgrind.core.model.security.OoxmlPersistenceSecurityInput.none())
             : new WorkbookPlan.WorkbookPersistence.SaveAs(
                 outputPath, WorkbookPlan.WorkbookPersistence.IfExists.REPLACE);
       }
@@ -117,7 +117,7 @@ final class GridGrindAdHocTaskRequestScaffolds {
                   + " cannot plan OVERWRITE persistence without an EXISTING source");
         }
         yield new WorkbookPlan.WorkbookPersistence.Overwrite(
-            dev.erst.gridgrind.contract.dto.OoxmlPersistenceSecurityInput.none());
+            dev.erst.gridgrind.core.model.security.OoxmlPersistenceSecurityInput.none());
       }
     };
   }

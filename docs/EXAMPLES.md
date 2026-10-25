@@ -143,7 +143,7 @@ The authoritative verification loop for the shipped examples is:
 ```bash
 ./gradlew :cli:test --tests dev.erst.gridgrind.cli.discovery.ExampleRequestFixturesTest
 ./gradlew :engine:test --tests dev.erst.gridgrind.engine.runtime.ExampleExecutionFixturesTest
-./gradlew :core:test --tests dev.erst.gridgrind.authoring.GridGrindPlanTest
+./gradlew :core:test --tests dev.erst.gridgrind.core.authoring.GridGrindPlanTest
 ./scripts/verify-cli-discovery-execution.sh ./cli/build/libs/gridgrind.jar
 ```
 

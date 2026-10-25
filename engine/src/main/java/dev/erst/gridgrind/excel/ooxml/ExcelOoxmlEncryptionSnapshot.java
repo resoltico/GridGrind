@@ -1,9 +1,9 @@
 package dev.erst.gridgrind.excel.ooxml;
 
-import dev.erst.gridgrind.excel.foundation.ExcelOoxmlChainingMode;
-import dev.erst.gridgrind.excel.foundation.ExcelOoxmlCipherAlgorithm;
-import dev.erst.gridgrind.excel.foundation.ExcelOoxmlEncryptionMode;
-import dev.erst.gridgrind.excel.foundation.ExcelOoxmlHashAlgorithm;
+import dev.erst.gridgrind.core.vocabulary.ExcelOoxmlChainingMode;
+import dev.erst.gridgrind.core.vocabulary.ExcelOoxmlCipherAlgorithm;
+import dev.erst.gridgrind.core.vocabulary.ExcelOoxmlEncryptionMode;
+import dev.erst.gridgrind.core.vocabulary.ExcelOoxmlHashAlgorithm;
 import java.util.Objects;
 
 /** Immutable factual snapshot of one workbook package's OOXML encryption state. */

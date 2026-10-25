@@ -1,10 +1,10 @@
 package dev.erst.gridgrind.engine.runtime;
 
-import dev.erst.gridgrind.contract.action.WorkbookMutationAction;
-import dev.erst.gridgrind.contract.selector.ColumnBandSelector;
-import dev.erst.gridgrind.contract.selector.RangeSelector;
-import dev.erst.gridgrind.contract.selector.RowBandSelector;
-import dev.erst.gridgrind.contract.selector.Selector;
+import dev.erst.gridgrind.core.plan.ColumnBandSelector;
+import dev.erst.gridgrind.core.plan.RangeSelector;
+import dev.erst.gridgrind.core.plan.RowBandSelector;
+import dev.erst.gridgrind.core.plan.Selector;
+import dev.erst.gridgrind.core.plan.WorkbookMutationAction;
 import dev.erst.gridgrind.excel.WorkbookCommand;
 import dev.erst.gridgrind.excel.WorkbookLayoutCommand;
 import dev.erst.gridgrind.excel.WorkbookSheetCommand;
@@ -193,7 +193,7 @@ final class WorkbookCommandWorkbookMutationConverter {
   }
 
   private static Optional<String> resolveOptionalSecret(
-      Optional<dev.erst.gridgrind.contract.dto.SecretReference> reference,
+      Optional<dev.erst.gridgrind.core.source.SecretReference> reference,
       ExecutionInputBindings bindings) {
     if (reference.isEmpty()) {
       return Optional.empty();

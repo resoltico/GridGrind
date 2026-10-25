@@ -1,6 +1,6 @@
 package dev.erst.gridgrind.excel;
 
-import dev.erst.gridgrind.excel.foundation.ExcelBorderStyle;
+import dev.erst.gridgrind.core.vocabulary.ExcelBorderStyle;
 import java.util.Map;
 import org.openxmlformats.schemas.spreadsheetml.x2006.main.STBorderStyle;
 

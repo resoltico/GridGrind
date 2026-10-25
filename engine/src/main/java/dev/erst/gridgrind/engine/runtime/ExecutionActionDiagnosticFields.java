@@ -1,12 +1,12 @@
 package dev.erst.gridgrind.engine.runtime;
 
-import dev.erst.gridgrind.contract.action.CellMutationAction;
-import dev.erst.gridgrind.contract.action.MutationAction;
-import dev.erst.gridgrind.contract.action.StructuredMutationAction;
-import dev.erst.gridgrind.contract.assertion.Assertion;
-import dev.erst.gridgrind.contract.assertion.CellAssertion;
-import dev.erst.gridgrind.contract.dto.CellInput;
-import dev.erst.gridgrind.contract.dto.PivotTableInput;
+import dev.erst.gridgrind.core.model.pivot.PivotTableInput;
+import dev.erst.gridgrind.core.model.value.CellInput;
+import dev.erst.gridgrind.core.plan.Assertion;
+import dev.erst.gridgrind.core.plan.CellAssertion;
+import dev.erst.gridgrind.core.plan.CellMutationAction;
+import dev.erst.gridgrind.core.plan.MutationAction;
+import dev.erst.gridgrind.core.plan.StructuredMutationAction;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -24,12 +24,13 @@ final class ExecutionActionDiagnosticFields {
     }
     if (action instanceof StructuredMutationAction.SetNamedRange setNamedRange) {
       return switch (setNamedRange.target()) {
-        case dev.erst.gridgrind.contract.dto.NamedRangeTarget.Range range ->
+        case dev.erst.gridgrind.core.model.formula.NamedRangeTarget.Range range ->
             Optional.of(range.sheetName());
-        case dev.erst.gridgrind.contract.dto.NamedRangeTarget.Formula _ ->
+        case dev.erst.gridgrind.core.model.formula.NamedRangeTarget.Formula _ ->
             switch (setNamedRange.scope()) {
-              case dev.erst.gridgrind.contract.dto.NamedRangeScope.Workbook _ -> Optional.empty();
-              case dev.erst.gridgrind.contract.dto.NamedRangeScope.Sheet sheet ->
+              case dev.erst.gridgrind.core.vocabulary.NamedRangeScope.Workbook _ ->
+                  Optional.empty();
+              case dev.erst.gridgrind.core.vocabulary.NamedRangeScope.Sheet sheet ->
                   Optional.of(sheet.sheetName());
             };
       };
@@ -57,9 +58,9 @@ final class ExecutionActionDiagnosticFields {
     }
     if (action instanceof StructuredMutationAction.SetNamedRange setNamedRange) {
       return switch (setNamedRange.target()) {
-        case dev.erst.gridgrind.contract.dto.NamedRangeTarget.Range range ->
+        case dev.erst.gridgrind.core.model.formula.NamedRangeTarget.Range range ->
             Optional.of(range.range());
-        case dev.erst.gridgrind.contract.dto.NamedRangeTarget.Formula _ -> Optional.empty();
+        case dev.erst.gridgrind.core.model.formula.NamedRangeTarget.Formula _ -> Optional.empty();
       };
     }
     return Optional.empty();
@@ -74,9 +75,9 @@ final class ExecutionActionDiagnosticFields {
     }
     if (action instanceof StructuredMutationAction.SetNamedRange setNamedRange) {
       return switch (setNamedRange.target()) {
-        case dev.erst.gridgrind.contract.dto.NamedRangeTarget.Formula formula ->
+        case dev.erst.gridgrind.core.model.formula.NamedRangeTarget.Formula formula ->
             Optional.of(formula.formula());
-        case dev.erst.gridgrind.contract.dto.NamedRangeTarget.Range _ -> Optional.empty();
+        case dev.erst.gridgrind.core.model.formula.NamedRangeTarget.Range _ -> Optional.empty();
       };
     }
     return Optional.empty();
@@ -104,10 +105,10 @@ final class ExecutionActionDiagnosticFields {
 
   private static Optional<String> inlineFormula(CellInput.Formula formula) {
     return switch (formula.source()) {
-      case dev.erst.gridgrind.contract.source.TextSourceInput.Inline inline ->
+      case dev.erst.gridgrind.core.source.TextSourceInput.Inline inline ->
           Optional.of(inline.text());
-      case dev.erst.gridgrind.contract.source.TextSourceInput.Utf8File _ -> Optional.empty();
-      case dev.erst.gridgrind.contract.source.TextSourceInput.StandardInput _ -> Optional.empty();
+      case dev.erst.gridgrind.core.source.TextSourceInput.Utf8File _ -> Optional.empty();
+      case dev.erst.gridgrind.core.source.TextSourceInput.StandardInput _ -> Optional.empty();
     };
   }
 }

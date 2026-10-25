@@ -1,14 +1,14 @@
 package dev.erst.gridgrind.engine.runtime;
 
-import dev.erst.gridgrind.contract.dto.CalculationExecutionStatus;
-import dev.erst.gridgrind.contract.dto.CalculationPolicyInput;
-import dev.erst.gridgrind.contract.dto.CalculationReport;
-import dev.erst.gridgrind.contract.dto.CalculationStrategyInput;
-import dev.erst.gridgrind.contract.dto.GridGrindProblemDetail;
-import dev.erst.gridgrind.contract.dto.GridGrindWarningCode;
-import dev.erst.gridgrind.contract.dto.RequestWarning;
-import dev.erst.gridgrind.contract.dto.RequestWarningLocation;
-import dev.erst.gridgrind.contract.dto.WorkbookPlan;
+import dev.erst.gridgrind.core.model.formula.CalculationExecutionStatus;
+import dev.erst.gridgrind.core.model.formula.CalculationPolicyInput;
+import dev.erst.gridgrind.core.model.formula.CalculationReport;
+import dev.erst.gridgrind.core.model.formula.CalculationStrategyInput;
+import dev.erst.gridgrind.core.plan.WorkbookPlan;
+import dev.erst.gridgrind.core.problem.GridGrindProblemDetail;
+import dev.erst.gridgrind.core.problem.GridGrindWarningCode;
+import dev.erst.gridgrind.core.problem.RequestWarning;
+import dev.erst.gridgrind.core.problem.RequestWarningLocation;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
 import dev.erst.gridgrind.excel.stream.ExcelStreamingWorkbookWriter;
 import java.util.List;
@@ -36,7 +36,7 @@ final class ExecutionCalculationSupport {
       WorkbookPlan request,
       ExecutionJournalRecorder journal,
       @Nullable FormulaOriginTracker formulaOrigins,
-      dev.erst.gridgrind.contract.dto.ProblemContextWorkbookSurfaces.@Nullable StepReference
+      dev.erst.gridgrind.core.problem.ProblemContextWorkbookSurfaces.@Nullable StepReference
           surfacedAtStep) {
     return executeCalculationPolicy(
         workbook, request, request.calculationPolicy(), journal, formulaOrigins, surfacedAtStep);
@@ -48,7 +48,7 @@ final class ExecutionCalculationSupport {
       CalculationPolicyInput calculationPolicy,
       ExecutionJournalRecorder journal,
       @Nullable FormulaOriginTracker formulaOrigins,
-      dev.erst.gridgrind.contract.dto.ProblemContextWorkbookSurfaces.@Nullable StepReference
+      dev.erst.gridgrind.core.problem.ProblemContextWorkbookSurfaces.@Nullable StepReference
           surfacedAtStep) {
     Objects.requireNonNull(workbook, "workbook must not be null");
     Objects.requireNonNull(request, "request must not be null");
@@ -169,16 +169,16 @@ final class ExecutionCalculationSupport {
       WorkbookPlan request,
       CalculationPolicyExecutor.FailureDetail failure,
       @Nullable FormulaOriginTracker formulaOrigins,
-      dev.erst.gridgrind.contract.dto.ProblemContextWorkbookSurfaces.@Nullable StepReference
+      dev.erst.gridgrind.core.problem.ProblemContextWorkbookSurfaces.@Nullable StepReference
           surfacedAtStep) {
-    java.util.Optional<dev.erst.gridgrind.contract.dto.ProblemContextWorkbookSurfaces.StepReference>
+    java.util.Optional<dev.erst.gridgrind.core.problem.ProblemContextWorkbookSurfaces.StepReference>
         formulaAuthor =
             formulaOrigins == null || failure.sheetName() == null || failure.address() == null
                 ? java.util.Optional.empty()
                 : formulaOrigins.originFor(failure.sheetName(), failure.address());
     if (formulaAuthor.isPresent()) {
-      dev.erst.gridgrind.contract.dto.ProblemContext.ExecuteStep context =
-          new dev.erst.gridgrind.contract.dto.ProblemContext.ExecuteStep(
+      dev.erst.gridgrind.core.problem.ProblemContext.ExecuteStep context =
+          new dev.erst.gridgrind.core.problem.ProblemContext.ExecuteStep(
               ExecutionRequestPaths.requestShape(request),
               formulaAuthor.orElseThrow(),
               failureLocation(failure),
@@ -212,7 +212,7 @@ final class ExecutionCalculationSupport {
         .filter(
             capability ->
                 capability.capability()
-                    != dev.erst.gridgrind.contract.dto.FormulaCapabilityKind.EVALUABLE_NOW)
+                    != dev.erst.gridgrind.core.model.formula.FormulaCapabilityKind.EVALUABLE_NOW)
         .map(
             capability ->
                 new RequestWarning(
@@ -227,30 +227,30 @@ final class ExecutionCalculationSupport {
         .toList();
   }
 
-  dev.erst.gridgrind.contract.dto.ProblemContext.ExecuteCalculation calculationContextFor(
+  dev.erst.gridgrind.core.problem.ProblemContext.ExecuteCalculation calculationContextFor(
       WorkbookPlan request,
       CalculationPolicyExecutor.Phase phase,
       CalculationPolicyExecutor.@Nullable FailureDetail failure) {
     return switch (phase) {
       case PREFLIGHT ->
-          new dev.erst.gridgrind.contract.dto.ProblemContext.ExecuteCalculation.Preflight(
+          new dev.erst.gridgrind.core.problem.ProblemContext.ExecuteCalculation.Preflight(
               ExecutionRequestPaths.requestShape(request), failureLocation(failure));
       case EXECUTION ->
-          new dev.erst.gridgrind.contract.dto.ProblemContext.ExecuteCalculation.Execution(
+          new dev.erst.gridgrind.core.problem.ProblemContext.ExecuteCalculation.Execution(
               ExecutionRequestPaths.requestShape(request), failureLocation(failure));
     };
   }
 
-  private static dev.erst.gridgrind.contract.dto.ProblemContextWorkbookSurfaces.ProblemLocation
+  private static dev.erst.gridgrind.core.problem.ProblemContextWorkbookSurfaces.ProblemLocation
       failureLocation(CalculationPolicyExecutor.@Nullable FailureDetail failure) {
     if (failure == null
         || failure.sheetName() == null
         || failure.address() == null
         || failure.formula() == null) {
-      return dev.erst.gridgrind.contract.dto.ProblemContextWorkbookSurfaces.ProblemLocation
+      return dev.erst.gridgrind.core.problem.ProblemContextWorkbookSurfaces.ProblemLocation
           .unknown();
     }
-    return dev.erst.gridgrind.contract.dto.ProblemContextWorkbookSurfaces.ProblemLocation
+    return dev.erst.gridgrind.core.problem.ProblemContextWorkbookSurfaces.ProblemLocation
         .formulaCell(failure.sheetName(), failure.address(), failure.formula());
   }
 

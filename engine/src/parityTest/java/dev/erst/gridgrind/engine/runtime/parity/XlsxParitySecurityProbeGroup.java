@@ -4,19 +4,28 @@ import static dev.erst.gridgrind.engine.runtime.parity.ParityPlanSupport.inspect
 import static dev.erst.gridgrind.engine.runtime.parity.ParityPlanSupport.mutate;
 import static dev.erst.gridgrind.engine.runtime.parity.XlsxParityProbeRegistry.*;
 
-import dev.erst.gridgrind.contract.action.CellMutationAction;
-import dev.erst.gridgrind.contract.action.WorkbookMutationAction;
-import dev.erst.gridgrind.contract.dto.*;
-import dev.erst.gridgrind.contract.query.*;
-import dev.erst.gridgrind.contract.query.SheetInspectionResult;
-import dev.erst.gridgrind.contract.query.WorkbookInspectionResult;
-import dev.erst.gridgrind.contract.selector.*;
+import dev.erst.gridgrind.core.model.security.OoxmlEncryptionInput;
+import dev.erst.gridgrind.core.model.security.OoxmlOpenSecurityInput;
+import dev.erst.gridgrind.core.model.security.OoxmlPersistenceEncryptionInput;
+import dev.erst.gridgrind.core.model.security.OoxmlPersistenceSecurityInput;
+import dev.erst.gridgrind.core.model.security.OoxmlPersistenceSignatureInput;
+import dev.erst.gridgrind.core.model.value.CellInput;
+import dev.erst.gridgrind.core.model.value.CellRowInput;
+import dev.erst.gridgrind.core.plan.*;
+import dev.erst.gridgrind.core.plan.CellMutationAction;
+import dev.erst.gridgrind.core.plan.ExecutionModeInput;
+import dev.erst.gridgrind.core.plan.SheetInspectionResult;
+import dev.erst.gridgrind.core.plan.WorkbookInspectionResult;
+import dev.erst.gridgrind.core.plan.WorkbookMutationAction;
+import dev.erst.gridgrind.core.problem.GridGrindProblemCategory;
+import dev.erst.gridgrind.core.problem.GridGrindProblemCode;
+import dev.erst.gridgrind.core.result.WorkbookResult;
+import dev.erst.gridgrind.core.vocabulary.ExcelOoxmlSignatureState;
+import dev.erst.gridgrind.core.vocabulary.ExcelOoxmlWriteCipher;
+import dev.erst.gridgrind.core.vocabulary.ExcelOoxmlWriteHash;
 import dev.erst.gridgrind.engine.runtime.parity.ParityPlanSupport.PendingMutation;
 import dev.erst.gridgrind.engine.runtime.parity.XlsxParityProbeRegistry.ProbeContext;
 import dev.erst.gridgrind.engine.runtime.parity.XlsxParityProbeRegistry.ProbeResult;
-import dev.erst.gridgrind.excel.foundation.ExcelOoxmlSignatureState;
-import dev.erst.gridgrind.excel.foundation.ExcelOoxmlWriteCipher;
-import dev.erst.gridgrind.excel.foundation.ExcelOoxmlWriteHash;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -192,7 +201,7 @@ final class XlsxParitySecurityProbeGroup {
             new OoxmlPersistenceSecurityInput(
                 new OoxmlPersistenceEncryptionInput.Encrypt(
                     new OoxmlEncryptionInput(
-                        new dev.erst.gridgrind.contract.dto.SecretReference("output-password"),
+                        new dev.erst.gridgrind.core.source.SecretReference("output-password"),
                         ExcelOoxmlWriteCipher.AES_256,
                         ExcelOoxmlWriteHash.SHA_512)),
                 new OoxmlPersistenceSignatureInput.None()),
@@ -282,7 +291,7 @@ final class XlsxParitySecurityProbeGroup {
             encrypted.workbookPath(),
             new OoxmlOpenSecurityInput(
                 java.util.Optional.of(
-                    new dev.erst.gridgrind.contract.dto.SecretReference("wrong-password"))),
+                    new dev.erst.gridgrind.core.source.SecretReference("wrong-password"))),
             inspect(
                 "security",
                 new WorkbookSelector.Current(),

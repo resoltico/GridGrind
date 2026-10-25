@@ -1,6 +1,6 @@
 package dev.erst.gridgrind.cli;
 
-import dev.erst.gridgrind.contract.catalog.GridGrindRequestSurfaceContractText;
+import dev.erst.gridgrind.core.catalog.GridGrindRequestSurfaceContractText;
 import java.nio.file.Path;
 import java.util.Objects;
 import java.util.Optional;

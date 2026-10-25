@@ -7,10 +7,12 @@ import static dev.erst.gridgrind.engine.runtime.parity.ParityPlanSupport.executi
 import static dev.erst.gridgrind.engine.runtime.parity.ParityPlanSupport.inspect;
 import static dev.erst.gridgrind.engine.runtime.parity.XlsxParityProbeRegistry.*;
 
-import dev.erst.gridgrind.contract.dto.*;
-import dev.erst.gridgrind.contract.query.*;
-import dev.erst.gridgrind.contract.query.SheetInspectionResult;
-import dev.erst.gridgrind.contract.selector.*;
+import dev.erst.gridgrind.core.model.formula.CalculationPolicyInput;
+import dev.erst.gridgrind.core.model.formula.CalculationStrategyInput;
+import dev.erst.gridgrind.core.plan.*;
+import dev.erst.gridgrind.core.plan.SheetInspectionResult;
+import dev.erst.gridgrind.core.problem.GridGrindProblemCode;
+import dev.erst.gridgrind.core.result.WorkbookResult;
 import dev.erst.gridgrind.engine.runtime.parity.XlsxParityProbeRegistry.ProbeContext;
 import dev.erst.gridgrind.engine.runtime.parity.XlsxParityProbeRegistry.ProbeResult;
 import java.nio.file.Path;
@@ -48,15 +50,15 @@ final class XlsxParityFormulaProbeGroup {
             List.of(),
             inspect(
                 "cells", new CellSelector.ByAddresses("Ops", List.of("B1")), allFacetCellsQuery()));
-    dev.erst.gridgrind.contract.dto.CellReport.FormulaReport formula =
+    dev.erst.gridgrind.core.model.value.CellReport.FormulaReport formula =
         cast(
-            dev.erst.gridgrind.contract.dto.CellReport.FormulaReport.class,
+            dev.erst.gridgrind.core.model.value.CellReport.FormulaReport.class,
             XlsxParityGridGrind.read(success, "cells", SheetInspectionResult.CellsResult.class)
                 .cells()
                 .getFirst());
-    dev.erst.gridgrind.contract.dto.CellValueReport.NumberValue evaluation =
+    dev.erst.gridgrind.core.model.value.CellValueReport.NumberValue evaluation =
         cast(
-            dev.erst.gridgrind.contract.dto.CellValueReport.NumberValue.class,
+            dev.erst.gridgrind.core.model.value.CellValueReport.NumberValue.class,
             formula.evaluation().orElseThrow());
     String cachedValue = XlsxParityOracle.cachedFormulaRawValue(outputPath, "Ops", "B1");
     return poiValue == 7.5d && evaluation.numberValue() == poiValue && "7.5".equals(cachedValue)
@@ -92,16 +94,16 @@ final class XlsxParityFormulaProbeGroup {
             missingWorkbookCachedValueEnvironment(),
             inspect(
                 "cells", new CellSelector.ByAddresses("Ops", List.of("B1")), allFacetCellsQuery()));
-    dev.erst.gridgrind.contract.dto.CellReport.FormulaReport cachedFormula =
+    dev.erst.gridgrind.core.model.value.CellReport.FormulaReport cachedFormula =
         cast(
-            dev.erst.gridgrind.contract.dto.CellReport.FormulaReport.class,
+            dev.erst.gridgrind.core.model.value.CellReport.FormulaReport.class,
             XlsxParityGridGrind.read(
                     cachedSuccess, "cells", SheetInspectionResult.CellsResult.class)
                 .cells()
                 .getFirst());
-    dev.erst.gridgrind.contract.dto.CellValueReport.NumberValue cachedEvaluation =
+    dev.erst.gridgrind.core.model.value.CellValueReport.NumberValue cachedEvaluation =
         cast(
-            dev.erst.gridgrind.contract.dto.CellValueReport.NumberValue.class,
+            dev.erst.gridgrind.core.model.value.CellValueReport.NumberValue.class,
             cachedFormula.evaluation().orElseThrow());
     return poiStrictFails
             && poiCachedValue == 7.5d
@@ -134,15 +136,15 @@ final class XlsxParityFormulaProbeGroup {
             List.of(),
             inspect(
                 "cells", new CellSelector.ByAddresses("Ops", List.of("B1")), allFacetCellsQuery()));
-    dev.erst.gridgrind.contract.dto.CellReport.FormulaReport formula =
+    dev.erst.gridgrind.core.model.value.CellReport.FormulaReport formula =
         cast(
-            dev.erst.gridgrind.contract.dto.CellReport.FormulaReport.class,
+            dev.erst.gridgrind.core.model.value.CellReport.FormulaReport.class,
             XlsxParityGridGrind.read(success, "cells", SheetInspectionResult.CellsResult.class)
                 .cells()
                 .getFirst());
-    dev.erst.gridgrind.contract.dto.CellValueReport.NumberValue evaluation =
+    dev.erst.gridgrind.core.model.value.CellValueReport.NumberValue evaluation =
         cast(
-            dev.erst.gridgrind.contract.dto.CellValueReport.NumberValue.class,
+            dev.erst.gridgrind.core.model.value.CellValueReport.NumberValue.class,
             formula.evaluation().orElseThrow());
     String cachedValue = XlsxParityOracle.cachedFormulaRawValue(outputPath, "Ops", "B1");
     return poiValue == 42.0d && evaluation.numberValue() == poiValue && "42.0".equals(cachedValue)
@@ -171,7 +173,7 @@ final class XlsxParityFormulaProbeGroup {
         targetedPath,
         executionPolicy(
             calculateTargets(
-                new dev.erst.gridgrind.contract.dto.FormulaCellTarget("Budget", "B1"))),
+                new dev.erst.gridgrind.core.model.formula.FormulaCellTarget("Budget", "B1"))),
         null,
         List.of());
     String targetedB1 = XlsxParityOracle.cachedFormulaRawValue(targetedPath, "Budget", "B1");

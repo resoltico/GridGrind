@@ -14,12 +14,12 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import dev.erst.gridgrind.contract.dto.CalculationExecutionStatus;
-import dev.erst.gridgrind.contract.dto.CalculationPolicyInput;
-import dev.erst.gridgrind.contract.dto.CalculationReport;
-import dev.erst.gridgrind.contract.dto.CalculationStrategyInput;
-import dev.erst.gridgrind.contract.dto.FormulaCapabilityKind;
-import dev.erst.gridgrind.contract.dto.GridGrindProblemCode;
+import dev.erst.gridgrind.core.model.formula.CalculationExecutionStatus;
+import dev.erst.gridgrind.core.model.formula.CalculationPolicyInput;
+import dev.erst.gridgrind.core.model.formula.CalculationReport;
+import dev.erst.gridgrind.core.model.formula.CalculationStrategyInput;
+import dev.erst.gridgrind.core.model.formula.FormulaCapabilityKind;
+import dev.erst.gridgrind.core.problem.GridGrindProblemCode;
 import dev.erst.gridgrind.excel.ExcelCellValue;
 import dev.erst.gridgrind.excel.ExcelFormulaCapabilityAssessment;
 import dev.erst.gridgrind.excel.ExcelFormulaCapabilityIssue;
@@ -61,7 +61,7 @@ class CalculationPolicyExecutorTest {
     assertTrue(
         CalculationPolicyExecutor.requiresMutationPrefix(
             calculateTargets(
-                new dev.erst.gridgrind.contract.dto.FormulaCellTarget("Budget", "B1"))));
+                new dev.erst.gridgrind.core.model.formula.FormulaCellTarget("Budget", "B1"))));
 
     CalculationReport report =
         CalculationPolicyExecutor.notRequestedReport(markRecalculateOnOpen());
@@ -122,7 +122,8 @@ class CalculationPolicyExecutorTest {
       workbook.sheet("Budget").cells().setCell("B1", ExcelCellValue.formula("A1*2"));
 
       CalculationPolicyInput targeted =
-          calculateTargets(new dev.erst.gridgrind.contract.dto.FormulaCellTarget("Budget", "B1"));
+          calculateTargets(
+              new dev.erst.gridgrind.core.model.formula.FormulaCellTarget("Budget", "B1"));
       CalculationPolicyExecutor.PreflightOutcome preflight =
           CalculationPolicyExecutor.preflight(workbook, targeted);
       CalculationPolicyExecutor.ExecutionOutcome execution =
@@ -167,7 +168,8 @@ class CalculationPolicyExecutorTest {
       CalculationPolicyInput targetedAndMarked =
           new CalculationPolicyInput(
               new CalculationStrategyInput.EvaluateTargets(
-                  List.of(new dev.erst.gridgrind.contract.dto.FormulaCellTarget("Budget", "B1"))),
+                  List.of(
+                      new dev.erst.gridgrind.core.model.formula.FormulaCellTarget("Budget", "B1"))),
               true);
       CalculationPolicyExecutor.ExecutionOutcome execution =
           CalculationPolicyExecutor.execute(workbook, targetedAndMarked, 1, false);
@@ -198,7 +200,7 @@ class CalculationPolicyExecutorTest {
           CalculationPolicyExecutor.execute(
               workbook,
               calculateTargets(
-                  new dev.erst.gridgrind.contract.dto.FormulaCellTarget("Budget", "B1")),
+                  new dev.erst.gridgrind.core.model.formula.FormulaCellTarget("Budget", "B1")),
               1,
               false);
 
@@ -383,7 +385,8 @@ class CalculationPolicyExecutorTest {
     try (ExcelWorkbook workbook =
         ExecutionContextFixtureSupport.openWorkbook(createUnsupportedFormulaWorkbook())) {
       CalculationPolicyInput targeted =
-          calculateTargets(new dev.erst.gridgrind.contract.dto.FormulaCellTarget("Ops", "A1"));
+          calculateTargets(
+              new dev.erst.gridgrind.core.model.formula.FormulaCellTarget("Ops", "A1"));
       CalculationPolicyExecutor.PreflightOutcome preflight =
           CalculationPolicyExecutor.preflight(workbook, targeted);
       CalculationPolicyExecutor.ExecutionOutcome execution =
@@ -414,7 +417,8 @@ class CalculationPolicyExecutorTest {
       CalculationPolicyInput clearCaches = clearFormulaCaches();
       CalculationPolicyInput evaluateAll = calculateAll();
       CalculationPolicyInput evaluateTargets =
-          calculateTargets(new dev.erst.gridgrind.contract.dto.FormulaCellTarget("Budget", "A1"));
+          calculateTargets(
+              new dev.erst.gridgrind.core.model.formula.FormulaCellTarget("Budget", "A1"));
       CalculationPolicyInput requireEvaluation = requireEvaluation();
 
       assertTrue(CalculationPolicyExecutor.preflight(workbook, doNotCalculate).report().isEmpty());

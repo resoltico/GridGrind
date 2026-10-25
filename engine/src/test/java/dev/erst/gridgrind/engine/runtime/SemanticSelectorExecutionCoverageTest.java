@@ -11,21 +11,20 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import dev.erst.gridgrind.contract.action.CellMutationAction;
-import dev.erst.gridgrind.contract.action.StructuredMutationAction;
-import dev.erst.gridgrind.contract.action.WorkbookMutationAction;
-import dev.erst.gridgrind.contract.assertion.*;
-import dev.erst.gridgrind.contract.dto.CellInput;
-import dev.erst.gridgrind.contract.dto.GridGrindProblemCode;
-import dev.erst.gridgrind.contract.dto.TableInput;
-import dev.erst.gridgrind.contract.dto.TableStyleInput;
-import dev.erst.gridgrind.contract.dto.WorkbookPlan;
-import dev.erst.gridgrind.contract.dto.WorkbookResult;
-import dev.erst.gridgrind.contract.query.*;
-import dev.erst.gridgrind.contract.query.SheetInspectionResult;
-import dev.erst.gridgrind.contract.selector.TableCellSelector;
-import dev.erst.gridgrind.contract.selector.TableRowSelector;
-import dev.erst.gridgrind.contract.selector.TableSelector;
+import dev.erst.gridgrind.core.model.table.TableInput;
+import dev.erst.gridgrind.core.model.table.TableStyleInput;
+import dev.erst.gridgrind.core.model.value.CellInput;
+import dev.erst.gridgrind.core.plan.*;
+import dev.erst.gridgrind.core.plan.CellMutationAction;
+import dev.erst.gridgrind.core.plan.SheetInspectionResult;
+import dev.erst.gridgrind.core.plan.StructuredMutationAction;
+import dev.erst.gridgrind.core.plan.TableCellSelector;
+import dev.erst.gridgrind.core.plan.TableRowSelector;
+import dev.erst.gridgrind.core.plan.TableSelector;
+import dev.erst.gridgrind.core.plan.WorkbookMutationAction;
+import dev.erst.gridgrind.core.plan.WorkbookPlan;
+import dev.erst.gridgrind.core.problem.GridGrindProblemCode;
+import dev.erst.gridgrind.core.result.WorkbookResult;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 
@@ -68,7 +67,7 @@ class SemanticSelectorExecutionCoverageTest {
                             "assert-missing-table-cell",
                             missingAmountCellTarget(),
                             new CellAssertion.CellValue(
-                                new dev.erst.gridgrind.contract.dto.CellScalarValue.NumberValue(
+                                new dev.erst.gridgrind.core.model.value.CellScalarValue.NumberValue(
                                     999.0)))),
                     List.of())));
 
@@ -83,7 +82,7 @@ class SemanticSelectorExecutionCoverageTest {
     assertEquals(List.of(), cellsResult.cells());
   }
 
-  private static dev.erst.gridgrind.contract.assertion.AssertionFailure failedAssertion(
+  private static dev.erst.gridgrind.core.plan.AssertionFailure failedAssertion(
       WorkbookResult.Failure failure) {
     return assertInstanceOf(AssertionResult.Failed.class, failure.assertions().getFirst())
         .failure();
@@ -124,12 +123,12 @@ class SemanticSelectorExecutionCoverageTest {
   private static List<ExecutorTestPlanSupport.PendingMutation> budgetTableMutations() {
     return mutations(
         mutate(
-            new dev.erst.gridgrind.contract.selector.SheetSelector.ByName("Budget"),
+            new dev.erst.gridgrind.core.plan.SheetSelector.ByName("Budget"),
             new WorkbookMutationAction.EnsureSheet()),
         mutate(
-            new dev.erst.gridgrind.contract.selector.RangeSelector.ByRange("Budget", "A1:B3"),
+            new dev.erst.gridgrind.core.plan.RangeSelector.ByRange("Budget", "A1:B3"),
             new CellMutationAction.SetRange(
-                new dev.erst.gridgrind.contract.dto.CellGridInput.Typed(
+                new dev.erst.gridgrind.core.model.value.CellGridInput.Typed(
                     List.of(
                         List.of(
                             new CellInput.Text(text("Item")), new CellInput.Text(text("Amount"))),
@@ -147,12 +146,12 @@ class SemanticSelectorExecutionCoverageTest {
   private static List<ExecutorTestPlanSupport.PendingMutation> duplicateBudgetTableMutations() {
     return mutations(
         mutate(
-            new dev.erst.gridgrind.contract.selector.SheetSelector.ByName("Budget"),
+            new dev.erst.gridgrind.core.plan.SheetSelector.ByName("Budget"),
             new WorkbookMutationAction.EnsureSheet()),
         mutate(
-            new dev.erst.gridgrind.contract.selector.RangeSelector.ByRange("Budget", "A1:B4"),
+            new dev.erst.gridgrind.core.plan.RangeSelector.ByRange("Budget", "A1:B4"),
             new CellMutationAction.SetRange(
-                new dev.erst.gridgrind.contract.dto.CellGridInput.Typed(
+                new dev.erst.gridgrind.core.model.value.CellGridInput.Typed(
                     List.of(
                         List.of(
                             new CellInput.Text(text("Item")), new CellInput.Text(text("Amount"))),

@@ -1,7 +1,7 @@
 package dev.erst.gridgrind.cli;
 
 import dev.erst.gridgrind.cli.discovery.GridGrindCliJson;
-import dev.erst.gridgrind.contract.catalog.GridGrindProtocolCatalog;
+import dev.erst.gridgrind.core.catalog.GridGrindProtocolCatalog;
 import dev.erst.gridgrind.json.codec.GridGrindJsonOutput;
 import java.io.IOException;
 import java.io.OutputStream;

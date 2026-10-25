@@ -1,13 +1,15 @@
 package dev.erst.gridgrind.jazzer.support;
 
-import dev.erst.gridgrind.contract.dto.BorderSideInput;
-import dev.erst.gridgrind.contract.dto.CellAlignmentInput;
-import dev.erst.gridgrind.contract.dto.CellBorderInput;
-import dev.erst.gridgrind.contract.dto.CellFillInput;
-import dev.erst.gridgrind.contract.dto.CellFontInput;
-import dev.erst.gridgrind.contract.dto.CellProtectionInput;
-import dev.erst.gridgrind.contract.dto.CellStylePatchInput;
-import dev.erst.gridgrind.contract.dto.FontHeightInput;
+import dev.erst.gridgrind.core.model.protection.CellProtectionInput;
+import dev.erst.gridgrind.core.model.style.BorderSideInput;
+import dev.erst.gridgrind.core.model.style.CellAlignmentInput;
+import dev.erst.gridgrind.core.model.style.CellBorderInput;
+import dev.erst.gridgrind.core.model.style.CellFillInput;
+import dev.erst.gridgrind.core.model.style.CellFontInput;
+import dev.erst.gridgrind.core.model.style.CellStylePatchInput;
+import dev.erst.gridgrind.core.model.style.FontHeightInput;
+import dev.erst.gridgrind.core.vocabulary.ExcelBorderStyle;
+import dev.erst.gridgrind.core.vocabulary.ExcelFillPattern;
 import dev.erst.gridgrind.excel.ExcelBorder;
 import dev.erst.gridgrind.excel.ExcelBorderSide;
 import dev.erst.gridgrind.excel.ExcelCellAlignment;
@@ -15,8 +17,6 @@ import dev.erst.gridgrind.excel.ExcelCellFill;
 import dev.erst.gridgrind.excel.ExcelCellFont;
 import dev.erst.gridgrind.excel.ExcelCellProtection;
 import dev.erst.gridgrind.excel.ExcelCellStyle;
-import dev.erst.gridgrind.excel.foundation.ExcelBorderStyle;
-import dev.erst.gridgrind.excel.foundation.ExcelFillPattern;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -226,7 +226,7 @@ public final class StyleKindIntrospection {
   private static boolean isEngineNone(Optional<ExcelBorderSide> side) {
     return side.isPresent()
         && side.orElseThrow().style().orElseThrow()
-            == dev.erst.gridgrind.excel.foundation.ExcelBorderStyle.NONE;
+            == dev.erst.gridgrind.core.vocabulary.ExcelBorderStyle.NONE;
   }
 
   private static boolean hasProtocolColor(Optional<BorderSideInput> side) {

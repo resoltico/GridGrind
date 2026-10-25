@@ -5,12 +5,12 @@ import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import dev.erst.gridgrind.contract.dto.ProtocolCellAddressValidation;
-import dev.erst.gridgrind.contract.dto.ProtocolDefinedNameValidation;
-import dev.erst.gridgrind.excel.foundation.ExcelColumnWidthViolation;
-import dev.erst.gridgrind.excel.foundation.ExcelRowHeightViolation;
-import dev.erst.gridgrind.excel.foundation.ExcelSheetNameProblem;
-import dev.erst.gridgrind.excel.foundation.ExcelZoomViolation;
+import dev.erst.gridgrind.core.vocabulary.ExcelColumnWidthViolation;
+import dev.erst.gridgrind.core.vocabulary.ExcelRowHeightViolation;
+import dev.erst.gridgrind.core.vocabulary.ExcelSheetNameProblem;
+import dev.erst.gridgrind.core.vocabulary.ExcelZoomViolation;
+import dev.erst.gridgrind.core.vocabulary.ProtocolCellAddressValidation;
+import dev.erst.gridgrind.core.vocabulary.ProtocolDefinedNameValidation;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;

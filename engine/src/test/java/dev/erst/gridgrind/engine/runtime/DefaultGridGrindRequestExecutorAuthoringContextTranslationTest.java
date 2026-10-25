@@ -3,20 +3,34 @@ package dev.erst.gridgrind.engine.runtime;
 import static dev.erst.gridgrind.engine.runtime.ExecutorTestPlanSupport.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-import dev.erst.gridgrind.contract.action.CellMutationAction;
-import dev.erst.gridgrind.contract.action.StructuredMutationAction;
-import dev.erst.gridgrind.contract.action.WorkbookMutationAction;
-import dev.erst.gridgrind.contract.dto.*;
-import dev.erst.gridgrind.contract.query.*;
-import dev.erst.gridgrind.contract.selector.*;
+import dev.erst.gridgrind.core.model.drawing.CommentInput;
+import dev.erst.gridgrind.core.model.formula.NamedRangeTarget;
+import dev.erst.gridgrind.core.model.layout.PaneInput;
+import dev.erst.gridgrind.core.model.print.PrintAreaInput;
+import dev.erst.gridgrind.core.model.print.PrintLayoutInput;
+import dev.erst.gridgrind.core.model.print.PrintScalingInput;
+import dev.erst.gridgrind.core.model.print.PrintTitleColumnsInput;
+import dev.erst.gridgrind.core.model.print.PrintTitleRowsInput;
+import dev.erst.gridgrind.core.model.style.DifferentialStyleInput;
+import dev.erst.gridgrind.core.model.table.TableInput;
+import dev.erst.gridgrind.core.model.table.TableStyleInput;
+import dev.erst.gridgrind.core.model.validation.ConditionalFormattingDefinitionInput;
+import dev.erst.gridgrind.core.model.validation.ConditionalFormattingRuleInput;
+import dev.erst.gridgrind.core.model.validation.DataValidationRuleInput;
+import dev.erst.gridgrind.core.model.value.HyperlinkTarget;
+import dev.erst.gridgrind.core.plan.*;
+import dev.erst.gridgrind.core.plan.CellMutationAction;
+import dev.erst.gridgrind.core.plan.StructuredMutationAction;
+import dev.erst.gridgrind.core.plan.WorkbookMutationAction;
+import dev.erst.gridgrind.core.vocabulary.ExcelComparisonOperator;
+import dev.erst.gridgrind.core.vocabulary.ExcelPrintOrientation;
+import dev.erst.gridgrind.core.vocabulary.NamedRangeScope;
 import dev.erst.gridgrind.excel.*;
 import dev.erst.gridgrind.excel.ExcelNamedRangeScope;
 import dev.erst.gridgrind.excel.InvalidCellAddressException;
 import dev.erst.gridgrind.excel.InvalidFormulaException;
 import dev.erst.gridgrind.excel.InvalidRangeAddressException;
 import dev.erst.gridgrind.excel.NamedRangeNotFoundException;
-import dev.erst.gridgrind.excel.foundation.ExcelComparisonOperator;
-import dev.erst.gridgrind.excel.foundation.ExcelPrintOrientation;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
@@ -169,8 +183,7 @@ class DefaultGridGrindRequestExecutorAuthoringContextTranslationTest
         "BudgetTotal");
     assertWriteContext(
         mutate(
-            new dev.erst.gridgrind.contract.selector.NamedRangeSelector.WorkbookScope(
-                "BudgetTotal"),
+            new dev.erst.gridgrind.core.plan.NamedRangeSelector.WorkbookScope("BudgetTotal"),
             new StructuredMutationAction.DeleteNamedRange()),
         exception,
         null,
@@ -179,8 +192,7 @@ class DefaultGridGrindRequestExecutorAuthoringContextTranslationTest
         "BudgetTotal");
     assertWriteContext(
         mutate(
-            new dev.erst.gridgrind.contract.selector.NamedRangeSelector.SheetScope(
-                "LocalItem", "Budget"),
+            new dev.erst.gridgrind.core.plan.NamedRangeSelector.SheetScope("LocalItem", "Budget"),
             new StructuredMutationAction.DeleteNamedRange()),
         exception,
         "Budget",
@@ -216,8 +228,7 @@ class DefaultGridGrindRequestExecutorAuthoringContextTranslationTest
         "BAD!",
         addressFor(
             mutate(
-                new dev.erst.gridgrind.contract.selector.NamedRangeSelector.WorkbookScope(
-                    "BudgetTotal"),
+                new dev.erst.gridgrind.core.plan.NamedRangeSelector.WorkbookScope("BudgetTotal"),
                 new StructuredMutationAction.DeleteNamedRange()),
             invalidAddress));
 
@@ -227,7 +238,7 @@ class DefaultGridGrindRequestExecutorAuthoringContextTranslationTest
             mutate(
                 new RangeSelector.ByRange("Budget", "C1:D2"),
                 new CellMutationAction.SetRange(
-                    new dev.erst.gridgrind.contract.dto.CellGridInput.Typed(
+                    new dev.erst.gridgrind.core.model.value.CellGridInput.Typed(
                         List.of(List.of(textCell("x")))))),
             invalidFormula));
     assertEquals(
@@ -359,7 +370,7 @@ class DefaultGridGrindRequestExecutorAuthoringContextTranslationTest
             mutate(
                 new RangeSelector.ByRange("Budget", "A1:B1"),
                 new CellMutationAction.SetRange(
-                    new dev.erst.gridgrind.contract.dto.CellGridInput.Typed(
+                    new dev.erst.gridgrind.core.model.value.CellGridInput.Typed(
                         List.of(List.of(textCell("x")))))),
             mutate(
                 new RangeSelector.ByRange("Budget", "A1:B1"), new CellMutationAction.ClearRange()),
@@ -423,7 +434,7 @@ class DefaultGridGrindRequestExecutorAuthoringContextTranslationTest
             mutate(
                 new SheetSelector.ByName("Budget"),
                 new CellMutationAction.AppendRow(
-                    new dev.erst.gridgrind.contract.dto.CellRowInput.Typed(
+                    new dev.erst.gridgrind.core.model.value.CellRowInput.Typed(
                         List.of(textCell("x"))))),
             mutate(
                 new SheetSelector.ByName("Budget"), new WorkbookMutationAction.AutoSizeColumns()));

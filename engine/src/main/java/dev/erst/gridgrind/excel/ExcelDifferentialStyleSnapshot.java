@@ -1,6 +1,6 @@
 package dev.erst.gridgrind.excel;
 
-import dev.erst.gridgrind.excel.foundation.ExcelConditionalFormattingUnsupportedFeature;
+import dev.erst.gridgrind.core.vocabulary.ExcelConditionalFormattingUnsupportedFeature;
 import java.util.List;
 import java.util.Objects;
 import org.jspecify.annotations.Nullable;

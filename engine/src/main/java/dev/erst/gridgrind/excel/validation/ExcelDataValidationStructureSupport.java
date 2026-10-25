@@ -1,10 +1,10 @@
 package dev.erst.gridgrind.excel.validation;
 
+import dev.erst.gridgrind.core.vocabulary.ExcelColumnSpan;
+import dev.erst.gridgrind.core.vocabulary.ExcelRowSpan;
 import dev.erst.gridgrind.excel.ExcelRange;
 import dev.erst.gridgrind.excel.ExcelSheetStructureSupport;
 import dev.erst.gridgrind.excel.ExcelSqrefSupport;
-import dev.erst.gridgrind.excel.foundation.ExcelColumnSpan;
-import dev.erst.gridgrind.excel.foundation.ExcelRowSpan;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;

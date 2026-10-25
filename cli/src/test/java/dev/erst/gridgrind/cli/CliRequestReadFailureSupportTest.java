@@ -3,7 +3,7 @@ package dev.erst.gridgrind.cli;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 
-import dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces.RequestInput;
+import dev.erst.gridgrind.core.problem.ProblemContextRequestSurfaces.RequestInput;
 import java.nio.file.Path;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;

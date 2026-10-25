@@ -1,19 +1,19 @@
 package dev.erst.gridgrind.engine.runtime;
 
-import dev.erst.gridgrind.contract.dto.AutofilterEntryReport;
-import dev.erst.gridgrind.contract.dto.AutofilterFilterColumnReport;
-import dev.erst.gridgrind.contract.dto.AutofilterFilterCriterionReport;
-import dev.erst.gridgrind.contract.dto.AutofilterSortConditionReport;
-import dev.erst.gridgrind.contract.dto.AutofilterSortStateReport;
-import dev.erst.gridgrind.contract.dto.CustomXmlDataBindingReport;
-import dev.erst.gridgrind.contract.dto.CustomXmlExportReport;
-import dev.erst.gridgrind.contract.dto.CustomXmlLinkedCellReport;
-import dev.erst.gridgrind.contract.dto.CustomXmlLinkedTableReport;
-import dev.erst.gridgrind.contract.dto.CustomXmlMappingReport;
-import dev.erst.gridgrind.contract.dto.PivotTableReport;
-import dev.erst.gridgrind.contract.dto.TableColumnReport;
-import dev.erst.gridgrind.contract.dto.TableEntryReport;
-import dev.erst.gridgrind.contract.dto.TableStyleReport;
+import dev.erst.gridgrind.core.model.customxml.CustomXmlDataBindingReport;
+import dev.erst.gridgrind.core.model.customxml.CustomXmlExportReport;
+import dev.erst.gridgrind.core.model.customxml.CustomXmlLinkedCellReport;
+import dev.erst.gridgrind.core.model.customxml.CustomXmlLinkedTableReport;
+import dev.erst.gridgrind.core.model.customxml.CustomXmlMappingReport;
+import dev.erst.gridgrind.core.model.pivot.PivotTableReport;
+import dev.erst.gridgrind.core.model.table.AutofilterEntryReport;
+import dev.erst.gridgrind.core.model.table.AutofilterFilterColumnReport;
+import dev.erst.gridgrind.core.model.table.AutofilterFilterCriterionReport;
+import dev.erst.gridgrind.core.model.table.AutofilterSortConditionReport;
+import dev.erst.gridgrind.core.model.table.AutofilterSortStateReport;
+import dev.erst.gridgrind.core.model.table.TableColumnReport;
+import dev.erst.gridgrind.core.model.table.TableEntryReport;
+import dev.erst.gridgrind.core.model.table.TableStyleReport;
 import dev.erst.gridgrind.excel.ExcelAutofilterFilterColumnSnapshot;
 import dev.erst.gridgrind.excel.ExcelAutofilterFilterCriterionSnapshot;
 import dev.erst.gridgrind.excel.ExcelAutofilterSnapshot;
@@ -97,9 +97,9 @@ final class InspectionResultWorkbookStructureReportSupport {
         snapshot.xml());
   }
 
-  static dev.erst.gridgrind.contract.dto.ArrayFormulaReport toArrayFormulaReport(
+  static dev.erst.gridgrind.core.model.formula.ArrayFormulaReport toArrayFormulaReport(
       dev.erst.gridgrind.excel.ExcelArrayFormulaSnapshot snapshot) {
-    return new dev.erst.gridgrind.contract.dto.ArrayFormulaReport(
+    return new dev.erst.gridgrind.core.model.formula.ArrayFormulaReport(
         snapshot.sheetName(),
         snapshot.range(),
         snapshot.topLeftAddress(),
@@ -314,7 +314,7 @@ final class InspectionResultWorkbookStructureReportSupport {
     };
   }
 
-  private static dev.erst.gridgrind.contract.dto.@Nullable CellColorReport toCellColorReport(
+  private static dev.erst.gridgrind.core.model.style.@Nullable CellColorReport toCellColorReport(
       dev.erst.gridgrind.excel.@Nullable ExcelColorSnapshot color) {
     return InspectionResultCellReportSupport.toCellColorReport(color).orElse(null);
   }

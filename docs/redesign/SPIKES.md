@@ -400,3 +400,51 @@ shell lines 10,831 → 10,827. Other model/converter/union counts remain unchang
 
 Evidence: external `evidence/wp-20/json-*.log` and `json-inventories/`. No golden re-recording or
 AGENTS baseline/supplement change. WP-20 remains open for core package normalization.
+
+### WP-20 domain packages and completion
+
+Core now uses `dev.erst.gridgrind.core` packages: vocabulary, metadata, feature models, plan,
+source, problems/results, semantics, validation and catalog. Java authoring is in `core.authoring`.
+Every caller, test, example, build scope and current source link follows the moved types. Engine
+coverage now also collects JSON integration tests. The two distinct `NamedRangeTarget` contracts
+(authoring target vs formula/range model) remain separate; a simple-name collision in the move
+script initially left the model unmoved and was repaired with qualified mappings. Initial
+production compilation had 81 access/missing-type errors; a descriptor-line repair then exposed
+a dangling qualified-opens target, which was fixed by regenerating the descriptor from actual
+packages. Shared existing validators retain their behavior across the new package boundaries.
+Test-only private factories were exercised through equivalent public constructors or kept in the
+owning security package; product APIs were not widened for those tests. Full production/test
+compilation and focused core/JSON/architecture checks passed (17s).
+
+The first full check failed (2m48s): making the optional open-security predicate public accidentally
+exposed a JavaBean `empty` property in serialized requests. Two engine fixture tests, two CLI
+fixture/materialization tests and both package-security golden transports detected it. Failure XML
+is retained externally in `packages-failures/`. The plan now inspects the existing optional secret
+reference directly; the unused convenience predicate and its redundant assertion were removed.
+Focused security/fixture checks passed (53s), and repaired full `./gradlew check --no-parallel`
+passed (3m2s): 2,769 active tests, zero failures/errors/skips, all 141 golden cases unchanged.
+No snapshot was re-recorded. This producer/consumer failure is also relevant to WP-22's record-only
+wire-property derivation: computed JavaBean predicates must not become wire fields.
+
+Nested Jazzer `check` passed (19s), including all committed regression targets. `mutationReport`
+passed (16s): core's selected 298/298 mutants and engine's selected 82/82 mutants killed, no
+uncovered mutants. Publication regression passed. An independent Java 26 named-module probe
+round-tripped all 14 shipped requests, the catalog and a response through the actual core/JSON
+JARs. JAR inspection found no retired contract, authoring or Excel-foundation namespace in core,
+JSON or the packaged CLI. Temporary annotation dependency and qualified opens remain until
+WP-22/WP-24 remove the Jackson annotations/creators; no databind import/dependency exists in core.
+
+Inventories now follow semantic packages instead of producing false zeros from the retired DTO
+directory. The original DTO-origin input count remains 81, report count 96. A separate all-core
+input count is 83, including the two pre-existing text/binary source unions omitted by the original
+DTO-only measure. Snapshot/definition counts remain 51/13, subtype files 99, handwritten catalog
+lines 2,849, blank checks 477, Support classes 220, JSON source files 63. Converter lines
+4,576 → 4,575 reflect import/format changes only. Main Java lines 125,668 → 125,883; test lines
+152,223 → 152,970; shell lines remain 10,827. The module consolidation began from six product/
+verification projects; the current build has core, JSON, engine, CLI and architecture tests.
+
+WP-20 acceptance is demonstrated by actual JPMS compilation and named execution, annotation-only
+core's explicitly allowed temporary dependency, unchanged golden output, complete JAR contents,
+and regenerated `package-inventories/`. Evidence is external in `evidence/wp-20/packages-*.log`,
+`jpms-probe.log` and inventories. Baseline diff is empty; no supplement exists yet. Next: WP-21
+value objects, then WP-22/WP-24 metadata/defaults and WP-23 vocabulary normalization.

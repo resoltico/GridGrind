@@ -1,8 +1,7 @@
 package dev.erst.gridgrind.core.problem;
 
-import dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces.JsonLocation;
-import dev.erst.gridgrind.contract.dto.RequestWarning;
-import dev.erst.gridgrind.contract.dto.WorkbookPlan;
+import dev.erst.gridgrind.core.plan.WorkbookPlan;
+import dev.erst.gridgrind.core.problem.ProblemContextRequestSurfaces.JsonLocation;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;

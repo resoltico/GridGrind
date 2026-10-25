@@ -1,14 +1,14 @@
 package dev.erst.gridgrind.engine.runtime;
 
-import dev.erst.gridgrind.contract.assertion.AssertionResult;
-import dev.erst.gridgrind.contract.dto.CalculationReport;
-import dev.erst.gridgrind.contract.dto.GridGrindProblemDetail;
-import dev.erst.gridgrind.contract.dto.GridGrindProtocolVersion;
-import dev.erst.gridgrind.contract.dto.RequestWarning;
-import dev.erst.gridgrind.contract.dto.WorkbookPlan;
-import dev.erst.gridgrind.contract.dto.WorkbookResult;
-import dev.erst.gridgrind.contract.query.InspectionResult;
-import dev.erst.gridgrind.contract.step.InspectionStep;
+import dev.erst.gridgrind.core.model.formula.CalculationReport;
+import dev.erst.gridgrind.core.plan.AssertionResult;
+import dev.erst.gridgrind.core.plan.GridGrindProtocolVersion;
+import dev.erst.gridgrind.core.plan.InspectionResult;
+import dev.erst.gridgrind.core.plan.InspectionStep;
+import dev.erst.gridgrind.core.plan.WorkbookPlan;
+import dev.erst.gridgrind.core.problem.GridGrindProblemDetail;
+import dev.erst.gridgrind.core.problem.RequestWarning;
+import dev.erst.gridgrind.core.result.WorkbookResult;
 import dev.erst.gridgrind.excel.WorkbookArtifactIo;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -61,7 +61,7 @@ final class ExecutionDirectEventReadWorkflow {
         (WorkbookPlan.WorkbookSource.ExistingFile) request.source();
     List<InspectionResult> inspections = new ArrayList<>();
     List<AssertionResult> hostAssertions = new ArrayList<>();
-    List<dev.erst.gridgrind.contract.dto.WorkbookExecutionEvidence.Preservation> hostPreservation =
+    List<dev.erst.gridgrind.core.result.WorkbookExecutionEvidence.Preservation> hostPreservation =
         new ArrayList<>();
     DirectEventReadContext executionContext =
         new DirectEventReadContext(
@@ -88,7 +88,7 @@ final class ExecutionDirectEventReadWorkflow {
       GridGrindProblemDetail.Problem problem =
           ExecutionResponseSupport.problemFor(
               exception,
-              new dev.erst.gridgrind.contract.dto.ProblemContext.OpenWorkbook(
+              new dev.erst.gridgrind.core.problem.ProblemContext.OpenWorkbook(
                   ExecutionRequestPaths.requestShape(request),
                   ExecutionRequestPaths.workbookReference(request, bindings.workingDirectory())));
       openPhase.fail(problem.code());
@@ -170,7 +170,7 @@ final class ExecutionDirectEventReadWorkflow {
     GridGrindProblemDetail.Problem problem =
         ExecutionResponseSupport.problemFor(
             exception,
-            new dev.erst.gridgrind.contract.dto.ProblemContext.ExecuteRequest(
+            new dev.erst.gridgrind.core.problem.ProblemContext.ExecuteRequest(
                 ExecutionRequestPaths.requestShape(executionContext.request())));
     return responseSupport.closeReadableWorkbook(
         materialized,

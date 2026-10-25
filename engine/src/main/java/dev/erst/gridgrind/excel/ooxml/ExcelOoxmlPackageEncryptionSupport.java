@@ -86,7 +86,7 @@ public final class ExcelOoxmlPackageEncryptionSupport {
             cipherAlgorithm.defaultKeySize,
             cipherAlgorithm.blockSize,
             ExcelOoxmlSecurityPoiBridge.toPoi(
-                dev.erst.gridgrind.excel.foundation.ExcelOoxmlChainingMode.CBC));
+                dev.erst.gridgrind.core.vocabulary.ExcelOoxmlChainingMode.CBC));
     Encryptor encryptor = encryptionInfo.getEncryptor();
     encryptor.confirmPassword(encryptionOptions.password());
 

@@ -1,20 +1,20 @@
 package dev.erst.gridgrind.cli.examples;
 
-import dev.erst.gridgrind.contract.action.DrawingMutationAction;
-import dev.erst.gridgrind.contract.action.StructuredMutationAction;
-import dev.erst.gridgrind.contract.action.WorkbookMutationAction;
-import dev.erst.gridgrind.contract.dto.NamedRangeScope;
-import dev.erst.gridgrind.contract.dto.NamedRangeTarget;
-import dev.erst.gridgrind.contract.dto.PictureDataInput;
-import dev.erst.gridgrind.contract.dto.SignatureLineInput;
-import dev.erst.gridgrind.contract.dto.WorkbookPlan;
-import dev.erst.gridgrind.contract.query.InspectionAnalysisQuery;
-import dev.erst.gridgrind.contract.query.WorkbookAssetIntrospectionQuery;
-import dev.erst.gridgrind.contract.selector.ChartSelector;
-import dev.erst.gridgrind.contract.selector.NamedRangeSelector;
-import dev.erst.gridgrind.contract.selector.PivotTableSelector;
-import dev.erst.gridgrind.contract.source.BinarySourceInput;
-import dev.erst.gridgrind.excel.foundation.ExcelPictureFormat;
+import dev.erst.gridgrind.core.model.drawing.PictureDataInput;
+import dev.erst.gridgrind.core.model.drawing.SignatureLineInput;
+import dev.erst.gridgrind.core.model.formula.NamedRangeTarget;
+import dev.erst.gridgrind.core.plan.ChartSelector;
+import dev.erst.gridgrind.core.plan.DrawingMutationAction;
+import dev.erst.gridgrind.core.plan.InspectionAnalysisQuery;
+import dev.erst.gridgrind.core.plan.NamedRangeSelector;
+import dev.erst.gridgrind.core.plan.PivotTableSelector;
+import dev.erst.gridgrind.core.plan.StructuredMutationAction;
+import dev.erst.gridgrind.core.plan.WorkbookAssetIntrospectionQuery;
+import dev.erst.gridgrind.core.plan.WorkbookMutationAction;
+import dev.erst.gridgrind.core.plan.WorkbookPlan;
+import dev.erst.gridgrind.core.source.BinarySourceInput;
+import dev.erst.gridgrind.core.vocabulary.ExcelPictureFormat;
+import dev.erst.gridgrind.core.vocabulary.NamedRangeScope;
 import java.util.Optional;
 
 /** Generated examples for visual workbook surfaces such as signatures, charts, and pivots. */
@@ -51,17 +51,17 @@ final class WorkbookVisualizationExamples {
                                 TaskStarterRecipeSupport.onePixelPngBase64())))))),
         ExampleSteps.read(
             "step-03-read-drawing-objects",
-            new dev.erst.gridgrind.contract.selector.DrawingObjectSelector.AllOnSheet("Approvals"),
+            new dev.erst.gridgrind.core.plan.DrawingObjectSelector.AllOnSheet("Approvals"),
             new WorkbookAssetIntrospectionQuery.GetDrawingObjects()),
         ExampleSteps.step(
             "step-04-move-signature-line",
-            new dev.erst.gridgrind.contract.selector.DrawingObjectSelector.ByName(
+            new dev.erst.gridgrind.core.plan.DrawingObjectSelector.ByName(
                 "Approvals", "BudgetSignature"),
             new DrawingMutationAction.SetDrawingObjectAnchor(
                 ExampleDrawingAnchors.anchor(5, 1, 8, 6))),
         ExampleSteps.read(
             "step-05-read-drawing-objects-after-move",
-            new dev.erst.gridgrind.contract.selector.DrawingObjectSelector.AllOnSheet("Approvals"),
+            new dev.erst.gridgrind.core.plan.DrawingObjectSelector.AllOnSheet("Approvals"),
             new WorkbookAssetIntrospectionQuery.GetDrawingObjects()));
   }
 
@@ -77,7 +77,7 @@ final class WorkbookVisualizationExamples {
         ExampleSteps.step(
             "step-02-set-range",
             ExampleSelectors.range("Ops", "A1:C4"),
-            new dev.erst.gridgrind.contract.action.CellMutationAction.SetRange(
+            new dev.erst.gridgrind.core.plan.CellMutationAction.SetRange(
                 ExampleCellValues.rows(
                     ExampleCellValues.row(
                         ExampleCellValues.text("Month"),
@@ -129,7 +129,7 @@ final class WorkbookVisualizationExamples {
         ExampleSteps.assertStep(
             "chart-present",
             new ChartSelector.ByName("Ops", "OpsChart"),
-            new dev.erst.gridgrind.contract.assertion.PresenceAssertion.ChartPresent()));
+            new dev.erst.gridgrind.core.plan.PresenceAssertion.ChartPresent()));
   }
 
   static WorkbookPlan pivotPlan(ExamplePathLayout paths) {
@@ -148,7 +148,7 @@ final class WorkbookVisualizationExamples {
         ExampleSteps.step(
             "step-03-set-range",
             ExampleSelectors.range("Data", "A1:D5"),
-            new dev.erst.gridgrind.contract.action.CellMutationAction.SetRange(
+            new dev.erst.gridgrind.core.plan.CellMutationAction.SetRange(
                 ExampleCellValues.rows(
                     ExampleCellValues.row(
                         ExampleCellValues.text("Region"),

@@ -3,13 +3,44 @@ package dev.erst.gridgrind.jazzer.support;
 import static dev.erst.gridgrind.jazzer.support.WorkbookInvariantChecks.require;
 import static dev.erst.gridgrind.jazzer.support.WorkbookInvariantChecks.requireNonBlank;
 
-import dev.erst.gridgrind.contract.assertion.*;
-import dev.erst.gridgrind.contract.dto.*;
-import dev.erst.gridgrind.contract.dto.WorkbookResultPersistence;
-import dev.erst.gridgrind.contract.query.*;
-import dev.erst.gridgrind.contract.selector.*;
-import dev.erst.gridgrind.contract.source.*;
-import dev.erst.gridgrind.contract.step.*;
+import dev.erst.gridgrind.core.model.chart.ChartReport;
+import dev.erst.gridgrind.core.model.customxml.CustomXmlExportReport;
+import dev.erst.gridgrind.core.model.customxml.CustomXmlMappingReport;
+import dev.erst.gridgrind.core.model.drawing.CellCommentReport;
+import dev.erst.gridgrind.core.model.drawing.DrawingObjectPayloadReport;
+import dev.erst.gridgrind.core.model.drawing.DrawingObjectReport;
+import dev.erst.gridgrind.core.model.formula.ArrayFormulaReport;
+import dev.erst.gridgrind.core.model.formula.FormulaHealthReport;
+import dev.erst.gridgrind.core.model.formula.FormulaSurfaceReport;
+import dev.erst.gridgrind.core.model.formula.NamedRangeHealthReport;
+import dev.erst.gridgrind.core.model.formula.NamedRangeReport;
+import dev.erst.gridgrind.core.model.formula.NamedRangeSurfaceReport;
+import dev.erst.gridgrind.core.model.layout.SheetLayoutReport;
+import dev.erst.gridgrind.core.model.layout.WindowReport;
+import dev.erst.gridgrind.core.model.pivot.PivotTableHealthReport;
+import dev.erst.gridgrind.core.model.pivot.PivotTableReport;
+import dev.erst.gridgrind.core.model.print.PrintLayoutReport;
+import dev.erst.gridgrind.core.model.protection.WorkbookProtectionReport;
+import dev.erst.gridgrind.core.model.security.OoxmlPackageSecurityReport;
+import dev.erst.gridgrind.core.model.table.AutofilterEntryReport;
+import dev.erst.gridgrind.core.model.table.AutofilterHealthReport;
+import dev.erst.gridgrind.core.model.table.SheetSchemaReport;
+import dev.erst.gridgrind.core.model.table.TableEntryReport;
+import dev.erst.gridgrind.core.model.table.TableHealthReport;
+import dev.erst.gridgrind.core.model.validation.ConditionalFormattingEntryReport;
+import dev.erst.gridgrind.core.model.validation.ConditionalFormattingHealthReport;
+import dev.erst.gridgrind.core.model.value.CellHyperlinkReport;
+import dev.erst.gridgrind.core.model.value.HyperlinkHealthReport;
+import dev.erst.gridgrind.core.plan.*;
+import dev.erst.gridgrind.core.plan.WorkbookPlan;
+import dev.erst.gridgrind.core.problem.RequestWarning;
+import dev.erst.gridgrind.core.problem.RequestWarningLocation;
+import dev.erst.gridgrind.core.result.SheetSummaryReport;
+import dev.erst.gridgrind.core.result.WorkbookFindingsReport;
+import dev.erst.gridgrind.core.result.WorkbookResult;
+import dev.erst.gridgrind.core.result.WorkbookResultPersistence;
+import dev.erst.gridgrind.core.result.WorkbookSummary;
+import dev.erst.gridgrind.core.source.*;
 import dev.erst.gridgrind.excel.*;
 import java.nio.file.*;
 import java.util.*;
@@ -90,7 +121,7 @@ final class WorkbookInvariantResponseChecks {
     require(failure.problem().context() != null, "problem context must not be null");
     require(failure.problem().causes() != null, "problem causes must not be null");
     if (failure.problem().code()
-        == dev.erst.gridgrind.contract.dto.GridGrindProblemCode.ASSERTION_FAILED) {
+        == dev.erst.gridgrind.core.problem.GridGrindProblemCode.ASSERTION_FAILED) {
       require(
           failure.assertions().stream()
               .anyMatch(result -> result instanceof AssertionResult.Failed),
@@ -215,8 +246,7 @@ final class WorkbookInvariantResponseChecks {
   }
 
   private static void requireAssertionMatchesRequest(
-      dev.erst.gridgrind.contract.step.AssertionStep assertionStep,
-      AssertionResult assertionResult) {
+      dev.erst.gridgrind.core.plan.AssertionStep assertionStep, AssertionResult assertionResult) {
     require(
         assertionStep.stepId().equals(assertionResult.stepId()),
         "assertion result stepId must match the request");
@@ -232,11 +262,11 @@ final class WorkbookInvariantResponseChecks {
     switch (assertionResult) {
       case AssertionResult.Passed passed ->
           require(
-              passed.outcome() == dev.erst.gridgrind.contract.assertion.AssertionOutcome.PASSED,
+              passed.outcome() == dev.erst.gridgrind.core.plan.AssertionOutcome.PASSED,
               "passed assertion result must report PASSED");
       case AssertionResult.Failed failed -> {
         require(
-            failed.outcome() == dev.erst.gridgrind.contract.assertion.AssertionOutcome.FAILED,
+            failed.outcome() == dev.erst.gridgrind.core.plan.AssertionOutcome.FAILED,
             "failed assertion result must report FAILED");
         requireAssertionFailureShape(failed.failure());
         require(
@@ -364,26 +394,24 @@ final class WorkbookInvariantResponseChecks {
           requireSheetSchemaShape(result.surface());
       case WorkbookSurfaceInspectionResult.NamedRangeSurfaceResult result ->
           requireNamedRangeSurfaceShape(result.surface());
-      case dev.erst.gridgrind.contract.query.WorkbookAnalysisResult.FormulaHealthResult result ->
+      case dev.erst.gridgrind.core.plan.WorkbookAnalysisResult.FormulaHealthResult result ->
           requireFormulaHealthShape(result.analysis());
-      case dev.erst.gridgrind.contract.query.WorkbookAnalysisResult.DataValidationHealthResult
-              result ->
+      case dev.erst.gridgrind.core.plan.WorkbookAnalysisResult.DataValidationHealthResult result ->
           requireDataValidationHealthShape(result.analysis());
-      case dev.erst.gridgrind.contract.query.WorkbookAnalysisResult
-                  .ConditionalFormattingHealthResult
+      case dev.erst.gridgrind.core.plan.WorkbookAnalysisResult.ConditionalFormattingHealthResult
               result ->
           requireConditionalFormattingHealthShape(result.analysis());
-      case dev.erst.gridgrind.contract.query.WorkbookAnalysisResult.AutofilterHealthResult result ->
+      case dev.erst.gridgrind.core.plan.WorkbookAnalysisResult.AutofilterHealthResult result ->
           requireAutofilterHealthShape(result.analysis());
-      case dev.erst.gridgrind.contract.query.WorkbookAnalysisResult.TableHealthResult result ->
+      case dev.erst.gridgrind.core.plan.WorkbookAnalysisResult.TableHealthResult result ->
           requireTableHealthShape(result.analysis());
-      case dev.erst.gridgrind.contract.query.WorkbookAnalysisResult.PivotTableHealthResult result ->
+      case dev.erst.gridgrind.core.plan.WorkbookAnalysisResult.PivotTableHealthResult result ->
           requirePivotTableHealthShape(result.analysis());
-      case dev.erst.gridgrind.contract.query.WorkbookAnalysisResult.HyperlinkHealthResult result ->
+      case dev.erst.gridgrind.core.plan.WorkbookAnalysisResult.HyperlinkHealthResult result ->
           requireHyperlinkHealthShape(result.analysis());
-      case dev.erst.gridgrind.contract.query.WorkbookAnalysisResult.NamedRangeHealthResult result ->
+      case dev.erst.gridgrind.core.plan.WorkbookAnalysisResult.NamedRangeHealthResult result ->
           requireNamedRangeHealthShape(result.analysis());
-      case dev.erst.gridgrind.contract.query.WorkbookAnalysisResult.WorkbookFindingsResult result ->
+      case dev.erst.gridgrind.core.plan.WorkbookAnalysisResult.WorkbookFindingsResult result ->
           requireWorkbookFindingsShape(result.analysis());
     }
   }
@@ -429,7 +457,7 @@ final class WorkbookInvariantResponseChecks {
   }
 
   private static void requireDataValidationEntryShape(
-      dev.erst.gridgrind.contract.dto.DataValidationEntryReport validation) {
+      dev.erst.gridgrind.core.model.validation.DataValidationEntryReport validation) {
     WorkbookInvariantAnalysisSurfaceChecks.requireDataValidationEntryShape(validation);
   }
 
@@ -468,7 +496,7 @@ final class WorkbookInvariantResponseChecks {
   }
 
   static void requireDataValidationHealthShape(
-      dev.erst.gridgrind.contract.dto.DataValidationHealthReport analysis) {
+      dev.erst.gridgrind.core.model.validation.DataValidationHealthReport analysis) {
     WorkbookInvariantAnalysisSurfaceChecks.requireDataValidationHealthShape(analysis);
   }
 
@@ -501,7 +529,7 @@ final class WorkbookInvariantResponseChecks {
   }
 
   private static void requireCellReportShape(
-      dev.erst.gridgrind.contract.dto.CellReport cellReport) {
+      dev.erst.gridgrind.core.model.value.CellReport cellReport) {
     WorkbookInvariantCellSurfaceChecks.requireCellReportShape(cellReport);
   }
 
