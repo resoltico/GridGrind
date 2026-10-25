@@ -193,7 +193,7 @@ class GridGrindRootConventionsPlugin : Plugin<Project> {
             tasks.register("parity") { parityTask ->
                 parityTask.group = "verification"
                 parityTask.description = "Runs the dedicated Apache POI XSSF parity verification suite."
-                parityTask.dependsOn(":executor:parityTest")
+                parityTask.dependsOn(":engine:parityTest")
             }
 
             gradle.projectsEvaluated {
@@ -286,7 +286,7 @@ class GridGrindRootConventionsPlugin : Plugin<Project> {
             add(rootFile("contract/build.gradle.kts"))
             add(rootFile("engine/build.gradle.kts"))
             add(rootFile("excel-foundation/build.gradle.kts"))
-            add(rootFile("executor/build.gradle.kts"))
+            add(rootFile("architecture-tests/build.gradle.kts"))
             add(rootFile("gradle/build-logic/build.gradle.kts"))
             add(rootFile("gradle/build-logic/settings.gradle.kts"))
             add(rootFile("gradle/libs.versions.toml"))

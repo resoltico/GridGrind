@@ -45,7 +45,7 @@ configure<PitestPluginExtension> {
 }
 
 val downstreamCoverageProjects =
-    listOf(project(":engine"), project(":executor"), project(":authoring-java"), project(":cli"))
+    listOf(project(":engine"), project(":authoring-java"), project(":cli"))
 
 fun downstreamCoverageTaskPaths(): List<String> =
     downstreamCoverageProjects.flatMap { downstreamProject ->

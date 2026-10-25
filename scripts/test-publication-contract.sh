@@ -155,8 +155,8 @@ grep -Fq 'COPY engine ./engine' "${dockerfile}" || die \
     "Dockerfile no longer copies engine into the builder stage"
 grep -Fq 'COPY excel-foundation ./excel-foundation' "${dockerfile}" || die \
     "Dockerfile no longer copies excel-foundation into the builder stage"
-grep -Fq 'COPY executor ./executor' "${dockerfile}" || die \
-    "Dockerfile no longer copies executor into the builder stage"
+grep -Fq 'COPY architecture-tests ./architecture-tests' "${dockerfile}" || die \
+    "Dockerfile no longer copies architecture-tests into the builder stage"
 grep -Fq 'RUN --mount=type=cache,target=/root/.gradle ./gradlew --no-daemon :cli:shadowJar' "${dockerfile}" || die \
     "Dockerfile no longer builds the packaged CLI JAR inside the pinned builder stage"
 dockerfile_copies_built_cli_jar "${dockerfile}" || die \

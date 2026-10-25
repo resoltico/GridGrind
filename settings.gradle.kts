@@ -7,4 +7,4 @@ plugins {
 }
 
 rootProject.name = "GridGrind"
-include("excel-foundation", "engine", "contract", "executor", "authoring-java", "cli")
+include("excel-foundation", "engine", "contract", "architecture-tests", "authoring-java", "cli")

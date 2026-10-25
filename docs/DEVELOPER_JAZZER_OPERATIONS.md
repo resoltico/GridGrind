@@ -316,7 +316,7 @@ Jazzer's native replay bootstrap path, so replay remains stable in a fresh JVM.
 
 `protocol-request` and `protocol-workflow` are stable Jazzer harness names for the canonical JSON
 request surface. They are not module names; the live product runtime split is `contract` plus
-`engine`, while `executor` remains verification-only.
+`engine`, while `architecture-tests` contains verification rules.
 Committed `protocol-workflow` binary seeds are opaque generator inputs, not human-authored semantic
 scenarios. They therefore use neutral case identifiers such as `workflow_case_01.bin`, while the
 authoritative decoded behavior lives in the refreshed replay metadata and replay text.

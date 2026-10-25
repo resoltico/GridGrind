@@ -31,7 +31,7 @@ readonly cli_module_file="${repo_root}/cli/src/main/java/module-info.java"
 readonly authoring_module_file="${repo_root}/authoring-java/src/main/java/module-info.java"
 readonly contract_module_file="${repo_root}/contract/src/main/java/module-info.java"
 readonly excel_foundation_module_file="${repo_root}/excel-foundation/src/main/java/module-info.java"
-readonly executor_module_file="${repo_root}/executor/src/main/java/module-info.java"
+readonly architecture_module_file="${repo_root}/architecture-tests/src/main/java/module-info.java"
 readonly engine_module_file="${repo_root}/engine/src/main/java/module-info.java"
 readonly jazzer_conventions_file="${repo_root}/gradle/build-logic/src/main/kotlin/dev/erst/gridgrind/buildlogic/GridGrindJazzerConventionsPlugin.kt"
 readonly developer_doc="${repo_root}/docs/DEVELOPER.md"
@@ -59,18 +59,18 @@ legacy_protocol_reference_exists() {
 [[ -d "${repo_root}/authoring-java" ]] || die "missing authoring-java module directory"
 [[ -d "${repo_root}/contract" ]] || die "missing contract module directory"
 [[ -d "${repo_root}/excel-foundation" ]] || die "missing excel-foundation module directory"
-[[ -d "${repo_root}/executor" ]] || die "missing executor module directory"
+[[ -d "${repo_root}/architecture-tests" ]] || die "missing architecture-tests module directory"
 [[ ! -d "${repo_root}/protocol" ]] || die "legacy top-level protocol module still exists"
 
-grep -Fq 'include("excel-foundation", "engine", "contract", "executor", "authoring-java", "cli")' "${settings_file}" || die \
+grep -Fq 'include("excel-foundation", "engine", "contract", "architecture-tests", "authoring-java", "cli")' "${settings_file}" || die \
     "settings.gradle.kts does not include the canonical six-module product graph"
 grep -Fq '"protocol"' "${settings_file}" && die \
     "settings.gradle.kts still includes the deleted protocol module"
 
 grep -Fq 'api(project(":contract"))' "${authoring_build_file}" || die \
     "authoring-java no longer depends on contract as its canonical authoring boundary"
-grep -Fq 'api(project(":executor"))' "${authoring_build_file}" && die \
-    "authoring-java still depends on executor despite the contract-only authoring boundary"
+grep -Fq 'api(project(":architecture-tests"))' "${authoring_build_file}" && die \
+    "authoring-java depends on verification rules instead of its contract boundary"
 grep -Fq 'implementation(project(":engine"))' "${cli_build_file}" || die \
     "cli no longer depends on engine"
 grep -Fq 'implementation(project(":protocol"))' "${cli_build_file}" && die \
@@ -81,7 +81,7 @@ grep -Fq 'module dev.erst.gridgrind.authoring {' "${authoring_module_file}" || d
 grep -Fq 'requires transitive dev.erst.gridgrind.contract;' "${authoring_module_file}" || die \
     "authoring-java module-info no longer depends transitively on contract"
 grep -Fq 'requires transitive dev.erst.gridgrind.engine;' "${authoring_module_file}" && die \
-    "authoring-java module-info still depends transitively on executor"
+    "authoring-java module-info depends transitively on the execution engine"
 grep -Fq 'requires dev.erst.gridgrind.engine;' "${cli_module_file}" || die \
     "cli module-info no longer requires engine"
 grep -Fq 'requires dev.erst.gridgrind.protocol;' "${cli_module_file}" && die \
@@ -91,8 +91,8 @@ grep -Fq 'module dev.erst.gridgrind.contract {' "${contract_module_file}" || die
     "contract module-info does not declare the canonical contract module name"
 grep -Fq 'module dev.erst.gridgrind.excel.foundation {' "${excel_foundation_module_file}" || die \
     "excel-foundation module-info does not declare the canonical foundation module name"
-[[ ! -e "${executor_module_file}" ]] || die \
-    "executor runtime module-info was resurrected instead of keeping executor verification-only"
+grep -Fq 'module dev.erst.gridgrind.architecture.tests {' "${architecture_module_file}" || die \
+    "architecture-tests module-info does not declare its verification module"
 grep -Fq 'requires transitive dev.erst.gridgrind.excel.foundation;' "${contract_module_file}" || die \
     "contract module-info no longer exposes the shared excel-foundation module transitively"
 grep -Fq 'requires transitive dev.erst.gridgrind.contract;' "${engine_module_file}" || die \
@@ -114,8 +114,7 @@ grep -Fq 'dev.erst.gridgrind.cli -> dev.erst.gridgrind.engine -> dev.erst.gridgr
     "developer reference no longer documents the canonical runtime graph"
 grep -Fq 'dev.erst.gridgrind.engine -> dev.erst.gridgrind.excel.foundation' "${developer_doc}" || die \
     "developer reference no longer documents the engine-to-foundation graph"
-grep -Fq '**Status**: Accepted' "${adr_doc}" || die \
-    "contract replacement ADR is missing its accepted status"
+
 
 if legacy_protocol_reference_exists \
     'dev\.erst\.gridgrind\.protocol|project\(":protocol"\)|module dev\.erst\.gridgrind\.protocol|requires dev\.erst\.gridgrind\.protocol|protocol/src/|protocol/build\.gradle\.kts' \
@@ -127,7 +126,7 @@ if legacy_protocol_reference_exists \
     "${repo_root}/check.sh" \
     "${repo_root}/cli" \
     "${repo_root}/contract" \
-    "${repo_root}/executor" \
+    "${repo_root}/architecture-tests" \
     "${repo_root}/engine" \
     "${repo_root}/.github"; then
     die "legacy protocol module references still exist in the live product/build/doc surface"

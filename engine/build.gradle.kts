@@ -35,7 +35,7 @@ tasks.named("pitest") {
 }
 
 // Engine behavior is exercised through both runtime adapters; coverage evidence must include both.
-val downstreamCoverageProjects = listOf(project(":cli"), project(":executor"))
+val downstreamCoverageProjects = listOf(project(":cli"))
 
 fun downstreamCoverageTaskPaths(): List<String> =
     downstreamCoverageProjects.flatMap { downstreamProject ->
@@ -92,4 +92,41 @@ tasks.named<JacocoReport>("jacocoTestReport") {
     executionData.from(localCoverageExecutionData())
     dependsOn(downstreamCoverageTaskPaths())
     executionData.from(downstreamCoverageExecutionData())
+}
+
+val paritySourceSet = the<org.gradle.api.tasks.SourceSetContainer>().create("parityTest") {
+    compileClasspath += sourceSets.main.get().output + configurations.getByName("testCompileClasspath")
+    runtimeClasspath += output + compileClasspath
+}
+configurations.named(paritySourceSet.implementationConfigurationName) {
+    extendsFrom(configurations.getByName("testImplementation"))
+}
+configurations.named(paritySourceSet.runtimeOnlyConfigurationName) {
+    extendsFrom(configurations.getByName("testRuntimeOnly"))
+}
+dependencies {
+    testImplementation(project(":cli"))
+    testImplementation(libs.jackson.databind)
+    add(paritySourceSet.implementationConfigurationName, libs.jackson.databind)
+    add(paritySourceSet.implementationConfigurationName, libs.bcpkix)
+    add(paritySourceSet.implementationConfigurationName, libs.bcprov)
+    add(paritySourceSet.implementationConfigurationName, libs.bcutil)
+    add(paritySourceSet.implementationConfigurationName, libs.xmlsec)
+    add(paritySourceSet.runtimeOnlyConfigurationName, libs.slf4j.api)
+}
+val parityTest = tasks.register<Test>("parityTest") {
+    description = "Runs the XSSF behavioural parity corpus."
+    group = "verification"
+    testClassesDirs = paritySourceSet.output.classesDirs
+    classpath = paritySourceSet.runtimeClasspath
+    useJUnitPlatform()
+    failOnNoDiscoveredTests = true
+    shouldRunAfter(tasks.named<Test>("test"))
+}
+tasks.named<org.gradle.api.plugins.quality.Pmd>("pmdParityTest") {
+    ruleSetFiles = files(rootProject.file("gradle/pmd/test-ruleset.xml"))
+    ruleSets = emptyList()
+}
+tasks.named("check") {
+    dependsOn(parityTest, "pmdParityTest")
 }

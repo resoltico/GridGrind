@@ -54,7 +54,7 @@ GridGrind is a six-module Gradle project with compiler-enforced JPMS boundaries:
 excel-foundation/
             Shared Excel-domain foundation. Owns the POI-free `.xlsx` enums,
             limits, and span/value objects shared by contract, engine,
-            executor-facing tests, and downstream adapters.
+            engine runtime tests, and downstream adapters.
 
 engine/     Apache-POI-backed workbook engine. Owns mutable workbook state,
             workbook mutation rules, factual workbook inspection, and the
@@ -65,14 +65,14 @@ contract/   Canonical GridGrind contract model. Owns the public request and
             response types, catalog metadata, JSON codecs, and transport-
             neutral contract shapes.
 
-executor/   Verification-only parity and execution-regression surface.
-            Exercises the engine runtime directly but does not own the live
-            request-execution boundary.
+architecture-tests/
+            Verification-only rules for boundaries beyond JPMS, with focused
+            negative controls. Runtime and parity tests live in engine.
 
 authoring-java/
             Fluent Java authoring layer. Owns selector builders, authored
             step builders, and canonical `WorkbookPlan` emission without
-            exposing engine internals or pulling executor runtime concerns
+            exposing engine internals or pulling execution runtime concerns
             into the module boundary.
 
 cli/        Thin transport adapter. Reads a contract request from stdin
@@ -81,8 +81,7 @@ cli/        Thin transport adapter. Reads a contract request from stdin
             commands.
 ```
 
-The CLI is not the core. The foundation is `excel-foundation` plus `engine` plus `contract` plus
-`executor`. The `authoring-java` API and the CLI are two downstream surfaces on top of that
+The CLI is not the core. The foundation is `excel-foundation` plus `engine` plus `contract`. The `authoring-java` API and the CLI are two downstream surfaces on top of that
 foundation. Future adapters (HTTP, gRPC, library embedding) can be added without touching
 `excel-foundation`, `engine`, or `contract`.
 
@@ -96,7 +95,8 @@ dev.erst.gridgrind.engine -> dev.erst.gridgrind.excel.foundation
 
 `authoring-java` does not depend on `engine`, and `cli` depends only on the `engine` module's
 exported `dev.erst.gridgrind.engine.api` seam instead of the internal runtime package. The
-`executor` Gradle project exists only as a parity and regression-verification surface; the live
+`architecture-tests` project owns architecture verification; runtime and parity tests are in
+`engine`. The live
 request executor and workbook-to-contract bridge are inside `engine`, and the exported API is now
 narrower than the internal runtime namespace. `excel-foundation` is the only shared Excel-domain
 surface allowed to sit below both `contract` and `engine`, so the public contract no longer
@@ -112,7 +112,7 @@ same theory boundaries as the code they own.
 The highest-churn architecture seams are intentionally split too:
 - `GridGrindProtocolCatalog` owns the top-level catalog assembly, `CatalogFieldMetadataSupport` derives nested/plain field-shape metadata from the canonical descriptor groups, and `GridGrindProtocolCatalogLookupSupport` owns exact lookup plus grouped operation-centered search behavior.
 - Jazzer request generation is no longer one monolith: the `OperationSequence*` family now splits orchestration, selector helpers, mutation/inspection/command factories, observation-side assertions, bounded payload generation, and chart payload generation into focused seams, while `WorkbookInvariantChecks` is split across workbook/cell/engine-surface invariant helpers.
-- Executable architecture rules protect these boundaries. The verification-only `executor:architectureTest` task runs ArchUnit over the compiled product modules, while `executor:architectureTestContract` checks the effective fail-closed policy. The rules constrain dependency direction and exported implementation types, require closed domain shapes and record wire variants, centralize formula writes and private POI access, and preserve the admitted-execution and publication boundaries. JPMS owns actual module encapsulation. Coverage reports describe exercised code; the architecture rules and their negative controls establish the required properties. `PoiPrivateAccessCompatibilityTest` checks the POI private-access seams used by the engine.
+- `architecture-tests:architectureTest` executes the rules that JPMS cannot express. JPMS owns module readability and exports; ArchUnit protects intra-engine dependencies, API signatures (including POI and generic types), tooling gateways, closed model shapes, and admission/semantics/publication boundaries. Gradle supplies the actual compiled product roots. Focused negative controls prove the retained rules detect their defects, and the task rejects an empty discovery result. Runtime and XSSF parity tests execute in `engine`.
 
 ## Contract Replacement Mode
 
@@ -131,7 +131,7 @@ transport-and-execution ownership. The accepted architecture decision record for
 | Contributor devcontainer | pinned glibc base image plus Azul Zulu 26 JDK; see [DEVELOPER_DEVCONTAINER.md](./DEVELOPER_DEVCONTAINER.md) |
 | Java | 26 |
 | Docker runtime | Docker Desktop daemon plus `docker buildx` reachable through the active shell `docker` command; smoke and release verification use an anonymous `DOCKER_CONFIG` while still targeting the active local Docker engine |
-| Architecture tests | ArchUnit 1.5.0 with its JUnit 6 integration, isolated to the paired `executor:architectureTest` and `executor:architectureTestContract` verification tasks |
+| Architecture tests | ArchUnit 1.5.0 with its JUnit 6 integration in `architecture-tests:architectureTest` |
 | Apache POI | 5.5.1 |
 | Jackson Databind | 3.2.2 |
 | JUnit Jupiter | 6.1.3 |
@@ -154,7 +154,7 @@ Jackson design, not a GridGrind version-skew bug.
 
 `./gradlew check` remains the root-project code-quality gate: Spotless formatting,
 explicit-import verification, executable ArchUnit rules, Error Prone with NullAway on `@NullMarked` production packages, PMD, tests, and
-JaCoCo HTML/XML reports for `engine`, `contract`, `executor`, `authoring-java`, and `cli`.
+JaCoCo HTML/XML reports for `engine`, `contract`, `architecture-tests`, `authoring-java`, and `cli`.
 `./check.sh` is the supported whole-repo deterministic gate: root `check` plus `coverage`,
 nested Jazzer `check`,
 `:cli:shadowJar`, architecture-split shell regressions, packaged-JAR CLI contract verification,
@@ -370,8 +370,8 @@ Coverage is reported as HTML and XML. `./gradlew check` writes per-module report
 Reports collect execution data from every local `Test` task, including architecture and parity
 suites, and from downstream consumers where those consumers exercise the owning model or engine.
 
-`contract` reports include downstream consumer execution from engine, executor, authoring and CLI.
-`engine` coverage also intentionally includes downstream consumer execution data from `executor`.
+`contract` reports include downstream consumer execution from engine, authoring and CLI.
+`engine` reports include its runtime/parity suites and downstream CLI execution data.
 The root aggregate derives participants from the JaCoCo-enabled Java subprojects.
 
 The nested Jazzer build also produces advisory coverage reports. Its `check` runs deterministic

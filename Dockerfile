@@ -14,7 +14,7 @@ COPY cli ./cli
 COPY contract ./contract
 COPY engine ./engine
 COPY excel-foundation ./excel-foundation
-COPY executor ./executor
+COPY architecture-tests ./architecture-tests
 COPY examples ./examples
 
 RUN chmod +x gradlew

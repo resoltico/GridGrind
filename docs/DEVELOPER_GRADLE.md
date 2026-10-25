@@ -74,7 +74,7 @@ gradle/
         └── ...
 engine/
 contract/
-executor/
+architecture-tests/
 authoring-java/
 cli/
 jazzer/
@@ -84,7 +84,7 @@ jazzer/
 
 Each layer owns a different concern:
 
-- root product build: builds and verifies `engine`, `contract`, `executor`, `authoring-java`,
+- root product build: builds and verifies `engine`, `contract`, `architecture-tests`, `authoring-java`,
   and `cli`
 - shared included build logic: houses reusable Gradle plugins and typed build logic
 - nested Jazzer build: runs Jazzer support tests, regression replay, and local fuzzing flows
@@ -120,7 +120,7 @@ compile time.
 ### Composite build for Jazzer
 
 `jazzer/settings.gradle.kts` uses `includeBuild("..")` so the nested build can consume the live
-local `engine`, `contract`, and `executor` modules without publishing snapshots. This keeps Jazzer
+local engine and contract modules without publishing snapshots. This keeps Jazzer
 iteration fast and ensures fuzzing runs against the exact working tree under review.
 
 ### One dependency authority
@@ -179,37 +179,17 @@ pruning remain build tasks.
 
 ### Architecture-testing contract
 
-The verification-only `executor` project owns a dedicated `architectureTest` source set. It uses
-the verification-scoped `com.tngtech.archunit:archunit-junit6:1.5.0` integration, aligned with the repository
-JUnit `6.1.3` BOM and Platform Launcher. `executor:architectureTest` includes only the `archunit`
-engine and fails when it discovers no tests; `executor:architectureTestContract` includes only
-`junit-jupiter` and verifies the effective `archRule.failOnEmptyShould=true` setting plus the fixed
-13-rule inventory. `executor:check`, the root `architectureCheck` and `check` tasks, and
-`./check.sh` always run both tasks. Ordinary production modules and packaged distributions have no
-ArchUnit dependency. This is a permanent generally available repository gate, not an optional pilot
-or experimental profile. The targeted `architectureCheck` aggregate also runs PMD analysis for the
-architecture-test source itself.
+The verification-only `architecture-tests` project contains the rules JPMS cannot express and
+one focused negative control per logical property. Production module readability and cycles are
+checked by JPMS compilation. The retained rules cover intra-engine dependencies, implementation
+and POI leaks in API signatures, centralized formula/private-access gateways, closed domain
+shapes and record wire variants, and admission, canonical semantics and publication boundaries.
 
-The ArchUnit import location provider supplies exactly the compiled `excel-foundation`, `contract`,
-`engine`, `authoring-java`, and `cli` modules. It also rejects test and Gradle test-fixture locations,
-so regression fixtures and verifier classes cannot become production inputs by source-set naming
-accident. The rules then check declared product package families and the acyclic graph; foundation,
-contract, engine, authoring, and CLI dependency direction; workbook mechanics below execution
-orchestration; the reviewed engine API implementation-bridge set; no runtime or unexported workbook
-implementation type in exported API supertypes, inherited members, protected extensible members, or
-generic signatures; centralized Apache POI formula writes and private access, including method
-references; and sealed-interface variants restricted to records, finite enums, sealed subinterfaces,
-or typed exception implementations. Sealed classes are reserved for typed exception bases without
-failing if the valid population is empty. The custom rule implementation is executor main code, exercised by the architecture suite
-and negative controls and included in coverage reports. JPMS descriptors
-still own actual exports, qualified opens, and module readability. Source-text audits remain only for
-build files, documentation, and other facts compiled bytecode cannot represent.
-
-Every architecture rule starts and remains green. Do not introduce `FreezingArchRule`,
-`ignoreDependency`, stored violation files, grandfathered baselines, or broad package exclusions.
-The source-set-owned `archunit.properties` also keeps empty `should` selections fail-closed. When a
-deliberate architecture change invalidates a rule, change the architecture and its documented model
-atomically, then express the new invariant directly.
+`architecture-tests:architectureTest` uses the ArchUnit JUnit 6 integration and rejects empty test
+discovery. Its compiled product inputs come from the Gradle project model. The suite imports only
+those main class directories, excluding test fixtures and its own verification implementation.
+`archunit.properties` keeps empty rule selections fail-closed. Runtime, workflow and parity tests
+belong to `engine`; `engine:parityTest` remains included in `check` and coverage reporting.
 
 ### Coverage reports
 
@@ -256,7 +236,7 @@ Rules:
 
 These are the Gradle-level invariants worth preserving:
 
-- `engine`, `contract`, `executor`, `authoring-java`, and `cli` remain ordinary root subprojects
+- `engine`, `contract`, `architecture-tests`, `authoring-java`, and `cli` remain ordinary root subprojects
 - `jazzer/` remains a nested build, not a root subproject
 - `gradle/build-logic` remains the only home for shared typed Gradle logic
 - the nested Jazzer build imports `../gradle/libs.versions.toml`

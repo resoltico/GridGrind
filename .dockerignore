@@ -15,7 +15,7 @@
 !contract/
 !engine/
 !excel-foundation/
-!executor/
+!architecture-tests/
 
 # Asset-backed built-in recipes are copied into the CLI JAR during processResources.
 !examples/

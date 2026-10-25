@@ -217,3 +217,29 @@ IOException contract. `compileJava` reports `NO-SOURCE`. The final
 failures/errors/skips, including all 141 golden cases. Packaging exercised the
 ported tasks and no golden snapshot changed. All remaining Java under the
 included build's `src` tree is test code.
+
+## WP-12 test ownership and retained rules
+
+`executor` is replaced by the verification-only `architecture-tests` project.
+Runtime and parity suites now live in engine, including their resources and test
+dependencies. Engine runs 1495 ordinary tests and all 14 parity tests. Architecture
+verification has nine production checks and 11 focused negative controls for
+their logical properties; JPMS owns the module graph. Rule-construction,
+inventory, classifier-coverage and source-text architecture meta-tests are removed.
+The compiled product roots come from the Gradle model rather than a parallel
+anchor inventory. The verification project has its own JPMS descriptor; product
+module exports were not widened.
+
+API-signature checks now explicitly include POI/OOXML types and generics. Engine
+violation fixtures belong to engine test fixtures; the verification suite inspects
+their bytecode without importing engine internals. Current non-Jazzer ordinary
+tests have zero such imports. The seven Jazzer test files remain the explicit
+later worklist described above, together with their fuzz consumers.
+
+The first moved-engine compile failed on seven missing Jackson tree symbols in
+the moved fixture helper. Restoring its existing test dependency fixed the
+consumer contract. Engine/parity tests then passed in 42 s. Architecture checks
+and controls passed; focused PMD passed in 6 s. Updated shell/module/documentation
+contracts passed. The final `./gradlew check --no-parallel` passed in 206.91 s:
+2765 tests, zero failures/errors/skips, including all 141 unchanged golden cases.
+The old ADR is explicitly historical pending its replacement in WP-20/WP-71.

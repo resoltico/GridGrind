@@ -28,7 +28,7 @@ readonly repo_hygiene_structural_root_entries=(
     engine
     examples
     excel-foundation
-    executor
+    architecture-tests
     gradle
     gradle.properties
     gradlew

@@ -28,7 +28,7 @@ a separate host-owned `GridGrindExecutionGrant`.
 Within the repository's JPMS layout, `dev.erst.gridgrind.authoring` requires transitive
 `dev.erst.gridgrind.contract`. Applications that execute plans additionally depend on
 `dev.erst.gridgrind.engine`; applications that only emit plan JSON do not inherit that runtime
-graph. The `executor` Gradle project is verification-only and is not an application runtime bridge.
+graph. The `architecture-tests` project contains verification rules; runtime and parity tests live in `engine`.
 
 ## Authoring Types
 

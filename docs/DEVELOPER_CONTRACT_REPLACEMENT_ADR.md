@@ -9,7 +9,8 @@ route:
 
 # Architecture Decision Record: Contract Replacement Mode
 
-**Status**: Accepted
+**Status**: Historical — superseded by the adopted foundations redesign.
+The [developer architecture](DEVELOPER.md#architecture) describes the supported module layout.
 **Decision date**: 2026-04-17
 ---
 

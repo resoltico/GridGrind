@@ -120,7 +120,7 @@ if [[ "${purge_generated_state}" == true ]]; then
         "${repo_root}/contract/build"
         "${repo_root}/engine/build"
         "${repo_root}/excel-foundation/build"
-        "${repo_root}/executor/build"
+        "${repo_root}/architecture-tests/build"
         "${repo_root}/jazzer/.gradle"
         "${repo_root}/jazzer/build"
     )
