@@ -57,7 +57,7 @@ final class WorkbookInvariantInspectionResultChecks {
         require(
             ((SheetSelector.ByName) readOperation.target())
                 .name()
-                .equals(result.sheet().sheetName()),
+                .equals(result.sheet().sheetName().value()),
             "sheet summary sheet mismatch");
       }
       case SheetIntrospectionQuery.GetArrayFormulas _ -> {

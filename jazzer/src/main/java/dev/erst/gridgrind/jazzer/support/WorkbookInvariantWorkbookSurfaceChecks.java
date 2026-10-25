@@ -31,7 +31,8 @@ final class WorkbookInvariantWorkbookSurfaceChecks {
         .forEach(
             sheetName ->
                 WorkbookInvariantChecks.require(
-                    sheetName != null && !sheetName.isBlank(), "sheetName must not be blank"));
+                    sheetName != null && !sheetName.value().isBlank(),
+                    "sheetName must not be blank"));
     switch (workbook) {
       case WorkbookSummary.Empty empty -> {
         WorkbookInvariantChecks.require(
@@ -43,7 +44,8 @@ final class WorkbookInvariantWorkbookSurfaceChecks {
         WorkbookInvariantChecks.require(
             withSheets.sheetCount() > 0,
             "non-empty workbook summary must have positive sheetCount");
-        WorkbookInvariantChecks.requireNonBlank(withSheets.activeSheetName(), "activeSheetName");
+        WorkbookInvariantChecks.requireNonBlank(
+            withSheets.activeSheetName().value(), "activeSheetName");
         WorkbookInvariantChecks.require(
             withSheets.sheetNames().contains(withSheets.activeSheetName()),
             "activeSheetName must be present in sheetNames");
@@ -59,7 +61,8 @@ final class WorkbookInvariantWorkbookSurfaceChecks {
             .selectedSheetNames()
             .forEach(
                 selectedSheetName -> {
-                  WorkbookInvariantChecks.requireNonBlank(selectedSheetName, "selectedSheetName");
+                  WorkbookInvariantChecks.requireNonBlank(
+                      selectedSheetName.value(), "selectedSheetName");
                   WorkbookInvariantChecks.require(
                       withSheets.sheetNames().contains(selectedSheetName),
                       "selectedSheetNames must be present in sheetNames");
@@ -70,7 +73,8 @@ final class WorkbookInvariantWorkbookSurfaceChecks {
 
   static void requireSheetSummaryShape(SheetSummaryReport sheet) {
     WorkbookInvariantChecks.require(sheet.sheetName() != null, "sheetName must not be null");
-    WorkbookInvariantChecks.require(!sheet.sheetName().isBlank(), "sheetName must not be blank");
+    WorkbookInvariantChecks.require(
+        !sheet.sheetName().value().isBlank(), "sheetName must not be blank");
     WorkbookInvariantChecks.require(sheet.visibility() != null, "visibility must not be null");
     WorkbookInvariantChecks.require(sheet.protection() != null, "protection must not be null");
     WorkbookInvariantChecks.require(

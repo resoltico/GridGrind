@@ -105,7 +105,7 @@ class GridGrindCliTest extends GridGrindCliTestSupport {
     assertEquals(List.of(), success.warnings());
     WorkbookSummary workbook =
         ((WorkbookInspectionResult.WorkbookSummaryResult) success.inspections().get(0)).workbook();
-    assertEquals("Budget", workbook.sheetNames().get(0));
+    assertEquals("Budget", workbook.sheetNames().get(0).value());
     SheetInspectionResult.CellsResult cells =
         (SheetInspectionResult.CellsResult) success.inspections().get(1);
     dev.erst.gridgrind.core.model.value.CellReport.FormulaReport b3Cell =
@@ -560,8 +560,9 @@ class GridGrindCliTest extends GridGrindCliTestSupport {
     assertEquals(
         List.of("Budget"),
         ((WorkbookInspectionResult.WorkbookSummaryResult) success.inspections().getFirst())
-            .workbook()
-            .sheetNames());
+            .workbook().sheetNames().stream()
+                .map(dev.erst.gridgrind.core.vocabulary.WireString::value)
+                .toList());
   }
 
   @Test

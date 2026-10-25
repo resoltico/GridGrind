@@ -14,6 +14,7 @@ import dev.erst.gridgrind.core.plan.WorkbookAssetIntrospectionQuery;
 import dev.erst.gridgrind.core.plan.WorkbookInspectionResult;
 import dev.erst.gridgrind.core.plan.WorkbookSelector;
 import dev.erst.gridgrind.core.result.WorkbookSummary;
+import dev.erst.gridgrind.core.vocabulary.SheetLabel;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
 import dev.erst.gridgrind.excel.ExcelWorkbooks;
@@ -72,7 +73,12 @@ class AssertionObservationExecutorCoverageTest {
                     new WorkbookInspectionResult.WorkbookSummaryResult(
                         new StepId("summary"),
                         new WorkbookSummary.WithSheets(
-                            1, List.of("Budget"), "Budget", List.of("Budget"), 0, false))));
+                            1,
+                            List.of(new SheetLabel("Budget")),
+                            new SheetLabel("Budget"),
+                            List.of(new SheetLabel("Budget")),
+                            0,
+                            false))));
     assertTrue(
         unsupportedObservedCount.getMessage().contains("Unsupported presence observation result"));
     assertEquals(

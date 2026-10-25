@@ -36,6 +36,7 @@ import dev.erst.gridgrind.core.vocabulary.ExcelFillPattern;
 import dev.erst.gridgrind.core.vocabulary.ExcelHorizontalAlignment;
 import dev.erst.gridgrind.core.vocabulary.ExcelVerticalAlignment;
 import dev.erst.gridgrind.core.vocabulary.NamedRangeScope;
+import dev.erst.gridgrind.core.vocabulary.SheetLabel;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -60,7 +61,12 @@ class WorkbookResultTest {
         new WorkbookInspectionResult.WorkbookSummaryResult(
             new StepId("summary"),
             new WorkbookSummary.WithSheets(
-                1, List.of("Budget"), "Budget", List.of("Budget"), 0, false)));
+                1,
+                List.of(new SheetLabel("Budget")),
+                new SheetLabel("Budget"),
+                List.of(new SheetLabel("Budget")),
+                0,
+                false)));
 
     WorkbookResult.Success success = WorkbookResults.success(warnings, List.of(), inspections);
     WorkbookResult.Success successWithoutInspections =
@@ -520,7 +526,7 @@ class WorkbookResultTest {
         "sheetCount must be 0 for an empty workbook",
         assertThrows(
                 IllegalArgumentException.class,
-                () -> new WorkbookSummary.Empty(1, List.of("Budget"), 0, false))
+                () -> new WorkbookSummary.Empty(1, List.of(new SheetLabel("Budget")), 0, false))
             .getMessage());
     assertEquals(
         "selectedSheetNames must only contain values present in sheetNames",
@@ -528,7 +534,12 @@ class WorkbookResultTest {
                 IllegalArgumentException.class,
                 () ->
                     new WorkbookSummary.WithSheets(
-                        1, List.of("Budget"), "Budget", List.of("Ops"), 0, false))
+                        1,
+                        List.of(new SheetLabel("Budget")),
+                        new SheetLabel("Budget"),
+                        List.of(new SheetLabel("Ops")),
+                        0,
+                        false))
             .getMessage());
     assertEquals(
         "message must not be blank",
@@ -586,7 +597,12 @@ class WorkbookResultTest {
                 new WorkbookInspectionResult.WorkbookSummaryResult(
                     new StepId("summary"),
                     new WorkbookSummary.WithSheets(
-                        1, List.of("Budget"), "Budget", List.of("Budget"), 0, false))));
+                        1,
+                        List.of(new SheetLabel("Budget")),
+                        new SheetLabel("Budget"),
+                        List.of(new SheetLabel("Budget")),
+                        0,
+                        false))));
     assertions.clear();
 
     assertEquals(1, success.assertions().size());

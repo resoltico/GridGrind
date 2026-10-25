@@ -341,7 +341,11 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
         success.warnings().stream().map(RequestWarning::code).toList());
     assertEquals(List.of("workbook", "cells", "window"), stepIds(success));
     assertEquals(1, workbook.sheetCount());
-    assertEquals(List.of("Budget"), workbook.sheetNames());
+    assertEquals(
+        List.of("Budget"),
+        workbook.sheetNames().stream()
+            .map(dev.erst.gridgrind.core.vocabulary.WireString::value)
+            .toList());
     assertEquals(0, workbook.namedRangeCount());
     assertTrue(workbook.forceFormulaRecalculationOnOpen());
 
@@ -732,7 +736,11 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
     assertEquals(28.5, layout.rows().getFirst().heightPoints());
     assertEquals(ExcelPrintOrientation.LANDSCAPE, printLayout.orientation());
     assertTrue(printLayout.setup().printGridlines());
-    assertEquals(List.of("Budget"), workbook.sheetNames());
+    assertEquals(
+        List.of("Budget"),
+        workbook.sheetNames().stream()
+            .map(dev.erst.gridgrind.core.vocabulary.WireString::value)
+            .toList());
 
     assertEquals(List.of("A1:B1"), XlsxRoundTrip.mergedRegions(workbookPath, "Budget"));
     assertEquals(4096, XlsxRoundTrip.columnWidth(workbookPath, "Budget", 0));

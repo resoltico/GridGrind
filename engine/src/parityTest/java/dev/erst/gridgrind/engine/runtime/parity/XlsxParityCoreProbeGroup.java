@@ -168,16 +168,22 @@ final class XlsxParityCoreProbeGroup {
       CoreReadObservation observation, List<String> mismatches) {
     WorkbookSummary.WithSheets summary = observation.summary();
     XlsxParityOracle.CoreWorkbookSnapshot direct = observation.direct();
-    if (!summary.sheetNames().equals(direct.sheetNames())) {
+    if (!summary.sheetNames().stream()
+        .map(dev.erst.gridgrind.core.vocabulary.SheetLabel::value)
+        .toList()
+        .equals(direct.sheetNames())) {
       mismatches.add(
           "sheetNames=%s direct=%s".formatted(summary.sheetNames(), direct.sheetNames()));
     }
-    if (!summary.activeSheetName().equals(direct.activeSheetName())) {
+    if (!summary.activeSheetName().value().equals(direct.activeSheetName())) {
       mismatches.add(
           "activeSheet=%s direct=%s"
               .formatted(summary.activeSheetName(), direct.activeSheetName()));
     }
-    if (!summary.selectedSheetNames().equals(direct.selectedSheetNames())) {
+    if (!summary.selectedSheetNames().stream()
+        .map(dev.erst.gridgrind.core.vocabulary.SheetLabel::value)
+        .toList()
+        .equals(direct.selectedSheetNames())) {
       mismatches.add(
           "selectedSheets=%s direct=%s"
               .formatted(summary.selectedSheetNames(), direct.selectedSheetNames()));
@@ -1235,7 +1241,10 @@ final class XlsxParityCoreProbeGroup {
   private static void compareSheetCopyWorkbook(
       SheetCopyCopiedObservation copied, List<String> mismatches) {
     if (!(copied.copiedWorkbook().workbook() instanceof WorkbookSummary.WithSheets workbook)
-        || !workbook.sheetNames().contains("Advanced Replica")) {
+        || !workbook.sheetNames().stream()
+            .map(dev.erst.gridgrind.core.vocabulary.SheetLabel::value)
+            .toList()
+            .contains("Advanced Replica")) {
       mismatches.add("workbookSummary=" + copied.copiedWorkbook().workbook());
     }
   }

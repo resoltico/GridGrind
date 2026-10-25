@@ -37,6 +37,7 @@ import dev.erst.gridgrind.core.result.WorkbookResultPersistence;
 import dev.erst.gridgrind.core.result.WorkbookResults;
 import dev.erst.gridgrind.core.result.WorkbookSummary;
 import dev.erst.gridgrind.core.source.TextSourceInput;
+import dev.erst.gridgrind.core.vocabulary.SheetLabel;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.json.codec.GridGrindJson;
 import dev.erst.gridgrind.json.codec.GridGrindJsonOutput;
@@ -386,7 +387,12 @@ class GridGrindJsonTest {
                 new WorkbookInspectionResult.WorkbookSummaryResult(
                     new StepId("summary"),
                     new WorkbookSummary.WithSheets(
-                        1, List.of("Budget"), "Budget", List.of("Budget"), 0, false))));
+                        1,
+                        List.of(new SheetLabel("Budget")),
+                        new SheetLabel("Budget"),
+                        List.of(new SheetLabel("Budget")),
+                        0,
+                        false))));
     Catalog catalog = GridGrindProtocolCatalog.catalog();
 
     assertEquals(

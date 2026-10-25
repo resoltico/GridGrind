@@ -139,6 +139,7 @@ import dev.erst.gridgrind.core.vocabulary.ExcelSheetVisibility;
 import dev.erst.gridgrind.core.vocabulary.ExcelVerticalAlignment;
 import dev.erst.gridgrind.core.vocabulary.NamedRangeBackingKind;
 import dev.erst.gridgrind.core.vocabulary.NamedRangeScope;
+import dev.erst.gridgrind.core.vocabulary.SheetLabel;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.excel.*;
 import dev.erst.gridgrind.excel.ExcelCellValue;
@@ -185,7 +186,12 @@ class WorkbookInvariantChecksTest {
                 new WorkbookInspectionResult.WorkbookSummaryResult(
                     new StepId("summary"),
                     new WorkbookSummary.WithSheets(
-                        1, List.of("Budget"), "Budget", List.of("Budget"), 1, false)),
+                        1,
+                        List.of(new SheetLabel("Budget")),
+                        new SheetLabel("Budget"),
+                        List.of(new SheetLabel("Budget")),
+                        1,
+                        false)),
                 new WorkbookInspectionResult.NamedRangesResult(
                     new StepId("ranges"),
                     List.of(
@@ -410,7 +416,12 @@ class WorkbookInvariantChecksTest {
                 new WorkbookInspectionResult.WorkbookSummaryResult(
                     new StepId("summary"),
                     new WorkbookSummary.WithSheets(
-                        1, List.of("Budget"), "Budget", List.of("Budget"), 1, false)),
+                        1,
+                        List.of(new SheetLabel("Budget")),
+                        new SheetLabel("Budget"),
+                        List.of(new SheetLabel("Budget")),
+                        1,
+                        false)),
                 new SheetInspectionResult.CellsResult(
                     new StepId("cells"), "Budget", List.of(textCell("A1", "Report"))),
                 new SheetInspectionResult.DataValidationsResult(
@@ -515,7 +526,7 @@ class WorkbookInvariantChecksTest {
                 new SheetInspectionResult.SheetSummaryResult(
                     new StepId("sheet"),
                     new SheetSummaryReport(
-                        "Budget",
+                        new SheetLabel("Budget"),
                         ExcelSheetVisibility.VERY_HIDDEN,
                         new SheetProtectionReport.Protected(protocolProtectionSettings()),
                         4,
@@ -717,7 +728,7 @@ class WorkbookInvariantChecksTest {
                 new SheetInspectionResult.SheetSummaryResult(
                     new StepId("sheet"),
                     new SheetSummaryReport(
-                        "Budget",
+                        new SheetLabel("Budget"),
                         ExcelSheetVisibility.VISIBLE,
                         new SheetProtectionReport.Unprotected(),
                         0,

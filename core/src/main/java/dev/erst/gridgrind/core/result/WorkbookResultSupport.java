@@ -8,6 +8,7 @@ import dev.erst.gridgrind.core.problem.GridGrindProblemCode;
 import dev.erst.gridgrind.core.problem.GridGrindProblemDetail;
 import dev.erst.gridgrind.core.problem.RequestWarning;
 import dev.erst.gridgrind.core.vocabulary.PlanId;
+import dev.erst.gridgrind.core.vocabulary.SheetLabel;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -108,9 +109,9 @@ public final class WorkbookResultSupport {
     };
   }
 
-  /** Copies a report string list with stable duplicate removal. */
-  public static List<String> copyDistinctStrings(List<String> values, String fieldName) {
-    List<String> copy = copyStrings(values, fieldName);
+  /** Copies nonnull report values, rejecting duplicate entries. */
+  public static <T> List<T> copyDistinctValues(List<T> values, String fieldName) {
+    List<T> copy = copyValues(values, fieldName);
     if (copy.size() != new java.util.LinkedHashSet<>(copy).size()) {
       throw new IllegalArgumentException(fieldName + " must not contain duplicates");
     }
@@ -118,22 +119,17 @@ public final class WorkbookResultSupport {
   }
 
   /** Validates observed workbook summary counts and sheet names. */
-  public static List<String> validateCommonWorkbookSummaryFields(
-      int sheetCount, List<String> sheetNames, int namedRangeCount) {
+  public static List<SheetLabel> validateCommonWorkbookSummaryFields(
+      int sheetCount, List<SheetLabel> sheetNames, int namedRangeCount) {
     if (sheetCount < 0) {
       throw new IllegalArgumentException("sheetCount must not be negative");
     }
     if (namedRangeCount < 0) {
       throw new IllegalArgumentException("namedRangeCount must not be negative");
     }
-    List<String> copy = copyDistinctStrings(sheetNames, "sheetNames");
+    List<SheetLabel> copy = copyDistinctValues(sheetNames, "sheetNames");
     if (sheetCount != copy.size()) {
       throw new IllegalArgumentException("sheetCount must match sheetNames size");
-    }
-    for (String sheetName : copy) {
-      if (sheetName.isBlank()) {
-        throw new IllegalArgumentException("sheetNames must not contain blank values");
-      }
     }
     return copy;
   }

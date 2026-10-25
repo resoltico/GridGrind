@@ -15,6 +15,7 @@ import dev.erst.gridgrind.core.plan.WorkbookSelector;
 import dev.erst.gridgrind.core.vocabulary.AnalysisFindingCode;
 import dev.erst.gridgrind.core.vocabulary.AnalysisSeverity;
 import dev.erst.gridgrind.core.vocabulary.ExcelSheetVisibility;
+import dev.erst.gridgrind.core.vocabulary.SheetLabel;
 import java.util.List;
 import java.util.Optional;
 
@@ -204,7 +205,7 @@ final class OperationSequenceObservationSupport {
           default ->
               new WorkbookFactAssertion.SheetStructureFacts(
                   new dev.erst.gridgrind.core.result.SheetSummaryReport(
-                      sheetName,
+                      new SheetLabel(sheetName),
                       ExcelSheetVisibility.VISIBLE,
                       new dev.erst.gridgrind.core.model.protection.SheetProtectionReport
                           .Unprotected(),

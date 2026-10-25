@@ -39,6 +39,7 @@ import dev.erst.gridgrind.core.vocabulary.ExcelPivotDataConsolidateFunction;
 import dev.erst.gridgrind.core.vocabulary.ExcelSheetVisibility;
 import dev.erst.gridgrind.core.vocabulary.ExcelVerticalAlignment;
 import dev.erst.gridgrind.core.vocabulary.NamedRangeScope;
+import dev.erst.gridgrind.core.vocabulary.SheetLabel;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import java.math.BigDecimal;
 import java.util.List;
@@ -112,7 +113,7 @@ class AssertionCoverageTest {
         "EXPECT_SHEET_STRUCTURE",
         new WorkbookFactAssertion.SheetStructureFacts(
                 new SheetSummaryReport(
-                    "Budget",
+                    new SheetLabel("Budget"),
                     ExcelSheetVisibility.VISIBLE,
                     new SheetProtectionReport.Unprotected(),
                     2,
@@ -193,7 +194,12 @@ class AssertionCoverageTest {
         new WorkbookInspectionResult.WorkbookSummaryResult(
             new StepId("summary"),
             new WorkbookSummary.WithSheets(
-                1, List.of("Budget"), "Budget", List.of("Budget"), 1, false));
+                1,
+                List.of(new SheetLabel("Budget")),
+                new SheetLabel("Budget"),
+                List.of(new SheetLabel("Budget")),
+                1,
+                false));
 
     assertEquals(
         List.of(new PresenceAssertion.TablePresent()),

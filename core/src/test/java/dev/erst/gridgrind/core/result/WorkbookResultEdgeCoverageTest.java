@@ -49,6 +49,7 @@ import dev.erst.gridgrind.core.vocabulary.ExcelHorizontalAlignment;
 import dev.erst.gridgrind.core.vocabulary.ExcelVerticalAlignment;
 import dev.erst.gridgrind.core.vocabulary.NamedRangeBackingKind;
 import dev.erst.gridgrind.core.vocabulary.NamedRangeScope;
+import dev.erst.gridgrind.core.vocabulary.SheetLabel;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import java.math.BigDecimal;
 import java.util.Arrays;
@@ -110,27 +111,34 @@ class WorkbookResultEdgeCoverageTest {
         "sheetCount must match sheetNames size",
         assertThrows(
                 IllegalArgumentException.class,
-                () -> new WorkbookSummary.Empty(0, List.of("Budget"), 0, false))
+                () -> new WorkbookSummary.Empty(0, List.of(new SheetLabel("Budget")), 0, false))
             .getMessage());
     assertEquals(
         "sheetNames must not contain duplicates",
         assertThrows(
                 IllegalArgumentException.class,
-                () -> new WorkbookSummary.Empty(2, List.of("Budget", "Budget"), 0, false))
+                () ->
+                    new WorkbookSummary.Empty(
+                        2, List.of(new SheetLabel("Budget"), new SheetLabel("Budget")), 0, false))
             .getMessage());
     assertEquals(
-        "sheetNames must not contain blank values",
+        "sheetName must not be blank",
         assertThrows(
                 IllegalArgumentException.class,
-                () -> new WorkbookSummary.Empty(1, List.of(" "), 0, false))
+                () -> new WorkbookSummary.Empty(1, List.of(new SheetLabel(" ")), 0, false))
             .getMessage());
     assertEquals(
-        "activeSheetName must not be blank",
+        "sheetName must not be blank",
         assertThrows(
                 IllegalArgumentException.class,
                 () ->
                     new WorkbookSummary.WithSheets(
-                        1, List.of("Budget"), " ", List.of("Budget"), 0, false))
+                        1,
+                        List.of(new SheetLabel("Budget")),
+                        new SheetLabel(" "),
+                        List.of(new SheetLabel("Budget")),
+                        0,
+                        false))
             .getMessage());
     assertEquals(
         "sheetCount must be greater than 0",
@@ -138,7 +146,12 @@ class WorkbookResultEdgeCoverageTest {
                 IllegalArgumentException.class,
                 () ->
                     new WorkbookSummary.WithSheets(
-                        0, List.of(), "Budget", List.of("Budget"), 0, false))
+                        0,
+                        List.of(),
+                        new SheetLabel("Budget"),
+                        List.of(new SheetLabel("Budget")),
+                        0,
+                        false))
             .getMessage());
     assertEquals(
         "activeSheetName must be present in sheetNames",
@@ -146,7 +159,12 @@ class WorkbookResultEdgeCoverageTest {
                 IllegalArgumentException.class,
                 () ->
                     new WorkbookSummary.WithSheets(
-                        1, List.of("Budget"), "Ops", List.of("Budget"), 0, false))
+                        1,
+                        List.of(new SheetLabel("Budget")),
+                        new SheetLabel("Ops"),
+                        List.of(new SheetLabel("Budget")),
+                        0,
+                        false))
             .getMessage());
     assertEquals(
         "selectedSheetNames must not be empty",
@@ -154,7 +172,12 @@ class WorkbookResultEdgeCoverageTest {
                 IllegalArgumentException.class,
                 () ->
                     new WorkbookSummary.WithSheets(
-                        1, List.of("Budget"), "Budget", List.of(), 0, false))
+                        1,
+                        List.of(new SheetLabel("Budget")),
+                        new SheetLabel("Budget"),
+                        List.of(),
+                        0,
+                        false))
             .getMessage());
     assertEquals(
         "name must not be blank",
@@ -200,7 +223,7 @@ class WorkbookResultEdgeCoverageTest {
                 IllegalArgumentException.class,
                 () ->
                     new SheetSummaryReport(
-                        " ",
+                        new SheetLabel(" "),
                         dev.erst.gridgrind.core.vocabulary.ExcelSheetVisibility.VISIBLE,
                         new SheetProtectionReport.Unprotected(),
                         0,

@@ -270,7 +270,8 @@ class DefaultGridGrindRequestExecutorReadResultTranslationTest
         cast(WorkbookInspectionResult.WorkbookSummaryResult.class, workbookSummary)
             .workbook()
             .sheetNames()
-            .getFirst());
+            .getFirst()
+            .value());
     assertEquals(
         "BudgetTotal",
         cast(WorkbookInspectionResult.NamedRangesResult.class, namedRanges)
@@ -279,7 +280,10 @@ class DefaultGridGrindRequestExecutorReadResultTranslationTest
             .name());
     assertEquals(
         "Budget",
-        cast(SheetInspectionResult.SheetSummaryResult.class, sheetSummary).sheet().sheetName());
+        cast(SheetInspectionResult.SheetSummaryResult.class, sheetSummary)
+            .sheet()
+            .sheetName()
+            .value());
     assertEquals(
         "A1", cast(SheetInspectionResult.CellsResult.class, cells).cells().getFirst().address());
     assertEquals(
@@ -622,8 +626,12 @@ class DefaultGridGrindRequestExecutorReadResultTranslationTest
         assertInstanceOf(SheetProtectionReport.Protected.class, sheet.protection());
 
     assertEquals(0, empty.sheetCount());
-    assertEquals("Archive", populated.activeSheetName());
-    assertEquals(List.of("Budget", "Archive"), populated.selectedSheetNames());
+    assertEquals("Archive", populated.activeSheetName().value());
+    assertEquals(
+        List.of("Budget", "Archive"),
+        populated.selectedSheetNames().stream()
+            .map(dev.erst.gridgrind.core.vocabulary.WireString::value)
+            .toList());
     assertEquals(ExcelSheetVisibility.VERY_HIDDEN, sheet.visibility());
     assertEquals(protectionSettings(), protection.settings());
   }

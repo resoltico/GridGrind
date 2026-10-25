@@ -23,15 +23,21 @@ final class InspectionResultWorkbookCoreReportSupport {
       case dev.erst.gridgrind.excel.WorkbookCoreResult.WorkbookSummary.Empty empty ->
           new WorkbookSummary.Empty(
               empty.sheetCount(),
-              empty.sheetNames(),
+              empty.sheetNames().stream()
+                  .map(dev.erst.gridgrind.core.vocabulary.SheetLabel::new)
+                  .toList(),
               empty.namedRangeCount(),
               empty.forceFormulaRecalculationOnOpen());
       case dev.erst.gridgrind.excel.WorkbookCoreResult.WorkbookSummary.WithSheets withSheets ->
           new WorkbookSummary.WithSheets(
               withSheets.sheetCount(),
-              withSheets.sheetNames(),
-              withSheets.activeSheetName(),
-              withSheets.selectedSheetNames(),
+              withSheets.sheetNames().stream()
+                  .map(dev.erst.gridgrind.core.vocabulary.SheetLabel::new)
+                  .toList(),
+              new dev.erst.gridgrind.core.vocabulary.SheetLabel(withSheets.activeSheetName()),
+              withSheets.selectedSheetNames().stream()
+                  .map(dev.erst.gridgrind.core.vocabulary.SheetLabel::new)
+                  .toList(),
               withSheets.namedRangeCount(),
               withSheets.forceFormulaRecalculationOnOpen());
     };

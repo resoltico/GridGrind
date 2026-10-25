@@ -579,3 +579,32 @@ reported that label. Authored selectors already validate Excel names; observed r
 a distinct, wider contract. Preserve that diagnostic capability with a distinct observed-label
 value instead of applying authoring-name validity to observed source facts. Evidence is external
 in `observed-names/` (owned workbook copy, request/grant/result and run log).
+
+### WP-21 observed worksheet labels
+
+The malformed-workbook probe established a real distinction: authored sheet names are validated
+against Excel naming rules, while workbook summaries already report wider observed labels such
+as `invalid[]`. Added SheetLabel for that observed contract; SheetName retains its authoring
+rules. WorkbookSummary and SheetSummaryReport now carry typed labels, with scalar JSON output
+unchanged. Converters construct labels at the observation boundary. The collection helper now
+has the accurate generic name `copyDistinctValues`: it copies nonnull values and rejects duplicates
+(it never removed duplicates). Count, active/selected membership, nonempty-selection and null-
+element invariants remain; repeated primitive blank checks moved into the label constructor.
+
+The compiler tool adapted immutable literal lists and typed text assertions. Four parity compile
+checks and one Jazzer invariant needed explicit `.value()` projections against the independent
+POI/string oracle. One constructor assertion still expected the retired container-level blank
+message; it now checks the canonical label message. Repaired focused checks passed (12s).
+A persisted-workbook regression bypasses POI's authoring setter, writes `invalid[]`, then executes
+product summary inspection and response round-trip to prove that observed labels remain readable.
+The generated scalar suite also covers SheetLabel's wider contract and invalid blank values.
+
+Full `./gradlew check --no-parallel` passed (2m43s): 2,799 active tests, zero failures/errors/skips,
+all 141 golden cases unchanged. Nested Jazzer check passed (16s) after the textual invariant
+projection. `mutationReport` passed (15s), selected core 298/298 and engine 82/82 mutants killed.
+Named-module probes passed all 14 requests, catalog, response and nine scalar values, including
+an invalid authoring-name label. No golden re-recording or baseline/supplement change.
+Evidence: external `sheet-label-*.log`, `sheet-label-failures/`, `sheet-label-inventories/` and the
+original `observed-names/` probe. Blank checks 474 → 473; main lines 126,314 → 126,344; test lines
+153,687 → 153,826; converters 4,576 → 4,583 (boundary scalar construction, mirrors still pending
+WP-40). Other model/subtype counts remain unchanged. Next: authored sheet identifiers.

@@ -15,22 +15,22 @@ final class SelectorListValidation {
 
   static List<String> copyDistinctAddresses(List<String> addresses, String fieldName) {
     Objects.requireNonNull(addresses, fieldName + " must not be null");
-    return copyDistinctStrings(addresses, fieldName, false, true, false);
+    return copyDistinctValues(addresses, fieldName, false, true, false);
   }
 
   static List<String> copyDistinctRanges(List<String> ranges, String fieldName) {
     Objects.requireNonNull(ranges, fieldName + " must not be null");
-    return copyDistinctStrings(ranges, fieldName, false, false, true);
+    return copyDistinctValues(ranges, fieldName, false, false, true);
   }
 
   static List<String> copyDistinctSheetNames(List<String> sheetNames, String fieldName) {
     Objects.requireNonNull(sheetNames, fieldName + " must not be null");
-    return copyDistinctStrings(sheetNames, fieldName, true, false, false);
+    return copyDistinctValues(sheetNames, fieldName, true, false, false);
   }
 
   static List<String> copyDistinctDefinedNames(List<String> names, String fieldName) {
     Objects.requireNonNull(names, fieldName + " must not be null");
-    return copyDistinctStrings(names, fieldName, false, false, false);
+    return copyDistinctValues(names, fieldName, false, false, false);
   }
 
   static List<String> copyDistinctPivotTableNames(List<String> names, String fieldName) {
@@ -107,7 +107,7 @@ final class SelectorListValidation {
     };
   }
 
-  private static List<String> copyDistinctStrings(
+  private static List<String> copyDistinctValues(
       List<String> values,
       String fieldName,
       boolean sheetNames,

@@ -51,7 +51,8 @@ final class InspectionResultReadConverter {
           new SheetInspectionResult.SheetSummaryResult(
               sheetSummary.stepId(),
               new SheetSummaryReport(
-                  sheetSummary.sheet().sheetName(),
+                  new dev.erst.gridgrind.core.vocabulary.SheetLabel(
+                      sheetSummary.sheet().sheetName()),
                   sheetSummary.sheet().visibility(),
                   InspectionResultWorkbookLayoutReportSupport.toSheetProtectionReport(
                       sheetSummary.sheet().protection()),

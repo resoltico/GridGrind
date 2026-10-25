@@ -10,6 +10,7 @@ import dev.erst.gridgrind.core.vocabulary.DefinedName;
 import dev.erst.gridgrind.core.vocabulary.PlanId;
 import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.core.vocabulary.RgbHex;
+import dev.erst.gridgrind.core.vocabulary.SheetLabel;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.core.vocabulary.TableName;
@@ -185,6 +186,11 @@ class WireStringPropertyTest {
     }
     return List.of(
         new Domain(SheetName.class, SheetName::new, sheets, invalidSheets),
+        new Domain(
+            SheetLabel.class,
+            SheetLabel::new,
+            List.of("Budget", "invalid[]", "s".repeat(100), "予算"),
+            invalidPlans),
         new Domain(CellAddress.class, CellAddress::new, cells, invalidCells),
         new Domain(RangeRef.class, RangeRef::new, ranges, invalidRanges),
         new Domain(DefinedName.class, DefinedName::new, names, invalidNames),

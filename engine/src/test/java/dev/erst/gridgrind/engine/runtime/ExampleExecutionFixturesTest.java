@@ -35,6 +35,45 @@ class ExampleExecutionFixturesTest {
   @TempDir Path tempDir;
 
   @Test
+  void observedWorksheetLabelsDoNotAcquireAuthoringNameRestrictions() throws IOException {
+    Path source = tempDir.resolve("observed-label.xlsx");
+    try (var workbook = new org.apache.poi.xssf.usermodel.XSSFWorkbook()) {
+      workbook.createSheet("Valid");
+      workbook.getCTWorkbook().getSheets().getSheetArray(0).setName("invalid[]");
+      try (OutputStream output = Files.newOutputStream(source)) {
+        workbook.write(output);
+      }
+    }
+    WorkbookPlan request =
+        GridGrindJson.readRequest(
+            """
+        {"protocolVersion":"V3","source":{"type":"EXISTING","path":"observed-label.xlsx"},"persistence":{"type":"NONE"},"steps":[{"stepId":"summary","target":{"type":"WORKBOOK_CURRENT"},"query":{"type":"GET_WORKBOOK_SUMMARY"}}]}
+        """);
+    WorkbookResult.Success result =
+        assertInstanceOf(
+            WorkbookResult.Success.class,
+            new DefaultGridGrindRequestExecutor()
+                .execute(request, bindingsForExample(tempDir, request)));
+    var summaryResult =
+        assertInstanceOf(
+            dev.erst.gridgrind.core.plan.WorkbookInspectionResult.WorkbookSummaryResult.class,
+            result.inspections().getFirst());
+    var summary =
+        assertInstanceOf(
+            dev.erst.gridgrind.core.result.WorkbookSummary.WithSheets.class,
+            summaryResult.workbook());
+    assertEquals(
+        java.util.List.of("invalid[]"),
+        summary.sheetNames().stream()
+            .map(dev.erst.gridgrind.core.vocabulary.SheetLabel::value)
+            .toList());
+    assertEquals("invalid[]", summary.activeSheetName().value());
+    var reopened =
+        GridGrindJson.readWorkbookResult(GridGrindJsonOutput.writeWorkbookResultBytes(result));
+    assertEquals(result, reopened);
+  }
+
+  @Test
   void selfContainedBuiltInExamplesExecuteFromABlankArtifactWorkspace() throws IOException {
     Path workspace = Files.createDirectories(tempDir.resolve("blank-artifact-workspace"));
 
