@@ -1,0 +1,1245 @@
+{
+  "exit" : 0,
+  "readback" : {
+    "bounds" : [ {
+      "sheet" : {
+        "lastColumnIndex" : 2,
+        "lastRowIndex" : 3,
+        "physicalRowCount" : 4,
+        "protection" : {
+          "kind" : "UNPROTECTED"
+        },
+        "sheetName" : "Ops",
+        "visibility" : "VISIBLE"
+      },
+      "stepId" : "sheet-0",
+      "type" : "GET_SHEET_SUMMARY"
+    } ],
+    "facts" : [ {
+      "layout" : {
+        "columns" : [ {
+          "collapsed" : false,
+          "columnIndex" : 0,
+          "hidden" : false,
+          "outlineLevel" : 0,
+          "widthCharacters" : 8.0
+        }, {
+          "collapsed" : false,
+          "columnIndex" : 1,
+          "hidden" : false,
+          "outlineLevel" : 0,
+          "widthCharacters" : 8.0
+        }, {
+          "collapsed" : false,
+          "columnIndex" : 2,
+          "hidden" : false,
+          "outlineLevel" : 0,
+          "widthCharacters" : 8.0
+        } ],
+        "pane" : {
+          "type" : "NONE"
+        },
+        "presentation" : {
+          "display" : {
+            "displayFormulas" : false,
+            "displayGridlines" : true,
+            "displayRowColHeadings" : true,
+            "displayZeros" : true,
+            "rightToLeft" : false
+          },
+          "ignoredErrors" : [ ],
+          "outlineSummary" : {
+            "rowSumsBelow" : true,
+            "rowSumsRight" : true
+          },
+          "sheetDefaults" : {
+            "defaultColumnWidth" : 8,
+            "defaultRowHeightPoints" : 15.0
+          }
+        },
+        "rows" : [ {
+          "collapsed" : false,
+          "heightPoints" : 15.0,
+          "hidden" : false,
+          "outlineLevel" : 0,
+          "rowIndex" : 0
+        }, {
+          "collapsed" : false,
+          "heightPoints" : 15.0,
+          "hidden" : false,
+          "outlineLevel" : 0,
+          "rowIndex" : 1
+        }, {
+          "collapsed" : false,
+          "heightPoints" : 15.0,
+          "hidden" : false,
+          "outlineLevel" : 0,
+          "rowIndex" : 2
+        }, {
+          "collapsed" : false,
+          "heightPoints" : 15.0,
+          "hidden" : false,
+          "outlineLevel" : 0,
+          "rowIndex" : 3
+        } ],
+        "sheetName" : "Ops",
+        "zoomPercent" : 100
+      },
+      "stepId" : "sheet-0-layout",
+      "type" : "GET_SHEET_LAYOUT"
+    }, {
+      "layout" : {
+        "footer" : {
+          "center" : "",
+          "left" : "",
+          "right" : ""
+        },
+        "header" : {
+          "center" : "",
+          "left" : "",
+          "right" : ""
+        },
+        "orientation" : "PORTRAIT",
+        "printArea" : {
+          "type" : "NONE"
+        },
+        "repeatingColumns" : {
+          "type" : "NONE"
+        },
+        "repeatingRows" : {
+          "type" : "NONE"
+        },
+        "scaling" : {
+          "type" : "AUTOMATIC"
+        },
+        "setup" : {
+          "blackAndWhite" : false,
+          "columnBreaks" : [ ],
+          "copies" : 1,
+          "draft" : false,
+          "firstPageNumber" : 1,
+          "horizontallyCentered" : false,
+          "margins" : {
+            "bottom" : 0.75,
+            "footer" : 0.3,
+            "header" : 0.3,
+            "left" : 0.7,
+            "right" : 0.7,
+            "top" : 0.75
+          },
+          "paperSize" : 1,
+          "printGridlines" : false,
+          "rowBreaks" : [ ],
+          "useFirstPageNumber" : false,
+          "verticallyCentered" : false
+        },
+        "sheetName" : "Ops"
+      },
+      "stepId" : "sheet-0-print",
+      "type" : "GET_PRINT_LAYOUT"
+    }, {
+      "charts" : [ {
+        "anchor" : {
+          "behavior" : "MOVE_AND_RESIZE",
+          "from" : {
+            "columnIndex" : 4,
+            "dx" : 0,
+            "dy" : 0,
+            "rowIndex" : 0
+          },
+          "to" : {
+            "columnIndex" : 8,
+            "dx" : 0,
+            "dy" : 0,
+            "rowIndex" : 12
+          },
+          "type" : "TWO_CELL"
+        },
+        "displayBlanksAs" : "SPAN",
+        "legend" : {
+          "position" : "TOP_RIGHT",
+          "type" : "VISIBLE"
+        },
+        "name" : "OpsChart",
+        "plotOnlyVisibleCells" : false,
+        "plots" : [ {
+          "axes" : [ {
+            "crosses" : "AUTO_ZERO",
+            "kind" : "CATEGORY",
+            "position" : "BOTTOM",
+            "visible" : true
+          }, {
+            "crosses" : "AUTO_ZERO",
+            "kind" : "VALUE",
+            "position" : "LEFT",
+            "visible" : true
+          } ],
+          "barDirection" : "COLUMN",
+          "gapWidth" : 150,
+          "grouping" : "CLUSTERED",
+          "overlap" : 0,
+          "series" : [ {
+            "categories" : {
+              "cachedValues" : [ "Jan", "Feb", "Mar" ],
+              "formula" : "ChartCategories",
+              "type" : "STRING_REFERENCE"
+            },
+            "title" : {
+              "text" : "Plan",
+              "type" : "TEXT"
+            },
+            "values" : {
+              "cachedValues" : [ "10.0", "18.0", "15.0" ],
+              "formula" : "Ops!$B$2:$B$4",
+              "type" : "NUMERIC_REFERENCE"
+            }
+          }, {
+            "categories" : {
+              "cachedValues" : [ "Jan", "Feb", "Mar" ],
+              "formula" : "ChartCategories",
+              "type" : "STRING_REFERENCE"
+            },
+            "title" : {
+              "text" : "Actual",
+              "type" : "TEXT"
+            },
+            "values" : {
+              "cachedValues" : [ "12.0", "17.0", "16.0" ],
+              "formula" : "ChartActual",
+              "type" : "NUMERIC_REFERENCE"
+            }
+          } ],
+          "type" : "BAR",
+          "varyColors" : true
+        } ],
+        "title" : {
+          "text" : "Roadmap",
+          "type" : "TEXT"
+        }
+      } ],
+      "sheetName" : "Ops",
+      "stepId" : "sheet-0-charts",
+      "type" : "GET_CHARTS"
+    }, {
+      "drawingObjects" : [ {
+        "anchor" : {
+          "behavior" : "MOVE_AND_RESIZE",
+          "from" : {
+            "columnIndex" : 4,
+            "dx" : 0,
+            "dy" : 0,
+            "rowIndex" : 0
+          },
+          "to" : {
+            "columnIndex" : 8,
+            "dx" : 0,
+            "dy" : 0,
+            "rowIndex" : 12
+          },
+          "type" : "TWO_CELL"
+        },
+        "name" : "OpsChart",
+        "plotTypeTokens" : [ "BAR" ],
+        "supported" : true,
+        "title" : "Roadmap",
+        "type" : "CHART"
+      } ],
+      "sheetName" : "Ops",
+      "stepId" : "sheet-0-drawing",
+      "type" : "GET_DRAWING_OBJECTS"
+    }, {
+      "cells" : [ {
+        "address" : "A1",
+        "displayValue" : "Month",
+        "style" : {
+          "alignment" : {
+            "horizontalAlignment" : "GENERAL",
+            "indentation" : 0,
+            "textRotation" : 0,
+            "verticalAlignment" : "BOTTOM",
+            "wrapText" : false
+          },
+          "border" : {
+            "bottom" : {
+              "type" : "NONE"
+            },
+            "left" : {
+              "type" : "NONE"
+            },
+            "right" : {
+              "type" : "NONE"
+            },
+            "top" : {
+              "type" : "NONE"
+            }
+          },
+          "fill" : {
+            "kind" : "PATTERN_ONLY",
+            "pattern" : "NONE"
+          },
+          "font" : {
+            "bold" : false,
+            "fontColor" : {
+              "indexed" : 8,
+              "kind" : "INDEXED"
+            },
+            "fontHeight" : {
+              "points" : 11,
+              "twips" : 220
+            },
+            "fontName" : "Calibri",
+            "italic" : false,
+            "strikeout" : false,
+            "underline" : false
+          },
+          "numberFormat" : "General",
+          "protection" : {
+            "hiddenFormula" : false,
+            "locked" : true
+          }
+        },
+        "textValue" : "Month",
+        "type" : "TEXT"
+      }, {
+        "address" : "B1",
+        "displayValue" : "Plan",
+        "style" : {
+          "alignment" : {
+            "horizontalAlignment" : "GENERAL",
+            "indentation" : 0,
+            "textRotation" : 0,
+            "verticalAlignment" : "BOTTOM",
+            "wrapText" : false
+          },
+          "border" : {
+            "bottom" : {
+              "type" : "NONE"
+            },
+            "left" : {
+              "type" : "NONE"
+            },
+            "right" : {
+              "type" : "NONE"
+            },
+            "top" : {
+              "type" : "NONE"
+            }
+          },
+          "fill" : {
+            "kind" : "PATTERN_ONLY",
+            "pattern" : "NONE"
+          },
+          "font" : {
+            "bold" : false,
+            "fontColor" : {
+              "indexed" : 8,
+              "kind" : "INDEXED"
+            },
+            "fontHeight" : {
+              "points" : 11,
+              "twips" : 220
+            },
+            "fontName" : "Calibri",
+            "italic" : false,
+            "strikeout" : false,
+            "underline" : false
+          },
+          "numberFormat" : "General",
+          "protection" : {
+            "hiddenFormula" : false,
+            "locked" : true
+          }
+        },
+        "textValue" : "Plan",
+        "type" : "TEXT"
+      }, {
+        "address" : "C1",
+        "displayValue" : "Actual",
+        "style" : {
+          "alignment" : {
+            "horizontalAlignment" : "GENERAL",
+            "indentation" : 0,
+            "textRotation" : 0,
+            "verticalAlignment" : "BOTTOM",
+            "wrapText" : false
+          },
+          "border" : {
+            "bottom" : {
+              "type" : "NONE"
+            },
+            "left" : {
+              "type" : "NONE"
+            },
+            "right" : {
+              "type" : "NONE"
+            },
+            "top" : {
+              "type" : "NONE"
+            }
+          },
+          "fill" : {
+            "kind" : "PATTERN_ONLY",
+            "pattern" : "NONE"
+          },
+          "font" : {
+            "bold" : false,
+            "fontColor" : {
+              "indexed" : 8,
+              "kind" : "INDEXED"
+            },
+            "fontHeight" : {
+              "points" : 11,
+              "twips" : 220
+            },
+            "fontName" : "Calibri",
+            "italic" : false,
+            "strikeout" : false,
+            "underline" : false
+          },
+          "numberFormat" : "General",
+          "protection" : {
+            "hiddenFormula" : false,
+            "locked" : true
+          }
+        },
+        "textValue" : "Actual",
+        "type" : "TEXT"
+      }, {
+        "address" : "A2",
+        "displayValue" : "Jan",
+        "style" : {
+          "alignment" : {
+            "horizontalAlignment" : "GENERAL",
+            "indentation" : 0,
+            "textRotation" : 0,
+            "verticalAlignment" : "BOTTOM",
+            "wrapText" : false
+          },
+          "border" : {
+            "bottom" : {
+              "type" : "NONE"
+            },
+            "left" : {
+              "type" : "NONE"
+            },
+            "right" : {
+              "type" : "NONE"
+            },
+            "top" : {
+              "type" : "NONE"
+            }
+          },
+          "fill" : {
+            "kind" : "PATTERN_ONLY",
+            "pattern" : "NONE"
+          },
+          "font" : {
+            "bold" : false,
+            "fontColor" : {
+              "indexed" : 8,
+              "kind" : "INDEXED"
+            },
+            "fontHeight" : {
+              "points" : 11,
+              "twips" : 220
+            },
+            "fontName" : "Calibri",
+            "italic" : false,
+            "strikeout" : false,
+            "underline" : false
+          },
+          "numberFormat" : "General",
+          "protection" : {
+            "hiddenFormula" : false,
+            "locked" : true
+          }
+        },
+        "textValue" : "Jan",
+        "type" : "TEXT"
+      }, {
+        "address" : "B2",
+        "displayValue" : "10",
+        "numberValue" : 10.0,
+        "style" : {
+          "alignment" : {
+            "horizontalAlignment" : "GENERAL",
+            "indentation" : 0,
+            "textRotation" : 0,
+            "verticalAlignment" : "BOTTOM",
+            "wrapText" : false
+          },
+          "border" : {
+            "bottom" : {
+              "type" : "NONE"
+            },
+            "left" : {
+              "type" : "NONE"
+            },
+            "right" : {
+              "type" : "NONE"
+            },
+            "top" : {
+              "type" : "NONE"
+            }
+          },
+          "fill" : {
+            "kind" : "PATTERN_ONLY",
+            "pattern" : "NONE"
+          },
+          "font" : {
+            "bold" : false,
+            "fontColor" : {
+              "indexed" : 8,
+              "kind" : "INDEXED"
+            },
+            "fontHeight" : {
+              "points" : 11,
+              "twips" : 220
+            },
+            "fontName" : "Calibri",
+            "italic" : false,
+            "strikeout" : false,
+            "underline" : false
+          },
+          "numberFormat" : "General",
+          "protection" : {
+            "hiddenFormula" : false,
+            "locked" : true
+          }
+        },
+        "temporal" : {
+          "isDate" : false
+        },
+        "type" : "NUMBER"
+      }, {
+        "address" : "C2",
+        "displayValue" : "12",
+        "numberValue" : 12.0,
+        "style" : {
+          "alignment" : {
+            "horizontalAlignment" : "GENERAL",
+            "indentation" : 0,
+            "textRotation" : 0,
+            "verticalAlignment" : "BOTTOM",
+            "wrapText" : false
+          },
+          "border" : {
+            "bottom" : {
+              "type" : "NONE"
+            },
+            "left" : {
+              "type" : "NONE"
+            },
+            "right" : {
+              "type" : "NONE"
+            },
+            "top" : {
+              "type" : "NONE"
+            }
+          },
+          "fill" : {
+            "kind" : "PATTERN_ONLY",
+            "pattern" : "NONE"
+          },
+          "font" : {
+            "bold" : false,
+            "fontColor" : {
+              "indexed" : 8,
+              "kind" : "INDEXED"
+            },
+            "fontHeight" : {
+              "points" : 11,
+              "twips" : 220
+            },
+            "fontName" : "Calibri",
+            "italic" : false,
+            "strikeout" : false,
+            "underline" : false
+          },
+          "numberFormat" : "General",
+          "protection" : {
+            "hiddenFormula" : false,
+            "locked" : true
+          }
+        },
+        "temporal" : {
+          "isDate" : false
+        },
+        "type" : "NUMBER"
+      }, {
+        "address" : "A3",
+        "displayValue" : "Feb",
+        "style" : {
+          "alignment" : {
+            "horizontalAlignment" : "GENERAL",
+            "indentation" : 0,
+            "textRotation" : 0,
+            "verticalAlignment" : "BOTTOM",
+            "wrapText" : false
+          },
+          "border" : {
+            "bottom" : {
+              "type" : "NONE"
+            },
+            "left" : {
+              "type" : "NONE"
+            },
+            "right" : {
+              "type" : "NONE"
+            },
+            "top" : {
+              "type" : "NONE"
+            }
+          },
+          "fill" : {
+            "kind" : "PATTERN_ONLY",
+            "pattern" : "NONE"
+          },
+          "font" : {
+            "bold" : false,
+            "fontColor" : {
+              "indexed" : 8,
+              "kind" : "INDEXED"
+            },
+            "fontHeight" : {
+              "points" : 11,
+              "twips" : 220
+            },
+            "fontName" : "Calibri",
+            "italic" : false,
+            "strikeout" : false,
+            "underline" : false
+          },
+          "numberFormat" : "General",
+          "protection" : {
+            "hiddenFormula" : false,
+            "locked" : true
+          }
+        },
+        "textValue" : "Feb",
+        "type" : "TEXT"
+      }, {
+        "address" : "B3",
+        "displayValue" : "18",
+        "numberValue" : 18.0,
+        "style" : {
+          "alignment" : {
+            "horizontalAlignment" : "GENERAL",
+            "indentation" : 0,
+            "textRotation" : 0,
+            "verticalAlignment" : "BOTTOM",
+            "wrapText" : false
+          },
+          "border" : {
+            "bottom" : {
+              "type" : "NONE"
+            },
+            "left" : {
+              "type" : "NONE"
+            },
+            "right" : {
+              "type" : "NONE"
+            },
+            "top" : {
+              "type" : "NONE"
+            }
+          },
+          "fill" : {
+            "kind" : "PATTERN_ONLY",
+            "pattern" : "NONE"
+          },
+          "font" : {
+            "bold" : false,
+            "fontColor" : {
+              "indexed" : 8,
+              "kind" : "INDEXED"
+            },
+            "fontHeight" : {
+              "points" : 11,
+              "twips" : 220
+            },
+            "fontName" : "Calibri",
+            "italic" : false,
+            "strikeout" : false,
+            "underline" : false
+          },
+          "numberFormat" : "General",
+          "protection" : {
+            "hiddenFormula" : false,
+            "locked" : true
+          }
+        },
+        "temporal" : {
+          "isDate" : false
+        },
+        "type" : "NUMBER"
+      }, {
+        "address" : "C3",
+        "displayValue" : "17",
+        "numberValue" : 17.0,
+        "style" : {
+          "alignment" : {
+            "horizontalAlignment" : "GENERAL",
+            "indentation" : 0,
+            "textRotation" : 0,
+            "verticalAlignment" : "BOTTOM",
+            "wrapText" : false
+          },
+          "border" : {
+            "bottom" : {
+              "type" : "NONE"
+            },
+            "left" : {
+              "type" : "NONE"
+            },
+            "right" : {
+              "type" : "NONE"
+            },
+            "top" : {
+              "type" : "NONE"
+            }
+          },
+          "fill" : {
+            "kind" : "PATTERN_ONLY",
+            "pattern" : "NONE"
+          },
+          "font" : {
+            "bold" : false,
+            "fontColor" : {
+              "indexed" : 8,
+              "kind" : "INDEXED"
+            },
+            "fontHeight" : {
+              "points" : 11,
+              "twips" : 220
+            },
+            "fontName" : "Calibri",
+            "italic" : false,
+            "strikeout" : false,
+            "underline" : false
+          },
+          "numberFormat" : "General",
+          "protection" : {
+            "hiddenFormula" : false,
+            "locked" : true
+          }
+        },
+        "temporal" : {
+          "isDate" : false
+        },
+        "type" : "NUMBER"
+      }, {
+        "address" : "A4",
+        "displayValue" : "Mar",
+        "style" : {
+          "alignment" : {
+            "horizontalAlignment" : "GENERAL",
+            "indentation" : 0,
+            "textRotation" : 0,
+            "verticalAlignment" : "BOTTOM",
+            "wrapText" : false
+          },
+          "border" : {
+            "bottom" : {
+              "type" : "NONE"
+            },
+            "left" : {
+              "type" : "NONE"
+            },
+            "right" : {
+              "type" : "NONE"
+            },
+            "top" : {
+              "type" : "NONE"
+            }
+          },
+          "fill" : {
+            "kind" : "PATTERN_ONLY",
+            "pattern" : "NONE"
+          },
+          "font" : {
+            "bold" : false,
+            "fontColor" : {
+              "indexed" : 8,
+              "kind" : "INDEXED"
+            },
+            "fontHeight" : {
+              "points" : 11,
+              "twips" : 220
+            },
+            "fontName" : "Calibri",
+            "italic" : false,
+            "strikeout" : false,
+            "underline" : false
+          },
+          "numberFormat" : "General",
+          "protection" : {
+            "hiddenFormula" : false,
+            "locked" : true
+          }
+        },
+        "textValue" : "Mar",
+        "type" : "TEXT"
+      }, {
+        "address" : "B4",
+        "displayValue" : "15",
+        "numberValue" : 15.0,
+        "style" : {
+          "alignment" : {
+            "horizontalAlignment" : "GENERAL",
+            "indentation" : 0,
+            "textRotation" : 0,
+            "verticalAlignment" : "BOTTOM",
+            "wrapText" : false
+          },
+          "border" : {
+            "bottom" : {
+              "type" : "NONE"
+            },
+            "left" : {
+              "type" : "NONE"
+            },
+            "right" : {
+              "type" : "NONE"
+            },
+            "top" : {
+              "type" : "NONE"
+            }
+          },
+          "fill" : {
+            "kind" : "PATTERN_ONLY",
+            "pattern" : "NONE"
+          },
+          "font" : {
+            "bold" : false,
+            "fontColor" : {
+              "indexed" : 8,
+              "kind" : "INDEXED"
+            },
+            "fontHeight" : {
+              "points" : 11,
+              "twips" : 220
+            },
+            "fontName" : "Calibri",
+            "italic" : false,
+            "strikeout" : false,
+            "underline" : false
+          },
+          "numberFormat" : "General",
+          "protection" : {
+            "hiddenFormula" : false,
+            "locked" : true
+          }
+        },
+        "temporal" : {
+          "isDate" : false
+        },
+        "type" : "NUMBER"
+      }, {
+        "address" : "C4",
+        "displayValue" : "16",
+        "numberValue" : 16.0,
+        "style" : {
+          "alignment" : {
+            "horizontalAlignment" : "GENERAL",
+            "indentation" : 0,
+            "textRotation" : 0,
+            "verticalAlignment" : "BOTTOM",
+            "wrapText" : false
+          },
+          "border" : {
+            "bottom" : {
+              "type" : "NONE"
+            },
+            "left" : {
+              "type" : "NONE"
+            },
+            "right" : {
+              "type" : "NONE"
+            },
+            "top" : {
+              "type" : "NONE"
+            }
+          },
+          "fill" : {
+            "kind" : "PATTERN_ONLY",
+            "pattern" : "NONE"
+          },
+          "font" : {
+            "bold" : false,
+            "fontColor" : {
+              "indexed" : 8,
+              "kind" : "INDEXED"
+            },
+            "fontHeight" : {
+              "points" : 11,
+              "twips" : 220
+            },
+            "fontName" : "Calibri",
+            "italic" : false,
+            "strikeout" : false,
+            "underline" : false
+          },
+          "numberFormat" : "General",
+          "protection" : {
+            "hiddenFormula" : false,
+            "locked" : true
+          }
+        },
+        "temporal" : {
+          "isDate" : false
+        },
+        "type" : "NUMBER"
+      } ],
+      "sheetName" : "Ops",
+      "stepId" : "sheet-0-cells",
+      "type" : "GET_CELLS"
+    }, {
+      "sheetName" : "Ops",
+      "stepId" : "sheet-0-GET_DATA_VALIDATIONS",
+      "type" : "GET_DATA_VALIDATIONS",
+      "validations" : [ ]
+    }, {
+      "conditionalFormattingBlocks" : [ ],
+      "sheetName" : "Ops",
+      "stepId" : "sheet-0-GET_CONDITIONAL_FORMATTING",
+      "type" : "GET_CONDITIONAL_FORMATTING"
+    }, {
+      "stepId" : "tables",
+      "tables" : [ ],
+      "type" : "GET_TABLES"
+    }, {
+      "pivotTables" : [ ],
+      "stepId" : "pivots",
+      "type" : "GET_PIVOT_TABLES"
+    }, {
+      "analysis" : {
+        "findings" : [ ],
+        "summary" : {
+          "errorCount" : 0,
+          "infoCount" : 0,
+          "totalCount" : 0,
+          "warningCount" : 0
+        }
+      },
+      "stepId" : "findings",
+      "type" : "ANALYZE_WORKBOOK_FINDINGS"
+    } ],
+    "summary" : [ {
+      "stepId" : "summary",
+      "type" : "GET_WORKBOOK_SUMMARY",
+      "workbook" : {
+        "activeSheetName" : "Ops",
+        "forceFormulaRecalculationOnOpen" : false,
+        "kind" : "WITH_SHEETS",
+        "namedRangeCount" : 2,
+        "selectedSheetNames" : [ "Ops" ],
+        "sheetCount" : 1,
+        "sheetNames" : [ "Ops" ]
+      }
+    } ]
+  },
+  "stderr" : "",
+  "stdout" : {
+    "assertions" : [ {
+      "assertionType" : "EXPECT_CHART_PRESENT",
+      "outcome" : "PASSED",
+      "stepId" : "chart-present"
+    } ],
+    "calculation" : {
+      "execution" : {
+        "cachesCleared" : false,
+        "evaluatedFormulaCount" : 0,
+        "markRecalculateOnOpenApplied" : false,
+        "status" : "NOT_REQUESTED"
+      },
+      "policy" : { }
+    },
+    "evidence" : {
+      "admission" : {
+        "materializedInputs" : [ ],
+        "operations" : [ {
+          "effects" : [ "READ_WORKBOOK", "MUTATE_WORKBOOK", "CELLS", "FORMULAS", "STYLES", "HYPERLINKS", "COMMENTS", "DRAWINGS", "WORKBOOK_STRUCTURE", "SHEET_STRUCTURE", "ROWS", "COLUMNS", "TABLES", "NAMED_RANGES", "DATA_VALIDATIONS", "CONDITIONAL_FORMATTING", "AUTOFILTERS", "PIVOT_TABLES", "WORKBOOK_METADATA", "WORKBOOK_SECURITY" ],
+          "footprint" : "CONSERVATIVE_WORKBOOK_WIDE",
+          "operationId" : "ENSURE_SHEET"
+        }, {
+          "effects" : [ "READ_WORKBOOK", "MUTATE_WORKBOOK", "CELLS", "FORMULAS", "STYLES", "HYPERLINKS", "COMMENTS", "DRAWINGS" ],
+          "footprint" : "CONSERVATIVE_WORKBOOK_WIDE",
+          "operationId" : "SET_RANGE"
+        }, {
+          "effects" : [ "READ_WORKBOOK", "MUTATE_WORKBOOK", "CELLS", "FORMULAS", "TABLES", "NAMED_RANGES", "DATA_VALIDATIONS", "CONDITIONAL_FORMATTING", "AUTOFILTERS", "PIVOT_TABLES", "CUSTOM_XML" ],
+          "footprint" : "CONSERVATIVE_WORKBOOK_WIDE",
+          "operationId" : "SET_NAMED_RANGE"
+        }, {
+          "effects" : [ "READ_WORKBOOK", "MUTATE_WORKBOOK", "CELLS", "FORMULAS", "TABLES", "NAMED_RANGES", "DATA_VALIDATIONS", "CONDITIONAL_FORMATTING", "AUTOFILTERS", "PIVOT_TABLES", "CUSTOM_XML" ],
+          "footprint" : "CONSERVATIVE_WORKBOOK_WIDE",
+          "operationId" : "SET_NAMED_RANGE"
+        }, {
+          "effects" : [ "READ_WORKBOOK", "MUTATE_WORKBOOK", "CELLS", "FORMULAS", "DRAWINGS" ],
+          "footprint" : "CONSERVATIVE_WORKBOOK_WIDE",
+          "operationId" : "SET_CHART"
+        }, {
+          "effects" : [ "READ_WORKBOOK" ],
+          "footprint" : "TARGET_BOUNDED",
+          "operationId" : "GET_CHARTS"
+        }, {
+          "effects" : [ "READ_WORKBOOK" ],
+          "footprint" : "TARGET_BOUNDED",
+          "operationId" : "EXPECT_CHART_PRESENT"
+        } ]
+      },
+      "computational" : {
+        "status" : "NOT_REQUESTED"
+      },
+      "presentational" : {
+        "status" : "NOT_ASSESSED"
+      },
+      "preservation" : [ {
+        "status" : "NOT_REQUESTED"
+      } ],
+      "structural" : {
+        "status" : "ESTABLISHED"
+      },
+      "taskSpecific" : {
+        "assertions" : [ {
+          "origin" : "PLAN_AUTHORED",
+          "result" : {
+            "assertionType" : "EXPECT_CHART_PRESENT",
+            "outcome" : "PASSED",
+            "stepId" : "chart-present"
+          }
+        } ],
+        "status" : "ESTABLISHED"
+      }
+    },
+    "inspections" : [ {
+      "charts" : [ {
+        "anchor" : {
+          "behavior" : "MOVE_AND_RESIZE",
+          "from" : {
+            "columnIndex" : 4,
+            "dx" : 0,
+            "dy" : 0,
+            "rowIndex" : 0
+          },
+          "to" : {
+            "columnIndex" : 8,
+            "dx" : 0,
+            "dy" : 0,
+            "rowIndex" : 12
+          },
+          "type" : "TWO_CELL"
+        },
+        "displayBlanksAs" : "SPAN",
+        "legend" : {
+          "position" : "TOP_RIGHT",
+          "type" : "VISIBLE"
+        },
+        "name" : "OpsChart",
+        "plotOnlyVisibleCells" : false,
+        "plots" : [ {
+          "axes" : [ {
+            "crosses" : "AUTO_ZERO",
+            "kind" : "CATEGORY",
+            "position" : "BOTTOM",
+            "visible" : true
+          }, {
+            "crosses" : "AUTO_ZERO",
+            "kind" : "VALUE",
+            "position" : "LEFT",
+            "visible" : true
+          } ],
+          "barDirection" : "COLUMN",
+          "gapWidth" : 150,
+          "grouping" : "CLUSTERED",
+          "overlap" : 0,
+          "series" : [ {
+            "categories" : {
+              "cachedValues" : [ "Jan", "Feb", "Mar" ],
+              "formula" : "ChartCategories",
+              "type" : "STRING_REFERENCE"
+            },
+            "title" : {
+              "text" : "Plan",
+              "type" : "TEXT"
+            },
+            "values" : {
+              "cachedValues" : [ "10.0", "18.0", "15.0" ],
+              "formula" : "Ops!$B$2:$B$4",
+              "type" : "NUMERIC_REFERENCE"
+            }
+          }, {
+            "categories" : {
+              "cachedValues" : [ "Jan", "Feb", "Mar" ],
+              "formula" : "ChartCategories",
+              "type" : "STRING_REFERENCE"
+            },
+            "title" : {
+              "text" : "Actual",
+              "type" : "TEXT"
+            },
+            "values" : {
+              "cachedValues" : [ "12.0", "17.0", "16.0" ],
+              "formula" : "ChartActual",
+              "type" : "NUMERIC_REFERENCE"
+            }
+          } ],
+          "type" : "BAR",
+          "varyColors" : true
+        } ],
+        "title" : {
+          "text" : "Roadmap",
+          "type" : "TEXT"
+        }
+      } ],
+      "sheetName" : "Ops",
+      "stepId" : "charts",
+      "type" : "GET_CHARTS"
+    } ],
+    "journal" : {
+      "calculation" : {
+        "execution" : {
+          "status" : "NOT_REQUESTED"
+        },
+        "preflight" : {
+          "status" : "NOT_REQUESTED"
+        }
+      },
+      "close" : {
+        "status" : "SUCCEEDED"
+      },
+      "inputResolution" : {
+        "status" : "SUCCEEDED"
+      },
+      "level" : "SUMMARY",
+      "open" : {
+        "status" : "SUCCEEDED"
+      },
+      "outcome" : {
+        "completedStepCount" : 7,
+        "durationMillis" : "<durationMillis>",
+        "plannedStepCount" : 7,
+        "status" : "SUCCEEDED"
+      },
+      "persistencePhase" : {
+        "status" : "SUCCEEDED"
+      },
+      "source" : {
+        "type" : "NEW"
+      },
+      "steps" : [ {
+        "outcome" : "SUCCEEDED",
+        "phase" : {
+          "status" : "SUCCEEDED"
+        },
+        "resolvedTargets" : [ {
+          "kind" : "SHEET",
+          "label" : "Sheet Ops"
+        } ],
+        "stepId" : "step-01-ensure-sheet",
+        "stepIndex" : 0,
+        "stepKind" : "MUTATION",
+        "stepType" : "ENSURE_SHEET"
+      }, {
+        "outcome" : "SUCCEEDED",
+        "phase" : {
+          "status" : "SUCCEEDED"
+        },
+        "resolvedTargets" : [ {
+          "kind" : "RANGE",
+          "label" : "Range Ops!A1:C4"
+        } ],
+        "stepId" : "step-02-set-range",
+        "stepIndex" : 1,
+        "stepKind" : "MUTATION",
+        "stepType" : "SET_RANGE"
+      }, {
+        "outcome" : "SUCCEEDED",
+        "phase" : {
+          "status" : "SUCCEEDED"
+        },
+        "resolvedTargets" : [ {
+          "kind" : "NAMED_RANGE",
+          "label" : "Workbook-scoped named range ChartCategories"
+        } ],
+        "stepId" : "step-03-set-categories",
+        "stepIndex" : 2,
+        "stepKind" : "MUTATION",
+        "stepType" : "SET_NAMED_RANGE"
+      }, {
+        "outcome" : "SUCCEEDED",
+        "phase" : {
+          "status" : "SUCCEEDED"
+        },
+        "resolvedTargets" : [ {
+          "kind" : "NAMED_RANGE",
+          "label" : "Workbook-scoped named range ChartActual"
+        } ],
+        "stepId" : "step-04-set-actual",
+        "stepIndex" : 3,
+        "stepKind" : "MUTATION",
+        "stepType" : "SET_NAMED_RANGE"
+      }, {
+        "outcome" : "SUCCEEDED",
+        "phase" : {
+          "status" : "SUCCEEDED"
+        },
+        "resolvedTargets" : [ {
+          "kind" : "SHEET",
+          "label" : "Sheet Ops"
+        } ],
+        "stepId" : "step-05-set-chart",
+        "stepIndex" : 4,
+        "stepKind" : "MUTATION",
+        "stepType" : "SET_CHART"
+      }, {
+        "outcome" : "SUCCEEDED",
+        "phase" : {
+          "status" : "SUCCEEDED"
+        },
+        "resolvedTargets" : [ {
+          "kind" : "CHART",
+          "label" : "All charts on Ops"
+        } ],
+        "stepId" : "charts",
+        "stepIndex" : 5,
+        "stepKind" : "INSPECTION",
+        "stepType" : "GET_CHARTS"
+      }, {
+        "outcome" : "SUCCEEDED",
+        "phase" : {
+          "status" : "SUCCEEDED"
+        },
+        "resolvedTargets" : [ {
+          "kind" : "CHART",
+          "label" : "Chart Ops!OpsChart"
+        } ],
+        "stepId" : "chart-present",
+        "stepIndex" : 6,
+        "stepKind" : "ASSERTION",
+        "stepType" : "EXPECT_CHART_PRESENT"
+      } ],
+      "validation" : {
+        "status" : "SUCCEEDED"
+      }
+    },
+    "persistence" : {
+      "publication" : {
+        "byteSize" : "<byteSize>",
+        "durability" : {
+          "level" : "FILE_AND_DIRECTORY_SYNCED"
+        },
+        "executionPath" : "<workspace>/recipe/generated-workbooks/gridgrind-chart.xlsx",
+        "sha256" : "<sha256>",
+        "stagedArtifactVerification" : { },
+        "status" : "PUBLISHED"
+      },
+      "requestedPath" : "generated-workbooks/gridgrind-chart.xlsx",
+      "type" : "SAVE_AS"
+    },
+    "planId" : "chart-workflow",
+    "protocolVersion" : "V3",
+    "status" : "SUCCEEDED",
+    "warnings" : [ ]
+  }
+}

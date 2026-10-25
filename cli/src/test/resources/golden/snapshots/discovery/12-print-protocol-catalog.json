@@ -1,0 +1,50 @@
+{
+  "exit" : 0,
+  "stderr" : "",
+  "stdout" : {
+    "effectFootprint" : "CONSERVATIVE_WORKBOOK_WIDE",
+    "effects" : [ "READ_WORKBOOK", "MUTATE_WORKBOOK", "CELLS", "FORMULAS", "STYLES", "HYPERLINKS", "COMMENTS", "DRAWINGS" ],
+    "fields" : [ {
+      "enumValues" : [ ],
+      "name" : "value",
+      "requirement" : "REQUIRED",
+      "shape" : {
+        "group" : "cellInputTypes",
+        "kind" : "NESTED_TYPE_GROUP"
+      }
+    } ],
+    "id" : "SET_CELL",
+    "protocolVersion" : "V3",
+    "stepTemplate" : {
+      "bodyField" : "action",
+      "notes" : [ "Replace the placeholder target when needed; SET_CELL accepts CELL_BY_ADDRESS, TABLE_CELL_BY_COLUMN_NAME." ],
+      "stepKind" : "MUTATION",
+      "template" : {
+        "action" : {
+          "type" : "SET_CELL",
+          "value" : {
+            "source" : {
+              "text" : "Sample text",
+              "type" : "INLINE"
+            },
+            "type" : "TEXT"
+          }
+        },
+        "stepId" : "step-set-cell",
+        "target" : {
+          "address" : "A1",
+          "sheetName" : "Sheet1",
+          "type" : "CELL_BY_ADDRESS"
+        }
+      }
+    },
+    "summary" : "Write one typed value to a single cell.",
+    "targetSelectors" : [ {
+      "family" : "CellSelector",
+      "typeIds" : [ "CELL_BY_ADDRESS" ]
+    }, {
+      "family" : "TableCellSelector",
+      "typeIds" : [ "TABLE_CELL_BY_COLUMN_NAME" ]
+    } ]
+  }
+}

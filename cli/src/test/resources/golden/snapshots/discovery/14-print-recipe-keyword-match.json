@@ -1,0 +1,54 @@
+{
+  "exit" : 0,
+  "stderr" : "",
+  "stdout" : {
+    "candidates" : [ {
+      "matchSources" : [ "intent tag", "discovery term", "artifact", "required input kind" ],
+      "matchedTerms" : [ "chart" ],
+      "recipeId" : "DASHBOARD",
+      "score" : 93,
+      "summary" : "Assemble an executive dashboard from reusable named surfaces and supported charts.",
+      "view" : "TASK_STARTER"
+    }, {
+      "matchSources" : [ "recipe id", "intent tag", "discovery term", "summary" ],
+      "matchedTerms" : [ "report", "budget" ],
+      "recipeId" : "TABULAR_REPORT",
+      "score" : 58,
+      "summary" : "Create a structured worksheet report with typed cells, table semantics, and factual readback.",
+      "view" : "TASK_STARTER"
+    }, {
+      "matchSources" : [ "recipe id", "intent tag", "file stem", "summary" ],
+      "matchedTerms" : [ "budget" ],
+      "recipeId" : "BUDGET",
+      "score" : 41,
+      "summary" : "Selector-first budget sheet with styling, formula totals, readback, and schema inspection.",
+      "view" : "EXAMPLE"
+    }, {
+      "matchSources" : [ "recipe id", "intent tag", "file stem", "summary" ],
+      "matchedTerms" : [ "chart" ],
+      "recipeId" : "CHART",
+      "score" : 41,
+      "summary" : "Supported chart authoring with named-range-backed series and factual chart readback.",
+      "view" : "EXAMPLE"
+    }, {
+      "matchSources" : [ "recipe id", "required input kind", "summary" ],
+      "matchedTerms" : [ "report", "chart" ],
+      "recipeId" : "PIVOT_REPORT",
+      "score" : 28,
+      "summary" : "Create one pivot-ready report flow from source data through named tables and pivot-table inspection.",
+      "view" : "TASK_STARTER"
+    }, {
+      "matchSources" : [ "intent tag" ],
+      "matchedTerms" : [ "report" ],
+      "recipeId" : "PIVOT",
+      "score" : 12,
+      "summary" : "Pivot authoring from a contiguous range with pivot readback and health analysis.",
+      "view" : "EXAMPLE"
+    } ],
+    "normalizedTerms" : [ "budget", "chart", "report" ],
+    "protocolVersion" : "V3",
+    "query" : "budget chart report",
+    "suggestedIntentTags" : [ "charts", "dashboard", "kpi", "office", "revenue", "sales", "summary", "report" ],
+    "unmatchedTerms" : [ ]
+  }
+}

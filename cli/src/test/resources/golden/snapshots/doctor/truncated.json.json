@@ -1,0 +1,110 @@
+{
+  "exit" : 1,
+  "stderr" : "",
+  "stdout" : {
+    "problems" : [ {
+      "category" : "REQUEST",
+      "causes" : [ {
+        "code" : "INVALID_JSON",
+        "message" : "Expected '}' to close object",
+        "stage" : "READ_REQUEST"
+      } ],
+      "code" : "INVALID_JSON",
+      "context" : {
+        "json" : {
+          "byteOffset" : 0,
+          "jsonColumn" : 1,
+          "jsonLine" : 1,
+          "type" : "BYTE_OFFSET_LINE_COLUMN"
+        },
+        "request" : {
+          "requestPath" : "<workspace>/request.json",
+          "type" : "FILE"
+        },
+        "stage" : "READ_REQUEST"
+      },
+      "message" : "Expected '}' to close object",
+      "recovery" : "CHANGE_REQUEST",
+      "resolution" : "Send syntactically valid JSON.",
+      "title" : "Invalid JSON payload"
+    }, {
+      "category" : "REQUEST",
+      "causes" : [ {
+        "code" : "INVALID_REQUEST_SHAPE",
+        "message" : "Field 'steps' must be a JSON array",
+        "stage" : "READ_REQUEST"
+      } ],
+      "code" : "INVALID_REQUEST_SHAPE",
+      "context" : {
+        "json" : {
+          "byteOffset" : 78,
+          "jsonPath" : "steps",
+          "type" : "PATH_BYTE_OFFSET"
+        },
+        "request" : {
+          "requestPath" : "<workspace>/request.json",
+          "type" : "FILE"
+        },
+        "stage" : "READ_REQUEST"
+      },
+      "message" : "Field 'steps' must be a JSON array",
+      "recovery" : "CHANGE_REQUEST",
+      "resolution" : "Fix field 'steps' so it matches the published request shape.",
+      "title" : "Invalid request shape"
+    }, {
+      "category" : "REQUEST",
+      "causes" : [ {
+        "code" : "INVALID_JSON",
+        "message" : "Expected a JSON value",
+        "stage" : "READ_REQUEST"
+      } ],
+      "code" : "INVALID_JSON",
+      "context" : {
+        "json" : {
+          "byteOffset" : 86,
+          "jsonColumn" : 87,
+          "jsonLine" : 1,
+          "type" : "BYTE_OFFSET_LINE_COLUMN"
+        },
+        "request" : {
+          "requestPath" : "<workspace>/request.json",
+          "type" : "FILE"
+        },
+        "stage" : "READ_REQUEST"
+      },
+      "message" : "Expected a JSON value",
+      "recovery" : "CHANGE_REQUEST",
+      "resolution" : "Send syntactically valid JSON.",
+      "title" : "Invalid JSON payload"
+    }, {
+      "category" : "REQUEST",
+      "causes" : [ {
+        "code" : "INVALID_JSON",
+        "message" : "Expected ',' or '}' after object member",
+        "stage" : "READ_REQUEST"
+      } ],
+      "code" : "INVALID_JSON",
+      "context" : {
+        "json" : {
+          "byteOffset" : 86,
+          "jsonColumn" : 87,
+          "jsonLine" : 1,
+          "type" : "BYTE_OFFSET_LINE_COLUMN"
+        },
+        "request" : {
+          "requestPath" : "<workspace>/request.json",
+          "type" : "FILE"
+        },
+        "stage" : "READ_REQUEST"
+      },
+      "message" : "Expected ',' or '}' after object member",
+      "recovery" : "CHANGE_REQUEST",
+      "resolution" : "Send syntactically valid JSON.",
+      "title" : "Invalid JSON payload"
+    } ],
+    "protocolVersion" : "V3",
+    "severity" : "ERROR",
+    "valid" : false,
+    "warnings" : [ ]
+  }
+}

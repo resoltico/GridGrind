@@ -1,0 +1,14 @@
+{
+  "exit" : 0,
+  "stderr" : "",
+  "stdout" : {
+    "persistence" : {
+      "type" : "NONE"
+    },
+    "protocolVersion" : "V3",
+    "source" : {
+      "type" : "NEW"
+    },
+    "steps" : [ ]
+  }
+}

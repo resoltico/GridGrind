@@ -1,0 +1,391 @@
+{
+  "exit" : 0,
+  "stderr" : "",
+  "stdout" : {
+    "assertions" : [ ],
+    "calculation" : {
+      "execution" : {
+        "cachesCleared" : false,
+        "evaluatedFormulaCount" : 0,
+        "markRecalculateOnOpenApplied" : false,
+        "status" : "NOT_REQUESTED"
+      },
+      "policy" : { }
+    },
+    "evidence" : {
+      "admission" : {
+        "materializedInputs" : [ {
+          "byteSize" : 210,
+          "path" : "<workspace>/recipe/custom-xml-assets/custom-xml-update.xml",
+          "role" : "custom XML",
+          "sha256" : "87648cbe438ffbccf39b1279e56162068a5759d019e1b6ff5b0f641b76cf4bf9"
+        }, {
+          "byteSize" : 9906,
+          "path" : "<workspace>/recipe/custom-xml-assets/custom-xml-mapping.xlsx",
+          "role" : "source",
+          "sha256" : "6a5fbb160c7c9c2add5125ac07ceaf3f841d40e03d5c75025ab71946d49af289"
+        } ],
+        "operations" : [ {
+          "effects" : [ "READ_WORKBOOK" ],
+          "footprint" : "TARGET_BOUNDED",
+          "operationId" : "GET_CUSTOM_XML_MAPPINGS"
+        }, {
+          "effects" : [ "READ_WORKBOOK" ],
+          "footprint" : "TARGET_BOUNDED",
+          "operationId" : "EXPORT_CUSTOM_XML_MAPPING"
+        }, {
+          "effects" : [ "READ_WORKBOOK", "MUTATE_WORKBOOK", "CELLS", "FORMULAS", "TABLES", "NAMED_RANGES", "DATA_VALIDATIONS", "CONDITIONAL_FORMATTING", "AUTOFILTERS", "PIVOT_TABLES", "CUSTOM_XML" ],
+          "footprint" : "CONSERVATIVE_WORKBOOK_WIDE",
+          "operationId" : "IMPORT_CUSTOM_XML_MAPPING"
+        }, {
+          "effects" : [ "READ_WORKBOOK" ],
+          "footprint" : "TARGET_BOUNDED",
+          "operationId" : "GET_CELLS"
+        }, {
+          "effects" : [ "READ_WORKBOOK" ],
+          "footprint" : "TARGET_BOUNDED",
+          "operationId" : "EXPORT_CUSTOM_XML_MAPPING"
+        } ]
+      },
+      "computational" : {
+        "status" : "NOT_REQUESTED"
+      },
+      "presentational" : {
+        "status" : "NOT_ASSESSED"
+      },
+      "preservation" : [ {
+        "status" : "NOT_REQUESTED"
+      } ],
+      "structural" : {
+        "status" : "NOT_ESTABLISHED"
+      },
+      "taskSpecific" : {
+        "status" : "NOT_REQUESTED"
+      }
+    },
+    "inspections" : [ {
+      "mappings" : [ {
+        "linkedCells" : [ {
+          "address" : "A1",
+          "sheetName" : "Foglio1",
+          "xmlDataType" : "string",
+          "xpath" : "/CORSO/NOME"
+        }, {
+          "address" : "B1",
+          "sheetName" : "Foglio1",
+          "xmlDataType" : "string",
+          "xpath" : "/CORSO/DOCENTE"
+        }, {
+          "address" : "C1",
+          "sheetName" : "Foglio1",
+          "xmlDataType" : "string",
+          "xpath" : "/CORSO/TUTOR"
+        }, {
+          "address" : "D1",
+          "sheetName" : "Foglio1",
+          "xmlDataType" : "string",
+          "xpath" : "/CORSO/CDL"
+        }, {
+          "address" : "E1",
+          "sheetName" : "Foglio1",
+          "xmlDataType" : "string",
+          "xpath" : "/CORSO/DURATA"
+        }, {
+          "address" : "F1",
+          "sheetName" : "Foglio1",
+          "xmlDataType" : "string",
+          "xpath" : "/CORSO/ARGOMENTO"
+        }, {
+          "address" : "G1",
+          "sheetName" : "Foglio1",
+          "xmlDataType" : "string",
+          "xpath" : "/CORSO/PROGETTO"
+        }, {
+          "address" : "H1",
+          "sheetName" : "Foglio1",
+          "xmlDataType" : "string",
+          "xpath" : "/CORSO/CREDITI"
+        } ],
+        "linkedTables" : [ ],
+        "mapId" : 1,
+        "name" : "CORSO_mapping",
+        "rootElement" : "CORSO",
+        "schema" : {
+          "xml" : "<xsd:schema xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\">\n\t\t\t<xsd:element name=\"CORSO\" type=\"TipoCorso\"/>\n\t\t\t<xsd:complexType name=\"TipoCorso\">\n\t\t\t\t<xsd:sequence>\n\t\t\t\t\t<xsd:element name=\"NOME\" type=\"xsd:string\"/>\n\t\t\t\t\t<xsd:element name=\"DOCENTE\" type=\"xsd:string\"/>\n\t\t\t\t\t<xsd:element name=\"TUTOR\" type=\"xsd:string\"/>\n\t\t\t\t\t<xsd:element name=\"CDL\" type=\"xsd:string\"/>\n\t\t\t\t\t<xsd:element name=\"DURATA\" type=\"xsd:string\"/>\n\t\t\t\t\t<xsd:element name=\"ARGOMENTO\" type=\"xsd:string\"/>\n\t\t\t\t\t<xsd:element name=\"PROGETTO\" type=\"xsd:string\"/>\n\t\t\t\t\t<xsd:element name=\"CREDITI\" type=\"xsd:string\"/>\n\t\t\t\t</xsd:sequence>\n\t\t\t</xsd:complexType></xsd:schema>"
+        },
+        "schemaId" : "Schema1",
+        "settings" : {
+          "append" : false,
+          "autoFit" : true,
+          "preserveFormat" : true,
+          "preserveSortAfLayout" : true,
+          "showImportExportValidationErrors" : false
+        }
+      } ],
+      "stepId" : "read-custom-xml-mappings",
+      "type" : "GET_CUSTOM_XML_MAPPINGS"
+    }, {
+      "export" : {
+        "encoding" : "UTF-8",
+        "mapping" : {
+          "linkedCells" : [ {
+            "address" : "A1",
+            "sheetName" : "Foglio1",
+            "xmlDataType" : "string",
+            "xpath" : "/CORSO/NOME"
+          }, {
+            "address" : "B1",
+            "sheetName" : "Foglio1",
+            "xmlDataType" : "string",
+            "xpath" : "/CORSO/DOCENTE"
+          }, {
+            "address" : "C1",
+            "sheetName" : "Foglio1",
+            "xmlDataType" : "string",
+            "xpath" : "/CORSO/TUTOR"
+          }, {
+            "address" : "D1",
+            "sheetName" : "Foglio1",
+            "xmlDataType" : "string",
+            "xpath" : "/CORSO/CDL"
+          }, {
+            "address" : "E1",
+            "sheetName" : "Foglio1",
+            "xmlDataType" : "string",
+            "xpath" : "/CORSO/DURATA"
+          }, {
+            "address" : "F1",
+            "sheetName" : "Foglio1",
+            "xmlDataType" : "string",
+            "xpath" : "/CORSO/ARGOMENTO"
+          }, {
+            "address" : "G1",
+            "sheetName" : "Foglio1",
+            "xmlDataType" : "string",
+            "xpath" : "/CORSO/PROGETTO"
+          }, {
+            "address" : "H1",
+            "sheetName" : "Foglio1",
+            "xmlDataType" : "string",
+            "xpath" : "/CORSO/CREDITI"
+          } ],
+          "linkedTables" : [ ],
+          "mapId" : 1,
+          "name" : "CORSO_mapping",
+          "rootElement" : "CORSO",
+          "schema" : {
+            "xml" : "<xsd:schema xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\">\n\t\t\t<xsd:element name=\"CORSO\" type=\"TipoCorso\"/>\n\t\t\t<xsd:complexType name=\"TipoCorso\">\n\t\t\t\t<xsd:sequence>\n\t\t\t\t\t<xsd:element name=\"NOME\" type=\"xsd:string\"/>\n\t\t\t\t\t<xsd:element name=\"DOCENTE\" type=\"xsd:string\"/>\n\t\t\t\t\t<xsd:element name=\"TUTOR\" type=\"xsd:string\"/>\n\t\t\t\t\t<xsd:element name=\"CDL\" type=\"xsd:string\"/>\n\t\t\t\t\t<xsd:element name=\"DURATA\" type=\"xsd:string\"/>\n\t\t\t\t\t<xsd:element name=\"ARGOMENTO\" type=\"xsd:string\"/>\n\t\t\t\t\t<xsd:element name=\"PROGETTO\" type=\"xsd:string\"/>\n\t\t\t\t\t<xsd:element name=\"CREDITI\" type=\"xsd:string\"/>\n\t\t\t\t</xsd:sequence>\n\t\t\t</xsd:complexType></xsd:schema>"
+          },
+          "schemaId" : "Schema1",
+          "settings" : {
+            "append" : false,
+            "autoFit" : true,
+            "preserveFormat" : true,
+            "preserveSortAfLayout" : true,
+            "showImportExportValidationErrors" : false
+          }
+        },
+        "schemaValidated" : true,
+        "xml" : "<CORSO>\n    <NOME>ro</NOME>\n    <DOCENTE>ro</DOCENTE>\n    <TUTOR>ds</TUTOR>\n    <CDL>gs</CDL>\n    <DURATA>g</DURATA>\n    <ARGOMENTO>gvvv</ARGOMENTO>\n    <PROGETTO>aaaa</PROGETTO>\n    <CREDITI>aa</CREDITI>\n</CORSO>\n"
+      },
+      "stepId" : "export-custom-xml-before-import",
+      "type" : "EXPORT_CUSTOM_XML_MAPPING"
+    }, {
+      "cells" : [ {
+        "address" : "A1",
+        "textValue" : "Grid",
+        "type" : "TEXT"
+      }, {
+        "address" : "B1",
+        "textValue" : "Grind",
+        "type" : "TEXT"
+      }, {
+        "address" : "C1",
+        "textValue" : "Agent",
+        "type" : "TEXT"
+      }, {
+        "address" : "D1",
+        "textValue" : "Ops",
+        "type" : "TEXT"
+      } ],
+      "sheetName" : "Foglio1",
+      "stepId" : "read-imported-cells",
+      "type" : "GET_CELLS"
+    }, {
+      "export" : {
+        "encoding" : "UTF-8",
+        "mapping" : {
+          "linkedCells" : [ {
+            "address" : "A1",
+            "sheetName" : "Foglio1",
+            "xmlDataType" : "string",
+            "xpath" : "/CORSO/NOME"
+          }, {
+            "address" : "B1",
+            "sheetName" : "Foglio1",
+            "xmlDataType" : "string",
+            "xpath" : "/CORSO/DOCENTE"
+          }, {
+            "address" : "C1",
+            "sheetName" : "Foglio1",
+            "xmlDataType" : "string",
+            "xpath" : "/CORSO/TUTOR"
+          }, {
+            "address" : "D1",
+            "sheetName" : "Foglio1",
+            "xmlDataType" : "string",
+            "xpath" : "/CORSO/CDL"
+          }, {
+            "address" : "E1",
+            "sheetName" : "Foglio1",
+            "xmlDataType" : "string",
+            "xpath" : "/CORSO/DURATA"
+          }, {
+            "address" : "F1",
+            "sheetName" : "Foglio1",
+            "xmlDataType" : "string",
+            "xpath" : "/CORSO/ARGOMENTO"
+          }, {
+            "address" : "G1",
+            "sheetName" : "Foglio1",
+            "xmlDataType" : "string",
+            "xpath" : "/CORSO/PROGETTO"
+          }, {
+            "address" : "H1",
+            "sheetName" : "Foglio1",
+            "xmlDataType" : "string",
+            "xpath" : "/CORSO/CREDITI"
+          } ],
+          "linkedTables" : [ ],
+          "mapId" : 1,
+          "name" : "CORSO_mapping",
+          "rootElement" : "CORSO",
+          "schema" : {
+            "xml" : "<xsd:schema xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\">\n\t\t\t<xsd:element name=\"CORSO\" type=\"TipoCorso\"/>\n\t\t\t<xsd:complexType name=\"TipoCorso\">\n\t\t\t\t<xsd:sequence>\n\t\t\t\t\t<xsd:element name=\"NOME\" type=\"xsd:string\"/>\n\t\t\t\t\t<xsd:element name=\"DOCENTE\" type=\"xsd:string\"/>\n\t\t\t\t\t<xsd:element name=\"TUTOR\" type=\"xsd:string\"/>\n\t\t\t\t\t<xsd:element name=\"CDL\" type=\"xsd:string\"/>\n\t\t\t\t\t<xsd:element name=\"DURATA\" type=\"xsd:string\"/>\n\t\t\t\t\t<xsd:element name=\"ARGOMENTO\" type=\"xsd:string\"/>\n\t\t\t\t\t<xsd:element name=\"PROGETTO\" type=\"xsd:string\"/>\n\t\t\t\t\t<xsd:element name=\"CREDITI\" type=\"xsd:string\"/>\n\t\t\t\t</xsd:sequence>\n\t\t\t</xsd:complexType></xsd:schema>"
+          },
+          "schemaId" : "Schema1",
+          "settings" : {
+            "append" : false,
+            "autoFit" : true,
+            "preserveFormat" : true,
+            "preserveSortAfLayout" : true,
+            "showImportExportValidationErrors" : false
+          }
+        },
+        "schemaValidated" : true,
+        "xml" : "<CORSO>\n    <NOME>Grid</NOME>\n    <DOCENTE>Grind</DOCENTE>\n    <TUTOR>Agent</TUTOR>\n    <CDL>Ops</CDL>\n    <DURATA>5</DURATA>\n    <ARGOMENTO>Audit</ARGOMENTO>\n    <PROGETTO>Parity</PROGETTO>\n    <CREDITI>10</CREDITI>\n</CORSO>\n"
+      },
+      "stepId" : "export-custom-xml-after-import",
+      "type" : "EXPORT_CUSTOM_XML_MAPPING"
+    } ],
+    "journal" : {
+      "calculation" : {
+        "execution" : {
+          "status" : "NOT_REQUESTED"
+        },
+        "preflight" : {
+          "status" : "NOT_REQUESTED"
+        }
+      },
+      "close" : {
+        "status" : "SUCCEEDED"
+      },
+      "inputResolution" : {
+        "status" : "SUCCEEDED"
+      },
+      "level" : "SUMMARY",
+      "open" : {
+        "status" : "SUCCEEDED"
+      },
+      "outcome" : {
+        "completedStepCount" : 5,
+        "durationMillis" : "<durationMillis>",
+        "plannedStepCount" : 5,
+        "status" : "SUCCEEDED"
+      },
+      "persistencePhase" : {
+        "status" : "SUCCEEDED"
+      },
+      "source" : {
+        "path" : "<workspace>/recipe/custom-xml-assets/custom-xml-mapping.xlsx",
+        "type" : "EXISTING"
+      },
+      "steps" : [ {
+        "outcome" : "SUCCEEDED",
+        "phase" : {
+          "status" : "SUCCEEDED"
+        },
+        "resolvedTargets" : [ {
+          "kind" : "WORKBOOK",
+          "label" : "Current workbook"
+        } ],
+        "stepId" : "read-custom-xml-mappings",
+        "stepIndex" : 0,
+        "stepKind" : "INSPECTION",
+        "stepType" : "GET_CUSTOM_XML_MAPPINGS"
+      }, {
+        "outcome" : "SUCCEEDED",
+        "phase" : {
+          "status" : "SUCCEEDED"
+        },
+        "resolvedTargets" : [ {
+          "kind" : "WORKBOOK",
+          "label" : "Current workbook"
+        } ],
+        "stepId" : "export-custom-xml-before-import",
+        "stepIndex" : 1,
+        "stepKind" : "INSPECTION",
+        "stepType" : "EXPORT_CUSTOM_XML_MAPPING"
+      }, {
+        "outcome" : "SUCCEEDED",
+        "phase" : {
+          "status" : "SUCCEEDED"
+        },
+        "resolvedTargets" : [ {
+          "kind" : "WORKBOOK",
+          "label" : "Current workbook"
+        } ],
+        "stepId" : "import-custom-xml",
+        "stepIndex" : 2,
+        "stepKind" : "MUTATION",
+        "stepType" : "IMPORT_CUSTOM_XML_MAPPING"
+      }, {
+        "outcome" : "SUCCEEDED",
+        "phase" : {
+          "status" : "SUCCEEDED"
+        },
+        "resolvedTargets" : [ {
+          "kind" : "CELL",
+          "label" : "Cells Foglio1![A1, B1, C1, D1]"
+        } ],
+        "stepId" : "read-imported-cells",
+        "stepIndex" : 3,
+        "stepKind" : "INSPECTION",
+        "stepType" : "GET_CELLS"
+      }, {
+        "outcome" : "SUCCEEDED",
+        "phase" : {
+          "status" : "SUCCEEDED"
+        },
+        "resolvedTargets" : [ {
+          "kind" : "WORKBOOK",
+          "label" : "Current workbook"
+        } ],
+        "stepId" : "export-custom-xml-after-import",
+        "stepIndex" : 4,
+        "stepKind" : "INSPECTION",
+        "stepType" : "EXPORT_CUSTOM_XML_MAPPING"
+      } ],
+      "validation" : {
+        "status" : "SUCCEEDED"
+      }
+    },
+    "persistence" : {
+      "type" : "NONE"
+    },
+    "planId" : "custom-xml-workflow",
+    "protocolVersion" : "V3",
+    "status" : "SUCCEEDED",
+    "warnings" : [ ]
+  }
+}

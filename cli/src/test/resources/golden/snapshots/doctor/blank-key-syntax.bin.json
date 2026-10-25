@@ -1,0 +1,33 @@
+{
+  "exit" : 1,
+  "stderr" : "",
+  "stdout" : {
+    "problems" : [ {
+      "category" : "REQUEST",
+      "causes" : [ {
+        "code" : "INVALID_REQUEST",
+        "message" : "jsonPath must not be blank",
+        "stage" : "READ_REQUEST"
+      } ],
+      "code" : "INVALID_REQUEST",
+      "context" : {
+        "json" : {
+          "type" : "UNAVAILABLE"
+        },
+        "request" : {
+          "requestPath" : "<workspace>/request.json",
+          "type" : "FILE"
+        },
+        "stage" : "READ_REQUEST"
+      },
+      "message" : "jsonPath must not be blank",
+      "recovery" : "CHANGE_REQUEST",
+      "resolution" : "Fix the request data and retry the workflow.",
+      "title" : "Invalid request"
+    } ],
+    "protocolVersion" : "V3",
+    "severity" : "ERROR",
+    "valid" : false,
+    "warnings" : [ ]
+  }
+}

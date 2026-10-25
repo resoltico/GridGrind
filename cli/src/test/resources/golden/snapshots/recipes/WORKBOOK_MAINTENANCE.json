@@ -1,0 +1,1746 @@
+{
+  "detail" : {
+    "exit" : 0,
+    "stderr" : "",
+    "stdout" : {
+      "advisory" : "REQUIRES_EXAMPLE_ASSETS",
+      "discoveryProfile" : {
+        "discoveryTerms" : [ "maintenance", "copy sheet", "repair", "normalize workbook", "sheet clone" ],
+        "intentProfile" : {
+          "artifacts" : [ "WORKBOOK", "SHEET", "COMMENT", "DRAWING_OBJECT" ],
+          "goals" : [ "INSPECT", "MAINTAIN", "VERIFY" ]
+        }
+      },
+      "executionProfile" : {
+        "assetMode" : "SELF_CONTAINED",
+        "mutationMode" : "MUTATING",
+        "persistenceMode" : "SAVE_AS",
+        "sourceMode" : "EXISTING_WORKBOOK"
+      },
+      "id" : "WORKBOOK_MAINTENANCE",
+      "intentTags" : [ "office", "maintenance", "repair", "copy", "comments" ],
+      "interactionProfile" : {
+        "requiredInputKinds" : [ "SOURCE_WORKBOOK_PATH", "TARGET_SHEET_NAMES", "PERSISTENCE_TARGET_PATH" ],
+        "verificationKinds" : [ "FACT_READBACK", "HEALTH_ANALYSIS" ]
+      },
+      "optionalFeatures" : [ "Workbook-level findings after the maintenance pass.", "Comment rereads on copied sheets.", "Drawing-object rereads on copied sheets when they matter." ],
+      "outcomes" : [ "Workbook maintenance flows can inspect the source before making structural changes.", "Copy-sheet work can be followed immediately by comment and drawing readback.", "The updated workbook can be saved separately while you verify the result." ],
+      "protocolVersion" : "V3",
+      "requestFileName" : "workbook-maintenance-request.json",
+      "requestProfile" : {
+        "assertionTypes" : [ ],
+        "calculationStrategy" : "DO_NOT_CALCULATE",
+        "executionMode" : "FULL_XSSF",
+        "inspectionQueryTypes" : [ "GET_WORKBOOK_SUMMARY", "GET_COMMENTS", "GET_DRAWING_OBJECTS", "ANALYZE_WORKBOOK_FINDINGS" ],
+        "journalLevel" : "SUMMARY",
+        "markRecalculateOnOpen" : false,
+        "mutationActionTypes" : [ "COPY_SHEET" ],
+        "persistenceType" : "SAVE_AS",
+        "sourceType" : "EXISTING",
+        "stepCount" : 5
+      },
+      "requiredInputs" : [ "Existing workbook path.", "Source sheet names and destination copy names.", "Persistence target when the maintained workbook should be kept." ],
+      "requiredWorkspacePaths" : [ "task-starter-assets/workbook-ops-source.xlsx" ],
+      "summary" : "Safely copy or normalize existing workbook sheets while verifying comments, drawings, and other cloned workbook state after the change.",
+      "view" : "TASK_STARTER",
+      "workflow" : {
+        "commonPitfalls" : [ "Replace placeholder sheet names before execution; copy-sheet requires an existing source sheet.", "Maintenance flows are safest with SAVE_AS so the source workbook stays intact until verification passes.", "Use targeted rereads after COPY_SHEET instead of assuming copied comments or drawings stayed coherent." ],
+        "phases" : [ {
+          "capabilityRefs" : [ {
+            "group" : "sourceTypes",
+            "id" : "EXISTING"
+          }, {
+            "group" : "inspectionQueryTypes",
+            "id" : "GET_WORKBOOK_SUMMARY"
+          }, {
+            "group" : "inspectionQueryTypes",
+            "id" : "GET_COMMENTS"
+          } ],
+          "label" : "Inspect The Current Workbook",
+          "notes" : [ "Factual inspection is the baseline for any maintenance pass." ],
+          "objective" : "Read source workbook facts before changing sheet structure.",
+          "purpose" : "INSPECT"
+        }, {
+          "capabilityRefs" : [ {
+            "group" : "mutationActionTypes",
+            "id" : "COPY_SHEET"
+          }, {
+            "group" : "persistenceTypes",
+            "id" : "SAVE_AS"
+          } ],
+          "label" : "Apply Structural Maintenance",
+          "notes" : [ "Copy-sheet work is safest when the destination name is explicit." ],
+          "objective" : "Copy one existing sheet into a new workbook-visible destination sheet.",
+          "purpose" : "AUTHOR"
+        }, {
+          "capabilityRefs" : [ {
+            "group" : "inspectionQueryTypes",
+            "id" : "GET_COMMENTS"
+          }, {
+            "group" : "inspectionQueryTypes",
+            "id" : "GET_DRAWING_OBJECTS"
+          }, {
+            "group" : "inspectionQueryTypes",
+            "id" : "ANALYZE_WORKBOOK_FINDINGS"
+          } ],
+          "label" : "Verify The Copied Surface",
+          "notes" : [ "Verification closes the loop on maintenance changes." ],
+          "objective" : "Read back copied comments, drawings, and workbook findings immediately.",
+          "purpose" : "VERIFY"
+        } ]
+      }
+    }
+  },
+  "execution" : {
+    "exit" : 0,
+    "readback" : {
+      "bounds" : [ {
+        "sheet" : {
+          "lastColumnIndex" : 1,
+          "lastRowIndex" : 2,
+          "physicalRowCount" : 3,
+          "protection" : {
+            "kind" : "UNPROTECTED"
+          },
+          "sheetName" : "Template",
+          "visibility" : "VISIBLE"
+        },
+        "stepId" : "sheet-0",
+        "type" : "GET_SHEET_SUMMARY"
+      }, {
+        "sheet" : {
+          "lastColumnIndex" : 1,
+          "lastRowIndex" : 0,
+          "physicalRowCount" : 1,
+          "protection" : {
+            "kind" : "UNPROTECTED"
+          },
+          "sheetName" : "Summary",
+          "visibility" : "VISIBLE"
+        },
+        "stepId" : "sheet-1",
+        "type" : "GET_SHEET_SUMMARY"
+      }, {
+        "sheet" : {
+          "lastColumnIndex" : 1,
+          "lastRowIndex" : 2,
+          "physicalRowCount" : 3,
+          "protection" : {
+            "kind" : "UNPROTECTED"
+          },
+          "sheetName" : "Template Copy",
+          "visibility" : "VISIBLE"
+        },
+        "stepId" : "sheet-2",
+        "type" : "GET_SHEET_SUMMARY"
+      } ],
+      "facts" : [ {
+        "layout" : {
+          "columns" : [ {
+            "collapsed" : false,
+            "columnIndex" : 0,
+            "hidden" : false,
+            "outlineLevel" : 0,
+            "widthCharacters" : 8.0
+          }, {
+            "collapsed" : false,
+            "columnIndex" : 1,
+            "hidden" : false,
+            "outlineLevel" : 0,
+            "widthCharacters" : 8.0
+          } ],
+          "pane" : {
+            "type" : "NONE"
+          },
+          "presentation" : {
+            "display" : {
+              "displayFormulas" : false,
+              "displayGridlines" : true,
+              "displayRowColHeadings" : true,
+              "displayZeros" : true,
+              "rightToLeft" : false
+            },
+            "ignoredErrors" : [ ],
+            "outlineSummary" : {
+              "rowSumsBelow" : true,
+              "rowSumsRight" : true
+            },
+            "sheetDefaults" : {
+              "defaultColumnWidth" : 8,
+              "defaultRowHeightPoints" : 15.0
+            }
+          },
+          "rows" : [ {
+            "collapsed" : false,
+            "heightPoints" : 15.0,
+            "hidden" : false,
+            "outlineLevel" : 0,
+            "rowIndex" : 0
+          }, {
+            "collapsed" : false,
+            "heightPoints" : 15.0,
+            "hidden" : false,
+            "outlineLevel" : 0,
+            "rowIndex" : 1
+          }, {
+            "collapsed" : false,
+            "heightPoints" : 15.0,
+            "hidden" : false,
+            "outlineLevel" : 0,
+            "rowIndex" : 2
+          } ],
+          "sheetName" : "Template",
+          "zoomPercent" : 100
+        },
+        "stepId" : "sheet-0-layout",
+        "type" : "GET_SHEET_LAYOUT"
+      }, {
+        "layout" : {
+          "footer" : {
+            "center" : "",
+            "left" : "",
+            "right" : ""
+          },
+          "header" : {
+            "center" : "",
+            "left" : "",
+            "right" : ""
+          },
+          "orientation" : "PORTRAIT",
+          "printArea" : {
+            "type" : "NONE"
+          },
+          "repeatingColumns" : {
+            "type" : "NONE"
+          },
+          "repeatingRows" : {
+            "type" : "NONE"
+          },
+          "scaling" : {
+            "type" : "AUTOMATIC"
+          },
+          "setup" : {
+            "blackAndWhite" : false,
+            "columnBreaks" : [ ],
+            "copies" : 1,
+            "draft" : false,
+            "firstPageNumber" : 1,
+            "horizontallyCentered" : false,
+            "margins" : {
+              "bottom" : 0.75,
+              "footer" : 0.3,
+              "header" : 0.3,
+              "left" : 0.7,
+              "right" : 0.7,
+              "top" : 0.75
+            },
+            "paperSize" : 1,
+            "printGridlines" : false,
+            "rowBreaks" : [ ],
+            "useFirstPageNumber" : false,
+            "verticallyCentered" : false
+          },
+          "sheetName" : "Template"
+        },
+        "stepId" : "sheet-0-print",
+        "type" : "GET_PRINT_LAYOUT"
+      }, {
+        "charts" : [ ],
+        "sheetName" : "Template",
+        "stepId" : "sheet-0-charts",
+        "type" : "GET_CHARTS"
+      }, {
+        "drawingObjects" : [ {
+          "anchor" : {
+            "behavior" : "MOVE_AND_RESIZE",
+            "from" : {
+              "columnIndex" : 3,
+              "dx" : 0,
+              "dy" : 0,
+              "rowIndex" : 1
+            },
+            "to" : {
+              "columnIndex" : 6,
+              "dx" : 0,
+              "dy" : 0,
+              "rowIndex" : 5
+            },
+            "type" : "TWO_CELL"
+          },
+          "name" : "TemplateSignature",
+          "preview" : {
+            "byteSize" : 2952,
+            "contentType" : "image/png",
+            "format" : "PNG",
+            "heightPixels" : 150,
+            "sha256" : "8056509f27f1f7f714cb1eb0faaf1898c354896f93c725ea6281563b34b6ad14",
+            "widthPixels" : 400
+          },
+          "setup" : {
+            "allowComments" : false,
+            "setupId" : "<setupId-0>",
+            "signingInstructions" : "Review the workbook before signing.",
+            "suggestedSigner" : "Ada Lovelace",
+            "suggestedSigner2" : "Operations",
+            "suggestedSignerEmail" : "ada@example.com"
+          },
+          "type" : "SIGNATURE_LINE"
+        } ],
+        "sheetName" : "Template",
+        "stepId" : "sheet-0-drawing",
+        "type" : "GET_DRAWING_OBJECTS"
+      }, {
+        "cells" : [ {
+          "address" : "A1",
+          "comment" : {
+            "anchor" : {
+              "firstColumn" : 0,
+              "firstRow" : 0,
+              "lastColumn" : 3,
+              "lastRow" : 3
+            },
+            "author" : "GridGrind",
+            "text" : "Template owner column",
+            "visible" : false
+          },
+          "displayValue" : "Owner",
+          "style" : {
+            "alignment" : {
+              "horizontalAlignment" : "GENERAL",
+              "indentation" : 0,
+              "textRotation" : 0,
+              "verticalAlignment" : "BOTTOM",
+              "wrapText" : false
+            },
+            "border" : {
+              "bottom" : {
+                "type" : "NONE"
+              },
+              "left" : {
+                "type" : "NONE"
+              },
+              "right" : {
+                "type" : "NONE"
+              },
+              "top" : {
+                "type" : "NONE"
+              }
+            },
+            "fill" : {
+              "kind" : "PATTERN_ONLY",
+              "pattern" : "NONE"
+            },
+            "font" : {
+              "bold" : false,
+              "fontColor" : {
+                "indexed" : 8,
+                "kind" : "INDEXED"
+              },
+              "fontHeight" : {
+                "points" : 11,
+                "twips" : 220
+              },
+              "fontName" : "Calibri",
+              "italic" : false,
+              "strikeout" : false,
+              "underline" : false
+            },
+            "numberFormat" : "General",
+            "protection" : {
+              "hiddenFormula" : false,
+              "locked" : true
+            }
+          },
+          "textValue" : "Owner",
+          "type" : "TEXT"
+        }, {
+          "address" : "B1",
+          "displayValue" : "Status",
+          "style" : {
+            "alignment" : {
+              "horizontalAlignment" : "GENERAL",
+              "indentation" : 0,
+              "textRotation" : 0,
+              "verticalAlignment" : "BOTTOM",
+              "wrapText" : false
+            },
+            "border" : {
+              "bottom" : {
+                "type" : "NONE"
+              },
+              "left" : {
+                "type" : "NONE"
+              },
+              "right" : {
+                "type" : "NONE"
+              },
+              "top" : {
+                "type" : "NONE"
+              }
+            },
+            "fill" : {
+              "kind" : "PATTERN_ONLY",
+              "pattern" : "NONE"
+            },
+            "font" : {
+              "bold" : false,
+              "fontColor" : {
+                "indexed" : 8,
+                "kind" : "INDEXED"
+              },
+              "fontHeight" : {
+                "points" : 11,
+                "twips" : 220
+              },
+              "fontName" : "Calibri",
+              "italic" : false,
+              "strikeout" : false,
+              "underline" : false
+            },
+            "numberFormat" : "General",
+            "protection" : {
+              "hiddenFormula" : false,
+              "locked" : true
+            }
+          },
+          "textValue" : "Status",
+          "type" : "TEXT"
+        }, {
+          "address" : "A2",
+          "displayValue" : "Ada",
+          "style" : {
+            "alignment" : {
+              "horizontalAlignment" : "GENERAL",
+              "indentation" : 0,
+              "textRotation" : 0,
+              "verticalAlignment" : "BOTTOM",
+              "wrapText" : false
+            },
+            "border" : {
+              "bottom" : {
+                "type" : "NONE"
+              },
+              "left" : {
+                "type" : "NONE"
+              },
+              "right" : {
+                "type" : "NONE"
+              },
+              "top" : {
+                "type" : "NONE"
+              }
+            },
+            "fill" : {
+              "kind" : "PATTERN_ONLY",
+              "pattern" : "NONE"
+            },
+            "font" : {
+              "bold" : false,
+              "fontColor" : {
+                "indexed" : 8,
+                "kind" : "INDEXED"
+              },
+              "fontHeight" : {
+                "points" : 11,
+                "twips" : 220
+              },
+              "fontName" : "Calibri",
+              "italic" : false,
+              "strikeout" : false,
+              "underline" : false
+            },
+            "numberFormat" : "General",
+            "protection" : {
+              "hiddenFormula" : false,
+              "locked" : true
+            }
+          },
+          "textValue" : "Ada",
+          "type" : "TEXT"
+        }, {
+          "address" : "B2",
+          "displayValue" : "Ready",
+          "style" : {
+            "alignment" : {
+              "horizontalAlignment" : "GENERAL",
+              "indentation" : 0,
+              "textRotation" : 0,
+              "verticalAlignment" : "BOTTOM",
+              "wrapText" : false
+            },
+            "border" : {
+              "bottom" : {
+                "type" : "NONE"
+              },
+              "left" : {
+                "type" : "NONE"
+              },
+              "right" : {
+                "type" : "NONE"
+              },
+              "top" : {
+                "type" : "NONE"
+              }
+            },
+            "fill" : {
+              "kind" : "PATTERN_ONLY",
+              "pattern" : "NONE"
+            },
+            "font" : {
+              "bold" : false,
+              "fontColor" : {
+                "indexed" : 8,
+                "kind" : "INDEXED"
+              },
+              "fontHeight" : {
+                "points" : 11,
+                "twips" : 220
+              },
+              "fontName" : "Calibri",
+              "italic" : false,
+              "strikeout" : false,
+              "underline" : false
+            },
+            "numberFormat" : "General",
+            "protection" : {
+              "hiddenFormula" : false,
+              "locked" : true
+            }
+          },
+          "textValue" : "Ready",
+          "type" : "TEXT"
+        }, {
+          "address" : "A3",
+          "displayValue" : "Lin",
+          "style" : {
+            "alignment" : {
+              "horizontalAlignment" : "GENERAL",
+              "indentation" : 0,
+              "textRotation" : 0,
+              "verticalAlignment" : "BOTTOM",
+              "wrapText" : false
+            },
+            "border" : {
+              "bottom" : {
+                "type" : "NONE"
+              },
+              "left" : {
+                "type" : "NONE"
+              },
+              "right" : {
+                "type" : "NONE"
+              },
+              "top" : {
+                "type" : "NONE"
+              }
+            },
+            "fill" : {
+              "kind" : "PATTERN_ONLY",
+              "pattern" : "NONE"
+            },
+            "font" : {
+              "bold" : false,
+              "fontColor" : {
+                "indexed" : 8,
+                "kind" : "INDEXED"
+              },
+              "fontHeight" : {
+                "points" : 11,
+                "twips" : 220
+              },
+              "fontName" : "Calibri",
+              "italic" : false,
+              "strikeout" : false,
+              "underline" : false
+            },
+            "numberFormat" : "General",
+            "protection" : {
+              "hiddenFormula" : false,
+              "locked" : true
+            }
+          },
+          "textValue" : "Lin",
+          "type" : "TEXT"
+        }, {
+          "address" : "B3",
+          "displayValue" : "Review",
+          "style" : {
+            "alignment" : {
+              "horizontalAlignment" : "GENERAL",
+              "indentation" : 0,
+              "textRotation" : 0,
+              "verticalAlignment" : "BOTTOM",
+              "wrapText" : false
+            },
+            "border" : {
+              "bottom" : {
+                "type" : "NONE"
+              },
+              "left" : {
+                "type" : "NONE"
+              },
+              "right" : {
+                "type" : "NONE"
+              },
+              "top" : {
+                "type" : "NONE"
+              }
+            },
+            "fill" : {
+              "kind" : "PATTERN_ONLY",
+              "pattern" : "NONE"
+            },
+            "font" : {
+              "bold" : false,
+              "fontColor" : {
+                "indexed" : 8,
+                "kind" : "INDEXED"
+              },
+              "fontHeight" : {
+                "points" : 11,
+                "twips" : 220
+              },
+              "fontName" : "Calibri",
+              "italic" : false,
+              "strikeout" : false,
+              "underline" : false
+            },
+            "numberFormat" : "General",
+            "protection" : {
+              "hiddenFormula" : false,
+              "locked" : true
+            }
+          },
+          "textValue" : "Review",
+          "type" : "TEXT"
+        } ],
+        "sheetName" : "Template",
+        "stepId" : "sheet-0-cells",
+        "type" : "GET_CELLS"
+      }, {
+        "sheetName" : "Template",
+        "stepId" : "sheet-0-GET_DATA_VALIDATIONS",
+        "type" : "GET_DATA_VALIDATIONS",
+        "validations" : [ ]
+      }, {
+        "conditionalFormattingBlocks" : [ ],
+        "sheetName" : "Template",
+        "stepId" : "sheet-0-GET_CONDITIONAL_FORMATTING",
+        "type" : "GET_CONDITIONAL_FORMATTING"
+      }, {
+        "layout" : {
+          "columns" : [ {
+            "collapsed" : false,
+            "columnIndex" : 0,
+            "hidden" : false,
+            "outlineLevel" : 0,
+            "widthCharacters" : 8.0
+          }, {
+            "collapsed" : false,
+            "columnIndex" : 1,
+            "hidden" : false,
+            "outlineLevel" : 0,
+            "widthCharacters" : 8.0
+          } ],
+          "pane" : {
+            "type" : "NONE"
+          },
+          "presentation" : {
+            "display" : {
+              "displayFormulas" : false,
+              "displayGridlines" : true,
+              "displayRowColHeadings" : true,
+              "displayZeros" : true,
+              "rightToLeft" : false
+            },
+            "ignoredErrors" : [ ],
+            "outlineSummary" : {
+              "rowSumsBelow" : true,
+              "rowSumsRight" : true
+            },
+            "sheetDefaults" : {
+              "defaultColumnWidth" : 8,
+              "defaultRowHeightPoints" : 15.0
+            }
+          },
+          "rows" : [ {
+            "collapsed" : false,
+            "heightPoints" : 15.0,
+            "hidden" : false,
+            "outlineLevel" : 0,
+            "rowIndex" : 0
+          } ],
+          "sheetName" : "Summary",
+          "zoomPercent" : 100
+        },
+        "stepId" : "sheet-7-layout",
+        "type" : "GET_SHEET_LAYOUT"
+      }, {
+        "layout" : {
+          "footer" : {
+            "center" : "",
+            "left" : "",
+            "right" : ""
+          },
+          "header" : {
+            "center" : "",
+            "left" : "",
+            "right" : ""
+          },
+          "orientation" : "PORTRAIT",
+          "printArea" : {
+            "type" : "NONE"
+          },
+          "repeatingColumns" : {
+            "type" : "NONE"
+          },
+          "repeatingRows" : {
+            "type" : "NONE"
+          },
+          "scaling" : {
+            "type" : "AUTOMATIC"
+          },
+          "setup" : {
+            "blackAndWhite" : false,
+            "columnBreaks" : [ ],
+            "copies" : 1,
+            "draft" : false,
+            "firstPageNumber" : 1,
+            "horizontallyCentered" : false,
+            "margins" : {
+              "bottom" : 0.75,
+              "footer" : 0.3,
+              "header" : 0.3,
+              "left" : 0.7,
+              "right" : 0.7,
+              "top" : 0.75
+            },
+            "paperSize" : 1,
+            "printGridlines" : false,
+            "rowBreaks" : [ ],
+            "useFirstPageNumber" : false,
+            "verticallyCentered" : false
+          },
+          "sheetName" : "Summary"
+        },
+        "stepId" : "sheet-7-print",
+        "type" : "GET_PRINT_LAYOUT"
+      }, {
+        "charts" : [ ],
+        "sheetName" : "Summary",
+        "stepId" : "sheet-7-charts",
+        "type" : "GET_CHARTS"
+      }, {
+        "drawingObjects" : [ ],
+        "sheetName" : "Summary",
+        "stepId" : "sheet-7-drawing",
+        "type" : "GET_DRAWING_OBJECTS"
+      }, {
+        "cells" : [ {
+          "address" : "A1",
+          "displayValue" : "Template status",
+          "style" : {
+            "alignment" : {
+              "horizontalAlignment" : "GENERAL",
+              "indentation" : 0,
+              "textRotation" : 0,
+              "verticalAlignment" : "BOTTOM",
+              "wrapText" : false
+            },
+            "border" : {
+              "bottom" : {
+                "type" : "NONE"
+              },
+              "left" : {
+                "type" : "NONE"
+              },
+              "right" : {
+                "type" : "NONE"
+              },
+              "top" : {
+                "type" : "NONE"
+              }
+            },
+            "fill" : {
+              "kind" : "PATTERN_ONLY",
+              "pattern" : "NONE"
+            },
+            "font" : {
+              "bold" : false,
+              "fontColor" : {
+                "indexed" : 8,
+                "kind" : "INDEXED"
+              },
+              "fontHeight" : {
+                "points" : 11,
+                "twips" : 220
+              },
+              "fontName" : "Calibri",
+              "italic" : false,
+              "strikeout" : false,
+              "underline" : false
+            },
+            "numberFormat" : "General",
+            "protection" : {
+              "hiddenFormula" : false,
+              "locked" : true
+            }
+          },
+          "textValue" : "Template status",
+          "type" : "TEXT"
+        }, {
+          "address" : "B1",
+          "displayValue" : "Ready",
+          "evaluation" : {
+            "textValue" : "Ready",
+            "type" : "TEXT"
+          },
+          "formula" : "'Template'!B2",
+          "style" : {
+            "alignment" : {
+              "horizontalAlignment" : "GENERAL",
+              "indentation" : 0,
+              "textRotation" : 0,
+              "verticalAlignment" : "BOTTOM",
+              "wrapText" : false
+            },
+            "border" : {
+              "bottom" : {
+                "type" : "NONE"
+              },
+              "left" : {
+                "type" : "NONE"
+              },
+              "right" : {
+                "type" : "NONE"
+              },
+              "top" : {
+                "type" : "NONE"
+              }
+            },
+            "fill" : {
+              "kind" : "PATTERN_ONLY",
+              "pattern" : "NONE"
+            },
+            "font" : {
+              "bold" : false,
+              "fontColor" : {
+                "indexed" : 8,
+                "kind" : "INDEXED"
+              },
+              "fontHeight" : {
+                "points" : 11,
+                "twips" : 220
+              },
+              "fontName" : "Calibri",
+              "italic" : false,
+              "strikeout" : false,
+              "underline" : false
+            },
+            "numberFormat" : "General",
+            "protection" : {
+              "hiddenFormula" : false,
+              "locked" : true
+            }
+          },
+          "type" : "FORMULA"
+        } ],
+        "sheetName" : "Summary",
+        "stepId" : "sheet-7-cells",
+        "type" : "GET_CELLS"
+      }, {
+        "sheetName" : "Summary",
+        "stepId" : "sheet-7-GET_DATA_VALIDATIONS",
+        "type" : "GET_DATA_VALIDATIONS",
+        "validations" : [ ]
+      }, {
+        "conditionalFormattingBlocks" : [ ],
+        "sheetName" : "Summary",
+        "stepId" : "sheet-7-GET_CONDITIONAL_FORMATTING",
+        "type" : "GET_CONDITIONAL_FORMATTING"
+      }, {
+        "layout" : {
+          "columns" : [ {
+            "collapsed" : false,
+            "columnIndex" : 0,
+            "hidden" : false,
+            "outlineLevel" : 0,
+            "widthCharacters" : 8.0
+          }, {
+            "collapsed" : false,
+            "columnIndex" : 1,
+            "hidden" : false,
+            "outlineLevel" : 0,
+            "widthCharacters" : 8.0
+          } ],
+          "pane" : {
+            "type" : "NONE"
+          },
+          "presentation" : {
+            "display" : {
+              "displayFormulas" : false,
+              "displayGridlines" : true,
+              "displayRowColHeadings" : true,
+              "displayZeros" : true,
+              "rightToLeft" : false
+            },
+            "ignoredErrors" : [ ],
+            "outlineSummary" : {
+              "rowSumsBelow" : true,
+              "rowSumsRight" : true
+            },
+            "sheetDefaults" : {
+              "defaultColumnWidth" : 8,
+              "defaultRowHeightPoints" : 15.0
+            }
+          },
+          "rows" : [ {
+            "collapsed" : false,
+            "heightPoints" : 15.0,
+            "hidden" : false,
+            "outlineLevel" : 0,
+            "rowIndex" : 0
+          }, {
+            "collapsed" : false,
+            "heightPoints" : 15.0,
+            "hidden" : false,
+            "outlineLevel" : 0,
+            "rowIndex" : 1
+          }, {
+            "collapsed" : false,
+            "heightPoints" : 15.0,
+            "hidden" : false,
+            "outlineLevel" : 0,
+            "rowIndex" : 2
+          } ],
+          "sheetName" : "Template Copy",
+          "zoomPercent" : 100
+        },
+        "stepId" : "sheet-14-layout",
+        "type" : "GET_SHEET_LAYOUT"
+      }, {
+        "layout" : {
+          "footer" : {
+            "center" : "",
+            "left" : "",
+            "right" : ""
+          },
+          "header" : {
+            "center" : "",
+            "left" : "",
+            "right" : ""
+          },
+          "orientation" : "PORTRAIT",
+          "printArea" : {
+            "type" : "NONE"
+          },
+          "repeatingColumns" : {
+            "type" : "NONE"
+          },
+          "repeatingRows" : {
+            "type" : "NONE"
+          },
+          "scaling" : {
+            "type" : "AUTOMATIC"
+          },
+          "setup" : {
+            "blackAndWhite" : false,
+            "columnBreaks" : [ ],
+            "copies" : 1,
+            "draft" : false,
+            "firstPageNumber" : 1,
+            "horizontallyCentered" : false,
+            "margins" : {
+              "bottom" : 0.75,
+              "footer" : 0.3,
+              "header" : 0.3,
+              "left" : 0.7,
+              "right" : 0.7,
+              "top" : 0.75
+            },
+            "paperSize" : 1,
+            "printGridlines" : false,
+            "rowBreaks" : [ ],
+            "useFirstPageNumber" : false,
+            "verticallyCentered" : false
+          },
+          "sheetName" : "Template Copy"
+        },
+        "stepId" : "sheet-14-print",
+        "type" : "GET_PRINT_LAYOUT"
+      }, {
+        "charts" : [ ],
+        "sheetName" : "Template Copy",
+        "stepId" : "sheet-14-charts",
+        "type" : "GET_CHARTS"
+      }, {
+        "drawingObjects" : [ {
+          "anchor" : {
+            "behavior" : "MOVE_AND_RESIZE",
+            "from" : {
+              "columnIndex" : 3,
+              "dx" : 0,
+              "dy" : 0,
+              "rowIndex" : 1
+            },
+            "to" : {
+              "columnIndex" : 6,
+              "dx" : 0,
+              "dy" : 0,
+              "rowIndex" : 5
+            },
+            "type" : "TWO_CELL"
+          },
+          "name" : "TemplateSignature",
+          "preview" : {
+            "byteSize" : 2952,
+            "contentType" : "image/png",
+            "format" : "PNG",
+            "heightPixels" : 150,
+            "sha256" : "8056509f27f1f7f714cb1eb0faaf1898c354896f93c725ea6281563b34b6ad14",
+            "widthPixels" : 400
+          },
+          "setup" : {
+            "allowComments" : false,
+            "setupId" : "<setupId-0>",
+            "signingInstructions" : "Review the workbook before signing.",
+            "suggestedSigner" : "Ada Lovelace",
+            "suggestedSigner2" : "Operations",
+            "suggestedSignerEmail" : "ada@example.com"
+          },
+          "type" : "SIGNATURE_LINE"
+        } ],
+        "sheetName" : "Template Copy",
+        "stepId" : "sheet-14-drawing",
+        "type" : "GET_DRAWING_OBJECTS"
+      }, {
+        "cells" : [ {
+          "address" : "A1",
+          "comment" : {
+            "anchor" : {
+              "firstColumn" : 0,
+              "firstRow" : 0,
+              "lastColumn" : 3,
+              "lastRow" : 3
+            },
+            "author" : "GridGrind",
+            "text" : "Template owner column",
+            "visible" : false
+          },
+          "displayValue" : "Owner",
+          "style" : {
+            "alignment" : {
+              "horizontalAlignment" : "GENERAL",
+              "indentation" : 0,
+              "textRotation" : 0,
+              "verticalAlignment" : "BOTTOM",
+              "wrapText" : false
+            },
+            "border" : {
+              "bottom" : {
+                "type" : "NONE"
+              },
+              "left" : {
+                "type" : "NONE"
+              },
+              "right" : {
+                "type" : "NONE"
+              },
+              "top" : {
+                "type" : "NONE"
+              }
+            },
+            "fill" : {
+              "kind" : "PATTERN_ONLY",
+              "pattern" : "NONE"
+            },
+            "font" : {
+              "bold" : false,
+              "fontColor" : {
+                "indexed" : 8,
+                "kind" : "INDEXED"
+              },
+              "fontHeight" : {
+                "points" : 11,
+                "twips" : 220
+              },
+              "fontName" : "Calibri",
+              "italic" : false,
+              "strikeout" : false,
+              "underline" : false
+            },
+            "numberFormat" : "General",
+            "protection" : {
+              "hiddenFormula" : false,
+              "locked" : true
+            }
+          },
+          "textValue" : "Owner",
+          "type" : "TEXT"
+        }, {
+          "address" : "B1",
+          "displayValue" : "Status",
+          "style" : {
+            "alignment" : {
+              "horizontalAlignment" : "GENERAL",
+              "indentation" : 0,
+              "textRotation" : 0,
+              "verticalAlignment" : "BOTTOM",
+              "wrapText" : false
+            },
+            "border" : {
+              "bottom" : {
+                "type" : "NONE"
+              },
+              "left" : {
+                "type" : "NONE"
+              },
+              "right" : {
+                "type" : "NONE"
+              },
+              "top" : {
+                "type" : "NONE"
+              }
+            },
+            "fill" : {
+              "kind" : "PATTERN_ONLY",
+              "pattern" : "NONE"
+            },
+            "font" : {
+              "bold" : false,
+              "fontColor" : {
+                "indexed" : 8,
+                "kind" : "INDEXED"
+              },
+              "fontHeight" : {
+                "points" : 11,
+                "twips" : 220
+              },
+              "fontName" : "Calibri",
+              "italic" : false,
+              "strikeout" : false,
+              "underline" : false
+            },
+            "numberFormat" : "General",
+            "protection" : {
+              "hiddenFormula" : false,
+              "locked" : true
+            }
+          },
+          "textValue" : "Status",
+          "type" : "TEXT"
+        }, {
+          "address" : "A2",
+          "displayValue" : "Ada",
+          "style" : {
+            "alignment" : {
+              "horizontalAlignment" : "GENERAL",
+              "indentation" : 0,
+              "textRotation" : 0,
+              "verticalAlignment" : "BOTTOM",
+              "wrapText" : false
+            },
+            "border" : {
+              "bottom" : {
+                "type" : "NONE"
+              },
+              "left" : {
+                "type" : "NONE"
+              },
+              "right" : {
+                "type" : "NONE"
+              },
+              "top" : {
+                "type" : "NONE"
+              }
+            },
+            "fill" : {
+              "kind" : "PATTERN_ONLY",
+              "pattern" : "NONE"
+            },
+            "font" : {
+              "bold" : false,
+              "fontColor" : {
+                "indexed" : 8,
+                "kind" : "INDEXED"
+              },
+              "fontHeight" : {
+                "points" : 11,
+                "twips" : 220
+              },
+              "fontName" : "Calibri",
+              "italic" : false,
+              "strikeout" : false,
+              "underline" : false
+            },
+            "numberFormat" : "General",
+            "protection" : {
+              "hiddenFormula" : false,
+              "locked" : true
+            }
+          },
+          "textValue" : "Ada",
+          "type" : "TEXT"
+        }, {
+          "address" : "B2",
+          "displayValue" : "Ready",
+          "style" : {
+            "alignment" : {
+              "horizontalAlignment" : "GENERAL",
+              "indentation" : 0,
+              "textRotation" : 0,
+              "verticalAlignment" : "BOTTOM",
+              "wrapText" : false
+            },
+            "border" : {
+              "bottom" : {
+                "type" : "NONE"
+              },
+              "left" : {
+                "type" : "NONE"
+              },
+              "right" : {
+                "type" : "NONE"
+              },
+              "top" : {
+                "type" : "NONE"
+              }
+            },
+            "fill" : {
+              "kind" : "PATTERN_ONLY",
+              "pattern" : "NONE"
+            },
+            "font" : {
+              "bold" : false,
+              "fontColor" : {
+                "indexed" : 8,
+                "kind" : "INDEXED"
+              },
+              "fontHeight" : {
+                "points" : 11,
+                "twips" : 220
+              },
+              "fontName" : "Calibri",
+              "italic" : false,
+              "strikeout" : false,
+              "underline" : false
+            },
+            "numberFormat" : "General",
+            "protection" : {
+              "hiddenFormula" : false,
+              "locked" : true
+            }
+          },
+          "textValue" : "Ready",
+          "type" : "TEXT"
+        }, {
+          "address" : "A3",
+          "displayValue" : "Lin",
+          "style" : {
+            "alignment" : {
+              "horizontalAlignment" : "GENERAL",
+              "indentation" : 0,
+              "textRotation" : 0,
+              "verticalAlignment" : "BOTTOM",
+              "wrapText" : false
+            },
+            "border" : {
+              "bottom" : {
+                "type" : "NONE"
+              },
+              "left" : {
+                "type" : "NONE"
+              },
+              "right" : {
+                "type" : "NONE"
+              },
+              "top" : {
+                "type" : "NONE"
+              }
+            },
+            "fill" : {
+              "kind" : "PATTERN_ONLY",
+              "pattern" : "NONE"
+            },
+            "font" : {
+              "bold" : false,
+              "fontColor" : {
+                "indexed" : 8,
+                "kind" : "INDEXED"
+              },
+              "fontHeight" : {
+                "points" : 11,
+                "twips" : 220
+              },
+              "fontName" : "Calibri",
+              "italic" : false,
+              "strikeout" : false,
+              "underline" : false
+            },
+            "numberFormat" : "General",
+            "protection" : {
+              "hiddenFormula" : false,
+              "locked" : true
+            }
+          },
+          "textValue" : "Lin",
+          "type" : "TEXT"
+        }, {
+          "address" : "B3",
+          "displayValue" : "Review",
+          "style" : {
+            "alignment" : {
+              "horizontalAlignment" : "GENERAL",
+              "indentation" : 0,
+              "textRotation" : 0,
+              "verticalAlignment" : "BOTTOM",
+              "wrapText" : false
+            },
+            "border" : {
+              "bottom" : {
+                "type" : "NONE"
+              },
+              "left" : {
+                "type" : "NONE"
+              },
+              "right" : {
+                "type" : "NONE"
+              },
+              "top" : {
+                "type" : "NONE"
+              }
+            },
+            "fill" : {
+              "kind" : "PATTERN_ONLY",
+              "pattern" : "NONE"
+            },
+            "font" : {
+              "bold" : false,
+              "fontColor" : {
+                "indexed" : 8,
+                "kind" : "INDEXED"
+              },
+              "fontHeight" : {
+                "points" : 11,
+                "twips" : 220
+              },
+              "fontName" : "Calibri",
+              "italic" : false,
+              "strikeout" : false,
+              "underline" : false
+            },
+            "numberFormat" : "General",
+            "protection" : {
+              "hiddenFormula" : false,
+              "locked" : true
+            }
+          },
+          "textValue" : "Review",
+          "type" : "TEXT"
+        } ],
+        "sheetName" : "Template Copy",
+        "stepId" : "sheet-14-cells",
+        "type" : "GET_CELLS"
+      }, {
+        "sheetName" : "Template Copy",
+        "stepId" : "sheet-14-GET_DATA_VALIDATIONS",
+        "type" : "GET_DATA_VALIDATIONS",
+        "validations" : [ ]
+      }, {
+        "conditionalFormattingBlocks" : [ ],
+        "sheetName" : "Template Copy",
+        "stepId" : "sheet-14-GET_CONDITIONAL_FORMATTING",
+        "type" : "GET_CONDITIONAL_FORMATTING"
+      }, {
+        "stepId" : "tables",
+        "tables" : [ ],
+        "type" : "GET_TABLES"
+      }, {
+        "pivotTables" : [ ],
+        "stepId" : "pivots",
+        "type" : "GET_PIVOT_TABLES"
+      }, {
+        "analysis" : {
+          "findings" : [ ],
+          "summary" : {
+            "errorCount" : 0,
+            "infoCount" : 0,
+            "totalCount" : 0,
+            "warningCount" : 0
+          }
+        },
+        "stepId" : "findings",
+        "type" : "ANALYZE_WORKBOOK_FINDINGS"
+      } ],
+      "summary" : [ {
+        "stepId" : "summary",
+        "type" : "GET_WORKBOOK_SUMMARY",
+        "workbook" : {
+          "activeSheetName" : "Template",
+          "forceFormulaRecalculationOnOpen" : false,
+          "kind" : "WITH_SHEETS",
+          "namedRangeCount" : 0,
+          "selectedSheetNames" : [ "Template" ],
+          "sheetCount" : 3,
+          "sheetNames" : [ "Template", "Summary", "Template Copy" ]
+        }
+      } ]
+    },
+    "stderr" : "",
+    "stdout" : {
+      "assertions" : [ ],
+      "calculation" : {
+        "execution" : {
+          "cachesCleared" : false,
+          "evaluatedFormulaCount" : 0,
+          "markRecalculateOnOpenApplied" : false,
+          "status" : "NOT_REQUESTED"
+        },
+        "policy" : { }
+      },
+      "evidence" : {
+        "admission" : {
+          "materializedInputs" : [ {
+            "byteSize" : 9105,
+            "path" : "<workspace>/recipe/task-starter-assets/workbook-ops-source.xlsx",
+            "role" : "source",
+            "sha256" : "bd7da95c2d02b4b8fbdb8a7c174a8d7d1a7ba27169170f38558e5e8cbae8c052"
+          } ],
+          "operations" : [ {
+            "effects" : [ "READ_WORKBOOK" ],
+            "footprint" : "TARGET_BOUNDED",
+            "operationId" : "GET_WORKBOOK_SUMMARY"
+          }, {
+            "effects" : [ "READ_WORKBOOK", "MUTATE_WORKBOOK", "CELLS", "FORMULAS", "STYLES", "HYPERLINKS", "COMMENTS", "DRAWINGS", "WORKBOOK_STRUCTURE", "SHEET_STRUCTURE", "ROWS", "COLUMNS", "TABLES", "NAMED_RANGES", "DATA_VALIDATIONS", "CONDITIONAL_FORMATTING", "AUTOFILTERS", "PIVOT_TABLES", "WORKBOOK_METADATA", "WORKBOOK_SECURITY" ],
+            "footprint" : "CONSERVATIVE_WORKBOOK_WIDE",
+            "operationId" : "COPY_SHEET"
+          }, {
+            "effects" : [ "READ_WORKBOOK" ],
+            "footprint" : "TARGET_BOUNDED",
+            "operationId" : "GET_COMMENTS"
+          }, {
+            "effects" : [ "READ_WORKBOOK" ],
+            "footprint" : "TARGET_BOUNDED",
+            "operationId" : "GET_DRAWING_OBJECTS"
+          }, {
+            "effects" : [ "READ_WORKBOOK" ],
+            "footprint" : "TARGET_BOUNDED",
+            "operationId" : "ANALYZE_WORKBOOK_FINDINGS"
+          } ]
+        },
+        "computational" : {
+          "status" : "NOT_REQUESTED"
+        },
+        "presentational" : {
+          "status" : "NOT_ASSESSED"
+        },
+        "preservation" : [ {
+          "status" : "NOT_REQUESTED"
+        } ],
+        "structural" : {
+          "status" : "ESTABLISHED"
+        },
+        "taskSpecific" : {
+          "status" : "NOT_REQUESTED"
+        }
+      },
+      "inspections" : [ {
+        "stepId" : "read-source-workbook",
+        "type" : "GET_WORKBOOK_SUMMARY",
+        "workbook" : {
+          "activeSheetName" : "Template",
+          "forceFormulaRecalculationOnOpen" : false,
+          "kind" : "WITH_SHEETS",
+          "namedRangeCount" : 0,
+          "selectedSheetNames" : [ "Template" ],
+          "sheetCount" : 2,
+          "sheetNames" : [ "Template", "Summary" ]
+        }
+      }, {
+        "comments" : [ {
+          "address" : "A1",
+          "comment" : {
+            "anchor" : {
+              "firstColumn" : 0,
+              "firstRow" : 0,
+              "lastColumn" : 3,
+              "lastRow" : 3
+            },
+            "author" : "GridGrind",
+            "text" : "Template owner column",
+            "visible" : false
+          }
+        } ],
+        "sheetName" : "Template Copy",
+        "stepId" : "read-copied-comments",
+        "type" : "GET_COMMENTS"
+      }, {
+        "drawingObjects" : [ {
+          "anchor" : {
+            "behavior" : "MOVE_AND_RESIZE",
+            "from" : {
+              "columnIndex" : 3,
+              "dx" : 0,
+              "dy" : 0,
+              "rowIndex" : 1
+            },
+            "to" : {
+              "columnIndex" : 6,
+              "dx" : 0,
+              "dy" : 0,
+              "rowIndex" : 5
+            },
+            "type" : "TWO_CELL"
+          },
+          "name" : "TemplateSignature",
+          "preview" : {
+            "byteSize" : 2952,
+            "contentType" : "image/png",
+            "format" : "PNG",
+            "heightPixels" : 150,
+            "sha256" : "8056509f27f1f7f714cb1eb0faaf1898c354896f93c725ea6281563b34b6ad14",
+            "widthPixels" : 400
+          },
+          "setup" : {
+            "allowComments" : false,
+            "setupId" : "<setupId-0>",
+            "signingInstructions" : "Review the workbook before signing.",
+            "suggestedSigner" : "Ada Lovelace",
+            "suggestedSigner2" : "Operations",
+            "suggestedSignerEmail" : "ada@example.com"
+          },
+          "type" : "SIGNATURE_LINE"
+        } ],
+        "sheetName" : "Template Copy",
+        "stepId" : "read-copied-drawing-objects",
+        "type" : "GET_DRAWING_OBJECTS"
+      }, {
+        "analysis" : {
+          "findings" : [ ],
+          "summary" : {
+            "errorCount" : 0,
+            "infoCount" : 0,
+            "totalCount" : 0,
+            "warningCount" : 0
+          }
+        },
+        "stepId" : "read-maintenance-findings",
+        "type" : "ANALYZE_WORKBOOK_FINDINGS"
+      } ],
+      "journal" : {
+        "calculation" : {
+          "execution" : {
+            "status" : "NOT_REQUESTED"
+          },
+          "preflight" : {
+            "status" : "NOT_REQUESTED"
+          }
+        },
+        "close" : {
+          "status" : "SUCCEEDED"
+        },
+        "inputResolution" : {
+          "status" : "SUCCEEDED"
+        },
+        "level" : "SUMMARY",
+        "open" : {
+          "status" : "SUCCEEDED"
+        },
+        "outcome" : {
+          "completedStepCount" : 5,
+          "durationMillis" : "<durationMillis>",
+          "plannedStepCount" : 5,
+          "status" : "SUCCEEDED"
+        },
+        "persistencePhase" : {
+          "status" : "SUCCEEDED"
+        },
+        "source" : {
+          "path" : "<workspace>/recipe/task-starter-assets/workbook-ops-source.xlsx",
+          "type" : "EXISTING"
+        },
+        "steps" : [ {
+          "outcome" : "SUCCEEDED",
+          "phase" : {
+            "status" : "SUCCEEDED"
+          },
+          "resolvedTargets" : [ {
+            "kind" : "WORKBOOK",
+            "label" : "Current workbook"
+          } ],
+          "stepId" : "read-source-workbook",
+          "stepIndex" : 0,
+          "stepKind" : "INSPECTION",
+          "stepType" : "GET_WORKBOOK_SUMMARY"
+        }, {
+          "outcome" : "SUCCEEDED",
+          "phase" : {
+            "status" : "SUCCEEDED"
+          },
+          "resolvedTargets" : [ {
+            "kind" : "SHEET",
+            "label" : "Sheet Template"
+          } ],
+          "stepId" : "copy-template-sheet",
+          "stepIndex" : 1,
+          "stepKind" : "MUTATION",
+          "stepType" : "COPY_SHEET"
+        }, {
+          "outcome" : "SUCCEEDED",
+          "phase" : {
+            "status" : "SUCCEEDED"
+          },
+          "resolvedTargets" : [ {
+            "kind" : "CELL",
+            "label" : "All used cells on Template Copy"
+          } ],
+          "stepId" : "read-copied-comments",
+          "stepIndex" : 2,
+          "stepKind" : "INSPECTION",
+          "stepType" : "GET_COMMENTS"
+        }, {
+          "outcome" : "SUCCEEDED",
+          "phase" : {
+            "status" : "SUCCEEDED"
+          },
+          "resolvedTargets" : [ {
+            "kind" : "DRAWING",
+            "label" : "All drawing objects on Template Copy"
+          } ],
+          "stepId" : "read-copied-drawing-objects",
+          "stepIndex" : 3,
+          "stepKind" : "INSPECTION",
+          "stepType" : "GET_DRAWING_OBJECTS"
+        }, {
+          "outcome" : "SUCCEEDED",
+          "phase" : {
+            "status" : "SUCCEEDED"
+          },
+          "resolvedTargets" : [ {
+            "kind" : "WORKBOOK",
+            "label" : "Current workbook"
+          } ],
+          "stepId" : "read-maintenance-findings",
+          "stepIndex" : 4,
+          "stepKind" : "INSPECTION",
+          "stepType" : "ANALYZE_WORKBOOK_FINDINGS"
+        } ],
+        "validation" : {
+          "status" : "SUCCEEDED"
+        }
+      },
+      "persistence" : {
+        "publication" : {
+          "byteSize" : "<byteSize>",
+          "durability" : {
+            "level" : "FILE_AND_DIRECTORY_SYNCED"
+          },
+          "executionPath" : "<workspace>/recipe/generated-workbooks/workbook-maintenance.xlsx",
+          "sha256" : "<sha256>",
+          "stagedArtifactVerification" : { },
+          "status" : "PUBLISHED"
+        },
+        "requestedPath" : "generated-workbooks/workbook-maintenance.xlsx",
+        "type" : "SAVE_AS"
+      },
+      "planId" : "workbook-maintenance-starter",
+      "protocolVersion" : "V3",
+      "status" : "SUCCEEDED",
+      "warnings" : [ ]
+    }
+  },
+  "materializedRequest" : {
+    "persistence" : {
+      "ifExists" : "REPLACE",
+      "path" : "generated-workbooks/workbook-maintenance.xlsx",
+      "security" : {
+        "encryption" : {
+          "type" : "NONE"
+        },
+        "signature" : {
+          "type" : "NONE"
+        }
+      },
+      "type" : "SAVE_AS"
+    },
+    "planId" : "workbook-maintenance-starter",
+    "protocolVersion" : "V3",
+    "source" : {
+      "path" : "task-starter-assets/workbook-ops-source.xlsx",
+      "type" : "EXISTING"
+    },
+    "steps" : [ {
+      "query" : {
+        "type" : "GET_WORKBOOK_SUMMARY"
+      },
+      "stepId" : "read-source-workbook",
+      "target" : {
+        "type" : "WORKBOOK_CURRENT"
+      }
+    }, {
+      "action" : {
+        "newSheetName" : "Template Copy",
+        "position" : {
+          "type" : "APPEND_AT_END"
+        },
+        "type" : "COPY_SHEET"
+      },
+      "stepId" : "copy-template-sheet",
+      "target" : {
+        "name" : "Template",
+        "type" : "SHEET_BY_NAME"
+      }
+    }, {
+      "query" : {
+        "type" : "GET_COMMENTS"
+      },
+      "stepId" : "read-copied-comments",
+      "target" : {
+        "sheetName" : "Template Copy",
+        "type" : "CELL_ALL_USED_IN_SHEET"
+      }
+    }, {
+      "query" : {
+        "type" : "GET_DRAWING_OBJECTS"
+      },
+      "stepId" : "read-copied-drawing-objects",
+      "target" : {
+        "sheetName" : "Template Copy",
+        "type" : "DRAWING_OBJECT_ALL_ON_SHEET"
+      }
+    }, {
+      "query" : {
+        "type" : "ANALYZE_WORKBOOK_FINDINGS"
+      },
+      "stepId" : "read-maintenance-findings",
+      "target" : {
+        "type" : "WORKBOOK_CURRENT"
+      }
+    } ]
+  },
+  "print" : {
+    "exit" : 2,
+    "stderr" : "",
+    "stdout" : {
+      "command" : "print-recipe",
+      "problems" : [ {
+        "category" : "ARGUMENTS",
+        "causes" : [ ],
+        "code" : "INVALID_ARGUMENTS",
+        "context" : {
+          "argument" : {
+            "argument" : "--materialize-recipe",
+            "type" : "NAMED"
+          },
+          "stage" : "PARSE_ARGUMENTS"
+        },
+        "message" : "Asset-backed recipes require --materialize-recipe --lookup WORKBOOK_MAINTENANCE --workspace <new-directory>.",
+        "recovery" : "CHANGE_REQUEST",
+        "resolution" : "Run gridgrind --help for the synopsis, --help-protocol for the authoritative request contract, or --help-guidance for workflows and examples.",
+        "title" : "Invalid CLI arguments"
+      } ],
+      "protocolVersion" : "V3",
+      "status" : "REJECTED"
+    }
+  }
+}

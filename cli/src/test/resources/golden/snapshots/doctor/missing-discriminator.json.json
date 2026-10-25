@@ -1,0 +1,34 @@
+{
+  "exit" : 1,
+  "stderr" : "",
+  "stdout" : {
+    "problems" : [ {
+      "category" : "REQUEST",
+      "causes" : [ {
+        "code" : "INVALID_REQUEST_SHAPE",
+        "message" : "Missing required field 'source.type'",
+        "stage" : "READ_REQUEST"
+      } ],
+      "code" : "INVALID_REQUEST_SHAPE",
+      "context" : {
+        "json" : {
+          "jsonPath" : "source.type",
+          "type" : "PATH_ONLY"
+        },
+        "request" : {
+          "requestPath" : "<workspace>/request.json",
+          "type" : "FILE"
+        },
+        "stage" : "READ_REQUEST"
+      },
+      "message" : "Missing required field 'source.type'",
+      "recovery" : "CHANGE_REQUEST",
+      "resolution" : "Add the required type discriminator at 'source.type'.",
+      "title" : "Invalid request shape"
+    } ],
+    "protocolVersion" : "V3",
+    "severity" : "ERROR",
+    "valid" : false,
+    "warnings" : [ ]
+  }
+}

@@ -1,0 +1,83 @@
+{
+  "exit" : 1,
+  "stderr" : "",
+  "stdout" : {
+    "problems" : [ {
+      "category" : "REQUEST",
+      "causes" : [ {
+        "code" : "INVALID_REQUEST_SHAPE",
+        "message" : "Field 'steps[0].target' must be a JSON object",
+        "stage" : "READ_REQUEST"
+      } ],
+      "code" : "INVALID_REQUEST_SHAPE",
+      "context" : {
+        "json" : {
+          "byteOffset" : 106,
+          "jsonPath" : "steps[0].target",
+          "type" : "PATH_BYTE_OFFSET"
+        },
+        "request" : {
+          "requestPath" : "<workspace>/request.json",
+          "type" : "FILE"
+        },
+        "stage" : "READ_REQUEST"
+      },
+      "message" : "Field 'steps[0].target' must be a JSON object",
+      "recovery" : "CHANGE_REQUEST",
+      "resolution" : "Fix field 'steps[0].target' so it matches the published request shape.",
+      "title" : "Invalid request shape"
+    }, {
+      "category" : "REQUEST",
+      "causes" : [ {
+        "code" : "INVALID_JSON",
+        "message" : "Expected a JSON value",
+        "stage" : "READ_REQUEST"
+      } ],
+      "code" : "INVALID_JSON",
+      "context" : {
+        "json" : {
+          "byteOffset" : 115,
+          "jsonPath" : "steps[0].target",
+          "type" : "PATH_BYTE_OFFSET"
+        },
+        "request" : {
+          "requestPath" : "<workspace>/request.json",
+          "type" : "FILE"
+        },
+        "stage" : "READ_REQUEST"
+      },
+      "message" : "Expected a JSON value",
+      "recovery" : "CHANGE_REQUEST",
+      "resolution" : "Send syntactically valid JSON.",
+      "title" : "Invalid JSON payload"
+    }, {
+      "category" : "REQUEST",
+      "causes" : [ {
+        "code" : "INVALID_REQUEST_SHAPE",
+        "message" : "Unknown type value 'BOGUS'; valid values: ANALYZE_AUTOFILTER_HEALTH, ANALYZE_CONDITIONAL_FORMATTING_HEALTH, ANALYZE_DATA_VALIDATION_HEALTH, ANALYZE_FORMULA_HEALTH, ANALYZE_HYPERLINK_HEALTH, ANALYZE_NAMED_RANGE_HEALTH, ANALYZE_PIVOT_TABLE_HEALTH, ANALYZE_TABLE_HEALTH, ANALYZE_WORKBOOK_FINDINGS, EXPORT_CUSTOM_XML_MAPPING, GET_ARRAY_FORMULAS, GET_AUTOFILTERS, GET_CELLS, GET_CHARTS, GET_COMMENTS, GET_CONDITIONAL_FORMATTING, GET_CUSTOM_XML_MAPPINGS, GET_DATA_VALIDATIONS, GET_DRAWING_OBJECTS, GET_DRAWING_OBJECT_PAYLOAD, GET_FORMULA_SURFACE, GET_HYPERLINKS, GET_MERGED_REGIONS, GET_NAMED_RANGES, GET_NAMED_RANGE_SURFACE, GET_PACKAGE_SECURITY, GET_PIVOT_TABLES, GET_PRINT_LAYOUT, GET_SHEET_LAYOUT, GET_SHEET_SCHEMA, GET_SHEET_SUMMARY, GET_TABLES, GET_WINDOW, GET_WORKBOOK_PROTECTION, GET_WORKBOOK_SUMMARY",
+        "stage" : "READ_REQUEST"
+      } ],
+      "code" : "INVALID_REQUEST_SHAPE",
+      "context" : {
+        "json" : {
+          "byteOffset" : 226,
+          "jsonPath" : "steps[1].query.type",
+          "type" : "PATH_BYTE_OFFSET"
+        },
+        "request" : {
+          "requestPath" : "<workspace>/request.json",
+          "type" : "FILE"
+        },
+        "stage" : "READ_REQUEST"
+      },
+      "message" : "Unknown type value 'BOGUS'; valid values: ANALYZE_AUTOFILTER_HEALTH, ANALYZE_CONDITIONAL_FORMATTING_HEALTH, ANALYZE_DATA_VALIDATION_HEALTH, ANALYZE_FORMULA_HEALTH, ANALYZE_HYPERLINK_HEALTH, ANALYZE_NAMED_RANGE_HEALTH, ANALYZE_PIVOT_TABLE_HEALTH, ANALYZE_TABLE_HEALTH, ANALYZE_WORKBOOK_FINDINGS, EXPORT_CUSTOM_XML_MAPPING, GET_ARRAY_FORMULAS, GET_AUTOFILTERS, GET_CELLS, GET_CHARTS, GET_COMMENTS, GET_CONDITIONAL_FORMATTING, GET_CUSTOM_XML_MAPPINGS, GET_DATA_VALIDATIONS, GET_DRAWING_OBJECTS, GET_DRAWING_OBJECT_PAYLOAD, GET_FORMULA_SURFACE, GET_HYPERLINKS, GET_MERGED_REGIONS, GET_NAMED_RANGES, GET_NAMED_RANGE_SURFACE, GET_PACKAGE_SECURITY, GET_PIVOT_TABLES, GET_PRINT_LAYOUT, GET_SHEET_LAYOUT, GET_SHEET_SCHEMA, GET_SHEET_SUMMARY, GET_TABLES, GET_WINDOW, GET_WORKBOOK_PROTECTION, GET_WORKBOOK_SUMMARY",
+      "recovery" : "CHANGE_REQUEST",
+      "resolution" : "Replace field 'steps[1].query.type' with one supported type value. Use --print-protocol-catalog --lookup or --search when you need the allowed values.",
+      "title" : "Invalid request shape"
+    } ],
+    "protocolVersion" : "V3",
+    "severity" : "ERROR",
+    "valid" : false,
+    "warnings" : [ ]
+  }
+}

@@ -204,6 +204,9 @@ tasks.named("shadowDistTar") {
 
 tasks.named<Test>("test") {
     jvmArgs("--enable-native-access=ALL-UNNAMED")
+    dependsOn(tasks.named("shadowJar"))
+    systemProperty("gridgrind.repository", rootProject.projectDir.absolutePath)
+    systemProperty("gridgrind.golden.update", providers.gradleProperty("golden.update").getOrElse("false"))
 }
 
 tasks.named<com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar>("shadowJar") {

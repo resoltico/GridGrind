@@ -1,0 +1,35 @@
+{
+  "exit" : 1,
+  "stderr" : "",
+  "stdout" : {
+    "problems" : [ {
+      "category" : "REQUEST",
+      "causes" : [ {
+        "code" : "INVALID_REQUEST_SHAPE",
+        "message" : "Unsupported value 'V999' for field 'protocolVersion'; expected one of: V3",
+        "stage" : "READ_REQUEST"
+      } ],
+      "code" : "INVALID_REQUEST_SHAPE",
+      "context" : {
+        "json" : {
+          "byteOffset" : 1,
+          "jsonPath" : "protocolVersion",
+          "type" : "PATH_BYTE_OFFSET"
+        },
+        "request" : {
+          "requestPath" : "<workspace>/request.json",
+          "type" : "FILE"
+        },
+        "stage" : "READ_REQUEST"
+      },
+      "message" : "Unsupported value 'V999' for field 'protocolVersion'; expected one of: V3",
+      "recovery" : "CHANGE_REQUEST",
+      "resolution" : "Replace field 'protocolVersion' with one supported value. Use --print-protocol-catalog --lookup or --search when you need the allowed values.",
+      "title" : "Invalid request shape"
+    } ],
+    "protocolVersion" : "V3",
+    "severity" : "ERROR",
+    "valid" : false,
+    "warnings" : [ ]
+  }
+}

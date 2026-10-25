@@ -1,0 +1,35 @@
+{
+  "exit" : 1,
+  "stderr" : "",
+  "stdout" : {
+    "problems" : [ {
+      "category" : "REQUEST",
+      "causes" : [ {
+        "code" : "INVALID_REQUEST",
+        "message" : "path must end in .xlsx (got: '.txt')",
+        "stage" : "BIND_REQUEST"
+      } ],
+      "code" : "INVALID_REQUEST",
+      "context" : {
+        "json" : {
+          "byteOffset" : 52,
+          "jsonPath" : "source.path",
+          "type" : "PATH_BYTE_OFFSET"
+        },
+        "request" : {
+          "requestPath" : "<workspace>/request.json",
+          "type" : "FILE"
+        },
+        "stage" : "BIND_REQUEST"
+      },
+      "message" : "path must end in .xlsx (got: '.txt')",
+      "recovery" : "CHANGE_REQUEST",
+      "resolution" : "Provide a path ending in .xlsx for field 'source.path'.",
+      "title" : "Invalid request"
+    } ],
+    "protocolVersion" : "V3",
+    "severity" : "ERROR",
+    "valid" : false,
+    "warnings" : [ ]
+  }
+}

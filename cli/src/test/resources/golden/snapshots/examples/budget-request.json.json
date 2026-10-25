@@ -1,0 +1,1281 @@
+{
+  "exit" : 0,
+  "readback" : {
+    "bounds" : [ {
+      "sheet" : {
+        "lastColumnIndex" : 2,
+        "lastRowIndex" : 3,
+        "physicalRowCount" : 4,
+        "protection" : {
+          "kind" : "UNPROTECTED"
+        },
+        "sheetName" : "Budget",
+        "visibility" : "VISIBLE"
+      },
+      "stepId" : "sheet-0",
+      "type" : "GET_SHEET_SUMMARY"
+    } ],
+    "facts" : [ {
+      "layout" : {
+        "columns" : [ {
+          "collapsed" : false,
+          "columnIndex" : 0,
+          "hidden" : false,
+          "outlineLevel" : 0,
+          "widthCharacters" : 9.0
+        }, {
+          "collapsed" : false,
+          "columnIndex" : 1,
+          "hidden" : false,
+          "outlineLevel" : 0,
+          "widthCharacters" : 8.0
+        }, {
+          "collapsed" : false,
+          "columnIndex" : 2,
+          "hidden" : false,
+          "outlineLevel" : 0,
+          "widthCharacters" : 10.0
+        } ],
+        "pane" : {
+          "type" : "NONE"
+        },
+        "presentation" : {
+          "display" : {
+            "displayFormulas" : false,
+            "displayGridlines" : true,
+            "displayRowColHeadings" : true,
+            "displayZeros" : true,
+            "rightToLeft" : false
+          },
+          "ignoredErrors" : [ ],
+          "outlineSummary" : {
+            "rowSumsBelow" : true,
+            "rowSumsRight" : true
+          },
+          "sheetDefaults" : {
+            "defaultColumnWidth" : 8,
+            "defaultRowHeightPoints" : 15.0
+          }
+        },
+        "rows" : [ {
+          "collapsed" : false,
+          "heightPoints" : 15.0,
+          "hidden" : false,
+          "outlineLevel" : 0,
+          "rowIndex" : 0
+        }, {
+          "collapsed" : false,
+          "heightPoints" : 15.0,
+          "hidden" : false,
+          "outlineLevel" : 0,
+          "rowIndex" : 1
+        }, {
+          "collapsed" : false,
+          "heightPoints" : 15.0,
+          "hidden" : false,
+          "outlineLevel" : 0,
+          "rowIndex" : 2
+        }, {
+          "collapsed" : false,
+          "heightPoints" : 15.0,
+          "hidden" : false,
+          "outlineLevel" : 0,
+          "rowIndex" : 3
+        } ],
+        "sheetName" : "Budget",
+        "zoomPercent" : 100
+      },
+      "stepId" : "sheet-0-layout",
+      "type" : "GET_SHEET_LAYOUT"
+    }, {
+      "layout" : {
+        "footer" : {
+          "center" : "",
+          "left" : "",
+          "right" : ""
+        },
+        "header" : {
+          "center" : "",
+          "left" : "",
+          "right" : ""
+        },
+        "orientation" : "PORTRAIT",
+        "printArea" : {
+          "type" : "NONE"
+        },
+        "repeatingColumns" : {
+          "type" : "NONE"
+        },
+        "repeatingRows" : {
+          "type" : "NONE"
+        },
+        "scaling" : {
+          "type" : "AUTOMATIC"
+        },
+        "setup" : {
+          "blackAndWhite" : false,
+          "columnBreaks" : [ ],
+          "copies" : 1,
+          "draft" : false,
+          "firstPageNumber" : 1,
+          "horizontallyCentered" : false,
+          "margins" : {
+            "bottom" : 0.75,
+            "footer" : 0.3,
+            "header" : 0.3,
+            "left" : 0.7,
+            "right" : 0.7,
+            "top" : 0.75
+          },
+          "paperSize" : 1,
+          "printGridlines" : false,
+          "rowBreaks" : [ ],
+          "useFirstPageNumber" : false,
+          "verticallyCentered" : false
+        },
+        "sheetName" : "Budget"
+      },
+      "stepId" : "sheet-0-print",
+      "type" : "GET_PRINT_LAYOUT"
+    }, {
+      "charts" : [ ],
+      "sheetName" : "Budget",
+      "stepId" : "sheet-0-charts",
+      "type" : "GET_CHARTS"
+    }, {
+      "drawingObjects" : [ ],
+      "sheetName" : "Budget",
+      "stepId" : "sheet-0-drawing",
+      "type" : "GET_DRAWING_OBJECTS"
+    }, {
+      "cells" : [ {
+        "address" : "A1",
+        "displayValue" : "Item",
+        "style" : {
+          "alignment" : {
+            "horizontalAlignment" : "CENTER",
+            "indentation" : 0,
+            "textRotation" : 0,
+            "verticalAlignment" : "CENTER",
+            "wrapText" : true
+          },
+          "border" : {
+            "bottom" : {
+              "type" : "NONE"
+            },
+            "left" : {
+              "type" : "NONE"
+            },
+            "right" : {
+              "type" : "NONE"
+            },
+            "top" : {
+              "type" : "NONE"
+            }
+          },
+          "fill" : {
+            "kind" : "PATTERN_ONLY",
+            "pattern" : "NONE"
+          },
+          "font" : {
+            "bold" : true,
+            "fontColor" : {
+              "indexed" : 8,
+              "kind" : "INDEXED"
+            },
+            "fontHeight" : {
+              "points" : 11,
+              "twips" : 220
+            },
+            "fontName" : "Calibri",
+            "italic" : false,
+            "strikeout" : false,
+            "underline" : false
+          },
+          "numberFormat" : "General",
+          "protection" : {
+            "hiddenFormula" : false,
+            "locked" : true
+          }
+        },
+        "textValue" : "Item",
+        "type" : "TEXT"
+      }, {
+        "address" : "B1",
+        "displayValue" : "Amount",
+        "style" : {
+          "alignment" : {
+            "horizontalAlignment" : "CENTER",
+            "indentation" : 0,
+            "textRotation" : 0,
+            "verticalAlignment" : "CENTER",
+            "wrapText" : true
+          },
+          "border" : {
+            "bottom" : {
+              "type" : "NONE"
+            },
+            "left" : {
+              "type" : "NONE"
+            },
+            "right" : {
+              "type" : "NONE"
+            },
+            "top" : {
+              "type" : "NONE"
+            }
+          },
+          "fill" : {
+            "kind" : "PATTERN_ONLY",
+            "pattern" : "NONE"
+          },
+          "font" : {
+            "bold" : true,
+            "fontColor" : {
+              "indexed" : 8,
+              "kind" : "INDEXED"
+            },
+            "fontHeight" : {
+              "points" : 11,
+              "twips" : 220
+            },
+            "fontName" : "Calibri",
+            "italic" : false,
+            "strikeout" : false,
+            "underline" : false
+          },
+          "numberFormat" : "General",
+          "protection" : {
+            "hiddenFormula" : false,
+            "locked" : true
+          }
+        },
+        "textValue" : "Amount",
+        "type" : "TEXT"
+      }, {
+        "address" : "C1",
+        "displayValue" : "Billable",
+        "style" : {
+          "alignment" : {
+            "horizontalAlignment" : "CENTER",
+            "indentation" : 0,
+            "textRotation" : 0,
+            "verticalAlignment" : "CENTER",
+            "wrapText" : true
+          },
+          "border" : {
+            "bottom" : {
+              "type" : "NONE"
+            },
+            "left" : {
+              "type" : "NONE"
+            },
+            "right" : {
+              "type" : "NONE"
+            },
+            "top" : {
+              "type" : "NONE"
+            }
+          },
+          "fill" : {
+            "kind" : "PATTERN_ONLY",
+            "pattern" : "NONE"
+          },
+          "font" : {
+            "bold" : true,
+            "fontColor" : {
+              "indexed" : 8,
+              "kind" : "INDEXED"
+            },
+            "fontHeight" : {
+              "points" : 11,
+              "twips" : 220
+            },
+            "fontName" : "Calibri",
+            "italic" : false,
+            "strikeout" : false,
+            "underline" : false
+          },
+          "numberFormat" : "General",
+          "protection" : {
+            "hiddenFormula" : false,
+            "locked" : true
+          }
+        },
+        "textValue" : "Billable",
+        "type" : "TEXT"
+      }, {
+        "address" : "A2",
+        "displayValue" : "Hosting",
+        "style" : {
+          "alignment" : {
+            "horizontalAlignment" : "GENERAL",
+            "indentation" : 0,
+            "textRotation" : 0,
+            "verticalAlignment" : "BOTTOM",
+            "wrapText" : false
+          },
+          "border" : {
+            "bottom" : {
+              "type" : "NONE"
+            },
+            "left" : {
+              "type" : "NONE"
+            },
+            "right" : {
+              "type" : "NONE"
+            },
+            "top" : {
+              "type" : "NONE"
+            }
+          },
+          "fill" : {
+            "kind" : "PATTERN_ONLY",
+            "pattern" : "NONE"
+          },
+          "font" : {
+            "bold" : false,
+            "fontColor" : {
+              "indexed" : 8,
+              "kind" : "INDEXED"
+            },
+            "fontHeight" : {
+              "points" : 11,
+              "twips" : 220
+            },
+            "fontName" : "Calibri",
+            "italic" : false,
+            "strikeout" : false,
+            "underline" : false
+          },
+          "numberFormat" : "General",
+          "protection" : {
+            "hiddenFormula" : false,
+            "locked" : true
+          }
+        },
+        "textValue" : "Hosting",
+        "type" : "TEXT"
+      }, {
+        "address" : "B2",
+        "displayValue" : "49.00",
+        "numberValue" : 49.0,
+        "style" : {
+          "alignment" : {
+            "horizontalAlignment" : "RIGHT",
+            "indentation" : 0,
+            "textRotation" : 0,
+            "verticalAlignment" : "BOTTOM",
+            "wrapText" : false
+          },
+          "border" : {
+            "bottom" : {
+              "type" : "NONE"
+            },
+            "left" : {
+              "type" : "NONE"
+            },
+            "right" : {
+              "type" : "NONE"
+            },
+            "top" : {
+              "type" : "NONE"
+            }
+          },
+          "fill" : {
+            "kind" : "PATTERN_ONLY",
+            "pattern" : "NONE"
+          },
+          "font" : {
+            "bold" : false,
+            "fontColor" : {
+              "indexed" : 8,
+              "kind" : "INDEXED"
+            },
+            "fontHeight" : {
+              "points" : 11,
+              "twips" : 220
+            },
+            "fontName" : "Calibri",
+            "italic" : false,
+            "strikeout" : false,
+            "underline" : false
+          },
+          "numberFormat" : "#,##0.00",
+          "protection" : {
+            "hiddenFormula" : false,
+            "locked" : true
+          }
+        },
+        "temporal" : {
+          "isDate" : false
+        },
+        "type" : "NUMBER"
+      }, {
+        "address" : "C2",
+        "booleanValue" : true,
+        "displayValue" : "TRUE",
+        "style" : {
+          "alignment" : {
+            "horizontalAlignment" : "GENERAL",
+            "indentation" : 0,
+            "textRotation" : 0,
+            "verticalAlignment" : "BOTTOM",
+            "wrapText" : false
+          },
+          "border" : {
+            "bottom" : {
+              "type" : "NONE"
+            },
+            "left" : {
+              "type" : "NONE"
+            },
+            "right" : {
+              "type" : "NONE"
+            },
+            "top" : {
+              "type" : "NONE"
+            }
+          },
+          "fill" : {
+            "kind" : "PATTERN_ONLY",
+            "pattern" : "NONE"
+          },
+          "font" : {
+            "bold" : false,
+            "fontColor" : {
+              "indexed" : 8,
+              "kind" : "INDEXED"
+            },
+            "fontHeight" : {
+              "points" : 11,
+              "twips" : 220
+            },
+            "fontName" : "Calibri",
+            "italic" : false,
+            "strikeout" : false,
+            "underline" : false
+          },
+          "numberFormat" : "General",
+          "protection" : {
+            "hiddenFormula" : false,
+            "locked" : true
+          }
+        },
+        "type" : "BOOLEAN"
+      }, {
+        "address" : "A3",
+        "displayValue" : "Domain",
+        "style" : {
+          "alignment" : {
+            "horizontalAlignment" : "GENERAL",
+            "indentation" : 0,
+            "textRotation" : 0,
+            "verticalAlignment" : "BOTTOM",
+            "wrapText" : false
+          },
+          "border" : {
+            "bottom" : {
+              "type" : "NONE"
+            },
+            "left" : {
+              "type" : "NONE"
+            },
+            "right" : {
+              "type" : "NONE"
+            },
+            "top" : {
+              "type" : "NONE"
+            }
+          },
+          "fill" : {
+            "kind" : "PATTERN_ONLY",
+            "pattern" : "NONE"
+          },
+          "font" : {
+            "bold" : false,
+            "fontColor" : {
+              "indexed" : 8,
+              "kind" : "INDEXED"
+            },
+            "fontHeight" : {
+              "points" : 11,
+              "twips" : 220
+            },
+            "fontName" : "Calibri",
+            "italic" : false,
+            "strikeout" : false,
+            "underline" : false
+          },
+          "numberFormat" : "General",
+          "protection" : {
+            "hiddenFormula" : false,
+            "locked" : true
+          }
+        },
+        "textValue" : "Domain",
+        "type" : "TEXT"
+      }, {
+        "address" : "B3",
+        "displayValue" : "12.00",
+        "numberValue" : 12.0,
+        "style" : {
+          "alignment" : {
+            "horizontalAlignment" : "RIGHT",
+            "indentation" : 0,
+            "textRotation" : 0,
+            "verticalAlignment" : "BOTTOM",
+            "wrapText" : false
+          },
+          "border" : {
+            "bottom" : {
+              "type" : "NONE"
+            },
+            "left" : {
+              "type" : "NONE"
+            },
+            "right" : {
+              "type" : "NONE"
+            },
+            "top" : {
+              "type" : "NONE"
+            }
+          },
+          "fill" : {
+            "kind" : "PATTERN_ONLY",
+            "pattern" : "NONE"
+          },
+          "font" : {
+            "bold" : false,
+            "fontColor" : {
+              "indexed" : 8,
+              "kind" : "INDEXED"
+            },
+            "fontHeight" : {
+              "points" : 11,
+              "twips" : 220
+            },
+            "fontName" : "Calibri",
+            "italic" : false,
+            "strikeout" : false,
+            "underline" : false
+          },
+          "numberFormat" : "#,##0.00",
+          "protection" : {
+            "hiddenFormula" : false,
+            "locked" : true
+          }
+        },
+        "temporal" : {
+          "isDate" : false
+        },
+        "type" : "NUMBER"
+      }, {
+        "address" : "C3",
+        "booleanValue" : false,
+        "displayValue" : "FALSE",
+        "style" : {
+          "alignment" : {
+            "horizontalAlignment" : "GENERAL",
+            "indentation" : 0,
+            "textRotation" : 0,
+            "verticalAlignment" : "BOTTOM",
+            "wrapText" : false
+          },
+          "border" : {
+            "bottom" : {
+              "type" : "NONE"
+            },
+            "left" : {
+              "type" : "NONE"
+            },
+            "right" : {
+              "type" : "NONE"
+            },
+            "top" : {
+              "type" : "NONE"
+            }
+          },
+          "fill" : {
+            "kind" : "PATTERN_ONLY",
+            "pattern" : "NONE"
+          },
+          "font" : {
+            "bold" : false,
+            "fontColor" : {
+              "indexed" : 8,
+              "kind" : "INDEXED"
+            },
+            "fontHeight" : {
+              "points" : 11,
+              "twips" : 220
+            },
+            "fontName" : "Calibri",
+            "italic" : false,
+            "strikeout" : false,
+            "underline" : false
+          },
+          "numberFormat" : "General",
+          "protection" : {
+            "hiddenFormula" : false,
+            "locked" : true
+          }
+        },
+        "type" : "BOOLEAN"
+      }, {
+        "address" : "A4",
+        "displayValue" : "Total",
+        "style" : {
+          "alignment" : {
+            "horizontalAlignment" : "GENERAL",
+            "indentation" : 0,
+            "textRotation" : 0,
+            "verticalAlignment" : "BOTTOM",
+            "wrapText" : false
+          },
+          "border" : {
+            "bottom" : {
+              "type" : "NONE"
+            },
+            "left" : {
+              "type" : "NONE"
+            },
+            "right" : {
+              "type" : "NONE"
+            },
+            "top" : {
+              "type" : "NONE"
+            }
+          },
+          "fill" : {
+            "kind" : "PATTERN_ONLY",
+            "pattern" : "NONE"
+          },
+          "font" : {
+            "bold" : false,
+            "fontColor" : {
+              "indexed" : 8,
+              "kind" : "INDEXED"
+            },
+            "fontHeight" : {
+              "points" : 11,
+              "twips" : 220
+            },
+            "fontName" : "Calibri",
+            "italic" : false,
+            "strikeout" : false,
+            "underline" : false
+          },
+          "numberFormat" : "General",
+          "protection" : {
+            "hiddenFormula" : false,
+            "locked" : true
+          }
+        },
+        "textValue" : "Total",
+        "type" : "TEXT"
+      }, {
+        "address" : "B4",
+        "displayValue" : "61.00",
+        "evaluation" : {
+          "numberValue" : 61.0,
+          "temporal" : {
+            "isDate" : false
+          },
+          "type" : "NUMBER"
+        },
+        "formula" : "SUM(B2:B3)",
+        "style" : {
+          "alignment" : {
+            "horizontalAlignment" : "RIGHT",
+            "indentation" : 0,
+            "textRotation" : 0,
+            "verticalAlignment" : "BOTTOM",
+            "wrapText" : false
+          },
+          "border" : {
+            "bottom" : {
+              "type" : "NONE"
+            },
+            "left" : {
+              "type" : "NONE"
+            },
+            "right" : {
+              "type" : "NONE"
+            },
+            "top" : {
+              "type" : "NONE"
+            }
+          },
+          "fill" : {
+            "kind" : "PATTERN_ONLY",
+            "pattern" : "NONE"
+          },
+          "font" : {
+            "bold" : false,
+            "fontColor" : {
+              "indexed" : 8,
+              "kind" : "INDEXED"
+            },
+            "fontHeight" : {
+              "points" : 11,
+              "twips" : 220
+            },
+            "fontName" : "Calibri",
+            "italic" : false,
+            "strikeout" : false,
+            "underline" : false
+          },
+          "numberFormat" : "#,##0.00",
+          "protection" : {
+            "hiddenFormula" : false,
+            "locked" : true
+          }
+        },
+        "type" : "FORMULA"
+      }, {
+        "address" : "C4",
+        "displayValue" : "",
+        "style" : {
+          "alignment" : {
+            "horizontalAlignment" : "GENERAL",
+            "indentation" : 0,
+            "textRotation" : 0,
+            "verticalAlignment" : "BOTTOM",
+            "wrapText" : false
+          },
+          "border" : {
+            "bottom" : {
+              "type" : "NONE"
+            },
+            "left" : {
+              "type" : "NONE"
+            },
+            "right" : {
+              "type" : "NONE"
+            },
+            "top" : {
+              "type" : "NONE"
+            }
+          },
+          "fill" : {
+            "kind" : "PATTERN_ONLY",
+            "pattern" : "NONE"
+          },
+          "font" : {
+            "bold" : false,
+            "fontColor" : {
+              "indexed" : 8,
+              "kind" : "INDEXED"
+            },
+            "fontHeight" : {
+              "points" : 11,
+              "twips" : 220
+            },
+            "fontName" : "Calibri",
+            "italic" : false,
+            "strikeout" : false,
+            "underline" : false
+          },
+          "numberFormat" : "General",
+          "protection" : {
+            "hiddenFormula" : false,
+            "locked" : true
+          }
+        },
+        "type" : "BLANK"
+      } ],
+      "sheetName" : "Budget",
+      "stepId" : "sheet-0-cells",
+      "type" : "GET_CELLS"
+    }, {
+      "sheetName" : "Budget",
+      "stepId" : "sheet-0-GET_DATA_VALIDATIONS",
+      "type" : "GET_DATA_VALIDATIONS",
+      "validations" : [ ]
+    }, {
+      "conditionalFormattingBlocks" : [ ],
+      "sheetName" : "Budget",
+      "stepId" : "sheet-0-GET_CONDITIONAL_FORMATTING",
+      "type" : "GET_CONDITIONAL_FORMATTING"
+    }, {
+      "stepId" : "tables",
+      "tables" : [ ],
+      "type" : "GET_TABLES"
+    }, {
+      "pivotTables" : [ ],
+      "stepId" : "pivots",
+      "type" : "GET_PIVOT_TABLES"
+    }, {
+      "analysis" : {
+        "findings" : [ ],
+        "summary" : {
+          "errorCount" : 0,
+          "infoCount" : 0,
+          "totalCount" : 0,
+          "warningCount" : 0
+        }
+      },
+      "stepId" : "findings",
+      "type" : "ANALYZE_WORKBOOK_FINDINGS"
+    } ],
+    "summary" : [ {
+      "stepId" : "summary",
+      "type" : "GET_WORKBOOK_SUMMARY",
+      "workbook" : {
+        "activeSheetName" : "Budget",
+        "forceFormulaRecalculationOnOpen" : false,
+        "kind" : "WITH_SHEETS",
+        "namedRangeCount" : 0,
+        "selectedSheetNames" : [ "Budget" ],
+        "sheetCount" : 1,
+        "sheetNames" : [ "Budget" ]
+      }
+    } ]
+  },
+  "stderr" : "",
+  "stdout" : {
+    "assertions" : [ ],
+    "calculation" : {
+      "execution" : {
+        "cachesCleared" : false,
+        "evaluatedFormulaCount" : 0,
+        "markRecalculateOnOpenApplied" : false,
+        "status" : "NOT_REQUESTED"
+      },
+      "policy" : { }
+    },
+    "evidence" : {
+      "admission" : {
+        "materializedInputs" : [ ],
+        "operations" : [ {
+          "effects" : [ "READ_WORKBOOK", "MUTATE_WORKBOOK", "CELLS", "FORMULAS", "STYLES", "HYPERLINKS", "COMMENTS", "DRAWINGS", "WORKBOOK_STRUCTURE", "SHEET_STRUCTURE", "ROWS", "COLUMNS", "TABLES", "NAMED_RANGES", "DATA_VALIDATIONS", "CONDITIONAL_FORMATTING", "AUTOFILTERS", "PIVOT_TABLES", "WORKBOOK_METADATA", "WORKBOOK_SECURITY" ],
+          "footprint" : "CONSERVATIVE_WORKBOOK_WIDE",
+          "operationId" : "ENSURE_SHEET"
+        }, {
+          "effects" : [ "READ_WORKBOOK", "MUTATE_WORKBOOK", "CELLS", "FORMULAS", "STYLES", "HYPERLINKS", "COMMENTS", "DRAWINGS" ],
+          "footprint" : "CONSERVATIVE_WORKBOOK_WIDE",
+          "operationId" : "SET_RANGE"
+        }, {
+          "effects" : [ "READ_WORKBOOK", "MUTATE_WORKBOOK", "CELLS", "FORMULAS", "STYLES", "HYPERLINKS", "COMMENTS", "DRAWINGS" ],
+          "footprint" : "CONSERVATIVE_WORKBOOK_WIDE",
+          "operationId" : "APPLY_STYLE"
+        }, {
+          "effects" : [ "READ_WORKBOOK", "MUTATE_WORKBOOK", "CELLS", "FORMULAS", "STYLES", "HYPERLINKS", "COMMENTS", "DRAWINGS" ],
+          "footprint" : "CONSERVATIVE_WORKBOOK_WIDE",
+          "operationId" : "APPLY_STYLE"
+        }, {
+          "effects" : [ "READ_WORKBOOK", "MUTATE_WORKBOOK", "CELLS", "FORMULAS", "STYLES", "HYPERLINKS", "COMMENTS", "DRAWINGS" ],
+          "footprint" : "CONSERVATIVE_WORKBOOK_WIDE",
+          "operationId" : "SET_CELL"
+        }, {
+          "effects" : [ "READ_WORKBOOK", "MUTATE_WORKBOOK", "CELLS", "FORMULAS", "STYLES", "HYPERLINKS", "COMMENTS", "DRAWINGS" ],
+          "footprint" : "CONSERVATIVE_WORKBOOK_WIDE",
+          "operationId" : "SET_CELL"
+        }, {
+          "effects" : [ "READ_WORKBOOK", "MUTATE_WORKBOOK", "CELLS", "FORMULAS", "STYLES", "HYPERLINKS", "COMMENTS", "DRAWINGS", "WORKBOOK_STRUCTURE", "SHEET_STRUCTURE", "ROWS", "COLUMNS", "TABLES", "NAMED_RANGES", "DATA_VALIDATIONS", "CONDITIONAL_FORMATTING", "AUTOFILTERS", "PIVOT_TABLES", "WORKBOOK_METADATA", "WORKBOOK_SECURITY" ],
+          "footprint" : "CONSERVATIVE_WORKBOOK_WIDE",
+          "operationId" : "AUTO_SIZE_COLUMNS"
+        }, {
+          "effects" : [ "READ_WORKBOOK" ],
+          "footprint" : "TARGET_BOUNDED",
+          "operationId" : "GET_WORKBOOK_SUMMARY"
+        }, {
+          "effects" : [ "READ_WORKBOOK" ],
+          "footprint" : "TARGET_BOUNDED",
+          "operationId" : "GET_CELLS"
+        }, {
+          "effects" : [ "READ_WORKBOOK" ],
+          "footprint" : "TARGET_BOUNDED",
+          "operationId" : "GET_WINDOW"
+        }, {
+          "effects" : [ "READ_WORKBOOK" ],
+          "footprint" : "TARGET_BOUNDED",
+          "operationId" : "GET_SHEET_SCHEMA"
+        }, {
+          "effects" : [ "READ_WORKBOOK" ],
+          "footprint" : "TARGET_BOUNDED",
+          "operationId" : "GET_FORMULA_SURFACE"
+        } ]
+      },
+      "computational" : {
+        "status" : "NOT_REQUESTED"
+      },
+      "presentational" : {
+        "status" : "NOT_ASSESSED"
+      },
+      "preservation" : [ {
+        "status" : "NOT_REQUESTED"
+      } ],
+      "structural" : {
+        "status" : "ESTABLISHED"
+      },
+      "taskSpecific" : {
+        "status" : "NOT_REQUESTED"
+      }
+    },
+    "inspections" : [ {
+      "stepId" : "workbook",
+      "type" : "GET_WORKBOOK_SUMMARY",
+      "workbook" : {
+        "activeSheetName" : "Budget",
+        "forceFormulaRecalculationOnOpen" : false,
+        "kind" : "WITH_SHEETS",
+        "namedRangeCount" : 0,
+        "selectedSheetNames" : [ "Budget" ],
+        "sheetCount" : 1,
+        "sheetNames" : [ "Budget" ]
+      }
+    }, {
+      "cells" : [ {
+        "address" : "A1",
+        "textValue" : "Item",
+        "type" : "TEXT"
+      }, {
+        "address" : "B4",
+        "evaluation" : {
+          "numberValue" : 61.0,
+          "type" : "NUMBER"
+        },
+        "type" : "FORMULA"
+      }, {
+        "address" : "C2",
+        "booleanValue" : true,
+        "type" : "BOOLEAN"
+      } ],
+      "sheetName" : "Budget",
+      "stepId" : "cells",
+      "type" : "GET_CELLS"
+    }, {
+      "stepId" : "window",
+      "type" : "GET_WINDOW",
+      "window" : {
+        "dimensions" : {
+          "columnCount" : 3,
+          "rowCount" : 4
+        },
+        "populatedCells" : [ {
+          "address" : "A1",
+          "textValue" : "Item",
+          "type" : "TEXT"
+        }, {
+          "address" : "B1",
+          "textValue" : "Amount",
+          "type" : "TEXT"
+        }, {
+          "address" : "C1",
+          "textValue" : "Billable",
+          "type" : "TEXT"
+        }, {
+          "address" : "A2",
+          "textValue" : "Hosting",
+          "type" : "TEXT"
+        }, {
+          "address" : "B2",
+          "numberValue" : 49.0,
+          "type" : "NUMBER"
+        }, {
+          "address" : "C2",
+          "booleanValue" : true,
+          "type" : "BOOLEAN"
+        }, {
+          "address" : "A3",
+          "textValue" : "Domain",
+          "type" : "TEXT"
+        }, {
+          "address" : "B3",
+          "numberValue" : 12.0,
+          "type" : "NUMBER"
+        }, {
+          "address" : "C3",
+          "booleanValue" : false,
+          "type" : "BOOLEAN"
+        }, {
+          "address" : "A4",
+          "textValue" : "Total",
+          "type" : "TEXT"
+        }, {
+          "address" : "B4",
+          "evaluation" : {
+            "numberValue" : 61.0,
+            "type" : "NUMBER"
+          },
+          "type" : "FORMULA"
+        } ],
+        "shape" : "SPARSE",
+        "sheetName" : "Budget",
+        "topLeftAddress" : "A1"
+      }
+    }, {
+      "stepId" : "schema",
+      "surface" : {
+        "columnCount" : 3,
+        "columns" : [ {
+          "blankCellCount" : 0,
+          "columnAddress" : "A1",
+          "columnIndex" : 0,
+          "dominantType" : "TEXT",
+          "headerDisplayValue" : "Item",
+          "observedTypes" : [ {
+            "count" : 3,
+            "type" : "TEXT"
+          } ],
+          "populatedCellCount" : 3
+        }, {
+          "blankCellCount" : 0,
+          "columnAddress" : "B1",
+          "columnIndex" : 1,
+          "dominantType" : "NUMBER",
+          "headerDisplayValue" : "Amount",
+          "observedTypes" : [ {
+            "count" : 3,
+            "type" : "NUMBER"
+          } ],
+          "populatedCellCount" : 3
+        }, {
+          "blankCellCount" : 1,
+          "columnAddress" : "C1",
+          "columnIndex" : 2,
+          "dominantType" : "BOOLEAN",
+          "headerDisplayValue" : "Billable",
+          "observedTypes" : [ {
+            "count" : 2,
+            "type" : "BOOLEAN"
+          } ],
+          "populatedCellCount" : 2
+        } ],
+        "dataRowCount" : 3,
+        "rowCount" : 4,
+        "sheetName" : "Budget",
+        "topLeftAddress" : "A1"
+      },
+      "type" : "GET_SHEET_SCHEMA"
+    }, {
+      "stepId" : "formula-surface",
+      "surface" : {
+        "sheets" : [ {
+          "distinctFormulaCount" : 1,
+          "formulaCellCount" : 1,
+          "formulas" : [ {
+            "addresses" : [ "B4" ],
+            "formula" : "SUM(B2:B3)",
+            "occurrenceCount" : 1
+          } ],
+          "sheetName" : "Budget"
+        } ],
+        "totalFormulaCellCount" : 1
+      },
+      "type" : "GET_FORMULA_SURFACE"
+    } ],
+    "journal" : {
+      "calculation" : {
+        "execution" : {
+          "status" : "NOT_REQUESTED"
+        },
+        "preflight" : {
+          "status" : "NOT_REQUESTED"
+        }
+      },
+      "close" : {
+        "status" : "SUCCEEDED"
+      },
+      "inputResolution" : {
+        "status" : "SUCCEEDED"
+      },
+      "level" : "SUMMARY",
+      "open" : {
+        "status" : "SUCCEEDED"
+      },
+      "outcome" : {
+        "completedStepCount" : 12,
+        "durationMillis" : "<durationMillis>",
+        "plannedStepCount" : 12,
+        "status" : "SUCCEEDED"
+      },
+      "persistencePhase" : {
+        "status" : "SUCCEEDED"
+      },
+      "source" : {
+        "type" : "NEW"
+      },
+      "steps" : [ {
+        "outcome" : "SUCCEEDED",
+        "phase" : {
+          "status" : "SUCCEEDED"
+        },
+        "resolvedTargets" : [ {
+          "kind" : "SHEET",
+          "label" : "Sheet Budget"
+        } ],
+        "stepId" : "step-01-ensure-sheet",
+        "stepIndex" : 0,
+        "stepKind" : "MUTATION",
+        "stepType" : "ENSURE_SHEET"
+      }, {
+        "outcome" : "SUCCEEDED",
+        "phase" : {
+          "status" : "SUCCEEDED"
+        },
+        "resolvedTargets" : [ {
+          "kind" : "RANGE",
+          "label" : "Range Budget!A1:C3"
+        } ],
+        "stepId" : "step-02-set-range",
+        "stepIndex" : 1,
+        "stepKind" : "MUTATION",
+        "stepType" : "SET_RANGE"
+      }, {
+        "outcome" : "SUCCEEDED",
+        "phase" : {
+          "status" : "SUCCEEDED"
+        },
+        "resolvedTargets" : [ {
+          "kind" : "RANGE",
+          "label" : "Range Budget!A1:C1"
+        } ],
+        "stepId" : "step-03-apply-header-style",
+        "stepIndex" : 2,
+        "stepKind" : "MUTATION",
+        "stepType" : "APPLY_STYLE"
+      }, {
+        "outcome" : "SUCCEEDED",
+        "phase" : {
+          "status" : "SUCCEEDED"
+        },
+        "resolvedTargets" : [ {
+          "kind" : "RANGE",
+          "label" : "Range Budget!B2:B4"
+        } ],
+        "stepId" : "step-04-apply-number-style",
+        "stepIndex" : 3,
+        "stepKind" : "MUTATION",
+        "stepType" : "APPLY_STYLE"
+      }, {
+        "outcome" : "SUCCEEDED",
+        "phase" : {
+          "status" : "SUCCEEDED"
+        },
+        "resolvedTargets" : [ {
+          "kind" : "CELL",
+          "label" : "Cell Budget!A4"
+        } ],
+        "stepId" : "step-05-set-total-label",
+        "stepIndex" : 4,
+        "stepKind" : "MUTATION",
+        "stepType" : "SET_CELL"
+      }, {
+        "outcome" : "SUCCEEDED",
+        "phase" : {
+          "status" : "SUCCEEDED"
+        },
+        "resolvedTargets" : [ {
+          "kind" : "CELL",
+          "label" : "Cell Budget!B4"
+        } ],
+        "stepId" : "step-06-set-total-formula",
+        "stepIndex" : 5,
+        "stepKind" : "MUTATION",
+        "stepType" : "SET_CELL"
+      }, {
+        "outcome" : "SUCCEEDED",
+        "phase" : {
+          "status" : "SUCCEEDED"
+        },
+        "resolvedTargets" : [ {
+          "kind" : "SHEET",
+          "label" : "Sheet Budget"
+        } ],
+        "stepId" : "step-07-auto-size",
+        "stepIndex" : 6,
+        "stepKind" : "MUTATION",
+        "stepType" : "AUTO_SIZE_COLUMNS"
+      }, {
+        "outcome" : "SUCCEEDED",
+        "phase" : {
+          "status" : "SUCCEEDED"
+        },
+        "resolvedTargets" : [ {
+          "kind" : "WORKBOOK",
+          "label" : "Current workbook"
+        } ],
+        "stepId" : "workbook",
+        "stepIndex" : 7,
+        "stepKind" : "INSPECTION",
+        "stepType" : "GET_WORKBOOK_SUMMARY"
+      }, {
+        "outcome" : "SUCCEEDED",
+        "phase" : {
+          "status" : "SUCCEEDED"
+        },
+        "resolvedTargets" : [ {
+          "kind" : "CELL",
+          "label" : "Cells Budget![A1, B4, C2]"
+        } ],
+        "stepId" : "cells",
+        "stepIndex" : 8,
+        "stepKind" : "INSPECTION",
+        "stepType" : "GET_CELLS"
+      }, {
+        "outcome" : "SUCCEEDED",
+        "phase" : {
+          "status" : "SUCCEEDED"
+        },
+        "resolvedTargets" : [ {
+          "kind" : "RANGE",
+          "label" : "Window Budget!A1:C4"
+        } ],
+        "stepId" : "window",
+        "stepIndex" : 9,
+        "stepKind" : "INSPECTION",
+        "stepType" : "GET_WINDOW"
+      }, {
+        "outcome" : "SUCCEEDED",
+        "phase" : {
+          "status" : "SUCCEEDED"
+        },
+        "resolvedTargets" : [ {
+          "kind" : "RANGE",
+          "label" : "Window Budget!A1:C4"
+        } ],
+        "stepId" : "schema",
+        "stepIndex" : 10,
+        "stepKind" : "INSPECTION",
+        "stepType" : "GET_SHEET_SCHEMA"
+      }, {
+        "outcome" : "SUCCEEDED",
+        "phase" : {
+          "status" : "SUCCEEDED"
+        },
+        "resolvedTargets" : [ {
+          "kind" : "SHEET",
+          "label" : "Sheets [Budget]"
+        } ],
+        "stepId" : "formula-surface",
+        "stepIndex" : 11,
+        "stepKind" : "INSPECTION",
+        "stepType" : "GET_FORMULA_SURFACE"
+      } ],
+      "validation" : {
+        "status" : "SUCCEEDED"
+      }
+    },
+    "persistence" : {
+      "publication" : {
+        "byteSize" : "<byteSize>",
+        "durability" : {
+          "level" : "FILE_AND_DIRECTORY_SYNCED"
+        },
+        "executionPath" : "<workspace>/recipe/generated-workbooks/gridgrind-budget.xlsx",
+        "sha256" : "<sha256>",
+        "stagedArtifactVerification" : { },
+        "status" : "PUBLISHED"
+      },
+      "requestedPath" : "generated-workbooks/gridgrind-budget.xlsx",
+      "type" : "SAVE_AS"
+    },
+    "planId" : "budget-workflow",
+    "protocolVersion" : "V3",
+    "status" : "SUCCEEDED",
+    "warnings" : [ ]
+  }
+}

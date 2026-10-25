@@ -304,6 +304,17 @@ release groups instead of splitting a release across the retention boundary.
 
 ## Quality Gates
 
+The CLI tests include a golden behaviour corpus for all shipped examples and recipes,
+discovery commands, doctor problem cases, and execution failures. Each case runs in process
+and through the packaged shadow JAR. Saved workbook facts are reopened through GridGrind
+inspection rather than compared as binary files.
+
+Run the corpus with `./gradlew :cli:test --tests '*GoldenCorpusTest' --no-parallel`.
+To record an intentional change, add `-Pgolden.update=true`, review the diff under
+`cli/src/test/resources/golden/snapshots/`, and explain each changed observation in the commit
+message. Only the in-process launcher records; the packaged launcher still has to match it.
+The suite includes a one-character cell-value negative control that must fail comparison.
+
 `./gradlew check` runs each of the following root-project gates. Any failure fails the build.
 `./check.sh` runs these same root-project gates, then runs nested Jazzer verification, builds the
 CLI fat JAR, syntax-checks the release-surface shell scripts, and finally runs the Docker smoke

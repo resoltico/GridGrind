@@ -1,0 +1,1 @@
+{"request":{"protocolVersion":"V3","source":{"type":"NEW"},"persistence":{"type":"NONE"},"steps":[{"stepId":"read","target":{"type":"CELL_BY_ADDRESS","sheetName":"Missing","address":"A1"},"query":{"type":"GET_CELLS"}}]},"exit":1,"code":"SHEET_NOT_FOUND"}

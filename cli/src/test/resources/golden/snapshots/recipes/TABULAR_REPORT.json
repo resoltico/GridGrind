@@ -1,0 +1,1587 @@
+{
+  "detail" : {
+    "exit" : 0,
+    "stderr" : "",
+    "stdout" : {
+      "advisory" : "SELF_CONTAINED",
+      "discoveryProfile" : {
+        "discoveryTerms" : [ "report", "spreadsheet", "worksheet", "budget", "tracker", "ledger", "table" ],
+        "intentProfile" : {
+          "artifacts" : [ "WORKBOOK", "SHEET", "CELL", "TABLE" ],
+          "goals" : [ "AUTHOR", "VERIFY" ]
+        }
+      },
+      "executionProfile" : {
+        "assetMode" : "SELF_CONTAINED",
+        "mutationMode" : "MUTATING",
+        "persistenceMode" : "SAVE_AS",
+        "sourceMode" : "NEW_WORKBOOK"
+      },
+      "id" : "TABULAR_REPORT",
+      "intentTags" : [ "office", "reporting", "table", "report", "save" ],
+      "interactionProfile" : {
+        "requiredInputKinds" : [ "TARGET_SHEET_NAMES", "TABULAR_SOURCE_ROWS", "PERSISTENCE_TARGET_PATH" ],
+        "verificationKinds" : [ "FACT_READBACK", "ASSERTION_CHECKS" ]
+      },
+      "optionalFeatures" : [ "Totals rows and formula-backed summaries.", "Cell styling and print-layout refinements.", "Assertions on key balances or counts." ],
+      "outcomes" : [ "Sheet structure is created intentionally instead of ad hoc cell drift.", "Rows can be modeled as a table so filtering and later readback stay authoritative.", "Critical facts can be inspected before the workbook is persisted." ],
+      "protocolVersion" : "V3",
+      "requestFileName" : "tabular-report-request.json",
+      "requestProfile" : {
+        "assertionTypes" : [ ],
+        "calculationStrategy" : "DO_NOT_CALCULATE",
+        "executionMode" : "FULL_XSSF",
+        "inspectionQueryTypes" : [ "GET_CELLS", "GET_TABLES", "GET_WORKBOOK_SUMMARY" ],
+        "journalLevel" : "SUMMARY",
+        "markRecalculateOnOpen" : false,
+        "mutationActionTypes" : [ "ENSURE_SHEET", "SET_RANGE", "SET_TABLE", "AUTO_SIZE_COLUMNS" ],
+        "persistenceType" : "SAVE_AS",
+        "sourceType" : "NEW",
+        "stepCount" : 7
+      },
+      "requiredInputs" : [ "Sheet name and header layout.", "Typed row values or source-backed payload files for larger authored content.", "Persistence target when the result must be saved." ],
+      "requiredWorkspacePaths" : [ ],
+      "summary" : "Create a structured worksheet report with typed cells, table semantics, and factual readback.",
+      "view" : "TASK_STARTER",
+      "workflow" : {
+        "commonPitfalls" : [ "Large authored literals belong in UTF8_FILE, FILE, or STANDARD_INPUT sources instead of huge inline JSON.", "Table headers must remain nonblank and unique.", "Formula authoring is scalar-only unless you use SET_ARRAY_FORMULA." ],
+        "phases" : [ {
+          "capabilityRefs" : [ {
+            "group" : "sourceTypes",
+            "id" : "NEW"
+          }, {
+            "group" : "mutationActionTypes",
+            "id" : "ENSURE_SHEET"
+          }, {
+            "group" : "mutationActionTypes",
+            "id" : "SET_RANGE"
+          } ],
+          "label" : "Lay Out The Workbook",
+          "notes" : [ "Use one intentional sheet skeleton instead of scattered cell writes." ],
+          "objective" : "Create sheets, headers, and fixed structure before data rows arrive.",
+          "purpose" : "PREPARE"
+        }, {
+          "capabilityRefs" : [ {
+            "group" : "mutationActionTypes",
+            "id" : "SET_TABLE"
+          }, {
+            "group" : "mutationActionTypes",
+            "id" : "AUTO_SIZE_COLUMNS"
+          }, {
+            "group" : "persistenceTypes",
+            "id" : "SAVE_AS"
+          } ],
+          "label" : "Model The Table",
+          "notes" : [ "Prefer one table per logical data region." ],
+          "objective" : "Move the sheet from loose cells into tabular semantics.",
+          "purpose" : "AUTHOR"
+        }, {
+          "capabilityRefs" : [ {
+            "group" : "inspectionQueryTypes",
+            "id" : "GET_CELLS"
+          }, {
+            "group" : "inspectionQueryTypes",
+            "id" : "GET_TABLES"
+          }, {
+            "group" : "inspectionQueryTypes",
+            "id" : "GET_WORKBOOK_SUMMARY"
+          } ],
+          "label" : "Verify And Inspect",
+          "notes" : [ "Use factual readback instead of assuming writes landed correctly." ],
+          "objective" : "Read back the cells or workbook facts that make the report trustworthy.",
+          "purpose" : "VERIFY"
+        } ]
+      }
+    }
+  },
+  "execution" : {
+    "exit" : 0,
+    "readback" : {
+      "bounds" : [ {
+        "sheet" : {
+          "lastColumnIndex" : 2,
+          "lastRowIndex" : 3,
+          "physicalRowCount" : 4,
+          "protection" : {
+            "kind" : "UNPROTECTED"
+          },
+          "sheetName" : "Report",
+          "visibility" : "VISIBLE"
+        },
+        "stepId" : "sheet-0",
+        "type" : "GET_SHEET_SUMMARY"
+      } ],
+      "facts" : [ {
+        "layout" : {
+          "columns" : [ {
+            "collapsed" : false,
+            "columnIndex" : 0,
+            "hidden" : false,
+            "outlineLevel" : 0,
+            "widthCharacters" : 10.0
+          }, {
+            "collapsed" : false,
+            "columnIndex" : 1,
+            "hidden" : false,
+            "outlineLevel" : 0,
+            "widthCharacters" : 7.0
+          }, {
+            "collapsed" : false,
+            "columnIndex" : 2,
+            "hidden" : false,
+            "outlineLevel" : 0,
+            "widthCharacters" : 8.0
+          } ],
+          "pane" : {
+            "type" : "NONE"
+          },
+          "presentation" : {
+            "display" : {
+              "displayFormulas" : false,
+              "displayGridlines" : true,
+              "displayRowColHeadings" : true,
+              "displayZeros" : true,
+              "rightToLeft" : false
+            },
+            "ignoredErrors" : [ ],
+            "outlineSummary" : {
+              "rowSumsBelow" : true,
+              "rowSumsRight" : true
+            },
+            "sheetDefaults" : {
+              "defaultColumnWidth" : 8,
+              "defaultRowHeightPoints" : 15.0
+            }
+          },
+          "rows" : [ {
+            "collapsed" : false,
+            "heightPoints" : 15.0,
+            "hidden" : false,
+            "outlineLevel" : 0,
+            "rowIndex" : 0
+          }, {
+            "collapsed" : false,
+            "heightPoints" : 15.0,
+            "hidden" : false,
+            "outlineLevel" : 0,
+            "rowIndex" : 1
+          }, {
+            "collapsed" : false,
+            "heightPoints" : 15.0,
+            "hidden" : false,
+            "outlineLevel" : 0,
+            "rowIndex" : 2
+          }, {
+            "collapsed" : false,
+            "heightPoints" : 15.0,
+            "hidden" : false,
+            "outlineLevel" : 0,
+            "rowIndex" : 3
+          } ],
+          "sheetName" : "Report",
+          "zoomPercent" : 100
+        },
+        "stepId" : "sheet-0-layout",
+        "type" : "GET_SHEET_LAYOUT"
+      }, {
+        "layout" : {
+          "footer" : {
+            "center" : "",
+            "left" : "",
+            "right" : ""
+          },
+          "header" : {
+            "center" : "",
+            "left" : "",
+            "right" : ""
+          },
+          "orientation" : "PORTRAIT",
+          "printArea" : {
+            "type" : "NONE"
+          },
+          "repeatingColumns" : {
+            "type" : "NONE"
+          },
+          "repeatingRows" : {
+            "type" : "NONE"
+          },
+          "scaling" : {
+            "type" : "AUTOMATIC"
+          },
+          "setup" : {
+            "blackAndWhite" : false,
+            "columnBreaks" : [ ],
+            "copies" : 1,
+            "draft" : false,
+            "firstPageNumber" : 1,
+            "horizontallyCentered" : false,
+            "margins" : {
+              "bottom" : 0.75,
+              "footer" : 0.3,
+              "header" : 0.3,
+              "left" : 0.7,
+              "right" : 0.7,
+              "top" : 0.75
+            },
+            "paperSize" : 1,
+            "printGridlines" : false,
+            "rowBreaks" : [ ],
+            "useFirstPageNumber" : false,
+            "verticallyCentered" : false
+          },
+          "sheetName" : "Report"
+        },
+        "stepId" : "sheet-0-print",
+        "type" : "GET_PRINT_LAYOUT"
+      }, {
+        "charts" : [ ],
+        "sheetName" : "Report",
+        "stepId" : "sheet-0-charts",
+        "type" : "GET_CHARTS"
+      }, {
+        "drawingObjects" : [ ],
+        "sheetName" : "Report",
+        "stepId" : "sheet-0-drawing",
+        "type" : "GET_DRAWING_OBJECTS"
+      }, {
+        "cells" : [ {
+          "address" : "A1",
+          "displayValue" : "Category",
+          "style" : {
+            "alignment" : {
+              "horizontalAlignment" : "GENERAL",
+              "indentation" : 0,
+              "textRotation" : 0,
+              "verticalAlignment" : "BOTTOM",
+              "wrapText" : false
+            },
+            "border" : {
+              "bottom" : {
+                "type" : "NONE"
+              },
+              "left" : {
+                "type" : "NONE"
+              },
+              "right" : {
+                "type" : "NONE"
+              },
+              "top" : {
+                "type" : "NONE"
+              }
+            },
+            "fill" : {
+              "kind" : "PATTERN_ONLY",
+              "pattern" : "NONE"
+            },
+            "font" : {
+              "bold" : false,
+              "fontColor" : {
+                "indexed" : 8,
+                "kind" : "INDEXED"
+              },
+              "fontHeight" : {
+                "points" : 11,
+                "twips" : 220
+              },
+              "fontName" : "Calibri",
+              "italic" : false,
+              "strikeout" : false,
+              "underline" : false
+            },
+            "numberFormat" : "General",
+            "protection" : {
+              "hiddenFormula" : false,
+              "locked" : true
+            }
+          },
+          "textValue" : "Category",
+          "type" : "TEXT"
+        }, {
+          "address" : "B1",
+          "displayValue" : "Owner",
+          "style" : {
+            "alignment" : {
+              "horizontalAlignment" : "GENERAL",
+              "indentation" : 0,
+              "textRotation" : 0,
+              "verticalAlignment" : "BOTTOM",
+              "wrapText" : false
+            },
+            "border" : {
+              "bottom" : {
+                "type" : "NONE"
+              },
+              "left" : {
+                "type" : "NONE"
+              },
+              "right" : {
+                "type" : "NONE"
+              },
+              "top" : {
+                "type" : "NONE"
+              }
+            },
+            "fill" : {
+              "kind" : "PATTERN_ONLY",
+              "pattern" : "NONE"
+            },
+            "font" : {
+              "bold" : false,
+              "fontColor" : {
+                "indexed" : 8,
+                "kind" : "INDEXED"
+              },
+              "fontHeight" : {
+                "points" : 11,
+                "twips" : 220
+              },
+              "fontName" : "Calibri",
+              "italic" : false,
+              "strikeout" : false,
+              "underline" : false
+            },
+            "numberFormat" : "General",
+            "protection" : {
+              "hiddenFormula" : false,
+              "locked" : true
+            }
+          },
+          "textValue" : "Owner",
+          "type" : "TEXT"
+        }, {
+          "address" : "C1",
+          "displayValue" : "Amount",
+          "style" : {
+            "alignment" : {
+              "horizontalAlignment" : "GENERAL",
+              "indentation" : 0,
+              "textRotation" : 0,
+              "verticalAlignment" : "BOTTOM",
+              "wrapText" : false
+            },
+            "border" : {
+              "bottom" : {
+                "type" : "NONE"
+              },
+              "left" : {
+                "type" : "NONE"
+              },
+              "right" : {
+                "type" : "NONE"
+              },
+              "top" : {
+                "type" : "NONE"
+              }
+            },
+            "fill" : {
+              "kind" : "PATTERN_ONLY",
+              "pattern" : "NONE"
+            },
+            "font" : {
+              "bold" : false,
+              "fontColor" : {
+                "indexed" : 8,
+                "kind" : "INDEXED"
+              },
+              "fontHeight" : {
+                "points" : 11,
+                "twips" : 220
+              },
+              "fontName" : "Calibri",
+              "italic" : false,
+              "strikeout" : false,
+              "underline" : false
+            },
+            "numberFormat" : "General",
+            "protection" : {
+              "hiddenFormula" : false,
+              "locked" : true
+            }
+          },
+          "textValue" : "Amount",
+          "type" : "TEXT"
+        }, {
+          "address" : "A2",
+          "displayValue" : "Travel",
+          "style" : {
+            "alignment" : {
+              "horizontalAlignment" : "GENERAL",
+              "indentation" : 0,
+              "textRotation" : 0,
+              "verticalAlignment" : "BOTTOM",
+              "wrapText" : false
+            },
+            "border" : {
+              "bottom" : {
+                "type" : "NONE"
+              },
+              "left" : {
+                "type" : "NONE"
+              },
+              "right" : {
+                "type" : "NONE"
+              },
+              "top" : {
+                "type" : "NONE"
+              }
+            },
+            "fill" : {
+              "kind" : "PATTERN_ONLY",
+              "pattern" : "NONE"
+            },
+            "font" : {
+              "bold" : false,
+              "fontColor" : {
+                "indexed" : 8,
+                "kind" : "INDEXED"
+              },
+              "fontHeight" : {
+                "points" : 11,
+                "twips" : 220
+              },
+              "fontName" : "Calibri",
+              "italic" : false,
+              "strikeout" : false,
+              "underline" : false
+            },
+            "numberFormat" : "General",
+            "protection" : {
+              "hiddenFormula" : false,
+              "locked" : true
+            }
+          },
+          "textValue" : "Travel",
+          "type" : "TEXT"
+        }, {
+          "address" : "B2",
+          "displayValue" : "Ada",
+          "style" : {
+            "alignment" : {
+              "horizontalAlignment" : "GENERAL",
+              "indentation" : 0,
+              "textRotation" : 0,
+              "verticalAlignment" : "BOTTOM",
+              "wrapText" : false
+            },
+            "border" : {
+              "bottom" : {
+                "type" : "NONE"
+              },
+              "left" : {
+                "type" : "NONE"
+              },
+              "right" : {
+                "type" : "NONE"
+              },
+              "top" : {
+                "type" : "NONE"
+              }
+            },
+            "fill" : {
+              "kind" : "PATTERN_ONLY",
+              "pattern" : "NONE"
+            },
+            "font" : {
+              "bold" : false,
+              "fontColor" : {
+                "indexed" : 8,
+                "kind" : "INDEXED"
+              },
+              "fontHeight" : {
+                "points" : 11,
+                "twips" : 220
+              },
+              "fontName" : "Calibri",
+              "italic" : false,
+              "strikeout" : false,
+              "underline" : false
+            },
+            "numberFormat" : "General",
+            "protection" : {
+              "hiddenFormula" : false,
+              "locked" : true
+            }
+          },
+          "textValue" : "Ada",
+          "type" : "TEXT"
+        }, {
+          "address" : "C2",
+          "displayValue" : "125",
+          "numberValue" : 125.0,
+          "style" : {
+            "alignment" : {
+              "horizontalAlignment" : "GENERAL",
+              "indentation" : 0,
+              "textRotation" : 0,
+              "verticalAlignment" : "BOTTOM",
+              "wrapText" : false
+            },
+            "border" : {
+              "bottom" : {
+                "type" : "NONE"
+              },
+              "left" : {
+                "type" : "NONE"
+              },
+              "right" : {
+                "type" : "NONE"
+              },
+              "top" : {
+                "type" : "NONE"
+              }
+            },
+            "fill" : {
+              "kind" : "PATTERN_ONLY",
+              "pattern" : "NONE"
+            },
+            "font" : {
+              "bold" : false,
+              "fontColor" : {
+                "indexed" : 8,
+                "kind" : "INDEXED"
+              },
+              "fontHeight" : {
+                "points" : 11,
+                "twips" : 220
+              },
+              "fontName" : "Calibri",
+              "italic" : false,
+              "strikeout" : false,
+              "underline" : false
+            },
+            "numberFormat" : "General",
+            "protection" : {
+              "hiddenFormula" : false,
+              "locked" : true
+            }
+          },
+          "temporal" : {
+            "isDate" : false
+          },
+          "type" : "NUMBER"
+        }, {
+          "address" : "A3",
+          "displayValue" : "Software",
+          "style" : {
+            "alignment" : {
+              "horizontalAlignment" : "GENERAL",
+              "indentation" : 0,
+              "textRotation" : 0,
+              "verticalAlignment" : "BOTTOM",
+              "wrapText" : false
+            },
+            "border" : {
+              "bottom" : {
+                "type" : "NONE"
+              },
+              "left" : {
+                "type" : "NONE"
+              },
+              "right" : {
+                "type" : "NONE"
+              },
+              "top" : {
+                "type" : "NONE"
+              }
+            },
+            "fill" : {
+              "kind" : "PATTERN_ONLY",
+              "pattern" : "NONE"
+            },
+            "font" : {
+              "bold" : false,
+              "fontColor" : {
+                "indexed" : 8,
+                "kind" : "INDEXED"
+              },
+              "fontHeight" : {
+                "points" : 11,
+                "twips" : 220
+              },
+              "fontName" : "Calibri",
+              "italic" : false,
+              "strikeout" : false,
+              "underline" : false
+            },
+            "numberFormat" : "General",
+            "protection" : {
+              "hiddenFormula" : false,
+              "locked" : true
+            }
+          },
+          "textValue" : "Software",
+          "type" : "TEXT"
+        }, {
+          "address" : "B3",
+          "displayValue" : "Lin",
+          "style" : {
+            "alignment" : {
+              "horizontalAlignment" : "GENERAL",
+              "indentation" : 0,
+              "textRotation" : 0,
+              "verticalAlignment" : "BOTTOM",
+              "wrapText" : false
+            },
+            "border" : {
+              "bottom" : {
+                "type" : "NONE"
+              },
+              "left" : {
+                "type" : "NONE"
+              },
+              "right" : {
+                "type" : "NONE"
+              },
+              "top" : {
+                "type" : "NONE"
+              }
+            },
+            "fill" : {
+              "kind" : "PATTERN_ONLY",
+              "pattern" : "NONE"
+            },
+            "font" : {
+              "bold" : false,
+              "fontColor" : {
+                "indexed" : 8,
+                "kind" : "INDEXED"
+              },
+              "fontHeight" : {
+                "points" : 11,
+                "twips" : 220
+              },
+              "fontName" : "Calibri",
+              "italic" : false,
+              "strikeout" : false,
+              "underline" : false
+            },
+            "numberFormat" : "General",
+            "protection" : {
+              "hiddenFormula" : false,
+              "locked" : true
+            }
+          },
+          "textValue" : "Lin",
+          "type" : "TEXT"
+        }, {
+          "address" : "C3",
+          "displayValue" : "310",
+          "numberValue" : 310.0,
+          "style" : {
+            "alignment" : {
+              "horizontalAlignment" : "GENERAL",
+              "indentation" : 0,
+              "textRotation" : 0,
+              "verticalAlignment" : "BOTTOM",
+              "wrapText" : false
+            },
+            "border" : {
+              "bottom" : {
+                "type" : "NONE"
+              },
+              "left" : {
+                "type" : "NONE"
+              },
+              "right" : {
+                "type" : "NONE"
+              },
+              "top" : {
+                "type" : "NONE"
+              }
+            },
+            "fill" : {
+              "kind" : "PATTERN_ONLY",
+              "pattern" : "NONE"
+            },
+            "font" : {
+              "bold" : false,
+              "fontColor" : {
+                "indexed" : 8,
+                "kind" : "INDEXED"
+              },
+              "fontHeight" : {
+                "points" : 11,
+                "twips" : 220
+              },
+              "fontName" : "Calibri",
+              "italic" : false,
+              "strikeout" : false,
+              "underline" : false
+            },
+            "numberFormat" : "General",
+            "protection" : {
+              "hiddenFormula" : false,
+              "locked" : true
+            }
+          },
+          "temporal" : {
+            "isDate" : false
+          },
+          "type" : "NUMBER"
+        }, {
+          "address" : "A4",
+          "displayValue" : "Training",
+          "style" : {
+            "alignment" : {
+              "horizontalAlignment" : "GENERAL",
+              "indentation" : 0,
+              "textRotation" : 0,
+              "verticalAlignment" : "BOTTOM",
+              "wrapText" : false
+            },
+            "border" : {
+              "bottom" : {
+                "type" : "NONE"
+              },
+              "left" : {
+                "type" : "NONE"
+              },
+              "right" : {
+                "type" : "NONE"
+              },
+              "top" : {
+                "type" : "NONE"
+              }
+            },
+            "fill" : {
+              "kind" : "PATTERN_ONLY",
+              "pattern" : "NONE"
+            },
+            "font" : {
+              "bold" : false,
+              "fontColor" : {
+                "indexed" : 8,
+                "kind" : "INDEXED"
+              },
+              "fontHeight" : {
+                "points" : 11,
+                "twips" : 220
+              },
+              "fontName" : "Calibri",
+              "italic" : false,
+              "strikeout" : false,
+              "underline" : false
+            },
+            "numberFormat" : "General",
+            "protection" : {
+              "hiddenFormula" : false,
+              "locked" : true
+            }
+          },
+          "textValue" : "Training",
+          "type" : "TEXT"
+        }, {
+          "address" : "B4",
+          "displayValue" : "Mia",
+          "style" : {
+            "alignment" : {
+              "horizontalAlignment" : "GENERAL",
+              "indentation" : 0,
+              "textRotation" : 0,
+              "verticalAlignment" : "BOTTOM",
+              "wrapText" : false
+            },
+            "border" : {
+              "bottom" : {
+                "type" : "NONE"
+              },
+              "left" : {
+                "type" : "NONE"
+              },
+              "right" : {
+                "type" : "NONE"
+              },
+              "top" : {
+                "type" : "NONE"
+              }
+            },
+            "fill" : {
+              "kind" : "PATTERN_ONLY",
+              "pattern" : "NONE"
+            },
+            "font" : {
+              "bold" : false,
+              "fontColor" : {
+                "indexed" : 8,
+                "kind" : "INDEXED"
+              },
+              "fontHeight" : {
+                "points" : 11,
+                "twips" : 220
+              },
+              "fontName" : "Calibri",
+              "italic" : false,
+              "strikeout" : false,
+              "underline" : false
+            },
+            "numberFormat" : "General",
+            "protection" : {
+              "hiddenFormula" : false,
+              "locked" : true
+            }
+          },
+          "textValue" : "Mia",
+          "type" : "TEXT"
+        }, {
+          "address" : "C4",
+          "displayValue" : "90",
+          "numberValue" : 90.0,
+          "style" : {
+            "alignment" : {
+              "horizontalAlignment" : "GENERAL",
+              "indentation" : 0,
+              "textRotation" : 0,
+              "verticalAlignment" : "BOTTOM",
+              "wrapText" : false
+            },
+            "border" : {
+              "bottom" : {
+                "type" : "NONE"
+              },
+              "left" : {
+                "type" : "NONE"
+              },
+              "right" : {
+                "type" : "NONE"
+              },
+              "top" : {
+                "type" : "NONE"
+              }
+            },
+            "fill" : {
+              "kind" : "PATTERN_ONLY",
+              "pattern" : "NONE"
+            },
+            "font" : {
+              "bold" : false,
+              "fontColor" : {
+                "indexed" : 8,
+                "kind" : "INDEXED"
+              },
+              "fontHeight" : {
+                "points" : 11,
+                "twips" : 220
+              },
+              "fontName" : "Calibri",
+              "italic" : false,
+              "strikeout" : false,
+              "underline" : false
+            },
+            "numberFormat" : "General",
+            "protection" : {
+              "hiddenFormula" : false,
+              "locked" : true
+            }
+          },
+          "temporal" : {
+            "isDate" : false
+          },
+          "type" : "NUMBER"
+        } ],
+        "sheetName" : "Report",
+        "stepId" : "sheet-0-cells",
+        "type" : "GET_CELLS"
+      }, {
+        "sheetName" : "Report",
+        "stepId" : "sheet-0-GET_DATA_VALIDATIONS",
+        "type" : "GET_DATA_VALIDATIONS",
+        "validations" : [ ]
+      }, {
+        "conditionalFormattingBlocks" : [ ],
+        "sheetName" : "Report",
+        "stepId" : "sheet-0-GET_CONDITIONAL_FORMATTING",
+        "type" : "GET_CONDITIONAL_FORMATTING"
+      }, {
+        "stepId" : "tables",
+        "tables" : [ {
+          "behavior" : {
+            "hasAutofilter" : true,
+            "insertRow" : false,
+            "insertRowShift" : false,
+            "published" : false
+          },
+          "name" : "QuarterlyReport",
+          "presentation" : { },
+          "range" : "A1:C4",
+          "sheetName" : "Report",
+          "structure" : {
+            "columnNames" : [ "Category", "Owner", "Amount" ],
+            "columns" : [ {
+              "id" : 1,
+              "name" : "Category"
+            }, {
+              "id" : 2,
+              "name" : "Owner"
+            }, {
+              "id" : 3,
+              "name" : "Amount"
+            } ],
+            "headerRowCount" : 1,
+            "totalsRowCount" : 0
+          },
+          "style" : {
+            "name" : "TableStyleMedium2",
+            "showColumnStripes" : false,
+            "showFirstColumn" : false,
+            "showLastColumn" : false,
+            "showRowStripes" : true,
+            "type" : "NAMED"
+          }
+        } ],
+        "type" : "GET_TABLES"
+      }, {
+        "pivotTables" : [ ],
+        "stepId" : "pivots",
+        "type" : "GET_PIVOT_TABLES"
+      }, {
+        "analysis" : {
+          "findings" : [ ],
+          "summary" : {
+            "errorCount" : 0,
+            "infoCount" : 0,
+            "totalCount" : 0,
+            "warningCount" : 0
+          }
+        },
+        "stepId" : "findings",
+        "type" : "ANALYZE_WORKBOOK_FINDINGS"
+      } ],
+      "summary" : [ {
+        "stepId" : "summary",
+        "type" : "GET_WORKBOOK_SUMMARY",
+        "workbook" : {
+          "activeSheetName" : "Report",
+          "forceFormulaRecalculationOnOpen" : false,
+          "kind" : "WITH_SHEETS",
+          "namedRangeCount" : 0,
+          "selectedSheetNames" : [ "Report" ],
+          "sheetCount" : 1,
+          "sheetNames" : [ "Report" ]
+        }
+      } ]
+    },
+    "stderr" : "",
+    "stdout" : {
+      "assertions" : [ ],
+      "calculation" : {
+        "execution" : {
+          "cachesCleared" : false,
+          "evaluatedFormulaCount" : 0,
+          "markRecalculateOnOpenApplied" : false,
+          "status" : "NOT_REQUESTED"
+        },
+        "policy" : { }
+      },
+      "evidence" : {
+        "admission" : {
+          "materializedInputs" : [ ],
+          "operations" : [ {
+            "effects" : [ "READ_WORKBOOK", "MUTATE_WORKBOOK", "CELLS", "FORMULAS", "STYLES", "HYPERLINKS", "COMMENTS", "DRAWINGS", "WORKBOOK_STRUCTURE", "SHEET_STRUCTURE", "ROWS", "COLUMNS", "TABLES", "NAMED_RANGES", "DATA_VALIDATIONS", "CONDITIONAL_FORMATTING", "AUTOFILTERS", "PIVOT_TABLES", "WORKBOOK_METADATA", "WORKBOOK_SECURITY" ],
+            "footprint" : "CONSERVATIVE_WORKBOOK_WIDE",
+            "operationId" : "ENSURE_SHEET"
+          }, {
+            "effects" : [ "READ_WORKBOOK", "MUTATE_WORKBOOK", "CELLS", "FORMULAS", "STYLES", "HYPERLINKS", "COMMENTS", "DRAWINGS" ],
+            "footprint" : "CONSERVATIVE_WORKBOOK_WIDE",
+            "operationId" : "SET_RANGE"
+          }, {
+            "effects" : [ "READ_WORKBOOK", "MUTATE_WORKBOOK", "CELLS", "FORMULAS", "TABLES", "NAMED_RANGES", "DATA_VALIDATIONS", "CONDITIONAL_FORMATTING", "AUTOFILTERS", "PIVOT_TABLES", "CUSTOM_XML" ],
+            "footprint" : "CONSERVATIVE_WORKBOOK_WIDE",
+            "operationId" : "SET_TABLE"
+          }, {
+            "effects" : [ "READ_WORKBOOK", "MUTATE_WORKBOOK", "CELLS", "FORMULAS", "STYLES", "HYPERLINKS", "COMMENTS", "DRAWINGS", "WORKBOOK_STRUCTURE", "SHEET_STRUCTURE", "ROWS", "COLUMNS", "TABLES", "NAMED_RANGES", "DATA_VALIDATIONS", "CONDITIONAL_FORMATTING", "AUTOFILTERS", "PIVOT_TABLES", "WORKBOOK_METADATA", "WORKBOOK_SECURITY" ],
+            "footprint" : "CONSERVATIVE_WORKBOOK_WIDE",
+            "operationId" : "AUTO_SIZE_COLUMNS"
+          }, {
+            "effects" : [ "READ_WORKBOOK" ],
+            "footprint" : "TARGET_BOUNDED",
+            "operationId" : "GET_CELLS"
+          }, {
+            "effects" : [ "READ_WORKBOOK" ],
+            "footprint" : "TARGET_BOUNDED",
+            "operationId" : "GET_TABLES"
+          }, {
+            "effects" : [ "READ_WORKBOOK" ],
+            "footprint" : "TARGET_BOUNDED",
+            "operationId" : "GET_WORKBOOK_SUMMARY"
+          } ]
+        },
+        "computational" : {
+          "status" : "NOT_REQUESTED"
+        },
+        "presentational" : {
+          "status" : "NOT_ASSESSED"
+        },
+        "preservation" : [ {
+          "status" : "NOT_REQUESTED"
+        } ],
+        "structural" : {
+          "status" : "ESTABLISHED"
+        },
+        "taskSpecific" : {
+          "status" : "NOT_REQUESTED"
+        }
+      },
+      "inspections" : [ {
+        "cells" : [ {
+          "address" : "A1",
+          "textValue" : "Category",
+          "type" : "TEXT"
+        }, {
+          "address" : "B2",
+          "textValue" : "Ada",
+          "type" : "TEXT"
+        }, {
+          "address" : "C4",
+          "numberValue" : 90.0,
+          "type" : "NUMBER"
+        } ],
+        "sheetName" : "Report",
+        "stepId" : "read-report-cells",
+        "type" : "GET_CELLS"
+      }, {
+        "stepId" : "read-report-tables",
+        "tables" : [ {
+          "behavior" : {
+            "hasAutofilter" : true,
+            "insertRow" : false,
+            "insertRowShift" : false,
+            "published" : false
+          },
+          "name" : "QuarterlyReport",
+          "presentation" : { },
+          "range" : "A1:C4",
+          "sheetName" : "Report",
+          "structure" : {
+            "columnNames" : [ "Category", "Owner", "Amount" ],
+            "columns" : [ {
+              "id" : 1,
+              "name" : "Category"
+            }, {
+              "id" : 2,
+              "name" : "Owner"
+            }, {
+              "id" : 3,
+              "name" : "Amount"
+            } ],
+            "headerRowCount" : 1,
+            "totalsRowCount" : 0
+          },
+          "style" : {
+            "name" : "TableStyleMedium2",
+            "showColumnStripes" : false,
+            "showFirstColumn" : false,
+            "showLastColumn" : false,
+            "showRowStripes" : true,
+            "type" : "NAMED"
+          }
+        } ],
+        "type" : "GET_TABLES"
+      }, {
+        "stepId" : "read-report-workbook",
+        "type" : "GET_WORKBOOK_SUMMARY",
+        "workbook" : {
+          "activeSheetName" : "Report",
+          "forceFormulaRecalculationOnOpen" : false,
+          "kind" : "WITH_SHEETS",
+          "namedRangeCount" : 0,
+          "selectedSheetNames" : [ "Report" ],
+          "sheetCount" : 1,
+          "sheetNames" : [ "Report" ]
+        }
+      } ],
+      "journal" : {
+        "calculation" : {
+          "execution" : {
+            "status" : "NOT_REQUESTED"
+          },
+          "preflight" : {
+            "status" : "NOT_REQUESTED"
+          }
+        },
+        "close" : {
+          "status" : "SUCCEEDED"
+        },
+        "inputResolution" : {
+          "status" : "SUCCEEDED"
+        },
+        "level" : "SUMMARY",
+        "open" : {
+          "status" : "SUCCEEDED"
+        },
+        "outcome" : {
+          "completedStepCount" : 7,
+          "durationMillis" : "<durationMillis>",
+          "plannedStepCount" : 7,
+          "status" : "SUCCEEDED"
+        },
+        "persistencePhase" : {
+          "status" : "SUCCEEDED"
+        },
+        "source" : {
+          "type" : "NEW"
+        },
+        "steps" : [ {
+          "outcome" : "SUCCEEDED",
+          "phase" : {
+            "status" : "SUCCEEDED"
+          },
+          "resolvedTargets" : [ {
+            "kind" : "SHEET",
+            "label" : "Sheet Report"
+          } ],
+          "stepId" : "ensure-report",
+          "stepIndex" : 0,
+          "stepKind" : "MUTATION",
+          "stepType" : "ENSURE_SHEET"
+        }, {
+          "outcome" : "SUCCEEDED",
+          "phase" : {
+            "status" : "SUCCEEDED"
+          },
+          "resolvedTargets" : [ {
+            "kind" : "RANGE",
+            "label" : "Range Report!A1:C4"
+          } ],
+          "stepId" : "seed-report",
+          "stepIndex" : 1,
+          "stepKind" : "MUTATION",
+          "stepType" : "SET_RANGE"
+        }, {
+          "outcome" : "SUCCEEDED",
+          "phase" : {
+            "status" : "SUCCEEDED"
+          },
+          "resolvedTargets" : [ {
+            "kind" : "TABLE",
+            "label" : "Table Report!QuarterlyReport"
+          } ],
+          "stepId" : "set-report-table",
+          "stepIndex" : 2,
+          "stepKind" : "MUTATION",
+          "stepType" : "SET_TABLE"
+        }, {
+          "outcome" : "SUCCEEDED",
+          "phase" : {
+            "status" : "SUCCEEDED"
+          },
+          "resolvedTargets" : [ {
+            "kind" : "SHEET",
+            "label" : "Sheet Report"
+          } ],
+          "stepId" : "auto-size-report",
+          "stepIndex" : 3,
+          "stepKind" : "MUTATION",
+          "stepType" : "AUTO_SIZE_COLUMNS"
+        }, {
+          "outcome" : "SUCCEEDED",
+          "phase" : {
+            "status" : "SUCCEEDED"
+          },
+          "resolvedTargets" : [ {
+            "kind" : "CELL",
+            "label" : "Cells Report![A1, B2, C4]"
+          } ],
+          "stepId" : "read-report-cells",
+          "stepIndex" : 4,
+          "stepKind" : "INSPECTION",
+          "stepType" : "GET_CELLS"
+        }, {
+          "outcome" : "SUCCEEDED",
+          "phase" : {
+            "status" : "SUCCEEDED"
+          },
+          "resolvedTargets" : [ {
+            "kind" : "TABLE",
+            "label" : "Table Report!QuarterlyReport"
+          } ],
+          "stepId" : "read-report-tables",
+          "stepIndex" : 5,
+          "stepKind" : "INSPECTION",
+          "stepType" : "GET_TABLES"
+        }, {
+          "outcome" : "SUCCEEDED",
+          "phase" : {
+            "status" : "SUCCEEDED"
+          },
+          "resolvedTargets" : [ {
+            "kind" : "WORKBOOK",
+            "label" : "Current workbook"
+          } ],
+          "stepId" : "read-report-workbook",
+          "stepIndex" : 6,
+          "stepKind" : "INSPECTION",
+          "stepType" : "GET_WORKBOOK_SUMMARY"
+        } ],
+        "validation" : {
+          "status" : "SUCCEEDED"
+        }
+      },
+      "persistence" : {
+        "publication" : {
+          "byteSize" : "<byteSize>",
+          "durability" : {
+            "level" : "FILE_AND_DIRECTORY_SYNCED"
+          },
+          "executionPath" : "<workspace>/recipe/generated-workbooks/tabular-report.xlsx",
+          "sha256" : "<sha256>",
+          "stagedArtifactVerification" : { },
+          "status" : "PUBLISHED"
+        },
+        "requestedPath" : "generated-workbooks/tabular-report.xlsx",
+        "type" : "SAVE_AS"
+      },
+      "planId" : "tabular-report-starter",
+      "protocolVersion" : "V3",
+      "status" : "SUCCEEDED",
+      "warnings" : [ ]
+    }
+  },
+  "materializedRequest" : {
+    "persistence" : {
+      "ifExists" : "REPLACE",
+      "path" : "generated-workbooks/tabular-report.xlsx",
+      "type" : "SAVE_AS"
+    },
+    "planId" : "tabular-report-starter",
+    "protocolVersion" : "V3",
+    "source" : {
+      "type" : "NEW"
+    },
+    "steps" : [ {
+      "action" : {
+        "type" : "ENSURE_SHEET"
+      },
+      "stepId" : "ensure-report",
+      "target" : {
+        "name" : "Report",
+        "type" : "SHEET_BY_NAME"
+      }
+    }, {
+      "action" : {
+        "rows" : {
+          "cells" : [ [ {
+            "source" : {
+              "text" : "Category",
+              "type" : "INLINE"
+            },
+            "type" : "TEXT"
+          }, {
+            "source" : {
+              "text" : "Owner",
+              "type" : "INLINE"
+            },
+            "type" : "TEXT"
+          }, {
+            "source" : {
+              "text" : "Amount",
+              "type" : "INLINE"
+            },
+            "type" : "TEXT"
+          } ], [ {
+            "source" : {
+              "text" : "Travel",
+              "type" : "INLINE"
+            },
+            "type" : "TEXT"
+          }, {
+            "source" : {
+              "text" : "Ada",
+              "type" : "INLINE"
+            },
+            "type" : "TEXT"
+          }, {
+            "number" : 125.0,
+            "type" : "NUMBER"
+          } ], [ {
+            "source" : {
+              "text" : "Software",
+              "type" : "INLINE"
+            },
+            "type" : "TEXT"
+          }, {
+            "source" : {
+              "text" : "Lin",
+              "type" : "INLINE"
+            },
+            "type" : "TEXT"
+          }, {
+            "number" : 310.0,
+            "type" : "NUMBER"
+          } ], [ {
+            "source" : {
+              "text" : "Training",
+              "type" : "INLINE"
+            },
+            "type" : "TEXT"
+          }, {
+            "source" : {
+              "text" : "Mia",
+              "type" : "INLINE"
+            },
+            "type" : "TEXT"
+          }, {
+            "number" : 90.0,
+            "type" : "NUMBER"
+          } ] ],
+          "type" : "TYPED"
+        },
+        "type" : "SET_RANGE"
+      },
+      "stepId" : "seed-report",
+      "target" : {
+        "range" : "A1:C4",
+        "sheetName" : "Report",
+        "type" : "RANGE_BY_RANGE"
+      }
+    }, {
+      "action" : {
+        "table" : {
+          "columns" : [ ],
+          "comment" : {
+            "text" : "",
+            "type" : "INLINE"
+          },
+          "dataCellStyle" : "",
+          "hasAutofilter" : true,
+          "headerRowCellStyle" : "",
+          "insertRow" : false,
+          "insertRowShift" : false,
+          "name" : "QuarterlyReport",
+          "published" : false,
+          "range" : "A1:C4",
+          "sheetName" : "Report",
+          "showTotalsRow" : false,
+          "style" : {
+            "name" : "TableStyleMedium2",
+            "showColumnStripes" : false,
+            "showFirstColumn" : false,
+            "showLastColumn" : false,
+            "showRowStripes" : true,
+            "type" : "NAMED"
+          },
+          "totalsRowCellStyle" : ""
+        },
+        "type" : "SET_TABLE"
+      },
+      "stepId" : "set-report-table",
+      "target" : {
+        "name" : "QuarterlyReport",
+        "sheetName" : "Report",
+        "type" : "TABLE_BY_NAME_ON_SHEET"
+      }
+    }, {
+      "action" : {
+        "type" : "AUTO_SIZE_COLUMNS"
+      },
+      "stepId" : "auto-size-report",
+      "target" : {
+        "name" : "Report",
+        "type" : "SHEET_BY_NAME"
+      }
+    }, {
+      "query" : {
+        "type" : "GET_CELLS"
+      },
+      "stepId" : "read-report-cells",
+      "target" : {
+        "addresses" : [ "A1", "B2", "C4" ],
+        "sheetName" : "Report",
+        "type" : "CELL_BY_ADDRESSES"
+      }
+    }, {
+      "query" : {
+        "type" : "GET_TABLES"
+      },
+      "stepId" : "read-report-tables",
+      "target" : {
+        "name" : "QuarterlyReport",
+        "sheetName" : "Report",
+        "type" : "TABLE_BY_NAME_ON_SHEET"
+      }
+    }, {
+      "query" : {
+        "type" : "GET_WORKBOOK_SUMMARY"
+      },
+      "stepId" : "read-report-workbook",
+      "target" : {
+        "type" : "WORKBOOK_CURRENT"
+      }
+    } ]
+  },
+  "print" : {
+    "exit" : 0,
+    "stderr" : "",
+    "stdout" : {
+      "persistence" : {
+        "ifExists" : "REPLACE",
+        "path" : "generated-workbooks/tabular-report.xlsx",
+        "type" : "SAVE_AS"
+      },
+      "planId" : "tabular-report-starter",
+      "protocolVersion" : "V3",
+      "source" : {
+        "type" : "NEW"
+      },
+      "steps" : [ {
+        "action" : {
+          "type" : "ENSURE_SHEET"
+        },
+        "stepId" : "ensure-report",
+        "target" : {
+          "name" : "Report",
+          "type" : "SHEET_BY_NAME"
+        }
+      }, {
+        "action" : {
+          "rows" : {
+            "cells" : [ [ {
+              "source" : {
+                "text" : "Category",
+                "type" : "INLINE"
+              },
+              "type" : "TEXT"
+            }, {
+              "source" : {
+                "text" : "Owner",
+                "type" : "INLINE"
+              },
+              "type" : "TEXT"
+            }, {
+              "source" : {
+                "text" : "Amount",
+                "type" : "INLINE"
+              },
+              "type" : "TEXT"
+            } ], [ {
+              "source" : {
+                "text" : "Travel",
+                "type" : "INLINE"
+              },
+              "type" : "TEXT"
+            }, {
+              "source" : {
+                "text" : "Ada",
+                "type" : "INLINE"
+              },
+              "type" : "TEXT"
+            }, {
+              "number" : 125.0,
+              "type" : "NUMBER"
+            } ], [ {
+              "source" : {
+                "text" : "Software",
+                "type" : "INLINE"
+              },
+              "type" : "TEXT"
+            }, {
+              "source" : {
+                "text" : "Lin",
+                "type" : "INLINE"
+              },
+              "type" : "TEXT"
+            }, {
+              "number" : 310.0,
+              "type" : "NUMBER"
+            } ], [ {
+              "source" : {
+                "text" : "Training",
+                "type" : "INLINE"
+              },
+              "type" : "TEXT"
+            }, {
+              "source" : {
+                "text" : "Mia",
+                "type" : "INLINE"
+              },
+              "type" : "TEXT"
+            }, {
+              "number" : 90.0,
+              "type" : "NUMBER"
+            } ] ],
+            "type" : "TYPED"
+          },
+          "type" : "SET_RANGE"
+        },
+        "stepId" : "seed-report",
+        "target" : {
+          "range" : "A1:C4",
+          "sheetName" : "Report",
+          "type" : "RANGE_BY_RANGE"
+        }
+      }, {
+        "action" : {
+          "table" : {
+            "columns" : [ ],
+            "comment" : {
+              "text" : "",
+              "type" : "INLINE"
+            },
+            "dataCellStyle" : "",
+            "hasAutofilter" : true,
+            "headerRowCellStyle" : "",
+            "insertRow" : false,
+            "insertRowShift" : false,
+            "name" : "QuarterlyReport",
+            "published" : false,
+            "range" : "A1:C4",
+            "sheetName" : "Report",
+            "showTotalsRow" : false,
+            "style" : {
+              "name" : "TableStyleMedium2",
+              "showColumnStripes" : false,
+              "showFirstColumn" : false,
+              "showLastColumn" : false,
+              "showRowStripes" : true,
+              "type" : "NAMED"
+            },
+            "totalsRowCellStyle" : ""
+          },
+          "type" : "SET_TABLE"
+        },
+        "stepId" : "set-report-table",
+        "target" : {
+          "name" : "QuarterlyReport",
+          "sheetName" : "Report",
+          "type" : "TABLE_BY_NAME_ON_SHEET"
+        }
+      }, {
+        "action" : {
+          "type" : "AUTO_SIZE_COLUMNS"
+        },
+        "stepId" : "auto-size-report",
+        "target" : {
+          "name" : "Report",
+          "type" : "SHEET_BY_NAME"
+        }
+      }, {
+        "query" : {
+          "type" : "GET_CELLS"
+        },
+        "stepId" : "read-report-cells",
+        "target" : {
+          "addresses" : [ "A1", "B2", "C4" ],
+          "sheetName" : "Report",
+          "type" : "CELL_BY_ADDRESSES"
+        }
+      }, {
+        "query" : {
+          "type" : "GET_TABLES"
+        },
+        "stepId" : "read-report-tables",
+        "target" : {
+          "name" : "QuarterlyReport",
+          "sheetName" : "Report",
+          "type" : "TABLE_BY_NAME_ON_SHEET"
+        }
+      }, {
+        "query" : {
+          "type" : "GET_WORKBOOK_SUMMARY"
+        },
+        "stepId" : "read-report-workbook",
+        "target" : {
+          "type" : "WORKBOOK_CURRENT"
+        }
+      } ]
+    }
+  }
+}

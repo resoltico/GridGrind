@@ -24,6 +24,9 @@
 *.gz         binary
 *.tar        binary
 
+# Malformed intake fixtures retain exact bytes, including invalid UTF-8 and whitespace.
+/cli/src/test/resources/golden/problems/*.bin binary
+
 # Repository-owned agent instructions stay in Git history but do not ship in source archives.
 /AGENTS.md   export-ignore
 /.codex      export-ignore

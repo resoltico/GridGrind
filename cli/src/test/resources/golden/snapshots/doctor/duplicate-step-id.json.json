@@ -1,0 +1,35 @@
+{
+  "exit" : 1,
+  "stderr" : "",
+  "stdout" : {
+    "problems" : [ {
+      "category" : "REQUEST",
+      "causes" : [ {
+        "code" : "INVALID_REQUEST",
+        "message" : "steps must not contain duplicate stepId values: a",
+        "stage" : "BIND_REQUEST"
+      } ],
+      "code" : "INVALID_REQUEST",
+      "context" : {
+        "json" : {
+          "byteOffset" : 241,
+          "jsonPath" : "steps[1].stepId",
+          "type" : "PATH_BYTE_OFFSET"
+        },
+        "request" : {
+          "requestPath" : "<workspace>/request.json",
+          "type" : "FILE"
+        },
+        "stage" : "BIND_REQUEST"
+      },
+      "message" : "steps must not contain duplicate stepId values: a",
+      "recovery" : "CHANGE_REQUEST",
+      "resolution" : "Make every stepId unique. Rename or remove the duplicate value 'a'.",
+      "title" : "Invalid request"
+    } ],
+    "protocolVersion" : "V3",
+    "severity" : "ERROR",
+    "valid" : false,
+    "warnings" : [ ]
+  }
+}

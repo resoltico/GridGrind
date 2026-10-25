@@ -5,6 +5,10 @@ Earlier release history through `0.68.0` is archived in [docs/CHANGELOG_ARCHIVE.
 
 ## [Unreleased]
 
+### Added
+
+- Added behaviour snapshots for every shipped example and recipe, discovery and diagnostic commands, and persisted workbook facts, checked through both the Java CLI entry point and packaged JAR.
+
 ## [0.76.0] - 2026-09-09
 
 ### Added
