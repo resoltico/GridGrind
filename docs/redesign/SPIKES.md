@@ -243,3 +243,36 @@ and controls passed; focused PMD passed in 6 s. Updated shell/module/documentati
 contracts passed. The final `./gradlew check --no-parallel` passed in 206.91 s:
 2765 tests, zero failures/errors/skips, including all 141 unchanged golden cases.
 The old ADR is explicitly historical pending its replacement in WP-20/WP-71.
+
+## Phase 1 whole-repository failure and focused repair
+
+The first phase-end `./check.sh` passed quality/coverage (212 s), nested Jazzer
+support and seed replay (32 s), and fat-JAR packaging (16 s). Stage 5 failed after
+332 s because the grant-writing Python helper imported `typing.TypeAlias`, absent
+from the ambient macOS Python 3.9.6. Total exit 1 after 607.43 s (script rounds
+to 608 s); Docker was not reached in that run. The complete log is retained in
+the package's `evidence/phase-1/check.log`.
+
+The helper used a newer runtime typing expression without declaring that
+prerequisite. Its recursive type descriptions now use standard `typing.Union`,
+with no version switch, polyfill, dependency or grant-generation behaviour
+change. The failing discovery verifier's focused test passes. Actual packaged
+discovery execution passes every example and all eight task starters, and the
+remaining container/publication contract tests pass.
+
+Focused Docker smoke also passes (261.28 s): pinned-base platform inspection,
+image build, legal visibility, packaged discovery, all recipe executions,
+bind-mount user guidance, custom workdir/odd paths, existing-workbook reopening,
+signature-line authoring under container fonts and streaming-write readback.
+This built and removed only a local smoke image; no container was published.
+
+The shell stage currently invokes the full quality gate again via its helper
+inventory. That verified duplication is left for the scheduled WP-61 orchestration
+replacement rather than bypassing the current canonical gate.
+
+The repaired canonical `./check.sh` passed all six stages in 728.38 s (script
+summary 728 s): hygiene, quality/coverage, nested Jazzer support and seed replay,
+fat-JAR packaging, all shell contracts and actual Docker smoke. Docker's stage
+passed in 121 s. The complete delivered-state log is retained as
+`evidence/phase-1/check-repaired.log`. The earlier 607.43-second failure remains
+recorded above and in its original log. No golden snapshot changed.

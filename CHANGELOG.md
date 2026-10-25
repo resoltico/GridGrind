@@ -16,6 +16,10 @@ Earlier release history through `0.68.0` is archived in [docs/CHANGELOG_ARCHIVE.
 - Consolidated build-task implementations and conventions in Kotlin, with the included build deriving its Java target from the shared toolchain pin.
 - Moved runtime and XSSF parity tests into the engine and replaced the executor verification project with focused architecture rules and negative controls.
 
+### Fixed
+
+- Fixed local discovery verification with macOS's ambient Python 3 runtime.
+
 ## [0.76.0] - 2026-09-09
 
 ### Added

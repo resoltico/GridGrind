@@ -7,11 +7,11 @@ import argparse
 import json
 import sys
 from pathlib import Path
-from typing import Final, TypeAlias, cast
+from typing import Final, Union, cast
 
-JsonArray: TypeAlias = list["JsonValue"]
-JsonObject: TypeAlias = dict[str, "JsonValue"]
-JsonValue: TypeAlias = JsonArray | JsonObject | str | int | float | bool | None
+JsonArray = list["JsonValue"]
+JsonObject = dict[str, "JsonValue"]
+JsonValue = Union[JsonArray, JsonObject, str, int, float, bool, None]
 FILE_SOURCE_TYPES: Final = frozenset({"EXISTING", "UTF8_FILE"})
 FILE_SOURCE_PARENT_KEYS: Final = frozenset({"source", "payload"})
 OPERATION_KEYS: Final = frozenset({"action", "assertion", "query"})
