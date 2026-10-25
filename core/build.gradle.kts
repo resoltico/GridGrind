@@ -1,7 +1,5 @@
 import info.solidsoft.gradle.pitest.PitestPluginExtension
 import org.gradle.api.tasks.testing.Test
-import org.gradle.api.tasks.JavaExec
-import org.gradle.api.plugins.JavaPluginExtension
 import org.gradle.testing.jacoco.plugins.JacocoTaskExtension
 import org.gradle.testing.jacoco.tasks.JacocoReport
 
@@ -11,9 +9,12 @@ plugins {
     id("gridgrind.mutation-conventions")
 }
 
-description = "Canonical workbook model, vocabulary, authoring and wire codecs"
+description = "Canonical workbook model, vocabulary and Java authoring"
 
 configure<PitestPluginExtension> {
+    testSourceSets.add(provider {
+        project(":json").extensions.getByType<org.gradle.api.tasks.SourceSetContainer>().getByName("test")
+    })
     targetClasses.set(
         setOf(
             "dev.erst.gridgrind.contract.dto.ProtocolDefinedNameValidation*",
@@ -23,7 +24,6 @@ configure<PitestPluginExtension> {
             "dev.erst.gridgrind.contract.catalog.FieldConstraint*",
             "dev.erst.gridgrind.contract.catalog.CatalogStepTemplateDefaults*",
             "dev.erst.gridgrind.contract.catalog.CatalogStepTemplateSupport*",
-            "dev.erst.gridgrind.contract.json.RequestUtf8DecodeResult*",
             "dev.erst.gridgrind.contract.step.WorkbookStaticMaterializationValidation*",
         ),
     )
@@ -36,7 +36,6 @@ configure<PitestPluginExtension> {
             "dev.erst.gridgrind.contract.dto.ProtocolResidualCoverageTest",
             "dev.erst.gridgrind.contract.catalog.FieldConstraintTest",
             "dev.erst.gridgrind.contract.catalog.CatalogStepTemplateSupportTest",
-            "dev.erst.gridgrind.contract.json.RequestSyntaxSupportTest",
             "dev.erst.gridgrind.contract.dto.ProtocolRgbColorSupportTest",
             "dev.erst.gridgrind.contract.step.WorkbookStaticMaterializationValidationTest",
             "dev.erst.gridgrind.contract.step.WorkbookStaticRequestContractTest",
@@ -45,7 +44,7 @@ configure<PitestPluginExtension> {
 }
 
 val downstreamCoverageProjects =
-    listOf(project(":engine"), project(":cli"))
+    listOf(project(":json"), project(":engine"), project(":cli"))
 
 fun downstreamCoverageTaskPaths(): List<String> =
     downstreamCoverageProjects.flatMap { downstreamProject ->
@@ -75,7 +74,6 @@ fun localCoverageExecutionData() =
 dependencies {
     // Jackson 3.x still owns annotations via the Jackson 2.x coordinates and package namespace.
     api(libs.jackson.annotations)
-    implementation(libs.jackson.databind)
     testImplementation(testFixtures(project(":engine")))
     testImplementation(libs.junit.jupiter)
     testImplementation(libs.poi.ooxml)

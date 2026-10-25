@@ -282,6 +282,7 @@ class GridGrindRootConventionsPlugin : Plugin<Project> {
             add(rootFile("gradle.properties"))
             add(rootFile("settings.gradle.kts"))
             add(rootFile("core/build.gradle.kts"))
+            add(rootFile("json/build.gradle.kts"))
             add(rootFile("cli/build.gradle.kts"))
             add(rootFile("engine/build.gradle.kts"))
             add(rootFile("architecture-tests/build.gradle.kts"))

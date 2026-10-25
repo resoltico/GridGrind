@@ -89,6 +89,7 @@ class GridGrindJazzerConventionsPlugin : Plugin<Project> {
                 add("implementation", libs.library("bcprov"))
                 add("implementation", libs.library("bcutil"))
                 add("implementation", "dev.erst.gridgrind:engine")
+                add("implementation", "dev.erst.gridgrind:json")
                 add("runtimeOnly", libs.library("log4j-core"))
                 add("runtimeOnly", libs.library("log4j-slf4j2-impl"))
 

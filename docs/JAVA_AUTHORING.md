@@ -18,7 +18,7 @@ and [OPERATIONS.md](./OPERATIONS.md)
 GridGrind has two first-class authoring surfaces:
 
 - JSON request documents for the CLI, fat JAR, and Docker image
-- the `dev.erst.gridgrind.authoring` module for selector-first fluent Java workflows
+- the `dev.erst.gridgrind.authoring` package in core for selector-first fluent Java workflows
 
 Both surfaces compile to the same canonical `WorkbookPlan`. The Java layer is not a separate
 execution engine and does not bypass request validation, execution-mode rules, or workbook safety
@@ -33,7 +33,7 @@ plan JSON do not inherit the execution runtime. Architecture tests protect the p
 
 | Type | Owns |
 |:-----|:-----|
-| `GridGrindPlan` | Start a plan with `newWorkbook()`, `open(path)`, or `from(plan)`; set persistence and journal detail; emit the canonical `WorkbookPlan` or JSON |
+| `GridGrindPlan` | Start a plan with `newWorkbook()`, `open(path)`, or `from(plan)`; set persistence and journal detail; emit the canonical `WorkbookPlan` |
 | `Targets` | Selector builders and fluent target-scoped mutation, inspection, and assertion builders |
 | `Values` | Typed cell values, expected values, comments, and source-backed UTF-8 helpers |
 | `Tables` | Focused table definitions and style wrappers |
@@ -66,7 +66,7 @@ Unnamed authored steps receive generated ids such as `mutation-001`, `inspection
 
 The checked-in example under
 [../examples/java-authoring-workflow.java](../examples/java-authoring-workflow.java) is compiled
-and executed by `:core:test`. A shortened excerpt:
+and executed by `:json:test`. A shortened excerpt:
 
 ```java
 GridGrindPlan plan =
@@ -121,8 +121,7 @@ workspace root so the example can read the committed
 `GridGrindPlan` stays at the canonical contract boundary:
 
 - `toPlan()` returns the immutable `WorkbookPlan`
-- `toJsonBytes()`, `toJsonString()`, and `writeJson(...)` emit the same request JSON that the CLI
-  would accept
+- Pass that plan to `GridGrindJsonOutput` in the `json` module to emit request JSON.
 
 If you want to execute in process, pass that plan to an executor with a least-authority host grant.
 The grant is not part of `WorkbookPlan`, and no plan can broaden it.

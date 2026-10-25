@@ -1,6 +1,5 @@
 package dev.erst.gridgrind.engine.runtime;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces.JsonLocation;
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
 import dev.erst.gridgrind.contract.source.BinarySourceInput;
@@ -121,8 +120,8 @@ final class InputResolutionOrigins {
   }
 
   static String jsonFieldName(RecordComponent component) {
-    JsonProperty property = component.getAccessor().getAnnotation(JsonProperty.class);
-    return property == null || property.value().isBlank() ? component.getName() : property.value();
+    return dev.erst.gridgrind.contract.catalog.GridGrindProtocolContractSupport.wireFieldName(
+        component);
   }
 
   private static String append(String prefix, String fieldName) {

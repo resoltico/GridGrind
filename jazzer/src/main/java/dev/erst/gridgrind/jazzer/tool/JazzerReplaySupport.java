@@ -2,7 +2,6 @@ package dev.erst.gridgrind.jazzer.tool;
 
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
 import dev.erst.gridgrind.contract.dto.WorkbookResult;
-import dev.erst.gridgrind.contract.json.GridGrindJson;
 import dev.erst.gridgrind.core.problem.InvalidEncodingException;
 import dev.erst.gridgrind.core.problem.InvalidJsonException;
 import dev.erst.gridgrind.core.problem.InvalidRequestException;
@@ -21,6 +20,7 @@ import dev.erst.gridgrind.jazzer.support.OperationSequenceModel;
 import dev.erst.gridgrind.jazzer.support.SequenceIntrospection;
 import dev.erst.gridgrind.jazzer.support.WorkbookInvariantChecks;
 import dev.erst.gridgrind.jazzer.support.XlsxRoundTripVerifier;
+import dev.erst.gridgrind.json.codec.GridGrindJson;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;

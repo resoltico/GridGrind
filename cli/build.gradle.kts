@@ -79,7 +79,7 @@ description = "CLI transport adapter for the GridGrind protocol"
 
 
 dependencies {
-    implementation(project(":core"))
+    implementation(project(":json"))
     implementation(project(":engine"))
     implementation(libs.jackson.databind)
     testImplementation(libs.junit.jupiter)

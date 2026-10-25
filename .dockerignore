@@ -12,6 +12,7 @@
 # Production modules needed for :cli:shadowJar.
 !cli/
 !core/
+!json/
 !engine/
 !architecture-tests/
 

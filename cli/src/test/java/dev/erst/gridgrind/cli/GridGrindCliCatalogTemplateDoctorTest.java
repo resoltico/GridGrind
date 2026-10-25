@@ -72,7 +72,7 @@ class GridGrindCliCatalogTemplateDoctorTest extends GridGrindCliTestSupport {
     ArrayNode steps = JSON.arrayNode();
     steps.add(ensureSheet());
     steps.add(
-        dev.erst.gridgrind.contract.json.GridGrindJsonOutput.stepTemplateTree(
+        dev.erst.gridgrind.json.codec.GridGrindJsonOutput.stepTemplateTree(
             entry.stepTemplate().orElseThrow()));
     request.set("steps", steps);
     return request;

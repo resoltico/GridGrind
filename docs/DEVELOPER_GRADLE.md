@@ -74,6 +74,7 @@ gradle/
         └── ...
 engine/
 core/
+json/
 architecture-tests/
 cli/
 jazzer/
@@ -83,7 +84,7 @@ jazzer/
 
 Each layer owns a different concern:
 
-- root product build: builds and verifies `core`, `engine`, `architecture-tests`,
+- root product build: builds and verifies `core`, `json`, `engine`, `architecture-tests`,
   and `cli`
 - shared included build logic: houses reusable Gradle plugins and typed build logic
 - nested Jazzer build: runs Jazzer support tests, regression replay, and local fuzzing flows
@@ -119,7 +120,7 @@ compile time.
 ### Composite build for Jazzer
 
 `jazzer/settings.gradle.kts` uses `includeBuild("..")` so the nested build can consume the live
-local engine and core modules without publishing snapshots. This keeps Jazzer
+local engine, JSON and core modules without publishing snapshots. This keeps Jazzer
 iteration fast and ensures fuzzing runs against the exact working tree under review.
 
 ### One dependency authority
@@ -235,7 +236,7 @@ Rules:
 
 These are the Gradle-level invariants worth preserving:
 
-- `core`, `engine`, `architecture-tests`, and `cli` remain ordinary root subprojects
+- `core`, `json`, `engine`, `architecture-tests`, and `cli` remain ordinary root subprojects
 - `jazzer/` remains a nested build, not a root subproject
 - `gradle/build-logic` remains the only home for shared typed Gradle logic
 - the nested Jazzer build imports `../gradle/libs.versions.toml`

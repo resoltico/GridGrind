@@ -11,7 +11,7 @@ import dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces.JsonLocatio
 import dev.erst.gridgrind.contract.dto.RequestDoctorReport;
 import dev.erst.gridgrind.contract.dto.WorkbookResult;
 import dev.erst.gridgrind.contract.dto.WorkbookResults;
-import dev.erst.gridgrind.contract.json.GridGrindJson;
+import dev.erst.gridgrind.json.codec.GridGrindJson;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;

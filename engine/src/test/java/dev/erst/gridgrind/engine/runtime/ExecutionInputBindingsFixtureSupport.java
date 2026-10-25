@@ -2,9 +2,9 @@ package dev.erst.gridgrind.engine.runtime;
 
 import dev.erst.gridgrind.contract.dto.SecretReference;
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
-import dev.erst.gridgrind.contract.json.GridGrindJsonOutput;
 import dev.erst.gridgrind.engine.api.GridGrindExecutionGrant;
 import dev.erst.gridgrind.excel.OoxmlSecurityTestSupport;
+import dev.erst.gridgrind.json.codec.GridGrindJsonOutput;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;

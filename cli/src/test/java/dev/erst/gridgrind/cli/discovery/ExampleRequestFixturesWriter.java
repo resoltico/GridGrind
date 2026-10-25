@@ -1,7 +1,7 @@
 package dev.erst.gridgrind.cli.discovery;
 
 import dev.erst.gridgrind.cli.examples.GridGrindShippedExamples;
-import dev.erst.gridgrind.contract.json.GridGrindJsonOutput;
+import dev.erst.gridgrind.json.codec.GridGrindJsonOutput;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;

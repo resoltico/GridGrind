@@ -33,7 +33,6 @@ readonly container_workflow="${repo_root}/.github/workflows/container.yml"
 readonly readme_file="${repo_root}/README.md"
 readonly quick_start_doc="${repo_root}/docs/QUICK_START.md"
 readonly root_plugin="${repo_root}/gradle/build-logic/src/main/kotlin/dev/erst/gridgrind/buildlogic/GridGrindRootConventionsPlugin.kt"
-readonly core_build="${repo_root}/core/build.gradle.kts"
 readonly cli_jar="${repo_root}/cli/build/libs/gridgrind.jar"
 readonly docker_smoke_script="${repo_root}/scripts/docker-smoke.sh"
 readonly docker_smoke_bind_mount_helper="${repo_root}/scripts/lib/docker-smoke-bind-mount-support.sh"
@@ -147,6 +146,8 @@ grep -Fq 'COPY gradle ./gradle' "${dockerfile}" || die \
     "Dockerfile no longer copies the Gradle support directory into the builder stage"
 grep -Fq 'COPY cli ./cli' "${dockerfile}" || die \
     "Dockerfile no longer copies cli into the builder stage"
+grep -Fq 'COPY json ./json' "${dockerfile}" || die \
+    "Dockerfile no longer copies json into the builder stage"
 grep -Fq 'COPY core ./core' "${dockerfile}" || die \
     "Dockerfile no longer copies core into the builder stage"
 grep -Fq 'COPY engine ./engine' "${dockerfile}" || die \
@@ -222,13 +223,6 @@ grep -Fq './scripts/verify-release-primary-checkout.sh "$PRIMARY_CHECKOUT" "X.Y.
 grep -Fq 'checks: read' "${release_workflow}" || die "release workflow is missing checks: read permission"
 grep -Fq 'checks: read' "${container_workflow}" || die "container workflow is missing checks: read permission"
 verify_publication_legal_contract "${repo_root}" "${dockerfile}" "${container_workflow}"
-
-grep -Fq 'api(libs.jackson.annotations)' "${core_build}" || die \
-    "core no longer exposes the Jackson annotations API needed by downstream compiles"
-grep -Fq 'implementation(libs.jackson.databind)' "${core_build}" || die \
-    "core no longer keeps jackson-databind off consumer compile classpaths"
-grep -Fq 'api(libs.jackson.databind)' "${core_build}" && die \
-    "core still declares jackson-databind as api"
 
 fixed_pattern_exists 'build/jacoco/test.exec' "${root_plugin}" && die \
     "root aggregated coverage hardcodes test.exec"

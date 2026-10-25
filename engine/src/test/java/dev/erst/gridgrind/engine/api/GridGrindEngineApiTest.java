@@ -19,7 +19,7 @@ import dev.erst.gridgrind.contract.dto.SecretReference;
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
 import dev.erst.gridgrind.contract.dto.WorkbookResult;
 import dev.erst.gridgrind.contract.dto.WorkbookResults;
-import dev.erst.gridgrind.contract.json.GridGrindJson;
+import dev.erst.gridgrind.json.codec.GridGrindJson;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;

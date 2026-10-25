@@ -17,7 +17,7 @@ import dev.erst.gridgrind.cli.discovery.TaskTestFixtures;
 import dev.erst.gridgrind.cli.examples.GridGrindCliRecipeRegistry;
 import dev.erst.gridgrind.contract.dto.OoxmlPersistenceSecurityInput;
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
-import dev.erst.gridgrind.contract.json.GridGrindJsonOutput;
+import dev.erst.gridgrind.json.codec.GridGrindJsonOutput;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 import tools.jackson.databind.JsonNode;

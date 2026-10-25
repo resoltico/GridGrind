@@ -117,6 +117,7 @@ if [[ "${purge_generated_state}" == true ]]; then
         "${repo_root}/generated-workbooks"
         "${repo_root}/cli/build"
         "${repo_root}/core/build"
+        "${repo_root}/json/build"
         "${repo_root}/engine/build"
         "${repo_root}/architecture-tests/build"
         "${repo_root}/jazzer/.gradle"

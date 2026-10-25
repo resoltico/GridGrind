@@ -9,8 +9,8 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
-import dev.erst.gridgrind.contract.json.GridGrindJson;
 import dev.erst.gridgrind.engine.api.GridGrindExecutionGrant;
+import dev.erst.gridgrind.json.codec.GridGrindJson;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;

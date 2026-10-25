@@ -5,7 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import dev.erst.gridgrind.contract.dto.GridGrindProblemDetail;
 import dev.erst.gridgrind.contract.dto.ProblemContext;
 import dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces;
-import dev.erst.gridgrind.contract.json.GridGrindJson;
+import dev.erst.gridgrind.json.codec.GridGrindJson;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Optional;

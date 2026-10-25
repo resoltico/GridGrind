@@ -110,8 +110,7 @@ class GridGrindCliResponseReservationTest {
     dev.erst.gridgrind.contract.dto.WorkbookResult.Success response =
         org.junit.jupiter.api.Assertions.assertInstanceOf(
             dev.erst.gridgrind.contract.dto.WorkbookResult.Success.class,
-            dev.erst.gridgrind.contract.json.GridGrindJson.readWorkbookResult(
-                stdout.toByteArray()));
+            dev.erst.gridgrind.json.codec.GridGrindJson.readWorkbookResult(stdout.toByteArray()));
     assertEquals(0, exitCode);
     assertEquals(1, response.warnings().size());
     assertEquals(
@@ -151,8 +150,7 @@ class GridGrindCliResponseReservationTest {
                 stderr);
 
     dev.erst.gridgrind.contract.dto.RequestDoctorReport report =
-        dev.erst.gridgrind.contract.json.GridGrindJson.readRequestDoctorReport(
-            stdout.toByteArray());
+        dev.erst.gridgrind.json.codec.GridGrindJson.readRequestDoctorReport(stdout.toByteArray());
     assertEquals(0, exitCode);
     assertEquals(1, report.warnings().size());
     assertEquals(
@@ -231,7 +229,7 @@ class GridGrindCliResponseReservationTest {
     WorkbookResult.Failure failure =
         assertInstanceOf(
             WorkbookResult.Failure.class,
-            dev.erst.gridgrind.contract.json.GridGrindJson.readWorkbookResult(
+            dev.erst.gridgrind.json.codec.GridGrindJson.readWorkbookResult(
                 executionStdout.toByteArray()));
     assertEquals(1, executionExitCode);
     assertEquals(
@@ -249,7 +247,7 @@ class GridGrindCliResponseReservationTest {
                 doctorStdout,
                 new ByteArrayOutputStream());
     dev.erst.gridgrind.contract.dto.RequestDoctorReport doctor =
-        dev.erst.gridgrind.contract.json.GridGrindJson.readRequestDoctorReport(
+        dev.erst.gridgrind.json.codec.GridGrindJson.readRequestDoctorReport(
             doctorStdout.toByteArray());
     assertEquals(1, doctorExitCode);
     assertFalse(doctor.valid());
@@ -288,7 +286,7 @@ class GridGrindCliResponseReservationTest {
     WorkbookResult.Failure failure =
         assertInstanceOf(
             WorkbookResult.Failure.class,
-            dev.erst.gridgrind.contract.json.GridGrindJson.readWorkbookResult(
+            dev.erst.gridgrind.json.codec.GridGrindJson.readWorkbookResult(
                 Files.readAllBytes(responsePath)));
     assertEquals(1, exitCode);
     assertEquals(0, executorCalls.get());

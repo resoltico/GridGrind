@@ -1,7 +1,6 @@
 module dev.erst.gridgrind.core {
-  requires transitive com.fasterxml.jackson.annotation;
+  requires static com.fasterxml.jackson.annotation;
   requires static org.jspecify;
-  requires tools.jackson.databind;
 
   exports dev.erst.gridgrind.authoring;
   exports dev.erst.gridgrind.excel.foundation;
@@ -9,7 +8,6 @@ module dev.erst.gridgrind.core {
   exports dev.erst.gridgrind.contract.catalog;
   exports dev.erst.gridgrind.contract.action;
   exports dev.erst.gridgrind.contract.dto;
-  exports dev.erst.gridgrind.contract.json;
   exports dev.erst.gridgrind.core.problem;
   exports dev.erst.gridgrind.contract.query;
   exports dev.erst.gridgrind.contract.selector;

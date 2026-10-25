@@ -11,6 +11,7 @@ COPY gradle ./gradle
 COPY LICENSE NOTICE PATENTS.md LICENSE-APACHE-2.0 LICENSE-BSD-2-CLAUSE LICENSE-BSD-3-CLAUSE ./
 COPY cli ./cli
 COPY core ./core
+COPY json ./json
 COPY engine ./engine
 COPY architecture-tests ./architecture-tests
 COPY examples ./examples

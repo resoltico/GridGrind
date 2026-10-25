@@ -104,6 +104,7 @@ configurations.named(paritySourceSet.runtimeOnlyConfigurationName) {
     extendsFrom(configurations.getByName("testRuntimeOnly"))
 }
 dependencies {
+    testImplementation(project(":json"))
     testImplementation(project(":cli"))
     testImplementation(libs.jackson.databind)
     add(paritySourceSet.implementationConfigurationName, libs.jackson.databind)

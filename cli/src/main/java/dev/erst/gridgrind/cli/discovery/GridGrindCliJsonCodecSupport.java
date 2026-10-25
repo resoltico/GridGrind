@@ -1,6 +1,6 @@
 package dev.erst.gridgrind.cli.discovery;
 
-import dev.erst.gridgrind.contract.json.GridGrindJsonOutput;
+import dev.erst.gridgrind.json.codec.GridGrindJsonOutput;
 import java.io.ByteArrayOutputStream;
 import java.io.FilterInputStream;
 import java.io.IOException;

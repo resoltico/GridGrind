@@ -1,6 +1,6 @@
 package dev.erst.gridgrind.cli;
 
-import dev.erst.gridgrind.contract.json.GridGrindJson;
+import dev.erst.gridgrind.json.codec.GridGrindJson;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.AccessDeniedException;

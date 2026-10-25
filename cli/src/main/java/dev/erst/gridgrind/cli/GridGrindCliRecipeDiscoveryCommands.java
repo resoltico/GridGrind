@@ -5,7 +5,7 @@ import dev.erst.gridgrind.cli.discovery.GridGrindRecipeCatalog;
 import dev.erst.gridgrind.cli.examples.GridGrindCliRecipeRegistry;
 import dev.erst.gridgrind.cli.examples.RecipeWorkspacePublicationException;
 import dev.erst.gridgrind.cli.examples.RecipeWorkspacePublisher;
-import dev.erst.gridgrind.contract.json.GridGrindJsonOutput;
+import dev.erst.gridgrind.json.codec.GridGrindJsonOutput;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Objects;

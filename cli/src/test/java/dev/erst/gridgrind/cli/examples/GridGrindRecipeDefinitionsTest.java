@@ -8,7 +8,7 @@ import dev.erst.gridgrind.cli.discovery.RecipeAdvisory;
 import dev.erst.gridgrind.cli.discovery.TaskEntry;
 import dev.erst.gridgrind.cli.discovery.TaskStarterContract;
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
-import dev.erst.gridgrind.contract.json.GridGrindJsonOutput;
+import dev.erst.gridgrind.json.codec.GridGrindJsonOutput;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 import tools.jackson.databind.JsonNode;

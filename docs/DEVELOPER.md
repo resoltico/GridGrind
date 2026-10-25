@@ -48,10 +48,10 @@ remains supported, but the devcontainer is the documented default.
 
 ## Architecture
 
-GridGrind currently has four Gradle projects with compiler-enforced JPMS boundaries:
+GridGrind has five Gradle projects with compiler-enforced JPMS boundaries:
 
-- `core`: canonical request/result types, Excel vocabulary, catalog metadata, Java authoring
-  and wire codecs; it has no POI or engine dependency.
+- `core`: canonical request/result types, Excel vocabulary, catalog metadata and Java authoring; it has no POI or engine dependency.
+- `json`: tolerant request intake, binding and wire codecs.
 - `engine`: POI-backed execution, admission, input binding, preflight, staged publication and
   evidence. Runtime and parity tests live with the engine.
 - `cli`: input/output transport, command dispatch, rendering and workspace materialization.
@@ -102,7 +102,7 @@ Jackson design, not a GridGrind version-skew bug.
 
 `./gradlew check` remains the root-project code-quality gate: Spotless formatting,
 explicit-import verification, executable ArchUnit rules, Error Prone with NullAway on `@NullMarked` production packages, PMD, tests, and
-JaCoCo HTML/XML reports for `core`, `engine`, `architecture-tests`, and `cli`.
+JaCoCo HTML/XML reports for `core`, `json`, `engine`, `architecture-tests`, and `cli`.
 `./check.sh` is the supported whole-repo deterministic gate: root `check` plus `coverage`,
 nested Jazzer `check`,
 `:cli:shadowJar`, architecture-split shell regressions, packaged-JAR CLI contract verification,

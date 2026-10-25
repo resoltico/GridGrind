@@ -3,7 +3,7 @@ package dev.erst.gridgrind.cli;
 import dev.erst.gridgrind.cli.discovery.CliTransportNotice;
 import dev.erst.gridgrind.cli.discovery.CommandError;
 import dev.erst.gridgrind.cli.discovery.GridGrindCliJson;
-import dev.erst.gridgrind.contract.json.RequestDiagnosticRedactor;
+import dev.erst.gridgrind.json.codec.RequestDiagnosticRedactor;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.file.Files;

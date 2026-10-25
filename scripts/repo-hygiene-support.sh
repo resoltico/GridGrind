@@ -23,6 +23,7 @@ readonly repo_hygiene_structural_root_entries=(
     check.sh
     cli
     core
+    json
     docs
     engine
     examples

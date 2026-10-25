@@ -359,3 +359,44 @@ Evidence: external `evidence/wp-20/intake-*.log` and `intake-inventories/`.
 Old JSON package files: 57 → 56 (analysis plus binding data retired; binder added).
 Main Java lines: 125,704 → 125,716. No golden re-recording, baseline or supplement change.
 Next: physically separate JSON, move codecs out of core and normalize packages before WP-20 closes.
+
+### WP-20 separate JSON module checkpoint
+
+Created `json` with `codec` and `intake` packages. Core has no databind import/dependency;
+its temporary Jackson annotations remain API-visible with `requires static` until WP-22.
+Engine main has no JSON/Jackson imports or module requirement. Its last direct JsonProperty
+lookup now delegates to the existing core metadata field-name function, preserving the same
+nonblank-annotation/name fallback. JSON registers the selector serializer and step deserializer
+in its mapper; core no longer carries their databind annotations. Java authoring emits plans,
+with JSON output explicitly through the codec. JSON-dependent tests and fixtures moved with
+serialization, preserving the total test count and package-private model assertions.
+
+The initial split exposed 43 package-access compilation errors, followed by the engine's direct
+annotation lookup and 17 test-access errors. Internal JSON package crossings were repaired;
+private codec assertions moved into codec tests instead of widening those helpers. Redundant
+JSON facade shortcuts and the test-only empty-redactor shortcut were deleted. The selector-hint
+class had no production caller (only two assertions) and was removed early from the WP-23 list,
+including those assertions. Its removal changes no runtime path. One focused test failed because
+it still instantiated a bare mapper after registration moved out of core; it now uses the product
+mapper and continues to assert the original missing-payload error.
+
+All production/test compilation passed. Focused core/JSON PMD and tests passed except that
+recorded mapper failure; its repaired focused rerun passed (4s). Full `./gradlew check --no-parallel`
+passed (2m58s), 2,769 active tests, zero failures/errors/skips: core 328, JSON 310, engine 1,495+14
+parity, CLI 596, architecture 11+9, build logic 6. All 141 golden cases passed unchanged.
+Nested `jazzer check` passed (17s), including every regression target; publication-contract
+regression passed. Core native PIT includes the moved JSON test source set and passed (11s):
+298/298 mutants killed in its selected scope, no uncovered mutants. The old UTF-8 mutation target
+is now JSON-owned and removed from core's scope. This is advisory reporting, not a score gate.
+
+JAR inspection confirmed no retired `contract.json` classes in core, JSON or the packaged CLI,
+and no serializer/deserializer implementation left in core. Core compilation emits eight
+expected javac warnings for qualified opens to an optional databind module absent from its
+compile path; the module's dependency was not restored to silence them. Docker, cleanup,
+composite fuzz dependencies, docs and publication checks follow the five-module build. The
+retired source assertions requiring codecs inside core were removed. Inventories track the new
+module separately: old JSON package 56 → 0; JSON source files 63; main Java lines 125,716 → 125,668;
+shell lines 10,831 → 10,827. Other model/converter/union counts remain unchanged.
+
+Evidence: external `evidence/wp-20/json-*.log` and `json-inventories/`. No golden re-recording or
+AGENTS baseline/supplement change. WP-20 remains open for core package normalization.

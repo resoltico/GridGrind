@@ -1,5 +1,5 @@
 module dev.erst.gridgrind.cli {
-  requires dev.erst.gridgrind.core;
+  requires dev.erst.gridgrind.json;
   requires dev.erst.gridgrind.engine;
   requires static org.jspecify;
   requires tools.jackson.databind;

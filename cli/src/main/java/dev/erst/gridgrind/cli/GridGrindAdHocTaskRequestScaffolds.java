@@ -10,8 +10,8 @@ import dev.erst.gridgrind.contract.catalog.ProtocolStepTemplate;
 import dev.erst.gridgrind.contract.dto.ExecutionPolicyInput;
 import dev.erst.gridgrind.contract.dto.FormulaEnvironmentInput;
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
-import dev.erst.gridgrind.contract.json.GridGrindJson;
-import dev.erst.gridgrind.contract.json.GridGrindJsonOutput;
+import dev.erst.gridgrind.json.codec.GridGrindJson;
+import dev.erst.gridgrind.json.codec.GridGrindJsonOutput;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.LinkedHashSet;
@@ -47,7 +47,7 @@ final class GridGrindAdHocTaskRequestScaffolds {
 
   private static ObjectNode requestTemplateFor(TaskEntry task, WorkbookPlan templatePlan) {
     ObjectNode requestTemplate =
-        dev.erst.gridgrind.contract.json.GridGrindJsonOutput.requestTree(templatePlan);
+        dev.erst.gridgrind.json.codec.GridGrindJsonOutput.requestTree(templatePlan);
     requestTemplate.set("steps", stepsFor(task));
     return requestTemplate;
   }

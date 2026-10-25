@@ -7,4 +7,4 @@ plugins {
 }
 
 rootProject.name = "GridGrind"
-include("core", "engine", "cli", "architecture-tests")
+include("core", "json", "engine", "cli", "architecture-tests")

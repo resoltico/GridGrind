@@ -7,14 +7,10 @@ import dev.erst.gridgrind.contract.dto.FormulaEnvironmentInput;
 import dev.erst.gridgrind.contract.dto.GridGrindProtocolVersion;
 import dev.erst.gridgrind.contract.dto.OoxmlPersistenceSecurityInput;
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
-import dev.erst.gridgrind.contract.json.GridGrindJsonOutput;
 import dev.erst.gridgrind.contract.step.AssertionStep;
 import dev.erst.gridgrind.contract.step.InspectionStep;
 import dev.erst.gridgrind.contract.step.MutationStep;
 import dev.erst.gridgrind.contract.step.WorkbookStep;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
@@ -193,21 +189,6 @@ public final class GridGrindPlan {
   public WorkbookPlan toPlan() {
     return new WorkbookPlan(
         protocolVersion, planId, source, persistence, execution, formulaEnvironment, steps);
-  }
-
-  /** Serializes the canonical workbook plan as UTF-8 JSON bytes. */
-  public byte[] toJsonBytes() throws IOException {
-    return GridGrindJsonOutput.writeRequestBytes(toPlan());
-  }
-
-  /** Serializes the canonical workbook plan as a compact UTF-8 JSON string. */
-  public String toJsonString() throws IOException {
-    return new String(toJsonBytes(), StandardCharsets.UTF_8);
-  }
-
-  /** Writes the canonical workbook-plan JSON to one caller-owned output stream. */
-  public void writeJson(OutputStream outputStream) throws IOException {
-    GridGrindJsonOutput.writeRequest(outputStream, toPlan(), false);
   }
 
   private String nextStepId(String prefix, int index) {
