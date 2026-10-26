@@ -3,16 +3,12 @@ package dev.erst.gridgrind.engine.runtime;
 import dev.erst.gridgrind.core.model.style.CellBorderReport;
 import dev.erst.gridgrind.core.model.style.CellBorderSideReport;
 import dev.erst.gridgrind.core.model.style.CellColorReport;
-import dev.erst.gridgrind.core.model.style.CellFontReport;
 import dev.erst.gridgrind.core.model.style.CellStyleReport;
-import dev.erst.gridgrind.core.model.style.FontHeightReport;
 import dev.erst.gridgrind.core.vocabulary.ExcelBorderStyle;
 import dev.erst.gridgrind.core.vocabulary.RgbHex;
 import dev.erst.gridgrind.excel.ExcelBorderSideSnapshot;
-import dev.erst.gridgrind.excel.ExcelCellFontSnapshot;
 import dev.erst.gridgrind.excel.ExcelCellStyleSnapshot;
 import dev.erst.gridgrind.excel.ExcelColor;
-import dev.erst.gridgrind.excel.ExcelFontHeight;
 import java.util.Optional;
 import org.jspecify.annotations.Nullable;
 
@@ -24,7 +20,7 @@ final class InspectionResultCellStyleReportSupport {
     return new CellStyleReport(
         style.numberFormat(),
         style.alignment(),
-        toCellFontReport(style.font()),
+        style.font(),
         style.fill(),
         new CellBorderReport(
             toCellBorderSideReport(style.border().top()),
@@ -52,21 +48,6 @@ final class InspectionResultCellStyleReportSupport {
                       ? CellColorReport.indexed(indexed.indexed(), indexed.tint().orElseThrow())
                       : CellColorReport.indexed(indexed.indexed());
             });
-  }
-
-  static FontHeightReport toFontHeightReport(ExcelFontHeight fontHeight) {
-    return new FontHeightReport(fontHeight.twips(), fontHeight.points());
-  }
-
-  static CellFontReport toCellFontReport(ExcelCellFontSnapshot font) {
-    return new CellFontReport(
-        font.bold(),
-        font.italic(),
-        font.fontName(),
-        toFontHeightReport(font.fontHeight()),
-        font.fontColor(),
-        font.underline(),
-        font.strikeout());
   }
 
   static CellBorderSideReport toCellBorderSideReport(ExcelBorderSideSnapshot side) {

@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.core.model.style.FontHeightReport;
 import dev.erst.gridgrind.core.vocabulary.ExcelConditionalFormattingUnsupportedFeature;
 import java.util.List;
 import java.util.Objects;
@@ -10,7 +11,7 @@ public record ExcelDifferentialStyleSnapshot(
     @Nullable String numberFormat,
     @Nullable Boolean bold,
     @Nullable Boolean italic,
-    @Nullable ExcelFontHeight fontHeight,
+    @Nullable FontHeightReport fontHeight,
     @Nullable ExcelColor fontColor,
     @Nullable Boolean underline,
     @Nullable Boolean strikeout,

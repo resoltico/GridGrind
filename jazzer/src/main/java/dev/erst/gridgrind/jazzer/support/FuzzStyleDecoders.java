@@ -2,6 +2,7 @@ package dev.erst.gridgrind.jazzer.support;
 
 import dev.erst.gridgrind.core.model.style.CellFontPatch;
 import dev.erst.gridgrind.core.model.style.ColorSpec;
+import dev.erst.gridgrind.core.model.style.FontHeightReport;
 import dev.erst.gridgrind.core.model.style.FontHeightSpec;
 import dev.erst.gridgrind.core.vocabulary.ExcelBorderStyle;
 import dev.erst.gridgrind.core.vocabulary.ExcelFillPattern;
@@ -16,7 +17,6 @@ import dev.erst.gridgrind.excel.ExcelCellFont;
 import dev.erst.gridgrind.excel.ExcelCellProtection;
 import dev.erst.gridgrind.excel.ExcelCellStyle;
 import dev.erst.gridgrind.excel.ExcelColor;
-import dev.erst.gridgrind.excel.ExcelFontHeight;
 import dev.erst.gridgrind.excel.ExcelGradientFill;
 import dev.erst.gridgrind.excel.ExcelGradientStop;
 import java.math.BigDecimal;
@@ -134,7 +134,7 @@ final class FuzzStyleDecoders {
               Optional.empty(),
               Optional.empty(),
               Optional.empty(),
-              Optional.of(nextExcelFontHeight(data)),
+              Optional.of(nextFontHeightReport(data)),
               Optional.empty(),
               Optional.empty(),
               Optional.empty());
@@ -208,7 +208,7 @@ final class FuzzStyleDecoders {
         includeName
             ? Optional.of(data.consumeBoolean() ? "Aptos" : "Aptos Display")
             : Optional.empty(),
-        data.consumeBoolean() ? Optional.of(nextExcelFontHeight(data)) : Optional.empty(),
+        data.consumeBoolean() ? Optional.of(nextFontHeightReport(data)) : Optional.empty(),
         data.consumeBoolean() ? Optional.of(nextExcelColor(data)) : Optional.empty(),
         data.consumeBoolean() ? Optional.of(Boolean.TRUE) : Optional.empty(),
         data.consumeBoolean() ? Optional.of(Boolean.FALSE) : Optional.empty());
@@ -253,16 +253,16 @@ final class FuzzStyleDecoders {
     return values[data.consumeInt(0, values.length - 1)];
   }
 
-  private static ExcelFontHeight nextExcelFontHeight(GridGrindFuzzData data) {
+  private static FontHeightReport nextFontHeightReport(GridGrindFuzzData data) {
     return switch (data.consumeInt(0, 2)) {
-      case 0 -> new ExcelFontHeight(data.consumeInt(20, 640));
-      case 1 -> ExcelFontHeight.fromPoints(nextPointHeight(data));
-      default -> new ExcelFontHeight(220);
+      case 0 -> FontHeightReport.fromTwips(data.consumeInt(20, 640));
+      case 1 -> FontHeightReport.fromPoints(nextPointHeight(data));
+      default -> FontHeightReport.fromTwips(220);
     };
   }
 
   private static BigDecimal nextPointHeight(GridGrindFuzzData data) {
-    return new ExcelFontHeight(data.consumeInt(20, 640)).points();
+    return FontHeightReport.fromTwips(data.consumeInt(20, 640)).points();
   }
 
   private static String nextRgbHex(GridGrindFuzzData data) {

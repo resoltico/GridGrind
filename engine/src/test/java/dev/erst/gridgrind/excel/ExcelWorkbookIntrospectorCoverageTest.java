@@ -6,6 +6,8 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import dev.erst.gridgrind.core.model.protection.CellProtectionReport;
 import dev.erst.gridgrind.core.model.style.CellAlignmentReport;
 import dev.erst.gridgrind.core.model.style.CellFillReport;
+import dev.erst.gridgrind.core.model.style.CellFontReport;
+import dev.erst.gridgrind.core.model.style.FontHeightReport;
 import dev.erst.gridgrind.core.vocabulary.ExcelBorderStyle;
 import dev.erst.gridgrind.core.vocabulary.ExcelFillPattern;
 import dev.erst.gridgrind.core.vocabulary.ExcelHorizontalAlignment;
@@ -92,11 +94,11 @@ class ExcelWorkbookIntrospectorCoverageTest {
         numberFormat,
         new CellAlignmentReport(
             false, ExcelHorizontalAlignment.GENERAL, ExcelVerticalAlignment.BOTTOM, 0, 0),
-        new ExcelCellFontSnapshot(
+        new CellFontReport(
             false,
             false,
             "Aptos",
-            ExcelFontHeight.fromPoints(BigDecimal.valueOf(11)),
+            FontHeightReport.fromPoints(BigDecimal.valueOf(11)),
             null,
             false,
             false),

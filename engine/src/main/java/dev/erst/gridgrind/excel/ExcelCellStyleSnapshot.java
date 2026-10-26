@@ -3,13 +3,14 @@ package dev.erst.gridgrind.excel;
 import dev.erst.gridgrind.core.model.protection.CellProtectionReport;
 import dev.erst.gridgrind.core.model.style.CellAlignmentReport;
 import dev.erst.gridgrind.core.model.style.CellFillReport;
+import dev.erst.gridgrind.core.model.style.CellFontReport;
 import java.util.Objects;
 
 /** Immutable snapshot of the style currently applied to a cell. */
 public record ExcelCellStyleSnapshot(
     String numberFormat,
     CellAlignmentReport alignment,
-    ExcelCellFontSnapshot font,
+    CellFontReport font,
     CellFillReport fill,
     ExcelBorderSnapshot border,
     CellProtectionReport protection) {

@@ -13,8 +13,10 @@ import dev.erst.gridgrind.core.model.style.CellBorderSideReport;
 import dev.erst.gridgrind.core.model.style.CellColorReport;
 import dev.erst.gridgrind.core.model.style.CellFillReport;
 import dev.erst.gridgrind.core.model.style.CellFillSpec;
+import dev.erst.gridgrind.core.model.style.CellFontReport;
 import dev.erst.gridgrind.core.model.style.CellStyleReport;
 import dev.erst.gridgrind.core.model.style.ColorSpec;
+import dev.erst.gridgrind.core.model.style.FontHeightReport;
 import dev.erst.gridgrind.core.model.style.RichTextRunSpec;
 import dev.erst.gridgrind.core.model.value.CellValueSpec;
 import dev.erst.gridgrind.core.plan.CellMutationAction;
@@ -37,10 +39,8 @@ import dev.erst.gridgrind.excel.*;
 import dev.erst.gridgrind.excel.ExcelBorderSideSnapshot;
 import dev.erst.gridgrind.excel.ExcelBorderSnapshot;
 import dev.erst.gridgrind.excel.ExcelCellFill;
-import dev.erst.gridgrind.excel.ExcelCellFontSnapshot;
 import dev.erst.gridgrind.excel.ExcelCellStyleSnapshot;
 import dev.erst.gridgrind.excel.ExcelColor;
-import dev.erst.gridgrind.excel.ExcelFontHeight;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingAnchor;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingMarker;
 import java.util.List;
@@ -86,18 +86,6 @@ class ExecutorConverterDelegationCoverageTest {
     assertEquals(1, markerReport.columnIndex());
     assertEquals(5, anchorReport.to().columnIndex());
     assertEquals(
-        "Calibri",
-        InspectionResultCellStyleReportSupport.toCellFontReport(
-                new ExcelCellFontSnapshot(
-                    true,
-                    false,
-                    "Calibri",
-                    new ExcelFontHeight(220),
-                    CellColorReport.rgb(new RgbHex("#112233")),
-                    false,
-                    false))
-            .fontName());
-    assertEquals(
         ExcelBorderStyle.THIN,
         assertInstanceOf(
                 CellBorderSideReport.Colored.class,
@@ -127,8 +115,8 @@ class ExecutorConverterDelegationCoverageTest {
                 "General",
                 new CellAlignmentReport(
                     false, ExcelHorizontalAlignment.LEFT, ExcelVerticalAlignment.BOTTOM, 0, 0),
-                new ExcelCellFontSnapshot(
-                    false, false, "Aptos", new ExcelFontHeight(220), null, false, false),
+                new CellFontReport(
+                    false, false, "Aptos", FontHeightReport.fromTwips(220), null, false, false),
                 CellFillReport.patternBackground(
                     ExcelFillPattern.BRICKS, CellColorReport.indexed(10)),
                 new ExcelBorderSnapshot(

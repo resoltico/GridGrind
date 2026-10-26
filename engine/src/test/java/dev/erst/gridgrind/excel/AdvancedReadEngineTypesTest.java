@@ -5,8 +5,10 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import dev.erst.gridgrind.core.model.style.CellColorReport;
 import dev.erst.gridgrind.core.model.style.CellFillReport;
+import dev.erst.gridgrind.core.model.style.CellFontReport;
 import dev.erst.gridgrind.core.model.style.CellGradientFillReport;
 import dev.erst.gridgrind.core.model.style.CellGradientStopReport;
+import dev.erst.gridgrind.core.model.style.FontHeightReport;
 import dev.erst.gridgrind.core.vocabulary.ExcelFillPattern;
 import dev.erst.gridgrind.core.vocabulary.RgbHex;
 import dev.erst.gridgrind.core.vocabulary.StepId;
@@ -153,7 +155,7 @@ class AdvancedReadEngineTypesTest {
 
   @Test
   void commentPrintAndProtectionSnapshotsValidateRichReadShapes() {
-    ExcelCellFontSnapshot baseFont = font(rgb("#112233"));
+    CellFontReport baseFont = font(rgb("#112233"));
     ExcelCommentAnchorSnapshot anchor = new ExcelCommentAnchorSnapshot(1, 2, 4, 6);
     ExcelRichTextSnapshot runs =
         new ExcelRichTextSnapshot(
@@ -527,12 +529,12 @@ class AdvancedReadEngineTypesTest {
     return CellColorReport.rgb(new RgbHex(rgb));
   }
 
-  private static ExcelCellFontSnapshot font(CellColorReport color) {
-    return new ExcelCellFontSnapshot(
+  private static CellFontReport font(CellColorReport color) {
+    return new CellFontReport(
         false,
         false,
         "Aptos",
-        ExcelFontHeight.fromPoints(BigDecimal.valueOf(11)),
+        FontHeightReport.fromPoints(BigDecimal.valueOf(11)),
         color,
         false,
         false);

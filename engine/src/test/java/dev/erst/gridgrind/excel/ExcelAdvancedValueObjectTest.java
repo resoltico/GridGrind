@@ -4,6 +4,8 @@ import static dev.erst.gridgrind.excel.ExcelStyleTestAccess.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 import dev.erst.gridgrind.core.model.style.CellColorReport;
+import dev.erst.gridgrind.core.model.style.CellFontReport;
+import dev.erst.gridgrind.core.model.style.FontHeightReport;
 import dev.erst.gridgrind.core.vocabulary.ExcelConditionalFormattingIconSet;
 import dev.erst.gridgrind.core.vocabulary.ExcelConditionalFormattingThresholdType;
 import dev.erst.gridgrind.core.vocabulary.ExcelDrawingAnchorBehavior;
@@ -434,21 +436,21 @@ class ExcelAdvancedValueObjectTest {
                     List.of(
                         new ExcelRichTextRunSnapshot(
                             "Quarterly",
-                            new ExcelCellFontSnapshot(
+                            new CellFontReport(
                                 false,
                                 false,
                                 "Aptos",
-                                ExcelFontHeight.fromPoints(java.math.BigDecimal.valueOf(11)),
+                                FontHeightReport.fromPoints(java.math.BigDecimal.valueOf(11)),
                                 null,
                                 false,
                                 false)),
                         new ExcelRichTextRunSnapshot(
                             " Review",
-                            new ExcelCellFontSnapshot(
+                            new CellFontReport(
                                 true,
                                 false,
                                 "Aptos",
-                                ExcelFontHeight.fromPoints(java.math.BigDecimal.valueOf(11)),
+                                FontHeightReport.fromPoints(java.math.BigDecimal.valueOf(11)),
                                 CellColorReport.rgb(new RgbHex("#112233")),
                                 false,
                                 false))))),

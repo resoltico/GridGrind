@@ -11,6 +11,7 @@ import dev.erst.gridgrind.core.model.style.CellFontPatch;
 import dev.erst.gridgrind.core.model.style.CellGradientFillSpec;
 import dev.erst.gridgrind.core.model.style.CellStylePatch;
 import dev.erst.gridgrind.core.model.style.ColorSpec;
+import dev.erst.gridgrind.core.model.style.FontHeightReport;
 import dev.erst.gridgrind.core.model.style.FontHeightSpec;
 import dev.erst.gridgrind.core.model.style.RichTextRunSpec;
 import dev.erst.gridgrind.core.model.value.CellValueSpec;
@@ -27,7 +28,6 @@ import dev.erst.gridgrind.excel.ExcelCellValue;
 import dev.erst.gridgrind.excel.ExcelColor;
 import dev.erst.gridgrind.excel.ExcelComment;
 import dev.erst.gridgrind.excel.ExcelCommentAnchor;
-import dev.erst.gridgrind.excel.ExcelFontHeight;
 import dev.erst.gridgrind.excel.ExcelGradientFill;
 import dev.erst.gridgrind.excel.ExcelGradientStop;
 import dev.erst.gridgrind.excel.ExcelHyperlink;
@@ -134,7 +134,7 @@ final class WorkbookCommandCellValueSpecConverter {
             font.bold(),
             font.italic(),
             font.fontName(),
-            font.fontHeight().flatMap(WorkbookCommandCellValueSpecConverter::toExcelFontHeight),
+            font.fontHeight().flatMap(WorkbookCommandCellValueSpecConverter::toFontHeightReport),
             font.fontColor().flatMap(WorkbookCommandCellValueSpecConverter::toExcelColor),
             font.underline(),
             font.strikeout()));
@@ -172,14 +172,14 @@ final class WorkbookCommandCellValueSpecConverter {
     return Optional.of(new ExcelCellProtection(protection.locked(), protection.hiddenFormula()));
   }
 
-  static Optional<ExcelFontHeight> toExcelFontHeight(FontHeightSpec fontHeight) {
+  static Optional<FontHeightReport> toFontHeightReport(FontHeightSpec fontHeight) {
     if (fontHeight == null) {
       return Optional.empty();
     }
     return Optional.of(
         switch (fontHeight) {
-          case FontHeightSpec.Points points -> ExcelFontHeight.fromPoints(points.points());
-          case FontHeightSpec.Twips twips -> new ExcelFontHeight(twips.twips());
+          case FontHeightSpec.Points points -> FontHeightReport.fromPoints(points.points());
+          case FontHeightSpec.Twips twips -> FontHeightReport.fromTwips(twips.twips());
         });
   }
 

@@ -6,6 +6,7 @@ import dev.erst.gridgrind.core.model.style.BorderSidePatch;
 import dev.erst.gridgrind.core.model.style.ColorSpec;
 import dev.erst.gridgrind.core.model.style.DifferentialBorderPatch;
 import dev.erst.gridgrind.core.model.style.DifferentialStylePatch;
+import dev.erst.gridgrind.core.model.style.FontHeightReport;
 import dev.erst.gridgrind.core.model.style.FontHeightSpec;
 import dev.erst.gridgrind.core.model.validation.ConditionalFormattingRuleSpec;
 import dev.erst.gridgrind.core.model.validation.ConditionalFormattingSpec;
@@ -18,7 +19,6 @@ import dev.erst.gridgrind.excel.ExcelConditionalFormattingBlockDefinition;
 import dev.erst.gridgrind.excel.ExcelConditionalFormattingRule;
 import dev.erst.gridgrind.excel.ExcelDifferentialBorder;
 import dev.erst.gridgrind.excel.ExcelDifferentialStyle;
-import dev.erst.gridgrind.excel.ExcelFontHeight;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
@@ -83,7 +83,8 @@ class ConditionalFormattingInputTest {
                             Optional.of("0.00"),
                             Optional.of(true),
                             Optional.of(false),
-                            Optional.ofNullable(ExcelFontHeight.fromPoints(BigDecimal.valueOf(11))),
+                            Optional.ofNullable(
+                                FontHeightReport.fromPoints(BigDecimal.valueOf(11))),
                             Optional.of(ExcelColor.rgb("#102030")),
                             Optional.of(true),
                             Optional.of(true),

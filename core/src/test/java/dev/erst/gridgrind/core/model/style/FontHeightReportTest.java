@@ -1,18 +1,15 @@
-package dev.erst.gridgrind.engine.runtime;
+package dev.erst.gridgrind.core.model.style;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import dev.erst.gridgrind.core.model.style.FontHeightReport;
-import dev.erst.gridgrind.excel.ExcelFontHeight;
 import java.math.BigDecimal;
 import org.junit.jupiter.api.Test;
 
 /** Tests for analyzed font-height reports returned to protocol callers. */
 class FontHeightReportTest {
   @Test
-  void createsConsistentReportsFromEngineFontHeights() {
-    FontHeightReport report =
-        InspectionResultCellStyleReportSupport.toFontHeightReport(new ExcelFontHeight(230));
+  void derivesConsistentPointsFromTwips() {
+    FontHeightReport report = FontHeightReport.fromTwips(230);
 
     assertEquals(230, report.twips());
     assertEquals(new BigDecimal("11.5"), report.points());

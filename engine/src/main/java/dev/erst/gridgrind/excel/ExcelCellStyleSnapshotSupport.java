@@ -4,8 +4,10 @@ import dev.erst.gridgrind.core.model.protection.CellProtectionReport;
 import dev.erst.gridgrind.core.model.style.CellAlignmentReport;
 import dev.erst.gridgrind.core.model.style.CellColorReport;
 import dev.erst.gridgrind.core.model.style.CellFillReport;
+import dev.erst.gridgrind.core.model.style.CellFontReport;
 import dev.erst.gridgrind.core.model.style.CellGradientFillReport;
 import dev.erst.gridgrind.core.model.style.CellGradientStopReport;
+import dev.erst.gridgrind.core.model.style.FontHeightReport;
 import dev.erst.gridgrind.core.vocabulary.ExcelGradientFillGeometry;
 import java.util.Optional;
 import org.apache.poi.ss.usermodel.BorderStyle;
@@ -28,12 +30,12 @@ final class ExcelCellStyleSnapshotSupport {
     this.workbook = workbook;
   }
 
-  static ExcelCellFontSnapshot snapshotFont(XSSFFont font) {
-    return new ExcelCellFontSnapshot(
+  static CellFontReport snapshotFont(XSSFFont font) {
+    return new CellFontReport(
         font.getBold(),
         font.getItalic(),
         font.getFontName(),
-        new ExcelFontHeight(font.getFontHeight()),
+        FontHeightReport.fromTwips(font.getFontHeight()),
         ExcelColorSnapshotSupport.snapshot(font.getXSSFColor()).orElse(null),
         font.getUnderline() != FontUnderline.NONE.getByteValue(),
         font.getStrikeout());

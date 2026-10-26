@@ -34,6 +34,7 @@ import dev.erst.gridgrind.core.model.style.BorderSidePatch;
 import dev.erst.gridgrind.core.model.style.CellBorderPatch;
 import dev.erst.gridgrind.core.model.style.CellStylePatch;
 import dev.erst.gridgrind.core.model.style.ColorSpec;
+import dev.erst.gridgrind.core.model.style.FontHeightReport;
 import dev.erst.gridgrind.core.model.style.RichTextRunSpec;
 import dev.erst.gridgrind.core.model.table.TableSpec;
 import dev.erst.gridgrind.core.model.table.TableStyleSpec;
@@ -90,7 +91,6 @@ import dev.erst.gridgrind.core.vocabulary.TableName;
 import dev.erst.gridgrind.excel.ExcelBorder;
 import dev.erst.gridgrind.excel.ExcelBorderSide;
 import dev.erst.gridgrind.excel.ExcelColor;
-import dev.erst.gridgrind.excel.ExcelFontHeight;
 import dev.erst.gridgrind.excel.validation.ExcelDataValidationErrorAlert;
 import dev.erst.gridgrind.excel.validation.ExcelDataValidationPrompt;
 import java.math.BigDecimal;
@@ -131,7 +131,7 @@ class RuntimeResidualCoverageTest {
 
   @Test
   void converterNullBranchesAndColorReportVariantsStayTyped() {
-    assertTrue(WorkbookCommandCellValueSpecConverter.toExcelFontHeight(null).isEmpty());
+    assertTrue(WorkbookCommandCellValueSpecConverter.toFontHeightReport(null).isEmpty());
     assertTrue(WorkbookCommandCellValueSpecConverter.toExcelBorder(null).isEmpty());
     assertTrue(WorkbookCommandCellValueSpecConverter.toExcelBorderSide(null).isEmpty());
     assertTrue(WorkbookCommandCellValueSpecConverter.toExcelColor(null).isEmpty());
@@ -140,8 +140,8 @@ class RuntimeResidualCoverageTest {
         WorkbookCommandStructuredInputConverter.toExcelDataValidationErrorAlert(null).isEmpty());
     assertTrue(WorkbookCommandStructuredInputConverter.toExcelAutofilterSortState(null).isEmpty());
 
-    Optional<ExcelFontHeight> fontHeight =
-        WorkbookCommandCellValueSpecConverter.toExcelFontHeight(
+    Optional<FontHeightReport> fontHeight =
+        WorkbookCommandCellValueSpecConverter.toFontHeightReport(
             new dev.erst.gridgrind.core.model.style.FontHeightSpec.Points(
                 BigDecimal.valueOf(12.5d)));
     Optional<ExcelBorder> border =
@@ -171,7 +171,7 @@ class RuntimeResidualCoverageTest {
                 TextSourceSpec.inline("Alert text"),
                 true));
 
-    assertEquals(Optional.of(new ExcelFontHeight(250)), fontHeight);
+    assertEquals(Optional.of(FontHeightReport.fromTwips(250)), fontHeight);
     assertEquals(
         Optional.of(ExcelBorderStyle.THIN), border.orElseThrow().all().orElseThrow().style());
     assertEquals(Optional.of(ExcelBorderStyle.DOUBLE), borderSide.orElseThrow().style());

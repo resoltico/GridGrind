@@ -6,6 +6,8 @@ import dev.erst.gridgrind.core.model.protection.CellProtectionReport;
 import dev.erst.gridgrind.core.model.style.CellAlignmentReport;
 import dev.erst.gridgrind.core.model.style.CellColorReport;
 import dev.erst.gridgrind.core.model.style.CellFillReport;
+import dev.erst.gridgrind.core.model.style.CellFontReport;
+import dev.erst.gridgrind.core.model.style.FontHeightReport;
 import dev.erst.gridgrind.core.vocabulary.ExcelBorderStyle;
 import dev.erst.gridgrind.core.vocabulary.ExcelFillPattern;
 import dev.erst.gridgrind.core.vocabulary.ExcelHorizontalAlignment;
@@ -222,7 +224,7 @@ class ExcelRichTextSupportTest {
                               Optional.of(Boolean.FALSE),
                               Optional.of(Boolean.FALSE),
                               Optional.of("Courier New"),
-                              Optional.of(ExcelFontHeight.fromPoints(new BigDecimal("14"))),
+                              Optional.of(FontHeightReport.fromPoints(new BigDecimal("14"))),
                               Optional.of(ExcelColor.rgb("#123456")),
                               Optional.of(Boolean.FALSE),
                               Optional.of(Boolean.TRUE)))),
@@ -264,7 +266,7 @@ class ExcelRichTextSupportTest {
       assertFalse(alpha.font().bold());
       assertFalse(alpha.font().italic());
       assertEquals("Courier New", alpha.font().fontName());
-      assertEquals(ExcelFontHeight.fromPoints(new BigDecimal("14")), alpha.font().fontHeight());
+      assertEquals(FontHeightReport.fromPoints(new BigDecimal("14")), alpha.font().fontHeight());
       assertEquals(CellColorReport.rgb(new RgbHex("#123456")), alpha.font().fontColor());
       assertFalse(alpha.font().underline());
       assertTrue(alpha.font().strikeout());
@@ -320,11 +322,11 @@ class ExcelRichTextSupportTest {
       assertNotNull(snapshot);
       assertEquals("Flags", snapshot.plainText());
       assertEquals(1, snapshot.runs().size());
-      ExcelCellFontSnapshot font = snapshot.runs().get(0).font();
+      CellFontReport font = snapshot.runs().get(0).font();
       assertTrue(font.bold());
       assertTrue(font.italic());
       assertEquals("Fira Code", font.fontName());
-      assertEquals(ExcelFontHeight.fromPoints(new BigDecimal("18")), font.fontHeight());
+      assertEquals(FontHeightReport.fromPoints(new BigDecimal("18")), font.fontHeight());
       assertEquals(CellColorReport.rgb(new RgbHex("#00AA11")), font.fontColor());
       assertTrue(font.underline());
       assertTrue(font.strikeout());
@@ -355,7 +357,7 @@ class ExcelRichTextSupportTest {
                               Optional.empty(),
                               Optional.empty(),
                               Optional.empty(),
-                              Optional.of(ExcelFontHeight.fromPoints(new BigDecimal("13"))),
+                              Optional.of(FontHeightReport.fromPoints(new BigDecimal("13"))),
                               Optional.empty(),
                               Optional.empty(),
                               Optional.empty()))),
@@ -402,7 +404,7 @@ class ExcelRichTextSupportTest {
       assertEquals(5, snapshot.runs().size());
       assertEquals("Courier New", snapshot.runs().get(0).font().fontName());
       assertEquals(
-          ExcelFontHeight.fromPoints(new BigDecimal("13")),
+          FontHeightReport.fromPoints(new BigDecimal("13")),
           snapshot.runs().get(1).font().fontHeight());
       assertEquals(
           CellColorReport.rgb(new RgbHex("#ABCDEF")), snapshot.runs().get(2).font().fontColor());
@@ -411,12 +413,12 @@ class ExcelRichTextSupportTest {
     }
   }
 
-  private static ExcelCellFontSnapshot baseFont() {
-    return new ExcelCellFontSnapshot(
+  private static CellFontReport baseFont() {
+    return new CellFontReport(
         true,
         true,
         "Aptos",
-        ExcelFontHeight.fromPoints(new BigDecimal("11")),
+        FontHeightReport.fromPoints(new BigDecimal("11")),
         CellColorReport.rgb(new RgbHex("#654321")),
         true,
         false);

@@ -1557,3 +1557,22 @@ passed without snapshot changes. Staged inventories: snapshots 51→45, converte
 main Java lines 123345→122963; definitions 13, Support 206, blank checks 436 unchanged. Evidence
 is outside the repo under evidence/wp-40. WP-40 remains open: font/border and other mirrors,
 resolved plan/step/target and command consumers still need migration. Baseline diff remains empty.
+
+## WP-40 factual font consolidation
+
+Deleted ExcelCellFontSnapshot and ExcelFontHeight. POI extraction, rich-text merging, conditional
+formatting, independent readback and replay now consume CellFontReport and FontHeightReport.
+The canonical report owns exact fromTwips/fromPoints construction while preserving its two-field
+wire shape and mismatched-unit rejection. Five unit/report tests moved from engine to core; the
+identity font conversion assertion was retired. Replay unit-consistency arithmetic deliberately
+does not call the product factory. Initial compilation caught overbroad constructor substitutions
+in the relocated tests; canonical two-argument constructors were restored and all source sets
+compiled (22s). No compatibility constructor or engine wrapper remains.
+
+Nested deterministic check passed (28s, all four retained seed harnesses; no active campaign).
+./gradlew check passed (3m48s): core 334, JSON 348, engine 1493 plus 14 parity, CLI 588,
+architecture 14 plus 12 architecture-rule tests, zero failures/errors/skips. The 143 golden cases
+are unchanged. Inventories: snapshots 45→44, converter lines 4591→4566, main Java lines
+122963→122914; definitions 13, Support 206 and blank checks 436 unchanged. Older architecture-test
+result directories from retired source sets are stale outputs, excluded from these executed-task
+counts. Evidence retained outside the repository under evidence/wp-40. Baseline diff empty.

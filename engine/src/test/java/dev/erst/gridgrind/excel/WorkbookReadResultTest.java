@@ -5,6 +5,8 @@ import static org.junit.jupiter.api.Assertions.*;
 import dev.erst.gridgrind.core.model.protection.CellProtectionReport;
 import dev.erst.gridgrind.core.model.style.CellAlignmentReport;
 import dev.erst.gridgrind.core.model.style.CellFillReport;
+import dev.erst.gridgrind.core.model.style.CellFontReport;
+import dev.erst.gridgrind.core.model.style.FontHeightReport;
 import dev.erst.gridgrind.core.vocabulary.AnalysisFindingCode;
 import dev.erst.gridgrind.core.vocabulary.AnalysisSeverity;
 import dev.erst.gridgrind.core.vocabulary.ExcelBorderStyle;
@@ -402,11 +404,11 @@ class WorkbookReadResultTest {
         "",
         new CellAlignmentReport(
             false, ExcelHorizontalAlignment.GENERAL, ExcelVerticalAlignment.BOTTOM, 0, 0),
-        new ExcelCellFontSnapshot(
+        new CellFontReport(
             false,
             false,
             "Aptos",
-            ExcelFontHeight.fromPoints(new BigDecimal("11")),
+            FontHeightReport.fromPoints(new BigDecimal("11")),
             null,
             false,
             false),

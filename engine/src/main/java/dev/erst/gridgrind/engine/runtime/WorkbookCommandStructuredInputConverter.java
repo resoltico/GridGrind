@@ -180,7 +180,7 @@ final class WorkbookCommandStructuredInputConverter {
             style.numberFormat(),
             style.bold(),
             style.italic(),
-            style.fontHeight().flatMap(WorkbookCommandCellValueSpecConverter::toExcelFontHeight),
+            style.fontHeight().flatMap(WorkbookCommandCellValueSpecConverter::toFontHeightReport),
             style.fontColor().flatMap(WorkbookCommandCellValueSpecConverter::toExcelColor),
             style.underline(),
             style.strikeout(),

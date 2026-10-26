@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import dev.erst.gridgrind.core.model.style.CellColorReport;
 import dev.erst.gridgrind.core.model.style.CellFillReport;
 import dev.erst.gridgrind.core.model.style.CellGradientFillReport;
+import dev.erst.gridgrind.core.model.style.FontHeightReport;
 import dev.erst.gridgrind.core.vocabulary.ExcelBorderStyle;
 import dev.erst.gridgrind.core.vocabulary.ExcelFillPattern;
 import dev.erst.gridgrind.core.vocabulary.ExcelHorizontalAlignment;
@@ -136,7 +137,7 @@ class WorkbookStyleRegistryTest {
                       null,
                       null,
                       null,
-                      ExcelFontHeight.fromPoints(new BigDecimal("11.5")),
+                      FontHeightReport.fromPoints(new BigDecimal("11.5")),
                       null,
                       null,
                       null),
@@ -424,7 +425,7 @@ class WorkbookStyleRegistryTest {
                       true,
                       false,
                       "Aptos",
-                      ExcelFontHeight.fromPoints(new BigDecimal("11.5")),
+                      FontHeightReport.fromPoints(new BigDecimal("11.5")),
                       ExcelColor.rgb("#102030"),
                       true,
                       false),
@@ -1242,7 +1243,7 @@ class WorkbookStyleRegistryTest {
       Boolean bold,
       Boolean italic,
       String fontName,
-      ExcelFontHeight fontHeight,
+      FontHeightReport fontHeight,
       ExcelColor fontColor,
       Boolean underline,
       Boolean strikeout) {

@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.core.model.style.FontHeightReport;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -8,7 +9,7 @@ public record ExcelDifferentialStyle(
     Optional<String> numberFormat,
     Optional<Boolean> bold,
     Optional<Boolean> italic,
-    Optional<ExcelFontHeight> fontHeight,
+    Optional<FontHeightReport> fontHeight,
     Optional<ExcelColor> fontColor,
     Optional<Boolean> underline,
     Optional<Boolean> strikeout,

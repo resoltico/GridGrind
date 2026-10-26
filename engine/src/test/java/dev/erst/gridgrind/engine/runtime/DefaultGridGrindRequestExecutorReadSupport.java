@@ -9,7 +9,9 @@ import dev.erst.gridgrind.core.model.protection.SheetProtectionSettings;
 import dev.erst.gridgrind.core.model.style.CellAlignmentReport;
 import dev.erst.gridgrind.core.model.style.CellColorReport;
 import dev.erst.gridgrind.core.model.style.CellFillReport;
+import dev.erst.gridgrind.core.model.style.CellFontReport;
 import dev.erst.gridgrind.core.model.style.CellStyleReport;
+import dev.erst.gridgrind.core.model.style.FontHeightReport;
 import dev.erst.gridgrind.core.model.style.RichTextRunReport;
 import dev.erst.gridgrind.core.model.value.CellReport;
 import dev.erst.gridgrind.core.model.value.CellValue;
@@ -223,11 +225,11 @@ class DefaultGridGrindRequestExecutorReadSupport {
         "",
         new CellAlignmentReport(
             false, ExcelHorizontalAlignment.GENERAL, ExcelVerticalAlignment.BOTTOM, 0, 0),
-        new ExcelCellFontSnapshot(
+        new CellFontReport(
             false,
             false,
             "Aptos",
-            ExcelFontHeight.fromPoints(new BigDecimal("11")),
+            FontHeightReport.fromPoints(new BigDecimal("11")),
             null,
             false,
             false),

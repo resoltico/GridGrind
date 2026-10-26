@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import dev.erst.gridgrind.core.model.style.CellColorReport;
 import dev.erst.gridgrind.core.model.style.CellFillReport;
+import dev.erst.gridgrind.core.model.style.FontHeightReport;
 import dev.erst.gridgrind.core.vocabulary.ExcelBorderStyle;
 import dev.erst.gridgrind.core.vocabulary.ExcelFillPattern;
 import dev.erst.gridgrind.core.vocabulary.ExcelHorizontalAlignment;
@@ -31,7 +32,7 @@ class ExcelCellStyleTest {
                     Optional.empty(),
                     Optional.empty(),
                     Optional.of("Aptos"),
-                    Optional.of(ExcelFontHeight.fromPoints(new BigDecimal("11.5"))),
+                    Optional.of(FontHeightReport.fromPoints(new BigDecimal("11.5"))),
                     Optional.of(ExcelColor.rgb("#00AAFF")),
                     Optional.of(true),
                     Optional.of(false))),
@@ -103,8 +104,9 @@ class ExcelCellStyleTest {
                 Optional.empty(),
                 Optional.empty(),
                 Optional.empty()));
-    assertThrows(IllegalArgumentException.class, () -> new ExcelFontHeight(0));
-    assertThrows(IllegalArgumentException.class, () -> new ExcelFontHeight(Short.MAX_VALUE + 1));
+    assertThrows(IllegalArgumentException.class, () -> FontHeightReport.fromTwips(0));
+    assertThrows(
+        IllegalArgumentException.class, () -> FontHeightReport.fromTwips(Short.MAX_VALUE + 1));
     assertThrows(IllegalArgumentException.class, () -> ExcelColor.rgb("#12ab"));
     assertThrows(IllegalArgumentException.class, () -> ExcelColor.rgb(" "));
     assertThrows(
@@ -177,7 +179,7 @@ class ExcelCellStyleTest {
                     Optional.empty(),
                     Optional.empty(),
                     Optional.empty(),
-                    Optional.of(new ExcelFontHeight(230)),
+                    Optional.of(FontHeightReport.fromTwips(230)),
                     Optional.empty(),
                     Optional.empty(),
                     Optional.empty())),

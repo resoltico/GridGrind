@@ -4,6 +4,7 @@ import static dev.erst.gridgrind.excel.ExcelStyleTestAccess.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 import dev.erst.gridgrind.core.model.style.CellColorReport;
+import dev.erst.gridgrind.core.model.style.FontHeightReport;
 import dev.erst.gridgrind.core.vocabulary.ExcelBorderStyle;
 import dev.erst.gridgrind.core.vocabulary.ExcelColumnSpan;
 import dev.erst.gridgrind.core.vocabulary.ExcelFillPattern;
@@ -527,7 +528,7 @@ class ExcelSheetCoreReadWriteCoverageTest extends ExcelSheetTestSupport {
                           Optional.of(true),
                           Optional.of(false),
                           Optional.of("Aptos"),
-                          Optional.of(new ExcelFontHeight(280)),
+                          Optional.of(FontHeightReport.fromTwips(280)),
                           Optional.of(ExcelColor.rgb("#1F4E78")),
                           Optional.of(true),
                           Optional.of(false))),

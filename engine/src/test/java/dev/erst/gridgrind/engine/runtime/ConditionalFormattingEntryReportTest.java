@@ -2,6 +2,7 @@ package dev.erst.gridgrind.engine.runtime;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.core.model.style.FontHeightReport;
 import dev.erst.gridgrind.core.model.validation.ConditionalFormattingEntryReport;
 import dev.erst.gridgrind.core.model.validation.ConditionalFormattingHealthReport;
 import dev.erst.gridgrind.core.model.validation.ConditionalFormattingRuleReport;
@@ -19,7 +20,6 @@ import dev.erst.gridgrind.excel.ExcelConditionalFormattingBlockSnapshot;
 import dev.erst.gridgrind.excel.ExcelConditionalFormattingRuleSnapshot;
 import dev.erst.gridgrind.excel.ExcelConditionalFormattingThresholdSnapshot;
 import dev.erst.gridgrind.excel.ExcelDifferentialStyleSnapshot;
-import dev.erst.gridgrind.excel.ExcelFontHeight;
 import java.math.BigDecimal;
 import java.util.List;
 import org.junit.jupiter.api.Test;
@@ -41,7 +41,7 @@ class ConditionalFormattingEntryReportTest {
                             "0.00",
                             true,
                             false,
-                            ExcelFontHeight.fromPoints(BigDecimal.valueOf(12)),
+                            FontHeightReport.fromPoints(BigDecimal.valueOf(12)),
                             ExcelColor.rgb("#102030"),
                             true,
                             true,

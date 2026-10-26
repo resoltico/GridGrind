@@ -2,6 +2,7 @@ package dev.erst.gridgrind.excel;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.core.model.style.FontHeightReport;
 import dev.erst.gridgrind.core.vocabulary.ExcelBorderStyle;
 import dev.erst.gridgrind.core.vocabulary.ExcelComparisonOperator;
 import dev.erst.gridgrind.core.vocabulary.ExcelConditionalFormattingIconSet;
@@ -120,7 +121,7 @@ class ExcelConditionalFormattingDomainModelTest {
             Optional.of("0.00"),
             Optional.of(true),
             Optional.of(false),
-            Optional.ofNullable(ExcelFontHeight.fromPoints(BigDecimal.valueOf(11))),
+            Optional.ofNullable(FontHeightReport.fromPoints(BigDecimal.valueOf(11))),
             Optional.of(ExcelColor.theme(3, Optional.of(0.25d))),
             Optional.of(true),
             Optional.of(false),
@@ -133,7 +134,7 @@ class ExcelConditionalFormattingDomainModelTest {
             "0.00",
             true,
             false,
-            ExcelFontHeight.fromPoints(BigDecimal.valueOf(11)),
+            FontHeightReport.fromPoints(BigDecimal.valueOf(11)),
             ExcelColor.theme(3, Optional.of(0.25d)),
             true,
             false,

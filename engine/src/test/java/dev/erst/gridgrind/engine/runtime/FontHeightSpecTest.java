@@ -14,13 +14,14 @@ class FontHeightSpecTest {
     FontHeightSpec.Twips twips = new FontHeightSpec.Twips(260);
 
     assertEquals(
-        230, WorkbookCommandCellValueSpecConverter.toExcelFontHeight(points).orElseThrow().twips());
+        230,
+        WorkbookCommandCellValueSpecConverter.toFontHeightReport(points).orElseThrow().twips());
     assertEquals(
         new BigDecimal("11.5"),
-        WorkbookCommandCellValueSpecConverter.toExcelFontHeight(points).orElseThrow().points());
+        WorkbookCommandCellValueSpecConverter.toFontHeightReport(points).orElseThrow().points());
     assertEquals(
         new BigDecimal("13"),
-        WorkbookCommandCellValueSpecConverter.toExcelFontHeight(twips).orElseThrow().points());
+        WorkbookCommandCellValueSpecConverter.toFontHeightReport(twips).orElseThrow().points());
   }
 
   @Test

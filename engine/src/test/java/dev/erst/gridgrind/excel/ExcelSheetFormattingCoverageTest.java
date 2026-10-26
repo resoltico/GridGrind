@@ -3,6 +3,7 @@ package dev.erst.gridgrind.excel;
 import static dev.erst.gridgrind.excel.ExcelStyleTestAccess.*;
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.core.model.style.FontHeightReport;
 import dev.erst.gridgrind.core.vocabulary.ExcelBorderStyle;
 import dev.erst.gridgrind.core.vocabulary.ExcelFillPattern;
 import dev.erst.gridgrind.core.vocabulary.ExcelHorizontalAlignment;
@@ -228,7 +229,7 @@ class ExcelSheetFormattingCoverageTest extends ExcelSheetTestSupport {
                           Optional.empty(),
                           Optional.of(Boolean.TRUE),
                           Optional.of("Aptos"),
-                          Optional.of(new ExcelFontHeight(260)),
+                          Optional.of(FontHeightReport.fromTwips(260)),
                           Optional.of(ExcelColor.rgb("#112233")),
                           Optional.empty(),
                           Optional.empty())),
@@ -247,7 +248,7 @@ class ExcelSheetFormattingCoverageTest extends ExcelSheetTestSupport {
       ExcelRichTextRunSnapshot firstRun = textSnapshot.richText().runs().get(0);
       assertEquals("Quarterly", firstRun.text());
       assertEquals("Aptos", firstRun.font().fontName());
-      assertEquals(new ExcelFontHeight(260), firstRun.font().fontHeight());
+      assertEquals(FontHeightReport.fromTwips(260), firstRun.font().fontHeight());
       assertEquals(rgb("#112233"), firstRun.font().fontColor());
       assertFalse(firstRun.font().bold());
       assertTrue(firstRun.font().italic());
@@ -255,7 +256,7 @@ class ExcelSheetFormattingCoverageTest extends ExcelSheetTestSupport {
       ExcelRichTextRunSnapshot secondRun = textSnapshot.richText().runs().get(1);
       assertEquals(" Report", secondRun.text());
       assertEquals("Aptos", secondRun.font().fontName());
-      assertEquals(new ExcelFontHeight(260), secondRun.font().fontHeight());
+      assertEquals(FontHeightReport.fromTwips(260), secondRun.font().fontHeight());
       assertEquals(rgb("#FF0000"), secondRun.font().fontColor());
       assertTrue(secondRun.font().bold());
       assertTrue(secondRun.font().italic());
@@ -282,7 +283,8 @@ class ExcelSheetFormattingCoverageTest extends ExcelSheetTestSupport {
                           Optional.empty(),
                           Optional.empty(),
                           Optional.of("Aptos"),
-                          Optional.of(ExcelFontHeight.fromPoints(new java.math.BigDecimal("15.2"))),
+                          Optional.of(
+                              FontHeightReport.fromPoints(new java.math.BigDecimal("15.2"))),
                           Optional.of(ExcelColor.rgb("#A3A3A3")),
                           Optional.empty(),
                           Optional.of(Boolean.TRUE))),

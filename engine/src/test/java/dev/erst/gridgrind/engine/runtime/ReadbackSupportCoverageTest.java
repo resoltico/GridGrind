@@ -30,7 +30,6 @@ import dev.erst.gridgrind.core.vocabulary.ExcelVerticalAlignment;
 import dev.erst.gridgrind.core.vocabulary.RgbHex;
 import dev.erst.gridgrind.excel.ExcelBorderSideSnapshot;
 import dev.erst.gridgrind.excel.ExcelBorderSnapshot;
-import dev.erst.gridgrind.excel.ExcelCellFontSnapshot;
 import dev.erst.gridgrind.excel.ExcelCellMetadataSnapshot;
 import dev.erst.gridgrind.excel.ExcelCellReadFacet;
 import dev.erst.gridgrind.excel.ExcelCellReadProjection;
@@ -39,7 +38,6 @@ import dev.erst.gridgrind.excel.ExcelCellStyleSnapshot;
 import dev.erst.gridgrind.excel.ExcelColor;
 import dev.erst.gridgrind.excel.ExcelCommentAnchorSnapshot;
 import dev.erst.gridgrind.excel.ExcelCommentSnapshot;
-import dev.erst.gridgrind.excel.ExcelFontHeight;
 import dev.erst.gridgrind.excel.ExcelHyperlink;
 import dev.erst.gridgrind.excel.ExcelRichTextRunSnapshot;
 import dev.erst.gridgrind.excel.ExcelRichTextSnapshot;
@@ -514,12 +512,12 @@ class ReadbackSupportCoverageTest {
         new CellProtectionReport(true, false));
   }
 
-  private static ExcelCellFontSnapshot fontSnapshot() {
-    return new ExcelCellFontSnapshot(
+  private static CellFontReport fontSnapshot() {
+    return new CellFontReport(
         false,
         false,
         "Aptos",
-        ExcelFontHeight.fromPoints(BigDecimal.valueOf(11)),
+        FontHeightReport.fromPoints(BigDecimal.valueOf(11)),
         null,
         false,
         false);

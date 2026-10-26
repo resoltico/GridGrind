@@ -12,7 +12,6 @@ import dev.erst.gridgrind.core.model.style.CellGradientStopReport;
 import dev.erst.gridgrind.core.model.style.CellStyleReport;
 import dev.erst.gridgrind.core.model.style.FontHeightReport;
 import dev.erst.gridgrind.core.vocabulary.ExcelFillPattern;
-import dev.erst.gridgrind.excel.ExcelFontHeight;
 import org.jspecify.annotations.Nullable;
 
 /** Owns invariant checks for cell style, color, border, gradient, and font payloads. */
@@ -155,9 +154,12 @@ final class WorkbookInvariantCellStyleChecks {
 
   static void requireFontHeightShape(FontHeightReport fontHeight) {
     WorkbookInvariantChecks.require(fontHeight != null, "fontHeight must not be null");
-    ExcelFontHeight expected = new ExcelFontHeight(fontHeight.twips());
     WorkbookInvariantChecks.require(
-        expected.points().compareTo(fontHeight.points()) == 0,
+        fontHeight
+                .points()
+                .multiply(java.math.BigDecimal.valueOf(20))
+                .compareTo(java.math.BigDecimal.valueOf(fontHeight.twips()))
+            == 0,
         "fontHeight points must match twips");
   }
 

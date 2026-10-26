@@ -16,8 +16,10 @@ import dev.erst.gridgrind.core.model.style.CellAlignmentReport;
 import dev.erst.gridgrind.core.model.style.CellBorderSideReport;
 import dev.erst.gridgrind.core.model.style.CellColorReport;
 import dev.erst.gridgrind.core.model.style.CellFillReport;
+import dev.erst.gridgrind.core.model.style.CellFontReport;
 import dev.erst.gridgrind.core.model.style.CellGradientFillReport;
 import dev.erst.gridgrind.core.model.style.CellGradientStopReport;
+import dev.erst.gridgrind.core.model.style.FontHeightReport;
 import dev.erst.gridgrind.core.model.table.AutofilterEntryReport;
 import dev.erst.gridgrind.core.model.table.AutofilterFilterCriterionReport;
 import dev.erst.gridgrind.core.model.table.AutofilterSortConditionReport;
@@ -976,23 +978,23 @@ class InspectionResultConverterTest extends DefaultGridGrindRequestExecutorTestS
         new CellProtectionReport(true, false));
   }
 
-  private static ExcelCellFontSnapshot advancedFont() {
-    return new ExcelCellFontSnapshot(
+  private static CellFontReport advancedFont() {
+    return new CellFontReport(
         true,
         false,
         "Aptos",
-        ExcelFontHeight.fromPoints(new BigDecimal("11")),
+        FontHeightReport.fromPoints(new BigDecimal("11")),
         CellColorReport.theme(2, 0.25d),
         false,
         false);
   }
 
-  private static ExcelCellFontSnapshot accentFont() {
-    return new ExcelCellFontSnapshot(
+  private static CellFontReport accentFont() {
+    return new CellFontReport(
         false,
         false,
         "Aptos",
-        ExcelFontHeight.fromPoints(new BigDecimal("11")),
+        FontHeightReport.fromPoints(new BigDecimal("11")),
         CellColorReport.rgb(new RgbHex("#AABBCC")),
         false,
         false);

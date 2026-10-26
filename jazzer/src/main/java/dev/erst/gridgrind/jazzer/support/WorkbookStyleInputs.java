@@ -8,13 +8,13 @@ import dev.erst.gridgrind.core.model.style.CellFillSpec;
 import dev.erst.gridgrind.core.model.style.CellFontPatch;
 import dev.erst.gridgrind.core.model.style.CellStylePatch;
 import dev.erst.gridgrind.core.model.style.ColorSpec;
+import dev.erst.gridgrind.core.model.style.FontHeightReport;
 import dev.erst.gridgrind.core.model.style.FontHeightSpec;
 import dev.erst.gridgrind.core.vocabulary.ExcelBorderStyle;
 import dev.erst.gridgrind.core.vocabulary.ExcelFillPattern;
 import dev.erst.gridgrind.core.vocabulary.ExcelHorizontalAlignment;
 import dev.erst.gridgrind.core.vocabulary.ExcelVerticalAlignment;
 import dev.erst.gridgrind.core.vocabulary.RgbHex;
-import dev.erst.gridgrind.excel.ExcelFontHeight;
 import java.math.BigDecimal;
 import java.util.Objects;
 import java.util.Optional;
@@ -158,7 +158,7 @@ public final class WorkbookStyleInputs {
   }
 
   private static BigDecimal nextPointHeight(GridGrindFuzzData data) {
-    return new ExcelFontHeight(data.consumeInt(20, 640)).points();
+    return FontHeightReport.fromTwips(data.consumeInt(20, 640)).points();
   }
 
   private static String nextRgbHex(GridGrindFuzzData data) {

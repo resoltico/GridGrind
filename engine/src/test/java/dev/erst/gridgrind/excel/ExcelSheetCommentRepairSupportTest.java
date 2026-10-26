@@ -5,6 +5,8 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import dev.erst.gridgrind.core.model.style.CellColorReport;
+import dev.erst.gridgrind.core.model.style.CellFontReport;
+import dev.erst.gridgrind.core.model.style.FontHeightReport;
 import dev.erst.gridgrind.core.vocabulary.ExcelColumnSpan;
 import java.io.IOException;
 import java.io.InputStream;
@@ -167,11 +169,11 @@ class ExcelSheetCommentRepairSupportTest {
               List.of(
                   new ExcelRichTextRunSnapshot(
                       "Raw rich",
-                      new ExcelCellFontSnapshot(
+                      new CellFontReport(
                           false,
                           false,
                           "Aptos",
-                          new ExcelFontHeight(220),
+                          FontHeightReport.fromTwips(220),
                           CellColorReport.indexed(8),
                           false,
                           false))));
@@ -514,9 +516,9 @@ class ExcelSheetCommentRepairSupportTest {
     return ExcelSheetCommentRepairSupport.rawCommentAddresses(commentsTable);
   }
 
-  private static ExcelCellFontSnapshot baseFontWithoutColor() {
-    return new ExcelCellFontSnapshot(
-        false, false, "Aptos", new ExcelFontHeight(220), null, false, false);
+  private static CellFontReport baseFontWithoutColor() {
+    return new CellFontReport(
+        false, false, "Aptos", FontHeightReport.fromTwips(220), null, false, false);
   }
 
   private static Document parseXml(InputStream inputStream) throws IOException {

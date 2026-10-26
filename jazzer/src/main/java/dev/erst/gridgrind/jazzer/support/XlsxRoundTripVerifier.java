@@ -4,8 +4,10 @@ import dev.erst.gridgrind.core.model.protection.CellProtectionReport;
 import dev.erst.gridgrind.core.model.style.CellAlignmentReport;
 import dev.erst.gridgrind.core.model.style.CellColorReport;
 import dev.erst.gridgrind.core.model.style.CellFillReport;
+import dev.erst.gridgrind.core.model.style.CellFontReport;
 import dev.erst.gridgrind.core.model.style.CellGradientFillReport;
 import dev.erst.gridgrind.core.model.style.CellGradientStopReport;
+import dev.erst.gridgrind.core.model.style.FontHeightReport;
 import dev.erst.gridgrind.core.vocabulary.ExcelBorderStyle;
 import dev.erst.gridgrind.core.vocabulary.ExcelFillPattern;
 import dev.erst.gridgrind.core.vocabulary.ExcelGradientFillGeometry;
@@ -14,10 +16,8 @@ import dev.erst.gridgrind.core.vocabulary.ExcelVerticalAlignment;
 import dev.erst.gridgrind.core.vocabulary.RgbHex;
 import dev.erst.gridgrind.excel.ExcelBorderSideSnapshot;
 import dev.erst.gridgrind.excel.ExcelBorderSnapshot;
-import dev.erst.gridgrind.excel.ExcelCellFontSnapshot;
 import dev.erst.gridgrind.excel.ExcelCellStyleSnapshot;
 import dev.erst.gridgrind.excel.ExcelComment;
-import dev.erst.gridgrind.excel.ExcelFontHeight;
 import dev.erst.gridgrind.excel.ExcelHyperlink;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
 import dev.erst.gridgrind.excel.ExcelWorkbooks;
@@ -180,11 +180,11 @@ public final class XlsxRoundTripVerifier {
             fromPoi(style.getVerticalAlignment()),
             style.getRotation(),
             style.getIndention()),
-        new ExcelCellFontSnapshot(
+        new CellFontReport(
             font.getBold(),
             font.getItalic(),
             font.getFontName(),
-            new ExcelFontHeight(font.getFontHeight()),
+            FontHeightReport.fromTwips(font.getFontHeight()),
             toColorSnapshot(font.getXSSFColor()).orElse(null),
             font.getUnderline() != org.apache.poi.ss.usermodel.Font.U_NONE,
             font.getStrikeout()),

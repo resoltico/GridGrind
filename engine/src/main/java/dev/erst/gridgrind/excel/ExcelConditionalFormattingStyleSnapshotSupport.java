@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.core.model.style.FontHeightReport;
 import dev.erst.gridgrind.core.vocabulary.ExcelBorderStyle;
 import dev.erst.gridgrind.core.vocabulary.ExcelConditionalFormattingUnsupportedFeature;
 import dev.erst.gridgrind.excel.ExcelConditionalFormattingStyleSupport.BorderSnapshot;
@@ -229,11 +230,12 @@ final class ExcelConditionalFormattingStyleSnapshotSupport {
         normalizedUnsupportedFeatures(unsupportedFeatures));
   }
 
-  private static Optional<ExcelFontHeight> fontHeight(CTFont font) {
+  private static Optional<FontHeightReport> fontHeight(CTFont font) {
     if (font.sizeOfSzArray() == 0) {
       return Optional.empty();
     }
-    return Optional.of(ExcelFontHeight.fromPoints(BigDecimal.valueOf(font.getSzArray(0).getVal())));
+    return Optional.of(
+        FontHeightReport.fromPoints(BigDecimal.valueOf(font.getSzArray(0).getVal())));
   }
 
   private static @Nullable ExcelColor fontColor(

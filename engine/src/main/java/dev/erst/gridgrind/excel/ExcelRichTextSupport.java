@@ -1,6 +1,8 @@
 package dev.erst.gridgrind.excel;
 
 import dev.erst.gridgrind.core.model.style.CellColorReport;
+import dev.erst.gridgrind.core.model.style.CellFontReport;
+import dev.erst.gridgrind.core.model.style.FontHeightReport;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -37,7 +39,7 @@ public final class ExcelRichTextSupport {
 
   /** Returns factual rich-text runs, or empty when the cell stores only a scalar plain string. */
   static Optional<ExcelRichTextSnapshot> snapshot(
-      XSSFWorkbook workbook, XSSFRichTextString richText, ExcelCellFontSnapshot baseFont) {
+      XSSFWorkbook workbook, XSSFRichTextString richText, CellFontReport baseFont) {
     Objects.requireNonNull(workbook, "workbook must not be null");
     Objects.requireNonNull(richText, "richText must not be null");
     Objects.requireNonNull(baseFont, "baseFont must not be null");
@@ -80,12 +82,11 @@ public final class ExcelRichTextSupport {
     return new XSSFFont(font);
   }
 
-  private static ExcelCellFontSnapshot merge(
-      ExcelCellFontSnapshot baseFont, RunFontPatch fontPatch) {
+  private static CellFontReport merge(CellFontReport baseFont, RunFontPatch fontPatch) {
     if (fontPatch.isEmpty()) {
       return baseFont;
     }
-    return new ExcelCellFontSnapshot(
+    return new CellFontReport(
         fontPatch.bold().orElse(baseFont.bold()),
         fontPatch.italic().orElse(baseFont.italic()),
         fontPatch.fontName().orElse(baseFont.fontName()),
@@ -127,12 +128,12 @@ public final class ExcelRichTextSupport {
         : Optional.empty();
   }
 
-  private static Optional<ExcelFontHeight> readFontHeight(CTRPrElt properties) {
+  private static Optional<FontHeightReport> readFontHeight(CTRPrElt properties) {
     if (properties.sizeOfSzArray() == 0) {
       return Optional.empty();
     }
     return Optional.of(
-        ExcelFontHeight.fromPoints(
+        FontHeightReport.fromPoints(
             java.math.BigDecimal.valueOf(properties.getSzArray(0).getVal())));
   }
 
@@ -176,7 +177,7 @@ public final class ExcelRichTextSupport {
       Optional<Boolean> bold,
       Optional<Boolean> italic,
       Optional<String> fontName,
-      Optional<ExcelFontHeight> fontHeight,
+      Optional<FontHeightReport> fontHeight,
       Optional<CellColorReport> fontColor,
       Optional<Boolean> underline,
       Optional<Boolean> strikeout) {

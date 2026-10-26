@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import dev.erst.gridgrind.core.model.style.CellColorReport;
 import dev.erst.gridgrind.core.model.style.CellGradientFillReport;
+import dev.erst.gridgrind.core.model.style.FontHeightReport;
 import dev.erst.gridgrind.core.vocabulary.ExcelBorderStyle;
 import dev.erst.gridgrind.core.vocabulary.ExcelColumnSpan;
 import dev.erst.gridgrind.core.vocabulary.ExcelComparisonOperator;
@@ -1023,7 +1024,7 @@ class ExcelWorkbookTest {
                           Optional.of(true),
                           Optional.of(false),
                           Optional.of("Aptos"),
-                          Optional.of(ExcelFontHeight.fromPoints(new BigDecimal("11.5"))),
+                          Optional.of(FontHeightReport.fromPoints(new BigDecimal("11.5"))),
                           Optional.of(ExcelColor.rgb("#1F4E78")),
                           Optional.of(true),
                           Optional.of(true))),

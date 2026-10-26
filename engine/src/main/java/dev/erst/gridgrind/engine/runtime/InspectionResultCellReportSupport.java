@@ -161,11 +161,7 @@ final class InspectionResultCellReportSupport {
     }
     return Optional.of(
         richText.orElseThrow().runs().stream()
-            .map(
-                run ->
-                    new RichTextRunReport(
-                        run.text(),
-                        InspectionResultCellStyleReportSupport.toCellFontReport(run.font())))
+            .map(run -> new RichTextRunReport(run.text(), run.font()))
             .toList());
   }
 
