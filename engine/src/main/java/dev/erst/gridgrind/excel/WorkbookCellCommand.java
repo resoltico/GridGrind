@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.core.model.formula.ResolvedArrayFormula;
 import java.util.List;
 import java.util.Objects;
 
@@ -75,7 +76,7 @@ public sealed interface WorkbookCellCommand extends WorkbookCommand
     }
   }
 
-  record SetArrayFormula(String sheetName, String range, ExcelArrayFormulaDefinition formula)
+  record SetArrayFormula(String sheetName, String range, ResolvedArrayFormula formula)
       implements WorkbookCellCommand {
     public SetArrayFormula {
       Objects.requireNonNull(sheetName, "sheetName must not be null");

@@ -14,6 +14,8 @@ import dev.erst.gridgrind.core.model.style.CellStyleReport;
 import dev.erst.gridgrind.core.model.style.ColorSpec;
 import dev.erst.gridgrind.core.model.style.FontHeightReport;
 import dev.erst.gridgrind.core.model.style.FontHeightSpec;
+import dev.erst.gridgrind.core.model.style.ResolvedRichText;
+import dev.erst.gridgrind.core.model.style.ResolvedRichTextRun;
 import dev.erst.gridgrind.core.model.style.RichTextRunReport;
 import dev.erst.gridgrind.core.vocabulary.ExcelFillPattern;
 import dev.erst.gridgrind.core.vocabulary.ExcelHorizontalAlignment;
@@ -34,21 +36,22 @@ import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTRPrElt;
 class ExcelRichTextSupportTest {
   @Test
   void richTextModelsValidateInputsAndCopyRunLists() {
-    assertThrows(NullPointerException.class, () -> new ExcelRichText(null));
-    assertThrows(IllegalArgumentException.class, () -> new ExcelRichText(List.of()));
+    assertThrows(NullPointerException.class, () -> new ResolvedRichText(null));
+    assertThrows(IllegalArgumentException.class, () -> new ResolvedRichText(List.of()));
 
-    List<ExcelRichTextRun> invalidRuns = new ArrayList<>();
+    List<ResolvedRichTextRun> invalidRuns = new ArrayList<>();
     invalidRuns.add(null);
-    assertThrows(NullPointerException.class, () -> new ExcelRichText(invalidRuns));
+    assertThrows(NullPointerException.class, () -> new ResolvedRichText(invalidRuns));
 
-    assertThrows(NullPointerException.class, () -> new ExcelRichTextRun(null, Optional.empty()));
-    assertThrows(IllegalArgumentException.class, () -> new ExcelRichTextRun("", Optional.empty()));
+    assertThrows(NullPointerException.class, () -> new ResolvedRichTextRun(null, Optional.empty()));
+    assertThrows(
+        IllegalArgumentException.class, () -> new ResolvedRichTextRun("", Optional.empty()));
 
-    List<ExcelRichTextRun> runs =
+    List<ResolvedRichTextRun> runs =
         new ArrayList<>(
             List.of(
-                new ExcelRichTextRun("Quarterly", Optional.empty()),
-                new ExcelRichTextRun(
+                new ResolvedRichTextRun("Quarterly", Optional.empty()),
+                new ResolvedRichTextRun(
                     " Report",
                     Optional.of(
                         new CellFontPatch(
@@ -59,7 +62,7 @@ class ExcelRichTextSupportTest {
                             Optional.empty(),
                             Optional.empty(),
                             Optional.empty())))));
-    ExcelRichText richText = new ExcelRichText(runs);
+    ResolvedRichText richText = new ResolvedRichText(runs);
     runs.clear();
 
     assertEquals("Quarterly Report", richText.plainText());
@@ -113,7 +116,8 @@ class ExcelRichTextSupportTest {
           () ->
               ExcelRichTextSupport.toPoiRichText(
                   null,
-                  new ExcelRichText(List.of(new ExcelRichTextRun("text", Optional.empty())))));
+                  new ResolvedRichText(
+                      List.of(new ResolvedRichTextRun("text", Optional.empty())))));
       assertThrows(
           NullPointerException.class, () -> ExcelRichTextSupport.toPoiRichText(workbook, null));
       assertThrows(
@@ -169,9 +173,9 @@ class ExcelRichTextSupportTest {
       XSSFRichTextString richText =
           ExcelRichTextSupport.toPoiRichText(
               workbook,
-              new ExcelRichText(
+              new ResolvedRichText(
                   List.of(
-                      new ExcelRichTextRun(
+                      new ResolvedRichTextRun(
                           "Lead",
                           Optional.of(
                               new CellFontPatch(
@@ -182,8 +186,8 @@ class ExcelRichTextSupportTest {
                                   Optional.of(ColorSpec.theme(4, -0.20d)),
                                   Optional.empty(),
                                   Optional.empty()))),
-                      new ExcelRichTextRun(" ", Optional.empty()),
-                      new ExcelRichTextRun(
+                      new ResolvedRichTextRun(" ", Optional.empty()),
+                      new ResolvedRichTextRun(
                           "review scheduled",
                           Optional.of(
                               new CellFontPatch(
@@ -212,10 +216,10 @@ class ExcelRichTextSupportTest {
   @Test
   void roundTripsExplicitRunOverridesAndInheritedBaseFontValues() throws Exception {
     try (XSSFWorkbook workbook = new XSSFWorkbook()) {
-      ExcelRichText richText =
-          new ExcelRichText(
+      ResolvedRichText richText =
+          new ResolvedRichText(
               List.of(
-                  new ExcelRichTextRun(
+                  new ResolvedRichTextRun(
                       "Alpha",
                       Optional.of(
                           new CellFontPatch(
@@ -226,7 +230,7 @@ class ExcelRichTextSupportTest {
                               Optional.of(ColorSpec.rgb(new RgbHex("#123456"))),
                               Optional.of(Boolean.FALSE),
                               Optional.of(Boolean.TRUE)))),
-                  new ExcelRichTextRun(
+                  new ResolvedRichTextRun(
                       " Beta",
                       Optional.of(
                           new CellFontPatch(
@@ -237,7 +241,7 @@ class ExcelRichTextSupportTest {
                               Optional.of(ColorSpec.rgb(new RgbHex("#ABCDEF"))),
                               Optional.of(Boolean.TRUE),
                               Optional.of(Boolean.FALSE)))),
-                  new ExcelRichTextRun(
+                  new ResolvedRichTextRun(
                       " Delta",
                       Optional.of(
                           new CellFontPatch(
@@ -248,7 +252,7 @@ class ExcelRichTextSupportTest {
                               Optional.empty(),
                               Optional.empty(),
                               Optional.empty()))),
-                  new ExcelRichTextRun(" Gamma", Optional.empty())));
+                  new ResolvedRichTextRun(" Gamma", Optional.empty())));
 
       List<RichTextRunReport> snapshot =
           ExcelRichTextSupport.snapshot(
@@ -342,10 +346,10 @@ class ExcelRichTextSupportTest {
   @Test
   void snapshotRetainsRunsWhoseOnlyOverridesAppearLateInTheFontPatchChain() throws Exception {
     try (XSSFWorkbook workbook = new XSSFWorkbook()) {
-      ExcelRichText richText =
-          new ExcelRichText(
+      ResolvedRichText richText =
+          new ResolvedRichText(
               List.of(
-                  new ExcelRichTextRun(
+                  new ResolvedRichTextRun(
                       "Name",
                       Optional.of(
                           new CellFontPatch(
@@ -356,7 +360,7 @@ class ExcelRichTextSupportTest {
                               Optional.empty(),
                               Optional.empty(),
                               Optional.empty()))),
-                  new ExcelRichTextRun(
+                  new ResolvedRichTextRun(
                       " Size",
                       Optional.of(
                           new CellFontPatch(
@@ -367,7 +371,7 @@ class ExcelRichTextSupportTest {
                               Optional.empty(),
                               Optional.empty(),
                               Optional.empty()))),
-                  new ExcelRichTextRun(
+                  new ResolvedRichTextRun(
                       " Color",
                       Optional.of(
                           new CellFontPatch(
@@ -378,7 +382,7 @@ class ExcelRichTextSupportTest {
                               Optional.of(ColorSpec.rgb(new RgbHex("#ABCDEF"))),
                               Optional.empty(),
                               Optional.empty()))),
-                  new ExcelRichTextRun(
+                  new ResolvedRichTextRun(
                       " Underline",
                       Optional.of(
                           new CellFontPatch(
@@ -389,7 +393,7 @@ class ExcelRichTextSupportTest {
                               Optional.empty(),
                               Optional.of(Boolean.FALSE),
                               Optional.empty()))),
-                  new ExcelRichTextRun(
+                  new ResolvedRichTextRun(
                       " Strike",
                       Optional.of(
                           new CellFontPatch(

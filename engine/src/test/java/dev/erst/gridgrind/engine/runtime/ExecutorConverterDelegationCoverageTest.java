@@ -34,12 +34,12 @@ class ExecutorConverterDelegationCoverageTest {
 
     assertEquals(
         "Bold",
-        WorkbookCommandCellValueSpecConverter.toExcelRichText(
+        WorkbookCommandCellValueSpecConverter.toResolvedRichText(
                 new CellValueSpec.RichText(List.of(run)))
             .runs()
             .getFirst()
             .text());
-    assertEquals("Bold", WorkbookCommandCellValueSpecConverter.toExcelRichTextRun(run).text());
+    assertEquals("Bold", WorkbookCommandCellValueSpecConverter.toResolvedRichTextRun(run).text());
     assertTrue(WorkbookCommandStructuredInputConverter.toExcelDifferentialStyle(null).isEmpty());
   }
 

@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import dev.erst.gridgrind.core.model.drawing.CommentAnchorReport;
+import dev.erst.gridgrind.core.model.drawing.ResolvedComment;
 import dev.erst.gridgrind.core.model.style.CellColorReport;
 import dev.erst.gridgrind.core.model.style.CellFontReport;
 import dev.erst.gridgrind.core.model.style.FontHeightReport;
@@ -249,7 +250,7 @@ class ExcelSheetCommentRepairSupportTest {
     assertFalse(missingAuthor.isAuthoringCompatible());
     assertTrue(compatible.isAuthoringCompatible());
     assertEquals(
-        new ExcelComment("Text", "GridGrind", true, Optional.empty(), Optional.empty()),
+        new ResolvedComment("Text", "GridGrind", true, Optional.empty(), Optional.empty()),
         compatible.toAuthoringComment());
   }
 
@@ -263,17 +264,17 @@ class ExcelSheetCommentRepairSupportTest {
       workbook
           .sheet("LL")
           .annotations()
-          .setComment("E2", new ExcelComment("Note BudgetTotal", "GridGrind", true));
+          .setComment("E2", new ResolvedComment("Note BudgetTotal", "GridGrind", true));
       workbook
           .sheet("LL")
           .annotations()
-          .setComment("A2", new ExcelComment("Note Report_Value", "GridGrind", true));
+          .setComment("A2", new ResolvedComment("Note Report_Value", "GridGrind", true));
       workbook.getOrCreateSheet("LL");
       workbook.sheet("LL").columns().delete(new ExcelColumnSpan(1, 3));
       workbook.sheet("LL").columns().delete(new ExcelColumnSpan(0, 0));
 
       assertVisibleComments(
-          workbook, "LL", Map.of("A2", new ExcelComment("Note BudgetTotal", "GridGrind", true)));
+          workbook, "LL", Map.of("A2", new ResolvedComment("Note BudgetTotal", "GridGrind", true)));
       workbook
           .persistence()
           .save(
@@ -287,7 +288,7 @@ class ExcelSheetCommentRepairSupportTest {
     try (ExcelWorkbook reopened =
         ExcelWorkbooks.open(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory())) {
       assertVisibleComments(
-          reopened, "LL", Map.of("A2", new ExcelComment("Note BudgetTotal", "GridGrind", true)));
+          reopened, "LL", Map.of("A2", new ResolvedComment("Note BudgetTotal", "GridGrind", true)));
     }
   }
 
@@ -301,19 +302,19 @@ class ExcelSheetCommentRepairSupportTest {
       workbook
           .sheet("Ops")
           .annotations()
-          .setComment("A2", new ExcelComment("Stationary", "GridGrind", true));
+          .setComment("A2", new ResolvedComment("Stationary", "GridGrind", true));
       workbook
           .sheet("Ops")
           .annotations()
-          .setComment("C2", new ExcelComment("Shifted", "GridGrind", true));
+          .setComment("C2", new ResolvedComment("Shifted", "GridGrind", true));
       workbook.sheet("Ops").columns().insert(1, 1);
 
       assertVisibleComments(
           workbook,
           "Ops",
           Map.of(
-              "A2", new ExcelComment("Stationary", "GridGrind", true),
-              "D2", new ExcelComment("Shifted", "GridGrind", true)));
+              "A2", new ResolvedComment("Stationary", "GridGrind", true),
+              "D2", new ResolvedComment("Shifted", "GridGrind", true)));
       workbook
           .persistence()
           .save(
@@ -331,8 +332,8 @@ class ExcelSheetCommentRepairSupportTest {
           reopened,
           "Ops",
           Map.of(
-              "A2", new ExcelComment("Stationary", "GridGrind", true),
-              "D2", new ExcelComment("Shifted", "GridGrind", true)));
+              "A2", new ResolvedComment("Stationary", "GridGrind", true),
+              "D2", new ResolvedComment("Shifted", "GridGrind", true)));
     }
   }
 
@@ -346,15 +347,15 @@ class ExcelSheetCommentRepairSupportTest {
       workbook
           .sheet("Ops")
           .annotations()
-          .setComment("A2", new ExcelComment("Stationary", "GridGrind", true));
+          .setComment("A2", new ResolvedComment("Stationary", "GridGrind", true));
       workbook
           .sheet("Ops")
           .annotations()
-          .setComment("B2", new ExcelComment("Moving", "GridGrind", true));
+          .setComment("B2", new ResolvedComment("Moving", "GridGrind", true));
       workbook.sheet("Ops").columns().shift(new ExcelColumnSpan(1, 1), -1);
 
       assertVisibleComments(
-          workbook, "Ops", Map.of("A2", new ExcelComment("Moving", "GridGrind", true)));
+          workbook, "Ops", Map.of("A2", new ResolvedComment("Moving", "GridGrind", true)));
       workbook
           .persistence()
           .save(
@@ -368,7 +369,7 @@ class ExcelSheetCommentRepairSupportTest {
     try (ExcelWorkbook reopened =
         ExcelWorkbooks.open(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory())) {
       assertVisibleComments(
-          reopened, "Ops", Map.of("A2", new ExcelComment("Moving", "GridGrind", true)));
+          reopened, "Ops", Map.of("A2", new ResolvedComment("Moving", "GridGrind", true)));
     }
   }
 
@@ -382,15 +383,15 @@ class ExcelSheetCommentRepairSupportTest {
       workbook
           .sheet("Ops")
           .annotations()
-          .setComment("A2", new ExcelComment("Moving", "GridGrind", true));
+          .setComment("A2", new ResolvedComment("Moving", "GridGrind", true));
       workbook
           .sheet("Ops")
           .annotations()
-          .setComment("B2", new ExcelComment("Stationary", "GridGrind", true));
+          .setComment("B2", new ResolvedComment("Stationary", "GridGrind", true));
       workbook.sheet("Ops").columns().shift(new ExcelColumnSpan(0, 0), 1);
 
       assertVisibleComments(
-          workbook, "Ops", Map.of("B2", new ExcelComment("Moving", "GridGrind", true)));
+          workbook, "Ops", Map.of("B2", new ResolvedComment("Moving", "GridGrind", true)));
       workbook
           .persistence()
           .save(
@@ -404,14 +405,14 @@ class ExcelSheetCommentRepairSupportTest {
     try (ExcelWorkbook reopened =
         ExcelWorkbooks.open(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory())) {
       assertVisibleComments(
-          reopened, "Ops", Map.of("B2", new ExcelComment("Moving", "GridGrind", true)));
+          reopened, "Ops", Map.of("B2", new ResolvedComment("Moving", "GridGrind", true)));
     }
   }
 
   @SuppressWarnings("PMD.UseConcurrentHashMap")
   private static void assertVisibleComments(
-      ExcelWorkbook workbook, String sheetName, Map<String, ExcelComment> expected) {
-    Map<String, ExcelComment> actual = new java.util.LinkedHashMap<>();
+      ExcelWorkbook workbook, String sheetName, Map<String, ResolvedComment> expected) {
+    Map<String, ResolvedComment> actual = new java.util.LinkedHashMap<>();
     for (WorkbookSheetResult.CellComment comment :
         workbook.sheet(sheetName).annotations().comments(new ExcelCellSelection.AllUsedCells())) {
       actual.put(comment.address(), comment.comment().toPlainComment());

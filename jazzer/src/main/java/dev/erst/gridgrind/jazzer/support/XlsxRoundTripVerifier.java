@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.jazzer.support;
 
+import dev.erst.gridgrind.core.model.drawing.ResolvedComment;
 import dev.erst.gridgrind.core.model.protection.CellProtectionReport;
 import dev.erst.gridgrind.core.model.style.CellAlignmentReport;
 import dev.erst.gridgrind.core.model.style.CellBorderReport;
@@ -17,7 +18,6 @@ import dev.erst.gridgrind.core.vocabulary.ExcelGradientFillGeometry;
 import dev.erst.gridgrind.core.vocabulary.ExcelHorizontalAlignment;
 import dev.erst.gridgrind.core.vocabulary.ExcelVerticalAlignment;
 import dev.erst.gridgrind.core.vocabulary.RgbHex;
-import dev.erst.gridgrind.excel.ExcelComment;
 import dev.erst.gridgrind.excel.ExcelHyperlink;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
 import dev.erst.gridgrind.excel.ExcelWorkbooks;
@@ -366,7 +366,7 @@ public final class XlsxRoundTripVerifier {
     }
   }
 
-  static Optional<ExcelComment> comment(Cell cell) {
+  static Optional<ResolvedComment> comment(Cell cell) {
     var comment = cell.getCellComment();
     if (comment == null || comment.getString() == null) {
       return Optional.empty();
@@ -376,6 +376,6 @@ public final class XlsxRoundTripVerifier {
     if (text == null || text.isBlank() || author == null || author.isBlank()) {
       return Optional.empty();
     }
-    return Optional.of(new ExcelComment(text, author, comment.isVisible()));
+    return Optional.of(new ResolvedComment(text, author, comment.isVisible()));
   }
 }

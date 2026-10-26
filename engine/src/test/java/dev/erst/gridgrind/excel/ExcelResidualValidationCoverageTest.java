@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import dev.erst.gridgrind.core.model.customxml.CustomXmlMappingLocator;
+import dev.erst.gridgrind.core.model.formula.ResolvedArrayFormula;
 import dev.erst.gridgrind.core.vocabulary.ExcelPictureFormat;
 import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlExportSnapshot;
 import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlImportDefinition;
@@ -26,7 +27,7 @@ class ExcelResidualValidationCoverageTest {
   @SuppressWarnings("PMD.NcssCount")
   void residualConstructorsRejectInvalidInputs() {
     ExcelDrawingAnchor.TwoCell anchor = ExcelChartTestSupport.anchor(1, 1, 4, 6);
-    ExcelArrayFormulaDefinition arrayFormula = new ExcelArrayFormulaDefinition("SUM(A1:A2)");
+    ResolvedArrayFormula arrayFormula = new ResolvedArrayFormula("SUM(A1:A2)");
     CustomXmlMappingLocator locator =
         new CustomXmlMappingLocator(
             java.util.Optional.of(1L), java.util.Optional.of("CORSO_mapping"));
@@ -51,7 +52,7 @@ class ExcelResidualValidationCoverageTest {
     ExcelChartDefinition.DataSource.NumericLiteral numericValues =
         new ExcelChartDefinition.DataSource.NumericLiteral(List.of(10d));
 
-    assertThrows(IllegalArgumentException.class, () -> new ExcelArrayFormulaDefinition(" "));
+    assertThrows(IllegalArgumentException.class, () -> new ResolvedArrayFormula(" "));
     assertThrows(
         IllegalArgumentException.class,
         () -> new ExcelArrayFormulaSnapshot(" ", "A1:A2", "A1", "SUM(A1:A2)", false));

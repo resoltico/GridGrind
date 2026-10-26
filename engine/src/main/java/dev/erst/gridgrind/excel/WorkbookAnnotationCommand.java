@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.core.model.drawing.ResolvedComment;
 import java.util.Objects;
 
 /** Cell annotation commands for hyperlinks and comments. */
@@ -40,7 +41,7 @@ public sealed interface WorkbookAnnotationCommand extends WorkbookCommand
   }
 
   /** Replaces the plain-text comment attached to a single cell. */
-  record SetComment(String sheetName, String address, ExcelComment comment)
+  record SetComment(String sheetName, String address, ResolvedComment comment)
       implements WorkbookAnnotationCommand {
     public SetComment {
       Objects.requireNonNull(sheetName, "sheetName must not be null");

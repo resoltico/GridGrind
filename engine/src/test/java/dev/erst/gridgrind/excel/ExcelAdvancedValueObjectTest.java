@@ -4,6 +4,8 @@ import static dev.erst.gridgrind.excel.ExcelStyleTestAccess.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 import dev.erst.gridgrind.core.model.drawing.CommentAnchorReport;
+import dev.erst.gridgrind.core.model.drawing.CommentAnchorSpec;
+import dev.erst.gridgrind.core.model.drawing.ResolvedComment;
 import dev.erst.gridgrind.core.model.style.CellColorReport;
 import dev.erst.gridgrind.core.model.style.CellFillSpec;
 import dev.erst.gridgrind.core.model.style.CellFontPatch;
@@ -12,6 +14,8 @@ import dev.erst.gridgrind.core.model.style.CellGradientFillSpec;
 import dev.erst.gridgrind.core.model.style.CellGradientStopSpec;
 import dev.erst.gridgrind.core.model.style.ColorSpec;
 import dev.erst.gridgrind.core.model.style.FontHeightReport;
+import dev.erst.gridgrind.core.model.style.ResolvedRichText;
+import dev.erst.gridgrind.core.model.style.ResolvedRichTextRun;
 import dev.erst.gridgrind.core.model.style.RichTextRunReport;
 import dev.erst.gridgrind.core.vocabulary.ExcelConditionalFormattingIconSet;
 import dev.erst.gridgrind.core.vocabulary.ExcelConditionalFormattingThresholdType;
@@ -420,15 +424,15 @@ class ExcelAdvancedValueObjectTest {
   @Test
   void namedRangeCommentAndTableContractsSupportAdvancedForms() {
     var authoringComment =
-        new ExcelComment(
+        new ResolvedComment(
             "Quarterly Review",
             "GridGrind",
             true,
             Optional.of(
-                new ExcelRichText(
+                new ResolvedRichText(
                     List.of(
-                        new ExcelRichTextRun("Quarterly", Optional.empty()),
-                        new ExcelRichTextRun(
+                        new ResolvedRichTextRun("Quarterly", Optional.empty()),
+                        new ResolvedRichTextRun(
                             " Review",
                             Optional.of(
                                 new CellFontPatch(
@@ -439,7 +443,7 @@ class ExcelAdvancedValueObjectTest {
                                     Optional.of(ColorSpec.rgb(new RgbHex("#112233"))),
                                     Optional.empty(),
                                     Optional.empty())))))),
-            Optional.of(new ExcelCommentAnchor(1, 2, 4, 6)));
+            Optional.of(new CommentAnchorSpec(1, 2, 4, 6)));
     var commentSnapshot =
         new ExcelCommentSnapshot(
             "Quarterly Review",
@@ -489,7 +493,7 @@ class ExcelAdvancedValueObjectTest {
     var protection =
         new ExcelWorkbookProtectionSettings(
             true, false, true, Optional.of("book"), Optional.of("review"));
-    ExcelComment copiedComment = commentSnapshot.toAuthoringComment();
+    ResolvedComment copiedComment = commentSnapshot.toAuthoringComment();
 
     assertEquals("SUM(Ops!$B$2:$B$5)", formulaTarget.refersToFormula());
     assertEquals(authoringComment.text(), copiedComment.text());
@@ -522,12 +526,12 @@ class ExcelAdvancedValueObjectTest {
     assertEquals(
         "A1:B2",
         ((ExcelNamedRangeTarget.Range) ExcelNamedRangeTarget.range("Ops", "$A$1:$B$2")).range());
-    ExcelComment plainComment =
+    ResolvedComment plainComment =
         new ExcelCommentSnapshot("Done", "GridGrind", false, Optional.empty(), Optional.empty())
             .toPlainComment();
     assertEquals("Done", plainComment.text());
     assertEquals("GridGrind", plainComment.author());
-    ExcelComment plainAuthoringComment =
+    ResolvedComment plainAuthoringComment =
         new ExcelCommentSnapshot("Done", "GridGrind", false, Optional.empty(), Optional.empty())
             .toAuthoringComment();
     assertEquals("Done", plainAuthoringComment.text());
@@ -537,12 +541,13 @@ class ExcelAdvancedValueObjectTest {
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new ExcelComment(
+            new ResolvedComment(
                 "Quarterly Review",
                 "GridGrind",
                 true,
                 Optional.of(
-                    new ExcelRichText(List.of(new ExcelRichTextRun("Mismatch", Optional.empty())))),
+                    new ResolvedRichText(
+                        List.of(new ResolvedRichTextRun("Mismatch", Optional.empty())))),
                 Optional.empty()));
     assertThrows(IllegalArgumentException.class, () -> ExcelNamedRangeTarget.formula(" "));
     assertThrows(IllegalArgumentException.class, () -> ExcelNamedRangeTarget.range("Ops", " "));
@@ -659,7 +664,7 @@ class ExcelAdvancedValueObjectTest {
             false);
     var top10 =
         new ExcelConditionalFormattingRule.Top10Rule(10, true, false, false, Optional.empty());
-    var anchor = new ExcelCommentAnchor(1, 2, 3, 4);
+    var anchor = new CommentAnchorSpec(1, 2, 3, 4);
 
     assertEquals(3, colorScale.thresholds().size());
     assertEquals(90, dataBar.widthMax());
@@ -742,9 +747,9 @@ class ExcelAdvancedValueObjectTest {
     assertThrows(
         NullPointerException.class,
         () -> new ExcelConditionalFormattingRule.Top10Rule(0, false, false, false, null));
-    assertThrows(IllegalArgumentException.class, () -> new ExcelCommentAnchor(-1, 0, 1, 1));
-    assertThrows(IllegalArgumentException.class, () -> new ExcelCommentAnchor(1, 0, 0, 1));
-    assertThrows(IllegalArgumentException.class, () -> new ExcelCommentAnchor(1, 2, 1, 1));
+    assertThrows(IllegalArgumentException.class, () -> new CommentAnchorSpec(-1, 0, 1, 1));
+    assertThrows(IllegalArgumentException.class, () -> new CommentAnchorSpec(1, 0, 0, 1));
+    assertThrows(IllegalArgumentException.class, () -> new CommentAnchorSpec(1, 2, 1, 1));
     assertThrows(IllegalArgumentException.class, () -> new ExcelPrintMargins(-0.1d, 0, 0, 0, 0, 0));
   }
 

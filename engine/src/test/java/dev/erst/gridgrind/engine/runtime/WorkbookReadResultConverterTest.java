@@ -9,6 +9,7 @@ import dev.erst.gridgrind.core.model.drawing.CommentReport;
 import dev.erst.gridgrind.core.model.drawing.DrawingAnchorReport;
 import dev.erst.gridgrind.core.model.drawing.DrawingObjectPayloadReport;
 import dev.erst.gridgrind.core.model.drawing.DrawingObjectReport;
+import dev.erst.gridgrind.core.model.drawing.ResolvedComment;
 import dev.erst.gridgrind.core.model.pivot.PivotTableReport;
 import dev.erst.gridgrind.core.model.protection.CellProtectionReport;
 import dev.erst.gridgrind.core.model.protection.WorkbookProtectionReport;
@@ -187,10 +188,10 @@ class InspectionResultConverterTest extends DefaultGridGrindRequestExecutorTestS
 
   @Test
   void convertsPlainCommentAndWorkbookProtectionFactsDirectly() {
-    assertTrue(InspectionResultCellReportSupport.toCommentReport((ExcelComment) null).isEmpty());
+    assertTrue(InspectionResultCellReportSupport.toCommentReport((ResolvedComment) null).isEmpty());
     CommentReport plainComment =
         InspectionResultCellReportSupport.toCommentReport(
-                new ExcelComment("Review", "GridGrind", false))
+                new ResolvedComment("Review", "GridGrind", false))
             .orElseThrow();
     WorkbookProtectionReport protection =
         InspectionResultWorkbookCoreReportSupport.toWorkbookProtectionReport(

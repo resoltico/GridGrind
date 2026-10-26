@@ -1,6 +1,7 @@
 package dev.erst.gridgrind.engine.runtime;
 
 import dev.erst.gridgrind.core.model.drawing.CommentReport;
+import dev.erst.gridgrind.core.model.drawing.ResolvedComment;
 import dev.erst.gridgrind.core.model.style.CellStyleReport;
 import dev.erst.gridgrind.core.model.style.RichTextRunReport;
 import dev.erst.gridgrind.core.model.value.CellReport;
@@ -42,8 +43,7 @@ final class InspectionResultCellReportSupport {
         });
   }
 
-  static Optional<CommentReport> toCommentReport(
-      dev.erst.gridgrind.excel.@Nullable ExcelComment comment) {
+  static Optional<CommentReport> toCommentReport(@Nullable ResolvedComment comment) {
     if (comment == null) {
       return Optional.empty();
     }

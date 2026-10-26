@@ -4,7 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import dev.erst.gridgrind.excel.ExcelComment;
+import dev.erst.gridgrind.core.model.drawing.ResolvedComment;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
 import dev.erst.gridgrind.excel.ExcelWorkbooks;
 import java.io.ByteArrayInputStream;
@@ -55,7 +55,7 @@ class XlsxCommentPackageInvariantSupportTest {
       workbook
           .sheet("Budget")
           .annotations()
-          .setComment("A1", new ExcelComment("Review", "GridGrind", true));
+          .setComment("A1", new ResolvedComment("Review", "GridGrind", true));
       JazzerWorkbookIoSupport.saveWorkbook(workbook, workbookPath);
     }
     return workbookPath;

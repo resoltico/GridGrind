@@ -2,6 +2,7 @@ package dev.erst.gridgrind.excel;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.core.model.drawing.ResolvedComment;
 import dev.erst.gridgrind.core.vocabulary.ExcelDrawingAnchorBehavior;
 import dev.erst.gridgrind.core.vocabulary.ExcelPictureFormat;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingAnchor;
@@ -113,7 +114,7 @@ class ExcelSheetCopyEmbeddedObjectSupportTest {
       ExcelSheet sourceSheet = workbook.getOrCreateSheet("LL");
       sourceSheet
           .annotations()
-          .setComment("C11", new ExcelComment("Note Name3", "GridGrind", false));
+          .setComment("C11", new ResolvedComment("Note Name3", "GridGrind", false));
       sourceSheet.drawings().setEmbeddedObject(embeddedObjectDefinition("OpsEmbed", "payload"));
 
       workbook.sheets().copySheet("LL", "LL_B1", new ExcelSheetCopyPosition.AtIndex(0));

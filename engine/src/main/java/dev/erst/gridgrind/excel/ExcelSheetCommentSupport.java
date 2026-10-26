@@ -1,6 +1,8 @@
 package dev.erst.gridgrind.excel;
 
 import dev.erst.gridgrind.core.model.drawing.CommentAnchorReport;
+import dev.erst.gridgrind.core.model.drawing.CommentAnchorSpec;
+import dev.erst.gridgrind.core.model.drawing.ResolvedComment;
 import dev.erst.gridgrind.core.model.style.RichTextRunReport;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingController;
 import java.util.ArrayList;
@@ -36,7 +38,7 @@ final class ExcelSheetCommentSupport {
         Objects.requireNonNull(drawingController, "drawingController must not be null");
   }
 
-  void setComment(String address, ExcelComment comment) {
+  void setComment(String address, ResolvedComment comment) {
     ExcelSheet.requireNonBlank(address, "address");
     Objects.requireNonNull(comment, "comment must not be null");
 
@@ -83,20 +85,20 @@ final class ExcelSheetCommentSupport {
     removeCommentShapeIfPresent(xssfSheet, address);
   }
 
-  static Optional<ExcelComment> comment(Cell cell) {
+  static Optional<ResolvedComment> comment(Cell cell) {
     return cell == null ? Optional.empty() : comment(cell.getCellComment());
   }
 
-  static Optional<ExcelComment> comment(Comment comment) {
+  static Optional<ResolvedComment> comment(Comment comment) {
     return comment == null || comment.getString() == null
         ? Optional.empty()
         : comment(comment.getString().getString(), comment.getAuthor(), comment.isVisible());
   }
 
-  static Optional<ExcelComment> comment(String text, String author, boolean visible) {
+  static Optional<ResolvedComment> comment(String text, String author, boolean visible) {
     return text == null || text.isBlank() || author == null || author.isBlank()
         ? Optional.empty()
-        : Optional.of(new ExcelComment(text, author, visible));
+        : Optional.of(new ResolvedComment(text, author, visible));
   }
 
   static Optional<ExcelCommentSnapshot> commentSnapshot(Cell cell) {
@@ -172,14 +174,14 @@ final class ExcelSheetCommentSupport {
     return Optional.empty();
   }
 
-  private Comment newComment(int rowIndex, int columnIndex, ExcelComment comment) {
+  private Comment newComment(int rowIndex, int columnIndex, ResolvedComment comment) {
     ExcelCellTextLimits.requireSupportedLength(comment.text(), "comment.text"); // LIM-010
     ClientAnchor anchor = sheet.getWorkbook().getCreationHelper().createClientAnchor();
-    Optional<ExcelCommentAnchor> authoredAnchor = comment.anchor();
-    anchor.setRow1(authoredAnchor.map(ExcelCommentAnchor::firstRow).orElse(rowIndex));
-    anchor.setRow2(authoredAnchor.map(ExcelCommentAnchor::lastRow).orElse(rowIndex + 3));
-    anchor.setCol1(authoredAnchor.map(ExcelCommentAnchor::firstColumn).orElse(columnIndex));
-    anchor.setCol2(authoredAnchor.map(ExcelCommentAnchor::lastColumn).orElse(columnIndex + 3));
+    Optional<CommentAnchorSpec> authoredAnchor = comment.anchor();
+    anchor.setRow1(authoredAnchor.map(CommentAnchorSpec::firstRow).orElse(rowIndex));
+    anchor.setRow2(authoredAnchor.map(CommentAnchorSpec::lastRow).orElse(rowIndex + 3));
+    anchor.setCol1(authoredAnchor.map(CommentAnchorSpec::firstColumn).orElse(columnIndex));
+    anchor.setCol2(authoredAnchor.map(CommentAnchorSpec::lastColumn).orElse(columnIndex + 3));
     Comment poiComment = sheet.createDrawingPatriarch().createCellComment(anchor);
     poiComment.setAuthor(comment.author());
     poiComment.setVisible(comment.visible());
@@ -230,7 +232,7 @@ final class ExcelSheetCommentSupport {
         || xssfComment.getAuthor().isBlank()) {
       return Optional.empty();
     }
-    Optional<ExcelComment> plainComment =
+    Optional<ResolvedComment> plainComment =
         comment(
             xssfComment.getString().getString(), xssfComment.getAuthor(), xssfComment.isVisible());
     if (plainComment.isEmpty()) {

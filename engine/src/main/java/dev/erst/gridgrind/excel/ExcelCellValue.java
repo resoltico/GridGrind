@@ -1,6 +1,7 @@
 package dev.erst.gridgrind.excel;
 
 import dev.erst.gridgrind.core.model.formula.FormulaTextValidation;
+import dev.erst.gridgrind.core.model.style.ResolvedRichText;
 import dev.erst.gridgrind.core.vocabulary.ExcelStoredCellErrorLiteral;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -30,7 +31,7 @@ public sealed interface ExcelCellValue
   }
 
   /** Creates a structured rich-text string cell value. */
-  static ExcelCellValue richText(ExcelRichText value) {
+  static ExcelCellValue richText(ResolvedRichText value) {
     return new RichTextValue(value);
   }
 
@@ -77,7 +78,7 @@ public sealed interface ExcelCellValue
     }
   }
 
-  record RichTextValue(ExcelRichText value) implements ExcelCellValue {
+  record RichTextValue(ResolvedRichText value) implements ExcelCellValue {
     public RichTextValue {
       Objects.requireNonNull(value, "value must not be null");
     }

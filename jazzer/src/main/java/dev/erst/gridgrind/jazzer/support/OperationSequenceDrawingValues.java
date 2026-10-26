@@ -10,6 +10,7 @@ import dev.erst.gridgrind.core.model.drawing.DrawingMarkerSpec;
 import dev.erst.gridgrind.core.model.drawing.EmbeddedObjectSpec;
 import dev.erst.gridgrind.core.model.drawing.PictureDataSpec;
 import dev.erst.gridgrind.core.model.drawing.PictureSpec;
+import dev.erst.gridgrind.core.model.drawing.ResolvedComment;
 import dev.erst.gridgrind.core.model.drawing.ShapeSpec;
 import dev.erst.gridgrind.core.model.value.HyperlinkTarget;
 import dev.erst.gridgrind.core.plan.*;
@@ -183,8 +184,8 @@ final class OperationSequenceDrawingValues {
     return data.consumeBoolean() ? DRAWING_PICTURE_NAME : DRAWING_EMBEDDED_OBJECT_NAME;
   }
 
-  static ExcelComment nextExcelComment(GridGrindFuzzData data) {
-    return new ExcelComment(
+  static ResolvedComment nextExcelComment(GridGrindFuzzData data) {
+    return new ResolvedComment(
         "Note " + nextNamedRangeName(data, true), "GridGrind", data.consumeBoolean());
   }
 }

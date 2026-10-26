@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import dev.erst.gridgrind.core.model.formula.ResolvedArrayFormula;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -22,8 +23,8 @@ class ExcelArrayFormulaTest {
       ExcelSheet sheet = workbook.getOrCreateSheet("Calc");
       seedSourceData(sheet);
 
-      sheet.cells().setArrayFormula("D2:D4", new ExcelArrayFormulaDefinition("B2:B4*C2:C4"));
-      sheet.cells().setArrayFormula("F2", new ExcelArrayFormulaDefinition("SUM(B2:C2)"));
+      sheet.cells().setArrayFormula("D2:D4", new ResolvedArrayFormula("B2:B4*C2:C4"));
+      sheet.cells().setArrayFormula("F2", new ResolvedArrayFormula("SUM(B2:C2)"));
 
       ExcelArrayFormulaSnapshot multiCell =
           sheet.cells().arrayFormulas().stream()
@@ -82,7 +83,7 @@ class ExcelArrayFormulaTest {
       ExcelWorkbookIntrospector introspector = new ExcelWorkbookIntrospector();
       ExcelSheet sheet = workbook.getOrCreateSheet("Calc");
       seedSourceData(sheet);
-      sheet.cells().setArrayFormula("D2:D4", new ExcelArrayFormulaDefinition("B2:B4*C2:C4"));
+      sheet.cells().setArrayFormula("D2:D4", new ResolvedArrayFormula("B2:B4*C2:C4"));
 
       WorkbookSheetResult.ArrayFormulasResult result =
           assertInstanceOf(

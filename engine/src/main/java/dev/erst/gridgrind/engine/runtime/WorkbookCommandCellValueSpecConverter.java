@@ -1,19 +1,18 @@
 package dev.erst.gridgrind.engine.runtime;
 
 import dev.erst.gridgrind.core.model.drawing.CommentSpec;
+import dev.erst.gridgrind.core.model.drawing.ResolvedComment;
 import dev.erst.gridgrind.core.model.formula.ArrayFormulaSpec;
+import dev.erst.gridgrind.core.model.formula.ResolvedArrayFormula;
 import dev.erst.gridgrind.core.model.style.FontHeightReport;
 import dev.erst.gridgrind.core.model.style.FontHeightSpec;
+import dev.erst.gridgrind.core.model.style.ResolvedRichText;
+import dev.erst.gridgrind.core.model.style.ResolvedRichTextRun;
 import dev.erst.gridgrind.core.model.style.RichTextRunSpec;
 import dev.erst.gridgrind.core.model.value.CellValueSpec;
 import dev.erst.gridgrind.core.model.value.HyperlinkTarget;
-import dev.erst.gridgrind.excel.ExcelArrayFormulaDefinition;
 import dev.erst.gridgrind.excel.ExcelCellValue;
-import dev.erst.gridgrind.excel.ExcelComment;
-import dev.erst.gridgrind.excel.ExcelCommentAnchor;
 import dev.erst.gridgrind.excel.ExcelHyperlink;
-import dev.erst.gridgrind.excel.ExcelRichText;
-import dev.erst.gridgrind.excel.ExcelRichTextRun;
 import java.util.Optional;
 
 /** Converts authored cell values, fonts and annotations for workbook operations. */
@@ -25,7 +24,7 @@ final class WorkbookCommandCellValueSpecConverter {
       case CellValueSpec.Blank _ -> ExcelCellValue.blank();
       case CellValueSpec.Text text ->
           ExcelCellValue.text(WorkbookCommandSourceSupport.inlineText(text.value(), "cell text"));
-      case CellValueSpec.RichText richText -> ExcelCellValue.richText(toExcelRichText(richText));
+      case CellValueSpec.RichText richText -> ExcelCellValue.richText(toResolvedRichText(richText));
       case CellValueSpec.NumberValue numberValue -> ExcelCellValue.number(numberValue.value());
       case CellValueSpec.BooleanValue booleanValue -> ExcelCellValue.bool(booleanValue.value());
       case CellValueSpec.ErrorValue errorValue -> ExcelCellValue.error(errorValue.value());
@@ -40,20 +39,20 @@ final class WorkbookCommandCellValueSpecConverter {
     };
   }
 
-  static ExcelArrayFormulaDefinition toExcelArrayFormulaDefinition(ArrayFormulaSpec input) {
-    return new ExcelArrayFormulaDefinition(
+  static ResolvedArrayFormula toResolvedArrayFormula(ArrayFormulaSpec input) {
+    return new ResolvedArrayFormula(
         WorkbookCommandSourceSupport.inlineText(input.source(), "array formula"));
   }
 
-  static ExcelRichText toExcelRichText(CellValueSpec.RichText richText) {
-    return new ExcelRichText(
+  static ResolvedRichText toResolvedRichText(CellValueSpec.RichText richText) {
+    return new ResolvedRichText(
         richText.runs().stream()
-            .map(WorkbookCommandCellValueSpecConverter::toExcelRichTextRun)
+            .map(WorkbookCommandCellValueSpecConverter::toResolvedRichTextRun)
             .toList());
   }
 
-  static ExcelRichTextRun toExcelRichTextRun(RichTextRunSpec run) {
-    return new ExcelRichTextRun(
+  static ResolvedRichTextRun toResolvedRichTextRun(RichTextRunSpec run) {
+    return new ResolvedRichTextRun(
         WorkbookCommandSourceSupport.inlineText(run.text(), "rich-text run"), run.font());
   }
 
@@ -66,13 +65,13 @@ final class WorkbookCommandCellValueSpecConverter {
     };
   }
 
-  static ExcelComment toExcelComment(CommentSpec comment) {
-    return new ExcelComment(
+  static ResolvedComment toResolvedComment(CommentSpec comment) {
+    return new ResolvedComment(
         WorkbookCommandSourceSupport.inlineText(comment.text(), "comment text"),
         comment.author(),
         comment.visible(),
         commentRuns(comment),
-        commentAnchor(comment));
+        comment.anchor());
   }
 
   static Optional<FontHeightReport> toFontHeightReport(FontHeightSpec fontHeight) {
@@ -86,24 +85,13 @@ final class WorkbookCommandCellValueSpecConverter {
         });
   }
 
-  private static Optional<ExcelRichText> commentRuns(CommentSpec comment) {
+  private static Optional<ResolvedRichText> commentRuns(CommentSpec comment) {
     return comment.runs().isEmpty()
         ? Optional.empty()
         : Optional.of(
-            new ExcelRichText(
+            new ResolvedRichText(
                 comment.runs().orElseThrow().stream()
-                    .map(WorkbookCommandCellValueSpecConverter::toExcelRichTextRun)
+                    .map(WorkbookCommandCellValueSpecConverter::toResolvedRichTextRun)
                     .toList()));
-  }
-
-  private static Optional<ExcelCommentAnchor> commentAnchor(CommentSpec comment) {
-    return comment.anchor().isEmpty()
-        ? Optional.empty()
-        : Optional.of(
-            new ExcelCommentAnchor(
-                comment.anchor().orElseThrow().firstColumn(),
-                comment.anchor().orElseThrow().firstRow(),
-                comment.anchor().orElseThrow().lastColumn(),
-                comment.anchor().orElseThrow().lastRow()));
   }
 }

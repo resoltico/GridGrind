@@ -6,6 +6,7 @@ import dev.erst.gridgrind.core.model.drawing.DrawingAnchorSpec;
 import dev.erst.gridgrind.core.model.drawing.EmbeddedObjectSpec;
 import dev.erst.gridgrind.core.model.drawing.PictureDataSpec;
 import dev.erst.gridgrind.core.model.drawing.PictureSpec;
+import dev.erst.gridgrind.core.model.drawing.ResolvedComment;
 import dev.erst.gridgrind.core.model.drawing.ShapeSpec;
 import dev.erst.gridgrind.core.model.layout.PaneSpec;
 import dev.erst.gridgrind.core.model.pivot.PivotTableSpec;
@@ -306,7 +307,7 @@ final class OperationSequenceValueFactory {
     return OperationSequenceTabularValues.nextTableName(data, valid, sheetName);
   }
 
-  static ExcelComment nextExcelComment(GridGrindFuzzData data) {
+  static ResolvedComment nextExcelComment(GridGrindFuzzData data) {
     return OperationSequenceDrawingValues.nextExcelComment(data);
   }
 

@@ -4,6 +4,7 @@ import static dev.erst.gridgrind.excel.ExcelStyleTestAccess.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 import dev.erst.gridgrind.core.model.drawing.CommentAnchorReport;
+import dev.erst.gridgrind.core.model.drawing.ResolvedComment;
 import dev.erst.gridgrind.core.model.style.CellColorReport;
 import dev.erst.gridgrind.core.model.style.CellFillReport;
 import dev.erst.gridgrind.core.model.style.CellFontReport;
@@ -169,9 +170,9 @@ class AdvancedReadEngineTypesTest {
         new ExcelCommentSnapshot("Hi there", "Ada", true, Optional.of(runs), Optional.of(anchor));
 
     assertEquals(Optional.of(anchor), comment.anchor());
-    assertEquals(new ExcelComment("Hi there", "Ada", true), comment.toPlainComment());
+    assertEquals(new ResolvedComment("Hi there", "Ada", true), comment.toPlainComment());
     assertEquals(
-        new ExcelComment("Ok", "Ada", false),
+        new ResolvedComment("Ok", "Ada", false),
         new ExcelCommentSnapshot("Ok", "Ada", false, Optional.empty(), Optional.empty())
             .toPlainComment());
     assertThrows(

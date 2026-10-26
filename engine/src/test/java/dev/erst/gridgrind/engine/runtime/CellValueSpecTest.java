@@ -4,12 +4,12 @@ import static dev.erst.gridgrind.engine.runtime.ExecutorTestPlanSupport.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 import dev.erst.gridgrind.core.model.style.ColorSpec;
+import dev.erst.gridgrind.core.model.style.ResolvedRichText;
+import dev.erst.gridgrind.core.model.style.ResolvedRichTextRun;
 import dev.erst.gridgrind.core.model.value.CellValueSpec;
 import dev.erst.gridgrind.core.source.TextSourceSpec;
 import dev.erst.gridgrind.core.vocabulary.RgbHex;
 import dev.erst.gridgrind.excel.ExcelCellValue;
-import dev.erst.gridgrind.excel.ExcelRichText;
-import dev.erst.gridgrind.excel.ExcelRichTextRun;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -47,10 +47,10 @@ class CellValueSpecTest {
                                 null,
                                 null))))));
     assertEquals(
-        new ExcelRichText(
+        new ResolvedRichText(
             List.of(
-                new ExcelRichTextRun("Budget", java.util.Optional.empty()),
-                new ExcelRichTextRun(
+                new ResolvedRichTextRun("Budget", java.util.Optional.empty()),
+                new ResolvedRichTextRun(
                     " FY26",
                     java.util.Optional.of(
                         new dev.erst.gridgrind.core.model.style.CellFontPatch(

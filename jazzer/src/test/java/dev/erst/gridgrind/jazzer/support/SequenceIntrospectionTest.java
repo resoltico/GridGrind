@@ -18,8 +18,10 @@ import dev.erst.gridgrind.core.model.drawing.DrawingMarkerSpec;
 import dev.erst.gridgrind.core.model.drawing.EmbeddedObjectSpec;
 import dev.erst.gridgrind.core.model.drawing.PictureDataSpec;
 import dev.erst.gridgrind.core.model.drawing.PictureSpec;
+import dev.erst.gridgrind.core.model.drawing.ResolvedComment;
 import dev.erst.gridgrind.core.model.drawing.ShapeSpec;
 import dev.erst.gridgrind.core.model.formula.NamedRangeTarget;
+import dev.erst.gridgrind.core.model.formula.ResolvedArrayFormula;
 import dev.erst.gridgrind.core.model.layout.SheetPresentationSpec;
 import dev.erst.gridgrind.core.model.pivot.PivotTableSpec;
 import dev.erst.gridgrind.core.model.protection.SheetProtectionSettings;
@@ -69,10 +71,8 @@ import dev.erst.gridgrind.core.vocabulary.SheetCopyPosition;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.TableName;
 import dev.erst.gridgrind.excel.*;
-import dev.erst.gridgrind.excel.ExcelArrayFormulaDefinition;
 import dev.erst.gridgrind.excel.ExcelBinaryData;
 import dev.erst.gridgrind.excel.ExcelChartDefinition;
-import dev.erst.gridgrind.excel.ExcelComment;
 import dev.erst.gridgrind.excel.ExcelHyperlink;
 import dev.erst.gridgrind.excel.ExcelNamedRangeDefinition;
 import dev.erst.gridgrind.excel.ExcelNamedRangeScope;
@@ -378,7 +378,7 @@ class SequenceIntrospectionTest {
         "SET_COMMENT",
         SequenceIntrospection.commandKind(
             new WorkbookAnnotationCommand.SetComment(
-                "Budget", "A1", new ExcelComment("Review", "GridGrind", false))));
+                "Budget", "A1", new ResolvedComment("Review", "GridGrind", false))));
     assertEquals(
         "CLEAR_COMMENT",
         SequenceIntrospection.commandKind(
@@ -408,7 +408,7 @@ class SequenceIntrospectionTest {
         "SET_ARRAY_FORMULA",
         SequenceIntrospection.commandKind(
             new WorkbookCellCommand.SetArrayFormula(
-                "Budget", "D2:D4", new ExcelArrayFormulaDefinition("B2:B4*C2:C4"))));
+                "Budget", "D2:D4", new ResolvedArrayFormula("B2:B4*C2:C4"))));
     assertEquals(
         "CLEAR_ARRAY_FORMULA",
         SequenceIntrospection.commandKind(
@@ -537,7 +537,7 @@ class SequenceIntrospectionTest {
         SequenceIntrospection.commandKinds(
                 List.of(
                     new WorkbookAnnotationCommand.SetComment(
-                        "Budget", "A1", new ExcelComment("Review", "GridGrind", false))))
+                        "Budget", "A1", new ResolvedComment("Review", "GridGrind", false))))
             .get("SET_COMMENT"));
   }
 

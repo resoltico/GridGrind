@@ -20,6 +20,7 @@ import dev.erst.gridgrind.core.model.drawing.DrawingMarkerSpec;
 import dev.erst.gridgrind.core.model.drawing.EmbeddedObjectSpec;
 import dev.erst.gridgrind.core.model.drawing.PictureDataSpec;
 import dev.erst.gridgrind.core.model.drawing.PictureSpec;
+import dev.erst.gridgrind.core.model.drawing.ResolvedComment;
 import dev.erst.gridgrind.core.model.drawing.ShapeSpec;
 import dev.erst.gridgrind.core.model.drawing.SignatureLineSpec;
 import dev.erst.gridgrind.core.model.formula.ArrayFormulaSpec;
@@ -28,6 +29,8 @@ import dev.erst.gridgrind.core.model.pivot.PivotTableSpec;
 import dev.erst.gridgrind.core.model.protection.SheetProtectionSettings;
 import dev.erst.gridgrind.core.model.protection.WorkbookProtectionSpec;
 import dev.erst.gridgrind.core.model.style.ColorSpec;
+import dev.erst.gridgrind.core.model.style.ResolvedRichText;
+import dev.erst.gridgrind.core.model.style.ResolvedRichTextRun;
 import dev.erst.gridgrind.core.model.style.RichTextRunSpec;
 import dev.erst.gridgrind.core.model.table.AutofilterFilterColumnSpec;
 import dev.erst.gridgrind.core.model.table.AutofilterFilterCriterionSpec;
@@ -68,15 +71,11 @@ import dev.erst.gridgrind.excel.ExcelAutofilterSortCondition;
 import dev.erst.gridgrind.excel.ExcelAutofilterSortState;
 import dev.erst.gridgrind.excel.ExcelBinaryData;
 import dev.erst.gridgrind.excel.ExcelChartDefinition;
-import dev.erst.gridgrind.excel.ExcelComment;
-import dev.erst.gridgrind.excel.ExcelCommentAnchor;
 import dev.erst.gridgrind.excel.ExcelConditionalFormattingRule;
 import dev.erst.gridgrind.excel.ExcelConditionalFormattingThreshold;
 import dev.erst.gridgrind.excel.ExcelNamedRangeDefinition;
 import dev.erst.gridgrind.excel.ExcelNamedRangeScope;
 import dev.erst.gridgrind.excel.ExcelNamedRangeTarget;
-import dev.erst.gridgrind.excel.ExcelRichText;
-import dev.erst.gridgrind.excel.ExcelRichTextRun;
 import dev.erst.gridgrind.excel.ExcelWorkbookProtectionSettings;
 import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlImportDefinition;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingAnchor;
@@ -113,16 +112,16 @@ class AdvancedMutationCommandConverterTest {
                                 new RichTextRunSpec(text(" Lovelace"), Optional.empty()))),
                         java.util.Optional.of(new CommentAnchorSpec(1, 2, 4, 6))))));
     assertEquals(
-        new ExcelComment(
+        new ResolvedComment(
             "Ada Lovelace",
             "GridGrind",
             true,
             Optional.of(
-                new ExcelRichText(
+                new ResolvedRichText(
                     List.of(
-                        new ExcelRichTextRun("Ada", Optional.empty()),
-                        new ExcelRichTextRun(" Lovelace", Optional.empty())))),
-            Optional.of(new ExcelCommentAnchor(1, 2, 4, 6))),
+                        new ResolvedRichTextRun("Ada", Optional.empty()),
+                        new ResolvedRichTextRun(" Lovelace", Optional.empty())))),
+            Optional.of(new CommentAnchorSpec(1, 2, 4, 6))),
         commentCommand.comment());
 
     WorkbookSheetCommand.SetWorkbookProtection protectionCommand =

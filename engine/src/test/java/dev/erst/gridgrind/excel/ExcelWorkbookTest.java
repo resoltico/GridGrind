@@ -3,6 +3,7 @@ package dev.erst.gridgrind.excel;
 import static dev.erst.gridgrind.excel.ExcelStyleTestAccess.*;
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.core.model.drawing.ResolvedComment;
 import dev.erst.gridgrind.core.model.protection.CellProtectionPatch;
 import dev.erst.gridgrind.core.model.style.BorderSidePatch;
 import dev.erst.gridgrind.core.model.style.CellAlignmentPatch;
@@ -361,7 +362,7 @@ class ExcelWorkbookTest {
       workbook
           .sheet("Source")
           .annotations()
-          .setComment("A2", new ExcelComment("Review", "GridGrind", false));
+          .setComment("A2", new ResolvedComment("Review", "GridGrind", false));
       workbook
           .sheet("Source")
           .metadata()
@@ -1134,7 +1135,7 @@ class ExcelWorkbookTest {
       budget.cells().setCell("A1", ExcelCellValue.text("Report"));
       budget.cells().setCell("B4", ExcelCellValue.number(61.0));
       budget.annotations().setHyperlink("A1", new ExcelHyperlink.Url("https://example.com/report"));
-      budget.annotations().setComment("A1", new ExcelComment("Review", "GridGrind", true));
+      budget.annotations().setComment("A1", new ResolvedComment("Review", "GridGrind", true));
       workbook
           .names()
           .setNamedRange(
@@ -1161,7 +1162,7 @@ class ExcelWorkbookTest {
     assertEquals(
         new ExcelHyperlink.Url("https://example.com/report"), metadata.hyperlink().orElseThrow());
     assertEquals(
-        new ExcelComment("Review", "GridGrind", true),
+        new ResolvedComment("Review", "GridGrind", true),
         metadata.comment().orElseThrow().toPlainComment());
     List<ExcelNamedRangeSnapshot> namedRanges = XlsxRoundTrip.namedRanges(workbookPath);
     assertEquals(2, namedRanges.size());

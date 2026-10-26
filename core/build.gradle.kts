@@ -93,6 +93,10 @@ dependencies {
 }
 
 tasks.withType<Test>().configureEach {
+    inputs.files(
+        rootProject.fileTree("docs") { include("*.md") },
+        rootProject.file("README.md"),
+    ).withPathSensitivity(PathSensitivity.RELATIVE)
     systemProperty("gridgrind.root.dir", rootProject.projectDir.absolutePath)
 }
 

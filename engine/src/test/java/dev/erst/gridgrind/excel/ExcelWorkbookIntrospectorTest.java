@@ -2,6 +2,7 @@ package dev.erst.gridgrind.excel;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.core.model.drawing.ResolvedComment;
 import dev.erst.gridgrind.core.vocabulary.ExcelDrawingAnchorBehavior;
 import dev.erst.gridgrind.core.vocabulary.ExcelPictureFormat;
 import dev.erst.gridgrind.core.vocabulary.ExcelPrintOrientation;
@@ -586,7 +587,7 @@ class ExcelWorkbookIntrospectorTest {
                 new ExcelHeaderFooterText("Budget", "", ""),
                 new ExcelHeaderFooterText("", "Page &P", "")));
     budget.annotations().setHyperlink("A1", new ExcelHyperlink.Url("https://example.com/report"));
-    budget.annotations().setComment("A1", new ExcelComment("Review", "GridGrind", false));
+    budget.annotations().setComment("A1", new ResolvedComment("Review", "GridGrind", false));
     workbook
         .names()
         .setNamedRange(

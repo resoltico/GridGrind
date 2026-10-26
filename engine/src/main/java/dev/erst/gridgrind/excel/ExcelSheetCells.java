@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.core.model.formula.ResolvedArrayFormula;
 import dev.erst.gridgrind.core.model.style.CellStylePatch;
 import java.util.List;
 import java.util.Objects;
@@ -39,7 +40,7 @@ public final class ExcelSheetCells {
   }
 
   /** Creates or replaces one dedicated array-formula group over a rectangular range. */
-  public ExcelSheetCells setArrayFormula(String range, ExcelArrayFormulaDefinition formula) {
+  public ExcelSheetCells setArrayFormula(String range, ResolvedArrayFormula formula) {
     mutationSupport.setArrayFormula(range, formula);
     return this;
   }

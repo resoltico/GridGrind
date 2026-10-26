@@ -1,8 +1,12 @@
 package dev.erst.gridgrind.excel;
 
 import dev.erst.gridgrind.core.model.drawing.CommentAnchorReport;
+import dev.erst.gridgrind.core.model.drawing.CommentAnchorSpec;
+import dev.erst.gridgrind.core.model.drawing.ResolvedComment;
 import dev.erst.gridgrind.core.model.style.CellFontPatch;
 import dev.erst.gridgrind.core.model.style.FontHeightSpec;
+import dev.erst.gridgrind.core.model.style.ResolvedRichText;
+import dev.erst.gridgrind.core.model.style.ResolvedRichTextRun;
 import dev.erst.gridgrind.core.model.style.RichTextRunReport;
 import java.util.List;
 import java.util.Objects;
@@ -36,23 +40,23 @@ public record ExcelCommentSnapshot(
   }
 
   /** Returns the plain-text authoring view of this factual comment snapshot. */
-  public ExcelComment toPlainComment() {
-    return new ExcelComment(text, author, visible);
+  public ResolvedComment toPlainComment() {
+    return new ResolvedComment(text, author, visible);
   }
 
   /** Returns the full authoring view of this factual comment snapshot. */
-  public ExcelComment toAuthoringComment() {
-    return new ExcelComment(
+  public ResolvedComment toAuthoringComment() {
+    return new ResolvedComment(
         text,
         author,
         visible,
         runs.map(
             snapshot ->
-                new ExcelRichText(
+                new ResolvedRichText(
                     snapshot.stream()
                         .map(
                             run ->
-                                new ExcelRichTextRun(
+                                new ResolvedRichTextRun(
                                     run.text(),
                                     Optional.of(
                                         new CellFontPatch(
@@ -73,7 +77,7 @@ public record ExcelCommentSnapshot(
                         .toList())),
         anchor.map(
             snapshot ->
-                new ExcelCommentAnchor(
+                new CommentAnchorSpec(
                     snapshot.firstColumn(),
                     snapshot.firstRow(),
                     snapshot.lastColumn(),

@@ -10,6 +10,7 @@ import dev.erst.gridgrind.core.model.drawing.DrawingMarkerSpec;
 import dev.erst.gridgrind.core.model.drawing.DrawingObjectReport;
 import dev.erst.gridgrind.core.model.drawing.EmbeddedObjectSpec;
 import dev.erst.gridgrind.core.model.drawing.PictureDataSpec;
+import dev.erst.gridgrind.core.model.drawing.ResolvedComment;
 import dev.erst.gridgrind.core.model.formula.FormulaEnvironmentSpec;
 import dev.erst.gridgrind.core.model.formula.NamedRangeReport;
 import dev.erst.gridgrind.core.model.formula.NamedRangeTarget;
@@ -90,7 +91,6 @@ import dev.erst.gridgrind.core.vocabulary.TableName;
 import dev.erst.gridgrind.excel.*;
 import dev.erst.gridgrind.excel.ExcelAutofilterSnapshot;
 import dev.erst.gridgrind.excel.ExcelCellValue;
-import dev.erst.gridgrind.excel.ExcelComment;
 import dev.erst.gridgrind.excel.ExcelConditionalFormattingBlockSnapshot;
 import dev.erst.gridgrind.excel.ExcelConditionalFormattingRuleSnapshot;
 import dev.erst.gridgrind.excel.ExcelHyperlink;
@@ -1256,7 +1256,7 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
         new ExcelHyperlink.Url("https://example.com/report"),
         XlsxRoundTrip.cellMetadata(workbookPath, "Budget", "A1").hyperlink().orElseThrow());
     assertEquals(
-        new ExcelComment("Review", "GridGrind", true),
+        new ResolvedComment("Review", "GridGrind", true),
         XlsxRoundTrip.cellMetadata(workbookPath, "Budget", "A1")
             .comment()
             .orElseThrow()

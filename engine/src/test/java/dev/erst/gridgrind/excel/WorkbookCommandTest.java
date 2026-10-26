@@ -2,6 +2,7 @@ package dev.erst.gridgrind.excel;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.core.model.drawing.ResolvedComment;
 import dev.erst.gridgrind.core.model.style.CellAlignmentPatch;
 import dev.erst.gridgrind.core.model.style.CellFontPatch;
 import dev.erst.gridgrind.core.model.style.CellStylePatch;
@@ -175,7 +176,7 @@ class WorkbookCommandTest {
             "Budget", "A1", new ExcelHyperlink.Url("https://example.com/report")),
         new WorkbookAnnotationCommand.ClearHyperlink("Budget", "A1"),
         new WorkbookAnnotationCommand.SetComment(
-            "Budget", "A1", new ExcelComment("Review", "GridGrind", false)),
+            "Budget", "A1", new ResolvedComment("Review", "GridGrind", false)),
         new WorkbookAnnotationCommand.ClearComment("Budget", "A1"),
         new WorkbookFormattingCommand.ApplyStyle("Budget", "A1:B1", style),
         new WorkbookFormattingCommand.SetDataValidation("Budget", "B2:B5", validationDefinition()),
@@ -684,12 +685,12 @@ class WorkbookCommandTest {
         NullPointerException.class,
         () ->
             new WorkbookAnnotationCommand.SetComment(
-                null, "A1", new ExcelComment("Review", "GridGrind", false)));
+                null, "A1", new ResolvedComment("Review", "GridGrind", false)));
     assertThrows(
         NullPointerException.class,
         () ->
             new WorkbookAnnotationCommand.SetComment(
-                "Budget", null, new ExcelComment("Review", "GridGrind", false)));
+                "Budget", null, new ResolvedComment("Review", "GridGrind", false)));
     assertThrows(
         NullPointerException.class,
         () -> new WorkbookAnnotationCommand.SetComment("Budget", "A1", null));
@@ -697,12 +698,12 @@ class WorkbookCommandTest {
         IllegalArgumentException.class,
         () ->
             new WorkbookAnnotationCommand.SetComment(
-                " ", "A1", new ExcelComment("Review", "GridGrind", false)));
+                " ", "A1", new ResolvedComment("Review", "GridGrind", false)));
     assertThrows(
         IllegalArgumentException.class,
         () ->
             new WorkbookAnnotationCommand.SetComment(
-                "Budget", " ", new ExcelComment("Review", "GridGrind", false)));
+                "Budget", " ", new ResolvedComment("Review", "GridGrind", false)));
     assertThrows(
         NullPointerException.class, () -> new WorkbookAnnotationCommand.ClearComment(null, "A1"));
     assertThrows(

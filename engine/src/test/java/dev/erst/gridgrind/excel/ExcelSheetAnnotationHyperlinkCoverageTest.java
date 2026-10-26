@@ -4,6 +4,7 @@ import static dev.erst.gridgrind.excel.ExcelStyleTestAccess.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 import dev.erst.gridgrind.core.model.drawing.CommentAnchorReport;
+import dev.erst.gridgrind.core.model.drawing.ResolvedComment;
 import dev.erst.gridgrind.core.vocabulary.AnalysisFindingCode;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -84,7 +85,7 @@ class ExcelSheetAnnotationHyperlinkCoverageTest extends ExcelSheetTestSupport {
           ExcelSheetAnnotationSupport.hyperlink(HyperlinkType.FILE, "https://example.com/report"));
 
       assertEquals(
-          Optional.of(new ExcelComment("Review", "GridGrind", false)),
+          Optional.of(new ResolvedComment("Review", "GridGrind", false)),
           ExcelSheetAnnotationSupport.comment(commentCell));
       assertEquals(Optional.empty(), ExcelSheetAnnotationSupport.comment(blankCell));
       assertEquals(Optional.empty(), ExcelSheetAnnotationSupport.comment(missingStringCommentCell));

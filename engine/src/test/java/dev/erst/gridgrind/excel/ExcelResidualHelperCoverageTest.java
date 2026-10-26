@@ -5,6 +5,8 @@ import static org.junit.jupiter.api.Assertions.*;
 import com.microsoft.schemas.office.excel.CTClientData;
 import com.microsoft.schemas.vml.CTShape;
 import dev.erst.gridgrind.core.model.customxml.CustomXmlMappingLocator;
+import dev.erst.gridgrind.core.model.drawing.ResolvedComment;
+import dev.erst.gridgrind.core.model.formula.ResolvedArrayFormula;
 import dev.erst.gridgrind.core.model.style.ColorSpec;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartAxisCrosses;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartAxisKind;
@@ -381,7 +383,7 @@ class ExcelResidualHelperCoverageTest {
       XSSFSheet annotationSheet = workbook.createSheet("Annotations");
       ExcelSheetAnnotationSupport annotationSupport =
           new ExcelSheetAnnotationSupport(annotationSheet, new ExcelDrawingController());
-      annotationSupport.setComment("A1", new ExcelComment("Review", "GridGrind", false));
+      annotationSupport.setComment("A1", new ResolvedComment("Review", "GridGrind", false));
       String vmlRelationId =
           ExcelSheetAnnotationSupport.vmlDrawingRelationId(annotationSheet).orElseThrow();
       assertEquals(
@@ -444,7 +446,7 @@ class ExcelResidualHelperCoverageTest {
       WorkbookCommandExecutor.applyCellValueCommand(
           workbook,
           new WorkbookCellCommand.SetArrayFormula(
-              "Ops", "D2:D4", new ExcelArrayFormulaDefinition("B2:B4*C2:C4")));
+              "Ops", "D2:D4", new ResolvedArrayFormula("B2:B4*C2:C4")));
       assertEquals(1, sheet.cells().arrayFormulas().size());
 
       WorkbookCommandExecutor.applyCellValueCommand(
@@ -453,7 +455,7 @@ class ExcelResidualHelperCoverageTest {
 
       assertThrows(
           InvalidFormulaException.class,
-          () -> sheet.cells().setArrayFormula("E2:E4", new ExcelArrayFormulaDefinition("SUM(")));
+          () -> sheet.cells().setArrayFormula("E2:E4", new ResolvedArrayFormula("SUM(")));
       assertThrows(CellNotFoundException.class, () -> sheet.cells().clearArrayFormula("Z99"));
       sheet.xssfSheet().createRow(0);
       assertThrows(CellNotFoundException.class, () -> sheet.cells().clearArrayFormula("B1"));

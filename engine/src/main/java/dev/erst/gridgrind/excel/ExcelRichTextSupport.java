@@ -4,6 +4,8 @@ import dev.erst.gridgrind.core.model.style.CellColorReport;
 import dev.erst.gridgrind.core.model.style.CellFontPatch;
 import dev.erst.gridgrind.core.model.style.CellFontReport;
 import dev.erst.gridgrind.core.model.style.FontHeightReport;
+import dev.erst.gridgrind.core.model.style.ResolvedRichText;
+import dev.erst.gridgrind.core.model.style.ResolvedRichTextRun;
 import dev.erst.gridgrind.core.model.style.RichTextRunReport;
 import java.util.ArrayList;
 import java.util.List;
@@ -26,13 +28,13 @@ public final class ExcelRichTextSupport {
   private ExcelRichTextSupport() {}
 
   /** Builds the POI rich-text payload for one authored GridGrind rich-text value. */
-  public static XSSFRichTextString toPoiRichText(XSSFWorkbook workbook, ExcelRichText richText) {
+  public static XSSFRichTextString toPoiRichText(XSSFWorkbook workbook, ResolvedRichText richText) {
     Objects.requireNonNull(workbook, "workbook must not be null");
     Objects.requireNonNull(richText, "richText must not be null");
 
     ExcelCellTextLimits.requireSupportedLength(richText.plainText(), "richText.text"); // LIM-010
     XSSFRichTextString poiRichText = new XSSFRichTextString();
-    for (ExcelRichTextRun run : richText.runs()) {
+    for (ResolvedRichTextRun run : richText.runs()) {
       poiRichText.append(
           run.text(), run.font().map(font -> fontPatch(workbook, font)).orElse(null));
     }

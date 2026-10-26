@@ -115,6 +115,10 @@ dependencies {
     add(paritySourceSet.runtimeOnlyConfigurationName, libs.slf4j.api)
 }
 val parityTest = tasks.register<Test>("parityTest") {
+    inputs.files(
+        rootProject.fileTree("docs") { include("*.md") },
+        rootProject.file("README.md"),
+    ).withPathSensitivity(PathSensitivity.RELATIVE)
     description = "Runs the XSSF behavioural parity corpus."
     group = "verification"
     testClassesDirs = paritySourceSet.output.classesDirs

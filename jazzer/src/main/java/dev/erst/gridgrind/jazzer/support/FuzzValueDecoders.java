@@ -1,13 +1,13 @@
 package dev.erst.gridgrind.jazzer.support;
 
+import dev.erst.gridgrind.core.model.style.ResolvedRichText;
+import dev.erst.gridgrind.core.model.style.ResolvedRichTextRun;
 import dev.erst.gridgrind.core.model.style.RichTextRunSpec;
 import dev.erst.gridgrind.core.model.value.CellGridSpec;
 import dev.erst.gridgrind.core.model.value.CellRowSpec;
 import dev.erst.gridgrind.core.model.value.CellValueSpec;
 import dev.erst.gridgrind.core.source.TextSourceSpec;
 import dev.erst.gridgrind.excel.ExcelCellValue;
-import dev.erst.gridgrind.excel.ExcelRichText;
-import dev.erst.gridgrind.excel.ExcelRichTextRun;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -121,17 +121,17 @@ final class FuzzValueDecoders {
     return new CellValueSpec.RichText(List.copyOf(runs));
   }
 
-  private static ExcelRichText nextRichText(GridGrindFuzzData data) {
+  private static ResolvedRichText nextRichText(GridGrindFuzzData data) {
     int runCount = data.consumeInt(1, 3);
-    List<ExcelRichTextRun> runs = new ArrayList<>(runCount);
+    List<ResolvedRichTextRun> runs = new ArrayList<>(runCount);
     for (int runIndex = 0; runIndex < runCount; runIndex++) {
       runs.add(
-          new ExcelRichTextRun(
+          new ResolvedRichTextRun(
               FuzzAddressDecoders.nextText(data),
               data.consumeBoolean()
                   ? Optional.of(FuzzStyleDecoders.nextRichTextFontPatch(data))
                   : Optional.empty()));
     }
-    return new ExcelRichText(List.copyOf(runs));
+    return new ResolvedRichText(List.copyOf(runs));
   }
 }

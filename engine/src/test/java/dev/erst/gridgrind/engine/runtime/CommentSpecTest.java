@@ -4,7 +4,7 @@ import static dev.erst.gridgrind.engine.runtime.ExecutorTestPlanSupport.text;
 import static org.junit.jupiter.api.Assertions.*;
 
 import dev.erst.gridgrind.core.model.drawing.CommentSpec;
-import dev.erst.gridgrind.excel.ExcelComment;
+import dev.erst.gridgrind.core.model.drawing.ResolvedComment;
 import org.junit.jupiter.api.Test;
 
 /** Tests for CommentSpec record construction and engine conversion. */
@@ -15,8 +15,8 @@ class CommentSpecTest {
 
     assertFalse(comment.visible());
     assertEquals(
-        new ExcelComment("Review", "GridGrind", false),
-        WorkbookCommandCellValueSpecConverter.toExcelComment(comment));
+        new ResolvedComment("Review", "GridGrind", false),
+        WorkbookCommandCellValueSpecConverter.toResolvedComment(comment));
   }
 
   @Test

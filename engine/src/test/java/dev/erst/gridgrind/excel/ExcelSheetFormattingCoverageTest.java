@@ -3,6 +3,7 @@ package dev.erst.gridgrind.excel;
 import static dev.erst.gridgrind.excel.ExcelStyleTestAccess.*;
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.core.model.drawing.ResolvedComment;
 import dev.erst.gridgrind.core.model.style.BorderSidePatch;
 import dev.erst.gridgrind.core.model.style.CellAlignmentPatch;
 import dev.erst.gridgrind.core.model.style.CellBorderPatch;
@@ -12,6 +13,8 @@ import dev.erst.gridgrind.core.model.style.CellStylePatch;
 import dev.erst.gridgrind.core.model.style.ColorSpec;
 import dev.erst.gridgrind.core.model.style.FontHeightReport;
 import dev.erst.gridgrind.core.model.style.FontHeightSpec;
+import dev.erst.gridgrind.core.model.style.ResolvedRichText;
+import dev.erst.gridgrind.core.model.style.ResolvedRichTextRun;
 import dev.erst.gridgrind.core.model.style.RichTextRunReport;
 import dev.erst.gridgrind.core.vocabulary.ExcelBorderStyle;
 import dev.erst.gridgrind.core.vocabulary.ExcelFillPattern;
@@ -39,7 +42,7 @@ class ExcelSheetFormattingCoverageTest extends ExcelSheetTestSupport {
 
       sheet.cells().setCell("A1", ExcelCellValue.text("Header"));
       sheet.annotations().setHyperlink("A4", new ExcelHyperlink.Document("Budget!A1"));
-      sheet.annotations().setComment("B5", new ExcelComment("Note", "GridGrind", false));
+      sheet.annotations().setComment("B5", new ResolvedComment("Note", "GridGrind", false));
       sheet.cells().appendRow(ExcelCellValue.text("Hosting"), ExcelCellValue.number(49.0));
 
       assertEquals("Hosting", sheet.cells().text("A2"));
@@ -48,7 +51,7 @@ class ExcelSheetFormattingCoverageTest extends ExcelSheetTestSupport {
           new ExcelHyperlink.Document("Budget!A1"),
           sheet.cells().snapshotCell("A4").metadata().hyperlink().orElseThrow());
       assertEquals(
-          new ExcelComment("Note", "GridGrind", false),
+          new ResolvedComment("Note", "GridGrind", false),
           sheet.cells().snapshotCell("B5").metadata().comment().orElseThrow().toPlainComment());
     }
   }
@@ -95,7 +98,7 @@ class ExcelSheetFormattingCoverageTest extends ExcelSheetTestSupport {
                           Optional.empty())),
                   Optional.empty()));
       sheet.annotations().setHyperlink("A1", new ExcelHyperlink.Url("https://example.com/report"));
-      sheet.annotations().setComment("A1", new ExcelComment("Review", "GridGrind", false));
+      sheet.annotations().setComment("A1", new ResolvedComment("Review", "GridGrind", false));
 
       ExcelCellSnapshot.TextSnapshot textSnapshot =
           (ExcelCellSnapshot.TextSnapshot)
@@ -112,7 +115,7 @@ class ExcelSheetFormattingCoverageTest extends ExcelSheetTestSupport {
           new ExcelHyperlink.Url("https://example.com/report"),
           textSnapshot.metadata().hyperlink().orElseThrow());
       assertEquals(
-          new ExcelComment("Review", "GridGrind", false),
+          new ResolvedComment("Review", "GridGrind", false),
           textSnapshot.metadata().comment().orElseThrow().toPlainComment());
 
       ExcelCellSnapshot.BlankSnapshot blankSnapshot =
@@ -124,7 +127,7 @@ class ExcelSheetFormattingCoverageTest extends ExcelSheetTestSupport {
           new ExcelHyperlink.Url("https://example.com/report"),
           blankSnapshot.metadata().hyperlink().orElseThrow());
       assertEquals(
-          new ExcelComment("Review", "GridGrind", false),
+          new ResolvedComment("Review", "GridGrind", false),
           blankSnapshot.metadata().comment().orElseThrow().toPlainComment());
     }
   }
@@ -213,10 +216,10 @@ class ExcelSheetFormattingCoverageTest extends ExcelSheetTestSupport {
           .setCell(
               "A1",
               ExcelCellValue.richText(
-                  new ExcelRichText(
+                  new ResolvedRichText(
                       List.of(
-                          new ExcelRichTextRun("Quarterly", Optional.empty()),
-                          new ExcelRichTextRun(
+                          new ResolvedRichTextRun("Quarterly", Optional.empty()),
+                          new ResolvedRichTextRun(
                               " Report",
                               Optional.of(
                                   new CellFontPatch(

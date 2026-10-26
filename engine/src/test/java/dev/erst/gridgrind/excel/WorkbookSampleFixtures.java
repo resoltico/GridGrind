@@ -1,6 +1,8 @@
 package dev.erst.gridgrind.excel;
 
 import dev.erst.gridgrind.core.model.customxml.CustomXmlMappingLocator;
+import dev.erst.gridgrind.core.model.drawing.ResolvedComment;
+import dev.erst.gridgrind.core.model.formula.ResolvedArrayFormula;
 import dev.erst.gridgrind.core.model.style.CellAlignmentPatch;
 import dev.erst.gridgrind.core.model.style.CellFontPatch;
 import dev.erst.gridgrind.core.model.style.CellStylePatch;
@@ -137,7 +139,7 @@ final class WorkbookSampleFixtures {
         new WorkbookCellCommand.SetCell(
             "Budget", "A1", ExcelCellValue.date(LocalDate.of(2026, 3, 23))),
         new WorkbookCellCommand.SetArrayFormula(
-            "Budget", "D2:D4", new ExcelArrayFormulaDefinition("B2:B4*C2:C4")),
+            "Budget", "D2:D4", new ResolvedArrayFormula("B2:B4*C2:C4")),
         new WorkbookCellCommand.ClearArrayFormula("Budget", "D2"),
         new WorkbookMetadataCommand.ImportCustomXmlMapping(
             new ExcelCustomXmlImportDefinition(
@@ -155,7 +157,7 @@ final class WorkbookSampleFixtures {
             "Budget", "A1", new ExcelHyperlink.Url("https://example.com/report")),
         new WorkbookAnnotationCommand.ClearHyperlink("Budget", "A1"),
         new WorkbookAnnotationCommand.SetComment(
-            "Budget", "A1", new ExcelComment("Review", "GridGrind", false)),
+            "Budget", "A1", new ResolvedComment("Review", "GridGrind", false)),
         new WorkbookAnnotationCommand.ClearComment("Budget", "A1"),
         new WorkbookDrawingCommand.SetPicture(
             "Budget",

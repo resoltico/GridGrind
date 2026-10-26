@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.core.model.drawing.ResolvedComment;
 import java.util.List;
 import java.util.Objects;
 
@@ -26,7 +27,7 @@ public final class ExcelSheetAnnotations {
   }
 
   /** Replaces the plain-text comment attached to one cell, creating the cell if necessary. */
-  public ExcelSheetAnnotations setComment(String address, ExcelComment comment) {
+  public ExcelSheetAnnotations setComment(String address, ResolvedComment comment) {
     annotationSupport.setComment(address, comment);
     return this;
   }

@@ -3,6 +3,7 @@ package dev.erst.gridgrind.excel;
 import static dev.erst.gridgrind.excel.ExcelStyleTestAccess.*;
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.core.model.drawing.ResolvedComment;
 import dev.erst.gridgrind.core.model.style.BorderSidePatch;
 import dev.erst.gridgrind.core.model.style.CellAlignmentPatch;
 import dev.erst.gridgrind.core.model.style.CellBorderPatch;
@@ -279,11 +280,15 @@ class ExcelSheetCoreReadWriteCoverageTest extends ExcelSheetTestSupport {
       assertThrows(
           NullPointerException.class,
           () ->
-              sheet.annotations().setComment(null, new ExcelComment("Review", "GridGrind", false)));
+              sheet
+                  .annotations()
+                  .setComment(null, new ResolvedComment("Review", "GridGrind", false)));
       assertThrows(
           IllegalArgumentException.class,
           () ->
-              sheet.annotations().setComment(" ", new ExcelComment("Review", "GridGrind", false)));
+              sheet
+                  .annotations()
+                  .setComment(" ", new ResolvedComment("Review", "GridGrind", false)));
       assertThrows(NullPointerException.class, () -> sheet.annotations().setComment("A1", null));
       assertThrows(NullPointerException.class, () -> sheet.annotations().clearComment(null));
       assertThrows(IllegalArgumentException.class, () -> sheet.annotations().clearComment(" "));
@@ -656,7 +661,7 @@ class ExcelSheetCoreReadWriteCoverageTest extends ExcelSheetTestSupport {
           new ExcelSheet(poiSheet, new WorkbookStyleRegistry(poiWorkbook), evaluator);
 
       sheet.annotations().setHyperlink("A1", new ExcelHyperlink.Url("https://example.com/report"));
-      sheet.annotations().setComment("A1", new ExcelComment("Review", "GridGrind", true));
+      sheet.annotations().setComment("A1", new ResolvedComment("Review", "GridGrind", true));
 
       ExcelCellSnapshot.BlankSnapshot snapshot =
           (ExcelCellSnapshot.BlankSnapshot) sheet.cells().snapshotCell("A1");
@@ -664,7 +669,7 @@ class ExcelSheetCoreReadWriteCoverageTest extends ExcelSheetTestSupport {
           new ExcelHyperlink.Url("https://example.com/report"),
           snapshot.metadata().hyperlink().orElseThrow());
       assertEquals(
-          new ExcelComment("Review", "GridGrind", true),
+          new ResolvedComment("Review", "GridGrind", true),
           snapshot.metadata().comment().orElseThrow().toPlainComment());
 
       List<ExcelPreviewRow> preview = sheet.cells().preview(1, 1);
@@ -679,7 +684,7 @@ class ExcelSheetCoreReadWriteCoverageTest extends ExcelSheetTestSupport {
       assertTrue(clearedMetadata.metadata().comment().isEmpty());
 
       sheet.annotations().setHyperlink("A1", new ExcelHyperlink.Document("Budget!B4"));
-      sheet.annotations().setComment("A1", new ExcelComment("Again", "GridGrind", false));
+      sheet.annotations().setComment("A1", new ResolvedComment("Again", "GridGrind", false));
       sheet.cells().clearRange("A1");
       ExcelCellSnapshot.BlankSnapshot clearedRange =
           (ExcelCellSnapshot.BlankSnapshot) sheet.cells().snapshotCell("A1");
@@ -779,7 +784,7 @@ class ExcelSheetCoreReadWriteCoverageTest extends ExcelSheetTestSupport {
 
       sheet.cells().setCell("B2", ExcelCellValue.text("Center"));
       sheet.annotations().setHyperlink("A1", new ExcelHyperlink.Url("https://example.com/report"));
-      sheet.annotations().setComment("C3", new ExcelComment("Review", "GridGrind", false));
+      sheet.annotations().setComment("C3", new ResolvedComment("Review", "GridGrind", false));
       sheet.columns().setWidth(0, 0, 12.5);
       sheet.rows().setHeight(0, 0, 19.5);
       sheet

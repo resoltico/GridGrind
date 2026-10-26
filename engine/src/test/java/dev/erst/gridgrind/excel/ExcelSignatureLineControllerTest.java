@@ -7,6 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.microsoft.schemas.office.excel.CTClientData;
 import com.microsoft.schemas.vml.CTShape;
+import dev.erst.gridgrind.core.model.drawing.ResolvedComment;
 import dev.erst.gridgrind.core.vocabulary.ExcelPictureFormat;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingAnchor;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingBinarySupport;
@@ -201,7 +202,7 @@ class ExcelSignatureLineControllerTest {
       XSSFSheet sheet = workbook.createSheet("Ops");
       ExcelSheetAnnotationSupport annotationSupport =
           new ExcelSheetAnnotationSupport(sheet, new ExcelDrawingController());
-      annotationSupport.setComment("C3", new ExcelComment("Note", "GridGrind", false));
+      annotationSupport.setComment("C3", new ResolvedComment("Note", "GridGrind", false));
 
       controller.setSignatureLine(
           sheet,

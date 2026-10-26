@@ -1,9 +1,13 @@
 package dev.erst.gridgrind.excel;
 
 import dev.erst.gridgrind.core.model.drawing.CommentAnchorReport;
+import dev.erst.gridgrind.core.model.drawing.CommentAnchorSpec;
+import dev.erst.gridgrind.core.model.drawing.ResolvedComment;
 import dev.erst.gridgrind.core.model.style.CellFontPatch;
 import dev.erst.gridgrind.core.model.style.CellFontReport;
 import dev.erst.gridgrind.core.model.style.FontHeightSpec;
+import dev.erst.gridgrind.core.model.style.ResolvedRichText;
+import dev.erst.gridgrind.core.model.style.ResolvedRichTextRun;
 import dev.erst.gridgrind.core.model.style.RichTextRunReport;
 import dev.erst.gridgrind.core.vocabulary.ExcelColumnSpan;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingController;
@@ -319,13 +323,13 @@ final class ExcelSheetCommentRepairSupport {
     return cell == null ? row.createCell(columnIndex) : cell;
   }
 
-  private static ExcelRichText toAuthoringRichText(List<RichTextRunReport> runs) {
-    return new ExcelRichText(
+  private static ResolvedRichText toAuthoringRichText(List<RichTextRunReport> runs) {
+    return new ResolvedRichText(
         runs.stream().map(ExcelSheetCommentRepairSupport::toAuthoringRun).toList());
   }
 
-  private static ExcelRichTextRun toAuthoringRun(RichTextRunReport run) {
-    return new ExcelRichTextRun(run.text(), Optional.of(toAuthoringFont(run.font())));
+  private static ResolvedRichTextRun toAuthoringRun(RichTextRunReport run) {
+    return new ResolvedRichTextRun(run.text(), Optional.of(toAuthoringFont(run.font())));
   }
 
   private static CellFontPatch toAuthoringFont(CellFontReport font) {
@@ -402,15 +406,15 @@ final class ExcelSheetCommentRepairSupport {
       return !text.isBlank() && !author.isBlank();
     }
 
-    ExcelComment toAuthoringComment() {
-      return new ExcelComment(
+    ResolvedComment toAuthoringComment() {
+      return new ResolvedComment(
           text,
           author,
           visible,
           runs.map(ExcelSheetCommentRepairSupport::toAuthoringRichText),
           anchor.map(
               value ->
-                  new ExcelCommentAnchor(
+                  new CommentAnchorSpec(
                       value.firstColumn(), value.firstRow(), value.lastColumn(), value.lastRow())));
     }
 

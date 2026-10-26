@@ -1,12 +1,12 @@
 package dev.erst.gridgrind.jazzer.support;
 
+import dev.erst.gridgrind.core.model.drawing.ResolvedComment;
 import dev.erst.gridgrind.core.model.style.CellStyleReport;
 import dev.erst.gridgrind.core.model.style.RichTextRunReport;
 import dev.erst.gridgrind.excel.ExcelAutofilterSnapshot;
 import dev.erst.gridgrind.excel.ExcelCellMetadataSnapshot;
 import dev.erst.gridgrind.excel.ExcelCellSnapshot;
 import dev.erst.gridgrind.excel.ExcelChartSnapshot;
-import dev.erst.gridgrind.excel.ExcelComment;
 import dev.erst.gridgrind.excel.ExcelCommentSnapshot;
 import dev.erst.gridgrind.excel.ExcelConditionalFormattingBlockSnapshot;
 import dev.erst.gridgrind.excel.ExcelHyperlink;
@@ -88,7 +88,8 @@ final class XlsxRoundTripExpectedStateSupport {
     }
   }
 
-  record ExpectedCellMetadata(Optional<ExcelHyperlink> hyperlink, Optional<ExcelComment> comment) {
+  record ExpectedCellMetadata(
+      Optional<ExcelHyperlink> hyperlink, Optional<ResolvedComment> comment) {
     static ExpectedCellMetadata from(ExcelCellMetadataSnapshot metadata) {
       return new ExpectedCellMetadata(
           metadata.hyperlink(), metadata.comment().map(ExcelCommentSnapshot::toPlainComment));

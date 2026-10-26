@@ -3,6 +3,7 @@ package dev.erst.gridgrind.excel;
 import static org.junit.jupiter.api.Assertions.*;
 
 import com.microsoft.schemas.vml.CTShape;
+import dev.erst.gridgrind.core.model.drawing.ResolvedComment;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartAxisCrosses;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartAxisKind;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartAxisPosition;
@@ -541,7 +542,7 @@ class ExcelDrawingControllerTest {
   void commentOperationsPreserveRealDrawingObjects() throws IOException {
     try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       ExcelSheet commentOnly = workbook.getOrCreateSheet("Comments");
-      commentOnly.annotations().setComment("A1", new ExcelComment("Review", "GridGrind", false));
+      commentOnly.annotations().setComment("A1", new ResolvedComment("Review", "GridGrind", false));
 
       assertTrue(commentOnly.cells().snapshotCell("A1").metadata().comment().isPresent());
 
@@ -560,7 +561,7 @@ class ExcelDrawingControllerTest {
                   Optional.of("Queue preview")));
       List<ExcelDrawingObjectSnapshot> before = withDrawing.drawings().drawingObjects();
 
-      withDrawing.annotations().setComment("A1", new ExcelComment("Review", "GridGrind", false));
+      withDrawing.annotations().setComment("A1", new ResolvedComment("Review", "GridGrind", false));
       assertEquals(before, withDrawing.drawings().drawingObjects());
 
       withDrawing.annotations().clearComment("A1");

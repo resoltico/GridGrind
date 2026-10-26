@@ -2,6 +2,8 @@ package dev.erst.gridgrind.excel;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.core.model.style.ResolvedRichText;
+import dev.erst.gridgrind.core.model.style.ResolvedRichTextRun;
 import dev.erst.gridgrind.excel.stream.ExcelStreamingWorkbookWriter;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -39,7 +41,8 @@ class ExcelStreamingWorkbookWriterTest {
                   ExcelCellValue.blank(),
                   ExcelCellValue.text("Item"),
                   ExcelCellValue.richText(
-                      new ExcelRichText(List.of(new ExcelRichTextRun("Rich", Optional.empty())))),
+                      new ResolvedRichText(
+                          List.of(new ResolvedRichTextRun("Rich", Optional.empty())))),
                   ExcelCellValue.number(42.5d),
                   ExcelCellValue.bool(true),
                   ExcelCellValue.error("#REF!"),

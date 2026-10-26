@@ -1,21 +1,22 @@
-package dev.erst.gridgrind.excel;
+package dev.erst.gridgrind.core.model.drawing;
 
+import dev.erst.gridgrind.core.model.style.ResolvedRichText;
 import java.util.Objects;
 import java.util.Optional;
 
-/** Immutable workbook-core comment used for cell comment authoring and analysis. */
-public record ExcelComment(
+/** Materialized comment text and rich runs ready for workbook authoring. */
+public record ResolvedComment(
     String text,
     String author,
     boolean visible,
-    Optional<ExcelRichText> runs,
-    Optional<ExcelCommentAnchor> anchor) {
+    Optional<ResolvedRichText> runs,
+    Optional<CommentAnchorSpec> anchor) {
   /** Creates a plain-text comment without rich-text runs or an explicit anchor override. */
-  public ExcelComment(String text, String author, boolean visible) {
+  public ResolvedComment(String text, String author, boolean visible) {
     this(text, author, visible, Optional.empty(), Optional.empty());
   }
 
-  public ExcelComment {
+  public ResolvedComment {
     Objects.requireNonNull(text, "text must not be null");
     Objects.requireNonNull(author, "author must not be null");
     Objects.requireNonNull(runs, "runs must not be null");

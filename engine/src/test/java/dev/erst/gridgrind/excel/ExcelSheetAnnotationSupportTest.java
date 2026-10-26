@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import dev.erst.gridgrind.core.model.drawing.ResolvedComment;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingController;
 import org.apache.poi.ss.util.CellAddress;
 import org.apache.poi.xssf.model.CommentsTable;
@@ -38,7 +39,7 @@ class ExcelSheetAnnotationSupportTest {
       InvalidCellAddressException commentFailure =
           assertThrows(
               InvalidCellAddressException.class,
-              () -> support.setComment("XFE1", new ExcelComment("Review", "GridGrind", false)));
+              () -> support.setComment("XFE1", new ResolvedComment("Review", "GridGrind", false)));
       assertEquals("XFE1", commentFailure.address());
     }
   }

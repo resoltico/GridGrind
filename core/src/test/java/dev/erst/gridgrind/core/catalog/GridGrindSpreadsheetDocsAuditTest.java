@@ -61,7 +61,7 @@ class GridGrindSpreadsheetDocsAuditTest {
     List<String> shippedRowsMissingContractEvidence =
         capabilityRows(inventory).stream()
             .filter(CapabilityRow::shipped)
-            .filter(row -> !row.evidence().contains("contract/"))
+            .filter(row -> !row.evidence().contains("core/src/main/java/"))
             .map(CapabilityRow::capability)
             .toList();
 

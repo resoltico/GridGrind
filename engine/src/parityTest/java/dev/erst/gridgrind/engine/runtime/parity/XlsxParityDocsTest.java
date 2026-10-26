@@ -146,8 +146,12 @@ final class XlsxParityDocsTest {
         inventory.contains(
             "| Formula surface, sheet schema, named-range surface, and aggregate workbook findings |"));
     assertFalse(inventory.contains("ExcelCommentSupport.java"));
-    assertTrue(inventory.contains("engine/excel/ExcelComment.java"));
-    assertTrue(inventory.contains("engine/excel/ExcelCommentAnchor.java"));
+    assertTrue(
+        inventory.contains(
+            "core/src/main/java/dev/erst/gridgrind/core/model/drawing/ResolvedComment.java"));
+    assertTrue(
+        inventory.contains(
+            "core/src/main/java/dev/erst/gridgrind/core/model/drawing/CommentAnchorSpec.java"));
     assertTrue(inventory.contains("markRecalculateOnOpen"));
     assertTrue(inventory.contains("EVALUATE_ALL"));
     assertTrue(inventory.contains("CLEAR_CACHES_ONLY"));

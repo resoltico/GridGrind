@@ -2,6 +2,8 @@ package dev.erst.gridgrind.jazzer.support;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 
+import dev.erst.gridgrind.core.model.drawing.ResolvedComment;
+import dev.erst.gridgrind.core.model.formula.ResolvedArrayFormula;
 import dev.erst.gridgrind.core.model.protection.CellProtectionPatch;
 import dev.erst.gridgrind.core.model.style.CellFillSpec;
 import dev.erst.gridgrind.core.model.style.CellFontPatch;
@@ -9,6 +11,8 @@ import dev.erst.gridgrind.core.model.style.CellGradientFillSpec;
 import dev.erst.gridgrind.core.model.style.CellGradientStopSpec;
 import dev.erst.gridgrind.core.model.style.CellStylePatch;
 import dev.erst.gridgrind.core.model.style.ColorSpec;
+import dev.erst.gridgrind.core.model.style.ResolvedRichText;
+import dev.erst.gridgrind.core.model.style.ResolvedRichTextRun;
 import dev.erst.gridgrind.core.vocabulary.ExcelColumnSpan;
 import dev.erst.gridgrind.core.vocabulary.ExcelComparisonOperator;
 import dev.erst.gridgrind.core.vocabulary.ExcelDataValidationErrorStyle;
@@ -16,10 +20,8 @@ import dev.erst.gridgrind.core.vocabulary.ExcelFillPattern;
 import dev.erst.gridgrind.core.vocabulary.ExcelPictureFormat;
 import dev.erst.gridgrind.core.vocabulary.RgbHex;
 import dev.erst.gridgrind.excel.*;
-import dev.erst.gridgrind.excel.ExcelArrayFormulaDefinition;
 import dev.erst.gridgrind.excel.ExcelBinaryData;
 import dev.erst.gridgrind.excel.ExcelCellValue;
-import dev.erst.gridgrind.excel.ExcelComment;
 import dev.erst.gridgrind.excel.ExcelConditionalFormattingBlockDefinition;
 import dev.erst.gridgrind.excel.ExcelConditionalFormattingRule;
 import dev.erst.gridgrind.excel.ExcelDifferentialStyle;
@@ -27,8 +29,6 @@ import dev.erst.gridgrind.excel.ExcelHyperlink;
 import dev.erst.gridgrind.excel.ExcelNamedRangeDefinition;
 import dev.erst.gridgrind.excel.ExcelNamedRangeScope;
 import dev.erst.gridgrind.excel.ExcelNamedRangeTarget;
-import dev.erst.gridgrind.excel.ExcelRichText;
-import dev.erst.gridgrind.excel.ExcelRichTextRun;
 import dev.erst.gridgrind.excel.ExcelTableDefinition;
 import dev.erst.gridgrind.excel.ExcelTableStyle;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
@@ -98,10 +98,10 @@ class XlsxRoundTripVerifierTest {
                         "Budget",
                         "A1",
                         ExcelCellValue.richText(
-                            new ExcelRichText(
+                            new ResolvedRichText(
                                 List.of(
-                                    new ExcelRichTextRun("Quarterly", Optional.empty()),
-                                    new ExcelRichTextRun(
+                                    new ResolvedRichTextRun("Quarterly", Optional.empty()),
+                                    new ResolvedRichTextRun(
                                         " Report",
                                         Optional.of(
                                             new CellFontPatch(
@@ -130,7 +130,7 @@ class XlsxRoundTripVerifierTest {
                     new WorkbookAnnotationCommand.SetHyperlink(
                         "Budget", "A1", new ExcelHyperlink.Url("https://example.com/report")),
                     new WorkbookAnnotationCommand.SetComment(
-                        "Budget", "A1", new ExcelComment("Review", "GridGrind", false)),
+                        "Budget", "A1", new ResolvedComment("Review", "GridGrind", false)),
                     new WorkbookMetadataCommand.SetNamedRange(
                         new ExcelNamedRangeDefinition(
                             "BudgetTitle",
@@ -209,9 +209,9 @@ class XlsxRoundTripVerifierTest {
                 List.of(
                     new WorkbookSheetCommand.CreateSheet("LL"),
                     new WorkbookAnnotationCommand.SetComment(
-                        "LL", "E2", new ExcelComment("Note BudgetTotal", "GridGrind", true)),
+                        "LL", "E2", new ResolvedComment("Note BudgetTotal", "GridGrind", true)),
                     new WorkbookAnnotationCommand.SetComment(
-                        "LL", "A2", new ExcelComment("Note Report_Value", "GridGrind", true)),
+                        "LL", "A2", new ResolvedComment("Note Report_Value", "GridGrind", true)),
                     new WorkbookSheetCommand.CreateSheet("LL"),
                     new WorkbookStructureCommand.DeleteColumns("LL", new ExcelColumnSpan(1, 3)),
                     new WorkbookStructureCommand.DeleteColumns("LL", new ExcelColumnSpan(0, 0)),
@@ -279,7 +279,7 @@ class XlsxRoundTripVerifierTest {
                                 new ExcelDrawingMarker(4, 6, 0, 0),
                                 null))),
                     new WorkbookAnnotationCommand.SetComment(
-                        "Queue", "B2", new ExcelComment("Queue note", "GridGrind", true)),
+                        "Queue", "B2", new ResolvedComment("Queue note", "GridGrind", true)),
                     new WorkbookSheetCommand.CopySheet(
                         "Queue",
                         "Queue Copy",
@@ -315,7 +315,7 @@ class XlsxRoundTripVerifierTest {
                                 ExcelCellValue.number(15.0d),
                                 ExcelCellValue.number(21.0d)))),
                     new WorkbookCellCommand.SetArrayFormula(
-                        "Approvals", "D2:D4", new ExcelArrayFormulaDefinition("B2:B4*C2:C4")),
+                        "Approvals", "D2:D4", new ResolvedArrayFormula("B2:B4*C2:C4")),
                     new WorkbookCellCommand.ClearArrayFormula("Approvals", "D2"),
                     new WorkbookDrawingCommand.SetSignatureLine(
                         "Approvals", signatureLineDefinition()))));

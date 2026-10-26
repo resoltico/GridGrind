@@ -4,6 +4,7 @@ import static dev.erst.gridgrind.engine.runtime.ExecutorTestPlanSupport.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 import dev.erst.gridgrind.core.model.drawing.CommentSpec;
+import dev.erst.gridgrind.core.model.drawing.ResolvedComment;
 import dev.erst.gridgrind.core.model.formula.NamedRangeTarget;
 import dev.erst.gridgrind.core.model.layout.PaneSpec;
 import dev.erst.gridgrind.core.model.layout.SheetDefaultsSpec;
@@ -40,7 +41,6 @@ import dev.erst.gridgrind.core.vocabulary.SheetCopyPosition;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.TableName;
 import dev.erst.gridgrind.excel.*;
-import dev.erst.gridgrind.excel.ExcelComment;
 import dev.erst.gridgrind.excel.ExcelHyperlink;
 import dev.erst.gridgrind.excel.ExcelNamedRangeDefinition;
 import dev.erst.gridgrind.excel.ExcelNamedRangeScope;
@@ -104,7 +104,7 @@ class DefaultGridGrindRequestExecutorCommandTranslationTest
         new ExcelHyperlink.Url("https://example.com/report"),
         cast(WorkbookAnnotationCommand.SetHyperlink.class, setHyperlink).target());
     assertEquals(
-        new ExcelComment("Review", "GridGrind", false),
+        new ResolvedComment("Review", "GridGrind", false),
         cast(WorkbookAnnotationCommand.SetComment.class, setComment).comment());
     assertEquals(
         new ExcelNamedRangeDefinition(

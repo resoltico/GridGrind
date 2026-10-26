@@ -2,9 +2,13 @@ package dev.erst.gridgrind.excel;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.core.model.drawing.CommentAnchorSpec;
+import dev.erst.gridgrind.core.model.drawing.ResolvedComment;
 import dev.erst.gridgrind.core.model.style.CellColorReport;
 import dev.erst.gridgrind.core.model.style.CellFontPatch;
 import dev.erst.gridgrind.core.model.style.ColorSpec;
+import dev.erst.gridgrind.core.model.style.ResolvedRichText;
+import dev.erst.gridgrind.core.model.style.ResolvedRichTextRun;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartBarDirection;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartDisplayBlanksAs;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartLegendPosition;
@@ -1134,15 +1138,15 @@ class ExcelSheetCopyControllerTest {
         .annotations()
         .setComment(
             "E2",
-            new ExcelComment(
+            new ResolvedComment(
                 "Quarterly Review",
                 "GridGrind",
                 true,
                 Optional.of(
-                    new ExcelRichText(
+                    new ResolvedRichText(
                         List.of(
-                            new ExcelRichTextRun("Quarterly", Optional.empty()),
-                            new ExcelRichTextRun(
+                            new ResolvedRichTextRun("Quarterly", Optional.empty()),
+                            new ResolvedRichTextRun(
                                 " Review",
                                 Optional.of(
                                     new CellFontPatch(
@@ -1153,7 +1157,7 @@ class ExcelSheetCopyControllerTest {
                                         Optional.of(ColorSpec.rgb(new RgbHex("#112233"))),
                                         Optional.empty(),
                                         Optional.empty())))))),
-                Optional.of(new ExcelCommentAnchor(1, 1, 4, 5))));
+                Optional.of(new CommentAnchorSpec(1, 1, 4, 5))));
     source
         .metadata()
         .setAutofilter(

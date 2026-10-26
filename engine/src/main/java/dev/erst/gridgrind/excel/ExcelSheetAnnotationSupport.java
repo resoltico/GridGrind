@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.core.model.drawing.ResolvedComment;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingController;
 import java.util.List;
 import java.util.Objects;
@@ -31,7 +32,7 @@ final class ExcelSheetAnnotationSupport {
     hyperlinkSupport.clearHyperlink(address);
   }
 
-  void setComment(String address, ExcelComment comment) {
+  void setComment(String address, ResolvedComment comment) {
     commentSupport.setComment(address, comment);
   }
 
@@ -75,15 +76,15 @@ final class ExcelSheetAnnotationSupport {
     return ExcelSheetHyperlinkSupport.toPoiTarget(hyperlink);
   }
 
-  static Optional<ExcelComment> comment(Cell cell) {
+  static Optional<ResolvedComment> comment(Cell cell) {
     return ExcelSheetCommentSupport.comment(cell);
   }
 
-  static Optional<ExcelComment> comment(Comment comment) {
+  static Optional<ResolvedComment> comment(Comment comment) {
     return ExcelSheetCommentSupport.comment(comment);
   }
 
-  static Optional<ExcelComment> comment(String text, String author, boolean visible) {
+  static Optional<ResolvedComment> comment(String text, String author, boolean visible) {
     return ExcelSheetCommentSupport.comment(text, author, visible);
   }
 

@@ -1728,3 +1728,32 @@ proves source-free records can implement closed authored and resolved contracts 
 only the source-bearing alternative needs a distinct record, with an exhaustive identity switch.
 These are design evidence for the pending resolved-plan/step/target work; those WPs are not
 claimed complete. No active mutation or fuzz campaign ran.
+
+## WP-40 core materialized cell payloads
+
+Moved the actual source-resolved array formula, rich text, rich-text run and comment contracts to
+core as ResolvedArrayFormula/ResolvedRichText/ResolvedRichTextRun/ResolvedComment. These differ
+from authored specs because text sources have become strings; source-free font patches remain
+shared. Backend APIs consume these core records directly; old engine names are deleted, without
+aliases. Deleted the identical engine comment anchor and use CommentAnchorSpec directly, removing
+its identity conversion. Pure comment construction tests moved to core.
+
+Compilation caught one qualified nullable type name after relocation (repaired; all source sets
+compile in 48s). Focused checks exposed stale capability-inventory source paths, then a core docs
+audit that recognized public evidence by the retired contract/ module spelling. Updated that
+inventory's contract references to existing core paths, including the resolved-comment row, and
+made the audit recognize core without an old-name fallback. A basename collision was resolved
+against the model package (not the Java authoring convenience class).
+
+The docs-reading core and parity Test tasks lacked Markdown inputs; declared the top-level docs
+and README they read, with relative sensitivity. Both tasks reran and passed (15s). The full
+focused engine/core/PMD suites and 14 parity scenarios pass; nested deterministic check and all
+retained seed replay pass (20s). Final ./gradlew check passes (3m19s): core 345, JSON 348,
+engine 1484 plus 14 parity, CLI 588, architecture 14 plus 12 rule tests, zero failures/errors/skips.
+All 143 golden cases are unchanged. No mutation or active fuzz campaign ran.
+
+Inventories: definitions 13→12, converter lines 4309→4297, main Java 121991→121978; snapshots
+38, Support 206 and blank checks 434 remain open. Baseline diff empty. These materialized payloads
+are prerequisites, not completion of ResolvedPlan/ResolvedStep/ResolvedTarget or command removal.
+Drawing review: authored DrawingAnchorSpec permits two-cell only; reports also preserve one-cell
+and absolute facts, so a whole-union replacement with the authored type would be incorrect.

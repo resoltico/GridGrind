@@ -5,13 +5,13 @@ import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import dev.erst.gridgrind.core.model.formula.FormulaEnvironmentSpec;
+import dev.erst.gridgrind.core.model.formula.ResolvedArrayFormula;
 import dev.erst.gridgrind.core.plan.ExecutionPolicySpec;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import dev.erst.gridgrind.core.problem.GridGrindProblemCode;
 import dev.erst.gridgrind.core.problem.ProblemContext;
 import dev.erst.gridgrind.core.problem.ProblemContextWorkbookSurfaces.StepReference;
 import dev.erst.gridgrind.core.vocabulary.StepId;
-import dev.erst.gridgrind.excel.ExcelArrayFormulaDefinition;
 import dev.erst.gridgrind.excel.ExcelCellValue;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
 import dev.erst.gridgrind.excel.ExcelWorkbooks;
@@ -101,8 +101,7 @@ class FormulaOriginTrackerTest {
           tracker,
           engine,
           workbook,
-          new WorkbookCellCommand.SetArrayFormula(
-              "Ops", "A3:A4", new ExcelArrayFormulaDefinition("4+4")),
+          new WorkbookCellCommand.SetArrayFormula("Ops", "A3:A4", new ResolvedArrayFormula("4+4")),
           author);
       applyAndRecord(
           tracker,

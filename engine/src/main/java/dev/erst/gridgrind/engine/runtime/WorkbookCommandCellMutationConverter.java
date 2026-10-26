@@ -49,7 +49,7 @@ final class WorkbookCommandCellMutationConverter {
         yield new WorkbookCellCommand.SetArrayFormula(
             selector.sheetName().value(),
             selector.range().value(),
-            WorkbookCommandCellValueSpecConverter.toExcelArrayFormulaDefinition(
+            WorkbookCommandCellValueSpecConverter.toResolvedArrayFormula(
                 setArrayFormula.formula()));
       }
       case CellMutationAction.ClearArrayFormula _ -> {
@@ -82,7 +82,7 @@ final class WorkbookCommandCellMutationConverter {
         yield new WorkbookAnnotationCommand.SetComment(
             cellTarget.sheetName(),
             cellTarget.address(),
-            WorkbookCommandCellValueSpecConverter.toExcelComment(setComment.comment()));
+            WorkbookCommandCellValueSpecConverter.toResolvedComment(setComment.comment()));
       }
       case CellMutationAction.ClearComment _ -> {
         SelectorConverter.SingleCellTarget cellTarget =

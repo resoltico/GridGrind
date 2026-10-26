@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.core.model.formula.ResolvedArrayFormula;
 import dev.erst.gridgrind.core.model.style.CellStylePatch;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingController;
 import java.util.ArrayList;
@@ -108,7 +109,7 @@ final class ExcelSheetCellMutationSupport {
     syncTableHeaders(excelRange);
   }
 
-  void setArrayFormula(String range, ExcelArrayFormulaDefinition formula) {
+  void setArrayFormula(String range, ResolvedArrayFormula formula) {
     ExcelSheet.requireNonBlank(range, "range");
     Objects.requireNonNull(formula, "formula must not be null");
 

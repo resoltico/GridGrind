@@ -2,6 +2,7 @@ package dev.erst.gridgrind.excel;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.core.model.drawing.ResolvedComment;
 import dev.erst.gridgrind.core.model.style.CellAlignmentPatch;
 import dev.erst.gridgrind.core.model.style.CellColorReport;
 import dev.erst.gridgrind.core.model.style.CellStylePatch;
@@ -88,7 +89,7 @@ class WorkbookCommandExecutorTest {
                   "Budget", "A1", new ExcelHyperlink.Document("Budget!B3")),
               new WorkbookAnnotationCommand.ClearHyperlink("Budget", "A1"),
               new WorkbookAnnotationCommand.SetComment(
-                  "Budget", "B1", new ExcelComment("Review", "GridGrind", false)),
+                  "Budget", "B1", new ResolvedComment("Review", "GridGrind", false)),
               new WorkbookAnnotationCommand.ClearComment("Budget", "B1"),
               new WorkbookFormattingCommand.SetDataValidation(
                   "Budget", "C1:C3", validationDefinition()),
@@ -291,7 +292,7 @@ class WorkbookCommandExecutorTest {
               executor.apply(
                   workbook,
                   new WorkbookAnnotationCommand.SetComment(
-                      "Missing", "A1", new ExcelComment("Review", "GridGrind", false))));
+                      "Missing", "A1", new ResolvedComment("Review", "GridGrind", false))));
       assertThrows(
           SheetNotFoundException.class,
           () ->
@@ -931,7 +932,7 @@ class WorkbookCommandExecutorTest {
       WorkbookCommandExecutor.applyAnnotationCommand(
           workbook,
           new WorkbookAnnotationCommand.SetComment(
-              "Budget", "A1", new ExcelComment("Review", "GridGrind", false)));
+              "Budget", "A1", new ResolvedComment("Review", "GridGrind", false)));
       WorkbookCommandExecutor.applyMetadataCommand(
           workbook,
           new WorkbookMetadataCommand.SetNamedRange(
@@ -973,7 +974,7 @@ class WorkbookCommandExecutorTest {
           workbook, new WorkbookTabularCommand.SetAutofilter("Budget", "A1:B2"));
 
       assertEquals(
-          new ExcelComment("Review", "GridGrind", false),
+          new ResolvedComment("Review", "GridGrind", false),
           workbook
               .sheet("Budget")
               .cells()
