@@ -228,7 +228,7 @@ class WorkbookCommandExecutorTest {
               new ExcelAutofilterSnapshot.TableOwned("A1:B3", "Queue")),
           autofilters.autofilters());
       assertEquals(
-          List.of("Queue"), tables.tables().stream().map(ExcelTableSnapshot::name).toList());
+          List.of("Queue"), tables.tables().stream().map(table -> table.name().value()).toList());
       workbook
           .persistence()
           .save(
@@ -280,7 +280,7 @@ class WorkbookCommandExecutorTest {
               new ExcelAutofilterSnapshot.TableOwned("A1:B3", "Queue")),
           autofilters.autofilters());
       assertEquals(1, tables.tables().size());
-      assertEquals("Queue", tables.tables().getFirst().name());
+      assertEquals("Queue", tables.tables().getFirst().name().value());
       assertTrue(tables.tables().getFirst().behavior().hasAutofilter());
     }
   }

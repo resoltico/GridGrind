@@ -38,6 +38,9 @@ import dev.erst.gridgrind.core.model.style.RichTextRunReport;
 import dev.erst.gridgrind.core.model.table.AutofilterEntryReport;
 import dev.erst.gridgrind.core.model.table.AutofilterFilterCriterionReport;
 import dev.erst.gridgrind.core.model.table.AutofilterSortConditionReport;
+import dev.erst.gridgrind.core.model.table.TableColumnReport;
+import dev.erst.gridgrind.core.model.table.TableEntryReport;
+import dev.erst.gridgrind.core.model.table.TableStyleReport;
 import dev.erst.gridgrind.core.model.validation.ConditionalFormattingEntryReport;
 import dev.erst.gridgrind.core.model.validation.ConditionalFormattingRuleReport;
 import dev.erst.gridgrind.core.model.value.HyperlinkTarget;
@@ -1134,41 +1137,59 @@ class InspectionResultConverterTest extends DefaultGridGrindRequestExecutorTestS
             "H1:I5", "QueueTable", List.of(), java.util.Optional.of(sortState)));
   }
 
-  private static ExcelTableSnapshot advancedTable() {
-    return new ExcelTableSnapshot(
-        "QueueTable",
-        "Budget",
-        "A1:B5",
-        new ExcelTableSnapshot.Structure(
+  private static TableEntryReport advancedTable() {
+    return new TableEntryReport(
+        new dev.erst.gridgrind.core.vocabulary.TableLabel("QueueTable"),
+        new dev.erst.gridgrind.core.vocabulary.SheetLabel("Budget"),
+        new dev.erst.gridgrind.core.vocabulary.RangeLabel("A1:B5"),
+        new TableEntryReport.Structure(
             1,
             1,
             List.of("Item", "Amount"),
             List.of(
-                new ExcelTableColumnSnapshot(1L, "Item", "", "", "", ""),
-                new ExcelTableColumnSnapshot(
-                    2L, "Amount", "UniqueAmount", "Total", "sum", "[@Amount]*2"))),
-        new ExcelTableStyleSnapshot.Named("TableStyleMedium2", false, false, true, false),
-        new ExcelTableSnapshot.Behavior(true, true, true, false),
-        new ExcelTableSnapshot.Presentation(
+                new TableColumnReport(
+                    1L,
+                    "Item",
+                    Optional.ofNullable(""),
+                    Optional.ofNullable(""),
+                    Optional.ofNullable(""),
+                    Optional.ofNullable("")),
+                new TableColumnReport(
+                    2L,
+                    "Amount",
+                    Optional.ofNullable("UniqueAmount"),
+                    Optional.ofNullable("Total"),
+                    Optional.ofNullable("sum"),
+                    Optional.ofNullable("[@Amount]*2")))),
+        new TableStyleReport.Named("TableStyleMedium2", false, false, true, false),
+        new TableEntryReport.Behavior(true, true, true, false),
+        new TableEntryReport.Presentation(
             Optional.of("Queue comment"),
             Optional.of("HeaderStyle"),
             Optional.of("DataStyle"),
             Optional.of("TotalsStyle")));
   }
 
-  private static ExcelTableSnapshot normalizedOptionalTable() {
-    return new ExcelTableSnapshot(
-        "OptionalTable",
-        "Budget",
-        "D1:E2",
-        new ExcelTableSnapshot.Structure(
+  private static TableEntryReport normalizedOptionalTable() {
+    return new TableEntryReport(
+        new dev.erst.gridgrind.core.vocabulary.TableLabel("OptionalTable"),
+        new dev.erst.gridgrind.core.vocabulary.SheetLabel("Budget"),
+        new dev.erst.gridgrind.core.vocabulary.RangeLabel("D1:E2"),
+        new TableEntryReport.Structure(
             1,
             0,
             List.of("Code"),
-            List.of(new ExcelTableColumnSnapshot(3L, "Code", null, " ", "", " "))),
-        new ExcelTableStyleSnapshot.None(),
-        new ExcelTableSnapshot.Behavior(false, false, false, false),
-        new ExcelTableSnapshot.Presentation(
+            List.of(
+                new TableColumnReport(
+                    3L,
+                    "Code",
+                    Optional.empty(),
+                    Optional.ofNullable(" "),
+                    Optional.ofNullable(""),
+                    Optional.ofNullable(" ")))),
+        new TableStyleReport.None(),
+        new TableEntryReport.Behavior(false, false, false, false),
+        new TableEntryReport.Presentation(
             Optional.of(" "), Optional.of(""), Optional.of(" "), Optional.empty()));
   }
 

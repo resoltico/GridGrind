@@ -95,7 +95,6 @@ import dev.erst.gridgrind.excel.ExcelSheetDisplay;
 import dev.erst.gridgrind.excel.ExcelSheetOutlineSummary;
 import dev.erst.gridgrind.excel.ExcelSheetPane;
 import dev.erst.gridgrind.excel.ExcelTableSelection;
-import dev.erst.gridgrind.excel.ExcelTableSnapshot;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
 import dev.erst.gridgrind.excel.ExcelWorkbooks;
 import dev.erst.gridgrind.excel.WorkbookExecutionEngine;
@@ -1595,25 +1594,40 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
           reopenedFilters.autofilters());
       assertEquals(
           List.of(
-              new ExcelTableSnapshot(
-                  "BudgetTable",
-                  "Budget",
-                  "A1:C4",
-                  new ExcelTableSnapshot.Structure(
+              new TableEntryReport(
+                  new dev.erst.gridgrind.core.vocabulary.TableLabel("BudgetTable"),
+                  new dev.erst.gridgrind.core.vocabulary.SheetLabel("Budget"),
+                  new dev.erst.gridgrind.core.vocabulary.RangeLabel("A1:C4"),
+                  new TableEntryReport.Structure(
                       1,
                       0,
                       List.of("Item", "Amount", "Billable"),
                       List.of(
-                          new dev.erst.gridgrind.excel.ExcelTableColumnSnapshot(
-                              1L, "Item", "", "", "", ""),
-                          new dev.erst.gridgrind.excel.ExcelTableColumnSnapshot(
-                              2L, "Amount", "", "", "", ""),
-                          new dev.erst.gridgrind.excel.ExcelTableColumnSnapshot(
-                              3L, "Billable", "", "", "", ""))),
-                  new dev.erst.gridgrind.excel.ExcelTableStyleSnapshot.Named(
+                          new dev.erst.gridgrind.core.model.table.TableColumnReport(
+                              1L,
+                              "Item",
+                              Optional.ofNullable(""),
+                              Optional.ofNullable(""),
+                              Optional.ofNullable(""),
+                              Optional.ofNullable("")),
+                          new dev.erst.gridgrind.core.model.table.TableColumnReport(
+                              2L,
+                              "Amount",
+                              Optional.ofNullable(""),
+                              Optional.ofNullable(""),
+                              Optional.ofNullable(""),
+                              Optional.ofNullable("")),
+                          new dev.erst.gridgrind.core.model.table.TableColumnReport(
+                              3L,
+                              "Billable",
+                              Optional.ofNullable(""),
+                              Optional.ofNullable(""),
+                              Optional.ofNullable(""),
+                              Optional.ofNullable("")))),
+                  new dev.erst.gridgrind.core.model.table.TableStyleReport.Named(
                       "TableStyleMedium2", false, false, true, false),
-                  new ExcelTableSnapshot.Behavior(true, false, false, false),
-                  new ExcelTableSnapshot.Presentation(
+                  new TableEntryReport.Behavior(true, false, false, false),
+                  new TableEntryReport.Presentation(
                       Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty()))),
           reopenedTables.tables());
     }

@@ -1,5 +1,8 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.core.model.table.TableColumnReport;
+import dev.erst.gridgrind.core.model.table.TableEntryReport;
+import dev.erst.gridgrind.core.model.table.TableStyleReport;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -17,12 +20,12 @@ final class ExcelTableCatalogSupport {
   private ExcelTableCatalogSupport() {}
 
   /** Selects factual table snapshots by workbook-global name in request order. */
-  static List<ExcelTableSnapshot> selectTablesByName(
-      List<ExcelTableSnapshot> allTables, List<String> names) {
+  static List<TableEntryReport> selectTablesByName(
+      List<TableEntryReport> allTables, List<String> names) {
     Objects.requireNonNull(allTables, "allTables must not be null");
     Objects.requireNonNull(names, "names must not be null");
 
-    List<ExcelTableSnapshot> selected = new ArrayList<>();
+    List<TableEntryReport> selected = new ArrayList<>();
     for (String name : names) {
       findTableSnapshotByName(allTables, name).ifPresent(selected::add);
     }
@@ -30,14 +33,14 @@ final class ExcelTableCatalogSupport {
   }
 
   /** Returns one factual table snapshot by workbook-global name or null when absent. */
-  static Optional<ExcelTableSnapshot> findTableSnapshotByName(
-      List<ExcelTableSnapshot> allTables, String name) {
+  static Optional<TableEntryReport> findTableSnapshotByName(
+      List<TableEntryReport> allTables, String name) {
     Objects.requireNonNull(allTables, "allTables must not be null");
     Objects.requireNonNull(name, "name must not be null");
 
     String expectedName = name.toUpperCase(Locale.ROOT);
-    for (ExcelTableSnapshot snapshot : allTables) {
-      if (snapshot.name().toUpperCase(Locale.ROOT).equals(expectedName)) {
+    for (TableEntryReport snapshot : allTables) {
+      if (snapshot.name().value().toUpperCase(Locale.ROOT).equals(expectedName)) {
         return Optional.of(snapshot);
       }
     }
@@ -59,16 +62,18 @@ final class ExcelTableCatalogSupport {
   }
 
   /** Converts one mutable POI table into the factual GridGrind snapshot shape. */
-  static ExcelTableSnapshot toSnapshot(String sheetName, XSSFTable table) {
+  static TableEntryReport toSnapshot(String sheetName, XSSFTable table) {
     Objects.requireNonNull(sheetName, "sheetName must not be null");
     Objects.requireNonNull(table, "table must not be null");
 
     CTTable ctTable = table.getCTTable();
-    return new ExcelTableSnapshot(
-        Objects.requireNonNullElse(table.getName(), ""),
-        sheetName,
-        Objects.requireNonNullElse(ctTable.getRef(), ""),
-        new ExcelTableSnapshot.Structure(
+    return new TableEntryReport(
+        new dev.erst.gridgrind.core.vocabulary.TableLabel(
+            Objects.requireNonNullElse(table.getName(), "")),
+        new dev.erst.gridgrind.core.vocabulary.SheetLabel(sheetName),
+        new dev.erst.gridgrind.core.vocabulary.RangeLabel(
+            Objects.requireNonNullElse(ctTable.getRef(), "")),
+        new TableEntryReport.Structure(
             table.getHeaderRowCount(),
             table.getTotalsRowCount(),
             table.getColumns().stream()
@@ -78,12 +83,12 @@ final class ExcelTableCatalogSupport {
                 .map(ExcelTableCatalogSupport::toColumnSnapshot)
                 .toList()),
         toStyleSnapshot(table),
-        new ExcelTableSnapshot.Behavior(
+        new TableEntryReport.Behavior(
             ctTable.isSetAutoFilter(),
             ctTable.getPublished(),
             ctTable.getInsertRow(),
             ctTable.getInsertRowShift()),
-        new ExcelTableSnapshot.Presentation(
+        new TableEntryReport.Presentation(
             blankAsOptional(ctTable.getComment()),
             blankAsOptional(ctTable.getHeaderRowCellStyle()),
             blankAsOptional(ctTable.getDataCellStyle()),
@@ -91,15 +96,15 @@ final class ExcelTableCatalogSupport {
   }
 
   /** Converts POI table-style metadata into the factual GridGrind snapshot shape. */
-  static ExcelTableStyleSnapshot toStyleSnapshot(XSSFTable table) {
+  static TableStyleReport toStyleSnapshot(XSSFTable table) {
     Objects.requireNonNull(table, "table must not be null");
 
     CTTable ctTable = table.getCTTable();
     if (!ctTable.isSetTableStyleInfo()) {
-      return new ExcelTableStyleSnapshot.None();
+      return new TableStyleReport.None();
     }
     CTTableStyleInfo styleInfo = ctTable.getTableStyleInfo();
-    return new ExcelTableStyleSnapshot.Named(
+    return new TableStyleReport.Named(
         Objects.requireNonNullElse(styleInfo.getName(), ""),
         styleInfo.getShowFirstColumn(),
         styleInfo.getShowLastColumn(),
@@ -107,16 +112,19 @@ final class ExcelTableCatalogSupport {
         styleInfo.getShowColumnStripes());
   }
 
-  private static ExcelTableColumnSnapshot toColumnSnapshot(CTTableColumn column) {
-    return new ExcelTableColumnSnapshot(
+  private static TableColumnReport toColumnSnapshot(CTTableColumn column) {
+    return new TableColumnReport(
         column.getId(),
         Objects.requireNonNullElse(column.getName(), ""),
-        Objects.requireNonNullElse(column.getUniqueName(), ""),
-        Objects.requireNonNullElse(column.getTotalsRowLabel(), ""),
-        column.isSetTotalsRowFunction() ? column.getTotalsRowFunction().toString() : "",
-        column.isSetCalculatedColumnFormula()
-            ? Objects.requireNonNullElse(column.getCalculatedColumnFormula().getStringValue(), "")
-            : "");
+        Optional.ofNullable(Objects.requireNonNullElse(column.getUniqueName(), "")),
+        Optional.ofNullable(Objects.requireNonNullElse(column.getTotalsRowLabel(), "")),
+        Optional.ofNullable(
+            column.isSetTotalsRowFunction() ? column.getTotalsRowFunction().toString() : ""),
+        Optional.ofNullable(
+            column.isSetCalculatedColumnFormula()
+                ? Objects.requireNonNullElse(
+                    column.getCalculatedColumnFormula().getStringValue(), "")
+                : ""));
   }
 
   private static Optional<String> blankAsOptional(String value) {

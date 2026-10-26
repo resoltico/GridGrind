@@ -2,6 +2,7 @@ package dev.erst.gridgrind.excel;
 
 import dev.erst.gridgrind.core.model.table.ResolvedTable;
 import dev.erst.gridgrind.core.model.table.TableColumnSpec;
+import dev.erst.gridgrind.core.model.table.TableEntryReport;
 import dev.erst.gridgrind.core.model.table.TableStyleSpec;
 import dev.erst.gridgrind.core.vocabulary.TableName;
 import java.util.ArrayList;
@@ -102,11 +103,11 @@ final class ExcelTableController {
   }
 
   /** Returns factual table metadata selected by workbook-global table name or all tables. */
-  List<ExcelTableSnapshot> tables(ExcelWorkbook workbook, ExcelTableSelection selection) {
+  List<TableEntryReport> tables(ExcelWorkbook workbook, ExcelTableSelection selection) {
     Objects.requireNonNull(workbook, "workbook must not be null");
     Objects.requireNonNull(selection, "selection must not be null");
 
-    List<ExcelTableSnapshot> allTables =
+    List<TableEntryReport> allTables =
         allTables(workbook).stream()
             .map(
                 tableHandle ->
@@ -155,10 +156,10 @@ final class ExcelTableController {
     Objects.requireNonNull(workbook, "workbook must not be null");
     Objects.requireNonNull(selection, "selection must not be null");
 
-    List<ExcelTableSnapshot> selectedTables = tables(workbook, selection);
-    List<ExcelTableSnapshot> allTables = tables(workbook, new ExcelTableSelection.All());
+    List<TableEntryReport> selectedTables = tables(workbook, selection);
+    List<TableEntryReport> allTables = tables(workbook, new ExcelTableSelection.All());
     List<WorkbookAnalysis.AnalysisFinding> findings = new ArrayList<>();
-    for (ExcelTableSnapshot table : selectedTables) {
+    for (TableEntryReport table : selectedTables) {
       findings.addAll(ExcelTableAnalysisSupport.tableFindings(workbook, table));
       findings.addAll(ExcelTableAnalysisSupport.overlapFindings(table, allTables));
     }
@@ -173,8 +174,8 @@ final class ExcelTableController {
 
     XSSFSheet sheet = requiredSheet(workbook, sheetName);
     List<WorkbookAnalysis.AnalysisFinding> findings = new ArrayList<>();
-    for (ExcelTableSnapshot table : tables(workbook, new ExcelTableSelection.All())) {
-      if (!table.sheetName().equals(sheetName) || !table.behavior().hasAutofilter()) {
+    for (TableEntryReport table : tables(workbook, new ExcelTableSelection.All())) {
+      if (!table.sheetName().value().equals(sheetName) || !table.behavior().hasAutofilter()) {
         continue;
       }
       findings.addAll(ExcelTableAnalysisSupport.tableAutofilterFindings(sheet, table));

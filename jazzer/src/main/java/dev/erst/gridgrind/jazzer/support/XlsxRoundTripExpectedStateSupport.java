@@ -4,6 +4,7 @@ import dev.erst.gridgrind.core.model.drawing.ResolvedComment;
 import dev.erst.gridgrind.core.model.pivot.PivotTableReport;
 import dev.erst.gridgrind.core.model.style.CellStyleReport;
 import dev.erst.gridgrind.core.model.style.RichTextRunReport;
+import dev.erst.gridgrind.core.model.table.TableEntryReport;
 import dev.erst.gridgrind.core.model.validation.ConditionalFormattingEntryReport;
 import dev.erst.gridgrind.core.model.value.HyperlinkTarget;
 import dev.erst.gridgrind.excel.ExcelAutofilterSnapshot;
@@ -13,7 +14,6 @@ import dev.erst.gridgrind.excel.ExcelChartSnapshot;
 import dev.erst.gridgrind.excel.ExcelNamedRangeScope;
 import dev.erst.gridgrind.excel.ExcelNamedRangeTarget;
 import dev.erst.gridgrind.excel.ExcelSheetPane;
-import dev.erst.gridgrind.excel.ExcelTableSnapshot;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
 import dev.erst.gridgrind.excel.WorkbookCommand;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingObjectSnapshot;
@@ -72,7 +72,7 @@ final class XlsxRoundTripExpectedStateSupport {
       Map<String, List<ExcelDrawingObjectSnapshot>> expectedDrawingObjects,
       Map<String, List<ExcelChartSnapshot>> expectedCharts,
       List<PivotTableReport> expectedPivots,
-      List<ExcelTableSnapshot> expectedTables) {}
+      List<TableEntryReport> expectedTables) {}
 
   record ExpectedWorkbookFootprint(Map<String, List<CellCoordinate>> candidateCoordinatesBySheet) {}
 

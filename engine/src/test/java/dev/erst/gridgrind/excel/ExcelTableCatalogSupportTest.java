@@ -2,6 +2,8 @@ package dev.erst.gridgrind.excel;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.core.model.table.TableEntryReport;
+import dev.erst.gridgrind.core.model.table.TableStyleReport;
 import dev.erst.gridgrind.core.model.table.TableStyleSpec;
 import java.util.List;
 import java.util.Optional;
@@ -16,33 +18,34 @@ import org.junit.jupiter.api.Test;
 class ExcelTableCatalogSupportTest {
   @Test
   void selectTablesByNamePreservesOrderAndIgnoresMissingNames() {
-    List<ExcelTableSnapshot> allTables =
+    List<TableEntryReport> allTables =
         List.of(
-            new ExcelTableSnapshot(
-                "Queue",
-                "Ops",
-                "A1:B3",
+            new TableEntryReport(
+                new dev.erst.gridgrind.core.vocabulary.TableLabel("Queue"),
+                new dev.erst.gridgrind.core.vocabulary.SheetLabel("Ops"),
+                new dev.erst.gridgrind.core.vocabulary.RangeLabel("A1:B3"),
                 1,
                 0,
                 List.of("Owner", "Task"),
-                new ExcelTableStyleSnapshot.None(),
+                new TableStyleReport.None(),
                 true),
-            new ExcelTableSnapshot(
-                "ArchiveQueue",
-                "Archive",
-                "A1:B3",
+            new TableEntryReport(
+                new dev.erst.gridgrind.core.vocabulary.TableLabel("ArchiveQueue"),
+                new dev.erst.gridgrind.core.vocabulary.SheetLabel("Archive"),
+                new dev.erst.gridgrind.core.vocabulary.RangeLabel("A1:B3"),
                 1,
                 0,
                 List.of("Owner", "Task"),
-                new ExcelTableStyleSnapshot.None(),
+                new TableStyleReport.None(),
                 false));
 
-    List<ExcelTableSnapshot> selected =
+    List<TableEntryReport> selected =
         ExcelTableCatalogSupport.selectTablesByName(
             allTables, List.of("archivequeue", "missing", "QUEUE"));
 
     assertEquals(
-        List.of("ArchiveQueue", "Queue"), selected.stream().map(ExcelTableSnapshot::name).toList());
+        List.of("ArchiveQueue", "Queue"),
+        selected.stream().map(table -> table.name().value()).toList());
     assertEquals(
         Optional.empty(), ExcelTableCatalogSupport.findTableSnapshotByName(allTables, "missing"));
   }
@@ -94,19 +97,21 @@ class ExcelTableCatalogSupportTest {
           org.openxmlformats.schemas.spreadsheetml.x2006.main.STTotalsRowFunction.SUM);
       amountColumn.addNewCalculatedColumnFormula().setStringValue("[@Task]&\"!\"");
 
-      ExcelTableSnapshot snapshot = ExcelTableCatalogSupport.toSnapshot("Ops", table);
+      TableEntryReport snapshot = ExcelTableCatalogSupport.toSnapshot("Ops", table);
 
-      assertEquals("Queue", snapshot.name());
+      assertEquals("Queue", snapshot.name().value());
       assertEquals(List.of("Owner", "Task"), snapshot.structure().columnNames());
       assertTrue(snapshot.behavior().hasAutofilter());
-      assertInstanceOf(ExcelTableStyleSnapshot.Named.class, snapshot.style());
+      assertInstanceOf(TableStyleReport.Named.class, snapshot.style());
       assertEquals("Queue comment", snapshot.presentation().comment().orElseThrow());
       assertEquals("HeaderStyle", snapshot.presentation().headerRowCellStyle().orElseThrow());
-      assertEquals("UniqueAmount", snapshot.structure().columns().get(1).uniqueName());
-      assertEquals("Total", snapshot.structure().columns().get(1).totalsRowLabel());
-      assertEquals("sum", snapshot.structure().columns().get(1).totalsRowFunction());
       assertEquals(
-          "[@Task]&\"!\"", snapshot.structure().columns().get(1).calculatedColumnFormula());
+          "UniqueAmount", snapshot.structure().columns().get(1).uniqueName().orElseThrow());
+      assertEquals("Total", snapshot.structure().columns().get(1).totalsRowLabel().orElseThrow());
+      assertEquals("sum", snapshot.structure().columns().get(1).totalsRowFunction().orElseThrow());
+      assertEquals(
+          "[@Task]&\"!\"",
+          snapshot.structure().columns().get(1).calculatedColumnFormula().orElseThrow());
     }
   }
 
@@ -124,7 +129,7 @@ class ExcelTableCatalogSupportTest {
       table.getCTTable().setDataCellStyle("DataStyle");
       table.getCTTable().setTotalsRowCellStyle("");
 
-      ExcelTableSnapshot snapshot = ExcelTableCatalogSupport.toSnapshot("Ops", table);
+      TableEntryReport snapshot = ExcelTableCatalogSupport.toSnapshot("Ops", table);
 
       assertTrue(snapshot.presentation().comment().isEmpty());
       assertTrue(snapshot.presentation().headerRowCellStyle().isEmpty());

@@ -1,6 +1,7 @@
 package dev.erst.gridgrind.excel;
 
 import dev.erst.gridgrind.core.model.pivot.PivotTableReport;
+import dev.erst.gridgrind.core.model.table.TableEntryReport;
 import dev.erst.gridgrind.core.vocabulary.AnalysisSeverity;
 import dev.erst.gridgrind.excel.pivot.ExcelPivotTableController;
 import dev.erst.gridgrind.excel.pivot.ExcelPivotTableSelection;
@@ -91,7 +92,7 @@ final class ExcelDocumentAnalyzer {
     Objects.requireNonNull(workbook, "workbook must not be null");
     Objects.requireNonNull(selection, "selection must not be null");
 
-    List<ExcelTableSnapshot> allTables =
+    List<TableEntryReport> allTables =
         tableController.tables(workbook, new ExcelTableSelection.All());
     int checkedAutofilterCount = 0;
     List<WorkbookAnalysis.AnalysisFinding> findings = new ArrayList<>();
@@ -99,8 +100,8 @@ final class ExcelDocumentAnalyzer {
       ExcelSheet sheet = workbook.sheet(sheetName);
       checkedAutofilterCount += autofilterController.sheetAutofilterCount(sheet.xssfSheet());
       checkedAutofilterCount += tableController.tableAutofilterCount(workbook, sheetName);
-      List<ExcelTableSnapshot> tablesOnSheet =
-          allTables.stream().filter(table -> table.sheetName().equals(sheetName)).toList();
+      List<TableEntryReport> tablesOnSheet =
+          allTables.stream().filter(table -> table.sheetName().value().equals(sheetName)).toList();
       findings.addAll(
           autofilterController.sheetAutofilterHealthFindings(
               sheetName, sheet.xssfSheet(), tablesOnSheet));
@@ -115,7 +116,7 @@ final class ExcelDocumentAnalyzer {
     Objects.requireNonNull(workbook, "workbook must not be null");
     Objects.requireNonNull(selection, "selection must not be null");
 
-    List<ExcelTableSnapshot> selectedTables = tableController.tables(workbook, selection);
+    List<TableEntryReport> selectedTables = tableController.tables(workbook, selection);
     List<WorkbookAnalysis.AnalysisFinding> findings =
         tableController.tableHealthFindings(workbook, selection);
     return new WorkbookAnalysis.TableHealth(

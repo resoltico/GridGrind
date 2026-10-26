@@ -10,21 +10,14 @@ import dev.erst.gridgrind.core.model.table.AutofilterFilterColumnReport;
 import dev.erst.gridgrind.core.model.table.AutofilterFilterCriterionReport;
 import dev.erst.gridgrind.core.model.table.AutofilterSortConditionReport;
 import dev.erst.gridgrind.core.model.table.AutofilterSortStateReport;
-import dev.erst.gridgrind.core.model.table.TableColumnReport;
-import dev.erst.gridgrind.core.model.table.TableEntryReport;
-import dev.erst.gridgrind.core.model.table.TableStyleReport;
 import dev.erst.gridgrind.core.vocabulary.CellAddress;
 import dev.erst.gridgrind.core.vocabulary.RangeLabel;
 import dev.erst.gridgrind.core.vocabulary.SheetLabel;
-import dev.erst.gridgrind.core.vocabulary.TableLabel;
 import dev.erst.gridgrind.excel.ExcelAutofilterFilterColumnSnapshot;
 import dev.erst.gridgrind.excel.ExcelAutofilterFilterCriterionSnapshot;
 import dev.erst.gridgrind.excel.ExcelAutofilterSnapshot;
 import dev.erst.gridgrind.excel.ExcelAutofilterSortConditionSnapshot;
 import dev.erst.gridgrind.excel.ExcelAutofilterSortStateSnapshot;
-import dev.erst.gridgrind.excel.ExcelTableColumnSnapshot;
-import dev.erst.gridgrind.excel.ExcelTableSnapshot;
-import dev.erst.gridgrind.excel.ExcelTableStyleSnapshot;
 import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlDataBindingSnapshot;
 import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlExportSnapshot;
 import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlLinkedCellSnapshot;
@@ -32,8 +25,6 @@ import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlLinkedTableSnapshot;
 import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlMappingSnapshot;
 
 /** Converts workbook structure snapshots such as XML mappings, filters, tables, and pivots. */
-@SuppressWarnings(
-    "PMD.ExcessiveImports") // Corresponding backend and report types define this adapter.
 final class InspectionResultWorkbookStructureReportSupport {
   private InspectionResultWorkbookStructureReportSupport() {}
 
@@ -143,31 +134,6 @@ final class InspectionResultWorkbookStructureReportSupport {
     };
   }
 
-  static TableEntryReport toTableEntryReport(ExcelTableSnapshot snapshot) {
-    return new TableEntryReport(
-        new TableLabel(snapshot.name()),
-        new SheetLabel(snapshot.sheetName()),
-        new RangeLabel(snapshot.range()),
-        new TableEntryReport.Structure(
-            snapshot.structure().headerRowCount(),
-            snapshot.structure().totalsRowCount(),
-            snapshot.structure().columnNames(),
-            snapshot.structure().columns().stream()
-                .map(InspectionResultWorkbookStructureReportSupport::toTableColumnReport)
-                .toList()),
-        toTableStyleReport(snapshot.style()),
-        new TableEntryReport.Behavior(
-            snapshot.behavior().hasAutofilter(),
-            snapshot.behavior().published(),
-            snapshot.behavior().insertRow(),
-            snapshot.behavior().insertRowShift()),
-        new TableEntryReport.Presentation(
-            snapshot.presentation().comment(),
-            snapshot.presentation().headerRowCellStyle(),
-            snapshot.presentation().dataCellStyle(),
-            snapshot.presentation().totalsRowCellStyle()));
-  }
-
   private static AutofilterFilterColumnReport toAutofilterFilterColumnReport(
       ExcelAutofilterFilterColumnSnapshot filterColumn) {
     return new AutofilterFilterColumnReport(
@@ -231,35 +197,5 @@ final class InspectionResultWorkbookStructureReportSupport {
           new AutofilterSortConditionReport.Icon(
               new RangeLabel(icon.range()), icon.descending(), icon.iconId());
     };
-  }
-
-  private static TableColumnReport toTableColumnReport(ExcelTableColumnSnapshot column) {
-    return new TableColumnReport(
-        column.id(),
-        column.name(),
-        optionalText(column.uniqueName()),
-        optionalText(column.totalsRowLabel()),
-        optionalText(column.totalsRowFunction()),
-        optionalText(column.calculatedColumnFormula()));
-  }
-
-  private static TableStyleReport toTableStyleReport(ExcelTableStyleSnapshot snapshot) {
-    return switch (snapshot) {
-      case ExcelTableStyleSnapshot.None _ -> new TableStyleReport.None();
-      case ExcelTableStyleSnapshot.Named named ->
-          new TableStyleReport.Named(
-              named.name(),
-              named.showFirstColumn(),
-              named.showLastColumn(),
-              named.showRowStripes(),
-              named.showColumnStripes());
-    };
-  }
-
-  private static java.util.Optional<String> optionalText(String value) {
-    if (value.isBlank()) {
-      return java.util.Optional.empty();
-    }
-    return java.util.Optional.of(value);
   }
 }

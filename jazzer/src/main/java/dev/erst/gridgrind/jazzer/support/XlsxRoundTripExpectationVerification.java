@@ -3,6 +3,7 @@ package dev.erst.gridgrind.jazzer.support;
 import dev.erst.gridgrind.core.model.pivot.PivotTableReport;
 import dev.erst.gridgrind.core.model.style.CellStyleReport;
 import dev.erst.gridgrind.core.model.style.RichTextRunReport;
+import dev.erst.gridgrind.core.model.table.TableEntryReport;
 import dev.erst.gridgrind.core.model.validation.ConditionalFormattingEntryReport;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.excel.*;
@@ -14,7 +15,6 @@ import dev.erst.gridgrind.excel.ExcelNamedRangeTargets;
 import dev.erst.gridgrind.excel.ExcelRangeSelection;
 import dev.erst.gridgrind.excel.ExcelSheetPane;
 import dev.erst.gridgrind.excel.ExcelTableSelection;
-import dev.erst.gridgrind.excel.ExcelTableSnapshot;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
 import dev.erst.gridgrind.excel.WorkbookExecutionEngine;
 import dev.erst.gridgrind.excel.WorkbookReadCommand;
@@ -501,7 +501,7 @@ final class XlsxRoundTripExpectationVerification {
     }
   }
 
-  static void requireExpectedTables(List<ExcelTableSnapshot> expectedTables, Path workbookPath)
+  static void requireExpectedTables(List<TableEntryReport> expectedTables, Path workbookPath)
       throws IOException {
     if (expectedTables.isEmpty()) {
       return;

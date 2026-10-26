@@ -6,6 +6,8 @@ import dev.erst.gridgrind.core.model.formula.ResolvedFormula;
 import dev.erst.gridgrind.core.model.style.CellStylePatch;
 import dev.erst.gridgrind.core.model.table.ResolvedTable;
 import dev.erst.gridgrind.core.model.table.TableColumnSpec;
+import dev.erst.gridgrind.core.model.table.TableEntryReport;
+import dev.erst.gridgrind.core.model.table.TableStyleReport;
 import dev.erst.gridgrind.core.model.table.TableStyleSpec;
 import dev.erst.gridgrind.core.model.value.CellValue;
 import dev.erst.gridgrind.core.model.value.CellValueSpec;
@@ -46,11 +48,11 @@ class ExcelTableControllerTest {
               false,
               new TableStyleSpec.None()));
 
-      List<ExcelTableSnapshot> tables = controller.tables(workbook, new ExcelTableSelection.All());
+      List<TableEntryReport> tables = controller.tables(workbook, new ExcelTableSelection.All());
       List<ExcelAutofilterSnapshot> autofilters = controller.tableOwnedAutofilters(workbook, "Ops");
 
       assertEquals(1, tables.size());
-      assertEquals("Queue", tables.getFirst().name());
+      assertEquals("Queue", tables.getFirst().name().value());
       assertTrue(tables.getFirst().behavior().hasAutofilter());
       assertFalse(workbook.sheet("Ops").xssfSheet().getCTWorksheet().isSetAutoFilter());
       assertEquals(List.of(new ExcelAutofilterSnapshot.TableOwned("A1:B3", "Queue")), autofilters);
@@ -82,12 +84,12 @@ class ExcelTableControllerTest {
               false,
               new TableStyleSpec.None()));
 
-      List<ExcelTableSnapshot> tables = controller.tables(workbook, new ExcelTableSelection.All());
+      List<TableEntryReport> tables = controller.tables(workbook, new ExcelTableSelection.All());
 
       assertEquals(1, tables.size());
-      assertEquals("A1:B3", tables.getFirst().range());
+      assertEquals("A1:B3", tables.getFirst().range().value());
       assertEquals(0, tables.getFirst().structure().totalsRowCount());
-      assertInstanceOf(ExcelTableStyleSnapshot.None.class, tables.getFirst().style());
+      assertInstanceOf(TableStyleReport.None.class, tables.getFirst().style());
       assertEquals(
           List.of(new ExcelAutofilterSnapshot.TableOwned("A1:B3", "Queue")),
           controller.tableOwnedAutofilters(workbook, "Ops"));
@@ -120,10 +122,10 @@ class ExcelTableControllerTest {
               "",
               List.of(new TableColumnSpec(1, "", "", "SUM", ""))));
 
-      ExcelTableSnapshot table =
+      TableEntryReport table =
           controller.tables(workbook, new ExcelTableSelection.All()).getFirst();
 
-      assertEquals("sum", table.structure().columns().get(1).totalsRowFunction());
+      assertEquals("sum", table.structure().columns().get(1).totalsRowFunction().orElseThrow());
     }
   }
 
@@ -155,7 +157,7 @@ class ExcelTableControllerTest {
                   new TableColumnSpec(0, "OwnerKey", "Total", "", ""),
                   new TableColumnSpec(1, "", "", "SUM", "UPPER([@Task])"))));
 
-      ExcelTableSnapshot authored =
+      TableEntryReport authored =
           controller.tables(workbook, new ExcelTableSelection.All()).getFirst();
       assertEquals("Office queue", authored.presentation().comment().orElseThrow());
       assertTrue(authored.behavior().published());
@@ -164,11 +166,12 @@ class ExcelTableControllerTest {
       assertEquals("Hdr", authored.presentation().headerRowCellStyle().orElseThrow());
       assertEquals("Data", authored.presentation().dataCellStyle().orElseThrow());
       assertEquals("Totals", authored.presentation().totalsRowCellStyle().orElseThrow());
-      assertEquals("OwnerKey", authored.structure().columns().get(0).uniqueName());
-      assertEquals("Total", authored.structure().columns().get(0).totalsRowLabel());
-      assertEquals("sum", authored.structure().columns().get(1).totalsRowFunction());
+      assertEquals("OwnerKey", authored.structure().columns().get(0).uniqueName().orElseThrow());
+      assertEquals("Total", authored.structure().columns().get(0).totalsRowLabel().orElseThrow());
+      assertEquals("sum", authored.structure().columns().get(1).totalsRowFunction().orElseThrow());
       assertEquals(
-          "UPPER([@Task])", authored.structure().columns().get(1).calculatedColumnFormula());
+          "UPPER([@Task])",
+          authored.structure().columns().get(1).calculatedColumnFormula().orElseThrow());
       assertFalse(authored.behavior().hasAutofilter());
 
       controller.setTable(
@@ -191,17 +194,19 @@ class ExcelTableControllerTest {
                   new TableColumnSpec(0, "OwnerKey2", "Overall", "", ""),
                   new TableColumnSpec(1, "", "", "AVERAGE", "LOWER([@Task])"))));
 
-      ExcelTableSnapshot updated =
+      TableEntryReport updated =
           controller.tables(workbook, new ExcelTableSelection.All()).getFirst();
       assertEquals("Updated queue", updated.presentation().comment().orElseThrow());
       assertEquals("Hdr2", updated.presentation().headerRowCellStyle().orElseThrow());
       assertEquals("Data2", updated.presentation().dataCellStyle().orElseThrow());
       assertEquals("Totals2", updated.presentation().totalsRowCellStyle().orElseThrow());
-      assertEquals("OwnerKey2", updated.structure().columns().get(0).uniqueName());
-      assertEquals("Overall", updated.structure().columns().get(0).totalsRowLabel());
-      assertEquals("average", updated.structure().columns().get(1).totalsRowFunction());
+      assertEquals("OwnerKey2", updated.structure().columns().get(0).uniqueName().orElseThrow());
+      assertEquals("Overall", updated.structure().columns().get(0).totalsRowLabel().orElseThrow());
       assertEquals(
-          "LOWER([@Task])", updated.structure().columns().get(1).calculatedColumnFormula());
+          "average", updated.structure().columns().get(1).totalsRowFunction().orElseThrow());
+      assertEquals(
+          "LOWER([@Task])",
+          updated.structure().columns().get(1).calculatedColumnFormula().orElseThrow());
       assertTrue(updated.behavior().hasAutofilter());
 
       controller.setTable(
@@ -223,7 +228,7 @@ class ExcelTableControllerTest {
               List.of(
                   new TableColumnSpec(0, "", "", "", ""), new TableColumnSpec(1, "", "", "", ""))));
 
-      ExcelTableSnapshot cleared =
+      TableEntryReport cleared =
           controller.tables(workbook, new ExcelTableSelection.All()).getFirst();
       assertTrue(cleared.presentation().comment().isEmpty());
       assertFalse(cleared.behavior().published());
@@ -232,10 +237,10 @@ class ExcelTableControllerTest {
       assertTrue(cleared.presentation().headerRowCellStyle().isEmpty());
       assertTrue(cleared.presentation().dataCellStyle().isEmpty());
       assertTrue(cleared.presentation().totalsRowCellStyle().isEmpty());
-      assertEquals("", cleared.structure().columns().get(0).uniqueName());
-      assertEquals("", cleared.structure().columns().get(0).totalsRowLabel());
-      assertEquals("", cleared.structure().columns().get(1).totalsRowFunction());
-      assertEquals("", cleared.structure().columns().get(1).calculatedColumnFormula());
+      assertTrue(cleared.structure().columns().get(0).uniqueName().isEmpty());
+      assertTrue(cleared.structure().columns().get(0).totalsRowLabel().isEmpty());
+      assertTrue(cleared.structure().columns().get(1).totalsRowFunction().isEmpty());
+      assertTrue(cleared.structure().columns().get(1).calculatedColumnFormula().isEmpty());
     }
   }
 
@@ -376,7 +381,7 @@ class ExcelTableControllerTest {
               false,
               new TableStyleSpec.None()));
 
-      ExcelTableSnapshot table =
+      TableEntryReport table =
           controller.tables(workbook, new ExcelTableSelection.All()).getFirst();
       assertEquals(2, table.structure().columnNames().size());
       assertTrue(table.structure().columnNames().stream().allMatch(name -> !name.isBlank()));
@@ -410,16 +415,17 @@ class ExcelTableControllerTest {
               false,
               new TableStyleSpec.None()));
 
-      List<ExcelTableSnapshot> selected =
+      List<TableEntryReport> selected =
           controller.tables(
               workbook,
               new ExcelTableSelection.ByNames(List.of("archivequeue", "missing", "QUEUE")));
 
       assertEquals(
           List.of("ArchiveQueue", "Queue"),
-          selected.stream().map(ExcelTableSnapshot::name).toList());
+          selected.stream().map(table -> table.name().value()).toList());
       assertEquals(
-          List.of("Archive", "Ops"), selected.stream().map(ExcelTableSnapshot::sheetName).toList());
+          List.of("Archive", "Ops"),
+          selected.stream().map(table -> table.sheetName().value()).toList());
     }
   }
 
@@ -716,7 +722,7 @@ class ExcelTableControllerTest {
               true,
               new TableStyleSpec.Named("TableStyleMedium2", false, false, true, false)));
 
-      ExcelTableSnapshot table =
+      TableEntryReport table =
           controller.tables(workbook, new ExcelTableSelection.All()).getFirst();
       assertEquals("A1:B3", controller.tableOwnedAutofilters(workbook, "Ops").getFirst().range());
       assertEquals("A1:B3", ExcelTableStructureSupport.expectedAutofilterRangeText(table));
@@ -1055,7 +1061,7 @@ class ExcelTableControllerTest {
       assertEquals(
           List.of("Legacy", "Queue"),
           controller.tables(workbook, new ExcelTableSelection.All()).stream()
-              .map(ExcelTableSnapshot::name)
+              .map(table -> table.name().value())
               .toList());
     }
   }
@@ -1107,20 +1113,21 @@ class ExcelTableControllerTest {
               false,
               new TableStyleSpec.None()));
 
-      List<ExcelTableSnapshot> tables = controller.tables(workbook, new ExcelTableSelection.All());
+      List<TableEntryReport> tables = controller.tables(workbook, new ExcelTableSelection.All());
       assertEquals(2, tables.size());
       assertTrue(
           tables.stream()
-              .map(ExcelTableSnapshot::name)
+              .map(table -> table.name().value())
               .toList()
               .containsAll(List.of("Queue", "RegionLead")));
       assertEquals(
           "A1:C3",
           tables.stream()
-              .filter(table -> "Queue".equals(table.name()))
+              .filter(table -> "Queue".equals(table.name().value()))
               .findFirst()
               .orElseThrow()
-              .range());
+              .range()
+              .value());
     }
   }
 
@@ -1221,7 +1228,7 @@ class ExcelTableControllerTest {
 
     try (ExcelWorkbook reopened =
         ExcelWorkbooks.open(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory())) {
-      ExcelTableSnapshot table =
+      TableEntryReport table =
           controller.tables(reopened, new ExcelTableSelection.All()).getFirst();
       assertEquals(List.of("", "Lane"), table.structure().columnNames());
       assertTrue(

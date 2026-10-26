@@ -27,6 +27,8 @@ import dev.erst.gridgrind.core.model.style.ResolvedRichText;
 import dev.erst.gridgrind.core.model.style.ResolvedRichTextRun;
 import dev.erst.gridgrind.core.model.table.ResolvedTable;
 import dev.erst.gridgrind.core.model.table.TableColumnSpec;
+import dev.erst.gridgrind.core.model.table.TableEntryReport;
+import dev.erst.gridgrind.core.model.table.TableStyleReport;
 import dev.erst.gridgrind.core.model.table.TableStyleSpec;
 import dev.erst.gridgrind.core.model.validation.ConditionalFormattingEntryReport;
 import dev.erst.gridgrind.core.model.validation.ConditionalFormattingRuleReport;
@@ -630,12 +632,12 @@ class ExcelSheetCopyControllerTest {
                   copiedFormatting.rules().get(1))
               .formula2()
               .orElseThrow());
-      ExcelTableSnapshot copiedTable =
+      TableEntryReport copiedTable =
           tableController.tables(workbook, new ExcelTableSelection.All()).stream()
-              .filter(table -> "Replica".equals(table.sheetName()))
+              .filter(table -> "Replica".equals(table.sheetName().value()))
               .findFirst()
               .orElseThrow();
-      assertEquals("L1:M3", copiedTable.range());
+      assertEquals("L1:M3", copiedTable.range().value());
       assertNotEquals("ReplicaTable", copiedTable.name());
       assertEquals("replica table", copiedTable.presentation().comment().orElseThrow());
       assertTrue(copiedTable.behavior().published());
@@ -825,15 +827,15 @@ class ExcelSheetCopyControllerTest {
       assertInstanceOf(
           ConditionalFormattingRuleReport.Top10Rule.class, copiedFormatting.rules().get(5));
 
-      ExcelTableSnapshot copiedTable =
+      TableEntryReport copiedTable =
           tableController.tables(workbook, new ExcelTableSelection.All()).stream()
-              .filter(table -> "Replica".equals(table.sheetName()))
+              .filter(table -> "Replica".equals(table.sheetName().value()))
               .findFirst()
               .orElseThrow();
-      assertEquals("E1:F4", copiedTable.range());
+      assertEquals("E1:F4", copiedTable.range().value());
       assertEquals(1, copiedTable.structure().totalsRowCount());
       assertFalse(copiedTable.behavior().hasAutofilter());
-      assertInstanceOf(ExcelTableStyleSnapshot.None.class, copiedTable.style());
+      assertInstanceOf(TableStyleReport.None.class, copiedTable.style());
     }
   }
 

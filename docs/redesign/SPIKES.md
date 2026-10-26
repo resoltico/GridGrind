@@ -2133,3 +2133,28 @@ state and stopped that task daemon only. Fresh checks ran afterward.
 
 Inventories: snapshots 32→28, converter lines 3613→3442, Support 206→205, blank checks 413→410,
 main Java 119901→119504. Definitions 2 remain; baseline diff empty. WP-40 remains open.
+
+## WP-40 direct factual table reports
+
+Deleted ExcelTableSnapshot/ExcelTableColumnSnapshot/ExcelTableStyleSnapshot. POI table catalog,
+analysis, copy materialization and semantic selectors use TableEntryReport/ColumnReport/StyleReport.
+The runtime table conversion and leaf conversions are gone. Labels remain typed until parsing,
+lookup, POI or string evidence boundaries. Optional column metadata remains optional for readback;
+copy materialization supplies explicit empty authored fields where absent. Compiler incompatible-type
+checks caught and corrected label/string comparisons in document analysis and table routing.
+
+Initial compile exposed scalar/optional boundaries; follow-up compile caught four equivalent test
+collection/filter comparisons. Removed one now-unnecessary import suppression (24s). Behavior/parity/
+static run had fourteen stale wrapper assertions (45s), then one introspection assertion (25s).
+The first targeted edit missed that exact expression (3s); corrected it, focused test passes (11s).
+Deterministic check/all retained seeds pass (15s). ./gradlew check passes (3m18s), all 143 golden
+cases unchanged, no active mutation/fuzz campaign. Inventories: snapshots 28→25, converter lines
+3442→3374, blank checks 410→409, main Java 119504→119283; definitions 2 and Support 205 remain.
+Baseline diff empty. WP-40 remains open.
+
+Adjacent autofilter review found a pre-existing codec contradiction: Dynamic criteria in core spec
+and report use component `type` as domain payload while the union also owns `type` as discriminator.
+A packaged-JAR codec probe of Dynamic("today",...) throws InvalidDefinitionException for that exact
+property collision (external evidence dynamic-filter-wire-probe.log). The next autofilter slice will
+use a distinct domain field, with codec regressions; this follows D5's discriminator ownership and
+the user's delegated QA authority without adding aliases. Table work above is independent and green.

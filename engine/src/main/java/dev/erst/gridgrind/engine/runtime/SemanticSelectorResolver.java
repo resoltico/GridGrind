@@ -1,6 +1,7 @@
 package dev.erst.gridgrind.engine.runtime;
 
 import dev.erst.gridgrind.core.model.table.ResolvedTable;
+import dev.erst.gridgrind.core.model.table.TableEntryReport;
 import dev.erst.gridgrind.core.model.value.CellValueSpec;
 import dev.erst.gridgrind.core.plan.Assertion;
 import dev.erst.gridgrind.core.plan.CellAssertion;
@@ -21,7 +22,6 @@ import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.excel.ExcelCellSnapshot;
 import dev.erst.gridgrind.excel.ExcelSheet;
-import dev.erst.gridgrind.excel.ExcelTableSnapshot;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
 import dev.erst.gridgrind.excel.WorkbookExecutionEngine;
 import dev.erst.gridgrind.excel.WorkbookReadCommand;
@@ -128,14 +128,14 @@ final class SemanticSelectorResolver {
     if (!resolvedRow.matched()) {
       TableRowSelector.ByKeyCell byKeyCell = (TableRowSelector.ByKeyCell) selector.row();
       return new ResolvedTableCell(
-          resolvedRow.table().sheetName(),
-          resolvedRow.table().name(),
+          resolvedRow.table().sheetName().value(),
+          resolvedRow.table().name().value(),
           byKeyCell.columnName(),
           null);
     }
     return new ResolvedTableCell(
-        resolvedRow.table().sheetName(),
-        resolvedRow.table().name(),
+        resolvedRow.table().sheetName().value(),
+        resolvedRow.table().name().value(),
         selector.columnName(),
         a1Address(
             Objects.requireNonNull(resolvedRow.rowIndex(), "resolved row index must be present"),
@@ -172,7 +172,7 @@ final class SemanticSelectorResolver {
       TableRowSelector.ByKeyCell selector,
       boolean allowZeroMatch) {
     int keyColumnOffset = tableColumnOffset(table.table(), selector.columnName());
-    ExcelSheet sheet = workbook.sheet(table.table().sheetName());
+    ExcelSheet sheet = workbook.sheet(table.table().sheetName().value());
     Integer matchedRowIndex = null;
     for (int rowIndex = table.dataFirstRowIndex();
         rowIndex <= table.dataLastRowIndex();
@@ -184,7 +184,7 @@ final class SemanticSelectorResolver {
         if (matchedRowIndex != null) {
           throw new IllegalArgumentException(
               "table row selector matched more than one row for table "
-                  + table.table().name()
+                  + table.table().name().value()
                   + " column "
                   + selector.columnName());
         }
@@ -197,7 +197,7 @@ final class SemanticSelectorResolver {
       }
       throw new IllegalArgumentException(
           "table row selector matched no rows for table "
-              + table.table().name()
+              + table.table().name().value()
               + " column "
               + selector.columnName());
     }
@@ -219,7 +219,7 @@ final class SemanticSelectorResolver {
                         new StepId(RESOLUTION_STEP_ID),
                         SelectorConverter.toExcelTableSelection(selector)))
                 .getFirst();
-    List<ExcelTableSnapshot> tables = result.tables();
+    List<TableEntryReport> tables = result.tables();
     if (tables.isEmpty()) {
       if (selector instanceof TableSelector.ByName byName) {
         throw new IllegalArgumentException("table not found: " + byName.name());
@@ -231,16 +231,16 @@ final class SemanticSelectorResolver {
               + "@"
               + byNameOnSheet.sheetName());
     }
-    ExcelTableSnapshot table = tables.getFirst();
+    TableEntryReport table = tables.getFirst();
     if (selector instanceof TableSelector.ByNameOnSheet byNameOnSheet
-        && !table.sheetName().equals(byNameOnSheet.sheetName().value())) {
+        && !table.sheetName().value().equals(byNameOnSheet.sheetName().value())) {
       throw new IllegalArgumentException(
           "table not found on expected sheet: "
               + byNameOnSheet.name()
               + "@"
               + byNameOnSheet.sheetName());
     }
-    RangeBounds bounds = RangeBounds.parse(table.range());
+    RangeBounds bounds = RangeBounds.parse(table.range().value());
     return new ResolvedTable(
         table,
         bounds.firstColumn(),
@@ -248,7 +248,7 @@ final class SemanticSelectorResolver {
         bounds.lastRow() - table.structure().totalsRowCount());
   }
 
-  private static int tableColumnOffset(ExcelTableSnapshot table, String columnName) {
+  private static int tableColumnOffset(TableEntryReport table, String columnName) {
     String lookup = columnName.toUpperCase(Locale.ROOT);
     for (int index = 0; index < table.structure().columnNames().size(); index++) {
       if (table.structure().columnNames().get(index).toUpperCase(Locale.ROOT).equals(lookup)) {
@@ -256,7 +256,7 @@ final class SemanticSelectorResolver {
       }
     }
     throw new IllegalArgumentException(
-        "table " + table.name() + " does not contain column " + columnName);
+        "table " + table.name().value() + " does not contain column " + columnName);
   }
 
   private static TableSelector tableSelectorFor(TableRowSelector selector) {
@@ -317,11 +317,11 @@ final class SemanticSelectorResolver {
   }
 
   private record ResolvedTable(
-      ExcelTableSnapshot snapshot,
+      TableEntryReport snapshot,
       int firstColumnIndex,
       int dataFirstRowIndex,
       int dataLastRowIndex) {
-    ExcelTableSnapshot table() {
+    TableEntryReport table() {
       return snapshot;
     }
 
@@ -331,7 +331,7 @@ final class SemanticSelectorResolver {
   }
 
   private record ResolvedTableRow(
-      ExcelTableSnapshot table, @Nullable Integer rowIndex, int firstColumnIndex) {
+      TableEntryReport table, @Nullable Integer rowIndex, int firstColumnIndex) {
     boolean matched() {
       return rowIndex != null;
     }

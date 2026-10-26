@@ -130,7 +130,7 @@ class ExcelWorkbookIntrospectorTest {
               new ExcelAutofilterSnapshot.TableOwned("A1:B3", "Queue")),
           results.autofilters().autofilters());
       assertEquals(1, results.tables().tables().size());
-      assertEquals("Queue", results.tables().tables().getFirst().name());
+      assertEquals("Queue", results.tables().tables().getFirst().name().value());
       assertTrue(results.tables().tables().getFirst().behavior().hasAutofilter());
     }
   }

@@ -4,6 +4,8 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import dev.erst.gridgrind.core.model.style.CellColorReport;
 import dev.erst.gridgrind.core.model.style.ColorSpec;
+import dev.erst.gridgrind.core.model.table.TableEntryReport;
+import dev.erst.gridgrind.core.model.table.TableStyleReport;
 import dev.erst.gridgrind.core.vocabulary.AnalysisFindingCode;
 import dev.erst.gridgrind.core.vocabulary.ExcelAutofilterSortMethod;
 import dev.erst.gridgrind.core.vocabulary.RgbHex;
@@ -750,14 +752,14 @@ class ExcelAutofilterControllerTest {
               "Ops",
               sheet,
               List.of(
-                  new ExcelTableSnapshot(
-                      "Table1",
-                      "Ops",
-                      "A1:B3",
+                  new TableEntryReport(
+                      new dev.erst.gridgrind.core.vocabulary.TableLabel("Table1"),
+                      new dev.erst.gridgrind.core.vocabulary.SheetLabel("Ops"),
+                      new dev.erst.gridgrind.core.vocabulary.RangeLabel("A1:B3"),
                       1,
                       0,
                       List.of("Owner", "Task"),
-                      new ExcelTableStyleSnapshot.None(),
+                      new TableStyleReport.None(),
                       false)));
 
       assertEquals(1, overlapFindings.size());
@@ -793,23 +795,23 @@ class ExcelAutofilterControllerTest {
               "Ops",
               sheet,
               List.of(
-                  new ExcelTableSnapshot(
-                      "Invalid",
-                      "Ops",
-                      "A0:B3",
+                  new TableEntryReport(
+                      new dev.erst.gridgrind.core.vocabulary.TableLabel("Invalid"),
+                      new dev.erst.gridgrind.core.vocabulary.SheetLabel("Ops"),
+                      new dev.erst.gridgrind.core.vocabulary.RangeLabel("A0:B3"),
                       1,
                       0,
                       List.of("Owner", "Task"),
-                      new ExcelTableStyleSnapshot.None(),
+                      new TableStyleReport.None(),
                       false),
-                  new ExcelTableSnapshot(
-                      "Desk",
-                      "Ops",
-                      "D1:E3",
+                  new TableEntryReport(
+                      new dev.erst.gridgrind.core.vocabulary.TableLabel("Desk"),
+                      new dev.erst.gridgrind.core.vocabulary.SheetLabel("Ops"),
+                      new dev.erst.gridgrind.core.vocabulary.RangeLabel("D1:E3"),
                       1,
                       0,
                       List.of("Desk", "Region"),
-                      new ExcelTableStyleSnapshot.None(),
+                      new TableStyleReport.None(),
                       false)));
 
       assertEquals(List.of(), findings);

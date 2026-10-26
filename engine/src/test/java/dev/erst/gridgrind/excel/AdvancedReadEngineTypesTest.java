@@ -12,6 +12,9 @@ import dev.erst.gridgrind.core.model.style.CellGradientFillReport;
 import dev.erst.gridgrind.core.model.style.CellGradientStopReport;
 import dev.erst.gridgrind.core.model.style.ColorSpec;
 import dev.erst.gridgrind.core.model.style.DifferentialStyleReport;
+import dev.erst.gridgrind.core.model.table.TableColumnReport;
+import dev.erst.gridgrind.core.model.table.TableEntryReport;
+import dev.erst.gridgrind.core.model.table.TableStyleReport;
 import dev.erst.gridgrind.core.model.validation.ConditionalFormattingRuleReport;
 import dev.erst.gridgrind.core.vocabulary.ExcelFillPattern;
 import dev.erst.gridgrind.core.vocabulary.RgbHex;
@@ -440,22 +443,33 @@ class AdvancedReadEngineTypesTest {
 
   @Test
   void tableAndConditionalFormattingSnapshotsValidateAdvancedMetadata() {
-    ExcelTableSnapshot normalized =
-        new ExcelTableSnapshot(
-            "BudgetTable",
-            "Budget",
-            "A1:B5",
-            new ExcelTableSnapshot.Structure(
+    TableEntryReport normalized =
+        new TableEntryReport(
+            new dev.erst.gridgrind.core.vocabulary.TableLabel("BudgetTable"),
+            new dev.erst.gridgrind.core.vocabulary.SheetLabel("Budget"),
+            new dev.erst.gridgrind.core.vocabulary.RangeLabel("A1:B5"),
+            new TableEntryReport.Structure(
                 1,
                 1,
                 List.of("Item", "Amount"),
                 List.of(
-                    new ExcelTableColumnSnapshot(1L, "Item", null, null, null, null),
-                    new ExcelTableColumnSnapshot(
-                        2L, "Amount", "UniqueAmount", "Total", "sum", "[@Amount]*2"))),
-            new ExcelTableStyleSnapshot.Named("TableStyleMedium2", false, false, true, false),
-            new ExcelTableSnapshot.Behavior(true, true, true, false),
-            new ExcelTableSnapshot.Presentation(
+                    new TableColumnReport(
+                        1L,
+                        "Item",
+                        Optional.empty(),
+                        Optional.empty(),
+                        Optional.empty(),
+                        Optional.empty()),
+                    new TableColumnReport(
+                        2L,
+                        "Amount",
+                        Optional.ofNullable("UniqueAmount"),
+                        Optional.ofNullable("Total"),
+                        Optional.ofNullable("sum"),
+                        Optional.ofNullable("[@Amount]*2")))),
+            new TableStyleReport.Named("TableStyleMedium2", false, false, true, false),
+            new TableEntryReport.Behavior(true, true, true, false),
+            new TableEntryReport.Presentation(
                 Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty()));
     ConditionalFormattingRuleReport.Top10Rule top10 =
         new ConditionalFormattingRuleReport.Top10Rule(
@@ -481,11 +495,19 @@ class AdvancedReadEngineTypesTest {
 
     assertEquals(Optional.empty(), normalized.presentation().comment());
     assertEquals(Optional.empty(), normalized.presentation().headerRowCellStyle());
-    assertEquals("UniqueAmount", normalized.structure().columns().get(1).uniqueName());
+    assertEquals(
+        "UniqueAmount", normalized.structure().columns().get(1).uniqueName().orElseThrow());
     assertEquals(10, top10.rank());
     assertThrows(
         IllegalArgumentException.class,
-        () -> new ExcelTableColumnSnapshot(-1L, "Item", null, null, null, null));
+        () ->
+            new TableColumnReport(
+                -1L,
+                "Item",
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty()));
     assertThrows(
         IllegalArgumentException.class,
         () ->

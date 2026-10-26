@@ -2,6 +2,8 @@ package dev.erst.gridgrind.excel;
 
 import dev.erst.gridgrind.core.model.table.ResolvedTable;
 import dev.erst.gridgrind.core.model.table.TableColumnSpec;
+import dev.erst.gridgrind.core.model.table.TableEntryReport;
+import dev.erst.gridgrind.core.model.table.TableStyleReport;
 import dev.erst.gridgrind.core.model.table.TableStyleSpec;
 import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
@@ -16,7 +18,7 @@ final class ExcelSheetCopyTableSupport {
   private ExcelSheetCopyTableSupport() {}
 
   static void replaceTables(
-      ExcelWorkbook workbook, String targetSheetName, List<ExcelTableSnapshot> tables) {
+      ExcelWorkbook workbook, String targetSheetName, List<TableEntryReport> tables) {
     List<String> existingTableNames =
         workbook.sheet(targetSheetName).xssfSheet().getTables().stream()
             .map(table -> table.getName())
@@ -32,8 +34,8 @@ final class ExcelSheetCopyTableSupport {
     ExcelWorkbookSheetSupport.requireSheetName(sheetName, "sheetName");
   }
 
-  static List<ExcelTableSnapshot> tablesOnSheet(XSSFSheet sourcePoiSheet) {
-    List<ExcelTableSnapshot> tables = new ArrayList<>();
+  static List<TableEntryReport> tablesOnSheet(XSSFSheet sourcePoiSheet) {
+    List<TableEntryReport> tables = new ArrayList<>();
     for (var table : sourcePoiSheet.getTables()) {
       tables.add(ExcelTableCatalogSupport.toSnapshot(sourcePoiSheet.getSheetName(), table));
     }
@@ -41,23 +43,23 @@ final class ExcelSheetCopyTableSupport {
   }
 
   private static void copyTables(
-      ExcelWorkbook workbook, String targetSheetName, List<ExcelTableSnapshot> tables) {
-    for (ExcelTableSnapshot table : tables) {
+      ExcelWorkbook workbook, String targetSheetName, List<TableEntryReport> tables) {
+    for (TableEntryReport table : tables) {
       workbook.tables().setTable(copiedTableDefinition(workbook, targetSheetName, table));
     }
   }
 
   private static ResolvedTable copiedTableDefinition(
-      ExcelWorkbook workbook, String targetSheetName, ExcelTableSnapshot table) {
+      ExcelWorkbook workbook, String targetSheetName, TableEntryReport table) {
     return new ResolvedTable(
-        new TableName(uniqueCopiedTableName(workbook, table.name())),
+        new TableName(uniqueCopiedTableName(workbook, table.name().value())),
         new SheetName(targetSheetName),
-        new RangeRef(table.range()),
+        new RangeRef(table.range().value()),
         table.structure().totalsRowCount() > 0,
         table.behavior().hasAutofilter(),
         switch (table.style()) {
-          case ExcelTableStyleSnapshot.None _ -> new TableStyleSpec.None();
-          case ExcelTableStyleSnapshot.Named named ->
+          case TableStyleReport.None _ -> new TableStyleSpec.None();
+          case TableStyleReport.Named named ->
               new TableStyleSpec.Named(
                   named.name(),
                   named.showFirstColumn(),
@@ -77,10 +79,10 @@ final class ExcelSheetCopyTableSupport {
                 column ->
                     new TableColumnSpec(
                         Math.toIntExact(column.id() - 1L),
-                        column.uniqueName(),
-                        column.totalsRowLabel(),
-                        column.totalsRowFunction(),
-                        column.calculatedColumnFormula()))
+                        column.uniqueName().orElse(""),
+                        column.totalsRowLabel().orElse(""),
+                        column.totalsRowFunction().orElse(""),
+                        column.calculatedColumnFormula().orElse("")))
             .toList());
   }
 

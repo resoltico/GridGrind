@@ -3,6 +3,8 @@ package dev.erst.gridgrind.excel;
 import static org.junit.jupiter.api.Assertions.*;
 
 import dev.erst.gridgrind.core.model.table.ResolvedTable;
+import dev.erst.gridgrind.core.model.table.TableEntryReport;
+import dev.erst.gridgrind.core.model.table.TableStyleReport;
 import dev.erst.gridgrind.core.model.table.TableStyleSpec;
 import dev.erst.gridgrind.core.model.value.CellValue;
 import dev.erst.gridgrind.core.vocabulary.AnalysisFindingCode;
@@ -22,14 +24,14 @@ class ExcelTableAnalysisSupportTest {
       List<AnalysisFindingCode> brokenCodes =
           ExcelTableAnalysisSupport.tableFindings(
                   workbook,
-                  new ExcelTableSnapshot(
-                      "Queue",
-                      "Ops",
-                      "A1:B2",
+                  new TableEntryReport(
+                      new dev.erst.gridgrind.core.vocabulary.TableLabel("Queue"),
+                      new dev.erst.gridgrind.core.vocabulary.SheetLabel("Ops"),
+                      new dev.erst.gridgrind.core.vocabulary.RangeLabel("A1:B2"),
                       0,
                       1,
                       List.of("", "owner", "Owner"),
-                      new ExcelTableStyleSnapshot.Named("", false, false, true, false),
+                      new TableStyleReport.Named("", false, false, true, false),
                       true))
               .stream()
               .map(WorkbookAnalysis.AnalysisFinding::code)
@@ -44,29 +46,29 @@ class ExcelTableAnalysisSupportTest {
           List.of(),
           ExcelTableAnalysisSupport.tableFindings(
               workbook,
-              new ExcelTableSnapshot(
-                  "Queue",
-                  "Ops",
-                  "A1:B3",
+              new TableEntryReport(
+                  new dev.erst.gridgrind.core.vocabulary.TableLabel("Queue"),
+                  new dev.erst.gridgrind.core.vocabulary.SheetLabel("Ops"),
+                  new dev.erst.gridgrind.core.vocabulary.RangeLabel("A1:B3"),
                   1,
                   0,
                   List.of("Owner", "Task"),
-                  new ExcelTableStyleSnapshot.None(),
+                  new TableStyleReport.None(),
                   true)));
     }
   }
 
   @Test
   void overlapFindingsIgnoreInvalidAndDifferentSheetTablesButReportRealOverlaps() {
-    ExcelTableSnapshot subject =
-        new ExcelTableSnapshot(
-            "Queue",
-            "Ops",
-            "A1:B3",
+    TableEntryReport subject =
+        new TableEntryReport(
+            new dev.erst.gridgrind.core.vocabulary.TableLabel("Queue"),
+            new dev.erst.gridgrind.core.vocabulary.SheetLabel("Ops"),
+            new dev.erst.gridgrind.core.vocabulary.RangeLabel("A1:B3"),
             1,
             0,
             List.of("Owner", "Task"),
-            new ExcelTableStyleSnapshot.None(),
+            new TableStyleReport.None(),
             true);
 
     List<WorkbookAnalysis.AnalysisFinding> findings =
@@ -74,41 +76,41 @@ class ExcelTableAnalysisSupportTest {
             subject,
             List.of(
                 subject,
-                new ExcelTableSnapshot(
-                    "Invalid",
-                    "Ops",
-                    "A0:B3",
+                new TableEntryReport(
+                    new dev.erst.gridgrind.core.vocabulary.TableLabel("Invalid"),
+                    new dev.erst.gridgrind.core.vocabulary.SheetLabel("Ops"),
+                    new dev.erst.gridgrind.core.vocabulary.RangeLabel("A0:B3"),
                     1,
                     0,
                     List.of("Owner", "Task"),
-                    new ExcelTableStyleSnapshot.None(),
+                    new TableStyleReport.None(),
                     false),
-                new ExcelTableSnapshot(
-                    "ArchiveQueue",
-                    "Archive",
-                    "A1:B3",
+                new TableEntryReport(
+                    new dev.erst.gridgrind.core.vocabulary.TableLabel("ArchiveQueue"),
+                    new dev.erst.gridgrind.core.vocabulary.SheetLabel("Archive"),
+                    new dev.erst.gridgrind.core.vocabulary.RangeLabel("A1:B3"),
                     1,
                     0,
                     List.of("Owner", "Task"),
-                    new ExcelTableStyleSnapshot.None(),
+                    new TableStyleReport.None(),
                     false),
-                new ExcelTableSnapshot(
-                    "Desk",
-                    "Ops",
-                    "B1:C3",
+                new TableEntryReport(
+                    new dev.erst.gridgrind.core.vocabulary.TableLabel("Desk"),
+                    new dev.erst.gridgrind.core.vocabulary.SheetLabel("Ops"),
+                    new dev.erst.gridgrind.core.vocabulary.RangeLabel("B1:C3"),
                     1,
                     0,
                     List.of("Desk", "Region"),
-                    new ExcelTableStyleSnapshot.None(),
+                    new TableStyleReport.None(),
                     false),
-                new ExcelTableSnapshot(
-                    "North",
-                    "Ops",
-                    "D1:E3",
+                new TableEntryReport(
+                    new dev.erst.gridgrind.core.vocabulary.TableLabel("North"),
+                    new dev.erst.gridgrind.core.vocabulary.SheetLabel("Ops"),
+                    new dev.erst.gridgrind.core.vocabulary.RangeLabel("D1:E3"),
                     1,
                     0,
                     List.of("Desk", "Region"),
-                    new ExcelTableStyleSnapshot.None(),
+                    new TableStyleReport.None(),
                     false)));
 
     assertEquals(1, findings.size());
@@ -140,7 +142,7 @@ class ExcelTableAnalysisSupportTest {
 
       XSSFSheet poiSheet = workbook.sheet("Ops").xssfSheet();
       XSSFTable healthyTable = poiSheet.getTables().getFirst();
-      ExcelTableSnapshot healthySnapshot =
+      TableEntryReport healthySnapshot =
           controller.tables(workbook, new ExcelTableSelection.All()).getFirst();
       List<WorkbookAnalysis.AnalysisFinding> healthyFindings =
           ExcelTableAnalysisSupport.tableAutofilterFindings(poiSheet, healthySnapshot);

@@ -1,6 +1,7 @@
 package dev.erst.gridgrind.excel;
 
 import dev.erst.gridgrind.core.model.pivot.PivotTableReport;
+import dev.erst.gridgrind.core.model.table.TableEntryReport;
 import dev.erst.gridgrind.core.model.validation.ConditionalFormattingEntryReport;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingObjectPayload;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingObjectSnapshot;
@@ -77,7 +78,7 @@ final class ExcelDocumentIntrospector {
   }
 
   /** Returns factual table metadata selected by workbook-global table name or all tables. */
-  List<ExcelTableSnapshot> tables(ExcelWorkbook workbook, ExcelTableSelection selection) {
+  List<TableEntryReport> tables(ExcelWorkbook workbook, ExcelTableSelection selection) {
     Objects.requireNonNull(workbook, "workbook must not be null");
     Objects.requireNonNull(selection, "selection must not be null");
     return tableController.tables(workbook, selection);

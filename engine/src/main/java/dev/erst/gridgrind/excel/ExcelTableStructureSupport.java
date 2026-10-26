@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.core.model.table.TableEntryReport;
 import dev.erst.gridgrind.core.model.table.TableStyleSpec;
 import java.util.ArrayList;
 import java.util.List;
@@ -93,12 +94,13 @@ final class ExcelTableStructureSupport {
   }
 
   /** Returns the table-owned autofilter range text implied by one factual table snapshot. */
-  static String expectedAutofilterRangeText(ExcelTableSnapshot table) {
+  static String expectedAutofilterRangeText(TableEntryReport table) {
     Objects.requireNonNull(table, "table must not be null");
 
-    Optional<ExcelRange> range = ExcelSheetStructureSupport.parseOptionalRange(table.range());
+    Optional<ExcelRange> range =
+        ExcelSheetStructureSupport.parseOptionalRange(table.range().value());
     if (range.isEmpty()) {
-      return table.range();
+      return table.range().value();
     }
     ExcelRange parsedRange = range.orElseThrow();
     int lastFilterRow =

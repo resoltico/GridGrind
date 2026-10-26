@@ -3,6 +3,7 @@ package dev.erst.gridgrind.excel;
 import static dev.erst.gridgrind.excel.WorkbookResultSupport.copyValues;
 import static dev.erst.gridgrind.excel.WorkbookResultSupport.requireNonBlank;
 
+import dev.erst.gridgrind.core.model.table.TableEntryReport;
 import dev.erst.gridgrind.core.model.validation.ConditionalFormattingEntryReport;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.excel.validation.ExcelDataValidationSnapshot;
@@ -55,8 +56,7 @@ public sealed interface WorkbookRuleResult extends WorkbookReadIntrospectionResu
   }
 
   /** Returns factual table metadata selected by workbook-global table name or all tables. */
-  record TablesResult(StepId stepId, List<ExcelTableSnapshot> tables)
-      implements WorkbookRuleResult {
+  record TablesResult(StepId stepId, List<TableEntryReport> tables) implements WorkbookRuleResult {
     public TablesResult {
 
       java.util.Objects.requireNonNull(stepId, "stepId must not be null");

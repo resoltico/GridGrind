@@ -3,6 +3,8 @@ package dev.erst.gridgrind.excel;
 import static org.junit.jupiter.api.Assertions.*;
 
 import dev.erst.gridgrind.core.model.table.ResolvedTable;
+import dev.erst.gridgrind.core.model.table.TableEntryReport;
+import dev.erst.gridgrind.core.model.table.TableStyleReport;
 import dev.erst.gridgrind.core.model.table.TableStyleSpec;
 import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
@@ -24,9 +26,16 @@ class ExcelTableValueTypesTest {
             new RangeRef("A1:B3"),
             false,
             new TableStyleSpec.None());
-    ExcelTableSnapshot snapshot =
-        new ExcelTableSnapshot(
-            "Queue", "Ops", "A1:B3", 1, 0, columnNames, new ExcelTableStyleSnapshot.None(), true);
+    TableEntryReport snapshot =
+        new TableEntryReport(
+            new dev.erst.gridgrind.core.vocabulary.TableLabel("Queue"),
+            new dev.erst.gridgrind.core.vocabulary.SheetLabel("Ops"),
+            new dev.erst.gridgrind.core.vocabulary.RangeLabel("A1:B3"),
+            1,
+            0,
+            columnNames,
+            new TableStyleReport.None(),
+            true);
     columnNames.clear();
 
     assertEquals(new TableName("Queue"), definition.name());
@@ -76,53 +85,62 @@ class ExcelTableValueTypesTest {
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new ExcelTableSnapshot(
-                "Queue",
-                "Ops",
-                "A1:B3",
+            new TableEntryReport(
+                new dev.erst.gridgrind.core.vocabulary.TableLabel("Queue"),
+                new dev.erst.gridgrind.core.vocabulary.SheetLabel("Ops"),
+                new dev.erst.gridgrind.core.vocabulary.RangeLabel("A1:B3"),
                 -1,
                 0,
                 List.of("Owner"),
-                new ExcelTableStyleSnapshot.None(),
+                new TableStyleReport.None(),
                 false));
     assertThrows(
         NullPointerException.class,
         () ->
-            new ExcelTableSnapshot(
-                "Queue",
-                "Ops",
-                "A1:B3",
+            new TableEntryReport(
+                new dev.erst.gridgrind.core.vocabulary.TableLabel("Queue"),
+                new dev.erst.gridgrind.core.vocabulary.SheetLabel("Ops"),
+                new dev.erst.gridgrind.core.vocabulary.RangeLabel("A1:B3"),
                 1,
                 0,
                 List.of("Owner", null),
-                new ExcelTableStyleSnapshot.None(),
+                new TableStyleReport.None(),
                 false));
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new ExcelTableSnapshot(
-                "Queue",
-                "Ops",
-                "A1:B3",
+            new TableEntryReport(
+                new dev.erst.gridgrind.core.vocabulary.TableLabel("Queue"),
+                new dev.erst.gridgrind.core.vocabulary.SheetLabel("Ops"),
+                new dev.erst.gridgrind.core.vocabulary.RangeLabel("A1:B3"),
                 1,
                 -1,
                 List.of("Owner"),
-                new ExcelTableStyleSnapshot.None(),
+                new TableStyleReport.None(),
                 false));
     assertThrows(
         NullPointerException.class,
-        () -> new ExcelTableSnapshot("Queue", "Ops", "A1:B3", 1, 0, List.of("Owner"), null, false));
-    assertThrows(
-        IllegalArgumentException.class,
         () ->
-            new ExcelTableSnapshot(
-                "Queue",
-                " ",
-                "A1:B3",
+            new TableEntryReport(
+                new dev.erst.gridgrind.core.vocabulary.TableLabel("Queue"),
+                new dev.erst.gridgrind.core.vocabulary.SheetLabel("Ops"),
+                new dev.erst.gridgrind.core.vocabulary.RangeLabel("A1:B3"),
                 1,
                 0,
                 List.of("Owner"),
-                new ExcelTableStyleSnapshot.None(),
+                null,
+                false));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new TableEntryReport(
+                new dev.erst.gridgrind.core.vocabulary.TableLabel("Queue"),
+                new dev.erst.gridgrind.core.vocabulary.SheetLabel(" "),
+                new dev.erst.gridgrind.core.vocabulary.RangeLabel("A1:B3"),
+                1,
+                0,
+                List.of("Owner"),
+                new TableStyleReport.None(),
                 false));
   }
 

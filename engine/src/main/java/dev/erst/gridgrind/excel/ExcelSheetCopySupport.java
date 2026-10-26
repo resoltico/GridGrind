@@ -1,6 +1,7 @@
 package dev.erst.gridgrind.excel;
 
 import dev.erst.gridgrind.core.model.print.ResolvedPrintLayout;
+import dev.erst.gridgrind.core.model.table.TableEntryReport;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -68,7 +69,7 @@ final class ExcelSheetCopySupport {
   }
 
   static void replaceTables(
-      ExcelWorkbook workbook, String targetSheetName, List<ExcelTableSnapshot> tables) {
+      ExcelWorkbook workbook, String targetSheetName, List<TableEntryReport> tables) {
     ExcelSheetCopyTableSupport.replaceTables(workbook, targetSheetName, tables);
   }
 
@@ -125,7 +126,7 @@ final class ExcelSheetCopySupport {
     return ExcelSheetCopyAutofilterSupport.copyableSortCondition(condition);
   }
 
-  static List<ExcelTableSnapshot> tablesOnSheet(XSSFSheet sourcePoiSheet) {
+  static List<TableEntryReport> tablesOnSheet(XSSFSheet sourcePoiSheet) {
     return ExcelSheetCopyTableSupport.tablesOnSheet(sourcePoiSheet);
   }
 

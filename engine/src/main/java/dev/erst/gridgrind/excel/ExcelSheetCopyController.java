@@ -1,6 +1,7 @@
 package dev.erst.gridgrind.excel;
 
 import dev.erst.gridgrind.core.model.print.ResolvedPrintLayout;
+import dev.erst.gridgrind.core.model.table.TableEntryReport;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -205,7 +206,7 @@ final class ExcelSheetCopyController {
       List<org.openxmlformats.schemas.spreadsheetml.x2006.main.CTConditionalFormatting>
           conditionalFormattingBlocks,
       Optional<ExcelAutofilterSnapshot.SheetOwned> sheetAutofilter,
-      List<ExcelTableSnapshot> tables) {
+      List<TableEntryReport> tables) {
     private ExcelSheetCopySnapshot {
       localNamedRanges = List.copyOf(localNamedRanges);
       Objects.requireNonNull(layout, "layout must not be null");

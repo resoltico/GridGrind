@@ -2,6 +2,8 @@ package dev.erst.gridgrind.excel;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.core.model.table.TableEntryReport;
+import dev.erst.gridgrind.core.model.table.TableStyleReport;
 import dev.erst.gridgrind.core.model.table.TableStyleSpec;
 import java.lang.reflect.Proxy;
 import java.util.List;
@@ -106,38 +108,38 @@ class ExcelTableStructureSupportTest {
     assertEquals(
         "A1:B3",
         ExcelTableStructureSupport.expectedAutofilterRangeText(
-            new ExcelTableSnapshot(
-                "Queue",
-                "Ops",
-                "A1:B4",
+            new TableEntryReport(
+                new dev.erst.gridgrind.core.vocabulary.TableLabel("Queue"),
+                new dev.erst.gridgrind.core.vocabulary.SheetLabel("Ops"),
+                new dev.erst.gridgrind.core.vocabulary.RangeLabel("A1:B4"),
                 1,
                 1,
                 List.of("Owner", "Task"),
-                new ExcelTableStyleSnapshot.None(),
+                new TableStyleReport.None(),
                 true)));
     assertEquals(
         "A1:B3",
         ExcelTableStructureSupport.expectedAutofilterRangeText(
-            new ExcelTableSnapshot(
-                "Queue",
-                "Ops",
-                "A1:B3",
+            new TableEntryReport(
+                new dev.erst.gridgrind.core.vocabulary.TableLabel("Queue"),
+                new dev.erst.gridgrind.core.vocabulary.SheetLabel("Ops"),
+                new dev.erst.gridgrind.core.vocabulary.RangeLabel("A1:B3"),
                 1,
                 0,
                 List.of("Owner", "Task"),
-                new ExcelTableStyleSnapshot.None(),
+                new TableStyleReport.None(),
                 true)));
     assertEquals(
         "A0:B3",
         ExcelTableStructureSupport.expectedAutofilterRangeText(
-            new ExcelTableSnapshot(
-                "Queue",
-                "Ops",
-                "A0:B3",
+            new TableEntryReport(
+                new dev.erst.gridgrind.core.vocabulary.TableLabel("Queue"),
+                new dev.erst.gridgrind.core.vocabulary.SheetLabel("Ops"),
+                new dev.erst.gridgrind.core.vocabulary.RangeLabel("A0:B3"),
                 1,
                 0,
                 List.of("Owner", "Task"),
-                new ExcelTableStyleSnapshot.None(),
+                new TableStyleReport.None(),
                 true)));
   }
 

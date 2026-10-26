@@ -3,6 +3,7 @@ package dev.erst.gridgrind.jazzer.support;
 import dev.erst.gridgrind.core.model.pivot.PivotTableReport;
 import dev.erst.gridgrind.core.model.style.CellStyleReport;
 import dev.erst.gridgrind.core.model.style.RichTextRunReport;
+import dev.erst.gridgrind.core.model.table.TableEntryReport;
 import dev.erst.gridgrind.core.model.validation.ConditionalFormattingEntryReport;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.excel.ExcelAutofilterSnapshot;
@@ -13,7 +14,6 @@ import dev.erst.gridgrind.excel.ExcelNamedRangeSnapshot;
 import dev.erst.gridgrind.excel.ExcelNamedRangeTarget;
 import dev.erst.gridgrind.excel.ExcelRangeSelection;
 import dev.erst.gridgrind.excel.ExcelTableSelection;
-import dev.erst.gridgrind.excel.ExcelTableSnapshot;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
 import dev.erst.gridgrind.excel.WorkbookExecutionEngine;
 import dev.erst.gridgrind.excel.WorkbookReadCommand;
@@ -241,7 +241,7 @@ final class XlsxRoundTripExpectedWorkbookSurfaceSupport {
     return List.copyOf(result.pivotTables());
   }
 
-  static List<ExcelTableSnapshot> expectedTables(ExcelWorkbook workbook) {
+  static List<TableEntryReport> expectedTables(ExcelWorkbook workbook) {
     WorkbookExecutionEngine readExecutor = new WorkbookExecutionEngine();
     var result =
         (dev.erst.gridgrind.excel.WorkbookRuleResult.TablesResult)

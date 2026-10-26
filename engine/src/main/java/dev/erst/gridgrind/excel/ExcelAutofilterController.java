@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.core.model.table.TableEntryReport;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -82,7 +83,7 @@ final class ExcelAutofilterController {
 
   /** Returns derived health findings for the sheet-owned autofilter on one sheet. */
   List<WorkbookAnalysis.AnalysisFinding> sheetAutofilterHealthFindings(
-      String sheetName, XSSFSheet sheet, List<ExcelTableSnapshot> tablesOnSheet) {
+      String sheetName, XSSFSheet sheet, List<TableEntryReport> tablesOnSheet) {
     Objects.requireNonNull(sheetName, "sheetName must not be null");
     Objects.requireNonNull(sheet, "sheet must not be null");
     Objects.requireNonNull(tablesOnSheet, "tablesOnSheet must not be null");
@@ -123,9 +124,9 @@ final class ExcelAutofilterController {
     }
 
     List<String> overlappingTables = new ArrayList<>();
-    for (ExcelTableSnapshot table : tablesOnSheet) {
+    for (TableEntryReport table : tablesOnSheet) {
       Optional<ExcelRange> tableRange =
-          ExcelSheetStructureSupport.parseOptionalRange(table.range());
+          ExcelSheetStructureSupport.parseOptionalRange(table.range().value());
       if (tableRange.isPresent()
           && ExcelSheetStructureSupport.intersects(parsedTargetRange, tableRange.orElseThrow())) {
         overlappingTables.add(table.name() + "@" + table.range());

@@ -17,6 +17,8 @@ import dev.erst.gridgrind.core.model.style.CellFillReport;
 import dev.erst.gridgrind.core.model.style.CellFontReport;
 import dev.erst.gridgrind.core.model.style.CellStyleReport;
 import dev.erst.gridgrind.core.model.style.FontHeightReport;
+import dev.erst.gridgrind.core.model.table.TableEntryReport;
+import dev.erst.gridgrind.core.model.table.TableStyleReport;
 import dev.erst.gridgrind.core.model.validation.DataValidationRuleSpec;
 import dev.erst.gridgrind.core.model.validation.ResolvedDataValidation;
 import dev.erst.gridgrind.core.model.validation.ResolvedValidationPrompt;
@@ -490,18 +492,17 @@ class WorkbookReadResultTest {
             List.of(
                 new ExcelAutofilterSnapshot.SheetOwned("E1:F4"),
                 new ExcelAutofilterSnapshot.TableOwned("A1:C4", "BudgetTable")));
-    List<ExcelTableSnapshot> tables =
+    List<TableEntryReport> tables =
         new ArrayList<>(
             List.of(
-                new ExcelTableSnapshot(
-                    "BudgetTable",
-                    "Budget",
-                    "A1:C4",
+                new TableEntryReport(
+                    new dev.erst.gridgrind.core.vocabulary.TableLabel("BudgetTable"),
+                    new dev.erst.gridgrind.core.vocabulary.SheetLabel("Budget"),
+                    new dev.erst.gridgrind.core.vocabulary.RangeLabel("A1:C4"),
                     1,
                     1,
                     List.of("Item", "Amount", "Billable"),
-                    new ExcelTableStyleSnapshot.Named(
-                        "TableStyleMedium2", false, false, true, false),
+                    new TableStyleReport.Named("TableStyleMedium2", false, false, true, false),
                     true)));
     List<WorkbookSurfaceResult.FormulaPattern> formulas =
         new ArrayList<>(
@@ -618,7 +619,7 @@ class WorkbookReadResultTest {
         "conditionalFormattingHealth",
         fixture.conditionalFormattingHealthResult().stepId().value());
     assertEquals("E1:F4", fixture.autofiltersResult().autofilters().getFirst().range());
-    assertEquals("BudgetTable", fixture.tablesResult().tables().getFirst().name());
+    assertEquals("BudgetTable", fixture.tablesResult().tables().getFirst().name().value());
     assertEquals(1, fixture.formulaSurfaceResult().surface().totalFormulaCellCount());
     assertEquals("TEXT", fixture.sheetSchemaResult().surface().columns().getFirst().dominantType());
     assertEquals(
@@ -638,7 +639,7 @@ class WorkbookReadResultTest {
       List<WorkbookSheetResult.RowLayout> resultRows,
       List<ExcelDataValidationSnapshot> validations,
       List<ExcelAutofilterSnapshot> autofilters,
-      List<ExcelTableSnapshot> tables,
+      List<TableEntryReport> tables,
       List<WorkbookSurfaceResult.FormulaPattern> formulas,
       List<WorkbookSurfaceResult.SchemaColumn> schemaColumns,
       List<WorkbookSurfaceResult.NamedRangeSurfaceEntry> namedRangeEntries,

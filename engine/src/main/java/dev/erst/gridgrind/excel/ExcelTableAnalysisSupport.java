@@ -1,5 +1,7 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.core.model.table.TableEntryReport;
+import dev.erst.gridgrind.core.model.table.TableStyleReport;
 import dev.erst.gridgrind.core.vocabulary.AnalysisFindingCode;
 import dev.erst.gridgrind.core.vocabulary.AnalysisSeverity;
 import java.util.ArrayList;
@@ -18,12 +20,13 @@ final class ExcelTableAnalysisSupport {
 
   /** Returns derived health findings for one factual table snapshot. */
   static List<WorkbookAnalysis.AnalysisFinding> tableFindings(
-      ExcelWorkbook workbook, ExcelTableSnapshot table) {
+      ExcelWorkbook workbook, TableEntryReport table) {
     Objects.requireNonNull(workbook, "workbook must not be null");
     Objects.requireNonNull(table, "table must not be null");
 
     List<WorkbookAnalysis.AnalysisFinding> findings = new ArrayList<>();
-    Optional<ExcelRange> parsedRange = ExcelSheetStructureSupport.parseOptionalRange(table.range());
+    Optional<ExcelRange> parsedRange =
+        ExcelSheetStructureSupport.parseOptionalRange(table.range().value());
     WorkbookAnalysis.AnalysisLocation location = tableLocation(table, parsedRange);
     if (parsedRange.isEmpty()) {
       return brokenReferenceFindings(table, location);
@@ -37,15 +40,16 @@ final class ExcelTableAnalysisSupport {
   }
 
   private static WorkbookAnalysis.AnalysisLocation tableLocation(
-      ExcelTableSnapshot table, Optional<ExcelRange> parsedRange) {
+      TableEntryReport table, Optional<ExcelRange> parsedRange) {
     return parsedRange.isEmpty()
-        ? new WorkbookAnalysis.AnalysisLocation.Sheet(table.sheetName())
+        ? new WorkbookAnalysis.AnalysisLocation.Sheet(table.sheetName().value())
         : new WorkbookAnalysis.AnalysisLocation.Range(
-            table.sheetName(), ExcelSheetStructureSupport.formatRange(parsedRange.orElseThrow()));
+            table.sheetName().value(),
+            ExcelSheetStructureSupport.formatRange(parsedRange.orElseThrow()));
   }
 
   private static List<WorkbookAnalysis.AnalysisFinding> brokenReferenceFindings(
-      ExcelTableSnapshot table, WorkbookAnalysis.AnalysisLocation location) {
+      TableEntryReport table, WorkbookAnalysis.AnalysisLocation location) {
     return List.of(
         new WorkbookAnalysis.AnalysisFinding(
             AnalysisFindingCode.TABLE_BROKEN_REFERENCE,
@@ -53,12 +57,12 @@ final class ExcelTableAnalysisSupport {
             "Table range is invalid",
             "Table range could not be parsed from workbook metadata.",
             location,
-            List.of(table.name(), table.range())));
+            List.of(table.name().value(), table.range().value())));
   }
 
   private static void addRowCountFinding(
       List<WorkbookAnalysis.AnalysisFinding> findings,
-      ExcelTableSnapshot table,
+      TableEntryReport table,
       ExcelRange range,
       WorkbookAnalysis.AnalysisLocation location) {
     int minimumRows = table.structure().headerRowCount() + table.structure().totalsRowCount() + 1;
@@ -74,13 +78,13 @@ final class ExcelTableAnalysisSupport {
                   + range.rowCount()
                   + ".",
               location,
-              List.of(table.range())));
+              List.of(table.range().value())));
     }
   }
 
   private static void addHeaderFindings(
       List<WorkbookAnalysis.AnalysisFinding> findings,
-      ExcelTableSnapshot table,
+      TableEntryReport table,
       WorkbookAnalysis.AnalysisLocation location) {
     List<String> duplicateHeaders = new ArrayList<>();
     List<String> blankHeaders = new ArrayList<>();
@@ -102,7 +106,7 @@ final class ExcelTableAnalysisSupport {
               "Table contains blank header cells",
               "Table column headers must be nonblank.",
               location,
-              List.of(table.name(), table.range())));
+              List.of(table.name().value(), table.range().value())));
     }
     if (!duplicateHeaders.isEmpty()) {
       findings.add(
@@ -119,11 +123,11 @@ final class ExcelTableAnalysisSupport {
   private static void addStyleFinding(
       List<WorkbookAnalysis.AnalysisFinding> findings,
       ExcelWorkbook workbook,
-      ExcelTableSnapshot table,
+      TableEntryReport table,
       WorkbookAnalysis.AnalysisLocation location) {
     switch (table.style()) {
-      case ExcelTableStyleSnapshot.None _ -> {}
-      case ExcelTableStyleSnapshot.Named named -> {
+      case TableStyleReport.None _ -> {}
+      case TableStyleReport.Named named -> {
         if (named.name().isBlank()
             || workbook.xssfWorkbook().getStylesSource().getTableStyle(named.name()) == null) {
           findings.add(
@@ -141,32 +145,33 @@ final class ExcelTableAnalysisSupport {
 
   /** Returns derived overlap findings for one factual table snapshot against a peer set. */
   static List<WorkbookAnalysis.AnalysisFinding> overlapFindings(
-      ExcelTableSnapshot table, List<ExcelTableSnapshot> allTables) {
+      TableEntryReport table, List<TableEntryReport> allTables) {
     Objects.requireNonNull(table, "table must not be null");
     Objects.requireNonNull(allTables, "allTables must not be null");
 
-    Optional<ExcelRange> tableRange = ExcelSheetStructureSupport.parseOptionalRange(table.range());
+    Optional<ExcelRange> tableRange =
+        ExcelSheetStructureSupport.parseOptionalRange(table.range().value());
     if (tableRange.isEmpty()) {
       return List.of();
     }
     List<String> overlaps = new ArrayList<>();
-    for (ExcelTableSnapshot other : allTables) {
-      if (other.equals(table) || !other.sheetName().equals(table.sheetName())) {
+    for (TableEntryReport other : allTables) {
+      if (other.equals(table) || !other.sheetName().value().equals(table.sheetName().value())) {
         continue;
       }
       Optional<ExcelRange> otherRange =
-          ExcelSheetStructureSupport.parseOptionalRange(other.range());
+          ExcelSheetStructureSupport.parseOptionalRange(other.range().value());
       if (otherRange.isPresent()
           && ExcelSheetStructureSupport.intersects(
               tableRange.orElseThrow(), otherRange.orElseThrow())) {
-        overlaps.add(other.name() + "@" + other.range());
+        overlaps.add(other.name().value() + "@" + other.range().value());
       }
     }
     if (overlaps.isEmpty()) {
       return List.of();
     }
     List<String> evidence = new ArrayList<>();
-    evidence.add(table.name() + "@" + table.range());
+    evidence.add(table.name().value() + "@" + table.range().value());
     evidence.addAll(overlaps);
     return List.of(
         new WorkbookAnalysis.AnalysisFinding(
@@ -174,24 +179,27 @@ final class ExcelTableAnalysisSupport {
             AnalysisSeverity.ERROR,
             "Table range overlaps another table",
             "Table metadata overlaps one or more other tables on the same sheet.",
-            new WorkbookAnalysis.AnalysisLocation.Range(table.sheetName(), table.range()),
+            new WorkbookAnalysis.AnalysisLocation.Range(
+                table.sheetName().value(), table.range().value()),
             List.copyOf(evidence)));
   }
 
   /** Returns derived autofilter findings for one factual table snapshot on one sheet. */
   static List<WorkbookAnalysis.AnalysisFinding> tableAutofilterFindings(
-      XSSFSheet sheet, ExcelTableSnapshot table) {
+      XSSFSheet sheet, TableEntryReport table) {
     Objects.requireNonNull(sheet, "sheet must not be null");
     Objects.requireNonNull(table, "table must not be null");
 
-    Optional<ExcelRange> tableRange = ExcelSheetStructureSupport.parseOptionalRange(table.range());
+    Optional<ExcelRange> tableRange =
+        ExcelSheetStructureSupport.parseOptionalRange(table.range().value());
     WorkbookAnalysis.AnalysisLocation location =
         tableRange.isEmpty()
-            ? new WorkbookAnalysis.AnalysisLocation.Sheet(table.sheetName())
+            ? new WorkbookAnalysis.AnalysisLocation.Sheet(table.sheetName().value())
             : new WorkbookAnalysis.AnalysisLocation.Range(
-                table.sheetName(), ExcelTableStructureSupport.expectedAutofilterRangeText(table));
+                table.sheetName().value(),
+                ExcelTableStructureSupport.expectedAutofilterRangeText(table));
 
-    XSSFTable xssfTable = ExcelTableCatalogSupport.requiredTableByName(sheet, table.name());
+    XSSFTable xssfTable = ExcelTableCatalogSupport.requiredTableByName(sheet, table.name().value());
     String rawFilterRange =
         Objects.requireNonNullElse(xssfTable.getCTTable().getAutoFilter().getRef(), "");
     Optional<ExcelRange> parsedFilterRange =
@@ -203,8 +211,8 @@ final class ExcelTableAnalysisSupport {
               AnalysisSeverity.ERROR,
               "Table autofilter range is invalid",
               "Table-owned autofilter range could not be parsed from workbook metadata.",
-              new WorkbookAnalysis.AnalysisLocation.Sheet(table.sheetName()),
-              List.of(table.name(), rawFilterRange)));
+              new WorkbookAnalysis.AnalysisLocation.Sheet(table.sheetName().value()),
+              List.of(table.name().value(), rawFilterRange)));
     }
 
     List<WorkbookAnalysis.AnalysisFinding> findings = new ArrayList<>();
@@ -216,7 +224,7 @@ final class ExcelTableAnalysisSupport {
               "Table autofilter header row is blank",
               "Table-owned autofilter range does not contain a nonblank header row.",
               location,
-              List.of(rawFilterRange, table.name())));
+              List.of(rawFilterRange, table.name().value())));
     }
     String expectedRange = ExcelTableStructureSupport.expectedAutofilterRangeText(table);
     if (!ExcelSheetStructureSupport.formatRange(parsedFilterRange.orElseThrow())
@@ -228,7 +236,7 @@ final class ExcelTableAnalysisSupport {
               "Table autofilter does not match table range",
               "Table-owned autofilter range must match the table range excluding any totals row.",
               location,
-              List.of(table.name(), rawFilterRange, expectedRange)));
+              List.of(table.name().value(), rawFilterRange, expectedRange)));
     }
     return List.copyOf(findings);
   }
