@@ -135,8 +135,7 @@ final class InspectionResultReadConverter {
                   sheetLayout.layout()));
       case dev.erst.gridgrind.excel.WorkbookSheetResult.PrintLayoutResult printLayout ->
           new SheetInspectionResult.PrintLayoutResult(
-              printLayout.stepId(),
-              InspectionResultWorkbookLayoutReportSupport.toPrintLayoutReport(printLayout));
+              printLayout.stepId(), printLayout.printLayout());
       case dev.erst.gridgrind.excel.WorkbookRuleResult.DataValidationsResult dataValidations ->
           new SheetInspectionResult.DataValidationsResult(
               dataValidations.stepId(),

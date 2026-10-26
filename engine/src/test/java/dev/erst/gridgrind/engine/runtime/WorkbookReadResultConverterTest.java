@@ -14,14 +14,11 @@ import dev.erst.gridgrind.core.model.drawing.DrawingObjectPayloadReport;
 import dev.erst.gridgrind.core.model.drawing.DrawingObjectReport;
 import dev.erst.gridgrind.core.model.drawing.ResolvedComment;
 import dev.erst.gridgrind.core.model.pivot.PivotTableReport;
+import dev.erst.gridgrind.core.model.print.*;
 import dev.erst.gridgrind.core.model.print.HeaderFooterTextReport;
-import dev.erst.gridgrind.core.model.print.PrintAreaSpec;
+import dev.erst.gridgrind.core.model.print.PrintLayoutReport;
 import dev.erst.gridgrind.core.model.print.PrintMarginsReport;
-import dev.erst.gridgrind.core.model.print.PrintScalingSpec;
 import dev.erst.gridgrind.core.model.print.PrintSetupReport;
-import dev.erst.gridgrind.core.model.print.PrintTitleColumnsSpec;
-import dev.erst.gridgrind.core.model.print.PrintTitleRowsSpec;
-import dev.erst.gridgrind.core.model.print.ResolvedPrintLayout;
 import dev.erst.gridgrind.core.model.protection.CellProtectionReport;
 import dev.erst.gridgrind.core.model.protection.WorkbookProtectionReport;
 import dev.erst.gridgrind.core.model.security.OoxmlEncryptionReport;
@@ -72,7 +69,6 @@ import dev.erst.gridgrind.core.vocabulary.ExcelPictureFormat;
 import dev.erst.gridgrind.core.vocabulary.ExcelPivotDataConsolidateFunction;
 import dev.erst.gridgrind.core.vocabulary.ExcelPrintOrientation;
 import dev.erst.gridgrind.core.vocabulary.ExcelVerticalAlignment;
-import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.core.vocabulary.RgbHex;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.excel.*;
@@ -1020,16 +1016,16 @@ class InspectionResultConverterTest extends DefaultGridGrindRequestExecutorTestS
         false);
   }
 
-  private static ExcelPrintLayoutSnapshot advancedPrintLayout() {
-    return new ExcelPrintLayoutSnapshot(
-        new ResolvedPrintLayout(
-            new PrintAreaSpec.Range(new RangeRef("A1:F20")),
-            ExcelPrintOrientation.LANDSCAPE,
-            new PrintScalingSpec.Fit(1, 0),
-            new PrintTitleRowsSpec.Band(0, 0),
-            new PrintTitleColumnsSpec.None(),
-            new HeaderFooterTextReport("Ops", "Queue", ""),
-            new HeaderFooterTextReport("", "Internal", "Page &P")),
+  private static PrintLayoutReport advancedPrintLayout() {
+    return new PrintLayoutReport(
+        new dev.erst.gridgrind.core.vocabulary.SheetLabel("Budget"),
+        new PrintAreaReport.Range(new dev.erst.gridgrind.core.vocabulary.RangeLabel("A1:F20")),
+        ExcelPrintOrientation.LANDSCAPE,
+        new PrintScalingReport.Fit(1, 0),
+        new PrintTitleRowsReport.Band(0, 0),
+        new PrintTitleColumnsReport.None(),
+        new HeaderFooterTextReport("Ops", "Queue", ""),
+        new HeaderFooterTextReport("", "Internal", "Page &P"),
         new PrintSetupReport(
             new PrintMarginsReport(0.5d, 0.5d, 1.0d, 1.0d, 0.3d, 0.3d),
             true,

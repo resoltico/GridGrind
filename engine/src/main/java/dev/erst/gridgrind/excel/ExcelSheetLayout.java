@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.core.model.print.PrintLayoutReport;
 import dev.erst.gridgrind.core.model.print.ResolvedPrintLayout;
 import java.util.List;
 import java.util.Objects;
@@ -72,7 +73,7 @@ public final class ExcelSheetLayout {
   }
 
   /** Returns the full factual print-layout snapshot currently stored for this sheet. */
-  public ExcelPrintLayoutSnapshot printLayoutSnapshot() {
+  public PrintLayoutReport printLayoutSnapshot() {
     return layoutSupport.printLayoutSnapshot();
   }
 }

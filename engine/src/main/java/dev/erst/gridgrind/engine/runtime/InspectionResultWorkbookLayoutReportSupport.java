@@ -9,15 +9,6 @@ import dev.erst.gridgrind.core.model.layout.SheetDisplayReport;
 import dev.erst.gridgrind.core.model.layout.SheetLayoutReport;
 import dev.erst.gridgrind.core.model.layout.SheetOutlineSummaryReport;
 import dev.erst.gridgrind.core.model.layout.SheetPresentationReport;
-import dev.erst.gridgrind.core.model.print.PrintAreaReport;
-import dev.erst.gridgrind.core.model.print.PrintAreaSpec;
-import dev.erst.gridgrind.core.model.print.PrintLayoutReport;
-import dev.erst.gridgrind.core.model.print.PrintScalingReport;
-import dev.erst.gridgrind.core.model.print.PrintScalingSpec;
-import dev.erst.gridgrind.core.model.print.PrintTitleColumnsReport;
-import dev.erst.gridgrind.core.model.print.PrintTitleColumnsSpec;
-import dev.erst.gridgrind.core.model.print.PrintTitleRowsReport;
-import dev.erst.gridgrind.core.model.print.PrintTitleRowsSpec;
 import dev.erst.gridgrind.core.model.protection.SheetProtectionReport;
 import dev.erst.gridgrind.core.model.validation.IgnoredErrorReport;
 import dev.erst.gridgrind.core.model.value.CellHyperlinkReport;
@@ -128,20 +119,6 @@ final class InspectionResultWorkbookLayoutReportSupport {
             .toList());
   }
 
-  static PrintLayoutReport toPrintLayoutReport(
-      dev.erst.gridgrind.excel.WorkbookSheetResult.PrintLayoutResult printLayout) {
-    return new PrintLayoutReport(
-        new SheetLabel(printLayout.sheetName()),
-        toPrintAreaReport(printLayout.printLayout().layout().printArea()),
-        printLayout.printLayout().layout().orientation(),
-        toPrintScalingReport(printLayout.printLayout().layout().scaling()),
-        toPrintTitleRowsReport(printLayout.printLayout().layout().repeatingRows()),
-        toPrintTitleColumnsReport(printLayout.printLayout().layout().repeatingColumns()),
-        printLayout.printLayout().layout().header(),
-        printLayout.printLayout().layout().footer(),
-        printLayout.printLayout().setup());
-  }
-
   static SheetPresentationReport toSheetPresentationReport(
       ExcelSheetPresentationSnapshot presentation) {
     return new SheetPresentationReport(
@@ -179,38 +156,6 @@ final class InspectionResultWorkbookLayoutReportSupport {
               split.leftmostColumn(),
               split.topRow(),
               split.activePane());
-    };
-  }
-
-  static PrintAreaReport toPrintAreaReport(PrintAreaSpec printArea) {
-    return switch (printArea) {
-      case PrintAreaSpec.None _ -> new PrintAreaReport.None();
-      case PrintAreaSpec.Range range ->
-          new PrintAreaReport.Range(new RangeLabel(range.range().value()));
-    };
-  }
-
-  static PrintScalingReport toPrintScalingReport(PrintScalingSpec scaling) {
-    return switch (scaling) {
-      case PrintScalingSpec.Automatic _ -> new PrintScalingReport.Automatic();
-      case PrintScalingSpec.Fit fit ->
-          new PrintScalingReport.Fit(fit.widthPages(), fit.heightPages());
-    };
-  }
-
-  static PrintTitleRowsReport toPrintTitleRowsReport(PrintTitleRowsSpec repeatingRows) {
-    return switch (repeatingRows) {
-      case PrintTitleRowsSpec.None _ -> new PrintTitleRowsReport.None();
-      case PrintTitleRowsSpec.Band band ->
-          new PrintTitleRowsReport.Band(band.firstRowIndex(), band.lastRowIndex());
-    };
-  }
-
-  static PrintTitleColumnsReport toPrintTitleColumnsReport(PrintTitleColumnsSpec repeatingColumns) {
-    return switch (repeatingColumns) {
-      case PrintTitleColumnsSpec.None _ -> new PrintTitleColumnsReport.None();
-      case PrintTitleColumnsSpec.Band band ->
-          new PrintTitleColumnsReport.Band(band.firstColumnIndex(), band.lastColumnIndex());
     };
   }
 }

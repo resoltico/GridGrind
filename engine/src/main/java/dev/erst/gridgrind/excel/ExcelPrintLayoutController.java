@@ -2,6 +2,7 @@ package dev.erst.gridgrind.excel;
 
 import dev.erst.gridgrind.core.model.print.HeaderFooterTextReport;
 import dev.erst.gridgrind.core.model.print.PrintAreaSpec;
+import dev.erst.gridgrind.core.model.print.PrintLayoutReport;
 import dev.erst.gridgrind.core.model.print.PrintMarginsReport;
 import dev.erst.gridgrind.core.model.print.PrintMarginsSpec;
 import dev.erst.gridgrind.core.model.print.PrintScalingSpec;
@@ -85,11 +86,43 @@ final class ExcelPrintLayoutController {
   }
 
   /** Returns the full factual print-layout snapshot currently stored for the provided sheet. */
-  ExcelPrintLayoutSnapshot printLayoutSnapshot(XSSFSheet sheet) {
+  PrintLayoutReport printLayoutSnapshot(XSSFSheet sheet) {
     Objects.requireNonNull(sheet, "sheet must not be null");
-    PrintSetupSpec setup = ExcelPrintLayoutReadSupport.setup(sheet);
-    return new ExcelPrintLayoutSnapshot(
-        printLayout(sheet),
+    var layout = printLayout(sheet);
+    PrintSetupSpec setup = layout.setup();
+    return new PrintLayoutReport(
+        new dev.erst.gridgrind.core.vocabulary.SheetLabel(sheet.getSheetName()),
+        switch (layout.printArea()) {
+          case PrintAreaSpec.None _ ->
+              new dev.erst.gridgrind.core.model.print.PrintAreaReport.None();
+          case PrintAreaSpec.Range value ->
+              new dev.erst.gridgrind.core.model.print.PrintAreaReport.Range(
+                  new dev.erst.gridgrind.core.vocabulary.RangeLabel(value.range().value()));
+        },
+        layout.orientation(),
+        switch (layout.scaling()) {
+          case PrintScalingSpec.Automatic _ ->
+              new dev.erst.gridgrind.core.model.print.PrintScalingReport.Automatic();
+          case PrintScalingSpec.Fit value ->
+              new dev.erst.gridgrind.core.model.print.PrintScalingReport.Fit(
+                  value.widthPages(), value.heightPages());
+        },
+        switch (layout.repeatingRows()) {
+          case PrintTitleRowsSpec.None _ ->
+              new dev.erst.gridgrind.core.model.print.PrintTitleRowsReport.None();
+          case PrintTitleRowsSpec.Band value ->
+              new dev.erst.gridgrind.core.model.print.PrintTitleRowsReport.Band(
+                  value.firstRowIndex(), value.lastRowIndex());
+        },
+        switch (layout.repeatingColumns()) {
+          case PrintTitleColumnsSpec.None _ ->
+              new dev.erst.gridgrind.core.model.print.PrintTitleColumnsReport.None();
+          case PrintTitleColumnsSpec.Band value ->
+              new dev.erst.gridgrind.core.model.print.PrintTitleColumnsReport.Band(
+                  value.firstColumnIndex(), value.lastColumnIndex());
+        },
+        layout.header(),
+        layout.footer(),
         new PrintSetupReport(
             new PrintMarginsReport(
                 setup.margins().left(),

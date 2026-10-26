@@ -9,6 +9,7 @@ import dev.erst.gridgrind.core.model.drawing.ResolvedEmbeddedObject;
 import dev.erst.gridgrind.core.model.drawing.ResolvedPicture;
 import dev.erst.gridgrind.core.model.formula.ResolvedFormula;
 import dev.erst.gridgrind.core.model.formula.ResolvedRawFormula;
+import dev.erst.gridgrind.core.model.print.*;
 import dev.erst.gridgrind.core.model.print.HeaderFooterTextReport;
 import dev.erst.gridgrind.core.model.print.PrintAreaSpec;
 import dev.erst.gridgrind.core.model.print.PrintScalingSpec;
@@ -110,8 +111,7 @@ class ExcelWorkbookIntrospectorTest {
       assertEquals(new ExcelSheetPane.Frozen(1, 1, 1, 1), results.layout().layout().pane());
       assertEquals(130, results.layout().layout().zoomPercent());
       assertEquals(
-          ExcelPrintOrientation.LANDSCAPE,
-          results.printLayout().printLayout().layout().orientation());
+          ExcelPrintOrientation.LANDSCAPE, results.printLayout().printLayout().orientation());
       assertEquals(1, results.formulaSurface().surface().totalFormulaCellCount());
       assertEquals(
           "SUM(B2:B3)",

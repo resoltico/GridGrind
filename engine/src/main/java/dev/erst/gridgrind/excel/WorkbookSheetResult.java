@@ -4,6 +4,7 @@ import static dev.erst.gridgrind.excel.WorkbookResultSupport.copyValues;
 import static dev.erst.gridgrind.excel.WorkbookResultSupport.requireNonBlank;
 
 import dev.erst.gridgrind.core.model.drawing.CommentReport;
+import dev.erst.gridgrind.core.model.print.PrintLayoutReport;
 import dev.erst.gridgrind.core.model.protection.SheetProtectionSettings;
 import dev.erst.gridgrind.core.vocabulary.ExcelIndexDisplay;
 import dev.erst.gridgrind.core.vocabulary.ExcelSheetVisibility;
@@ -118,7 +119,7 @@ public sealed interface WorkbookSheetResult extends WorkbookReadIntrospectionRes
   }
 
   /** Returns supported print-layout metadata for one sheet. */
-  record PrintLayoutResult(StepId stepId, String sheetName, ExcelPrintLayoutSnapshot printLayout)
+  record PrintLayoutResult(StepId stepId, String sheetName, PrintLayoutReport printLayout)
       implements WorkbookSheetResult {
     public PrintLayoutResult {
 

@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.core.model.print.PrintLayoutReport;
 import dev.erst.gridgrind.core.model.print.ResolvedPrintLayout;
 import java.util.ArrayList;
 import java.util.List;
@@ -104,7 +105,7 @@ final class ExcelSheetLayoutSupport {
     return printLayoutController.printLayout(xssfSheet());
   }
 
-  ExcelPrintLayoutSnapshot printLayoutSnapshot() {
+  PrintLayoutReport printLayoutSnapshot() {
     return printLayoutController.printLayoutSnapshot(xssfSheet());
   }
 

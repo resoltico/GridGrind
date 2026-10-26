@@ -2057,3 +2057,16 @@ All 143 golden cases unchanged; no active mutation/fuzz campaign. Inventories: c
 3874→3779, blank checks 417→416, main Java 120662→120273. Snapshots 34, definitions 2 and Support
 206 remain open. Baseline diff empty. The selected-range block and named-range definition, factual
 model drain and real resolved plan/step/target execution cutover remain WP-40 work.
+
+## WP-40 direct print-layout reports
+
+Deleted ExcelPrintLayoutSnapshot. The POI adapter returns PrintLayoutReport with sheet identity,
+print-area/scaling/title-band facts, header/footer and setup. Inspection passes that report directly;
+removed the runtime print conversion and its now-unused leaf conversion helpers. Existing resolved
+print state is still used by sheet-copy materialization; this checkpoint does not claim that separate
+copy/read path has been consolidated. Removed one unused fixture helper and one duplicate setup read.
+
+All source sets compile (20s); engine behavior/14 parity/static checks pass (40s). Deterministic check
+and all retained seeds pass (16s). ./gradlew check passes (3m03s), all 143 golden cases unchanged.
+No active mutation/fuzz campaign. Inventories: snapshots 34→33, converter lines 3779→3723, main Java
+120273→120241; definitions 2, Support 206 and blank checks 416 remain open. Baseline diff empty.

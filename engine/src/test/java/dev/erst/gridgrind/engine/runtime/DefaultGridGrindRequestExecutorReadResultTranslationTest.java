@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import dev.erst.gridgrind.core.model.drawing.CommentReport;
 import dev.erst.gridgrind.core.model.formula.NamedRangeReport;
 import dev.erst.gridgrind.core.model.layout.PaneReport;
+import dev.erst.gridgrind.core.model.print.*;
 import dev.erst.gridgrind.core.model.print.PrintAreaReport;
 import dev.erst.gridgrind.core.model.print.PrintScalingReport;
 import dev.erst.gridgrind.core.model.print.PrintTitleColumnsReport;
@@ -22,7 +23,6 @@ import dev.erst.gridgrind.core.vocabulary.ExcelPaneRegion;
 import dev.erst.gridgrind.core.vocabulary.ExcelPrintOrientation;
 import dev.erst.gridgrind.core.vocabulary.ExcelSheetVisibility;
 import dev.erst.gridgrind.core.vocabulary.NamedRangeBackingKind;
-import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.core.vocabulary.RgbHex;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.excel.*;
@@ -137,18 +137,18 @@ class DefaultGridGrindRequestExecutorReadResultTranslationTest
             new dev.erst.gridgrind.excel.WorkbookSheetResult.PrintLayoutResult(
                 new StepId("printLayout"),
                 "Budget",
-                new dev.erst.gridgrind.excel.ExcelPrintLayoutSnapshot(
-                    new dev.erst.gridgrind.core.model.print.ResolvedPrintLayout(
-                        new dev.erst.gridgrind.core.model.print.PrintAreaSpec.Range(
-                            new RangeRef("A1:B20")),
-                        ExcelPrintOrientation.LANDSCAPE,
-                        new dev.erst.gridgrind.core.model.print.PrintScalingSpec.Fit(1, 0),
-                        new dev.erst.gridgrind.core.model.print.PrintTitleRowsSpec.Band(0, 0),
-                        new dev.erst.gridgrind.core.model.print.PrintTitleColumnsSpec.Band(0, 0),
-                        new dev.erst.gridgrind.core.model.print.HeaderFooterTextReport(
-                            "Budget", "", ""),
-                        new dev.erst.gridgrind.core.model.print.HeaderFooterTextReport(
-                            "", "Page &P", "")),
+                new dev.erst.gridgrind.core.model.print.PrintLayoutReport(
+                    new dev.erst.gridgrind.core.vocabulary.SheetLabel("Budget"),
+                    new dev.erst.gridgrind.core.model.print.PrintAreaReport.Range(
+                        new dev.erst.gridgrind.core.vocabulary.RangeLabel("A1:B20")),
+                    ExcelPrintOrientation.LANDSCAPE,
+                    new dev.erst.gridgrind.core.model.print.PrintScalingReport.Fit(1, 0),
+                    new dev.erst.gridgrind.core.model.print.PrintTitleRowsReport.Band(0, 0),
+                    new dev.erst.gridgrind.core.model.print.PrintTitleColumnsReport.Band(0, 0),
+                    new dev.erst.gridgrind.core.model.print.HeaderFooterTextReport(
+                        "Budget", "", ""),
+                    new dev.erst.gridgrind.core.model.print.HeaderFooterTextReport(
+                        "", "Page &P", ""),
                     defaultPrintSetupSnapshot())));
     InspectionResult conditionalFormatting =
         InspectionResultConverter.toReadResult(
@@ -566,17 +566,15 @@ class DefaultGridGrindRequestExecutorReadResultTranslationTest
                 new dev.erst.gridgrind.excel.WorkbookSheetResult.PrintLayoutResult(
                     new StepId("print-layout"),
                     "Budget",
-                    new dev.erst.gridgrind.excel.ExcelPrintLayoutSnapshot(
-                        new dev.erst.gridgrind.core.model.print.ResolvedPrintLayout(
-                            new dev.erst.gridgrind.core.model.print.PrintAreaSpec.None(),
-                            ExcelPrintOrientation.PORTRAIT,
-                            new dev.erst.gridgrind.core.model.print.PrintScalingSpec.Automatic(),
-                            new dev.erst.gridgrind.core.model.print.PrintTitleRowsSpec.None(),
-                            new dev.erst.gridgrind.core.model.print.PrintTitleColumnsSpec.None(),
-                            new dev.erst.gridgrind.core.model.print.HeaderFooterTextReport(
-                                "", "", ""),
-                            new dev.erst.gridgrind.core.model.print.HeaderFooterTextReport(
-                                "", "", "")),
+                    new dev.erst.gridgrind.core.model.print.PrintLayoutReport(
+                        new dev.erst.gridgrind.core.vocabulary.SheetLabel("Budget"),
+                        new dev.erst.gridgrind.core.model.print.PrintAreaReport.None(),
+                        ExcelPrintOrientation.PORTRAIT,
+                        new dev.erst.gridgrind.core.model.print.PrintScalingReport.Automatic(),
+                        new dev.erst.gridgrind.core.model.print.PrintTitleRowsReport.None(),
+                        new dev.erst.gridgrind.core.model.print.PrintTitleColumnsReport.None(),
+                        new dev.erst.gridgrind.core.model.print.HeaderFooterTextReport("", "", ""),
+                        new dev.erst.gridgrind.core.model.print.HeaderFooterTextReport("", "", ""),
                         defaultPrintSetupSnapshot()))));
 
     PaneReport.Split pane = assertInstanceOf(PaneReport.Split.class, layout.layout().pane());

@@ -3,14 +3,11 @@ package dev.erst.gridgrind.excel;
 import static org.junit.jupiter.api.Assertions.*;
 
 import dev.erst.gridgrind.core.model.drawing.CommentReport;
+import dev.erst.gridgrind.core.model.print.*;
 import dev.erst.gridgrind.core.model.print.HeaderFooterTextReport;
-import dev.erst.gridgrind.core.model.print.PrintAreaSpec;
+import dev.erst.gridgrind.core.model.print.PrintLayoutReport;
 import dev.erst.gridgrind.core.model.print.PrintMarginsReport;
-import dev.erst.gridgrind.core.model.print.PrintScalingSpec;
 import dev.erst.gridgrind.core.model.print.PrintSetupReport;
-import dev.erst.gridgrind.core.model.print.PrintTitleColumnsSpec;
-import dev.erst.gridgrind.core.model.print.PrintTitleRowsSpec;
-import dev.erst.gridgrind.core.model.print.ResolvedPrintLayout;
 import dev.erst.gridgrind.core.model.protection.CellProtectionReport;
 import dev.erst.gridgrind.core.model.style.CellAlignmentReport;
 import dev.erst.gridgrind.core.model.style.CellBorderReport;
@@ -31,7 +28,6 @@ import dev.erst.gridgrind.core.vocabulary.ExcelPivotDataConsolidateFunction;
 import dev.erst.gridgrind.core.vocabulary.ExcelPrintOrientation;
 import dev.erst.gridgrind.core.vocabulary.ExcelSheetVisibility;
 import dev.erst.gridgrind.core.vocabulary.ExcelVerticalAlignment;
-import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.excel.pivot.ExcelPivotTableSnapshot;
 import dev.erst.gridgrind.excel.validation.ExcelDataValidationSnapshot;
@@ -674,20 +670,16 @@ class WorkbookReadResultTest {
     }
   }
 
-  private static ResolvedPrintLayout defaultPrintLayout() {
-    return new ResolvedPrintLayout(
-        new PrintAreaSpec.Range(new RangeRef("A1:B20")),
+  private static PrintLayoutReport defaultPrintLayoutSnapshot() {
+    return new PrintLayoutReport(
+        new dev.erst.gridgrind.core.vocabulary.SheetLabel("Budget"),
+        new PrintAreaReport.Range(new dev.erst.gridgrind.core.vocabulary.RangeLabel("A1:B20")),
         ExcelPrintOrientation.LANDSCAPE,
-        new PrintScalingSpec.Fit(1, 0),
-        new PrintTitleRowsSpec.Band(0, 0),
-        new PrintTitleColumnsSpec.Band(0, 0),
+        new PrintScalingReport.Fit(1, 0),
+        new PrintTitleRowsReport.Band(0, 0),
+        new PrintTitleColumnsReport.Band(0, 0),
         new HeaderFooterTextReport("Budget", "", "2026"),
-        new HeaderFooterTextReport("", "Confidential", ""));
-  }
-
-  private static ExcelPrintLayoutSnapshot defaultPrintLayoutSnapshot() {
-    return new ExcelPrintLayoutSnapshot(
-        defaultPrintLayout(),
+        new HeaderFooterTextReport("", "Confidential", ""),
         new PrintSetupReport(
             new PrintMarginsReport(0.0d, 0.0d, 0.0d, 0.0d, 0.0d, 0.0d),
             false,

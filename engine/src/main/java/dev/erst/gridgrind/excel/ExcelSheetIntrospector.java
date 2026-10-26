@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.core.model.print.PrintLayoutReport;
 import java.util.List;
 import java.util.Objects;
 
@@ -54,7 +55,7 @@ final class ExcelSheetIntrospector {
   }
 
   /** Returns supported print-layout metadata for one sheet. */
-  ExcelPrintLayoutSnapshot printLayout(ExcelSheet sheet) {
+  PrintLayoutReport printLayout(ExcelSheet sheet) {
     Objects.requireNonNull(sheet, "sheet must not be null");
     return sheet.layout().printLayoutSnapshot();
   }
