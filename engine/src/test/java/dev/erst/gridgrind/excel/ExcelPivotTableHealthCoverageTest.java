@@ -4,6 +4,8 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import dev.erst.gridgrind.core.model.pivot.PivotTableReport;
 import dev.erst.gridgrind.core.model.pivot.PivotTableSpec;
+import dev.erst.gridgrind.core.result.AnalysisFindingReport;
+import dev.erst.gridgrind.core.result.AnalysisLocationReport;
 import dev.erst.gridgrind.core.vocabulary.AnalysisFindingCode;
 import dev.erst.gridgrind.core.vocabulary.AnalysisSeverity;
 import dev.erst.gridgrind.excel.pivot.ExcelPivotTableSelection;
@@ -54,7 +56,7 @@ class ExcelPivotTableHealthCoverageTest extends ExcelPivotTableCoverageTestSuppo
 
       List<AnalysisFindingCode> duplicateCodes =
           controller.pivotTableHealthFindings(workbook, new ExcelPivotTableSelection.All()).stream()
-              .map(WorkbookAnalysis.AnalysisFinding::code)
+              .map(AnalysisFindingReport::code)
               .toList();
       assertTrue(duplicateCodes.contains(AnalysisFindingCode.PIVOT_TABLE_DUPLICATE_NAME));
 
@@ -69,18 +71,18 @@ class ExcelPivotTableHealthCoverageTest extends ExcelPivotTableCoverageTestSuppo
           Optional.empty(), invoke(controller, "rawLocationRange", Object.class, firstHandle));
       assertEquals(Optional.empty(), invoke(controller, "safeLocation", Object.class, firstHandle));
 
-      WorkbookAnalysis.AnalysisFinding sheetFinding =
+      AnalysisFindingReport sheetFinding =
           invoke(
               controller,
               "finding",
-              WorkbookAnalysis.AnalysisFinding.class,
+              AnalysisFindingReport.class,
               AnalysisFindingCode.PIVOT_TABLE_UNSUPPORTED_DETAIL,
               AnalysisSeverity.ERROR,
               firstHandle,
               "Broken Pivot",
               "Location missing",
               List.of("evidence"));
-      assertInstanceOf(WorkbookAnalysis.AnalysisLocation.Sheet.class, sheetFinding.location());
+      assertInstanceOf(AnalysisLocationReport.Sheet.class, sheetFinding.location());
       assertTrue(
           invoke(controller, "resolvedName", String.class, firstHandle)
               .startsWith("_GG_PIVOT_Report_"));
@@ -99,7 +101,7 @@ class ExcelPivotTableHealthCoverageTest extends ExcelPivotTableCoverageTestSuppo
       assertTrue(PoiRelationRemoval.defaultRemover().test(cacheDefinition, cacheRecords));
       List<AnalysisFindingCode> codes =
           controller.pivotTableHealthFindings(workbook, new ExcelPivotTableSelection.All()).stream()
-              .map(WorkbookAnalysis.AnalysisFinding::code)
+              .map(AnalysisFindingReport::code)
               .toList();
       assertTrue(codes.contains(AnalysisFindingCode.PIVOT_TABLE_MISSING_CACHE_RECORDS));
     }
@@ -116,7 +118,7 @@ class ExcelPivotTableHealthCoverageTest extends ExcelPivotTableCoverageTestSuppo
 
       List<AnalysisFindingCode> codes =
           controller.pivotTableHealthFindings(workbook, new ExcelPivotTableSelection.All()).stream()
-              .map(WorkbookAnalysis.AnalysisFinding::code)
+              .map(AnalysisFindingReport::code)
               .toList();
       assertTrue(codes.contains(AnalysisFindingCode.PIVOT_TABLE_MISSING_WORKBOOK_CACHE));
     }
@@ -183,7 +185,7 @@ class ExcelPivotTableHealthCoverageTest extends ExcelPivotTableCoverageTestSuppo
       assertTrue(snapshot.detail().contains("location range"));
       List<AnalysisFindingCode> codes =
           controller.pivotTableHealthFindings(workbook, new ExcelPivotTableSelection.All()).stream()
-              .map(WorkbookAnalysis.AnalysisFinding::code)
+              .map(AnalysisFindingReport::code)
               .toList();
       assertTrue(codes.contains(AnalysisFindingCode.PIVOT_TABLE_UNSUPPORTED_DETAIL));
     }
@@ -210,7 +212,7 @@ class ExcelPivotTableHealthCoverageTest extends ExcelPivotTableCoverageTestSuppo
 
       List<AnalysisFindingCode> codes =
           controller.pivotTableHealthFindings(workbook, new ExcelPivotTableSelection.All()).stream()
-              .map(WorkbookAnalysis.AnalysisFinding::code)
+              .map(AnalysisFindingReport::code)
               .toList();
       assertTrue(codes.contains(AnalysisFindingCode.PIVOT_TABLE_BROKEN_SOURCE));
     }

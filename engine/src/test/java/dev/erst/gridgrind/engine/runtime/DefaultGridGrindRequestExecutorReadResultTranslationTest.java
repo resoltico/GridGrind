@@ -265,18 +265,18 @@ class DefaultGridGrindRequestExecutorReadResultTranslationTest
         InspectionResultConverter.toReadResult(
             new dev.erst.gridgrind.excel.WorkbookAnalysisResult.FormulaHealthResult(
                 new StepId("formula-health"),
-                new dev.erst.gridgrind.excel.WorkbookAnalysis.FormulaHealth(
+                new dev.erst.gridgrind.core.model.formula.FormulaHealthReport(
                     1,
-                    new dev.erst.gridgrind.excel.WorkbookAnalysis.AnalysisSummary(1, 0, 0, 1),
+                    new dev.erst.gridgrind.core.result.AnalysisSummaryReport(1, 0, 0, 1),
                     List.of(
-                        new dev.erst.gridgrind.excel.WorkbookAnalysis.AnalysisFinding(
+                        new dev.erst.gridgrind.core.result.AnalysisFindingReport(
                             dev.erst.gridgrind.core.vocabulary.AnalysisFindingCode
                                 .FORMULA_VOLATILE_FUNCTION,
                             dev.erst.gridgrind.core.vocabulary.AnalysisSeverity.INFO,
                             "Volatile formula",
                             "Formula uses NOW().",
-                            new dev.erst.gridgrind.excel.WorkbookAnalysis.AnalysisLocation.Cell(
-                                "Budget", "B4"),
+                            new dev.erst.gridgrind.core.result.AnalysisLocationReport.Cell(
+                                new dev.erst.gridgrind.core.vocabulary.SheetLabel("Budget"), "B4"),
                             List.of("NOW()"))))));
 
     assertInstanceOf(WorkbookInspectionResult.WorkbookSummaryResult.class, workbookSummary);
@@ -397,77 +397,76 @@ class DefaultGridGrindRequestExecutorReadResultTranslationTest
         InspectionResultConverter.toReadResult(
             new dev.erst.gridgrind.excel.WorkbookAnalysisResult.ConditionalFormattingHealthResult(
                 new StepId("conditional-formatting-health"),
-                new dev.erst.gridgrind.excel.WorkbookAnalysis.ConditionalFormattingHealth(
+                new dev.erst.gridgrind.core.model.validation.ConditionalFormattingHealthReport(
                     1,
-                    new dev.erst.gridgrind.excel.WorkbookAnalysis.AnalysisSummary(1, 1, 0, 0),
+                    new dev.erst.gridgrind.core.result.AnalysisSummaryReport(1, 1, 0, 0),
                     List.of(
-                        new dev.erst.gridgrind.excel.WorkbookAnalysis.AnalysisFinding(
+                        new dev.erst.gridgrind.core.result.AnalysisFindingReport(
                             dev.erst.gridgrind.core.vocabulary.AnalysisFindingCode
                                 .CONDITIONAL_FORMATTING_PRIORITY_COLLISION,
                             dev.erst.gridgrind.core.vocabulary.AnalysisSeverity.ERROR,
                             "Priority collision",
                             "Conditional-formatting priorities collide.",
-                            new dev.erst.gridgrind.excel.WorkbookAnalysis.AnalysisLocation.Sheet(
-                                "Budget"),
+                            new dev.erst.gridgrind.core.result.AnalysisLocationReport.Sheet(
+                                new dev.erst.gridgrind.core.vocabulary.SheetLabel("Budget")),
                             List.of("FORMULA_RULE@Budget!A1:A3"))))));
     InspectionResult hyperlinkHealth =
         InspectionResultConverter.toReadResult(
             new dev.erst.gridgrind.excel.WorkbookAnalysisResult.HyperlinkHealthResult(
                 new StepId("hyperlink-health"),
-                new dev.erst.gridgrind.excel.WorkbookAnalysis.HyperlinkHealth(
+                new dev.erst.gridgrind.core.model.value.HyperlinkHealthReport(
                     2,
-                    new dev.erst.gridgrind.excel.WorkbookAnalysis.AnalysisSummary(2, 1, 1, 0),
+                    new dev.erst.gridgrind.core.result.AnalysisSummaryReport(2, 1, 1, 0),
                     List.of(
-                        new dev.erst.gridgrind.excel.WorkbookAnalysis.AnalysisFinding(
+                        new dev.erst.gridgrind.core.result.AnalysisFindingReport(
                             dev.erst.gridgrind.core.vocabulary.AnalysisFindingCode
                                 .HYPERLINK_MALFORMED_TARGET,
                             dev.erst.gridgrind.core.vocabulary.AnalysisSeverity.ERROR,
                             "Malformed hyperlink target",
                             "Hyperlink target is malformed.",
-                            new dev.erst.gridgrind.excel.WorkbookAnalysis.AnalysisLocation
-                                .Workbook(),
+                            new dev.erst.gridgrind.core.result.AnalysisLocationReport.Workbook(),
                             List.of("mailto:")),
-                        new dev.erst.gridgrind.excel.WorkbookAnalysis.AnalysisFinding(
+                        new dev.erst.gridgrind.core.result.AnalysisFindingReport(
                             dev.erst.gridgrind.core.vocabulary.AnalysisFindingCode
                                 .HYPERLINK_MISSING_DOCUMENT_SHEET,
                             dev.erst.gridgrind.core.vocabulary.AnalysisSeverity.WARNING,
                             "Missing target sheet",
                             "Sheet is missing.",
-                            new dev.erst.gridgrind.excel.WorkbookAnalysis.AnalysisLocation.Sheet(
-                                "Budget"),
+                            new dev.erst.gridgrind.core.result.AnalysisLocationReport.Sheet(
+                                new dev.erst.gridgrind.core.vocabulary.SheetLabel("Budget")),
                             List.of("Missing!A1"))))));
     InspectionResult namedRangeHealth =
         InspectionResultConverter.toReadResult(
             new dev.erst.gridgrind.excel.WorkbookAnalysisResult.NamedRangeHealthResult(
                 new StepId("named-range-health"),
-                new dev.erst.gridgrind.excel.WorkbookAnalysis.NamedRangeHealth(
+                new dev.erst.gridgrind.core.model.formula.NamedRangeHealthReport(
                     1,
-                    new dev.erst.gridgrind.excel.WorkbookAnalysis.AnalysisSummary(1, 0, 1, 0),
+                    new dev.erst.gridgrind.core.result.AnalysisSummaryReport(1, 0, 1, 0),
                     List.of(
-                        new dev.erst.gridgrind.excel.WorkbookAnalysis.AnalysisFinding(
+                        new dev.erst.gridgrind.core.result.AnalysisFindingReport(
                             dev.erst.gridgrind.core.vocabulary.AnalysisFindingCode
                                 .NAMED_RANGE_BROKEN_REFERENCE,
                             dev.erst.gridgrind.core.vocabulary.AnalysisSeverity.WARNING,
                             "Broken named range",
                             "Named range contains #REF!.",
-                            new dev.erst.gridgrind.excel.WorkbookAnalysis.AnalysisLocation.Range(
-                                "Budget", "A1:B2"),
+                            new dev.erst.gridgrind.core.result.AnalysisLocationReport.Range(
+                                new dev.erst.gridgrind.core.vocabulary.SheetLabel("Budget"),
+                                "A1:B2"),
                             List.of("#REF!"))))));
     InspectionResult workbookFindings =
         InspectionResultConverter.toReadResult(
             new dev.erst.gridgrind.excel.WorkbookAnalysisResult.WorkbookFindingsResult(
                 new StepId("workbook-findings"),
-                new dev.erst.gridgrind.excel.WorkbookAnalysis.WorkbookFindings(
-                    new dev.erst.gridgrind.excel.WorkbookAnalysis.AnalysisSummary(1, 0, 0, 1),
+                new dev.erst.gridgrind.core.result.WorkbookFindingsReport(
+                    new dev.erst.gridgrind.core.result.AnalysisSummaryReport(1, 0, 0, 1),
                     List.of(
-                        new dev.erst.gridgrind.excel.WorkbookAnalysis.AnalysisFinding(
+                        new dev.erst.gridgrind.core.result.AnalysisFindingReport(
                             dev.erst.gridgrind.core.vocabulary.AnalysisFindingCode
                                 .NAMED_RANGE_SCOPE_SHADOWING,
                             dev.erst.gridgrind.core.vocabulary.AnalysisSeverity.INFO,
                             "Scope shadowing",
                             "Name exists in more than one scope.",
-                            new dev.erst.gridgrind.excel.WorkbookAnalysis.AnalysisLocation
-                                .NamedRange(
+                            new dev.erst.gridgrind.core.result.AnalysisLocationReport.NamedRange(
                                 "BudgetTotal",
                                 new NamedRangeScopeReport.Sheet(
                                     new dev.erst.gridgrind.core.vocabulary.SheetLabel("Budget"))),

@@ -9,6 +9,7 @@ import dev.erst.gridgrind.core.model.table.ResolvedTable;
 import dev.erst.gridgrind.core.model.table.TableStyleSpec;
 import dev.erst.gridgrind.core.model.value.CellValue;
 import dev.erst.gridgrind.core.plan.StructuredMutationAction;
+import dev.erst.gridgrind.core.result.AnalysisFindingReport;
 import dev.erst.gridgrind.core.vocabulary.AnalysisFindingCode;
 import dev.erst.gridgrind.core.vocabulary.ExcelPivotDataConsolidateFunction;
 import dev.erst.gridgrind.core.vocabulary.RangeRef;
@@ -263,7 +264,7 @@ class ExcelPivotTableControllerTest {
 
       List<AnalysisFindingCode> missingNameCodes =
           controller.pivotTableHealthFindings(workbook, new ExcelPivotTableSelection.All()).stream()
-              .map(WorkbookAnalysis.AnalysisFinding::code)
+              .map(AnalysisFindingReport::code)
               .toList();
       PivotTableReport snapshot =
           controller.pivotTables(workbook, new ExcelPivotTableSelection.All()).getFirst();
@@ -279,7 +280,7 @@ class ExcelPivotTableControllerTest {
 
       List<AnalysisFindingCode> brokenSourceCodes =
           controller.pivotTableHealthFindings(workbook, new ExcelPivotTableSelection.All()).stream()
-              .map(WorkbookAnalysis.AnalysisFinding::code)
+              .map(AnalysisFindingReport::code)
               .toList();
 
       assertTrue(brokenSourceCodes.contains(AnalysisFindingCode.PIVOT_TABLE_MISSING_NAME));

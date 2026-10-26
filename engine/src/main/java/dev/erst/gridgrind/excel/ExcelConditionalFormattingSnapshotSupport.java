@@ -4,6 +4,7 @@ import dev.erst.gridgrind.core.model.style.DifferentialStyleReport;
 import dev.erst.gridgrind.core.model.validation.ConditionalFormattingEntryReport;
 import dev.erst.gridgrind.core.model.validation.ConditionalFormattingRuleReport;
 import dev.erst.gridgrind.core.model.validation.ConditionalFormattingThresholdReport;
+import dev.erst.gridgrind.core.result.AnalysisLocationReport;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -158,13 +159,13 @@ final class ExcelConditionalFormattingSnapshotSupport {
     }
   }
 
-  static String locationEvidence(WorkbookAnalysis.AnalysisLocation location) {
+  static String locationEvidence(AnalysisLocationReport location) {
     return switch (location) {
-      case WorkbookAnalysis.AnalysisLocation.Workbook _ -> "WORKBOOK";
-      case WorkbookAnalysis.AnalysisLocation.Sheet sheet -> sheet.sheetName();
-      case WorkbookAnalysis.AnalysisLocation.Cell cell -> cell.sheetName() + "!" + cell.address();
-      case WorkbookAnalysis.AnalysisLocation.Range range -> range.sheetName() + "!" + range.range();
-      case WorkbookAnalysis.AnalysisLocation.NamedRange namedRange ->
+      case AnalysisLocationReport.Workbook _ -> "WORKBOOK";
+      case AnalysisLocationReport.Sheet sheet -> sheet.sheetName().value();
+      case AnalysisLocationReport.Cell cell -> cell.sheetName() + "!" + cell.address();
+      case AnalysisLocationReport.Range range -> range.sheetName() + "!" + range.range();
+      case AnalysisLocationReport.NamedRange namedRange ->
           namedRange.name()
               + "@"
               + switch (namedRange.scope()) {

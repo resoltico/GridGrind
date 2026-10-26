@@ -14,6 +14,8 @@ import dev.erst.gridgrind.core.model.table.TableStyleSpec;
 import dev.erst.gridgrind.core.model.value.CellValue;
 import dev.erst.gridgrind.core.model.value.CellValueSpec;
 import dev.erst.gridgrind.core.plan.StructuredMutationAction;
+import dev.erst.gridgrind.core.result.AnalysisFindingReport;
+import dev.erst.gridgrind.core.result.AnalysisLocationReport;
 import dev.erst.gridgrind.core.vocabulary.AnalysisFindingCode;
 import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
@@ -706,7 +708,7 @@ class ExcelTableControllerTest {
 
       List<AnalysisFindingCode> codes =
           controller.tableHealthFindings(workbook, new ExcelTableSelection.All()).stream()
-              .map(WorkbookAnalysis.AnalysisFinding::code)
+              .map(AnalysisFindingReport::code)
               .toList();
 
       assertTrue(codes.contains(AnalysisFindingCode.TABLE_DUPLICATE_HEADER));
@@ -811,7 +813,7 @@ class ExcelTableControllerTest {
 
       List<AnalysisFindingCode> codes =
           controller.tableHealthFindings(workbook, new ExcelTableSelection.All()).stream()
-              .map(WorkbookAnalysis.AnalysisFinding::code)
+              .map(AnalysisFindingReport::code)
               .toList();
 
       assertTrue(codes.contains(AnalysisFindingCode.TABLE_BROKEN_REFERENCE));
@@ -836,7 +838,7 @@ class ExcelTableControllerTest {
       XSSFTable table = workbook.sheet("Ops").xssfSheet().getTables().getFirst();
       table.getCTTable().setRef("A0:B3");
 
-      List<WorkbookAnalysis.AnalysisFinding> findings =
+      List<AnalysisFindingReport> findings =
           controller.tableHealthFindings(workbook, new ExcelTableSelection.All());
 
       assertEquals(1, findings.size());
@@ -861,7 +863,7 @@ class ExcelTableControllerTest {
       XSSFTable table = workbook.sheet("Ops").xssfSheet().getTables().getFirst();
       table.getCTTable().getAutoFilter().setRef("A1:B2");
 
-      List<WorkbookAnalysis.AnalysisFinding> findings =
+      List<AnalysisFindingReport> findings =
           controller.tableAutofilterHealthFindings(workbook, "Ops");
 
       assertEquals(1, findings.size());
@@ -886,7 +888,7 @@ class ExcelTableControllerTest {
       XSSFTable table = workbook.sheet("Ops").xssfSheet().getTables().getFirst();
       table.getCTTable().getAutoFilter().setRef("A0:B3");
 
-      List<WorkbookAnalysis.AnalysisFinding> invalidRangeFindings =
+      List<AnalysisFindingReport> invalidRangeFindings =
           controller.tableAutofilterHealthFindings(workbook, "Ops");
 
       assertEquals(1, invalidRangeFindings.size());
@@ -908,7 +910,7 @@ class ExcelTableControllerTest {
       sheet.cells().setCell("A1", new CellValue.Blank());
       sheet.cells().setCell("B1", new CellValue.Blank());
 
-      List<WorkbookAnalysis.AnalysisFinding> findings =
+      List<AnalysisFindingReport> findings =
           controller.tableAutofilterHealthFindings(workbook, "Ops");
 
       assertEquals(1, findings.size());
@@ -935,13 +937,12 @@ class ExcelTableControllerTest {
       table.getCTTable().setRef("A0:B3");
       table.getCTTable().getAutoFilter().setRef("A1:B3");
 
-      List<WorkbookAnalysis.AnalysisFinding> findings =
+      List<AnalysisFindingReport> findings =
           controller.tableAutofilterHealthFindings(workbook, "Ops");
 
       assertEquals(1, findings.size());
       assertEquals(AnalysisFindingCode.AUTOFILTER_TABLE_MISMATCH, findings.getFirst().code());
-      assertInstanceOf(
-          WorkbookAnalysis.AnalysisLocation.Sheet.class, findings.getFirst().location());
+      assertInstanceOf(AnalysisLocationReport.Sheet.class, findings.getFirst().location());
     }
   }
 
@@ -1232,7 +1233,7 @@ class ExcelTableControllerTest {
       assertEquals("", table.getCTTable().getTableColumns().getTableColumnArray(0).getName());
       assertTrue(
           controller.tableHealthFindings(workbook, new ExcelTableSelection.All()).stream()
-              .map(WorkbookAnalysis.AnalysisFinding::code)
+              .map(AnalysisFindingReport::code)
               .toList()
               .contains(AnalysisFindingCode.TABLE_BLANK_HEADER));
 
@@ -1251,7 +1252,7 @@ class ExcelTableControllerTest {
       assertEquals(List.of("", "Lane"), table.structure().columnNames());
       assertTrue(
           controller.tableHealthFindings(reopened, new ExcelTableSelection.All()).stream()
-              .map(WorkbookAnalysis.AnalysisFinding::code)
+              .map(AnalysisFindingReport::code)
               .toList()
               .contains(AnalysisFindingCode.TABLE_BLANK_HEADER));
     }

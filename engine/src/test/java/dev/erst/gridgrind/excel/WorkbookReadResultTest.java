@@ -17,6 +17,7 @@ import dev.erst.gridgrind.core.model.layout.SheetDisplayReport;
 import dev.erst.gridgrind.core.model.layout.SheetLayoutReport;
 import dev.erst.gridgrind.core.model.layout.SheetOutlineSummaryReport;
 import dev.erst.gridgrind.core.model.layout.SheetPresentationReport;
+import dev.erst.gridgrind.core.model.pivot.PivotTableHealthReport;
 import dev.erst.gridgrind.core.model.pivot.PivotTableReport;
 import dev.erst.gridgrind.core.model.print.*;
 import dev.erst.gridgrind.core.model.print.HeaderFooterTextReport;
@@ -35,6 +36,7 @@ import dev.erst.gridgrind.core.model.style.FontHeightReport;
 import dev.erst.gridgrind.core.model.table.AutofilterEntryReport;
 import dev.erst.gridgrind.core.model.table.TableEntryReport;
 import dev.erst.gridgrind.core.model.table.TableStyleReport;
+import dev.erst.gridgrind.core.model.validation.ConditionalFormattingHealthReport;
 import dev.erst.gridgrind.core.model.validation.DataValidationEntryReport;
 import dev.erst.gridgrind.core.model.validation.DataValidationRuleSpec;
 import dev.erst.gridgrind.core.model.validation.ResolvedDataValidation;
@@ -42,6 +44,9 @@ import dev.erst.gridgrind.core.model.validation.ResolvedValidationPrompt;
 import dev.erst.gridgrind.core.model.value.CellHyperlinkReport;
 import dev.erst.gridgrind.core.model.value.CellReport;
 import dev.erst.gridgrind.core.model.value.HyperlinkTarget;
+import dev.erst.gridgrind.core.result.AnalysisFindingReport;
+import dev.erst.gridgrind.core.result.AnalysisLocationReport;
+import dev.erst.gridgrind.core.result.AnalysisSummaryReport;
 import dev.erst.gridgrind.core.result.SheetSummaryReport;
 import dev.erst.gridgrind.core.result.WorkbookSummary;
 import dev.erst.gridgrind.core.vocabulary.AnalysisFindingCode;
@@ -308,17 +313,17 @@ class WorkbookReadResultTest {
                     "Total Amount",
                     Optional.of("#,##0.00"))),
             false);
-    WorkbookAnalysis.AnalysisFinding finding =
-        new WorkbookAnalysis.AnalysisFinding(
+    AnalysisFindingReport finding =
+        new AnalysisFindingReport(
             AnalysisFindingCode.PIVOT_TABLE_MISSING_NAME,
             AnalysisSeverity.WARNING,
             "Pivot table name is missing",
             "GridGrind assigned a synthetic identifier for readback.",
-            new WorkbookAnalysis.AnalysisLocation.Sheet("Report"),
+            new AnalysisLocationReport.Sheet(
+                new dev.erst.gridgrind.core.vocabulary.SheetLabel("Report")),
             List.of("_GG_PIVOT_Report_A3"));
-    WorkbookAnalysis.PivotTableHealth health =
-        new WorkbookAnalysis.PivotTableHealth(
-            1, new WorkbookAnalysis.AnalysisSummary(1, 0, 1, 0), List.of(finding));
+    PivotTableHealthReport health =
+        new PivotTableHealthReport(1, new AnalysisSummaryReport(1, 0, 1, 0), List.of(finding));
 
     WorkbookDrawingResult.PivotTablesResult pivotTables =
         new WorkbookDrawingResult.PivotTablesResult(new StepId("pivots"), List.of(pivot));
@@ -586,8 +591,8 @@ class WorkbookReadResultTest {
             new StepId("validations"), "Budget", validations),
         new WorkbookAnalysisResult.ConditionalFormattingHealthResult(
             new StepId("conditionalFormattingHealth"),
-            new WorkbookAnalysis.ConditionalFormattingHealth(
-                1, new WorkbookAnalysis.AnalysisSummary(0, 0, 0, 0), List.of())),
+            new ConditionalFormattingHealthReport(
+                1, new AnalysisSummaryReport(0, 0, 0, 0), List.of())),
         new WorkbookRuleResult.AutofiltersResult(new StepId("autofilters"), "Budget", autofilters),
         new WorkbookRuleResult.TablesResult(new StepId("tables"), tables),
         new WorkbookSurfaceResult.FormulaSurfaceResult(

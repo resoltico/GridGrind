@@ -1,7 +1,8 @@
 package dev.erst.gridgrind.excel.pivot;
 
 import dev.erst.gridgrind.core.model.pivot.PivotTableReport;
-import dev.erst.gridgrind.excel.WorkbookAnalysis;
+import dev.erst.gridgrind.core.result.AnalysisFindingReport;
+import dev.erst.gridgrind.core.result.AnalysisLocationReport;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -17,8 +18,7 @@ import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTPivotTableDefinitio
 public final class ExcelPivotTableAnalysisSupport {
   private ExcelPivotTableAnalysisSupport() {}
 
-  public static List<WorkbookAnalysis.AnalysisFinding> duplicateNameFindings(
-      List<PivotHandle> handles) {
+  public static List<AnalysisFindingReport> duplicateNameFindings(List<PivotHandle> handles) {
     Set<String> seenNames = new LinkedHashSet<>();
     Set<String> duplicateNames = new LinkedHashSet<>();
     for (PivotHandle handle : handles) {
@@ -27,7 +27,7 @@ public final class ExcelPivotTableAnalysisSupport {
         duplicateNames.add(normalizedName);
       }
     }
-    List<WorkbookAnalysis.AnalysisFinding> findings = new ArrayList<>();
+    List<AnalysisFindingReport> findings = new ArrayList<>();
     for (PivotHandle handle : handles) {
       if (!duplicateNames.contains(ExcelPivotTableIdentitySupport.normalizedResolvedName(handle))) {
         continue;
@@ -44,9 +44,9 @@ public final class ExcelPivotTableAnalysisSupport {
     return List.copyOf(findings);
   }
 
-  public static List<WorkbookAnalysis.AnalysisFinding> pivotTableHealthFindings(
+  public static List<AnalysisFindingReport> pivotTableHealthFindings(
       XSSFWorkbook workbook, PivotHandle handle) {
-    List<WorkbookAnalysis.AnalysisFinding> findings = new ArrayList<>();
+    List<AnalysisFindingReport> findings = new ArrayList<>();
     if (ExcelPivotTableIdentitySupport.actualName(handle).isEmpty()) {
       findings.add(
           finding(
@@ -142,7 +142,7 @@ public final class ExcelPivotTableAnalysisSupport {
     return List.copyOf(new ArrayList<>(new LinkedHashSet<>(findings)));
   }
 
-  public static WorkbookAnalysis.AnalysisFinding finding(
+  public static AnalysisFindingReport finding(
       dev.erst.gridgrind.core.vocabulary.AnalysisFindingCode code,
       dev.erst.gridgrind.core.vocabulary.AnalysisSeverity severity,
       PivotHandle handle,
@@ -150,12 +150,14 @@ public final class ExcelPivotTableAnalysisSupport {
       String message,
       List<String> evidence) {
     PivotLocation location = ExcelPivotTableIdentitySupport.safeLocation(handle).orElse(null);
-    WorkbookAnalysis.AnalysisLocation analysisLocation =
+    AnalysisLocationReport analysisLocation =
         location == null
-            ? new WorkbookAnalysis.AnalysisLocation.Sheet(handle.sheetName())
-            : new WorkbookAnalysis.AnalysisLocation.Range(
-                handle.sheetName(), location.locationRange());
-    return new WorkbookAnalysis.AnalysisFinding(
+            ? new AnalysisLocationReport.Sheet(
+                new dev.erst.gridgrind.core.vocabulary.SheetLabel(handle.sheetName()))
+            : new AnalysisLocationReport.Range(
+                new dev.erst.gridgrind.core.vocabulary.SheetLabel(handle.sheetName()),
+                location.locationRange());
+    return new AnalysisFindingReport(
         code, severity, title, message, analysisLocation, List.copyOf(evidence));
   }
 }

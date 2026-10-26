@@ -10,6 +10,8 @@ import dev.erst.gridgrind.core.model.layout.SheetLayoutReport;
 import dev.erst.gridgrind.core.model.value.CellReport;
 import dev.erst.gridgrind.core.model.value.CellValue;
 import dev.erst.gridgrind.core.model.value.HyperlinkTarget;
+import dev.erst.gridgrind.core.result.AnalysisFindingReport;
+import dev.erst.gridgrind.core.result.AnalysisLocationReport;
 import dev.erst.gridgrind.core.vocabulary.AnalysisFindingCode;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -251,7 +253,7 @@ class ExcelSheetAnnotationHyperlinkCoverageTest extends ExcelSheetTestSupport {
       quotedDocumentCell.setHyperlink(
           hyperlink(poiWorkbook, HyperlinkType.DOCUMENT, "'Quarter 1'!A1"));
 
-      List<WorkbookAnalysis.AnalysisFinding> findings;
+      List<AnalysisFindingReport> findings;
       try {
         findings = sheet.diagnostics().hyperlinkHealthFindings();
       } finally {
@@ -261,7 +263,7 @@ class ExcelSheetAnnotationHyperlinkCoverageTest extends ExcelSheetTestSupport {
       assertEquals(5, sheet.diagnostics().hyperlinkCount());
       assertTrue(
           findings.stream()
-              .map(WorkbookAnalysis.AnalysisFinding::code)
+              .map(AnalysisFindingReport::code)
               .toList()
               .containsAll(
                   List.of(
@@ -271,33 +273,34 @@ class ExcelSheetAnnotationHyperlinkCoverageTest extends ExcelSheetTestSupport {
           findings.stream()
               .noneMatch(
                   finding ->
-                      finding.location() instanceof WorkbookAnalysis.AnalysisLocation.Cell cell
+                      finding.location() instanceof AnalysisLocationReport.Cell cell
                           && "A5".equals(cell.address())));
     }
   }
 
   @Test
   void fileHyperlinkFindingsCoverMalformedMissingAndUnresolvedTargets() {
-    WorkbookAnalysis.AnalysisLocation.Cell location =
-        new WorkbookAnalysis.AnalysisLocation.Cell("Budget", "A1");
+    AnalysisLocationReport.Cell location =
+        new AnalysisLocationReport.Cell(
+            new dev.erst.gridgrind.core.vocabulary.SheetLabel("Budget"), "A1");
     WorkbookLocation storedWorkbook =
         new WorkbookLocation.StoredWorkbook(
             Path.of("tmp", "file-hyperlink-findings", "Budget.xlsx").toAbsolutePath());
 
-    List<WorkbookAnalysis.AnalysisFinding> malformed =
+    List<AnalysisFindingReport> malformed =
         ExcelSheetAnalysisSupport.fileHyperlinkFindings(
             location, "https://example.com/report", storedWorkbook);
     assertEquals(1, malformed.size());
     assertEquals(AnalysisFindingCode.HYPERLINK_MALFORMED_TARGET, malformed.getFirst().code());
 
-    List<WorkbookAnalysis.AnalysisFinding> unresolved =
+    List<AnalysisFindingReport> unresolved =
         ExcelSheetAnalysisSupport.fileHyperlinkFindings(
             location, "reports/q1.xlsx", new WorkbookLocation.UnsavedWorkbook());
     assertEquals(1, unresolved.size());
     assertEquals(
         AnalysisFindingCode.HYPERLINK_UNRESOLVED_FILE_TARGET, unresolved.getFirst().code());
 
-    List<WorkbookAnalysis.AnalysisFinding> missing =
+    List<AnalysisFindingReport> missing =
         ExcelSheetAnalysisSupport.fileHyperlinkFindings(
             location, "reports/q1.xlsx", storedWorkbook);
     assertEquals(1, missing.size());
@@ -313,7 +316,7 @@ class ExcelSheetAnnotationHyperlinkCoverageTest extends ExcelSheetTestSupport {
         Path.of("tmp", "file-hyperlink-findings", "missing-report.xlsx")
             .toAbsolutePath()
             .toString();
-    List<WorkbookAnalysis.AnalysisFinding> missingAbsolute =
+    List<AnalysisFindingReport> missingAbsolute =
         ExcelSheetAnalysisSupport.fileHyperlinkFindings(
             location, absoluteMissingTarget, new WorkbookLocation.UnsavedWorkbook());
     assertEquals(1, missingAbsolute.size());
@@ -321,7 +324,7 @@ class ExcelSheetAnnotationHyperlinkCoverageTest extends ExcelSheetTestSupport {
         AnalysisFindingCode.HYPERLINK_MISSING_FILE_TARGET, missingAbsolute.getFirst().code());
     assertFalse(missingAbsolute.getFirst().message().contains("workbook directory"));
 
-    List<WorkbookAnalysis.AnalysisFinding> missingAbsoluteStored =
+    List<AnalysisFindingReport> missingAbsoluteStored =
         ExcelSheetAnalysisSupport.fileHyperlinkFindings(
             location, absoluteMissingTarget, storedWorkbook);
     assertEquals(1, missingAbsoluteStored.size());
@@ -337,16 +340,17 @@ class ExcelSheetAnnotationHyperlinkCoverageTest extends ExcelSheetTestSupport {
 
   @Test
   void externalHyperlinkFindingsCoverMalformedUrlAndEmailTargets() {
-    WorkbookAnalysis.AnalysisLocation.Cell location =
-        new WorkbookAnalysis.AnalysisLocation.Cell("Budget", "A1");
+    AnalysisLocationReport.Cell location =
+        new AnalysisLocationReport.Cell(
+            new dev.erst.gridgrind.core.vocabulary.SheetLabel("Budget"), "A1");
 
-    List<WorkbookAnalysis.AnalysisFinding> malformedUrl =
+    List<AnalysisFindingReport> malformedUrl =
         ExcelSheetAnalysisSupport.externalHyperlinkFindings(
             location, "example.com/report", "URL", false);
     assertEquals(1, malformedUrl.size());
     assertEquals(AnalysisFindingCode.HYPERLINK_MALFORMED_TARGET, malformedUrl.getFirst().code());
 
-    List<WorkbookAnalysis.AnalysisFinding> malformedEmail =
+    List<AnalysisFindingReport> malformedEmail =
         ExcelSheetAnalysisSupport.externalHyperlinkFindings(location, "mailto:", "EMAIL", false);
     assertEquals(1, malformedEmail.size());
     assertEquals(AnalysisFindingCode.HYPERLINK_MALFORMED_TARGET, malformedEmail.getFirst().code());
@@ -402,8 +406,9 @@ class ExcelSheetAnnotationHyperlinkCoverageTest extends ExcelSheetTestSupport {
       assertEquals("IllegalStateException", sheet.exceptionMessage(new IllegalStateException()));
       assertEquals(
           "display failure", sheet.exceptionMessage(new IllegalStateException("display failure")));
-      WorkbookAnalysis.AnalysisLocation.Cell location =
-          new WorkbookAnalysis.AnalysisLocation.Cell("Helpers", "A1");
+      AnalysisLocationReport.Cell location =
+          new AnalysisLocationReport.Cell(
+              new dev.erst.gridgrind.core.vocabulary.SheetLabel("Helpers"), "A1");
       assertEquals(
           AnalysisFindingCode.HYPERLINK_MALFORMED_TARGET,
           sheet
@@ -447,30 +452,31 @@ class ExcelSheetAnnotationHyperlinkCoverageTest extends ExcelSheetTestSupport {
       FormulaEvaluator evaluator = poiWorkbook.getCreationHelper().createFormulaEvaluator();
       ExcelSheet sheet =
           new ExcelSheet(poiSheet, new WorkbookStyleRegistry(poiWorkbook), evaluator);
-      WorkbookAnalysis.AnalysisLocation.Cell location =
-          new WorkbookAnalysis.AnalysisLocation.Cell("Budget", "A1");
+      AnalysisLocationReport.Cell location =
+          new AnalysisLocationReport.Cell(
+              new dev.erst.gridgrind.core.vocabulary.SheetLabel("Budget"), "A1");
 
-      List<WorkbookAnalysis.AnalysisFinding> invalidStructure = new ArrayList<>();
+      List<AnalysisFindingReport> invalidStructure = new ArrayList<>();
       sheet.validateDocumentHyperlinkTarget(location, "!A1", invalidStructure);
       assertEquals(
           AnalysisFindingCode.HYPERLINK_INVALID_DOCUMENT_TARGET,
           invalidStructure.getFirst().code());
 
-      List<WorkbookAnalysis.AnalysisFinding> missingSheet = new ArrayList<>();
+      List<AnalysisFindingReport> missingSheet = new ArrayList<>();
       sheet.validateDocumentHyperlinkTarget(location, "Missing!A1", missingSheet);
       assertEquals(
           AnalysisFindingCode.HYPERLINK_MISSING_DOCUMENT_SHEET, missingSheet.getFirst().code());
 
-      List<WorkbookAnalysis.AnalysisFinding> invalidRange = new ArrayList<>();
+      List<AnalysisFindingReport> invalidRange = new ArrayList<>();
       sheet.validateDocumentHyperlinkTarget(location, "Budget!A1:", invalidRange);
       assertEquals(
           AnalysisFindingCode.HYPERLINK_INVALID_DOCUMENT_TARGET, invalidRange.getFirst().code());
 
-      List<WorkbookAnalysis.AnalysisFinding> validRange = new ArrayList<>();
+      List<AnalysisFindingReport> validRange = new ArrayList<>();
       sheet.validateDocumentHyperlinkTarget(location, "Budget!A1:B2", validRange);
       assertEquals(List.of(), validRange);
 
-      List<WorkbookAnalysis.AnalysisFinding> quotedValid = new ArrayList<>();
+      List<AnalysisFindingReport> quotedValid = new ArrayList<>();
       sheet.validateDocumentHyperlinkTarget(location, "'Quarter 1'!A1", quotedValid);
       assertEquals(List.of(), quotedValid);
     }

@@ -3,10 +3,13 @@ package dev.erst.gridgrind.excel;
 import static org.junit.jupiter.api.Assertions.*;
 
 import dev.erst.gridgrind.core.model.validation.DataValidationEntryReport;
+import dev.erst.gridgrind.core.model.validation.DataValidationHealthReport;
 import dev.erst.gridgrind.core.model.validation.DataValidationRuleSpec;
 import dev.erst.gridgrind.core.model.validation.ResolvedDataValidation;
 import dev.erst.gridgrind.core.model.validation.ResolvedValidationErrorAlert;
 import dev.erst.gridgrind.core.model.validation.ResolvedValidationPrompt;
+import dev.erst.gridgrind.core.result.AnalysisFindingReport;
+import dev.erst.gridgrind.core.result.WorkbookFindingsReport;
 import dev.erst.gridgrind.core.vocabulary.AnalysisFindingCode;
 import dev.erst.gridgrind.core.vocabulary.ExcelDataValidationErrorStyle;
 import dev.erst.gridgrind.core.vocabulary.StepId;
@@ -125,7 +128,7 @@ class ExcelDataValidationWorkflowTest {
         ExcelWorkbooks.open(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory())) {
       WorkbookAnalyzer analyzer = new WorkbookAnalyzer();
 
-      WorkbookAnalysis.DataValidationHealth health =
+      DataValidationHealthReport health =
           analyzer.dataValidationHealth(workbook, new ExcelSheetSelection.All());
       WorkbookAnalysisResult.DataValidationHealthResult executed =
           cast(
@@ -135,13 +138,13 @@ class ExcelDataValidationWorkflowTest {
                   new WorkbookLocation.StoredWorkbook(workbookPath),
                   new WorkbookReadCommand.AnalyzeDataValidationHealth(
                       new StepId("validationHealth"), new ExcelSheetSelection.All())));
-      WorkbookAnalysis.WorkbookFindings workbookFindings = analyzer.workbookFindings(workbook);
+      WorkbookFindingsReport workbookFindings = analyzer.workbookFindings(workbook);
 
       assertEquals(2, health.checkedValidationCount());
       assertEquals(2, executed.analysis().checkedValidationCount());
       assertTrue(
           health.findings().stream()
-              .map(WorkbookAnalysis.AnalysisFinding::code)
+              .map(AnalysisFindingReport::code)
               .toList()
               .containsAll(
                   List.of(
@@ -149,7 +152,7 @@ class ExcelDataValidationWorkflowTest {
                       AnalysisFindingCode.DATA_VALIDATION_OVERLAPPING_RULES)));
       assertTrue(
           workbookFindings.findings().stream()
-              .map(WorkbookAnalysis.AnalysisFinding::code)
+              .map(AnalysisFindingReport::code)
               .toList()
               .containsAll(
                   List.of(

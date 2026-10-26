@@ -1,5 +1,7 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.core.result.AnalysisFindingReport;
+import dev.erst.gridgrind.core.result.AnalysisLocationReport;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingController;
 import dev.erst.gridgrind.excel.validation.ExcelDataValidationController;
 import org.apache.poi.common.usermodel.HyperlinkType;
@@ -132,8 +134,8 @@ public final class ExcelSheet {
     return ExcelSheetAnalysisSupport.exceptionMessage(exception);
   }
 
-  java.util.List<WorkbookAnalysis.AnalysisFinding> hyperlinkTargetFindings(
-      WorkbookAnalysis.AnalysisLocation.Cell location,
+  java.util.List<AnalysisFindingReport> hyperlinkTargetFindings(
+      AnalysisLocationReport.Cell location,
       HyperlinkType hyperlinkType,
       String target,
       WorkbookLocation workbookLocation) {
@@ -142,9 +144,9 @@ public final class ExcelSheet {
   }
 
   void validateDocumentHyperlinkTarget(
-      WorkbookAnalysis.AnalysisLocation.Cell location,
+      AnalysisLocationReport.Cell location,
       String target,
-      java.util.List<WorkbookAnalysis.AnalysisFinding> findings) {
+      java.util.List<AnalysisFindingReport> findings) {
     analysisSupport.validateDocumentHyperlinkTarget(location, target, findings);
   }
 }

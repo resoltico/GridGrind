@@ -15,6 +15,7 @@ import dev.erst.gridgrind.core.model.style.CellColorReport;
 import dev.erst.gridgrind.core.model.style.ColorSpec;
 import dev.erst.gridgrind.core.model.table.AutofilterSortConditionReport;
 import dev.erst.gridgrind.core.model.validation.ConditionalFormattingRuleSpec;
+import dev.erst.gridgrind.core.result.AnalysisFindingReport;
 import dev.erst.gridgrind.core.vocabulary.AnalysisFindingCode;
 import dev.erst.gridgrind.core.vocabulary.ExcelAuthoredDrawingShapeKind;
 import dev.erst.gridgrind.core.vocabulary.ExcelOoxmlChainingMode;
@@ -308,7 +309,7 @@ class ResidualUtilityCoverageTest extends ExcelPivotTableCoverageTestSupport {
           ExcelPivotTableAnalysisSupport.pivotTableHealthFindings(
                   workbook.xssfWorkbook(), missingCacheHandle)
               .stream()
-              .map(WorkbookAnalysis.AnalysisFinding::code)
+              .map(AnalysisFindingReport::code)
               .toList();
       assertTrue(
           missingCacheCodes.contains(AnalysisFindingCode.PIVOT_TABLE_MISSING_CACHE_DEFINITION));
@@ -334,7 +335,7 @@ class ResidualUtilityCoverageTest extends ExcelPivotTableCoverageTestSupport {
           ExcelPivotTableAnalysisSupport.pivotTableHealthFindings(
                   workbook.xssfWorkbook(), missingRecordsHandle)
               .stream()
-              .map(WorkbookAnalysis.AnalysisFinding::code)
+              .map(AnalysisFindingReport::code)
               .toList();
       assertTrue(
           missingRecordsCodes.contains(AnalysisFindingCode.PIVOT_TABLE_MISSING_CACHE_RECORDS));

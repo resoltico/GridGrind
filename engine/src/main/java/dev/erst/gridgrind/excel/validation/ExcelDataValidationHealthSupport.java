@@ -2,10 +2,11 @@ package dev.erst.gridgrind.excel.validation;
 
 import dev.erst.gridgrind.core.model.validation.DataValidationEntryReport;
 import dev.erst.gridgrind.core.model.validation.DataValidationRuleSpec;
+import dev.erst.gridgrind.core.result.AnalysisFindingReport;
+import dev.erst.gridgrind.core.result.AnalysisLocationReport;
 import dev.erst.gridgrind.core.vocabulary.AnalysisFindingCode;
 import dev.erst.gridgrind.core.vocabulary.AnalysisSeverity;
 import dev.erst.gridgrind.excel.ExcelRange;
-import dev.erst.gridgrind.excel.WorkbookAnalysis;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -13,9 +14,9 @@ import java.util.Optional;
 
 /** Derives workbook-health findings from canonical data-validation snapshots. */
 public final class ExcelDataValidationHealthSupport {
-  List<WorkbookAnalysis.AnalysisFinding> dataValidationHealthFindings(
+  List<AnalysisFindingReport> dataValidationHealthFindings(
       String sheetName, List<DataValidationEntryReport> snapshots) {
-    List<WorkbookAnalysis.AnalysisFinding> findings = new ArrayList<>();
+    List<AnalysisFindingReport> findings = new ArrayList<>();
     for (DataValidationEntryReport snapshot : snapshots) {
       switch (snapshot) {
         case DataValidationEntryReport.Supported supported ->
@@ -28,17 +29,18 @@ public final class ExcelDataValidationHealthSupport {
     return List.copyOf(findings);
   }
 
-  private static List<WorkbookAnalysis.AnalysisFinding> supportedFindings(
+  private static List<AnalysisFindingReport> supportedFindings(
       String sheetName, DataValidationEntryReport.Supported supported) {
-    List<WorkbookAnalysis.AnalysisFinding> findings = new ArrayList<>();
-    WorkbookAnalysis.AnalysisLocation.Range location =
-        new WorkbookAnalysis.AnalysisLocation.Range(
-            sheetName, supported.ranges().getFirst().value());
+    List<AnalysisFindingReport> findings = new ArrayList<>();
+    AnalysisLocationReport.Range location =
+        new AnalysisLocationReport.Range(
+            new dev.erst.gridgrind.core.vocabulary.SheetLabel(sheetName),
+            supported.ranges().getFirst().value());
     switch (supported.validation().rule()) {
       case DataValidationRuleSpec.ExplicitList explicitList -> {
         if (explicitList.values().isEmpty()) {
           findings.add(
-              new WorkbookAnalysis.AnalysisFinding(
+              new AnalysisFindingReport(
                   AnalysisFindingCode.DATA_VALIDATION_EMPTY_EXPLICIT_LIST,
                   AnalysisSeverity.ERROR,
                   "Explicit-list validation is empty",
@@ -101,13 +103,14 @@ public final class ExcelDataValidationHealthSupport {
     return List.copyOf(findings);
   }
 
-  private static WorkbookAnalysis.AnalysisFinding unsupportedFinding(
+  private static AnalysisFindingReport unsupportedFinding(
       String sheetName, DataValidationEntryReport.Unsupported unsupported) {
-    WorkbookAnalysis.AnalysisLocation.Range location =
-        new WorkbookAnalysis.AnalysisLocation.Range(
-            sheetName, unsupported.ranges().getFirst().value());
+    AnalysisLocationReport.Range location =
+        new AnalysisLocationReport.Range(
+            new dev.erst.gridgrind.core.vocabulary.SheetLabel(sheetName),
+            unsupported.ranges().getFirst().value());
     if ("MISSING_FORMULA".equals(unsupported.kind())) {
-      return new WorkbookAnalysis.AnalysisFinding(
+      return new AnalysisFindingReport(
           AnalysisFindingCode.DATA_VALIDATION_MALFORMED_RULE,
           AnalysisSeverity.ERROR,
           "Data-validation rule is malformed",
@@ -117,7 +120,7 @@ public final class ExcelDataValidationHealthSupport {
               .map(dev.erst.gridgrind.core.vocabulary.RangeLabel::value)
               .toList());
     }
-    return new WorkbookAnalysis.AnalysisFinding(
+    return new AnalysisFindingReport(
         AnalysisFindingCode.DATA_VALIDATION_UNSUPPORTED_RULE,
         AnalysisSeverity.WARNING,
         "Unsupported data-validation rule",
@@ -129,8 +132,8 @@ public final class ExcelDataValidationHealthSupport {
   }
 
   private static void addBrokenFormulaFindingIfNeeded(
-      List<WorkbookAnalysis.AnalysisFinding> findings,
-      WorkbookAnalysis.AnalysisLocation.Range location,
+      List<AnalysisFindingReport> findings,
+      AnalysisLocationReport.Range location,
       Optional<String> formula,
       String label) {
     if (formula.isEmpty()) {
@@ -139,7 +142,7 @@ public final class ExcelDataValidationHealthSupport {
     String actualFormula = formula.orElseThrow();
     if (actualFormula.toUpperCase(Locale.ROOT).contains("#REF!")) {
       findings.add(
-          new WorkbookAnalysis.AnalysisFinding(
+          new AnalysisFindingReport(
               AnalysisFindingCode.DATA_VALIDATION_BROKEN_FORMULA,
               AnalysisSeverity.ERROR,
               "Broken data-validation formula",
@@ -149,9 +152,9 @@ public final class ExcelDataValidationHealthSupport {
     }
   }
 
-  private static List<WorkbookAnalysis.AnalysisFinding> overlapFindings(
+  private static List<AnalysisFindingReport> overlapFindings(
       String sheetName, List<DataValidationEntryReport> snapshots) {
-    List<WorkbookAnalysis.AnalysisFinding> findings = new ArrayList<>();
+    List<AnalysisFindingReport> findings = new ArrayList<>();
     for (int firstIndex = 0; firstIndex < snapshots.size(); firstIndex++) {
       for (int secondIndex = firstIndex + 1; secondIndex < snapshots.size(); secondIndex++) {
         for (String firstRange :
@@ -167,12 +170,13 @@ public final class ExcelDataValidationHealthSupport {
               continue;
             }
             findings.add(
-                new WorkbookAnalysis.AnalysisFinding(
+                new AnalysisFindingReport(
                     AnalysisFindingCode.DATA_VALIDATION_OVERLAPPING_RULES,
                     AnalysisSeverity.WARNING,
                     "Overlapping data-validation rules",
                     "Two data-validation structures overlap on the same sheet.",
-                    new WorkbookAnalysis.AnalysisLocation.Range(sheetName, firstRange),
+                    new AnalysisLocationReport.Range(
+                        new dev.erst.gridgrind.core.vocabulary.SheetLabel(sheetName), firstRange),
                     List.of(firstRange, secondRange)));
           }
         }

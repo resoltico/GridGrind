@@ -7,6 +7,7 @@ import dev.erst.gridgrind.core.model.table.TableEntryReport;
 import dev.erst.gridgrind.core.model.table.TableStyleReport;
 import dev.erst.gridgrind.core.model.table.TableStyleSpec;
 import dev.erst.gridgrind.core.model.value.CellValue;
+import dev.erst.gridgrind.core.result.AnalysisFindingReport;
 import dev.erst.gridgrind.core.vocabulary.AnalysisFindingCode;
 import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
@@ -34,7 +35,7 @@ class ExcelTableAnalysisSupportTest {
                       new TableStyleReport.Named("", false, false, true, false),
                       true))
               .stream()
-              .map(WorkbookAnalysis.AnalysisFinding::code)
+              .map(AnalysisFindingReport::code)
               .toList();
 
       assertTrue(brokenCodes.contains(AnalysisFindingCode.TABLE_BROKEN_REFERENCE));
@@ -71,7 +72,7 @@ class ExcelTableAnalysisSupportTest {
             new TableStyleReport.None(),
             true);
 
-    List<WorkbookAnalysis.AnalysisFinding> findings =
+    List<AnalysisFindingReport> findings =
         ExcelTableAnalysisSupport.overlapFindings(
             subject,
             List.of(
@@ -144,7 +145,7 @@ class ExcelTableAnalysisSupportTest {
       XSSFTable healthyTable = poiSheet.getTables().getFirst();
       TableEntryReport healthySnapshot =
           controller.tables(workbook, new ExcelTableSelection.All()).getFirst();
-      List<WorkbookAnalysis.AnalysisFinding> healthyFindings =
+      List<AnalysisFindingReport> healthyFindings =
           ExcelTableAnalysisSupport.tableAutofilterFindings(poiSheet, healthySnapshot);
       assertEquals(List.of(), healthyFindings, healthyFindings.toString());
 

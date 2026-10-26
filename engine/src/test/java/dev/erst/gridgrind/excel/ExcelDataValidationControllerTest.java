@@ -7,6 +7,7 @@ import dev.erst.gridgrind.core.model.validation.DataValidationRuleSpec;
 import dev.erst.gridgrind.core.model.validation.ResolvedDataValidation;
 import dev.erst.gridgrind.core.model.validation.ResolvedValidationErrorAlert;
 import dev.erst.gridgrind.core.model.validation.ResolvedValidationPrompt;
+import dev.erst.gridgrind.core.result.AnalysisFindingReport;
 import dev.erst.gridgrind.core.vocabulary.AnalysisFindingCode;
 import dev.erst.gridgrind.core.vocabulary.ExcelComparisonOperator;
 import dev.erst.gridgrind.core.vocabulary.ExcelDataValidationErrorStyle;
@@ -1270,7 +1271,7 @@ class ExcelDataValidationControllerTest {
       addHelperValidation(sheet, "H1:H3", helperValidation(sheet, 0, 2, 7, 7));
       addHelperValidation(sheet, "H2:H4", helperValidation(sheet, 1, 3, 7, 7));
 
-      List<WorkbookAnalysis.AnalysisFinding> findings =
+      List<AnalysisFindingReport> findings =
           controller.dataValidationHealthFindings("Budget", sheet);
 
       assertEquals(9, controller.dataValidationCount(sheet));
@@ -1319,13 +1320,13 @@ class ExcelDataValidationControllerTest {
               Optional.empty()));
       addRawValidation(sheet, "D1", STDataValidationType.NONE);
 
-      List<WorkbookAnalysis.AnalysisFinding> findings =
+      List<AnalysisFindingReport> findings =
           controller.dataValidationHealthFindings("Budget", sheet);
 
       assertEquals(4, controller.dataValidationCount(sheet));
       assertEquals(
           List.of(AnalysisFindingCode.DATA_VALIDATION_UNSUPPORTED_RULE),
-          findings.stream().map(WorkbookAnalysis.AnalysisFinding::code).toList());
+          findings.stream().map(AnalysisFindingReport::code).toList());
     }
   }
 
@@ -1372,7 +1373,7 @@ class ExcelDataValidationControllerTest {
               AnalysisFindingCode.DATA_VALIDATION_EMPTY_EXPLICIT_LIST,
               AnalysisFindingCode.DATA_VALIDATION_MALFORMED_RULE),
           controller.dataValidationHealthFindings("Budget", sheet).stream()
-              .map(WorkbookAnalysis.AnalysisFinding::code)
+              .map(AnalysisFindingReport::code)
               .distinct()
               .toList());
     }
@@ -1387,7 +1388,7 @@ class ExcelDataValidationControllerTest {
 
       List<AnalysisFindingCode> codes =
           controller.dataValidationHealthFindings("Budget", sheet).stream()
-              .map(WorkbookAnalysis.AnalysisFinding::code)
+              .map(AnalysisFindingReport::code)
               .distinct()
               .toList();
 
@@ -1436,7 +1437,7 @@ class ExcelDataValidationControllerTest {
       assertEquals(
           List.of(AnalysisFindingCode.DATA_VALIDATION_EMPTY_EXPLICIT_LIST),
           controller.dataValidationHealthFindings("Budget", sheet).stream()
-              .map(WorkbookAnalysis.AnalysisFinding::code)
+              .map(AnalysisFindingReport::code)
               .distinct()
               .toList());
     }
@@ -1755,11 +1756,11 @@ class ExcelDataValidationControllerTest {
     }
   }
 
-  private boolean isBrokenFormulaFinding(WorkbookAnalysis.AnalysisFinding finding) {
+  private boolean isBrokenFormulaFinding(AnalysisFindingReport finding) {
     return finding.code() == AnalysisFindingCode.DATA_VALIDATION_BROKEN_FORMULA;
   }
 
-  private boolean isOverlapFinding(WorkbookAnalysis.AnalysisFinding finding) {
+  private boolean isOverlapFinding(AnalysisFindingReport finding) {
     return finding.code() == AnalysisFindingCode.DATA_VALIDATION_OVERLAPPING_RULES;
   }
 }

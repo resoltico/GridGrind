@@ -4,10 +4,10 @@ import dev.erst.gridgrind.core.model.validation.DataValidationEntryReport;
 import dev.erst.gridgrind.core.model.validation.DataValidationErrorAlertReport;
 import dev.erst.gridgrind.core.model.validation.DataValidationPromptReport;
 import dev.erst.gridgrind.core.model.validation.ResolvedDataValidation;
+import dev.erst.gridgrind.core.result.AnalysisFindingReport;
 import dev.erst.gridgrind.core.vocabulary.ExcelComparisonOperator;
 import dev.erst.gridgrind.core.vocabulary.ExcelDataValidationErrorStyle;
 import dev.erst.gridgrind.excel.ExcelRangeSelection;
-import dev.erst.gridgrind.excel.WorkbookAnalysis;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -57,7 +57,7 @@ public final class ExcelDataValidationController {
   }
 
   /** Returns derived findings for data-validation health on this sheet. */
-  public List<WorkbookAnalysis.AnalysisFinding> dataValidationHealthFindings(
+  public List<AnalysisFindingReport> dataValidationHealthFindings(
       String sheetName, XSSFSheet sheet) {
     Objects.requireNonNull(sheetName, "sheetName must not be null");
     Objects.requireNonNull(sheet, "sheet must not be null");

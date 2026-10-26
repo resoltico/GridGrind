@@ -1,5 +1,14 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.core.model.formula.FormulaHealthReport;
+import dev.erst.gridgrind.core.model.formula.NamedRangeHealthReport;
+import dev.erst.gridgrind.core.model.pivot.PivotTableHealthReport;
+import dev.erst.gridgrind.core.model.table.AutofilterHealthReport;
+import dev.erst.gridgrind.core.model.table.TableHealthReport;
+import dev.erst.gridgrind.core.model.validation.ConditionalFormattingHealthReport;
+import dev.erst.gridgrind.core.model.validation.DataValidationHealthReport;
+import dev.erst.gridgrind.core.model.value.HyperlinkHealthReport;
+import dev.erst.gridgrind.core.result.WorkbookFindingsReport;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import java.util.Objects;
 
@@ -16,7 +25,7 @@ public sealed interface WorkbookAnalysisResult extends WorkbookReadAnalysisResul
         WorkbookAnalysisResult.WorkbookFindingsResult {
 
   /** Returns formula-health findings for one analysis read. */
-  record FormulaHealthResult(StepId stepId, WorkbookAnalysis.FormulaHealth analysis)
+  record FormulaHealthResult(StepId stepId, FormulaHealthReport analysis)
       implements WorkbookAnalysisResult {
     public FormulaHealthResult {
 
@@ -26,7 +35,7 @@ public sealed interface WorkbookAnalysisResult extends WorkbookReadAnalysisResul
   }
 
   /** Returns data-validation-health findings for one analysis read. */
-  record DataValidationHealthResult(StepId stepId, WorkbookAnalysis.DataValidationHealth analysis)
+  record DataValidationHealthResult(StepId stepId, DataValidationHealthReport analysis)
       implements WorkbookAnalysisResult {
     public DataValidationHealthResult {
 
@@ -37,8 +46,7 @@ public sealed interface WorkbookAnalysisResult extends WorkbookReadAnalysisResul
 
   /** Returns conditional-formatting-health findings for one analysis read. */
   record ConditionalFormattingHealthResult(
-      StepId stepId, WorkbookAnalysis.ConditionalFormattingHealth analysis)
-      implements WorkbookAnalysisResult {
+      StepId stepId, ConditionalFormattingHealthReport analysis) implements WorkbookAnalysisResult {
     public ConditionalFormattingHealthResult {
 
       java.util.Objects.requireNonNull(stepId, "stepId must not be null");
@@ -47,7 +55,7 @@ public sealed interface WorkbookAnalysisResult extends WorkbookReadAnalysisResul
   }
 
   /** Returns autofilter-health findings for one analysis read. */
-  record AutofilterHealthResult(StepId stepId, WorkbookAnalysis.AutofilterHealth analysis)
+  record AutofilterHealthResult(StepId stepId, AutofilterHealthReport analysis)
       implements WorkbookAnalysisResult {
     public AutofilterHealthResult {
 
@@ -57,7 +65,7 @@ public sealed interface WorkbookAnalysisResult extends WorkbookReadAnalysisResul
   }
 
   /** Returns table-health findings for one analysis read. */
-  record TableHealthResult(StepId stepId, WorkbookAnalysis.TableHealth analysis)
+  record TableHealthResult(StepId stepId, TableHealthReport analysis)
       implements WorkbookAnalysisResult {
     public TableHealthResult {
 
@@ -67,7 +75,7 @@ public sealed interface WorkbookAnalysisResult extends WorkbookReadAnalysisResul
   }
 
   /** Returns pivot-table-health findings for one analysis read. */
-  record PivotTableHealthResult(StepId stepId, WorkbookAnalysis.PivotTableHealth analysis)
+  record PivotTableHealthResult(StepId stepId, PivotTableHealthReport analysis)
       implements WorkbookAnalysisResult {
     public PivotTableHealthResult {
 
@@ -77,7 +85,7 @@ public sealed interface WorkbookAnalysisResult extends WorkbookReadAnalysisResul
   }
 
   /** Returns hyperlink-health findings for one analysis read. */
-  record HyperlinkHealthResult(StepId stepId, WorkbookAnalysis.HyperlinkHealth analysis)
+  record HyperlinkHealthResult(StepId stepId, HyperlinkHealthReport analysis)
       implements WorkbookAnalysisResult {
     public HyperlinkHealthResult {
 
@@ -87,7 +95,7 @@ public sealed interface WorkbookAnalysisResult extends WorkbookReadAnalysisResul
   }
 
   /** Returns named-range-health findings for one analysis read. */
-  record NamedRangeHealthResult(StepId stepId, WorkbookAnalysis.NamedRangeHealth analysis)
+  record NamedRangeHealthResult(StepId stepId, NamedRangeHealthReport analysis)
       implements WorkbookAnalysisResult {
     public NamedRangeHealthResult {
 
@@ -97,7 +105,7 @@ public sealed interface WorkbookAnalysisResult extends WorkbookReadAnalysisResul
   }
 
   /** Returns the aggregated workbook findings from the first analysis family. */
-  record WorkbookFindingsResult(StepId stepId, WorkbookAnalysis.WorkbookFindings analysis)
+  record WorkbookFindingsResult(StepId stepId, WorkbookFindingsReport analysis)
       implements WorkbookAnalysisResult {
     public WorkbookFindingsResult {
 

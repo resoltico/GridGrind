@@ -2594,3 +2594,22 @@ Final ./gradlew check passes2m58s: core384, JSON353, engine1414 plus14 parity, C
 errors/skips; all143 golden cases unchanged. Inventories: converters1160→1083, main114592→114469,
 tests153596→153631; Support198, blank288, definitions0, snapshots2(runtime) unchanged. Baseline diff
 empty. WP-40 remains open for ResolvedPlan, windows/surfaces/analyses and the read query/result cutover.
+
+## WP-40 canonical analysis findings and health reports
+
+Deleted the engine WorkbookAnalysis payload hierarchy and its health/finding/location conversion
+support. Native analyzers now build existing core health reports, AnalysisFindingReport,
+AnalysisSummaryReport and AnalysisLocationReport directly. Sheet labels are captured where native
+locations are created; the conditional-formatting sheet-name lookup explicitly unwraps its label.
+Read result conversion forwards analysis payloads unchanged. Retired only the deleted engine DTO's
+two constructor/collection-copy tests; existing canonical core invariant tests and real analyzer,
+selection, evidence, severity, count and ordering tests remain.
+
+Main compilation identified one String boundary needing label.value(); corrected it. Focused core,
+engine, parity and PMD checks found only a String-vs-label assertion in the selected-sheet validation
+health test; retained its exact expected sheet and counts, then verified that class16s. Failure XML
+retained externally. Nested check/all94 retained seeds passes19s. Final ./gradlew check passes3m4s:
+core384, JSON353, engine1412 plus14 parity, CLI588, zero failures/errors/skips; all143 golden cases
+unchanged. No active campaigns. Inventories: converters1083→927, Support198→197, blank288→287,
+main Java114469→114102, tests153631→153526; definitions0 and snapshots2(runtime) unchanged. Baseline
+diff empty. WP-40 remains open for ResolvedPlan, surface/window facts and the read query/result seam.

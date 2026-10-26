@@ -1,7 +1,19 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.core.model.formula.FormulaHealthReport;
+import dev.erst.gridgrind.core.model.formula.NamedRangeHealthReport;
 import dev.erst.gridgrind.core.model.formula.NamedRangeReport;
 import dev.erst.gridgrind.core.model.formula.NamedRangeScopeReport;
+import dev.erst.gridgrind.core.model.pivot.PivotTableHealthReport;
+import dev.erst.gridgrind.core.model.table.AutofilterHealthReport;
+import dev.erst.gridgrind.core.model.table.TableHealthReport;
+import dev.erst.gridgrind.core.model.validation.ConditionalFormattingHealthReport;
+import dev.erst.gridgrind.core.model.validation.DataValidationHealthReport;
+import dev.erst.gridgrind.core.model.value.HyperlinkHealthReport;
+import dev.erst.gridgrind.core.result.AnalysisFindingReport;
+import dev.erst.gridgrind.core.result.AnalysisLocationReport;
+import dev.erst.gridgrind.core.result.AnalysisSummaryReport;
+import dev.erst.gridgrind.core.result.WorkbookFindingsReport;
 import dev.erst.gridgrind.core.vocabulary.AnalysisFindingCode;
 import dev.erst.gridgrind.core.vocabulary.AnalysisSeverity;
 import dev.erst.gridgrind.excel.pivot.ExcelPivotTableSelection;
@@ -84,80 +96,77 @@ final class WorkbookAnalyzer {
     };
   }
 
-  WorkbookAnalysis.FormulaHealth formulaHealth(
-      ExcelWorkbook workbook, ExcelSheetSelection selection) {
+  FormulaHealthReport formulaHealth(ExcelWorkbook workbook, ExcelSheetSelection selection) {
     Objects.requireNonNull(workbook, "workbook must not be null");
     Objects.requireNonNull(selection, "selection must not be null");
 
     int checkedFormulaCellCount = 0;
-    List<WorkbookAnalysis.AnalysisFinding> findings = new ArrayList<>();
+    List<AnalysisFindingReport> findings = new ArrayList<>();
     for (String sheetName : selectSheets(workbook, selection)) {
       ExcelSheet sheet = workbook.sheet(sheetName);
       checkedFormulaCellCount += sheet.diagnostics().formulaCellCount();
       findings.addAll(sheet.diagnostics().formulaHealthFindings());
     }
-    return new WorkbookAnalysis.FormulaHealth(
+    return new FormulaHealthReport(
         checkedFormulaCellCount, summary(findings), List.copyOf(findings));
   }
 
-  WorkbookAnalysis.DataValidationHealth dataValidationHealth(
+  DataValidationHealthReport dataValidationHealth(
       ExcelWorkbook workbook, ExcelSheetSelection selection) {
     Objects.requireNonNull(workbook, "workbook must not be null");
     Objects.requireNonNull(selection, "selection must not be null");
     return documentAnalyzer.dataValidationHealth(workbook, selection);
   }
 
-  WorkbookAnalysis.ConditionalFormattingHealth conditionalFormattingHealth(
+  ConditionalFormattingHealthReport conditionalFormattingHealth(
       ExcelWorkbook workbook, ExcelSheetSelection selection) {
     Objects.requireNonNull(workbook, "workbook must not be null");
     Objects.requireNonNull(selection, "selection must not be null");
     return documentAnalyzer.conditionalFormattingHealth(workbook, selection);
   }
 
-  WorkbookAnalysis.AutofilterHealth autofilterHealth(
-      ExcelWorkbook workbook, ExcelSheetSelection selection) {
+  AutofilterHealthReport autofilterHealth(ExcelWorkbook workbook, ExcelSheetSelection selection) {
     Objects.requireNonNull(workbook, "workbook must not be null");
     Objects.requireNonNull(selection, "selection must not be null");
     return documentAnalyzer.autofilterHealth(workbook, selection);
   }
 
-  WorkbookAnalysis.TableHealth tableHealth(ExcelWorkbook workbook, ExcelTableSelection selection) {
+  TableHealthReport tableHealth(ExcelWorkbook workbook, ExcelTableSelection selection) {
     Objects.requireNonNull(workbook, "workbook must not be null");
     Objects.requireNonNull(selection, "selection must not be null");
     return documentAnalyzer.tableHealth(workbook, selection);
   }
 
-  WorkbookAnalysis.PivotTableHealth pivotTableHealth(
+  PivotTableHealthReport pivotTableHealth(
       ExcelWorkbook workbook, ExcelPivotTableSelection selection) {
     Objects.requireNonNull(workbook, "workbook must not be null");
     Objects.requireNonNull(selection, "selection must not be null");
     return documentAnalyzer.pivotTableHealth(workbook, selection);
   }
 
-  WorkbookAnalysis.HyperlinkHealth hyperlinkHealth(
+  HyperlinkHealthReport hyperlinkHealth(
       ExcelWorkbook workbook, WorkbookLocation workbookLocation, ExcelSheetSelection selection) {
     Objects.requireNonNull(workbook, "workbook must not be null");
     Objects.requireNonNull(workbookLocation, "workbookLocation must not be null");
     Objects.requireNonNull(selection, "selection must not be null");
 
     int checkedHyperlinkCount = 0;
-    List<WorkbookAnalysis.AnalysisFinding> findings = new ArrayList<>();
+    List<AnalysisFindingReport> findings = new ArrayList<>();
     for (String sheetName : selectSheets(workbook, selection)) {
       ExcelSheet sheet = workbook.sheet(sheetName);
       checkedHyperlinkCount += sheet.diagnostics().hyperlinkCount();
       findings.addAll(sheet.diagnostics().hyperlinkHealthFindings(workbookLocation));
     }
-    return new WorkbookAnalysis.HyperlinkHealth(
+    return new HyperlinkHealthReport(
         checkedHyperlinkCount, summary(findings), List.copyOf(findings));
   }
 
   /** Runs hyperlink-health analysis assuming the workbook has not yet been saved to disk. */
-  WorkbookAnalysis.HyperlinkHealth hyperlinkHealth(
-      ExcelWorkbook workbook, ExcelSheetSelection selection) {
+  HyperlinkHealthReport hyperlinkHealth(ExcelWorkbook workbook, ExcelSheetSelection selection) {
     return hyperlinkHealth(workbook, new WorkbookLocation.UnsavedWorkbook(), selection);
   }
 
-  WorkbookAnalysis.NamedRangeHealth namedRangeHealth(
+  NamedRangeHealthReport namedRangeHealth(
       ExcelWorkbook workbook, ExcelNamedRangeSelection selection) {
     Objects.requireNonNull(workbook, "workbook must not be null");
     Objects.requireNonNull(selection, "selection must not be null");
@@ -170,18 +179,16 @@ final class WorkbookAnalyzer {
       combined.addAll(ExcelWorkbookNamedRangeSupport.unmodeledObservedNamedRanges(workbook));
       namedRanges = List.copyOf(combined);
     }
-    List<WorkbookAnalysis.AnalysisFinding> findings =
-        analyzeNamedRangeHealth(workbook, namedRanges);
-    return new WorkbookAnalysis.NamedRangeHealth(
-        namedRanges.size(), summary(findings), List.copyOf(findings));
+    List<AnalysisFindingReport> findings = analyzeNamedRangeHealth(workbook, namedRanges);
+    return new NamedRangeHealthReport(namedRanges.size(), summary(findings), List.copyOf(findings));
   }
 
-  WorkbookAnalysis.WorkbookFindings workbookFindings(
+  WorkbookFindingsReport workbookFindings(
       ExcelWorkbook workbook, WorkbookLocation workbookLocation) {
     Objects.requireNonNull(workbook, "workbook must not be null");
     Objects.requireNonNull(workbookLocation, "workbookLocation must not be null");
 
-    List<WorkbookAnalysis.AnalysisFinding> combined = new ArrayList<>();
+    List<AnalysisFindingReport> combined = new ArrayList<>();
     combined.addAll(formulaHealth(workbook, new ExcelSheetSelection.All()).findings());
     combined.addAll(dataValidationHealth(workbook, new ExcelSheetSelection.All()).findings());
     combined.addAll(
@@ -193,27 +200,27 @@ final class WorkbookAnalyzer {
         hyperlinkHealth(workbook, workbookLocation, new ExcelSheetSelection.All()).findings());
     combined.addAll(namedRangeHealth(workbook, new ExcelNamedRangeSelection.All()).findings());
 
-    List<WorkbookAnalysis.AnalysisFinding> findings =
+    List<AnalysisFindingReport> findings =
         List.copyOf(new ArrayList<>(new LinkedHashSet<>(combined)));
-    return new WorkbookAnalysis.WorkbookFindings(summary(findings), findings);
+    return new WorkbookFindingsReport(summary(findings), findings);
   }
 
   /** Aggregates workbook findings assuming the workbook has not yet been saved to disk. */
-  WorkbookAnalysis.WorkbookFindings workbookFindings(ExcelWorkbook workbook) {
+  WorkbookFindingsReport workbookFindings(ExcelWorkbook workbook) {
     return workbookFindings(workbook, new WorkbookLocation.UnsavedWorkbook());
   }
 
-  private List<WorkbookAnalysis.AnalysisFinding> analyzeNamedRangeHealth(
+  private List<AnalysisFindingReport> analyzeNamedRangeHealth(
       ExcelWorkbook workbook, List<NamedRangeReport> namedRanges) {
-    List<WorkbookAnalysis.AnalysisFinding> findings = new ArrayList<>();
+    List<AnalysisFindingReport> findings = new ArrayList<>();
     Set<String> workbookSheetNames = new LinkedHashSet<>(workbook.sheets().sheetNames());
     for (NamedRangeReport namedRange : namedRanges) {
-      WorkbookAnalysis.AnalysisLocation.NamedRange location = namedRangeLocation(namedRange);
+      AnalysisLocationReport.NamedRange location = namedRangeLocation(namedRange);
       String refersToFormula = namedRange.refersToFormula();
       String upperFormula = refersToFormula.toUpperCase(Locale.ROOT);
       if (upperFormula.contains("#REF!")) {
         findings.add(
-            new WorkbookAnalysis.AnalysisFinding(
+            new AnalysisFindingReport(
                 AnalysisFindingCode.NAMED_RANGE_BROKEN_REFERENCE,
                 AnalysisSeverity.ERROR,
                 "Named range contains a broken reference",
@@ -228,7 +235,7 @@ final class WorkbookAnalyzer {
           for (String referencedSheet : parsed.sheetNames()) {
             if (!workbookSheetNames.contains(referencedSheet)) {
               findings.add(
-                  new WorkbookAnalysis.AnalysisFinding(
+                  new AnalysisFindingReport(
                       AnalysisFindingCode.NAMED_RANGE_BROKEN_REFERENCE,
                       AnalysisSeverity.ERROR,
                       "Named range targets a missing sheet",
@@ -240,7 +247,7 @@ final class WorkbookAnalyzer {
         }
         case NamedFormulaReferences.Unparseable _ ->
             findings.add(
-                new WorkbookAnalysis.AnalysisFinding(
+                new AnalysisFindingReport(
                     AnalysisFindingCode.NAMED_RANGE_UNPARSEABLE_FORMULA,
                     AnalysisSeverity.ERROR,
                     "Named range formula could not be parsed",
@@ -254,9 +261,8 @@ final class WorkbookAnalyzer {
     return List.copyOf(findings);
   }
 
-  static List<WorkbookAnalysis.AnalysisFinding> scopeShadowingFindings(
-      List<NamedRangeReport> namedRanges) {
-    List<WorkbookAnalysis.AnalysisFinding> findings = new ArrayList<>();
+  static List<AnalysisFindingReport> scopeShadowingFindings(List<NamedRangeReport> namedRanges) {
+    List<AnalysisFindingReport> findings = new ArrayList<>();
     Set<String> workbookScopedNames = new LinkedHashSet<>();
     Set<String> sheetScopedNames = new LinkedHashSet<>();
     for (NamedRangeReport namedRange : namedRanges) {
@@ -271,7 +277,7 @@ final class WorkbookAnalyzer {
       String normalized = namedRange.name().value().toUpperCase(Locale.ROOT);
       if (workbookScopedNames.contains(normalized) && sheetScopedNames.contains(normalized)) {
         findings.add(
-            new WorkbookAnalysis.AnalysisFinding(
+            new AnalysisFindingReport(
                 AnalysisFindingCode.NAMED_RANGE_SCOPE_SHADOWING,
                 AnalysisSeverity.INFO,
                 "Named range scope shadowing",
@@ -290,14 +296,12 @@ final class WorkbookAnalyzer {
     };
   }
 
-  WorkbookAnalysis.AnalysisSummary summary(List<WorkbookAnalysis.AnalysisFinding> findings) {
+  AnalysisSummaryReport summary(List<AnalysisFindingReport> findings) {
     return ExcelDocumentAnalyzer.summarizeFindings(findings);
   }
 
-  private static WorkbookAnalysis.AnalysisLocation.NamedRange namedRangeLocation(
-      NamedRangeReport namedRange) {
-    return new WorkbookAnalysis.AnalysisLocation.NamedRange(
-        namedRange.name().value(), namedRange.scope());
+  private static AnalysisLocationReport.NamedRange namedRangeLocation(NamedRangeReport namedRange) {
+    return new AnalysisLocationReport.NamedRange(namedRange.name().value(), namedRange.scope());
   }
 
   private NamedFormulaReferences namedFormulaReferences(

@@ -114,54 +114,37 @@ final class InspectionResultReadConverter {
                   namedRangeSurface.surface()));
       case dev.erst.gridgrind.excel.WorkbookAnalysisResult.FormulaHealthResult formulaHealth ->
           new WorkbookAnalysisResult.FormulaHealthResult(
-              formulaHealth.stepId(),
-              InspectionResultAnalysisReportSupport.toFormulaHealthReport(
-                  formulaHealth.analysis()));
+              formulaHealth.stepId(), formulaHealth.analysis());
       case dev.erst.gridgrind.excel.WorkbookAnalysisResult.DataValidationHealthResult
               dataValidationHealth ->
           new WorkbookAnalysisResult.DataValidationHealthResult(
-              dataValidationHealth.stepId(),
-              InspectionResultAnalysisReportSupport.toDataValidationHealthReport(
-                  dataValidationHealth.analysis()));
+              dataValidationHealth.stepId(), dataValidationHealth.analysis());
       case dev.erst.gridgrind.excel.WorkbookAnalysisResult.ConditionalFormattingHealthResult
               conditionalFormattingHealth ->
           new WorkbookAnalysisResult.ConditionalFormattingHealthResult(
-              conditionalFormattingHealth.stepId(),
-              InspectionResultAnalysisReportSupport.toConditionalFormattingHealthReport(
-                  conditionalFormattingHealth.analysis()));
+              conditionalFormattingHealth.stepId(), conditionalFormattingHealth.analysis());
       case dev.erst.gridgrind.excel.WorkbookAnalysisResult.AutofilterHealthResult
               autofilterHealth ->
           new WorkbookAnalysisResult.AutofilterHealthResult(
-              autofilterHealth.stepId(),
-              InspectionResultAnalysisReportSupport.toAutofilterHealthReport(
-                  autofilterHealth.analysis()));
+              autofilterHealth.stepId(), autofilterHealth.analysis());
       case dev.erst.gridgrind.excel.WorkbookAnalysisResult.TableHealthResult tableHealth ->
           new WorkbookAnalysisResult.TableHealthResult(
-              tableHealth.stepId(),
-              InspectionResultAnalysisReportSupport.toTableHealthReport(tableHealth.analysis()));
+              tableHealth.stepId(), tableHealth.analysis());
       case dev.erst.gridgrind.excel.WorkbookAnalysisResult.PivotTableHealthResult
               pivotTableHealth ->
           new WorkbookAnalysisResult.PivotTableHealthResult(
-              pivotTableHealth.stepId(),
-              InspectionResultAnalysisReportSupport.toPivotTableHealthReport(
-                  pivotTableHealth.analysis()));
+              pivotTableHealth.stepId(), pivotTableHealth.analysis());
       case dev.erst.gridgrind.excel.WorkbookAnalysisResult.HyperlinkHealthResult hyperlinkHealth ->
           new WorkbookAnalysisResult.HyperlinkHealthResult(
-              hyperlinkHealth.stepId(),
-              InspectionResultAnalysisReportSupport.toHyperlinkHealthReport(
-                  hyperlinkHealth.analysis()));
+              hyperlinkHealth.stepId(), hyperlinkHealth.analysis());
       case dev.erst.gridgrind.excel.WorkbookAnalysisResult.NamedRangeHealthResult
               namedRangeHealth ->
           new WorkbookAnalysisResult.NamedRangeHealthResult(
-              namedRangeHealth.stepId(),
-              InspectionResultAnalysisReportSupport.toNamedRangeHealthReport(
-                  namedRangeHealth.analysis()));
+              namedRangeHealth.stepId(), namedRangeHealth.analysis());
       case dev.erst.gridgrind.excel.WorkbookAnalysisResult.WorkbookFindingsResult
               workbookFindings ->
           new WorkbookAnalysisResult.WorkbookFindingsResult(
-              workbookFindings.stepId(),
-              InspectionResultAnalysisReportSupport.toWorkbookFindingsReport(
-                  workbookFindings.analysis()));
+              workbookFindings.stepId(), workbookFindings.analysis());
     };
   }
 }

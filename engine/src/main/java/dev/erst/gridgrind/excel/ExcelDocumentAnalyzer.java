@@ -1,7 +1,14 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.core.model.pivot.PivotTableHealthReport;
 import dev.erst.gridgrind.core.model.pivot.PivotTableReport;
+import dev.erst.gridgrind.core.model.table.AutofilterHealthReport;
 import dev.erst.gridgrind.core.model.table.TableEntryReport;
+import dev.erst.gridgrind.core.model.table.TableHealthReport;
+import dev.erst.gridgrind.core.model.validation.ConditionalFormattingHealthReport;
+import dev.erst.gridgrind.core.model.validation.DataValidationHealthReport;
+import dev.erst.gridgrind.core.result.AnalysisFindingReport;
+import dev.erst.gridgrind.core.result.AnalysisSummaryReport;
 import dev.erst.gridgrind.core.vocabulary.AnalysisSeverity;
 import dev.erst.gridgrind.excel.pivot.ExcelPivotTableController;
 import dev.erst.gridgrind.excel.pivot.ExcelPivotTableSelection;
@@ -48,32 +55,31 @@ final class ExcelDocumentAnalyzer {
   }
 
   /** Returns data-validation-health findings for the selected sheets. */
-  WorkbookAnalysis.DataValidationHealth dataValidationHealth(
+  DataValidationHealthReport dataValidationHealth(
       ExcelWorkbook workbook, ExcelSheetSelection selection) {
     Objects.requireNonNull(workbook, "workbook must not be null");
     Objects.requireNonNull(selection, "selection must not be null");
 
     int checkedValidationCount = 0;
-    List<WorkbookAnalysis.AnalysisFinding> findings = new ArrayList<>();
+    List<AnalysisFindingReport> findings = new ArrayList<>();
     for (String sheetName : selectSheets(workbook, selection)) {
       ExcelSheet sheet = workbook.sheet(sheetName);
       checkedValidationCount += dataValidationController.dataValidationCount(sheet.xssfSheet());
       findings.addAll(
           dataValidationController.dataValidationHealthFindings(sheetName, sheet.xssfSheet()));
     }
-    WorkbookAnalysis.AnalysisSummary summary = summarizeFindings(findings);
-    return new WorkbookAnalysis.DataValidationHealth(
-        checkedValidationCount, summary, List.copyOf(findings));
+    AnalysisSummaryReport summary = summarizeFindings(findings);
+    return new DataValidationHealthReport(checkedValidationCount, summary, List.copyOf(findings));
   }
 
   /** Returns conditional-formatting-health findings for the selected sheets. */
-  WorkbookAnalysis.ConditionalFormattingHealth conditionalFormattingHealth(
+  ConditionalFormattingHealthReport conditionalFormattingHealth(
       ExcelWorkbook workbook, ExcelSheetSelection selection) {
     Objects.requireNonNull(workbook, "workbook must not be null");
     Objects.requireNonNull(selection, "selection must not be null");
 
     int checkedConditionalFormattingBlockCount = 0;
-    List<WorkbookAnalysis.AnalysisFinding> findings = new ArrayList<>();
+    List<AnalysisFindingReport> findings = new ArrayList<>();
     for (String sheetName : selectSheets(workbook, selection)) {
       ExcelSheet sheet = workbook.sheet(sheetName);
       checkedConditionalFormattingBlockCount +=
@@ -82,20 +88,19 @@ final class ExcelDocumentAnalyzer {
           conditionalFormattingController.conditionalFormattingHealthFindings(
               sheetName, sheet.xssfSheet()));
     }
-    return new WorkbookAnalysis.ConditionalFormattingHealth(
+    return new ConditionalFormattingHealthReport(
         checkedConditionalFormattingBlockCount, summarizeFindings(findings), List.copyOf(findings));
   }
 
   /** Returns autofilter-health findings for the selected sheets. */
-  WorkbookAnalysis.AutofilterHealth autofilterHealth(
-      ExcelWorkbook workbook, ExcelSheetSelection selection) {
+  AutofilterHealthReport autofilterHealth(ExcelWorkbook workbook, ExcelSheetSelection selection) {
     Objects.requireNonNull(workbook, "workbook must not be null");
     Objects.requireNonNull(selection, "selection must not be null");
 
     List<TableEntryReport> allTables =
         tableController.tables(workbook, new ExcelTableSelection.All());
     int checkedAutofilterCount = 0;
-    List<WorkbookAnalysis.AnalysisFinding> findings = new ArrayList<>();
+    List<AnalysisFindingReport> findings = new ArrayList<>();
     for (String sheetName : selectSheets(workbook, selection)) {
       ExcelSheet sheet = workbook.sheet(sheetName);
       checkedAutofilterCount += autofilterController.sheetAutofilterCount(sheet.xssfSheet());
@@ -107,32 +112,31 @@ final class ExcelDocumentAnalyzer {
               sheetName, sheet.xssfSheet(), tablesOnSheet));
       findings.addAll(tableController.tableAutofilterHealthFindings(workbook, sheetName));
     }
-    return new WorkbookAnalysis.AutofilterHealth(
+    return new AutofilterHealthReport(
         checkedAutofilterCount, summarizeFindings(findings), List.copyOf(findings));
   }
 
   /** Returns table-health findings for the selected workbook-global tables. */
-  WorkbookAnalysis.TableHealth tableHealth(ExcelWorkbook workbook, ExcelTableSelection selection) {
+  TableHealthReport tableHealth(ExcelWorkbook workbook, ExcelTableSelection selection) {
     Objects.requireNonNull(workbook, "workbook must not be null");
     Objects.requireNonNull(selection, "selection must not be null");
 
     List<TableEntryReport> selectedTables = tableController.tables(workbook, selection);
-    List<WorkbookAnalysis.AnalysisFinding> findings =
-        tableController.tableHealthFindings(workbook, selection);
-    return new WorkbookAnalysis.TableHealth(
+    List<AnalysisFindingReport> findings = tableController.tableHealthFindings(workbook, selection);
+    return new TableHealthReport(
         selectedTables.size(), summarizeFindings(findings), List.copyOf(findings));
   }
 
   /** Returns pivot-table-health findings for the selected workbook-global pivot tables. */
-  WorkbookAnalysis.PivotTableHealth pivotTableHealth(
+  PivotTableHealthReport pivotTableHealth(
       ExcelWorkbook workbook, ExcelPivotTableSelection selection) {
     Objects.requireNonNull(workbook, "workbook must not be null");
     Objects.requireNonNull(selection, "selection must not be null");
 
     List<PivotTableReport> selectedPivots = pivotTableController.pivotTables(workbook, selection);
-    List<WorkbookAnalysis.AnalysisFinding> findings =
+    List<AnalysisFindingReport> findings =
         pivotTableController.pivotTableHealthFindings(workbook, selection);
-    return new WorkbookAnalysis.PivotTableHealth(
+    return new PivotTableHealthReport(
         selectedPivots.size(), summarizeFindings(findings), List.copyOf(findings));
   }
 
@@ -144,12 +148,11 @@ final class ExcelDocumentAnalyzer {
   }
 
   /** Returns analysis summary counts derived from the provided findings. */
-  static WorkbookAnalysis.AnalysisSummary summarizeFindings(
-      List<WorkbookAnalysis.AnalysisFinding> findings) {
+  static AnalysisSummaryReport summarizeFindings(List<AnalysisFindingReport> findings) {
     int errorCount = 0;
     int warningCount = 0;
     int infoCount = 0;
-    for (WorkbookAnalysis.AnalysisFinding finding : findings) {
+    for (AnalysisFindingReport finding : findings) {
       if (finding.severity() == AnalysisSeverity.ERROR) {
         errorCount++;
         continue;
@@ -160,7 +163,6 @@ final class ExcelDocumentAnalyzer {
       }
       infoCount++;
     }
-    return new WorkbookAnalysis.AnalysisSummary(
-        findings.size(), errorCount, warningCount, infoCount);
+    return new AnalysisSummaryReport(findings.size(), errorCount, warningCount, infoCount);
   }
 }

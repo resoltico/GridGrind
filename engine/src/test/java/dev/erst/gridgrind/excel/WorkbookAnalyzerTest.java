@@ -2,6 +2,8 @@ package dev.erst.gridgrind.excel;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.core.model.formula.FormulaHealthReport;
+import dev.erst.gridgrind.core.model.formula.NamedRangeHealthReport;
 import dev.erst.gridgrind.core.model.formula.NamedRangeReport;
 import dev.erst.gridgrind.core.model.formula.NamedRangeScopeReport;
 import dev.erst.gridgrind.core.model.formula.NamedRangeTarget;
@@ -12,8 +14,13 @@ import dev.erst.gridgrind.core.model.table.ResolvedTable;
 import dev.erst.gridgrind.core.model.table.TableStyleSpec;
 import dev.erst.gridgrind.core.model.validation.ConditionalFormattingRuleSpec;
 import dev.erst.gridgrind.core.model.value.CellValue;
+import dev.erst.gridgrind.core.model.value.HyperlinkHealthReport;
 import dev.erst.gridgrind.core.model.value.HyperlinkTarget;
 import dev.erst.gridgrind.core.plan.StructuredMutationAction;
+import dev.erst.gridgrind.core.result.AnalysisFindingReport;
+import dev.erst.gridgrind.core.result.AnalysisLocationReport;
+import dev.erst.gridgrind.core.result.AnalysisSummaryReport;
+import dev.erst.gridgrind.core.result.WorkbookFindingsReport;
 import dev.erst.gridgrind.core.vocabulary.AnalysisFindingCode;
 import dev.erst.gridgrind.core.vocabulary.AnalysisSeverity;
 import dev.erst.gridgrind.core.vocabulary.ExcelPivotDataConsolidateFunction;
@@ -179,7 +186,7 @@ class WorkbookAnalyzerTest {
       assertEquals(2, formulaHealth.analysis().checkedFormulaCellCount());
       assertTrue(
           formulaHealth.analysis().findings().stream()
-              .map(WorkbookAnalysis.AnalysisFinding::code)
+              .map(AnalysisFindingReport::code)
               .toList()
               .containsAll(
                   List.of(
@@ -189,7 +196,7 @@ class WorkbookAnalyzerTest {
       assertEquals(3, hyperlinkHealth.analysis().checkedHyperlinkCount());
       assertTrue(
           hyperlinkHealth.analysis().findings().stream()
-              .map(WorkbookAnalysis.AnalysisFinding::code)
+              .map(AnalysisFindingReport::code)
               .toList()
               .containsAll(
                   List.of(
@@ -200,7 +207,7 @@ class WorkbookAnalyzerTest {
       assertEquals(4, namedRangeHealth.analysis().checkedNamedRangeCount());
       assertTrue(
           namedRangeHealth.analysis().findings().stream()
-              .map(WorkbookAnalysis.AnalysisFinding::code)
+              .map(AnalysisFindingReport::code)
               .toList()
               .containsAll(List.of(AnalysisFindingCode.NAMED_RANGE_BROKEN_REFERENCE)));
 
@@ -222,7 +229,7 @@ class WorkbookAnalyzerTest {
       assertEquals(
           List.of(AnalysisFindingCode.PIVOT_TABLE_MISSING_NAME),
           pivotTableHealth.analysis().findings().stream()
-              .map(WorkbookAnalysis.AnalysisFinding::code)
+              .map(AnalysisFindingReport::code)
               .distinct()
               .toList());
 
@@ -232,12 +239,12 @@ class WorkbookAnalyzerTest {
           workbookFindings.analysis().findings().size());
       assertTrue(
           workbookFindings.analysis().findings().stream()
-              .map(WorkbookAnalysis.AnalysisFinding::code)
+              .map(AnalysisFindingReport::code)
               .toList()
               .contains(AnalysisFindingCode.AUTOFILTER_TABLE_MISMATCH));
       assertTrue(
           workbookFindings.analysis().findings().stream()
-              .map(WorkbookAnalysis.AnalysisFinding::code)
+              .map(AnalysisFindingReport::code)
               .toList()
               .contains(AnalysisFindingCode.PIVOT_TABLE_MISSING_NAME));
     }
@@ -268,17 +275,17 @@ class WorkbookAnalyzerTest {
 
       WorkbookAnalyzer analyzer = new WorkbookAnalyzer();
 
-      WorkbookAnalysis.FormulaHealth formulaHealth =
+      FormulaHealthReport formulaHealth =
           analyzer.formulaHealth(workbook, new ExcelSheetSelection.Selected(List.of("Forecast")));
       assertEquals(1, formulaHealth.checkedFormulaCellCount());
       assertEquals(0, formulaHealth.summary().infoCount());
 
-      WorkbookAnalysis.HyperlinkHealth hyperlinkHealth =
+      HyperlinkHealthReport hyperlinkHealth =
           analyzer.hyperlinkHealth(workbook, new ExcelSheetSelection.Selected(List.of("Budget")));
       assertEquals(1, hyperlinkHealth.checkedHyperlinkCount());
       assertEquals(1, hyperlinkHealth.summary().errorCount());
 
-      WorkbookAnalysis.HyperlinkHealth unresolvedFileHealth =
+      HyperlinkHealthReport unresolvedFileHealth =
           analyzer.hyperlinkHealth(
               workbook,
               new WorkbookLocation.UnsavedWorkbook(),
@@ -289,7 +296,7 @@ class WorkbookAnalyzerTest {
           AnalysisFindingCode.HYPERLINK_UNRESOLVED_FILE_TARGET,
           unresolvedFileHealth.findings().getFirst().code());
 
-      WorkbookAnalysis.NamedRangeHealth namedRangeHealth =
+      NamedRangeHealthReport namedRangeHealth =
           analyzer.namedRangeHealth(
               workbook,
               new ExcelNamedRangeSelection.Selected(
@@ -354,9 +361,9 @@ class WorkbookAnalyzerTest {
 
       WorkbookAnalyzer analyzer = new WorkbookAnalyzer();
 
-      WorkbookAnalysis.HyperlinkHealth hyperlinkHealth =
+      HyperlinkHealthReport hyperlinkHealth =
           analyzer.hyperlinkHealth(workbook, new ExcelSheetSelection.All());
-      WorkbookAnalysis.WorkbookFindings workbookFindings = analyzer.workbookFindings(workbook);
+      WorkbookFindingsReport workbookFindings = analyzer.workbookFindings(workbook);
 
       assertEquals(1, hyperlinkHealth.findings().size());
       assertEquals(
@@ -364,7 +371,7 @@ class WorkbookAnalyzerTest {
           hyperlinkHealth.findings().getFirst().code());
       assertTrue(
           workbookFindings.findings().stream()
-              .map(WorkbookAnalysis.AnalysisFinding::code)
+              .map(AnalysisFindingReport::code)
               .toList()
               .contains(AnalysisFindingCode.HYPERLINK_UNRESOLVED_FILE_TARGET));
     }
@@ -390,8 +397,7 @@ class WorkbookAnalyzerTest {
                     new dev.erst.gridgrind.core.vocabulary.SheetName("Budget"),
                     new dev.erst.gridgrind.core.vocabulary.RangeRef("B2"))));
 
-    List<WorkbookAnalysis.AnalysisFinding> findings =
-        WorkbookAnalyzer.scopeShadowingFindings(namedRanges);
+    List<AnalysisFindingReport> findings = WorkbookAnalyzer.scopeShadowingFindings(namedRanges);
 
     assertEquals(2, findings.size());
     assertTrue(
@@ -454,7 +460,7 @@ class WorkbookAnalyzerTest {
 
     try (ExcelWorkbook workbook =
         ExcelWorkbooks.open(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory())) {
-      WorkbookAnalysis.NamedRangeHealth analysis =
+      NamedRangeHealthReport analysis =
           new WorkbookAnalyzer().namedRangeHealth(workbook, new ExcelNamedRangeSelection.All());
 
       assertEquals(3, analysis.checkedNamedRangeCount());
@@ -516,7 +522,7 @@ class WorkbookAnalyzerTest {
         ExcelWorkbooks.open(
             patchedWorkbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory())) {
 
-      WorkbookAnalysis.NamedRangeHealth analysis =
+      NamedRangeHealthReport analysis =
           new WorkbookAnalyzer().namedRangeHealth(workbook, new ExcelNamedRangeSelection.All());
 
       assertEquals(10, analysis.checkedNamedRangeCount());
@@ -524,7 +530,7 @@ class WorkbookAnalyzerTest {
           List.of(
               AnalysisFindingCode.NAMED_RANGE_BROKEN_REFERENCE,
               AnalysisFindingCode.NAMED_RANGE_UNPARSEABLE_FORMULA),
-          analysis.findings().stream().map(WorkbookAnalysis.AnalysisFinding::code).toList());
+          analysis.findings().stream().map(AnalysisFindingReport::code).toList());
       assertEquals(
           "Named range refers to a sheet that does not exist: Missing",
           analysis.findings().getFirst().message());
@@ -565,32 +571,34 @@ class WorkbookAnalyzerTest {
   @Test
   void summaryCountsAllSeverities() {
     WorkbookAnalyzer analyzer = new WorkbookAnalyzer();
-    WorkbookAnalysis.AnalysisSummary result =
+    AnalysisSummaryReport result =
         analyzer.summary(
             List.of(
-                new WorkbookAnalysis.AnalysisFinding(
+                new AnalysisFindingReport(
                     AnalysisFindingCode.FORMULA_ERROR_RESULT,
                     AnalysisSeverity.ERROR,
                     "Error",
                     "Error finding",
-                    new WorkbookAnalysis.AnalysisLocation.Workbook(),
+                    new AnalysisLocationReport.Workbook(),
                     List.of("1/0")),
-                new WorkbookAnalysis.AnalysisFinding(
+                new AnalysisFindingReport(
                     AnalysisFindingCode.FORMULA_EXTERNAL_REFERENCE,
                     AnalysisSeverity.WARNING,
                     "Warning",
                     "Warning finding",
-                    new WorkbookAnalysis.AnalysisLocation.Sheet("Budget"),
+                    new AnalysisLocationReport.Sheet(
+                        new dev.erst.gridgrind.core.vocabulary.SheetLabel("Budget")),
                     List.of("[Book]Sheet!A1")),
-                new WorkbookAnalysis.AnalysisFinding(
+                new AnalysisFindingReport(
                     AnalysisFindingCode.FORMULA_VOLATILE_FUNCTION,
                     AnalysisSeverity.INFO,
                     "Info",
                     "Info finding",
-                    new WorkbookAnalysis.AnalysisLocation.Cell("Budget", "A1"),
+                    new AnalysisLocationReport.Cell(
+                        new dev.erst.gridgrind.core.vocabulary.SheetLabel("Budget"), "A1"),
                     List.of("NOW()"))));
 
-    assertEquals(new WorkbookAnalysis.AnalysisSummary(3, 1, 1, 1), result);
+    assertEquals(new AnalysisSummaryReport(3, 1, 1, 1), result);
   }
 
   private static <T> T cast(Class<T> type, Object value) {

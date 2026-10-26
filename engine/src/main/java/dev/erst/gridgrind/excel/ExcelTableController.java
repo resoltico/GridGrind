@@ -5,6 +5,7 @@ import dev.erst.gridgrind.core.model.table.ResolvedTable;
 import dev.erst.gridgrind.core.model.table.TableColumnSpec;
 import dev.erst.gridgrind.core.model.table.TableEntryReport;
 import dev.erst.gridgrind.core.model.table.TableStyleSpec;
+import dev.erst.gridgrind.core.result.AnalysisFindingReport;
 import dev.erst.gridgrind.core.vocabulary.TableName;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
@@ -153,14 +154,14 @@ final class ExcelTableController {
   }
 
   /** Returns derived table-health findings for the selected tables. */
-  List<WorkbookAnalysis.AnalysisFinding> tableHealthFindings(
+  List<AnalysisFindingReport> tableHealthFindings(
       ExcelWorkbook workbook, ExcelTableSelection selection) {
     Objects.requireNonNull(workbook, "workbook must not be null");
     Objects.requireNonNull(selection, "selection must not be null");
 
     List<TableEntryReport> selectedTables = tables(workbook, selection);
     List<TableEntryReport> allTables = tables(workbook, new ExcelTableSelection.All());
-    List<WorkbookAnalysis.AnalysisFinding> findings = new ArrayList<>();
+    List<AnalysisFindingReport> findings = new ArrayList<>();
     for (TableEntryReport table : selectedTables) {
       findings.addAll(ExcelTableAnalysisSupport.tableFindings(workbook, table));
       findings.addAll(ExcelTableAnalysisSupport.overlapFindings(table, allTables));
@@ -169,13 +170,13 @@ final class ExcelTableController {
   }
 
   /** Returns derived autofilter-health findings for table-owned autofilters on one sheet. */
-  List<WorkbookAnalysis.AnalysisFinding> tableAutofilterHealthFindings(
+  List<AnalysisFindingReport> tableAutofilterHealthFindings(
       ExcelWorkbook workbook, String sheetName) {
     Objects.requireNonNull(workbook, "workbook must not be null");
     Objects.requireNonNull(sheetName, "sheetName must not be null");
 
     XSSFSheet sheet = requiredSheet(workbook, sheetName);
-    List<WorkbookAnalysis.AnalysisFinding> findings = new ArrayList<>();
+    List<AnalysisFindingReport> findings = new ArrayList<>();
     for (TableEntryReport table : tables(workbook, new ExcelTableSelection.All())) {
       if (!table.sheetName().value().equals(sheetName) || !table.behavior().hasAutofilter()) {
         continue;

@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.core.result.AnalysisFindingReport;
 import java.util.List;
 import java.util.Objects;
 
@@ -28,11 +29,11 @@ final class ExcelSheetDiagnostics {
     return metadataSupport.conditionalFormattingBlockCount();
   }
 
-  List<WorkbookAnalysis.AnalysisFinding> formulaHealthFindings() {
+  List<AnalysisFindingReport> formulaHealthFindings() {
     return analysisSupport.formulaHealthFindings(sheet.name());
   }
 
-  List<WorkbookAnalysis.AnalysisFinding> conditionalFormattingHealthFindings() {
+  List<AnalysisFindingReport> conditionalFormattingHealthFindings() {
     return metadataSupport.conditionalFormattingHealthFindings(sheet.name());
   }
 
@@ -40,12 +41,11 @@ final class ExcelSheetDiagnostics {
     return analysisSupport.hyperlinkCount();
   }
 
-  List<WorkbookAnalysis.AnalysisFinding> hyperlinkHealthFindings(
-      WorkbookLocation workbookLocation) {
+  List<AnalysisFindingReport> hyperlinkHealthFindings(WorkbookLocation workbookLocation) {
     return analysisSupport.hyperlinkHealthFindings(workbookLocation);
   }
 
-  List<WorkbookAnalysis.AnalysisFinding> hyperlinkHealthFindings() {
+  List<AnalysisFindingReport> hyperlinkHealthFindings() {
     return analysisSupport.hyperlinkHealthFindings();
   }
 }

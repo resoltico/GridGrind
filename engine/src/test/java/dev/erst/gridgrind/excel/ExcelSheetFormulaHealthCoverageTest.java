@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import dev.erst.gridgrind.core.model.formula.ResolvedFormula;
 import dev.erst.gridgrind.core.model.value.CellReport;
 import dev.erst.gridgrind.core.model.value.CellValue;
+import dev.erst.gridgrind.core.result.AnalysisFindingReport;
 import dev.erst.gridgrind.core.vocabulary.AnalysisFindingCode;
 import dev.erst.gridgrind.core.vocabulary.AnalysisSeverity;
 import java.util.List;
@@ -131,12 +132,12 @@ class ExcelSheetFormulaHealthCoverageTest extends ExcelSheetTestSupport {
       sheet.cells().setCell("A2", new ResolvedFormula("NOW()"));
       sheet.cells().setCell("A3", new ResolvedFormula("1/0"));
 
-      List<WorkbookAnalysis.AnalysisFinding> findings = sheet.diagnostics().formulaHealthFindings();
+      List<AnalysisFindingReport> findings = sheet.diagnostics().formulaHealthFindings();
 
       assertEquals(3, sheet.diagnostics().formulaCellCount());
       assertTrue(
           findings.stream()
-              .map(WorkbookAnalysis.AnalysisFinding::code)
+              .map(AnalysisFindingReport::code)
               .toList()
               .containsAll(
                   List.of(
@@ -157,10 +158,10 @@ class ExcelSheetFormulaHealthCoverageTest extends ExcelSheetTestSupport {
               new WorkbookStyleRegistry(poiWorkbook),
               FormulaRuntimeTestDouble.alwaysFail(new IllegalStateException()));
 
-      List<WorkbookAnalysis.AnalysisFinding> findings = sheet.diagnostics().formulaHealthFindings();
+      List<AnalysisFindingReport> findings = sheet.diagnostics().formulaHealthFindings();
 
       assertEquals(1, findings.size());
-      WorkbookAnalysis.AnalysisFinding finding = findings.getFirst();
+      AnalysisFindingReport finding = findings.getFirst();
       assertEquals(AnalysisFindingCode.FORMULA_EVALUATION_FAILURE, finding.code());
       assertEquals(List.of("1+1", "IllegalStateException"), finding.evidence());
       assertEquals("Formula evaluation failed: IllegalStateException", finding.message());
@@ -180,9 +181,9 @@ class ExcelSheetFormulaHealthCoverageTest extends ExcelSheetTestSupport {
       sheet.cells().setCell("A1", new ResolvedFormula("B1+1"));
       sheet.cells().setCell("B1", new ResolvedFormula("A1+1"));
 
-      List<WorkbookAnalysis.AnalysisFinding> findings = sheet.diagnostics().formulaHealthFindings();
+      List<AnalysisFindingReport> findings = sheet.diagnostics().formulaHealthFindings();
 
-      WorkbookAnalysis.AnalysisFinding circularFinding =
+      AnalysisFindingReport circularFinding =
           findings.stream()
               .filter(finding -> finding.code() == AnalysisFindingCode.FORMULA_ERROR_RESULT)
               .findFirst()
@@ -232,7 +233,7 @@ class ExcelSheetFormulaHealthCoverageTest extends ExcelSheetTestSupport {
                       new LocalWorkbookNotFoundException(
                           "Could not resolve external workbook name 'Rates.xlsx'."))));
 
-      List<WorkbookAnalysis.AnalysisFinding> findings = sheet.diagnostics().formulaHealthFindings();
+      List<AnalysisFindingReport> findings = sheet.diagnostics().formulaHealthFindings();
 
       assertEquals(1, findings.size());
       assertEquals(
@@ -254,7 +255,7 @@ class ExcelSheetFormulaHealthCoverageTest extends ExcelSheetTestSupport {
                   new org.apache.poi.ss.formula.eval.FakeNotImplementedFunctionException(
                       "DOUBLE")));
 
-      List<WorkbookAnalysis.AnalysisFinding> findings = sheet.diagnostics().formulaHealthFindings();
+      List<AnalysisFindingReport> findings = sheet.diagnostics().formulaHealthFindings();
 
       assertEquals(1, findings.size());
       assertEquals(
@@ -293,8 +294,7 @@ class ExcelSheetFormulaHealthCoverageTest extends ExcelSheetTestSupport {
                   null,
                   null));
 
-      List<WorkbookAnalysis.AnalysisFinding> findings =
-          cached.diagnostics().formulaHealthFindings();
+      List<AnalysisFindingReport> findings = cached.diagnostics().formulaHealthFindings();
 
       assertEquals(1, findings.size());
       assertEquals(
@@ -323,7 +323,7 @@ class ExcelSheetFormulaHealthCoverageTest extends ExcelSheetTestSupport {
                           "Could not resolve external workbook name 'Rates.xlsx'.")),
                   null));
 
-      List<WorkbookAnalysis.AnalysisFinding> findings = sheet.diagnostics().formulaHealthFindings();
+      List<AnalysisFindingReport> findings = sheet.diagnostics().formulaHealthFindings();
 
       assertEquals(1, findings.size());
       assertEquals(
@@ -347,7 +347,7 @@ class ExcelSheetFormulaHealthCoverageTest extends ExcelSheetTestSupport {
                   new IllegalStateException("outer", new LocalWorkbookNotFoundException(null)),
                   null));
 
-      List<WorkbookAnalysis.AnalysisFinding> findings = sheet.diagnostics().formulaHealthFindings();
+      List<AnalysisFindingReport> findings = sheet.diagnostics().formulaHealthFindings();
 
       assertEquals(1, findings.size());
       assertEquals(

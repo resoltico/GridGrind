@@ -22,6 +22,7 @@ import dev.erst.gridgrind.core.model.layout.SheetDefaultsReport;
 import dev.erst.gridgrind.core.model.layout.SheetDisplayReport;
 import dev.erst.gridgrind.core.model.layout.SheetOutlineSummaryReport;
 import dev.erst.gridgrind.core.model.layout.SheetPresentationReport;
+import dev.erst.gridgrind.core.model.pivot.PivotTableHealthReport;
 import dev.erst.gridgrind.core.model.pivot.PivotTableReport;
 import dev.erst.gridgrind.core.model.print.*;
 import dev.erst.gridgrind.core.model.print.HeaderFooterTextReport;
@@ -63,6 +64,9 @@ import dev.erst.gridgrind.core.plan.SheetInspectionResult;
 import dev.erst.gridgrind.core.plan.WorkbookAnalysisResult;
 import dev.erst.gridgrind.core.plan.WorkbookAssetInspectionResult;
 import dev.erst.gridgrind.core.plan.WorkbookInspectionResult;
+import dev.erst.gridgrind.core.result.AnalysisFindingReport;
+import dev.erst.gridgrind.core.result.AnalysisLocationReport;
+import dev.erst.gridgrind.core.result.AnalysisSummaryReport;
 import dev.erst.gridgrind.core.source.BinaryContent;
 import dev.erst.gridgrind.core.vocabulary.AnalysisFindingCode;
 import dev.erst.gridgrind.core.vocabulary.AnalysisSeverity;
@@ -554,16 +558,17 @@ class InspectionResultConverterTest extends DefaultGridGrindRequestExecutorTestS
             InspectionResultConverter.toReadResult(
                 new dev.erst.gridgrind.excel.WorkbookAnalysisResult.PivotTableHealthResult(
                     new StepId("pivot-health"),
-                    new WorkbookAnalysis.PivotTableHealth(
+                    new PivotTableHealthReport(
                         1,
-                        new WorkbookAnalysis.AnalysisSummary(1, 0, 1, 0),
+                        new AnalysisSummaryReport(1, 0, 1, 0),
                         List.of(
-                            new WorkbookAnalysis.AnalysisFinding(
+                            new AnalysisFindingReport(
                                 AnalysisFindingCode.PIVOT_TABLE_MISSING_NAME,
                                 AnalysisSeverity.WARNING,
                                 "Pivot table name is missing",
                                 "GridGrind assigned a synthetic identifier for readback.",
-                                new WorkbookAnalysis.AnalysisLocation.Sheet("Report"),
+                                new AnalysisLocationReport.Sheet(
+                                    new dev.erst.gridgrind.core.vocabulary.SheetLabel("Report")),
                                 List.of("_GG_PIVOT_Report_A3")))))));
 
     PivotTableReport.Supported supported =

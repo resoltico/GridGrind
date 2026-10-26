@@ -1,5 +1,7 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.core.result.AnalysisFindingReport;
+import dev.erst.gridgrind.core.result.AnalysisLocationReport;
 import dev.erst.gridgrind.core.vocabulary.AnalysisFindingCode;
 import dev.erst.gridgrind.core.vocabulary.AnalysisSeverity;
 import java.nio.file.Files;
@@ -37,7 +39,7 @@ final class ExcelSheetAnalysisSupport {
     return count;
   }
 
-  List<WorkbookAnalysis.AnalysisFinding> formulaHealthFindings(String sheetName) {
+  List<AnalysisFindingReport> formulaHealthFindings(String sheetName) {
     return ExcelFormulaHealthSupport.formulaHealthFindings(sheetName, sheet, formulaRuntime);
   }
 
@@ -53,10 +55,9 @@ final class ExcelSheetAnalysisSupport {
     return count;
   }
 
-  List<WorkbookAnalysis.AnalysisFinding> hyperlinkHealthFindings(
-      WorkbookLocation workbookLocation) {
+  List<AnalysisFindingReport> hyperlinkHealthFindings(WorkbookLocation workbookLocation) {
     Objects.requireNonNull(workbookLocation, "workbookLocation must not be null");
-    List<WorkbookAnalysis.AnalysisFinding> findings = new ArrayList<>();
+    List<AnalysisFindingReport> findings = new ArrayList<>();
     for (Row row : sheet) {
       for (Cell cell : row) {
         org.apache.poi.ss.usermodel.Hyperlink hyperlink = cell.getHyperlink();
@@ -65,8 +66,7 @@ final class ExcelSheetAnalysisSupport {
         }
         HyperlinkType hyperlinkType = hyperlink.getType();
         String address = cell.getAddress().formatAsString();
-        WorkbookAnalysis.AnalysisLocation.Cell location =
-            cellLocation(sheet.getSheetName(), address);
+        AnalysisLocationReport.Cell location = cellLocation(sheet.getSheetName(), address);
         findings.addAll(
             hyperlinkTargetFindings(
                 location, hyperlinkType, hyperlink.getAddress(), workbookLocation));
@@ -75,15 +75,12 @@ final class ExcelSheetAnalysisSupport {
     return List.copyOf(findings);
   }
 
-  List<WorkbookAnalysis.AnalysisFinding> hyperlinkHealthFindings() {
+  List<AnalysisFindingReport> hyperlinkHealthFindings() {
     return hyperlinkHealthFindings(new WorkbookLocation.UnsavedWorkbook());
   }
 
-  static List<WorkbookAnalysis.AnalysisFinding> externalHyperlinkFindings(
-      WorkbookAnalysis.AnalysisLocation.Cell location,
-      String target,
-      String expectedShape,
-      boolean valid) {
+  static List<AnalysisFindingReport> externalHyperlinkFindings(
+      AnalysisLocationReport.Cell location, String target, String expectedShape, boolean valid) {
     Objects.requireNonNull(location, "location must not be null");
     Objects.requireNonNull(target, "target must not be null");
     Objects.requireNonNull(expectedShape, "expectedShape must not be null");
@@ -96,8 +93,8 @@ final class ExcelSheetAnalysisSupport {
                 List.of(target)));
   }
 
-  List<WorkbookAnalysis.AnalysisFinding> hyperlinkTargetFindings(
-      WorkbookAnalysis.AnalysisLocation.Cell location,
+  List<AnalysisFindingReport> hyperlinkTargetFindings(
+      AnalysisLocationReport.Cell location,
       HyperlinkType hyperlinkType,
       String target,
       WorkbookLocation workbookLocation) {
@@ -125,7 +122,7 @@ final class ExcelSheetAnalysisSupport {
               ExcelHyperlinkValidation.isValidEmailTarget(target));
       case FILE -> fileHyperlinkFindings(location, target, workbookLocation);
       case DOCUMENT -> {
-        List<WorkbookAnalysis.AnalysisFinding> findings = new ArrayList<>();
+        List<AnalysisFindingReport> findings = new ArrayList<>();
         validateDocumentHyperlinkTarget(location, target, findings);
         yield List.copyOf(findings);
       }
@@ -134,13 +131,11 @@ final class ExcelSheetAnalysisSupport {
   }
 
   void validateDocumentHyperlinkTarget(
-      WorkbookAnalysis.AnalysisLocation.Cell location,
-      String target,
-      List<WorkbookAnalysis.AnalysisFinding> findings) {
+      AnalysisLocationReport.Cell location, String target, List<AnalysisFindingReport> findings) {
     int bangIndex = target.indexOf('!');
     if (bangIndex <= 0 || bangIndex >= target.length() - 1) {
       findings.add(
-          new WorkbookAnalysis.AnalysisFinding(
+          new AnalysisFindingReport(
               AnalysisFindingCode.HYPERLINK_INVALID_DOCUMENT_TARGET,
               AnalysisSeverity.ERROR,
               "Invalid document hyperlink target",
@@ -154,7 +149,7 @@ final class ExcelSheetAnalysisSupport {
     String targetAddress = target.substring(bangIndex + 1);
     if (sheet.getWorkbook().getSheet(targetSheetName) == null) {
       findings.add(
-          new WorkbookAnalysis.AnalysisFinding(
+          new AnalysisFindingReport(
               AnalysisFindingCode.HYPERLINK_MISSING_DOCUMENT_SHEET,
               AnalysisSeverity.ERROR,
               "Document hyperlink targets a missing sheet",
@@ -172,7 +167,7 @@ final class ExcelSheetAnalysisSupport {
       }
     } catch (IllegalArgumentException exception) {
       findings.add(
-          new WorkbookAnalysis.AnalysisFinding(
+          new AnalysisFindingReport(
               AnalysisFindingCode.HYPERLINK_INVALID_DOCUMENT_TARGET,
               AnalysisSeverity.ERROR,
               "Invalid document hyperlink target",
@@ -182,10 +177,8 @@ final class ExcelSheetAnalysisSupport {
     }
   }
 
-  static List<WorkbookAnalysis.AnalysisFinding> fileHyperlinkFindings(
-      WorkbookAnalysis.AnalysisLocation.Cell location,
-      String target,
-      WorkbookLocation workbookLocation) {
+  static List<AnalysisFindingReport> fileHyperlinkFindings(
+      AnalysisLocationReport.Cell location, String target, WorkbookLocation workbookLocation) {
     Objects.requireNonNull(location, "location must not be null");
     Objects.requireNonNull(target, "target must not be null");
     Objects.requireNonNull(workbookLocation, "workbookLocation must not be null");
@@ -197,7 +190,7 @@ final class ExcelSheetAnalysisSupport {
                   location, malformedPath.reason(), List.of(malformedPath.path())));
       case FileHyperlinkResolution.UnresolvedRelativePath unresolvedRelativePath ->
           List.of(
-              new WorkbookAnalysis.AnalysisFinding(
+              new AnalysisFindingReport(
                   AnalysisFindingCode.HYPERLINK_UNRESOLVED_FILE_TARGET,
                   AnalysisSeverity.WARNING,
                   "Relative file hyperlink cannot be resolved yet",
@@ -208,7 +201,7 @@ final class ExcelSheetAnalysisSupport {
       case FileHyperlinkResolution.ResolvedPath resolvedPath ->
           Files.notExists(resolvedPath.resolvedPath())
               ? List.of(
-                  new WorkbookAnalysis.AnalysisFinding(
+                  new AnalysisFindingReport(
                       AnalysisFindingCode.HYPERLINK_MISSING_FILE_TARGET,
                       AnalysisSeverity.ERROR,
                       "File hyperlink targets a missing path",
@@ -284,9 +277,9 @@ final class ExcelSheetAnalysisSupport {
     return List.copyOf(functions);
   }
 
-  private static WorkbookAnalysis.AnalysisFinding malformedHyperlinkFinding(
-      WorkbookAnalysis.AnalysisLocation.Cell location, String message, List<String> evidence) {
-    return new WorkbookAnalysis.AnalysisFinding(
+  private static AnalysisFindingReport malformedHyperlinkFinding(
+      AnalysisLocationReport.Cell location, String message, List<String> evidence) {
+    return new AnalysisFindingReport(
         AnalysisFindingCode.HYPERLINK_MALFORMED_TARGET,
         AnalysisSeverity.ERROR,
         "Malformed hyperlink target",
@@ -295,8 +288,9 @@ final class ExcelSheetAnalysisSupport {
         evidence);
   }
 
-  static WorkbookAnalysis.AnalysisLocation.Cell cellLocation(String sheetName, String address) {
-    return new WorkbookAnalysis.AnalysisLocation.Cell(sheetName, address);
+  static AnalysisLocationReport.Cell cellLocation(String sheetName, String address) {
+    return new AnalysisLocationReport.Cell(
+        new dev.erst.gridgrind.core.vocabulary.SheetLabel(sheetName), address);
   }
 
   static boolean hasUnregisteredUserDefinedFunction(

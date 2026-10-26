@@ -2,6 +2,8 @@ package dev.erst.gridgrind.excel;
 
 import dev.erst.gridgrind.core.model.validation.ConditionalFormattingEntryReport;
 import dev.erst.gridgrind.core.model.validation.ConditionalFormattingRuleReport;
+import dev.erst.gridgrind.core.result.AnalysisFindingReport;
+import dev.erst.gridgrind.core.result.AnalysisLocationReport;
 import java.util.List;
 import java.util.Objects;
 import org.apache.poi.ss.usermodel.ConditionType;
@@ -51,7 +53,7 @@ final class ExcelConditionalFormattingController {
   }
 
   /** Returns derived conditional-formatting health findings for one sheet. */
-  List<WorkbookAnalysis.AnalysisFinding> conditionalFormattingHealthFindings(
+  List<AnalysisFindingReport> conditionalFormattingHealthFindings(
       String sheetName, XSSFSheet sheet) {
     Objects.requireNonNull(sheetName, "sheetName must not be null");
     Objects.requireNonNull(sheet, "sheet must not be null");
@@ -83,7 +85,7 @@ final class ExcelConditionalFormattingController {
   }
 
   /** Formats one analysis location into the evidence string used by collision findings. */
-  static String locationEvidence(WorkbookAnalysis.AnalysisLocation location) {
+  static String locationEvidence(AnalysisLocationReport location) {
     return ExcelConditionalFormattingSnapshotSupport.locationEvidence(location);
   }
 

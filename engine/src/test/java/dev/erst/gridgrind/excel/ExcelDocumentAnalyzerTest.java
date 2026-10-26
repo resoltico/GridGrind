@@ -2,11 +2,17 @@ package dev.erst.gridgrind.excel;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.core.model.table.AutofilterHealthReport;
 import dev.erst.gridgrind.core.model.table.ResolvedTable;
+import dev.erst.gridgrind.core.model.table.TableHealthReport;
 import dev.erst.gridgrind.core.model.table.TableStyleSpec;
+import dev.erst.gridgrind.core.model.validation.DataValidationHealthReport;
 import dev.erst.gridgrind.core.model.validation.DataValidationRuleSpec;
 import dev.erst.gridgrind.core.model.validation.ResolvedDataValidation;
 import dev.erst.gridgrind.core.model.value.CellValue;
+import dev.erst.gridgrind.core.result.AnalysisFindingReport;
+import dev.erst.gridgrind.core.result.AnalysisLocationReport;
+import dev.erst.gridgrind.core.result.AnalysisSummaryReport;
 import dev.erst.gridgrind.core.vocabulary.AnalysisFindingCode;
 import dev.erst.gridgrind.core.vocabulary.AnalysisSeverity;
 import dev.erst.gridgrind.core.vocabulary.RangeRef;
@@ -49,7 +55,7 @@ class ExcelDocumentAnalyzerTest {
                   Optional.empty()));
 
       ExcelDocumentAnalyzer analyzer = new ExcelDocumentAnalyzer();
-      WorkbookAnalysis.DataValidationHealth selected =
+      DataValidationHealthReport selected =
           analyzer.dataValidationHealth(
               workbook, new ExcelSheetSelection.Selected(List.of("Budget")));
 
@@ -60,8 +66,9 @@ class ExcelDocumentAnalyzerTest {
       assertEquals(0, selected.summary().infoCount());
       assertEquals(
           "Budget",
-          ((WorkbookAnalysis.AnalysisLocation.Range) selected.findings().getFirst().location())
-              .sheetName());
+          ((AnalysisLocationReport.Range) selected.findings().getFirst().location())
+              .sheetName()
+              .value());
     }
   }
 
@@ -94,9 +101,9 @@ class ExcelDocumentAnalyzerTest {
       archive.xssfSheet().getCTWorksheet().addNewAutoFilter().setRef("D1:E2");
 
       ExcelDocumentAnalyzer analyzer = new ExcelDocumentAnalyzer();
-      WorkbookAnalysis.AutofilterHealth autofilterHealth =
+      AutofilterHealthReport autofilterHealth =
           analyzer.autofilterHealth(workbook, new ExcelSheetSelection.Selected(List.of("Archive")));
-      WorkbookAnalysis.TableHealth tableHealth =
+      TableHealthReport tableHealth =
           analyzer.tableHealth(workbook, new ExcelTableSelection.ByNames(List.of("BudgetQueue")));
 
       assertEquals(1, autofilterHealth.checkedAutofilterCount());
@@ -108,7 +115,7 @@ class ExcelDocumentAnalyzerTest {
       assertEquals(1, tableHealth.checkedTableCount());
       assertEquals(0, tableHealth.summary().totalCount());
 
-      WorkbookAnalysis.AutofilterHealth budgetAutofilterHealth =
+      AutofilterHealthReport budgetAutofilterHealth =
           analyzer.autofilterHealth(workbook, new ExcelSheetSelection.Selected(List.of("Budget")));
       assertEquals(1, budgetAutofilterHealth.summary().warningCount());
       assertEquals(
@@ -119,7 +126,7 @@ class ExcelDocumentAnalyzerTest {
 
   @Test
   void summaryCountsAllSeverities() {
-    WorkbookAnalysis.AnalysisSummary summary =
+    AnalysisSummaryReport summary =
         ExcelDocumentAnalyzer.summarizeFindings(
             List.of(
                 finding(AnalysisSeverity.ERROR, "A1"),
@@ -132,13 +139,14 @@ class ExcelDocumentAnalyzerTest {
     assertEquals(1, summary.infoCount());
   }
 
-  private static WorkbookAnalysis.AnalysisFinding finding(AnalysisSeverity severity, String range) {
-    return new WorkbookAnalysis.AnalysisFinding(
+  private static AnalysisFindingReport finding(AnalysisSeverity severity, String range) {
+    return new AnalysisFindingReport(
         AnalysisFindingCode.DATA_VALIDATION_UNSUPPORTED_RULE,
         severity,
         "Finding",
         "Detail",
-        new WorkbookAnalysis.AnalysisLocation.Range("Budget", range),
+        new AnalysisLocationReport.Range(
+            new dev.erst.gridgrind.core.vocabulary.SheetLabel("Budget"), range),
         List.of(range));
   }
 }

@@ -4,6 +4,8 @@ import dev.erst.gridgrind.core.model.table.AutofilterEntryReport;
 import dev.erst.gridgrind.core.model.table.AutofilterFilterColumnSpec;
 import dev.erst.gridgrind.core.model.table.AutofilterSortStateSpec;
 import dev.erst.gridgrind.core.model.table.TableEntryReport;
+import dev.erst.gridgrind.core.result.AnalysisFindingReport;
+import dev.erst.gridgrind.core.result.AnalysisLocationReport;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -86,7 +88,7 @@ final class ExcelAutofilterController {
   }
 
   /** Returns derived health findings for the sheet-owned autofilter on one sheet. */
-  List<WorkbookAnalysis.AnalysisFinding> sheetAutofilterHealthFindings(
+  List<AnalysisFindingReport> sheetAutofilterHealthFindings(
       String sheetName, XSSFSheet sheet, List<TableEntryReport> tablesOnSheet) {
     Objects.requireNonNull(sheetName, "sheetName must not be null");
     Objects.requireNonNull(sheet, "sheet must not be null");
@@ -99,26 +101,28 @@ final class ExcelAutofilterController {
     String rawRange =
         Objects.requireNonNullElse(sheet.getCTWorksheet().getAutoFilter().getRef(), "");
     Optional<ExcelRange> targetRange = ExcelSheetStructureSupport.parseOptionalRange(rawRange);
-    List<WorkbookAnalysis.AnalysisFinding> findings = new ArrayList<>();
+    List<AnalysisFindingReport> findings = new ArrayList<>();
     if (targetRange.isEmpty()) {
       findings.add(
-          new WorkbookAnalysis.AnalysisFinding(
+          new AnalysisFindingReport(
               dev.erst.gridgrind.core.vocabulary.AnalysisFindingCode.AUTOFILTER_INVALID_RANGE,
               dev.erst.gridgrind.core.vocabulary.AnalysisSeverity.ERROR,
               "Autofilter range is invalid",
               "Sheet-owned autofilter range could not be parsed.",
-              new WorkbookAnalysis.AnalysisLocation.Sheet(sheetName),
+              new AnalysisLocationReport.Sheet(
+                  new dev.erst.gridgrind.core.vocabulary.SheetLabel(sheetName)),
               List.of(rawRange)));
       return List.copyOf(findings);
     }
 
     ExcelRange parsedTargetRange = targetRange.orElseThrow();
     String normalizedRange = ExcelSheetStructureSupport.formatRange(parsedTargetRange);
-    WorkbookAnalysis.AnalysisLocation.Range location =
-        new WorkbookAnalysis.AnalysisLocation.Range(sheetName, normalizedRange);
+    AnalysisLocationReport.Range location =
+        new AnalysisLocationReport.Range(
+            new dev.erst.gridgrind.core.vocabulary.SheetLabel(sheetName), normalizedRange);
     if (ExcelSheetStructureSupport.headerRowMissing(sheet, parsedTargetRange)) {
       findings.add(
-          new WorkbookAnalysis.AnalysisFinding(
+          new AnalysisFindingReport(
               dev.erst.gridgrind.core.vocabulary.AnalysisFindingCode.AUTOFILTER_MISSING_HEADER_ROW,
               dev.erst.gridgrind.core.vocabulary.AnalysisSeverity.WARNING,
               "Autofilter header row is blank",
@@ -141,7 +145,7 @@ final class ExcelAutofilterController {
       evidence.add(normalizedRange);
       evidence.addAll(overlappingTables);
       findings.add(
-          new WorkbookAnalysis.AnalysisFinding(
+          new AnalysisFindingReport(
               dev.erst.gridgrind.core.vocabulary.AnalysisFindingCode.AUTOFILTER_TABLE_MISMATCH,
               dev.erst.gridgrind.core.vocabulary.AnalysisSeverity.WARNING,
               "Sheet autofilter overlaps a table range",

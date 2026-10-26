@@ -2,10 +2,10 @@ package dev.erst.gridgrind.excel.pivot;
 
 import dev.erst.gridgrind.core.model.pivot.PivotTableReport;
 import dev.erst.gridgrind.core.model.pivot.PivotTableSpec;
+import dev.erst.gridgrind.core.result.AnalysisFindingReport;
 import dev.erst.gridgrind.core.vocabulary.ExcelPivotTableNaming;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
 import dev.erst.gridgrind.excel.PoiRelationRemoval;
-import dev.erst.gridgrind.excel.WorkbookAnalysis;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -131,13 +131,13 @@ public final class ExcelPivotTableController {
   }
 
   /** Returns integrity findings for the selected pivot-table set. */
-  public List<WorkbookAnalysis.AnalysisFinding> pivotTableHealthFindings(
+  public List<AnalysisFindingReport> pivotTableHealthFindings(
       ExcelWorkbook workbook, ExcelPivotTableSelection selection) {
     Objects.requireNonNull(workbook, "workbook must not be null");
     Objects.requireNonNull(selection, "selection must not be null");
 
     List<PivotHandle> handles = selectHandles(workbook, selection);
-    List<WorkbookAnalysis.AnalysisFinding> findings = new ArrayList<>();
+    List<AnalysisFindingReport> findings = new ArrayList<>();
     for (PivotHandle handle : handles) {
       findings.addAll(
           ExcelPivotTableAnalysisSupport.pivotTableHealthFindings(workbook.xssfWorkbook(), handle));

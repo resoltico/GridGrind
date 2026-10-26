@@ -1,5 +1,7 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.core.result.AnalysisFindingReport;
+import dev.erst.gridgrind.core.result.AnalysisLocationReport;
 import dev.erst.gridgrind.core.vocabulary.AnalysisFindingCode;
 import dev.erst.gridgrind.core.vocabulary.AnalysisSeverity;
 import java.util.ArrayList;
@@ -13,11 +15,11 @@ import org.apache.poi.ss.usermodel.Row;
 final class ExcelFormulaHealthSupport {
   private ExcelFormulaHealthSupport() {}
 
-  static List<WorkbookAnalysis.AnalysisFinding> formulaHealthFindings(
+  static List<AnalysisFindingReport> formulaHealthFindings(
       String sheetName,
       org.apache.poi.ss.usermodel.Sheet sheet,
       ExcelFormulaRuntime formulaRuntime) {
-    List<WorkbookAnalysis.AnalysisFinding> findings = new ArrayList<>();
+    List<AnalysisFindingReport> findings = new ArrayList<>();
     ExcelFormulaRuntimeContext formulaContext = formulaRuntime.context();
     for (Row row : sheet) {
       for (Cell cell : row) {
@@ -30,15 +32,16 @@ final class ExcelFormulaHealthSupport {
   }
 
   private static void analyzeFormulaCell(
-      List<WorkbookAnalysis.AnalysisFinding> findings,
+      List<AnalysisFindingReport> findings,
       String sheetName,
       Cell cell,
       ExcelFormulaRuntime formulaRuntime,
       ExcelFormulaRuntimeContext formulaContext) {
     String address = cell.getAddress().formatAsString();
     String formula = cell.getCellFormula();
-    WorkbookAnalysis.AnalysisLocation.Cell location =
-        new WorkbookAnalysis.AnalysisLocation.Cell(sheetName, address);
+    AnalysisLocationReport.Cell location =
+        new AnalysisLocationReport.Cell(
+            new dev.erst.gridgrind.core.vocabulary.SheetLabel(sheetName), address);
     boolean missingExternalWorkbook =
         addExternalWorkbookFindings(findings, formulaContext, formula, location);
     addUserDefinedFunctionFinding(findings, formulaContext, formula, location);
@@ -48,10 +51,10 @@ final class ExcelFormulaHealthSupport {
   }
 
   private static boolean addExternalWorkbookFindings(
-      List<WorkbookAnalysis.AnalysisFinding> findings,
+      List<AnalysisFindingReport> findings,
       ExcelFormulaRuntimeContext formulaContext,
       String formula,
-      WorkbookAnalysis.AnalysisLocation.Cell location) {
+      AnalysisLocationReport.Cell location) {
     boolean missingExternalWorkbook = false;
     for (String workbookName : FormulaExceptions.externalWorkbookNames(formula)) {
       if (formulaContext.hasExternalWorkbookBinding(workbookName)) {
@@ -68,9 +71,9 @@ final class ExcelFormulaHealthSupport {
     return missingExternalWorkbook;
   }
 
-  private static WorkbookAnalysis.AnalysisFinding cachedExternalWorkbookFinding(
-      String formula, String workbookName, WorkbookAnalysis.AnalysisLocation.Cell location) {
-    return new WorkbookAnalysis.AnalysisFinding(
+  private static AnalysisFindingReport cachedExternalWorkbookFinding(
+      String formula, String workbookName, AnalysisLocationReport.Cell location) {
+    return new AnalysisFindingReport(
         AnalysisFindingCode.FORMULA_USES_CACHED_EXTERNAL_VALUE,
         AnalysisSeverity.INFO,
         "External workbook uses cached result",
@@ -81,9 +84,9 @@ final class ExcelFormulaHealthSupport {
         List.of(formula, workbookName));
   }
 
-  private static WorkbookAnalysis.AnalysisFinding missingExternalWorkbookFinding(
-      String formula, String workbookName, WorkbookAnalysis.AnalysisLocation.Cell location) {
-    return new WorkbookAnalysis.AnalysisFinding(
+  private static AnalysisFindingReport missingExternalWorkbookFinding(
+      String formula, String workbookName, AnalysisLocationReport.Cell location) {
+    return new AnalysisFindingReport(
         AnalysisFindingCode.FORMULA_MISSING_EXTERNAL_WORKBOOK,
         AnalysisSeverity.ERROR,
         "External workbook is missing or unbound",
@@ -93,17 +96,17 @@ final class ExcelFormulaHealthSupport {
   }
 
   private static void addUserDefinedFunctionFinding(
-      List<WorkbookAnalysis.AnalysisFinding> findings,
+      List<AnalysisFindingReport> findings,
       ExcelFormulaRuntimeContext formulaContext,
       String formula,
-      WorkbookAnalysis.AnalysisLocation.Cell location) {
+      AnalysisLocationReport.Cell location) {
     String leadingFunctionName = FormulaExceptions.leadingFunctionName(formula).orElse(null);
     if (!ExcelSheetAnalysisSupport.hasUnregisteredUserDefinedFunction(
         formulaContext, leadingFunctionName, formula)) {
       return;
     }
     findings.add(
-        new WorkbookAnalysis.AnalysisFinding(
+        new AnalysisFindingReport(
             AnalysisFindingCode.FORMULA_UNREGISTERED_USER_DEFINED_FUNCTION,
             AnalysisSeverity.ERROR,
             "User-defined function is not registered",
@@ -115,14 +118,12 @@ final class ExcelFormulaHealthSupport {
   }
 
   private static void addVolatileFunctionFindings(
-      List<WorkbookAnalysis.AnalysisFinding> findings,
-      String formula,
-      WorkbookAnalysis.AnalysisLocation.Cell location) {
+      List<AnalysisFindingReport> findings, String formula, AnalysisLocationReport.Cell location) {
     ExcelSheetAnalysisSupport.volatileFunctions(formula)
         .forEach(
             functionName ->
                 findings.add(
-                    new WorkbookAnalysis.AnalysisFinding(
+                    new AnalysisFindingReport(
                         AnalysisFindingCode.FORMULA_VOLATILE_FUNCTION,
                         AnalysisSeverity.INFO,
                         "Volatile formula function",
@@ -132,18 +133,18 @@ final class ExcelFormulaHealthSupport {
   }
 
   private static void addEvaluationFindings(
-      List<WorkbookAnalysis.AnalysisFinding> findings,
+      List<AnalysisFindingReport> findings,
       ExcelFormulaRuntime formulaRuntime,
       ExcelFormulaRuntimeContext formulaContext,
       Cell cell,
       String formula,
-      WorkbookAnalysis.AnalysisLocation.Cell location,
+      AnalysisLocationReport.Cell location,
       boolean missingExternalWorkbook) {
     try {
       var evaluated = formulaRuntime.evaluate(cell);
       if (evaluated != null && evaluated.getCellType() == CellType.ERROR) {
         findings.add(
-            new WorkbookAnalysis.AnalysisFinding(
+            new AnalysisFindingReport(
                 AnalysisFindingCode.FORMULA_ERROR_RESULT,
                 AnalysisSeverity.ERROR,
                 "Formula evaluates to an error",
@@ -161,17 +162,17 @@ final class ExcelFormulaHealthSupport {
   }
 
   private static void addEvaluationFailureFinding(
-      List<WorkbookAnalysis.AnalysisFinding> findings,
+      List<AnalysisFindingReport> findings,
       ExcelFormulaRuntimeContext formulaContext,
       String formula,
-      WorkbookAnalysis.AnalysisLocation.Cell location,
+      AnalysisLocationReport.Cell location,
       boolean missingExternalWorkbook,
       RuntimeException exception) {
     if (FormulaExceptions.isMissingExternalWorkbookFailure(exception)) {
       if (!missingExternalWorkbook) {
         String workbookName = FormulaExceptions.missingExternalWorkbookName(exception, formula);
         findings.add(
-            new WorkbookAnalysis.AnalysisFinding(
+            new AnalysisFindingReport(
                 AnalysisFindingCode.FORMULA_MISSING_EXTERNAL_WORKBOOK,
                 AnalysisSeverity.ERROR,
                 "External workbook is missing or unbound",
@@ -186,7 +187,7 @@ final class ExcelFormulaHealthSupport {
     if (!FormulaExceptions.isUnregisteredUserDefinedFunctionFailure(
         formulaContext, exception, formula)) {
       findings.add(
-          new WorkbookAnalysis.AnalysisFinding(
+          new AnalysisFindingReport(
               AnalysisFindingCode.FORMULA_EVALUATION_FAILURE,
               AnalysisSeverity.ERROR,
               "Formula evaluation failed",

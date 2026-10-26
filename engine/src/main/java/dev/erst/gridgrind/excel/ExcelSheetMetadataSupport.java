@@ -5,6 +5,7 @@ import dev.erst.gridgrind.core.model.table.AutofilterSortStateSpec;
 import dev.erst.gridgrind.core.model.validation.ConditionalFormattingEntryReport;
 import dev.erst.gridgrind.core.model.validation.DataValidationEntryReport;
 import dev.erst.gridgrind.core.model.validation.ResolvedDataValidation;
+import dev.erst.gridgrind.core.result.AnalysisFindingReport;
 import dev.erst.gridgrind.excel.validation.ExcelDataValidationController;
 import java.util.List;
 import java.util.Objects;
@@ -106,7 +107,7 @@ final class ExcelSheetMetadataSupport {
     return conditionalFormattingController.conditionalFormattingBlockCount(xssfSheet());
   }
 
-  List<WorkbookAnalysis.AnalysisFinding> conditionalFormattingHealthFindings(String sheetName) {
+  List<AnalysisFindingReport> conditionalFormattingHealthFindings(String sheetName) {
     return conditionalFormattingController.conditionalFormattingHealthFindings(
         sheetName, xssfSheet());
   }

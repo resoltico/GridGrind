@@ -15,6 +15,7 @@ import dev.erst.gridgrind.core.model.table.AutofilterSortStateReport;
 import dev.erst.gridgrind.core.model.table.AutofilterSortStateSpec;
 import dev.erst.gridgrind.core.model.table.TableEntryReport;
 import dev.erst.gridgrind.core.model.table.TableStyleReport;
+import dev.erst.gridgrind.core.result.AnalysisFindingReport;
 import dev.erst.gridgrind.core.vocabulary.AnalysisFindingCode;
 import dev.erst.gridgrind.core.vocabulary.ExcelAutofilterSortMethod;
 import dev.erst.gridgrind.core.vocabulary.RgbHex;
@@ -776,7 +777,7 @@ class ExcelAutofilterControllerTest {
       XSSFSheet sheet = populatedSheet(workbook);
       sheet.getCTWorksheet().addNewAutoFilter().setRef("A0:B3");
 
-      List<WorkbookAnalysis.AnalysisFinding> invalidRangeFindings =
+      List<AnalysisFindingReport> invalidRangeFindings =
           controller.sheetAutofilterHealthFindings("Ops", sheet, List.of());
 
       assertEquals(1, invalidRangeFindings.size());
@@ -789,7 +790,7 @@ class ExcelAutofilterControllerTest {
       sheet.setAutoFilter(CellRangeAddress.valueOf("A1:B3"));
       sheet.createTable(new AreaReference("A1:B3", SpreadsheetVersion.EXCEL2007));
 
-      List<WorkbookAnalysis.AnalysisFinding> overlapFindings =
+      List<AnalysisFindingReport> overlapFindings =
           controller.sheetAutofilterHealthFindings(
               "Ops",
               sheet,
@@ -818,7 +819,7 @@ class ExcelAutofilterControllerTest {
       sheet.getRow(0).getCell(1).setBlank();
       sheet.setAutoFilter(CellRangeAddress.valueOf("A1:B3"));
 
-      List<WorkbookAnalysis.AnalysisFinding> findings =
+      List<AnalysisFindingReport> findings =
           controller.sheetAutofilterHealthFindings("Ops", sheet, List.of());
 
       assertEquals(1, findings.size());
@@ -832,7 +833,7 @@ class ExcelAutofilterControllerTest {
       XSSFSheet sheet = populatedSheet(workbook);
       sheet.setAutoFilter(CellRangeAddress.valueOf("A1:B3"));
 
-      List<WorkbookAnalysis.AnalysisFinding> findings =
+      List<AnalysisFindingReport> findings =
           controller.sheetAutofilterHealthFindings(
               "Ops",
               sheet,

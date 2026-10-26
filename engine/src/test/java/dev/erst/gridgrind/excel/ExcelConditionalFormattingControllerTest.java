@@ -15,6 +15,8 @@ import dev.erst.gridgrind.core.model.validation.ConditionalFormattingRuleSpec;
 import dev.erst.gridgrind.core.model.validation.ConditionalFormattingThresholdReport;
 import dev.erst.gridgrind.core.model.validation.ConditionalFormattingThresholdSpec;
 import dev.erst.gridgrind.core.model.value.CellValue;
+import dev.erst.gridgrind.core.result.AnalysisFindingReport;
+import dev.erst.gridgrind.core.result.AnalysisLocationReport;
 import dev.erst.gridgrind.core.vocabulary.AnalysisFindingCode;
 import dev.erst.gridgrind.core.vocabulary.ExcelBorderStyle;
 import dev.erst.gridgrind.core.vocabulary.ExcelComparisonOperator;
@@ -641,11 +643,11 @@ class ExcelConditionalFormattingControllerTest {
       assertEquals("FORMULA", unsupported.kind());
       assertEquals("Formula rule is missing formula text.", unsupported.detail());
 
-      List<WorkbookAnalysis.AnalysisFinding> findings =
+      List<AnalysisFindingReport> findings =
           controller.conditionalFormattingHealthFindings("Ops", sheet);
       assertEquals(
           List.of(AnalysisFindingCode.CONDITIONAL_FORMATTING_UNSUPPORTED_RULE),
-          findings.stream().map(WorkbookAnalysis.AnalysisFinding::code).distinct().toList());
+          findings.stream().map(AnalysisFindingReport::code).distinct().toList());
     }
   }
 
@@ -668,7 +670,7 @@ class ExcelConditionalFormattingControllerTest {
 
       List<AnalysisFindingCode> codes =
           controller.conditionalFormattingHealthFindings("Ops", sheet).stream()
-              .map(WorkbookAnalysis.AnalysisFinding::code)
+              .map(AnalysisFindingReport::code)
               .distinct()
               .toList();
 
@@ -686,23 +688,26 @@ class ExcelConditionalFormattingControllerTest {
     assertEquals(
         "WORKBOOK",
         ExcelConditionalFormattingController.locationEvidence(
-            new WorkbookAnalysis.AnalysisLocation.Workbook()));
+            new AnalysisLocationReport.Workbook()));
     assertEquals(
         "Ops",
         ExcelConditionalFormattingController.locationEvidence(
-            new WorkbookAnalysis.AnalysisLocation.Sheet("Ops")));
+            new AnalysisLocationReport.Sheet(
+                new dev.erst.gridgrind.core.vocabulary.SheetLabel("Ops"))));
     assertEquals(
         "Ops!A1",
         ExcelConditionalFormattingController.locationEvidence(
-            new WorkbookAnalysis.AnalysisLocation.Cell("Ops", "A1")));
+            new AnalysisLocationReport.Cell(
+                new dev.erst.gridgrind.core.vocabulary.SheetLabel("Ops"), "A1")));
     assertEquals(
         "Ops!A1:B2",
         ExcelConditionalFormattingController.locationEvidence(
-            new WorkbookAnalysis.AnalysisLocation.Range("Ops", "A1:B2")));
+            new AnalysisLocationReport.Range(
+                new dev.erst.gridgrind.core.vocabulary.SheetLabel("Ops"), "A1:B2")));
     assertEquals(
         "BudgetTotal@workbook",
         ExcelConditionalFormattingController.locationEvidence(
-            new WorkbookAnalysis.AnalysisLocation.NamedRange(
+            new AnalysisLocationReport.NamedRange(
                 "BudgetTotal", new NamedRangeScopeReport.Workbook())));
   }
 
@@ -995,7 +1000,7 @@ class ExcelConditionalFormattingControllerTest {
                               Optional.empty(),
                               Optional.empty()))))));
 
-      WorkbookAnalysis.AnalysisFinding finding =
+      AnalysisFindingReport finding =
           controller.conditionalFormattingHealthFindings("Ops", sheet).stream()
               .filter(
                   candidate ->
@@ -1033,7 +1038,7 @@ class ExcelConditionalFormattingControllerTest {
                               Optional.empty(),
                               Optional.empty()))))));
 
-      WorkbookAnalysis.AnalysisFinding finding =
+      AnalysisFindingReport finding =
           controller.conditionalFormattingHealthFindings("Ops", sheet).stream()
               .filter(
                   candidate ->
@@ -1130,7 +1135,7 @@ class ExcelConditionalFormattingControllerTest {
               sheet, new ExcelRangeSelection.Selected(List.of("A1:A3"))));
       assertTrue(
           controller.conditionalFormattingHealthFindings("Ops", sheet).stream()
-              .map(WorkbookAnalysis.AnalysisFinding::code)
+              .map(AnalysisFindingReport::code)
               .toList()
               .containsAll(
                   List.of(
@@ -1150,7 +1155,7 @@ class ExcelConditionalFormattingControllerTest {
 
       assertTrue(
           controller.conditionalFormattingHealthFindings("Ops", sheet).stream()
-              .map(WorkbookAnalysis.AnalysisFinding::code)
+              .map(AnalysisFindingReport::code)
               .toList()
               .contains(AnalysisFindingCode.CONDITIONAL_FORMATTING_EMPTY_RANGE));
     }
@@ -1337,7 +1342,7 @@ class ExcelConditionalFormattingControllerTest {
       assertEquals(
           List.of(AnalysisFindingCode.CONDITIONAL_FORMATTING_BROKEN_FORMULA),
           sheet.diagnostics().conditionalFormattingHealthFindings().stream()
-              .map(WorkbookAnalysis.AnalysisFinding::code)
+              .map(AnalysisFindingReport::code)
               .distinct()
               .toList());
     }
