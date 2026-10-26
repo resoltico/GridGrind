@@ -36,6 +36,7 @@ import dev.erst.gridgrind.core.model.validation.ResolvedValidationErrorAlert;
 import dev.erst.gridgrind.core.model.validation.ResolvedValidationPrompt;
 import dev.erst.gridgrind.core.model.value.CellValue;
 import dev.erst.gridgrind.core.model.value.CellValueSpec;
+import dev.erst.gridgrind.core.model.value.HyperlinkTarget;
 import dev.erst.gridgrind.core.source.BinaryContent;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartBarDirection;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartDisplayBlanksAs;
@@ -176,7 +177,7 @@ final class WorkbookSampleFixtures {
                 List.of(new CellValue.Text("Tax"), new CellValue.NumberValue(10.0d)))),
         new WorkbookCellCommand.ClearRange("Budget", "C1:C2"),
         new WorkbookAnnotationCommand.SetHyperlink(
-            "Budget", "A1", new ExcelHyperlink.Url("https://example.com/report")),
+            "Budget", "A1", new HyperlinkTarget.Url("https://example.com/report")),
         new WorkbookAnnotationCommand.ClearHyperlink("Budget", "A1"),
         new WorkbookAnnotationCommand.SetComment(
             "Budget", "A1", new ResolvedComment("Review", "GridGrind", false)),

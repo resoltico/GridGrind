@@ -1,41 +1,15 @@
-package dev.erst.gridgrind.engine.runtime;
+package dev.erst.gridgrind.core.model.value;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import dev.erst.gridgrind.core.model.value.HyperlinkTarget;
-import dev.erst.gridgrind.excel.ExcelHyperlink;
 import org.junit.jupiter.api.Test;
 
-/** Tests for HyperlinkTarget record construction and engine conversion. */
+/** Tests for HyperlinkTarget authored construction and normalization. */
 class HyperlinkTargetTest {
   @Test
-  void buildsSupportedHyperlinkTargets() {
-    HyperlinkTarget.Url url = new HyperlinkTarget.Url("https://example.com/report");
-    HyperlinkTarget.Email email = new HyperlinkTarget.Email("mailto:team@example.com");
-    HyperlinkTarget.Email plainEmail = new HyperlinkTarget.Email("team@example.com");
-    HyperlinkTarget.File file = new HyperlinkTarget.File("/tmp/report.xlsx");
-    HyperlinkTarget.File fileUri = new HyperlinkTarget.File("file:///tmp/report.xlsx");
-    HyperlinkTarget.Document document = new HyperlinkTarget.Document("Budget!B4");
-
-    assertEquals(
-        new ExcelHyperlink.Url("https://example.com/report"),
-        WorkbookCommandCellValueSpecConverter.toExcelHyperlink(url));
-    assertEquals(
-        new ExcelHyperlink.Email("team@example.com"),
-        WorkbookCommandCellValueSpecConverter.toExcelHyperlink(email));
-    assertEquals(
-        new ExcelHyperlink.Email("team@example.com"),
-        WorkbookCommandCellValueSpecConverter.toExcelHyperlink(plainEmail));
-    assertEquals(
-        new ExcelHyperlink.File("/tmp/report.xlsx"),
-        WorkbookCommandCellValueSpecConverter.toExcelHyperlink(file));
-    assertEquals(
-        new ExcelHyperlink.File("/tmp/report.xlsx"),
-        WorkbookCommandCellValueSpecConverter.toExcelHyperlink(fileUri));
-    assertEquals("/tmp/report.xlsx", fileUri.path());
-    assertEquals(
-        new ExcelHyperlink.Document("Budget!B4"),
-        WorkbookCommandCellValueSpecConverter.toExcelHyperlink(document));
+  void normalizesEmailAndFileUriTargets() {
+    assertEquals("team@example.com", new HyperlinkTarget.Email("mailto:team@example.com").email());
+    assertEquals("/tmp/report.xlsx", new HyperlinkTarget.File("file:///tmp/report.xlsx").path());
   }
 
   @Test

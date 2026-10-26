@@ -27,6 +27,7 @@ import dev.erst.gridgrind.core.model.validation.ResolvedDataValidation;
 import dev.erst.gridgrind.core.model.validation.ResolvedValidationErrorAlert;
 import dev.erst.gridgrind.core.model.validation.ResolvedValidationPrompt;
 import dev.erst.gridgrind.core.model.value.CellValue;
+import dev.erst.gridgrind.core.model.value.HyperlinkTarget;
 import dev.erst.gridgrind.core.source.BinaryContent;
 import dev.erst.gridgrind.core.vocabulary.ExcelColumnSpan;
 import dev.erst.gridgrind.core.vocabulary.ExcelComparisonOperator;
@@ -40,7 +41,6 @@ import dev.erst.gridgrind.core.vocabulary.TableName;
 import dev.erst.gridgrind.excel.*;
 import dev.erst.gridgrind.excel.ExcelComparisonFormulaSupport;
 import dev.erst.gridgrind.excel.ExcelConditionalFormattingBlockDefinition;
-import dev.erst.gridgrind.excel.ExcelHyperlink;
 import dev.erst.gridgrind.excel.ExcelNamedRangeDefinition;
 import dev.erst.gridgrind.excel.ExcelNamedRangeScope;
 import dev.erst.gridgrind.excel.ExcelNamedRangeTarget;
@@ -130,7 +130,7 @@ class XlsxRoundTripVerifierTest {
                             Optional.of(
                                 new CellProtectionPatch(Optional.of(false), Optional.of(true))))),
                     new WorkbookAnnotationCommand.SetHyperlink(
-                        "Budget", "A1", new ExcelHyperlink.Url("https://example.com/report")),
+                        "Budget", "A1", new HyperlinkTarget.Url("https://example.com/report")),
                     new WorkbookAnnotationCommand.SetComment(
                         "Budget", "A1", new ResolvedComment("Review", "GridGrind", false)),
                     new WorkbookMetadataCommand.SetNamedRange(

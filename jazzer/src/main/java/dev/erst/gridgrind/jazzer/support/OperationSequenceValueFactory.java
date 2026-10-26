@@ -117,7 +117,7 @@ final class OperationSequenceValueFactory {
     return OperationSequenceDrawingValues.nextHyperlinkTarget(data);
   }
 
-  static ExcelHyperlink nextExcelHyperlink(GridGrindFuzzData data) {
+  static HyperlinkTarget nextExcelHyperlink(GridGrindFuzzData data) {
     return OperationSequenceDrawingValues.nextExcelHyperlink(data);
   }
 

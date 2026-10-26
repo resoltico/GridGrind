@@ -42,7 +42,6 @@ import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.core.vocabulary.TableName;
-import dev.erst.gridgrind.excel.ExcelHyperlink;
 import dev.erst.gridgrind.excel.ExcelSheetPane;
 import dev.erst.gridgrind.excel.InvalidCellAddressException;
 import dev.erst.gridgrind.excel.InvalidFormulaException;
@@ -208,18 +207,6 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
     assertEquals(
         new HyperlinkTarget.File(linkedFile.toString()),
         hyperlinks.hyperlinks().getFirst().hyperlink());
-  }
-
-  @Test
-  void convertsEmailAndDocumentHyperlinksToCanonicalProtocolTargets() {
-    assertEquals(
-        java.util.Optional.of(new HyperlinkTarget.Email("team@example.com")),
-        InspectionResultCellReportSupport.toHyperlinkTarget(
-            new ExcelHyperlink.Email("team@example.com")));
-    assertEquals(
-        java.util.Optional.of(new HyperlinkTarget.Document("Budget!B4")),
-        InspectionResultCellReportSupport.toHyperlinkTarget(
-            new ExcelHyperlink.Document("Budget!B4")));
   }
 
   @Test

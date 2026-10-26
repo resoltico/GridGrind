@@ -14,6 +14,7 @@ import dev.erst.gridgrind.core.model.style.CellGradientFillReport;
 import dev.erst.gridgrind.core.model.style.CellGradientStopReport;
 import dev.erst.gridgrind.core.model.style.CellStyleReport;
 import dev.erst.gridgrind.core.model.style.FontHeightReport;
+import dev.erst.gridgrind.core.model.value.HyperlinkTarget;
 import dev.erst.gridgrind.core.vocabulary.ExcelBorderStyle;
 import dev.erst.gridgrind.core.vocabulary.ExcelFillPattern;
 import dev.erst.gridgrind.core.vocabulary.ExcelGradientFillGeometry;
@@ -414,7 +415,7 @@ public final class XlsxRoundTrip {
     return workbook.getStylesSource().getFillAt((int) style.getCoreXf().getFillId());
   }
 
-  private static Optional<ExcelHyperlink> hyperlink(XSSFCell cell) {
+  private static Optional<HyperlinkTarget> hyperlink(XSSFCell cell) {
     XSSFHyperlink hyperlink = cell.getHyperlink();
     if (hyperlink == null || hyperlink.getType() == null) {
       return Optional.empty();
@@ -425,10 +426,10 @@ public final class XlsxRoundTrip {
     }
     try {
       return switch (hyperlink.getType()) {
-        case URL -> Optional.of(new ExcelHyperlink.Url(address));
-        case EMAIL -> Optional.of(new ExcelHyperlink.Email(address));
-        case FILE -> Optional.of(new ExcelHyperlink.File(address));
-        case DOCUMENT -> Optional.of(new ExcelHyperlink.Document(address));
+        case URL -> Optional.of(new HyperlinkTarget.Url(address));
+        case EMAIL -> Optional.of(new HyperlinkTarget.Email(address));
+        case FILE -> Optional.of(new HyperlinkTarget.File(address));
+        case DOCUMENT -> Optional.of(new HyperlinkTarget.Document(address));
         case NONE -> Optional.empty();
       };
     } catch (IllegalArgumentException exception) {

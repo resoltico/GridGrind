@@ -32,7 +32,6 @@ import dev.erst.gridgrind.excel.ExcelConditionalFormattingBlockSnapshot;
 import dev.erst.gridgrind.excel.ExcelConditionalFormattingRuleSnapshot;
 import dev.erst.gridgrind.excel.ExcelConditionalFormattingThresholdSnapshot;
 import dev.erst.gridgrind.excel.ExcelDifferentialStyleSnapshot;
-import dev.erst.gridgrind.excel.ExcelHyperlink;
 import dev.erst.gridgrind.excel.ExcelNamedRangeScope;
 import dev.erst.gridgrind.excel.ExcelNamedRangeSnapshot;
 import dev.erst.gridgrind.excel.ExcelNamedRangeTarget;
@@ -102,7 +101,7 @@ class DefaultGridGrindRequestExecutorReadResultTranslationTest
                 "Budget",
                 List.of(
                     new dev.erst.gridgrind.excel.WorkbookSheetResult.CellHyperlink(
-                        "A1", new ExcelHyperlink.Url("https://example.com/report")))));
+                        "A1", new HyperlinkTarget.Url("https://example.com/report")))));
     InspectionResult comments =
         InspectionResultConverter.toReadResult(
             new dev.erst.gridgrind.excel.WorkbookSheetResult.CommentsResult(

@@ -19,6 +19,7 @@ import dev.erst.gridgrind.core.model.print.ResolvedPrintLayout;
 import dev.erst.gridgrind.core.model.table.ResolvedTable;
 import dev.erst.gridgrind.core.model.table.TableStyleSpec;
 import dev.erst.gridgrind.core.model.value.CellValue;
+import dev.erst.gridgrind.core.model.value.HyperlinkTarget;
 import dev.erst.gridgrind.core.source.BinaryContent;
 import dev.erst.gridgrind.core.vocabulary.ExcelDrawingAnchorBehavior;
 import dev.erst.gridgrind.core.vocabulary.ExcelPictureFormat;
@@ -106,7 +107,10 @@ class ExcelWorkbookIntrospectorTest {
       assertEquals("A1:B1", results.mergedRegions().mergedRegions().getFirst().range());
       assertEquals(
           "https://example.com/report",
-          results.hyperlinks().hyperlinks().getFirst().hyperlink().target());
+          assertInstanceOf(
+                  HyperlinkTarget.Url.class,
+                  results.hyperlinks().hyperlinks().getFirst().hyperlink())
+              .target());
       assertEquals("Review", results.comments().comments().getFirst().comment().text());
       assertEquals(new ExcelSheetPane.Frozen(1, 1, 1, 1), results.layout().layout().pane());
       assertEquals(130, results.layout().layout().zoomPercent());
@@ -601,7 +605,7 @@ class ExcelWorkbookIntrospectorTest {
                 new PrintTitleColumnsSpec.None(),
                 new HeaderFooterTextReport("Budget", "", ""),
                 new HeaderFooterTextReport("", "Page &P", "")));
-    budget.annotations().setHyperlink("A1", new ExcelHyperlink.Url("https://example.com/report"));
+    budget.annotations().setHyperlink("A1", new HyperlinkTarget.Url("https://example.com/report"));
     budget.annotations().setComment("A1", new ResolvedComment("Review", "GridGrind", false));
     workbook
         .names()

@@ -64,9 +64,7 @@ final class WorkbookCommandCellMutationConverter {
             SelectorConverter.toSingleCellTarget(
                 WorkbookCommandSelectorSupport.cellByAddress(target, action));
         yield new WorkbookAnnotationCommand.SetHyperlink(
-            cellTarget.sheetName(),
-            cellTarget.address(),
-            WorkbookCommandCellValueSpecConverter.toExcelHyperlink(setHyperlink.target()));
+            cellTarget.sheetName(), cellTarget.address(), setHyperlink.target());
       }
       case CellMutationAction.ClearHyperlink _ -> {
         SelectorConverter.SingleCellTarget cellTarget =

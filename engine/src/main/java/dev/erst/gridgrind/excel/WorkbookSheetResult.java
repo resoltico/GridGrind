@@ -6,6 +6,7 @@ import static dev.erst.gridgrind.excel.WorkbookResultSupport.requireNonBlank;
 import dev.erst.gridgrind.core.model.drawing.CommentReport;
 import dev.erst.gridgrind.core.model.print.PrintLayoutReport;
 import dev.erst.gridgrind.core.model.protection.SheetProtectionSettings;
+import dev.erst.gridgrind.core.model.value.HyperlinkTarget;
 import dev.erst.gridgrind.core.vocabulary.ExcelIndexDisplay;
 import dev.erst.gridgrind.core.vocabulary.ExcelSheetVisibility;
 import dev.erst.gridgrind.core.vocabulary.StepId;
@@ -212,7 +213,7 @@ public sealed interface WorkbookSheetResult extends WorkbookReadIntrospectionRes
   }
 
   /** Hyperlink metadata associated with one concrete cell address. */
-  record CellHyperlink(String address, ExcelHyperlink hyperlink) {
+  record CellHyperlink(String address, HyperlinkTarget hyperlink) {
     public CellHyperlink {
       address = requireNonBlank(address, "address");
       Objects.requireNonNull(hyperlink, "hyperlink must not be null");

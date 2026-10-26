@@ -33,6 +33,7 @@ import dev.erst.gridgrind.core.model.validation.ConditionalFormattingRuleSpec;
 import dev.erst.gridgrind.core.model.validation.DataValidationRuleSpec;
 import dev.erst.gridgrind.core.model.validation.ResolvedDataValidation;
 import dev.erst.gridgrind.core.model.value.CellValue;
+import dev.erst.gridgrind.core.model.value.HyperlinkTarget;
 import dev.erst.gridgrind.core.vocabulary.ExcelBorderStyle;
 import dev.erst.gridgrind.core.vocabulary.ExcelColumnSpan;
 import dev.erst.gridgrind.core.vocabulary.ExcelComparisonOperator;
@@ -374,7 +375,7 @@ class ExcelWorkbookTest {
       workbook
           .sheet("Source")
           .annotations()
-          .setHyperlink("A2", new ExcelHyperlink.Url("https://example.com/h"));
+          .setHyperlink("A2", new HyperlinkTarget.Url("https://example.com/h"));
       workbook
           .sheet("Source")
           .annotations()
@@ -492,8 +493,8 @@ class ExcelWorkbookTest {
               .snapshotCell("A2")
               .metadata()
               .hyperlink()
-              .orElseThrow()
-              .target());
+              .map(link -> assertInstanceOf(HyperlinkTarget.Url.class, link).target())
+              .orElseThrow());
       assertEquals(
           "Review",
           workbook
@@ -1158,7 +1159,9 @@ class ExcelWorkbookTest {
       ExcelSheet budget = workbook.getOrCreateSheet("Budget");
       budget.cells().setCell("A1", new CellValue.Text("Report"));
       budget.cells().setCell("B4", new CellValue.NumberValue(61.0));
-      budget.annotations().setHyperlink("A1", new ExcelHyperlink.Url("https://example.com/report"));
+      budget
+          .annotations()
+          .setHyperlink("A1", new HyperlinkTarget.Url("https://example.com/report"));
       budget.annotations().setComment("A1", new ResolvedComment("Review", "GridGrind", true));
       workbook
           .names()
@@ -1184,7 +1187,7 @@ class ExcelWorkbookTest {
 
     ExcelCellMetadataSnapshot metadata = XlsxRoundTrip.cellMetadata(workbookPath, "Budget", "A1");
     assertEquals(
-        new ExcelHyperlink.Url("https://example.com/report"), metadata.hyperlink().orElseThrow());
+        new HyperlinkTarget.Url("https://example.com/report"), metadata.hyperlink().orElseThrow());
     assertAll(
         () -> assertEquals("Review", metadata.comment().orElseThrow().text()),
         () -> assertEquals("GridGrind", metadata.comment().orElseThrow().author()),
@@ -1229,10 +1232,12 @@ class ExcelWorkbookTest {
 
     try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       ExcelSheet sheet = workbook.getOrCreateSheet("C");
-      sheet.annotations().setHyperlink("F18", new ExcelHyperlink.Email("Report_Value@example.com"));
       sheet
           .annotations()
-          .setHyperlink("F18", new ExcelHyperlink.Email("Summary.Total@example.com"));
+          .setHyperlink("F18", new HyperlinkTarget.Email("Report_Value@example.com"));
+      sheet
+          .annotations()
+          .setHyperlink("F18", new HyperlinkTarget.Email("Summary.Total@example.com"));
       workbook
           .persistence()
           .save(
@@ -1243,7 +1248,7 @@ class ExcelWorkbookTest {
 
     ExcelCellMetadataSnapshot metadata = XlsxRoundTrip.cellMetadata(workbookPath, "C", "F18");
     assertEquals(
-        new ExcelHyperlink.Email("Summary.Total@example.com"), metadata.hyperlink().orElseThrow());
+        new HyperlinkTarget.Email("Summary.Total@example.com"), metadata.hyperlink().orElseThrow());
   }
 
   @Test

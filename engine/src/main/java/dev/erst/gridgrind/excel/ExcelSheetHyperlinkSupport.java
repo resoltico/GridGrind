@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.core.model.value.HyperlinkTarget;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -18,7 +19,7 @@ final class ExcelSheetHyperlinkSupport {
     this.sheet = Objects.requireNonNull(sheet, "sheet must not be null");
   }
 
-  void setHyperlink(String address, ExcelHyperlink hyperlink) {
+  void setHyperlink(String address, HyperlinkTarget hyperlink) {
     ExcelSheet.requireNonBlank(address, "address");
     Objects.requireNonNull(hyperlink, "hyperlink must not be null");
 
@@ -29,7 +30,7 @@ final class ExcelSheetHyperlinkSupport {
     requireHyperlinkCapacity(cell);
     cell.removeHyperlink();
     org.apache.poi.ss.usermodel.Hyperlink poiHyperlink =
-        sheet.getWorkbook().getCreationHelper().createHyperlink(toPoi(hyperlink.type()));
+        sheet.getWorkbook().getCreationHelper().createHyperlink(toPoi(hyperlink));
     poiHyperlink.setAddress(toPoiTarget(hyperlink));
     cell.setHyperlink(poiHyperlink);
   }
@@ -47,17 +48,17 @@ final class ExcelSheetHyperlinkSupport {
     };
   }
 
-  static Optional<ExcelHyperlink> hyperlink(Cell cell) {
+  static Optional<HyperlinkTarget> hyperlink(Cell cell) {
     return cell == null ? Optional.empty() : hyperlink(cell.getHyperlink());
   }
 
-  static Optional<ExcelHyperlink> hyperlink(org.apache.poi.ss.usermodel.Hyperlink hyperlink) {
+  static Optional<HyperlinkTarget> hyperlink(org.apache.poi.ss.usermodel.Hyperlink hyperlink) {
     return hyperlink == null || hyperlink.getType() == null
         ? Optional.empty()
         : hyperlink(hyperlink.getType(), hyperlink.getAddress());
   }
 
-  static Optional<ExcelHyperlink> hyperlink(HyperlinkType hyperlinkType, String target) {
+  static Optional<HyperlinkTarget> hyperlink(HyperlinkType hyperlinkType, String target) {
     if (hyperlinkType == null || target == null || target.isBlank()) {
       return Optional.empty();
     }
@@ -65,26 +66,26 @@ final class ExcelSheetHyperlinkSupport {
       case URL -> urlHyperlink(target);
       case EMAIL -> emailHyperlink(target);
       case FILE -> fileHyperlink(target);
-      case DOCUMENT -> Optional.of(new ExcelHyperlink.Document(target));
+      case DOCUMENT -> Optional.of(new HyperlinkTarget.Document(target));
       case NONE -> Optional.empty();
     };
   }
 
-  static HyperlinkType toPoi(ExcelHyperlinkType hyperlinkType) {
+  static HyperlinkType toPoi(HyperlinkTarget hyperlinkType) {
     return switch (hyperlinkType) {
-      case URL -> HyperlinkType.URL;
-      case EMAIL -> HyperlinkType.EMAIL;
-      case FILE -> HyperlinkType.FILE;
-      case DOCUMENT -> HyperlinkType.DOCUMENT;
+      case HyperlinkTarget.Url _ -> HyperlinkType.URL;
+      case HyperlinkTarget.Email _ -> HyperlinkType.EMAIL;
+      case HyperlinkTarget.File _ -> HyperlinkType.FILE;
+      case HyperlinkTarget.Document _ -> HyperlinkType.DOCUMENT;
     };
   }
 
-  static String toPoiTarget(ExcelHyperlink hyperlink) {
+  static String toPoiTarget(HyperlinkTarget hyperlink) {
     return switch (hyperlink) {
-      case ExcelHyperlink.Url url -> url.target();
-      case ExcelHyperlink.Email email -> "mailto:" + email.target();
-      case ExcelHyperlink.File file -> ExcelFileHyperlinkTargets.toPoiAddress(file.path());
-      case ExcelHyperlink.Document document -> document.target();
+      case HyperlinkTarget.Url url -> url.target();
+      case HyperlinkTarget.Email email -> "mailto:" + email.email();
+      case HyperlinkTarget.File file -> ExcelFileHyperlinkTargets.toPoiAddress(file.path());
+      case HyperlinkTarget.Document document -> document.target();
     };
   }
 
@@ -92,7 +93,7 @@ final class ExcelSheetHyperlinkSupport {
     List<WorkbookSheetResult.CellHyperlink> hyperlinks = new ArrayList<>();
     for (Row row : sheet) {
       for (Cell cell : row) {
-        Optional<ExcelHyperlink> hyperlink = hyperlink(cell);
+        Optional<HyperlinkTarget> hyperlink = hyperlink(cell);
         if (hyperlink.isPresent()) {
           hyperlinks.add(
               new WorkbookSheetResult.CellHyperlink(
@@ -111,7 +112,7 @@ final class ExcelSheetHyperlinkSupport {
       if (cell == null) {
         continue;
       }
-      Optional<ExcelHyperlink> hyperlink = hyperlink(cell);
+      Optional<HyperlinkTarget> hyperlink = hyperlink(cell);
       if (hyperlink.isPresent()) {
         hyperlinks.add(new WorkbookSheetResult.CellHyperlink(address, hyperlink.orElseThrow()));
       }
@@ -134,21 +135,21 @@ final class ExcelSheetHyperlinkSupport {
     ExcelHyperlinkLimits.requireWorksheetHyperlinkCapacity(hyperlinkCount); // LIM-012
   }
 
-  private static Optional<ExcelHyperlink> urlHyperlink(String target) {
+  private static Optional<HyperlinkTarget> urlHyperlink(String target) {
     return ExcelHyperlinkValidation.isValidUrlTarget(target)
-        ? Optional.of(new ExcelHyperlink.Url(target))
+        ? Optional.of(new HyperlinkTarget.Url(target))
         : Optional.empty();
   }
 
-  private static Optional<ExcelHyperlink> emailHyperlink(String target) {
+  private static Optional<HyperlinkTarget> emailHyperlink(String target) {
     return ExcelHyperlinkValidation.isValidEmailTarget(target)
-        ? Optional.of(new ExcelHyperlink.Email(target))
+        ? Optional.of(new HyperlinkTarget.Email(target))
         : Optional.empty();
   }
 
-  private static Optional<ExcelHyperlink> fileHyperlink(String target) {
+  private static Optional<HyperlinkTarget> fileHyperlink(String target) {
     return ExcelHyperlinkValidation.isValidFileTarget(target)
-        ? Optional.of(new ExcelHyperlink.File(target))
+        ? Optional.of(new HyperlinkTarget.File(target))
         : Optional.empty();
   }
 }

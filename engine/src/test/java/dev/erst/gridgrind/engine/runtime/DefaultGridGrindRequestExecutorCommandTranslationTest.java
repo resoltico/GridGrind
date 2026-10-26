@@ -41,7 +41,6 @@ import dev.erst.gridgrind.core.vocabulary.SheetCopyPosition;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.TableName;
 import dev.erst.gridgrind.excel.*;
-import dev.erst.gridgrind.excel.ExcelHyperlink;
 import dev.erst.gridgrind.excel.ExcelNamedRangeDefinition;
 import dev.erst.gridgrind.excel.ExcelNamedRangeScope;
 import dev.erst.gridgrind.excel.ExcelNamedRangeTarget;
@@ -101,7 +100,7 @@ class DefaultGridGrindRequestExecutorCommandTranslationTest
     assertInstanceOf(WorkbookMetadataCommand.SetNamedRange.class, setNamedRange);
     assertInstanceOf(WorkbookMetadataCommand.DeleteNamedRange.class, deleteNamedRange);
     assertEquals(
-        new ExcelHyperlink.Url("https://example.com/report"),
+        new HyperlinkTarget.Url("https://example.com/report"),
         cast(WorkbookAnnotationCommand.SetHyperlink.class, setHyperlink).target());
     assertEquals(
         new ResolvedComment("Review", "GridGrind", false),

@@ -955,7 +955,7 @@ class InspectionResultConverterTest extends DefaultGridGrindRequestExecutorTestS
         "Styled",
         advancedStyle(),
         ExcelCellMetadataSnapshot.of(
-            Optional.of(new ExcelHyperlink.Url("https://example.com/tasks/42")),
+            Optional.of(new HyperlinkTarget.Url("https://example.com/tasks/42")),
             Optional.of(richComment())),
         "Styled",
         richText);

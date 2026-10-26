@@ -19,6 +19,7 @@ import dev.erst.gridgrind.core.model.style.FontHeightReport;
 import dev.erst.gridgrind.core.model.validation.DataValidationRuleSpec;
 import dev.erst.gridgrind.core.model.validation.ResolvedDataValidation;
 import dev.erst.gridgrind.core.model.validation.ResolvedValidationPrompt;
+import dev.erst.gridgrind.core.model.value.HyperlinkTarget;
 import dev.erst.gridgrind.core.vocabulary.AnalysisFindingCode;
 import dev.erst.gridgrind.core.vocabulary.AnalysisSeverity;
 import dev.erst.gridgrind.core.vocabulary.ExcelComparisonOperator;
@@ -451,7 +452,7 @@ class WorkbookReadResultTest {
         new ArrayList<>(
             List.of(
                 new WorkbookSheetResult.CellHyperlink(
-                    "A1", new ExcelHyperlink.Url("https://example.com/report"))));
+                    "A1", new HyperlinkTarget.Url("https://example.com/report"))));
     List<WorkbookSheetResult.CellComment> comments =
         new ArrayList<>(
             List.of(
@@ -599,7 +600,10 @@ class WorkbookReadResultTest {
     assertEquals("A1:B2", fixture.mergedRegionsResult().mergedRegions().getFirst().range());
     assertEquals(
         "https://example.com/report",
-        fixture.hyperlinksResult().hyperlinks().getFirst().hyperlink().target());
+        assertInstanceOf(
+                HyperlinkTarget.Url.class,
+                fixture.hyperlinksResult().hyperlinks().getFirst().hyperlink())
+            .target());
     assertEquals("Review", fixture.commentsResult().comments().getFirst().comment().text());
     assertEquals(new ExcelSheetPane.Frozen(1, 1, 1, 1), fixture.layoutResult().layout().pane());
     assertEquals(125, fixture.layoutResult().layout().zoomPercent());

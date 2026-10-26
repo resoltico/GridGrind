@@ -12,13 +12,13 @@ import dev.erst.gridgrind.core.model.style.CellGradientFillReport;
 import dev.erst.gridgrind.core.model.style.CellGradientStopReport;
 import dev.erst.gridgrind.core.model.style.CellStyleReport;
 import dev.erst.gridgrind.core.model.style.FontHeightReport;
+import dev.erst.gridgrind.core.model.value.HyperlinkTarget;
 import dev.erst.gridgrind.core.vocabulary.ExcelBorderStyle;
 import dev.erst.gridgrind.core.vocabulary.ExcelFillPattern;
 import dev.erst.gridgrind.core.vocabulary.ExcelGradientFillGeometry;
 import dev.erst.gridgrind.core.vocabulary.ExcelHorizontalAlignment;
 import dev.erst.gridgrind.core.vocabulary.ExcelVerticalAlignment;
 import dev.erst.gridgrind.core.vocabulary.RgbHex;
-import dev.erst.gridgrind.excel.ExcelHyperlink;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
 import dev.erst.gridgrind.excel.ExcelWorkbooks;
 import dev.erst.gridgrind.excel.WorkbookCommand;
@@ -344,7 +344,7 @@ public final class XlsxRoundTripVerifier {
     };
   }
 
-  static Optional<ExcelHyperlink> hyperlink(Cell cell) {
+  static Optional<HyperlinkTarget> hyperlink(Cell cell) {
     XSSFHyperlink hyperlink = (XSSFHyperlink) cell.getHyperlink();
     if (hyperlink == null || hyperlink.getType() == null) {
       return Optional.empty();
@@ -355,10 +355,10 @@ public final class XlsxRoundTripVerifier {
     }
     try {
       return switch (hyperlink.getType()) {
-        case URL -> Optional.of(new ExcelHyperlink.Url(target));
-        case EMAIL -> Optional.of(new ExcelHyperlink.Email(target));
-        case FILE -> Optional.of(new ExcelHyperlink.File(target));
-        case DOCUMENT -> Optional.of(new ExcelHyperlink.Document(target));
+        case URL -> Optional.of(new HyperlinkTarget.Url(target));
+        case EMAIL -> Optional.of(new HyperlinkTarget.Email(target));
+        case FILE -> Optional.of(new HyperlinkTarget.File(target));
+        case DOCUMENT -> Optional.of(new HyperlinkTarget.Document(target));
         case NONE -> Optional.empty();
       };
     } catch (IllegalArgumentException exception) {

@@ -91,7 +91,6 @@ import dev.erst.gridgrind.excel.*;
 import dev.erst.gridgrind.excel.ExcelAutofilterSnapshot;
 import dev.erst.gridgrind.excel.ExcelConditionalFormattingBlockSnapshot;
 import dev.erst.gridgrind.excel.ExcelConditionalFormattingRuleSnapshot;
-import dev.erst.gridgrind.excel.ExcelHyperlink;
 import dev.erst.gridgrind.excel.ExcelIgnoredError;
 import dev.erst.gridgrind.excel.ExcelSheetDefaults;
 import dev.erst.gridgrind.excel.ExcelSheetDisplay;
@@ -1251,7 +1250,7 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
                     NamedRangeTarget.range(new SheetName("Budget"), new RangeRef("A1:B2")))));
 
     assertEquals(
-        new ExcelHyperlink.Url("https://example.com/report"),
+        new HyperlinkTarget.Url("https://example.com/report"),
         XlsxRoundTrip.cellMetadata(workbookPath, "Budget", "A1").hyperlink().orElseThrow());
     assertAll(
         () ->

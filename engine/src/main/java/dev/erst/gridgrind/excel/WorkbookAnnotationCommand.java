@@ -1,6 +1,7 @@
 package dev.erst.gridgrind.excel;
 
 import dev.erst.gridgrind.core.model.drawing.ResolvedComment;
+import dev.erst.gridgrind.core.model.value.HyperlinkTarget;
 import java.util.Objects;
 
 /** Cell annotation commands for hyperlinks and comments. */
@@ -11,7 +12,7 @@ public sealed interface WorkbookAnnotationCommand extends WorkbookCommand
         WorkbookAnnotationCommand.ClearComment {
 
   /** Replaces the hyperlink attached to a single cell. */
-  record SetHyperlink(String sheetName, String address, ExcelHyperlink target)
+  record SetHyperlink(String sheetName, String address, HyperlinkTarget target)
       implements WorkbookAnnotationCommand {
     public SetHyperlink {
       Objects.requireNonNull(sheetName, "sheetName must not be null");

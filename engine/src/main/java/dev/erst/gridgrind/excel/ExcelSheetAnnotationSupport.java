@@ -2,6 +2,7 @@ package dev.erst.gridgrind.excel;
 
 import dev.erst.gridgrind.core.model.drawing.CommentReport;
 import dev.erst.gridgrind.core.model.drawing.ResolvedComment;
+import dev.erst.gridgrind.core.model.value.HyperlinkTarget;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingController;
 import java.util.List;
 import java.util.Objects;
@@ -25,7 +26,7 @@ final class ExcelSheetAnnotationSupport {
     this.commentSupport = new ExcelSheetCommentSupport(sheet, drawingController);
   }
 
-  void setHyperlink(String address, ExcelHyperlink hyperlink) {
+  void setHyperlink(String address, HyperlinkTarget hyperlink) {
     hyperlinkSupport.setHyperlink(address, hyperlink);
   }
 
@@ -57,23 +58,23 @@ final class ExcelSheetAnnotationSupport {
     ExcelSheetCommentSupport.clearCellComment(cell);
   }
 
-  static Optional<ExcelHyperlink> hyperlink(Cell cell) {
+  static Optional<HyperlinkTarget> hyperlink(Cell cell) {
     return ExcelSheetHyperlinkSupport.hyperlink(cell);
   }
 
-  static Optional<ExcelHyperlink> hyperlink(org.apache.poi.ss.usermodel.Hyperlink hyperlink) {
+  static Optional<HyperlinkTarget> hyperlink(org.apache.poi.ss.usermodel.Hyperlink hyperlink) {
     return ExcelSheetHyperlinkSupport.hyperlink(hyperlink);
   }
 
-  static Optional<ExcelHyperlink> hyperlink(HyperlinkType hyperlinkType, String target) {
+  static Optional<HyperlinkTarget> hyperlink(HyperlinkType hyperlinkType, String target) {
     return ExcelSheetHyperlinkSupport.hyperlink(hyperlinkType, target);
   }
 
-  static HyperlinkType toPoi(ExcelHyperlinkType hyperlinkType) {
+  static HyperlinkType toPoi(HyperlinkTarget hyperlinkType) {
     return ExcelSheetHyperlinkSupport.toPoi(hyperlinkType);
   }
 
-  static String toPoiTarget(ExcelHyperlink hyperlink) {
+  static String toPoiTarget(HyperlinkTarget hyperlink) {
     return ExcelSheetHyperlinkSupport.toPoiTarget(hyperlink);
   }
 

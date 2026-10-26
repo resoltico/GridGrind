@@ -80,9 +80,7 @@ final class InspectionResultWorkbookLayoutReportSupport {
 
   static CellHyperlinkReport toCellHyperlinkReport(
       dev.erst.gridgrind.excel.WorkbookSheetResult.CellHyperlink hyperlink) {
-    return new CellHyperlinkReport(
-        new CellAddress(hyperlink.address()),
-        InspectionResultCellReportSupport.toHyperlinkTarget(hyperlink.hyperlink()).orElseThrow());
+    return new CellHyperlinkReport(new CellAddress(hyperlink.address()), hyperlink.hyperlink());
   }
 
   static CellCommentReport toCellCommentReport(

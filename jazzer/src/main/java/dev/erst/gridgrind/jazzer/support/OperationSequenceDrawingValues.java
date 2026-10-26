@@ -41,12 +41,12 @@ final class OperationSequenceDrawingValues {
     };
   }
 
-  static ExcelHyperlink nextExcelHyperlink(GridGrindFuzzData data) {
+  static HyperlinkTarget nextExcelHyperlink(GridGrindFuzzData data) {
     return switch (selectorSlot(nextSelectorByte(data))) {
-      case 0 -> new ExcelHyperlink.Url("https://example.com/" + nextNamedRangeName(data, true));
-      case 1 -> new ExcelHyperlink.Email(nextNamedRangeName(data, true) + "@example.com");
-      case 2 -> new ExcelHyperlink.File("/tmp/" + nextNamedRangeName(data, true) + ".xlsx");
-      default -> new ExcelHyperlink.Document("Budget!A1");
+      case 0 -> new HyperlinkTarget.Url("https://example.com/" + nextNamedRangeName(data, true));
+      case 1 -> new HyperlinkTarget.Email(nextNamedRangeName(data, true) + "@example.com");
+      case 2 -> new HyperlinkTarget.File("/tmp/" + nextNamedRangeName(data, true) + ".xlsx");
+      default -> new HyperlinkTarget.Document("Budget!A1");
     };
   }
 

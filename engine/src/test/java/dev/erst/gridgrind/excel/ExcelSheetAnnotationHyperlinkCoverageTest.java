@@ -7,6 +7,7 @@ import dev.erst.gridgrind.core.model.drawing.CommentAnchorReport;
 import dev.erst.gridgrind.core.model.drawing.CommentReport;
 import dev.erst.gridgrind.core.model.drawing.ResolvedComment;
 import dev.erst.gridgrind.core.model.value.CellValue;
+import dev.erst.gridgrind.core.model.value.HyperlinkTarget;
 import dev.erst.gridgrind.core.vocabulary.AnalysisFindingCode;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -62,16 +63,16 @@ class ExcelSheetAnnotationHyperlinkCoverageTest extends ExcelSheetTestSupport {
 
       assertEquals(Optional.empty(), ExcelSheetAnnotationSupport.hyperlink(blankCell));
       assertEquals(
-          Optional.of(new ExcelHyperlink.Url("https://example.com/report")),
+          Optional.of(new HyperlinkTarget.Url("https://example.com/report")),
           ExcelSheetAnnotationSupport.hyperlink(urlCell));
       assertEquals(
-          Optional.of(new ExcelHyperlink.Email("team@example.com")),
+          Optional.of(new HyperlinkTarget.Email("team@example.com")),
           ExcelSheetAnnotationSupport.hyperlink(emailCell));
       assertEquals(
-          Optional.of(new ExcelHyperlink.File("/tmp/report.xlsx")),
+          Optional.of(new HyperlinkTarget.File("/tmp/report.xlsx")),
           ExcelSheetAnnotationSupport.hyperlink(fileCell));
       assertEquals(
-          Optional.of(new ExcelHyperlink.Document("Budget!B4")),
+          Optional.of(new HyperlinkTarget.Document("Budget!B4")),
           ExcelSheetAnnotationSupport.hyperlink(documentCell));
       assertEquals(
           Optional.empty(), ExcelSheetAnnotationSupport.hyperlink(HyperlinkType.NONE, "ignored"));
@@ -101,30 +102,36 @@ class ExcelSheetAnnotationHyperlinkCoverageTest extends ExcelSheetTestSupport {
       blankAuthorCommentCell.setCellComment(comment(poiWorkbook, poiSheet, "Review", " ", false));
       assertEquals(Optional.empty(), ExcelSheetAnnotationSupport.comment(blankAuthorCommentCell));
 
-      assertEquals(HyperlinkType.URL, ExcelSheetAnnotationSupport.toPoi(ExcelHyperlinkType.URL));
       assertEquals(
-          HyperlinkType.EMAIL, ExcelSheetAnnotationSupport.toPoi(ExcelHyperlinkType.EMAIL));
-      assertEquals(HyperlinkType.FILE, ExcelSheetAnnotationSupport.toPoi(ExcelHyperlinkType.FILE));
+          HyperlinkType.URL,
+          ExcelSheetAnnotationSupport.toPoi(new HyperlinkTarget.Url("https://example.com")));
       assertEquals(
-          HyperlinkType.DOCUMENT, ExcelSheetAnnotationSupport.toPoi(ExcelHyperlinkType.DOCUMENT));
+          HyperlinkType.EMAIL,
+          ExcelSheetAnnotationSupport.toPoi(new HyperlinkTarget.Email("team@example.com")));
+      assertEquals(
+          HyperlinkType.FILE,
+          ExcelSheetAnnotationSupport.toPoi(new HyperlinkTarget.File("/tmp/report.xlsx")));
+      assertEquals(
+          HyperlinkType.DOCUMENT,
+          ExcelSheetAnnotationSupport.toPoi(new HyperlinkTarget.Document("Budget!A1")));
 
       assertEquals(
           "https://example.com/report",
           ExcelSheetAnnotationSupport.toPoiTarget(
-              new ExcelHyperlink.Url("https://example.com/report")));
+              new HyperlinkTarget.Url("https://example.com/report")));
       assertEquals(
           "mailto:team@example.com",
-          ExcelSheetAnnotationSupport.toPoiTarget(new ExcelHyperlink.Email("team@example.com")));
+          ExcelSheetAnnotationSupport.toPoiTarget(new HyperlinkTarget.Email("team@example.com")));
       assertEquals(
           Path.of("/tmp/report.xlsx").toUri().toASCIIString(),
-          ExcelSheetAnnotationSupport.toPoiTarget(new ExcelHyperlink.File("/tmp/report.xlsx")));
+          ExcelSheetAnnotationSupport.toPoiTarget(new HyperlinkTarget.File("/tmp/report.xlsx")));
       assertEquals(
           "support/budget%20backup.xlsx",
           ExcelSheetAnnotationSupport.toPoiTarget(
-              new ExcelHyperlink.File("support/budget backup.xlsx")));
+              new HyperlinkTarget.File("support/budget backup.xlsx")));
       assertEquals(
           "Budget!B4",
-          ExcelSheetAnnotationSupport.toPoiTarget(new ExcelHyperlink.Document("Budget!B4")));
+          ExcelSheetAnnotationSupport.toPoiTarget(new HyperlinkTarget.Document("Budget!B4")));
     }
   }
 

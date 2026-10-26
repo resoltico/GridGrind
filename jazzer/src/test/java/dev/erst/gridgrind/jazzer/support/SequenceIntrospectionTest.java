@@ -83,7 +83,6 @@ import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.TableName;
 import dev.erst.gridgrind.excel.*;
 import dev.erst.gridgrind.excel.ExcelComparisonFormulaSupport;
-import dev.erst.gridgrind.excel.ExcelHyperlink;
 import dev.erst.gridgrind.excel.ExcelNamedRangeDefinition;
 import dev.erst.gridgrind.excel.ExcelNamedRangeScope;
 import dev.erst.gridgrind.excel.ExcelNamedRangeTarget;
@@ -365,7 +364,7 @@ class SequenceIntrospectionTest {
         "SET_HYPERLINK",
         SequenceIntrospection.commandKind(
             new WorkbookAnnotationCommand.SetHyperlink(
-                "Budget", "A1", new ExcelHyperlink.Url("https://example.com"))));
+                "Budget", "A1", new HyperlinkTarget.Url("https://example.com"))));
     assertEquals(
         "CLEAR_HYPERLINK",
         SequenceIntrospection.commandKind(

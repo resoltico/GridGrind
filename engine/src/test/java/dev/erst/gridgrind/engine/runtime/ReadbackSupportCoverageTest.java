@@ -34,7 +34,6 @@ import dev.erst.gridgrind.excel.ExcelCellMetadataSnapshot;
 import dev.erst.gridgrind.excel.ExcelCellReadFacet;
 import dev.erst.gridgrind.excel.ExcelCellReadProjection;
 import dev.erst.gridgrind.excel.ExcelCellSnapshot;
-import dev.erst.gridgrind.excel.ExcelHyperlink;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
@@ -472,7 +471,7 @@ class ReadbackSupportCoverageTest {
 
   private static ExcelCellMetadataSnapshot metadata() {
     return ExcelCellMetadataSnapshot.of(
-        Optional.of(new ExcelHyperlink.Url("https://example.com/report")),
+        Optional.of(new HyperlinkTarget.Url("https://example.com/report")),
         Optional.of(
             new CommentReport(
                 "Review",

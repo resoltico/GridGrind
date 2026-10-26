@@ -9,6 +9,7 @@ import dev.erst.gridgrind.core.model.table.ResolvedTable;
 import dev.erst.gridgrind.core.model.table.TableStyleSpec;
 import dev.erst.gridgrind.core.model.validation.ConditionalFormattingRuleSpec;
 import dev.erst.gridgrind.core.model.value.CellValue;
+import dev.erst.gridgrind.core.model.value.HyperlinkTarget;
 import dev.erst.gridgrind.core.vocabulary.AnalysisFindingCode;
 import dev.erst.gridgrind.core.vocabulary.AnalysisSeverity;
 import dev.erst.gridgrind.core.vocabulary.ExcelPivotDataConsolidateFunction;
@@ -39,11 +40,11 @@ class WorkbookAnalyzerTest {
     try (ExcelWorkbook workbook =
         ExcelWorkbooks.open(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory())) {
       ExcelSheet budget = workbook.sheet("Budget");
-      budget.annotations().setHyperlink("A1", new ExcelHyperlink.Document("Missing!A1"));
-      budget.annotations().setHyperlink("A2", new ExcelHyperlink.Document("Budget!A1:"));
+      budget.annotations().setHyperlink("A1", new HyperlinkTarget.Document("Missing!A1"));
+      budget.annotations().setHyperlink("A2", new HyperlinkTarget.Document("Budget!A1:"));
       budget
           .annotations()
-          .setHyperlink("A3", new ExcelHyperlink.File("missing-supporting-doc.pdf"));
+          .setHyperlink("A3", new HyperlinkTarget.File("missing-supporting-doc.pdf"));
       budget.cells().setCell("D1", new CellValue.Text("Owner"));
       budget.cells().setCell("E1", new CellValue.Text("Task"));
       budget.cells().setCell("D2", new CellValue.Text("Ada"));
@@ -242,12 +243,12 @@ class WorkbookAnalyzerTest {
       ExcelSheet budget = workbook.getOrCreateSheet("Budget");
       budget.cells().setCell("A1", new CellValue.Text("Item"));
       budget.cells().setCell("B1", new ResolvedFormula("NOW()"));
-      budget.annotations().setHyperlink("A1", new ExcelHyperlink.Document("Missing!A1"));
+      budget.annotations().setHyperlink("A1", new HyperlinkTarget.Document("Missing!A1"));
 
       ExcelSheet forecast = workbook.getOrCreateSheet("Forecast");
       forecast.cells().setCell("A1", new CellValue.Text("Item"));
       forecast.cells().setCell("B1", new ResolvedFormula("1+1"));
-      forecast.annotations().setHyperlink("C1", new ExcelHyperlink.File("relative-report.xlsx"));
+      forecast.annotations().setHyperlink("C1", new HyperlinkTarget.File("relative-report.xlsx"));
 
       workbook
           .names()
@@ -341,7 +342,7 @@ class WorkbookAnalyzerTest {
       workbook
           .getOrCreateSheet("Budget")
           .annotations()
-          .setHyperlink("A1", new ExcelHyperlink.File("reports/q1.xlsx"));
+          .setHyperlink("A1", new HyperlinkTarget.File("reports/q1.xlsx"));
 
       WorkbookAnalyzer analyzer = new WorkbookAnalyzer();
 

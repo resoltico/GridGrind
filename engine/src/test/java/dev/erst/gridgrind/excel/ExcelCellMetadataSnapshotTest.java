@@ -3,6 +3,7 @@ package dev.erst.gridgrind.excel;
 import static org.junit.jupiter.api.Assertions.*;
 
 import dev.erst.gridgrind.core.model.drawing.CommentReport;
+import dev.erst.gridgrind.core.model.value.HyperlinkTarget;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
 
@@ -16,12 +17,12 @@ class ExcelCellMetadataSnapshotTest {
 
     ExcelCellMetadataSnapshot snapshot =
         ExcelCellMetadataSnapshot.of(
-            Optional.of(new ExcelHyperlink.Document("Budget!B4")),
+            Optional.of(new HyperlinkTarget.Document("Budget!B4")),
             Optional.of(
                 new CommentReport(
                     "Review", "GridGrind", false, Optional.empty(), Optional.empty())));
 
-    assertEquals(Optional.of(new ExcelHyperlink.Document("Budget!B4")), snapshot.hyperlink());
+    assertEquals(Optional.of(new HyperlinkTarget.Document("Budget!B4")), snapshot.hyperlink());
     assertEquals(
         Optional.of(
             new CommentReport("Review", "GridGrind", false, Optional.empty(), Optional.empty())),

@@ -115,13 +115,13 @@ final class ExcelSheetAnalysisSupport {
           externalHyperlinkFindings(
               location,
               target,
-              ExcelHyperlinkType.URL.name(),
+              HyperlinkType.URL.name(),
               ExcelHyperlinkValidation.isValidUrlTarget(target));
       case EMAIL ->
           externalHyperlinkFindings(
               location,
               target,
-              ExcelHyperlinkType.EMAIL.name(),
+              HyperlinkType.EMAIL.name(),
               ExcelHyperlinkValidation.isValidEmailTarget(target));
       case FILE -> fileHyperlinkFindings(location, target, workbookLocation);
       case DOCUMENT -> {

@@ -16,6 +16,7 @@ import dev.erst.gridgrind.core.model.style.ColorSpec;
 import dev.erst.gridgrind.core.model.style.FontHeightSpec;
 import dev.erst.gridgrind.core.model.value.CellValue;
 import dev.erst.gridgrind.core.model.value.CellValueSpec;
+import dev.erst.gridgrind.core.model.value.HyperlinkTarget;
 import dev.erst.gridgrind.core.model.value.ResolvedCellWrite;
 import dev.erst.gridgrind.core.vocabulary.ExcelBorderStyle;
 import dev.erst.gridgrind.core.vocabulary.ExcelColumnSpan;
@@ -273,11 +274,13 @@ class ExcelSheetCoreReadWriteCoverageTest extends ExcelSheetTestSupport {
           () ->
               sheet
                   .annotations()
-                  .setHyperlink(null, new ExcelHyperlink.Url("https://example.com")));
+                  .setHyperlink(null, new HyperlinkTarget.Url("https://example.com")));
       assertThrows(
           IllegalArgumentException.class,
           () ->
-              sheet.annotations().setHyperlink(" ", new ExcelHyperlink.Url("https://example.com")));
+              sheet
+                  .annotations()
+                  .setHyperlink(" ", new HyperlinkTarget.Url("https://example.com")));
       assertThrows(NullPointerException.class, () -> sheet.annotations().setHyperlink("A1", null));
       assertThrows(NullPointerException.class, () -> sheet.annotations().clearHyperlink(null));
       assertThrows(IllegalArgumentException.class, () -> sheet.annotations().clearHyperlink(" "));
@@ -662,13 +665,13 @@ class ExcelSheetCoreReadWriteCoverageTest extends ExcelSheetTestSupport {
       ExcelSheet sheet =
           new ExcelSheet(poiSheet, new WorkbookStyleRegistry(poiWorkbook), evaluator);
 
-      sheet.annotations().setHyperlink("A1", new ExcelHyperlink.Url("https://example.com/report"));
+      sheet.annotations().setHyperlink("A1", new HyperlinkTarget.Url("https://example.com/report"));
       sheet.annotations().setComment("A1", new ResolvedComment("Review", "GridGrind", true));
 
       ExcelCellSnapshot.BlankSnapshot snapshot =
           (ExcelCellSnapshot.BlankSnapshot) sheet.cells().snapshotCell("A1");
       assertEquals(
-          new ExcelHyperlink.Url("https://example.com/report"),
+          new HyperlinkTarget.Url("https://example.com/report"),
           snapshot.metadata().hyperlink().orElseThrow());
       assertAll(
           () -> assertEquals("Review", snapshot.metadata().comment().orElseThrow().text()),
@@ -686,7 +689,7 @@ class ExcelSheetCoreReadWriteCoverageTest extends ExcelSheetTestSupport {
       assertTrue(clearedMetadata.metadata().hyperlink().isEmpty());
       assertTrue(clearedMetadata.metadata().comment().isEmpty());
 
-      sheet.annotations().setHyperlink("A1", new ExcelHyperlink.Document("Budget!B4"));
+      sheet.annotations().setHyperlink("A1", new HyperlinkTarget.Document("Budget!B4"));
       sheet.annotations().setComment("A1", new ResolvedComment("Again", "GridGrind", false));
       sheet.cells().clearRange("A1");
       ExcelCellSnapshot.BlankSnapshot clearedRange =
@@ -715,12 +718,12 @@ class ExcelSheetCoreReadWriteCoverageTest extends ExcelSheetTestSupport {
           () ->
               sheet
                   .annotations()
-                  .setHyperlink("A1", new ExcelHyperlink.File("support/budget backup.xlsx")));
+                  .setHyperlink("A1", new HyperlinkTarget.File("support/budget backup.xlsx")));
 
       Cell cell = poiSheet.getRow(0).getCell(0);
       assertEquals("support/budget%20backup.xlsx", cell.getHyperlink().getAddress());
       assertEquals(
-          Optional.of(new ExcelHyperlink.File("support/budget backup.xlsx")),
+          Optional.of(new HyperlinkTarget.File("support/budget backup.xlsx")),
           ExcelSheetAnnotationSupport.hyperlink(cell));
     }
   }
@@ -786,7 +789,7 @@ class ExcelSheetCoreReadWriteCoverageTest extends ExcelSheetTestSupport {
       assertEquals(List.of(), emptyLayout.rows());
 
       sheet.cells().setCell("B2", new CellValue.Text("Center"));
-      sheet.annotations().setHyperlink("A1", new ExcelHyperlink.Url("https://example.com/report"));
+      sheet.annotations().setHyperlink("A1", new HyperlinkTarget.Url("https://example.com/report"));
       sheet.annotations().setComment("C3", new ResolvedComment("Review", "GridGrind", false));
       sheet.columns().setWidth(0, 0, 12.5);
       sheet.rows().setHeight(0, 0, 19.5);
@@ -874,15 +877,17 @@ class ExcelSheetCoreReadWriteCoverageTest extends ExcelSheetTestSupport {
       ExcelSheet sheet =
           new ExcelSheet(poiSheet, new WorkbookStyleRegistry(poiWorkbook), evaluator);
 
-      sheet.annotations().setHyperlink("F18", new ExcelHyperlink.Email("Report_Value@example.com"));
       sheet
           .annotations()
-          .setHyperlink("F18", new ExcelHyperlink.Email("Summary.Total@example.com"));
+          .setHyperlink("F18", new HyperlinkTarget.Email("Report_Value@example.com"));
+      sheet
+          .annotations()
+          .setHyperlink("F18", new HyperlinkTarget.Email("Summary.Total@example.com"));
 
       ExcelCellSnapshot.BlankSnapshot snapshot =
           (ExcelCellSnapshot.BlankSnapshot) sheet.cells().snapshotCell("F18");
       assertEquals(
-          new ExcelHyperlink.Email("Summary.Total@example.com"),
+          new HyperlinkTarget.Email("Summary.Total@example.com"),
           snapshot.metadata().hyperlink().orElseThrow());
     }
   }

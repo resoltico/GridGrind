@@ -18,6 +18,7 @@ import dev.erst.gridgrind.core.model.style.ResolvedRichTextRun;
 import dev.erst.gridgrind.core.model.style.RichTextRunReport;
 import dev.erst.gridgrind.core.model.value.CellValue;
 import dev.erst.gridgrind.core.model.value.CellValueSpec;
+import dev.erst.gridgrind.core.model.value.HyperlinkTarget;
 import dev.erst.gridgrind.core.vocabulary.ExcelBorderStyle;
 import dev.erst.gridgrind.core.vocabulary.ExcelFillPattern;
 import dev.erst.gridgrind.core.vocabulary.ExcelHorizontalAlignment;
@@ -43,14 +44,14 @@ class ExcelSheetFormattingCoverageTest extends ExcelSheetTestSupport {
           new ExcelSheet(poiSheet, new WorkbookStyleRegistry(poiWorkbook), evaluator);
 
       sheet.cells().setCell("A1", new CellValue.Text("Header"));
-      sheet.annotations().setHyperlink("A4", new ExcelHyperlink.Document("Budget!A1"));
+      sheet.annotations().setHyperlink("A4", new HyperlinkTarget.Document("Budget!A1"));
       sheet.annotations().setComment("B5", new ResolvedComment("Note", "GridGrind", false));
       sheet.cells().appendRow(new CellValue.Text("Hosting"), new CellValue.NumberValue(49.0));
 
       assertEquals("Hosting", sheet.cells().text("A2"));
       assertEquals(49.0, sheet.cells().number("B2"));
       assertEquals(
-          new ExcelHyperlink.Document("Budget!A1"),
+          new HyperlinkTarget.Document("Budget!A1"),
           sheet.cells().snapshotCell("A4").metadata().hyperlink().orElseThrow());
       assertAll(
           () ->
@@ -108,7 +109,7 @@ class ExcelSheetFormattingCoverageTest extends ExcelSheetTestSupport {
                           Optional.empty(),
                           Optional.empty())),
                   Optional.empty()));
-      sheet.annotations().setHyperlink("A1", new ExcelHyperlink.Url("https://example.com/report"));
+      sheet.annotations().setHyperlink("A1", new HyperlinkTarget.Url("https://example.com/report"));
       sheet.annotations().setComment("A1", new ResolvedComment("Review", "GridGrind", false));
 
       ExcelCellSnapshot.TextSnapshot textSnapshot =
@@ -123,7 +124,7 @@ class ExcelSheetFormattingCoverageTest extends ExcelSheetTestSupport {
       assertEquals(
           ExcelHorizontalAlignment.CENTER, textSnapshot.style().alignment().horizontalAlignment());
       assertEquals(
-          new ExcelHyperlink.Url("https://example.com/report"),
+          new HyperlinkTarget.Url("https://example.com/report"),
           textSnapshot.metadata().hyperlink().orElseThrow());
       assertAll(
           () -> assertEquals("Review", textSnapshot.metadata().comment().orElseThrow().text()),
@@ -136,7 +137,7 @@ class ExcelSheetFormattingCoverageTest extends ExcelSheetTestSupport {
       assertEquals(rgb("#AABBCC"), fillForegroundColor(blankSnapshot.style().fill()));
       assertEquals(ExcelBorderStyle.THIN, borderStyle(blankSnapshot.style().border().top()));
       assertEquals(
-          new ExcelHyperlink.Url("https://example.com/report"),
+          new HyperlinkTarget.Url("https://example.com/report"),
           blankSnapshot.metadata().hyperlink().orElseThrow());
       assertAll(
           () -> assertEquals("Review", blankSnapshot.metadata().comment().orElseThrow().text()),

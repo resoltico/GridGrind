@@ -25,6 +25,7 @@ import dev.erst.gridgrind.core.model.validation.ResolvedValidationErrorAlert;
 import dev.erst.gridgrind.core.model.validation.ResolvedValidationPrompt;
 import dev.erst.gridgrind.core.model.value.CellValue;
 import dev.erst.gridgrind.core.model.value.CellValueSpec;
+import dev.erst.gridgrind.core.model.value.HyperlinkTarget;
 import dev.erst.gridgrind.core.model.value.ResolvedCellWrite;
 import dev.erst.gridgrind.core.vocabulary.ExcelColumnSpan;
 import dev.erst.gridgrind.core.vocabulary.ExcelComparisonOperator;
@@ -193,7 +194,7 @@ class WorkbookCommandTest {
         new WorkbookCellCommand.SetRange("Budget", "A1:B2", rows),
         new WorkbookCellCommand.ClearRange("Budget", "C1:C2"),
         new WorkbookAnnotationCommand.SetHyperlink(
-            "Budget", "A1", new ExcelHyperlink.Url("https://example.com/report")),
+            "Budget", "A1", new HyperlinkTarget.Url("https://example.com/report")),
         new WorkbookAnnotationCommand.ClearHyperlink("Budget", "A1"),
         new WorkbookAnnotationCommand.SetComment(
             "Budget", "A1", new ResolvedComment("Review", "GridGrind", false)),
@@ -285,7 +286,7 @@ class WorkbookCommandTest {
     assertEquals("A1:B2", commands.setRange().range());
     assertEquals(2, commands.setRange().rows().size());
     assertEquals("C1:C2", commands.clearRange().range());
-    assertEquals(ExcelHyperlinkType.URL, commands.setHyperlink().target().type());
+    assertInstanceOf(HyperlinkTarget.Url.class, commands.setHyperlink().target());
     assertEquals("A1", commands.clearHyperlink().address());
     assertEquals("Review", commands.setComment().comment().text());
     assertEquals("A1", commands.clearComment().address());
@@ -673,12 +674,12 @@ class WorkbookCommandTest {
         NullPointerException.class,
         () ->
             new WorkbookAnnotationCommand.SetHyperlink(
-                null, "A1", new ExcelHyperlink.Url("https://example.com")));
+                null, "A1", new HyperlinkTarget.Url("https://example.com")));
     assertThrows(
         NullPointerException.class,
         () ->
             new WorkbookAnnotationCommand.SetHyperlink(
-                "Budget", null, new ExcelHyperlink.Url("https://example.com")));
+                "Budget", null, new HyperlinkTarget.Url("https://example.com")));
     assertThrows(
         NullPointerException.class,
         () -> new WorkbookAnnotationCommand.SetHyperlink("Budget", "A1", null));
@@ -686,12 +687,12 @@ class WorkbookCommandTest {
         IllegalArgumentException.class,
         () ->
             new WorkbookAnnotationCommand.SetHyperlink(
-                " ", "A1", new ExcelHyperlink.Url("https://example.com")));
+                " ", "A1", new HyperlinkTarget.Url("https://example.com")));
     assertThrows(
         IllegalArgumentException.class,
         () ->
             new WorkbookAnnotationCommand.SetHyperlink(
-                "Budget", " ", new ExcelHyperlink.Url("https://example.com")));
+                "Budget", " ", new HyperlinkTarget.Url("https://example.com")));
     assertThrows(
         NullPointerException.class, () -> new WorkbookAnnotationCommand.ClearHyperlink(null, "A1"));
     assertThrows(

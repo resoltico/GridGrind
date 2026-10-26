@@ -2070,3 +2070,20 @@ All source sets compile (20s); engine behavior/14 parity/static checks pass (40s
 and all retained seeds pass (16s). ./gradlew check passes (3m03s), all 143 golden cases unchanged.
 No active mutation/fuzz campaign. Inventories: snapshots 34→33, converter lines 3779→3723, main Java
 120273→120241; definitions 2, Support 206 and blank checks 416 remain open. Baseline diff empty.
+
+## WP-40 shared hyperlink variants
+
+Deleted ExcelHyperlink and its duplicate type enum. Engine commands, POI writers/readers, metadata
+and deterministic expected-state fixtures use HyperlinkTarget directly. Removed request/report
+identity conversions; POI type/address switches handle the existing four variants at the adapter.
+Email uses its canonical email accessor and file uses path. Authored normalization/validation checks
+moved into core; retired constructor/type-label and conversion-only checks. POI hyperlink behavior,
+relative file resolution, readback and analysis checks remain. Raw hyperlink health classification
+retains its existing nonthrowing checks. The canonical core URL allowlist governs authored values;
+the raw health analysis still inspects workbook addresses independently.
+
+Production compilation passed; 16 stale test accessor/converter references were migrated. Focused
+core/engine/14 parity/static checks pass (45s); deterministic check/all retained seeds pass (17s).
+Root ./gradlew check passes (3m09s), all 143 golden cases unchanged. No active mutation/fuzz campaign.
+Inventories: converter lines 3723→3690, blank checks 416→415, main Java 120241→120109; snapshots 33,
+definitions 2 and Support 206 remain open. Baseline diff empty. WP-40 remains in progress.

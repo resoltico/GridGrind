@@ -32,6 +32,7 @@ import dev.erst.gridgrind.core.model.validation.ResolvedDataValidation;
 import dev.erst.gridgrind.core.model.validation.ResolvedValidationErrorAlert;
 import dev.erst.gridgrind.core.model.validation.ResolvedValidationPrompt;
 import dev.erst.gridgrind.core.model.value.CellValue;
+import dev.erst.gridgrind.core.model.value.HyperlinkTarget;
 import dev.erst.gridgrind.core.source.BinaryContent;
 import dev.erst.gridgrind.core.vocabulary.ExcelColumnSpan;
 import dev.erst.gridgrind.core.vocabulary.ExcelDataValidationErrorStyle;
@@ -105,7 +106,7 @@ class WorkbookCommandExecutorTest {
                   List.of(new CellValue.Text("Total"), new ResolvedFormula("SUM(B1:B2)"))),
               new WorkbookCellCommand.ClearRange("Budget", "A2"),
               new WorkbookAnnotationCommand.SetHyperlink(
-                  "Budget", "A1", new ExcelHyperlink.Document("Budget!B3")),
+                  "Budget", "A1", new HyperlinkTarget.Document("Budget!B3")),
               new WorkbookAnnotationCommand.ClearHyperlink("Budget", "A1"),
               new WorkbookAnnotationCommand.SetComment(
                   "Budget", "B1", new ResolvedComment("Review", "GridGrind", false)),
@@ -308,7 +309,7 @@ class WorkbookCommandExecutorTest {
               executor.apply(
                   workbook,
                   new WorkbookAnnotationCommand.SetHyperlink(
-                      "Missing", "A1", new ExcelHyperlink.Document("Budget!A1"))));
+                      "Missing", "A1", new HyperlinkTarget.Document("Budget!A1"))));
       assertThrows(
           SheetNotFoundException.class,
           () ->

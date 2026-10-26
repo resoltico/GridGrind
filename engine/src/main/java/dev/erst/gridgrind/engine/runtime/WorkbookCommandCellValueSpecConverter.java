@@ -13,9 +13,7 @@ import dev.erst.gridgrind.core.model.style.ResolvedRichTextRun;
 import dev.erst.gridgrind.core.model.style.RichTextRunSpec;
 import dev.erst.gridgrind.core.model.value.CellValue;
 import dev.erst.gridgrind.core.model.value.CellValueSpec;
-import dev.erst.gridgrind.core.model.value.HyperlinkTarget;
 import dev.erst.gridgrind.core.model.value.ResolvedCellWrite;
-import dev.erst.gridgrind.excel.ExcelHyperlink;
 import java.util.Optional;
 
 /** Converts authored cell values, fonts and annotations for workbook operations. */
@@ -57,15 +55,6 @@ final class WorkbookCommandCellValueSpecConverter {
   static ResolvedRichTextRun toResolvedRichTextRun(RichTextRunSpec run) {
     return new ResolvedRichTextRun(
         WorkbookCommandSourceSupport.inlineText(run.text(), "rich-text run"), run.font());
-  }
-
-  static ExcelHyperlink toExcelHyperlink(HyperlinkTarget target) {
-    return switch (target) {
-      case HyperlinkTarget.Url url -> new ExcelHyperlink.Url(url.target());
-      case HyperlinkTarget.Email email -> new ExcelHyperlink.Email(email.email());
-      case HyperlinkTarget.File file -> new ExcelHyperlink.File(file.path());
-      case HyperlinkTarget.Document document -> new ExcelHyperlink.Document(document.target());
-    };
   }
 
   static ResolvedComment toResolvedComment(CommentSpec comment) {

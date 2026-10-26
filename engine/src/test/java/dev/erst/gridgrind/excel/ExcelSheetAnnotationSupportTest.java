@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import dev.erst.gridgrind.core.model.drawing.ResolvedComment;
+import dev.erst.gridgrind.core.model.value.HyperlinkTarget;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingController;
 import org.apache.poi.ss.util.CellAddress;
 import org.apache.poi.xssf.model.CommentsTable;
@@ -33,7 +34,7 @@ class ExcelSheetAnnotationSupportTest {
           assertThrows(
               InvalidCellAddressException.class,
               () ->
-                  support.setHyperlink("A1048577", new ExcelHyperlink.Url("https://example.com")));
+                  support.setHyperlink("A1048577", new HyperlinkTarget.Url("https://example.com")));
       assertEquals("A1048577", hyperlinkFailure.address());
 
       InvalidCellAddressException commentFailure =

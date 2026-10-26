@@ -1,6 +1,7 @@
 package dev.erst.gridgrind.excel;
 
 import dev.erst.gridgrind.core.model.drawing.ResolvedComment;
+import dev.erst.gridgrind.core.model.value.HyperlinkTarget;
 import java.util.List;
 import java.util.Objects;
 
@@ -15,7 +16,7 @@ public final class ExcelSheetAnnotations {
   }
 
   /** Replaces the hyperlink attached to one cell, creating the cell if necessary. */
-  public ExcelSheetAnnotations setHyperlink(String address, ExcelHyperlink hyperlink) {
+  public ExcelSheetAnnotations setHyperlink(String address, HyperlinkTarget hyperlink) {
     annotationSupport.setHyperlink(address, hyperlink);
     return this;
   }

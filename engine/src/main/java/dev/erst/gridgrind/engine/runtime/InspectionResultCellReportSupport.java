@@ -24,24 +24,6 @@ import org.jspecify.annotations.Nullable;
 final class InspectionResultCellReportSupport {
   private InspectionResultCellReportSupport() {}
 
-  static Optional<HyperlinkTarget> toHyperlinkTarget(
-      dev.erst.gridgrind.excel.@Nullable ExcelHyperlink hyperlink) {
-    if (hyperlink == null) {
-      return Optional.empty();
-    }
-    return Optional.of(
-        switch (hyperlink) {
-          case dev.erst.gridgrind.excel.ExcelHyperlink.Url url ->
-              new HyperlinkTarget.Url(url.target());
-          case dev.erst.gridgrind.excel.ExcelHyperlink.Email email ->
-              new HyperlinkTarget.Email(email.target());
-          case dev.erst.gridgrind.excel.ExcelHyperlink.File file ->
-              new HyperlinkTarget.File(file.path());
-          case dev.erst.gridgrind.excel.ExcelHyperlink.Document document ->
-              new HyperlinkTarget.Document(document.target());
-        });
-  }
-
   static Optional<CommentReport> toCommentReport(@Nullable ResolvedComment comment) {
     if (comment == null) {
       return Optional.empty();
@@ -155,7 +137,7 @@ final class InspectionResultCellReportSupport {
   private static Optional<HyperlinkTarget> projectedHyperlink(
       ExcelCellSnapshot snapshot, ExcelCellReadProjection projection) {
     return projection.includes(ExcelCellReadFacet.HYPERLINK)
-        ? toHyperlinkTarget(snapshot.metadata().hyperlink().orElse(null))
+        ? snapshot.metadata().hyperlink()
         : Optional.empty();
   }
 
