@@ -2,8 +2,10 @@ package dev.erst.gridgrind.excel;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.core.model.formula.NamedRangeTarget;
 import dev.erst.gridgrind.core.model.pivot.PivotTableReport;
 import dev.erst.gridgrind.core.model.pivot.PivotTableSpec;
+import dev.erst.gridgrind.core.plan.StructuredMutationAction;
 import dev.erst.gridgrind.excel.pivot.ExcelPivotTableController;
 import dev.erst.gridgrind.excel.pivot.ExcelPivotTableSelection;
 import java.util.List;
@@ -97,10 +99,12 @@ class ExcelPivotTableDeletionCoverageTest extends ExcelPivotTableCoverageTestSup
       workbook
           .names()
           .setNamedRange(
-              new ExcelNamedRangeDefinition(
-                  "DupReadSource",
-                  new ExcelNamedRangeScope.WorkbookScope(),
-                  ExcelNamedRangeTarget.range("Data", "A1:D5")));
+              new StructuredMutationAction.SetNamedRange(
+                  new dev.erst.gridgrind.core.vocabulary.DefinedName("DupReadSource"),
+                  new dev.erst.gridgrind.core.vocabulary.NamedRangeScope.Workbook(),
+                  NamedRangeTarget.range(
+                      new dev.erst.gridgrind.core.vocabulary.SheetName("Data"),
+                      new dev.erst.gridgrind.core.vocabulary.RangeRef("A1:D5"))));
       controller.setPivotTable(
           workbook,
           definition(
@@ -115,10 +119,13 @@ class ExcelPivotTableDeletionCoverageTest extends ExcelPivotTableCoverageTestSup
       workbook
           .names()
           .setNamedRange(
-              new ExcelNamedRangeDefinition(
-                  "DupReadSource",
-                  new ExcelNamedRangeScope.SheetScope("Data"),
-                  ExcelNamedRangeTarget.range("Data", "A1:D5")));
+              new StructuredMutationAction.SetNamedRange(
+                  new dev.erst.gridgrind.core.vocabulary.DefinedName("DupReadSource"),
+                  new dev.erst.gridgrind.core.vocabulary.NamedRangeScope.Sheet(
+                      new dev.erst.gridgrind.core.vocabulary.SheetName("Data")),
+                  NamedRangeTarget.range(
+                      new dev.erst.gridgrind.core.vocabulary.SheetName("Data"),
+                      new dev.erst.gridgrind.core.vocabulary.RangeRef("A1:D5"))));
 
       IllegalArgumentException failure =
           assertInvocationFailure(

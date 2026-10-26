@@ -7,6 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import dev.erst.gridgrind.core.model.formula.NamedRangeScopeReport;
 import dev.erst.gridgrind.core.model.formula.NamedRangeTarget;
 import dev.erst.gridgrind.core.model.pivot.PivotTableSpec;
 import dev.erst.gridgrind.core.model.security.OoxmlEncryptionSpec;
@@ -52,7 +53,6 @@ import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.core.vocabulary.TableName;
 import dev.erst.gridgrind.excel.CellNotFoundException;
-import dev.erst.gridgrind.excel.ExcelNamedRangeScope;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
 import dev.erst.gridgrind.excel.ExcelWorkbooks;
 import dev.erst.gridgrind.excel.InvalidCellAddressException;
@@ -271,7 +271,9 @@ class ExecutorPolicyCoverageTest {
                     dev.erst.gridgrind.core.problem.ProblemContextWorkbookSurfaces.ProblemLocation
                         .unknown()),
                 new NamedRangeNotFoundException(
-                    "LocalTotal", new ExcelNamedRangeScope.SheetScope("Budget"))));
+                    "LocalTotal",
+                    new NamedRangeScopeReport.Sheet(
+                        new dev.erst.gridgrind.core.vocabulary.SheetLabel("Budget")))));
     assertEquals(
         java.util.Optional.of("Budget"),
         enriched.sheetName().map(dev.erst.gridgrind.core.vocabulary.WireString::value));
@@ -978,13 +980,14 @@ class ExecutorPolicyCoverageTest {
     assertEquals(
         java.util.Optional.empty(),
         ExecutionExceptionDiagnosticFields.sheetNameFor(
-            new NamedRangeNotFoundException(
-                "BudgetTotal", new ExcelNamedRangeScope.WorkbookScope())));
+            new NamedRangeNotFoundException("BudgetTotal", new NamedRangeScopeReport.Workbook())));
     assertEquals(
         java.util.Optional.of("Budget"),
         ExecutionExceptionDiagnosticFields.sheetNameFor(
             new NamedRangeNotFoundException(
-                "LocalTotal", new ExcelNamedRangeScope.SheetScope("Budget"))));
+                "LocalTotal",
+                new NamedRangeScopeReport.Sheet(
+                    new dev.erst.gridgrind.core.vocabulary.SheetLabel("Budget")))));
     assertEquals(
         java.util.Optional.of("A1"),
         ExecutionExceptionDiagnosticFields.addressFor(new CellNotFoundException("A1")));

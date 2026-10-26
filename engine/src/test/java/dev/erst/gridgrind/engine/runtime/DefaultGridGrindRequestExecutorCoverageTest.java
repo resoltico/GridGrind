@@ -3,6 +3,7 @@ package dev.erst.gridgrind.engine.runtime;
 import static dev.erst.gridgrind.engine.runtime.ExecutorTestPlanSupport.*;
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.core.model.formula.NamedRangeScopeReport;
 import dev.erst.gridgrind.core.model.formula.NamedRangeTarget;
 import dev.erst.gridgrind.core.model.protection.CellProtectionReport;
 import dev.erst.gridgrind.core.model.protection.WorkbookProtectionReport;
@@ -37,7 +38,6 @@ import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.excel.*;
 import dev.erst.gridgrind.excel.ExcelCellMetadataSnapshot;
 import dev.erst.gridgrind.excel.ExcelCellSnapshot;
-import dev.erst.gridgrind.excel.ExcelNamedRangeScope;
 import dev.erst.gridgrind.excel.InvalidFormulaException;
 import dev.erst.gridgrind.excel.InvalidRangeAddressException;
 import dev.erst.gridgrind.excel.NamedRangeNotFoundException;
@@ -92,7 +92,7 @@ class DefaultGridGrindRequestExecutorCoverageTest
             ExecutionResponseSupport.enrichContext(
                 context,
                 new NamedRangeNotFoundException(
-                    "BudgetTotal", new ExcelNamedRangeScope.WorkbookScope())));
+                    "BudgetTotal", new NamedRangeScopeReport.Workbook())));
     assertEquals(java.util.Optional.of("BudgetTotal"), enrichedNamedRange.namedRangeName());
   }
 
@@ -192,7 +192,7 @@ class DefaultGridGrindRequestExecutorCoverageTest
         WorkbookReadCommand.AnalyzeWorkbookFindings.class,
         InspectionCommandConverter.toReadCommand(workbookFindings));
 
-    assertEquals("BudgetExpr", namedRangeCommand.definition().name());
+    assertEquals("BudgetExpr", namedRangeCommand.definition().name().value());
     assertEquals("step-03-get-named-ranges", namedRangesCommand.stepId().value());
   }
 

@@ -81,7 +81,7 @@ final class InspectionResultSurfaceReportSupport {
                 entry ->
                     new NamedRangeSurfaceEntryReport(
                         entry.name(),
-                        InspectionResultWorkbookCoreReportSupport.toNamedRangeScope(entry.scope()),
+                        entry.scope(),
                         entry.refersToFormula(),
                         switch (entry.kind()) {
                           case RANGE -> NamedRangeBackingKind.RANGE;

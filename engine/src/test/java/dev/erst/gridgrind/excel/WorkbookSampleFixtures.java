@@ -13,6 +13,8 @@ import dev.erst.gridgrind.core.model.drawing.ResolvedEmbeddedObject;
 import dev.erst.gridgrind.core.model.drawing.ResolvedPicture;
 import dev.erst.gridgrind.core.model.drawing.ResolvedShape;
 import dev.erst.gridgrind.core.model.drawing.ResolvedSignatureLine;
+import dev.erst.gridgrind.core.model.formula.NamedRangeScopeReport;
+import dev.erst.gridgrind.core.model.formula.NamedRangeTarget;
 import dev.erst.gridgrind.core.model.formula.ResolvedArrayFormula;
 import dev.erst.gridgrind.core.model.pivot.PivotTableSpec;
 import dev.erst.gridgrind.core.model.print.HeaderFooterTextReport;
@@ -41,6 +43,7 @@ import dev.erst.gridgrind.core.model.validation.ResolvedValidationPrompt;
 import dev.erst.gridgrind.core.model.value.CellValue;
 import dev.erst.gridgrind.core.model.value.CellValueSpec;
 import dev.erst.gridgrind.core.model.value.HyperlinkTarget;
+import dev.erst.gridgrind.core.plan.StructuredMutationAction;
 import dev.erst.gridgrind.core.source.BinaryContent;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartBarDirection;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartDisplayBlanksAs;
@@ -294,12 +297,16 @@ final class WorkbookSampleFixtures {
         new WorkbookTabularCommand.DeleteTable("BudgetTable", "Budget"),
         new WorkbookTabularCommand.DeletePivotTable("Budget Pivot", "Budget"),
         new WorkbookMetadataCommand.SetNamedRange(
-            new ExcelNamedRangeDefinition(
-                "BudgetTotal",
-                new ExcelNamedRangeScope.WorkbookScope(),
-                ExcelNamedRangeTarget.range("Budget", "B4"))),
+            new StructuredMutationAction.SetNamedRange(
+                new dev.erst.gridgrind.core.vocabulary.DefinedName("BudgetTotal"),
+                new dev.erst.gridgrind.core.vocabulary.NamedRangeScope.Workbook(),
+                NamedRangeTarget.range(
+                    new dev.erst.gridgrind.core.vocabulary.SheetName("Budget"),
+                    new dev.erst.gridgrind.core.vocabulary.RangeRef("B4")))),
         new WorkbookMetadataCommand.DeleteNamedRange(
-            "BudgetTotal", new ExcelNamedRangeScope.SheetScope("Budget")),
+            "BudgetTotal",
+            new NamedRangeScopeReport.Sheet(
+                new dev.erst.gridgrind.core.vocabulary.SheetLabel("Budget"))),
         new WorkbookCellCommand.AppendRow("Budget", List.of(new CellValue.Text("Item"))),
         new WorkbookLayoutCommand.AutoSizeColumns("Budget"));
   }

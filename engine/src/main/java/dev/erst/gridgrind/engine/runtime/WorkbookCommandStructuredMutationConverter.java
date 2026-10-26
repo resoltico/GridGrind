@@ -6,7 +6,6 @@ import dev.erst.gridgrind.core.plan.RangeSelector;
 import dev.erst.gridgrind.core.plan.Selector;
 import dev.erst.gridgrind.core.plan.StructuredMutationAction;
 import dev.erst.gridgrind.core.plan.TableSelector;
-import dev.erst.gridgrind.excel.ExcelNamedRangeDefinition;
 import dev.erst.gridgrind.excel.ExcelRangeSelection;
 import dev.erst.gridgrind.excel.WorkbookCommand;
 import dev.erst.gridgrind.excel.WorkbookFormattingCommand;
@@ -94,12 +93,7 @@ final class WorkbookCommandStructuredMutationConverter {
       }
       case StructuredMutationAction.SetNamedRange setNamedRange -> {
         WorkbookCommandSelectorSupport.ensureNamedRangeIdentity(target, setNamedRange);
-        yield new WorkbookMetadataCommand.SetNamedRange(
-            new ExcelNamedRangeDefinition(
-                setNamedRange.name().value(),
-                WorkbookCommandLayoutInputConverter.toExcelNamedRangeScope(setNamedRange.scope()),
-                WorkbookCommandLayoutInputConverter.toExcelNamedRangeTarget(
-                    setNamedRange.target())));
+        yield new WorkbookMetadataCommand.SetNamedRange(setNamedRange);
       }
       case StructuredMutationAction.DeleteNamedRange _ -> {
         NamedRangeSelector.ScopedExact selector =

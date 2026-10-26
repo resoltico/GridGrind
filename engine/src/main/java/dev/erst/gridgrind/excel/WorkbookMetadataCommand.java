@@ -1,6 +1,8 @@
 package dev.erst.gridgrind.excel;
 
 import dev.erst.gridgrind.core.model.customxml.ResolvedCustomXmlImport;
+import dev.erst.gridgrind.core.model.formula.NamedRangeScopeReport;
+import dev.erst.gridgrind.core.plan.StructuredMutationAction;
 import java.util.Objects;
 
 /** Workbook-global metadata commands such as custom XML and named ranges. */
@@ -18,17 +20,18 @@ public sealed interface WorkbookMetadataCommand extends WorkbookCommand
   }
 
   /** Creates or replaces one named range in workbook or sheet scope. */
-  record SetNamedRange(ExcelNamedRangeDefinition definition) implements WorkbookMetadataCommand {
+  record SetNamedRange(StructuredMutationAction.SetNamedRange definition)
+      implements WorkbookMetadataCommand {
     public SetNamedRange {
       Objects.requireNonNull(definition, "definition must not be null");
     }
   }
 
   /** Deletes one existing named range from workbook or sheet scope. */
-  record DeleteNamedRange(String name, ExcelNamedRangeScope scope)
+  record DeleteNamedRange(String name, NamedRangeScopeReport scope)
       implements WorkbookMetadataCommand {
     public DeleteNamedRange {
-      name = ExcelNamedRangeDefinition.validateName(name);
+      name = dev.erst.gridgrind.core.vocabulary.ProtocolDefinedNameValidation.validateName(name);
       Objects.requireNonNull(scope, "scope must not be null");
     }
   }

@@ -48,7 +48,6 @@ import dev.erst.gridgrind.core.vocabulary.ExcelOoxmlSignatureState;
 import dev.erst.gridgrind.core.vocabulary.ExcelPaneRegion;
 import dev.erst.gridgrind.core.vocabulary.ExcelPictureFormat;
 import dev.erst.gridgrind.core.vocabulary.ExcelPivotDataConsolidateFunction;
-import dev.erst.gridgrind.core.vocabulary.NamedRangeScope;
 import dev.erst.gridgrind.core.vocabulary.RangeLabel;
 import dev.erst.gridgrind.core.vocabulary.RgbHex;
 import dev.erst.gridgrind.core.vocabulary.SheetLabel;
@@ -887,7 +886,9 @@ class DtoEdgeCoverageTest {
     assertInstanceOf(
         NamedRangeReport.FormulaReport.class,
         new NamedRangeReport.FormulaReport(
-            new DefinedNameLabel("Expr"), new NamedRangeScope.Workbook(), "SUM(A1:A2)"));
+            new DefinedNameLabel("Expr"),
+            new dev.erst.gridgrind.core.model.formula.NamedRangeScopeReport.Workbook(),
+            "SUM(A1:A2)"));
     assertEquals(
         "color must not be null",
         assertThrows(NullPointerException.class, () -> new CellGradientStopReport(0.0d, null))

@@ -4,6 +4,7 @@ import static dev.erst.gridgrind.engine.runtime.ExecutorTestPlanSupport.formulaC
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 
+import dev.erst.gridgrind.core.model.formula.NamedRangeScopeReport;
 import dev.erst.gridgrind.core.model.formula.NamedRangeTarget;
 import dev.erst.gridgrind.core.model.pivot.PivotTableSpec;
 import dev.erst.gridgrind.core.model.table.TableSpec;
@@ -32,7 +33,6 @@ import dev.erst.gridgrind.core.vocabulary.SheetLabel;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.core.vocabulary.TableName;
-import dev.erst.gridgrind.excel.ExcelNamedRangeScope;
 import dev.erst.gridgrind.excel.InvalidCellAddressException;
 import dev.erst.gridgrind.excel.InvalidFormulaException;
 import dev.erst.gridgrind.excel.InvalidRangeAddressException;
@@ -51,12 +51,13 @@ class ExecutionDiagnosticFieldsTest {
             new SheetLabel("Budget"), "BudgetTotal"),
         ExecutionDiagnosticFields.locationFor(
             new NamedRangeNotFoundException(
-                "BudgetTotal", new ExcelNamedRangeScope.SheetScope("Budget"))));
+                "BudgetTotal",
+                new NamedRangeScopeReport.Sheet(
+                    new dev.erst.gridgrind.core.vocabulary.SheetLabel("Budget")))));
     assertEquals(
         new ProblemContextWorkbookSurfaces.ProblemLocation.NamedRange("BudgetTotal"),
         ExecutionDiagnosticFields.locationFor(
-            new NamedRangeNotFoundException(
-                "BudgetTotal", new ExcelNamedRangeScope.WorkbookScope())));
+            new NamedRangeNotFoundException("BudgetTotal", new NamedRangeScopeReport.Workbook())));
     assertEquals(
         new ProblemContextWorkbookSurfaces.ProblemLocation.FormulaCell(
             new SheetLabel("Budget"), "B4", "SUM("),
@@ -287,8 +288,7 @@ class ExecutionDiagnosticFieldsTest {
         Optional.of("BudgetTotal"),
         ExecutionDiagnosticFields.namedRangeNameFor(
             workbookInspection,
-            new NamedRangeNotFoundException(
-                "BudgetTotal", new ExcelNamedRangeScope.WorkbookScope())));
+            new NamedRangeNotFoundException("BudgetTotal", new NamedRangeScopeReport.Workbook())));
     assertEquals(
         Optional.of("SUM("),
         ExecutionDiagnosticFields.formulaFor(
@@ -304,8 +304,7 @@ class ExecutionDiagnosticFieldsTest {
     assertEquals(
         Optional.of("BudgetTotal"),
         ExecutionExceptionDiagnosticFields.namedRangeNameFor(
-            new NamedRangeNotFoundException(
-                "BudgetTotal", new ExcelNamedRangeScope.WorkbookScope())));
+            new NamedRangeNotFoundException("BudgetTotal", new NamedRangeScopeReport.Workbook())));
     assertInstanceOf(
         ProblemContextWorkbookSurfaces.ProblemLocation.FormulaCell.class,
         ExecutionDiagnosticFields.locationFor(

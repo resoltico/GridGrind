@@ -2,6 +2,7 @@ package dev.erst.gridgrind.excel;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.core.model.formula.NamedRangeTarget;
 import dev.erst.gridgrind.core.vocabulary.ExcelColumnSpan;
 import dev.erst.gridgrind.core.vocabulary.ExcelRowSpan;
 import java.util.List;
@@ -187,7 +188,9 @@ class ExcelStructureGuardHelperCoverageTest extends ExcelRowColumnStructureTestS
                   workbook, new DefinedNameStub("OFFSET(Budget!$A$1,0,0,2,1)", -1))
               .isEmpty());
       assertEquals(
-          ExcelNamedRangeTarget.range("Budget", "A1:B2"),
+          NamedRangeTarget.range(
+              new dev.erst.gridgrind.core.vocabulary.SheetName("Budget"),
+              new dev.erst.gridgrind.core.vocabulary.RangeRef("A1:B2")),
           ExcelRowColumnStructureController.resolvedRangeBackedTarget(
                   workbook, new DefinedNameStub("Budget!$A$1:$B$2", -1))
               .orElseThrow());
@@ -210,7 +213,11 @@ class ExcelStructureGuardHelperCoverageTest extends ExcelRowColumnStructureTestS
 
       assertEquals(1, resolved.size());
       assertEquals("TestName", resolved.getFirst().name());
-      assertEquals(ExcelNamedRangeTarget.range("Budget", "A1:B2"), resolved.getFirst().target());
+      assertEquals(
+          NamedRangeTarget.range(
+              new dev.erst.gridgrind.core.vocabulary.SheetName("Budget"),
+              new dev.erst.gridgrind.core.vocabulary.RangeRef("A1:B2")),
+          resolved.getFirst().target());
       assertEquals(new ExcelRange(0, 1, 0, 1), resolved.getFirst().range());
     }
   }

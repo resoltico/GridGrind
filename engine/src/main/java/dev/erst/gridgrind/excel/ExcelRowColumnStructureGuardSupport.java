@@ -1,5 +1,7 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.core.model.formula.NamedRangeScopeReport;
+import dev.erst.gridgrind.core.model.formula.NamedRangeTarget;
 import dev.erst.gridgrind.core.vocabulary.ExcelColumnSpan;
 import dev.erst.gridgrind.core.vocabulary.ExcelRowSpan;
 import java.util.ArrayList;
@@ -298,7 +300,7 @@ final class ExcelRowColumnStructureGuardSupport {
       if (refersToFormula == null || refersToFormula.isBlank()) {
         continue;
       }
-      ExcelNamedRangeScope scope = scopeForName(workbook, name);
+      NamedRangeScopeReport scope = scopeForName(workbook, name);
       if (ExcelNamedRangeTargets.resolveTarget(refersToFormula, scope).isEmpty()) {
         return true;
       }
@@ -306,8 +308,7 @@ final class ExcelRowColumnStructureGuardSupport {
     return false;
   }
 
-  static Optional<ExcelNamedRangeTarget> resolvedRangeBackedTarget(
-      XSSFWorkbook workbook, Name name) {
+  static Optional<NamedRangeTarget> resolvedRangeBackedTarget(XSSFWorkbook workbook, Name name) {
     String refersToFormula = name.getRefersToFormula();
     if (refersToFormula == null || refersToFormula.isBlank()) {
       return Optional.empty();
@@ -326,16 +327,18 @@ final class ExcelRowColumnStructureGuardSupport {
                       new ResolvedNamedRange(
                           name.getNameName(),
                           target,
-                          ExcelRange.parse(((ExcelNamedRangeTarget.Range) target).range()))));
+                          ExcelRange.parse(((NamedRangeTarget.Range) target).range().value()))));
     }
     return List.copyOf(resolved);
   }
 
-  private static ExcelNamedRangeScope scopeForName(XSSFWorkbook workbook, Name name) {
+  private static NamedRangeScopeReport scopeForName(XSSFWorkbook workbook, Name name) {
     if (name.getSheetIndex() < 0) {
-      return new ExcelNamedRangeScope.WorkbookScope();
+      return new NamedRangeScopeReport.Workbook();
     }
-    return new ExcelNamedRangeScope.SheetScope(workbook.getSheetName(name.getSheetIndex()));
+    return new NamedRangeScopeReport.Sheet(
+        new dev.erst.gridgrind.core.vocabulary.SheetLabel(
+            workbook.getSheetName(name.getSheetIndex())));
   }
 
   private static IllegalArgumentException unsupportedStructure(
@@ -399,7 +402,7 @@ final class ExcelRowColumnStructureGuardSupport {
     return overlapsColumns(range, columns) || overlapsColumns(range, destination);
   }
 
-  record ResolvedNamedRange(String name, ExcelNamedRangeTarget target, ExcelRange range) {
+  record ResolvedNamedRange(String name, NamedRangeTarget target, ExcelRange range) {
     ResolvedNamedRange {
       Objects.requireNonNull(name, "name must not be null");
       Objects.requireNonNull(target, "target must not be null");
@@ -407,7 +410,7 @@ final class ExcelRowColumnStructureGuardSupport {
     }
 
     private boolean targetsSheet(String sheetName) {
-      return ((ExcelNamedRangeTarget.Range) target).sheetName().equals(sheetName);
+      return ((NamedRangeTarget.Range) target).sheetName().value().equals(sheetName);
     }
 
     private String label() {

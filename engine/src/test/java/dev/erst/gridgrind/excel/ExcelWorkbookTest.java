@@ -4,6 +4,9 @@ import static dev.erst.gridgrind.excel.ExcelStyleTestAccess.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 import dev.erst.gridgrind.core.model.drawing.ResolvedComment;
+import dev.erst.gridgrind.core.model.formula.NamedRangeReport;
+import dev.erst.gridgrind.core.model.formula.NamedRangeScopeReport;
+import dev.erst.gridgrind.core.model.formula.NamedRangeTarget;
 import dev.erst.gridgrind.core.model.formula.ResolvedFormula;
 import dev.erst.gridgrind.core.model.print.HeaderFooterTextReport;
 import dev.erst.gridgrind.core.model.print.PrintAreaSpec;
@@ -34,6 +37,7 @@ import dev.erst.gridgrind.core.model.validation.DataValidationRuleSpec;
 import dev.erst.gridgrind.core.model.validation.ResolvedDataValidation;
 import dev.erst.gridgrind.core.model.value.CellValue;
 import dev.erst.gridgrind.core.model.value.HyperlinkTarget;
+import dev.erst.gridgrind.core.plan.StructuredMutationAction;
 import dev.erst.gridgrind.core.vocabulary.ExcelBorderStyle;
 import dev.erst.gridgrind.core.vocabulary.ExcelColumnSpan;
 import dev.erst.gridgrind.core.vocabulary.ExcelComparisonOperator;
@@ -434,10 +438,13 @@ class ExcelWorkbookTest {
       workbook
           .names()
           .setNamedRange(
-              new ExcelNamedRangeDefinition(
-                  "LocalBudget",
-                  new ExcelNamedRangeScope.SheetScope("Source"),
-                  ExcelNamedRangeTarget.range("Source", "A1:B3")));
+              new StructuredMutationAction.SetNamedRange(
+                  new dev.erst.gridgrind.core.vocabulary.DefinedName("LocalBudget"),
+                  new dev.erst.gridgrind.core.vocabulary.NamedRangeScope.Sheet(
+                      new dev.erst.gridgrind.core.vocabulary.SheetName("Source")),
+                  NamedRangeTarget.range(
+                      new dev.erst.gridgrind.core.vocabulary.SheetName("Source"),
+                      new dev.erst.gridgrind.core.vocabulary.RangeRef("A1:B3"))));
       workbook.sheets().copySheet("Source", "Replica", new ExcelSheetCopyPosition.AppendAtEnd());
       workbook
           .persistence()
@@ -455,16 +462,22 @@ class ExcelWorkbookTest {
         XlsxRoundTrip.printLayout(workbookPath, "Replica").orientation());
     assertEquals(
         List.of(
-            new ExcelNamedRangeSnapshot.RangeSnapshot(
-                "LocalBudget",
-                new ExcelNamedRangeScope.SheetScope("Source"),
+            new NamedRangeReport.RangeReport(
+                new dev.erst.gridgrind.core.vocabulary.DefinedNameLabel("LocalBudget"),
+                new NamedRangeScopeReport.Sheet(
+                    new dev.erst.gridgrind.core.vocabulary.SheetLabel("Source")),
                 "Source!$A$1:$B$3",
-                ExcelNamedRangeTarget.range("Source", "A1:B3")),
-            new ExcelNamedRangeSnapshot.RangeSnapshot(
-                "LocalBudget",
-                new ExcelNamedRangeScope.SheetScope("Replica"),
+                NamedRangeTarget.range(
+                    new dev.erst.gridgrind.core.vocabulary.SheetName("Source"),
+                    new dev.erst.gridgrind.core.vocabulary.RangeRef("A1:B3"))),
+            new NamedRangeReport.RangeReport(
+                new dev.erst.gridgrind.core.vocabulary.DefinedNameLabel("LocalBudget"),
+                new NamedRangeScopeReport.Sheet(
+                    new dev.erst.gridgrind.core.vocabulary.SheetLabel("Replica")),
                 "Replica!$A$1:$B$3",
-                ExcelNamedRangeTarget.range("Replica", "A1:B3"))),
+                NamedRangeTarget.range(
+                    new dev.erst.gridgrind.core.vocabulary.SheetName("Replica"),
+                    new dev.erst.gridgrind.core.vocabulary.RangeRef("A1:B3")))),
         XlsxRoundTrip.namedRanges(workbookPath));
     assertEquals(
         List.of(
@@ -589,13 +602,15 @@ class ExcelWorkbookTest {
 
       assertEquals(
           List.of(
-              new ExcelNamedRangeSnapshot.FormulaSnapshot(
-                  "LocalFormula",
-                  new ExcelNamedRangeScope.SheetScope("FormulaNames"),
+              new NamedRangeReport.FormulaReport(
+                  new dev.erst.gridgrind.core.vocabulary.DefinedNameLabel("LocalFormula"),
+                  new NamedRangeScopeReport.Sheet(
+                      new dev.erst.gridgrind.core.vocabulary.SheetLabel("FormulaNames")),
                   "SUM(FormulaNames!$A$1:$A$2)"),
-              new ExcelNamedRangeSnapshot.FormulaSnapshot(
-                  "LocalFormula",
-                  new ExcelNamedRangeScope.SheetScope("FormulaNames Copy"),
+              new NamedRangeReport.FormulaReport(
+                  new dev.erst.gridgrind.core.vocabulary.DefinedNameLabel("LocalFormula"),
+                  new NamedRangeScopeReport.Sheet(
+                      new dev.erst.gridgrind.core.vocabulary.SheetLabel("FormulaNames Copy")),
                   "SUM('FormulaNames Copy'!$A$1:$A$2)")),
           workbook.names().namedRanges());
     }
@@ -1169,17 +1184,22 @@ class ExcelWorkbookTest {
       workbook
           .names()
           .setNamedRange(
-              new ExcelNamedRangeDefinition(
-                  "BudgetTotal",
-                  new ExcelNamedRangeScope.WorkbookScope(),
-                  ExcelNamedRangeTarget.range("Budget", "B4")));
+              new StructuredMutationAction.SetNamedRange(
+                  new dev.erst.gridgrind.core.vocabulary.DefinedName("BudgetTotal"),
+                  new dev.erst.gridgrind.core.vocabulary.NamedRangeScope.Workbook(),
+                  NamedRangeTarget.range(
+                      new dev.erst.gridgrind.core.vocabulary.SheetName("Budget"),
+                      new dev.erst.gridgrind.core.vocabulary.RangeRef("B4"))));
       workbook
           .names()
           .setNamedRange(
-              new ExcelNamedRangeDefinition(
-                  "LocalItem",
-                  new ExcelNamedRangeScope.SheetScope("Budget"),
-                  ExcelNamedRangeTarget.range("Budget", "A1:B2")));
+              new StructuredMutationAction.SetNamedRange(
+                  new dev.erst.gridgrind.core.vocabulary.DefinedName("LocalItem"),
+                  new dev.erst.gridgrind.core.vocabulary.NamedRangeScope.Sheet(
+                      new dev.erst.gridgrind.core.vocabulary.SheetName("Budget")),
+                  NamedRangeTarget.range(
+                      new dev.erst.gridgrind.core.vocabulary.SheetName("Budget"),
+                      new dev.erst.gridgrind.core.vocabulary.RangeRef("A1:B2"))));
       workbook
           .persistence()
           .save(
@@ -1195,36 +1215,41 @@ class ExcelWorkbookTest {
         () -> assertEquals("Review", metadata.comment().orElseThrow().text()),
         () -> assertEquals("GridGrind", metadata.comment().orElseThrow().author()),
         () -> assertTrue(metadata.comment().orElseThrow().visible()));
-    List<ExcelNamedRangeSnapshot> namedRanges = XlsxRoundTrip.namedRanges(workbookPath);
+    List<NamedRangeReport> namedRanges = XlsxRoundTrip.namedRanges(workbookPath);
     assertEquals(2, namedRanges.size());
     assertTrue(
         namedRanges.contains(
-            new ExcelNamedRangeSnapshot.RangeSnapshot(
-                "BudgetTotal",
-                new ExcelNamedRangeScope.WorkbookScope(),
+            new NamedRangeReport.RangeReport(
+                new dev.erst.gridgrind.core.vocabulary.DefinedNameLabel("BudgetTotal"),
+                new NamedRangeScopeReport.Workbook(),
                 namedRanges.stream()
-                    .filter(namedRange -> "BudgetTotal".equals(namedRange.name()))
+                    .filter(namedRange -> "BudgetTotal".equals(namedRange.name().value()))
                     .findFirst()
                     .orElseThrow()
                     .refersToFormula(),
-                ExcelNamedRangeTarget.range("Budget", "B4"))));
+                NamedRangeTarget.range(
+                    new dev.erst.gridgrind.core.vocabulary.SheetName("Budget"),
+                    new dev.erst.gridgrind.core.vocabulary.RangeRef("B4")))));
     assertTrue(
         namedRanges.contains(
-            new ExcelNamedRangeSnapshot.RangeSnapshot(
-                "LocalItem",
-                new ExcelNamedRangeScope.SheetScope("Budget"),
+            new NamedRangeReport.RangeReport(
+                new dev.erst.gridgrind.core.vocabulary.DefinedNameLabel("LocalItem"),
+                new NamedRangeScopeReport.Sheet(
+                    new dev.erst.gridgrind.core.vocabulary.SheetLabel("Budget")),
                 namedRanges.stream()
-                    .filter(namedRange -> "LocalItem".equals(namedRange.name()))
+                    .filter(namedRange -> "LocalItem".equals(namedRange.name().value()))
                     .findFirst()
                     .orElseThrow()
                     .refersToFormula(),
-                ExcelNamedRangeTarget.range("Budget", "A1:B2"))));
+                NamedRangeTarget.range(
+                    new dev.erst.gridgrind.core.vocabulary.SheetName("Budget"),
+                    new dev.erst.gridgrind.core.vocabulary.RangeRef("A1:B2")))));
 
     try (ExcelWorkbook workbook =
         ExcelWorkbooks.open(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory())) {
       assertEquals(2, workbook.names().namedRangeCount());
       assertEquals(2, workbook.names().namedRanges().size());
-      workbook.names().deleteNamedRange("BudgetTotal", new ExcelNamedRangeScope.WorkbookScope());
+      workbook.names().deleteNamedRange("BudgetTotal", new NamedRangeScopeReport.Workbook());
       assertEquals(1, workbook.names().namedRangeCount());
     }
   }
@@ -1267,17 +1292,21 @@ class ExcelWorkbookTest {
       workbook
           .names()
           .setNamedRange(
-              new ExcelNamedRangeDefinition(
-                  "BudgetTotal",
-                  new ExcelNamedRangeScope.WorkbookScope(),
-                  ExcelNamedRangeTarget.range("Budget", "B4")));
+              new StructuredMutationAction.SetNamedRange(
+                  new dev.erst.gridgrind.core.vocabulary.DefinedName("BudgetTotal"),
+                  new dev.erst.gridgrind.core.vocabulary.NamedRangeScope.Workbook(),
+                  NamedRangeTarget.range(
+                      new dev.erst.gridgrind.core.vocabulary.SheetName("Budget"),
+                      new dev.erst.gridgrind.core.vocabulary.RangeRef("B4"))));
       workbook
           .names()
           .setNamedRange(
-              new ExcelNamedRangeDefinition(
-                  "BudgetTotal",
-                  new ExcelNamedRangeScope.WorkbookScope(),
-                  ExcelNamedRangeTarget.range("Budget", "C1")));
+              new StructuredMutationAction.SetNamedRange(
+                  new dev.erst.gridgrind.core.vocabulary.DefinedName("BudgetTotal"),
+                  new dev.erst.gridgrind.core.vocabulary.NamedRangeScope.Workbook(),
+                  NamedRangeTarget.range(
+                      new dev.erst.gridgrind.core.vocabulary.SheetName("Budget"),
+                      new dev.erst.gridgrind.core.vocabulary.RangeRef("C1"))));
 
       Name formulaName = poiWorkbook.createName();
       formulaName.setNameName("BudgetRollup");
@@ -1302,31 +1331,47 @@ class ExcelWorkbookTest {
       assertFalse(ExcelWorkbookNames.shouldExpose("_XLNM.PRINT_TITLES", false, false));
       assertFalse(ExcelWorkbookNames.shouldExpose("BudgetFn", true, false));
 
-      assertTrue(workbook.scopeMatches(workbookScoped, new ExcelNamedRangeScope.WorkbookScope()));
+      assertTrue(workbook.scopeMatches(workbookScoped, new NamedRangeScopeReport.Workbook()));
       assertFalse(
-          workbook.scopeMatches(workbookScoped, new ExcelNamedRangeScope.SheetScope("Budget")));
-      assertTrue(workbook.scopeMatches(sheetScoped, new ExcelNamedRangeScope.SheetScope("Budget")));
-      assertFalse(workbook.scopeMatches(sheetScoped, new ExcelNamedRangeScope.WorkbookScope()));
+          workbook.scopeMatches(
+              workbookScoped,
+              new NamedRangeScopeReport.Sheet(
+                  new dev.erst.gridgrind.core.vocabulary.SheetLabel("Budget"))));
+      assertTrue(
+          workbook.scopeMatches(
+              sheetScoped,
+              new NamedRangeScopeReport.Sheet(
+                  new dev.erst.gridgrind.core.vocabulary.SheetLabel("Budget"))));
+      assertFalse(workbook.scopeMatches(sheetScoped, new NamedRangeScopeReport.Workbook()));
       assertThrows(
           SheetNotFoundException.class,
-          () -> workbook.scopeMatches(sheetScoped, new ExcelNamedRangeScope.SheetScope("Missing")));
+          () ->
+              workbook.scopeMatches(
+                  sheetScoped,
+                  new NamedRangeScopeReport.Sheet(
+                      new dev.erst.gridgrind.core.vocabulary.SheetLabel("Missing"))));
 
       assertEquals(
           List.of(
-              new ExcelNamedRangeSnapshot.RangeSnapshot(
-                  "BudgetTotal",
-                  new ExcelNamedRangeScope.WorkbookScope(),
+              new NamedRangeReport.RangeReport(
+                  new dev.erst.gridgrind.core.vocabulary.DefinedNameLabel("BudgetTotal"),
+                  new NamedRangeScopeReport.Workbook(),
                   "Budget!$C$1",
-                  ExcelNamedRangeTarget.range("Budget", "C1")),
-              new ExcelNamedRangeSnapshot.FormulaSnapshot(
-                  "BudgetRollup",
-                  new ExcelNamedRangeScope.WorkbookScope(),
+                  NamedRangeTarget.range(
+                      new dev.erst.gridgrind.core.vocabulary.SheetName("Budget"),
+                      new dev.erst.gridgrind.core.vocabulary.RangeRef("C1"))),
+              new NamedRangeReport.FormulaReport(
+                  new dev.erst.gridgrind.core.vocabulary.DefinedNameLabel("BudgetRollup"),
+                  new NamedRangeScopeReport.Workbook(),
                   "SUM(Budget!$B$2:$B$3)"),
-              new ExcelNamedRangeSnapshot.RangeSnapshot(
-                  "LocalItem",
-                  new ExcelNamedRangeScope.SheetScope("Budget"),
+              new NamedRangeReport.RangeReport(
+                  new dev.erst.gridgrind.core.vocabulary.DefinedNameLabel("LocalItem"),
+                  new NamedRangeScopeReport.Sheet(
+                      new dev.erst.gridgrind.core.vocabulary.SheetLabel("Budget")),
                   "Budget!$A$1",
-                  ExcelNamedRangeTarget.range("Budget", "A1"))),
+                  NamedRangeTarget.range(
+                      new dev.erst.gridgrind.core.vocabulary.SheetName("Budget"),
+                      new dev.erst.gridgrind.core.vocabulary.RangeRef("A1")))),
           workbook.names().namedRanges());
     }
   }
@@ -1343,13 +1388,15 @@ class ExcelWorkbookTest {
               workbook
                   .names()
                   .setNamedRange(
-                      new ExcelNamedRangeDefinition(
-                          "A1",
-                          new ExcelNamedRangeScope.WorkbookScope(),
-                          ExcelNamedRangeTarget.range("Budget", "B4"))));
+                      new StructuredMutationAction.SetNamedRange(
+                          new dev.erst.gridgrind.core.vocabulary.DefinedName("A1"),
+                          new dev.erst.gridgrind.core.vocabulary.NamedRangeScope.Workbook(),
+                          NamedRangeTarget.range(
+                              new dev.erst.gridgrind.core.vocabulary.SheetName("Budget"),
+                              new dev.erst.gridgrind.core.vocabulary.RangeRef("B4")))));
       assertThrows(
           NullPointerException.class,
-          () -> workbook.names().deleteNamedRange(null, new ExcelNamedRangeScope.WorkbookScope()));
+          () -> workbook.names().deleteNamedRange(null, new NamedRangeScopeReport.Workbook()));
       assertThrows(
           NullPointerException.class, () -> workbook.names().deleteNamedRange("BudgetTotal", null));
       assertThrows(
@@ -1357,17 +1404,20 @@ class ExcelWorkbookTest {
           () ->
               workbook
                   .names()
-                  .deleteNamedRange("BudgetTotal", new ExcelNamedRangeScope.WorkbookScope()));
+                  .deleteNamedRange("BudgetTotal", new NamedRangeScopeReport.Workbook()));
       assertThrows(
           SheetNotFoundException.class,
           () ->
               workbook
                   .names()
                   .setNamedRange(
-                      new ExcelNamedRangeDefinition(
-                          "BudgetTotal",
-                          new ExcelNamedRangeScope.SheetScope("Missing"),
-                          ExcelNamedRangeTarget.range("Missing", "A1"))));
+                      new StructuredMutationAction.SetNamedRange(
+                          new dev.erst.gridgrind.core.vocabulary.DefinedName("BudgetTotal"),
+                          new dev.erst.gridgrind.core.vocabulary.NamedRangeScope.Sheet(
+                              new dev.erst.gridgrind.core.vocabulary.SheetName("Missing")),
+                          NamedRangeTarget.range(
+                              new dev.erst.gridgrind.core.vocabulary.SheetName("Missing"),
+                              new dev.erst.gridgrind.core.vocabulary.RangeRef("A1")))));
     }
   }
 

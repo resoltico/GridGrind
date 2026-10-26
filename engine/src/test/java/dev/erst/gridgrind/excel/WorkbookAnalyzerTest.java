@@ -2,6 +2,9 @@ package dev.erst.gridgrind.excel;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.core.model.formula.NamedRangeReport;
+import dev.erst.gridgrind.core.model.formula.NamedRangeScopeReport;
+import dev.erst.gridgrind.core.model.formula.NamedRangeTarget;
 import dev.erst.gridgrind.core.model.formula.ResolvedFormula;
 import dev.erst.gridgrind.core.model.pivot.PivotTableSpec;
 import dev.erst.gridgrind.core.model.style.DifferentialStylePatch;
@@ -10,6 +13,7 @@ import dev.erst.gridgrind.core.model.table.TableStyleSpec;
 import dev.erst.gridgrind.core.model.validation.ConditionalFormattingRuleSpec;
 import dev.erst.gridgrind.core.model.value.CellValue;
 import dev.erst.gridgrind.core.model.value.HyperlinkTarget;
+import dev.erst.gridgrind.core.plan.StructuredMutationAction;
 import dev.erst.gridgrind.core.vocabulary.AnalysisFindingCode;
 import dev.erst.gridgrind.core.vocabulary.AnalysisSeverity;
 import dev.erst.gridgrind.core.vocabulary.ExcelPivotDataConsolidateFunction;
@@ -253,10 +257,12 @@ class WorkbookAnalyzerTest {
       workbook
           .names()
           .setNamedRange(
-              new ExcelNamedRangeDefinition(
-                  "BudgetTotal",
-                  new ExcelNamedRangeScope.WorkbookScope(),
-                  ExcelNamedRangeTarget.range("Budget", "B1")));
+              new StructuredMutationAction.SetNamedRange(
+                  new dev.erst.gridgrind.core.vocabulary.DefinedName("BudgetTotal"),
+                  new dev.erst.gridgrind.core.vocabulary.NamedRangeScope.Workbook(),
+                  NamedRangeTarget.range(
+                      new dev.erst.gridgrind.core.vocabulary.SheetName("Budget"),
+                      new dev.erst.gridgrind.core.vocabulary.RangeRef("B1"))));
 
       WorkbookAnalyzer analyzer = new WorkbookAnalyzer();
 
@@ -364,18 +370,23 @@ class WorkbookAnalyzerTest {
 
   @Test
   void scopeShadowingFindingsDetectWorkbookAndSheetScopeDuplicates() {
-    List<ExcelNamedRangeSnapshot> namedRanges =
+    List<NamedRangeReport> namedRanges =
         List.of(
-            new ExcelNamedRangeSnapshot.RangeSnapshot(
-                "SharedName",
-                new ExcelNamedRangeScope.WorkbookScope(),
+            new NamedRangeReport.RangeReport(
+                new dev.erst.gridgrind.core.vocabulary.DefinedNameLabel("SharedName"),
+                new NamedRangeScopeReport.Workbook(),
                 "Budget!$A$1",
-                ExcelNamedRangeTarget.range("Budget", "A1")),
-            new ExcelNamedRangeSnapshot.RangeSnapshot(
-                "SharedName",
-                new ExcelNamedRangeScope.SheetScope("Budget"),
+                NamedRangeTarget.range(
+                    new dev.erst.gridgrind.core.vocabulary.SheetName("Budget"),
+                    new dev.erst.gridgrind.core.vocabulary.RangeRef("A1"))),
+            new NamedRangeReport.RangeReport(
+                new dev.erst.gridgrind.core.vocabulary.DefinedNameLabel("SharedName"),
+                new NamedRangeScopeReport.Sheet(
+                    new dev.erst.gridgrind.core.vocabulary.SheetLabel("Budget")),
                 "Budget!$B$2",
-                ExcelNamedRangeTarget.range("Budget", "B2")));
+                NamedRangeTarget.range(
+                    new dev.erst.gridgrind.core.vocabulary.SheetName("Budget"),
+                    new dev.erst.gridgrind.core.vocabulary.RangeRef("B2"))));
 
     List<WorkbookAnalysis.AnalysisFinding> findings =
         WorkbookAnalyzer.scopeShadowingFindings(namedRanges);
@@ -389,18 +400,23 @@ class WorkbookAnalyzerTest {
 
   @Test
   void scopeShadowingFindingsReturnsEmptyWhenScopesDoNotOverlap() {
-    List<ExcelNamedRangeSnapshot> namedRanges =
+    List<NamedRangeReport> namedRanges =
         List.of(
-            new ExcelNamedRangeSnapshot.RangeSnapshot(
-                "BudgetTotal",
-                new ExcelNamedRangeScope.WorkbookScope(),
+            new NamedRangeReport.RangeReport(
+                new dev.erst.gridgrind.core.vocabulary.DefinedNameLabel("BudgetTotal"),
+                new NamedRangeScopeReport.Workbook(),
                 "Budget!$A$1",
-                ExcelNamedRangeTarget.range("Budget", "A1")),
-            new ExcelNamedRangeSnapshot.RangeSnapshot(
-                "ForecastTotal",
-                new ExcelNamedRangeScope.SheetScope("Forecast"),
+                NamedRangeTarget.range(
+                    new dev.erst.gridgrind.core.vocabulary.SheetName("Budget"),
+                    new dev.erst.gridgrind.core.vocabulary.RangeRef("A1"))),
+            new NamedRangeReport.RangeReport(
+                new dev.erst.gridgrind.core.vocabulary.DefinedNameLabel("ForecastTotal"),
+                new NamedRangeScopeReport.Sheet(
+                    new dev.erst.gridgrind.core.vocabulary.SheetLabel("Forecast")),
                 "Forecast!$B$2",
-                ExcelNamedRangeTarget.range("Forecast", "B2")));
+                NamedRangeTarget.range(
+                    new dev.erst.gridgrind.core.vocabulary.SheetName("Forecast"),
+                    new dev.erst.gridgrind.core.vocabulary.RangeRef("B2"))));
 
     assertEquals(List.of(), WorkbookAnalyzer.scopeShadowingFindings(namedRanges));
   }

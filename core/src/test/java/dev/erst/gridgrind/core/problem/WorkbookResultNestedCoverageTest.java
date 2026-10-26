@@ -45,7 +45,6 @@ import dev.erst.gridgrind.core.vocabulary.ExcelHorizontalAlignment;
 import dev.erst.gridgrind.core.vocabulary.ExcelPaneRegion;
 import dev.erst.gridgrind.core.vocabulary.ExcelVerticalAlignment;
 import dev.erst.gridgrind.core.vocabulary.NamedRangeBackingKind;
-import dev.erst.gridgrind.core.vocabulary.NamedRangeScope;
 import dev.erst.gridgrind.core.vocabulary.SheetLabel;
 import java.math.BigDecimal;
 import java.util.List;
@@ -134,7 +133,7 @@ class WorkbookResultNestedCoverageTest {
             List.of(
                 new NamedRangeSurfaceEntryReport(
                     "BudgetTotal",
-                    new NamedRangeScope.Workbook(),
+                    new dev.erst.gridgrind.core.model.formula.NamedRangeScopeReport.Workbook(),
                     "Budget!$B$4",
                     NamedRangeBackingKind.RANGE)));
     assertEquals(1, surface.namedRanges().size());
@@ -158,7 +157,9 @@ class WorkbookResultNestedCoverageTest {
             AnalysisSeverity.INFO,
             "Formula-backed name",
             "Named range stores a formula.",
-            new AnalysisLocationReport.NamedRange("BudgetTotal", new NamedRangeScope.Workbook()),
+            new AnalysisLocationReport.NamedRange(
+                "BudgetTotal",
+                new dev.erst.gridgrind.core.model.formula.NamedRangeScopeReport.Workbook()),
             List.of("Budget!$B$4"));
     assertEquals(1, new WorkbookFindingsReport(summary, List.of(finding)).findings().size());
     assertEquals(
@@ -253,7 +254,9 @@ class WorkbookResultNestedCoverageTest {
     assertInstanceOf(
         NamedRangeReport.FormulaReport.class,
         new NamedRangeReport.FormulaReport(
-            new DefinedNameLabel("Expr"), new NamedRangeScope.Workbook(), "SUM(A1:A2)"));
+            new DefinedNameLabel("Expr"),
+            new dev.erst.gridgrind.core.model.formula.NamedRangeScopeReport.Workbook(),
+            "SUM(A1:A2)"));
 
     GridGrindProblemDetail.Problem problem =
         GridGrindProblemDetail.Problem.of(

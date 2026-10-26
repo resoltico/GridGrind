@@ -3,7 +3,6 @@ package dev.erst.gridgrind.core.model.formula;
 import dev.erst.gridgrind.core.metadata.Union;
 import dev.erst.gridgrind.core.metadata.Variant;
 import dev.erst.gridgrind.core.vocabulary.DefinedNameLabel;
-import dev.erst.gridgrind.core.vocabulary.NamedRangeScope;
 import java.util.Objects;
 
 /** Structured workbook-level analysis report for one defined name. */
@@ -15,7 +14,7 @@ public sealed interface NamedRangeReport
   DefinedNameLabel name();
 
   /** Workbook or sheet scope of the defined name. */
-  NamedRangeScope scope();
+  NamedRangeScopeReport scope();
 
   /** Exact formula text stored in the workbook for this defined name. */
   String refersToFormula();
@@ -25,7 +24,10 @@ public sealed interface NamedRangeReport
       id = "RANGE",
       summary = "Exact named-range report that resolves to one typed workbook target.")
   record RangeReport(
-      DefinedNameLabel name, NamedRangeScope scope, String refersToFormula, NamedRangeTarget target)
+      DefinedNameLabel name,
+      NamedRangeScopeReport scope,
+      String refersToFormula,
+      NamedRangeTarget target)
       implements NamedRangeReport {
     public RangeReport {
       Objects.requireNonNull(name, "name must not be null");
@@ -40,15 +42,12 @@ public sealed interface NamedRangeReport
 
   /** Defined name whose formula cannot be normalized to a typed range target. */
   @Variant(id = "FORMULA", summary = "Exact named-range report that remains formula-backed.")
-  record FormulaReport(DefinedNameLabel name, NamedRangeScope scope, String refersToFormula)
+  record FormulaReport(DefinedNameLabel name, NamedRangeScopeReport scope, String refersToFormula)
       implements NamedRangeReport {
     public FormulaReport {
       Objects.requireNonNull(name, "name must not be null");
       Objects.requireNonNull(scope, "scope must not be null");
       Objects.requireNonNull(refersToFormula, "refersToFormula must not be null");
-      if (refersToFormula.isBlank()) {
-        throw new IllegalArgumentException("refersToFormula must not be blank");
-      }
     }
   }
 }

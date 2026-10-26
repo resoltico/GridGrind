@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import dev.erst.gridgrind.core.model.drawing.CommentSpec;
 import dev.erst.gridgrind.core.model.drawing.ResolvedComment;
+import dev.erst.gridgrind.core.model.formula.NamedRangeScopeReport;
 import dev.erst.gridgrind.core.model.formula.NamedRangeTarget;
 import dev.erst.gridgrind.core.model.layout.PaneSpec;
 import dev.erst.gridgrind.core.model.layout.SheetDefaultsSpec;
@@ -41,9 +42,6 @@ import dev.erst.gridgrind.core.vocabulary.SheetCopyPosition;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.TableName;
 import dev.erst.gridgrind.excel.*;
-import dev.erst.gridgrind.excel.ExcelNamedRangeDefinition;
-import dev.erst.gridgrind.excel.ExcelNamedRangeScope;
-import dev.erst.gridgrind.excel.ExcelNamedRangeTarget;
 import dev.erst.gridgrind.excel.ExcelSheetCopyPosition;
 import dev.erst.gridgrind.excel.ExcelSheetPane;
 import dev.erst.gridgrind.excel.ExcelSheetPresentation;
@@ -106,13 +104,16 @@ class DefaultGridGrindRequestExecutorCommandTranslationTest
         new ResolvedComment("Review", "GridGrind", false),
         cast(WorkbookAnnotationCommand.SetComment.class, setComment).comment());
     assertEquals(
-        new ExcelNamedRangeDefinition(
-            "BudgetTotal",
-            new ExcelNamedRangeScope.WorkbookScope(),
-            ExcelNamedRangeTarget.range("Budget", "B4")),
+        new StructuredMutationAction.SetNamedRange(
+            new dev.erst.gridgrind.core.vocabulary.DefinedName("BudgetTotal"),
+            new dev.erst.gridgrind.core.vocabulary.NamedRangeScope.Workbook(),
+            NamedRangeTarget.range(
+                new dev.erst.gridgrind.core.vocabulary.SheetName("Budget"),
+                new dev.erst.gridgrind.core.vocabulary.RangeRef("B4"))),
         cast(WorkbookMetadataCommand.SetNamedRange.class, setNamedRange).definition());
     assertEquals(
-        new ExcelNamedRangeScope.SheetScope("Budget"),
+        new NamedRangeScopeReport.Sheet(
+            new dev.erst.gridgrind.core.vocabulary.SheetLabel("Budget")),
         cast(WorkbookMetadataCommand.DeleteNamedRange.class, deleteNamedRange).scope());
   }
 

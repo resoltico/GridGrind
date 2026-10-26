@@ -8,6 +8,7 @@ import dev.erst.gridgrind.core.model.drawing.ResolvedComment;
 import dev.erst.gridgrind.core.model.drawing.ResolvedEmbeddedObject;
 import dev.erst.gridgrind.core.model.drawing.ResolvedPicture;
 import dev.erst.gridgrind.core.model.drawing.ResolvedSignatureLine;
+import dev.erst.gridgrind.core.model.formula.NamedRangeTarget;
 import dev.erst.gridgrind.core.model.formula.ResolvedArrayFormula;
 import dev.erst.gridgrind.core.model.protection.CellProtectionPatch;
 import dev.erst.gridgrind.core.model.style.CellFillSpec;
@@ -28,6 +29,7 @@ import dev.erst.gridgrind.core.model.validation.ResolvedValidationErrorAlert;
 import dev.erst.gridgrind.core.model.validation.ResolvedValidationPrompt;
 import dev.erst.gridgrind.core.model.value.CellValue;
 import dev.erst.gridgrind.core.model.value.HyperlinkTarget;
+import dev.erst.gridgrind.core.plan.StructuredMutationAction;
 import dev.erst.gridgrind.core.source.BinaryContent;
 import dev.erst.gridgrind.core.vocabulary.ExcelColumnSpan;
 import dev.erst.gridgrind.core.vocabulary.ExcelComparisonOperator;
@@ -41,9 +43,6 @@ import dev.erst.gridgrind.core.vocabulary.TableName;
 import dev.erst.gridgrind.excel.*;
 import dev.erst.gridgrind.excel.ExcelComparisonFormulaSupport;
 import dev.erst.gridgrind.excel.ExcelConditionalFormattingBlockDefinition;
-import dev.erst.gridgrind.excel.ExcelNamedRangeDefinition;
-import dev.erst.gridgrind.excel.ExcelNamedRangeScope;
-import dev.erst.gridgrind.excel.ExcelNamedRangeTarget;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
 import dev.erst.gridgrind.excel.ExcelWorkbooks;
 import dev.erst.gridgrind.excel.WorkbookExecutionEngine;
@@ -134,10 +133,12 @@ class XlsxRoundTripVerifierTest {
                     new WorkbookAnnotationCommand.SetComment(
                         "Budget", "A1", new ResolvedComment("Review", "GridGrind", false)),
                     new WorkbookMetadataCommand.SetNamedRange(
-                        new ExcelNamedRangeDefinition(
-                            "BudgetTitle",
-                            new ExcelNamedRangeScope.WorkbookScope(),
-                            ExcelNamedRangeTarget.range("Budget", "A1"))))));
+                        new StructuredMutationAction.SetNamedRange(
+                            new dev.erst.gridgrind.core.vocabulary.DefinedName("BudgetTitle"),
+                            new dev.erst.gridgrind.core.vocabulary.NamedRangeScope.Workbook(),
+                            NamedRangeTarget.range(
+                                new dev.erst.gridgrind.core.vocabulary.SheetName("Budget"),
+                                new dev.erst.gridgrind.core.vocabulary.RangeRef("A1")))))));
   }
 
   @Test

@@ -1,6 +1,8 @@
 package dev.erst.gridgrind.excel;
 
 import dev.erst.gridgrind.core.model.drawing.CommentReport;
+import dev.erst.gridgrind.core.model.formula.NamedRangeReport;
+import dev.erst.gridgrind.core.model.formula.NamedRangeScopeReport;
 import dev.erst.gridgrind.core.model.print.ResolvedPrintLayout;
 import dev.erst.gridgrind.core.model.protection.CellProtectionReport;
 import dev.erst.gridgrind.core.model.protection.SheetProtectionSettings;
@@ -275,26 +277,31 @@ public final class XlsxRoundTrip {
   }
 
   /** Returns every analyzable named range stored in the saved workbook. */
-  public static List<ExcelNamedRangeSnapshot> namedRanges(Path workbookPath) throws IOException {
+  public static List<NamedRangeReport> namedRanges(Path workbookPath) throws IOException {
     return readWorkbook(
         workbookPath,
         workbook -> {
-          List<ExcelNamedRangeSnapshot> namedRanges = new ArrayList<>();
+          List<NamedRangeReport> namedRanges = new ArrayList<>();
           for (var name : workbook.getAllNames()) {
             if (!shouldExpose(name)) {
               continue;
             }
-            ExcelNamedRangeScope scope = toScope(workbook, name.getSheetIndex());
+            NamedRangeScopeReport scope = toScope(workbook, name.getSheetIndex());
             String refersToFormula = Objects.requireNonNullElse(name.getRefersToFormula(), "");
             var target = ExcelNamedRangeTargets.resolveTarget(refersToFormula, scope);
             if (target.isEmpty()) {
               namedRanges.add(
-                  new ExcelNamedRangeSnapshot.FormulaSnapshot(
-                      name.getNameName(), scope, refersToFormula));
+                  new NamedRangeReport.FormulaReport(
+                      new dev.erst.gridgrind.core.vocabulary.DefinedNameLabel(name.getNameName()),
+                      scope,
+                      refersToFormula));
             } else {
               namedRanges.add(
-                  new ExcelNamedRangeSnapshot.RangeSnapshot(
-                      name.getNameName(), scope, refersToFormula, target.orElseThrow()));
+                  new NamedRangeReport.RangeReport(
+                      new dev.erst.gridgrind.core.vocabulary.DefinedNameLabel(name.getNameName()),
+                      scope,
+                      refersToFormula,
+                      target.orElseThrow()));
             }
           }
           return List.copyOf(namedRanges);
@@ -459,11 +466,12 @@ public final class XlsxRoundTrip {
         && !nameName.startsWith("_XLNM.");
   }
 
-  private static ExcelNamedRangeScope toScope(XSSFWorkbook workbook, int sheetIndex) {
+  private static NamedRangeScopeReport toScope(XSSFWorkbook workbook, int sheetIndex) {
     if (sheetIndex < 0) {
-      return new ExcelNamedRangeScope.WorkbookScope();
+      return new NamedRangeScopeReport.Workbook();
     }
-    return new ExcelNamedRangeScope.SheetScope(workbook.getSheetName(sheetIndex));
+    return new NamedRangeScopeReport.Sheet(
+        new dev.erst.gridgrind.core.vocabulary.SheetLabel(workbook.getSheetName(sheetIndex)));
   }
 
   private static CellColorReport colorSnapshot(XSSFColor color) {

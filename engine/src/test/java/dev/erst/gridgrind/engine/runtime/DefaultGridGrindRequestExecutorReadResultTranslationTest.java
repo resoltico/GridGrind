@@ -5,6 +5,8 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import dev.erst.gridgrind.core.model.drawing.CommentReport;
 import dev.erst.gridgrind.core.model.formula.NamedRangeReport;
+import dev.erst.gridgrind.core.model.formula.NamedRangeScopeReport;
+import dev.erst.gridgrind.core.model.formula.NamedRangeTarget;
 import dev.erst.gridgrind.core.model.layout.PaneReport;
 import dev.erst.gridgrind.core.model.print.*;
 import dev.erst.gridgrind.core.model.print.PrintAreaReport;
@@ -32,9 +34,6 @@ import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.excel.*;
 import dev.erst.gridgrind.excel.ExcelCellMetadataSnapshot;
 import dev.erst.gridgrind.excel.ExcelCellSnapshot;
-import dev.erst.gridgrind.excel.ExcelNamedRangeScope;
-import dev.erst.gridgrind.excel.ExcelNamedRangeSnapshot;
-import dev.erst.gridgrind.excel.ExcelNamedRangeTarget;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
@@ -59,11 +58,13 @@ class DefaultGridGrindRequestExecutorReadResultTranslationTest
             new dev.erst.gridgrind.excel.WorkbookCoreResult.NamedRangesResult(
                 new StepId("ranges"),
                 List.of(
-                    new ExcelNamedRangeSnapshot.RangeSnapshot(
-                        "BudgetTotal",
-                        new ExcelNamedRangeScope.WorkbookScope(),
+                    new NamedRangeReport.RangeReport(
+                        new dev.erst.gridgrind.core.vocabulary.DefinedNameLabel("BudgetTotal"),
+                        new NamedRangeScopeReport.Workbook(),
                         "Budget!$B$4",
-                        ExcelNamedRangeTarget.range("Budget", "B4")))));
+                        NamedRangeTarget.range(
+                            new dev.erst.gridgrind.core.vocabulary.SheetName("Budget"),
+                            new dev.erst.gridgrind.core.vocabulary.RangeRef("B4"))))));
     InspectionResult sheetSummary =
         InspectionResultConverter.toReadResult(
             new dev.erst.gridgrind.excel.WorkbookSheetResult.SheetSummaryResult(
@@ -239,7 +240,7 @@ class DefaultGridGrindRequestExecutorReadResultTranslationTest
                     List.of(
                         new dev.erst.gridgrind.excel.WorkbookSurfaceResult.NamedRangeSurfaceEntry(
                             "BudgetTotal",
-                            new ExcelNamedRangeScope.WorkbookScope(),
+                            new NamedRangeScopeReport.Workbook(),
                             "Budget!$B$4",
                             dev.erst.gridgrind.excel.WorkbookSurfaceResult.NamedRangeBackingKind
                                 .RANGE)))));
@@ -450,7 +451,9 @@ class DefaultGridGrindRequestExecutorReadResultTranslationTest
                             "Name exists in more than one scope.",
                             new dev.erst.gridgrind.excel.WorkbookAnalysis.AnalysisLocation
                                 .NamedRange(
-                                "BudgetTotal", new ExcelNamedRangeScope.SheetScope("Budget")),
+                                "BudgetTotal",
+                                new NamedRangeScopeReport.Sheet(
+                                    new dev.erst.gridgrind.core.vocabulary.SheetLabel("Budget"))),
                             List.of("Budget!$B$4"))))));
 
     assertEquals(
@@ -504,12 +507,6 @@ class DefaultGridGrindRequestExecutorReadResultTranslationTest
 
   @Test
   void convertsNamedRangeFormulaSnapshotsAndFormulaBackedSurfaceEntries() {
-    NamedRangeReport formulaReport =
-        InspectionResultWorkbookCoreReportSupport.toNamedRangeReport(
-            new ExcelNamedRangeSnapshot.FormulaSnapshot(
-                "BudgetRollup", new ExcelNamedRangeScope.WorkbookScope(), "SUM(Budget!$B$2:$B$3)"));
-    assertInstanceOf(NamedRangeReport.FormulaReport.class, formulaReport);
-
     WorkbookSurfaceInspectionResult.NamedRangeSurfaceResult surface =
         cast(
             WorkbookSurfaceInspectionResult.NamedRangeSurfaceResult.class,
@@ -525,7 +522,8 @@ class DefaultGridGrindRequestExecutorReadResultTranslationTest
                             new dev.erst.gridgrind.excel.WorkbookSurfaceResult
                                 .NamedRangeSurfaceEntry(
                                 "BudgetRollup",
-                                new ExcelNamedRangeScope.SheetScope("Budget"),
+                                new NamedRangeScopeReport.Sheet(
+                                    new dev.erst.gridgrind.core.vocabulary.SheetLabel("Budget")),
                                 "SUM(Budget!$B$2:$B$3)",
                                 dev.erst.gridgrind.excel.WorkbookSurfaceResult.NamedRangeBackingKind
                                     .FORMULA))))));

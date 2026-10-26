@@ -1,5 +1,8 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.core.model.formula.NamedRangeReport;
+import dev.erst.gridgrind.core.model.formula.NamedRangeScopeReport;
+import dev.erst.gridgrind.core.plan.StructuredMutationAction;
 import java.util.List;
 import java.util.Objects;
 import org.apache.poi.ss.usermodel.Name;
@@ -13,13 +16,13 @@ public final class ExcelWorkbookNames {
   }
 
   /** Creates or replaces one named range in workbook or sheet scope. */
-  public ExcelWorkbookNames setNamedRange(ExcelNamedRangeDefinition definition) {
+  public ExcelWorkbookNames setNamedRange(StructuredMutationAction.SetNamedRange definition) {
     ExcelWorkbookNamedRangeSupport.setNamedRange(workbook, definition);
     return this;
   }
 
   /** Deletes one named range from workbook or sheet scope. */
-  public ExcelWorkbookNames deleteNamedRange(String name, ExcelNamedRangeScope scope) {
+  public ExcelWorkbookNames deleteNamedRange(String name, NamedRangeScopeReport scope) {
     ExcelWorkbookNamedRangeSupport.deleteNamedRange(workbook, name, scope);
     return this;
   }
@@ -30,7 +33,7 @@ public final class ExcelWorkbookNames {
   }
 
   /** Returns every analyzable named range currently present in the workbook. */
-  public List<ExcelNamedRangeSnapshot> namedRanges() {
+  public List<NamedRangeReport> namedRanges() {
     return ExcelWorkbookNamedRangeSupport.namedRanges(workbook);
   }
 

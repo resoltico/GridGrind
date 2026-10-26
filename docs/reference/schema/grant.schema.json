@@ -1098,7 +1098,7 @@
           "type" : "string"
         },
         "scope" : {
-          "$ref" : "#/$defs/dev.erst.gridgrind.core.vocabulary.NamedRangeScope"
+          "$ref" : "#/$defs/dev.erst.gridgrind.core.model.formula.NamedRangeScopeReport"
         },
         "type" : {
           "const" : "FORMULA"
@@ -1118,7 +1118,7 @@
           "type" : "string"
         },
         "scope" : {
-          "$ref" : "#/$defs/dev.erst.gridgrind.core.vocabulary.NamedRangeScope"
+          "$ref" : "#/$defs/dev.erst.gridgrind.core.model.formula.NamedRangeScopeReport"
         },
         "target" : {
           "$ref" : "#/$defs/dev.erst.gridgrind.core.model.formula.NamedRangeTarget"
@@ -1128,6 +1128,38 @@
         }
       },
       "required" : [ "name", "scope", "refersToFormula", "target", "type" ],
+      "type" : "object"
+    },
+    "dev.erst.gridgrind.core.model.formula.NamedRangeScopeReport" : {
+      "oneOf" : [ {
+        "$ref" : "#/$defs/dev.erst.gridgrind.core.model.formula.NamedRangeScopeReport$Sheet"
+      }, {
+        "$ref" : "#/$defs/dev.erst.gridgrind.core.model.formula.NamedRangeScopeReport$Workbook"
+      } ]
+    },
+    "dev.erst.gridgrind.core.model.formula.NamedRangeScopeReport$Sheet" : {
+      "additionalProperties" : false,
+      "description" : "Observed local sheet scope.",
+      "properties" : {
+        "sheetName" : {
+          "type" : "string"
+        },
+        "type" : {
+          "const" : "SHEET"
+        }
+      },
+      "required" : [ "sheetName", "type" ],
+      "type" : "object"
+    },
+    "dev.erst.gridgrind.core.model.formula.NamedRangeScopeReport$Workbook" : {
+      "additionalProperties" : false,
+      "description" : "Observed workbook scope.",
+      "properties" : {
+        "type" : {
+          "const" : "WORKBOOK"
+        }
+      },
+      "required" : [ "type" ],
       "type" : "object"
     },
     "dev.erst.gridgrind.core.model.formula.NamedRangeTarget" : {
@@ -4205,38 +4237,6 @@
         }
       },
       "required" : [ "path", "type" ],
-      "type" : "object"
-    },
-    "dev.erst.gridgrind.core.vocabulary.NamedRangeScope" : {
-      "oneOf" : [ {
-        "$ref" : "#/$defs/dev.erst.gridgrind.core.vocabulary.NamedRangeScope$Sheet"
-      }, {
-        "$ref" : "#/$defs/dev.erst.gridgrind.core.vocabulary.NamedRangeScope$Workbook"
-      } ]
-    },
-    "dev.erst.gridgrind.core.vocabulary.NamedRangeScope$Sheet" : {
-      "additionalProperties" : false,
-      "description" : "Target one specific sheet scope.",
-      "properties" : {
-        "sheetName" : {
-          "type" : "string"
-        },
-        "type" : {
-          "const" : "SHEET"
-        }
-      },
-      "required" : [ "sheetName", "type" ],
-      "type" : "object"
-    },
-    "dev.erst.gridgrind.core.vocabulary.NamedRangeScope$Workbook" : {
-      "additionalProperties" : false,
-      "description" : "Target workbook scope.",
-      "properties" : {
-        "type" : {
-          "const" : "WORKBOOK"
-        }
-      },
-      "required" : [ "type" ],
       "type" : "object"
     }
   },

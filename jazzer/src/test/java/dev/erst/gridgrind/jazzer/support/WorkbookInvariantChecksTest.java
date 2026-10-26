@@ -148,7 +148,6 @@ import dev.erst.gridgrind.core.vocabulary.ExcelPrintOrientation;
 import dev.erst.gridgrind.core.vocabulary.ExcelSheetVisibility;
 import dev.erst.gridgrind.core.vocabulary.ExcelVerticalAlignment;
 import dev.erst.gridgrind.core.vocabulary.NamedRangeBackingKind;
-import dev.erst.gridgrind.core.vocabulary.NamedRangeScope;
 import dev.erst.gridgrind.core.vocabulary.ProtocolVersion;
 import dev.erst.gridgrind.core.vocabulary.RangeLabel;
 import dev.erst.gridgrind.core.vocabulary.RangeRef;
@@ -207,7 +206,8 @@ class WorkbookInvariantChecksTest {
                     List.of(
                         new NamedRangeReport.RangeReport(
                             new DefinedNameLabel("BudgetTotal"),
-                            new NamedRangeScope.Workbook(),
+                            new dev.erst.gridgrind.core.model.formula.NamedRangeScopeReport
+                                .Workbook(),
                             "Budget!$B$4",
                             NamedRangeTarget.range(new SheetName("Budget"), new RangeRef("B4"))))),
                 new SheetInspectionResult.CellsResult(
@@ -347,7 +347,8 @@ class WorkbookInvariantChecksTest {
                         List.of(
                             new NamedRangeSurfaceEntryReport(
                                 "BudgetTotal",
-                                new NamedRangeScope.Workbook(),
+                                new dev.erst.gridgrind.core.model.formula.NamedRangeScopeReport
+                                    .Workbook(),
                                 "Budget!$B$4",
                                 NamedRangeBackingKind.RANGE)))),
                 new WorkbookAnalysisResult.FormulaHealthResult(
@@ -512,10 +513,12 @@ class WorkbookInvariantChecksTest {
       workbook
           .names()
           .setNamedRange(
-              new dev.erst.gridgrind.excel.ExcelNamedRangeDefinition(
-                  "BudgetTotal",
-                  new dev.erst.gridgrind.excel.ExcelNamedRangeScope.WorkbookScope(),
-                  dev.erst.gridgrind.excel.ExcelNamedRangeTarget.range("Budget", "B4")));
+              new dev.erst.gridgrind.core.plan.StructuredMutationAction.SetNamedRange(
+                  new dev.erst.gridgrind.core.vocabulary.DefinedName("BudgetTotal"),
+                  new dev.erst.gridgrind.core.vocabulary.NamedRangeScope.Workbook(),
+                  dev.erst.gridgrind.core.model.formula.NamedRangeTarget.range(
+                      new dev.erst.gridgrind.core.vocabulary.SheetName("Budget"),
+                      new dev.erst.gridgrind.core.vocabulary.RangeRef("B4"))));
 
       assertDoesNotThrow(() -> WorkbookInvariantChecks.requireWorkbookShape(workbook));
     }

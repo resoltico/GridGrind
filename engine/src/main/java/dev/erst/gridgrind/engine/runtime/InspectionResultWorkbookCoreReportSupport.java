@@ -1,18 +1,9 @@
 package dev.erst.gridgrind.engine.runtime;
 
-import dev.erst.gridgrind.core.model.formula.NamedRangeReport;
-import dev.erst.gridgrind.core.model.formula.NamedRangeTarget;
 import dev.erst.gridgrind.core.model.security.OoxmlEncryptionReport;
 import dev.erst.gridgrind.core.model.security.OoxmlPackageSecurityReport;
 import dev.erst.gridgrind.core.model.security.OoxmlSignatureReport;
 import dev.erst.gridgrind.core.result.WorkbookSummary;
-import dev.erst.gridgrind.core.vocabulary.DefinedNameLabel;
-import dev.erst.gridgrind.core.vocabulary.NamedRangeScope;
-import dev.erst.gridgrind.core.vocabulary.RangeRef;
-import dev.erst.gridgrind.core.vocabulary.SheetName;
-import dev.erst.gridgrind.excel.ExcelNamedRangeScope;
-import dev.erst.gridgrind.excel.ExcelNamedRangeSnapshot;
-import dev.erst.gridgrind.excel.ExcelNamedRangeTarget;
 
 /** Converts workbook-global security, summary, protection, and named-range snapshots. */
 final class InspectionResultWorkbookCoreReportSupport {
@@ -81,31 +72,5 @@ final class InspectionResultWorkbookCoreReportSupport {
                     new OoxmlSignatureReport.SignerIdentity(
                         signer.subject(), signer.issuer(), signer.serialNumberHex())),
         snapshot.state());
-  }
-
-  static NamedRangeReport toNamedRangeReport(ExcelNamedRangeSnapshot namedRange) {
-    return switch (namedRange) {
-      case ExcelNamedRangeSnapshot.RangeSnapshot rangeSnapshot ->
-          new NamedRangeReport.RangeReport(
-              new DefinedNameLabel(rangeSnapshot.name()),
-              toNamedRangeScope(rangeSnapshot.scope()),
-              rangeSnapshot.refersToFormula(),
-              NamedRangeTarget.range(
-                  new SheetName(((ExcelNamedRangeTarget.Range) rangeSnapshot.target()).sheetName()),
-                  new RangeRef(((ExcelNamedRangeTarget.Range) rangeSnapshot.target()).range())));
-      case ExcelNamedRangeSnapshot.FormulaSnapshot formulaSnapshot ->
-          new NamedRangeReport.FormulaReport(
-              new DefinedNameLabel(formulaSnapshot.name()),
-              toNamedRangeScope(formulaSnapshot.scope()),
-              formulaSnapshot.refersToFormula());
-    };
-  }
-
-  static NamedRangeScope toNamedRangeScope(ExcelNamedRangeScope scope) {
-    return switch (scope) {
-      case ExcelNamedRangeScope.WorkbookScope _ -> new NamedRangeScope.Workbook();
-      case ExcelNamedRangeScope.SheetScope sheetScope ->
-          new NamedRangeScope.Sheet(new SheetName(sheetScope.sheetName()));
-    };
   }
 }

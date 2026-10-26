@@ -3,6 +3,7 @@ package dev.erst.gridgrind.engine.runtime;
 import static dev.erst.gridgrind.engine.runtime.ExecutorTestPlanSupport.*;
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.core.model.formula.NamedRangeScopeReport;
 import dev.erst.gridgrind.core.plan.*;
 import dev.erst.gridgrind.core.plan.InspectionStep;
 import dev.erst.gridgrind.core.vocabulary.CellAddress;
@@ -11,7 +12,6 @@ import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.TableName;
 import dev.erst.gridgrind.excel.*;
-import dev.erst.gridgrind.excel.ExcelNamedRangeScope;
 import dev.erst.gridgrind.excel.InvalidCellAddressException;
 import dev.erst.gridgrind.excel.NamedRangeNotFoundException;
 import java.util.List;
@@ -189,7 +189,7 @@ class DefaultGridGrindRequestExecutorReadContextTranslationTest
   @Test
   void extractsContextForReadOperations() {
     NamedRangeNotFoundException missingNamedRange =
-        new NamedRangeNotFoundException("BudgetTotal", new ExcelNamedRangeScope.WorkbookScope());
+        new NamedRangeNotFoundException("BudgetTotal", new NamedRangeScopeReport.Workbook());
     InvalidCellAddressException invalidAddress =
         new InvalidCellAddressException("BAD!", new IllegalArgumentException("bad"));
     RuntimeException runtimeException = new RuntimeException("x");
@@ -417,7 +417,7 @@ class DefaultGridGrindRequestExecutorReadContextTranslationTest
     InvalidCellAddressException invalidAddress =
         new InvalidCellAddressException("BAD!", new IllegalArgumentException("bad"));
     NamedRangeNotFoundException missingNamedRange =
-        new NamedRangeNotFoundException("BudgetTotal", new ExcelNamedRangeScope.WorkbookScope());
+        new NamedRangeNotFoundException("BudgetTotal", new NamedRangeScopeReport.Workbook());
 
     assertEquals(
         "C3",

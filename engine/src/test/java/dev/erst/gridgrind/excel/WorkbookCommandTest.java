@@ -3,6 +3,8 @@ package dev.erst.gridgrind.excel;
 import static org.junit.jupiter.api.Assertions.*;
 
 import dev.erst.gridgrind.core.model.drawing.ResolvedComment;
+import dev.erst.gridgrind.core.model.formula.NamedRangeScopeReport;
+import dev.erst.gridgrind.core.model.formula.NamedRangeTarget;
 import dev.erst.gridgrind.core.model.pivot.PivotTableSpec;
 import dev.erst.gridgrind.core.model.print.HeaderFooterTextReport;
 import dev.erst.gridgrind.core.model.print.PrintAreaSpec;
@@ -31,6 +33,7 @@ import dev.erst.gridgrind.core.model.value.CellValue;
 import dev.erst.gridgrind.core.model.value.CellValueSpec;
 import dev.erst.gridgrind.core.model.value.HyperlinkTarget;
 import dev.erst.gridgrind.core.model.value.ResolvedCellWrite;
+import dev.erst.gridgrind.core.plan.StructuredMutationAction;
 import dev.erst.gridgrind.core.vocabulary.ExcelColumnSpan;
 import dev.erst.gridgrind.core.vocabulary.ExcelComparisonOperator;
 import dev.erst.gridgrind.core.vocabulary.ExcelDataValidationErrorStyle;
@@ -259,12 +262,16 @@ class WorkbookCommandTest {
                         Optional.of("#,##0.00"))))),
         new WorkbookTabularCommand.DeletePivotTable("Budget Pivot", "Budget"),
         new WorkbookMetadataCommand.SetNamedRange(
-            new ExcelNamedRangeDefinition(
-                "BudgetTotal",
-                new ExcelNamedRangeScope.WorkbookScope(),
-                ExcelNamedRangeTarget.range("Budget", "B4"))),
+            new StructuredMutationAction.SetNamedRange(
+                new dev.erst.gridgrind.core.vocabulary.DefinedName("BudgetTotal"),
+                new dev.erst.gridgrind.core.vocabulary.NamedRangeScope.Workbook(),
+                NamedRangeTarget.range(
+                    new dev.erst.gridgrind.core.vocabulary.SheetName("Budget"),
+                    new dev.erst.gridgrind.core.vocabulary.RangeRef("B4")))),
         new WorkbookMetadataCommand.DeleteNamedRange(
-            "BudgetTotal", new ExcelNamedRangeScope.SheetScope("Budget")),
+            "BudgetTotal",
+            new NamedRangeScopeReport.Sheet(
+                new dev.erst.gridgrind.core.vocabulary.SheetLabel("Budget"))),
         new WorkbookCellCommand.AppendRow("Budget", values),
         new WorkbookLayoutCommand.AutoSizeColumns("Budget"));
   }
@@ -313,10 +320,10 @@ class WorkbookCommandTest {
     assertEquals("Budget", commands.deleteTable().sheetName());
     assertEquals("Budget Pivot", commands.setPivotTable().definition().name());
     assertEquals("Budget", commands.deletePivotTable().sheetName());
-    assertEquals("BudgetTotal", commands.setNamedRange().definition().name());
+    assertEquals("BudgetTotal", commands.setNamedRange().definition().name().value());
     assertEquals(
         "Budget",
-        ((ExcelNamedRangeScope.SheetScope) commands.deleteNamedRange().scope()).sheetName());
+        ((NamedRangeScopeReport.Sheet) commands.deleteNamedRange().scope()).sheetName().value());
     assertEquals(1, commands.appendRow().values().size());
     assertEquals("Budget", commands.autoSizeColumns().sheetName());
   }
@@ -934,7 +941,7 @@ class WorkbookCommandTest {
         NullPointerException.class,
         () ->
             new WorkbookMetadataCommand.DeleteNamedRange(
-                null, new ExcelNamedRangeScope.WorkbookScope()));
+                null, new NamedRangeScopeReport.Workbook()));
     assertThrows(
         NullPointerException.class,
         () -> new WorkbookMetadataCommand.DeleteNamedRange("BudgetTotal", null));
@@ -942,7 +949,7 @@ class WorkbookCommandTest {
         IllegalArgumentException.class,
         () ->
             new WorkbookMetadataCommand.DeleteNamedRange(
-                "_XLNM.PRINT_AREA", new ExcelNamedRangeScope.WorkbookScope()));
+                "_XLNM.PRINT_AREA", new NamedRangeScopeReport.Workbook()));
     assertThrows(
         IllegalArgumentException.class,
         () -> new WorkbookTabularCommand.DeleteTable("A1", "Budget"));

@@ -15,10 +15,13 @@ import dev.erst.gridgrind.core.model.drawing.DrawingAnchorSpec;
 import dev.erst.gridgrind.core.model.drawing.ResolvedComment;
 import dev.erst.gridgrind.core.model.drawing.ResolvedShape;
 import dev.erst.gridgrind.core.model.drawing.ResolvedSignatureLine;
+import dev.erst.gridgrind.core.model.formula.NamedRangeScopeReport;
+import dev.erst.gridgrind.core.model.formula.NamedRangeTarget;
 import dev.erst.gridgrind.core.model.formula.ResolvedArrayFormula;
 import dev.erst.gridgrind.core.model.formula.ResolvedFormula;
 import dev.erst.gridgrind.core.model.style.ColorSpec;
 import dev.erst.gridgrind.core.model.value.CellValue;
+import dev.erst.gridgrind.core.plan.StructuredMutationAction;
 import dev.erst.gridgrind.core.source.BinaryContent;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartAxisCrosses;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartAxisKind;
@@ -499,14 +502,16 @@ class ExcelResidualHelperCoverageTest {
       WorkbookCommandExecutor.applyMetadataCommand(
           workbook,
           new WorkbookMetadataCommand.SetNamedRange(
-              new ExcelNamedRangeDefinition(
-                  "BudgetTotal",
-                  new ExcelNamedRangeScope.WorkbookScope(),
-                  ExcelNamedRangeTarget.range("Ops", "B2"))));
+              new StructuredMutationAction.SetNamedRange(
+                  new dev.erst.gridgrind.core.vocabulary.DefinedName("BudgetTotal"),
+                  new dev.erst.gridgrind.core.vocabulary.NamedRangeScope.Workbook(),
+                  NamedRangeTarget.range(
+                      new dev.erst.gridgrind.core.vocabulary.SheetName("Ops"),
+                      new dev.erst.gridgrind.core.vocabulary.RangeRef("B2")))));
       WorkbookCommandExecutor.applyMetadataCommand(
           workbook,
           new WorkbookMetadataCommand.DeleteNamedRange(
-              "BudgetTotal", new ExcelNamedRangeScope.WorkbookScope()));
+              "BudgetTotal", new NamedRangeScopeReport.Workbook()));
       WorkbookCommandExecutor.applyDrawingCommand(
           workbook,
           new WorkbookDrawingCommand.SetShape(
@@ -579,22 +584,29 @@ class ExcelResidualHelperCoverageTest {
       workbook
           .names()
           .setNamedRange(
-              new ExcelNamedRangeDefinition(
-                  "LocalName",
-                  new ExcelNamedRangeScope.SheetScope("Target"),
-                  ExcelNamedRangeTarget.range("Target", "A1")));
+              new StructuredMutationAction.SetNamedRange(
+                  new dev.erst.gridgrind.core.vocabulary.DefinedName("LocalName"),
+                  new dev.erst.gridgrind.core.vocabulary.NamedRangeScope.Sheet(
+                      new dev.erst.gridgrind.core.vocabulary.SheetName("Target")),
+                  NamedRangeTarget.range(
+                      new dev.erst.gridgrind.core.vocabulary.SheetName("Target"),
+                      new dev.erst.gridgrind.core.vocabulary.RangeRef("A1"))));
       workbook
           .names()
           .setNamedRange(
-              new ExcelNamedRangeDefinition(
-                  "WorkbookName",
-                  new ExcelNamedRangeScope.WorkbookScope(),
-                  ExcelNamedRangeTarget.range("Target", "A1")));
+              new StructuredMutationAction.SetNamedRange(
+                  new dev.erst.gridgrind.core.vocabulary.DefinedName("WorkbookName"),
+                  new dev.erst.gridgrind.core.vocabulary.NamedRangeScope.Workbook(),
+                  NamedRangeTarget.range(
+                      new dev.erst.gridgrind.core.vocabulary.SheetName("Target"),
+                      new dev.erst.gridgrind.core.vocabulary.RangeRef("A1"))));
 
       ExcelSheetCopyController.deleteLocalNamedRanges(workbook, "Target");
       assertEquals(
           List.of("WorkbookName"),
-          workbook.names().namedRanges().stream().map(ExcelNamedRangeSnapshot::name).toList());
+          workbook.names().namedRanges().stream()
+              .map(namedRange -> namedRange.name().value())
+              .toList());
       assertTrue(ExcelSheetCopyController.mayReferenceCopiedSheet("Source!A1", "Source"));
       assertTrue(
           ExcelSheetCopyController.mayReferenceCopiedSheet("'Source Name'!A1", "Source Name"));

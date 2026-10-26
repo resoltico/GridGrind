@@ -4,6 +4,7 @@ import static dev.erst.gridgrind.engine.runtime.ExecutorTestPlanSupport.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 import dev.erst.gridgrind.core.model.drawing.CommentSpec;
+import dev.erst.gridgrind.core.model.formula.NamedRangeScopeReport;
 import dev.erst.gridgrind.core.model.formula.NamedRangeTarget;
 import dev.erst.gridgrind.core.model.layout.PaneSpec;
 import dev.erst.gridgrind.core.model.print.PrintAreaSpec;
@@ -31,7 +32,6 @@ import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.TableName;
 import dev.erst.gridgrind.excel.*;
-import dev.erst.gridgrind.excel.ExcelNamedRangeScope;
 import dev.erst.gridgrind.excel.InvalidCellAddressException;
 import dev.erst.gridgrind.excel.InvalidFormulaException;
 import dev.erst.gridgrind.excel.InvalidRangeAddressException;
@@ -222,8 +222,7 @@ class DefaultGridGrindRequestExecutorAuthoringContextTranslationTest
             mutate(
                 new SheetSelector.ByName(new SheetName("Budget")),
                 new WorkbookMutationAction.EnsureSheet()),
-            new NamedRangeNotFoundException(
-                "BudgetTotal", new ExcelNamedRangeScope.WorkbookScope())));
+            new NamedRangeNotFoundException("BudgetTotal", new NamedRangeScopeReport.Workbook())));
   }
 
   @Test
@@ -232,7 +231,7 @@ class DefaultGridGrindRequestExecutorAuthoringContextTranslationTest
         new InvalidFormulaException(
             "Budget", "C3", "SUM(", "bad formula", new IllegalArgumentException("bad"));
     NamedRangeNotFoundException missingNamedRange =
-        new NamedRangeNotFoundException("BudgetTotal", new ExcelNamedRangeScope.WorkbookScope());
+        new NamedRangeNotFoundException("BudgetTotal", new NamedRangeScopeReport.Workbook());
     InvalidCellAddressException invalidAddress =
         new InvalidCellAddressException("BAD!", new IllegalArgumentException("bad"));
     InvalidRangeAddressException invalidRange =

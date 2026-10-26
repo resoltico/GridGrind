@@ -27,6 +27,7 @@ import dev.erst.gridgrind.core.model.drawing.ResolvedPicture;
 import dev.erst.gridgrind.core.model.drawing.ResolvedShape;
 import dev.erst.gridgrind.core.model.drawing.ResolvedSignatureLine;
 import dev.erst.gridgrind.core.model.drawing.ShapeSpec;
+import dev.erst.gridgrind.core.model.formula.NamedRangeScopeReport;
 import dev.erst.gridgrind.core.model.formula.NamedRangeTarget;
 import dev.erst.gridgrind.core.model.formula.ResolvedArrayFormula;
 import dev.erst.gridgrind.core.model.layout.SheetPresentationSpec;
@@ -83,9 +84,6 @@ import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.TableName;
 import dev.erst.gridgrind.excel.*;
 import dev.erst.gridgrind.excel.ExcelComparisonFormulaSupport;
-import dev.erst.gridgrind.excel.ExcelNamedRangeDefinition;
-import dev.erst.gridgrind.excel.ExcelNamedRangeScope;
-import dev.erst.gridgrind.excel.ExcelNamedRangeTarget;
 import dev.erst.gridgrind.excel.ExcelSheetCopyPosition;
 import dev.erst.gridgrind.excel.ExcelSheetPresentation;
 import java.util.List;
@@ -433,15 +431,17 @@ class SequenceIntrospectionTest {
         "SET_NAMED_RANGE",
         SequenceIntrospection.commandKind(
             new WorkbookMetadataCommand.SetNamedRange(
-                new ExcelNamedRangeDefinition(
-                    "BudgetTotal",
-                    new ExcelNamedRangeScope.WorkbookScope(),
-                    ExcelNamedRangeTarget.range("Budget", "B4")))));
+                new StructuredMutationAction.SetNamedRange(
+                    new dev.erst.gridgrind.core.vocabulary.DefinedName("BudgetTotal"),
+                    new dev.erst.gridgrind.core.vocabulary.NamedRangeScope.Workbook(),
+                    NamedRangeTarget.range(
+                        new dev.erst.gridgrind.core.vocabulary.SheetName("Budget"),
+                        new dev.erst.gridgrind.core.vocabulary.RangeRef("B4"))))));
     assertEquals(
         "DELETE_NAMED_RANGE",
         SequenceIntrospection.commandKind(
             new WorkbookMetadataCommand.DeleteNamedRange(
-                "BudgetTotal", new ExcelNamedRangeScope.WorkbookScope())));
+                "BudgetTotal", new NamedRangeScopeReport.Workbook())));
     assertEquals(
         "SET_DATA_VALIDATION",
         SequenceIntrospection.commandKind(

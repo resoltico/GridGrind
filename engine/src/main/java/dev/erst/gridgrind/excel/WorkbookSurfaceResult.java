@@ -4,6 +4,7 @@ import static dev.erst.gridgrind.excel.WorkbookResultSupport.copyStrings;
 import static dev.erst.gridgrind.excel.WorkbookResultSupport.copyValues;
 import static dev.erst.gridgrind.excel.WorkbookResultSupport.requireNonBlank;
 
+import dev.erst.gridgrind.core.model.formula.NamedRangeScopeReport;
 import dev.erst.gridgrind.core.vocabulary.ExcelIndexDisplay;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import java.util.List;
@@ -173,7 +174,10 @@ public sealed interface WorkbookSurfaceResult extends WorkbookReadSurfaceResult
 
   /** One named-range surface entry classified by scope and backing kind. */
   record NamedRangeSurfaceEntry(
-      String name, ExcelNamedRangeScope scope, String refersToFormula, NamedRangeBackingKind kind) {
+      String name,
+      NamedRangeScopeReport scope,
+      String refersToFormula,
+      NamedRangeBackingKind kind) {
     public NamedRangeSurfaceEntry {
       name = requireNonBlank(name, "name");
       Objects.requireNonNull(scope, "scope must not be null");

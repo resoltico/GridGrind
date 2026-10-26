@@ -1,34 +1,19 @@
-package dev.erst.gridgrind.engine.runtime;
+package dev.erst.gridgrind.core.model.formula;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import dev.erst.gridgrind.core.model.formula.NamedRangeTarget;
 import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
-import dev.erst.gridgrind.excel.ExcelNamedRangeTarget;
 import org.junit.jupiter.api.Test;
 
-/** Tests for NamedRangeTarget record construction and engine conversion. */
+/** Tests for NamedRangeTarget authored construction and validation. */
 class NamedRangeTargetTest {
   @Test
-  void preservesProtocolRangeTextUntilEngineConversion() {
+  void preservesAuthoredRangeText() {
     NamedRangeTarget.Range target =
         NamedRangeTarget.range(new SheetName("Budget"), new RangeRef("B4:A1"));
 
     assertEquals("B4:A1", target.range().value());
-    assertEquals(
-        ExcelNamedRangeTarget.range("Budget", "A1:B4"),
-        WorkbookCommandLayoutInputConverter.toExcelNamedRangeTarget(target));
-  }
-
-  @Test
-  void convertsNamedRangeTargetToEngineType() {
-    NamedRangeTarget.Range target =
-        NamedRangeTarget.range(new SheetName("Budget"), new RangeRef("B4:C5"));
-
-    assertEquals(
-        ExcelNamedRangeTarget.range("Budget", "B4:C5"),
-        WorkbookCommandLayoutInputConverter.toExcelNamedRangeTarget(target));
   }
 
   @Test

@@ -2,11 +2,13 @@ package dev.erst.gridgrind.excel;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.core.model.formula.NamedRangeTarget;
 import dev.erst.gridgrind.core.model.pivot.PivotTableReport;
 import dev.erst.gridgrind.core.model.pivot.PivotTableSpec;
 import dev.erst.gridgrind.core.model.table.ResolvedTable;
 import dev.erst.gridgrind.core.model.table.TableStyleSpec;
 import dev.erst.gridgrind.core.model.value.CellValue;
+import dev.erst.gridgrind.core.plan.StructuredMutationAction;
 import dev.erst.gridgrind.core.vocabulary.AnalysisFindingCode;
 import dev.erst.gridgrind.core.vocabulary.ExcelPivotDataConsolidateFunction;
 import dev.erst.gridgrind.core.vocabulary.RangeRef;
@@ -109,10 +111,12 @@ class ExcelPivotTableControllerTest {
       workbook
           .names()
           .setNamedRange(
-              new ExcelNamedRangeDefinition(
-                  "PivotSource",
-                  new ExcelNamedRangeScope.WorkbookScope(),
-                  ExcelNamedRangeTarget.range("Data", "A1:D5")));
+              new StructuredMutationAction.SetNamedRange(
+                  new dev.erst.gridgrind.core.vocabulary.DefinedName("PivotSource"),
+                  new dev.erst.gridgrind.core.vocabulary.NamedRangeScope.Workbook(),
+                  NamedRangeTarget.range(
+                      new dev.erst.gridgrind.core.vocabulary.SheetName("Data"),
+                      new dev.erst.gridgrind.core.vocabulary.RangeRef("A1:D5"))));
       workbook
           .tables()
           .setTable(

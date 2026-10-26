@@ -12,6 +12,7 @@ import dev.erst.gridgrind.core.model.drawing.ResolvedComment;
 import dev.erst.gridgrind.core.model.drawing.ResolvedEmbeddedObject;
 import dev.erst.gridgrind.core.model.drawing.ResolvedPicture;
 import dev.erst.gridgrind.core.model.drawing.ResolvedShape;
+import dev.erst.gridgrind.core.model.formula.NamedRangeTarget;
 import dev.erst.gridgrind.core.model.print.HeaderFooterTextReport;
 import dev.erst.gridgrind.core.model.print.PrintAreaSpec;
 import dev.erst.gridgrind.core.model.print.PrintMarginsSpec;
@@ -481,7 +482,7 @@ class ExcelAdvancedValueObjectTest {
 
   @Test
   void namedRangeCommentAndTableContractsSupportAdvancedForms() {
-    var formulaTarget = ExcelNamedRangeTarget.formula("SUM(Ops!$B$2:$B$5)");
+    var formulaTarget = NamedRangeTarget.formula("SUM(Ops!$B$2:$B$5)");
     var table =
         new ResolvedTable(
             new TableName("Queue"),
@@ -502,19 +503,13 @@ class ExcelAdvancedValueObjectTest {
         new ResolvedWorkbookProtection(
             true, false, true, Optional.of("book"), Optional.of("review"));
 
-    assertEquals("SUM(Ops!$B$2:$B$5)", formulaTarget.refersToFormula());
+    assertEquals("SUM(Ops!$B$2:$B$5)", formulaTarget.formula());
     assertEquals("", table.comment());
     assertEquals("", table.headerRowCellStyle());
     assertEquals("sum", table.columns().getFirst().totalsRowFunction());
     assertEquals("B2*2", table.columns().getFirst().calculatedColumnFormula());
     assertEquals("book", protection.workbookPassword().orElseThrow());
     assertEquals("review", protection.revisionsPassword().orElseThrow());
-    assertEquals(
-        "A1", ((ExcelNamedRangeTarget.Range) ExcelNamedRangeTarget.range("Ops", "A1")).range());
-    assertEquals("Ops!$A$1", ExcelNamedRangeTarget.range("Ops", "A1").refersToFormula());
-    assertEquals(
-        "A1:B2",
-        ((ExcelNamedRangeTarget.Range) ExcelNamedRangeTarget.range("Ops", "$A$1:$B$2")).range());
     assertThrows(
         IllegalArgumentException.class,
         () ->
@@ -526,8 +521,13 @@ class ExcelAdvancedValueObjectTest {
                     new ResolvedRichText(
                         List.of(new ResolvedRichTextRun("Mismatch", Optional.empty())))),
                 Optional.empty()));
-    assertThrows(IllegalArgumentException.class, () -> ExcelNamedRangeTarget.formula(" "));
-    assertThrows(IllegalArgumentException.class, () -> ExcelNamedRangeTarget.range("Ops", " "));
+    assertThrows(IllegalArgumentException.class, () -> NamedRangeTarget.formula(" "));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            NamedRangeTarget.range(
+                new dev.erst.gridgrind.core.vocabulary.SheetName("Ops"),
+                new dev.erst.gridgrind.core.vocabulary.RangeRef(" ")));
     assertThrows(
         IllegalArgumentException.class,
         () ->

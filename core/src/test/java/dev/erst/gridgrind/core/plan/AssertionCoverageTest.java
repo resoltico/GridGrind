@@ -40,7 +40,6 @@ import dev.erst.gridgrind.core.vocabulary.ExcelHorizontalAlignment;
 import dev.erst.gridgrind.core.vocabulary.ExcelPivotDataConsolidateFunction;
 import dev.erst.gridgrind.core.vocabulary.ExcelSheetVisibility;
 import dev.erst.gridgrind.core.vocabulary.ExcelVerticalAlignment;
-import dev.erst.gridgrind.core.vocabulary.NamedRangeScope;
 import dev.erst.gridgrind.core.vocabulary.RangeLabel;
 import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.core.vocabulary.SheetLabel;
@@ -85,7 +84,7 @@ class AssertionCoverageTest {
     NamedRangeReport namedRange =
         new NamedRangeReport.RangeReport(
             new DefinedNameLabel("BudgetTotal"),
-            new NamedRangeScope.Workbook(),
+            new dev.erst.gridgrind.core.model.formula.NamedRangeScopeReport.Workbook(),
             "Budget!B2",
             dev.erst.gridgrind.core.model.formula.NamedRangeTarget.range(
                 new SheetName("Budget"), new RangeRef("B2")));
@@ -197,7 +196,7 @@ class AssertionCoverageTest {
     NamedRangeReport namedRange =
         new NamedRangeReport.FormulaReport(
             new DefinedNameLabel("BudgetExpr"),
-            new NamedRangeScope.Workbook(),
+            new dev.erst.gridgrind.core.model.formula.NamedRangeScopeReport.Workbook(),
             "SUM(Budget!B2:B4)");
     InspectionResult observation =
         new WorkbookInspectionResult.WorkbookSummaryResult(

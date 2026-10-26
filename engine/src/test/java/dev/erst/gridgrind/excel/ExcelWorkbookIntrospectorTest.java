@@ -7,6 +7,9 @@ import dev.erst.gridgrind.core.model.drawing.DrawingMarkerSpec;
 import dev.erst.gridgrind.core.model.drawing.ResolvedComment;
 import dev.erst.gridgrind.core.model.drawing.ResolvedEmbeddedObject;
 import dev.erst.gridgrind.core.model.drawing.ResolvedPicture;
+import dev.erst.gridgrind.core.model.formula.NamedRangeReport;
+import dev.erst.gridgrind.core.model.formula.NamedRangeScopeReport;
+import dev.erst.gridgrind.core.model.formula.NamedRangeTarget;
 import dev.erst.gridgrind.core.model.formula.ResolvedFormula;
 import dev.erst.gridgrind.core.model.formula.ResolvedRawFormula;
 import dev.erst.gridgrind.core.model.print.*;
@@ -21,6 +24,7 @@ import dev.erst.gridgrind.core.model.table.ResolvedTable;
 import dev.erst.gridgrind.core.model.table.TableStyleSpec;
 import dev.erst.gridgrind.core.model.value.CellValue;
 import dev.erst.gridgrind.core.model.value.HyperlinkTarget;
+import dev.erst.gridgrind.core.plan.StructuredMutationAction;
 import dev.erst.gridgrind.core.source.BinaryContent;
 import dev.erst.gridgrind.core.vocabulary.ExcelDrawingAnchorBehavior;
 import dev.erst.gridgrind.core.vocabulary.ExcelPictureFormat;
@@ -101,7 +105,7 @@ class ExcelWorkbookIntrospectorTest {
           readEveryIntrospectionResult(workbook, new ExcelWorkbookIntrospector());
 
       assertEquals(List.of("Budget", "Ops"), results.workbookSummary().workbook().sheetNames());
-      assertEquals("BudgetTotal", results.namedRanges().namedRanges().getFirst().name());
+      assertEquals("BudgetTotal", results.namedRanges().namedRanges().getFirst().name().value());
       assertEquals("Budget", results.sheetSummary().sheet().sheetName());
       assertEquals("A1", results.cells().cells().getFirst().address());
       assertEquals("A1", results.window().window().rows().getFirst().cells().getFirst().address());
@@ -162,9 +166,9 @@ class ExcelWorkbookIntrospectorTest {
         ExcelWorkbooks.open(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory())) {
       ExcelWorkbookIntrospector introspector = new ExcelWorkbookIntrospector();
 
-      List<ExcelNamedRangeSnapshot> all =
+      List<NamedRangeReport> all =
           introspector.selectNamedRanges(workbook, new ExcelNamedRangeSelection.All());
-      List<ExcelNamedRangeSnapshot> selected =
+      List<NamedRangeReport> selected =
           introspector.selectNamedRanges(
               workbook,
               new ExcelNamedRangeSelection.Selected(
@@ -193,7 +197,7 @@ class ExcelWorkbookIntrospectorTest {
                       new ExcelNamedRangeSelection.Selected(
                           List.of(new ExcelNamedRangeSelector.WorkbookScope("MissingWorkbook")))));
       assertEquals("MissingWorkbook", missingWorkbookScope.name());
-      assertInstanceOf(ExcelNamedRangeScope.WorkbookScope.class, missingWorkbookScope.scope());
+      assertInstanceOf(NamedRangeScopeReport.Workbook.class, missingWorkbookScope.scope());
 
       NamedRangeNotFoundException missingSheetScope =
           assertThrows(
@@ -205,40 +209,45 @@ class ExcelWorkbookIntrospectorTest {
                           List.of(
                               new ExcelNamedRangeSelector.SheetScope("SharedName", "Budget")))));
       assertEquals("SharedName", missingSheetScope.name());
-      ExcelNamedRangeScope.SheetScope scope =
-          assertInstanceOf(ExcelNamedRangeScope.SheetScope.class, missingSheetScope.scope());
-      assertEquals("Budget", scope.sheetName());
+      NamedRangeScopeReport.Sheet scope =
+          assertInstanceOf(NamedRangeScopeReport.Sheet.class, missingSheetScope.scope());
+      assertEquals("Budget", scope.sheetName().value());
     }
   }
 
   @Test
   void matchSelectorHandlesSameNameScopeEdgeCases() {
-    List<ExcelNamedRangeSnapshot> namedRanges =
+    List<NamedRangeReport> namedRanges =
         List.of(
-            new ExcelNamedRangeSnapshot.RangeSnapshot(
-                "SharedName",
-                new ExcelNamedRangeScope.WorkbookScope(),
+            new NamedRangeReport.RangeReport(
+                new dev.erst.gridgrind.core.vocabulary.DefinedNameLabel("SharedName"),
+                new NamedRangeScopeReport.Workbook(),
                 "Budget!$A$1",
-                ExcelNamedRangeTarget.range("Budget", "A1")),
-            new ExcelNamedRangeSnapshot.RangeSnapshot(
-                "SharedName",
-                new ExcelNamedRangeScope.SheetScope("Forecast"),
+                NamedRangeTarget.range(
+                    new dev.erst.gridgrind.core.vocabulary.SheetName("Budget"),
+                    new dev.erst.gridgrind.core.vocabulary.RangeRef("A1"))),
+            new NamedRangeReport.RangeReport(
+                new dev.erst.gridgrind.core.vocabulary.DefinedNameLabel("SharedName"),
+                new NamedRangeScopeReport.Sheet(
+                    new dev.erst.gridgrind.core.vocabulary.SheetLabel("Forecast")),
                 "Forecast!$A$1",
-                ExcelNamedRangeTarget.range("Forecast", "A1")));
+                NamedRangeTarget.range(
+                    new dev.erst.gridgrind.core.vocabulary.SheetName("Forecast"),
+                    new dev.erst.gridgrind.core.vocabulary.RangeRef("A1"))));
 
-    List<ExcelNamedRangeSnapshot> workbookScoped =
+    List<NamedRangeReport> workbookScoped =
         ExcelWorkbookIntrospector.matchSelector(
             namedRanges, new ExcelNamedRangeSelector.WorkbookScope("SharedName"));
-    List<ExcelNamedRangeSnapshot> sheetScoped =
+    List<NamedRangeReport> sheetScoped =
         ExcelWorkbookIntrospector.matchSelector(
             namedRanges, new ExcelNamedRangeSelector.SheetScope("SharedName", "Forecast"));
 
     assertEquals(1, workbookScoped.size());
-    assertInstanceOf(ExcelNamedRangeScope.WorkbookScope.class, workbookScoped.getFirst().scope());
+    assertInstanceOf(NamedRangeScopeReport.Workbook.class, workbookScoped.getFirst().scope());
     assertEquals(1, sheetScoped.size());
-    ExcelNamedRangeScope.SheetScope scope =
-        assertInstanceOf(ExcelNamedRangeScope.SheetScope.class, sheetScoped.getFirst().scope());
-    assertEquals("Forecast", scope.sheetName());
+    NamedRangeScopeReport.Sheet scope =
+        assertInstanceOf(NamedRangeScopeReport.Sheet.class, sheetScoped.getFirst().scope());
+    assertEquals("Forecast", scope.sheetName().value());
 
     NamedRangeNotFoundException missingWorkbookSelector =
         assertThrows(
@@ -613,10 +622,12 @@ class ExcelWorkbookIntrospectorTest {
     workbook
         .names()
         .setNamedRange(
-            new ExcelNamedRangeDefinition(
-                "BudgetTotal",
-                new ExcelNamedRangeScope.WorkbookScope(),
-                ExcelNamedRangeTarget.range("Budget", "B4")));
+            new StructuredMutationAction.SetNamedRange(
+                new dev.erst.gridgrind.core.vocabulary.DefinedName("BudgetTotal"),
+                new dev.erst.gridgrind.core.vocabulary.NamedRangeScope.Workbook(),
+                NamedRangeTarget.range(
+                    new dev.erst.gridgrind.core.vocabulary.SheetName("Budget"),
+                    new dev.erst.gridgrind.core.vocabulary.RangeRef("B4"))));
 
     ExcelSheet ops = workbook.getOrCreateSheet("Ops");
     ops.cells().setCell("A1", new CellValue.Text("Owner"));

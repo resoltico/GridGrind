@@ -43,10 +43,7 @@ final class InspectionResultReadConverter {
                   customXmlExport.export()));
       case dev.erst.gridgrind.excel.WorkbookCoreResult.NamedRangesResult namedRanges ->
           new WorkbookInspectionResult.NamedRangesResult(
-              namedRanges.stepId(),
-              namedRanges.namedRanges().stream()
-                  .map(InspectionResultWorkbookCoreReportSupport::toNamedRangeReport)
-                  .toList());
+              namedRanges.stepId(), namedRanges.namedRanges());
       case dev.erst.gridgrind.excel.WorkbookSheetResult.SheetSummaryResult sheetSummary ->
           new SheetInspectionResult.SheetSummaryResult(
               sheetSummary.stepId(),

@@ -2,7 +2,9 @@ package dev.erst.gridgrind.excel;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.core.model.formula.NamedRangeTarget;
 import dev.erst.gridgrind.core.model.value.CellValue;
+import dev.erst.gridgrind.core.plan.StructuredMutationAction;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import java.util.Arrays;
 import java.util.List;
@@ -19,10 +21,12 @@ class WorkbookReadExecutorTest {
       workbook
           .names()
           .setNamedRange(
-              new ExcelNamedRangeDefinition(
-                  "BudgetTotal",
-                  new ExcelNamedRangeScope.WorkbookScope(),
-                  ExcelNamedRangeTarget.range("Budget", "B2")));
+              new StructuredMutationAction.SetNamedRange(
+                  new dev.erst.gridgrind.core.vocabulary.DefinedName("BudgetTotal"),
+                  new dev.erst.gridgrind.core.vocabulary.NamedRangeScope.Workbook(),
+                  NamedRangeTarget.range(
+                      new dev.erst.gridgrind.core.vocabulary.SheetName("Budget"),
+                      new dev.erst.gridgrind.core.vocabulary.RangeRef("B2"))));
 
       WorkbookReadExecutor executor = new WorkbookReadExecutor();
 

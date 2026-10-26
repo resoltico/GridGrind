@@ -70,9 +70,6 @@ import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.core.vocabulary.TableName;
 import dev.erst.gridgrind.excel.*;
-import dev.erst.gridgrind.excel.ExcelNamedRangeDefinition;
-import dev.erst.gridgrind.excel.ExcelNamedRangeScope;
-import dev.erst.gridgrind.excel.ExcelNamedRangeTarget;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
@@ -158,10 +155,10 @@ class AdvancedMutationCommandConverterTest {
                     new NamedRangeScope.Workbook(),
                     NamedRangeTarget.formula("SUM(Budget!A1:A3)"))));
     assertEquals(
-        new ExcelNamedRangeDefinition(
-            "BudgetExpr",
-            new ExcelNamedRangeScope.WorkbookScope(),
-            ExcelNamedRangeTarget.formula("SUM(Budget!A1:A3)")),
+        new StructuredMutationAction.SetNamedRange(
+            new dev.erst.gridgrind.core.vocabulary.DefinedName("BudgetExpr"),
+            new dev.erst.gridgrind.core.vocabulary.NamedRangeScope.Workbook(),
+            NamedRangeTarget.formula("SUM(Budget!A1:A3)")),
         namedRangeCommand.definition());
 
     WorkbookMutationAction.SetSheetProtection sheetProtection =

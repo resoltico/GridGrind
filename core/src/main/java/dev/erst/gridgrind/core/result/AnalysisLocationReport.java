@@ -2,7 +2,7 @@ package dev.erst.gridgrind.core.result;
 
 import dev.erst.gridgrind.core.metadata.Union;
 import dev.erst.gridgrind.core.metadata.Variant;
-import dev.erst.gridgrind.core.vocabulary.NamedRangeScope;
+import dev.erst.gridgrind.core.model.formula.NamedRangeScopeReport;
 import dev.erst.gridgrind.core.vocabulary.SheetLabel;
 import java.util.Objects;
 
@@ -52,7 +52,7 @@ public sealed interface AnalysisLocationReport
 
   /** One named-range finding. */
   @Variant(id = "NAMED_RANGE", summary = "One named-range finding.")
-  record NamedRange(String name, NamedRangeScope scope) implements AnalysisLocationReport {
+  record NamedRange(String name, NamedRangeScopeReport scope) implements AnalysisLocationReport {
     public NamedRange {
       Objects.requireNonNull(name, "name must not be null");
       Objects.requireNonNull(scope, "scope must not be null");

@@ -50,7 +50,6 @@ import dev.erst.gridgrind.core.vocabulary.ExcelFillPattern;
 import dev.erst.gridgrind.core.vocabulary.ExcelHorizontalAlignment;
 import dev.erst.gridgrind.core.vocabulary.ExcelVerticalAlignment;
 import dev.erst.gridgrind.core.vocabulary.NamedRangeBackingKind;
-import dev.erst.gridgrind.core.vocabulary.NamedRangeScope;
 import dev.erst.gridgrind.core.vocabulary.ProtocolVersion;
 import dev.erst.gridgrind.core.vocabulary.RangeLabel;
 import dev.erst.gridgrind.core.vocabulary.RangeRef;
@@ -191,7 +190,9 @@ class WorkbookResultEdgeCoverageTest {
                 IllegalArgumentException.class,
                 () ->
                     new NamedRangeReport.FormulaReport(
-                        new DefinedNameLabel(" "), new NamedRangeScope.Workbook(), "SUM(A1:A2)"))
+                        new DefinedNameLabel(" "),
+                        new dev.erst.gridgrind.core.model.formula.NamedRangeScopeReport.Workbook(),
+                        "SUM(A1:A2)"))
             .getMessage());
     assertEquals(
         "name must not be blank",
@@ -200,7 +201,7 @@ class WorkbookResultEdgeCoverageTest {
                 () ->
                     new NamedRangeReport.RangeReport(
                         new DefinedNameLabel(" "),
-                        new NamedRangeScope.Workbook(),
+                        new dev.erst.gridgrind.core.model.formula.NamedRangeScopeReport.Workbook(),
                         "Budget!A1",
                         NamedRangeTarget.range(new SheetName("Budget"), new RangeRef("A1"))))
             .getMessage());
@@ -211,18 +212,16 @@ class WorkbookResultEdgeCoverageTest {
                 () ->
                     new NamedRangeReport.RangeReport(
                         new DefinedNameLabel("BudgetTotal"),
-                        new NamedRangeScope.Workbook(),
+                        new dev.erst.gridgrind.core.model.formula.NamedRangeScopeReport.Workbook(),
                         " ",
                         NamedRangeTarget.range(new SheetName("Budget"), new RangeRef("A1"))))
             .getMessage());
-    assertEquals(
-        "refersToFormula must not be blank",
-        assertThrows(
-                IllegalArgumentException.class,
-                () ->
-                    new NamedRangeReport.FormulaReport(
-                        new DefinedNameLabel("BudgetExpr"), new NamedRangeScope.Workbook(), " "))
-            .getMessage());
+    assertDoesNotThrow(
+        () ->
+            new NamedRangeReport.FormulaReport(
+                new DefinedNameLabel("BudgetExpr"),
+                new dev.erst.gridgrind.core.model.formula.NamedRangeScopeReport.Workbook(),
+                " "));
     assertEquals(
         "sheetName must not be blank",
         assertThrows(
@@ -539,7 +538,7 @@ class WorkbookResultEdgeCoverageTest {
                 () ->
                     new NamedRangeSurfaceEntryReport(
                         " ",
-                        new NamedRangeScope.Workbook(),
+                        new dev.erst.gridgrind.core.model.formula.NamedRangeScopeReport.Workbook(),
                         "Budget!$A$1",
                         NamedRangeBackingKind.RANGE))
             .getMessage());
@@ -593,7 +592,10 @@ class WorkbookResultEdgeCoverageTest {
         "name must not be blank",
         assertThrows(
                 IllegalArgumentException.class,
-                () -> new AnalysisLocationReport.NamedRange(" ", new NamedRangeScope.Workbook()))
+                () ->
+                    new AnalysisLocationReport.NamedRange(
+                        " ",
+                        new dev.erst.gridgrind.core.model.formula.NamedRangeScopeReport.Workbook()))
             .getMessage());
     assertEquals(
         "title must not be blank",

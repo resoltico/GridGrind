@@ -4,6 +4,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import dev.erst.gridgrind.core.model.formula.NamedRangeScopeReport;
+import dev.erst.gridgrind.core.model.formula.NamedRangeTarget;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
 
@@ -11,39 +13,56 @@ import org.junit.jupiter.api.Test;
 class ExcelNamedRangeTargetsTest {
   @Test
   void resolvesWorkbookScopedRangeTargetsWithRepeatedSheetPrefixes() {
-    Optional<ExcelNamedRangeTarget> target =
+    Optional<NamedRangeTarget> target =
         ExcelNamedRangeTargets.resolveTarget(
-            "Budget!$A$1:Budget!$B$4", new ExcelNamedRangeScope.WorkbookScope());
+            "Budget!$A$1:Budget!$B$4", new NamedRangeScopeReport.Workbook());
 
-    assertEquals(Optional.of(ExcelNamedRangeTarget.range("Budget", "A1:B4")), target);
+    assertEquals(
+        Optional.of(
+            NamedRangeTarget.range(
+                new dev.erst.gridgrind.core.vocabulary.SheetName("Budget"),
+                new dev.erst.gridgrind.core.vocabulary.RangeRef("A1:B4"))),
+        target);
   }
 
   @Test
   void resolvesSheetScopedRangeTargetsWithRepeatedSheetPrefixes() {
-    Optional<ExcelNamedRangeTarget> target =
+    Optional<NamedRangeTarget> target =
         ExcelNamedRangeTargets.resolveTarget(
-            "Budget!$A$1:Budget!$B$4", new ExcelNamedRangeScope.SheetScope("Budget"));
+            "Budget!$A$1:Budget!$B$4",
+            new NamedRangeScopeReport.Sheet(
+                new dev.erst.gridgrind.core.vocabulary.SheetLabel("Budget")));
 
-    assertEquals(Optional.of(ExcelNamedRangeTarget.range("Budget", "A1:B4")), target);
+    assertEquals(
+        Optional.of(
+            NamedRangeTarget.range(
+                new dev.erst.gridgrind.core.vocabulary.SheetName("Budget"),
+                new dev.erst.gridgrind.core.vocabulary.RangeRef("A1:B4"))),
+        target);
   }
 
   @Test
   void resolvesSingleCellAndSingleRowRangeTargets() {
     assertEquals(
-        Optional.of(ExcelNamedRangeTarget.range("Budget", "A1")),
-        ExcelNamedRangeTargets.resolveTarget(
-            "Budget!$A$1", new ExcelNamedRangeScope.WorkbookScope()));
+        Optional.of(
+            NamedRangeTarget.range(
+                new dev.erst.gridgrind.core.vocabulary.SheetName("Budget"),
+                new dev.erst.gridgrind.core.vocabulary.RangeRef("A1"))),
+        ExcelNamedRangeTargets.resolveTarget("Budget!$A$1", new NamedRangeScopeReport.Workbook()));
     assertEquals(
-        Optional.of(ExcelNamedRangeTarget.range("Budget", "A1:B1")),
+        Optional.of(
+            NamedRangeTarget.range(
+                new dev.erst.gridgrind.core.vocabulary.SheetName("Budget"),
+                new dev.erst.gridgrind.core.vocabulary.RangeRef("A1:B1"))),
         ExcelNamedRangeTargets.resolveTarget(
-            "Budget!$A$1:Budget!$B$1", new ExcelNamedRangeScope.WorkbookScope()));
+            "Budget!$A$1:Budget!$B$1", new NamedRangeScopeReport.Workbook()));
   }
 
   @Test
   void returnsEmptyForNonRangeDefinedNameFormulas() {
-    Optional<ExcelNamedRangeTarget> target =
+    Optional<NamedRangeTarget> target =
         ExcelNamedRangeTargets.resolveTarget(
-            "SUM(Budget!$A$1:Budget!$B$4)", new ExcelNamedRangeScope.WorkbookScope());
+            "SUM(Budget!$A$1:Budget!$B$4)", new NamedRangeScopeReport.Workbook());
 
     assertTrue(target.isEmpty());
   }
@@ -52,32 +71,35 @@ class ExcelNamedRangeTargetsTest {
   void returnsEmptyForBlankInvalidAndWorkbookScopedSheetlessRanges() {
     assertThrows(
         NullPointerException.class,
-        () -> ExcelNamedRangeTargets.resolveTarget(null, new ExcelNamedRangeScope.WorkbookScope()));
+        () -> ExcelNamedRangeTargets.resolveTarget(null, new NamedRangeScopeReport.Workbook()));
     assertTrue(
-        ExcelNamedRangeTargets.resolveTarget(" ", new ExcelNamedRangeScope.WorkbookScope())
-            .isEmpty());
-    assertTrue(
-        ExcelNamedRangeTargets.resolveTarget(
-                "Budget!$A$1,Budget!$B$4", new ExcelNamedRangeScope.WorkbookScope())
-            .isEmpty());
+        ExcelNamedRangeTargets.resolveTarget(" ", new NamedRangeScopeReport.Workbook()).isEmpty());
     assertTrue(
         ExcelNamedRangeTargets.resolveTarget(
-                "Budget!$A$1,", new ExcelNamedRangeScope.WorkbookScope())
+                "Budget!$A$1,Budget!$B$4", new NamedRangeScopeReport.Workbook())
             .isEmpty());
     assertTrue(
-        ExcelNamedRangeTargets.resolveTarget("A1:B4", new ExcelNamedRangeScope.WorkbookScope())
+        ExcelNamedRangeTargets.resolveTarget("Budget!$A$1,", new NamedRangeScopeReport.Workbook())
+            .isEmpty());
+    assertTrue(
+        ExcelNamedRangeTargets.resolveTarget("A1:B4", new NamedRangeScopeReport.Workbook())
             .isEmpty());
   }
 
   @Test
   void resolvesSheetScopedSheetlessRangesAndRejectsMismatchedSheetPrefixes() {
     assertEquals(
-        Optional.of(ExcelNamedRangeTarget.range("Budget", "A1:B4")),
+        Optional.of(
+            NamedRangeTarget.range(
+                new dev.erst.gridgrind.core.vocabulary.SheetName("Budget"),
+                new dev.erst.gridgrind.core.vocabulary.RangeRef("A1:B4"))),
         ExcelNamedRangeTargets.resolveTarget(
-            "A1:B4", new ExcelNamedRangeScope.SheetScope("Budget")));
+            "A1:B4",
+            new NamedRangeScopeReport.Sheet(
+                new dev.erst.gridgrind.core.vocabulary.SheetLabel("Budget"))));
     assertTrue(
         ExcelNamedRangeTargets.resolveTarget(
-                "Budget!$A$1:Summary!$B$4", new ExcelNamedRangeScope.WorkbookScope())
+                "Budget!$A$1:Summary!$B$4", new NamedRangeScopeReport.Workbook())
             .isEmpty());
   }
 }

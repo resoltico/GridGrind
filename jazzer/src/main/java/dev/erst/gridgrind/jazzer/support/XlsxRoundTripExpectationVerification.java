@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.jazzer.support;
 
+import dev.erst.gridgrind.core.model.formula.NamedRangeScopeReport;
 import dev.erst.gridgrind.core.model.pivot.PivotTableReport;
 import dev.erst.gridgrind.core.model.style.CellStyleReport;
 import dev.erst.gridgrind.core.model.style.RichTextRunReport;
@@ -10,7 +11,6 @@ import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.excel.*;
 import dev.erst.gridgrind.excel.ExcelCellSnapshot;
 import dev.erst.gridgrind.excel.ExcelChartSnapshot;
-import dev.erst.gridgrind.excel.ExcelNamedRangeScope;
 import dev.erst.gridgrind.excel.ExcelNamedRangeTargets;
 import dev.erst.gridgrind.excel.ExcelRangeSelection;
 import dev.erst.gridgrind.excel.ExcelSheetPane;
@@ -590,7 +590,7 @@ final class XlsxRoundTripExpectationVerification {
       if (!shouldExpose(name)) {
         continue;
       }
-      ExcelNamedRangeScope scope = toScope(workbook, name.getSheetIndex());
+      NamedRangeScopeReport scope = toScope(workbook, name.getSheetIndex());
       String refersToFormula = Objects.requireNonNullElse(name.getRefersToFormula(), "");
       actualNamedRanges.put(
           new XlsxRoundTripExpectedStateSupport.NamedRangeKey(name.getNameName(), scope),
@@ -611,11 +611,12 @@ final class XlsxRoundTripExpectationVerification {
         && !nameName.startsWith("_XLNM.");
   }
 
-  static ExcelNamedRangeScope toScope(XSSFWorkbook workbook, int sheetIndex) {
+  static NamedRangeScopeReport toScope(XSSFWorkbook workbook, int sheetIndex) {
     if (sheetIndex < 0) {
-      return new ExcelNamedRangeScope.WorkbookScope();
+      return new NamedRangeScopeReport.Workbook();
     }
-    return new ExcelNamedRangeScope.SheetScope(workbook.getSheetName(sheetIndex));
+    return new NamedRangeScopeReport.Sheet(
+        new dev.erst.gridgrind.core.vocabulary.SheetLabel(workbook.getSheetName(sheetIndex)));
   }
 
   static void requireEquals(

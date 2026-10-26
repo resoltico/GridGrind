@@ -3,6 +3,9 @@ package dev.erst.gridgrind.excel;
 import static org.junit.jupiter.api.Assertions.*;
 
 import dev.erst.gridgrind.core.model.drawing.CommentReport;
+import dev.erst.gridgrind.core.model.formula.NamedRangeReport;
+import dev.erst.gridgrind.core.model.formula.NamedRangeScopeReport;
+import dev.erst.gridgrind.core.model.formula.NamedRangeTarget;
 import dev.erst.gridgrind.core.model.pivot.PivotTableReport;
 import dev.erst.gridgrind.core.model.print.*;
 import dev.erst.gridgrind.core.model.print.HeaderFooterTextReport;
@@ -74,7 +77,7 @@ class WorkbookReadResultTest {
         NullPointerException.class,
         () ->
             new WorkbookCoreResult.NamedRangesResult(
-                new StepId("ranges"), List.of((ExcelNamedRangeSnapshot) null)));
+                new StepId("ranges"), List.of((NamedRangeReport) null)));
     assertThrows(
         IllegalArgumentException.class,
         () ->
@@ -442,14 +445,16 @@ class WorkbookReadResultTest {
         new ExcelCellSnapshot.BlankSnapshot(
             "A1", "", defaultStyle(), ExcelCellMetadataSnapshot.empty());
     List<String> sheetNames = new ArrayList<>(List.of("Budget"));
-    List<ExcelNamedRangeSnapshot> namedRanges =
+    List<NamedRangeReport> namedRanges =
         new ArrayList<>(
             List.of(
-                new ExcelNamedRangeSnapshot.RangeSnapshot(
-                    "BudgetTotal",
-                    new ExcelNamedRangeScope.WorkbookScope(),
+                new NamedRangeReport.RangeReport(
+                    new dev.erst.gridgrind.core.vocabulary.DefinedNameLabel("BudgetTotal"),
+                    new NamedRangeScopeReport.Workbook(),
                     "Budget!$B$4",
-                    ExcelNamedRangeTarget.range("Budget", "B4"))));
+                    NamedRangeTarget.range(
+                        new dev.erst.gridgrind.core.vocabulary.SheetName("Budget"),
+                        new dev.erst.gridgrind.core.vocabulary.RangeRef("B4")))));
     List<ExcelCellSnapshot> cells = new ArrayList<>(List.of(blank));
     List<WorkbookSheetResult.WindowRow> rows =
         new ArrayList<>(List.of(new WorkbookSheetResult.WindowRow(0, List.of(blank))));
@@ -526,7 +531,7 @@ class WorkbookReadResultTest {
             List.of(
                 new WorkbookSurfaceResult.NamedRangeSurfaceEntry(
                     "BudgetTotal",
-                    new ExcelNamedRangeScope.WorkbookScope(),
+                    new NamedRangeScopeReport.Workbook(),
                     "Budget!$B$4",
                     WorkbookSurfaceResult.NamedRangeBackingKind.RANGE)));
 
@@ -632,7 +637,7 @@ class WorkbookReadResultTest {
 
   private record ReadResultFixture(
       List<String> sheetNames,
-      List<ExcelNamedRangeSnapshot> namedRanges,
+      List<NamedRangeReport> namedRanges,
       List<ExcelCellSnapshot> cells,
       List<WorkbookSheetResult.WindowRow> rows,
       List<WorkbookSheetResult.MergedRegion> mergedRegions,

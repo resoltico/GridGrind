@@ -2,6 +2,7 @@ package dev.erst.gridgrind.excel;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.core.model.formula.NamedRangeScopeReport;
 import dev.erst.gridgrind.core.vocabulary.AnalysisFindingCode;
 import dev.erst.gridgrind.core.vocabulary.AnalysisSeverity;
 import java.util.ArrayList;
@@ -19,7 +20,7 @@ class WorkbookAnalysisTest {
     assertDoesNotThrow(
         () ->
             new WorkbookAnalysis.AnalysisLocation.NamedRange(
-                "BudgetTotal", new ExcelNamedRangeScope.WorkbookScope()));
+                "BudgetTotal", new NamedRangeScopeReport.Workbook()));
 
     assertThrows(
         IllegalArgumentException.class, () -> new WorkbookAnalysis.AnalysisLocation.Sheet(" "));
@@ -30,7 +31,7 @@ class WorkbookAnalysisTest {
         IllegalArgumentException.class,
         () ->
             new WorkbookAnalysis.AnalysisLocation.NamedRange(
-                " ", new ExcelNamedRangeScope.WorkbookScope()));
+                " ", new NamedRangeScopeReport.Workbook()));
     assertThrows(
         NullPointerException.class,
         () -> new WorkbookAnalysis.AnalysisLocation.NamedRange("BudgetTotal", null));

@@ -11,8 +11,10 @@ import dev.erst.gridgrind.core.model.chart.ChartLegendSpec;
 import dev.erst.gridgrind.core.model.chart.ChartTitleSpec;
 import dev.erst.gridgrind.core.model.chart.ResolvedChart;
 import dev.erst.gridgrind.core.model.chart.ResolvedChartTitle;
+import dev.erst.gridgrind.core.model.formula.NamedRangeTarget;
 import dev.erst.gridgrind.core.model.formula.ResolvedFormula;
 import dev.erst.gridgrind.core.model.value.CellValue;
+import dev.erst.gridgrind.core.plan.StructuredMutationAction;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartDisplayBlanksAs;
 import java.io.IOException;
 import java.util.List;
@@ -237,15 +239,19 @@ class ExcelChartSourceResolutionTest {
     workbook
         .names()
         .setNamedRange(
-            new ExcelNamedRangeDefinition(
-                "NumericCategories",
-                new ExcelNamedRangeScope.WorkbookScope(),
-                ExcelNamedRangeTarget.range("Charts", "B2:B4")))
+            new StructuredMutationAction.SetNamedRange(
+                new dev.erst.gridgrind.core.vocabulary.DefinedName("NumericCategories"),
+                new dev.erst.gridgrind.core.vocabulary.NamedRangeScope.Workbook(),
+                NamedRangeTarget.range(
+                    new dev.erst.gridgrind.core.vocabulary.SheetName("Charts"),
+                    new dev.erst.gridgrind.core.vocabulary.RangeRef("B2:B4"))))
         .setNamedRange(
-            new ExcelNamedRangeDefinition(
-                "SparseCategories",
-                new ExcelNamedRangeScope.WorkbookScope(),
-                ExcelNamedRangeTarget.range("Charts", "D2:D4")));
+            new StructuredMutationAction.SetNamedRange(
+                new dev.erst.gridgrind.core.vocabulary.DefinedName("SparseCategories"),
+                new dev.erst.gridgrind.core.vocabulary.NamedRangeScope.Workbook(),
+                NamedRangeTarget.range(
+                    new dev.erst.gridgrind.core.vocabulary.SheetName("Charts"),
+                    new dev.erst.gridgrind.core.vocabulary.RangeRef("D2:D4"))));
 
     var localCategories = workbook.xssfWorkbook().createName();
     localCategories.setNameName("LocalCategories");
@@ -267,25 +273,33 @@ class ExcelChartSourceResolutionTest {
     workbook
         .names()
         .setNamedRange(
-            new ExcelNamedRangeDefinition(
-                "FormulaCategories",
-                new ExcelNamedRangeScope.WorkbookScope(),
-                ExcelNamedRangeTarget.range("Charts", "E2:E5")))
+            new StructuredMutationAction.SetNamedRange(
+                new dev.erst.gridgrind.core.vocabulary.DefinedName("FormulaCategories"),
+                new dev.erst.gridgrind.core.vocabulary.NamedRangeScope.Workbook(),
+                NamedRangeTarget.range(
+                    new dev.erst.gridgrind.core.vocabulary.SheetName("Charts"),
+                    new dev.erst.gridgrind.core.vocabulary.RangeRef("E2:E5"))))
         .setNamedRange(
-            new ExcelNamedRangeDefinition(
-                "FormulaValues",
-                new ExcelNamedRangeScope.WorkbookScope(),
-                ExcelNamedRangeTarget.range("Charts", "C2:C5")))
+            new StructuredMutationAction.SetNamedRange(
+                new dev.erst.gridgrind.core.vocabulary.DefinedName("FormulaValues"),
+                new dev.erst.gridgrind.core.vocabulary.NamedRangeScope.Workbook(),
+                NamedRangeTarget.range(
+                    new dev.erst.gridgrind.core.vocabulary.SheetName("Charts"),
+                    new dev.erst.gridgrind.core.vocabulary.RangeRef("C2:C5"))))
         .setNamedRange(
-            new ExcelNamedRangeDefinition(
-                "ErrorFormulaCategories",
-                new ExcelNamedRangeScope.WorkbookScope(),
-                ExcelNamedRangeTarget.range("Charts", "F2:F4")))
+            new StructuredMutationAction.SetNamedRange(
+                new dev.erst.gridgrind.core.vocabulary.DefinedName("ErrorFormulaCategories"),
+                new dev.erst.gridgrind.core.vocabulary.NamedRangeScope.Workbook(),
+                NamedRangeTarget.range(
+                    new dev.erst.gridgrind.core.vocabulary.SheetName("Charts"),
+                    new dev.erst.gridgrind.core.vocabulary.RangeRef("F2:F4"))))
         .setNamedRange(
-            new ExcelNamedRangeDefinition(
-                "ErrorCellCategories",
-                new ExcelNamedRangeScope.WorkbookScope(),
-                ExcelNamedRangeTarget.range("Charts", "G2:G4")));
+            new StructuredMutationAction.SetNamedRange(
+                new dev.erst.gridgrind.core.vocabulary.DefinedName("ErrorCellCategories"),
+                new dev.erst.gridgrind.core.vocabulary.NamedRangeScope.Workbook(),
+                NamedRangeTarget.range(
+                    new dev.erst.gridgrind.core.vocabulary.SheetName("Charts"),
+                    new dev.erst.gridgrind.core.vocabulary.RangeRef("G2:G4"))));
 
     xssfSheet.getRow(1).createCell(5).setCellFormula("1/0");
     xssfSheet.getRow(2).createCell(5).setCellFormula("1/0");

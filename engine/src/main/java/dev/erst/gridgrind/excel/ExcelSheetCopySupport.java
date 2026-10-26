@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.core.model.formula.NamedRangeReport;
 import dev.erst.gridgrind.core.model.print.ResolvedPrintLayout;
 import dev.erst.gridgrind.core.model.table.AutofilterEntryReport;
 import dev.erst.gridgrind.core.model.table.AutofilterSortConditionReport;
@@ -42,7 +43,7 @@ final class ExcelSheetCopySupport {
       ExcelWorkbook workbook,
       String sourceSheetName,
       String targetSheetName,
-      List<ExcelNamedRangeSnapshot> localNamedRanges) {
+      List<NamedRangeReport> localNamedRanges) {
     ExcelSheetCopyNamedRangeSupport.replaceLocalNamedRanges(
         workbook, sourceSheetName, targetSheetName, localNamedRanges);
   }
@@ -92,19 +93,9 @@ final class ExcelSheetCopySupport {
     targetSheet.getCTWorksheet().setSheetProtection(copiedProtection);
   }
 
-  static List<ExcelNamedRangeSnapshot> copyableLocalNames(
-      List<ExcelNamedRangeSnapshot> namedRanges, String sheetName) {
+  static List<NamedRangeReport> copyableLocalNames(
+      List<NamedRangeReport> namedRanges, String sheetName) {
     return ExcelSheetCopyNamedRangeSupport.copyableLocalNames(namedRanges, sheetName);
-  }
-
-  static List<ExcelNamedRangeSnapshot.RangeSnapshot> copyableLocalRangeNames(
-      List<ExcelNamedRangeSnapshot> namedRanges, String sheetName) {
-    return ExcelSheetCopyNamedRangeSupport.copyableLocalRangeNames(namedRanges, sheetName);
-  }
-
-  static void requireNoUncopyableLocalNamedRanges(
-      List<ExcelNamedRangeSnapshot> namedRanges, String sheetName) {
-    ExcelSheetCopyNamedRangeSupport.requireNoUncopyableLocalNamedRanges(namedRanges, sheetName);
   }
 
   static void requireNoTables(XSSFSheet sheet, String sheetName) {

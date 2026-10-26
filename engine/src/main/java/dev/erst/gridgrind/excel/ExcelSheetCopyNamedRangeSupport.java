@@ -1,5 +1,8 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.core.model.formula.NamedRangeReport;
+import dev.erst.gridgrind.core.model.formula.NamedRangeScopeReport;
+import dev.erst.gridgrind.core.model.formula.NamedRangeTarget;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -13,29 +16,31 @@ final class ExcelSheetCopyNamedRangeSupport {
       ExcelWorkbook workbook,
       String sourceSheetName,
       String targetSheetName,
-      List<ExcelNamedRangeSnapshot> localNamedRanges) {
+      List<NamedRangeReport> localNamedRanges) {
     deleteLocalNamedRanges(workbook, targetSheetName);
     copyLocalNamedRanges(workbook, sourceSheetName, targetSheetName, localNamedRanges);
   }
 
   static void deleteLocalNamedRanges(ExcelWorkbook workbook, String sheetName) {
-    ExcelNamedRangeScope.SheetScope scope = new ExcelNamedRangeScope.SheetScope(sheetName);
-    for (ExcelNamedRangeSnapshot localName :
+    NamedRangeScopeReport.Sheet scope =
+        new NamedRangeScopeReport.Sheet(
+            new dev.erst.gridgrind.core.vocabulary.SheetLabel(sheetName));
+    for (NamedRangeReport localName :
         copyableLocalNames(workbook.names().namedRanges(), sheetName)) {
-      workbook.names().deleteNamedRange(localName.name(), scope);
+      workbook.names().deleteNamedRange(localName.name().value(), scope);
     }
   }
 
-  static List<ExcelNamedRangeSnapshot> copyableLocalNames(
-      List<ExcelNamedRangeSnapshot> namedRanges, String sheetName) {
+  static List<NamedRangeReport> copyableLocalNames(
+      List<NamedRangeReport> namedRanges, String sheetName) {
     Objects.requireNonNull(namedRanges, "namedRanges must not be null");
     ExcelWorkbookSheetSupport.requireSheetName(sheetName, "sheetName");
-    List<ExcelNamedRangeSnapshot> localNamedRanges = new ArrayList<>();
-    for (ExcelNamedRangeSnapshot namedRange : namedRanges) {
+    List<NamedRangeReport> localNamedRanges = new ArrayList<>();
+    for (NamedRangeReport namedRange : namedRanges) {
       switch (namedRange.scope()) {
-        case ExcelNamedRangeScope.WorkbookScope _ -> {}
-        case ExcelNamedRangeScope.SheetScope sheetScope -> {
-          if (sheetScope.sheetName().equals(sheetName)) {
+        case NamedRangeScopeReport.Workbook _ -> {}
+        case NamedRangeScopeReport.Sheet sheetScope -> {
+          if (sheetScope.sheetName().value().equals(sheetName)) {
             localNamedRanges.add(namedRange);
           }
         }
@@ -44,70 +49,34 @@ final class ExcelSheetCopyNamedRangeSupport {
     return List.copyOf(localNamedRanges);
   }
 
-  static List<ExcelNamedRangeSnapshot.RangeSnapshot> copyableLocalRangeNames(
-      List<ExcelNamedRangeSnapshot> namedRanges, String sheetName) {
-    return copyableLocalNames(namedRanges, sheetName).stream()
-        .flatMap(
-            namedRange ->
-                namedRange instanceof ExcelNamedRangeSnapshot.RangeSnapshot rangeSnapshot
-                    ? java.util.stream.Stream.of(rangeSnapshot)
-                    : java.util.stream.Stream.empty())
-        .toList();
-  }
-
-  static void requireNoUncopyableLocalNamedRanges(
-      List<ExcelNamedRangeSnapshot> namedRanges, String sheetName) {
-    Objects.requireNonNull(namedRanges, "namedRanges must not be null");
-    ExcelWorkbookSheetSupport.requireSheetName(sheetName, "sheetName");
-  }
-
   private static void copyLocalNamedRanges(
       ExcelWorkbook workbook,
       String sourceSheetName,
       String targetSheetName,
-      List<ExcelNamedRangeSnapshot> localNamedRanges) {
-    ExcelNamedRangeScope.SheetScope scope = new ExcelNamedRangeScope.SheetScope(targetSheetName);
+      List<NamedRangeReport> localNamedRanges) {
     int targetSheetIndex = workbook.xssfWorkbook().getSheetIndex(targetSheetName);
-    for (ExcelNamedRangeSnapshot localNamedRange : localNamedRanges) {
-      workbook
-          .names()
-          .setNamedRange(
-              copiedLocalNamedRange(
-                  workbook,
-                  localNamedRange,
-                  scope,
-                  targetSheetIndex,
-                  sourceSheetName,
-                  targetSheetName));
+    var destination = new dev.erst.gridgrind.core.vocabulary.SheetName(targetSheetName);
+    for (NamedRangeReport localName : localNamedRanges) {
+      String formula =
+          switch (localName) {
+            case NamedRangeReport.RangeReport range ->
+                ExcelNamedRangeTargets.rangeFormula(
+                    destination, ((NamedRangeTarget.Range) range.target()).range());
+            case NamedRangeReport.FormulaReport value ->
+                value.refersToFormula().isEmpty()
+                    ? ""
+                    : ExcelSheetCopySupport.retargetFormula(
+                        workbook,
+                        value.refersToFormula(),
+                        FormulaType.NAMEDRANGE,
+                        targetSheetIndex,
+                        sourceSheetName,
+                        targetSheetName);
+          };
+      var copied = workbook.xssfWorkbook().createName();
+      copied.setNameName(localName.name().value());
+      copied.setSheetIndex(targetSheetIndex);
+      if (!formula.isEmpty()) copied.setRefersToFormula(formula);
     }
-  }
-
-  private static ExcelNamedRangeDefinition copiedLocalNamedRange(
-      ExcelWorkbook workbook,
-      ExcelNamedRangeSnapshot localNamedRange,
-      ExcelNamedRangeScope.SheetScope scope,
-      int targetSheetIndex,
-      String sourceSheetName,
-      String targetSheetName) {
-    return switch (localNamedRange) {
-      case ExcelNamedRangeSnapshot.RangeSnapshot rangeSnapshot ->
-          new ExcelNamedRangeDefinition(
-              rangeSnapshot.name(),
-              scope,
-              ExcelNamedRangeTarget.range(
-                  targetSheetName, ((ExcelNamedRangeTarget.Range) rangeSnapshot.target()).range()));
-      case ExcelNamedRangeSnapshot.FormulaSnapshot formulaSnapshot ->
-          new ExcelNamedRangeDefinition(
-              formulaSnapshot.name(),
-              scope,
-              ExcelNamedRangeTarget.formula(
-                  ExcelSheetCopySupport.retargetFormula(
-                      workbook,
-                      formulaSnapshot.refersToFormula(),
-                      FormulaType.NAMEDRANGE,
-                      targetSheetIndex,
-                      sourceSheetName,
-                      targetSheetName)));
-    };
   }
 }

@@ -1,5 +1,7 @@
 package dev.erst.gridgrind.jazzer.support;
 
+import dev.erst.gridgrind.core.model.formula.NamedRangeReport;
+import dev.erst.gridgrind.core.model.formula.NamedRangeTarget;
 import dev.erst.gridgrind.core.model.pivot.PivotTableReport;
 import dev.erst.gridgrind.core.model.style.CellStyleReport;
 import dev.erst.gridgrind.core.model.style.RichTextRunReport;
@@ -10,8 +12,6 @@ import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.excel.ExcelCellMetadataSnapshot;
 import dev.erst.gridgrind.excel.ExcelCellSnapshot;
 import dev.erst.gridgrind.excel.ExcelChartSnapshot;
-import dev.erst.gridgrind.excel.ExcelNamedRangeSnapshot;
-import dev.erst.gridgrind.excel.ExcelNamedRangeTarget;
 import dev.erst.gridgrind.excel.ExcelRangeSelection;
 import dev.erst.gridgrind.excel.ExcelTableSelection;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
@@ -111,15 +111,15 @@ final class XlsxRoundTripExpectedWorkbookSurfaceSupport {
             XlsxRoundTripExpectedStateSupport.NamedRangeKey,
             XlsxRoundTripExpectedStateSupport.ExpectedNamedRange>
         expectedNamedRanges = new LinkedHashMap<>();
-    for (ExcelNamedRangeSnapshot namedRange : workbook.names().namedRanges()) {
-      ExcelNamedRangeTarget target =
+    for (NamedRangeReport namedRange : workbook.names().namedRanges()) {
+      NamedRangeTarget target =
           switch (namedRange) {
-            case ExcelNamedRangeSnapshot.RangeSnapshot rangeSnapshot -> rangeSnapshot.target();
-            case ExcelNamedRangeSnapshot.FormulaSnapshot _ -> null;
+            case NamedRangeReport.RangeReport rangeSnapshot -> rangeSnapshot.target();
+            case NamedRangeReport.FormulaReport _ -> null;
           };
       expectedNamedRanges.put(
           new XlsxRoundTripExpectedStateSupport.NamedRangeKey(
-              namedRange.name(), namedRange.scope()),
+              namedRange.name().value(), namedRange.scope()),
           new XlsxRoundTripExpectedStateSupport.ExpectedNamedRange(
               namedRange.scope(), namedRange.refersToFormula(), target));
     }

@@ -5,6 +5,7 @@ import static dev.erst.gridgrind.excel.WorkbookResultSupport.copyValues;
 import static dev.erst.gridgrind.excel.WorkbookResultSupport.requireNonBlank;
 import static dev.erst.gridgrind.excel.WorkbookResultSupport.validateCommonWorkbookSummaryFields;
 
+import dev.erst.gridgrind.core.model.formula.NamedRangeReport;
 import dev.erst.gridgrind.core.model.protection.WorkbookProtectionReport;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlExportSnapshot;
@@ -73,7 +74,7 @@ public sealed interface WorkbookCoreResult extends WorkbookReadIntrospectionResu
   }
 
   /** Returns selected named ranges. */
-  record NamedRangesResult(StepId stepId, List<ExcelNamedRangeSnapshot> namedRanges)
+  record NamedRangesResult(StepId stepId, List<NamedRangeReport> namedRanges)
       implements WorkbookCoreResult {
     public NamedRangesResult {
 

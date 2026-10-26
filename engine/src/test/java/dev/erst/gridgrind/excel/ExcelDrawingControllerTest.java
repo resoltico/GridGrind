@@ -16,7 +16,9 @@ import dev.erst.gridgrind.core.model.drawing.ResolvedPicture;
 import dev.erst.gridgrind.core.model.drawing.ResolvedShape;
 import dev.erst.gridgrind.core.model.drawing.ResolvedSignatureLine;
 import dev.erst.gridgrind.core.model.drawing.ShapeSpec;
+import dev.erst.gridgrind.core.model.formula.NamedRangeTarget;
 import dev.erst.gridgrind.core.model.value.CellValue;
+import dev.erst.gridgrind.core.plan.StructuredMutationAction;
 import dev.erst.gridgrind.core.source.BinaryContent;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartAxisCrosses;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartAxisKind;
@@ -904,15 +906,19 @@ class ExcelDrawingControllerTest {
       workbook
           .names()
           .setNamedRange(
-              new ExcelNamedRangeDefinition(
-                  "ChartCategories",
-                  new ExcelNamedRangeScope.WorkbookScope(),
-                  ExcelNamedRangeTarget.range("Chart", "A2:A4")))
+              new StructuredMutationAction.SetNamedRange(
+                  new dev.erst.gridgrind.core.vocabulary.DefinedName("ChartCategories"),
+                  new dev.erst.gridgrind.core.vocabulary.NamedRangeScope.Workbook(),
+                  NamedRangeTarget.range(
+                      new dev.erst.gridgrind.core.vocabulary.SheetName("Chart"),
+                      new dev.erst.gridgrind.core.vocabulary.RangeRef("A2:A4"))))
           .setNamedRange(
-              new ExcelNamedRangeDefinition(
-                  "ChartActual",
-                  new ExcelNamedRangeScope.WorkbookScope(),
-                  ExcelNamedRangeTarget.range("Chart", "C2:C4")));
+              new StructuredMutationAction.SetNamedRange(
+                  new dev.erst.gridgrind.core.vocabulary.DefinedName("ChartActual"),
+                  new dev.erst.gridgrind.core.vocabulary.NamedRangeScope.Workbook(),
+                  NamedRangeTarget.range(
+                      new dev.erst.gridgrind.core.vocabulary.SheetName("Chart"),
+                      new dev.erst.gridgrind.core.vocabulary.RangeRef("C2:C4"))));
 
       sheet.drawings().setChart(initialChartDefinition(anchor(4, 1, 11, 16)));
 
@@ -1196,15 +1202,19 @@ class ExcelDrawingControllerTest {
     workbook
         .names()
         .setNamedRange(
-            new ExcelNamedRangeDefinition(
-                "ChartCategories",
-                new ExcelNamedRangeScope.WorkbookScope(),
-                ExcelNamedRangeTarget.range("Chart", "A2:A4")))
+            new StructuredMutationAction.SetNamedRange(
+                new dev.erst.gridgrind.core.vocabulary.DefinedName("ChartCategories"),
+                new dev.erst.gridgrind.core.vocabulary.NamedRangeScope.Workbook(),
+                NamedRangeTarget.range(
+                    new dev.erst.gridgrind.core.vocabulary.SheetName("Chart"),
+                    new dev.erst.gridgrind.core.vocabulary.RangeRef("A2:A4"))))
         .setNamedRange(
-            new ExcelNamedRangeDefinition(
-                "ChartActual",
-                new ExcelNamedRangeScope.WorkbookScope(),
-                ExcelNamedRangeTarget.range("Chart", "C2:C4")));
+            new StructuredMutationAction.SetNamedRange(
+                new dev.erst.gridgrind.core.vocabulary.DefinedName("ChartActual"),
+                new dev.erst.gridgrind.core.vocabulary.NamedRangeScope.Workbook(),
+                NamedRangeTarget.range(
+                    new dev.erst.gridgrind.core.vocabulary.SheetName("Chart"),
+                    new dev.erst.gridgrind.core.vocabulary.RangeRef("C2:C4"))));
   }
 
   private static void assertInitialChartSnapshot(ExcelSheet sheet) {

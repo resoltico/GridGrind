@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.core.model.formula.NamedRangeScopeReport;
 import dev.erst.gridgrind.core.model.protection.WorkbookProtectionReport;
 import dev.erst.gridgrind.excel.ooxml.ExcelOoxmlPackageSecuritySnapshot;
 import java.io.IOException;
@@ -188,7 +189,7 @@ public final class ExcelWorkbook implements AutoCloseable {
   }
 
   /** Returns whether the POI defined name belongs to the requested workbook or sheet scope. */
-  boolean scopeMatches(Name candidate, ExcelNamedRangeScope scope) {
+  boolean scopeMatches(Name candidate, NamedRangeScopeReport scope) {
     return ExcelWorkbookNamedRangeSupport.scopeMatches(this, candidate, scope);
   }
 }

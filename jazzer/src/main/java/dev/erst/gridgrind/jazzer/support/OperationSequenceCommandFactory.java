@@ -3,13 +3,13 @@ package dev.erst.gridgrind.jazzer.support;
 import static dev.erst.gridgrind.jazzer.support.OperationSequenceSelectorSupport.*;
 import static dev.erst.gridgrind.jazzer.support.OperationSequenceValueFactory.*;
 
+import dev.erst.gridgrind.core.model.formula.NamedRangeScopeReport;
+import dev.erst.gridgrind.core.model.formula.NamedRangeTarget;
 import dev.erst.gridgrind.core.model.protection.ResolvedWorkbookProtection;
+import dev.erst.gridgrind.core.plan.StructuredMutationAction;
 import dev.erst.gridgrind.core.vocabulary.ExcelColumnSpan;
 import dev.erst.gridgrind.core.vocabulary.ExcelRowSpan;
 import dev.erst.gridgrind.excel.*;
-import dev.erst.gridgrind.excel.ExcelNamedRangeDefinition;
-import dev.erst.gridgrind.excel.ExcelNamedRangeScope;
-import dev.erst.gridgrind.excel.ExcelNamedRangeTarget;
 import dev.erst.gridgrind.excel.ExcelSheetPresentation;
 import java.util.List;
 import java.util.Optional;
@@ -189,22 +189,26 @@ final class OperationSequenceCommandFactory {
           switch (selectorSlot(selector)) {
             case 0x0 ->
                 new WorkbookMetadataCommand.SetNamedRange(
-                    new ExcelNamedRangeDefinition(
-                        validName ? namedRangeName : nextNamedRangeName(data, false),
+                    new StructuredMutationAction.SetNamedRange(
+                        new dev.erst.gridgrind.core.vocabulary.DefinedName(
+                            validName ? namedRangeName : nextNamedRangeName(data, false)),
                         data.consumeBoolean()
-                            ? new ExcelNamedRangeScope.WorkbookScope()
-                            : new ExcelNamedRangeScope.SheetScope(targetSheet),
-                        ExcelNamedRangeTarget.range(
-                            targetSheet,
-                            validRange
-                                ? "A1:B2"
-                                : FuzzDataDecoders.nextNonBlankRange(data, false))));
+                            ? new dev.erst.gridgrind.core.vocabulary.NamedRangeScope.Workbook()
+                            : new dev.erst.gridgrind.core.vocabulary.NamedRangeScope.Sheet(
+                                new dev.erst.gridgrind.core.vocabulary.SheetName(targetSheet)),
+                        NamedRangeTarget.range(
+                            new dev.erst.gridgrind.core.vocabulary.SheetName(targetSheet),
+                            new dev.erst.gridgrind.core.vocabulary.RangeRef(
+                                validRange
+                                    ? "A1:B2"
+                                    : FuzzDataDecoders.nextNonBlankRange(data, false)))));
             default ->
                 new WorkbookMetadataCommand.DeleteNamedRange(
                     validName ? namedRangeName : nextNamedRangeName(data, false),
                     data.consumeBoolean()
-                        ? new ExcelNamedRangeScope.WorkbookScope()
-                        : new ExcelNamedRangeScope.SheetScope(targetSheet));
+                        ? new NamedRangeScopeReport.Workbook()
+                        : new NamedRangeScopeReport.Sheet(
+                            new dev.erst.gridgrind.core.vocabulary.SheetLabel(targetSheet)));
           };
       case 0x7 ->
           switch (selectorSlot(selector)) {

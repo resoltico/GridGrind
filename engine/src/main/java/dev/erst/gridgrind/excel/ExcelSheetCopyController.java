@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.core.model.formula.NamedRangeReport;
 import dev.erst.gridgrind.core.model.print.ResolvedPrintLayout;
 import dev.erst.gridgrind.core.model.table.AutofilterEntryReport;
 import dev.erst.gridgrind.core.model.table.TableEntryReport;
@@ -163,21 +164,9 @@ final class ExcelSheetCopyController {
   }
 
   /** Returns copyable sheet-local names scoped to the requested source sheet. */
-  static List<ExcelNamedRangeSnapshot> copyableLocalNames(
-      List<ExcelNamedRangeSnapshot> namedRanges, String sheetName) {
+  static List<NamedRangeReport> copyableLocalNames(
+      List<NamedRangeReport> namedRanges, String sheetName) {
     return ExcelSheetCopySupport.copyableLocalNames(namedRanges, sheetName);
-  }
-
-  /** Retained for focused tests covering explicit range-backed local names only. */
-  static List<ExcelNamedRangeSnapshot.RangeSnapshot> copyableLocalRangeNames(
-      List<ExcelNamedRangeSnapshot> namedRanges, String sheetName) {
-    return ExcelSheetCopySupport.copyableLocalRangeNames(namedRanges, sheetName);
-  }
-
-  /** Local names owned by a copied sheet are now fully copyable. */
-  static void requireNoUncopyableLocalNamedRanges(
-      List<ExcelNamedRangeSnapshot> namedRanges, String sheetName) {
-    ExcelSheetCopySupport.requireNoUncopyableLocalNamedRanges(namedRanges, sheetName);
   }
 
   /** Sheet copy now supports tables and no longer rejects them up front. */
@@ -198,7 +187,7 @@ final class ExcelSheetCopyController {
 
   /** Immutable copy plan for the sheet-local structures GridGrind can reproduce safely. */
   private record ExcelSheetCopySnapshot(
-      List<ExcelNamedRangeSnapshot> localNamedRanges,
+      List<NamedRangeReport> localNamedRanges,
       WorkbookSheetResult.SheetLayout layout,
       ResolvedPrintLayout printLayout,
       List<WorkbookSheetResult.MergedRegion> mergedRegions,

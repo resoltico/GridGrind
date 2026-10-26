@@ -165,7 +165,14 @@ final class ExcelConditionalFormattingSnapshotSupport {
       case WorkbookAnalysis.AnalysisLocation.Cell cell -> cell.sheetName() + "!" + cell.address();
       case WorkbookAnalysis.AnalysisLocation.Range range -> range.sheetName() + "!" + range.range();
       case WorkbookAnalysis.AnalysisLocation.NamedRange namedRange ->
-          namedRange.name() + "@" + namedRange.scope();
+          namedRange.name()
+              + "@"
+              + switch (namedRange.scope()) {
+                case dev.erst.gridgrind.core.model.formula.NamedRangeScopeReport.Workbook _ ->
+                    "workbook";
+                case dev.erst.gridgrind.core.model.formula.NamedRangeScopeReport.Sheet sheet ->
+                    "sheet:" + sheet.sheetName().value();
+              };
     };
   }
 

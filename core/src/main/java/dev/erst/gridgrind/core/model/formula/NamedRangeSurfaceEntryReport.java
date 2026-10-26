@@ -1,12 +1,11 @@
 package dev.erst.gridgrind.core.model.formula;
 
 import dev.erst.gridgrind.core.vocabulary.NamedRangeBackingKind;
-import dev.erst.gridgrind.core.vocabulary.NamedRangeScope;
 import java.util.Objects;
 
 /** One named-range surface entry classified by scope and backing kind. */
 public record NamedRangeSurfaceEntryReport(
-    String name, NamedRangeScope scope, String refersToFormula, NamedRangeBackingKind kind) {
+    String name, NamedRangeScopeReport scope, String refersToFormula, NamedRangeBackingKind kind) {
   public NamedRangeSurfaceEntryReport {
     Objects.requireNonNull(name, "name must not be null");
     Objects.requireNonNull(scope, "scope must not be null");

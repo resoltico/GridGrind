@@ -3,9 +3,11 @@ package dev.erst.gridgrind.excel;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import dev.erst.gridgrind.core.model.formula.NamedRangeTarget;
 import dev.erst.gridgrind.core.model.table.ResolvedTable;
 import dev.erst.gridgrind.core.model.table.TableStyleSpec;
 import dev.erst.gridgrind.core.model.value.CellValue;
+import dev.erst.gridgrind.core.plan.StructuredMutationAction;
 import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.TableName;
@@ -47,7 +49,9 @@ class ExcelUnicodeDefinedNamePersistenceTest {
         ExcelWorkbooks.open(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory())) {
       assertEquals(
           FIXTURES.stream().map(UnicodeNameFixture::namedRangeName).toList(),
-          workbook.names().namedRanges().stream().map(ExcelNamedRangeSnapshot::name).toList());
+          workbook.names().namedRanges().stream()
+              .map(namedRange -> namedRange.name().value())
+              .toList());
       assertEquals(
           FIXTURES.stream().map(UnicodeNameFixture::tableName).toList(),
           workbook.xssfWorkbook().getSheet("Data").getTables().stream()
@@ -75,7 +79,7 @@ class ExcelUnicodeDefinedNamePersistenceTest {
         ExcelWorkbooks.open(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory())) {
       assertTrue(
           workbook.names().namedRanges().stream()
-              .map(ExcelNamedRangeSnapshot::name)
+              .map(namedRange -> namedRange.name().value())
               .collect(java.util.stream.Collectors.toSet())
               .containsAll(FIXTURES.stream().map(UnicodeNameFixture::namedRangeName).toList()));
       assertTrue(
@@ -106,10 +110,12 @@ class ExcelUnicodeDefinedNamePersistenceTest {
     workbook
         .names()
         .setNamedRange(
-            new ExcelNamedRangeDefinition(
-                fixture.namedRangeName(),
-                new ExcelNamedRangeScope.WorkbookScope(),
-                ExcelNamedRangeTarget.range("Data", fixture.range())));
+            new StructuredMutationAction.SetNamedRange(
+                new dev.erst.gridgrind.core.vocabulary.DefinedName(fixture.namedRangeName()),
+                new dev.erst.gridgrind.core.vocabulary.NamedRangeScope.Workbook(),
+                NamedRangeTarget.range(
+                    new dev.erst.gridgrind.core.vocabulary.SheetName("Data"),
+                    new dev.erst.gridgrind.core.vocabulary.RangeRef(fixture.range()))));
     workbook
         .tables()
         .setTable(

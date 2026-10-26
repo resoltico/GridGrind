@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.core.model.formula.NamedRangeScopeReport;
 import dev.erst.gridgrind.core.vocabulary.AnalysisFindingCode;
 import dev.erst.gridgrind.core.vocabulary.AnalysisSeverity;
 import java.util.ArrayList;
@@ -53,7 +54,7 @@ public sealed interface WorkbookAnalysis
     }
 
     /** One named-range finding. */
-    record NamedRange(String name, ExcelNamedRangeScope scope) implements AnalysisLocation {
+    record NamedRange(String name, NamedRangeScopeReport scope) implements AnalysisLocation {
       public NamedRange {
         name = requireNonBlank(name, "name");
         Objects.requireNonNull(scope, "scope must not be null");

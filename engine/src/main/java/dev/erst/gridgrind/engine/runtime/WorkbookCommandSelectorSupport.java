@@ -92,8 +92,14 @@ final class WorkbookCommandSelectorSupport {
     NamedRangeSelector.ScopedExact selector = namedRangeScopedExact(target, action);
     if (!WorkbookCommandLayoutInputConverter.toExcelNamedRangeName(selector)
             .equals(action.name().value())
-        || !WorkbookCommandLayoutInputConverter.toExcelNamedRangeScope(selector)
-            .equals(WorkbookCommandLayoutInputConverter.toExcelNamedRangeScope(action.scope()))) {
+        || !(switch (selector) {
+          case NamedRangeSelector.WorkbookScope _ ->
+              action.scope() instanceof dev.erst.gridgrind.core.vocabulary.NamedRangeScope.Workbook;
+          case NamedRangeSelector.SheetScope sheet ->
+              action.scope()
+                      instanceof dev.erst.gridgrind.core.vocabulary.NamedRangeScope.Sheet scoped
+                  && scoped.sheetName().equals(sheet.sheetName());
+        })) {
       throw new IllegalArgumentException(
           action.actionType() + " target must match action name and scope");
     }

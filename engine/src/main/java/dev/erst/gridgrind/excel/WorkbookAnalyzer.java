@@ -1,5 +1,7 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.core.model.formula.NamedRangeReport;
+import dev.erst.gridgrind.core.model.formula.NamedRangeScopeReport;
 import dev.erst.gridgrind.core.vocabulary.AnalysisFindingCode;
 import dev.erst.gridgrind.core.vocabulary.AnalysisSeverity;
 import dev.erst.gridgrind.excel.pivot.ExcelPivotTableSelection;
@@ -160,11 +162,11 @@ final class WorkbookAnalyzer {
     Objects.requireNonNull(workbook, "workbook must not be null");
     Objects.requireNonNull(selection, "selection must not be null");
 
-    List<ExcelNamedRangeSnapshot> namedRanges =
+    List<NamedRangeReport> namedRanges =
         workbookIntrospector.selectNamedRanges(workbook, selection);
     if (selection instanceof ExcelNamedRangeSelection.All
         && !workbook.wasMutatedSinceOpenInternal()) {
-      List<ExcelNamedRangeSnapshot> combined = new ArrayList<>(namedRanges);
+      List<NamedRangeReport> combined = new ArrayList<>(namedRanges);
       combined.addAll(ExcelWorkbookNamedRangeSupport.unmodeledObservedNamedRanges(workbook));
       namedRanges = List.copyOf(combined);
     }
@@ -202,10 +204,10 @@ final class WorkbookAnalyzer {
   }
 
   private List<WorkbookAnalysis.AnalysisFinding> analyzeNamedRangeHealth(
-      ExcelWorkbook workbook, List<ExcelNamedRangeSnapshot> namedRanges) {
+      ExcelWorkbook workbook, List<NamedRangeReport> namedRanges) {
     List<WorkbookAnalysis.AnalysisFinding> findings = new ArrayList<>();
     Set<String> workbookSheetNames = new LinkedHashSet<>(workbook.sheets().sheetNames());
-    for (ExcelNamedRangeSnapshot namedRange : namedRanges) {
+    for (NamedRangeReport namedRange : namedRanges) {
       WorkbookAnalysis.AnalysisLocation.NamedRange location = namedRangeLocation(namedRange);
       String refersToFormula = namedRange.refersToFormula();
       String upperFormula = refersToFormula.toUpperCase(Locale.ROOT);
@@ -253,20 +255,20 @@ final class WorkbookAnalyzer {
   }
 
   static List<WorkbookAnalysis.AnalysisFinding> scopeShadowingFindings(
-      List<ExcelNamedRangeSnapshot> namedRanges) {
+      List<NamedRangeReport> namedRanges) {
     List<WorkbookAnalysis.AnalysisFinding> findings = new ArrayList<>();
     Set<String> workbookScopedNames = new LinkedHashSet<>();
     Set<String> sheetScopedNames = new LinkedHashSet<>();
-    for (ExcelNamedRangeSnapshot namedRange : namedRanges) {
-      String normalized = namedRange.name().toUpperCase(Locale.ROOT);
+    for (NamedRangeReport namedRange : namedRanges) {
+      String normalized = namedRange.name().value().toUpperCase(Locale.ROOT);
       switch (namedRange.scope()) {
-        case ExcelNamedRangeScope.WorkbookScope _ -> workbookScopedNames.add(normalized);
-        case ExcelNamedRangeScope.SheetScope _ -> sheetScopedNames.add(normalized);
+        case NamedRangeScopeReport.Workbook _ -> workbookScopedNames.add(normalized);
+        case NamedRangeScopeReport.Sheet _ -> sheetScopedNames.add(normalized);
       }
     }
 
-    for (ExcelNamedRangeSnapshot namedRange : namedRanges) {
-      String normalized = namedRange.name().toUpperCase(Locale.ROOT);
+    for (NamedRangeReport namedRange : namedRanges) {
+      String normalized = namedRange.name().value().toUpperCase(Locale.ROOT);
       if (workbookScopedNames.contains(normalized) && sheetScopedNames.contains(normalized)) {
         findings.add(
             new WorkbookAnalysis.AnalysisFinding(
@@ -293,12 +295,13 @@ final class WorkbookAnalyzer {
   }
 
   private static WorkbookAnalysis.AnalysisLocation.NamedRange namedRangeLocation(
-      ExcelNamedRangeSnapshot namedRange) {
-    return new WorkbookAnalysis.AnalysisLocation.NamedRange(namedRange.name(), namedRange.scope());
+      NamedRangeReport namedRange) {
+    return new WorkbookAnalysis.AnalysisLocation.NamedRange(
+        namedRange.name().value(), namedRange.scope());
   }
 
   private NamedFormulaReferences namedFormulaReferences(
-      ExcelWorkbook workbook, ExcelNamedRangeSnapshot namedRange) {
+      ExcelWorkbook workbook, NamedRangeReport namedRange) {
     int sheetIndex = sheetIndex(workbook, namedRange.scope());
     try {
       Ptg[] tokens =
@@ -323,11 +326,11 @@ final class WorkbookAnalyzer {
     }
   }
 
-  private static int sheetIndex(ExcelWorkbook workbook, ExcelNamedRangeScope scope) {
+  private static int sheetIndex(ExcelWorkbook workbook, NamedRangeScopeReport scope) {
     return switch (scope) {
-      case ExcelNamedRangeScope.WorkbookScope _ -> 0;
-      case ExcelNamedRangeScope.SheetScope sheetScope ->
-          Math.max(0, workbook.xssfWorkbook().getSheetIndex(sheetScope.sheetName()));
+      case NamedRangeScopeReport.Workbook _ -> 0;
+      case NamedRangeScopeReport.Sheet sheetScope ->
+          Math.max(0, workbook.xssfWorkbook().getSheetIndex(sheetScope.sheetName().value()));
     };
   }
 

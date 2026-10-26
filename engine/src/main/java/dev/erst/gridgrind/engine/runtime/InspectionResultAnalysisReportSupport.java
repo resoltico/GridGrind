@@ -133,9 +133,7 @@ final class InspectionResultAnalysisReportSupport {
       case WorkbookAnalysis.AnalysisLocation.Range range ->
           new AnalysisLocationReport.Range(new SheetLabel(range.sheetName()), range.range());
       case WorkbookAnalysis.AnalysisLocation.NamedRange namedRange ->
-          new AnalysisLocationReport.NamedRange(
-              namedRange.name(),
-              InspectionResultWorkbookCoreReportSupport.toNamedRangeScope(namedRange.scope()));
+          new AnalysisLocationReport.NamedRange(namedRange.name(), namedRange.scope());
     };
   }
 }

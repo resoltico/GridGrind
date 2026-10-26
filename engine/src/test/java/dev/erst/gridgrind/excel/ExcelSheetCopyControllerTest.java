@@ -9,6 +9,9 @@ import dev.erst.gridgrind.core.model.chart.ResolvedChartTitle;
 import dev.erst.gridgrind.core.model.drawing.CommentAnchorSpec;
 import dev.erst.gridgrind.core.model.drawing.ResolvedComment;
 import dev.erst.gridgrind.core.model.drawing.ResolvedPicture;
+import dev.erst.gridgrind.core.model.formula.NamedRangeReport;
+import dev.erst.gridgrind.core.model.formula.NamedRangeScopeReport;
+import dev.erst.gridgrind.core.model.formula.NamedRangeTarget;
 import dev.erst.gridgrind.core.model.formula.ResolvedFormula;
 import dev.erst.gridgrind.core.model.print.HeaderFooterTextReport;
 import dev.erst.gridgrind.core.model.print.PrintAreaSpec;
@@ -46,6 +49,7 @@ import dev.erst.gridgrind.core.model.validation.ConditionalFormattingThresholdSp
 import dev.erst.gridgrind.core.model.validation.DataValidationRuleSpec;
 import dev.erst.gridgrind.core.model.validation.ResolvedDataValidation;
 import dev.erst.gridgrind.core.model.value.CellValue;
+import dev.erst.gridgrind.core.plan.StructuredMutationAction;
 import dev.erst.gridgrind.core.source.BinaryContent;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartBarDirection;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartDisplayBlanksAs;
@@ -600,34 +604,35 @@ class ExcelSheetCopyControllerTest {
       assertEquals("1", rawReplicaValidations.get(1).getFormula1());
       assertTrue(rawReplicaValidations.get(1).getFormula2().contains("Replica"));
       assertTrue(rawReplicaValidations.get(1).getFormula2().contains("$B$2:$B$3"));
-      List<ExcelNamedRangeSnapshot> replicaNames =
+      List<NamedRangeReport> replicaNames =
           workbook.names().namedRanges().stream()
               .filter(
                   namedRange ->
-                      namedRange.scope() instanceof ExcelNamedRangeScope.SheetScope scope
-                          && "Replica".equals(scope.sheetName()))
+                      namedRange.scope() instanceof NamedRangeScopeReport.Sheet scope
+                          && "Replica".equals(scope.sheetName().value()))
               .toList();
       assertEquals(2, replicaNames.size());
       assertTrue(
           replicaNames.stream()
               .anyMatch(
                   namedRange ->
-                      namedRange instanceof ExcelNamedRangeSnapshot.RangeSnapshot rangeSnapshot
-                          && "LocalRange".equals(rangeSnapshot.name())
+                      namedRange instanceof NamedRangeReport.RangeReport rangeSnapshot
+                          && "LocalRange".equals(rangeSnapshot.name().value())
                           && rangeSnapshot.refersToFormula().contains("Replica")
                           && rangeSnapshot.refersToFormula().contains("$A$2")
                           && rangeSnapshot.refersToFormula().contains("$A$3")
                           && "A2:A3"
                               .equals(
                                   assertInstanceOf(
-                                          ExcelNamedRangeTarget.Range.class, rangeSnapshot.target())
-                                      .range())));
+                                          NamedRangeTarget.Range.class, rangeSnapshot.target())
+                                      .range()
+                                      .value())));
       assertTrue(
           replicaNames.stream()
               .anyMatch(
                   namedRange ->
-                      namedRange instanceof ExcelNamedRangeSnapshot.FormulaSnapshot formulaSnapshot
-                          && "LocalFormula".equals(formulaSnapshot.name())
+                      namedRange instanceof NamedRangeReport.FormulaReport formulaSnapshot
+                          && "LocalFormula".equals(formulaSnapshot.name().value())
                           && formulaSnapshot.refersToFormula().contains("Replica")
                           && formulaSnapshot.refersToFormula().contains("$B$2:$B$3")));
       ConditionalFormattingEntryReport copiedFormatting =
@@ -871,49 +876,58 @@ class ExcelSheetCopyControllerTest {
 
   @Test
   void localNamedRangeHelpersRespectScopeBoundaries() {
-    ExcelNamedRangeSnapshot.FormulaSnapshot localFormula =
-        new ExcelNamedRangeSnapshot.FormulaSnapshot(
-            "LocalFormula", new ExcelNamedRangeScope.SheetScope("Source"), "SUM(Source!$A$1:$A$2)");
-    List<ExcelNamedRangeSnapshot> namedRanges =
+    NamedRangeReport.FormulaReport localFormula =
+        new NamedRangeReport.FormulaReport(
+            new dev.erst.gridgrind.core.vocabulary.DefinedNameLabel("LocalFormula"),
+            new NamedRangeScopeReport.Sheet(
+                new dev.erst.gridgrind.core.vocabulary.SheetLabel("Source")),
+            "SUM(Source!$A$1:$A$2)");
+    List<NamedRangeReport> namedRanges =
         List.of(
-            new ExcelNamedRangeSnapshot.RangeSnapshot(
-                "WorkbookBudget",
-                new ExcelNamedRangeScope.WorkbookScope(),
+            new NamedRangeReport.RangeReport(
+                new dev.erst.gridgrind.core.vocabulary.DefinedNameLabel("WorkbookBudget"),
+                new NamedRangeScopeReport.Workbook(),
                 "Source!$A$1",
-                ExcelNamedRangeTarget.range("Source", "A1")),
-            new ExcelNamedRangeSnapshot.RangeSnapshot(
-                "LocalBudget",
-                new ExcelNamedRangeScope.SheetScope("Source"),
+                NamedRangeTarget.range(
+                    new dev.erst.gridgrind.core.vocabulary.SheetName("Source"),
+                    new dev.erst.gridgrind.core.vocabulary.RangeRef("A1"))),
+            new NamedRangeReport.RangeReport(
+                new dev.erst.gridgrind.core.vocabulary.DefinedNameLabel("LocalBudget"),
+                new NamedRangeScopeReport.Sheet(
+                    new dev.erst.gridgrind.core.vocabulary.SheetLabel("Source")),
                 "Source!$A$1:$A$2",
-                ExcelNamedRangeTarget.range("Source", "A1:A2")),
-            new ExcelNamedRangeSnapshot.RangeSnapshot(
-                "OtherLocal",
-                new ExcelNamedRangeScope.SheetScope("Other"),
+                NamedRangeTarget.range(
+                    new dev.erst.gridgrind.core.vocabulary.SheetName("Source"),
+                    new dev.erst.gridgrind.core.vocabulary.RangeRef("A1:A2"))),
+            new NamedRangeReport.RangeReport(
+                new dev.erst.gridgrind.core.vocabulary.DefinedNameLabel("OtherLocal"),
+                new NamedRangeScopeReport.Sheet(
+                    new dev.erst.gridgrind.core.vocabulary.SheetLabel("Other")),
                 "Other!$B$1",
-                ExcelNamedRangeTarget.range("Other", "B1")),
-            new ExcelNamedRangeSnapshot.FormulaSnapshot(
-                "OtherFormula", new ExcelNamedRangeScope.SheetScope("Other"), "SUM(Other!$A$1)"),
-            new ExcelNamedRangeSnapshot.FormulaSnapshot(
-                "WorkbookFormula", new ExcelNamedRangeScope.WorkbookScope(), "SUM(Source!$A$1)"),
+                NamedRangeTarget.range(
+                    new dev.erst.gridgrind.core.vocabulary.SheetName("Other"),
+                    new dev.erst.gridgrind.core.vocabulary.RangeRef("B1"))),
+            new NamedRangeReport.FormulaReport(
+                new dev.erst.gridgrind.core.vocabulary.DefinedNameLabel("OtherFormula"),
+                new NamedRangeScopeReport.Sheet(
+                    new dev.erst.gridgrind.core.vocabulary.SheetLabel("Other")),
+                "SUM(Other!$A$1)"),
+            new NamedRangeReport.FormulaReport(
+                new dev.erst.gridgrind.core.vocabulary.DefinedNameLabel("WorkbookFormula"),
+                new NamedRangeScopeReport.Workbook(),
+                "SUM(Source!$A$1)"),
             localFormula);
 
     assertEquals(
         List.of(
-            new ExcelNamedRangeSnapshot.RangeSnapshot(
-                "LocalBudget",
-                new ExcelNamedRangeScope.SheetScope("Source"),
+            new NamedRangeReport.RangeReport(
+                new dev.erst.gridgrind.core.vocabulary.DefinedNameLabel("LocalBudget"),
+                new NamedRangeScopeReport.Sheet(
+                    new dev.erst.gridgrind.core.vocabulary.SheetLabel("Source")),
                 "Source!$A$1:$A$2",
-                ExcelNamedRangeTarget.range("Source", "A1:A2"))),
-        ExcelSheetCopyController.copyableLocalRangeNames(namedRanges, "Source"));
-    assertDoesNotThrow(
-        () -> ExcelSheetCopyController.requireNoUncopyableLocalNamedRanges(namedRanges, "Source"));
-    assertEquals(
-        List.of(
-            new ExcelNamedRangeSnapshot.RangeSnapshot(
-                "LocalBudget",
-                new ExcelNamedRangeScope.SheetScope("Source"),
-                "Source!$A$1:$A$2",
-                ExcelNamedRangeTarget.range("Source", "A1:A2")),
+                NamedRangeTarget.range(
+                    new dev.erst.gridgrind.core.vocabulary.SheetName("Source"),
+                    new dev.erst.gridgrind.core.vocabulary.RangeRef("A1:A2"))),
             localFormula),
         ExcelSheetCopyController.copyableLocalNames(namedRanges, "Source"));
   }
@@ -1183,17 +1197,21 @@ class ExcelSheetCopyControllerTest {
     workbook
         .names()
         .setNamedRange(
-            new ExcelNamedRangeDefinition(
-                "LocalRange",
-                new ExcelNamedRangeScope.SheetScope("Source"),
-                ExcelNamedRangeTarget.range("Source", "A2:A3")));
+            new StructuredMutationAction.SetNamedRange(
+                new dev.erst.gridgrind.core.vocabulary.DefinedName("LocalRange"),
+                new dev.erst.gridgrind.core.vocabulary.NamedRangeScope.Sheet(
+                    new dev.erst.gridgrind.core.vocabulary.SheetName("Source")),
+                NamedRangeTarget.range(
+                    new dev.erst.gridgrind.core.vocabulary.SheetName("Source"),
+                    new dev.erst.gridgrind.core.vocabulary.RangeRef("A2:A3"))));
     workbook
         .names()
         .setNamedRange(
-            new ExcelNamedRangeDefinition(
-                "LocalFormula",
-                new ExcelNamedRangeScope.SheetScope("Source"),
-                ExcelNamedRangeTarget.formula("SUM(Source!$B$2:$B$3)")));
+            new StructuredMutationAction.SetNamedRange(
+                new dev.erst.gridgrind.core.vocabulary.DefinedName("LocalFormula"),
+                new dev.erst.gridgrind.core.vocabulary.NamedRangeScope.Sheet(
+                    new dev.erst.gridgrind.core.vocabulary.SheetName("Source")),
+                NamedRangeTarget.formula("SUM(Source!$B$2:$B$3)")));
     source.cells().setCell("L1", new CellValue.Text("Region"));
     source.cells().setCell("M1", new CellValue.Text("Desk"));
     source.cells().setCell("L2", new CellValue.Text("North"));

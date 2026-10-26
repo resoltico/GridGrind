@@ -13,6 +13,8 @@ required operands for that operation.
 contracts: for example, `SheetName` enforces worksheet-authoring rules while `SheetLabel` preserves
 an observed name, and `RangeLabel` preserves blank stored text and unsupported references such as `#REF!`.
 Authored `RangeRef` still rejects blank and malformed coordinates.
+Named-range scope specs use authored `SheetName`; `NamedRangeScopeReport` retains observed
+`SheetLabel` values. Formula-backed name reports can preserve an empty stored reference.
 
 Model types do not use `Input`, `Dto`, `Snapshot` or `Definition` as generic suffixes. Materialized
 source-bearing specifications use the `Resolved` prefix where a separate resolved form is necessary.

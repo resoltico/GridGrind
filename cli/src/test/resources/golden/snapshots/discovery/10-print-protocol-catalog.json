@@ -141,6 +141,9 @@
       "entryIds" : [ "NAMED_RANGE_ALL", "NAMED_RANGE_ANY_OF", "NAMED_RANGE_BY_NAMES", "NAMED_RANGE_BY_NAME", "NAMED_RANGE_WORKBOOK_SCOPE", "NAMED_RANGE_SHEET_SCOPE" ],
       "group" : "namedRangeSelectorTypes"
     }, {
+      "entryIds" : [ "WORKBOOK", "SHEET" ],
+      "group" : "namedRangeScopeReportTypes"
+    }, {
       "entryIds" : [ "DRAWING_OBJECT_ALL_ON_SHEET", "DRAWING_OBJECT_BY_NAME" ],
       "group" : "drawingObjectSelectorTypes"
     }, {

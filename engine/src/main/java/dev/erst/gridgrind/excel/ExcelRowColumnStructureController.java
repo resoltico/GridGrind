@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.core.model.formula.NamedRangeTarget;
 import dev.erst.gridgrind.core.vocabulary.ExcelColumnSpan;
 import dev.erst.gridgrind.core.vocabulary.ExcelRowSpan;
 import java.util.List;
@@ -67,8 +68,7 @@ final class ExcelRowColumnStructureController {
     return ExcelRowColumnStructureGuardSupport.workbookContainsFormulaDefinedNames(workbook, names);
   }
 
-  static Optional<ExcelNamedRangeTarget> resolvedRangeBackedTarget(
-      XSSFWorkbook workbook, Name name) {
+  static Optional<NamedRangeTarget> resolvedRangeBackedTarget(XSSFWorkbook workbook, Name name) {
     return ExcelRowColumnStructureGuardSupport.resolvedRangeBackedTarget(workbook, name);
   }
 
@@ -104,7 +104,7 @@ final class ExcelRowColumnStructureController {
   }
 
   /** Typed resolved view of a range-backed defined name for structural guard evaluation. */
-  record ResolvedNamedRange(String name, ExcelNamedRangeTarget target, ExcelRange range) {
+  record ResolvedNamedRange(String name, NamedRangeTarget target, ExcelRange range) {
     ResolvedNamedRange {
       Objects.requireNonNull(name, "name must not be null");
       Objects.requireNonNull(target, "target must not be null");

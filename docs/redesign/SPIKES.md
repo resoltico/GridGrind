@@ -2204,3 +2204,42 @@ failures/errors/skips; all 143 golden cases unchanged. No active mutation/fuzz c
 snapshots 25→20, converter lines 3374→3188, blank checks 409→396, main Java 119283→118644; definitions
 2 and Support 205 remain. Baseline diff empty. WP-40's remaining factual models, source-free
 named-range/block definitions and real resolved plan/step/target execution cutover remain open.
+
+## WP-40 canonical named-range authoring and observed scope
+
+Deleted ExcelNamedRangeDefinition/Target/Scope/Snapshot. Named-range authoring accepts the existing
+source-free StructuredMutationAction.SetNamedRange directly; coordinate spelling remains authored
+until the POI formatter creates absolute normalized references. Core NamedRangeReport flows directly
+through reads. NamedRangeScopeReport is a distinct observed contract with SheetLabel, while authored
+NamedRangeScope retains SheetName validation. Updated analysis/surface scope consumers and removed
+identity conversions. Formula-backed observations retain empty stored references; range-backed reports
+still require a nonblank reference. Real baseline probes passed before migration (12s) for empty
+formulas and malformed stored local sheet labels. Both probes and a new codec roundtrip pass afterward.
+
+Sheet copy uses observed reports directly instead of reconstructing authored definitions; removed
+its unused test-only range filter and no-op guard. Unicode/name validation moved to core. New POI
+parameterized tests verify four absolute range encodings, including reversed endpoints, without
+changing authored coordinates. Analysis evidence uses explicit workbook/sheet domain labels rather
+than record implementation names. Existing copy, lookup, collision, source and parity behavior remains.
+
+Compilation exposed typed identifier/scope boundaries, one mechanical helper-prefix collision and
+obsolete converter assertions; repaired them. Catalog initialization required declaring the referenced
+report scope as a catalog union; fixed metadata, not catalog fallbacks. PMD caught loop allocations,
+resolved by sharing the actual range formatter and validating destination identity once. A malformed
+test edit was caught by formatting (1s) and corrected. Engine assertion retries corrected six typed
+values and one old record-debug evidence string. Core/JSON/engine/14 parity/static checks pass (39s).
+Nested compile found one string-key boundary and two report-scope fixtures; corrected, deterministic
+check/all retained seeds pass (13s). The first root run then exposed only the expected catalog golden
+drift in both launchers (3m08s).
+
+Golden review: exactly one file changed, discovery/10-print-protocol-catalog.json, by three lines.
+It adds nested group namedRangeScopeReportTypes with WORKBOOK/SHEET, necessary to describe the
+verified distinct factual scope contract. No authored scope group or workbook observation changed.
+Reviewed semantic diff is external evidence; discovery factory re-record/replay passes (6s). This is
+a narrow metadata deviation from WP-40's unchanged-corpus wording under delegated QA authority.
+Final no-update ./gradlew check passes (3m): core 374, JSON 352, engine 1456 plus 14 parity, CLI 588,
+zero failures/errors/skips; all 143 golden cases pass. No active mutation/fuzz campaign ran.
+
+Inventories: snapshots 20→19, definitions 2→1, converter lines 3188→3124, blank checks 396→391,
+main Java 118644→118471; reports 95→96 for the distinct observed scope contract. Support 205 remains.
+Baseline diff empty. WP-40 remains open: factual models, selected-range block, resolved execution seam.

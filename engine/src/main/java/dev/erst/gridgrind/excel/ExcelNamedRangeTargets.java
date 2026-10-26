@@ -1,5 +1,7 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.core.model.formula.NamedRangeScopeReport;
+import dev.erst.gridgrind.core.model.formula.NamedRangeTarget;
 import java.util.Objects;
 import java.util.Optional;
 import org.apache.poi.ss.SpreadsheetVersion;
@@ -18,8 +20,30 @@ public final class ExcelNamedRangeTargets {
    * Returns the typed target for a defined-name formula when it resolves to one contiguous cell or
    * range.
    */
-  public static Optional<ExcelNamedRangeTarget> resolveTarget(
-      String refersToFormula, ExcelNamedRangeScope scope) {
+  public static String toFormula(NamedRangeTarget target) {
+    return switch (target) {
+      case NamedRangeTarget.Formula formula -> formula.formula();
+      case NamedRangeTarget.Range range -> rangeFormula(range.sheetName(), range.range());
+    };
+  }
+
+  /** Formats a concrete range for a destination sheet at the POI boundary. */
+  public static String rangeFormula(
+      dev.erst.gridgrind.core.vocabulary.SheetName sheetName,
+      dev.erst.gridgrind.core.vocabulary.RangeRef range) {
+    ExcelRange parsed = ExcelRange.parse(range.value());
+    String first =
+        new CellReference(sheetName.value(), parsed.firstRow(), parsed.firstColumn(), true, true)
+            .formatAsString();
+    return parsed.rowCount() == 1 && parsed.columnCount() == 1
+        ? first
+        : first
+            + ":"
+            + new CellReference(parsed.lastRow(), parsed.lastColumn(), true, true).formatAsString();
+  }
+
+  public static Optional<NamedRangeTarget> resolveTarget(
+      String refersToFormula, NamedRangeScopeReport scope) {
     Objects.requireNonNull(refersToFormula, "refersToFormula must not be null");
     Objects.requireNonNull(scope, "scope must not be null");
 
@@ -45,7 +69,10 @@ public final class ExcelNamedRangeTargets {
               : new CellReference(firstCell.getRow(), firstCell.getCol()).formatAsString()
                   + ":"
                   + new CellReference(lastCell.getRow(), lastCell.getCol()).formatAsString();
-      return Optional.of(ExcelNamedRangeTarget.range(sheetName, range));
+      return Optional.of(
+          NamedRangeTarget.range(
+              new dev.erst.gridgrind.core.vocabulary.SheetName(sheetName),
+              new dev.erst.gridgrind.core.vocabulary.RangeRef(range)));
     } catch (RuntimeException exception) {
       return Optional.empty();
     }
@@ -72,14 +99,14 @@ public final class ExcelNamedRangeTargets {
   }
 
   private static @Nullable String resolveSheetName(
-      AreaReference areaReference, ExcelNamedRangeScope scope) {
+      AreaReference areaReference, NamedRangeScopeReport scope) {
     String sheetName = areaReference.getFirstCell().getSheetName();
     if (sheetName != null) {
       return sheetName;
     }
     return switch (scope) {
-      case ExcelNamedRangeScope.WorkbookScope _ -> null;
-      case ExcelNamedRangeScope.SheetScope sheetScope -> sheetScope.sheetName();
+      case NamedRangeScopeReport.Workbook _ -> null;
+      case NamedRangeScopeReport.Sheet sheetScope -> sheetScope.sheetName().value();
     };
   }
 }

@@ -2,15 +2,27 @@ package dev.erst.gridgrind.excel;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.core.model.formula.NamedRangeScopeReport;
 import org.junit.jupiter.api.Test;
 
-/** Tests for ExcelNamedRangeScope record construction. */
+/** Tests for NamedRangeScopeReport record construction. */
 class ExcelNamedRangeScopeTest {
   @Test
   void validatesSheetScopeInput() {
-    assertDoesNotThrow(() -> new ExcelNamedRangeScope.WorkbookScope());
-    assertDoesNotThrow(() -> new ExcelNamedRangeScope.SheetScope("Budget"));
-    assertThrows(NullPointerException.class, () -> new ExcelNamedRangeScope.SheetScope(null));
-    assertThrows(IllegalArgumentException.class, () -> new ExcelNamedRangeScope.SheetScope(" "));
+    assertDoesNotThrow(() -> new NamedRangeScopeReport.Workbook());
+    assertDoesNotThrow(
+        () ->
+            new NamedRangeScopeReport.Sheet(
+                new dev.erst.gridgrind.core.vocabulary.SheetLabel("Budget")));
+    assertThrows(
+        NullPointerException.class,
+        () ->
+            new NamedRangeScopeReport.Sheet(
+                new dev.erst.gridgrind.core.vocabulary.SheetLabel(null)));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new NamedRangeScopeReport.Sheet(
+                new dev.erst.gridgrind.core.vocabulary.SheetLabel(" ")));
   }
 }

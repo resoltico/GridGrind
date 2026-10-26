@@ -2,6 +2,7 @@ package dev.erst.gridgrind.excel;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.core.model.formula.NamedRangeScopeReport;
 import dev.erst.gridgrind.core.model.style.BorderSidePatch;
 import dev.erst.gridgrind.core.model.style.ColorSpec;
 import dev.erst.gridgrind.core.model.style.DifferentialBorderPatch;
@@ -656,10 +657,10 @@ class ExcelConditionalFormattingControllerTest {
         ExcelConditionalFormattingController.locationEvidence(
             new WorkbookAnalysis.AnalysisLocation.Range("Ops", "A1:B2")));
     assertEquals(
-        "BudgetTotal@WorkbookScope[]",
+        "BudgetTotal@workbook",
         ExcelConditionalFormattingController.locationEvidence(
             new WorkbookAnalysis.AnalysisLocation.NamedRange(
-                "BudgetTotal", new ExcelNamedRangeScope.WorkbookScope())));
+                "BudgetTotal", new NamedRangeScopeReport.Workbook())));
   }
 
   @Test

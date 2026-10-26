@@ -1,5 +1,7 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.core.model.formula.NamedRangeReport;
+import dev.erst.gridgrind.core.model.formula.NamedRangeScopeReport;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -189,12 +191,12 @@ final class ExcelWorkbookIntrospector {
   }
 
   /** Returns the named ranges selected by the provided workbook-core named-range selection. */
-  List<ExcelNamedRangeSnapshot> selectNamedRanges(
+  List<NamedRangeReport> selectNamedRanges(
       ExcelWorkbook workbook, ExcelNamedRangeSelection selection) {
     Objects.requireNonNull(workbook, "workbook must not be null");
     Objects.requireNonNull(selection, "selection must not be null");
 
-    List<ExcelNamedRangeSnapshot> namedRanges = workbook.names().namedRanges();
+    List<NamedRangeReport> namedRanges = workbook.names().namedRanges();
     return switch (selection) {
       case ExcelNamedRangeSelection.All _ -> namedRanges;
       case ExcelNamedRangeSelection.Selected selected ->
@@ -202,9 +204,9 @@ final class ExcelWorkbookIntrospector {
     };
   }
 
-  private List<ExcelNamedRangeSnapshot> selectNamedRanges(
-      List<ExcelNamedRangeSnapshot> namedRanges, List<ExcelNamedRangeSelector> selectors) {
-    Set<ExcelNamedRangeSnapshot> matched = new LinkedHashSet<>();
+  private List<NamedRangeReport> selectNamedRanges(
+      List<NamedRangeReport> namedRanges, List<ExcelNamedRangeSelector> selectors) {
+    Set<NamedRangeReport> matched = new LinkedHashSet<>();
     for (ExcelNamedRangeSelector selector : selectors) {
       matched.addAll(matchSelector(namedRanges, selector));
     }
@@ -212,10 +214,10 @@ final class ExcelWorkbookIntrospector {
   }
 
   /** Returns the named ranges matched by one exact selector or throws when none match. */
-  static List<ExcelNamedRangeSnapshot> matchSelector(
-      List<ExcelNamedRangeSnapshot> namedRanges, ExcelNamedRangeSelector selector) {
-    List<ExcelNamedRangeSnapshot> matches = new ArrayList<>();
-    for (ExcelNamedRangeSnapshot namedRange : namedRanges) {
+  static List<NamedRangeReport> matchSelector(
+      List<NamedRangeReport> namedRanges, ExcelNamedRangeSelector selector) {
+    List<NamedRangeReport> matches = new ArrayList<>();
+    for (NamedRangeReport namedRange : namedRanges) {
       if (matchesSelector(namedRange, selector)) {
         matches.add(namedRange);
       }
@@ -227,34 +229,36 @@ final class ExcelWorkbookIntrospector {
   }
 
   private static boolean matchesSelector(
-      ExcelNamedRangeSnapshot namedRange, ExcelNamedRangeSelector selector) {
+      NamedRangeReport namedRange, ExcelNamedRangeSelector selector) {
     return switch (selector) {
       case ExcelNamedRangeSelector.ByName byName ->
-          namedRange.name().equalsIgnoreCase(byName.name());
+          namedRange.name().value().equalsIgnoreCase(byName.name());
       case ExcelNamedRangeSelector.WorkbookScope workbookScope ->
-          namedRange.name().equalsIgnoreCase(workbookScope.name())
-              && namedRange.scope() instanceof ExcelNamedRangeScope.WorkbookScope;
+          namedRange.name().value().equalsIgnoreCase(workbookScope.name())
+              && namedRange.scope() instanceof NamedRangeScopeReport.Workbook;
       case ExcelNamedRangeSelector.SheetScope sheetScope ->
-          namedRange.name().equalsIgnoreCase(sheetScope.name())
+          namedRange.name().value().equalsIgnoreCase(sheetScope.name())
               && matchesSheetScope(namedRange.scope(), sheetScope.sheetName());
     };
   }
 
-  private static boolean matchesSheetScope(ExcelNamedRangeScope scope, String sheetName) {
-    return scope instanceof ExcelNamedRangeScope.SheetScope namedRangeScope
-        && namedRangeScope.sheetName().equals(sheetName);
+  private static boolean matchesSheetScope(NamedRangeScopeReport scope, String sheetName) {
+    return scope instanceof NamedRangeScopeReport.Sheet namedRangeScope
+        && namedRangeScope.sheetName().value().equals(sheetName);
   }
 
   private static NamedRangeNotFoundException notFound(ExcelNamedRangeSelector selector) {
     return switch (selector) {
       case ExcelNamedRangeSelector.ByName byName ->
-          new NamedRangeNotFoundException(byName.name(), new ExcelNamedRangeScope.WorkbookScope());
+          new NamedRangeNotFoundException(byName.name(), new NamedRangeScopeReport.Workbook());
       case ExcelNamedRangeSelector.WorkbookScope workbookScope ->
           new NamedRangeNotFoundException(
-              workbookScope.name(), new ExcelNamedRangeScope.WorkbookScope());
+              workbookScope.name(), new NamedRangeScopeReport.Workbook());
       case ExcelNamedRangeSelector.SheetScope sheetScope ->
           new NamedRangeNotFoundException(
-              sheetScope.name(), new ExcelNamedRangeScope.SheetScope(sheetScope.sheetName()));
+              sheetScope.name(),
+              new NamedRangeScopeReport.Sheet(
+                  new dev.erst.gridgrind.core.vocabulary.SheetLabel(sheetScope.sheetName())));
     };
   }
 
@@ -391,32 +395,32 @@ final class ExcelWorkbookIntrospector {
     Objects.requireNonNull(workbook, "workbook must not be null");
     Objects.requireNonNull(selection, "selection must not be null");
 
-    List<ExcelNamedRangeSnapshot> namedRanges = selectNamedRanges(workbook, selection);
+    List<NamedRangeReport> namedRanges = selectNamedRanges(workbook, selection);
     int workbookScopedCount = 0;
     int sheetScopedCount = 0;
     int rangeBackedCount = 0;
     int formulaBackedCount = 0;
     List<WorkbookSurfaceResult.NamedRangeSurfaceEntry> entries =
         new ArrayList<>(namedRanges.size());
-    for (ExcelNamedRangeSnapshot namedRange : namedRanges) {
+    for (NamedRangeReport namedRange : namedRanges) {
       WorkbookSurfaceResult.NamedRangeBackingKind kind;
       switch (namedRange) {
-        case ExcelNamedRangeSnapshot.RangeSnapshot _ -> {
+        case NamedRangeReport.RangeReport _ -> {
           kind = WorkbookSurfaceResult.NamedRangeBackingKind.RANGE;
           rangeBackedCount++;
         }
-        case ExcelNamedRangeSnapshot.FormulaSnapshot _ -> {
+        case NamedRangeReport.FormulaReport _ -> {
           kind = WorkbookSurfaceResult.NamedRangeBackingKind.FORMULA;
           formulaBackedCount++;
         }
       }
       switch (namedRange.scope()) {
-        case ExcelNamedRangeScope.WorkbookScope _ -> workbookScopedCount++;
-        case ExcelNamedRangeScope.SheetScope _ -> sheetScopedCount++;
+        case NamedRangeScopeReport.Workbook _ -> workbookScopedCount++;
+        case NamedRangeScopeReport.Sheet _ -> sheetScopedCount++;
       }
       entries.add(
           new WorkbookSurfaceResult.NamedRangeSurfaceEntry(
-              namedRange.name(), namedRange.scope(), namedRange.refersToFormula(), kind));
+              namedRange.name().value(), namedRange.scope(), namedRange.refersToFormula(), kind));
     }
     return new WorkbookSurfaceResult.NamedRangeSurface(
         workbookScopedCount,

@@ -35,7 +35,6 @@ import dev.erst.gridgrind.core.vocabulary.DefinedNameLabel;
 import dev.erst.gridgrind.core.vocabulary.ExcelFillPattern;
 import dev.erst.gridgrind.core.vocabulary.ExcelHorizontalAlignment;
 import dev.erst.gridgrind.core.vocabulary.ExcelVerticalAlignment;
-import dev.erst.gridgrind.core.vocabulary.NamedRangeScope;
 import dev.erst.gridgrind.core.vocabulary.ProtocolVersion;
 import dev.erst.gridgrind.core.vocabulary.RangeLabel;
 import dev.erst.gridgrind.core.vocabulary.SheetLabel;
@@ -385,7 +384,7 @@ class WorkbookResultTest {
     NamedRangeReport.FormulaReport formulaOnly =
         new NamedRangeReport.FormulaReport(
             new DefinedNameLabel("BudgetExpr"),
-            new NamedRangeScope.Workbook(),
+            new dev.erst.gridgrind.core.model.formula.NamedRangeScopeReport.Workbook(),
             "SUM(Budget!A1:A3)");
     SheetProtectionReport.Unprotected unprotected = new SheetProtectionReport.Unprotected();
     dev.erst.gridgrind.core.model.value.CellReport.BlankReport blankCell =

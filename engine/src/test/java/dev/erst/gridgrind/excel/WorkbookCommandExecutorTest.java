@@ -8,6 +8,9 @@ import dev.erst.gridgrind.core.model.drawing.ResolvedComment;
 import dev.erst.gridgrind.core.model.drawing.ResolvedEmbeddedObject;
 import dev.erst.gridgrind.core.model.drawing.ResolvedPicture;
 import dev.erst.gridgrind.core.model.drawing.ResolvedShape;
+import dev.erst.gridgrind.core.model.formula.NamedRangeReport;
+import dev.erst.gridgrind.core.model.formula.NamedRangeScopeReport;
+import dev.erst.gridgrind.core.model.formula.NamedRangeTarget;
 import dev.erst.gridgrind.core.model.formula.ResolvedFormula;
 import dev.erst.gridgrind.core.model.pivot.PivotTableReport;
 import dev.erst.gridgrind.core.model.pivot.PivotTableSpec;
@@ -35,6 +38,7 @@ import dev.erst.gridgrind.core.model.validation.ResolvedValidationErrorAlert;
 import dev.erst.gridgrind.core.model.validation.ResolvedValidationPrompt;
 import dev.erst.gridgrind.core.model.value.CellValue;
 import dev.erst.gridgrind.core.model.value.HyperlinkTarget;
+import dev.erst.gridgrind.core.plan.StructuredMutationAction;
 import dev.erst.gridgrind.core.source.BinaryContent;
 import dev.erst.gridgrind.core.vocabulary.ExcelColumnSpan;
 import dev.erst.gridgrind.core.vocabulary.ExcelDataValidationErrorStyle;
@@ -159,17 +163,22 @@ class WorkbookCommandExecutorTest {
               new WorkbookSheetCommand.MoveSheet("History", 0),
               new WorkbookSheetCommand.DeleteSheet("Scratch"),
               new WorkbookMetadataCommand.SetNamedRange(
-                  new ExcelNamedRangeDefinition(
-                      "BudgetTotal",
-                      new ExcelNamedRangeScope.WorkbookScope(),
-                      ExcelNamedRangeTarget.range("Budget", "B3"))),
+                  new StructuredMutationAction.SetNamedRange(
+                      new dev.erst.gridgrind.core.vocabulary.DefinedName("BudgetTotal"),
+                      new dev.erst.gridgrind.core.vocabulary.NamedRangeScope.Workbook(),
+                      NamedRangeTarget.range(
+                          new dev.erst.gridgrind.core.vocabulary.SheetName("Budget"),
+                          new dev.erst.gridgrind.core.vocabulary.RangeRef("B3")))),
               new WorkbookMetadataCommand.SetNamedRange(
-                  new ExcelNamedRangeDefinition(
-                      "HistoryCell",
-                      new ExcelNamedRangeScope.SheetScope("History"),
-                      ExcelNamedRangeTarget.range("History", "A1"))),
+                  new StructuredMutationAction.SetNamedRange(
+                      new dev.erst.gridgrind.core.vocabulary.DefinedName("HistoryCell"),
+                      new dev.erst.gridgrind.core.vocabulary.NamedRangeScope.Sheet(
+                          new dev.erst.gridgrind.core.vocabulary.SheetName("History")),
+                      NamedRangeTarget.range(
+                          new dev.erst.gridgrind.core.vocabulary.SheetName("History"),
+                          new dev.erst.gridgrind.core.vocabulary.RangeRef("A1")))),
               new WorkbookMetadataCommand.DeleteNamedRange(
-                  "BudgetTotal", new ExcelNamedRangeScope.WorkbookScope()),
+                  "BudgetTotal", new NamedRangeScopeReport.Workbook()),
               new WorkbookLayoutCommand.AutoSizeColumns("Budget"),
               new WorkbookStructureCommand.SetColumnWidth("Budget", 0, 1, 16.0),
               new WorkbookStructureCommand.SetRowHeight("Budget", 0, 0, 28.5),
@@ -254,11 +263,14 @@ class WorkbookCommandExecutorTest {
         XlsxRoundTrip.dataValidations(workbookPath, "Budget"));
     assertEquals(
         List.of(
-            new ExcelNamedRangeSnapshot.RangeSnapshot(
-                "HistoryCell",
-                new ExcelNamedRangeScope.SheetScope("History"),
+            new NamedRangeReport.RangeReport(
+                new dev.erst.gridgrind.core.vocabulary.DefinedNameLabel("HistoryCell"),
+                new NamedRangeScopeReport.Sheet(
+                    new dev.erst.gridgrind.core.vocabulary.SheetLabel("History")),
                 "History!$A$1",
-                ExcelNamedRangeTarget.range("History", "A1"))),
+                NamedRangeTarget.range(
+                    new dev.erst.gridgrind.core.vocabulary.SheetName("History"),
+                    new dev.erst.gridgrind.core.vocabulary.RangeRef("A1")))),
         XlsxRoundTrip.namedRanges(workbookPath));
     try (ExcelWorkbook reopened =
         ExcelWorkbooks.open(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory())) {
@@ -970,10 +982,12 @@ class WorkbookCommandExecutorTest {
       WorkbookCommandExecutor.applyMetadataCommand(
           workbook,
           new WorkbookMetadataCommand.SetNamedRange(
-              new ExcelNamedRangeDefinition(
-                  "BudgetStatus",
-                  new ExcelNamedRangeScope.WorkbookScope(),
-                  ExcelNamedRangeTarget.range("Budget", "B2"))));
+              new StructuredMutationAction.SetNamedRange(
+                  new dev.erst.gridgrind.core.vocabulary.DefinedName("BudgetStatus"),
+                  new dev.erst.gridgrind.core.vocabulary.NamedRangeScope.Workbook(),
+                  NamedRangeTarget.range(
+                      new dev.erst.gridgrind.core.vocabulary.SheetName("Budget"),
+                      new dev.erst.gridgrind.core.vocabulary.RangeRef("B2")))));
       WorkbookCommandExecutor.applyDrawingCommand(
           workbook,
           new WorkbookDrawingCommand.SetShape(

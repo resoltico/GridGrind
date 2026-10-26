@@ -1224,7 +1224,7 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
             .contains(
                 new NamedRangeReport.RangeReport(
                     new DefinedNameLabel("BudgetTotal"),
-                    new NamedRangeScope.Workbook(),
+                    new dev.erst.gridgrind.core.model.formula.NamedRangeScopeReport.Workbook(),
                     ranges.namedRanges().stream()
                         .filter(namedRange -> "BudgetTotal".equals(namedRange.name().value()))
                         .findFirst()
@@ -1237,7 +1237,8 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
             .contains(
                 new NamedRangeReport.RangeReport(
                     new DefinedNameLabel("LocalItem"),
-                    new NamedRangeScope.Sheet(new SheetName("Budget")),
+                    new dev.erst.gridgrind.core.model.formula.NamedRangeScopeReport.Sheet(
+                        new dev.erst.gridgrind.core.vocabulary.SheetLabel("Budget")),
                     ranges.namedRanges().stream()
                         .filter(namedRange -> "LocalItem".equals(namedRange.name().value()))
                         .findFirst()

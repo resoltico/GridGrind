@@ -1,6 +1,8 @@
 package dev.erst.gridgrind.jazzer.support;
 
 import dev.erst.gridgrind.core.model.drawing.ResolvedComment;
+import dev.erst.gridgrind.core.model.formula.NamedRangeScopeReport;
+import dev.erst.gridgrind.core.model.formula.NamedRangeTarget;
 import dev.erst.gridgrind.core.model.pivot.PivotTableReport;
 import dev.erst.gridgrind.core.model.style.CellStyleReport;
 import dev.erst.gridgrind.core.model.style.RichTextRunReport;
@@ -11,8 +13,6 @@ import dev.erst.gridgrind.core.model.value.HyperlinkTarget;
 import dev.erst.gridgrind.excel.ExcelCellMetadataSnapshot;
 import dev.erst.gridgrind.excel.ExcelCellSnapshot;
 import dev.erst.gridgrind.excel.ExcelChartSnapshot;
-import dev.erst.gridgrind.excel.ExcelNamedRangeScope;
-import dev.erst.gridgrind.excel.ExcelNamedRangeTarget;
 import dev.erst.gridgrind.excel.ExcelSheetPane;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
 import dev.erst.gridgrind.excel.WorkbookCommand;
@@ -110,16 +110,16 @@ final class XlsxRoundTripExpectedStateSupport {
 
   record ExpectedColumnLayoutState(Boolean hidden, Integer outlineLevel, Boolean collapsed) {}
 
-  record NamedRangeKey(String name, ExcelNamedRangeScope scope) {
+  record NamedRangeKey(String name, NamedRangeScopeReport scope) {
     String displayName() {
       return switch (scope) {
-        case ExcelNamedRangeScope.WorkbookScope _ -> "WORKBOOK:" + name;
-        case ExcelNamedRangeScope.SheetScope sheetScope ->
+        case NamedRangeScopeReport.Workbook _ -> "WORKBOOK:" + name;
+        case NamedRangeScopeReport.Sheet sheetScope ->
             "SHEET:" + sheetScope.sheetName() + ":" + name;
       };
     }
   }
 
   record ExpectedNamedRange(
-      ExcelNamedRangeScope scope, String refersToFormula, @Nullable ExcelNamedRangeTarget target) {}
+      NamedRangeScopeReport scope, String refersToFormula, @Nullable NamedRangeTarget target) {}
 }
