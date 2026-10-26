@@ -252,8 +252,10 @@ final class WorkbookSampleFixtures {
             "Budget", new ExcelRangeSelection.Selected(List.of("C2:D4"))),
         new WorkbookFormattingCommand.SetConditionalFormatting(
             "Budget",
-            new ExcelConditionalFormattingBlockDefinition(
-                List.of("A2:A5"),
+            List.of("A2:A5").stream()
+                .map(dev.erst.gridgrind.core.vocabulary.RangeRef::new)
+                .toList(),
+            new dev.erst.gridgrind.core.model.validation.ConditionalFormattingSpec(
                 List.of(
                     new ConditionalFormattingRuleSpec.FormulaRule(
                         "A2>0",

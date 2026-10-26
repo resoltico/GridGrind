@@ -34,8 +34,9 @@ public final class ExcelSheetMetadata {
 
   /** Creates or replaces one logical conditional-formatting block on this sheet. */
   public ExcelSheetMetadata setConditionalFormatting(
-      ExcelConditionalFormattingBlockDefinition block) {
-    metadataSupport.setConditionalFormatting(block, sheet);
+      List<dev.erst.gridgrind.core.vocabulary.RangeRef> ranges,
+      dev.erst.gridgrind.core.model.validation.ConditionalFormattingSpec formatting) {
+    metadataSupport.setConditionalFormatting(ranges, formatting, sheet);
     return this;
   }
 

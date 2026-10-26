@@ -467,8 +467,10 @@ class SequenceIntrospectionTest {
         SequenceIntrospection.commandKind(
             new WorkbookFormattingCommand.SetConditionalFormatting(
                 "Budget",
-                new dev.erst.gridgrind.excel.ExcelConditionalFormattingBlockDefinition(
-                    List.of("A2:A5"),
+                List.of("A2:A5").stream()
+                    .map(dev.erst.gridgrind.core.vocabulary.RangeRef::new)
+                    .toList(),
+                new dev.erst.gridgrind.core.model.validation.ConditionalFormattingSpec(
                     List.of(
                         new dev.erst.gridgrind.core.model.validation.ConditionalFormattingRuleSpec
                             .FormulaRule(

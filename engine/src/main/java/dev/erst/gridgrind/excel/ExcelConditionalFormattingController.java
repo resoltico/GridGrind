@@ -20,10 +20,13 @@ final class ExcelConditionalFormattingController {
       new ExcelConditionalFormattingHealthSupport();
 
   /** Creates or replaces one logical conditional-formatting block on the target sheet. */
-  void setConditionalFormatting(XSSFSheet sheet, ExcelConditionalFormattingBlockDefinition block) {
+  void setConditionalFormatting(
+      XSSFSheet sheet,
+      List<dev.erst.gridgrind.core.vocabulary.RangeRef> ranges,
+      dev.erst.gridgrind.core.model.validation.ConditionalFormattingSpec formatting) {
     Objects.requireNonNull(sheet, "sheet must not be null");
-    Objects.requireNonNull(block, "block must not be null");
-    authoring.setConditionalFormatting(sheet, block);
+    Objects.requireNonNull(formatting, "formatting must not be null");
+    authoring.setConditionalFormatting(sheet, ranges, formatting);
   }
 
   /** Removes conditional-formatting blocks on one sheet according to the provided selection. */

@@ -708,8 +708,10 @@ class ExcelSheetCopyControllerTest {
       source
           .metadata()
           .setConditionalFormatting(
-              new ExcelConditionalFormattingBlockDefinition(
-                  List.of("C2:C3"),
+              List.of("C2:C3").stream()
+                  .map(dev.erst.gridgrind.core.vocabulary.RangeRef::new)
+                  .toList(),
+              new dev.erst.gridgrind.core.model.validation.ConditionalFormattingSpec(
                   List.of(
                       new ConditionalFormattingRuleSpec.FormulaRule(
                           "SUM(Source!$B$2:$B$3)>0", true, Optional.empty()),
@@ -1157,8 +1159,10 @@ class ExcelSheetCopyControllerTest {
     source
         .metadata()
         .setConditionalFormatting(
-            new ExcelConditionalFormattingBlockDefinition(
-                List.of("I2:I3"),
+            List.of("I2:I3").stream()
+                .map(dev.erst.gridgrind.core.vocabulary.RangeRef::new)
+                .toList(),
+            new dev.erst.gridgrind.core.model.validation.ConditionalFormattingSpec(
                 List.of(
                     new ConditionalFormattingRuleSpec.FormulaRule(
                         "SUM(Source!$B$2:$B$3)>0", false, Optional.of(supportedStyle())),

@@ -40,7 +40,11 @@ class ExcelConditionalFormattingOperatorPersistenceTest {
               .toList();
       new ExcelConditionalFormattingController()
           .setConditionalFormatting(
-              sheet, new ExcelConditionalFormattingBlockDefinition(List.of("A1:A8"), rules));
+              sheet,
+              List.of("A1:A8").stream()
+                  .map(dev.erst.gridgrind.core.vocabulary.RangeRef::new)
+                  .toList(),
+              new dev.erst.gridgrind.core.model.validation.ConditionalFormattingSpec(rules));
       try (var output = Files.newOutputStream(workbookPath)) {
         workbook.write(output);
       }

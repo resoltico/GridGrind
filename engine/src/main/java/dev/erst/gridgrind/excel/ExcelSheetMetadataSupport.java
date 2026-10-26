@@ -57,9 +57,11 @@ final class ExcelSheetMetadataSupport {
   }
 
   ExcelSheet setConditionalFormatting(
-      ExcelConditionalFormattingBlockDefinition block, ExcelSheet owner) {
-    Objects.requireNonNull(block, "block must not be null");
-    conditionalFormattingController.setConditionalFormatting(xssfSheet(), block);
+      List<dev.erst.gridgrind.core.vocabulary.RangeRef> ranges,
+      dev.erst.gridgrind.core.model.validation.ConditionalFormattingSpec formatting,
+      ExcelSheet owner) {
+    Objects.requireNonNull(formatting, "formatting must not be null");
+    conditionalFormattingController.setConditionalFormatting(xssfSheet(), ranges, formatting);
     return owner;
   }
 

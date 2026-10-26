@@ -58,8 +58,10 @@ class WorkbookAnalyzerTest {
       budget
           .metadata()
           .setConditionalFormatting(
-              new ExcelConditionalFormattingBlockDefinition(
-                  List.of("B2:B3"),
+              List.of("B2:B3").stream()
+                  .map(dev.erst.gridgrind.core.vocabulary.RangeRef::new)
+                  .toList(),
+              new dev.erst.gridgrind.core.model.validation.ConditionalFormattingSpec(
                   List.of(
                       new ConditionalFormattingRuleSpec.FormulaRule(
                           "B2>0",

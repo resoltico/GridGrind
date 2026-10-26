@@ -1,14 +1,11 @@
 package dev.erst.gridgrind.engine.runtime;
 
-import dev.erst.gridgrind.core.model.validation.ConditionalFormattingSpec;
 import dev.erst.gridgrind.core.model.validation.DataValidationErrorAlertSpec;
 import dev.erst.gridgrind.core.model.validation.DataValidationPromptSpec;
 import dev.erst.gridgrind.core.model.validation.DataValidationSpec;
 import dev.erst.gridgrind.core.model.validation.ResolvedDataValidation;
 import dev.erst.gridgrind.core.model.validation.ResolvedValidationErrorAlert;
 import dev.erst.gridgrind.core.model.validation.ResolvedValidationPrompt;
-import dev.erst.gridgrind.excel.ExcelConditionalFormattingBlockDefinition;
-import java.util.List;
 import java.util.Optional;
 
 /** Converts structured contract inputs such as drawings, validations, and tables. */
@@ -50,10 +47,5 @@ final class WorkbookCommandStructuredInputConverter {
                     errorAlert.title(), "validation error title"),
                 WorkbookCommandSourceSupport.inlineText(errorAlert.text(), "validation error text"),
                 errorAlert.showErrorBox()));
-  }
-
-  static ExcelConditionalFormattingBlockDefinition toExcelConditionalFormattingBlock(
-      List<String> ranges, ConditionalFormattingSpec definition) {
-    return new ExcelConditionalFormattingBlockDefinition(ranges, definition.rules());
   }
 }

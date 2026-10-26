@@ -377,8 +377,10 @@ class WorkbookCommandExecutorTest {
                   workbook,
                   new WorkbookFormattingCommand.SetConditionalFormatting(
                       "Missing",
-                      new ExcelConditionalFormattingBlockDefinition(
-                          List.of("A1"),
+                      List.of("A1").stream()
+                          .map(dev.erst.gridgrind.core.vocabulary.RangeRef::new)
+                          .toList(),
+                      new dev.erst.gridgrind.core.model.validation.ConditionalFormattingSpec(
                           List.of(
                               new ConditionalFormattingRuleSpec.FormulaRule(
                                   "A1>0",
@@ -695,8 +697,10 @@ class WorkbookCommandExecutorTest {
           workbook,
           new WorkbookFormattingCommand.SetConditionalFormatting(
               "Ops",
-              new ExcelConditionalFormattingBlockDefinition(
-                  List.of("A1:A3"),
+              List.of("A1:A3").stream()
+                  .map(dev.erst.gridgrind.core.vocabulary.RangeRef::new)
+                  .toList(),
+              new dev.erst.gridgrind.core.model.validation.ConditionalFormattingSpec(
                   List.of(
                       new ConditionalFormattingRuleSpec.FormulaRule(
                           "A1>0",

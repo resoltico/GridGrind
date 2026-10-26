@@ -39,14 +39,42 @@ import org.junit.jupiter.api.Test;
 /** Tests for direct conditional-formatting authoring, introspection, and health analysis. */
 class ExcelConditionalFormattingControllerTest {
   @Test
+  void invalidTargetRangeListsPreserveExistingRules() throws IOException {
+    try (XSSFWorkbook workbook = new XSSFWorkbook()) {
+      var sheet = workbook.createSheet("Data");
+      var controller = new ExcelConditionalFormattingController();
+      var range = new dev.erst.gridgrind.core.vocabulary.RangeRef("A1:A3");
+      var formatting =
+          new dev.erst.gridgrind.core.model.validation.ConditionalFormattingSpec(
+              List.of(
+                  new ConditionalFormattingRuleSpec.FormulaRule("A1>0", true, Optional.empty())));
+      controller.setConditionalFormatting(sheet, List.of(range), formatting);
+      assertThrows(
+          IllegalArgumentException.class,
+          () -> controller.setConditionalFormatting(sheet, List.of(), formatting));
+      assertThrows(
+          IllegalArgumentException.class,
+          () -> controller.setConditionalFormatting(sheet, List.of(range, range), formatting));
+      assertEquals(1, sheet.getSheetConditionalFormatting().getNumConditionalFormattings());
+      assertEquals(
+          "A1>0",
+          sheet
+              .getSheetConditionalFormatting()
+              .getConditionalFormattingAt(0)
+              .getRule(0)
+              .getFormula1());
+    }
+  }
+
+  @Test
   void normalizesAuthoredFormulasAtPoiBoundary() throws IOException {
     try (XSSFWorkbook workbook = new XSSFWorkbook()) {
       var sheet = workbook.createSheet("Data");
       var controller = new ExcelConditionalFormattingController();
       controller.setConditionalFormatting(
           sheet,
-          new ExcelConditionalFormattingBlockDefinition(
-              List.of("A1:A3"),
+          List.of("A1:A3").stream().map(dev.erst.gridgrind.core.vocabulary.RangeRef::new).toList(),
+          new dev.erst.gridgrind.core.model.validation.ConditionalFormattingSpec(
               List.of(
                   new ConditionalFormattingRuleSpec.FormulaRule(
                       " =A1>0 ", true, Optional.empty()))));
@@ -67,8 +95,8 @@ class ExcelConditionalFormattingControllerTest {
       var controller = new ExcelConditionalFormattingController();
       controller.setConditionalFormatting(
           sheet,
-          new ExcelConditionalFormattingBlockDefinition(
-              List.of("A1:A3"),
+          List.of("A1:A3").stream().map(dev.erst.gridgrind.core.vocabulary.RangeRef::new).toList(),
+          new dev.erst.gridgrind.core.model.validation.ConditionalFormattingSpec(
               List.of(
                   new ConditionalFormattingRuleSpec.FormulaRule("A1>0", true, Optional.empty()))));
       assertThrows(
@@ -76,8 +104,10 @@ class ExcelConditionalFormattingControllerTest {
           () ->
               controller.setConditionalFormatting(
                   sheet,
-                  new ExcelConditionalFormattingBlockDefinition(
-                      List.of("A1:A3"),
+                  List.of("A1:A3").stream()
+                      .map(dev.erst.gridgrind.core.vocabulary.RangeRef::new)
+                      .toList(),
+                  new dev.erst.gridgrind.core.model.validation.ConditionalFormattingSpec(
                       List.of(
                           new ConditionalFormattingRuleSpec.FormulaRule(
                               " = ", true, Optional.empty())))));
@@ -102,8 +132,15 @@ class ExcelConditionalFormattingControllerTest {
     try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       workbook.getOrCreateSheet("Ops");
       ExcelSheet sheet = workbook.sheet("Ops");
-      sheet.metadata().setConditionalFormatting(primaryBlock("A1:A3"));
-      sheet.metadata().setConditionalFormatting(secondaryBlock("C1:C3"));
+      sheet
+          .metadata()
+          .setConditionalFormatting(
+              List.of(new dev.erst.gridgrind.core.vocabulary.RangeRef("A1:A3")), primaryBlock());
+      sheet
+          .metadata()
+          .setConditionalFormatting(
+              List.of(new dev.erst.gridgrind.core.vocabulary.RangeRef("C1:C3")),
+              secondaryBlock("C1:C3"));
 
       assertEquals(
           List.of(
@@ -256,8 +293,8 @@ class ExcelConditionalFormattingControllerTest {
 
       controller.setConditionalFormatting(
           sheet,
-          new ExcelConditionalFormattingBlockDefinition(
-              List.of("A1:A3"),
+          List.of("A1:A3").stream().map(dev.erst.gridgrind.core.vocabulary.RangeRef::new).toList(),
+          new dev.erst.gridgrind.core.model.validation.ConditionalFormattingSpec(
               List.of(
                   new ConditionalFormattingRuleSpec.FormulaRule("A1>0", true, Optional.empty()),
                   new ConditionalFormattingRuleSpec.CellValueRule(
@@ -299,8 +336,8 @@ class ExcelConditionalFormattingControllerTest {
 
       controller.setConditionalFormatting(
           sheet,
-          new ExcelConditionalFormattingBlockDefinition(
-              List.of("A1:A3"),
+          List.of("A1:A3").stream().map(dev.erst.gridgrind.core.vocabulary.RangeRef::new).toList(),
+          new dev.erst.gridgrind.core.model.validation.ConditionalFormattingSpec(
               List.of(
                   new ConditionalFormattingRuleSpec.ColorScaleRule(
                       false,
@@ -365,8 +402,8 @@ class ExcelConditionalFormattingControllerTest {
 
       controller.setConditionalFormatting(
           sheet,
-          new ExcelConditionalFormattingBlockDefinition(
-              List.of("A1:A3"),
+          List.of("A1:A3").stream().map(dev.erst.gridgrind.core.vocabulary.RangeRef::new).toList(),
+          new dev.erst.gridgrind.core.model.validation.ConditionalFormattingSpec(
               List.of(
                   new ConditionalFormattingRuleSpec.IconSetRule(
                       true,
@@ -410,8 +447,8 @@ class ExcelConditionalFormattingControllerTest {
 
       controller.setConditionalFormatting(
           sheet,
-          new ExcelConditionalFormattingBlockDefinition(
-              List.of("A1:A3"),
+          List.of("A1:A3").stream().map(dev.erst.gridgrind.core.vocabulary.RangeRef::new).toList(),
+          new dev.erst.gridgrind.core.model.validation.ConditionalFormattingSpec(
               List.of(
                   new ConditionalFormattingRuleSpec.Top10Rule(
                       true,
@@ -470,8 +507,10 @@ class ExcelConditionalFormattingControllerTest {
       sheet
           .metadata()
           .setConditionalFormatting(
-              new ExcelConditionalFormattingBlockDefinition(
-                  List.of("A1:A2"),
+              List.of("A1:A2").stream()
+                  .map(dev.erst.gridgrind.core.vocabulary.RangeRef::new)
+                  .toList(),
+              new dev.erst.gridgrind.core.model.validation.ConditionalFormattingSpec(
                   List.of(
                       new ConditionalFormattingRuleSpec.CellValueRule(
                           ExcelComparisonOperator.GREATER_THAN,
@@ -614,8 +653,12 @@ class ExcelConditionalFormattingControllerTest {
   void healthFindingsDetectBrokenFormulaEmptyRangeAndPriorityCollision() throws Exception {
     try (XSSFWorkbook workbook = new XSSFWorkbook()) {
       XSSFSheet sheet = workbook.createSheet("Ops");
-      controller.setConditionalFormatting(sheet, primaryBlock("A1:A3"));
-      controller.setConditionalFormatting(sheet, secondaryBlock("B1:B3"));
+      controller.setConditionalFormatting(
+          sheet, List.of(new dev.erst.gridgrind.core.vocabulary.RangeRef("A1:A3")), primaryBlock());
+      controller.setConditionalFormatting(
+          sheet,
+          List.of(new dev.erst.gridgrind.core.vocabulary.RangeRef("B1:B3")),
+          secondaryBlock("B1:B3"));
 
       var firstRule = ctBlock(sheet, "A1:A3").getCfRuleArray(0);
       firstRule.setFormulaArray(0, "#REF!");
@@ -932,8 +975,8 @@ class ExcelConditionalFormattingControllerTest {
       XSSFSheet sheet = workbook.createSheet("Ops");
       controller.setConditionalFormatting(
           sheet,
-          new ExcelConditionalFormattingBlockDefinition(
-              List.of("A1:A2"),
+          List.of("A1:A2").stream().map(dev.erst.gridgrind.core.vocabulary.RangeRef::new).toList(),
+          new dev.erst.gridgrind.core.model.validation.ConditionalFormattingSpec(
               List.of(
                   new ConditionalFormattingRuleSpec.CellValueRule(
                       ExcelComparisonOperator.GREATER_THAN,
@@ -970,8 +1013,8 @@ class ExcelConditionalFormattingControllerTest {
       XSSFSheet sheet = workbook.createSheet("Ops");
       controller.setConditionalFormatting(
           sheet,
-          new ExcelConditionalFormattingBlockDefinition(
-              List.of("A1:A2"),
+          List.of("A1:A2").stream().map(dev.erst.gridgrind.core.vocabulary.RangeRef::new).toList(),
+          new dev.erst.gridgrind.core.model.validation.ConditionalFormattingSpec(
               List.of(
                   new ConditionalFormattingRuleSpec.CellValueRule(
                       ExcelComparisonOperator.BETWEEN,
@@ -1009,8 +1052,8 @@ class ExcelConditionalFormattingControllerTest {
       seedConditionalFormattingValues(sheet);
       controller.setConditionalFormatting(
           sheet,
-          new ExcelConditionalFormattingBlockDefinition(
-              List.of("A1:A3"),
+          List.of("A1:A3").stream().map(dev.erst.gridgrind.core.vocabulary.RangeRef::new).toList(),
+          new dev.erst.gridgrind.core.model.validation.ConditionalFormattingSpec(
               List.of(
                   new ConditionalFormattingRuleSpec.FormulaRule(
                       "A1>0",
@@ -1041,8 +1084,8 @@ class ExcelConditionalFormattingControllerTest {
       XSSFSheet sheet = workbook.createSheet("Ops");
       controller.setConditionalFormatting(
           sheet,
-          new ExcelConditionalFormattingBlockDefinition(
-              List.of("A1:A3"),
+          List.of("A1:A3").stream().map(dev.erst.gridgrind.core.vocabulary.RangeRef::new).toList(),
+          new dev.erst.gridgrind.core.model.validation.ConditionalFormattingSpec(
               List.of(
                   new ConditionalFormattingRuleSpec.CellValueRule(
                       ExcelComparisonOperator.BETWEEN,
@@ -1101,7 +1144,8 @@ class ExcelConditionalFormattingControllerTest {
     try (XSSFWorkbook workbook = new XSSFWorkbook()) {
       XSSFSheet sheet = workbook.createSheet("Ops");
       seedConditionalFormattingValues(sheet);
-      controller.setConditionalFormatting(sheet, primaryBlock("A1:A3"));
+      controller.setConditionalFormatting(
+          sheet, List.of(new dev.erst.gridgrind.core.vocabulary.RangeRef("A1:A3")), primaryBlock());
       ctBlock(sheet, "A1:A3").setSqref(List.of("A1:A3", "not-a-range"));
 
       assertTrue(
@@ -1118,8 +1162,8 @@ class ExcelConditionalFormattingControllerTest {
       XSSFSheet sheet = workbook.createSheet("Ops");
       controller.setConditionalFormatting(
           sheet,
-          new ExcelConditionalFormattingBlockDefinition(
-              List.of("A1:A3"),
+          List.of("A1:A3").stream().map(dev.erst.gridgrind.core.vocabulary.RangeRef::new).toList(),
+          new dev.erst.gridgrind.core.model.validation.ConditionalFormattingSpec(
               List.of(
                   new ConditionalFormattingRuleSpec.Top10Rule(
                       false,
@@ -1270,8 +1314,10 @@ class ExcelConditionalFormattingControllerTest {
       sheet
           .metadata()
           .setConditionalFormatting(
-              new ExcelConditionalFormattingBlockDefinition(
-                  List.of("A1:A2"),
+              List.of("A1:A2").stream()
+                  .map(dev.erst.gridgrind.core.vocabulary.RangeRef::new)
+                  .toList(),
+              new dev.erst.gridgrind.core.model.validation.ConditionalFormattingSpec(
                   List.of(
                       new ConditionalFormattingRuleSpec.FormulaRule(
                           "#REF!",
@@ -1297,9 +1343,8 @@ class ExcelConditionalFormattingControllerTest {
     }
   }
 
-  private static ExcelConditionalFormattingBlockDefinition primaryBlock(String range) {
-    return new ExcelConditionalFormattingBlockDefinition(
-        List.of(range),
+  private static dev.erst.gridgrind.core.model.validation.ConditionalFormattingSpec primaryBlock() {
+    return new dev.erst.gridgrind.core.model.validation.ConditionalFormattingSpec(
         List.of(
             new ConditionalFormattingRuleSpec.FormulaRule(
                 "A1>10",
@@ -1341,9 +1386,9 @@ class ExcelConditionalFormattingControllerTest {
                         Optional.empty())))));
   }
 
-  private static ExcelConditionalFormattingBlockDefinition secondaryBlock(String range) {
-    return new ExcelConditionalFormattingBlockDefinition(
-        List.of(range),
+  private static dev.erst.gridgrind.core.model.validation.ConditionalFormattingSpec secondaryBlock(
+      String range) {
+    return new dev.erst.gridgrind.core.model.validation.ConditionalFormattingSpec(
         List.of(
             new ConditionalFormattingRuleSpec.FormulaRule(
                 range.startsWith("B") ? "B1>5" : "C1=\"Ready\"",

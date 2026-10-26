@@ -331,12 +331,12 @@ class OperationSequenceValueFactoryTest {
                 OperationSequenceValueFactory.nextConditionalFormattingInput(
                     (GridGrindFuzzData) args[0])),
         new CoverageCase(
-            "nextExcelConditionalFormattingBlockDefinition",
-            List.of(CoverageParameterKind.DATA, CoverageParameterKind.BOOLEAN),
+            "nextConditionalFormattingCommand",
+            List.of(CoverageParameterKind.DATA),
             false,
             args ->
-                OperationSequenceValueFactory.nextExcelConditionalFormattingBlockDefinition(
-                    (GridGrindFuzzData) args[0], (boolean) args[1])),
+                OperationSequenceValueFactory.nextConditionalFormattingCommand(
+                    (GridGrindFuzzData) args[0], true, "Budget")),
         new CoverageCase(
             "nextDifferentialStyleInput",
             List.of(CoverageParameterKind.DATA),

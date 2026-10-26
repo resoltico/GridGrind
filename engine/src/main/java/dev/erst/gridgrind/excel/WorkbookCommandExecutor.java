@@ -300,7 +300,8 @@ final class WorkbookCommandExecutor {
           workbook
               .sheet(setConditionalFormatting.sheetName())
               .metadata()
-              .setConditionalFormatting(setConditionalFormatting.block());
+              .setConditionalFormatting(
+                  setConditionalFormatting.ranges(), setConditionalFormatting.formatting());
       case WorkbookFormattingCommand.ClearConditionalFormatting clearConditionalFormatting ->
           workbook
               .sheet(clearConditionalFormatting.sheetName())

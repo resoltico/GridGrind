@@ -53,8 +53,10 @@ final class WorkbookCommandStructuredMutationConverter {
             };
         yield new WorkbookFormattingCommand.SetConditionalFormatting(
             selection.sheetName(),
-            WorkbookCommandStructuredInputConverter.toExcelConditionalFormattingBlock(
-                selected.ranges(), setConditionalFormatting.conditionalFormatting()));
+            selected.ranges().stream()
+                .map(dev.erst.gridgrind.core.vocabulary.RangeRef::new)
+                .toList(),
+            setConditionalFormatting.conditionalFormatting());
       }
       case StructuredMutationAction.ClearConditionalFormatting _ -> {
         SelectorConverter.SheetLocalRangeSelection selection =

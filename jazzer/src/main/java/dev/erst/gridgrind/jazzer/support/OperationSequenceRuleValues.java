@@ -101,20 +101,26 @@ final class OperationSequenceRuleValues {
                     Optional.of(nextDifferentialStyleInput(data)))));
   }
 
-  static ExcelConditionalFormattingBlockDefinition nextExcelConditionalFormattingBlockDefinition(
-      GridGrindFuzzData data, boolean validRange) {
-    return new ExcelConditionalFormattingBlockDefinition(
-        List.of(validRange ? "A1:A4" : FuzzDataDecoders.nextNonBlankRange(data, false)),
+  static WorkbookFormattingCommand.SetConditionalFormatting nextConditionalFormattingCommand(
+      GridGrindFuzzData data, boolean validRange, String sheetName) {
+    return new WorkbookFormattingCommand.SetConditionalFormatting(
+        sheetName,
         List.of(
-            data.consumeBoolean()
-                ? new ConditionalFormattingRuleSpec.FormulaRule(
-                    "A1>0", data.consumeBoolean(), Optional.of(nextExcelDifferentialStyle(data)))
-                : new ConditionalFormattingRuleSpec.CellValueRule(
-                    ExcelComparisonOperator.GREATER_THAN,
-                    "1",
-                    Optional.empty(),
-                    data.consumeBoolean(),
-                    Optional.of(nextExcelDifferentialStyle(data)))));
+            new dev.erst.gridgrind.core.vocabulary.RangeRef(
+                validRange ? "A1:A4" : FuzzDataDecoders.nextNonBlankRange(data, false))),
+        new ConditionalFormattingSpec(
+            List.of(
+                data.consumeBoolean()
+                    ? new ConditionalFormattingRuleSpec.FormulaRule(
+                        "A1>0",
+                        data.consumeBoolean(),
+                        Optional.of(nextExcelDifferentialStyle(data)))
+                    : new ConditionalFormattingRuleSpec.CellValueRule(
+                        ExcelComparisonOperator.GREATER_THAN,
+                        "1",
+                        Optional.empty(),
+                        data.consumeBoolean(),
+                        Optional.of(nextExcelDifferentialStyle(data))))));
   }
 
   static DifferentialStylePatch nextDifferentialStyleInput(GridGrindFuzzData data) {

@@ -154,9 +154,7 @@ final class OperationSequenceCommandFactory {
             case 0x1 ->
                 new WorkbookFormattingCommand.ClearDataValidations(
                     targetSheet, nextExcelRangeSelection(data, validRange));
-            case 0x2 ->
-                new WorkbookFormattingCommand.SetConditionalFormatting(
-                    targetSheet, nextExcelConditionalFormattingBlockDefinition(data, validRange));
+            case 0x2 -> nextConditionalFormattingCommand(data, validRange, targetSheet);
             default ->
                 new WorkbookFormattingCommand.ClearConditionalFormatting(
                     targetSheet, nextExcelRangeSelection(data, validRange));

@@ -327,10 +327,6 @@ class ExcelConditionalFormattingDomainModelTest {
                     Optional.empty(),
                     Optional.empty(),
                     Optional.empty())));
-    ExcelConditionalFormattingBlockDefinition definition =
-        new ExcelConditionalFormattingBlockDefinition(List.of("A1:A3"), List.of(rule));
-
-    assertEquals(List.of("A1:A3"), definition.ranges());
     assertEquals("=A1>0", rule.formula());
     assertDoesNotThrow(
         () ->
@@ -350,17 +346,6 @@ class ExcelConditionalFormattingDomainModelTest {
                     new ConditionalFormattingRuleReport.UnsupportedRule(
                         1, false, "FORMULA", "detail"))));
 
-    assertThrows(
-        IllegalArgumentException.class,
-        () -> new ExcelConditionalFormattingBlockDefinition(List.of(), List.of(rule)));
-    assertThrows(
-        IllegalArgumentException.class,
-        () ->
-            new ExcelConditionalFormattingBlockDefinition(
-                List.of("A1:A3", "A1:A3"), List.of(rule)));
-    assertThrows(
-        NullPointerException.class,
-        () -> new ExcelConditionalFormattingBlockDefinition(List.of("A1:A3"), List.of(rule, null)));
     assertDoesNotThrow(
         () ->
             new ConditionalFormattingEntryReport(
@@ -370,9 +355,7 @@ class ExcelConditionalFormattingDomainModelTest {
                 List.of(
                     new ConditionalFormattingRuleReport.UnsupportedRule(
                         1, false, "FORMULA", "detail"))));
-    assertThrows(
-        IllegalArgumentException.class,
-        () -> new ExcelConditionalFormattingBlockDefinition(List.of("A1:A3"), List.of()));
+
     assertThrows(
         NullPointerException.class,
         () -> new ConditionalFormattingThresholdReport(null, null, 1.0d));

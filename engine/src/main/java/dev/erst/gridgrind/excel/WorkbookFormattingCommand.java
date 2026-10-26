@@ -2,6 +2,7 @@ package dev.erst.gridgrind.excel;
 
 import dev.erst.gridgrind.core.model.style.CellStylePatch;
 import dev.erst.gridgrind.core.model.validation.ResolvedDataValidation;
+import java.util.List;
 import java.util.Objects;
 
 /** Formatting-rule commands for styles, validations, and conditional formatting. */
@@ -56,11 +57,15 @@ public sealed interface WorkbookFormattingCommand extends WorkbookCommand
   }
 
   /** Creates or replaces one logical conditional-formatting block over the requested ranges. */
-  record SetConditionalFormatting(String sheetName, ExcelConditionalFormattingBlockDefinition block)
+  record SetConditionalFormatting(
+      String sheetName,
+      List<dev.erst.gridgrind.core.vocabulary.RangeRef> ranges,
+      dev.erst.gridgrind.core.model.validation.ConditionalFormattingSpec formatting)
       implements WorkbookFormattingCommand {
     public SetConditionalFormatting {
       Objects.requireNonNull(sheetName, "sheetName must not be null");
-      Objects.requireNonNull(block, "block must not be null");
+      ranges = List.copyOf(ranges);
+      Objects.requireNonNull(formatting, "formatting must not be null");
       if (sheetName.isBlank()) {
         throw new IllegalArgumentException("sheetName must not be blank");
       }

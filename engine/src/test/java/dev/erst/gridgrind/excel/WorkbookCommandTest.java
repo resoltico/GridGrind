@@ -215,8 +215,10 @@ class WorkbookCommandTest {
             "Budget", new ExcelRangeSelection.Selected(List.of("C2:D4"))),
         new WorkbookFormattingCommand.SetConditionalFormatting(
             "Budget",
-            new ExcelConditionalFormattingBlockDefinition(
-                List.of("A2:A5"),
+            List.of("A2:A5").stream()
+                .map(dev.erst.gridgrind.core.vocabulary.RangeRef::new)
+                .toList(),
+            new dev.erst.gridgrind.core.model.validation.ConditionalFormattingSpec(
                 List.of(
                     new ConditionalFormattingRuleSpec.FormulaRule(
                         "A2>0",
@@ -310,7 +312,11 @@ class WorkbookCommandTest {
         List.of("C2:D4"),
         ((ExcelRangeSelection.Selected) commands.clearDataValidations().selection()).ranges());
     assertEquals("Budget", commands.setConditionalFormatting().sheetName());
-    assertEquals(List.of("A2:A5"), commands.setConditionalFormatting().block().ranges());
+    assertEquals(
+        List.of("A2:A5"),
+        commands.setConditionalFormatting().ranges().stream()
+            .map(dev.erst.gridgrind.core.vocabulary.RangeRef::value)
+            .toList());
     assertEquals(
         List.of("A2:A5"),
         ((ExcelRangeSelection.Selected) commands.clearConditionalFormatting().selection())
@@ -845,8 +851,10 @@ class WorkbookCommandTest {
         () ->
             new WorkbookFormattingCommand.SetConditionalFormatting(
                 null,
-                new ExcelConditionalFormattingBlockDefinition(
-                    List.of("A2:A5"),
+                List.of("A2:A5").stream()
+                    .map(dev.erst.gridgrind.core.vocabulary.RangeRef::new)
+                    .toList(),
+                new dev.erst.gridgrind.core.model.validation.ConditionalFormattingSpec(
                     List.of(
                         new ConditionalFormattingRuleSpec.FormulaRule(
                             "A2>0",
@@ -864,14 +872,16 @@ class WorkbookCommandTest {
                                     Optional.empty())))))));
     assertThrows(
         NullPointerException.class,
-        () -> new WorkbookFormattingCommand.SetConditionalFormatting("Budget", null));
+        () -> new WorkbookFormattingCommand.SetConditionalFormatting("Budget", List.of(), null));
     assertThrows(
         IllegalArgumentException.class,
         () ->
             new WorkbookFormattingCommand.SetConditionalFormatting(
                 " ",
-                new ExcelConditionalFormattingBlockDefinition(
-                    List.of("A2:A5"),
+                List.of("A2:A5").stream()
+                    .map(dev.erst.gridgrind.core.vocabulary.RangeRef::new)
+                    .toList(),
+                new dev.erst.gridgrind.core.model.validation.ConditionalFormattingSpec(
                     List.of(
                         new ConditionalFormattingRuleSpec.FormulaRule(
                             "A2>0",

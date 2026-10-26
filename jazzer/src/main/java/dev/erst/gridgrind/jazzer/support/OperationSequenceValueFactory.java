@@ -189,10 +189,10 @@ final class OperationSequenceValueFactory {
     return OperationSequenceRuleValues.nextConditionalFormattingInput(data);
   }
 
-  static ExcelConditionalFormattingBlockDefinition nextExcelConditionalFormattingBlockDefinition(
-      GridGrindFuzzData data, boolean validRange) {
-    return OperationSequenceRuleValues.nextExcelConditionalFormattingBlockDefinition(
-        data, validRange);
+  static WorkbookFormattingCommand.SetConditionalFormatting nextConditionalFormattingCommand(
+      GridGrindFuzzData data, boolean validRange, String sheetName) {
+    return OperationSequenceRuleValues.nextConditionalFormattingCommand(
+        data, validRange, sheetName);
   }
 
   static DifferentialStylePatch nextDifferentialStyleInput(GridGrindFuzzData data) {

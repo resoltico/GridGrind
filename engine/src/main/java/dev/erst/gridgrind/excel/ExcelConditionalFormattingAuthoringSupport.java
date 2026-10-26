@@ -17,10 +17,18 @@ import org.openxmlformats.schemas.spreadsheetml.x2006.main.STCfType;
 
 /** Applies authored conditional-formatting blocks onto one sheet. */
 final class ExcelConditionalFormattingAuthoringSupport {
-  void setConditionalFormatting(XSSFSheet sheet, ExcelConditionalFormattingBlockDefinition block) {
-    List<ExcelRange> targetRanges = block.ranges().stream().map(ExcelRange::parse).toList();
+  void setConditionalFormatting(
+      XSSFSheet sheet,
+      List<dev.erst.gridgrind.core.vocabulary.RangeRef> ranges,
+      dev.erst.gridgrind.core.model.validation.ConditionalFormattingSpec formatting) {
+    var targets = List.copyOf(ranges);
+    if (targets.isEmpty()) throw new IllegalArgumentException("ranges must not be empty");
+    if (new java.util.LinkedHashSet<>(targets).size() != targets.size())
+      throw new IllegalArgumentException("ranges must not contain duplicates");
+    List<ExcelRange> targetRanges =
+        targets.stream().map(range -> ExcelRange.parse(range.value())).toList();
     XSSFConditionalFormattingRule[] rules =
-        block.rules().stream()
+        formatting.rules().stream()
             .map(rule -> createRule(sheet, rule))
             .toArray(XSSFConditionalFormattingRule[]::new);
     removeIntersectingBlocks(sheet, targetRanges);
@@ -35,9 +43,9 @@ final class ExcelConditionalFormattingAuthoringSupport {
 
     CTConditionalFormatting ctBlock =
         ExcelConditionalFormattingSnapshotSupport.ctBlock(sheet, blockIndex);
-    for (int ruleIndex = 0; ruleIndex < block.rules().size(); ruleIndex++) {
+    for (int ruleIndex = 0; ruleIndex < formatting.rules().size(); ruleIndex++) {
       CTCfRule ctRule = ctBlock.getCfRuleArray(ruleIndex);
-      switch (block.rules().get(ruleIndex)) {
+      switch (formatting.rules().get(ruleIndex)) {
         case ConditionalFormattingRuleSpec.FormulaRule formulaRule -> {
           ctRule.setStopIfTrue(formulaRule.stopIfTrue());
           formulaRule

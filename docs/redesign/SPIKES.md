@@ -2413,3 +2413,23 @@ snapshots 4→2, converter lines 2529→2289, Support 202→201, main Java 11668
 blank checks 364 remain. Remaining HostAcceptanceSnapshot and ColumnAxisSnapshot are actual runtime
 concepts (host acceptance evidence and parsed pivot axis state), not core model mirrors. Baseline
 diff empty. WP-40 remains open: selected-range block, resolved plan/step/target and command/query cutover.
+
+## WP-40 conditional-formatting targets without a model block
+
+Deleted the last engine Definition model, ExcelConditionalFormattingBlockDefinition. The adapter
+accepts canonical RangeRef targets and ConditionalFormattingSpec independently; retained empty and
+duplicate range validation at the actual POI mutation boundary. A real workbook regression confirms
+both rejected range-list forms preserve existing rules. Removed constructor/converter-only checks;
+retained actual rule persistence, copy, command execution and inspection checks. The deterministic
+sequence generator now constructs the command directly, retaining range-first byte consumption.
+Its successful-value sweep explicitly selects valid ranges because canonical RangeRef rejects the
+intentionally malformed alternatives earlier; real harnesses retain expected-invalid handling.
+
+Focused core/engine/parity/PMD checks pass (43s). Nested compilation first found three stale test
+fixtures, then the value sweep exposed earlier canonical range rejection; both were corrected and
+failure output retained externally. Final nested check/all retained seeds pass (11s); no active
+fuzz or mutation campaign. Final ./gradlew check passes (2m57s): core377, JSON353, engine1447 plus
+14 parity, CLI588, zero failures/errors/skips. All143 golden cases unchanged. Inventories:
+definitions1→0, snapshots2 unchanged (runtime concepts justified above), converter lines2289→2283,
+main Java116301→116274, blank364 and Support201 unchanged. Baseline diff empty. WP-40 remains open
+for resolved execution and removal of command/query/selector translation.
