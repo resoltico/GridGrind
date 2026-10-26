@@ -115,14 +115,15 @@ public final class ExcelSheetCells {
   }
 
   /** Returns an exact rectangular window of cell snapshots anchored at one top-left address. */
-  public WorkbookSheetResult.Window window(String topLeftAddress, int rowCount, int columnCount) {
+  public dev.erst.gridgrind.core.model.layout.WindowReport.Dense window(
+      String topLeftAddress, int rowCount, int columnCount) {
     return readSupport.window(topLeftAddress, rowCount, columnCount);
   }
 
   /**
    * Captures one rectangular window while evaluating formulas only when the projection needs it.
    */
-  public WorkbookSheetResult.Window window(
+  public dev.erst.gridgrind.core.model.layout.WindowReport.Dense window(
       String topLeftAddress, int rowCount, int columnCount, CellReadProjection projection) {
     return readSupport.window(topLeftAddress, rowCount, columnCount, projection);
   }

@@ -137,7 +137,8 @@ final class ExcelSheetCellReadSupport {
     return List.copyOf(previewRows);
   }
 
-  WorkbookSheetResult.Window window(String topLeftAddress, int rowCount, int columnCount) {
+  dev.erst.gridgrind.core.model.layout.WindowReport.Dense window(
+      String topLeftAddress, int rowCount, int columnCount) {
     return window(
         topLeftAddress,
         rowCount,
@@ -146,7 +147,7 @@ final class ExcelSheetCellReadSupport {
   }
 
   @SuppressWarnings("PMD.AvoidInstantiatingObjectsInLoops")
-  WorkbookSheetResult.Window window(
+  dev.erst.gridgrind.core.model.layout.WindowReport.Dense window(
       String topLeftAddress, int rowCount, int columnCount, CellReadProjection projection) {
     ExcelSheet.requireNonBlank(topLeftAddress, "topLeftAddress");
     Objects.requireNonNull(projection, "projection must not be null");
@@ -171,7 +172,7 @@ final class ExcelSheetCellReadSupport {
               + " columnCount="
               + columnCount);
     }
-    List<WorkbookSheetResult.WindowRow> rows = new ArrayList<>(rowCount);
+    List<dev.erst.gridgrind.core.model.layout.WindowRowReport> rows = new ArrayList<>(rowCount);
     for (int rowOffset = 0; rowOffset < rowCount; rowOffset++) {
       int rowIndex = topLeft.getRow() + rowOffset;
       List<CellReport> cells = new ArrayList<>(columnCount);
@@ -180,10 +181,14 @@ final class ExcelSheetCellReadSupport {
         String address = new CellReference(rowIndex, columnIndex).formatAsString();
         cells.add(snapshotCellOrBlank(address, rowIndex, columnIndex, projection));
       }
-      rows.add(new WorkbookSheetResult.WindowRow(rowIndex, List.copyOf(cells)));
+      rows.add(
+          new dev.erst.gridgrind.core.model.layout.WindowRowReport(rowIndex, List.copyOf(cells)));
     }
-    return new WorkbookSheetResult.Window(
-        sheet.getSheetName(), topLeftAddress, rowCount, columnCount, List.copyOf(rows));
+    return new dev.erst.gridgrind.core.model.layout.WindowReport.Dense(
+        new dev.erst.gridgrind.core.vocabulary.SheetLabel(sheet.getSheetName()),
+        new dev.erst.gridgrind.core.vocabulary.CellAddress(topLeftAddress),
+        new dev.erst.gridgrind.core.model.layout.WindowDimensionsReport(rowCount, columnCount),
+        List.copyOf(rows));
   }
 
   List<ArrayFormulaReport> arrayFormulas() {

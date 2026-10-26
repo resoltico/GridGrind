@@ -7,7 +7,6 @@ import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
 import dev.erst.gridgrind.excel.WorkbookExecutionEngine;
 import dev.erst.gridgrind.excel.WorkbookReadCommand;
-import dev.erst.gridgrind.excel.WorkbookSheetResult;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -24,8 +23,8 @@ final class XlsxRoundTripExpectedLayoutSupport {
     LinkedHashMap<String, XlsxRoundTripExpectedStateSupport.ExpectedSheetLayoutState>
         expectedLayouts = new LinkedHashMap<>();
     for (String sheetName : workbook.sheets().sheetNames()) {
-      WorkbookSheetResult.SheetLayoutResult layoutResult =
-          (WorkbookSheetResult.SheetLayoutResult)
+      dev.erst.gridgrind.core.plan.SheetInspectionResult.SheetLayoutResult layoutResult =
+          (dev.erst.gridgrind.core.plan.SheetInspectionResult.SheetLayoutResult)
               readExecutor
                   .read(
                       workbook,

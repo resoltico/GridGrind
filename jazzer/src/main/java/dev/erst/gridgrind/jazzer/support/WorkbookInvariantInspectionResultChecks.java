@@ -6,7 +6,6 @@ import dev.erst.gridgrind.core.plan.*;
 import dev.erst.gridgrind.core.plan.InspectionResult;
 import dev.erst.gridgrind.core.plan.InspectionStep;
 import dev.erst.gridgrind.core.plan.SheetInspectionResult;
-import dev.erst.gridgrind.core.plan.WorkbookAnalysisResult;
 import dev.erst.gridgrind.core.plan.WorkbookAssetInspectionResult;
 import dev.erst.gridgrind.core.plan.WorkbookInspectionResult;
 import dev.erst.gridgrind.core.plan.WorkbookSurfaceInspectionResult;
@@ -244,31 +243,48 @@ final class WorkbookInvariantInspectionResultChecks {
       }
       case InspectionAnalysisQuery.AnalyzeFormulaHealth _ ->
           WorkbookInvariantResponseChecks.requireFormulaHealthShape(
-              ((WorkbookAnalysisResult.FormulaHealthResult) readResult).analysis());
+              ((dev.erst.gridgrind.core.plan.WorkbookAnalysisResult.FormulaHealthResult) readResult)
+                  .analysis());
       case InspectionAnalysisQuery.AnalyzeDataValidationHealth _ ->
           WorkbookInvariantResponseChecks.requireDataValidationHealthShape(
-              ((WorkbookAnalysisResult.DataValidationHealthResult) readResult).analysis());
+              ((dev.erst.gridgrind.core.plan.WorkbookAnalysisResult.DataValidationHealthResult)
+                      readResult)
+                  .analysis());
       case InspectionAnalysisQuery.AnalyzeConditionalFormattingHealth _ ->
           WorkbookInvariantResponseChecks.requireConditionalFormattingHealthShape(
-              ((WorkbookAnalysisResult.ConditionalFormattingHealthResult) readResult).analysis());
+              ((dev.erst.gridgrind.core.plan.WorkbookAnalysisResult
+                          .ConditionalFormattingHealthResult)
+                      readResult)
+                  .analysis());
       case InspectionAnalysisQuery.AnalyzeAutofilterHealth _ ->
           WorkbookInvariantResponseChecks.requireAutofilterHealthShape(
-              ((WorkbookAnalysisResult.AutofilterHealthResult) readResult).analysis());
+              ((dev.erst.gridgrind.core.plan.WorkbookAnalysisResult.AutofilterHealthResult)
+                      readResult)
+                  .analysis());
       case InspectionAnalysisQuery.AnalyzeTableHealth _ ->
           WorkbookInvariantResponseChecks.requireTableHealthShape(
-              ((WorkbookAnalysisResult.TableHealthResult) readResult).analysis());
+              ((dev.erst.gridgrind.core.plan.WorkbookAnalysisResult.TableHealthResult) readResult)
+                  .analysis());
       case InspectionAnalysisQuery.AnalyzePivotTableHealth _ ->
           WorkbookInvariantResponseChecks.requirePivotTableHealthShape(
-              ((WorkbookAnalysisResult.PivotTableHealthResult) readResult).analysis());
+              ((dev.erst.gridgrind.core.plan.WorkbookAnalysisResult.PivotTableHealthResult)
+                      readResult)
+                  .analysis());
       case InspectionAnalysisQuery.AnalyzeHyperlinkHealth _ ->
           WorkbookInvariantResponseChecks.requireHyperlinkHealthShape(
-              ((WorkbookAnalysisResult.HyperlinkHealthResult) readResult).analysis());
+              ((dev.erst.gridgrind.core.plan.WorkbookAnalysisResult.HyperlinkHealthResult)
+                      readResult)
+                  .analysis());
       case InspectionAnalysisQuery.AnalyzeNamedRangeHealth _ ->
           WorkbookInvariantResponseChecks.requireNamedRangeHealthShape(
-              ((WorkbookAnalysisResult.NamedRangeHealthResult) readResult).analysis());
+              ((dev.erst.gridgrind.core.plan.WorkbookAnalysisResult.NamedRangeHealthResult)
+                      readResult)
+                  .analysis());
       case InspectionAnalysisQuery.AnalyzeWorkbookFindings _ ->
           WorkbookInvariantResponseChecks.requireWorkbookFindingsShape(
-              ((WorkbookAnalysisResult.WorkbookFindingsResult) readResult).analysis());
+              ((dev.erst.gridgrind.core.plan.WorkbookAnalysisResult.WorkbookFindingsResult)
+                      readResult)
+                  .analysis());
     }
   }
 
@@ -319,16 +335,25 @@ final class WorkbookInvariantInspectionResultChecks {
       case WorkbookSurfaceInspectionResult.FormulaSurfaceResult _ -> "GET_FORMULA_SURFACE";
       case WorkbookSurfaceInspectionResult.SheetSchemaResult _ -> "GET_SHEET_SCHEMA";
       case WorkbookSurfaceInspectionResult.NamedRangeSurfaceResult _ -> "GET_NAMED_RANGE_SURFACE";
-      case WorkbookAnalysisResult.FormulaHealthResult _ -> "ANALYZE_FORMULA_HEALTH";
-      case WorkbookAnalysisResult.DataValidationHealthResult _ -> "ANALYZE_DATA_VALIDATION_HEALTH";
-      case WorkbookAnalysisResult.ConditionalFormattingHealthResult _ ->
+      case dev.erst.gridgrind.core.plan.WorkbookAnalysisResult.FormulaHealthResult _ ->
+          "ANALYZE_FORMULA_HEALTH";
+      case dev.erst.gridgrind.core.plan.WorkbookAnalysisResult.DataValidationHealthResult _ ->
+          "ANALYZE_DATA_VALIDATION_HEALTH";
+      case dev.erst.gridgrind.core.plan.WorkbookAnalysisResult.ConditionalFormattingHealthResult
+              _ ->
           "ANALYZE_CONDITIONAL_FORMATTING_HEALTH";
-      case WorkbookAnalysisResult.AutofilterHealthResult _ -> "ANALYZE_AUTOFILTER_HEALTH";
-      case WorkbookAnalysisResult.TableHealthResult _ -> "ANALYZE_TABLE_HEALTH";
-      case WorkbookAnalysisResult.PivotTableHealthResult _ -> "ANALYZE_PIVOT_TABLE_HEALTH";
-      case WorkbookAnalysisResult.HyperlinkHealthResult _ -> "ANALYZE_HYPERLINK_HEALTH";
-      case WorkbookAnalysisResult.NamedRangeHealthResult _ -> "ANALYZE_NAMED_RANGE_HEALTH";
-      case WorkbookAnalysisResult.WorkbookFindingsResult _ -> "ANALYZE_WORKBOOK_FINDINGS";
+      case dev.erst.gridgrind.core.plan.WorkbookAnalysisResult.AutofilterHealthResult _ ->
+          "ANALYZE_AUTOFILTER_HEALTH";
+      case dev.erst.gridgrind.core.plan.WorkbookAnalysisResult.TableHealthResult _ ->
+          "ANALYZE_TABLE_HEALTH";
+      case dev.erst.gridgrind.core.plan.WorkbookAnalysisResult.PivotTableHealthResult _ ->
+          "ANALYZE_PIVOT_TABLE_HEALTH";
+      case dev.erst.gridgrind.core.plan.WorkbookAnalysisResult.HyperlinkHealthResult _ ->
+          "ANALYZE_HYPERLINK_HEALTH";
+      case dev.erst.gridgrind.core.plan.WorkbookAnalysisResult.NamedRangeHealthResult _ ->
+          "ANALYZE_NAMED_RANGE_HEALTH";
+      case dev.erst.gridgrind.core.plan.WorkbookAnalysisResult.WorkbookFindingsResult _ ->
+          "ANALYZE_WORKBOOK_FINDINGS";
     };
   }
 }

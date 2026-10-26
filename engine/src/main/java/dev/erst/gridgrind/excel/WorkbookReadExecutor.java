@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.core.plan.InspectionResult;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -22,25 +23,25 @@ final class WorkbookReadExecutor {
   }
 
   /** Executes one or more read commands in order and returns their immutable results. */
-  List<WorkbookReadResult> apply(ExcelWorkbook workbook, WorkbookReadCommand... commands) {
+  List<InspectionResult> apply(ExcelWorkbook workbook, WorkbookReadCommand... commands) {
     Objects.requireNonNull(commands, "commands must not be null");
     return apply(workbook, new WorkbookLocation.UnsavedWorkbook(), Arrays.asList(commands));
   }
 
   /** Executes one or more read commands using the workbook filesystem location for analysis. */
-  List<WorkbookReadResult> apply(
+  List<InspectionResult> apply(
       ExcelWorkbook workbook, WorkbookLocation workbookLocation, WorkbookReadCommand... commands) {
     Objects.requireNonNull(commands, "commands must not be null");
     return apply(workbook, workbookLocation, Arrays.asList(commands));
   }
 
   /** Executes read commands from any iterable source in order. */
-  List<WorkbookReadResult> apply(ExcelWorkbook workbook, Iterable<WorkbookReadCommand> commands) {
+  List<InspectionResult> apply(ExcelWorkbook workbook, Iterable<WorkbookReadCommand> commands) {
     return apply(workbook, new WorkbookLocation.UnsavedWorkbook(), commands);
   }
 
   /** Executes read commands from any iterable source with explicit workbook-location context. */
-  List<WorkbookReadResult> apply(
+  List<InspectionResult> apply(
       ExcelWorkbook workbook,
       WorkbookLocation workbookLocation,
       Iterable<WorkbookReadCommand> commands) {
@@ -48,7 +49,7 @@ final class WorkbookReadExecutor {
     Objects.requireNonNull(workbookLocation, "workbookLocation must not be null");
     Objects.requireNonNull(commands, "commands must not be null");
 
-    List<WorkbookReadResult> results = new ArrayList<>();
+    List<InspectionResult> results = new ArrayList<>();
     for (WorkbookReadCommand command : commands) {
       Objects.requireNonNull(command, "command must not be null");
       results.add(applyOne(workbook, workbookLocation, command));
@@ -56,7 +57,7 @@ final class WorkbookReadExecutor {
     return List.copyOf(results);
   }
 
-  private WorkbookReadResult applyOne(
+  private InspectionResult applyOne(
       ExcelWorkbook workbook, WorkbookLocation workbookLocation, WorkbookReadCommand command) {
     return switch (command) {
       case WorkbookReadCommand.Introspection introspection ->

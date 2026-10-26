@@ -132,7 +132,7 @@ final class ExecutionStepSupport {
       return Objects.requireNonNull(
           resolvedTarget.shortCircuitResult(), "short-circuit inspection result must be present");
     }
-    dev.erst.gridgrind.excel.WorkbookReadResult result =
+    dev.erst.gridgrind.core.plan.InspectionResult result =
         workbookEngine
             .read(
                 workbook,
@@ -143,7 +143,7 @@ final class ExecutionStepSupport {
                         resolvedTarget.selector(), "resolved selector must be present"),
                     inspectionStep.query()))
             .getFirst();
-    return InspectionResultConverter.toReadResult(result);
+    return result;
   }
 
   private InspectionResult executeEventInspectionAgainstWorkbook(
@@ -265,8 +265,8 @@ final class ExecutionStepSupport {
           GridGrindExecutionModeMetadata.eventRead()
               .unsupportedQueryMessage(inspectionStep.query().queryType()));
     }
-    dev.erst.gridgrind.excel.WorkbookReadResult result =
+    dev.erst.gridgrind.core.plan.InspectionResult result =
         eventWorkbookReader.apply(workbookPath, List.of(introspection)).getFirst();
-    return InspectionResultConverter.toReadResult(result);
+    return result;
   }
 }

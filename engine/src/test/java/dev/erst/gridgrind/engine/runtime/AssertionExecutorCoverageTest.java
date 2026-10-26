@@ -205,8 +205,11 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
         inspection(inspected, "namedRanges", WorkbookInspectionResult.NamedRangesResult.class);
     WorkbookAssetInspectionResult.TablesResult tables =
         inspection(inspected, "tables", WorkbookAssetInspectionResult.TablesResult.class);
-    WorkbookAnalysisResult.FormulaHealthResult formulaHealth =
-        inspection(inspected, "formulaHealth", WorkbookAnalysisResult.FormulaHealthResult.class);
+    dev.erst.gridgrind.core.plan.WorkbookAnalysisResult.FormulaHealthResult formulaHealth =
+        inspection(
+            inspected,
+            "formulaHealth",
+            dev.erst.gridgrind.core.plan.WorkbookAnalysisResult.FormulaHealthResult.class);
 
     dev.erst.gridgrind.core.model.value.CellReport.TextReport owner =
         assertInstanceOf(
@@ -553,8 +556,11 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
         inspection(inspected, "namedRanges", WorkbookInspectionResult.NamedRangesResult.class);
     WorkbookAssetInspectionResult.TablesResult tables =
         inspection(inspected, "tables", WorkbookAssetInspectionResult.TablesResult.class);
-    WorkbookAnalysisResult.FormulaHealthResult formulaHealth =
-        inspection(inspected, "formulaHealth", WorkbookAnalysisResult.FormulaHealthResult.class);
+    dev.erst.gridgrind.core.plan.WorkbookAnalysisResult.FormulaHealthResult formulaHealth =
+        inspection(
+            inspected,
+            "formulaHealth",
+            dev.erst.gridgrind.core.plan.WorkbookAnalysisResult.FormulaHealthResult.class);
     AnalysisFindingReport firstFinding = formulaHealth.analysis().findings().getFirst();
 
     WorkbookResult.Failure presentMissingSheet =
@@ -1037,33 +1043,34 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
 
     List<WorkbookAnalysisResult> analyses =
         List.of(
-            new WorkbookAnalysisResult.FormulaHealthResult(
+            new dev.erst.gridgrind.core.plan.WorkbookAnalysisResult.FormulaHealthResult(
                 new StepId("formula"), new FormulaHealthReport(1, summary, List.of(finding))),
-            new WorkbookAnalysisResult.DataValidationHealthResult(
+            new dev.erst.gridgrind.core.plan.WorkbookAnalysisResult.DataValidationHealthResult(
                 new StepId("validation"),
                 new dev.erst.gridgrind.core.model.validation.DataValidationHealthReport(
                     1, summary, List.of(finding))),
-            new WorkbookAnalysisResult.ConditionalFormattingHealthResult(
+            new dev.erst.gridgrind.core.plan.WorkbookAnalysisResult
+                .ConditionalFormattingHealthResult(
                 new StepId("formatting"),
                 new dev.erst.gridgrind.core.model.validation.ConditionalFormattingHealthReport(
                     1, summary, List.of(finding))),
-            new WorkbookAnalysisResult.AutofilterHealthResult(
+            new dev.erst.gridgrind.core.plan.WorkbookAnalysisResult.AutofilterHealthResult(
                 new StepId("autofilter"),
                 new dev.erst.gridgrind.core.model.table.AutofilterHealthReport(
                     1, summary, List.of(finding))),
-            new WorkbookAnalysisResult.TableHealthResult(
+            new dev.erst.gridgrind.core.plan.WorkbookAnalysisResult.TableHealthResult(
                 new StepId("table"),
                 new dev.erst.gridgrind.core.model.table.TableHealthReport(
                     1, summary, List.of(finding))),
-            new WorkbookAnalysisResult.PivotTableHealthResult(
+            new dev.erst.gridgrind.core.plan.WorkbookAnalysisResult.PivotTableHealthResult(
                 new StepId("pivot"),
                 new dev.erst.gridgrind.core.model.pivot.PivotTableHealthReport(
                     1, summary, List.of(finding))),
-            new WorkbookAnalysisResult.HyperlinkHealthResult(
+            new dev.erst.gridgrind.core.plan.WorkbookAnalysisResult.HyperlinkHealthResult(
                 new StepId("hyperlink"), new HyperlinkHealthReport(1, summary, List.of(finding))),
-            new WorkbookAnalysisResult.NamedRangeHealthResult(
+            new dev.erst.gridgrind.core.plan.WorkbookAnalysisResult.NamedRangeHealthResult(
                 new StepId("namedRange"), new NamedRangeHealthReport(1, summary, List.of(finding))),
-            new WorkbookAnalysisResult.WorkbookFindingsResult(
+            new dev.erst.gridgrind.core.plan.WorkbookAnalysisResult.WorkbookFindingsResult(
                 new StepId("workbook"), new WorkbookFindingsReport(summary, List.of(finding))));
 
     for (WorkbookAnalysisResult analysis : analyses) {
@@ -1085,19 +1092,19 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
     assertEquals(
         java.util.Optional.of(AnalysisSeverity.WARNING),
         AssertionAnalysisEvaluator.highestSeverity(
-            new WorkbookAnalysisResult.FormulaHealthResult(
+            new dev.erst.gridgrind.core.plan.WorkbookAnalysisResult.FormulaHealthResult(
                 new StepId("warning"),
                 new FormulaHealthReport(1, new AnalysisSummaryReport(1, 0, 1, 0), List.of()))));
     assertEquals(
         java.util.Optional.of(AnalysisSeverity.INFO),
         AssertionAnalysisEvaluator.highestSeverity(
-            new WorkbookAnalysisResult.FormulaHealthResult(
+            new dev.erst.gridgrind.core.plan.WorkbookAnalysisResult.FormulaHealthResult(
                 new StepId("info"),
                 new FormulaHealthReport(1, new AnalysisSummaryReport(1, 0, 0, 1), List.of()))));
     assertEquals(
         java.util.Optional.empty(),
         AssertionAnalysisEvaluator.highestSeverity(
-            new WorkbookAnalysisResult.FormulaHealthResult(
+            new dev.erst.gridgrind.core.plan.WorkbookAnalysisResult.FormulaHealthResult(
                 new StepId("clean"),
                 new FormulaHealthReport(1, new AnalysisSummaryReport(0, 0, 0, 0), List.of()))));
   }

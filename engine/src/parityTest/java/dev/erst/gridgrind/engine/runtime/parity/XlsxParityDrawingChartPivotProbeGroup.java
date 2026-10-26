@@ -19,7 +19,6 @@ import dev.erst.gridgrind.core.plan.*;
 import dev.erst.gridgrind.core.plan.CellMutationAction;
 import dev.erst.gridgrind.core.plan.DrawingMutationAction;
 import dev.erst.gridgrind.core.plan.StructuredMutationAction;
-import dev.erst.gridgrind.core.plan.WorkbookAnalysisResult;
 import dev.erst.gridgrind.core.plan.WorkbookAssetInspectionResult;
 import dev.erst.gridgrind.core.plan.WorkbookMutationAction;
 import dev.erst.gridgrind.core.result.WorkbookResult;
@@ -659,9 +658,11 @@ final class XlsxParityDrawingChartPivotProbeGroup {
     WorkbookAssetInspectionResult.PivotTablesResult pivots =
         XlsxParityGridGrind.read(
             success, "pivots", WorkbookAssetInspectionResult.PivotTablesResult.class);
-    WorkbookAnalysisResult.PivotTableHealthResult health =
+    dev.erst.gridgrind.core.plan.WorkbookAnalysisResult.PivotTableHealthResult health =
         XlsxParityGridGrind.read(
-            success, "health", WorkbookAnalysisResult.PivotTableHealthResult.class);
+            success,
+            "health",
+            dev.erst.gridgrind.core.plan.WorkbookAnalysisResult.PivotTableHealthResult.class);
     if (directPivots.size() != 1
         || !(directPivots.getFirst() instanceof PivotTableReport.Supported supported)
         || !(supported.source() instanceof PivotTableReport.PivotSourceReport.Range)
@@ -698,9 +699,11 @@ final class XlsxParityDrawingChartPivotProbeGroup {
     WorkbookAssetInspectionResult.PivotTablesResult pivots =
         XlsxParityGridGrind.read(
             success, "pivots", WorkbookAssetInspectionResult.PivotTablesResult.class);
-    WorkbookAnalysisResult.PivotTableHealthResult health =
+    dev.erst.gridgrind.core.plan.WorkbookAnalysisResult.PivotTableHealthResult health =
         XlsxParityGridGrind.read(
-            success, "health", WorkbookAnalysisResult.PivotTableHealthResult.class);
+            success,
+            "health",
+            dev.erst.gridgrind.core.plan.WorkbookAnalysisResult.PivotTableHealthResult.class);
     if (directPivots.size() != 3
         || supportedPivotByName(directPivots, "Sales Pivot") == null
         || !(supportedPivotByName(directPivots, "Named Pivot").source()
@@ -761,9 +764,11 @@ final class XlsxParityDrawingChartPivotProbeGroup {
     WorkbookAssetInspectionResult.PivotTablesResult pivots =
         XlsxParityGridGrind.read(
             success, "pivots", WorkbookAssetInspectionResult.PivotTablesResult.class);
-    WorkbookAnalysisResult.PivotTableHealthResult health =
+    dev.erst.gridgrind.core.plan.WorkbookAnalysisResult.PivotTableHealthResult health =
         XlsxParityGridGrind.read(
-            success, "health", WorkbookAnalysisResult.PivotTableHealthResult.class);
+            success,
+            "health",
+            dev.erst.gridgrind.core.plan.WorkbookAnalysisResult.PivotTableHealthResult.class);
     PivotTableReport.Supported salesPivot = supportedPivotByName(directPivots, "Sales Pivot");
     if (directPivots.size() != 2
         || salesPivot == null
@@ -782,7 +787,8 @@ final class XlsxParityDrawingChartPivotProbeGroup {
   }
 
   private static boolean pivotHealthClean(
-      WorkbookAnalysisResult.PivotTableHealthResult health, int expectedPivotCount) {
+      dev.erst.gridgrind.core.plan.WorkbookAnalysisResult.PivotTableHealthResult health,
+      int expectedPivotCount) {
     return health.analysis().checkedPivotTableCount() == expectedPivotCount
         && health.analysis().summary().totalCount() == 0
         && health.analysis().findings().isEmpty();

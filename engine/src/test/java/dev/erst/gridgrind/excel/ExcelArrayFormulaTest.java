@@ -87,9 +87,9 @@ class ExcelArrayFormulaTest {
       seedSourceData(sheet);
       sheet.cells().setArrayFormula("D2:D4", new ResolvedArrayFormula("B2:B4*C2:C4"));
 
-      WorkbookSheetResult.ArrayFormulasResult result =
+      dev.erst.gridgrind.core.plan.SheetInspectionResult.ArrayFormulasResult result =
           assertInstanceOf(
-              WorkbookSheetResult.ArrayFormulasResult.class,
+              dev.erst.gridgrind.core.plan.SheetInspectionResult.ArrayFormulasResult.class,
               introspector.execute(
                   workbook,
                   new WorkbookReadCommand.GetArrayFormulas(

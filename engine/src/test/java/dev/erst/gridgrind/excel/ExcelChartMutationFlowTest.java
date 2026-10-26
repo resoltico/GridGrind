@@ -46,9 +46,9 @@ class ExcelChartMutationFlowTest {
                       new ResolvedChartTitle.Text("Line roadmap"),
                       new ChartTitleSpec.Formula("B1")))));
 
-      WorkbookDrawingResult.ChartsResult lineRead =
+      dev.erst.gridgrind.core.plan.WorkbookAssetInspectionResult.ChartsResult lineRead =
           assertInstanceOf(
-              WorkbookDrawingResult.ChartsResult.class,
+              dev.erst.gridgrind.core.plan.WorkbookAssetInspectionResult.ChartsResult.class,
               introspector.execute(
                   workbook,
                   new WorkbookReadCommand.GetCharts(
@@ -99,9 +99,9 @@ class ExcelChartMutationFlowTest {
           Optional.of(120),
           ExcelChartTestSupport.singlePlot(updatedPie, ChartReport.Pie.class).firstSliceAngle());
 
-      WorkbookDrawingResult.ChartsResult exactChartRead =
+      dev.erst.gridgrind.core.plan.WorkbookAssetInspectionResult.ChartsResult exactChartRead =
           assertInstanceOf(
-              WorkbookDrawingResult.ChartsResult.class,
+              dev.erst.gridgrind.core.plan.WorkbookAssetInspectionResult.ChartsResult.class,
               introspector.execute(
                   workbook,
                   new WorkbookReadCommand.GetCharts(

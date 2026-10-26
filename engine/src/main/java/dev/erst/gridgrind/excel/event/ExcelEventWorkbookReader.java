@@ -1,12 +1,10 @@
 package dev.erst.gridgrind.excel.event;
 
+import dev.erst.gridgrind.core.plan.InspectionIntrospectionResult;
 import dev.erst.gridgrind.core.result.SheetSummaryReport;
 import dev.erst.gridgrind.core.result.WorkbookSummary;
 import dev.erst.gridgrind.excel.SheetNotFoundException;
-import dev.erst.gridgrind.excel.WorkbookCoreResult;
 import dev.erst.gridgrind.excel.WorkbookReadCommand;
-import dev.erst.gridgrind.excel.WorkbookReadIntrospectionResult;
-import dev.erst.gridgrind.excel.WorkbookSheetResult;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Path;
@@ -29,7 +27,7 @@ import org.xml.sax.XMLReader;
 /** Low-memory factual workbook reader backed by POI's XSSF event-model package access. */
 public final class ExcelEventWorkbookReader {
   /** Executes supported introspection commands against one workbook path using the event model. */
-  public List<WorkbookReadIntrospectionResult> apply(
+  public List<InspectionIntrospectionResult> apply(
       Path workbookPath, Iterable<WorkbookReadCommand.Introspection> commands) throws IOException {
     Objects.requireNonNull(workbookPath, "workbookPath must not be null");
     Objects.requireNonNull(commands, "commands must not be null");
@@ -38,7 +36,7 @@ public final class ExcelEventWorkbookReader {
       XSSFReader reader = new XSSFReader(pkg);
       EventWorkbookMetadata metadata = EventWorkbookMetadata.workbookMetadata(reader);
       Map<String, EventSheetSummary> sheetSummaries = new ConcurrentHashMap<>();
-      List<WorkbookReadIntrospectionResult> results = new ArrayList<>();
+      List<InspectionIntrospectionResult> results = new ArrayList<>();
       for (WorkbookReadCommand.Introspection command : commands) {
         Objects.requireNonNull(command, "command must not contain nulls");
         results.add(applyOne(reader, metadata, sheetSummaries, command));
@@ -52,7 +50,7 @@ public final class ExcelEventWorkbookReader {
     }
   }
 
-  private WorkbookReadIntrospectionResult applyOne(
+  private InspectionIntrospectionResult applyOne(
       XSSFReader reader,
       EventWorkbookMetadata metadata,
       Map<String, EventSheetSummary> sheetSummaries,
@@ -60,10 +58,10 @@ public final class ExcelEventWorkbookReader {
       throws IOException {
     return switch (command) {
       case WorkbookReadCommand.GetWorkbookSummary getWorkbookSummary ->
-          new WorkbookCoreResult.WorkbookSummaryResult(
+          new dev.erst.gridgrind.core.plan.WorkbookInspectionResult.WorkbookSummaryResult(
               getWorkbookSummary.stepId(), workbookSummary(reader, metadata, sheetSummaries));
       case WorkbookReadCommand.GetSheetSummary getSheetSummary ->
-          new WorkbookSheetResult.SheetSummaryResult(
+          new dev.erst.gridgrind.core.plan.SheetInspectionResult.SheetSummaryResult(
               getSheetSummary.stepId(),
               sheetSummary(reader, metadata, sheetSummaries, getSheetSummary.sheetName()));
       default ->

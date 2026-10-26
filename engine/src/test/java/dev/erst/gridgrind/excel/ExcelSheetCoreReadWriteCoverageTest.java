@@ -848,7 +848,8 @@ class ExcelSheetCoreReadWriteCoverageTest extends ExcelSheetTestSupport {
                           new dev.erst.gridgrind.core.vocabulary.RangeRef("A1:B2"),
                           List.of(ExcelIgnoredErrorType.NUMBER_STORED_AS_TEXT)))));
 
-      WorkbookSheetResult.Window window = sheet.cells().window("A1", 3, 3);
+      dev.erst.gridgrind.core.model.layout.WindowReport.Dense window =
+          sheet.cells().window("A1", 3, 3);
       assertEquals("A1", window.rows().getFirst().cells().getFirst().address().value());
       assertEquals("B2", window.rows().get(1).cells().get(1).address().value());
       assertEquals("Center", window.rows().get(1).cells().get(1).displayValue().orElseThrow());

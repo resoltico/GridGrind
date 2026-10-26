@@ -46,16 +46,16 @@ class ExcelDataValidationWorkflowTest {
       budget.metadata().setDataValidation("A1:C3", definition);
 
       ExcelWorkbookIntrospector introspector = new ExcelWorkbookIntrospector();
-      WorkbookRuleResult.DataValidationsResult beforeClear =
+      dev.erst.gridgrind.core.plan.SheetInspectionResult.DataValidationsResult beforeClear =
           cast(
-              WorkbookRuleResult.DataValidationsResult.class,
+              dev.erst.gridgrind.core.plan.SheetInspectionResult.DataValidationsResult.class,
               introspector.execute(
                   workbook,
                   new WorkbookReadCommand.GetDataValidations(
                       new StepId("all"), "Budget", new ExcelRangeSelection.All())));
-      WorkbookRuleResult.DataValidationsResult selected =
+      dev.erst.gridgrind.core.plan.SheetInspectionResult.DataValidationsResult selected =
           cast(
-              WorkbookRuleResult.DataValidationsResult.class,
+              dev.erst.gridgrind.core.plan.SheetInspectionResult.DataValidationsResult.class,
               introspector.execute(
                   workbook,
                   new WorkbookReadCommand.GetDataValidations(
@@ -79,9 +79,9 @@ class ExcelDataValidationWorkflowTest {
 
       budget.metadata().clearDataValidations(new ExcelRangeSelection.Selected(List.of("B2")));
 
-      WorkbookRuleResult.DataValidationsResult afterClear =
+      dev.erst.gridgrind.core.plan.SheetInspectionResult.DataValidationsResult afterClear =
           cast(
-              WorkbookRuleResult.DataValidationsResult.class,
+              dev.erst.gridgrind.core.plan.SheetInspectionResult.DataValidationsResult.class,
               introspector.execute(
                   workbook,
                   new WorkbookReadCommand.GetDataValidations(
@@ -130,9 +130,9 @@ class ExcelDataValidationWorkflowTest {
 
       DataValidationHealthReport health =
           analyzer.dataValidationHealth(workbook, new ExcelSheetSelection.All());
-      WorkbookAnalysisResult.DataValidationHealthResult executed =
+      dev.erst.gridgrind.core.plan.WorkbookAnalysisResult.DataValidationHealthResult executed =
           cast(
-              WorkbookAnalysisResult.DataValidationHealthResult.class,
+              dev.erst.gridgrind.core.plan.WorkbookAnalysisResult.DataValidationHealthResult.class,
               analyzer.execute(
                   workbook,
                   new WorkbookLocation.StoredWorkbook(workbookPath),

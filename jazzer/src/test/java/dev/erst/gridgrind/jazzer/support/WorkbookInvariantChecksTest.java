@@ -101,7 +101,6 @@ import dev.erst.gridgrind.core.plan.ResolvedStep;
 import dev.erst.gridgrind.core.plan.SheetInspectionResult;
 import dev.erst.gridgrind.core.plan.SheetSelector;
 import dev.erst.gridgrind.core.plan.TableSelector;
-import dev.erst.gridgrind.core.plan.WorkbookAnalysisResult;
 import dev.erst.gridgrind.core.plan.WorkbookAssetInspectionResult;
 import dev.erst.gridgrind.core.plan.WorkbookInspectionResult;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
@@ -354,7 +353,7 @@ class WorkbookInvariantChecksTest {
                                     .Workbook(),
                                 "Budget!$B$4",
                                 NamedRangeBackingKind.RANGE)))),
-                new WorkbookAnalysisResult.FormulaHealthResult(
+                new dev.erst.gridgrind.core.plan.WorkbookAnalysisResult.FormulaHealthResult(
                     new StepId("formula-health"),
                     new FormulaHealthReport(
                         1,
@@ -367,7 +366,7 @@ class WorkbookInvariantChecksTest {
                                 "Formula uses NOW().",
                                 new AnalysisLocationReport.Cell(new SheetLabel("Budget"), "B4"),
                                 List.of("NOW()"))))),
-                new WorkbookAnalysisResult.DataValidationHealthResult(
+                new dev.erst.gridgrind.core.plan.WorkbookAnalysisResult.DataValidationHealthResult(
                     new StepId("data-validation-health"),
                     new DataValidationHealthReport(
                         1, new AnalysisSummaryReport(0, 0, 0, 0), List.of()))));
@@ -464,7 +463,7 @@ class WorkbookInvariantChecksTest {
                         new CellHyperlinkReport(
                             new CellAddress("A1"),
                             new HyperlinkTarget.Url("https://example.com/report")))),
-                new WorkbookAnalysisResult.DataValidationHealthResult(
+                new dev.erst.gridgrind.core.plan.WorkbookAnalysisResult.DataValidationHealthResult(
                     new StepId("data-validation-health"),
                     new DataValidationHealthReport(
                         1,
@@ -477,7 +476,7 @@ class WorkbookInvariantChecksTest {
                                 "Formula is missing",
                                 new AnalysisLocationReport.Range(new SheetLabel("Budget"), "A2:A5"),
                                 List.of("A2:A5"))))),
-                new WorkbookAnalysisResult.NamedRangeHealthResult(
+                new dev.erst.gridgrind.core.plan.WorkbookAnalysisResult.NamedRangeHealthResult(
                     new StepId("named-range-health"),
                     new NamedRangeHealthReport(
                         1, new AnalysisSummaryReport(0, 0, 0, 0), List.of()))));
@@ -600,11 +599,11 @@ class WorkbookInvariantChecksTest {
                             new TableStyleReport.Named(
                                 "TableStyleMedium2", false, false, true, false),
                             true))),
-                new WorkbookAnalysisResult.AutofilterHealthResult(
+                new dev.erst.gridgrind.core.plan.WorkbookAnalysisResult.AutofilterHealthResult(
                     new StepId("autofilter-health"),
                     new AutofilterHealthReport(
                         2, new AnalysisSummaryReport(0, 0, 0, 0), List.of())),
-                new WorkbookAnalysisResult.TableHealthResult(
+                new dev.erst.gridgrind.core.plan.WorkbookAnalysisResult.TableHealthResult(
                     new StepId("table-health"),
                     new TableHealthReport(1, new AnalysisSummaryReport(0, 0, 0, 0), List.of()))));
 
@@ -657,11 +656,11 @@ class WorkbookInvariantChecksTest {
                             List.of("Item", "Amount", "Billable"),
                             new TableStyleReport.None(),
                             true))),
-                new WorkbookAnalysisResult.AutofilterHealthResult(
+                new dev.erst.gridgrind.core.plan.WorkbookAnalysisResult.AutofilterHealthResult(
                     new StepId("autofilter-health"),
                     new AutofilterHealthReport(
                         1, new AnalysisSummaryReport(0, 0, 0, 0), List.of())),
-                new WorkbookAnalysisResult.TableHealthResult(
+                new dev.erst.gridgrind.core.plan.WorkbookAnalysisResult.TableHealthResult(
                     new StepId("table-health"),
                     new TableHealthReport(1, new AnalysisSummaryReport(0, 0, 0, 0), List.of()))));
 
@@ -683,7 +682,7 @@ class WorkbookInvariantChecksTest {
             List.of(
                 new WorkbookAssetInspectionResult.PivotTablesResult(
                     new StepId("pivots"), List.of(pivotReport())),
-                new WorkbookAnalysisResult.PivotTableHealthResult(
+                new dev.erst.gridgrind.core.plan.WorkbookAnalysisResult.PivotTableHealthResult(
                     new StepId("pivot-health"),
                     new PivotTableHealthReport(
                         1, new AnalysisSummaryReport(0, 0, 0, 0), List.of()))));
@@ -716,7 +715,7 @@ class WorkbookInvariantChecksTest {
             List.of(
                 new WorkbookAssetInspectionResult.PivotTablesResult(
                     new StepId("pivots"), List.of(pivotReport())),
-                new WorkbookAnalysisResult.PivotTableHealthResult(
+                new dev.erst.gridgrind.core.plan.WorkbookAnalysisResult.PivotTableHealthResult(
                     new StepId("pivot-health"),
                     new PivotTableHealthReport(
                         1, new AnalysisSummaryReport(0, 0, 0, 0), List.of()))));

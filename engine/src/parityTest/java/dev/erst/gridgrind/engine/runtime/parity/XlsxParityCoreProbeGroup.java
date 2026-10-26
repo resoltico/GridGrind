@@ -31,7 +31,6 @@ import dev.erst.gridgrind.core.plan.*;
 import dev.erst.gridgrind.core.plan.CellMutationAction;
 import dev.erst.gridgrind.core.plan.SheetInspectionResult;
 import dev.erst.gridgrind.core.plan.StructuredMutationAction;
-import dev.erst.gridgrind.core.plan.WorkbookAnalysisResult;
 import dev.erst.gridgrind.core.plan.WorkbookAssetInspectionResult;
 import dev.erst.gridgrind.core.plan.WorkbookInspectionResult;
 import dev.erst.gridgrind.core.plan.WorkbookMutationAction;
@@ -762,9 +761,11 @@ final class XlsxParityCoreProbeGroup {
               + failure.problem().message());
     }
     WorkbookResult.Success success = cast(WorkbookResult.Success.class, response);
-    WorkbookAnalysisResult.DataValidationHealthResult health =
+    dev.erst.gridgrind.core.plan.WorkbookAnalysisResult.DataValidationHealthResult health =
         XlsxParityGridGrind.read(
-            success, "health", WorkbookAnalysisResult.DataValidationHealthResult.class);
+            success,
+            "health",
+            dev.erst.gridgrind.core.plan.WorkbookAnalysisResult.DataValidationHealthResult.class);
     List<String> findingCodes =
         health.analysis().findings().stream()
             .map(finding -> finding.code().name())

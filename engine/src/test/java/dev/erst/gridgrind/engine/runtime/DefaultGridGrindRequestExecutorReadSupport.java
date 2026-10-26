@@ -127,21 +127,16 @@ class DefaultGridGrindRequestExecutorReadSupport {
     return new InspectionSurfaceQuery.GetSheetSchema(Optional.of(allFacetProjection()));
   }
 
-  static dev.erst.gridgrind.excel.WorkbookSheetResult.CellsResult excelCellsResult(
+  static dev.erst.gridgrind.core.plan.SheetInspectionResult.CellsResult excelCellsResult(
       String stepId, String sheetName, List<CellReport> cells) {
-    return new dev.erst.gridgrind.excel.WorkbookSheetResult.CellsResult(
-        new StepId(stepId), sheetName, cells, projection(), false);
+    return new dev.erst.gridgrind.core.plan.SheetInspectionResult.CellsResult(
+        new StepId(stepId), new dev.erst.gridgrind.core.vocabulary.SheetLabel(sheetName), cells);
   }
 
-  static dev.erst.gridgrind.excel.WorkbookSheetResult.WindowResult excelWindowResult(
-      String stepId, dev.erst.gridgrind.excel.WorkbookSheetResult.Window window) {
-    return new dev.erst.gridgrind.excel.WorkbookSheetResult.WindowResult(
-        new StepId(stepId), window, projection(), true, false);
-  }
-
-  static dev.erst.gridgrind.excel.WorkbookSurfaceResult.SheetSchemaResult excelSheetSchemaResult(
-      String stepId, dev.erst.gridgrind.core.model.table.SheetSchemaReport surface) {
-    return new dev.erst.gridgrind.excel.WorkbookSurfaceResult.SheetSchemaResult(
+  static dev.erst.gridgrind.core.plan.WorkbookSurfaceInspectionResult.SheetSchemaResult
+      excelSheetSchemaResult(
+          String stepId, dev.erst.gridgrind.core.model.table.SheetSchemaReport surface) {
+    return new dev.erst.gridgrind.core.plan.WorkbookSurfaceInspectionResult.SheetSchemaResult(
         new StepId(stepId), surface);
   }
 

@@ -84,9 +84,9 @@ class ExcelOoxmlPackageSecuritySupportTest {
               .orElseThrow()
               .value());
 
-      WorkbookCoreResult.PackageSecurityResult securityResult =
+      dev.erst.gridgrind.core.plan.WorkbookInspectionResult.PackageSecurityResult securityResult =
           assertInstanceOf(
-              WorkbookCoreResult.PackageSecurityResult.class,
+              dev.erst.gridgrind.core.plan.WorkbookInspectionResult.PackageSecurityResult.class,
               new WorkbookReadExecutor()
                   .apply(
                       workbook, new WorkbookReadCommand.GetPackageSecurity(new StepId("security")))
@@ -116,9 +116,9 @@ class ExcelOoxmlPackageSecuritySupportTest {
             encryptedWorkbook.workbookPath(),
             new ExcelOoxmlOpenOptions.Encrypted(encryptedWorkbook.password()),
             ExcelTempFileFactoryTestSupport.tempFileFactory())) {
-      WorkbookCoreResult.PackageSecurityResult securityResult =
+      dev.erst.gridgrind.core.plan.WorkbookInspectionResult.PackageSecurityResult securityResult =
           assertInstanceOf(
-              WorkbookCoreResult.PackageSecurityResult.class,
+              dev.erst.gridgrind.core.plan.WorkbookInspectionResult.PackageSecurityResult.class,
               new WorkbookReadExecutor()
                   .apply(
                       workbook, new WorkbookReadCommand.GetPackageSecurity(new StepId("security")))
@@ -143,9 +143,9 @@ class ExcelOoxmlPackageSecuritySupportTest {
             encryptedWorkbook.workbookPath(),
             new ExcelOoxmlOpenOptions.Encrypted(encryptedWorkbook.password()),
             ExcelTempFileFactoryTestSupport.tempFileFactory())) {
-      WorkbookCoreResult.PackageSecurityResult securityResult =
+      dev.erst.gridgrind.core.plan.WorkbookInspectionResult.PackageSecurityResult securityResult =
           assertInstanceOf(
-              WorkbookCoreResult.PackageSecurityResult.class,
+              dev.erst.gridgrind.core.plan.WorkbookInspectionResult.PackageSecurityResult.class,
               new WorkbookReadExecutor()
                   .apply(
                       workbook, new WorkbookReadCommand.GetPackageSecurity(new StepId("security")))
@@ -228,9 +228,9 @@ class ExcelOoxmlPackageSecuritySupportTest {
     try (ExcelWorkbook workbook =
         ExcelWorkbooks.open(
             signedWorkbook.workbookPath(), ExcelTempFileFactoryTestSupport.tempFileFactory())) {
-      WorkbookCoreResult.PackageSecurityResult beforeMutation =
+      dev.erst.gridgrind.core.plan.WorkbookInspectionResult.PackageSecurityResult beforeMutation =
           assertInstanceOf(
-              WorkbookCoreResult.PackageSecurityResult.class,
+              dev.erst.gridgrind.core.plan.WorkbookInspectionResult.PackageSecurityResult.class,
               new WorkbookReadExecutor()
                   .apply(
                       workbook, new WorkbookReadCommand.GetPackageSecurity(new StepId("security")))
@@ -247,9 +247,9 @@ class ExcelOoxmlPackageSecuritySupportTest {
                   new CellSelector.ByAddress(new SheetName("Signed"), new CellAddress("C1")),
                   new ResolvedMutationAction.SetCell(new CellValue.Text("Touch"))));
 
-      WorkbookCoreResult.PackageSecurityResult afterMutation =
+      dev.erst.gridgrind.core.plan.WorkbookInspectionResult.PackageSecurityResult afterMutation =
           assertInstanceOf(
-              WorkbookCoreResult.PackageSecurityResult.class,
+              dev.erst.gridgrind.core.plan.WorkbookInspectionResult.PackageSecurityResult.class,
               new WorkbookReadExecutor()
                   .apply(
                       workbook, new WorkbookReadCommand.GetPackageSecurity(new StepId("security")))
@@ -292,9 +292,9 @@ class ExcelOoxmlPackageSecuritySupportTest {
     assertTrue(OoxmlSecurityTestSupport.signatureValid(resignedOutput));
     try (ExcelWorkbook reopened =
         ExcelWorkbooks.open(resignedOutput, ExcelTempFileFactoryTestSupport.tempFileFactory())) {
-      WorkbookCoreResult.PackageSecurityResult resignedSecurity =
+      dev.erst.gridgrind.core.plan.WorkbookInspectionResult.PackageSecurityResult resignedSecurity =
           assertInstanceOf(
-              WorkbookCoreResult.PackageSecurityResult.class,
+              dev.erst.gridgrind.core.plan.WorkbookInspectionResult.PackageSecurityResult.class,
               new WorkbookReadExecutor()
                   .apply(
                       reopened, new WorkbookReadCommand.GetPackageSecurity(new StepId("security")))
@@ -318,9 +318,9 @@ class ExcelOoxmlPackageSecuritySupportTest {
     assertFalse(OoxmlSecurityTestSupport.signatureValid(tamperedWorkbook));
     try (ExcelWorkbook workbook =
         ExcelWorkbooks.open(tamperedWorkbook, ExcelTempFileFactoryTestSupport.tempFileFactory())) {
-      WorkbookCoreResult.PackageSecurityResult securityResult =
+      dev.erst.gridgrind.core.plan.WorkbookInspectionResult.PackageSecurityResult securityResult =
           assertInstanceOf(
-              WorkbookCoreResult.PackageSecurityResult.class,
+              dev.erst.gridgrind.core.plan.WorkbookInspectionResult.PackageSecurityResult.class,
               new WorkbookReadExecutor()
                   .apply(
                       workbook, new WorkbookReadCommand.GetPackageSecurity(new StepId("security")))

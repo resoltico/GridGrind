@@ -16,7 +16,7 @@ final class WorkbookInvariantWorkbookChecks {
     Objects.requireNonNull(workbook, "workbook must not be null");
     WorkbookExecutionEngine readExecutor = new WorkbookExecutionEngine();
     var workbookSummary =
-        ((dev.erst.gridgrind.excel.WorkbookCoreResult.WorkbookSummaryResult)
+        ((dev.erst.gridgrind.core.plan.WorkbookInspectionResult.WorkbookSummaryResult)
                 readExecutor
                     .read(
                         workbook,
@@ -31,7 +31,7 @@ final class WorkbookInvariantWorkbookChecks {
         .forEach(
             sheetName -> {
               requireEngineSheetSummaryShape(
-                  ((dev.erst.gridgrind.excel.WorkbookSheetResult.SheetSummaryResult)
+                  ((dev.erst.gridgrind.core.plan.SheetInspectionResult.SheetSummaryResult)
                           readExecutor
                               .read(
                                   workbook,
@@ -39,7 +39,7 @@ final class WorkbookInvariantWorkbookChecks {
                                       new StepId("sheet-shape-" + sheetName), sheetName))
                               .getFirst())
                       .sheet());
-              ((dev.erst.gridgrind.excel.WorkbookDrawingResult.DrawingObjectsResult)
+              ((dev.erst.gridgrind.core.plan.WorkbookAssetInspectionResult.DrawingObjectsResult)
                       readExecutor
                           .read(
                               workbook,
@@ -48,7 +48,7 @@ final class WorkbookInvariantWorkbookChecks {
                           .getFirst())
                   .drawingObjects()
                   .forEach(WorkbookInvariantWorkbookChecks::requireEngineDrawingObjectShape);
-              ((dev.erst.gridgrind.excel.WorkbookDrawingResult.ChartsResult)
+              ((dev.erst.gridgrind.core.plan.WorkbookAssetInspectionResult.ChartsResult)
                       readExecutor
                           .read(
                               workbook,
@@ -60,7 +60,7 @@ final class WorkbookInvariantWorkbookChecks {
                   .charts()
                   .forEach(WorkbookInvariantWorkbookChecks::requireEngineChartShape);
             });
-    ((dev.erst.gridgrind.excel.WorkbookDrawingResult.PivotTablesResult)
+    ((dev.erst.gridgrind.core.plan.WorkbookAssetInspectionResult.PivotTablesResult)
             readExecutor
                 .read(
                     workbook,

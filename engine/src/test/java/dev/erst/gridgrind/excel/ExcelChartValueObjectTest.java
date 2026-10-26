@@ -168,8 +168,11 @@ class ExcelChartValueObjectTest {
             .plotTypeToken());
 
     List<ChartReport> chartSnapshots = new ArrayList<>(List.of(lineSnapshot, unsupported));
-    WorkbookDrawingResult.ChartsResult chartsResult =
-        new WorkbookDrawingResult.ChartsResult(new StepId("charts"), "Charts", chartSnapshots);
+    dev.erst.gridgrind.core.plan.WorkbookAssetInspectionResult.ChartsResult chartsResult =
+        new dev.erst.gridgrind.core.plan.WorkbookAssetInspectionResult.ChartsResult(
+            new StepId("charts"),
+            new dev.erst.gridgrind.core.vocabulary.SheetLabel("Charts"),
+            chartSnapshots);
     chartSnapshots.clear();
     assertEquals(2, chartsResult.charts().size());
 

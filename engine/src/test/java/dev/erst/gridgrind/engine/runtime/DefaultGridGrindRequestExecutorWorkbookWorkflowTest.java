@@ -1430,8 +1430,8 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
 
     try (ExcelWorkbook workbook = ExecutionContextFixtureSupport.openWorkbook(workbookPath)) {
       WorkbookExecutionEngine readExecutor = new WorkbookExecutionEngine();
-      dev.erst.gridgrind.excel.WorkbookRuleResult.ConditionalFormattingResult reopened =
-          (dev.erst.gridgrind.excel.WorkbookRuleResult.ConditionalFormattingResult)
+      dev.erst.gridgrind.core.plan.SheetInspectionResult.ConditionalFormattingResult reopened =
+          (dev.erst.gridgrind.core.plan.SheetInspectionResult.ConditionalFormattingResult)
               readExecutor
                   .read(
                       workbook,
@@ -1568,15 +1568,15 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
 
     try (ExcelWorkbook workbook = ExecutionContextFixtureSupport.openWorkbook(workbookPath)) {
       WorkbookExecutionEngine readExecutor = new WorkbookExecutionEngine();
-      dev.erst.gridgrind.excel.WorkbookRuleResult.AutofiltersResult reopenedFilters =
-          (dev.erst.gridgrind.excel.WorkbookRuleResult.AutofiltersResult)
+      dev.erst.gridgrind.core.plan.SheetInspectionResult.AutofiltersResult reopenedFilters =
+          (dev.erst.gridgrind.core.plan.SheetInspectionResult.AutofiltersResult)
               readExecutor
                   .read(
                       workbook,
                       new WorkbookReadCommand.GetAutofilters(new StepId("filters"), "Budget"))
                   .getFirst();
-      dev.erst.gridgrind.excel.WorkbookRuleResult.TablesResult reopenedTables =
-          (dev.erst.gridgrind.excel.WorkbookRuleResult.TablesResult)
+      dev.erst.gridgrind.core.plan.WorkbookAssetInspectionResult.TablesResult reopenedTables =
+          (dev.erst.gridgrind.core.plan.WorkbookAssetInspectionResult.TablesResult)
               readExecutor
                   .read(
                       workbook,

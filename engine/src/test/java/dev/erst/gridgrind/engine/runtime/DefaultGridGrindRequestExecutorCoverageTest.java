@@ -6,7 +6,6 @@ import static org.junit.jupiter.api.Assertions.*;
 import dev.erst.gridgrind.core.model.formula.NamedRangeScopeReport;
 import dev.erst.gridgrind.core.model.formula.NamedRangeTarget;
 import dev.erst.gridgrind.core.model.protection.CellProtectionReport;
-import dev.erst.gridgrind.core.model.protection.WorkbookProtectionReport;
 import dev.erst.gridgrind.core.model.style.CellAlignmentReport;
 import dev.erst.gridgrind.core.model.style.CellBorderReport;
 import dev.erst.gridgrind.core.model.style.CellBorderSideReport;
@@ -14,7 +13,6 @@ import dev.erst.gridgrind.core.model.style.CellFillReport;
 import dev.erst.gridgrind.core.model.style.CellFontReport;
 import dev.erst.gridgrind.core.model.style.CellStyleReport;
 import dev.erst.gridgrind.core.model.style.FontHeightReport;
-import dev.erst.gridgrind.core.model.value.CellReport;
 import dev.erst.gridgrind.core.plan.*;
 import dev.erst.gridgrind.core.plan.CellMutationAction;
 import dev.erst.gridgrind.core.plan.CellSelector;
@@ -22,9 +20,7 @@ import dev.erst.gridgrind.core.plan.InspectionStep;
 import dev.erst.gridgrind.core.plan.MutationStep;
 import dev.erst.gridgrind.core.plan.NamedRangeSelector;
 import dev.erst.gridgrind.core.plan.RangeSelector;
-import dev.erst.gridgrind.core.plan.SheetInspectionResult;
 import dev.erst.gridgrind.core.plan.StructuredMutationAction;
-import dev.erst.gridgrind.core.plan.WorkbookInspectionResult;
 import dev.erst.gridgrind.core.plan.WorkbookSelector;
 import dev.erst.gridgrind.core.problem.GridGrindProblemCode;
 import dev.erst.gridgrind.core.vocabulary.CellAddress;
@@ -45,7 +41,6 @@ import dev.erst.gridgrind.excel.WorkbookReadCommand;
 import java.math.BigDecimal;
 import java.nio.file.Path;
 import java.util.List;
-import java.util.Optional;
 import org.junit.jupiter.api.Test;
 
 /** Focused current-API coverage for executor-owned helper and conversion seams. */
@@ -181,40 +176,6 @@ class DefaultGridGrindRequestExecutorCoverageTest
         InspectionCommandConverter.toReadCommand(workbookFindings));
 
     assertEquals("step-03-get-named-ranges", namedRangesCommand.stepId().value());
-  }
-
-  @Test
-  void convertsFocusedWorkbookReadResultsIntoInspectionResults() {
-    WorkbookInspectionResult.WorkbookProtectionResult protection =
-        assertInstanceOf(
-            WorkbookInspectionResult.WorkbookProtectionResult.class,
-            InspectionResultConverter.toReadResult(
-                new dev.erst.gridgrind.excel.WorkbookCoreResult.WorkbookProtectionResult(
-                    new StepId("step-01-protection"),
-                    new WorkbookProtectionReport(true, false, true, true, false))));
-    SheetInspectionResult.CellsResult cells =
-        assertInstanceOf(
-            SheetInspectionResult.CellsResult.class,
-            InspectionResultConverter.toReadResult(
-                excelCellsResult(
-                    "step-02-cells",
-                    "Budget",
-                    List.of(
-                        new CellReport.NumberReport(
-                            new dev.erst.gridgrind.core.vocabulary.CellAddress("B4"),
-                            Optional.ofNullable("61"),
-                            Optional.ofNullable(defaultStyle()),
-                            Optional.empty(),
-                            Optional.empty(),
-                            Optional.of(
-                                new dev.erst.gridgrind.core.model.value.CellValue.NumberValue(
-                                    61.0d)),
-                            Optional.empty())))));
-
-    assertTrue(protection.protection().structureLocked());
-    assertEquals("step-02-cells", cells.stepId().value());
-    assertEquals("Budget", cells.sheetName().value());
-    assertEquals("B4", cells.cells().getFirst().address().value());
   }
 
   static CellStyleReport defaultStyle() {

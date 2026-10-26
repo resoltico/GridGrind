@@ -15,12 +15,8 @@ import dev.erst.gridgrind.core.model.chart.ChartSeriesSpec;
 import dev.erst.gridgrind.core.model.chart.ChartSpec;
 import dev.erst.gridgrind.core.model.chart.ChartTitleSpec;
 import dev.erst.gridgrind.core.model.chart.ResolvedChart;
-import dev.erst.gridgrind.core.model.customxml.CustomXmlDataBindingReport;
 import dev.erst.gridgrind.core.model.customxml.CustomXmlImportSpec;
-import dev.erst.gridgrind.core.model.customxml.CustomXmlLinkedCellReport;
-import dev.erst.gridgrind.core.model.customxml.CustomXmlLinkedTableReport;
 import dev.erst.gridgrind.core.model.customxml.CustomXmlMappingLocator;
-import dev.erst.gridgrind.core.model.customxml.CustomXmlMappingReport;
 import dev.erst.gridgrind.core.model.drawing.DrawingAnchorSpec;
 import dev.erst.gridgrind.core.model.drawing.DrawingMarkerSpec;
 import dev.erst.gridgrind.core.model.drawing.PictureDataSpec;
@@ -30,7 +26,6 @@ import dev.erst.gridgrind.core.plan.DrawingMutationAction;
 import dev.erst.gridgrind.core.plan.MutationStep;
 import dev.erst.gridgrind.core.plan.SheetSelector;
 import dev.erst.gridgrind.core.plan.StructuredMutationAction;
-import dev.erst.gridgrind.core.plan.WorkbookInspectionResult;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import dev.erst.gridgrind.core.plan.WorkbookSelector;
 import dev.erst.gridgrind.core.source.BinarySourceSpec;
@@ -52,7 +47,6 @@ import dev.erst.gridgrind.core.vocabulary.ExcelPictureFormat;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.excel.*;
-import dev.erst.gridgrind.excel.DrawingGeometryFixtures;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -114,72 +108,6 @@ class SpreadsheetSurfaceConverterCoverageTest {
         assertInstanceOf(ResolvedChart.Bar3D.class, definition.plots().get(3)).shape());
     assertEquals(Optional.empty(), signatureLine.plainSignatureFormat());
     assertEquals(Optional.empty(), signatureLine.plainSignature());
-  }
-
-  @Test
-  void inspectionResultConverterCoversEveryExtendedChartPlotAndCustomXmlLinkedTables() {
-    CustomXmlMappingReport mappingSnapshot =
-        new CustomXmlMappingReport(
-            1L,
-            "CORSO_mapping",
-            "CORSO",
-            "Schema1",
-            new CustomXmlMappingReport.Settings(false, true, false, true, true),
-            new CustomXmlMappingReport.Schema(
-                "urn:gridgrind:test", "XSD", "schema.xsd", "<xsd:schema/>"),
-            new CustomXmlDataBindingReport("binding", true, 5L, "binding.xml", 2L),
-            List.of(
-                new CustomXmlLinkedCellReport(
-                    new dev.erst.gridgrind.core.vocabulary.SheetLabel("Foglio1"),
-                    new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"),
-                    "/CORSO/NOME",
-                    "string")),
-            List.of(
-                new CustomXmlLinkedTableReport(
-                    new dev.erst.gridgrind.core.vocabulary.SheetLabel("Foglio1"),
-                    "Table1",
-                    "CourseTable",
-                    new dev.erst.gridgrind.core.vocabulary.RangeLabel("A1:B4"),
-                    "/CORSO/RIGHE/RIGA")));
-    ChartReport snapshot =
-        new ChartReport(
-            "ExtendedChart",
-            DrawingGeometryFixtures.report(excelAnchor()),
-            new ChartReport.Title.Text("Extended"),
-            new ChartReport.Legend.Visible(ExcelChartLegendPosition.TOP_RIGHT),
-            ExcelChartDisplayBlanksAs.SPAN,
-            false,
-            snapshotPlots(snapshotSeries(new ChartReport.Title.Text("Series"))));
-    ChartReport chartReport =
-        assertInstanceOf(
-                dev.erst.gridgrind.core.plan.WorkbookAssetInspectionResult.ChartsResult.class,
-                InspectionResultConverter.toReadResult(
-                    new dev.erst.gridgrind.excel.WorkbookDrawingResult.ChartsResult(
-                        new StepId("charts"), "Foglio1", List.of(snapshot))))
-            .charts()
-            .getFirst();
-    WorkbookInspectionResult.CustomXmlMappingsResult mappings =
-        assertInstanceOf(
-            WorkbookInspectionResult.CustomXmlMappingsResult.class,
-            InspectionResultConverter.toReadResult(
-                new WorkbookCoreResult.CustomXmlMappingsResult(
-                    new StepId("custom-xml"), List.of(mappingSnapshot))));
-
-    assertEquals(expectedReportPlotTypes(), plotTypes(chartReport.plots()));
-    assertEquals(
-        List.of("Jan", "Feb"),
-        assertInstanceOf(
-                ChartReport.DataSource.StringLiteral.class,
-                assertInstanceOf(ChartReport.Area.class, chartReport.plots().getFirst())
-                    .series()
-                    .getFirst()
-                    .categories())
-            .values());
-    assertEquals(
-        "CourseTable", mappings.mappings().getFirst().linkedTables().getFirst().tableDisplayName());
-    assertEquals(
-        "/CORSO/RIGHE/RIGA",
-        mappings.mappings().getFirst().linkedTables().getFirst().commonXPath());
   }
 
   @Test
@@ -391,13 +319,6 @@ class SpreadsheetSurfaceConverterCoverageTest {
         ExcelDrawingAnchorBehavior.MOVE_AND_RESIZE);
   }
 
-  private static DrawingAnchorSpec.TwoCell excelAnchor() {
-    return new DrawingAnchorSpec.TwoCell(
-        new DrawingMarkerSpec(1, 2, 0, 0),
-        new DrawingMarkerSpec(8, 14, 0, 0),
-        ExcelDrawingAnchorBehavior.MOVE_AND_RESIZE);
-  }
-
   private static ChartSeriesSpec inlineSeries(TextSourceSpec title) {
     return new ChartSeriesSpec(
         new ChartTitleSpec.Text(title),
@@ -409,23 +330,8 @@ class SpreadsheetSurfaceConverterCoverageTest {
         Optional.of(4L));
   }
 
-  private static ChartReport.Series snapshotSeries(ChartReport.Title title) {
-    return new ChartReport.Series(
-        title,
-        new ChartReport.DataSource.StringLiteral(List.of("Jan", "Feb")),
-        new ChartReport.DataSource.NumericLiteral(Optional.of("0.0"), List.of("10", "18")),
-        Optional.of(true),
-        Optional.of(ExcelChartMarkerStyle.DIAMOND),
-        Optional.of((short) 6),
-        Optional.of(4L));
-  }
-
   private static List<ChartPlotSpec> inputPlots(ChartSeriesSpec series) {
     return plotVariants().stream().map(variant -> variant.inputFactory().apply(series)).toList();
-  }
-
-  private static List<ChartReport.Plot> snapshotPlots(ChartReport.Series series) {
-    return plotVariants().stream().map(variant -> variant.snapshotFactory().apply(series)).toList();
   }
 
   private static List<PlotVariant> plotVariants() {
@@ -663,23 +569,6 @@ class SpreadsheetSurfaceConverterCoverageTest {
         ResolvedChart.Scatter.class,
         ResolvedChart.Surface.class,
         ResolvedChart.Surface3D.class);
-  }
-
-  private static List<Class<?>> expectedReportPlotTypes() {
-    return List.of(
-        ChartReport.Area.class,
-        ChartReport.Area3D.class,
-        ChartReport.Bar.class,
-        ChartReport.Bar3D.class,
-        ChartReport.Doughnut.class,
-        ChartReport.Line.class,
-        ChartReport.Line3D.class,
-        ChartReport.Pie.class,
-        ChartReport.Pie3D.class,
-        ChartReport.Radar.class,
-        ChartReport.Scatter.class,
-        ChartReport.Surface.class,
-        ChartReport.Surface3D.class);
   }
 
   private static List<Class<?>> expectedInputPlotTypes() {

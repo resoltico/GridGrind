@@ -10,6 +10,7 @@ import dev.erst.gridgrind.core.model.table.TableHealthReport;
 import dev.erst.gridgrind.core.model.validation.ConditionalFormattingHealthReport;
 import dev.erst.gridgrind.core.model.validation.DataValidationHealthReport;
 import dev.erst.gridgrind.core.model.value.HyperlinkHealthReport;
+import dev.erst.gridgrind.core.plan.InspectionAnalysisResult;
 import dev.erst.gridgrind.core.result.AnalysisFindingReport;
 import dev.erst.gridgrind.core.result.AnalysisLocationReport;
 import dev.erst.gridgrind.core.result.AnalysisSummaryReport;
@@ -31,6 +32,8 @@ import org.apache.poi.ss.formula.ptg.Pxg3D;
 import org.apache.poi.xssf.usermodel.XSSFEvaluationWorkbook;
 
 /** Derives conclusion-bearing workbook findings from reusable workbook and sheet facts. */
+@SuppressWarnings(
+    "PMD.ExcessiveImports") // Closed analysis dispatcher shares the canonical report families.
 final class WorkbookAnalyzer {
   private final ExcelWorkbookIntrospector workbookIntrospector;
   private final ExcelDocumentAnalyzer documentAnalyzer;
@@ -48,7 +51,7 @@ final class WorkbookAnalyzer {
   }
 
   /** Executes one derived analysis command against the workbook. */
-  WorkbookReadAnalysisResult execute(
+  InspectionAnalysisResult execute(
       ExcelWorkbook workbook,
       WorkbookLocation workbookLocation,
       WorkbookReadCommand.Analysis command) {
@@ -58,40 +61,40 @@ final class WorkbookAnalyzer {
 
     return switch (command) {
       case WorkbookReadCommand.AnalyzeFormulaHealth analyzeFormulaHealth ->
-          new WorkbookAnalysisResult.FormulaHealthResult(
+          new dev.erst.gridgrind.core.plan.WorkbookAnalysisResult.FormulaHealthResult(
               analyzeFormulaHealth.stepId(),
               formulaHealth(workbook, analyzeFormulaHealth.selection()));
       case WorkbookReadCommand.AnalyzeDataValidationHealth analyzeDataValidationHealth ->
-          new WorkbookAnalysisResult.DataValidationHealthResult(
+          new dev.erst.gridgrind.core.plan.WorkbookAnalysisResult.DataValidationHealthResult(
               analyzeDataValidationHealth.stepId(),
               dataValidationHealth(workbook, analyzeDataValidationHealth.selection()));
       case WorkbookReadCommand.AnalyzeConditionalFormattingHealth
               analyzeConditionalFormattingHealth ->
-          new WorkbookAnalysisResult.ConditionalFormattingHealthResult(
+          new dev.erst.gridgrind.core.plan.WorkbookAnalysisResult.ConditionalFormattingHealthResult(
               analyzeConditionalFormattingHealth.stepId(),
               conditionalFormattingHealth(
                   workbook, analyzeConditionalFormattingHealth.selection()));
       case WorkbookReadCommand.AnalyzeAutofilterHealth analyzeAutofilterHealth ->
-          new WorkbookAnalysisResult.AutofilterHealthResult(
+          new dev.erst.gridgrind.core.plan.WorkbookAnalysisResult.AutofilterHealthResult(
               analyzeAutofilterHealth.stepId(),
               autofilterHealth(workbook, analyzeAutofilterHealth.selection()));
       case WorkbookReadCommand.AnalyzeTableHealth analyzeTableHealth ->
-          new WorkbookAnalysisResult.TableHealthResult(
+          new dev.erst.gridgrind.core.plan.WorkbookAnalysisResult.TableHealthResult(
               analyzeTableHealth.stepId(), tableHealth(workbook, analyzeTableHealth.selection()));
       case WorkbookReadCommand.AnalyzePivotTableHealth analyzePivotTableHealth ->
-          new WorkbookAnalysisResult.PivotTableHealthResult(
+          new dev.erst.gridgrind.core.plan.WorkbookAnalysisResult.PivotTableHealthResult(
               analyzePivotTableHealth.stepId(),
               pivotTableHealth(workbook, analyzePivotTableHealth.selection()));
       case WorkbookReadCommand.AnalyzeHyperlinkHealth analyzeHyperlinkHealth ->
-          new WorkbookAnalysisResult.HyperlinkHealthResult(
+          new dev.erst.gridgrind.core.plan.WorkbookAnalysisResult.HyperlinkHealthResult(
               analyzeHyperlinkHealth.stepId(),
               hyperlinkHealth(workbook, workbookLocation, analyzeHyperlinkHealth.selection()));
       case WorkbookReadCommand.AnalyzeNamedRangeHealth analyzeNamedRangeHealth ->
-          new WorkbookAnalysisResult.NamedRangeHealthResult(
+          new dev.erst.gridgrind.core.plan.WorkbookAnalysisResult.NamedRangeHealthResult(
               analyzeNamedRangeHealth.stepId(),
               namedRangeHealth(workbook, analyzeNamedRangeHealth.selection()));
       case WorkbookReadCommand.AnalyzeWorkbookFindings analyzeWorkbookFindings ->
-          new WorkbookAnalysisResult.WorkbookFindingsResult(
+          new dev.erst.gridgrind.core.plan.WorkbookAnalysisResult.WorkbookFindingsResult(
               analyzeWorkbookFindings.stepId(), workbookFindings(workbook, workbookLocation));
     };
   }

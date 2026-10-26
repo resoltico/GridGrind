@@ -367,7 +367,8 @@ class ExcelSheetAnnotationHyperlinkCoverageTest extends ExcelSheetTestSupport {
       sheet.cells().setCell("A1", new CellValue.Text("first"));
       sheet.cells().setCell("A3", new CellValue.Text("third"));
 
-      WorkbookSheetResult.Window window = sheet.cells().window("A1", 3, 1);
+      dev.erst.gridgrind.core.model.layout.WindowReport.Dense window =
+          sheet.cells().window("A1", 3, 1);
       assertEquals("A2", window.rows().get(1).cells().getFirst().address().value());
       assertEquals("BLANK", window.rows().get(1).cells().getFirst().type());
 

@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.core.plan.InspectionResult;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
@@ -29,26 +30,26 @@ public final class WorkbookExecutionEngine {
   }
 
   /** Executes one or more read commands against one workbook instance. */
-  public List<WorkbookReadResult> read(ExcelWorkbook workbook, WorkbookReadCommand... commands) {
+  public List<InspectionResult> read(ExcelWorkbook workbook, WorkbookReadCommand... commands) {
     Objects.requireNonNull(commands, "commands must not be null");
     return read(workbook, new WorkbookLocation.UnsavedWorkbook(), Arrays.asList(commands));
   }
 
   /** Executes read commands with explicit workbook-location context. */
-  public List<WorkbookReadResult> read(
+  public List<InspectionResult> read(
       ExcelWorkbook workbook, WorkbookLocation workbookLocation, WorkbookReadCommand... commands) {
     Objects.requireNonNull(commands, "commands must not be null");
     return read(workbook, workbookLocation, Arrays.asList(commands));
   }
 
   /** Executes read commands from any iterable source using an unsaved workbook location. */
-  public List<WorkbookReadResult> read(
+  public List<InspectionResult> read(
       ExcelWorkbook workbook, Iterable<WorkbookReadCommand> commands) {
     return read(workbook, new WorkbookLocation.UnsavedWorkbook(), commands);
   }
 
   /** Executes read commands from any iterable source with explicit workbook-location context. */
-  public List<WorkbookReadResult> read(
+  public List<InspectionResult> read(
       ExcelWorkbook workbook,
       WorkbookLocation workbookLocation,
       Iterable<WorkbookReadCommand> commands) {

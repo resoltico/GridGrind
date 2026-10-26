@@ -130,7 +130,7 @@ final class XlsxRoundTripExpectedWorkbookSurfaceSupport {
   static dev.erst.gridgrind.core.result.WorkbookSummary expectedWorkbookSummary(
       ExcelWorkbook workbook) {
     WorkbookExecutionEngine readExecutor = new WorkbookExecutionEngine();
-    return ((dev.erst.gridgrind.excel.WorkbookCoreResult.WorkbookSummaryResult)
+    return ((dev.erst.gridgrind.core.plan.WorkbookInspectionResult.WorkbookSummaryResult)
             readExecutor
                 .read(
                     workbook,
@@ -147,7 +147,7 @@ final class XlsxRoundTripExpectedWorkbookSurfaceSupport {
     for (String sheetName : workbook.sheets().sheetNames()) {
       expected.put(
           sheetName,
-          ((dev.erst.gridgrind.excel.WorkbookSheetResult.SheetSummaryResult)
+          ((dev.erst.gridgrind.core.plan.SheetInspectionResult.SheetSummaryResult)
                   readExecutor
                       .read(
                           workbook,
@@ -178,7 +178,7 @@ final class XlsxRoundTripExpectedWorkbookSurfaceSupport {
     LinkedHashMap<String, List<ConditionalFormattingEntryReport>> expected = new LinkedHashMap<>();
     for (String sheetName : workbook.sheets().sheetNames()) {
       var result =
-          (dev.erst.gridgrind.excel.WorkbookRuleResult.ConditionalFormattingResult)
+          (dev.erst.gridgrind.core.plan.SheetInspectionResult.ConditionalFormattingResult)
               readExecutor
                   .read(
                       workbook,
@@ -199,7 +199,7 @@ final class XlsxRoundTripExpectedWorkbookSurfaceSupport {
     LinkedHashMap<String, List<AutofilterEntryReport>> expected = new LinkedHashMap<>();
     for (String sheetName : workbook.sheets().sheetNames()) {
       var result =
-          (dev.erst.gridgrind.excel.WorkbookRuleResult.AutofiltersResult)
+          (dev.erst.gridgrind.core.plan.SheetInspectionResult.AutofiltersResult)
               readExecutor
                   .read(
                       workbook,
@@ -231,7 +231,7 @@ final class XlsxRoundTripExpectedWorkbookSurfaceSupport {
   static List<PivotTableReport> expectedPivots(ExcelWorkbook workbook) {
     WorkbookExecutionEngine readExecutor = new WorkbookExecutionEngine();
     var result =
-        (dev.erst.gridgrind.excel.WorkbookDrawingResult.PivotTablesResult)
+        (dev.erst.gridgrind.core.plan.WorkbookAssetInspectionResult.PivotTablesResult)
             readExecutor
                 .read(
                     workbook,
@@ -244,7 +244,7 @@ final class XlsxRoundTripExpectedWorkbookSurfaceSupport {
   static List<TableEntryReport> expectedTables(ExcelWorkbook workbook) {
     WorkbookExecutionEngine readExecutor = new WorkbookExecutionEngine();
     var result =
-        (dev.erst.gridgrind.excel.WorkbookRuleResult.TablesResult)
+        (dev.erst.gridgrind.core.plan.WorkbookAssetInspectionResult.TablesResult)
             readExecutor
                 .read(
                     workbook,

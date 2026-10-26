@@ -289,8 +289,8 @@ class AdvancedReadEngineTypesTest {
         new WorkbookProtectionReport(true, false, true, true, false);
     WorkbookReadCommand.GetWorkbookProtection read =
         new WorkbookReadCommand.GetWorkbookProtection(new StepId("workbook-protection"));
-    WorkbookCoreResult.WorkbookProtectionResult result =
-        new WorkbookCoreResult.WorkbookProtectionResult(
+    dev.erst.gridgrind.core.plan.WorkbookInspectionResult.WorkbookProtectionResult result =
+        new dev.erst.gridgrind.core.plan.WorkbookInspectionResult.WorkbookProtectionResult(
             new StepId("workbook-protection"), protection);
 
     assertTrue(protection.structureLocked());
@@ -304,12 +304,12 @@ class AdvancedReadEngineTypesTest {
     assertThrows(
         NullPointerException.class,
         () ->
-            new WorkbookCoreResult.WorkbookProtectionResult(
+            new dev.erst.gridgrind.core.plan.WorkbookInspectionResult.WorkbookProtectionResult(
                 new StepId("workbook-protection"), null));
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new WorkbookCoreResult.WorkbookProtectionResult(
+            new dev.erst.gridgrind.core.plan.WorkbookInspectionResult.WorkbookProtectionResult(
                 new StepId(" "), new WorkbookProtectionReport(true, false, true, true, false)));
   }
 

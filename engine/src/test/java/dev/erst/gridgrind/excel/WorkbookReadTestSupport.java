@@ -38,20 +38,15 @@ final class WorkbookReadTestSupport {
         projection());
   }
 
-  static WorkbookSheetResult.CellsResult cellsResult(
+  static dev.erst.gridgrind.core.plan.SheetInspectionResult.CellsResult cellsResult(
       String stepId, String sheetName, List<CellReport> cells) {
-    return new WorkbookSheetResult.CellsResult(
-        new StepId(stepId), sheetName, cells, projection(), false);
+    return new dev.erst.gridgrind.core.plan.SheetInspectionResult.CellsResult(
+        new StepId(stepId), new dev.erst.gridgrind.core.vocabulary.SheetLabel(sheetName), cells);
   }
 
-  static WorkbookSheetResult.WindowResult windowResult(
-      String stepId, WorkbookSheetResult.Window window) {
-    return new WorkbookSheetResult.WindowResult(
-        new StepId(stepId), window, projection(), false, false);
-  }
-
-  static WorkbookSurfaceResult.SheetSchemaResult sheetSchemaResult(
-      String stepId, SheetSchemaReport surface) {
-    return new WorkbookSurfaceResult.SheetSchemaResult(new StepId(stepId), surface);
+  static dev.erst.gridgrind.core.plan.WorkbookSurfaceInspectionResult.SheetSchemaResult
+      sheetSchemaResult(String stepId, SheetSchemaReport surface) {
+    return new dev.erst.gridgrind.core.plan.WorkbookSurfaceInspectionResult.SheetSchemaResult(
+        new StepId(stepId), surface);
   }
 }

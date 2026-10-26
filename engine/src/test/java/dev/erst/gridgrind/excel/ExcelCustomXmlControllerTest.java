@@ -83,20 +83,21 @@ class ExcelCustomXmlControllerTest {
                       + "<CDL>Ops</CDL><DURATA>5</DURATA><ARGOMENTO>Audit</ARGOMENTO>"
                       + "<PROGETTO>Parity</PROGETTO><CREDITI>10</CREDITI></CORSO>"));
 
-      WorkbookSheetResult.Window window = workbook.sheet("Foglio1").cells().window("A1", 1, 3);
+      dev.erst.gridgrind.core.model.layout.WindowReport.Dense window =
+          workbook.sheet("Foglio1").cells().window("A1", 1, 3);
       assertEquals("Grid", window.rows().getFirst().cells().get(0).displayValue().orElseThrow());
       assertEquals("Grind", window.rows().getFirst().cells().get(1).displayValue().orElseThrow());
       assertEquals("Agent", window.rows().getFirst().cells().get(2).displayValue().orElseThrow());
 
       ExcelWorkbookIntrospector introspector = new ExcelWorkbookIntrospector();
-      WorkbookCoreResult.CustomXmlMappingsResult mappings =
+      dev.erst.gridgrind.core.plan.WorkbookInspectionResult.CustomXmlMappingsResult mappings =
           assertInstanceOf(
-              WorkbookCoreResult.CustomXmlMappingsResult.class,
+              dev.erst.gridgrind.core.plan.WorkbookInspectionResult.CustomXmlMappingsResult.class,
               introspector.execute(
                   workbook, new WorkbookReadCommand.GetCustomXmlMappings(new StepId("maps"))));
-      WorkbookCoreResult.CustomXmlExportResult exported =
+      dev.erst.gridgrind.core.plan.WorkbookInspectionResult.CustomXmlExportResult exported =
           assertInstanceOf(
-              WorkbookCoreResult.CustomXmlExportResult.class,
+              dev.erst.gridgrind.core.plan.WorkbookInspectionResult.CustomXmlExportResult.class,
               introspector.execute(
                   workbook,
                   new WorkbookReadCommand.ExportCustomXmlMapping(

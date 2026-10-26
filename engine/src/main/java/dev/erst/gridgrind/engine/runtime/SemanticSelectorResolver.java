@@ -25,7 +25,6 @@ import dev.erst.gridgrind.excel.ExcelSheet;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
 import dev.erst.gridgrind.excel.WorkbookExecutionEngine;
 import dev.erst.gridgrind.excel.WorkbookReadCommand;
-import dev.erst.gridgrind.excel.WorkbookRuleResult;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
@@ -217,8 +216,8 @@ final class SemanticSelectorResolver {
   }
 
   private ResolvedTable resolveExactTable(ExcelWorkbook workbook, TableSelector selector) {
-    WorkbookRuleResult.TablesResult result =
-        (WorkbookRuleResult.TablesResult)
+    dev.erst.gridgrind.core.plan.WorkbookAssetInspectionResult.TablesResult result =
+        (dev.erst.gridgrind.core.plan.WorkbookAssetInspectionResult.TablesResult)
             workbookEngine
                 .read(
                     workbook,

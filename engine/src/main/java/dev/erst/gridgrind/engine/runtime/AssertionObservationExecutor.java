@@ -20,7 +20,6 @@ import dev.erst.gridgrind.excel.NamedRangeNotFoundException;
 import dev.erst.gridgrind.excel.SheetNotFoundException;
 import dev.erst.gridgrind.excel.WorkbookExecutionEngine;
 import dev.erst.gridgrind.excel.WorkbookLocation;
-import dev.erst.gridgrind.excel.WorkbookReadResult;
 import java.util.List;
 import java.util.Objects;
 
@@ -48,7 +47,7 @@ final class AssertionObservationExecutor {
       return Objects.requireNonNull(
           resolvedTarget.shortCircuitResult(), "short-circuit observation result must be present");
     }
-    WorkbookReadResult result =
+    InspectionResult result =
         workbookEngine
             .read(
                 workbook,
@@ -59,7 +58,7 @@ final class AssertionObservationExecutor {
                         resolvedTarget.selector(), "resolved selector must be present"),
                     query))
             .getFirst();
-    return InspectionResultConverter.toReadResult(result);
+    return result;
   }
 
   InspectionResult presenceObservation(

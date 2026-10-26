@@ -21,7 +21,7 @@ final class ExcelSheetIntrospector {
   }
 
   /** Returns a rectangular window of cell snapshots anchored at one top-left address. */
-  WorkbookSheetResult.Window window(
+  dev.erst.gridgrind.core.model.layout.WindowReport.Dense window(
       ExcelSheet sheet,
       String topLeftAddress,
       int rowCount,

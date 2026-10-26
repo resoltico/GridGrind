@@ -119,65 +119,68 @@ class WorkbookAnalyzerTest {
 
       WorkbookAnalyzer analyzer = new WorkbookAnalyzer();
 
-      WorkbookAnalysisResult.FormulaHealthResult formulaHealth =
+      dev.erst.gridgrind.core.plan.WorkbookAnalysisResult.FormulaHealthResult formulaHealth =
           cast(
-              WorkbookAnalysisResult.FormulaHealthResult.class,
+              dev.erst.gridgrind.core.plan.WorkbookAnalysisResult.FormulaHealthResult.class,
               analyzer.execute(
                   workbook,
                   new WorkbookLocation.StoredWorkbook(workbookPath),
                   new WorkbookReadCommand.AnalyzeFormulaHealth(
                       new StepId("formulaHealth"), new ExcelSheetSelection.All())));
-      WorkbookAnalysisResult.HyperlinkHealthResult hyperlinkHealth =
+      dev.erst.gridgrind.core.plan.WorkbookAnalysisResult.HyperlinkHealthResult hyperlinkHealth =
           cast(
-              WorkbookAnalysisResult.HyperlinkHealthResult.class,
+              dev.erst.gridgrind.core.plan.WorkbookAnalysisResult.HyperlinkHealthResult.class,
               analyzer.execute(
                   workbook,
                   new WorkbookLocation.StoredWorkbook(workbookPath),
                   new WorkbookReadCommand.AnalyzeHyperlinkHealth(
                       new StepId("hyperlinkHealth"), new ExcelSheetSelection.All())));
-      WorkbookAnalysisResult.NamedRangeHealthResult namedRangeHealth =
+      dev.erst.gridgrind.core.plan.WorkbookAnalysisResult.NamedRangeHealthResult namedRangeHealth =
           cast(
-              WorkbookAnalysisResult.NamedRangeHealthResult.class,
+              dev.erst.gridgrind.core.plan.WorkbookAnalysisResult.NamedRangeHealthResult.class,
               analyzer.execute(
                   workbook,
                   new WorkbookLocation.StoredWorkbook(workbookPath),
                   new WorkbookReadCommand.AnalyzeNamedRangeHealth(
                       new StepId("namedRangeHealth"), new ExcelNamedRangeSelection.All())));
-      WorkbookAnalysisResult.AutofilterHealthResult autofilterHealth =
+      dev.erst.gridgrind.core.plan.WorkbookAnalysisResult.AutofilterHealthResult autofilterHealth =
           cast(
-              WorkbookAnalysisResult.AutofilterHealthResult.class,
+              dev.erst.gridgrind.core.plan.WorkbookAnalysisResult.AutofilterHealthResult.class,
               analyzer.execute(
                   workbook,
                   new WorkbookLocation.StoredWorkbook(workbookPath),
                   new WorkbookReadCommand.AnalyzeAutofilterHealth(
                       new StepId("autofilterHealth"), new ExcelSheetSelection.All())));
-      WorkbookAnalysisResult.ConditionalFormattingHealthResult conditionalFormattingHealth =
+      dev.erst.gridgrind.core.plan.WorkbookAnalysisResult.ConditionalFormattingHealthResult
+          conditionalFormattingHealth =
+              cast(
+                  dev.erst.gridgrind.core.plan.WorkbookAnalysisResult
+                      .ConditionalFormattingHealthResult.class,
+                  analyzer.execute(
+                      workbook,
+                      new WorkbookLocation.StoredWorkbook(workbookPath),
+                      new WorkbookReadCommand.AnalyzeConditionalFormattingHealth(
+                          new StepId("conditionalFormattingHealth"),
+                          new ExcelSheetSelection.All())));
+      dev.erst.gridgrind.core.plan.WorkbookAnalysisResult.TableHealthResult tableHealth =
           cast(
-              WorkbookAnalysisResult.ConditionalFormattingHealthResult.class,
-              analyzer.execute(
-                  workbook,
-                  new WorkbookLocation.StoredWorkbook(workbookPath),
-                  new WorkbookReadCommand.AnalyzeConditionalFormattingHealth(
-                      new StepId("conditionalFormattingHealth"), new ExcelSheetSelection.All())));
-      WorkbookAnalysisResult.TableHealthResult tableHealth =
-          cast(
-              WorkbookAnalysisResult.TableHealthResult.class,
+              dev.erst.gridgrind.core.plan.WorkbookAnalysisResult.TableHealthResult.class,
               analyzer.execute(
                   workbook,
                   new WorkbookLocation.StoredWorkbook(workbookPath),
                   new WorkbookReadCommand.AnalyzeTableHealth(
                       new StepId("tableHealth"), new ExcelTableSelection.All())));
-      WorkbookAnalysisResult.PivotTableHealthResult pivotTableHealth =
+      dev.erst.gridgrind.core.plan.WorkbookAnalysisResult.PivotTableHealthResult pivotTableHealth =
           cast(
-              WorkbookAnalysisResult.PivotTableHealthResult.class,
+              dev.erst.gridgrind.core.plan.WorkbookAnalysisResult.PivotTableHealthResult.class,
               analyzer.execute(
                   workbook,
                   new WorkbookLocation.StoredWorkbook(workbookPath),
                   new WorkbookReadCommand.AnalyzePivotTableHealth(
                       new StepId("pivotTableHealth"), new ExcelPivotTableSelection.All())));
-      WorkbookAnalysisResult.WorkbookFindingsResult workbookFindings =
+      dev.erst.gridgrind.core.plan.WorkbookAnalysisResult.WorkbookFindingsResult workbookFindings =
           cast(
-              WorkbookAnalysisResult.WorkbookFindingsResult.class,
+              dev.erst.gridgrind.core.plan.WorkbookAnalysisResult.WorkbookFindingsResult.class,
               analyzer.execute(
                   workbook,
                   new WorkbookLocation.StoredWorkbook(workbookPath),

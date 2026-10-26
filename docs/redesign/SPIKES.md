@@ -2633,3 +2633,34 @@ core384, JSON353, engine1412 plus14 parity, CLI588, zero failures/errors/skips; 
 unchanged. Inventories: converters927→829, Support197→196, main114102→113870, tests153526→153527;
 blank287, definitions0, snapshots2(runtime) unchanged. Baseline diff empty. WP-40 remains open for
 ResolvedPlan, physical windows and the remaining read query/result/selection seam.
+
+## WP-40 return core inspection results directly
+
+Deleted the complete engine read-result hierarchy, the remaining physical Window/WindowRow mirrors,
+its validation helper and all result-conversion classes. Full-XSSF, event-read, assertions and runtime
+inspection flows now receive canonical InspectionResult variants directly. Physical cell reads build
+WindowReport.Dense/WindowRowReport; the query boundary chooses dense or sparse output and omits blank
+reports for sparse queries with the same prior semantics. Projection and date-system calculation stay
+at native cell read boundaries. No result-conversion alias remains. The independent sequence replay
+and round-trip consumers now use the same canonical result types.
+
+Removed only the three fixture-only result/model conversion test classes and two corresponding methods
+from mixed tests, plus their unused private fixtures. Existing core result invariants and real native,
+public workflow, event-read, assertion, host-acceptance, persistence and golden tests remain. Added a
+real query regression: sparse returns exactly A1/B2/B3, dense retains the3×2 grid and B1's blank-cell
+comment, and both retain their step ids. The defaults were preserved: an existing physical read test
+now explicitly observes its requested sparse form instead of expecting a raw intermediate grid.
+
+Main compilation passes8s. Compile retries corrected print-layout/window accessors, a qualified-name
+rewrite and unused private test helpers. PMD's import-count rule crossed its threshold by moving the
+closed analysis dispatcher's result type into core; documented a local suppression, without a global
+rule change or artificial facade. Focused core/engine/parity/PMD checks pass32s and nested check/all94
+retained seeds pass17s. Final ./gradlew check passes2m55s: core384, JSON353, engine1394 plus14 parity,
+CLI588, zero failures/errors/skips; all143 golden cases unchanged. No active campaigns. Four packaged
+JARs were independently checked: all14 deleted main-type families are absent, including nested classes.
+
+Inventories: converters829→625, Support196→194, blank287→286, main113870→113122, tests153527→150937;
+definitions0, snapshots2(runtime) unchanged. Only the historical changelog archive mentions the retired
+read converter; current Markdown guidance has no such reference. Baseline diff empty. WP-40 remains
+open for ResolvedPlan and elimination of the query/selection translation seam (the last625 converter
+lines), before feature-package/backend work.

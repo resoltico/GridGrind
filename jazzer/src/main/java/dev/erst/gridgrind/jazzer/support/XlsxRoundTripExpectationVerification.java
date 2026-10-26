@@ -243,7 +243,7 @@ final class XlsxRoundTripExpectationVerification {
       for (Map.Entry<String, dev.erst.gridgrind.core.result.SheetSummaryReport> entry :
           expectedWorkbookState.expectedSheetSummaries().entrySet()) {
         var actualSheetSummary =
-            ((dev.erst.gridgrind.excel.WorkbookSheetResult.SheetSummaryResult)
+            ((dev.erst.gridgrind.core.plan.SheetInspectionResult.SheetSummaryResult)
                     new WorkbookExecutionEngine()
                         .read(
                             workbook,
@@ -320,7 +320,7 @@ final class XlsxRoundTripExpectationVerification {
         }
       }
       List<PivotTableReport> actualPivots =
-          ((dev.erst.gridgrind.excel.WorkbookDrawingResult.PivotTablesResult)
+          ((dev.erst.gridgrind.core.plan.WorkbookAssetInspectionResult.PivotTablesResult)
                   new WorkbookExecutionEngine()
                       .read(
                           workbook,
@@ -446,7 +446,7 @@ final class XlsxRoundTripExpectationVerification {
       for (Map.Entry<String, List<ConditionalFormattingEntryReport>> entry :
           expectedConditionalFormatting.entrySet()) {
         var actual =
-            ((dev.erst.gridgrind.excel.WorkbookRuleResult.ConditionalFormattingResult)
+            ((dev.erst.gridgrind.core.plan.SheetInspectionResult.ConditionalFormattingResult)
                     readExecutor
                         .read(
                             workbook,
@@ -479,7 +479,7 @@ final class XlsxRoundTripExpectationVerification {
       WorkbookExecutionEngine readExecutor = new WorkbookExecutionEngine();
       for (Map.Entry<String, List<AutofilterEntryReport>> entry : expectedAutofilters.entrySet()) {
         var actual =
-            ((dev.erst.gridgrind.excel.WorkbookRuleResult.AutofiltersResult)
+            ((dev.erst.gridgrind.core.plan.SheetInspectionResult.AutofiltersResult)
                     readExecutor
                         .read(
                             workbook,
@@ -508,7 +508,7 @@ final class XlsxRoundTripExpectationVerification {
     try (ExcelWorkbook workbook = JazzerWorkbookIoSupport.openWorkbook(workbookPath)) {
       WorkbookExecutionEngine readExecutor = new WorkbookExecutionEngine();
       var actual =
-          ((dev.erst.gridgrind.excel.WorkbookRuleResult.TablesResult)
+          ((dev.erst.gridgrind.core.plan.WorkbookAssetInspectionResult.TablesResult)
                   readExecutor
                       .read(
                           workbook,

@@ -292,16 +292,16 @@ class ResolvedMutationExecutorTest {
       assertEquals("BLANK", workbook.sheet("Budget").cells().snapshotCell("A2").type());
       assertThrows(SheetNotFoundException.class, () -> workbook.sheet("Scratch"));
       assertTrue(workbook.formulas().recalculateOnOpenEnabled());
-      WorkbookRuleResult.AutofiltersResult autofilters =
+      dev.erst.gridgrind.core.plan.SheetInspectionResult.AutofiltersResult autofilters =
           assertInstanceOf(
-              WorkbookRuleResult.AutofiltersResult.class,
+              dev.erst.gridgrind.core.plan.SheetInspectionResult.AutofiltersResult.class,
               new ExcelWorkbookIntrospector()
                   .execute(
                       workbook,
                       new WorkbookReadCommand.GetAutofilters(new StepId("autofilters"), "Ops")));
-      WorkbookRuleResult.TablesResult tables =
+      dev.erst.gridgrind.core.plan.WorkbookAssetInspectionResult.TablesResult tables =
           assertInstanceOf(
-              WorkbookRuleResult.TablesResult.class,
+              dev.erst.gridgrind.core.plan.WorkbookAssetInspectionResult.TablesResult.class,
               new ExcelWorkbookIntrospector()
                   .execute(
                       workbook,
@@ -355,16 +355,16 @@ class ResolvedMutationExecutorTest {
         XlsxRoundTrip.namedRanges(workbookPath));
     try (ExcelWorkbook reopened =
         ExcelWorkbooks.open(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory())) {
-      WorkbookRuleResult.AutofiltersResult autofilters =
+      dev.erst.gridgrind.core.plan.SheetInspectionResult.AutofiltersResult autofilters =
           assertInstanceOf(
-              WorkbookRuleResult.AutofiltersResult.class,
+              dev.erst.gridgrind.core.plan.SheetInspectionResult.AutofiltersResult.class,
               new ExcelWorkbookIntrospector()
                   .execute(
                       reopened,
                       new WorkbookReadCommand.GetAutofilters(new StepId("autofilters"), "Ops")));
-      WorkbookRuleResult.TablesResult tables =
+      dev.erst.gridgrind.core.plan.WorkbookAssetInspectionResult.TablesResult tables =
           assertInstanceOf(
-              WorkbookRuleResult.TablesResult.class,
+              dev.erst.gridgrind.core.plan.WorkbookAssetInspectionResult.TablesResult.class,
               new ExcelWorkbookIntrospector()
                   .execute(
                       reopened,
@@ -654,9 +654,9 @@ class ResolvedMutationExecutorTest {
                           "Total Amount",
                           Optional.of("#,##0.00"))))));
 
-      WorkbookDrawingResult.PivotTablesResult pivotTables =
+      dev.erst.gridgrind.core.plan.WorkbookAssetInspectionResult.PivotTablesResult pivotTables =
           assertInstanceOf(
-              WorkbookDrawingResult.PivotTablesResult.class,
+              dev.erst.gridgrind.core.plan.WorkbookAssetInspectionResult.PivotTablesResult.class,
               new ExcelWorkbookIntrospector()
                   .execute(
                       workbook,
@@ -674,9 +674,9 @@ class ResolvedMutationExecutorTest {
               new PivotTableSelector.ByNameOnSheet("Ops Pivot", new SheetName("Report")),
               new StructuredMutationAction.DeletePivotTable()));
 
-      WorkbookDrawingResult.PivotTablesResult afterDelete =
+      dev.erst.gridgrind.core.plan.WorkbookAssetInspectionResult.PivotTablesResult afterDelete =
           assertInstanceOf(
-              WorkbookDrawingResult.PivotTablesResult.class,
+              dev.erst.gridgrind.core.plan.WorkbookAssetInspectionResult.PivotTablesResult.class,
               new ExcelWorkbookIntrospector()
                   .execute(
                       workbook,
@@ -855,9 +855,9 @@ class ResolvedMutationExecutorTest {
                                       Optional.empty(),
                                       Optional.empty()))))))));
 
-      WorkbookRuleResult.ConditionalFormattingResult initial =
+      dev.erst.gridgrind.core.plan.SheetInspectionResult.ConditionalFormattingResult initial =
           assertInstanceOf(
-              WorkbookRuleResult.ConditionalFormattingResult.class,
+              dev.erst.gridgrind.core.plan.SheetInspectionResult.ConditionalFormattingResult.class,
               new ExcelWorkbookIntrospector()
                   .execute(
                       workbook,
@@ -872,9 +872,9 @@ class ResolvedMutationExecutorTest {
               new ExcelRangeSelection.All(),
               new StructuredMutationAction.ClearConditionalFormatting()));
 
-      WorkbookRuleResult.ConditionalFormattingResult cleared =
+      dev.erst.gridgrind.core.plan.SheetInspectionResult.ConditionalFormattingResult cleared =
           assertInstanceOf(
-              WorkbookRuleResult.ConditionalFormattingResult.class,
+              dev.erst.gridgrind.core.plan.SheetInspectionResult.ConditionalFormattingResult.class,
               new ExcelWorkbookIntrospector()
                   .execute(
                       workbook,
@@ -1304,9 +1304,9 @@ class ResolvedMutationExecutorTest {
               .orElseThrow()
               .alignment()
               .horizontalAlignment());
-      WorkbookRuleResult.AutofiltersResult autofilters =
+      dev.erst.gridgrind.core.plan.SheetInspectionResult.AutofiltersResult autofilters =
           assertInstanceOf(
-              WorkbookRuleResult.AutofiltersResult.class,
+              dev.erst.gridgrind.core.plan.SheetInspectionResult.AutofiltersResult.class,
               new ExcelWorkbookIntrospector()
                   .execute(
                       workbook,

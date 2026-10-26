@@ -272,7 +272,10 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
         read(success, "ranges", WorkbookSurfaceInspectionResult.NamedRangeSurfaceResult.class)
             .surface();
     FormulaHealthReport formulaHealth =
-        read(success, "formula-health", WorkbookAnalysisResult.FormulaHealthResult.class)
+        read(
+                success,
+                "formula-health",
+                dev.erst.gridgrind.core.plan.WorkbookAnalysisResult.FormulaHealthResult.class)
             .analysis();
 
     assertEquals(1, formula.totalFormulaCellCount());
