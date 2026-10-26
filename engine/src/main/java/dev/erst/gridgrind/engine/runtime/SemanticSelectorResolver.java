@@ -50,7 +50,7 @@ final class SemanticSelectorResolver {
           SheetIntrospectionQuery.GetComments.class);
   private static final Set<Class<? extends Assertion>> EXACT_CELL_ASSERTIONS =
       Set.of(
-          CellAssertion.CellValue.class,
+          CellAssertion.Value.class,
           CellAssertion.DisplayValue.class,
           CellAssertion.FormulaText.class,
           CellAssertion.CellStyle.class);

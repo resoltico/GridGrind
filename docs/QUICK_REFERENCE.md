@@ -211,7 +211,7 @@ Write one cell:
   },
   "action": {
     "type": "SET_CELL",
-    "value": { "type": "TEXT", "source": { "type": "INLINE", "text": "Quarterly Budget" } }
+    "value": { "type": "TEXT", "value": { "type": "INLINE", "text": "Quarterly Budget" } }
   }
 }
 ```
@@ -232,21 +232,21 @@ Write a row range:
       [
         {
           "type": "TEXT",
-          "source": {
+          "value": {
             "type": "INLINE",
             "text": "Team"
           }
         },
         {
           "type": "TEXT",
-          "source": {
+          "value": {
             "type": "INLINE",
             "text": "Plan"
           }
         },
         {
           "type": "TEXT",
-          "source": {
+          "value": {
             "type": "INLINE",
             "text": "Actual"
           }
@@ -291,7 +291,7 @@ Exact cell-value assertion:
   "target": { "type": "CELL_BY_ADDRESS", "sheetName": "Budget", "address": "D2" },
   "assertion": {
     "type": "EXPECT_CELL_VALUE",
-    "expectedValue": { "type": "NUMBER", "number": 1200 }
+    "expectedValue": { "type": "NUMBER", "value": 1200 }
   }
 }
 ```
@@ -341,7 +341,7 @@ cells stay `type=NUMBER` on the default projection, so request `TEMPORAL` whenev
 semantic distinction. All three
 cell-returning reads share the same deterministic 250,000-cell cap: `GET_CELLS` counts explicit
 addresses, while `GET_WINDOW` and `GET_SHEET_SCHEMA` count requested rectangular area.
-Lookup payloads for `nestedTypes:cellReportTypes` and `nestedTypes:cellValueReportTypes` publish
+Lookup payloads for `nestedTypes:cellReportTypes` and `nestedTypes:cellValueTypes` publish
 `projectedByFacets` on each conditional field, so the facet request needed for `displayValue`,
 `formula`, `runs`, or `temporal` is derivable from the machine contract alone. The compact
 protocol-catalog index now includes a field-metadata legend for keys such as

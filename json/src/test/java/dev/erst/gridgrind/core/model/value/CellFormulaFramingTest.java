@@ -41,7 +41,7 @@ class CellFormulaFramingTest {
         () -> new CellValueSpec.Formula(TextSourceSpec.inline("{=A1:A2}")));
     assertEquals(
         "{=A1",
-        ((TextSourceSpec.Inline) new CellValueSpec.Formula(TextSourceSpec.inline("{=A1")).source())
+        ((TextSourceSpec.Inline) new CellValueSpec.Formula(TextSourceSpec.inline("{=A1")).value())
             .text());
     assertThrows(
         InvalidRawFormulaTextException.class,
@@ -52,7 +52,7 @@ class CellFormulaFramingTest {
 
     CellValueSpec.RawFormula raw =
         new CellValueSpec.RawFormula(TextSourceSpec.inline("\"<b>\"&A1\t\n\r\uD83D\uDE00"));
-    assertEquals("\"<b>\"&A1\t\n\r\uD83D\uDE00", ((TextSourceSpec.Inline) raw.source()).text());
+    assertEquals("\"<b>\"&A1\t\n\r\uD83D\uDE00", ((TextSourceSpec.Inline) raw.value()).text());
     FormulaTextValidation.requireXml10CharacterData(
         new String(
             new int[] {0x9, 0xA, 0xD, 0x20, 0xD7FF, 0xE000, 0xFFFD, 0x10000, 0x10FFFF}, 0, 9));
@@ -66,9 +66,9 @@ class CellFormulaFramingTest {
     CellValueSpec.RawFormula raw =
         new CellValueSpec.RawFormula(TextSourceSpec.inline("LAMBDA(x,x+1)(A1)"));
 
-    assertEquals("LAMBDA(x,x+1)(A1)", ((TextSourceSpec.Inline) raw.source()).text());
+    assertEquals("LAMBDA(x,x+1)(A1)", ((TextSourceSpec.Inline) raw.value()).text());
     TextSourceSpec.Utf8File fileSource = TextSourceSpec.utf8File("raw-formula.txt");
-    assertEquals(fileSource, new CellValueSpec.RawFormula(fileSource).source());
+    assertEquals(fileSource, new CellValueSpec.RawFormula(fileSource).value());
   }
 
   @Test
@@ -86,7 +86,7 @@ class CellFormulaFramingTest {
                   "target": { "type": "CELL_BY_ADDRESS", "sheetName": "Budget", "address": "A1" },
                   "action": {
                     "type": "SET_CELL",
-                    "value": { "type": "RAW_FORMULA", "source": { "type": "INLINE", "text": "LAMBDA(x,x+1)(A1)" } }
+                    "value": { "type": "RAW_FORMULA", "value": { "type": "INLINE", "text": "LAMBDA(x,x+1)(A1)" } }
                   }
                 }
               ]
@@ -113,9 +113,9 @@ class CellFormulaFramingTest {
     assertEquals(GridGrindProblemCode.INVALID_FORMULA, normal.problemCode());
     assertEquals(GridGrindProblemCode.INVALID_FORMULA_TEXT, raw.problemCode());
     assertEquals(
-        "steps[0].action.value.source.text", normal.jsonLocation().jsonPath().orElseThrow());
+        "steps[0].action.value.value.text", normal.jsonLocation().jsonPath().orElseThrow());
     assertEquals(
-        "steps[0].action.value.source.text", normal.requestProblem().jsonPath().orElseThrow());
+        "steps[0].action.value.value.text", normal.requestProblem().jsonPath().orElseThrow());
     assertTrue(normal.getMessage().contains("must not begin with ="));
   }
 
@@ -131,7 +131,7 @@ class CellFormulaFramingTest {
               "target": { "type": "CELL_BY_ADDRESS", "sheetName": "Budget", "address": "A1" },
               "action": {
                 "type": "SET_CELL",
-                "value": { "type": "%s", "source": { "type": "INLINE", "text": "%s" } }
+                "value": { "type": "%s", "value": { "type": "INLINE", "text": "%s" } }
               }
             }
           ]

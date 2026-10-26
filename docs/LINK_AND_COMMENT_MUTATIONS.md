@@ -117,13 +117,13 @@ requires the authoritative plain `text` plus `author`, and can also author order
               "tint": -0.2
             }
           },
-          "source": {
+          "text": {
             "type": "INLINE",
             "text": "Lead"
           }
         },
         {
-          "source": {
+          "text": {
             "type": "INLINE",
             "text": " "
           }
@@ -136,7 +136,7 @@ requires the authoritative plain `text` plus `author`, and can also author order
               "indexed": 17
             }
           },
-          "source": {
+          "text": {
             "type": "INLINE",
             "text": "review scheduled."
           }

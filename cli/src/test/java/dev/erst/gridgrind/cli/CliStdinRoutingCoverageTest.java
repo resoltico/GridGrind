@@ -82,7 +82,7 @@ class CliStdinRoutingCoverageTest extends GridGrindCliTestSupport {
                                 "target": { "type": "CELL_BY_ADDRESS", "sheetName": "Budget", "address": "A1" },
                                 "action": {
                                   "type": "SET_CELL",
-                                  "value": { "type": "TEXT", "source": { "type": "STANDARD_INPUT" } }
+                                  "value": { "type": "TEXT", "value": { "type": "STANDARD_INPUT" } }
                                 }
                               }
                             ]

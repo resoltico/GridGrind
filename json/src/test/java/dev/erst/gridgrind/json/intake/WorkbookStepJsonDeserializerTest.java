@@ -139,7 +139,7 @@ class WorkbookStepJsonDeserializerTest {
                     "target": { "type": "CELL_BY_ADDRESS", "sheetName": "Budget", "address": "A1" },
                     "assertion": {
                       "type": "EXPECT_CELL_VALUE",
-                      "expectedValue": { "type": "TEXT", "text": "Owner" }
+                      "expectedValue": { "type": "TEXT", "value": "Owner" }
                     }
                     """)));
 
@@ -160,7 +160,7 @@ class WorkbookStepJsonDeserializerTest {
                           "type": "SET_CELL",
                           "value": {
                             "type": "TEXT",
-                            "source": { "type": "INLINE", "text": "Owner" }
+                            "value": { "type": "INLINE", "text": "Owner" }
                           }
                         }
                         """)));
@@ -275,7 +275,7 @@ class WorkbookStepJsonDeserializerTest {
                         "target": { "type": "CELL_BY_ADDRESS", "sheetName": "Budget", "address": "A0" },
                         "assertion": {
                           "type": "EXPECT_CELL_VALUE",
-                          "expectedValue": { "type": "TEXT", "text": "Owner" }
+                          "expectedValue": { "type": "TEXT", "value": "Owner" }
                         }
                         """)));
 

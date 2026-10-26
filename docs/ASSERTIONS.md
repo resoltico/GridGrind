@@ -109,7 +109,7 @@ Common assertion step shapes:
     "type": "EXPECT_CELL_VALUE",
     "expectedValue": {
       "type": "TEXT",
-      "text": "Quarterly Budget"
+      "value": "Quarterly Budget"
     }
   }
 }
@@ -163,7 +163,7 @@ Common assertion step shapes:
         "type": "EXPECT_CELL_VALUE",
         "expectedValue": {
           "type": "NUMBER",
-          "number": 1200
+          "value": 1200
         }
       },
       {

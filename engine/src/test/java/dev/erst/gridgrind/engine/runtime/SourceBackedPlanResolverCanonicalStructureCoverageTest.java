@@ -86,7 +86,7 @@ class SourceBackedPlanResolverCanonicalStructureCoverageTest
             ((MutationStep) resolved.steps().getFirst()).action());
     CellValueSpec.RichText richTextValue =
         assertInstanceOf(CellValueSpec.RichText.class, richTextAction.value());
-    assertEquals(" ", ((TextSourceSpec.Inline) richTextValue.runs().getFirst().source()).text());
+    assertEquals(" ", ((TextSourceSpec.Inline) richTextValue.runs().getFirst().text()).text());
   }
 
   @Test
@@ -116,8 +116,8 @@ class SourceBackedPlanResolverCanonicalStructureCoverageTest
                     "Item",
                     new CellValueSpec.Text(TextSourceSpec.inline("Hosting"))),
                 "Amount"),
-            new CellAssertion.CellValue(
-                new dev.erst.gridgrind.core.model.value.CellScalarValue.NumberValue(125.0)));
+            new CellAssertion.Value(
+                new dev.erst.gridgrind.core.model.value.CellValue.NumberValue(125.0)));
 
     WorkbookPlan resolved =
         SourceBackedPlanResolver.resolve(
@@ -392,7 +392,7 @@ class SourceBackedPlanResolverCanonicalStructureCoverageTest
         assertInstanceOf(CellValueSpec.Formula.class, resolvedFormulaAction.value());
     assertEquals(
         "SUM(B2:B3)",
-        assertInstanceOf(TextSourceSpec.Inline.class, resolvedFormula.source()).text());
+        assertInstanceOf(TextSourceSpec.Inline.class, resolvedFormula.value()).text());
 
     CellMutationAction.SetComment resolvedCommentAction =
         assertInstanceOf(
@@ -400,8 +400,7 @@ class SourceBackedPlanResolverCanonicalStructureCoverageTest
             assertInstanceOf(MutationStep.class, resolved.steps().get(1)).action());
     assertEquals(
         " Lovelace",
-        ((TextSourceSpec.Inline)
-                resolvedCommentAction.comment().runs().orElseThrow().get(1).source())
+        ((TextSourceSpec.Inline) resolvedCommentAction.comment().runs().orElseThrow().get(1).text())
             .text());
 
     DrawingMutationAction.SetPicture resolvedPictureAction =
@@ -593,7 +592,7 @@ class SourceBackedPlanResolverCanonicalStructureCoverageTest
                             new CellValueSpec.RawFormula(
                                 TextSourceSpec.utf8File("raw-formula.txt")),
                             bindings))
-                    .source())
+                    .value())
             .text());
 
     MutationStep stableInline =
@@ -635,7 +634,7 @@ class SourceBackedPlanResolverCanonicalStructureCoverageTest
         "SUM(B1:B2)",
         assertInstanceOf(
                 TextSourceSpec.Inline.class,
-                assertInstanceOf(CellValueSpec.Formula.class, prefixedAction.value()).source())
+                assertInstanceOf(CellValueSpec.Formula.class, prefixedAction.value()).value())
             .text());
 
     CellMutationAction.SetCell fileBackedAction =
@@ -646,7 +645,7 @@ class SourceBackedPlanResolverCanonicalStructureCoverageTest
         "SUM(C1:C2)",
         assertInstanceOf(
                 TextSourceSpec.Inline.class,
-                assertInstanceOf(CellValueSpec.Formula.class, fileBackedAction.value()).source())
+                assertInstanceOf(CellValueSpec.Formula.class, fileBackedAction.value()).value())
             .text());
   }
 }

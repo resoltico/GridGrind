@@ -252,8 +252,18 @@ final class XlsxParityCoreProbeGroup {
         cast(
             dev.erst.gridgrind.core.model.value.CellReport.TextReport.class,
             cellsByAddress.get("A3"));
-    if (!"Ada Lovelace".equals(richTextCell.textValue().orElse(null))) {
-      mismatches.add("richTextCell.textValue=%s".formatted(richTextCell.textValue()));
+    if (!"Ada Lovelace"
+        .equals(
+            richTextCell
+                .value()
+                .map(dev.erst.gridgrind.core.model.value.CellValue.Text::value)
+                .orElse(null))) {
+      mismatches.add(
+          "richTextCell.value=%s"
+              .formatted(
+                  richTextCell
+                      .value()
+                      .map(dev.erst.gridgrind.core.model.value.CellValue.Text::value)));
     }
     if (richTextCell.runs().map(List::size).orElse(0) != 2) {
       mismatches.add("richText runs=%s".formatted(richTextCell.runs()));
@@ -271,11 +281,29 @@ final class XlsxParityCoreProbeGroup {
         cast(
             dev.erst.gridgrind.core.model.value.CellReport.BooleanReport.class,
             cellsByAddress.get("C3"));
-    if (numericCell.numberValue().orElse(Double.NaN) != 12.5d) {
-      mismatches.add("numericCell=%s".formatted(numericCell.numberValue()));
+    if (numericCell
+            .value()
+            .map(dev.erst.gridgrind.core.model.value.CellValue.NumberValue::value)
+            .orElse(Double.NaN)
+        != 12.5d) {
+      mismatches.add(
+          "numericCell=%s"
+              .formatted(
+                  numericCell
+                      .value()
+                      .map(dev.erst.gridgrind.core.model.value.CellValue.NumberValue::value)));
     }
-    if (!Boolean.TRUE.equals(booleanCell.booleanValue().orElse(null))) {
-      mismatches.add("booleanCell=%s".formatted(booleanCell.booleanValue()));
+    if (!Boolean.TRUE.equals(
+        booleanCell
+            .value()
+            .map(dev.erst.gridgrind.core.model.value.CellValue.BooleanValue::value)
+            .orElse(null))) {
+      mismatches.add(
+          "booleanCell=%s"
+              .formatted(
+                  booleanCell
+                      .value()
+                      .map(dev.erst.gridgrind.core.model.value.CellValue.BooleanValue::value)));
     }
   }
 
@@ -287,19 +315,19 @@ final class XlsxParityCoreProbeGroup {
         cast(
             dev.erst.gridgrind.core.model.value.CellReport.FormulaReport.class,
             cellsByAddress.get("D3"));
-    dev.erst.gridgrind.core.model.value.CellValueReport.NumberValue formulaEvaluation =
+    dev.erst.gridgrind.core.model.value.CellValue.NumberValue formulaEvaluation =
         cast(
-            dev.erst.gridgrind.core.model.value.CellValueReport.NumberValue.class,
-            formulaCell.evaluation().orElseThrow());
+            dev.erst.gridgrind.core.model.value.CellValue.NumberValue.class,
+            formulaCell.value().orElseThrow());
     if (!observation.direct().formulaText().equals(formulaCell.formula().orElse(null))) {
       mismatches.add(
           "formulaText=%s direct=%s"
               .formatted(formulaCell.formula(), observation.direct().formulaText()));
     }
-    if (formulaEvaluation.numberValue() != observation.direct().formulaValue()) {
+    if (formulaEvaluation.value() != observation.direct().formulaValue()) {
       mismatches.add(
           "formulaValue=%s direct=%s"
-              .formatted(formulaEvaluation.numberValue(), observation.direct().formulaValue()));
+              .formatted(formulaEvaluation.value(), observation.direct().formulaValue()));
     }
   }
 

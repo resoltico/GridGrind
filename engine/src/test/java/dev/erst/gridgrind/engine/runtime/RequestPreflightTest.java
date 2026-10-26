@@ -213,7 +213,7 @@ class RequestPreflightTest {
                     "type": "SET_CELL",
                     "value": {
                       "type": "TEXT",
-                      "source": { "type": "UTF8_FILE", "path": "missing-title.txt" }
+                      "value": { "type": "UTF8_FILE", "path": "missing-title.txt" }
                     }
                   }
                 }
@@ -262,8 +262,8 @@ class RequestPreflightTest {
                     "rows": {
                       "type": "TYPED",
                       "cells": [[
-                        { "type": "TEXT", "source": { "type": "UTF8_FILE", "path": "missing-first.txt" } },
-                        { "type": "TEXT", "source": { "type": "UTF8_FILE", "path": "missing-second.txt" } }
+                        { "type": "TEXT", "value": { "type": "UTF8_FILE", "path": "missing-first.txt" } },
+                        { "type": "TEXT", "value": { "type": "UTF8_FILE", "path": "missing-second.txt" } }
                       ]]
                     }
                   }
@@ -286,8 +286,8 @@ class RequestPreflightTest {
     assertEquals(2, result.problems().size());
     assertEquals(
         List.of(
-            "steps[0].action.rows.cells[0][0].source.path",
-            "steps[0].action.rows.cells[0][1].source.path"),
+            "steps[0].action.rows.cells[0][0].value.path",
+            "steps[0].action.rows.cells[0][1].value.path"),
         result.problems().stream()
             .map(GridGrindProblemDetail.Problem::context)
             .map(ProblemContext.ResolveInputs.class::cast)

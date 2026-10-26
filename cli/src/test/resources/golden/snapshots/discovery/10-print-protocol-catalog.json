@@ -34,13 +34,10 @@
     } ],
     "nestedTypeGroups" : [ {
       "entryIds" : [ "BLANK", "TEXT", "NUMBER", "BOOLEAN", "ERROR" ],
-      "group" : "cellScalarValueTypes"
+      "group" : "cellValueTypes"
     }, {
       "entryIds" : [ "BLANK", "TEXT", "NUMBER", "BOOLEAN", "ERROR", "FORMULA" ],
       "group" : "cellReportTypes"
-    }, {
-      "entryIds" : [ "BLANK", "TEXT", "NUMBER", "BOOLEAN", "ERROR" ],
-      "group" : "cellValueReportTypes"
     }, {
       "entryIds" : [ "SPARSE", "DENSE" ],
       "group" : "windowReportTypes"

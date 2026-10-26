@@ -84,8 +84,8 @@ class SemanticSelectorResolverTest {
               workbook,
               tableCell,
               new CompositeAssertion.Not(
-                  new CellAssertion.CellValue(
-                      new dev.erst.gridgrind.core.model.value.CellScalarValue.Text("Updated")))));
+                  new CellAssertion.Value(
+                      new dev.erst.gridgrind.core.model.value.CellValue.Text("Updated")))));
 
       SemanticSelectorResolver.ResolvedInspectionTarget inspectionTarget =
           resolver.resolveInspectionTarget(
@@ -473,9 +473,8 @@ class SemanticSelectorResolverTest {
                 resolver.resolveAssertionTarget(
                     workbook,
                     target,
-                    new CellAssertion.CellValue(
-                        new dev.erst.gridgrind.core.model.value.CellScalarValue.NumberValue(
-                            100.0d))))
+                    new CellAssertion.Value(
+                        new dev.erst.gridgrind.core.model.value.CellValue.NumberValue(100.0d))))
             .address()
             .value());
     assertEquals(

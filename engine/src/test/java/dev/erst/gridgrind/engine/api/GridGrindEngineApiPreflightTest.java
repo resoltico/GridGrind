@@ -121,7 +121,7 @@ class GridGrindEngineApiPreflightTest {
     assertFalse(doctorReport.valid());
     assertEquals(doctorReport.primaryProblem().orElseThrow(), executionFailure.problem());
     assertEquals(
-        "steps[0].action.rows.cells[0][0].source.path",
+        "steps[0].action.rows.cells[0][0].value.path",
         assertInstanceOf(
                 dev.erst.gridgrind.core.problem.ProblemContext.ResolveInputs.class,
                 executionFailure.problem().context())
@@ -167,7 +167,7 @@ class GridGrindEngineApiPreflightTest {
             {
               "stepId": "set-value",
               "target": { "type": "WORKBOOK_CURRENT" },
-              "action": { "type": "SET_CELL", "value": { "type": "NUMBER", "number": 1.0 } }
+              "action": { "type": "SET_CELL", "value": { "type": "NUMBER", "value": 1.0 } }
             }
           ]
         }
@@ -205,8 +205,8 @@ class GridGrindEngineApiPreflightTest {
                 "rows": {
                   "type": "TYPED",
                   "cells": [[
-                    { "type": "TEXT", "source": { "type": "UTF8_FILE", "path": "missing-first.txt" } },
-                    { "type": "TEXT", "source": { "type": "UTF8_FILE", "path": "missing-second.txt" } }
+                    { "type": "TEXT", "value": { "type": "UTF8_FILE", "path": "missing-first.txt" } },
+                    { "type": "TEXT", "value": { "type": "UTF8_FILE", "path": "missing-second.txt" } }
                   ]]
                 }
               }

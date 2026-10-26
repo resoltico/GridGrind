@@ -137,11 +137,11 @@
       }, {
         "cells" : [ {
           "address" : "A1",
-          "evaluation" : {
-            "numberValue" : 1200.0,
-            "type" : "NUMBER"
-          },
-          "type" : "FORMULA"
+          "type" : "FORMULA",
+          "value" : {
+            "type" : "NUMBER",
+            "value" : 1200.0
+          }
         } ],
         "sheetName" : "Summary",
         "stepId" : "summary-cells",
@@ -340,11 +340,11 @@
       "action" : {
         "type" : "SET_CELL",
         "value" : {
-          "source" : {
+          "type" : "TEXT",
+          "value" : {
             "text" : "Amount",
             "type" : "INLINE"
-          },
-          "type" : "TEXT"
+          }
         }
       },
       "stepId" : "step-03-set-budget-header",
@@ -357,8 +357,8 @@
       "action" : {
         "type" : "SET_CELL",
         "value" : {
-          "number" : 1200.0,
-          "type" : "NUMBER"
+          "type" : "NUMBER",
+          "value" : 1200.0
         }
       },
       "stepId" : "step-04-set-budget-value",
@@ -371,11 +371,11 @@
       "action" : {
         "type" : "SET_CELL",
         "value" : {
-          "source" : {
+          "type" : "FORMULA",
+          "value" : {
             "text" : "'Budget Review'!B1",
             "type" : "INLINE"
-          },
-          "type" : "FORMULA"
+          }
         }
       },
       "stepId" : "step-05-set-summary-formula",
@@ -456,11 +456,11 @@
         "action" : {
           "type" : "SET_CELL",
           "value" : {
-            "source" : {
+            "type" : "TEXT",
+            "value" : {
               "text" : "Amount",
               "type" : "INLINE"
-            },
-            "type" : "TEXT"
+            }
           }
         },
         "stepId" : "step-03-set-budget-header",
@@ -473,8 +473,8 @@
         "action" : {
           "type" : "SET_CELL",
           "value" : {
-            "number" : 1200.0,
-            "type" : "NUMBER"
+            "type" : "NUMBER",
+            "value" : 1200.0
           }
         },
         "stepId" : "step-04-set-budget-value",
@@ -487,11 +487,11 @@
         "action" : {
           "type" : "SET_CELL",
           "value" : {
-            "source" : {
+            "type" : "FORMULA",
+            "value" : {
               "text" : "'Budget Review'!B1",
               "type" : "INLINE"
-            },
-            "type" : "FORMULA"
+            }
           }
         },
         "stepId" : "step-05-set-summary-formula",

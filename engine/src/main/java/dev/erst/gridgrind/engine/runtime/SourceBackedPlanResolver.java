@@ -114,8 +114,8 @@ public final class SourceBackedPlanResolver {
       case CellValueSpec.Blank blank -> blank;
       case CellValueSpec.Text text -> {
         TextSourceSpec resolvedSource =
-            resolveTextSource(text.source(), bindings, true, "cell text");
-        yield sameReference(resolvedSource, text.source())
+            resolveTextSource(text.value(), bindings, true, "cell text");
+        yield sameReference(resolvedSource, text.value())
             ? text
             : new CellValueSpec.Text(resolvedSource);
       }
@@ -132,14 +132,14 @@ public final class SourceBackedPlanResolver {
       case CellValueSpec.Date date -> date;
       case CellValueSpec.DateTime dateTime -> dateTime;
       case CellValueSpec.Formula formula -> {
-        TextSourceSpec resolvedSource = resolveFormulaSource(formula.source(), bindings);
-        yield sameReference(resolvedSource, formula.source())
+        TextSourceSpec resolvedSource = resolveFormulaSource(formula.value(), bindings);
+        yield sameReference(resolvedSource, formula.value())
             ? formula
             : new CellValueSpec.Formula(resolvedSource);
       }
       case CellValueSpec.RawFormula rawFormula -> {
-        TextSourceSpec resolvedSource = resolveRawFormulaSource(rawFormula.source(), bindings);
-        yield sameReference(resolvedSource, rawFormula.source())
+        TextSourceSpec resolvedSource = resolveRawFormulaSource(rawFormula.value(), bindings);
+        yield sameReference(resolvedSource, rawFormula.value())
             ? rawFormula
             : new CellValueSpec.RawFormula(resolvedSource);
       }
@@ -192,7 +192,7 @@ public final class SourceBackedPlanResolver {
     }
     TextSourceSpec.Inline validated =
         (TextSourceSpec.Inline)
-            new CellValueSpec.RawFormula(new TextSourceSpec.Inline(inline.text())).source();
+            new CellValueSpec.RawFormula(new TextSourceSpec.Inline(inline.text())).value();
     return source instanceof TextSourceSpec.Inline ? source : validated;
   }
 

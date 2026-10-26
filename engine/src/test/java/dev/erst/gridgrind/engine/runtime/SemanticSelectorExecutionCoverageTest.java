@@ -69,8 +69,8 @@ class SemanticSelectorExecutionCoverageTest {
                         ExecutorTestPlanSupport.assertThat(
                             "assert-missing-table-cell",
                             missingAmountCellTarget(),
-                            new CellAssertion.CellValue(
-                                new dev.erst.gridgrind.core.model.value.CellScalarValue.NumberValue(
+                            new CellAssertion.Value(
+                                new dev.erst.gridgrind.core.model.value.CellValue.NumberValue(
                                     999.0)))),
                     List.of())));
 

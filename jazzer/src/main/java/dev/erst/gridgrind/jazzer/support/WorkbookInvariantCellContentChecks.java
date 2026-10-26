@@ -5,7 +5,7 @@ import dev.erst.gridgrind.core.model.formula.NamedRangeReport;
 import dev.erst.gridgrind.core.model.formula.NamedRangeTarget;
 import dev.erst.gridgrind.core.model.style.RichTextRunReport;
 import dev.erst.gridgrind.core.model.value.CellTemporalReport;
-import dev.erst.gridgrind.core.model.value.CellValueReport;
+import dev.erst.gridgrind.core.model.value.CellValue;
 
 /** Owns invariant checks for cell content, comments, hyperlinks, and named ranges. */
 final class WorkbookInvariantCellContentChecks {
@@ -24,50 +24,42 @@ final class WorkbookInvariantCellContentChecks {
     WorkbookInvariantChecks.require(cellReport.hyperlink() != null, "hyperlink must not be null");
     WorkbookInvariantChecks.require(cellReport.comment() != null, "comment must not be null");
 
+    WorkbookInvariantChecks.require(cellReport.value() != null, "value must not be null");
+    cellReport.value().ifPresent(WorkbookInvariantCellContentChecks::requireCellValueShape);
+    if (!(cellReport instanceof dev.erst.gridgrind.core.model.value.CellReport.FormulaReport)) {
+      cellReport
+          .value()
+          .ifPresent(
+              value ->
+                  WorkbookInvariantChecks.require(
+                      cellReport.type().equals(value.type()),
+                      "stored and scalar value types must agree"));
+    }
     switch (cellReport) {
-      case dev.erst.gridgrind.core.model.value.CellReport.BlankReport _ -> {}
-      case dev.erst.gridgrind.core.model.value.CellReport.TextReport text -> {
-        WorkbookInvariantChecks.require(text.textValue() != null, "textValue must not be null");
-        WorkbookInvariantChecks.require(text.runs() != null, "runs must not be null");
-        if (text.runs().isPresent()) {
-          WorkbookInvariantChecks.require(
-              text.textValue().isPresent(), "runs require textValue to be present");
-          WorkbookInvariantChecks.require(
-              !text.runs().orElseThrow().isEmpty(), "runs must not be empty");
-          StringBuilder builder = new StringBuilder();
-          for (var run : text.runs().orElseThrow()) {
-            WorkbookInvariantChecks.require(
-                run.text() != null, "richText run text must not be null");
-            WorkbookInvariantChecks.require(
-                !run.text().isEmpty(), "richText run text must not be empty");
-            WorkbookInvariantCellStyleChecks.requireCellFontShape(run.font());
-            builder.append(run.text());
-          }
-          WorkbookInvariantChecks.require(
-              text.textValue().orElseThrow().equals(builder.toString()),
-              "richText run text must concatenate to textValue");
-        }
-      }
+      case dev.erst.gridgrind.core.model.value.CellReport.TextReport text ->
+          requireTextRuns(text.runs(), text.value().map(CellValue.Text::value));
       case dev.erst.gridgrind.core.model.value.CellReport.NumberReport number -> {
-        WorkbookInvariantChecks.require(
-            number.numberValue() != null, "numberValue must not be null");
         WorkbookInvariantChecks.require(number.temporal() != null, "temporal must not be null");
         number.temporal().ifPresent(WorkbookInvariantCellContentChecks::requireTemporalShape);
       }
-      case dev.erst.gridgrind.core.model.value.CellReport.BooleanReport bool ->
-          WorkbookInvariantChecks.require(
-              bool.booleanValue() != null, "booleanValue must not be null");
-      case dev.erst.gridgrind.core.model.value.CellReport.ErrorReport error ->
-          WorkbookInvariantChecks.require(
-              error.errorValue() != null, "errorValue must not be null");
       case dev.erst.gridgrind.core.model.value.CellReport.FormulaReport formula -> {
         WorkbookInvariantChecks.require(formula.formula() != null, "formula must not be null");
-        WorkbookInvariantChecks.require(
-            formula.evaluation() != null, "formula evaluation must not be null");
-        formula
-            .evaluation()
-            .ifPresent(WorkbookInvariantCellContentChecks::requireCellValueReportShape);
+        requireTextRuns(
+            formula.runs(),
+            formula
+                .value()
+                .filter(CellValue.Text.class::isInstance)
+                .map(CellValue.Text.class::cast)
+                .map(CellValue.Text::value));
+        WorkbookInvariantChecks.require(formula.temporal() != null, "temporal must not be null");
+        if (formula.temporal().isPresent()) {
+          WorkbookInvariantChecks.require(
+              formula.value().orElse(null) instanceof CellValue.NumberValue,
+              "temporal requires a numeric value");
+          requireTemporalShape(formula.temporal().orElseThrow());
+        }
       }
+      default -> {}
     }
     if (cellReport.hyperlink().isPresent()) {
       requireHyperlinkShape(cellReport.hyperlink().orElseThrow());
@@ -77,45 +69,42 @@ final class WorkbookInvariantCellContentChecks {
     }
   }
 
-  private static void requireCellValueReportShape(CellValueReport valueReport) {
-    WorkbookInvariantChecks.require(valueReport != null, "valueReport must not be null");
-    WorkbookInvariantChecks.require(valueReport.type() != null, "value type must not be null");
-    WorkbookInvariantChecks.require(!valueReport.type().isBlank(), "value type must not be blank");
-    switch (valueReport) {
-      case CellValueReport.BlankValue _ -> {}
-      case CellValueReport.TextValue text -> {
-        WorkbookInvariantChecks.require(text.textValue() != null, "textValue must not be null");
-        WorkbookInvariantChecks.require(text.runs() != null, "runs must not be null");
-        if (text.runs().isPresent()) {
-          WorkbookInvariantChecks.require(
-              !text.runs().orElseThrow().isEmpty(), "runs must not be empty");
-          StringBuilder builder = new StringBuilder();
-          for (RichTextRunReport run : text.runs().orElseThrow()) {
-            WorkbookInvariantChecks.require(run != null, "runs must not contain null values");
-            WorkbookInvariantChecks.require(run.text() != null, "run text must not be null");
-            WorkbookInvariantChecks.require(!run.text().isEmpty(), "run text must not be empty");
-            WorkbookInvariantCellStyleChecks.requireCellFontShape(run.font());
-            builder.append(run.text());
-          }
-          WorkbookInvariantChecks.require(
-              text.textValue().equals(builder.toString()), "runs must concatenate to textValue");
-        }
-      }
-      case CellValueReport.NumberValue number -> {
+  private static void requireCellValueShape(CellValue value) {
+    WorkbookInvariantChecks.require(value != null, "value must not be null");
+    WorkbookInvariantChecks.require(value.type() != null, "value type must not be null");
+    WorkbookInvariantChecks.require(!value.type().isBlank(), "value type must not be blank");
+    switch (value) {
+      case CellValue.Text text ->
+          WorkbookInvariantChecks.require(text.value() != null, "text value must not be null");
+      case CellValue.ErrorValue error -> {
+        WorkbookInvariantChecks.require(error.value() != null, "error value must not be null");
         WorkbookInvariantChecks.require(
-            number.numberValue() != null, "numberValue must not be null");
-        WorkbookInvariantChecks.require(number.temporal() != null, "temporal must not be null");
-        number.temporal().ifPresent(WorkbookInvariantCellContentChecks::requireTemporalShape);
+            dev.erst.gridgrind.core.vocabulary.ExcelReportedCellErrorLiteral.orderedWireValues()
+                .contains(error.value()),
+            "error value must be a reported Excel literal");
       }
-      case CellValueReport.BooleanValue bool ->
-          WorkbookInvariantChecks.require(
-              bool.booleanValue() != null, "booleanValue must not be null");
-      case CellValueReport.ErrorValue error -> {
-        WorkbookInvariantChecks.require(error.errorValue() != null, "errorValue must not be null");
-        WorkbookInvariantChecks.require(
-            !error.errorValue().isBlank(), "errorValue must not be blank");
-      }
+      case CellValue.Blank _, CellValue.NumberValue _, CellValue.BooleanValue _ -> {}
     }
+  }
+
+  private static void requireTextRuns(
+      java.util.Optional<java.util.List<RichTextRunReport>> runs, java.util.Optional<String> text) {
+    WorkbookInvariantChecks.require(runs != null, "runs must not be null");
+    if (runs.isEmpty()) {
+      return;
+    }
+    WorkbookInvariantChecks.require(text.isPresent(), "runs require a text value");
+    WorkbookInvariantChecks.require(!runs.orElseThrow().isEmpty(), "runs must not be empty");
+    StringBuilder builder = new StringBuilder();
+    for (RichTextRunReport run : runs.orElseThrow()) {
+      WorkbookInvariantChecks.require(run != null, "runs must not contain null values");
+      WorkbookInvariantChecks.require(run.text() != null, "run text must not be null");
+      WorkbookInvariantChecks.require(!run.text().isEmpty(), "run text must not be empty");
+      WorkbookInvariantCellStyleChecks.requireCellFontShape(run.font());
+      builder.append(run.text());
+    }
+    WorkbookInvariantChecks.require(
+        text.orElseThrow().equals(builder.toString()), "runs must concatenate to value");
   }
 
   private static void requireTemporalShape(CellTemporalReport temporal) {

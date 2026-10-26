@@ -82,7 +82,8 @@ class OoxmlSecurityRequestExecutorTest extends DefaultGridGrindRequestExecutorTe
         assertInstanceOf(
                 dev.erst.gridgrind.core.model.value.CellReport.TextReport.class,
                 cells.cells().getFirst())
-            .textValue()
+            .value()
+            .map(dev.erst.gridgrind.core.model.value.CellValue.Text::value)
             .orElseThrow());
   }
 
@@ -586,7 +587,8 @@ class OoxmlSecurityRequestExecutorTest extends DefaultGridGrindRequestExecutorTe
         assertInstanceOf(
                 dev.erst.gridgrind.core.model.value.CellReport.TextReport.class,
                 cells.cells().getFirst())
-            .textValue()
+            .value()
+            .map(dev.erst.gridgrind.core.model.value.CellValue.Text::value)
             .orElseThrow());
   }
 

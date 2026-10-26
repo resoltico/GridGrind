@@ -59,7 +59,7 @@ public final class TableCellTarget {
   }
 
   /** Returns one effective-value assertion step against the logical table cell. */
-  public PlannedAssertion valueEquals(ExpectedValues.Value expectedValue) {
+  public PlannedAssertion valueEquals(dev.erst.gridgrind.core.model.value.CellValue expectedValue) {
     return new PlannedAssertion(selector, Checks.cellValue(expectedValue));
   }
 

@@ -168,8 +168,11 @@
             "locked" : true
           }
         },
-        "textValue" : "alpha",
-        "type" : "TEXT"
+        "type" : "TEXT",
+        "value" : {
+          "type" : "TEXT",
+          "value" : "alpha"
+        }
       } ],
       "sheetName" : "Control",
       "stepId" : "sheet-0-cells",

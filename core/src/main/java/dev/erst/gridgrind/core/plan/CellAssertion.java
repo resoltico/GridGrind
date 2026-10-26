@@ -2,12 +2,12 @@ package dev.erst.gridgrind.core.plan;
 
 import dev.erst.gridgrind.core.metadata.Variant;
 import dev.erst.gridgrind.core.model.style.CellStyleReport;
-import dev.erst.gridgrind.core.model.value.CellScalarValue;
+import dev.erst.gridgrind.core.model.value.CellValue;
 import java.util.Objects;
 
 /** Assertions over cell values, display values, formulas, and styles. */
 public sealed interface CellAssertion extends Assertion
-    permits CellAssertion.CellValue,
+    permits CellAssertion.Value,
         CellAssertion.DisplayValue,
         CellAssertion.FormulaText,
         CellAssertion.CellStyle {
@@ -21,9 +21,13 @@ public sealed interface CellAssertion extends Assertion
         TableCellSelector.ByColumnName.class
       },
       profile = dev.erst.gridgrind.core.semantics.OperationProfile.READ)
-  record CellValue(CellScalarValue expectedValue) implements CellAssertion {
-    public CellValue {
+  record Value(CellValue expectedValue) implements CellAssertion {
+    public Value {
       Objects.requireNonNull(expectedValue, "expectedValue must not be null");
+      if (expectedValue instanceof CellValue.NumberValue number
+          && !Double.isFinite(number.value())) {
+        throw new IllegalArgumentException("expectedValue.value must be finite");
+      }
     }
   }
 

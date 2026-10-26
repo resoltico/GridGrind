@@ -541,7 +541,8 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
         cast(
                 dev.erst.gridgrind.core.model.value.CellReport.TextReport.class,
                 read(success, "cells", SheetInspectionResult.CellsResult.class).cells().getFirst())
-            .textValue()
+            .value()
+            .map(dev.erst.gridgrind.core.model.value.CellValue.Text::value)
             .orElseThrow());
     assertEquals(List.of("Budget", "Summary"), XlsxRoundTrip.sheetOrder(workbookPath));
     assertEquals(List.of("A1:B2"), XlsxRoundTrip.mergedRegions(workbookPath, "Budget"));

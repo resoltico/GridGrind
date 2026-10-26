@@ -250,7 +250,8 @@ final class XlsxParityProbeRegistry {
     return cast(
             dev.erst.gridgrind.core.model.value.CellReport.TextReport.class,
             byAddress(cells.cells()).get(address))
-        .textValue()
+        .value()
+        .map(dev.erst.gridgrind.core.model.value.CellValue.Text::value)
         .orElseThrow();
   }
 

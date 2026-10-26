@@ -27,7 +27,7 @@ class WorkbookOperationSemanticsFactoryTest {
             .preconditions());
     assertEquals(
         List.of(OperationEffect.READ_WORKBOOK),
-        WorkbookOperationSemanticsFactory.semanticsFor(CellAssertion.CellValue.class).effects());
+        WorkbookOperationSemanticsFactory.semanticsFor(CellAssertion.Value.class).effects());
     assertEquals(
         List.of(OperationEffect.READ_WORKBOOK),
         WorkbookOperationSemanticsFactory.semanticsFor(

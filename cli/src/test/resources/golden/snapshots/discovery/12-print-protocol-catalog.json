@@ -23,11 +23,11 @@
         "action" : {
           "type" : "SET_CELL",
           "value" : {
-            "source" : {
+            "type" : "TEXT",
+            "value" : {
               "text" : "Sample text",
               "type" : "INLINE"
-            },
-            "type" : "TEXT"
+            }
           }
         },
         "stepId" : "step-set-cell",

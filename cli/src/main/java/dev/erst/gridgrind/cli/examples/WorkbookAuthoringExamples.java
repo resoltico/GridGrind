@@ -193,13 +193,13 @@ final class WorkbookAuthoringExamples {
         ExampleSteps.assertStep(
             new StepId("assert-title"),
             ExampleSelectors.cell("Budget", "A1"),
-            new CellAssertion.CellValue(
-                new dev.erst.gridgrind.core.model.value.CellScalarValue.Text("Quarterly Budget"))),
+            new CellAssertion.Value(
+                new dev.erst.gridgrind.core.model.value.CellValue.Text("Quarterly Budget"))),
         ExampleSteps.assertStep(
             new StepId("assert-total"),
             ExampleSelectors.cell("Budget", "B2"),
-            new CellAssertion.CellValue(
-                new dev.erst.gridgrind.core.model.value.CellScalarValue.NumberValue(1200.0d))),
+            new CellAssertion.Value(
+                new dev.erst.gridgrind.core.model.value.CellValue.NumberValue(1200.0d))),
         ExampleSteps.assertStep(
             new StepId("assert-formula-health"),
             ExampleSelectors.sheet("Budget"),

@@ -23,18 +23,28 @@ final class SemanticSelectorKeyMatchSupport {
       case CellValueSpec.Text text ->
           report instanceof dev.erst.gridgrind.core.model.value.CellReport.TextReport textReport
               && textReport
-                  .textValue()
+                  .value()
+                  .map(dev.erst.gridgrind.core.model.value.CellValue.Text::value)
                   .orElseThrow()
-                  .equals(inlineText(text.source(), "table row key TEXT"));
+                  .equals(inlineText(text.value(), "table row key TEXT"));
       case CellValueSpec.NumberValue numberValue ->
           report instanceof dev.erst.gridgrind.core.model.value.CellReport.NumberReport numberReport
-              && Double.compare(numberReport.numberValue().orElseThrow(), numberValue.number())
+              && Double.compare(
+                      numberReport
+                          .value()
+                          .map(dev.erst.gridgrind.core.model.value.CellValue.NumberValue::value)
+                          .orElseThrow(),
+                      numberValue.value())
                   == 0;
       case CellValueSpec.BooleanValue booleanValue ->
           report
                   instanceof
                   dev.erst.gridgrind.core.model.value.CellReport.BooleanReport booleanReport
-              && booleanReport.booleanValue().orElseThrow().equals(booleanValue.bool());
+              && booleanReport
+                  .value()
+                  .map(dev.erst.gridgrind.core.model.value.CellValue.BooleanValue::value)
+                  .orElseThrow()
+                  .equals(booleanValue.value());
       case CellValueSpec.Formula formula ->
           report
                   instanceof
@@ -42,7 +52,7 @@ final class SemanticSelectorKeyMatchSupport {
               && formulaReport
                   .formula()
                   .orElseThrow()
-                  .equals(inlineText(formula.source(), "table row key FORMULA"));
+                  .equals(inlineText(formula.value(), "table row key FORMULA"));
       default -> false;
     };
   }

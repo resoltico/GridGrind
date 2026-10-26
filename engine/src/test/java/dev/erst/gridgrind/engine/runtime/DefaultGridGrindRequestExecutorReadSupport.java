@@ -9,7 +9,7 @@ import dev.erst.gridgrind.core.model.style.CellColorReport;
 import dev.erst.gridgrind.core.model.style.CellStyleReport;
 import dev.erst.gridgrind.core.model.style.RichTextRunReport;
 import dev.erst.gridgrind.core.model.value.CellReport;
-import dev.erst.gridgrind.core.model.value.CellValueReport;
+import dev.erst.gridgrind.core.model.value.CellValue;
 import dev.erst.gridgrind.core.plan.*;
 import dev.erst.gridgrind.core.result.WorkbookResult;
 import dev.erst.gridgrind.core.vocabulary.CellAddress;
@@ -46,7 +46,9 @@ class DefaultGridGrindRequestExecutorReadSupport {
   }
 
   static String textValue(CellReport.TextReport cell) {
-    return cell.textValue().orElseThrow();
+    return cell.value()
+        .map(dev.erst.gridgrind.core.model.value.CellValue.Text::value)
+        .orElseThrow();
   }
 
   static List<RichTextRunReport> runs(CellReport.TextReport cell) {
@@ -54,23 +56,29 @@ class DefaultGridGrindRequestExecutorReadSupport {
   }
 
   static double numberValue(CellReport.NumberReport cell) {
-    return cell.numberValue().orElseThrow();
+    return cell.value()
+        .map(dev.erst.gridgrind.core.model.value.CellValue.NumberValue::value)
+        .orElseThrow();
   }
 
   static boolean booleanValue(CellReport.BooleanReport cell) {
-    return cell.booleanValue().orElseThrow();
+    return cell.value()
+        .map(dev.erst.gridgrind.core.model.value.CellValue.BooleanValue::value)
+        .orElseThrow();
   }
 
   static String errorValue(CellReport.ErrorReport cell) {
-    return cell.errorValue().orElseThrow();
+    return cell.value()
+        .map(dev.erst.gridgrind.core.model.value.CellValue.ErrorValue::value)
+        .orElseThrow();
   }
 
   static String formulaText(CellReport.FormulaReport cell) {
     return cell.formula().orElseThrow();
   }
 
-  static CellValueReport evaluation(CellReport.FormulaReport cell) {
-    return cell.evaluation().orElseThrow();
+  static CellValue evaluation(CellReport.FormulaReport cell) {
+    return cell.value().orElseThrow();
   }
 
   static List<CellReport> windowCells(WindowReport window) {
@@ -131,7 +139,8 @@ class DefaultGridGrindRequestExecutorReadSupport {
         Optional.of(displayValue),
         Optional.of(style),
         Optional.empty(),
-        Optional.empty());
+        Optional.empty(),
+        java.util.Optional.empty());
   }
 
   static CellReport.TextReport textReadCell(
@@ -142,7 +151,7 @@ class DefaultGridGrindRequestExecutorReadSupport {
         Optional.of(style),
         Optional.empty(),
         Optional.empty(),
-        Optional.of(textValue),
+        java.util.Optional.of(new dev.erst.gridgrind.core.model.value.CellValue.Text(textValue)),
         Optional.empty());
   }
 
@@ -154,7 +163,8 @@ class DefaultGridGrindRequestExecutorReadSupport {
         Optional.of(style),
         Optional.empty(),
         Optional.empty(),
-        Optional.of(numberValue),
+        java.util.Optional.of(
+            new dev.erst.gridgrind.core.model.value.CellValue.NumberValue(numberValue)),
         Optional.empty());
   }
 
@@ -166,7 +176,8 @@ class DefaultGridGrindRequestExecutorReadSupport {
         Optional.of(style),
         Optional.empty(),
         Optional.empty(),
-        Optional.of(booleanValue));
+        java.util.Optional.of(
+            new dev.erst.gridgrind.core.model.value.CellValue.BooleanValue(booleanValue)));
   }
 
   static CellReport.ErrorReport errorReadCell(
@@ -177,7 +188,8 @@ class DefaultGridGrindRequestExecutorReadSupport {
         Optional.of(style),
         Optional.empty(),
         Optional.empty(),
-        Optional.of(errorValue));
+        java.util.Optional.of(
+            new dev.erst.gridgrind.core.model.value.CellValue.ErrorValue(errorValue)));
   }
 
   static CellReport.FormulaReport formulaReadCell(
@@ -185,7 +197,7 @@ class DefaultGridGrindRequestExecutorReadSupport {
       String displayValue,
       CellStyleReport style,
       String formula,
-      CellValueReport evaluation) {
+      CellValue evaluation) {
     return new CellReport.FormulaReport(
         new CellAddress(address),
         Optional.of(displayValue),
@@ -193,7 +205,9 @@ class DefaultGridGrindRequestExecutorReadSupport {
         Optional.empty(),
         Optional.empty(),
         Optional.of(formula),
-        Optional.of(evaluation));
+        Optional.of(evaluation),
+        Optional.empty(),
+        Optional.empty());
   }
 
   static <T extends InspectionResult> T read(

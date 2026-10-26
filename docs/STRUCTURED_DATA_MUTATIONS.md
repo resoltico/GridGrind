@@ -445,18 +445,18 @@ Homogeneous rows may use the compact scalar-family encodings instead.
     "values": { "type": "TYPED", "cells": [
       {
         "type": "TEXT",
-        "source": {
+        "value": {
           "type": "INLINE",
           "text": "Guatemala Antigua"
         }
       },
       {
         "type": "NUMBER",
-        "number": 100
+        "value": 100
       },
       {
         "type": "NUMBER",
-        "number": 9.2
+        "value": 9.2
       }
     ] }
   }

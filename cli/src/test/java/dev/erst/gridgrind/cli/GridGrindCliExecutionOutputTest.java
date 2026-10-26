@@ -144,8 +144,8 @@ class GridGrindCliExecutionOutputTest extends GridGrindCliTestSupport {
         """
         [
           { "stepId": "ensure-data", "target": { "type": "SHEET_BY_NAME", "name": "Data" }, "action": { "type": "ENSURE_SHEET" } },
-          { "stepId": "set-a1", "target": { "type": "CELL_BY_ADDRESS", "sheetName": "Data", "address": "A1" }, "action": { "type": "SET_CELL", "value": { "type": "TEXT", "source": { "type": "INLINE", "text": "%s" } } } },
-          { "stepId": "assert-a1", "target": { "type": "CELL_BY_ADDRESS", "sheetName": "Data", "address": "A1" }, "assertion": { "type": "EXPECT_CELL_VALUE", "expectedValue": { "type": "TEXT", "text": "%s" } } }
+          { "stepId": "set-a1", "target": { "type": "CELL_BY_ADDRESS", "sheetName": "Data", "address": "A1" }, "action": { "type": "SET_CELL", "value": { "type": "TEXT", "value": { "type": "INLINE", "text": "%s" } } } },
+          { "stepId": "assert-a1", "target": { "type": "CELL_BY_ADDRESS", "sheetName": "Data", "address": "A1" }, "assertion": { "type": "EXPECT_CELL_VALUE", "expectedValue": { "type": "TEXT", "value": "%s" } } }
         ]
         """
             .formatted(actualText, expectedText));
@@ -160,7 +160,7 @@ class GridGrindCliExecutionOutputTest extends GridGrindCliTestSupport {
         """
         [
           { "stepId": "ensure-data", "target": { "type": "SHEET_BY_NAME", "name": "Data" }, "action": { "type": "ENSURE_SHEET" } },
-          { "stepId": "set-formula", "target": { "type": "CELL_BY_ADDRESS", "sheetName": "Data", "address": "A1" }, "action": { "type": "SET_CELL", "value": { "type": "FORMULA", "source": { "type": "INLINE", "text": "%s" } } } }
+          { "stepId": "set-formula", "target": { "type": "CELL_BY_ADDRESS", "sheetName": "Data", "address": "A1" }, "action": { "type": "SET_CELL", "value": { "type": "FORMULA", "value": { "type": "INLINE", "text": "%s" } } } }
         ]
         """
             .formatted(formula));

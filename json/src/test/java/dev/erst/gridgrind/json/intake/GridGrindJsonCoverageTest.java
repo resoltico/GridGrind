@@ -588,7 +588,7 @@ class GridGrindJsonCoverageTest {
                             "type": "SET_CELL",
                             "value": {
                               "type": "TEXT",
-                              "source": { "type": "INLINE", "text": "%s" }
+                              "value": { "type": "INLINE", "text": "%s" }
                             }
                           }
                         }
@@ -717,7 +717,8 @@ class GridGrindJsonCoverageTest {
                             Optional.empty(),
                             Optional.empty(),
                             Optional.empty(),
-                            Optional.of("Ada"),
+                            java.util.Optional.of(
+                                new dev.erst.gridgrind.core.model.value.CellValue.Text("Ada")),
                             Optional.empty())))));
     WorkbookResult sparseWindowResponse =
         WorkbookResults.success(
@@ -737,7 +738,8 @@ class GridGrindJsonCoverageTest {
                                 Optional.empty(),
                                 Optional.empty(),
                                 Optional.empty(),
-                                Optional.of("Ada"),
+                                java.util.Optional.of(
+                                    new dev.erst.gridgrind.core.model.value.CellValue.Text("Ada")),
                                 Optional.empty()))))));
 
     byte[] cellsResponseBytes = GridGrindJsonOutput.writeWorkbookResultBytes(cellsResponse);

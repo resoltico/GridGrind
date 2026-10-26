@@ -16,10 +16,9 @@ import dev.erst.gridgrind.core.model.style.CellStyleReport;
 import dev.erst.gridgrind.core.model.style.FontHeightReport;
 import dev.erst.gridgrind.core.model.style.RichTextRunReport;
 import dev.erst.gridgrind.core.model.value.CellReport;
-import dev.erst.gridgrind.core.model.value.CellScalarValue;
 import dev.erst.gridgrind.core.model.value.CellTemporalKind;
 import dev.erst.gridgrind.core.model.value.CellTemporalReport;
-import dev.erst.gridgrind.core.model.value.CellValueReport;
+import dev.erst.gridgrind.core.model.value.CellValue;
 import dev.erst.gridgrind.core.model.value.HyperlinkTarget;
 import dev.erst.gridgrind.core.source.TextSourceSpec;
 import dev.erst.gridgrind.core.vocabulary.CellAddress;
@@ -163,7 +162,9 @@ class ReadbackSupportCoverageTest {
             CellReport.FormulaReport.class,
             InspectionResultCellReportSupport.toCellReport(formulaSnapshot, formulaOnly, false));
 
-    assertEquals(Optional.of("Ada"), textReport.textValue());
+    assertEquals(
+        Optional.of("Ada"),
+        textReport.value().map(dev.erst.gridgrind.core.model.value.CellValue.Text::value));
     assertEquals("Ada", textReport.runs().orElseThrow().getFirst().text());
     assertEquals(HyperlinkTarget.Url.class, textReport.hyperlink().orElseThrow().getClass());
     assertEquals("Review", textReport.comment().orElseThrow().text());
@@ -183,7 +184,7 @@ class ReadbackSupportCoverageTest {
     assertEquals(Optional.empty(), formulaValueOnly.formula());
     assertEquals(Optional.empty(), formulaValueOnly.style());
     assertEquals(Optional.of("CONCAT(\"A\",\"da\")"), formulaFormulaOnly.formula());
-    assertEquals(Optional.empty(), formulaFormulaOnly.evaluation());
+    assertEquals(Optional.empty(), formulaFormulaOnly.value());
 
     assertInstanceOf(
         CellReport.BooleanReport.class,
@@ -196,27 +197,21 @@ class ReadbackSupportCoverageTest {
         InspectionResultCellReportSupport.toCellReport(blankSnapshot, valueOnly, false));
 
     assertInstanceOf(
-        CellValueReport.BlankValue.class,
-        InspectionResultCellReportSupport.toCellValueReport(blankSnapshot, valueOnly, false));
+        CellValue.Blank.class, InspectionResultCellReportSupport.toCellValue(blankSnapshot));
     assertInstanceOf(
-        CellValueReport.TextValue.class,
-        InspectionResultCellReportSupport.toCellValueReport(textSnapshot, allFacets, false));
+        CellValue.Text.class, InspectionResultCellReportSupport.toCellValue(textSnapshot));
     assertInstanceOf(
-        CellValueReport.NumberValue.class,
-        InspectionResultCellReportSupport.toCellValueReport(dateSnapshot, allFacets, false));
+        CellValue.NumberValue.class, InspectionResultCellReportSupport.toCellValue(dateSnapshot));
     assertInstanceOf(
-        CellValueReport.BooleanValue.class,
-        InspectionResultCellReportSupport.toCellValueReport(booleanSnapshot, valueOnly, false));
+        CellValue.BooleanValue.class,
+        InspectionResultCellReportSupport.toCellValue(booleanSnapshot));
     assertInstanceOf(
-        CellValueReport.ErrorValue.class,
-        InspectionResultCellReportSupport.toCellValueReport(errorSnapshot, valueOnly, false));
+        CellValue.ErrorValue.class, InspectionResultCellReportSupport.toCellValue(errorSnapshot));
 
     IllegalArgumentException exception =
         assertThrows(
             IllegalArgumentException.class,
-            () ->
-                InspectionResultCellReportSupport.toCellValueReport(
-                    formulaSnapshot, valueOnly, false));
+            () -> InspectionResultCellReportSupport.toCellValue(formulaSnapshot));
     assertEquals("Formula evaluations must not recursively remain FORMULA", exception.getMessage());
 
     assertEquals(
@@ -333,7 +328,9 @@ class ReadbackSupportCoverageTest {
             Optional.empty(),
             Optional.empty(),
             Optional.of("A1"),
-            Optional.of(new CellValueReport.BlankValue()));
+            java.util.Optional.of(new dev.erst.gridgrind.core.model.value.CellValue.Blank()),
+            java.util.Optional.empty(),
+            java.util.Optional.empty());
     CellReport.FormulaReport textFormula =
         new CellReport.FormulaReport(
             new CellAddress("A2"),
@@ -342,8 +339,9 @@ class ReadbackSupportCoverageTest {
             Optional.empty(),
             Optional.empty(),
             Optional.of("A2"),
-            Optional.of(
-                new CellValueReport.TextValue("Ada", Optional.of(List.of(runReport("Ada"))))));
+            java.util.Optional.of(new dev.erst.gridgrind.core.model.value.CellValue.Text("Ada")),
+            Optional.of(List.of(runReport("Ada"))),
+            java.util.Optional.empty());
     CellReport.FormulaReport numberFormula =
         new CellReport.FormulaReport(
             new CellAddress("A3"),
@@ -352,11 +350,10 @@ class ReadbackSupportCoverageTest {
             Optional.empty(),
             Optional.empty(),
             Optional.of("A3"),
-            Optional.of(
-                new CellValueReport.NumberValue(
-                    42.0d,
-                    Optional.of(
-                        CellTemporalReport.temporal(CellTemporalKind.DATE, "2026-07-01")))));
+            java.util.Optional.of(
+                new dev.erst.gridgrind.core.model.value.CellValue.NumberValue(42.0d)),
+            java.util.Optional.empty(),
+            Optional.of(CellTemporalReport.temporal(CellTemporalKind.DATE, "2026-07-01")));
     CellReport.FormulaReport booleanFormula =
         new CellReport.FormulaReport(
             new CellAddress("A4"),
@@ -365,7 +362,10 @@ class ReadbackSupportCoverageTest {
             Optional.empty(),
             Optional.empty(),
             Optional.of("A4"),
-            Optional.of(new CellValueReport.BooleanValue(true)));
+            java.util.Optional.of(
+                new dev.erst.gridgrind.core.model.value.CellValue.BooleanValue(true)),
+            java.util.Optional.empty(),
+            java.util.Optional.empty());
     CellReport.FormulaReport errorFormula =
         new CellReport.FormulaReport(
             new CellAddress("A5"),
@@ -374,7 +374,10 @@ class ReadbackSupportCoverageTest {
             Optional.empty(),
             Optional.empty(),
             Optional.of("A5"),
-            Optional.of(new CellValueReport.ErrorValue("#REF!")));
+            java.util.Optional.of(
+                new dev.erst.gridgrind.core.model.value.CellValue.ErrorValue("#REF!")),
+            java.util.Optional.empty(),
+            java.util.Optional.empty());
     CellReport.FormulaReport missingEvaluation =
         new CellReport.FormulaReport(
             new CellAddress("A6"),
@@ -383,45 +386,113 @@ class ReadbackSupportCoverageTest {
             Optional.empty(),
             Optional.empty(),
             Optional.of("A6"),
-            Optional.empty());
+            Optional.empty(),
+            java.util.Optional.empty(),
+            java.util.Optional.empty());
 
-    assertTrue(AssertionValueEvaluator.matchesCellValue(blankFormula, new CellScalarValue.Blank()));
+    assertTrue(AssertionValueEvaluator.matchesCellValue(blankFormula, new CellValue.Blank()));
+    assertTrue(AssertionValueEvaluator.matchesCellValue(textFormula, new CellValue.Text("Ada")));
+    assertFalse(AssertionValueEvaluator.matchesCellValue(textFormula, new CellValue.Text("Grace")));
+    assertFalse(AssertionValueEvaluator.matchesCellValue(numberFormula, new CellValue.Text("Ada")));
     assertTrue(
-        AssertionValueEvaluator.matchesCellValue(textFormula, new CellScalarValue.Text("Ada")));
+        AssertionValueEvaluator.matchesCellValue(numberFormula, new CellValue.NumberValue(42.0d)));
     assertFalse(
-        AssertionValueEvaluator.matchesCellValue(textFormula, new CellScalarValue.Text("Grace")));
+        AssertionValueEvaluator.matchesCellValue(numberFormula, new CellValue.NumberValue(41.0d)));
     assertFalse(
-        AssertionValueEvaluator.matchesCellValue(numberFormula, new CellScalarValue.Text("Ada")));
+        AssertionValueEvaluator.matchesCellValue(textFormula, new CellValue.NumberValue(42.0d)));
     assertTrue(
-        AssertionValueEvaluator.matchesCellValue(
-            numberFormula, new CellScalarValue.NumberValue(42.0d)));
+        AssertionValueEvaluator.matchesCellValue(booleanFormula, new CellValue.BooleanValue(true)));
     assertFalse(
         AssertionValueEvaluator.matchesCellValue(
-            numberFormula, new CellScalarValue.NumberValue(41.0d)));
+            booleanFormula, new CellValue.BooleanValue(false)));
     assertFalse(
-        AssertionValueEvaluator.matchesCellValue(
-            textFormula, new CellScalarValue.NumberValue(42.0d)));
+        AssertionValueEvaluator.matchesCellValue(numberFormula, new CellValue.BooleanValue(true)));
     assertTrue(
-        AssertionValueEvaluator.matchesCellValue(
-            booleanFormula, new CellScalarValue.BooleanValue(true)));
+        AssertionValueEvaluator.matchesCellValue(errorFormula, new CellValue.ErrorValue("#REF!")));
     assertFalse(
         AssertionValueEvaluator.matchesCellValue(
-            booleanFormula, new CellScalarValue.BooleanValue(false)));
+            errorFormula, new CellValue.ErrorValue("#DIV/0!")));
     assertFalse(
         AssertionValueEvaluator.matchesCellValue(
-            numberFormula, new CellScalarValue.BooleanValue(true)));
-    assertTrue(
-        AssertionValueEvaluator.matchesCellValue(
-            errorFormula, new CellScalarValue.ErrorValue("#REF!")));
+            booleanFormula, new CellValue.ErrorValue("#REF!")));
     assertFalse(
-        AssertionValueEvaluator.matchesCellValue(
-            errorFormula, new CellScalarValue.ErrorValue("#DIV/0!")));
-    assertFalse(
-        AssertionValueEvaluator.matchesCellValue(
-            booleanFormula, new CellScalarValue.ErrorValue("#REF!")));
-    assertFalse(
-        AssertionValueEvaluator.matchesCellValue(
-            missingEvaluation, new CellScalarValue.Text("Ada")));
+        AssertionValueEvaluator.matchesCellValue(missingEvaluation, new CellValue.Text("Ada")));
+  }
+
+  @Test
+  void scalarMetadataAndBlankValuesFollowTheirProjectionMasks() {
+    ExcelCellReadProjection allFacets =
+        new ExcelCellReadProjection(Set.of(ExcelCellReadFacet.values()));
+    ExcelCellReadProjection valueOnly = ExcelCellReadProjection.defaults();
+    ExcelCellReadProjection formulaOnly =
+        new ExcelCellReadProjection(Set.of(ExcelCellReadFacet.FORMULA));
+    var textSnapshot =
+        new ExcelCellSnapshot.TextSnapshot(
+            "A1",
+            "Ada",
+            style("General"),
+            metadata(),
+            "Ada",
+            new ExcelRichTextSnapshot(
+                List.of(new ExcelRichTextRunSnapshot("Ada", fontSnapshot()))));
+    var formulaSnapshot =
+        new ExcelCellSnapshot.FormulaSnapshot(
+            "A7", "Ada", style("General"), metadata(), "A1", Optional.of(textSnapshot));
+    var blankSnapshot = new ExcelCellSnapshot.BlankSnapshot("A6", "", style("General"), metadata());
+    var dateSnapshot =
+        new ExcelCellSnapshot.NumberSnapshot(
+            "A2", "7/1/2025", style("m/d/yyyy"), metadata(), 45839.0);
+    var formulaValueOnly =
+        assertInstanceOf(
+            CellReport.FormulaReport.class,
+            InspectionResultCellReportSupport.toCellReport(formulaSnapshot, valueOnly, false));
+    var formulaFormulaOnly =
+        assertInstanceOf(
+            CellReport.FormulaReport.class,
+            InspectionResultCellReportSupport.toCellReport(formulaSnapshot, formulaOnly, false));
+    CellReport.FormulaReport formulaAll =
+        assertInstanceOf(
+            CellReport.FormulaReport.class,
+            InspectionResultCellReportSupport.toCellReport(formulaSnapshot, allFacets, false));
+    assertEquals(new CellValue.Text("Ada"), formulaAll.value().orElseThrow());
+    assertEquals("Ada", formulaAll.runs().orElseThrow().getFirst().text());
+    assertEquals(Optional.empty(), formulaValueOnly.runs());
+    assertEquals(Optional.empty(), formulaFormulaOnly.runs());
+    CellReport.BlankReport blankValue =
+        assertInstanceOf(
+            CellReport.BlankReport.class,
+            InspectionResultCellReportSupport.toCellReport(blankSnapshot, valueOnly, false));
+    assertEquals(Optional.of(new CellValue.Blank()), blankValue.value());
+    assertEquals(
+        Optional.empty(),
+        assertInstanceOf(
+                CellReport.BlankReport.class,
+                InspectionResultCellReportSupport.toCellReport(blankSnapshot, formulaOnly, false))
+            .value());
+    ExcelCellReadProjection temporalOnly =
+        new ExcelCellReadProjection(Set.of(ExcelCellReadFacet.TEMPORAL));
+    CellReport.NumberReport dateWithoutValue =
+        assertInstanceOf(
+            CellReport.NumberReport.class,
+            InspectionResultCellReportSupport.toCellReport(dateSnapshot, temporalOnly, false));
+    assertEquals(Optional.empty(), dateWithoutValue.value());
+    assertEquals(
+        CellTemporalKind.DATE, dateWithoutValue.temporal().orElseThrow().kind().orElseThrow());
+    var numericFormula =
+        new ExcelCellSnapshot.FormulaSnapshot(
+            "A7", "7/1/2025", style("m/d/yyyy"), metadata(), "A2", Optional.of(dateSnapshot));
+    CellReport.FormulaReport numericFormulaAll =
+        assertInstanceOf(
+            CellReport.FormulaReport.class,
+            InspectionResultCellReportSupport.toCellReport(numericFormula, allFacets, false));
+    assertEquals(new CellValue.NumberValue(45839), numericFormulaAll.value().orElseThrow());
+    assertEquals(Optional.of("2025-07-01"), numericFormulaAll.temporal().orElseThrow().isoValue());
+    assertEquals(
+        Optional.empty(),
+        assertInstanceOf(
+                CellReport.FormulaReport.class,
+                InspectionResultCellReportSupport.toCellReport(numericFormula, temporalOnly, false))
+            .temporal());
   }
 
   private static ExcelCellMetadataSnapshot metadata() {

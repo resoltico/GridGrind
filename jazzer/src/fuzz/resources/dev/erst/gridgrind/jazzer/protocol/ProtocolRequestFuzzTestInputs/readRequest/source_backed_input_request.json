@@ -28,7 +28,7 @@
         "type": "SET_CELL",
         "value": {
           "type": "TEXT",
-          "source": {
+          "value": {
             "type": "UTF8_FILE",
             "path": "examples/source-backed-input-assets/title.txt"
           }

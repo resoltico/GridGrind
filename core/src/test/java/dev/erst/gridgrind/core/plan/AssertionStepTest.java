@@ -13,8 +13,7 @@ class AssertionStepTest {
   @Test
   void constructsAssertionStepsAndKeepsIncompatibleTargetsForStaticValidation() {
     Assertion assertion =
-        new CellAssertion.CellValue(
-            new dev.erst.gridgrind.core.model.value.CellScalarValue.Text("Owner"));
+        new CellAssertion.Value(new dev.erst.gridgrind.core.model.value.CellValue.Text("Owner"));
     AssertionStep step =
         new AssertionStep(
             new StepId("assert-owner"),

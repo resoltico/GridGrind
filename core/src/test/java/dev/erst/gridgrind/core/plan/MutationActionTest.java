@@ -45,7 +45,7 @@ class MutationActionTest {
         "A",
         ((TextSourceSpec.Inline)
                 ((CellValueSpec.Text) setRange.rows().toCellInputRows().getFirst().getFirst())
-                    .source())
+                    .value())
             .text());
     assertEquals(
         2,

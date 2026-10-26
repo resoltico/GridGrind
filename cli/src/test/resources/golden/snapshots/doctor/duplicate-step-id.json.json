@@ -12,7 +12,7 @@
       "code" : "INVALID_REQUEST",
       "context" : {
         "json" : {
-          "byteOffset" : 238,
+          "byteOffset" : 237,
           "jsonPath" : "steps[1].stepId",
           "type" : "PATH_BYTE_OFFSET"
         },

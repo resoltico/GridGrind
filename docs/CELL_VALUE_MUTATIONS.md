@@ -34,7 +34,7 @@ state on the targeted cell is preserved.
     "type": "SET_CELL",
     "value": {
       "type": "FORMULA",
-      "source": {
+      "value": {
         "type": "INLINE",
         "text": "SUM(B2:B3)"
       }
@@ -87,21 +87,21 @@ grids may use the compact scalar-family encodings instead.
       [
         {
           "type": "TEXT",
-          "source": {
+          "value": {
             "type": "INLINE",
             "text": "Origin"
           }
         },
         {
           "type": "TEXT",
-          "source": {
+          "value": {
             "type": "INLINE",
             "text": "Kilos"
           }
         },
         {
           "type": "TEXT",
-          "source": {
+          "value": {
             "type": "INLINE",
             "text": "Cost/kg"
           }
@@ -110,35 +110,35 @@ grids may use the compact scalar-family encodings instead.
       [
         {
           "type": "TEXT",
-          "source": {
+          "value": {
             "type": "INLINE",
             "text": "Ethiopia Yirgacheffe"
           }
         },
         {
           "type": "NUMBER",
-          "number": 150
+          "value": 150
         },
         {
           "type": "NUMBER",
-          "number": 8.4
+          "value": 8.4
         }
       ],
       [
         {
           "type": "TEXT",
-          "source": {
+          "value": {
             "type": "INLINE",
             "text": "Colombia Huila"
           }
         },
         {
           "type": "NUMBER",
-          "number": 200
+          "value": 200
         },
         {
           "type": "NUMBER",
-          "number": 7.8
+          "value": 7.8
         }
       ]
     ] }

@@ -4,7 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import dev.erst.gridgrind.core.model.value.CellScalarValue;
+import dev.erst.gridgrind.core.model.value.CellValue;
 import dev.erst.gridgrind.core.plan.AssertionFailure;
 import dev.erst.gridgrind.core.plan.AssertionResult;
 import dev.erst.gridgrind.core.plan.CellAssertion;
@@ -54,7 +54,7 @@ class WorkbookExecutionEvidenceTest {
                 new StepId("assert-cell"),
                 "EXPECT_CELL_VALUE",
                 new CellSelector.ByAddress(new SheetName("Summary"), new CellAddress("A1")),
-                new CellAssertion.CellValue(new CellScalarValue.Text("Approved")),
+                new CellAssertion.Value(new CellValue.Text("Approved")),
                 List.of()));
     WorkbookExecutionEvidence.TaskSpecific.Assertion passedAssertion =
         new WorkbookExecutionEvidence.TaskSpecific.Assertion(
@@ -138,7 +138,7 @@ class WorkbookExecutionEvidenceTest {
             new StepId("assert-cell"),
             "EXPECT_CELL_VALUE",
             new CellSelector.ByAddress(new SheetName("Summary"), new CellAddress("A1")),
-            new CellAssertion.CellValue(new CellScalarValue.Text("Approved")),
+            new CellAssertion.Value(new CellValue.Text("Approved")),
             List.of());
     return new WorkbookExecutionEvidence.TaskSpecific.Assertion(
         WorkbookExecutionEvidence.TaskSpecific.Origin.HOST_REQUIRED,

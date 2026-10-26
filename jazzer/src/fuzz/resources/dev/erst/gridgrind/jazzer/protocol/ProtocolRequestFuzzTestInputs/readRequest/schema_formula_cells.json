@@ -22,7 +22,7 @@
         "address": "A1",
         "value": {
           "type": "TEXT",
-          "source": {
+          "value": {
             "type": "INLINE",
             "text": "Total"
           }
@@ -37,7 +37,7 @@
         "address": "A2",
         "value": {
           "type": "FORMULA",
-          "source": {
+          "value": {
             "type": "INLINE",
             "text": "1+1"
           }
@@ -52,7 +52,7 @@
         "address": "A3",
         "value": {
           "type": "FORMULA",
-          "source": {
+          "value": {
             "type": "INLINE",
             "text": "2+2"
           }

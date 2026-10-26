@@ -2,8 +2,8 @@ package dev.erst.gridgrind.jazzer.support;
 
 import dev.erst.gridgrind.core.model.style.RichTextRunSpec;
 import dev.erst.gridgrind.core.model.value.CellGridSpec;
-import dev.erst.gridgrind.core.model.value.CellValueSpec;
 import dev.erst.gridgrind.core.model.value.CellRowSpec;
+import dev.erst.gridgrind.core.model.value.CellValueSpec;
 import dev.erst.gridgrind.core.source.TextSourceSpec;
 import dev.erst.gridgrind.excel.ExcelCellValue;
 import dev.erst.gridgrind.excel.ExcelRichText;
@@ -29,7 +29,8 @@ final class FuzzValueDecoders {
       case 3 -> new CellValueSpec.NumberValue(data.consumeRegularDouble(-1000.0d, 1000.0d));
       case 4 -> new CellValueSpec.BooleanValue(data.consumeBoolean());
       case 5 ->
-          new CellValueSpec.Date(LocalDate.of(2026, data.consumeInt(1, 12), data.consumeInt(1, 28)));
+          new CellValueSpec.Date(
+              LocalDate.of(2026, data.consumeInt(1, 12), data.consumeInt(1, 28)));
       case 6 ->
           new CellValueSpec.DateTime(
               LocalDateTime.of(

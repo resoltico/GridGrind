@@ -294,8 +294,11 @@
               "locked" : true
             }
           },
-          "textValue" : "Category",
-          "type" : "TEXT"
+          "type" : "TEXT",
+          "value" : {
+            "type" : "TEXT",
+            "value" : "Category"
+          }
         }, {
           "address" : "B1",
           "displayValue" : "Owner",
@@ -346,8 +349,11 @@
               "locked" : true
             }
           },
-          "textValue" : "Owner",
-          "type" : "TEXT"
+          "type" : "TEXT",
+          "value" : {
+            "type" : "TEXT",
+            "value" : "Owner"
+          }
         }, {
           "address" : "C1",
           "displayValue" : "Amount",
@@ -398,8 +404,11 @@
               "locked" : true
             }
           },
-          "textValue" : "Amount",
-          "type" : "TEXT"
+          "type" : "TEXT",
+          "value" : {
+            "type" : "TEXT",
+            "value" : "Amount"
+          }
         }, {
           "address" : "A2",
           "displayValue" : "Travel",
@@ -450,8 +459,11 @@
               "locked" : true
             }
           },
-          "textValue" : "Travel",
-          "type" : "TEXT"
+          "type" : "TEXT",
+          "value" : {
+            "type" : "TEXT",
+            "value" : "Travel"
+          }
         }, {
           "address" : "B2",
           "displayValue" : "Ada",
@@ -502,12 +514,14 @@
               "locked" : true
             }
           },
-          "textValue" : "Ada",
-          "type" : "TEXT"
+          "type" : "TEXT",
+          "value" : {
+            "type" : "TEXT",
+            "value" : "Ada"
+          }
         }, {
           "address" : "C2",
           "displayValue" : "125",
-          "numberValue" : 125.0,
           "style" : {
             "alignment" : {
               "horizontalAlignment" : "GENERAL",
@@ -558,7 +572,11 @@
           "temporal" : {
             "isDate" : false
           },
-          "type" : "NUMBER"
+          "type" : "NUMBER",
+          "value" : {
+            "type" : "NUMBER",
+            "value" : 125.0
+          }
         }, {
           "address" : "A3",
           "displayValue" : "Software",
@@ -609,8 +627,11 @@
               "locked" : true
             }
           },
-          "textValue" : "Software",
-          "type" : "TEXT"
+          "type" : "TEXT",
+          "value" : {
+            "type" : "TEXT",
+            "value" : "Software"
+          }
         }, {
           "address" : "B3",
           "displayValue" : "Lin",
@@ -661,12 +682,14 @@
               "locked" : true
             }
           },
-          "textValue" : "Lin",
-          "type" : "TEXT"
+          "type" : "TEXT",
+          "value" : {
+            "type" : "TEXT",
+            "value" : "Lin"
+          }
         }, {
           "address" : "C3",
           "displayValue" : "310",
-          "numberValue" : 310.0,
           "style" : {
             "alignment" : {
               "horizontalAlignment" : "GENERAL",
@@ -717,7 +740,11 @@
           "temporal" : {
             "isDate" : false
           },
-          "type" : "NUMBER"
+          "type" : "NUMBER",
+          "value" : {
+            "type" : "NUMBER",
+            "value" : 310.0
+          }
         }, {
           "address" : "A4",
           "displayValue" : "Training",
@@ -768,8 +795,11 @@
               "locked" : true
             }
           },
-          "textValue" : "Training",
-          "type" : "TEXT"
+          "type" : "TEXT",
+          "value" : {
+            "type" : "TEXT",
+            "value" : "Training"
+          }
         }, {
           "address" : "B4",
           "displayValue" : "Mia",
@@ -820,12 +850,14 @@
               "locked" : true
             }
           },
-          "textValue" : "Mia",
-          "type" : "TEXT"
+          "type" : "TEXT",
+          "value" : {
+            "type" : "TEXT",
+            "value" : "Mia"
+          }
         }, {
           "address" : "C4",
           "displayValue" : "90",
-          "numberValue" : 90.0,
           "style" : {
             "alignment" : {
               "horizontalAlignment" : "GENERAL",
@@ -876,7 +908,11 @@
           "temporal" : {
             "isDate" : false
           },
-          "type" : "NUMBER"
+          "type" : "NUMBER",
+          "value" : {
+            "type" : "NUMBER",
+            "value" : 90.0
+          }
         } ],
         "sheetName" : "Report",
         "stepId" : "sheet-0-cells",
@@ -1024,16 +1060,25 @@
       "inspections" : [ {
         "cells" : [ {
           "address" : "A1",
-          "textValue" : "Category",
-          "type" : "TEXT"
+          "type" : "TEXT",
+          "value" : {
+            "type" : "TEXT",
+            "value" : "Category"
+          }
         }, {
           "address" : "B2",
-          "textValue" : "Ada",
-          "type" : "TEXT"
+          "type" : "TEXT",
+          "value" : {
+            "type" : "TEXT",
+            "value" : "Ada"
+          }
         }, {
           "address" : "C4",
-          "numberValue" : 90.0,
-          "type" : "NUMBER"
+          "type" : "NUMBER",
+          "value" : {
+            "type" : "NUMBER",
+            "value" : 90.0
+          }
         } ],
         "sheetName" : "Report",
         "stepId" : "read-report-cells",
@@ -1260,68 +1305,68 @@
       "action" : {
         "rows" : {
           "cells" : [ [ {
-            "source" : {
+            "type" : "TEXT",
+            "value" : {
               "text" : "Category",
               "type" : "INLINE"
-            },
-            "type" : "TEXT"
+            }
           }, {
-            "source" : {
+            "type" : "TEXT",
+            "value" : {
               "text" : "Owner",
               "type" : "INLINE"
-            },
-            "type" : "TEXT"
+            }
           }, {
-            "source" : {
+            "type" : "TEXT",
+            "value" : {
               "text" : "Amount",
               "type" : "INLINE"
-            },
-            "type" : "TEXT"
+            }
           } ], [ {
-            "source" : {
+            "type" : "TEXT",
+            "value" : {
               "text" : "Travel",
               "type" : "INLINE"
-            },
-            "type" : "TEXT"
+            }
           }, {
-            "source" : {
+            "type" : "TEXT",
+            "value" : {
               "text" : "Ada",
               "type" : "INLINE"
-            },
-            "type" : "TEXT"
+            }
           }, {
-            "number" : 125.0,
-            "type" : "NUMBER"
+            "type" : "NUMBER",
+            "value" : 125.0
           } ], [ {
-            "source" : {
+            "type" : "TEXT",
+            "value" : {
               "text" : "Software",
               "type" : "INLINE"
-            },
-            "type" : "TEXT"
+            }
           }, {
-            "source" : {
+            "type" : "TEXT",
+            "value" : {
               "text" : "Lin",
               "type" : "INLINE"
-            },
-            "type" : "TEXT"
+            }
           }, {
-            "number" : 310.0,
-            "type" : "NUMBER"
+            "type" : "NUMBER",
+            "value" : 310.0
           } ], [ {
-            "source" : {
+            "type" : "TEXT",
+            "value" : {
               "text" : "Training",
               "type" : "INLINE"
-            },
-            "type" : "TEXT"
+            }
           }, {
-            "source" : {
+            "type" : "TEXT",
+            "value" : {
               "text" : "Mia",
               "type" : "INLINE"
-            },
-            "type" : "TEXT"
+            }
           }, {
-            "number" : 90.0,
-            "type" : "NUMBER"
+            "type" : "NUMBER",
+            "value" : 90.0
           } ] ],
           "type" : "TYPED"
         },
@@ -1435,68 +1480,68 @@
         "action" : {
           "rows" : {
             "cells" : [ [ {
-              "source" : {
+              "type" : "TEXT",
+              "value" : {
                 "text" : "Category",
                 "type" : "INLINE"
-              },
-              "type" : "TEXT"
+              }
             }, {
-              "source" : {
+              "type" : "TEXT",
+              "value" : {
                 "text" : "Owner",
                 "type" : "INLINE"
-              },
-              "type" : "TEXT"
+              }
             }, {
-              "source" : {
+              "type" : "TEXT",
+              "value" : {
                 "text" : "Amount",
                 "type" : "INLINE"
-              },
-              "type" : "TEXT"
+              }
             } ], [ {
-              "source" : {
+              "type" : "TEXT",
+              "value" : {
                 "text" : "Travel",
                 "type" : "INLINE"
-              },
-              "type" : "TEXT"
+              }
             }, {
-              "source" : {
+              "type" : "TEXT",
+              "value" : {
                 "text" : "Ada",
                 "type" : "INLINE"
-              },
-              "type" : "TEXT"
+              }
             }, {
-              "number" : 125.0,
-              "type" : "NUMBER"
+              "type" : "NUMBER",
+              "value" : 125.0
             } ], [ {
-              "source" : {
+              "type" : "TEXT",
+              "value" : {
                 "text" : "Software",
                 "type" : "INLINE"
-              },
-              "type" : "TEXT"
+              }
             }, {
-              "source" : {
+              "type" : "TEXT",
+              "value" : {
                 "text" : "Lin",
                 "type" : "INLINE"
-              },
-              "type" : "TEXT"
+              }
             }, {
-              "number" : 310.0,
-              "type" : "NUMBER"
+              "type" : "NUMBER",
+              "value" : 310.0
             } ], [ {
-              "source" : {
+              "type" : "TEXT",
+              "value" : {
                 "text" : "Training",
                 "type" : "INLINE"
-              },
-              "type" : "TEXT"
+              }
             }, {
-              "source" : {
+              "type" : "TEXT",
+              "value" : {
                 "text" : "Mia",
                 "type" : "INLINE"
-              },
-              "type" : "TEXT"
+              }
             }, {
-              "number" : 90.0,
-              "type" : "NUMBER"
+              "type" : "NUMBER",
+              "value" : 90.0
             } ] ],
             "type" : "TYPED"
           },

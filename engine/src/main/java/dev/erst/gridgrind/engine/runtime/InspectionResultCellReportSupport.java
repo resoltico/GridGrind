@@ -8,7 +8,7 @@ import dev.erst.gridgrind.core.model.style.RichTextRunReport;
 import dev.erst.gridgrind.core.model.value.CellReport;
 import dev.erst.gridgrind.core.model.value.CellTemporalKind;
 import dev.erst.gridgrind.core.model.value.CellTemporalReport;
-import dev.erst.gridgrind.core.model.value.CellValueReport;
+import dev.erst.gridgrind.core.model.value.CellValue;
 import dev.erst.gridgrind.core.model.value.HyperlinkTarget;
 import dev.erst.gridgrind.core.vocabulary.CellAddress;
 import dev.erst.gridgrind.excel.ExcelCellReadFacet;
@@ -75,71 +75,81 @@ final class InspectionResultCellReportSupport {
     Optional<CommentReport> comment = projectedComment(snapshot, projection);
 
     return switch (snapshot) {
-      case ExcelCellSnapshot.BlankSnapshot s ->
+      case ExcelCellSnapshot.BlankSnapshot cell ->
           new CellReport.BlankReport(
-              new CellAddress(s.address()), displayValue, style, hyperlink, comment);
-      case ExcelCellSnapshot.TextSnapshot s ->
+              new CellAddress(cell.address()),
+              displayValue,
+              style,
+              hyperlink,
+              comment,
+              projectedValue(projection, new CellValue.Blank()));
+      case ExcelCellSnapshot.TextSnapshot cell ->
           new CellReport.TextReport(
-              new CellAddress(s.address()),
+              new CellAddress(cell.address()),
               displayValue,
               style,
               hyperlink,
               comment,
-              projectedValue(projection, s.textValue()),
-              projectedRuns(projection, s.richText()));
-      case ExcelCellSnapshot.NumberSnapshot s ->
+              projectedValue(projection, new CellValue.Text(cell.textValue())),
+              projectedRuns(projection, cell.richText()));
+      case ExcelCellSnapshot.NumberSnapshot cell ->
           new CellReport.NumberReport(
-              new CellAddress(s.address()),
+              new CellAddress(cell.address()),
               displayValue,
               style,
               hyperlink,
               comment,
-              projectedValue(projection, s.numberValue()),
-              projectedTemporal(s, projection, date1904));
-      case ExcelCellSnapshot.BooleanSnapshot s ->
+              projectedValue(projection, new CellValue.NumberValue(cell.numberValue())),
+              projectedTemporal(cell, projection, date1904));
+      case ExcelCellSnapshot.BooleanSnapshot cell ->
           new CellReport.BooleanReport(
-              new CellAddress(s.address()),
+              new CellAddress(cell.address()),
               displayValue,
               style,
               hyperlink,
               comment,
-              projectedValue(projection, s.booleanValue()));
-      case ExcelCellSnapshot.ErrorSnapshot s ->
+              projectedValue(projection, new CellValue.BooleanValue(cell.booleanValue())));
+      case ExcelCellSnapshot.ErrorSnapshot cell ->
           new CellReport.ErrorReport(
-              new CellAddress(s.address()),
+              new CellAddress(cell.address()),
               displayValue,
               style,
               hyperlink,
               comment,
-              projectedValue(projection, s.errorValue()));
-      case ExcelCellSnapshot.FormulaSnapshot s ->
-          new CellReport.FormulaReport(
-              new CellAddress(s.address()),
-              displayValue,
-              style,
-              hyperlink,
-              comment,
-              projectedFormula(projection, s.formula()),
-              projectedEvaluation(s.evaluation(), projection, date1904));
+              projectedValue(projection, new CellValue.ErrorValue(cell.errorValue())));
+      case ExcelCellSnapshot.FormulaSnapshot cell -> {
+        Optional<ExcelCellSnapshot> evaluation =
+            projection.includes(ExcelCellReadFacet.VALUE)
+                ? Optional.of(cell.evaluation().orElseThrow())
+                : Optional.empty();
+        yield new CellReport.FormulaReport(
+            new CellAddress(cell.address()),
+            displayValue,
+            style,
+            hyperlink,
+            comment,
+            projectedFormula(projection, cell.formula()),
+            evaluation.map(InspectionResultCellReportSupport::toCellValue),
+            evaluation
+                .filter(ExcelCellSnapshot.TextSnapshot.class::isInstance)
+                .map(ExcelCellSnapshot.TextSnapshot.class::cast)
+                .flatMap(text -> projectedRuns(projection, text.richText())),
+            evaluation
+                .filter(ExcelCellSnapshot.NumberSnapshot.class::isInstance)
+                .map(ExcelCellSnapshot.NumberSnapshot.class::cast)
+                .flatMap(number -> projectedTemporal(number, projection, date1904)));
+      }
     };
   }
 
-  static CellValueReport toCellValueReport(
-      ExcelCellSnapshot snapshot, ExcelCellReadProjection projection, boolean date1904) {
+  static CellValue toCellValue(ExcelCellSnapshot snapshot) {
     return switch (snapshot) {
-      case ExcelCellSnapshot.BlankSnapshot _ -> new CellValueReport.BlankValue();
-      case ExcelCellSnapshot.TextSnapshot s ->
-          new CellValueReport.TextValue(
-              s.textValue(),
-              projection.includes(ExcelCellReadFacet.RICH_TEXT_RUNS)
-                  ? toRichTextRunReports(s.richText())
-                  : Optional.empty());
-      case ExcelCellSnapshot.NumberSnapshot s ->
-          new CellValueReport.NumberValue(
-              s.numberValue(), projectedTemporal(s, projection, date1904));
-      case ExcelCellSnapshot.BooleanSnapshot s ->
-          new CellValueReport.BooleanValue(s.booleanValue());
-      case ExcelCellSnapshot.ErrorSnapshot s -> new CellValueReport.ErrorValue(s.errorValue());
+      case ExcelCellSnapshot.BlankSnapshot _ -> new CellValue.Blank();
+      case ExcelCellSnapshot.TextSnapshot cell -> new CellValue.Text(cell.textValue());
+      case ExcelCellSnapshot.NumberSnapshot cell -> new CellValue.NumberValue(cell.numberValue());
+      case ExcelCellSnapshot.BooleanSnapshot cell ->
+          new CellValue.BooleanValue(cell.booleanValue());
+      case ExcelCellSnapshot.ErrorSnapshot cell -> new CellValue.ErrorValue(cell.errorValue());
       case ExcelCellSnapshot.FormulaSnapshot _ ->
           throw new IllegalArgumentException(
               "Formula evaluations must not recursively remain FORMULA");
@@ -206,15 +216,6 @@ final class InspectionResultCellReportSupport {
       ExcelCellReadProjection projection, String formula) {
     return projection.includes(ExcelCellReadFacet.FORMULA)
         ? Optional.of(formula)
-        : Optional.empty();
-  }
-
-  private static Optional<CellValueReport> projectedEvaluation(
-      Optional<ExcelCellSnapshot> evaluation,
-      ExcelCellReadProjection projection,
-      boolean date1904) {
-    return projection.includes(ExcelCellReadFacet.VALUE)
-        ? Optional.of(toCellValueReport(evaluation.orElseThrow(), projection, date1904))
         : Optional.empty();
   }
 

@@ -5,7 +5,7 @@ import static dev.erst.gridgrind.jazzer.support.OperationSequenceValueFactory.ne
 import static dev.erst.gridgrind.jazzer.support.OperationSequenceValueFactory.nextTableSelector;
 import static dev.erst.gridgrind.jazzer.support.ProtocolStepSupport.assertThat;
 
-import dev.erst.gridgrind.core.model.value.CellScalarValue;
+import dev.erst.gridgrind.core.model.value.CellValue;
 import dev.erst.gridgrind.core.plan.*;
 import dev.erst.gridgrind.core.plan.CellSelector;
 import dev.erst.gridgrind.core.plan.ChartSelector;
@@ -161,12 +161,12 @@ final class OperationSequenceObservationSupport {
   private static Assertion nextCellAssertion(GridGrindFuzzData data) {
     Assertion primary =
         switch (selectorSlot(nextSelectorByte(data)) % 4) {
-          case 0 -> new CellAssertion.CellValue(nextExpectedCellValue(data));
+          case 0 -> new CellAssertion.Value(nextExpectedCellValue(data));
           case 1 -> new CellAssertion.DisplayValue("display-" + data.consumeInt(0, 9));
           case 2 -> new CellAssertion.FormulaText(data.consumeBoolean() ? "B2*2" : "SUM(B2:B4)");
           default -> new CellAssertion.DisplayValue("Report");
         };
-    Assertion alternate = new CellAssertion.CellValue(new CellScalarValue.Text("Jan"));
+    Assertion alternate = new CellAssertion.Value(new CellValue.Text("Jan"));
     return maybeComposeAssertion(data, primary, alternate);
   }
 
@@ -305,13 +305,13 @@ final class OperationSequenceObservationSupport {
     return data.consumeBoolean() ? Optional.of(nextMaximumSeverity(data)) : Optional.empty();
   }
 
-  private static CellScalarValue nextExpectedCellValue(GridGrindFuzzData data) {
+  private static CellValue nextExpectedCellValue(GridGrindFuzzData data) {
     return switch (selectorSlot(nextSelectorByte(data)) % 5) {
-      case 0 -> new CellScalarValue.Blank();
-      case 1 -> new CellScalarValue.Text("seed-" + data.consumeInt(0, 9));
-      case 2 -> new CellScalarValue.NumberValue(data.consumeRegularDouble(0.0d, 10.0d));
-      case 3 -> new CellScalarValue.BooleanValue(data.consumeBoolean());
-      default -> new CellScalarValue.ErrorValue("#REF!");
+      case 0 -> new CellValue.Blank();
+      case 1 -> new CellValue.Text("seed-" + data.consumeInt(0, 9));
+      case 2 -> new CellValue.NumberValue(data.consumeRegularDouble(0.0d, 10.0d));
+      case 3 -> new CellValue.BooleanValue(data.consumeBoolean());
+      default -> new CellValue.ErrorValue("#REF!");
     };
   }
 

@@ -322,8 +322,11 @@
               "locked" : true
             }
           },
-          "textValue" : "Region",
-          "type" : "TEXT"
+          "type" : "TEXT",
+          "value" : {
+            "type" : "TEXT",
+            "value" : "Region"
+          }
         }, {
           "address" : "B1",
           "displayValue" : "Stage",
@@ -374,8 +377,11 @@
               "locked" : true
             }
           },
-          "textValue" : "Stage",
-          "type" : "TEXT"
+          "type" : "TEXT",
+          "value" : {
+            "type" : "TEXT",
+            "value" : "Stage"
+          }
         }, {
           "address" : "C1",
           "displayValue" : "Owner",
@@ -426,8 +432,11 @@
               "locked" : true
             }
           },
-          "textValue" : "Owner",
-          "type" : "TEXT"
+          "type" : "TEXT",
+          "value" : {
+            "type" : "TEXT",
+            "value" : "Owner"
+          }
         }, {
           "address" : "D1",
           "displayValue" : "Amount",
@@ -478,8 +487,11 @@
               "locked" : true
             }
           },
-          "textValue" : "Amount",
-          "type" : "TEXT"
+          "type" : "TEXT",
+          "value" : {
+            "type" : "TEXT",
+            "value" : "Amount"
+          }
         }, {
           "address" : "A2",
           "displayValue" : "North",
@@ -530,8 +542,11 @@
               "locked" : true
             }
           },
-          "textValue" : "North",
-          "type" : "TEXT"
+          "type" : "TEXT",
+          "value" : {
+            "type" : "TEXT",
+            "value" : "North"
+          }
         }, {
           "address" : "B2",
           "displayValue" : "Plan",
@@ -582,8 +597,11 @@
               "locked" : true
             }
           },
-          "textValue" : "Plan",
-          "type" : "TEXT"
+          "type" : "TEXT",
+          "value" : {
+            "type" : "TEXT",
+            "value" : "Plan"
+          }
         }, {
           "address" : "C2",
           "displayValue" : "Ada",
@@ -634,12 +652,14 @@
               "locked" : true
             }
           },
-          "textValue" : "Ada",
-          "type" : "TEXT"
+          "type" : "TEXT",
+          "value" : {
+            "type" : "TEXT",
+            "value" : "Ada"
+          }
         }, {
           "address" : "D2",
           "displayValue" : "10",
-          "numberValue" : 10.0,
           "style" : {
             "alignment" : {
               "horizontalAlignment" : "GENERAL",
@@ -690,7 +710,11 @@
           "temporal" : {
             "isDate" : false
           },
-          "type" : "NUMBER"
+          "type" : "NUMBER",
+          "value" : {
+            "type" : "NUMBER",
+            "value" : 10.0
+          }
         }, {
           "address" : "A3",
           "displayValue" : "North",
@@ -741,8 +765,11 @@
               "locked" : true
             }
           },
-          "textValue" : "North",
-          "type" : "TEXT"
+          "type" : "TEXT",
+          "value" : {
+            "type" : "TEXT",
+            "value" : "North"
+          }
         }, {
           "address" : "B3",
           "displayValue" : "Do",
@@ -793,8 +820,11 @@
               "locked" : true
             }
           },
-          "textValue" : "Do",
-          "type" : "TEXT"
+          "type" : "TEXT",
+          "value" : {
+            "type" : "TEXT",
+            "value" : "Do"
+          }
         }, {
           "address" : "C3",
           "displayValue" : "Ada",
@@ -845,12 +875,14 @@
               "locked" : true
             }
           },
-          "textValue" : "Ada",
-          "type" : "TEXT"
+          "type" : "TEXT",
+          "value" : {
+            "type" : "TEXT",
+            "value" : "Ada"
+          }
         }, {
           "address" : "D3",
           "displayValue" : "15",
-          "numberValue" : 15.0,
           "style" : {
             "alignment" : {
               "horizontalAlignment" : "GENERAL",
@@ -901,7 +933,11 @@
           "temporal" : {
             "isDate" : false
           },
-          "type" : "NUMBER"
+          "type" : "NUMBER",
+          "value" : {
+            "type" : "NUMBER",
+            "value" : 15.0
+          }
         }, {
           "address" : "A4",
           "displayValue" : "South",
@@ -952,8 +988,11 @@
               "locked" : true
             }
           },
-          "textValue" : "South",
-          "type" : "TEXT"
+          "type" : "TEXT",
+          "value" : {
+            "type" : "TEXT",
+            "value" : "South"
+          }
         }, {
           "address" : "B4",
           "displayValue" : "Plan",
@@ -1004,8 +1043,11 @@
               "locked" : true
             }
           },
-          "textValue" : "Plan",
-          "type" : "TEXT"
+          "type" : "TEXT",
+          "value" : {
+            "type" : "TEXT",
+            "value" : "Plan"
+          }
         }, {
           "address" : "C4",
           "displayValue" : "Lin",
@@ -1056,12 +1098,14 @@
               "locked" : true
             }
           },
-          "textValue" : "Lin",
-          "type" : "TEXT"
+          "type" : "TEXT",
+          "value" : {
+            "type" : "TEXT",
+            "value" : "Lin"
+          }
         }, {
           "address" : "D4",
           "displayValue" : "7",
-          "numberValue" : 7.0,
           "style" : {
             "alignment" : {
               "horizontalAlignment" : "GENERAL",
@@ -1112,7 +1156,11 @@
           "temporal" : {
             "isDate" : false
           },
-          "type" : "NUMBER"
+          "type" : "NUMBER",
+          "value" : {
+            "type" : "NUMBER",
+            "value" : 7.0
+          }
         }, {
           "address" : "A5",
           "displayValue" : "South",
@@ -1163,8 +1211,11 @@
               "locked" : true
             }
           },
-          "textValue" : "South",
-          "type" : "TEXT"
+          "type" : "TEXT",
+          "value" : {
+            "type" : "TEXT",
+            "value" : "South"
+          }
         }, {
           "address" : "B5",
           "displayValue" : "Do",
@@ -1215,8 +1266,11 @@
               "locked" : true
             }
           },
-          "textValue" : "Do",
-          "type" : "TEXT"
+          "type" : "TEXT",
+          "value" : {
+            "type" : "TEXT",
+            "value" : "Do"
+          }
         }, {
           "address" : "C5",
           "displayValue" : "Lin",
@@ -1267,12 +1321,14 @@
               "locked" : true
             }
           },
-          "textValue" : "Lin",
-          "type" : "TEXT"
+          "type" : "TEXT",
+          "value" : {
+            "type" : "TEXT",
+            "value" : "Lin"
+          }
         }, {
           "address" : "D5",
           "displayValue" : "12",
-          "numberValue" : 12.0,
           "style" : {
             "alignment" : {
               "horizontalAlignment" : "GENERAL",
@@ -1323,7 +1379,11 @@
           "temporal" : {
             "isDate" : false
           },
-          "type" : "NUMBER"
+          "type" : "NUMBER",
+          "value" : {
+            "type" : "NUMBER",
+            "value" : 12.0
+          }
         } ],
         "sheetName" : "Data",
         "stepId" : "sheet-0-cells",
@@ -1849,113 +1909,113 @@
       "action" : {
         "rows" : {
           "cells" : [ [ {
-            "source" : {
+            "type" : "TEXT",
+            "value" : {
               "text" : "Region",
               "type" : "INLINE"
-            },
-            "type" : "TEXT"
+            }
           }, {
-            "source" : {
+            "type" : "TEXT",
+            "value" : {
               "text" : "Stage",
               "type" : "INLINE"
-            },
-            "type" : "TEXT"
+            }
           }, {
-            "source" : {
+            "type" : "TEXT",
+            "value" : {
               "text" : "Owner",
               "type" : "INLINE"
-            },
-            "type" : "TEXT"
+            }
           }, {
-            "source" : {
+            "type" : "TEXT",
+            "value" : {
               "text" : "Amount",
               "type" : "INLINE"
-            },
-            "type" : "TEXT"
+            }
           } ], [ {
-            "source" : {
+            "type" : "TEXT",
+            "value" : {
               "text" : "North",
               "type" : "INLINE"
-            },
-            "type" : "TEXT"
+            }
           }, {
-            "source" : {
+            "type" : "TEXT",
+            "value" : {
               "text" : "Plan",
               "type" : "INLINE"
-            },
-            "type" : "TEXT"
+            }
           }, {
-            "source" : {
+            "type" : "TEXT",
+            "value" : {
               "text" : "Ada",
               "type" : "INLINE"
-            },
-            "type" : "TEXT"
+            }
           }, {
-            "number" : 10.0,
-            "type" : "NUMBER"
+            "type" : "NUMBER",
+            "value" : 10.0
           } ], [ {
-            "source" : {
+            "type" : "TEXT",
+            "value" : {
               "text" : "North",
               "type" : "INLINE"
-            },
-            "type" : "TEXT"
+            }
           }, {
-            "source" : {
+            "type" : "TEXT",
+            "value" : {
               "text" : "Do",
               "type" : "INLINE"
-            },
-            "type" : "TEXT"
+            }
           }, {
-            "source" : {
+            "type" : "TEXT",
+            "value" : {
               "text" : "Ada",
               "type" : "INLINE"
-            },
-            "type" : "TEXT"
+            }
           }, {
-            "number" : 15.0,
-            "type" : "NUMBER"
+            "type" : "NUMBER",
+            "value" : 15.0
           } ], [ {
-            "source" : {
+            "type" : "TEXT",
+            "value" : {
               "text" : "South",
               "type" : "INLINE"
-            },
-            "type" : "TEXT"
+            }
           }, {
-            "source" : {
+            "type" : "TEXT",
+            "value" : {
               "text" : "Plan",
               "type" : "INLINE"
-            },
-            "type" : "TEXT"
+            }
           }, {
-            "source" : {
+            "type" : "TEXT",
+            "value" : {
               "text" : "Lin",
               "type" : "INLINE"
-            },
-            "type" : "TEXT"
+            }
           }, {
-            "number" : 7.0,
-            "type" : "NUMBER"
+            "type" : "NUMBER",
+            "value" : 7.0
           } ], [ {
-            "source" : {
+            "type" : "TEXT",
+            "value" : {
               "text" : "South",
               "type" : "INLINE"
-            },
-            "type" : "TEXT"
+            }
           }, {
-            "source" : {
+            "type" : "TEXT",
+            "value" : {
               "text" : "Do",
               "type" : "INLINE"
-            },
-            "type" : "TEXT"
+            }
           }, {
-            "source" : {
+            "type" : "TEXT",
+            "value" : {
               "text" : "Lin",
               "type" : "INLINE"
-            },
-            "type" : "TEXT"
+            }
           }, {
-            "number" : 12.0,
-            "type" : "NUMBER"
+            "type" : "NUMBER",
+            "value" : 12.0
           } ] ],
           "type" : "TYPED"
         },
@@ -2097,113 +2157,113 @@
         "action" : {
           "rows" : {
             "cells" : [ [ {
-              "source" : {
+              "type" : "TEXT",
+              "value" : {
                 "text" : "Region",
                 "type" : "INLINE"
-              },
-              "type" : "TEXT"
+              }
             }, {
-              "source" : {
+              "type" : "TEXT",
+              "value" : {
                 "text" : "Stage",
                 "type" : "INLINE"
-              },
-              "type" : "TEXT"
+              }
             }, {
-              "source" : {
+              "type" : "TEXT",
+              "value" : {
                 "text" : "Owner",
                 "type" : "INLINE"
-              },
-              "type" : "TEXT"
+              }
             }, {
-              "source" : {
+              "type" : "TEXT",
+              "value" : {
                 "text" : "Amount",
                 "type" : "INLINE"
-              },
-              "type" : "TEXT"
+              }
             } ], [ {
-              "source" : {
+              "type" : "TEXT",
+              "value" : {
                 "text" : "North",
                 "type" : "INLINE"
-              },
-              "type" : "TEXT"
+              }
             }, {
-              "source" : {
+              "type" : "TEXT",
+              "value" : {
                 "text" : "Plan",
                 "type" : "INLINE"
-              },
-              "type" : "TEXT"
+              }
             }, {
-              "source" : {
+              "type" : "TEXT",
+              "value" : {
                 "text" : "Ada",
                 "type" : "INLINE"
-              },
-              "type" : "TEXT"
+              }
             }, {
-              "number" : 10.0,
-              "type" : "NUMBER"
+              "type" : "NUMBER",
+              "value" : 10.0
             } ], [ {
-              "source" : {
+              "type" : "TEXT",
+              "value" : {
                 "text" : "North",
                 "type" : "INLINE"
-              },
-              "type" : "TEXT"
+              }
             }, {
-              "source" : {
+              "type" : "TEXT",
+              "value" : {
                 "text" : "Do",
                 "type" : "INLINE"
-              },
-              "type" : "TEXT"
+              }
             }, {
-              "source" : {
+              "type" : "TEXT",
+              "value" : {
                 "text" : "Ada",
                 "type" : "INLINE"
-              },
-              "type" : "TEXT"
+              }
             }, {
-              "number" : 15.0,
-              "type" : "NUMBER"
+              "type" : "NUMBER",
+              "value" : 15.0
             } ], [ {
-              "source" : {
+              "type" : "TEXT",
+              "value" : {
                 "text" : "South",
                 "type" : "INLINE"
-              },
-              "type" : "TEXT"
+              }
             }, {
-              "source" : {
+              "type" : "TEXT",
+              "value" : {
                 "text" : "Plan",
                 "type" : "INLINE"
-              },
-              "type" : "TEXT"
+              }
             }, {
-              "source" : {
+              "type" : "TEXT",
+              "value" : {
                 "text" : "Lin",
                 "type" : "INLINE"
-              },
-              "type" : "TEXT"
+              }
             }, {
-              "number" : 7.0,
-              "type" : "NUMBER"
+              "type" : "NUMBER",
+              "value" : 7.0
             } ], [ {
-              "source" : {
+              "type" : "TEXT",
+              "value" : {
                 "text" : "South",
                 "type" : "INLINE"
-              },
-              "type" : "TEXT"
+              }
             }, {
-              "source" : {
+              "type" : "TEXT",
+              "value" : {
                 "text" : "Do",
                 "type" : "INLINE"
-              },
-              "type" : "TEXT"
+              }
             }, {
-              "source" : {
+              "type" : "TEXT",
+              "value" : {
                 "text" : "Lin",
                 "type" : "INLINE"
-              },
-              "type" : "TEXT"
+              }
             }, {
-              "number" : 12.0,
-              "type" : "NUMBER"
+              "type" : "NUMBER",
+              "value" : 12.0
             } ] ],
             "type" : "TYPED"
           },

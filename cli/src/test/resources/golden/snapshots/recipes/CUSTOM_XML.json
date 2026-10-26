@@ -220,20 +220,32 @@
       }, {
         "cells" : [ {
           "address" : "A1",
-          "textValue" : "Grid",
-          "type" : "TEXT"
+          "type" : "TEXT",
+          "value" : {
+            "type" : "TEXT",
+            "value" : "Grid"
+          }
         }, {
           "address" : "B1",
-          "textValue" : "Grind",
-          "type" : "TEXT"
+          "type" : "TEXT",
+          "value" : {
+            "type" : "TEXT",
+            "value" : "Grind"
+          }
         }, {
           "address" : "C1",
-          "textValue" : "Agent",
-          "type" : "TEXT"
+          "type" : "TEXT",
+          "value" : {
+            "type" : "TEXT",
+            "value" : "Agent"
+          }
         }, {
           "address" : "D1",
-          "textValue" : "Ops",
-          "type" : "TEXT"
+          "type" : "TEXT",
+          "value" : {
+            "type" : "TEXT",
+            "value" : "Ops"
+          }
         } ],
         "sheetName" : "Foglio1",
         "stepId" : "read-imported-cells",

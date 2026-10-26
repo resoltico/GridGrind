@@ -103,7 +103,7 @@ class StaticRequestValidatorTest {
                   "target": { "type": "WORKBOOK_CURRENT" },
                   "action": {
                     "type": "SET_CELL",
-                    "value": { "type": "NUMBER", "number": 1.0 }
+                    "value": { "type": "NUMBER", "value": 1.0 }
                   }
                 },
                 {
@@ -151,7 +151,7 @@ class StaticRequestValidatorTest {
                   "target": { "type": "CELL_BY_ADDRESS", "sheetName": "Budget", "address": "A1" },
                   "action": {
                     "type": "SET_CELL",
-                    "value": { "type": "NUMBER", "number": 1.0 }
+                    "value": { "type": "NUMBER", "value": 1.0 }
                   }
                 }
               ]
@@ -261,7 +261,7 @@ class StaticRequestValidatorTest {
                 {
                   "stepId": "set-cell",
                   "target": { "type": "WORKBOOK_CURRENT" },
-                  "action": { "type": "SET_CELL", "value": { "type": "NUMBER", "number": 1.0 } }
+                  "action": { "type": "SET_CELL", "value": { "type": "NUMBER", "value": 1.0 } }
                 }
               ]
             }
@@ -289,7 +289,7 @@ class StaticRequestValidatorTest {
                 {
                   "stepId": "set-cell",
                   "target": { "type": "WORKBOOK_CURRENT" },
-                  "action": { "type": "SET_CELL", "value": { "type": "NUMBER", "number": 1.0 } }
+                  "action": { "type": "SET_CELL", "value": { "type": "NUMBER", "value": 1.0 } }
                 }
               ]
             }

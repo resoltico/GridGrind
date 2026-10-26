@@ -263,11 +263,12 @@ class WorkbookResultEdgeCoverageTest {
                         Optional.of(style()),
                         Optional.empty(),
                         Optional.empty(),
-                        Optional.of("Owner"),
+                        java.util.Optional.of(
+                            new dev.erst.gridgrind.core.model.value.CellValue.Text("Owner")),
                         Optional.of(List.of())))
             .getMessage());
     assertEquals(
-        "runs text must concatenate to the textValue",
+        "runs text must concatenate to the value",
         assertThrows(
                 IllegalArgumentException.class,
                 () ->
@@ -277,7 +278,8 @@ class WorkbookResultEdgeCoverageTest {
                         Optional.of(style()),
                         Optional.empty(),
                         Optional.empty(),
-                        Optional.of("Owner"),
+                        java.util.Optional.of(
+                            new dev.erst.gridgrind.core.model.value.CellValue.Text("Owner")),
                         Optional.of(List.of(new RichTextRunReport("Mismatch", style().font())))))
             .getMessage());
     assertEquals(
@@ -671,7 +673,8 @@ class WorkbookResultEdgeCoverageTest {
             java.util.Optional.of(style()),
             java.util.Optional.empty(),
             java.util.Optional.empty(),
-            java.util.Optional.of(true));
+            java.util.Optional.of(
+                new dev.erst.gridgrind.core.model.value.CellValue.BooleanValue(true)));
     dev.erst.gridgrind.core.model.value.CellReport.ErrorReport errorCell =
         new dev.erst.gridgrind.core.model.value.CellReport.ErrorReport(
             new CellAddress("A3"),
@@ -679,7 +682,8 @@ class WorkbookResultEdgeCoverageTest {
             java.util.Optional.of(style()),
             java.util.Optional.empty(),
             java.util.Optional.empty(),
-            java.util.Optional.of("#DIV/0!"));
+            java.util.Optional.of(
+                new dev.erst.gridgrind.core.model.value.CellValue.ErrorValue("#DIV/0!")));
 
     assertEquals("PARSE_ARGUMENTS", parseArguments.type());
     assertEquals(java.util.Optional.of("--request"), parseArguments.argumentName());

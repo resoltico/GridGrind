@@ -2,10 +2,10 @@ package dev.erst.gridgrind.jazzer.support;
 
 import dev.erst.gridgrind.core.model.chart.ChartAxisSpec;
 import dev.erst.gridgrind.core.model.chart.ChartDataSourceSpec;
-import dev.erst.gridgrind.core.model.chart.ChartSpec;
 import dev.erst.gridgrind.core.model.chart.ChartLegendSpec;
 import dev.erst.gridgrind.core.model.chart.ChartPlotSpec;
 import dev.erst.gridgrind.core.model.chart.ChartSeriesSpec;
+import dev.erst.gridgrind.core.model.chart.ChartSpec;
 import dev.erst.gridgrind.core.model.chart.ChartTitleSpec;
 import dev.erst.gridgrind.core.source.TextSourceSpec;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartAxisCrosses;

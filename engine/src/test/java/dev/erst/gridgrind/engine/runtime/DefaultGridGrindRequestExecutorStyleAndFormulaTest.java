@@ -19,7 +19,7 @@ import dev.erst.gridgrind.core.model.style.CellStyleReport;
 import dev.erst.gridgrind.core.model.style.ColorSpec;
 import dev.erst.gridgrind.core.model.style.FontHeightSpec;
 import dev.erst.gridgrind.core.model.style.RichTextRunSpec;
-import dev.erst.gridgrind.core.model.value.CellValueReport;
+import dev.erst.gridgrind.core.model.value.CellValue;
 import dev.erst.gridgrind.core.model.value.CellValueSpec;
 import dev.erst.gridgrind.core.plan.*;
 import dev.erst.gridgrind.core.plan.CellMutationAction;
@@ -482,10 +482,9 @@ class DefaultGridGrindRequestExecutorStyleAndFormulaTest
     dev.erst.gridgrind.core.model.value.CellReport cell =
         read(success, "cells", SheetInspectionResult.CellsResult.class).cells().getFirst();
     assertInstanceOf(dev.erst.gridgrind.core.model.value.CellReport.FormulaReport.class, cell);
-    CellValueReport evaluation =
+    CellValue evaluation =
         evaluation(cast(dev.erst.gridgrind.core.model.value.CellReport.FormulaReport.class, cell));
-    assertInstanceOf(
-        dev.erst.gridgrind.core.model.value.CellValueReport.ErrorValue.class, evaluation);
+    assertInstanceOf(dev.erst.gridgrind.core.model.value.CellValue.ErrorValue.class, evaluation);
     assertEquals("ERROR", evaluation.type());
   }
 

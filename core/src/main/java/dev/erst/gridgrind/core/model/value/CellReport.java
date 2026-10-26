@@ -18,7 +18,12 @@ public sealed interface CellReport {
   CellAddress address();
 
   /** Canonical published cell type. */
-  String type();
+  default String type() {
+    return dev.erst.gridgrind.core.catalog.ProtocolTypeMetadataSupport.requiredTypeId(getClass());
+  }
+
+  /** Effective scalar value when the VALUE facet is projected. */
+  Optional<? extends CellValue> value();
 
   /** Formatted display string as shown in Excel when the FORMAT facet is projected. */
   Optional<String> displayValue();
@@ -36,14 +41,15 @@ public sealed interface CellReport {
   @Variant(
       id = "BLANK",
       summary =
-          "Factual blank cell report. Only address and type are always present; FORMAT, STYLE, HYPERLINK, and COMMENT project the remaining fields.")
+          "Factual blank cell report. Only address and type are always present; VALUE projects the blank scalar, and FORMAT, STYLE, HYPERLINK, and COMMENT project their metadata.")
   record BlankReport(
       CellAddress address,
       @dev.erst.gridgrind.core.metadata.ProjectedBy({"FORMAT"}) Optional<String> displayValue,
       @dev.erst.gridgrind.core.metadata.ProjectedBy({"STYLE"}) Optional<CellStyleReport> style,
       @dev.erst.gridgrind.core.metadata.ProjectedBy({"HYPERLINK"})
           Optional<HyperlinkTarget> hyperlink,
-      @dev.erst.gridgrind.core.metadata.ProjectedBy({"COMMENT"}) Optional<CommentReport> comment)
+      @dev.erst.gridgrind.core.metadata.ProjectedBy({"COMMENT"}) Optional<CommentReport> comment,
+      @dev.erst.gridgrind.core.metadata.ProjectedBy({"VALUE"}) Optional<CellValue.Blank> value)
       implements CellReport {
     public BlankReport {
       Objects.requireNonNull(address, "address must not be null");
@@ -51,11 +57,7 @@ public sealed interface CellReport {
       style = normalizeOptional(style, "style");
       hyperlink = normalizeOptional(hyperlink, "hyperlink");
       comment = normalizeOptional(comment, "comment");
-    }
-
-    @Override
-    public String type() {
-      return "BLANK";
+      value = normalizeOptional(value, "value");
     }
   }
 
@@ -63,7 +65,7 @@ public sealed interface CellReport {
   @Variant(
       id = "TEXT",
       summary =
-          "Factual text cell report. VALUE projects textValue, RICH_TEXT_RUNS projects runs, and the remaining fields are facet-gated.")
+          "Factual text cell report. VALUE projects value, RICH_TEXT_RUNS projects runs, and the remaining fields are facet-gated.")
   record TextReport(
       CellAddress address,
       @dev.erst.gridgrind.core.metadata.ProjectedBy({"FORMAT"}) Optional<String> displayValue,
@@ -71,7 +73,7 @@ public sealed interface CellReport {
       @dev.erst.gridgrind.core.metadata.ProjectedBy({"HYPERLINK"})
           Optional<HyperlinkTarget> hyperlink,
       @dev.erst.gridgrind.core.metadata.ProjectedBy({"COMMENT"}) Optional<CommentReport> comment,
-      @dev.erst.gridgrind.core.metadata.ProjectedBy({"VALUE"}) Optional<String> textValue,
+      @dev.erst.gridgrind.core.metadata.ProjectedBy({"VALUE"}) Optional<CellValue.Text> value,
       @dev.erst.gridgrind.core.metadata.ProjectedBy({"RICH_TEXT_RUNS"})
           Optional<List<RichTextRunReport>> runs)
       implements CellReport {
@@ -81,21 +83,16 @@ public sealed interface CellReport {
       style = normalizeOptional(style, "style");
       hyperlink = normalizeOptional(hyperlink, "hyperlink");
       comment = normalizeOptional(comment, "comment");
-      textValue = normalizeOptional(textValue, "textValue");
+      value = normalizeOptional(value, "value");
       runs = copyRichTextRuns(runs, "runs");
       if (runs.isPresent()) {
-        if (textValue.isEmpty()) {
-          throw new IllegalArgumentException("runs require textValue to be present");
+        if (value.isEmpty()) {
+          throw new IllegalArgumentException("runs require value to be present");
         }
-        if (!textValue.orElseThrow().equals(concatenateRuns(runs.orElseThrow()))) {
-          throw new IllegalArgumentException("runs text must concatenate to the textValue");
+        if (!value.orElseThrow().value().equals(concatenateRuns(runs.orElseThrow()))) {
+          throw new IllegalArgumentException("runs text must concatenate to the value");
         }
       }
-    }
-
-    @Override
-    public String type() {
-      return "TEXT";
     }
   }
 
@@ -103,7 +100,7 @@ public sealed interface CellReport {
   @Variant(
       id = "NUMBER",
       summary =
-          "Factual numeric cell report. VALUE projects numberValue; TEMPORAL adds date, time, or date-time semantics when a numeric Excel value is format-derived rather than a plain number.")
+          "Factual numeric cell report. VALUE projects value; TEMPORAL adds date, time, or date-time semantics when a numeric Excel value is format-derived rather than a plain number.")
   record NumberReport(
       CellAddress address,
       @dev.erst.gridgrind.core.metadata.ProjectedBy({"FORMAT"}) Optional<String> displayValue,
@@ -111,7 +108,8 @@ public sealed interface CellReport {
       @dev.erst.gridgrind.core.metadata.ProjectedBy({"HYPERLINK"})
           Optional<HyperlinkTarget> hyperlink,
       @dev.erst.gridgrind.core.metadata.ProjectedBy({"COMMENT"}) Optional<CommentReport> comment,
-      @dev.erst.gridgrind.core.metadata.ProjectedBy({"VALUE"}) Optional<Double> numberValue,
+      @dev.erst.gridgrind.core.metadata.ProjectedBy({"VALUE"})
+          Optional<CellValue.NumberValue> value,
       @dev.erst.gridgrind.core.metadata.ProjectedBy({"TEMPORAL"})
           Optional<CellTemporalReport> temporal)
       implements CellReport {
@@ -121,13 +119,8 @@ public sealed interface CellReport {
       style = normalizeOptional(style, "style");
       hyperlink = normalizeOptional(hyperlink, "hyperlink");
       comment = normalizeOptional(comment, "comment");
-      numberValue = normalizeOptional(numberValue, "numberValue");
+      value = normalizeOptional(value, "value");
       temporal = normalizeOptional(temporal, "temporal");
-    }
-
-    @Override
-    public String type() {
-      return "NUMBER";
     }
   }
 
@@ -135,7 +128,7 @@ public sealed interface CellReport {
   @Variant(
       id = "BOOLEAN",
       summary =
-          "Factual boolean cell report. VALUE projects booleanValue and the remaining fields are facet-gated.")
+          "Factual boolean cell report. VALUE projects value and the remaining fields are facet-gated.")
   record BooleanReport(
       CellAddress address,
       @dev.erst.gridgrind.core.metadata.ProjectedBy({"FORMAT"}) Optional<String> displayValue,
@@ -143,7 +136,8 @@ public sealed interface CellReport {
       @dev.erst.gridgrind.core.metadata.ProjectedBy({"HYPERLINK"})
           Optional<HyperlinkTarget> hyperlink,
       @dev.erst.gridgrind.core.metadata.ProjectedBy({"COMMENT"}) Optional<CommentReport> comment,
-      @dev.erst.gridgrind.core.metadata.ProjectedBy({"VALUE"}) Optional<Boolean> booleanValue)
+      @dev.erst.gridgrind.core.metadata.ProjectedBy({"VALUE"})
+          Optional<CellValue.BooleanValue> value)
       implements CellReport {
     public BooleanReport {
       Objects.requireNonNull(address, "address must not be null");
@@ -151,12 +145,7 @@ public sealed interface CellReport {
       style = normalizeOptional(style, "style");
       hyperlink = normalizeOptional(hyperlink, "hyperlink");
       comment = normalizeOptional(comment, "comment");
-      booleanValue = normalizeOptional(booleanValue, "booleanValue");
-    }
-
-    @Override
-    public String type() {
-      return "BOOLEAN";
+      value = normalizeOptional(value, "value");
     }
   }
 
@@ -164,7 +153,7 @@ public sealed interface CellReport {
   @Variant(
       id = "ERROR",
       summary =
-          "Factual error cell report. VALUE projects errorValue and the remaining fields are facet-gated.")
+          "Factual error cell report. VALUE projects value and the remaining fields are facet-gated.")
   record ErrorReport(
       CellAddress address,
       @dev.erst.gridgrind.core.metadata.ProjectedBy({"FORMAT"}) Optional<String> displayValue,
@@ -172,7 +161,7 @@ public sealed interface CellReport {
       @dev.erst.gridgrind.core.metadata.ProjectedBy({"HYPERLINK"})
           Optional<HyperlinkTarget> hyperlink,
       @dev.erst.gridgrind.core.metadata.ProjectedBy({"COMMENT"}) Optional<CommentReport> comment,
-      @dev.erst.gridgrind.core.metadata.ProjectedBy({"VALUE"}) Optional<String> errorValue)
+      @dev.erst.gridgrind.core.metadata.ProjectedBy({"VALUE"}) Optional<CellValue.ErrorValue> value)
       implements CellReport {
     public ErrorReport {
       Objects.requireNonNull(address, "address must not be null");
@@ -180,16 +169,7 @@ public sealed interface CellReport {
       style = normalizeOptional(style, "style");
       hyperlink = normalizeOptional(hyperlink, "hyperlink");
       comment = normalizeOptional(comment, "comment");
-      errorValue =
-          normalizeOptional(errorValue, "errorValue")
-              .map(
-                  value ->
-                      CellErrorLiteralValidation.requireReportedErrorLiteral(value, "errorValue"));
-    }
-
-    @Override
-    public String type() {
-      return "ERROR";
+      value = normalizeOptional(value, "value");
     }
   }
 
@@ -197,7 +177,7 @@ public sealed interface CellReport {
   @Variant(
       id = "FORMULA",
       summary =
-          "Factual formula cell report with separate projected evaluation. FORMULA projects formula text, VALUE projects evaluation, and the remaining fields are facet-gated.")
+          "Factual formula cell report with separate projected scalar value. FORMULA projects formula text, VALUE projects value, and the remaining fields are facet-gated.")
   record FormulaReport(
       CellAddress address,
       @dev.erst.gridgrind.core.metadata.ProjectedBy({"FORMAT"}) Optional<String> displayValue,
@@ -206,7 +186,11 @@ public sealed interface CellReport {
           Optional<HyperlinkTarget> hyperlink,
       @dev.erst.gridgrind.core.metadata.ProjectedBy({"COMMENT"}) Optional<CommentReport> comment,
       @dev.erst.gridgrind.core.metadata.ProjectedBy({"FORMULA"}) Optional<String> formula,
-      @dev.erst.gridgrind.core.metadata.ProjectedBy({"VALUE"}) Optional<CellValueReport> evaluation)
+      @dev.erst.gridgrind.core.metadata.ProjectedBy({"VALUE"}) Optional<CellValue> value,
+      @dev.erst.gridgrind.core.metadata.ProjectedBy({"RICH_TEXT_RUNS"})
+          Optional<List<RichTextRunReport>> runs,
+      @dev.erst.gridgrind.core.metadata.ProjectedBy({"TEMPORAL"})
+          Optional<CellTemporalReport> temporal)
       implements CellReport {
     public FormulaReport {
       Objects.requireNonNull(address, "address must not be null");
@@ -215,12 +199,20 @@ public sealed interface CellReport {
       hyperlink = normalizeOptional(hyperlink, "hyperlink");
       comment = normalizeOptional(comment, "comment");
       formula = normalizeOptional(formula, "formula");
-      evaluation = normalizeOptional(evaluation, "evaluation");
-    }
-
-    @Override
-    public String type() {
-      return "FORMULA";
+      value = normalizeOptional(value, "value");
+      runs = copyRichTextRuns(runs, "runs");
+      temporal = normalizeOptional(temporal, "temporal");
+      if (runs.isPresent()) {
+        if (!(value.orElse(null) instanceof CellValue.Text text)) {
+          throw new IllegalArgumentException("runs require a text value to be present");
+        }
+        if (!text.value().equals(concatenateRuns(runs.orElseThrow()))) {
+          throw new IllegalArgumentException("runs text must concatenate to the value");
+        }
+      }
+      if (temporal.isPresent() && !(value.orElse(null) instanceof CellValue.NumberValue)) {
+        throw new IllegalArgumentException("temporal requires a numeric value to be present");
+      }
     }
   }
 

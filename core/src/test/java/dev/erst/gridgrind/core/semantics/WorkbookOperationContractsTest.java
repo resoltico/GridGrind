@@ -3,7 +3,7 @@ package dev.erst.gridgrind.core.semantics;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import dev.erst.gridgrind.core.model.value.CellScalarValue;
+import dev.erst.gridgrind.core.model.value.CellValue;
 import dev.erst.gridgrind.core.model.value.CellValueSpec;
 import dev.erst.gridgrind.core.plan.AnalysisAssertion;
 import dev.erst.gridgrind.core.plan.CellAssertion;
@@ -80,7 +80,7 @@ class WorkbookOperationContractsTest {
         "EXPECT_CELL_VALUE requires target type CELL_BY_ADDRESS, CELL_BY_ADDRESSES or "
             + "TABLE_CELL_BY_COLUMN_NAME but got WORKBOOK_CURRENT",
         WorkbookOperationContracts.targetViolation(
-                new CellAssertion.CellValue(new CellScalarValue.Text("Owner")),
+                new CellAssertion.Value(new CellValue.Text("Owner")),
                 new WorkbookSelector.Current())
             .orElseThrow());
   }

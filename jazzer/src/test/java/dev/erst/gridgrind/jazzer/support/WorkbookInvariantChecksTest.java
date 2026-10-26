@@ -83,7 +83,6 @@ import dev.erst.gridgrind.core.plan.AssertionResult;
 import dev.erst.gridgrind.core.plan.CellSelector;
 import dev.erst.gridgrind.core.plan.ChartSelector;
 import dev.erst.gridgrind.core.plan.DrawingObjectSelector;
-import dev.erst.gridgrind.core.vocabulary.ProtocolVersion;
 import dev.erst.gridgrind.core.plan.InspectionStep;
 import dev.erst.gridgrind.core.plan.PivotTableSelector;
 import dev.erst.gridgrind.core.plan.RangeSelector;
@@ -141,6 +140,7 @@ import dev.erst.gridgrind.core.vocabulary.ExcelSheetVisibility;
 import dev.erst.gridgrind.core.vocabulary.ExcelVerticalAlignment;
 import dev.erst.gridgrind.core.vocabulary.NamedRangeBackingKind;
 import dev.erst.gridgrind.core.vocabulary.NamedRangeScope;
+import dev.erst.gridgrind.core.vocabulary.ProtocolVersion;
 import dev.erst.gridgrind.core.vocabulary.RangeLabel;
 import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.core.vocabulary.RgbHex;
@@ -218,7 +218,8 @@ class WorkbookInvariantChecksTest {
                             java.util.Optional.of(
                                 new HyperlinkTarget.Url("https://example.com/report")),
                             java.util.Optional.of(new CommentReport("Review", "GridGrind", true)),
-                            java.util.Optional.of("Report"),
+                            java.util.Optional.of(
+                                new dev.erst.gridgrind.core.model.value.CellValue.Text("Report")),
                             java.util.Optional.of(
                                 List.of(
                                     new RichTextRunReport(
@@ -247,7 +248,9 @@ class WorkbookInvariantChecksTest {
                                         java.util.Optional.of(style),
                                         java.util.Optional.empty(),
                                         java.util.Optional.empty(),
-                                        java.util.Optional.of("Report"),
+                                        java.util.Optional.of(
+                                            new dev.erst.gridgrind.core.model.value.CellValue.Text(
+                                                "Report")),
                                         java.util.Optional.empty())))))),
                 new SheetInspectionResult.MergedRegionsResult(
                     new StepId("merged"),
@@ -829,7 +832,8 @@ class WorkbookInvariantChecksTest {
                             java.util.Optional.of(advancedStyle),
                             java.util.Optional.empty(),
                             java.util.Optional.of(anchoredComment),
-                            java.util.Optional.of("Review"),
+                            java.util.Optional.of(
+                                new dev.erst.gridgrind.core.model.value.CellValue.Text("Review")),
                             java.util.Optional.of(
                                 List.of(
                                     new RichTextRunReport(
@@ -1461,7 +1465,8 @@ class WorkbookInvariantChecksTest {
         "OpsPivot",
         new SheetName("Budget"),
         new PivotTableReport.Anchor(new CellAddress("F4"), new RangeLabel("F4:H8")),
-        new PivotTableReport.PivotSourceReport.Range(new SheetName("Budget"), new RangeLabel("A1:C4")),
+        new PivotTableReport.PivotSourceReport.Range(
+            new SheetName("Budget"), new RangeLabel("A1:C4")),
         List.of(new PivotTableReport.Field(0, "Month")),
         List.of(),
         List.of(),
@@ -1505,7 +1510,7 @@ class WorkbookInvariantChecksTest {
         java.util.Optional.of(defaultStyle()),
         java.util.Optional.empty(),
         java.util.Optional.empty(),
-        java.util.Optional.of(value),
+        java.util.Optional.of(new dev.erst.gridgrind.core.model.value.CellValue.Text(value)),
         java.util.Optional.empty());
   }
 

@@ -89,8 +89,8 @@
           "type" : "PATH"
         },
         "json" : {
-          "byteOffset" : 355,
-          "jsonPath" : "steps[1].action.value.source.path",
+          "byteOffset" : 354,
+          "jsonPath" : "steps[1].action.value.value.path",
           "type" : "PATH_BYTE_OFFSET"
         },
         "request" : {

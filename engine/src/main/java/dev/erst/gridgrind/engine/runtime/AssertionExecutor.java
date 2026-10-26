@@ -105,7 +105,7 @@ final class AssertionExecutor {
       case PresenceAssertion.ChartAbsent chartAbsent ->
           valueEvaluator.evaluateEntityPresence(
               stepId, target, chartAbsent.assertionType(), false, workbook, workbookLocation);
-      case CellAssertion.CellValue cellValue ->
+      case CellAssertion.Value cellValue ->
           valueEvaluator.evaluateCellValue(
               stepId, target, cellValue.expectedValue(), workbook, workbookLocation);
       case CellAssertion.DisplayValue displayValue ->

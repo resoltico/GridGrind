@@ -33,7 +33,7 @@
         "type": "SET_CELL",
         "value": {
           "type": "TEXT",
-          "source": {
+          "value": {
             "type": "INLINE",
             "text": "Amount"
           }
@@ -51,7 +51,7 @@
         "type": "SET_CELL",
         "value": {
           "type": "NUMBER",
-          "number": 1200.0
+          "value": 1200.0
         }
       },
       "target": {
@@ -66,7 +66,7 @@
         "type": "SET_CELL",
         "value": {
           "type": "FORMULA",
-          "source": {
+          "value": {
             "type": "INLINE",
             "text": "'Budget Review'!B1"
           }

@@ -38,7 +38,8 @@ class CellReadbackCoverageTest {
             Optional.empty(),
             Optional.empty(),
             Optional.empty(),
-            Optional.empty());
+            Optional.empty(),
+            java.util.Optional.empty());
     CellReport.TextReport text =
         new CellReport.TextReport(
             new CellAddress("A2"),
@@ -46,7 +47,7 @@ class CellReadbackCoverageTest {
             Optional.of(style()),
             Optional.empty(),
             Optional.empty(),
-            Optional.of("Ada"),
+            java.util.Optional.of(new dev.erst.gridgrind.core.model.value.CellValue.Text("Ada")),
             Optional.of(List.of(run("Ada"))));
     CellReport.NumberReport number =
         new CellReport.NumberReport(
@@ -55,7 +56,7 @@ class CellReadbackCoverageTest {
             Optional.empty(),
             Optional.empty(),
             Optional.empty(),
-            Optional.empty(),
+            java.util.Optional.empty(),
             Optional.empty());
     CellReport.BooleanReport bool =
         new CellReport.BooleanReport(
@@ -64,7 +65,8 @@ class CellReadbackCoverageTest {
             Optional.empty(),
             Optional.empty(),
             Optional.empty(),
-            Optional.of(true));
+            java.util.Optional.of(
+                new dev.erst.gridgrind.core.model.value.CellValue.BooleanValue(true)));
     CellReport.ErrorReport error =
         new CellReport.ErrorReport(
             new CellAddress("A5"),
@@ -72,7 +74,8 @@ class CellReadbackCoverageTest {
             Optional.empty(),
             Optional.empty(),
             Optional.empty(),
-            Optional.of("#REF!"));
+            java.util.Optional.of(
+                new dev.erst.gridgrind.core.model.value.CellValue.ErrorValue("#REF!")));
     CellReport.FormulaReport formula =
         new CellReport.FormulaReport(
             new CellAddress("A6"),
@@ -81,7 +84,9 @@ class CellReadbackCoverageTest {
             Optional.empty(),
             Optional.empty(),
             Optional.of("SUM(A1:A3)"),
-            Optional.empty());
+            Optional.empty(),
+            java.util.Optional.empty(),
+            java.util.Optional.empty());
 
     assertEquals("BLANK", blank.type());
     assertEquals("TEXT", text.type());
@@ -105,7 +110,8 @@ class CellReadbackCoverageTest {
                 Optional.empty(),
                 Optional.empty(),
                 Optional.empty(),
-                Optional.empty()));
+                Optional.empty(),
+                java.util.Optional.empty()));
     assertThrows(
         IllegalArgumentException.class,
         () ->
@@ -115,7 +121,8 @@ class CellReadbackCoverageTest {
                 Optional.empty(),
                 Optional.empty(),
                 Optional.empty(),
-                Optional.of("Ada"),
+                java.util.Optional.of(
+                    new dev.erst.gridgrind.core.model.value.CellValue.Text("Ada")),
                 Optional.of(List.of(run("Ada")))));
     assertThrows(
         IllegalArgumentException.class,
@@ -126,7 +133,7 @@ class CellReadbackCoverageTest {
                 Optional.empty(),
                 Optional.empty(),
                 Optional.empty(),
-                Optional.empty(),
+                java.util.Optional.empty(),
                 Optional.empty()));
     assertThrows(
         IllegalArgumentException.class,
@@ -137,7 +144,8 @@ class CellReadbackCoverageTest {
                 Optional.empty(),
                 Optional.empty(),
                 Optional.empty(),
-                Optional.of(true)));
+                java.util.Optional.of(
+                    new dev.erst.gridgrind.core.model.value.CellValue.BooleanValue(true))));
     assertThrows(
         IllegalArgumentException.class,
         () ->
@@ -147,7 +155,8 @@ class CellReadbackCoverageTest {
                 Optional.empty(),
                 Optional.empty(),
                 Optional.empty(),
-                Optional.of("#REF!")));
+                java.util.Optional.of(
+                    new dev.erst.gridgrind.core.model.value.CellValue.ErrorValue("#REF!"))));
     assertThrows(
         IllegalArgumentException.class,
         () ->
@@ -158,7 +167,9 @@ class CellReadbackCoverageTest {
                 Optional.empty(),
                 Optional.empty(),
                 Optional.of("SUM(A1:A3)"),
-                Optional.empty()));
+                Optional.empty(),
+                java.util.Optional.empty(),
+                java.util.Optional.empty()));
 
     assertThrows(
         IllegalArgumentException.class,
@@ -169,7 +180,7 @@ class CellReadbackCoverageTest {
                 Optional.empty(),
                 Optional.empty(),
                 Optional.empty(),
-                Optional.empty(),
+                java.util.Optional.empty(),
                 Optional.of(List.of(run("Ada")))));
     assertThrows(
         IllegalArgumentException.class,
@@ -180,7 +191,8 @@ class CellReadbackCoverageTest {
                 Optional.empty(),
                 Optional.empty(),
                 Optional.empty(),
-                Optional.of("Ada"),
+                java.util.Optional.of(
+                    new dev.erst.gridgrind.core.model.value.CellValue.Text("Ada")),
                 Optional.of(List.of())));
     assertThrows(
         IllegalArgumentException.class,
@@ -191,7 +203,8 @@ class CellReadbackCoverageTest {
                 Optional.empty(),
                 Optional.empty(),
                 Optional.empty(),
-                Optional.of("Ada"),
+                java.util.Optional.of(
+                    new dev.erst.gridgrind.core.model.value.CellValue.Text("Ada")),
                 Optional.of(List.of(run("Mismatch")))));
     assertThrows(
         NullPointerException.class,
@@ -202,20 +215,21 @@ class CellReadbackCoverageTest {
                 Optional.empty(),
                 Optional.empty(),
                 Optional.empty(),
-                Optional.of("Ada"),
+                java.util.Optional.of(
+                    new dev.erst.gridgrind.core.model.value.CellValue.Text("Ada")),
                 Optional.of(java.util.Arrays.asList(run("Ada"), null))));
   }
 
   @Test
   void cellValueTemporalAndWindowReportsCoverResidualValidationBranches() {
-    CellValueReport.BlankValue blank = new CellValueReport.BlankValue();
-    CellValueReport.TextValue text = new CellValueReport.TextValue("Ada", nullOptional());
+    CellValue.Blank blank = new CellValue.Blank();
+    CellValue.Text text = new CellValue.Text("Ada");
     CellTemporalReport notDate = CellTemporalReport.notDate();
     CellTemporalReport date = CellTemporalReport.temporal(CellTemporalKind.DATE, "2026-07-01");
     CellTemporalReport time = CellTemporalReport.temporal(CellTemporalKind.TIME, "12:00");
-    CellValueReport.NumberValue number = new CellValueReport.NumberValue(42.0d, Optional.of(date));
-    CellValueReport.BooleanValue bool = new CellValueReport.BooleanValue(true);
-    CellValueReport.ErrorValue error = new CellValueReport.ErrorValue("#CIRCULAR_REF!");
+    CellValue.NumberValue number = new CellValue.NumberValue(42.0d);
+    CellValue.BooleanValue bool = new CellValue.BooleanValue(true);
+    CellValue.ErrorValue error = new CellValue.ErrorValue("#CIRCULAR_REF!");
     WindowDimensionsReport dimensions = new WindowDimensionsReport(2, 2);
     WindowReport.Sparse sparse =
         new WindowReport.Sparse(
@@ -229,7 +243,8 @@ class CellReadbackCoverageTest {
                     Optional.of(style()),
                     Optional.empty(),
                     Optional.empty(),
-                    Optional.of("Ada"),
+                    java.util.Optional.of(
+                        new dev.erst.gridgrind.core.model.value.CellValue.Text("Ada")),
                     Optional.empty())));
     WindowReport.Dense dense =
         new WindowReport.Dense(
@@ -245,14 +260,15 @@ class CellReadbackCoverageTest {
                             Optional.empty(),
                             Optional.empty(),
                             Optional.empty(),
-                            Optional.empty())))));
+                            Optional.empty(),
+                            java.util.Optional.empty())))));
 
     assertEquals("BLANK", blank.type());
     assertEquals("TEXT", text.type());
     assertEquals("NUMBER", number.type());
     assertEquals("BOOLEAN", bool.type());
     assertEquals("ERROR", error.type());
-    assertEquals("#CIRCULAR_REF!", error.errorValue());
+    assertEquals("#CIRCULAR_REF!", error.value());
     assertFalse(notDate.isDate());
     assertTrue(date.isDate());
     assertEquals(Optional.of(CellTemporalKind.DATE), date.kind());
@@ -260,10 +276,7 @@ class CellReadbackCoverageTest {
     assertEquals("SPARSE", sparse.type());
     assertEquals("DENSE", dense.type());
 
-    assertThrows(
-        NullPointerException.class, () -> new CellValueReport.NumberValue(null, Optional.empty()));
-    assertThrows(NullPointerException.class, () -> new CellValueReport.BooleanValue(null));
-    assertThrows(IllegalArgumentException.class, () -> new CellValueReport.ErrorValue(" "));
+    assertThrows(IllegalArgumentException.class, () -> new CellValue.ErrorValue(" "));
     assertThrows(
         IllegalArgumentException.class,
         () ->
@@ -273,18 +286,16 @@ class CellReadbackCoverageTest {
                 Optional.empty(),
                 Optional.empty(),
                 Optional.empty(),
-                Optional.of("~CIRCULAR~REF~")));
+                java.util.Optional.of(
+                    new dev.erst.gridgrind.core.model.value.CellValue.ErrorValue(
+                        "~CIRCULAR~REF~"))));
+    assertThrows(IllegalArgumentException.class, () -> formulaText("Ada", Optional.of(List.of())));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new CellValueReport.TextValue("Ada", Optional.of(List.of())));
-    assertThrows(
-        IllegalArgumentException.class,
-        () -> new CellValueReport.TextValue("Ada", Optional.of(List.of(run("Mismatch")))));
+        () -> formulaText("Ada", Optional.of(List.of(run("Mismatch")))));
     assertThrows(
         NullPointerException.class,
-        () ->
-            new CellValueReport.TextValue(
-                "Ada", Optional.of(java.util.Arrays.asList(run("Ada"), null))));
+        () -> formulaText("Ada", Optional.of(java.util.Arrays.asList(run("Ada"), null))));
     assertThrows(
         IllegalArgumentException.class,
         () -> new CellTemporalReport(true, Optional.empty(), Optional.of("2026-07-01")));
@@ -314,7 +325,8 @@ class CellReadbackCoverageTest {
                         Optional.of(style()),
                         Optional.empty(),
                         Optional.empty(),
-                        Optional.of("Ada"),
+                        java.util.Optional.of(
+                            new dev.erst.gridgrind.core.model.value.CellValue.Text("Ada")),
                         Optional.empty()))));
     assertThrows(
         IllegalArgumentException.class,
@@ -330,7 +342,8 @@ class CellReadbackCoverageTest {
                         Optional.of(style()),
                         Optional.empty(),
                         Optional.empty(),
-                        Optional.of("Ada"),
+                        java.util.Optional.of(
+                            new dev.erst.gridgrind.core.model.value.CellValue.Text("Ada")),
                         Optional.empty()))));
     assertThrows(
         IllegalArgumentException.class,
@@ -345,12 +358,8 @@ class CellReadbackCoverageTest {
                         Optional.empty(),
                         Optional.empty(),
                         Optional.empty(),
-                        Optional.empty()))));
-  }
-
-  @SuppressWarnings("NullOptional")
-  private static <T> Optional<T> nullOptional() {
-    return null;
+                        Optional.empty(),
+                        java.util.Optional.empty()))));
   }
 
   private static RichTextRunReport run(String text) {
@@ -374,5 +383,19 @@ class CellReadbackCoverageTest {
         CellFillReport.pattern(ExcelFillPattern.NONE),
         new CellBorderReport(emptySide, emptySide, emptySide, emptySide),
         new CellProtectionReport(true, false));
+  }
+
+  private static CellReport.FormulaReport formulaText(
+      String text, Optional<List<RichTextRunReport>> runs) {
+    return new CellReport.FormulaReport(
+        new CellAddress("A1"),
+        Optional.empty(),
+        Optional.empty(),
+        Optional.empty(),
+        Optional.empty(),
+        Optional.of("A1"),
+        Optional.of(new CellValue.Text(text)),
+        runs,
+        Optional.empty());
   }
 }

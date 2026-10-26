@@ -164,17 +164,17 @@ final class SourceBackedInputRequirements {
 
   static boolean requiresStandardInput(CellValueSpec value) {
     return switch (value) {
-      case CellValueSpec.Text text -> requiresStandardInput(text.source());
+      case CellValueSpec.Text text -> requiresStandardInput(text.value());
       case CellValueSpec.RichText richText ->
           richText.runs().stream().anyMatch(SourceBackedInputRequirements::requiresStandardInput);
-      case CellValueSpec.Formula formula -> requiresStandardInput(formula.source());
-      case CellValueSpec.RawFormula rawFormula -> requiresStandardInput(rawFormula.source());
+      case CellValueSpec.Formula formula -> requiresStandardInput(formula.value());
+      case CellValueSpec.RawFormula rawFormula -> requiresStandardInput(rawFormula.value());
       default -> false;
     };
   }
 
   static boolean requiresStandardInput(RichTextRunSpec run) {
-    return requiresStandardInput(run.source());
+    return requiresStandardInput(run.text());
   }
 
   static boolean requiresStandardInput(CommentSpec comment) {

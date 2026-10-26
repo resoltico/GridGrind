@@ -50,19 +50,19 @@ final class WorkbookCommandCellValueSpecConverter {
     return switch (value) {
       case CellValueSpec.Blank _ -> ExcelCellValue.blank();
       case CellValueSpec.Text text ->
-          ExcelCellValue.text(WorkbookCommandSourceSupport.inlineText(text.source(), "cell text"));
+          ExcelCellValue.text(WorkbookCommandSourceSupport.inlineText(text.value(), "cell text"));
       case CellValueSpec.RichText richText -> ExcelCellValue.richText(toExcelRichText(richText));
-      case CellValueSpec.NumberValue numberValue -> ExcelCellValue.number(numberValue.number());
-      case CellValueSpec.BooleanValue booleanValue -> ExcelCellValue.bool(booleanValue.bool());
-      case CellValueSpec.ErrorValue errorValue -> ExcelCellValue.error(errorValue.error());
-      case CellValueSpec.Date date -> ExcelCellValue.date(date.date());
-      case CellValueSpec.DateTime dateTime -> ExcelCellValue.dateTime(dateTime.dateTime());
+      case CellValueSpec.NumberValue numberValue -> ExcelCellValue.number(numberValue.value());
+      case CellValueSpec.BooleanValue booleanValue -> ExcelCellValue.bool(booleanValue.value());
+      case CellValueSpec.ErrorValue errorValue -> ExcelCellValue.error(errorValue.value());
+      case CellValueSpec.Date date -> ExcelCellValue.date(date.value());
+      case CellValueSpec.DateTime dateTime -> ExcelCellValue.dateTime(dateTime.value());
       case CellValueSpec.Formula formula ->
           ExcelCellValue.formula(
-              WorkbookCommandSourceSupport.inlineText(formula.source(), "formula"));
+              WorkbookCommandSourceSupport.inlineText(formula.value(), "formula"));
       case CellValueSpec.RawFormula rawFormula ->
           ExcelCellValue.rawFormula(
-              WorkbookCommandSourceSupport.inlineText(rawFormula.source(), "raw formula"));
+              WorkbookCommandSourceSupport.inlineText(rawFormula.value(), "raw formula"));
     };
   }
 
@@ -80,7 +80,7 @@ final class WorkbookCommandCellValueSpecConverter {
 
   static ExcelRichTextRun toExcelRichTextRun(RichTextRunSpec run) {
     return new ExcelRichTextRun(
-        WorkbookCommandSourceSupport.inlineText(run.source(), "rich-text run"),
+        WorkbookCommandSourceSupport.inlineText(run.text(), "rich-text run"),
         run.font().flatMap(WorkbookCommandCellValueSpecConverter::toExcelCellFont));
   }
 

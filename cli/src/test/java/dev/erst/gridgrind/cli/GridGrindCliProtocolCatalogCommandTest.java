@@ -231,7 +231,7 @@ class GridGrindCliProtocolCatalogCommandTest extends GridGrindCliTestSupport {
   @Test
   void cellReadLookupPublishesFacetGatingMetadata() throws IOException {
     JsonNode cellReports = protocolCatalogLookupJson("nestedTypes:cellReportTypes");
-    JsonNode cellValues = protocolCatalogLookupJson("nestedTypes:cellValueReportTypes");
+    JsonNode cellValues = protocolCatalogLookupJson("nestedTypes:cellValueTypes");
     JsonNode projection = protocolCatalogLookupJson("plainTypes:cellReadProjectionType");
     JsonNode number = catalogType(cellReports, "NUMBER");
     JsonNode formula = catalogType(cellReports, "FORMULA");
@@ -251,9 +251,8 @@ class GridGrindCliProtocolCatalogCommandTest extends GridGrindCliTestSupport {
     assertEquals("OPTIONAL", catalogField(number, "comment").path("requirement").asText());
     assertEquals(
         "COMMENT", catalogField(number, "comment").path("projectedByFacets").get(0).asText());
-    assertEquals("OPTIONAL", catalogField(number, "numberValue").path("requirement").asText());
-    assertEquals(
-        "VALUE", catalogField(number, "numberValue").path("projectedByFacets").get(0).asText());
+    assertEquals("OPTIONAL", catalogField(number, "value").path("requirement").asText());
+    assertEquals("VALUE", catalogField(number, "value").path("projectedByFacets").get(0).asText());
     assertEquals("OPTIONAL", catalogField(number, "temporal").path("requirement").asText());
     assertEquals(
         "TEMPORAL", catalogField(number, "temporal").path("projectedByFacets").get(0).asText());
@@ -264,30 +263,22 @@ class GridGrindCliProtocolCatalogCommandTest extends GridGrindCliTestSupport {
     assertEquals("OPTIONAL", catalogField(formula, "formula").path("requirement").asText());
     assertEquals(
         "FORMULA", catalogField(formula, "formula").path("projectedByFacets").get(0).asText());
-    assertEquals("OPTIONAL", catalogField(formula, "evaluation").path("requirement").asText());
+    assertEquals("OPTIONAL", catalogField(formula, "value").path("requirement").asText());
+    assertEquals("VALUE", catalogField(formula, "value").path("projectedByFacets").get(0).asText());
+    assertFalse(catalogField(evaluatedText, "value").has("projectedByFacets"));
+    assertEquals("REQUIRED", catalogField(evaluatedNumber, "value").path("requirement").asText());
+    assertEquals("OPTIONAL", catalogField(formula, "runs").path("requirement").asText());
     assertEquals(
-        "VALUE", catalogField(formula, "evaluation").path("projectedByFacets").get(0).asText());
-    assertFalse(catalogField(evaluatedText, "textValue").has("projectedByFacets"));
-    assertEquals("OPTIONAL", catalogField(evaluatedText, "runs").path("requirement").asText());
+        "RICH_TEXT_RUNS", catalogField(formula, "runs").path("projectedByFacets").get(0).asText());
+    assertEquals("OPTIONAL", catalogField(formula, "temporal").path("requirement").asText());
     assertEquals(
-        "RICH_TEXT_RUNS",
-        catalogField(evaluatedText, "runs").path("projectedByFacets").get(0).asText());
-    assertEquals(
-        "OPTIONAL", catalogField(evaluatedNumber, "temporal").path("requirement").asText());
-    assertEquals(
-        "TEMPORAL",
-        catalogField(evaluatedNumber, "temporal").path("projectedByFacets").get(0).asText());
+        "TEMPORAL", catalogField(formula, "temporal").path("projectedByFacets").get(0).asText());
     assertEquals("FORMAT", facets.path("enumValueDocs").get(2).path("value").asText());
     assertTrue(
         facets.path("enumValueDocs").get(2).path("summary").asText().contains("displayValue"));
     assertEquals("VALUE", facets.path("enumValueDocs").get(0).path("value").asText());
     assertTrue(
-        facets
-            .path("enumValueDocs")
-            .get(0)
-            .path("summary")
-            .asText()
-            .contains("formula evaluation"));
+        facets.path("enumValueDocs").get(0).path("summary").asText().contains("formula results"));
   }
 
   @Test
@@ -349,7 +340,8 @@ class GridGrindCliProtocolCatalogCommandTest extends GridGrindCliTestSupport {
     assertEquals(0, exitCode);
     String output = stdout.toString(StandardCharsets.UTF_8).trim();
     assertTrue(output.contains("\"FORMULA\""), "output must contain the entry id");
-    assertTrue(output.contains("\"source\""), "qualified lookup must expose the source field");
+    assertTrue(
+        output.contains("\"value\""), "qualified lookup must expose the authored value field");
     assertFalse(
         output.contains("\"refersToFormula\""),
         "qualified lookup must not silently return the named-range report variant");

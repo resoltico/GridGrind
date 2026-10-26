@@ -329,8 +329,11 @@
               "locked" : true
             }
           },
-          "textValue" : "Grid",
-          "type" : "TEXT"
+          "type" : "TEXT",
+          "value" : {
+            "type" : "TEXT",
+            "value" : "Grid"
+          }
         }, {
           "address" : "B1",
           "displayValue" : "Grind",
@@ -381,8 +384,11 @@
               "locked" : true
             }
           },
-          "textValue" : "Grind",
-          "type" : "TEXT"
+          "type" : "TEXT",
+          "value" : {
+            "type" : "TEXT",
+            "value" : "Grind"
+          }
         }, {
           "address" : "C1",
           "displayValue" : "Agent",
@@ -433,8 +439,11 @@
               "locked" : true
             }
           },
-          "textValue" : "Agent",
-          "type" : "TEXT"
+          "type" : "TEXT",
+          "value" : {
+            "type" : "TEXT",
+            "value" : "Agent"
+          }
         }, {
           "address" : "D1",
           "displayValue" : "Ops",
@@ -485,8 +494,11 @@
               "locked" : true
             }
           },
-          "textValue" : "Ops",
-          "type" : "TEXT"
+          "type" : "TEXT",
+          "value" : {
+            "type" : "TEXT",
+            "value" : "Ops"
+          }
         }, {
           "address" : "E1",
           "displayValue" : "5",
@@ -537,8 +549,11 @@
               "locked" : true
             }
           },
-          "textValue" : "5",
-          "type" : "TEXT"
+          "type" : "TEXT",
+          "value" : {
+            "type" : "TEXT",
+            "value" : "5"
+          }
         }, {
           "address" : "F1",
           "displayValue" : "Audit",
@@ -589,8 +604,11 @@
               "locked" : true
             }
           },
-          "textValue" : "Audit",
-          "type" : "TEXT"
+          "type" : "TEXT",
+          "value" : {
+            "type" : "TEXT",
+            "value" : "Audit"
+          }
         }, {
           "address" : "G1",
           "displayValue" : "Parity",
@@ -641,8 +659,11 @@
               "locked" : true
             }
           },
-          "textValue" : "Parity",
-          "type" : "TEXT"
+          "type" : "TEXT",
+          "value" : {
+            "type" : "TEXT",
+            "value" : "Parity"
+          }
         }, {
           "address" : "H1",
           "displayValue" : "10",
@@ -693,8 +714,11 @@
               "locked" : true
             }
           },
-          "textValue" : "10",
-          "type" : "TEXT"
+          "type" : "TEXT",
+          "value" : {
+            "type" : "TEXT",
+            "value" : "10"
+          }
         }, {
           "address" : "A2",
           "displayValue" : "jerhwkj",
@@ -745,8 +769,11 @@
               "locked" : true
             }
           },
-          "textValue" : "jerhwkj",
-          "type" : "TEXT"
+          "type" : "TEXT",
+          "value" : {
+            "type" : "TEXT",
+            "value" : "jerhwkj"
+          }
         }, {
           "address" : "B2",
           "displayValue" : "lkcnkln",
@@ -797,8 +824,11 @@
               "locked" : true
             }
           },
-          "textValue" : "lkcnkln",
-          "type" : "TEXT"
+          "type" : "TEXT",
+          "value" : {
+            "type" : "TEXT",
+            "value" : "lkcnkln"
+          }
         }, {
           "address" : "C2",
           "displayValue" : "msdnakjd",
@@ -849,8 +879,11 @@
               "locked" : true
             }
           },
-          "textValue" : "msdnakjd",
-          "type" : "TEXT"
+          "type" : "TEXT",
+          "value" : {
+            "type" : "TEXT",
+            "value" : "msdnakjd"
+          }
         }, {
           "address" : "D2",
           "displayValue" : "nmne,",
@@ -901,8 +934,11 @@
               "locked" : true
             }
           },
-          "textValue" : "nmne,",
-          "type" : "TEXT"
+          "type" : "TEXT",
+          "value" : {
+            "type" : "TEXT",
+            "value" : "nmne,"
+          }
         }, {
           "address" : "E2",
           "displayValue" : "ernemn",
@@ -953,8 +989,11 @@
               "locked" : true
             }
           },
-          "textValue" : "ernemn",
-          "type" : "TEXT"
+          "type" : "TEXT",
+          "value" : {
+            "type" : "TEXT",
+            "value" : "ernemn"
+          }
         }, {
           "address" : "F2",
           "displayValue" : "acoco",
@@ -1005,8 +1044,11 @@
               "locked" : true
             }
           },
-          "textValue" : "acoco",
-          "type" : "TEXT"
+          "type" : "TEXT",
+          "value" : {
+            "type" : "TEXT",
+            "value" : "acoco"
+          }
         }, {
           "address" : "G2",
           "displayValue" : "cme",
@@ -1057,8 +1099,11 @@
               "locked" : true
             }
           },
-          "textValue" : "cme",
-          "type" : "TEXT"
+          "type" : "TEXT",
+          "value" : {
+            "type" : "TEXT",
+            "value" : "cme"
+          }
         }, {
           "address" : "H2",
           "displayValue" : "ass",
@@ -1109,8 +1154,11 @@
               "locked" : true
             }
           },
-          "textValue" : "ass",
-          "type" : "TEXT"
+          "type" : "TEXT",
+          "value" : {
+            "type" : "TEXT",
+            "value" : "ass"
+          }
         } ],
         "sheetName" : "Foglio1",
         "stepId" : "sheet-0-cells",
@@ -1533,20 +1581,32 @@
       }, {
         "cells" : [ {
           "address" : "A1",
-          "textValue" : "Grid",
-          "type" : "TEXT"
+          "type" : "TEXT",
+          "value" : {
+            "type" : "TEXT",
+            "value" : "Grid"
+          }
         }, {
           "address" : "B1",
-          "textValue" : "Grind",
-          "type" : "TEXT"
+          "type" : "TEXT",
+          "value" : {
+            "type" : "TEXT",
+            "value" : "Grind"
+          }
         }, {
           "address" : "C1",
-          "textValue" : "Agent",
-          "type" : "TEXT"
+          "type" : "TEXT",
+          "value" : {
+            "type" : "TEXT",
+            "value" : "Agent"
+          }
         }, {
           "address" : "D1",
-          "textValue" : "Ops",
-          "type" : "TEXT"
+          "type" : "TEXT",
+          "value" : {
+            "type" : "TEXT",
+            "value" : "Ops"
+          }
         } ],
         "sheetName" : "Foglio1",
         "stepId" : "read-imported-cells",

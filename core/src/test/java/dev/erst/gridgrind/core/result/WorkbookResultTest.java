@@ -20,7 +20,6 @@ import dev.erst.gridgrind.core.model.style.CellStyleReport;
 import dev.erst.gridgrind.core.model.style.FontHeightReport;
 import dev.erst.gridgrind.core.model.table.AutofilterEntryReport;
 import dev.erst.gridgrind.core.model.table.AutofilterSortStateReport;
-import dev.erst.gridgrind.core.model.value.CellValueReport;
 import dev.erst.gridgrind.core.model.value.HyperlinkTarget;
 import dev.erst.gridgrind.core.plan.AssertionResult;
 import dev.erst.gridgrind.core.plan.ExecutionPolicySpec;
@@ -395,6 +394,7 @@ class WorkbookResultTest {
             java.util.Optional.of(""),
             java.util.Optional.of(minimalStyle()),
             java.util.Optional.empty(),
+            java.util.Optional.empty(),
             java.util.Optional.empty());
     dev.erst.gridgrind.core.problem.ProblemContext.ReadRequest readRequest =
         new dev.erst.gridgrind.core.problem.ProblemContext.ReadRequest(
@@ -456,7 +456,8 @@ class WorkbookResultTest {
             java.util.Optional.of(minimalStyle()),
             java.util.Optional.of(hyperlink),
             java.util.Optional.of(comment),
-            java.util.Optional.of("Reviewed"),
+            java.util.Optional.of(
+                new dev.erst.gridgrind.core.model.value.CellValue.Text("Reviewed")),
             java.util.Optional.empty());
     dev.erst.gridgrind.core.model.value.CellReport numberCell =
         new dev.erst.gridgrind.core.model.value.CellReport.NumberReport(
@@ -465,7 +466,8 @@ class WorkbookResultTest {
             java.util.Optional.of(minimalStyle()),
             java.util.Optional.of(hyperlink),
             java.util.Optional.of(comment),
-            java.util.Optional.of(42.0d),
+            java.util.Optional.of(
+                new dev.erst.gridgrind.core.model.value.CellValue.NumberValue(42.0d)),
             java.util.Optional.empty());
     dev.erst.gridgrind.core.model.value.CellReport booleanCell =
         new dev.erst.gridgrind.core.model.value.CellReport.BooleanReport(
@@ -474,7 +476,8 @@ class WorkbookResultTest {
             java.util.Optional.of(minimalStyle()),
             java.util.Optional.of(hyperlink),
             java.util.Optional.of(comment),
-            java.util.Optional.of(true));
+            java.util.Optional.of(
+                new dev.erst.gridgrind.core.model.value.CellValue.BooleanValue(true)));
     dev.erst.gridgrind.core.model.value.CellReport errorCell =
         new dev.erst.gridgrind.core.model.value.CellReport.ErrorReport(
             new CellAddress("A4"),
@@ -482,7 +485,8 @@ class WorkbookResultTest {
             java.util.Optional.of(minimalStyle()),
             java.util.Optional.of(hyperlink),
             java.util.Optional.of(comment),
-            java.util.Optional.of("#REF!"));
+            java.util.Optional.of(
+                new dev.erst.gridgrind.core.model.value.CellValue.ErrorValue("#REF!")));
     dev.erst.gridgrind.core.model.value.CellReport formulaCell =
         new dev.erst.gridgrind.core.model.value.CellReport.FormulaReport(
             new CellAddress("A5"),
@@ -492,7 +496,9 @@ class WorkbookResultTest {
             java.util.Optional.of(comment),
             java.util.Optional.of("SUM(A2:A4)"),
             java.util.Optional.of(
-                new CellValueReport.NumberValue(42.0d, java.util.Optional.empty())));
+                new dev.erst.gridgrind.core.model.value.CellValue.NumberValue(42.0d)),
+            java.util.Optional.empty(),
+            java.util.Optional.empty());
 
     assertEquals(java.util.Optional.of(hyperlink), textCell.hyperlink());
     assertEquals(java.util.Optional.of(comment), textCell.comment());

@@ -72,9 +72,9 @@ class FormulaEnvironmentRequestExecutorTest {
     assertEquals(
         7.5d,
         assertInstanceOf(
-                dev.erst.gridgrind.core.model.value.CellValueReport.NumberValue.class,
-                formula.evaluation().orElseThrow())
-            .numberValue());
+                dev.erst.gridgrind.core.model.value.CellValue.NumberValue.class,
+                formula.value().orElseThrow())
+            .value());
   }
 
   @Test
@@ -110,9 +110,9 @@ class FormulaEnvironmentRequestExecutorTest {
     assertEquals(
         7.5d,
         assertInstanceOf(
-                dev.erst.gridgrind.core.model.value.CellValueReport.NumberValue.class,
-                formula.evaluation().orElseThrow())
-            .numberValue());
+                dev.erst.gridgrind.core.model.value.CellValue.NumberValue.class,
+                formula.value().orElseThrow())
+            .value());
   }
 
   @Test
@@ -152,9 +152,9 @@ class FormulaEnvironmentRequestExecutorTest {
     assertEquals(
         42.0d,
         assertInstanceOf(
-                dev.erst.gridgrind.core.model.value.CellValueReport.NumberValue.class,
-                formula.evaluation().orElseThrow())
-            .numberValue());
+                dev.erst.gridgrind.core.model.value.CellValue.NumberValue.class,
+                formula.value().orElseThrow())
+            .value());
   }
 
   @Test

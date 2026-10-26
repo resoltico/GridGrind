@@ -96,8 +96,8 @@ class SourceBackedPlanResolverMutationInliningCoverageTest
         new AssertionStep(
             new StepId("assert-budget"),
             new CellSelector.ByAddress(new SheetName("Budget"), new CellAddress("A1")),
-            new CellAssertion.CellValue(
-                new dev.erst.gridgrind.core.model.value.CellScalarValue.Text("Quarterly Budget")));
+            new CellAssertion.Value(
+                new dev.erst.gridgrind.core.model.value.CellValue.Text("Quarterly Budget")));
     InspectionStep inspection =
         new InspectionStep(
             new StepId("inspect-budget"),
@@ -285,7 +285,7 @@ class SourceBackedPlanResolverMutationInliningCoverageTest
     assertEquals("Ada Lovelace", ((TextSourceSpec.Inline) commentAction.comment().text()).text());
     assertEquals(
         "Ada",
-        ((TextSourceSpec.Inline) commentAction.comment().runs().orElseThrow().getFirst().source())
+        ((TextSourceSpec.Inline) commentAction.comment().runs().orElseThrow().getFirst().text())
             .text());
 
     DrawingMutationAction.SetPicture pictureAction =
@@ -373,7 +373,7 @@ class SourceBackedPlanResolverMutationInliningCoverageTest
         ((TextSourceSpec.Inline)
                 assertInstanceOf(
                         CellValueSpec.Formula.class, appendRow.values().toCellInputs().get(2))
-                    .source())
+                    .value())
             .text());
 
     WorkbookMutationAction.SetPrintLayout printLayout =

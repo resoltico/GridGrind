@@ -12,18 +12,18 @@ import java.util.Optional;
     summary =
         "One ordered rich-text run for a string cell. text must be non-empty; font is an optional override patch. The ordered run texts concatenate to the stored plain string value.",
     displayOrder = 46)
-public record RichTextRunSpec(TextSourceSpec source, Optional<CellFontPatch> font) {
+public record RichTextRunSpec(TextSourceSpec text, Optional<CellFontPatch> font) {
 
   public RichTextRunSpec {
-    Objects.requireNonNull(source, "source must not be null");
+    Objects.requireNonNull(text, "text must not be null");
     Objects.requireNonNull(font, "font must not be null");
-    if (source instanceof TextSourceSpec.Inline inline && inline.text().isEmpty()) {
-      throw new IllegalArgumentException("source must not be empty");
+    if (text instanceof TextSourceSpec.Inline inline && inline.text().isEmpty()) {
+      throw new IllegalArgumentException("text must not be empty");
     }
-    if (source instanceof TextSourceSpec.Inline inline) {
-      source =
+    if (text instanceof TextSourceSpec.Inline inline) {
+      text =
           new TextSourceSpec.Inline(
-              OoxmlTextValidation.requireXml10CharacterData(inline.text(), "source.text"));
+              OoxmlTextValidation.requireXml10CharacterData(inline.text(), "text.text"));
     }
   }
 }

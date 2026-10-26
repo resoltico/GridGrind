@@ -28,8 +28,7 @@ class AuthoringInternalsCoverageTest {
         new CellSelector.ByAddress(new SheetName("Budget"), new CellAddress("A1"));
     WorkbookMutationAction.EnsureSheet ensureSheet = new WorkbookMutationAction.EnsureSheet();
     SheetIntrospectionQuery.GetCells cellQuery = new SheetIntrospectionQuery.GetCells();
-    CellAssertion.CellValue present =
-        new CellAssertion.CellValue(ExpectedValues.toCellScalarValue(ExpectedValues.blank()));
+    CellAssertion.Value present = new CellAssertion.Value(ExpectedValues.blank());
 
     PlannedMutation unnamedMutation = new PlannedMutation(sheetSelector, ensureSheet);
     PlannedInspection unnamedInspection = new PlannedInspection(cellSelector, cellQuery);
@@ -133,7 +132,7 @@ class AuthoringInternalsCoverageTest {
     assertInstanceOf(PresenceAssertion.PivotTableAbsent.class, Checks.pivotTableAbsent());
     assertInstanceOf(PresenceAssertion.ChartPresent.class, Checks.chartPresent());
     assertInstanceOf(PresenceAssertion.ChartAbsent.class, Checks.chartAbsent());
-    assertInstanceOf(CellAssertion.CellValue.class, Checks.cellValue(ExpectedValues.text("Owner")));
+    assertInstanceOf(CellAssertion.Value.class, Checks.cellValue(ExpectedValues.text("Owner")));
     assertInstanceOf(CellAssertion.DisplayValue.class, Checks.displayValue("Owner"));
     assertInstanceOf(CellAssertion.FormulaText.class, Checks.formulaText("SUM(A1:A2)"));
     assertInstanceOf(

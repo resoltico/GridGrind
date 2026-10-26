@@ -159,7 +159,7 @@ class AuthoringTargetCoverageTest {
         SheetIntrospectionQuery.GetComments.class,
         cell.comments().toStep(new StepId("comments")).query());
     assertInstanceOf(
-        CellAssertion.CellValue.class,
+        CellAssertion.Value.class,
         cell.valueEquals(ExpectedValues.text("Owner")).toStep(new StepId("assert")).assertion());
     assertInstanceOf(
         CellAssertion.DisplayValue.class,
@@ -269,7 +269,7 @@ class AuthoringTargetCoverageTest {
         SheetIntrospectionQuery.GetComments.class,
         tableCell.comments().toStep(new StepId("comments")).query());
     assertInstanceOf(
-        CellAssertion.CellValue.class,
+        CellAssertion.Value.class,
         tableCell
             .valueEquals(ExpectedValues.number(125.0))
             .toStep(new StepId("assert"))

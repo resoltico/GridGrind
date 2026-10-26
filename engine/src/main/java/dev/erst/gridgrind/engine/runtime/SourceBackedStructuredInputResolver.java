@@ -44,7 +44,7 @@ final class SourceBackedStructuredInputResolver {
   private static RichTextRunSpec resolveRichTextRun(
       RichTextRunSpec run, ExecutionInputBindings bindings) throws IOException {
     TextSourceSpec resolvedSource =
-        SourceBackedPlanResolver.resolveTextSource(run.source(), bindings, false, "rich-text run");
+        SourceBackedPlanResolver.resolveTextSource(run.text(), bindings, false, "rich-text run");
     if (!(resolvedSource instanceof TextSourceSpec.Inline inline)) {
       return run;
     }
@@ -52,12 +52,12 @@ final class SourceBackedStructuredInputResolver {
     if (resolvedText.isEmpty()) {
       IllegalArgumentException failure =
           new IllegalArgumentException("rich-text run must not be empty");
-      if (bindings.collectInputResolutionFailure(failure, run.source())) {
+      if (bindings.collectInputResolutionFailure(failure, run.text())) {
         return run;
       }
       throw failure;
     }
-    return sameReference(resolvedSource, run.source())
+    return sameReference(resolvedSource, run.text())
         ? run
         : new RichTextRunSpec(resolvedSource, run.font());
   }

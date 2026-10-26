@@ -394,8 +394,11 @@
               "locked" : true
             }
           },
-          "textValue" : "Month",
-          "type" : "TEXT"
+          "type" : "TEXT",
+          "value" : {
+            "type" : "TEXT",
+            "value" : "Month"
+          }
         }, {
           "address" : "B1",
           "displayValue" : "Plan",
@@ -446,8 +449,11 @@
               "locked" : true
             }
           },
-          "textValue" : "Plan",
-          "type" : "TEXT"
+          "type" : "TEXT",
+          "value" : {
+            "type" : "TEXT",
+            "value" : "Plan"
+          }
         }, {
           "address" : "C1",
           "displayValue" : "Actual",
@@ -498,8 +504,11 @@
               "locked" : true
             }
           },
-          "textValue" : "Actual",
-          "type" : "TEXT"
+          "type" : "TEXT",
+          "value" : {
+            "type" : "TEXT",
+            "value" : "Actual"
+          }
         }, {
           "address" : "A2",
           "displayValue" : "Jan",
@@ -550,12 +559,14 @@
               "locked" : true
             }
           },
-          "textValue" : "Jan",
-          "type" : "TEXT"
+          "type" : "TEXT",
+          "value" : {
+            "type" : "TEXT",
+            "value" : "Jan"
+          }
         }, {
           "address" : "B2",
           "displayValue" : "10",
-          "numberValue" : 10.0,
           "style" : {
             "alignment" : {
               "horizontalAlignment" : "GENERAL",
@@ -606,11 +617,14 @@
           "temporal" : {
             "isDate" : false
           },
-          "type" : "NUMBER"
+          "type" : "NUMBER",
+          "value" : {
+            "type" : "NUMBER",
+            "value" : 10.0
+          }
         }, {
           "address" : "C2",
           "displayValue" : "12",
-          "numberValue" : 12.0,
           "style" : {
             "alignment" : {
               "horizontalAlignment" : "GENERAL",
@@ -661,7 +675,11 @@
           "temporal" : {
             "isDate" : false
           },
-          "type" : "NUMBER"
+          "type" : "NUMBER",
+          "value" : {
+            "type" : "NUMBER",
+            "value" : 12.0
+          }
         }, {
           "address" : "A3",
           "displayValue" : "Feb",
@@ -712,12 +730,14 @@
               "locked" : true
             }
           },
-          "textValue" : "Feb",
-          "type" : "TEXT"
+          "type" : "TEXT",
+          "value" : {
+            "type" : "TEXT",
+            "value" : "Feb"
+          }
         }, {
           "address" : "B3",
           "displayValue" : "18",
-          "numberValue" : 18.0,
           "style" : {
             "alignment" : {
               "horizontalAlignment" : "GENERAL",
@@ -768,11 +788,14 @@
           "temporal" : {
             "isDate" : false
           },
-          "type" : "NUMBER"
+          "type" : "NUMBER",
+          "value" : {
+            "type" : "NUMBER",
+            "value" : 18.0
+          }
         }, {
           "address" : "C3",
           "displayValue" : "17",
-          "numberValue" : 17.0,
           "style" : {
             "alignment" : {
               "horizontalAlignment" : "GENERAL",
@@ -823,7 +846,11 @@
           "temporal" : {
             "isDate" : false
           },
-          "type" : "NUMBER"
+          "type" : "NUMBER",
+          "value" : {
+            "type" : "NUMBER",
+            "value" : 17.0
+          }
         }, {
           "address" : "A4",
           "displayValue" : "Mar",
@@ -874,12 +901,14 @@
               "locked" : true
             }
           },
-          "textValue" : "Mar",
-          "type" : "TEXT"
+          "type" : "TEXT",
+          "value" : {
+            "type" : "TEXT",
+            "value" : "Mar"
+          }
         }, {
           "address" : "B4",
           "displayValue" : "15",
-          "numberValue" : 15.0,
           "style" : {
             "alignment" : {
               "horizontalAlignment" : "GENERAL",
@@ -930,11 +959,14 @@
           "temporal" : {
             "isDate" : false
           },
-          "type" : "NUMBER"
+          "type" : "NUMBER",
+          "value" : {
+            "type" : "NUMBER",
+            "value" : 15.0
+          }
         }, {
           "address" : "C4",
           "displayValue" : "16",
-          "numberValue" : 16.0,
           "style" : {
             "alignment" : {
               "horizontalAlignment" : "GENERAL",
@@ -985,7 +1017,11 @@
           "temporal" : {
             "isDate" : false
           },
-          "type" : "NUMBER"
+          "type" : "NUMBER",
+          "value" : {
+            "type" : "NUMBER",
+            "value" : 16.0
+          }
         } ],
         "sheetName" : "Ops",
         "stepId" : "sheet-0-cells",
@@ -1363,59 +1399,59 @@
       "action" : {
         "rows" : {
           "cells" : [ [ {
-            "source" : {
+            "type" : "TEXT",
+            "value" : {
               "text" : "Month",
               "type" : "INLINE"
-            },
-            "type" : "TEXT"
+            }
           }, {
-            "source" : {
+            "type" : "TEXT",
+            "value" : {
               "text" : "Plan",
               "type" : "INLINE"
-            },
-            "type" : "TEXT"
+            }
           }, {
-            "source" : {
+            "type" : "TEXT",
+            "value" : {
               "text" : "Actual",
               "type" : "INLINE"
-            },
-            "type" : "TEXT"
+            }
           } ], [ {
-            "source" : {
+            "type" : "TEXT",
+            "value" : {
               "text" : "Jan",
               "type" : "INLINE"
-            },
-            "type" : "TEXT"
+            }
           }, {
-            "number" : 10.0,
-            "type" : "NUMBER"
+            "type" : "NUMBER",
+            "value" : 10.0
           }, {
-            "number" : 12.0,
-            "type" : "NUMBER"
+            "type" : "NUMBER",
+            "value" : 12.0
           } ], [ {
-            "source" : {
+            "type" : "TEXT",
+            "value" : {
               "text" : "Feb",
               "type" : "INLINE"
-            },
-            "type" : "TEXT"
+            }
           }, {
-            "number" : 18.0,
-            "type" : "NUMBER"
+            "type" : "NUMBER",
+            "value" : 18.0
           }, {
-            "number" : 17.0,
-            "type" : "NUMBER"
+            "type" : "NUMBER",
+            "value" : 17.0
           } ], [ {
-            "source" : {
+            "type" : "TEXT",
+            "value" : {
               "text" : "Mar",
               "type" : "INLINE"
-            },
-            "type" : "TEXT"
+            }
           }, {
-            "number" : 15.0,
-            "type" : "NUMBER"
+            "type" : "NUMBER",
+            "value" : 15.0
           }, {
-            "number" : 16.0,
-            "type" : "NUMBER"
+            "type" : "NUMBER",
+            "value" : 16.0
           } ] ],
           "type" : "TYPED"
         },
@@ -1604,59 +1640,59 @@
         "action" : {
           "rows" : {
             "cells" : [ [ {
-              "source" : {
+              "type" : "TEXT",
+              "value" : {
                 "text" : "Month",
                 "type" : "INLINE"
-              },
-              "type" : "TEXT"
+              }
             }, {
-              "source" : {
+              "type" : "TEXT",
+              "value" : {
                 "text" : "Plan",
                 "type" : "INLINE"
-              },
-              "type" : "TEXT"
+              }
             }, {
-              "source" : {
+              "type" : "TEXT",
+              "value" : {
                 "text" : "Actual",
                 "type" : "INLINE"
-              },
-              "type" : "TEXT"
+              }
             } ], [ {
-              "source" : {
+              "type" : "TEXT",
+              "value" : {
                 "text" : "Jan",
                 "type" : "INLINE"
-              },
-              "type" : "TEXT"
+              }
             }, {
-              "number" : 10.0,
-              "type" : "NUMBER"
+              "type" : "NUMBER",
+              "value" : 10.0
             }, {
-              "number" : 12.0,
-              "type" : "NUMBER"
+              "type" : "NUMBER",
+              "value" : 12.0
             } ], [ {
-              "source" : {
+              "type" : "TEXT",
+              "value" : {
                 "text" : "Feb",
                 "type" : "INLINE"
-              },
-              "type" : "TEXT"
+              }
             }, {
-              "number" : 18.0,
-              "type" : "NUMBER"
+              "type" : "NUMBER",
+              "value" : 18.0
             }, {
-              "number" : 17.0,
-              "type" : "NUMBER"
+              "type" : "NUMBER",
+              "value" : 17.0
             } ], [ {
-              "source" : {
+              "type" : "TEXT",
+              "value" : {
                 "text" : "Mar",
                 "type" : "INLINE"
-              },
-              "type" : "TEXT"
+              }
             }, {
-              "number" : 15.0,
-              "type" : "NUMBER"
+              "type" : "NUMBER",
+              "value" : 15.0
             }, {
-              "number" : 16.0,
-              "type" : "NUMBER"
+              "type" : "NUMBER",
+              "value" : 16.0
             } ] ],
             "type" : "TYPED"
           },

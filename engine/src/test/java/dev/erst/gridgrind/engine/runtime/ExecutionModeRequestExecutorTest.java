@@ -351,9 +351,8 @@ class ExecutionModeRequestExecutorTest {
                         assertThat(
                             "assert-owner",
                             new CellSelector.ByAddress(new SheetName("Ops"), new CellAddress("A1")),
-                            new CellAssertion.CellValue(
-                                new dev.erst.gridgrind.core.model.value.CellScalarValue.Text(
-                                    "Owner")))),
+                            new CellAssertion.Value(
+                                new dev.erst.gridgrind.core.model.value.CellValue.Text("Owner")))),
                     List.of(
                         inspect(
                             "workbook",

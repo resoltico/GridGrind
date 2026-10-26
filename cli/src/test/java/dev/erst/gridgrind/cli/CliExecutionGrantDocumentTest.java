@@ -5,7 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import dev.erst.gridgrind.cli.discovery.GridGrindCliJson;
-import dev.erst.gridgrind.core.model.value.CellScalarValue;
+import dev.erst.gridgrind.core.model.value.CellValue;
 import dev.erst.gridgrind.core.plan.AssertionStep;
 import dev.erst.gridgrind.core.plan.CellAssertion;
 import dev.erst.gridgrind.core.plan.CellSelector;
@@ -248,7 +248,7 @@ class CliExecutionGrantDocumentTest {
         new AssertionStep(
             new StepId("assert-owner"),
             new CellSelector.ByAddress(new SheetName("Summary"), new CellAddress("A1")),
-            new CellAssertion.CellValue(new CellScalarValue.Text("Approved")));
+            new CellAssertion.Value(new CellValue.Text("Approved")));
     CliGrantAcceptancePolicy.Requirement.TerminalAssertions requirement =
         new CliGrantAcceptancePolicy.Requirement.TerminalAssertions(List.of(assertion));
 

@@ -10,7 +10,7 @@ import dev.erst.gridgrind.core.model.formula.CalculationPolicySpec;
 import dev.erst.gridgrind.core.model.formula.CalculationStrategySpec;
 import dev.erst.gridgrind.core.model.style.CellStylePatch;
 import dev.erst.gridgrind.core.model.value.CellRowSpec;
-import dev.erst.gridgrind.core.model.value.CellScalarValue;
+import dev.erst.gridgrind.core.model.value.CellValue;
 import dev.erst.gridgrind.core.model.value.CellValueSpec;
 import dev.erst.gridgrind.core.plan.AssertionModeSpec;
 import dev.erst.gridgrind.core.plan.AssertionStep;
@@ -219,7 +219,7 @@ class WorkbookStaticRequestContractTest {
                         new AssertionStep(
                             new StepId("assert"),
                             new CellSelector.ByAddress(new SheetName("Ops"), new CellAddress("A1")),
-                            new CellAssertion.CellValue(new CellScalarValue.Text("ready")))))));
+                            new CellAssertion.Value(new CellValue.Text("ready")))))));
 
     List<String> messages =
         WorkbookStaticRequestContract.validate(request).stream()
@@ -251,13 +251,12 @@ class WorkbookStaticRequestContractTest {
             .isEmpty());
     assertTrue(
         WorkbookOperationContracts.executionModeViolation(
-                new CellAssertion.CellValue(new CellScalarValue.Text("ready")),
+                new CellAssertion.Value(new CellValue.Text("ready")),
                 ExecutionModeSpec.streamingWrite())
             .isEmpty());
     assertTrue(
         WorkbookOperationContracts.executionModeViolation(
-                new CellAssertion.CellValue(new CellScalarValue.Text("ready")),
-                ExecutionModeSpec.eventRead())
+                new CellAssertion.Value(new CellValue.Text("ready")), ExecutionModeSpec.eventRead())
             .orElseThrow()
             .contains("unsupported step kind: ASSERTION"));
   }
@@ -306,7 +305,7 @@ class WorkbookStaticRequestContractTest {
                         new AssertionStep(
                             new StepId("assert"),
                             new CellSelector.ByAddress(new SheetName("Ops"), new CellAddress("A1")),
-                            new CellAssertion.CellValue(new CellScalarValue.Text("ready"))))),
+                            new CellAssertion.Value(new CellValue.Text("ready"))))),
                 new WorkbookStaticStep(1, Optional.of(appendStep("append"))),
                 new WorkbookStaticStep(2, Optional.of(appendStep("append-2")))));
 
@@ -332,7 +331,7 @@ class WorkbookStaticRequestContractTest {
                         new AssertionStep(
                             new StepId("assert"),
                             new CellSelector.ByAddress(new SheetName("Ops"), new CellAddress("A1")),
-                            new CellAssertion.CellValue(new CellScalarValue.Text("ready"))))),
+                            new CellAssertion.Value(new CellValue.Text("ready"))))),
                 new WorkbookStaticStep(2, Optional.of(appendStep("append")))));
 
     assertEquals(

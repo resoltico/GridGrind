@@ -112,8 +112,7 @@ final class GridGrindRequestWarnings {
     if (!(input instanceof CellValueSpec.Formula formula)) {
       return;
     }
-    if (!(formula.source()
-        instanceof dev.erst.gridgrind.core.source.TextSourceSpec.Inline inline)) {
+    if (!(formula.value() instanceof dev.erst.gridgrind.core.source.TextSourceSpec.Inline inline)) {
       return;
     }
     String formulaText = inline.text();

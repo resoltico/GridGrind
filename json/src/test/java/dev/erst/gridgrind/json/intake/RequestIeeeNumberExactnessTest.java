@@ -40,17 +40,17 @@ class RequestIeeeNumberExactnessTest {
                       candidate ->
                           candidate
                               .jsonPath()
-                              .equals(java.util.Optional.of("steps[0].action.value.number")))
+                              .equals(java.util.Optional.of("steps[0].action.value.value")))
                   .findFirst()
                   .orElseThrow());
       assertEquals(token, problem.token());
       assertEquals(
-          bytesAsText(bytes).indexOf("\"number\": " + token), problem.byteOffset().orElseThrow());
+          bytesAsText(bytes).indexOf("\"value\": " + token), problem.byteOffset().orElseThrow());
       NumberNotRepresentableException exception =
           assertThrows(
               NumberNotRepresentableException.class, () -> GridGrindJson.readRequest(bytes));
       assertEquals(problem.message(), exception.getMessage());
-      assertEquals(Optional.of("steps[0].action.value.number"), exception.jsonPath());
+      assertEquals(Optional.of("steps[0].action.value.value"), exception.jsonPath());
     }
   }
 
@@ -95,7 +95,7 @@ class RequestIeeeNumberExactnessTest {
             {
               "stepId": "set-number",
               "target": { "type": "CELL_BY_ADDRESS", "sheetName": "Budget", "address": "A1" },
-              "action": { "type": "SET_CELL", "value": { "type": "NUMBER", "number": %s } }
+              "action": { "type": "SET_CELL", "value": { "type": "NUMBER", "value": %s } }
             }
           ]
         }

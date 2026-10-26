@@ -257,12 +257,18 @@
       "inspections" : [ {
         "cells" : [ {
           "address" : "A1",
-          "textValue" : "Quarterly Budget",
-          "type" : "TEXT"
+          "type" : "TEXT",
+          "value" : {
+            "type" : "TEXT",
+            "value" : "Quarterly Budget"
+          }
         }, {
           "address" : "B2",
-          "numberValue" : 1200.0,
-          "type" : "NUMBER"
+          "type" : "NUMBER",
+          "value" : {
+            "type" : "NUMBER",
+            "value" : 1200.0
+          }
         } ],
         "sheetName" : "Budget",
         "stepId" : "read-budget",
@@ -494,11 +500,11 @@
       "action" : {
         "type" : "SET_CELL",
         "value" : {
-          "source" : {
+          "type" : "TEXT",
+          "value" : {
             "text" : "Quarterly Budget",
             "type" : "INLINE"
-          },
-          "type" : "TEXT"
+          }
         }
       },
       "stepId" : "set-title",
@@ -511,8 +517,8 @@
       "action" : {
         "type" : "SET_CELL",
         "value" : {
-          "number" : 1200.0,
-          "type" : "NUMBER"
+          "type" : "NUMBER",
+          "value" : 1200.0
         }
       },
       "stepId" : "set-total",
@@ -524,8 +530,8 @@
     }, {
       "assertion" : {
         "expectedValue" : {
-          "text" : "Quarterly Budget",
-          "type" : "TEXT"
+          "type" : "TEXT",
+          "value" : "Quarterly Budget"
         },
         "type" : "EXPECT_CELL_VALUE"
       },
@@ -538,8 +544,8 @@
     }, {
       "assertion" : {
         "expectedValue" : {
-          "number" : 1200.0,
-          "type" : "NUMBER"
+          "type" : "NUMBER",
+          "value" : 1200.0
         },
         "type" : "EXPECT_CELL_VALUE"
       },
@@ -604,11 +610,11 @@
         "action" : {
           "type" : "SET_CELL",
           "value" : {
-            "source" : {
+            "type" : "TEXT",
+            "value" : {
               "text" : "Quarterly Budget",
               "type" : "INLINE"
-            },
-            "type" : "TEXT"
+            }
           }
         },
         "stepId" : "set-title",
@@ -621,8 +627,8 @@
         "action" : {
           "type" : "SET_CELL",
           "value" : {
-            "number" : 1200.0,
-            "type" : "NUMBER"
+            "type" : "NUMBER",
+            "value" : 1200.0
           }
         },
         "stepId" : "set-total",
@@ -634,8 +640,8 @@
       }, {
         "assertion" : {
           "expectedValue" : {
-            "text" : "Quarterly Budget",
-            "type" : "TEXT"
+            "type" : "TEXT",
+            "value" : "Quarterly Budget"
           },
           "type" : "EXPECT_CELL_VALUE"
         },
@@ -648,8 +654,8 @@
       }, {
         "assertion" : {
           "expectedValue" : {
-            "number" : 1200.0,
-            "type" : "NUMBER"
+            "type" : "NUMBER",
+            "value" : 1200.0
           },
           "type" : "EXPECT_CELL_VALUE"
         },

@@ -100,8 +100,8 @@ final class RequestBindingPathSupport {
   private static String formulaSourcePath(RequestJsonNode fragment, String jacksonPath) {
     if ("value".equals(jacksonPath)
         && GridGrindJsonPathSupport.pathExists(
-            RequestFragmentBinder.toJsonNode(fragment), "action.value.source.text")) {
-      return "action.value.source.text";
+            RequestFragmentBinder.toJsonNode(fragment), "action.value.value.text")) {
+      return "action.value.value.text";
     }
     return jacksonPath;
   }

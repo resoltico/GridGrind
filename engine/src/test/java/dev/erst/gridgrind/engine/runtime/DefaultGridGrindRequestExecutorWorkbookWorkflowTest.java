@@ -49,7 +49,7 @@ import dev.erst.gridgrind.core.model.validation.DataValidationEntryReport;
 import dev.erst.gridgrind.core.model.validation.DataValidationRuleSpec;
 import dev.erst.gridgrind.core.model.validation.IgnoredErrorReport;
 import dev.erst.gridgrind.core.model.validation.IgnoredErrorSpec;
-import dev.erst.gridgrind.core.model.value.CellValueReport;
+import dev.erst.gridgrind.core.model.value.CellValue;
 import dev.erst.gridgrind.core.model.value.CellValueSpec;
 import dev.erst.gridgrind.core.model.value.HyperlinkTarget;
 import dev.erst.gridgrind.core.plan.*;
@@ -146,9 +146,8 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
                             "assert-owner",
                             new CellSelector.ByAddress(
                                 new SheetName("Budget"), new CellAddress("A1")),
-                            new CellAssertion.CellValue(
-                                new dev.erst.gridgrind.core.model.value.CellScalarValue.Text(
-                                    "Owner"))),
+                            new CellAssertion.Value(
+                                new dev.erst.gridgrind.core.model.value.CellValue.Text("Owner"))),
                         assertThat(
                             "assert-formula",
                             new CellSelector.ByAddress(
@@ -169,7 +168,8 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
     assertEquals(
         "Owner",
         cast(dev.erst.gridgrind.core.model.value.CellReport.TextReport.class, cells.cells().get(0))
-            .textValue()
+            .value()
+            .map(dev.erst.gridgrind.core.model.value.CellValue.Text::value)
             .orElseThrow());
   }
 
@@ -195,9 +195,8 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
                             "assert-owner",
                             new CellSelector.ByAddress(
                                 new SheetName("Budget"), new CellAddress("A1")),
-                            new CellAssertion.CellValue(
-                                new dev.erst.gridgrind.core.model.value.CellScalarValue.Text(
-                                    "Wrong")))),
+                            new CellAssertion.Value(
+                                new dev.erst.gridgrind.core.model.value.CellValue.Text("Wrong")))),
                     inspections())));
 
     assertEquals(GridGrindProblemCode.ASSERTION_FAILED, failure.problem().code());
@@ -373,7 +372,8 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
     assertEquals(
         "Item",
         cast(dev.erst.gridgrind.core.model.value.CellReport.TextReport.class, cells.cells().get(0))
-            .textValue()
+            .value()
+            .map(dev.erst.gridgrind.core.model.value.CellValue.Text::value)
             .orElseThrow());
     dev.erst.gridgrind.core.model.value.CellReport.FormulaReport formulaCell =
         cast(
@@ -381,13 +381,13 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
             cells.cells().get(1));
     assertEquals("SUM(B2:B3)", formulaText(formulaCell));
     assertEquals(
-        61.0,
-        assertInstanceOf(CellValueReport.NumberValue.class, evaluation(formulaCell)).numberValue());
+        61.0, assertInstanceOf(CellValue.NumberValue.class, evaluation(formulaCell)).value());
     assertTrue(
         cast(
                 dev.erst.gridgrind.core.model.value.CellReport.BooleanReport.class,
                 cells.cells().get(2))
-            .booleanValue()
+            .value()
+            .map(dev.erst.gridgrind.core.model.value.CellValue.BooleanValue::value)
             .orElseThrow());
 
     assertEquals("Budget", window.sheetName().value());
@@ -618,14 +618,16 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
     assertEquals(
         "After",
         cast(dev.erst.gridgrind.core.model.value.CellReport.TextReport.class, cells.cells().get(0))
-            .textValue()
+            .value()
+            .map(dev.erst.gridgrind.core.model.value.CellValue.Text::value)
             .orElseThrow());
     assertEquals(
         12.0,
         cast(
                 dev.erst.gridgrind.core.model.value.CellReport.NumberReport.class,
                 cells.cells().get(1))
-            .numberValue()
+            .value()
+            .map(dev.erst.gridgrind.core.model.value.CellValue.NumberValue::value)
             .orElseThrow());
   }
 
@@ -738,7 +740,8 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
         cast(
                 dev.erst.gridgrind.core.model.value.CellReport.TextReport.class,
                 cells.cells().getFirst())
-            .textValue()
+            .value()
+            .map(dev.erst.gridgrind.core.model.value.CellValue.Text::value)
             .orElseThrow());
     assertEquals(
         List.of("A1:B1"),
@@ -1026,29 +1029,34 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
     assertEquals(
         "Spacer",
         cast(dev.erst.gridgrind.core.model.value.CellReport.TextReport.class, cells.cells().get(0))
-            .textValue()
+            .value()
+            .map(dev.erst.gridgrind.core.model.value.CellValue.Text::value)
             .orElseThrow());
     assertEquals(
         "Pad",
         cast(dev.erst.gridgrind.core.model.value.CellReport.TextReport.class, cells.cells().get(1))
-            .textValue()
+            .value()
+            .map(dev.erst.gridgrind.core.model.value.CellValue.Text::value)
             .orElseThrow());
     assertEquals(
         "Hosting",
         cast(dev.erst.gridgrind.core.model.value.CellReport.TextReport.class, cells.cells().get(2))
-            .textValue()
+            .value()
+            .map(dev.erst.gridgrind.core.model.value.CellValue.Text::value)
             .orElseThrow());
     assertEquals(
         42.0,
         cast(
                 dev.erst.gridgrind.core.model.value.CellReport.NumberReport.class,
                 cells.cells().get(3))
-            .numberValue()
+            .value()
+            .map(dev.erst.gridgrind.core.model.value.CellValue.NumberValue::value)
             .orElseThrow());
     assertEquals(
         "Beta",
         cast(dev.erst.gridgrind.core.model.value.CellReport.TextReport.class, cells.cells().get(4))
-            .textValue()
+            .value()
+            .map(dev.erst.gridgrind.core.model.value.CellValue.Text::value)
             .orElseThrow());
 
     try (ExcelWorkbook workbook = ExecutionContextFixtureSupport.openWorkbook(workbookPath)) {

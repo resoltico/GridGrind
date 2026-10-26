@@ -608,7 +608,7 @@ class GridGrindCliCatalogCommandTest extends GridGrindCliTestSupport {
                                 "target": { "type": "CELL_BY_ADDRESS", "sheetName": "Budget", "address": "A1" },
                                 "action": {
                                   "type": "SET_CELL",
-                                  "value": { "type": "TEXT", "source": { "type": "STANDARD_INPUT" } }
+                                  "value": { "type": "TEXT", "value": { "type": "STANDARD_INPUT" } }
                                 }
                               }
                             ]
@@ -671,7 +671,7 @@ class GridGrindCliCatalogCommandTest extends GridGrindCliTestSupport {
                           },
                           "assertion": {
                             "type": "EXPECT_CELL_VALUE",
-                            "expectedValue": { "type": "TEXT", "text": "x" }
+                            "expectedValue": { "type": "TEXT", "value": "x" }
                           }
                         }
                       ]
@@ -835,7 +835,7 @@ class GridGrindCliCatalogCommandTest extends GridGrindCliTestSupport {
                   "type": "SET_CELL",
                   "value": {
                     "type": "TEXT",
-                    "source": { "type": "UTF8_FILE", "path": "blank.txt" }
+                    "value": { "type": "UTF8_FILE", "path": "blank.txt" }
                   }
                 }
               }

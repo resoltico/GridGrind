@@ -303,7 +303,7 @@ class GridGrindCliInvocationTest extends GridGrindCliTestSupport {
                     "target": { "type": "WORKBOOK_CURRENT" },
                     "action": {
                       "type": "SET_CELL",
-                      "value": { "type": "NUMBER", "number": 1.0 }
+                      "value": { "type": "NUMBER", "value": 1.0 }
                     }
                   },
                   {

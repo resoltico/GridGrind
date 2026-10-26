@@ -351,8 +351,11 @@
               "locked" : true
             }
           },
-          "textValue" : "Owner",
-          "type" : "TEXT"
+          "type" : "TEXT",
+          "value" : {
+            "type" : "TEXT",
+            "value" : "Owner"
+          }
         }, {
           "address" : "B1",
           "displayValue" : "Status",
@@ -403,8 +406,11 @@
               "locked" : true
             }
           },
-          "textValue" : "Status",
-          "type" : "TEXT"
+          "type" : "TEXT",
+          "value" : {
+            "type" : "TEXT",
+            "value" : "Status"
+          }
         }, {
           "address" : "A2",
           "displayValue" : "Ada",
@@ -455,8 +461,11 @@
               "locked" : true
             }
           },
-          "textValue" : "Ada",
-          "type" : "TEXT"
+          "type" : "TEXT",
+          "value" : {
+            "type" : "TEXT",
+            "value" : "Ada"
+          }
         }, {
           "address" : "B2",
           "displayValue" : "Ready",
@@ -507,8 +516,11 @@
               "locked" : true
             }
           },
-          "textValue" : "Ready",
-          "type" : "TEXT"
+          "type" : "TEXT",
+          "value" : {
+            "type" : "TEXT",
+            "value" : "Ready"
+          }
         }, {
           "address" : "A3",
           "displayValue" : "Lin",
@@ -559,8 +571,11 @@
               "locked" : true
             }
           },
-          "textValue" : "Lin",
-          "type" : "TEXT"
+          "type" : "TEXT",
+          "value" : {
+            "type" : "TEXT",
+            "value" : "Lin"
+          }
         }, {
           "address" : "B3",
           "displayValue" : "Review",
@@ -611,8 +626,11 @@
               "locked" : true
             }
           },
-          "textValue" : "Review",
-          "type" : "TEXT"
+          "type" : "TEXT",
+          "value" : {
+            "type" : "TEXT",
+            "value" : "Review"
+          }
         } ],
         "sheetName" : "Template",
         "stepId" : "sheet-0-cells",
@@ -786,15 +804,14 @@
               "locked" : true
             }
           },
-          "textValue" : "Template status",
-          "type" : "TEXT"
+          "type" : "TEXT",
+          "value" : {
+            "type" : "TEXT",
+            "value" : "Template status"
+          }
         }, {
           "address" : "B1",
           "displayValue" : "Ready",
-          "evaluation" : {
-            "textValue" : "Ready",
-            "type" : "TEXT"
-          },
           "formula" : "'Template'!B2",
           "style" : {
             "alignment" : {
@@ -843,7 +860,11 @@
               "locked" : true
             }
           },
-          "type" : "FORMULA"
+          "type" : "FORMULA",
+          "value" : {
+            "type" : "TEXT",
+            "value" : "Ready"
+          }
         } ],
         "sheetName" : "Summary",
         "stepId" : "sheet-7-cells",
@@ -1075,8 +1096,11 @@
               "locked" : true
             }
           },
-          "textValue" : "Owner",
-          "type" : "TEXT"
+          "type" : "TEXT",
+          "value" : {
+            "type" : "TEXT",
+            "value" : "Owner"
+          }
         }, {
           "address" : "B1",
           "displayValue" : "Status",
@@ -1127,8 +1151,11 @@
               "locked" : true
             }
           },
-          "textValue" : "Status",
-          "type" : "TEXT"
+          "type" : "TEXT",
+          "value" : {
+            "type" : "TEXT",
+            "value" : "Status"
+          }
         }, {
           "address" : "A2",
           "displayValue" : "Ada",
@@ -1179,8 +1206,11 @@
               "locked" : true
             }
           },
-          "textValue" : "Ada",
-          "type" : "TEXT"
+          "type" : "TEXT",
+          "value" : {
+            "type" : "TEXT",
+            "value" : "Ada"
+          }
         }, {
           "address" : "B2",
           "displayValue" : "Ready",
@@ -1231,8 +1261,11 @@
               "locked" : true
             }
           },
-          "textValue" : "Ready",
-          "type" : "TEXT"
+          "type" : "TEXT",
+          "value" : {
+            "type" : "TEXT",
+            "value" : "Ready"
+          }
         }, {
           "address" : "A3",
           "displayValue" : "Lin",
@@ -1283,8 +1316,11 @@
               "locked" : true
             }
           },
-          "textValue" : "Lin",
-          "type" : "TEXT"
+          "type" : "TEXT",
+          "value" : {
+            "type" : "TEXT",
+            "value" : "Lin"
+          }
         }, {
           "address" : "B3",
           "displayValue" : "Review",
@@ -1335,8 +1371,11 @@
               "locked" : true
             }
           },
-          "textValue" : "Review",
-          "type" : "TEXT"
+          "type" : "TEXT",
+          "value" : {
+            "type" : "TEXT",
+            "value" : "Review"
+          }
         } ],
         "sheetName" : "Template Copy",
         "stepId" : "sheet-14-cells",

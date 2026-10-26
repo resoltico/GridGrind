@@ -92,24 +92,39 @@
       }, {
         "cells" : [ {
           "address" : "A1",
-          "textValue" : "Field",
-          "type" : "TEXT"
+          "type" : "TEXT",
+          "value" : {
+            "type" : "TEXT",
+            "value" : "Field"
+          }
         }, {
           "address" : "A2",
-          "textValue" : "Owner",
-          "type" : "TEXT"
+          "type" : "TEXT",
+          "value" : {
+            "type" : "TEXT",
+            "value" : "Owner"
+          }
         }, {
           "address" : "B2",
-          "textValue" : "GridGrind",
-          "type" : "TEXT"
+          "type" : "TEXT",
+          "value" : {
+            "type" : "TEXT",
+            "value" : "GridGrind"
+          }
         }, {
           "address" : "A3",
-          "textValue" : "Status",
-          "type" : "TEXT"
+          "type" : "TEXT",
+          "value" : {
+            "type" : "TEXT",
+            "value" : "Status"
+          }
         }, {
           "address" : "B3",
-          "textValue" : "Encrypted",
-          "type" : "TEXT"
+          "type" : "TEXT",
+          "value" : {
+            "type" : "TEXT",
+            "value" : "Encrypted"
+          }
         } ],
         "sheetName" : "Secure",
         "stepId" : "secure-cells",

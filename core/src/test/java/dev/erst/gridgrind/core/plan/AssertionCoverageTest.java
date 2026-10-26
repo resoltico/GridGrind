@@ -20,7 +20,7 @@ import dev.erst.gridgrind.core.model.style.CellStyleReport;
 import dev.erst.gridgrind.core.model.style.FontHeightReport;
 import dev.erst.gridgrind.core.model.table.TableEntryReport;
 import dev.erst.gridgrind.core.model.table.TableStyleReport;
-import dev.erst.gridgrind.core.model.value.CellScalarValue;
+import dev.erst.gridgrind.core.model.value.CellValue;
 import dev.erst.gridgrind.core.result.SheetSummaryReport;
 import dev.erst.gridgrind.core.result.WorkbookSummary;
 import dev.erst.gridgrind.core.vocabulary.AnalysisFindingCode;
@@ -62,7 +62,7 @@ class AssertionCoverageTest {
             "EXPECT_CELL_VALUE",
             new dev.erst.gridgrind.core.plan.CellSelector.ByAddress(
                 new SheetName("Budget"), new CellAddress("A1")),
-            new CellAssertion.CellValue(new CellScalarValue.Text("expected")),
+            new CellAssertion.Value(new CellValue.Text("expected")),
             List.of());
     AssertionResult.Passed passed =
         new AssertionResult.Passed(new StepId("assert-pass"), "EXPECT_CELL_VALUE");
@@ -106,8 +106,7 @@ class AssertionCoverageTest {
     assertEquals("EXPECT_CHART_ABSENT", new PresenceAssertion.ChartAbsent().assertionType());
     assertEquals(
         "EXPECT_CELL_VALUE",
-        new CellAssertion.CellValue(
-                new dev.erst.gridgrind.core.model.value.CellScalarValue.Text("Owner"))
+        new CellAssertion.Value(new dev.erst.gridgrind.core.model.value.CellValue.Text("Owner"))
             .assertionType());
     assertEquals("EXPECT_DISPLAY_VALUE", new CellAssertion.DisplayValue("Owner").assertionType());
     assertEquals("EXPECT_FORMULA_TEXT", new CellAssertion.FormulaText("2+3").assertionType());
@@ -165,32 +164,32 @@ class AssertionCoverageTest {
         "ALL_OF",
         new CompositeAssertion.AllOf(
                 List.of(
-                    new CellAssertion.CellValue(
-                        new dev.erst.gridgrind.core.model.value.CellScalarValue.Text("Owner")),
+                    new CellAssertion.Value(
+                        new dev.erst.gridgrind.core.model.value.CellValue.Text("Owner")),
                     new CellAssertion.DisplayValue("Owner")))
             .assertionType());
     assertEquals(
         "ANY_OF",
         new CompositeAssertion.AnyOf(
                 List.of(
-                    new CellAssertion.CellValue(
-                        new dev.erst.gridgrind.core.model.value.CellScalarValue.Text("Owner")),
+                    new CellAssertion.Value(
+                        new dev.erst.gridgrind.core.model.value.CellValue.Text("Owner")),
                     new CellAssertion.DisplayValue("Owner")))
             .assertionType());
     assertEquals(
         "NOT",
         new CompositeAssertion.Not(
-                new CellAssertion.CellValue(
-                    new dev.erst.gridgrind.core.model.value.CellScalarValue.Text("Owner")))
+                new CellAssertion.Value(
+                    new dev.erst.gridgrind.core.model.value.CellValue.Text("Owner")))
             .assertionType());
   }
 
   @Test
   void expectedCellValueVariantsCoverSuccessConstructors() {
-    assertInstanceOf(CellScalarValue.Blank.class, new CellScalarValue.Blank());
-    assertTrue(new CellScalarValue.BooleanValue(true).bool());
-    assertEquals("#REF!", new CellScalarValue.ErrorValue("#REF!").error());
-    assertEquals(42.0d, new CellScalarValue.NumberValue(42.0d).number());
+    assertInstanceOf(CellValue.Blank.class, new CellValue.Blank());
+    assertTrue(new CellValue.BooleanValue(true).value());
+    assertEquals("#REF!", new CellValue.ErrorValue("#REF!").value());
+    assertEquals(42.0d, new CellValue.NumberValue(42.0d).value());
   }
 
   @Test

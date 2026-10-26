@@ -148,7 +148,7 @@ class CatalogFieldMetadataSupportTest {
             recordComponent(CellReadProjection.class, "facets"), Set.of());
     FieldEntry errorValue =
         CatalogFieldMetadataSupport.fieldEntry(
-            recordComponent(CellValueSpec.ErrorValue.class, "error"), Set.of());
+            recordComponent(CellValueSpec.ErrorValue.class, "value"), Set.of());
     FieldEntry errorRowValues =
         CatalogFieldMetadataSupport.fieldEntry(
             recordComponent(
@@ -157,7 +157,7 @@ class CatalogFieldMetadataSupportTest {
     FieldEntry reportedErrorValue =
         CatalogFieldMetadataSupport.fieldEntry(
             recordComponent(
-                dev.erst.gridgrind.core.model.value.CellValueReport.ErrorValue.class, "errorValue"),
+                dev.erst.gridgrind.core.model.value.CellValue.ErrorValue.class, "value"),
             Set.of());
 
     assertEquals(

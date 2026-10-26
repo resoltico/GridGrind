@@ -25,7 +25,7 @@
         "type": "SET_CELL",
         "value": {
           "type": "TEXT",
-          "source": {
+          "value": {
             "type": "INLINE",
             "text": "Quarterly Summary"
           }

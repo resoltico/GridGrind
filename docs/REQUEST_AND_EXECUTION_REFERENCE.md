@@ -94,7 +94,7 @@ accessibility without mutating a workbook.
 - It resolves `UTF8_FILE`, `FILE`, and `STANDARD_INPUT` authored payloads early, so missing or
   unreadable authored inputs can fail under `journal.inputResolution`. Each source-resolution
   problem carries `context.json.jsonPath` for the exact authored leaf, such as
-  `steps[0].action.rows.cells[0][1].source.path`; raw requests retain that leaf's UTF-8 byte
+  `steps[0].action.rows.cells[0][1].value.path`; raw requests retain that leaf's UTF-8 byte
   offset as well.
 - It also preflights `source.type: EXISTING` workbook access, so missing or unreadable
   `source.path` workbooks can already fail during doctoring under `OPEN_WORKBOOK`.
@@ -654,26 +654,26 @@ Use `{ "type": "NONE" }` to run mutations, assertions, and inspections without s
 Used in `SET_CELL`, `SET_RANGE`, and `APPEND_ROW`:
 
 ```json
-{ "type": "TEXT",      "source": { "type": "INLINE", "text": "Origin" } }
+{ "type": "TEXT",      "value": { "type": "INLINE", "text": "Origin" } }
 {
   "type": "RICH_TEXT",
   "runs": [
     {
-      "source": { "type": "INLINE", "text": "Q2 " },
+      "text": { "type": "INLINE", "text": "Q2 " },
       "font": { "fontName": "Aptos", "fontColor": { "type": "RGB", "rgb": "#44546A" } }
     },
     {
-      "source": { "type": "INLINE", "text": "Budget" },
+      "text": { "type": "INLINE", "text": "Budget" },
       "font": { "bold": true, "fontColor": { "type": "RGB", "rgb": "#C00000" } }
     }
   ]
 }
-{ "type": "NUMBER",    "number": 8.40                }
-{ "type": "BOOLEAN",   "bool": true                  }
-{ "type": "FORMULA",   "source": { "type": "INLINE", "text": "SUM(B2:B3)" } }
-{ "type": "RAW_FORMULA", "source": { "type": "INLINE", "text": "LAMBDA(x,x+1)(A1)" } }
-{ "type": "DATE",      "date": "2026-03-25"           }
-{ "type": "DATE_TIME", "dateTime": "2026-03-25T10:15:30" }
+{ "type": "NUMBER",    "value": 8.40                }
+{ "type": "BOOLEAN",   "value": true                  }
+{ "type": "FORMULA",   "value": { "type": "INLINE", "text": "SUM(B2:B3)" } }
+{ "type": "RAW_FORMULA", "value": { "type": "INLINE", "text": "LAMBDA(x,x+1)(A1)" } }
+{ "type": "DATE",      "value": "2026-03-25"           }
+{ "type": "DATE_TIME", "value": "2026-03-25T10:15:30" }
 { "type": "BLANK"                                     }
 ```
 

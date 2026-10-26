@@ -135,7 +135,7 @@ class SourceBackedPlanResolverIdentityCoverageTest extends SourceBackedPlanResol
     CellValueSpec.Text titleValue = assertInstanceOf(CellValueSpec.Text.class, titleAction.value());
     assertEquals(
         "Quarterly Budget",
-        assertInstanceOf(TextSourceSpec.Inline.class, titleValue.source()).text());
+        assertInstanceOf(TextSourceSpec.Inline.class, titleValue.value()).text());
 
     CellMutationAction.SetCell formulaAction =
         assertInstanceOf(
@@ -143,7 +143,7 @@ class SourceBackedPlanResolverIdentityCoverageTest extends SourceBackedPlanResol
     CellValueSpec.Formula formulaValue =
         assertInstanceOf(CellValueSpec.Formula.class, formulaAction.value());
     assertEquals(
-        "SUM(B2:B3)", assertInstanceOf(TextSourceSpec.Inline.class, formulaValue.source()).text());
+        "SUM(B2:B3)", assertInstanceOf(TextSourceSpec.Inline.class, formulaValue.value()).text());
 
     DrawingMutationAction.SetShape shapeAction =
         assertInstanceOf(
@@ -276,9 +276,8 @@ class SourceBackedPlanResolverIdentityCoverageTest extends SourceBackedPlanResol
                 new AssertionStep(
                     new StepId("assert-amount"),
                     selector,
-                    new CellAssertion.CellValue(
-                        new dev.erst.gridgrind.core.model.value.CellScalarValue.NumberValue(
-                            125.0)))));
+                    new CellAssertion.Value(
+                        new dev.erst.gridgrind.core.model.value.CellValue.NumberValue(125.0)))));
 
     WorkbookPlan resolved =
         SourceBackedPlanResolver.resolve(
@@ -295,7 +294,7 @@ class SourceBackedPlanResolverIdentityCoverageTest extends SourceBackedPlanResol
     CellValueSpec.Text resolvedValue =
         assertInstanceOf(CellValueSpec.Text.class, resolvedRow.expectedValue());
     assertEquals(
-        "Hosting", assertInstanceOf(TextSourceSpec.Inline.class, resolvedValue.source()).text());
+        "Hosting", assertInstanceOf(TextSourceSpec.Inline.class, resolvedValue.value()).text());
 
     AssertionStep resolvedAssertion =
         assertInstanceOf(AssertionStep.class, resolved.steps().get(1));
@@ -306,7 +305,7 @@ class SourceBackedPlanResolverIdentityCoverageTest extends SourceBackedPlanResol
     CellValueSpec.Text assertedValue =
         assertInstanceOf(CellValueSpec.Text.class, assertedRow.expectedValue());
     assertEquals(
-        "Hosting", assertInstanceOf(TextSourceSpec.Inline.class, assertedValue.source()).text());
+        "Hosting", assertInstanceOf(TextSourceSpec.Inline.class, assertedValue.value()).text());
   }
 
   @Test
@@ -383,7 +382,7 @@ class SourceBackedPlanResolverIdentityCoverageTest extends SourceBackedPlanResol
             CellValueSpec.Text.class, resolvedRange.rows().toCellInputRows().getFirst().getFirst());
     assertEquals(
         "Quarterly Budget",
-        assertInstanceOf(TextSourceSpec.Inline.class, resolvedRangeCell.source()).text());
+        assertInstanceOf(TextSourceSpec.Inline.class, resolvedRangeCell.value()).text());
 
     MutationStep resolvedLineStep = assertInstanceOf(MutationStep.class, resolved.steps().get(1));
     assertNotSame(lineChartStep, resolvedLineStep);

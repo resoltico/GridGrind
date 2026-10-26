@@ -22,7 +22,7 @@
         "address": "A1",
         "value": {
           "type": "NUMBER",
-          "number": 10.0
+          "value": 10.0
         }
       }
     },
@@ -34,7 +34,7 @@
         "address": "A2",
         "value": {
           "type": "NUMBER",
-          "number": 20.0
+          "value": 20.0
         }
       }
     },
@@ -46,7 +46,7 @@
         "address": "A3",
         "value": {
           "type": "FORMULA",
-          "source": {
+          "value": {
             "type": "INLINE",
             "text": "=SUM(A1:A2)"
           }

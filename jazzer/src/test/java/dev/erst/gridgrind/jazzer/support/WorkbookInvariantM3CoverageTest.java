@@ -18,7 +18,6 @@ import dev.erst.gridgrind.core.model.style.RichTextRunReport;
 import dev.erst.gridgrind.core.model.value.CellReport;
 import dev.erst.gridgrind.core.model.value.CellTemporalKind;
 import dev.erst.gridgrind.core.model.value.CellTemporalReport;
-import dev.erst.gridgrind.core.model.value.CellValueReport;
 import dev.erst.gridgrind.core.model.value.HyperlinkTarget;
 import dev.erst.gridgrind.core.plan.InspectionStep;
 import dev.erst.gridgrind.core.plan.RangeSelector;
@@ -70,7 +69,8 @@ class WorkbookInvariantM3CoverageTest {
                     Optional.of(style()),
                     Optional.of(new HyperlinkTarget.Url("https://example.com/report")),
                     Optional.of(new CommentReport("Review", "GridGrind", true)),
-                    Optional.of("Ada"),
+                    java.util.Optional.of(
+                        new dev.erst.gridgrind.core.model.value.CellValue.Text("Ada")),
                     Optional.of(List.of(run("Ada"))))));
     assertDoesNotThrow(
         () ->
@@ -81,7 +81,8 @@ class WorkbookInvariantM3CoverageTest {
                     Optional.of(style()),
                     Optional.empty(),
                     Optional.empty(),
-                    Optional.of(46160.0d),
+                    java.util.Optional.of(
+                        new dev.erst.gridgrind.core.model.value.CellValue.NumberValue(46160.0d)),
                     Optional.of(
                         CellTemporalReport.temporal(CellTemporalKind.DATE, "2026-07-01")))));
     assertDoesNotThrow(
@@ -94,8 +95,10 @@ class WorkbookInvariantM3CoverageTest {
                     Optional.empty(),
                     Optional.empty(),
                     Optional.of("CONCAT(\"A\",\"da\")"),
-                    Optional.of(
-                        new CellValueReport.TextValue("Ada", Optional.of(List.of(run("Ada"))))))));
+                    java.util.Optional.of(
+                        new dev.erst.gridgrind.core.model.value.CellValue.Text("Ada")),
+                    Optional.of(List.of(run("Ada"))),
+                    java.util.Optional.empty())));
   }
 
   @Test
@@ -125,7 +128,8 @@ class WorkbookInvariantM3CoverageTest {
         Optional.empty(),
         Optional.empty(),
         Optional.empty(),
-        Optional.empty());
+        Optional.empty(),
+        java.util.Optional.empty());
   }
 
   private static CellReport.TextReport textCell(String address, String value) {
@@ -135,7 +139,7 @@ class WorkbookInvariantM3CoverageTest {
         Optional.of(style()),
         Optional.empty(),
         Optional.empty(),
-        Optional.of(value),
+        java.util.Optional.of(new dev.erst.gridgrind.core.model.value.CellValue.Text(value)),
         Optional.empty());
   }
 

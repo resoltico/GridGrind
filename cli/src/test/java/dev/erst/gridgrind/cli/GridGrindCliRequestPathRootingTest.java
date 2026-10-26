@@ -120,7 +120,8 @@ class GridGrindCliRequestPathRootingTest extends GridGrindCliTestSupport {
         assertInstanceOf(
                 dev.erst.gridgrind.core.model.value.CellReport.TextReport.class,
                 cells.cells().getFirst())
-            .textValue()
+            .value()
+            .map(dev.erst.gridgrind.core.model.value.CellValue.Text::value)
             .orElseThrow());
   }
 
@@ -149,7 +150,7 @@ class GridGrindCliRequestPathRootingTest extends GridGrindCliTestSupport {
                   "type": "SET_CELL",
                   "value": {
                     "type": "TEXT",
-                    "source": { "type": "UTF8_FILE", "path": "title.txt" }
+                    "value": { "type": "UTF8_FILE", "path": "title.txt" }
                   }
                 }
               },
@@ -186,7 +187,8 @@ class GridGrindCliRequestPathRootingTest extends GridGrindCliTestSupport {
         assertInstanceOf(
                 dev.erst.gridgrind.core.model.value.CellReport.TextReport.class,
                 cells.cells().getFirst())
-            .textValue()
+            .value()
+            .map(dev.erst.gridgrind.core.model.value.CellValue.Text::value)
             .orElseThrow());
   }
 
@@ -248,9 +250,9 @@ class GridGrindCliRequestPathRootingTest extends GridGrindCliTestSupport {
     assertEquals(
         7.5d,
         assertInstanceOf(
-                dev.erst.gridgrind.core.model.value.CellValueReport.NumberValue.class,
-                formula.evaluation().orElseThrow())
-            .numberValue());
+                dev.erst.gridgrind.core.model.value.CellValue.NumberValue.class,
+                formula.value().orElseThrow())
+            .value());
   }
 
   @Test
@@ -337,7 +339,7 @@ class GridGrindCliRequestPathRootingTest extends GridGrindCliTestSupport {
                                   "type": "SET_CELL",
                                   "value": {
                                     "type": "TEXT",
-                                    "source": { "type": "UTF8_FILE", "path": "title.txt" }
+                                    "value": { "type": "UTF8_FILE", "path": "title.txt" }
                                   }
                                 }
                               },
@@ -364,7 +366,8 @@ class GridGrindCliRequestPathRootingTest extends GridGrindCliTestSupport {
         assertInstanceOf(
                 dev.erst.gridgrind.core.model.value.CellReport.TextReport.class,
                 cells.cells().getFirst())
-            .textValue()
+            .value()
+            .map(dev.erst.gridgrind.core.model.value.CellValue.Text::value)
             .orElseThrow());
   }
 

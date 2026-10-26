@@ -205,17 +205,16 @@ final class ExecutionJournalTargetResolver {
   static String summarizeCellInput(CellValueSpec input) {
     return switch (input) {
       case CellValueSpec.Blank _ -> "Blank[]";
-      case CellValueSpec.Text text -> "Text[" + summarizeTextSource(text.source()) + "]";
+      case CellValueSpec.Text text -> "Text[" + summarizeTextSource(text.value()) + "]";
       case CellValueSpec.RichText richText -> "RichText[runs=" + richText.runs().size() + "]";
-      case CellValueSpec.NumberValue numberValue -> "Number[number=" + numberValue.number() + "]";
-      case CellValueSpec.BooleanValue booleanValue -> "Boolean[value=" + booleanValue.bool() + "]";
-      case CellValueSpec.ErrorValue errorValue -> "Error[error=" + errorValue.error() + "]";
-      case CellValueSpec.Date date -> "Date[value=" + date.date() + "]";
-      case CellValueSpec.DateTime dateTime -> "DateTime[value=" + dateTime.dateTime() + "]";
-      case CellValueSpec.Formula formula ->
-          "Formula[" + summarizeTextSource(formula.source()) + "]";
+      case CellValueSpec.NumberValue numberValue -> "Number[number=" + numberValue.value() + "]";
+      case CellValueSpec.BooleanValue booleanValue -> "Boolean[value=" + booleanValue.value() + "]";
+      case CellValueSpec.ErrorValue errorValue -> "Error[error=" + errorValue.value() + "]";
+      case CellValueSpec.Date date -> "Date[value=" + date.value() + "]";
+      case CellValueSpec.DateTime dateTime -> "DateTime[value=" + dateTime.value() + "]";
+      case CellValueSpec.Formula formula -> "Formula[" + summarizeTextSource(formula.value()) + "]";
       case CellValueSpec.RawFormula rawFormula ->
-          "RawFormula[" + summarizeTextSource(rawFormula.source()) + "]";
+          "RawFormula[" + summarizeTextSource(rawFormula.value()) + "]";
     };
   }
 

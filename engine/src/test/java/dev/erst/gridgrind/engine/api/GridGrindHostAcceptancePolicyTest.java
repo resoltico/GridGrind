@@ -3,7 +3,7 @@ package dev.erst.gridgrind.engine.api;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import dev.erst.gridgrind.core.model.value.CellScalarValue;
+import dev.erst.gridgrind.core.model.value.CellValue;
 import dev.erst.gridgrind.core.plan.AssertionStep;
 import dev.erst.gridgrind.core.plan.CellAssertion;
 import dev.erst.gridgrind.core.plan.CellSelector;
@@ -27,7 +27,7 @@ class GridGrindHostAcceptancePolicyTest {
         new AssertionStep(
             new StepId("assert-owner"),
             new CellSelector.ByAddress(new SheetName("Budget"), new CellAddress("A1")),
-            new CellAssertion.CellValue(new CellScalarValue.Text("Ada")));
+            new CellAssertion.Value(new CellValue.Text("Ada")));
     InspectionStep inspection =
         new InspectionStep(
             new StepId("inspect-budget"),

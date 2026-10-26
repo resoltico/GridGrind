@@ -62,6 +62,7 @@ class InspectionResultTest {
             java.util.Optional.of(""),
             java.util.Optional.of(minimalStyle()),
             java.util.Optional.empty(),
+            java.util.Optional.empty(),
             java.util.Optional.empty()));
     SheetInspectionResult.CellsResult result =
         new SheetInspectionResult.CellsResult(new StepId("cells"), new SheetLabel("Budget"), cells);

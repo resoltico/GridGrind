@@ -2,10 +2,8 @@ package dev.erst.gridgrind.core.catalog;
 
 import dev.erst.gridgrind.core.metadata.ProtocolField;
 import dev.erst.gridgrind.core.model.value.CellGridSpec;
-import dev.erst.gridgrind.core.model.value.CellReport;
 import dev.erst.gridgrind.core.model.value.CellRowSpec;
-import dev.erst.gridgrind.core.model.value.CellScalarValue;
-import dev.erst.gridgrind.core.model.value.CellValueReport;
+import dev.erst.gridgrind.core.model.value.CellValue;
 import dev.erst.gridgrind.core.model.value.CellValueSpec;
 import dev.erst.gridgrind.core.source.SecretReference;
 import dev.erst.gridgrind.core.vocabulary.ExcelReportedCellErrorLiteral;
@@ -57,23 +55,17 @@ public final class CatalogFieldMetadataSupport {
   private static final Map<ComponentKey, FieldMetadataOverride> FIELD_METADATA_OVERRIDES =
       Map.ofEntries(
           Map.entry(
-              new ComponentKey(CellValueSpec.ErrorValue.class, "error"),
+              new ComponentKey(CellValueSpec.ErrorValue.class, "value"),
               STORED_CELL_ERROR_LITERAL_METADATA),
           Map.entry(
-              new ComponentKey(CellScalarValue.ErrorValue.class, "error"),
+              new ComponentKey(CellValue.ErrorValue.class, "value"),
               REPORTED_CELL_ERROR_LITERAL_METADATA),
           Map.entry(
               new ComponentKey(CellRowSpec.ErrorValues.class, "cells"),
               STORED_CELL_ERROR_LITERAL_METADATA),
           Map.entry(
               new ComponentKey(CellGridSpec.ErrorRows.class, "cells"),
-              STORED_CELL_ERROR_LITERAL_METADATA),
-          Map.entry(
-              new ComponentKey(CellValueReport.ErrorValue.class, "errorValue"),
-              REPORTED_CELL_ERROR_LITERAL_METADATA),
-          Map.entry(
-              new ComponentKey(CellReport.ErrorReport.class, "errorValue"),
-              REPORTED_CELL_ERROR_LITERAL_METADATA));
+              STORED_CELL_ERROR_LITERAL_METADATA));
 
   private CatalogFieldMetadataSupport() {}
 

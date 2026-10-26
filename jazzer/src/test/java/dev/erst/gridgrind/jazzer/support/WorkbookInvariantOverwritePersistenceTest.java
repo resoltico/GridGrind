@@ -2,7 +2,6 @@ package dev.erst.gridgrind.jazzer.support;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 
-import dev.erst.gridgrind.core.vocabulary.ProtocolVersion;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import dev.erst.gridgrind.core.problem.GridGrindProblemCode;
 import dev.erst.gridgrind.core.problem.GridGrindProblemDetail;
@@ -11,6 +10,7 @@ import dev.erst.gridgrind.core.problem.ProblemContextRequestSurfaces;
 import dev.erst.gridgrind.core.result.WorkbookResult;
 import dev.erst.gridgrind.core.result.WorkbookResultPersistence;
 import dev.erst.gridgrind.core.result.WorkbookResults;
+import dev.erst.gridgrind.core.vocabulary.ProtocolVersion;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;

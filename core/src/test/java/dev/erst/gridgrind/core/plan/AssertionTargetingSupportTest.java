@@ -66,8 +66,8 @@ class AssertionTargetingSupportTest {
             TableCellSelector.ByColumnName.class),
         List.of(
             Assertion.allowedTargetTypes(
-                new CellAssertion.CellValue(
-                    new dev.erst.gridgrind.core.model.value.CellScalarValue.Text("Owner")))));
+                new CellAssertion.Value(
+                    new dev.erst.gridgrind.core.model.value.CellValue.Text("Owner")))));
   }
 
   @Test
@@ -80,8 +80,8 @@ class AssertionTargetingSupportTest {
                     new CompositeAssertion.AllOf(
                         List.of(
                             new PresenceAssertion.TablePresent(),
-                            new CellAssertion.CellValue(
-                                new dev.erst.gridgrind.core.model.value.CellScalarValue.Text(
+                            new CellAssertion.Value(
+                                new dev.erst.gridgrind.core.model.value.CellValue.Text(
                                     "Owner"))))));
     assertEquals(
         "ALL_OF requires nested assertions with compatible target families",

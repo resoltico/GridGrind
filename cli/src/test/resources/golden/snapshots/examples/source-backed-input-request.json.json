@@ -79,15 +79,18 @@
     "inspections" : [ {
       "cells" : [ {
         "address" : "A1",
-        "textValue" : "Quarterly Budget\n",
-        "type" : "TEXT"
+        "type" : "TEXT",
+        "value" : {
+          "type" : "TEXT",
+          "value" : "Quarterly Budget\n"
+        }
       }, {
         "address" : "B4",
-        "evaluation" : {
-          "numberValue" : 30.0,
-          "type" : "NUMBER"
-        },
-        "type" : "FORMULA"
+        "type" : "FORMULA",
+        "value" : {
+          "type" : "NUMBER",
+          "value" : 30.0
+        }
       } ],
       "sheetName" : "Inputs",
       "stepId" : "read-cells",

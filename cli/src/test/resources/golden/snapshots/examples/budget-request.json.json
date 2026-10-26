@@ -198,8 +198,11 @@
             "locked" : true
           }
         },
-        "textValue" : "Item",
-        "type" : "TEXT"
+        "type" : "TEXT",
+        "value" : {
+          "type" : "TEXT",
+          "value" : "Item"
+        }
       }, {
         "address" : "B1",
         "displayValue" : "Amount",
@@ -250,8 +253,11 @@
             "locked" : true
           }
         },
-        "textValue" : "Amount",
-        "type" : "TEXT"
+        "type" : "TEXT",
+        "value" : {
+          "type" : "TEXT",
+          "value" : "Amount"
+        }
       }, {
         "address" : "C1",
         "displayValue" : "Billable",
@@ -302,8 +308,11 @@
             "locked" : true
           }
         },
-        "textValue" : "Billable",
-        "type" : "TEXT"
+        "type" : "TEXT",
+        "value" : {
+          "type" : "TEXT",
+          "value" : "Billable"
+        }
       }, {
         "address" : "A2",
         "displayValue" : "Hosting",
@@ -354,12 +363,14 @@
             "locked" : true
           }
         },
-        "textValue" : "Hosting",
-        "type" : "TEXT"
+        "type" : "TEXT",
+        "value" : {
+          "type" : "TEXT",
+          "value" : "Hosting"
+        }
       }, {
         "address" : "B2",
         "displayValue" : "49.00",
-        "numberValue" : 49.0,
         "style" : {
           "alignment" : {
             "horizontalAlignment" : "RIGHT",
@@ -410,10 +421,13 @@
         "temporal" : {
           "isDate" : false
         },
-        "type" : "NUMBER"
+        "type" : "NUMBER",
+        "value" : {
+          "type" : "NUMBER",
+          "value" : 49.0
+        }
       }, {
         "address" : "C2",
-        "booleanValue" : true,
         "displayValue" : "TRUE",
         "style" : {
           "alignment" : {
@@ -462,7 +476,11 @@
             "locked" : true
           }
         },
-        "type" : "BOOLEAN"
+        "type" : "BOOLEAN",
+        "value" : {
+          "type" : "BOOLEAN",
+          "value" : true
+        }
       }, {
         "address" : "A3",
         "displayValue" : "Domain",
@@ -513,12 +531,14 @@
             "locked" : true
           }
         },
-        "textValue" : "Domain",
-        "type" : "TEXT"
+        "type" : "TEXT",
+        "value" : {
+          "type" : "TEXT",
+          "value" : "Domain"
+        }
       }, {
         "address" : "B3",
         "displayValue" : "12.00",
-        "numberValue" : 12.0,
         "style" : {
           "alignment" : {
             "horizontalAlignment" : "RIGHT",
@@ -569,10 +589,13 @@
         "temporal" : {
           "isDate" : false
         },
-        "type" : "NUMBER"
+        "type" : "NUMBER",
+        "value" : {
+          "type" : "NUMBER",
+          "value" : 12.0
+        }
       }, {
         "address" : "C3",
-        "booleanValue" : false,
         "displayValue" : "FALSE",
         "style" : {
           "alignment" : {
@@ -621,7 +644,11 @@
             "locked" : true
           }
         },
-        "type" : "BOOLEAN"
+        "type" : "BOOLEAN",
+        "value" : {
+          "type" : "BOOLEAN",
+          "value" : false
+        }
       }, {
         "address" : "A4",
         "displayValue" : "Total",
@@ -672,18 +699,14 @@
             "locked" : true
           }
         },
-        "textValue" : "Total",
-        "type" : "TEXT"
+        "type" : "TEXT",
+        "value" : {
+          "type" : "TEXT",
+          "value" : "Total"
+        }
       }, {
         "address" : "B4",
         "displayValue" : "61.00",
-        "evaluation" : {
-          "numberValue" : 61.0,
-          "temporal" : {
-            "isDate" : false
-          },
-          "type" : "NUMBER"
-        },
         "formula" : "SUM(B2:B3)",
         "style" : {
           "alignment" : {
@@ -732,7 +755,14 @@
             "locked" : true
           }
         },
-        "type" : "FORMULA"
+        "temporal" : {
+          "isDate" : false
+        },
+        "type" : "FORMULA",
+        "value" : {
+          "type" : "NUMBER",
+          "value" : 61.0
+        }
       }, {
         "address" : "C4",
         "displayValue" : "",
@@ -783,7 +813,10 @@
             "locked" : true
           }
         },
-        "type" : "BLANK"
+        "type" : "BLANK",
+        "value" : {
+          "type" : "BLANK"
+        }
       } ],
       "sheetName" : "Budget",
       "stepId" : "sheet-0-cells",
@@ -929,19 +962,25 @@
     }, {
       "cells" : [ {
         "address" : "A1",
-        "textValue" : "Item",
-        "type" : "TEXT"
+        "type" : "TEXT",
+        "value" : {
+          "type" : "TEXT",
+          "value" : "Item"
+        }
       }, {
         "address" : "B4",
-        "evaluation" : {
-          "numberValue" : 61.0,
-          "type" : "NUMBER"
-        },
-        "type" : "FORMULA"
+        "type" : "FORMULA",
+        "value" : {
+          "type" : "NUMBER",
+          "value" : 61.0
+        }
       }, {
         "address" : "C2",
-        "booleanValue" : true,
-        "type" : "BOOLEAN"
+        "type" : "BOOLEAN",
+        "value" : {
+          "type" : "BOOLEAN",
+          "value" : true
+        }
       } ],
       "sheetName" : "Budget",
       "stepId" : "cells",
@@ -956,51 +995,81 @@
         },
         "populatedCells" : [ {
           "address" : "A1",
-          "textValue" : "Item",
-          "type" : "TEXT"
+          "type" : "TEXT",
+          "value" : {
+            "type" : "TEXT",
+            "value" : "Item"
+          }
         }, {
           "address" : "B1",
-          "textValue" : "Amount",
-          "type" : "TEXT"
+          "type" : "TEXT",
+          "value" : {
+            "type" : "TEXT",
+            "value" : "Amount"
+          }
         }, {
           "address" : "C1",
-          "textValue" : "Billable",
-          "type" : "TEXT"
+          "type" : "TEXT",
+          "value" : {
+            "type" : "TEXT",
+            "value" : "Billable"
+          }
         }, {
           "address" : "A2",
-          "textValue" : "Hosting",
-          "type" : "TEXT"
+          "type" : "TEXT",
+          "value" : {
+            "type" : "TEXT",
+            "value" : "Hosting"
+          }
         }, {
           "address" : "B2",
-          "numberValue" : 49.0,
-          "type" : "NUMBER"
+          "type" : "NUMBER",
+          "value" : {
+            "type" : "NUMBER",
+            "value" : 49.0
+          }
         }, {
           "address" : "C2",
-          "booleanValue" : true,
-          "type" : "BOOLEAN"
+          "type" : "BOOLEAN",
+          "value" : {
+            "type" : "BOOLEAN",
+            "value" : true
+          }
         }, {
           "address" : "A3",
-          "textValue" : "Domain",
-          "type" : "TEXT"
+          "type" : "TEXT",
+          "value" : {
+            "type" : "TEXT",
+            "value" : "Domain"
+          }
         }, {
           "address" : "B3",
-          "numberValue" : 12.0,
-          "type" : "NUMBER"
+          "type" : "NUMBER",
+          "value" : {
+            "type" : "NUMBER",
+            "value" : 12.0
+          }
         }, {
           "address" : "C3",
-          "booleanValue" : false,
-          "type" : "BOOLEAN"
+          "type" : "BOOLEAN",
+          "value" : {
+            "type" : "BOOLEAN",
+            "value" : false
+          }
         }, {
           "address" : "A4",
-          "textValue" : "Total",
-          "type" : "TEXT"
+          "type" : "TEXT",
+          "value" : {
+            "type" : "TEXT",
+            "value" : "Total"
+          }
         }, {
           "address" : "B4",
-          "evaluation" : {
-            "numberValue" : 61.0,
-            "type" : "NUMBER"
-          },
-          "type" : "FORMULA"
+          "type" : "FORMULA",
+          "value" : {
+            "type" : "NUMBER",
+            "value" : 61.0
+          }
         } ],
         "sheetName" : "Budget",
         "topLeftAddress" : "A1",

@@ -35,6 +35,55 @@ class ExampleExecutionFixturesTest {
   @TempDir Path tempDir;
 
   @Test
+  void storedNonfiniteNumericObservationsRemainVisible() throws IOException {
+    Path source = tempDir.resolve("observed-number.xlsx");
+    try (var workbook = new org.apache.poi.xssf.usermodel.XSSFWorkbook()) {
+      var row = workbook.createSheet("Data").createRow(0);
+      var observed = row.createCell(0);
+      observed.setCellValue(1.0);
+      observed.getCTCell().setV("NaN");
+      row.createCell(1).setCellValue(1.0);
+      try (OutputStream output = Files.newOutputStream(source)) {
+        workbook.write(output);
+      }
+    }
+    WorkbookPlan request =
+        GridGrindJson.readRequest(
+            """
+        {"protocolVersion":1,"source":{"type":"EXISTING","path":"observed-number.xlsx"},
+         "persistence":{"type":"NONE"},"steps":[{"stepId":"numbers",
+         "target":{"type":"CELL_BY_ADDRESSES","sheetName":"Data","addresses":["A1","B1"]},
+         "query":{"type":"GET_CELLS"}}]}
+        """);
+    var result =
+        assertInstanceOf(
+            WorkbookResult.Success.class,
+            new DefaultGridGrindRequestExecutor()
+                .execute(request, bindingsForExample(tempDir, request)));
+    var cells =
+        assertInstanceOf(
+                dev.erst.gridgrind.core.plan.SheetInspectionResult.CellsResult.class,
+                result.inspections().getFirst())
+            .cells();
+    var observed =
+        assertInstanceOf(
+                dev.erst.gridgrind.core.model.value.CellReport.NumberReport.class, cells.getFirst())
+            .value()
+            .orElseThrow();
+    assertTrue(Double.isNaN(observed.value()));
+    assertEquals(
+        1.0,
+        assertInstanceOf(
+                dev.erst.gridgrind.core.model.value.CellReport.NumberReport.class, cells.get(1))
+            .value()
+            .orElseThrow()
+            .value());
+    assertEquals(
+        result,
+        GridGrindJson.readWorkbookResult(GridGrindJsonOutput.writeWorkbookResultBytes(result)));
+  }
+
+  @Test
   void observedTableLabelsMayBeEmptyWithoutBecomingAuthoredIdentifiers() throws IOException {
     Path source = tempDir.resolve("observed-table-name.xlsx");
     try (var workbook = new org.apache.poi.xssf.usermodel.XSSFWorkbook()) {

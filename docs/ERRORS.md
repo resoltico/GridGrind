@@ -259,7 +259,7 @@ target, authored assertion, and observations:
         "type": "EXPECT_CELL_VALUE",
         "expectedValue": {
           "type": "NUMBER",
-          "number": 1200
+          "value": 1200
         }
       },
       "observations": [
@@ -271,7 +271,7 @@ target, authored assertion, and observations:
             {
               "type": "NUMBER",
               "address": "B2",
-              "numberValue": 900.0
+              "value": { "type": "NUMBER", "value": 900.0 }
             }
           ]
         }
@@ -421,7 +421,7 @@ The `context` block provides structured metadata about where the failure occurre
 | `range` | Range, if applicable. |
 | `formula` | Formula text, if applicable. |
 | `namedRangeName` | Named range involved in the failure, if applicable. |
-| `jsonPath` | GridGrind dotted JSON path to the offending request value itself, such as `steps[0].action.zoomPercent`, `steps[0].target.type`, `steps[0].action.rows.cells[0][1].source.path`, or `protocolVersion`. It is present for request intake, static validation, and source-backed input-resolution failures when an authored request location is available. |
+| `jsonPath` | GridGrind dotted JSON path to the offending request value itself, such as `steps[0].action.zoomPercent`, `steps[0].target.type`, `steps[0].action.rows.cells[0][1].value.path`, or `protocolVersion`. It is present for request intake, static validation, and source-backed input-resolution failures when an authored request location is available. |
 | `jsonLine` | One-based line number in the request payload when request parsing exposed a concrete cursor. |
 | `jsonColumn` | One-based column number in the request payload when request parsing exposed a concrete cursor. |
 | `responsePath` | The response file path that failed during `WRITE_RESPONSE`, when the CLI was writing to `--response <path>`. |

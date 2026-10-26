@@ -112,14 +112,14 @@ cat > "${request_path}" <<EOF
           [
             {
               "type": "TEXT",
-              "source": {
+              "value": {
                 "type": "INLINE",
                 "text": "Field"
               }
             },
             {
               "type": "TEXT",
-              "source": {
+              "value": {
                 "type": "INLINE",
                 "text": "Value"
               }
@@ -128,14 +128,14 @@ cat > "${request_path}" <<EOF
           [
             {
               "type": "TEXT",
-              "source": {
+              "value": {
                 "type": "INLINE",
                 "text": "Owner"
               }
             },
             {
               "type": "TEXT",
-              "source": {
+              "value": {
                 "type": "INLINE",
                 "text": "GridGrind"
               }
@@ -144,14 +144,14 @@ cat > "${request_path}" <<EOF
           [
             {
               "type": "TEXT",
-              "source": {
+              "value": {
                 "type": "INLINE",
                 "text": "Status"
               }
             },
             {
               "type": "TEXT",
-              "source": {
+              "value": {
                 "type": "INLINE",
                 "text": "Encrypted"
               }
@@ -226,14 +226,14 @@ cat > "${task_request_path}" <<EOF
           [
             {
               "type": "TEXT",
-              "source": {
+              "value": {
                 "type": "INLINE",
                 "text": "Owner"
               }
             },
             {
               "type": "TEXT",
-              "source": {
+              "value": {
                 "type": "INLINE",
                 "text": "Status"
               }
@@ -242,14 +242,14 @@ cat > "${task_request_path}" <<EOF
           [
             {
               "type": "TEXT",
-              "source": {
+              "value": {
                 "type": "INLINE",
                 "text": "Ada"
               }
             },
             {
               "type": "TEXT",
-              "source": {
+              "value": {
                 "type": "INLINE",
                 "text": "Ready"
               }
@@ -258,14 +258,14 @@ cat > "${task_request_path}" <<EOF
           [
             {
               "type": "TEXT",
-              "source": {
+              "value": {
                 "type": "INLINE",
                 "text": "Lin"
               }
             },
             {
               "type": "TEXT",
-              "source": {
+              "value": {
                 "type": "INLINE",
                 "text": "Review"
               }
@@ -357,7 +357,7 @@ cat > "${task_request_path}" <<EOF
         "type": "SET_CELL",
         "value": {
           "type": "TEXT",
-          "source": {
+          "value": {
             "type": "INLINE",
             "text": "Template status"
           }
@@ -375,7 +375,7 @@ cat > "${task_request_path}" <<EOF
         "type": "SET_CELL",
         "value": {
           "type": "FORMULA",
-          "source": {
+          "value": {
             "type": "INLINE",
             "text": "'Template'!B2"
           }

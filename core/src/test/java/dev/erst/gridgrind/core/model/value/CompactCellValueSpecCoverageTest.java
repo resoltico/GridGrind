@@ -61,7 +61,7 @@ class CompactCellValueSpecCoverageTest {
                 assertInstanceOf(
                         CellValueSpec.Formula.class,
                         formulaRows.toCellInputRows().getFirst().getFirst())
-                    .source())
+                    .value())
             .text());
 
     assertEquals(
@@ -93,7 +93,7 @@ class CompactCellValueSpecCoverageTest {
                         new CellRowSpec.FormulaValues(List.of("SUM(B1:B2)"))
                             .toCellInputs()
                             .getFirst())
-                    .source())
+                    .value())
             .text());
   }
 
@@ -196,7 +196,7 @@ class CompactCellValueSpecCoverageTest {
 
   @Test
   void explicitErrorLiteralValidationAndPhaseFactoriesCoverResidualBranches() {
-    assertEquals("#REF!", new CellValueSpec.ErrorValue("#REF!").error());
+    assertEquals("#REF!", new CellValueSpec.ErrorValue("#REF!").value());
     assertEquals(
         "storedError must not be null",
         assertThrows(

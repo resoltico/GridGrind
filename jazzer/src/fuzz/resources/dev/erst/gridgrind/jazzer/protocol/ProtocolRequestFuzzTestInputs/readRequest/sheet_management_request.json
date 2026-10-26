@@ -90,7 +90,7 @@
         "type": "SET_CELL",
         "value": {
           "type": "TEXT",
-          "source": {
+          "value": {
             "type": "INLINE",
             "text": "Hidden archive"
           }
@@ -123,7 +123,7 @@
         "type": "SET_CELL",
         "value": {
           "type": "NUMBER",
-          "number": 155.0
+          "value": 155.0
         }
       },
       "target": {

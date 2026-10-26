@@ -387,7 +387,7 @@ class GridGrindCliDoctorCatalogCommandTest extends GridGrindCliTestSupport {
                                 },
                                 "assertion": {
                                   "type": "EXPECT_CELL_VALUE",
-                                  "expectedValue": { "type": "TEXT", "text": "Owner" }
+                                  "expectedValue": { "type": "TEXT", "value": "Owner" }
                                 }
                               }
                             ]
@@ -583,7 +583,7 @@ class GridGrindCliDoctorCatalogCommandTest extends GridGrindCliTestSupport {
                 "target": { "type": "CELL_BY_ADDRESS", "sheetName": "Budget", "address": "A1" },
                 "action": {
                   "type": "SET_CELL",
-                  "value": { "type": "ERROR", "error": "#CIRCULAR_REF!" }
+                  "value": { "type": "ERROR", "value": "#CIRCULAR_REF!" }
                 }
               }
             ]
@@ -605,7 +605,7 @@ class GridGrindCliDoctorCatalogCommandTest extends GridGrindCliTestSupport {
     assertFalse(report.valid());
     assertEquals(GridGrindProblemCode.INVALID_REQUEST, problem.code());
     assertEquals(
-        Optional.of("steps[0].action.value.error"), requestIntakeContext(report).jsonPath());
+        Optional.of("steps[0].action.value.value"), requestIntakeContext(report).jsonPath());
     assertTrue(problem.message().contains("cannot be authored as stored cell values"));
   }
 

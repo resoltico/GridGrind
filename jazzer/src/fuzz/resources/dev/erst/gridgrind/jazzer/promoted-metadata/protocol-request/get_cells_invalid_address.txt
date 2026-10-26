@@ -4,7 +4,7 @@ Harness: protocol-request
 Outcome: EXPECTED_INVALID
 Kind: InvalidRequestShapeException
 Message: Unknown field 'steps[0].action.sheetName'
-Input Bytes: 744
+Input Bytes: 740
 Decode Outcome: INVALID_REQUEST_SHAPE
 Source Kind: NOT_PARSED
 Persistence Kind: NOT_PARSED

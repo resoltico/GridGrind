@@ -48,8 +48,9 @@ final class Checks {
     return new PresenceAssertion.ChartAbsent();
   }
 
-  static CellAssertion.CellValue cellValue(ExpectedValues.Value expectedValue) {
-    return new CellAssertion.CellValue(ExpectedValues.toCellScalarValue(expectedValue));
+  static CellAssertion.Value cellValue(
+      dev.erst.gridgrind.core.model.value.CellValue expectedValue) {
+    return new CellAssertion.Value(expectedValue);
   }
 
   static CellAssertion.DisplayValue displayValue(String displayValue) {

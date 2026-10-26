@@ -60,19 +60,19 @@ final class XlsxParityFormulaProbeGroup {
             XlsxParityGridGrind.read(success, "cells", SheetInspectionResult.CellsResult.class)
                 .cells()
                 .getFirst());
-    dev.erst.gridgrind.core.model.value.CellValueReport.NumberValue evaluation =
+    dev.erst.gridgrind.core.model.value.CellValue.NumberValue evaluation =
         cast(
-            dev.erst.gridgrind.core.model.value.CellValueReport.NumberValue.class,
-            formula.evaluation().orElseThrow());
+            dev.erst.gridgrind.core.model.value.CellValue.NumberValue.class,
+            formula.value().orElseThrow());
     String cachedValue = XlsxParityOracle.cachedFormulaRawValue(outputPath, "Ops", "B1");
-    return poiValue == 7.5d && evaluation.numberValue() == poiValue && "7.5".equals(cachedValue)
+    return poiValue == 7.5d && evaluation.value() == poiValue && "7.5".equals(cachedValue)
         ? pass("External-workbook formula bindings evaluate and persist cached results.")
         : fail(
             "External-workbook formula parity mismatch."
                 + " poiValue="
                 + poiValue
                 + " gridValue="
-                + evaluation.numberValue()
+                + evaluation.value()
                 + " cachedValue="
                 + cachedValue);
   }
@@ -107,14 +107,14 @@ final class XlsxParityFormulaProbeGroup {
                     cachedSuccess, "cells", SheetInspectionResult.CellsResult.class)
                 .cells()
                 .getFirst());
-    dev.erst.gridgrind.core.model.value.CellValueReport.NumberValue cachedEvaluation =
+    dev.erst.gridgrind.core.model.value.CellValue.NumberValue cachedEvaluation =
         cast(
-            dev.erst.gridgrind.core.model.value.CellValueReport.NumberValue.class,
-            cachedFormula.evaluation().orElseThrow());
+            dev.erst.gridgrind.core.model.value.CellValue.NumberValue.class,
+            cachedFormula.value().orElseThrow());
     return poiStrictFails
             && poiCachedValue == 7.5d
             && strictFailure.problem().code() == GridGrindProblemCode.MISSING_EXTERNAL_WORKBOOK
-            && cachedEvaluation.numberValue() == poiCachedValue
+            && cachedEvaluation.value() == poiCachedValue
         ? pass("Missing-workbook policy control matches POI strict and cached-value behavior.")
         : fail(
             "Missing-workbook policy parity mismatch."
@@ -125,7 +125,7 @@ final class XlsxParityFormulaProbeGroup {
                 + " gridStrictCode="
                 + strictFailure.problem().code()
                 + " gridCachedValue="
-                + cachedEvaluation.numberValue());
+                + cachedEvaluation.value());
   }
 
   static ProbeResult probeFormulaUdf(ProbeContext context) {
@@ -150,19 +150,19 @@ final class XlsxParityFormulaProbeGroup {
             XlsxParityGridGrind.read(success, "cells", SheetInspectionResult.CellsResult.class)
                 .cells()
                 .getFirst());
-    dev.erst.gridgrind.core.model.value.CellValueReport.NumberValue evaluation =
+    dev.erst.gridgrind.core.model.value.CellValue.NumberValue evaluation =
         cast(
-            dev.erst.gridgrind.core.model.value.CellValueReport.NumberValue.class,
-            formula.evaluation().orElseThrow());
+            dev.erst.gridgrind.core.model.value.CellValue.NumberValue.class,
+            formula.value().orElseThrow());
     String cachedValue = XlsxParityOracle.cachedFormulaRawValue(outputPath, "Ops", "B1");
-    return poiValue == 42.0d && evaluation.numberValue() == poiValue && "42.0".equals(cachedValue)
+    return poiValue == 42.0d && evaluation.value() == poiValue && "42.0".equals(cachedValue)
         ? pass("Template-backed UDF toolpacks evaluate and persist cached results.")
         : fail(
             "UDF-backed formula parity mismatch."
                 + " poiValue="
                 + poiValue
                 + " gridValue="
-                + evaluation.numberValue()
+                + evaluation.value()
                 + " cachedValue="
                 + cachedValue);
   }

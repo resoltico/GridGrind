@@ -597,13 +597,13 @@
                   "tint": -0.2
                 }
               },
-              "source": {
+              "text": {
                 "type": "INLINE",
                 "text": "Lead"
               }
             },
             {
-              "source": {
+              "text": {
                 "type": "INLINE",
                 "text": " "
               }
@@ -616,7 +616,7 @@
                   "indexed": 17
                 }
               },
-              "source": {
+              "text": {
                 "type": "INLINE",
                 "text": "review scheduled."
               }

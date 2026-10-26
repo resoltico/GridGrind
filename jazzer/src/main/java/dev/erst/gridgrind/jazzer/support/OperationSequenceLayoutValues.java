@@ -32,8 +32,7 @@ final class OperationSequenceLayoutValues {
       case 0 -> new PaneSpec.None();
       case 1 -> {
         int splitColumn = data.consumeInt(1, 3);
-        yield new PaneSpec.Frozen(
-            splitColumn, 0, data.consumeInt(splitColumn, splitColumn + 2), 0);
+        yield new PaneSpec.Frozen(splitColumn, 0, data.consumeInt(splitColumn, splitColumn + 2), 0);
       }
       case 2 -> {
         int splitRow = data.consumeInt(1, 3);

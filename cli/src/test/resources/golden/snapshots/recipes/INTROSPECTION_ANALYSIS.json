@@ -229,8 +229,11 @@
               "locked" : true
             }
           },
-          "textValue" : "Metric",
-          "type" : "TEXT"
+          "type" : "TEXT",
+          "value" : {
+            "type" : "TEXT",
+            "value" : "Metric"
+          }
         }, {
           "address" : "B1",
           "displayValue" : "Value",
@@ -281,8 +284,11 @@
               "locked" : true
             }
           },
-          "textValue" : "Value",
-          "type" : "TEXT"
+          "type" : "TEXT",
+          "value" : {
+            "type" : "TEXT",
+            "value" : "Value"
+          }
         }, {
           "address" : "C1",
           "displayValue" : "Notes",
@@ -333,8 +339,11 @@
               "locked" : true
             }
           },
-          "textValue" : "Notes",
-          "type" : "TEXT"
+          "type" : "TEXT",
+          "value" : {
+            "type" : "TEXT",
+            "value" : "Notes"
+          }
         }, {
           "address" : "A2",
           "displayValue" : "Revenue",
@@ -385,12 +394,14 @@
               "locked" : true
             }
           },
-          "textValue" : "Revenue",
-          "type" : "TEXT"
+          "type" : "TEXT",
+          "value" : {
+            "type" : "TEXT",
+            "value" : "Revenue"
+          }
         }, {
           "address" : "B2",
           "displayValue" : "125000.25",
-          "numberValue" : 125000.25,
           "style" : {
             "alignment" : {
               "horizontalAlignment" : "GENERAL",
@@ -441,7 +452,11 @@
           "temporal" : {
             "isDate" : false
           },
-          "type" : "NUMBER"
+          "type" : "NUMBER",
+          "value" : {
+            "type" : "NUMBER",
+            "value" : 125000.25
+          }
         }, {
           "address" : "C2",
           "displayValue" : "Closed month",
@@ -492,8 +507,11 @@
               "locked" : true
             }
           },
-          "textValue" : "Closed month",
-          "type" : "TEXT"
+          "type" : "TEXT",
+          "value" : {
+            "type" : "TEXT",
+            "value" : "Closed month"
+          }
         }, {
           "address" : "A3",
           "displayValue" : "Margin",
@@ -544,12 +562,14 @@
               "locked" : true
             }
           },
-          "textValue" : "Margin",
-          "type" : "TEXT"
+          "type" : "TEXT",
+          "value" : {
+            "type" : "TEXT",
+            "value" : "Margin"
+          }
         }, {
           "address" : "B3",
           "displayValue" : "0.42",
-          "numberValue" : 0.42,
           "style" : {
             "alignment" : {
               "horizontalAlignment" : "GENERAL",
@@ -600,7 +620,11 @@
           "temporal" : {
             "isDate" : false
           },
-          "type" : "NUMBER"
+          "type" : "NUMBER",
+          "value" : {
+            "type" : "NUMBER",
+            "value" : 0.42
+          }
         }, {
           "address" : "C3",
           "displayValue" : "Target 0.40",
@@ -651,8 +675,11 @@
               "locked" : true
             }
           },
-          "textValue" : "Target 0.40",
-          "type" : "TEXT"
+          "type" : "TEXT",
+          "value" : {
+            "type" : "TEXT",
+            "value" : "Target 0.40"
+          }
         }, {
           "address" : "A4",
           "displayValue" : "Forecast",
@@ -703,8 +730,11 @@
               "locked" : true
             }
           },
-          "textValue" : "Forecast",
-          "type" : "TEXT"
+          "type" : "TEXT",
+          "value" : {
+            "type" : "TEXT",
+            "value" : "Forecast"
+          }
         }, {
           "address" : "B4",
           "comment" : {
@@ -719,13 +749,6 @@
             "visible" : true
           },
           "displayValue" : "177500.355",
-          "evaluation" : {
-            "numberValue" : 177500.355,
-            "temporal" : {
-              "isDate" : false
-            },
-            "type" : "NUMBER"
-          },
           "formula" : "B2*(1+B3)",
           "style" : {
             "alignment" : {
@@ -774,7 +797,14 @@
               "locked" : true
             }
           },
-          "type" : "FORMULA"
+          "temporal" : {
+            "isDate" : false
+          },
+          "type" : "FORMULA",
+          "value" : {
+            "type" : "NUMBER",
+            "value" : 177500.355
+          }
         }, {
           "address" : "C4",
           "displayValue" : "Projected next month",
@@ -825,8 +855,11 @@
               "locked" : true
             }
           },
-          "textValue" : "Projected next month",
-          "type" : "TEXT"
+          "type" : "TEXT",
+          "value" : {
+            "type" : "TEXT",
+            "value" : "Projected next month"
+          }
         } ],
         "sheetName" : "Dashboard",
         "stepId" : "sheet-0-cells",
@@ -1351,71 +1384,71 @@
       "action" : {
         "rows" : {
           "cells" : [ [ {
-            "source" : {
+            "type" : "TEXT",
+            "value" : {
               "text" : "Metric",
               "type" : "INLINE"
-            },
-            "type" : "TEXT"
+            }
           }, {
-            "source" : {
+            "type" : "TEXT",
+            "value" : {
               "text" : "Value",
               "type" : "INLINE"
-            },
-            "type" : "TEXT"
+            }
           }, {
-            "source" : {
+            "type" : "TEXT",
+            "value" : {
               "text" : "Notes",
               "type" : "INLINE"
-            },
-            "type" : "TEXT"
+            }
           } ], [ {
-            "source" : {
+            "type" : "TEXT",
+            "value" : {
               "text" : "Revenue",
               "type" : "INLINE"
-            },
-            "type" : "TEXT"
+            }
           }, {
-            "number" : 125000.25,
-            "type" : "NUMBER"
+            "type" : "NUMBER",
+            "value" : 125000.25
           }, {
-            "source" : {
+            "type" : "TEXT",
+            "value" : {
               "text" : "Closed month",
               "type" : "INLINE"
-            },
-            "type" : "TEXT"
+            }
           } ], [ {
-            "source" : {
+            "type" : "TEXT",
+            "value" : {
               "text" : "Margin",
               "type" : "INLINE"
-            },
-            "type" : "TEXT"
+            }
           }, {
-            "number" : 0.42,
-            "type" : "NUMBER"
+            "type" : "NUMBER",
+            "value" : 0.42
           }, {
-            "source" : {
+            "type" : "TEXT",
+            "value" : {
               "text" : "Target 0.40",
               "type" : "INLINE"
-            },
-            "type" : "TEXT"
+            }
           } ], [ {
-            "source" : {
+            "type" : "TEXT",
+            "value" : {
               "text" : "Forecast",
               "type" : "INLINE"
-            },
-            "type" : "TEXT"
+            }
           }, {
-            "source" : {
+            "type" : "FORMULA",
+            "value" : {
               "text" : "B2*(1+B3)",
               "type" : "INLINE"
-            },
-            "type" : "FORMULA"
+            }
           }, {
-            "source" : {
+            "type" : "TEXT",
+            "value" : {
               "text" : "Projected next month",
               "type" : "INLINE"
-            },
-            "type" : "TEXT"
+            }
           } ] ],
           "type" : "TYPED"
         },
@@ -1579,71 +1612,71 @@
         "action" : {
           "rows" : {
             "cells" : [ [ {
-              "source" : {
+              "type" : "TEXT",
+              "value" : {
                 "text" : "Metric",
                 "type" : "INLINE"
-              },
-              "type" : "TEXT"
+              }
             }, {
-              "source" : {
+              "type" : "TEXT",
+              "value" : {
                 "text" : "Value",
                 "type" : "INLINE"
-              },
-              "type" : "TEXT"
+              }
             }, {
-              "source" : {
+              "type" : "TEXT",
+              "value" : {
                 "text" : "Notes",
                 "type" : "INLINE"
-              },
-              "type" : "TEXT"
+              }
             } ], [ {
-              "source" : {
+              "type" : "TEXT",
+              "value" : {
                 "text" : "Revenue",
                 "type" : "INLINE"
-              },
-              "type" : "TEXT"
+              }
             }, {
-              "number" : 125000.25,
-              "type" : "NUMBER"
+              "type" : "NUMBER",
+              "value" : 125000.25
             }, {
-              "source" : {
+              "type" : "TEXT",
+              "value" : {
                 "text" : "Closed month",
                 "type" : "INLINE"
-              },
-              "type" : "TEXT"
+              }
             } ], [ {
-              "source" : {
+              "type" : "TEXT",
+              "value" : {
                 "text" : "Margin",
                 "type" : "INLINE"
-              },
-              "type" : "TEXT"
+              }
             }, {
-              "number" : 0.42,
-              "type" : "NUMBER"
+              "type" : "NUMBER",
+              "value" : 0.42
             }, {
-              "source" : {
+              "type" : "TEXT",
+              "value" : {
                 "text" : "Target 0.40",
                 "type" : "INLINE"
-              },
-              "type" : "TEXT"
+              }
             } ], [ {
-              "source" : {
+              "type" : "TEXT",
+              "value" : {
                 "text" : "Forecast",
                 "type" : "INLINE"
-              },
-              "type" : "TEXT"
+              }
             }, {
-              "source" : {
+              "type" : "FORMULA",
+              "value" : {
                 "text" : "B2*(1+B3)",
                 "type" : "INLINE"
-              },
-              "type" : "FORMULA"
+              }
             }, {
-              "source" : {
+              "type" : "TEXT",
+              "value" : {
                 "text" : "Projected next month",
                 "type" : "INLINE"
-              },
-              "type" : "TEXT"
+              }
             } ] ],
             "type" : "TYPED"
           },

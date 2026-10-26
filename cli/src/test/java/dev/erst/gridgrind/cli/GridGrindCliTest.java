@@ -3,7 +3,7 @@ package dev.erst.gridgrind.cli;
 import static org.junit.jupiter.api.Assertions.*;
 
 import dev.erst.gridgrind.cli.discovery.CommandError;
-import dev.erst.gridgrind.core.model.value.CellValueReport;
+import dev.erst.gridgrind.core.model.value.CellValue;
 import dev.erst.gridgrind.core.plan.SheetInspectionResult;
 import dev.erst.gridgrind.core.plan.WorkbookAssetInspectionResult;
 import dev.erst.gridgrind.core.plan.WorkbookInspectionResult;
@@ -73,14 +73,14 @@ class GridGrindCliTest extends GridGrindCliTestSupport {
             [
               { "stepId": "ensure-budget", "target": { "type": "SHEET_BY_NAME", "name": "Budget" }, "action": { "type": "ENSURE_SHEET" } },
               { "stepId": "append-header", "target": { "type": "SHEET_BY_NAME", "name": "Budget" }, "action": { "type": "APPEND_ROW", "values": { "type": "TYPED", "cells": [
-                { "type": "TEXT", "source": { "type": "INLINE", "text": "Item" } },
-                { "type": "TEXT", "source": { "type": "INLINE", "text": "Amount" } }
+                { "type": "TEXT", "value": { "type": "INLINE", "text": "Item" } },
+                { "type": "TEXT", "value": { "type": "INLINE", "text": "Amount" } }
               ] } } },
               { "stepId": "append-hosting", "target": { "type": "SHEET_BY_NAME", "name": "Budget" }, "action": { "type": "APPEND_ROW", "values": { "type": "TYPED", "cells": [
-                { "type": "TEXT", "source": { "type": "INLINE", "text": "Hosting" } },
-                { "type": "NUMBER", "number": 49.0 }
+                { "type": "TEXT", "value": { "type": "INLINE", "text": "Hosting" } },
+                { "type": "NUMBER", "value": 49.0 }
               ] } } },
-              { "stepId": "set-total", "target": { "type": "CELL_BY_ADDRESS", "sheetName": "Budget", "address": "B3" }, "action": { "type": "SET_CELL", "value": { "type": "FORMULA", "source": { "type": "INLINE", "text": "SUM(B2:B2)" } } } },
+              { "stepId": "set-total", "target": { "type": "CELL_BY_ADDRESS", "sheetName": "Budget", "address": "B3" }, "action": { "type": "SET_CELL", "value": { "type": "FORMULA", "value": { "type": "INLINE", "text": "SUM(B2:B2)" } } } },
               { "stepId": "workbook", "target": { "type": "WORKBOOK_CURRENT" }, "query": { "type": "GET_WORKBOOK_SUMMARY" } },
               { "stepId": "cells", "target": { "type": "CELL_BY_ADDRESSES", "sheetName": "Budget", "addresses": ["A1", "B3"] }, "query": { "type": "GET_CELLS", "projection": { "facets": ["VALUE", "FORMULA"] } } }
             ]
@@ -112,9 +112,7 @@ class GridGrindCliTest extends GridGrindCliTestSupport {
         (dev.erst.gridgrind.core.model.value.CellReport.FormulaReport) cells.cells().get(1);
     assertEquals("SUM(B2:B2)", b3Cell.formula().orElseThrow());
     assertEquals(
-        49.0,
-        assertInstanceOf(CellValueReport.NumberValue.class, b3Cell.evaluation().orElseThrow())
-            .numberValue());
+        49.0, assertInstanceOf(CellValue.NumberValue.class, b3Cell.value().orElseThrow()).value());
   }
 
   @Test
@@ -166,7 +164,7 @@ class GridGrindCliTest extends GridGrindCliTestSupport {
                   "type": "SET_CELL",
                   "value": {
                     "type": "TEXT",
-                    "source": { "type": "STANDARD_INPUT" }
+                    "value": { "type": "STANDARD_INPUT" }
                   }
                 }
               }
@@ -209,7 +207,7 @@ class GridGrindCliTest extends GridGrindCliTestSupport {
                   "type": "SET_CELL",
                   "value": {
                     "type": "TEXT",
-                    "source": { "type": "STANDARD_INPUT" }
+                    "value": { "type": "STANDARD_INPUT" }
                   }
                 }
               },
@@ -243,7 +241,9 @@ class GridGrindCliTest extends GridGrindCliTestSupport {
             dev.erst.gridgrind.core.model.value.CellReport.TextReport.class,
             cells.cells().getFirst());
     assertEquals(0, exitCode);
-    assertEquals("Quarterly Budget", a1.textValue().orElseThrow());
+    assertEquals(
+        "Quarterly Budget",
+        a1.value().map(dev.erst.gridgrind.core.model.value.CellValue.Text::value).orElseThrow());
   }
 
   @Test
@@ -449,16 +449,16 @@ class GridGrindCliTest extends GridGrindCliTestSupport {
                       "type": "TYPED",
                       "cells": [
                         [
-                          { "type": "TEXT", "source": { "type": "INLINE", "text": "Owner" } },
-                          { "type": "TEXT", "source": { "type": "INLINE", "text": "Task" } }
+                          { "type": "TEXT", "value": { "type": "INLINE", "text": "Owner" } },
+                          { "type": "TEXT", "value": { "type": "INLINE", "text": "Task" } }
                         ],
                         [
-                          { "type": "TEXT", "source": { "type": "INLINE", "text": "Ada" } },
-                          { "type": "TEXT", "source": { "type": "INLINE", "text": "Onboarding" } }
+                          { "type": "TEXT", "value": { "type": "INLINE", "text": "Ada" } },
+                          { "type": "TEXT", "value": { "type": "INLINE", "text": "Onboarding" } }
                         ],
                         [
-                          { "type": "TEXT", "source": { "type": "INLINE", "text": "Lin" } },
-                          { "type": "TEXT", "source": { "type": "INLINE", "text": "Badge run" } }
+                          { "type": "TEXT", "value": { "type": "INLINE", "text": "Lin" } },
+                          { "type": "TEXT", "value": { "type": "INLINE", "text": "Badge run" } }
                         ]
                       ]
                     }

@@ -77,8 +77,8 @@ class GridGrindProblemsTest {
             new StepId("assert-total"),
             "EXPECT_CELL_VALUE",
             new CellSelector.ByAddress(new SheetName("Budget"), new CellAddress("B4")),
-            new CellAssertion.CellValue(
-                new dev.erst.gridgrind.core.model.value.CellScalarValue.NumberValue(42.0d)),
+            new CellAssertion.Value(
+                new dev.erst.gridgrind.core.model.value.CellValue.NumberValue(42.0d)),
             List.of());
     assertEquals(
         GridGrindProblemCode.ASSERTION_FAILED,
@@ -161,8 +161,8 @@ class GridGrindProblemsTest {
                     new StepId("assert-total"),
                     "EXPECT_CELL_VALUE",
                     new CellSelector.ByAddress(new SheetName("Budget"), new CellAddress("B4")),
-                    new CellAssertion.CellValue(
-                        new dev.erst.gridgrind.core.model.value.CellScalarValue.NumberValue(42.0d)),
+                    new CellAssertion.Value(
+                        new dev.erst.gridgrind.core.model.value.CellValue.NumberValue(42.0d)),
                     List.of())),
             new ProblemContext.ExecuteStep(
                 ProblemContextRequestSurfaces.RequestShape.known("NEW", "NONE"),

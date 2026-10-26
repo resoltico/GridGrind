@@ -11,7 +11,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 
 import dev.erst.gridgrind.core.model.formula.CalculationPolicySpec;
-import dev.erst.gridgrind.core.model.value.CellScalarValue;
+import dev.erst.gridgrind.core.model.value.CellValue;
 import dev.erst.gridgrind.core.plan.AssertionModeSpec;
 import dev.erst.gridgrind.core.plan.AssertionResult;
 import dev.erst.gridgrind.core.plan.AssertionStatus;
@@ -59,17 +59,17 @@ class AssertionCollectionWorkflowTest extends DefaultGridGrindRequestExecutorTes
                             "assert-pass",
                             new CellSelector.ByAddress(
                                 new SheetName("Budget"), new CellAddress("A1")),
-                            new CellAssertion.CellValue(new CellScalarValue.Text("Owner"))),
+                            new CellAssertion.Value(new CellValue.Text("Owner"))),
                         assertThat(
                             "assert-first",
                             new CellSelector.ByAddress(
                                 new SheetName("Budget"), new CellAddress("A1")),
-                            new CellAssertion.CellValue(new CellScalarValue.Text("Wrong first"))),
+                            new CellAssertion.Value(new CellValue.Text("Wrong first"))),
                         assertThat(
                             "assert-second",
                             new CellSelector.ByAddress(
                                 new SheetName("Budget"), new CellAddress("A1")),
-                            new CellAssertion.CellValue(new CellScalarValue.Text("Wrong second")))),
+                            new CellAssertion.Value(new CellValue.Text("Wrong second")))),
                     inspections(
                         inspect(
                             "cells-after-assertions",
@@ -120,12 +120,12 @@ class AssertionCollectionWorkflowTest extends DefaultGridGrindRequestExecutorTes
                             "stream-pass",
                             new CellSelector.ByAddress(
                                 new SheetName("Stream"), new CellAddress("A1")),
-                            new CellAssertion.CellValue(new CellScalarValue.Text("Owner"))),
+                            new CellAssertion.Value(new CellValue.Text("Owner"))),
                         assertThat(
                             "stream-fail",
                             new CellSelector.ByAddress(
                                 new SheetName("Stream"), new CellAddress("A1")),
-                            new CellAssertion.CellValue(new CellScalarValue.Text("Wrong")))),
+                            new CellAssertion.Value(new CellValue.Text("Wrong")))),
                     inspections(
                         inspect(
                             "stream-after-failure",

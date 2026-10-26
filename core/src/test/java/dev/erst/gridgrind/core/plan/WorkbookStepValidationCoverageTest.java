@@ -22,8 +22,8 @@ class WorkbookStepValidationCoverageTest {
             List.of(new PresenceAssertion.TablePresent(), new PresenceAssertion.TableAbsent()));
     CompositeAssertion.Not not =
         new CompositeAssertion.Not(
-            new CellAssertion.CellValue(
-                new dev.erst.gridgrind.core.model.value.CellScalarValue.Text("Owner")));
+            new CellAssertion.Value(
+                new dev.erst.gridgrind.core.model.value.CellValue.Text("Owner")));
 
     assertEquals(
         List.of(TableSelector.class),
@@ -78,8 +78,8 @@ class WorkbookStepValidationCoverageTest {
                     new CompositeAssertion.AnyOf(
                         List.of(
                             new PresenceAssertion.TablePresent(),
-                            new CellAssertion.CellValue(
-                                new dev.erst.gridgrind.core.model.value.CellScalarValue.Text(
+                            new CellAssertion.Value(
+                                new dev.erst.gridgrind.core.model.value.CellValue.Text(
                                     "Owner"))))));
 
     assertEquals(

@@ -7,7 +7,7 @@
     "outcomeKind" : "SUCCESS",
     "details" : {
       "type" : "PROTOCOL_REQUEST",
-      "inputBytes" : 1707,
+      "inputBytes" : 1703,
       "decodeOutcome" : "PARSED",
       "sourceKind" : "EXISTING",
       "persistenceKind" : "SAVE_AS",

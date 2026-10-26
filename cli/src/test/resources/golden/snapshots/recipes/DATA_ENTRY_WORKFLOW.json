@@ -288,8 +288,11 @@
               "locked" : true
             }
           },
-          "textValue" : "Owner",
-          "type" : "TEXT"
+          "type" : "TEXT",
+          "value" : {
+            "type" : "TEXT",
+            "value" : "Owner"
+          }
         }, {
           "address" : "B1",
           "comment" : {
@@ -351,8 +354,11 @@
               "locked" : true
             }
           },
-          "textValue" : "Status",
-          "type" : "TEXT"
+          "type" : "TEXT",
+          "value" : {
+            "type" : "TEXT",
+            "value" : "Status"
+          }
         }, {
           "address" : "A2",
           "displayValue" : "Ada",
@@ -403,8 +409,11 @@
               "locked" : true
             }
           },
-          "textValue" : "Ada",
-          "type" : "TEXT"
+          "type" : "TEXT",
+          "value" : {
+            "type" : "TEXT",
+            "value" : "Ada"
+          }
         }, {
           "address" : "B2",
           "displayValue" : "Open",
@@ -455,8 +464,11 @@
               "locked" : true
             }
           },
-          "textValue" : "Open",
-          "type" : "TEXT"
+          "type" : "TEXT",
+          "value" : {
+            "type" : "TEXT",
+            "value" : "Open"
+          }
         }, {
           "address" : "A3",
           "displayValue" : "Lin",
@@ -507,8 +519,11 @@
               "locked" : true
             }
           },
-          "textValue" : "Lin",
-          "type" : "TEXT"
+          "type" : "TEXT",
+          "value" : {
+            "type" : "TEXT",
+            "value" : "Lin"
+          }
         }, {
           "address" : "B3",
           "displayValue" : "Review",
@@ -559,8 +574,11 @@
               "locked" : true
             }
           },
-          "textValue" : "Review",
-          "type" : "TEXT"
+          "type" : "TEXT",
+          "value" : {
+            "type" : "TEXT",
+            "value" : "Review"
+          }
         } ],
         "sheetName" : "Intake",
         "stepId" : "sheet-0-cells",
@@ -963,41 +981,41 @@
       "action" : {
         "rows" : {
           "cells" : [ [ {
-            "source" : {
+            "type" : "TEXT",
+            "value" : {
               "text" : "Owner",
               "type" : "INLINE"
-            },
-            "type" : "TEXT"
+            }
           }, {
-            "source" : {
+            "type" : "TEXT",
+            "value" : {
               "text" : "Status",
               "type" : "INLINE"
-            },
-            "type" : "TEXT"
+            }
           } ], [ {
-            "source" : {
+            "type" : "TEXT",
+            "value" : {
               "text" : "Ada",
               "type" : "INLINE"
-            },
-            "type" : "TEXT"
+            }
           }, {
-            "source" : {
+            "type" : "TEXT",
+            "value" : {
               "text" : "Open",
               "type" : "INLINE"
-            },
-            "type" : "TEXT"
+            }
           } ], [ {
-            "source" : {
+            "type" : "TEXT",
+            "value" : {
               "text" : "Lin",
               "type" : "INLINE"
-            },
-            "type" : "TEXT"
+            }
           }, {
-            "source" : {
+            "type" : "TEXT",
+            "value" : {
               "text" : "Review",
               "type" : "INLINE"
-            },
-            "type" : "TEXT"
+            }
           } ] ],
           "type" : "TYPED"
         },
@@ -1138,41 +1156,41 @@
         "action" : {
           "rows" : {
             "cells" : [ [ {
-              "source" : {
+              "type" : "TEXT",
+              "value" : {
                 "text" : "Owner",
                 "type" : "INLINE"
-              },
-              "type" : "TEXT"
+              }
             }, {
-              "source" : {
+              "type" : "TEXT",
+              "value" : {
                 "text" : "Status",
                 "type" : "INLINE"
-              },
-              "type" : "TEXT"
+              }
             } ], [ {
-              "source" : {
+              "type" : "TEXT",
+              "value" : {
                 "text" : "Ada",
                 "type" : "INLINE"
-              },
-              "type" : "TEXT"
+              }
             }, {
-              "source" : {
+              "type" : "TEXT",
+              "value" : {
                 "text" : "Open",
                 "type" : "INLINE"
-              },
-              "type" : "TEXT"
+              }
             } ], [ {
-              "source" : {
+              "type" : "TEXT",
+              "value" : {
                 "text" : "Lin",
                 "type" : "INLINE"
-              },
-              "type" : "TEXT"
+              }
             }, {
-              "source" : {
+              "type" : "TEXT",
+              "value" : {
                 "text" : "Review",
                 "type" : "INLINE"
-              },
-              "type" : "TEXT"
+              }
             } ] ],
             "type" : "TYPED"
           },

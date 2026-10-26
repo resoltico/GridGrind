@@ -80,7 +80,7 @@
       "lookupId" : "EXPECT_CELL_VALUE",
       "qualifiedId" : "assertionTypes:EXPECT_CELL_VALUE",
       "summary" : "Require every selected cell to have the exact effective value.",
-      "supportingQualifiedIds" : [ "cellScalarValueTypes:BLANK", "cellScalarValueTypes:BOOLEAN", "cellScalarValueTypes:ERROR", "cellScalarValueTypes:NUMBER", "cellScalarValueTypes:TEXT", "nestedTypes:cellScalarValueTypes" ]
+      "supportingQualifiedIds" : [ "cellValueTypes:BLANK", "cellValueTypes:BOOLEAN", "cellValueTypes:ERROR", "cellValueTypes:NUMBER", "cellValueTypes:TEXT", "nestedTypes:cellValueTypes" ]
     }, {
       "catalogGroup" : "assertionTypes",
       "kind" : "ENTRY",
@@ -396,12 +396,6 @@
     }, {
       "catalogGroup" : "nestedTypes",
       "kind" : "NESTED_GROUP",
-      "lookupId" : "cellValueReportTypes",
-      "qualifiedId" : "nestedTypes:cellValueReportTypes",
-      "summary" : "Nested type group with discriminator type and 5 variants."
-    }, {
-      "catalogGroup" : "nestedTypes",
-      "kind" : "NESTED_GROUP",
       "lookupId" : "requestWarningLocationTypes",
       "qualifiedId" : "nestedTypes:requestWarningLocationTypes",
       "summary" : "Nested type group with discriminator type and 4 variants."
@@ -510,6 +504,6 @@
     } ],
     "protocolVersion" : 1,
     "query" : "cell text",
-    "totalCount" : 79
+    "totalCount" : 78
   }
 }

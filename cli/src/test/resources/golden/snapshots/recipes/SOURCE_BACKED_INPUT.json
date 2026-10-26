@@ -106,15 +106,18 @@
       "inspections" : [ {
         "cells" : [ {
           "address" : "A1",
-          "textValue" : "Quarterly Budget\n",
-          "type" : "TEXT"
+          "type" : "TEXT",
+          "value" : {
+            "type" : "TEXT",
+            "value" : "Quarterly Budget\n"
+          }
         }, {
           "address" : "B4",
-          "evaluation" : {
-            "numberValue" : 30.0,
-            "type" : "NUMBER"
-          },
-          "type" : "FORMULA"
+          "type" : "FORMULA",
+          "value" : {
+            "type" : "NUMBER",
+            "value" : 30.0
+          }
         } ],
         "sheetName" : "Inputs",
         "stepId" : "read-cells",
@@ -293,11 +296,11 @@
       "action" : {
         "rows" : {
           "cells" : [ [ {
-            "number" : 12.0,
-            "type" : "NUMBER"
+            "type" : "NUMBER",
+            "value" : 12.0
           } ], [ {
-            "number" : 18.0,
-            "type" : "NUMBER"
+            "type" : "NUMBER",
+            "value" : 18.0
           } ] ],
           "type" : "TYPED"
         },
@@ -313,11 +316,11 @@
       "action" : {
         "type" : "SET_CELL",
         "value" : {
-          "source" : {
+          "type" : "TEXT",
+          "value" : {
             "path" : "source-backed-input-assets/title.txt",
             "type" : "UTF8_FILE"
-          },
-          "type" : "TEXT"
+          }
         }
       },
       "stepId" : "set-title-from-file",
@@ -330,11 +333,11 @@
       "action" : {
         "type" : "SET_CELL",
         "value" : {
-          "source" : {
+          "type" : "FORMULA",
+          "value" : {
             "path" : "source-backed-input-assets/total-formula.txt",
             "type" : "UTF8_FILE"
-          },
-          "type" : "FORMULA"
+          }
         }
       },
       "stepId" : "set-total-formula-from-file",

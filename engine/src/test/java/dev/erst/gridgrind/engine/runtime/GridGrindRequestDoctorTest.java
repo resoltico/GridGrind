@@ -49,7 +49,7 @@ class GridGrindRequestDoctorTest {
                 "target": { "type": "CELL_BY_ADDRESS", "sheetName": "Budget", "address": "A1" },
                 "action": {
                   "type": "SET_CELL",
-                  "value": { "type": "TEXT", "source": { "type": "STANDARD_INPUT" } }
+                  "value": { "type": "TEXT", "value": { "type": "STANDARD_INPUT" } }
                 }
               }
             ]
@@ -88,7 +88,7 @@ class GridGrindRequestDoctorTest {
                   "type": "SET_CELL",
                   "value": {
                     "type": "FORMULA",
-                    "source": { "type": "INLINE", "text": "Budget Sheet!A1" }
+                    "value": { "type": "INLINE", "text": "Budget Sheet!A1" }
                   }
                 }
               }
@@ -199,7 +199,7 @@ class GridGrindRequestDoctorTest {
                   "type": "SET_CELL",
                   "value": {
                     "type": "TEXT",
-                    "source": { "type": "UTF8_FILE", "path": "title.txt" }
+                    "value": { "type": "UTF8_FILE", "path": "title.txt" }
                   }
                 }
               }
@@ -235,7 +235,7 @@ class GridGrindRequestDoctorTest {
                   "type": "SET_CELL",
                   "value": {
                     "type": "TEXT",
-                    "source": { "type": "STANDARD_INPUT" }
+                    "value": { "type": "STANDARD_INPUT" }
                   }
                 }
               }
@@ -275,7 +275,7 @@ class GridGrindRequestDoctorTest {
                   "type": "SET_CELL",
                   "value": {
                     "type": "TEXT",
-                    "source": { "type": "UTF8_FILE", "path": "blank-title.txt" }
+                    "value": { "type": "UTF8_FILE", "path": "blank-title.txt" }
                   }
                 }
               }
@@ -315,7 +315,7 @@ class GridGrindRequestDoctorTest {
                   "type": "SET_CELL",
                   "value": {
                     "type": "TEXT",
-                    "source": { "type": "UTF8_FILE", "path": "missing.txt" }
+                    "value": { "type": "UTF8_FILE", "path": "missing.txt" }
                   }
                 }
               }

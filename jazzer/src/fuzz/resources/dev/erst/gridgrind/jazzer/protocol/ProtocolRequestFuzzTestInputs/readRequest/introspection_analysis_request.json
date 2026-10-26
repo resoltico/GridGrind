@@ -187,7 +187,7 @@
         "type": "SET_CELL",
         "value": {
           "type": "TEXT",
-          "source": {
+          "value": {
             "type": "INLINE",
             "text": "Board Snapshot"
           }

@@ -55,7 +55,7 @@
               "font": {
                 "fontColor": { "type": "RGB", "rgb": "#44546A" }
               },
-              "source": {
+              "text": {
                 "type": "INLINE",
                 "text": "Q2 "
               }
@@ -65,7 +65,7 @@
                 "bold": true,
                 "fontColor": { "type": "RGB", "rgb": "#C00000" }
               },
-              "source": {
+              "text": {
                 "type": "INLINE",
                 "text": "Budget"
               }
@@ -75,7 +75,7 @@
                 "italic": true,
                 "underline": true
               },
-              "source": {
+              "text": {
                 "type": "INLINE",
                 "text": " Review"
               }
@@ -95,7 +95,7 @@
         "type": "SET_CELL",
         "value": {
           "type": "TEXT",
-          "source": {
+          "value": {
             "type": "INLINE",
             "text": "Plain text stays plain."
           }

@@ -7,7 +7,7 @@
     "outcomeKind" : "EXPECTED_INVALID",
     "details" : {
       "type" : "PROTOCOL_REQUEST",
-      "inputBytes" : 477,
+      "inputBytes" : 474,
       "decodeOutcome" : "INVALID_REQUEST_SHAPE",
       "sourceKind" : "NOT_PARSED",
       "persistenceKind" : "NOT_PARSED",

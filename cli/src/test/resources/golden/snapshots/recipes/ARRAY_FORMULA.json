@@ -244,59 +244,59 @@
       "action" : {
         "rows" : {
           "cells" : [ [ {
-            "source" : {
+            "type" : "TEXT",
+            "value" : {
               "text" : "Month",
               "type" : "INLINE"
-            },
-            "type" : "TEXT"
+            }
           }, {
-            "source" : {
+            "type" : "TEXT",
+            "value" : {
               "text" : "Plan",
               "type" : "INLINE"
-            },
-            "type" : "TEXT"
+            }
           }, {
-            "source" : {
+            "type" : "TEXT",
+            "value" : {
               "text" : "Actual",
               "type" : "INLINE"
-            },
-            "type" : "TEXT"
+            }
           } ], [ {
-            "source" : {
+            "type" : "TEXT",
+            "value" : {
               "text" : "Jan",
               "type" : "INLINE"
-            },
-            "type" : "TEXT"
+            }
           }, {
-            "number" : 10.0,
-            "type" : "NUMBER"
+            "type" : "NUMBER",
+            "value" : 10.0
           }, {
-            "number" : 12.0,
-            "type" : "NUMBER"
+            "type" : "NUMBER",
+            "value" : 12.0
           } ], [ {
-            "source" : {
+            "type" : "TEXT",
+            "value" : {
               "text" : "Feb",
               "type" : "INLINE"
-            },
-            "type" : "TEXT"
+            }
           }, {
-            "number" : 18.0,
-            "type" : "NUMBER"
+            "type" : "NUMBER",
+            "value" : 18.0
           }, {
-            "number" : 16.0,
-            "type" : "NUMBER"
+            "type" : "NUMBER",
+            "value" : 16.0
           } ], [ {
-            "source" : {
+            "type" : "TEXT",
+            "value" : {
               "text" : "Mar",
               "type" : "INLINE"
-            },
-            "type" : "TEXT"
+            }
           }, {
-            "number" : 15.0,
-            "type" : "NUMBER"
+            "type" : "NUMBER",
+            "value" : 15.0
           }, {
-            "number" : 21.0,
-            "type" : "NUMBER"
+            "type" : "NUMBER",
+            "value" : 21.0
           } ] ],
           "type" : "TYPED"
         },
@@ -379,59 +379,59 @@
         "action" : {
           "rows" : {
             "cells" : [ [ {
-              "source" : {
+              "type" : "TEXT",
+              "value" : {
                 "text" : "Month",
                 "type" : "INLINE"
-              },
-              "type" : "TEXT"
+              }
             }, {
-              "source" : {
+              "type" : "TEXT",
+              "value" : {
                 "text" : "Plan",
                 "type" : "INLINE"
-              },
-              "type" : "TEXT"
+              }
             }, {
-              "source" : {
+              "type" : "TEXT",
+              "value" : {
                 "text" : "Actual",
                 "type" : "INLINE"
-              },
-              "type" : "TEXT"
+              }
             } ], [ {
-              "source" : {
+              "type" : "TEXT",
+              "value" : {
                 "text" : "Jan",
                 "type" : "INLINE"
-              },
-              "type" : "TEXT"
+              }
             }, {
-              "number" : 10.0,
-              "type" : "NUMBER"
+              "type" : "NUMBER",
+              "value" : 10.0
             }, {
-              "number" : 12.0,
-              "type" : "NUMBER"
+              "type" : "NUMBER",
+              "value" : 12.0
             } ], [ {
-              "source" : {
+              "type" : "TEXT",
+              "value" : {
                 "text" : "Feb",
                 "type" : "INLINE"
-              },
-              "type" : "TEXT"
+              }
             }, {
-              "number" : 18.0,
-              "type" : "NUMBER"
+              "type" : "NUMBER",
+              "value" : 18.0
             }, {
-              "number" : 16.0,
-              "type" : "NUMBER"
+              "type" : "NUMBER",
+              "value" : 16.0
             } ], [ {
-              "source" : {
+              "type" : "TEXT",
+              "value" : {
                 "text" : "Mar",
                 "type" : "INLINE"
-              },
-              "type" : "TEXT"
+              }
             }, {
-              "number" : 15.0,
-              "type" : "NUMBER"
+              "type" : "NUMBER",
+              "value" : 15.0
             }, {
-              "number" : 21.0,
-              "type" : "NUMBER"
+              "type" : "NUMBER",
+              "value" : 21.0
             } ] ],
             "type" : "TYPED"
           },

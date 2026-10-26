@@ -110,11 +110,11 @@
     }, {
       "cells" : [ {
         "address" : "A1",
-        "evaluation" : {
-          "numberValue" : 1200.0,
-          "type" : "NUMBER"
-        },
-        "type" : "FORMULA"
+        "type" : "FORMULA",
+        "value" : {
+          "type" : "NUMBER",
+          "value" : 1200.0
+        }
       } ],
       "sheetName" : "Summary",
       "stepId" : "summary-cells",

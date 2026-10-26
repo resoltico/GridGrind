@@ -219,8 +219,11 @@
               "locked" : true
             }
           },
-          "textValue" : "Team",
-          "type" : "TEXT"
+          "type" : "TEXT",
+          "value" : {
+            "type" : "TEXT",
+            "value" : "Team"
+          }
         }, {
           "address" : "B1",
           "displayValue" : "Task",
@@ -271,8 +274,11 @@
               "locked" : true
             }
           },
-          "textValue" : "Task",
-          "type" : "TEXT"
+          "type" : "TEXT",
+          "value" : {
+            "type" : "TEXT",
+            "value" : "Task"
+          }
         }, {
           "address" : "C1",
           "displayValue" : "Hours",
@@ -323,8 +329,11 @@
               "locked" : true
             }
           },
-          "textValue" : "Hours",
-          "type" : "TEXT"
+          "type" : "TEXT",
+          "value" : {
+            "type" : "TEXT",
+            "value" : "Hours"
+          }
         }, {
           "address" : "A2",
           "displayValue" : "Ops",
@@ -375,8 +384,11 @@
               "locked" : true
             }
           },
-          "textValue" : "Ops",
-          "type" : "TEXT"
+          "type" : "TEXT",
+          "value" : {
+            "type" : "TEXT",
+            "value" : "Ops"
+          }
         }, {
           "address" : "B2",
           "displayValue" : "Badge prep",
@@ -427,12 +439,14 @@
               "locked" : true
             }
           },
-          "textValue" : "Badge prep",
-          "type" : "TEXT"
+          "type" : "TEXT",
+          "value" : {
+            "type" : "TEXT",
+            "value" : "Badge prep"
+          }
         }, {
           "address" : "C2",
           "displayValue" : "6.5",
-          "numberValue" : 6.5,
           "style" : {
             "alignment" : {
               "horizontalAlignment" : "GENERAL",
@@ -483,7 +497,11 @@
           "temporal" : {
             "isDate" : false
           },
-          "type" : "NUMBER"
+          "type" : "NUMBER",
+          "value" : {
+            "type" : "NUMBER",
+            "value" : 6.5
+          }
         }, {
           "address" : "A3",
           "displayValue" : "Facilities",
@@ -534,8 +552,11 @@
               "locked" : true
             }
           },
-          "textValue" : "Facilities",
-          "type" : "TEXT"
+          "type" : "TEXT",
+          "value" : {
+            "type" : "TEXT",
+            "value" : "Facilities"
+          }
         }, {
           "address" : "B3",
           "displayValue" : "Desk setup",
@@ -586,12 +607,14 @@
               "locked" : true
             }
           },
-          "textValue" : "Desk setup",
-          "type" : "TEXT"
+          "type" : "TEXT",
+          "value" : {
+            "type" : "TEXT",
+            "value" : "Desk setup"
+          }
         }, {
           "address" : "C3",
           "displayValue" : "4",
-          "numberValue" : 4.0,
           "style" : {
             "alignment" : {
               "horizontalAlignment" : "GENERAL",
@@ -642,7 +665,11 @@
           "temporal" : {
             "isDate" : false
           },
-          "type" : "NUMBER"
+          "type" : "NUMBER",
+          "value" : {
+            "type" : "NUMBER",
+            "value" : 4.0
+          }
         } ],
         "sheetName" : "Ledger",
         "stepId" : "sheet-0-cells",
@@ -944,23 +971,23 @@
         "type" : "APPEND_ROW",
         "values" : {
           "cells" : [ {
-            "source" : {
+            "type" : "TEXT",
+            "value" : {
               "text" : "Team",
               "type" : "INLINE"
-            },
-            "type" : "TEXT"
+            }
           }, {
-            "source" : {
+            "type" : "TEXT",
+            "value" : {
               "text" : "Task",
               "type" : "INLINE"
-            },
-            "type" : "TEXT"
+            }
           }, {
-            "source" : {
+            "type" : "TEXT",
+            "value" : {
               "text" : "Hours",
               "type" : "INLINE"
-            },
-            "type" : "TEXT"
+            }
           } ],
           "type" : "TYPED"
         }
@@ -975,20 +1002,20 @@
         "type" : "APPEND_ROW",
         "values" : {
           "cells" : [ {
-            "source" : {
+            "type" : "TEXT",
+            "value" : {
               "text" : "Ops",
               "type" : "INLINE"
-            },
-            "type" : "TEXT"
+            }
           }, {
-            "source" : {
+            "type" : "TEXT",
+            "value" : {
               "text" : "Badge prep",
               "type" : "INLINE"
-            },
-            "type" : "TEXT"
+            }
           }, {
-            "number" : 6.5,
-            "type" : "NUMBER"
+            "type" : "NUMBER",
+            "value" : 6.5
           } ],
           "type" : "TYPED"
         }
@@ -1003,20 +1030,20 @@
         "type" : "APPEND_ROW",
         "values" : {
           "cells" : [ {
-            "source" : {
+            "type" : "TEXT",
+            "value" : {
               "text" : "Facilities",
               "type" : "INLINE"
-            },
-            "type" : "TEXT"
+            }
           }, {
-            "source" : {
+            "type" : "TEXT",
+            "value" : {
               "text" : "Desk setup",
               "type" : "INLINE"
-            },
-            "type" : "TEXT"
+            }
           }, {
-            "number" : 4.0,
-            "type" : "NUMBER"
+            "type" : "NUMBER",
+            "value" : 4.0
           } ],
           "type" : "TYPED"
         }
@@ -1081,23 +1108,23 @@
           "type" : "APPEND_ROW",
           "values" : {
             "cells" : [ {
-              "source" : {
+              "type" : "TEXT",
+              "value" : {
                 "text" : "Team",
                 "type" : "INLINE"
-              },
-              "type" : "TEXT"
+              }
             }, {
-              "source" : {
+              "type" : "TEXT",
+              "value" : {
                 "text" : "Task",
                 "type" : "INLINE"
-              },
-              "type" : "TEXT"
+              }
             }, {
-              "source" : {
+              "type" : "TEXT",
+              "value" : {
                 "text" : "Hours",
                 "type" : "INLINE"
-              },
-              "type" : "TEXT"
+              }
             } ],
             "type" : "TYPED"
           }
@@ -1112,20 +1139,20 @@
           "type" : "APPEND_ROW",
           "values" : {
             "cells" : [ {
-              "source" : {
+              "type" : "TEXT",
+              "value" : {
                 "text" : "Ops",
                 "type" : "INLINE"
-              },
-              "type" : "TEXT"
+              }
             }, {
-              "source" : {
+              "type" : "TEXT",
+              "value" : {
                 "text" : "Badge prep",
                 "type" : "INLINE"
-              },
-              "type" : "TEXT"
+              }
             }, {
-              "number" : 6.5,
-              "type" : "NUMBER"
+              "type" : "NUMBER",
+              "value" : 6.5
             } ],
             "type" : "TYPED"
           }
@@ -1140,20 +1167,20 @@
           "type" : "APPEND_ROW",
           "values" : {
             "cells" : [ {
-              "source" : {
+              "type" : "TEXT",
+              "value" : {
                 "text" : "Facilities",
                 "type" : "INLINE"
-              },
-              "type" : "TEXT"
+              }
             }, {
-              "source" : {
+              "type" : "TEXT",
+              "value" : {
                 "text" : "Desk setup",
                 "type" : "INLINE"
-              },
-              "type" : "TEXT"
+              }
             }, {
-              "number" : 4.0,
-              "type" : "NUMBER"
+              "type" : "NUMBER",
+              "value" : 4.0
             } ],
             "type" : "TYPED"
           }

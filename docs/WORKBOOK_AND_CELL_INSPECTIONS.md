@@ -332,10 +332,10 @@ or add only the extra facets you need:
 ```
 
 Under that default `[VALUE]` projection, date-like numeric cells still read back as
-`type=NUMBER` plus `numberValue`. Add `TEMPORAL` whenever you need GridGrind to distinguish a
+`type=NUMBER` plus `value: { type: NUMBER, value: ... }`. Add `TEMPORAL` whenever you need GridGrind to distinguish a
 plain number from a date, time, or date-time value.
 
-#### Cell snapshot shape
+#### Cell report shape
 
 Every factual cell in a `GET_CELLS` or `GET_WINDOW` response always includes these canonical
 fields:
@@ -352,7 +352,7 @@ Facet-gated fields:
 
 | Facet | Fields surfaced |
 |:------|:----------------|
-| `VALUE` | `textValue`, `numberValue`, `booleanValue`, `errorValue`, and formula `evaluation` |
+| `VALUE` | `value`, a shared scalar payload for stored and evaluated cells |
 | `FORMAT` | `displayValue` |
 | `STYLE` | `style` |
 | `HYPERLINK` | `hyperlink` |
@@ -362,7 +362,7 @@ Facet-gated fields:
 | `TEMPORAL` | numeric `temporal` |
 
 The protocol catalog publishes this same mapping in machine-readable form: field descriptors on
-`nestedTypes:cellReportTypes` and `nestedTypes:cellValueReportTypes` carry `projectedByFacets`,
+`nestedTypes:cellReportTypes` carry `projectedByFacets`,
 so an agent can derive `FORMAT -> displayValue`, `FORMULA -> formula`,
 `RICH_TEXT_RUNS -> runs`, and `TEMPORAL -> temporal` directly from the catalog payload. The
 compact protocol-catalog index also publishes a legend for field-metadata keys such as
@@ -376,18 +376,19 @@ Type-specific fields:
 
 | Field | Present when | Description |
 |:------|:-------------|:------------|
-| `textValue` | `type=TEXT` and `VALUE` projected | The stored plain string content. |
-| `runs` | `type=TEXT` and `RICH_TEXT_RUNS` projected | Optional ordered rich-text runs. When present, run text concatenates exactly to `textValue`. |
-| `numberValue` | `type=NUMBER` and `VALUE` projected | The numeric value as a double. |
-| `temporal` | `type=NUMBER` and `TEMPORAL` projected | Optional temporal facet `{ isDate, kind, isoValue }`. Date-like numeric cells stay `type=NUMBER`; `kind` refines them to `DATE`, `TIME`, or `DATE_TIME`. |
-| `booleanValue` | `type=BOOLEAN` and `VALUE` projected | `true` or `false`. |
-| `errorValue` | `type=ERROR` and `VALUE` projected | The GridGrind-owned reported error literal. Stored error cells use canonical Excel tokens such as `#DIV/0!` and `#REF!`; evaluated states may additionally report `#CIRCULAR_REF!` or `#FUNCTION_NOT_IMPLEMENTED!`. |
+| `value` | `VALUE` projected | A `CellValue` with `type` equal to `BLANK`, `TEXT`, `NUMBER`, `BOOLEAN`, or `ERROR`. Every nonblank variant carries its primitive in `value`. Formula cells carry their evaluated scalar here. |
+| `runs` | stored or evaluated text with `RICH_TEXT_RUNS` and `VALUE` projected | Optional ordered rich-text runs. Run text concatenates exactly to `value.value`. |
+| `temporal` | numeric cells with `TEMPORAL` projected; formula numeric results also require `VALUE` | Optional temporal facet `{ isDate, kind, isoValue }`. Date-like numeric cells retain `type=NUMBER`; `kind` refines them to `DATE`, `TIME`, or `DATE_TIME`. |
 | `formula` | `type=FORMULA` and `FORMULA` projected | The stored formula text without the leading `=`. |
-| `evaluation` | `type=FORMULA` and `VALUE` projected | Nested `CellValueReport` carrying the evaluated value kind (`BLANK`, `TEXT`, `NUMBER`, `BOOLEAN`, or `ERROR`). |
 | `displayValue` | `FORMAT` projected | Formatted string exactly as Excel would render it. |
 | `style` | `STYLE` projected | Nested style snapshot with `numberFormat`, `alignment`, `font`, `fill`, `border`, and `protection`. |
 | `hyperlink` | `HYPERLINK` projected and metadata exists | Optional hyperlink metadata attached at snapshot time. |
 | `comment` | `COMMENT` projected and metadata exists | Optional comment metadata including plain text, visibility, optional runs, and optional anchor bounds. |
+
+Resolved numeric values preserve externally stored nonfinite observations as the JSON strings
+`"NaN"`, `"Infinity"`, and `"-Infinity"`. Authored numeric writes and expectations require finite
+numbers. Error values carry canonical Excel tokens such as `#DIV/0!` and `#REF!`; evaluated
+states may also report `#CIRCULAR_REF!` or `#FUNCTION_NOT_IMPLEMENTED!`.
 
 **fontHeight read-back shape:** `style.font.fontHeight` is a plain object with both `twips` and
 `points` fields: `{"twips": 260, "points": 13}`. This differs from the write-side

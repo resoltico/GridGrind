@@ -230,12 +230,18 @@
     "inspections" : [ {
       "cells" : [ {
         "address" : "A1",
-        "textValue" : "Quarterly Budget",
-        "type" : "TEXT"
+        "type" : "TEXT",
+        "value" : {
+          "type" : "TEXT",
+          "value" : "Quarterly Budget"
+        }
       }, {
         "address" : "B2",
-        "numberValue" : 1200.0,
-        "type" : "NUMBER"
+        "type" : "NUMBER",
+        "value" : {
+          "type" : "NUMBER",
+          "value" : 1200.0
+        }
       } ],
       "sheetName" : "Budget",
       "stepId" : "read-budget",

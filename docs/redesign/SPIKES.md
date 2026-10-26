@@ -1152,3 +1152,69 @@ metadata belongs to reports, while the shared scalar payload is common with expe
 the independently observed stored-NaN behavior and keep authored numeric expectations finite.
 Detailed design/challenge notes are external in cell-values-design.md. WP-23 is not complete yet;
 WP-21's full identifier/blank target, schema defaults and later phases also remain outstanding.
+
+### WP-23 shared cell-value checkpoint
+
+CellValue is now the common resolved scalar for exact expectations and observed cell values.
+Removed CellScalarValue, CellValueReport and the five ExpectedValues wrapper records/conversion
+switch. CellReport retains its six meaningful stored-type variants, including FORMULA when VALUE
+is unprojected; each projected scalar uses value. Formula runs and temporal metadata now belong
+to FormulaReport. Preserved run concatenation, nonempty-run and numeric/temporal invariants, and
+preserved the existing requirement that formula metadata needs VALUE while ordinary numeric
+TEMPORAL may stand alone. Blank VALUE now explicitly projects the shared blank variant.
+
+Authored CellValueSpec scalar/source/date payloads use value; rich-text run sources use text.
+Migrated authored examples, recipes, Java consumers, diagnostic paths and deterministic fuzz seeds.
+ExpectedValues factories now return canonical CellValue directly; CellAssertion.Value keeps the
+finite-number guard at the authored expectation boundary. Observed NaN/Infinity/-Infinity retain
+their encoded string values. New codec tests cover every scalar wire shape, observed nonfinite
+round trips and both authored guards. A raw stored-NaN workbook regression exercises the engine,
+ordinary numeric control and response round trip. Projection tests independently cover blank
+VALUE presence/absence, formula runs/temporal dependencies, and ordinary numeric TEMPORAL alone.
+
+Golden review: 73 initially drifting launcher observations correspond to 37 snapshots. Both launchers
+agreed on every one of 36 paired observations; the remaining control snapshot was checked by the
+existing real value-changing negative control. After only the declared payload reshapes, all workbook
+values/metadata are equal. Formula evaluation scalars move to value and their runs/temporal move
+up to the report. Scalar primitives acquire the common typed envelope. Four launcher observations
+add the already-implied blank payload. Authored payload keys and rich-run text keys change without
+changing their contents. The two old scalar catalog groups merge into cellValueTypes, so compact
+index groups drop 72 -> 71 and the cell-text search matches drop 79 -> 78. Search ordering changes
+only where group deduplication, renamed fields and truthful variant summaries affect the entries.
+Catalog changes are confined to the three affected existing groups, the replacement scalar group,
+and action/assertion templates/references. EXPECT_CELL_VALUE's text example now uses the generic
+value placeholder "sample-value" instead of the former field-specific "Sample text".
+
+Two diagnostic-coordinate changes were verified against actual serialized fixture bytes: duplicate
+stepId offset 238 -> 237 after number -> value; missing-source path offset 355 -> 354 after source
+-> value. The missing-source JSON path changes action.value.source.path -> action.value.value.path.
+No workbook-root source or chart-title source keys changed. The snapshot normalization code is
+unchanged. All 37 recorded snapshots equal the independently retained pre-record actual observations;
+the update run passed all 143 cases in 3m30s. Detailed per-case/catalog/offset evidence is external
+under wp-23/cell-*. The VALUE facet documentation and user references describe the shared payload.
+
+The first full check exposed eight stale accessors in the separate parity source set. Corrected
+those consumers and the focused parity gate passed in 41s, retaining its independent POI checks.
+Other earlier failures and their corrections remain in retained logs; no mutation or active fuzz
+campaign ran. The full aggregate check and inventory review follow below.
+
+Aggregate ./gradlew check passed in 4m34s: core 328, JSON 343, engine 1513 (including parity),
+CLI 600 and architecture/build-logic 41; 2825 tests, zero failures/errors/skips. Named JPMS modules
+pass 14 example round trips, catalog, response, twelve string scalars and a shared observed-NaN
+report round trip. Deterministic nested Jazzer check passes: 106 support tests and 94 promoted
+inputs (48 protocol, 11 workflow, nine engine sequence, 26 XLSX roundtrip). Kept every expected
+outcome; only 45 input-byte counts and their text copies needed correction, including the earlier
+integer-header shortening. Moved the same rich-run/temporal invariant checks onto formula reports
+and validate shared scalar types directly. The compile uncovered this remaining nested consumer;
+all three source sets now compile. Retained the stale-count mismatch before correction.
+
+Inventory before -> after: reports 96 -> 95; main Java 124528 -> 124311; test Java 154714 -> 154963;
+blank checks 438 -> 437. Spec 75/Patch eight, snapshots 51/definitions 13, Support 217 and JSON files
+69 remain. Converter inventory 4700 -> 4701: the common report adapter is still present until WP-40;
+its categorization does not capture the removed authoring wrappers/assertion switches. Creator,
+wire-default, Jackson-registration and handwritten catalog-descriptor inventories remain empty.
+Discriminators remain type/status only. Remaining legacy markers concern stored OOXML formats and
+build-directory policy, not wire compatibility handlers. No baseline change; supplement absent.
+The shell example materializer and Docker workflow's 20 authored payload fields were migrated too.
+Bash syntax passes. Full ./check.sh checkpoint follows this commit; WP-21's aggregate blank target
+and schema default publication remain explicitly incomplete, along with the planned engine work.

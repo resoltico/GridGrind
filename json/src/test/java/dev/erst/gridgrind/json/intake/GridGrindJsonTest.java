@@ -329,8 +329,8 @@ class GridGrindJsonTest {
                 new AssertionStep(
                     new StepId("assert-owner"),
                     new CellSelector.ByAddress(new SheetName("Budget"), new CellAddress("A1")),
-                    new CellAssertion.CellValue(
-                        new dev.erst.gridgrind.core.model.value.CellScalarValue.Text("Owner"))),
+                    new CellAssertion.Value(
+                        new dev.erst.gridgrind.core.model.value.CellValue.Text("Owner"))),
                 new InspectionStep(
                     new StepId("summary"),
                     new WorkbookSelector.Current(),
@@ -394,7 +394,7 @@ class GridGrindJsonTest {
                         .path("cell text", "missing.txt"),
                     java.util.Optional.of(
                         dev.erst.gridgrind.core.problem.ProblemContextRequestSurfaces.JsonLocation
-                            .pathAtByteOffset("steps[0].action.value.source.path", 73))),
+                            .pathAtByteOffset("steps[0].action.value.value.path", 73))),
                 List.of()));
     WorkbookResult calculationFailure =
         WorkbookResults.failure(
@@ -494,7 +494,7 @@ class GridGrindJsonTest {
                     "type": "SET_CELL",
                     "value": {
                       "type": "TEXT",
-                      "source": { "type": "INLINE", "text": "Owner" }
+                      "value": { "type": "INLINE", "text": "Owner" }
                     }
                   }
                 },
@@ -503,7 +503,7 @@ class GridGrindJsonTest {
                   "target": { "type": "CELL_BY_ADDRESS", "sheetName": "Budget", "address": "A1" },
                   "assertion": {
                     "type": "EXPECT_CELL_VALUE",
-                    "expectedValue": { "type": "TEXT", "text": "Owner" }
+                    "expectedValue": { "type": "TEXT", "value": "Owner" }
                   }
                 },
                 {

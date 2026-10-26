@@ -419,21 +419,21 @@ ${default_formula_environment_block}
           "cells": [
             {
               "type": "TEXT",
-              "source": {
+              "value": {
                 "type": "INLINE",
                 "text": "Team"
               }
             },
             {
               "type": "TEXT",
-              "source": {
+              "value": {
                 "type": "INLINE",
                 "text": "Task"
               }
             },
             {
               "type": "TEXT",
-              "source": {
+              "value": {
                 "type": "INLINE",
                 "text": "Hours"
               }
@@ -455,21 +455,21 @@ ${default_formula_environment_block}
           "cells": [
             {
               "type": "TEXT",
-              "source": {
+              "value": {
                 "type": "INLINE",
                 "text": "Ops"
               }
             },
             {
               "type": "TEXT",
-              "source": {
+              "value": {
                 "type": "INLINE",
                 "text": "Badge prep"
               }
             },
             {
               "type": "NUMBER",
-              "number": 6.5
+              "value": 6.5
             }
           ]
         }

@@ -105,7 +105,7 @@ final class ExecutionActionDiagnosticFields {
   }
 
   private static Optional<String> inlineFormula(CellValueSpec.Formula formula) {
-    return switch (formula.source()) {
+    return switch (formula.value()) {
       case dev.erst.gridgrind.core.source.TextSourceSpec.Inline inline ->
           Optional.of(inline.text());
       case dev.erst.gridgrind.core.source.TextSourceSpec.Utf8File _ -> Optional.empty();

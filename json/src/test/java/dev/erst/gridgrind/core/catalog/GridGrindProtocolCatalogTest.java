@@ -104,10 +104,10 @@ class GridGrindProtocolCatalogTest {
             .anyMatch(
                 match -> "inspectionQueryTypes:GET_SHEET_LAYOUT".equals(match.qualifiedId())));
     assertEquals(
-        "source",
+        "value",
         GridGrindProtocolCatalog.entryFor("cellValueSpecTypes:FORMULA")
             .orElseThrow()
-            .field("source")
+            .field("value")
             .orElseThrow()
             .name());
     NestedTypeGroup cellInputs =
@@ -439,8 +439,7 @@ class GridGrindProtocolCatalogTest {
             GridGrindProtocolCatalog.lookupValueFor("nestedTypes:cellReportTypes").orElseThrow();
     NestedTypeGroup valueGroup =
         (NestedTypeGroup)
-            GridGrindProtocolCatalog.lookupValueFor("nestedTypes:cellValueReportTypes")
-                .orElseThrow();
+            GridGrindProtocolCatalog.lookupValueFor("nestedTypes:cellValueTypes").orElseThrow();
     NestedTypeGroup inputGroup =
         (NestedTypeGroup)
             GridGrindProtocolCatalog.lookupValueFor("nestedTypes:cellValueSpecTypes").orElseThrow();
@@ -520,53 +519,47 @@ class GridGrindProtocolCatalogTest {
     assertEquals(List.of("HYPERLINK"), number.field("hyperlink").orElseThrow().projectedByFacets());
     assertEquals(FieldRequirement.OPTIONAL, number.field("comment").orElseThrow().requirement());
     assertEquals(List.of("COMMENT"), number.field("comment").orElseThrow().projectedByFacets());
-    assertEquals(
-        FieldRequirement.OPTIONAL, number.field("numberValue").orElseThrow().requirement());
-    assertEquals(List.of("VALUE"), number.field("numberValue").orElseThrow().projectedByFacets());
+    assertEquals(FieldRequirement.OPTIONAL, number.field("value").orElseThrow().requirement());
+    assertEquals(List.of("VALUE"), number.field("value").orElseThrow().projectedByFacets());
     assertEquals(FieldRequirement.OPTIONAL, number.field("temporal").orElseThrow().requirement());
     assertEquals(List.of("TEMPORAL"), number.field("temporal").orElseThrow().projectedByFacets());
     assertTrue(number.summary().contains("TEMPORAL"));
 
-    assertEquals(FieldRequirement.OPTIONAL, text.field("textValue").orElseThrow().requirement());
-    assertEquals(List.of("VALUE"), text.field("textValue").orElseThrow().projectedByFacets());
+    assertEquals(FieldRequirement.OPTIONAL, text.field("value").orElseThrow().requirement());
+    assertEquals(List.of("VALUE"), text.field("value").orElseThrow().projectedByFacets());
     assertEquals(FieldRequirement.OPTIONAL, text.field("runs").orElseThrow().requirement());
     assertEquals(List.of("RICH_TEXT_RUNS"), text.field("runs").orElseThrow().projectedByFacets());
-    assertEquals(reportedErrorLiterals, error.field("errorValue").orElseThrow().enumValues());
+    assertEquals(
+        new FieldShape.NestedTypeGroupRef("cellValueTypes"),
+        error.field("value").orElseThrow().shape());
     assertEquals(FieldRequirement.OPTIONAL, formula.field("formula").orElseThrow().requirement());
     assertEquals(List.of("FORMULA"), formula.field("formula").orElseThrow().projectedByFacets());
-    assertEquals(
-        FieldRequirement.OPTIONAL, formula.field("evaluation").orElseThrow().requirement());
-    assertEquals(List.of("VALUE"), formula.field("evaluation").orElseThrow().projectedByFacets());
+    assertEquals(FieldRequirement.OPTIONAL, formula.field("value").orElseThrow().requirement());
+    assertEquals(List.of("VALUE"), formula.field("value").orElseThrow().projectedByFacets());
 
     assertEquals(
-        FieldRequirement.REQUIRED, evaluatedText.field("textValue").orElseThrow().requirement());
-    assertTrue(evaluatedText.field("textValue").orElseThrow().projectedByFacets().isEmpty());
+        FieldRequirement.REQUIRED, evaluatedText.field("value").orElseThrow().requirement());
+    assertTrue(evaluatedText.field("value").orElseThrow().projectedByFacets().isEmpty());
+    assertEquals(FieldRequirement.OPTIONAL, formula.field("runs").orElseThrow().requirement());
     assertEquals(
-        FieldRequirement.OPTIONAL, evaluatedText.field("runs").orElseThrow().requirement());
+        List.of("RICH_TEXT_RUNS"), formula.field("runs").orElseThrow().projectedByFacets());
     assertEquals(
-        List.of("RICH_TEXT_RUNS"), evaluatedText.field("runs").orElseThrow().projectedByFacets());
-    assertEquals(
-        FieldRequirement.REQUIRED,
-        evaluatedNumber.field("numberValue").orElseThrow().requirement());
-    assertTrue(evaluatedNumber.field("numberValue").orElseThrow().projectedByFacets().isEmpty());
-    assertEquals(
-        reportedErrorLiterals, evaluatedError.field("errorValue").orElseThrow().enumValues());
-    assertEquals(
-        FieldRequirement.OPTIONAL, evaluatedNumber.field("temporal").orElseThrow().requirement());
-    assertEquals(
-        List.of("TEMPORAL"), evaluatedNumber.field("temporal").orElseThrow().projectedByFacets());
-    assertEquals(storedErrorLiterals, inputError.field("error").orElseThrow().enumValues());
+        FieldRequirement.REQUIRED, evaluatedNumber.field("value").orElseThrow().requirement());
+    assertTrue(evaluatedNumber.field("value").orElseThrow().projectedByFacets().isEmpty());
+    assertEquals(reportedErrorLiterals, evaluatedError.field("value").orElseThrow().enumValues());
+    assertEquals(FieldRequirement.OPTIONAL, formula.field("temporal").orElseThrow().requirement());
+    assertEquals(List.of("TEMPORAL"), formula.field("temporal").orElseThrow().projectedByFacets());
+    assertEquals(storedErrorLiterals, inputError.field("value").orElseThrow().enumValues());
     assertEquals(storedErrorLiterals, rowInputError.field("cells").orElseThrow().enumValues());
     assertEquals(storedErrorLiterals, gridInputError.field("cells").orElseThrow().enumValues());
     assertEquals(
         "#FUNCTION_NOT_IMPLEMENTED!",
-        error.field("errorValue").orElseThrow().enumValueDocs().get(8).value());
+        evaluatedError.field("value").orElseThrow().enumValueDocs().get(8).value());
     assertEquals(
         List.of(
             new EnumValueDocEntry(
                 "VALUE",
-                "Project the factual cell value: textValue, numberValue, booleanValue,"
-                    + " errorValue, or formula evaluation."),
+                "Project the factual effective scalar in value, including formula results and blank values."),
             new EnumValueDocEntry("STYLE", "Project the style report for each returned cell."),
             new EnumValueDocEntry(
                 "FORMAT", "Project displayValue using Excel's formatted display text."),

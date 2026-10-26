@@ -59,7 +59,7 @@ public final class CellTarget {
   }
 
   /** Returns one effective-value assertion step. */
-  public PlannedAssertion valueEquals(ExpectedValues.Value expectedValue) {
+  public PlannedAssertion valueEquals(dev.erst.gridgrind.core.model.value.CellValue expectedValue) {
     return new PlannedAssertion(selector, Checks.cellValue(expectedValue));
   }
 

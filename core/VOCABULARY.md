@@ -30,3 +30,11 @@ such as journal verbosity and a diagnostic cause's stage keep their domain names
 
 `protocolVersion` is the integer `1`. Validated wire scalars represent domain values directly as
 JSON primitives; their Java record components do not add an object layer to the wire document.
+
+`CellValueSpec` describes authored cell content. Each scalar or source-bearing variant uses
+`value`; rich text uses `runs`, whose source-bearing text field is `text`. `CellValue` is the
+shared resolved scalar union for observations and exact expectations: blank has no payload,
+and text, number, boolean and error variants each use `value` for their primitive payload.
+`CellReport` retains the stored cell type and carries the shared scalar in its optional `value`
+field. Formula text, rich-text runs and temporal metadata stay on the report and follow its
+projection facets. A formula report's scalar value describes the evaluated type.

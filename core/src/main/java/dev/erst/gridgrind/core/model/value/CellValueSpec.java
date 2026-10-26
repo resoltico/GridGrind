@@ -34,9 +34,9 @@ public sealed interface CellValueSpec
       id = "TEXT",
       summary =
           "Write one string cell value from an inline, file-backed, or standard-input text source. Blank resolved text is rejected; use BLANK for empty cells.")
-  record Text(TextSourceSpec source) implements CellValueSpec {
+  record Text(TextSourceSpec value) implements CellValueSpec {
     public Text {
-      source = Validation.requireNonBlankTextSource(source, "source");
+      value = Validation.requireNonBlankTextSource(value, "value");
     }
   }
 
@@ -60,25 +60,24 @@ public sealed interface CellValueSpec
 
   /** Numeric cell input stored as a double. */
   @Variant(id = "NUMBER", summary = "Write one numeric cell value.")
-  record NumberValue(double number) implements CellValueSpec {
+  record NumberValue(double value) implements CellValueSpec {
     public NumberValue {
-      Validation.requireFinite(number, "number");
+      Validation.requireFinite(value, "value");
     }
   }
 
   /** Boolean cell input. */
   @Variant(id = "BOOLEAN", summary = "Write one boolean cell value.")
-  record BooleanValue(boolean bool) implements CellValueSpec {}
+  record BooleanValue(boolean value) implements CellValueSpec {}
 
   /** Stored Excel error cell input such as {@code #REF!}, {@code #DIV/0!}, or {@code #N/A}. */
   @Variant(
       id = "ERROR",
       summary =
           "Write one exact stored Excel error literal such as #REF!, #DIV/0!, or #N/A. Evaluation-only states such as #CIRCULAR_REF! are reported on readback but cannot be authored as stored cell values.")
-  record ErrorValue(String error) implements CellValueSpec {
+  record ErrorValue(String value) implements CellValueSpec {
     public ErrorValue {
-      error = Validation.requireNonBlank(error, "error");
-      error = CellErrorLiteralValidation.requireStoredErrorLiteral(error, "error");
+      value = CellErrorLiteralValidation.requireStoredErrorLiteral(value, "value");
     }
   }
 
@@ -87,9 +86,9 @@ public sealed interface CellValueSpec
       id = "FORMULA",
       summary =
           "Write one Excel formula from an inline, file-backed, or standard-input text source. Formula text is the OOXML <f> body: it must not begin with = and is parsed by Apache POI.")
-  record Formula(TextSourceSpec source) implements CellValueSpec {
+  record Formula(TextSourceSpec value) implements CellValueSpec {
     public Formula {
-      source = Validation.normalizeFormulaSource(source, "source");
+      value = Validation.normalizeFormulaSource(value, "value");
     }
   }
 
@@ -98,9 +97,9 @@ public sealed interface CellValueSpec
       id = "RAW_FORMULA",
       summary =
           "Write opaque OOXML <f> character data from one text source without POI formula parsing. It must be nonempty, must not begin with =, and rejects XML 1.0-invalid characters as INVALID_FORMULA_TEXT; XML-looking formula string literals are preserved.")
-  record RawFormula(TextSourceSpec source) implements CellValueSpec {
+  record RawFormula(TextSourceSpec value) implements CellValueSpec {
     public RawFormula {
-      source = Validation.normalizeRawFormulaSource(source, "source");
+      value = Validation.normalizeRawFormulaSource(value, "value");
     }
   }
 
@@ -109,9 +108,9 @@ public sealed interface CellValueSpec
       id = "DATE",
       summary =
           "Write an ISO-8601 date value. Stored as an Excel serial number; readback keeps type=NUMBER, and the TEMPORAL facet can expose kind=DATE.")
-  record Date(LocalDate date) implements CellValueSpec {
+  record Date(LocalDate value) implements CellValueSpec {
     public Date {
-      Validation.required(date, "date");
+      Validation.required(value, "value");
     }
   }
 
@@ -123,9 +122,9 @@ public sealed interface CellValueSpec
       id = "DATE_TIME",
       summary =
           "Write an ISO-8601 date-time value. Stored as an Excel serial number; readback keeps type=NUMBER, and the TEMPORAL facet can expose kind=DATE_TIME.")
-  record DateTime(LocalDateTime dateTime) implements CellValueSpec {
+  record DateTime(LocalDateTime value) implements CellValueSpec {
     public DateTime {
-      Validation.required(dateTime, "dateTime");
+      Validation.required(value, "value");
     }
   }
 

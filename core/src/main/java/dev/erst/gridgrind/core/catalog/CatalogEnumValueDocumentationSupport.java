@@ -17,8 +17,7 @@ final class CatalogEnumValueDocumentationSupport {
           CellReadFacet.class,
           Map.of(
               "VALUE",
-                  "Project the factual cell value: textValue, numberValue, booleanValue,"
-                      + " errorValue, or formula evaluation.",
+                  "Project the factual effective scalar in value, including formula results and blank values.",
               "STYLE", "Project the style report for each returned cell.",
               "FORMAT", "Project displayValue using Excel's formatted display text.",
               "HYPERLINK", "Project hyperlink metadata when the cell carries a hyperlink.",

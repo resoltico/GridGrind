@@ -109,7 +109,7 @@
         "type": "SET_CELL",
         "value": {
           "type": "FORMULA",
-          "source": {
+          "value": {
             "type": "INLINE",
             "text": "DOUBLE(B2)"
           }
@@ -127,7 +127,7 @@
         "type": "SET_CELL",
         "value": {
           "type": "FORMULA",
-          "source": {
+          "value": {
             "type": "INLINE",
             "text": "B2*C2"
           }

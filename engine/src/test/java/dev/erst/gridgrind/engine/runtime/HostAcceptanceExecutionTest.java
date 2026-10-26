@@ -8,7 +8,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import dev.erst.gridgrind.core.model.formula.FormulaEnvironmentSpec;
 import dev.erst.gridgrind.core.model.value.CellRowSpec;
-import dev.erst.gridgrind.core.model.value.CellScalarValue;
+import dev.erst.gridgrind.core.model.value.CellValue;
 import dev.erst.gridgrind.core.model.value.CellValueSpec;
 import dev.erst.gridgrind.core.plan.AssertionStep;
 import dev.erst.gridgrind.core.plan.CellAssertion;
@@ -55,7 +55,7 @@ class HostAcceptanceExecutionTest {
                             new StepId("host-total"),
                             new CellSelector.ByAddress(
                                 new SheetName("Report"), new CellAddress("A1")),
-                            new CellAssertion.CellValue(new CellScalarValue.NumberValue(2)))))));
+                            new CellAssertion.Value(new CellValue.NumberValue(2)))))));
 
     WorkbookResult.Failure failure =
         assertInstanceOf(
@@ -92,7 +92,7 @@ class HostAcceptanceExecutionTest {
                             new StepId("host-total"),
                             new CellSelector.ByAddress(
                                 new SheetName("Report"), new CellAddress("A1")),
-                            new CellAssertion.CellValue(new CellScalarValue.NumberValue(1)))))));
+                            new CellAssertion.Value(new CellValue.NumberValue(1)))))));
 
     WorkbookResult.Success success =
         assertInstanceOf(
@@ -293,7 +293,7 @@ class HostAcceptanceExecutionTest {
                     new AssertionStep(
                         new StepId("host-total"),
                         new CellSelector.ByAddress(new SheetName("Report"), new CellAddress("A1")),
-                        new CellAssertion.CellValue(new CellScalarValue.NumberValue(2)))))));
+                        new CellAssertion.Value(new CellValue.NumberValue(2)))))));
   }
 
   private Path writePreservationSource() throws java.io.IOException {

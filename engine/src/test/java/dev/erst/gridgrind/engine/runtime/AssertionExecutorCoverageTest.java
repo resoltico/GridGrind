@@ -22,8 +22,7 @@ import dev.erst.gridgrind.core.model.style.CellStyleReport;
 import dev.erst.gridgrind.core.model.style.FontHeightReport;
 import dev.erst.gridgrind.core.model.table.TableSpec;
 import dev.erst.gridgrind.core.model.table.TableStyleSpec;
-import dev.erst.gridgrind.core.model.value.CellScalarValue;
-import dev.erst.gridgrind.core.model.value.CellValueReport;
+import dev.erst.gridgrind.core.model.value.CellValue;
 import dev.erst.gridgrind.core.model.value.CellValueSpec;
 import dev.erst.gridgrind.core.model.value.HyperlinkHealthReport;
 import dev.erst.gridgrind.core.plan.*;
@@ -273,51 +272,51 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
                             "cell-text",
                             new CellSelector.ByAddress(
                                 new SheetName("Budget"), new CellAddress("A2")),
-                            new CellAssertion.CellValue(
-                                new dev.erst.gridgrind.core.model.value.CellScalarValue.Text(
+                            new CellAssertion.Value(
+                                new dev.erst.gridgrind.core.model.value.CellValue.Text(
                                     textValue(owner)))),
                         assertThat(
                             "cell-number",
                             new CellSelector.ByAddress(
                                 new SheetName("Budget"), new CellAddress("B2")),
-                            new CellAssertion.CellValue(
-                                new dev.erst.gridgrind.core.model.value.CellScalarValue.NumberValue(
+                            new CellAssertion.Value(
+                                new dev.erst.gridgrind.core.model.value.CellValue.NumberValue(
                                     numberValue(amount)))),
                         assertThat(
                             "cell-boolean",
                             new CellSelector.ByAddress(
                                 new SheetName("Budget"), new CellAddress("C2")),
-                            new CellAssertion.CellValue(
-                                new dev.erst.gridgrind.core.model.value.CellScalarValue
-                                    .BooleanValue(booleanValue(enabled)))),
+                            new CellAssertion.Value(
+                                new dev.erst.gridgrind.core.model.value.CellValue.BooleanValue(
+                                    booleanValue(enabled)))),
                         assertThat(
                             "cell-blank",
                             new CellSelector.ByAddress(
                                 new SheetName("Budget"), new CellAddress("D2")),
-                            new CellAssertion.CellValue(
-                                new dev.erst.gridgrind.core.model.value.CellScalarValue.Blank())),
+                            new CellAssertion.Value(
+                                new dev.erst.gridgrind.core.model.value.CellValue.Blank())),
                         assertThat(
                             "cell-error",
                             new CellSelector.ByAddress(
                                 new SheetName("Budget"), new CellAddress("E2")),
-                            new CellAssertion.CellValue(
-                                new dev.erst.gridgrind.core.model.value.CellScalarValue.ErrorValue(
+                            new CellAssertion.Value(
+                                new dev.erst.gridgrind.core.model.value.CellValue.ErrorValue(
                                     assertInstanceOf(
-                                            dev.erst.gridgrind.core.model.value.CellValueReport
-                                                .ErrorValue.class,
+                                            dev.erst.gridgrind.core.model.value.CellValue.ErrorValue
+                                                .class,
                                             evaluation(errorFormula))
-                                        .errorValue()))),
+                                        .value()))),
                         assertThat(
                             "cell-formula-evaluation",
                             new CellSelector.ByAddress(
                                 new SheetName("Budget"), new CellAddress("F2")),
-                            new CellAssertion.CellValue(
-                                new dev.erst.gridgrind.core.model.value.CellScalarValue.NumberValue(
+                            new CellAssertion.Value(
+                                new dev.erst.gridgrind.core.model.value.CellValue.NumberValue(
                                     assertInstanceOf(
-                                            dev.erst.gridgrind.core.model.value.CellValueReport
+                                            dev.erst.gridgrind.core.model.value.CellValue
                                                 .NumberValue.class,
                                             evaluation(totalFormula))
-                                        .numberValue()))),
+                                        .value()))),
                         assertThat(
                             "display-value",
                             new CellSelector.ByAddress(
@@ -378,9 +377,9 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
                                 new SheetName("Budget"), new CellAddress("A2")),
                             new CompositeAssertion.AllOf(
                                 List.of(
-                                    new CellAssertion.CellValue(
-                                        new dev.erst.gridgrind.core.model.value.CellScalarValue
-                                            .Text(textValue(owner))),
+                                    new CellAssertion.Value(
+                                        new dev.erst.gridgrind.core.model.value.CellValue.Text(
+                                            textValue(owner))),
                                     new CellAssertion.DisplayValue(displayValue(owner))))),
                         assertThat(
                             "any-of",
@@ -389,16 +388,16 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
                             new CompositeAssertion.AnyOf(
                                 List.of(
                                     new CellAssertion.DisplayValue("Wrong"),
-                                    new CellAssertion.CellValue(
-                                        new dev.erst.gridgrind.core.model.value.CellScalarValue
-                                            .Text(textValue(owner)))))),
+                                    new CellAssertion.Value(
+                                        new dev.erst.gridgrind.core.model.value.CellValue.Text(
+                                            textValue(owner)))))),
                         assertThat(
                             "not",
                             new CellSelector.ByAddress(
                                 new SheetName("Budget"), new CellAddress("A2")),
                             new CompositeAssertion.Not(
-                                new CellAssertion.CellValue(
-                                    new dev.erst.gridgrind.core.model.value.CellScalarValue.Text(
+                                new CellAssertion.Value(
+                                    new dev.erst.gridgrind.core.model.value.CellValue.Text(
                                         "Wrong"))))),
                     List.of())));
 
@@ -786,9 +785,9 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
                                 new SheetName("Budget"), new CellAddress("A1")),
                             new CompositeAssertion.AllOf(
                                 List.of(
-                                    new CellAssertion.CellValue(
-                                        new dev.erst.gridgrind.core.model.value.CellScalarValue
-                                            .Text("Owner")),
+                                    new CellAssertion.Value(
+                                        new dev.erst.gridgrind.core.model.value.CellValue.Text(
+                                            "Owner")),
                                     new CellAssertion.DisplayValue("Wrong"))))),
                     List.of())));
     assertTrue(allOfFailure.problem().message().contains("ALL_OF failed"));
@@ -809,9 +808,9 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
                             new CompositeAssertion.AnyOf(
                                 List.of(
                                     new CellAssertion.DisplayValue("Wrong"),
-                                    new CellAssertion.CellValue(
-                                        new dev.erst.gridgrind.core.model.value.CellScalarValue
-                                            .Text("Also wrong")))))),
+                                    new CellAssertion.Value(
+                                        new dev.erst.gridgrind.core.model.value.CellValue.Text(
+                                            "Also wrong")))))),
                     List.of())));
     assertTrue(anyOfFailure.problem().message().contains("ANY_OF failed"));
 
@@ -829,8 +828,8 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
                             new CellSelector.ByAddress(
                                 new SheetName("Budget"), new CellAddress("A1")),
                             new CompositeAssertion.Not(
-                                new CellAssertion.CellValue(
-                                    new dev.erst.gridgrind.core.model.value.CellScalarValue.Text(
+                                new CellAssertion.Value(
+                                    new dev.erst.gridgrind.core.model.value.CellValue.Text(
                                         "Owner"))))),
                     List.of())));
     assertTrue(notFailure.problem().message().contains("NOT failed"));
@@ -1125,49 +1124,35 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
     dev.erst.gridgrind.core.model.value.CellReport.ErrorReport errorCell =
         errorReadCell("D2", "#DIV/0!", style, "#DIV/0!");
     dev.erst.gridgrind.core.model.value.CellReport.FormulaReport formulaCell =
-        formulaReadCell(
-            "E2", "42", style, "2+40", new CellValueReport.NumberValue(42.0d, Optional.empty()));
+        formulaReadCell("E2", "42", style, "2+40", new CellValue.NumberValue(42.0d));
 
-    assertTrue(AssertionValueEvaluator.matchesCellValue(blankCell, new CellScalarValue.Blank()));
-    assertFalse(AssertionValueEvaluator.matchesCellValue(textCell, new CellScalarValue.Blank()));
+    assertTrue(AssertionValueEvaluator.matchesCellValue(blankCell, new CellValue.Blank()));
+    assertFalse(AssertionValueEvaluator.matchesCellValue(textCell, new CellValue.Blank()));
+    assertFalse(AssertionValueEvaluator.matchesCellValue(blankCell, new CellValue.Text("Owner")));
+    assertTrue(AssertionValueEvaluator.matchesCellValue(textCell, new CellValue.Text("Owner")));
+    assertFalse(AssertionValueEvaluator.matchesCellValue(textCell, new CellValue.Text("Wrong")));
     assertFalse(
-        AssertionValueEvaluator.matchesCellValue(blankCell, new CellScalarValue.Text("Owner")));
+        AssertionValueEvaluator.matchesCellValue(textCell, new CellValue.NumberValue(42.0d)));
     assertTrue(
-        AssertionValueEvaluator.matchesCellValue(textCell, new CellScalarValue.Text("Owner")));
+        AssertionValueEvaluator.matchesCellValue(numberCell, new CellValue.NumberValue(42.0d)));
     assertFalse(
-        AssertionValueEvaluator.matchesCellValue(textCell, new CellScalarValue.Text("Wrong")));
-    assertFalse(
-        AssertionValueEvaluator.matchesCellValue(textCell, new CellScalarValue.NumberValue(42.0d)));
+        AssertionValueEvaluator.matchesCellValue(numberCell, new CellValue.NumberValue(41.0d)));
     assertTrue(
-        AssertionValueEvaluator.matchesCellValue(
-            numberCell, new CellScalarValue.NumberValue(42.0d)));
+        AssertionValueEvaluator.matchesCellValue(booleanCell, new CellValue.BooleanValue(true)));
     assertFalse(
-        AssertionValueEvaluator.matchesCellValue(
-            numberCell, new CellScalarValue.NumberValue(41.0d)));
+        AssertionValueEvaluator.matchesCellValue(booleanCell, new CellValue.BooleanValue(false)));
+    assertFalse(
+        AssertionValueEvaluator.matchesCellValue(numberCell, new CellValue.BooleanValue(true)));
     assertTrue(
-        AssertionValueEvaluator.matchesCellValue(
-            booleanCell, new CellScalarValue.BooleanValue(true)));
+        AssertionValueEvaluator.matchesCellValue(errorCell, new CellValue.ErrorValue("#DIV/0!")));
     assertFalse(
-        AssertionValueEvaluator.matchesCellValue(
-            booleanCell, new CellScalarValue.BooleanValue(false)));
+        AssertionValueEvaluator.matchesCellValue(errorCell, new CellValue.ErrorValue("#REF!")));
     assertFalse(
-        AssertionValueEvaluator.matchesCellValue(
-            numberCell, new CellScalarValue.BooleanValue(true)));
+        AssertionValueEvaluator.matchesCellValue(numberCell, new CellValue.ErrorValue("#DIV/0!")));
     assertTrue(
-        AssertionValueEvaluator.matchesCellValue(
-            errorCell, new CellScalarValue.ErrorValue("#DIV/0!")));
+        AssertionValueEvaluator.matchesCellValue(formulaCell, new CellValue.NumberValue(42.0d)));
     assertFalse(
-        AssertionValueEvaluator.matchesCellValue(
-            errorCell, new CellScalarValue.ErrorValue("#REF!")));
-    assertFalse(
-        AssertionValueEvaluator.matchesCellValue(
-            numberCell, new CellScalarValue.ErrorValue("#DIV/0!")));
-    assertTrue(
-        AssertionValueEvaluator.matchesCellValue(
-            formulaCell, new CellScalarValue.NumberValue(42.0d)));
-    assertFalse(
-        AssertionValueEvaluator.matchesCellValue(
-            formulaCell, new CellScalarValue.NumberValue(41.0d)));
+        AssertionValueEvaluator.matchesCellValue(formulaCell, new CellValue.NumberValue(41.0d)));
 
     assertTrue(
         AssertionAnalysisEvaluator.matchesFinding(
@@ -1222,9 +1207,8 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
                         assertThat(
                             "stream-assert",
                             new CellSelector.ByAddress(new SheetName("Ops"), new CellAddress("A1")),
-                            new CellAssertion.CellValue(
-                                new dev.erst.gridgrind.core.model.value.CellScalarValue.Text(
-                                    "Owner")))),
+                            new CellAssertion.Value(
+                                new dev.erst.gridgrind.core.model.value.CellValue.Text("Owner")))),
                     List.of(
                         inspect(
                             "stream-read",
@@ -1261,14 +1245,13 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
                         assertThat(
                             "stream-pass",
                             new CellSelector.ByAddress(new SheetName("Ops"), new CellAddress("A1")),
-                            new CellAssertion.CellValue(
-                                new dev.erst.gridgrind.core.model.value.CellScalarValue.Text(
-                                    "Owner"))),
+                            new CellAssertion.Value(
+                                new dev.erst.gridgrind.core.model.value.CellValue.Text("Owner"))),
                         assertThat(
                             "stream-fail",
                             new CellSelector.ByAddress(new SheetName("Ops"), new CellAddress("A1")),
-                            new CellAssertion.CellValue(
-                                new dev.erst.gridgrind.core.model.value.CellScalarValue.Text(
+                            new CellAssertion.Value(
+                                new dev.erst.gridgrind.core.model.value.CellValue.Text(
                                     "WrongValue")))),
                     List.of())));
     assertEquals(2, streamingAssertionFailure.assertions().size());
@@ -1289,8 +1272,8 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
                     new AssertionStep(
                         new StepId("assert"),
                         new CellSelector.ByAddress(new SheetName("Ops"), new CellAddress("A1")),
-                        new CellAssertion.CellValue(
-                            new dev.erst.gridgrind.core.model.value.CellScalarValue.Text("Owner"))),
+                        new CellAssertion.Value(
+                            new dev.erst.gridgrind.core.model.value.CellValue.Text("Owner"))),
                     null,
                     new WorkbookLocation.UnsavedWorkbook(),
                     ExecutionModeSpec.eventRead()));
@@ -1304,8 +1287,8 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
                     new AssertionStep(
                         new StepId("assert"),
                         new CellSelector.ByAddress(new SheetName("Ops"), new CellAddress("A1")),
-                        new CellAssertion.CellValue(
-                            new dev.erst.gridgrind.core.model.value.CellScalarValue.Text("Owner"))),
+                        new CellAssertion.Value(
+                            new dev.erst.gridgrind.core.model.value.CellValue.Text("Owner"))),
                     null,
                     new WorkbookLocation.UnsavedWorkbook(),
                     ExecutionModeSpec.eventRead()));
@@ -1424,8 +1407,8 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
                                 "assert-without-sheet",
                                 new CellSelector.ByAddress(
                                     new SheetName("Ops"), new CellAddress("A1")),
-                                new CellAssertion.CellValue(
-                                    new dev.erst.gridgrind.core.model.value.CellScalarValue.Text(
+                                new CellAssertion.Value(
+                                    new dev.erst.gridgrind.core.model.value.CellValue.Text(
                                         "Owner")))),
                         List.of())))
             .stream()

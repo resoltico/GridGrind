@@ -219,8 +219,11 @@
               "locked" : true
             }
           },
-          "textValue" : "Label",
-          "type" : "TEXT"
+          "type" : "TEXT",
+          "value" : {
+            "type" : "TEXT",
+            "value" : "Label"
+          }
         }, {
           "address" : "B1",
           "displayValue" : "Destination",
@@ -271,8 +274,11 @@
               "locked" : true
             }
           },
-          "textValue" : "Destination",
-          "type" : "TEXT"
+          "type" : "TEXT",
+          "value" : {
+            "type" : "TEXT",
+            "value" : "Destination"
+          }
         }, {
           "address" : "A2",
           "displayValue" : "Relative policy PDF from request assets\n",
@@ -327,8 +333,11 @@
               "locked" : true
             }
           },
-          "textValue" : "Relative policy PDF from request assets\n",
-          "type" : "TEXT"
+          "type" : "TEXT",
+          "value" : {
+            "type" : "TEXT",
+            "value" : "Relative policy PDF from request assets\n"
+          }
         }, {
           "address" : "B2",
           "displayValue" : "support/expense policy 2026.pdf",
@@ -379,8 +388,11 @@
               "locked" : true
             }
           },
-          "textValue" : "support/expense policy 2026.pdf",
-          "type" : "TEXT"
+          "type" : "TEXT",
+          "value" : {
+            "type" : "TEXT",
+            "value" : "support/expense policy 2026.pdf"
+          }
         }, {
           "address" : "A3",
           "displayValue" : "Absolute checklist URI",
@@ -435,8 +447,11 @@
               "locked" : true
             }
           },
-          "textValue" : "Absolute checklist URI",
-          "type" : "TEXT"
+          "type" : "TEXT",
+          "value" : {
+            "type" : "TEXT",
+            "value" : "Absolute checklist URI"
+          }
         }, {
           "address" : "B3",
           "displayValue" : "file:///tmp/quarterly%20close/checklist.xlsx",
@@ -487,8 +502,11 @@
               "locked" : true
             }
           },
-          "textValue" : "file:///tmp/quarterly%20close/checklist.xlsx",
-          "type" : "TEXT"
+          "type" : "TEXT",
+          "value" : {
+            "type" : "TEXT",
+            "value" : "file:///tmp/quarterly%20close/checklist.xlsx"
+          }
         }, {
           "address" : "A4",
           "displayValue" : "Workbook section",
@@ -543,8 +561,11 @@
               "locked" : true
             }
           },
-          "textValue" : "Workbook section",
-          "type" : "TEXT"
+          "type" : "TEXT",
+          "value" : {
+            "type" : "TEXT",
+            "value" : "Workbook section"
+          }
         }, {
           "address" : "B4",
           "displayValue" : "Links!B2",
@@ -595,8 +616,11 @@
               "locked" : true
             }
           },
-          "textValue" : "Links!B2",
-          "type" : "TEXT"
+          "type" : "TEXT",
+          "value" : {
+            "type" : "TEXT",
+            "value" : "Links!B2"
+          }
         } ],
         "sheetName" : "Links",
         "stepId" : "sheet-0-cells",
@@ -964,53 +988,53 @@
       "action" : {
         "rows" : {
           "cells" : [ [ {
-            "source" : {
+            "type" : "TEXT",
+            "value" : {
               "text" : "Label",
               "type" : "INLINE"
-            },
-            "type" : "TEXT"
+            }
           }, {
-            "source" : {
+            "type" : "TEXT",
+            "value" : {
               "text" : "Destination",
               "type" : "INLINE"
-            },
-            "type" : "TEXT"
+            }
           } ], [ {
-            "source" : {
+            "type" : "TEXT",
+            "value" : {
               "path" : "file-hyperlink-assets/request-label.txt",
               "type" : "UTF8_FILE"
-            },
-            "type" : "TEXT"
+            }
           }, {
-            "source" : {
+            "type" : "TEXT",
+            "value" : {
               "text" : "support/expense policy 2026.pdf",
               "type" : "INLINE"
-            },
-            "type" : "TEXT"
+            }
           } ], [ {
-            "source" : {
+            "type" : "TEXT",
+            "value" : {
               "text" : "Absolute checklist URI",
               "type" : "INLINE"
-            },
-            "type" : "TEXT"
+            }
           }, {
-            "source" : {
+            "type" : "TEXT",
+            "value" : {
               "text" : "file:///tmp/quarterly%20close/checklist.xlsx",
               "type" : "INLINE"
-            },
-            "type" : "TEXT"
+            }
           } ], [ {
-            "source" : {
+            "type" : "TEXT",
+            "value" : {
               "text" : "Workbook section",
               "type" : "INLINE"
-            },
-            "type" : "TEXT"
+            }
           }, {
-            "source" : {
+            "type" : "TEXT",
+            "value" : {
               "text" : "Links!B2",
               "type" : "INLINE"
-            },
-            "type" : "TEXT"
+            }
           } ] ],
           "type" : "TYPED"
         },

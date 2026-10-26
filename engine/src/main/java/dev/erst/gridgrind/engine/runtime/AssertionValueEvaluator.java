@@ -1,8 +1,7 @@
 package dev.erst.gridgrind.engine.runtime;
 
 import dev.erst.gridgrind.core.model.style.CellStyleReport;
-import dev.erst.gridgrind.core.model.value.CellScalarValue;
-import dev.erst.gridgrind.core.model.value.CellValueReport;
+import dev.erst.gridgrind.core.model.value.CellValue;
 import dev.erst.gridgrind.core.plan.CellReadFacet;
 import dev.erst.gridgrind.core.plan.CellReadProjection;
 import dev.erst.gridgrind.core.plan.InspectionResult;
@@ -50,7 +49,7 @@ final class AssertionValueEvaluator {
   AssertionEvaluation evaluateCellValue(
       StepId stepId,
       Selector target,
-      CellScalarValue expectedValue,
+      CellValue expectedValue,
       ExcelWorkbook workbook,
       WorkbookLocation workbookLocation) {
     SheetInspectionResult.CellsResult cellsResult =
@@ -178,46 +177,14 @@ final class AssertionValueEvaluator {
   }
 
   static boolean matchesCellValue(
-      dev.erst.gridgrind.core.model.value.CellReport cell, CellScalarValue expectedValue) {
-    if (cell
-        instanceof dev.erst.gridgrind.core.model.value.CellReport.FormulaReport formulaReport) {
-      return formulaReport.evaluation().isPresent()
-          && matchesCellValue(formulaReport.evaluation().orElseThrow(), expectedValue);
+      dev.erst.gridgrind.core.model.value.CellReport cell, CellValue expectedValue) {
+    if (cell instanceof dev.erst.gridgrind.core.model.value.CellReport.FormulaReport formula) {
+      return formula.value().map(expectedValue::equals).orElse(false);
     }
-    return switch (expectedValue) {
-      case CellScalarValue.Blank _ ->
-          cell instanceof dev.erst.gridgrind.core.model.value.CellReport.BlankReport;
-      case CellScalarValue.Text expectedText ->
-          cell instanceof dev.erst.gridgrind.core.model.value.CellReport.TextReport textReport
-              && textReport.textValue().orElseThrow().equals(expectedText.text());
-      case CellScalarValue.NumberValue expectedNumber ->
-          cell instanceof dev.erst.gridgrind.core.model.value.CellReport.NumberReport numberReport
-              && Double.compare(numberReport.numberValue().orElseThrow(), expectedNumber.number())
-                  == 0;
-      case CellScalarValue.BooleanValue expectedBoolean ->
-          cell instanceof dev.erst.gridgrind.core.model.value.CellReport.BooleanReport booleanReport
-              && booleanReport.booleanValue().orElseThrow().equals(expectedBoolean.bool());
-      case CellScalarValue.ErrorValue expectedError ->
-          cell instanceof dev.erst.gridgrind.core.model.value.CellReport.ErrorReport errorReport
-              && errorReport.errorValue().orElseThrow().equals(expectedError.error());
-    };
-  }
-
-  private static boolean matchesCellValue(CellValueReport cell, CellScalarValue expectedValue) {
-    return switch (expectedValue) {
-      case CellScalarValue.Blank _ -> cell instanceof CellValueReport.BlankValue;
-      case CellScalarValue.Text expectedText ->
-          cell instanceof CellValueReport.TextValue textValue
-              && textValue.textValue().equals(expectedText.text());
-      case CellScalarValue.NumberValue expectedNumber ->
-          cell instanceof CellValueReport.NumberValue numberValue
-              && Double.compare(numberValue.numberValue(), expectedNumber.number()) == 0;
-      case CellScalarValue.BooleanValue expectedBoolean ->
-          cell instanceof CellValueReport.BooleanValue booleanValue
-              && booleanValue.booleanValue().equals(expectedBoolean.bool());
-      case CellScalarValue.ErrorValue expectedError ->
-          cell instanceof CellValueReport.ErrorValue errorValue
-              && errorValue.errorValue().equals(expectedError.error());
-    };
+    if (cell instanceof dev.erst.gridgrind.core.model.value.CellReport.BlankReport) {
+      return expectedValue instanceof CellValue.Blank;
+    }
+    return cell.type().equals(expectedValue.type())
+        && cell.value().orElseThrow().equals(expectedValue);
   }
 }

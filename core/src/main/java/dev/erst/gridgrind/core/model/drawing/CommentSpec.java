@@ -53,12 +53,12 @@ public record CommentSpec(
     if (!(text instanceof TextSourceSpec.Inline inlineText)) {
       return;
     }
-    if (runs.stream().anyMatch(run -> !(run.source() instanceof TextSourceSpec.Inline))) {
+    if (runs.stream().anyMatch(run -> !(run.text() instanceof TextSourceSpec.Inline))) {
       return;
     }
     String joined =
         runs.stream()
-            .map(RichTextRunSpec::source)
+            .map(RichTextRunSpec::text)
             .map(TextSourceSpec.Inline.class::cast)
             .map(TextSourceSpec.Inline::text)
             .collect(java.util.stream.Collectors.joining());

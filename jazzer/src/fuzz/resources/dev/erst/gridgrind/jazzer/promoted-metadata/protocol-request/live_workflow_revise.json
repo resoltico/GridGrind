@@ -7,7 +7,7 @@
     "outcomeKind" : "SUCCESS",
     "details" : {
       "type" : "PROTOCOL_REQUEST",
-      "inputBytes" : 2774,
+      "inputBytes" : 2768,
       "decodeOutcome" : "PARSED",
       "sourceKind" : "EXISTING",
       "persistenceKind" : "OVERWRITE",

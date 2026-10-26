@@ -22,7 +22,7 @@
         "address": "A1",
         "value": {
           "type": "TEXT",
-          "source": {
+          "value": {
             "type": "INLINE",
             "text": "hello"
           }

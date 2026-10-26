@@ -14,7 +14,7 @@
         "type": "SET_CELL",
         "value": {
           "type": "NUMBER",
-          "number": 18.0
+          "value": 18.0
         }
       },
       "target": {
@@ -29,7 +29,7 @@
         "type": "SET_CELL",
         "value": {
           "type": "NUMBER",
-          "number": 20.0
+          "value": 20.0
         }
       },
       "target": {
@@ -44,7 +44,7 @@
         "type": "SET_CELL",
         "value": {
           "type": "NUMBER",
-          "number": 55.25
+          "value": 55.25
         }
       },
       "target": {

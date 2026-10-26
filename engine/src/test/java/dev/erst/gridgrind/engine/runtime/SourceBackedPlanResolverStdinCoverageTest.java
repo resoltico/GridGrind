@@ -77,9 +77,8 @@ class SourceBackedPlanResolverStdinCoverageTest extends SourceBackedPlanResolver
                     new AssertionStep(
                         new StepId("assert-owner"),
                         new CellSelector.ByAddress(new SheetName("Budget"), new CellAddress("A1")),
-                        new CellAssertion.CellValue(
-                            new dev.erst.gridgrind.core.model.value.CellScalarValue.Text(
-                                "Owner")))))));
+                        new CellAssertion.Value(
+                            new dev.erst.gridgrind.core.model.value.CellValue.Text("Owner")))))));
     assertFalse(
         SourceBackedPlanResolver.requiresStandardInput(
             WorkbookPlan.standard(

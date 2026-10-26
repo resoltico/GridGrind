@@ -5,12 +5,12 @@ import static dev.erst.gridgrind.jazzer.support.OperationSequenceValueFactory.*;
 
 import dev.erst.gridgrind.core.model.style.ColorSpec;
 import dev.erst.gridgrind.core.model.style.DifferentialStylePatch;
-import dev.erst.gridgrind.core.model.validation.ConditionalFormattingSpec;
 import dev.erst.gridgrind.core.model.validation.ConditionalFormattingRuleSpec;
+import dev.erst.gridgrind.core.model.validation.ConditionalFormattingSpec;
 import dev.erst.gridgrind.core.model.validation.DataValidationErrorAlertSpec;
-import dev.erst.gridgrind.core.model.validation.DataValidationSpec;
 import dev.erst.gridgrind.core.model.validation.DataValidationPromptSpec;
 import dev.erst.gridgrind.core.model.validation.DataValidationRuleSpec;
+import dev.erst.gridgrind.core.model.validation.DataValidationSpec;
 import dev.erst.gridgrind.core.plan.*;
 import dev.erst.gridgrind.core.source.*;
 import dev.erst.gridgrind.core.vocabulary.*;
@@ -83,8 +83,7 @@ final class OperationSequenceRuleValues {
     return data.consumeBoolean() ? List.of("Queued", "Done") : List.of("x".repeat(253));
   }
 
-  static ConditionalFormattingSpec nextConditionalFormattingInput(
-      GridGrindFuzzData data) {
+  static ConditionalFormattingSpec nextConditionalFormattingInput(GridGrindFuzzData data) {
     return new ConditionalFormattingSpec(
         List.of(
             data.consumeBoolean()

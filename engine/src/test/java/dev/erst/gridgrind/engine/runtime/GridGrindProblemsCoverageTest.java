@@ -3,7 +3,7 @@ package dev.erst.gridgrind.engine.runtime;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertSame;
 
-import dev.erst.gridgrind.core.model.value.CellScalarValue;
+import dev.erst.gridgrind.core.model.value.CellValue;
 import dev.erst.gridgrind.core.plan.AssertionFailure;
 import dev.erst.gridgrind.core.plan.CellAssertion;
 import dev.erst.gridgrind.core.plan.CellSelector;
@@ -144,7 +144,7 @@ class GridGrindProblemsCoverageTest {
                     new StepId("assert-total"),
                     "EXPECT_CELL_VALUE",
                     new CellSelector.ByAddress(new SheetName("Budget"), new CellAddress("B2")),
-                    new CellAssertion.CellValue(new CellScalarValue.NumberValue(1200.0d)),
+                    new CellAssertion.Value(new CellValue.NumberValue(1200.0d)),
                     java.util.List.of())),
             assertionContext);
     GridGrindProblemDetail.Problem saveAsConflict =

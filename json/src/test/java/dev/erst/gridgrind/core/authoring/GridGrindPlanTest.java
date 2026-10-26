@@ -136,8 +136,7 @@ class GridGrindPlanTest {
                 new AssertionStep(
                     new StepId("assertion-001"),
                     Targets.cell(new SheetName("Budget"), new CellAddress("A1")).selector(),
-                    new dev.erst.gridgrind.core.plan.CellAssertion.CellValue(
-                        ExpectedValues.toCellScalarValue(ExpectedValues.blank())))));
+                    new dev.erst.gridgrind.core.plan.CellAssertion.Value(ExpectedValues.blank()))));
 
     WorkbookPlan plan =
         GridGrindPlan.from(imported)
@@ -276,7 +275,12 @@ class GridGrindPlanTest {
             cellsResult.cells().getFirst());
     assertEquals("Budget", cellsResult.sheetName().value());
     assertEquals("B2", numberReport.address().value());
-    assertEquals(125.0, numberReport.numberValue().orElseThrow());
+    assertEquals(
+        125.0,
+        numberReport
+            .value()
+            .map(dev.erst.gridgrind.core.model.value.CellValue.NumberValue::value)
+            .orElseThrow());
   }
 
   @Test
