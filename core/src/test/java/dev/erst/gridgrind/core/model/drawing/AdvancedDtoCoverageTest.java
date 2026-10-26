@@ -482,7 +482,7 @@ class AdvancedDtoCoverageTest {
                 () -> new AutofilterFilterCriterionReport.Custom(false, List.of()))
             .getMessage());
     assertEquals(
-        "type must not be blank",
+        "dynamicType must not be blank",
         assertThrows(
                 IllegalArgumentException.class,
                 () -> new AutofilterFilterCriterionReport.Dynamic(" ", null, null))

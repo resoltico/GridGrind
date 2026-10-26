@@ -41,12 +41,12 @@ public sealed interface AutofilterFilterCriterionReport
 
   /** One dynamic-filter rule. */
   @Variant(id = "DYNAMIC", summary = "One dynamic-filter rule.")
-  record Dynamic(String type, @Nullable Double value, @Nullable Double maxValue)
+  record Dynamic(String dynamicType, @Nullable Double value, @Nullable Double maxValue)
       implements AutofilterFilterCriterionReport {
     public Dynamic {
-      Objects.requireNonNull(type, "type must not be null");
-      if (type.isBlank()) {
-        throw new IllegalArgumentException("type must not be blank");
+      Objects.requireNonNull(dynamicType, "dynamicType must not be null");
+      if (dynamicType.isBlank()) {
+        throw new IllegalArgumentException("dynamicType must not be blank");
       }
       requireFiniteOrNull(value, "value");
       requireFiniteOrNull(maxValue, "maxValue");

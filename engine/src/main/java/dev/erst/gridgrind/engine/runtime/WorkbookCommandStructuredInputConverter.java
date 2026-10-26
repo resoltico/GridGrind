@@ -105,7 +105,7 @@ final class WorkbookCommandStructuredInputConverter {
                   .toList());
       case AutofilterFilterCriterionSpec.Dynamic dynamic ->
           new ExcelAutofilterFilterCriterion.Dynamic(
-              dynamic.type(), dynamic.value().orElse(null), dynamic.maxValue().orElse(null));
+              dynamic.dynamicType(), dynamic.value().orElse(null), dynamic.maxValue().orElse(null));
       case AutofilterFilterCriterionSpec.Top10 top10 ->
           new ExcelAutofilterFilterCriterion.Top10(top10.value(), top10.top(), top10.percent());
       case AutofilterFilterCriterionSpec.Color color ->

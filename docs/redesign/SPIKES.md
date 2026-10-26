@@ -2158,3 +2158,22 @@ A packaged-JAR codec probe of Dynamic("today",...) throws InvalidDefinitionExcep
 property collision (external evidence dynamic-filter-wire-probe.log). The next autofilter slice will
 use a distinct domain field, with codec regressions; this follows D5's discriminator ownership and
 the user's delegated QA authority without adding aliases. Table work above is independent and green.
+
+## WP-40 dynamic-filter discriminator collision correction
+
+Confirmed the adjacent contradiction with the packaged codec: serializing Dynamic("today",...)
+throws InvalidDefinitionException because the domain field `type` collides with union discriminator
+`type`. Both authored and factual core criteria were affected; generated schemas even had duplicate
+`type` required entries. Renamed the domain component to `dynamicType`, retaining `type: DYNAMIC` as
+the sole variant discriminator. No aliases or old-field handling added. Updated consumers, diagnostics,
+mutation guide and explicitly regenerated request/response schemas. Three codec regressions cover
+authored roundtrip, factual roundtrip and schema-driven request intake with the distinct domain field.
+Adjacent plain `type` attributes on non-union records do not have this collision.
+
+Focused codec/schema generation passes (18s); deterministic check/all retained seeds pass (16s).
+Root check first found one expected diagnostic still naming `type` (37s); corrected the expectation,
+focused core retry passes (5s). Final ./gradlew check passes (2m53s), all 143 existing golden cases
+unchanged; no snapshots re-recorded. No active mutation/fuzz campaign. Inventory counts unchanged:
+snapshots 25, definitions 2, converter lines 3374, Support 205, blank checks 409, main Java 119283.
+Baseline diff empty. This corrects the verified codec defect consistently with D5 discriminator
+ownership under the user's delegated QA authority; autofilter model consolidation follows.

@@ -50,12 +50,12 @@ public sealed interface AutofilterFilterCriterionSpec
   @Variant(
       id = "DYNAMIC",
       summary = "Retain rows using one dynamic-date or moving-window autofilter rule.")
-  record Dynamic(String type, Optional<Double> value, Optional<Double> maxValue)
+  record Dynamic(String dynamicType, Optional<Double> value, Optional<Double> maxValue)
       implements AutofilterFilterCriterionSpec {
     public Dynamic {
-      Objects.requireNonNull(type, "type must not be null");
-      if (type.isBlank()) {
-        throw new IllegalArgumentException("type must not be blank");
+      Objects.requireNonNull(dynamicType, "dynamicType must not be null");
+      if (dynamicType.isBlank()) {
+        throw new IllegalArgumentException("dynamicType must not be blank");
       }
       Objects.requireNonNull(value, "value must not be null");
       Objects.requireNonNull(maxValue, "maxValue must not be null");

@@ -4035,6 +4035,9 @@
       "additionalProperties" : false,
       "description" : "Retain rows using one dynamic-date or moving-window autofilter rule.",
       "properties" : {
+        "dynamicType" : {
+          "type" : "string"
+        },
         "maxValue" : {
           "type" : "number"
         },
@@ -4045,7 +4048,7 @@
           "type" : "number"
         }
       },
-      "required" : [ "type", "type" ],
+      "required" : [ "dynamicType", "type" ],
       "type" : "object"
     },
     "dev.erst.gridgrind.core.model.table.AutofilterFilterCriterionSpec$Icon" : {

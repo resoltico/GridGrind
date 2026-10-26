@@ -751,7 +751,7 @@ class AdvancedMutationProtocolTypesTest {
 
     assertEquals(List.of("Queued", "Ready"), values.values());
     assertTrue(custom.and());
-    assertEquals("TODAY", dynamic.type());
+    assertEquals("TODAY", dynamic.dynamicType());
     assertEquals(Optional.of(1.0d), dynamic.value());
     assertEquals(Optional.of(2.0d), dynamic.maxValue());
     assertEquals(10, top10.value());

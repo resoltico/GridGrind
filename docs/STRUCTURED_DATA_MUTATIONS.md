@@ -84,7 +84,7 @@ If a sheet already has a sheet-level autofilter, the new range replaces it.
 
 - `VALUES`: `values` plus `includeBlank`
 - `CUSTOM`: `and` plus one or more `{ "operator": "...", "value": "..." }` conditions
-- `DYNAMIC`: Excel dynamic-filter token in `type` plus optional numeric `value` and `maxValue`
+- `DYNAMIC`: Excel dynamic-filter token in `dynamicType` plus optional numeric `value` and `maxValue`
 - `TOP10`: `value`, `top`, and `percent`
 - `COLOR`: `cellColor` plus a structured `color` object using `rgb`, `theme`, `indexed`, and optional `tint`
 - `ICON`: `iconSet` plus `iconId`

@@ -239,7 +239,7 @@ final class WorkbookInvariantCellMetadataChecks {
                 });
       }
       case AutofilterFilterCriterionReport.Dynamic dynamic -> {
-        WorkbookInvariantChecks.requireNonBlank(dynamic.type(), "autofilter dynamic type");
+        WorkbookInvariantChecks.requireNonBlank(dynamic.dynamicType(), "autofilter dynamic type");
         if (dynamic.value() != null) {
           WorkbookInvariantChecks.require(
               Double.isFinite(dynamic.value()), "autofilter dynamic value must be finite");

@@ -3737,6 +3737,9 @@
       "additionalProperties" : false,
       "description" : "One dynamic-filter rule.",
       "properties" : {
+        "dynamicType" : {
+          "type" : "string"
+        },
         "maxValue" : {
           "oneOf" : [ {
             "type" : "number"
@@ -3757,7 +3760,7 @@
           } ]
         }
       },
-      "required" : [ "type", "value", "maxValue", "type" ],
+      "required" : [ "dynamicType", "value", "maxValue", "type" ],
       "type" : "object"
     },
     "dev.erst.gridgrind.core.model.table.AutofilterFilterCriterionReport$Icon" : {
