@@ -98,10 +98,6 @@ final class ExcelSheetCopySupport {
     return ExcelSheetCopyNamedRangeSupport.copyableLocalNames(namedRanges, sheetName);
   }
 
-  static void requireNoTables(XSSFSheet sheet, String sheetName) {
-    ExcelSheetCopyTableSupport.requireNoTables(sheet, sheetName);
-  }
-
   static List<CTDataValidation> copiedDataValidations(XSSFSheet sourcePoiSheet) {
     return ExcelSheetCopyValidationSupport.copiedDataValidations(sourcePoiSheet);
   }
@@ -109,10 +105,6 @@ final class ExcelSheetCopySupport {
   static Optional<AutofilterEntryReport.SheetOwned> sheetOwnedAutofilter(
       List<AutofilterEntryReport> autofilters) {
     return ExcelSheetCopyAutofilterSupport.sheetOwnedAutofilter(autofilters);
-  }
-
-  static Optional<String> sheetOwnedAutofilterRange(List<AutofilterEntryReport> autofilters) {
-    return ExcelSheetCopyAutofilterSupport.sheetOwnedAutofilterRange(autofilters);
   }
 
   static AutofilterSortConditionSpec copyableSortCondition(

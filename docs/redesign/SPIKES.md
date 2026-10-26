@@ -2547,3 +2547,25 @@ main Java114790→114625, tests153518→153591; blank288, definitions0, snapshot
 Baseline diff empty. WP-40 remains open for resolved plan and the remaining read/query/model cutover.
 Review also found residual requireNoTables no-op wrappers and a range-only autofilter helper still
 present in source, contrary to an earlier progress account; verify/remove them in the next copy cleanup.
+
+## WP-40 remove obsolete sheet-copy reads and shims
+
+Verified the residual requireNoTables guard has no production caller and only validates parameters;
+its own test explicitly described a no-op. Removed all three forwarding layers and that test. Removed
+the range-only sheetOwnedAutofilterRange helper/forwarders; retained the actual full-state selector
+and its empty/sheet-owned/table-owned rejection checks. No copy protection was disabled.
+
+The private copy plan also captured layout and merged-region facts that no copy operation consumed:
+POI cloneSheet preserves those structures itself. Removed both unused fields and reads. A real
+negative control copied a native hidden zero-height row and failed before the fix because the unused
+layout read constructed a positive-height-only RowLayout. The same test now saves and reopens the
+workbook with POI and independently confirms both source/copied row height0, hidden flag and cell text.
+The change establishes copy preservation; it does not claim layout inspection now accepts zero height.
+Failure XML/log retained externally. This corrects the earlier progress account that these no-op and
+range-only helpers were already gone. No replacement aliases remain (source search empty).
+
+Focused copy suite passes21s; nested check/all94 retained seeds pass14s. Final ./gradlew check passes
+3m40s: core384, JSON353, engine1414 plus14 parity, CLI588, zero failures/errors/skips; all143 golden cases
+unchanged. No active campaigns. Inventories: main Java114625→114592, tests153591→153596; converter1160,
+blank288, Support198, definitions0, snapshots2(runtime) unchanged. Baseline diff empty. WP-40 remains
+open for resolved plan and remaining read-side consolidation.

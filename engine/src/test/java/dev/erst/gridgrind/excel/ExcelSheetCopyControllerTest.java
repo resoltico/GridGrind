@@ -86,6 +86,36 @@ import org.openxmlformats.schemas.spreadsheetml.x2006.main.STDataValidationType;
 /** Tests for sheet-copy planning and validation helpers. */
 class ExcelSheetCopyControllerTest {
   @Test
+  void copiesNativeHiddenZeroHeightRows(@org.junit.jupiter.api.io.TempDir Path directory)
+      throws IOException {
+    Path artifact = directory.resolve("copied.xlsx");
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
+      workbook.getOrCreateSheet("Source");
+      var row = workbook.xssfWorkbook().getSheet("Source").createRow(0);
+      row.setHeight((short) 0);
+      row.setZeroHeight(true);
+      row.createCell(0).setCellValue("preserved");
+      new ExcelSheetCopyController()
+          .copySheet(workbook, "Source", "Copied", new SheetCopyPosition.AppendAtEnd());
+      workbook
+          .persistence()
+          .save(
+              artifact,
+              WorkbookArtifactWriteDisposition.REPLACE_EXISTING,
+              ExcelTempFileFactoryTestSupport.tempFileFactory());
+    }
+    try (var input = Files.newInputStream(artifact);
+        XSSFWorkbook saved = new XSSFWorkbook(input)) {
+      for (String name : List.of("Source", "Copied")) {
+        var row = saved.getSheet(name).getRow(0);
+        assertEquals(0, row.getHeight());
+        assertTrue(row.getZeroHeight());
+        assertEquals("preserved", row.getCell(0).getStringCellValue());
+      }
+    }
+  }
+
+  @Test
   void copyPreservesObservedStylelessRuleAndRetargetsFormula() throws IOException {
     try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       workbook.getOrCreateSheet("Source");
@@ -832,24 +862,6 @@ class ExcelSheetCopyControllerTest {
   }
 
   @Test
-  void requireNoTablesIsNowANoOpBecauseSheetCopySupportsTables() throws Exception {
-    try (XSSFWorkbook workbook = new XSSFWorkbook()) {
-      var sheet = workbook.createSheet("Source");
-      sheet.createRow(0).createCell(0).setCellValue("Header");
-      sheet.getRow(0).createCell(1).setCellValue("Value");
-      sheet.createRow(1).createCell(0).setCellValue("A");
-      sheet.getRow(1).createCell(1).setCellValue("B");
-      sheet.createRow(2).createCell(0).setCellValue("C");
-      sheet.getRow(2).createCell(1).setCellValue("D");
-      sheet.createTable(
-          new org.apache.poi.ss.util.AreaReference(
-              "A1:B3", org.apache.poi.ss.SpreadsheetVersion.EXCEL2007));
-
-      assertDoesNotThrow(() -> ExcelSheetCopyController.requireNoTables(sheet, "Source"));
-    }
-  }
-
-  @Test
   void localNamedRangeHelpersRespectScopeBoundaries() {
     NamedRangeReport.FormulaReport localFormula =
         new NamedRangeReport.FormulaReport(
@@ -1018,7 +1030,7 @@ class ExcelSheetCopyControllerTest {
   }
 
   @Test
-  void sheetOwnedAutofilterRangeHandlesEmptySheetOwnedAndInvalidTableOwnedStates() {
+  void sheetOwnedAutofilterHandlesEmptySheetOwnedAndInvalidTableOwnedStates() {
     assertEquals(Optional.empty(), ExcelSheetCopyController.sheetOwnedAutofilter(List.of()));
     assertEquals(
         Optional.of(
@@ -1028,18 +1040,11 @@ class ExcelSheetCopyControllerTest {
             List.of(
                 new AutofilterEntryReport.SheetOwned(
                     new dev.erst.gridgrind.core.vocabulary.RangeLabel("A1:B3")))));
-    assertEquals(Optional.empty(), ExcelSheetCopyController.sheetOwnedAutofilterRange(List.of()));
-    assertEquals(
-        Optional.of("A1:B3"),
-        ExcelSheetCopyController.sheetOwnedAutofilterRange(
-            List.of(
-                new AutofilterEntryReport.SheetOwned(
-                    new dev.erst.gridgrind.core.vocabulary.RangeLabel("A1:B3")))));
     IllegalStateException failure =
         assertThrows(
             IllegalStateException.class,
             () ->
-                ExcelSheetCopyController.sheetOwnedAutofilterRange(
+                ExcelSheetCopyController.sheetOwnedAutofilter(
                     List.of(
                         new AutofilterEntryReport.TableOwned(
                             new dev.erst.gridgrind.core.vocabulary.RangeLabel("A1:B3"), "Ops"))));

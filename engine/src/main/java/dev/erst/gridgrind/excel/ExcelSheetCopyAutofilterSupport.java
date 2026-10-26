@@ -38,10 +38,6 @@ final class ExcelSheetCopyAutofilterSupport {
     };
   }
 
-  static Optional<String> sheetOwnedAutofilterRange(List<AutofilterEntryReport> autofilters) {
-    return sheetOwnedAutofilter(autofilters).map(value -> value.range().value());
-  }
-
   static AutofilterSortConditionSpec copyableSortCondition(
       AutofilterSortConditionReport condition) {
     return switch (condition) {

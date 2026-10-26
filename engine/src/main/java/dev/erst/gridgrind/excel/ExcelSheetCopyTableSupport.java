@@ -29,11 +29,6 @@ final class ExcelSheetCopyTableSupport {
     copyTables(workbook, targetSheetName, tables);
   }
 
-  static void requireNoTables(XSSFSheet sheet, String sheetName) {
-    Objects.requireNonNull(sheet, "sheet must not be null");
-    ExcelWorkbookSheetSupport.requireSheetName(sheetName, "sheetName");
-  }
-
   static List<TableEntryReport> tablesOnSheet(XSSFSheet sourcePoiSheet) {
     List<TableEntryReport> tables = new ArrayList<>();
     for (var table : sourcePoiSheet.getTables()) {

@@ -114,9 +114,7 @@ final class ExcelSheetCopyController {
     ExcelSheet sourceSheet = workbook.sheet(sheetName);
     return new ExcelSheetCopySnapshot(
         ExcelSheetCopySupport.copyableLocalNames(workbook.names().namedRanges(), sheetName),
-        sourceSheet.layout().snapshot(),
         sourceSheet.layout().printLayout(),
-        sourceSheet.layout().mergedRegions(),
         sourceSheet.annotations().comments(new ExcelCellSelection.AllUsedCells()),
         ExcelSheetCopySupport.copiedDataValidations(sourcePoiSheet),
         ExcelSheetCopyConditionalFormattingSupport.snapshot(sourcePoiSheet, sheetName),
@@ -170,28 +168,16 @@ final class ExcelSheetCopyController {
     return ExcelSheetCopySupport.copyableLocalNames(namedRanges, sheetName);
   }
 
-  /** Sheet copy now supports tables and no longer rejects them up front. */
-  static void requireNoTables(XSSFSheet sheet, String sheetName) {
-    ExcelSheetCopySupport.requireNoTables(sheet, sheetName);
-  }
-
   /** Returns the one sheet-owned autofilter snapshot when present. */
   static Optional<AutofilterEntryReport.SheetOwned> sheetOwnedAutofilter(
       List<AutofilterEntryReport> autofilters) {
     return ExcelSheetCopySupport.sheetOwnedAutofilter(autofilters);
   }
 
-  /** Retained for focused tests around the legacy range-only sheet autofilter path. */
-  static Optional<String> sheetOwnedAutofilterRange(List<AutofilterEntryReport> autofilters) {
-    return ExcelSheetCopySupport.sheetOwnedAutofilterRange(autofilters);
-  }
-
   /** Immutable copy plan for the sheet-local structures GridGrind can reproduce safely. */
   private record ExcelSheetCopySnapshot(
       List<NamedRangeReport> localNamedRanges,
-      WorkbookSheetResult.SheetLayout layout,
       ResolvedPrintLayout printLayout,
-      List<WorkbookSheetResult.MergedRegion> mergedRegions,
       List<WorkbookSheetResult.CellComment> comments,
       List<CTDataValidation> dataValidations,
       List<org.openxmlformats.schemas.spreadsheetml.x2006.main.CTConditionalFormatting>
@@ -200,9 +186,7 @@ final class ExcelSheetCopyController {
       List<TableEntryReport> tables) {
     private ExcelSheetCopySnapshot {
       localNamedRanges = List.copyOf(localNamedRanges);
-      Objects.requireNonNull(layout, "layout must not be null");
       Objects.requireNonNull(printLayout, "printLayout must not be null");
-      mergedRegions = List.copyOf(mergedRegions);
       comments = List.copyOf(comments);
       dataValidations = List.copyOf(dataValidations);
       conditionalFormattingBlocks = List.copyOf(conditionalFormattingBlocks);
