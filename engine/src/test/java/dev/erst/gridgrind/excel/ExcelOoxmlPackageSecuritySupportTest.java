@@ -2,6 +2,7 @@ package dev.erst.gridgrind.excel;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.core.model.security.OoxmlEncryptionReport;
 import dev.erst.gridgrind.core.model.value.CellValue;
 import dev.erst.gridgrind.core.vocabulary.ExcelOoxmlCipherAlgorithm;
 import dev.erst.gridgrind.core.vocabulary.ExcelOoxmlEncryptionMode;
@@ -11,7 +12,6 @@ import dev.erst.gridgrind.core.vocabulary.ExcelOoxmlSignatureState;
 import dev.erst.gridgrind.core.vocabulary.ExcelOoxmlWriteCipher;
 import dev.erst.gridgrind.core.vocabulary.ExcelOoxmlWriteHash;
 import dev.erst.gridgrind.core.vocabulary.StepId;
-import dev.erst.gridgrind.excel.ooxml.ExcelOoxmlEncryptionSnapshot;
 import dev.erst.gridgrind.excel.ooxml.ExcelOoxmlOpenOptions;
 import dev.erst.gridgrind.excel.ooxml.ExcelOoxmlPackageInspectionSupport;
 import dev.erst.gridgrind.excel.ooxml.ExcelOoxmlPersistenceEncryption;
@@ -83,9 +83,9 @@ class ExcelOoxmlPackageSecuritySupportTest {
                   .apply(
                       workbook, new WorkbookReadCommand.GetPackageSecurity(new StepId("security")))
                   .getFirst());
-      ExcelOoxmlEncryptionSnapshot.Encrypted encryption =
+      OoxmlEncryptionReport.Encrypted encryption =
           assertInstanceOf(
-              ExcelOoxmlEncryptionSnapshot.Encrypted.class, securityResult.security().encryption());
+              OoxmlEncryptionReport.Encrypted.class, securityResult.security().encryption());
       assertEquals(ExcelOoxmlEncryptionMode.AGILE, encryption.mode());
       assertEquals(ExcelOoxmlCipherAlgorithm.AES_256, encryption.cipherAlgorithm());
       assertEquals(ExcelOoxmlHashAlgorithm.SHA_512, encryption.hashAlgorithm());
@@ -115,9 +115,9 @@ class ExcelOoxmlPackageSecuritySupportTest {
                   .apply(
                       workbook, new WorkbookReadCommand.GetPackageSecurity(new StepId("security")))
                   .getFirst());
-      ExcelOoxmlEncryptionSnapshot.Encrypted encryption =
+      OoxmlEncryptionReport.Encrypted encryption =
           assertInstanceOf(
-              ExcelOoxmlEncryptionSnapshot.Encrypted.class, securityResult.security().encryption());
+              OoxmlEncryptionReport.Encrypted.class, securityResult.security().encryption());
       assertEquals(ExcelOoxmlEncryptionMode.AGILE, encryption.mode());
       assertEquals(expectedCipher(cipher), encryption.cipherAlgorithm());
       assertEquals(expectedHash(hash), encryption.hashAlgorithm());
@@ -142,9 +142,9 @@ class ExcelOoxmlPackageSecuritySupportTest {
                   .apply(
                       workbook, new WorkbookReadCommand.GetPackageSecurity(new StepId("security")))
                   .getFirst());
-      ExcelOoxmlEncryptionSnapshot.Encrypted encryption =
+      OoxmlEncryptionReport.Encrypted encryption =
           assertInstanceOf(
-              ExcelOoxmlEncryptionSnapshot.Encrypted.class, securityResult.security().encryption());
+              OoxmlEncryptionReport.Encrypted.class, securityResult.security().encryption());
       assertEquals(ExcelOoxmlEncryptionMode.STANDARD, encryption.mode());
     }
   }
@@ -274,7 +274,7 @@ class ExcelOoxmlPackageSecuritySupportTest {
 
     assertTrue(
         ExcelOoxmlPackageInspectionSupport.inspectPackageSecurity(
-                unsignedOutput, ExcelOoxmlEncryptionSnapshot.none())
+                unsignedOutput, new OoxmlEncryptionReport.None())
             .signatures()
             .isEmpty());
     assertTrue(OoxmlSecurityTestSupport.signatureValid(resignedOutput));

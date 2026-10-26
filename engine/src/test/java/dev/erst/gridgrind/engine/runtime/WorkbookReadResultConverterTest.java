@@ -13,6 +13,7 @@ import dev.erst.gridgrind.core.model.drawing.DrawingMarkerSpec;
 import dev.erst.gridgrind.core.model.drawing.DrawingObjectPayloadReport;
 import dev.erst.gridgrind.core.model.drawing.DrawingObjectReport;
 import dev.erst.gridgrind.core.model.drawing.ResolvedComment;
+import dev.erst.gridgrind.core.model.formula.ArrayFormulaReport;
 import dev.erst.gridgrind.core.model.pivot.PivotTableReport;
 import dev.erst.gridgrind.core.model.print.*;
 import dev.erst.gridgrind.core.model.print.HeaderFooterTextReport;
@@ -22,6 +23,8 @@ import dev.erst.gridgrind.core.model.print.PrintSetupReport;
 import dev.erst.gridgrind.core.model.protection.CellProtectionReport;
 import dev.erst.gridgrind.core.model.protection.WorkbookProtectionReport;
 import dev.erst.gridgrind.core.model.security.OoxmlEncryptionReport;
+import dev.erst.gridgrind.core.model.security.OoxmlPackageSecurityReport;
+import dev.erst.gridgrind.core.model.security.OoxmlSignatureReport;
 import dev.erst.gridgrind.core.model.style.CellAlignmentReport;
 import dev.erst.gridgrind.core.model.style.CellBorderReport;
 import dev.erst.gridgrind.core.model.style.CellBorderSideReport;
@@ -89,9 +92,6 @@ import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlSchemaSnapshot;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingObjectPayload;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingObjectSnapshot;
 import dev.erst.gridgrind.excel.drawing.ExcelSignatureLineSnapshot;
-import dev.erst.gridgrind.excel.ooxml.ExcelOoxmlEncryptionSnapshot;
-import dev.erst.gridgrind.excel.ooxml.ExcelOoxmlPackageSecuritySnapshot;
-import dev.erst.gridgrind.excel.ooxml.ExcelOoxmlSignatureSnapshot;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
@@ -107,8 +107,8 @@ class InspectionResultConverterTest extends DefaultGridGrindRequestExecutorTestS
             InspectionResultConverter.toReadResult(
                 new dev.erst.gridgrind.excel.WorkbookCoreResult.PackageSecurityResult(
                     new StepId("security"),
-                    new ExcelOoxmlPackageSecuritySnapshot(
-                        new ExcelOoxmlEncryptionSnapshot.Encrypted(
+                    new OoxmlPackageSecurityReport(
+                        new OoxmlEncryptionReport.Encrypted(
                             ExcelOoxmlEncryptionMode.AGILE,
                             ExcelOoxmlCipherAlgorithm.AES_256,
                             ExcelOoxmlHashAlgorithm.SHA_512,
@@ -117,7 +117,7 @@ class InspectionResultConverterTest extends DefaultGridGrindRequestExecutorTestS
                             16,
                             100_000),
                         List.of(
-                            new ExcelOoxmlSignatureSnapshot(
+                            new OoxmlSignatureReport(
                                 "/_xmlsignatures/sig1.xml",
                                 Optional.of("CN=GridGrind Signing Test"),
                                 Optional.of("CN=GridGrind Signing Test"),
@@ -611,8 +611,18 @@ class InspectionResultConverterTest extends DefaultGridGrindRequestExecutorTestS
                 new dev.erst.gridgrind.excel.WorkbookSheetResult.ArrayFormulasResult(
                     new StepId("array-formulas"),
                     List.of(
-                        new ExcelArrayFormulaSnapshot("Calc", "D2:D4", "D2", "B2:B4*C2:C4", false),
-                        new ExcelArrayFormulaSnapshot("Calc", "F2", "F2", "SUM(B2:C2)", true)))));
+                        new ArrayFormulaReport(
+                            new dev.erst.gridgrind.core.vocabulary.SheetLabel("Calc"),
+                            new dev.erst.gridgrind.core.vocabulary.RangeLabel("D2:D4"),
+                            new dev.erst.gridgrind.core.vocabulary.CellAddress("D2"),
+                            "B2:B4*C2:C4",
+                            false),
+                        new ArrayFormulaReport(
+                            new dev.erst.gridgrind.core.vocabulary.SheetLabel("Calc"),
+                            new dev.erst.gridgrind.core.vocabulary.RangeLabel("F2"),
+                            new dev.erst.gridgrind.core.vocabulary.CellAddress("F2"),
+                            "SUM(B2:C2)",
+                            true)))));
 
     assertEquals("array-formulas", arrayFormulas.stepId().value());
     assertEquals(2, arrayFormulas.arrayFormulas().size());

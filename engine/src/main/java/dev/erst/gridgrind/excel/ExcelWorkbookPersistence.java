@@ -1,6 +1,6 @@
 package dev.erst.gridgrind.excel;
 
-import dev.erst.gridgrind.excel.ooxml.ExcelOoxmlPackageSecuritySnapshot;
+import dev.erst.gridgrind.core.model.security.OoxmlPackageSecurityReport;
 import dev.erst.gridgrind.excel.ooxml.ExcelOoxmlPersistenceOptions;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -47,7 +47,7 @@ public final class ExcelWorkbookPersistence {
   }
 
   /** Returns the loaded OOXML package-security facts captured when the workbook was opened. */
-  public ExcelOoxmlPackageSecuritySnapshot loadedPackageSecurity() {
+  public OoxmlPackageSecurityReport loadedPackageSecurity() {
     return workbook.context().loadedPackageSecurity();
   }
 

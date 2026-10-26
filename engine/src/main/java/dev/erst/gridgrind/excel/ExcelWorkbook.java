@@ -2,7 +2,7 @@ package dev.erst.gridgrind.excel;
 
 import dev.erst.gridgrind.core.model.formula.NamedRangeScopeReport;
 import dev.erst.gridgrind.core.model.protection.WorkbookProtectionReport;
-import dev.erst.gridgrind.excel.ooxml.ExcelOoxmlPackageSecuritySnapshot;
+import dev.erst.gridgrind.core.model.security.OoxmlPackageSecurityReport;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Optional;
@@ -31,7 +31,7 @@ public final class ExcelWorkbook implements AutoCloseable {
         workbook,
         ExcelFormulaRuntime.poi(workbook.getCreationHelper().createFormulaEvaluator()),
         Optional.empty(),
-        ExcelOoxmlPackageSecuritySnapshot.none(),
+        OoxmlPackageSecurityReport.none(),
         Optional.empty());
   }
 
@@ -41,7 +41,7 @@ public final class ExcelWorkbook implements AutoCloseable {
         workbook,
         ExcelFormulaRuntime.poi(workbook, formulaEnvironment),
         Optional.empty(),
-        ExcelOoxmlPackageSecuritySnapshot.none(),
+        OoxmlPackageSecurityReport.none(),
         Optional.empty());
   }
 
@@ -50,7 +50,7 @@ public final class ExcelWorkbook implements AutoCloseable {
         workbook,
         formulaRuntime,
         Optional.empty(),
-        ExcelOoxmlPackageSecuritySnapshot.none(),
+        OoxmlPackageSecurityReport.none(),
         Optional.empty());
   }
 
@@ -58,7 +58,7 @@ public final class ExcelWorkbook implements AutoCloseable {
       XSSFWorkbook workbook,
       ExcelFormulaRuntime formulaRuntime,
       Optional<Path> sourcePath,
-      ExcelOoxmlPackageSecuritySnapshot loadedPackageSecurity,
+      OoxmlPackageSecurityReport loadedPackageSecurity,
       Optional<String> sourceEncryptionPassword) {
     this.context =
         new ExcelWorkbookContext(
@@ -154,7 +154,7 @@ public final class ExcelWorkbook implements AutoCloseable {
   }
 
   /** Returns factual OOXML package-security state for the current in-memory workbook. */
-  ExcelOoxmlPackageSecuritySnapshot packageSecurity() {
+  OoxmlPackageSecurityReport packageSecurity() {
     return ExcelWorkbookPersistenceSupport.packageSecurity(this);
   }
 

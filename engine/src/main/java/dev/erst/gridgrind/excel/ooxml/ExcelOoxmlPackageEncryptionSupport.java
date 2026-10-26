@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.excel.ooxml;
 
+import dev.erst.gridgrind.core.model.security.OoxmlEncryptionReport;
 import dev.erst.gridgrind.excel.WorkbookArtifactWriteDisposition;
 import dev.erst.gridgrind.excel.WorkbookNotOpenableException;
 import dev.erst.gridgrind.excel.WorkbookSecurityException;
@@ -18,10 +19,10 @@ public final class ExcelOoxmlPackageEncryptionSupport {
   private ExcelOoxmlPackageEncryptionSupport() {}
 
   /** Reads one encrypted workbook's factual OOXML encryption metadata. */
-  public static ExcelOoxmlEncryptionSnapshot encryptionSnapshot(EncryptionInfo encryptionInfo)
+  public static OoxmlEncryptionReport encryptionSnapshot(EncryptionInfo encryptionInfo)
       throws IOException {
     try {
-      return new ExcelOoxmlEncryptionSnapshot.Encrypted(
+      return new OoxmlEncryptionReport.Encrypted(
           ExcelOoxmlSecurityPoiBridge.fromPoi(encryptionInfo.getEncryptionMode()),
           ExcelOoxmlSecurityPoiBridge.fromPoi(encryptionInfo.getHeader().getCipherAlgorithm()),
           ExcelOoxmlSecurityPoiBridge.fromPoi(encryptionInfo.getVerifier().getHashAlgorithm()),

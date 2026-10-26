@@ -1,5 +1,7 @@
 package dev.erst.gridgrind.excel.ooxml;
 
+import dev.erst.gridgrind.core.model.security.OoxmlEncryptionReport;
+import dev.erst.gridgrind.core.model.security.OoxmlPackageSecurityReport;
 import dev.erst.gridgrind.excel.ExcelDeterministicWorkbookArtifactSupport;
 import dev.erst.gridgrind.excel.ExcelFormulaEnvironment;
 import dev.erst.gridgrind.excel.ExcelTempFileWriteTargetSupport;
@@ -77,7 +79,7 @@ public final class ExcelOoxmlPackageSecuritySupport {
           new ReadableWorkbook(
               absolutePath,
               ExcelOoxmlPackageInspectionSupport.inspectPackageSecurity(
-                  absolutePath, ExcelOoxmlEncryptionSnapshot.none()),
+                  absolutePath, new OoxmlEncryptionReport.None()),
               Optional.empty(),
               Optional.empty());
       case OLE2 ->
@@ -143,7 +145,7 @@ public final class ExcelOoxmlPackageSecuritySupport {
   public static void persistMaterializedWorkbook(
       Path plainWorkbookPath,
       Path targetPath,
-      ExcelOoxmlPackageSecuritySnapshot sourceSecurity,
+      OoxmlPackageSecurityReport sourceSecurity,
       Optional<String> sourceEncryptionPassword,
       WorkbookArtifactWriteDisposition writeDisposition,
       ExcelOoxmlPersistenceOptions persistenceOptions)
@@ -177,13 +179,13 @@ public final class ExcelOoxmlPackageSecuritySupport {
   /** One readable plain `.xlsx` path materialized from a possibly encrypted source workbook. */
   public static final class ReadableWorkbook implements AutoCloseable {
     private final Path workbookPath;
-    private final ExcelOoxmlPackageSecuritySnapshot packageSecurity;
+    private final OoxmlPackageSecurityReport packageSecurity;
     private final Optional<String> sourceEncryptionPassword;
     private final Optional<Path> cleanupRoot;
 
     ReadableWorkbook(
         Path workbookPath,
-        ExcelOoxmlPackageSecuritySnapshot packageSecurity,
+        OoxmlPackageSecurityReport packageSecurity,
         Optional<String> sourceEncryptionPassword,
         Optional<Path> cleanupRoot) {
       this.workbookPath = Objects.requireNonNull(workbookPath, "workbookPath must not be null");
@@ -199,7 +201,7 @@ public final class ExcelOoxmlPackageSecuritySupport {
       return workbookPath;
     }
 
-    public ExcelOoxmlPackageSecuritySnapshot packageSecurity() {
+    public OoxmlPackageSecurityReport packageSecurity() {
       return packageSecurity;
     }
 

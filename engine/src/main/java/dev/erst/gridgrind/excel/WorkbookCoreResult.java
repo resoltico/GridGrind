@@ -7,10 +7,10 @@ import static dev.erst.gridgrind.excel.WorkbookResultSupport.validateCommonWorkb
 
 import dev.erst.gridgrind.core.model.formula.NamedRangeReport;
 import dev.erst.gridgrind.core.model.protection.WorkbookProtectionReport;
+import dev.erst.gridgrind.core.model.security.OoxmlPackageSecurityReport;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlExportSnapshot;
 import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlMappingSnapshot;
-import dev.erst.gridgrind.excel.ooxml.ExcelOoxmlPackageSecuritySnapshot;
 import java.util.List;
 import java.util.Objects;
 
@@ -34,7 +34,7 @@ public sealed interface WorkbookCoreResult extends WorkbookReadIntrospectionResu
   }
 
   /** Returns OOXML package-encryption and package-signature facts. */
-  record PackageSecurityResult(StepId stepId, ExcelOoxmlPackageSecuritySnapshot security)
+  record PackageSecurityResult(StepId stepId, OoxmlPackageSecurityReport security)
       implements WorkbookCoreResult {
     public PackageSecurityResult {
 

@@ -1,7 +1,7 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.core.model.security.OoxmlPackageSecurityReport;
 import dev.erst.gridgrind.excel.ooxml.ExcelOoxmlOpenOptions;
-import dev.erst.gridgrind.excel.ooxml.ExcelOoxmlPackageSecuritySnapshot;
 import dev.erst.gridgrind.excel.ooxml.ExcelOoxmlPackageSecuritySupport;
 import dev.erst.gridgrind.excel.ooxml.ExcelOoxmlPersistenceOptions;
 import java.io.IOException;
@@ -39,7 +39,7 @@ final class WorkbookPackageIo {
   static void persistMaterializedWorkbook(
       Path plainWorkbookPath,
       Path targetPath,
-      ExcelOoxmlPackageSecuritySnapshot sourceSecurity,
+      OoxmlPackageSecurityReport sourceSecurity,
       Optional<String> sourceEncryptionPassword,
       WorkbookArtifactWriteDisposition writeDisposition,
       ExcelOoxmlPersistenceOptions persistenceOptions)

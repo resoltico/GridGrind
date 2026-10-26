@@ -1,7 +1,7 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.core.model.security.OoxmlPackageSecurityReport;
 import dev.erst.gridgrind.excel.ooxml.ExcelOoxmlPackageFileSupport;
-import dev.erst.gridgrind.excel.ooxml.ExcelOoxmlPackageSecuritySnapshot;
 import dev.erst.gridgrind.excel.ooxml.ExcelOoxmlPackageSecuritySupport;
 import dev.erst.gridgrind.excel.ooxml.ExcelOoxmlPersistenceOptions;
 import java.io.IOException;
@@ -56,10 +56,20 @@ final class ExcelWorkbookPersistenceSupport {
     ExcelDeterministicWorkbookArtifactSupport.normalizeWorkbookPackage(absolutePath);
   }
 
-  static ExcelOoxmlPackageSecuritySnapshot packageSecurity(ExcelWorkbook workbook) {
-    return workbook.persistence().wasMutatedSinceOpen()
-        ? workbook.context().loadedPackageSecurity().afterMutation()
-        : workbook.context().loadedPackageSecurity();
+  static OoxmlPackageSecurityReport packageSecurity(ExcelWorkbook workbook) {
+    var loaded = workbook.context().loadedPackageSecurity();
+    if (!workbook.persistence().wasMutatedSinceOpen() || loaded.signatures().isEmpty())
+      return loaded;
+    return new OoxmlPackageSecurityReport(
+        loaded.encryption(),
+        loaded.signatures().stream()
+            .map(
+                signature ->
+                    new dev.erst.gridgrind.core.model.security.OoxmlSignatureReport(
+                        signature.packagePartName(),
+                        signature.signer(),
+                        signature.state().afterMutation()))
+            .toList());
   }
 
   static void close(ExcelWorkbook workbook) throws IOException {

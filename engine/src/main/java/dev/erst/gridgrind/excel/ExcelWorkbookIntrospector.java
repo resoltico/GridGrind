@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.core.model.formula.ArrayFormulaReport;
 import dev.erst.gridgrind.core.model.formula.NamedRangeReport;
 import dev.erst.gridgrind.core.model.formula.NamedRangeScopeReport;
 import java.util.ArrayList;
@@ -295,13 +296,13 @@ final class ExcelWorkbookIntrospector {
     return new WorkbookSurfaceResult.FormulaSurface(totalFormulaCellCount, List.copyOf(sheets));
   }
 
-  private List<ExcelArrayFormulaSnapshot> arrayFormulas(
+  private List<ArrayFormulaReport> arrayFormulas(
       ExcelWorkbook workbook, ExcelSheetSelection selection) {
     Objects.requireNonNull(workbook, "workbook must not be null");
     Objects.requireNonNull(selection, "selection must not be null");
 
     List<String> sheetNames = selectSheets(workbook, selection);
-    List<ExcelArrayFormulaSnapshot> formulas = new ArrayList<>();
+    List<ArrayFormulaReport> formulas = new ArrayList<>();
     for (String sheetName : sheetNames) {
       formulas.addAll(workbook.sheet(sheetName).cells().arrayFormulas());
     }

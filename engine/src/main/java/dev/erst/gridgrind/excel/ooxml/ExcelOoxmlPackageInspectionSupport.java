@@ -1,5 +1,8 @@
 package dev.erst.gridgrind.excel.ooxml;
 
+import dev.erst.gridgrind.core.model.security.OoxmlEncryptionReport;
+import dev.erst.gridgrind.core.model.security.OoxmlPackageSecurityReport;
+import dev.erst.gridgrind.core.model.security.OoxmlSignatureReport;
 import dev.erst.gridgrind.core.vocabulary.ExcelOoxmlSignatureState;
 import dev.erst.gridgrind.excel.WorkbookNotOpenableException;
 import dev.erst.gridgrind.excel.WorkbookSecurityException;
@@ -24,8 +27,8 @@ public final class ExcelOoxmlPackageInspectionSupport {
   private ExcelOoxmlPackageInspectionSupport() {}
 
   /** Reads one workbook package's signature state alongside its already-known encryption facts. */
-  public static ExcelOoxmlPackageSecuritySnapshot inspectPackageSecurity(
-      Path workbookPath, ExcelOoxmlEncryptionSnapshot encryption) throws IOException {
+  public static OoxmlPackageSecurityReport inspectPackageSecurity(
+      Path workbookPath, OoxmlEncryptionReport encryption) throws IOException {
     OPCPackage pkg;
     try {
       pkg = OPCPackage.open(workbookPath.toFile(), PackageAccess.READ);
@@ -37,17 +40,16 @@ public final class ExcelOoxmlPackageInspectionSupport {
     }
   }
 
-  private static ExcelOoxmlPackageSecuritySnapshot inspectOpenedPackage(
-      OPCPackage pkg, Path workbookPath, ExcelOoxmlEncryptionSnapshot encryption)
-      throws IOException {
+  private static OoxmlPackageSecurityReport inspectOpenedPackage(
+      OPCPackage pkg, Path workbookPath, OoxmlEncryptionReport encryption) throws IOException {
     return inspectOpenedPackage(
         pkg, workbookPath, encryption, ExcelOoxmlDsigProviderSupport::newSignatureInfo);
   }
 
-  static ExcelOoxmlPackageSecuritySnapshot inspectOpenedPackage(
+  static OoxmlPackageSecurityReport inspectOpenedPackage(
       OPCPackage pkg,
       Path workbookPath,
-      ExcelOoxmlEncryptionSnapshot encryption,
+      OoxmlEncryptionReport encryption,
       SignatureInfoFactory signatureInfoFactory)
       throws IOException {
     try {
@@ -55,11 +57,11 @@ public final class ExcelOoxmlPackageInspectionSupport {
       signatureInfo.setSignatureConfig(new SignatureConfig());
       signatureInfo.setOpcPackage(pkg);
 
-      List<ExcelOoxmlSignatureSnapshot> signatures = new ArrayList<>();
+      List<OoxmlSignatureReport> signatures = new ArrayList<>();
       for (SignaturePart signaturePart : signatureInfo.getSignatureParts()) {
         signatures.add(signatureSnapshot(signaturePart));
       }
-      return new ExcelOoxmlPackageSecuritySnapshot(encryption, List.copyOf(signatures));
+      return new OoxmlPackageSecurityReport(encryption, List.copyOf(signatures));
     } catch (RuntimeException exception) {
       throw new WorkbookSecurityException(
           "Failed to inspect OOXML package signatures for " + workbookPath, exception);
@@ -67,22 +69,22 @@ public final class ExcelOoxmlPackageInspectionSupport {
   }
 
   /** Converts one POI signature part into the public GridGrind signature snapshot. */
-  public static ExcelOoxmlSignatureSnapshot signatureSnapshot(SignaturePart signaturePart) {
+  public static OoxmlSignatureReport signatureSnapshot(SignaturePart signaturePart) {
     boolean valid = signaturePart.validate();
     X509Certificate signerCertificate = signaturePart.getSigner();
-    return new ExcelOoxmlSignatureSnapshot(
+    return new OoxmlSignatureReport(
         signaturePart.getPackagePart().getPartName().getName(),
         signerIdentity(signerCertificate),
         valid ? ExcelOoxmlSignatureState.VALID : ExcelOoxmlSignatureState.INVALID);
   }
 
   /** Returns the factual signer identity when one certificate is present. */
-  public static Optional<ExcelOoxmlSignatureSnapshot.SignerIdentity> signerIdentity(
+  public static Optional<OoxmlSignatureReport.SignerIdentity> signerIdentity(
       @Nullable X509Certificate signer) {
     return signer == null
         ? Optional.empty()
         : Optional.of(
-            new ExcelOoxmlSignatureSnapshot.SignerIdentity(
+            new OoxmlSignatureReport.SignerIdentity(
                 signer.getSubjectX500Principal().getName(),
                 signer.getIssuerX500Principal().getName(),
                 signer.getSerialNumber().toString(16).toUpperCase(Locale.ROOT)));

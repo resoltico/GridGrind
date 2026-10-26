@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.core.model.formula.ArrayFormulaReport;
 import dev.erst.gridgrind.core.model.style.CellStyleReport;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
@@ -182,9 +183,9 @@ final class ExcelSheetCellReadSupport {
         sheet.getSheetName(), topLeftAddress, rowCount, columnCount, List.copyOf(rows));
   }
 
-  List<ExcelArrayFormulaSnapshot> arrayFormulas() {
+  List<ArrayFormulaReport> arrayFormulas() {
     Set<String> seenRanges = new LinkedHashSet<>();
-    List<ExcelArrayFormulaSnapshot> formulas = new ArrayList<>();
+    List<ArrayFormulaReport> formulas = new ArrayList<>();
     for (Row row : sheet) {
       for (Cell cell : row) {
         if (cell.getCellType() != CellType.FORMULA || !cell.isPartOfArrayFormulaGroup()) {
@@ -196,10 +197,12 @@ final class ExcelSheetCellReadSupport {
           continue;
         }
         formulas.add(
-            new ExcelArrayFormulaSnapshot(
-                sheet.getSheetName(),
-                rangeText,
-                new CellReference(range.getFirstRow(), range.getFirstColumn()).formatAsString(),
+            new ArrayFormulaReport(
+                new dev.erst.gridgrind.core.vocabulary.SheetLabel(sheet.getSheetName()),
+                new dev.erst.gridgrind.core.vocabulary.RangeLabel(rangeText),
+                new dev.erst.gridgrind.core.vocabulary.CellAddress(
+                    new CellReference(range.getFirstRow(), range.getFirstColumn())
+                        .formatAsString()),
                 xssfSheet()
                     .getRow(range.getFirstRow())
                     .getCell(range.getFirstColumn())

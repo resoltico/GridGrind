@@ -83,14 +83,4 @@ final class InspectionResultWorkbookStructureReportSupport {
         snapshot.schemaValidated(),
         snapshot.xml());
   }
-
-  static dev.erst.gridgrind.core.model.formula.ArrayFormulaReport toArrayFormulaReport(
-      dev.erst.gridgrind.excel.ExcelArrayFormulaSnapshot snapshot) {
-    return new dev.erst.gridgrind.core.model.formula.ArrayFormulaReport(
-        new SheetLabel(snapshot.sheetName()),
-        new RangeLabel(snapshot.range()),
-        new CellAddress(snapshot.topLeftAddress()),
-        snapshot.formula(),
-        snapshot.singleCell());
-  }
 }

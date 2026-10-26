@@ -2,6 +2,9 @@ package dev.erst.gridgrind.excel;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.core.model.security.OoxmlEncryptionReport;
+import dev.erst.gridgrind.core.model.security.OoxmlPackageSecurityReport;
+import dev.erst.gridgrind.core.model.security.OoxmlSignatureReport;
 import dev.erst.gridgrind.core.vocabulary.ExcelOoxmlChainingMode;
 import dev.erst.gridgrind.core.vocabulary.ExcelOoxmlCipherAlgorithm;
 import dev.erst.gridgrind.core.vocabulary.ExcelOoxmlEncryptionMode;
@@ -11,12 +14,9 @@ import dev.erst.gridgrind.core.vocabulary.ExcelOoxmlSignatureState;
 import dev.erst.gridgrind.core.vocabulary.ExcelOoxmlWriteCipher;
 import dev.erst.gridgrind.core.vocabulary.ExcelOoxmlWriteHash;
 import dev.erst.gridgrind.excel.ooxml.ExcelOoxmlEncryptionOptions;
-import dev.erst.gridgrind.excel.ooxml.ExcelOoxmlEncryptionSnapshot;
 import dev.erst.gridgrind.excel.ooxml.ExcelOoxmlOpenOptions;
-import dev.erst.gridgrind.excel.ooxml.ExcelOoxmlPackageSecuritySnapshot;
 import dev.erst.gridgrind.excel.ooxml.ExcelOoxmlSecurityPoiBridge;
 import dev.erst.gridgrind.excel.ooxml.ExcelOoxmlSignatureOptions;
-import dev.erst.gridgrind.excel.ooxml.ExcelOoxmlSignatureSnapshot;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Arrays;
@@ -77,8 +77,8 @@ class ExcelOoxmlPackageSecurityTypesTest {
   @Test
   void encryptionAndSignatureSnapshotsValidateSecurityFacts() {
     String blankValue = Character.toString(' ');
-    ExcelOoxmlEncryptionSnapshot encryption =
-        new ExcelOoxmlEncryptionSnapshot.Encrypted(
+    OoxmlEncryptionReport encryption =
+        new OoxmlEncryptionReport.Encrypted(
             ExcelOoxmlEncryptionMode.AGILE,
             ExcelOoxmlCipherAlgorithm.AES_256,
             ExcelOoxmlHashAlgorithm.SHA_512,
@@ -86,27 +86,23 @@ class ExcelOoxmlPackageSecurityTypesTest {
             256,
             16,
             100_000);
-    ExcelOoxmlSignatureSnapshot signature =
-        new ExcelOoxmlSignatureSnapshot(
+    OoxmlSignatureReport signature =
+        new OoxmlSignatureReport(
             "/_xmlsignatures/sig1.xml",
             Optional.of("CN=GridGrind Signing Test"),
             Optional.of("CN=GridGrind Signing Test"),
             Optional.of("01AB"),
             ExcelOoxmlSignatureState.VALID);
-    ExcelOoxmlPackageSecuritySnapshot packageSecurity =
-        new ExcelOoxmlPackageSecuritySnapshot(encryption, List.of(signature));
+    OoxmlPackageSecurityReport packageSecurity =
+        new OoxmlPackageSecurityReport(encryption, List.of(signature));
 
     assertTrue(packageSecurity.isSecure());
-    assertEquals(
-        ExcelOoxmlSignatureState.INVALIDATED_BY_MUTATION,
-        packageSecurity.afterMutation().signatures().getFirst().state());
     assertInstanceOf(
-        ExcelOoxmlEncryptionSnapshot.None.class,
-        ExcelOoxmlPackageSecuritySnapshot.none().encryption());
-    assertFalse(ExcelOoxmlPackageSecuritySnapshot.none().isSecure());
+        OoxmlEncryptionReport.None.class, OoxmlPackageSecurityReport.none().encryption());
+    assertFalse(OoxmlPackageSecurityReport.none().isSecure());
     assertEquals(
         Optional.empty(),
-        new ExcelOoxmlSignatureSnapshot(
+        new OoxmlSignatureReport(
                 "/_xmlsignatures/sig2.xml",
                 Optional.empty(),
                 Optional.empty(),
@@ -115,14 +111,14 @@ class ExcelOoxmlPackageSecurityTypesTest {
             .signer());
     assertEquals(
         Optional.of(
-            new ExcelOoxmlSignatureSnapshot.SignerIdentity(
+            new OoxmlSignatureReport.SignerIdentity(
                 "CN=GridGrind Signing Test", "CN=GridGrind Signing Test", "01AB")),
         signature.signer());
 
     assertThrows(
         NullPointerException.class,
         () ->
-            new ExcelOoxmlEncryptionSnapshot.Encrypted(
+            new OoxmlEncryptionReport.Encrypted(
                 null,
                 ExcelOoxmlCipherAlgorithm.AES_256,
                 ExcelOoxmlHashAlgorithm.SHA_512,
@@ -133,7 +129,7 @@ class ExcelOoxmlPackageSecurityTypesTest {
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new ExcelOoxmlEncryptionSnapshot.Encrypted(
+            new OoxmlEncryptionReport.Encrypted(
                 ExcelOoxmlEncryptionMode.AGILE,
                 ExcelOoxmlCipherAlgorithm.AES_256,
                 ExcelOoxmlHashAlgorithm.SHA_512,
@@ -144,7 +140,7 @@ class ExcelOoxmlPackageSecurityTypesTest {
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new ExcelOoxmlSignatureSnapshot(
+            new OoxmlSignatureReport(
                 blankValue,
                 Optional.empty(),
                 Optional.empty(),
@@ -153,7 +149,7 @@ class ExcelOoxmlPackageSecurityTypesTest {
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new ExcelOoxmlSignatureSnapshot(
+            new OoxmlSignatureReport(
                 "/_xmlsignatures/sig1.xml",
                 Optional.of("CN=GridGrind Signing Test"),
                 Optional.empty(),
@@ -161,7 +157,7 @@ class ExcelOoxmlPackageSecurityTypesTest {
                 ExcelOoxmlSignatureState.VALID));
     assertThrows(
         NullPointerException.class,
-        () -> new ExcelOoxmlPackageSecuritySnapshot(encryption, Arrays.asList(signature, null)));
+        () -> new OoxmlPackageSecurityReport(encryption, Arrays.asList(signature, null)));
 
     assertEquals(
         ExcelOoxmlSignatureState.INVALIDATED_BY_MUTATION,
@@ -230,12 +226,12 @@ class ExcelOoxmlPackageSecurityTypesTest {
         HashAlgorithm.sha512,
         ExcelOoxmlSecurityPoiBridge.toPoi(ExcelOoxmlSignatureDigestAlgorithm.SHA512));
 
-    ExcelOoxmlEncryptionSnapshot none = ExcelOoxmlEncryptionSnapshot.none();
-    assertInstanceOf(ExcelOoxmlEncryptionSnapshot.None.class, none);
+    OoxmlEncryptionReport none = new OoxmlEncryptionReport.None();
+    assertInstanceOf(OoxmlEncryptionReport.None.class, none);
     assertThrows(
         NullPointerException.class,
         () ->
-            new ExcelOoxmlEncryptionSnapshot.Encrypted(
+            new OoxmlEncryptionReport.Encrypted(
                 ExcelOoxmlEncryptionMode.AGILE,
                 null,
                 ExcelOoxmlHashAlgorithm.SHA_512,
@@ -246,7 +242,7 @@ class ExcelOoxmlPackageSecurityTypesTest {
     assertThrows(
         NullPointerException.class,
         () ->
-            new ExcelOoxmlEncryptionSnapshot.Encrypted(
+            new OoxmlEncryptionReport.Encrypted(
                 ExcelOoxmlEncryptionMode.AGILE,
                 ExcelOoxmlCipherAlgorithm.AES_256,
                 null,
@@ -257,7 +253,7 @@ class ExcelOoxmlPackageSecurityTypesTest {
     assertThrows(
         NullPointerException.class,
         () ->
-            new ExcelOoxmlEncryptionSnapshot.Encrypted(
+            new OoxmlEncryptionReport.Encrypted(
                 ExcelOoxmlEncryptionMode.AGILE,
                 ExcelOoxmlCipherAlgorithm.AES_256,
                 ExcelOoxmlHashAlgorithm.SHA_512,
@@ -268,7 +264,7 @@ class ExcelOoxmlPackageSecurityTypesTest {
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new ExcelOoxmlEncryptionSnapshot.Encrypted(
+            new OoxmlEncryptionReport.Encrypted(
                 ExcelOoxmlEncryptionMode.AGILE,
                 ExcelOoxmlCipherAlgorithm.AES_256,
                 ExcelOoxmlHashAlgorithm.SHA_512,
@@ -279,7 +275,7 @@ class ExcelOoxmlPackageSecurityTypesTest {
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new ExcelOoxmlEncryptionSnapshot.Encrypted(
+            new OoxmlEncryptionReport.Encrypted(
                 ExcelOoxmlEncryptionMode.AGILE,
                 ExcelOoxmlCipherAlgorithm.AES_256,
                 ExcelOoxmlHashAlgorithm.SHA_512,
@@ -287,9 +283,6 @@ class ExcelOoxmlPackageSecurityTypesTest {
                 256,
                 16,
                 -1));
-
-    ExcelOoxmlPackageSecuritySnapshot plainSecurity = ExcelOoxmlPackageSecuritySnapshot.none();
-    assertSame(plainSecurity, plainSecurity.afterMutation());
 
     Path workbookPath = Path.of("/tmp/security.xlsx");
     WorkbookPasswordRequiredException passwordRequired = new WorkbookPasswordRequiredException();

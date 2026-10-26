@@ -1,6 +1,6 @@
 package dev.erst.gridgrind.excel;
 
-import dev.erst.gridgrind.excel.ooxml.ExcelOoxmlPackageSecuritySnapshot;
+import dev.erst.gridgrind.core.model.security.OoxmlPackageSecurityReport;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
@@ -26,7 +26,7 @@ final class ExcelWorkbookOpenSupport {
   static ExcelWorkbook openMaterializedWorkbook(
       Path workbookPath,
       Optional<Path> sourcePath,
-      ExcelOoxmlPackageSecuritySnapshot loadedPackageSecurity,
+      OoxmlPackageSecurityReport loadedPackageSecurity,
       Optional<String> sourceEncryptionPassword)
       throws IOException {
     Objects.requireNonNull(workbookPath, "workbookPath must not be null");
@@ -54,7 +54,7 @@ final class ExcelWorkbookOpenSupport {
       Path workbookPath,
       ExcelFormulaEnvironment formulaEnvironment,
       Optional<Path> sourcePath,
-      ExcelOoxmlPackageSecuritySnapshot loadedPackageSecurity,
+      OoxmlPackageSecurityReport loadedPackageSecurity,
       Optional<String> sourceEncryptionPassword)
       throws IOException {
     Objects.requireNonNull(workbookPath, "workbookPath must not be null");
@@ -82,7 +82,7 @@ final class ExcelWorkbookOpenSupport {
   static ExcelWorkbook openMaterializedWorkbook(
       XSSFWorkbook xssfWorkbook,
       Optional<Path> sourcePath,
-      ExcelOoxmlPackageSecuritySnapshot loadedPackageSecurity,
+      OoxmlPackageSecurityReport loadedPackageSecurity,
       Optional<String> sourceEncryptionPassword)
       throws IOException {
     try {
@@ -102,7 +102,7 @@ final class ExcelWorkbookOpenSupport {
       XSSFWorkbook xssfWorkbook,
       ExcelFormulaEnvironment formulaEnvironment,
       Optional<Path> sourcePath,
-      ExcelOoxmlPackageSecuritySnapshot loadedPackageSecurity,
+      OoxmlPackageSecurityReport loadedPackageSecurity,
       Optional<String> sourceEncryptionPassword)
       throws IOException {
     try {

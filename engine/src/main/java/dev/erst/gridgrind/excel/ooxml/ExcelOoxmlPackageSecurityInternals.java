@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.excel.ooxml;
 
+import dev.erst.gridgrind.core.model.security.OoxmlEncryptionReport;
 import dev.erst.gridgrind.excel.InvalidWorkbookPasswordException;
 import dev.erst.gridgrind.excel.WorkbookNotOpenableException;
 import dev.erst.gridgrind.excel.WorkbookPasswordRequiredException;
@@ -46,7 +47,7 @@ final class ExcelOoxmlPackageSecurityInternals {
       ExcelOoxmlPackageEncryptionSupport.materializeDecryptedWorkbook(
           () -> decryptor.getDataStream(fileSystem), privateWorkbook.workbookPath(), workbookPath);
 
-      ExcelOoxmlEncryptionSnapshot encryption =
+      OoxmlEncryptionReport encryption =
           ExcelOoxmlPackageEncryptionSupport.encryptionSnapshot(encryptionInfo);
       return new ExcelOoxmlPackageSecuritySupport.ReadableWorkbook(
           privateWorkbook.workbookPath(),

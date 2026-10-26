@@ -80,7 +80,7 @@ final class RequestPreflightWorkbookSource {
             instanceof
             dev.erst.gridgrind.core.model.security.OoxmlPersistenceEncryptionSpec.PreserveSource
         && workbook.persistence().loadedPackageSecurity().encryption()
-            instanceof dev.erst.gridgrind.excel.ooxml.ExcelOoxmlEncryptionSnapshot.None) {
+            instanceof dev.erst.gridgrind.core.model.security.OoxmlEncryptionReport.None) {
       throw new EncryptionSourceNotEncryptedException();
     }
     if (security.isPresent()

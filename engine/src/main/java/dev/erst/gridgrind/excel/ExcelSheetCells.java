@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.core.model.formula.ArrayFormulaReport;
 import dev.erst.gridgrind.core.model.formula.ResolvedArrayFormula;
 import dev.erst.gridgrind.core.model.style.CellStylePatch;
 import dev.erst.gridgrind.core.model.value.ResolvedCellWrite;
@@ -126,7 +127,7 @@ public final class ExcelSheetCells {
   }
 
   /** Returns factual array-formula groups on this sheet. */
-  public List<ExcelArrayFormulaSnapshot> arrayFormulas() {
+  public List<ArrayFormulaReport> arrayFormulas() {
     return readSupport.arrayFormulas();
   }
 }

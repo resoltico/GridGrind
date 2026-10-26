@@ -1,9 +1,9 @@
 package dev.erst.gridgrind.engine.runtime;
 
+import dev.erst.gridgrind.core.model.security.OoxmlPackageSecurityReport;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import dev.erst.gridgrind.excel.WorkbookArtifactWriteDisposition;
 import dev.erst.gridgrind.excel.WorkbookLocation;
-import dev.erst.gridgrind.excel.ooxml.ExcelOoxmlPackageSecuritySnapshot;
 import dev.erst.gridgrind.excel.ooxml.ExcelOoxmlPersistenceOptions;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -38,11 +38,10 @@ final class ExecutionRequestPaths {
     };
   }
 
-  static ExcelOoxmlPackageSecuritySnapshot sourcePackageSecurity(
-      WorkbookPlan.WorkbookSource source) {
+  static OoxmlPackageSecurityReport sourcePackageSecurity(WorkbookPlan.WorkbookSource source) {
     return switch (source) {
-      case WorkbookPlan.WorkbookSource.New _ -> ExcelOoxmlPackageSecuritySnapshot.none();
-      case WorkbookPlan.WorkbookSource.ExistingFile _ -> ExcelOoxmlPackageSecuritySnapshot.none();
+      case WorkbookPlan.WorkbookSource.New _ -> OoxmlPackageSecurityReport.none();
+      case WorkbookPlan.WorkbookSource.ExistingFile _ -> OoxmlPackageSecurityReport.none();
     };
   }
 

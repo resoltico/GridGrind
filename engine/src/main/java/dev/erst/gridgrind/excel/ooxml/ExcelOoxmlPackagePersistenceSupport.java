@@ -1,5 +1,7 @@
 package dev.erst.gridgrind.excel.ooxml;
 
+import dev.erst.gridgrind.core.model.security.OoxmlEncryptionReport;
+import dev.erst.gridgrind.core.model.security.OoxmlPackageSecurityReport;
 import dev.erst.gridgrind.excel.UnsupportedSourceEncryptionPreservationException;
 
 /** Resolves how a saved workbook should preserve or replace source OOXML security settings. */
@@ -8,7 +10,7 @@ public final class ExcelOoxmlPackagePersistenceSupport {
 
   /** Computes the effective encryption and signing settings for one persistence request. */
   public static ExcelOoxmlPersistenceOptions effectiveOptions(
-      ExcelOoxmlPackageSecuritySnapshot sourceSecurity,
+      OoxmlPackageSecurityReport sourceSecurity,
       java.util.Optional<String> sourceEncryptionPassword,
       ExcelOoxmlPersistenceOptions persistenceOptions) {
     return switch (persistenceOptions.encryption()) {
@@ -23,10 +25,10 @@ public final class ExcelOoxmlPackagePersistenceSupport {
   }
 
   private static ExcelOoxmlEncryptionOptions preservedSourceEncryption(
-      ExcelOoxmlPackageSecuritySnapshot sourceSecurity,
+      OoxmlPackageSecurityReport sourceSecurity,
       java.util.Optional<String> sourceEncryptionPassword) { // LIM-038
     if (!(sourceSecurity.encryption()
-        instanceof ExcelOoxmlEncryptionSnapshot.Encrypted sourceEncryption)) {
+        instanceof OoxmlEncryptionReport.Encrypted sourceEncryption)) {
       throw new IllegalArgumentException(
           "PRESERVE_SOURCE encryption requires an encrypted source workbook");
     }

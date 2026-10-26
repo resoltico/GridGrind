@@ -1,7 +1,7 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.core.model.security.OoxmlPackageSecurityReport;
 import dev.erst.gridgrind.excel.ooxml.ExcelOoxmlOpenOptions;
-import dev.erst.gridgrind.excel.ooxml.ExcelOoxmlPackageSecuritySnapshot;
 import dev.erst.gridgrind.excel.ooxml.ExcelOoxmlPackageSecuritySupport;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -50,7 +50,7 @@ public final class ExcelWorkbooks {
   public static ExcelWorkbook openMaterializedWorkbook(
       Path workbookPath,
       Optional<Path> sourcePath,
-      ExcelOoxmlPackageSecuritySnapshot loadedPackageSecurity,
+      OoxmlPackageSecurityReport loadedPackageSecurity,
       Optional<String> sourceEncryptionPassword)
       throws IOException {
     return ExcelWorkbookOpenSupport.openMaterializedWorkbook(
@@ -86,7 +86,7 @@ public final class ExcelWorkbooks {
       Path workbookPath,
       ExcelFormulaEnvironment formulaEnvironment,
       Optional<Path> sourcePath,
-      ExcelOoxmlPackageSecuritySnapshot loadedPackageSecurity,
+      OoxmlPackageSecurityReport loadedPackageSecurity,
       Optional<String> sourceEncryptionPassword)
       throws IOException {
     return ExcelWorkbookOpenSupport.openMaterializedWorkbook(

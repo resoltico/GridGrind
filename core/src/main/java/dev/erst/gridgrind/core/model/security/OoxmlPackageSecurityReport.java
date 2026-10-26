@@ -17,6 +17,16 @@ public record OoxmlPackageSecurityReport(
     signatures = copyValues(signatures, "signatures");
   }
 
+  /** Returns the plain, unsigned package state. */
+  public static OoxmlPackageSecurityReport none() {
+    return new OoxmlPackageSecurityReport(new OoxmlEncryptionReport.None(), List.of());
+  }
+
+  /** Reports whether encryption or signatures are present. */
+  public boolean isSecure() {
+    return encryption instanceof OoxmlEncryptionReport.Encrypted || !signatures.isEmpty();
+  }
+
   private static <T> List<T> copyValues(List<T> values, String fieldName) {
     Objects.requireNonNull(values, fieldName + " must not be null");
     List<T> copy = new ArrayList<>(values.size());

@@ -1,6 +1,6 @@
 package dev.erst.gridgrind.excel;
 
-import dev.erst.gridgrind.excel.ooxml.ExcelOoxmlPackageSecuritySnapshot;
+import dev.erst.gridgrind.core.model.security.OoxmlPackageSecurityReport;
 import java.nio.file.Path;
 import java.util.Objects;
 import java.util.Optional;
@@ -12,14 +12,14 @@ final class ExcelWorkbookContext {
   private final WorkbookStyleRegistry styleRegistry;
   private final ExcelFormulaRuntime formulaRuntime;
   private final Optional<Path> sourcePath;
-  private final ExcelOoxmlPackageSecuritySnapshot loadedPackageSecurity;
+  private final OoxmlPackageSecurityReport loadedPackageSecurity;
   private final Optional<String> sourceEncryptionPassword;
 
   ExcelWorkbookContext(
       XSSFWorkbook workbook,
       ExcelFormulaRuntime formulaRuntime,
       Optional<Path> sourcePath,
-      ExcelOoxmlPackageSecuritySnapshot loadedPackageSecurity,
+      OoxmlPackageSecurityReport loadedPackageSecurity,
       Optional<String> sourceEncryptionPassword) {
     this.workbook = Objects.requireNonNull(workbook, "workbook must not be null");
     this.styleRegistry = new WorkbookStyleRegistry(workbook);
@@ -48,7 +48,7 @@ final class ExcelWorkbookContext {
     return sourcePath;
   }
 
-  ExcelOoxmlPackageSecuritySnapshot loadedPackageSecurity() {
+  OoxmlPackageSecurityReport loadedPackageSecurity() {
     return loadedPackageSecurity;
   }
 

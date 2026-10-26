@@ -10,6 +10,7 @@ import dev.erst.gridgrind.core.model.drawing.DrawingAnchorSpec;
 import dev.erst.gridgrind.core.model.drawing.DrawingMarkerSpec;
 import dev.erst.gridgrind.core.model.drawing.ResolvedShape;
 import dev.erst.gridgrind.core.model.drawing.ShapeSpec;
+import dev.erst.gridgrind.core.model.security.OoxmlEncryptionReport;
 import dev.erst.gridgrind.core.model.style.CellColorReport;
 import dev.erst.gridgrind.core.model.style.ColorSpec;
 import dev.erst.gridgrind.core.model.table.AutofilterSortConditionReport;
@@ -26,7 +27,6 @@ import dev.erst.gridgrind.core.vocabulary.ExcelOoxmlWriteHash;
 import dev.erst.gridgrind.core.vocabulary.RgbHex;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingAnchorSupport;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingBinarySupport;
-import dev.erst.gridgrind.excel.ooxml.ExcelOoxmlEncryptionSnapshot;
 import dev.erst.gridgrind.excel.ooxml.ExcelOoxmlSecurityPoiBridge;
 import dev.erst.gridgrind.excel.pivot.ExcelPivotTableAnalysisSupport;
 import dev.erst.gridgrind.excel.pivot.ExcelPivotTableSnapshotSupport;
@@ -84,7 +84,7 @@ class ResidualUtilityCoverageTest extends ExcelPivotTableCoverageTestSupport {
         assertThrows(
                 NullPointerException.class,
                 () ->
-                    new ExcelOoxmlEncryptionSnapshot.Encrypted(
+                    new OoxmlEncryptionReport.Encrypted(
                         null,
                         ExcelOoxmlCipherAlgorithm.AES_256,
                         ExcelOoxmlHashAlgorithm.SHA_512,

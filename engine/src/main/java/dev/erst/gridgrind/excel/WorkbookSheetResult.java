@@ -4,6 +4,7 @@ import static dev.erst.gridgrind.excel.WorkbookResultSupport.copyValues;
 import static dev.erst.gridgrind.excel.WorkbookResultSupport.requireNonBlank;
 
 import dev.erst.gridgrind.core.model.drawing.CommentReport;
+import dev.erst.gridgrind.core.model.formula.ArrayFormulaReport;
 import dev.erst.gridgrind.core.model.print.PrintLayoutReport;
 import dev.erst.gridgrind.core.model.protection.SheetProtectionSettings;
 import dev.erst.gridgrind.core.model.value.HyperlinkTarget;
@@ -35,7 +36,7 @@ public sealed interface WorkbookSheetResult extends WorkbookReadIntrospectionRes
   }
 
   /** Returns factual array-formula groups across the selected sheets. */
-  record ArrayFormulasResult(StepId stepId, List<ExcelArrayFormulaSnapshot> arrayFormulas)
+  record ArrayFormulasResult(StepId stepId, List<ArrayFormulaReport> arrayFormulas)
       implements WorkbookSheetResult {
     public ArrayFormulasResult {
 

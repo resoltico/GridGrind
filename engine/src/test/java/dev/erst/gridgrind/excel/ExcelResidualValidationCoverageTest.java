@@ -12,6 +12,7 @@ import dev.erst.gridgrind.core.model.customxml.CustomXmlMappingLocator;
 import dev.erst.gridgrind.core.model.customxml.ResolvedCustomXmlImport;
 import dev.erst.gridgrind.core.model.drawing.DrawingAnchorSpec;
 import dev.erst.gridgrind.core.model.drawing.ResolvedSignatureLine;
+import dev.erst.gridgrind.core.model.formula.ArrayFormulaReport;
 import dev.erst.gridgrind.core.model.formula.ResolvedArrayFormula;
 import dev.erst.gridgrind.core.source.BinaryContent;
 import dev.erst.gridgrind.core.vocabulary.ExcelPictureFormat;
@@ -59,7 +60,13 @@ class ExcelResidualValidationCoverageTest {
     assertThrows(IllegalArgumentException.class, () -> new ResolvedArrayFormula(" "));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new ExcelArrayFormulaSnapshot(" ", "A1:A2", "A1", "SUM(A1:A2)", false));
+        () ->
+            new ArrayFormulaReport(
+                new dev.erst.gridgrind.core.vocabulary.SheetLabel(" "),
+                new dev.erst.gridgrind.core.vocabulary.RangeLabel("A1:A2"),
+                new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"),
+                "SUM(A1:A2)",
+                false));
 
     assertThrows(
         IllegalArgumentException.class,

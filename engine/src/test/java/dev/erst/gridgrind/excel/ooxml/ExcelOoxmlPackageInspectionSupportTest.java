@@ -3,6 +3,7 @@ package dev.erst.gridgrind.excel.ooxml;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import dev.erst.gridgrind.core.model.security.OoxmlEncryptionReport;
 import dev.erst.gridgrind.excel.WorkbookSecurityException;
 import java.io.OutputStream;
 import java.nio.file.Files;
@@ -31,7 +32,7 @@ class ExcelOoxmlPackageInspectionSupportTest {
                   ExcelOoxmlPackageInspectionSupport.inspectOpenedPackage(
                       pkg,
                       workbookPath,
-                      ExcelOoxmlEncryptionSnapshot.none(),
+                      new OoxmlEncryptionReport.None(),
                       () -> {
                         throw new IllegalStateException("signature runtime failure");
                       }));

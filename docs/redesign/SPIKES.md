@@ -2243,3 +2243,21 @@ zero failures/errors/skips; all 143 golden cases pass. No active mutation/fuzz c
 Inventories: snapshots 20→19, definitions 2→1, converter lines 3188→3124, blank checks 396→391,
 main Java 118644→118471; reports 95→96 for the distinct observed scope contract. Support 205 remains.
 Baseline diff empty. WP-40 remains open: factual models, selected-range block, resolved execution seam.
+
+## WP-40 direct package-security and array-formula facts
+
+Deleted engine OOXML encryption/signature/package-security and array-formula snapshots. POI readers,
+open/admission context and workbook inspection now share core reports; removed runtime conversions.
+Core package-security report owns plain-state construction and the encryption/signature presence
+query. Signature invalidation remains in persistence support, where the mutation decision is owned;
+it maps loaded signature reports through the existing signature-state transition. Retained the real
+signed-workbook regression that reads VALID, mutates through execution, reads INVALIDATED_BY_MUTATION,
+and verifies persistence behavior. Removed only retired model-transition assertions.
+
+Compilation caught those two deleted transition calls and two typed array-range comparisons.
+Behavior/static/parity run then exposed address/sheet assertions and a natural sort of RangeLabel;
+corrected tests to compare/sort their actual scalar values. Focused array tests pass (11s), retained
+security behavior/static/parity checks pass, deterministic check/all retained seeds pass (15s).
+Final ./gradlew check passes (3m), all 143 golden cases unchanged; no active mutation/fuzz campaign.
+Inventories: snapshots 19→15, converter lines 3124→3067, blank checks 391→389, main Java
+118471→118271; definition 1 and Support 205 remain. Baseline diff empty. WP-40 remains open.

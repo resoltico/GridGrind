@@ -12,6 +12,7 @@ import dev.erst.gridgrind.core.model.formula.NamedRangeTarget;
 import dev.erst.gridgrind.core.model.pivot.PivotTableSpec;
 import dev.erst.gridgrind.core.model.security.OoxmlEncryptionSpec;
 import dev.erst.gridgrind.core.model.security.OoxmlOpenSecuritySpec;
+import dev.erst.gridgrind.core.model.security.OoxmlPackageSecurityReport;
 import dev.erst.gridgrind.core.model.security.OoxmlPersistenceSecuritySpec;
 import dev.erst.gridgrind.core.model.style.DifferentialStylePatch;
 import dev.erst.gridgrind.core.model.table.TableSpec;
@@ -61,7 +62,6 @@ import dev.erst.gridgrind.excel.NamedRangeNotFoundException;
 import dev.erst.gridgrind.excel.SheetNotFoundException;
 import dev.erst.gridgrind.excel.UnregisteredUserDefinedFunctionException;
 import dev.erst.gridgrind.excel.WorkbookArtifactIo;
-import dev.erst.gridgrind.excel.ooxml.ExcelOoxmlPackageSecuritySnapshot;
 import dev.erst.gridgrind.excel.ooxml.ExcelOoxmlPersistenceOptions;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -442,9 +442,9 @@ class ExecutorPolicyCoverageTest {
       assertFalse(overwriteOptions.writesPlaintextUnsigned());
     }
 
-    ExcelOoxmlPackageSecuritySnapshot newSecurity =
+    OoxmlPackageSecurityReport newSecurity =
         ExecutionRequestPaths.sourcePackageSecurity(new WorkbookPlan.WorkbookSource.New());
-    ExcelOoxmlPackageSecuritySnapshot existingSecurity =
+    OoxmlPackageSecurityReport existingSecurity =
         ExecutionRequestPaths.sourcePackageSecurity(
             new WorkbookPlan.WorkbookSource.ExistingFile("/tmp/in.xlsx"));
     assertFalse(newSecurity.isSecure());

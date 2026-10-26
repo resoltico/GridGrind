@@ -24,9 +24,7 @@ final class InspectionResultReadConverter {
                   workbookSummary.workbook()));
       case dev.erst.gridgrind.excel.WorkbookCoreResult.PackageSecurityResult packageSecurity ->
           new WorkbookInspectionResult.PackageSecurityResult(
-              packageSecurity.stepId(),
-              InspectionResultWorkbookCoreReportSupport.toOoxmlPackageSecurityReport(
-                  packageSecurity.security()));
+              packageSecurity.stepId(), packageSecurity.security());
       case dev.erst.gridgrind.excel.WorkbookCoreResult.WorkbookProtectionResult protection ->
           new WorkbookInspectionResult.WorkbookProtectionResult(
               protection.stepId(), protection.protection());
@@ -58,10 +56,7 @@ final class InspectionResultReadConverter {
                   sheetSummary.sheet().lastColumnIndex()));
       case dev.erst.gridgrind.excel.WorkbookSheetResult.ArrayFormulasResult arrayFormulas ->
           new SheetInspectionResult.ArrayFormulasResult(
-              arrayFormulas.stepId(),
-              arrayFormulas.arrayFormulas().stream()
-                  .map(InspectionResultWorkbookStructureReportSupport::toArrayFormulaReport)
-                  .toList());
+              arrayFormulas.stepId(), arrayFormulas.arrayFormulas());
       case dev.erst.gridgrind.excel.WorkbookSheetResult.CellsResult cells ->
           new SheetInspectionResult.CellsResult(
               cells.stepId(),
