@@ -10,6 +10,7 @@ import dev.erst.gridgrind.core.model.drawing.PictureSpec;
 import dev.erst.gridgrind.core.model.drawing.ResolvedComment;
 import dev.erst.gridgrind.core.model.drawing.ResolvedEmbeddedObject;
 import dev.erst.gridgrind.core.model.drawing.ResolvedPicture;
+import dev.erst.gridgrind.core.model.drawing.ResolvedShape;
 import dev.erst.gridgrind.core.model.drawing.ShapeSpec;
 import dev.erst.gridgrind.core.model.layout.PaneSpec;
 import dev.erst.gridgrind.core.model.pivot.PivotTableSpec;
@@ -27,7 +28,6 @@ import dev.erst.gridgrind.core.source.*;
 import dev.erst.gridgrind.core.vocabulary.*;
 import dev.erst.gridgrind.core.vocabulary.SheetCopyPosition;
 import dev.erst.gridgrind.excel.*;
-import dev.erst.gridgrind.excel.drawing.ExcelShapeDefinition;
 import dev.erst.gridgrind.excel.pivot.ExcelPivotTableDefinition;
 import dev.erst.gridgrind.excel.validation.ExcelDataValidationDefinition;
 import java.io.IOException;
@@ -156,8 +156,8 @@ final class OperationSequenceValueFactory {
     return OperationSequenceDrawingValues.nextResolvedChart(data);
   }
 
-  static ExcelShapeDefinition nextExcelShapeDefinition(GridGrindFuzzData data) {
-    return OperationSequenceDrawingValues.nextExcelShapeDefinition(data);
+  static ResolvedShape nextResolvedShape(GridGrindFuzzData data) {
+    return OperationSequenceDrawingValues.nextResolvedShape(data);
   }
 
   static ResolvedEmbeddedObject nextExcelEmbeddedObjectDefinition(GridGrindFuzzData data) {

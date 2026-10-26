@@ -4,11 +4,11 @@ import dev.erst.gridgrind.core.model.chart.ResolvedChart;
 import dev.erst.gridgrind.core.model.drawing.DrawingAnchorSpec;
 import dev.erst.gridgrind.core.model.drawing.ResolvedEmbeddedObject;
 import dev.erst.gridgrind.core.model.drawing.ResolvedPicture;
+import dev.erst.gridgrind.core.model.drawing.ResolvedShape;
+import dev.erst.gridgrind.core.model.drawing.ResolvedSignatureLine;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingController;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingObjectPayload;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingObjectSnapshot;
-import dev.erst.gridgrind.excel.drawing.ExcelShapeDefinition;
-import dev.erst.gridgrind.excel.drawing.ExcelSignatureLineDefinition;
 import java.util.List;
 import java.util.Objects;
 import org.apache.poi.ss.usermodel.Sheet;
@@ -45,7 +45,7 @@ final class ExcelSheetDrawingSupport {
     return owner;
   }
 
-  ExcelSheet setSignatureLine(ExcelSignatureLineDefinition definition, ExcelSheet owner) {
+  ExcelSheet setSignatureLine(ResolvedSignatureLine definition, ExcelSheet owner) {
     Objects.requireNonNull(definition, "definition must not be null");
     drawingController.setSignatureLine(xssfSheet(), definition);
     return owner;
@@ -57,7 +57,7 @@ final class ExcelSheetDrawingSupport {
     return owner;
   }
 
-  ExcelSheet setShape(ExcelShapeDefinition definition, ExcelSheet owner) {
+  ExcelSheet setShape(ResolvedShape definition, ExcelSheet owner) {
     Objects.requireNonNull(definition, "definition must not be null");
     drawingController.setShape(xssfSheet(), definition);
     return owner;

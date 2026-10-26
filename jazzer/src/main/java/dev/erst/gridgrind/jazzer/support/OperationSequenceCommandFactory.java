@@ -128,8 +128,7 @@ final class OperationSequenceCommandFactory {
                 new WorkbookDrawingCommand.SetPicture(
                     targetSheet, nextExcelPictureDefinition(data));
             case 0x5 -> new WorkbookDrawingCommand.SetChart(targetSheet, nextResolvedChart(data));
-            case 0x6 ->
-                new WorkbookDrawingCommand.SetShape(targetSheet, nextExcelShapeDefinition(data));
+            case 0x6 -> new WorkbookDrawingCommand.SetShape(targetSheet, nextResolvedShape(data));
             case 0x7 ->
                 new WorkbookDrawingCommand.SetEmbeddedObject(
                     targetSheet, nextExcelEmbeddedObjectDefinition(data));

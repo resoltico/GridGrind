@@ -3,12 +3,12 @@ package dev.erst.gridgrind.excel;
 import static org.junit.jupiter.api.Assertions.*;
 
 import dev.erst.gridgrind.core.model.drawing.DrawingAnchorReport;
+import dev.erst.gridgrind.core.model.drawing.ResolvedShape;
 import dev.erst.gridgrind.core.source.BinaryContent;
 import dev.erst.gridgrind.core.vocabulary.ExcelDrawingAnchorBehavior;
 import dev.erst.gridgrind.core.vocabulary.ExcelDrawingShapeKind;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingController;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingObjectSnapshot;
-import dev.erst.gridgrind.excel.drawing.ExcelShapeDefinition;
 import java.util.List;
 import java.util.Optional;
 import org.apache.poi.openxml4j.opc.PackagingURIHelper;
@@ -98,7 +98,7 @@ class ExcelDrawingControllerCoverageTest extends ExcelDrawingCoverageTestSupport
           () ->
               controller.setShape(
                   sheet,
-                  new ExcelShapeDefinition.SimpleShape(
+                  new ResolvedShape.SimpleShape(
                       "OpsBrokenShape", anchor(1, 1, 2, 2), "invalid-shape", Optional.empty())));
 
       String pictureDefaultName = invoke(controller, "defaultName", String.class, picture);

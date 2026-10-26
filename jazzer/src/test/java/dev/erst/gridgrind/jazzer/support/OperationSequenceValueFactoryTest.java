@@ -273,12 +273,10 @@ class OperationSequenceValueFactoryTest {
             false,
             args -> OperationSequenceValueFactory.nextResolvedChart((GridGrindFuzzData) args[0])),
         new CoverageCase(
-            "nextExcelShapeDefinition",
+            "nextResolvedShape",
             List.of(CoverageParameterKind.DATA),
             false,
-            args ->
-                OperationSequenceValueFactory.nextExcelShapeDefinition(
-                    (GridGrindFuzzData) args[0])),
+            args -> OperationSequenceValueFactory.nextResolvedShape((GridGrindFuzzData) args[0])),
         new CoverageCase(
             "nextExcelEmbeddedObjectDefinition",
             List.of(CoverageParameterKind.DATA),

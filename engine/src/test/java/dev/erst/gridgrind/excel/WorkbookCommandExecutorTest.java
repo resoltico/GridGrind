@@ -7,6 +7,7 @@ import dev.erst.gridgrind.core.model.drawing.DrawingMarkerSpec;
 import dev.erst.gridgrind.core.model.drawing.ResolvedComment;
 import dev.erst.gridgrind.core.model.drawing.ResolvedEmbeddedObject;
 import dev.erst.gridgrind.core.model.drawing.ResolvedPicture;
+import dev.erst.gridgrind.core.model.drawing.ResolvedShape;
 import dev.erst.gridgrind.core.model.formula.ResolvedFormula;
 import dev.erst.gridgrind.core.model.style.CellAlignmentPatch;
 import dev.erst.gridgrind.core.model.style.CellColorReport;
@@ -28,7 +29,6 @@ import dev.erst.gridgrind.core.vocabulary.ExcelVerticalAlignment;
 import dev.erst.gridgrind.core.vocabulary.RgbHex;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingObjectSnapshot;
-import dev.erst.gridgrind.excel.drawing.ExcelShapeDefinition;
 import dev.erst.gridgrind.excel.pivot.ExcelPivotTableDefinition;
 import dev.erst.gridgrind.excel.pivot.ExcelPivotTableSelection;
 import dev.erst.gridgrind.excel.pivot.ExcelPivotTableSnapshot;
@@ -540,8 +540,7 @@ class WorkbookCommandExecutorTest {
                   Optional.of("Queue preview"))),
           new WorkbookDrawingCommand.SetShape(
               "Ops",
-              new ExcelShapeDefinition.SimpleShape(
-                  "OpsShape", firstAnchor, "rect", Optional.of("Queue"))),
+              new ResolvedShape.SimpleShape("OpsShape", firstAnchor, "rect", Optional.of("Queue"))),
           new WorkbookDrawingCommand.SetEmbeddedObject(
               "Ops",
               new ResolvedEmbeddedObject(
@@ -947,7 +946,7 @@ class WorkbookCommandExecutorTest {
           workbook,
           new WorkbookDrawingCommand.SetShape(
               "Budget",
-              new ExcelShapeDefinition.SimpleShape(
+              new ResolvedShape.SimpleShape(
                   "BudgetShape",
                   new DrawingAnchorSpec.TwoCell(
                       new DrawingMarkerSpec(0, 0, 0, 0),

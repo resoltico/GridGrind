@@ -14,6 +14,7 @@ import dev.erst.gridgrind.core.model.drawing.PictureSpec;
 import dev.erst.gridgrind.core.model.drawing.ResolvedComment;
 import dev.erst.gridgrind.core.model.drawing.ResolvedEmbeddedObject;
 import dev.erst.gridgrind.core.model.drawing.ResolvedPicture;
+import dev.erst.gridgrind.core.model.drawing.ResolvedShape;
 import dev.erst.gridgrind.core.model.drawing.ShapeSpec;
 import dev.erst.gridgrind.core.model.value.HyperlinkTarget;
 import dev.erst.gridgrind.core.plan.*;
@@ -21,11 +22,11 @@ import dev.erst.gridgrind.core.source.*;
 import dev.erst.gridgrind.core.source.BinaryContent;
 import dev.erst.gridgrind.core.vocabulary.*;
 import dev.erst.gridgrind.excel.*;
-import dev.erst.gridgrind.excel.drawing.ExcelShapeDefinition;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
 import java.util.*;
+import java.util.Optional;
 
 /** Generates authored and engine drawing values for operation-sequence fuzzing. */
 final class OperationSequenceDrawingValues {
@@ -125,15 +126,15 @@ final class OperationSequenceDrawingValues {
     return OperationSequenceChartFactory.nextResolvedChart(data);
   }
 
-  static ExcelShapeDefinition nextExcelShapeDefinition(GridGrindFuzzData data) {
+  static ResolvedShape nextResolvedShape(GridGrindFuzzData data) {
     if (data.consumeBoolean()) {
-      return new ExcelShapeDefinition.SimpleShape(
+      return new ResolvedShape.SimpleShape(
           DRAWING_SHAPE_NAME,
           nextDrawingAnchorInput(data),
           data.consumeBoolean() ? "roundRect" : "rect",
           data.consumeBoolean() ? Optional.of("Queue") : Optional.empty());
     }
-    return new ExcelShapeDefinition.Connector(DRAWING_CONNECTOR_NAME, nextDrawingAnchorInput(data));
+    return new ShapeSpec.Connector(DRAWING_CONNECTOR_NAME, nextDrawingAnchorInput(data));
   }
 
   static ResolvedEmbeddedObject nextExcelEmbeddedObjectDefinition(GridGrindFuzzData data) {

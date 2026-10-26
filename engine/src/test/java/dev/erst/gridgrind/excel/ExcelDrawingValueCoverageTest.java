@@ -8,6 +8,8 @@ import dev.erst.gridgrind.core.model.drawing.DrawingMarkerReport;
 import dev.erst.gridgrind.core.model.drawing.DrawingMarkerSpec;
 import dev.erst.gridgrind.core.model.drawing.ResolvedEmbeddedObject;
 import dev.erst.gridgrind.core.model.drawing.ResolvedPicture;
+import dev.erst.gridgrind.core.model.drawing.ResolvedShape;
+import dev.erst.gridgrind.core.model.drawing.ShapeSpec;
 import dev.erst.gridgrind.core.source.BinaryContent;
 import dev.erst.gridgrind.core.vocabulary.ExcelAuthoredDrawingShapeKind;
 import dev.erst.gridgrind.core.vocabulary.ExcelDrawingAnchorBehavior;
@@ -17,7 +19,6 @@ import dev.erst.gridgrind.core.vocabulary.ExcelPictureFormat;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingObjectPayload;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingObjectSnapshot;
 import dev.erst.gridgrind.excel.drawing.ExcelPicturePoiBridge;
-import dev.erst.gridgrind.excel.drawing.ExcelShapeDefinition;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
 
@@ -164,28 +165,27 @@ class ExcelDrawingValueCoverageTest extends ExcelDrawingCoverageTestSupport {
             new ResolvedPicture(
                 "Picture", data, ExcelPictureFormat.PNG, twoCell, Optional.of(" ")));
 
-    ExcelShapeDefinition defaultShape =
-        new ExcelShapeDefinition.SimpleShape("Shape", twoCell, " rect ", Optional.of("Queue"));
-    assertEquals("rect", ((ExcelShapeDefinition.SimpleShape) defaultShape).presetGeometryToken());
-    ExcelShapeDefinition connectorShape = new ExcelShapeDefinition.Connector("Connector", twoCell);
+    ResolvedShape defaultShape =
+        new ResolvedShape.SimpleShape("Shape", twoCell, " rect ", Optional.of("Queue"));
+    assertEquals("rect", ((ResolvedShape.SimpleShape) defaultShape).presetGeometryToken());
+    ResolvedShape connectorShape = new ShapeSpec.Connector("Connector", twoCell);
     assertEquals(ExcelAuthoredDrawingShapeKind.CONNECTOR, connectorShape.kind());
     assertThrows(
         NullPointerException.class,
-        () -> new ExcelShapeDefinition.SimpleShape(null, twoCell, "rect", Optional.empty()));
+        () -> new ResolvedShape.SimpleShape(null, twoCell, "rect", Optional.empty()));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new ExcelShapeDefinition.SimpleShape(" ", twoCell, "rect", Optional.empty()));
+        () -> new ResolvedShape.SimpleShape(" ", twoCell, "rect", Optional.empty()));
     assertThrows(
         NullPointerException.class,
-        () -> new ExcelShapeDefinition.SimpleShape("Shape", null, "rect", Optional.empty()));
-    assertThrows(
-        NullPointerException.class, () -> new ExcelShapeDefinition.Connector("Connector", null));
-    assertThrows(
-        IllegalArgumentException.class,
-        () -> new ExcelShapeDefinition.SimpleShape("Shape", twoCell, " ", Optional.empty()));
+        () -> new ResolvedShape.SimpleShape("Shape", null, "rect", Optional.empty()));
+    assertThrows(NullPointerException.class, () -> new ShapeSpec.Connector("Connector", null));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new ExcelShapeDefinition.SimpleShape("Shape", twoCell, "rect", Optional.of(" ")));
+        () -> new ResolvedShape.SimpleShape("Shape", twoCell, " ", Optional.empty()));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new ResolvedShape.SimpleShape("Shape", twoCell, "rect", Optional.of(" ")));
 
     ResolvedEmbeddedObject embeddedDefinition =
         new ResolvedEmbeddedObject(

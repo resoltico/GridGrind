@@ -4,8 +4,8 @@ import dev.erst.gridgrind.core.model.chart.ResolvedChart;
 import dev.erst.gridgrind.core.model.drawing.DrawingAnchorSpec;
 import dev.erst.gridgrind.core.model.drawing.ResolvedEmbeddedObject;
 import dev.erst.gridgrind.core.model.drawing.ResolvedPicture;
-import dev.erst.gridgrind.excel.drawing.ExcelShapeDefinition;
-import dev.erst.gridgrind.excel.drawing.ExcelSignatureLineDefinition;
+import dev.erst.gridgrind.core.model.drawing.ResolvedShape;
+import dev.erst.gridgrind.core.model.drawing.ResolvedSignatureLine;
 import java.util.Objects;
 
 /** Drawing-object commands for pictures, charts, shapes, and embedded payloads. */
@@ -30,7 +30,7 @@ public sealed interface WorkbookDrawingCommand extends WorkbookCommand
   }
 
   /** Creates or replaces one signature-line drawing object on a single sheet. */
-  record SetSignatureLine(String sheetName, ExcelSignatureLineDefinition signatureLine)
+  record SetSignatureLine(String sheetName, ResolvedSignatureLine signatureLine)
       implements WorkbookDrawingCommand {
     public SetSignatureLine {
       Objects.requireNonNull(sheetName, "sheetName must not be null");
@@ -53,7 +53,7 @@ public sealed interface WorkbookDrawingCommand extends WorkbookCommand
   }
 
   /** Creates or replaces one simple-shape or connector drawing object on a single sheet. */
-  record SetShape(String sheetName, ExcelShapeDefinition shape) implements WorkbookDrawingCommand {
+  record SetShape(String sheetName, ResolvedShape shape) implements WorkbookDrawingCommand {
     public SetShape {
       Objects.requireNonNull(sheetName, "sheetName must not be null");
       Objects.requireNonNull(shape, "shape must not be null");

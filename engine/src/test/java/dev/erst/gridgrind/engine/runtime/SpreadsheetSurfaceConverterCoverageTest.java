@@ -20,6 +20,7 @@ import dev.erst.gridgrind.core.model.customxml.CustomXmlMappingLocator;
 import dev.erst.gridgrind.core.model.drawing.DrawingAnchorSpec;
 import dev.erst.gridgrind.core.model.drawing.DrawingMarkerSpec;
 import dev.erst.gridgrind.core.model.drawing.PictureDataSpec;
+import dev.erst.gridgrind.core.model.drawing.ResolvedSignatureLine;
 import dev.erst.gridgrind.core.model.drawing.SignatureLineSpec;
 import dev.erst.gridgrind.core.plan.DrawingMutationAction;
 import dev.erst.gridgrind.core.plan.MutationStep;
@@ -55,7 +56,6 @@ import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlLinkedTableSnapshot;
 import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlMappingSettings;
 import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlMappingSnapshot;
 import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlSchemaSnapshot;
-import dev.erst.gridgrind.excel.drawing.ExcelSignatureLineDefinition;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -85,8 +85,8 @@ class SpreadsheetSurfaceConverterCoverageTest {
             WorkbookCommandConverter.toCommand(
                 new SheetSelector.ByName(new SheetName("Ops")),
                 new DrawingMutationAction.SetChart(chart)));
-    ExcelSignatureLineDefinition signatureLine =
-        WorkbookCommandDrawingInputConverter.toExcelSignatureLineDefinition(
+    ResolvedSignatureLine signatureLine =
+        WorkbookCommandDrawingInputConverter.toResolvedSignatureLine(
             new SignatureLineSpec(
                 "OpsSignature",
                 inputAnchor(),

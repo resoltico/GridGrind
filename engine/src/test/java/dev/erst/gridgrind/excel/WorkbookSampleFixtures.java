@@ -10,6 +10,8 @@ import dev.erst.gridgrind.core.model.drawing.DrawingMarkerSpec;
 import dev.erst.gridgrind.core.model.drawing.ResolvedComment;
 import dev.erst.gridgrind.core.model.drawing.ResolvedEmbeddedObject;
 import dev.erst.gridgrind.core.model.drawing.ResolvedPicture;
+import dev.erst.gridgrind.core.model.drawing.ResolvedShape;
+import dev.erst.gridgrind.core.model.drawing.ResolvedSignatureLine;
 import dev.erst.gridgrind.core.model.formula.ResolvedArrayFormula;
 import dev.erst.gridgrind.core.model.style.CellAlignmentPatch;
 import dev.erst.gridgrind.core.model.style.CellFontPatch;
@@ -33,8 +35,6 @@ import dev.erst.gridgrind.core.vocabulary.ExcelSheetVisibility;
 import dev.erst.gridgrind.core.vocabulary.ExcelVerticalAlignment;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlImportDefinition;
-import dev.erst.gridgrind.excel.drawing.ExcelShapeDefinition;
-import dev.erst.gridgrind.excel.drawing.ExcelSignatureLineDefinition;
 import dev.erst.gridgrind.excel.pivot.ExcelPivotTableDefinition;
 import dev.erst.gridgrind.excel.pivot.ExcelPivotTableSelection;
 import dev.erst.gridgrind.excel.validation.ExcelDataValidationDefinition;
@@ -176,16 +176,16 @@ final class WorkbookSampleFixtures {
                 Optional.of("Queue preview"))),
         new WorkbookDrawingCommand.SetSignatureLine(
             "Budget",
-            new ExcelSignatureLineDefinition(
+            new ResolvedSignatureLine(
                 "BudgetSignature",
                 firstAnchor,
                 false,
-                "Review the budget before signing.",
-                "Ada Lovelace",
-                "Finance",
-                "ada@example.com",
-                null,
-                "invalid",
+                Optional.ofNullable("Review the budget before signing."),
+                Optional.ofNullable("Ada Lovelace"),
+                Optional.ofNullable("Finance"),
+                Optional.ofNullable("ada@example.com"),
+                Optional.empty(),
+                Optional.ofNullable("invalid"),
                 Optional.of(ExcelPictureFormat.PNG),
                 Optional.of(new BinaryContent(PNG_PIXEL_BYTES)))),
         new WorkbookDrawingCommand.SetChart("Budget", chartDefinition(firstAnchor)),
@@ -206,7 +206,7 @@ final class WorkbookSampleFixtures {
                         Optional.of("#,##0.00"))))),
         new WorkbookDrawingCommand.SetShape(
             "Budget",
-            new ExcelShapeDefinition.SimpleShape(
+            new ResolvedShape.SimpleShape(
                 "BudgetShape", firstAnchor, "rect", Optional.of("Queue"))),
         new WorkbookDrawingCommand.SetEmbeddedObject(
             "Budget",

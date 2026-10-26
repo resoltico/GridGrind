@@ -12,6 +12,7 @@ import dev.erst.gridgrind.core.model.drawing.DrawingMarkerSpec;
 import dev.erst.gridgrind.core.model.drawing.ResolvedComment;
 import dev.erst.gridgrind.core.model.drawing.ResolvedEmbeddedObject;
 import dev.erst.gridgrind.core.model.drawing.ResolvedPicture;
+import dev.erst.gridgrind.core.model.drawing.ResolvedShape;
 import dev.erst.gridgrind.core.model.style.CellColorReport;
 import dev.erst.gridgrind.core.model.style.CellFillSpec;
 import dev.erst.gridgrind.core.model.style.CellFontPatch;
@@ -35,7 +36,6 @@ import dev.erst.gridgrind.core.vocabulary.ExcelPrintOrientation;
 import dev.erst.gridgrind.core.vocabulary.RgbHex;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingObjectPayload;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingObjectSnapshot;
-import dev.erst.gridgrind.excel.drawing.ExcelShapeDefinition;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -353,8 +353,8 @@ class ExcelAdvancedValueObjectTest {
     ResolvedPicture picture =
         new ResolvedPicture(
             "OpsPicture", binary, ExcelPictureFormat.PNG, twoCell, Optional.empty());
-    ExcelShapeDefinition shape =
-        new ExcelShapeDefinition.SimpleShape("OpsShape", twoCell, " rect ", Optional.of("Queue"));
+    ResolvedShape shape =
+        new ResolvedShape.SimpleShape("OpsShape", twoCell, " rect ", Optional.of("Queue"));
     ResolvedEmbeddedObject embeddedObject =
         new ResolvedEmbeddedObject(
             "OpsEmbed",
@@ -388,7 +388,7 @@ class ExcelAdvancedValueObjectTest {
     assertEquals(3, binary.size());
     assertEquals(ExcelDrawingAnchorBehavior.MOVE_DONT_RESIZE, twoCell.behavior());
     assertEquals(ExcelPictureFormat.PNG, picture.format());
-    assertEquals("rect", ((ExcelShapeDefinition.SimpleShape) shape).presetGeometryToken());
+    assertEquals("rect", ((ResolvedShape.SimpleShape) shape).presetGeometryToken());
     assertEquals("payload.txt", embeddedObject.fileName());
     assertEquals(2, groupSnapshot.childCount());
     assertEquals("Payload", payload.label());
@@ -415,7 +415,7 @@ class ExcelAdvancedValueObjectTest {
                 dev.erst.gridgrind.core.vocabulary.ExcelDrawingAnchorBehavior.MOVE_AND_RESIZE));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new ExcelShapeDefinition.SimpleShape("OpsShape", twoCell, " ", Optional.empty()));
+        () -> new ResolvedShape.SimpleShape("OpsShape", twoCell, " ", Optional.empty()));
     assertThrows(
         IllegalArgumentException.class,
         () ->

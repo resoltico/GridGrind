@@ -6,13 +6,13 @@ import dev.erst.gridgrind.core.model.drawing.DrawingAnchorSpec;
 import dev.erst.gridgrind.core.model.drawing.DrawingMarkerSpec;
 import dev.erst.gridgrind.core.model.drawing.ResolvedEmbeddedObject;
 import dev.erst.gridgrind.core.model.drawing.ResolvedPicture;
+import dev.erst.gridgrind.core.model.drawing.ResolvedSignatureLine;
 import dev.erst.gridgrind.core.source.BinaryContent;
 import dev.erst.gridgrind.core.vocabulary.ExcelDrawingAnchorBehavior;
 import dev.erst.gridgrind.core.vocabulary.ExcelPictureFormat;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingObjectPayload;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingObjectSnapshot;
 import dev.erst.gridgrind.excel.drawing.ExcelPicturePoiBridge;
-import dev.erst.gridgrind.excel.drawing.ExcelSignatureLineDefinition;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -270,18 +270,18 @@ class ExcelWorkbookImageCatalogSupportTest {
         Optional.of("preview"));
   }
 
-  private static ExcelSignatureLineDefinition signatureDefinition(
+  private static ResolvedSignatureLine signatureDefinition(
       String objectName, int fromColumn, int fromRow, int toColumn, int toRow) {
-    return new ExcelSignatureLineDefinition(
+    return new ResolvedSignatureLine(
         objectName,
         anchor(fromColumn, fromRow, toColumn, toRow),
         false,
-        "Review before signing.",
-        "Ada Lovelace",
-        "Finance",
-        "ada@example.com",
-        null,
-        "invalid",
+        Optional.ofNullable("Review before signing."),
+        Optional.ofNullable("Ada Lovelace"),
+        Optional.ofNullable("Finance"),
+        Optional.ofNullable("ada@example.com"),
+        Optional.empty(),
+        Optional.ofNullable("invalid"),
         Optional.of(ExcelPictureFormat.PNG),
         Optional.of(new BinaryContent(PNG_PIXEL_BYTES)));
   }

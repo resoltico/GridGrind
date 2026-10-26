@@ -9,12 +9,12 @@ import com.microsoft.schemas.office.excel.CTClientData;
 import com.microsoft.schemas.vml.CTShape;
 import dev.erst.gridgrind.core.model.drawing.DrawingAnchorSpec;
 import dev.erst.gridgrind.core.model.drawing.ResolvedComment;
+import dev.erst.gridgrind.core.model.drawing.ResolvedSignatureLine;
 import dev.erst.gridgrind.core.source.BinaryContent;
 import dev.erst.gridgrind.core.vocabulary.ExcelPictureFormat;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingBinarySupport;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingController;
 import dev.erst.gridgrind.excel.drawing.ExcelSignatureLineController;
-import dev.erst.gridgrind.excel.drawing.ExcelSignatureLineDefinition;
 import dev.erst.gridgrind.excel.drawing.ExcelSignatureLineSnapshot;
 import java.util.ArrayList;
 import java.util.Base64;
@@ -209,16 +209,16 @@ class ExcelSignatureLineControllerTest {
 
       controller.setSignatureLine(
           sheet,
-          new ExcelSignatureLineDefinition(
+          new ResolvedSignatureLine(
               "LeanSignature",
               ExcelChartTestSupport.anchor(1, 1, 4, 6),
               true,
-              "Follow the packet",
-              "Ada Lovelace",
-              null,
-              null,
-              null,
-              null,
+              Optional.ofNullable("Follow the packet"),
+              Optional.ofNullable("Ada Lovelace"),
+              Optional.empty(),
+              Optional.empty(),
+              Optional.empty(),
+              Optional.empty(),
               Optional.empty(),
               Optional.empty()));
 
@@ -237,18 +237,17 @@ class ExcelSignatureLineControllerTest {
     }
   }
 
-  private static ExcelSignatureLineDefinition definition(
-      String name, DrawingAnchorSpec.TwoCell anchor) {
-    return new ExcelSignatureLineDefinition(
+  private static ResolvedSignatureLine definition(String name, DrawingAnchorSpec.TwoCell anchor) {
+    return new ResolvedSignatureLine(
         name,
         anchor,
         false,
-        "Review before signing.",
-        "Ada Lovelace",
-        "Finance",
-        "ada@example.com",
-        null,
-        "invalid",
+        Optional.ofNullable("Review before signing."),
+        Optional.ofNullable("Ada Lovelace"),
+        Optional.ofNullable("Finance"),
+        Optional.ofNullable("ada@example.com"),
+        Optional.empty(),
+        Optional.ofNullable("invalid"),
         Optional.of(ExcelPictureFormat.PNG),
         Optional.of(new BinaryContent(PNG_PIXEL_BYTES)));
   }

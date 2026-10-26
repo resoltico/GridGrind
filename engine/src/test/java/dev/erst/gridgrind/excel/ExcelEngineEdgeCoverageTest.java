@@ -16,6 +16,7 @@ import dev.erst.gridgrind.core.model.chart.ResolvedChart;
 import dev.erst.gridgrind.core.model.chart.ResolvedChartTitle;
 import dev.erst.gridgrind.core.model.customxml.CustomXmlMappingLocator;
 import dev.erst.gridgrind.core.model.drawing.DrawingAnchorSpec;
+import dev.erst.gridgrind.core.model.drawing.ResolvedSignatureLine;
 import dev.erst.gridgrind.core.source.BinaryContent;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartAxisCrosses;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartAxisKind;
@@ -34,7 +35,6 @@ import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlSchemaSnapshot;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingController;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingObjectSnapshot;
 import dev.erst.gridgrind.excel.drawing.ExcelSignatureLineController;
-import dev.erst.gridgrind.excel.drawing.ExcelSignatureLineDefinition;
 import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
@@ -435,121 +435,121 @@ class ExcelEngineEdgeCoverageTest {
 
     assertDoesNotThrow(
         () ->
-            new ExcelSignatureLineDefinition(
+            new ResolvedSignatureLine(
                 "Signature",
                 anchor,
                 false,
-                "instructions",
-                "Ada",
-                "Finance",
-                "ada@example.com",
-                null,
-                "invalid",
+                Optional.ofNullable("instructions"),
+                Optional.ofNullable("Ada"),
+                Optional.ofNullable("Finance"),
+                Optional.ofNullable("ada@example.com"),
+                Optional.empty(),
+                Optional.ofNullable("invalid"),
                 Optional.of(ExcelPictureFormat.PNG),
                 Optional.of(new BinaryContent(new byte[] {1}))));
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new ExcelSignatureLineDefinition(
+            new ResolvedSignatureLine(
                 " ",
                 anchor,
                 false,
-                "instructions",
-                "Ada",
-                "Finance",
-                "ada@example.com",
-                null,
-                "invalid",
+                Optional.ofNullable("instructions"),
+                Optional.ofNullable("Ada"),
+                Optional.ofNullable("Finance"),
+                Optional.ofNullable("ada@example.com"),
+                Optional.empty(),
+                Optional.ofNullable("invalid"),
                 Optional.of(ExcelPictureFormat.PNG),
                 Optional.of(new BinaryContent(new byte[] {1}))));
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new ExcelSignatureLineDefinition(
+            new ResolvedSignatureLine(
                 "Signature",
                 anchor,
                 false,
-                " ",
-                "Ada",
-                "Finance",
-                "ada@example.com",
-                null,
-                "invalid",
+                Optional.ofNullable(" "),
+                Optional.ofNullable("Ada"),
+                Optional.ofNullable("Finance"),
+                Optional.ofNullable("ada@example.com"),
+                Optional.empty(),
+                Optional.ofNullable("invalid"),
                 Optional.of(ExcelPictureFormat.PNG),
                 Optional.of(new BinaryContent(new byte[] {1}))));
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new ExcelSignatureLineDefinition(
+            new ResolvedSignatureLine(
                 "Signature",
                 anchor,
                 false,
-                "instructions",
-                " ",
-                "Finance",
-                "ada@example.com",
-                null,
-                "invalid",
+                Optional.ofNullable("instructions"),
+                Optional.ofNullable(" "),
+                Optional.ofNullable("Finance"),
+                Optional.ofNullable("ada@example.com"),
+                Optional.empty(),
+                Optional.ofNullable("invalid"),
                 Optional.of(ExcelPictureFormat.PNG),
                 Optional.of(new BinaryContent(new byte[] {1}))));
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new ExcelSignatureLineDefinition(
+            new ResolvedSignatureLine(
                 "Signature",
                 anchor,
                 false,
-                "instructions",
-                "Ada",
-                "Finance",
-                "ada@example.com",
-                "line1\nline2\nline3\nline4",
-                "invalid",
+                Optional.ofNullable("instructions"),
+                Optional.ofNullable("Ada"),
+                Optional.ofNullable("Finance"),
+                Optional.ofNullable("ada@example.com"),
+                Optional.ofNullable("line1\nline2\nline3\nline4"),
+                Optional.ofNullable("invalid"),
                 Optional.of(ExcelPictureFormat.PNG),
                 Optional.of(new BinaryContent(new byte[] {1}))));
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new ExcelSignatureLineDefinition(
+            new ResolvedSignatureLine(
                 "Signature",
                 anchor,
                 false,
-                null,
-                null,
-                null,
-                null,
-                null,
-                "invalid",
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.ofNullable("invalid"),
                 Optional.empty(),
                 Optional.empty()));
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new ExcelSignatureLineDefinition(
+            new ResolvedSignatureLine(
                 "Signature",
                 anchor,
                 false,
-                null,
-                "Ada",
-                "Finance",
-                "ada@example.com",
-                null,
-                "invalid",
+                Optional.empty(),
+                Optional.ofNullable("Ada"),
+                Optional.ofNullable("Finance"),
+                Optional.ofNullable("ada@example.com"),
+                Optional.empty(),
+                Optional.ofNullable("invalid"),
                 Optional.of(ExcelPictureFormat.PNG),
                 Optional.empty()));
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new ExcelSignatureLineDefinition(
+            new ResolvedSignatureLine(
                 "Signature",
                 anchor,
                 false,
-                null,
-                "Ada",
-                "Finance",
-                "ada@example.com",
-                null,
-                "invalid",
+                Optional.empty(),
+                Optional.ofNullable("Ada"),
+                Optional.ofNullable("Finance"),
+                Optional.ofNullable("ada@example.com"),
+                Optional.empty(),
+                Optional.ofNullable("invalid"),
                 Optional.empty(),
                 Optional.of(new BinaryContent(new byte[] {1}))));
   }
@@ -883,16 +883,16 @@ class ExcelEngineEdgeCoverageTest {
         wrappedSheet
             .drawings()
             .setSignatureLine(
-                new ExcelSignatureLineDefinition(
+                new ResolvedSignatureLine(
                     "Dup",
                     ExcelChartTestSupport.anchor(5, 1, 8, 6),
                     false,
-                    "instructions",
-                    "Ada",
-                    "Finance",
-                    "ada@example.com",
-                    null,
-                    "invalid",
+                    Optional.ofNullable("instructions"),
+                    Optional.ofNullable("Ada"),
+                    Optional.ofNullable("Finance"),
+                    Optional.ofNullable("ada@example.com"),
+                    Optional.empty(),
+                    Optional.ofNullable("invalid"),
                     Optional.of(ExcelPictureFormat.PNG),
                     Optional.of(new BinaryContent(new byte[] {1}))));
         forceSignatureLineName(wrappedWorkbook.sheet("Ops").xssfSheet(), "Dup");

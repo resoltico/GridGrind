@@ -6,6 +6,7 @@ import com.microsoft.schemas.vml.CTShape;
 import dev.erst.gridgrind.core.model.drawing.DrawingAnchorReport;
 import dev.erst.gridgrind.core.model.drawing.DrawingAnchorSpec;
 import dev.erst.gridgrind.core.model.drawing.DrawingMarkerReport;
+import dev.erst.gridgrind.core.model.drawing.ResolvedSignatureLine;
 import dev.erst.gridgrind.core.vocabulary.ExcelDrawingAnchorBehavior;
 import dev.erst.gridgrind.core.vocabulary.ExcelPictureFormat;
 import java.util.ArrayList;
@@ -45,7 +46,7 @@ public final class ExcelSignatureLineController {
     return List.copyOf(snapshots);
   }
 
-  public void setSignatureLine(XSSFSheet sheet, ExcelSignatureLineDefinition definition) {
+  public void setSignatureLine(XSSFSheet sheet, ResolvedSignatureLine definition) {
     Objects.requireNonNull(sheet, "sheet must not be null");
     Objects.requireNonNull(definition, "definition must not be null");
 
@@ -169,8 +170,7 @@ public final class ExcelSignatureLineController {
                 matchedIndex));
   }
 
-  private static XSSFSignatureLine configuredSignatureLine(
-      ExcelSignatureLineDefinition definition) {
+  private static XSSFSignatureLine configuredSignatureLine(ResolvedSignatureLine definition) {
     XSSFSignatureLine signatureLine = new XSSFSignatureLine();
     applyOptionalMetadata(signatureLine, definition);
     applyPlainSignature(signatureLine, definition);
@@ -178,17 +178,17 @@ public final class ExcelSignatureLineController {
   }
 
   private static void applyOptionalMetadata(
-      XSSFSignatureLine signatureLine, ExcelSignatureLineDefinition definition) {
-    applyIfPresent(definition.signingInstructions(), signatureLine::setSigningInstructions);
-    applyIfPresent(definition.suggestedSigner(), signatureLine::setSuggestedSigner);
-    applyIfPresent(definition.suggestedSigner2(), signatureLine::setSuggestedSigner2);
-    applyIfPresent(definition.suggestedSignerEmail(), signatureLine::setSuggestedSignerEmail);
-    applyIfPresent(definition.caption(), signatureLine::setCaption);
-    applyIfPresent(definition.invalidStamp(), signatureLine::setInvalidStamp);
+      XSSFSignatureLine signatureLine, ResolvedSignatureLine definition) {
+    definition.signingInstructions().ifPresent(signatureLine::setSigningInstructions);
+    definition.suggestedSigner().ifPresent(signatureLine::setSuggestedSigner);
+    definition.suggestedSigner2().ifPresent(signatureLine::setSuggestedSigner2);
+    definition.suggestedSignerEmail().ifPresent(signatureLine::setSuggestedSignerEmail);
+    definition.caption().ifPresent(signatureLine::setCaption);
+    definition.invalidStamp().ifPresent(signatureLine::setInvalidStamp);
   }
 
   private static void applyPlainSignature(
-      XSSFSignatureLine signatureLine, ExcelSignatureLineDefinition definition) {
+      XSSFSignatureLine signatureLine, ResolvedSignatureLine definition) {
     if (definition.plainSignature().isEmpty()) {
       return;
     }
@@ -197,8 +197,7 @@ public final class ExcelSignatureLineController {
         definition.plainSignatureFormat().orElseThrow().defaultContentType());
   }
 
-  private static void applyNameAndCommentMetadata(
-      CTShape shape, ExcelSignatureLineDefinition definition) {
+  private static void applyNameAndCommentMetadata(CTShape shape, ResolvedSignatureLine definition) {
     shape.setAlt(definition.name());
     applyImageTitle(shape, definition.name());
     shape
@@ -211,13 +210,6 @@ public final class ExcelSignatureLineController {
       return;
     }
     shape.getImagedataArray(0).setTitle(name);
-  }
-
-  private static void applyIfPresent(
-      @Nullable String value, java.util.function.Consumer<String> consumer) {
-    if (value != null) {
-      consumer.accept(value);
-    }
   }
 
   public static boolean usesImagePart(

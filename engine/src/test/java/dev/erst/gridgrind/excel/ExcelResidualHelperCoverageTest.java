@@ -12,6 +12,8 @@ import dev.erst.gridgrind.core.model.chart.ResolvedChartTitle;
 import dev.erst.gridgrind.core.model.customxml.CustomXmlMappingLocator;
 import dev.erst.gridgrind.core.model.drawing.DrawingAnchorSpec;
 import dev.erst.gridgrind.core.model.drawing.ResolvedComment;
+import dev.erst.gridgrind.core.model.drawing.ResolvedShape;
+import dev.erst.gridgrind.core.model.drawing.ResolvedSignatureLine;
 import dev.erst.gridgrind.core.model.formula.ResolvedArrayFormula;
 import dev.erst.gridgrind.core.model.formula.ResolvedFormula;
 import dev.erst.gridgrind.core.model.style.ColorSpec;
@@ -37,9 +39,7 @@ import dev.erst.gridgrind.excel.drawing.ExcelDrawingController;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingObjectSnapshot;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingRemovalSupport;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingSnapshotSupport;
-import dev.erst.gridgrind.excel.drawing.ExcelShapeDefinition;
 import dev.erst.gridgrind.excel.drawing.ExcelSignatureLineController;
-import dev.erst.gridgrind.excel.drawing.ExcelSignatureLineDefinition;
 import dev.erst.gridgrind.excel.drawing.ExcelSignatureLineSnapshot;
 import java.nio.file.Path;
 import java.util.List;
@@ -511,7 +511,7 @@ class ExcelResidualHelperCoverageTest {
           workbook,
           new WorkbookDrawingCommand.SetShape(
               "Ops",
-              new ExcelShapeDefinition.SimpleShape(
+              new ResolvedShape.SimpleShape(
                   "Mover",
                   ExcelChartTestSupport.anchor(5, 8, 8, 12),
                   "rect",
@@ -796,18 +796,18 @@ class ExcelResidualHelperCoverageTest {
         chart.getCTChart().getTitle().getTx().getStrRef().getStrCache().getPtArray(0).getV());
   }
 
-  private static ExcelSignatureLineDefinition signatureDefinition(
+  private static ResolvedSignatureLine signatureDefinition(
       String name, DrawingAnchorSpec.TwoCell anchor) {
-    return new ExcelSignatureLineDefinition(
+    return new ResolvedSignatureLine(
         name,
         anchor,
         false,
-        "Review before signing.",
-        "Ada Lovelace",
-        "Finance",
-        "ada@example.com",
-        null,
-        "invalid",
+        Optional.ofNullable("Review before signing."),
+        Optional.ofNullable("Ada Lovelace"),
+        Optional.ofNullable("Finance"),
+        Optional.ofNullable("ada@example.com"),
+        Optional.empty(),
+        Optional.ofNullable("invalid"),
         Optional.of(ExcelPictureFormat.PNG),
         Optional.of(new BinaryContent(new byte[] {1})));
   }

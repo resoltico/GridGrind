@@ -4,6 +4,9 @@ import dev.erst.gridgrind.core.model.chart.ResolvedChart;
 import dev.erst.gridgrind.core.model.drawing.DrawingAnchorSpec;
 import dev.erst.gridgrind.core.model.drawing.ResolvedEmbeddedObject;
 import dev.erst.gridgrind.core.model.drawing.ResolvedPicture;
+import dev.erst.gridgrind.core.model.drawing.ResolvedShape;
+import dev.erst.gridgrind.core.model.drawing.ResolvedSignatureLine;
+import dev.erst.gridgrind.core.model.drawing.ShapeSpec;
 import dev.erst.gridgrind.excel.DrawingObjectNotFoundException;
 import dev.erst.gridgrind.excel.ExcelChartSnapshot;
 import dev.erst.gridgrind.excel.ExcelFormulaRuntime;
@@ -158,7 +161,7 @@ public final class ExcelDrawingController {
     }
   }
 
-  public void setSignatureLine(XSSFSheet sheet, ExcelSignatureLineDefinition definition) {
+  public void setSignatureLine(XSSFSheet sheet, ResolvedSignatureLine definition) {
     Objects.requireNonNull(sheet, "sheet must not be null");
     Objects.requireNonNull(definition, "definition must not be null");
 
@@ -166,7 +169,7 @@ public final class ExcelDrawingController {
     signatureLineController.setSignatureLine(sheet, definition);
   }
 
-  public void setShape(XSSFSheet sheet, ExcelShapeDefinition definition) {
+  public void setShape(XSSFSheet sheet, ResolvedShape definition) {
     Objects.requireNonNull(sheet, "sheet must not be null");
     Objects.requireNonNull(definition, "definition must not be null");
 
@@ -175,7 +178,7 @@ public final class ExcelDrawingController {
     org.apache.poi.xssf.usermodel.XSSFClientAnchor anchor =
         ExcelDrawingAnchorSupport.toPoiAnchor(drawing, definition.anchor());
     switch (definition) {
-      case ExcelShapeDefinition.SimpleShape simpleShape -> {
+      case ResolvedShape.SimpleShape simpleShape -> {
         int resolvedShapeType =
             ExcelDrawingAnchorSupport.shapeType(simpleShape.presetGeometryToken());
         org.apache.poi.xssf.usermodel.XSSFSimpleShape shape = drawing.createSimpleShape(anchor);
@@ -184,7 +187,7 @@ public final class ExcelDrawingController {
         simpleShape.text().ifPresent(shape::setText);
         return;
       }
-      case ExcelShapeDefinition.Connector connector -> {
+      case ShapeSpec.Connector connector -> {
         org.apache.poi.xssf.usermodel.XSSFConnector poiConnector = drawing.createConnector(anchor);
         poiConnector.getCTConnector().getNvCxnSpPr().getCNvPr().setName(connector.name());
         return;

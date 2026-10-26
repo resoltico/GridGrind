@@ -25,6 +25,8 @@ import dev.erst.gridgrind.core.model.drawing.PictureSpec;
 import dev.erst.gridgrind.core.model.drawing.ResolvedComment;
 import dev.erst.gridgrind.core.model.drawing.ResolvedEmbeddedObject;
 import dev.erst.gridgrind.core.model.drawing.ResolvedPicture;
+import dev.erst.gridgrind.core.model.drawing.ResolvedShape;
+import dev.erst.gridgrind.core.model.drawing.ResolvedSignatureLine;
 import dev.erst.gridgrind.core.model.drawing.ShapeSpec;
 import dev.erst.gridgrind.core.model.drawing.SignatureLineSpec;
 import dev.erst.gridgrind.core.model.formula.ArrayFormulaSpec;
@@ -81,8 +83,6 @@ import dev.erst.gridgrind.excel.ExcelNamedRangeScope;
 import dev.erst.gridgrind.excel.ExcelNamedRangeTarget;
 import dev.erst.gridgrind.excel.ExcelWorkbookProtectionSettings;
 import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlImportDefinition;
-import dev.erst.gridgrind.excel.drawing.ExcelShapeDefinition;
-import dev.erst.gridgrind.excel.drawing.ExcelSignatureLineDefinition;
 import dev.erst.gridgrind.excel.pivot.ExcelPivotTableDefinition;
 import java.util.List;
 import java.util.Optional;
@@ -276,24 +276,24 @@ class AdvancedMutationCommandConverterTest {
             Optional.of("Queue preview")),
         pictureCommand.picture());
     assertEquals(
-        new ExcelSignatureLineDefinition(
+        new ResolvedSignatureLine(
             "OpsSignature",
             new DrawingAnchorSpec.TwoCell(
                 new DrawingMarkerSpec(1, 2, 3, 4),
                 new DrawingMarkerSpec(4, 6, 7, 8),
                 ExcelDrawingAnchorBehavior.MOVE_DONT_RESIZE),
             false,
-            "Review before signing.",
-            "Ada Lovelace",
-            "Finance",
-            "ada@example.com",
-            null,
-            "invalid",
+            Optional.ofNullable("Review before signing."),
+            Optional.ofNullable("Ada Lovelace"),
+            Optional.ofNullable("Finance"),
+            Optional.ofNullable("ada@example.com"),
+            Optional.empty(),
+            Optional.ofNullable("invalid"),
             Optional.of(ExcelPictureFormat.PNG),
             Optional.of(new BinaryContent(java.util.Base64.getDecoder().decode(PNG_PIXEL_BASE64)))),
         signatureLineCommand.signatureLine());
     assertEquals(
-        new ExcelShapeDefinition.SimpleShape(
+        new ResolvedShape.SimpleShape(
             "OpsShape",
             new DrawingAnchorSpec.TwoCell(
                 new DrawingMarkerSpec(1, 2, 3, 4),

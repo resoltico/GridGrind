@@ -52,7 +52,7 @@ public record SignatureLineSpec(
     return value;
   }
 
-  private static Optional<String> normalizeOptional(Optional<String> value, String fieldName) {
+  static Optional<String> normalizeOptional(Optional<String> value, String fieldName) {
     Optional<String> normalized = Objects.requireNonNull(value, fieldName + " must not be null");
     if (normalized.isEmpty()) {
       return Optional.empty();

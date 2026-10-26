@@ -55,7 +55,7 @@ public sealed interface ShapeSpec
   @Variant(
       id = "CONNECTOR",
       summary = "Write one authored connector with no geometry token or text payload.")
-  record Connector(String name, DrawingAnchorSpec anchor) implements ShapeSpec {
+  record Connector(String name, DrawingAnchorSpec anchor) implements ShapeSpec, ResolvedShape {
     public Connector {
       name = requireNonBlank(name, "name");
       anchor = requireTwoCellAnchor(anchor);
@@ -67,7 +67,8 @@ public sealed interface ShapeSpec
     }
   }
 
-  private static String requirePresetGeometryToken(String presetGeometryToken) {
+  /** Normalizes a required geometry token for authored and materialized simple shapes. */
+  static String requirePresetGeometryToken(String presetGeometryToken) {
     Objects.requireNonNull(presetGeometryToken, "presetGeometryToken must not be null");
     String normalized = presetGeometryToken.trim();
     if (normalized.isBlank()) {
@@ -76,7 +77,8 @@ public sealed interface ShapeSpec
     return normalized;
   }
 
-  private static String requireNonBlank(String value, String fieldName) {
+  /** Validates required shape text shared by authored and materialized payloads. */
+  static String requireNonBlank(String value, String fieldName) {
     Objects.requireNonNull(value, fieldName + " must not be null");
     if (value.isBlank()) {
       throw new IllegalArgumentException(fieldName + " must not be blank");

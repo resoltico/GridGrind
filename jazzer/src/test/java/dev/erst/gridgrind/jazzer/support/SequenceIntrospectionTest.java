@@ -23,6 +23,8 @@ import dev.erst.gridgrind.core.model.drawing.PictureSpec;
 import dev.erst.gridgrind.core.model.drawing.ResolvedComment;
 import dev.erst.gridgrind.core.model.drawing.ResolvedEmbeddedObject;
 import dev.erst.gridgrind.core.model.drawing.ResolvedPicture;
+import dev.erst.gridgrind.core.model.drawing.ResolvedShape;
+import dev.erst.gridgrind.core.model.drawing.ResolvedSignatureLine;
 import dev.erst.gridgrind.core.model.drawing.ShapeSpec;
 import dev.erst.gridgrind.core.model.formula.NamedRangeTarget;
 import dev.erst.gridgrind.core.model.formula.ResolvedArrayFormula;
@@ -87,8 +89,6 @@ import dev.erst.gridgrind.excel.ExcelTableDefinition;
 import dev.erst.gridgrind.excel.ExcelTableStyle;
 import dev.erst.gridgrind.excel.ExcelWorkbookProtectionSettings;
 import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlImportDefinition;
-import dev.erst.gridgrind.excel.drawing.ExcelShapeDefinition;
-import dev.erst.gridgrind.excel.drawing.ExcelSignatureLineDefinition;
 import dev.erst.gridgrind.excel.pivot.ExcelPivotTableDefinition;
 import dev.erst.gridgrind.excel.validation.ExcelDataValidationDefinition;
 import dev.erst.gridgrind.excel.validation.ExcelDataValidationRule;
@@ -812,9 +812,8 @@ class SequenceIntrospectionTest {
         Optional.of("Queue preview"));
   }
 
-  private static ExcelShapeDefinition excelShapeDefinition() {
-    return new ExcelShapeDefinition.SimpleShape(
-        "OpsShape", excelAnchor(), "rect", Optional.of("Queue"));
+  private static ResolvedShape excelShapeDefinition() {
+    return new ResolvedShape.SimpleShape("OpsShape", excelAnchor(), "rect", Optional.of("Queue"));
   }
 
   private static ResolvedEmbeddedObject excelEmbeddedObjectDefinition() {
@@ -829,17 +828,17 @@ class SequenceIntrospectionTest {
         excelAnchor());
   }
 
-  private static ExcelSignatureLineDefinition excelSignatureLineDefinition() {
-    return new ExcelSignatureLineDefinition(
+  private static ResolvedSignatureLine excelSignatureLineDefinition() {
+    return new ResolvedSignatureLine(
         "OpsSignature",
         excelAnchor(),
         false,
-        "Review the budget before signing.",
-        "Ada Lovelace",
-        "Finance",
-        "ada@example.com",
-        null,
-        "invalid",
+        Optional.ofNullable("Review the budget before signing."),
+        Optional.ofNullable("Ada Lovelace"),
+        Optional.ofNullable("Finance"),
+        Optional.ofNullable("ada@example.com"),
+        Optional.empty(),
+        Optional.ofNullable("invalid"),
         Optional.of(ExcelPictureFormat.PNG),
         Optional.of(new BinaryContent(java.util.Base64.getDecoder().decode(PNG_PIXEL_BASE64))));
   }

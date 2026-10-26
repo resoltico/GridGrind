@@ -8,6 +8,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import dev.erst.gridgrind.core.model.drawing.DrawingAnchorSpec;
 import dev.erst.gridgrind.core.model.drawing.DrawingMarkerSpec;
+import dev.erst.gridgrind.core.model.drawing.ResolvedShape;
+import dev.erst.gridgrind.core.model.drawing.ShapeSpec;
 import dev.erst.gridgrind.core.model.style.CellColorReport;
 import dev.erst.gridgrind.core.model.style.ColorSpec;
 import dev.erst.gridgrind.core.vocabulary.AnalysisFindingCode;
@@ -22,7 +24,6 @@ import dev.erst.gridgrind.core.vocabulary.ExcelOoxmlWriteHash;
 import dev.erst.gridgrind.core.vocabulary.RgbHex;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingAnchorSupport;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingBinarySupport;
-import dev.erst.gridgrind.excel.drawing.ExcelShapeDefinition;
 import dev.erst.gridgrind.excel.ooxml.ExcelOoxmlEncryptionSnapshot;
 import dev.erst.gridgrind.excel.ooxml.ExcelOoxmlSecurityPoiBridge;
 import dev.erst.gridgrind.excel.pivot.ExcelPivotTableAnalysisSupport;
@@ -61,14 +62,12 @@ class ResidualUtilityCoverageTest extends ExcelPivotTableCoverageTestSupport {
             new DrawingMarkerSpec(0, 0, 0, 0),
             new DrawingMarkerSpec(2, 2, 0, 0),
             dev.erst.gridgrind.core.vocabulary.ExcelDrawingAnchorBehavior.MOVE_AND_RESIZE);
-    ExcelShapeDefinition.SimpleShape simpleShape =
-        new ExcelShapeDefinition.SimpleShape("Queue Banner", anchor, "rect", Optional.of("Ready"));
+    ResolvedShape.SimpleShape simpleShape =
+        new ResolvedShape.SimpleShape("Queue Banner", anchor, "rect", Optional.of("Ready"));
     assertEquals(ExcelAuthoredDrawingShapeKind.SIMPLE_SHAPE, simpleShape.kind());
     assertEquals(
         "name must not be blank",
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> new ExcelShapeDefinition.Connector(" ", anchor))
+        assertThrows(IllegalArgumentException.class, () -> new ShapeSpec.Connector(" ", anchor))
             .getMessage());
     assertEquals(
         "rank must be greater than 0",

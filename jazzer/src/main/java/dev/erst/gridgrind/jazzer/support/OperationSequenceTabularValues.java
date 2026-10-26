@@ -16,6 +16,7 @@ import dev.erst.gridgrind.excel.pivot.ExcelPivotTableDefinition;
 import java.io.*;
 import java.nio.file.*;
 import java.util.*;
+import java.util.Optional;
 
 /** Generates table, named-range, and pivot values for operation-sequence fuzzing. */
 final class OperationSequenceTabularValues {

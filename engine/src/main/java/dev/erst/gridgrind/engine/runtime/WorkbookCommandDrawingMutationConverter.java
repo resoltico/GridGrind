@@ -19,7 +19,7 @@ final class WorkbookCommandDrawingMutationConverter {
       case DrawingMutationAction.SetSignatureLine setSignatureLine ->
           new WorkbookDrawingCommand.SetSignatureLine(
               WorkbookCommandSelectorSupport.sheetByName(target, action).name().value(),
-              WorkbookCommandDrawingInputConverter.toExcelSignatureLineDefinition(
+              WorkbookCommandDrawingInputConverter.toResolvedSignatureLine(
                   setSignatureLine.signatureLine()));
       case DrawingMutationAction.SetChart setChart ->
           new WorkbookDrawingCommand.SetChart(
@@ -28,7 +28,7 @@ final class WorkbookCommandDrawingMutationConverter {
       case DrawingMutationAction.SetShape setShape ->
           new WorkbookDrawingCommand.SetShape(
               WorkbookCommandSelectorSupport.sheetByName(target, action).name().value(),
-              WorkbookCommandDrawingInputConverter.toExcelShapeDefinition(setShape.shape()));
+              WorkbookCommandDrawingInputConverter.toResolvedShape(setShape.shape()));
       case DrawingMutationAction.SetEmbeddedObject setEmbeddedObject ->
           new WorkbookDrawingCommand.SetEmbeddedObject(
               WorkbookCommandSelectorSupport.sheetByName(target, action).name().value(),

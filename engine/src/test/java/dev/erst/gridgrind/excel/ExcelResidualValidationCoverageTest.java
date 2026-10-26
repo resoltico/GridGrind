@@ -10,6 +10,7 @@ import dev.erst.gridgrind.core.model.chart.ChartTitleSpec;
 import dev.erst.gridgrind.core.model.chart.ResolvedChart;
 import dev.erst.gridgrind.core.model.customxml.CustomXmlMappingLocator;
 import dev.erst.gridgrind.core.model.drawing.DrawingAnchorSpec;
+import dev.erst.gridgrind.core.model.drawing.ResolvedSignatureLine;
 import dev.erst.gridgrind.core.model.formula.ResolvedArrayFormula;
 import dev.erst.gridgrind.core.source.BinaryContent;
 import dev.erst.gridgrind.core.vocabulary.ExcelPictureFormat;
@@ -20,7 +21,6 @@ import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlLinkedTableSnapshot;
 import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlMappingSettings;
 import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlMappingSnapshot;
 import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlSchemaSnapshot;
-import dev.erst.gridgrind.excel.drawing.ExcelSignatureLineDefinition;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
@@ -183,199 +183,199 @@ class ExcelResidualValidationCoverageTest {
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new ExcelSignatureLineDefinition(
+            new ResolvedSignatureLine(
                 "OpsSignature",
                 anchor,
                 false,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
                 Optional.empty(),
                 Optional.empty()));
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new ExcelSignatureLineDefinition(
+            new ResolvedSignatureLine(
                 "OpsSignature",
                 anchor,
                 false,
-                "instructions",
-                null,
-                null,
-                null,
-                "one\ntwo\nthree\nfour",
-                null,
+                Optional.ofNullable("instructions"),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.ofNullable("one\ntwo\nthree\nfour"),
+                Optional.empty(),
                 Optional.empty(),
                 Optional.empty()));
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new ExcelSignatureLineDefinition(
+            new ResolvedSignatureLine(
                 "OpsSignature",
                 anchor,
                 false,
-                " ",
-                "Ada",
-                null,
-                null,
-                null,
-                null,
+                Optional.ofNullable(" "),
+                Optional.ofNullable("Ada"),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
                 Optional.empty(),
                 Optional.empty()));
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new ExcelSignatureLineDefinition(
+            new ResolvedSignatureLine(
                 "OpsSignature",
                 anchor,
                 false,
-                "instructions",
-                " ",
-                null,
-                null,
-                null,
-                null,
+                Optional.ofNullable("instructions"),
+                Optional.ofNullable(" "),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
                 Optional.empty(),
                 Optional.empty()));
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new ExcelSignatureLineDefinition(
+            new ResolvedSignatureLine(
                 "OpsSignature",
                 anchor,
                 false,
-                "instructions",
-                "Ada",
-                " ",
-                null,
-                null,
-                null,
+                Optional.ofNullable("instructions"),
+                Optional.ofNullable("Ada"),
+                Optional.ofNullable(" "),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
                 Optional.empty(),
                 Optional.empty()));
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new ExcelSignatureLineDefinition(
+            new ResolvedSignatureLine(
                 "OpsSignature",
                 anchor,
                 false,
-                "instructions",
-                "Ada",
-                null,
-                " ",
-                null,
-                null,
+                Optional.ofNullable("instructions"),
+                Optional.ofNullable("Ada"),
+                Optional.empty(),
+                Optional.ofNullable(" "),
+                Optional.empty(),
+                Optional.empty(),
                 Optional.empty(),
                 Optional.empty()));
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new ExcelSignatureLineDefinition(
+            new ResolvedSignatureLine(
                 "OpsSignature",
                 anchor,
                 false,
-                "instructions",
-                "Ada",
-                null,
-                null,
-                " ",
-                null,
+                Optional.ofNullable("instructions"),
+                Optional.ofNullable("Ada"),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.ofNullable(" "),
+                Optional.empty(),
                 Optional.empty(),
                 Optional.empty()));
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new ExcelSignatureLineDefinition(
+            new ResolvedSignatureLine(
                 "OpsSignature",
                 anchor,
                 false,
-                "instructions",
-                "Ada",
-                null,
-                null,
-                null,
-                " ",
+                Optional.ofNullable("instructions"),
+                Optional.ofNullable("Ada"),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.ofNullable(" "),
                 Optional.empty(),
                 Optional.empty()));
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new ExcelSignatureLineDefinition(
+            new ResolvedSignatureLine(
                 "OpsSignature",
                 anchor,
                 false,
-                "instructions",
-                "Ada",
-                null,
-                null,
-                null,
-                null,
+                Optional.ofNullable("instructions"),
+                Optional.ofNullable("Ada"),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
                 Optional.of(ExcelPictureFormat.PNG),
                 Optional.empty()));
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new ExcelSignatureLineDefinition(
+            new ResolvedSignatureLine(
                 "OpsSignature",
                 anchor,
                 false,
-                "instructions",
-                "Ada",
-                null,
-                null,
-                null,
-                null,
+                Optional.ofNullable("instructions"),
+                Optional.ofNullable("Ada"),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
                 Optional.empty(),
                 Optional.of(new BinaryContent(new byte[] {1}))));
-    new ExcelSignatureLineDefinition(
+    new ResolvedSignatureLine(
         "OpsSignature",
         anchor,
         false,
-        "instructions",
-        null,
-        null,
-        null,
-        "caption",
-        null,
+        Optional.ofNullable("instructions"),
+        Optional.empty(),
+        Optional.empty(),
+        Optional.empty(),
+        Optional.ofNullable("caption"),
+        Optional.empty(),
         Optional.empty(),
         Optional.empty());
-    new ExcelSignatureLineDefinition(
+    new ResolvedSignatureLine(
         "OpsSignature",
         anchor,
         false,
-        "instructions",
-        null,
-        null,
-        "ada@example.com",
-        null,
-        null,
+        Optional.ofNullable("instructions"),
+        Optional.empty(),
+        Optional.empty(),
+        Optional.ofNullable("ada@example.com"),
+        Optional.empty(),
+        Optional.empty(),
         Optional.empty(),
         Optional.empty());
-    new ExcelSignatureLineDefinition(
+    new ResolvedSignatureLine(
         "OpsSignature",
         anchor,
         false,
-        "instructions",
-        null,
-        "Finance",
-        null,
-        null,
-        null,
+        Optional.ofNullable("instructions"),
+        Optional.empty(),
+        Optional.ofNullable("Finance"),
+        Optional.empty(),
+        Optional.empty(),
+        Optional.empty(),
         Optional.empty(),
         Optional.empty());
-    new ExcelSignatureLineDefinition(
+    new ResolvedSignatureLine(
         "OpsSignature",
         anchor,
         false,
-        "instructions",
-        null,
-        null,
-        "ada@example.com",
-        "one\ntwo\nthree",
-        null,
+        Optional.ofNullable("instructions"),
+        Optional.empty(),
+        Optional.empty(),
+        Optional.ofNullable("ada@example.com"),
+        Optional.ofNullable("one\ntwo\nthree"),
+        Optional.empty(),
         Optional.empty(),
         Optional.empty());
 
@@ -736,18 +736,17 @@ class ExcelResidualValidationCoverageTest {
                 -1));
   }
 
-  private static ExcelSignatureLineDefinition signatureDefinition(
-      DrawingAnchorSpec.TwoCell anchor) {
-    return new ExcelSignatureLineDefinition(
+  private static ResolvedSignatureLine signatureDefinition(DrawingAnchorSpec.TwoCell anchor) {
+    return new ResolvedSignatureLine(
         "OpsSignature",
         anchor,
         false,
-        "Review before signing.",
-        "Ada Lovelace",
-        "Finance",
-        "ada@example.com",
-        null,
-        "invalid",
+        Optional.ofNullable("Review before signing."),
+        Optional.ofNullable("Ada Lovelace"),
+        Optional.ofNullable("Finance"),
+        Optional.ofNullable("ada@example.com"),
+        Optional.empty(),
+        Optional.ofNullable("invalid"),
         Optional.of(ExcelPictureFormat.PNG),
         Optional.of(new BinaryContent(new byte[] {1})));
   }

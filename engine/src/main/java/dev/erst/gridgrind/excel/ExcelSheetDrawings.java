@@ -4,10 +4,10 @@ import dev.erst.gridgrind.core.model.chart.ResolvedChart;
 import dev.erst.gridgrind.core.model.drawing.DrawingAnchorSpec;
 import dev.erst.gridgrind.core.model.drawing.ResolvedEmbeddedObject;
 import dev.erst.gridgrind.core.model.drawing.ResolvedPicture;
+import dev.erst.gridgrind.core.model.drawing.ResolvedShape;
+import dev.erst.gridgrind.core.model.drawing.ResolvedSignatureLine;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingObjectPayload;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingObjectSnapshot;
-import dev.erst.gridgrind.excel.drawing.ExcelShapeDefinition;
-import dev.erst.gridgrind.excel.drawing.ExcelSignatureLineDefinition;
 import java.util.List;
 import java.util.Objects;
 
@@ -28,7 +28,7 @@ public final class ExcelSheetDrawings {
   }
 
   /** Creates or replaces one signature-line drawing object on this sheet. */
-  public ExcelSheetDrawings setSignatureLine(ExcelSignatureLineDefinition definition) {
+  public ExcelSheetDrawings setSignatureLine(ResolvedSignatureLine definition) {
     drawingSupport.setSignatureLine(definition, sheet);
     return this;
   }
@@ -40,7 +40,7 @@ public final class ExcelSheetDrawings {
   }
 
   /** Creates or replaces one simple-shape or connector drawing object on this sheet. */
-  public ExcelSheetDrawings setShape(ExcelShapeDefinition definition) {
+  public ExcelSheetDrawings setShape(ResolvedShape definition) {
     drawingSupport.setShape(definition, sheet);
     return this;
   }

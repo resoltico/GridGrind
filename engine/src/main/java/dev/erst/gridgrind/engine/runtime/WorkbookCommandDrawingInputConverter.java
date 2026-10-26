@@ -13,12 +13,12 @@ import dev.erst.gridgrind.core.model.drawing.PictureDataSpec;
 import dev.erst.gridgrind.core.model.drawing.PictureSpec;
 import dev.erst.gridgrind.core.model.drawing.ResolvedEmbeddedObject;
 import dev.erst.gridgrind.core.model.drawing.ResolvedPicture;
+import dev.erst.gridgrind.core.model.drawing.ResolvedShape;
+import dev.erst.gridgrind.core.model.drawing.ResolvedSignatureLine;
 import dev.erst.gridgrind.core.model.drawing.ShapeSpec;
 import dev.erst.gridgrind.core.model.drawing.SignatureLineSpec;
 import dev.erst.gridgrind.core.source.BinaryContent;
 import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlImportDefinition;
-import dev.erst.gridgrind.excel.drawing.ExcelShapeDefinition;
-import dev.erst.gridgrind.excel.drawing.ExcelSignatureLineDefinition;
 
 /** Converts drawing-oriented structured contract inputs. */
 final class WorkbookCommandDrawingInputConverter {
@@ -57,18 +57,17 @@ final class WorkbookCommandDrawingInputConverter {
             .toList());
   }
 
-  static ExcelSignatureLineDefinition toExcelSignatureLineDefinition(
-      SignatureLineSpec signatureLine) {
-    return new ExcelSignatureLineDefinition(
+  static ResolvedSignatureLine toResolvedSignatureLine(SignatureLineSpec signatureLine) {
+    return new ResolvedSignatureLine(
         signatureLine.name(),
         twoCellAnchor(signatureLine.anchor()),
         signatureLine.allowComments(),
-        signatureLine.signingInstructions().orElse(null),
-        signatureLine.suggestedSigner().orElse(null),
-        signatureLine.suggestedSigner2().orElse(null),
-        signatureLine.suggestedSignerEmail().orElse(null),
-        signatureLine.caption().orElse(null),
-        signatureLine.invalidStamp().orElse(null),
+        signatureLine.signingInstructions(),
+        signatureLine.suggestedSigner(),
+        signatureLine.suggestedSigner2(),
+        signatureLine.suggestedSignerEmail(),
+        signatureLine.caption(),
+        signatureLine.invalidStamp(),
         signatureLine.plainSignature().map(PictureDataSpec::format),
         signatureLine
             .plainSignature()
@@ -79,18 +78,17 @@ final class WorkbookCommandDrawingInputConverter {
                             plainSignature.source(), "signature-line plain signature"))));
   }
 
-  static ExcelShapeDefinition toExcelShapeDefinition(ShapeSpec shape) {
+  static ResolvedShape toResolvedShape(ShapeSpec shape) {
     return switch (shape) {
       case ShapeSpec.SimpleShape simpleShape ->
-          new ExcelShapeDefinition.SimpleShape(
+          new ResolvedShape.SimpleShape(
               simpleShape.name(),
               twoCellAnchor(simpleShape.anchor()),
               simpleShape.presetGeometryToken(),
               simpleShape
                   .text()
                   .map(text -> WorkbookCommandSourceSupport.inlineText(text, "shape text")));
-      case ShapeSpec.Connector connector ->
-          new ExcelShapeDefinition.Connector(connector.name(), twoCellAnchor(connector.anchor()));
+      case ShapeSpec.Connector connector -> connector;
     };
   }
 

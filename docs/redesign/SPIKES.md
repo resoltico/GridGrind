@@ -1859,3 +1859,25 @@ Inventories: definitions 11→9, converter lines 4204→4203; main Java remains 
 are necessary materialized contracts moved to their core owner. Snapshots 38, Support 206 and blank
 checks 432 remain open. Baseline diff empty. Signature and shape materialization still need their
 source-free/optional-field cleanup before the remaining resolved-plan/step/target cutover.
+
+## WP-40 resolved signatures and shapes
+
+Deleted engine signature-line and shape definitions. Core ResolvedSignatureLine carries materialized
+preview bytes with Optional<String> metadata; nullable absence is gone from the resolved model.
+POI setters use ifPresent, and the old nullable helper is deleted. Shared optional-text normalization
+uses the existing signature spec rule. Core ResolvedShape adds only the simple-shape payload whose
+text sources have materialized; the existing source-free ShapeSpec.Connector record implements
+both contracts and passes through by identity. Geometry remains canonical core data.
+
+Shape name/geometry token rules are shared rather than copied. The interface static methods needed
+documentation (PMD caught this in the first focused gate); added explicit responsibility comments.
+All source sets compiled first pass (36s, then 32s for the combined shape change). Focused
+core/JSON/engine/14 parity/static checks passed (56s), nested deterministic check and all retained
+seed replay passed (27s), and ./gradlew check passed (3m): core 347, JSON 348, engine 1483
+plus 14 parity, CLI 588, architecture 14 plus 12 rule tests, zero failures/errors/skips. All 143
+golden cases are unchanged. No mutation or active fuzz campaign ran.
+
+Inventories: definitions 9→7, converter lines 4203→4201, blank checks 432→428, main Java
+121635→121602. Snapshots 38 and Support 206 remain open. Baseline diff empty. Next review
+confirmed table columns/styles are source-free and should be reused directly; only table comment
+text makes the table payload source-bearing. Do not create resolved column/style mirrors.

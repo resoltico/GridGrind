@@ -25,6 +25,7 @@ import dev.erst.gridgrind.excel.validation.ExcelDataValidationRule;
 import java.io.*;
 import java.nio.file.*;
 import java.util.*;
+import java.util.Optional;
 import java.util.stream.Stream;
 
 /** Generates rule-oriented authored and engine values for operation-sequence fuzzing. */

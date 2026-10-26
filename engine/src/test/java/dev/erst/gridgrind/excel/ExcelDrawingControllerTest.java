@@ -13,6 +13,9 @@ import dev.erst.gridgrind.core.model.drawing.DrawingMarkerSpec;
 import dev.erst.gridgrind.core.model.drawing.ResolvedComment;
 import dev.erst.gridgrind.core.model.drawing.ResolvedEmbeddedObject;
 import dev.erst.gridgrind.core.model.drawing.ResolvedPicture;
+import dev.erst.gridgrind.core.model.drawing.ResolvedShape;
+import dev.erst.gridgrind.core.model.drawing.ResolvedSignatureLine;
+import dev.erst.gridgrind.core.model.drawing.ShapeSpec;
 import dev.erst.gridgrind.core.model.value.CellValue;
 import dev.erst.gridgrind.core.source.BinaryContent;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartAxisCrosses;
@@ -30,8 +33,6 @@ import dev.erst.gridgrind.core.vocabulary.ExcelPictureFormat;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingBinarySupport;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingObjectPayload;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingObjectSnapshot;
-import dev.erst.gridgrind.excel.drawing.ExcelShapeDefinition;
-import dev.erst.gridgrind.excel.drawing.ExcelSignatureLineDefinition;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -88,9 +89,9 @@ class ExcelDrawingControllerTest {
                   anchor(1, 1, 4, 6),
                   Optional.of("Queue preview")))
           .setShape(
-              new ExcelShapeDefinition.SimpleShape(
+              new ResolvedShape.SimpleShape(
                   "OpsShape", anchor(5, 1, 8, 5), "rect", Optional.of("Queue")))
-          .setShape(new ExcelShapeDefinition.Connector("OpsConnector", anchor(9, 1, 11, 4)))
+          .setShape(new ShapeSpec.Connector("OpsConnector", anchor(9, 1, 11, 4)))
           .setEmbeddedObject(
               new ResolvedEmbeddedObject(
                   "OpsEmbed",
@@ -183,16 +184,16 @@ class ExcelDrawingControllerTest {
       sheet
           .drawings()
           .setSignatureLine(
-              new ExcelSignatureLineDefinition(
+              new ResolvedSignatureLine(
                   "OpsSignature",
                   anchor(1, 1, 4, 6),
                   false,
-                  "Review the numbers before signing.",
-                  "Ada Lovelace",
-                  "Finance",
-                  "ada@example.com",
-                  null,
-                  "invalid",
+                  Optional.ofNullable("Review the numbers before signing."),
+                  Optional.ofNullable("Ada Lovelace"),
+                  Optional.ofNullable("Finance"),
+                  Optional.ofNullable("ada@example.com"),
+                  Optional.empty(),
+                  Optional.ofNullable("invalid"),
                   Optional.of(ExcelPictureFormat.PNG),
                   Optional.of(new BinaryContent(PNG_PIXEL_BYTES))));
 
@@ -1066,7 +1067,7 @@ class ExcelDrawingControllerTest {
                   sheet
                       .drawings()
                       .setShape(
-                          new ExcelShapeDefinition.SimpleShape(
+                          new ResolvedShape.SimpleShape(
                               "OpsBrokenShape",
                               anchor(1, 1, 3, 3),
                               "invalid-shape",

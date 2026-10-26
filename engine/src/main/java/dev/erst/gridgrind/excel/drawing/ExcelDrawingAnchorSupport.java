@@ -21,18 +21,22 @@ public final class ExcelDrawingAnchorSupport {
   private ExcelDrawingAnchorSupport() {}
 
   public static org.apache.poi.xssf.usermodel.XSSFClientAnchor toPoiAnchor(
-      XSSFDrawing drawing, DrawingAnchorSpec.TwoCell anchor) {
+      XSSFDrawing drawing, DrawingAnchorSpec anchor) {
+    DrawingAnchorSpec.TwoCell twoCell =
+        switch (anchor) {
+          case DrawingAnchorSpec.TwoCell value -> value;
+        };
     org.apache.poi.xssf.usermodel.XSSFClientAnchor poiAnchor =
         drawing.createAnchor(
-            anchor.from().dx(),
-            anchor.from().dy(),
-            anchor.to().dx(),
-            anchor.to().dy(),
-            anchor.from().columnIndex(),
-            anchor.from().rowIndex(),
-            anchor.to().columnIndex(),
-            anchor.to().rowIndex());
-    poiAnchor.setAnchorType(toPoiBehavior(anchor.behavior()));
+            twoCell.from().dx(),
+            twoCell.from().dy(),
+            twoCell.to().dx(),
+            twoCell.to().dy(),
+            twoCell.from().columnIndex(),
+            twoCell.from().rowIndex(),
+            twoCell.to().columnIndex(),
+            twoCell.to().rowIndex());
+    poiAnchor.setAnchorType(toPoiBehavior(twoCell.behavior()));
     return poiAnchor;
   }
 
