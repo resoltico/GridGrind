@@ -2,6 +2,7 @@ package dev.erst.gridgrind.excel;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.core.model.layout.ColumnLayoutReport;
 import dev.erst.gridgrind.core.vocabulary.ExcelColumnSpan;
 import dev.erst.gridgrind.core.vocabulary.ExcelRowSpan;
 import java.util.List;
@@ -513,7 +514,7 @@ class ExcelColumnStructureEditCoverageTest extends ExcelRowColumnStructureTestSu
 
       columnController.insertColumns(sheet, 1, 1);
 
-      List<WorkbookSheetResult.ColumnLayout> columns = columnController.columnLayouts(sheet);
+      List<ColumnLayoutReport> columns = columnController.columnLayouts(sheet);
       assertEquals(4, columns.size());
       assertEquals(8.0d, columns.get(0).widthCharacters());
       assertEquals(16.0d, columns.get(3).widthCharacters());
@@ -533,8 +534,7 @@ class ExcelColumnStructureEditCoverageTest extends ExcelRowColumnStructureTestSu
 
       columnController.deleteColumns(metadataSheet, new ExcelColumnSpan(1, 1));
 
-      List<WorkbookSheetResult.ColumnLayout> columns =
-          columnController.columnLayouts(metadataSheet);
+      List<ColumnLayoutReport> columns = columnController.columnLayouts(metadataSheet);
       assertEquals(3, columns.size());
       assertEquals(8.0d, columns.get(0).widthCharacters());
       assertEquals(16.0d, columns.get(2).widthCharacters());
@@ -570,7 +570,7 @@ class ExcelColumnStructureEditCoverageTest extends ExcelRowColumnStructureTestSu
 
       columnController.shiftColumns(sheet, new ExcelColumnSpan(2, 3), 2);
 
-      List<WorkbookSheetResult.ColumnLayout> columns = columnController.columnLayouts(sheet);
+      List<ColumnLayoutReport> columns = columnController.columnLayouts(sheet);
       assertEquals(7, columns.size());
       assertEquals(8.0d, columns.get(0).widthCharacters());
       assertEquals(12.0d, columns.get(4).widthCharacters());
@@ -591,7 +591,7 @@ class ExcelColumnStructureEditCoverageTest extends ExcelRowColumnStructureTestSu
 
       columnController.deleteColumns(sheet, new ExcelColumnSpan(1, 1));
 
-      List<WorkbookSheetResult.ColumnLayout> columns = columnController.columnLayouts(sheet);
+      List<ColumnLayoutReport> columns = columnController.columnLayouts(sheet);
       assertEquals(2, columns.size());
       assertEquals(8.0d, columns.get(1).widthCharacters());
     }
@@ -609,7 +609,7 @@ class ExcelColumnStructureEditCoverageTest extends ExcelRowColumnStructureTestSu
       columnController.insertColumns(sheet, 0, 1);
 
       assertCanonicalColumnDefinitions(sheet);
-      List<WorkbookSheetResult.ColumnLayout> columns = columnController.columnLayouts(sheet);
+      List<ColumnLayoutReport> columns = columnController.columnLayouts(sheet);
       assertEquals(3, columns.size(), "columns=" + columns);
       assertTrue(columns.get(0).hidden(), "columns=" + columns);
       assertTrue(columns.get(1).hidden(), "columns=" + columns);
@@ -647,7 +647,7 @@ class ExcelColumnStructureEditCoverageTest extends ExcelRowColumnStructureTestSu
       columnController.insertColumns(sheet, 0, 1);
 
       assertCanonicalColumnDefinitions(sheet);
-      List<WorkbookSheetResult.ColumnLayout> columns = columnController.columnLayouts(sheet);
+      List<ColumnLayoutReport> columns = columnController.columnLayouts(sheet);
       assertEquals(4, columns.size(), "columns=" + columns);
       assertEquals(1, columns.get(1).outlineLevel(), "columns=" + columns);
       assertEquals(2, columns.get(2).outlineLevel(), "columns=" + columns);
@@ -671,7 +671,7 @@ class ExcelColumnStructureEditCoverageTest extends ExcelRowColumnStructureTestSu
       columnController.insertColumns(sheet, 0, 1);
 
       assertCanonicalColumnDefinitions(sheet);
-      List<WorkbookSheetResult.ColumnLayout> columns = columnController.columnLayouts(sheet);
+      List<ColumnLayoutReport> columns = columnController.columnLayouts(sheet);
       assertEquals(2, columns.size(), "columns=" + columns);
       assertEquals(2, columns.get(1).outlineLevel(), "columns=" + columns);
       assertTrue(columns.get(1).hidden(), "columns=" + columns);

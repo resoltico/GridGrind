@@ -1,6 +1,8 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.core.model.drawing.CellCommentReport;
 import dev.erst.gridgrind.core.model.drawing.ResolvedComment;
+import dev.erst.gridgrind.core.model.value.CellHyperlinkReport;
 import dev.erst.gridgrind.core.model.value.HyperlinkTarget;
 import java.util.List;
 import java.util.Objects;
@@ -40,12 +42,12 @@ public final class ExcelSheetAnnotations {
   }
 
   /** Returns hyperlink metadata for the selected cells on this sheet. */
-  public List<WorkbookSheetResult.CellHyperlink> hyperlinks(ExcelCellSelection selection) {
+  public List<CellHyperlinkReport> hyperlinks(ExcelCellSelection selection) {
     return annotationSupport.hyperlinks(selection);
   }
 
   /** Returns comment metadata for the selected cells on this sheet. */
-  public List<WorkbookSheetResult.CellComment> comments(ExcelCellSelection selection) {
+  public List<CellCommentReport> comments(ExcelCellSelection selection) {
     return annotationSupport.comments(selection);
   }
 }

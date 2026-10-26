@@ -31,20 +31,20 @@ final class ExcelSheetViewSupport {
   }
 
   /** Returns the current pane state captured on the provided sheet. */
-  static PaneSpec pane(XSSFSheet sheet) {
+  static dev.erst.gridgrind.core.model.layout.PaneReport pane(XSSFSheet sheet) {
     Objects.requireNonNull(sheet, "sheet must not be null");
     PaneInformation paneInformation = sheet.getPaneInformation();
     if (paneInformation == null) {
-      return new PaneSpec.None();
+      return new dev.erst.gridgrind.core.model.layout.PaneReport.None();
     }
     if (paneInformation.isFreezePane()) {
-      return new PaneSpec.Frozen(
+      return new dev.erst.gridgrind.core.model.layout.PaneReport.Frozen(
           paneInformation.getVerticalSplitPosition(),
           paneInformation.getHorizontalSplitPosition(),
           paneInformation.getVerticalSplitLeftColumn(),
           paneInformation.getHorizontalSplitTopRow());
     }
-    return new PaneSpec.Split(
+    return new dev.erst.gridgrind.core.model.layout.PaneReport.Split(
         paneInformation.getVerticalSplitPosition(),
         paneInformation.getHorizontalSplitPosition(),
         paneInformation.getVerticalSplitLeftColumn(),

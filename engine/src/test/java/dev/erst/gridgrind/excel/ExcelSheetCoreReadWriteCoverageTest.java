@@ -3,11 +3,13 @@ package dev.erst.gridgrind.excel;
 import static dev.erst.gridgrind.excel.ExcelStyleTestAccess.*;
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.core.model.drawing.CellCommentReport;
 import dev.erst.gridgrind.core.model.drawing.ResolvedComment;
 import dev.erst.gridgrind.core.model.formula.ResolvedFormula;
 import dev.erst.gridgrind.core.model.layout.PaneSpec;
 import dev.erst.gridgrind.core.model.layout.SheetDefaultsSpec;
 import dev.erst.gridgrind.core.model.layout.SheetDisplaySpec;
+import dev.erst.gridgrind.core.model.layout.SheetLayoutReport;
 import dev.erst.gridgrind.core.model.layout.SheetOutlineSummarySpec;
 import dev.erst.gridgrind.core.model.layout.SheetPresentationSpec;
 import dev.erst.gridgrind.core.model.style.BorderSidePatch;
@@ -20,6 +22,7 @@ import dev.erst.gridgrind.core.model.style.CellStylePatch;
 import dev.erst.gridgrind.core.model.style.ColorSpec;
 import dev.erst.gridgrind.core.model.style.FontHeightSpec;
 import dev.erst.gridgrind.core.model.validation.IgnoredErrorSpec;
+import dev.erst.gridgrind.core.model.value.CellHyperlinkReport;
 import dev.erst.gridgrind.core.model.value.CellReport;
 import dev.erst.gridgrind.core.model.value.CellValue;
 import dev.erst.gridgrind.core.model.value.CellValueSpec;
@@ -406,7 +409,7 @@ class ExcelSheetCoreReadWriteCoverageTest extends ExcelSheetTestSupport {
       assertSame(rows, rows.ungroup(new ExcelRowSpan(1, 3)));
       assertSame(columns, columns.ungroup(new ExcelColumnSpan(1, 3)));
 
-      WorkbookSheetResult.SheetLayout layout = sheet.layout().snapshot();
+      SheetLayoutReport layout = sheet.layout().snapshot();
       assertFalse(layout.rows().get(1).hidden());
       assertEquals(0, layout.rows().get(1).outlineLevel());
       assertFalse(layout.columns().get(1).hidden());
@@ -812,8 +815,8 @@ class ExcelSheetCoreReadWriteCoverageTest extends ExcelSheetTestSupport {
       ExcelSheet sheet =
           new ExcelSheet(poiSheet, new WorkbookStyleRegistry(poiWorkbook), evaluator);
 
-      WorkbookSheetResult.SheetLayout emptyLayout = sheet.layout().snapshot();
-      assertEquals(new PaneSpec.None(), emptyLayout.pane());
+      SheetLayoutReport emptyLayout = sheet.layout().snapshot();
+      assertEquals(new dev.erst.gridgrind.core.model.layout.PaneReport.None(), emptyLayout.pane());
       assertEquals(100, emptyLayout.zoomPercent());
       assertEquals(
           dev.erst.gridgrind.core.model.layout.SheetDisplayReport.defaults(),
@@ -855,27 +858,28 @@ class ExcelSheetCoreReadWriteCoverageTest extends ExcelSheetTestSupport {
       assertThrows(IllegalArgumentException.class, () -> sheet.cells().window("A1", 1048577, 1));
       assertThrows(IllegalArgumentException.class, () -> sheet.cells().window("A1", 1, 16385));
 
-      List<WorkbookSheetResult.CellHyperlink> allHyperlinks =
+      List<CellHyperlinkReport> allHyperlinks =
           sheet.annotations().hyperlinks(new ExcelCellSelection.AllUsedCells());
       assertEquals(1, allHyperlinks.size());
-      assertEquals("A1", allHyperlinks.getFirst().address());
+      assertEquals("A1", allHyperlinks.getFirst().address().value());
 
-      List<WorkbookSheetResult.CellHyperlink> selectedHyperlinks =
+      List<CellHyperlinkReport> selectedHyperlinks =
           sheet
               .annotations()
               .hyperlinks(new ExcelCellSelection.Selected(List.of("A1", "B2", "B9", "D3")));
       assertEquals(1, selectedHyperlinks.size());
-      assertEquals("A1", selectedHyperlinks.getFirst().address());
+      assertEquals("A1", selectedHyperlinks.getFirst().address().value());
 
-      List<WorkbookSheetResult.CellComment> selectedComments =
+      List<CellCommentReport> selectedComments =
           sheet
               .annotations()
               .comments(new ExcelCellSelection.Selected(List.of("C3", "B2", "A9", "D3")));
       assertEquals(1, selectedComments.size());
-      assertEquals("C3", selectedComments.getFirst().address());
+      assertEquals("C3", selectedComments.getFirst().address().value());
 
-      WorkbookSheetResult.SheetLayout unfrozenLayout = sheet.layout().snapshot();
-      assertEquals(new PaneSpec.None(), unfrozenLayout.pane());
+      SheetLayoutReport unfrozenLayout = sheet.layout().snapshot();
+      assertEquals(
+          new dev.erst.gridgrind.core.model.layout.PaneReport.None(), unfrozenLayout.pane());
       assertEquals(100, unfrozenLayout.zoomPercent());
       assertEquals(
           new dev.erst.gridgrind.core.model.layout.SheetDisplayReport(
@@ -901,14 +905,18 @@ class ExcelSheetCoreReadWriteCoverageTest extends ExcelSheetTestSupport {
 
       sheet.layout().setPane(new PaneSpec.Frozen(1, 1, 1, 1));
       sheet.layout().setZoom(135);
-      WorkbookSheetResult.SheetLayout frozenLayout = sheet.layout().snapshot();
-      assertEquals(new PaneSpec.Frozen(1, 1, 1, 1), frozenLayout.pane());
+      SheetLayoutReport frozenLayout = sheet.layout().snapshot();
+      assertEquals(
+          new dev.erst.gridgrind.core.model.layout.PaneReport.Frozen(1, 1, 1, 1),
+          frozenLayout.pane());
       assertEquals(135, frozenLayout.zoomPercent());
 
       poiSheet.createSplitPane(2000, 2000, 0, 0, PaneType.LOWER_RIGHT);
-      WorkbookSheetResult.SheetLayout splitLayout = sheet.layout().snapshot();
+      SheetLayoutReport splitLayout = sheet.layout().snapshot();
       assertEquals(
-          new PaneSpec.Split(2000, 2000, 0, 0, ExcelPaneRegion.LOWER_RIGHT), splitLayout.pane());
+          new dev.erst.gridgrind.core.model.layout.PaneReport.Split(
+              2000, 2000, 0, 0, ExcelPaneRegion.LOWER_RIGHT),
+          splitLayout.pane());
     }
   }
 

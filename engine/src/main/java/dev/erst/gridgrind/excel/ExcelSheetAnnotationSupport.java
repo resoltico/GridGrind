@@ -1,7 +1,9 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.core.model.drawing.CellCommentReport;
 import dev.erst.gridgrind.core.model.drawing.CommentReport;
 import dev.erst.gridgrind.core.model.drawing.ResolvedComment;
+import dev.erst.gridgrind.core.model.value.CellHyperlinkReport;
 import dev.erst.gridgrind.core.model.value.HyperlinkTarget;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingController;
 import java.util.List;
@@ -42,11 +44,11 @@ final class ExcelSheetAnnotationSupport {
     commentSupport.clearComment(address);
   }
 
-  List<WorkbookSheetResult.CellHyperlink> hyperlinks(ExcelCellSelection selection) {
+  List<CellHyperlinkReport> hyperlinks(ExcelCellSelection selection) {
     return hyperlinkSupport.hyperlinks(selection);
   }
 
-  List<WorkbookSheetResult.CellComment> comments(ExcelCellSelection selection) {
+  List<CellCommentReport> comments(ExcelCellSelection selection) {
     return commentSupport.comments(selection);
   }
 

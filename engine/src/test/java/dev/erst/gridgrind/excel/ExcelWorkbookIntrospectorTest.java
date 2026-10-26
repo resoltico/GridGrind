@@ -120,7 +120,7 @@ class ExcelWorkbookIntrospectorTest {
       assertEquals("A1", results.cells().cells().getFirst().address().value());
       assertEquals(
           "A1", results.window().window().rows().getFirst().cells().getFirst().address().value());
-      assertEquals("A1:B1", results.mergedRegions().mergedRegions().getFirst().range());
+      assertEquals("A1:B1", results.mergedRegions().mergedRegions().getFirst().range().value());
       assertEquals(
           "https://example.com/report",
           assertInstanceOf(
@@ -128,7 +128,9 @@ class ExcelWorkbookIntrospectorTest {
                   results.hyperlinks().hyperlinks().getFirst().hyperlink())
               .target());
       assertEquals("Review", results.comments().comments().getFirst().comment().text());
-      assertEquals(new PaneSpec.Frozen(1, 1, 1, 1), results.layout().layout().pane());
+      assertEquals(
+          new dev.erst.gridgrind.core.model.layout.PaneReport.Frozen(1, 1, 1, 1),
+          results.layout().layout().pane());
       assertEquals(130, results.layout().layout().zoomPercent());
       assertEquals(
           ExcelPrintOrientation.LANDSCAPE, results.printLayout().printLayout().orientation());

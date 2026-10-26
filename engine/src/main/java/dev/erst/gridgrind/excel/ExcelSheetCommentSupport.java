@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.core.model.drawing.CellCommentReport;
 import dev.erst.gridgrind.core.model.drawing.CommentAnchorReport;
 import dev.erst.gridgrind.core.model.drawing.CommentAnchorSpec;
 import dev.erst.gridgrind.core.model.drawing.CommentReport;
@@ -60,7 +61,7 @@ final class ExcelSheetCommentSupport {
     drawingController.cleanupEmptyDrawingPatriarch((XSSFSheet) sheet);
   }
 
-  List<WorkbookSheetResult.CellComment> comments(ExcelCellSelection selection) {
+  List<CellCommentReport> comments(ExcelCellSelection selection) {
     Objects.requireNonNull(selection, "selection must not be null");
     return switch (selection) {
       case ExcelCellSelection.AllUsedCells _ -> allUsedComments();
@@ -189,15 +190,17 @@ final class ExcelSheetCommentSupport {
     return poiComment;
   }
 
-  private List<WorkbookSheetResult.CellComment> allUsedComments() {
-    List<WorkbookSheetResult.CellComment> comments = new ArrayList<>();
+  private List<CellCommentReport> allUsedComments() {
+    List<CellCommentReport> comments = new ArrayList<>();
     for (Row row : sheet) {
       for (Cell cell : row) {
         Optional<CommentReport> comment = commentSnapshot(cell);
         if (comment.isPresent()) {
           comments.add(
-              new WorkbookSheetResult.CellComment(
-                  new CellReference(cell.getRowIndex(), cell.getColumnIndex()).formatAsString(),
+              new CellCommentReport(
+                  new dev.erst.gridgrind.core.vocabulary.CellAddress(
+                      new CellReference(cell.getRowIndex(), cell.getColumnIndex())
+                          .formatAsString()),
                   comment.orElseThrow()));
         }
       }
@@ -205,8 +208,8 @@ final class ExcelSheetCommentSupport {
     return List.copyOf(comments);
   }
 
-  private List<WorkbookSheetResult.CellComment> selectedComments(List<String> addresses) {
-    List<WorkbookSheetResult.CellComment> comments = new ArrayList<>();
+  private List<CellCommentReport> selectedComments(List<String> addresses) {
+    List<CellCommentReport> comments = new ArrayList<>();
     for (String address : addresses) {
       Cell cell = ExcelSheetAddressSupport.cellOrNull(sheet, address).orElse(null);
       if (cell == null) {
@@ -214,7 +217,10 @@ final class ExcelSheetCommentSupport {
       }
       Optional<CommentReport> comment = commentSnapshot(cell);
       if (comment.isPresent()) {
-        comments.add(new WorkbookSheetResult.CellComment(address, comment.orElseThrow()));
+        comments.add(
+            new CellCommentReport(
+                new dev.erst.gridgrind.core.vocabulary.CellAddress(address),
+                comment.orElseThrow()));
       }
     }
     return List.copyOf(comments);

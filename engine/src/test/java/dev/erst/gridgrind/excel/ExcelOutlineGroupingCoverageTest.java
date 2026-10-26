@@ -2,6 +2,9 @@ package dev.erst.gridgrind.excel;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.core.model.layout.ColumnLayoutReport;
+import dev.erst.gridgrind.core.model.layout.RowLayoutReport;
+import dev.erst.gridgrind.core.model.layout.SheetLayoutReport;
 import dev.erst.gridgrind.core.vocabulary.ExcelColumnSpan;
 import dev.erst.gridgrind.core.vocabulary.ExcelRowSpan;
 import java.nio.file.Files;
@@ -25,8 +28,8 @@ class ExcelOutlineGroupingCoverageTest extends ExcelRowColumnStructureTestSuppor
       rowController.setRowVisibility(sheet, new ExcelRowSpan(5, 5), true);
       columnController.setColumnVisibility(sheet, new ExcelColumnSpan(5, 5), true);
 
-      List<WorkbookSheetResult.RowLayout> rows = rowController.rowLayouts(sheet);
-      List<WorkbookSheetResult.ColumnLayout> columns = columnController.columnLayouts(sheet);
+      List<RowLayoutReport> rows = rowController.rowLayouts(sheet);
+      List<ColumnLayoutReport> columns = columnController.columnLayouts(sheet);
 
       assertEquals(6, rows.size());
       assertTrue(rows.get(1).hidden());
@@ -55,7 +58,7 @@ class ExcelOutlineGroupingCoverageTest extends ExcelRowColumnStructureTestSuppor
       }
     }
 
-    WorkbookSheetResult.SheetLayout layout = XlsxRoundTrip.sheetLayout(workbookPath, "Budget");
+    SheetLayoutReport layout = XlsxRoundTrip.sheetLayout(workbookPath, "Budget");
 
     assertEquals(3, layout.rows().size());
     assertTrue(layout.rows().get(0).hidden());
@@ -93,8 +96,7 @@ class ExcelOutlineGroupingCoverageTest extends ExcelRowColumnStructureTestSuppor
       columnController.groupColumns(sheet, new ExcelColumnSpan(0, 3), true);
       columnController.ungroupColumns(sheet, new ExcelColumnSpan(1, 1));
 
-      List<WorkbookSheetResult.ColumnLayout> inMemoryColumns =
-          columnController.columnLayouts(sheet);
+      List<ColumnLayoutReport> inMemoryColumns = columnController.columnLayouts(sheet);
       assertEquals(5, inMemoryColumns.size(), "in-memory columns=" + inMemoryColumns);
       assertTrue(inMemoryColumns.get(0).hidden(), "in-memory columns=" + inMemoryColumns);
       assertFalse(inMemoryColumns.get(1).collapsed(), "in-memory columns=" + inMemoryColumns);
@@ -109,7 +111,7 @@ class ExcelOutlineGroupingCoverageTest extends ExcelRowColumnStructureTestSuppor
       }
     }
 
-    WorkbookSheetResult.SheetLayout layout = XlsxRoundTrip.sheetLayout(workbookPath, "Budget");
+    SheetLayoutReport layout = XlsxRoundTrip.sheetLayout(workbookPath, "Budget");
 
     assertEquals(5, layout.columns().size(), "reopened columns=" + layout.columns());
     assertTrue(layout.columns().get(0).hidden(), "reopened columns=" + layout.columns());
@@ -133,7 +135,7 @@ class ExcelOutlineGroupingCoverageTest extends ExcelRowColumnStructureTestSuppor
       }
     }
 
-    WorkbookSheetResult.SheetLayout layout = XlsxRoundTrip.sheetLayout(workbookPath, "Budget");
+    SheetLayoutReport layout = XlsxRoundTrip.sheetLayout(workbookPath, "Budget");
 
     assertEquals(4, layout.rows().size());
     assertEquals(0, layout.rows().get(1).outlineLevel());
@@ -150,8 +152,8 @@ class ExcelOutlineGroupingCoverageTest extends ExcelRowColumnStructureTestSuppor
       rowController.groupRows(sheet, new ExcelRowSpan(1, 3), false);
       columnController.groupColumns(sheet, new ExcelColumnSpan(1, 3), false);
 
-      List<WorkbookSheetResult.RowLayout> rows = rowController.rowLayouts(sheet);
-      List<WorkbookSheetResult.ColumnLayout> columns = columnController.columnLayouts(sheet);
+      List<RowLayoutReport> rows = rowController.rowLayouts(sheet);
+      List<ColumnLayoutReport> columns = columnController.columnLayouts(sheet);
 
       assertEquals(4, rows.size());
       assertFalse(rows.get(1).hidden());
@@ -179,7 +181,7 @@ class ExcelOutlineGroupingCoverageTest extends ExcelRowColumnStructureTestSuppor
 
       rowController.groupRows(sheet, new ExcelRowSpan(1, 3), false);
 
-      List<WorkbookSheetResult.RowLayout> rows = rowController.rowLayouts(sheet);
+      List<RowLayoutReport> rows = rowController.rowLayouts(sheet);
 
       assertEquals(5, rows.size());
       assertFalse(rows.get(1).hidden());
@@ -199,7 +201,7 @@ class ExcelOutlineGroupingCoverageTest extends ExcelRowColumnStructureTestSuppor
 
       rowController.groupRows(sheet, new ExcelRowSpan(1, 3), false);
 
-      List<WorkbookSheetResult.RowLayout> rows = rowController.rowLayouts(sheet);
+      List<RowLayoutReport> rows = rowController.rowLayouts(sheet);
 
       assertEquals(5, rows.size());
       assertFalse(rows.get(1).hidden());
@@ -220,7 +222,7 @@ class ExcelOutlineGroupingCoverageTest extends ExcelRowColumnStructureTestSuppor
       rowController.setRowVisibility(sheet, new ExcelRowSpan(2, 2), true);
       rowController.groupRows(sheet, new ExcelRowSpan(1, 3), false);
 
-      List<WorkbookSheetResult.RowLayout> groupedRows = rowController.rowLayouts(sheet);
+      List<RowLayoutReport> groupedRows = rowController.rowLayouts(sheet);
       assertEquals(4, groupedRows.size());
       assertFalse(groupedRows.get(1).hidden());
       assertTrue(groupedRows.get(2).hidden());
@@ -229,7 +231,7 @@ class ExcelOutlineGroupingCoverageTest extends ExcelRowColumnStructureTestSuppor
 
       rowController.ungroupRows(sheet, new ExcelRowSpan(1, 3));
 
-      List<WorkbookSheetResult.RowLayout> ungroupedRows = rowController.rowLayouts(sheet);
+      List<RowLayoutReport> ungroupedRows = rowController.rowLayouts(sheet);
       assertTrue(ungroupedRows.get(2).hidden());
       assertEquals(0, ungroupedRows.get(2).outlineLevel());
 
@@ -238,7 +240,7 @@ class ExcelOutlineGroupingCoverageTest extends ExcelRowColumnStructureTestSuppor
       }
     }
 
-    WorkbookSheetResult.SheetLayout layout = XlsxRoundTrip.sheetLayout(workbookPath, "Budget");
+    SheetLayoutReport layout = XlsxRoundTrip.sheetLayout(workbookPath, "Budget");
 
     assertEquals(4, layout.rows().size());
     assertFalse(layout.rows().get(1).hidden());
@@ -259,8 +261,8 @@ class ExcelOutlineGroupingCoverageTest extends ExcelRowColumnStructureTestSuppor
       rowController.ungroupRows(sheet, new ExcelRowSpan(1, 3));
       columnController.ungroupColumns(sheet, new ExcelColumnSpan(1, 3));
 
-      List<WorkbookSheetResult.RowLayout> rows = rowController.rowLayouts(sheet);
-      List<WorkbookSheetResult.ColumnLayout> columns = columnController.columnLayouts(sheet);
+      List<RowLayoutReport> rows = rowController.rowLayouts(sheet);
+      List<ColumnLayoutReport> columns = columnController.columnLayouts(sheet);
 
       assertFalse(rows.get(1).hidden());
       assertEquals(0, rows.get(1).outlineLevel());
@@ -350,7 +352,7 @@ class ExcelOutlineGroupingCoverageTest extends ExcelRowColumnStructureTestSuppor
       columnController.groupColumns(sheet, new ExcelColumnSpan(1, 2), false);
 
       assertEquals(1, sheet.getCTWorksheet().sizeOfColsArray());
-      List<WorkbookSheetResult.ColumnLayout> columns = columnController.columnLayouts(sheet);
+      List<ColumnLayoutReport> columns = columnController.columnLayouts(sheet);
       assertEquals(1, columns.get(1).outlineLevel());
       assertEquals(1, columns.get(2).outlineLevel());
       assertFalse(columns.get(1).hidden());
@@ -371,7 +373,7 @@ class ExcelOutlineGroupingCoverageTest extends ExcelRowColumnStructureTestSuppor
       columnController.groupColumns(sheet, new ExcelColumnSpan(1, 2), false);
 
       assertEquals(1, sheet.getCTWorksheet().sizeOfColsArray());
-      List<WorkbookSheetResult.ColumnLayout> columns = columnController.columnLayouts(sheet);
+      List<ColumnLayoutReport> columns = columnController.columnLayouts(sheet);
       assertEquals(1, columns.get(1).outlineLevel());
       assertEquals(1, columns.get(2).outlineLevel());
       assertFalse(columns.get(1).hidden());
@@ -390,7 +392,7 @@ class ExcelOutlineGroupingCoverageTest extends ExcelRowColumnStructureTestSuppor
 
       columnController.groupColumns(sheet, new ExcelColumnSpan(1, 1), false);
 
-      List<WorkbookSheetResult.ColumnLayout> columns = columnController.columnLayouts(sheet);
+      List<ColumnLayoutReport> columns = columnController.columnLayouts(sheet);
       assertEquals(8.0d, columns.get(0).widthCharacters());
       assertFalse(columns.get(2).collapsed());
     }
@@ -405,7 +407,7 @@ class ExcelOutlineGroupingCoverageTest extends ExcelRowColumnStructureTestSuppor
       assertDoesNotThrow(
           () -> columnController.groupColumns(sheet, new ExcelColumnSpan(0, 2), false));
 
-      List<WorkbookSheetResult.ColumnLayout> columns = columnController.columnLayouts(sheet);
+      List<ColumnLayoutReport> columns = columnController.columnLayouts(sheet);
       assertEquals(5, columns.size(), "columns=" + columns);
       assertFalse(columns.get(0).hidden(), "columns=" + columns);
       assertFalse(columns.get(1).hidden(), "columns=" + columns);
@@ -439,7 +441,7 @@ class ExcelOutlineGroupingCoverageTest extends ExcelRowColumnStructureTestSuppor
 
       ExcelRowColumnStructureController.setColumnCollapsed(sheet, 3, true);
 
-      List<WorkbookSheetResult.ColumnLayout> columns = columnController.columnLayouts(sheet);
+      List<ColumnLayoutReport> columns = columnController.columnLayouts(sheet);
       assertFalse(columns.get(0).collapsed());
       assertTrue(columns.get(3).collapsed());
     }
@@ -454,7 +456,7 @@ class ExcelOutlineGroupingCoverageTest extends ExcelRowColumnStructureTestSuppor
 
       ExcelRowColumnStructureController.setColumnCollapsed(sheet, 0, true);
 
-      List<WorkbookSheetResult.ColumnLayout> columns = columnController.columnLayouts(sheet);
+      List<ColumnLayoutReport> columns = columnController.columnLayouts(sheet);
       assertFalse(columns.get(3).collapsed());
     }
   }

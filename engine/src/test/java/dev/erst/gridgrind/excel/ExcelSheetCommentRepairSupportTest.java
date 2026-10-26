@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import dev.erst.gridgrind.core.model.drawing.CellCommentReport;
 import dev.erst.gridgrind.core.model.drawing.CommentAnchorReport;
 import dev.erst.gridgrind.core.model.drawing.CommentReport;
 import dev.erst.gridgrind.core.model.drawing.ResolvedComment;
@@ -42,15 +43,15 @@ import org.xml.sax.SAXException;
 class ExcelSheetCommentRepairSupportTest {
   @Test
   void commentsAfterShiftColumnsKeepsMovedCommentWhenTargetsCollide() {
-    List<WorkbookSheetResult.CellComment> shifted =
+    List<CellCommentReport> shifted =
         ExcelSheetCommentRepairSupport.commentsAfterShiftColumns(
             List.of(
-                new WorkbookSheetResult.CellComment(
-                    "A2",
+                new CellCommentReport(
+                    new dev.erst.gridgrind.core.vocabulary.CellAddress("A2"),
                     new CommentReport(
                         "stationary", "GridGrind", true, Optional.empty(), Optional.empty())),
-                new WorkbookSheetResult.CellComment(
-                    "B2",
+                new CellCommentReport(
+                    new dev.erst.gridgrind.core.vocabulary.CellAddress("B2"),
                     new CommentReport(
                         "moving", "GridGrind", true, Optional.empty(), Optional.empty()))),
             new ExcelColumnSpan(1, 1),
@@ -58,8 +59,8 @@ class ExcelSheetCommentRepairSupportTest {
 
     assertEquals(
         List.of(
-            new WorkbookSheetResult.CellComment(
-                "A2",
+            new CellCommentReport(
+                new dev.erst.gridgrind.core.vocabulary.CellAddress("A2"),
                 new CommentReport(
                     "moving", "GridGrind", true, Optional.empty(), Optional.empty()))),
         shifted);
@@ -105,20 +106,20 @@ class ExcelSheetCommentRepairSupportTest {
 
   @Test
   void insertDeleteAndShiftColumnHelpersRewriteReadComments() {
-    List<WorkbookSheetResult.CellComment> inserted =
+    List<CellCommentReport> inserted =
         ExcelSheetCommentRepairSupport.commentsAfterInsertColumns(
             List.of(comment("A2", "Stationary"), comment("C2", "Shifted")), 1, 1);
 
     assertEquals(List.of(comment("A2", "Stationary"), comment("D2", "Shifted")), inserted);
 
-    List<WorkbookSheetResult.CellComment> deleted =
+    List<CellCommentReport> deleted =
         ExcelSheetCommentRepairSupport.commentsAfterDeleteColumns(
             List.of(comment("A2", "Stationary"), comment("D2", "Shifted")),
             new ExcelColumnSpan(1, 2));
 
     assertEquals(List.of(comment("A2", "Stationary"), comment("B2", "Shifted")), deleted);
 
-    List<WorkbookSheetResult.CellComment> shiftedRight =
+    List<CellCommentReport> shiftedRight =
         ExcelSheetCommentRepairSupport.commentsAfterShiftColumns(
             List.of(
                 comment("A2", "Stationary"),
@@ -132,7 +133,7 @@ class ExcelSheetCommentRepairSupportTest {
         List.of(comment("A2", "Stationary"), comment("C2", "Moving"), comment("E2", "Far")),
         shiftedRight);
 
-    List<WorkbookSheetResult.CellComment> unchanged =
+    List<CellCommentReport> unchanged =
         ExcelSheetCommentRepairSupport.commentsAfterShiftColumns(
             List.of(comment("A2", "Stationary"), comment("B2", "Moving")),
             new ExcelColumnSpan(1, 1),
@@ -140,7 +141,7 @@ class ExcelSheetCommentRepairSupportTest {
 
     assertEquals(List.of(comment("A2", "Stationary"), comment("B2", "Moving")), unchanged);
 
-    List<WorkbookSheetResult.CellComment> shiftedLeft =
+    List<CellCommentReport> shiftedLeft =
         ExcelSheetCommentRepairSupport.commentsAfterShiftColumns(
             List.of(comment("B2", "Moving"), comment("D2", "Stationary")),
             new ExcelColumnSpan(1, 1),
@@ -148,7 +149,7 @@ class ExcelSheetCommentRepairSupportTest {
 
     assertEquals(List.of(comment("A2", "Moving"), comment("D2", "Stationary")), shiftedLeft);
 
-    List<WorkbookSheetResult.CellComment> shiftedLeftOutsideWindow =
+    List<CellCommentReport> shiftedLeftOutsideWindow =
         ExcelSheetCommentRepairSupport.commentsAfterShiftColumns(
             List.of(comment("C2", "Stationary"), comment("F2", "Moving")),
             new ExcelColumnSpan(5, 5),
@@ -418,11 +419,11 @@ class ExcelSheetCommentRepairSupportTest {
     assertEquals(
         expected.keySet(),
         actual.stream()
-            .map(WorkbookSheetResult.CellComment::address)
+            .map(cell -> cell.address().value())
             .collect(java.util.stream.Collectors.toSet()));
     assertEquals(expected.size(), actual.size());
     for (var cell : actual) {
-      var wanted = expected.get(cell.address());
+      var wanted = expected.get(cell.address().value());
       assertEquals(wanted.text(), cell.comment().text());
       assertEquals(wanted.author(), cell.comment().author());
       assertEquals(wanted.visible(), cell.comment().visible());
@@ -502,9 +503,10 @@ class ExcelSheetCommentRepairSupportTest {
     return Map.copyOf(counts);
   }
 
-  private static WorkbookSheetResult.CellComment comment(String address, String text) {
-    return new WorkbookSheetResult.CellComment(
-        address, new CommentReport(text, "GridGrind", true, Optional.empty(), Optional.empty()));
+  private static CellCommentReport comment(String address, String text) {
+    return new CellCommentReport(
+        new dev.erst.gridgrind.core.vocabulary.CellAddress(address),
+        new CommentReport(text, "GridGrind", true, Optional.empty(), Optional.empty()));
   }
 
   @SuppressWarnings("PMD.UseConcurrentHashMap")

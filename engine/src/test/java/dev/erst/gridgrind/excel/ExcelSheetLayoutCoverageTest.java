@@ -4,6 +4,7 @@ import static dev.erst.gridgrind.excel.ExcelStyleTestAccess.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 import dev.erst.gridgrind.core.model.layout.PaneSpec;
+import dev.erst.gridgrind.core.model.layout.SheetLayoutReport;
 import dev.erst.gridgrind.core.model.print.HeaderFooterTextReport;
 import dev.erst.gridgrind.core.model.print.PrintAreaSpec;
 import dev.erst.gridgrind.core.model.print.PrintScalingSpec;
@@ -37,7 +38,7 @@ class ExcelSheetLayoutCoverageTest extends ExcelSheetTestSupport {
       sheet.cells().setCell("C1", new CellValue.Text("Q1"));
       sheet.columns().autoSize();
 
-      WorkbookSheetResult.SheetLayout layout = sheet.layout().snapshot();
+      SheetLayoutReport layout = sheet.layout().snapshot();
       assertTrue(
           layout.columns().get(1).widthCharacters() > layout.columns().get(0).widthCharacters());
       assertTrue(
@@ -96,7 +97,8 @@ class ExcelSheetLayoutCoverageTest extends ExcelSheetTestSupport {
           layout,
           layout.setPane(new PaneSpec.Split(1200, 2400, 3, 4, ExcelPaneRegion.LOWER_RIGHT)));
       assertEquals(
-          new PaneSpec.Split(1200, 2400, 3, 4, ExcelPaneRegion.LOWER_RIGHT),
+          new dev.erst.gridgrind.core.model.layout.PaneReport.Split(
+              1200, 2400, 3, 4, ExcelPaneRegion.LOWER_RIGHT),
           layout.snapshot().pane());
       assertSame(layout, layout.setZoom(125));
       assertEquals(125, layout.snapshot().zoomPercent());

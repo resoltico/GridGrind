@@ -1,12 +1,5 @@
 package dev.erst.gridgrind.engine.runtime;
 
-import dev.erst.gridgrind.core.model.drawing.CellCommentReport;
-import dev.erst.gridgrind.core.model.layout.ColumnLayoutReport;
-import dev.erst.gridgrind.core.model.layout.PaneReport;
-import dev.erst.gridgrind.core.model.layout.PaneSpec;
-import dev.erst.gridgrind.core.model.layout.RowLayoutReport;
-import dev.erst.gridgrind.core.model.layout.SheetLayoutReport;
-import dev.erst.gridgrind.core.model.value.CellHyperlinkReport;
 import dev.erst.gridgrind.core.plan.CellReadProjection;
 import dev.erst.gridgrind.core.vocabulary.CellAddress;
 import dev.erst.gridgrind.core.vocabulary.SheetLabel;
@@ -51,60 +44,5 @@ final class InspectionResultWorkbookLayoutReportSupport {
         new CellAddress(window.topLeftAddress()),
         dimensions,
         List.copyOf(populatedCells));
-  }
-
-  static CellHyperlinkReport toCellHyperlinkReport(
-      dev.erst.gridgrind.excel.WorkbookSheetResult.CellHyperlink hyperlink) {
-    return new CellHyperlinkReport(new CellAddress(hyperlink.address()), hyperlink.hyperlink());
-  }
-
-  static CellCommentReport toCellCommentReport(
-      dev.erst.gridgrind.excel.WorkbookSheetResult.CellComment comment) {
-    return new CellCommentReport(new CellAddress(comment.address()), comment.comment());
-  }
-
-  static SheetLayoutReport toSheetLayoutReport(
-      dev.erst.gridgrind.excel.WorkbookSheetResult.SheetLayout layout) {
-    return new SheetLayoutReport(
-        new SheetLabel(layout.sheetName()),
-        toPaneReport(layout.pane()),
-        layout.zoomPercent(),
-        layout.presentation(),
-        layout.columns().stream()
-            .map(
-                column ->
-                    new ColumnLayoutReport(
-                        column.columnIndex(),
-                        column.widthCharacters(),
-                        column.hidden(),
-                        column.outlineLevel(),
-                        column.collapsed()))
-            .toList(),
-        layout.rows().stream()
-            .map(
-                row ->
-                    new RowLayoutReport(
-                        row.rowIndex(),
-                        row.heightPoints(),
-                        row.hidden(),
-                        row.outlineLevel(),
-                        row.collapsed()))
-            .toList());
-  }
-
-  static PaneReport toPaneReport(PaneSpec pane) {
-    return switch (pane) {
-      case PaneSpec.None _ -> new PaneReport.None();
-      case PaneSpec.Frozen frozen ->
-          new PaneReport.Frozen(
-              frozen.splitColumn(), frozen.splitRow(), frozen.leftmostColumn(), frozen.topRow());
-      case PaneSpec.Split split ->
-          new PaneReport.Split(
-              split.xSplitPosition(),
-              split.ySplitPosition(),
-              split.leftmostColumn(),
-              split.topRow(),
-              split.activePane());
-    };
   }
 }

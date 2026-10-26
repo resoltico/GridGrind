@@ -1,6 +1,8 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.core.model.layout.MergedRegionReport;
 import dev.erst.gridgrind.core.model.layout.PaneSpec;
+import dev.erst.gridgrind.core.model.layout.SheetLayoutReport;
 import dev.erst.gridgrind.core.model.layout.SheetPresentationSpec;
 import dev.erst.gridgrind.core.model.print.PrintLayoutReport;
 import dev.erst.gridgrind.core.model.print.ResolvedPrintLayout;
@@ -82,20 +84,20 @@ final class ExcelSheetLayoutSupport {
     printLayoutController.clearPrintLayout(xssfSheet());
   }
 
-  List<WorkbookSheetResult.MergedRegion> mergedRegions() {
-    List<WorkbookSheetResult.MergedRegion> mergedRegions =
-        new ArrayList<>(sheet.getNumMergedRegions());
+  List<MergedRegionReport> mergedRegions() {
+    List<MergedRegionReport> mergedRegions = new ArrayList<>(sheet.getNumMergedRegions());
     for (int regionIndex = 0; regionIndex < sheet.getNumMergedRegions(); regionIndex++) {
       mergedRegions.add(
-          new WorkbookSheetResult.MergedRegion(
-              sheet.getMergedRegion(regionIndex).formatAsString()));
+          new MergedRegionReport(
+              new dev.erst.gridgrind.core.vocabulary.RangeLabel(
+                  sheet.getMergedRegion(regionIndex).formatAsString())));
     }
     return List.copyOf(mergedRegions);
   }
 
-  WorkbookSheetResult.SheetLayout layout(String sheetName) {
-    return new WorkbookSheetResult.SheetLayout(
-        sheetName,
+  SheetLayoutReport layout(String sheetName) {
+    return new SheetLayoutReport(
+        new dev.erst.gridgrind.core.vocabulary.SheetLabel(sheetName),
         ExcelSheetViewSupport.pane(xssfSheet()),
         ExcelSheetViewSupport.zoomPercent(xssfSheet()),
         sheetPresentationController.presentation(xssfSheet()),

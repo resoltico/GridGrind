@@ -3,13 +3,13 @@ package dev.erst.gridgrind.excel;
 import static dev.erst.gridgrind.excel.WorkbookResultSupport.copyValues;
 import static dev.erst.gridgrind.excel.WorkbookResultSupport.requireNonBlank;
 
-import dev.erst.gridgrind.core.model.drawing.CommentReport;
+import dev.erst.gridgrind.core.model.drawing.CellCommentReport;
 import dev.erst.gridgrind.core.model.formula.ArrayFormulaReport;
-import dev.erst.gridgrind.core.model.layout.PaneSpec;
-import dev.erst.gridgrind.core.model.layout.SheetPresentationReport;
+import dev.erst.gridgrind.core.model.layout.MergedRegionReport;
+import dev.erst.gridgrind.core.model.layout.SheetLayoutReport;
 import dev.erst.gridgrind.core.model.print.PrintLayoutReport;
+import dev.erst.gridgrind.core.model.value.CellHyperlinkReport;
 import dev.erst.gridgrind.core.model.value.CellReport;
-import dev.erst.gridgrind.core.model.value.HyperlinkTarget;
 import dev.erst.gridgrind.core.plan.CellReadProjection;
 import dev.erst.gridgrind.core.result.SheetSummaryReport;
 import dev.erst.gridgrind.core.vocabulary.ExcelIndexDisplay;
@@ -83,7 +83,8 @@ public sealed interface WorkbookSheetResult extends WorkbookReadIntrospectionRes
   }
 
   /** Returns every merged region defined on one sheet. */
-  record MergedRegionsResult(StepId stepId, String sheetName, List<MergedRegion> mergedRegions)
+  record MergedRegionsResult(
+      StepId stepId, String sheetName, List<MergedRegionReport> mergedRegions)
       implements WorkbookSheetResult {
     public MergedRegionsResult {
 
@@ -94,7 +95,7 @@ public sealed interface WorkbookSheetResult extends WorkbookReadIntrospectionRes
   }
 
   /** Returns hyperlink metadata for selected cells on one sheet. */
-  record HyperlinksResult(StepId stepId, String sheetName, List<CellHyperlink> hyperlinks)
+  record HyperlinksResult(StepId stepId, String sheetName, List<CellHyperlinkReport> hyperlinks)
       implements WorkbookSheetResult {
     public HyperlinksResult {
 
@@ -105,7 +106,7 @@ public sealed interface WorkbookSheetResult extends WorkbookReadIntrospectionRes
   }
 
   /** Returns comment metadata for selected cells on one sheet. */
-  record CommentsResult(StepId stepId, String sheetName, List<CellComment> comments)
+  record CommentsResult(StepId stepId, String sheetName, List<CellCommentReport> comments)
       implements WorkbookSheetResult {
     public CommentsResult {
 
@@ -116,7 +117,7 @@ public sealed interface WorkbookSheetResult extends WorkbookReadIntrospectionRes
   }
 
   /** Returns layout metadata such as panes, zoom, and visible sizing. */
-  record SheetLayoutResult(StepId stepId, SheetLayout layout) implements WorkbookSheetResult {
+  record SheetLayoutResult(StepId stepId, SheetLayoutReport layout) implements WorkbookSheetResult {
     public SheetLayoutResult {
 
       java.util.Objects.requireNonNull(stepId, "stepId must not be null");
@@ -163,85 +164,6 @@ public sealed interface WorkbookSheetResult extends WorkbookReadIntrospectionRes
             ExcelIndexDisplay.mustNotBeNegative("rowIndex", rowIndex));
       }
       cells = copyValues(cells, "cells");
-    }
-  }
-
-  /** One merged region captured from a sheet. */
-  record MergedRegion(String range) {
-    public MergedRegion {
-      range = requireNonBlank(range, "range");
-    }
-  }
-
-  /** Hyperlink metadata associated with one concrete cell address. */
-  record CellHyperlink(String address, HyperlinkTarget hyperlink) {
-    public CellHyperlink {
-      address = requireNonBlank(address, "address");
-      Objects.requireNonNull(hyperlink, "hyperlink must not be null");
-    }
-  }
-
-  /** Comment metadata associated with one concrete cell address. */
-  record CellComment(String address, CommentReport comment) {
-    public CellComment {
-      address = requireNonBlank(address, "address");
-      Objects.requireNonNull(comment, "comment must not be null");
-    }
-  }
-
-  /** Layout metadata such as pane state, zoom, and visible row and column sizing for one sheet. */
-  record SheetLayout(
-      String sheetName,
-      PaneSpec pane,
-      int zoomPercent,
-      SheetPresentationReport presentation,
-      List<ColumnLayout> columns,
-      List<RowLayout> rows) {
-    public SheetLayout {
-      sheetName = requireNonBlank(sheetName, "sheetName");
-      Objects.requireNonNull(pane, "pane must not be null");
-      ExcelSheetViewSupport.requireZoomPercent(zoomPercent);
-      Objects.requireNonNull(presentation, "presentation must not be null");
-      columns = copyValues(columns, "columns");
-      rows = copyValues(rows, "rows");
-    }
-  }
-
-  /** Width metadata for one sheet column. */
-  record ColumnLayout(
-      int columnIndex,
-      double widthCharacters,
-      boolean hidden,
-      int outlineLevel,
-      boolean collapsed) {
-    public ColumnLayout {
-      if (columnIndex < 0) {
-        throw new IllegalArgumentException(
-            ExcelIndexDisplay.mustNotBeNegative("columnIndex", columnIndex));
-      }
-      if (!Double.isFinite(widthCharacters) || widthCharacters <= 0.0d) {
-        throw new IllegalArgumentException("widthCharacters must be finite and greater than 0");
-      }
-      if (outlineLevel < 0) {
-        throw new IllegalArgumentException("outlineLevel must not be negative");
-      }
-    }
-  }
-
-  /** Height metadata for one sheet row. */
-  record RowLayout(
-      int rowIndex, double heightPoints, boolean hidden, int outlineLevel, boolean collapsed) {
-    public RowLayout {
-      if (rowIndex < 0) {
-        throw new IllegalArgumentException(
-            ExcelIndexDisplay.mustNotBeNegative("rowIndex", rowIndex));
-      }
-      if (!Double.isFinite(heightPoints) || heightPoints <= 0.0d) {
-        throw new IllegalArgumentException("heightPoints must be finite and greater than 0");
-      }
-      if (outlineLevel < 0) {
-        throw new IllegalArgumentException("outlineLevel must not be negative");
-      }
     }
   }
 }

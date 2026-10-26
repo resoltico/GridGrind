@@ -2,6 +2,7 @@ package dev.erst.gridgrind.excel;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.core.model.layout.ColumnLayoutReport;
 import dev.erst.gridgrind.core.vocabulary.ExcelColumnSpan;
 import dev.erst.gridgrind.core.vocabulary.ExcelRowSpan;
 import java.io.IOException;
@@ -360,7 +361,7 @@ class ExcelRowColumnStructureTestSupport {
   }
 
   void assertColumnOutlineLevels(XSSFSheet sheet, int first, int second, int third) {
-    List<WorkbookSheetResult.ColumnLayout> columns = columnController.columnLayouts(sheet);
+    List<ColumnLayoutReport> columns = columnController.columnLayouts(sheet);
 
     assertEquals(first, columns.get(1).outlineLevel(), "columns=" + columns);
     assertEquals(second, columns.get(2).outlineLevel(), "columns=" + columns);

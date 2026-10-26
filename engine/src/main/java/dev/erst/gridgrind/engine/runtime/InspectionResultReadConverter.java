@@ -1,13 +1,11 @@
 package dev.erst.gridgrind.engine.runtime;
 
-import dev.erst.gridgrind.core.model.layout.MergedRegionReport;
 import dev.erst.gridgrind.core.plan.InspectionResult;
 import dev.erst.gridgrind.core.plan.SheetInspectionResult;
 import dev.erst.gridgrind.core.plan.WorkbookAnalysisResult;
 import dev.erst.gridgrind.core.plan.WorkbookAssetInspectionResult;
 import dev.erst.gridgrind.core.plan.WorkbookInspectionResult;
 import dev.erst.gridgrind.core.plan.WorkbookSurfaceInspectionResult;
-import dev.erst.gridgrind.core.vocabulary.RangeLabel;
 import dev.erst.gridgrind.core.vocabulary.SheetLabel;
 
 /** Converts engine read results into protocol inspection-result variants. */
@@ -51,23 +49,13 @@ final class InspectionResultReadConverter {
           new SheetInspectionResult.MergedRegionsResult(
               mergedRegions.stepId(),
               new SheetLabel(mergedRegions.sheetName()),
-              mergedRegions.mergedRegions().stream()
-                  .map(region -> new MergedRegionReport(new RangeLabel(region.range())))
-                  .toList());
+              mergedRegions.mergedRegions());
       case dev.erst.gridgrind.excel.WorkbookSheetResult.HyperlinksResult hyperlinks ->
           new SheetInspectionResult.HyperlinksResult(
-              hyperlinks.stepId(),
-              new SheetLabel(hyperlinks.sheetName()),
-              hyperlinks.hyperlinks().stream()
-                  .map(InspectionResultWorkbookLayoutReportSupport::toCellHyperlinkReport)
-                  .toList());
+              hyperlinks.stepId(), new SheetLabel(hyperlinks.sheetName()), hyperlinks.hyperlinks());
       case dev.erst.gridgrind.excel.WorkbookSheetResult.CommentsResult comments ->
           new SheetInspectionResult.CommentsResult(
-              comments.stepId(),
-              new SheetLabel(comments.sheetName()),
-              comments.comments().stream()
-                  .map(InspectionResultWorkbookLayoutReportSupport::toCellCommentReport)
-                  .toList());
+              comments.stepId(), new SheetLabel(comments.sheetName()), comments.comments());
       case dev.erst.gridgrind.excel.WorkbookDrawingResult.DrawingObjectsResult drawingObjects ->
           new WorkbookAssetInspectionResult.DrawingObjectsResult(
               drawingObjects.stepId(),
@@ -86,10 +74,7 @@ final class InspectionResultReadConverter {
               new SheetLabel(drawingPayload.sheetName()),
               drawingPayload.payload());
       case dev.erst.gridgrind.excel.WorkbookSheetResult.SheetLayoutResult sheetLayout ->
-          new SheetInspectionResult.SheetLayoutResult(
-              sheetLayout.stepId(),
-              InspectionResultWorkbookLayoutReportSupport.toSheetLayoutReport(
-                  sheetLayout.layout()));
+          new SheetInspectionResult.SheetLayoutResult(sheetLayout.stepId(), sheetLayout.layout());
       case dev.erst.gridgrind.excel.WorkbookSheetResult.PrintLayoutResult printLayout ->
           new SheetInspectionResult.PrintLayoutResult(
               printLayout.stepId(), printLayout.printLayout());

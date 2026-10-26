@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.core.model.drawing.CellCommentReport;
 import dev.erst.gridgrind.core.model.drawing.CommentAnchorReport;
 import dev.erst.gridgrind.core.model.drawing.CommentAnchorSpec;
 import dev.erst.gridgrind.core.model.drawing.CommentReport;
@@ -83,32 +84,31 @@ final class ExcelSheetCommentRepairSupport {
     }
   }
 
-  static List<CommentRewriteSnapshot> commentRewriteSnapshots(
-      List<WorkbookSheetResult.CellComment> comments) {
+  static List<CommentRewriteSnapshot> commentRewriteSnapshots(List<CellCommentReport> comments) {
     Objects.requireNonNull(comments, "comments must not be null");
     List<CommentRewriteSnapshot> snapshots = new ArrayList<>(comments.size());
-    for (WorkbookSheetResult.CellComment comment : comments) {
+    for (CellCommentReport comment : comments) {
       Objects.requireNonNull(comment, "comments must not contain nulls");
       snapshots.add(CommentRewriteSnapshot.from(comment));
     }
     return List.copyOf(snapshots);
   }
 
-  static List<WorkbookSheetResult.CellComment> commentsAfterInsertColumns(
-      List<WorkbookSheetResult.CellComment> comments, int columnIndex, int columnCount) {
+  static List<CellCommentReport> commentsAfterInsertColumns(
+      List<CellCommentReport> comments, int columnIndex, int columnCount) {
     return toReadComments(
         rewriteCommentsAfterInsertColumns(
             commentRewriteSnapshots(comments), columnIndex, columnCount));
   }
 
-  static List<WorkbookSheetResult.CellComment> commentsAfterDeleteColumns(
-      List<WorkbookSheetResult.CellComment> comments, ExcelColumnSpan columns) {
+  static List<CellCommentReport> commentsAfterDeleteColumns(
+      List<CellCommentReport> comments, ExcelColumnSpan columns) {
     return toReadComments(
         rewriteCommentsAfterDeleteColumns(commentRewriteSnapshots(comments), columns));
   }
 
-  static List<WorkbookSheetResult.CellComment> commentsAfterShiftColumns(
-      List<WorkbookSheetResult.CellComment> comments, ExcelColumnSpan columns, int delta) {
+  static List<CellCommentReport> commentsAfterShiftColumns(
+      List<CellCommentReport> comments, ExcelColumnSpan columns, int delta) {
     return toReadComments(
         rewriteCommentsAfterShiftColumns(commentRewriteSnapshots(comments), columns, delta));
   }
@@ -253,9 +253,8 @@ final class ExcelSheetCommentRepairSupport {
     return List.copyOf(shifted.values());
   }
 
-  private static List<WorkbookSheetResult.CellComment> toReadComments(
-      List<CommentRewriteSnapshot> comments) {
-    List<WorkbookSheetResult.CellComment> readComments = new ArrayList<>(comments.size());
+  private static List<CellCommentReport> toReadComments(List<CommentRewriteSnapshot> comments) {
+    List<CellCommentReport> readComments = new ArrayList<>(comments.size());
     for (CommentRewriteSnapshot comment : comments) {
       readComments.add(comment.toReadComment());
     }
@@ -359,9 +358,9 @@ final class ExcelSheetCommentRepairSupport {
       Objects.requireNonNull(anchor, "anchor must not be null");
     }
 
-    static CommentRewriteSnapshot from(WorkbookSheetResult.CellComment comment) {
+    static CommentRewriteSnapshot from(CellCommentReport comment) {
       return new CommentRewriteSnapshot(
-          comment.address(),
+          comment.address().value(),
           comment.comment().text(),
           comment.comment().author(),
           comment.comment().visible(),
@@ -419,9 +418,10 @@ final class ExcelSheetCommentRepairSupport {
                       value.firstColumn(), value.firstRow(), value.lastColumn(), value.lastRow())));
     }
 
-    WorkbookSheetResult.CellComment toReadComment() {
-      return new WorkbookSheetResult.CellComment(
-          address, new CommentReport(text, author, visible, runs, anchor));
+    CellCommentReport toReadComment() {
+      return new CellCommentReport(
+          new dev.erst.gridgrind.core.vocabulary.CellAddress(address),
+          new CommentReport(text, author, visible, runs, anchor));
     }
   }
 }

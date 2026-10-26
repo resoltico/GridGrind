@@ -1,5 +1,7 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.core.model.layout.ColumnLayoutReport;
+import dev.erst.gridgrind.core.model.layout.RowLayoutReport;
 import dev.erst.gridgrind.core.vocabulary.ExcelColumnSpan;
 import dev.erst.gridgrind.core.vocabulary.ExcelRowSpan;
 import java.util.ArrayList;
@@ -20,22 +22,22 @@ final class ExcelRowColumnOutlineSupport {
     return ExcelColumnDefinitionSupport.lastColumnIndex(sheet);
   }
 
-  static List<WorkbookSheetResult.ColumnLayout> columnLayouts(XSSFSheet sheet) {
+  static List<ColumnLayoutReport> columnLayouts(XSSFSheet sheet) {
     return ExcelColumnDefinitionSupport.columnLayouts(sheet);
   }
 
-  static List<WorkbookSheetResult.RowLayout> rowLayouts(XSSFSheet sheet) {
+  static List<RowLayoutReport> rowLayouts(XSSFSheet sheet) {
     int lastRowIndex = sheet.getLastRowNum();
     if (lastRowIndex < 0) {
       return List.of();
     }
-    List<WorkbookSheetResult.RowLayout> rows = new ArrayList<>(lastRowIndex + 1);
+    List<RowLayoutReport> rows = new ArrayList<>(lastRowIndex + 1);
     for (int rowIndex = 0; rowIndex <= lastRowIndex; rowIndex++) {
       Row row = sheet.getRow(rowIndex);
       double heightPoints =
           row == null ? sheet.getDefaultRowHeight() / 20.0d : row.getHeight() / 20.0d;
       rows.add(
-          new WorkbookSheetResult.RowLayout(
+          new RowLayoutReport(
               rowIndex,
               heightPoints,
               row instanceof XSSFRow xssfRow && xssfRow.getZeroHeight(),

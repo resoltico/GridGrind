@@ -5,7 +5,7 @@ import dev.erst.gridgrind.core.model.drawing.DrawingObjectReport;
 import dev.erst.gridgrind.core.model.drawing.ResolvedComment;
 import dev.erst.gridgrind.core.model.formula.NamedRangeScopeReport;
 import dev.erst.gridgrind.core.model.formula.NamedRangeTarget;
-import dev.erst.gridgrind.core.model.layout.PaneSpec;
+import dev.erst.gridgrind.core.model.layout.PaneReport;
 import dev.erst.gridgrind.core.model.pivot.PivotTableReport;
 import dev.erst.gridgrind.core.model.style.CellStyleReport;
 import dev.erst.gridgrind.core.model.style.RichTextRunReport;
@@ -100,7 +100,7 @@ final class XlsxRoundTripExpectedStateSupport {
   }
 
   record ExpectedSheetLayoutState(
-      PaneSpec pane,
+      PaneReport pane,
       Integer zoomPercent,
       Map<Integer, ExpectedRowLayoutState> rows,
       Map<Integer, ExpectedColumnLayoutState> columns) {}

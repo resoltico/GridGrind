@@ -447,7 +447,9 @@ class ExcelResidualHelperCoverageTest {
 
       XSSFSheet paneSheet = workbook.createSheet("Pane");
       ExcelSheetViewSupport.setPane(paneSheet, new PaneSpec.None());
-      assertInstanceOf(PaneSpec.None.class, ExcelSheetViewSupport.pane(paneSheet));
+      assertInstanceOf(
+          dev.erst.gridgrind.core.model.layout.PaneReport.None.class,
+          ExcelSheetViewSupport.pane(paneSheet));
     }
   }
 

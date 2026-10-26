@@ -534,7 +534,9 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
     assertEquals(List.of("A1:B2"), XlsxRoundTrip.mergedRegions(workbookPath, "Budget"));
     assertEquals(4096, XlsxRoundTrip.columnWidth(workbookPath, "Budget", 0));
     assertEquals((short) 570, XlsxRoundTrip.rowHeightTwips(workbookPath, "Budget", 0));
-    assertEquals(new PaneSpec.Frozen(1, 2, 3, 4), XlsxRoundTrip.pane(workbookPath, "Budget"));
+    assertEquals(
+        new dev.erst.gridgrind.core.model.layout.PaneReport.Frozen(1, 2, 3, 4),
+        XlsxRoundTrip.pane(workbookPath, "Budget"));
   }
 
   @Test

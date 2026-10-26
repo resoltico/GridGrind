@@ -3,7 +3,7 @@ package dev.erst.gridgrind.excel;
 import dev.erst.gridgrind.core.model.drawing.CommentReport;
 import dev.erst.gridgrind.core.model.formula.NamedRangeReport;
 import dev.erst.gridgrind.core.model.formula.NamedRangeScopeReport;
-import dev.erst.gridgrind.core.model.layout.PaneSpec;
+import dev.erst.gridgrind.core.model.layout.SheetLayoutReport;
 import dev.erst.gridgrind.core.model.print.ResolvedPrintLayout;
 import dev.erst.gridgrind.core.model.protection.CellProtectionReport;
 import dev.erst.gridgrind.core.model.protection.SheetProtectionReport;
@@ -185,7 +185,8 @@ public final class XlsxRoundTrip {
   }
 
   /** Returns the explicit pane state stored on the named sheet. */
-  public static PaneSpec pane(Path workbookPath, String sheetName) throws IOException {
+  public static dev.erst.gridgrind.core.model.layout.PaneReport pane(
+      Path workbookPath, String sheetName) throws IOException {
     return readSheet(workbookPath, sheetName, ExcelSheetViewSupport::pane);
   }
 
@@ -195,7 +196,7 @@ public final class XlsxRoundTrip {
   }
 
   /** Returns the supported sheet-layout snapshot stored on the named sheet. */
-  public static WorkbookSheetResult.SheetLayout sheetLayout(Path workbookPath, String sheetName)
+  public static SheetLayoutReport sheetLayout(Path workbookPath, String sheetName)
       throws IOException {
     requireWorkbookPath(workbookPath);
     requireNonBlank(sheetName, "sheetName");

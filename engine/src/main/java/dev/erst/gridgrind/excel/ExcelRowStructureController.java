@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.core.model.layout.RowLayoutReport;
 import dev.erst.gridgrind.core.vocabulary.ExcelIndexDisplay;
 import dev.erst.gridgrind.core.vocabulary.ExcelRowSpan;
 import java.util.List;
@@ -98,7 +99,7 @@ final class ExcelRowStructureController {
     sheet.ungroupRow(rows.firstRowIndex(), rows.lastRowIndex());
   }
 
-  List<WorkbookSheetResult.RowLayout> rowLayouts(XSSFSheet sheet) {
+  List<RowLayoutReport> rowLayouts(XSSFSheet sheet) {
     Objects.requireNonNull(sheet, "sheet must not be null");
     return ExcelRowColumnOutlineSupport.rowLayouts(sheet);
   }

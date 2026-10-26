@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.core.model.value.CellHyperlinkReport;
 import dev.erst.gridgrind.core.model.value.HyperlinkTarget;
 import java.util.ArrayList;
 import java.util.List;
@@ -40,7 +41,7 @@ final class ExcelSheetHyperlinkSupport {
     ExcelSheetAddressSupport.optionalCell(sheet, address).ifPresent(Cell::removeHyperlink);
   }
 
-  List<WorkbookSheetResult.CellHyperlink> hyperlinks(ExcelCellSelection selection) {
+  List<CellHyperlinkReport> hyperlinks(ExcelCellSelection selection) {
     Objects.requireNonNull(selection, "selection must not be null");
     return switch (selection) {
       case ExcelCellSelection.AllUsedCells _ -> allUsedHyperlinks();
@@ -89,15 +90,17 @@ final class ExcelSheetHyperlinkSupport {
     };
   }
 
-  private List<WorkbookSheetResult.CellHyperlink> allUsedHyperlinks() {
-    List<WorkbookSheetResult.CellHyperlink> hyperlinks = new ArrayList<>();
+  private List<CellHyperlinkReport> allUsedHyperlinks() {
+    List<CellHyperlinkReport> hyperlinks = new ArrayList<>();
     for (Row row : sheet) {
       for (Cell cell : row) {
         Optional<HyperlinkTarget> hyperlink = hyperlink(cell);
         if (hyperlink.isPresent()) {
           hyperlinks.add(
-              new WorkbookSheetResult.CellHyperlink(
-                  new CellReference(cell.getRowIndex(), cell.getColumnIndex()).formatAsString(),
+              new CellHyperlinkReport(
+                  new dev.erst.gridgrind.core.vocabulary.CellAddress(
+                      new CellReference(cell.getRowIndex(), cell.getColumnIndex())
+                          .formatAsString()),
                   hyperlink.orElseThrow()));
         }
       }
@@ -105,8 +108,8 @@ final class ExcelSheetHyperlinkSupport {
     return List.copyOf(hyperlinks);
   }
 
-  private List<WorkbookSheetResult.CellHyperlink> selectedHyperlinks(List<String> addresses) {
-    List<WorkbookSheetResult.CellHyperlink> hyperlinks = new ArrayList<>();
+  private List<CellHyperlinkReport> selectedHyperlinks(List<String> addresses) {
+    List<CellHyperlinkReport> hyperlinks = new ArrayList<>();
     for (String address : addresses) {
       Cell cell = ExcelSheetAddressSupport.cellOrNull(sheet, address).orElse(null);
       if (cell == null) {
@@ -114,7 +117,10 @@ final class ExcelSheetHyperlinkSupport {
       }
       Optional<HyperlinkTarget> hyperlink = hyperlink(cell);
       if (hyperlink.isPresent()) {
-        hyperlinks.add(new WorkbookSheetResult.CellHyperlink(address, hyperlink.orElseThrow()));
+        hyperlinks.add(
+            new CellHyperlinkReport(
+                new dev.erst.gridgrind.core.vocabulary.CellAddress(address),
+                hyperlink.orElseThrow()));
       }
     }
     return List.copyOf(hyperlinks);

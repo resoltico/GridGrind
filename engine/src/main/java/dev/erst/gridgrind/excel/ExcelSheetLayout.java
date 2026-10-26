@@ -1,6 +1,8 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.core.model.layout.MergedRegionReport;
 import dev.erst.gridgrind.core.model.layout.PaneSpec;
+import dev.erst.gridgrind.core.model.layout.SheetLayoutReport;
 import dev.erst.gridgrind.core.model.layout.SheetPresentationSpec;
 import dev.erst.gridgrind.core.model.print.PrintLayoutReport;
 import dev.erst.gridgrind.core.model.print.ResolvedPrintLayout;
@@ -60,12 +62,12 @@ public final class ExcelSheetLayout {
   }
 
   /** Returns every merged region currently defined on the sheet. */
-  public List<WorkbookSheetResult.MergedRegion> mergedRegions() {
+  public List<MergedRegionReport> mergedRegions() {
     return layoutSupport.mergedRegions();
   }
 
   /** Returns layout metadata such as panes, zoom, and visible sizing. */
-  public WorkbookSheetResult.SheetLayout snapshot() {
+  public SheetLayoutReport snapshot() {
     return layoutSupport.layout(sheet.name());
   }
 

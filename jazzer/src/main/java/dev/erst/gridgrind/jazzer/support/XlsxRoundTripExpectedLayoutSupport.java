@@ -1,5 +1,8 @@
 package dev.erst.gridgrind.jazzer.support;
 
+import dev.erst.gridgrind.core.model.layout.ColumnLayoutReport;
+import dev.erst.gridgrind.core.model.layout.RowLayoutReport;
+import dev.erst.gridgrind.core.model.layout.SheetLayoutReport;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
 import dev.erst.gridgrind.excel.WorkbookExecutionEngine;
@@ -34,12 +37,12 @@ final class XlsxRoundTripExpectedLayoutSupport {
   }
 
   static XlsxRoundTripExpectedStateSupport.ExpectedSheetLayoutState expectedSheetLayout(
-      WorkbookSheetResult.SheetLayout layout) {
+      SheetLayoutReport layout) {
     Objects.requireNonNull(layout, "layout must not be null");
 
     LinkedHashMap<Integer, XlsxRoundTripExpectedStateSupport.ExpectedRowLayoutState> expectedRows =
         new LinkedHashMap<>();
-    for (WorkbookSheetResult.RowLayout row : layout.rows()) {
+    for (RowLayoutReport row : layout.rows()) {
       expectedRows.put(
           row.rowIndex(),
           new XlsxRoundTripExpectedStateSupport.ExpectedRowLayoutState(
@@ -48,7 +51,7 @@ final class XlsxRoundTripExpectedLayoutSupport {
 
     LinkedHashMap<Integer, XlsxRoundTripExpectedStateSupport.ExpectedColumnLayoutState>
         expectedColumns = new LinkedHashMap<>();
-    for (WorkbookSheetResult.ColumnLayout column : layout.columns()) {
+    for (ColumnLayoutReport column : layout.columns()) {
       expectedColumns.put(
           column.columnIndex(),
           new XlsxRoundTripExpectedStateSupport.ExpectedColumnLayoutState(

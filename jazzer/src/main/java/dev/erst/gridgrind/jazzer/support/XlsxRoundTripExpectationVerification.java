@@ -3,7 +3,7 @@ package dev.erst.gridgrind.jazzer.support;
 import dev.erst.gridgrind.core.model.chart.ChartReport;
 import dev.erst.gridgrind.core.model.drawing.DrawingObjectReport;
 import dev.erst.gridgrind.core.model.formula.NamedRangeScopeReport;
-import dev.erst.gridgrind.core.model.layout.PaneSpec;
+import dev.erst.gridgrind.core.model.layout.PaneReport;
 import dev.erst.gridgrind.core.model.pivot.PivotTableReport;
 import dev.erst.gridgrind.core.model.style.CellStyleReport;
 import dev.erst.gridgrind.core.model.style.RichTextRunReport;
@@ -363,7 +363,7 @@ final class XlsxRoundTripExpectationVerification {
       String sheetName,
       XlsxRoundTripExpectedStateSupport.ExpectedSheetLayoutState expectedSheetLayout,
       XSSFSheet sheet) {
-    PaneSpec actualPane = pane(sheet);
+    PaneReport actualPane = pane(sheet);
     int actualZoomPercent = zoomPercent(sheet);
     if (expectedSheetLayout.pane() != null && !expectedSheetLayout.pane().equals(actualPane)) {
       throw new IllegalStateException(
@@ -533,19 +533,19 @@ final class XlsxRoundTripExpectationVerification {
             .formatted(axis, index, fieldName, sheetName, expected, actual));
   }
 
-  static PaneSpec pane(XSSFSheet sheet) {
+  static PaneReport pane(XSSFSheet sheet) {
     PaneInformation paneInformation = sheet.getPaneInformation();
     if (paneInformation == null) {
-      return new PaneSpec.None();
+      return new PaneReport.None();
     }
     if (paneInformation.isFreezePane()) {
-      return new PaneSpec.Frozen(
+      return new PaneReport.Frozen(
           paneInformation.getVerticalSplitPosition(),
           paneInformation.getHorizontalSplitPosition(),
           paneInformation.getVerticalSplitLeftColumn(),
           paneInformation.getHorizontalSplitTopRow());
     }
-    return new PaneSpec.Split(
+    return new PaneReport.Split(
         paneInformation.getVerticalSplitPosition(),
         paneInformation.getHorizontalSplitPosition(),
         paneInformation.getVerticalSplitLeftColumn(),

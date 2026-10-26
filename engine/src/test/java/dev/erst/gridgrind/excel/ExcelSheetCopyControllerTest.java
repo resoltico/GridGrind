@@ -7,6 +7,7 @@ import dev.erst.gridgrind.core.model.chart.ChartReport;
 import dev.erst.gridgrind.core.model.chart.ChartTitleSpec;
 import dev.erst.gridgrind.core.model.chart.ResolvedChart;
 import dev.erst.gridgrind.core.model.chart.ResolvedChartTitle;
+import dev.erst.gridgrind.core.model.drawing.CellCommentReport;
 import dev.erst.gridgrind.core.model.drawing.CommentAnchorSpec;
 import dev.erst.gridgrind.core.model.drawing.DrawingObjectReport;
 import dev.erst.gridgrind.core.model.drawing.ResolvedComment;
@@ -525,7 +526,7 @@ class ExcelSheetCopyControllerTest {
 
     try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       ExcelSheet source = seedAdvancedCopySource(workbook);
-      List<WorkbookSheetResult.CellComment> sourceComments =
+      List<CellCommentReport> sourceComments =
           source.annotations().comments(new ExcelCellSelection.Selected(List.of("E2")));
 
       workbook.sheets().copySheet("Source", "Replica", new SheetCopyPosition.AppendAtEnd());
@@ -673,7 +674,7 @@ class ExcelSheetCopyControllerTest {
   void copySheetPreservesAdvancedCommentsAfterSaveAndReopen() throws IOException {
     Path workbookPath = XlsxRoundTrip.newWorkbookPath("gridgrind-copy-sheet-comment-reopen-");
 
-    List<WorkbookSheetResult.CellComment> sourceComments;
+    List<CellCommentReport> sourceComments;
     try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       ExcelSheet source = seedAdvancedCopySource(workbook);
       sourceComments =

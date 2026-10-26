@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.core.model.layout.ColumnLayoutReport;
 import dev.erst.gridgrind.core.vocabulary.ExcelColumnSpan;
 import dev.erst.gridgrind.core.vocabulary.ExcelIndexDisplay;
 import dev.erst.gridgrind.excel.validation.ExcelDataValidationStructureSupport;
@@ -150,7 +151,7 @@ final class ExcelColumnStructureController {
     return ExcelRowColumnOutlineSupport.lastColumnIndex(sheet);
   }
 
-  List<WorkbookSheetResult.ColumnLayout> columnLayouts(XSSFSheet sheet) {
+  List<ColumnLayoutReport> columnLayouts(XSSFSheet sheet) {
     return ExcelRowColumnOutlineSupport.columnLayouts(sheet);
   }
 

@@ -21,6 +21,7 @@ import dev.erst.gridgrind.core.model.formula.ResolvedFormula;
 import dev.erst.gridgrind.core.model.layout.PaneSpec;
 import dev.erst.gridgrind.core.model.layout.SheetDefaultsSpec;
 import dev.erst.gridgrind.core.model.layout.SheetDisplaySpec;
+import dev.erst.gridgrind.core.model.layout.SheetLayoutReport;
 import dev.erst.gridgrind.core.model.layout.SheetOutlineSummarySpec;
 import dev.erst.gridgrind.core.model.layout.SheetPresentationSpec;
 import dev.erst.gridgrind.core.model.pivot.PivotTableReport;
@@ -326,7 +327,9 @@ class ResolvedMutationExecutorTest {
     assertEquals(List.of(), XlsxRoundTrip.mergedRegions(workbookPath, "Budget"));
     assertEquals(4096, XlsxRoundTrip.columnWidth(workbookPath, "Budget", 0));
     assertEquals((short) 570, XlsxRoundTrip.rowHeightTwips(workbookPath, "Budget", 0));
-    assertEquals(new PaneSpec.Frozen(1, 1, 1, 1), XlsxRoundTrip.pane(workbookPath, "Budget"));
+    assertEquals(
+        new dev.erst.gridgrind.core.model.layout.PaneReport.Frozen(1, 1, 1, 1),
+        XlsxRoundTrip.pane(workbookPath, "Budget"));
     assertEquals(125, XlsxRoundTrip.zoomPercent(workbookPath, "Budget"));
     assertEquals(
         ExcelPrintOrientation.LANDSCAPE,
@@ -567,7 +570,7 @@ class ResolvedMutationExecutorTest {
                   new SheetSelector.ByName(new SheetName("Budget")),
                   new WorkbookMutationAction.SetSheetPresentation(presentation))));
 
-      WorkbookSheetResult.SheetLayout layout = workbook.sheet("Budget").layout().snapshot();
+      SheetLayoutReport layout = workbook.sheet("Budget").layout().snapshot();
       assertEquals(
           new dev.erst.gridgrind.core.model.layout.SheetDisplayReport(
               false, false, false, true, true),
@@ -1012,7 +1015,7 @@ class ResolvedMutationExecutorTest {
               ExcelTempFileFactoryTestSupport.tempFileFactory());
     }
 
-    WorkbookSheetResult.SheetLayout layout = XlsxRoundTrip.sheetLayout(workbookPath, "Layout");
+    SheetLayoutReport layout = XlsxRoundTrip.sheetLayout(workbookPath, "Layout");
     assertEquals(6, layout.rows().size());
     assertTrue(layout.rows().get(1).hidden());
     assertEquals(1, layout.rows().get(1).outlineLevel());
@@ -1148,7 +1151,7 @@ class ResolvedMutationExecutorTest {
               ExcelTempFileFactoryTestSupport.tempFileFactory());
     }
 
-    WorkbookSheetResult.SheetLayout layout = XlsxRoundTrip.sheetLayout(workbookPath, "Layout");
+    SheetLayoutReport layout = XlsxRoundTrip.sheetLayout(workbookPath, "Layout");
 
     assertTrue(layout.rows().size() >= 4);
     assertFalse(layout.rows().get(1).hidden());

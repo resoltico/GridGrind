@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import dev.erst.gridgrind.core.model.drawing.CommentAnchorReport;
 import dev.erst.gridgrind.core.model.drawing.CommentReport;
 import dev.erst.gridgrind.core.model.drawing.ResolvedComment;
+import dev.erst.gridgrind.core.model.layout.SheetLayoutReport;
 import dev.erst.gridgrind.core.model.value.CellReport;
 import dev.erst.gridgrind.core.model.value.CellValue;
 import dev.erst.gridgrind.core.model.value.HyperlinkTarget;
@@ -366,7 +367,7 @@ class ExcelSheetAnnotationHyperlinkCoverageTest extends ExcelSheetTestSupport {
       assertEquals("A2", window.rows().get(1).cells().getFirst().address().value());
       assertEquals("BLANK", window.rows().get(1).cells().getFirst().type());
 
-      WorkbookSheetResult.SheetLayout layout = sheet.layout().snapshot();
+      SheetLayoutReport layout = sheet.layout().snapshot();
       assertEquals(3, layout.rows().size());
       assertEquals(poiSheet.getDefaultRowHeightInPoints(), layout.rows().get(1).heightPoints());
 

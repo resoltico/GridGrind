@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.core.model.layout.ColumnLayoutReport;
 import dev.erst.gridgrind.core.vocabulary.ExcelColumnSpan;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -33,18 +34,18 @@ final class ExcelColumnDefinitionSupport {
   }
 
   /** Returns the sheet column layouts including hidden, outline, and collapsed state. */
-  static List<WorkbookSheetResult.ColumnLayout> columnLayouts(XSSFSheet sheet) {
+  static List<ColumnLayoutReport> columnLayouts(XSSFSheet sheet) {
     Objects.requireNonNull(sheet, "sheet must not be null");
     int lastColumnIndex = lastColumnIndex(sheet);
     if (lastColumnIndex < 0) {
       return List.of();
     }
     Map<Integer, CTCol> effectiveColumns = effectiveColumnDefinitions(sheet);
-    List<WorkbookSheetResult.ColumnLayout> columns = new ArrayList<>(lastColumnIndex + 1);
+    List<ColumnLayoutReport> columns = new ArrayList<>(lastColumnIndex + 1);
     for (int columnIndex = 0; columnIndex <= lastColumnIndex; columnIndex++) {
       CTCol columnDefinition = effectiveColumns.get(columnIndex);
       columns.add(
-          new WorkbookSheetResult.ColumnLayout(
+          new ColumnLayoutReport(
               columnIndex,
               sheet.getColumnWidth(columnIndex) / 256.0d,
               columnDefinition != null && columnDefinition.getHidden(),

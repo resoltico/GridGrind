@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.core.model.drawing.CellCommentReport;
 import dev.erst.gridgrind.core.model.formula.NamedRangeReport;
 import dev.erst.gridgrind.core.model.print.ResolvedPrintLayout;
 import dev.erst.gridgrind.core.model.table.AutofilterEntryReport;
@@ -18,8 +19,7 @@ import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTSheetProtection;
 final class ExcelSheetCopySupport {
   private ExcelSheetCopySupport() {}
 
-  static void repairComments(
-      List<WorkbookSheetResult.CellComment> expectedComments, ExcelSheet targetSheet) {
+  static void repairComments(List<CellCommentReport> expectedComments, ExcelSheet targetSheet) {
     if (expectedComments.isEmpty()) {
       return;
     }

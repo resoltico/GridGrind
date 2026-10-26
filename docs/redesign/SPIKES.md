@@ -2569,3 +2569,28 @@ Focused copy suite passes21s; nested check/all94 retained seeds pass14s. Final .
 unchanged. No active campaigns. Inventories: main Java114625→114592, tests153591→153596; converter1160,
 blank288, Support198, definitions0, snapshots2(runtime) unchanged. Baseline diff empty. WP-40 remains
 open for resolved plan and remaining read-side consolidation.
+
+## WP-40 canonical sheet layout, merges and cell metadata facts
+
+Deleted six nested engine fact models: SheetLayout, ColumnLayout, RowLayout, MergedRegion,
+CellHyperlink and CellComment. Native layout/annotation producers now construct the existing core
+reports directly. Pane reads produce PaneReport; pane writes still consume PaneSpec. The typed
+address unwrap in comment repair preserves its native coordinate processing. Read result conversion
+forwards these facts, deleting sheet-layout/metadata/pane reconstruction; only window conversion
+remains in that helper. Native layout, saved workbook, copied-sheet and comment-column-repair checks
+retain the same expected values, coordinates and order. The independent round-trip verifier reads
+PaneReport from POI directly, without calling the production reader.
+
+Compile retries corrected a comment-repair String lookup, the readback fixture's pane return type,
+and an expected-map address lookup flagged by Error Prone. Initial behavioral failures were spec vs
+report equality or String vs typed label/address comparisons; narrowed fixtures to factual records
+and scalar values. Retired the deleted merge wrapper's blank rejection (RangeLabel intentionally
+represents observed text) and the deleted row/column wrappers' wording-only checks. Existing canonical
+core row/column invariants remain independently tested in WorkbookResultEdgeCoverageTest. Failure
+traces retained in external sheet-facts-* JSONs. Focused fixture checks pass12s; nested check/all94
+retained seeds pass16s. No active campaigns.
+
+Final ./gradlew check passes2m58s: core384, JSON353, engine1414 plus14 parity, CLI588, zero failures,
+errors/skips; all143 golden cases unchanged. Inventories: converters1160→1083, main114592→114469,
+tests153596→153631; Support198, blank288, definitions0, snapshots2(runtime) unchanged. Baseline diff
+empty. WP-40 remains open for ResolvedPlan, windows/surfaces/analyses and the read query/result cutover.

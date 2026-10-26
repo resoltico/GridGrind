@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.core.model.drawing.CellCommentReport;
 import dev.erst.gridgrind.core.model.formula.NamedRangeReport;
 import dev.erst.gridgrind.core.model.print.ResolvedPrintLayout;
 import dev.erst.gridgrind.core.model.table.AutofilterEntryReport;
@@ -178,7 +179,7 @@ final class ExcelSheetCopyController {
   private record ExcelSheetCopySnapshot(
       List<NamedRangeReport> localNamedRanges,
       ResolvedPrintLayout printLayout,
-      List<WorkbookSheetResult.CellComment> comments,
+      List<CellCommentReport> comments,
       List<CTDataValidation> dataValidations,
       List<org.openxmlformats.schemas.spreadsheetml.x2006.main.CTConditionalFormatting>
           conditionalFormattingBlocks,

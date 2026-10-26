@@ -488,7 +488,9 @@ class ExcelWorkbookTest {
               ExcelTempFileFactoryTestSupport.tempFileFactory());
     }
 
-    assertEquals(new PaneSpec.Frozen(1, 1, 1, 1), XlsxRoundTrip.pane(workbookPath, "Replica"));
+    assertEquals(
+        new dev.erst.gridgrind.core.model.layout.PaneReport.Frozen(1, 1, 1, 1),
+        XlsxRoundTrip.pane(workbookPath, "Replica"));
     assertEquals(140, XlsxRoundTrip.zoomPercent(workbookPath, "Replica"));
     assertEquals(
         ExcelPrintOrientation.LANDSCAPE,
@@ -549,7 +551,7 @@ class ExcelWorkbookTest {
       assertEquals(
           List.of("A1:B1"),
           workbook.sheet("Replica").layout().mergedRegions().stream()
-              .map(WorkbookSheetResult.MergedRegion::range)
+              .map(region -> region.range().value())
               .toList());
       assertEquals(
           List.of("B2:B4"),
@@ -676,7 +678,9 @@ class ExcelWorkbookTest {
     assertEquals(List.of("A1:B1"), XlsxRoundTrip.mergedRegions(workbookPath, "Budget"));
     assertEquals(4096, XlsxRoundTrip.columnWidth(workbookPath, "Budget", 0));
     assertEquals((short) 570, XlsxRoundTrip.rowHeightTwips(workbookPath, "Budget", 0));
-    assertEquals(new PaneSpec.Frozen(1, 1, 1, 1), XlsxRoundTrip.pane(workbookPath, "Budget"));
+    assertEquals(
+        new dev.erst.gridgrind.core.model.layout.PaneReport.Frozen(1, 1, 1, 1),
+        XlsxRoundTrip.pane(workbookPath, "Budget"));
     assertEquals(125, XlsxRoundTrip.zoomPercent(workbookPath, "Budget"));
     assertEquals(
         new PrintAreaSpec.Range(new RangeRef("A1:B12")),
@@ -1074,7 +1078,9 @@ class ExcelWorkbookTest {
     assertEquals(List.of("A1:B2"), XlsxRoundTrip.mergedRegions(workbookPath, "Budget"));
     assertEquals(4096, XlsxRoundTrip.columnWidth(workbookPath, "Budget", 0));
     assertEquals((short) 570, XlsxRoundTrip.rowHeightTwips(workbookPath, "Budget", 0));
-    assertEquals(new PaneSpec.Frozen(1, 2, 3, 4), XlsxRoundTrip.pane(workbookPath, "Budget"));
+    assertEquals(
+        new dev.erst.gridgrind.core.model.layout.PaneReport.Frozen(1, 2, 3, 4),
+        XlsxRoundTrip.pane(workbookPath, "Budget"));
   }
 
   @Test

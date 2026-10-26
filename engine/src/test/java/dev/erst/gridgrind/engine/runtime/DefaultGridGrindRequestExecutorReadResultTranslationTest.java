@@ -109,23 +109,26 @@ class DefaultGridGrindRequestExecutorReadResultTranslationTest
             new dev.erst.gridgrind.excel.WorkbookSheetResult.MergedRegionsResult(
                 new StepId("merged"),
                 "Budget",
-                List.of(new dev.erst.gridgrind.excel.WorkbookSheetResult.MergedRegion("A1:B2"))));
+                List.of(
+                    new dev.erst.gridgrind.core.model.layout.MergedRegionReport(
+                        new dev.erst.gridgrind.core.vocabulary.RangeLabel("A1:B2")))));
     InspectionResult hyperlinks =
         InspectionResultConverter.toReadResult(
             new dev.erst.gridgrind.excel.WorkbookSheetResult.HyperlinksResult(
                 new StepId("hyperlinks"),
                 "Budget",
                 List.of(
-                    new dev.erst.gridgrind.excel.WorkbookSheetResult.CellHyperlink(
-                        "A1", new HyperlinkTarget.Url("https://example.com/report")))));
+                    new dev.erst.gridgrind.core.model.value.CellHyperlinkReport(
+                        new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"),
+                        new HyperlinkTarget.Url("https://example.com/report")))));
     InspectionResult comments =
         InspectionResultConverter.toReadResult(
             new dev.erst.gridgrind.excel.WorkbookSheetResult.CommentsResult(
                 new StepId("comments"),
                 "Budget",
                 List.of(
-                    new dev.erst.gridgrind.excel.WorkbookSheetResult.CellComment(
-                        "A1",
+                    new dev.erst.gridgrind.core.model.drawing.CellCommentReport(
+                        new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"),
                         new CommentReport(
                             "Review",
                             "GridGrind",
@@ -136,16 +139,16 @@ class DefaultGridGrindRequestExecutorReadResultTranslationTest
         InspectionResultConverter.toReadResult(
             new dev.erst.gridgrind.excel.WorkbookSheetResult.SheetLayoutResult(
                 new StepId("layout"),
-                new dev.erst.gridgrind.excel.WorkbookSheetResult.SheetLayout(
-                    "Budget",
-                    new dev.erst.gridgrind.core.model.layout.PaneSpec.Frozen(1, 1, 1, 1),
+                new dev.erst.gridgrind.core.model.layout.SheetLayoutReport(
+                    new dev.erst.gridgrind.core.vocabulary.SheetLabel("Budget"),
+                    new dev.erst.gridgrind.core.model.layout.PaneReport.Frozen(1, 1, 1, 1),
                     125,
                     defaultSheetPresentationSnapshot(),
                     List.of(
-                        new dev.erst.gridgrind.excel.WorkbookSheetResult.ColumnLayout(
+                        new dev.erst.gridgrind.core.model.layout.ColumnLayoutReport(
                             0, 12.5, false, 0, false)),
                     List.of(
-                        new dev.erst.gridgrind.excel.WorkbookSheetResult.RowLayout(
+                        new dev.erst.gridgrind.core.model.layout.RowLayoutReport(
                             0, 18.0, false, 0, false)))));
     InspectionResult printLayout =
         InspectionResultConverter.toReadResult(
@@ -553,9 +556,9 @@ class DefaultGridGrindRequestExecutorReadResultTranslationTest
             InspectionResultConverter.toReadResult(
                 new dev.erst.gridgrind.excel.WorkbookSheetResult.SheetLayoutResult(
                     new StepId("layout"),
-                    new dev.erst.gridgrind.excel.WorkbookSheetResult.SheetLayout(
-                        "Budget",
-                        new dev.erst.gridgrind.core.model.layout.PaneSpec.None(),
+                    new dev.erst.gridgrind.core.model.layout.SheetLayoutReport(
+                        new dev.erst.gridgrind.core.vocabulary.SheetLabel("Budget"),
+                        new dev.erst.gridgrind.core.model.layout.PaneReport.None(),
                         100,
                         defaultSheetPresentationSnapshot(),
                         List.of(),
@@ -572,9 +575,9 @@ class DefaultGridGrindRequestExecutorReadResultTranslationTest
             InspectionResultConverter.toReadResult(
                 new dev.erst.gridgrind.excel.WorkbookSheetResult.SheetLayoutResult(
                     new StepId("layout"),
-                    new dev.erst.gridgrind.excel.WorkbookSheetResult.SheetLayout(
-                        "Budget",
-                        new dev.erst.gridgrind.core.model.layout.PaneSpec.Split(
+                    new dev.erst.gridgrind.core.model.layout.SheetLayoutReport(
+                        new dev.erst.gridgrind.core.vocabulary.SheetLabel("Budget"),
+                        new dev.erst.gridgrind.core.model.layout.PaneReport.Split(
                             1200, 2400, 3, 4, ExcelPaneRegion.LOWER_RIGHT),
                         100,
                         defaultSheetPresentationSnapshot(),

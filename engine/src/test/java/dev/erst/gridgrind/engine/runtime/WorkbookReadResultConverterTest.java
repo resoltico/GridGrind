@@ -17,7 +17,7 @@ import dev.erst.gridgrind.core.model.drawing.DrawingMarkerSpec;
 import dev.erst.gridgrind.core.model.drawing.DrawingObjectPayloadReport;
 import dev.erst.gridgrind.core.model.drawing.DrawingObjectReport;
 import dev.erst.gridgrind.core.model.formula.ArrayFormulaReport;
-import dev.erst.gridgrind.core.model.layout.PaneSpec;
+import dev.erst.gridgrind.core.model.layout.PaneReport;
 import dev.erst.gridgrind.core.model.layout.SheetDefaultsReport;
 import dev.erst.gridgrind.core.model.layout.SheetDisplayReport;
 import dev.erst.gridgrind.core.model.layout.SheetOutlineSummaryReport;
@@ -263,8 +263,9 @@ class InspectionResultConverterTest extends DefaultGridGrindRequestExecutorTestS
                     new StepId("comments"),
                     "Budget",
                     List.of(
-                        new dev.erst.gridgrind.excel.WorkbookSheetResult.CellComment(
-                            "C3", richComment())))));
+                        new dev.erst.gridgrind.core.model.drawing.CellCommentReport(
+                            new dev.erst.gridgrind.core.vocabulary.CellAddress("C3"),
+                            richComment())))));
     assertEquals(2, comments.comments().getFirst().comment().runs().orElseThrow().size());
     assertEquals(6, comments.comments().getFirst().comment().anchor().orElseThrow().lastRow());
   }
@@ -951,10 +952,10 @@ class InspectionResultConverterTest extends DefaultGridGrindRequestExecutorTestS
             List.of(2, 4)));
   }
 
-  private static dev.erst.gridgrind.excel.WorkbookSheetResult.SheetLayout advancedSheetLayout() {
-    return new dev.erst.gridgrind.excel.WorkbookSheetResult.SheetLayout(
-        "Budget",
-        new PaneSpec.Frozen(1, 1, 1, 1),
+  private static dev.erst.gridgrind.core.model.layout.SheetLayoutReport advancedSheetLayout() {
+    return new dev.erst.gridgrind.core.model.layout.SheetLayoutReport(
+        new dev.erst.gridgrind.core.vocabulary.SheetLabel("Budget"),
+        new PaneReport.Frozen(1, 1, 1, 1),
         125,
         new SheetPresentationReport(
             new SheetDisplayReport(false, false, true, true, true),
@@ -968,10 +969,9 @@ class InspectionResultConverterTest extends DefaultGridGrindRequestExecutorTestS
                         ExcelIgnoredErrorType.NUMBER_STORED_AS_TEXT,
                         ExcelIgnoredErrorType.FORMULA)))),
         List.of(
-            new dev.erst.gridgrind.excel.WorkbookSheetResult.ColumnLayout(
-                0, 16.0d, false, 0, false)),
+            new dev.erst.gridgrind.core.model.layout.ColumnLayoutReport(0, 16.0d, false, 0, false)),
         List.of(
-            new dev.erst.gridgrind.excel.WorkbookSheetResult.RowLayout(0, 20.0d, false, 0, false)));
+            new dev.erst.gridgrind.core.model.layout.RowLayoutReport(0, 20.0d, false, 0, false)));
   }
 
   private static List<AutofilterEntryReport> advancedAutofilters() {

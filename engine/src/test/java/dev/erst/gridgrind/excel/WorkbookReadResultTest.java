@@ -2,13 +2,19 @@ package dev.erst.gridgrind.excel;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.core.model.drawing.CellCommentReport;
 import dev.erst.gridgrind.core.model.drawing.CommentReport;
 import dev.erst.gridgrind.core.model.formula.NamedRangeReport;
 import dev.erst.gridgrind.core.model.formula.NamedRangeScopeReport;
 import dev.erst.gridgrind.core.model.formula.NamedRangeTarget;
+import dev.erst.gridgrind.core.model.layout.ColumnLayoutReport;
+import dev.erst.gridgrind.core.model.layout.MergedRegionReport;
+import dev.erst.gridgrind.core.model.layout.PaneReport;
 import dev.erst.gridgrind.core.model.layout.PaneSpec;
+import dev.erst.gridgrind.core.model.layout.RowLayoutReport;
 import dev.erst.gridgrind.core.model.layout.SheetDefaultsReport;
 import dev.erst.gridgrind.core.model.layout.SheetDisplayReport;
+import dev.erst.gridgrind.core.model.layout.SheetLayoutReport;
 import dev.erst.gridgrind.core.model.layout.SheetOutlineSummaryReport;
 import dev.erst.gridgrind.core.model.layout.SheetPresentationReport;
 import dev.erst.gridgrind.core.model.pivot.PivotTableReport;
@@ -33,6 +39,7 @@ import dev.erst.gridgrind.core.model.validation.DataValidationEntryReport;
 import dev.erst.gridgrind.core.model.validation.DataValidationRuleSpec;
 import dev.erst.gridgrind.core.model.validation.ResolvedDataValidation;
 import dev.erst.gridgrind.core.model.validation.ResolvedValidationPrompt;
+import dev.erst.gridgrind.core.model.value.CellHyperlinkReport;
 import dev.erst.gridgrind.core.model.value.CellReport;
 import dev.erst.gridgrind.core.model.value.HyperlinkTarget;
 import dev.erst.gridgrind.core.result.SheetSummaryReport;
@@ -133,10 +140,15 @@ class WorkbookReadResultTest {
     assertThrows(
         IllegalArgumentException.class,
         () -> new WorkbookSheetResult.Window("Budget", "A1", 1, 0, List.of()));
-    assertThrows(IllegalArgumentException.class, () -> new WorkbookSheetResult.MergedRegion(" "));
     assertThrows(
-        NullPointerException.class, () -> new WorkbookSheetResult.CellHyperlink("A1", null));
-    assertThrows(NullPointerException.class, () -> new WorkbookSheetResult.CellComment("A1", null));
+        NullPointerException.class,
+        () ->
+            new CellHyperlinkReport(
+                new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"), null));
+    assertThrows(
+        NullPointerException.class,
+        () ->
+            new CellCommentReport(new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"), null));
     assertThrows(
         NullPointerException.class,
         () ->
@@ -160,9 +172,9 @@ class WorkbookReadResultTest {
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new WorkbookSheetResult.SheetLayout(
-                "Budget",
-                new PaneSpec.None(),
+            new SheetLayoutReport(
+                new dev.erst.gridgrind.core.vocabulary.SheetLabel("Budget"),
+                new PaneReport.None(),
                 9,
                 defaultSheetPresentationSnapshot(),
                 List.of(),
@@ -172,29 +184,23 @@ class WorkbookReadResultTest {
         NullPointerException.class,
         () -> new WorkbookSheetResult.PrintLayoutResult(new StepId("print"), "Budget", null));
     assertThrows(
-        IllegalArgumentException.class,
-        () -> new WorkbookSheetResult.ColumnLayout(-1, 1.0, false, 0, false));
+        IllegalArgumentException.class, () -> new ColumnLayoutReport(-1, 1.0, false, 0, false));
+    assertThrows(
+        IllegalArgumentException.class, () -> new ColumnLayoutReport(0, 0.0, false, 0, false));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new WorkbookSheetResult.ColumnLayout(0, 0.0, false, 0, false));
+        () -> new ColumnLayoutReport(0, Double.POSITIVE_INFINITY, false, 0, false));
+    assertThrows(
+        IllegalArgumentException.class, () -> new ColumnLayoutReport(0, 1.0, false, -1, false));
+    assertThrows(
+        IllegalArgumentException.class, () -> new RowLayoutReport(-1, 1.0, false, 0, false));
+    assertThrows(
+        IllegalArgumentException.class, () -> new RowLayoutReport(0, 0.0, false, 0, false));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new WorkbookSheetResult.ColumnLayout(0, Double.POSITIVE_INFINITY, false, 0, false));
+        () -> new RowLayoutReport(0, Double.POSITIVE_INFINITY, false, 0, false));
     assertThrows(
-        IllegalArgumentException.class,
-        () -> new WorkbookSheetResult.ColumnLayout(0, 1.0, false, -1, false));
-    assertThrows(
-        IllegalArgumentException.class,
-        () -> new WorkbookSheetResult.RowLayout(-1, 1.0, false, 0, false));
-    assertThrows(
-        IllegalArgumentException.class,
-        () -> new WorkbookSheetResult.RowLayout(0, 0.0, false, 0, false));
-    assertThrows(
-        IllegalArgumentException.class,
-        () -> new WorkbookSheetResult.RowLayout(0, Double.POSITIVE_INFINITY, false, 0, false));
-    assertThrows(
-        IllegalArgumentException.class,
-        () -> new WorkbookSheetResult.RowLayout(0, 1.0, false, -1, false));
+        IllegalArgumentException.class, () -> new RowLayoutReport(0, 1.0, false, -1, false));
     assertThrows(
         IllegalArgumentException.class,
         () -> new WorkbookSurfaceResult.FormulaSurface(-1, List.of()));
@@ -347,20 +353,6 @@ class WorkbookReadResultTest {
     assertTrue(windowRowFailure.getMessage().contains("rowIndex -1"));
     assertTrue(windowRowFailure.getMessage().contains("Excel row 1"));
 
-    IllegalArgumentException columnLayoutFailure =
-        assertThrows(
-            IllegalArgumentException.class,
-            () -> new WorkbookSheetResult.ColumnLayout(-1, 1.0, false, 0, false));
-    assertTrue(columnLayoutFailure.getMessage().contains("columnIndex -1"));
-    assertTrue(columnLayoutFailure.getMessage().contains("Excel column A"));
-
-    IllegalArgumentException rowLayoutFailure =
-        assertThrows(
-            IllegalArgumentException.class,
-            () -> new WorkbookSheetResult.RowLayout(-1, 1.0, false, 0, false));
-    assertTrue(rowLayoutFailure.getMessage().contains("rowIndex -1"));
-    assertTrue(rowLayoutFailure.getMessage().contains("Excel row 1"));
-
     IllegalArgumentException schemaColumnFailure =
         assertThrows(
             IllegalArgumentException.class,
@@ -450,24 +442,28 @@ class WorkbookReadResultTest {
     List<CellReport> cells = new ArrayList<>(List.of(blank));
     List<WorkbookSheetResult.WindowRow> rows =
         new ArrayList<>(List.of(new WorkbookSheetResult.WindowRow(0, List.of(blank))));
-    List<WorkbookSheetResult.MergedRegion> mergedRegions =
-        new ArrayList<>(List.of(new WorkbookSheetResult.MergedRegion("A1:B2")));
-    List<WorkbookSheetResult.CellHyperlink> hyperlinks =
+    List<MergedRegionReport> mergedRegions =
         new ArrayList<>(
             List.of(
-                new WorkbookSheetResult.CellHyperlink(
-                    "A1", new HyperlinkTarget.Url("https://example.com/report"))));
-    List<WorkbookSheetResult.CellComment> comments =
+                new MergedRegionReport(
+                    new dev.erst.gridgrind.core.vocabulary.RangeLabel("A1:B2"))));
+    List<CellHyperlinkReport> hyperlinks =
         new ArrayList<>(
             List.of(
-                new WorkbookSheetResult.CellComment(
-                    "A1",
+                new CellHyperlinkReport(
+                    new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"),
+                    new HyperlinkTarget.Url("https://example.com/report"))));
+    List<CellCommentReport> comments =
+        new ArrayList<>(
+            List.of(
+                new CellCommentReport(
+                    new dev.erst.gridgrind.core.vocabulary.CellAddress("A1"),
                     new CommentReport(
                         "Review", "GridGrind", false, Optional.empty(), Optional.empty()))));
-    List<WorkbookSheetResult.ColumnLayout> columns =
-        new ArrayList<>(List.of(new WorkbookSheetResult.ColumnLayout(0, 12.5, false, 0, false)));
-    List<WorkbookSheetResult.RowLayout> resultRows =
-        new ArrayList<>(List.of(new WorkbookSheetResult.RowLayout(0, 18.0, false, 0, false)));
+    List<ColumnLayoutReport> columns =
+        new ArrayList<>(List.of(new ColumnLayoutReport(0, 12.5, false, 0, false)));
+    List<RowLayoutReport> resultRows =
+        new ArrayList<>(List.of(new RowLayoutReport(0, 18.0, false, 0, false)));
     List<DataValidationEntryReport> validations =
         new ArrayList<>(
             List.of(
@@ -577,9 +573,9 @@ class WorkbookReadResultTest {
         new WorkbookSheetResult.CommentsResult(new StepId("comments"), "Budget", comments),
         new WorkbookSheetResult.SheetLayoutResult(
             new StepId("layout"),
-            new WorkbookSheetResult.SheetLayout(
-                "Budget",
-                new PaneSpec.Frozen(1, 1, 1, 1),
+            new SheetLayoutReport(
+                new dev.erst.gridgrind.core.vocabulary.SheetLabel("Budget"),
+                new PaneReport.Frozen(1, 1, 1, 1),
                 125,
                 defaultSheetPresentationSnapshot(),
                 columns,
@@ -619,7 +615,7 @@ class WorkbookReadResultTest {
     assertEquals(
         "A1",
         fixture.windowResult().window().rows().getFirst().cells().getFirst().address().value());
-    assertEquals("A1:B2", fixture.mergedRegionsResult().mergedRegions().getFirst().range());
+    assertEquals("A1:B2", fixture.mergedRegionsResult().mergedRegions().getFirst().range().value());
     assertEquals(
         "https://example.com/report",
         assertInstanceOf(
@@ -627,7 +623,9 @@ class WorkbookReadResultTest {
                 fixture.hyperlinksResult().hyperlinks().getFirst().hyperlink())
             .target());
     assertEquals("Review", fixture.commentsResult().comments().getFirst().comment().text());
-    assertEquals(new PaneSpec.Frozen(1, 1, 1, 1), fixture.layoutResult().layout().pane());
+    assertEquals(
+        new dev.erst.gridgrind.core.model.layout.PaneReport.Frozen(1, 1, 1, 1),
+        fixture.layoutResult().layout().pane());
     assertEquals(125, fixture.layoutResult().layout().zoomPercent());
     assertEquals(defaultPrintLayoutSnapshot(), fixture.printLayoutResult().printLayout());
     assertEquals(
@@ -650,11 +648,11 @@ class WorkbookReadResultTest {
       List<NamedRangeReport> namedRanges,
       List<CellReport> cells,
       List<WorkbookSheetResult.WindowRow> rows,
-      List<WorkbookSheetResult.MergedRegion> mergedRegions,
-      List<WorkbookSheetResult.CellHyperlink> hyperlinks,
-      List<WorkbookSheetResult.CellComment> comments,
-      List<WorkbookSheetResult.ColumnLayout> columns,
-      List<WorkbookSheetResult.RowLayout> resultRows,
+      List<MergedRegionReport> mergedRegions,
+      List<CellHyperlinkReport> hyperlinks,
+      List<CellCommentReport> comments,
+      List<ColumnLayoutReport> columns,
+      List<RowLayoutReport> resultRows,
       List<DataValidationEntryReport> validations,
       List<AutofilterEntryReport> autofilters,
       List<TableEntryReport> tables,

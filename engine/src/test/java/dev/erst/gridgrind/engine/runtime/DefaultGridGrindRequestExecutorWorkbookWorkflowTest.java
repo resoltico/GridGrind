@@ -764,9 +764,11 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
     assertEquals(List.of("A1:B1"), XlsxRoundTrip.mergedRegions(workbookPath, "Budget"));
     assertEquals(4096, XlsxRoundTrip.columnWidth(workbookPath, "Budget", 0));
     assertEquals((short) 570, XlsxRoundTrip.rowHeightTwips(workbookPath, "Budget", 0));
-    assertEquals(new PaneSpec.Frozen(1, 1, 1, 1), XlsxRoundTrip.pane(workbookPath, "Budget"));
+    assertEquals(
+        new dev.erst.gridgrind.core.model.layout.PaneReport.Frozen(1, 1, 1, 1),
+        XlsxRoundTrip.pane(workbookPath, "Budget"));
     assertEquals(125, XlsxRoundTrip.zoomPercent(workbookPath, "Budget"));
-    dev.erst.gridgrind.excel.WorkbookSheetResult.SheetLayout reopenedLayout =
+    dev.erst.gridgrind.core.model.layout.SheetLayoutReport reopenedLayout =
         XlsxRoundTrip.sheetLayout(workbookPath, "Budget");
     assertEquals(
         new dev.erst.gridgrind.core.model.layout.SheetDisplayReport(
@@ -885,7 +887,7 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
     assertTrue(layout.columns().get(4).collapsed());
     assertTrue(layout.columns().get(5).hidden());
 
-    dev.erst.gridgrind.excel.WorkbookSheetResult.SheetLayout reopenedLayout =
+    dev.erst.gridgrind.core.model.layout.SheetLayoutReport reopenedLayout =
         XlsxRoundTrip.sheetLayout(workbookPath, "Layout");
     assertTrue(reopenedLayout.rows().get(1).hidden());
     assertEquals(1, reopenedLayout.rows().get(1).outlineLevel());
@@ -937,7 +939,7 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
     assertEquals(300.0d, layout.columns().getFirst().widthCharacters());
     assertEquals(999.0d, layout.rows().getFirst().heightPoints());
 
-    dev.erst.gridgrind.excel.WorkbookSheetResult.SheetLayout reopenedLayout =
+    dev.erst.gridgrind.core.model.layout.SheetLayoutReport reopenedLayout =
         XlsxRoundTrip.sheetLayout(malformedWorkbook, "Layout");
     assertEquals(999.0d, reopenedLayout.presentation().sheetDefaults().defaultRowHeightPoints());
     assertEquals(300.0d, reopenedLayout.columns().getFirst().widthCharacters());
