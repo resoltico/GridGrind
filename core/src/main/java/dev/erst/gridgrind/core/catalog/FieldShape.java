@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.Objects;
 
 /** JSON-serializable recursive field-shape contract used by protocol discovery output. */
-@Union(discriminator = "kind")
+@Union(discriminator = "type")
 public sealed interface FieldShape
     permits FieldShape.Scalar,
         FieldShape.ListShape,

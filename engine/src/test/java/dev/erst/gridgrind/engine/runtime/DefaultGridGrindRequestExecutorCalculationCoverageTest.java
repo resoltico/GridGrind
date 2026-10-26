@@ -76,7 +76,7 @@ class DefaultGridGrindRequestExecutorCalculationCoverageTest {
             ExecutionContextFixtureSupport.execute(new DefaultGridGrindRequestExecutor(), request));
 
     assertEquals(GridGrindProblemCode.INVALID_REQUEST, failure.problem().code());
-    assertEquals("VALIDATE_REQUEST", failure.problem().context().stage());
+    assertEquals("VALIDATE_REQUEST", failure.problem().context().type());
     assertTrue(failure.problem().message().contains("mutation-to-observation boundary"));
   }
 
@@ -229,7 +229,7 @@ class DefaultGridGrindRequestExecutorCalculationCoverageTest {
                     java.util.List.of())));
 
     assertEquals(GridGrindProblemCode.INTERNAL_ERROR, failure.problem().code());
-    assertEquals("CALCULATION_EXECUTION", failure.problem().context().stage());
+    assertEquals("CALCULATION_EXECUTION", failure.problem().context().type());
     assertEquals(CalculationExecutionStatus.FAILED, failure.calculation().execution().status());
     assertTrue(
         failure
@@ -270,7 +270,7 @@ class DefaultGridGrindRequestExecutorCalculationCoverageTest {
       assertEquals(CalculationExecutionStatus.FAILED, preflightReport.execution().status());
       assertEquals(
           GridGrindProblemCode.UNREGISTERED_USER_DEFINED_FUNCTION, preflightFailure.code());
-      assertEquals("CALCULATION_PREFLIGHT", preflightFailure.context().stage());
+      assertEquals("CALCULATION_PREFLIGHT", preflightFailure.context().type());
       assertEquals(
           java.util.Optional.of("Ops"),
           DefaultGridGrindRequestExecutorTestSupport.calculationPreflightContext(preflightFailure)
@@ -305,7 +305,7 @@ class DefaultGridGrindRequestExecutorCalculationCoverageTest {
       GridGrindProblemDetail.Problem executionFailure = executionOutcome.failure().orElseThrow();
       assertEquals(CalculationExecutionStatus.FAILED, executionReport.execution().status());
       assertEquals(GridGrindProblemCode.INTERNAL_ERROR, executionFailure.code());
-      assertEquals("CALCULATION_EXECUTION", executionFailure.context().stage());
+      assertEquals("CALCULATION_EXECUTION", executionFailure.context().type());
       assertEquals(
           java.util.Optional.empty(),
           DefaultGridGrindRequestExecutorTestSupport.calculationExecutionContext(executionFailure)
@@ -353,12 +353,12 @@ class DefaultGridGrindRequestExecutorCalculationCoverageTest {
     GridGrindProblemDetail.Problem mappedCodeFailure =
         calculationSupport.calculationProblemFor(preflightRequest, codeFailure);
     assertEquals(GridGrindProblemCode.INVALID_FORMULA, mappedCodeFailure.code());
-    assertEquals("CALCULATION_PREFLIGHT", mappedCodeFailure.context().stage());
+    assertEquals("CALCULATION_PREFLIGHT", mappedCodeFailure.context().type());
 
     dev.erst.gridgrind.core.problem.ProblemContext.ExecuteCalculation nullFailureContext =
         calculationSupport.calculationContextFor(
             preflightRequest, CalculationPolicyExecutor.Phase.EXECUTION, null);
-    assertEquals("CALCULATION_EXECUTION", nullFailureContext.stage());
+    assertEquals("CALCULATION_EXECUTION", nullFailureContext.type());
     assertEquals(java.util.Optional.empty(), nullFailureContext.sheetName());
     assertEquals(java.util.Optional.empty(), nullFailureContext.address());
     assertEquals(java.util.Optional.empty(), nullFailureContext.formula());
@@ -366,7 +366,7 @@ class DefaultGridGrindRequestExecutorCalculationCoverageTest {
     dev.erst.gridgrind.core.problem.ProblemContext.ExecuteCalculation preflightNullFailureContext =
         calculationSupport.calculationContextFor(
             preflightRequest, CalculationPolicyExecutor.Phase.PREFLIGHT, null);
-    assertEquals("CALCULATION_PREFLIGHT", preflightNullFailureContext.stage());
+    assertEquals("CALCULATION_PREFLIGHT", preflightNullFailureContext.type());
     assertEquals(java.util.Optional.empty(), preflightNullFailureContext.sheetName());
     assertEquals(java.util.Optional.empty(), preflightNullFailureContext.address());
     assertEquals(java.util.Optional.empty(), preflightNullFailureContext.formula());

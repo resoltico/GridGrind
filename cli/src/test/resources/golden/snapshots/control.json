@@ -7,7 +7,7 @@
         "lastRowIndex" : 0,
         "physicalRowCount" : 1,
         "protection" : {
-          "kind" : "UNPROTECTED"
+          "type" : "UNPROTECTED"
         },
         "sheetName" : "Control",
         "visibility" : "VISIBLE"
@@ -144,14 +144,14 @@
             }
           },
           "fill" : {
-            "kind" : "PATTERN_ONLY",
-            "pattern" : "NONE"
+            "pattern" : "NONE",
+            "type" : "PATTERN_ONLY"
           },
           "font" : {
             "bold" : false,
             "fontColor" : {
               "indexed" : 8,
-              "kind" : "INDEXED"
+              "type" : "INDEXED"
             },
             "fontHeight" : {
               "points" : 11,
@@ -211,11 +211,11 @@
       "workbook" : {
         "activeSheetName" : "Control",
         "forceFormulaRecalculationOnOpen" : false,
-        "kind" : "WITH_SHEETS",
         "namedRangeCount" : 0,
         "selectedSheetNames" : [ "Control" ],
         "sheetCount" : 1,
-        "sheetNames" : [ "Control" ]
+        "sheetNames" : [ "Control" ],
+        "type" : "WITH_SHEETS"
       }
     } ]
   },
@@ -327,7 +327,7 @@
       "publication" : {
         "byteSize" : "<byteSize>",
         "durability" : {
-          "level" : "FILE_AND_DIRECTORY_SYNCED"
+          "type" : "FILE_AND_DIRECTORY_SYNCED"
         },
         "executionPath" : "<workspace>/control.xlsx",
         "sha256" : "<sha256>",

@@ -101,7 +101,7 @@ final class FullXssfStepExecution {
                             java.util.Optional.of(triggeringContext.step())))
                 .orElse(triggeringContext));
     stepHandle.fail(
-        problem.code(), problem.category(), problem.context().stage(), problem.message());
+        problem.code(), problem.category(), problem.context().type(), problem.message());
     if (exception instanceof AssertionFailedException assertionFailed) {
       executionContext
           .planAssertions()

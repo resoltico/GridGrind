@@ -103,7 +103,7 @@ class ExecutionModeRequestExecutorTest {
                             new WorkbookIntrospectionQuery.GetWorkbookSummary())))));
 
     assertEquals(GridGrindProblemCode.INVALID_REQUEST, failure.problem().code());
-    assertEquals("VALIDATE_REQUEST", failure.problem().context().stage());
+    assertEquals("VALIDATE_REQUEST", failure.problem().context().type());
     assertTrue(failure.problem().message().contains("inspection steps only"));
     assertTrue(failure.problem().message().contains("MUTATION"));
   }
@@ -204,7 +204,7 @@ class ExecutionModeRequestExecutorTest {
                             new WorkbookIntrospectionQuery.GetWorkbookSummary())))));
 
     assertEquals(GridGrindProblemCode.INVALID_REQUEST, failure.problem().code());
-    assertEquals("VALIDATE_REQUEST", failure.problem().context().stage());
+    assertEquals("VALIDATE_REQUEST", failure.problem().context().type());
     assertTrue(failure.problem().message().contains("inspection steps only"));
   }
 
@@ -313,7 +313,7 @@ class ExecutionModeRequestExecutorTest {
                             new WorkbookIntrospectionQuery.GetWorkbookSummary())))));
 
     assertEquals(GridGrindProblemCode.WORKBOOK_NOT_FOUND, failure.problem().code());
-    assertEquals("OPEN_WORKBOOK", failure.problem().context().stage());
+    assertEquals("OPEN_WORKBOOK", failure.problem().context().type());
   }
 
   @Test
@@ -361,7 +361,7 @@ class ExecutionModeRequestExecutorTest {
                             new WorkbookIntrospectionQuery.GetWorkbookSummary())))));
 
     assertEquals(GridGrindProblemCode.INVALID_REQUEST, failure.problem().code());
-    assertEquals("VALIDATE_REQUEST", failure.problem().context().stage());
+    assertEquals("VALIDATE_REQUEST", failure.problem().context().type());
     assertTrue(failure.problem().message().contains("inspection steps only"));
     assertTrue(failure.problem().message().contains("ASSERTION"));
   }
@@ -386,7 +386,7 @@ class ExecutionModeRequestExecutorTest {
                     List.of())));
 
     assertEquals(GridGrindProblemCode.INVALID_REQUEST, failure.problem().code());
-    assertEquals("VALIDATE_REQUEST", failure.problem().context().stage());
+    assertEquals("VALIDATE_REQUEST", failure.problem().context().type());
     assertTrue(failure.problem().message().contains("requires ENSURE_SHEET before APPEND_ROW"));
   }
 
@@ -419,7 +419,7 @@ class ExecutionModeRequestExecutorTest {
                 ExecutionProgressSink.NOOP));
 
     assertEquals(GridGrindProblemCode.IO_ERROR, failure.problem().code());
-    assertEquals("EXECUTE_REQUEST", failure.problem().context().stage());
+    assertEquals("EXECUTE_REQUEST", failure.problem().context().type());
   }
 
   @Test
@@ -445,7 +445,7 @@ class ExecutionModeRequestExecutorTest {
                             new SheetIntrospectionQuery.GetCells())))));
 
     assertEquals(GridGrindProblemCode.SHEET_NOT_FOUND, failure.problem().code());
-    assertEquals("EXECUTE_STEP", failure.problem().context().stage());
+    assertEquals("EXECUTE_STEP", failure.problem().context().type());
     assertEquals(
         java.util.Optional.of("Missing"),
         DefaultGridGrindRequestExecutorTestSupport.executeStepContext(failure)
@@ -475,7 +475,7 @@ class ExecutionModeRequestExecutorTest {
                     List.of())));
 
     assertEquals(GridGrindProblemCode.UNSAFE_PATH_ACCESS, failure.problem().code());
-    assertEquals("PERSIST_WORKBOOK", failure.problem().context().stage());
+    assertEquals("PERSIST_WORKBOOK", failure.problem().context().type());
     assertEquals(
         java.util.Optional.of(workbookPath.toAbsolutePath().toString()),
         DefaultGridGrindRequestExecutorTestSupport.persistWorkbookContext(failure)

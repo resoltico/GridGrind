@@ -42,7 +42,7 @@
       "requiredInputs" : [ "Target sheet and object names.", "Anchor positions.", "Persistence target when the workbook should be saved." ],
       "requiredWorkspacePaths" : [ ],
       "summary" : "Author or inspect drawing-backed workbook content such as signature lines, pictures, shapes, and embedded objects.",
-      "view" : "TASK_STARTER",
+      "type" : "TASK_STARTER",
       "workflow" : {
         "commonPitfalls" : [ "Signature lines are VML-backed drawing objects with workbook-side constraints.", "Invalid drawing payloads are rejected without leaving partial artifacts behind.", "Image-heavy workflows should prefer file-backed binary sources over huge inline base64 payloads." ],
         "phases" : [ {
@@ -94,7 +94,7 @@
           "lastRowIndex" : -1,
           "physicalRowCount" : 0,
           "protection" : {
-            "kind" : "UNPROTECTED"
+            "type" : "UNPROTECTED"
           },
           "sheetName" : "Approvals",
           "visibility" : "VISIBLE"
@@ -254,11 +254,11 @@
         "workbook" : {
           "activeSheetName" : "Approvals",
           "forceFormulaRecalculationOnOpen" : false,
-          "kind" : "WITH_SHEETS",
           "namedRangeCount" : 0,
           "selectedSheetNames" : [ "Approvals" ],
           "sheetCount" : 1,
-          "sheetNames" : [ "Approvals" ]
+          "sheetNames" : [ "Approvals" ],
+          "type" : "WITH_SHEETS"
         }
       } ]
     },
@@ -501,7 +501,7 @@
         "publication" : {
           "byteSize" : "<byteSize>",
           "durability" : {
-            "level" : "FILE_AND_DIRECTORY_SYNCED"
+            "type" : "FILE_AND_DIRECTORY_SYNCED"
           },
           "executionPath" : "<workspace>/recipe/generated-workbooks/drawing-and-signature-workflow.xlsx",
           "sha256" : "<sha256>",

@@ -90,7 +90,7 @@ class GridGrindRecipeDefinitionsTest {
     WorkbookPlan request =
         GridGrindCliRecipeRegistry.recipeFor("DASHBOARD")
             .filter(
-                recipe -> recipe.view() == dev.erst.gridgrind.cli.discovery.RecipeView.TASK_STARTER)
+                recipe -> recipe.type() == dev.erst.gridgrind.cli.discovery.RecipeType.TASK_STARTER)
             .orElseThrow()
             .plan();
     assertEquals("NEW", textField(GridGrindJsonOutput.requestTree(request).path("source"), "type"));

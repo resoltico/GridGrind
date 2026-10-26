@@ -181,7 +181,7 @@ use the plural `CommandError` envelope instead of an execution result:
       "message": "Unknown argument: --bogus",
       "resolution": "Use one exact CLI flag. Start from --help for the synopsis, --help-protocol for the grammar, or --help-guidance for workflow-oriented commands.",
       "context": {
-        "stage": "PARSE_ARGUMENTS",
+        "type": "PARSE_ARGUMENTS",
         "argument": {
           "type": "NAMED",
           "argument": "--bogus"
@@ -212,7 +212,7 @@ details remain in `problems[*].context.argument`; request cursor details remain 
 
 Every entry in `problem.causes` also carries an explicit `stage` token. Cause diagnostics are not
 stage-less fallbacks; they preserve the same pipeline stage vocabulary used by the primary
-`problem.context.stage` classification.
+`problem.context.type` classification.
 
 Warnings use one typed `location`: `STEP` carries `stepIndex`, `stepId`, and `stepType`,
 `REQUEST_PATH` carries the request-owned `path` and its `pathRole`, `REQUEST_BYTE_OFFSET` carries
@@ -403,7 +403,7 @@ The `context` block provides structured metadata about where the failure occurre
 
 | Field | Description |
 |:------|:------------|
-| `stage` | `PARSE_ARGUMENTS`, `CLI_RUNTIME`, `READ_REQUEST`, `BIND_REQUEST`, `VALIDATE_REQUEST`, `RESOLVE_INPUTS`, `OPEN_WORKBOOK`, `EXECUTE_STEP`, `CALCULATION_PREFLIGHT`, `CALCULATION_EXECUTION`, `PERSIST_WORKBOOK`, `EXECUTE_REQUEST`, `WRITE_RESPONSE` |
+| `type` | `PARSE_ARGUMENTS`, `CLI_RUNTIME`, `READ_REQUEST`, `BIND_REQUEST`, `VALIDATE_REQUEST`, `RESOLVE_INPUTS`, `OPEN_WORKBOOK`, `EXECUTE_STEP`, `CALCULATION_PREFLIGHT`, `CALCULATION_EXECUTION`, `PERSIST_WORKBOOK`, `EXECUTE_REQUEST`, `WRITE_RESPONSE` |
 | `argument` | The CLI flag or argument token that failed parsing, when the stage is `PARSE_ARGUMENTS`. |
 | `requestPath` | The request file path used for `READ_REQUEST` or `BIND_REQUEST`, when the CLI read JSON from `--request <path>`. |
 | `sourceType` | Request `source.type` when the failure occurred after request parsing, including `EXECUTE_REQUEST` failures. |

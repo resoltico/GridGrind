@@ -19,7 +19,7 @@
           "requestPath" : "<workspace>/request.json",
           "type" : "FILE"
         },
-        "stage" : "READ_REQUEST"
+        "type" : "READ_REQUEST"
       },
       "message" : "Request bytes must be valid UTF-8",
       "recovery" : "CHANGE_REQUEST",

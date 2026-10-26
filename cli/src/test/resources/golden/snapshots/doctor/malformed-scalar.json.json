@@ -20,7 +20,7 @@
           "requestPath" : "<workspace>/request.json",
           "type" : "FILE"
         },
-        "stage" : "READ_REQUEST"
+        "type" : "READ_REQUEST"
       },
       "message" : "Field 'steps' must be a JSON array",
       "recovery" : "CHANGE_REQUEST",

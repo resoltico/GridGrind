@@ -201,7 +201,7 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
                     inspections())));
 
     assertEquals(GridGrindProblemCode.ASSERTION_FAILED, failure.problem().code());
-    assertEquals("EXECUTE_STEP", failure.problem().context().stage());
+    assertEquals("EXECUTE_STEP", failure.problem().context().type());
     assertEquals("assert-owner", failedAssertion(failure).stepId().value());
     assertEquals("EXPECT_CELL_VALUE", failedAssertion(failure).assertionType());
     assertEquals(1, failedAssertion(failure).observations().size());

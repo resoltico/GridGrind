@@ -294,7 +294,7 @@ object. The excerpt below focuses on that canonical persistence outcome and its 
       "sha256": "<64-lowercase-hex-characters>",
       "byteSize": 12345,
       "stagedArtifactVerification": {},
-      "durability": { "level": "FILE_AND_DIRECTORY_SYNCED" }
+      "durability": { "type": "FILE_AND_DIRECTORY_SYNCED" }
     }
   },
   "journal": {
@@ -595,7 +595,7 @@ Successful `SAVE_AS` responses therefore look like:
     "sha256": "<64-lowercase-hex-characters>",
     "byteSize": 12345,
     "stagedArtifactVerification": {},
-    "durability": { "level": "FILE_AND_DIRECTORY_SYNCED" }
+    "durability": { "type": "FILE_AND_DIRECTORY_SYNCED" }
   }
 }
 ```

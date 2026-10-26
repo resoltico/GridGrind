@@ -22,7 +22,7 @@
       },
       "requiredWorkspacePaths" : [ "package-security-assets/gridgrind-package-security.xlsx" ],
       "summary" : "Repo-asset-backed encrypted package open plus factual package-security and cell inspection.",
-      "view" : "EXAMPLE"
+      "type" : "EXAMPLE"
     }
   },
   "execution" : {
@@ -236,7 +236,7 @@
             "argument" : "--materialize-recipe",
             "type" : "NAMED"
           },
-          "stage" : "PARSE_ARGUMENTS"
+          "type" : "PARSE_ARGUMENTS"
         },
         "message" : "Asset-backed recipes require --materialize-recipe --lookup PACKAGE_SECURITY_INSPECTION --workspace <new-directory>.",
         "recovery" : "CHANGE_REQUEST",

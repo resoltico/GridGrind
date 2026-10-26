@@ -116,13 +116,13 @@
           "sourceType" : "NEW",
           "type" : "KNOWN"
         },
-        "stage" : "EXECUTE_STEP",
         "step" : {
           "stepId" : "read",
           "stepIndex" : 0,
           "stepKind" : "INSPECTION",
           "stepType" : "GET_CELLS"
-        }
+        },
+        "type" : "EXECUTE_STEP"
       },
       "message" : "Sheet does not exist: Missing",
       "recovery" : "CHANGE_REQUEST",

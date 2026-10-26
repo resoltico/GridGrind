@@ -59,7 +59,7 @@ final class CommandErrors {
             context,
             List.of(
                 new GridGrindProblemDetail.ProblemCause(
-                    GridGrindProblemCode.INTERNAL_ERROR, message, context.stage()))));
+                    GridGrindProblemCode.INTERNAL_ERROR, message, context.type()))));
   }
 
   private static CommandError commandError(

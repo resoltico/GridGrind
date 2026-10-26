@@ -22,7 +22,7 @@
       },
       "requiredWorkspacePaths" : [ ],
       "summary" : "Compact no-save workbook-health pass with targeted formula and aggregate findings.",
-      "view" : "EXAMPLE"
+      "type" : "EXAMPLE"
     }
   },
   "execution" : {
@@ -102,7 +102,7 @@
           "lastRowIndex" : 0,
           "physicalRowCount" : 1,
           "protection" : {
-            "kind" : "UNPROTECTED"
+            "type" : "UNPROTECTED"
           },
           "sheetName" : "Summary",
           "visibility" : "VISIBLE"

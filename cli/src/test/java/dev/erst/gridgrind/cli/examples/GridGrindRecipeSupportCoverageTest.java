@@ -31,7 +31,7 @@ class GridGrindRecipeSupportCoverageTest {
                 () ->
                     new GridGrindCliRecipe(
                         "workbook_health",
-                        dev.erst.gridgrind.cli.discovery.RecipeView.EXAMPLE,
+                        dev.erst.gridgrind.cli.discovery.RecipeType.EXAMPLE,
                         "recipe.json",
                         "summary",
                         RecipeAdvisory.SELF_CONTAINED,
@@ -46,7 +46,7 @@ class GridGrindRecipeSupportCoverageTest {
                 () ->
                     new GridGrindCliRecipe(
                         "WORKBOOK_HEALTH",
-                        dev.erst.gridgrind.cli.discovery.RecipeView.EXAMPLE,
+                        dev.erst.gridgrind.cli.discovery.RecipeType.EXAMPLE,
                         " ",
                         "summary",
                         RecipeAdvisory.SELF_CONTAINED,
@@ -61,7 +61,7 @@ class GridGrindRecipeSupportCoverageTest {
                 () ->
                     new GridGrindCliRecipe(
                         "WORKBOOK_HEALTH",
-                        dev.erst.gridgrind.cli.discovery.RecipeView.EXAMPLE,
+                        dev.erst.gridgrind.cli.discovery.RecipeType.EXAMPLE,
                         "recipe.json",
                         "summary",
                         RecipeAdvisory.SELF_CONTAINED,
@@ -239,10 +239,10 @@ class GridGrindRecipeSupportCoverageTest {
     assertEquals(
         List.of("package-security-assets/gridgrind-package-security.xlsx"),
         packageSecurityDefinition.requiredWorkspacePaths());
-    assertEquals(dev.erst.gridgrind.cli.discovery.RecipeView.EXAMPLE, definition.recipe().view());
+    assertEquals(dev.erst.gridgrind.cli.discovery.RecipeType.EXAMPLE, definition.recipe().type());
     assertEquals(
-        dev.erst.gridgrind.cli.discovery.RecipeView.TASK_STARTER,
-        dashboardDefinition.recipe().view());
+        dev.erst.gridgrind.cli.discovery.RecipeType.TASK_STARTER,
+        dashboardDefinition.recipe().type());
     assertEquals("dashboard-request.json", dashboardDefinition.recipe().requestFileName());
     assertEquals("WORKBOOK_MAINTENANCE", maintenanceDefinition.task().id());
     assertEquals(
@@ -423,7 +423,7 @@ class GridGrindRecipeSupportCoverageTest {
   private static GridGrindCliRecipe recipe(String id) {
     return new GridGrindCliRecipe(
         id,
-        dev.erst.gridgrind.cli.discovery.RecipeView.EXAMPLE,
+        dev.erst.gridgrind.cli.discovery.RecipeType.EXAMPLE,
         id.toLowerCase(Locale.ROOT) + ".json",
         "summary",
         RecipeAdvisory.SELF_CONTAINED,

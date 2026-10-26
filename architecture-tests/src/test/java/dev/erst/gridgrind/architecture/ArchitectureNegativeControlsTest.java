@@ -18,6 +18,24 @@ import org.junit.jupiter.api.Test;
 /** One focused counterexample for each architecture property beyond JPMS enforcement. */
 class ArchitectureNegativeControlsTest {
   @Test
+  void unionTagsRejectOtherNamesAndUnownedStructuralExceptions() {
+    AssertionError failure =
+        assertThrows(
+            AssertionError.class,
+            () ->
+                ProductDomainShapeArchitectureRules.unionTagsUseTypeOrStatus()
+                    .check(
+                        new ClassFileImporter()
+                            .importClasses(
+                                dev.erst.gridgrind.architecture.fixture
+                                    .ArchitectureDiscriminatorViolations.WrongKind.class,
+                                dev.erst.gridgrind.architecture.fixture
+                                    .ArchitectureDiscriminatorViolations.WrongEmpty.class)));
+    assertTrue(failure.getMessage().contains("WrongKind"));
+    assertTrue(failure.getMessage().contains("WrongEmpty"));
+  }
+
+  @Test
   void modelNamesRejectRetiredGenericSuffixes() {
     AssertionError failure =
         assertThrows(

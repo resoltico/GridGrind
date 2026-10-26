@@ -262,11 +262,11 @@ final class WorkbookInvariantResponseChecks {
     switch (assertionResult) {
       case AssertionResult.Passed passed ->
           require(
-              passed.outcome() == dev.erst.gridgrind.core.plan.AssertionOutcome.PASSED,
+              passed.status() == dev.erst.gridgrind.core.plan.AssertionStatus.PASSED,
               "passed assertion result must report PASSED");
       case AssertionResult.Failed failed -> {
         require(
-            failed.outcome() == dev.erst.gridgrind.core.plan.AssertionOutcome.FAILED,
+            failed.status() == dev.erst.gridgrind.core.plan.AssertionStatus.FAILED,
             "failed assertion result must report FAILED");
         requireAssertionFailureShape(failed.failure());
         require(

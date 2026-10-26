@@ -167,7 +167,7 @@ class OoxmlSecurityRequestExecutorTest extends DefaultGridGrindRequestExecutorTe
 
     assertEquals(GridGrindProblemCode.WORKBOOK_NOT_OPENABLE, failure.problem().code());
     assertEquals(GridGrindProblemCategory.REQUEST, failure.problem().category());
-    assertEquals("OPEN_WORKBOOK", failure.problem().context().stage());
+    assertEquals("OPEN_WORKBOOK", failure.problem().context().type());
     assertTrue(failure.journal().steps().isEmpty());
   }
 
@@ -192,7 +192,7 @@ class OoxmlSecurityRequestExecutorTest extends DefaultGridGrindRequestExecutorTe
                     List.of())));
 
     assertEquals(GridGrindProblemCode.INVALID_REQUEST, failure.problem().code());
-    assertEquals("VALIDATE_REQUEST", failure.problem().context().stage());
+    assertEquals("VALIDATE_REQUEST", failure.problem().context().type());
     assertFalse(Files.exists(copiedWorkbook));
   }
 
@@ -310,7 +310,7 @@ class OoxmlSecurityRequestExecutorTest extends DefaultGridGrindRequestExecutorTe
                             new WorkbookMutationAction.EnsureSheet())))));
 
     assertEquals(GridGrindProblemCode.ENCRYPTION_SOURCE_NOT_ENCRYPTED, failure.problem().code());
-    assertEquals("OPEN_WORKBOOK", failure.problem().context().stage());
+    assertEquals("OPEN_WORKBOOK", failure.problem().context().type());
     assertTrue(failure.journal().steps().isEmpty());
     assertFalse(Files.exists(directory.resolve("output.xlsx")));
   }
@@ -452,7 +452,7 @@ class OoxmlSecurityRequestExecutorTest extends DefaultGridGrindRequestExecutorTe
 
     assertEquals(GridGrindProblemCode.ENCRYPTION_SOURCE_NOT_PRESERVABLE, failure.problem().code());
     assertEquals(GridGrindProblemCategory.SECURITY, failure.problem().category());
-    assertEquals("OPEN_WORKBOOK", failure.problem().context().stage());
+    assertEquals("OPEN_WORKBOOK", failure.problem().context().type());
     assertTrue(failure.journal().steps().isEmpty());
     assertFalse(Files.exists(output));
   }
@@ -628,7 +628,7 @@ class OoxmlSecurityRequestExecutorTest extends DefaultGridGrindRequestExecutorTe
 
     assertEquals(GridGrindProblemCode.INVALID_SIGNING_CONFIGURATION, failure.problem().code());
     assertEquals(GridGrindProblemCategory.SECURITY, failure.problem().category());
-    assertEquals("PERSIST_WORKBOOK", failure.problem().context().stage());
+    assertEquals("PERSIST_WORKBOOK", failure.problem().context().type());
     assertTrue(failure.journal().steps().isEmpty());
     assertFalse(Files.exists(outputPath));
   }

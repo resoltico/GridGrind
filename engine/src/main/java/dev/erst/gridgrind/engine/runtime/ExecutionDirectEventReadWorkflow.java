@@ -120,7 +120,7 @@ final class ExecutionDirectEventReadWorkflow {
                 ExecutionStepContextFactory.contextFor(
                     request, stepIndex, inspectionStep, exception));
         stepHandle.fail(
-            problem.code(), problem.category(), problem.context().stage(), problem.message());
+            problem.code(), problem.category(), problem.context().type(), problem.message());
         return responseSupport.closeReadableWorkbook(
             materialized,
             ExecutionResponseSupport.failureResponseWithoutPlanOutcomeEvent(

@@ -20,7 +20,7 @@
           "requestPath" : "<workspace>/request.json",
           "type" : "FILE"
         },
-        "stage" : "READ_REQUEST"
+        "type" : "READ_REQUEST"
       },
       "message" : "Unsupported value 'V999' for field 'protocolVersion'; expected one of: V3",
       "recovery" : "CHANGE_REQUEST",

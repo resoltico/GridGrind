@@ -17,7 +17,7 @@ import tools.jackson.databind.json.JsonMapper;
 /** Focused contract tests for the CLI recipe-discovery surfaces. */
 class GridGrindCliRecipeDiscoveryContractTest extends GridGrindCliTestSupport {
   @Test
-  void printRecipeCatalogListUsesOneCompactRowShapeForBothViews() throws IOException {
+  void printRecipeCatalogListUsesOneCompactRowShapeForBothTypes() throws IOException {
     ByteArrayOutputStream stdout = new ByteArrayOutputStream();
 
     int exitCode =
@@ -30,7 +30,7 @@ class GridGrindCliRecipeDiscoveryContractTest extends GridGrindCliTestSupport {
 
     assertEquals(0, exitCode);
     assertEquals(
-        List.of("advisory", "id", "requestFileName", "requiredWorkspacePaths", "summary", "view"),
+        List.of("advisory", "id", "requestFileName", "requiredWorkspacePaths", "summary", "type"),
         fieldNames(example));
     assertEquals(fieldNames(example), fieldNames(task));
   }
@@ -40,7 +40,7 @@ class GridGrindCliRecipeDiscoveryContractTest extends GridGrindCliTestSupport {
     JsonNode output = runRecipeCatalogLookup("DASHBOARD");
 
     assertEquals("DASHBOARD", output.path("id").asText());
-    assertEquals("TASK_STARTER", output.path("view").asText());
+    assertEquals("TASK_STARTER", output.path("type").asText());
     assertTrue(output.has("intentTags"), "task lookup must expose top-level intent tags");
     assertTrue(
         output.has("discoveryProfile"), "task lookup must expose discovery-profile metadata");
@@ -63,7 +63,7 @@ class GridGrindCliRecipeDiscoveryContractTest extends GridGrindCliTestSupport {
     JsonNode output = runRecipeCatalogLookup("BUDGET");
 
     assertEquals("BUDGET", output.path("id").asText());
-    assertEquals("EXAMPLE", output.path("view").asText());
+    assertEquals("EXAMPLE", output.path("type").asText());
     assertTrue(output.has("intentTags"), "example lookup must expose intent tags");
     assertTrue(
         output.has("requestProfile"),
@@ -118,7 +118,7 @@ class GridGrindCliRecipeDiscoveryContractTest extends GridGrindCliTestSupport {
 
   private static JsonNode recipeWithView(JsonNode recipes, String view) {
     for (JsonNode recipe : recipes) {
-      if (view.equals(recipe.path("view").asText())) {
+      if (view.equals(recipe.path("type").asText())) {
         return recipe;
       }
     }

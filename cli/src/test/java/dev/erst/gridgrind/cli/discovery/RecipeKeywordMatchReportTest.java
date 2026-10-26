@@ -14,7 +14,7 @@ class RecipeKeywordMatchReportTest {
     RecipeKeywordMatchReport.Candidate candidate =
         new RecipeKeywordMatchReport.Candidate(
             task.id(),
-            RecipeView.TASK_STARTER,
+            RecipeType.TASK_STARTER,
             task.narrative().summary(),
             42,
             List.of("dashboard", "chart"),
@@ -77,14 +77,14 @@ class RecipeKeywordMatchReportTest {
                     List.of(
                         new RecipeKeywordMatchReport.Candidate(
                             task.id(),
-                            RecipeView.TASK_STARTER,
+                            RecipeType.TASK_STARTER,
                             task.narrative().summary(),
                             42,
                             List.of("dashboard"),
                             List.of("intent tag")),
                         new RecipeKeywordMatchReport.Candidate(
                             task.id(),
-                            RecipeView.TASK_STARTER,
+                            RecipeType.TASK_STARTER,
                             task.narrative().summary(),
                             21,
                             List.of("chart"),
@@ -99,7 +99,7 @@ class RecipeKeywordMatchReportTest {
             () ->
                 new RecipeKeywordMatchReport.Candidate(
                     task.id(),
-                    RecipeView.TASK_STARTER,
+                    RecipeType.TASK_STARTER,
                     task.narrative().summary(),
                     0,
                     List.of("dashboard"),
@@ -112,7 +112,7 @@ class RecipeKeywordMatchReportTest {
             () ->
                 new RecipeKeywordMatchReport.Candidate(
                     task.id(),
-                    RecipeView.TASK_STARTER,
+                    RecipeType.TASK_STARTER,
                     task.narrative().summary(),
                     10,
                     List.of(),
@@ -125,7 +125,7 @@ class RecipeKeywordMatchReportTest {
             () ->
                 new RecipeKeywordMatchReport.Candidate(
                     task.id(),
-                    RecipeView.TASK_STARTER,
+                    RecipeType.TASK_STARTER,
                     task.narrative().summary(),
                     10,
                     List.of("dashboard"),

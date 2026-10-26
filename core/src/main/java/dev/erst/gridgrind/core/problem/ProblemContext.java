@@ -18,7 +18,7 @@ import java.util.Objects;
 import java.util.Optional;
 
 /** Structured execution metadata that pinpoints where and why a failure happened. */
-@Union(discriminator = "stage")
+@Union(discriminator = "type")
 public sealed interface ProblemContext
     permits ProblemContext.ParseArguments,
         CliRuntimeContext,
@@ -28,8 +28,10 @@ public sealed interface ProblemContext
         ProblemContext.PersistWorkbook,
         ProblemContext.ExecuteRequest,
         ProblemContext.WriteResponse {
-  /** Pipeline stage in which the failure occurred. */
-  String stage();
+  /** Metadata-owned type identifying the failure context. */
+  default String type() {
+    return dev.erst.gridgrind.core.catalog.ProtocolTypeMetadataSupport.requiredTypeId(getClass());
+  }
 
   /** Context for failures that occur while parsing CLI arguments. */
   @Variant(
@@ -44,11 +46,6 @@ public sealed interface ProblemContext
     public Optional<String> argumentName() {
       return argument.argumentValue();
     }
-
-    @Override
-    public String stage() {
-      return "PARSE_ARGUMENTS";
-    }
   }
 
   /** Context for failures that occur while reading or structurally checking the JSON request. */
@@ -60,11 +57,6 @@ public sealed interface ProblemContext
     public ReadRequest {
       Objects.requireNonNull(request, "request must not be null");
       json = Objects.requireNonNullElseGet(json, JsonLocation.Unavailable::new);
-    }
-
-    @Override
-    public String stage() {
-      return "READ_REQUEST";
     }
 
     /** Returns one copy enriched with JSON cursor details when none were already present. */
@@ -85,11 +77,6 @@ public sealed interface ProblemContext
     public BindRequest {
       Objects.requireNonNull(request, "request must not be null");
       json = Objects.requireNonNullElseGet(json, JsonLocation.Unavailable::new);
-    }
-
-    @Override
-    public String stage() {
-      return "BIND_REQUEST";
     }
 
     /** Returns one copy enriched with JSON cursor details when none were already present. */
@@ -138,11 +125,6 @@ public sealed interface ProblemContext
       return new ValidateRequest(
           request, Optional.of(Objects.requireNonNull(location, "location must not be null")));
     }
-
-    @Override
-    public String stage() {
-      return "VALIDATE_REQUEST";
-    }
   }
 
   /** Context for failures that occur while resolving source-backed authored inputs. */
@@ -171,11 +153,6 @@ public sealed interface ProblemContext
     public Optional<String> inputPath() {
       return input.inputPathValue();
     }
-
-    @Override
-    public String stage() {
-      return "RESOLVE_INPUTS";
-    }
   }
 
   /** Context for failures that occur while opening the source workbook. */
@@ -192,11 +169,6 @@ public sealed interface ProblemContext
     /** Returns the opened workbook path when execution targeted one existing file. */
     public Optional<String> sourceWorkbookPath() {
       return workbook.sourceWorkbookPathValue();
-    }
-
-    @Override
-    public String stage() {
-      return "OPEN_WORKBOOK";
     }
   }
 
@@ -250,11 +222,6 @@ public sealed interface ProblemContext
         Objects.requireNonNull(request, "request must not be null");
         Objects.requireNonNull(location, "location must not be null");
       }
-
-      @Override
-      public String stage() {
-        return "CALCULATION_PREFLIGHT";
-      }
     }
 
     /** Context for failures that occur during immediate calculation execution. */
@@ -265,11 +232,6 @@ public sealed interface ProblemContext
       public Execution {
         Objects.requireNonNull(request, "request must not be null");
         Objects.requireNonNull(location, "location must not be null");
-      }
-
-      @Override
-      public String stage() {
-        return "CALCULATION_EXECUTION";
       }
     }
   }
@@ -346,11 +308,6 @@ public sealed interface ProblemContext
       return location.formulaValue();
     }
 
-    @Override
-    public String stage() {
-      return "EXECUTE_STEP";
-    }
-
     /** Returns one copy enriched with exception-derived location facts. */
     public ExecuteStep withLocation(ProblemLocation discovered) {
       Objects.requireNonNull(discovered, "discovered must not be null");
@@ -395,11 +352,6 @@ public sealed interface ProblemContext
       return request.persistenceTypeValue();
     }
 
-    @Override
-    public String stage() {
-      return "PERSIST_WORKBOOK";
-    }
-
     private static Optional<String> normalizeOptionalPath(Optional<String> path, String fieldName) {
       Optional<String> normalized = Objects.requireNonNullElseGet(path, Optional::empty);
       if (normalized.isEmpty()) {
@@ -433,11 +385,6 @@ public sealed interface ProblemContext
     public Optional<String> persistenceType() {
       return request.persistenceTypeValue();
     }
-
-    @Override
-    public String stage() {
-      return "EXECUTE_REQUEST";
-    }
   }
 
   /** Context for failures that occur while writing the JSON response to its destination. */
@@ -453,11 +400,6 @@ public sealed interface ProblemContext
     /** Returns the authored response path when output targeted one file instead of stdout. */
     public Optional<String> responsePath() {
       return output.responsePathValue();
-    }
-
-    @Override
-    public String stage() {
-      return "WRITE_RESPONSE";
     }
   }
 

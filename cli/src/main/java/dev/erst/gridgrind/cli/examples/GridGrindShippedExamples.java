@@ -1,7 +1,7 @@
 package dev.erst.gridgrind.cli.examples;
 
 import dev.erst.gridgrind.cli.discovery.RecipeAdvisory;
-import dev.erst.gridgrind.cli.discovery.RecipeView;
+import dev.erst.gridgrind.cli.discovery.RecipeType;
 import dev.erst.gridgrind.cli.discovery.ShippedExampleCatalog;
 import dev.erst.gridgrind.cli.discovery.ShippedExampleEntry;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
@@ -85,7 +85,7 @@ public final class GridGrindShippedExamples {
   public static Optional<ShippedExample> find(String id) {
     Objects.requireNonNull(id, "id must not be null");
     return GridGrindCliRecipeRegistry.recipeFor(id)
-        .filter(recipe -> recipe.view() == RecipeView.EXAMPLE)
+        .filter(recipe -> recipe.type() == RecipeType.EXAMPLE)
         .map(GridGrindShippedExamples::toShippedExample);
   }
 
@@ -93,7 +93,7 @@ public final class GridGrindShippedExamples {
   public static Optional<RecipeAdvisory> advisoryFor(String id) {
     Objects.requireNonNull(id, "id must not be null");
     return GridGrindCliRecipeRegistry.recipeFor(id)
-        .filter(recipe -> recipe.view() == RecipeView.EXAMPLE)
+        .filter(recipe -> recipe.type() == RecipeType.EXAMPLE)
         .map(GridGrindCliRecipe::advisory);
   }
 
@@ -102,7 +102,7 @@ public final class GridGrindShippedExamples {
     Objects.requireNonNull(example, "example must not be null");
     GridGrindCliRecipe recipe =
         GridGrindCliRecipeRegistry.recipeFor(example.id())
-            .filter(candidate -> candidate.view() == RecipeView.EXAMPLE)
+            .filter(candidate -> candidate.type() == RecipeType.EXAMPLE)
             .orElseThrow(
                 () ->
                     new IllegalStateException(

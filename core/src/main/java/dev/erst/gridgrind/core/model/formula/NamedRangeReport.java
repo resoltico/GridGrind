@@ -7,7 +7,7 @@ import dev.erst.gridgrind.core.vocabulary.NamedRangeScope;
 import java.util.Objects;
 
 /** Structured workbook-level analysis report for one defined name. */
-@Union(discriminator = "kind", catalog = true, displayOrder = 6)
+@Union(discriminator = "type", catalog = true, displayOrder = 6)
 public sealed interface NamedRangeReport
     permits dev.erst.gridgrind.core.model.formula.NamedRangeReport.RangeReport,
         dev.erst.gridgrind.core.model.formula.NamedRangeReport.FormulaReport {

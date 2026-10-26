@@ -290,7 +290,7 @@ class GridGrindCliResponseReservationTest {
                 Files.readAllBytes(responsePath)));
     assertEquals(1, exitCode);
     assertEquals(0, executorCalls.get());
-    assertEquals("EXECUTE_REQUEST", failure.problem().context().stage());
+    assertEquals("EXECUTE_REQUEST", failure.problem().context().type());
   }
 
   private static byte[] validRequestBytes() {

@@ -22,7 +22,7 @@
       },
       "requiredWorkspacePaths" : [ ],
       "summary" : "Mutate then verify with first-class assertions, verbose journaling, and factual readback.",
-      "view" : "EXAMPLE"
+      "type" : "EXAMPLE"
     }
   },
   "execution" : {
@@ -163,15 +163,15 @@
     "stdout" : {
       "assertions" : [ {
         "assertionType" : "EXPECT_CELL_VALUE",
-        "outcome" : "PASSED",
+        "status" : "PASSED",
         "stepId" : "assert-title"
       }, {
         "assertionType" : "EXPECT_CELL_VALUE",
-        "outcome" : "PASSED",
+        "status" : "PASSED",
         "stepId" : "assert-total"
       }, {
         "assertionType" : "EXPECT_ANALYSIS_MAX_SEVERITY",
-        "outcome" : "PASSED",
+        "status" : "PASSED",
         "stepId" : "assert-formula-health"
       } ],
       "calculation" : {
@@ -233,21 +233,21 @@
             "origin" : "PLAN_AUTHORED",
             "result" : {
               "assertionType" : "EXPECT_CELL_VALUE",
-              "outcome" : "PASSED",
+              "status" : "PASSED",
               "stepId" : "assert-title"
             }
           }, {
             "origin" : "PLAN_AUTHORED",
             "result" : {
               "assertionType" : "EXPECT_CELL_VALUE",
-              "outcome" : "PASSED",
+              "status" : "PASSED",
               "stepId" : "assert-total"
             }
           }, {
             "origin" : "PLAN_AUTHORED",
             "result" : {
               "assertionType" : "EXPECT_ANALYSIS_MAX_SEVERITY",
-              "outcome" : "PASSED",
+              "status" : "PASSED",
               "stepId" : "assert-formula-health"
             }
           } ],

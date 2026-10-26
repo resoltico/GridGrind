@@ -22,3 +22,8 @@ lower-case initial plus `Type`. The catalog and codec derive identities from tha
 
 Collections use plural domain nouns. Optional fields use `Optional<T>` and are absent on the wire.
 `WireDefault` declares omission defaults; an explicit JSON `null` is not an omission default.
+
+Wire discriminators use `type` for a variant's identity and `status` for a completed process outcome.
+The structural `WorkbookStep` envelope selects its action, assertion or query without an additional
+tag. Variant ids use `SCREAMING_SNAKE_CASE` and are declared by `Variant` metadata. Plain attributes
+such as journal verbosity and a diagnostic cause's stage keep their domain names.

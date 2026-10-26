@@ -6,10 +6,10 @@ import dev.erst.gridgrind.core.vocabulary.StepId;
 import java.util.Objects;
 
 /** Ordered assertion outcome carrying complete evidence for every failed assertion step. */
-@Union(discriminator = "outcome")
+@Union(discriminator = "status")
 public sealed interface AssertionResult permits AssertionResult.Passed, AssertionResult.Failed {
   /** Returns the stable outcome discriminator. */
-  AssertionOutcome outcome();
+  AssertionStatus status();
 
   /** Returns the authored assertion step id. */
   StepId stepId();
@@ -27,8 +27,8 @@ public sealed interface AssertionResult permits AssertionResult.Passed, Assertio
     }
 
     @Override
-    public AssertionOutcome outcome() {
-      return AssertionOutcome.PASSED;
+    public AssertionStatus status() {
+      return AssertionStatus.PASSED;
     }
   }
 
@@ -51,8 +51,8 @@ public sealed interface AssertionResult permits AssertionResult.Passed, Assertio
     }
 
     @Override
-    public AssertionOutcome outcome() {
-      return AssertionOutcome.FAILED;
+    public AssertionStatus status() {
+      return AssertionStatus.FAILED;
     }
   }
 }

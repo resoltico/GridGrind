@@ -7,7 +7,7 @@
         "lastRowIndex" : 3,
         "physicalRowCount" : 4,
         "protection" : {
-          "kind" : "UNPROTECTED"
+          "type" : "UNPROTECTED"
         },
         "sheetName" : "Ops",
         "visibility" : "VISIBLE"
@@ -274,14 +274,14 @@
             }
           },
           "fill" : {
-            "kind" : "PATTERN_ONLY",
-            "pattern" : "NONE"
+            "pattern" : "NONE",
+            "type" : "PATTERN_ONLY"
           },
           "font" : {
             "bold" : false,
             "fontColor" : {
               "indexed" : 8,
-              "kind" : "INDEXED"
+              "type" : "INDEXED"
             },
             "fontHeight" : {
               "points" : 11,
@@ -326,14 +326,14 @@
             }
           },
           "fill" : {
-            "kind" : "PATTERN_ONLY",
-            "pattern" : "NONE"
+            "pattern" : "NONE",
+            "type" : "PATTERN_ONLY"
           },
           "font" : {
             "bold" : false,
             "fontColor" : {
               "indexed" : 8,
-              "kind" : "INDEXED"
+              "type" : "INDEXED"
             },
             "fontHeight" : {
               "points" : 11,
@@ -378,14 +378,14 @@
             }
           },
           "fill" : {
-            "kind" : "PATTERN_ONLY",
-            "pattern" : "NONE"
+            "pattern" : "NONE",
+            "type" : "PATTERN_ONLY"
           },
           "font" : {
             "bold" : false,
             "fontColor" : {
               "indexed" : 8,
-              "kind" : "INDEXED"
+              "type" : "INDEXED"
             },
             "fontHeight" : {
               "points" : 11,
@@ -430,14 +430,14 @@
             }
           },
           "fill" : {
-            "kind" : "PATTERN_ONLY",
-            "pattern" : "NONE"
+            "pattern" : "NONE",
+            "type" : "PATTERN_ONLY"
           },
           "font" : {
             "bold" : false,
             "fontColor" : {
               "indexed" : 8,
-              "kind" : "INDEXED"
+              "type" : "INDEXED"
             },
             "fontHeight" : {
               "points" : 11,
@@ -483,14 +483,14 @@
             }
           },
           "fill" : {
-            "kind" : "PATTERN_ONLY",
-            "pattern" : "NONE"
+            "pattern" : "NONE",
+            "type" : "PATTERN_ONLY"
           },
           "font" : {
             "bold" : false,
             "fontColor" : {
               "indexed" : 8,
-              "kind" : "INDEXED"
+              "type" : "INDEXED"
             },
             "fontHeight" : {
               "points" : 11,
@@ -538,14 +538,14 @@
             }
           },
           "fill" : {
-            "kind" : "PATTERN_ONLY",
-            "pattern" : "NONE"
+            "pattern" : "NONE",
+            "type" : "PATTERN_ONLY"
           },
           "font" : {
             "bold" : false,
             "fontColor" : {
               "indexed" : 8,
-              "kind" : "INDEXED"
+              "type" : "INDEXED"
             },
             "fontHeight" : {
               "points" : 11,
@@ -592,14 +592,14 @@
             }
           },
           "fill" : {
-            "kind" : "PATTERN_ONLY",
-            "pattern" : "NONE"
+            "pattern" : "NONE",
+            "type" : "PATTERN_ONLY"
           },
           "font" : {
             "bold" : false,
             "fontColor" : {
               "indexed" : 8,
-              "kind" : "INDEXED"
+              "type" : "INDEXED"
             },
             "fontHeight" : {
               "points" : 11,
@@ -645,14 +645,14 @@
             }
           },
           "fill" : {
-            "kind" : "PATTERN_ONLY",
-            "pattern" : "NONE"
+            "pattern" : "NONE",
+            "type" : "PATTERN_ONLY"
           },
           "font" : {
             "bold" : false,
             "fontColor" : {
               "indexed" : 8,
-              "kind" : "INDEXED"
+              "type" : "INDEXED"
             },
             "fontHeight" : {
               "points" : 11,
@@ -700,14 +700,14 @@
             }
           },
           "fill" : {
-            "kind" : "PATTERN_ONLY",
-            "pattern" : "NONE"
+            "pattern" : "NONE",
+            "type" : "PATTERN_ONLY"
           },
           "font" : {
             "bold" : false,
             "fontColor" : {
               "indexed" : 8,
-              "kind" : "INDEXED"
+              "type" : "INDEXED"
             },
             "fontHeight" : {
               "points" : 11,
@@ -754,14 +754,14 @@
             }
           },
           "fill" : {
-            "kind" : "PATTERN_ONLY",
-            "pattern" : "NONE"
+            "pattern" : "NONE",
+            "type" : "PATTERN_ONLY"
           },
           "font" : {
             "bold" : false,
             "fontColor" : {
               "indexed" : 8,
-              "kind" : "INDEXED"
+              "type" : "INDEXED"
             },
             "fontHeight" : {
               "points" : 11,
@@ -807,14 +807,14 @@
             }
           },
           "fill" : {
-            "kind" : "PATTERN_ONLY",
-            "pattern" : "NONE"
+            "pattern" : "NONE",
+            "type" : "PATTERN_ONLY"
           },
           "font" : {
             "bold" : false,
             "fontColor" : {
               "indexed" : 8,
-              "kind" : "INDEXED"
+              "type" : "INDEXED"
             },
             "fontHeight" : {
               "points" : 11,
@@ -862,14 +862,14 @@
             }
           },
           "fill" : {
-            "kind" : "PATTERN_ONLY",
-            "pattern" : "NONE"
+            "pattern" : "NONE",
+            "type" : "PATTERN_ONLY"
           },
           "font" : {
             "bold" : false,
             "fontColor" : {
               "indexed" : 8,
-              "kind" : "INDEXED"
+              "type" : "INDEXED"
             },
             "fontHeight" : {
               "points" : 11,
@@ -931,11 +931,11 @@
       "workbook" : {
         "activeSheetName" : "Ops",
         "forceFormulaRecalculationOnOpen" : false,
-        "kind" : "WITH_SHEETS",
         "namedRangeCount" : 2,
         "selectedSheetNames" : [ "Ops" ],
         "sheetCount" : 1,
-        "sheetNames" : [ "Ops" ]
+        "sheetNames" : [ "Ops" ],
+        "type" : "WITH_SHEETS"
       }
     } ]
   },
@@ -943,7 +943,7 @@
   "stdout" : {
     "assertions" : [ {
       "assertionType" : "EXPECT_CHART_PRESENT",
-      "outcome" : "PASSED",
+      "status" : "PASSED",
       "stepId" : "chart-present"
     } ],
     "calculation" : {
@@ -1005,7 +1005,7 @@
           "origin" : "PLAN_AUTHORED",
           "result" : {
             "assertionType" : "EXPECT_CHART_PRESENT",
-            "outcome" : "PASSED",
+            "status" : "PASSED",
             "stepId" : "chart-present"
           }
         } ],
@@ -1227,7 +1227,7 @@
       "publication" : {
         "byteSize" : "<byteSize>",
         "durability" : {
-          "level" : "FILE_AND_DIRECTORY_SYNCED"
+          "type" : "FILE_AND_DIRECTORY_SYNCED"
         },
         "executionPath" : "<workspace>/recipe/generated-workbooks/gridgrind-chart.xlsx",
         "sha256" : "<sha256>",

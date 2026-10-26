@@ -257,8 +257,8 @@ class CellReadbackCoverageTest {
     assertTrue(date.isDate());
     assertEquals(Optional.of(CellTemporalKind.DATE), date.kind());
     assertEquals(Optional.of(CellTemporalKind.TIME), time.kind());
-    assertEquals("SPARSE", sparse.shape());
-    assertEquals("DENSE", dense.shape());
+    assertEquals("SPARSE", sparse.type());
+    assertEquals("DENSE", dense.type());
 
     assertThrows(
         NullPointerException.class, () -> new CellValueReport.NumberValue(null, Optional.empty()));

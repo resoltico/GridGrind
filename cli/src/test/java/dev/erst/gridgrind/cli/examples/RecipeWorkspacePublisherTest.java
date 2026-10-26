@@ -139,7 +139,7 @@ class RecipeWorkspacePublisherTest {
         GridGrindCliRecipeRegistry.recipeFor("AUDIT_EXISTING_WORKBOOK").orElseThrow();
     return new GridGrindCliRecipe(
         base.id(),
-        base.view(),
+        base.type(),
         base.requestFileName(),
         base.summary(),
         base.advisory(),

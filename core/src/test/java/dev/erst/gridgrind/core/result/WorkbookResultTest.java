@@ -367,9 +367,9 @@ class WorkbookResultTest {
         assertInstanceOf(
             dev.erst.gridgrind.core.problem.ProblemContext.ExecuteStep.class, problem.context());
 
-    assertEquals("PARSE_ARGUMENTS", parseArguments.stage());
+    assertEquals("PARSE_ARGUMENTS", parseArguments.type());
     assertEquals(java.util.Optional.of("--request"), parseArguments.argumentName());
-    assertEquals("EXECUTE_STEP", executeStep.stage());
+    assertEquals("EXECUTE_STEP", executeStep.type());
     assertEquals(1, executeStep.stepIndex());
     assertEquals("cells", executeStep.stepId().value());
     assertEquals("GET_CELLS", executeStep.stepType());

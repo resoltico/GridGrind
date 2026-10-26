@@ -1,7 +1,7 @@
 package dev.erst.gridgrind.cli;
 
 import dev.erst.gridgrind.cli.discovery.RecipeKeywordMatchReport;
-import dev.erst.gridgrind.cli.discovery.RecipeView;
+import dev.erst.gridgrind.cli.discovery.RecipeType;
 import dev.erst.gridgrind.cli.discovery.TaskArtifactKind;
 import dev.erst.gridgrind.cli.discovery.TaskCapabilityRef;
 import dev.erst.gridgrind.cli.discovery.TaskDiscoveryProfile;
@@ -27,7 +27,7 @@ final class GridGrindRecipeKeywordCandidateScorer {
   static Optional<RecipeKeywordMatchReport.Candidate> candidateFor(
       GridGrindCliRecipe recipe, List<String> queryTerms) {
     Objects.requireNonNull(recipe, "recipe must not be null");
-    return switch (recipe.view()) {
+    return switch (recipe.type()) {
       case EXAMPLE -> exampleCandidateFor(recipe, queryTerms);
       case TASK_STARTER -> taskCandidateFor(recipe, queryTerms);
     };
@@ -55,7 +55,7 @@ final class GridGrindRecipeKeywordCandidateScorer {
     return Optional.of(
         new RecipeKeywordMatchReport.Candidate(
             recipe.id(),
-            RecipeView.EXAMPLE,
+            RecipeType.EXAMPLE,
             recipe.summary(),
             accumulator.score,
             List.copyOf(accumulator.matchedTerms),
@@ -92,7 +92,7 @@ final class GridGrindRecipeKeywordCandidateScorer {
     return Optional.of(
         new RecipeKeywordMatchReport.Candidate(
             task.id(),
-            RecipeView.TASK_STARTER,
+            RecipeType.TASK_STARTER,
             task.narrative().summary(),
             accumulator.score,
             List.copyOf(accumulator.matchedTerms),

@@ -162,12 +162,12 @@ class ProblemContextCoverageTest {
     assertEquals(Optional.empty(), readRequest.jsonPath());
     assertEquals(Optional.of(7), readRequest.jsonLine());
     assertEquals(Optional.of(3), readRequest.jsonColumn());
-    assertEquals("READ_REQUEST", readRequest.stage());
-    assertEquals("BIND_REQUEST", bindRequest.stage());
+    assertEquals("READ_REQUEST", readRequest.type());
+    assertEquals("BIND_REQUEST", bindRequest.type());
     assertEquals(Optional.of("request.json"), bindRequest.requestPath());
     assertEquals(Optional.of("source.path"), bindRequest.jsonPath());
     assertEquals(Optional.of(41L), bindRequest.byteOffset());
-    assertEquals("CLI_RUNTIME", cliRuntime.stage());
+    assertEquals("CLI_RUNTIME", cliRuntime.type());
     assertEquals(Optional.of("EXISTING"), validateRequest.sourceType());
     assertEquals(Optional.of("OVERWRITE"), validateRequest.persistenceType());
     assertEquals(Optional.of("EXISTING"), resolveInputs.sourceType());

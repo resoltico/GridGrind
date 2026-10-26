@@ -22,7 +22,7 @@
       },
       "requiredWorkspacePaths" : [ ],
       "summary" : "Batch factual reads plus formula, hyperlink, named-range, and aggregate workbook analysis.",
-      "view" : "EXAMPLE"
+      "type" : "EXAMPLE"
     }
   },
   "execution" : {
@@ -34,7 +34,7 @@
           "lastRowIndex" : 3,
           "physicalRowCount" : 4,
           "protection" : {
-            "kind" : "UNPROTECTED"
+            "type" : "UNPROTECTED"
           },
           "sheetName" : "Dashboard",
           "visibility" : "VISIBLE"
@@ -205,14 +205,14 @@
               }
             },
             "fill" : {
-              "kind" : "PATTERN_ONLY",
-              "pattern" : "NONE"
+              "pattern" : "NONE",
+              "type" : "PATTERN_ONLY"
             },
             "font" : {
               "bold" : false,
               "fontColor" : {
                 "indexed" : 8,
-                "kind" : "INDEXED"
+                "type" : "INDEXED"
               },
               "fontHeight" : {
                 "points" : 11,
@@ -257,14 +257,14 @@
               }
             },
             "fill" : {
-              "kind" : "PATTERN_ONLY",
-              "pattern" : "NONE"
+              "pattern" : "NONE",
+              "type" : "PATTERN_ONLY"
             },
             "font" : {
               "bold" : false,
               "fontColor" : {
                 "indexed" : 8,
-                "kind" : "INDEXED"
+                "type" : "INDEXED"
               },
               "fontHeight" : {
                 "points" : 11,
@@ -309,14 +309,14 @@
               }
             },
             "fill" : {
-              "kind" : "PATTERN_ONLY",
-              "pattern" : "NONE"
+              "pattern" : "NONE",
+              "type" : "PATTERN_ONLY"
             },
             "font" : {
               "bold" : false,
               "fontColor" : {
                 "indexed" : 8,
-                "kind" : "INDEXED"
+                "type" : "INDEXED"
               },
               "fontHeight" : {
                 "points" : 11,
@@ -361,14 +361,14 @@
               }
             },
             "fill" : {
-              "kind" : "PATTERN_ONLY",
-              "pattern" : "NONE"
+              "pattern" : "NONE",
+              "type" : "PATTERN_ONLY"
             },
             "font" : {
               "bold" : false,
               "fontColor" : {
                 "indexed" : 8,
-                "kind" : "INDEXED"
+                "type" : "INDEXED"
               },
               "fontHeight" : {
                 "points" : 11,
@@ -414,14 +414,14 @@
               }
             },
             "fill" : {
-              "kind" : "PATTERN_ONLY",
-              "pattern" : "NONE"
+              "pattern" : "NONE",
+              "type" : "PATTERN_ONLY"
             },
             "font" : {
               "bold" : false,
               "fontColor" : {
                 "indexed" : 8,
-                "kind" : "INDEXED"
+                "type" : "INDEXED"
               },
               "fontHeight" : {
                 "points" : 11,
@@ -468,14 +468,14 @@
               }
             },
             "fill" : {
-              "kind" : "PATTERN_ONLY",
-              "pattern" : "NONE"
+              "pattern" : "NONE",
+              "type" : "PATTERN_ONLY"
             },
             "font" : {
               "bold" : false,
               "fontColor" : {
                 "indexed" : 8,
-                "kind" : "INDEXED"
+                "type" : "INDEXED"
               },
               "fontHeight" : {
                 "points" : 11,
@@ -520,14 +520,14 @@
               }
             },
             "fill" : {
-              "kind" : "PATTERN_ONLY",
-              "pattern" : "NONE"
+              "pattern" : "NONE",
+              "type" : "PATTERN_ONLY"
             },
             "font" : {
               "bold" : false,
               "fontColor" : {
                 "indexed" : 8,
-                "kind" : "INDEXED"
+                "type" : "INDEXED"
               },
               "fontHeight" : {
                 "points" : 11,
@@ -573,14 +573,14 @@
               }
             },
             "fill" : {
-              "kind" : "PATTERN_ONLY",
-              "pattern" : "NONE"
+              "pattern" : "NONE",
+              "type" : "PATTERN_ONLY"
             },
             "font" : {
               "bold" : false,
               "fontColor" : {
                 "indexed" : 8,
-                "kind" : "INDEXED"
+                "type" : "INDEXED"
               },
               "fontHeight" : {
                 "points" : 11,
@@ -627,14 +627,14 @@
               }
             },
             "fill" : {
-              "kind" : "PATTERN_ONLY",
-              "pattern" : "NONE"
+              "pattern" : "NONE",
+              "type" : "PATTERN_ONLY"
             },
             "font" : {
               "bold" : false,
               "fontColor" : {
                 "indexed" : 8,
-                "kind" : "INDEXED"
+                "type" : "INDEXED"
               },
               "fontHeight" : {
                 "points" : 11,
@@ -679,14 +679,14 @@
               }
             },
             "fill" : {
-              "kind" : "PATTERN_ONLY",
-              "pattern" : "NONE"
+              "pattern" : "NONE",
+              "type" : "PATTERN_ONLY"
             },
             "font" : {
               "bold" : false,
               "fontColor" : {
                 "indexed" : 8,
-                "kind" : "INDEXED"
+                "type" : "INDEXED"
               },
               "fontHeight" : {
                 "points" : 11,
@@ -750,14 +750,14 @@
               }
             },
             "fill" : {
-              "kind" : "PATTERN_ONLY",
-              "pattern" : "NONE"
+              "pattern" : "NONE",
+              "type" : "PATTERN_ONLY"
             },
             "font" : {
               "bold" : false,
               "fontColor" : {
                 "indexed" : 8,
-                "kind" : "INDEXED"
+                "type" : "INDEXED"
               },
               "fontHeight" : {
                 "points" : 11,
@@ -801,14 +801,14 @@
               }
             },
             "fill" : {
-              "kind" : "PATTERN_ONLY",
-              "pattern" : "NONE"
+              "pattern" : "NONE",
+              "type" : "PATTERN_ONLY"
             },
             "font" : {
               "bold" : false,
               "fontColor" : {
                 "indexed" : 8,
-                "kind" : "INDEXED"
+                "type" : "INDEXED"
               },
               "fontHeight" : {
                 "points" : 11,
@@ -868,11 +868,11 @@
         "workbook" : {
           "activeSheetName" : "Dashboard",
           "forceFormulaRecalculationOnOpen" : false,
-          "kind" : "WITH_SHEETS",
           "namedRangeCount" : 1,
           "selectedSheetNames" : [ "Dashboard" ],
           "sheetCount" : 1,
-          "sheetNames" : [ "Dashboard" ]
+          "sheetNames" : [ "Dashboard" ],
+          "type" : "WITH_SHEETS"
         }
       } ]
     },
@@ -967,11 +967,11 @@
         "workbook" : {
           "activeSheetName" : "Dashboard",
           "forceFormulaRecalculationOnOpen" : false,
-          "kind" : "WITH_SHEETS",
           "namedRangeCount" : 1,
           "selectedSheetNames" : [ "Dashboard" ],
           "sheetCount" : 1,
-          "sheetNames" : [ "Dashboard" ]
+          "sheetNames" : [ "Dashboard" ],
+          "type" : "WITH_SHEETS"
         }
       }, {
         "stepId" : "formula-surface",
@@ -1311,7 +1311,7 @@
         "publication" : {
           "byteSize" : "<byteSize>",
           "durability" : {
-            "level" : "FILE_AND_DIRECTORY_SYNCED"
+            "type" : "FILE_AND_DIRECTORY_SYNCED"
           },
           "executionPath" : "<workspace>/recipe/generated-workbooks/gridgrind-introspection-analysis.xlsx",
           "sha256" : "<sha256>",

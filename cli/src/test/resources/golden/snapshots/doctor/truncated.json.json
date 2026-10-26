@@ -21,7 +21,7 @@
           "requestPath" : "<workspace>/request.json",
           "type" : "FILE"
         },
-        "stage" : "READ_REQUEST"
+        "type" : "READ_REQUEST"
       },
       "message" : "Expected '}' to close object",
       "recovery" : "CHANGE_REQUEST",
@@ -45,7 +45,7 @@
           "requestPath" : "<workspace>/request.json",
           "type" : "FILE"
         },
-        "stage" : "READ_REQUEST"
+        "type" : "READ_REQUEST"
       },
       "message" : "Field 'steps' must be a JSON array",
       "recovery" : "CHANGE_REQUEST",
@@ -70,7 +70,7 @@
           "requestPath" : "<workspace>/request.json",
           "type" : "FILE"
         },
-        "stage" : "READ_REQUEST"
+        "type" : "READ_REQUEST"
       },
       "message" : "Expected a JSON value",
       "recovery" : "CHANGE_REQUEST",
@@ -95,7 +95,7 @@
           "requestPath" : "<workspace>/request.json",
           "type" : "FILE"
         },
-        "stage" : "READ_REQUEST"
+        "type" : "READ_REQUEST"
       },
       "message" : "Expected ',' or '}' after object member",
       "recovery" : "CHANGE_REQUEST",

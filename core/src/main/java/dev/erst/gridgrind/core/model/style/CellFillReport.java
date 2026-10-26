@@ -6,7 +6,7 @@ import dev.erst.gridgrind.core.vocabulary.ExcelFillPattern;
 import java.util.Objects;
 
 /** Effective fill facts reported with every analyzed cell. */
-@Union(discriminator = "kind", catalog = true, displayOrder = 61)
+@Union(discriminator = "type", catalog = true, displayOrder = 61)
 public sealed interface CellFillReport
     permits dev.erst.gridgrind.core.model.style.CellFillReport.PatternOnly,
         dev.erst.gridgrind.core.model.style.CellFillReport.PatternForeground,

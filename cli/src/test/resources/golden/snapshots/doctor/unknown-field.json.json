@@ -20,7 +20,7 @@
           "requestPath" : "<workspace>/request.json",
           "type" : "FILE"
         },
-        "stage" : "READ_REQUEST"
+        "type" : "READ_REQUEST"
       },
       "message" : "Unknown field 'unexpected'",
       "recovery" : "CHANGE_REQUEST",

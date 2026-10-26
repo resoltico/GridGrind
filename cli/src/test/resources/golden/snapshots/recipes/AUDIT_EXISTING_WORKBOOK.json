@@ -42,7 +42,7 @@
       "requiredInputs" : [ "Source workbook path.", "Target sheets or workbook areas that matter to the audit.", "Any expected invariants that should later become assertions." ],
       "requiredWorkspacePaths" : [ "task-starter-assets/workbook-ops-source.xlsx" ],
       "summary" : "Inspect an existing workbook, surface health findings, and avoid mutation unless a follow-up workflow explicitly asks for it.",
-      "view" : "TASK_STARTER",
+      "type" : "TASK_STARTER",
       "workflow" : {
         "commonPitfalls" : [ "EVENT_READ is intentionally limited; many audit plans require FULL_XSSF.", "Loaded formulas that Apache POI cannot evaluate surface as UNSUPPORTED_FORMULA instead of silently recalculating.", "If the audit needs strict policy checks, promote the findings into ASSERTION steps in a follow-up plan." ],
         "phases" : [ {
@@ -145,11 +145,11 @@
         "workbook" : {
           "activeSheetName" : "Template",
           "forceFormulaRecalculationOnOpen" : false,
-          "kind" : "WITH_SHEETS",
           "namedRangeCount" : 0,
           "selectedSheetNames" : [ "Template" ],
           "sheetCount" : 2,
-          "sheetNames" : [ "Template", "Summary" ]
+          "sheetNames" : [ "Template", "Summary" ],
+          "type" : "WITH_SHEETS"
         }
       }, {
         "comments" : [ {
@@ -419,7 +419,7 @@
             "argument" : "--materialize-recipe",
             "type" : "NAMED"
           },
-          "stage" : "PARSE_ARGUMENTS"
+          "type" : "PARSE_ARGUMENTS"
         },
         "message" : "Asset-backed recipes require --materialize-recipe --lookup AUDIT_EXISTING_WORKBOOK --workspace <new-directory>.",
         "recovery" : "CHANGE_REQUEST",

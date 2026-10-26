@@ -38,14 +38,14 @@ public record RecipeKeywordMatchReport(
   /** One compact scored recipe match that points the caller at the next discovery command. */
   public record Candidate(
       String recipeId,
-      RecipeView view,
+      RecipeType type,
       String summary,
       int score,
       List<String> matchedTerms,
       List<String> matchSources) {
     public Candidate {
       recipeId = CliDiscoveryValidation.requireNonBlank(recipeId, "recipeId");
-      Objects.requireNonNull(view, "view must not be null");
+      Objects.requireNonNull(type, "type must not be null");
       summary = CliDiscoveryValidation.requireNonBlank(summary, "summary");
       if (score <= 0) {
         throw new IllegalArgumentException("score must be positive");

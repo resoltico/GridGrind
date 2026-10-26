@@ -22,7 +22,7 @@
           "requestPath" : "<workspace>/request.json",
           "type" : "FILE"
         },
-        "stage" : "READ_REQUEST"
+        "type" : "READ_REQUEST"
       },
       "message" : "Duplicate key 'protocolVersion'",
       "recovery" : "CHANGE_REQUEST",

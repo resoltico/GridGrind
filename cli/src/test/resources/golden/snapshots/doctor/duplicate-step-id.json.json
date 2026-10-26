@@ -20,7 +20,7 @@
           "requestPath" : "<workspace>/request.json",
           "type" : "FILE"
         },
-        "stage" : "BIND_REQUEST"
+        "type" : "BIND_REQUEST"
       },
       "message" : "steps must not contain duplicate stepId values: a",
       "recovery" : "CHANGE_REQUEST",

@@ -16,6 +16,34 @@ import java.util.stream.Stream;
 enum ProductDomainShapeArchitectureRules {
   ;
 
+  static ArchRule unionTagsUseTypeOrStatus() {
+    return classes()
+        .that()
+        .areAnnotatedWith(dev.erst.gridgrind.core.metadata.Union.class)
+        .should(
+            new ArchCondition<JavaClass>("use type or status as the union discriminator") {
+              @Override
+              public void check(JavaClass item, ConditionEvents events) {
+                String discriminator =
+                    item.getAnnotationOfType(dev.erst.gridgrind.core.metadata.Union.class)
+                        .discriminator();
+                boolean structuralStep =
+                    discriminator.isEmpty()
+                        && "dev.erst.gridgrind.core.plan.WorkbookStep".equals(item.getName());
+                if (!structuralStep
+                    && !java.util.Set.of("type", "status").contains(discriminator)) {
+                  events.add(
+                      SimpleConditionEvent.violated(
+                          item,
+                          item.getName()
+                              + " declares unsupported discriminator: "
+                              + discriminator));
+                }
+              }
+            })
+        .because("wire identity uses type and completed-process outcomes use status");
+  }
+
   static ArchRule canonicalModelNamesDescribeTheirRole() {
     return classes()
         .that()

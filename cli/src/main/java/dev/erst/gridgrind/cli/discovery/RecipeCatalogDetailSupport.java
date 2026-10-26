@@ -17,7 +17,7 @@ final class RecipeCatalogDetailSupport {
 
   static RecipeCatalogDetail catalogDetailFor(GridGrindCliRecipe recipe) {
     RecipeRequestProfile requestProfile = requestProfileFor(recipe.plan());
-    return switch (recipe.view()) {
+    return switch (recipe.type()) {
       case EXAMPLE ->
           new ExampleRecipeCatalogDetail(
               recipe.id(),

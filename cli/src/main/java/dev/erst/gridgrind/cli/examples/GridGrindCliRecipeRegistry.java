@@ -1,6 +1,6 @@
 package dev.erst.gridgrind.cli.examples;
 
-import dev.erst.gridgrind.cli.discovery.RecipeView;
+import dev.erst.gridgrind.cli.discovery.RecipeType;
 import dev.erst.gridgrind.cli.discovery.ShippedExampleEntry;
 import dev.erst.gridgrind.cli.discovery.TaskEntry;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
@@ -16,9 +16,9 @@ public final class GridGrindCliRecipeRegistry {
   private static final RecipeRegistryState REGISTRY = buildRegistryState();
   private static final List<GridGrindCliRecipe> RECIPES = List.copyOf(REGISTRY.recipes());
   private static final List<GridGrindCliRecipe> EXAMPLE_RECIPES =
-      RECIPES.stream().filter(recipe -> recipe.view() == RecipeView.EXAMPLE).toList();
+      RECIPES.stream().filter(recipe -> recipe.type() == RecipeType.EXAMPLE).toList();
   private static final List<GridGrindCliRecipe> TASK_RECIPES =
-      RECIPES.stream().filter(recipe -> recipe.view() == RecipeView.TASK_STARTER).toList();
+      RECIPES.stream().filter(recipe -> recipe.type() == RecipeType.TASK_STARTER).toList();
   private static final Map<String, GridGrindCliRecipe> RECIPES_BY_ID =
       Map.copyOf(REGISTRY.recipesById());
   private static final Map<String, WorkbookPlan> REPOSITORY_EXAMPLE_PLANS =

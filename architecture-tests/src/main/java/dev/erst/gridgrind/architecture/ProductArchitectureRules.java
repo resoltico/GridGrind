@@ -9,6 +9,10 @@ public enum ProductArchitectureRules {
   ;
 
   @ArchTest
+  static final ArchRule UNION_TAGS_USE_TYPE_OR_STATUS =
+      ProductDomainShapeArchitectureRules.unionTagsUseTypeOrStatus();
+
+  @ArchTest
   static final ArchRule CANONICAL_MODEL_NAMES_DESCRIBE_THEIR_ROLE =
       ProductDomainShapeArchitectureRules.canonicalModelNamesDescribeTheirRole();
 

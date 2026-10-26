@@ -22,7 +22,7 @@
       },
       "requiredWorkspacePaths" : [ "source-backed-input-assets/title.txt", "source-backed-input-assets/total-formula.txt", "source-backed-input-assets/payload.bin" ],
       "summary" : "Repo-asset-backed file text, formula, and binary payload authoring without large inline literals.",
-      "view" : "EXAMPLE"
+      "type" : "EXAMPLE"
     }
   },
   "execution" : {
@@ -421,7 +421,7 @@
             "argument" : "--materialize-recipe",
             "type" : "NAMED"
           },
-          "stage" : "PARSE_ARGUMENTS"
+          "type" : "PARSE_ARGUMENTS"
         },
         "message" : "Asset-backed recipes require --materialize-recipe --lookup SOURCE_BACKED_INPUT --workspace <new-directory>.",
         "recovery" : "CHANGE_REQUEST",

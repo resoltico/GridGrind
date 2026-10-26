@@ -304,7 +304,7 @@ class CalculationContractTypesTest {
                 ProblemContextWorkbookSurfaces.ProblemLocation.formulaCell(
                     new SheetLabel("Ignored"), "Ignored", "Ignored"));
 
-    assertEquals("CALCULATION_PREFLIGHT", enriched.stage());
+    assertEquals("CALCULATION_PREFLIGHT", enriched.type());
     assertEquals(
         java.util.Optional.of("Budget"),
         enriched.sheetName().map(dev.erst.gridgrind.core.vocabulary.WireString::value));

@@ -278,7 +278,7 @@ final class ExecutionStreamingWorkflow {
             ExecutionStepContextFactory.contextFor(
                 workflowContext.request(), stepIndex, step, assertionFailure));
     stepHandle.fail(
-        problem.code(), problem.category(), problem.context().stage(), problem.message());
+        problem.code(), problem.category(), problem.context().type(), problem.message());
     collectedAssertionFailures.add(stepIndex, step.stepId(), problem);
   }
 
@@ -339,7 +339,7 @@ final class ExecutionStreamingWorkflow {
             ExecutionStepContextFactory.contextFor(
                 workflowContext.request(), stepIndex, step, exception));
     stepHandle.fail(
-        problem.code(), problem.category(), problem.context().stage(), problem.message());
+        problem.code(), problem.category(), problem.context().type(), problem.message());
     if (exception instanceof AssertionFailedException assertionFailed) {
       workflowContext
           .planAssertions()

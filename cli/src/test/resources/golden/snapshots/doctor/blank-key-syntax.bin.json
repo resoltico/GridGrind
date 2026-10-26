@@ -18,7 +18,7 @@
           "requestPath" : "<workspace>/request.json",
           "type" : "FILE"
         },
-        "stage" : "READ_REQUEST"
+        "type" : "READ_REQUEST"
       },
       "message" : "jsonPath must not be blank",
       "recovery" : "CHANGE_REQUEST",

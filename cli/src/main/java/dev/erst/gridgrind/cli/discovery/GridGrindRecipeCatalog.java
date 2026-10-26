@@ -45,7 +45,7 @@ public final class GridGrindRecipeCatalog {
 
   private static RecipeCatalogEntry catalogEntryFor(GridGrindCliRecipe recipe) {
     return new RecipeCatalogEntry(
-        recipe.view(),
+        recipe.type(),
         recipe.id(),
         recipe.requestFileName(),
         recipe.summary(),

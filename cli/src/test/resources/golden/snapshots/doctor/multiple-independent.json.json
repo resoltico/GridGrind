@@ -20,7 +20,7 @@
           "requestPath" : "<workspace>/request.json",
           "type" : "FILE"
         },
-        "stage" : "READ_REQUEST"
+        "type" : "READ_REQUEST"
       },
       "message" : "Field 'source' must be omitted when absent; explicit null is not accepted.",
       "recovery" : "CHANGE_REQUEST",
@@ -44,7 +44,7 @@
           "requestPath" : "<workspace>/request.json",
           "type" : "FILE"
         },
-        "stage" : "READ_REQUEST"
+        "type" : "READ_REQUEST"
       },
       "message" : "Unknown type value 'UNKNOWN'; valid values: NONE, OVERWRITE, SAVE_AS",
       "recovery" : "CHANGE_REQUEST",
@@ -68,7 +68,7 @@
           "requestPath" : "<workspace>/request.json",
           "type" : "FILE"
         },
-        "stage" : "READ_REQUEST"
+        "type" : "READ_REQUEST"
       },
       "message" : "Field 'steps' must be a JSON array",
       "recovery" : "CHANGE_REQUEST",
@@ -92,7 +92,7 @@
           "requestPath" : "<workspace>/request.json",
           "type" : "FILE"
         },
-        "stage" : "READ_REQUEST"
+        "type" : "READ_REQUEST"
       },
       "message" : "Unknown field 'unexpected'",
       "recovery" : "CHANGE_REQUEST",

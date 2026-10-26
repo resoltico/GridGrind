@@ -681,7 +681,7 @@ class WorkbookResultEdgeCoverageTest {
             java.util.Optional.empty(),
             java.util.Optional.of("#DIV/0!"));
 
-    assertEquals("PARSE_ARGUMENTS", parseArguments.stage());
+    assertEquals("PARSE_ARGUMENTS", parseArguments.type());
     assertEquals(java.util.Optional.of("--request"), parseArguments.argumentName());
     assertEquals("BOOLEAN", booleanCell.type());
     assertEquals("ERROR", errorCell.type());

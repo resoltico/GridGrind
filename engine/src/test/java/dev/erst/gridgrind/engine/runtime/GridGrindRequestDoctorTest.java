@@ -292,7 +292,7 @@ class GridGrindRequestDoctorTest {
     assertEquals(AnalysisSeverity.ERROR, report.severity());
     assertEquals(
         GridGrindProblemCode.INVALID_REQUEST, report.primaryProblem().orElseThrow().code());
-    assertEquals("RESOLVE_INPUTS", report.primaryProblem().orElseThrow().context().stage());
+    assertEquals("RESOLVE_INPUTS", report.primaryProblem().orElseThrow().context().type());
     assertEquals("cell text must not be blank", report.primaryProblem().orElseThrow().message());
   }
 
@@ -335,7 +335,7 @@ class GridGrindRequestDoctorTest {
         assertInstanceOf(
             dev.erst.gridgrind.core.problem.ProblemContext.ResolveInputs.class,
             report.primaryProblem().orElseThrow().context());
-    assertEquals("RESOLVE_INPUTS", context.stage());
+    assertEquals("RESOLVE_INPUTS", context.type());
     assertEquals(java.util.Optional.of("cell text"), context.inputKind());
     assertEquals(java.util.Optional.of("missing.txt"), context.inputPath());
   }
@@ -371,7 +371,7 @@ class GridGrindRequestDoctorTest {
         assertInstanceOf(
             dev.erst.gridgrind.core.problem.ProblemContext.OpenWorkbook.class,
             report.primaryProblem().orElseThrow().context());
-    assertEquals("OPEN_WORKBOOK", context.stage());
+    assertEquals("OPEN_WORKBOOK", context.type());
     assertEquals(
         java.util.Optional.of(workingDirectory.resolve("missing-workbook.xlsx").toString()),
         context.sourceWorkbookPath());

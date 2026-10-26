@@ -5,7 +5,7 @@ import java.util.Objects;
 
 /** One compact published recipe row in the unified machine-readable recipe catalog. */
 public record RecipeCatalogEntry(
-    RecipeView view,
+    RecipeType type,
     String id,
     String requestFileName,
     String summary,
@@ -13,7 +13,7 @@ public record RecipeCatalogEntry(
     List<String> requiredWorkspacePaths)
     implements RecipeCatalogDescriptor {
   public RecipeCatalogEntry {
-    Objects.requireNonNull(view, "view must not be null");
+    Objects.requireNonNull(type, "type must not be null");
     id = CliDiscoveryValidation.requireNonBlank(id, "id");
     requestFileName = CliRecipeCatalogValidation.requirePortableRequestFileName(requestFileName);
     summary = CliDiscoveryValidation.requireNonBlank(summary, "summary");

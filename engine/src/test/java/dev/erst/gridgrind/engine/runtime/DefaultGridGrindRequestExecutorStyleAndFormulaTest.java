@@ -635,7 +635,7 @@ class DefaultGridGrindRequestExecutorStyleAndFormulaTest
                             new WorkbookMutationAction.EnsureSheet())))));
 
     assertEquals(GridGrindProblemCode.INTERNAL_ERROR, failure.problem().code());
-    assertEquals("EXECUTE_REQUEST", failure.problem().context().stage());
+    assertEquals("EXECUTE_REQUEST", failure.problem().context().type());
   }
 
   @Test
@@ -705,7 +705,7 @@ class DefaultGridGrindRequestExecutorStyleAndFormulaTest
                                 new dev.erst.gridgrind.core.model.value.CellRowSpec.Typed(
                                     List.of(formulaCell("SUM(")))))))));
 
-    assertEquals("EXECUTE_STEP", failure.problem().context().stage());
+    assertEquals("EXECUTE_STEP", failure.problem().context().type());
     assertEquals("APPEND_ROW", executeStepContext(failure).stepType());
     assertEquals(
         java.util.Optional.of("Budget"),

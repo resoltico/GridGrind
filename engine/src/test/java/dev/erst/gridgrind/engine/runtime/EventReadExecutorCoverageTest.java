@@ -43,7 +43,7 @@ class EventReadExecutorCoverageTest {
                             new SheetIntrospectionQuery.GetSheetSummary())))));
 
     assertEquals(GridGrindProblemCode.SHEET_NOT_FOUND, failure.problem().code());
-    assertEquals("EXECUTE_STEP", failure.problem().context().stage());
+    assertEquals("EXECUTE_STEP", failure.problem().context().type());
     assertEquals(
         java.util.Optional.of("Missing"),
         DefaultGridGrindRequestExecutorTestSupport.executeStepContext(failure)
@@ -106,7 +106,7 @@ class EventReadExecutorCoverageTest {
                             new WorkbookIntrospectionQuery.GetWorkbookSummary())))));
 
     assertEquals(GridGrindProblemCode.IO_ERROR, failure.problem().code());
-    assertEquals("EXECUTE_REQUEST", failure.problem().context().stage());
+    assertEquals("EXECUTE_REQUEST", failure.problem().context().type());
   }
 
   @Test
@@ -167,6 +167,6 @@ class EventReadExecutorCoverageTest {
                             new WorkbookIntrospectionQuery.GetWorkbookSummary())))));
 
     assertEquals(GridGrindProblemCode.WORKBOOK_NOT_FOUND, failure.problem().code());
-    assertEquals("OPEN_WORKBOOK", failure.problem().context().stage());
+    assertEquals("OPEN_WORKBOOK", failure.problem().context().type());
   }
 }

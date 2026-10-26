@@ -144,8 +144,8 @@ class RequestPreflightTest {
         result.problems().stream()
             .allMatch(
                 problem ->
-                    problem.context().stage().endsWith("INPUTS")
-                        || "OPEN_WORKBOOK".equals(problem.context().stage())));
+                    problem.context().type().endsWith("INPUTS")
+                        || "OPEN_WORKBOOK".equals(problem.context().type())));
   }
 
   @Test

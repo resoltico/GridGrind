@@ -42,7 +42,7 @@
       "requiredInputs" : [ "Metric definitions and source ranges.", "Chart names and anchors.", "Target persistence path when the dashboard must be saved." ],
       "requiredWorkspacePaths" : [ ],
       "summary" : "Assemble an executive dashboard from reusable named surfaces and supported charts.",
-      "view" : "TASK_STARTER",
+      "type" : "TASK_STARTER",
       "workflow" : {
         "commonPitfalls" : [ "SET_CHART supports the authoritative simple-chart family listed in the protocol catalog.", "Chart title and series FORMULA titles must resolve to one cell.", "Unsupported loaded chart detail is preserved on unrelated edits but is not available for authoritative mutation." ],
         "phases" : [ {
@@ -103,7 +103,7 @@
           "lastRowIndex" : 3,
           "physicalRowCount" : 4,
           "protection" : {
-            "kind" : "UNPROTECTED"
+            "type" : "UNPROTECTED"
           },
           "sheetName" : "Ops",
           "visibility" : "VISIBLE"
@@ -370,14 +370,14 @@
               }
             },
             "fill" : {
-              "kind" : "PATTERN_ONLY",
-              "pattern" : "NONE"
+              "pattern" : "NONE",
+              "type" : "PATTERN_ONLY"
             },
             "font" : {
               "bold" : false,
               "fontColor" : {
                 "indexed" : 8,
-                "kind" : "INDEXED"
+                "type" : "INDEXED"
               },
               "fontHeight" : {
                 "points" : 11,
@@ -422,14 +422,14 @@
               }
             },
             "fill" : {
-              "kind" : "PATTERN_ONLY",
-              "pattern" : "NONE"
+              "pattern" : "NONE",
+              "type" : "PATTERN_ONLY"
             },
             "font" : {
               "bold" : false,
               "fontColor" : {
                 "indexed" : 8,
-                "kind" : "INDEXED"
+                "type" : "INDEXED"
               },
               "fontHeight" : {
                 "points" : 11,
@@ -474,14 +474,14 @@
               }
             },
             "fill" : {
-              "kind" : "PATTERN_ONLY",
-              "pattern" : "NONE"
+              "pattern" : "NONE",
+              "type" : "PATTERN_ONLY"
             },
             "font" : {
               "bold" : false,
               "fontColor" : {
                 "indexed" : 8,
-                "kind" : "INDEXED"
+                "type" : "INDEXED"
               },
               "fontHeight" : {
                 "points" : 11,
@@ -526,14 +526,14 @@
               }
             },
             "fill" : {
-              "kind" : "PATTERN_ONLY",
-              "pattern" : "NONE"
+              "pattern" : "NONE",
+              "type" : "PATTERN_ONLY"
             },
             "font" : {
               "bold" : false,
               "fontColor" : {
                 "indexed" : 8,
-                "kind" : "INDEXED"
+                "type" : "INDEXED"
               },
               "fontHeight" : {
                 "points" : 11,
@@ -579,14 +579,14 @@
               }
             },
             "fill" : {
-              "kind" : "PATTERN_ONLY",
-              "pattern" : "NONE"
+              "pattern" : "NONE",
+              "type" : "PATTERN_ONLY"
             },
             "font" : {
               "bold" : false,
               "fontColor" : {
                 "indexed" : 8,
-                "kind" : "INDEXED"
+                "type" : "INDEXED"
               },
               "fontHeight" : {
                 "points" : 11,
@@ -634,14 +634,14 @@
               }
             },
             "fill" : {
-              "kind" : "PATTERN_ONLY",
-              "pattern" : "NONE"
+              "pattern" : "NONE",
+              "type" : "PATTERN_ONLY"
             },
             "font" : {
               "bold" : false,
               "fontColor" : {
                 "indexed" : 8,
-                "kind" : "INDEXED"
+                "type" : "INDEXED"
               },
               "fontHeight" : {
                 "points" : 11,
@@ -688,14 +688,14 @@
               }
             },
             "fill" : {
-              "kind" : "PATTERN_ONLY",
-              "pattern" : "NONE"
+              "pattern" : "NONE",
+              "type" : "PATTERN_ONLY"
             },
             "font" : {
               "bold" : false,
               "fontColor" : {
                 "indexed" : 8,
-                "kind" : "INDEXED"
+                "type" : "INDEXED"
               },
               "fontHeight" : {
                 "points" : 11,
@@ -741,14 +741,14 @@
               }
             },
             "fill" : {
-              "kind" : "PATTERN_ONLY",
-              "pattern" : "NONE"
+              "pattern" : "NONE",
+              "type" : "PATTERN_ONLY"
             },
             "font" : {
               "bold" : false,
               "fontColor" : {
                 "indexed" : 8,
-                "kind" : "INDEXED"
+                "type" : "INDEXED"
               },
               "fontHeight" : {
                 "points" : 11,
@@ -796,14 +796,14 @@
               }
             },
             "fill" : {
-              "kind" : "PATTERN_ONLY",
-              "pattern" : "NONE"
+              "pattern" : "NONE",
+              "type" : "PATTERN_ONLY"
             },
             "font" : {
               "bold" : false,
               "fontColor" : {
                 "indexed" : 8,
-                "kind" : "INDEXED"
+                "type" : "INDEXED"
               },
               "fontHeight" : {
                 "points" : 11,
@@ -850,14 +850,14 @@
               }
             },
             "fill" : {
-              "kind" : "PATTERN_ONLY",
-              "pattern" : "NONE"
+              "pattern" : "NONE",
+              "type" : "PATTERN_ONLY"
             },
             "font" : {
               "bold" : false,
               "fontColor" : {
                 "indexed" : 8,
-                "kind" : "INDEXED"
+                "type" : "INDEXED"
               },
               "fontHeight" : {
                 "points" : 11,
@@ -903,14 +903,14 @@
               }
             },
             "fill" : {
-              "kind" : "PATTERN_ONLY",
-              "pattern" : "NONE"
+              "pattern" : "NONE",
+              "type" : "PATTERN_ONLY"
             },
             "font" : {
               "bold" : false,
               "fontColor" : {
                 "indexed" : 8,
-                "kind" : "INDEXED"
+                "type" : "INDEXED"
               },
               "fontHeight" : {
                 "points" : 11,
@@ -958,14 +958,14 @@
               }
             },
             "fill" : {
-              "kind" : "PATTERN_ONLY",
-              "pattern" : "NONE"
+              "pattern" : "NONE",
+              "type" : "PATTERN_ONLY"
             },
             "font" : {
               "bold" : false,
               "fontColor" : {
                 "indexed" : 8,
-                "kind" : "INDEXED"
+                "type" : "INDEXED"
               },
               "fontHeight" : {
                 "points" : 11,
@@ -1027,11 +1027,11 @@
         "workbook" : {
           "activeSheetName" : "Ops",
           "forceFormulaRecalculationOnOpen" : false,
-          "kind" : "WITH_SHEETS",
           "namedRangeCount" : 2,
           "selectedSheetNames" : [ "Ops" ],
           "sheetCount" : 1,
-          "sheetNames" : [ "Ops" ]
+          "sheetNames" : [ "Ops" ],
+          "type" : "WITH_SHEETS"
         }
       } ]
     },
@@ -1039,7 +1039,7 @@
     "stdout" : {
       "assertions" : [ {
         "assertionType" : "EXPECT_CHART_PRESENT",
-        "outcome" : "PASSED",
+        "status" : "PASSED",
         "stepId" : "assert-dashboard-chart"
       } ],
       "calculation" : {
@@ -1101,7 +1101,7 @@
             "origin" : "PLAN_AUTHORED",
             "result" : {
               "assertionType" : "EXPECT_CHART_PRESENT",
-              "outcome" : "PASSED",
+              "status" : "PASSED",
               "stepId" : "assert-dashboard-chart"
             }
           } ],
@@ -1323,7 +1323,7 @@
         "publication" : {
           "byteSize" : "<byteSize>",
           "durability" : {
-            "level" : "FILE_AND_DIRECTORY_SYNCED"
+            "type" : "FILE_AND_DIRECTORY_SYNCED"
           },
           "executionPath" : "<workspace>/recipe/generated-workbooks/dashboard.xlsx",
           "sha256" : "<sha256>",

@@ -7,7 +7,7 @@
         "lastRowIndex" : 2,
         "physicalRowCount" : 3,
         "protection" : {
-          "kind" : "UNPROTECTED"
+          "type" : "UNPROTECTED"
         },
         "sheetName" : "Template",
         "visibility" : "VISIBLE"
@@ -20,7 +20,7 @@
         "lastRowIndex" : 2,
         "physicalRowCount" : 3,
         "protection" : {
-          "kind" : "UNPROTECTED"
+          "type" : "UNPROTECTED"
         },
         "sheetName" : "Template Copy",
         "visibility" : "VISIBLE"
@@ -186,14 +186,14 @@
             }
           },
           "fill" : {
-            "kind" : "PATTERN_ONLY",
-            "pattern" : "NONE"
+            "pattern" : "NONE",
+            "type" : "PATTERN_ONLY"
           },
           "font" : {
             "bold" : false,
             "fontColor" : {
               "indexed" : 8,
-              "kind" : "INDEXED"
+              "type" : "INDEXED"
             },
             "fontHeight" : {
               "points" : 11,
@@ -238,14 +238,14 @@
             }
           },
           "fill" : {
-            "kind" : "PATTERN_ONLY",
-            "pattern" : "NONE"
+            "pattern" : "NONE",
+            "type" : "PATTERN_ONLY"
           },
           "font" : {
             "bold" : false,
             "fontColor" : {
               "indexed" : 8,
-              "kind" : "INDEXED"
+              "type" : "INDEXED"
             },
             "fontHeight" : {
               "points" : 11,
@@ -290,14 +290,14 @@
             }
           },
           "fill" : {
-            "kind" : "PATTERN_ONLY",
-            "pattern" : "NONE"
+            "pattern" : "NONE",
+            "type" : "PATTERN_ONLY"
           },
           "font" : {
             "bold" : false,
             "fontColor" : {
               "indexed" : 8,
-              "kind" : "INDEXED"
+              "type" : "INDEXED"
             },
             "fontHeight" : {
               "points" : 11,
@@ -342,14 +342,14 @@
             }
           },
           "fill" : {
-            "kind" : "PATTERN_ONLY",
-            "pattern" : "NONE"
+            "pattern" : "NONE",
+            "type" : "PATTERN_ONLY"
           },
           "font" : {
             "bold" : false,
             "fontColor" : {
               "indexed" : 8,
-              "kind" : "INDEXED"
+              "type" : "INDEXED"
             },
             "fontHeight" : {
               "points" : 11,
@@ -394,14 +394,14 @@
             }
           },
           "fill" : {
-            "kind" : "PATTERN_ONLY",
-            "pattern" : "NONE"
+            "pattern" : "NONE",
+            "type" : "PATTERN_ONLY"
           },
           "font" : {
             "bold" : false,
             "fontColor" : {
               "indexed" : 8,
-              "kind" : "INDEXED"
+              "type" : "INDEXED"
             },
             "fontHeight" : {
               "points" : 11,
@@ -446,14 +446,14 @@
             }
           },
           "fill" : {
-            "kind" : "PATTERN_ONLY",
-            "pattern" : "NONE"
+            "pattern" : "NONE",
+            "type" : "PATTERN_ONLY"
           },
           "font" : {
             "bold" : false,
             "fontColor" : {
               "indexed" : 8,
-              "kind" : "INDEXED"
+              "type" : "INDEXED"
             },
             "fontHeight" : {
               "points" : 11,
@@ -644,14 +644,14 @@
             }
           },
           "fill" : {
-            "kind" : "PATTERN_ONLY",
-            "pattern" : "NONE"
+            "pattern" : "NONE",
+            "type" : "PATTERN_ONLY"
           },
           "font" : {
             "bold" : false,
             "fontColor" : {
               "indexed" : 8,
-              "kind" : "INDEXED"
+              "type" : "INDEXED"
             },
             "fontHeight" : {
               "points" : 11,
@@ -696,14 +696,14 @@
             }
           },
           "fill" : {
-            "kind" : "PATTERN_ONLY",
-            "pattern" : "NONE"
+            "pattern" : "NONE",
+            "type" : "PATTERN_ONLY"
           },
           "font" : {
             "bold" : false,
             "fontColor" : {
               "indexed" : 8,
-              "kind" : "INDEXED"
+              "type" : "INDEXED"
             },
             "fontHeight" : {
               "points" : 11,
@@ -748,14 +748,14 @@
             }
           },
           "fill" : {
-            "kind" : "PATTERN_ONLY",
-            "pattern" : "NONE"
+            "pattern" : "NONE",
+            "type" : "PATTERN_ONLY"
           },
           "font" : {
             "bold" : false,
             "fontColor" : {
               "indexed" : 8,
-              "kind" : "INDEXED"
+              "type" : "INDEXED"
             },
             "fontHeight" : {
               "points" : 11,
@@ -800,14 +800,14 @@
             }
           },
           "fill" : {
-            "kind" : "PATTERN_ONLY",
-            "pattern" : "NONE"
+            "pattern" : "NONE",
+            "type" : "PATTERN_ONLY"
           },
           "font" : {
             "bold" : false,
             "fontColor" : {
               "indexed" : 8,
-              "kind" : "INDEXED"
+              "type" : "INDEXED"
             },
             "fontHeight" : {
               "points" : 11,
@@ -852,14 +852,14 @@
             }
           },
           "fill" : {
-            "kind" : "PATTERN_ONLY",
-            "pattern" : "NONE"
+            "pattern" : "NONE",
+            "type" : "PATTERN_ONLY"
           },
           "font" : {
             "bold" : false,
             "fontColor" : {
               "indexed" : 8,
-              "kind" : "INDEXED"
+              "type" : "INDEXED"
             },
             "fontHeight" : {
               "points" : 11,
@@ -904,14 +904,14 @@
             }
           },
           "fill" : {
-            "kind" : "PATTERN_ONLY",
-            "pattern" : "NONE"
+            "pattern" : "NONE",
+            "type" : "PATTERN_ONLY"
           },
           "font" : {
             "bold" : false,
             "fontColor" : {
               "indexed" : 8,
-              "kind" : "INDEXED"
+              "type" : "INDEXED"
             },
             "fontHeight" : {
               "points" : 11,
@@ -971,11 +971,11 @@
       "workbook" : {
         "activeSheetName" : "Template",
         "forceFormulaRecalculationOnOpen" : false,
-        "kind" : "WITH_SHEETS",
         "namedRangeCount" : 0,
         "selectedSheetNames" : [ "Template" ],
         "sheetCount" : 2,
-        "sheetNames" : [ "Template", "Template Copy" ]
+        "sheetNames" : [ "Template", "Template Copy" ],
+        "type" : "WITH_SHEETS"
       }
     } ]
   },
@@ -1185,7 +1185,7 @@
       "publication" : {
         "byteSize" : "<byteSize>",
         "durability" : {
-          "level" : "FILE_AND_DIRECTORY_SYNCED"
+          "type" : "FILE_AND_DIRECTORY_SYNCED"
         },
         "executionPath" : "<workspace>/recipe/generated-workbooks/gridgrind-sheet-maintenance.xlsx",
         "sha256" : "<sha256>",

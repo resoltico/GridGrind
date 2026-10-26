@@ -5,7 +5,7 @@ import dev.erst.gridgrind.core.metadata.Variant;
 import java.util.Objects;
 
 /** Captures whether a sheet is protected and, if so, with which supported lock flags. */
-@Union(discriminator = "kind", catalog = true, displayOrder = 7)
+@Union(discriminator = "type", catalog = true, displayOrder = 7)
 public sealed interface SheetProtectionReport
     permits dev.erst.gridgrind.core.model.protection.SheetProtectionReport.Unprotected,
         dev.erst.gridgrind.core.model.protection.SheetProtectionReport.Protected {

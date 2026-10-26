@@ -1,7 +1,7 @@
 package dev.erst.gridgrind.cli.examples;
 
 import dev.erst.gridgrind.cli.discovery.RecipeAdvisory;
-import dev.erst.gridgrind.cli.discovery.RecipeView;
+import dev.erst.gridgrind.cli.discovery.RecipeType;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import java.util.List;
 import java.util.Locale;
@@ -50,7 +50,7 @@ record GridGrindExampleRecipeDefinition(
   GridGrindCliRecipe recipe() {
     return new GridGrindCliRecipe(
         id,
-        RecipeView.EXAMPLE,
+        RecipeType.EXAMPLE,
         requestFileName,
         summary,
         advisory,

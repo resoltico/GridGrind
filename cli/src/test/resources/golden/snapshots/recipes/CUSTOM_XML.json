@@ -22,7 +22,7 @@
       },
       "requiredWorkspacePaths" : [ "custom-xml-assets/custom-xml-mapping.xlsx", "custom-xml-assets/custom-xml-update.xml" ],
       "summary" : "Repo-asset-backed existing-workbook custom-XML mapping discovery, XML export, and file-backed XML import.",
-      "view" : "EXAMPLE"
+      "type" : "EXAMPLE"
     }
   },
   "execution" : {
@@ -506,7 +506,7 @@
             "argument" : "--materialize-recipe",
             "type" : "NAMED"
           },
-          "stage" : "PARSE_ARGUMENTS"
+          "type" : "PARSE_ARGUMENTS"
         },
         "message" : "Asset-backed recipes require --materialize-recipe --lookup CUSTOM_XML --workspace <new-directory>.",
         "recovery" : "CHANGE_REQUEST",

@@ -414,7 +414,7 @@ class GridGrindCommandErrorClassificationTest extends GridGrindCliTestSupport {
     WorkbookResult.Failure failure = (WorkbookResult.Failure) response;
     assertEquals(GridGrindProblemCode.INTERNAL_ERROR, failure.problem().code());
     assertEquals(GridGrindProblemCategory.INTERNAL, failure.problem().category());
-    assertEquals("EXECUTE_REQUEST", failure.problem().context().stage());
+    assertEquals("EXECUTE_REQUEST", failure.problem().context().type());
     assertEquals(java.util.Optional.of("NEW"), executeRequestContext(failure).sourceType());
     assertEquals(java.util.Optional.of("NONE"), executeRequestContext(failure).persistenceType());
     assertEquals(GridGrindProblemCode.INTERNAL_ERROR.title(), failure.problem().message());
@@ -456,7 +456,7 @@ class GridGrindCommandErrorClassificationTest extends GridGrindCliTestSupport {
     assertInstanceOf(WorkbookResult.Failure.class, response);
     WorkbookResult.Failure failure = (WorkbookResult.Failure) response;
     assertEquals(GridGrindProblemCode.INTERNAL_ERROR, failure.problem().code());
-    assertEquals("EXECUTE_REQUEST", failure.problem().context().stage());
+    assertEquals("EXECUTE_REQUEST", failure.problem().context().type());
     assertEquals(java.util.Optional.of("EXISTING"), executeRequestContext(failure).sourceType());
     assertEquals(
         java.util.Optional.of("OVERWRITE"), executeRequestContext(failure).persistenceType());
@@ -500,7 +500,7 @@ class GridGrindCommandErrorClassificationTest extends GridGrindCliTestSupport {
     assertInstanceOf(WorkbookResult.Failure.class, response);
     WorkbookResult.Failure failure = (WorkbookResult.Failure) response;
     assertEquals(GridGrindProblemCode.INTERNAL_ERROR, failure.problem().code());
-    assertEquals("EXECUTE_REQUEST", failure.problem().context().stage());
+    assertEquals("EXECUTE_REQUEST", failure.problem().context().type());
     assertEquals(java.util.Optional.of("EXISTING"), executeRequestContext(failure).sourceType());
     assertEquals(
         java.util.Optional.of("SAVE_AS"), executeRequestContext(failure).persistenceType());
@@ -530,7 +530,7 @@ class GridGrindCommandErrorClassificationTest extends GridGrindCliTestSupport {
       assertInstanceOf(WorkbookResult.Failure.class, response);
       WorkbookResult.Failure failure = (WorkbookResult.Failure) response;
       assertEquals(GridGrindProblemCode.INTERNAL_ERROR, failure.problem().code());
-      assertEquals("EXECUTE_REQUEST", failure.problem().context().stage());
+      assertEquals("EXECUTE_REQUEST", failure.problem().context().type());
       assertEquals(GridGrindProblemCode.INTERNAL_ERROR.title(), failure.problem().message());
     } finally {
       Files.deleteIfExists(responsePath);

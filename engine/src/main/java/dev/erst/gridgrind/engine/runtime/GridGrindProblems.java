@@ -31,7 +31,7 @@ public final class GridGrindProblems {
         code,
         publicMessage,
         enrichContext(context, exception),
-        causesFor(exception, context.stage(), publicMessage),
+        causesFor(exception, context.type(), publicMessage),
         exception);
   }
 
@@ -52,7 +52,7 @@ public final class GridGrindProblems {
         context,
         causesFor(
             cause,
-            context.stage(),
+            context.type(),
             cause == null ? publicMessage : publicMessageFor(codeFor(cause), cause, context)),
         cause);
   }
@@ -136,7 +136,7 @@ public final class GridGrindProblems {
       GridGrindProblemDetail.Problem problem) {
     Objects.requireNonNull(problem, "problem must not be null");
     return new GridGrindProblemDetail.ProblemCause(
-        problem.code(), problem.title() + ": " + problem.message(), problem.context().stage());
+        problem.code(), problem.title() + ": " + problem.message(), problem.context().type());
   }
 
   static GridGrindProblemCode codeFor(Throwable exception) {

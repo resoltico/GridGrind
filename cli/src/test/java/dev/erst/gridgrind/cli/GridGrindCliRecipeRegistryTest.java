@@ -37,12 +37,12 @@ class GridGrindCliRecipeRegistryTest {
   void taskAndExampleViewsDerivePublishedFieldsFromRegistryDefinitions() {
     assertTrue(
         GridGrindCliRecipeRegistry.recipeFor("WORKBOOK_HEALTH")
-            .filter(recipe -> recipe.view() == dev.erst.gridgrind.cli.discovery.RecipeView.EXAMPLE)
+            .filter(recipe -> recipe.type() == dev.erst.gridgrind.cli.discovery.RecipeType.EXAMPLE)
             .isPresent());
     assertTrue(
         GridGrindCliRecipeRegistry.recipeFor("DASHBOARD")
             .filter(
-                recipe -> recipe.view() == dev.erst.gridgrind.cli.discovery.RecipeView.TASK_STARTER)
+                recipe -> recipe.type() == dev.erst.gridgrind.cli.discovery.RecipeType.TASK_STARTER)
             .isPresent());
     assertEquals(
         RecipeAdvisory.SELF_CONTAINED,
@@ -55,7 +55,7 @@ class GridGrindCliRecipeRegistryTest {
 
     for (ShippedExampleEntry entry : GridGrindShippedExamples.catalog().examples()) {
       GridGrindCliRecipe recipe = GridGrindCliRecipeRegistry.recipeFor(entry.id()).orElseThrow();
-      assertEquals(dev.erst.gridgrind.cli.discovery.RecipeView.EXAMPLE, recipe.view());
+      assertEquals(dev.erst.gridgrind.cli.discovery.RecipeType.EXAMPLE, recipe.type());
       assertEquals(recipe.requestFileName(), entry.requestFileName());
       assertEquals(recipe.summary(), entry.summary());
       assertEquals(recipe.advisory(), entry.advisory());
@@ -64,7 +64,7 @@ class GridGrindCliRecipeRegistryTest {
 
     for (TaskEntry entry : GridGrindTaskCatalog.catalog().tasks()) {
       GridGrindCliRecipe recipe = GridGrindCliRecipeRegistry.recipeFor(entry.id()).orElseThrow();
-      assertEquals(dev.erst.gridgrind.cli.discovery.RecipeView.TASK_STARTER, recipe.view());
+      assertEquals(dev.erst.gridgrind.cli.discovery.RecipeType.TASK_STARTER, recipe.type());
       assertEquals(entry.narrative().summary(), recipe.summary());
       assertEquals(entry.intentTags(), recipe.intentTags());
       assertEquals(entry.starter().requestFileName(), recipe.requestFileName());

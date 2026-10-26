@@ -20,7 +20,7 @@
           "requestPath" : "<workspace>/request.json",
           "type" : "FILE"
         },
-        "stage" : "BIND_REQUEST"
+        "type" : "BIND_REQUEST"
       },
       "message" : "path must end in .xlsx (got: '.txt')",
       "recovery" : "CHANGE_REQUEST",

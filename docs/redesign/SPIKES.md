@@ -1044,3 +1044,52 @@ Before/after evidence is in wp-23/before and after-names. Baseline diff is empty
 WP-23 remains open: normalize tag fields, unify cell values and reset the wire version to integer 1.
 Other pending WPs, including schema emission, remaining identifier validation, central engine
 refactoring and final campaigns, remain explicit rather than being counted as done here.
+
+### WP-23 canonical wire tag checkpoint
+
+All 122 tagged production unions now declare type (111) or status (11). WorkbookStep remains the
+single structural, untagged envelope. AssertionResult uses status and AssertionStatus; context and
+window identities use type and derive their id from Variant metadata rather than repeated literals.
+Recipe rows, details and keyword candidates consistently use type/RecipeType. Domain attributes
+such as journal verbosity, diagnostic cause stage and named-range backing kind keep their existing
+meaning; they are not polymorphic discriminators. No old-name alias or compatibility handler exists.
+An architecture rule covers the two tag names and the exact structural exception, with negative
+controls for another tag and an unowned empty tag. Three codec regressions start from valid complete
+objects, mutate only the tag name and prove removed shape/stage/outcome tags are rejected.
+
+Javac-resolved member migration changed 110 tokens in 37 files, with zero compiler diagnostics
+before the rewrite. Captured the prior tag owners, variant ids and record components independently
+from the previous packaged artifact (tag-contracts-before.json). Full catalog comparison proves
+that only 1254 tag/descriptor fields change; all other fields and values are equal. Current docs
+and fixtures were updated. Restored 22 incidental authored-type substitutions in the archived
+release changelog from before the naming checkpoint; released historical names remain historical.
+
+Golden review accounts for every change across 56 snapshots: kind -> type (574), view -> type (50),
+stage -> type (34), durability level -> type (24), assertion outcome -> status (20), window shape ->
+type (two), plus one derived window-group search description saying discriminator type (one).
+Total: 705 declared key/description changes. Per-file/path evidence is in
+wp-23/tag-snapshot-corrected-review.json. Scalar observations and golden normalization are unchanged.
+The review initially missed the host-added protocolVersion envelope on recipe details and falsely
+classified a plain named-range surface backing-kind field by its overlapping JSON shape. The full
+run detected both. Corrected the review using the producer context: preserve surface.namedRanges
+kind and admit the unchanged version envelope. All 46 failed launcher observations then equal the
+independently transformed prior snapshots. Retained full failure XML, actuals and difference lists.
+One CLI constructor test's expected field label also changed from view to type. The final full run
+passes all 141 golden cases and their value-changing negative control.
+
+Final ./gradlew check passed in 3m33s: core 328, JSON 336, engine 1511, CLI 598, architecture 41;
+no failures, errors or skips. Named JPMS modules passed 14 requests, catalog, response and twelve
+scalars. Inventory: only type/status discriminators; main Java 124513 -> 124474, tests 154573 ->
+154674. Spec 75/Patch eight, reports 96, engine snapshots 51/definitions 13, converters 4700,
+Support 217, blank checks 438 remain. Registrations, hand descriptors and wire creator/default
+sites remain zero. Baseline diff is empty; supplement absent. No mutation or active fuzzing ran.
+
+Challenge for the next cell-value merge: an independently constructed workbook with a stored NaN
+at A1 succeeds and reports numberValue="NaN"; a normal C1 control succeeds with 1.0. A NaN formula
+cache at B1 currently fails INTERNAL_ERROR. Combined reads fail at that cache, so separate cell
+requests were necessary to establish the actual boundary. Source, workbook, request/grant, results
+and verdicts are retained in wp-23/nonfinite-observation. Preserve stored numeric observations in
+the shared resolved type and keep finite-number checks at the authored expectation boundary. The
+formula-cache failure is pre-existing and remains a backend investigation, not a reason to drop
+stored observations. WP-23 remains open for cell-value unification and integer protocol version.
+Schema defaults, remaining WP-21 inventory targets and all later WPs remain outstanding.

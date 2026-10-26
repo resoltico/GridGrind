@@ -1,6 +1,6 @@
 package dev.erst.gridgrind.cli.examples;
 
-import dev.erst.gridgrind.cli.discovery.RecipeView;
+import dev.erst.gridgrind.cli.discovery.RecipeType;
 import dev.erst.gridgrind.cli.discovery.TaskEntry;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import java.util.Objects;
@@ -16,7 +16,7 @@ record GridGrindTaskRecipeDefinition(TaskEntry task, WorkbookPlan starterPlan)
   GridGrindCliRecipe recipe() {
     return new GridGrindCliRecipe(
         task.id(),
-        RecipeView.TASK_STARTER,
+        RecipeType.TASK_STARTER,
         task.starter().requestFileName(),
         task.narrative().summary(),
         task.starter().advisory(),

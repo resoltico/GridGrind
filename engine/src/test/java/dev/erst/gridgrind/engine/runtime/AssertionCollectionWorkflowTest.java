@@ -13,8 +13,8 @@ import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import dev.erst.gridgrind.core.model.formula.CalculationPolicySpec;
 import dev.erst.gridgrind.core.model.value.CellScalarValue;
 import dev.erst.gridgrind.core.plan.AssertionModeSpec;
-import dev.erst.gridgrind.core.plan.AssertionOutcome;
 import dev.erst.gridgrind.core.plan.AssertionResult;
+import dev.erst.gridgrind.core.plan.AssertionStatus;
 import dev.erst.gridgrind.core.plan.CellAssertion;
 import dev.erst.gridgrind.core.plan.CellMutationAction;
 import dev.erst.gridgrind.core.plan.CellSelector;
@@ -80,8 +80,8 @@ class AssertionCollectionWorkflowTest extends DefaultGridGrindRequestExecutorTes
     assertEquals(GridGrindProblemCode.ASSERTION_FAILED, failure.problem().code());
     assertEquals("assert-first", failedAssertion(failure).stepId().value());
     assertEquals(
-        List.of(AssertionOutcome.PASSED, AssertionOutcome.FAILED, AssertionOutcome.FAILED),
-        failure.assertions().stream().map(AssertionResult::outcome).toList());
+        List.of(AssertionStatus.PASSED, AssertionStatus.FAILED, AssertionStatus.FAILED),
+        failure.assertions().stream().map(AssertionResult::status).toList());
     assertEquals(
         List.of("cells-after-assertions"),
         failure.inspections().stream().map(InspectionResult::stepId).toList().stream()
@@ -136,8 +136,8 @@ class AssertionCollectionWorkflowTest extends DefaultGridGrindRequestExecutorTes
     assertEquals(GridGrindProblemCode.ASSERTION_FAILED, failure.problem().code());
     assertEquals("stream-fail", failedAssertion(failure).stepId().value());
     assertEquals(
-        List.of(AssertionOutcome.PASSED, AssertionOutcome.FAILED),
-        failure.assertions().stream().map(AssertionResult::outcome).toList());
+        List.of(AssertionStatus.PASSED, AssertionStatus.FAILED),
+        failure.assertions().stream().map(AssertionResult::status).toList());
     assertEquals(
         List.of("stream-after-failure"),
         failure.inspections().stream().map(InspectionResult::stepId).toList().stream()
@@ -150,7 +150,7 @@ class AssertionCollectionWorkflowTest extends DefaultGridGrindRequestExecutorTes
     return assertInstanceOf(
             AssertionResult.Failed.class,
             failure.assertions().stream()
-                .filter(result -> result.outcome() == AssertionOutcome.FAILED)
+                .filter(result -> result.status() == AssertionStatus.FAILED)
                 .findFirst()
                 .orElseThrow())
         .failure();

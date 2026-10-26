@@ -10,7 +10,7 @@
       "requirement" : "REQUIRED",
       "shape" : {
         "group" : "cellValueSpecTypes",
-        "kind" : "NESTED_TYPE_GROUP"
+        "type" : "NESTED_TYPE_GROUP"
       }
     } ],
     "id" : "SET_CELL",

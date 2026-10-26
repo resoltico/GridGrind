@@ -285,7 +285,7 @@ class GridGrindCliDoctorCatalogCommandTest extends GridGrindCliTestSupport {
     assertFalse(report.valid());
     assertEquals(
         GridGrindProblemCode.WORKBOOK_NOT_FOUND, report.primaryProblem().orElseThrow().code());
-    assertEquals("OPEN_WORKBOOK", report.primaryProblem().orElseThrow().context().stage());
+    assertEquals("OPEN_WORKBOOK", report.primaryProblem().orElseThrow().context().type());
     assertEquals(
         java.util.Optional.of(requestDirectory.resolve("missing-workbook.xlsx").toString()),
         openWorkbookContext(report).sourceWorkbookPath());
@@ -648,11 +648,11 @@ class GridGrindCliDoctorCatalogCommandTest extends GridGrindCliTestSupport {
                                       "italic": false,
                                       "fontName": "Calibri",
                                       "fontHeight": { "twips": 220, "points": 11 },
-                                      "fontColor": { "kind": "INDEXED", "indexed": 8 },
+                                      "fontColor": { "type": "INDEXED", "indexed": 8 },
                                       "underline": false,
                                       "strikeout": false
                                     },
-                                    "fill": { "kind": "PATTERN_ONLY", "pattern": "NONE" },
+                                    "fill": { "type": "PATTERN_ONLY", "pattern": "NONE" },
                                     "border": {
                                       "top": { "type": "NONE" },
                                       "right": { "type": "NONE" },

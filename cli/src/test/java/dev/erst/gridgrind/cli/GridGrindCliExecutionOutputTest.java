@@ -45,7 +45,7 @@ class GridGrindCliExecutionOutputTest extends GridGrindCliTestSupport {
     assertInstanceOf(WorkbookResult.Failure.class, response);
     WorkbookResult.Failure failure = (WorkbookResult.Failure) response;
     assertEquals(GridGrindProblemCode.INTERNAL_ERROR, failure.problem().code());
-    assertEquals("EXECUTE_REQUEST", failure.problem().context().stage());
+    assertEquals("EXECUTE_REQUEST", failure.problem().context().type());
   }
 
   @Test
@@ -74,11 +74,11 @@ class GridGrindCliExecutionOutputTest extends GridGrindCliTestSupport {
         JsonMapper.builder().build().readTree(new ByteArrayInputStream(stdout.toByteArray()));
 
     assertEquals("ASSERTION_FAILED", response.path("problem").path("code").asString());
-    assertEquals("EXECUTE_STEP", response.path("problem").path("context").path("stage").asString());
+    assertEquals("EXECUTE_STEP", response.path("problem").path("context").path("type").asString());
     assertEquals(
         "EXPECT_CELL_VALUE", response.path("assertions").get(0).path("assertionType").asString());
     assertEquals("assert-a1", response.path("assertions").get(0).path("stepId").asString());
-    assertEquals("FAILED", response.path("assertions").get(0).path("outcome").asString());
+    assertEquals("FAILED", response.path("assertions").get(0).path("status").asString());
   }
 
   @Test
@@ -103,7 +103,7 @@ class GridGrindCliExecutionOutputTest extends GridGrindCliTestSupport {
     assertInstanceOf(WorkbookResult.Failure.class, response);
     WorkbookResult.Failure failure = (WorkbookResult.Failure) response;
     assertEquals(GridGrindProblemCode.INVALID_FORMULA, failure.problem().code());
-    assertEquals("EXECUTE_STEP", failure.problem().context().stage());
+    assertEquals("EXECUTE_STEP", failure.problem().context().type());
     assertEquals(java.util.Optional.of("A1"), executeStepContext(failure).address());
     assertEquals(java.util.Optional.of("SUM("), executeStepContext(failure).formula());
   }
@@ -130,7 +130,7 @@ class GridGrindCliExecutionOutputTest extends GridGrindCliTestSupport {
     assertInstanceOf(WorkbookResult.Failure.class, response);
     WorkbookResult.Failure failure = (WorkbookResult.Failure) response;
     assertEquals(GridGrindProblemCode.UNSUPPORTED_FORMULA_CONSTRUCT, failure.problem().code());
-    assertEquals("EXECUTE_STEP", failure.problem().context().stage());
+    assertEquals("EXECUTE_STEP", failure.problem().context().type());
     assertEquals(java.util.Optional.of("A1"), executeStepContext(failure).address());
     assertEquals(java.util.Optional.of("LAMBDA(x,x+1)(2)"), executeStepContext(failure).formula());
   }

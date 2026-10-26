@@ -68,8 +68,8 @@ class AssertionCoverageTest {
         new AssertionResult.Passed(new StepId("assert-pass"), "EXPECT_CELL_VALUE");
     AssertionResult.Failed failed =
         new AssertionResult.Failed(new StepId("assert-cell"), "EXPECT_CELL_VALUE", failure);
-    assertEquals(AssertionOutcome.PASSED, passed.outcome());
-    assertEquals(AssertionOutcome.FAILED, failed.outcome());
+    assertEquals(AssertionStatus.PASSED, passed.status());
+    assertEquals(AssertionStatus.FAILED, failed.status());
     assertEquals(failure, failed.failure());
     assertThrows(
         IllegalArgumentException.class,

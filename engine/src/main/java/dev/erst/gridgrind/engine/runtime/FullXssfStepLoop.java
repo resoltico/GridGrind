@@ -94,7 +94,7 @@ final class FullXssfStepLoop {
             ExecutionStepContextFactory.contextFor(
                 state.executionContext().request(), stepIndex, step, failure));
     stepHandle.fail(
-        problem.code(), problem.category(), problem.context().stage(), problem.message());
+        problem.code(), problem.category(), problem.context().type(), problem.message());
     state.collectedAssertionFailures().add(stepIndex, step.stepId(), problem);
   }
 }

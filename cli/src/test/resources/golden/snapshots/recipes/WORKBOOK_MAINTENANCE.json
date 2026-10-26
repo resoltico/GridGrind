@@ -42,7 +42,7 @@
       "requiredInputs" : [ "Existing workbook path.", "Source sheet names and destination copy names.", "Persistence target when the maintained workbook should be kept." ],
       "requiredWorkspacePaths" : [ "task-starter-assets/workbook-ops-source.xlsx" ],
       "summary" : "Safely copy or normalize existing workbook sheets while verifying comments, drawings, and other cloned workbook state after the change.",
-      "view" : "TASK_STARTER",
+      "type" : "TASK_STARTER",
       "workflow" : {
         "commonPitfalls" : [ "Replace placeholder sheet names before execution; copy-sheet requires an existing source sheet.", "Maintenance flows are safest with SAVE_AS so the source workbook stays intact until verification passes.", "Use targeted rereads after COPY_SHEET instead of assuming copied comments or drawings stayed coherent." ],
         "phases" : [ {
@@ -100,7 +100,7 @@
           "lastRowIndex" : 2,
           "physicalRowCount" : 3,
           "protection" : {
-            "kind" : "UNPROTECTED"
+            "type" : "UNPROTECTED"
           },
           "sheetName" : "Template",
           "visibility" : "VISIBLE"
@@ -113,7 +113,7 @@
           "lastRowIndex" : 0,
           "physicalRowCount" : 1,
           "protection" : {
-            "kind" : "UNPROTECTED"
+            "type" : "UNPROTECTED"
           },
           "sheetName" : "Summary",
           "visibility" : "VISIBLE"
@@ -126,7 +126,7 @@
           "lastRowIndex" : 2,
           "physicalRowCount" : 3,
           "protection" : {
-            "kind" : "UNPROTECTED"
+            "type" : "UNPROTECTED"
           },
           "sheetName" : "Template Copy",
           "visibility" : "VISIBLE"
@@ -327,14 +327,14 @@
               }
             },
             "fill" : {
-              "kind" : "PATTERN_ONLY",
-              "pattern" : "NONE"
+              "pattern" : "NONE",
+              "type" : "PATTERN_ONLY"
             },
             "font" : {
               "bold" : false,
               "fontColor" : {
                 "indexed" : 8,
-                "kind" : "INDEXED"
+                "type" : "INDEXED"
               },
               "fontHeight" : {
                 "points" : 11,
@@ -379,14 +379,14 @@
               }
             },
             "fill" : {
-              "kind" : "PATTERN_ONLY",
-              "pattern" : "NONE"
+              "pattern" : "NONE",
+              "type" : "PATTERN_ONLY"
             },
             "font" : {
               "bold" : false,
               "fontColor" : {
                 "indexed" : 8,
-                "kind" : "INDEXED"
+                "type" : "INDEXED"
               },
               "fontHeight" : {
                 "points" : 11,
@@ -431,14 +431,14 @@
               }
             },
             "fill" : {
-              "kind" : "PATTERN_ONLY",
-              "pattern" : "NONE"
+              "pattern" : "NONE",
+              "type" : "PATTERN_ONLY"
             },
             "font" : {
               "bold" : false,
               "fontColor" : {
                 "indexed" : 8,
-                "kind" : "INDEXED"
+                "type" : "INDEXED"
               },
               "fontHeight" : {
                 "points" : 11,
@@ -483,14 +483,14 @@
               }
             },
             "fill" : {
-              "kind" : "PATTERN_ONLY",
-              "pattern" : "NONE"
+              "pattern" : "NONE",
+              "type" : "PATTERN_ONLY"
             },
             "font" : {
               "bold" : false,
               "fontColor" : {
                 "indexed" : 8,
-                "kind" : "INDEXED"
+                "type" : "INDEXED"
               },
               "fontHeight" : {
                 "points" : 11,
@@ -535,14 +535,14 @@
               }
             },
             "fill" : {
-              "kind" : "PATTERN_ONLY",
-              "pattern" : "NONE"
+              "pattern" : "NONE",
+              "type" : "PATTERN_ONLY"
             },
             "font" : {
               "bold" : false,
               "fontColor" : {
                 "indexed" : 8,
-                "kind" : "INDEXED"
+                "type" : "INDEXED"
               },
               "fontHeight" : {
                 "points" : 11,
@@ -587,14 +587,14 @@
               }
             },
             "fill" : {
-              "kind" : "PATTERN_ONLY",
-              "pattern" : "NONE"
+              "pattern" : "NONE",
+              "type" : "PATTERN_ONLY"
             },
             "font" : {
               "bold" : false,
               "fontColor" : {
                 "indexed" : 8,
-                "kind" : "INDEXED"
+                "type" : "INDEXED"
               },
               "fontHeight" : {
                 "points" : 11,
@@ -762,14 +762,14 @@
               }
             },
             "fill" : {
-              "kind" : "PATTERN_ONLY",
-              "pattern" : "NONE"
+              "pattern" : "NONE",
+              "type" : "PATTERN_ONLY"
             },
             "font" : {
               "bold" : false,
               "fontColor" : {
                 "indexed" : 8,
-                "kind" : "INDEXED"
+                "type" : "INDEXED"
               },
               "fontHeight" : {
                 "points" : 11,
@@ -819,14 +819,14 @@
               }
             },
             "fill" : {
-              "kind" : "PATTERN_ONLY",
-              "pattern" : "NONE"
+              "pattern" : "NONE",
+              "type" : "PATTERN_ONLY"
             },
             "font" : {
               "bold" : false,
               "fontColor" : {
                 "indexed" : 8,
-                "kind" : "INDEXED"
+                "type" : "INDEXED"
               },
               "fontHeight" : {
                 "points" : 11,
@@ -1051,14 +1051,14 @@
               }
             },
             "fill" : {
-              "kind" : "PATTERN_ONLY",
-              "pattern" : "NONE"
+              "pattern" : "NONE",
+              "type" : "PATTERN_ONLY"
             },
             "font" : {
               "bold" : false,
               "fontColor" : {
                 "indexed" : 8,
-                "kind" : "INDEXED"
+                "type" : "INDEXED"
               },
               "fontHeight" : {
                 "points" : 11,
@@ -1103,14 +1103,14 @@
               }
             },
             "fill" : {
-              "kind" : "PATTERN_ONLY",
-              "pattern" : "NONE"
+              "pattern" : "NONE",
+              "type" : "PATTERN_ONLY"
             },
             "font" : {
               "bold" : false,
               "fontColor" : {
                 "indexed" : 8,
-                "kind" : "INDEXED"
+                "type" : "INDEXED"
               },
               "fontHeight" : {
                 "points" : 11,
@@ -1155,14 +1155,14 @@
               }
             },
             "fill" : {
-              "kind" : "PATTERN_ONLY",
-              "pattern" : "NONE"
+              "pattern" : "NONE",
+              "type" : "PATTERN_ONLY"
             },
             "font" : {
               "bold" : false,
               "fontColor" : {
                 "indexed" : 8,
-                "kind" : "INDEXED"
+                "type" : "INDEXED"
               },
               "fontHeight" : {
                 "points" : 11,
@@ -1207,14 +1207,14 @@
               }
             },
             "fill" : {
-              "kind" : "PATTERN_ONLY",
-              "pattern" : "NONE"
+              "pattern" : "NONE",
+              "type" : "PATTERN_ONLY"
             },
             "font" : {
               "bold" : false,
               "fontColor" : {
                 "indexed" : 8,
-                "kind" : "INDEXED"
+                "type" : "INDEXED"
               },
               "fontHeight" : {
                 "points" : 11,
@@ -1259,14 +1259,14 @@
               }
             },
             "fill" : {
-              "kind" : "PATTERN_ONLY",
-              "pattern" : "NONE"
+              "pattern" : "NONE",
+              "type" : "PATTERN_ONLY"
             },
             "font" : {
               "bold" : false,
               "fontColor" : {
                 "indexed" : 8,
-                "kind" : "INDEXED"
+                "type" : "INDEXED"
               },
               "fontHeight" : {
                 "points" : 11,
@@ -1311,14 +1311,14 @@
               }
             },
             "fill" : {
-              "kind" : "PATTERN_ONLY",
-              "pattern" : "NONE"
+              "pattern" : "NONE",
+              "type" : "PATTERN_ONLY"
             },
             "font" : {
               "bold" : false,
               "fontColor" : {
                 "indexed" : 8,
-                "kind" : "INDEXED"
+                "type" : "INDEXED"
               },
               "fontHeight" : {
                 "points" : 11,
@@ -1378,11 +1378,11 @@
         "workbook" : {
           "activeSheetName" : "Template",
           "forceFormulaRecalculationOnOpen" : false,
-          "kind" : "WITH_SHEETS",
           "namedRangeCount" : 0,
           "selectedSheetNames" : [ "Template" ],
           "sheetCount" : 3,
-          "sheetNames" : [ "Template", "Summary", "Template Copy" ]
+          "sheetNames" : [ "Template", "Summary", "Template Copy" ],
+          "type" : "WITH_SHEETS"
         }
       } ]
     },
@@ -1450,11 +1450,11 @@
         "workbook" : {
           "activeSheetName" : "Template",
           "forceFormulaRecalculationOnOpen" : false,
-          "kind" : "WITH_SHEETS",
           "namedRangeCount" : 0,
           "selectedSheetNames" : [ "Template" ],
           "sheetCount" : 2,
-          "sheetNames" : [ "Template", "Summary" ]
+          "sheetNames" : [ "Template", "Summary" ],
+          "type" : "WITH_SHEETS"
         }
       }, {
         "comments" : [ {
@@ -1633,7 +1633,7 @@
         "publication" : {
           "byteSize" : "<byteSize>",
           "durability" : {
-            "level" : "FILE_AND_DIRECTORY_SYNCED"
+            "type" : "FILE_AND_DIRECTORY_SYNCED"
           },
           "executionPath" : "<workspace>/recipe/generated-workbooks/workbook-maintenance.xlsx",
           "sha256" : "<sha256>",
@@ -1732,7 +1732,7 @@
             "argument" : "--materialize-recipe",
             "type" : "NAMED"
           },
-          "stage" : "PARSE_ARGUMENTS"
+          "type" : "PARSE_ARGUMENTS"
         },
         "message" : "Asset-backed recipes require --materialize-recipe --lookup WORKBOOK_MAINTENANCE --workspace <new-directory>.",
         "recovery" : "CHANGE_REQUEST",

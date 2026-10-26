@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.Objects;
 
 /** High-level workbook facts returned on success. */
-@Union(discriminator = "kind")
+@Union(discriminator = "type")
 public sealed interface WorkbookSummary permits WorkbookSummary.Empty, WorkbookSummary.WithSheets {
   /** Total sheet count after all mutations complete. */
   int sheetCount();

@@ -7,7 +7,7 @@
         "lastRowIndex" : 4,
         "physicalRowCount" : 5,
         "protection" : {
-          "kind" : "UNPROTECTED"
+          "type" : "UNPROTECTED"
         },
         "sheetName" : "Data",
         "visibility" : "VISIBLE"
@@ -20,7 +20,7 @@
         "lastRowIndex" : -1,
         "physicalRowCount" : 0,
         "protection" : {
-          "kind" : "UNPROTECTED"
+          "type" : "UNPROTECTED"
         },
         "sheetName" : "RangeReport",
         "visibility" : "VISIBLE"
@@ -199,14 +199,14 @@
             }
           },
           "fill" : {
-            "kind" : "PATTERN_ONLY",
-            "pattern" : "NONE"
+            "pattern" : "NONE",
+            "type" : "PATTERN_ONLY"
           },
           "font" : {
             "bold" : false,
             "fontColor" : {
               "indexed" : 8,
-              "kind" : "INDEXED"
+              "type" : "INDEXED"
             },
             "fontHeight" : {
               "points" : 11,
@@ -251,14 +251,14 @@
             }
           },
           "fill" : {
-            "kind" : "PATTERN_ONLY",
-            "pattern" : "NONE"
+            "pattern" : "NONE",
+            "type" : "PATTERN_ONLY"
           },
           "font" : {
             "bold" : false,
             "fontColor" : {
               "indexed" : 8,
-              "kind" : "INDEXED"
+              "type" : "INDEXED"
             },
             "fontHeight" : {
               "points" : 11,
@@ -303,14 +303,14 @@
             }
           },
           "fill" : {
-            "kind" : "PATTERN_ONLY",
-            "pattern" : "NONE"
+            "pattern" : "NONE",
+            "type" : "PATTERN_ONLY"
           },
           "font" : {
             "bold" : false,
             "fontColor" : {
               "indexed" : 8,
-              "kind" : "INDEXED"
+              "type" : "INDEXED"
             },
             "fontHeight" : {
               "points" : 11,
@@ -355,14 +355,14 @@
             }
           },
           "fill" : {
-            "kind" : "PATTERN_ONLY",
-            "pattern" : "NONE"
+            "pattern" : "NONE",
+            "type" : "PATTERN_ONLY"
           },
           "font" : {
             "bold" : false,
             "fontColor" : {
               "indexed" : 8,
-              "kind" : "INDEXED"
+              "type" : "INDEXED"
             },
             "fontHeight" : {
               "points" : 11,
@@ -407,14 +407,14 @@
             }
           },
           "fill" : {
-            "kind" : "PATTERN_ONLY",
-            "pattern" : "NONE"
+            "pattern" : "NONE",
+            "type" : "PATTERN_ONLY"
           },
           "font" : {
             "bold" : false,
             "fontColor" : {
               "indexed" : 8,
-              "kind" : "INDEXED"
+              "type" : "INDEXED"
             },
             "fontHeight" : {
               "points" : 11,
@@ -459,14 +459,14 @@
             }
           },
           "fill" : {
-            "kind" : "PATTERN_ONLY",
-            "pattern" : "NONE"
+            "pattern" : "NONE",
+            "type" : "PATTERN_ONLY"
           },
           "font" : {
             "bold" : false,
             "fontColor" : {
               "indexed" : 8,
-              "kind" : "INDEXED"
+              "type" : "INDEXED"
             },
             "fontHeight" : {
               "points" : 11,
@@ -511,14 +511,14 @@
             }
           },
           "fill" : {
-            "kind" : "PATTERN_ONLY",
-            "pattern" : "NONE"
+            "pattern" : "NONE",
+            "type" : "PATTERN_ONLY"
           },
           "font" : {
             "bold" : false,
             "fontColor" : {
               "indexed" : 8,
-              "kind" : "INDEXED"
+              "type" : "INDEXED"
             },
             "fontHeight" : {
               "points" : 11,
@@ -564,14 +564,14 @@
             }
           },
           "fill" : {
-            "kind" : "PATTERN_ONLY",
-            "pattern" : "NONE"
+            "pattern" : "NONE",
+            "type" : "PATTERN_ONLY"
           },
           "font" : {
             "bold" : false,
             "fontColor" : {
               "indexed" : 8,
-              "kind" : "INDEXED"
+              "type" : "INDEXED"
             },
             "fontHeight" : {
               "points" : 11,
@@ -618,14 +618,14 @@
             }
           },
           "fill" : {
-            "kind" : "PATTERN_ONLY",
-            "pattern" : "NONE"
+            "pattern" : "NONE",
+            "type" : "PATTERN_ONLY"
           },
           "font" : {
             "bold" : false,
             "fontColor" : {
               "indexed" : 8,
-              "kind" : "INDEXED"
+              "type" : "INDEXED"
             },
             "fontHeight" : {
               "points" : 11,
@@ -670,14 +670,14 @@
             }
           },
           "fill" : {
-            "kind" : "PATTERN_ONLY",
-            "pattern" : "NONE"
+            "pattern" : "NONE",
+            "type" : "PATTERN_ONLY"
           },
           "font" : {
             "bold" : false,
             "fontColor" : {
               "indexed" : 8,
-              "kind" : "INDEXED"
+              "type" : "INDEXED"
             },
             "fontHeight" : {
               "points" : 11,
@@ -722,14 +722,14 @@
             }
           },
           "fill" : {
-            "kind" : "PATTERN_ONLY",
-            "pattern" : "NONE"
+            "pattern" : "NONE",
+            "type" : "PATTERN_ONLY"
           },
           "font" : {
             "bold" : false,
             "fontColor" : {
               "indexed" : 8,
-              "kind" : "INDEXED"
+              "type" : "INDEXED"
             },
             "fontHeight" : {
               "points" : 11,
@@ -775,14 +775,14 @@
             }
           },
           "fill" : {
-            "kind" : "PATTERN_ONLY",
-            "pattern" : "NONE"
+            "pattern" : "NONE",
+            "type" : "PATTERN_ONLY"
           },
           "font" : {
             "bold" : false,
             "fontColor" : {
               "indexed" : 8,
-              "kind" : "INDEXED"
+              "type" : "INDEXED"
             },
             "fontHeight" : {
               "points" : 11,
@@ -829,14 +829,14 @@
             }
           },
           "fill" : {
-            "kind" : "PATTERN_ONLY",
-            "pattern" : "NONE"
+            "pattern" : "NONE",
+            "type" : "PATTERN_ONLY"
           },
           "font" : {
             "bold" : false,
             "fontColor" : {
               "indexed" : 8,
-              "kind" : "INDEXED"
+              "type" : "INDEXED"
             },
             "fontHeight" : {
               "points" : 11,
@@ -881,14 +881,14 @@
             }
           },
           "fill" : {
-            "kind" : "PATTERN_ONLY",
-            "pattern" : "NONE"
+            "pattern" : "NONE",
+            "type" : "PATTERN_ONLY"
           },
           "font" : {
             "bold" : false,
             "fontColor" : {
               "indexed" : 8,
-              "kind" : "INDEXED"
+              "type" : "INDEXED"
             },
             "fontHeight" : {
               "points" : 11,
@@ -933,14 +933,14 @@
             }
           },
           "fill" : {
-            "kind" : "PATTERN_ONLY",
-            "pattern" : "NONE"
+            "pattern" : "NONE",
+            "type" : "PATTERN_ONLY"
           },
           "font" : {
             "bold" : false,
             "fontColor" : {
               "indexed" : 8,
-              "kind" : "INDEXED"
+              "type" : "INDEXED"
             },
             "fontHeight" : {
               "points" : 11,
@@ -986,14 +986,14 @@
             }
           },
           "fill" : {
-            "kind" : "PATTERN_ONLY",
-            "pattern" : "NONE"
+            "pattern" : "NONE",
+            "type" : "PATTERN_ONLY"
           },
           "font" : {
             "bold" : false,
             "fontColor" : {
               "indexed" : 8,
-              "kind" : "INDEXED"
+              "type" : "INDEXED"
             },
             "fontHeight" : {
               "points" : 11,
@@ -1040,14 +1040,14 @@
             }
           },
           "fill" : {
-            "kind" : "PATTERN_ONLY",
-            "pattern" : "NONE"
+            "pattern" : "NONE",
+            "type" : "PATTERN_ONLY"
           },
           "font" : {
             "bold" : false,
             "fontColor" : {
               "indexed" : 8,
-              "kind" : "INDEXED"
+              "type" : "INDEXED"
             },
             "fontHeight" : {
               "points" : 11,
@@ -1092,14 +1092,14 @@
             }
           },
           "fill" : {
-            "kind" : "PATTERN_ONLY",
-            "pattern" : "NONE"
+            "pattern" : "NONE",
+            "type" : "PATTERN_ONLY"
           },
           "font" : {
             "bold" : false,
             "fontColor" : {
               "indexed" : 8,
-              "kind" : "INDEXED"
+              "type" : "INDEXED"
             },
             "fontHeight" : {
               "points" : 11,
@@ -1144,14 +1144,14 @@
             }
           },
           "fill" : {
-            "kind" : "PATTERN_ONLY",
-            "pattern" : "NONE"
+            "pattern" : "NONE",
+            "type" : "PATTERN_ONLY"
           },
           "font" : {
             "bold" : false,
             "fontColor" : {
               "indexed" : 8,
-              "kind" : "INDEXED"
+              "type" : "INDEXED"
             },
             "fontHeight" : {
               "points" : 11,
@@ -1197,14 +1197,14 @@
             }
           },
           "fill" : {
-            "kind" : "PATTERN_ONLY",
-            "pattern" : "NONE"
+            "pattern" : "NONE",
+            "type" : "PATTERN_ONLY"
           },
           "font" : {
             "bold" : false,
             "fontColor" : {
               "indexed" : 8,
-              "kind" : "INDEXED"
+              "type" : "INDEXED"
             },
             "fontHeight" : {
               "points" : 11,
@@ -1386,11 +1386,11 @@
       "workbook" : {
         "activeSheetName" : "Data",
         "forceFormulaRecalculationOnOpen" : false,
-        "kind" : "WITH_SHEETS",
         "namedRangeCount" : 0,
         "selectedSheetNames" : [ "Data" ],
         "sheetCount" : 2,
-        "sheetNames" : [ "Data", "RangeReport" ]
+        "sheetNames" : [ "Data", "RangeReport" ],
+        "type" : "WITH_SHEETS"
       }
     } ]
   },
@@ -1617,7 +1617,7 @@
       "publication" : {
         "byteSize" : "<byteSize>",
         "durability" : {
-          "level" : "FILE_AND_DIRECTORY_SYNCED"
+          "type" : "FILE_AND_DIRECTORY_SYNCED"
         },
         "executionPath" : "<workspace>/recipe/generated-workbooks/gridgrind-pivot.xlsx",
         "sha256" : "<sha256>",

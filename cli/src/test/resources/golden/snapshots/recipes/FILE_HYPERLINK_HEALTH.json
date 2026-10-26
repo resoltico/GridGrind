@@ -22,7 +22,7 @@
       },
       "requiredWorkspacePaths" : [ "file-hyperlink-assets/request-label.txt" ],
       "summary" : "Request-asset text plus workbook-relative file and document hyperlink analysis.",
-      "view" : "EXAMPLE"
+      "type" : "EXAMPLE"
     }
   },
   "execution" : {
@@ -34,7 +34,7 @@
           "lastRowIndex" : 3,
           "physicalRowCount" : 4,
           "protection" : {
-            "kind" : "UNPROTECTED"
+            "type" : "UNPROTECTED"
           },
           "sheetName" : "Links",
           "visibility" : "VISIBLE"
@@ -195,14 +195,14 @@
               }
             },
             "fill" : {
-              "kind" : "PATTERN_ONLY",
-              "pattern" : "NONE"
+              "pattern" : "NONE",
+              "type" : "PATTERN_ONLY"
             },
             "font" : {
               "bold" : false,
               "fontColor" : {
                 "indexed" : 8,
-                "kind" : "INDEXED"
+                "type" : "INDEXED"
               },
               "fontHeight" : {
                 "points" : 11,
@@ -247,14 +247,14 @@
               }
             },
             "fill" : {
-              "kind" : "PATTERN_ONLY",
-              "pattern" : "NONE"
+              "pattern" : "NONE",
+              "type" : "PATTERN_ONLY"
             },
             "font" : {
               "bold" : false,
               "fontColor" : {
                 "indexed" : 8,
-                "kind" : "INDEXED"
+                "type" : "INDEXED"
               },
               "fontHeight" : {
                 "points" : 11,
@@ -303,14 +303,14 @@
               }
             },
             "fill" : {
-              "kind" : "PATTERN_ONLY",
-              "pattern" : "NONE"
+              "pattern" : "NONE",
+              "type" : "PATTERN_ONLY"
             },
             "font" : {
               "bold" : false,
               "fontColor" : {
                 "indexed" : 8,
-                "kind" : "INDEXED"
+                "type" : "INDEXED"
               },
               "fontHeight" : {
                 "points" : 11,
@@ -355,14 +355,14 @@
               }
             },
             "fill" : {
-              "kind" : "PATTERN_ONLY",
-              "pattern" : "NONE"
+              "pattern" : "NONE",
+              "type" : "PATTERN_ONLY"
             },
             "font" : {
               "bold" : false,
               "fontColor" : {
                 "indexed" : 8,
-                "kind" : "INDEXED"
+                "type" : "INDEXED"
               },
               "fontHeight" : {
                 "points" : 11,
@@ -411,14 +411,14 @@
               }
             },
             "fill" : {
-              "kind" : "PATTERN_ONLY",
-              "pattern" : "NONE"
+              "pattern" : "NONE",
+              "type" : "PATTERN_ONLY"
             },
             "font" : {
               "bold" : false,
               "fontColor" : {
                 "indexed" : 8,
-                "kind" : "INDEXED"
+                "type" : "INDEXED"
               },
               "fontHeight" : {
                 "points" : 11,
@@ -463,14 +463,14 @@
               }
             },
             "fill" : {
-              "kind" : "PATTERN_ONLY",
-              "pattern" : "NONE"
+              "pattern" : "NONE",
+              "type" : "PATTERN_ONLY"
             },
             "font" : {
               "bold" : false,
               "fontColor" : {
                 "indexed" : 8,
-                "kind" : "INDEXED"
+                "type" : "INDEXED"
               },
               "fontHeight" : {
                 "points" : 11,
@@ -519,14 +519,14 @@
               }
             },
             "fill" : {
-              "kind" : "PATTERN_ONLY",
-              "pattern" : "NONE"
+              "pattern" : "NONE",
+              "type" : "PATTERN_ONLY"
             },
             "font" : {
               "bold" : false,
               "fontColor" : {
                 "indexed" : 8,
-                "kind" : "INDEXED"
+                "type" : "INDEXED"
               },
               "fontHeight" : {
                 "points" : 11,
@@ -571,14 +571,14 @@
               }
             },
             "fill" : {
-              "kind" : "PATTERN_ONLY",
-              "pattern" : "NONE"
+              "pattern" : "NONE",
+              "type" : "PATTERN_ONLY"
             },
             "font" : {
               "bold" : false,
               "fontColor" : {
                 "indexed" : 8,
-                "kind" : "INDEXED"
+                "type" : "INDEXED"
               },
               "fontHeight" : {
                 "points" : 11,
@@ -660,11 +660,11 @@
         "workbook" : {
           "activeSheetName" : "Links",
           "forceFormulaRecalculationOnOpen" : false,
-          "kind" : "WITH_SHEETS",
           "namedRangeCount" : 0,
           "selectedSheetNames" : [ "Links" ],
           "sheetCount" : 1,
-          "sheetNames" : [ "Links" ]
+          "sheetNames" : [ "Links" ],
+          "type" : "WITH_SHEETS"
         }
       } ]
     },
@@ -924,7 +924,7 @@
         "publication" : {
           "byteSize" : "<byteSize>",
           "durability" : {
-            "level" : "FILE_AND_DIRECTORY_SYNCED"
+            "type" : "FILE_AND_DIRECTORY_SYNCED"
           },
           "executionPath" : "<workspace>/recipe/generated-workbooks/gridgrind-file-hyperlink-health.xlsx",
           "sha256" : "<sha256>",
@@ -1099,7 +1099,7 @@
             "argument" : "--materialize-recipe",
             "type" : "NAMED"
           },
-          "stage" : "PARSE_ARGUMENTS"
+          "type" : "PARSE_ARGUMENTS"
         },
         "message" : "Asset-backed recipes require --materialize-recipe --lookup FILE_HYPERLINK_HEALTH --workspace <new-directory>.",
         "recovery" : "CHANGE_REQUEST",

@@ -42,7 +42,7 @@
       "requiredInputs" : [ "Mapped source workbook path.", "Existing mapping id and name.", "XML payload source when the workbook should be updated." ],
       "requiredWorkspacePaths" : [ "custom-xml-assets/custom-xml-mapping.xlsx", "custom-xml-assets/custom-xml-update.xml" ],
       "summary" : "Inspect, export, and import existing workbook custom-XML mappings on mapped .xlsx files.",
-      "view" : "TASK_STARTER",
+      "type" : "TASK_STARTER",
       "workflow" : {
         "commonPitfalls" : [ "IMPORT_CUSTOM_XML_MAPPING requires an existing mapping; discovery comes first.", "Large XML payloads belong in UTF8_FILE or STANDARD_INPUT sources instead of huge inline JSON.", "Mapped workbook structure is workbook-specific, so replace placeholder mapping locators before execution." ],
         "phases" : [ {
@@ -94,7 +94,7 @@
           "lastRowIndex" : 1,
           "physicalRowCount" : 2,
           "protection" : {
-            "kind" : "UNPROTECTED"
+            "type" : "UNPROTECTED"
           },
           "sheetName" : "Foglio1",
           "visibility" : "VISIBLE"
@@ -107,7 +107,7 @@
           "lastRowIndex" : -1,
           "physicalRowCount" : 0,
           "protection" : {
-            "kind" : "UNPROTECTED"
+            "type" : "UNPROTECTED"
           },
           "sheetName" : "Foglio2",
           "visibility" : "VISIBLE"
@@ -120,7 +120,7 @@
           "lastRowIndex" : -1,
           "physicalRowCount" : 0,
           "protection" : {
-            "kind" : "UNPROTECTED"
+            "type" : "UNPROTECTED"
           },
           "sheetName" : "Foglio3",
           "visibility" : "VISIBLE"
@@ -305,14 +305,14 @@
               }
             },
             "fill" : {
-              "kind" : "PATTERN_ONLY",
-              "pattern" : "NONE"
+              "pattern" : "NONE",
+              "type" : "PATTERN_ONLY"
             },
             "font" : {
               "bold" : false,
               "fontColor" : {
-                "kind" : "RGB",
-                "rgb" : "#000000"
+                "rgb" : "#000000",
+                "type" : "RGB"
               },
               "fontHeight" : {
                 "points" : 11,
@@ -357,14 +357,14 @@
               }
             },
             "fill" : {
-              "kind" : "PATTERN_ONLY",
-              "pattern" : "NONE"
+              "pattern" : "NONE",
+              "type" : "PATTERN_ONLY"
             },
             "font" : {
               "bold" : false,
               "fontColor" : {
-                "kind" : "RGB",
-                "rgb" : "#000000"
+                "rgb" : "#000000",
+                "type" : "RGB"
               },
               "fontHeight" : {
                 "points" : 11,
@@ -409,14 +409,14 @@
               }
             },
             "fill" : {
-              "kind" : "PATTERN_ONLY",
-              "pattern" : "NONE"
+              "pattern" : "NONE",
+              "type" : "PATTERN_ONLY"
             },
             "font" : {
               "bold" : false,
               "fontColor" : {
-                "kind" : "RGB",
-                "rgb" : "#000000"
+                "rgb" : "#000000",
+                "type" : "RGB"
               },
               "fontHeight" : {
                 "points" : 11,
@@ -461,14 +461,14 @@
               }
             },
             "fill" : {
-              "kind" : "PATTERN_ONLY",
-              "pattern" : "NONE"
+              "pattern" : "NONE",
+              "type" : "PATTERN_ONLY"
             },
             "font" : {
               "bold" : false,
               "fontColor" : {
-                "kind" : "RGB",
-                "rgb" : "#000000"
+                "rgb" : "#000000",
+                "type" : "RGB"
               },
               "fontHeight" : {
                 "points" : 11,
@@ -513,14 +513,14 @@
               }
             },
             "fill" : {
-              "kind" : "PATTERN_ONLY",
-              "pattern" : "NONE"
+              "pattern" : "NONE",
+              "type" : "PATTERN_ONLY"
             },
             "font" : {
               "bold" : false,
               "fontColor" : {
-                "kind" : "RGB",
-                "rgb" : "#000000"
+                "rgb" : "#000000",
+                "type" : "RGB"
               },
               "fontHeight" : {
                 "points" : 11,
@@ -565,14 +565,14 @@
               }
             },
             "fill" : {
-              "kind" : "PATTERN_ONLY",
-              "pattern" : "NONE"
+              "pattern" : "NONE",
+              "type" : "PATTERN_ONLY"
             },
             "font" : {
               "bold" : false,
               "fontColor" : {
-                "kind" : "RGB",
-                "rgb" : "#000000"
+                "rgb" : "#000000",
+                "type" : "RGB"
               },
               "fontHeight" : {
                 "points" : 11,
@@ -617,14 +617,14 @@
               }
             },
             "fill" : {
-              "kind" : "PATTERN_ONLY",
-              "pattern" : "NONE"
+              "pattern" : "NONE",
+              "type" : "PATTERN_ONLY"
             },
             "font" : {
               "bold" : false,
               "fontColor" : {
-                "kind" : "RGB",
-                "rgb" : "#000000"
+                "rgb" : "#000000",
+                "type" : "RGB"
               },
               "fontHeight" : {
                 "points" : 11,
@@ -669,14 +669,14 @@
               }
             },
             "fill" : {
-              "kind" : "PATTERN_ONLY",
-              "pattern" : "NONE"
+              "pattern" : "NONE",
+              "type" : "PATTERN_ONLY"
             },
             "font" : {
               "bold" : false,
               "fontColor" : {
-                "kind" : "RGB",
-                "rgb" : "#000000"
+                "rgb" : "#000000",
+                "type" : "RGB"
               },
               "fontHeight" : {
                 "points" : 11,
@@ -721,14 +721,14 @@
               }
             },
             "fill" : {
-              "kind" : "PATTERN_ONLY",
-              "pattern" : "NONE"
+              "pattern" : "NONE",
+              "type" : "PATTERN_ONLY"
             },
             "font" : {
               "bold" : false,
               "fontColor" : {
-                "kind" : "RGB",
-                "rgb" : "#000000"
+                "rgb" : "#000000",
+                "type" : "RGB"
               },
               "fontHeight" : {
                 "points" : 11,
@@ -773,14 +773,14 @@
               }
             },
             "fill" : {
-              "kind" : "PATTERN_ONLY",
-              "pattern" : "NONE"
+              "pattern" : "NONE",
+              "type" : "PATTERN_ONLY"
             },
             "font" : {
               "bold" : false,
               "fontColor" : {
-                "kind" : "RGB",
-                "rgb" : "#000000"
+                "rgb" : "#000000",
+                "type" : "RGB"
               },
               "fontHeight" : {
                 "points" : 11,
@@ -825,14 +825,14 @@
               }
             },
             "fill" : {
-              "kind" : "PATTERN_ONLY",
-              "pattern" : "NONE"
+              "pattern" : "NONE",
+              "type" : "PATTERN_ONLY"
             },
             "font" : {
               "bold" : false,
               "fontColor" : {
-                "kind" : "RGB",
-                "rgb" : "#000000"
+                "rgb" : "#000000",
+                "type" : "RGB"
               },
               "fontHeight" : {
                 "points" : 11,
@@ -877,14 +877,14 @@
               }
             },
             "fill" : {
-              "kind" : "PATTERN_ONLY",
-              "pattern" : "NONE"
+              "pattern" : "NONE",
+              "type" : "PATTERN_ONLY"
             },
             "font" : {
               "bold" : false,
               "fontColor" : {
-                "kind" : "RGB",
-                "rgb" : "#000000"
+                "rgb" : "#000000",
+                "type" : "RGB"
               },
               "fontHeight" : {
                 "points" : 11,
@@ -929,14 +929,14 @@
               }
             },
             "fill" : {
-              "kind" : "PATTERN_ONLY",
-              "pattern" : "NONE"
+              "pattern" : "NONE",
+              "type" : "PATTERN_ONLY"
             },
             "font" : {
               "bold" : false,
               "fontColor" : {
-                "kind" : "RGB",
-                "rgb" : "#000000"
+                "rgb" : "#000000",
+                "type" : "RGB"
               },
               "fontHeight" : {
                 "points" : 11,
@@ -981,14 +981,14 @@
               }
             },
             "fill" : {
-              "kind" : "PATTERN_ONLY",
-              "pattern" : "NONE"
+              "pattern" : "NONE",
+              "type" : "PATTERN_ONLY"
             },
             "font" : {
               "bold" : false,
               "fontColor" : {
-                "kind" : "RGB",
-                "rgb" : "#000000"
+                "rgb" : "#000000",
+                "type" : "RGB"
               },
               "fontHeight" : {
                 "points" : 11,
@@ -1033,14 +1033,14 @@
               }
             },
             "fill" : {
-              "kind" : "PATTERN_ONLY",
-              "pattern" : "NONE"
+              "pattern" : "NONE",
+              "type" : "PATTERN_ONLY"
             },
             "font" : {
               "bold" : false,
               "fontColor" : {
-                "kind" : "RGB",
-                "rgb" : "#000000"
+                "rgb" : "#000000",
+                "type" : "RGB"
               },
               "fontHeight" : {
                 "points" : 11,
@@ -1085,14 +1085,14 @@
               }
             },
             "fill" : {
-              "kind" : "PATTERN_ONLY",
-              "pattern" : "NONE"
+              "pattern" : "NONE",
+              "type" : "PATTERN_ONLY"
             },
             "font" : {
               "bold" : false,
               "fontColor" : {
-                "kind" : "RGB",
-                "rgb" : "#000000"
+                "rgb" : "#000000",
+                "type" : "RGB"
               },
               "fontHeight" : {
                 "points" : 11,
@@ -1332,11 +1332,11 @@
         "workbook" : {
           "activeSheetName" : "Foglio1",
           "forceFormulaRecalculationOnOpen" : false,
-          "kind" : "WITH_SHEETS",
           "namedRangeCount" : 0,
           "selectedSheetNames" : [ "Foglio1" ],
           "sheetCount" : 3,
-          "sheetNames" : [ "Foglio1", "Foglio2", "Foglio3" ]
+          "sheetNames" : [ "Foglio1", "Foglio2", "Foglio3" ],
+          "type" : "WITH_SHEETS"
         }
       } ]
     },
@@ -1724,7 +1724,7 @@
         "publication" : {
           "byteSize" : "<byteSize>",
           "durability" : {
-            "level" : "FILE_AND_DIRECTORY_SYNCED"
+            "type" : "FILE_AND_DIRECTORY_SYNCED"
           },
           "executionPath" : "<workspace>/recipe/generated-workbooks/custom-xml-workflow.xlsx",
           "sha256" : "<sha256>",
@@ -1840,7 +1840,7 @@
             "argument" : "--materialize-recipe",
             "type" : "NAMED"
           },
-          "stage" : "PARSE_ARGUMENTS"
+          "type" : "PARSE_ARGUMENTS"
         },
         "message" : "Asset-backed recipes require --materialize-recipe --lookup CUSTOM_XML_WORKFLOW --workspace <new-directory>.",
         "recovery" : "CHANGE_REQUEST",

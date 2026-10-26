@@ -155,7 +155,7 @@ final class GridGrindCliHelpRenderSupport {
 
   private static String formatRecipeBlock(RecipeCatalogEntry recipe) {
     List<String> lines = new ArrayList<>();
-    lines.add("    - " + recipe.id() + " (" + recipe.view().name() + ")");
+    lines.add("    - " + recipe.id() + " (" + recipe.type().name() + ")");
     lines.add(
         wrappedText(
             "requestFileName: " + recipe.requestFileName(), "      ", "        ", helpTextWidth()));

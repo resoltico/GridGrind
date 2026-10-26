@@ -19,7 +19,7 @@
           "requestPath" : "<workspace>/request.json",
           "type" : "FILE"
         },
-        "stage" : "READ_REQUEST"
+        "type" : "READ_REQUEST"
       },
       "message" : "Missing required field 'source.type'",
       "recovery" : "CHANGE_REQUEST",

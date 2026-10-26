@@ -22,7 +22,7 @@
       },
       "requiredWorkspacePaths" : [ ],
       "summary" : "Array-formula authoring with factual group readback and group clearing.",
-      "view" : "EXAMPLE"
+      "type" : "EXAMPLE"
     }
   },
   "execution" : {

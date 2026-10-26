@@ -464,7 +464,7 @@
       "kind" : "NESTED_GROUP",
       "lookupId" : "windowReportTypes",
       "qualifiedId" : "nestedTypes:windowReportTypes",
-      "summary" : "Nested type group with discriminator shape and 2 variants."
+      "summary" : "Nested type group with discriminator type and 2 variants."
     }, {
       "catalogGroup" : "plainTypes",
       "kind" : "PLAIN_GROUP",

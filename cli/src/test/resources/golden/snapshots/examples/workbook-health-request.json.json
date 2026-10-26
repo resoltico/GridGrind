@@ -75,7 +75,7 @@
         "lastRowIndex" : 0,
         "physicalRowCount" : 1,
         "protection" : {
-          "kind" : "UNPROTECTED"
+          "type" : "UNPROTECTED"
         },
         "sheetName" : "Summary",
         "visibility" : "VISIBLE"

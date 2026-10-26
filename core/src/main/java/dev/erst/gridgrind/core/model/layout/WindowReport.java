@@ -10,12 +10,14 @@ import java.util.List;
 import java.util.Objects;
 
 /** Rectangular cell window returned in sparse or dense form. */
-@Union(discriminator = "shape", catalog = true, displayOrder = 3)
+@Union(discriminator = "type", catalog = true, displayOrder = 3)
 public sealed interface WindowReport
     permits dev.erst.gridgrind.core.model.layout.WindowReport.Sparse,
         dev.erst.gridgrind.core.model.layout.WindowReport.Dense {
-  /** Returns the published window shape discriminator. */
-  String shape();
+  /** Returns the metadata-owned window type. */
+  default String type() {
+    return dev.erst.gridgrind.core.catalog.ProtocolTypeMetadataSupport.requiredTypeId(getClass());
+  }
 
   /** Returns the sheet owning the returned window. */
   SheetLabel sheetName();
@@ -47,11 +49,6 @@ public sealed interface WindowReport
         }
       }
     }
-
-    @Override
-    public String shape() {
-      return "SPARSE";
-    }
   }
 
   /** Dense window shape that retains the explicit row grid, including blanks. */
@@ -69,11 +66,6 @@ public sealed interface WindowReport
       Objects.requireNonNull(topLeftAddress, "topLeftAddress must not be null");
       Objects.requireNonNull(dimensions, "dimensions must not be null");
       rows = WorkbookResultSupport.copyValues(rows, "rows");
-    }
-
-    @Override
-    public String shape() {
-      return "DENSE";
     }
   }
 }

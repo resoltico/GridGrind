@@ -9,7 +9,7 @@ import dev.erst.gridgrind.cli.discovery.GridGrindCliJson;
 import dev.erst.gridgrind.cli.discovery.RecipeAdvisory;
 import dev.erst.gridgrind.cli.discovery.RecipeCatalog;
 import dev.erst.gridgrind.cli.discovery.RecipeCatalogEntry;
-import dev.erst.gridgrind.cli.discovery.RecipeView;
+import dev.erst.gridgrind.cli.discovery.RecipeType;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import dev.erst.gridgrind.core.result.WorkbookResult;
 import dev.erst.gridgrind.core.source.SecretReference;
@@ -320,7 +320,7 @@ class ExampleExecutionFixturesTest {
     RecipeCatalog recipeCatalog =
         GridGrindCliJson.readBytes(stdout.toByteArray(), RecipeCatalog.class);
     return recipeCatalog.recipes().stream()
-        .filter(recipe -> recipe.view() == RecipeView.EXAMPLE)
+        .filter(recipe -> recipe.type() == RecipeType.EXAMPLE)
         .toList();
   }
 

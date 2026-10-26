@@ -241,7 +241,7 @@ class GridGrindProblemsTest {
                 ProblemContextRequestSurfaces.RequestShape.known("NEW", "SAVE_AS"),
                 ProblemContextWorkbookSurfaces.ProblemLocation.unknown()));
 
-    assertEquals("CALCULATION_PREFLIGHT", problem.context().stage());
+    assertEquals("CALCULATION_PREFLIGHT", problem.context().type());
     assertEquals(
         java.util.Optional.of("Budget"),
         DefaultGridGrindRequestExecutorTestSupport.calculationPreflightContext(problem)

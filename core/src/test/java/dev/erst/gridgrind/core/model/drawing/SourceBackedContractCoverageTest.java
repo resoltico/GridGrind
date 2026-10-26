@@ -56,7 +56,7 @@ class SourceBackedContractCoverageTest {
         new ProblemContext.ResolveInputs(
             ProblemContextRequestSurfaces.RequestShape.known("NEW", "NONE"),
             ProblemContextWorkbookSurfaces.InputReference.path("cell text", "missing.txt"));
-    assertEquals("RESOLVE_INPUTS", context.stage());
+    assertEquals("RESOLVE_INPUTS", context.type());
     assertEquals(java.util.Optional.of("cell text"), context.inputKind());
     assertEquals(java.util.Optional.of("missing.txt"), context.inputPath());
   }

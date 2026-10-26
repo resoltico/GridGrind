@@ -177,7 +177,7 @@ class CliDiscoveryValidationCoverageTest {
 
     RecipeCatalogEntry assetBackedExample =
         new RecipeCatalogEntry(
-            RecipeView.EXAMPLE,
+            RecipeType.EXAMPLE,
             "ASSET_BACKED",
             "asset-backed-request.json",
             "summary",
@@ -208,7 +208,7 @@ class CliDiscoveryValidationCoverageTest {
             .getMessage());
 
     assertEquals(
-        "view must not be null",
+        "type must not be null",
         assertThrows(
                 NullPointerException.class,
                 () ->
@@ -236,7 +236,7 @@ class CliDiscoveryValidationCoverageTest {
                 IllegalArgumentException.class,
                 () ->
                     new RecipeCatalogEntry(
-                        RecipeView.EXAMPLE,
+                        RecipeType.EXAMPLE,
                         "BROKEN_SELF_CONTAINED",
                         "broken-self-contained.json",
                         "summary",
@@ -249,7 +249,7 @@ class CliDiscoveryValidationCoverageTest {
                 IllegalArgumentException.class,
                 () ->
                     new RecipeCatalogEntry(
-                        RecipeView.EXAMPLE,
+                        RecipeType.EXAMPLE,
                         "BROKEN_ASSET_BACKED",
                         "broken-asset-backed.json",
                         "summary",

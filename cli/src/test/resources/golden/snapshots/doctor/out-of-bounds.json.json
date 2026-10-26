@@ -20,7 +20,7 @@
           "requestPath" : "<workspace>/request.json",
           "type" : "FILE"
         },
-        "stage" : "BIND_REQUEST"
+        "type" : "BIND_REQUEST"
       },
       "message" : "address must be within Excel .xlsx bounds",
       "recovery" : "CHANGE_REQUEST",

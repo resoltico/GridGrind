@@ -20,7 +20,7 @@
           "requestPath" : "<workspace>/request.json",
           "type" : "FILE"
         },
-        "stage" : "READ_REQUEST"
+        "type" : "READ_REQUEST"
       },
       "message" : "Field 'steps[0].target' must be a JSON object",
       "recovery" : "CHANGE_REQUEST",
@@ -44,7 +44,7 @@
           "requestPath" : "<workspace>/request.json",
           "type" : "FILE"
         },
-        "stage" : "READ_REQUEST"
+        "type" : "READ_REQUEST"
       },
       "message" : "Expected a JSON value",
       "recovery" : "CHANGE_REQUEST",
@@ -68,7 +68,7 @@
           "requestPath" : "<workspace>/request.json",
           "type" : "FILE"
         },
-        "stage" : "READ_REQUEST"
+        "type" : "READ_REQUEST"
       },
       "message" : "Unknown type value 'BOGUS'; valid values: ANALYZE_AUTOFILTER_HEALTH, ANALYZE_CONDITIONAL_FORMATTING_HEALTH, ANALYZE_DATA_VALIDATION_HEALTH, ANALYZE_FORMULA_HEALTH, ANALYZE_HYPERLINK_HEALTH, ANALYZE_NAMED_RANGE_HEALTH, ANALYZE_PIVOT_TABLE_HEALTH, ANALYZE_TABLE_HEALTH, ANALYZE_WORKBOOK_FINDINGS, EXPORT_CUSTOM_XML_MAPPING, GET_ARRAY_FORMULAS, GET_AUTOFILTERS, GET_CELLS, GET_CHARTS, GET_COMMENTS, GET_CONDITIONAL_FORMATTING, GET_CUSTOM_XML_MAPPINGS, GET_DATA_VALIDATIONS, GET_DRAWING_OBJECTS, GET_DRAWING_OBJECT_PAYLOAD, GET_FORMULA_SURFACE, GET_HYPERLINKS, GET_MERGED_REGIONS, GET_NAMED_RANGES, GET_NAMED_RANGE_SURFACE, GET_PACKAGE_SECURITY, GET_PIVOT_TABLES, GET_PRINT_LAYOUT, GET_SHEET_LAYOUT, GET_SHEET_SCHEMA, GET_SHEET_SUMMARY, GET_TABLES, GET_WINDOW, GET_WORKBOOK_PROTECTION, GET_WORKBOOK_SUMMARY",
       "recovery" : "CHANGE_REQUEST",

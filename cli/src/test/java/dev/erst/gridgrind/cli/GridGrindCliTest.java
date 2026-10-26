@@ -395,7 +395,7 @@ class GridGrindCliTest extends GridGrindCliTestSupport {
     assertInstanceOf(WorkbookResult.Failure.class, response);
     WorkbookResult.Failure failure = (WorkbookResult.Failure) response;
     assertEquals(GridGrindProblemCode.WORKBOOK_NOT_FOUND, failure.problem().code());
-    assertEquals("OPEN_WORKBOOK", failure.problem().context().stage());
+    assertEquals("OPEN_WORKBOOK", failure.problem().context().type());
     assertTrue(failure.problem().message().contains("Workbook does not exist"));
   }
 

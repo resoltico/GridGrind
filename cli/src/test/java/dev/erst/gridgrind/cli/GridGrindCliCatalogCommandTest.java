@@ -363,7 +363,7 @@ class GridGrindCliCatalogCommandTest extends GridGrindCliTestSupport {
         GridGrindCliRecipeRegistry.recipeFor("DASHBOARD")
             .filter(
                 candidate ->
-                    candidate.view() == dev.erst.gridgrind.cli.discovery.RecipeView.TASK_STARTER)
+                    candidate.type() == dev.erst.gridgrind.cli.discovery.RecipeType.TASK_STARTER)
             .orElseThrow();
 
     assertEquals(0, exitCode);
@@ -864,7 +864,7 @@ class GridGrindCliCatalogCommandTest extends GridGrindCliTestSupport {
     assertFalse(report.valid());
     assertEquals(
         GridGrindProblemCode.INVALID_REQUEST, report.primaryProblem().orElseThrow().code());
-    assertEquals("RESOLVE_INPUTS", report.primaryProblem().orElseThrow().context().stage());
+    assertEquals("RESOLVE_INPUTS", report.primaryProblem().orElseThrow().context().type());
     assertEquals("cell text must not be blank", report.primaryProblem().orElseThrow().message());
   }
 }

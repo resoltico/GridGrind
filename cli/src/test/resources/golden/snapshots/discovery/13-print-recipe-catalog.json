@@ -9,154 +9,154 @@
       "requestFileName" : "pivot-request.json",
       "requiredWorkspacePaths" : [ ],
       "summary" : "Pivot authoring from a contiguous range with pivot readback and health analysis.",
-      "view" : "EXAMPLE"
+      "type" : "EXAMPLE"
     }, {
       "advisory" : "SELF_CONTAINED",
       "id" : "CHART",
       "requestFileName" : "chart-request.json",
       "requiredWorkspacePaths" : [ ],
       "summary" : "Supported chart authoring with named-range-backed series and factual chart readback.",
-      "view" : "EXAMPLE"
+      "type" : "EXAMPLE"
     }, {
       "advisory" : "REQUIRES_EXAMPLE_ASSETS",
       "id" : "CUSTOM_XML",
       "requestFileName" : "custom-xml-request.json",
       "requiredWorkspacePaths" : [ "custom-xml-assets/custom-xml-mapping.xlsx", "custom-xml-assets/custom-xml-update.xml" ],
       "summary" : "Repo-asset-backed existing-workbook custom-XML mapping discovery, XML export, and file-backed XML import.",
-      "view" : "EXAMPLE"
+      "type" : "EXAMPLE"
     }, {
       "advisory" : "SELF_CONTAINED",
       "id" : "SHEET_MAINTENANCE",
       "requestFileName" : "sheet-maintenance-request.json",
       "requiredWorkspacePaths" : [ ],
       "summary" : "Copy-sheet maintenance walkthrough with comment reread and workbook findings.",
-      "view" : "EXAMPLE"
+      "type" : "EXAMPLE"
     }, {
       "advisory" : "SELF_CONTAINED",
       "id" : "WORKBOOK_HEALTH",
       "requestFileName" : "workbook-health-request.json",
       "requiredWorkspacePaths" : [ ],
       "summary" : "Compact no-save workbook-health pass with targeted formula and aggregate findings.",
-      "view" : "EXAMPLE"
+      "type" : "EXAMPLE"
     }, {
       "advisory" : "SELF_CONTAINED",
       "id" : "ARRAY_FORMULA",
       "requestFileName" : "array-formula-request.json",
       "requiredWorkspacePaths" : [ ],
       "summary" : "Array-formula authoring with factual group readback and group clearing.",
-      "view" : "EXAMPLE"
+      "type" : "EXAMPLE"
     }, {
       "advisory" : "SELF_CONTAINED",
       "id" : "BUDGET",
       "requestFileName" : "budget-request.json",
       "requiredWorkspacePaths" : [ ],
       "summary" : "Selector-first budget sheet with styling, formula totals, readback, and schema inspection.",
-      "view" : "EXAMPLE"
+      "type" : "EXAMPLE"
     }, {
       "advisory" : "REQUIRES_EXAMPLE_ASSETS",
       "id" : "FILE_HYPERLINK_HEALTH",
       "requestFileName" : "file-hyperlink-health-request.json",
       "requiredWorkspacePaths" : [ "file-hyperlink-assets/request-label.txt" ],
       "summary" : "Request-asset text plus workbook-relative file and document hyperlink analysis.",
-      "view" : "EXAMPLE"
+      "type" : "EXAMPLE"
     }, {
       "advisory" : "SELF_CONTAINED",
       "id" : "LARGE_FILE_MODES",
       "requestFileName" : "large-file-modes-request.json",
       "requiredWorkspacePaths" : [ ],
       "summary" : "Low-memory STREAMING_WRITE plan with append-only rows and recalc-on-open flagging.",
-      "view" : "EXAMPLE"
+      "type" : "EXAMPLE"
     }, {
       "advisory" : "SELF_CONTAINED",
       "id" : "INTROSPECTION_ANALYSIS",
       "requestFileName" : "introspection-analysis-request.json",
       "requiredWorkspacePaths" : [ ],
       "summary" : "Batch factual reads plus formula, hyperlink, named-range, and aggregate workbook analysis.",
-      "view" : "EXAMPLE"
+      "type" : "EXAMPLE"
     }, {
       "advisory" : "REQUIRES_EXAMPLE_ASSETS",
       "id" : "PACKAGE_SECURITY_INSPECTION",
       "requestFileName" : "package-security-inspect-request.json",
       "requiredWorkspacePaths" : [ "package-security-assets/gridgrind-package-security.xlsx" ],
       "summary" : "Repo-asset-backed encrypted package open plus factual package-security and cell inspection.",
-      "view" : "EXAMPLE"
+      "type" : "EXAMPLE"
     }, {
       "advisory" : "SELF_CONTAINED",
       "id" : "SIGNATURE_LINE",
       "requestFileName" : "signature-line-request.json",
       "requiredWorkspacePaths" : [ ],
       "summary" : "Signature-line authoring with drawing-object readback and authored anchor replacement.",
-      "view" : "EXAMPLE"
+      "type" : "EXAMPLE"
     }, {
       "advisory" : "SELF_CONTAINED",
       "id" : "ASSERTION",
       "requestFileName" : "assertion-request.json",
       "requiredWorkspacePaths" : [ ],
       "summary" : "Mutate then verify with first-class assertions, verbose journaling, and factual readback.",
-      "view" : "EXAMPLE"
+      "type" : "EXAMPLE"
     }, {
       "advisory" : "REQUIRES_EXAMPLE_ASSETS",
       "id" : "SOURCE_BACKED_INPUT",
       "requestFileName" : "source-backed-input-request.json",
       "requiredWorkspacePaths" : [ "source-backed-input-assets/title.txt", "source-backed-input-assets/total-formula.txt", "source-backed-input-assets/payload.bin" ],
       "summary" : "Repo-asset-backed file text, formula, and binary payload authoring without large inline literals.",
-      "view" : "EXAMPLE"
+      "type" : "EXAMPLE"
     }, {
       "advisory" : "SELF_CONTAINED",
       "id" : "TABULAR_REPORT",
       "requestFileName" : "tabular-report-request.json",
       "requiredWorkspacePaths" : [ ],
       "summary" : "Create a structured worksheet report with typed cells, table semantics, and factual readback.",
-      "view" : "TASK_STARTER"
+      "type" : "TASK_STARTER"
     }, {
       "advisory" : "SELF_CONTAINED",
       "id" : "DASHBOARD",
       "requestFileName" : "dashboard-request.json",
       "requiredWorkspacePaths" : [ ],
       "summary" : "Assemble an executive dashboard from reusable named surfaces and supported charts.",
-      "view" : "TASK_STARTER"
+      "type" : "TASK_STARTER"
     }, {
       "advisory" : "SELF_CONTAINED",
       "id" : "DATA_ENTRY_WORKFLOW",
       "requestFileName" : "data-entry-workflow-request.json",
       "requiredWorkspacePaths" : [ ],
       "summary" : "Build one repeatable intake worksheet for row-oriented data entry with validations, comments, and later factual inspection.",
-      "view" : "TASK_STARTER"
+      "type" : "TASK_STARTER"
     }, {
       "advisory" : "SELF_CONTAINED",
       "id" : "PIVOT_REPORT",
       "requestFileName" : "pivot-report-request.json",
       "requiredWorkspacePaths" : [ ],
       "summary" : "Create one pivot-ready report flow from source data through named tables and pivot-table inspection.",
-      "view" : "TASK_STARTER"
+      "type" : "TASK_STARTER"
     }, {
       "advisory" : "REQUIRES_EXAMPLE_ASSETS",
       "id" : "AUDIT_EXISTING_WORKBOOK",
       "requestFileName" : "audit-existing-workbook-request.json",
       "requiredWorkspacePaths" : [ "task-starter-assets/workbook-ops-source.xlsx" ],
       "summary" : "Inspect an existing workbook, surface health findings, and avoid mutation unless a follow-up workflow explicitly asks for it.",
-      "view" : "TASK_STARTER"
+      "type" : "TASK_STARTER"
     }, {
       "advisory" : "REQUIRES_EXAMPLE_ASSETS",
       "id" : "CUSTOM_XML_WORKFLOW",
       "requestFileName" : "custom-xml-workflow-request.json",
       "requiredWorkspacePaths" : [ "custom-xml-assets/custom-xml-mapping.xlsx", "custom-xml-assets/custom-xml-update.xml" ],
       "summary" : "Inspect, export, and import existing workbook custom-XML mappings on mapped .xlsx files.",
-      "view" : "TASK_STARTER"
+      "type" : "TASK_STARTER"
     }, {
       "advisory" : "SELF_CONTAINED",
       "id" : "DRAWING_AND_SIGNATURE_WORKFLOW",
       "requestFileName" : "drawing-and-signature-workflow-request.json",
       "requiredWorkspacePaths" : [ ],
       "summary" : "Author or inspect drawing-backed workbook content such as signature lines, pictures, shapes, and embedded objects.",
-      "view" : "TASK_STARTER"
+      "type" : "TASK_STARTER"
     }, {
       "advisory" : "REQUIRES_EXAMPLE_ASSETS",
       "id" : "WORKBOOK_MAINTENANCE",
       "requestFileName" : "workbook-maintenance-request.json",
       "requiredWorkspacePaths" : [ "task-starter-assets/workbook-ops-source.xlsx" ],
       "summary" : "Safely copy or normalize existing workbook sheets while verifying comments, drawings, and other cloned workbook state after the change.",
-      "view" : "TASK_STARTER"
+      "type" : "TASK_STARTER"
     } ]
   }
 }

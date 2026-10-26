@@ -98,7 +98,7 @@
           "sourceType" : "NEW",
           "type" : "KNOWN"
         },
-        "stage" : "RESOLVE_INPUTS"
+        "type" : "RESOLVE_INPUTS"
       },
       "message" : "cell text file does not exist: missing.txt",
       "recovery" : "CHANGE_REQUEST",

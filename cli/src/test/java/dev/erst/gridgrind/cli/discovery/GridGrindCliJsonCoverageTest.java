@@ -410,7 +410,7 @@ class GridGrindCliJsonCoverageTest {
         List.of(
             new RecipeKeywordMatchReport.Candidate(
                 task.id(),
-                RecipeView.TASK_STARTER,
+                RecipeType.TASK_STARTER,
                 task.narrative().summary(),
                 42,
                 List.of("dashboard", "chart"),

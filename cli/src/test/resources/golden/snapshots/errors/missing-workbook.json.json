@@ -89,7 +89,7 @@
           "sourceType" : "EXISTING",
           "type" : "KNOWN"
         },
-        "stage" : "OPEN_WORKBOOK",
+        "type" : "OPEN_WORKBOOK",
         "workbook" : {
           "path" : "<workspace>/missing.xlsx",
           "type" : "EXISTING"

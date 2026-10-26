@@ -1273,12 +1273,12 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
                     List.of())));
     assertEquals(2, streamingAssertionFailure.assertions().size());
     assertEquals(
-        dev.erst.gridgrind.core.plan.AssertionOutcome.PASSED,
-        streamingAssertionFailure.assertions().get(0).outcome());
+        dev.erst.gridgrind.core.plan.AssertionStatus.PASSED,
+        streamingAssertionFailure.assertions().get(0).status());
     assertEquals("stream-pass", streamingAssertionFailure.assertions().get(0).stepId().value());
     assertEquals(
-        dev.erst.gridgrind.core.plan.AssertionOutcome.FAILED,
-        streamingAssertionFailure.assertions().get(1).outcome());
+        dev.erst.gridgrind.core.plan.AssertionStatus.FAILED,
+        streamingAssertionFailure.assertions().get(1).status());
     assertEquals("stream-fail", streamingAssertionFailure.assertions().get(1).stepId().value());
 
     IllegalStateException assertionModeFailure =

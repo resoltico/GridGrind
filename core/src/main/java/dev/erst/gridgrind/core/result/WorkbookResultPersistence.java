@@ -133,7 +133,7 @@ public interface WorkbookResultPersistence {
     record StagedArtifactVerification() {}
 
     /** Durability evidence established for one published artifact. */
-    @Union(discriminator = "level")
+    @Union(discriminator = "type")
     sealed interface DurabilityEvidence
         permits DurabilityEvidence.FileAndDirectorySynced,
             DurabilityEvidence.FileSyncedDirectoryUnestablished {

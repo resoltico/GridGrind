@@ -60,7 +60,7 @@ class RequestDiagnosticRedactorTest {
         RequestDiagnosticRedactor.forRequestType(dev.erst.gridgrind.core.plan.WorkbookPlan.class);
     byte[] payload =
         """
-        {"message":"a harmless path detail","resolution":"Use a valid path","context":{"stage":"READ_REQUEST","json":{"type":"PATH_ONLY","jsonPath":"source.path"}},"causes":[{"message":"a harmless cause"}]}
+        {"message":"a harmless path detail","resolution":"Use a valid path","context":{"type":"READ_REQUEST","json":{"type":"PATH_ONLY","jsonPath":"source.path"}},"causes":[{"message":"a harmless cause"}]}
         """
             .getBytes(StandardCharsets.UTF_8);
 
@@ -75,7 +75,7 @@ class RequestDiagnosticRedactorTest {
         RequestDiagnosticRedactor.forRequestType(SecretCarrier.class);
     byte[] payload =
         """
-        {"message":"source-secret escaped","resolution":"retry source-secret","context":{"stage":"READ_REQUEST","json":{"type":"PATH_ONLY","jsonPath":"credential"}},"causes":[{"message":"source-secret cause"}]}
+        {"message":"source-secret escaped","resolution":"retry source-secret","context":{"type":"READ_REQUEST","json":{"type":"PATH_ONLY","jsonPath":"credential"}},"causes":[{"message":"source-secret cause"}]}
         """
             .getBytes(StandardCharsets.UTF_8);
 

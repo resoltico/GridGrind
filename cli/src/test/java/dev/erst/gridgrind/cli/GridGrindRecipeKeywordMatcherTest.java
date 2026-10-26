@@ -7,7 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import dev.erst.gridgrind.cli.discovery.GridGrindTaskCatalog;
 import dev.erst.gridgrind.cli.discovery.RecipeKeywordMatchReport;
-import dev.erst.gridgrind.cli.discovery.RecipeView;
+import dev.erst.gridgrind.cli.discovery.RecipeType;
 import dev.erst.gridgrind.cli.discovery.TaskArtifactKind;
 import dev.erst.gridgrind.cli.discovery.TaskAssetMode;
 import dev.erst.gridgrind.cli.discovery.TaskGoalKind;
@@ -37,7 +37,7 @@ class GridGrindRecipeKeywordMatcherTest {
         GridGrindRecipeKeywordMatcher.reportFor("budget sheet with totals");
 
     assertEquals("DASHBOARD", dashboardReport.candidates().getFirst().recipeId());
-    assertEquals(RecipeView.TASK_STARTER, dashboardReport.candidates().getFirst().view());
+    assertEquals(RecipeType.TASK_STARTER, dashboardReport.candidates().getFirst().type());
     assertTrue(dashboardReport.candidates().getFirst().matchedTerms().contains("dashboard"));
     assertTrue(dashboardReport.candidates().getFirst().matchedTerms().contains("chart"));
     assertTrue(dashboardReport.suggestedIntentTags().contains("dashboard"));
@@ -51,7 +51,7 @@ class GridGrindRecipeKeywordMatcherTest {
     assertTrue(pivotReport.candidates().getFirst().matchedTerms().contains("pivot"));
 
     assertEquals("BUDGET", budgetReport.candidates().getFirst().recipeId());
-    assertEquals(RecipeView.EXAMPLE, budgetReport.candidates().getFirst().view());
+    assertEquals(RecipeType.EXAMPLE, budgetReport.candidates().getFirst().type());
     assertTrue(budgetReport.candidates().getFirst().matchedTerms().contains("budget"));
   }
 
@@ -106,7 +106,7 @@ class GridGrindRecipeKeywordMatcherTest {
     GridGrindCliRecipe adHocExample =
         new GridGrindCliRecipe(
             "AD_HOC_TEMPLATE",
-            RecipeView.EXAMPLE,
+            RecipeType.EXAMPLE,
             "ad-hoc-template",
             "summary",
             dev.erst.gridgrind.cli.discovery.RecipeAdvisory.SELF_CONTAINED,
@@ -120,7 +120,7 @@ class GridGrindRecipeKeywordMatcherTest {
             .orElseThrow();
 
     assertEquals("AD_HOC_TEMPLATE", candidate.recipeId());
-    assertEquals(RecipeView.EXAMPLE, candidate.view());
+    assertEquals(RecipeType.EXAMPLE, candidate.type());
     assertTrue(candidate.matchedTerms().contains("template"));
   }
 
@@ -257,7 +257,7 @@ class GridGrindRecipeKeywordMatcherTest {
     var task = GridGrindTaskCatalog.entryFor(taskId).orElseThrow();
     return new RecipeKeywordMatchReport.Candidate(
         task.id(),
-        RecipeView.TASK_STARTER,
+        RecipeType.TASK_STARTER,
         task.narrative().summary(),
         score,
         matchedTerms,

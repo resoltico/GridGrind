@@ -107,7 +107,7 @@ class GridGrindProblemsCoverageTest {
                 bindingContext,
                 badRequest(Optional.of("source.path"), Optional.of(4), Optional.of(9)));
 
-    assertEquals("BIND_REQUEST", locatedContext.stage());
+    assertEquals("BIND_REQUEST", locatedContext.type());
     assertEquals(Optional.of("source.path"), locatedContext.jsonPath());
     assertEquals(Optional.of(4), locatedContext.jsonLine());
     assertEquals(Optional.of(9), locatedContext.jsonColumn());

@@ -1,16 +1,16 @@
 package dev.erst.gridgrind.cli.examples;
 
 import dev.erst.gridgrind.cli.discovery.RecipeAdvisory;
-import dev.erst.gridgrind.cli.discovery.RecipeView;
+import dev.erst.gridgrind.cli.discovery.RecipeType;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 
-/** Public recipe view published by the CLI for built-in examples and task starters. */
+/** Public recipe type published by the CLI for built-in examples and task starters. */
 public record GridGrindCliRecipe(
     String id,
-    RecipeView view,
+    RecipeType type,
     String requestFileName,
     String summary,
     RecipeAdvisory advisory,
@@ -22,7 +22,7 @@ public record GridGrindCliRecipe(
     if (!id.equals(id.toUpperCase(Locale.ROOT))) {
       throw new IllegalArgumentException("id must use upper-case discovery tokens");
     }
-    Objects.requireNonNull(view, "view must not be null");
+    Objects.requireNonNull(type, "type must not be null");
     requestFileName = requireNonBlank(requestFileName, "requestFileName");
     summary = requireNonBlank(summary, "summary");
     Objects.requireNonNull(advisory, "advisory must not be null");

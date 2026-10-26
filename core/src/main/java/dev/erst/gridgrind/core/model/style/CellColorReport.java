@@ -7,7 +7,7 @@ import java.util.Objects;
 import java.util.Optional;
 
 /** Factual workbook color preserving RGB, theme, indexed, and tint semantics. */
-@Union(discriminator = "kind", catalog = true, displayOrder = 58)
+@Union(discriminator = "type", catalog = true, displayOrder = 58)
 public sealed interface CellColorReport
     permits dev.erst.gridgrind.core.model.style.CellColorReport.Rgb,
         dev.erst.gridgrind.core.model.style.CellColorReport.Theme,

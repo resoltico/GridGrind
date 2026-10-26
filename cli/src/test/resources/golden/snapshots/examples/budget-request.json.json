@@ -7,7 +7,7 @@
         "lastRowIndex" : 3,
         "physicalRowCount" : 4,
         "protection" : {
-          "kind" : "UNPROTECTED"
+          "type" : "UNPROTECTED"
         },
         "sheetName" : "Budget",
         "visibility" : "VISIBLE"
@@ -174,14 +174,14 @@
             }
           },
           "fill" : {
-            "kind" : "PATTERN_ONLY",
-            "pattern" : "NONE"
+            "pattern" : "NONE",
+            "type" : "PATTERN_ONLY"
           },
           "font" : {
             "bold" : true,
             "fontColor" : {
               "indexed" : 8,
-              "kind" : "INDEXED"
+              "type" : "INDEXED"
             },
             "fontHeight" : {
               "points" : 11,
@@ -226,14 +226,14 @@
             }
           },
           "fill" : {
-            "kind" : "PATTERN_ONLY",
-            "pattern" : "NONE"
+            "pattern" : "NONE",
+            "type" : "PATTERN_ONLY"
           },
           "font" : {
             "bold" : true,
             "fontColor" : {
               "indexed" : 8,
-              "kind" : "INDEXED"
+              "type" : "INDEXED"
             },
             "fontHeight" : {
               "points" : 11,
@@ -278,14 +278,14 @@
             }
           },
           "fill" : {
-            "kind" : "PATTERN_ONLY",
-            "pattern" : "NONE"
+            "pattern" : "NONE",
+            "type" : "PATTERN_ONLY"
           },
           "font" : {
             "bold" : true,
             "fontColor" : {
               "indexed" : 8,
-              "kind" : "INDEXED"
+              "type" : "INDEXED"
             },
             "fontHeight" : {
               "points" : 11,
@@ -330,14 +330,14 @@
             }
           },
           "fill" : {
-            "kind" : "PATTERN_ONLY",
-            "pattern" : "NONE"
+            "pattern" : "NONE",
+            "type" : "PATTERN_ONLY"
           },
           "font" : {
             "bold" : false,
             "fontColor" : {
               "indexed" : 8,
-              "kind" : "INDEXED"
+              "type" : "INDEXED"
             },
             "fontHeight" : {
               "points" : 11,
@@ -383,14 +383,14 @@
             }
           },
           "fill" : {
-            "kind" : "PATTERN_ONLY",
-            "pattern" : "NONE"
+            "pattern" : "NONE",
+            "type" : "PATTERN_ONLY"
           },
           "font" : {
             "bold" : false,
             "fontColor" : {
               "indexed" : 8,
-              "kind" : "INDEXED"
+              "type" : "INDEXED"
             },
             "fontHeight" : {
               "points" : 11,
@@ -438,14 +438,14 @@
             }
           },
           "fill" : {
-            "kind" : "PATTERN_ONLY",
-            "pattern" : "NONE"
+            "pattern" : "NONE",
+            "type" : "PATTERN_ONLY"
           },
           "font" : {
             "bold" : false,
             "fontColor" : {
               "indexed" : 8,
-              "kind" : "INDEXED"
+              "type" : "INDEXED"
             },
             "fontHeight" : {
               "points" : 11,
@@ -489,14 +489,14 @@
             }
           },
           "fill" : {
-            "kind" : "PATTERN_ONLY",
-            "pattern" : "NONE"
+            "pattern" : "NONE",
+            "type" : "PATTERN_ONLY"
           },
           "font" : {
             "bold" : false,
             "fontColor" : {
               "indexed" : 8,
-              "kind" : "INDEXED"
+              "type" : "INDEXED"
             },
             "fontHeight" : {
               "points" : 11,
@@ -542,14 +542,14 @@
             }
           },
           "fill" : {
-            "kind" : "PATTERN_ONLY",
-            "pattern" : "NONE"
+            "pattern" : "NONE",
+            "type" : "PATTERN_ONLY"
           },
           "font" : {
             "bold" : false,
             "fontColor" : {
               "indexed" : 8,
-              "kind" : "INDEXED"
+              "type" : "INDEXED"
             },
             "fontHeight" : {
               "points" : 11,
@@ -597,14 +597,14 @@
             }
           },
           "fill" : {
-            "kind" : "PATTERN_ONLY",
-            "pattern" : "NONE"
+            "pattern" : "NONE",
+            "type" : "PATTERN_ONLY"
           },
           "font" : {
             "bold" : false,
             "fontColor" : {
               "indexed" : 8,
-              "kind" : "INDEXED"
+              "type" : "INDEXED"
             },
             "fontHeight" : {
               "points" : 11,
@@ -648,14 +648,14 @@
             }
           },
           "fill" : {
-            "kind" : "PATTERN_ONLY",
-            "pattern" : "NONE"
+            "pattern" : "NONE",
+            "type" : "PATTERN_ONLY"
           },
           "font" : {
             "bold" : false,
             "fontColor" : {
               "indexed" : 8,
-              "kind" : "INDEXED"
+              "type" : "INDEXED"
             },
             "fontHeight" : {
               "points" : 11,
@@ -708,14 +708,14 @@
             }
           },
           "fill" : {
-            "kind" : "PATTERN_ONLY",
-            "pattern" : "NONE"
+            "pattern" : "NONE",
+            "type" : "PATTERN_ONLY"
           },
           "font" : {
             "bold" : false,
             "fontColor" : {
               "indexed" : 8,
-              "kind" : "INDEXED"
+              "type" : "INDEXED"
             },
             "fontHeight" : {
               "points" : 11,
@@ -759,14 +759,14 @@
             }
           },
           "fill" : {
-            "kind" : "PATTERN_ONLY",
-            "pattern" : "NONE"
+            "pattern" : "NONE",
+            "type" : "PATTERN_ONLY"
           },
           "font" : {
             "bold" : false,
             "fontColor" : {
               "indexed" : 8,
-              "kind" : "INDEXED"
+              "type" : "INDEXED"
             },
             "fontHeight" : {
               "points" : 11,
@@ -825,11 +825,11 @@
       "workbook" : {
         "activeSheetName" : "Budget",
         "forceFormulaRecalculationOnOpen" : false,
-        "kind" : "WITH_SHEETS",
         "namedRangeCount" : 0,
         "selectedSheetNames" : [ "Budget" ],
         "sheetCount" : 1,
-        "sheetNames" : [ "Budget" ]
+        "sheetNames" : [ "Budget" ],
+        "type" : "WITH_SHEETS"
       }
     } ]
   },
@@ -920,11 +920,11 @@
       "workbook" : {
         "activeSheetName" : "Budget",
         "forceFormulaRecalculationOnOpen" : false,
-        "kind" : "WITH_SHEETS",
         "namedRangeCount" : 0,
         "selectedSheetNames" : [ "Budget" ],
         "sheetCount" : 1,
-        "sheetNames" : [ "Budget" ]
+        "sheetNames" : [ "Budget" ],
+        "type" : "WITH_SHEETS"
       }
     }, {
       "cells" : [ {
@@ -1002,9 +1002,9 @@
           },
           "type" : "FORMULA"
         } ],
-        "shape" : "SPARSE",
         "sheetName" : "Budget",
-        "topLeftAddress" : "A1"
+        "topLeftAddress" : "A1",
+        "type" : "SPARSE"
       }
     }, {
       "stepId" : "schema",
@@ -1263,7 +1263,7 @@
       "publication" : {
         "byteSize" : "<byteSize>",
         "durability" : {
-          "level" : "FILE_AND_DIRECTORY_SYNCED"
+          "type" : "FILE_AND_DIRECTORY_SYNCED"
         },
         "executionPath" : "<workspace>/recipe/generated-workbooks/gridgrind-budget.xlsx",
         "sha256" : "<sha256>",
