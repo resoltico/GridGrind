@@ -256,8 +256,7 @@ class DefaultGridGrindRequestExecutorStyleAndFormulaTest
     assertEquals(rgb("#203040"), rightBorder.color());
     assertFalse(style.protection().locked());
     assertTrue(style.protection().hiddenFormula());
-    assertEquals(
-        style, toResponseStyleReport(XlsxRoundTrip.cellStyle(workbookPath, "Budget", "A1")));
+    assertEquals(style, XlsxRoundTrip.cellStyle(workbookPath, "Budget", "A1"));
   }
 
   @Test

@@ -2,9 +2,7 @@ package dev.erst.gridgrind.engine.runtime;
 
 import dev.erst.gridgrind.core.model.drawing.CommentSpec;
 import dev.erst.gridgrind.core.model.formula.ArrayFormulaSpec;
-import dev.erst.gridgrind.core.model.protection.CellProtectionPatch;
 import dev.erst.gridgrind.core.model.style.BorderSidePatch;
-import dev.erst.gridgrind.core.model.style.CellAlignmentPatch;
 import dev.erst.gridgrind.core.model.style.CellBorderPatch;
 import dev.erst.gridgrind.core.model.style.CellFillSpec;
 import dev.erst.gridgrind.core.model.style.CellFontPatch;
@@ -19,10 +17,8 @@ import dev.erst.gridgrind.core.model.value.HyperlinkTarget;
 import dev.erst.gridgrind.excel.ExcelArrayFormulaDefinition;
 import dev.erst.gridgrind.excel.ExcelBorder;
 import dev.erst.gridgrind.excel.ExcelBorderSide;
-import dev.erst.gridgrind.excel.ExcelCellAlignment;
 import dev.erst.gridgrind.excel.ExcelCellFill;
 import dev.erst.gridgrind.excel.ExcelCellFont;
-import dev.erst.gridgrind.excel.ExcelCellProtection;
 import dev.erst.gridgrind.excel.ExcelCellStyle;
 import dev.erst.gridgrind.excel.ExcelCellValue;
 import dev.erst.gridgrind.excel.ExcelColor;
@@ -105,24 +101,11 @@ final class WorkbookCommandCellValueSpecConverter {
   static ExcelCellStyle toExcelCellStyle(CellStylePatch style) {
     return new ExcelCellStyle(
         style.numberFormat(),
-        style.alignment().flatMap(WorkbookCommandCellValueSpecConverter::toExcelCellAlignment),
+        style.alignment(),
         style.font().flatMap(WorkbookCommandCellValueSpecConverter::toExcelCellFont),
         style.fill().flatMap(WorkbookCommandCellValueSpecConverter::toExcelCellFill),
         style.border().flatMap(WorkbookCommandCellValueSpecConverter::toExcelBorder),
-        style.protection().flatMap(WorkbookCommandCellValueSpecConverter::toExcelCellProtection));
-  }
-
-  static Optional<ExcelCellAlignment> toExcelCellAlignment(CellAlignmentPatch alignment) {
-    if (alignment == null) {
-      return Optional.empty();
-    }
-    return Optional.of(
-        new ExcelCellAlignment(
-            alignment.wrapText(),
-            alignment.horizontalAlignment(),
-            alignment.verticalAlignment(),
-            alignment.textRotation(),
-            alignment.indentation()));
+        style.protection());
   }
 
   static Optional<ExcelCellFont> toExcelCellFont(CellFontPatch font) {
@@ -163,13 +146,6 @@ final class WorkbookCommandCellValueSpecConverter {
           case CellFillSpec.Gradient gradient ->
               ExcelCellFill.gradient(toExcelGradientFill(gradient.gradient()));
         });
-  }
-
-  static Optional<ExcelCellProtection> toExcelCellProtection(CellProtectionPatch protection) {
-    if (protection == null) {
-      return Optional.empty();
-    }
-    return Optional.of(new ExcelCellProtection(protection.locked(), protection.hiddenFormula()));
   }
 
   static Optional<FontHeightReport> toFontHeightReport(FontHeightSpec fontHeight) {

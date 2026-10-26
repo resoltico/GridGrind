@@ -12,10 +12,8 @@ import dev.erst.gridgrind.core.vocabulary.ExcelBorderStyle;
 import dev.erst.gridgrind.core.vocabulary.ExcelFillPattern;
 import dev.erst.gridgrind.excel.ExcelBorder;
 import dev.erst.gridgrind.excel.ExcelBorderSide;
-import dev.erst.gridgrind.excel.ExcelCellAlignment;
 import dev.erst.gridgrind.excel.ExcelCellFill;
 import dev.erst.gridgrind.excel.ExcelCellFont;
-import dev.erst.gridgrind.excel.ExcelCellProtection;
 import dev.erst.gridgrind.excel.ExcelCellStyle;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -171,7 +169,7 @@ public final class StyleKindIntrospection {
     if (style.alignment().isEmpty()) {
       return;
     }
-    ExcelCellAlignment alignment = style.alignment().orElseThrow();
+    CellAlignmentPatch alignment = style.alignment().orElseThrow();
     increment(kinds, "wrap_text", alignment.wrapText().isPresent());
     increment(kinds, "horizontal_alignment", alignment.horizontalAlignment().isPresent());
     increment(kinds, "vertical_alignment", alignment.verticalAlignment().isPresent());
@@ -214,7 +212,7 @@ public final class StyleKindIntrospection {
     if (style.protection().isEmpty()) {
       return;
     }
-    ExcelCellProtection protection = style.protection().orElseThrow();
+    CellProtectionPatch protection = style.protection().orElseThrow();
     increment(kinds, "locked", protection.locked().isPresent());
     increment(kinds, "hidden_formula", protection.hiddenFormula().isPresent());
   }

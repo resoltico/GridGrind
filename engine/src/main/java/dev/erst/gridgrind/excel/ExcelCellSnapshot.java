@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.core.model.style.CellStyleReport;
 import dev.erst.gridgrind.core.vocabulary.ExcelReportedCellErrorLiteral;
 import java.util.Optional;
 import org.jspecify.annotations.Nullable;
@@ -16,7 +17,7 @@ public sealed interface ExcelCellSnapshot {
   String displayValue();
 
   /** Formatting style applied to the cell at the time of the snapshot. */
-  ExcelCellStyleSnapshot style();
+  CellStyleReport style();
 
   /** Hyperlink and comment metadata captured for the cell at snapshot time. */
   ExcelCellMetadataSnapshot metadata();
@@ -24,7 +25,7 @@ public sealed interface ExcelCellSnapshot {
   record BlankSnapshot(
       String address,
       String displayValue,
-      ExcelCellStyleSnapshot style,
+      CellStyleReport style,
       ExcelCellMetadataSnapshot metadata)
       implements ExcelCellSnapshot {
     @Override
@@ -36,7 +37,7 @@ public sealed interface ExcelCellSnapshot {
   record TextSnapshot(
       String address,
       String displayValue,
-      ExcelCellStyleSnapshot style,
+      CellStyleReport style,
       ExcelCellMetadataSnapshot metadata,
       String textValue,
       @Nullable ExcelRichTextSnapshot richText)
@@ -61,7 +62,7 @@ public sealed interface ExcelCellSnapshot {
   record NumberSnapshot(
       String address,
       String displayValue,
-      ExcelCellStyleSnapshot style,
+      CellStyleReport style,
       ExcelCellMetadataSnapshot metadata,
       Double numberValue)
       implements ExcelCellSnapshot {
@@ -74,7 +75,7 @@ public sealed interface ExcelCellSnapshot {
   record BooleanSnapshot(
       String address,
       String displayValue,
-      ExcelCellStyleSnapshot style,
+      CellStyleReport style,
       ExcelCellMetadataSnapshot metadata,
       Boolean booleanValue)
       implements ExcelCellSnapshot {
@@ -87,7 +88,7 @@ public sealed interface ExcelCellSnapshot {
   record ErrorSnapshot(
       String address,
       String displayValue,
-      ExcelCellStyleSnapshot style,
+      CellStyleReport style,
       ExcelCellMetadataSnapshot metadata,
       String errorValue)
       implements ExcelCellSnapshot {
@@ -109,7 +110,7 @@ public sealed interface ExcelCellSnapshot {
   record FormulaSnapshot(
       String address,
       String displayValue,
-      ExcelCellStyleSnapshot style,
+      CellStyleReport style,
       ExcelCellMetadataSnapshot metadata,
       String formula,
       Optional<ExcelCellSnapshot> evaluation)

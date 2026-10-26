@@ -2,6 +2,7 @@ package dev.erst.gridgrind.jazzer.support;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 
+import dev.erst.gridgrind.core.model.protection.CellProtectionPatch;
 import dev.erst.gridgrind.core.vocabulary.ExcelColumnSpan;
 import dev.erst.gridgrind.core.vocabulary.ExcelComparisonOperator;
 import dev.erst.gridgrind.core.vocabulary.ExcelDataValidationErrorStyle;
@@ -12,7 +13,6 @@ import dev.erst.gridgrind.excel.ExcelArrayFormulaDefinition;
 import dev.erst.gridgrind.excel.ExcelBinaryData;
 import dev.erst.gridgrind.excel.ExcelCellFill;
 import dev.erst.gridgrind.excel.ExcelCellFont;
-import dev.erst.gridgrind.excel.ExcelCellProtection;
 import dev.erst.gridgrind.excel.ExcelCellStyle;
 import dev.erst.gridgrind.excel.ExcelCellValue;
 import dev.erst.gridgrind.excel.ExcelColor;
@@ -81,7 +81,7 @@ class XlsxRoundTripVerifierTest {
                                             new ExcelGradientStop(1.0d, ExcelColor.theme(3)))))),
                             Optional.empty(),
                             Optional.of(
-                                new ExcelCellProtection(Optional.of(true), Optional.of(true))))))));
+                                new CellProtectionPatch(Optional.of(true), Optional.of(true))))))));
   }
 
   @Test
@@ -124,7 +124,7 @@ class XlsxRoundTripVerifierTest {
                                     ExcelColor.rgb("#405060"))),
                             Optional.empty(),
                             Optional.of(
-                                new ExcelCellProtection(Optional.of(false), Optional.of(true))))),
+                                new CellProtectionPatch(Optional.of(false), Optional.of(true))))),
                     new WorkbookAnnotationCommand.SetHyperlink(
                         "Budget", "A1", new ExcelHyperlink.Url("https://example.com/report")),
                     new WorkbookAnnotationCommand.SetComment(

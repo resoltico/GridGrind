@@ -1,6 +1,7 @@
 package dev.erst.gridgrind.excel;
 
 import dev.erst.gridgrind.core.model.customxml.CustomXmlMappingLocator;
+import dev.erst.gridgrind.core.model.style.CellAlignmentPatch;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartBarDirection;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartDisplayBlanksAs;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartLegendPosition;
@@ -308,7 +309,7 @@ final class WorkbookSampleFixtures {
     return new ExcelCellStyle(
         Optional.of("#,##0.00"),
         Optional.of(
-            new ExcelCellAlignment(
+            new CellAlignmentPatch(
                 Optional.of(true),
                 Optional.of(ExcelHorizontalAlignment.RIGHT),
                 Optional.of(ExcelVerticalAlignment.CENTER),

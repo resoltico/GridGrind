@@ -1576,3 +1576,28 @@ are unchanged. Inventories: snapshots 45→44, converter lines 4591→4566, main
 122963→122914; definitions 13, Support 206 and blank checks 436 unchanged. Older architecture-test
 result directories from retired source sets are stale outputs, excluded from these executed-task
 counts. Evidence retained outside the repository under evidence/wp-40. Baseline diff empty.
+
+## WP-40 canonical style border and patches
+
+Deleted the identical ExcelCellAlignment/ExcelCellProtection patches and use the core patches
+directly, removing both optional identity converters. Deleted ExcelBorderSideSnapshot,
+ExcelBorderSnapshot and ExcelCellStyleSnapshot; adapters and readback now return core style
+reports directly. Retired the identity whole-style/border-side conversions and their assertions.
+No additional core accessor or compatibility factory remains.
+
+Border extraction now chooses the existing None/DefaultColor/Colored alternatives. One old
+engine-only test expected an Indexed16 color on a NONE side, which the old public-report converter
+already discarded. The test was corrected to assert core None and independently prove the raw
+POI indexed color is still retained. A real POI RGB regression proves invisible None and preserved
+RGB when switched to THIN. Style merging reads POI directly, so canonicalization does not erase
+stored border metadata. No behavioral assurance was replaced by a weaker equality assertion.
+Initial compile attempts caught missing canonical test imports and a POI interface/concrete getter;
+these were repaired. The obsolete mirror assertion caused the one behavioral failure above; its
+full log remains under external evidence/wp-40. Focused style regressions and PMD passed (15s).
+
+Nested deterministic check/replay passed (21s); no active fuzzing/mutation ran. Final ./gradlew
+check passed (4m): core 334, JSON 348, engine 1494 plus 14 parity, CLI 588, architecture 14 plus
+12 rule tests, zero failures/errors/skips. All 143 golden cases pass unchanged. Inventories:
+snapshots 44→41; converter lines 4566→4513; main Java lines 122914→122760. Definitions 13,
+Support 206 and blank checks 436 remain open. Baseline diff empty. Next: authored style mirrors,
+then remaining factual/model and resolved command consumers; WP-40 remains in progress.

@@ -23,18 +23,14 @@ import dev.erst.gridgrind.core.model.value.CellValue;
 import dev.erst.gridgrind.core.model.value.HyperlinkTarget;
 import dev.erst.gridgrind.core.source.TextSourceSpec;
 import dev.erst.gridgrind.core.vocabulary.CellAddress;
-import dev.erst.gridgrind.core.vocabulary.ExcelBorderStyle;
 import dev.erst.gridgrind.core.vocabulary.ExcelFillPattern;
 import dev.erst.gridgrind.core.vocabulary.ExcelHorizontalAlignment;
 import dev.erst.gridgrind.core.vocabulary.ExcelVerticalAlignment;
 import dev.erst.gridgrind.core.vocabulary.RgbHex;
-import dev.erst.gridgrind.excel.ExcelBorderSideSnapshot;
-import dev.erst.gridgrind.excel.ExcelBorderSnapshot;
 import dev.erst.gridgrind.excel.ExcelCellMetadataSnapshot;
 import dev.erst.gridgrind.excel.ExcelCellReadFacet;
 import dev.erst.gridgrind.excel.ExcelCellReadProjection;
 import dev.erst.gridgrind.excel.ExcelCellSnapshot;
-import dev.erst.gridgrind.excel.ExcelCellStyleSnapshot;
 import dev.erst.gridgrind.excel.ExcelColor;
 import dev.erst.gridgrind.excel.ExcelCommentAnchorSnapshot;
 import dev.erst.gridgrind.excel.ExcelCommentSnapshot;
@@ -77,10 +73,6 @@ class ReadbackSupportCoverageTest {
         Optional.of(CellColorReport.indexed(9, 0.5d)),
         InspectionResultCellStyleReportSupport.toCellColorReport(
             ExcelColor.indexed(9, Optional.of(0.5d))));
-    assertInstanceOf(
-        CellBorderSideReport.DefaultColor.class,
-        InspectionResultCellStyleReportSupport.toCellBorderSideReport(
-            new ExcelBorderSideSnapshot(ExcelBorderStyle.THIN, null)));
   }
 
   @Test
@@ -500,15 +492,15 @@ class ReadbackSupportCoverageTest {
                 Optional.of(new ExcelCommentAnchorSnapshot(0, 0, 1, 2)))));
   }
 
-  private static ExcelCellStyleSnapshot style(String numberFormat) {
-    ExcelBorderSideSnapshot emptySide = new ExcelBorderSideSnapshot(ExcelBorderStyle.NONE, null);
-    return new ExcelCellStyleSnapshot(
+  private static CellStyleReport style(String numberFormat) {
+    CellBorderSideReport emptySide = new CellBorderSideReport.None();
+    return new CellStyleReport(
         numberFormat,
         new CellAlignmentReport(
             false, ExcelHorizontalAlignment.GENERAL, ExcelVerticalAlignment.BOTTOM, 0, 0),
         fontSnapshot(),
         CellFillReport.pattern(ExcelFillPattern.NONE),
-        new ExcelBorderSnapshot(emptySide, emptySide, emptySide, emptySide),
+        new CellBorderReport(emptySide, emptySide, emptySide, emptySide),
         new CellProtectionReport(true, false));
   }
 

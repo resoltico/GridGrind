@@ -2,11 +2,14 @@ package dev.erst.gridgrind.excel;
 
 import dev.erst.gridgrind.core.model.protection.CellProtectionReport;
 import dev.erst.gridgrind.core.model.style.CellAlignmentReport;
+import dev.erst.gridgrind.core.model.style.CellBorderReport;
+import dev.erst.gridgrind.core.model.style.CellBorderSideReport;
 import dev.erst.gridgrind.core.model.style.CellColorReport;
 import dev.erst.gridgrind.core.model.style.CellFillReport;
 import dev.erst.gridgrind.core.model.style.CellFontReport;
 import dev.erst.gridgrind.core.model.style.CellGradientFillReport;
 import dev.erst.gridgrind.core.model.style.CellGradientStopReport;
+import dev.erst.gridgrind.core.model.style.CellStyleReport;
 import dev.erst.gridgrind.core.model.style.FontHeightReport;
 import dev.erst.gridgrind.core.vocabulary.ExcelGradientFillGeometry;
 import java.util.Optional;
@@ -45,8 +48,8 @@ final class ExcelCellStyleSnapshotSupport {
     return numberFormat == null || numberFormat.isBlank() ? DEFAULT_NUMBER_FORMAT : numberFormat;
   }
 
-  ExcelCellStyleSnapshot snapshot(XSSFCellStyle style) {
-    return new ExcelCellStyleSnapshot(
+  CellStyleReport snapshot(XSSFCellStyle style) {
+    return new CellStyleReport(
         resolveNumberFormat(style.getDataFormatString()),
         new CellAlignmentReport(
             style.getWrapText(),
@@ -56,7 +59,7 @@ final class ExcelCellStyleSnapshotSupport {
             style.getIndention()),
         snapshotFont(style.getFont()),
         fillSnapshot(style),
-        new ExcelBorderSnapshot(
+        new CellBorderReport(
             borderSideSnapshot(style.getBorderTop(), style.getTopBorderXSSFColor()),
             borderSideSnapshot(style.getBorderRight(), style.getRightBorderXSSFColor()),
             borderSideSnapshot(style.getBorderBottom(), style.getBottomBorderXSSFColor()),
@@ -124,10 +127,14 @@ final class ExcelCellStyleSnapshotSupport {
     return new CellGradientStopReport(stop.getPosition(), color);
   }
 
-  private static ExcelBorderSideSnapshot borderSideSnapshot(
+  private static CellBorderSideReport borderSideSnapshot(
       BorderStyle borderStyle, XSSFColor borderColor) {
-    return new ExcelBorderSideSnapshot(
-        ExcelCellStylePoiBridge.fromPoi(borderStyle),
-        ExcelColorSnapshotSupport.snapshot(borderColor).orElse(null));
+    var style = ExcelCellStylePoiBridge.fromPoi(borderStyle);
+    if (style == dev.erst.gridgrind.core.vocabulary.ExcelBorderStyle.NONE) {
+      return new CellBorderSideReport.None();
+    }
+    return ExcelColorSnapshotSupport.snapshot(borderColor)
+        .<CellBorderSideReport>map(color -> new CellBorderSideReport.Colored(style, color))
+        .orElseGet(() -> new CellBorderSideReport.DefaultColor(style));
   }
 }

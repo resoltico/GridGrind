@@ -4,12 +4,14 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import dev.erst.gridgrind.core.model.protection.CellProtectionReport;
 import dev.erst.gridgrind.core.model.style.CellAlignmentReport;
+import dev.erst.gridgrind.core.model.style.CellBorderReport;
+import dev.erst.gridgrind.core.model.style.CellBorderSideReport;
 import dev.erst.gridgrind.core.model.style.CellFillReport;
 import dev.erst.gridgrind.core.model.style.CellFontReport;
+import dev.erst.gridgrind.core.model.style.CellStyleReport;
 import dev.erst.gridgrind.core.model.style.FontHeightReport;
 import dev.erst.gridgrind.core.vocabulary.AnalysisFindingCode;
 import dev.erst.gridgrind.core.vocabulary.AnalysisSeverity;
-import dev.erst.gridgrind.core.vocabulary.ExcelBorderStyle;
 import dev.erst.gridgrind.core.vocabulary.ExcelComparisonOperator;
 import dev.erst.gridgrind.core.vocabulary.ExcelFillPattern;
 import dev.erst.gridgrind.core.vocabulary.ExcelHorizontalAlignment;
@@ -399,8 +401,8 @@ class WorkbookReadResultTest {
                 1, List.of("Budget"), "Budget", List.of("Budget", "Budget"), 0, false));
   }
 
-  private static ExcelCellStyleSnapshot defaultStyle() {
-    return new ExcelCellStyleSnapshot(
+  private static CellStyleReport defaultStyle() {
+    return new CellStyleReport(
         "",
         new CellAlignmentReport(
             false, ExcelHorizontalAlignment.GENERAL, ExcelVerticalAlignment.BOTTOM, 0, 0),
@@ -413,11 +415,11 @@ class WorkbookReadResultTest {
             false,
             false),
         CellFillReport.pattern(ExcelFillPattern.NONE),
-        new ExcelBorderSnapshot(
-            new ExcelBorderSideSnapshot(ExcelBorderStyle.NONE, null),
-            new ExcelBorderSideSnapshot(ExcelBorderStyle.NONE, null),
-            new ExcelBorderSideSnapshot(ExcelBorderStyle.NONE, null),
-            new ExcelBorderSideSnapshot(ExcelBorderStyle.NONE, null)),
+        new CellBorderReport(
+            new CellBorderSideReport.None(),
+            new CellBorderSideReport.None(),
+            new CellBorderSideReport.None(),
+            new CellBorderSideReport.None()),
         new CellProtectionReport(true, false));
   }
 

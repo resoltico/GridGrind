@@ -1,5 +1,7 @@
 package dev.erst.gridgrind.jazzer.support;
 
+import dev.erst.gridgrind.core.model.protection.CellProtectionPatch;
+import dev.erst.gridgrind.core.model.style.CellAlignmentPatch;
 import dev.erst.gridgrind.core.model.style.CellFontPatch;
 import dev.erst.gridgrind.core.model.style.ColorSpec;
 import dev.erst.gridgrind.core.model.style.FontHeightReport;
@@ -11,10 +13,8 @@ import dev.erst.gridgrind.core.vocabulary.ExcelVerticalAlignment;
 import dev.erst.gridgrind.core.vocabulary.RgbHex;
 import dev.erst.gridgrind.excel.ExcelBorder;
 import dev.erst.gridgrind.excel.ExcelBorderSide;
-import dev.erst.gridgrind.excel.ExcelCellAlignment;
 import dev.erst.gridgrind.excel.ExcelCellFill;
 import dev.erst.gridgrind.excel.ExcelCellFont;
-import dev.erst.gridgrind.excel.ExcelCellProtection;
 import dev.erst.gridgrind.excel.ExcelCellStyle;
 import dev.erst.gridgrind.excel.ExcelColor;
 import dev.erst.gridgrind.excel.ExcelGradientFill;
@@ -188,8 +188,8 @@ final class FuzzStyleDecoders {
     return values[data.consumeInt(0, values.length - 1)];
   }
 
-  private static ExcelCellAlignment nextAlignment(GridGrindFuzzData data, boolean includeDepth) {
-    return new ExcelCellAlignment(
+  private static CellAlignmentPatch nextAlignment(GridGrindFuzzData data, boolean includeDepth) {
+    return new CellAlignmentPatch(
         data.consumeBoolean() ? Optional.of(Boolean.TRUE) : Optional.empty(),
         Optional.of(nextHorizontalAlignment(data)),
         Optional.of(nextVerticalAlignment(data)),
@@ -242,8 +242,8 @@ final class FuzzStyleDecoders {
     return patterns[data.consumeInt(0, patterns.length - 1)];
   }
 
-  private static ExcelCellProtection nextProtection(GridGrindFuzzData data) {
-    return new ExcelCellProtection(
+  private static CellProtectionPatch nextProtection(GridGrindFuzzData data) {
+    return new CellProtectionPatch(
         data.consumeBoolean() ? Optional.of(data.consumeBoolean()) : Optional.empty(),
         data.consumeBoolean() ? Optional.of(data.consumeBoolean()) : Optional.empty());
   }

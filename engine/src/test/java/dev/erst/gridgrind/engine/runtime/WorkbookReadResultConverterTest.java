@@ -13,12 +13,14 @@ import dev.erst.gridgrind.core.model.protection.CellProtectionReport;
 import dev.erst.gridgrind.core.model.protection.WorkbookProtectionReport;
 import dev.erst.gridgrind.core.model.security.OoxmlEncryptionReport;
 import dev.erst.gridgrind.core.model.style.CellAlignmentReport;
+import dev.erst.gridgrind.core.model.style.CellBorderReport;
 import dev.erst.gridgrind.core.model.style.CellBorderSideReport;
 import dev.erst.gridgrind.core.model.style.CellColorReport;
 import dev.erst.gridgrind.core.model.style.CellFillReport;
 import dev.erst.gridgrind.core.model.style.CellFontReport;
 import dev.erst.gridgrind.core.model.style.CellGradientFillReport;
 import dev.erst.gridgrind.core.model.style.CellGradientStopReport;
+import dev.erst.gridgrind.core.model.style.CellStyleReport;
 import dev.erst.gridgrind.core.model.style.FontHeightReport;
 import dev.erst.gridgrind.core.model.table.AutofilterEntryReport;
 import dev.erst.gridgrind.core.model.table.AutofilterFilterCriterionReport;
@@ -958,8 +960,8 @@ class InspectionResultConverterTest extends DefaultGridGrindRequestExecutorTestS
         Optional.of(new ExcelCommentAnchorSnapshot(1, 2, 4, 6)));
   }
 
-  private static ExcelCellStyleSnapshot advancedStyle() {
-    return new ExcelCellStyleSnapshot(
+  private static CellStyleReport advancedStyle() {
+    return new CellStyleReport(
         "0.00",
         new CellAlignmentReport(
             false, ExcelHorizontalAlignment.CENTER, ExcelVerticalAlignment.CENTER, 0, 0),
@@ -970,11 +972,11 @@ class InspectionResultConverterTest extends DefaultGridGrindRequestExecutorTestS
                 List.of(
                     new CellGradientStopReport(0.0d, CellColorReport.rgb(new RgbHex("#112233"))),
                     new CellGradientStopReport(1.0d, CellColorReport.theme(4, 0.45d))))),
-        new ExcelBorderSnapshot(
-            new ExcelBorderSideSnapshot(ExcelBorderStyle.NONE, null),
-            new ExcelBorderSideSnapshot(ExcelBorderStyle.NONE, null),
-            new ExcelBorderSideSnapshot(ExcelBorderStyle.THICK, CellColorReport.indexed(12)),
-            new ExcelBorderSideSnapshot(ExcelBorderStyle.NONE, null)),
+        new CellBorderReport(
+            new CellBorderSideReport.None(),
+            new CellBorderSideReport.None(),
+            new CellBorderSideReport.Colored(ExcelBorderStyle.THICK, CellColorReport.indexed(12)),
+            new CellBorderSideReport.None()),
         new CellProtectionReport(true, false));
   }
 

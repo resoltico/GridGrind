@@ -5,10 +5,12 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import dev.erst.gridgrind.core.model.protection.CellProtectionReport;
 import dev.erst.gridgrind.core.model.style.CellAlignmentReport;
+import dev.erst.gridgrind.core.model.style.CellBorderReport;
+import dev.erst.gridgrind.core.model.style.CellBorderSideReport;
 import dev.erst.gridgrind.core.model.style.CellFillReport;
 import dev.erst.gridgrind.core.model.style.CellFontReport;
+import dev.erst.gridgrind.core.model.style.CellStyleReport;
 import dev.erst.gridgrind.core.model.style.FontHeightReport;
-import dev.erst.gridgrind.core.vocabulary.ExcelBorderStyle;
 import dev.erst.gridgrind.core.vocabulary.ExcelFillPattern;
 import dev.erst.gridgrind.core.vocabulary.ExcelHorizontalAlignment;
 import dev.erst.gridgrind.core.vocabulary.ExcelVerticalAlignment;
@@ -88,9 +90,9 @@ class ExcelWorkbookIntrospectorCoverageTest {
     return ExcelCellMetadataSnapshot.empty();
   }
 
-  private static ExcelCellStyleSnapshot style(String numberFormat) {
-    ExcelBorderSideSnapshot emptySide = new ExcelBorderSideSnapshot(ExcelBorderStyle.NONE, null);
-    return new ExcelCellStyleSnapshot(
+  private static CellStyleReport style(String numberFormat) {
+    CellBorderSideReport emptySide = new CellBorderSideReport.None();
+    return new CellStyleReport(
         numberFormat,
         new CellAlignmentReport(
             false, ExcelHorizontalAlignment.GENERAL, ExcelVerticalAlignment.BOTTOM, 0, 0),
@@ -103,7 +105,7 @@ class ExcelWorkbookIntrospectorCoverageTest {
             false,
             false),
         CellFillReport.pattern(ExcelFillPattern.NONE),
-        new ExcelBorderSnapshot(emptySide, emptySide, emptySide, emptySide),
+        new CellBorderReport(emptySide, emptySide, emptySide, emptySide),
         new CellProtectionReport(true, false));
   }
 }

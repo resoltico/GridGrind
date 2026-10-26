@@ -3,6 +3,7 @@ package dev.erst.gridgrind.excel;
 import static dev.erst.gridgrind.excel.ExcelStyleTestAccess.*;
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.core.model.style.CellAlignmentPatch;
 import dev.erst.gridgrind.core.model.style.CellColorReport;
 import dev.erst.gridgrind.core.model.style.FontHeightReport;
 import dev.erst.gridgrind.core.vocabulary.ExcelBorderStyle;
@@ -402,7 +403,7 @@ class ExcelSheetCoreReadWriteCoverageTest extends ExcelSheetTestSupport {
               new ExcelCellStyle(
                   Optional.of("#,##0.00"),
                   Optional.of(
-                      new ExcelCellAlignment(
+                      new CellAlignmentPatch(
                           Optional.of(true),
                           Optional.of(ExcelHorizontalAlignment.CENTER),
                           Optional.of(ExcelVerticalAlignment.TOP),
@@ -435,10 +436,10 @@ class ExcelSheetCoreReadWriteCoverageTest extends ExcelSheetTestSupport {
       assertFalse(styledValue.style().font().strikeout());
       assertEquals(CellColorReport.indexed(8), styledValue.style().font().fontColor());
       assertNull(fillForegroundColor(styledValue.style().fill()));
-      assertEquals(ExcelBorderStyle.NONE, styledValue.style().border().top().style());
-      assertEquals(ExcelBorderStyle.NONE, styledValue.style().border().right().style());
-      assertEquals(ExcelBorderStyle.NONE, styledValue.style().border().bottom().style());
-      assertEquals(ExcelBorderStyle.NONE, styledValue.style().border().left().style());
+      assertEquals(ExcelBorderStyle.NONE, borderStyle(styledValue.style().border().top()));
+      assertEquals(ExcelBorderStyle.NONE, borderStyle(styledValue.style().border().right()));
+      assertEquals(ExcelBorderStyle.NONE, borderStyle(styledValue.style().border().bottom()));
+      assertEquals(ExcelBorderStyle.NONE, borderStyle(styledValue.style().border().left()));
 
       List<ExcelPreviewRow> preview = sheet.cells().preview(2, 3);
       assertTrue(preview.getFirst().cells().stream().anyMatch(cell -> "C1".equals(cell.address())));
@@ -460,10 +461,10 @@ class ExcelSheetCoreReadWriteCoverageTest extends ExcelSheetTestSupport {
       assertFalse(cleared.style().font().underline());
       assertFalse(cleared.style().font().strikeout());
       assertNull(fillForegroundColor(cleared.style().fill()));
-      assertEquals(ExcelBorderStyle.NONE, cleared.style().border().top().style());
-      assertEquals(ExcelBorderStyle.NONE, cleared.style().border().right().style());
-      assertEquals(ExcelBorderStyle.NONE, cleared.style().border().bottom().style());
-      assertEquals(ExcelBorderStyle.NONE, cleared.style().border().left().style());
+      assertEquals(ExcelBorderStyle.NONE, borderStyle(cleared.style().border().top()));
+      assertEquals(ExcelBorderStyle.NONE, borderStyle(cleared.style().border().right()));
+      assertEquals(ExcelBorderStyle.NONE, borderStyle(cleared.style().border().bottom()));
+      assertEquals(ExcelBorderStyle.NONE, borderStyle(cleared.style().border().left()));
 
       assertThrows(
           IllegalArgumentException.class,
@@ -517,7 +518,7 @@ class ExcelSheetCoreReadWriteCoverageTest extends ExcelSheetTestSupport {
               new ExcelCellStyle(
                   Optional.empty(),
                   Optional.of(
-                      new ExcelCellAlignment(
+                      new CellAlignmentPatch(
                           Optional.of(true),
                           Optional.of(ExcelHorizontalAlignment.CENTER),
                           Optional.of(ExcelVerticalAlignment.TOP),
@@ -582,10 +583,10 @@ class ExcelSheetCoreReadWriteCoverageTest extends ExcelSheetTestSupport {
       assertTrue(styled.style().font().underline());
       assertTrue(styled.style().font().strikeout());
       assertEquals(rgb("#FFF2CC"), fillForegroundColor(styled.style().fill()));
-      assertEquals(ExcelBorderStyle.THIN, styled.style().border().top().style());
-      assertEquals(ExcelBorderStyle.DOUBLE, styled.style().border().right().style());
-      assertEquals(ExcelBorderStyle.THIN, styled.style().border().bottom().style());
-      assertEquals(ExcelBorderStyle.THIN, styled.style().border().left().style());
+      assertEquals(ExcelBorderStyle.THIN, borderStyle(styled.style().border().top()));
+      assertEquals(ExcelBorderStyle.DOUBLE, borderStyle(styled.style().border().right()));
+      assertEquals(ExcelBorderStyle.THIN, borderStyle(styled.style().border().bottom()));
+      assertEquals(ExcelBorderStyle.THIN, borderStyle(styled.style().border().left()));
     }
   }
 

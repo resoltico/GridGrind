@@ -3,6 +3,7 @@ package dev.erst.gridgrind.excel;
 import static dev.erst.gridgrind.excel.ExcelStyleTestAccess.*;
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.core.model.style.CellAlignmentPatch;
 import dev.erst.gridgrind.core.model.style.FontHeightReport;
 import dev.erst.gridgrind.core.vocabulary.ExcelBorderStyle;
 import dev.erst.gridgrind.core.vocabulary.ExcelFillPattern;
@@ -58,7 +59,7 @@ class ExcelSheetFormattingCoverageTest extends ExcelSheetTestSupport {
               new ExcelCellStyle(
                   Optional.empty(),
                   Optional.of(
-                      new ExcelCellAlignment(
+                      new CellAlignmentPatch(
                           Optional.empty(),
                           Optional.of(ExcelHorizontalAlignment.CENTER),
                           Optional.empty(),
@@ -95,7 +96,7 @@ class ExcelSheetFormattingCoverageTest extends ExcelSheetTestSupport {
                   .snapshotCell("A1");
       assertEquals("Quarterly report", textSnapshot.textValue());
       assertEquals(rgb("#AABBCC"), fillForegroundColor(textSnapshot.style().fill()));
-      assertEquals(ExcelBorderStyle.THIN, textSnapshot.style().border().top().style());
+      assertEquals(ExcelBorderStyle.THIN, borderStyle(textSnapshot.style().border().top()));
       assertEquals(
           ExcelHorizontalAlignment.CENTER, textSnapshot.style().alignment().horizontalAlignment());
       assertEquals(
@@ -109,7 +110,7 @@ class ExcelSheetFormattingCoverageTest extends ExcelSheetTestSupport {
           (ExcelCellSnapshot.BlankSnapshot)
               sheet.cells().setCell("A1", ExcelCellValue.blank()).snapshotCell("A1");
       assertEquals(rgb("#AABBCC"), fillForegroundColor(blankSnapshot.style().fill()));
-      assertEquals(ExcelBorderStyle.THIN, blankSnapshot.style().border().top().style());
+      assertEquals(ExcelBorderStyle.THIN, borderStyle(blankSnapshot.style().border().top()));
       assertEquals(
           new ExcelHyperlink.Url("https://example.com/report"),
           blankSnapshot.metadata().hyperlink().orElseThrow());
@@ -131,7 +132,7 @@ class ExcelSheetFormattingCoverageTest extends ExcelSheetTestSupport {
           new ExcelCellStyle(
               Optional.empty(),
               Optional.of(
-                  new ExcelCellAlignment(
+                  new CellAlignmentPatch(
                       Optional.of(Boolean.TRUE),
                       Optional.empty(),
                       Optional.of(ExcelVerticalAlignment.TOP),
@@ -178,7 +179,7 @@ class ExcelSheetFormattingCoverageTest extends ExcelSheetTestSupport {
       assertTrue(dateSnapshot.style().alignment().wrapText());
       assertEquals(
           ExcelVerticalAlignment.TOP, dateSnapshot.style().alignment().verticalAlignment());
-      assertEquals(ExcelBorderStyle.DOUBLE, dateSnapshot.style().border().right().style());
+      assertEquals(ExcelBorderStyle.DOUBLE, borderStyle(dateSnapshot.style().border().right()));
 
       assertEquals("yyyy-mm-dd hh:mm:ss", dateTimeSnapshot.style().numberFormat());
       assertEquals(rgb("#DDEBF7"), fillForegroundColor(dateTimeSnapshot.style().fill()));
@@ -186,7 +187,7 @@ class ExcelSheetFormattingCoverageTest extends ExcelSheetTestSupport {
       assertTrue(dateTimeSnapshot.style().alignment().wrapText());
       assertEquals(
           ExcelVerticalAlignment.TOP, dateTimeSnapshot.style().alignment().verticalAlignment());
-      assertEquals(ExcelBorderStyle.DOUBLE, dateTimeSnapshot.style().border().right().style());
+      assertEquals(ExcelBorderStyle.DOUBLE, borderStyle(dateTimeSnapshot.style().border().right()));
     }
   }
 
@@ -312,11 +313,12 @@ class ExcelSheetFormattingCoverageTest extends ExcelSheetTestSupport {
       assertEquals(rgb("#CDCDCD"), fillForegroundColor(firstCell.style().fill()));
       assertEquals(rgb("#A3A3A3"), firstCell.style().font().fontColor());
       assertTrue(firstCell.style().font().strikeout());
-      assertEquals(ExcelBorderStyle.DASH_DOT, firstCell.style().border().top().style());
+      assertEquals(ExcelBorderStyle.DASH_DOT, borderStyle(firstCell.style().border().top()));
       assertEquals(rgb("#CDCDCD"), fillForegroundColor(secondCell.style().fill()));
-      assertEquals(ExcelBorderStyle.DASH_DOT, secondCell.style().border().top().style());
+      assertEquals(ExcelBorderStyle.DASH_DOT, borderStyle(secondCell.style().border().top()));
       assertEquals(rgb("#CDCDCD"), fillForegroundColor(untouchedStyledCell.style().fill()));
-      assertEquals(ExcelBorderStyle.DASH_DOT, untouchedStyledCell.style().border().top().style());
+      assertEquals(
+          ExcelBorderStyle.DASH_DOT, borderStyle(untouchedStyledCell.style().border().top()));
     }
   }
 
@@ -341,7 +343,7 @@ class ExcelSheetFormattingCoverageTest extends ExcelSheetTestSupport {
               new ExcelCellStyle(
                   Optional.of("0.00"),
                   Optional.of(
-                      new ExcelCellAlignment(
+                      new CellAlignmentPatch(
                           Optional.of(Boolean.TRUE),
                           Optional.empty(),
                           Optional.of(ExcelVerticalAlignment.CENTER),
@@ -387,9 +389,9 @@ class ExcelSheetFormattingCoverageTest extends ExcelSheetTestSupport {
       assertEquals(
           ExcelVerticalAlignment.CENTER, appendedFirstCell.style().alignment().verticalAlignment());
       assertEquals(
-          ExcelBorderStyle.MEDIUM_DASHED, appendedFirstCell.style().border().top().style());
+          ExcelBorderStyle.MEDIUM_DASHED, borderStyle(appendedFirstCell.style().border().top()));
       assertEquals(
-          ExcelBorderStyle.MEDIUM_DASHED, appendedFirstCell.style().border().right().style());
+          ExcelBorderStyle.MEDIUM_DASHED, borderStyle(appendedFirstCell.style().border().right()));
     }
   }
 

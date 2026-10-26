@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.core.model.style.CellStyleReport;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -260,7 +261,7 @@ final class ExcelSheetCellReadSupport {
     CellType declaredType = cell.getCellType();
     String formulaExpression = declaredType == CellType.FORMULA ? cell.getCellFormula() : null;
     String displayValue = displayValue(address, cell, declaredType, formulaExpression, projection);
-    ExcelCellStyleSnapshot style = styleRegistry.snapshot(cell);
+    CellStyleReport style = styleRegistry.snapshot(cell);
     ExcelCellMetadataSnapshot metadata = annotationSupport.metadata(cell);
 
     if (declaredType == CellType.FORMULA) {
@@ -292,7 +293,7 @@ final class ExcelSheetCellReadSupport {
       String address,
       Cell cell,
       String displayValue,
-      ExcelCellStyleSnapshot style,
+      CellStyleReport style,
       ExcelCellMetadataSnapshot metadata,
       ExcelCellReadProjection projection) {
     String formula = cell.getCellFormula();
@@ -327,7 +328,7 @@ final class ExcelSheetCellReadSupport {
   private ExcelCellSnapshot evaluatedFormulaSnapshot(
       String address,
       String displayValue,
-      ExcelCellStyleSnapshot style,
+      CellStyleReport style,
       ExcelCellMetadataSnapshot metadata,
       CellValue evaluatedCell) {
     CellType evaluatedType = evaluatedCell != null ? evaluatedCell.getCellType() : CellType.BLANK;
@@ -359,7 +360,7 @@ final class ExcelSheetCellReadSupport {
       Cell cell,
       CellType declaredType,
       String displayValue,
-      ExcelCellStyleSnapshot style,
+      CellStyleReport style,
       ExcelCellMetadataSnapshot metadata) {
     return switch (declaredType) {
       case STRING ->

@@ -2,11 +2,14 @@ package dev.erst.gridgrind.excel;
 
 import dev.erst.gridgrind.core.model.protection.CellProtectionReport;
 import dev.erst.gridgrind.core.model.style.CellAlignmentReport;
+import dev.erst.gridgrind.core.model.style.CellBorderReport;
+import dev.erst.gridgrind.core.model.style.CellBorderSideReport;
 import dev.erst.gridgrind.core.model.style.CellColorReport;
 import dev.erst.gridgrind.core.model.style.CellFillReport;
 import dev.erst.gridgrind.core.model.style.CellFontReport;
 import dev.erst.gridgrind.core.model.style.CellGradientFillReport;
 import dev.erst.gridgrind.core.model.style.CellGradientStopReport;
+import dev.erst.gridgrind.core.model.style.CellStyleReport;
 import dev.erst.gridgrind.core.model.style.FontHeightReport;
 import dev.erst.gridgrind.core.vocabulary.ExcelBorderStyle;
 import dev.erst.gridgrind.core.vocabulary.ExcelFillPattern;
@@ -202,8 +205,8 @@ public final class XlsxRoundTrip {
   }
 
   /** Returns the effective style captured at one A1-style cell address in the saved workbook. */
-  public static ExcelCellStyleSnapshot cellStyle(
-      Path workbookPath, String sheetName, String address) throws IOException {
+  public static CellStyleReport cellStyle(Path workbookPath, String sheetName, String address)
+      throws IOException {
     requireNonBlank(address, "address");
     CellReference cellReference = new CellReference(address);
     return readSheet(
@@ -220,7 +223,7 @@ public final class XlsxRoundTrip {
           }
           XSSFCellStyle style = cell.getCellStyle();
           XSSFFont font = style.getFont();
-          return new ExcelCellStyleSnapshot(
+          return new CellStyleReport(
               ExcelCellStyleSnapshotSupport.resolveNumberFormat(style.getDataFormatString()),
               new CellAlignmentReport(
                   style.getWrapText(),
@@ -237,7 +240,7 @@ public final class XlsxRoundTrip {
                   font.getUnderline() != org.apache.poi.ss.usermodel.Font.U_NONE,
                   font.getStrikeout()),
               fillSnapshot((XSSFWorkbook) sheet.getWorkbook(), style),
-              new ExcelBorderSnapshot(
+              new CellBorderReport(
                   borderSideSnapshot(style.getBorderTop(), style.getTopBorderXSSFColor()),
                   borderSideSnapshot(style.getBorderRight(), style.getRightBorderXSSFColor()),
                   borderSideSnapshot(style.getBorderBottom(), style.getBottomBorderXSSFColor()),
@@ -515,11 +518,16 @@ public final class XlsxRoundTrip {
                             + " is missing its color definition.")));
   }
 
-  private static ExcelBorderSideSnapshot borderSideSnapshot(
+  private static CellBorderSideReport borderSideSnapshot(
       BorderStyle borderStyle, XSSFColor borderColor) {
     ExcelBorderStyle style = fromPoi(borderStyle);
-    return new ExcelBorderSideSnapshot(
-        style, style == ExcelBorderStyle.NONE ? null : colorSnapshot(borderColor));
+    if (style == ExcelBorderStyle.NONE) {
+      return new CellBorderSideReport.None();
+    }
+    CellColorReport color = colorSnapshot(borderColor);
+    return color == null
+        ? new CellBorderSideReport.DefaultColor(style)
+        : new CellBorderSideReport.Colored(style, color);
   }
 
   private static ExcelHorizontalAlignment fromPoi(HorizontalAlignment alignment) {

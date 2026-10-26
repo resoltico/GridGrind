@@ -180,7 +180,7 @@ final class InspectionResultCellReportSupport {
   private static Optional<CellStyleReport> projectedStyle(
       ExcelCellSnapshot snapshot, ExcelCellReadProjection projection) {
     return projection.includes(ExcelCellReadFacet.STYLE)
-        ? Optional.of(InspectionResultCellStyleReportSupport.toCellStyleReport(snapshot.style()))
+        ? Optional.of(snapshot.style())
         : Optional.empty();
   }
 

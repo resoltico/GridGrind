@@ -4,7 +4,6 @@ import static dev.erst.gridgrind.engine.runtime.ExecutorTestPlanSupport.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 import dev.erst.gridgrind.core.model.formula.FormulaEnvironmentSpec;
-import dev.erst.gridgrind.core.model.style.CellStyleReport;
 import dev.erst.gridgrind.core.plan.*;
 import dev.erst.gridgrind.core.plan.ExecutionModeSpec;
 import dev.erst.gridgrind.core.plan.ExecutionPolicySpec;
@@ -365,9 +364,5 @@ class DefaultGridGrindRequestExecutorTestSupport
     assertEquals(expectedAddress, addressFor(step, exception));
     assertEquals(expectedRange, rangeFor(step, exception));
     assertEquals(expectedNamedRangeName, namedRangeNameFor(step, exception));
-  }
-
-  CellStyleReport toResponseStyleReport(dev.erst.gridgrind.excel.ExcelCellStyleSnapshot style) {
-    return InspectionResultCellStyleReportSupport.toCellStyleReport(style);
   }
 }

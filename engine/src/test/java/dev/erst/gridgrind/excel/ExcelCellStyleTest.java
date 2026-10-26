@@ -3,6 +3,8 @@ package dev.erst.gridgrind.excel;
 import static dev.erst.gridgrind.excel.ExcelStyleTestAccess.*;
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.core.model.protection.CellProtectionPatch;
+import dev.erst.gridgrind.core.model.style.CellAlignmentPatch;
 import dev.erst.gridgrind.core.model.style.CellColorReport;
 import dev.erst.gridgrind.core.model.style.CellFillReport;
 import dev.erst.gridgrind.core.model.style.FontHeightReport;
@@ -139,7 +141,7 @@ class ExcelCellStyleTest {
         new ExcelCellStyle(
             Optional.empty(),
             Optional.of(
-                new ExcelCellAlignment(
+                new CellAlignmentPatch(
                     Optional.of(true),
                     Optional.empty(),
                     Optional.empty(),
@@ -233,7 +235,7 @@ class ExcelCellStyleTest {
             Optional.empty(),
             Optional.empty(),
             Optional.empty(),
-            Optional.of(new ExcelCellProtection(Optional.of(true), Optional.empty())));
+            Optional.of(new CellProtectionPatch(Optional.of(true), Optional.empty())));
     assertTrue(protectionOnly.protection().orElseThrow().locked().orElseThrow());
     assertEquals(Optional.empty(), protectionOnly.protection().orElseThrow().hiddenFormula());
   }
@@ -243,7 +245,7 @@ class ExcelCellStyleTest {
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new ExcelCellAlignment(
+            new CellAlignmentPatch(
                 Optional.empty(),
                 Optional.empty(),
                 Optional.empty(),
@@ -252,7 +254,7 @@ class ExcelCellStyleTest {
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new ExcelCellAlignment(
+            new CellAlignmentPatch(
                 Optional.empty(),
                 Optional.empty(),
                 Optional.empty(),
@@ -261,7 +263,7 @@ class ExcelCellStyleTest {
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new ExcelCellAlignment(
+            new CellAlignmentPatch(
                 Optional.empty(),
                 Optional.empty(),
                 Optional.empty(),
@@ -270,7 +272,7 @@ class ExcelCellStyleTest {
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new ExcelCellAlignment(
+            new CellAlignmentPatch(
                 Optional.empty(),
                 Optional.empty(),
                 Optional.empty(),
@@ -279,15 +281,15 @@ class ExcelCellStyleTest {
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new ExcelCellAlignment(
+            new CellAlignmentPatch(
                 Optional.empty(),
                 Optional.empty(),
                 Optional.empty(),
                 Optional.empty(),
                 Optional.of(251)));
 
-    ExcelCellAlignment alignment =
-        new ExcelCellAlignment(
+    CellAlignmentPatch alignment =
+        new CellAlignmentPatch(
             Optional.empty(),
             Optional.empty(),
             Optional.of(ExcelVerticalAlignment.BOTTOM),
@@ -356,7 +358,7 @@ class ExcelCellStyleTest {
                 Optional.empty()));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new ExcelCellProtection(Optional.empty(), Optional.empty()));
+        () -> new CellProtectionPatch(Optional.empty(), Optional.empty()));
     assertThrows(IllegalArgumentException.class, () -> ExcelCellStyle.emphasis(null, null));
 
     ExcelCellFont strikeoutOnly =
@@ -368,7 +370,7 @@ class ExcelCellStyleTest {
             Optional.empty(),
             Optional.empty(),
             Optional.of(true));
-    ExcelCellProtection hiddenOnly = new ExcelCellProtection(Optional.empty(), Optional.of(false));
+    CellProtectionPatch hiddenOnly = new CellProtectionPatch(Optional.empty(), Optional.of(false));
     assertTrue(strikeoutOnly.strikeout().orElseThrow());
     assertFalse(hiddenOnly.hiddenFormula().orElseThrow());
     assertEquals(Optional.empty(), hiddenOnly.locked());

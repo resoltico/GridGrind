@@ -9,6 +9,25 @@ import dev.erst.gridgrind.core.vocabulary.ExcelFillPattern;
 final class ExcelStyleTestAccess {
   private ExcelStyleTestAccess() {}
 
+  static dev.erst.gridgrind.core.vocabulary.ExcelBorderStyle borderStyle(
+      dev.erst.gridgrind.core.model.style.CellBorderSideReport side) {
+    return switch (side) {
+      case dev.erst.gridgrind.core.model.style.CellBorderSideReport.None ignored ->
+          dev.erst.gridgrind.core.vocabulary.ExcelBorderStyle.NONE;
+      case dev.erst.gridgrind.core.model.style.CellBorderSideReport.DefaultColor border ->
+          border.style();
+      case dev.erst.gridgrind.core.model.style.CellBorderSideReport.Colored border ->
+          border.style();
+    };
+  }
+
+  static dev.erst.gridgrind.core.model.style.CellColorReport borderColor(
+      dev.erst.gridgrind.core.model.style.CellBorderSideReport side) {
+    return side instanceof dev.erst.gridgrind.core.model.style.CellBorderSideReport.Colored colored
+        ? colored.color()
+        : null;
+  }
+
   static ExcelFillPattern fillPattern(ExcelCellFill fill) {
     return switch (fill) {
       case ExcelCellFill.PatternOnly pattern -> pattern.pattern();

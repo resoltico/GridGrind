@@ -1,10 +1,10 @@
 package dev.erst.gridgrind.jazzer.support;
 
+import dev.erst.gridgrind.core.model.style.CellStyleReport;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.excel.ExcelAutofilterSnapshot;
 import dev.erst.gridgrind.excel.ExcelCellMetadataSnapshot;
 import dev.erst.gridgrind.excel.ExcelCellSnapshot;
-import dev.erst.gridgrind.excel.ExcelCellStyleSnapshot;
 import dev.erst.gridgrind.excel.ExcelChartSnapshot;
 import dev.erst.gridgrind.excel.ExcelConditionalFormattingBlockSnapshot;
 import dev.erst.gridgrind.excel.ExcelNamedRangeSnapshot;
@@ -28,15 +28,13 @@ import java.util.Map;
 final class XlsxRoundTripExpectedWorkbookSurfaceSupport {
   private XlsxRoundTripExpectedWorkbookSurfaceSupport() {}
 
-  static Map<String, Map<XlsxRoundTripExpectedStateSupport.CellCoordinate, ExcelCellStyleSnapshot>>
+  static Map<String, Map<XlsxRoundTripExpectedStateSupport.CellCoordinate, CellStyleReport>>
       expectedStyles(
-          Map<String, List<ExcelCellSnapshot>> candidateSnapshots,
-          ExcelCellStyleSnapshot defaultStyle) {
-    LinkedHashMap<
-            String, Map<XlsxRoundTripExpectedStateSupport.CellCoordinate, ExcelCellStyleSnapshot>>
+          Map<String, List<ExcelCellSnapshot>> candidateSnapshots, CellStyleReport defaultStyle) {
+    LinkedHashMap<String, Map<XlsxRoundTripExpectedStateSupport.CellCoordinate, CellStyleReport>>
         expectedStylesBySheet = new LinkedHashMap<>();
     for (Map.Entry<String, List<ExcelCellSnapshot>> entry : candidateSnapshots.entrySet()) {
-      LinkedHashMap<XlsxRoundTripExpectedStateSupport.CellCoordinate, ExcelCellStyleSnapshot>
+      LinkedHashMap<XlsxRoundTripExpectedStateSupport.CellCoordinate, CellStyleReport>
           expectedStyles = new LinkedHashMap<>();
       for (ExcelCellSnapshot snapshot : entry.getValue()) {
         if (!snapshot.style().equals(defaultStyle)) {

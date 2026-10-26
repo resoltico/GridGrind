@@ -1,5 +1,7 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.core.model.protection.CellProtectionPatch;
+import dev.erst.gridgrind.core.model.style.CellAlignmentPatch;
 import dev.erst.gridgrind.core.vocabulary.ExcelHorizontalAlignment;
 import dev.erst.gridgrind.core.vocabulary.ExcelVerticalAlignment;
 import java.util.Objects;
@@ -8,11 +10,11 @@ import java.util.Optional;
 /** Agent-facing style patch that can be applied to one cell or a rectangular range. */
 public record ExcelCellStyle(
     Optional<String> numberFormat,
-    Optional<ExcelCellAlignment> alignment,
+    Optional<CellAlignmentPatch> alignment,
     Optional<ExcelCellFont> font,
     Optional<ExcelCellFill> fill,
     Optional<ExcelBorder> border,
-    Optional<ExcelCellProtection> protection) {
+    Optional<CellProtectionPatch> protection) {
   public ExcelCellStyle {
     Objects.requireNonNull(numberFormat, "numberFormat must not be null");
     Objects.requireNonNull(alignment, "alignment must not be null");
@@ -75,7 +77,7 @@ public record ExcelCellStyle(
     return new ExcelCellStyle(
         Optional.empty(),
         Optional.of(
-            new ExcelCellAlignment(
+            new CellAlignmentPatch(
                 Optional.empty(),
                 Optional.ofNullable(horizontalAlignment),
                 Optional.ofNullable(verticalAlignment),

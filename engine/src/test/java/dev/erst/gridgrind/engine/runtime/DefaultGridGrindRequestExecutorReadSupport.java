@@ -7,6 +7,8 @@ import dev.erst.gridgrind.core.model.layout.WindowRowReport;
 import dev.erst.gridgrind.core.model.protection.CellProtectionReport;
 import dev.erst.gridgrind.core.model.protection.SheetProtectionSettings;
 import dev.erst.gridgrind.core.model.style.CellAlignmentReport;
+import dev.erst.gridgrind.core.model.style.CellBorderReport;
+import dev.erst.gridgrind.core.model.style.CellBorderSideReport;
 import dev.erst.gridgrind.core.model.style.CellColorReport;
 import dev.erst.gridgrind.core.model.style.CellFillReport;
 import dev.erst.gridgrind.core.model.style.CellFontReport;
@@ -18,7 +20,6 @@ import dev.erst.gridgrind.core.model.value.CellValue;
 import dev.erst.gridgrind.core.plan.*;
 import dev.erst.gridgrind.core.result.WorkbookResult;
 import dev.erst.gridgrind.core.vocabulary.CellAddress;
-import dev.erst.gridgrind.core.vocabulary.ExcelBorderStyle;
 import dev.erst.gridgrind.core.vocabulary.ExcelHorizontalAlignment;
 import dev.erst.gridgrind.core.vocabulary.ExcelVerticalAlignment;
 import dev.erst.gridgrind.core.vocabulary.RgbHex;
@@ -220,8 +221,8 @@ class DefaultGridGrindRequestExecutorReadSupport {
     return ExecutorTestPlanSupport.inspection(success, stepId, type);
   }
 
-  static ExcelCellStyleSnapshot defaultStyle() {
-    return new ExcelCellStyleSnapshot(
+  static CellStyleReport defaultStyle() {
+    return new CellStyleReport(
         "",
         new CellAlignmentReport(
             false, ExcelHorizontalAlignment.GENERAL, ExcelVerticalAlignment.BOTTOM, 0, 0),
@@ -234,11 +235,11 @@ class DefaultGridGrindRequestExecutorReadSupport {
             false,
             false),
         CellFillReport.pattern(dev.erst.gridgrind.core.vocabulary.ExcelFillPattern.NONE),
-        new ExcelBorderSnapshot(
-            new ExcelBorderSideSnapshot(ExcelBorderStyle.NONE, null),
-            new ExcelBorderSideSnapshot(ExcelBorderStyle.NONE, null),
-            new ExcelBorderSideSnapshot(ExcelBorderStyle.NONE, null),
-            new ExcelBorderSideSnapshot(ExcelBorderStyle.NONE, null)),
+        new CellBorderReport(
+            new CellBorderSideReport.None(),
+            new CellBorderSideReport.None(),
+            new CellBorderSideReport.None(),
+            new CellBorderSideReport.None()),
         new CellProtectionReport(true, false));
   }
 

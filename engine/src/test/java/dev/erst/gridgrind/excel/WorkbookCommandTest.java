@@ -2,6 +2,7 @@ package dev.erst.gridgrind.excel;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.core.model.style.CellAlignmentPatch;
 import dev.erst.gridgrind.core.vocabulary.ExcelColumnSpan;
 import dev.erst.gridgrind.core.vocabulary.ExcelComparisonOperator;
 import dev.erst.gridgrind.core.vocabulary.ExcelDataValidationErrorStyle;
@@ -910,7 +911,7 @@ class WorkbookCommandTest {
     return new ExcelCellStyle(
         Optional.of("#,##0.00"),
         Optional.of(
-            new ExcelCellAlignment(
+            new CellAlignmentPatch(
                 Optional.of(true),
                 Optional.of(ExcelHorizontalAlignment.RIGHT),
                 Optional.of(ExcelVerticalAlignment.CENTER),

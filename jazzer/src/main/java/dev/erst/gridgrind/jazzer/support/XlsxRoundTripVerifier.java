@@ -2,11 +2,14 @@ package dev.erst.gridgrind.jazzer.support;
 
 import dev.erst.gridgrind.core.model.protection.CellProtectionReport;
 import dev.erst.gridgrind.core.model.style.CellAlignmentReport;
+import dev.erst.gridgrind.core.model.style.CellBorderReport;
+import dev.erst.gridgrind.core.model.style.CellBorderSideReport;
 import dev.erst.gridgrind.core.model.style.CellColorReport;
 import dev.erst.gridgrind.core.model.style.CellFillReport;
 import dev.erst.gridgrind.core.model.style.CellFontReport;
 import dev.erst.gridgrind.core.model.style.CellGradientFillReport;
 import dev.erst.gridgrind.core.model.style.CellGradientStopReport;
+import dev.erst.gridgrind.core.model.style.CellStyleReport;
 import dev.erst.gridgrind.core.model.style.FontHeightReport;
 import dev.erst.gridgrind.core.vocabulary.ExcelBorderStyle;
 import dev.erst.gridgrind.core.vocabulary.ExcelFillPattern;
@@ -14,9 +17,6 @@ import dev.erst.gridgrind.core.vocabulary.ExcelGradientFillGeometry;
 import dev.erst.gridgrind.core.vocabulary.ExcelHorizontalAlignment;
 import dev.erst.gridgrind.core.vocabulary.ExcelVerticalAlignment;
 import dev.erst.gridgrind.core.vocabulary.RgbHex;
-import dev.erst.gridgrind.excel.ExcelBorderSideSnapshot;
-import dev.erst.gridgrind.excel.ExcelBorderSnapshot;
-import dev.erst.gridgrind.excel.ExcelCellStyleSnapshot;
 import dev.erst.gridgrind.excel.ExcelComment;
 import dev.erst.gridgrind.excel.ExcelHyperlink;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
@@ -163,16 +163,16 @@ public final class XlsxRoundTripVerifier {
     return numberFormat == null || numberFormat.isBlank() ? "General" : numberFormat;
   }
 
-  static ExcelCellStyleSnapshot defaultStyleSnapshot() throws IOException {
+  static CellStyleReport defaultStyleSnapshot() throws IOException {
     try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       workbook.getOrCreateSheet("Default");
       return workbook.sheet("Default").cells().snapshotCell("A1").style();
     }
   }
 
-  static ExcelCellStyleSnapshot styleSnapshot(XSSFWorkbook workbook, XSSFCellStyle style) {
+  static CellStyleReport styleSnapshot(XSSFWorkbook workbook, XSSFCellStyle style) {
     XSSFFont font = style.getFont();
-    return new ExcelCellStyleSnapshot(
+    return new CellStyleReport(
         resolveNumberFormat(style.getDataFormatString()),
         new CellAlignmentReport(
             style.getWrapText(),
@@ -189,20 +189,22 @@ public final class XlsxRoundTripVerifier {
             font.getUnderline() != org.apache.poi.ss.usermodel.Font.U_NONE,
             font.getStrikeout()),
         fillSnapshot(workbook, style),
-        new ExcelBorderSnapshot(
-            new ExcelBorderSideSnapshot(
-                fromPoi(style.getBorderTop()),
-                toColorSnapshot(style.getTopBorderXSSFColor()).orElse(null)),
-            new ExcelBorderSideSnapshot(
-                fromPoi(style.getBorderRight()),
-                toColorSnapshot(style.getRightBorderXSSFColor()).orElse(null)),
-            new ExcelBorderSideSnapshot(
-                fromPoi(style.getBorderBottom()),
-                toColorSnapshot(style.getBottomBorderXSSFColor()).orElse(null)),
-            new ExcelBorderSideSnapshot(
-                fromPoi(style.getBorderLeft()),
-                toColorSnapshot(style.getLeftBorderXSSFColor()).orElse(null))),
+        new CellBorderReport(
+            borderSide(style.getBorderTop(), style.getTopBorderXSSFColor()),
+            borderSide(style.getBorderRight(), style.getRightBorderXSSFColor()),
+            borderSide(style.getBorderBottom(), style.getBottomBorderXSSFColor()),
+            borderSide(style.getBorderLeft(), style.getLeftBorderXSSFColor())),
         new CellProtectionReport(style.getLocked(), style.getHidden()));
+  }
+
+  private static CellBorderSideReport borderSide(BorderStyle border, XSSFColor color) {
+    ExcelBorderStyle style = fromPoi(border);
+    if (style == ExcelBorderStyle.NONE) {
+      return new CellBorderSideReport.None();
+    }
+    return toColorSnapshot(color)
+        .<CellBorderSideReport>map(value -> new CellBorderSideReport.Colored(style, value))
+        .orElseGet(() -> new CellBorderSideReport.DefaultColor(style));
   }
 
   private static CellFillReport fillSnapshot(XSSFWorkbook workbook, XSSFCellStyle style) {

@@ -1,10 +1,10 @@
 package dev.erst.gridgrind.jazzer.support;
 
+import dev.erst.gridgrind.core.model.style.CellStyleReport;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.excel.*;
 import dev.erst.gridgrind.excel.ExcelAutofilterSnapshot;
 import dev.erst.gridgrind.excel.ExcelCellSnapshot;
-import dev.erst.gridgrind.excel.ExcelCellStyleSnapshot;
 import dev.erst.gridgrind.excel.ExcelChartSnapshot;
 import dev.erst.gridgrind.excel.ExcelConditionalFormattingBlockSnapshot;
 import dev.erst.gridgrind.excel.ExcelNamedRangeScope;
@@ -46,22 +46,21 @@ final class XlsxRoundTripExpectationVerification {
   private XlsxRoundTripExpectationVerification() {}
 
   static void requireExpectedStyles(
-      Map<String, Map<XlsxRoundTripExpectedStateSupport.CellCoordinate, ExcelCellStyleSnapshot>>
+      Map<String, Map<XlsxRoundTripExpectedStateSupport.CellCoordinate, CellStyleReport>>
           expectedStyles,
       XSSFWorkbook workbook) {
     if (expectedStyles.isEmpty()) {
       return;
     }
-    for (Map.Entry<
-            String, Map<XlsxRoundTripExpectedStateSupport.CellCoordinate, ExcelCellStyleSnapshot>>
+    for (Map.Entry<String, Map<XlsxRoundTripExpectedStateSupport.CellCoordinate, CellStyleReport>>
         sheetEntry : expectedStyles.entrySet()) {
       var sheet = workbook.getSheet(sheetEntry.getKey());
       if (sheet == null) {
         throw new IllegalStateException(
             "expected styled sheet must exist after round-trip: " + sheetEntry.getKey());
       }
-      for (Map.Entry<XlsxRoundTripExpectedStateSupport.CellCoordinate, ExcelCellStyleSnapshot>
-          cellEntry : sheetEntry.getValue().entrySet()) {
+      for (Map.Entry<XlsxRoundTripExpectedStateSupport.CellCoordinate, CellStyleReport> cellEntry :
+          sheetEntry.getValue().entrySet()) {
         Row row = sheet.getRow(cellEntry.getKey().rowIndex());
         if (row == null) {
           throw new IllegalStateException(
@@ -86,9 +85,9 @@ final class XlsxRoundTripExpectationVerification {
   static void requireExpectedStyle(
       String sheetName,
       XlsxRoundTripExpectedStateSupport.CellCoordinate coordinate,
-      ExcelCellStyleSnapshot expectedStyle,
+      CellStyleReport expectedStyle,
       Cell cell) {
-    ExcelCellStyleSnapshot actualStyle =
+    CellStyleReport actualStyle =
         XlsxRoundTripVerifier.styleSnapshot(
             (XSSFWorkbook) cell.getSheet().getWorkbook(), (XSSFCellStyle) cell.getCellStyle());
     if (!expectedStyle.equals(actualStyle)) {

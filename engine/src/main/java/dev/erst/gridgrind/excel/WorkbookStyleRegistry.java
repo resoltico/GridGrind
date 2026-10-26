@@ -1,6 +1,9 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.core.model.protection.CellProtectionPatch;
+import dev.erst.gridgrind.core.model.style.CellAlignmentPatch;
 import dev.erst.gridgrind.core.model.style.CellGradientFillReport;
+import dev.erst.gridgrind.core.model.style.CellStyleReport;
 import dev.erst.gridgrind.core.vocabulary.ExcelFillPattern;
 import java.util.HashMap;
 import java.util.Map;
@@ -88,13 +91,13 @@ public final class WorkbookStyleRegistry {
   }
 
   /** Captures a read-only snapshot of the effective style applied to the given cell. */
-  ExcelCellStyleSnapshot snapshot(Cell cell) {
+  CellStyleReport snapshot(Cell cell) {
     XSSFCellStyle style = styleRecord(cell);
     return snapshotSupport.snapshot(style);
   }
 
   /** Captures a read-only snapshot of the workbook's default cell style. */
-  ExcelCellStyleSnapshot defaultSnapshot() {
+  CellStyleReport defaultSnapshot() {
     return snapshotSupport.snapshot(defaultStyleRecord());
   }
 
@@ -131,11 +134,11 @@ public final class WorkbookStyleRegistry {
   }
 
   private void applyAlignmentPatch(
-      XSSFCellStyle cellStyle, Optional<ExcelCellAlignment> alignmentPatch) {
+      XSSFCellStyle cellStyle, Optional<CellAlignmentPatch> alignmentPatch) {
     if (alignmentPatch.isEmpty()) {
       return;
     }
-    ExcelCellAlignment patch = alignmentPatch.orElseThrow();
+    CellAlignmentPatch patch = alignmentPatch.orElseThrow();
     patch.wrapText().ifPresent(cellStyle::setWrapText);
     patch
         .horizontalAlignment()
@@ -189,7 +192,7 @@ public final class WorkbookStyleRegistry {
     }
   }
 
-  private void applyProtectionPatch(XSSFCellStyle cellStyle, ExcelCellProtection protectionPatch) {
+  private void applyProtectionPatch(XSSFCellStyle cellStyle, CellProtectionPatch protectionPatch) {
     protectionPatch.locked().ifPresent(cellStyle::setLocked);
     protectionPatch.hiddenFormula().ifPresent(cellStyle::setHidden);
   }

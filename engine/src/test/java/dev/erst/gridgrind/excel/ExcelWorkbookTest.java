@@ -3,8 +3,11 @@ package dev.erst.gridgrind.excel;
 import static dev.erst.gridgrind.excel.ExcelStyleTestAccess.*;
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.core.model.protection.CellProtectionPatch;
+import dev.erst.gridgrind.core.model.style.CellAlignmentPatch;
 import dev.erst.gridgrind.core.model.style.CellColorReport;
 import dev.erst.gridgrind.core.model.style.CellGradientFillReport;
+import dev.erst.gridgrind.core.model.style.CellStyleReport;
 import dev.erst.gridgrind.core.model.style.FontHeightReport;
 import dev.erst.gridgrind.core.vocabulary.ExcelBorderStyle;
 import dev.erst.gridgrind.core.vocabulary.ExcelColumnSpan;
@@ -1013,7 +1016,7 @@ class ExcelWorkbookTest {
               new ExcelCellStyle(
                   Optional.empty(),
                   Optional.of(
-                      new ExcelCellAlignment(
+                      new CellAlignmentPatch(
                           Optional.of(true),
                           Optional.of(ExcelHorizontalAlignment.CENTER),
                           Optional.of(ExcelVerticalAlignment.TOP),
@@ -1047,7 +1050,7 @@ class ExcelWorkbookTest {
               ExcelTempFileFactoryTestSupport.tempFileFactory());
     }
 
-    ExcelCellStyleSnapshot style = XlsxRoundTrip.cellStyle(workbookPath, "Budget", "A1");
+    CellStyleReport style = XlsxRoundTrip.cellStyle(workbookPath, "Budget", "A1");
     assertTrue(style.font().bold());
     assertFalse(style.font().italic());
     assertTrue(style.alignment().wrapText());
@@ -1059,10 +1062,10 @@ class ExcelWorkbookTest {
     assertTrue(style.font().underline());
     assertTrue(style.font().strikeout());
     assertEquals(rgb("#FFF2CC"), fillForegroundColor(style.fill()));
-    assertEquals(ExcelBorderStyle.THIN, style.border().top().style());
-    assertEquals(ExcelBorderStyle.DOUBLE, style.border().right().style());
-    assertEquals(ExcelBorderStyle.THIN, style.border().bottom().style());
-    assertEquals(ExcelBorderStyle.THIN, style.border().left().style());
+    assertEquals(ExcelBorderStyle.THIN, borderStyle(style.border().top()));
+    assertEquals(ExcelBorderStyle.DOUBLE, borderStyle(style.border().right()));
+    assertEquals(ExcelBorderStyle.THIN, borderStyle(style.border().bottom()));
+    assertEquals(ExcelBorderStyle.THIN, borderStyle(style.border().left()));
   }
 
   @Test
@@ -1088,7 +1091,7 @@ class ExcelWorkbookTest {
                                   new ExcelGradientStop(0.0d, ExcelColor.rgb("#736C00")),
                                   new ExcelGradientStop(1.0d, ExcelColor.theme(3)))))),
                   Optional.empty(),
-                  Optional.of(new ExcelCellProtection(Optional.of(true), Optional.of(true)))));
+                  Optional.of(new CellProtectionPatch(Optional.of(true), Optional.of(true)))));
       workbook
           .persistence()
           .save(
@@ -1099,7 +1102,7 @@ class ExcelWorkbookTest {
 
     try (ExcelWorkbook reopenedWorkbook =
         ExcelWorkbooks.open(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory())) {
-      ExcelCellStyleSnapshot linearStyle =
+      CellStyleReport linearStyle =
           reopenedWorkbook.sheet("Budget").cells().snapshotCell("A1").style();
 
       CellGradientFillReport gradient = fillGradient(linearStyle.fill());

@@ -1,9 +1,9 @@
 package dev.erst.gridgrind.jazzer.support;
 
+import dev.erst.gridgrind.core.model.style.CellStyleReport;
 import dev.erst.gridgrind.excel.ExcelAutofilterSnapshot;
 import dev.erst.gridgrind.excel.ExcelCellMetadataSnapshot;
 import dev.erst.gridgrind.excel.ExcelCellSnapshot;
-import dev.erst.gridgrind.excel.ExcelCellStyleSnapshot;
 import dev.erst.gridgrind.excel.ExcelChartSnapshot;
 import dev.erst.gridgrind.excel.ExcelComment;
 import dev.erst.gridgrind.excel.ExcelCommentSnapshot;
@@ -60,7 +60,7 @@ final class XlsxRoundTripExpectedStateSupport {
   }
 
   record ExpectedWorkbookState(
-      Map<String, Map<CellCoordinate, ExcelCellStyleSnapshot>> expectedStyles,
+      Map<String, Map<CellCoordinate, CellStyleReport>> expectedStyles,
       Map<String, Map<CellCoordinate, ExpectedCellMetadata>> expectedMetadata,
       Map<String, Map<CellCoordinate, ExcelRichTextSnapshot>> expectedRichText,
       Map<NamedRangeKey, ExpectedNamedRange> expectedNamedRanges,
