@@ -89,7 +89,7 @@ final class RequestObjectMembers {
   }
 
   static String childPath(String parent, String child) {
-    return parent.isEmpty() ? child : parent + "." + child;
+    return RequestJsonPaths.field(parent, child);
   }
 
   /** Immutable, source-ordered lookup for every occurrence in one tolerant JSON object. */

@@ -158,6 +158,6 @@ final class RequestTolerantSyntaxParser {
   }
 
   private static String appendPath(String basePath, String fieldName) {
-    return basePath.isEmpty() ? fieldName : basePath + "." + fieldName;
+    return RequestJsonPaths.field(basePath, fieldName);
   }
 }

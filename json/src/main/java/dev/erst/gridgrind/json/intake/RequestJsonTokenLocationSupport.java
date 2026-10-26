@@ -26,13 +26,10 @@ final class RequestJsonTokenLocationSupport {
         Set<String> seen = new HashSet<>();
         for (RequestJsonMember member : object.members()) {
           String name = member.name();
-          if (!seen.add(name) || name.isEmpty() || name.contains(".") || name.contains("[")) {
+          if (!seen.add(name)) {
             continue;
           }
-          String fieldPath = path.isEmpty() ? name : path + "." + name;
-          if (fieldPath.isBlank()) {
-            continue;
-          }
+          String fieldPath = RequestJsonPaths.field(path, name);
           offsets.putIfAbsent(fieldPath, member.nameByteOffset());
           collectOffsets(member.value(), fieldPath, offsets);
         }
@@ -62,44 +59,37 @@ final class RequestJsonTokenLocationSupport {
     if (jsonPath.isBlank()) {
       return Optional.empty();
     }
-    return locate(root, jsonPath, 0);
+    return locate(root, jsonPath, "");
   }
 
-  private static Optional<Long> locate(RequestJsonNode node, String jsonPath, int position) {
-    if (position >= jsonPath.length()) {
+  private static Optional<Long> locate(RequestJsonNode node, String jsonPath, String prefix) {
+    if (jsonPath.length() <= prefix.length()) {
       return Optional.empty();
     }
     return switch (node) {
-      case RequestJsonObject object -> locateObjectMember(object, jsonPath, position);
-      case RequestJsonArray array -> locateArrayElement(array, jsonPath, position);
+      case RequestJsonObject object -> locateObjectMember(object, jsonPath, prefix);
+      case RequestJsonArray array -> locateArrayElement(array, jsonPath, prefix);
       default -> Optional.empty();
     };
   }
 
   private static Optional<Long> locateObjectMember(
-      RequestJsonObject object, String jsonPath, int position) {
-    int fieldEnd = nextFieldBoundary(jsonPath, position);
-    if (fieldEnd == position) {
-      return Optional.empty();
+      RequestJsonObject object, String jsonPath, String prefix) {
+    for (RequestJsonMember member : object.members()) {
+      String fieldPath = RequestJsonPaths.field(prefix, member.name());
+      if (jsonPath.equals(fieldPath)) {
+        return Optional.of(member.nameByteOffset());
+      }
+      if (isDescendant(fieldPath, jsonPath)) {
+        return locate(member.value(), jsonPath, fieldPath);
+      }
     }
-    String fieldName = jsonPath.substring(position, fieldEnd);
-    Optional<RequestJsonMember> member =
-        object.members().stream()
-            .filter(candidate -> candidate.name().equals(fieldName))
-            .findFirst();
-    if (member.isEmpty()) {
-      return Optional.empty();
-    }
-    RequestJsonMember matched = member.orElseThrow();
-    if (fieldEnd == jsonPath.length()) {
-      return Optional.of(matched.nameByteOffset());
-    }
-    int nextPosition = jsonPath.charAt(fieldEnd) == '.' ? fieldEnd + 1 : fieldEnd;
-    return locate(matched.value(), jsonPath, nextPosition);
+    return Optional.empty();
   }
 
   private static Optional<Long> locateArrayElement(
-      RequestJsonArray array, String jsonPath, int position) {
+      RequestJsonArray array, String jsonPath, String prefix) {
+    int position = prefix.length();
     if (jsonPath.charAt(position) != '[') {
       return Optional.empty();
     }
@@ -112,21 +102,17 @@ final class RequestJsonTokenLocationSupport {
       return Optional.empty();
     }
     RequestJsonNode element = array.elements().get(index.orElseThrow());
-    if (closeBracket + 1 == jsonPath.length()) {
+    String elementPath = prefix + "[" + index.orElseThrow() + "]";
+    if (jsonPath.equals(elementPath)) {
       return Optional.of(element.byteOffset());
     }
-    int nextPosition =
-        jsonPath.charAt(closeBracket + 1) == '.' ? closeBracket + 2 : closeBracket + 1;
-    return locate(element, jsonPath, nextPosition);
+    return isDescendant(elementPath, jsonPath)
+        ? locate(element, jsonPath, elementPath)
+        : Optional.empty();
   }
 
-  private static int nextFieldBoundary(String jsonPath, int position) {
-    int dot = jsonPath.indexOf('.', position);
-    int bracket = jsonPath.indexOf('[', position);
-    if (dot < 0) {
-      return bracket < 0 ? jsonPath.length() : bracket;
-    }
-    return bracket < 0 ? dot : Math.min(dot, bracket);
+  private static boolean isDescendant(String prefix, String path) {
+    return path.startsWith(prefix + ".") || path.startsWith(prefix + "[");
   }
 
   private static Optional<Integer> arrayIndex(String text) {

@@ -51,7 +51,17 @@ class RequestJsonTokenLocationSupportTest {
                 new RequestJsonMember("request", 90, new RequestJsonString(100, "field")),
                 new RequestJsonMember("a.b", 110, new RequestJsonString(120, "ambiguous"))));
     assertEquals(
-        java.util.Map.of("request", 0L, "source", 10L, "source.path", 30L),
+        java.util.Map.of(
+            "request",
+            0L,
+            "source",
+            10L,
+            "source.path",
+            30L,
+            "[\"request\"]",
+            90L,
+            "[\"a.b\"]",
+            110L),
         RequestJsonTokenLocationSupport.index(root));
   }
 

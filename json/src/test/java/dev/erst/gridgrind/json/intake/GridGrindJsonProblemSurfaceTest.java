@@ -314,8 +314,8 @@ class GridGrindJsonProblemSurfaceTest {
                     }
                     """));
 
-    assertEquals("Unknown field ''", exception.getMessage());
-    assertEquals(Optional.empty(), exception.jsonPath());
+    assertEquals("Unknown field '[\"\"]'", exception.getMessage());
+    assertEquals(Optional.of("[\"\"]"), exception.jsonPath());
   }
 
   @Test
@@ -361,8 +361,8 @@ class GridGrindJsonProblemSurfaceTest {
                     }
                     """));
 
-    assertEquals("Unknown field ''", exception.getMessage());
-    assertEquals(Optional.empty(), exception.jsonPath());
+    assertEquals("Unknown field '[\"\"]'", exception.getMessage());
+    assertEquals(Optional.of("[\"\"]"), exception.jsonPath());
   }
 
   @Test

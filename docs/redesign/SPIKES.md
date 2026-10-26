@@ -1247,3 +1247,39 @@ aggregate WP-21 blank-check target remains open for the scheduled engine/Jazzer 
 schema publication remains coupled to WP-30. Do not label these incomplete criteria as delivered.
 WP-30 starts with the retained unusual-key defect and independent schema generation; grant schema
 publication must follow the actual canonical core grant in WP-43 instead of introducing a mirror.
+
+### WP-30 unusual-key intake defect checkpoint
+
+Reproduced the retained S2 failure and adjacent path-loss cases through the packaged CLI. Whitespace
+keys could abort syntax recovery with "jsonPath must not be blank"; empty keys lost their JSON path,
+and dots/brackets in keys were indistinguishable from path operators. Root "request" also collided
+with the root-location sentinel. Added one canonical field-path renderer shared by syntax parsing,
+shape findings and token indexing. Ordinary identifiers retain dot paths; unusual keys use JSON-
+quoted bracket paths, with the reserved root field quoted separately from the root location.
+Token lookup now traverses these canonical prefixes against actual members rather than splitting
+arbitrary authored names at dots/brackets. Array indexes retain direct indexed access. Removed the
+old ambiguous-key skipping and obsolete field-boundary parsing; first duplicate ownership remains.
+
+The regression first failed seven of eight cases against the old implementation, including the
+original blank-path exception. Ten final cases cover empty/whitespace keys, quotes/backslashes,
+dots/brackets, the root sentinel, ordinary identifiers, Unicode names, mixed quoted-key/array paths
+and UTF-8 byte offsets. Existing empty-key problem-surface tests now require the precise quoted path
+instead of absent location. Full JSON tests/static checks pass (353 cases). All 48 deterministic
+protocol seeds replay with unchanged expectations; no active fuzz campaign or mutation run occurred.
+
+Only one golden snapshot changes: doctor/blank-key-syntax.bin.json, identically in both launchers.
+It previously recorded a generic INVALID_REQUEST blank-path failure. It now preserves nine ordered
+findings: four INVALID_JSON grammar findings (unclosed object at offset 0, missing colon at 4,
+expected value at 10, missing separator at 23), the unknown quoted whitespace field at 4, and four
+missing required root fields (protocolVersion/source/persistence/steps). Verified line/column facts
+against the exact UTF-8 bytes; no normalization changes. This intentionally repairs the S2 defect
+rather than preserving its collapsed error result. The other 16 doctor inputs are byte-identical.
+The full golden suite, including both launchers and the real scalar-changing negative control,
+passes in the aggregate run.
+
+./gradlew check passes in 2m51s: 2835 tests, zero failures/errors/skips. Inventory: JSON main files
+69 -> 70; main Java 124311 -> 124315; test Java 154963 -> 155058. All model, converter, Support and
+blank-check counts are unchanged (95 reports, 51 snapshots, 13 definitions, 4701 converter lines,
+217 Support classes, 437 blank checks). AGENTS.md baseline diff is empty; supplement absent.
+Detailed red/green tests, before/after packaged observations, golden failure XML and source-location
+proof are retained in external wp-30 evidence. WP-30 remains open for schema/intake integration.
