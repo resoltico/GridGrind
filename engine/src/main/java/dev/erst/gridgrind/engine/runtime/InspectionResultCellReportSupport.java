@@ -13,7 +13,6 @@ import dev.erst.gridgrind.core.vocabulary.CellAddress;
 import dev.erst.gridgrind.excel.ExcelCellReadFacet;
 import dev.erst.gridgrind.excel.ExcelCellReadProjection;
 import dev.erst.gridgrind.excel.ExcelCellSnapshot;
-import dev.erst.gridgrind.excel.ExcelCommentSnapshot;
 import dev.erst.gridgrind.excel.ExcelTemporalFormatSupport;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -48,15 +47,6 @@ final class InspectionResultCellReportSupport {
       return Optional.empty();
     }
     return Optional.of(new CommentReport(comment.text(), comment.author(), comment.visible()));
-  }
-
-  static Optional<CommentReport> toCommentReport(@Nullable ExcelCommentSnapshot comment) {
-    if (comment == null) {
-      return Optional.empty();
-    }
-    return Optional.of(
-        new CommentReport(
-            comment.text(), comment.author(), comment.visible(), comment.runs(), comment.anchor()));
   }
 
   static CellReport toCellReport(
@@ -172,7 +162,7 @@ final class InspectionResultCellReportSupport {
   private static Optional<CommentReport> projectedComment(
       ExcelCellSnapshot snapshot, ExcelCellReadProjection projection) {
     return projection.includes(ExcelCellReadFacet.COMMENT)
-        ? toCommentReport(snapshot.metadata().comment().orElse(null))
+        ? snapshot.metadata().comment()
         : Optional.empty();
   }
 

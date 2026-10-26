@@ -10,7 +10,6 @@ import dev.erst.gridgrind.core.model.drawing.DrawingMarkerSpec;
 import dev.erst.gridgrind.core.model.drawing.DrawingObjectReport;
 import dev.erst.gridgrind.core.model.drawing.EmbeddedObjectSpec;
 import dev.erst.gridgrind.core.model.drawing.PictureDataSpec;
-import dev.erst.gridgrind.core.model.drawing.ResolvedComment;
 import dev.erst.gridgrind.core.model.formula.FormulaEnvironmentSpec;
 import dev.erst.gridgrind.core.model.formula.NamedRangeReport;
 import dev.erst.gridgrind.core.model.formula.NamedRangeTarget;
@@ -1254,12 +1253,27 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
     assertEquals(
         new ExcelHyperlink.Url("https://example.com/report"),
         XlsxRoundTrip.cellMetadata(workbookPath, "Budget", "A1").hyperlink().orElseThrow());
-    assertEquals(
-        new ResolvedComment("Review", "GridGrind", true),
-        XlsxRoundTrip.cellMetadata(workbookPath, "Budget", "A1")
-            .comment()
-            .orElseThrow()
-            .toPlainComment());
+    assertAll(
+        () ->
+            assertEquals(
+                "Review",
+                XlsxRoundTrip.cellMetadata(workbookPath, "Budget", "A1")
+                    .comment()
+                    .orElseThrow()
+                    .text()),
+        () ->
+            assertEquals(
+                "GridGrind",
+                XlsxRoundTrip.cellMetadata(workbookPath, "Budget", "A1")
+                    .comment()
+                    .orElseThrow()
+                    .author()),
+        () ->
+            assertTrue(
+                XlsxRoundTrip.cellMetadata(workbookPath, "Budget", "A1")
+                    .comment()
+                    .orElseThrow()
+                    .visible()));
     assertEquals(2, XlsxRoundTrip.namedRanges(workbookPath).size());
   }
 

@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.core.model.drawing.CommentReport;
 import dev.erst.gridgrind.core.model.print.ResolvedPrintLayout;
 import dev.erst.gridgrind.core.model.protection.CellProtectionReport;
 import dev.erst.gridgrind.core.model.protection.SheetProtectionSettings;
@@ -435,7 +436,7 @@ public final class XlsxRoundTrip {
     }
   }
 
-  private static Optional<ExcelCommentSnapshot> commentSnapshot(XSSFCell cell) {
+  private static Optional<CommentReport> commentSnapshot(XSSFCell cell) {
     var comment = cell.getCellComment();
     if (comment == null || comment.getString() == null) {
       return Optional.empty();

@@ -2,6 +2,7 @@ package dev.erst.gridgrind.excel;
 
 import dev.erst.gridgrind.core.model.drawing.CommentAnchorReport;
 import dev.erst.gridgrind.core.model.drawing.CommentAnchorSpec;
+import dev.erst.gridgrind.core.model.drawing.CommentReport;
 import dev.erst.gridgrind.core.model.drawing.ResolvedComment;
 import dev.erst.gridgrind.core.model.style.CellFontPatch;
 import dev.erst.gridgrind.core.model.style.CellFontReport;
@@ -420,7 +421,7 @@ final class ExcelSheetCommentRepairSupport {
 
     WorkbookSheetResult.CellComment toReadComment() {
       return new WorkbookSheetResult.CellComment(
-          address, new ExcelCommentSnapshot(text, author, visible, runs, anchor));
+          address, new CommentReport(text, author, visible, runs, anchor));
     }
   }
 }

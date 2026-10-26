@@ -1000,16 +1000,39 @@ class WorkbookCommandExecutorTest {
       WorkbookCommandExecutor.applyTabularCommand(
           workbook, new WorkbookTabularCommand.SetAutofilter("Budget", "A1:B2"));
 
-      assertEquals(
-          new ResolvedComment("Review", "GridGrind", false),
-          workbook
-              .sheet("Budget")
-              .cells()
-              .snapshotCell("A1")
-              .metadata()
-              .comment()
-              .orElseThrow()
-              .toPlainComment());
+      assertAll(
+          () ->
+              assertEquals(
+                  "Review",
+                  workbook
+                      .sheet("Budget")
+                      .cells()
+                      .snapshotCell("A1")
+                      .metadata()
+                      .comment()
+                      .orElseThrow()
+                      .text()),
+          () ->
+              assertEquals(
+                  "GridGrind",
+                  workbook
+                      .sheet("Budget")
+                      .cells()
+                      .snapshotCell("A1")
+                      .metadata()
+                      .comment()
+                      .orElseThrow()
+                      .author()),
+          () ->
+              assertFalse(
+                  workbook
+                      .sheet("Budget")
+                      .cells()
+                      .snapshotCell("A1")
+                      .metadata()
+                      .comment()
+                      .orElseThrow()
+                      .visible()));
       assertEquals(1, workbook.names().namedRangeCount());
       assertEquals(1, workbook.sheet("Budget").drawings().drawingObjects().size());
       assertEquals(

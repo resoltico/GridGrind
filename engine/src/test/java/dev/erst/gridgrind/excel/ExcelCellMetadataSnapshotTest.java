@@ -2,6 +2,7 @@ package dev.erst.gridgrind.excel;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.core.model.drawing.CommentReport;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
 
@@ -17,14 +18,13 @@ class ExcelCellMetadataSnapshotTest {
         ExcelCellMetadataSnapshot.of(
             Optional.of(new ExcelHyperlink.Document("Budget!B4")),
             Optional.of(
-                new ExcelCommentSnapshot(
+                new CommentReport(
                     "Review", "GridGrind", false, Optional.empty(), Optional.empty())));
 
     assertEquals(Optional.of(new ExcelHyperlink.Document("Budget!B4")), snapshot.hyperlink());
     assertEquals(
         Optional.of(
-            new ExcelCommentSnapshot(
-                "Review", "GridGrind", false, Optional.empty(), Optional.empty())),
+            new CommentReport("Review", "GridGrind", false, Optional.empty(), Optional.empty())),
         snapshot.comment());
   }
 

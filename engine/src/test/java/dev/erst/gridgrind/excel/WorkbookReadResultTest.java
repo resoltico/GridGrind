@@ -2,6 +2,7 @@ package dev.erst.gridgrind.excel;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.core.model.drawing.CommentReport;
 import dev.erst.gridgrind.core.model.print.HeaderFooterTextReport;
 import dev.erst.gridgrind.core.model.print.PrintAreaSpec;
 import dev.erst.gridgrind.core.model.print.PrintMarginsReport;
@@ -460,7 +461,7 @@ class WorkbookReadResultTest {
             List.of(
                 new WorkbookSheetResult.CellComment(
                     "A1",
-                    new ExcelCommentSnapshot(
+                    new CommentReport(
                         "Review", "GridGrind", false, Optional.empty(), Optional.empty()))));
     List<WorkbookSheetResult.ColumnLayout> columns =
         new ArrayList<>(List.of(new WorkbookSheetResult.ColumnLayout(0, 12.5, false, 0, false)));

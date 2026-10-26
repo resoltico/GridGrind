@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import dev.erst.gridgrind.core.model.drawing.CommentAnchorReport;
+import dev.erst.gridgrind.core.model.drawing.CommentReport;
 import dev.erst.gridgrind.core.model.drawing.ResolvedComment;
 import dev.erst.gridgrind.core.model.style.CellColorReport;
 import dev.erst.gridgrind.core.model.style.CellFontReport;
@@ -46,11 +47,11 @@ class ExcelSheetCommentRepairSupportTest {
             List.of(
                 new WorkbookSheetResult.CellComment(
                     "A2",
-                    new ExcelCommentSnapshot(
+                    new CommentReport(
                         "stationary", "GridGrind", true, Optional.empty(), Optional.empty())),
                 new WorkbookSheetResult.CellComment(
                     "B2",
-                    new ExcelCommentSnapshot(
+                    new CommentReport(
                         "moving", "GridGrind", true, Optional.empty(), Optional.empty()))),
             new ExcelColumnSpan(1, 1),
             -1);
@@ -59,7 +60,7 @@ class ExcelSheetCommentRepairSupportTest {
         List.of(
             new WorkbookSheetResult.CellComment(
                 "A2",
-                new ExcelCommentSnapshot(
+                new CommentReport(
                     "moving", "GridGrind", true, Optional.empty(), Optional.empty()))),
         shifted);
   }
@@ -410,15 +411,22 @@ class ExcelSheetCommentRepairSupportTest {
     }
   }
 
-  @SuppressWarnings("PMD.UseConcurrentHashMap")
   private static void assertVisibleComments(
       ExcelWorkbook workbook, String sheetName, Map<String, ResolvedComment> expected) {
-    Map<String, ResolvedComment> actual = new java.util.LinkedHashMap<>();
-    for (WorkbookSheetResult.CellComment comment :
-        workbook.sheet(sheetName).annotations().comments(new ExcelCellSelection.AllUsedCells())) {
-      actual.put(comment.address(), comment.comment().toPlainComment());
+    var actual =
+        workbook.sheet(sheetName).annotations().comments(new ExcelCellSelection.AllUsedCells());
+    assertEquals(
+        expected.keySet(),
+        actual.stream()
+            .map(WorkbookSheetResult.CellComment::address)
+            .collect(java.util.stream.Collectors.toSet()));
+    assertEquals(expected.size(), actual.size());
+    for (var cell : actual) {
+      var wanted = expected.get(cell.address());
+      assertEquals(wanted.text(), cell.comment().text());
+      assertEquals(wanted.author(), cell.comment().author());
+      assertEquals(wanted.visible(), cell.comment().visible());
     }
-    assertEquals(expected, Map.copyOf(actual));
   }
 
   private static void assertCanonicalCommentParts(
@@ -496,8 +504,7 @@ class ExcelSheetCommentRepairSupportTest {
 
   private static WorkbookSheetResult.CellComment comment(String address, String text) {
     return new WorkbookSheetResult.CellComment(
-        address,
-        new ExcelCommentSnapshot(text, "GridGrind", true, Optional.empty(), Optional.empty()));
+        address, new CommentReport(text, "GridGrind", true, Optional.empty(), Optional.empty()));
   }
 
   @SuppressWarnings("PMD.UseConcurrentHashMap")

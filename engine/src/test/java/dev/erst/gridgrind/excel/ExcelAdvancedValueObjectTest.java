@@ -3,7 +3,6 @@ package dev.erst.gridgrind.excel;
 import static dev.erst.gridgrind.excel.ExcelStyleTestAccess.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-import dev.erst.gridgrind.core.model.drawing.CommentAnchorReport;
 import dev.erst.gridgrind.core.model.drawing.CommentAnchorSpec;
 import dev.erst.gridgrind.core.model.drawing.DrawingAnchorReport;
 import dev.erst.gridgrind.core.model.drawing.DrawingAnchorSpec;
@@ -22,17 +21,12 @@ import dev.erst.gridgrind.core.model.print.PrintTitleColumnsSpec;
 import dev.erst.gridgrind.core.model.print.PrintTitleRowsSpec;
 import dev.erst.gridgrind.core.model.print.ResolvedPrintLayout;
 import dev.erst.gridgrind.core.model.protection.ResolvedWorkbookProtection;
-import dev.erst.gridgrind.core.model.style.CellColorReport;
 import dev.erst.gridgrind.core.model.style.CellFillSpec;
-import dev.erst.gridgrind.core.model.style.CellFontPatch;
-import dev.erst.gridgrind.core.model.style.CellFontReport;
 import dev.erst.gridgrind.core.model.style.CellGradientFillSpec;
 import dev.erst.gridgrind.core.model.style.CellGradientStopSpec;
 import dev.erst.gridgrind.core.model.style.ColorSpec;
-import dev.erst.gridgrind.core.model.style.FontHeightReport;
 import dev.erst.gridgrind.core.model.style.ResolvedRichText;
 import dev.erst.gridgrind.core.model.style.ResolvedRichTextRun;
-import dev.erst.gridgrind.core.model.style.RichTextRunReport;
 import dev.erst.gridgrind.core.model.table.ResolvedTable;
 import dev.erst.gridgrind.core.model.table.TableColumnSpec;
 import dev.erst.gridgrind.core.model.table.TableStyleSpec;
@@ -447,56 +441,6 @@ class ExcelAdvancedValueObjectTest {
 
   @Test
   void namedRangeCommentAndTableContractsSupportAdvancedForms() {
-    var authoringComment =
-        new ResolvedComment(
-            "Quarterly Review",
-            "GridGrind",
-            true,
-            Optional.of(
-                new ResolvedRichText(
-                    List.of(
-                        new ResolvedRichTextRun("Quarterly", Optional.empty()),
-                        new ResolvedRichTextRun(
-                            " Review",
-                            Optional.of(
-                                new CellFontPatch(
-                                    Optional.of(true),
-                                    Optional.of(false),
-                                    Optional.of("Aptos"),
-                                    Optional.empty(),
-                                    Optional.of(ColorSpec.rgb(new RgbHex("#112233"))),
-                                    Optional.empty(),
-                                    Optional.empty())))))),
-            Optional.of(new CommentAnchorSpec(1, 2, 4, 6)));
-    var commentSnapshot =
-        new ExcelCommentSnapshot(
-            "Quarterly Review",
-            "GridGrind",
-            true,
-            Optional.of(
-                List.copyOf(
-                    List.of(
-                        new RichTextRunReport(
-                            "Quarterly",
-                            new CellFontReport(
-                                false,
-                                false,
-                                "Aptos",
-                                FontHeightReport.fromPoints(java.math.BigDecimal.valueOf(11)),
-                                null,
-                                false,
-                                false)),
-                        new RichTextRunReport(
-                            " Review",
-                            new CellFontReport(
-                                true,
-                                false,
-                                "Aptos",
-                                FontHeightReport.fromPoints(java.math.BigDecimal.valueOf(11)),
-                                CellColorReport.rgb(new RgbHex("#112233")),
-                                false,
-                                false))))),
-            Optional.of(new CommentAnchorReport(1, 2, 4, 6)));
     var formulaTarget = ExcelNamedRangeTarget.formula("SUM(Ops!$B$2:$B$5)");
     var table =
         new ResolvedTable(
@@ -517,27 +461,8 @@ class ExcelAdvancedValueObjectTest {
     var protection =
         new ResolvedWorkbookProtection(
             true, false, true, Optional.of("book"), Optional.of("review"));
-    ResolvedComment copiedComment = commentSnapshot.toAuthoringComment();
 
     assertEquals("SUM(Ops!$B$2:$B$5)", formulaTarget.refersToFormula());
-    assertEquals(authoringComment.text(), copiedComment.text());
-    assertEquals(authoringComment.author(), copiedComment.author());
-    assertEquals(authoringComment.visible(), copiedComment.visible());
-    assertEquals(authoringComment.anchor(), copiedComment.anchor());
-    assertEquals(
-        authoringComment.runs().orElseThrow().plainText(),
-        copiedComment.runs().orElseThrow().plainText());
-    assertEquals(
-        ColorSpec.rgb(new RgbHex("#112233")),
-        copiedComment
-            .runs()
-            .orElseThrow()
-            .runs()
-            .get(1)
-            .font()
-            .orElseThrow()
-            .fontColor()
-            .orElseThrow());
     assertEquals("", table.comment());
     assertEquals("", table.headerRowCellStyle());
     assertEquals("sum", table.columns().getFirst().totalsRowFunction());
@@ -550,18 +475,6 @@ class ExcelAdvancedValueObjectTest {
     assertEquals(
         "A1:B2",
         ((ExcelNamedRangeTarget.Range) ExcelNamedRangeTarget.range("Ops", "$A$1:$B$2")).range());
-    ResolvedComment plainComment =
-        new ExcelCommentSnapshot("Done", "GridGrind", false, Optional.empty(), Optional.empty())
-            .toPlainComment();
-    assertEquals("Done", plainComment.text());
-    assertEquals("GridGrind", plainComment.author());
-    ResolvedComment plainAuthoringComment =
-        new ExcelCommentSnapshot("Done", "GridGrind", false, Optional.empty(), Optional.empty())
-            .toAuthoringComment();
-    assertEquals("Done", plainAuthoringComment.text());
-    assertTrue(plainAuthoringComment.runs().isEmpty());
-    assertTrue(plainAuthoringComment.anchor().isEmpty());
-
     assertThrows(
         IllegalArgumentException.class,
         () ->

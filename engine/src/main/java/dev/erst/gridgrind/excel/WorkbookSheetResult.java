@@ -3,6 +3,7 @@ package dev.erst.gridgrind.excel;
 import static dev.erst.gridgrind.excel.WorkbookResultSupport.copyValues;
 import static dev.erst.gridgrind.excel.WorkbookResultSupport.requireNonBlank;
 
+import dev.erst.gridgrind.core.model.drawing.CommentReport;
 import dev.erst.gridgrind.core.model.protection.SheetProtectionSettings;
 import dev.erst.gridgrind.core.vocabulary.ExcelIndexDisplay;
 import dev.erst.gridgrind.core.vocabulary.ExcelSheetVisibility;
@@ -218,7 +219,7 @@ public sealed interface WorkbookSheetResult extends WorkbookReadIntrospectionRes
   }
 
   /** Comment metadata associated with one concrete cell address. */
-  record CellComment(String address, ExcelCommentSnapshot comment) {
+  record CellComment(String address, CommentReport comment) {
     public CellComment {
       address = requireNonBlank(address, "address");
       Objects.requireNonNull(comment, "comment must not be null");

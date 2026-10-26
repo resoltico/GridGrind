@@ -96,9 +96,7 @@ final class InspectionResultWorkbookLayoutReportSupport {
 
   static CellCommentReport toCellCommentReport(
       dev.erst.gridgrind.excel.WorkbookSheetResult.CellComment comment) {
-    return new CellCommentReport(
-        new CellAddress(comment.address()),
-        InspectionResultCellReportSupport.toCommentReport(comment.comment()).orElseThrow());
+    return new CellCommentReport(new CellAddress(comment.address()), comment.comment());
   }
 
   static SheetLayoutReport toSheetLayoutReport(

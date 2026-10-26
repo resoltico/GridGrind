@@ -965,8 +965,8 @@ class InspectionResultConverterTest extends DefaultGridGrindRequestExecutorTestS
         richText);
   }
 
-  private static ExcelCommentSnapshot richComment() {
-    return new ExcelCommentSnapshot(
+  private static CommentReport richComment() {
+    return new CommentReport(
         "Hi there",
         "Ada",
         true,

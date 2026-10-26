@@ -670,9 +670,10 @@ class ExcelSheetCoreReadWriteCoverageTest extends ExcelSheetTestSupport {
       assertEquals(
           new ExcelHyperlink.Url("https://example.com/report"),
           snapshot.metadata().hyperlink().orElseThrow());
-      assertEquals(
-          new ResolvedComment("Review", "GridGrind", true),
-          snapshot.metadata().comment().orElseThrow().toPlainComment());
+      assertAll(
+          () -> assertEquals("Review", snapshot.metadata().comment().orElseThrow().text()),
+          () -> assertEquals("GridGrind", snapshot.metadata().comment().orElseThrow().author()),
+          () -> assertTrue(snapshot.metadata().comment().orElseThrow().visible()));
 
       List<ExcelPreviewRow> preview = sheet.cells().preview(1, 1);
       assertEquals(1, preview.size());

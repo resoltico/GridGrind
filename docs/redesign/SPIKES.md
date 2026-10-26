@@ -1996,3 +1996,20 @@ the direct-use edit and scalar unwrapping; all source sets compiled (31s). Focus
 Root ./gradlew check passes (2m58s), all 143 golden cases unchanged, no active mutation/fuzz campaign.
 Inventories: definitions 3→2, converter lines 3971→3931, blank checks 424→420, main Java
 121047→120840. Snapshots 35 and Support 206 remain open; baseline diff empty. WP-40 remains open.
+
+## WP-40 direct factual comments
+
+Deleted ExcelCommentSnapshot and its authoring projection methods. POI comment producers, cell
+metadata, repair readback and sheet results now use CommentReport directly; removed the identity
+report conversion. Producer blank-text/author filtering is unchanged. Actual workbook tests assert
+text/author/visibility directly; repair assertions also compare exact cell sets and counts. Deleted
+constructor/projection-only checks for the retired snapshot; core retains run/text consistency tests.
+The deterministic expected-state builder explicitly selects its three plain-comment fields.
+
+All source sets compile (20s). First behavioral/static run had nine PMD test cleanup violations
+(33s): unused helper, boolean assertions and loop object creation. Fixed them; engine behavior/static
+retry passes (26s), with earlier core/14 parity already passing. Nested replay first found one stale
+projection method reference (2s); corrected and deterministic check/all retained seeds pass (17s).
+Root ./gradlew check passes (2m57s), all 143 golden cases unchanged. No active mutation/fuzz campaign.
+Inventories: snapshots 35→34, converter lines 3931→3919, blank checks 420→418, main Java
+120840→120751. Definitions 2 and Support 206 remain open. Baseline diff empty; WP-40 remains open.

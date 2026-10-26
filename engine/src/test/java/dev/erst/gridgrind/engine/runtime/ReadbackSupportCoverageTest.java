@@ -7,6 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import dev.erst.gridgrind.core.model.drawing.CommentAnchorReport;
+import dev.erst.gridgrind.core.model.drawing.CommentReport;
 import dev.erst.gridgrind.core.model.protection.CellProtectionReport;
 import dev.erst.gridgrind.core.model.style.CellAlignmentReport;
 import dev.erst.gridgrind.core.model.style.CellBorderReport;
@@ -33,7 +34,6 @@ import dev.erst.gridgrind.excel.ExcelCellMetadataSnapshot;
 import dev.erst.gridgrind.excel.ExcelCellReadFacet;
 import dev.erst.gridgrind.excel.ExcelCellReadProjection;
 import dev.erst.gridgrind.excel.ExcelCellSnapshot;
-import dev.erst.gridgrind.excel.ExcelCommentSnapshot;
 import dev.erst.gridgrind.excel.ExcelHyperlink;
 import java.math.BigDecimal;
 import java.util.List;
@@ -474,7 +474,7 @@ class ReadbackSupportCoverageTest {
     return ExcelCellMetadataSnapshot.of(
         Optional.of(new ExcelHyperlink.Url("https://example.com/report")),
         Optional.of(
-            new ExcelCommentSnapshot(
+            new CommentReport(
                 "Review",
                 "Alice",
                 true,

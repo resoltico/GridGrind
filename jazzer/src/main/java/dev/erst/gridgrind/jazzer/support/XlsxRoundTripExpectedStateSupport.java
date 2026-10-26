@@ -7,7 +7,6 @@ import dev.erst.gridgrind.excel.ExcelAutofilterSnapshot;
 import dev.erst.gridgrind.excel.ExcelCellMetadataSnapshot;
 import dev.erst.gridgrind.excel.ExcelCellSnapshot;
 import dev.erst.gridgrind.excel.ExcelChartSnapshot;
-import dev.erst.gridgrind.excel.ExcelCommentSnapshot;
 import dev.erst.gridgrind.excel.ExcelConditionalFormattingBlockSnapshot;
 import dev.erst.gridgrind.excel.ExcelHyperlink;
 import dev.erst.gridgrind.excel.ExcelNamedRangeScope;
@@ -92,7 +91,12 @@ final class XlsxRoundTripExpectedStateSupport {
       Optional<ExcelHyperlink> hyperlink, Optional<ResolvedComment> comment) {
     static ExpectedCellMetadata from(ExcelCellMetadataSnapshot metadata) {
       return new ExpectedCellMetadata(
-          metadata.hyperlink(), metadata.comment().map(ExcelCommentSnapshot::toPlainComment));
+          metadata.hyperlink(),
+          metadata
+              .comment()
+              .map(
+                  comment ->
+                      new ResolvedComment(comment.text(), comment.author(), comment.visible())));
     }
   }
 

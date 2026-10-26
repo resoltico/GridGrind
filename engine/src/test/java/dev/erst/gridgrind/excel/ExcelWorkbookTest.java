@@ -1183,9 +1183,10 @@ class ExcelWorkbookTest {
     ExcelCellMetadataSnapshot metadata = XlsxRoundTrip.cellMetadata(workbookPath, "Budget", "A1");
     assertEquals(
         new ExcelHyperlink.Url("https://example.com/report"), metadata.hyperlink().orElseThrow());
-    assertEquals(
-        new ResolvedComment("Review", "GridGrind", true),
-        metadata.comment().orElseThrow().toPlainComment());
+    assertAll(
+        () -> assertEquals("Review", metadata.comment().orElseThrow().text()),
+        () -> assertEquals("GridGrind", metadata.comment().orElseThrow().author()),
+        () -> assertTrue(metadata.comment().orElseThrow().visible()));
     List<ExcelNamedRangeSnapshot> namedRanges = XlsxRoundTrip.namedRanges(workbookPath);
     assertEquals(2, namedRanges.size());
     assertTrue(

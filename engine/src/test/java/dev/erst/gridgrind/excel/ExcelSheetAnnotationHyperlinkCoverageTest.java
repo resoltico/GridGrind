@@ -4,6 +4,7 @@ import static dev.erst.gridgrind.excel.ExcelStyleTestAccess.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 import dev.erst.gridgrind.core.model.drawing.CommentAnchorReport;
+import dev.erst.gridgrind.core.model.drawing.CommentReport;
 import dev.erst.gridgrind.core.model.drawing.ResolvedComment;
 import dev.erst.gridgrind.core.model.value.CellValue;
 import dev.erst.gridgrind.core.vocabulary.AnalysisFindingCode;
@@ -145,8 +146,7 @@ class ExcelSheetAnnotationHyperlinkCoverageTest extends ExcelSheetTestSupport {
       comment.setVisible(true);
       cell.setCellComment(comment);
 
-      ExcelCommentSnapshot snapshot =
-          ExcelSheetAnnotationSupport.commentSnapshot(cell).orElseThrow();
+      CommentReport snapshot = ExcelSheetAnnotationSupport.commentSnapshot(cell).orElseThrow();
 
       assertEquals("Hi there", snapshot.text());
       assertEquals("GridGrind", snapshot.author());
@@ -186,7 +186,7 @@ class ExcelSheetAnnotationHyperlinkCoverageTest extends ExcelSheetTestSupport {
       assertTrue(
           ExcelSheetAnnotationSupport.commentSnapshot(nullAuthorCell.getCellComment()).isEmpty());
 
-      ExcelCommentSnapshot directSnapshot =
+      CommentReport directSnapshot =
           ExcelSheetAnnotationSupport.commentSnapshot(validCommentCell.getCellComment())
               .orElseThrow();
       assertEquals("Review", directSnapshot.text());
@@ -194,7 +194,7 @@ class ExcelSheetAnnotationHyperlinkCoverageTest extends ExcelSheetTestSupport {
       assertTrue(directSnapshot.visible());
       assertTrue(directSnapshot.runs().isEmpty());
 
-      ExcelCommentSnapshot noAnchorSnapshot =
+      CommentReport noAnchorSnapshot =
           ExcelSheetAnnotationSupport.commentSnapshot(
                   commentWithoutAnchor(poiSheet, validCommentCell.getCellComment()))
               .orElseThrow();

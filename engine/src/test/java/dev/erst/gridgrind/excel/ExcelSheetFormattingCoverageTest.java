@@ -52,9 +52,18 @@ class ExcelSheetFormattingCoverageTest extends ExcelSheetTestSupport {
       assertEquals(
           new ExcelHyperlink.Document("Budget!A1"),
           sheet.cells().snapshotCell("A4").metadata().hyperlink().orElseThrow());
-      assertEquals(
-          new ResolvedComment("Note", "GridGrind", false),
-          sheet.cells().snapshotCell("B5").metadata().comment().orElseThrow().toPlainComment());
+      assertAll(
+          () ->
+              assertEquals(
+                  "Note",
+                  sheet.cells().snapshotCell("B5").metadata().comment().orElseThrow().text()),
+          () ->
+              assertEquals(
+                  "GridGrind",
+                  sheet.cells().snapshotCell("B5").metadata().comment().orElseThrow().author()),
+          () ->
+              assertFalse(
+                  sheet.cells().snapshotCell("B5").metadata().comment().orElseThrow().visible()));
     }
   }
 
@@ -116,9 +125,10 @@ class ExcelSheetFormattingCoverageTest extends ExcelSheetTestSupport {
       assertEquals(
           new ExcelHyperlink.Url("https://example.com/report"),
           textSnapshot.metadata().hyperlink().orElseThrow());
-      assertEquals(
-          new ResolvedComment("Review", "GridGrind", false),
-          textSnapshot.metadata().comment().orElseThrow().toPlainComment());
+      assertAll(
+          () -> assertEquals("Review", textSnapshot.metadata().comment().orElseThrow().text()),
+          () -> assertEquals("GridGrind", textSnapshot.metadata().comment().orElseThrow().author()),
+          () -> assertFalse(textSnapshot.metadata().comment().orElseThrow().visible()));
 
       ExcelCellSnapshot.BlankSnapshot blankSnapshot =
           (ExcelCellSnapshot.BlankSnapshot)
@@ -128,9 +138,11 @@ class ExcelSheetFormattingCoverageTest extends ExcelSheetTestSupport {
       assertEquals(
           new ExcelHyperlink.Url("https://example.com/report"),
           blankSnapshot.metadata().hyperlink().orElseThrow());
-      assertEquals(
-          new ResolvedComment("Review", "GridGrind", false),
-          blankSnapshot.metadata().comment().orElseThrow().toPlainComment());
+      assertAll(
+          () -> assertEquals("Review", blankSnapshot.metadata().comment().orElseThrow().text()),
+          () ->
+              assertEquals("GridGrind", blankSnapshot.metadata().comment().orElseThrow().author()),
+          () -> assertFalse(blankSnapshot.metadata().comment().orElseThrow().visible()));
     }
   }
 

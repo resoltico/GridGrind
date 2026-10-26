@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.core.model.drawing.CommentReport;
 import dev.erst.gridgrind.core.model.drawing.ResolvedComment;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingController;
 import java.util.List;
@@ -88,11 +89,11 @@ final class ExcelSheetAnnotationSupport {
     return ExcelSheetCommentSupport.comment(text, author, visible);
   }
 
-  static Optional<ExcelCommentSnapshot> commentSnapshot(Cell cell) {
+  static Optional<CommentReport> commentSnapshot(Cell cell) {
     return ExcelSheetCommentSupport.commentSnapshot(cell);
   }
 
-  static Optional<ExcelCommentSnapshot> commentSnapshot(Comment comment) {
+  static Optional<CommentReport> commentSnapshot(Comment comment) {
     return ExcelSheetCommentSupport.commentSnapshot(comment);
   }
 

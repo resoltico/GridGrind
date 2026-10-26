@@ -3,23 +3,17 @@ package dev.erst.gridgrind.excel;
 import static dev.erst.gridgrind.excel.ExcelStyleTestAccess.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-import dev.erst.gridgrind.core.model.drawing.CommentAnchorReport;
-import dev.erst.gridgrind.core.model.drawing.ResolvedComment;
 import dev.erst.gridgrind.core.model.print.PrintMarginsReport;
 import dev.erst.gridgrind.core.model.print.PrintSetupReport;
 import dev.erst.gridgrind.core.model.protection.WorkbookProtectionReport;
 import dev.erst.gridgrind.core.model.style.CellColorReport;
 import dev.erst.gridgrind.core.model.style.CellFillReport;
-import dev.erst.gridgrind.core.model.style.CellFontReport;
 import dev.erst.gridgrind.core.model.style.CellGradientFillReport;
 import dev.erst.gridgrind.core.model.style.CellGradientStopReport;
 import dev.erst.gridgrind.core.model.style.ColorSpec;
-import dev.erst.gridgrind.core.model.style.FontHeightReport;
-import dev.erst.gridgrind.core.model.style.RichTextRunReport;
 import dev.erst.gridgrind.core.vocabulary.ExcelFillPattern;
 import dev.erst.gridgrind.core.vocabulary.RgbHex;
 import dev.erst.gridgrind.core.vocabulary.StepId;
-import java.math.BigDecimal;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
@@ -161,42 +155,7 @@ class AdvancedReadEngineTypesTest {
   }
 
   @Test
-  void commentPrintAndProtectionSnapshotsValidateRichReadShapes() {
-    CellFontReport baseFont = font(rgb("#112233"));
-    CommentAnchorReport anchor = new CommentAnchorReport(1, 2, 4, 6);
-    List<RichTextRunReport> runs =
-        List.copyOf(
-            List.of(
-                new RichTextRunReport("Hi ", baseFont),
-                new RichTextRunReport("there", font(CellColorReport.theme(5, 0.2d)))));
-    ExcelCommentSnapshot comment =
-        new ExcelCommentSnapshot("Hi there", "Ada", true, Optional.of(runs), Optional.of(anchor));
-
-    assertEquals(Optional.of(anchor), comment.anchor());
-    assertEquals(new ResolvedComment("Hi there", "Ada", true), comment.toPlainComment());
-    assertEquals(
-        new ResolvedComment("Ok", "Ada", false),
-        new ExcelCommentSnapshot("Ok", "Ada", false, Optional.empty(), Optional.empty())
-            .toPlainComment());
-    assertThrows(
-        IllegalArgumentException.class,
-        () ->
-            new ExcelCommentSnapshot(
-                "Mismatch",
-                "Ada",
-                true,
-                Optional.of(List.copyOf(List.of(new RichTextRunReport("Other", baseFont)))),
-                Optional.empty()));
-    assertThrows(
-        IllegalArgumentException.class,
-        () -> new ExcelCommentSnapshot(" ", "Ada", true, Optional.empty(), Optional.empty()));
-    assertThrows(
-        IllegalArgumentException.class,
-        () -> new ExcelCommentSnapshot("Hi there", " ", true, Optional.empty(), Optional.empty()));
-    assertThrows(IllegalArgumentException.class, () -> new CommentAnchorReport(2, 0, 1, 0));
-    assertThrows(IllegalArgumentException.class, () -> new CommentAnchorReport(0, 2, 0, 1));
-    assertThrows(IllegalArgumentException.class, () -> new CommentAnchorReport(-1, 0, 1, 1));
-
+  void printAndProtectionReportsValidateRichReadShapes() {
     PrintSetupReport setup =
         new PrintSetupReport(
             new PrintMarginsReport(0.5d, 0.5d, 1.0d, 1.0d, 0.3d, 0.3d),
@@ -530,16 +489,5 @@ class AdvancedReadEngineTypesTest {
 
   private static CellColorReport rgb(String rgb) {
     return CellColorReport.rgb(new RgbHex(rgb));
-  }
-
-  private static CellFontReport font(CellColorReport color) {
-    return new CellFontReport(
-        false,
-        false,
-        "Aptos",
-        FontHeightReport.fromPoints(BigDecimal.valueOf(11)),
-        color,
-        false,
-        false);
   }
 }

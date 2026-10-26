@@ -3,6 +3,7 @@ package dev.erst.gridgrind.engine.runtime;
 import static dev.erst.gridgrind.engine.runtime.ExecutorTestPlanSupport.*;
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.core.model.drawing.CommentReport;
 import dev.erst.gridgrind.core.model.formula.NamedRangeReport;
 import dev.erst.gridgrind.core.model.layout.PaneReport;
 import dev.erst.gridgrind.core.model.print.PrintAreaReport;
@@ -27,7 +28,6 @@ import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.excel.*;
 import dev.erst.gridgrind.excel.ExcelCellMetadataSnapshot;
 import dev.erst.gridgrind.excel.ExcelCellSnapshot;
-import dev.erst.gridgrind.excel.ExcelCommentSnapshot;
 import dev.erst.gridgrind.excel.ExcelConditionalFormattingBlockSnapshot;
 import dev.erst.gridgrind.excel.ExcelConditionalFormattingRuleSnapshot;
 import dev.erst.gridgrind.excel.ExcelConditionalFormattingThresholdSnapshot;
@@ -111,7 +111,7 @@ class DefaultGridGrindRequestExecutorReadResultTranslationTest
                 List.of(
                     new dev.erst.gridgrind.excel.WorkbookSheetResult.CellComment(
                         "A1",
-                        new ExcelCommentSnapshot(
+                        new CommentReport(
                             "Review",
                             "GridGrind",
                             false,

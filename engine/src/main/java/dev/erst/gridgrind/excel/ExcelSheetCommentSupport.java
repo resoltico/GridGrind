@@ -2,6 +2,7 @@ package dev.erst.gridgrind.excel;
 
 import dev.erst.gridgrind.core.model.drawing.CommentAnchorReport;
 import dev.erst.gridgrind.core.model.drawing.CommentAnchorSpec;
+import dev.erst.gridgrind.core.model.drawing.CommentReport;
 import dev.erst.gridgrind.core.model.drawing.ResolvedComment;
 import dev.erst.gridgrind.core.model.style.RichTextRunReport;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingController;
@@ -101,14 +102,14 @@ final class ExcelSheetCommentSupport {
         : Optional.of(new ResolvedComment(text, author, visible));
   }
 
-  static Optional<ExcelCommentSnapshot> commentSnapshot(Cell cell) {
+  static Optional<CommentReport> commentSnapshot(Cell cell) {
     return cell == null
         ? Optional.empty()
         : optionalCommentSnapshot(
             Optional.of(cell.getSheet().getWorkbook()), cell.getCellComment());
   }
 
-  static Optional<ExcelCommentSnapshot> commentSnapshot(Comment comment) {
+  static Optional<CommentReport> commentSnapshot(Comment comment) {
     return optionalCommentSnapshot(Optional.empty(), comment);
   }
 
@@ -197,7 +198,7 @@ final class ExcelSheetCommentSupport {
     List<WorkbookSheetResult.CellComment> comments = new ArrayList<>();
     for (Row row : sheet) {
       for (Cell cell : row) {
-        Optional<ExcelCommentSnapshot> comment = commentSnapshot(cell);
+        Optional<CommentReport> comment = commentSnapshot(cell);
         if (comment.isPresent()) {
           comments.add(
               new WorkbookSheetResult.CellComment(
@@ -216,7 +217,7 @@ final class ExcelSheetCommentSupport {
       if (cell == null) {
         continue;
       }
-      Optional<ExcelCommentSnapshot> comment = commentSnapshot(cell);
+      Optional<CommentReport> comment = commentSnapshot(cell);
       if (comment.isPresent()) {
         comments.add(new WorkbookSheetResult.CellComment(address, comment.orElseThrow()));
       }
@@ -224,7 +225,7 @@ final class ExcelSheetCommentSupport {
     return List.copyOf(comments);
   }
 
-  private static Optional<ExcelCommentSnapshot> optionalCommentSnapshot(
+  private static Optional<CommentReport> optionalCommentSnapshot(
       Optional<Workbook> workbook, Comment comment) {
     if (!(comment instanceof XSSFComment xssfComment)
         || xssfComment.getString() == null
@@ -257,7 +258,7 @@ final class ExcelSheetCommentSupport {
                 ExcelCellStyleSnapshotSupport.snapshotFont(
                     (org.apache.poi.xssf.usermodel.XSSFFont) workbook.get().getFontAt(0)));
     return Optional.of(
-        new ExcelCommentSnapshot(
+        new CommentReport(
             plainComment.orElseThrow().text(),
             plainComment.orElseThrow().author(),
             plainComment.orElseThrow().visible(),
