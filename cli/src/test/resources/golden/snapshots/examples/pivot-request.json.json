@@ -1628,7 +1628,7 @@
       "type" : "SAVE_AS"
     },
     "planId" : "pivot-workflow",
-    "protocolVersion" : "V3",
+    "protocolVersion" : 1,
     "status" : "SUCCEEDED",
     "warnings" : [ ]
   }

@@ -20,8 +20,8 @@ regression inputs exist, and what remains outside the current fuzzing surface.
 
 | Target | Entry Point | Concern | Replay Support | Telemetry | Promoted Inputs |
 |:-------|:------------|:--------|:---------------|:----------|:----------------|
-| `protocol-request` | `GridGrindJson.readRequest(byte[])` | raw V3 JSON parsing and request validation | Yes | Yes | 48 |
-| `protocol-workflow` | `DefaultGridGrindRequestExecutor.execute(...)` | ordered request workflows through the engine-owned V3 execution path | Yes | Yes | 11 |
+| `protocol-request` | `GridGrindJson.readRequest(byte[])` | raw version 1 JSON parsing and request validation | Yes | Yes | 48 |
+| `protocol-workflow` | `DefaultGridGrindRequestExecutor.execute(...)` | ordered request workflows through the engine-owned version 1 execution path | Yes | Yes | 11 |
 | `engine-command-sequence` | `WorkbookExecutionEngine.apply(...)` | ordered workbook-command execution in the engine layer | Yes | Yes | 9 |
 | `xlsx-roundtrip` | `ExcelWorkbook.save(...)` plus POI reopen | `.xlsx` persistence and reopen invariants after bounded command sequences | Yes | Yes | 26 |
 | `regression` | four isolated per-harness regression tasks over all committed promoted inputs | replay of the committed custom seed floor | N/A | Yes | 94 total across harnesses |
@@ -40,7 +40,7 @@ Surface:
   template-backed UDF toolpacks
 - top-level `execution.mode` payloads for `EVENT_READ` and `STREAMING_WRITE`, plus
   `execution.journal.level`
-- V3 host-grant, typed-secret-reference, and publication-result shapes
+- version 1 host-grant, typed-secret-reference, and publication-result shapes
 - ordered `steps` payloads, selectors, and inspection-step/result correlation IDs
 - style payloads including typed `fontHeight`, structured color, fill, gradient, and border input
   shapes

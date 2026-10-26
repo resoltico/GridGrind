@@ -24,7 +24,6 @@ import dev.erst.gridgrind.core.plan.CellSelector;
 import dev.erst.gridgrind.core.plan.ChartSelector;
 import dev.erst.gridgrind.core.plan.DrawingObjectSelector;
 import dev.erst.gridgrind.core.plan.ExecutionModeSpec;
-import dev.erst.gridgrind.core.plan.GridGrindProtocolVersion;
 import dev.erst.gridgrind.core.plan.MutationStep;
 import dev.erst.gridgrind.core.plan.NamedRangeSelector;
 import dev.erst.gridgrind.core.plan.PivotTableSelector;
@@ -47,6 +46,7 @@ import dev.erst.gridgrind.core.vocabulary.DefinedName;
 import dev.erst.gridgrind.core.vocabulary.ExcelOoxmlWriteCipher;
 import dev.erst.gridgrind.core.vocabulary.ExcelOoxmlWriteHash;
 import dev.erst.gridgrind.core.vocabulary.NamedRangeScope;
+import dev.erst.gridgrind.core.vocabulary.ProtocolVersion;
 import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.StepId;
@@ -565,7 +565,7 @@ class ExecutorPolicyCoverageTest {
         assertInstanceOf(
             WorkbookResult.Failure.class,
             responseSupport.guardUnexpectedRuntime(
-                GridGrindProtocolVersion.V3,
+                ProtocolVersion.CURRENT,
                 request,
                 ExecutionContextFixtureSupport.startJournal(request, ExecutionProgressSink.NOOP),
                 () -> {
@@ -578,7 +578,7 @@ class ExecutorPolicyCoverageTest {
           assertInstanceOf(
               WorkbookResult.Failure.class,
               responseSupport.guardUnexpectedRuntime(
-                  GridGrindProtocolVersion.V3,
+                  ProtocolVersion.CURRENT,
                   request,
                   ExecutionContextFixtureSupport.startJournal(request, ExecutionProgressSink.NOOP),
                   workbook,
@@ -599,7 +599,7 @@ class ExecutorPolicyCoverageTest {
           assertInstanceOf(
               WorkbookResult.Failure.class,
               closeFailingResponseSupport.guardUnexpectedRuntime(
-                  GridGrindProtocolVersion.V3,
+                  ProtocolVersion.CURRENT,
                   request,
                   ExecutionContextFixtureSupport.startJournal(request, ExecutionProgressSink.NOOP),
                   workbook,

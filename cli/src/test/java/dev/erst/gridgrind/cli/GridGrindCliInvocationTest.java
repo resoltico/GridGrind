@@ -360,7 +360,7 @@ class GridGrindCliInvocationTest extends GridGrindCliTestSupport {
         requestPath,
         """
         {
-          "protocolVersion": "V3",
+          "protocolVersion": 1,
           "planId": 7,
           "source": { "type": "NEW", "unexpected": true },
           "persistence": null,
@@ -428,7 +428,7 @@ class GridGrindCliInvocationTest extends GridGrindCliTestSupport {
         requestPath,
         """
         {
-          "protocolVersion": "V3",
+          "protocolVersion": 1,
           "source": { "type": "EXISTING", "path": "input.xls" },
           "persistence": { "type": "NONE" },
           "unexpected": true,

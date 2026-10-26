@@ -2,13 +2,13 @@ package dev.erst.gridgrind.engine.runtime;
 
 import dev.erst.gridgrind.core.model.formula.CalculationReport;
 import dev.erst.gridgrind.core.plan.AssertionResult;
-import dev.erst.gridgrind.core.plan.GridGrindProtocolVersion;
 import dev.erst.gridgrind.core.plan.InspectionResult;
 import dev.erst.gridgrind.core.plan.InspectionStep;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import dev.erst.gridgrind.core.problem.GridGrindProblemDetail;
 import dev.erst.gridgrind.core.problem.RequestWarning;
 import dev.erst.gridgrind.core.result.WorkbookResult;
+import dev.erst.gridgrind.core.vocabulary.ProtocolVersion;
 import dev.erst.gridgrind.excel.WorkbookArtifactIo;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -50,7 +50,7 @@ final class ExecutionDirectEventReadWorkflow {
   }
 
   WorkbookResult execute(
-      GridGrindProtocolVersion protocolVersion,
+      ProtocolVersion protocolVersion,
       WorkbookPlan request,
       List<RequestWarning> warnings,
       ExecutionJournalRecorder journal,

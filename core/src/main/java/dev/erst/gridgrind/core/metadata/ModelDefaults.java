@@ -1,6 +1,6 @@
 package dev.erst.gridgrind.core.metadata;
 
-import dev.erst.gridgrind.core.vocabulary.WireString;
+import dev.erst.gridgrind.core.vocabulary.WireScalar;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.RecordComponent;
 import java.util.Collections;
@@ -85,8 +85,8 @@ public final class ModelDefaults {
   @SuppressWarnings(
       "PMD.UseConcurrentHashMap") // Thread-confined order is the published record order.
   public static Object wireValue(Object value) {
-    if (value instanceof WireString text) {
-      return text.value();
+    if (value instanceof WireScalar text) {
+      return text.scalarValue();
     }
     if (value instanceof Enum<?> enumeration) {
       return enumeration.name();

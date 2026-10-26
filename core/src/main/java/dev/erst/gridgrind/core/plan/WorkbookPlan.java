@@ -15,6 +15,7 @@ import dev.erst.gridgrind.core.problem.NonXlsxPath;
 import dev.erst.gridgrind.core.result.ExecutionJournalLevel;
 import dev.erst.gridgrind.core.vocabulary.PlanId;
 import dev.erst.gridgrind.core.vocabulary.ProtocolConstraintValues;
+import dev.erst.gridgrind.core.vocabulary.ProtocolVersion;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import java.util.HashSet;
 import java.util.List;
@@ -31,7 +32,7 @@ import java.util.Set;
     summary =
         "Complete GridGrind plan for workbook source, execution policy, formula environment, ordered mutation, assertion, and inspection steps, and persistence.")
 public record WorkbookPlan(
-    GridGrindProtocolVersion protocolVersion,
+    ProtocolVersion protocolVersion,
     Optional<PlanId> planId,
     WorkbookSource source,
     WorkbookPersistence persistence,
@@ -63,7 +64,7 @@ public record WorkbookPlan(
       FormulaEnvironmentSpec formulaEnvironment,
       List<WorkbookStep> steps) {
     return new WorkbookPlan(
-        GridGrindProtocolVersion.current(),
+        ProtocolVersion.CURRENT,
         Optional.empty(),
         source,
         persistence,
@@ -81,7 +82,7 @@ public record WorkbookPlan(
       FormulaEnvironmentSpec formulaEnvironment,
       List<WorkbookStep> steps) {
     return new WorkbookPlan(
-        GridGrindProtocolVersion.current(),
+        ProtocolVersion.CURRENT,
         Optional.of(planId),
         source,
         persistence,
@@ -92,7 +93,7 @@ public record WorkbookPlan(
 
   /** Creates one caller-identified canonical plan on an explicit protocol version. */
   public static WorkbookPlan identified(
-      GridGrindProtocolVersion protocolVersion,
+      ProtocolVersion protocolVersion,
       PlanId planId,
       WorkbookSource source,
       WorkbookPersistence persistence,

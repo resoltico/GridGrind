@@ -77,7 +77,7 @@ class CellFormulaFramingTest {
         GridGrindJson.readRequest(
             """
             {
-              "protocolVersion": "V3",
+              "protocolVersion": 1,
               "source": { "type": "NEW" },
               "persistence": { "type": "NONE" },
               "steps": [
@@ -122,7 +122,7 @@ class CellFormulaFramingTest {
   private static String requestWithFormula(String type, String formula) {
     return """
         {
-          "protocolVersion": "V3",
+          "protocolVersion": 1,
           "source": { "type": "NEW" },
           "persistence": { "type": "NONE" },
           "steps": [

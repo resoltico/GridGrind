@@ -435,7 +435,7 @@
       "type" : "NONE"
     },
     "planId" : "assertion-workflow",
-    "protocolVersion" : "V3",
+    "protocolVersion" : 1,
     "status" : "SUCCEEDED",
     "warnings" : [ ]
   }

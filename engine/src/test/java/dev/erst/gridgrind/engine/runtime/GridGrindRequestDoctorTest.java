@@ -6,11 +6,11 @@ import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import dev.erst.gridgrind.core.plan.GridGrindProtocolVersion;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import dev.erst.gridgrind.core.problem.GridGrindProblemCode;
 import dev.erst.gridgrind.core.problem.RequestDoctorReport;
 import dev.erst.gridgrind.core.vocabulary.AnalysisSeverity;
+import dev.erst.gridgrind.core.vocabulary.ProtocolVersion;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
 import dev.erst.gridgrind.excel.ExcelWorkbooks;
 import dev.erst.gridgrind.json.codec.GridGrindJson;
@@ -430,7 +430,7 @@ class GridGrindRequestDoctorTest {
     return GridGrindJson.readRequest(
         """
         {
-          "protocolVersion": "%s",
+          "protocolVersion": %d,
           "source": %s,
           "persistence": { "type": "NONE" },
           "execution": {
@@ -453,7 +453,7 @@ class GridGrindRequestDoctorTest {
           "steps": %s
         }
         """
-            .formatted(GridGrindProtocolVersion.current(), sourceJson.strip(), stepsJson.strip())
+            .formatted(ProtocolVersion.NUMBER, sourceJson.strip(), stepsJson.strip())
             .getBytes(StandardCharsets.UTF_8));
   }
 }

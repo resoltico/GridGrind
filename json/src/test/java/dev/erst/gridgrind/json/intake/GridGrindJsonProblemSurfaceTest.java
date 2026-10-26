@@ -126,7 +126,7 @@ class GridGrindJsonProblemSurfaceTest {
                 GridGrindJson.readProtocolCatalog(
                     """
                     {
-                      "protocolVersion": "V3",
+                      "protocolVersion": 1,
                       "requestTemplate": { "source": { "type": "NEW" }, "steps": [] }
                     }
                     """
@@ -193,7 +193,7 @@ class GridGrindJsonProblemSurfaceTest {
                 GridGrindJson.readRequest(
                     """
                     {
-                      "protocolVersion": "V3",
+                      "protocolVersion": 1,
                       "source": { "type": "NEW" },
                       "persistence": { "type": "NONE" },
                       "steps": [
@@ -221,7 +221,7 @@ class GridGrindJsonProblemSurfaceTest {
                 GridGrindJson.readRequest(
                     """
                     {
-                      "protocolVersion": "V3",
+                      "protocolVersion": 1,
                       "source": { "type": "NEW" },
                       "persistence": { "type": "NONE" },
                       "steps": [
@@ -260,7 +260,7 @@ class GridGrindJsonProblemSurfaceTest {
                 GridGrindJson.readRequest(
                     """
                     {
-                      "protocolVersion": "V3",
+                      "protocolVersion": 1,
                       "source": { "type": "NEW" },
                       "persistence": { "type": "NONE" },
                       "steps": [],
@@ -275,7 +275,7 @@ class GridGrindJsonProblemSurfaceTest {
                 GridGrindJson.readRequest(
                     """
                     {
-                      "protocolVersion": "V3",
+                      "protocolVersion": 1,
                       "source": { "type": "NEW" },
                       "persistence": { "type": "NONE" },
                       "steps": [
@@ -307,7 +307,7 @@ class GridGrindJsonProblemSurfaceTest {
                 GridGrindJson.readRequest(
                     """
                     {
-                      "protocolVersion": "V3",
+                      "protocolVersion": 1,
                       "source": { "type": "NEW" },
                       "persistence": { "type": "NONE" },
                       "": {}
@@ -327,7 +327,7 @@ class GridGrindJsonProblemSurfaceTest {
                 GridGrindJson.readRequest(
                     """
                     {
-                      "protocolVersion": "V3",
+                      "protocolVersion": 1,
                       "source": { "type": "NEW" },
                       "persistence": { "type": "NONE" },
                       "steps": [
@@ -353,7 +353,7 @@ class GridGrindJsonProblemSurfaceTest {
                 GridGrindJson.readRequest(
                     """
                     {
-                      "protocolVersion": "V3",
+                      "protocolVersion": 1,
                       "source": { "type": "NEW" },
                       "persistence": { "type": "NONE" },
                       "": 1,
@@ -374,15 +374,19 @@ class GridGrindJsonProblemSurfaceTest {
                 GridGrindJson.readRequest(
                     """
                     {
-                      "protocolVersion": "",
+                      "protocolVersion": 1,
+                      "execution": { "assertionMode": "" },
+                      "steps": [],
                       "source": { "type": "NEW" },
                       "persistence": { "type": "NONE" }
                     }
                     """));
 
     assertTrue(
-        exception.getMessage().startsWith("Unsupported value '' for field 'protocolVersion'"));
-    assertEquals(Optional.of("protocolVersion"), exception.jsonPath());
+        exception
+            .getMessage()
+            .startsWith("Unsupported value '' for field 'execution.assertionMode'"));
+    assertEquals(Optional.of("execution.assertionMode"), exception.jsonPath());
   }
 
   /** Tracks whether the request writer closes the destination stream after producing JSON. */

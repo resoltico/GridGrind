@@ -12,7 +12,7 @@
       "code" : "INVALID_REQUEST_SHAPE",
       "context" : {
         "json" : {
-          "byteOffset" : 89,
+          "byteOffset" : 86,
           "jsonPath" : "unexpected",
           "type" : "PATH_BYTE_OFFSET"
         },
@@ -27,7 +27,7 @@
       "resolution" : "Remove or rename unexpected field 'unexpected' so the request matches the protocol.",
       "title" : "Invalid request shape"
     } ],
-    "protocolVersion" : "V3",
+    "protocolVersion" : 1,
     "severity" : "ERROR",
     "valid" : false,
     "warnings" : [ ]

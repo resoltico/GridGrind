@@ -1,10 +1,10 @@
 package dev.erst.gridgrind.engine.runtime;
 
 import dev.erst.gridgrind.core.model.formula.CalculationReport;
-import dev.erst.gridgrind.core.plan.GridGrindProtocolVersion;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import dev.erst.gridgrind.core.result.WorkbookResult;
 import dev.erst.gridgrind.core.result.WorkbookResultPersistence;
+import dev.erst.gridgrind.core.vocabulary.ProtocolVersion;
 import java.util.List;
 
 /** Assembles the single successful response for an admitted streaming-write workflow. */
@@ -12,7 +12,7 @@ final class StreamingWorkflowResult {
   private StreamingWorkflowResult() {}
 
   static WorkbookResult success(
-      GridGrindProtocolVersion protocolVersion,
+      ProtocolVersion protocolVersion,
       WorkbookPlan request,
       ExecutionInputBindings bindings,
       StreamingWorkflowContext context,

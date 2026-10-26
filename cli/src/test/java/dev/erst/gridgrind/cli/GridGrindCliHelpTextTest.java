@@ -125,7 +125,9 @@ class GridGrindCliHelpTextTest extends GridGrindCliTestSupport {
 
   @Test
   void licenseTextContainsThirdPartySectionWhenDependencyLicensesPresent() {
-    InputStream own = new ByteArrayInputStream("Mozilla Public License Version 2.0\n".getBytes(StandardCharsets.UTF_8));
+    InputStream own =
+        new ByteArrayInputStream(
+            "Mozilla Public License Version 2.0\n".getBytes(StandardCharsets.UTF_8));
     InputStream notice = new ByteArrayInputStream("NOTICE info\n".getBytes(StandardCharsets.UTF_8));
     InputStream apache =
         new ByteArrayInputStream("Apache License\n".getBytes(StandardCharsets.UTF_8));
@@ -176,7 +178,8 @@ class GridGrindCliHelpTextTest extends GridGrindCliTestSupport {
   void licenseTextAddsOneTrailingNewlineWhenSourceTextOmitsIt() {
     String text =
         GridGrindCli.licenseText(
-            new ByteArrayInputStream("Mozilla Public License Version 2.0".getBytes(StandardCharsets.UTF_8)),
+            new ByteArrayInputStream(
+                "Mozilla Public License Version 2.0".getBytes(StandardCharsets.UTF_8)),
             null,
             null,
             null,

@@ -3,8 +3,8 @@ package dev.erst.gridgrind.core.problem;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import dev.erst.gridgrind.core.plan.GridGrindProtocolVersion;
 import dev.erst.gridgrind.core.vocabulary.AnalysisSeverity;
+import dev.erst.gridgrind.core.vocabulary.ProtocolVersion;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import java.util.List;
 import java.util.Optional;
@@ -53,7 +53,7 @@ class RequestDoctorReportTest {
     assertEquals(Optional.empty(), clean.primaryProblem());
     assertEquals(Optional.of(problem), invalid.primaryProblem());
     assertEquals(List.of(warning), warnings.warnings());
-    assertEquals(GridGrindProtocolVersion.current(), clean.protocolVersion());
+    assertEquals(ProtocolVersion.CURRENT, clean.protocolVersion());
     assertThrows(UnsupportedOperationException.class, () -> warnings.warnings().add(warning));
   }
 
@@ -75,7 +75,7 @@ class RequestDoctorReportTest {
                 IllegalArgumentException.class,
                 () ->
                     new RequestDoctorReport(
-                        GridGrindProtocolVersion.current(),
+                        ProtocolVersion.CURRENT,
                         AnalysisSeverity.INFO,
                         true,
                         Optional.empty(),
@@ -88,7 +88,7 @@ class RequestDoctorReportTest {
                 IllegalArgumentException.class,
                 () ->
                     new RequestDoctorReport(
-                        GridGrindProtocolVersion.current(),
+                        ProtocolVersion.CURRENT,
                         AnalysisSeverity.INFO,
                         true,
                         Optional.of(summary),
@@ -101,7 +101,7 @@ class RequestDoctorReportTest {
                 IllegalArgumentException.class,
                 () ->
                     new RequestDoctorReport(
-                        GridGrindProtocolVersion.current(),
+                        ProtocolVersion.CURRENT,
                         AnalysisSeverity.ERROR,
                         false,
                         Optional.of(summary),
@@ -114,7 +114,7 @@ class RequestDoctorReportTest {
                 IllegalArgumentException.class,
                 () ->
                     new RequestDoctorReport(
-                        GridGrindProtocolVersion.current(),
+                        ProtocolVersion.CURRENT,
                         AnalysisSeverity.WARNING,
                         true,
                         Optional.of(summary),
@@ -127,7 +127,7 @@ class RequestDoctorReportTest {
                 IllegalArgumentException.class,
                 () ->
                     new RequestDoctorReport(
-                        GridGrindProtocolVersion.current(),
+                        ProtocolVersion.CURRENT,
                         AnalysisSeverity.WARNING,
                         false,
                         Optional.of(summary),
@@ -140,7 +140,7 @@ class RequestDoctorReportTest {
                 IllegalArgumentException.class,
                 () ->
                     new RequestDoctorReport(
-                        GridGrindProtocolVersion.current(),
+                        ProtocolVersion.CURRENT,
                         AnalysisSeverity.INFO,
                         true,
                         Optional.of(summary),
@@ -205,7 +205,7 @@ class RequestDoctorReportTest {
                 NullPointerException.class,
                 () ->
                     new RequestDoctorReport(
-                        GridGrindProtocolVersion.V3,
+                        ProtocolVersion.CURRENT,
                         AnalysisSeverity.ERROR,
                         false,
                         Optional.empty(),
@@ -218,7 +218,7 @@ class RequestDoctorReportTest {
                 NullPointerException.class,
                 () ->
                     new RequestDoctorReport(
-                        GridGrindProtocolVersion.current(),
+                        ProtocolVersion.CURRENT,
                         AnalysisSeverity.WARNING,
                         true,
                         Optional.of(

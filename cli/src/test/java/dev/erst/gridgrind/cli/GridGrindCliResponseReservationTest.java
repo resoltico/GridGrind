@@ -53,7 +53,7 @@ class GridGrindCliResponseReservationTest {
             new ByteArrayInputStream(
                 """
                 {
-                  "protocolVersion": "V3",
+                  "protocolVersion": 1,
                   "source": { "type": "NEW" },
                   "persistence": { "type": "SAVE_AS", "path": "output.xlsx", "ifExists": "REJECT" },
                   "steps": []
@@ -83,7 +83,7 @@ class GridGrindCliResponseReservationTest {
     byte[] body =
         """
         {
-          "protocolVersion": "V3",
+          "protocolVersion": 1,
           "source": { "type": "NEW" },
           "persistence": { "type": "NONE" },
           "steps": []
@@ -126,7 +126,7 @@ class GridGrindCliResponseReservationTest {
     byte[] body =
         """
         {
-          "protocolVersion": "V3",
+          "protocolVersion": 1,
           "source": { "type": "NEW" },
           "persistence": { "type": "NONE" },
           "steps": []
@@ -296,7 +296,7 @@ class GridGrindCliResponseReservationTest {
   private static byte[] validRequestBytes() {
     return """
         {
-          "protocolVersion": "V3",
+          "protocolVersion": 1,
           "source": { "type": "NEW" },
           "persistence": { "type": "NONE" },
           "steps": []

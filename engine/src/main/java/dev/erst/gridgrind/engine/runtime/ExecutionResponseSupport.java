@@ -1,12 +1,12 @@
 package dev.erst.gridgrind.engine.runtime;
 
 import dev.erst.gridgrind.core.model.formula.CalculationReport;
-import dev.erst.gridgrind.core.plan.GridGrindProtocolVersion;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import dev.erst.gridgrind.core.problem.GridGrindProblemCode;
 import dev.erst.gridgrind.core.problem.GridGrindProblemDetail;
 import dev.erst.gridgrind.core.result.WorkbookResult;
 import dev.erst.gridgrind.core.result.WorkbookResults;
+import dev.erst.gridgrind.core.vocabulary.ProtocolVersion;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
 import dev.erst.gridgrind.excel.WorkbookArtifactIo;
@@ -94,7 +94,7 @@ final class ExecutionResponseSupport {
   }
 
   WorkbookResult guardUnexpectedRuntime(
-      GridGrindProtocolVersion protocolVersion,
+      ProtocolVersion protocolVersion,
       WorkbookPlan request,
       ExecutionJournalRecorder journal,
       Supplier<WorkbookResult> workflow) {
@@ -118,7 +118,7 @@ final class ExecutionResponseSupport {
   }
 
   WorkbookResult guardUnexpectedRuntime(
-      GridGrindProtocolVersion protocolVersion,
+      ProtocolVersion protocolVersion,
       WorkbookPlan request,
       ExecutionJournalRecorder journal,
       ExcelWorkbook workbook,
@@ -165,7 +165,7 @@ final class ExecutionResponseSupport {
   }
 
   static WorkbookResult.Failure failureResponse(
-      GridGrindProtocolVersion protocolVersion,
+      ProtocolVersion protocolVersion,
       ExecutionJournalRecorder journal,
       WorkbookPlan request,
       GridGrindProblemDetail.Problem problem,
@@ -180,7 +180,7 @@ final class ExecutionResponseSupport {
   }
 
   static WorkbookResult.Failure failureResponse(
-      GridGrindProtocolVersion protocolVersion,
+      ProtocolVersion protocolVersion,
       ExecutionJournalRecorder journal,
       WorkbookPlan request,
       CalculationReport calculation,

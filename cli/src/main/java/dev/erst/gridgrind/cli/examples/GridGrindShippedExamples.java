@@ -78,7 +78,7 @@ public final class GridGrindShippedExamples {
   /** Returns the machine-readable example catalog for CLI discovery. */
   public static ShippedExampleCatalog catalog() {
     return new ShippedExampleCatalog(
-        dev.erst.gridgrind.core.plan.GridGrindProtocolVersion.current(), catalogEntries());
+        dev.erst.gridgrind.core.vocabulary.ProtocolVersion.CURRENT, catalogEntries());
   }
 
   /** Finds one built-in example by its stable upper-case id. */

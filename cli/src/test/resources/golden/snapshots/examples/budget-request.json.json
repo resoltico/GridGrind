@@ -1274,7 +1274,7 @@
       "type" : "SAVE_AS"
     },
     "planId" : "budget-workflow",
-    "protocolVersion" : "V3",
+    "protocolVersion" : 1,
     "status" : "SUCCEEDED",
     "warnings" : [ ]
   }

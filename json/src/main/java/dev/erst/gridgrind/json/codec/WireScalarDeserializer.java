@@ -3,7 +3,7 @@ package dev.erst.gridgrind.json.codec;
 import dev.erst.gridgrind.core.problem.InvalidRequestException;
 import dev.erst.gridgrind.core.problem.MessageInvariant;
 import dev.erst.gridgrind.core.problem.RequestProblemSource;
-import dev.erst.gridgrind.core.vocabulary.WireString;
+import dev.erst.gridgrind.core.vocabulary.WireScalar;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Optional;
@@ -12,27 +12,39 @@ import tools.jackson.core.JsonToken;
 import tools.jackson.databind.DeserializationContext;
 import tools.jackson.databind.ValueDeserializer;
 
-/** Binds domain strings through their validating public constructor without coercing tokens. */
-final class WireStringDeserializer extends ValueDeserializer<WireString> {
-  private final Constructor<? extends WireString> constructor;
+/** Binds domain scalars through their validating public constructor without coercing tokens. */
+final class WireScalarDeserializer extends ValueDeserializer<WireScalar> {
+  private final Constructor<? extends WireScalar> constructor;
+  private final Class<?> componentType;
 
-  WireStringDeserializer(Class<? extends WireString> valueType) {
+  WireScalarDeserializer(Class<? extends WireScalar> valueType) {
     try {
-      constructor = valueType.getConstructor(String.class);
+      componentType = valueType.getRecordComponents()[0].getType();
+      constructor = valueType.getConstructor(componentType);
     } catch (NoSuchMethodException exception) {
       throw new IllegalArgumentException(
-          "Domain strings need a public String constructor", exception);
+          "Domain scalars need a public component constructor", exception);
     }
   }
 
   @Override
-  public WireString deserialize(JsonParser parser, DeserializationContext context) {
-    if (!parser.hasToken(JsonToken.VALUE_STRING)) {
-      return context.reportInputMismatch(handledType(), "Domain values require a JSON string");
+  public WireScalar deserialize(JsonParser parser, DeserializationContext context) {
+    Object scalar;
+    if (componentType == String.class) {
+      if (!parser.hasToken(JsonToken.VALUE_STRING)) {
+        return context.reportInputMismatch(handledType(), "Domain values require a JSON string");
+      }
+      scalar = parser.getString();
+    } else if (componentType == int.class) {
+      if (!parser.hasToken(JsonToken.VALUE_NUMBER_INT)) {
+        return context.reportInputMismatch(handledType(), "Domain values require a JSON integer");
+      }
+      scalar = parser.getIntValue();
+    } else {
+      throw new IllegalStateException("Unsupported wire scalar component: " + componentType);
     }
-    String text = parser.getString();
     try {
-      return constructor.newInstance(text);
+      return constructor.newInstance(scalar);
     } catch (InvocationTargetException exception) {
       Throwable cause = exception.getCause();
       if (cause instanceof IllegalArgumentException invalid
@@ -41,10 +53,10 @@ final class WireStringDeserializer extends ValueDeserializer<WireString> {
         if (message == null || message.isBlank()) {
           message = "Domain value is invalid.";
         }
-        return (WireString)
+        return (WireScalar)
             context.handleInstantiationProblem(
                 handledType(),
-                text,
+                scalar,
                 new InvalidRequestException(
                     new MessageInvariant(message, Optional.empty()),
                     Optional.empty(),
@@ -52,11 +64,11 @@ final class WireStringDeserializer extends ValueDeserializer<WireString> {
                     Optional.empty(),
                     exception));
       }
-      return (WireString)
+      return (WireScalar)
           context.handleInstantiationProblem(
-              handledType(), text, cause == null ? exception : cause);
+              handledType(), scalar, cause == null ? exception : cause);
     } catch (ReflectiveOperationException exception) {
-      throw new IllegalStateException("Unable to construct domain string", exception);
+      throw new IllegalStateException("Unable to construct domain scalar", exception);
     }
   }
 

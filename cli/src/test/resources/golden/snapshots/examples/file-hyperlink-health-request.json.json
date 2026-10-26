@@ -908,7 +908,7 @@
       "type" : "SAVE_AS"
     },
     "planId" : "file-hyperlink-health-workflow",
-    "protocolVersion" : "V3",
+    "protocolVersion" : 1,
     "status" : "SUCCEEDED",
     "warnings" : [ ]
   }

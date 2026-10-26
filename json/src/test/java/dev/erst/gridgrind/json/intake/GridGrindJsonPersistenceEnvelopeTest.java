@@ -3,11 +3,11 @@ package dev.erst.gridgrind.json.intake;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 
-import dev.erst.gridgrind.core.plan.GridGrindProtocolVersion;
 import dev.erst.gridgrind.core.problem.GridGrindProblemDetail;
 import dev.erst.gridgrind.core.result.WorkbookResult;
 import dev.erst.gridgrind.core.result.WorkbookResultPersistence;
 import dev.erst.gridgrind.core.result.WorkbookResults;
+import dev.erst.gridgrind.core.vocabulary.ProtocolVersion;
 import dev.erst.gridgrind.json.codec.GridGrindJson;
 import dev.erst.gridgrind.json.codec.GridGrindJsonMapperSupport;
 import dev.erst.gridgrind.json.codec.GridGrindJsonOutput;
@@ -24,7 +24,7 @@ class GridGrindJsonPersistenceEnvelopeTest {
   void successResponsesKeepPersistenceOnlyAtTheTopLevel() throws IOException {
     WorkbookResult persistSuccess =
         WorkbookResults.success(
-            GridGrindProtocolVersion.V3,
+            ProtocolVersion.CURRENT,
             new WorkbookResultPersistence.PersistenceOutcome.SavedAs(
                 "out/report.xlsx", published("/work/out/report.xlsx")),
             List.of(),
@@ -51,7 +51,7 @@ class GridGrindJsonPersistenceEnvelopeTest {
   void persistFailureContextsDoNotDuplicateTheTopLevelPersistenceBlock() throws IOException {
     WorkbookResult persistFailure =
         WorkbookResults.failure(
-            GridGrindProtocolVersion.V3,
+            ProtocolVersion.CURRENT,
             new WorkbookResultPersistence.PersistenceOutcome.SavedAs(
                 "out/report.xlsx", new WorkbookResultPersistence.PublicationOutcome.NotAttempted()),
             new GridGrindProblemDetail.Problem(
@@ -89,7 +89,7 @@ class GridGrindJsonPersistenceEnvelopeTest {
       throws IOException {
     WorkbookResult persistFailure =
         WorkbookResults.failure(
-            GridGrindProtocolVersion.V3,
+            ProtocolVersion.CURRENT,
             new WorkbookResultPersistence.PersistenceOutcome.Overwritten(
                 Optional.empty(), new WorkbookResultPersistence.PublicationOutcome.NotAttempted()),
             new GridGrindProblemDetail.Problem(

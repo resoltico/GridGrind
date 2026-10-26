@@ -1295,7 +1295,7 @@
       "type" : "SAVE_AS"
     },
     "planId" : "introspection-analysis-workflow",
-    "protocolVersion" : "V3",
+    "protocolVersion" : 1,
     "status" : "SUCCEEDED",
     "warnings" : [ ]
   }

@@ -25,7 +25,7 @@
       },
       "optionalFeatures" : [ "Assertions that required dashboard entities exist.", "Workbook-health analysis after authoring.", "Named-range-backed chart series for reusable models." ],
       "outcomes" : [ "Summary sheets and KPI surfaces are intentionally structured.", "Reusable named surfaces back formulas or charts instead of fragile copied ranges.", "Charts are authored and then read back through the same contract surface." ],
-      "protocolVersion" : "V3",
+      "protocolVersion" : 1,
       "requestFileName" : "dashboard-request.json",
       "requestProfile" : {
         "assertionTypes" : [ "EXPECT_CHART_PRESENT" ],
@@ -1334,7 +1334,7 @@
         "type" : "SAVE_AS"
       },
       "planId" : "dashboard-starter",
-      "protocolVersion" : "V3",
+      "protocolVersion" : 1,
       "status" : "SUCCEEDED",
       "warnings" : [ ]
     }
@@ -1346,7 +1346,7 @@
       "type" : "SAVE_AS"
     },
     "planId" : "dashboard-starter",
-    "protocolVersion" : "V3",
+    "protocolVersion" : 1,
     "source" : {
       "type" : "NEW"
     },
@@ -1587,7 +1587,7 @@
         "type" : "SAVE_AS"
       },
       "planId" : "dashboard-starter",
-      "protocolVersion" : "V3",
+      "protocolVersion" : 1,
       "source" : {
         "type" : "NEW"
       },

@@ -2,9 +2,9 @@ package dev.erst.gridgrind.engine.runtime;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import dev.erst.gridgrind.core.plan.GridGrindProtocolVersion;
 import dev.erst.gridgrind.core.problem.GridGrindProblemCode;
 import dev.erst.gridgrind.core.result.WorkbookResults;
+import dev.erst.gridgrind.core.vocabulary.ProtocolVersion;
 import org.junit.jupiter.api.Test;
 
 /** Tests for the transport-neutral GridGrind request executor port. */
@@ -14,7 +14,7 @@ class GridGrindRequestExecutorTest {
     GridGrindRequestExecutor executor =
         (request, bindings, sink) ->
             WorkbookResults.failure(
-                GridGrindProtocolVersion.current(),
+                ProtocolVersion.CURRENT,
                 GridGrindProblems.problem(
                     GridGrindProblemCode.INVALID_REQUEST,
                     "boom",

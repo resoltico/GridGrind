@@ -18,7 +18,6 @@ import dev.erst.gridgrind.core.plan.DrawingObjectSelector;
 import dev.erst.gridgrind.core.plan.ExecutionJournalSpec;
 import dev.erst.gridgrind.core.plan.ExecutionModeSpec;
 import dev.erst.gridgrind.core.plan.ExecutionPolicySpec;
-import dev.erst.gridgrind.core.plan.GridGrindProtocolVersion;
 import dev.erst.gridgrind.core.plan.InspectionStep;
 import dev.erst.gridgrind.core.plan.MutationStep;
 import dev.erst.gridgrind.core.plan.NamedRangeSelector;
@@ -42,6 +41,7 @@ import dev.erst.gridgrind.core.result.WorkbookResults;
 import dev.erst.gridgrind.core.vocabulary.CellAddress;
 import dev.erst.gridgrind.core.vocabulary.DefinedName;
 import dev.erst.gridgrind.core.vocabulary.PlanId;
+import dev.erst.gridgrind.core.vocabulary.ProtocolVersion;
 import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.StepId;
@@ -509,7 +509,7 @@ class ExecutionJournalCoverageTest {
     List<dev.erst.gridgrind.core.plan.WorkbookStep> steps = new ArrayList<>(mutationsAndAssertions);
     steps.addAll(inspections);
     return WorkbookPlan.identified(
-        GridGrindProtocolVersion.current(),
+        ProtocolVersion.CURRENT,
         new PlanId(planId),
         new WorkbookPlan.WorkbookSource.New(),
         new WorkbookPlan.WorkbookPersistence.None(),

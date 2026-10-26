@@ -4,7 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import dev.erst.gridgrind.core.plan.GridGrindProtocolVersion;
+import dev.erst.gridgrind.core.vocabulary.ProtocolVersion;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -421,7 +421,7 @@ class CatalogLookupSupportCoverageTest {
                     objectTemplate("USE_PLAIN"),
                     List.of("step template note"))));
     return new Catalog(
-        GridGrindProtocolVersion.current(),
+        ProtocolVersion.CURRENT,
         "type",
         new TypeEntry("REQUEST", "Synthetic request.", List.of()),
         List.of(source),
@@ -442,7 +442,7 @@ class CatalogLookupSupportCoverageTest {
             "Unknown top-level set in referenced-shape text.",
             List.of(field("source", new FieldShape.TopLevelTypeSetRef("bogusTypeSet"))));
     return new Catalog(
-        GridGrindProtocolVersion.current(),
+        ProtocolVersion.CURRENT,
         "type",
         new TypeEntry("REQUEST", "Synthetic request.", List.of()),
         List.of(),
@@ -496,7 +496,7 @@ class CatalogLookupSupportCoverageTest {
             "Searchable through plain group references.",
             List.of(field("plain", new FieldShape.PlainTypeGroupRef("lookupPlain"))));
     return new Catalog(
-        GridGrindProtocolVersion.current(),
+        ProtocolVersion.CURRENT,
         "type",
         new TypeEntry("REQUEST", "Synthetic request.", List.of()),
         List.of(source),
@@ -541,7 +541,7 @@ class CatalogLookupSupportCoverageTest {
                 field("recursivePlain", new FieldShape.PlainTypeGroupRef("recursivePlainGroup")),
                 field("plainLeaf", new FieldShape.PlainTypeGroupRef("plainLeafGroup"))));
     return new Catalog(
-        GridGrindProtocolVersion.current(),
+        ProtocolVersion.CURRENT,
         "type",
         new TypeEntry("REQUEST", "Synthetic request.", List.of()),
         List.of(),
@@ -567,7 +567,7 @@ class CatalogLookupSupportCoverageTest {
             "Broken nested group reference.",
             List.of(field("nested", new FieldShape.NestedTypeGroupRef("missingNested"))));
     return new Catalog(
-        GridGrindProtocolVersion.current(),
+        ProtocolVersion.CURRENT,
         "type",
         new TypeEntry("REQUEST", "Synthetic request.", List.of()),
         List.of(),
@@ -588,7 +588,7 @@ class CatalogLookupSupportCoverageTest {
             "Broken plain group reference.",
             List.of(field("plain", new FieldShape.PlainTypeGroupRef("missingPlain"))));
     return new Catalog(
-        GridGrindProtocolVersion.current(),
+        ProtocolVersion.CURRENT,
         "type",
         new TypeEntry("REQUEST", "Synthetic request.", List.of()),
         List.of(),
@@ -610,7 +610,7 @@ class CatalogLookupSupportCoverageTest {
         new TypeEntry(
             "ORPHAN_PLAIN", "Orphan plain entry.", List.of(field("label", scalarString())));
     return new Catalog(
-        GridGrindProtocolVersion.current(),
+        ProtocolVersion.CURRENT,
         "type",
         new TypeEntry("REQUEST", "Synthetic request.", List.of()),
         List.of(),
@@ -632,7 +632,7 @@ class CatalogLookupSupportCoverageTest {
         new TypeEntry(
             "ENTRY_BETA", "Second nested entry.", List.of(field("title", scalarString())));
     return new Catalog(
-        GridGrindProtocolVersion.current(),
+        ProtocolVersion.CURRENT,
         "type",
         new TypeEntry("REQUEST", "Synthetic request.", List.of()),
         List.of(),

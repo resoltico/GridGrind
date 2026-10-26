@@ -129,7 +129,7 @@
       "resolution" : "Create the sheet first or correct the sheet name.",
       "title" : "Sheet not found"
     },
-    "protocolVersion" : "V3",
+    "protocolVersion" : 1,
     "status" : "FAILED",
     "warnings" : [ ]
   }

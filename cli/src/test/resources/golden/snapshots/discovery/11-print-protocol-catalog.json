@@ -508,7 +508,7 @@
       "qualifiedId" : "inspectionQueryTypes",
       "summary" : "Top-level type category with 35 entries."
     } ],
-    "protocolVersion" : "V3",
+    "protocolVersion" : 1,
     "query" : "cell text",
     "totalCount" : 79
   }

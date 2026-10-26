@@ -38,7 +38,6 @@ import dev.erst.gridgrind.core.model.table.SheetSchemaReport;
 import dev.erst.gridgrind.core.model.value.CellHyperlinkReport;
 import dev.erst.gridgrind.core.model.value.HyperlinkHealthReport;
 import dev.erst.gridgrind.core.model.value.HyperlinkTarget;
-import dev.erst.gridgrind.core.plan.GridGrindProtocolVersion;
 import dev.erst.gridgrind.core.problem.GridGrindProblemCode;
 import dev.erst.gridgrind.core.problem.GridGrindProblemDetail;
 import dev.erst.gridgrind.core.problem.ProblemContextRequestSurfaces.RequestShape;
@@ -51,6 +50,7 @@ import dev.erst.gridgrind.core.vocabulary.ExcelHorizontalAlignment;
 import dev.erst.gridgrind.core.vocabulary.ExcelVerticalAlignment;
 import dev.erst.gridgrind.core.vocabulary.NamedRangeBackingKind;
 import dev.erst.gridgrind.core.vocabulary.NamedRangeScope;
+import dev.erst.gridgrind.core.vocabulary.ProtocolVersion;
 import dev.erst.gridgrind.core.vocabulary.RangeLabel;
 import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.core.vocabulary.SheetLabel;
@@ -83,7 +83,7 @@ class WorkbookResultEdgeCoverageTest {
                 new dev.erst.gridgrind.core.problem.ProblemContext.ValidateRequest(requestShape)));
 
     assertTrue(success.warnings().isEmpty());
-    assertEquals(GridGrindProtocolVersion.current(), failure.protocolVersion());
+    assertEquals(ProtocolVersion.CURRENT, failure.protocolVersion());
     assertEquals(
         "executionPath must not be blank",
         assertThrows(

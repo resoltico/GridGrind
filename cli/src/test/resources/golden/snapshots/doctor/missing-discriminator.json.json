@@ -26,7 +26,7 @@
       "resolution" : "Add the required type discriminator at 'source.type'.",
       "title" : "Invalid request shape"
     } ],
-    "protocolVersion" : "V3",
+    "protocolVersion" : 1,
     "severity" : "ERROR",
     "valid" : false,
     "warnings" : [ ]

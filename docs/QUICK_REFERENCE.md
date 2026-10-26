@@ -44,7 +44,7 @@ Machine-readable request-template, discovery, doctor, and execution payloads are
 
 ```json
 {
-  "protocolVersion": "V3",
+  "protocolVersion": 1,
   "source": {
     "type": "NEW"
   },

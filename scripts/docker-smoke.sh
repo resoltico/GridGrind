@@ -244,7 +244,7 @@ JSON
 )"
 cat > "${request_path}" <<JSON
 {
-  "protocolVersion": "V3",
+  "protocolVersion": 1,
   "source": {
     "type": "NEW"
   },
@@ -280,7 +280,7 @@ ${default_formula_environment_block}
 JSON
 cat > "${existing_request_path}" <<JSON
 {
-  "protocolVersion": "V3",
+  "protocolVersion": 1,
   "source": {
     "type": "EXISTING",
     "path": "${workbook_rel}"
@@ -305,7 +305,7 @@ ${default_formula_environment_block}
 JSON
 cat > "${signature_request_path}" <<JSON
 {
-  "protocolVersion": "V3",
+  "protocolVersion": 1,
   "source": {
     "type": "NEW"
   },
@@ -384,7 +384,7 @@ ${default_formula_environment_block}
 JSON
 cat > "${streaming_request_path}" <<JSON
 {
-  "protocolVersion": "V3",
+  "protocolVersion": 1,
   "source": {
     "type": "NEW"
   },
@@ -480,7 +480,7 @@ ${default_formula_environment_block}
 JSON
 cat > "${streaming_read_request_path}" <<JSON
 {
-  "protocolVersion": "V3",
+  "protocolVersion": 1,
   "source": {
     "type": "EXISTING",
     "path": "${streaming_workbook_rel}"

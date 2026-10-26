@@ -6,7 +6,7 @@
       "advisory" : "SELF_CONTAINED",
       "id" : "ASSERTION",
       "intentTags" : [ "assertion", "verification", "fact-readback", "quality" ],
-      "protocolVersion" : "V3",
+      "protocolVersion" : 1,
       "requestFileName" : "assertion-request.json",
       "requestProfile" : {
         "assertionTypes" : [ "EXPECT_CELL_VALUE", "EXPECT_ANALYSIS_MAX_SEVERITY" ],
@@ -462,7 +462,7 @@
         "type" : "NONE"
       },
       "planId" : "assertion-workflow",
-      "protocolVersion" : "V3",
+      "protocolVersion" : 1,
       "status" : "SUCCEEDED",
       "warnings" : [ ]
     }
@@ -477,7 +477,7 @@
       "type" : "NONE"
     },
     "planId" : "assertion-workflow",
-    "protocolVersion" : "V3",
+    "protocolVersion" : 1,
     "source" : {
       "type" : "NEW"
     },
@@ -587,7 +587,7 @@
         "type" : "NONE"
       },
       "planId" : "assertion-workflow",
-      "protocolVersion" : "V3",
+      "protocolVersion" : 1,
       "source" : {
         "type" : "NEW"
       },

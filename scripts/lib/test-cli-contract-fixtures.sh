@@ -25,7 +25,7 @@ append_fixture_line() {
 print_cli_contract_minimal_request() {
     cat <<'JSON'
 {
-  "protocolVersion": "V3",
+  "protocolVersion": 1,
   "source": { "type": "NEW" },
   "persistence": { "type": "NONE" },
   "steps": []

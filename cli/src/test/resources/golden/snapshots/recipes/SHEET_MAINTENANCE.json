@@ -6,7 +6,7 @@
       "advisory" : "SELF_CONTAINED",
       "id" : "SHEET_MAINTENANCE",
       "intentTags" : [ "maintenance", "sheet", "authoring", "copy", "cleanup" ],
-      "protocolVersion" : "V3",
+      "protocolVersion" : 1,
       "requestFileName" : "sheet-maintenance-request.json",
       "requestProfile" : {
         "assertionTypes" : [ ],
@@ -1223,7 +1223,7 @@
         "type" : "SAVE_AS"
       },
       "planId" : "sheet-maintenance-workflow",
-      "protocolVersion" : "V3",
+      "protocolVersion" : 1,
       "status" : "SUCCEEDED",
       "warnings" : [ ]
     }
@@ -1235,7 +1235,7 @@
       "type" : "SAVE_AS"
     },
     "planId" : "sheet-maintenance-workflow",
-    "protocolVersion" : "V3",
+    "protocolVersion" : 1,
     "source" : {
       "type" : "NEW"
     },
@@ -1358,7 +1358,7 @@
         "type" : "SAVE_AS"
       },
       "planId" : "sheet-maintenance-workflow",
-      "protocolVersion" : "V3",
+      "protocolVersion" : 1,
       "source" : {
         "type" : "NEW"
       },

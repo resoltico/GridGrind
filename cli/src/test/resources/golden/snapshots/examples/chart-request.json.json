@@ -1238,7 +1238,7 @@
       "type" : "SAVE_AS"
     },
     "planId" : "chart-workflow",
-    "protocolVersion" : "V3",
+    "protocolVersion" : 1,
     "status" : "SUCCEEDED",
     "warnings" : [ ]
   }

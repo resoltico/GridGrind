@@ -9,13 +9,13 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import dev.erst.gridgrind.core.metadata.CatalogIgnored;
-import dev.erst.gridgrind.core.plan.GridGrindProtocolVersion;
 import dev.erst.gridgrind.core.plan.MutationStep;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import dev.erst.gridgrind.core.semantics.OperationEffect;
 import dev.erst.gridgrind.core.semantics.OperationEffectFootprint;
 import dev.erst.gridgrind.core.semantics.OperationPrecondition;
 import dev.erst.gridgrind.core.vocabulary.ProtocolConstraintValues;
+import dev.erst.gridgrind.core.vocabulary.ProtocolVersion;
 import dev.erst.gridgrind.json.codec.GridGrindJson;
 import dev.erst.gridgrind.json.codec.GridGrindJsonOutput;
 import java.io.IOException;
@@ -34,7 +34,7 @@ class GridGrindProtocolCatalogTest {
         GridGrindJson.readRequest(GridGrindJsonOutput.writeRequestBytes(template));
     var templateTree = GridGrindJsonOutput.requestTree(template);
 
-    assertEquals(GridGrindProtocolVersion.V3, template.protocolVersion());
+    assertEquals(ProtocolVersion.CURRENT, template.protocolVersion());
     assertTrue(template.execution().isDefault());
     assertTrue(template.formulaEnvironment().isEmpty());
     assertTrue(template.steps().isEmpty());

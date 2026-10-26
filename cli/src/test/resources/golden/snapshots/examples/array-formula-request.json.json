@@ -190,7 +190,7 @@
       "type" : "NONE"
     },
     "planId" : "array-formula-workflow",
-    "protocolVersion" : "V3",
+    "protocolVersion" : 1,
     "status" : "SUCCEEDED",
     "warnings" : [ ]
   }

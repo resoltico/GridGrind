@@ -211,7 +211,8 @@ final class GoldenWorkbook {
   }
 
   private static ObjectNode readPlan(Path output) {
-    ObjectNode plan = object("protocolVersion", "V3");
+    ObjectNode plan = GoldenSnapshots.JSON.createObjectNode();
+    plan.put("protocolVersion", 1);
     plan.putObject("source").put("type", "EXISTING").put("path", output.toString());
     plan.putObject("persistence").put("type", "NONE");
     plan.putArray("steps");

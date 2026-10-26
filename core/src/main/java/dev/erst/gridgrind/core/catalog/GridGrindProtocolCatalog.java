@@ -1,7 +1,7 @@
 package dev.erst.gridgrind.core.catalog;
 
-import dev.erst.gridgrind.core.plan.GridGrindProtocolVersion;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
+import dev.erst.gridgrind.core.vocabulary.ProtocolVersion;
 import java.util.List;
 import java.util.Optional;
 
@@ -15,7 +15,7 @@ public final class GridGrindProtocolCatalog {
   private static final String DISCRIMINATOR_FIELD = "type";
   private static final WorkbookPlan REQUEST_TEMPLATE =
       new WorkbookPlan(
-          GridGrindProtocolVersion.current(),
+          ProtocolVersion.CURRENT,
           Optional.empty(),
           new WorkbookPlan.WorkbookSource.New(),
           new WorkbookPlan.WorkbookPersistence.None(),
@@ -111,7 +111,7 @@ public final class GridGrindProtocolCatalog {
   private static Catalog buildCatalog() {
     return CatalogStepTemplateSupport.attach(
         new Catalog(
-            GridGrindProtocolVersion.current(),
+            ProtocolVersion.CURRENT,
             DISCRIMINATOR_FIELD,
             REQUEST_TYPE,
             publicEntries(SOURCE_TYPES),

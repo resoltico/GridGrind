@@ -55,7 +55,7 @@ class ExampleExecutionFixturesTest {
     WorkbookPlan request =
         GridGrindJson.readRequest(
             """
-        {"protocolVersion":"V3","source":{"type":"EXISTING","path":"observed-table-name.xlsx"},
+        {"protocolVersion":1,"source":{"type":"EXISTING","path":"observed-table-name.xlsx"},
         "persistence":{"type":"NONE"},"steps":[{"stepId":"tables","target":{"type":"TABLE_ALL"},
         "query":{"type":"GET_TABLES"}}]}
         """);
@@ -95,7 +95,7 @@ class ExampleExecutionFixturesTest {
     WorkbookPlan request =
         GridGrindJson.readRequest(
             """
-        {"protocolVersion":"V3","source":{"type":"EXISTING","path":"observed-defined-name.xlsx"},
+        {"protocolVersion":1,"source":{"type":"EXISTING","path":"observed-defined-name.xlsx"},
         "persistence":{"type":"NONE"},"steps":[{"stepId":"names","target":{"type":"NAMED_RANGE_ALL"},
         "query":{"type":"GET_NAMED_RANGES"}}]}
         """);
@@ -135,7 +135,7 @@ class ExampleExecutionFixturesTest {
     WorkbookPlan request =
         GridGrindJson.readRequest(
             """
-        {"protocolVersion":"V3","source":{"type":"EXISTING","path":"observed-range.xlsx"},
+        {"protocolVersion":1,"source":{"type":"EXISTING","path":"observed-range.xlsx"},
         "persistence":{"type":"NONE"},"steps":[{"stepId":"ranges",
         "target":{"type":"RANGE_ALL_ON_SHEET","sheetName":"Data"},"query":{"type":"GET_DATA_VALIDATIONS"}}]}
         """);
@@ -180,7 +180,7 @@ class ExampleExecutionFixturesTest {
     WorkbookPlan request =
         GridGrindJson.readRequest(
             """
-        {"protocolVersion":"V3","source":{"type":"EXISTING","path":"observed-label.xlsx"},"persistence":{"type":"NONE"},"steps":[{"stepId":"summary","target":{"type":"WORKBOOK_CURRENT"},"query":{"type":"GET_WORKBOOK_SUMMARY"}},{"stepId":"tables","target":{"type":"TABLE_ALL"},"query":{"type":"GET_TABLES"}}]}
+        {"protocolVersion":1,"source":{"type":"EXISTING","path":"observed-label.xlsx"},"persistence":{"type":"NONE"},"steps":[{"stepId":"summary","target":{"type":"WORKBOOK_CURRENT"},"query":{"type":"GET_WORKBOOK_SUMMARY"}},{"stepId":"tables","target":{"type":"TABLE_ALL"},"query":{"type":"GET_TABLES"}}]}
         """);
     WorkbookResult.Success result =
         assertInstanceOf(

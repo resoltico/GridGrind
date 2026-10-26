@@ -1,10 +1,10 @@
 package dev.erst.gridgrind.engine.runtime;
 
 import dev.erst.gridgrind.core.plan.ExecutionModeSpec;
-import dev.erst.gridgrind.core.plan.GridGrindProtocolVersion;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import dev.erst.gridgrind.core.problem.RequestWarning;
 import dev.erst.gridgrind.core.result.WorkbookResult;
+import dev.erst.gridgrind.core.vocabulary.ProtocolVersion;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
 import java.util.List;
 import java.util.Objects;
@@ -54,7 +54,7 @@ final class ExecutionWorkflowSupport {
   }
 
   WorkbookResult executeWorkbookWorkflow(
-      GridGrindProtocolVersion protocolVersion,
+      ProtocolVersion protocolVersion,
       WorkbookPlan request,
       ExcelWorkbook workbook,
       ExecutionModeSpec executionMode,
@@ -66,7 +66,7 @@ final class ExecutionWorkflowSupport {
   }
 
   WorkbookResult executeDirectEventReadWorkflow(
-      GridGrindProtocolVersion protocolVersion,
+      ProtocolVersion protocolVersion,
       WorkbookPlan request,
       List<RequestWarning> warnings,
       ExecutionJournalRecorder journal,
@@ -75,7 +75,7 @@ final class ExecutionWorkflowSupport {
   }
 
   WorkbookResult executeStreamingWorkflow(
-      GridGrindProtocolVersion protocolVersion,
+      ProtocolVersion protocolVersion,
       WorkbookPlan request,
       ExecutionModeSpec executionMode,
       List<RequestWarning> warnings,

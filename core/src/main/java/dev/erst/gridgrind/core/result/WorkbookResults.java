@@ -1,12 +1,12 @@
 package dev.erst.gridgrind.core.result;
 
 import dev.erst.gridgrind.core.plan.AssertionResult;
-import dev.erst.gridgrind.core.plan.GridGrindProtocolVersion;
 import dev.erst.gridgrind.core.plan.InspectionResult;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import dev.erst.gridgrind.core.problem.GridGrindProblemDetail;
 import dev.erst.gridgrind.core.problem.RequestWarning;
 import dev.erst.gridgrind.core.vocabulary.PlanId;
+import dev.erst.gridgrind.core.vocabulary.ProtocolVersion;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -20,7 +20,7 @@ public final class WorkbookResults {
    * report.
    */
   public static WorkbookResult.Success success(
-      GridGrindProtocolVersion protocolVersion,
+      ProtocolVersion protocolVersion,
       WorkbookResultPersistence.PersistenceOutcome persistence,
       List<RequestWarning> warnings,
       List<AssertionResult> assertions,
@@ -35,7 +35,7 @@ public final class WorkbookResults {
       List<AssertionResult> assertions,
       List<InspectionResult> inspections) {
     return success(
-        GridGrindProtocolVersion.current(),
+        ProtocolVersion.CURRENT,
         new WorkbookResultPersistence.PersistenceOutcome.NotSaved(),
         warnings,
         assertions,
@@ -47,7 +47,7 @@ public final class WorkbookResults {
    * report.
    */
   public static WorkbookResult.Failure failure(
-      GridGrindProtocolVersion protocolVersion,
+      ProtocolVersion protocolVersion,
       WorkbookResultPersistence.PersistenceOutcome persistence,
       GridGrindProblemDetail.Problem problem) {
     return failure(protocolVersion, Optional.empty(), persistence, problem);
@@ -55,7 +55,7 @@ public final class WorkbookResults {
 
   /** Creates a failure result with the request's optional stable plan identifier. */
   public static WorkbookResult.Failure failure(
-      GridGrindProtocolVersion protocolVersion,
+      ProtocolVersion protocolVersion,
       Optional<PlanId> planId,
       WorkbookResultPersistence.PersistenceOutcome persistence,
       GridGrindProblemDetail.Problem problem) {
@@ -67,14 +67,14 @@ public final class WorkbookResults {
    * report.
    */
   public static WorkbookResult.Failure failure(
-      GridGrindProtocolVersion protocolVersion, GridGrindProblemDetail.Problem problem) {
+      ProtocolVersion protocolVersion, GridGrindProblemDetail.Problem problem) {
     return failure(
         protocolVersion, new WorkbookResultPersistence.PersistenceOutcome.NotSaved(), problem);
   }
 
   /** Creates one failed response using the current protocol version. */
   public static WorkbookResult.Failure failure(GridGrindProblemDetail.Problem problem) {
-    return failure(GridGrindProtocolVersion.current(), problem);
+    return failure(ProtocolVersion.CURRENT, problem);
   }
 
   /**

@@ -7,9 +7,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import dev.erst.gridgrind.core.metadata.CatalogIgnored;
 import dev.erst.gridgrind.core.plan.CellMutationAction;
-import dev.erst.gridgrind.core.plan.GridGrindProtocolVersion;
 import dev.erst.gridgrind.core.plan.InspectionStep;
 import dev.erst.gridgrind.core.plan.MutationStep;
+import dev.erst.gridgrind.core.vocabulary.ProtocolVersion;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 
@@ -20,7 +20,7 @@ class CatalogEdgeCoverageTest {
     TypeEntry requestType = new TypeEntry("REQUEST", "Summary", List.of());
     Catalog catalog =
         new Catalog(
-            GridGrindProtocolVersion.current(),
+            ProtocolVersion.CURRENT,
             "type",
             requestType,
             List.of(),
@@ -33,7 +33,7 @@ class CatalogEdgeCoverageTest {
             List.of(),
             List.of());
 
-    assertEquals(GridGrindProtocolVersion.current(), catalog.protocolVersion());
+    assertEquals(ProtocolVersion.CURRENT, catalog.protocolVersion());
     assertTrue(requestType.field("missing").isEmpty());
     assertEquals(
         "protocolVersion must not be null",
@@ -179,7 +179,7 @@ class CatalogEdgeCoverageTest {
             List.of("sharedRule"));
     Catalog catalog =
         new Catalog(
-            GridGrindProtocolVersion.current(),
+            ProtocolVersion.CURRENT,
             "type",
             new TypeEntry("REQUEST", "Summary", List.of()),
             List.of(directNoted),

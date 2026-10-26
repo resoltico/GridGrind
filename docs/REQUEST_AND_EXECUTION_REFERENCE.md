@@ -129,7 +129,7 @@ accessibility without mutating a workbook.
 
 ```json
 {
-  "protocolVersion": "V3",
+  "protocolVersion": 1,
   "source":      { ... },
   "persistence": { ... },
   "steps": [ ... ]
@@ -138,7 +138,7 @@ accessibility without mutating a workbook.
 
 | Field | Required | Description |
 |:------|:---------|:------------|
-| `protocolVersion` | Yes | Wire-contract version. The current public value is `V3`. |
+| `protocolVersion` | Yes | Wire-contract version. The current public value is integer `1`. |
 | `source` | Yes | Where the workbook comes from. |
 | `persistence` | Yes | Where and whether to save. Use `{"type":"NONE"}` for unsaved runs. |
 | `execution` | No | Optional execution policy for low-memory mode selection, structured journaling, and formula calculation handling. Omit it for the standard full-XSSF path with `SUMMARY` journaling and `DO_NOT_CALCULATE`, or supply it explicitly when you need non-default behavior. |
@@ -283,7 +283,7 @@ object. The excerpt below focuses on that canonical persistence outcome and its 
 ```json
 {
   "status": "SUCCEEDED",
-  "protocolVersion": "V3",
+  "protocolVersion": 1,
   "planId": "budget-pass",
   "persistence": {
     "type": "SAVE_AS",
@@ -421,7 +421,7 @@ Use `ANALYZE_WORKBOOK_FINDINGS` as the primary workbook-health check. Pair it wi
 
 ```json
 {
-  "protocolVersion": "V3",
+  "protocolVersion": 1,
   "source": {
     "type": "NEW"
   },

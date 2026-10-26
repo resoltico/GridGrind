@@ -6,7 +6,7 @@
       "advisory" : "REQUIRES_EXAMPLE_ASSETS",
       "id" : "FILE_HYPERLINK_HEALTH",
       "intentTags" : [ "hyperlink", "health", "analysis", "inspection" ],
-      "protocolVersion" : "V3",
+      "protocolVersion" : 1,
       "requestFileName" : "file-hyperlink-health-request.json",
       "requestProfile" : {
         "assertionTypes" : [ ],
@@ -935,7 +935,7 @@
         "type" : "SAVE_AS"
       },
       "planId" : "file-hyperlink-health-workflow",
-      "protocolVersion" : "V3",
+      "protocolVersion" : 1,
       "status" : "SUCCEEDED",
       "warnings" : [ ]
     }
@@ -947,7 +947,7 @@
       "type" : "SAVE_AS"
     },
     "planId" : "file-hyperlink-health-workflow",
-    "protocolVersion" : "V3",
+    "protocolVersion" : 1,
     "source" : {
       "type" : "NEW"
     },
@@ -1106,7 +1106,7 @@
         "resolution" : "Run gridgrind --help for the synopsis, --help-protocol for the authoritative request contract, or --help-guidance for workflows and examples.",
         "title" : "Invalid CLI arguments"
       } ],
-      "protocolVersion" : "V3",
+      "protocolVersion" : 1,
       "status" : "REJECTED"
     }
   }

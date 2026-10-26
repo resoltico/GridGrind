@@ -10,11 +10,11 @@ import dev.erst.gridgrind.cli.examples.GridGrindCliRecipeRegistry;
 import dev.erst.gridgrind.cli.examples.GridGrindShippedExamples;
 import dev.erst.gridgrind.core.catalog.GridGrindProtocolCatalog;
 import dev.erst.gridgrind.core.catalog.TypeEntry;
-import dev.erst.gridgrind.core.plan.GridGrindProtocolVersion;
 import dev.erst.gridgrind.core.problem.GridGrindProblemCode;
 import dev.erst.gridgrind.core.problem.GridGrindProblemDetail;
 import dev.erst.gridgrind.core.problem.ProblemContext;
 import dev.erst.gridgrind.core.problem.ProblemContextRequestSurfaces.CliArgument;
+import dev.erst.gridgrind.core.vocabulary.ProtocolVersion;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
@@ -24,7 +24,7 @@ import org.junit.jupiter.api.Test;
 class CliDiscoveryValidationCoverageTest {
   @Test
   void validatesPrimitiveCopyHelpersAndNullGuards() {
-    GridGrindProtocolVersion protocolVersion = GridGrindProtocolVersion.current();
+    ProtocolVersion protocolVersion = ProtocolVersion.CURRENT;
     TypeEntry typeEntry = GridGrindProtocolCatalog.catalog().plainTypes().getFirst().type();
     ShippedExampleEntry exampleEntry = GridGrindShippedExamples.catalog().examples().getFirst();
     TaskEntry taskEntry = GridGrindTaskCatalog.catalog().tasks().getFirst();
@@ -150,7 +150,7 @@ class CliDiscoveryValidationCoverageTest {
                 IllegalStateException.class,
                 () ->
                     GridGrindTaskCatalog.validateCapabilityReferences(
-                        new TaskCatalog(GridGrindProtocolVersion.current(), List.of(brokenTask))))
+                        new TaskCatalog(ProtocolVersion.CURRENT, List.of(brokenTask))))
             .getMessage());
   }
 
@@ -226,8 +226,7 @@ class CliDiscoveryValidationCoverageTest {
             IllegalArgumentException.class,
             () ->
                 new RecipeCatalog(
-                    GridGrindProtocolVersion.current(),
-                    List.of(assetBackedExample, assetBackedExample)));
+                    ProtocolVersion.CURRENT, List.of(assetBackedExample, assetBackedExample)));
     assertEquals("recipes must not contain duplicate ASSET_BACKED", duplicateRecipes.getMessage());
 
     assertEquals(
@@ -358,7 +357,7 @@ class CliDiscoveryValidationCoverageTest {
                 NullPointerException.class,
                 () ->
                     new CommandError(
-                        GridGrindProtocolVersion.current(),
+                        ProtocolVersion.CURRENT,
                         "print-recipe",
                         (List<GridGrindProblemDetail.Problem>) null))
             .getMessage());
@@ -366,15 +365,13 @@ class CliDiscoveryValidationCoverageTest {
         "problems must not be empty",
         assertThrows(
                 IllegalArgumentException.class,
-                () ->
-                    new CommandError(GridGrindProtocolVersion.current(), "print-recipe", List.of()))
+                () -> new CommandError(ProtocolVersion.CURRENT, "print-recipe", List.of()))
             .getMessage());
     assertEquals(
         "command must not be blank",
         assertThrows(
                 IllegalArgumentException.class,
-                () ->
-                    new CommandError(GridGrindProtocolVersion.current(), "   ", List.of(problem())))
+                () -> new CommandError(ProtocolVersion.CURRENT, "   ", List.of(problem())))
             .getMessage());
     assertEquals(
         "responsePath must not be blank",

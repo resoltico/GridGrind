@@ -2,7 +2,7 @@ package dev.erst.gridgrind.cli.discovery;
 
 import dev.erst.gridgrind.cli.examples.GridGrindCliRecipe;
 import dev.erst.gridgrind.cli.examples.GridGrindCliRecipeRegistry;
-import dev.erst.gridgrind.core.plan.GridGrindProtocolVersion;
+import dev.erst.gridgrind.core.vocabulary.ProtocolVersion;
 import java.util.List;
 import java.util.Optional;
 
@@ -12,7 +12,7 @@ public final class GridGrindRecipeCatalog {
 
   /** Returns the full built-in recipe catalog across examples and task starters. */
   public static RecipeCatalog catalog() {
-    return new RecipeCatalog(GridGrindProtocolVersion.current(), recipeEntries());
+    return new RecipeCatalog(ProtocolVersion.CURRENT, recipeEntries());
   }
 
   /** Returns one recipe catalog entry by stable id, or empty when unknown. */

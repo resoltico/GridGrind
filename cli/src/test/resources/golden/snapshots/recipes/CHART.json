@@ -6,7 +6,7 @@
       "advisory" : "SELF_CONTAINED",
       "id" : "CHART",
       "intentTags" : [ "dashboard", "chart", "visual", "authoring" ],
-      "protocolVersion" : "V3",
+      "protocolVersion" : 1,
       "requestFileName" : "chart-request.json",
       "requestProfile" : {
         "assertionTypes" : [ "EXPECT_CHART_PRESENT" ],
@@ -1265,7 +1265,7 @@
         "type" : "SAVE_AS"
       },
       "planId" : "chart-workflow",
-      "protocolVersion" : "V3",
+      "protocolVersion" : 1,
       "status" : "SUCCEEDED",
       "warnings" : [ ]
     }
@@ -1277,7 +1277,7 @@
       "type" : "SAVE_AS"
     },
     "planId" : "chart-workflow",
-    "protocolVersion" : "V3",
+    "protocolVersion" : 1,
     "source" : {
       "type" : "NEW"
     },
@@ -1518,7 +1518,7 @@
         "type" : "SAVE_AS"
       },
       "planId" : "chart-workflow",
-      "protocolVersion" : "V3",
+      "protocolVersion" : 1,
       "source" : {
         "type" : "NEW"
       },

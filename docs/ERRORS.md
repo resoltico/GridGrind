@@ -18,7 +18,7 @@ route:
 
 ```json
 {
-  "protocolVersion": "V3",
+  "protocolVersion": 1,
   "status": "FAILED",
   "planId": "set-total-pass",
   "persistence": {
@@ -169,7 +169,7 @@ use the plural `CommandError` envelope instead of an execution result:
 
 ```json
 {
-  "protocolVersion": "V3",
+  "protocolVersion": 1,
   "command": "execute",
   "status": "REJECTED",
   "problems": [
@@ -227,7 +227,7 @@ target, authored assertion, and observations:
 ```json
 {
   "status": "FAILED",
-  "protocolVersion": "V3",
+  "protocolVersion": 1,
   "problem": {
     "code": "ASSERTION_FAILED",
     "category": "ASSERTION",

@@ -2,19 +2,19 @@ package dev.erst.gridgrind.engine.runtime;
 
 import dev.erst.gridgrind.core.model.formula.CalculationReport;
 import dev.erst.gridgrind.core.plan.AssertionResult;
-import dev.erst.gridgrind.core.plan.GridGrindProtocolVersion;
 import dev.erst.gridgrind.core.plan.InspectionResult;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import dev.erst.gridgrind.core.problem.GridGrindProblemDetail;
 import dev.erst.gridgrind.core.problem.RequestWarning;
 import dev.erst.gridgrind.core.result.WorkbookExecutionEvidence.Preservation;
+import dev.erst.gridgrind.core.vocabulary.ProtocolVersion;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import java.util.List;
 import org.jspecify.annotations.Nullable;
 
 /** Request-scoped direct-event facts and evidence retained through readable-workbook closure. */
 record DirectEventReadContext(
-    GridGrindProtocolVersion protocolVersion,
+    ProtocolVersion protocolVersion,
     WorkbookPlan request,
     List<RequestWarning> warnings,
     ExecutionJournalRecorder journal,

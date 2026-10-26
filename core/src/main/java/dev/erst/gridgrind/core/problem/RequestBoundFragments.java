@@ -2,10 +2,10 @@ package dev.erst.gridgrind.core.problem;
 
 import dev.erst.gridgrind.core.model.formula.FormulaEnvironmentSpec;
 import dev.erst.gridgrind.core.plan.ExecutionPolicySpec;
-import dev.erst.gridgrind.core.plan.GridGrindProtocolVersion;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import dev.erst.gridgrind.core.plan.WorkbookStep;
 import dev.erst.gridgrind.core.vocabulary.PlanId;
+import dev.erst.gridgrind.core.vocabulary.ProtocolVersion;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -22,7 +22,7 @@ public final class RequestBoundFragments {
   }
 
   /** Returns the independently bound protocol version when its branch has no structural defect. */
-  public Optional<GridGrindProtocolVersion> protocolVersion() {
+  public Optional<ProtocolVersion> protocolVersion() {
     return root.protocolVersion();
   }
 

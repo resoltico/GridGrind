@@ -12,7 +12,7 @@
       "code" : "INVALID_REQUEST",
       "context" : {
         "json" : {
-          "byteOffset" : 157,
+          "byteOffset" : 154,
           "jsonPath" : "steps[0].target.address",
           "type" : "PATH_BYTE_OFFSET"
         },
@@ -27,7 +27,7 @@
       "resolution" : "Use a single-cell A1-style address such as A1 or BC12 within Excel .xlsx bounds for field 'address'.",
       "title" : "Invalid request"
     } ],
-    "protocolVersion" : "V3",
+    "protocolVersion" : 1,
     "severity" : "ERROR",
     "valid" : false,
     "warnings" : [ ]

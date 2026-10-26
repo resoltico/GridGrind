@@ -2,7 +2,7 @@
   "exit" : 0,
   "stderr" : "",
   "stdout" : {
-    "protocolVersion" : "V3",
+    "protocolVersion" : 1,
     "recipes" : [ {
       "advisory" : "SELF_CONTAINED",
       "id" : "PIVOT",

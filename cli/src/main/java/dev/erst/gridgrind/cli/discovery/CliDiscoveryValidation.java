@@ -1,7 +1,7 @@
 package dev.erst.gridgrind.cli.discovery;
 
 import dev.erst.gridgrind.core.catalog.TypeEntry;
-import dev.erst.gridgrind.core.plan.GridGrindProtocolVersion;
+import dev.erst.gridgrind.core.vocabulary.ProtocolVersion;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -21,7 +21,7 @@ final class CliDiscoveryValidation {
     return value;
   }
 
-  static GridGrindProtocolVersion requireProtocolVersion(GridGrindProtocolVersion protocolVersion) {
+  static ProtocolVersion requireProtocolVersion(ProtocolVersion protocolVersion) {
     return Objects.requireNonNull(protocolVersion, "protocolVersion must not be null");
   }
 

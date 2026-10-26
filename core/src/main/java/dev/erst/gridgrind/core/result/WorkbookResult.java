@@ -4,7 +4,6 @@ import dev.erst.gridgrind.core.metadata.Union;
 import dev.erst.gridgrind.core.metadata.Variant;
 import dev.erst.gridgrind.core.model.formula.CalculationReport;
 import dev.erst.gridgrind.core.plan.AssertionResult;
-import dev.erst.gridgrind.core.plan.GridGrindProtocolVersion;
 import dev.erst.gridgrind.core.plan.InspectionResult;
 import dev.erst.gridgrind.core.problem.DiagnosticOrder;
 import dev.erst.gridgrind.core.problem.GridGrindProblemCode;
@@ -12,6 +11,7 @@ import dev.erst.gridgrind.core.problem.GridGrindProblemDetail.Problem;
 import dev.erst.gridgrind.core.problem.RequestWarning;
 import dev.erst.gridgrind.core.result.WorkbookResultPersistence.PersistenceOutcome;
 import dev.erst.gridgrind.core.vocabulary.PlanId;
+import dev.erst.gridgrind.core.vocabulary.ProtocolVersion;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -20,7 +20,7 @@ import java.util.Optional;
 @Union(discriminator = "status")
 public sealed interface WorkbookResult {
   /** Protocol version negotiated for this response. */
-  GridGrindProtocolVersion protocolVersion();
+  ProtocolVersion protocolVersion();
 
   /**
    * Optional caller-supplied plan identifier, owned by the result rather than execution telemetry.
@@ -41,7 +41,7 @@ public sealed interface WorkbookResult {
   /** Successful workbook execution result. */
   @Variant(id = "SUCCEEDED", summary = "Successful workbook execution result.")
   record Success(
-      GridGrindProtocolVersion protocolVersion,
+      ProtocolVersion protocolVersion,
       Optional<PlanId> planId,
       ExecutionJournal journal,
       CalculationReport calculation,
@@ -72,7 +72,7 @@ public sealed interface WorkbookResult {
   /** Failed workbook execution with a structured problem. */
   @Variant(id = "FAILED", summary = "Failed workbook execution with a structured problem.")
   record Failure(
-      GridGrindProtocolVersion protocolVersion,
+      ProtocolVersion protocolVersion,
       Optional<PlanId> planId,
       ExecutionJournal journal,
       CalculationReport calculation,

@@ -65,7 +65,7 @@ class GridGrindJsonRequestContractTest {
                 GridGrindJson.readRequest(
                     """
                     {
-                      "protocolVersion": "V3",
+                      "protocolVersion": 1,
                       "source": { "type": "NEW" },
                       "execution": {
                         "mode": {"type": "FULL_XSSF"},
@@ -94,7 +94,7 @@ class GridGrindJsonRequestContractTest {
         GridGrindJson.readRequest(
             """
             {
-              "protocolVersion": "V3",
+              "protocolVersion": 1,
               "source": { "type": "NEW" },
               "persistence": { "type": "NONE" },
               "steps": []
@@ -114,7 +114,7 @@ class GridGrindJsonRequestContractTest {
         GridGrindJson.readRequest(
             """
             {
-              "protocolVersion": "V3",
+              "protocolVersion": 1,
               "source": { "type": "NEW" },
               "persistence": { "type": "NONE" },
               "execution": { "assertionMode": "COLLECT" },
@@ -132,7 +132,7 @@ class GridGrindJsonRequestContractTest {
         GridGrindJson.readRequest(
             """
             {
-              "protocolVersion": "V3",
+              "protocolVersion": 1,
               "source": { "type": "NEW" },
 	              "persistence": {
 	                "type": "SAVE_AS",
@@ -189,7 +189,7 @@ class GridGrindJsonRequestContractTest {
                 GridGrindJson.readRequest(
                     """
                     {
-                      "protocolVersion": "V3",
+                      "protocolVersion": 1,
                       "source": { "type": "NEW" },
                       "persistence": {
                         "type": "SAVE_AS",
@@ -208,7 +208,7 @@ class GridGrindJsonRequestContractTest {
                 GridGrindJson.readRequest(
                     """
                     {
-                      "protocolVersion": "V3",
+                      "protocolVersion": 1,
                       "source": { "type": "NEW" },
                       "persistence": {
                         "type": "SAVE_AS",
@@ -234,7 +234,7 @@ class GridGrindJsonRequestContractTest {
                 GridGrindJson.readRequest(
                     """
                     {
-                      "protocolVersion": "V3",
+                      "protocolVersion": 1,
                       "source": { "type": "NEW" },
                       "persistence": {
                         "type": "SAVE_AS",
@@ -267,7 +267,7 @@ class GridGrindJsonRequestContractTest {
                 GridGrindJson.readRequest(
                     """
                     {
-                      "protocolVersion": "V3",
+                      "protocolVersion": 1,
                       "source": { "type": "NEW" },
                       "persistence": { "type": "NONE" },
                       "steps": [ {
@@ -306,7 +306,7 @@ class GridGrindJsonRequestContractTest {
                 GridGrindJson.readRequest(
                     """
                     {
-                      "protocolVersion": "V3",
+                      "protocolVersion": 1,
                       "source": { "type": "NEW" },
                       "persistence": {
                         "type": "SAVE_AS",
@@ -341,7 +341,7 @@ class GridGrindJsonRequestContractTest {
                 GridGrindJson.readRequest(
                     """
                     {
-                      "protocolVersion": "V3",
+                      "protocolVersion": 1,
                       "source": { "type": "NEW" },
                       "persistence": {
                         "type": "SAVE_AS",
@@ -376,7 +376,7 @@ class GridGrindJsonRequestContractTest {
                 GridGrindJson.readRequest(
                     """
                     {
-                      "protocolVersion": "V3",
+                      "protocolVersion": 1,
                       "source": { "type": "NEW" },
                       "persistence": { "type": "NONE" },
                       "execution": {
@@ -432,7 +432,7 @@ class GridGrindJsonRequestContractTest {
                 GridGrindJson.readRequest(
                     """
                     {
-                      "protocolVersion": "V3",
+                      "protocolVersion": 1,
                       "source": { "type": "NEW" },
                       "persistence": { "type": "NONE" },
                       "execution": {

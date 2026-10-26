@@ -12,7 +12,7 @@
       "code" : "INVALID_REQUEST_SHAPE",
       "context" : {
         "json" : {
-          "byteOffset" : 106,
+          "byteOffset" : 103,
           "jsonPath" : "steps[0].target",
           "type" : "PATH_BYTE_OFFSET"
         },
@@ -36,7 +36,7 @@
       "code" : "INVALID_JSON",
       "context" : {
         "json" : {
-          "byteOffset" : 115,
+          "byteOffset" : 112,
           "jsonPath" : "steps[0].target",
           "type" : "PATH_BYTE_OFFSET"
         },
@@ -60,7 +60,7 @@
       "code" : "INVALID_REQUEST_SHAPE",
       "context" : {
         "json" : {
-          "byteOffset" : 226,
+          "byteOffset" : 223,
           "jsonPath" : "steps[1].query.type",
           "type" : "PATH_BYTE_OFFSET"
         },
@@ -75,7 +75,7 @@
       "resolution" : "Replace field 'steps[1].query.type' with one supported type value. Use --print-protocol-catalog --lookup or --search when you need the allowed values.",
       "title" : "Invalid request shape"
     } ],
-    "protocolVersion" : "V3",
+    "protocolVersion" : 1,
     "severity" : "ERROR",
     "valid" : false,
     "warnings" : [ ]

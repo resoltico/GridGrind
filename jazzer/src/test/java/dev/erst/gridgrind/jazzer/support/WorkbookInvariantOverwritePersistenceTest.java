@@ -2,7 +2,7 @@ package dev.erst.gridgrind.jazzer.support;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 
-import dev.erst.gridgrind.core.plan.GridGrindProtocolVersion;
+import dev.erst.gridgrind.core.vocabulary.ProtocolVersion;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import dev.erst.gridgrind.core.problem.GridGrindProblemCode;
 import dev.erst.gridgrind.core.problem.GridGrindProblemDetail;
@@ -28,7 +28,7 @@ class WorkbookInvariantOverwritePersistenceTest {
             List.of());
     WorkbookResult.Failure response =
         WorkbookResults.failure(
-            GridGrindProtocolVersion.V3,
+            ProtocolVersion.CURRENT,
             new WorkbookResultPersistence.PersistenceOutcome.Overwritten(
                 Optional.empty(), new WorkbookResultPersistence.PublicationOutcome.NotAttempted()),
             GridGrindProblemDetail.Problem.of(

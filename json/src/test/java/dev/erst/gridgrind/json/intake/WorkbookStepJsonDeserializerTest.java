@@ -46,7 +46,7 @@ class WorkbookStepJsonDeserializerTest {
                     GridGrindJson.readRequest(
                         """
                         {
-                          "protocolVersion": "V3",
+                          "protocolVersion": 1,
                           "source": { "type": "NEW" },
                           "persistence": { "type": "NONE" },
                           "steps": [3]
@@ -440,7 +440,7 @@ class WorkbookStepJsonDeserializerTest {
   private static byte[] requestWithStepBody(String stepBody) {
     return ("""
         {
-          "protocolVersion": "V3",
+          "protocolVersion": 1,
           "source": { "type": "NEW" },
           "persistence": { "type": "NONE" },
           "execution": {

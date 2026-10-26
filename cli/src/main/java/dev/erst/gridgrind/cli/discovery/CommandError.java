@@ -1,21 +1,21 @@
 package dev.erst.gridgrind.cli.discovery;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import dev.erst.gridgrind.core.plan.GridGrindProtocolVersion;
 import dev.erst.gridgrind.core.problem.DiagnosticOrder;
 import dev.erst.gridgrind.core.problem.GridGrindProblemDetail;
+import dev.erst.gridgrind.core.vocabulary.ProtocolVersion;
 import java.util.List;
 import java.util.Objects;
 
 /** Canonical plural result for a command rejected before workbook execution begins. */
 public record CommandError(
-    GridGrindProtocolVersion protocolVersion,
+    ProtocolVersion protocolVersion,
     String command,
     String status,
     List<GridGrindProblemDetail.Problem> problems) {
   /** Constructs a rejection with the fixed command status. */
   public CommandError(
-      GridGrindProtocolVersion protocolVersion,
+      ProtocolVersion protocolVersion,
       String command,
       List<GridGrindProblemDetail.Problem> problems) {
     this(protocolVersion, command, "REJECTED", problems);

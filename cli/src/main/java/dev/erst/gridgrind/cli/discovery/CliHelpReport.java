@@ -1,12 +1,12 @@
 package dev.erst.gridgrind.cli.discovery;
 
 import dev.erst.gridgrind.cli.CliSurface;
-import dev.erst.gridgrind.core.plan.GridGrindProtocolVersion;
+import dev.erst.gridgrind.core.vocabulary.ProtocolVersion;
 import java.util.Objects;
 
 /** Structured help payload for one CLI help surface. */
 public record CliHelpReport(
-    GridGrindProtocolVersion protocolVersion,
+    ProtocolVersion protocolVersion,
     String topic,
     String version,
     String description,

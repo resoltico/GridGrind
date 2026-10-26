@@ -1196,7 +1196,7 @@
       "type" : "SAVE_AS"
     },
     "planId" : "sheet-maintenance-workflow",
-    "protocolVersion" : "V3",
+    "protocolVersion" : 1,
     "status" : "SUCCEEDED",
     "warnings" : [ ]
   }

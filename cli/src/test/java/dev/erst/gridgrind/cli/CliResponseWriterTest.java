@@ -8,7 +8,6 @@ import dev.erst.gridgrind.cli.discovery.CliTransportNotice;
 import dev.erst.gridgrind.cli.discovery.CommandError;
 import dev.erst.gridgrind.cli.discovery.GridGrindCliJson;
 import dev.erst.gridgrind.core.metadata.ProtocolField;
-import dev.erst.gridgrind.core.plan.GridGrindProtocolVersion;
 import dev.erst.gridgrind.core.problem.GridGrindProblemCode;
 import dev.erst.gridgrind.core.problem.GridGrindProblemDetail;
 import dev.erst.gridgrind.core.problem.ProblemContext;
@@ -18,6 +17,7 @@ import dev.erst.gridgrind.core.problem.ProblemContextRequestSurfaces.RequestInpu
 import dev.erst.gridgrind.core.problem.RequestDoctorReport;
 import dev.erst.gridgrind.core.result.WorkbookResult;
 import dev.erst.gridgrind.core.result.WorkbookResults;
+import dev.erst.gridgrind.core.vocabulary.ProtocolVersion;
 import dev.erst.gridgrind.json.codec.GridGrindJson;
 import dev.erst.gridgrind.json.codec.RequestDiagnosticRedactor;
 import java.io.ByteArrayOutputStream;
@@ -208,7 +208,7 @@ class CliResponseWriterTest extends GridGrindCliTestSupport {
 
   private static CommandError commandError() {
     return new CommandError(
-        GridGrindProtocolVersion.current(),
+        ProtocolVersion.CURRENT,
         "execute",
         List.of(
             GridGrindProblemDetail.Problem.of(
@@ -244,7 +244,7 @@ class CliResponseWriterTest extends GridGrindCliTestSupport {
       RequestDiagnosticRedactor redactor, SecretOwner owner) throws IOException {
     GridGrindProblemDetail.Problem problem = secretProblem(owner);
     CommandError commandError =
-        new CommandError(GridGrindProtocolVersion.current(), "execute", List.of(problem));
+        new CommandError(ProtocolVersion.CURRENT, "execute", List.of(problem));
     RequestDoctorReport doctorReport =
         RequestDoctorReport.invalid(Optional.empty(), List.of(), problem);
     WorkbookResult.Failure executionResult = WorkbookResults.failure(problem);

@@ -3,7 +3,7 @@ package dev.erst.gridgrind.cli.discovery;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 
-import dev.erst.gridgrind.core.plan.GridGrindProtocolVersion;
+import dev.erst.gridgrind.core.vocabulary.ProtocolVersion;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.List;
@@ -25,7 +25,7 @@ class CliDiscoveryResidualCoverageTest {
   void protocolCatalogIndexCodecRoundTripsAndGroupIndicesExposeEntryCounts() throws IOException {
     ProtocolCatalogIndexReport report =
         new ProtocolCatalogIndexReport(
-            GridGrindProtocolVersion.current(),
+            ProtocolVersion.CURRENT,
             "type",
             "SET_CELL",
             List.of(new ProtocolCatalogGroupIndex("topLevel", List.of("A", "B"))),
@@ -54,7 +54,7 @@ class CliDiscoveryResidualCoverageTest {
   void genericDiscoveryCodecConvenienceWritersDefaultToCompactJson() throws IOException {
     ProtocolCatalogSearchReport report =
         new ProtocolCatalogSearchReport(
-            GridGrindProtocolVersion.current(),
+            ProtocolVersion.CURRENT,
             "chart title",
             List.of(
                 new ProtocolCatalogSearchHit(

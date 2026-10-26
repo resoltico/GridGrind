@@ -5,7 +5,6 @@ import dev.erst.gridgrind.core.plan.AssertionModeSpec;
 import dev.erst.gridgrind.core.plan.AssertionResult;
 import dev.erst.gridgrind.core.plan.AssertionStep;
 import dev.erst.gridgrind.core.plan.ExecutionModeSpec;
-import dev.erst.gridgrind.core.plan.GridGrindProtocolVersion;
 import dev.erst.gridgrind.core.plan.InspectionStep;
 import dev.erst.gridgrind.core.plan.MutationStep;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
@@ -14,6 +13,7 @@ import dev.erst.gridgrind.core.problem.GridGrindProblemDetail;
 import dev.erst.gridgrind.core.problem.RequestWarning;
 import dev.erst.gridgrind.core.result.WorkbookResult;
 import dev.erst.gridgrind.core.result.WorkbookResultPersistence;
+import dev.erst.gridgrind.core.vocabulary.ProtocolVersion;
 import dev.erst.gridgrind.excel.ExcelTempFileWriteTargetSupport;
 import dev.erst.gridgrind.excel.WorkbookArtifactWriteDisposition;
 import dev.erst.gridgrind.excel.stream.ExcelStreamingWorkbookWriter;
@@ -61,7 +61,7 @@ final class ExecutionStreamingWorkflow {
   }
 
   WorkbookResult execute(
-      GridGrindProtocolVersion protocolVersion,
+      ProtocolVersion protocolVersion,
       WorkbookPlan request,
       ExecutionModeSpec executionMode,
       List<RequestWarning> warnings,

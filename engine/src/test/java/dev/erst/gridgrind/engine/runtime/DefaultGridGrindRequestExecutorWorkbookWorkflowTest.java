@@ -57,7 +57,6 @@ import dev.erst.gridgrind.core.plan.CellMutationAction;
 import dev.erst.gridgrind.core.plan.DrawingMutationAction;
 import dev.erst.gridgrind.core.plan.ExecutionJournalSpec;
 import dev.erst.gridgrind.core.plan.ExecutionPolicySpec;
-import dev.erst.gridgrind.core.plan.GridGrindProtocolVersion;
 import dev.erst.gridgrind.core.plan.InspectionStep;
 import dev.erst.gridgrind.core.plan.StructuredMutationAction;
 import dev.erst.gridgrind.core.plan.WorkbookMutationAction;
@@ -80,6 +79,7 @@ import dev.erst.gridgrind.core.vocabulary.ExcelPictureFormat;
 import dev.erst.gridgrind.core.vocabulary.ExcelPrintOrientation;
 import dev.erst.gridgrind.core.vocabulary.NamedRangeScope;
 import dev.erst.gridgrind.core.vocabulary.PlanId;
+import dev.erst.gridgrind.core.vocabulary.ProtocolVersion;
 import dev.erst.gridgrind.core.vocabulary.RangeLabel;
 import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.core.vocabulary.RgbHex;
@@ -217,7 +217,7 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
             ExecutionContextFixtureSupport.execute(
                 new DefaultGridGrindRequestExecutor(),
                 WorkbookPlan.identified(
-                    GridGrindProtocolVersion.current(),
+                    ProtocolVersion.CURRENT,
                     new PlanId("ledger-audit"),
                     new WorkbookPlan.WorkbookSource.New(),
                     new WorkbookPlan.WorkbookPersistence.None(),
@@ -253,7 +253,7 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
             ExecutionContextFixtureSupport.execute(
                 new DefaultGridGrindRequestExecutor(),
                 WorkbookPlan.identified(
-                    GridGrindProtocolVersion.current(),
+                    ProtocolVersion.CURRENT,
                     new PlanId("bad-open"),
                     new WorkbookPlan.WorkbookSource.New(),
                     new WorkbookPlan.WorkbookPersistence.None(),
@@ -353,7 +353,7 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
     WindowReport window =
         read(success, "window", SheetInspectionResult.WindowResult.class).window();
 
-    assertEquals(GridGrindProtocolVersion.V3, success.protocolVersion());
+    assertEquals(ProtocolVersion.CURRENT, success.protocolVersion());
     assertEquals(workbookPath.toAbsolutePath().toString(), savedPath(success));
     assertTrue(Files.exists(workbookPath));
     assertEquals(

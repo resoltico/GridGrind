@@ -384,7 +384,7 @@
       "type" : "NONE"
     },
     "planId" : "custom-xml-workflow",
-    "protocolVersion" : "V3",
+    "protocolVersion" : 1,
     "status" : "SUCCEEDED",
     "warnings" : [ ]
   }

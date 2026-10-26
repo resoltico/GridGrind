@@ -1,11 +1,11 @@
 package dev.erst.gridgrind.engine.runtime;
 
 import dev.erst.gridgrind.core.plan.ExecutionModeSpec;
-import dev.erst.gridgrind.core.plan.GridGrindProtocolVersion;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import dev.erst.gridgrind.core.problem.GridGrindProblemDetail;
 import dev.erst.gridgrind.core.problem.RequestWarning;
 import dev.erst.gridgrind.core.result.WorkbookResult;
+import dev.erst.gridgrind.core.vocabulary.ProtocolVersion;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
 import java.util.List;
 import java.util.Objects;
@@ -61,7 +61,7 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
             tempFileFactory);
     ExecutionJournalRecorder journal =
         ExecutionJournalRecorder.start(authoredRequest, sink, executionBindings.workingDirectory());
-    GridGrindProtocolVersion protocolVersion = authoredRequest.protocolVersion();
+    ProtocolVersion protocolVersion = authoredRequest.protocolVersion();
 
     ExecutionJournalRecorder.PhaseHandle validationPhase = journal.beginValidation();
     Optional<GridGrindProblemDetail.Problem> validationError =

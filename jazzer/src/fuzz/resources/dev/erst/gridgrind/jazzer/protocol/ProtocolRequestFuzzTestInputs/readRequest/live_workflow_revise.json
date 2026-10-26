@@ -1,5 +1,5 @@
 {
-  "protocolVersion": "V3",
+  "protocolVersion": 1,
   "source": {
     "type": "EXISTING",
     "path": "generated-workbooks/live-finance-workbook.xlsx"

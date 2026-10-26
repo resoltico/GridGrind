@@ -50,7 +50,7 @@ class GridGrindEngineApiPreflightTest {
     RequestDoctorReport structurallyInvalid =
         doctor.diagnose(
             GridGrindJson.analyzeRequest(
-                "{\"protocolVersion\":\"V3\"}".getBytes(StandardCharsets.UTF_8)),
+                "{\"protocolVersion\":1}".getBytes(StandardCharsets.UTF_8)),
             requestInput,
             inputs());
 
@@ -149,7 +149,7 @@ class GridGrindEngineApiPreflightTest {
   private static String minimalRequest() {
     return """
         {
-          "protocolVersion": "V3",
+          "protocolVersion": 1,
           "source": { "type": "NEW" },
           "persistence": { "type": "NONE" },
           "steps": []
@@ -160,7 +160,7 @@ class GridGrindEngineApiPreflightTest {
   private static String staticTargetMismatchRequest() {
     return """
         {
-          "protocolVersion": "V3",
+          "protocolVersion": 1,
           "source": { "type": "NEW" },
           "persistence": { "type": "NONE" },
           "steps": [
@@ -177,7 +177,7 @@ class GridGrindEngineApiPreflightTest {
   private static String existingSourceRequest(String mode) {
     return """
         {
-          "protocolVersion": "V3",
+          "protocolVersion": 1,
           "source": { "type": "EXISTING", "path": "source.xlsx" },
           "persistence": { "type": "NONE" },
           "execution": {
@@ -193,7 +193,7 @@ class GridGrindEngineApiPreflightTest {
   private static String preflightFailureRequest() {
     return """
         {
-          "protocolVersion": "V3",
+          "protocolVersion": 1,
           "source": { "type": "NEW" },
           "persistence": { "type": "NONE" },
           "steps": [

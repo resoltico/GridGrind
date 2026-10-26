@@ -48,7 +48,7 @@ rm -f \
 readonly jar_path="$(ensure_cli_shadow_jar "${repo_root}")"
 cat > "${request_path}" <<EOF
 {
-  "protocolVersion": "V3",
+  "protocolVersion": 1,
   "planId": "generate-package-security-asset",
   "source": {
     "type": "NEW"
@@ -173,7 +173,7 @@ java -jar "${jar_path}" \
     --response "${response_path}" < "${request_path}"
 cat > "${task_request_path}" <<EOF
 {
-  "protocolVersion": "V3",
+  "protocolVersion": 1,
   "planId": "generate-task-starter-workbook-asset",
   "source": {
     "type": "NEW"

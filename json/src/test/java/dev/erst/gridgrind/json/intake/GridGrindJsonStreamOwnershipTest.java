@@ -4,7 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import dev.erst.gridgrind.core.plan.GridGrindProtocolVersion;
+import dev.erst.gridgrind.core.vocabulary.ProtocolVersion;
 import dev.erst.gridgrind.json.codec.GridGrindJson;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -17,13 +17,13 @@ class GridGrindJsonStreamOwnershipTest {
   void requestInputStreamsRetainCallerOwnershipAcrossDecodeAndAnalysis() throws IOException {
     byte[] request =
         """
-        {"protocolVersion":"V3","source":{"type":"NEW"},"persistence":{"type":"NONE"},"steps":[]}
+        {"protocolVersion":1,"source":{"type":"NEW"},"persistence":{"type":"NONE"},"steps":[]}
         """
             .getBytes(StandardCharsets.UTF_8);
     try (TrackingInputStream decodeStream = new TrackingInputStream(request);
         TrackingInputStream analysisStream = new TrackingInputStream(request)) {
       assertEquals(
-          GridGrindProtocolVersion.V3, GridGrindJson.readRequest(decodeStream).protocolVersion());
+          ProtocolVersion.CURRENT, GridGrindJson.readRequest(decodeStream).protocolVersion());
       assertTrue(GridGrindJson.analyzeRequest(analysisStream).isStructurallyValid());
       assertFalse(decodeStream.closed);
       assertFalse(analysisStream.closed);

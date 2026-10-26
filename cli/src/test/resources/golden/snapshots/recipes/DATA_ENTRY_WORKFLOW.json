@@ -25,7 +25,7 @@
       },
       "optionalFeatures" : [ "Sheet protection after authoring.", "Comments or prompts that explain the allowed entry flow.", "Assertions on the protected or validated workbook surface." ],
       "outcomes" : [ "Operators get one workbook surface designed for repeated entry instead of ad hoc edits.", "Validation rules, comments, and protection settings are part of the authored workflow.", "The result can be inspected or asserted after authoring." ],
-      "protocolVersion" : "V3",
+      "protocolVersion" : 1,
       "requestFileName" : "data-entry-workflow-request.json",
       "requestProfile" : {
         "assertionTypes" : [ ],
@@ -934,7 +934,7 @@
         "type" : "SAVE_AS"
       },
       "planId" : "data-entry-workflow-starter",
-      "protocolVersion" : "V3",
+      "protocolVersion" : 1,
       "status" : "SUCCEEDED",
       "warnings" : [ ]
     }
@@ -946,7 +946,7 @@
       "type" : "SAVE_AS"
     },
     "planId" : "data-entry-workflow-starter",
-    "protocolVersion" : "V3",
+    "protocolVersion" : 1,
     "source" : {
       "type" : "NEW"
     },
@@ -1121,7 +1121,7 @@
         "type" : "SAVE_AS"
       },
       "planId" : "data-entry-workflow-starter",
-      "protocolVersion" : "V3",
+      "protocolVersion" : 1,
       "source" : {
         "type" : "NEW"
       },

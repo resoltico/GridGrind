@@ -2,12 +2,12 @@ package dev.erst.gridgrind.core.result;
 
 import dev.erst.gridgrind.core.model.formula.CalculationReport;
 import dev.erst.gridgrind.core.plan.AssertionResult;
-import dev.erst.gridgrind.core.plan.GridGrindProtocolVersion;
 import dev.erst.gridgrind.core.plan.InspectionResult;
 import dev.erst.gridgrind.core.problem.GridGrindProblemCode;
 import dev.erst.gridgrind.core.problem.GridGrindProblemDetail;
 import dev.erst.gridgrind.core.problem.RequestWarning;
 import dev.erst.gridgrind.core.vocabulary.PlanId;
+import dev.erst.gridgrind.core.vocabulary.ProtocolVersion;
 import dev.erst.gridgrind.core.vocabulary.SheetLabel;
 import java.util.ArrayList;
 import java.util.List;
@@ -19,7 +19,7 @@ public final class WorkbookResultSupport {
   private WorkbookResultSupport() {}
 
   static WorkbookResult.Success success(
-      GridGrindProtocolVersion protocolVersion,
+      ProtocolVersion protocolVersion,
       WorkbookResultPersistence.PersistenceOutcome persistence,
       List<RequestWarning> warnings,
       List<AssertionResult> assertions,
@@ -38,7 +38,7 @@ public final class WorkbookResultSupport {
   }
 
   static WorkbookResult.Failure failure(
-      GridGrindProtocolVersion protocolVersion,
+      ProtocolVersion protocolVersion,
       Optional<PlanId> planId,
       WorkbookResultPersistence.PersistenceOutcome persistence,
       GridGrindProblemDetail.Problem problem) {

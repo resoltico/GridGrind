@@ -6,7 +6,7 @@
       "advisory" : "REQUIRES_EXAMPLE_ASSETS",
       "id" : "SOURCE_BACKED_INPUT",
       "intentTags" : [ "source-backed", "payloads", "integration", "binary", "text" ],
-      "protocolVersion" : "V3",
+      "protocolVersion" : 1,
       "requestFileName" : "source-backed-input-request.json",
       "requestProfile" : {
         "assertionTypes" : [ ],
@@ -266,7 +266,7 @@
         "type" : "NONE"
       },
       "planId" : "source-backed-input-workflow",
-      "protocolVersion" : "V3",
+      "protocolVersion" : 1,
       "status" : "SUCCEEDED",
       "warnings" : [ ]
     }
@@ -276,7 +276,7 @@
       "type" : "NONE"
     },
     "planId" : "source-backed-input-workflow",
-    "protocolVersion" : "V3",
+    "protocolVersion" : 1,
     "source" : {
       "type" : "NEW"
     },
@@ -428,7 +428,7 @@
         "resolution" : "Run gridgrind --help for the synopsis, --help-protocol for the authoritative request contract, or --help-guidance for workflows and examples.",
         "title" : "Invalid CLI arguments"
       } ],
-      "protocolVersion" : "V3",
+      "protocolVersion" : 1,
       "status" : "REJECTED"
     }
   }

@@ -12,7 +12,7 @@
       "code" : "INVALID_REQUEST_SHAPE",
       "context" : {
         "json" : {
-          "byteOffset" : 24,
+          "byteOffset" : 21,
           "jsonPath" : "source",
           "type" : "PATH_BYTE_OFFSET"
         },
@@ -27,7 +27,7 @@
       "resolution" : "Remove field 'source' entirely when it is absent; explicit null is not part of the request contract.",
       "title" : "Invalid request shape"
     } ],
-    "protocolVersion" : "V3",
+    "protocolVersion" : 1,
     "severity" : "ERROR",
     "valid" : false,
     "warnings" : [ ]

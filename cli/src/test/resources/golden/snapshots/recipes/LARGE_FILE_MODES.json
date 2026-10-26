@@ -6,7 +6,7 @@
       "advisory" : "SELF_CONTAINED",
       "id" : "LARGE_FILE_MODES",
       "intentTags" : [ "execution-mode", "streaming", "large-files", "analysis" ],
-      "protocolVersion" : "V3",
+      "protocolVersion" : 1,
       "requestFileName" : "large-file-modes-request.json",
       "requestProfile" : {
         "assertionTypes" : [ ],
@@ -906,7 +906,7 @@
         "type" : "SAVE_AS"
       },
       "planId" : "large-file-modes-workflow",
-      "protocolVersion" : "V3",
+      "protocolVersion" : 1,
       "status" : "SUCCEEDED",
       "warnings" : [ ]
     }
@@ -926,7 +926,7 @@
       "type" : "SAVE_AS"
     },
     "planId" : "large-file-modes-workflow",
-    "protocolVersion" : "V3",
+    "protocolVersion" : 1,
     "source" : {
       "type" : "NEW"
     },
@@ -1063,7 +1063,7 @@
         "type" : "SAVE_AS"
       },
       "planId" : "large-file-modes-workflow",
-      "protocolVersion" : "V3",
+      "protocolVersion" : 1,
       "source" : {
         "type" : "NEW"
       },

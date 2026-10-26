@@ -26,7 +26,7 @@ class GridGrindPlanExecutionPolicyTest {
             true);
     WorkbookPlan canonical =
         new WorkbookPlan(
-            dev.erst.gridgrind.core.plan.GridGrindProtocolVersion.current(),
+            dev.erst.gridgrind.core.vocabulary.ProtocolVersion.CURRENT,
             Optional.of(new PlanId("canonical-plan")),
             new WorkbookPlan.WorkbookSource.New(),
             new WorkbookPlan.WorkbookPersistence.None(),

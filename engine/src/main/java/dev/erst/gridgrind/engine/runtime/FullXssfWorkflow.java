@@ -1,11 +1,11 @@
 package dev.erst.gridgrind.engine.runtime;
 
-import dev.erst.gridgrind.core.plan.GridGrindProtocolVersion;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import dev.erst.gridgrind.core.problem.GridGrindProblemDetail;
 import dev.erst.gridgrind.core.problem.RequestWarning;
 import dev.erst.gridgrind.core.result.WorkbookResult;
 import dev.erst.gridgrind.core.result.WorkbookResultPersistence;
+import dev.erst.gridgrind.core.vocabulary.ProtocolVersion;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
 import java.io.IOException;
 import java.util.List;
@@ -60,7 +60,7 @@ final class FullXssfWorkflow {
   }
 
   WorkbookResult execute(
-      GridGrindProtocolVersion protocolVersion,
+      ProtocolVersion protocolVersion,
       WorkbookPlan request,
       ExcelWorkbook workbook,
       dev.erst.gridgrind.core.plan.ExecutionModeSpec executionMode,

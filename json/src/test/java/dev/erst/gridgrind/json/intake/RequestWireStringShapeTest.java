@@ -117,14 +117,14 @@ class RequestWireStringShapeTest {
 
   private static String stepDocument(String stepId) {
     return """
-        {"protocolVersion":"V3","source":{"type":"NEW"},"persistence":{"type":"NONE"},"steps":[{"stepId":%s,"target":{"type":"WORKBOOK_CURRENT"},"query":{"type":"GET_WORKBOOK_SUMMARY"}}]}
+        {"protocolVersion":1,"source":{"type":"NEW"},"persistence":{"type":"NONE"},"steps":[{"stepId":%s,"target":{"type":"WORKBOOK_CURRENT"},"query":{"type":"GET_WORKBOOK_SUMMARY"}}]}
         """
         .formatted(stepId);
   }
 
   private static String planDocument(String extra) {
     return """
-        {"protocolVersion":"V3","source":{"type":"NEW"},"persistence":{"type":"NONE"},"steps":[]%s}
+        {"protocolVersion":1,"source":{"type":"NEW"},"persistence":{"type":"NONE"},"steps":[]%s}
         """
         .formatted(extra);
   }

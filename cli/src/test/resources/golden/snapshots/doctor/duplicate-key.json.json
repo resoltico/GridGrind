@@ -12,7 +12,7 @@
       "code" : "INVALID_JSON",
       "context" : {
         "json" : {
-          "byteOffset" : 24,
+          "byteOffset" : 21,
           "containingObjectPath" : "",
           "key" : "protocolVersion",
           "occurrenceOrdinal" : 0,
@@ -29,7 +29,7 @@
       "resolution" : "Send syntactically valid JSON.",
       "title" : "Invalid JSON payload"
     } ],
-    "protocolVersion" : "V3",
+    "protocolVersion" : 1,
     "severity" : "ERROR",
     "valid" : false,
     "warnings" : [ ]

@@ -25,7 +25,7 @@
       },
       "optionalFeatures" : [ "Workbook-level findings after the maintenance pass.", "Comment rereads on copied sheets.", "Drawing-object rereads on copied sheets when they matter." ],
       "outcomes" : [ "Workbook maintenance flows can inspect the source before making structural changes.", "Copy-sheet work can be followed immediately by comment and drawing readback.", "The updated workbook can be saved separately while you verify the result." ],
-      "protocolVersion" : "V3",
+      "protocolVersion" : 1,
       "requestFileName" : "workbook-maintenance-request.json",
       "requestProfile" : {
         "assertionTypes" : [ ],
@@ -1644,7 +1644,7 @@
         "type" : "SAVE_AS"
       },
       "planId" : "workbook-maintenance-starter",
-      "protocolVersion" : "V3",
+      "protocolVersion" : 1,
       "status" : "SUCCEEDED",
       "warnings" : [ ]
     }
@@ -1664,7 +1664,7 @@
       "type" : "SAVE_AS"
     },
     "planId" : "workbook-maintenance-starter",
-    "protocolVersion" : "V3",
+    "protocolVersion" : 1,
     "source" : {
       "path" : "task-starter-assets/workbook-ops-source.xlsx",
       "type" : "EXISTING"
@@ -1739,7 +1739,7 @@
         "resolution" : "Run gridgrind --help for the synopsis, --help-protocol for the authoritative request contract, or --help-guidance for workflows and examples.",
         "title" : "Invalid CLI arguments"
       } ],
-      "protocolVersion" : "V3",
+      "protocolVersion" : 1,
       "status" : "REJECTED"
     }
   }

@@ -337,7 +337,7 @@
       "requestedPath" : "control.xlsx",
       "type" : "SAVE_AS"
     },
-    "protocolVersion" : "V3",
+    "protocolVersion" : 1,
     "status" : "SUCCEEDED",
     "warnings" : [ ]
   }

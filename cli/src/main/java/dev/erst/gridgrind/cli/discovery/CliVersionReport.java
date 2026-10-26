@@ -1,10 +1,10 @@
 package dev.erst.gridgrind.cli.discovery;
 
-import dev.erst.gridgrind.core.plan.GridGrindProtocolVersion;
+import dev.erst.gridgrind.core.vocabulary.ProtocolVersion;
 
 /** Structured version payload for packaged product discovery. */
 public record CliVersionReport(
-    GridGrindProtocolVersion protocolVersion,
+    ProtocolVersion protocolVersion,
     String version,
     String description,
     String documentRef,

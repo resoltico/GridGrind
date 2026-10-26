@@ -21,7 +21,7 @@ class AppTest {
   private static final String EMPTY_SUCCESS_REQUEST =
       """
       {
-        "protocolVersion": "V3",
+        "protocolVersion": 1,
         "source": { "type": "NEW" },
         "persistence": { "type": "NONE" },
         "execution": {

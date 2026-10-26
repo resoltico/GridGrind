@@ -100,7 +100,7 @@
       "resolution" : "Create the workbook first or provide an existing workbook path.",
       "title" : "Workbook not found"
     },
-    "protocolVersion" : "V3",
+    "protocolVersion" : 1,
     "status" : "FAILED",
     "warnings" : [ ]
   }

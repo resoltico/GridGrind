@@ -36,7 +36,7 @@ abstract class GridGrindCliTestSupport {
       String sourceJson, String persistenceJson, String stepsJson) {
     return """
         {
-          "protocolVersion": "V3",
+          "protocolVersion": 1,
           "source": %s,
           "persistence": %s,
           "steps": %s
@@ -53,7 +53,7 @@ abstract class GridGrindCliTestSupport {
       String stepsJson) {
     return """
         {
-          "protocolVersion": "V3",
+          "protocolVersion": 1,
           "source": %s,
           "persistence": %s,
           "execution": %s,
@@ -73,7 +73,7 @@ abstract class GridGrindCliTestSupport {
       String stepsJson) {
     return """
         {
-          "protocolVersion": "V3",
+          "protocolVersion": 1,
           "planId": "%s",
           "source": %s,
           "persistence": %s,

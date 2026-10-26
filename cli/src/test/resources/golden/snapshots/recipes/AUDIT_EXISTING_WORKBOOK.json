@@ -25,7 +25,7 @@
       },
       "optionalFeatures" : [ "Package security inspection for protected OOXML files.", "Targeted formula-surface inspection before broad workbook findings.", "Follow-up assertion plans after the first audit pass." ],
       "outcomes" : [ "Existing workbook structure is surfaced as facts instead of guesses.", "Health analyses aggregate into one workbook-level findings view.", "The default audit posture stays read-only and non-persistent." ],
-      "protocolVersion" : "V3",
+      "protocolVersion" : 1,
       "requestFileName" : "audit-existing-workbook-request.json",
       "requestProfile" : {
         "assertionTypes" : [ ],
@@ -344,7 +344,7 @@
         "type" : "NONE"
       },
       "planId" : "audit-existing-workbook-starter",
-      "protocolVersion" : "V3",
+      "protocolVersion" : 1,
       "status" : "SUCCEEDED",
       "warnings" : [ ]
     }
@@ -354,7 +354,7 @@
       "type" : "NONE"
     },
     "planId" : "audit-existing-workbook-starter",
-    "protocolVersion" : "V3",
+    "protocolVersion" : 1,
     "source" : {
       "path" : "task-starter-assets/workbook-ops-source.xlsx",
       "type" : "EXISTING"
@@ -426,7 +426,7 @@
         "resolution" : "Run gridgrind --help for the synopsis, --help-protocol for the authoritative request contract, or --help-guidance for workflows and examples.",
         "title" : "Invalid CLI arguments"
       } ],
-      "protocolVersion" : "V3",
+      "protocolVersion" : 1,
       "status" : "REJECTED"
     }
   }

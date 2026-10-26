@@ -6,8 +6,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import dev.erst.gridgrind.core.model.formula.FormulaEnvironmentSpec;
 import dev.erst.gridgrind.core.plan.ExecutionPolicySpec;
-import dev.erst.gridgrind.core.plan.GridGrindProtocolVersion;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
+import dev.erst.gridgrind.core.vocabulary.ProtocolVersion;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -29,7 +29,7 @@ class RequestIntakeTest {
     RequestBoundFragments fragments =
         new RequestBoundFragments(
             new RequestBoundRoot(
-                Optional.of(GridGrindProtocolVersion.current()),
+                Optional.of(ProtocolVersion.CURRENT),
                 Optional.empty(),
                 Optional.of(plan.source()),
                 Optional.of(plan.persistence()),

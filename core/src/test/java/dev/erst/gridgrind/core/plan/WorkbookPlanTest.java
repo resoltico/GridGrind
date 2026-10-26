@@ -16,6 +16,7 @@ import dev.erst.gridgrind.core.source.SecretReference;
 import dev.erst.gridgrind.core.source.TextSourceSpec;
 import dev.erst.gridgrind.core.vocabulary.CellAddress;
 import dev.erst.gridgrind.core.vocabulary.PlanId;
+import dev.erst.gridgrind.core.vocabulary.ProtocolVersion;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import java.util.ArrayList;
@@ -35,7 +36,7 @@ class WorkbookPlanTest {
             FormulaEnvironmentSpec.empty(),
             List.of());
 
-    assertEquals(GridGrindProtocolVersion.current(), plan.protocolVersion());
+    assertEquals(ProtocolVersion.CURRENT, plan.protocolVersion());
     assertInstanceOf(WorkbookPlan.WorkbookPersistence.None.class, plan.persistence());
     assertEquals(java.util.Optional.empty(), plan.planId());
     assertTrue(plan.execution().isDefault());
@@ -47,7 +48,7 @@ class WorkbookPlanTest {
         NullPointerException.class,
         () ->
             new WorkbookPlan(
-                GridGrindProtocolVersion.current(),
+                ProtocolVersion.CURRENT,
                 Optional.empty(),
                 new WorkbookPlan.WorkbookSource.New(),
                 new WorkbookPlan.WorkbookPersistence.None(),
@@ -184,7 +185,7 @@ class WorkbookPlanTest {
         NullPointerException.class,
         () ->
             new WorkbookPlan(
-                GridGrindProtocolVersion.current(),
+                ProtocolVersion.CURRENT,
                 Optional.empty(),
                 new WorkbookPlan.WorkbookSource.New(),
                 new WorkbookPlan.WorkbookPersistence.None(),
@@ -197,7 +198,7 @@ class WorkbookPlanTest {
   void supportsExplicitPlanIdAndExecutionJournalPolicy() {
     WorkbookPlan plan =
         WorkbookPlan.identified(
-            GridGrindProtocolVersion.current(),
+            ProtocolVersion.CURRENT,
             new PlanId("budget-audit"),
             new WorkbookPlan.WorkbookSource.New(),
             new WorkbookPlan.WorkbookPersistence.None(),
@@ -217,7 +218,7 @@ class WorkbookPlanTest {
                 IllegalArgumentException.class,
                 () ->
                     WorkbookPlan.identified(
-                        GridGrindProtocolVersion.current(),
+                        ProtocolVersion.CURRENT,
                         new PlanId(" "),
                         new WorkbookPlan.WorkbookSource.New(),
                         new WorkbookPlan.WorkbookPersistence.None(),
@@ -234,7 +235,7 @@ class WorkbookPlanTest {
             ExecutionModeSpec.eventRead(), new ExecutionJournalSpec(ExecutionJournalLevel.SUMMARY));
     WorkbookPlan explicitPlan =
         new WorkbookPlan(
-            GridGrindProtocolVersion.current(),
+            ProtocolVersion.CURRENT,
             Optional.empty(),
             new WorkbookPlan.WorkbookSource.New(),
             new WorkbookPlan.WorkbookPersistence.None(),
@@ -252,7 +253,7 @@ class WorkbookPlanTest {
         NullPointerException.class,
         () ->
             new WorkbookPlan(
-                GridGrindProtocolVersion.current(),
+                ProtocolVersion.CURRENT,
                 Optional.empty(),
                 new WorkbookPlan.WorkbookSource.New(),
                 new WorkbookPlan.WorkbookPersistence.None(),
@@ -270,7 +271,7 @@ class WorkbookPlanTest {
         NullPointerException.class,
         () ->
             new WorkbookPlan(
-                GridGrindProtocolVersion.current(),
+                ProtocolVersion.CURRENT,
                 Optional.empty(),
                 new WorkbookPlan.WorkbookSource.New(),
                 new WorkbookPlan.WorkbookPersistence.None(),

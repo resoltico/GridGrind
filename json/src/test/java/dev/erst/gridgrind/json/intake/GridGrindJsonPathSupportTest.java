@@ -20,7 +20,7 @@ class GridGrindJsonPathSupportTest {
         readTree(
             """
             {
-              "protocolVersion": "V3",
+              "protocolVersion": 1,
               "steps": [
                 {
                   "target": {

@@ -6,7 +6,6 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import dev.erst.gridgrind.core.model.formula.CalculationReport;
-import dev.erst.gridgrind.core.plan.GridGrindProtocolVersion;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import dev.erst.gridgrind.core.problem.GridGrindProblemCode;
 import dev.erst.gridgrind.core.problem.GridGrindProblemDetail;
@@ -14,6 +13,7 @@ import dev.erst.gridgrind.core.problem.ProblemContext;
 import dev.erst.gridgrind.core.problem.ProblemContextRequestSurfaces;
 import dev.erst.gridgrind.core.result.ExecutionJournal;
 import dev.erst.gridgrind.core.result.WorkbookResult;
+import dev.erst.gridgrind.core.vocabulary.ProtocolVersion;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -265,7 +265,7 @@ class ExecutionPathCoverageTest {
 
     WorkbookResult.Failure failure =
         ExecutionResponseSupport.failureResponse(
-            GridGrindProtocolVersion.V3, journal, request, problem, 1, new StepId("step-1"));
+            ProtocolVersion.CURRENT, journal, request, problem, 1, new StepId("step-1"));
 
     assertEquals(CalculationReport.notRequested(), failure.calculation());
     assertEquals(problem, failure.problem());

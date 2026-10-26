@@ -7,11 +7,11 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import dev.erst.gridgrind.core.model.formula.FormulaEnvironmentSpec;
 import dev.erst.gridgrind.core.plan.ExecutionModeSpec;
 import dev.erst.gridgrind.core.plan.ExecutionPolicySpec;
-import dev.erst.gridgrind.core.plan.GridGrindProtocolVersion;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import dev.erst.gridgrind.core.problem.GridGrindProblemCode;
 import dev.erst.gridgrind.core.result.WorkbookResult;
 import dev.erst.gridgrind.core.result.WorkbookResultPersistence;
+import dev.erst.gridgrind.core.vocabulary.ProtocolVersion;
 import dev.erst.gridgrind.engine.api.GridGrindExecutionGrant;
 import dev.erst.gridgrind.engine.api.GridGrindHostAcceptancePolicy;
 import dev.erst.gridgrind.excel.WorkbookExecutionEngine;
@@ -66,7 +66,7 @@ class ExecutionStreamingWorkflowTest {
         assertInstanceOf(
             WorkbookResult.Failure.class,
             workflow.execute(
-                GridGrindProtocolVersion.current(),
+                ProtocolVersion.CURRENT,
                 request,
                 new ExecutionModeSpec.StreamingWrite(),
                 List.of(),
@@ -100,7 +100,7 @@ class ExecutionStreamingWorkflowTest {
         assertInstanceOf(
             WorkbookResult.Failure.class,
             workflow.execute(
-                GridGrindProtocolVersion.current(),
+                ProtocolVersion.CURRENT,
                 request,
                 new ExecutionModeSpec.StreamingWrite(),
                 List.of(),

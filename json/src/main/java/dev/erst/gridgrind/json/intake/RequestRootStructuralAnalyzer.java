@@ -3,7 +3,6 @@ package dev.erst.gridgrind.json.intake;
 import dev.erst.gridgrind.core.catalog.GridGrindProtocolContractSupport;
 import dev.erst.gridgrind.core.model.formula.FormulaEnvironmentSpec;
 import dev.erst.gridgrind.core.plan.ExecutionPolicySpec;
-import dev.erst.gridgrind.core.plan.GridGrindProtocolVersion;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import dev.erst.gridgrind.core.problem.RequestBindingFailure;
 import dev.erst.gridgrind.core.problem.RequestBoundFragments;
@@ -13,6 +12,7 @@ import dev.erst.gridgrind.core.problem.RequestInvalidEncoding;
 import dev.erst.gridgrind.core.problem.RequestInvalidJson;
 import dev.erst.gridgrind.core.problem.RequestMalformedScalar;
 import dev.erst.gridgrind.core.problem.RequestStructuralProblem;
+import dev.erst.gridgrind.core.vocabulary.ProtocolVersion;
 import dev.erst.gridgrind.json.codec.RequestDiagnosticRedactor;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
@@ -65,7 +65,7 @@ final class RequestRootStructuralAnalyzer {
             new RequestBoundRoot(
                 RequestFragmentBinder.bindMember(
                     members.member("protocolVersion"),
-                    GridGrindProtocolVersion.class,
+                    ProtocolVersion.class,
                     "protocolVersion",
                     problems,
                     bindingFailures,
@@ -119,9 +119,9 @@ final class RequestRootStructuralAnalyzer {
   private static void validateRootScalars(
       RequestObjectMembers.Index root, List<RequestStructuralProblem> problems) {
     for (RequestJsonMember member : root.membersNamed("protocolVersion")) {
-      RequestNodeValidator.validateEnum(
+      RequestNodeValidator.validateNode(
           member.value(),
-          GridGrindProtocolVersion.class,
+          ProtocolVersion.class,
           "protocolVersion",
           member.nameByteOffset(),
           problems);

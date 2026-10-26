@@ -1,0 +1,35 @@
+{
+  "exit" : 1,
+  "stderr" : "",
+  "stdout" : {
+    "problems" : [ {
+      "category" : "REQUEST",
+      "causes" : [ {
+        "code" : "INVALID_REQUEST",
+        "message" : "protocolVersion must equal 1",
+        "stage" : "BIND_REQUEST"
+      } ],
+      "code" : "INVALID_REQUEST",
+      "context" : {
+        "json" : {
+          "byteOffset" : 1,
+          "jsonPath" : "protocolVersion",
+          "type" : "PATH_BYTE_OFFSET"
+        },
+        "request" : {
+          "requestPath" : "<workspace>/request.json",
+          "type" : "FILE"
+        },
+        "type" : "BIND_REQUEST"
+      },
+      "message" : "protocolVersion must equal 1",
+      "recovery" : "CHANGE_REQUEST",
+      "resolution" : "Fix field 'protocolVersion' so it satisfies the request contract.",
+      "title" : "Invalid request"
+    } ],
+    "protocolVersion" : 1,
+    "severity" : "ERROR",
+    "valid" : false,
+    "warnings" : [ ]
+  }
+}

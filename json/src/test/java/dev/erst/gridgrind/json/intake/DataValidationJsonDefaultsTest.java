@@ -17,7 +17,7 @@ class DataValidationJsonDefaultsTest {
         requestTree(
             """
         {
-          "protocolVersion": "V3",
+          "protocolVersion": 1,
           "source": { "type": "NEW" },
           "persistence": { "type": "NONE" },
           "execution": {
@@ -59,7 +59,7 @@ class DataValidationJsonDefaultsTest {
         requestTree(
             """
         {
-          "protocolVersion": "V3",
+          "protocolVersion": 1,
           "source": { "type": "NEW" },
           "persistence": { "type": "NONE" },
           "execution": {

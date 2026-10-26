@@ -3,7 +3,7 @@ package dev.erst.gridgrind.cli.discovery;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import dev.erst.gridgrind.core.plan.GridGrindProtocolVersion;
+import dev.erst.gridgrind.core.vocabulary.ProtocolVersion;
 import java.util.List;
 import java.util.Objects;
 
@@ -11,9 +11,7 @@ import java.util.Objects;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonPropertyOrder({"protocolVersion", "query", "totalCount", "matches"})
 public record ProtocolCatalogSearchReport(
-    GridGrindProtocolVersion protocolVersion,
-    String query,
-    List<ProtocolCatalogSearchHit> matches) {
+    ProtocolVersion protocolVersion, String query, List<ProtocolCatalogSearchHit> matches) {
   public ProtocolCatalogSearchReport {
     Objects.requireNonNull(protocolVersion, "protocolVersion must not be null");
     query = CliDiscoveryValidation.requireNonBlank(query, "query");

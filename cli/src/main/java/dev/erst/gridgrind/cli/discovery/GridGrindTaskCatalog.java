@@ -12,7 +12,7 @@ public final class GridGrindTaskCatalog {
   /** Returns the full task catalog. */
   public static TaskCatalog catalog() {
     return new TaskCatalog(
-        dev.erst.gridgrind.core.plan.GridGrindProtocolVersion.current(), taskEntries());
+        dev.erst.gridgrind.core.vocabulary.ProtocolVersion.CURRENT, taskEntries());
   }
 
   /** Returns one task entry by its stable id, or empty when unknown. */

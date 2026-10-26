@@ -29,7 +29,7 @@ final class GridGrindJsonExecutionPolicySerializationTest {
                 GridGrindJson.readRequest(
                     """
                     {
-                      "protocolVersion": "V3",
+                      "protocolVersion": 1,
                       "source": { "type": "NEW" },
                       "persistence": { "type": "NONE" },
                       "execution": {},
@@ -50,7 +50,7 @@ final class GridGrindJsonExecutionPolicySerializationTest {
                 GridGrindJson.readRequest(
                     """
                     {
-                      "protocolVersion": "V3",
+                      "protocolVersion": 1,
                       "source": { "type": "NEW" },
                       "persistence": { "type": "NONE" },
                       "execution": {
@@ -73,7 +73,7 @@ final class GridGrindJsonExecutionPolicySerializationTest {
                 GridGrindJson.readRequest(
                     """
                     {
-                      "protocolVersion": "V3",
+                      "protocolVersion": 1,
                       "source": { "type": "NEW" },
                       "persistence": { "type": "NONE" },
                       "execution": {
@@ -96,7 +96,7 @@ final class GridGrindJsonExecutionPolicySerializationTest {
                 GridGrindJson.readRequest(
                     """
                     {
-                      "protocolVersion": "V3",
+                      "protocolVersion": 1,
                       "source": { "type": "NEW" },
                       "persistence": { "type": "NONE" },
                       "execution": {
@@ -123,7 +123,7 @@ final class GridGrindJsonExecutionPolicySerializationTest {
                 GridGrindJson.readRequest(
                     """
                     {
-                      "protocolVersion": "V3",
+                      "protocolVersion": 1,
                       "source": { "type": "NEW" },
                       "persistence": { "type": "NONE" },
                       "execution": {

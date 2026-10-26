@@ -157,7 +157,7 @@ class WireStringPropertyTest {
             () ->
                 GridGrindJson.readRequest(
                     """
-            {"protocolVersion":"V3","source":{"type":"NEW"},"persistence":{"type":"NONE"},
+            {"protocolVersion":1,"source":{"type":"NEW"},"persistence":{"type":"NONE"},
             "steps":[{"stepId":"cells","target":{"type":"CELL_BY_ADDRESSES","sheetName":"Data",
             "addresses":["A1","A0"]},"query":{"type":"GET_CELLS"}}]}
             """));

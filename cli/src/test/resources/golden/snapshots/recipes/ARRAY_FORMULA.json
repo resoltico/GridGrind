@@ -6,7 +6,7 @@
       "advisory" : "SELF_CONTAINED",
       "id" : "ARRAY_FORMULA",
       "intentTags" : [ "formula", "array-formula", "authoring", "inspection" ],
-      "protocolVersion" : "V3",
+      "protocolVersion" : 1,
       "requestFileName" : "array-formula-request.json",
       "requestProfile" : {
         "assertionTypes" : [ ],
@@ -217,7 +217,7 @@
         "type" : "NONE"
       },
       "planId" : "array-formula-workflow",
-      "protocolVersion" : "V3",
+      "protocolVersion" : 1,
       "status" : "SUCCEEDED",
       "warnings" : [ ]
     }
@@ -227,7 +227,7 @@
       "type" : "NONE"
     },
     "planId" : "array-formula-workflow",
-    "protocolVersion" : "V3",
+    "protocolVersion" : 1,
     "source" : {
       "type" : "NEW"
     },
@@ -362,7 +362,7 @@
         "type" : "NONE"
       },
       "planId" : "array-formula-workflow",
-      "protocolVersion" : "V3",
+      "protocolVersion" : 1,
       "source" : {
         "type" : "NEW"
       },

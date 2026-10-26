@@ -3,7 +3,7 @@ package dev.erst.gridgrind.json.intake;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import dev.erst.gridgrind.core.catalog.GridGrindProtocolContractSupport;
 import dev.erst.gridgrind.core.metadata.ProtocolField;
-import dev.erst.gridgrind.core.vocabulary.WireString;
+import dev.erst.gridgrind.core.vocabulary.WireScalar;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.RecordComponent;
 import java.lang.reflect.Type;
@@ -68,7 +68,7 @@ public final class RequestSecretFieldPaths {
 
   private static void collectClass(
       Class<?> classType, List<String> path, Set<String> paths, Set<Type> activeTypes) {
-    if (WireString.isValueType(classType)) {
+    if (WireScalar.isValueType(classType)) {
       return;
     }
     if (classType.isRecord()) {

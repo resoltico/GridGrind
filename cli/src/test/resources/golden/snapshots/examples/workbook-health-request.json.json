@@ -277,7 +277,7 @@
       "type" : "NONE"
     },
     "planId" : "workbook-health-workflow",
-    "protocolVersion" : "V3",
+    "protocolVersion" : 1,
     "status" : "SUCCEEDED",
     "warnings" : [ ]
   }

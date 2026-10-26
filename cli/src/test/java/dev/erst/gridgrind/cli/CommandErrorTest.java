@@ -127,7 +127,7 @@ class CommandErrorTest {
             .getMessage());
   }
 
-  private static dev.erst.gridgrind.core.plan.GridGrindProtocolVersion errorVersion() {
-    return dev.erst.gridgrind.core.plan.GridGrindProtocolVersion.current();
+  private static dev.erst.gridgrind.core.vocabulary.ProtocolVersion errorVersion() {
+    return dev.erst.gridgrind.core.vocabulary.ProtocolVersion.CURRENT;
   }
 }

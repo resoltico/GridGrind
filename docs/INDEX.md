@@ -28,9 +28,9 @@ Complete map of every file in `docs/`. Files are grouped by audience and topic.
 
 | File | What it covers |
 |:-----|:---------------|
-| [REQUEST_AND_EXECUTION_REFERENCE.md](./REQUEST_AND_EXECUTION_REFERENCE.md) | V3 request and result contracts, host grants, typed secrets, acceptance, evidence, persistence, source-backed inputs, doctoring, and execution modes |
+| [REQUEST_AND_EXECUTION_REFERENCE.md](./REQUEST_AND_EXECUTION_REFERENCE.md) | version 1 request and result contracts, host grants, typed secrets, acceptance, evidence, persistence, source-backed inputs, doctoring, and execution modes |
 | [LIMITATIONS.md](./LIMITATIONS.md) | Hard ceilings and mode restrictions (LIM-001 through LIM-040) |
-| [CONFORMANCE.md](./CONFORMANCE.md) | Evidence-backed V3 authority, publication, determinism, filesystem-safety, and environment-sensitive guarantee boundaries |
+| [CONFORMANCE.md](./CONFORMANCE.md) | Evidence-backed version 1 authority, publication, determinism, filesystem-safety, and environment-sensitive guarantee boundaries |
 | [ERRORS.md](./ERRORS.md) | Problem model, error codes, and recovery guidance |
 
 ---
@@ -77,7 +77,7 @@ Two-tier structure: landing pages give the overview; detail pages own the full f
 
 | File | What it covers |
 |:-----|:---------------|
-| [JAVA_AUTHORING.md](./JAVA_AUTHORING.md) | Fluent Java plan building, selector helpers, source-backed inputs, JSON emission, and explicit V3 engine execution with host grants |
+| [JAVA_AUTHORING.md](./JAVA_AUTHORING.md) | Fluent Java plan building, selector helpers, source-backed inputs, JSON emission, and explicit version 1 engine execution with host grants |
 
 ---
 

@@ -10,7 +10,7 @@ import dev.erst.gridgrind.core.plan.Selector;
 import dev.erst.gridgrind.core.plan.WorkbookStep;
 import dev.erst.gridgrind.core.problem.InvalidRequestException;
 import dev.erst.gridgrind.core.problem.MessageInvariant;
-import dev.erst.gridgrind.core.vocabulary.WireString;
+import dev.erst.gridgrind.core.vocabulary.WireScalar;
 import dev.erst.gridgrind.json.intake.WorkbookStepJsonDeserializer;
 import org.jspecify.annotations.Nullable;
 import tools.jackson.core.StreamReadConstraints;
@@ -74,7 +74,7 @@ public final class GridGrindJsonMapperSupport {
             .disable(StreamWriteFeature.AUTO_CLOSE_TARGET)
             .enable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
             .enable(DeserializationFeature.FAIL_ON_NULL_FOR_PRIMITIVES)
-            // RequestStructuralAnalyzer owns V3 field presence. The typed mapper only
+            // RequestStructuralAnalyzer owns request field presence. The typed mapper only
             // normalizes already shape-valid fragments, including Optional fields.
             .disable(DeserializationFeature.FAIL_ON_MISSING_CREATOR_PROPERTIES)
             .disable(DeserializationFeature.FAIL_ON_NULL_CREATOR_PROPERTIES)
@@ -98,8 +98,8 @@ public final class GridGrindJsonMapperSupport {
         new SimpleModule()
             .setValueInstantiators(new RecordDefaultInstantiators())
             .setSerializerModifier(new RecordDefaultSerialization())
-            .setDeserializers(new WireStringDeserializers())
-            .addSerializer(WireString.class, new WireStringSerializer())
+            .setDeserializers(new WireScalarDeserializers())
+            .addSerializer(WireScalar.class, new WireScalarSerializer())
             .addSerializer(Selector.class, new SelectorJsonSerializer());
     registerStepCodec(module, WorkbookStep.class);
     for (Class<?> type : WorkbookStep.class.getPermittedSubclasses()) {

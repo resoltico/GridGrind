@@ -25,7 +25,7 @@
       },
       "optionalFeatures" : [ "Workbook findings after authoring.", "Charting or dashboard follow-ups built from the pivot output.", "Assertions that the expected pivot table exists." ],
       "outcomes" : [ "Source data is modeled as one table before pivot logic depends on it.", "Pivot tables are authored by name instead of fragile workbook surgery.", "Readback confirms the resulting pivot structure." ],
-      "protocolVersion" : "V3",
+      "protocolVersion" : 1,
       "requestFileName" : "pivot-report-request.json",
       "requestProfile" : {
         "assertionTypes" : [ "EXPECT_PIVOT_TABLE_PRESENT" ],
@@ -1811,7 +1811,7 @@
         "type" : "SAVE_AS"
       },
       "planId" : "pivot-report-starter",
-      "protocolVersion" : "V3",
+      "protocolVersion" : 1,
       "status" : "SUCCEEDED",
       "warnings" : [ ]
     }
@@ -1823,7 +1823,7 @@
       "type" : "SAVE_AS"
     },
     "planId" : "pivot-report-starter",
-    "protocolVersion" : "V3",
+    "protocolVersion" : 1,
     "source" : {
       "type" : "NEW"
     },
@@ -2071,7 +2071,7 @@
         "type" : "SAVE_AS"
       },
       "planId" : "pivot-report-starter",
-      "protocolVersion" : "V3",
+      "protocolVersion" : 1,
       "source" : {
         "type" : "NEW"
       },

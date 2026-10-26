@@ -79,7 +79,7 @@ class GridGrindTaskCatalogTest {
             IllegalArgumentException.class,
             () ->
                 new TaskCatalog(
-                    dev.erst.gridgrind.core.plan.GridGrindProtocolVersion.current(),
+                    dev.erst.gridgrind.core.vocabulary.ProtocolVersion.CURRENT,
                     java.util.List.of(left, right)));
     assertEquals("tasks must not contain duplicate DUPLICATE", duplicateTasks.getMessage());
 
@@ -123,7 +123,7 @@ class GridGrindTaskCatalogTest {
             () ->
                 GridGrindTaskCatalog.validateCapabilityReferences(
                     new TaskCatalog(
-                        dev.erst.gridgrind.core.plan.GridGrindProtocolVersion.current(),
+                        dev.erst.gridgrind.core.vocabulary.ProtocolVersion.CURRENT,
                         java.util.List.of(brokenTask()))));
     assertTrue(
         danglingReference

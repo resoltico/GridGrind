@@ -879,7 +879,7 @@
       "type" : "SAVE_AS"
     },
     "planId" : "large-file-modes-workflow",
-    "protocolVersion" : "V3",
+    "protocolVersion" : 1,
     "status" : "SUCCEEDED",
     "warnings" : [ ]
   }

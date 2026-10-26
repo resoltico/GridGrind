@@ -9,7 +9,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import dev.erst.gridgrind.core.model.formula.FormulaEnvironmentSpec;
 import dev.erst.gridgrind.core.model.security.OoxmlEncryptionSpec;
 import dev.erst.gridgrind.core.plan.ExecutionPolicySpec;
-import dev.erst.gridgrind.core.plan.GridGrindProtocolVersion;
 import dev.erst.gridgrind.core.plan.Selector;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import dev.erst.gridgrind.core.problem.InvalidEncodingException;
@@ -31,6 +30,7 @@ import dev.erst.gridgrind.core.problem.RequestStructuralProblem;
 import dev.erst.gridgrind.core.problem.RequestUnknownField;
 import dev.erst.gridgrind.core.problem.RequestUnknownTypeDiscriminator;
 import dev.erst.gridgrind.core.vocabulary.PlanId;
+import dev.erst.gridgrind.core.vocabulary.ProtocolVersion;
 import dev.erst.gridgrind.json.codec.GridGrindJson;
 import dev.erst.gridgrind.json.codec.RequestDiagnosticRedactor;
 import java.nio.charset.StandardCharsets;
@@ -67,15 +67,15 @@ class RequestStructuralSupportTest {
     RequestNonContainerNodeValidator.validate(
         new RequestJsonString(3, "text"), StringBuilder.class, "text", 3, problems);
     RequestNodeValidator.validateEnum(
-        new RequestJsonString(4, "NOT_A_VERSION"),
-        GridGrindProtocolVersion.class,
-        "protocolVersion",
+        new RequestJsonString(4, "NOT_A_MODE"),
+        dev.erst.gridgrind.core.plan.AssertionModeSpec.class,
+        "assertionMode",
         4,
         problems);
     RequestNodeValidator.validateEnum(
         new RequestJsonNumber(5, "2"),
-        GridGrindProtocolVersion.class,
-        "protocolVersion",
+        dev.erst.gridgrind.core.plan.AssertionModeSpec.class,
+        "assertionMode",
         5,
         problems);
     RequestUnionValidator.validateUnion(
@@ -107,8 +107,8 @@ class RequestStructuralSupportTest {
             "Unknown field 'encryption.password'",
             "Field 'integer' must be a JSON number",
             "Field 'boolean' must be a JSON boolean",
-            "Unsupported value 'NOT_A_VERSION' for field 'protocolVersion'; expected one of: V3",
-            "Field 'protocolVersion' must be a JSON string",
+            "Unsupported value 'NOT_A_MODE' for field 'assertionMode'; expected one of: FAIL_FAST, COLLECT",
+            "Field 'assertionMode' must be a JSON string",
             "Field 'source' must be a JSON object",
             "Missing required field 'source.type'",
             "Field 'source.type' must be a JSON string type id",
@@ -362,7 +362,7 @@ class RequestStructuralSupportTest {
   void buildsCompletePlansOnlyFromCompleteAndConstructorValidFragments() {
     RequestBoundRoot completeRoot =
         new RequestBoundRoot(
-            Optional.of(GridGrindProtocolVersion.V3),
+            Optional.of(ProtocolVersion.CURRENT),
             Optional.of(new PlanId("plan")),
             Optional.of(new WorkbookPlan.WorkbookSource.New()),
             Optional.of(new WorkbookPlan.WorkbookPersistence.None()),
@@ -373,7 +373,7 @@ class RequestStructuralSupportTest {
 
     assertTrue(complete.completePlan().isPresent());
     assertEquals("plan", complete.planId().orElseThrow().value());
-    assertEquals(GridGrindProtocolVersion.V3, complete.protocolVersion().orElseThrow());
+    assertEquals(ProtocolVersion.CURRENT, complete.protocolVersion().orElseThrow());
     assertTrue(complete.source().isPresent());
     assertTrue(complete.persistence().isPresent());
     assertTrue(complete.execution().isPresent());
@@ -396,7 +396,7 @@ class RequestStructuralSupportTest {
         List.of(
             new RequestBoundFragments(
                 new RequestBoundRoot(
-                    Optional.of(GridGrindProtocolVersion.V3),
+                    Optional.of(ProtocolVersion.CURRENT),
                     Optional.empty(),
                     Optional.empty(),
                     Optional.of(new WorkbookPlan.WorkbookPersistence.None()),
@@ -405,7 +405,7 @@ class RequestStructuralSupportTest {
                 Optional.of(List.of())),
             new RequestBoundFragments(
                 new RequestBoundRoot(
-                    Optional.of(GridGrindProtocolVersion.V3),
+                    Optional.of(ProtocolVersion.CURRENT),
                     Optional.empty(),
                     Optional.of(new WorkbookPlan.WorkbookSource.New()),
                     Optional.empty(),
@@ -414,7 +414,7 @@ class RequestStructuralSupportTest {
                 Optional.of(List.of())),
             new RequestBoundFragments(
                 new RequestBoundRoot(
-                    Optional.of(GridGrindProtocolVersion.V3),
+                    Optional.of(ProtocolVersion.CURRENT),
                     Optional.empty(),
                     Optional.of(new WorkbookPlan.WorkbookSource.New()),
                     Optional.of(new WorkbookPlan.WorkbookPersistence.None()),
@@ -423,7 +423,7 @@ class RequestStructuralSupportTest {
                 Optional.of(List.of())),
             new RequestBoundFragments(
                 new RequestBoundRoot(
-                    Optional.of(GridGrindProtocolVersion.V3),
+                    Optional.of(ProtocolVersion.CURRENT),
                     Optional.empty(),
                     Optional.of(new WorkbookPlan.WorkbookSource.New()),
                     Optional.of(new WorkbookPlan.WorkbookPersistence.None()),
@@ -453,7 +453,7 @@ class RequestStructuralSupportTest {
         GridGrindJson.readRequest(
                 """
                 {
-                  "protocolVersion": "V3",
+                  "protocolVersion": 1,
                   "source": {"type": "NEW"},
                   "persistence": {"type": "NONE"},
                   "steps": [{

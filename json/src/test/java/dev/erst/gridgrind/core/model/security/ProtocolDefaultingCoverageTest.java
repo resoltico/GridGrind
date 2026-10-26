@@ -63,7 +63,6 @@ import dev.erst.gridgrind.core.model.validation.IgnoredErrorSpec;
 import dev.erst.gridgrind.core.plan.ExecutionJournalSpec;
 import dev.erst.gridgrind.core.plan.ExecutionModeSpec;
 import dev.erst.gridgrind.core.plan.ExecutionPolicySpec;
-import dev.erst.gridgrind.core.plan.GridGrindProtocolVersion;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import dev.erst.gridgrind.core.problem.RequestDoctorReport;
 import dev.erst.gridgrind.core.result.ExecutionJournal;
@@ -94,6 +93,7 @@ import dev.erst.gridgrind.core.vocabulary.ExcelOoxmlWriteHash;
 import dev.erst.gridgrind.core.vocabulary.ExcelPivotDataConsolidateFunction;
 import dev.erst.gridgrind.core.vocabulary.ExcelPrintOrientation;
 import dev.erst.gridgrind.core.vocabulary.PlanId;
+import dev.erst.gridgrind.core.vocabulary.ProtocolVersion;
 import dev.erst.gridgrind.core.vocabulary.RangeLabel;
 import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.core.vocabulary.RgbHex;
@@ -176,7 +176,7 @@ class ProtocolDefaultingCoverageTest {
             Optional.of("Signed workbook"));
     RequestDoctorReport report =
         new RequestDoctorReport(
-            GridGrindProtocolVersion.current(),
+            ProtocolVersion.CURRENT,
             AnalysisSeverity.INFO,
             true,
             Optional.of(
@@ -215,7 +215,7 @@ class ProtocolDefaultingCoverageTest {
     assertEquals(Optional.of("gridgrind-signing"), explicitSignature.alias());
     assertEquals(ExcelOoxmlSignatureDigestAlgorithm.SHA512, explicitSignature.digestAlgorithm());
     assertEquals(Optional.of("Signed workbook"), explicitSignature.description());
-    assertEquals(GridGrindProtocolVersion.current(), report.protocolVersion());
+    assertEquals(ProtocolVersion.CURRENT, report.protocolVersion());
     assertEquals(List.of(), report.warnings());
   }
 
@@ -709,7 +709,7 @@ class ProtocolDefaultingCoverageTest {
   void convenienceConstructorsCoverDefaultPlanAndReportBranches() {
     WorkbookPlan defaultPlan =
         WorkbookPlan.identified(
-            GridGrindProtocolVersion.current(),
+            ProtocolVersion.CURRENT,
             new PlanId("budget-defaults"),
             new WorkbookPlan.WorkbookSource.New(),
             new WorkbookPlan.WorkbookPersistence.None(),
@@ -718,7 +718,7 @@ class ProtocolDefaultingCoverageTest {
             List.of());
     WorkbookPlan explicitExecutionPlan =
         WorkbookPlan.identified(
-            GridGrindProtocolVersion.current(),
+            ProtocolVersion.CURRENT,
             new PlanId("budget-execution"),
             new WorkbookPlan.WorkbookSource.New(),
             new WorkbookPlan.WorkbookPersistence.None(),
@@ -728,7 +728,7 @@ class ProtocolDefaultingCoverageTest {
     WorkbookPlan wireDefaultedPlan =
         readOmitted(
             WorkbookPlan.class,
-            GridGrindProtocolVersion.current(),
+            ProtocolVersion.CURRENT,
             Optional.empty(),
             new WorkbookPlan.WorkbookSource.New(),
             new WorkbookPlan.WorkbookPersistence.None(),

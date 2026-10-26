@@ -12,7 +12,7 @@
       "code" : "INVALID_REQUEST",
       "context" : {
         "json" : {
-          "byteOffset" : 52,
+          "byteOffset" : 49,
           "jsonPath" : "source.path",
           "type" : "PATH_BYTE_OFFSET"
         },
@@ -27,7 +27,7 @@
       "resolution" : "Provide a path ending in .xlsx for field 'source.path'.",
       "title" : "Invalid request"
     } ],
-    "protocolVersion" : "V3",
+    "protocolVersion" : 1,
     "severity" : "ERROR",
     "valid" : false,
     "warnings" : [ ]

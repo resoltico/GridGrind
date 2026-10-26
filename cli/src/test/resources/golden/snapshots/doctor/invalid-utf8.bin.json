@@ -26,7 +26,7 @@
       "resolution" : "Encode the request document as UTF-8.",
       "title" : "Invalid request encoding"
     } ],
-    "protocolVersion" : "V3",
+    "protocolVersion" : 1,
     "severity" : "ERROR",
     "valid" : false,
     "warnings" : [ ]

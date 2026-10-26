@@ -2,11 +2,11 @@ package dev.erst.gridgrind.engine.runtime;
 
 import dev.erst.gridgrind.core.model.formula.CalculationReport;
 import dev.erst.gridgrind.core.plan.AssertionResult;
-import dev.erst.gridgrind.core.plan.GridGrindProtocolVersion;
 import dev.erst.gridgrind.core.plan.InspectionResult;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import dev.erst.gridgrind.core.problem.RequestWarning;
 import dev.erst.gridgrind.core.result.WorkbookExecutionEvidence.Preservation;
+import dev.erst.gridgrind.core.vocabulary.ProtocolVersion;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
 import dev.erst.gridgrind.excel.WorkbookLocation;
 import java.util.ArrayList;
@@ -27,7 +27,7 @@ final class FullXssfWorkflowState {
   private HostAcceptanceSnapshot hostAcceptanceSnapshot = HostAcceptanceSnapshot.empty();
 
   FullXssfWorkflowState(
-      GridGrindProtocolVersion protocolVersion,
+      ProtocolVersion protocolVersion,
       WorkbookPlan request,
       ExcelWorkbook workbook,
       List<RequestWarning> warnings,

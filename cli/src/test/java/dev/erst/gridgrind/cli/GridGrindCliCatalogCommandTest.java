@@ -640,7 +640,7 @@ class GridGrindCliCatalogCommandTest extends GridGrindCliTestSupport {
                 new ByteArrayInputStream(
                     """
                     {
-                      "protocolVersion": "V3",
+                      "protocolVersion": 1,
                       "source": { "type": "EXISTING" },
                       "persistence": { "type": "SAVE_AS" },
                       "execution": {
@@ -712,7 +712,7 @@ class GridGrindCliCatalogCommandTest extends GridGrindCliTestSupport {
                 new ByteArrayInputStream(
                     """
                     {
-                      "protocolVersion": "V3",
+                      "protocolVersion": 1,
                       "source": { "type": "NEW" },
                       "persistence": { "type": "OVERWRITE" },
                       "execution": {

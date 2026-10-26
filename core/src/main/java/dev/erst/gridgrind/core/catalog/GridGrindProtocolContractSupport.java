@@ -2,7 +2,7 @@ package dev.erst.gridgrind.core.catalog;
 
 import dev.erst.gridgrind.core.metadata.Union;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
-import dev.erst.gridgrind.core.vocabulary.WireString;
+import dev.erst.gridgrind.core.vocabulary.WireScalar;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.RecordComponent;
 import java.lang.reflect.Type;
@@ -146,7 +146,7 @@ public final class GridGrindProtocolContractSupport {
     if (!(type instanceof Class<?> classType)) {
       return;
     }
-    if (WireString.isValueType(classType)) {
+    if (WireScalar.isValueType(classType)) {
       return;
     }
     if (classType.isRecord()) {

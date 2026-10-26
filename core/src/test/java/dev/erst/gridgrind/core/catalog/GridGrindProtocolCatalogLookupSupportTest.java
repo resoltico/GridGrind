@@ -5,7 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import dev.erst.gridgrind.core.plan.GridGrindProtocolVersion;
+import dev.erst.gridgrind.core.vocabulary.ProtocolVersion;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 
@@ -150,7 +150,7 @@ class GridGrindProtocolCatalogLookupSupportTest {
             IllegalArgumentException.class,
             () ->
                 new CatalogSearchResult(
-                    GridGrindProtocolVersion.current(),
+                    ProtocolVersion.CURRENT,
                     "source",
                     new java.util.ArrayList<>(java.util.Arrays.asList((CatalogSearchMatch) null))));
 

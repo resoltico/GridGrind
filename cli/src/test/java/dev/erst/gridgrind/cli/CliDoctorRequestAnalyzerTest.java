@@ -29,7 +29,7 @@ import org.junit.jupiter.api.Test;
 /** Direct coverage for tolerant doctor intake and complete-plan binding selection. */
 class CliDoctorRequestAnalyzerTest extends GridGrindCliTestSupport {
   @Test
-  void diagnoseRunsTheDoctorForACompleteMinimalV3Request() throws IOException {
+  void diagnoseRunsTheDoctorForACompleteRequest() throws IOException {
     RecordingDoctor doctor =
         new RecordingDoctor((request, inputs) -> RequestDoctorReport.clean(summaryFor(request)));
 
@@ -122,7 +122,7 @@ class CliDoctorRequestAnalyzerTest extends GridGrindCliTestSupport {
     byte[] requestBytes =
         """
         {
-          "protocolVersion": "V3",
+          "protocolVersion": 1,
           "source": { "type": "NEW", "unexpected": true },
           "persistence": null,
           "steps": [
@@ -158,12 +158,12 @@ class CliDoctorRequestAnalyzerTest extends GridGrindCliTestSupport {
   }
 
   @Test
-  void diagnoseRejectsV1WithoutTranslatingIt() throws IOException {
+  void diagnoseRejectsAStringVersionWithoutCoercion() throws IOException {
     RecordingDoctor doctor =
         new RecordingDoctor((request, inputs) -> RequestDoctorReport.clean(summaryFor(request)));
     byte[] requestBytes =
         minimalRequestJson("{ \"type\": \"NEW\" }", "{ \"type\": \"NONE\" }", "[]")
-            .replace("\"protocolVersion\": \"V3\"", "\"protocolVersion\": \"V1\"")
+            .replace("\"protocolVersion\": 1", "\"protocolVersion\": \"V1\"")
             .getBytes(StandardCharsets.UTF_8);
 
     RequestDoctorReport report =
@@ -180,7 +180,8 @@ class CliDoctorRequestAnalyzerTest extends GridGrindCliTestSupport {
     assertTrue(
         report.problems().stream()
             .map(GridGrindProblemDetail.Problem::message)
-            .anyMatch(message -> message.contains("protocolVersion") && message.contains("V3")));
+            .anyMatch(
+                message -> message.contains("protocolVersion") && message.contains("JSON number")));
   }
 
   @Test

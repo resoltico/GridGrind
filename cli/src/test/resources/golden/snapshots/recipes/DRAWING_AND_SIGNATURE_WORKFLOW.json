@@ -25,7 +25,7 @@
       },
       "optionalFeatures" : [ "Signature-line preview images.", "Follow-up drawing-object payload extraction or deletion.", "Picture, shape, or embedded-object variants alongside signature lines." ],
       "outcomes" : [ "Drawing-backed workbook objects are authored by name instead of fragile XML surgery.", "Anchors can be moved authoritatively after creation.", "Drawing-object readback confirms what the workbook now contains." ],
-      "protocolVersion" : "V3",
+      "protocolVersion" : 1,
       "requestFileName" : "drawing-and-signature-workflow-request.json",
       "requestProfile" : {
         "assertionTypes" : [ ],
@@ -512,7 +512,7 @@
         "type" : "SAVE_AS"
       },
       "planId" : "drawing-and-signature-workflow-starter",
-      "protocolVersion" : "V3",
+      "protocolVersion" : 1,
       "status" : "SUCCEEDED",
       "warnings" : [ ]
     }
@@ -524,7 +524,7 @@
       "type" : "SAVE_AS"
     },
     "planId" : "drawing-and-signature-workflow-starter",
-    "protocolVersion" : "V3",
+    "protocolVersion" : 1,
     "source" : {
       "type" : "NEW"
     },
@@ -634,7 +634,7 @@
         "type" : "SAVE_AS"
       },
       "planId" : "drawing-and-signature-workflow-starter",
-      "protocolVersion" : "V3",
+      "protocolVersion" : 1,
       "source" : {
         "type" : "NEW"
       },

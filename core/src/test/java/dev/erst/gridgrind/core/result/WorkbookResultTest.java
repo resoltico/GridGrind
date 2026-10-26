@@ -24,7 +24,6 @@ import dev.erst.gridgrind.core.model.value.CellValueReport;
 import dev.erst.gridgrind.core.model.value.HyperlinkTarget;
 import dev.erst.gridgrind.core.plan.AssertionResult;
 import dev.erst.gridgrind.core.plan.ExecutionPolicySpec;
-import dev.erst.gridgrind.core.plan.GridGrindProtocolVersion;
 import dev.erst.gridgrind.core.plan.InspectionResult;
 import dev.erst.gridgrind.core.plan.WorkbookInspectionResult;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
@@ -38,6 +37,7 @@ import dev.erst.gridgrind.core.vocabulary.ExcelFillPattern;
 import dev.erst.gridgrind.core.vocabulary.ExcelHorizontalAlignment;
 import dev.erst.gridgrind.core.vocabulary.ExcelVerticalAlignment;
 import dev.erst.gridgrind.core.vocabulary.NamedRangeScope;
+import dev.erst.gridgrind.core.vocabulary.ProtocolVersion;
 import dev.erst.gridgrind.core.vocabulary.RangeLabel;
 import dev.erst.gridgrind.core.vocabulary.SheetLabel;
 import dev.erst.gridgrind.core.vocabulary.StepId;
@@ -78,7 +78,7 @@ class WorkbookResultTest {
     warnings.clear();
     inspections.clear();
 
-    assertEquals(GridGrindProtocolVersion.current(), success.protocolVersion());
+    assertEquals(ProtocolVersion.CURRENT, success.protocolVersion());
     assertInstanceOf(
         WorkbookResultPersistence.PersistenceOutcome.NotSaved.class, success.persistence());
     assertEquals(java.util.Optional.empty(), success.planId());

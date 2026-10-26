@@ -6,10 +6,10 @@ import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import dev.erst.gridgrind.core.model.formula.FormulaEnvironmentSpec;
 import dev.erst.gridgrind.core.plan.ExecutionModeSpec;
 import dev.erst.gridgrind.core.plan.ExecutionPolicySpec;
-import dev.erst.gridgrind.core.plan.GridGrindProtocolVersion;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import dev.erst.gridgrind.core.problem.GridGrindProblemCode;
 import dev.erst.gridgrind.core.result.WorkbookResult;
+import dev.erst.gridgrind.core.vocabulary.ProtocolVersion;
 import dev.erst.gridgrind.engine.api.GridGrindExecutionGrant;
 import dev.erst.gridgrind.engine.api.GridGrindHostAcceptancePolicy;
 import dev.erst.gridgrind.excel.ExcelCellValue;
@@ -70,7 +70,7 @@ class FullXssfWorkflowTest {
           assertInstanceOf(
               WorkbookResult.Failure.class,
               workflow.execute(
-                  GridGrindProtocolVersion.current(),
+                  ProtocolVersion.CURRENT,
                   request,
                   workbook,
                   new ExecutionModeSpec.FullXssf(),
@@ -127,7 +127,7 @@ class FullXssfWorkflowTest {
       assertInstanceOf(
           WorkbookResult.Failure.class,
           workflow.execute(
-              GridGrindProtocolVersion.current(),
+              ProtocolVersion.CURRENT,
               request,
               workbook,
               new ExecutionModeSpec.FullXssf(),
@@ -157,7 +157,7 @@ class FullXssfWorkflowTest {
     try (var workbook = ExcelWorkbooks.create()) {
       FullXssfWorkflowState state =
           new FullXssfWorkflowState(
-              GridGrindProtocolVersion.current(),
+              ProtocolVersion.CURRENT,
               request,
               workbook,
               new ArrayList<>(),

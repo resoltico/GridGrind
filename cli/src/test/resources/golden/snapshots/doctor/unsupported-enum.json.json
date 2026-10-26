@@ -6,14 +6,14 @@
       "category" : "REQUEST",
       "causes" : [ {
         "code" : "INVALID_REQUEST_SHAPE",
-        "message" : "Unsupported value 'V999' for field 'protocolVersion'; expected one of: V3",
+        "message" : "Unsupported value 'UNKNOWN' for field 'execution.assertionMode'; expected one of: FAIL_FAST, COLLECT",
         "stage" : "READ_REQUEST"
       } ],
       "code" : "INVALID_REQUEST_SHAPE",
       "context" : {
         "json" : {
-          "byteOffset" : 1,
-          "jsonPath" : "protocolVersion",
+          "byteOffset" : 88,
+          "jsonPath" : "execution.assertionMode",
           "type" : "PATH_BYTE_OFFSET"
         },
         "request" : {
@@ -22,12 +22,12 @@
         },
         "type" : "READ_REQUEST"
       },
-      "message" : "Unsupported value 'V999' for field 'protocolVersion'; expected one of: V3",
+      "message" : "Unsupported value 'UNKNOWN' for field 'execution.assertionMode'; expected one of: FAIL_FAST, COLLECT",
       "recovery" : "CHANGE_REQUEST",
-      "resolution" : "Replace field 'protocolVersion' with one supported value. Use --print-protocol-catalog --lookup or --search when you need the allowed values.",
+      "resolution" : "Replace field 'execution.assertionMode' with one supported value. Use --print-protocol-catalog --lookup or --search when you need the allowed values.",
       "title" : "Invalid request shape"
     } ],
-    "protocolVersion" : "V3",
+    "protocolVersion" : 1,
     "severity" : "ERROR",
     "valid" : false,
     "warnings" : [ ]

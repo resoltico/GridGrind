@@ -89,7 +89,7 @@
           "type" : "PATH"
         },
         "json" : {
-          "byteOffset" : 358,
+          "byteOffset" : 355,
           "jsonPath" : "steps[1].action.value.source.path",
           "type" : "PATH_BYTE_OFFSET"
         },
@@ -105,7 +105,7 @@
       "resolution" : "Provide an existing authored input file or correct its path. When the CLI reads a request via --request, relative request-owned paths resolve from the request file directory.",
       "title" : "Input source not found"
     },
-    "protocolVersion" : "V3",
+    "protocolVersion" : 1,
     "status" : "FAILED",
     "warnings" : [ ]
   }

@@ -6,7 +6,7 @@
       "advisory" : "SELF_CONTAINED",
       "id" : "PIVOT",
       "intentTags" : [ "pivot", "report", "analysis", "authoring" ],
-      "protocolVersion" : "V3",
+      "protocolVersion" : 1,
       "requestFileName" : "pivot-request.json",
       "requestProfile" : {
         "assertionTypes" : [ ],
@@ -1655,7 +1655,7 @@
         "type" : "SAVE_AS"
       },
       "planId" : "pivot-workflow",
-      "protocolVersion" : "V3",
+      "protocolVersion" : 1,
       "status" : "SUCCEEDED",
       "warnings" : [ ]
     }
@@ -1667,7 +1667,7 @@
       "type" : "SAVE_AS"
     },
     "planId" : "pivot-workflow",
-    "protocolVersion" : "V3",
+    "protocolVersion" : 1,
     "source" : {
       "type" : "NEW"
     },
@@ -1872,7 +1872,7 @@
         "type" : "SAVE_AS"
       },
       "planId" : "pivot-workflow",
-      "protocolVersion" : "V3",
+      "protocolVersion" : 1,
       "source" : {
         "type" : "NEW"
       },

@@ -10,7 +10,7 @@ import dev.erst.gridgrind.core.model.value.CellValueSpec;
 import dev.erst.gridgrind.core.source.SecretReference;
 import dev.erst.gridgrind.core.vocabulary.ExcelReportedCellErrorLiteral;
 import dev.erst.gridgrind.core.vocabulary.ExcelStoredCellErrorLiteral;
-import dev.erst.gridgrind.core.vocabulary.WireString;
+import dev.erst.gridgrind.core.vocabulary.WireScalar;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.RecordComponent;
 import java.lang.reflect.Type;
@@ -144,6 +144,12 @@ public final class CatalogFieldMetadataSupport {
   /** Returns the machine-readable field shape for one non-parameterized record component type. */
   public static FieldShape fieldShape(Class<?> classType) {
     Objects.requireNonNull(classType, "classType must not be null");
+    if (WireScalar.isValueType(classType)) {
+      RecordComponent value = classType.getRecordComponents()[0];
+      return applyConstraints(
+          fieldShape(value.getGenericType()),
+          CatalogFieldConstraints.forComponent(classType, value.getName()));
+    }
     return scalarFieldShape(classType)
         .or(() -> groupedFieldShape(classType))
         .orElseThrow(
@@ -159,9 +165,7 @@ public final class CatalogFieldMetadataSupport {
   }
 
   private static Optional<FieldShape> scalarFieldShape(Class<?> classType) {
-    if (STRING_FIELD_TYPES.contains(classType)
-        || classType.isEnum()
-        || WireString.isValueType(classType)) {
+    if (STRING_FIELD_TYPES.contains(classType) || classType.isEnum()) {
       return Optional.of(new FieldShape.Scalar(ScalarType.STRING));
     }
     if (BOOLEAN_FIELD_TYPES.contains(classType)) {

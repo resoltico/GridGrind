@@ -133,7 +133,9 @@ public final class GridGrindRequestProblemSupport {
 
   private static String missingFieldResolution(String jsonPath) {
     if ("protocolVersion".equals(jsonPath)) {
-      return "Add protocolVersion: \"V3\" at the request root.";
+      return "Add protocolVersion: "
+          + dev.erst.gridgrind.core.vocabulary.ProtocolVersion.NUMBER
+          + " at the request root.";
     }
     if (jsonPath.endsWith(".type")) {
       return "Add the required type discriminator at '" + jsonPath + "'.";

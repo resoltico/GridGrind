@@ -3,12 +3,12 @@ package dev.erst.gridgrind.engine.runtime;
 import dev.erst.gridgrind.core.model.formula.CalculationReport;
 import dev.erst.gridgrind.core.plan.AssertionResult;
 import dev.erst.gridgrind.core.plan.ExecutionModeSpec;
-import dev.erst.gridgrind.core.plan.GridGrindProtocolVersion;
 import dev.erst.gridgrind.core.plan.InspectionResult;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import dev.erst.gridgrind.core.problem.GridGrindProblemDetail;
 import dev.erst.gridgrind.core.problem.RequestWarning;
 import dev.erst.gridgrind.core.result.WorkbookExecutionEvidence.Preservation;
+import dev.erst.gridgrind.core.vocabulary.ProtocolVersion;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.excel.WorkbookLocation;
 import java.util.ArrayList;
@@ -17,7 +17,7 @@ import org.jspecify.annotations.Nullable;
 
 /** Mutable request-scoped evidence collected during one streaming-write workflow. */
 record StreamingWorkflowContext(
-    GridGrindProtocolVersion protocolVersion,
+    ProtocolVersion protocolVersion,
     WorkbookPlan request,
     ExecutionModeSpec executionMode,
     List<RequestWarning> warnings,
@@ -28,7 +28,7 @@ record StreamingWorkflowContext(
     List<Preservation> preservation,
     List<InspectionResult> inspections) {
   static StreamingWorkflowContext create(
-      GridGrindProtocolVersion protocolVersion,
+      ProtocolVersion protocolVersion,
       WorkbookPlan request,
       ExecutionModeSpec executionMode,
       List<RequestWarning> warnings,

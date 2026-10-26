@@ -238,7 +238,7 @@ class JazzerRegressionRunnerTest {
           inputPath,
           """
           {
-            "protocolVersion": "V3",
+            "protocolVersion": 1,
             "source": { "type": "NEW" },
             "persistence": { "type": "NONE" },
             "execution": {

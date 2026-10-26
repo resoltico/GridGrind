@@ -25,7 +25,7 @@
       },
       "optionalFeatures" : [ "Schema validation during export.", "SAVE_AS persistence when the imported workbook should be kept separately.", "Post-import factual rereads or exports for verification." ],
       "outcomes" : [ "Mapped workbook metadata is discovered before any XML payload is pushed in.", "Existing mappings can be exported for inspection or diffing.", "XML payloads can be imported back through the existing workbook mapping." ],
-      "protocolVersion" : "V3",
+      "protocolVersion" : 1,
       "requestFileName" : "custom-xml-workflow-request.json",
       "requestProfile" : {
         "assertionTypes" : [ ],
@@ -1735,7 +1735,7 @@
         "type" : "SAVE_AS"
       },
       "planId" : "custom-xml-workflow-starter",
-      "protocolVersion" : "V3",
+      "protocolVersion" : 1,
       "status" : "SUCCEEDED",
       "warnings" : [ ]
     }
@@ -1755,7 +1755,7 @@
       "type" : "SAVE_AS"
     },
     "planId" : "custom-xml-workflow-starter",
-    "protocolVersion" : "V3",
+    "protocolVersion" : 1,
     "source" : {
       "path" : "custom-xml-assets/custom-xml-mapping.xlsx",
       "type" : "EXISTING"
@@ -1847,7 +1847,7 @@
         "resolution" : "Run gridgrind --help for the synopsis, --help-protocol for the authoritative request contract, or --help-guidance for workflows and examples.",
         "title" : "Invalid CLI arguments"
       } ],
-      "protocolVersion" : "V3",
+      "protocolVersion" : 1,
       "status" : "REJECTED"
     }
   }

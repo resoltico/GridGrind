@@ -4,10 +4,10 @@ import dev.erst.gridgrind.core.catalog.Catalog;
 import dev.erst.gridgrind.core.catalog.CatalogNote;
 import dev.erst.gridgrind.core.catalog.ProtocolStepTemplate;
 import dev.erst.gridgrind.core.catalog.TypeEntry;
-import dev.erst.gridgrind.core.plan.GridGrindProtocolVersion;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import dev.erst.gridgrind.core.problem.RequestDoctorReport;
 import dev.erst.gridgrind.core.result.WorkbookResult;
+import dev.erst.gridgrind.core.vocabulary.ProtocolVersion;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.List;
@@ -134,10 +134,7 @@ public final class GridGrindJsonOutput {
    * the root.
    */
   public static void writeCatalogLookupResult(
-      OutputStream outputStream,
-      GridGrindProtocolVersion protocolVersion,
-      Object value,
-      boolean pretty)
+      OutputStream outputStream, ProtocolVersion protocolVersion, Object value, boolean pretty)
       throws IOException {
     writeCatalogLookupResult(outputStream, protocolVersion, value, List.of(), pretty);
   }
@@ -148,7 +145,7 @@ public final class GridGrindJsonOutput {
    */
   public static void writeCatalogLookupResult(
       OutputStream outputStream,
-      GridGrindProtocolVersion protocolVersion,
+      ProtocolVersion protocolVersion,
       Object value,
       List<CatalogNote> notes,
       boolean pretty)
@@ -159,7 +156,7 @@ public final class GridGrindJsonOutput {
     var mapper = wireWriteMapper(pretty);
     ObjectNode valueNode = mapper.valueToTree(value);
     ObjectNode envelope = mapper.createObjectNode();
-    envelope.put("protocolVersion", protocolVersion.name());
+    envelope.put("protocolVersion", protocolVersion.value());
     if (!notes.isEmpty()) {
       envelope.set("notes", mapper.valueToTree(notes));
     }

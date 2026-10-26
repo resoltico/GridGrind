@@ -21,7 +21,7 @@ class RecipeKeywordMatchReportTest {
             List.of("intent tag", "summary"));
     RecipeKeywordMatchReport report =
         new RecipeKeywordMatchReport(
-            dev.erst.gridgrind.core.plan.GridGrindProtocolVersion.current(),
+            dev.erst.gridgrind.core.vocabulary.ProtocolVersion.CURRENT,
             "monthly dashboard with charts",
             List.of("monthly", "dashboard", "chart"),
             List.of("monthly"),
@@ -30,7 +30,7 @@ class RecipeKeywordMatchReportTest {
 
     assertEquals(task.id(), report.candidates().getFirst().recipeId());
     assertEquals(
-        dev.erst.gridgrind.core.plan.GridGrindProtocolVersion.current(), report.protocolVersion());
+        dev.erst.gridgrind.core.vocabulary.ProtocolVersion.CURRENT, report.protocolVersion());
     assertThrows(UnsupportedOperationException.class, () -> report.candidates().add(candidate));
 
     NullPointerException exception =
@@ -56,7 +56,7 @@ class RecipeKeywordMatchReportTest {
             IllegalArgumentException.class,
             () ->
                 new RecipeKeywordMatchReport(
-                    dev.erst.gridgrind.core.plan.GridGrindProtocolVersion.current(),
+                    dev.erst.gridgrind.core.vocabulary.ProtocolVersion.CURRENT,
                     " ",
                     List.of("dashboard"),
                     List.of(),
@@ -69,7 +69,7 @@ class RecipeKeywordMatchReportTest {
             IllegalArgumentException.class,
             () ->
                 new RecipeKeywordMatchReport(
-                    dev.erst.gridgrind.core.plan.GridGrindProtocolVersion.current(),
+                    dev.erst.gridgrind.core.vocabulary.ProtocolVersion.CURRENT,
                     "dashboard",
                     List.of("dashboard"),
                     List.of(),

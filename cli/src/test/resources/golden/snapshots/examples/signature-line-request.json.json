@@ -425,7 +425,7 @@
       "type" : "SAVE_AS"
     },
     "planId" : "signature-line-workflow",
-    "protocolVersion" : "V3",
+    "protocolVersion" : 1,
     "status" : "SUCCEEDED",
     "warnings" : [ ]
   }

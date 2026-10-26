@@ -3,7 +3,7 @@ package dev.erst.gridgrind.core.model.formula;
 import dev.erst.gridgrind.core.source.OoxmlTextValidation;
 import java.util.Objects;
 
-/** Canonical validation for the two V3 OOXML formula-body input contracts. */
+/** Canonical validation for normal and raw OOXML formula-body authoring contracts. */
 public final class FormulaTextValidation {
   private FormulaTextValidation() {}
 

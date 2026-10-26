@@ -12,7 +12,7 @@
       "code" : "INVALID_REQUEST",
       "context" : {
         "json" : {
-          "byteOffset" : 241,
+          "byteOffset" : 238,
           "jsonPath" : "steps[1].stepId",
           "type" : "PATH_BYTE_OFFSET"
         },
@@ -27,7 +27,7 @@
       "resolution" : "Make every stepId unique. Rename or remove the duplicate value 'a'.",
       "title" : "Invalid request"
     } ],
-    "protocolVersion" : "V3",
+    "protocolVersion" : 1,
     "severity" : "ERROR",
     "valid" : false,
     "warnings" : [ ]

@@ -1093,3 +1093,62 @@ the shared resolved type and keep finite-number checks at the authored expectati
 formula-cache failure is pre-existing and remains a backend investigation, not a reason to drop
 stored observations. WP-23 remains open for cell-value unification and integer protocol version.
 Schema defaults, remaining WP-21 inventory targets and all later WPs remain outstanding.
+
+### WP-23 integer protocol header checkpoint
+
+The wire protocol version is now integer 1. Removed the plan enum and its current()/V3 surface;
+ProtocolVersion is a validated vocabulary record with one authoritative NUMBER constant. A closed
+WireScalar primitive hierarchy extends the existing twelve WireString records with that integer
+value. The generic constructor-backed codec still rejects token coercion and preserves owned
+field/index paths; it now writes scalar primitive values rather than expanding the record. Graph,
+origin and redaction traversal treat the numeric value as a scalar. The catalog unwraps the scalar
+component and derives its 1..1 number constraint from FieldRule metadata. No core Jackson dependency
+or qualified opens were introduced. Record construction validates version identity once.
+
+All main/test projects compile. Three new regressions independently assert literal integer bytes,
+unsupported numeric/string/null/float rejection, rooted problem paths and numeric catalog shape.
+The existing twelve-domain string property suite still passes. Generic enum tests were moved from
+the retired version enum to the existing assertion-mode enum, preserving allowed-candidate and
+empty-enum detection. Constructor-error coordinate assertions now inspect version binding failure
+rather than incorrectly expecting an integer to fail enum shape validation. Updated generated test
+request builders to emit actual numbers, including the product-based golden readback requests.
+
+The unknown-enum golden fixture now targets execution.assertionMode with a valid integer header;
+its code/category and rejection assurance remain intact. Added a separate unsupported numeric
+version fixture, with one owned INVALID_REQUEST problem at the exact version property offset.
+Corpus: 17 doctor inputs, 72 snapshots and 143 JUnit cases (both launcher paths retained).
+Golden review: 115 existing non-doctor header values and 16 doctor response headers change V3 -> 1.
+No existing legal payload or scalar workbook observation changes. Independently recomputed 18 doctor
+byte offsets and two columns from the edited input bytes; one execution-time missing-input offset
+also moves 358 -> 355. The moved enum fixture changes only its diagnostic subject, candidate list,
+path and exact property offset. The new numeric-version snapshot proves the new guard. Per-file
+reviews are version-snapshot-predicted-review.json, version-doctor-reviewed.json and the retained
+execution-error difference/proof. Normalization is unchanged. All 143 cases, including the real
+value-changing negative control, pass in the final full run.
+
+Full catalog output equals the prior producer after only the numeric header plus its field's
+STRING/enum -> NUMBER/range-1..1 descriptor change (version-catalog-review.json). Named JPMS modules
+pass 14 request round trips, catalog, response and twelve string scalars; version transport is also
+exercised in every versioned document. No hidden legacy parser or old-string alias remains.
+
+A concurrent authorized task owned shared packaging inputs temporarily; paused shared-file edits
+and packaging checks, then verified the aggregate delivered state after it committed. Its committed
+legal payloads were used as the snapshot baseline and preserved. All changes in this checkpoint's
+index are the protocol work. Recorded intermediate failures include stale enum/type assertions,
+a quoted dynamic test-header builder, a source-offset expectation, and a standard PMD literal-order
+finding; focused corrections passed before the final full run.
+
+Final ./gradlew check passed in 2m54s: core 328, JSON 339, engine 1511, CLI 600, architecture 41;
+2819 tests, zero failures/errors/skips. Inventory: main Java 124474 -> 124528; tests 154674 -> 154714;
+JSON main files 69 unchanged (codec files renamed), Spec 75/Patch eight, reports 96, engine snapshots
+51/definitions 13, converters 4700, Support 217, blank checks 438 remain. Shell lines 10827 -> 10829.
+Creator/default/registration/manual-descriptor inventories remain empty. AGENTS.md baseline diff is
+empty; supplement absent. No mutation or active fuzzing campaigns ran.
+
+Next: merge scalar expectations and effective cell observations into one CellValue and remove their
+parallel wrapper/converter families. Keep CellReport's meaningful stored-cell variants: they retain
+stored type without VALUE projection and enforce type-specific report facets. Rich-run/temporal
+metadata belongs to reports, while the shared scalar payload is common with expectations. Preserve
+the independently observed stored-NaN behavior and keep authored numeric expectations finite.
+Detailed design/challenge notes are external in cell-values-design.md. WP-23 is not complete yet;
+WP-21's full identifier/blank target, schema defaults and later phases also remain outstanding.

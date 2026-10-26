@@ -6,7 +6,7 @@
       "advisory" : "REQUIRES_EXAMPLE_ASSETS",
       "id" : "PACKAGE_SECURITY_INSPECTION",
       "intentTags" : [ "package-security", "ooxml", "inspection", "encrypted" ],
-      "protocolVersion" : "V3",
+      "protocolVersion" : 1,
       "requestFileName" : "package-security-inspect-request.json",
       "requestProfile" : {
         "assertionTypes" : [ ],
@@ -182,7 +182,7 @@
         "type" : "NONE"
       },
       "planId" : "package-security-inspection-workflow",
-      "protocolVersion" : "V3",
+      "protocolVersion" : 1,
       "status" : "SUCCEEDED",
       "warnings" : [ ]
     }
@@ -192,7 +192,7 @@
       "type" : "NONE"
     },
     "planId" : "package-security-inspection-workflow",
-    "protocolVersion" : "V3",
+    "protocolVersion" : 1,
     "source" : {
       "path" : "package-security-assets/gridgrind-package-security.xlsx",
       "security" : {
@@ -243,7 +243,7 @@
         "resolution" : "Run gridgrind --help for the synopsis, --help-protocol for the authoritative request contract, or --help-guidance for workflows and examples.",
         "title" : "Invalid CLI arguments"
       } ],
-      "protocolVersion" : "V3",
+      "protocolVersion" : 1,
       "status" : "REJECTED"
     }
   }

@@ -239,7 +239,7 @@
       "type" : "NONE"
     },
     "planId" : "source-backed-input-workflow",
-    "protocolVersion" : "V3",
+    "protocolVersion" : 1,
     "status" : "SUCCEEDED",
     "warnings" : [ ]
   }

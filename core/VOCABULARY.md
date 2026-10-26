@@ -27,3 +27,6 @@ Wire discriminators use `type` for a variant's identity and `status` for a compl
 The structural `WorkbookStep` envelope selects its action, assertion or query without an additional
 tag. Variant ids use `SCREAMING_SNAKE_CASE` and are declared by `Variant` metadata. Plain attributes
 such as journal verbosity and a diagnostic cause's stage keep their domain names.
+
+`protocolVersion` is the integer `1`. Validated wire scalars represent domain values directly as
+JSON primitives; their Java record components do not add an object layer to the wire document.

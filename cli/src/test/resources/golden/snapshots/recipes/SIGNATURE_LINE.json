@@ -6,7 +6,7 @@
       "advisory" : "SELF_CONTAINED",
       "id" : "SIGNATURE_LINE",
       "intentTags" : [ "drawing", "signature", "visual", "authoring" ],
-      "protocolVersion" : "V3",
+      "protocolVersion" : 1,
       "requestFileName" : "signature-line-request.json",
       "requestProfile" : {
         "assertionTypes" : [ ],
@@ -452,7 +452,7 @@
         "type" : "SAVE_AS"
       },
       "planId" : "signature-line-workflow",
-      "protocolVersion" : "V3",
+      "protocolVersion" : 1,
       "status" : "SUCCEEDED",
       "warnings" : [ ]
     }
@@ -464,7 +464,7 @@
       "type" : "SAVE_AS"
     },
     "planId" : "signature-line-workflow",
-    "protocolVersion" : "V3",
+    "protocolVersion" : 1,
     "source" : {
       "type" : "NEW"
     },
@@ -574,7 +574,7 @@
         "type" : "SAVE_AS"
       },
       "planId" : "signature-line-workflow",
-      "protocolVersion" : "V3",
+      "protocolVersion" : 1,
       "source" : {
         "type" : "NEW"
       },

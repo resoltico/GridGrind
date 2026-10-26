@@ -3,7 +3,7 @@ package dev.erst.gridgrind.cli;
 import dev.erst.gridgrind.cli.discovery.CliHelpReport;
 import dev.erst.gridgrind.cli.discovery.CliLicenseReport;
 import dev.erst.gridgrind.cli.discovery.CliVersionReport;
-import dev.erst.gridgrind.core.plan.GridGrindProtocolVersion;
+import dev.erst.gridgrind.core.vocabulary.ProtocolVersion;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
@@ -30,7 +30,7 @@ final class GridGrindCliProductInfo {
     Objects.requireNonNull(topic, "topic must not be null");
     String version = version();
     return new CliHelpReport(
-        GridGrindProtocolVersion.current(),
+        ProtocolVersion.CURRENT,
         topic.name(),
         version,
         description(),
@@ -42,7 +42,7 @@ final class GridGrindCliProductInfo {
   static CliVersionReport versionReport() {
     String version = version();
     return new CliVersionReport(
-        GridGrindProtocolVersion.current(),
+        ProtocolVersion.CURRENT,
         version,
         description(),
         documentRef(version),
@@ -51,7 +51,7 @@ final class GridGrindCliProductInfo {
 
   static CliLicenseReport licenseReport() {
     return new CliLicenseReport(
-        GridGrindProtocolVersion.current(), version(), licenseText(GridGrindCli.class));
+        ProtocolVersion.CURRENT, version(), licenseText(GridGrindCli.class));
   }
 
   static String productHeader(String version, String description) {

@@ -46,7 +46,7 @@
       "type" : "EXAMPLE"
     } ],
     "normalizedTerms" : [ "budget", "chart", "report" ],
-    "protocolVersion" : "V3",
+    "protocolVersion" : 1,
     "query" : "budget chart report",
     "suggestedIntentTags" : [ "charts", "dashboard", "kpi", "office", "revenue", "sales", "summary", "report" ],
     "unmatchedTerms" : [ ]

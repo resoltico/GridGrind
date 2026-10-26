@@ -39,7 +39,7 @@ class RequestIntakeBindingTest {
         GridGrindJson.analyzeRequest(
             """
             {
-              "protocolVersion": "V3",
+              "protocolVersion": 1,
               "planId": 7,
               "source": { "type": "NEW" },
               "persistence": null,
@@ -74,7 +74,7 @@ class RequestIntakeBindingTest {
     String request =
         """
         {
-          "protocolVersion": "V3",
+          "protocolVersion": 1,
           "source": { "type": "EXISTING", "path": "input.xls" },
           "persistence": { "type": "SAVE_AS", "path": "output.txt", "ifExists": "REJECT" },
           "steps": []
@@ -111,7 +111,7 @@ class RequestIntakeBindingTest {
         GridGrindJson.analyzeRequest(
             """
             {
-              "protocolVersion": "V3",
+              "protocolVersion": 1,
               "source" { "type": "NEW" },
               "persistence": { "type": "NONE" },
               "steps": []
@@ -142,7 +142,7 @@ class RequestIntakeBindingTest {
         GridGrindJson.analyzeRequest(
             """
             {
-              "protocolVersion": "V3",
+              "protocolVersion": 1,
               "source": { "type": "NEW" },
               "persistence": { "type": "NONE" },
               "steps": []
@@ -187,7 +187,7 @@ class RequestIntakeBindingTest {
   void anchorsDuplicateKeysAtTheirSecondPropertyTokenInUtf8Bytes() {
     String request =
         """
-        {"protocolVersion":"V3","source":{"type":"NEW"},"persistence":{"type":"NONE"},"steps":[],"planId":"€","planId":"duplicate"}
+        {"protocolVersion":1,"source":{"type":"NEW"},"persistence":{"type":"NONE"},"steps":[],"planId":"€","planId":"duplicate"}
         """;
     byte[] bytes = request.getBytes(StandardCharsets.UTF_8);
 
@@ -210,7 +210,7 @@ class RequestIntakeBindingTest {
   void distinguishesEveryDuplicateOccurrenceOfTheSameProperty() {
     String request =
         """
-        {"protocolVersion":"V3","source":{"type":"NEW"},"persistence":{"type":"NONE"},"steps":[],"planId":"one","planId":"two","planId":"three"}
+        {"protocolVersion":1,"source":{"type":"NEW"},"persistence":{"type":"NONE"},"steps":[],"planId":"one","planId":"two","planId":"three"}
         """;
     byte[] bytes = request.getBytes(StandardCharsets.UTF_8);
 
@@ -233,7 +233,7 @@ class RequestIntakeBindingTest {
     String request =
         """
         {
-          "protocolVersion": "V3",
+          "protocolVersion": 1,
           "protocolVersion": null,
           "planId": "valid",
           "planId": 7,
@@ -285,7 +285,7 @@ class RequestIntakeBindingTest {
     String request =
         """
         {
-          "protocolVersion": "V3",
+          "protocolVersion": 1,
           "source": { "type": "NEW" },
           "source": null,
           "persistence": { "type": "NONE" },
@@ -328,8 +328,8 @@ class RequestIntakeBindingTest {
         GridGrindJson.analyzeRequest(
             """
             {
-              "protocolVersion": "V3",
-              "protocolVersion": "V3",
+              "protocolVersion": 1,
+              "protocolVersion": 1,
               "planId": "first",
               "planId": "second",
               "source": { "type": "NEW" },
@@ -364,7 +364,7 @@ class RequestIntakeBindingTest {
         GridGrindJson.analyzeRequest(
             """
             {
-              "protocolVersion": "V3",
+              "protocolVersion": 1,
               "source": { "type": "NEW" },
               "persistence": { "type": "NONE" },
               "steps": [
@@ -414,7 +414,7 @@ class RequestIntakeBindingTest {
                 GridGrindJson.analyzeRequest(
                     """
                     {
-                      "protocolVersion": "V3",
+                      "protocolVersion": 1,
                       "source": { "type": "NEW" },
                       "persistence": { "type": "NONE" },
                       "steps": [}
@@ -434,7 +434,7 @@ class RequestIntakeBindingTest {
     String request =
         """
         {
-          "protocolVersion": "V3",
+          "protocolVersion": 1,
           "source": { "type": "NEW" },<non-json-whitespace>
           "persistence": { "type": "NONE" },
           "steps": []
@@ -454,7 +454,7 @@ class RequestIntakeBindingTest {
         GridGrindJson.analyzeRequest(
             """
             {
-              "protocolVersion": "V3",
+              "protocolVersion": 1,
               "source": { "type": "NEW" },
               "persistence": { "type": "NONE" },
               "steps": null
@@ -475,7 +475,7 @@ class RequestIntakeBindingTest {
         requestOffset(
             """
             {
-              "protocolVersion": "V3",
+              "protocolVersion": 1,
               "source": { "type": "NEW" },
               "persistence": { "type": "NONE" },
               "steps": null
@@ -525,7 +525,7 @@ class RequestIntakeBindingTest {
         GridGrindJson.analyzeRequest(
             """
             {
-              "protocolVersion": "V3",
+              "protocolVersion": 1,
               "source": {},
               "persistence": { "type": "NONE" },
               "steps": []
@@ -553,12 +553,17 @@ class RequestIntakeBindingTest {
         }
         """;
     byte[] bytes = request.getBytes(StandardCharsets.UTF_8);
-    List<RequestStructuralProblem> problems =
-        GridGrindJson.analyzeRequest(bytes).structuralProblems();
+    RequestIntake analysis = GridGrindJson.analyzeRequest(bytes);
+    List<RequestStructuralProblem> problems = analysis.structuralProblems();
 
     assertEquals(
         firstOccurrence(bytes, "\"protocolVersion\": 7"),
-        problemAt(problems, "protocolVersion").byteOffset().orElseThrow());
+        analysis.bindingFailures().stream()
+            .filter(failure -> "protocolVersion".equals(failure.jsonPath()))
+            .findFirst()
+            .orElseThrow()
+            .byteOffset()
+            .orElseThrow());
     assertEquals(
         firstOccurrence(bytes, "\"type\": 1"),
         problemAt(problems, "source.type").byteOffset().orElseThrow());
@@ -576,7 +581,7 @@ class RequestIntakeBindingTest {
         GridGrindJson.analyzeRequest(
             """
             {
-              "protocolVersion": "V3",
+              "protocolVersion": 1,
               "source": { "type": "NEW", "unexpected": true },
               "persistence": { "type": "NOT_A_PERSISTENCE_MODE" },
               "steps": [
@@ -616,7 +621,7 @@ class RequestIntakeBindingTest {
         GridGrindJson.analyzeRequest(
             """
             {
-              "protocolVersion": "V3",
+              "protocolVersion": 1,
               "source": {
                 "type": null,
                 "type": "EXISTING",
@@ -650,7 +655,7 @@ class RequestIntakeBindingTest {
         GridGrindJson.analyzeRequest(
             """
             {
-              "protocolVersion": "V3",
+              "protocolVersion": 1,
               "source": { "type": null, "notAllowed": true },
               "persistence": { "type": "NONE" },
               "steps": []
@@ -675,7 +680,7 @@ class RequestIntakeBindingTest {
         GridGrindJson.analyzeRequest(
             """
             {
-              "protocolVersion": "V3",
+              "protocolVersion": 1,
               "source": { "type": "NEW" },
               "persistence": {
                 "type": "OVERWRITE",
@@ -710,7 +715,7 @@ class RequestIntakeBindingTest {
     String missingZoom =
         """
         {
-          "protocolVersion": "V3",
+          "protocolVersion": 1,
           "source": { "type": "NEW" },
           "persistence": { "type": "NONE" },
           "steps": [
@@ -742,7 +747,7 @@ class RequestIntakeBindingTest {
     String request =
         """
         {
-          "protocolVersion": "V3",
+          "protocolVersion": 1,
           "source": { "type": "NEW" },
           "persistence": { "type": "NONE" },
           "steps": [

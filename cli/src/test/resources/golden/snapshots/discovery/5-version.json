@@ -5,7 +5,7 @@
     "containerImageRef" : "ghcr.io/resoltico/gridgrind:0.76.0",
     "description" : "Structured .xlsx workbook automation engine with an agent-friendly JSON protocol",
     "documentRef" : "https://github.com/resoltico/GridGrind/blob/v0.76.0",
-    "protocolVersion" : "V3",
+    "protocolVersion" : 1,
     "version" : "<version>"
   }
 }

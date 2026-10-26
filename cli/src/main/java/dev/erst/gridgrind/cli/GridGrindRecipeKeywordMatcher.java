@@ -2,7 +2,7 @@ package dev.erst.gridgrind.cli;
 
 import dev.erst.gridgrind.cli.discovery.RecipeKeywordMatchReport;
 import dev.erst.gridgrind.cli.examples.GridGrindCliRecipeRegistry;
-import dev.erst.gridgrind.core.plan.GridGrindProtocolVersion;
+import dev.erst.gridgrind.core.vocabulary.ProtocolVersion;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.LinkedHashSet;
@@ -32,7 +32,7 @@ final class GridGrindRecipeKeywordMatcher {
             .sorted(candidateOrdering())
             .toList();
     return new RecipeKeywordMatchReport(
-        GridGrindProtocolVersion.current(),
+        ProtocolVersion.CURRENT,
         requestedQuery,
         normalizedTerms,
         unmatchedTerms(normalizedTerms, candidates),

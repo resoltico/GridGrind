@@ -1,1 +1,1 @@
-{"protocolVersion":"V3","source":{"type":"NEW"},"persistence":{"type":"NONE"},"steps":[{"stepId":"a","target":{"type":"CELL_BY_ADDRESS","sheetName":"Sheet1","address":"XFE1"},"action":{"type":"SET_CELL","value":{"type":"NUMBER","number":1}}}]}
+{"protocolVersion":1,"source":{"type":"NEW"},"persistence":{"type":"NONE"},"steps":[{"stepId":"a","target":{"type":"CELL_BY_ADDRESS","sheetName":"Sheet1","address":"XFE1"},"action":{"type":"SET_CELL","value":{"type":"NUMBER","number":1}}}]}

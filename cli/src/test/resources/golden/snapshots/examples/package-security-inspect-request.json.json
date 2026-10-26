@@ -155,7 +155,7 @@
       "type" : "NONE"
     },
     "planId" : "package-security-inspection-workflow",
-    "protocolVersion" : "V3",
+    "protocolVersion" : 1,
     "status" : "SUCCEEDED",
     "warnings" : [ ]
   }

@@ -583,7 +583,7 @@
       "entryIds" : [ "ChartSeriesReport" ],
       "group" : "chartSeriesReportType"
     } ],
-    "protocolVersion" : "V3",
+    "protocolVersion" : 1,
     "requestTypeId" : "WorkbookPlan",
     "topLevelGroups" : [ {
       "entryIds" : [ "NEW", "EXISTING" ],

@@ -6,13 +6,13 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import dev.erst.gridgrind.cli.examples.GridGrindShippedExamples;
-import dev.erst.gridgrind.core.plan.GridGrindProtocolVersion;
 import dev.erst.gridgrind.core.problem.GridGrindProblemCode;
 import dev.erst.gridgrind.core.problem.GridGrindProblemDetail;
 import dev.erst.gridgrind.core.problem.ProblemContext;
 import dev.erst.gridgrind.core.problem.ProblemContextRequestSurfaces.CliArgument;
 import dev.erst.gridgrind.core.problem.ProblemContextRequestSurfaces.JsonLocation;
 import dev.erst.gridgrind.core.problem.ProblemContextRequestSurfaces.RequestInput;
+import dev.erst.gridgrind.core.vocabulary.ProtocolVersion;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -309,8 +309,7 @@ class GridGrindCliJsonCoverageTest {
     JsonNode readRequestDiagnostic =
         GridGrindCliJsonStreams.readTree(
             GridGrindCliJson.writeBytes(
-                new CommandError(
-                    GridGrindProtocolVersion.current(), "execute", List.of(readRequestProblem))));
+                new CommandError(ProtocolVersion.CURRENT, "execute", List.of(readRequestProblem))));
 
     assertEquals(
         Set.of("protocolVersion", "command", "problems", "status"),
@@ -402,7 +401,7 @@ class GridGrindCliJsonCoverageTest {
   private static RecipeKeywordMatchReport sampleRecipeKeywordMatchReport() {
     TaskEntry task = GridGrindTaskCatalog.entryFor("DASHBOARD").orElseThrow();
     return new RecipeKeywordMatchReport(
-        GridGrindProtocolVersion.current(),
+        ProtocolVersion.CURRENT,
         "Create a monthly sales dashboard with charts",
         List.of("monthly", "sales", "dashboard", "chart"),
         List.of("monthly", "sales"),
@@ -419,7 +418,7 @@ class GridGrindCliJsonCoverageTest {
 
   private static CommandError sampleCommandError() {
     return new CommandError(
-        GridGrindProtocolVersion.current(),
+        ProtocolVersion.CURRENT,
         "print-recipe-keyword-match",
         List.of(
             GridGrindProblemDetail.Problem.of(
@@ -430,7 +429,7 @@ class GridGrindCliJsonCoverageTest {
 
   private static ProtocolCatalogSearchReport sampleProtocolCatalogSearchReport() {
     return new ProtocolCatalogSearchReport(
-        GridGrindProtocolVersion.current(),
+        ProtocolVersion.CURRENT,
         "chart title",
         List.of(
             new ProtocolCatalogSearchHit(

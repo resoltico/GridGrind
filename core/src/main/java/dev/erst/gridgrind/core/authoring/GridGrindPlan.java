@@ -5,13 +5,13 @@ import dev.erst.gridgrind.core.model.security.OoxmlPersistenceSecuritySpec;
 import dev.erst.gridgrind.core.plan.AssertionStep;
 import dev.erst.gridgrind.core.plan.ExecutionJournalSpec;
 import dev.erst.gridgrind.core.plan.ExecutionPolicySpec;
-import dev.erst.gridgrind.core.plan.GridGrindProtocolVersion;
 import dev.erst.gridgrind.core.plan.InspectionStep;
 import dev.erst.gridgrind.core.plan.MutationStep;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import dev.erst.gridgrind.core.plan.WorkbookStep;
 import dev.erst.gridgrind.core.result.ExecutionJournalLevel;
 import dev.erst.gridgrind.core.vocabulary.PlanId;
+import dev.erst.gridgrind.core.vocabulary.ProtocolVersion;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -28,7 +28,7 @@ import java.util.Optional;
  * runtime coupling from the authoring surface.
  */
 public final class GridGrindPlan {
-  private GridGrindProtocolVersion protocolVersion;
+  private ProtocolVersion protocolVersion;
   private Optional<PlanId> planId;
   private WorkbookPlan.WorkbookSource source;
   private WorkbookPlan.WorkbookPersistence persistence;
@@ -41,7 +41,7 @@ public final class GridGrindPlan {
 
   private GridGrindPlan(WorkbookPlan.WorkbookSource source) {
     this(
-        GridGrindProtocolVersion.current(),
+        ProtocolVersion.CURRENT,
         Optional.empty(),
         source,
         new WorkbookPlan.WorkbookPersistence.None(),
@@ -51,15 +51,14 @@ public final class GridGrindPlan {
   }
 
   private GridGrindPlan(
-      GridGrindProtocolVersion protocolVersion,
+      ProtocolVersion protocolVersion,
       Optional<PlanId> planId,
       WorkbookPlan.WorkbookSource source,
       WorkbookPlan.WorkbookPersistence persistence,
       ExecutionPolicySpec execution,
       FormulaEnvironmentSpec formulaEnvironment,
       List<WorkbookStep> steps) {
-    this.protocolVersion =
-        Objects.requireNonNullElse(protocolVersion, GridGrindProtocolVersion.current());
+    this.protocolVersion = Objects.requireNonNullElse(protocolVersion, ProtocolVersion.CURRENT);
     this.planId = planId;
     this.source = Objects.requireNonNull(source, "source must not be null");
     this.persistence =

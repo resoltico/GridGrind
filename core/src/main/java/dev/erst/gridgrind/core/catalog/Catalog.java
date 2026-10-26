@@ -1,12 +1,12 @@
 package dev.erst.gridgrind.core.catalog;
 
-import dev.erst.gridgrind.core.plan.GridGrindProtocolVersion;
+import dev.erst.gridgrind.core.vocabulary.ProtocolVersion;
 import java.util.List;
 import java.util.Objects;
 
 /** JSON-serializable top-level catalog emitted by {@code --print-protocol-catalog}. */
 public record Catalog(
-    GridGrindProtocolVersion protocolVersion,
+    ProtocolVersion protocolVersion,
     String discriminatorField,
     TypeEntry requestType,
     List<TypeEntry> sourceTypes,

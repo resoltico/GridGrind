@@ -2,11 +2,11 @@ package dev.erst.gridgrind.engine.runtime;
 
 import dev.erst.gridgrind.core.model.formula.CalculationReport;
 import dev.erst.gridgrind.core.plan.AssertionResult;
-import dev.erst.gridgrind.core.plan.GridGrindProtocolVersion;
 import dev.erst.gridgrind.core.plan.InspectionResult;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import dev.erst.gridgrind.core.problem.GridGrindProblemDetail;
 import dev.erst.gridgrind.core.problem.RequestWarning;
+import dev.erst.gridgrind.core.vocabulary.ProtocolVersion;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
 import java.util.List;
@@ -14,7 +14,7 @@ import org.jspecify.annotations.Nullable;
 
 /** Mutable-artifact context held while the full-XSSF workflow executes one request. */
 record WorkbookWorkflowExecutionContext(
-    GridGrindProtocolVersion protocolVersion,
+    ProtocolVersion protocolVersion,
     WorkbookPlan request,
     ExcelWorkbook workbook,
     ExecutionJournalRecorder journal,

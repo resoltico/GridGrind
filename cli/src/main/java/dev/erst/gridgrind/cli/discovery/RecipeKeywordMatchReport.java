@@ -1,6 +1,6 @@
 package dev.erst.gridgrind.cli.discovery;
 
-import dev.erst.gridgrind.core.plan.GridGrindProtocolVersion;
+import dev.erst.gridgrind.core.vocabulary.ProtocolVersion;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Objects;
@@ -8,7 +8,7 @@ import java.util.Set;
 
 /** Machine-readable ranked recipe matches for one English keyword query. */
 public record RecipeKeywordMatchReport(
-    GridGrindProtocolVersion protocolVersion,
+    ProtocolVersion protocolVersion,
     String query,
     List<String> normalizedTerms,
     List<String> unmatchedTerms,

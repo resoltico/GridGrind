@@ -1,12 +1,12 @@
 package dev.erst.gridgrind.cli;
 
 import dev.erst.gridgrind.cli.discovery.CommandError;
-import dev.erst.gridgrind.core.plan.GridGrindProtocolVersion;
 import dev.erst.gridgrind.core.problem.CliRuntimeContext;
 import dev.erst.gridgrind.core.problem.GridGrindProblemCode;
 import dev.erst.gridgrind.core.problem.GridGrindProblemDetail;
 import dev.erst.gridgrind.core.problem.ProblemContext;
 import dev.erst.gridgrind.core.problem.ProblemContextRequestSurfaces.CliArgument;
+import dev.erst.gridgrind.core.vocabulary.ProtocolVersion;
 import dev.erst.gridgrind.engine.api.GridGrindProblems;
 import java.util.List;
 import java.util.Objects;
@@ -64,6 +64,6 @@ final class CommandErrors {
 
   private static CommandError commandError(
       String command, List<GridGrindProblemDetail.Problem> problems) {
-    return new CommandError(GridGrindProtocolVersion.current(), command, problems);
+    return new CommandError(ProtocolVersion.CURRENT, command, problems);
   }
 }

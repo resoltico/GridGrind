@@ -25,7 +25,7 @@
       "resolution" : "Fix the request data and retry the workflow.",
       "title" : "Invalid request"
     } ],
-    "protocolVersion" : "V3",
+    "protocolVersion" : 1,
     "severity" : "ERROR",
     "valid" : false,
     "warnings" : [ ]

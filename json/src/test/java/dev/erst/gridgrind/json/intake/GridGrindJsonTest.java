@@ -17,7 +17,6 @@ import dev.erst.gridgrind.core.plan.CellMutationAction;
 import dev.erst.gridgrind.core.plan.CellSelector;
 import dev.erst.gridgrind.core.plan.ExecutionModeSpec;
 import dev.erst.gridgrind.core.plan.ExecutionPolicySpec;
-import dev.erst.gridgrind.core.plan.GridGrindProtocolVersion;
 import dev.erst.gridgrind.core.plan.InspectionStep;
 import dev.erst.gridgrind.core.plan.MutationStep;
 import dev.erst.gridgrind.core.plan.WorkbookInspectionResult;
@@ -38,6 +37,7 @@ import dev.erst.gridgrind.core.result.WorkbookResults;
 import dev.erst.gridgrind.core.result.WorkbookSummary;
 import dev.erst.gridgrind.core.source.TextSourceSpec;
 import dev.erst.gridgrind.core.vocabulary.CellAddress;
+import dev.erst.gridgrind.core.vocabulary.ProtocolVersion;
 import dev.erst.gridgrind.core.vocabulary.SheetLabel;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.StepId;
@@ -60,7 +60,7 @@ class GridGrindJsonTest {
         GridGrindJson.readRequest(
             """
             {
-              "protocolVersion": "V3",
+              "protocolVersion": 1,
               "source": { "type": "NEW" },
               "persistence": { "type": "NONE" },
               "steps": []
@@ -68,7 +68,7 @@ class GridGrindJsonTest {
             """
                 .getBytes(StandardCharsets.UTF_8));
 
-    assertEquals(GridGrindProtocolVersion.V3, plan.protocolVersion());
+    assertEquals(ProtocolVersion.CURRENT, plan.protocolVersion());
     assertTrue(plan.execution().isDefault());
     assertEquals(ExecutionJournalLevel.SUMMARY, plan.journalLevel());
     assertTrue(plan.formulaEnvironment().isEmpty());
@@ -103,50 +103,13 @@ class GridGrindJsonTest {
             () ->
                 GridGrindJson.readRequest(
                     """
-                    {
-                      "protocolVersion": "V1",
-                      "source": { "type": "NEW" },
-                      "persistence": { "type": "NONE" },
-                      "execution": {
-                        "mode": { "type": "FULL_XSSF" },
-                        "journal": { "level": "SUMMARY" },
-                        "calculation": {
-                          "strategy": { "type": "DO_NOT_CALCULATE" },
-                          "markRecalculateOnOpen": false
-                        }
-                      },
-                      "formulaEnvironment": {
-                        "externalWorkbooks": [],
-                        "missingWorkbookPolicy": "ERROR",
-                        "udfToolpacks": []
-                      },
-                      "steps": []
-                    }
-                    """
+            {"protocolVersion":1,"source":{"type":"NEW"},"persistence":{"type":"NONE"},
+             "execution":{"assertionMode":"NOT_A_MODE"},"steps":[]}
+            """
                         .getBytes(StandardCharsets.UTF_8)));
-
     assertEquals(
-        "Unsupported value 'V1' for field 'protocolVersion'; expected one of: V3",
+        "Unsupported value 'NOT_A_MODE' for field 'execution.assertionMode'; expected one of: FAIL_FAST, COLLECT",
         exception.getMessage());
-
-    InvalidRequestShapeException removedVersion =
-        assertThrows(
-            InvalidRequestShapeException.class,
-            () ->
-                GridGrindJson.readRequest(
-                    """
-                    {
-                      "protocolVersion": "V2",
-                      "source": { "type": "NEW" },
-                      "persistence": { "type": "NONE" },
-                      "steps": []
-                    }
-                    """
-                        .getBytes(StandardCharsets.UTF_8)));
-
-    assertEquals(
-        "Unsupported value 'V2' for field 'protocolVersion'; expected one of: V3",
-        removedVersion.getMessage());
   }
 
   @Test
@@ -158,7 +121,7 @@ class GridGrindJsonTest {
                 GridGrindJson.readRequest(
                     """
                     {
-                      "protocolVersion": "V3",
+                      "protocolVersion": 1,
                       "planId": null,
                       "source": { "type": "NEW" },
                       "persistence": { "type": "NONE" },
@@ -186,7 +149,7 @@ class GridGrindJsonTest {
                 GridGrindJson.readRequest(
                     """
                     {
-                      "protocolVersion": "V3",
+                      "protocolVersion": 1,
                       "source": { "type": "NEW" },
                       "persistence": { "type": "NONE" },
                       "execution": null,
@@ -201,7 +164,7 @@ class GridGrindJsonTest {
                 GridGrindJson.readRequest(
                     """
                     {
-                      "protocolVersion": "V3",
+                      "protocolVersion": 1,
                       "source": { "type": "NEW" },
                       "persistence": { "type": "NONE" },
                       "steps": [
@@ -274,7 +237,7 @@ class GridGrindJsonTest {
                 GridGrindJson.readRequest(
                     """
                     {
-                      "protocolVersion": "V3",
+                      "protocolVersion": 1,
                       "source": { "type": "NEW" },
                       "persistence": { "type": "SAVE_AS", "path": "budget.xlsx" },
                       "steps": []
@@ -298,7 +261,7 @@ class GridGrindJsonTest {
                 GridGrindJson.readRequest(
                     """
                     {
-                      "protocolVersion": "V3",
+                      "protocolVersion": 1,
                       "source": { "type": "EXISTING", "path": "budget.txt" },
                       "persistence": { "type": "NONE" },
                       "steps": []
@@ -312,7 +275,7 @@ class GridGrindJsonTest {
                 GridGrindJson.readRequest(
                     """
                     {
-                      "protocolVersion": "V3",
+                      "protocolVersion": 1,
                       "source": { "type": "NEW" },
                       "persistence": { "type": "SAVE_AS", "path": "budget.txt", "ifExists": "REJECT" },
                       "steps": []
@@ -326,7 +289,7 @@ class GridGrindJsonTest {
                 GridGrindJson.readRequest(
                     """
                     {
-                      "protocolVersion": "V3",
+                      "protocolVersion": 1,
                       "source": { "type": "NEW" },
                       "persistence": { "type": "NONE" },
                       "formulaEnvironment": {
@@ -374,7 +337,7 @@ class GridGrindJsonTest {
                     new WorkbookIntrospectionQuery.GetWorkbookSummary())));
     WorkbookResult response =
         WorkbookResults.success(
-            GridGrindProtocolVersion.V3,
+            ProtocolVersion.CURRENT,
             new WorkbookResultPersistence.PersistenceOutcome.NotSaved(),
             List.of(
                 new RequestWarning(
@@ -411,7 +374,7 @@ class GridGrindJsonTest {
   void roundTripsResolveInputsAndCalculationFailureContexts() throws IOException {
     WorkbookResult resolveInputsFailure =
         WorkbookResults.failure(
-            GridGrindProtocolVersion.V3,
+            ProtocolVersion.CURRENT,
             new WorkbookResultPersistence.PersistenceOutcome.SavedAs(
                 "out/report.xlsx", new WorkbookResultPersistence.PublicationOutcome.NotAttempted()),
             new GridGrindProblemDetail.Problem(
@@ -435,7 +398,7 @@ class GridGrindJsonTest {
                 List.of()));
     WorkbookResult calculationFailure =
         WorkbookResults.failure(
-            GridGrindProtocolVersion.V3,
+            ProtocolVersion.CURRENT,
             new GridGrindProblemDetail.Problem(
                 dev.erst.gridgrind.core.problem.GridGrindProblemCode.INVALID_FORMULA,
                 dev.erst.gridgrind.core.problem.GridGrindProblemCode.INVALID_FORMULA.category(),
@@ -471,7 +434,7 @@ class GridGrindJsonTest {
         GridGrindJson.readRequest(
             """
             {
-              "protocolVersion": "V3",
+              "protocolVersion": 1,
               "source": { "type": "NEW" },
               "persistence": { "type": "NONE" },
               "execution": {
@@ -507,7 +470,7 @@ class GridGrindJsonTest {
         GridGrindJson.readRequest(
             """
             {
-              "protocolVersion": "V3",
+              "protocolVersion": 1,
               "source": { "type": "NEW" },
               "persistence": { "type": "NONE" },
               "execution": {
@@ -565,7 +528,7 @@ class GridGrindJsonTest {
         new TrackingInputStream(
             """
             {
-              "protocolVersion": "V3",
+              "protocolVersion": 1,
               "source": { "type": "NEW" },
               "persistence": { "type": "NONE" },
               "execution": {
@@ -587,7 +550,7 @@ class GridGrindJsonTest {
                 .getBytes(StandardCharsets.UTF_8))) {
       WorkbookPlan request = GridGrindJson.readRequest(inputStream);
 
-      assertEquals(GridGrindProtocolVersion.V3, request.protocolVersion());
+      assertEquals(ProtocolVersion.CURRENT, request.protocolVersion());
       assertFalse(inputStream.closed);
     }
   }
@@ -601,7 +564,7 @@ class GridGrindJsonTest {
                 GridGrindJson.readRequest(
                     """
                     {
-                      "protocolVersion": "V3",
+                      "protocolVersion": 1,
                       "source": { "type": "NEW" },
                       "persistence": { "type": "NONE" },
                       "steps": [
@@ -621,7 +584,7 @@ class GridGrindJsonTest {
                 GridGrindJson.readRequest(
                     """
                     {
-                      "protocolVersion": "V3",
+                      "protocolVersion": 1,
                       "source": { "type": "NEW" },
                       "persistence": { "type": "NONE" },
                       "steps": [
@@ -641,7 +604,7 @@ class GridGrindJsonTest {
                 GridGrindJson.readRequest(
                     """
                     {
-                      "protocolVersion": "V3",
+                      "protocolVersion": 1,
                       "source": { "type": "NEW" },
                       "persistence": { "type": "NONE" },
                       "steps": [
@@ -682,7 +645,7 @@ class GridGrindJsonTest {
                 GridGrindJson.readRequest(
                     """
                     {
-                      "protocolVersion": "V3",
+                      "protocolVersion": 1,
                       "source": { "type": "NEW" },
                       "persistence": { "type": "NONE" },
                       "steps": [
@@ -702,7 +665,7 @@ class GridGrindJsonTest {
                 GridGrindJson.readRequest(
                     """
                     {
-                      "protocolVersion": "V3",
+                      "protocolVersion": 1,
                       "source": { "type": "NEW" },
                       "persistence": { "type": "NONE" },
                       "steps": [
@@ -722,7 +685,7 @@ class GridGrindJsonTest {
                 GridGrindJson.readRequest(
                     """
                     {
-                      "protocolVersion": "V3",
+                      "protocolVersion": 1,
                       "source": { "type": "NEW" },
                       "persistence": { "type": "NONE" },
                       "steps": [
@@ -742,7 +705,7 @@ class GridGrindJsonTest {
                 GridGrindJson.readRequest(
                     """
                     {
-                      "protocolVersion": "V3",
+                      "protocolVersion": 1,
                       "source": {
                         "type": "FILE",
                         "path": "budget.xlsx"
@@ -759,7 +722,7 @@ class GridGrindJsonTest {
                 GridGrindJson.readRequest(
                     """
                     {
-                      "protocolVersion": "V3",
+                      "protocolVersion": 1,
                       "source": {
                         "type": "ARCHIVE",
                         "path": "budget.xlsx"
@@ -784,7 +747,7 @@ class GridGrindJsonTest {
     byte[] request =
         """
         {
-          "protocolVersion": "V3",
+          "protocolVersion": 1,
           "source": { "type": "NEW" },
           "persistence": { "type": "NONE" },
           "steps": [
@@ -823,7 +786,7 @@ class GridGrindJsonTest {
                 GridGrindJson.readRequest(
                     """
                     {
-                      "protocolVersion": "V3",
+                      "protocolVersion": 1,
                       "source": { "type": "NEW" },
                       "persistence": { "type": "NONE" },
                       "steps": [

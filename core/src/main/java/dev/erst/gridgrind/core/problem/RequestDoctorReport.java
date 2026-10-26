@@ -1,7 +1,7 @@
 package dev.erst.gridgrind.core.problem;
 
-import dev.erst.gridgrind.core.plan.GridGrindProtocolVersion;
 import dev.erst.gridgrind.core.vocabulary.AnalysisSeverity;
+import dev.erst.gridgrind.core.vocabulary.ProtocolVersion;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -9,7 +9,7 @@ import java.util.Optional;
 
 /** Machine-readable lint report for one authored request before workbook execution begins. */
 public record RequestDoctorReport(
-    GridGrindProtocolVersion protocolVersion,
+    ProtocolVersion protocolVersion,
     AnalysisSeverity severity,
     boolean valid,
     Optional<Summary> summary,
@@ -56,7 +56,7 @@ public record RequestDoctorReport(
   /** Returns one clean doctor report with no warnings or blocking problems. */
   public static RequestDoctorReport clean(Summary summary) {
     return new RequestDoctorReport(
-        GridGrindProtocolVersion.current(),
+        ProtocolVersion.CURRENT,
         AnalysisSeverity.INFO,
         true,
         Optional.of(summary),
@@ -67,7 +67,7 @@ public record RequestDoctorReport(
   /** Returns one valid doctor report that surfaces non-fatal warnings. */
   public static RequestDoctorReport warnings(Summary summary, List<RequestWarning> warnings) {
     return new RequestDoctorReport(
-        GridGrindProtocolVersion.current(),
+        ProtocolVersion.CURRENT,
         AnalysisSeverity.WARNING,
         true,
         Optional.of(summary),
@@ -95,12 +95,7 @@ public record RequestDoctorReport(
       List<RequestWarning> warnings,
       List<GridGrindProblemDetail.Problem> problems) {
     return new RequestDoctorReport(
-        GridGrindProtocolVersion.current(),
-        AnalysisSeverity.ERROR,
-        false,
-        summary,
-        warnings,
-        problems);
+        ProtocolVersion.CURRENT, AnalysisSeverity.ERROR, false, summary, warnings, problems);
   }
 
   /** Returns one invalid doctor report with an optional summary and one blocking problem. */

@@ -38,7 +38,7 @@ verify_documented_bind_mount_user_guidance() {
 
         cat > "${target_request_path}" <<JSON
 {
-  "protocolVersion": "V3",
+  "protocolVersion": 1,
   "source": {
     "type": "NEW"
   },

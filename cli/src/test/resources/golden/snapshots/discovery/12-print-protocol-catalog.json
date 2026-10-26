@@ -14,7 +14,7 @@
       }
     } ],
     "id" : "SET_CELL",
-    "protocolVersion" : "V3",
+    "protocolVersion" : 1,
     "stepTemplate" : {
       "bodyField" : "action",
       "notes" : [ "Replace the placeholder target when needed; SET_CELL accepts CELL_BY_ADDRESS, TABLE_CELL_BY_COLUMN_NAME." ],

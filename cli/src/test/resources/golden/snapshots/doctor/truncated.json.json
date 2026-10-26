@@ -37,7 +37,7 @@
       "code" : "INVALID_REQUEST_SHAPE",
       "context" : {
         "json" : {
-          "byteOffset" : 78,
+          "byteOffset" : 75,
           "jsonPath" : "steps",
           "type" : "PATH_BYTE_OFFSET"
         },
@@ -61,8 +61,8 @@
       "code" : "INVALID_JSON",
       "context" : {
         "json" : {
-          "byteOffset" : 86,
-          "jsonColumn" : 87,
+          "byteOffset" : 83,
+          "jsonColumn" : 84,
           "jsonLine" : 1,
           "type" : "BYTE_OFFSET_LINE_COLUMN"
         },
@@ -86,8 +86,8 @@
       "code" : "INVALID_JSON",
       "context" : {
         "json" : {
-          "byteOffset" : 86,
-          "jsonColumn" : 87,
+          "byteOffset" : 83,
+          "jsonColumn" : 84,
           "jsonLine" : 1,
           "type" : "BYTE_OFFSET_LINE_COLUMN"
         },
@@ -102,7 +102,7 @@
       "resolution" : "Send syntactically valid JSON.",
       "title" : "Invalid JSON payload"
     } ],
-    "protocolVersion" : "V3",
+    "protocolVersion" : 1,
     "severity" : "ERROR",
     "valid" : false,
     "warnings" : [ ]

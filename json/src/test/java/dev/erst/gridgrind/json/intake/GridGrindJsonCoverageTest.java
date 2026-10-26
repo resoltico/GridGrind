@@ -19,7 +19,6 @@ import dev.erst.gridgrind.core.model.layout.WindowReport;
 import dev.erst.gridgrind.core.model.value.CellReport;
 import dev.erst.gridgrind.core.plan.ExecutionModeSpec;
 import dev.erst.gridgrind.core.plan.ExecutionPolicySpec;
-import dev.erst.gridgrind.core.plan.GridGrindProtocolVersion;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import dev.erst.gridgrind.core.problem.GridGrindProblemDetail;
 import dev.erst.gridgrind.core.problem.InvalidJsonException;
@@ -30,6 +29,7 @@ import dev.erst.gridgrind.core.result.WorkbookResult;
 import dev.erst.gridgrind.core.result.WorkbookResults;
 import dev.erst.gridgrind.core.result.WorkbookSummary;
 import dev.erst.gridgrind.core.vocabulary.CellAddress;
+import dev.erst.gridgrind.core.vocabulary.ProtocolVersion;
 import dev.erst.gridgrind.core.vocabulary.SheetLabel;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.json.codec.GridGrindJson;
@@ -157,7 +157,7 @@ class GridGrindJsonCoverageTest {
     ObjectNode requestTree = GridGrindJsonOutput.requestTree(request);
     ObjectNode explicitRequestTree = GridGrindJsonOutput.requestTree(explicitRequest);
 
-    assertEquals("V3", requestTree.path("protocolVersion").stringValue());
+    assertEquals(1, requestTree.path("protocolVersion").intValue());
     assertEquals("NEW", requestTree.path("source").path("type").stringValue());
     assertTrue(requestTree.path("steps").isArray());
     assertFalse(requestTree.has("execution"));
@@ -200,7 +200,7 @@ class GridGrindJsonCoverageTest {
                 GridGrindJson.readRequest(
                     """
                     {
-                      "protocolVersion": "V3",
+                      "protocolVersion": 1,
                       "source": { "type": "NEW" },
                       "persistence": { "type": "NONE" },
                       "execution": null,
@@ -259,7 +259,7 @@ class GridGrindJsonCoverageTest {
                     GridGrindJson.readRequest(
                         """
                         {
-                          "protocolVersion": "V3",
+                          "protocolVersion": 1,
                           "source": { "type": "NEW" },
                           "persistence": { "type": "NONE" },
                           "execution": {
@@ -564,7 +564,7 @@ class GridGrindJsonCoverageTest {
         GridGrindJson.readRequest(
             """
                         {
-                          "protocolVersion": "V3",
+                          "protocolVersion": 1,
                           "source": { "type": "NEW" },
                           "persistence": { "type": "NONE" },
                           "execution": {
@@ -621,7 +621,7 @@ class GridGrindJsonCoverageTest {
     TypeEntry entry = GridGrindProtocolCatalog.entryFor("GET_CELLS").orElseThrow();
     ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
     GridGrindJsonOutput.writeCatalogLookupResult(
-        outputStream, GridGrindProtocolVersion.V3, entry, false);
+        outputStream, ProtocolVersion.CURRENT, entry, false);
     String json = outputStream.toString(StandardCharsets.UTF_8);
     assertTrue(json.indexOf("\"protocolVersion\"") < json.indexOf("\"id\""));
     assertTrue(json.contains("\"GET_CELLS\""));
@@ -639,13 +639,13 @@ class GridGrindJsonCoverageTest {
                 NullPointerException.class,
                 () ->
                     GridGrindJsonOutput.writeCatalogLookupResult(
-                        new ByteArrayOutputStream(), GridGrindProtocolVersion.V3, null, false))
+                        new ByteArrayOutputStream(), ProtocolVersion.CURRENT, null, false))
             .getMessage());
 
     ByteArrayOutputStream noteOutput = new ByteArrayOutputStream();
     GridGrindJsonOutput.writeCatalogLookupResult(
         noteOutput,
-        GridGrindProtocolVersion.V3,
+        ProtocolVersion.CURRENT,
         entry,
         List.of(new CatalogNote("sharedRule", "Shared rule text.")),
         false);
@@ -658,11 +658,7 @@ class GridGrindJsonCoverageTest {
                 NullPointerException.class,
                 () ->
                     GridGrindJsonOutput.writeCatalogLookupResult(
-                        new ByteArrayOutputStream(),
-                        GridGrindProtocolVersion.V3,
-                        entry,
-                        null,
-                        false))
+                        new ByteArrayOutputStream(), ProtocolVersion.CURRENT, entry, null, false))
             .getMessage());
   }
 
@@ -771,7 +767,7 @@ class GridGrindJsonCoverageTest {
                 GridGrindJson.readRequest(
                     """
                     {
-                      "protocolVersion": "V3",
+                      "protocolVersion": 1,
                       "source": { "type": "NEW" },
                       "persistence": { "type": "NONE" },
                       "execution": {

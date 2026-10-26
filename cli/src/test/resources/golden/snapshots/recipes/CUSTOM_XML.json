@@ -6,7 +6,7 @@
       "advisory" : "REQUIRES_EXAMPLE_ASSETS",
       "id" : "CUSTOM_XML",
       "intentTags" : [ "custom-xml", "mapping", "integration", "readback" ],
-      "protocolVersion" : "V3",
+      "protocolVersion" : 1,
       "requestFileName" : "custom-xml-request.json",
       "requestProfile" : {
         "assertionTypes" : [ ],
@@ -411,7 +411,7 @@
         "type" : "NONE"
       },
       "planId" : "custom-xml-workflow",
-      "protocolVersion" : "V3",
+      "protocolVersion" : 1,
       "status" : "SUCCEEDED",
       "warnings" : [ ]
     }
@@ -421,7 +421,7 @@
       "type" : "NONE"
     },
     "planId" : "custom-xml-workflow",
-    "protocolVersion" : "V3",
+    "protocolVersion" : 1,
     "source" : {
       "path" : "custom-xml-assets/custom-xml-mapping.xlsx",
       "type" : "EXISTING"
@@ -513,7 +513,7 @@
         "resolution" : "Run gridgrind --help for the synopsis, --help-protocol for the authoritative request contract, or --help-guidance for workflows and examples.",
         "title" : "Invalid CLI arguments"
       } ],
-      "protocolVersion" : "V3",
+      "protocolVersion" : 1,
       "status" : "REJECTED"
     }
   }

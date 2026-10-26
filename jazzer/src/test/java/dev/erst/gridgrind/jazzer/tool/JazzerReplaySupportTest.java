@@ -72,7 +72,7 @@ class JazzerReplaySupportTest {
             JazzerHarness.protocolRequest(),
             """
             {
-              "protocolVersion": "V3",
+              "protocolVersion": 1,
               "source": { "type": "NEW" },
               "persistence": { "type": "NONE" },
               "steps": [
@@ -100,7 +100,7 @@ class JazzerReplaySupportTest {
             JazzerHarness.protocolRequest(),
             """
             {
-              "protocolVersion": "V3",
+              "protocolVersion": 1,
               "source": { "type": "EXISTING", "path": "budget.xlsm" },
               "persistence": { "type": "NONE" },
               "steps": []

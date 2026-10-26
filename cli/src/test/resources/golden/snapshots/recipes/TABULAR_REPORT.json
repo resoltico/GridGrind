@@ -25,7 +25,7 @@
       },
       "optionalFeatures" : [ "Totals rows and formula-backed summaries.", "Cell styling and print-layout refinements.", "Assertions on key balances or counts." ],
       "outcomes" : [ "Sheet structure is created intentionally instead of ad hoc cell drift.", "Rows can be modeled as a table so filtering and later readback stay authoritative.", "Critical facts can be inspected before the workbook is persisted." ],
-      "protocolVersion" : "V3",
+      "protocolVersion" : 1,
       "requestFileName" : "tabular-report-request.json",
       "requestProfile" : {
         "assertionTypes" : [ ],
@@ -1231,7 +1231,7 @@
         "type" : "SAVE_AS"
       },
       "planId" : "tabular-report-starter",
-      "protocolVersion" : "V3",
+      "protocolVersion" : 1,
       "status" : "SUCCEEDED",
       "warnings" : [ ]
     }
@@ -1243,7 +1243,7 @@
       "type" : "SAVE_AS"
     },
     "planId" : "tabular-report-starter",
-    "protocolVersion" : "V3",
+    "protocolVersion" : 1,
     "source" : {
       "type" : "NEW"
     },
@@ -1418,7 +1418,7 @@
         "type" : "SAVE_AS"
       },
       "planId" : "tabular-report-starter",
-      "protocolVersion" : "V3",
+      "protocolVersion" : 1,
       "source" : {
         "type" : "NEW"
       },

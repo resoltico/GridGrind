@@ -6,7 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import dev.erst.gridgrind.core.plan.GridGrindProtocolVersion;
+import dev.erst.gridgrind.core.vocabulary.ProtocolVersion;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
@@ -748,7 +748,7 @@ class CatalogStepTemplateSupportTest {
       List<NestedTypeGroup> nestedTypes,
       List<PlainTypeGroup> plainTypes) {
     return new Catalog(
-        GridGrindProtocolVersion.current(),
+        ProtocolVersion.CURRENT,
         "type",
         new TypeEntry("REQUEST", "Synthetic request.", List.of()),
         sourceTypes,
