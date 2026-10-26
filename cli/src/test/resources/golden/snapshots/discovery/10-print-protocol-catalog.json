@@ -577,8 +577,14 @@
       "entryIds" : [ "ChartReport" ],
       "group" : "chartReportType"
     }, {
+      "entryIds" : [ "DataValidationPromptReport" ],
+      "group" : "dataValidationPromptReportType"
+    }, {
       "entryIds" : [ "ChartAxisReport" ],
       "group" : "chartAxisReportType"
+    }, {
+      "entryIds" : [ "DataValidationErrorAlertReport" ],
+      "group" : "dataValidationErrorAlertReportType"
     }, {
       "entryIds" : [ "ChartSeriesReport" ],
       "group" : "chartSeriesReportType"

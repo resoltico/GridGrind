@@ -2,6 +2,7 @@ package dev.erst.gridgrind.excel;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.core.model.validation.DataValidationEntryReport;
 import dev.erst.gridgrind.core.model.validation.DataValidationRuleSpec;
 import dev.erst.gridgrind.core.model.validation.ResolvedDataValidation;
 import dev.erst.gridgrind.core.model.validation.ResolvedValidationErrorAlert;
@@ -9,7 +10,6 @@ import dev.erst.gridgrind.core.model.validation.ResolvedValidationPrompt;
 import dev.erst.gridgrind.core.vocabulary.ExcelComparisonOperator;
 import dev.erst.gridgrind.core.vocabulary.ExcelDataValidationErrorStyle;
 import dev.erst.gridgrind.excel.validation.ExcelDataValidationPoiBridge;
-import dev.erst.gridgrind.excel.validation.ExcelDataValidationSnapshot;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -344,28 +344,64 @@ class ExcelDataValidationModelTest {
             Optional.of(new ResolvedValidationPrompt("Status", "Choose one workflow state.", true)),
             Optional.empty());
 
-    ExcelDataValidationSnapshot.Supported supported =
-        new ExcelDataValidationSnapshot.Supported(List.of("A1:A3"), definition);
-    ExcelDataValidationSnapshot.Unsupported unsupported =
-        new ExcelDataValidationSnapshot.Unsupported(List.of("B1:B3"), "ANY", "Not modeled");
-    ExcelDataValidationSnapshot.Unsupported invalid =
-        new ExcelDataValidationSnapshot.Unsupported(
-            List.of("C1:C3"), "MISSING_FORMULA", "Missing formula1.");
+    DataValidationEntryReport.Supported supported =
+        new DataValidationEntryReport.Supported(
+            List.of("A1:A3").stream()
+                .map(dev.erst.gridgrind.core.vocabulary.RangeLabel::new)
+                .toList(),
+            dev.erst.gridgrind.excel.DataValidationFixtures.report(definition));
+    DataValidationEntryReport.Unsupported unsupported =
+        new DataValidationEntryReport.Unsupported(
+            List.of("B1:B3").stream()
+                .map(dev.erst.gridgrind.core.vocabulary.RangeLabel::new)
+                .toList(),
+            "ANY",
+            "Not modeled");
+    DataValidationEntryReport.Unsupported invalid =
+        new DataValidationEntryReport.Unsupported(
+            List.of("C1:C3").stream()
+                .map(dev.erst.gridgrind.core.vocabulary.RangeLabel::new)
+                .toList(),
+            "MISSING_FORMULA",
+            "Missing formula1.");
 
-    assertEquals(definition, supported.validation());
+    assertEquals(
+        dev.erst.gridgrind.excel.DataValidationFixtures.report(definition), supported.validation());
     assertEquals("ANY", unsupported.kind());
     assertEquals("Missing formula1.", invalid.detail());
     assertThrows(
         IllegalArgumentException.class,
-        () -> new ExcelDataValidationSnapshot.Supported(List.of(), definition));
+        () ->
+            new DataValidationEntryReport.Supported(
+                List.<String>of().stream()
+                    .map(dev.erst.gridgrind.core.vocabulary.RangeLabel::new)
+                    .toList(),
+                dev.erst.gridgrind.excel.DataValidationFixtures.report(definition)));
+    assertDoesNotThrow(
+        () ->
+            new DataValidationEntryReport.Unsupported(
+                List.of(" ").stream()
+                    .map(dev.erst.gridgrind.core.vocabulary.RangeLabel::new)
+                    .toList(),
+                "ANY",
+                "detail"));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new ExcelDataValidationSnapshot.Unsupported(List.of(" "), "ANY", "detail"));
+        () ->
+            new DataValidationEntryReport.Unsupported(
+                List.of("A1").stream()
+                    .map(dev.erst.gridgrind.core.vocabulary.RangeLabel::new)
+                    .toList(),
+                " ",
+                "detail"));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new ExcelDataValidationSnapshot.Unsupported(List.of("A1"), " ", "detail"));
-    assertThrows(
-        IllegalArgumentException.class,
-        () -> new ExcelDataValidationSnapshot.Unsupported(List.of("A1"), "KIND", " "));
+        () ->
+            new DataValidationEntryReport.Unsupported(
+                List.of("A1").stream()
+                    .map(dev.erst.gridgrind.core.vocabulary.RangeLabel::new)
+                    .toList(),
+                "KIND",
+                " "));
   }
 }

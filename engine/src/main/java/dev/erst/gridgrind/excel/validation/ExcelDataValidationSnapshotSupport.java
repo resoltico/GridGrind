@@ -1,9 +1,9 @@
 package dev.erst.gridgrind.excel.validation;
 
+import dev.erst.gridgrind.core.model.validation.DataValidationEntryReport;
+import dev.erst.gridgrind.core.model.validation.DataValidationErrorAlertReport;
+import dev.erst.gridgrind.core.model.validation.DataValidationPromptReport;
 import dev.erst.gridgrind.core.model.validation.DataValidationRuleSpec;
-import dev.erst.gridgrind.core.model.validation.ResolvedDataValidation;
-import dev.erst.gridgrind.core.model.validation.ResolvedValidationErrorAlert;
-import dev.erst.gridgrind.core.model.validation.ResolvedValidationPrompt;
 import dev.erst.gridgrind.core.vocabulary.ExcelComparisonOperator;
 import dev.erst.gridgrind.core.vocabulary.ExcelDataValidationErrorStyle;
 import dev.erst.gridgrind.excel.ExcelComparisonFormulaSupport;
@@ -24,13 +24,12 @@ import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTDataValidations;
 
 /** Reads workbook data-validation XML into canonical GridGrind snapshot values. */
 public final class ExcelDataValidationSnapshotSupport {
-  List<ExcelDataValidationSnapshot> dataValidations(
-      XSSFSheet sheet, ExcelRangeSelection selection) {
+  List<DataValidationEntryReport> dataValidations(XSSFSheet sheet, ExcelRangeSelection selection) {
     CTDataValidations dataValidations = sheet.getCTWorksheet().getDataValidations();
     if (dataValidations == null) {
       return List.of();
     }
-    List<ExcelDataValidationSnapshot> snapshots = new ArrayList<>();
+    List<DataValidationEntryReport> snapshots = new ArrayList<>();
     for (CTDataValidation validation : dataValidations.getDataValidationArray()) {
       List<String> ranges = ExcelSqrefSupport.normalizedSqref(validation.getSqref());
       if (!ExcelDataValidationRangeSupport.matchesSelection(ranges, selection)) {
@@ -41,13 +40,14 @@ public final class ExcelDataValidationSnapshotSupport {
     return List.copyOf(snapshots);
   }
 
-  static ExcelDataValidationSnapshot toSnapshot(
-      XSSFDataValidation validation, List<String> ranges) {
+  static DataValidationEntryReport toSnapshot(XSSFDataValidation validation, List<String> ranges) {
     DataValidationConstraint constraint = validation.getValidationConstraint();
     return switch (constraint.getValidationType()) {
       case DataValidationConstraint.ValidationType.ANY ->
-          new ExcelDataValidationSnapshot.Unsupported(
-              ranges, "ANY", "Excel 'any value' validation is not modeled by GridGrind.");
+          new DataValidationEntryReport.Unsupported(
+              ranges.stream().map(dev.erst.gridgrind.core.vocabulary.RangeLabel::new).toList(),
+              "ANY",
+              "Excel 'any value' validation is not modeled by GridGrind.");
       case DataValidationConstraint.ValidationType.LIST -> listSnapshot(validation, ranges);
       case DataValidationConstraint.ValidationType.INTEGER ->
           comparisonSnapshot(validation, ranges, constraint, ComparisonFamily.INTEGER);
@@ -62,19 +62,21 @@ public final class ExcelDataValidationSnapshotSupport {
       case DataValidationConstraint.ValidationType.FORMULA ->
           customFormulaSnapshot(validation, ranges);
       default ->
-          new ExcelDataValidationSnapshot.Unsupported(
-              ranges,
+          new DataValidationEntryReport.Unsupported(
+              ranges.stream().map(dev.erst.gridgrind.core.vocabulary.RangeLabel::new).toList(),
               "UNKNOWN",
               "Unsupported data-validation type: " + constraint.getValidationType());
     };
   }
 
-  static ExcelDataValidationSnapshot toSnapshot(CTDataValidation validation, List<String> ranges) {
+  static DataValidationEntryReport toSnapshot(CTDataValidation validation, List<String> ranges) {
     String type = Objects.requireNonNullElse(rawAttribute(validation, "type"), "");
     return switch (type.toLowerCase(Locale.ROOT)) {
       case "none", "" ->
-          new ExcelDataValidationSnapshot.Unsupported(
-              ranges, "ANY", "Excel 'any value' validation is not modeled by GridGrind.");
+          new DataValidationEntryReport.Unsupported(
+              ranges.stream().map(dev.erst.gridgrind.core.vocabulary.RangeLabel::new).toList(),
+              "ANY",
+              "Excel 'any value' validation is not modeled by GridGrind.");
       case "list" -> listSnapshot(validation, ranges);
       case "whole" -> comparisonSnapshot(validation, ranges, ComparisonFamily.INTEGER);
       case "decimal" -> comparisonSnapshot(validation, ranges, ComparisonFamily.DECIMAL);
@@ -83,14 +85,14 @@ public final class ExcelDataValidationSnapshotSupport {
       case "textlength" -> comparisonSnapshot(validation, ranges, ComparisonFamily.TEXT_LENGTH);
       case "custom" -> customFormulaSnapshot(validation, ranges);
       default ->
-          new ExcelDataValidationSnapshot.Unsupported(
-              ranges,
+          new DataValidationEntryReport.Unsupported(
+              ranges.stream().map(dev.erst.gridgrind.core.vocabulary.RangeLabel::new).toList(),
               "UNKNOWN",
               "Unsupported data-validation type: " + Objects.requireNonNullElse(type, "UNKNOWN"));
     };
   }
 
-  private static ExcelDataValidationSnapshot listSnapshot(
+  private static DataValidationEntryReport listSnapshot(
       XSSFDataValidation validation, List<String> ranges) {
     DataValidationConstraint constraint = validation.getValidationConstraint();
     String[] explicitValues = constraint.getExplicitListValues();
@@ -99,9 +101,9 @@ public final class ExcelDataValidationSnapshotSupport {
           "\"\"".equals(Objects.requireNonNullElse(constraint.getFormula1(), ""))
               ? List.of()
               : List.of(explicitValues);
-      return new ExcelDataValidationSnapshot.Supported(
-          ranges,
-          new ResolvedDataValidation(
+      return new DataValidationEntryReport.Supported(
+          ranges.stream().map(dev.erst.gridgrind.core.vocabulary.RangeLabel::new).toList(),
+          new DataValidationEntryReport.DataValidationDefinitionReport(
               new DataValidationRuleSpec.ExplicitList(explicitListValues),
               validation.getEmptyCellAllowed(),
               validation.getSuppressDropDownArrow(),
@@ -110,14 +112,14 @@ public final class ExcelDataValidationSnapshotSupport {
     }
     String formula1 = constraint.getFormula1();
     if (formula1 == null || formula1.isBlank()) {
-      return new ExcelDataValidationSnapshot.Unsupported(
-          ranges,
+      return new DataValidationEntryReport.Unsupported(
+          ranges.stream().map(dev.erst.gridgrind.core.vocabulary.RangeLabel::new).toList(),
           "MISSING_FORMULA",
           "List validation is missing both explicit values and formula1.");
     }
-    return new ExcelDataValidationSnapshot.Supported(
-        ranges,
-        new ResolvedDataValidation(
+    return new DataValidationEntryReport.Supported(
+        ranges.stream().map(dev.erst.gridgrind.core.vocabulary.RangeLabel::new).toList(),
+        new DataValidationEntryReport.DataValidationDefinitionReport(
             new DataValidationRuleSpec.FormulaList(
                 ExcelComparisonFormulaSupport.normalizeFormula(formula1, "formula")),
             validation.getEmptyCellAllowed(),
@@ -126,12 +128,12 @@ public final class ExcelDataValidationSnapshotSupport {
             errorAlert(validation)));
   }
 
-  private static ExcelDataValidationSnapshot listSnapshot(
+  private static DataValidationEntryReport listSnapshot(
       CTDataValidation validation, List<String> ranges) {
     String formula1 = validation.isSetFormula1() ? validation.getFormula1() : "";
     if (formula1.isBlank()) {
-      return new ExcelDataValidationSnapshot.Unsupported(
-          ranges,
+      return new DataValidationEntryReport.Unsupported(
+          ranges.stream().map(dev.erst.gridgrind.core.vocabulary.RangeLabel::new).toList(),
           "MISSING_FORMULA",
           "List validation is missing both explicit values and formula1.");
     }
@@ -146,9 +148,9 @@ public final class ExcelDataValidationSnapshotSupport {
           new DataValidationRuleSpec.FormulaList(
               ExcelComparisonFormulaSupport.normalizeFormula(formula1, "formula"));
     }
-    return new ExcelDataValidationSnapshot.Supported(
-        ranges,
-        new ResolvedDataValidation(
+    return new DataValidationEntryReport.Supported(
+        ranges.stream().map(dev.erst.gridgrind.core.vocabulary.RangeLabel::new).toList(),
+        new DataValidationEntryReport.DataValidationDefinitionReport(
             rule,
             validation.isSetAllowBlank() && validation.getAllowBlank(),
             suppressDropDownArrow(validation),
@@ -156,36 +158,38 @@ public final class ExcelDataValidationSnapshotSupport {
             errorAlert(validation)));
   }
 
-  private static ExcelDataValidationSnapshot comparisonSnapshot(
+  private static DataValidationEntryReport comparisonSnapshot(
       XSSFDataValidation validation,
       List<String> ranges,
       DataValidationConstraint constraint,
       ComparisonFamily family) {
     String formula1 = constraint.getFormula1();
     if (formula1 == null || formula1.isBlank()) {
-      return new ExcelDataValidationSnapshot.Unsupported(
-          ranges, "MISSING_FORMULA", family.label + " validation is missing formula1.");
+      return new DataValidationEntryReport.Unsupported(
+          ranges.stream().map(dev.erst.gridgrind.core.vocabulary.RangeLabel::new).toList(),
+          "MISSING_FORMULA",
+          family.label + " validation is missing formula1.");
     }
     ExcelComparisonOperator operator;
     try {
       operator = ExcelDataValidationComparisonOperatorPoiBridge.fromPoi(constraint.getOperator());
     } catch (IllegalArgumentException exception) {
-      return new ExcelDataValidationSnapshot.Unsupported(
-          ranges,
+      return new DataValidationEntryReport.Unsupported(
+          ranges.stream().map(dev.erst.gridgrind.core.vocabulary.RangeLabel::new).toList(),
           "UNKNOWN_OPERATOR",
           family.label + " validation uses an unsupported comparison operator.");
     }
     Optional<String> formula2 = Optional.ofNullable(constraint.getFormula2());
     if (requiresUpperBound(operator) && (formula2.isEmpty() || formula2.orElseThrow().isBlank())) {
-      return new ExcelDataValidationSnapshot.Unsupported(
-          ranges,
+      return new DataValidationEntryReport.Unsupported(
+          ranges.stream().map(dev.erst.gridgrind.core.vocabulary.RangeLabel::new).toList(),
           "MISSING_FORMULA",
           family.label + " validation is missing formula2 for " + operatorLabel(operator) + ".");
     }
     DataValidationRuleSpec rule = comparisonRule(family, operator, formula1, formula2);
-    return new ExcelDataValidationSnapshot.Supported(
-        ranges,
-        new ResolvedDataValidation(
+    return new DataValidationEntryReport.Supported(
+        ranges.stream().map(dev.erst.gridgrind.core.vocabulary.RangeLabel::new).toList(),
+        new DataValidationEntryReport.DataValidationDefinitionReport(
             rule,
             validation.getEmptyCellAllowed(),
             validation.getSuppressDropDownArrow(),
@@ -193,34 +197,36 @@ public final class ExcelDataValidationSnapshotSupport {
             errorAlert(validation)));
   }
 
-  private static ExcelDataValidationSnapshot comparisonSnapshot(
+  private static DataValidationEntryReport comparisonSnapshot(
       CTDataValidation validation, List<String> ranges, ComparisonFamily family) {
     String formula1 = validation.isSetFormula1() ? validation.getFormula1() : "";
     if (formula1.isBlank()) {
-      return new ExcelDataValidationSnapshot.Unsupported(
-          ranges, "MISSING_FORMULA", family.label + " validation is missing formula1.");
+      return new DataValidationEntryReport.Unsupported(
+          ranges.stream().map(dev.erst.gridgrind.core.vocabulary.RangeLabel::new).toList(),
+          "MISSING_FORMULA",
+          family.label + " validation is missing formula1.");
     }
     ExcelComparisonOperator operator;
     try {
       operator = comparisonOperator(validation);
     } catch (IllegalArgumentException exception) {
-      return new ExcelDataValidationSnapshot.Unsupported(
-          ranges,
+      return new DataValidationEntryReport.Unsupported(
+          ranges.stream().map(dev.erst.gridgrind.core.vocabulary.RangeLabel::new).toList(),
           "UNKNOWN_OPERATOR",
           family.label + " validation uses an unsupported comparison operator.");
     }
     Optional<String> formula2 =
         validation.isSetFormula2() ? Optional.of(validation.getFormula2()) : Optional.empty();
     if (requiresUpperBound(operator) && (formula2.isEmpty() || formula2.orElseThrow().isBlank())) {
-      return new ExcelDataValidationSnapshot.Unsupported(
-          ranges,
+      return new DataValidationEntryReport.Unsupported(
+          ranges.stream().map(dev.erst.gridgrind.core.vocabulary.RangeLabel::new).toList(),
           "MISSING_FORMULA",
           family.label + " validation is missing formula2 for " + operatorLabel(operator) + ".");
     }
     DataValidationRuleSpec rule = comparisonRule(family, operator, formula1, formula2);
-    return new ExcelDataValidationSnapshot.Supported(
-        ranges,
-        new ResolvedDataValidation(
+    return new DataValidationEntryReport.Supported(
+        ranges.stream().map(dev.erst.gridgrind.core.vocabulary.RangeLabel::new).toList(),
+        new DataValidationEntryReport.DataValidationDefinitionReport(
             rule,
             validation.isSetAllowBlank() && validation.getAllowBlank(),
             suppressDropDownArrow(validation),
@@ -228,16 +234,18 @@ public final class ExcelDataValidationSnapshotSupport {
             errorAlert(validation)));
   }
 
-  private static ExcelDataValidationSnapshot customFormulaSnapshot(
+  private static DataValidationEntryReport customFormulaSnapshot(
       XSSFDataValidation validation, List<String> ranges) {
     String formula1 = validation.getValidationConstraint().getFormula1();
     if (formula1 == null || formula1.isBlank()) {
-      return new ExcelDataValidationSnapshot.Unsupported(
-          ranges, "MISSING_FORMULA", "Custom formula validation is missing formula1.");
+      return new DataValidationEntryReport.Unsupported(
+          ranges.stream().map(dev.erst.gridgrind.core.vocabulary.RangeLabel::new).toList(),
+          "MISSING_FORMULA",
+          "Custom formula validation is missing formula1.");
     }
-    return new ExcelDataValidationSnapshot.Supported(
-        ranges,
-        new ResolvedDataValidation(
+    return new DataValidationEntryReport.Supported(
+        ranges.stream().map(dev.erst.gridgrind.core.vocabulary.RangeLabel::new).toList(),
+        new DataValidationEntryReport.DataValidationDefinitionReport(
             new DataValidationRuleSpec.CustomFormula(
                 ExcelComparisonFormulaSupport.normalizeFormula(formula1, "formula")),
             validation.getEmptyCellAllowed(),
@@ -246,16 +254,18 @@ public final class ExcelDataValidationSnapshotSupport {
             errorAlert(validation)));
   }
 
-  private static ExcelDataValidationSnapshot customFormulaSnapshot(
+  private static DataValidationEntryReport customFormulaSnapshot(
       CTDataValidation validation, List<String> ranges) {
     String formula1 = validation.isSetFormula1() ? validation.getFormula1() : "";
     if (formula1.isBlank()) {
-      return new ExcelDataValidationSnapshot.Unsupported(
-          ranges, "MISSING_FORMULA", "Custom formula validation is missing formula1.");
+      return new DataValidationEntryReport.Unsupported(
+          ranges.stream().map(dev.erst.gridgrind.core.vocabulary.RangeLabel::new).toList(),
+          "MISSING_FORMULA",
+          "Custom formula validation is missing formula1.");
     }
-    return new ExcelDataValidationSnapshot.Supported(
-        ranges,
-        new ResolvedDataValidation(
+    return new DataValidationEntryReport.Supported(
+        ranges.stream().map(dev.erst.gridgrind.core.vocabulary.RangeLabel::new).toList(),
+        new DataValidationEntryReport.DataValidationDefinitionReport(
             new DataValidationRuleSpec.CustomFormula(
                 ExcelComparisonFormulaSupport.normalizeFormula(formula1, "formula")),
             validation.isSetAllowBlank() && validation.getAllowBlank(),
@@ -264,28 +274,28 @@ public final class ExcelDataValidationSnapshotSupport {
             errorAlert(validation)));
   }
 
-  static java.util.Optional<ResolvedValidationPrompt> prompt(XSSFDataValidation validation) {
+  static java.util.Optional<DataValidationPromptReport> prompt(XSSFDataValidation validation) {
     String title = validation.getPromptBoxTitle();
     String text = validation.getPromptBoxText();
     if (title == null || title.isBlank() || text == null || text.isBlank()) {
       return java.util.Optional.empty();
     }
     return java.util.Optional.of(
-        new ResolvedValidationPrompt(title, text, validation.getShowPromptBox()));
+        new DataValidationPromptReport(title, text, validation.getShowPromptBox()));
   }
 
-  static java.util.Optional<ResolvedValidationPrompt> prompt(CTDataValidation validation) {
+  static java.util.Optional<DataValidationPromptReport> prompt(CTDataValidation validation) {
     String title = validation.isSetPromptTitle() ? validation.getPromptTitle() : null;
     String text = validation.isSetPrompt() ? validation.getPrompt() : null;
     if (title == null || title.isBlank() || text == null || text.isBlank()) {
       return java.util.Optional.empty();
     }
     return java.util.Optional.of(
-        new ResolvedValidationPrompt(
+        new DataValidationPromptReport(
             title, text, validation.isSetShowInputMessage() && validation.getShowInputMessage()));
   }
 
-  static java.util.Optional<ResolvedValidationErrorAlert> errorAlert(
+  static java.util.Optional<DataValidationErrorAlertReport> errorAlert(
       XSSFDataValidation validation) {
     String title = validation.getErrorBoxTitle();
     String text = validation.getErrorBoxText();
@@ -293,21 +303,22 @@ public final class ExcelDataValidationSnapshotSupport {
       return java.util.Optional.empty();
     }
     return java.util.Optional.of(
-        new ResolvedValidationErrorAlert(
+        new DataValidationErrorAlertReport(
             ExcelDataValidationPoiBridge.fromPoiErrorStyle(validation.getErrorStyle()),
             title,
             text,
             validation.getShowErrorBox()));
   }
 
-  static java.util.Optional<ResolvedValidationErrorAlert> errorAlert(CTDataValidation validation) {
+  static java.util.Optional<DataValidationErrorAlertReport> errorAlert(
+      CTDataValidation validation) {
     String title = validation.isSetErrorTitle() ? validation.getErrorTitle() : null;
     String text = validation.isSetError() ? validation.getError() : null;
     if (title == null || title.isBlank() || text == null || text.isBlank()) {
       return java.util.Optional.empty();
     }
     return java.util.Optional.of(
-        new ResolvedValidationErrorAlert(
+        new DataValidationErrorAlertReport(
             errorStyle(validation),
             title,
             text,

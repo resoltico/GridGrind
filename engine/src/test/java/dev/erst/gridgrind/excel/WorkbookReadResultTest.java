@@ -27,6 +27,7 @@ import dev.erst.gridgrind.core.model.style.FontHeightReport;
 import dev.erst.gridgrind.core.model.table.AutofilterEntryReport;
 import dev.erst.gridgrind.core.model.table.TableEntryReport;
 import dev.erst.gridgrind.core.model.table.TableStyleReport;
+import dev.erst.gridgrind.core.model.validation.DataValidationEntryReport;
 import dev.erst.gridgrind.core.model.validation.DataValidationRuleSpec;
 import dev.erst.gridgrind.core.model.validation.ResolvedDataValidation;
 import dev.erst.gridgrind.core.model.validation.ResolvedValidationPrompt;
@@ -41,7 +42,6 @@ import dev.erst.gridgrind.core.vocabulary.ExcelPrintOrientation;
 import dev.erst.gridgrind.core.vocabulary.ExcelSheetVisibility;
 import dev.erst.gridgrind.core.vocabulary.ExcelVerticalAlignment;
 import dev.erst.gridgrind.core.vocabulary.StepId;
-import dev.erst.gridgrind.excel.validation.ExcelDataValidationSnapshot;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
@@ -480,23 +480,26 @@ class WorkbookReadResultTest {
         new ArrayList<>(List.of(new WorkbookSheetResult.ColumnLayout(0, 12.5, false, 0, false)));
     List<WorkbookSheetResult.RowLayout> resultRows =
         new ArrayList<>(List.of(new WorkbookSheetResult.RowLayout(0, 18.0, false, 0, false)));
-    List<ExcelDataValidationSnapshot> validations =
+    List<DataValidationEntryReport> validations =
         new ArrayList<>(
             List.of(
-                new ExcelDataValidationSnapshot.Supported(
-                    List.of("A2:A5"),
-                    new ResolvedDataValidation(
-                        new DataValidationRuleSpec.TextLength(
-                            ExcelComparisonOperator.LESS_OR_EQUAL,
-                            ExcelComparisonFormulaSupport.normalizeFormula("20", "formula1"),
-                            ExcelComparisonFormulaSupport.normalizeOptionalFormula(
-                                Optional.empty(), "formula2")),
-                        true,
-                        false,
-                        Optional.of(
-                            new ResolvedValidationPrompt(
-                                "Reason", "Use 20 characters or fewer.", true)),
-                        Optional.empty()))));
+                new DataValidationEntryReport.Supported(
+                    List.of("A2:A5").stream()
+                        .map(dev.erst.gridgrind.core.vocabulary.RangeLabel::new)
+                        .toList(),
+                    dev.erst.gridgrind.excel.DataValidationFixtures.report(
+                        new ResolvedDataValidation(
+                            new DataValidationRuleSpec.TextLength(
+                                ExcelComparisonOperator.LESS_OR_EQUAL,
+                                ExcelComparisonFormulaSupport.normalizeFormula("20", "formula1"),
+                                ExcelComparisonFormulaSupport.normalizeOptionalFormula(
+                                    Optional.empty(), "formula2")),
+                            true,
+                            false,
+                            Optional.of(
+                                new ResolvedValidationPrompt(
+                                    "Reason", "Use 20 characters or fewer.", true)),
+                            Optional.empty())))));
     List<AutofilterEntryReport> autofilters =
         new ArrayList<>(
             List.of(
@@ -626,7 +629,8 @@ class WorkbookReadResultTest {
     assertEquals(125, fixture.layoutResult().layout().zoomPercent());
     assertEquals(defaultPrintLayoutSnapshot(), fixture.printLayoutResult().printLayout());
     assertEquals(
-        "A2:A5", fixture.dataValidationsResult().validations().getFirst().ranges().getFirst());
+        "A2:A5",
+        fixture.dataValidationsResult().validations().getFirst().ranges().getFirst().value());
     assertEquals(
         "conditionalFormattingHealth",
         fixture.conditionalFormattingHealthResult().stepId().value());
@@ -649,7 +653,7 @@ class WorkbookReadResultTest {
       List<WorkbookSheetResult.CellComment> comments,
       List<WorkbookSheetResult.ColumnLayout> columns,
       List<WorkbookSheetResult.RowLayout> resultRows,
-      List<ExcelDataValidationSnapshot> validations,
+      List<DataValidationEntryReport> validations,
       List<AutofilterEntryReport> autofilters,
       List<TableEntryReport> tables,
       List<WorkbookSurfaceResult.FormulaPattern> formulas,

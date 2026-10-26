@@ -36,6 +36,7 @@ import dev.erst.gridgrind.core.model.table.AutofilterEntryReport;
 import dev.erst.gridgrind.core.model.table.ResolvedTable;
 import dev.erst.gridgrind.core.model.table.TableStyleSpec;
 import dev.erst.gridgrind.core.model.validation.ConditionalFormattingRuleSpec;
+import dev.erst.gridgrind.core.model.validation.DataValidationEntryReport;
 import dev.erst.gridgrind.core.model.validation.DataValidationRuleSpec;
 import dev.erst.gridgrind.core.model.validation.IgnoredErrorSpec;
 import dev.erst.gridgrind.core.model.validation.ResolvedDataValidation;
@@ -63,7 +64,6 @@ import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.core.vocabulary.TableName;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingObjectSnapshot;
 import dev.erst.gridgrind.excel.pivot.ExcelPivotTableSelection;
-import dev.erst.gridgrind.excel.validation.ExcelDataValidationSnapshot;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Arrays;
@@ -264,7 +264,11 @@ class WorkbookCommandExecutorTest {
         XlsxRoundTrip.printLayout(workbookPath, "Budget").orientation());
     assertEquals(
         List.of(
-            new ExcelDataValidationSnapshot.Supported(List.of("C1", "C3"), validationDefinition())),
+            new DataValidationEntryReport.Supported(
+                List.of("C1", "C3").stream()
+                    .map(dev.erst.gridgrind.core.vocabulary.RangeLabel::new)
+                    .toList(),
+                dev.erst.gridgrind.excel.DataValidationFixtures.report(validationDefinition()))),
         XlsxRoundTrip.dataValidations(workbookPath, "Budget"));
     assertEquals(
         List.of(

@@ -2,6 +2,7 @@ package dev.erst.gridgrind.excel;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.core.model.validation.DataValidationEntryReport;
 import dev.erst.gridgrind.core.model.validation.DataValidationRuleSpec;
 import dev.erst.gridgrind.core.model.validation.ResolvedDataValidation;
 import dev.erst.gridgrind.core.model.validation.ResolvedValidationErrorAlert;
@@ -9,7 +10,6 @@ import dev.erst.gridgrind.core.model.validation.ResolvedValidationPrompt;
 import dev.erst.gridgrind.core.vocabulary.AnalysisFindingCode;
 import dev.erst.gridgrind.core.vocabulary.ExcelDataValidationErrorStyle;
 import dev.erst.gridgrind.core.vocabulary.StepId;
-import dev.erst.gridgrind.excel.validation.ExcelDataValidationSnapshot;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -61,11 +61,17 @@ class ExcelDataValidationWorkflowTest {
                       new ExcelRangeSelection.Selected(List.of("B2")))));
 
       assertEquals(1, beforeClear.validations().size());
-      ExcelDataValidationSnapshot.Supported supported =
+      DataValidationEntryReport.Supported supported =
           assertInstanceOf(
-              ExcelDataValidationSnapshot.Supported.class, beforeClear.validations().getFirst());
-      assertEquals(List.of("A1:C3"), supported.ranges());
-      assertEquals(definition, supported.validation());
+              DataValidationEntryReport.Supported.class, beforeClear.validations().getFirst());
+      assertEquals(
+          List.of("A1:C3"),
+          supported.ranges().stream()
+              .map(dev.erst.gridgrind.core.vocabulary.RangeLabel::value)
+              .toList());
+      assertEquals(
+          dev.erst.gridgrind.excel.DataValidationFixtures.report(definition),
+          supported.validation());
       assertEquals(beforeClear.validations(), selected.validations());
 
       budget.metadata().clearDataValidations(new ExcelRangeSelection.Selected(List.of("B2")));
@@ -79,11 +85,17 @@ class ExcelDataValidationWorkflowTest {
                       new StepId("afterClear"), "Budget", new ExcelRangeSelection.All())));
 
       assertEquals(1, afterClear.validations().size());
-      ExcelDataValidationSnapshot.Supported retained =
+      DataValidationEntryReport.Supported retained =
           assertInstanceOf(
-              ExcelDataValidationSnapshot.Supported.class, afterClear.validations().getFirst());
-      assertEquals(List.of("A1:C1", "A3:C3", "A2", "C2"), retained.ranges());
-      assertEquals(definition, retained.validation());
+              DataValidationEntryReport.Supported.class, afterClear.validations().getFirst());
+      assertEquals(
+          List.of("A1:C1", "A3:C3", "A2", "C2"),
+          retained.ranges().stream()
+              .map(dev.erst.gridgrind.core.vocabulary.RangeLabel::value)
+              .toList());
+      assertEquals(
+          dev.erst.gridgrind.excel.DataValidationFixtures.report(definition),
+          retained.validation());
     }
   }
 

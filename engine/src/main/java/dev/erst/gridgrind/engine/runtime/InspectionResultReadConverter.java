@@ -124,9 +124,7 @@ final class InspectionResultReadConverter {
           new SheetInspectionResult.DataValidationsResult(
               dataValidations.stepId(),
               new SheetLabel(dataValidations.sheetName()),
-              dataValidations.validations().stream()
-                  .map(InspectionResultValidationReportSupport::toDataValidationEntryReport)
-                  .toList());
+              dataValidations.validations());
       case dev.erst.gridgrind.excel.WorkbookRuleResult.ConditionalFormattingResult
               conditionalFormatting ->
           new SheetInspectionResult.ConditionalFormattingResult(

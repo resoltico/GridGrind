@@ -8,6 +8,7 @@ import dev.erst.gridgrind.core.model.style.RichTextRunReport;
 import dev.erst.gridgrind.core.model.table.AutofilterEntryReport;
 import dev.erst.gridgrind.core.model.table.TableEntryReport;
 import dev.erst.gridgrind.core.model.validation.ConditionalFormattingEntryReport;
+import dev.erst.gridgrind.core.model.validation.DataValidationEntryReport;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.excel.ExcelCellMetadataSnapshot;
 import dev.erst.gridgrind.excel.ExcelCellSnapshot;
@@ -19,7 +20,6 @@ import dev.erst.gridgrind.excel.WorkbookExecutionEngine;
 import dev.erst.gridgrind.excel.WorkbookReadCommand;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingObjectSnapshot;
 import dev.erst.gridgrind.excel.pivot.ExcelPivotTableSelection;
-import dev.erst.gridgrind.excel.validation.ExcelDataValidationSnapshot;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -158,11 +158,11 @@ final class XlsxRoundTripExpectedWorkbookSurfaceSupport {
     return Map.copyOf(expected);
   }
 
-  static Map<String, List<ExcelDataValidationSnapshot>> expectedDataValidations(
+  static Map<String, List<DataValidationEntryReport>> expectedDataValidations(
       ExcelWorkbook workbook) {
-    LinkedHashMap<String, List<ExcelDataValidationSnapshot>> expected = new LinkedHashMap<>();
+    LinkedHashMap<String, List<DataValidationEntryReport>> expected = new LinkedHashMap<>();
     for (String sheetName : workbook.sheets().sheetNames()) {
-      List<ExcelDataValidationSnapshot> validations =
+      List<DataValidationEntryReport> validations =
           workbook.sheet(sheetName).metadata().dataValidations(new ExcelRangeSelection.All());
       if (!validations.isEmpty()) {
         expected.put(sheetName, validations);

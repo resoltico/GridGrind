@@ -2298,3 +2298,37 @@ pass (26s), deterministic check/all retained seeds pass (17s). ./gradlew check p
 golden cases unchanged, no active mutation/fuzz campaign. Inventories: snapshots 9→8, converter
 lines 2976→2909, main Java 117984→117784; definition 1, Support 204 and blank checks 383 remain.
 Baseline diff empty. WP-40 remains open.
+
+## WP-40 factual validation reports without authored source wrappers
+
+Deleted the validation snapshot and the entire validation report converter. POI reads construct
+DataValidationEntryReport and its factual definition directly. Added distinct prompt/error reports
+with observed string title/text; authored source specs and resolved write payloads remain separate.
+The former converter fabricated INLINE sources from observed text, contradicting D1's distinct
+contracts. Removed that projection rather than moving it. Preserved rule normalization, prompt/error
+presence filtering, selected clear/split behavior, overlap analysis and malformed-rule diagnostics.
+Health evidence unwraps range labels only at parser/evidence boundaries. Documented the response
+shape and explicitly regenerated schemas. A codec regression checks observed message roundtrips.
+
+Readback fixtures independently map authored values to expected reports without sharing production
+read logic. Report invariants moved into core; obsolete converter-only tests retired. Compilation
+found range/evidence boundaries, resolved-versus-factual fixture definitions and deleted converter
+calls. Behavior retries corrected ten and then four stale range/metadata assertions, including one
+obsolete factual blank-label rejection. Final core/JSON/engine/14 parity/static checks pass (31s),
+deterministic check/all retained seeds pass (17s). The first full root run then found exactly six
+expected golden mismatches in both launchers (3m03s).
+
+Golden review/re-record: three files only. Catalog snapshot 10 adds the two factual report groups;
+search snapshot 11 adds exactly those two matches and totalCount 78→80, preserving all existing
+matches/order. DATA_ENTRY_WORKFLOW changes exactly eight observed leaves (four in execution
+inspections, four in reopened workbook facts): prompt/error title/text INLINE objects become the
+same strings. A structural comparison independently verifies every other value, key, list length,
+authored source object, range, flag, rule and message text is unchanged. Review JSON retained outside
+the repo. Normal discovery/example/recipe update replay passes (2m05s). This is a narrow D1 contract
+correction under delegated QA authority, explicitly deviating from WP-40's unchanged-corpus wording.
+
+Final no-update ./gradlew check passes (2m41s), all 143 golden cases pass. No active mutation/fuzz
+campaign. Task daemon 56897 retained 123 workers/6056MiB at the completed idle gate; recorded evidence
+and stopped that task daemon only. Inventories: snapshots 8→7, converter lines 2909→2843, Support
+204→203, blank checks 383→382, main Java 117784→117727; reports 96→98 for distinct factual text
+contracts. Definition 1 remains. Baseline diff empty; WP-40 remains open.

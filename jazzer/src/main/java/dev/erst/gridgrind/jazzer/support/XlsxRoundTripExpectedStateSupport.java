@@ -9,6 +9,7 @@ import dev.erst.gridgrind.core.model.style.RichTextRunReport;
 import dev.erst.gridgrind.core.model.table.AutofilterEntryReport;
 import dev.erst.gridgrind.core.model.table.TableEntryReport;
 import dev.erst.gridgrind.core.model.validation.ConditionalFormattingEntryReport;
+import dev.erst.gridgrind.core.model.validation.DataValidationEntryReport;
 import dev.erst.gridgrind.core.model.value.HyperlinkTarget;
 import dev.erst.gridgrind.excel.ExcelCellMetadataSnapshot;
 import dev.erst.gridgrind.excel.ExcelCellSnapshot;
@@ -17,7 +18,6 @@ import dev.erst.gridgrind.excel.ExcelSheetPane;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
 import dev.erst.gridgrind.excel.WorkbookCommand;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingObjectSnapshot;
-import dev.erst.gridgrind.excel.validation.ExcelDataValidationSnapshot;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
@@ -66,7 +66,7 @@ final class XlsxRoundTripExpectedStateSupport {
       dev.erst.gridgrind.excel.WorkbookCoreResult.WorkbookSummary expectedWorkbookSummary,
       Map<String, dev.erst.gridgrind.excel.WorkbookSheetResult.SheetSummary> expectedSheetSummaries,
       Map<String, ExpectedSheetLayoutState> expectedSheetLayouts,
-      Map<String, List<ExcelDataValidationSnapshot>> expectedDataValidations,
+      Map<String, List<DataValidationEntryReport>> expectedDataValidations,
       Map<String, List<ConditionalFormattingEntryReport>> expectedConditionalFormatting,
       Map<String, List<AutofilterEntryReport>> expectedAutofilters,
       Map<String, List<ExcelDrawingObjectSnapshot>> expectedDrawingObjects,

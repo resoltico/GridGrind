@@ -46,6 +46,7 @@ import dev.erst.gridgrind.core.model.validation.ConditionalFormattingEntryReport
 import dev.erst.gridgrind.core.model.validation.ConditionalFormattingRuleReport;
 import dev.erst.gridgrind.core.model.validation.ConditionalFormattingRuleSpec;
 import dev.erst.gridgrind.core.model.validation.ConditionalFormattingThresholdSpec;
+import dev.erst.gridgrind.core.model.validation.DataValidationEntryReport;
 import dev.erst.gridgrind.core.model.validation.DataValidationRuleSpec;
 import dev.erst.gridgrind.core.model.validation.ResolvedDataValidation;
 import dev.erst.gridgrind.core.model.value.CellValue;
@@ -63,7 +64,6 @@ import dev.erst.gridgrind.core.vocabulary.RgbHex;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.TableName;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingObjectSnapshot;
-import dev.erst.gridgrind.excel.validation.ExcelDataValidationSnapshot;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -585,17 +585,17 @@ class ExcelSheetCopyControllerTest {
                                   false,
                                   4)))))),
           autofilterController.sheetOwnedAutofilters(replica.xssfSheet()));
-      List<ExcelDataValidationSnapshot> replicaValidations =
+      List<DataValidationEntryReport> replicaValidations =
           replica.metadata().dataValidations(new ExcelRangeSelection.All());
       assertEquals(2, replicaValidations.size());
-      ExcelDataValidationSnapshot.Supported formulaList =
-          assertInstanceOf(ExcelDataValidationSnapshot.Supported.class, replicaValidations.get(0));
+      DataValidationEntryReport.Supported formulaList =
+          assertInstanceOf(DataValidationEntryReport.Supported.class, replicaValidations.get(0));
       assertEquals(
           new DataValidationRuleSpec.FormulaList(
               ExcelComparisonFormulaSupport.normalizeFormula("Replica!$J$2:$J$3", "formula")),
           formulaList.validation().rule());
-      ExcelDataValidationSnapshot.Supported wholeNumber =
-          assertInstanceOf(ExcelDataValidationSnapshot.Supported.class, replicaValidations.get(1));
+      DataValidationEntryReport.Supported wholeNumber =
+          assertInstanceOf(DataValidationEntryReport.Supported.class, replicaValidations.get(1));
       assertInstanceOf(DataValidationRuleSpec.WholeNumber.class, wholeNumber.validation().rule());
       List<CTDataValidation> rawReplicaValidations =
           List.of(
@@ -956,23 +956,25 @@ class ExcelSheetCopyControllerTest {
 
       workbook.sheets().copySheet("Source", "Replica", new ExcelSheetCopyPosition.AppendAtEnd());
 
-      List<ExcelDataValidationSnapshot> replicaValidations =
+      List<DataValidationEntryReport> replicaValidations =
           workbook.sheet("Replica").metadata().dataValidations(new ExcelRangeSelection.All());
       assertEquals(3, replicaValidations.size());
-      ExcelDataValidationSnapshot.Supported formulaList =
-          assertInstanceOf(ExcelDataValidationSnapshot.Supported.class, replicaValidations.get(0));
+      DataValidationEntryReport.Supported formulaList =
+          assertInstanceOf(DataValidationEntryReport.Supported.class, replicaValidations.get(0));
       assertEquals(
           new DataValidationRuleSpec.FormulaList(
               ExcelComparisonFormulaSupport.normalizeFormula("Replica!$D$1:$D$3", "formula")),
           formulaList.validation().rule());
-      ExcelDataValidationSnapshot.Supported emptyExplicitList =
-          assertInstanceOf(ExcelDataValidationSnapshot.Supported.class, replicaValidations.get(1));
+      DataValidationEntryReport.Supported emptyExplicitList =
+          assertInstanceOf(DataValidationEntryReport.Supported.class, replicaValidations.get(1));
       assertEquals(
           new DataValidationRuleSpec.ExplicitList(List.of()),
           emptyExplicitList.validation().rule());
       assertEquals(
-          new ExcelDataValidationSnapshot.Unsupported(
-              List.of("C1:C3"),
+          new DataValidationEntryReport.Unsupported(
+              List.of("C1:C3").stream()
+                  .map(dev.erst.gridgrind.core.vocabulary.RangeLabel::new)
+                  .toList(),
               "MISSING_FORMULA",
               "List validation is missing both explicit values and formula1."),
           replicaValidations.get(2));

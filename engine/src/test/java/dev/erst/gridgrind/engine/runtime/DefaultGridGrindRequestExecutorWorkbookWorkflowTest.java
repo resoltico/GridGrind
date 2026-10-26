@@ -95,7 +95,6 @@ import dev.erst.gridgrind.excel.ExcelWorkbooks;
 import dev.erst.gridgrind.excel.WorkbookExecutionEngine;
 import dev.erst.gridgrind.excel.WorkbookReadCommand;
 import dev.erst.gridgrind.excel.XlsxRoundTrip;
-import dev.erst.gridgrind.excel.validation.ExcelDataValidationSnapshot;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -1333,7 +1332,7 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
             success,
             "health",
             dev.erst.gridgrind.core.plan.WorkbookAnalysisResult.DataValidationHealthResult.class);
-    List<ExcelDataValidationSnapshot> persisted =
+    List<DataValidationEntryReport> persisted =
         XlsxRoundTrip.dataValidations(workbookPath, "Budget");
 
     assertEquals(workbookPath.toAbsolutePath().toString(), savedPath(success));
@@ -1365,7 +1364,11 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
         AnalysisFindingCode.DATA_VALIDATION_BROKEN_FORMULA,
         health.analysis().findings().getFirst().code());
     assertEquals(2, persisted.size());
-    assertEquals(List.of("A2:C2", "A4:C5", "A3", "C3"), persisted.getFirst().ranges());
+    assertEquals(
+        List.of("A2:C2", "A4:C5", "A3", "C3"),
+        persisted.getFirst().ranges().stream()
+            .map(dev.erst.gridgrind.core.vocabulary.RangeLabel::value)
+            .toList());
   }
 
   @Test

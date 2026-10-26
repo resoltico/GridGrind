@@ -2,10 +2,10 @@ package dev.erst.gridgrind.excel;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.core.model.validation.DataValidationEntryReport;
 import dev.erst.gridgrind.core.model.validation.DataValidationRuleSpec;
 import dev.erst.gridgrind.core.model.validation.ResolvedDataValidation;
 import dev.erst.gridgrind.excel.validation.ExcelDataValidationController;
-import dev.erst.gridgrind.excel.validation.ExcelDataValidationSnapshot;
 import java.util.List;
 import java.util.Optional;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
@@ -40,13 +40,17 @@ class ExcelStructureValidationRewriteCoverageTest extends ExcelRowColumnStructur
 
       rowController.insertRows(formulaSheet, 1, 1);
 
-      ExcelDataValidationSnapshot.Supported supported =
+      DataValidationEntryReport.Supported supported =
           assertInstanceOf(
-              ExcelDataValidationSnapshot.Supported.class,
+              DataValidationEntryReport.Supported.class,
               new ExcelDataValidationController()
                   .dataValidations(formulaSheet, new ExcelRangeSelection.All())
                   .getFirst());
-      assertEquals(List.of("A3:A5"), supported.ranges());
+      assertEquals(
+          List.of("A3:A5"),
+          supported.ranges().stream()
+              .map(dev.erst.gridgrind.core.vocabulary.RangeLabel::value)
+              .toList());
       assertEquals(
           new DataValidationRuleSpec.CustomFormula(
               ExcelComparisonFormulaSupport.normalizeFormula("LEN(A3)>0", "formula")),
@@ -79,13 +83,17 @@ class ExcelStructureValidationRewriteCoverageTest extends ExcelRowColumnStructur
 
       columnController.insertColumns(formulaSheet, 0, 1);
 
-      ExcelDataValidationSnapshot.Supported supported =
+      DataValidationEntryReport.Supported supported =
           assertInstanceOf(
-              ExcelDataValidationSnapshot.Supported.class,
+              DataValidationEntryReport.Supported.class,
               new ExcelDataValidationController()
                   .dataValidations(formulaSheet, new ExcelRangeSelection.All())
                   .getFirst());
-      assertEquals(List.of("B1:B3"), supported.ranges());
+      assertEquals(
+          List.of("B1:B3"),
+          supported.ranges().stream()
+              .map(dev.erst.gridgrind.core.vocabulary.RangeLabel::value)
+              .toList());
       assertEquals(
           new DataValidationRuleSpec.CustomFormula(
               ExcelComparisonFormulaSupport.normalizeFormula("LEN(B1)>0", "formula")),

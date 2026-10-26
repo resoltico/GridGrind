@@ -7,6 +7,7 @@ import dev.erst.gridgrind.core.model.style.RichTextRunReport;
 import dev.erst.gridgrind.core.model.table.AutofilterEntryReport;
 import dev.erst.gridgrind.core.model.table.TableEntryReport;
 import dev.erst.gridgrind.core.model.validation.ConditionalFormattingEntryReport;
+import dev.erst.gridgrind.core.model.validation.DataValidationEntryReport;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.excel.*;
 import dev.erst.gridgrind.excel.ExcelCellSnapshot;
@@ -20,7 +21,6 @@ import dev.erst.gridgrind.excel.WorkbookExecutionEngine;
 import dev.erst.gridgrind.excel.WorkbookReadCommand;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingObjectSnapshot;
 import dev.erst.gridgrind.excel.pivot.ExcelPivotTableSelection;
-import dev.erst.gridgrind.excel.validation.ExcelDataValidationSnapshot;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
@@ -200,15 +200,15 @@ final class XlsxRoundTripExpectationVerification {
   }
 
   static void requireExpectedDataValidations(
-      Map<String, List<ExcelDataValidationSnapshot>> expectedDataValidations, Path workbookPath)
+      Map<String, List<DataValidationEntryReport>> expectedDataValidations, Path workbookPath)
       throws IOException {
     if (expectedDataValidations.isEmpty()) {
       return;
     }
     try (ExcelWorkbook workbook = JazzerWorkbookIoSupport.openWorkbook(workbookPath)) {
-      for (Map.Entry<String, List<ExcelDataValidationSnapshot>> entry :
+      for (Map.Entry<String, List<DataValidationEntryReport>> entry :
           expectedDataValidations.entrySet()) {
-        List<ExcelDataValidationSnapshot> actual =
+        List<DataValidationEntryReport> actual =
             workbook
                 .sheet(entry.getKey())
                 .metadata()

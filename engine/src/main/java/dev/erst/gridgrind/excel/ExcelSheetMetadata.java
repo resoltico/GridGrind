@@ -3,8 +3,8 @@ package dev.erst.gridgrind.excel;
 import dev.erst.gridgrind.core.model.table.AutofilterFilterColumnSpec;
 import dev.erst.gridgrind.core.model.table.AutofilterSortStateSpec;
 import dev.erst.gridgrind.core.model.validation.ConditionalFormattingEntryReport;
+import dev.erst.gridgrind.core.model.validation.DataValidationEntryReport;
 import dev.erst.gridgrind.core.model.validation.ResolvedDataValidation;
-import dev.erst.gridgrind.excel.validation.ExcelDataValidationSnapshot;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -67,7 +67,7 @@ public final class ExcelSheetMetadata {
   }
 
   /** Returns data-validation metadata for the selected ranges on this sheet. */
-  public List<ExcelDataValidationSnapshot> dataValidations(ExcelRangeSelection selection) {
+  public List<DataValidationEntryReport> dataValidations(ExcelRangeSelection selection) {
     return metadataSupport.dataValidations(selection);
   }
 

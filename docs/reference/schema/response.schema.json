@@ -4541,10 +4541,10 @@
           "type" : "boolean"
         },
         "errorAlert" : {
-          "$ref" : "#/$defs/dev.erst.gridgrind.core.model.validation.DataValidationErrorAlertSpec"
+          "$ref" : "#/$defs/dev.erst.gridgrind.core.model.validation.DataValidationErrorAlertReport"
         },
         "prompt" : {
-          "$ref" : "#/$defs/dev.erst.gridgrind.core.model.validation.DataValidationPromptSpec"
+          "$ref" : "#/$defs/dev.erst.gridgrind.core.model.validation.DataValidationPromptReport"
         },
         "rule" : {
           "$ref" : "#/$defs/dev.erst.gridgrind.core.model.validation.DataValidationRuleSpec"
@@ -4599,12 +4599,11 @@
       "required" : [ "ranges", "kind", "detail", "type" ],
       "type" : "object"
     },
-    "dev.erst.gridgrind.core.model.validation.DataValidationErrorAlertSpec" : {
+    "dev.erst.gridgrind.core.model.validation.DataValidationErrorAlertReport" : {
       "additionalProperties" : false,
-      "description" : "Optional error-box configuration shown when invalid data is entered.",
+      "description" : "Observed error-box text, style and display state.",
       "properties" : {
         "showErrorBox" : {
-          "default" : true,
           "type" : "boolean"
         },
         "style" : {
@@ -4612,13 +4611,13 @@
           "type" : "string"
         },
         "text" : {
-          "$ref" : "#/$defs/dev.erst.gridgrind.core.source.TextSourceSpec"
+          "type" : "string"
         },
         "title" : {
-          "$ref" : "#/$defs/dev.erst.gridgrind.core.source.TextSourceSpec"
+          "type" : "string"
         }
       },
-      "required" : [ "style", "title", "text" ],
+      "required" : [ "style", "title", "text", "showErrorBox" ],
       "type" : "object"
     },
     "dev.erst.gridgrind.core.model.validation.DataValidationHealthReport" : {
@@ -4640,22 +4639,21 @@
       "required" : [ "checkedValidationCount", "summary", "findings" ],
       "type" : "object"
     },
-    "dev.erst.gridgrind.core.model.validation.DataValidationPromptSpec" : {
+    "dev.erst.gridgrind.core.model.validation.DataValidationPromptReport" : {
       "additionalProperties" : false,
-      "description" : "Optional prompt-box configuration shown when a validated cell is selected.",
+      "description" : "Observed prompt-box text and display state.",
       "properties" : {
         "showPromptBox" : {
-          "default" : true,
           "type" : "boolean"
         },
         "text" : {
-          "$ref" : "#/$defs/dev.erst.gridgrind.core.source.TextSourceSpec"
+          "type" : "string"
         },
         "title" : {
-          "$ref" : "#/$defs/dev.erst.gridgrind.core.source.TextSourceSpec"
+          "type" : "string"
         }
       },
-      "required" : [ "title", "text" ],
+      "required" : [ "title", "text", "showPromptBox" ],
       "type" : "object"
     },
     "dev.erst.gridgrind.core.model.validation.DataValidationRuleSpec" : {

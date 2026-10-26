@@ -6,8 +6,8 @@ import static dev.erst.gridgrind.excel.WorkbookResultSupport.requireNonBlank;
 import dev.erst.gridgrind.core.model.table.AutofilterEntryReport;
 import dev.erst.gridgrind.core.model.table.TableEntryReport;
 import dev.erst.gridgrind.core.model.validation.ConditionalFormattingEntryReport;
+import dev.erst.gridgrind.core.model.validation.DataValidationEntryReport;
 import dev.erst.gridgrind.core.vocabulary.StepId;
-import dev.erst.gridgrind.excel.validation.ExcelDataValidationSnapshot;
 import java.util.List;
 
 /** Validation, formatting, autofilter, and table inventory results. */
@@ -19,7 +19,7 @@ public sealed interface WorkbookRuleResult extends WorkbookReadIntrospectionResu
 
   /** Returns data-validation metadata for the selected ranges on one sheet. */
   record DataValidationsResult(
-      StepId stepId, String sheetName, List<ExcelDataValidationSnapshot> validations)
+      StepId stepId, String sheetName, List<DataValidationEntryReport> validations)
       implements WorkbookRuleResult {
     public DataValidationsResult {
 

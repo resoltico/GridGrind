@@ -199,7 +199,9 @@ plus `columnBreaks`.
 
 ### GET_DATA_VALIDATIONS
 
-Returns factual data-validation structures for one sheet. Each returned entry is one of:
+Returns factual data-validation structures for one sheet. Observed prompt and error-alert `title`
+and `text` fields are plain strings; authored source objects belong only to requests. Each returned
+entry is one of:
 
 - `SUPPORTED`: a fully modeled validation definition plus its normalized stored ranges
 - `UNSUPPORTED`: a present workbook rule GridGrind can detect but cannot expose as a supported

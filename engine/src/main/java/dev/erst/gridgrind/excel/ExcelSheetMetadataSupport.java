@@ -3,9 +3,9 @@ package dev.erst.gridgrind.excel;
 import dev.erst.gridgrind.core.model.table.AutofilterFilterColumnSpec;
 import dev.erst.gridgrind.core.model.table.AutofilterSortStateSpec;
 import dev.erst.gridgrind.core.model.validation.ConditionalFormattingEntryReport;
+import dev.erst.gridgrind.core.model.validation.DataValidationEntryReport;
 import dev.erst.gridgrind.core.model.validation.ResolvedDataValidation;
 import dev.erst.gridgrind.excel.validation.ExcelDataValidationController;
-import dev.erst.gridgrind.excel.validation.ExcelDataValidationSnapshot;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -90,7 +90,7 @@ final class ExcelSheetMetadataSupport {
     return owner;
   }
 
-  List<ExcelDataValidationSnapshot> dataValidations(ExcelRangeSelection selection) {
+  List<DataValidationEntryReport> dataValidations(ExcelRangeSelection selection) {
     Objects.requireNonNull(selection, "selection must not be null");
     return dataValidationController.dataValidations(xssfSheet(), selection);
   }

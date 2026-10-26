@@ -33,6 +33,7 @@ import dev.erst.gridgrind.core.model.style.FontHeightSpec;
 import dev.erst.gridgrind.core.model.table.ResolvedTable;
 import dev.erst.gridgrind.core.model.table.TableStyleSpec;
 import dev.erst.gridgrind.core.model.validation.ConditionalFormattingRuleSpec;
+import dev.erst.gridgrind.core.model.validation.DataValidationEntryReport;
 import dev.erst.gridgrind.core.model.validation.DataValidationRuleSpec;
 import dev.erst.gridgrind.core.model.validation.ResolvedDataValidation;
 import dev.erst.gridgrind.core.model.value.CellValue;
@@ -51,7 +52,6 @@ import dev.erst.gridgrind.core.vocabulary.RgbHex;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.TableName;
 import dev.erst.gridgrind.excel.ooxml.ExcelOoxmlPersistenceOptions;
-import dev.erst.gridgrind.excel.validation.ExcelDataValidationSnapshot;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.nio.file.FileAlreadyExistsException;
@@ -481,18 +481,21 @@ class ExcelWorkbookTest {
         XlsxRoundTrip.namedRanges(workbookPath));
     assertEquals(
         List.of(
-            new ExcelDataValidationSnapshot.Supported(
-                List.of("C2:C4"),
-                new ResolvedDataValidation(
-                    new DataValidationRuleSpec.WholeNumber(
-                        ExcelComparisonOperator.GREATER_OR_EQUAL,
-                        ExcelComparisonFormulaSupport.normalizeFormula("1", "formula1"),
-                        ExcelComparisonFormulaSupport.normalizeOptionalFormula(
-                            Optional.empty(), "formula2")),
-                    false,
-                    true,
-                    Optional.empty(),
-                    Optional.empty()))),
+            new DataValidationEntryReport.Supported(
+                List.of("C2:C4").stream()
+                    .map(dev.erst.gridgrind.core.vocabulary.RangeLabel::new)
+                    .toList(),
+                dev.erst.gridgrind.excel.DataValidationFixtures.report(
+                    new ResolvedDataValidation(
+                        new DataValidationRuleSpec.WholeNumber(
+                            ExcelComparisonOperator.GREATER_OR_EQUAL,
+                            ExcelComparisonFormulaSupport.normalizeFormula("1", "formula1"),
+                            ExcelComparisonFormulaSupport.normalizeOptionalFormula(
+                                Optional.empty(), "formula2")),
+                        false,
+                        true,
+                        Optional.empty(),
+                        Optional.empty())))),
         XlsxRoundTrip.dataValidations(workbookPath, "Replica"));
 
     try (ExcelWorkbook workbook =

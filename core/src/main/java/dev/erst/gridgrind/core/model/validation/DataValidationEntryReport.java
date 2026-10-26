@@ -43,8 +43,8 @@ public sealed interface DataValidationEntryReport
       DataValidationRuleSpec rule,
       boolean allowBlank,
       boolean suppressDropDownArrow,
-      Optional<DataValidationPromptSpec> prompt,
-      Optional<DataValidationErrorAlertSpec> errorAlert) {
+      Optional<DataValidationPromptReport> prompt,
+      Optional<DataValidationErrorAlertReport> errorAlert) {
     public DataValidationDefinitionReport {
       Objects.requireNonNull(rule, "rule must not be null");
       Objects.requireNonNull(prompt, "prompt must not be null");

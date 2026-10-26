@@ -2,6 +2,7 @@ package dev.erst.gridgrind.excel;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.core.model.validation.DataValidationEntryReport;
 import dev.erst.gridgrind.core.model.validation.DataValidationRuleSpec;
 import dev.erst.gridgrind.core.model.validation.ResolvedDataValidation;
 import dev.erst.gridgrind.core.model.validation.ResolvedValidationErrorAlert;
@@ -10,7 +11,6 @@ import dev.erst.gridgrind.core.vocabulary.AnalysisFindingCode;
 import dev.erst.gridgrind.core.vocabulary.ExcelComparisonOperator;
 import dev.erst.gridgrind.core.vocabulary.ExcelDataValidationErrorStyle;
 import dev.erst.gridgrind.excel.validation.ExcelDataValidationController;
-import dev.erst.gridgrind.excel.validation.ExcelDataValidationSnapshot;
 import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
@@ -161,24 +161,27 @@ class ExcelDataValidationControllerTest {
               Optional.empty(),
               Optional.empty()));
 
-      List<ExcelDataValidationSnapshot> selected =
+      List<DataValidationEntryReport> selected =
           controller.dataValidations(sheet, new ExcelRangeSelection.Selected(List.of("C2")));
 
       assertEquals(
           List.of(
-              new ExcelDataValidationSnapshot.Supported(
-                  List.of("C1:C3"),
-                  expectedRoundTripDefinition(
-                      new ResolvedDataValidation(
-                          new DataValidationRuleSpec.TextLength(
-                              ExcelComparisonOperator.GREATER_THAN,
-                              ExcelComparisonFormulaSupport.normalizeFormula("20", "formula1"),
-                              ExcelComparisonFormulaSupport.normalizeOptionalFormula(
-                                  Optional.empty(), "formula2")),
-                          false,
-                          false,
-                          Optional.empty(),
-                          Optional.empty())))),
+              new DataValidationEntryReport.Supported(
+                  List.of("C1:C3").stream()
+                      .map(dev.erst.gridgrind.core.vocabulary.RangeLabel::new)
+                      .toList(),
+                  dev.erst.gridgrind.excel.DataValidationFixtures.report(
+                      expectedRoundTripDefinition(
+                          new ResolvedDataValidation(
+                              new DataValidationRuleSpec.TextLength(
+                                  ExcelComparisonOperator.GREATER_THAN,
+                                  ExcelComparisonFormulaSupport.normalizeFormula("20", "formula1"),
+                                  ExcelComparisonFormulaSupport.normalizeOptionalFormula(
+                                      Optional.empty(), "formula2")),
+                              false,
+                              false,
+                              Optional.empty(),
+                              Optional.empty()))))),
           selected);
     }
   }
@@ -249,9 +252,12 @@ class ExcelDataValidationControllerTest {
 
       assertEquals(
           List.of(
-              new ExcelDataValidationSnapshot.Supported(
-                  List.of("A1:A2", "A5:A10"),
-                  expectedRoundTripDefinition(explicitListValidation()))),
+              new DataValidationEntryReport.Supported(
+                  List.of("A1:A2", "A5:A10").stream()
+                      .map(dev.erst.gridgrind.core.vocabulary.RangeLabel::new)
+                      .toList(),
+                  dev.erst.gridgrind.excel.DataValidationFixtures.report(
+                      expectedRoundTripDefinition(explicitListValidation())))),
           controller.dataValidations(sheet, new ExcelRangeSelection.All()));
     }
   }
@@ -270,10 +276,18 @@ class ExcelDataValidationControllerTest {
 
       assertEquals(
           List.of(
-              new ExcelDataValidationSnapshot.Supported(
-                  List.of("A20", "C20"), expectedRoundTripDefinition(explicitListValidation())),
-              new ExcelDataValidationSnapshot.Supported(
-                  List.of("C1:C3"), expectedRoundTripDefinition(explicitListValidation()))),
+              new DataValidationEntryReport.Supported(
+                  List.of("A20", "C20").stream()
+                      .map(dev.erst.gridgrind.core.vocabulary.RangeLabel::new)
+                      .toList(),
+                  dev.erst.gridgrind.excel.DataValidationFixtures.report(
+                      expectedRoundTripDefinition(explicitListValidation()))),
+              new DataValidationEntryReport.Supported(
+                  List.of("C1:C3").stream()
+                      .map(dev.erst.gridgrind.core.vocabulary.RangeLabel::new)
+                      .toList(),
+                  dev.erst.gridgrind.excel.DataValidationFixtures.report(
+                      expectedRoundTripDefinition(explicitListValidation())))),
           controller.dataValidations(sheet, new ExcelRangeSelection.All()));
     }
   }
@@ -281,14 +295,16 @@ class ExcelDataValidationControllerTest {
   @Test
   void dataValidationsExposeUnsupportedStructures() {
     assertEquals(
-        new ExcelDataValidationSnapshot.Unsupported(
-            List.of("A1"), "ANY", "Excel 'any value' validation is not modeled by GridGrind."),
+        new DataValidationEntryReport.Unsupported(
+            List.of("A1").stream().map(dev.erst.gridgrind.core.vocabulary.RangeLabel::new).toList(),
+            "ANY",
+            "Excel 'any value' validation is not modeled by GridGrind."),
         invokeToSnapshot(
             new StubConstraint(DataValidationConstraint.ValidationType.ANY, 0, null, null, null),
             List.of("A1")));
     assertEquals(
-        new ExcelDataValidationSnapshot.Unsupported(
-            List.of("B1"),
+        new DataValidationEntryReport.Unsupported(
+            List.of("B1").stream().map(dev.erst.gridgrind.core.vocabulary.RangeLabel::new).toList(),
             "UNKNOWN_OPERATOR",
             "whole-number validation uses an unsupported comparison operator."),
         invokeToSnapshot(
@@ -296,68 +312,77 @@ class ExcelDataValidationControllerTest {
                 DataValidationConstraint.ValidationType.INTEGER, -99, null, "1", null),
             List.of("B1")));
     assertEquals(
-        new ExcelDataValidationSnapshot.Unsupported(
-            List.of("B2"), "UNKNOWN", "Unsupported data-validation type: 999"),
+        new DataValidationEntryReport.Unsupported(
+            List.of("B2").stream().map(dev.erst.gridgrind.core.vocabulary.RangeLabel::new).toList(),
+            "UNKNOWN",
+            "Unsupported data-validation type: 999"),
         invokeToSnapshot(new StubConstraint(999, 0, null, "1", null), List.of("B2")));
     assertEquals(
-        new ExcelDataValidationSnapshot.Supported(
-            List.of("C0"),
-            new ResolvedDataValidation(
-                new DataValidationRuleSpec.ExplicitList(List.of()),
-                false,
-                true,
-                Optional.empty(),
-                Optional.empty())),
+        new DataValidationEntryReport.Supported(
+            List.of("C0").stream().map(dev.erst.gridgrind.core.vocabulary.RangeLabel::new).toList(),
+            dev.erst.gridgrind.excel.DataValidationFixtures.report(
+                new ResolvedDataValidation(
+                    new DataValidationRuleSpec.ExplicitList(List.of()),
+                    false,
+                    true,
+                    Optional.empty(),
+                    Optional.empty()))),
         invokeToSnapshot(
             new StubConstraint(
                 DataValidationConstraint.ValidationType.LIST, 0, new String[0], null, null),
             List.of("C0")));
     assertEquals(
-        new ExcelDataValidationSnapshot.Supported(
-            List.of("C0b"),
-            new ResolvedDataValidation(
-                new DataValidationRuleSpec.ExplicitList(List.of()),
-                false,
-                true,
-                Optional.empty(),
-                Optional.empty())),
+        new DataValidationEntryReport.Supported(
+            List.of("C0b").stream()
+                .map(dev.erst.gridgrind.core.vocabulary.RangeLabel::new)
+                .toList(),
+            dev.erst.gridgrind.excel.DataValidationFixtures.report(
+                new ResolvedDataValidation(
+                    new DataValidationRuleSpec.ExplicitList(List.of()),
+                    false,
+                    true,
+                    Optional.empty(),
+                    Optional.empty()))),
         invokeToSnapshot(
             new StubConstraint(
                 DataValidationConstraint.ValidationType.LIST, 0, new String[0], "\"\"", null),
             List.of("C0b")));
     assertEquals(
-        new ExcelDataValidationSnapshot.Unsupported(
-            List.of("C1"),
+        new DataValidationEntryReport.Unsupported(
+            List.of("C1").stream().map(dev.erst.gridgrind.core.vocabulary.RangeLabel::new).toList(),
             "MISSING_FORMULA",
             "List validation is missing both explicit values and formula1."),
         invokeToSnapshot(
             new StubConstraint(DataValidationConstraint.ValidationType.LIST, 0, null, null, null),
             List.of("C1")));
     assertEquals(
-        new ExcelDataValidationSnapshot.Unsupported(
-            List.of("C2"),
+        new DataValidationEntryReport.Unsupported(
+            List.of("C2").stream().map(dev.erst.gridgrind.core.vocabulary.RangeLabel::new).toList(),
             "MISSING_FORMULA",
             "List validation is missing both explicit values and formula1."),
         invokeToSnapshot(
             new StubConstraint(DataValidationConstraint.ValidationType.LIST, 0, null, " ", null),
             List.of("C2")));
     assertEquals(
-        new ExcelDataValidationSnapshot.Supported(
-            List.of("C3"),
-            new ResolvedDataValidation(
-                new DataValidationRuleSpec.FormulaList(
-                    ExcelComparisonFormulaSupport.normalizeFormula("Statuses", "formula")),
-                false,
-                true,
-                Optional.empty(),
-                Optional.empty())),
+        new DataValidationEntryReport.Supported(
+            List.of("C3").stream().map(dev.erst.gridgrind.core.vocabulary.RangeLabel::new).toList(),
+            dev.erst.gridgrind.excel.DataValidationFixtures.report(
+                new ResolvedDataValidation(
+                    new DataValidationRuleSpec.FormulaList(
+                        ExcelComparisonFormulaSupport.normalizeFormula("Statuses", "formula")),
+                    false,
+                    true,
+                    Optional.empty(),
+                    Optional.empty()))),
         invokeToSnapshot(
             new StubConstraint(
                 DataValidationConstraint.ValidationType.LIST, 0, null, "Statuses", null),
             List.of("C3")));
     assertEquals(
-        new ExcelDataValidationSnapshot.Unsupported(
-            List.of("D1"), "MISSING_FORMULA", "whole-number validation is missing formula1."),
+        new DataValidationEntryReport.Unsupported(
+            List.of("D1").stream().map(dev.erst.gridgrind.core.vocabulary.RangeLabel::new).toList(),
+            "MISSING_FORMULA",
+            "whole-number validation is missing formula1."),
         invokeToSnapshot(
             new StubConstraint(
                 DataValidationConstraint.ValidationType.INTEGER,
@@ -367,8 +392,10 @@ class ExcelDataValidationControllerTest {
                 null),
             List.of("D1")));
     assertEquals(
-        new ExcelDataValidationSnapshot.Unsupported(
-            List.of("D2"), "MISSING_FORMULA", "whole-number validation is missing formula1."),
+        new DataValidationEntryReport.Unsupported(
+            List.of("D2").stream().map(dev.erst.gridgrind.core.vocabulary.RangeLabel::new).toList(),
+            "MISSING_FORMULA",
+            "whole-number validation is missing formula1."),
         invokeToSnapshot(
             new StubConstraint(
                 DataValidationConstraint.ValidationType.INTEGER,
@@ -378,15 +405,19 @@ class ExcelDataValidationControllerTest {
                 null),
             List.of("D2")));
     assertEquals(
-        new ExcelDataValidationSnapshot.Unsupported(
-            List.of("E1"), "MISSING_FORMULA", "Custom formula validation is missing formula1."),
+        new DataValidationEntryReport.Unsupported(
+            List.of("E1").stream().map(dev.erst.gridgrind.core.vocabulary.RangeLabel::new).toList(),
+            "MISSING_FORMULA",
+            "Custom formula validation is missing formula1."),
         invokeToSnapshot(
             new StubConstraint(
                 DataValidationConstraint.ValidationType.FORMULA, 0, null, null, null),
             List.of("E1")));
     assertEquals(
-        new ExcelDataValidationSnapshot.Unsupported(
-            List.of("E2"), "MISSING_FORMULA", "Custom formula validation is missing formula1."),
+        new DataValidationEntryReport.Unsupported(
+            List.of("E2").stream().map(dev.erst.gridgrind.core.vocabulary.RangeLabel::new).toList(),
+            "MISSING_FORMULA",
+            "Custom formula validation is missing formula1."),
         invokeToSnapshot(
             new StubConstraint(DataValidationConstraint.ValidationType.FORMULA, 0, null, " ", null),
             List.of("E2")));
@@ -408,9 +439,9 @@ class ExcelDataValidationControllerTest {
     blankPromptTitle.setErrorStyle(DataValidation.ErrorStyle.WARNING);
     blankPromptTitle.createErrorBox("Invalid state", " ");
 
-    ExcelDataValidationSnapshot.Supported blankPromptTitleSnapshot =
+    DataValidationEntryReport.Supported blankPromptTitleSnapshot =
         assertInstanceOf(
-            ExcelDataValidationSnapshot.Supported.class,
+            DataValidationEntryReport.Supported.class,
             ExcelDataValidationController.toSnapshot(blankPromptTitle, List.of("A1")));
     assertEquals(Optional.empty(), blankPromptTitleSnapshot.validation().prompt());
     assertEquals(Optional.empty(), blankPromptTitleSnapshot.validation().errorAlert());
@@ -429,9 +460,9 @@ class ExcelDataValidationControllerTest {
     blankPromptText.setErrorStyle(DataValidation.ErrorStyle.INFO);
     blankPromptText.createErrorBox(" ", "Choose an allowed value.");
 
-    ExcelDataValidationSnapshot.Supported blankPromptTextSnapshot =
+    DataValidationEntryReport.Supported blankPromptTextSnapshot =
         assertInstanceOf(
-            ExcelDataValidationSnapshot.Supported.class,
+            DataValidationEntryReport.Supported.class,
             ExcelDataValidationController.toSnapshot(blankPromptText, List.of("B1")));
     assertEquals(Optional.empty(), blankPromptTextSnapshot.validation().prompt());
     assertEquals(Optional.empty(), blankPromptTextSnapshot.validation().errorAlert());
@@ -450,9 +481,9 @@ class ExcelDataValidationControllerTest {
             .overridePrompt("Status", null, true)
             .overrideError("Invalid state", null, true, DataValidation.ErrorStyle.STOP);
 
-    ExcelDataValidationSnapshot.Supported snapshot =
+    DataValidationEntryReport.Supported snapshot =
         assertInstanceOf(
-            ExcelDataValidationSnapshot.Supported.class,
+            DataValidationEntryReport.Supported.class,
             ExcelDataValidationController.toSnapshot(nullPromptText, List.of("C1")));
 
     assertEquals(Optional.empty(), snapshot.validation().prompt());
@@ -476,7 +507,9 @@ class ExcelDataValidationControllerTest {
         Optional.empty(),
         ExcelDataValidationController.prompt(xssfListStub().overridePrompt("Status", " ", true)));
     assertEquals(
-        Optional.of(new ResolvedValidationPrompt("Status", "Choose one workflow state.", false)),
+        Optional.of(
+            new dev.erst.gridgrind.core.model.validation.DataValidationPromptReport(
+                "Status", "Choose one workflow state.", false)),
         ExcelDataValidationController.prompt(
             xssfListStub().overridePrompt("Status", "Choose one workflow state.", false)));
 
@@ -504,7 +537,7 @@ class ExcelDataValidationControllerTest {
                 .overrideError("Invalid status", " ", true, DataValidation.ErrorStyle.STOP)));
     assertEquals(
         Optional.of(
-            new ResolvedValidationErrorAlert(
+            new dev.erst.gridgrind.core.model.validation.DataValidationErrorAlertReport(
                 ExcelDataValidationErrorStyle.INFORMATION,
                 "Heads up",
                 "Use an allowed value.",
@@ -514,9 +547,9 @@ class ExcelDataValidationControllerTest {
                 .overrideError(
                     "Heads up", "Use an allowed value.", false, DataValidation.ErrorStyle.INFO)));
 
-    ExcelDataValidationSnapshot.Supported formulaListSnapshot =
+    DataValidationEntryReport.Supported formulaListSnapshot =
         assertInstanceOf(
-            ExcelDataValidationSnapshot.Supported.class,
+            DataValidationEntryReport.Supported.class,
             ExcelDataValidationController.toSnapshot(
                 new StubXssfDataValidation(
                         new StubConstraint(
@@ -537,20 +570,22 @@ class ExcelDataValidationControllerTest {
             ExcelComparisonFormulaSupport.normalizeFormula("Statuses", "formula")),
         formulaListSnapshot.validation().rule());
     assertEquals(
-        Optional.of(new ResolvedValidationPrompt("Status", "Choose one workflow state.", false)),
+        Optional.of(
+            new dev.erst.gridgrind.core.model.validation.DataValidationPromptReport(
+                "Status", "Choose one workflow state.", false)),
         formulaListSnapshot.validation().prompt());
     assertEquals(
         Optional.of(
-            new ResolvedValidationErrorAlert(
+            new dev.erst.gridgrind.core.model.validation.DataValidationErrorAlertReport(
                 ExcelDataValidationErrorStyle.WARNING,
                 "Heads up",
                 "Read the allowed values.",
                 false)),
         formulaListSnapshot.validation().errorAlert());
 
-    ExcelDataValidationSnapshot.Supported customFormulaSnapshot =
+    DataValidationEntryReport.Supported customFormulaSnapshot =
         assertInstanceOf(
-            ExcelDataValidationSnapshot.Supported.class,
+            DataValidationEntryReport.Supported.class,
             ExcelDataValidationController.toSnapshot(
                 new StubXssfDataValidation(
                         new StubConstraint(
@@ -578,7 +613,9 @@ class ExcelDataValidationControllerTest {
     promptDefaults.setPromptTitle("Status");
     promptDefaults.setPrompt("Choose one workflow state.");
     assertEquals(
-        Optional.of(new ResolvedValidationPrompt("Status", "Choose one workflow state.", false)),
+        Optional.of(
+            new dev.erst.gridgrind.core.model.validation.DataValidationPromptReport(
+                "Status", "Choose one workflow state.", false)),
         ExcelDataValidationController.prompt(promptDefaults));
 
     CTDataValidation promptExplicitFalse =
@@ -587,7 +624,9 @@ class ExcelDataValidationControllerTest {
     promptExplicitFalse.setPrompt("Choose one workflow state.");
     promptExplicitFalse.setShowInputMessage(false);
     assertEquals(
-        Optional.of(new ResolvedValidationPrompt("Status", "Choose one workflow state.", false)),
+        Optional.of(
+            new dev.erst.gridgrind.core.model.validation.DataValidationPromptReport(
+                "Status", "Choose one workflow state.", false)),
         ExcelDataValidationController.prompt(promptExplicitFalse));
 
     CTDataValidation promptBlankTitle =
@@ -611,7 +650,7 @@ class ExcelDataValidationControllerTest {
     errorDefaults.setError("Use one of the allowed values.");
     assertEquals(
         Optional.of(
-            new ResolvedValidationErrorAlert(
+            new dev.erst.gridgrind.core.model.validation.DataValidationErrorAlertReport(
                 ExcelDataValidationErrorStyle.STOP,
                 "Invalid status",
                 "Use one of the allowed values.",
@@ -626,7 +665,7 @@ class ExcelDataValidationControllerTest {
         org.openxmlformats.schemas.spreadsheetml.x2006.main.STDataValidationErrorStyle.WARNING);
     assertEquals(
         Optional.of(
-            new ResolvedValidationErrorAlert(
+            new dev.erst.gridgrind.core.model.validation.DataValidationErrorAlertReport(
                 ExcelDataValidationErrorStyle.WARNING, "Warning", "Watch this value.", true)),
         ExcelDataValidationController.errorAlert(warningError));
 
@@ -637,7 +676,7 @@ class ExcelDataValidationControllerTest {
         org.openxmlformats.schemas.spreadsheetml.x2006.main.STDataValidationErrorStyle.INFORMATION);
     assertEquals(
         Optional.of(
-            new ResolvedValidationErrorAlert(
+            new dev.erst.gridgrind.core.model.validation.DataValidationErrorAlertReport(
                 ExcelDataValidationErrorStyle.INFORMATION, "Info", "Read the list.", false)),
         ExcelDataValidationController.errorAlert(infoError));
 
@@ -648,7 +687,7 @@ class ExcelDataValidationControllerTest {
     explicitFalseError.setShowErrorMessage(false);
     assertEquals(
         Optional.of(
-            new ResolvedValidationErrorAlert(
+            new dev.erst.gridgrind.core.model.validation.DataValidationErrorAlertReport(
                 ExcelDataValidationErrorStyle.STOP, "Explicit false", "Stay false.", false)),
         ExcelDataValidationController.errorAlert(explicitFalseError));
 
@@ -672,8 +711,8 @@ class ExcelDataValidationControllerTest {
   void rawEnumMappingsAndLabelsCoverDefaultedAndMalformedMetadata() {
     CTDataValidation defaultWhole = rawValidation(STDataValidationType.WHOLE, "B1", "1");
     assertEquals(
-        new ExcelDataValidationSnapshot.Unsupported(
-            List.of("B1"),
+        new DataValidationEntryReport.Unsupported(
+            List.of("B1").stream().map(dev.erst.gridgrind.core.vocabulary.RangeLabel::new).toList(),
             "MISSING_FORMULA",
             "whole-number validation is missing formula2 for between operator."),
         ExcelDataValidationController.toSnapshot(defaultWhole, List.of("B1")));
@@ -790,9 +829,9 @@ class ExcelDataValidationControllerTest {
 
   @Test
   void directSnapshotDispatchCoversRemainingXssfAndRawComparisonFamilies() {
-    ExcelDataValidationSnapshot.Supported decimalSnapshot =
+    DataValidationEntryReport.Supported decimalSnapshot =
         assertInstanceOf(
-            ExcelDataValidationSnapshot.Supported.class,
+            DataValidationEntryReport.Supported.class,
             invokeToSnapshot(
                 new StubConstraint(
                     DataValidationConstraint.ValidationType.DECIMAL,
@@ -808,9 +847,9 @@ class ExcelDataValidationControllerTest {
             ExcelComparisonFormulaSupport.normalizeOptionalFormula(Optional.empty(), "formula2")),
         decimalSnapshot.validation().rule());
 
-    ExcelDataValidationSnapshot.Supported dateSnapshot =
+    DataValidationEntryReport.Supported dateSnapshot =
         assertInstanceOf(
-            ExcelDataValidationSnapshot.Supported.class,
+            DataValidationEntryReport.Supported.class,
             invokeToSnapshot(
                 new StubConstraint(
                     DataValidationConstraint.ValidationType.DATE,
@@ -826,9 +865,9 @@ class ExcelDataValidationControllerTest {
             ExcelComparisonFormulaSupport.normalizeOptionalFormula(Optional.empty(), "formula2")),
         dateSnapshot.validation().rule());
 
-    ExcelDataValidationSnapshot.Supported timeSnapshot =
+    DataValidationEntryReport.Supported timeSnapshot =
         assertInstanceOf(
-            ExcelDataValidationSnapshot.Supported.class,
+            DataValidationEntryReport.Supported.class,
             invokeToSnapshot(
                 new StubConstraint(
                     DataValidationConstraint.ValidationType.TIME,
@@ -844,9 +883,9 @@ class ExcelDataValidationControllerTest {
             ExcelComparisonFormulaSupport.normalizeOptionalFormula(Optional.empty(), "formula2")),
         timeSnapshot.validation().rule());
 
-    ExcelDataValidationSnapshot.Supported textLengthSnapshot =
+    DataValidationEntryReport.Supported textLengthSnapshot =
         assertInstanceOf(
-            ExcelDataValidationSnapshot.Supported.class,
+            DataValidationEntryReport.Supported.class,
             invokeToSnapshot(
                 new StubConstraint(
                     DataValidationConstraint.ValidationType.TEXT_LENGTH,
@@ -862,9 +901,9 @@ class ExcelDataValidationControllerTest {
             ExcelComparisonFormulaSupport.normalizeOptionalFormula(Optional.empty(), "formula2")),
         textLengthSnapshot.validation().rule());
 
-    ExcelDataValidationSnapshot.Supported wholeBetweenSnapshot =
+    DataValidationEntryReport.Supported wholeBetweenSnapshot =
         assertInstanceOf(
-            ExcelDataValidationSnapshot.Supported.class,
+            DataValidationEntryReport.Supported.class,
             invokeToSnapshot(
                 new StubConstraint(
                     DataValidationConstraint.ValidationType.INTEGER,
@@ -880,8 +919,8 @@ class ExcelDataValidationControllerTest {
             ExcelComparisonFormulaSupport.normalizeOptionalFormula(Optional.of("9"), "formula2")),
         wholeBetweenSnapshot.validation().rule());
     assertEquals(
-        new ExcelDataValidationSnapshot.Unsupported(
-            List.of("F1"),
+        new DataValidationEntryReport.Unsupported(
+            List.of("F1").stream().map(dev.erst.gridgrind.core.vocabulary.RangeLabel::new).toList(),
             "MISSING_FORMULA",
             "whole-number validation is missing formula2 for between operator."),
         invokeToSnapshot(
@@ -893,8 +932,8 @@ class ExcelDataValidationControllerTest {
                 null),
             List.of("F1")));
     assertEquals(
-        new ExcelDataValidationSnapshot.Unsupported(
-            List.of("F2"),
+        new DataValidationEntryReport.Unsupported(
+            List.of("F2").stream().map(dev.erst.gridgrind.core.vocabulary.RangeLabel::new).toList(),
             "MISSING_FORMULA",
             "whole-number validation is missing formula2 for between operator."),
         invokeToSnapshot(
@@ -906,22 +945,26 @@ class ExcelDataValidationControllerTest {
                 " "),
             List.of("F2")));
     assertEquals(
-        new ExcelDataValidationSnapshot.Unsupported(
-            List.of("G1"), "MISSING_FORMULA", "Custom formula validation is missing formula1."),
+        new DataValidationEntryReport.Unsupported(
+            List.of("G1").stream().map(dev.erst.gridgrind.core.vocabulary.RangeLabel::new).toList(),
+            "MISSING_FORMULA",
+            "Custom formula validation is missing formula1."),
         ExcelDataValidationController.toSnapshot(
             rawValidation(STDataValidationType.CUSTOM, "G1", null), List.of("G1")));
     // Blank formula1 (non-null, whitespace-only) for XSSF list and comparison paths.
     assertEquals(
-        new ExcelDataValidationSnapshot.Unsupported(
-            List.of("G2"),
+        new DataValidationEntryReport.Unsupported(
+            List.of("G2").stream().map(dev.erst.gridgrind.core.vocabulary.RangeLabel::new).toList(),
             "MISSING_FORMULA",
             "List validation is missing both explicit values and formula1."),
         invokeToSnapshot(
             new StubConstraint(DataValidationConstraint.ValidationType.LIST, 0, null, " ", null),
             List.of("G2")));
     assertEquals(
-        new ExcelDataValidationSnapshot.Unsupported(
-            List.of("G3"), "MISSING_FORMULA", "whole-number validation is missing formula1."),
+        new DataValidationEntryReport.Unsupported(
+            List.of("G3").stream().map(dev.erst.gridgrind.core.vocabulary.RangeLabel::new).toList(),
+            "MISSING_FORMULA",
+            "whole-number validation is missing formula1."),
         invokeToSnapshot(
             new StubConstraint(
                 DataValidationConstraint.ValidationType.INTEGER,
@@ -936,9 +979,9 @@ class ExcelDataValidationControllerTest {
         org.openxmlformats.schemas.spreadsheetml.x2006.main.STDataValidationOperator.NOT_BETWEEN);
     allowBlankComparison.setFormula2("9");
     allowBlankComparison.setAllowBlank(true);
-    ExcelDataValidationSnapshot.Supported allowBlankComparisonSnapshot =
+    DataValidationEntryReport.Supported allowBlankComparisonSnapshot =
         assertInstanceOf(
-            ExcelDataValidationSnapshot.Supported.class,
+            DataValidationEntryReport.Supported.class,
             ExcelDataValidationController.toSnapshot(allowBlankComparison, List.of("H1")));
     assertTrue(allowBlankComparisonSnapshot.validation().allowBlank());
 
@@ -947,49 +990,53 @@ class ExcelDataValidationControllerTest {
         org.openxmlformats.schemas.spreadsheetml.x2006.main.STDataValidationOperator.BETWEEN);
     blankFormula2.setFormula2(" ");
     assertEquals(
-        new ExcelDataValidationSnapshot.Unsupported(
-            List.of("I1"),
+        new DataValidationEntryReport.Unsupported(
+            List.of("I1").stream().map(dev.erst.gridgrind.core.vocabulary.RangeLabel::new).toList(),
             "MISSING_FORMULA",
             "whole-number validation is missing formula2 for between operator."),
         ExcelDataValidationController.toSnapshot(blankFormula2, List.of("I1")));
 
     assertEquals(
-        new ExcelDataValidationSnapshot.Unsupported(
-            List.of("J1"), "MISSING_FORMULA", "whole-number validation is missing formula1."),
+        new DataValidationEntryReport.Unsupported(
+            List.of("J1").stream().map(dev.erst.gridgrind.core.vocabulary.RangeLabel::new).toList(),
+            "MISSING_FORMULA",
+            "whole-number validation is missing formula1."),
         ExcelDataValidationController.toSnapshot(
             rawValidation(STDataValidationType.WHOLE, "J1", null), List.of("J1")));
 
     CTDataValidation customAllowBlank =
         rawValidation(STDataValidationType.CUSTOM, "K1", "LEN(K1)>0");
     customAllowBlank.setAllowBlank(true);
-    ExcelDataValidationSnapshot.Supported customAllowBlankSnapshot =
+    DataValidationEntryReport.Supported customAllowBlankSnapshot =
         assertInstanceOf(
-            ExcelDataValidationSnapshot.Supported.class,
+            DataValidationEntryReport.Supported.class,
             ExcelDataValidationController.toSnapshot(customAllowBlank, List.of("K1")));
     assertTrue(customAllowBlankSnapshot.validation().allowBlank());
 
     assertEquals(
-        new ExcelDataValidationSnapshot.Supported(
-            List.of("L1"),
-            new ResolvedDataValidation(
-                new DataValidationRuleSpec.FormulaList(
-                    ExcelComparisonFormulaSupport.normalizeFormula("\"Queued", "formula")),
-                false,
-                true,
-                Optional.empty(),
-                Optional.empty())),
+        new DataValidationEntryReport.Supported(
+            List.of("L1").stream().map(dev.erst.gridgrind.core.vocabulary.RangeLabel::new).toList(),
+            dev.erst.gridgrind.excel.DataValidationFixtures.report(
+                new ResolvedDataValidation(
+                    new DataValidationRuleSpec.FormulaList(
+                        ExcelComparisonFormulaSupport.normalizeFormula("\"Queued", "formula")),
+                    false,
+                    true,
+                    Optional.empty(),
+                    Optional.empty()))),
         ExcelDataValidationController.toSnapshot(
             rawValidation(STDataValidationType.LIST, "L1", "\"Queued"), List.of("L1")));
     assertEquals(
-        new ExcelDataValidationSnapshot.Supported(
-            List.of("L2"),
-            new ResolvedDataValidation(
-                new DataValidationRuleSpec.FormulaList(
-                    ExcelComparisonFormulaSupport.normalizeFormula("\"", "formula")),
-                false,
-                true,
-                Optional.empty(),
-                Optional.empty())),
+        new DataValidationEntryReport.Supported(
+            List.of("L2").stream().map(dev.erst.gridgrind.core.vocabulary.RangeLabel::new).toList(),
+            dev.erst.gridgrind.excel.DataValidationFixtures.report(
+                new ResolvedDataValidation(
+                    new DataValidationRuleSpec.FormulaList(
+                        ExcelComparisonFormulaSupport.normalizeFormula("\"", "formula")),
+                    false,
+                    true,
+                    Optional.empty(),
+                    Optional.empty()))),
         ExcelDataValidationController.toSnapshot(
             rawValidation(STDataValidationType.LIST, "L2", "\""), List.of("L2")));
 
@@ -999,8 +1046,10 @@ class ExcelDataValidationControllerTest {
       cursor.setAttributeText(new javax.xml.namespace.QName("", "type"), "mystery");
     }
     assertEquals(
-        new ExcelDataValidationSnapshot.Unsupported(
-            List.of("M1"), "UNKNOWN", "Unsupported data-validation type: mystery"),
+        new DataValidationEntryReport.Unsupported(
+            List.of("M1").stream().map(dev.erst.gridgrind.core.vocabulary.RangeLabel::new).toList(),
+            "UNKNOWN",
+            "Unsupported data-validation type: mystery"),
         ExcelDataValidationController.toSnapshot(unknownType, List.of("M1")));
   }
 
@@ -1021,15 +1070,17 @@ class ExcelDataValidationControllerTest {
     explicitList.setErrorStyle(
         org.openxmlformats.schemas.spreadsheetml.x2006.main.STDataValidationErrorStyle.WARNING);
 
-    ExcelDataValidationSnapshot.Supported explicitListSnapshot =
+    DataValidationEntryReport.Supported explicitListSnapshot =
         assertInstanceOf(
-            ExcelDataValidationSnapshot.Supported.class,
+            DataValidationEntryReport.Supported.class,
             ExcelDataValidationController.toSnapshot(explicitList, List.of("A1:A3")));
     assertEquals(
         new DataValidationRuleSpec.ExplicitList(List.of("Queued", "Done")),
         explicitListSnapshot.validation().rule());
     assertEquals(
-        Optional.of(new ResolvedValidationPrompt("Status", "Choose one workflow state.", true)),
+        Optional.of(
+            new dev.erst.gridgrind.core.model.validation.DataValidationPromptReport(
+                "Status", "Choose one workflow state.", true)),
         explicitListSnapshot.validation().prompt());
     assertEquals(
         ExcelDataValidationErrorStyle.WARNING,
@@ -1047,9 +1098,9 @@ class ExcelDataValidationControllerTest {
     formulaList.setErrorStyle(
         org.openxmlformats.schemas.spreadsheetml.x2006.main.STDataValidationErrorStyle.INFORMATION);
 
-    ExcelDataValidationSnapshot.Supported formulaListSnapshot =
+    DataValidationEntryReport.Supported formulaListSnapshot =
         assertInstanceOf(
-            ExcelDataValidationSnapshot.Supported.class,
+            DataValidationEntryReport.Supported.class,
             ExcelDataValidationController.toSnapshot(formulaList, List.of("B1:B3")));
     assertEquals(
         new DataValidationRuleSpec.FormulaList(
@@ -1099,9 +1150,9 @@ class ExcelDataValidationControllerTest {
     custom.setType(STDataValidationType.CUSTOM);
     custom.setSqref(List.of("C1:C3"));
     custom.setFormula1("LEN(C1)>0");
-    ExcelDataValidationSnapshot.Supported customSnapshot =
+    DataValidationEntryReport.Supported customSnapshot =
         assertInstanceOf(
-            ExcelDataValidationSnapshot.Supported.class,
+            DataValidationEntryReport.Supported.class,
             ExcelDataValidationController.toSnapshot(custom, List.of("C1:C3")));
     assertEquals(
         new DataValidationRuleSpec.CustomFormula(
@@ -1120,8 +1171,8 @@ class ExcelDataValidationControllerTest {
     }
 
     assertEquals(
-        new ExcelDataValidationSnapshot.Unsupported(
-            List.of("D1"),
+        new DataValidationEntryReport.Unsupported(
+            List.of("D1").stream().map(dev.erst.gridgrind.core.vocabulary.RangeLabel::new).toList(),
             "UNKNOWN_OPERATOR",
             "whole-number validation uses an unsupported comparison operator."),
         ExcelDataValidationController.toSnapshot(invalidOperator, List.of("D1")));
@@ -1287,24 +1338,34 @@ class ExcelDataValidationControllerTest {
       addRawValidation(sheet, "G2", STDataValidationType.TEXT_LENGTH, "20");
 
       assertEquals(3, controller.dataValidationCount(sheet));
-      List<ExcelDataValidationSnapshot> snapshots =
+      List<DataValidationEntryReport> snapshots =
           controller.dataValidations(sheet, new ExcelRangeSelection.All());
       assertEquals(3, snapshots.size());
-      ExcelDataValidationSnapshot.Supported emptyExplicitList =
-          assertInstanceOf(ExcelDataValidationSnapshot.Supported.class, snapshots.get(0));
-      assertEquals(List.of("E2"), emptyExplicitList.ranges());
+      DataValidationEntryReport.Supported emptyExplicitList =
+          assertInstanceOf(DataValidationEntryReport.Supported.class, snapshots.get(0));
+      assertEquals(
+          List.of("E2"),
+          emptyExplicitList.ranges().stream()
+              .map(dev.erst.gridgrind.core.vocabulary.RangeLabel::value)
+              .toList());
       assertEquals(
           new DataValidationRuleSpec.ExplicitList(List.of()),
           emptyExplicitList.validation().rule());
       assertEquals(
-          new ExcelDataValidationSnapshot.Unsupported(
-              List.of("F2"),
+          new DataValidationEntryReport.Unsupported(
+              List.of("F2").stream()
+                  .map(dev.erst.gridgrind.core.vocabulary.RangeLabel::new)
+                  .toList(),
               "MISSING_FORMULA",
               "List validation is missing both explicit values and formula1."),
           snapshots.get(1));
-      ExcelDataValidationSnapshot.Supported textLength =
-          assertInstanceOf(ExcelDataValidationSnapshot.Supported.class, snapshots.get(2));
-      assertEquals(List.of("G2"), textLength.ranges());
+      DataValidationEntryReport.Supported textLength =
+          assertInstanceOf(DataValidationEntryReport.Supported.class, snapshots.get(2));
+      assertEquals(
+          List.of("G2"),
+          textLength.ranges().stream()
+              .map(dev.erst.gridgrind.core.vocabulary.RangeLabel::value)
+              .toList());
       assertInstanceOf(DataValidationRuleSpec.TextLength.class, textLength.validation().rule());
       assertEquals(
           List.of(
@@ -1352,19 +1413,22 @@ class ExcelDataValidationControllerTest {
 
       controller.setDataValidation(sheet, "E2:E4", definition);
 
-      List<ExcelDataValidationSnapshot> snapshots =
+      List<DataValidationEntryReport> snapshots =
           controller.dataValidations(sheet, new ExcelRangeSelection.All());
 
       assertEquals(
           List.of(
-              new ExcelDataValidationSnapshot.Supported(
-                  List.of("E2:E4"),
-                  new ResolvedDataValidation(
-                      new DataValidationRuleSpec.ExplicitList(List.of()),
-                      true,
-                      false,
-                      Optional.empty(),
-                      Optional.empty()))),
+              new DataValidationEntryReport.Supported(
+                  List.of("E2:E4").stream()
+                      .map(dev.erst.gridgrind.core.vocabulary.RangeLabel::new)
+                      .toList(),
+                  dev.erst.gridgrind.excel.DataValidationFixtures.report(
+                      new ResolvedDataValidation(
+                          new DataValidationRuleSpec.ExplicitList(List.of()),
+                          true,
+                          false,
+                          Optional.empty(),
+                          Optional.empty())))),
           snapshots);
       assertEquals(
           "\"\"",
@@ -1400,7 +1464,7 @@ class ExcelDataValidationControllerTest {
         true);
   }
 
-  private ExcelDataValidationSnapshot invokeToSnapshot(
+  private DataValidationEntryReport invokeToSnapshot(
       StubConstraint constraint, List<String> ranges) {
     return ExcelDataValidationController.toSnapshot(new StubXssfDataValidation(constraint), ranges);
   }
@@ -1422,9 +1486,9 @@ class ExcelDataValidationControllerTest {
     }
     validation.setOperator(operator);
 
-    ExcelDataValidationSnapshot.Supported snapshot =
+    DataValidationEntryReport.Supported snapshot =
         assertInstanceOf(
-            ExcelDataValidationSnapshot.Supported.class,
+            DataValidationEntryReport.Supported.class,
             ExcelDataValidationController.toSnapshot(validation, List.of("Z1")));
 
     DataValidationRuleSpec rule = snapshot.validation().rule();
@@ -1459,13 +1523,17 @@ class ExcelDataValidationControllerTest {
       XSSFSheet sheet = workbook.createSheet("Budget");
       controller.setDataValidation(sheet, range, definition);
 
-      List<ExcelDataValidationSnapshot> snapshots =
+      List<DataValidationEntryReport> snapshots =
           controller.dataValidations(sheet, new ExcelRangeSelection.All());
 
       assertEquals(
           List.of(
-              new ExcelDataValidationSnapshot.Supported(
-                  List.of(range), expectedRoundTripDefinition(definition))),
+              new DataValidationEntryReport.Supported(
+                  List.of(range).stream()
+                      .map(dev.erst.gridgrind.core.vocabulary.RangeLabel::new)
+                      .toList(),
+                  dev.erst.gridgrind.excel.DataValidationFixtures.report(
+                      expectedRoundTripDefinition(definition)))),
           snapshots);
     }
   }

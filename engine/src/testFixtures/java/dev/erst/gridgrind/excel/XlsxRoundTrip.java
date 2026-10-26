@@ -309,7 +309,7 @@ public final class XlsxRoundTrip {
   }
 
   /** Returns normalized data-validation structures stored on one saved sheet. */
-  public static List<dev.erst.gridgrind.excel.validation.ExcelDataValidationSnapshot>
+  public static List<dev.erst.gridgrind.core.model.validation.DataValidationEntryReport>
       dataValidations(Path workbookPath, String sheetName) throws IOException {
     requireWorkbookPath(workbookPath);
     requireNonBlank(sheetName, "sheetName");

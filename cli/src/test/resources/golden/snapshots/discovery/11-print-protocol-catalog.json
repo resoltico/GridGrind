@@ -480,6 +480,18 @@
     }, {
       "catalogGroup" : "plainTypes",
       "kind" : "PLAIN_GROUP",
+      "lookupId" : "dataValidationErrorAlertReportType",
+      "qualifiedId" : "plainTypes:dataValidationErrorAlertReportType",
+      "summary" : "Observed error-box text, style and display state."
+    }, {
+      "catalogGroup" : "plainTypes",
+      "kind" : "PLAIN_GROUP",
+      "lookupId" : "dataValidationPromptReportType",
+      "qualifiedId" : "plainTypes:dataValidationPromptReportType",
+      "summary" : "Observed prompt-box text and display state."
+    }, {
+      "catalogGroup" : "plainTypes",
+      "kind" : "PLAIN_GROUP",
       "lookupId" : "formulaCapabilityReportType",
       "qualifiedId" : "plainTypes:formulaCapabilityReportType",
       "summary" : "One classified formula-cell capability entry from calculation preflight."
@@ -504,6 +516,6 @@
     } ],
     "protocolVersion" : 1,
     "query" : "cell text",
-    "totalCount" : 78
+    "totalCount" : 80
   }
 }

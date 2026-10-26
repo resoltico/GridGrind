@@ -4,12 +4,12 @@ import dev.erst.gridgrind.core.model.pivot.PivotTableReport;
 import dev.erst.gridgrind.core.model.table.AutofilterEntryReport;
 import dev.erst.gridgrind.core.model.table.TableEntryReport;
 import dev.erst.gridgrind.core.model.validation.ConditionalFormattingEntryReport;
+import dev.erst.gridgrind.core.model.validation.DataValidationEntryReport;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingObjectPayload;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingObjectSnapshot;
 import dev.erst.gridgrind.excel.pivot.ExcelPivotTableController;
 import dev.erst.gridgrind.excel.pivot.ExcelPivotTableSelection;
 import dev.erst.gridgrind.excel.validation.ExcelDataValidationController;
-import dev.erst.gridgrind.excel.validation.ExcelDataValidationSnapshot;
 import java.util.List;
 import java.util.Objects;
 
@@ -51,8 +51,7 @@ final class ExcelDocumentIntrospector {
   }
 
   /** Returns data-validation metadata for the selected ranges on one sheet. */
-  List<ExcelDataValidationSnapshot> dataValidations(
-      ExcelSheet sheet, ExcelRangeSelection selection) {
+  List<DataValidationEntryReport> dataValidations(ExcelSheet sheet, ExcelRangeSelection selection) {
     Objects.requireNonNull(sheet, "sheet must not be null");
     Objects.requireNonNull(selection, "selection must not be null");
     return dataValidationController.dataValidations(sheet.xssfSheet(), selection);

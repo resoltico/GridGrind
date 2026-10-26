@@ -595,25 +595,13 @@
             "errorAlert" : {
               "showErrorBox" : true,
               "style" : "STOP",
-              "text" : {
-                "text" : "Use Open, Review, or Closed.",
-                "type" : "INLINE"
-              },
-              "title" : {
-                "text" : "Invalid status",
-                "type" : "INLINE"
-              }
+              "text" : "Use Open, Review, or Closed.",
+              "title" : "Invalid status"
             },
             "prompt" : {
               "showPromptBox" : true,
-              "text" : {
-                "text" : "Choose one approved workflow state.",
-                "type" : "INLINE"
-              },
-              "title" : {
-                "text" : "Status",
-                "type" : "INLINE"
-              }
+              "text" : "Choose one approved workflow state.",
+              "title" : "Status"
             },
             "rule" : {
               "type" : "EXPLICIT_LIST",
@@ -739,25 +727,13 @@
             "errorAlert" : {
               "showErrorBox" : true,
               "style" : "STOP",
-              "text" : {
-                "text" : "Use Open, Review, or Closed.",
-                "type" : "INLINE"
-              },
-              "title" : {
-                "text" : "Invalid status",
-                "type" : "INLINE"
-              }
+              "text" : "Use Open, Review, or Closed.",
+              "title" : "Invalid status"
             },
             "prompt" : {
               "showPromptBox" : true,
-              "text" : {
-                "text" : "Choose one approved workflow state.",
-                "type" : "INLINE"
-              },
-              "title" : {
-                "text" : "Status",
-                "type" : "INLINE"
-              }
+              "text" : "Choose one approved workflow state.",
+              "title" : "Status"
             },
             "rule" : {
               "type" : "EXPLICIT_LIST",

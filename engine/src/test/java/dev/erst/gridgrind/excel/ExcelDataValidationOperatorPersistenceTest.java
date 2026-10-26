@@ -3,11 +3,11 @@ package dev.erst.gridgrind.excel;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 
+import dev.erst.gridgrind.core.model.validation.DataValidationEntryReport;
 import dev.erst.gridgrind.core.model.validation.DataValidationRuleSpec;
 import dev.erst.gridgrind.core.model.validation.ResolvedDataValidation;
 import dev.erst.gridgrind.core.vocabulary.ExcelComparisonOperator;
 import dev.erst.gridgrind.excel.validation.ExcelDataValidationController;
-import dev.erst.gridgrind.excel.validation.ExcelDataValidationSnapshot;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -52,7 +52,7 @@ class ExcelDataValidationOperatorPersistenceTest {
     try (XSSFWorkbook workbook = new XSSFWorkbook(Files.newInputStream(workbookPath))) {
       XSSFSheet sheet = workbook.getSheet("Validations");
       ExcelDataValidationController controller = new ExcelDataValidationController();
-      List<ExcelDataValidationSnapshot> snapshots =
+      List<DataValidationEntryReport> snapshots =
           controller.dataValidations(sheet, new ExcelRangeSelection.All());
       assertEquals(Family.values().length * operators.size(), snapshots.size());
 
@@ -66,9 +66,9 @@ class ExcelDataValidationOperatorPersistenceTest {
               persisted.getOperator().toString(),
               family + " " + operator + " must persist its exact OOXML operator");
 
-          ExcelDataValidationSnapshot.Supported snapshot =
+          DataValidationEntryReport.Supported snapshot =
               assertInstanceOf(
-                  ExcelDataValidationSnapshot.Supported.class, snapshots.get(validationIndex));
+                  DataValidationEntryReport.Supported.class, snapshots.get(validationIndex));
           assertEquals(
               operator,
               operatorOf(snapshot.validation().rule()),
