@@ -6,6 +6,7 @@ import dev.erst.gridgrind.core.model.drawing.DrawingAnchorReport;
 import dev.erst.gridgrind.core.model.drawing.DrawingAnchorSpec;
 import dev.erst.gridgrind.core.model.drawing.DrawingMarkerReport;
 import dev.erst.gridgrind.core.model.drawing.DrawingMarkerSpec;
+import dev.erst.gridgrind.core.model.drawing.DrawingObjectPayloadReport;
 import dev.erst.gridgrind.core.model.drawing.DrawingObjectReport;
 import dev.erst.gridgrind.core.model.drawing.ResolvedEmbeddedObject;
 import dev.erst.gridgrind.core.model.drawing.ResolvedPicture;
@@ -17,7 +18,6 @@ import dev.erst.gridgrind.core.vocabulary.ExcelDrawingAnchorBehavior;
 import dev.erst.gridgrind.core.vocabulary.ExcelDrawingShapeKind;
 import dev.erst.gridgrind.core.vocabulary.ExcelEmbeddedObjectPackagingKind;
 import dev.erst.gridgrind.core.vocabulary.ExcelPictureFormat;
-import dev.erst.gridgrind.excel.drawing.ExcelDrawingObjectPayload;
 import dev.erst.gridgrind.excel.drawing.ExcelPicturePoiBridge;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
@@ -329,126 +329,150 @@ class ExcelDrawingValueCoverageTest extends ExcelDrawingCoverageTestSupport {
         IllegalArgumentException.class,
         () -> new WorkbookDrawingCommand.DeleteDrawingObject("Ops", " "));
 
-    ExcelDrawingObjectPayload.Picture picturePayload =
-        new ExcelDrawingObjectPayload.Picture(
+    DrawingObjectPayloadReport.Picture picturePayload =
+        new DrawingObjectPayloadReport.Picture(
             "Picture",
             ExcelPictureFormat.PNG,
             "image/png",
             "picture.png",
             "abc123",
-            data,
+            java.util.Base64.getEncoder().encodeToString(data.bytes()),
             "preview");
     assertEquals("picture.png", picturePayload.fileName());
     assertNull(
-        new ExcelDrawingObjectPayload.Picture(
+        new DrawingObjectPayloadReport.Picture(
                 "NullDescPicture",
                 ExcelPictureFormat.PNG,
                 "image/png",
                 "picture.png",
                 "abc123",
-                data,
+                java.util.Base64.getEncoder().encodeToString(data.bytes()),
                 null)
             .description());
     assertThrows(
         NullPointerException.class,
         () ->
-            new ExcelDrawingObjectPayload.Picture(
-                null, ExcelPictureFormat.PNG, "image/png", "picture.png", "abc123", data, null));
+            new DrawingObjectPayloadReport.Picture(
+                null,
+                ExcelPictureFormat.PNG,
+                "image/png",
+                "picture.png",
+                "abc123",
+                java.util.Base64.getEncoder().encodeToString(data.bytes()),
+                null));
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new ExcelDrawingObjectPayload.Picture(
-                "Picture", ExcelPictureFormat.PNG, " ", "picture.png", "abc123", data, null));
+            new DrawingObjectPayloadReport.Picture(
+                "Picture",
+                ExcelPictureFormat.PNG,
+                " ",
+                "picture.png",
+                "abc123",
+                java.util.Base64.getEncoder().encodeToString(data.bytes()),
+                null));
     assertThrows(
         NullPointerException.class,
         () ->
-            new ExcelDrawingObjectPayload.Picture(
-                "Picture", null, "image/png", "picture.png", "abc123", data, null));
+            new DrawingObjectPayloadReport.Picture(
+                "Picture",
+                null,
+                "image/png",
+                "picture.png",
+                "abc123",
+                java.util.Base64.getEncoder().encodeToString(data.bytes()),
+                null));
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new ExcelDrawingObjectPayload.Picture(
-                "Picture", ExcelPictureFormat.PNG, "image/png", " ", "abc123", data, null));
+            new DrawingObjectPayloadReport.Picture(
+                "Picture",
+                ExcelPictureFormat.PNG,
+                "image/png",
+                " ",
+                "abc123",
+                java.util.Base64.getEncoder().encodeToString(data.bytes()),
+                null));
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new ExcelDrawingObjectPayload.Picture(
+            new DrawingObjectPayloadReport.Picture(
                 "Picture",
                 ExcelPictureFormat.PNG,
                 "image/png",
                 "picture.png",
                 "abc123",
-                data,
+                java.util.Base64.getEncoder().encodeToString(data.bytes()),
                 " "));
 
-    ExcelDrawingObjectPayload.EmbeddedObject embeddedPayload =
-        new ExcelDrawingObjectPayload.EmbeddedObject(
+    DrawingObjectPayloadReport.EmbeddedObject embeddedPayload =
+        new DrawingObjectPayloadReport.EmbeddedObject(
             "Embed",
             ExcelEmbeddedObjectPackagingKind.OLE10_NATIVE,
             "application/octet-stream",
             "payload.txt",
             "abc123",
-            data,
+            java.util.Base64.getEncoder().encodeToString(data.bytes()),
             "Payload",
             "payload.txt");
     assertEquals("Payload", embeddedPayload.label());
     assertNull(
-        new ExcelDrawingObjectPayload.EmbeddedObject(
+        new DrawingObjectPayloadReport.EmbeddedObject(
                 "NullOptEmbed",
                 ExcelEmbeddedObjectPackagingKind.OLE10_NATIVE,
                 "application/octet-stream",
                 null,
                 "abc123",
-                data,
+                java.util.Base64.getEncoder().encodeToString(data.bytes()),
                 null,
                 null)
             .label());
     assertThrows(
         NullPointerException.class,
         () ->
-            new ExcelDrawingObjectPayload.EmbeddedObject(
+            new DrawingObjectPayloadReport.EmbeddedObject(
                 "Embed",
                 null,
                 "application/octet-stream",
                 "payload.txt",
                 "abc123",
-                data,
+                java.util.Base64.getEncoder().encodeToString(data.bytes()),
                 "Payload",
                 "payload.txt"));
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new ExcelDrawingObjectPayload.EmbeddedObject(
+            new DrawingObjectPayloadReport.EmbeddedObject(
                 "Embed",
                 ExcelEmbeddedObjectPackagingKind.OLE10_NATIVE,
                 "application/octet-stream",
                 " ",
                 "abc123",
-                data,
+                java.util.Base64.getEncoder().encodeToString(data.bytes()),
                 "Payload",
                 "payload.txt"));
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new ExcelDrawingObjectPayload.EmbeddedObject(
+            new DrawingObjectPayloadReport.EmbeddedObject(
                 "Embed",
                 ExcelEmbeddedObjectPackagingKind.OLE10_NATIVE,
                 "application/octet-stream",
                 "payload.txt",
                 "abc123",
-                data,
+                java.util.Base64.getEncoder().encodeToString(data.bytes()),
                 " ",
                 "payload.txt"));
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new ExcelDrawingObjectPayload.EmbeddedObject(
+            new DrawingObjectPayloadReport.EmbeddedObject(
                 "Embed",
                 ExcelEmbeddedObjectPackagingKind.OLE10_NATIVE,
                 "application/octet-stream",
                 "payload.txt",
                 "abc123",
-                data,
+                java.util.Base64.getEncoder().encodeToString(data.bytes()),
                 "Payload",
                 " "));
 

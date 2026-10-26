@@ -1,7 +1,7 @@
 package dev.erst.gridgrind.excel.drawing;
 
+import dev.erst.gridgrind.core.model.drawing.DrawingObjectPayloadReport;
 import dev.erst.gridgrind.core.model.drawing.DrawingObjectReport;
-import dev.erst.gridgrind.core.source.BinaryContent;
 import dev.erst.gridgrind.core.vocabulary.ExcelPictureFormat;
 import dev.erst.gridgrind.excel.ExcelWorkbookImageCatalogSupport;
 import java.util.Objects;
@@ -37,16 +37,16 @@ public final class ExcelDrawingPictureSupport {
             .orElse(null));
   }
 
-  public static ExcelDrawingObjectPayload.Picture picturePayload(
+  public static DrawingObjectPayloadReport.Picture picturePayload(
       String objectName, XSSFPicture picture) {
     PictureReadback readback = requiredPictureReadback(picture);
-    return new ExcelDrawingObjectPayload.Picture(
+    return new DrawingObjectPayloadReport.Picture(
         objectName,
         readback.format(),
         readback.contentType(),
         objectName + readback.format().defaultExtension(),
         ExcelDrawingBinarySupport.sha256(readback.bytes()),
-        BinaryContent.readback(readback.bytes()),
+        java.util.Base64.getEncoder().encodeToString(readback.bytes()),
         ExcelDrawingBinarySupport.blankAsOptional(
                 picture.getCTPicture().getNvPicPr().getCNvPr().getDescr())
             .orElse(null));

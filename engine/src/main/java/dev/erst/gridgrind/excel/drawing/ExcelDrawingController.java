@@ -3,6 +3,7 @@ package dev.erst.gridgrind.excel.drawing;
 import dev.erst.gridgrind.core.model.chart.ChartReport;
 import dev.erst.gridgrind.core.model.chart.ResolvedChart;
 import dev.erst.gridgrind.core.model.drawing.DrawingAnchorSpec;
+import dev.erst.gridgrind.core.model.drawing.DrawingObjectPayloadReport;
 import dev.erst.gridgrind.core.model.drawing.DrawingObjectReport;
 import dev.erst.gridgrind.core.model.drawing.ResolvedEmbeddedObject;
 import dev.erst.gridgrind.core.model.drawing.ResolvedPicture;
@@ -96,7 +97,7 @@ public final class ExcelDrawingController {
     return List.copyOf(snapshots);
   }
 
-  public ExcelDrawingObjectPayload drawingObjectPayload(XSSFSheet sheet, String objectName) {
+  public DrawingObjectPayloadReport drawingObjectPayload(XSSFSheet sheet, String objectName) {
     Objects.requireNonNull(sheet, "sheet must not be null");
     ExcelDrawingArgumentSupport.requireNonBlank(objectName, "objectName");
 

@@ -4,13 +4,13 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import dev.erst.gridgrind.core.model.drawing.DrawingAnchorSpec;
 import dev.erst.gridgrind.core.model.drawing.DrawingMarkerSpec;
+import dev.erst.gridgrind.core.model.drawing.DrawingObjectPayloadReport;
 import dev.erst.gridgrind.core.model.drawing.DrawingObjectReport;
 import dev.erst.gridgrind.core.model.drawing.ResolvedPicture;
 import dev.erst.gridgrind.core.source.BinaryContent;
 import dev.erst.gridgrind.core.vocabulary.ExcelDrawingAnchorBehavior;
 import dev.erst.gridgrind.core.vocabulary.ExcelPictureFormat;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingAnchorSupport;
-import dev.erst.gridgrind.excel.drawing.ExcelDrawingObjectPayload;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingPictureSupport;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -65,11 +65,12 @@ class ExcelSheetCopyPictureSupportTest {
                   ExcelDrawingPictureSupport.requiredPictureReadback(repairedPicture)
                       .pictureData()),
           repairedPicture.getCTPicture().getBlipFill().getBlip().getEmbed());
-      ExcelDrawingObjectPayload.Picture payload =
+      DrawingObjectPayloadReport.Picture payload =
           assertInstanceOf(
-              ExcelDrawingObjectPayload.Picture.class,
+              DrawingObjectPayloadReport.Picture.class,
               workbook.sheet("Replica").drawings().drawingObjectPayload("OpsPicture2"));
-      assertArrayEquals(PNG_PIXEL_BYTES, payload.data().bytes());
+      assertArrayEquals(
+          PNG_PIXEL_BYTES, java.util.Base64.getDecoder().decode(payload.base64Data()));
     }
   }
 
@@ -113,11 +114,12 @@ class ExcelSheetCopyPictureSupportTest {
               .map(DrawingObjectReport::name)
               .filter(name -> name.startsWith("OpsPicture"))
               .toList());
-      ExcelDrawingObjectPayload.Picture payload =
+      DrawingObjectPayloadReport.Picture payload =
           assertInstanceOf(
-              ExcelDrawingObjectPayload.Picture.class,
+              DrawingObjectPayloadReport.Picture.class,
               reopened.sheet("Replica").drawings().drawingObjectPayload("OpsPicture2"));
-      assertArrayEquals(PNG_PIXEL_BYTES, payload.data().bytes());
+      assertArrayEquals(
+          PNG_PIXEL_BYTES, java.util.Base64.getDecoder().decode(payload.base64Data()));
     }
   }
 

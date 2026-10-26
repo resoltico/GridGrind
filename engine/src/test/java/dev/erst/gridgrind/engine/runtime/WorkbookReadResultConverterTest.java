@@ -92,7 +92,6 @@ import dev.erst.gridgrind.core.vocabulary.RgbHex;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.excel.*;
 import dev.erst.gridgrind.excel.DrawingGeometryFixtures;
-import dev.erst.gridgrind.excel.drawing.ExcelDrawingObjectPayload;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
@@ -486,14 +485,17 @@ class InspectionResultConverterTest extends DefaultGridGrindRequestExecutorTestS
                 new dev.erst.gridgrind.excel.WorkbookDrawingResult.DrawingObjectPayloadResult(
                     new StepId("drawing-payload"),
                     "Budget",
-                    new ExcelDrawingObjectPayload.EmbeddedObject(
+                    new DrawingObjectPayloadReport.EmbeddedObject(
                         "OpsEmbed",
                         ExcelEmbeddedObjectPackagingKind.RAW_PACKAGE,
                         "application/octet-stream",
                         "payload.txt",
                         "def456",
-                        new BinaryContent(
-                            "payload".getBytes(java.nio.charset.StandardCharsets.UTF_8)),
+                        java.util.Base64.getEncoder()
+                            .encodeToString(
+                                new BinaryContent(
+                                        "payload".getBytes(java.nio.charset.StandardCharsets.UTF_8))
+                                    .bytes()),
                         "Payload",
                         "payload.txt"))));
     assertEquals(5, drawingObjects.drawingObjects().size());
@@ -517,20 +519,6 @@ class InspectionResultConverterTest extends DefaultGridGrindRequestExecutorTestS
     assertFalse(signatureLine.setup().orElseThrow().allowComments().orElseThrow());
     assertEquals(400, signatureLine.preview().orElseThrow().widthPixels().orElseThrow());
     assertEquals("cGF5bG9hZA==", drawingPayload.payload().base64Data());
-    DrawingObjectPayloadReport.Picture picturePayload =
-        assertInstanceOf(
-            DrawingObjectPayloadReport.Picture.class,
-            InspectionResultDrawingReportSupport.toDrawingObjectPayloadReport(
-                new ExcelDrawingObjectPayload.Picture(
-                    "OpsPicture",
-                    ExcelPictureFormat.PNG,
-                    "image/png",
-                    "OpsPicture.png",
-                    "abc123",
-                    new BinaryContent("picture".getBytes(java.nio.charset.StandardCharsets.UTF_8)),
-                    "Queue preview")));
-    assertEquals("OpsPicture.png", picturePayload.fileName());
-    assertEquals("cGljdHVyZQ==", picturePayload.base64Data());
   }
 
   @Test

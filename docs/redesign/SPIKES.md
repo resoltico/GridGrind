@@ -2362,3 +2362,18 @@ No active mutation/fuzz campaign. Inventories: snapshots 6→4, converter lines 
 379→369, main Java 117154→116807; definition 1 and Support 203 remain. Remaining snapshots are the
 genuine HostAcceptanceSnapshot/ColumnAxisSnapshot runtime concepts and the cell/metadata mirrors.
 Baseline diff empty. WP-40 remains open.
+
+## WP-40 canonical drawing payload reports
+
+Deleted ExcelDrawingObjectPayload and the remaining drawing report converter. POI extraction
+constructs DrawingObjectPayloadReport directly and encodes bytes at that read boundary; runtime
+inspection passes reports through. Internal binary readback/copy objects retain their actual byte
+contracts. Real picture/raw/POIFS/embedded/copy/empty-payload assertions now decode report base64
+before comparing exact bytes. Removed only the retired leaf-converter assertion.
+
+Production compiles; test compile found four copied-payload accessors and the old converter call.
+Corrected those without changing internal byte-only tests. Core/engine/14 parity/static checks pass
+(50s), deterministic check/all retained seeds pass (15s). ./gradlew check passes (3m28s), all 143
+golden cases unchanged; no active mutation/fuzz campaign. Inventories: converter lines 2565→2529,
+Support 203→202, blank checks 369→364, main Java 116807→116687; snapshots 4 and definition 1 remain.
+Baseline diff empty. WP-40 remains open; cell/metadata mirrors and the resolved execution seam remain.

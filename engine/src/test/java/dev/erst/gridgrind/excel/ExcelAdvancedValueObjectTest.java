@@ -8,6 +8,7 @@ import dev.erst.gridgrind.core.model.drawing.DrawingAnchorReport;
 import dev.erst.gridgrind.core.model.drawing.DrawingAnchorSpec;
 import dev.erst.gridgrind.core.model.drawing.DrawingMarkerReport;
 import dev.erst.gridgrind.core.model.drawing.DrawingMarkerSpec;
+import dev.erst.gridgrind.core.model.drawing.DrawingObjectPayloadReport;
 import dev.erst.gridgrind.core.model.drawing.DrawingObjectReport;
 import dev.erst.gridgrind.core.model.drawing.ResolvedComment;
 import dev.erst.gridgrind.core.model.drawing.ResolvedEmbeddedObject;
@@ -51,7 +52,6 @@ import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.core.vocabulary.RgbHex;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.TableName;
-import dev.erst.gridgrind.excel.drawing.ExcelDrawingObjectPayload;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -423,14 +423,17 @@ class ExcelAdvancedValueObjectTest {
             null,
             null,
             2);
-    ExcelDrawingObjectPayload.EmbeddedObject payload =
-        new ExcelDrawingObjectPayload.EmbeddedObject(
+    DrawingObjectPayloadReport.EmbeddedObject payload =
+        new DrawingObjectPayloadReport.EmbeddedObject(
             "OpsEmbed",
             ExcelEmbeddedObjectPackagingKind.RAW_PACKAGE,
             "application/octet-stream",
             "payload.txt",
             "abc123",
-            new BinaryContent("payload".getBytes(java.nio.charset.StandardCharsets.UTF_8)),
+            java.util.Base64.getEncoder()
+                .encodeToString(
+                    new BinaryContent("payload".getBytes(java.nio.charset.StandardCharsets.UTF_8))
+                        .bytes()),
             "Payload",
             "payload.txt");
 
@@ -469,13 +472,13 @@ class ExcelAdvancedValueObjectTest {
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new ExcelDrawingObjectPayload.EmbeddedObject(
+            new DrawingObjectPayloadReport.EmbeddedObject(
                 "OpsEmbed",
                 ExcelEmbeddedObjectPackagingKind.RAW_PACKAGE,
                 "application/octet-stream",
                 " ",
                 "abc123",
-                binary,
+                java.util.Base64.getEncoder().encodeToString(binary.bytes()),
                 null,
                 null));
   }

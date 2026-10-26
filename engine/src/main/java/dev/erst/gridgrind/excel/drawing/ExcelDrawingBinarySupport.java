@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.excel.drawing;
 
+import dev.erst.gridgrind.core.model.drawing.DrawingObjectPayloadReport;
 import dev.erst.gridgrind.core.model.drawing.DrawingObjectReport;
 import dev.erst.gridgrind.core.source.BinaryContent;
 import dev.erst.gridgrind.core.vocabulary.ExcelEmbeddedObjectPackagingKind;
@@ -45,21 +46,21 @@ public final class ExcelDrawingBinarySupport {
         readback.previewImage() == null ? null : sha256(readback.previewImage().bytes()));
   }
 
-  public static ExcelDrawingObjectPayload.Picture picturePayload(
+  public static DrawingObjectPayloadReport.Picture picturePayload(
       String objectName, XSSFPicture picture) {
     return ExcelDrawingPictureSupport.picturePayload(objectName, picture);
   }
 
-  public static ExcelDrawingObjectPayload.EmbeddedObject embeddedObjectPayload(
+  public static DrawingObjectPayloadReport.EmbeddedObject embeddedObjectPayload(
       String objectName, org.apache.poi.xssf.usermodel.XSSFObjectData objectData) {
     EmbeddedObjectReadback readback = embeddedObjectReadback(objectName, objectData);
-    return new ExcelDrawingObjectPayload.EmbeddedObject(
+    return new DrawingObjectPayloadReport.EmbeddedObject(
         objectName,
         readback.packagingKind(),
         readback.contentType(),
         readback.fileName(),
         sha256(readback.payload().bytes()),
-        readback.payload(),
+        java.util.Base64.getEncoder().encodeToString(readback.payload().bytes()),
         readback.label(),
         readback.command());
   }

@@ -104,8 +104,7 @@ final class InspectionResultReadConverter {
           new WorkbookAssetInspectionResult.DrawingObjectPayloadResult(
               drawingPayload.stepId(),
               new SheetLabel(drawingPayload.sheetName()),
-              InspectionResultDrawingReportSupport.toDrawingObjectPayloadReport(
-                  drawingPayload.payload()));
+              drawingPayload.payload());
       case dev.erst.gridgrind.excel.WorkbookSheetResult.SheetLayoutResult sheetLayout ->
           new SheetInspectionResult.SheetLayoutResult(
               sheetLayout.stepId(),

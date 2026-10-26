@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import dev.erst.gridgrind.core.model.drawing.DrawingAnchorSpec;
 import dev.erst.gridgrind.core.model.drawing.DrawingMarkerSpec;
+import dev.erst.gridgrind.core.model.drawing.DrawingObjectPayloadReport;
 import dev.erst.gridgrind.core.model.drawing.ResolvedComment;
 import dev.erst.gridgrind.core.model.drawing.ResolvedEmbeddedObject;
 import dev.erst.gridgrind.core.source.BinaryContent;
@@ -11,7 +12,6 @@ import dev.erst.gridgrind.core.vocabulary.ExcelDrawingAnchorBehavior;
 import dev.erst.gridgrind.core.vocabulary.ExcelPictureFormat;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingAnchorSupport;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingBinarySupport;
-import dev.erst.gridgrind.excel.drawing.ExcelDrawingObjectPayload;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
@@ -53,11 +53,13 @@ class ExcelSheetCopyEmbeddedObjectSupportTest {
       assertTrue(ExcelDrawingBinarySupport.oleObjectPart(repairedObject).isPresent());
       assertNotNull(previewSheetPart(repairedObject));
       assertNotNull(previewDrawingPart(repairedObject));
-      ExcelDrawingObjectPayload.EmbeddedObject payload =
+      DrawingObjectPayloadReport.EmbeddedObject payload =
           assertInstanceOf(
-              ExcelDrawingObjectPayload.EmbeddedObject.class,
+              DrawingObjectPayloadReport.EmbeddedObject.class,
               workbook.sheet("Replica").drawings().drawingObjectPayload("OpsEmbed"));
-      assertArrayEquals("payload".getBytes(StandardCharsets.UTF_8), payload.data().bytes());
+      assertArrayEquals(
+          "payload".getBytes(StandardCharsets.UTF_8),
+          java.util.Base64.getDecoder().decode(payload.base64Data()));
     }
   }
 
@@ -71,11 +73,13 @@ class ExcelSheetCopyEmbeddedObjectSupportTest {
 
       workbook.sheets().copySheet("Source", "Replica", new ExcelSheetCopyPosition.AppendAtEnd());
 
-      ExcelDrawingObjectPayload.EmbeddedObject copiedPayload =
+      DrawingObjectPayloadReport.EmbeddedObject copiedPayload =
           assertInstanceOf(
-              ExcelDrawingObjectPayload.EmbeddedObject.class,
+              DrawingObjectPayloadReport.EmbeddedObject.class,
               workbook.sheet("Replica").drawings().drawingObjectPayload("OpsEmbed"));
-      assertArrayEquals("payload".getBytes(StandardCharsets.UTF_8), copiedPayload.data().bytes());
+      assertArrayEquals(
+          "payload".getBytes(StandardCharsets.UTF_8),
+          java.util.Base64.getDecoder().decode(copiedPayload.base64Data()));
       assertEquals(
           1L,
           workbook.sheet("Replica").drawings().drawingObjects().stream()
@@ -92,11 +96,13 @@ class ExcelSheetCopyEmbeddedObjectSupportTest {
 
     try (ExcelWorkbook reopened =
         ExcelWorkbooks.open(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory())) {
-      ExcelDrawingObjectPayload.EmbeddedObject copiedPayload =
+      DrawingObjectPayloadReport.EmbeddedObject copiedPayload =
           assertInstanceOf(
-              ExcelDrawingObjectPayload.EmbeddedObject.class,
+              DrawingObjectPayloadReport.EmbeddedObject.class,
               reopened.sheet("Replica").drawings().drawingObjectPayload("OpsEmbed"));
-      assertArrayEquals("payload".getBytes(StandardCharsets.UTF_8), copiedPayload.data().bytes());
+      assertArrayEquals(
+          "payload".getBytes(StandardCharsets.UTF_8),
+          java.util.Base64.getDecoder().decode(copiedPayload.base64Data()));
       assertEquals(
           1L,
           reopened.sheet("Replica").drawings().drawingObjects().stream()
@@ -124,11 +130,13 @@ class ExcelSheetCopyEmbeddedObjectSupportTest {
       workbook.getOrCreateSheet("LL");
       workbook.getOrCreateSheet("LL");
 
-      ExcelDrawingObjectPayload.EmbeddedObject copiedPayload =
+      DrawingObjectPayloadReport.EmbeddedObject copiedPayload =
           assertInstanceOf(
-              ExcelDrawingObjectPayload.EmbeddedObject.class,
+              DrawingObjectPayloadReport.EmbeddedObject.class,
               workbook.sheet("LL_B1").drawings().drawingObjectPayload("OpsEmbed"));
-      assertArrayEquals("payload".getBytes(StandardCharsets.UTF_8), copiedPayload.data().bytes());
+      assertArrayEquals(
+          "payload".getBytes(StandardCharsets.UTF_8),
+          java.util.Base64.getDecoder().decode(copiedPayload.base64Data()));
       workbook
           .persistence()
           .save(
@@ -139,11 +147,13 @@ class ExcelSheetCopyEmbeddedObjectSupportTest {
 
     try (ExcelWorkbook reopened =
         ExcelWorkbooks.open(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory())) {
-      ExcelDrawingObjectPayload.EmbeddedObject copiedPayload =
+      DrawingObjectPayloadReport.EmbeddedObject copiedPayload =
           assertInstanceOf(
-              ExcelDrawingObjectPayload.EmbeddedObject.class,
+              DrawingObjectPayloadReport.EmbeddedObject.class,
               reopened.sheet("LL_B1").drawings().drawingObjectPayload("OpsEmbed"));
-      assertArrayEquals("payload".getBytes(StandardCharsets.UTF_8), copiedPayload.data().bytes());
+      assertArrayEquals(
+          "payload".getBytes(StandardCharsets.UTF_8),
+          java.util.Base64.getDecoder().decode(copiedPayload.base64Data()));
       assertEquals(
           1L,
           reopened.sheet("LL_B1").drawings().drawingObjects().stream()

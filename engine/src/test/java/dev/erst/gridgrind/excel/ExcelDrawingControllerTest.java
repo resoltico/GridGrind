@@ -11,6 +11,7 @@ import dev.erst.gridgrind.core.model.chart.ResolvedChart;
 import dev.erst.gridgrind.core.model.chart.ResolvedChartTitle;
 import dev.erst.gridgrind.core.model.drawing.DrawingAnchorSpec;
 import dev.erst.gridgrind.core.model.drawing.DrawingMarkerSpec;
+import dev.erst.gridgrind.core.model.drawing.DrawingObjectPayloadReport;
 import dev.erst.gridgrind.core.model.drawing.DrawingObjectReport;
 import dev.erst.gridgrind.core.model.drawing.ResolvedComment;
 import dev.erst.gridgrind.core.model.drawing.ResolvedEmbeddedObject;
@@ -35,7 +36,6 @@ import dev.erst.gridgrind.core.vocabulary.ExcelDrawingShapeKind;
 import dev.erst.gridgrind.core.vocabulary.ExcelEmbeddedObjectPackagingKind;
 import dev.erst.gridgrind.core.vocabulary.ExcelPictureFormat;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingBinarySupport;
-import dev.erst.gridgrind.excel.drawing.ExcelDrawingObjectPayload;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -122,16 +122,19 @@ class ExcelDrawingControllerTest {
           assertInstanceOf(DrawingObjectReport.EmbeddedObject.class, snapshots.get(3))
               .packagingKind());
 
-      ExcelDrawingObjectPayload.Picture picturePayload =
+      DrawingObjectPayloadReport.Picture picturePayload =
           assertInstanceOf(
-              ExcelDrawingObjectPayload.Picture.class,
+              DrawingObjectPayloadReport.Picture.class,
               sheet.drawings().drawingObjectPayload("OpsPicture"));
-      ExcelDrawingObjectPayload.EmbeddedObject embeddedPayload =
+      DrawingObjectPayloadReport.EmbeddedObject embeddedPayload =
           assertInstanceOf(
-              ExcelDrawingObjectPayload.EmbeddedObject.class,
+              DrawingObjectPayloadReport.EmbeddedObject.class,
               sheet.drawings().drawingObjectPayload("OpsEmbed"));
-      assertArrayEquals(PNG_PIXEL_BYTES, picturePayload.data().bytes());
-      assertArrayEquals("payload".getBytes(StandardCharsets.UTF_8), embeddedPayload.data().bytes());
+      assertArrayEquals(
+          PNG_PIXEL_BYTES, java.util.Base64.getDecoder().decode(picturePayload.base64Data()));
+      assertArrayEquals(
+          "payload".getBytes(StandardCharsets.UTF_8),
+          java.util.Base64.getDecoder().decode(embeddedPayload.base64Data()));
 
       DrawingAnchorSpec.TwoCell movedAnchor = anchor(6, 2, 10, 7);
       sheet.drawings().setDrawingObjectAnchor("OpsShape", movedAnchor);
@@ -660,15 +663,17 @@ class ExcelDrawingControllerTest {
           assertInstanceOf(
               DrawingObjectReport.EmbeddedObject.class,
               workbook.sheet("Ops").drawings().drawingObjects().getFirst());
-      ExcelDrawingObjectPayload.EmbeddedObject payload =
+      DrawingObjectPayloadReport.EmbeddedObject payload =
           assertInstanceOf(
-              ExcelDrawingObjectPayload.EmbeddedObject.class,
+              DrawingObjectPayloadReport.EmbeddedObject.class,
               workbook.sheet("Ops").drawings().drawingObjectPayload("OpsEmbed"));
 
       assertEquals(ExcelPictureFormat.PNG, snapshot.previewFormat());
       assertNotNull(snapshot.previewByteSize());
       assertNotNull(snapshot.previewSha256());
-      assertArrayEquals("payload".getBytes(StandardCharsets.UTF_8), payload.data().bytes());
+      assertArrayEquals(
+          "payload".getBytes(StandardCharsets.UTF_8),
+          java.util.Base64.getDecoder().decode(payload.base64Data()));
     }
   }
 
@@ -721,15 +726,17 @@ class ExcelDrawingControllerTest {
           assertInstanceOf(
               DrawingObjectReport.EmbeddedObject.class,
               workbook.sheet("Ops").drawings().drawingObjects().getFirst());
-      ExcelDrawingObjectPayload.EmbeddedObject payload =
+      DrawingObjectPayloadReport.EmbeddedObject payload =
           assertInstanceOf(
-              ExcelDrawingObjectPayload.EmbeddedObject.class,
+              DrawingObjectPayloadReport.EmbeddedObject.class,
               workbook.sheet("Ops").drawings().drawingObjectPayload("OpsEmbed"));
 
       assertNull(snapshot.previewFormat());
       assertNull(snapshot.previewByteSize());
       assertNull(snapshot.previewSha256());
-      assertArrayEquals("payload".getBytes(StandardCharsets.UTF_8), payload.data().bytes());
+      assertArrayEquals(
+          "payload".getBytes(StandardCharsets.UTF_8),
+          java.util.Base64.getDecoder().decode(payload.base64Data()));
     }
   }
 
@@ -776,15 +783,17 @@ class ExcelDrawingControllerTest {
           assertInstanceOf(
               DrawingObjectReport.EmbeddedObject.class,
               workbook.sheet("Ops").drawings().drawingObjects().getFirst());
-      ExcelDrawingObjectPayload.EmbeddedObject payload =
+      DrawingObjectPayloadReport.EmbeddedObject payload =
           assertInstanceOf(
-              ExcelDrawingObjectPayload.EmbeddedObject.class,
+              DrawingObjectPayloadReport.EmbeddedObject.class,
               workbook.sheet("Ops").drawings().drawingObjectPayload("OpsEmbed"));
 
       assertEquals(ExcelPictureFormat.PNG, snapshot.previewFormat());
       assertNotNull(snapshot.previewByteSize());
       assertNotNull(snapshot.previewSha256());
-      assertArrayEquals("payload".getBytes(StandardCharsets.UTF_8), payload.data().bytes());
+      assertArrayEquals(
+          "payload".getBytes(StandardCharsets.UTF_8),
+          java.util.Base64.getDecoder().decode(payload.base64Data()));
     }
   }
 
@@ -880,15 +889,15 @@ class ExcelDrawingControllerTest {
           assertInstanceOf(
               DrawingObjectReport.EmbeddedObject.class,
               workbook.sheet("Ops").drawings().drawingObjects().getFirst());
-      ExcelDrawingObjectPayload.EmbeddedObject payload =
+      DrawingObjectPayloadReport.EmbeddedObject payload =
           assertInstanceOf(
-              ExcelDrawingObjectPayload.EmbeddedObject.class,
+              DrawingObjectPayloadReport.EmbeddedObject.class,
               workbook.sheet("Ops").drawings().drawingObjectPayload("OpsEmbed"));
 
       assertEquals(0L, snapshot.byteSize());
       assertEquals(ExcelDrawingBinarySupport.sha256(new byte[0]), snapshot.sha256());
-      assertEquals(0, payload.data().size());
-      assertArrayEquals(new byte[0], payload.data().bytes());
+      assertEquals(0, java.util.Base64.getDecoder().decode(payload.base64Data()).length);
+      assertArrayEquals(new byte[0], java.util.Base64.getDecoder().decode(payload.base64Data()));
     }
   }
 

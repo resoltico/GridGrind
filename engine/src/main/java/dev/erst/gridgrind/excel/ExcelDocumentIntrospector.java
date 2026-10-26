@@ -1,13 +1,13 @@
 package dev.erst.gridgrind.excel;
 
 import dev.erst.gridgrind.core.model.chart.ChartReport;
+import dev.erst.gridgrind.core.model.drawing.DrawingObjectPayloadReport;
 import dev.erst.gridgrind.core.model.drawing.DrawingObjectReport;
 import dev.erst.gridgrind.core.model.pivot.PivotTableReport;
 import dev.erst.gridgrind.core.model.table.AutofilterEntryReport;
 import dev.erst.gridgrind.core.model.table.TableEntryReport;
 import dev.erst.gridgrind.core.model.validation.ConditionalFormattingEntryReport;
 import dev.erst.gridgrind.core.model.validation.DataValidationEntryReport;
-import dev.erst.gridgrind.excel.drawing.ExcelDrawingObjectPayload;
 import dev.erst.gridgrind.excel.pivot.ExcelPivotTableController;
 import dev.erst.gridgrind.excel.pivot.ExcelPivotTableSelection;
 import dev.erst.gridgrind.excel.validation.ExcelDataValidationController;
@@ -112,7 +112,7 @@ final class ExcelDocumentIntrospector {
   }
 
   /** Returns the extracted binary payload for one existing drawing object on one sheet. */
-  ExcelDrawingObjectPayload drawingObjectPayload(
+  DrawingObjectPayloadReport drawingObjectPayload(
       ExcelWorkbook workbook, String sheetName, String objectName) {
     Objects.requireNonNull(workbook, "workbook must not be null");
     Objects.requireNonNull(sheetName, "sheetName must not be null");

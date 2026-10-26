@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import dev.erst.gridgrind.core.model.drawing.DrawingAnchorSpec;
 import dev.erst.gridgrind.core.model.drawing.DrawingMarkerSpec;
+import dev.erst.gridgrind.core.model.drawing.DrawingObjectPayloadReport;
 import dev.erst.gridgrind.core.model.drawing.DrawingObjectReport;
 import dev.erst.gridgrind.core.model.drawing.ResolvedEmbeddedObject;
 import dev.erst.gridgrind.core.model.drawing.ResolvedPicture;
@@ -11,7 +12,6 @@ import dev.erst.gridgrind.core.model.drawing.ResolvedSignatureLine;
 import dev.erst.gridgrind.core.source.BinaryContent;
 import dev.erst.gridgrind.core.vocabulary.ExcelDrawingAnchorBehavior;
 import dev.erst.gridgrind.core.vocabulary.ExcelPictureFormat;
-import dev.erst.gridgrind.excel.drawing.ExcelDrawingObjectPayload;
 import dev.erst.gridgrind.excel.drawing.ExcelPicturePoiBridge;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -111,11 +111,13 @@ class ExcelWorkbookImageCatalogSupportTest {
 
     try (ExcelWorkbook workbook =
         ExcelWorkbooks.open(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory())) {
-      ExcelDrawingObjectPayload.EmbeddedObject payload =
+      DrawingObjectPayloadReport.EmbeddedObject payload =
           assertInstanceOf(
-              ExcelDrawingObjectPayload.EmbeddedObject.class,
+              DrawingObjectPayloadReport.EmbeddedObject.class,
               workbook.sheet("Ops").drawings().drawingObjectPayload("OpsEmbed"));
-      assertArrayEquals("payload".getBytes(StandardCharsets.UTF_8), payload.data().bytes());
+      assertArrayEquals(
+          "payload".getBytes(StandardCharsets.UTF_8),
+          java.util.Base64.getDecoder().decode(payload.base64Data()));
       assertEquals(
           List.of("OpsPicture", "OpsEmbed", "OpsSignature"),
           workbook.sheet("Ops").drawings().drawingObjects().stream()

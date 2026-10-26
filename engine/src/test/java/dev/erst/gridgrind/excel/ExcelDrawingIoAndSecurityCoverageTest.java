@@ -2,13 +2,13 @@ package dev.erst.gridgrind.excel;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.core.model.drawing.DrawingObjectPayloadReport;
 import dev.erst.gridgrind.core.model.drawing.ResolvedEmbeddedObject;
 import dev.erst.gridgrind.core.model.drawing.ResolvedPicture;
 import dev.erst.gridgrind.core.source.BinaryContent;
 import dev.erst.gridgrind.core.vocabulary.ExcelEmbeddedObjectPackagingKind;
 import dev.erst.gridgrind.core.vocabulary.ExcelPictureFormat;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingController;
-import dev.erst.gridgrind.excel.drawing.ExcelDrawingObjectPayload;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -159,13 +159,15 @@ class ExcelDrawingIoAndSecurityCoverageTest extends ExcelDrawingCoverageTestSupp
               existingRelation.getRelationshipType(),
               relationId);
 
-      ExcelDrawingObjectPayload.EmbeddedObject payload =
+      DrawingObjectPayloadReport.EmbeddedObject payload =
           assertInstanceOf(
-              ExcelDrawingObjectPayload.EmbeddedObject.class,
+              DrawingObjectPayloadReport.EmbeddedObject.class,
               controller.drawingObjectPayload(sheet, objectData.getShapeName()));
       assertEquals(ExcelEmbeddedObjectPackagingKind.RAW_PACKAGE, payload.packagingKind());
       assertEquals("raw.bin", payload.fileName());
-      assertArrayEquals("raw".getBytes(StandardCharsets.UTF_8), payload.data().bytes());
+      assertArrayEquals(
+          "raw".getBytes(StandardCharsets.UTF_8),
+          java.util.Base64.getDecoder().decode(payload.base64Data()));
     }
 
     try (OPCPackage pkg = OPCPackage.create(new ByteArrayOutputStream())) {
@@ -259,13 +261,14 @@ class ExcelDrawingIoAndSecurityCoverageTest extends ExcelDrawingCoverageTestSupp
               existingRelation.getRelationshipType(),
               relationId);
 
-      ExcelDrawingObjectPayload.EmbeddedObject payload =
+      DrawingObjectPayloadReport.EmbeddedObject payload =
           assertInstanceOf(
-              ExcelDrawingObjectPayload.EmbeddedObject.class,
+              DrawingObjectPayloadReport.EmbeddedObject.class,
               controller.drawingObjectPayload(sheet, objectData.getShapeName()));
       assertEquals(ExcelEmbeddedObjectPackagingKind.RAW_PACKAGE, payload.packagingKind());
       assertEquals("raw-ole.bin", payload.fileName());
-      assertArrayEquals(ole2StorageBytes(), payload.data().bytes());
+      assertArrayEquals(
+          ole2StorageBytes(), java.util.Base64.getDecoder().decode(payload.base64Data()));
     }
 
     try (XSSFWorkbook workbook = new XSSFWorkbook()) {
