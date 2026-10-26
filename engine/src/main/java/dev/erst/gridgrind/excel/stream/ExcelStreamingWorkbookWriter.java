@@ -1,8 +1,13 @@
 package dev.erst.gridgrind.excel.stream;
 
+import dev.erst.gridgrind.core.model.formula.ResolvedFormula;
+import dev.erst.gridgrind.core.model.formula.ResolvedRawFormula;
+import dev.erst.gridgrind.core.model.style.ResolvedRichText;
+import dev.erst.gridgrind.core.model.value.CellValue;
+import dev.erst.gridgrind.core.model.value.CellValueSpec;
+import dev.erst.gridgrind.core.model.value.ResolvedCellWrite;
 import dev.erst.gridgrind.excel.ExcelCellErrorLiteralSupport;
 import dev.erst.gridgrind.excel.ExcelCellTextLimits;
-import dev.erst.gridgrind.excel.ExcelCellValue;
 import dev.erst.gridgrind.excel.ExcelDeterministicWorkbookArtifactSupport;
 import dev.erst.gridgrind.excel.ExcelFormulaWriteSupport;
 import dev.erst.gridgrind.excel.ExcelRichTextSupport;
@@ -28,6 +33,8 @@ import org.apache.poi.xssf.streaming.SXSSFWorkbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 /** Stateful low-memory append-oriented workbook authoring backed by POI's SXSSF writer. */
+// Streaming authoring spans canonical scalar, temporal, formula and rich-text operands.
+@SuppressWarnings("PMD.ExcessiveImports")
 public final class ExcelStreamingWorkbookWriter implements AutoCloseable {
   private final SXSSFWorkbook workbook;
   private final WorkbookStyleRegistry styleRegistry;
@@ -105,34 +112,33 @@ public final class ExcelStreamingWorkbookWriter implements AutoCloseable {
     }
   }
 
-  private void writeCellValue(SXSSFCell cell, ExcelCellValue value) {
+  private void writeCellValue(SXSSFCell cell, ResolvedCellWrite value) {
     switch (value) {
-      case ExcelCellValue.BlankValue _ -> cell.setBlank();
-      case ExcelCellValue.TextValue textValue -> {
+      case CellValue.Blank _ -> cell.setBlank();
+      case CellValue.Text textValue -> {
         ExcelCellTextLimits.requireSupportedLength(textValue.value(), "textValue.value"); // LIM-010
         cell.setCellValue(textValue.value());
       }
-      case ExcelCellValue.RichTextValue richTextValue ->
+      case ResolvedRichText richTextValue ->
           cell.setCellValue(
-              ExcelRichTextSupport.toPoiRichText(
-                  workbook.getXSSFWorkbook(), richTextValue.value()));
-      case ExcelCellValue.NumberValue numberValue -> cell.setCellValue(numberValue.value());
-      case ExcelCellValue.BooleanValue booleanValue -> cell.setCellValue(booleanValue.value());
-      case ExcelCellValue.ErrorValue errorValue ->
+              ExcelRichTextSupport.toPoiRichText(workbook.getXSSFWorkbook(), richTextValue));
+      case CellValue.NumberValue numberValue -> cell.setCellValue(numberValue.value());
+      case CellValue.BooleanValue booleanValue -> cell.setCellValue(booleanValue.value());
+      case CellValue.ErrorValue errorValue ->
           cell.setCellErrorValue(
               ExcelCellErrorLiteralSupport.toPoiStoredFormulaError(errorValue.value()).getCode());
-      case ExcelCellValue.DateValue dateValue -> {
+      case CellValueSpec.Date dateValue -> {
         cell.setCellValue(dateValue.value());
         cell.setCellStyle(styleRegistry.localDateStyle(cell));
       }
-      case ExcelCellValue.DateTimeValue dateTimeValue -> {
+      case CellValueSpec.DateTime dateTimeValue -> {
         cell.setCellValue(dateTimeValue.value());
         cell.setCellStyle(styleRegistry.localDateTimeStyle(cell));
       }
-      case ExcelCellValue.FormulaValue formulaValue ->
-          ExcelFormulaWriteSupport.setAuthoredFormula(cell, formulaValue.expression());
-      case ExcelCellValue.RawFormulaValue rawFormulaValue ->
-          ExcelFormulaWriteSupport.setOpaqueFormula(cell, rawFormulaValue.expression());
+      case ResolvedFormula formulaValue ->
+          ExcelFormulaWriteSupport.setAuthoredFormula(cell, formulaValue.value());
+      case ResolvedRawFormula rawFormulaValue ->
+          ExcelFormulaWriteSupport.setOpaqueFormula(cell, rawFormulaValue.value());
     }
   }
 }

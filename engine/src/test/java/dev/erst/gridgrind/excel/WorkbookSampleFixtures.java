@@ -6,6 +6,8 @@ import dev.erst.gridgrind.core.model.formula.ResolvedArrayFormula;
 import dev.erst.gridgrind.core.model.style.CellAlignmentPatch;
 import dev.erst.gridgrind.core.model.style.CellFontPatch;
 import dev.erst.gridgrind.core.model.style.CellStylePatch;
+import dev.erst.gridgrind.core.model.value.CellValue;
+import dev.erst.gridgrind.core.model.value.CellValueSpec;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartBarDirection;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartDisplayBlanksAs;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartLegendPosition;
@@ -137,7 +139,7 @@ final class WorkbookSampleFixtures {
         new WorkbookLayoutCommand.SetPrintLayout("Budget", defaultPrintLayout()),
         new WorkbookLayoutCommand.ClearPrintLayout("Budget"),
         new WorkbookCellCommand.SetCell(
-            "Budget", "A1", ExcelCellValue.date(LocalDate.of(2026, 3, 23))),
+            "Budget", "A1", new CellValueSpec.Date(LocalDate.of(2026, 3, 23))),
         new WorkbookCellCommand.SetArrayFormula(
             "Budget", "D2:D4", new ResolvedArrayFormula("B2:B4*C2:C4")),
         new WorkbookCellCommand.ClearArrayFormula("Budget", "D2"),
@@ -150,8 +152,8 @@ final class WorkbookSampleFixtures {
             "Budget",
             "A1:B2",
             List.of(
-                List.of(ExcelCellValue.text("Item"), ExcelCellValue.number(49.0d)),
-                List.of(ExcelCellValue.text("Tax"), ExcelCellValue.number(10.0d)))),
+                List.of(new CellValue.Text("Item"), new CellValue.NumberValue(49.0d)),
+                List.of(new CellValue.Text("Tax"), new CellValue.NumberValue(10.0d)))),
         new WorkbookCellCommand.ClearRange("Budget", "C1:C2"),
         new WorkbookAnnotationCommand.SetHyperlink(
             "Budget", "A1", new ExcelHyperlink.Url("https://example.com/report")),
@@ -269,7 +271,7 @@ final class WorkbookSampleFixtures {
                 ExcelNamedRangeTarget.range("Budget", "B4"))),
         new WorkbookMetadataCommand.DeleteNamedRange(
             "BudgetTotal", new ExcelNamedRangeScope.SheetScope("Budget")),
-        new WorkbookCellCommand.AppendRow("Budget", List.of(ExcelCellValue.text("Item"))),
+        new WorkbookCellCommand.AppendRow("Budget", List.of(new CellValue.Text("Item"))),
         new WorkbookLayoutCommand.AutoSizeColumns("Budget"));
   }
 

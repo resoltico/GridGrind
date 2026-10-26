@@ -108,7 +108,7 @@ public sealed interface CellValueSpec
       id = "DATE",
       summary =
           "Write an ISO-8601 date value. Stored as an Excel serial number; readback keeps type=NUMBER, and the TEMPORAL facet can expose kind=DATE.")
-  record Date(LocalDate value) implements CellValueSpec {
+  record Date(LocalDate value) implements CellValueSpec, ResolvedCellWrite {
     public Date {
       Validation.required(value, "value");
     }
@@ -122,7 +122,7 @@ public sealed interface CellValueSpec
       id = "DATE_TIME",
       summary =
           "Write an ISO-8601 date-time value. Stored as an Excel serial number; readback keeps type=NUMBER, and the TEMPORAL facet can expose kind=DATE_TIME.")
-  record DateTime(LocalDateTime value) implements CellValueSpec {
+  record DateTime(LocalDateTime value) implements CellValueSpec, ResolvedCellWrite {
     public DateTime {
       Validation.required(value, "value");
     }

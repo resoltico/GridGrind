@@ -16,6 +16,8 @@ import dev.erst.gridgrind.core.model.style.FontHeightSpec;
 import dev.erst.gridgrind.core.model.style.ResolvedRichText;
 import dev.erst.gridgrind.core.model.style.ResolvedRichTextRun;
 import dev.erst.gridgrind.core.model.style.RichTextRunReport;
+import dev.erst.gridgrind.core.model.value.CellValue;
+import dev.erst.gridgrind.core.model.value.CellValueSpec;
 import dev.erst.gridgrind.core.vocabulary.ExcelBorderStyle;
 import dev.erst.gridgrind.core.vocabulary.ExcelFillPattern;
 import dev.erst.gridgrind.core.vocabulary.ExcelHorizontalAlignment;
@@ -40,10 +42,10 @@ class ExcelSheetFormattingCoverageTest extends ExcelSheetTestSupport {
       ExcelSheet sheet =
           new ExcelSheet(poiSheet, new WorkbookStyleRegistry(poiWorkbook), evaluator);
 
-      sheet.cells().setCell("A1", ExcelCellValue.text("Header"));
+      sheet.cells().setCell("A1", new CellValue.Text("Header"));
       sheet.annotations().setHyperlink("A4", new ExcelHyperlink.Document("Budget!A1"));
       sheet.annotations().setComment("B5", new ResolvedComment("Note", "GridGrind", false));
-      sheet.cells().appendRow(ExcelCellValue.text("Hosting"), ExcelCellValue.number(49.0));
+      sheet.cells().appendRow(new CellValue.Text("Hosting"), new CellValue.NumberValue(49.0));
 
       assertEquals("Hosting", sheet.cells().text("A2"));
       assertEquals(49.0, sheet.cells().number("B2"));
@@ -104,7 +106,7 @@ class ExcelSheetFormattingCoverageTest extends ExcelSheetTestSupport {
           (ExcelCellSnapshot.TextSnapshot)
               sheet
                   .cells()
-                  .setCell("A1", ExcelCellValue.text("Quarterly report"))
+                  .setCell("A1", new CellValue.Text("Quarterly report"))
                   .snapshotCell("A1");
       assertEquals("Quarterly report", textSnapshot.textValue());
       assertEquals(rgb("#AABBCC"), fillForegroundColor(textSnapshot.style().fill()));
@@ -120,7 +122,7 @@ class ExcelSheetFormattingCoverageTest extends ExcelSheetTestSupport {
 
       ExcelCellSnapshot.BlankSnapshot blankSnapshot =
           (ExcelCellSnapshot.BlankSnapshot)
-              sheet.cells().setCell("A1", ExcelCellValue.blank()).snapshotCell("A1");
+              sheet.cells().setCell("A1", new CellValue.Blank()).snapshotCell("A1");
       assertEquals(rgb("#AABBCC"), fillForegroundColor(blankSnapshot.style().fill()));
       assertEquals(ExcelBorderStyle.THIN, borderStyle(blankSnapshot.style().border().top()));
       assertEquals(
@@ -176,13 +178,14 @@ class ExcelSheetFormattingCoverageTest extends ExcelSheetTestSupport {
           (ExcelCellSnapshot.NumberSnapshot)
               sheet
                   .cells()
-                  .setCell("A1", ExcelCellValue.date(LocalDate.of(2026, 3, 31)))
+                  .setCell("A1", new CellValueSpec.Date(LocalDate.of(2026, 3, 31)))
                   .snapshotCell("A1");
       ExcelCellSnapshot.NumberSnapshot dateTimeSnapshot =
           (ExcelCellSnapshot.NumberSnapshot)
               sheet
                   .cells()
-                  .setCell("B1", ExcelCellValue.dateTime(LocalDateTime.of(2026, 3, 31, 9, 45, 0)))
+                  .setCell(
+                      "B1", new CellValueSpec.DateTime(LocalDateTime.of(2026, 3, 31, 9, 45, 0)))
                   .snapshotCell("B1");
 
       assertEquals("yyyy-mm-dd", dateSnapshot.style().numberFormat());
@@ -215,21 +218,20 @@ class ExcelSheetFormattingCoverageTest extends ExcelSheetTestSupport {
           .cells()
           .setCell(
               "A1",
-              ExcelCellValue.richText(
-                  new ResolvedRichText(
-                      List.of(
-                          new ResolvedRichTextRun("Quarterly", Optional.empty()),
-                          new ResolvedRichTextRun(
-                              " Report",
-                              Optional.of(
-                                  new CellFontPatch(
-                                      Optional.of(Boolean.TRUE),
-                                      Optional.empty(),
-                                      Optional.empty(),
-                                      Optional.empty(),
-                                      Optional.of(ColorSpec.rgb(new RgbHex("#FF0000"))),
-                                      Optional.empty(),
-                                      Optional.empty())))))));
+              new ResolvedRichText(
+                  List.of(
+                      new ResolvedRichTextRun("Quarterly", Optional.empty()),
+                      new ResolvedRichTextRun(
+                          " Report",
+                          Optional.of(
+                              new CellFontPatch(
+                                  Optional.of(Boolean.TRUE),
+                                  Optional.empty(),
+                                  Optional.empty(),
+                                  Optional.empty(),
+                                  Optional.of(ColorSpec.rgb(new RgbHex("#FF0000"))),
+                                  Optional.empty(),
+                                  Optional.empty()))))));
       sheet
           .cells()
           .applyStyle(
@@ -317,7 +319,10 @@ class ExcelSheetFormattingCoverageTest extends ExcelSheetTestSupport {
                           Optional.empty())),
                   Optional.empty()));
 
-      sheet.cells().appendRow(ExcelCellValue.number(607.8483822864587), ExcelCellValue.bool(false));
+      sheet
+          .cells()
+          .appendRow(
+              new CellValue.NumberValue(607.8483822864587), new CellValue.BooleanValue(false));
 
       ExcelCellSnapshot.NumberSnapshot firstCell =
           (ExcelCellSnapshot.NumberSnapshot) sheet.cells().snapshotCell("A1");
@@ -350,8 +355,8 @@ class ExcelSheetFormattingCoverageTest extends ExcelSheetTestSupport {
       sheet
           .cells()
           .appendRow(
-              ExcelCellValue.dateTime(LocalDateTime.of(2026, 2, 6, 13, 1, 1)),
-              ExcelCellValue.dateTime(LocalDateTime.of(2026, 2, 6, 13, 58, 1)));
+              new CellValueSpec.DateTime(LocalDateTime.of(2026, 2, 6, 13, 1, 1)),
+              new CellValueSpec.DateTime(LocalDateTime.of(2026, 2, 6, 13, 58, 1)));
       sheet
           .cells()
           .applyStyle(
@@ -389,8 +394,8 @@ class ExcelSheetFormattingCoverageTest extends ExcelSheetTestSupport {
       sheet
           .cells()
           .appendRow(
-              ExcelCellValue.dateTime(LocalDateTime.of(2026, 2, 6, 13, 1, 58)),
-              ExcelCellValue.dateTime(LocalDateTime.of(2026, 2, 6, 13, 1, 1)));
+              new CellValueSpec.DateTime(LocalDateTime.of(2026, 2, 6, 13, 1, 58)),
+              new CellValueSpec.DateTime(LocalDateTime.of(2026, 2, 6, 13, 1, 1)));
 
       ExcelCellSnapshot.NumberSnapshot appendedFirstCell =
           (ExcelCellSnapshot.NumberSnapshot) sheet.cells().snapshotCell("A2");

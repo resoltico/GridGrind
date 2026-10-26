@@ -123,7 +123,7 @@ class ExecutorGuardCoverageTest {
         assertThrows(
                 IllegalStateException.class,
                 () ->
-                    WorkbookCommandCellValueSpecConverter.toExcelCellValue(
+                    WorkbookCommandCellValueSpecConverter.toResolvedCellWrite(
                         new CellValueSpec.Text(TextSourceSpec.utf8File("title.txt"))))
             .getMessage());
 

@@ -90,7 +90,6 @@ import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.core.vocabulary.TableName;
 import dev.erst.gridgrind.excel.*;
 import dev.erst.gridgrind.excel.ExcelAutofilterSnapshot;
-import dev.erst.gridgrind.excel.ExcelCellValue;
 import dev.erst.gridgrind.excel.ExcelConditionalFormattingBlockSnapshot;
 import dev.erst.gridgrind.excel.ExcelConditionalFormattingRuleSnapshot;
 import dev.erst.gridgrind.excel.ExcelHyperlink;
@@ -585,7 +584,7 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
     Path workbookPath = Files.createTempFile("gridgrind-existing-", ".xlsx");
 
     try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
-      workbook.getOrCreateSheet("Budget").cells().setCell("A1", ExcelCellValue.text("Before"));
+      workbook.getOrCreateSheet("Budget").cells().setCell("A1", new CellValue.Text("Before"));
       ExecutionContextFixtureSupport.saveWorkbook(workbook, workbookPath);
     }
 
@@ -909,7 +908,7 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
     Path sourceWorkbook = XlsxRoundTrip.newWorkbookPath("gridgrind-layout-factual-source-");
     try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       workbook.getOrCreateSheet("Layout");
-      workbook.sheet("Layout").cells().setCell("A1", ExcelCellValue.text("Header"));
+      workbook.sheet("Layout").cells().setCell("A1", new CellValue.Text("Header"));
       workbook.sheet("Layout").columns().setWidth(0, 0, 16.0d);
       ExecutionContextFixtureSupport.saveWorkbook(workbook, sourceWorkbook);
     }

@@ -7,6 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import dev.erst.gridgrind.core.model.formula.ResolvedArrayFormula;
+import dev.erst.gridgrind.core.model.value.CellValue;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -101,17 +102,17 @@ class ExcelArrayFormulaTest {
   }
 
   private static void seedSourceData(ExcelSheet sheet) {
-    sheet.cells().setCell("A1", ExcelCellValue.text("Month"));
-    sheet.cells().setCell("B1", ExcelCellValue.text("Plan"));
-    sheet.cells().setCell("C1", ExcelCellValue.text("Actual"));
-    sheet.cells().setCell("A2", ExcelCellValue.text("Jan"));
-    sheet.cells().setCell("A3", ExcelCellValue.text("Feb"));
-    sheet.cells().setCell("A4", ExcelCellValue.text("Mar"));
-    sheet.cells().setCell("B2", ExcelCellValue.number(10d));
-    sheet.cells().setCell("B3", ExcelCellValue.number(18d));
-    sheet.cells().setCell("B4", ExcelCellValue.number(15d));
-    sheet.cells().setCell("C2", ExcelCellValue.number(12d));
-    sheet.cells().setCell("C3", ExcelCellValue.number(16d));
-    sheet.cells().setCell("C4", ExcelCellValue.number(21d));
+    sheet.cells().setCell("A1", new CellValue.Text("Month"));
+    sheet.cells().setCell("B1", new CellValue.Text("Plan"));
+    sheet.cells().setCell("C1", new CellValue.Text("Actual"));
+    sheet.cells().setCell("A2", new CellValue.Text("Jan"));
+    sheet.cells().setCell("A3", new CellValue.Text("Feb"));
+    sheet.cells().setCell("A4", new CellValue.Text("Mar"));
+    sheet.cells().setCell("B2", new CellValue.NumberValue(10d));
+    sheet.cells().setCell("B3", new CellValue.NumberValue(18d));
+    sheet.cells().setCell("B4", new CellValue.NumberValue(15d));
+    sheet.cells().setCell("C2", new CellValue.NumberValue(12d));
+    sheet.cells().setCell("C3", new CellValue.NumberValue(16d));
+    sheet.cells().setCell("C4", new CellValue.NumberValue(21d));
   }
 }

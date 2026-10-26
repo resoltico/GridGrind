@@ -10,6 +10,7 @@ import dev.erst.gridgrind.core.model.style.CellColorReport;
 import dev.erst.gridgrind.core.model.style.CellFontReport;
 import dev.erst.gridgrind.core.model.style.FontHeightReport;
 import dev.erst.gridgrind.core.model.style.RichTextRunReport;
+import dev.erst.gridgrind.core.model.value.CellValue;
 import dev.erst.gridgrind.core.vocabulary.ExcelColumnSpan;
 import java.io.IOException;
 import java.io.InputStream;
@@ -160,7 +161,7 @@ class ExcelSheetCommentRepairSupportTest {
   void replaceCommentsSupportsRawPlainAndRichComments() throws Exception {
     try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       workbook.getOrCreateSheet("Ops");
-      workbook.sheet("Ops").cells().setCell("C3", ExcelCellValue.text("Existing"));
+      workbook.sheet("Ops").cells().setCell("C3", new CellValue.Text("Existing"));
 
       ExcelSheetCommentRepairSupport support =
           new ExcelSheetCommentRepairSupport(workbook.sheet("Ops").xssfSheet());

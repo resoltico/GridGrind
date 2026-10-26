@@ -1,10 +1,11 @@
 package dev.erst.gridgrind.core.model.style;
 
+import dev.erst.gridgrind.core.model.value.ResolvedCellWrite;
 import java.util.List;
 import java.util.Objects;
 
 /** Materialized ordered rich-text runs ready for workbook authoring. */
-public record ResolvedRichText(List<ResolvedRichTextRun> runs) {
+public record ResolvedRichText(List<ResolvedRichTextRun> runs) implements ResolvedCellWrite {
   public ResolvedRichText {
     Objects.requireNonNull(runs, "runs must not be null");
     runs = List.copyOf(runs);

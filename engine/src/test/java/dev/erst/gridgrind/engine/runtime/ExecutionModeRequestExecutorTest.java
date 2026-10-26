@@ -4,6 +4,7 @@ import static dev.erst.gridgrind.engine.runtime.ExecutorTestPlanSupport.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 import dev.erst.gridgrind.core.catalog.GridGrindContractText;
+import dev.erst.gridgrind.core.model.value.CellValue;
 import dev.erst.gridgrind.core.plan.*;
 import dev.erst.gridgrind.core.plan.CellMutationAction;
 import dev.erst.gridgrind.core.plan.ExecutionModeSpec;
@@ -18,7 +19,6 @@ import dev.erst.gridgrind.core.result.WorkbookResultPersistence;
 import dev.erst.gridgrind.core.vocabulary.CellAddress;
 import dev.erst.gridgrind.core.vocabulary.ExcelSheetVisibility;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
-import dev.erst.gridgrind.excel.ExcelCellValue;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
 import dev.erst.gridgrind.excel.ExcelWorkbooks;
 import dev.erst.gridgrind.excel.WorkbookExecutionEngine;
@@ -40,8 +40,8 @@ class ExecutionModeRequestExecutorTest {
       workbook.sheets().setActiveSheet("Ops");
       workbook.sheets().setSelectedSheets(List.of("Ops"));
       workbook.formulas().markRecalculateOnOpen();
-      workbook.sheet("Ops").cells().setCell("A1", ExcelCellValue.text("Header"));
-      workbook.sheet("Ops").cells().setCell("C2", ExcelCellValue.number(42.0d));
+      workbook.sheet("Ops").cells().setCell("A1", new CellValue.Text("Header"));
+      workbook.sheet("Ops").cells().setCell("C2", new CellValue.NumberValue(42.0d));
       ExecutionContextFixtureSupport.saveWorkbook(workbook, workbookPath);
     }
 
@@ -253,7 +253,7 @@ class ExecutionModeRequestExecutorTest {
     Files.deleteIfExists(persistedCopy);
     try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       workbook.getOrCreateSheet("Ops");
-      workbook.sheet("Ops").cells().setCell("A1", ExcelCellValue.text("Header"));
+      workbook.sheet("Ops").cells().setCell("A1", new CellValue.Text("Header"));
       ExecutionContextFixtureSupport.saveWorkbook(workbook, sourcePath);
     }
 

@@ -1,13 +1,15 @@
 package dev.erst.gridgrind.jazzer.support;
 
+import dev.erst.gridgrind.core.model.formula.ResolvedFormula;
 import dev.erst.gridgrind.core.model.style.ResolvedRichText;
 import dev.erst.gridgrind.core.model.style.ResolvedRichTextRun;
 import dev.erst.gridgrind.core.model.style.RichTextRunSpec;
 import dev.erst.gridgrind.core.model.value.CellGridSpec;
 import dev.erst.gridgrind.core.model.value.CellRowSpec;
+import dev.erst.gridgrind.core.model.value.CellValue;
 import dev.erst.gridgrind.core.model.value.CellValueSpec;
+import dev.erst.gridgrind.core.model.value.ResolvedCellWrite;
 import dev.erst.gridgrind.core.source.TextSourceSpec;
-import dev.erst.gridgrind.excel.ExcelCellValue;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -45,19 +47,20 @@ final class FuzzValueDecoders {
     };
   }
 
-  static ExcelCellValue nextExcelCellValue(GridGrindFuzzData data) {
+  static ResolvedCellWrite nextExcelCellValue(GridGrindFuzzData data) {
     Objects.requireNonNull(data, "data must not be null");
 
     return switch (data.consumeInt(0, 7)) {
-      case 0 -> ExcelCellValue.blank();
-      case 1 -> ExcelCellValue.text(FuzzAddressDecoders.nextText(data));
-      case 2 -> ExcelCellValue.richText(nextRichText(data));
-      case 3 -> ExcelCellValue.number(data.consumeRegularDouble(-1000.0d, 1000.0d));
-      case 4 -> ExcelCellValue.bool(data.consumeBoolean());
+      case 0 -> new CellValue.Blank();
+      case 1 -> new CellValue.Text(FuzzAddressDecoders.nextText(data));
+      case 2 -> nextRichText(data);
+      case 3 -> new CellValue.NumberValue(data.consumeRegularDouble(-1000.0d, 1000.0d));
+      case 4 -> new CellValue.BooleanValue(data.consumeBoolean());
       case 5 ->
-          ExcelCellValue.date(LocalDate.of(2026, data.consumeInt(1, 12), data.consumeInt(1, 28)));
+          new CellValueSpec.Date(
+              LocalDate.of(2026, data.consumeInt(1, 12), data.consumeInt(1, 28)));
       case 6 ->
-          ExcelCellValue.dateTime(
+          new CellValueSpec.DateTime(
               LocalDateTime.of(
                   2026,
                   data.consumeInt(1, 12),
@@ -65,7 +68,7 @@ final class FuzzValueDecoders {
                   data.consumeInt(0, 23),
                   data.consumeInt(0, 59),
                   data.consumeInt(0, 59)));
-      default -> ExcelCellValue.formula(FuzzAddressDecoders.nextFormula(data));
+      default -> new ResolvedFormula(FuzzAddressDecoders.nextFormula(data));
     };
   }
 
@@ -93,13 +96,13 @@ final class FuzzValueDecoders {
     return new CellRowSpec.Typed(List.copyOf(values));
   }
 
-  static List<List<ExcelCellValue>> nextExcelMatrix(
+  static List<List<ResolvedCellWrite>> nextExcelMatrix(
       GridGrindFuzzData data, int rowCount, int columnCount) {
     Objects.requireNonNull(data, "data must not be null");
 
-    List<List<ExcelCellValue>> rows = new ArrayList<>(rowCount);
+    List<List<ResolvedCellWrite>> rows = new ArrayList<>(rowCount);
     for (int rowIndex = 0; rowIndex < rowCount; rowIndex++) {
-      List<ExcelCellValue> row = new ArrayList<>(columnCount);
+      List<ResolvedCellWrite> row = new ArrayList<>(columnCount);
       for (int columnIndex = 0; columnIndex < columnCount; columnIndex++) {
         row.add(nextExcelCellValue(data));
       }

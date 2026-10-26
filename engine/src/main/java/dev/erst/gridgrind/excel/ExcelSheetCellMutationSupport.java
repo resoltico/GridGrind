@@ -1,7 +1,13 @@
 package dev.erst.gridgrind.excel;
 
 import dev.erst.gridgrind.core.model.formula.ResolvedArrayFormula;
+import dev.erst.gridgrind.core.model.formula.ResolvedFormula;
+import dev.erst.gridgrind.core.model.formula.ResolvedRawFormula;
 import dev.erst.gridgrind.core.model.style.CellStylePatch;
+import dev.erst.gridgrind.core.model.style.ResolvedRichText;
+import dev.erst.gridgrind.core.model.value.CellValue;
+import dev.erst.gridgrind.core.model.value.CellValueSpec;
+import dev.erst.gridgrind.core.model.value.ResolvedCellWrite;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingController;
 import java.util.ArrayList;
 import java.util.List;
@@ -34,7 +40,7 @@ final class ExcelSheetCellMutationSupport {
         Objects.requireNonNull(drawingController, "drawingController must not be null");
   }
 
-  void setCell(String address, ExcelCellValue value) {
+  void setCell(String address, ResolvedCellWrite value) {
     ExcelSheet.requireNonBlank(address, "address");
     Objects.requireNonNull(value, "value must not be null");
 
@@ -48,14 +54,14 @@ final class ExcelSheetCellMutationSupport {
             cellReference.getCol()));
   }
 
-  void setRange(String range, List<List<ExcelCellValue>> rows) {
+  void setRange(String range, List<List<ResolvedCellWrite>> rows) {
     ExcelSheet.requireNonBlank(range, "range");
     Objects.requireNonNull(rows, "rows must not be null");
     if (rows.isEmpty()) {
       throw new IllegalArgumentException("rows must not be empty");
     }
 
-    List<List<ExcelCellValue>> copiedRows = copyRows(rows);
+    List<List<ResolvedCellWrite>> copiedRows = copyRows(rows);
     ExcelRange excelRange = ExcelRange.parse(range);
     if (copiedRows.size() != excelRange.rowCount()
         || copiedRows.getFirst().size() != excelRange.columnCount()) {
@@ -73,7 +79,7 @@ final class ExcelSheetCellMutationSupport {
     }
 
     for (int rowOffset = 0; rowOffset < copiedRows.size(); rowOffset++) {
-      List<ExcelCellValue> rowValues = copiedRows.get(rowOffset);
+      List<ResolvedCellWrite> rowValues = copiedRows.get(rowOffset);
       for (int columnOffset = 0; columnOffset < rowValues.size(); columnOffset++) {
         writeCellValue(
             excelRange.firstRow() + rowOffset,
@@ -170,9 +176,9 @@ final class ExcelSheetCellMutationSupport {
     syncTableHeaders(excelRange);
   }
 
-  void appendRow(ExcelCellValue... values) {
+  void appendRow(ResolvedCellWrite... values) {
     Objects.requireNonNull(values, "values must not be null");
-    for (ExcelCellValue value : values) {
+    for (ResolvedCellWrite value : values) {
       Objects.requireNonNull(value, "values must not contain nulls");
     }
 
@@ -185,56 +191,57 @@ final class ExcelSheetCellMutationSupport {
     }
   }
 
-  private void writeCellValue(int rowIndex, int columnIndex, ExcelCellValue value) {
+  private void writeCellValue(int rowIndex, int columnIndex, ResolvedCellWrite value) {
     Cell cell = getOrCreateCell(rowIndex, columnIndex);
 
     switch (value) {
-      case ExcelCellValue.BlankValue _ -> {
+      case CellValue.Blank _ -> {
         clearExistingFormula(cell);
         cell.setBlank();
       }
-      case ExcelCellValue.TextValue textValue -> {
+      case CellValue.Text textValue -> {
         clearExistingFormula(cell);
         ExcelCellTextLimits.requireSupportedLength(textValue.value(), "textValue.value"); // LIM-010
         cell.setCellValue(textValue.value());
       }
-      case ExcelCellValue.RichTextValue richTextValue -> {
+      case ResolvedRichText richTextValue -> {
         clearExistingFormula(cell);
         cell.setCellValue(
-            ExcelRichTextSupport.toPoiRichText(xssfSheet().getWorkbook(), richTextValue.value()));
+            ExcelRichTextSupport.toPoiRichText(xssfSheet().getWorkbook(), richTextValue));
       }
-      case ExcelCellValue.NumberValue numberValue -> {
+      case CellValue.NumberValue numberValue -> {
         clearExistingFormula(cell);
         cell.setCellValue(numberValue.value());
       }
-      case ExcelCellValue.BooleanValue booleanValue -> {
+      case CellValue.BooleanValue booleanValue -> {
         clearExistingFormula(cell);
         cell.setCellValue(booleanValue.value());
       }
-      case ExcelCellValue.ErrorValue errorValue -> {
+      case CellValue.ErrorValue errorValue -> {
+        byte storedError =
+            ExcelCellErrorLiteralSupport.toPoiStoredFormulaError(errorValue.value()).getCode();
         clearExistingFormula(cell);
-        cell.setCellErrorValue(
-            ExcelCellErrorLiteralSupport.toPoiStoredFormulaError(errorValue.value()).getCode());
+        cell.setCellErrorValue(storedError);
       }
-      case ExcelCellValue.DateValue dateValue -> {
+      case CellValueSpec.Date dateValue -> {
         clearExistingFormula(cell);
         cell.setCellValue(dateValue.value());
         cell.setCellStyle(styleRegistry.localDateStyle(cell));
       }
-      case ExcelCellValue.DateTimeValue dateTimeValue -> {
+      case CellValueSpec.DateTime dateTimeValue -> {
         clearExistingFormula(cell);
         cell.setCellValue(dateTimeValue.value());
         cell.setCellStyle(styleRegistry.localDateTimeStyle(cell));
       }
-      case ExcelCellValue.FormulaValue formulaValue ->
+      case ResolvedFormula formulaValue ->
           ExcelFormulaWriteSupport.setAuthoredFormula(
               cell,
-              formulaValue.expression(),
+              formulaValue.value(),
               formulaRuntime,
               sheet.getSheetName(),
               new CellReference(rowIndex, columnIndex).formatAsString());
-      case ExcelCellValue.RawFormulaValue rawFormulaValue ->
-          ExcelFormulaWriteSupport.setOpaqueFormula(cell, rawFormulaValue.expression());
+      case ResolvedRawFormula rawFormulaValue ->
+          ExcelFormulaWriteSupport.setOpaqueFormula(cell, rawFormulaValue.value());
     }
   }
 
@@ -322,12 +329,12 @@ final class ExcelSheetCellMutationSupport {
     }
   }
 
-  private static List<List<ExcelCellValue>> copyRows(List<List<ExcelCellValue>> rows) {
-    List<List<ExcelCellValue>> copiedRows = new ArrayList<>(rows.size());
+  private static List<List<ResolvedCellWrite>> copyRows(List<List<ResolvedCellWrite>> rows) {
+    List<List<ResolvedCellWrite>> copiedRows = new ArrayList<>(rows.size());
     int expectedWidth = -1;
-    for (List<ExcelCellValue> row : rows) {
+    for (List<ResolvedCellWrite> row : rows) {
       Objects.requireNonNull(row, "rows must not contain nulls");
-      List<ExcelCellValue> copiedRow = List.copyOf(row);
+      List<ResolvedCellWrite> copiedRow = List.copyOf(row);
       if (copiedRow.isEmpty()) {
         throw new IllegalArgumentException("rows must not contain empty rows");
       }
@@ -336,7 +343,7 @@ final class ExcelSheetCellMutationSupport {
       } else if (copiedRow.size() != expectedWidth) {
         throw new IllegalArgumentException("rows must describe a rectangular matrix");
       }
-      for (ExcelCellValue value : copiedRow) {
+      for (ResolvedCellWrite value : copiedRow) {
         Objects.requireNonNull(value, "rows must not contain null cell values");
       }
       copiedRows.add(copiedRow);

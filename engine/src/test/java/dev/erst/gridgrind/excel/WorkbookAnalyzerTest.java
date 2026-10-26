@@ -2,6 +2,8 @@ package dev.erst.gridgrind.excel;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.core.model.formula.ResolvedFormula;
+import dev.erst.gridgrind.core.model.value.CellValue;
 import dev.erst.gridgrind.core.vocabulary.AnalysisFindingCode;
 import dev.erst.gridgrind.core.vocabulary.AnalysisSeverity;
 import dev.erst.gridgrind.core.vocabulary.ExcelPivotDataConsolidateFunction;
@@ -35,12 +37,12 @@ class WorkbookAnalyzerTest {
       budget
           .annotations()
           .setHyperlink("A3", new ExcelHyperlink.File("missing-supporting-doc.pdf"));
-      budget.cells().setCell("D1", ExcelCellValue.text("Owner"));
-      budget.cells().setCell("E1", ExcelCellValue.text("Task"));
-      budget.cells().setCell("D2", ExcelCellValue.text("Ada"));
-      budget.cells().setCell("E2", ExcelCellValue.text("Queue"));
-      budget.cells().setCell("D3", ExcelCellValue.text("Lin"));
-      budget.cells().setCell("E3", ExcelCellValue.text("Pack"));
+      budget.cells().setCell("D1", new CellValue.Text("Owner"));
+      budget.cells().setCell("E1", new CellValue.Text("Task"));
+      budget.cells().setCell("D2", new CellValue.Text("Ada"));
+      budget.cells().setCell("E2", new CellValue.Text("Queue"));
+      budget.cells().setCell("D3", new CellValue.Text("Lin"));
+      budget.cells().setCell("E3", new CellValue.Text("Pack"));
       budget
           .metadata()
           .setConditionalFormatting(
@@ -224,13 +226,13 @@ class WorkbookAnalyzerTest {
   void respectsSelectedSheetsAndNamedRanges() throws IOException {
     try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       ExcelSheet budget = workbook.getOrCreateSheet("Budget");
-      budget.cells().setCell("A1", ExcelCellValue.text("Item"));
-      budget.cells().setCell("B1", ExcelCellValue.formula("NOW()"));
+      budget.cells().setCell("A1", new CellValue.Text("Item"));
+      budget.cells().setCell("B1", new ResolvedFormula("NOW()"));
       budget.annotations().setHyperlink("A1", new ExcelHyperlink.Document("Missing!A1"));
 
       ExcelSheet forecast = workbook.getOrCreateSheet("Forecast");
-      forecast.cells().setCell("A1", ExcelCellValue.text("Item"));
-      forecast.cells().setCell("B1", ExcelCellValue.formula("1+1"));
+      forecast.cells().setCell("A1", new CellValue.Text("Item"));
+      forecast.cells().setCell("B1", new ResolvedFormula("1+1"));
       forecast.annotations().setHyperlink("C1", new ExcelHyperlink.File("relative-report.xlsx"));
 
       workbook

@@ -1,7 +1,8 @@
 package dev.erst.gridgrind.engine.runtime;
 
+import dev.erst.gridgrind.core.model.formula.ResolvedFormula;
+import dev.erst.gridgrind.core.model.value.ResolvedCellWrite;
 import dev.erst.gridgrind.core.problem.ProblemContextWorkbookSurfaces.StepReference;
-import dev.erst.gridgrind.excel.ExcelCellValue;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
 import dev.erst.gridgrind.excel.WorkbookCellCommand;
 import dev.erst.gridgrind.excel.WorkbookCommand;
@@ -138,9 +139,9 @@ final class FormulaOriginTracker {
     return new FormulaWrites(writes);
   }
 
-  private static Optional<String> formulaFor(ExcelCellValue value) {
-    if (value instanceof ExcelCellValue.FormulaValue formula) {
-      return Optional.of(formula.expression());
+  private static Optional<String> formulaFor(ResolvedCellWrite value) {
+    if (value instanceof ResolvedFormula formula) {
+      return Optional.of(formula.value());
     }
     return Optional.empty();
   }

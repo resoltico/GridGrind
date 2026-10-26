@@ -3,6 +3,7 @@ package dev.erst.gridgrind.excel;
 import static dev.erst.gridgrind.excel.ExcelStyleTestAccess.*;
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.core.model.value.CellValue;
 import dev.erst.gridgrind.core.vocabulary.ExcelPaneRegion;
 import dev.erst.gridgrind.core.vocabulary.ExcelPrintOrientation;
 import dev.erst.gridgrind.core.vocabulary.ExcelSheetLayoutLimits;
@@ -23,9 +24,9 @@ class ExcelSheetLayoutCoverageTest extends ExcelSheetTestSupport {
       ExcelSheet sheet =
           new ExcelSheet(poiSheet, new WorkbookStyleRegistry(poiWorkbook), evaluator);
 
-      sheet.cells().setCell("A1", ExcelCellValue.text("ID"));
-      sheet.cells().setCell("B1", ExcelCellValue.text("Riga onboarding checklist"));
-      sheet.cells().setCell("C1", ExcelCellValue.text("Q1"));
+      sheet.cells().setCell("A1", new CellValue.Text("ID"));
+      sheet.cells().setCell("B1", new CellValue.Text("Riga onboarding checklist"));
+      sheet.cells().setCell("C1", new CellValue.Text("Q1"));
       sheet.columns().autoSize();
 
       WorkbookSheetResult.SheetLayout layout = sheet.layout().snapshot();

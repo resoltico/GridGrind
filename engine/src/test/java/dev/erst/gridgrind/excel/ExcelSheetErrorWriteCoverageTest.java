@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import dev.erst.gridgrind.core.model.value.CellValue;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
@@ -20,9 +21,9 @@ class ExcelSheetErrorWriteCoverageTest {
     try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       ExcelSheet sheet = workbook.getOrCreateSheet("Budget");
 
-      sheet.cells().setCell("A1", ExcelCellValue.error("#REF!"));
-      sheet.cells().setCell("A2", ExcelCellValue.error("#DIV/0!"));
-      sheet.cells().setCell("A3", ExcelCellValue.error("#N/A"));
+      sheet.cells().setCell("A1", new CellValue.ErrorValue("#REF!"));
+      sheet.cells().setCell("A2", new CellValue.ErrorValue("#DIV/0!"));
+      sheet.cells().setCell("A3", new CellValue.ErrorValue("#N/A"));
 
       ExcelCellSnapshot.ErrorSnapshot snapshot =
           assertInstanceOf(ExcelCellSnapshot.ErrorSnapshot.class, sheet.cells().snapshotCell("A1"));
@@ -60,10 +61,11 @@ class ExcelSheetErrorWriteCoverageTest {
 
       assertThrows(
           IllegalArgumentException.class,
-          () -> sheet.cells().setCell("A1", ExcelCellValue.error("#CIRCULAR_REF!")));
+          () -> sheet.cells().setCell("A1", new CellValue.ErrorValue("#CIRCULAR_REF!")));
       assertThrows(
           IllegalArgumentException.class,
-          () -> sheet.cells().setCell("A1", ExcelCellValue.error("#FUNCTION_NOT_IMPLEMENTED!")));
+          () ->
+              sheet.cells().setCell("A1", new CellValue.ErrorValue("#FUNCTION_NOT_IMPLEMENTED!")));
     }
   }
 }

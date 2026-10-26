@@ -17,6 +17,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import dev.erst.gridgrind.core.model.formula.CalculationExecutionStatus;
 import dev.erst.gridgrind.core.model.formula.CalculationReport;
 import dev.erst.gridgrind.core.model.formula.FormulaEnvironmentSpec;
+import dev.erst.gridgrind.core.model.formula.ResolvedFormula;
 import dev.erst.gridgrind.core.plan.*;
 import dev.erst.gridgrind.core.plan.CellMutationAction;
 import dev.erst.gridgrind.core.plan.CellSelector;
@@ -37,7 +38,6 @@ import dev.erst.gridgrind.core.vocabulary.CellAddress;
 import dev.erst.gridgrind.core.vocabulary.SheetLabel;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.StepId;
-import dev.erst.gridgrind.excel.ExcelCellValue;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
 import dev.erst.gridgrind.excel.ExcelWorkbooks;
 import dev.erst.gridgrind.excel.WorkbookExecutionEngine;
@@ -253,10 +253,7 @@ class DefaultGridGrindRequestExecutorCalculationCoverageTest {
             java.util.List.of());
     try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       workbook.getOrCreateSheet("Ops");
-      workbook
-          .sheet("Ops")
-          .cells()
-          .setCell("A1", ExcelCellValue.formula("TEXTAFTER(\"a,b\",\",\")"));
+      workbook.sheet("Ops").cells().setCell("A1", new ResolvedFormula("TEXTAFTER(\"a,b\",\",\")"));
 
       ExecutionCalculationSupport.CalculationExecutionOutcome preflightOutcome =
           calculationSupport.executeCalculationPolicy(
@@ -414,10 +411,7 @@ class DefaultGridGrindRequestExecutorCalculationCoverageTest {
             java.util.List.of());
     try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       workbook.getOrCreateSheet("Ops");
-      workbook
-          .sheet("Ops")
-          .cells()
-          .setCell("A1", ExcelCellValue.formula("TEXTAFTER(\"a,b\",\",\")"));
+      workbook.sheet("Ops").cells().setCell("A1", new ResolvedFormula("TEXTAFTER(\"a,b\",\",\")"));
 
       ExecutionCalculationSupport.CalculationExecutionOutcome outcome =
           calculationSupport.executeCalculationPolicy(

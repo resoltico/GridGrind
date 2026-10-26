@@ -6,6 +6,8 @@ import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import dev.erst.gridgrind.core.model.formula.ResolvedFormula;
+import dev.erst.gridgrind.core.model.value.CellValue;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartDisplayBlanksAs;
 import java.io.IOException;
 import java.util.List;
@@ -164,12 +166,12 @@ class ExcelChartSourceResolutionTest {
   void runtimeAwareSourceResolutionEvaluatesFormulaCellsBeforeReadingValues() throws IOException {
     try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       ExcelSheet sheet = workbook.getOrCreateSheet("Charts");
-      sheet.cells().setCell("A2", ExcelCellValue.text("Ari"));
-      sheet.cells().setCell("A3", ExcelCellValue.text("Bo"));
-      sheet.cells().setCell("A4", ExcelCellValue.text("Cy"));
-      sheet.cells().setCell("B2", ExcelCellValue.formula("40+2"));
-      sheet.cells().setCell("B3", ExcelCellValue.number(7d));
-      sheet.cells().setCell("B4", ExcelCellValue.formula("B3*2"));
+      sheet.cells().setCell("A2", new CellValue.Text("Ari"));
+      sheet.cells().setCell("A3", new CellValue.Text("Bo"));
+      sheet.cells().setCell("A4", new CellValue.Text("Cy"));
+      sheet.cells().setCell("B2", new ResolvedFormula("40+2"));
+      sheet.cells().setCell("B3", new CellValue.NumberValue(7d));
+      sheet.cells().setCell("B4", new ResolvedFormula("B3*2"));
 
       ResolvedChartSource resolved =
           ExcelChartSourceSupport.resolveChartSource(
@@ -226,8 +228,8 @@ class ExcelChartSourceResolutionTest {
   }
 
   private static void seedChartSourceResolutionFixtures(ExcelWorkbook workbook, ExcelSheet sheet) {
-    sheet.cells().setCell("D2", ExcelCellValue.bool(true));
-    sheet.cells().setCell("D3", ExcelCellValue.blank());
+    sheet.cells().setCell("D2", new CellValue.BooleanValue(true));
+    sheet.cells().setCell("D3", new CellValue.Blank());
     workbook
         .names()
         .setNamedRange(
@@ -290,8 +292,8 @@ class ExcelChartSourceResolutionTest {
     xssfSheet.getRow(3).createCell(6).setCellErrorValue(FormulaError.NA.getCode());
 
     ExcelSheet sourceSheet = workbook.getOrCreateSheet("Other");
-    sourceSheet.cells().setCell("A2", ExcelCellValue.text("North"));
-    sourceSheet.cells().setCell("A3", ExcelCellValue.text("South"));
-    sourceSheet.cells().setCell("A4", ExcelCellValue.text("West"));
+    sourceSheet.cells().setCell("A2", new CellValue.Text("North"));
+    sourceSheet.cells().setCell("A3", new CellValue.Text("South"));
+    sourceSheet.cells().setCell("A4", new CellValue.Text("West"));
   }
 }

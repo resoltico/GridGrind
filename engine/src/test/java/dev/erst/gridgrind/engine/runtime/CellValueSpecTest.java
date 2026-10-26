@@ -3,36 +3,38 @@ package dev.erst.gridgrind.engine.runtime;
 import static dev.erst.gridgrind.engine.runtime.ExecutorTestPlanSupport.*;
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.core.model.formula.ResolvedFormula;
+import dev.erst.gridgrind.core.model.formula.ResolvedRawFormula;
 import dev.erst.gridgrind.core.model.style.ColorSpec;
 import dev.erst.gridgrind.core.model.style.ResolvedRichText;
 import dev.erst.gridgrind.core.model.style.ResolvedRichTextRun;
+import dev.erst.gridgrind.core.model.value.CellValue;
 import dev.erst.gridgrind.core.model.value.CellValueSpec;
 import dev.erst.gridgrind.core.source.TextSourceSpec;
 import dev.erst.gridgrind.core.vocabulary.RgbHex;
-import dev.erst.gridgrind.excel.ExcelCellValue;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 
-/** Tests for CellValueSpec record construction and ExcelCellValue conversion. */
+/** Tests for CellValueSpec record construction and ResolvedCellWrite conversion. */
 class CellValueSpecTest {
   @Test
   void convertsAllSupportedInputTypesToExcelValues() {
     assertInstanceOf(
-        ExcelCellValue.BlankValue.class,
-        WorkbookCommandCellValueSpecConverter.toExcelCellValue(new CellValueSpec.Blank()));
+        CellValue.Blank.class,
+        WorkbookCommandCellValueSpecConverter.toResolvedCellWrite(new CellValueSpec.Blank()));
 
-    ExcelCellValue.TextValue textValue =
+    CellValue.Text textValue =
         assertInstanceOf(
-            ExcelCellValue.TextValue.class,
-            WorkbookCommandCellValueSpecConverter.toExcelCellValue(textCell("Budget")));
+            CellValue.Text.class,
+            WorkbookCommandCellValueSpecConverter.toResolvedCellWrite(textCell("Budget")));
     assertEquals("Budget", textValue.value());
 
-    ExcelCellValue.RichTextValue richTextValue =
+    ResolvedRichText richTextValue =
         assertInstanceOf(
-            ExcelCellValue.RichTextValue.class,
-            WorkbookCommandCellValueSpecConverter.toExcelCellValue(
+            ResolvedRichText.class,
+            WorkbookCommandCellValueSpecConverter.toResolvedCellWrite(
                 new CellValueSpec.RichText(
                     List.of(
                         richTextRun("Budget"),
@@ -61,54 +63,55 @@ class CellValueSpecTest {
                             java.util.Optional.of(ColorSpec.rgb(new RgbHex("#AABBCC"))),
                             java.util.Optional.empty(),
                             java.util.Optional.empty()))))),
-        richTextValue.value());
+        richTextValue);
 
-    ExcelCellValue.NumberValue numberValue =
+    CellValue.NumberValue numberValue =
         assertInstanceOf(
-            ExcelCellValue.NumberValue.class,
-            WorkbookCommandCellValueSpecConverter.toExcelCellValue(
+            CellValue.NumberValue.class,
+            WorkbookCommandCellValueSpecConverter.toResolvedCellWrite(
                 new CellValueSpec.NumberValue(42.5)));
     assertEquals(42.5, numberValue.value());
 
-    ExcelCellValue.BooleanValue booleanValue =
+    CellValue.BooleanValue booleanValue =
         assertInstanceOf(
-            ExcelCellValue.BooleanValue.class,
-            WorkbookCommandCellValueSpecConverter.toExcelCellValue(
+            CellValue.BooleanValue.class,
+            WorkbookCommandCellValueSpecConverter.toResolvedCellWrite(
                 new CellValueSpec.BooleanValue(true)));
     assertTrue(booleanValue.value());
 
-    ExcelCellValue.FormulaValue formulaValue =
+    ResolvedFormula formulaValue =
         assertInstanceOf(
-            ExcelCellValue.FormulaValue.class,
-            WorkbookCommandCellValueSpecConverter.toExcelCellValue(formulaCell("SUM(B2:B4)")));
-    assertEquals("SUM(B2:B4)", formulaValue.expression());
+            ResolvedFormula.class,
+            WorkbookCommandCellValueSpecConverter.toResolvedCellWrite(formulaCell("SUM(B2:B4)")));
+    assertEquals("SUM(B2:B4)", formulaValue.value());
 
     assertThrows(
         IllegalArgumentException.class,
-        () -> WorkbookCommandCellValueSpecConverter.toExcelCellValue(formulaCell("=SUM(B2:B4)")));
+        () ->
+            WorkbookCommandCellValueSpecConverter.toResolvedCellWrite(formulaCell("=SUM(B2:B4)")));
 
-    ExcelCellValue.RawFormulaValue rawFormulaValue =
+    ResolvedRawFormula rawFormulaValue =
         assertInstanceOf(
-            ExcelCellValue.RawFormulaValue.class,
-            WorkbookCommandCellValueSpecConverter.toExcelCellValue(
+            ResolvedRawFormula.class,
+            WorkbookCommandCellValueSpecConverter.toResolvedCellWrite(
                 new CellValueSpec.RawFormula(TextSourceSpec.inline("LAMBDA(x,x+1)(A1)"))));
-    assertEquals("LAMBDA(x,x+1)(A1)", rawFormulaValue.expression());
+    assertEquals("LAMBDA(x,x+1)(A1)", rawFormulaValue.value());
     assertEquals(
         "RawFormula[text=LAMBDA(x,x+1)(A1)]",
         ExecutionJournalTargetResolver.summarizeCellInput(
             new CellValueSpec.RawFormula(TextSourceSpec.inline("LAMBDA(x,x+1)(A1)"))));
 
-    ExcelCellValue.DateValue dateValue =
+    CellValueSpec.Date dateValue =
         assertInstanceOf(
-            ExcelCellValue.DateValue.class,
-            WorkbookCommandCellValueSpecConverter.toExcelCellValue(
+            CellValueSpec.Date.class,
+            WorkbookCommandCellValueSpecConverter.toResolvedCellWrite(
                 new CellValueSpec.Date(LocalDate.of(2026, 3, 23))));
     assertEquals(LocalDate.of(2026, 3, 23), dateValue.value());
 
-    ExcelCellValue.DateTimeValue dateTimeValue =
+    CellValueSpec.DateTime dateTimeValue =
         assertInstanceOf(
-            ExcelCellValue.DateTimeValue.class,
-            WorkbookCommandCellValueSpecConverter.toExcelCellValue(
+            CellValueSpec.DateTime.class,
+            WorkbookCommandCellValueSpecConverter.toResolvedCellWrite(
                 new CellValueSpec.DateTime(LocalDateTime.of(2026, 3, 23, 10, 15, 30))));
     assertEquals(LocalDateTime.of(2026, 3, 23, 10, 15, 30), dateTimeValue.value());
   }

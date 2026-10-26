@@ -2,6 +2,7 @@ package dev.erst.gridgrind.excel;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.core.model.value.CellValue;
 import dev.erst.gridgrind.core.vocabulary.ExcelOoxmlCipherAlgorithm;
 import dev.erst.gridgrind.core.vocabulary.ExcelOoxmlEncryptionMode;
 import dev.erst.gridgrind.core.vocabulary.ExcelOoxmlHashAlgorithm;
@@ -186,7 +187,7 @@ class ExcelOoxmlPackageSecuritySupportTest {
       new WorkbookCommandExecutor()
           .apply(
               workbook,
-              new WorkbookCellCommand.SetCell("Encrypted", "B2", ExcelCellValue.text("Mutated")));
+              new WorkbookCellCommand.SetCell("Encrypted", "B2", new CellValue.Text("Mutated")));
       workbook
           .persistence()
           .save(
@@ -232,7 +233,7 @@ class ExcelOoxmlPackageSecuritySupportTest {
       new WorkbookCommandExecutor()
           .apply(
               workbook,
-              new WorkbookCellCommand.SetCell("Signed", "C1", ExcelCellValue.text("Touch")));
+              new WorkbookCellCommand.SetCell("Signed", "C1", new CellValue.Text("Touch")));
 
       WorkbookCoreResult.PackageSecurityResult afterMutation =
           assertInstanceOf(

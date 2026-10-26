@@ -2,6 +2,7 @@ package dev.erst.gridgrind.excel;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.core.model.value.CellValue;
 import dev.erst.gridgrind.core.vocabulary.AnalysisFindingCode;
 import java.util.List;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
@@ -113,14 +114,14 @@ class ExcelTableAnalysisSupportTest {
   void tableAutofilterFindingsCoverHealthyInvalidMismatchAndBlankHeaderStates() throws Exception {
     try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       ExcelSheet sheet = workbook.getOrCreateSheet("Ops");
-      sheet.cells().setCell("A1", ExcelCellValue.text("Owner"));
-      sheet.cells().setCell("B1", ExcelCellValue.text("Task"));
-      sheet.cells().setCell("A2", ExcelCellValue.text("Ada"));
-      sheet.cells().setCell("B2", ExcelCellValue.text("Queue"));
-      sheet.cells().setCell("A3", ExcelCellValue.text("Lin"));
-      sheet.cells().setCell("B3", ExcelCellValue.text("Pack"));
-      sheet.cells().setCell("A4", ExcelCellValue.text("Totals"));
-      sheet.cells().setCell("B4", ExcelCellValue.text("Done"));
+      sheet.cells().setCell("A1", new CellValue.Text("Owner"));
+      sheet.cells().setCell("B1", new CellValue.Text("Task"));
+      sheet.cells().setCell("A2", new CellValue.Text("Ada"));
+      sheet.cells().setCell("B2", new CellValue.Text("Queue"));
+      sheet.cells().setCell("A3", new CellValue.Text("Lin"));
+      sheet.cells().setCell("B3", new CellValue.Text("Pack"));
+      sheet.cells().setCell("A4", new CellValue.Text("Totals"));
+      sheet.cells().setCell("B4", new CellValue.Text("Done"));
 
       ExcelTableController controller = new ExcelTableController();
       controller.setTable(

@@ -6,6 +6,9 @@ import dev.erst.gridgrind.core.model.drawing.ResolvedComment;
 import dev.erst.gridgrind.core.model.style.CellAlignmentPatch;
 import dev.erst.gridgrind.core.model.style.CellFontPatch;
 import dev.erst.gridgrind.core.model.style.CellStylePatch;
+import dev.erst.gridgrind.core.model.value.CellValue;
+import dev.erst.gridgrind.core.model.value.CellValueSpec;
+import dev.erst.gridgrind.core.model.value.ResolvedCellWrite;
 import dev.erst.gridgrind.core.vocabulary.ExcelColumnSpan;
 import dev.erst.gridgrind.core.vocabulary.ExcelComparisonOperator;
 import dev.erst.gridgrind.core.vocabulary.ExcelDataValidationErrorStyle;
@@ -32,12 +35,14 @@ import org.junit.jupiter.api.Test;
 class WorkbookCommandTest {
   @Test
   void createsSupportedCommandsAndCopiesCollections() {
-    List<ExcelCellValue> values = new ArrayList<>(List.of(ExcelCellValue.text("Item")));
-    List<List<ExcelCellValue>> rows =
+    List<ResolvedCellWrite> values = new ArrayList<>(List.of(new CellValue.Text("Item")));
+    List<List<ResolvedCellWrite>> rows =
         new ArrayList<>(
             List.of(
-                new ArrayList<>(List.of(ExcelCellValue.text("Item"), ExcelCellValue.number(49.0))),
-                new ArrayList<>(List.of(ExcelCellValue.text("Tax"), ExcelCellValue.number(10.0)))));
+                new ArrayList<>(
+                    List.of(new CellValue.Text("Item"), new CellValue.NumberValue(49.0))),
+                new ArrayList<>(
+                    List.of(new CellValue.Text("Tax"), new CellValue.NumberValue(10.0)))));
     CreatedCommands commands = createSupportedCommands(values, rows, defaultStyle());
 
     values.clear();
@@ -147,7 +152,7 @@ class WorkbookCommandTest {
   }
 
   private CreatedCommands createSupportedCommands(
-      List<ExcelCellValue> values, List<List<ExcelCellValue>> rows, CellStylePatch style) {
+      List<ResolvedCellWrite> values, List<List<ResolvedCellWrite>> rows, CellStylePatch style) {
     return new CreatedCommands(
         new WorkbookSheetCommand.CreateSheet("Budget"),
         new WorkbookSheetCommand.RenameSheet("Budget", "Summary"),
@@ -169,7 +174,7 @@ class WorkbookCommandTest {
         new WorkbookLayoutCommand.SetPrintLayout("Budget", defaultPrintLayout()),
         new WorkbookLayoutCommand.ClearPrintLayout("Budget"),
         new WorkbookCellCommand.SetCell(
-            "Budget", "A1", ExcelCellValue.date(LocalDate.of(2026, 3, 23))),
+            "Budget", "A1", new CellValueSpec.Date(LocalDate.of(2026, 3, 23))),
         new WorkbookCellCommand.SetRange("Budget", "A1:B2", rows),
         new WorkbookCellCommand.ClearRange("Budget", "C1:C2"),
         new WorkbookAnnotationCommand.SetHyperlink(
@@ -593,18 +598,18 @@ class WorkbookCommandTest {
   void validatesCellRangeAndLinkCommentCommandInputs() {
     assertThrows(
         NullPointerException.class,
-        () -> new WorkbookCellCommand.SetCell(null, "A1", ExcelCellValue.text("x")));
+        () -> new WorkbookCellCommand.SetCell(null, "A1", new CellValue.Text("x")));
     assertThrows(
         NullPointerException.class,
-        () -> new WorkbookCellCommand.SetCell("Budget", null, ExcelCellValue.text("x")));
+        () -> new WorkbookCellCommand.SetCell("Budget", null, new CellValue.Text("x")));
     assertThrows(
         NullPointerException.class, () -> new WorkbookCellCommand.SetCell("Budget", "A1", null));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new WorkbookCellCommand.SetCell(" ", "A1", ExcelCellValue.text("x")));
+        () -> new WorkbookCellCommand.SetCell(" ", "A1", new CellValue.Text("x")));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new WorkbookCellCommand.SetCell("Budget", " ", ExcelCellValue.text("x")));
+        () -> new WorkbookCellCommand.SetCell("Budget", " ", new CellValue.Text("x")));
     assertThrows(
         NullPointerException.class, () -> new WorkbookCellCommand.SetRange(null, "A1", List.of()));
     assertThrows(
@@ -631,10 +636,10 @@ class WorkbookCommandTest {
                 "Budget",
                 "A1:B2",
                 List.of(
-                    List.of(ExcelCellValue.text("x")),
-                    List.of(ExcelCellValue.text("y"), ExcelCellValue.text("z")))));
-    List<List<ExcelCellValue>> rowsWithNull = new ArrayList<>();
-    List<ExcelCellValue> rowWithNull = new ArrayList<>();
+                    List.of(new CellValue.Text("x")),
+                    List.of(new CellValue.Text("y"), new CellValue.Text("z")))));
+    List<List<ResolvedCellWrite>> rowsWithNull = new ArrayList<>();
+    List<ResolvedCellWrite> rowWithNull = new ArrayList<>();
     rowWithNull.add(null);
     rowsWithNull.add(rowWithNull);
     assertThrows(
@@ -922,7 +927,7 @@ class WorkbookCommandTest {
     assertThrows(
         IllegalArgumentException.class,
         () -> new WorkbookCellCommand.AppendRow("Budget", List.of()));
-    List<ExcelCellValue> valuesWithNull = new ArrayList<>();
+    List<ResolvedCellWrite> valuesWithNull = new ArrayList<>();
     valuesWithNull.add(null);
     assertThrows(
         NullPointerException.class,

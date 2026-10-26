@@ -4,6 +4,7 @@ import static dev.erst.gridgrind.excel.ExcelStyleTestAccess.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 import dev.erst.gridgrind.core.model.drawing.ResolvedComment;
+import dev.erst.gridgrind.core.model.formula.ResolvedFormula;
 import dev.erst.gridgrind.core.model.protection.CellProtectionPatch;
 import dev.erst.gridgrind.core.model.style.BorderSidePatch;
 import dev.erst.gridgrind.core.model.style.CellAlignmentPatch;
@@ -18,6 +19,7 @@ import dev.erst.gridgrind.core.model.style.CellStylePatch;
 import dev.erst.gridgrind.core.model.style.CellStyleReport;
 import dev.erst.gridgrind.core.model.style.ColorSpec;
 import dev.erst.gridgrind.core.model.style.FontHeightSpec;
+import dev.erst.gridgrind.core.model.value.CellValue;
 import dev.erst.gridgrind.core.vocabulary.ExcelBorderStyle;
 import dev.erst.gridgrind.core.vocabulary.ExcelColumnSpan;
 import dev.erst.gridgrind.core.vocabulary.ExcelComparisonOperator;
@@ -60,14 +62,14 @@ class ExcelWorkbookTest {
           List.<WorkbookCommand>of(
               new WorkbookSheetCommand.CreateSheet("Budget"),
               new WorkbookCellCommand.AppendRow(
-                  "Budget", List.of(ExcelCellValue.text("Item"), ExcelCellValue.text("Amount"))),
+                  "Budget", List.of(new CellValue.Text("Item"), new CellValue.Text("Amount"))),
               new WorkbookCellCommand.AppendRow(
-                  "Budget", List.of(ExcelCellValue.text("Hosting"), ExcelCellValue.number(49.0))),
+                  "Budget",
+                  List.of(new CellValue.Text("Hosting"), new CellValue.NumberValue(49.0))),
               new WorkbookCellCommand.AppendRow(
-                  "Budget", List.of(ExcelCellValue.text("Domain"), ExcelCellValue.number(12.0))),
-              new WorkbookCellCommand.SetCell("Budget", "A4", ExcelCellValue.text("Total")),
-              new WorkbookCellCommand.SetCell(
-                  "Budget", "B4", ExcelCellValue.formula("SUM(B2:B3)"))));
+                  "Budget", List.of(new CellValue.Text("Domain"), new CellValue.NumberValue(12.0))),
+              new WorkbookCellCommand.SetCell("Budget", "A4", new CellValue.Text("Total")),
+              new WorkbookCellCommand.SetCell("Budget", "B4", new ResolvedFormula("SUM(B2:B3)"))));
       workbook.formulas().evaluateAll();
       workbook
           .persistence()
@@ -107,8 +109,8 @@ class ExcelWorkbookTest {
             .resolve("nested/book.xlsx");
 
     try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
-      workbook.getOrCreateSheet("Budget").cells().setCell("A1", ExcelCellValue.text("Hello"));
-      workbook.getOrCreateSheet("Budget").cells().setCell("B1", ExcelCellValue.number(12.0));
+      workbook.getOrCreateSheet("Budget").cells().setCell("A1", new CellValue.Text("Hello"));
+      workbook.getOrCreateSheet("Budget").cells().setCell("B1", new CellValue.NumberValue(12.0));
       workbook.formulas().markRecalculateOnOpen();
       workbook
           .persistence()
@@ -155,8 +157,8 @@ class ExcelWorkbookTest {
       assertTrue(workbook.formulaRuntimeContext().hasExternalWorkbookBinding("RATES.XLSX"));
       assertTrue(workbook.formulaRuntimeContext().hasUserDefinedFunction("double"));
       workbook.getOrCreateSheet("Budget");
-      workbook.sheet("Budget").cells().setCell("A1", ExcelCellValue.number(2.0d));
-      workbook.sheet("Budget").cells().setCell("B1", ExcelCellValue.formula("A1*2"));
+      workbook.sheet("Budget").cells().setCell("A1", new CellValue.NumberValue(2.0d));
+      workbook.sheet("Budget").cells().setCell("B1", new ResolvedFormula("A1*2"));
       workbook.formulas().evaluateAll();
       workbook
           .persistence()
@@ -189,8 +191,8 @@ class ExcelWorkbookTest {
     Path workbookPath = XlsxRoundTrip.newWorkbookPath("gridgrind-sheet-management-");
 
     try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
-      workbook.getOrCreateSheet("Budget").cells().setCell("A1", ExcelCellValue.text("Live"));
-      workbook.getOrCreateSheet("Archive").cells().setCell("A1", ExcelCellValue.text("Old"));
+      workbook.getOrCreateSheet("Budget").cells().setCell("A1", new CellValue.Text("Live"));
+      workbook.getOrCreateSheet("Archive").cells().setCell("A1", new CellValue.Text("Old"));
       workbook.getOrCreateSheet("Scratch");
 
       workbook.sheets().renameSheet("Archive", "History");
@@ -241,7 +243,7 @@ class ExcelWorkbookTest {
     Path workbookPath = XlsxRoundTrip.newWorkbookPath("gridgrind-sheet-state-");
 
     try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
-      workbook.getOrCreateSheet("Alpha").cells().setCell("A1", ExcelCellValue.text("Live"));
+      workbook.getOrCreateSheet("Alpha").cells().setCell("A1", new CellValue.Text("Live"));
       workbook.getOrCreateSheet("Beta");
       workbook.getOrCreateSheet("Gamma");
       workbook.sheets().copySheet("Alpha", "Replica", new ExcelSheetCopyPosition.AtIndex(1));
@@ -350,11 +352,11 @@ class ExcelWorkbookTest {
 
     try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       workbook.getOrCreateSheet("Source");
-      workbook.sheet("Source").cells().setCell("A1", ExcelCellValue.text("Item"));
-      workbook.sheet("Source").cells().setCell("B1", ExcelCellValue.text("Amount"));
-      workbook.sheet("Source").cells().setCell("A2", ExcelCellValue.text("Hosting"));
-      workbook.sheet("Source").cells().setCell("B2", ExcelCellValue.number(49.0));
-      workbook.sheet("Source").cells().setCell("B3", ExcelCellValue.formula("SUM(B2:B2)"));
+      workbook.sheet("Source").cells().setCell("A1", new CellValue.Text("Item"));
+      workbook.sheet("Source").cells().setCell("B1", new CellValue.Text("Amount"));
+      workbook.sheet("Source").cells().setCell("A2", new CellValue.Text("Hosting"));
+      workbook.sheet("Source").cells().setCell("B2", new CellValue.NumberValue(49.0));
+      workbook.sheet("Source").cells().setCell("B3", new ResolvedFormula("SUM(B2:B2)"));
       workbook
           .sheet("Source")
           .annotations()
@@ -522,10 +524,10 @@ class ExcelWorkbookTest {
 
     try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       workbook.getOrCreateSheet("Tables");
-      workbook.sheet("Tables").cells().setCell("A1", ExcelCellValue.text("Name"));
-      workbook.sheet("Tables").cells().setCell("B1", ExcelCellValue.text("Value"));
-      workbook.sheet("Tables").cells().setCell("A2", ExcelCellValue.text("Ops"));
-      workbook.sheet("Tables").cells().setCell("B2", ExcelCellValue.number(1.0));
+      workbook.sheet("Tables").cells().setCell("A1", new CellValue.Text("Name"));
+      workbook.sheet("Tables").cells().setCell("B1", new CellValue.Text("Value"));
+      workbook.sheet("Tables").cells().setCell("A2", new CellValue.Text("Ops"));
+      workbook.sheet("Tables").cells().setCell("B2", new CellValue.NumberValue(1.0));
       workbook
           .tables()
           .setTable(
@@ -577,7 +579,7 @@ class ExcelWorkbookTest {
 
     try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       ExcelSheet budget = workbook.getOrCreateSheet("Budget");
-      budget.cells().setCell("A1", ExcelCellValue.text("Quarterly"));
+      budget.cells().setCell("A1", new CellValue.Text("Quarterly"));
       budget.layout().mergeCells("A1:B1");
       budget.columns().setWidth(0, 1, 16.0);
       budget.rows().setHeight(0, 0, 28.5);
@@ -621,7 +623,7 @@ class ExcelWorkbookTest {
                 FormulaRuntimeTestDouble.failingEvaluation(
                     poiWorkbook.getCreationHelper().createFormulaEvaluator(),
                     new org.apache.poi.ss.formula.FakeFormulaFailure("bad formula")))) {
-      workbook.getOrCreateSheet("Budget").cells().setCell("A1", ExcelCellValue.formula("1+1"));
+      workbook.getOrCreateSheet("Budget").cells().setCell("A1", new ResolvedFormula("1+1"));
 
       InvalidFormulaException exception =
           assertThrows(InvalidFormulaException.class, workbook.formulas()::evaluateAll);
@@ -637,7 +639,7 @@ class ExcelWorkbookTest {
         ExcelWorkbook workbook =
             new ExcelWorkbook(
                 poiWorkbook, poiWorkbook.getCreationHelper().createFormulaEvaluator())) {
-      workbook.getOrCreateSheet("Budget").cells().setCell("A1", ExcelCellValue.formula("1+1"));
+      workbook.getOrCreateSheet("Budget").cells().setCell("A1", new ResolvedFormula("1+1"));
 
       workbook.formulas().evaluateAll();
 
@@ -650,9 +652,9 @@ class ExcelWorkbookTest {
   @Test
   void setCellLiteralReplacesExistingFormulaCell() throws Exception {
     try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
-      workbook.getOrCreateSheet("Budget").cells().setCell("A1", ExcelCellValue.formula("1+1"));
+      workbook.getOrCreateSheet("Budget").cells().setCell("A1", new ResolvedFormula("1+1"));
 
-      workbook.sheet("Budget").cells().setCell("A1", ExcelCellValue.number(0.0d));
+      workbook.sheet("Budget").cells().setCell("A1", new CellValue.NumberValue(0.0d));
 
       ExcelCellSnapshot.NumberSnapshot snapshot =
           assertInstanceOf(
@@ -666,14 +668,15 @@ class ExcelWorkbookTest {
   @Test
   void setRangeLiteralReplacesExistingFormulaCells() throws Exception {
     try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
-      workbook.getOrCreateSheet("Budget").cells().setCell("A1", ExcelCellValue.formula("1+1"));
-      workbook.getOrCreateSheet("Budget").cells().setCell("B1", ExcelCellValue.formula("2+2"));
+      workbook.getOrCreateSheet("Budget").cells().setCell("A1", new ResolvedFormula("1+1"));
+      workbook.getOrCreateSheet("Budget").cells().setCell("B1", new ResolvedFormula("2+2"));
 
       workbook
           .sheet("Budget")
           .cells()
           .setRange(
-              "A1:B1", List.of(List.of(ExcelCellValue.number(0.0d), ExcelCellValue.number(5.0d))));
+              "A1:B1",
+              List.of(List.of(new CellValue.NumberValue(0.0d), new CellValue.NumberValue(5.0d))));
 
       ExcelCellSnapshot.NumberSnapshot first =
           assertInstanceOf(
@@ -812,7 +815,7 @@ class ExcelWorkbookTest {
     try (ExcelWorkbook workbook = ExcelWorkbooks.create(null)) {
       assertEquals(
           ExcelFormulaEnvironment.defaults().runtimeContext(), workbook.formulaRuntimeContext());
-      workbook.getOrCreateSheet("Budget").cells().setCell("A1", ExcelCellValue.text("Header"));
+      workbook.getOrCreateSheet("Budget").cells().setCell("A1", new CellValue.Text("Header"));
       assertThrows(
           CellNotFoundException.class,
           () -> workbook.formulas().evaluate(List.of(new ExcelFormulaCellTarget("Budget", "B1"))));
@@ -849,10 +852,7 @@ class ExcelWorkbookTest {
   @Test
   void clearFormulaCachesRemovesInlineStringAndTypeMetadata() throws Exception {
     try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
-      workbook
-          .getOrCreateSheet("Budget")
-          .cells()
-          .setCell("A1", ExcelCellValue.formula("\"hello\""));
+      workbook.getOrCreateSheet("Budget").cells().setCell("A1", new ResolvedFormula("\"hello\""));
       workbook.formulas().evaluateAll();
 
       org.apache.poi.xssf.usermodel.XSSFCell cell =
@@ -877,7 +877,7 @@ class ExcelWorkbookTest {
   @Test
   void clearFormulaCachesLeavesUnsetTypeMetadataUnset() throws Exception {
     try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
-      workbook.getOrCreateSheet("Budget").cells().setCell("A1", ExcelCellValue.formula("1+1"));
+      workbook.getOrCreateSheet("Budget").cells().setCell("A1", new ResolvedFormula("1+1"));
       workbook.formulas().evaluateAll();
 
       org.apache.poi.xssf.usermodel.XSSFCell cell =
@@ -899,7 +899,7 @@ class ExcelWorkbookTest {
     Path workbookPath = ExcelTempFiles.createManagedTempFile("gridgrind-empty-persist-", ".xlsx");
     try {
       try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
-        workbook.getOrCreateSheet("Alpha").cells().setCell("A1", ExcelCellValue.text("Hello"));
+        workbook.getOrCreateSheet("Alpha").cells().setCell("A1", new CellValue.Text("Hello"));
         workbook
             .persistence()
             .save(
@@ -937,7 +937,7 @@ class ExcelWorkbookTest {
     try {
       saveBudgetWorkbook(workbookPath);
       try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
-        workbook.getOrCreateSheet("Budget").cells().setCell("A1", ExcelCellValue.text("Again"));
+        workbook.getOrCreateSheet("Budget").cells().setCell("A1", new CellValue.Text("Again"));
         assertThrows(
             FileAlreadyExistsException.class,
             () ->
@@ -958,7 +958,7 @@ class ExcelWorkbookTest {
     Path relativePath = Path.of("gridgrind-relative-" + UUID.randomUUID() + ".xlsx");
 
     try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
-      workbook.getOrCreateSheet("Budget").cells().setCell("A1", ExcelCellValue.text("Hello"));
+      workbook.getOrCreateSheet("Budget").cells().setCell("A1", new CellValue.Text("Hello"));
       workbook
           .persistence()
           .save(
@@ -973,8 +973,8 @@ class ExcelWorkbookTest {
 
   private static byte[] saveBudgetWorkbook(Path workbookPath) throws IOException {
     try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
-      workbook.getOrCreateSheet("Budget").cells().setCell("A1", ExcelCellValue.text("Hello"));
-      workbook.getOrCreateSheet("Budget").cells().setCell("B1", ExcelCellValue.number(12.0d));
+      workbook.getOrCreateSheet("Budget").cells().setCell("A1", new CellValue.Text("Hello"));
+      workbook.getOrCreateSheet("Budget").cells().setCell("B1", new CellValue.NumberValue(12.0d));
       workbook.formulas().markRecalculateOnOpen();
       workbook
           .persistence()
@@ -1016,7 +1016,7 @@ class ExcelWorkbookTest {
     Path workbookPath = XlsxRoundTrip.newWorkbookPath("gridgrind-style-roundtrip-");
 
     try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
-      workbook.getOrCreateSheet("Budget").cells().setCell("A1", ExcelCellValue.text("Item"));
+      workbook.getOrCreateSheet("Budget").cells().setCell("A1", new CellValue.Text("Item"));
       workbook
           .sheet("Budget")
           .cells()
@@ -1083,7 +1083,7 @@ class ExcelWorkbookTest {
 
     try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       ExcelSheet budget = workbook.getOrCreateSheet("Budget");
-      budget.cells().setCell("A1", ExcelCellValue.text("Linear"));
+      budget.cells().setCell("A1", new CellValue.Text("Linear"));
       budget
           .cells()
           .applyStyle(
@@ -1132,8 +1132,8 @@ class ExcelWorkbookTest {
 
     try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       ExcelSheet budget = workbook.getOrCreateSheet("Budget");
-      budget.cells().setCell("A1", ExcelCellValue.text("Report"));
-      budget.cells().setCell("B4", ExcelCellValue.number(61.0));
+      budget.cells().setCell("A1", new CellValue.Text("Report"));
+      budget.cells().setCell("B4", new CellValue.NumberValue(61.0));
       budget.annotations().setHyperlink("A1", new ExcelHyperlink.Url("https://example.com/report"));
       budget.annotations().setComment("A1", new ResolvedComment("Review", "GridGrind", true));
       workbook

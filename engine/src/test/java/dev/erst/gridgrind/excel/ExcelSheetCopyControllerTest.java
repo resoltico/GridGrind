@@ -4,11 +4,13 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import dev.erst.gridgrind.core.model.drawing.CommentAnchorSpec;
 import dev.erst.gridgrind.core.model.drawing.ResolvedComment;
+import dev.erst.gridgrind.core.model.formula.ResolvedFormula;
 import dev.erst.gridgrind.core.model.style.CellColorReport;
 import dev.erst.gridgrind.core.model.style.CellFontPatch;
 import dev.erst.gridgrind.core.model.style.ColorSpec;
 import dev.erst.gridgrind.core.model.style.ResolvedRichText;
 import dev.erst.gridgrind.core.model.style.ResolvedRichTextRun;
+import dev.erst.gridgrind.core.model.value.CellValue;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartBarDirection;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartDisplayBlanksAs;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartLegendPosition;
@@ -601,21 +603,21 @@ class ExcelSheetCopyControllerTest {
 
     try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       ExcelSheet source = workbook.getOrCreateSheet("Source");
-      source.cells().setCell("A1", ExcelCellValue.text("Owner"));
-      source.cells().setCell("B1", ExcelCellValue.text("Amount"));
-      source.cells().setCell("C1", ExcelCellValue.text("Flag"));
-      source.cells().setCell("A2", ExcelCellValue.text("Ada"));
-      source.cells().setCell("A3", ExcelCellValue.text("Lin"));
-      source.cells().setCell("B2", ExcelCellValue.number(2));
-      source.cells().setCell("B3", ExcelCellValue.number(4));
-      source.cells().setCell("E1", ExcelCellValue.text("Desk"));
-      source.cells().setCell("F1", ExcelCellValue.text("Region"));
-      source.cells().setCell("E2", ExcelCellValue.text("A1"));
-      source.cells().setCell("E3", ExcelCellValue.text("B1"));
-      source.cells().setCell("E4", ExcelCellValue.text("Totals"));
-      source.cells().setCell("F2", ExcelCellValue.text("North"));
-      source.cells().setCell("F3", ExcelCellValue.text("South"));
-      source.cells().setCell("F4", ExcelCellValue.text("2"));
+      source.cells().setCell("A1", new CellValue.Text("Owner"));
+      source.cells().setCell("B1", new CellValue.Text("Amount"));
+      source.cells().setCell("C1", new CellValue.Text("Flag"));
+      source.cells().setCell("A2", new CellValue.Text("Ada"));
+      source.cells().setCell("A3", new CellValue.Text("Lin"));
+      source.cells().setCell("B2", new CellValue.NumberValue(2));
+      source.cells().setCell("B3", new CellValue.NumberValue(4));
+      source.cells().setCell("E1", new CellValue.Text("Desk"));
+      source.cells().setCell("F1", new CellValue.Text("Region"));
+      source.cells().setCell("E2", new CellValue.Text("A1"));
+      source.cells().setCell("E3", new CellValue.Text("B1"));
+      source.cells().setCell("E4", new CellValue.Text("Totals"));
+      source.cells().setCell("F2", new CellValue.Text("North"));
+      source.cells().setCell("F3", new CellValue.Text("South"));
+      source.cells().setCell("F4", new CellValue.Text("2"));
 
       source
           .metadata()
@@ -1110,30 +1112,30 @@ class ExcelSheetCopyControllerTest {
 
   private static ExcelSheet seedAdvancedCopySource(ExcelWorkbook workbook) throws IOException {
     ExcelSheet source = workbook.getOrCreateSheet("Source");
-    source.cells().setCell("A1", ExcelCellValue.text("Owner"));
-    source.cells().setCell("B1", ExcelCellValue.text("Amount"));
-    source.cells().setCell("C1", ExcelCellValue.text("Formula"));
-    source.cells().setCell("D1", ExcelCellValue.text("Stage"));
-    source.cells().setCell("E1", ExcelCellValue.text("Comment"));
-    source.cells().setCell("F1", ExcelCellValue.text("Flag"));
-    source.cells().setCell("G1", ExcelCellValue.text("List"));
-    source.cells().setCell("H1", ExcelCellValue.text("Whole"));
-    source.cells().setCell("I1", ExcelCellValue.text("Note"));
-    source.cells().setCell("J1", ExcelCellValue.text("Statuses"));
-    source.cells().setCell("A2", ExcelCellValue.text("Ada"));
-    source.cells().setCell("A3", ExcelCellValue.text("Lin"));
-    source.cells().setCell("B2", ExcelCellValue.number(2));
-    source.cells().setCell("B3", ExcelCellValue.number(4));
-    source.cells().setCell("C2", ExcelCellValue.formula("SUM(Source!B2:B3)"));
-    source.cells().setCell("D2", ExcelCellValue.text("Today"));
-    source.cells().setCell("D3", ExcelCellValue.text("Today"));
-    source.cells().setCell("F2", ExcelCellValue.text("High"));
-    source.cells().setCell("F3", ExcelCellValue.text("Low"));
-    source.cells().setCell("J2", ExcelCellValue.text("Ready"));
-    source.cells().setCell("J3", ExcelCellValue.text("Done"));
-    source.cells().setCell("H2", ExcelCellValue.number(1));
-    source.cells().setCell("H3", ExcelCellValue.number(2));
-    source.cells().setCell("E2", ExcelCellValue.text("Quarterly Review"));
+    source.cells().setCell("A1", new CellValue.Text("Owner"));
+    source.cells().setCell("B1", new CellValue.Text("Amount"));
+    source.cells().setCell("C1", new CellValue.Text("Formula"));
+    source.cells().setCell("D1", new CellValue.Text("Stage"));
+    source.cells().setCell("E1", new CellValue.Text("Comment"));
+    source.cells().setCell("F1", new CellValue.Text("Flag"));
+    source.cells().setCell("G1", new CellValue.Text("List"));
+    source.cells().setCell("H1", new CellValue.Text("Whole"));
+    source.cells().setCell("I1", new CellValue.Text("Note"));
+    source.cells().setCell("J1", new CellValue.Text("Statuses"));
+    source.cells().setCell("A2", new CellValue.Text("Ada"));
+    source.cells().setCell("A3", new CellValue.Text("Lin"));
+    source.cells().setCell("B2", new CellValue.NumberValue(2));
+    source.cells().setCell("B3", new CellValue.NumberValue(4));
+    source.cells().setCell("C2", new ResolvedFormula("SUM(Source!B2:B3)"));
+    source.cells().setCell("D2", new CellValue.Text("Today"));
+    source.cells().setCell("D3", new CellValue.Text("Today"));
+    source.cells().setCell("F2", new CellValue.Text("High"));
+    source.cells().setCell("F3", new CellValue.Text("Low"));
+    source.cells().setCell("J2", new CellValue.Text("Ready"));
+    source.cells().setCell("J3", new CellValue.Text("Done"));
+    source.cells().setCell("H2", new CellValue.NumberValue(1));
+    source.cells().setCell("H3", new CellValue.NumberValue(2));
+    source.cells().setCell("E2", new CellValue.Text("Quarterly Review"));
     source
         .annotations()
         .setComment(
@@ -1213,12 +1215,12 @@ class ExcelSheetCopyControllerTest {
                 "LocalFormula",
                 new ExcelNamedRangeScope.SheetScope("Source"),
                 ExcelNamedRangeTarget.formula("SUM(Source!$B$2:$B$3)")));
-    source.cells().setCell("L1", ExcelCellValue.text("Region"));
-    source.cells().setCell("M1", ExcelCellValue.text("Desk"));
-    source.cells().setCell("L2", ExcelCellValue.text("North"));
-    source.cells().setCell("M2", ExcelCellValue.text("A1"));
-    source.cells().setCell("L3", ExcelCellValue.text("South"));
-    source.cells().setCell("M3", ExcelCellValue.text("B1"));
+    source.cells().setCell("L1", new CellValue.Text("Region"));
+    source.cells().setCell("M1", new CellValue.Text("Desk"));
+    source.cells().setCell("L2", new CellValue.Text("North"));
+    source.cells().setCell("M2", new CellValue.Text("A1"));
+    source.cells().setCell("L3", new CellValue.Text("South"));
+    source.cells().setCell("M3", new CellValue.Text("B1"));
     workbook
         .tables()
         .setTable(

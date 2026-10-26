@@ -2,6 +2,7 @@ package dev.erst.gridgrind.excel;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.core.model.value.CellValue;
 import dev.erst.gridgrind.excel.pivot.ExcelPivotTableDefinition;
 import dev.erst.gridgrind.excel.pivot.ExcelPivotTableSelection;
 import dev.erst.gridgrind.excel.pivot.ExcelPivotTableSnapshot;
@@ -155,10 +156,10 @@ class ExcelPivotTableAuthoringCoverageTest extends ExcelPivotTableCoverageTestSu
               "A1:D1",
               List.of(
                   List.of(
-                      ExcelCellValue.text("Region"),
-                      ExcelCellValue.text("Stage"),
-                      ExcelCellValue.text("Owner"),
-                      ExcelCellValue.text("Amount"))));
+                      new CellValue.Text("Region"),
+                      new CellValue.Text("Stage"),
+                      new CellValue.Text("Owner"),
+                      new CellValue.Text("Amount"))));
       IllegalArgumentException oneRowFailure =
           assertThrows(
               IllegalArgumentException.class,
@@ -176,8 +177,8 @@ class ExcelPivotTableAuthoringCoverageTest extends ExcelPivotTableCoverageTestSu
       assertTrue(oneRowFailure.getMessage().contains("header row plus at least one data row"));
 
       ExcelSheet missingHeaderSheet = workbook.getOrCreateSheet("MissingHeader");
-      missingHeaderSheet.cells().setCell("A3", ExcelCellValue.text("North"));
-      missingHeaderSheet.cells().setCell("B3", ExcelCellValue.number(10));
+      missingHeaderSheet.cells().setCell("A3", new CellValue.Text("North"));
+      missingHeaderSheet.cells().setCell("B3", new CellValue.NumberValue(10));
       IllegalArgumentException missingHeaderFailure =
           assertThrows(
               IllegalArgumentException.class,
@@ -200,8 +201,8 @@ class ExcelPivotTableAuthoringCoverageTest extends ExcelPivotTableCoverageTestSu
           .setRange(
               "A1:B2",
               List.of(
-                  List.of(ExcelCellValue.number(1), ExcelCellValue.text("Amount")),
-                  List.of(ExcelCellValue.text("North"), ExcelCellValue.number(10))));
+                  List.of(new CellValue.NumberValue(1), new CellValue.Text("Amount")),
+                  List.of(new CellValue.Text("North"), new CellValue.NumberValue(10))));
       IllegalArgumentException numericHeaderFailure =
           assertThrows(
               IllegalArgumentException.class,
@@ -224,8 +225,8 @@ class ExcelPivotTableAuthoringCoverageTest extends ExcelPivotTableCoverageTestSu
           .setRange(
               "A1:B2",
               List.of(
-                  List.of(ExcelCellValue.text(" "), ExcelCellValue.text("Amount")),
-                  List.of(ExcelCellValue.text("North"), ExcelCellValue.number(10))));
+                  List.of(new CellValue.Text(" "), new CellValue.Text("Amount")),
+                  List.of(new CellValue.Text("North"), new CellValue.NumberValue(10))));
       assertThrows(
           IllegalArgumentException.class,
           () ->
@@ -241,11 +242,11 @@ class ExcelPivotTableAuthoringCoverageTest extends ExcelPivotTableCoverageTestSu
                       List.of())));
 
       ExcelSheet missingHeaderCellSheet = workbook.getOrCreateSheet("MissingHeaderCell");
-      missingHeaderCellSheet.cells().setCell("A1", ExcelCellValue.text("Region"));
-      missingHeaderCellSheet.cells().setCell("C1", ExcelCellValue.text("Amount"));
-      missingHeaderCellSheet.cells().setCell("A2", ExcelCellValue.text("North"));
-      missingHeaderCellSheet.cells().setCell("B2", ExcelCellValue.text("Plan"));
-      missingHeaderCellSheet.cells().setCell("C2", ExcelCellValue.number(10));
+      missingHeaderCellSheet.cells().setCell("A1", new CellValue.Text("Region"));
+      missingHeaderCellSheet.cells().setCell("C1", new CellValue.Text("Amount"));
+      missingHeaderCellSheet.cells().setCell("A2", new CellValue.Text("North"));
+      missingHeaderCellSheet.cells().setCell("B2", new CellValue.Text("Plan"));
+      missingHeaderCellSheet.cells().setCell("C2", new CellValue.NumberValue(10));
       assertThrows(
           IllegalArgumentException.class,
           () ->
@@ -266,8 +267,8 @@ class ExcelPivotTableAuthoringCoverageTest extends ExcelPivotTableCoverageTestSu
           .setRange(
               "A1:B2",
               List.of(
-                  List.of(ExcelCellValue.text("Region"), ExcelCellValue.text("region")),
-                  List.of(ExcelCellValue.text("North"), ExcelCellValue.number(10))));
+                  List.of(new CellValue.Text("Region"), new CellValue.Text("region")),
+                  List.of(new CellValue.Text("North"), new CellValue.NumberValue(10))));
       IllegalArgumentException duplicateHeaderFailure =
           assertThrows(
               IllegalArgumentException.class,
@@ -290,8 +291,8 @@ class ExcelPivotTableAuthoringCoverageTest extends ExcelPivotTableCoverageTestSu
           .setRange(
               "A1:B2",
               List.of(
-                  List.of(ExcelCellValue.text(""), ExcelCellValue.text("Amount")),
-                  List.of(ExcelCellValue.text("North"), ExcelCellValue.number(10))));
+                  List.of(new CellValue.Text(""), new CellValue.Text("Amount")),
+                  List.of(new CellValue.Text("North"), new CellValue.NumberValue(10))));
       IllegalArgumentException blankHeaderFailure =
           assertThrows(
               IllegalArgumentException.class,

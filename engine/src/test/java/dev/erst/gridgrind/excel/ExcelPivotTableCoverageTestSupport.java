@@ -2,6 +2,7 @@ package dev.erst.gridgrind.excel;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.core.model.value.CellValue;
 import dev.erst.gridgrind.core.vocabulary.AnalysisFindingCode;
 import dev.erst.gridgrind.core.vocabulary.AnalysisSeverity;
 import dev.erst.gridgrind.core.vocabulary.ExcelPivotDataConsolidateFunction;
@@ -103,30 +104,30 @@ class ExcelPivotTableCoverageTestSupport {
             "A1:D5",
             List.of(
                 List.of(
-                    ExcelCellValue.text("Region"),
-                    ExcelCellValue.text("Stage"),
-                    ExcelCellValue.text("Owner"),
-                    ExcelCellValue.text("Amount")),
+                    new CellValue.Text("Region"),
+                    new CellValue.Text("Stage"),
+                    new CellValue.Text("Owner"),
+                    new CellValue.Text("Amount")),
                 List.of(
-                    ExcelCellValue.text("North"),
-                    ExcelCellValue.text("Plan"),
-                    ExcelCellValue.text("Ada"),
-                    ExcelCellValue.number(10)),
+                    new CellValue.Text("North"),
+                    new CellValue.Text("Plan"),
+                    new CellValue.Text("Ada"),
+                    new CellValue.NumberValue(10)),
                 List.of(
-                    ExcelCellValue.text("North"),
-                    ExcelCellValue.text("Do"),
-                    ExcelCellValue.text("Ada"),
-                    ExcelCellValue.number(15)),
+                    new CellValue.Text("North"),
+                    new CellValue.Text("Do"),
+                    new CellValue.Text("Ada"),
+                    new CellValue.NumberValue(15)),
                 List.of(
-                    ExcelCellValue.text("South"),
-                    ExcelCellValue.text("Plan"),
-                    ExcelCellValue.text("Lin"),
-                    ExcelCellValue.number(7)),
+                    new CellValue.Text("South"),
+                    new CellValue.Text("Plan"),
+                    new CellValue.Text("Lin"),
+                    new CellValue.NumberValue(7)),
                 List.of(
-                    ExcelCellValue.text("South"),
-                    ExcelCellValue.text("Do"),
-                    ExcelCellValue.text("Lin"),
-                    ExcelCellValue.number(12))));
+                    new CellValue.Text("South"),
+                    new CellValue.Text("Do"),
+                    new CellValue.Text("Lin"),
+                    new CellValue.NumberValue(12))));
   }
 
   List<String> fieldNames(List<ExcelPivotTableSnapshot.Field> fields) {

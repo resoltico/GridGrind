@@ -4,6 +4,7 @@ import static dev.erst.gridgrind.excel.ExcelStyleTestAccess.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 import dev.erst.gridgrind.core.model.drawing.ResolvedComment;
+import dev.erst.gridgrind.core.model.formula.ResolvedFormula;
 import dev.erst.gridgrind.core.model.style.BorderSidePatch;
 import dev.erst.gridgrind.core.model.style.CellAlignmentPatch;
 import dev.erst.gridgrind.core.model.style.CellBorderPatch;
@@ -13,6 +14,9 @@ import dev.erst.gridgrind.core.model.style.CellFontPatch;
 import dev.erst.gridgrind.core.model.style.CellStylePatch;
 import dev.erst.gridgrind.core.model.style.ColorSpec;
 import dev.erst.gridgrind.core.model.style.FontHeightSpec;
+import dev.erst.gridgrind.core.model.value.CellValue;
+import dev.erst.gridgrind.core.model.value.CellValueSpec;
+import dev.erst.gridgrind.core.model.value.ResolvedCellWrite;
 import dev.erst.gridgrind.core.vocabulary.ExcelBorderStyle;
 import dev.erst.gridgrind.core.vocabulary.ExcelColumnSpan;
 import dev.erst.gridgrind.core.vocabulary.ExcelFillPattern;
@@ -52,23 +56,23 @@ class ExcelSheetCoreReadWriteCoverageTest extends ExcelSheetTestSupport {
       assertSame(
           cells,
           cells.appendRow(
-              ExcelCellValue.text("Name"),
-              ExcelCellValue.number(42.5),
-              ExcelCellValue.bool(true),
-              ExcelCellValue.formula("B1*2"),
-              ExcelCellValue.formula("TRUE()"),
-              ExcelCellValue.formula("\"Hi\"")));
+              new CellValue.Text("Name"),
+              new CellValue.NumberValue(42.5),
+              new CellValue.BooleanValue(true),
+              new ResolvedFormula("B1*2"),
+              new ResolvedFormula("TRUE()"),
+              new ResolvedFormula("\"Hi\"")));
       sheet
           .cells()
           .appendRow(
-              ExcelCellValue.blank(),
-              ExcelCellValue.date(LocalDate.of(2026, 3, 23)),
-              ExcelCellValue.dateTime(LocalDateTime.of(2026, 3, 23, 14, 15, 16)),
-              ExcelCellValue.formula("1/0"));
-      sheet.cells().setCell("A3", ExcelCellValue.formula("B3+1"));
-      sheet.cells().setCell("B3", ExcelCellValue.date(LocalDate.of(2026, 3, 24)));
-      sheet.cells().setCell("C3", ExcelCellValue.dateTime(LocalDateTime.of(2026, 3, 24, 9, 0)));
-      sheet.cells().setCell("D3", ExcelCellValue.formula("D3+1"));
+              new CellValue.Blank(),
+              new CellValueSpec.Date(LocalDate.of(2026, 3, 23)),
+              new CellValueSpec.DateTime(LocalDateTime.of(2026, 3, 23, 14, 15, 16)),
+              new ResolvedFormula("1/0"));
+      sheet.cells().setCell("A3", new ResolvedFormula("B3+1"));
+      sheet.cells().setCell("B3", new CellValueSpec.Date(LocalDate.of(2026, 3, 24)));
+      sheet.cells().setCell("C3", new CellValueSpec.DateTime(LocalDateTime.of(2026, 3, 24, 9, 0)));
+      sheet.cells().setCell("D3", new ResolvedFormula("D3+1"));
       sheet.columns().autoSize();
 
       Row errorRow = poiSheet.createRow(3);
@@ -148,7 +152,7 @@ class ExcelSheetCoreReadWriteCoverageTest extends ExcelSheetTestSupport {
       FormulaEvaluator evaluator = poiWorkbook.getCreationHelper().createFormulaEvaluator();
       ExcelSheetCells cells =
           new ExcelSheet(poiSheet, new WorkbookStyleRegistry(poiWorkbook), evaluator).cells();
-      cells.setCell("A1", ExcelCellValue.formula("1+1"));
+      cells.setCell("A1", new ResolvedFormula("1+1"));
 
       ExcelCellReadProjection formulaOnly =
           new ExcelCellReadProjection(Set.of(ExcelCellReadFacet.FORMULA));
@@ -174,17 +178,17 @@ class ExcelSheetCoreReadWriteCoverageTest extends ExcelSheetTestSupport {
           new ExcelSheet(poiSheet, new WorkbookStyleRegistry(poiWorkbook), evaluator);
 
       assertThrows(
-          NullPointerException.class, () -> sheet.cells().setCell(null, ExcelCellValue.text("x")));
+          NullPointerException.class, () -> sheet.cells().setCell(null, new CellValue.Text("x")));
       assertThrows(
           IllegalArgumentException.class,
-          () -> sheet.cells().setCell(" ", ExcelCellValue.text("x")));
+          () -> sheet.cells().setCell(" ", new CellValue.Text("x")));
       assertThrows(NullPointerException.class, () -> sheet.cells().setCell("A1", null));
       assertThrows(
           NullPointerException.class,
-          () -> sheet.cells().setRange(null, List.of(List.of(ExcelCellValue.text("x")))));
+          () -> sheet.cells().setRange(null, List.of(List.of(new CellValue.Text("x")))));
       assertThrows(
           IllegalArgumentException.class,
-          () -> sheet.cells().setRange(" ", List.of(List.of(ExcelCellValue.text("x")))));
+          () -> sheet.cells().setRange(" ", List.of(List.of(new CellValue.Text("x")))));
       assertThrows(NullPointerException.class, () -> sheet.cells().setRange("A1", null));
       assertThrows(IllegalArgumentException.class, () -> sheet.cells().setRange("A1", List.of()));
       assertThrows(NullPointerException.class, () -> sheet.cells().clearRange(null));
@@ -293,10 +297,9 @@ class ExcelSheetCoreReadWriteCoverageTest extends ExcelSheetTestSupport {
       assertThrows(NullPointerException.class, () -> sheet.annotations().clearComment(null));
       assertThrows(IllegalArgumentException.class, () -> sheet.annotations().clearComment(" "));
       assertThrows(
-          NullPointerException.class, () -> sheet.cells().appendRow((ExcelCellValue[]) null));
+          NullPointerException.class, () -> sheet.cells().appendRow((ResolvedCellWrite[]) null));
       assertThrows(
-          NullPointerException.class,
-          () -> sheet.cells().appendRow(ExcelCellValue.text("x"), null));
+          NullPointerException.class, () -> sheet.cells().appendRow(new CellValue.Text("x"), null));
     }
   }
 
@@ -313,7 +316,7 @@ class ExcelSheetCoreReadWriteCoverageTest extends ExcelSheetTestSupport {
       InvalidCellAddressException invalidSetCell =
           assertThrows(
               InvalidCellAddressException.class,
-              () -> sheet.cells().setCell(":", ExcelCellValue.text("x")));
+              () -> sheet.cells().setCell(":", new CellValue.Text("x")));
       assertEquals(":", invalidSetCell.address());
       InvalidCellAddressException invalidSnapshotCell =
           assertThrows(InvalidCellAddressException.class, () -> sheet.cells().snapshotCell(":"));
@@ -338,7 +341,7 @@ class ExcelSheetCoreReadWriteCoverageTest extends ExcelSheetTestSupport {
       InvalidRangeAddressException invalidRangeSet =
           assertThrows(
               InvalidRangeAddressException.class,
-              () -> sheet.cells().setRange("A1:", List.of(List.of(ExcelCellValue.text("x")))));
+              () -> sheet.cells().setRange("A1:", List.of(List.of(new CellValue.Text("x")))));
       assertEquals("A1:", invalidRangeSet.range());
       InvalidRangeAddressException invalidRangeClear =
           assertThrows(
@@ -380,7 +383,7 @@ class ExcelSheetCoreReadWriteCoverageTest extends ExcelSheetTestSupport {
       ExcelSheetRows rows = sheet.rows();
       ExcelSheetColumns columns = sheet.columns();
 
-      sheet.cells().setCell("A1", ExcelCellValue.text("Header"));
+      sheet.cells().setCell("A1", new CellValue.Text("Header"));
 
       assertSame(rows, rows.group(new ExcelRowSpan(1, 3), true));
       assertSame(columns, columns.group(new ExcelColumnSpan(1, 3), true));
@@ -411,9 +414,9 @@ class ExcelSheetCoreReadWriteCoverageTest extends ExcelSheetTestSupport {
       assertEquals("A1", missingCell.address());
       assertThrows(IllegalArgumentException.class, () -> sheet.cells().text(" "));
 
-      sheet.cells().setCell("A1", ExcelCellValue.text("Name"));
-      sheet.cells().setCell("B1", ExcelCellValue.formula("TRUE()"));
-      sheet.cells().setCell("C1", ExcelCellValue.formula("1+1"));
+      sheet.cells().setCell("A1", new CellValue.Text("Name"));
+      sheet.cells().setCell("B1", new ResolvedFormula("TRUE()"));
+      sheet.cells().setCell("C1", new ResolvedFormula("1+1"));
 
       assertThrows(CellNotFoundException.class, () -> sheet.cells().text("B2"));
       assertThrows(CellNotFoundException.class, () -> sheet.cells().text("D1"));
@@ -438,8 +441,8 @@ class ExcelSheetCoreReadWriteCoverageTest extends ExcelSheetTestSupport {
           cells.setRange(
               "B2:A1",
               List.of(
-                  List.of(ExcelCellValue.text("Item"), ExcelCellValue.number(42.0)),
-                  List.of(ExcelCellValue.text("Tax"), ExcelCellValue.number(8.0)))));
+                  List.of(new CellValue.Text("Item"), new CellValue.NumberValue(42.0)),
+                  List.of(new CellValue.Text("Tax"), new CellValue.NumberValue(8.0)))));
       sheet
           .cells()
           .applyStyle(
@@ -530,23 +533,13 @@ class ExcelSheetCoreReadWriteCoverageTest extends ExcelSheetTestSupport {
 
       assertThrows(
           IllegalArgumentException.class,
-          () -> sheet.cells().setRange("A1:B2", List.of(List.of(ExcelCellValue.text("x")))));
+          () -> sheet.cells().setRange("A1:B2", List.of(List.of(new CellValue.Text("x")))));
       assertThrows(
           IllegalArgumentException.class,
           () ->
               sheet
                   .cells()
-                  .setRange("A1:B2", List.of(List.of(), List.of(ExcelCellValue.text("x")))));
-      assertThrows(
-          IllegalArgumentException.class,
-          () ->
-              sheet
-                  .cells()
-                  .setRange(
-                      "A1:B2",
-                      List.of(
-                          List.of(ExcelCellValue.text("x")),
-                          List.of(ExcelCellValue.text("y"), ExcelCellValue.text("z")))));
+                  .setRange("A1:B2", List.of(List.of(), List.of(new CellValue.Text("x")))));
       assertThrows(
           IllegalArgumentException.class,
           () ->
@@ -555,9 +548,18 @@ class ExcelSheetCoreReadWriteCoverageTest extends ExcelSheetTestSupport {
                   .setRange(
                       "A1:B2",
                       List.of(
-                          List.of(ExcelCellValue.text("x")), List.of(ExcelCellValue.text("y")))));
-      List<List<ExcelCellValue>> rowsWithNull = new ArrayList<>();
-      List<ExcelCellValue> rowWithNull = new ArrayList<>();
+                          List.of(new CellValue.Text("x")),
+                          List.of(new CellValue.Text("y"), new CellValue.Text("z")))));
+      assertThrows(
+          IllegalArgumentException.class,
+          () ->
+              sheet
+                  .cells()
+                  .setRange(
+                      "A1:B2",
+                      List.of(List.of(new CellValue.Text("x")), List.of(new CellValue.Text("y")))));
+      List<List<ResolvedCellWrite>> rowsWithNull = new ArrayList<>();
+      List<ResolvedCellWrite> rowWithNull = new ArrayList<>();
       rowWithNull.add(null);
       rowsWithNull.add(rowWithNull);
       assertThrows(NullPointerException.class, () -> sheet.cells().setRange("A1", rowsWithNull));
@@ -572,7 +574,7 @@ class ExcelSheetCoreReadWriteCoverageTest extends ExcelSheetTestSupport {
       ExcelSheet sheet =
           new ExcelSheet(poiSheet, new WorkbookStyleRegistry(poiWorkbook), evaluator);
 
-      sheet.cells().setCell("A1", ExcelCellValue.text("Item"));
+      sheet.cells().setCell("A1", new CellValue.Text("Item"));
       sheet
           .cells()
           .applyStyle(
@@ -730,7 +732,7 @@ class ExcelSheetCoreReadWriteCoverageTest extends ExcelSheetTestSupport {
       ExcelSheet sheet =
           new ExcelSheet(poiSheet, new WorkbookStyleRegistry(poiWorkbook), evaluator);
 
-      sheet.cells().setCell("A1", ExcelCellValue.text("anchor"));
+      sheet.cells().setCell("A1", new CellValue.Text("anchor"));
 
       int rowsBefore = sheet.rows().physicalCount();
       int lastRowBefore = sheet.rows().lastIndex();
@@ -756,7 +758,7 @@ class ExcelSheetCoreReadWriteCoverageTest extends ExcelSheetTestSupport {
 
       // Row 2 exists (B2 is written) but C2 has never been written.
       // Clearing B2:C2 must not throw even though C2 is absent.
-      sheet.cells().setCell("B2", ExcelCellValue.text("present"));
+      sheet.cells().setCell("B2", new CellValue.Text("present"));
       assertDoesNotThrow(() -> sheet.cells().clearRange("B2:C2"));
       // B2 must now be blank after the clear
       ExcelCellSnapshot b2 = sheet.cells().snapshotCell("B2");
@@ -782,7 +784,7 @@ class ExcelSheetCoreReadWriteCoverageTest extends ExcelSheetTestSupport {
       assertEquals(List.of(), emptyLayout.columns());
       assertEquals(List.of(), emptyLayout.rows());
 
-      sheet.cells().setCell("B2", ExcelCellValue.text("Center"));
+      sheet.cells().setCell("B2", new CellValue.Text("Center"));
       sheet.annotations().setHyperlink("A1", new ExcelHyperlink.Url("https://example.com/report"));
       sheet.annotations().setComment("C3", new ResolvedComment("Review", "GridGrind", false));
       sheet.columns().setWidth(0, 0, 12.5);

@@ -10,9 +10,12 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import dev.erst.gridgrind.core.model.drawing.CommentSpec;
+import dev.erst.gridgrind.core.model.formula.ResolvedFormula;
 import dev.erst.gridgrind.core.model.style.CellStyleReport;
+import dev.erst.gridgrind.core.model.value.CellValue;
 import dev.erst.gridgrind.core.model.value.CellValueSpec;
 import dev.erst.gridgrind.core.model.value.HyperlinkTarget;
+import dev.erst.gridgrind.core.model.value.ResolvedCellWrite;
 import dev.erst.gridgrind.core.plan.*;
 import dev.erst.gridgrind.core.plan.CellMutationAction;
 import dev.erst.gridgrind.core.plan.CellSelector;
@@ -25,7 +28,6 @@ import dev.erst.gridgrind.core.vocabulary.CellAddress;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.core.vocabulary.TableName;
-import dev.erst.gridgrind.excel.ExcelCellValue;
 import dev.erst.gridgrind.excel.ExcelTableDefinition;
 import dev.erst.gridgrind.excel.ExcelTableStyle;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
@@ -597,31 +599,31 @@ class SemanticSelectorResolverTest {
         workbook,
         "Texts",
         "TextTable",
-        ExcelCellValue.text("Hosting"),
-        ExcelCellValue.number(100.0d));
+        new CellValue.Text("Hosting"),
+        new CellValue.NumberValue(100.0d));
     addTable(
-        workbook, "Blanks", "BlankTable", ExcelCellValue.blank(), ExcelCellValue.number(10.0d));
+        workbook, "Blanks", "BlankTable", new CellValue.Blank(), new CellValue.NumberValue(10.0d));
     addTable(
         workbook,
         "Numbers",
         "NumberTable",
-        ExcelCellValue.number(42.0d),
-        ExcelCellValue.number(200.0d));
+        new CellValue.NumberValue(42.0d),
+        new CellValue.NumberValue(200.0d));
     addTable(
         workbook,
         "Flags",
         "BooleanTable",
-        ExcelCellValue.bool(true),
-        ExcelCellValue.number(300.0d));
+        new CellValue.BooleanValue(true),
+        new CellValue.NumberValue(300.0d));
     addTable(
         workbook,
         "Formulas",
         "FormulaTable",
-        ExcelCellValue.formula("2+2"),
-        ExcelCellValue.number(400.0d));
+        new ResolvedFormula("2+2"),
+        new CellValue.NumberValue(400.0d));
     addWideTable(workbook);
     workbook.getOrCreateSheet("Budget");
-    workbook.sheet("Budget").cells().setCell("A1", ExcelCellValue.text("Owner"));
+    workbook.sheet("Budget").cells().setCell("A1", new CellValue.Text("Owner"));
     return workbook;
   }
 
@@ -629,11 +631,11 @@ class SemanticSelectorResolverTest {
       ExcelWorkbook workbook,
       String sheetName,
       String tableName,
-      ExcelCellValue keyValue,
-      ExcelCellValue amountValue) {
+      ResolvedCellWrite keyValue,
+      ResolvedCellWrite amountValue) {
     workbook.getOrCreateSheet(sheetName);
-    workbook.sheet(sheetName).cells().setCell("A1", ExcelCellValue.text("Item"));
-    workbook.sheet(sheetName).cells().setCell("B1", ExcelCellValue.text("Amount"));
+    workbook.sheet(sheetName).cells().setCell("A1", new CellValue.Text("Item"));
+    workbook.sheet(sheetName).cells().setCell("B1", new CellValue.Text("Amount"));
     workbook.sheet(sheetName).cells().setCell("A2", keyValue);
     workbook.sheet(sheetName).cells().setCell("B2", amountValue);
     workbook
@@ -645,10 +647,10 @@ class SemanticSelectorResolverTest {
 
   private static void addWideTable(ExcelWorkbook workbook) {
     workbook.getOrCreateSheet("Wide");
-    workbook.sheet("Wide").cells().setCell("AA1", ExcelCellValue.text("Item"));
-    workbook.sheet("Wide").cells().setCell("AB1", ExcelCellValue.text("Amount"));
-    workbook.sheet("Wide").cells().setCell("AA2", ExcelCellValue.text("Hosting"));
-    workbook.sheet("Wide").cells().setCell("AB2", ExcelCellValue.number(500.0d));
+    workbook.sheet("Wide").cells().setCell("AA1", new CellValue.Text("Item"));
+    workbook.sheet("Wide").cells().setCell("AB1", new CellValue.Text("Amount"));
+    workbook.sheet("Wide").cells().setCell("AA2", new CellValue.Text("Hosting"));
+    workbook.sheet("Wide").cells().setCell("AB2", new CellValue.NumberValue(500.0d));
     workbook
         .tables()
         .setTable(

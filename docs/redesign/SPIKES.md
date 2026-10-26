@@ -1757,3 +1757,32 @@ Inventories: definitions 13→12, converter lines 4309→4297, main Java 121991�
 are prerequisites, not completion of ResolvedPlan/ResolvedStep/ResolvedTarget or command removal.
 Drawing review: authored DrawingAnchorSpec permits two-cell only; reports also preserve one-cell
 and absolute facts, so a whole-union replacement with the authored type would be incorrect.
+
+## WP-40 shared resolved cell-write contract
+
+Deleted ExcelCellValue and its ten-variant engine hierarchy. ResolvedCellWrite is a closed core
+contract that directly shares CellValue's five scalars, the existing authored Date/DateTime records
+and ResolvedRichText. Only formula/raw-formula text needs new source-resolved records; their
+operand field is value. No duplicate scalar/date/rich-text wrapper or compatibility factory remains.
+XSSF, streaming, formula origins, command payloads and deterministic sequence consumers use the
+core contract. Source-free dates pass through by identity rather than reconstruction.
+
+Core factual error values include evaluation-only states. Writers retain stored-error validation;
+XSSF now validates before clearing an existing formula. A real write-boundary regression proves
+that both evaluation-only errors are rejected without erasing that formula. Old factory type-only
+assertions were retired; domain validation moved to core, POI behavior stays with the backend.
+Compilation caught obsolete expression()/rich-text wrapper accessors (repaired, all source sets
+compile in 18s). Standard PMD required a scoped import suppression for the streaming adapter's
+canonical operand variants and moving test allocations outside the loop. Focused core/JSON/engine,
+14 parity and static checks pass (27s after those repairs). Nested deterministic check and all
+retained seed replay pass (17s). No active mutation or fuzz campaign ran.
+
+./gradlew check passes (3m30s): core 346, JSON 348, engine 1483 plus 14 parity, CLI 588,
+architecture 14 plus 12 rule tests; zero failures/errors/skips. All 143 golden cases are unchanged.
+Inventories: main Java 121978→121920; converter lines 4297→4300 (the remaining authored-to-
+materialized conversion is still needed until plan materialization is cut over). Snapshots 38,
+definitions 12, Support 206 and blank checks 434 remain open. Baseline diff empty.
+
+This is an actual shared closed-type implementation of the earlier Java probe: unannotated resolved
+contracts reuse existing wire records without adding wire variants or a parallel scalar model.
+Drawing anchors still need separate authored/report routing before drawing resolved payloads move.

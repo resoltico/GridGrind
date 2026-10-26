@@ -1298,10 +1298,7 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
     Path workbookPath = Files.createTempFile("gridgrind-private-event-read-", ".xlsx");
     try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       workbook.getOrCreateSheet("Ops");
-      workbook
-          .sheet("Ops")
-          .cells()
-          .setCell("A1", dev.erst.gridgrind.excel.ExcelCellValue.text("Owner"));
+      workbook.sheet("Ops").cells().setCell("A1", new CellValue.Text("Owner"));
       ExecutionContextFixtureSupport.saveWorkbook(workbook, workbookPath);
     }
     WorkbookInspectionResult.WorkbookSummaryResult eventSummary =

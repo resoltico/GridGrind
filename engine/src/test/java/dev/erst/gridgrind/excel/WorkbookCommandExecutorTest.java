@@ -3,10 +3,12 @@ package dev.erst.gridgrind.excel;
 import static org.junit.jupiter.api.Assertions.*;
 
 import dev.erst.gridgrind.core.model.drawing.ResolvedComment;
+import dev.erst.gridgrind.core.model.formula.ResolvedFormula;
 import dev.erst.gridgrind.core.model.style.CellAlignmentPatch;
 import dev.erst.gridgrind.core.model.style.CellColorReport;
 import dev.erst.gridgrind.core.model.style.CellStylePatch;
 import dev.erst.gridgrind.core.model.style.ColorSpec;
+import dev.erst.gridgrind.core.model.value.CellValue;
 import dev.erst.gridgrind.core.vocabulary.ExcelColumnSpan;
 import dev.erst.gridgrind.core.vocabulary.ExcelDataValidationErrorStyle;
 import dev.erst.gridgrind.core.vocabulary.ExcelDrawingAnchorBehavior;
@@ -62,8 +64,8 @@ class WorkbookCommandExecutorTest {
                   "Budget",
                   "A1:B2",
                   List.of(
-                      List.of(ExcelCellValue.text("Item"), ExcelCellValue.number(49.0)),
-                      List.of(ExcelCellValue.text("Tax"), ExcelCellValue.number(5.0)))),
+                      List.of(new CellValue.Text("Item"), new CellValue.NumberValue(49.0)),
+                      List.of(new CellValue.Text("Tax"), new CellValue.NumberValue(5.0)))),
               new WorkbookStructureCommand.MergeCells("Budget", "A1:B1"),
               new WorkbookFormattingCommand.ApplyStyle(
                   "Budget",
@@ -83,7 +85,7 @@ class WorkbookCommandExecutorTest {
                       Optional.empty())),
               new WorkbookCellCommand.AppendRow(
                   "Budget",
-                  List.of(ExcelCellValue.text("Total"), ExcelCellValue.formula("SUM(B1:B2)"))),
+                  List.of(new CellValue.Text("Total"), new ResolvedFormula("SUM(B1:B2)"))),
               new WorkbookCellCommand.ClearRange("Budget", "A2"),
               new WorkbookAnnotationCommand.SetHyperlink(
                   "Budget", "A1", new ExcelHyperlink.Document("Budget!B3")),
@@ -101,23 +103,23 @@ class WorkbookCommandExecutorTest {
                   "Ops",
                   "A1:B3",
                   List.of(
-                      List.of(ExcelCellValue.text("Owner"), ExcelCellValue.text("Task")),
-                      List.of(ExcelCellValue.text("Ada"), ExcelCellValue.text("Queue")),
-                      List.of(ExcelCellValue.text("Lin"), ExcelCellValue.text("Pack")))),
+                      List.of(new CellValue.Text("Owner"), new CellValue.Text("Task")),
+                      List.of(new CellValue.Text("Ada"), new CellValue.Text("Queue")),
+                      List.of(new CellValue.Text("Lin"), new CellValue.Text("Pack")))),
               new WorkbookCellCommand.SetRange(
                   "Ops",
                   "D1:E3",
                   List.of(
-                      List.of(ExcelCellValue.text("Region"), ExcelCellValue.text("Desk")),
-                      List.of(ExcelCellValue.text("North"), ExcelCellValue.text("A1")),
-                      List.of(ExcelCellValue.text("South"), ExcelCellValue.text("B1")))),
+                      List.of(new CellValue.Text("Region"), new CellValue.Text("Desk")),
+                      List.of(new CellValue.Text("North"), new CellValue.Text("A1")),
+                      List.of(new CellValue.Text("South"), new CellValue.Text("B1")))),
               new WorkbookCellCommand.SetRange(
                   "Ops",
                   "G1:H3",
                   List.of(
-                      List.of(ExcelCellValue.text("Stage"), ExcelCellValue.text("Team")),
-                      List.of(ExcelCellValue.text("Review"), ExcelCellValue.text("Docs")),
-                      List.of(ExcelCellValue.text("Ship"), ExcelCellValue.text("Ops")))),
+                      List.of(new CellValue.Text("Stage"), new CellValue.Text("Team")),
+                      List.of(new CellValue.Text("Review"), new CellValue.Text("Docs")),
+                      List.of(new CellValue.Text("Ship"), new CellValue.Text("Ops")))),
               new WorkbookTabularCommand.SetAutofilter("Ops", "D1:E3"),
               new WorkbookTabularCommand.SetTable(
                   new ExcelTableDefinition(
@@ -271,14 +273,14 @@ class WorkbookCommandExecutorTest {
           () ->
               executor.apply(
                   workbook,
-                  new WorkbookCellCommand.SetCell("Missing", "A1", ExcelCellValue.text("x"))));
+                  new WorkbookCellCommand.SetCell("Missing", "A1", new CellValue.Text("x"))));
       assertThrows(
           SheetNotFoundException.class,
           () ->
               executor.apply(
                   workbook,
                   new WorkbookCellCommand.SetRange(
-                      "Missing", "A1", List.of(List.of(ExcelCellValue.text("x"))))));
+                      "Missing", "A1", List.of(List.of(new CellValue.Text("x"))))));
       assertThrows(
           SheetNotFoundException.class,
           () ->
@@ -384,7 +386,7 @@ class WorkbookCommandExecutorTest {
           () ->
               executor.apply(
                   workbook,
-                  new WorkbookCellCommand.AppendRow("Missing", List.of(ExcelCellValue.text("x")))));
+                  new WorkbookCellCommand.AppendRow("Missing", List.of(new CellValue.Text("x")))));
     }
   }
 
@@ -436,30 +438,30 @@ class WorkbookCommandExecutorTest {
               "A1:D5",
               List.of(
                   List.of(
-                      ExcelCellValue.text("Region"),
-                      ExcelCellValue.text("Stage"),
-                      ExcelCellValue.text("Owner"),
-                      ExcelCellValue.text("Amount")),
+                      new CellValue.Text("Region"),
+                      new CellValue.Text("Stage"),
+                      new CellValue.Text("Owner"),
+                      new CellValue.Text("Amount")),
                   List.of(
-                      ExcelCellValue.text("North"),
-                      ExcelCellValue.text("Plan"),
-                      ExcelCellValue.text("Ada"),
-                      ExcelCellValue.number(10)),
+                      new CellValue.Text("North"),
+                      new CellValue.Text("Plan"),
+                      new CellValue.Text("Ada"),
+                      new CellValue.NumberValue(10)),
                   List.of(
-                      ExcelCellValue.text("North"),
-                      ExcelCellValue.text("Do"),
-                      ExcelCellValue.text("Ada"),
-                      ExcelCellValue.number(15)),
+                      new CellValue.Text("North"),
+                      new CellValue.Text("Do"),
+                      new CellValue.Text("Ada"),
+                      new CellValue.NumberValue(15)),
                   List.of(
-                      ExcelCellValue.text("South"),
-                      ExcelCellValue.text("Plan"),
-                      ExcelCellValue.text("Lin"),
-                      ExcelCellValue.number(7)),
+                      new CellValue.Text("South"),
+                      new CellValue.Text("Plan"),
+                      new CellValue.Text("Lin"),
+                      new CellValue.NumberValue(7)),
                   List.of(
-                      ExcelCellValue.text("South"),
-                      ExcelCellValue.text("Do"),
-                      ExcelCellValue.text("Lin"),
-                      ExcelCellValue.number(12)))),
+                      new CellValue.Text("South"),
+                      new CellValue.Text("Do"),
+                      new CellValue.Text("Lin"),
+                      new CellValue.NumberValue(12)))),
           new WorkbookTabularCommand.SetPivotTable(
               new ExcelPivotTableDefinition(
                   "Ops Pivot",
@@ -695,47 +697,47 @@ class WorkbookCommandExecutorTest {
                   "A1:F6",
                   List.of(
                       List.of(
-                          ExcelCellValue.text("Item"),
-                          ExcelCellValue.text("Qty"),
-                          ExcelCellValue.text("Status"),
-                          ExcelCellValue.text("Note"),
-                          ExcelCellValue.text("Owner"),
-                          ExcelCellValue.text("Flag")),
+                          new CellValue.Text("Item"),
+                          new CellValue.Text("Qty"),
+                          new CellValue.Text("Status"),
+                          new CellValue.Text("Note"),
+                          new CellValue.Text("Owner"),
+                          new CellValue.Text("Flag")),
                       List.of(
-                          ExcelCellValue.text("Hosting"),
-                          ExcelCellValue.number(42.0),
-                          ExcelCellValue.text("Open"),
-                          ExcelCellValue.text("Alpha"),
-                          ExcelCellValue.text("Ada"),
-                          ExcelCellValue.text("Y")),
+                          new CellValue.Text("Hosting"),
+                          new CellValue.NumberValue(42.0),
+                          new CellValue.Text("Open"),
+                          new CellValue.Text("Alpha"),
+                          new CellValue.Text("Ada"),
+                          new CellValue.Text("Y")),
                       List.of(
-                          ExcelCellValue.text("Support"),
-                          ExcelCellValue.number(84.0),
-                          ExcelCellValue.text("Closed"),
-                          ExcelCellValue.text("Beta"),
-                          ExcelCellValue.text("Lin"),
-                          ExcelCellValue.text("N")),
+                          new CellValue.Text("Support"),
+                          new CellValue.NumberValue(84.0),
+                          new CellValue.Text("Closed"),
+                          new CellValue.Text("Beta"),
+                          new CellValue.Text("Lin"),
+                          new CellValue.Text("N")),
                       List.of(
-                          ExcelCellValue.text("Ops"),
-                          ExcelCellValue.number(168.0),
-                          ExcelCellValue.text("Open"),
-                          ExcelCellValue.text("Gamma"),
-                          ExcelCellValue.text("Bea"),
-                          ExcelCellValue.text("Y")),
+                          new CellValue.Text("Ops"),
+                          new CellValue.NumberValue(168.0),
+                          new CellValue.Text("Open"),
+                          new CellValue.Text("Gamma"),
+                          new CellValue.Text("Bea"),
+                          new CellValue.Text("Y")),
                       List.of(
-                          ExcelCellValue.text("QA"),
-                          ExcelCellValue.number(21.0),
-                          ExcelCellValue.text("Queued"),
-                          ExcelCellValue.text("Delta"),
-                          ExcelCellValue.text("Kai"),
-                          ExcelCellValue.text("N")),
+                          new CellValue.Text("QA"),
+                          new CellValue.NumberValue(21.0),
+                          new CellValue.Text("Queued"),
+                          new CellValue.Text("Delta"),
+                          new CellValue.Text("Kai"),
+                          new CellValue.Text("N")),
                       List.of(
-                          ExcelCellValue.text("Infra"),
-                          ExcelCellValue.number(7.0),
-                          ExcelCellValue.text("Done"),
-                          ExcelCellValue.text("Epsilon"),
-                          ExcelCellValue.text("Mia"),
-                          ExcelCellValue.text("Y")))),
+                          new CellValue.Text("Infra"),
+                          new CellValue.NumberValue(7.0),
+                          new CellValue.Text("Done"),
+                          new CellValue.Text("Epsilon"),
+                          new CellValue.Text("Mia"),
+                          new CellValue.Text("Y")))),
               new WorkbookStructureCommand.GroupRows("Layout", new ExcelRowSpan(1, 3), true),
               new WorkbookStructureCommand.SetRowVisibility("Layout", new ExcelRowSpan(5, 5), true),
               new WorkbookStructureCommand.GroupColumns("Layout", new ExcelColumnSpan(1, 3), true),
@@ -747,26 +749,26 @@ class WorkbookCommandExecutorTest {
                   "A1:D3",
                   List.of(
                       List.of(
-                          ExcelCellValue.text("Item"),
-                          ExcelCellValue.text("Qty"),
-                          ExcelCellValue.text("Status"),
-                          ExcelCellValue.text("Note")),
+                          new CellValue.Text("Item"),
+                          new CellValue.Text("Qty"),
+                          new CellValue.Text("Status"),
+                          new CellValue.Text("Note")),
                       List.of(
-                          ExcelCellValue.text("Hosting"),
-                          ExcelCellValue.number(42.0),
-                          ExcelCellValue.text("Open"),
-                          ExcelCellValue.text("Alpha")),
+                          new CellValue.Text("Hosting"),
+                          new CellValue.NumberValue(42.0),
+                          new CellValue.Text("Open"),
+                          new CellValue.Text("Alpha")),
                       List.of(
-                          ExcelCellValue.text("Support"),
-                          ExcelCellValue.number(84.0),
-                          ExcelCellValue.text("Closed"),
-                          ExcelCellValue.text("Beta")))),
+                          new CellValue.Text("Support"),
+                          new CellValue.NumberValue(84.0),
+                          new CellValue.Text("Closed"),
+                          new CellValue.Text("Beta")))),
               new WorkbookStructureCommand.InsertRows("Moves", 1, 1),
-              new WorkbookCellCommand.SetCell("Moves", "A2", ExcelCellValue.text("Spacer")),
+              new WorkbookCellCommand.SetCell("Moves", "A2", new CellValue.Text("Spacer")),
               new WorkbookStructureCommand.ShiftRows("Moves", new ExcelRowSpan(2, 3), 1),
               new WorkbookStructureCommand.DeleteRows("Moves", new ExcelRowSpan(2, 2)),
               new WorkbookStructureCommand.InsertColumns("Moves", 1, 1),
-              new WorkbookCellCommand.SetCell("Moves", "B1", ExcelCellValue.text("Pad")),
+              new WorkbookCellCommand.SetCell("Moves", "B1", new CellValue.Text("Pad")),
               new WorkbookStructureCommand.ShiftColumns("Moves", new ExcelColumnSpan(2, 4), 1),
               new WorkbookStructureCommand.DeleteColumns("Moves", new ExcelColumnSpan(2, 2))));
 
@@ -814,7 +816,7 @@ class WorkbookCommandExecutorTest {
               workbook,
               new WorkbookSheetCommand.CreateSheet("Alpha"),
               new WorkbookSheetCommand.CreateSheet("Beta"),
-              new WorkbookCellCommand.SetCell("Alpha", "A1", ExcelCellValue.text("Live")),
+              new WorkbookCellCommand.SetCell("Alpha", "A1", new CellValue.Text("Live")),
               new WorkbookSheetCommand.CopySheet(
                   "Alpha", "Alpha Copy", new ExcelSheetCopyPosition.AtIndex(1)),
               new WorkbookSheetCommand.SetActiveSheet("Alpha"),
@@ -853,25 +855,25 @@ class WorkbookCommandExecutorTest {
               "A1:D4",
               List.of(
                   List.of(
-                      ExcelCellValue.text("Item"),
-                      ExcelCellValue.text("Qty"),
-                      ExcelCellValue.text("Status"),
-                      ExcelCellValue.text("Owner")),
+                      new CellValue.Text("Item"),
+                      new CellValue.Text("Qty"),
+                      new CellValue.Text("Status"),
+                      new CellValue.Text("Owner")),
                   List.of(
-                      ExcelCellValue.text("Hosting"),
-                      ExcelCellValue.number(42.0),
-                      ExcelCellValue.text("Open"),
-                      ExcelCellValue.text("Ada")),
+                      new CellValue.Text("Hosting"),
+                      new CellValue.NumberValue(42.0),
+                      new CellValue.Text("Open"),
+                      new CellValue.Text("Ada")),
                   List.of(
-                      ExcelCellValue.text("Support"),
-                      ExcelCellValue.number(84.0),
-                      ExcelCellValue.text("Closed"),
-                      ExcelCellValue.text("Lin")),
+                      new CellValue.Text("Support"),
+                      new CellValue.NumberValue(84.0),
+                      new CellValue.Text("Closed"),
+                      new CellValue.Text("Lin")),
                   List.of(
-                      ExcelCellValue.text("Ops"),
-                      ExcelCellValue.number(7.0),
-                      ExcelCellValue.text("Done"),
-                      ExcelCellValue.text("Mia")))),
+                      new CellValue.Text("Ops"),
+                      new CellValue.NumberValue(7.0),
+                      new CellValue.Text("Done"),
+                      new CellValue.Text("Mia")))),
           new WorkbookStructureCommand.GroupRows("Layout", new ExcelRowSpan(1, 3), true),
           new WorkbookStructureCommand.GroupColumns("Layout", new ExcelColumnSpan(1, 3), true),
           new WorkbookStructureCommand.UngroupRows("Layout", new ExcelRowSpan(1, 3)),
@@ -911,9 +913,9 @@ class WorkbookCommandExecutorTest {
               "A1:B2",
               List.of(
                   List.of(
-                      ExcelCellValue.text("Extremely long workflow heading"),
-                      ExcelCellValue.text("State")),
-                  List.of(ExcelCellValue.text("Ada"), ExcelCellValue.text("Queued")))));
+                      new CellValue.Text("Extremely long workflow heading"),
+                      new CellValue.Text("State")),
+                  List.of(new CellValue.Text("Ada"), new CellValue.Text("Queued")))));
       WorkbookCommandExecutor.applySheetStructureCommand(
           workbook, new WorkbookStructureCommand.SetColumnWidth("Budget", 0, 0, 4.0));
       WorkbookCommandExecutor.applySheetLayoutCommand(

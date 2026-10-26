@@ -19,10 +19,11 @@ import dev.erst.gridgrind.core.model.formula.CalculationPolicySpec;
 import dev.erst.gridgrind.core.model.formula.CalculationReport;
 import dev.erst.gridgrind.core.model.formula.CalculationStrategySpec;
 import dev.erst.gridgrind.core.model.formula.FormulaCapabilityKind;
+import dev.erst.gridgrind.core.model.formula.ResolvedFormula;
+import dev.erst.gridgrind.core.model.value.CellValue;
 import dev.erst.gridgrind.core.problem.GridGrindProblemCode;
 import dev.erst.gridgrind.core.vocabulary.CellAddress;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
-import dev.erst.gridgrind.excel.ExcelCellValue;
 import dev.erst.gridgrind.excel.ExcelFormulaCapabilityAssessment;
 import dev.erst.gridgrind.excel.ExcelFormulaCapabilityIssue;
 import dev.erst.gridgrind.excel.ExcelFormulaCapabilityKind;
@@ -96,9 +97,9 @@ class CalculationPolicyExecutorTest {
 
     try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       workbook.getOrCreateSheet("Budget");
-      workbook.sheet("Budget").cells().setCell("A1", ExcelCellValue.number(2.0d));
-      workbook.sheet("Budget").cells().setCell("B1", ExcelCellValue.formula("A1*2"));
-      workbook.sheet("Budget").cells().setCell("C1", ExcelCellValue.formula("A1*3"));
+      workbook.sheet("Budget").cells().setCell("A1", new CellValue.NumberValue(2.0d));
+      workbook.sheet("Budget").cells().setCell("B1", new ResolvedFormula("A1*2"));
+      workbook.sheet("Budget").cells().setCell("C1", new ResolvedFormula("A1*3"));
 
       CalculationPolicyExecutor.PreflightOutcome preflight =
           CalculationPolicyExecutor.preflight(workbook, requireEvaluation());
@@ -121,8 +122,8 @@ class CalculationPolicyExecutorTest {
 
     try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       workbook.getOrCreateSheet("Budget");
-      workbook.sheet("Budget").cells().setCell("A1", ExcelCellValue.number(5.0d));
-      workbook.sheet("Budget").cells().setCell("B1", ExcelCellValue.formula("A1*2"));
+      workbook.sheet("Budget").cells().setCell("A1", new CellValue.NumberValue(5.0d));
+      workbook.sheet("Budget").cells().setCell("B1", new ResolvedFormula("A1*2"));
 
       CalculationPolicySpec targeted =
           calculateTargets(
@@ -145,8 +146,8 @@ class CalculationPolicyExecutorTest {
 
     try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       workbook.getOrCreateSheet("Budget");
-      workbook.sheet("Budget").cells().setCell("A1", ExcelCellValue.number(2.0d));
-      workbook.sheet("Budget").cells().setCell("B1", ExcelCellValue.formula("A1*2"));
+      workbook.sheet("Budget").cells().setCell("A1", new CellValue.NumberValue(2.0d));
+      workbook.sheet("Budget").cells().setCell("B1", new ResolvedFormula("A1*2"));
       workbook.formulas().evaluateAll();
 
       CalculationPolicyExecutor.ExecutionOutcome clearCaches =
@@ -166,8 +167,8 @@ class CalculationPolicyExecutorTest {
 
     try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       workbook.getOrCreateSheet("Budget");
-      workbook.sheet("Budget").cells().setCell("A1", ExcelCellValue.number(5.0d));
-      workbook.sheet("Budget").cells().setCell("B1", ExcelCellValue.formula("A1*2"));
+      workbook.sheet("Budget").cells().setCell("A1", new CellValue.NumberValue(5.0d));
+      workbook.sheet("Budget").cells().setCell("B1", new ResolvedFormula("A1*2"));
 
       CalculationPolicySpec targetedAndMarked =
           new CalculationPolicySpec(
@@ -415,9 +416,9 @@ class CalculationPolicyExecutorTest {
       throws Exception {
     try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       var sheet = workbook.getOrCreateSheet("Budget");
-      sheet.cells().setCell("A1", ExcelCellValue.formula("A1+1"));
-      sheet.cells().setCell("B1", ExcelCellValue.formula("C1+1"));
-      sheet.cells().setCell("C1", ExcelCellValue.formula("B1+1"));
+      sheet.cells().setCell("A1", new ResolvedFormula("A1+1"));
+      sheet.cells().setCell("B1", new ResolvedFormula("C1+1"));
+      sheet.cells().setCell("C1", new ResolvedFormula("B1+1"));
 
       CalculationPolicySpec doNotCalculate = CalculationPolicySpec.defaults();
       CalculationPolicySpec deferred = deferCalculation();

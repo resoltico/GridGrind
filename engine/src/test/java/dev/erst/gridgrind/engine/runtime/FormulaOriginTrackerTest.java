@@ -6,13 +6,15 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import dev.erst.gridgrind.core.model.formula.FormulaEnvironmentSpec;
 import dev.erst.gridgrind.core.model.formula.ResolvedArrayFormula;
+import dev.erst.gridgrind.core.model.formula.ResolvedFormula;
+import dev.erst.gridgrind.core.model.formula.ResolvedRawFormula;
+import dev.erst.gridgrind.core.model.value.CellValue;
 import dev.erst.gridgrind.core.plan.ExecutionPolicySpec;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import dev.erst.gridgrind.core.problem.GridGrindProblemCode;
 import dev.erst.gridgrind.core.problem.ProblemContext;
 import dev.erst.gridgrind.core.problem.ProblemContextWorkbookSurfaces.StepReference;
 import dev.erst.gridgrind.core.vocabulary.StepId;
-import dev.erst.gridgrind.excel.ExcelCellValue;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
 import dev.erst.gridgrind.excel.ExcelWorkbooks;
 import dev.erst.gridgrind.excel.InvalidFormulaException;
@@ -38,8 +40,8 @@ class FormulaOriginTrackerTest {
                   "Ops",
                   "B2:C3",
                   List.of(
-                      List.of(ExcelCellValue.formula("1+1"), ExcelCellValue.text("a")),
-                      List.of(ExcelCellValue.text("b"), ExcelCellValue.formula("2+2")))));
+                      List.of(new ResolvedFormula("1+1"), new CellValue.Text("a")),
+                      List.of(new CellValue.Text("b"), new ResolvedFormula("2+2")))));
       FormulaOriginTracker.FormulaWrites clearWrites =
           tracker.plannedWrites(workbook, new WorkbookCellCommand.ClearRange("Ops", "B2:C3"));
       FormulaOriginTracker.FormulaWrites clearArrayWrites =
@@ -73,13 +75,13 @@ class FormulaOriginTrackerTest {
           tracker,
           engine,
           workbook,
-          new WorkbookCellCommand.SetCell("Ops", "A1", ExcelCellValue.formula("1+1")),
+          new WorkbookCellCommand.SetCell("Ops", "A1", new ResolvedFormula("1+1")),
           author);
       applyAndRecord(
           tracker,
           engine,
           workbook,
-          new WorkbookCellCommand.SetCell("Ops", "B1", ExcelCellValue.formula("2+2")),
+          new WorkbookCellCommand.SetCell("Ops", "B1", new ResolvedFormula("2+2")),
           author);
       applyAndRecord(
           tracker,
@@ -88,14 +90,14 @@ class FormulaOriginTrackerTest {
           new WorkbookCellCommand.SetRange(
               "Ops",
               "B1:C1",
-              List.of(List.of(ExcelCellValue.formula("2+2"), ExcelCellValue.text("plain")))),
+              List.of(List.of(new ResolvedFormula("2+2"), new CellValue.Text("plain")))),
           author);
       applyAndRecord(
           tracker,
           engine,
           workbook,
           new WorkbookCellCommand.AppendRow(
-              "Ops", List.of(ExcelCellValue.formula("3+3"), ExcelCellValue.text("tail"))),
+              "Ops", List.of(new ResolvedFormula("3+3"), new CellValue.Text("tail"))),
           author);
       applyAndRecord(
           tracker,
@@ -107,7 +109,7 @@ class FormulaOriginTrackerTest {
           tracker,
           engine,
           workbook,
-          new WorkbookCellCommand.SetCell("Ops", "D1", ExcelCellValue.rawFormula("RAW()")),
+          new WorkbookCellCommand.SetCell("Ops", "D1", new ResolvedRawFormula("RAW()")),
           author);
 
       assertEquals(author, tracker.originFor("Ops", "A1").orElseThrow());
@@ -139,25 +141,25 @@ class FormulaOriginTrackerTest {
           tracker,
           engine,
           workbook,
-          new WorkbookCellCommand.SetCell("Ops", "A1", ExcelCellValue.formula("1+1")),
+          new WorkbookCellCommand.SetCell("Ops", "A1", new ResolvedFormula("1+1")),
           author);
       applyAndRecord(
           tracker,
           engine,
           workbook,
-          new WorkbookCellCommand.SetCell("Ops", "B1", ExcelCellValue.formula("2+2")),
+          new WorkbookCellCommand.SetCell("Ops", "B1", new ResolvedFormula("2+2")),
           author);
       applyAndRecord(
           tracker,
           engine,
           workbook,
-          new WorkbookCellCommand.SetCell("Ops", "A1", ExcelCellValue.text("replaced")),
+          new WorkbookCellCommand.SetCell("Ops", "A1", new CellValue.Text("replaced")),
           new StepReference(1, new StepId("replace"), "MUTATION", "SET_CELL"));
       applyAndRecord(
           tracker,
           engine,
           workbook,
-          new WorkbookCellCommand.SetCell("Ops", "A1", ExcelCellValue.formula("2+2")),
+          new WorkbookCellCommand.SetCell("Ops", "A1", new ResolvedFormula("2+2")),
           new StepReference(2, new StepId("rewrite"), "MUTATION", "SET_CELL"));
       applyAndRecord(
           tracker,
@@ -193,7 +195,7 @@ class FormulaOriginTrackerTest {
           tracker,
           engine,
           workbook,
-          new WorkbookCellCommand.SetCell("Ops", "A1", ExcelCellValue.formula("1+1")),
+          new WorkbookCellCommand.SetCell("Ops", "A1", new ResolvedFormula("1+1")),
           author);
 
       dev.erst.gridgrind.core.problem.GridGrindProblemDetail.Problem problem =
@@ -268,27 +270,27 @@ class FormulaOriginTrackerTest {
               "A1:C1",
               List.of(
                   List.of(
-                      ExcelCellValue.formula("1+1"),
-                      ExcelCellValue.formula("2+2"),
-                      ExcelCellValue.formula("3+3")))),
+                      new ResolvedFormula("1+1"),
+                      new ResolvedFormula("2+2"),
+                      new ResolvedFormula("3+3")))),
           author);
       applyAndRecord(
           tracker,
           engine,
           workbook,
-          new WorkbookCellCommand.SetCell("Ops", "A5", ExcelCellValue.formula("5+5")),
+          new WorkbookCellCommand.SetCell("Ops", "A5", new ResolvedFormula("5+5")),
           author);
       applyAndRecord(
           tracker,
           engine,
           workbook,
-          new WorkbookCellCommand.SetCell("Ops", "A6", ExcelCellValue.formula("6+6")),
+          new WorkbookCellCommand.SetCell("Ops", "A6", new ResolvedFormula("6+6")),
           author);
       applyAndRecord(
           tracker,
           engine,
           workbook,
-          new WorkbookCellCommand.SetCell("Removed", "A1", ExcelCellValue.formula("7+7")),
+          new WorkbookCellCommand.SetCell("Removed", "A1", new ResolvedFormula("7+7")),
           author);
 
       assertEquals(author, tracker.originFor("Ops", "A1").orElseThrow());

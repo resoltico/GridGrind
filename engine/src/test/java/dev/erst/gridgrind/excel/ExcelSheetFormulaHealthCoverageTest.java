@@ -3,6 +3,8 @@ package dev.erst.gridgrind.excel;
 import static dev.erst.gridgrind.excel.ExcelStyleTestAccess.*;
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.core.model.formula.ResolvedFormula;
+import dev.erst.gridgrind.core.model.value.CellValue;
 import dev.erst.gridgrind.core.vocabulary.AnalysisFindingCode;
 import dev.erst.gridgrind.core.vocabulary.AnalysisSeverity;
 import java.util.List;
@@ -30,15 +32,12 @@ class ExcelSheetFormulaHealthCoverageTest extends ExcelSheetTestSupport {
       InvalidFormulaException invalidWrite =
           assertThrows(
               InvalidFormulaException.class,
-              () -> writeFailureSheet.cells().setCell("B1", ExcelCellValue.formula("SUM(")));
+              () -> writeFailureSheet.cells().setCell("B1", new ResolvedFormula("SUM(")));
       assertEquals("SUM(", invalidWrite.formula());
       InvalidFormulaException parserStateWrite =
           assertThrows(
               InvalidFormulaException.class,
-              () ->
-                  writeFailureSheet
-                      .cells()
-                      .setCell("C1", ExcelCellValue.formula("[^owe_e`ffffff")));
+              () -> writeFailureSheet.cells().setCell("C1", new ResolvedFormula("[^owe_e`ffffff")));
       assertEquals("[^owe_e`ffffff", parserStateWrite.formula());
 
       FormulaEvaluator baseEvaluator = poiWorkbook.getCreationHelper().createFormulaEvaluator();
@@ -108,8 +107,8 @@ class ExcelSheetFormulaHealthCoverageTest extends ExcelSheetTestSupport {
       ExcelSheet sheet =
           new ExcelSheet(poiSheet, new WorkbookStyleRegistry(poiWorkbook), evaluator);
 
-      sheet.cells().setCell("A1", ExcelCellValue.text("first"));
-      sheet.cells().setCell("A3", ExcelCellValue.text("third"));
+      sheet.cells().setCell("A1", new CellValue.Text("first"));
+      sheet.cells().setCell("A3", new CellValue.Text("third"));
 
       List<ExcelPreviewRow> preview = sheet.cells().preview(3, 1);
       assertEquals(3, preview.size());
@@ -127,9 +126,9 @@ class ExcelSheetFormulaHealthCoverageTest extends ExcelSheetTestSupport {
       ExcelSheet sheet =
           new ExcelSheet(poiSheet, new WorkbookStyleRegistry(poiWorkbook), evaluator);
 
-      sheet.cells().setCell("A1", ExcelCellValue.formula("INDIRECT(\"[External.xlsx]Sheet1!A1\")"));
-      sheet.cells().setCell("A2", ExcelCellValue.formula("NOW()"));
-      sheet.cells().setCell("A3", ExcelCellValue.formula("1/0"));
+      sheet.cells().setCell("A1", new ResolvedFormula("INDIRECT(\"[External.xlsx]Sheet1!A1\")"));
+      sheet.cells().setCell("A2", new ResolvedFormula("NOW()"));
+      sheet.cells().setCell("A3", new ResolvedFormula("1/0"));
 
       List<WorkbookAnalysis.AnalysisFinding> findings = sheet.diagnostics().formulaHealthFindings();
 
@@ -177,8 +176,8 @@ class ExcelSheetFormulaHealthCoverageTest extends ExcelSheetTestSupport {
               new WorkbookStyleRegistry(poiWorkbook),
               poiWorkbook.getCreationHelper().createFormulaEvaluator());
 
-      sheet.cells().setCell("A1", ExcelCellValue.formula("B1+1"));
-      sheet.cells().setCell("B1", ExcelCellValue.formula("A1+1"));
+      sheet.cells().setCell("A1", new ResolvedFormula("B1+1"));
+      sheet.cells().setCell("B1", new ResolvedFormula("A1+1"));
 
       List<WorkbookAnalysis.AnalysisFinding> findings = sheet.diagnostics().formulaHealthFindings();
 

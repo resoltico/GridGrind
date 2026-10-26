@@ -4,7 +4,7 @@ import dev.erst.gridgrind.core.model.style.CellStylePatch;
 import dev.erst.gridgrind.core.model.value.CellGridSpec;
 import dev.erst.gridgrind.core.model.value.CellRowSpec;
 import dev.erst.gridgrind.core.model.value.CellValueSpec;
-import dev.erst.gridgrind.excel.ExcelCellValue;
+import dev.erst.gridgrind.core.model.value.ResolvedCellWrite;
 import java.util.List;
 
 /** Decodes bounded structured values from a Jazzer data provider. */
@@ -44,7 +44,7 @@ public final class FuzzDataDecoders {
   }
 
   /** Returns a workbook-core cell value. */
-  public static ExcelCellValue nextExcelCellValue(GridGrindFuzzData data) {
+  public static ResolvedCellWrite nextExcelCellValue(GridGrindFuzzData data) {
     return FuzzValueDecoders.nextExcelCellValue(data);
   }
 
@@ -65,7 +65,7 @@ public final class FuzzDataDecoders {
   }
 
   /** Returns a non-empty rectangular matrix of workbook-core cell values. */
-  public static List<List<ExcelCellValue>> nextExcelMatrix(
+  public static List<List<ResolvedCellWrite>> nextExcelMatrix(
       GridGrindFuzzData data, int rowCount, int columnCount) {
     return FuzzValueDecoders.nextExcelMatrix(data, rowCount, columnCount);
   }

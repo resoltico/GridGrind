@@ -2,6 +2,7 @@ package dev.erst.gridgrind.excel;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.core.model.value.CellValue;
 import dev.erst.gridgrind.core.vocabulary.AnalysisFindingCode;
 import dev.erst.gridgrind.core.vocabulary.AnalysisSeverity;
 import dev.erst.gridgrind.excel.validation.ExcelDataValidationDefinition;
@@ -62,12 +63,12 @@ class ExcelDocumentAnalyzerTest {
   void autofilterAndTableHealthHonorTheirSelections() throws IOException {
     try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       ExcelSheet budget = workbook.getOrCreateSheet("Budget");
-      budget.cells().setCell("A1", ExcelCellValue.text("Owner"));
-      budget.cells().setCell("B1", ExcelCellValue.text("Task"));
-      budget.cells().setCell("A2", ExcelCellValue.text("Ada"));
-      budget.cells().setCell("B2", ExcelCellValue.text("Queue"));
-      budget.cells().setCell("A3", ExcelCellValue.text("Lin"));
-      budget.cells().setCell("B3", ExcelCellValue.text("Pack"));
+      budget.cells().setCell("A1", new CellValue.Text("Owner"));
+      budget.cells().setCell("B1", new CellValue.Text("Task"));
+      budget.cells().setCell("A2", new CellValue.Text("Ada"));
+      budget.cells().setCell("B2", new CellValue.Text("Queue"));
+      budget.cells().setCell("A3", new CellValue.Text("Lin"));
+      budget.cells().setCell("B3", new CellValue.Text("Pack"));
       workbook
           .tables()
           .setTable(
@@ -76,10 +77,10 @@ class ExcelDocumentAnalyzerTest {
       budget.xssfSheet().getTables().getFirst().getCTTable().getAutoFilter().setRef("A1:B2");
 
       ExcelSheet archive = workbook.getOrCreateSheet("Archive");
-      archive.cells().setCell("D1", ExcelCellValue.text(""));
-      archive.cells().setCell("E1", ExcelCellValue.text(""));
-      archive.cells().setCell("D2", ExcelCellValue.text("Old"));
-      archive.cells().setCell("E2", ExcelCellValue.text("Done"));
+      archive.cells().setCell("D1", new CellValue.Text(""));
+      archive.cells().setCell("E1", new CellValue.Text(""));
+      archive.cells().setCell("D2", new CellValue.Text("Old"));
+      archive.cells().setCell("E2", new CellValue.Text("Done"));
       archive.xssfSheet().getCTWorksheet().addNewAutoFilter().setRef("D1:E2");
 
       ExcelDocumentAnalyzer analyzer = new ExcelDocumentAnalyzer();

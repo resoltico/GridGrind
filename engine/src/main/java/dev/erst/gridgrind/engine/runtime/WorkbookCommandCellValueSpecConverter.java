@@ -4,14 +4,17 @@ import dev.erst.gridgrind.core.model.drawing.CommentSpec;
 import dev.erst.gridgrind.core.model.drawing.ResolvedComment;
 import dev.erst.gridgrind.core.model.formula.ArrayFormulaSpec;
 import dev.erst.gridgrind.core.model.formula.ResolvedArrayFormula;
+import dev.erst.gridgrind.core.model.formula.ResolvedFormula;
+import dev.erst.gridgrind.core.model.formula.ResolvedRawFormula;
 import dev.erst.gridgrind.core.model.style.FontHeightReport;
 import dev.erst.gridgrind.core.model.style.FontHeightSpec;
 import dev.erst.gridgrind.core.model.style.ResolvedRichText;
 import dev.erst.gridgrind.core.model.style.ResolvedRichTextRun;
 import dev.erst.gridgrind.core.model.style.RichTextRunSpec;
+import dev.erst.gridgrind.core.model.value.CellValue;
 import dev.erst.gridgrind.core.model.value.CellValueSpec;
 import dev.erst.gridgrind.core.model.value.HyperlinkTarget;
-import dev.erst.gridgrind.excel.ExcelCellValue;
+import dev.erst.gridgrind.core.model.value.ResolvedCellWrite;
 import dev.erst.gridgrind.excel.ExcelHyperlink;
 import java.util.Optional;
 
@@ -19,22 +22,22 @@ import java.util.Optional;
 final class WorkbookCommandCellValueSpecConverter {
   private WorkbookCommandCellValueSpecConverter() {}
 
-  static ExcelCellValue toExcelCellValue(CellValueSpec value) {
+  static ResolvedCellWrite toResolvedCellWrite(CellValueSpec value) {
     return switch (value) {
-      case CellValueSpec.Blank _ -> ExcelCellValue.blank();
+      case CellValueSpec.Blank _ -> new CellValue.Blank();
       case CellValueSpec.Text text ->
-          ExcelCellValue.text(WorkbookCommandSourceSupport.inlineText(text.value(), "cell text"));
-      case CellValueSpec.RichText richText -> ExcelCellValue.richText(toResolvedRichText(richText));
-      case CellValueSpec.NumberValue numberValue -> ExcelCellValue.number(numberValue.value());
-      case CellValueSpec.BooleanValue booleanValue -> ExcelCellValue.bool(booleanValue.value());
-      case CellValueSpec.ErrorValue errorValue -> ExcelCellValue.error(errorValue.value());
-      case CellValueSpec.Date date -> ExcelCellValue.date(date.value());
-      case CellValueSpec.DateTime dateTime -> ExcelCellValue.dateTime(dateTime.value());
+          new CellValue.Text(WorkbookCommandSourceSupport.inlineText(text.value(), "cell text"));
+      case CellValueSpec.RichText richText -> toResolvedRichText(richText);
+      case CellValueSpec.NumberValue numberValue -> new CellValue.NumberValue(numberValue.value());
+      case CellValueSpec.BooleanValue booleanValue ->
+          new CellValue.BooleanValue(booleanValue.value());
+      case CellValueSpec.ErrorValue errorValue -> new CellValue.ErrorValue(errorValue.value());
+      case CellValueSpec.Date date -> date;
+      case CellValueSpec.DateTime dateTime -> dateTime;
       case CellValueSpec.Formula formula ->
-          ExcelCellValue.formula(
-              WorkbookCommandSourceSupport.inlineText(formula.value(), "formula"));
+          new ResolvedFormula(WorkbookCommandSourceSupport.inlineText(formula.value(), "formula"));
       case CellValueSpec.RawFormula rawFormula ->
-          ExcelCellValue.rawFormula(
+          new ResolvedRawFormula(
               WorkbookCommandSourceSupport.inlineText(rawFormula.value(), "raw formula"));
     };
   }

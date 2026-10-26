@@ -2,6 +2,7 @@ package dev.erst.gridgrind.excel;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.core.model.value.CellValue;
 import dev.erst.gridgrind.core.vocabulary.ExcelOoxmlChainingMode;
 import dev.erst.gridgrind.core.vocabulary.ExcelOoxmlCipherAlgorithm;
 import dev.erst.gridgrind.core.vocabulary.ExcelOoxmlEncryptionMode;
@@ -54,7 +55,7 @@ class ExcelOoxmlPackageSecurityCoverageTest {
       workbook
           .getOrCreateSheet("Plain")
           .cells()
-          .setCell("A1", ExcelCellValue.text("Plain workbook"));
+          .setCell("A1", new CellValue.Text("Plain workbook"));
       workbook
           .persistence()
           .save(
@@ -128,7 +129,7 @@ class ExcelOoxmlPackageSecurityCoverageTest {
     Path directory = ExcelTempFiles.createManagedTempDirectory("gridgrind-package-io-");
     Path sourceWorkbookPath = directory.resolve("source.xlsx");
     try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
-      workbook.getOrCreateSheet("Budget").cells().setCell("A1", ExcelCellValue.text("Bridge"));
+      workbook.getOrCreateSheet("Budget").cells().setCell("A1", new CellValue.Text("Bridge"));
       workbook
           .persistence()
           .save(
@@ -163,7 +164,7 @@ class ExcelOoxmlPackageSecurityCoverageTest {
     Path workspace = ExcelTempFiles.createManagedTempDirectory("gridgrind-package-file-ops-");
     Path sourceWorkbookPath = workspace.resolve("source.xlsx");
     try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
-      workbook.getOrCreateSheet("Budget").cells().setCell("A1", ExcelCellValue.text("Source"));
+      workbook.getOrCreateSheet("Budget").cells().setCell("A1", new CellValue.Text("Source"));
       workbook
           .persistence()
           .save(
@@ -372,7 +373,7 @@ class ExcelOoxmlPackageSecurityCoverageTest {
     Path materializedWorkbookPath =
         ExcelTempFiles.createManagedTempFile("gridgrind-materialized-open-", ".xlsx");
     try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
-      workbook.getOrCreateSheet("Plain").cells().setCell("A1", ExcelCellValue.text("Materialized"));
+      workbook.getOrCreateSheet("Plain").cells().setCell("A1", new CellValue.Text("Materialized"));
       workbook
           .persistence()
           .save(
@@ -658,7 +659,7 @@ class ExcelOoxmlPackageSecurityCoverageTest {
     Path workspace = ExcelTempFiles.createManagedTempDirectory("gridgrind-saveworkbook-security-");
     Path plainSourcePath = workspace.resolve("plain-source.xlsx");
     try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
-      workbook.getOrCreateSheet("Plain").cells().setCell("A1", ExcelCellValue.text("Plain save"));
+      workbook.getOrCreateSheet("Plain").cells().setCell("A1", new CellValue.Text("Plain save"));
       workbook
           .persistence()
           .save(
@@ -684,7 +685,7 @@ class ExcelOoxmlPackageSecurityCoverageTest {
 
     Path plainWorkbookPath = workspace.resolve("persist-signed-plain.xlsx");
     try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
-      workbook.getOrCreateSheet("Guard").cells().setCell("A1", ExcelCellValue.text("Signed guard"));
+      workbook.getOrCreateSheet("Guard").cells().setCell("A1", new CellValue.Text("Signed guard"));
       workbook
           .persistence()
           .save(
@@ -718,7 +719,7 @@ class ExcelOoxmlPackageSecurityCoverageTest {
   @Test
   void saveWorkbookCoversInMemoryAndSignedPassthroughBranches() throws Exception {
     try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
-      workbook.getOrCreateSheet("Memory").cells().setCell("A1", ExcelCellValue.text("Memory save"));
+      workbook.getOrCreateSheet("Memory").cells().setCell("A1", new CellValue.Text("Memory save"));
       Path memoryTarget = ExcelTempFiles.createManagedTempFile("gridgrind-save-memory-", ".xlsx");
 
       ExcelOoxmlPackageSecuritySupport.saveWorkbook(
@@ -794,7 +795,7 @@ class ExcelOoxmlPackageSecurityCoverageTest {
       workbook
           .getOrCreateSheet("Encrypted")
           .cells()
-          .setCell("A1", ExcelCellValue.text("Encrypted save"));
+          .setCell("A1", new CellValue.Text("Encrypted save"));
       ExcelOoxmlPackageSecuritySupport.saveWorkbook(
           workbook,
           encryptedOutput,
@@ -1206,7 +1207,7 @@ class ExcelOoxmlPackageSecurityCoverageTest {
       workbook
           .getOrCreateSheet("Signed")
           .cells()
-          .setCell("A1", ExcelCellValue.text("Signed workbook"));
+          .setCell("A1", new CellValue.Text("Signed workbook"));
       workbook
           .persistence()
           .save(

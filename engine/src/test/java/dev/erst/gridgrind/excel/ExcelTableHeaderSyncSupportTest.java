@@ -2,6 +2,7 @@ package dev.erst.gridgrind.excel;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+import dev.erst.gridgrind.core.model.value.CellValue;
 import org.junit.jupiter.api.Test;
 
 /** Tests for the table-header metadata synchronization support seam. */
@@ -101,11 +102,11 @@ class ExcelTableHeaderSyncSupportTest {
 
   private static void populateTableCells(
       ExcelSheet sheet, String firstHeader, String secondHeader) {
-    sheet.cells().setCell("A1", ExcelCellValue.text(firstHeader));
-    sheet.cells().setCell("B1", ExcelCellValue.text(secondHeader));
-    sheet.cells().setCell("A2", ExcelCellValue.text("Ada"));
-    sheet.cells().setCell("B2", ExcelCellValue.text("Queue"));
-    sheet.cells().setCell("A3", ExcelCellValue.text("Lin"));
-    sheet.cells().setCell("B3", ExcelCellValue.text("Pack"));
+    sheet.cells().setCell("A1", new CellValue.Text(firstHeader));
+    sheet.cells().setCell("B1", new CellValue.Text(secondHeader));
+    sheet.cells().setCell("A2", new CellValue.Text("Ada"));
+    sheet.cells().setCell("B2", new CellValue.Text("Queue"));
+    sheet.cells().setCell("A3", new CellValue.Text("Lin"));
+    sheet.cells().setCell("B3", new CellValue.Text("Pack"));
   }
 }

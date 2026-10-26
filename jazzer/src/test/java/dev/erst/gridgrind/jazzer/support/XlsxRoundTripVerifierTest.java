@@ -13,6 +13,7 @@ import dev.erst.gridgrind.core.model.style.CellStylePatch;
 import dev.erst.gridgrind.core.model.style.ColorSpec;
 import dev.erst.gridgrind.core.model.style.ResolvedRichText;
 import dev.erst.gridgrind.core.model.style.ResolvedRichTextRun;
+import dev.erst.gridgrind.core.model.value.CellValue;
 import dev.erst.gridgrind.core.vocabulary.ExcelColumnSpan;
 import dev.erst.gridgrind.core.vocabulary.ExcelComparisonOperator;
 import dev.erst.gridgrind.core.vocabulary.ExcelDataValidationErrorStyle;
@@ -21,7 +22,6 @@ import dev.erst.gridgrind.core.vocabulary.ExcelPictureFormat;
 import dev.erst.gridgrind.core.vocabulary.RgbHex;
 import dev.erst.gridgrind.excel.*;
 import dev.erst.gridgrind.excel.ExcelBinaryData;
-import dev.erst.gridgrind.excel.ExcelCellValue;
 import dev.erst.gridgrind.excel.ExcelConditionalFormattingBlockDefinition;
 import dev.erst.gridgrind.excel.ExcelConditionalFormattingRule;
 import dev.erst.gridgrind.excel.ExcelDifferentialStyle;
@@ -64,8 +64,7 @@ class XlsxRoundTripVerifierTest {
                 "gridgrind-jazzer-gradient-roundtrip-",
                 List.of(
                     new WorkbookSheetCommand.CreateSheet("Budget"),
-                    new WorkbookCellCommand.SetCell(
-                        "Budget", "A1", ExcelCellValue.text("Gradient")),
+                    new WorkbookCellCommand.SetCell("Budget", "A1", new CellValue.Text("Gradient")),
                     new WorkbookFormattingCommand.ApplyStyle(
                         "Budget",
                         "A1",
@@ -97,21 +96,20 @@ class XlsxRoundTripVerifierTest {
                     new WorkbookCellCommand.SetCell(
                         "Budget",
                         "A1",
-                        ExcelCellValue.richText(
-                            new ResolvedRichText(
-                                List.of(
-                                    new ResolvedRichTextRun("Quarterly", Optional.empty()),
-                                    new ResolvedRichTextRun(
-                                        " Report",
-                                        Optional.of(
-                                            new CellFontPatch(
-                                                Optional.of(true),
-                                                Optional.empty(),
-                                                Optional.empty(),
-                                                Optional.empty(),
-                                                Optional.of(ColorSpec.rgb(new RgbHex("#C0504D"))),
-                                                Optional.empty(),
-                                                Optional.empty()))))))),
+                        new ResolvedRichText(
+                            List.of(
+                                new ResolvedRichTextRun("Quarterly", Optional.empty()),
+                                new ResolvedRichTextRun(
+                                    " Report",
+                                    Optional.of(
+                                        new CellFontPatch(
+                                            Optional.of(true),
+                                            Optional.empty(),
+                                            Optional.empty(),
+                                            Optional.empty(),
+                                            Optional.of(ColorSpec.rgb(new RgbHex("#C0504D"))),
+                                            Optional.empty(),
+                                            Optional.empty())))))),
                     new WorkbookFormattingCommand.ApplyStyle(
                         "Budget",
                         "A1",
@@ -150,14 +148,15 @@ class XlsxRoundTripVerifierTest {
                         "Budget",
                         "A1:B3",
                         List.of(
-                            List.of(ExcelCellValue.text("Item"), ExcelCellValue.text("Value")),
-                            List.of(ExcelCellValue.text("Ada"), ExcelCellValue.number(49.0d)),
-                            List.of(ExcelCellValue.text("Linus"), ExcelCellValue.number(10.0d)))),
-                    new WorkbookCellCommand.SetCell("Budget", "C1", ExcelCellValue.text("scratch")),
+                            List.of(new CellValue.Text("Item"), new CellValue.Text("Value")),
+                            List.of(new CellValue.Text("Ada"), new CellValue.NumberValue(49.0d)),
+                            List.of(
+                                new CellValue.Text("Linus"), new CellValue.NumberValue(10.0d)))),
+                    new WorkbookCellCommand.SetCell("Budget", "C1", new CellValue.Text("scratch")),
                     new WorkbookCellCommand.ClearRange("Budget", "C1:C1"),
                     new WorkbookCellCommand.AppendRow(
                         "Budget",
-                        List.of(ExcelCellValue.text("Grace"), ExcelCellValue.number(30.0d))),
+                        List.of(new CellValue.Text("Grace"), new CellValue.NumberValue(30.0d))),
                     new WorkbookFormattingCommand.SetDataValidation(
                         "Budget",
                         "B2:B4",
@@ -299,21 +298,21 @@ class XlsxRoundTripVerifierTest {
                         "A1:C4",
                         List.of(
                             List.of(
-                                ExcelCellValue.text("Month"),
-                                ExcelCellValue.text("Plan"),
-                                ExcelCellValue.text("Actual")),
+                                new CellValue.Text("Month"),
+                                new CellValue.Text("Plan"),
+                                new CellValue.Text("Actual")),
                             List.of(
-                                ExcelCellValue.text("Jan"),
-                                ExcelCellValue.number(10.0d),
-                                ExcelCellValue.number(12.0d)),
+                                new CellValue.Text("Jan"),
+                                new CellValue.NumberValue(10.0d),
+                                new CellValue.NumberValue(12.0d)),
                             List.of(
-                                ExcelCellValue.text("Feb"),
-                                ExcelCellValue.number(18.0d),
-                                ExcelCellValue.number(16.0d)),
+                                new CellValue.Text("Feb"),
+                                new CellValue.NumberValue(18.0d),
+                                new CellValue.NumberValue(16.0d)),
                             List.of(
-                                ExcelCellValue.text("Mar"),
-                                ExcelCellValue.number(15.0d),
-                                ExcelCellValue.number(21.0d)))),
+                                new CellValue.Text("Mar"),
+                                new CellValue.NumberValue(15.0d),
+                                new CellValue.NumberValue(21.0d)))),
                     new WorkbookCellCommand.SetArrayFormula(
                         "Approvals", "D2:D4", new ResolvedArrayFormula("B2:B4*C2:C4")),
                     new WorkbookCellCommand.ClearArrayFormula("Approvals", "D2"),

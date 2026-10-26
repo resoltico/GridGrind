@@ -2,6 +2,8 @@ package dev.erst.gridgrind.excel;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.core.model.formula.ResolvedFormula;
+import dev.erst.gridgrind.core.model.value.CellValue;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
@@ -254,11 +256,11 @@ class ExcelFormulaEnvironmentTest {
 
     try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       workbook.getOrCreateSheet("Budget");
-      workbook.sheet("Budget").cells().setCell("A1", ExcelCellValue.number(2.0d));
-      workbook.sheet("Budget").cells().setCell("B1", ExcelCellValue.formula("A1*2"));
-      workbook.sheet("Budget").cells().setCell("C1", ExcelCellValue.formula("A1*3"));
+      workbook.sheet("Budget").cells().setCell("A1", new CellValue.NumberValue(2.0d));
+      workbook.sheet("Budget").cells().setCell("B1", new ResolvedFormula("A1*2"));
+      workbook.sheet("Budget").cells().setCell("C1", new ResolvedFormula("A1*3"));
       workbook.formulas().evaluateAll();
-      workbook.sheet("Budget").cells().setCell("A1", ExcelCellValue.number(4.0d));
+      workbook.sheet("Budget").cells().setCell("A1", new CellValue.NumberValue(4.0d));
       workbook.formulas().evaluate(List.of(new ExcelFormulaCellTarget("Budget", "B1")));
       workbook
           .persistence()
@@ -278,9 +280,9 @@ class ExcelFormulaEnvironmentTest {
 
     try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       workbook.getOrCreateSheet("Budget");
-      workbook.sheet("Budget").cells().setCell("A1", ExcelCellValue.number(2.0d));
-      workbook.sheet("Budget").cells().setCell("B1", ExcelCellValue.formula("A1*2"));
-      workbook.sheet("Budget").cells().setCell("C1", ExcelCellValue.formula("A1*3"));
+      workbook.sheet("Budget").cells().setCell("A1", new CellValue.NumberValue(2.0d));
+      workbook.sheet("Budget").cells().setCell("B1", new ResolvedFormula("A1*2"));
+      workbook.sheet("Budget").cells().setCell("C1", new ResolvedFormula("A1*3"));
       workbook.formulas().evaluateAll();
       workbook.formulas().clearCaches();
       workbook
@@ -303,8 +305,8 @@ class ExcelFormulaEnvironmentTest {
 
     try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       workbook.getOrCreateSheet("Budget");
-      workbook.sheet("Budget").cells().setCell("A1", ExcelCellValue.number(2.0d));
-      workbook.sheet("Budget").cells().setCell("B1", ExcelCellValue.formula("A1*2"));
+      workbook.sheet("Budget").cells().setCell("A1", new CellValue.NumberValue(2.0d));
+      workbook.sheet("Budget").cells().setCell("B1", new ResolvedFormula("A1*2"));
 
       assertEquals(
           List.of(
@@ -352,8 +354,8 @@ class ExcelFormulaEnvironmentTest {
       throws Exception {
     try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       workbook.getOrCreateSheet("Budget");
-      workbook.sheet("Budget").cells().setCell("A1", ExcelCellValue.number(2.0d));
-      workbook.sheet("Budget").cells().setCell("B1", ExcelCellValue.formula("A1*2"));
+      workbook.sheet("Budget").cells().setCell("A1", new CellValue.NumberValue(2.0d));
+      workbook.sheet("Budget").cells().setCell("B1", new ResolvedFormula("A1*2"));
 
       assertEquals(
           List.of(
@@ -413,7 +415,7 @@ class ExcelFormulaEnvironmentTest {
                 poiWorkbook,
                 FormulaRuntimeTestDouble.alwaysFail(new IllegalStateException("boom")))) {
       workbook.getOrCreateSheet("Budget");
-      workbook.sheet("Budget").cells().setCell("A1", ExcelCellValue.formula("1+1"));
+      workbook.sheet("Budget").cells().setCell("A1", new ResolvedFormula("1+1"));
 
       IllegalStateException failure =
           assertThrows(IllegalStateException.class, workbook.formulas()::assessAllCapabilities);

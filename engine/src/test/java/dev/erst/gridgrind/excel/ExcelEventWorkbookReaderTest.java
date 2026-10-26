@@ -2,6 +2,7 @@ package dev.erst.gridgrind.excel;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.core.model.value.CellValue;
 import dev.erst.gridgrind.core.vocabulary.ExcelSheetVisibility;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.excel.event.EventReadCommandTypes;
@@ -38,8 +39,8 @@ class ExcelEventWorkbookReaderTest {
       workbook.sheets().setActiveSheet("Ops");
       workbook.sheets().setSelectedSheets(List.of("Ops"));
       workbook.formulas().markRecalculateOnOpen();
-      workbook.sheet("Ops").cells().setCell("A1", ExcelCellValue.text("Header"));
-      workbook.sheet("Ops").cells().setCell("D3", ExcelCellValue.number(12.5d));
+      workbook.sheet("Ops").cells().setCell("A1", new CellValue.Text("Header"));
+      workbook.sheet("Ops").cells().setCell("D3", new CellValue.NumberValue(12.5d));
       workbook.sheet("Ops").columns().setWidth(5, 5, 18.0d);
       workbook
           .sheets()

@@ -21,7 +21,7 @@ final class WorkbookCommandCellMutationConverter {
         yield new WorkbookCellCommand.SetCell(
             cellTarget.sheetName(),
             cellTarget.address(),
-            WorkbookCommandCellValueSpecConverter.toExcelCellValue(setCell.value()));
+            WorkbookCommandCellValueSpecConverter.toResolvedCellWrite(setCell.value()));
       }
       case CellMutationAction.SetRange setRange -> {
         RangeSelector.ByRange selector =
@@ -33,7 +33,7 @@ final class WorkbookCommandCellMutationConverter {
                 .map(
                     row ->
                         row.stream()
-                            .map(WorkbookCommandCellValueSpecConverter::toExcelCellValue)
+                            .map(WorkbookCommandCellValueSpecConverter::toResolvedCellWrite)
                             .toList())
                 .toList());
       }
@@ -101,7 +101,7 @@ final class WorkbookCommandCellMutationConverter {
           new WorkbookCellCommand.AppendRow(
               WorkbookCommandSelectorSupport.sheetByName(target, action).name().value(),
               appendRow.values().toCellInputs().stream()
-                  .map(WorkbookCommandCellValueSpecConverter::toExcelCellValue)
+                  .map(WorkbookCommandCellValueSpecConverter::toResolvedCellWrite)
                   .toList());
     };
   }

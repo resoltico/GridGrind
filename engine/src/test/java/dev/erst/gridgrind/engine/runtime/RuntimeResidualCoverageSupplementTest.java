@@ -12,6 +12,7 @@ import dev.erst.gridgrind.core.model.validation.ConditionalFormattingRuleSpec;
 import dev.erst.gridgrind.core.model.validation.ConditionalFormattingSpec;
 import dev.erst.gridgrind.core.model.value.CellGridSpec;
 import dev.erst.gridgrind.core.model.value.CellRowSpec;
+import dev.erst.gridgrind.core.model.value.CellValue;
 import dev.erst.gridgrind.core.model.value.CellValueSpec;
 import dev.erst.gridgrind.core.plan.CellMutationAction;
 import dev.erst.gridgrind.core.plan.RangeSelector;
@@ -23,7 +24,6 @@ import dev.erst.gridgrind.core.source.TextSourceSpec;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.TableName;
 import dev.erst.gridgrind.excel.ExcelCellSnapshot;
-import dev.erst.gridgrind.excel.ExcelCellValue;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
 import dev.erst.gridgrind.excel.ExcelWorkbooks;
 import java.nio.charset.StandardCharsets;
@@ -144,15 +144,15 @@ class RuntimeResidualCoverageSupplementTest {
     assertEquals(
         "#REF!",
         assertInstanceOf(
-                ExcelCellValue.ErrorValue.class,
-                WorkbookCommandCellValueSpecConverter.toExcelCellValue(errorValue))
+                CellValue.ErrorValue.class,
+                WorkbookCommandCellValueSpecConverter.toResolvedCellWrite(errorValue))
             .value());
   }
 
   @Test
   void semanticSelectorResolverTreatsUnsupportedKeyCellKindsAsNonMatches() throws Exception {
     try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
-      workbook.getOrCreateSheet("Budget").cells().setCell("A1", ExcelCellValue.text("Ada"));
+      workbook.getOrCreateSheet("Budget").cells().setCell("A1", new CellValue.Text("Ada"));
       ExcelCellSnapshot snapshot = workbook.sheet("Budget").cells().snapshotCell("A1");
 
       boolean matched =

@@ -2,6 +2,7 @@ package dev.erst.gridgrind.excel;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.core.model.value.CellValue;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import java.util.Arrays;
 import java.util.List;
@@ -13,8 +14,8 @@ class WorkbookReadExecutorTest {
   void appliesVarargsAndIterableCommandsInOrder() throws Exception {
     try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       ExcelSheet sheet = workbook.getOrCreateSheet("Budget");
-      sheet.cells().setCell("A1", ExcelCellValue.text("Report"));
-      sheet.cells().setCell("B2", ExcelCellValue.number(61.0));
+      sheet.cells().setCell("A1", new CellValue.Text("Report"));
+      sheet.cells().setCell("B2", new CellValue.NumberValue(61.0));
       workbook
           .names()
           .setNamedRange(

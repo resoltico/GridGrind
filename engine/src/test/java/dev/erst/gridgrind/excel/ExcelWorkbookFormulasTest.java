@@ -6,6 +6,8 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import dev.erst.gridgrind.core.model.formula.ResolvedFormula;
+import dev.erst.gridgrind.core.model.value.CellValue;
 import java.util.List;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.junit.jupiter.api.Test;
@@ -36,8 +38,8 @@ class ExcelWorkbookFormulasTest {
   void formulasSurfaceDelegatesToWorkbookFormulaOperations() throws Exception {
     try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       workbook.getOrCreateSheet("Budget");
-      workbook.sheet("Budget").cells().setCell("A1", ExcelCellValue.number(2.0d));
-      workbook.sheet("Budget").cells().setCell("B1", ExcelCellValue.formula("A1*2"));
+      workbook.sheet("Budget").cells().setCell("A1", new CellValue.NumberValue(2.0d));
+      workbook.sheet("Budget").cells().setCell("B1", new ResolvedFormula("A1*2"));
 
       ExcelWorkbookFormulas formulas = workbook.formulas();
 
@@ -72,10 +74,10 @@ class ExcelWorkbookFormulasTest {
       throws Exception {
     try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       ExcelSheet sheet = workbook.getOrCreateSheet("Budget");
-      sheet.cells().setCell("A1", ExcelCellValue.formula("A1+1"));
-      sheet.cells().setCell("B1", ExcelCellValue.formula("C1+1"));
-      sheet.cells().setCell("C1", ExcelCellValue.formula("B1+1"));
-      sheet.cells().setCell("D1", ExcelCellValue.formula("1/0"));
+      sheet.cells().setCell("A1", new ResolvedFormula("A1+1"));
+      sheet.cells().setCell("B1", new ResolvedFormula("C1+1"));
+      sheet.cells().setCell("C1", new ResolvedFormula("B1+1"));
+      sheet.cells().setCell("D1", new ResolvedFormula("1/0"));
 
       List<ExcelFormulaCapabilityAssessment> assessments =
           workbook.formulas().assessAllCapabilities();
@@ -117,7 +119,7 @@ class ExcelWorkbookFormulasTest {
                 poiWorkbook,
                 FormulaRuntimeTestDouble.nullEvaluation(
                     poiWorkbook.getCreationHelper().createFormulaEvaluator()))) {
-      workbook.getOrCreateSheet("Budget").cells().setCell("A1", ExcelCellValue.formula("1+1"));
+      workbook.getOrCreateSheet("Budget").cells().setCell("A1", new ResolvedFormula("1+1"));
 
       assertEquals(
           List.of(

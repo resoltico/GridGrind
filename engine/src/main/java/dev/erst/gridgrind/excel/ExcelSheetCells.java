@@ -2,6 +2,7 @@ package dev.erst.gridgrind.excel;
 
 import dev.erst.gridgrind.core.model.formula.ResolvedArrayFormula;
 import dev.erst.gridgrind.core.model.style.CellStylePatch;
+import dev.erst.gridgrind.core.model.value.ResolvedCellWrite;
 import java.util.List;
 import java.util.Objects;
 
@@ -22,13 +23,13 @@ public final class ExcelSheetCells {
   }
 
   /** Writes a typed value to an A1-style address. */
-  public ExcelSheetCells setCell(String address, ExcelCellValue value) {
+  public ExcelSheetCells setCell(String address, ResolvedCellWrite value) {
     mutationSupport.setCell(address, value);
     return this;
   }
 
   /** Writes a rectangular matrix of values to an A1-style range such as {@code A1:C3}. */
-  public ExcelSheetCells setRange(String range, List<List<ExcelCellValue>> rows) {
+  public ExcelSheetCells setRange(String range, List<List<ResolvedCellWrite>> rows) {
     mutationSupport.setRange(range, rows);
     return this;
   }
@@ -58,7 +59,7 @@ public final class ExcelSheetCells {
   }
 
   /** Appends a new row using the next available row index. */
-  public ExcelSheetCells appendRow(ExcelCellValue... values) {
+  public ExcelSheetCells appendRow(ResolvedCellWrite... values) {
     mutationSupport.appendRow(values);
     return this;
   }

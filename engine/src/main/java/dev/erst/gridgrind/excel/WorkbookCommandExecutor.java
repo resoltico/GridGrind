@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.core.model.value.ResolvedCellWrite;
 import java.util.Arrays;
 import java.util.Objects;
 
@@ -201,7 +202,7 @@ final class WorkbookCommandExecutor {
           workbook
               .sheet(appendRow.sheetName())
               .cells()
-              .appendRow(appendRow.values().toArray(ExcelCellValue[]::new));
+              .appendRow(appendRow.values().toArray(ResolvedCellWrite[]::new));
     }
   }
 

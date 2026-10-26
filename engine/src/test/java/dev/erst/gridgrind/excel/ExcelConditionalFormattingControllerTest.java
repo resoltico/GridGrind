@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import dev.erst.gridgrind.core.model.style.BorderSidePatch;
 import dev.erst.gridgrind.core.model.style.ColorSpec;
 import dev.erst.gridgrind.core.model.style.FontHeightReport;
+import dev.erst.gridgrind.core.model.value.CellValue;
 import dev.erst.gridgrind.core.vocabulary.AnalysisFindingCode;
 import dev.erst.gridgrind.core.vocabulary.ExcelBorderStyle;
 import dev.erst.gridgrind.core.vocabulary.ExcelComparisonOperator;
@@ -362,8 +363,8 @@ class ExcelConditionalFormattingControllerTest {
   void healthyGreaterThanRuleSupportsSelectionFilteringAndSheetDelegation() throws Exception {
     try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       ExcelSheet sheet = workbook.getOrCreateSheet("Ops");
-      sheet.cells().setCell("A1", ExcelCellValue.number(5));
-      sheet.cells().setCell("A2", ExcelCellValue.number(9));
+      sheet.cells().setCell("A1", new CellValue.NumberValue(5));
+      sheet.cells().setCell("A2", new CellValue.NumberValue(9));
       sheet
           .metadata()
           .setConditionalFormatting(
@@ -1149,7 +1150,7 @@ class ExcelConditionalFormattingControllerTest {
   void excelSheetDelegatesConditionalFormattingHealthAnalysis() throws Exception {
     try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       ExcelSheet sheet = workbook.getOrCreateSheet("Ops");
-      sheet.cells().setCell("A1", ExcelCellValue.number(1));
+      sheet.cells().setCell("A1", new CellValue.NumberValue(1));
       sheet
           .metadata()
           .setConditionalFormatting(

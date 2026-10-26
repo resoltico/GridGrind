@@ -4,9 +4,9 @@ import dev.erst.gridgrind.core.metadata.Union;
 import dev.erst.gridgrind.core.metadata.Variant;
 import java.util.Objects;
 
-/** Resolved effective scalar value shared by cell observations and exact-value expectations. */
+/** Resolved scalar shared by observations, cell-write operands and exact-value expectations. */
 @Union(discriminator = "type", catalog = true, displayOrder = 0)
-public sealed interface CellValue
+public sealed interface CellValue extends ResolvedCellWrite
     permits CellValue.Blank,
         CellValue.Text,
         CellValue.NumberValue,

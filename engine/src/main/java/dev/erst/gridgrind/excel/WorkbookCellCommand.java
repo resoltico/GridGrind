@@ -1,6 +1,7 @@
 package dev.erst.gridgrind.excel;
 
 import dev.erst.gridgrind.core.model.formula.ResolvedArrayFormula;
+import dev.erst.gridgrind.core.model.value.ResolvedCellWrite;
 import java.util.List;
 import java.util.Objects;
 
@@ -13,7 +14,7 @@ public sealed interface WorkbookCellCommand extends WorkbookCommand
         WorkbookCellCommand.ClearArrayFormula,
         WorkbookCellCommand.AppendRow {
 
-  record SetCell(String sheetName, String address, ExcelCellValue value)
+  record SetCell(String sheetName, String address, ResolvedCellWrite value)
       implements WorkbookCellCommand {
     public SetCell {
       Objects.requireNonNull(sheetName, "sheetName must not be null");
@@ -28,7 +29,7 @@ public sealed interface WorkbookCellCommand extends WorkbookCommand
     }
   }
 
-  record SetRange(String sheetName, String range, List<List<ExcelCellValue>> rows)
+  record SetRange(String sheetName, String range, List<List<ResolvedCellWrite>> rows)
       implements WorkbookCellCommand {
     public SetRange {
       Objects.requireNonNull(sheetName, "sheetName must not be null");
@@ -45,9 +46,9 @@ public sealed interface WorkbookCellCommand extends WorkbookCommand
         throw new IllegalArgumentException("rows must not be empty");
       }
       int expectedWidth = -1;
-      for (List<ExcelCellValue> row : rows) {
+      for (List<ResolvedCellWrite> row : rows) {
         Objects.requireNonNull(row, "rows must not contain nulls");
-        List<ExcelCellValue> copiedRow = List.copyOf(row);
+        List<ResolvedCellWrite> copiedRow = List.copyOf(row);
         if (copiedRow.isEmpty()) {
           throw new IllegalArgumentException("rows must not contain empty rows");
         }
@@ -56,7 +57,7 @@ public sealed interface WorkbookCellCommand extends WorkbookCommand
         } else if (copiedRow.size() != expectedWidth) {
           throw new IllegalArgumentException("rows must describe a rectangular matrix");
         }
-        for (ExcelCellValue value : copiedRow) {
+        for (ResolvedCellWrite value : copiedRow) {
           Objects.requireNonNull(value, "rows must not contain null cell values");
         }
       }
@@ -104,7 +105,8 @@ public sealed interface WorkbookCellCommand extends WorkbookCommand
     }
   }
 
-  record AppendRow(String sheetName, List<ExcelCellValue> values) implements WorkbookCellCommand {
+  record AppendRow(String sheetName, List<ResolvedCellWrite> values)
+      implements WorkbookCellCommand {
     public AppendRow {
       Objects.requireNonNull(sheetName, "sheetName must not be null");
       Objects.requireNonNull(values, "values must not be null");
@@ -115,7 +117,7 @@ public sealed interface WorkbookCellCommand extends WorkbookCommand
       if (values.isEmpty()) {
         throw new IllegalArgumentException("values must not be empty");
       }
-      for (ExcelCellValue value : values) {
+      for (ResolvedCellWrite value : values) {
         Objects.requireNonNull(value, "value must not be null");
       }
     }

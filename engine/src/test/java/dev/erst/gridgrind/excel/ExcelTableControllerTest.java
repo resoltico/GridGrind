@@ -2,7 +2,10 @@ package dev.erst.gridgrind.excel;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.core.model.formula.ResolvedFormula;
 import dev.erst.gridgrind.core.model.style.CellStylePatch;
+import dev.erst.gridgrind.core.model.value.CellValue;
+import dev.erst.gridgrind.core.model.value.CellValueSpec;
 import dev.erst.gridgrind.core.vocabulary.AnalysisFindingCode;
 import java.nio.file.Path;
 import java.time.LocalDate;
@@ -48,8 +51,8 @@ class ExcelTableControllerTest {
     try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       ExcelSheet sheet = workbook.getOrCreateSheet("Ops");
       populateTableCells(sheet, "Owner", "Task");
-      sheet.cells().setCell("A4", ExcelCellValue.text("Totals"));
-      sheet.cells().setCell("B4", ExcelCellValue.text("Done"));
+      sheet.cells().setCell("A4", new CellValue.Text("Totals"));
+      sheet.cells().setCell("B4", new CellValue.Text("Done"));
 
       controller.setTable(
           workbook,
@@ -80,8 +83,8 @@ class ExcelTableControllerTest {
     try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       ExcelSheet sheet = workbook.getOrCreateSheet("Ops");
       populateTableCells(sheet, "Owner", "Amount");
-      sheet.cells().setCell("A4", ExcelCellValue.text("Totals"));
-      sheet.cells().setCell("B4", ExcelCellValue.number(3));
+      sheet.cells().setCell("A4", new CellValue.Text("Totals"));
+      sheet.cells().setCell("B4", new CellValue.NumberValue(3));
 
       controller.setTable(
           workbook,
@@ -113,8 +116,8 @@ class ExcelTableControllerTest {
     try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       ExcelSheet sheet = workbook.getOrCreateSheet("Ops");
       populateTableCells(sheet, "Owner", "Task");
-      sheet.cells().setCell("A4", ExcelCellValue.text("Totals"));
-      sheet.cells().setCell("B4", ExcelCellValue.text("Done"));
+      sheet.cells().setCell("A4", new CellValue.Text("Totals"));
+      sheet.cells().setCell("B4", new CellValue.Text("Done"));
 
       controller.setTable(
           workbook,
@@ -226,8 +229,8 @@ class ExcelTableControllerTest {
     try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       ExcelSheet sheet = workbook.getOrCreateSheet("Ops");
       populateTableCells(sheet, "Owner", "Task");
-      sheet.cells().setCell("A4", ExcelCellValue.text("Totals"));
-      sheet.cells().setCell("B4", ExcelCellValue.text("Done"));
+      sheet.cells().setCell("A4", new CellValue.Text("Totals"));
+      sheet.cells().setCell("B4", new CellValue.Text("Done"));
 
       controller.setTable(
           workbook,
@@ -342,12 +345,12 @@ class ExcelTableControllerTest {
   void setTable_acceptsFormulaAndNumericHeaders() throws Exception {
     try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       ExcelSheet sheet = workbook.getOrCreateSheet("Ops");
-      sheet.cells().setCell("A1", ExcelCellValue.formula("A2"));
-      sheet.cells().setCell("B1", ExcelCellValue.number(12.0));
-      sheet.cells().setCell("A2", ExcelCellValue.text("Ada"));
-      sheet.cells().setCell("B2", ExcelCellValue.text("Queue"));
-      sheet.cells().setCell("A3", ExcelCellValue.text("Lin"));
-      sheet.cells().setCell("B3", ExcelCellValue.text("Pack"));
+      sheet.cells().setCell("A1", new ResolvedFormula("A2"));
+      sheet.cells().setCell("B1", new CellValue.NumberValue(12.0));
+      sheet.cells().setCell("A2", new CellValue.Text("Ada"));
+      sheet.cells().setCell("B2", new CellValue.Text("Queue"));
+      sheet.cells().setCell("A3", new CellValue.Text("Lin"));
+      sheet.cells().setCell("B3", new CellValue.Text("Pack"));
 
       controller.setTable(
           workbook,
@@ -435,15 +438,15 @@ class ExcelTableControllerTest {
     try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       ExcelSheet sheet = workbook.getOrCreateSheet("Ops");
       populateTableCells(sheet, "Owner", "Task");
-      sheet.cells().setCell("C1", ExcelCellValue.text("Desk"));
-      sheet.cells().setCell("C2", ExcelCellValue.text("A1"));
-      sheet.cells().setCell("C3", ExcelCellValue.text("B1"));
-      sheet.cells().setCell("D1", ExcelCellValue.text("Region"));
-      sheet.cells().setCell("E1", ExcelCellValue.text("Desk"));
-      sheet.cells().setCell("D2", ExcelCellValue.text("North"));
-      sheet.cells().setCell("E2", ExcelCellValue.text("A1"));
-      sheet.cells().setCell("D3", ExcelCellValue.text("South"));
-      sheet.cells().setCell("E3", ExcelCellValue.text("B1"));
+      sheet.cells().setCell("C1", new CellValue.Text("Desk"));
+      sheet.cells().setCell("C2", new CellValue.Text("A1"));
+      sheet.cells().setCell("C3", new CellValue.Text("B1"));
+      sheet.cells().setCell("D1", new CellValue.Text("Region"));
+      sheet.cells().setCell("E1", new CellValue.Text("Desk"));
+      sheet.cells().setCell("D2", new CellValue.Text("North"));
+      sheet.cells().setCell("E2", new CellValue.Text("A1"));
+      sheet.cells().setCell("D3", new CellValue.Text("South"));
+      sheet.cells().setCell("E3", new CellValue.Text("B1"));
 
       controller.setTable(
           workbook,
@@ -624,8 +627,8 @@ class ExcelTableControllerTest {
     try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       ExcelSheet sheet = workbook.getOrCreateSheet("Ops");
       populateTableCells(sheet, "Owner", "Task");
-      sheet.cells().setCell("A4", ExcelCellValue.text("Totals"));
-      sheet.cells().setCell("B4", ExcelCellValue.text("Done"));
+      sheet.cells().setCell("A4", new CellValue.Text("Totals"));
+      sheet.cells().setCell("B4", new CellValue.Text("Done"));
 
       controller.setTable(
           workbook,
@@ -651,9 +654,9 @@ class ExcelTableControllerTest {
     try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       ExcelSheet sheet = workbook.getOrCreateSheet("Ops");
       populateTableCells(sheet, "Owner", "Task");
-      sheet.cells().setCell("D1", ExcelCellValue.text("Desk"));
-      sheet.cells().setCell("D2", ExcelCellValue.text("A1"));
-      sheet.cells().setCell("D3", ExcelCellValue.text("B1"));
+      sheet.cells().setCell("D1", new CellValue.Text("Desk"));
+      sheet.cells().setCell("D2", new CellValue.Text("A1"));
+      sheet.cells().setCell("D3", new CellValue.Text("B1"));
       sheet.metadata().setAutofilter("D1:D3");
 
       controller.setTable(
@@ -775,8 +778,8 @@ class ExcelTableControllerTest {
       controller.setTable(
           workbook,
           new ExcelTableDefinition("Queue", "Ops", "A1:B3", false, new ExcelTableStyle.None()));
-      sheet.cells().setCell("A1", ExcelCellValue.blank());
-      sheet.cells().setCell("B1", ExcelCellValue.blank());
+      sheet.cells().setCell("A1", new CellValue.Blank());
+      sheet.cells().setCell("B1", new CellValue.Blank());
 
       List<WorkbookAnalysis.AnalysisFinding> findings =
           controller.tableAutofilterHealthFindings(workbook, "Ops");
@@ -935,15 +938,15 @@ class ExcelTableControllerTest {
     try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       ExcelSheet sheet = workbook.getOrCreateSheet("Ops");
       populateTableCells(sheet, "Owner", "Task");
-      sheet.cells().setCell("C1", ExcelCellValue.text("Desk"));
-      sheet.cells().setCell("C2", ExcelCellValue.text("A1"));
-      sheet.cells().setCell("C3", ExcelCellValue.text("B1"));
-      sheet.cells().setCell("E1", ExcelCellValue.text("Region"));
-      sheet.cells().setCell("F1", ExcelCellValue.text("Lead"));
-      sheet.cells().setCell("E2", ExcelCellValue.text("North"));
-      sheet.cells().setCell("F2", ExcelCellValue.text("Ada"));
-      sheet.cells().setCell("E3", ExcelCellValue.text("South"));
-      sheet.cells().setCell("F3", ExcelCellValue.text("Lin"));
+      sheet.cells().setCell("C1", new CellValue.Text("Desk"));
+      sheet.cells().setCell("C2", new CellValue.Text("A1"));
+      sheet.cells().setCell("C3", new CellValue.Text("B1"));
+      sheet.cells().setCell("E1", new CellValue.Text("Region"));
+      sheet.cells().setCell("F1", new CellValue.Text("Lead"));
+      sheet.cells().setCell("E2", new CellValue.Text("North"));
+      sheet.cells().setCell("F2", new CellValue.Text("Ada"));
+      sheet.cells().setCell("E3", new CellValue.Text("South"));
+      sheet.cells().setCell("F3", new CellValue.Text("Lin"));
       workbook
           .names()
           .setNamedRange(
@@ -994,7 +997,7 @@ class ExcelTableControllerTest {
               "BudgetTable", "Ops", "A1:B3", false, new ExcelTableStyle.None()));
 
       XSSFTable table = workbook.sheet("Ops").xssfSheet().getTables().getFirst();
-      sheet.cells().setCell("A1", ExcelCellValue.text("QQQQq"));
+      sheet.cells().setCell("A1", new CellValue.Text("QQQQq"));
 
       assertEquals("QQQQq", table.getCTTable().getTableColumns().getTableColumnArray(0).getName());
       assertEquals(
@@ -1043,8 +1046,8 @@ class ExcelTableControllerTest {
           .setRange(
               "A1:B2",
               List.of(
-                  List.of(ExcelCellValue.text("Desk"), ExcelCellValue.text("Lane")),
-                  List.of(ExcelCellValue.text("Ada"), ExcelCellValue.text("Queue"))));
+                  List.of(new CellValue.Text("Desk"), new CellValue.Text("Lane")),
+                  List.of(new CellValue.Text("Ada"), new CellValue.Text("Queue"))));
 
       assertEquals("Desk", table.getCTTable().getTableColumns().getTableColumnArray(0).getName());
       assertEquals("Lane", table.getCTTable().getTableColumns().getTableColumnArray(1).getName());
@@ -1089,12 +1092,12 @@ class ExcelTableControllerTest {
       sheet
           .cells()
           .appendRow(
-              ExcelCellValue.dateTime(LocalDateTime.of(2026, 2, 6, 0, 19, 17)),
-              ExcelCellValue.date(LocalDate.of(2026, 6, 26)));
-      sheet.cells().setCell("A2", ExcelCellValue.text("Ada"));
-      sheet.cells().setCell("B2", ExcelCellValue.text("Queue"));
-      sheet.cells().setCell("A3", ExcelCellValue.text("Totals"));
-      sheet.cells().setCell("B3", ExcelCellValue.text("Done"));
+              new CellValueSpec.DateTime(LocalDateTime.of(2026, 2, 6, 0, 19, 17)),
+              new CellValueSpec.Date(LocalDate.of(2026, 6, 26)));
+      sheet.cells().setCell("A2", new CellValue.Text("Ada"));
+      sheet.cells().setCell("B2", new CellValue.Text("Queue"));
+      sheet.cells().setCell("A3", new CellValue.Text("Totals"));
+      sheet.cells().setCell("B3", new CellValue.Text("Done"));
       controller.setTable(
           workbook,
           new ExcelTableDefinition(
@@ -1161,12 +1164,12 @@ class ExcelTableControllerTest {
       sheet
           .cells()
           .appendRow(
-              ExcelCellValue.dateTime(LocalDateTime.of(2026, 2, 6, 0, 19, 17)),
-              ExcelCellValue.date(LocalDate.of(2026, 6, 26)));
-      sheet.cells().setCell("A2", ExcelCellValue.text("Ada"));
-      sheet.cells().setCell("B2", ExcelCellValue.text("Queue"));
-      sheet.cells().setCell("A3", ExcelCellValue.text("Totals"));
-      sheet.cells().setCell("B3", ExcelCellValue.text("Done"));
+              new CellValueSpec.DateTime(LocalDateTime.of(2026, 2, 6, 0, 19, 17)),
+              new CellValueSpec.Date(LocalDate.of(2026, 6, 26)));
+      sheet.cells().setCell("A2", new CellValue.Text("Ada"));
+      sheet.cells().setCell("B2", new CellValue.Text("Queue"));
+      sheet.cells().setCell("A3", new CellValue.Text("Totals"));
+      sheet.cells().setCell("B3", new CellValue.Text("Done"));
       controller.setTable(
           workbook,
           new ExcelTableDefinition(
@@ -1209,11 +1212,11 @@ class ExcelTableControllerTest {
 
   private static void populateTableCells(
       ExcelSheet sheet, String firstHeader, String secondHeader) {
-    sheet.cells().setCell("A1", ExcelCellValue.text(firstHeader));
-    sheet.cells().setCell("B1", ExcelCellValue.text(secondHeader));
-    sheet.cells().setCell("A2", ExcelCellValue.text("Ada"));
-    sheet.cells().setCell("B2", ExcelCellValue.text("Queue"));
-    sheet.cells().setCell("A3", ExcelCellValue.text("Lin"));
-    sheet.cells().setCell("B3", ExcelCellValue.text("Pack"));
+    sheet.cells().setCell("A1", new CellValue.Text(firstHeader));
+    sheet.cells().setCell("B1", new CellValue.Text(secondHeader));
+    sheet.cells().setCell("A2", new CellValue.Text("Ada"));
+    sheet.cells().setCell("B2", new CellValue.Text("Queue"));
+    sheet.cells().setCell("A3", new CellValue.Text("Lin"));
+    sheet.cells().setCell("B3", new CellValue.Text("Pack"));
   }
 }

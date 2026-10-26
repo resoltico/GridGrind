@@ -3,6 +3,9 @@ package dev.erst.gridgrind.excel;
 import static org.junit.jupiter.api.Assertions.*;
 
 import dev.erst.gridgrind.core.model.drawing.ResolvedComment;
+import dev.erst.gridgrind.core.model.formula.ResolvedFormula;
+import dev.erst.gridgrind.core.model.formula.ResolvedRawFormula;
+import dev.erst.gridgrind.core.model.value.CellValue;
 import dev.erst.gridgrind.core.vocabulary.ExcelDrawingAnchorBehavior;
 import dev.erst.gridgrind.core.vocabulary.ExcelPictureFormat;
 import dev.erst.gridgrind.core.vocabulary.ExcelPrintOrientation;
@@ -26,10 +29,10 @@ class ExcelWorkbookIntrospectorTest {
   void readsOpaqueRawFormulaFactsWithoutEvaluatorExecution() throws IOException {
     try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       ExcelSheet sheet = workbook.getOrCreateSheet("Raw");
-      sheet.cells().setCell("A1", ExcelCellValue.rawFormula("_xlfn.UNIQUE({1,2,2})"));
+      sheet.cells().setCell("A1", new ResolvedRawFormula("_xlfn.UNIQUE({1,2,2})"));
       ExcelSheet schemaSheet = workbook.getOrCreateSheet("Schema");
-      schemaSheet.cells().setCell("A1", ExcelCellValue.text("Count"));
-      schemaSheet.cells().setCell("A2", ExcelCellValue.formula("1+1"));
+      schemaSheet.cells().setCell("A1", new CellValue.Text("Count"));
+      schemaSheet.cells().setCell("A2", new ResolvedFormula("1+1"));
 
       ExcelWorkbookIntrospector introspector = new ExcelWorkbookIntrospector();
       WorkbookSurfaceResult.FormulaSurfaceResult formulaSurface =
@@ -417,9 +420,9 @@ class ExcelWorkbookIntrospectorTest {
   void getSheetSchemaReturnsNullDominantTypeOnTies() throws IOException {
     try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       ExcelSheet sheet = workbook.getOrCreateSheet("Budget");
-      sheet.cells().setCell("A1", ExcelCellValue.text("Mixed"));
-      sheet.cells().setCell("A2", ExcelCellValue.text("text"));
-      sheet.cells().setCell("A3", ExcelCellValue.number(1.0));
+      sheet.cells().setCell("A1", new CellValue.Text("Mixed"));
+      sheet.cells().setCell("A2", new CellValue.Text("text"));
+      sheet.cells().setCell("A3", new CellValue.NumberValue(1.0));
 
       WorkbookSurfaceResult.SheetSchemaResult schema =
           cast(
@@ -459,10 +462,10 @@ class ExcelWorkbookIntrospectorTest {
   void schemaDataRowCountIsRowCountMinusOneWhenHeaderIsPopulated() throws IOException {
     try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       ExcelSheet sheet = workbook.getOrCreateSheet("Data");
-      sheet.cells().setCell("A1", ExcelCellValue.text("Name"));
-      sheet.cells().setCell("B1", ExcelCellValue.text("Score"));
-      sheet.cells().setCell("A2", ExcelCellValue.text("Alice"));
-      sheet.cells().setCell("B2", ExcelCellValue.number(95.0));
+      sheet.cells().setCell("A1", new CellValue.Text("Name"));
+      sheet.cells().setCell("B1", new CellValue.Text("Score"));
+      sheet.cells().setCell("A2", new CellValue.Text("Alice"));
+      sheet.cells().setCell("B2", new CellValue.NumberValue(95.0));
 
       WorkbookSurfaceResult.SheetSchemaResult schema =
           cast(
@@ -480,9 +483,9 @@ class ExcelWorkbookIntrospectorTest {
   void schemaUsesEvaluatedTypeForFormulaCells() throws IOException {
     try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       ExcelSheet sheet = workbook.getOrCreateSheet("Data");
-      sheet.cells().setCell("A1", ExcelCellValue.text("Total"));
-      sheet.cells().setCell("A2", ExcelCellValue.formula("1+1"));
-      sheet.cells().setCell("A3", ExcelCellValue.formula("2+2"));
+      sheet.cells().setCell("A1", new CellValue.Text("Total"));
+      sheet.cells().setCell("A2", new ResolvedFormula("1+1"));
+      sheet.cells().setCell("A3", new ResolvedFormula("2+2"));
 
       WorkbookSurfaceResult.SheetSchemaResult schema =
           cast(
@@ -544,10 +547,10 @@ class ExcelWorkbookIntrospectorTest {
   void schemaDominantTypeIsNullWhenMinorityTypeExistsButTieDoesNot() throws IOException {
     try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       ExcelSheet sheet = workbook.getOrCreateSheet("Data");
-      sheet.cells().setCell("A1", ExcelCellValue.text("Col"));
-      sheet.cells().setCell("A2", ExcelCellValue.text("a"));
-      sheet.cells().setCell("A3", ExcelCellValue.text("b"));
-      sheet.cells().setCell("A4", ExcelCellValue.number(1.0));
+      sheet.cells().setCell("A1", new CellValue.Text("Col"));
+      sheet.cells().setCell("A2", new CellValue.Text("a"));
+      sheet.cells().setCell("A3", new CellValue.Text("b"));
+      sheet.cells().setCell("A4", new CellValue.NumberValue(1.0));
 
       WorkbookSurfaceResult.SheetSchemaResult schema =
           cast(
@@ -563,13 +566,13 @@ class ExcelWorkbookIntrospectorTest {
 
   private void populateWorkbookForFullIntrospection(ExcelWorkbook workbook) {
     ExcelSheet budget = workbook.getOrCreateSheet("Budget");
-    budget.cells().setCell("A1", ExcelCellValue.text("Report"));
-    budget.cells().setCell("A2", ExcelCellValue.text("Hosting"));
-    budget.cells().setCell("B2", ExcelCellValue.number(49.0));
-    budget.cells().setCell("A3", ExcelCellValue.text("Domain"));
-    budget.cells().setCell("B3", ExcelCellValue.number(12.0));
-    budget.cells().setCell("B4", ExcelCellValue.number(61.0));
-    budget.cells().setCell("B5", ExcelCellValue.formula("SUM(B2:B3)"));
+    budget.cells().setCell("A1", new CellValue.Text("Report"));
+    budget.cells().setCell("A2", new CellValue.Text("Hosting"));
+    budget.cells().setCell("B2", new CellValue.NumberValue(49.0));
+    budget.cells().setCell("A3", new CellValue.Text("Domain"));
+    budget.cells().setCell("B3", new CellValue.NumberValue(12.0));
+    budget.cells().setCell("B4", new CellValue.NumberValue(61.0));
+    budget.cells().setCell("B5", new ResolvedFormula("SUM(B2:B3)"));
     budget.layout().mergeCells("A1:B1");
     budget.columns().setWidth(0, 0, 12.5);
     budget.rows().setHeight(0, 0, 18.0);
@@ -597,18 +600,18 @@ class ExcelWorkbookIntrospectorTest {
                 ExcelNamedRangeTarget.range("Budget", "B4")));
 
     ExcelSheet ops = workbook.getOrCreateSheet("Ops");
-    ops.cells().setCell("A1", ExcelCellValue.text("Owner"));
-    ops.cells().setCell("B1", ExcelCellValue.text("Task"));
-    ops.cells().setCell("A2", ExcelCellValue.text("Ada"));
-    ops.cells().setCell("B2", ExcelCellValue.text("Queue"));
-    ops.cells().setCell("A3", ExcelCellValue.text("Lin"));
-    ops.cells().setCell("B3", ExcelCellValue.text("Pack"));
-    ops.cells().setCell("D1", ExcelCellValue.text("Region"));
-    ops.cells().setCell("E1", ExcelCellValue.text("Desk"));
-    ops.cells().setCell("D2", ExcelCellValue.text("North"));
-    ops.cells().setCell("E2", ExcelCellValue.text("A1"));
-    ops.cells().setCell("D3", ExcelCellValue.text("South"));
-    ops.cells().setCell("E3", ExcelCellValue.text("B1"));
+    ops.cells().setCell("A1", new CellValue.Text("Owner"));
+    ops.cells().setCell("B1", new CellValue.Text("Task"));
+    ops.cells().setCell("A2", new CellValue.Text("Ada"));
+    ops.cells().setCell("B2", new CellValue.Text("Queue"));
+    ops.cells().setCell("A3", new CellValue.Text("Lin"));
+    ops.cells().setCell("B3", new CellValue.Text("Pack"));
+    ops.cells().setCell("D1", new CellValue.Text("Region"));
+    ops.cells().setCell("E1", new CellValue.Text("Desk"));
+    ops.cells().setCell("D2", new CellValue.Text("North"));
+    ops.cells().setCell("E2", new CellValue.Text("A1"));
+    ops.cells().setCell("D3", new CellValue.Text("South"));
+    ops.cells().setCell("E3", new CellValue.Text("B1"));
     ops.metadata().setAutofilter("D1:E3");
     workbook
         .tables()

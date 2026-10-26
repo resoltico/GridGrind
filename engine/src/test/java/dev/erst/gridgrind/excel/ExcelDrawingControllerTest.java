@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import com.microsoft.schemas.vml.CTShape;
 import dev.erst.gridgrind.core.model.drawing.ResolvedComment;
+import dev.erst.gridgrind.core.model.value.CellValue;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartAxisCrosses;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartAxisKind;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartAxisPosition;
@@ -275,13 +276,13 @@ class ExcelDrawingControllerTest {
 
     try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       ExcelSheet sheet = workbook.getOrCreateSheet("Ops");
-      sheet.cells().setCell("B1", ExcelCellValue.number(1d));
-      sheet.cells().setCell("A2", ExcelCellValue.text("Jan"));
-      sheet.cells().setCell("A3", ExcelCellValue.text("Feb"));
-      sheet.cells().setCell("A4", ExcelCellValue.text("Mar"));
-      sheet.cells().setCell("B2", ExcelCellValue.number(10d));
-      sheet.cells().setCell("B3", ExcelCellValue.number(12d));
-      sheet.cells().setCell("B4", ExcelCellValue.number(14d));
+      sheet.cells().setCell("B1", new CellValue.NumberValue(1d));
+      sheet.cells().setCell("A2", new CellValue.Text("Jan"));
+      sheet.cells().setCell("A3", new CellValue.Text("Feb"));
+      sheet.cells().setCell("A4", new CellValue.Text("Mar"));
+      sheet.cells().setCell("B2", new CellValue.NumberValue(10d));
+      sheet.cells().setCell("B3", new CellValue.NumberValue(12d));
+      sheet.cells().setCell("B4", new CellValue.NumberValue(14d));
       sheet
           .drawings()
           .setChart(
@@ -341,8 +342,8 @@ class ExcelDrawingControllerTest {
     try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       ExcelSheet sheet = workbook.getOrCreateSheet("Chart");
       seedChartData(sheet);
-      sheet.cells().setCell("D1", ExcelCellValue.number(1d));
-      sheet.cells().setCell("E1", ExcelCellValue.number(2d));
+      sheet.cells().setCell("D1", new CellValue.NumberValue(1d));
+      sheet.cells().setCell("E1", new CellValue.NumberValue(2d));
       sheet
           .drawings()
           .setChart(
@@ -1028,7 +1029,7 @@ class ExcelDrawingControllerTest {
           ExcelChartSnapshot.Bar.class,
           ExcelChartTestSupport.singlePlot(replaced, ExcelChartSnapshot.Bar.class));
 
-      sheet.cells().setCell("F1", ExcelCellValue.text("Touch"));
+      sheet.cells().setCell("F1", new CellValue.Text("Touch"));
       workbook
           .persistence()
           .save(
@@ -1131,18 +1132,18 @@ class ExcelDrawingControllerTest {
   }
 
   private static void seedChartData(ExcelSheet sheet) {
-    sheet.cells().setCell("A1", ExcelCellValue.text("Month"));
-    sheet.cells().setCell("B1", ExcelCellValue.text("Plan"));
-    sheet.cells().setCell("C1", ExcelCellValue.text("Actual"));
-    sheet.cells().setCell("A2", ExcelCellValue.text("Jan"));
-    sheet.cells().setCell("B2", ExcelCellValue.number(10d));
-    sheet.cells().setCell("C2", ExcelCellValue.number(12d));
-    sheet.cells().setCell("A3", ExcelCellValue.text("Feb"));
-    sheet.cells().setCell("B3", ExcelCellValue.number(18d));
-    sheet.cells().setCell("C3", ExcelCellValue.number(16d));
-    sheet.cells().setCell("A4", ExcelCellValue.text("Mar"));
-    sheet.cells().setCell("B4", ExcelCellValue.number(15d));
-    sheet.cells().setCell("C4", ExcelCellValue.number(21d));
+    sheet.cells().setCell("A1", new CellValue.Text("Month"));
+    sheet.cells().setCell("B1", new CellValue.Text("Plan"));
+    sheet.cells().setCell("C1", new CellValue.Text("Actual"));
+    sheet.cells().setCell("A2", new CellValue.Text("Jan"));
+    sheet.cells().setCell("B2", new CellValue.NumberValue(10d));
+    sheet.cells().setCell("C2", new CellValue.NumberValue(12d));
+    sheet.cells().setCell("A3", new CellValue.Text("Feb"));
+    sheet.cells().setCell("B3", new CellValue.NumberValue(18d));
+    sheet.cells().setCell("C3", new CellValue.NumberValue(16d));
+    sheet.cells().setCell("A4", new CellValue.Text("Mar"));
+    sheet.cells().setCell("B4", new CellValue.NumberValue(15d));
+    sheet.cells().setCell("C4", new CellValue.NumberValue(21d));
   }
 
   private static CTShape firstSignatureShape(XSSFVMLDrawing vmlDrawing) {

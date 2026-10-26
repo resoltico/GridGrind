@@ -1,5 +1,11 @@
 package dev.erst.gridgrind.jazzer.support;
 
+import dev.erst.gridgrind.core.model.formula.ResolvedFormula;
+import dev.erst.gridgrind.core.model.formula.ResolvedRawFormula;
+import dev.erst.gridgrind.core.model.style.ResolvedRichText;
+import dev.erst.gridgrind.core.model.value.CellValue;
+import dev.erst.gridgrind.core.model.value.CellValueSpec;
+import dev.erst.gridgrind.core.model.value.ResolvedCellWrite;
 import dev.erst.gridgrind.excel.ExcelCellSnapshot;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
 import dev.erst.gridgrind.excel.WorkbookAnnotationCommand;
@@ -404,18 +410,18 @@ final class XlsxRoundTripExpectedFootprintSupport {
     return lastRowIndex + 1;
   }
 
-  static boolean isValueBearing(dev.erst.gridgrind.excel.ExcelCellValue value) {
+  static boolean isValueBearing(ResolvedCellWrite value) {
     return switch (value) {
-      case dev.erst.gridgrind.excel.ExcelCellValue.BlankValue _ -> false;
-      case dev.erst.gridgrind.excel.ExcelCellValue.TextValue _ -> true;
-      case dev.erst.gridgrind.excel.ExcelCellValue.RichTextValue _ -> true;
-      case dev.erst.gridgrind.excel.ExcelCellValue.NumberValue _ -> true;
-      case dev.erst.gridgrind.excel.ExcelCellValue.BooleanValue _ -> true;
-      case dev.erst.gridgrind.excel.ExcelCellValue.ErrorValue _ -> true;
-      case dev.erst.gridgrind.excel.ExcelCellValue.DateValue _ -> true;
-      case dev.erst.gridgrind.excel.ExcelCellValue.DateTimeValue _ -> true;
-      case dev.erst.gridgrind.excel.ExcelCellValue.FormulaValue _ -> true;
-      case dev.erst.gridgrind.excel.ExcelCellValue.RawFormulaValue _ -> true;
+      case CellValue.Blank _ -> false;
+      case CellValue.Text _ -> true;
+      case ResolvedRichText _ -> true;
+      case CellValue.NumberValue _ -> true;
+      case CellValue.BooleanValue _ -> true;
+      case CellValue.ErrorValue _ -> true;
+      case CellValueSpec.Date _ -> true;
+      case CellValueSpec.DateTime _ -> true;
+      case ResolvedFormula _ -> true;
+      case ResolvedRawFormula _ -> true;
     };
   }
 

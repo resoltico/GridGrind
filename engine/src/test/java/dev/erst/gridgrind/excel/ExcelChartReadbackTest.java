@@ -4,6 +4,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 
+import dev.erst.gridgrind.core.model.formula.ResolvedFormula;
+import dev.erst.gridgrind.core.model.value.CellValue;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartDisplayBlanksAs;
 import dev.erst.gridgrind.core.vocabulary.ExcelDrawingAnchorBehavior;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingAnchor;
@@ -119,14 +121,14 @@ class ExcelChartReadbackTest {
 
     try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       ExcelSheet sheet = workbook.getOrCreateSheet("Summary");
-      sheet.cells().setCell("A1", ExcelCellValue.text("Owner"));
-      sheet.cells().setCell("B1", ExcelCellValue.text("Projected"));
-      sheet.cells().setCell("A2", ExcelCellValue.text("Ari"));
-      sheet.cells().setCell("A3", ExcelCellValue.text("Bo"));
-      sheet.cells().setCell("A4", ExcelCellValue.text("Cy"));
-      sheet.cells().setCell("B2", ExcelCellValue.formula("40+2"));
-      sheet.cells().setCell("B3", ExcelCellValue.number(7d));
-      sheet.cells().setCell("B4", ExcelCellValue.formula("B3*2"));
+      sheet.cells().setCell("A1", new CellValue.Text("Owner"));
+      sheet.cells().setCell("B1", new CellValue.Text("Projected"));
+      sheet.cells().setCell("A2", new CellValue.Text("Ari"));
+      sheet.cells().setCell("A3", new CellValue.Text("Bo"));
+      sheet.cells().setCell("A4", new CellValue.Text("Cy"));
+      sheet.cells().setCell("B2", new ResolvedFormula("40+2"));
+      sheet.cells().setCell("B3", new CellValue.NumberValue(7d));
+      sheet.cells().setCell("B4", new ResolvedFormula("B3*2"));
 
       sheet
           .drawings()
@@ -163,18 +165,18 @@ class ExcelChartReadbackTest {
   }
 
   private static void seedFormulaBackedChartData(ExcelSheet sheet) {
-    sheet.cells().setCell("A1", ExcelCellValue.text("Owner"));
-    sheet.cells().setCell("B1", ExcelCellValue.text("Hours"));
-    sheet.cells().setCell("C1", ExcelCellValue.text("Projected"));
-    sheet.cells().setCell("A2", ExcelCellValue.text("Ari"));
-    sheet.cells().setCell("A3", ExcelCellValue.text("Bo"));
-    sheet.cells().setCell("A4", ExcelCellValue.text("Cy"));
-    sheet.cells().setCell("B2", ExcelCellValue.number(2d));
-    sheet.cells().setCell("B3", ExcelCellValue.number(3d));
-    sheet.cells().setCell("B4", ExcelCellValue.number(5d));
-    sheet.cells().setCell("C2", ExcelCellValue.formula("B2*2"));
-    sheet.cells().setCell("C3", ExcelCellValue.formula("B3*2"));
-    sheet.cells().setCell("C4", ExcelCellValue.formula("B4*2"));
+    sheet.cells().setCell("A1", new CellValue.Text("Owner"));
+    sheet.cells().setCell("B1", new CellValue.Text("Hours"));
+    sheet.cells().setCell("C1", new CellValue.Text("Projected"));
+    sheet.cells().setCell("A2", new CellValue.Text("Ari"));
+    sheet.cells().setCell("A3", new CellValue.Text("Bo"));
+    sheet.cells().setCell("A4", new CellValue.Text("Cy"));
+    sheet.cells().setCell("B2", new CellValue.NumberValue(2d));
+    sheet.cells().setCell("B3", new CellValue.NumberValue(3d));
+    sheet.cells().setCell("B4", new CellValue.NumberValue(5d));
+    sheet.cells().setCell("C2", new ResolvedFormula("B2*2"));
+    sheet.cells().setCell("C3", new ResolvedFormula("B3*2"));
+    sheet.cells().setCell("C4", new ResolvedFormula("B4*2"));
   }
 
   private static ExcelDrawingAnchor.TwoCell anchor(

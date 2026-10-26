@@ -2,6 +2,7 @@ package dev.erst.gridgrind.excel;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.core.model.value.CellValue;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
@@ -195,20 +196,20 @@ class ExcelTableCalculatedColumnCanonicalizerTest {
   private static void seedCalculatedTableSheet(
       ExcelWorkbook workbook, String sheetName, String tableName) throws IOException {
     ExcelSheet sheet = workbook.getOrCreateSheet(sheetName);
-    sheet.cells().setCell("A1", ExcelCellValue.text("Task"));
-    sheet.cells().setCell("B1", ExcelCellValue.text("Actual"));
-    sheet.cells().setCell("C1", ExcelCellValue.text("Budget"));
-    sheet.cells().setCell("D1", ExcelCellValue.text("Delta"));
-    sheet.cells().setCell("A2", ExcelCellValue.text("One"));
-    sheet.cells().setCell("B2", ExcelCellValue.number(10));
-    sheet.cells().setCell("C2", ExcelCellValue.number(7));
-    sheet.cells().setCell("A3", ExcelCellValue.text("Two"));
-    sheet.cells().setCell("B3", ExcelCellValue.number(5));
-    sheet.cells().setCell("C3", ExcelCellValue.number(6));
-    sheet.cells().setCell("A4", ExcelCellValue.text("Total"));
-    sheet.cells().setCell("B4", ExcelCellValue.blank());
-    sheet.cells().setCell("C4", ExcelCellValue.blank());
-    sheet.cells().setCell("D4", ExcelCellValue.blank());
+    sheet.cells().setCell("A1", new CellValue.Text("Task"));
+    sheet.cells().setCell("B1", new CellValue.Text("Actual"));
+    sheet.cells().setCell("C1", new CellValue.Text("Budget"));
+    sheet.cells().setCell("D1", new CellValue.Text("Delta"));
+    sheet.cells().setCell("A2", new CellValue.Text("One"));
+    sheet.cells().setCell("B2", new CellValue.NumberValue(10));
+    sheet.cells().setCell("C2", new CellValue.NumberValue(7));
+    sheet.cells().setCell("A3", new CellValue.Text("Two"));
+    sheet.cells().setCell("B3", new CellValue.NumberValue(5));
+    sheet.cells().setCell("C3", new CellValue.NumberValue(6));
+    sheet.cells().setCell("A4", new CellValue.Text("Total"));
+    sheet.cells().setCell("B4", new CellValue.Blank());
+    sheet.cells().setCell("C4", new CellValue.Blank());
+    sheet.cells().setCell("D4", new CellValue.Blank());
     workbook
         .tables()
         .setTable(

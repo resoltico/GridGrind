@@ -2,8 +2,13 @@ package dev.erst.gridgrind.excel;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.core.model.formula.ResolvedFormula;
+import dev.erst.gridgrind.core.model.formula.ResolvedRawFormula;
 import dev.erst.gridgrind.core.model.style.ResolvedRichText;
 import dev.erst.gridgrind.core.model.style.ResolvedRichTextRun;
+import dev.erst.gridgrind.core.model.value.CellValue;
+import dev.erst.gridgrind.core.model.value.CellValueSpec;
+import dev.erst.gridgrind.core.model.value.ResolvedCellWrite;
 import dev.erst.gridgrind.excel.stream.ExcelStreamingWorkbookWriter;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -38,21 +43,19 @@ class ExcelStreamingWorkbookWriterTest {
           new WorkbookCellCommand.AppendRow(
               "Ops",
               List.of(
-                  ExcelCellValue.blank(),
-                  ExcelCellValue.text("Item"),
-                  ExcelCellValue.richText(
-                      new ResolvedRichText(
-                          List.of(new ResolvedRichTextRun("Rich", Optional.empty())))),
-                  ExcelCellValue.number(42.5d),
-                  ExcelCellValue.bool(true),
-                  ExcelCellValue.error("#REF!"),
-                  ExcelCellValue.date(LocalDate.of(2026, 4, 13)),
-                  ExcelCellValue.dateTime(LocalDateTime.of(2026, 4, 13, 9, 30, 15)),
-                  ExcelCellValue.formula("2+3"),
-                  ExcelCellValue.rawFormula("LAMBDA(x,x+1)(A1)"))));
+                  new CellValue.Blank(),
+                  new CellValue.Text("Item"),
+                  new ResolvedRichText(List.of(new ResolvedRichTextRun("Rich", Optional.empty()))),
+                  new CellValue.NumberValue(42.5d),
+                  new CellValue.BooleanValue(true),
+                  new CellValue.ErrorValue("#REF!"),
+                  new CellValueSpec.Date(LocalDate.of(2026, 4, 13)),
+                  new CellValueSpec.DateTime(LocalDateTime.of(2026, 4, 13, 9, 30, 15)),
+                  new ResolvedFormula("2+3"),
+                  new ResolvedRawFormula("LAMBDA(x,x+1)(A1)"))));
       writer.apply(
           new WorkbookCellCommand.AppendRow(
-              "Ops", List.of(ExcelCellValue.text("Hosting"), ExcelCellValue.number(9.0d))));
+              "Ops", List.of(new CellValue.Text("Hosting"), new CellValue.NumberValue(9.0d))));
       writer.markRecalculateOnOpen();
       writer.save(
           workbookPath, dev.erst.gridgrind.excel.WorkbookArtifactWriteDisposition.REPLACE_EXISTING);
@@ -88,7 +91,7 @@ class ExcelStreamingWorkbookWriterTest {
               () ->
                   writer.apply(
                       new WorkbookCellCommand.AppendRow(
-                          "Ops", List.of(ExcelCellValue.text("missing")))));
+                          "Ops", List.of(new CellValue.Text("missing")))));
       assertEquals("Sheet does not exist: Ops", missingSheet.getMessage());
 
       for (WorkbookCommand command : WorkbookSampleFixtures.workbookCommands()) {
@@ -117,7 +120,7 @@ class ExcelStreamingWorkbookWriterTest {
     assertEquals("ENSURE_SHEET", new WorkbookSheetCommand.CreateSheet("Ops").commandType());
     assertEquals(
         "APPEND_ROW",
-        new WorkbookCellCommand.AppendRow("Ops", List.of(ExcelCellValue.text("value")))
+        new WorkbookCellCommand.AppendRow("Ops", List.of(new CellValue.Text("value")))
             .commandType());
     assertEquals(
         "SET_SHEET_PRESENTATION",
@@ -137,14 +140,14 @@ class ExcelStreamingWorkbookWriterTest {
     Path gridGrindWorkbookPath = tempDirectory.resolve("gridgrind-streaming.xlsx");
     Path inlineWorkbookPath = tempDirectory.resolve("poi-inline-streaming.xlsx");
 
-    List<ExcelCellValue> repeatedValues =
+    List<ResolvedCellWrite> repeatedValues =
         List.of(
-            ExcelCellValue.text("Quarterly revenue forecast"),
-            ExcelCellValue.text("North"),
-            ExcelCellValue.text("Approved"),
-            ExcelCellValue.text("Quarterly revenue forecast"),
-            ExcelCellValue.text("North"),
-            ExcelCellValue.text("Approved"));
+            new CellValue.Text("Quarterly revenue forecast"),
+            new CellValue.Text("North"),
+            new CellValue.Text("Approved"),
+            new CellValue.Text("Quarterly revenue forecast"),
+            new CellValue.Text("North"),
+            new CellValue.Text("Approved"));
 
     try (ExcelStreamingWorkbookWriter writer = new ExcelStreamingWorkbookWriter()) {
       WorkbookCellCommand.AppendRow repeatedAppendRow =
@@ -164,7 +167,7 @@ class ExcelStreamingWorkbookWriterTest {
         var row = sheet.createRow(rowIndex);
         for (int columnIndex = 0; columnIndex < repeatedValues.size(); columnIndex++) {
           row.createCell(columnIndex)
-              .setCellValue(((ExcelCellValue.TextValue) repeatedValues.get(columnIndex)).value());
+              .setCellValue(((CellValue.Text) repeatedValues.get(columnIndex)).value());
         }
       }
       try (OutputStream outputStream = java.nio.file.Files.newOutputStream(inlineWorkbookPath)) {
@@ -201,7 +204,7 @@ class ExcelStreamingWorkbookWriterTest {
       try (ExcelStreamingWorkbookWriter writer = new ExcelStreamingWorkbookWriter()) {
         writer.apply(new WorkbookSheetCommand.CreateSheet("Ops"));
         writer.apply(
-            new WorkbookCellCommand.AppendRow("Ops", List.of(ExcelCellValue.text("collision"))));
+            new WorkbookCellCommand.AppendRow("Ops", List.of(new CellValue.Text("collision"))));
         assertThrows(
             FileAlreadyExistsException.class,
             () ->
@@ -219,7 +222,7 @@ class ExcelStreamingWorkbookWriterTest {
       writer.apply(new WorkbookSheetCommand.CreateSheet("Ops"));
       writer.apply(
           new WorkbookCellCommand.AppendRow(
-              "Ops", List.of(ExcelCellValue.text("Hosting"), ExcelCellValue.number(9.0d))));
+              "Ops", List.of(new CellValue.Text("Hosting"), new CellValue.NumberValue(9.0d))));
       writer.markRecalculateOnOpen();
       writer.save(
           workbookPath, dev.erst.gridgrind.excel.WorkbookArtifactWriteDisposition.REPLACE_EXISTING);

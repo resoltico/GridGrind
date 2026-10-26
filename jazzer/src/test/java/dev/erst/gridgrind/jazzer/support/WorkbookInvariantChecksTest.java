@@ -77,6 +77,7 @@ import dev.erst.gridgrind.core.model.validation.DataValidationEntryReport;
 import dev.erst.gridgrind.core.model.validation.DataValidationHealthReport;
 import dev.erst.gridgrind.core.model.validation.DataValidationRuleSpec;
 import dev.erst.gridgrind.core.model.value.CellHyperlinkReport;
+import dev.erst.gridgrind.core.model.value.CellValue;
 import dev.erst.gridgrind.core.model.value.HyperlinkTarget;
 import dev.erst.gridgrind.core.plan.*;
 import dev.erst.gridgrind.core.plan.AssertionResult;
@@ -149,7 +150,6 @@ import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.core.vocabulary.TableLabel;
 import dev.erst.gridgrind.excel.*;
-import dev.erst.gridgrind.excel.ExcelCellValue;
 import dev.erst.gridgrind.excel.ExcelChartDefinition;
 import dev.erst.gridgrind.excel.ExcelSheetProtectionSettings;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
@@ -505,7 +505,7 @@ class WorkbookInvariantChecksTest {
   @Test
   void acceptsWorkbookShapeWithNamedRanges() throws IOException {
     try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
-      workbook.getOrCreateSheet("Budget").cells().setCell("B4", ExcelCellValue.number(61.0));
+      workbook.getOrCreateSheet("Budget").cells().setCell("B4", new CellValue.NumberValue(61.0));
       workbook
           .names()
           .setNamedRange(
@@ -1129,14 +1129,14 @@ class WorkbookInvariantChecksTest {
   @Test
   void acceptsWorkbookShapeWithCharts() throws IOException {
     try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
-      workbook.getOrCreateSheet("Ops").cells().setCell("A1", ExcelCellValue.text("Month"));
-      workbook.getOrCreateSheet("Ops").cells().setCell("B1", ExcelCellValue.text("Actual"));
-      workbook.getOrCreateSheet("Ops").cells().setCell("A2", ExcelCellValue.text("Jan"));
-      workbook.getOrCreateSheet("Ops").cells().setCell("B2", ExcelCellValue.number(12.0d));
-      workbook.getOrCreateSheet("Ops").cells().setCell("A3", ExcelCellValue.text("Feb"));
-      workbook.getOrCreateSheet("Ops").cells().setCell("B3", ExcelCellValue.number(18.0d));
-      workbook.getOrCreateSheet("Ops").cells().setCell("A4", ExcelCellValue.text("Mar"));
-      workbook.getOrCreateSheet("Ops").cells().setCell("B4", ExcelCellValue.number(15.0d));
+      workbook.getOrCreateSheet("Ops").cells().setCell("A1", new CellValue.Text("Month"));
+      workbook.getOrCreateSheet("Ops").cells().setCell("B1", new CellValue.Text("Actual"));
+      workbook.getOrCreateSheet("Ops").cells().setCell("A2", new CellValue.Text("Jan"));
+      workbook.getOrCreateSheet("Ops").cells().setCell("B2", new CellValue.NumberValue(12.0d));
+      workbook.getOrCreateSheet("Ops").cells().setCell("A3", new CellValue.Text("Feb"));
+      workbook.getOrCreateSheet("Ops").cells().setCell("B3", new CellValue.NumberValue(18.0d));
+      workbook.getOrCreateSheet("Ops").cells().setCell("A4", new CellValue.Text("Mar"));
+      workbook.getOrCreateSheet("Ops").cells().setCell("B4", new CellValue.NumberValue(15.0d));
       new WorkbookExecutionEngine()
           .apply(
               workbook,
@@ -1181,14 +1181,14 @@ class WorkbookInvariantChecksTest {
   @Test
   void acceptsWorkbookShapeWithPivots() throws IOException {
     try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
-      workbook.getOrCreateSheet("Budget").cells().setCell("A1", ExcelCellValue.text("Month"));
-      workbook.getOrCreateSheet("Budget").cells().setCell("B1", ExcelCellValue.text("Actual"));
-      workbook.getOrCreateSheet("Budget").cells().setCell("A2", ExcelCellValue.text("Jan"));
-      workbook.getOrCreateSheet("Budget").cells().setCell("B2", ExcelCellValue.number(12.0d));
-      workbook.getOrCreateSheet("Budget").cells().setCell("A3", ExcelCellValue.text("Feb"));
-      workbook.getOrCreateSheet("Budget").cells().setCell("B3", ExcelCellValue.number(18.0d));
-      workbook.getOrCreateSheet("Budget").cells().setCell("A4", ExcelCellValue.text("Mar"));
-      workbook.getOrCreateSheet("Budget").cells().setCell("B4", ExcelCellValue.number(15.0d));
+      workbook.getOrCreateSheet("Budget").cells().setCell("A1", new CellValue.Text("Month"));
+      workbook.getOrCreateSheet("Budget").cells().setCell("B1", new CellValue.Text("Actual"));
+      workbook.getOrCreateSheet("Budget").cells().setCell("A2", new CellValue.Text("Jan"));
+      workbook.getOrCreateSheet("Budget").cells().setCell("B2", new CellValue.NumberValue(12.0d));
+      workbook.getOrCreateSheet("Budget").cells().setCell("A3", new CellValue.Text("Feb"));
+      workbook.getOrCreateSheet("Budget").cells().setCell("B3", new CellValue.NumberValue(18.0d));
+      workbook.getOrCreateSheet("Budget").cells().setCell("A4", new CellValue.Text("Mar"));
+      workbook.getOrCreateSheet("Budget").cells().setCell("B4", new CellValue.NumberValue(15.0d));
       workbook.getOrCreateSheet("Pivot");
       new WorkbookExecutionEngine()
           .apply(

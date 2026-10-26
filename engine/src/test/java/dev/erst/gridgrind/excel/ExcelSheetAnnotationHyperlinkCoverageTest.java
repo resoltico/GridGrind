@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import dev.erst.gridgrind.core.model.drawing.CommentAnchorReport;
 import dev.erst.gridgrind.core.model.drawing.ResolvedComment;
+import dev.erst.gridgrind.core.model.value.CellValue;
 import dev.erst.gridgrind.core.vocabulary.AnalysisFindingCode;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -350,8 +351,8 @@ class ExcelSheetAnnotationHyperlinkCoverageTest extends ExcelSheetTestSupport {
       ExcelSheet sheet =
           new ExcelSheet(poiSheet, new WorkbookStyleRegistry(poiWorkbook), evaluator);
 
-      sheet.cells().setCell("A1", ExcelCellValue.text("first"));
-      sheet.cells().setCell("A3", ExcelCellValue.text("third"));
+      sheet.cells().setCell("A1", new CellValue.Text("first"));
+      sheet.cells().setCell("A3", new CellValue.Text("third"));
 
       WorkbookSheetResult.Window window = sheet.cells().window("A1", 3, 1);
       assertEquals("A2", window.rows().get(1).cells().getFirst().address());
@@ -495,7 +496,7 @@ class ExcelSheetAnnotationHyperlinkCoverageTest extends ExcelSheetTestSupport {
       ExcelSheet sheet =
           new ExcelSheet(poiSheet, new WorkbookStyleRegistry(poiWorkbook), evaluator);
 
-      sheet.cells().setCell("A1", ExcelCellValue.text("Header"));
+      sheet.cells().setCell("A1", new CellValue.Text("Header"));
 
       // A cell in a non-existent row returns blank.
       ExcelCellSnapshot blankInNewRow = sheet.cells().snapshotCell("C5");

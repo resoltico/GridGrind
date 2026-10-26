@@ -7,7 +7,9 @@ import com.microsoft.schemas.vml.CTShape;
 import dev.erst.gridgrind.core.model.customxml.CustomXmlMappingLocator;
 import dev.erst.gridgrind.core.model.drawing.ResolvedComment;
 import dev.erst.gridgrind.core.model.formula.ResolvedArrayFormula;
+import dev.erst.gridgrind.core.model.formula.ResolvedFormula;
 import dev.erst.gridgrind.core.model.style.ColorSpec;
+import dev.erst.gridgrind.core.model.value.CellValue;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartAxisCrosses;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartAxisKind;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartAxisPosition;
@@ -437,10 +439,10 @@ class ExcelResidualHelperCoverageTest {
           .setRange(
               "B2:C4",
               List.of(
-                  List.of(ExcelCellValue.number(2d), ExcelCellValue.number(3d)),
-                  List.of(ExcelCellValue.number(4d), ExcelCellValue.number(5d)),
-                  List.of(ExcelCellValue.number(6d), ExcelCellValue.number(7d))));
-      sheet.cells().setCell("A1", ExcelCellValue.formula("1+1"));
+                  List.of(new CellValue.NumberValue(2d), new CellValue.NumberValue(3d)),
+                  List.of(new CellValue.NumberValue(4d), new CellValue.NumberValue(5d)),
+                  List.of(new CellValue.NumberValue(6d), new CellValue.NumberValue(7d))));
+      sheet.cells().setCell("A1", new ResolvedFormula("1+1"));
       assertEquals(List.of(), sheet.cells().arrayFormulas());
 
       WorkbookCommandExecutor.applyCellValueCommand(
@@ -568,7 +570,7 @@ class ExcelResidualHelperCoverageTest {
     try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       workbook.getOrCreateSheet("Source");
       workbook.getOrCreateSheet("Target");
-      workbook.sheet("Target").cells().setCell("A1", ExcelCellValue.formula("1+1"));
+      workbook.sheet("Target").cells().setCell("A1", new ResolvedFormula("1+1"));
       workbook
           .names()
           .setNamedRange(

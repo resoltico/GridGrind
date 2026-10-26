@@ -3,6 +3,7 @@ package dev.erst.gridgrind.excel;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import dev.erst.gridgrind.core.model.value.CellValue;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -132,25 +133,25 @@ class ExcelUnicodeDefinedNamePersistenceTest {
         .setCell(
             new org.apache.poi.ss.util.CellReference(parsed.firstRow(), parsed.firstColumn())
                 .formatAsString(),
-            ExcelCellValue.text("Header" + parsed.firstColumn()));
+            new CellValue.Text("Header" + parsed.firstColumn()));
     sheet
         .cells()
         .setCell(
             new org.apache.poi.ss.util.CellReference(parsed.firstRow(), parsed.lastColumn())
                 .formatAsString(),
-            ExcelCellValue.text("Value" + parsed.lastColumn()));
+            new CellValue.Text("Value" + parsed.lastColumn()));
     sheet
         .cells()
         .setCell(
             new org.apache.poi.ss.util.CellReference(parsed.lastRow(), parsed.firstColumn())
                 .formatAsString(),
-            ExcelCellValue.text("one"));
+            new CellValue.Text("one"));
     sheet
         .cells()
         .setCell(
             new org.apache.poi.ss.util.CellReference(parsed.lastRow(), parsed.lastColumn())
                 .formatAsString(),
-            ExcelCellValue.text("two"));
+            new CellValue.Text("two"));
   }
 
   private static void populateObservedTableRange(
