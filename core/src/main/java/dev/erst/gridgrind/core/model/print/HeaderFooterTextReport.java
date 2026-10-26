@@ -4,6 +4,16 @@ import java.util.Objects;
 
 /** Plain left, center, and right header or footer text segments. */
 public record HeaderFooterTextReport(String left, String center, String right) {
+  /** Returns empty header/footer segments. */
+  public static HeaderFooterTextReport blank() {
+    return new HeaderFooterTextReport("", "", "");
+  }
+
+  /** Returns whether every stored segment is empty. */
+  public boolean empty() {
+    return left.isEmpty() && center.isEmpty() && right.isEmpty();
+  }
+
   public HeaderFooterTextReport {
     Objects.requireNonNull(left, "left must not be null");
     Objects.requireNonNull(center, "center must not be null");

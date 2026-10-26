@@ -9,6 +9,12 @@ import dev.erst.gridgrind.core.model.drawing.ResolvedEmbeddedObject;
 import dev.erst.gridgrind.core.model.drawing.ResolvedPicture;
 import dev.erst.gridgrind.core.model.formula.ResolvedFormula;
 import dev.erst.gridgrind.core.model.formula.ResolvedRawFormula;
+import dev.erst.gridgrind.core.model.print.HeaderFooterTextReport;
+import dev.erst.gridgrind.core.model.print.PrintAreaSpec;
+import dev.erst.gridgrind.core.model.print.PrintScalingSpec;
+import dev.erst.gridgrind.core.model.print.PrintTitleColumnsSpec;
+import dev.erst.gridgrind.core.model.print.PrintTitleRowsSpec;
+import dev.erst.gridgrind.core.model.print.ResolvedPrintLayout;
 import dev.erst.gridgrind.core.model.table.ResolvedTable;
 import dev.erst.gridgrind.core.model.table.TableStyleSpec;
 import dev.erst.gridgrind.core.model.value.CellValue;
@@ -587,14 +593,14 @@ class ExcelWorkbookIntrospectorTest {
     budget
         .layout()
         .setPrintLayout(
-            new ExcelPrintLayout(
-                new ExcelPrintLayout.Area.Range("A1:B5"),
+            new ResolvedPrintLayout(
+                new PrintAreaSpec.Range(new RangeRef("A1:B5")),
                 ExcelPrintOrientation.LANDSCAPE,
-                new ExcelPrintLayout.Scaling.Fit(1, 0),
-                new ExcelPrintLayout.TitleRows.Band(0, 0),
-                new ExcelPrintLayout.TitleColumns.None(),
-                new ExcelHeaderFooterText("Budget", "", ""),
-                new ExcelHeaderFooterText("", "Page &P", "")));
+                new PrintScalingSpec.Fit(1, 0),
+                new PrintTitleRowsSpec.Band(0, 0),
+                new PrintTitleColumnsSpec.None(),
+                new HeaderFooterTextReport("Budget", "", ""),
+                new HeaderFooterTextReport("", "Page &P", "")));
     budget.annotations().setHyperlink("A1", new ExcelHyperlink.Url("https://example.com/report"));
     budget.annotations().setComment("A1", new ResolvedComment("Review", "GridGrind", false));
     workbook

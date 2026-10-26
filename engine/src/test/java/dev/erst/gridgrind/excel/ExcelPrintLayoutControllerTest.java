@@ -5,7 +5,16 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import dev.erst.gridgrind.core.model.print.HeaderFooterTextReport;
+import dev.erst.gridgrind.core.model.print.PrintAreaSpec;
+import dev.erst.gridgrind.core.model.print.PrintMarginsSpec;
+import dev.erst.gridgrind.core.model.print.PrintScalingSpec;
+import dev.erst.gridgrind.core.model.print.PrintSetupSpec;
+import dev.erst.gridgrind.core.model.print.PrintTitleColumnsSpec;
+import dev.erst.gridgrind.core.model.print.PrintTitleRowsSpec;
+import dev.erst.gridgrind.core.model.print.ResolvedPrintLayout;
 import dev.erst.gridgrind.core.vocabulary.ExcelPrintOrientation;
+import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import org.apache.poi.ss.usermodel.PageMargin;
 import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.xssf.usermodel.XSSFName;
@@ -41,15 +50,15 @@ class ExcelPrintLayoutControllerTest {
     try (XSSFWorkbook workbook = new XSSFWorkbook()) {
       XSSFSheet sheet = workbook.createSheet("Budget");
       ExcelPrintLayoutController controller = new ExcelPrintLayoutController();
-      ExcelPrintLayout layout =
-          new ExcelPrintLayout(
-              new ExcelPrintLayout.Area.Range("A1:B20"),
+      ResolvedPrintLayout layout =
+          new ResolvedPrintLayout(
+              new PrintAreaSpec.Range(new RangeRef("A1:B20")),
               ExcelPrintOrientation.LANDSCAPE,
-              new ExcelPrintLayout.Scaling.Fit(1, 0),
-              new ExcelPrintLayout.TitleRows.Band(0, 0),
-              new ExcelPrintLayout.TitleColumns.Band(0, 1),
-              new ExcelHeaderFooterText("Budget", "", ""),
-              new ExcelHeaderFooterText("", "Page &P", ""));
+              new PrintScalingSpec.Fit(1, 0),
+              new PrintTitleRowsSpec.Band(0, 0),
+              new PrintTitleColumnsSpec.Band(0, 1),
+              new HeaderFooterTextReport("Budget", "", ""),
+              new HeaderFooterTextReport("", "Page &P", ""));
 
       controller.setPrintLayout(sheet, layout);
 
@@ -71,17 +80,17 @@ class ExcelPrintLayoutControllerTest {
     try (XSSFWorkbook workbook = new XSSFWorkbook()) {
       XSSFSheet sheet = workbook.createSheet("Budget");
       ExcelPrintLayoutController controller = new ExcelPrintLayoutController();
-      ExcelPrintLayout layout =
-          new ExcelPrintLayout(
-              new ExcelPrintLayout.Area.None(),
+      ResolvedPrintLayout layout =
+          new ResolvedPrintLayout(
+              new PrintAreaSpec.None(),
               ExcelPrintOrientation.PORTRAIT,
-              new ExcelPrintLayout.Scaling.Automatic(),
-              new ExcelPrintLayout.TitleRows.None(),
-              new ExcelPrintLayout.TitleColumns.None(),
-              ExcelHeaderFooterText.blank(),
-              ExcelHeaderFooterText.blank(),
-              new ExcelPrintSetup(
-                  new ExcelPrintMargins(0.7d, 0.7d, 0.75d, 0.75d, 0.3d, 0.3d),
+              new PrintScalingSpec.Automatic(),
+              new PrintTitleRowsSpec.None(),
+              new PrintTitleColumnsSpec.None(),
+              HeaderFooterTextReport.blank(),
+              HeaderFooterTextReport.blank(),
+              new PrintSetupSpec(
+                  new PrintMarginsSpec(0.7d, 0.7d, 0.75d, 0.75d, 0.3d, 0.3d),
                   true,
                   false,
                   false,
@@ -111,17 +120,17 @@ class ExcelPrintLayoutControllerTest {
     try (XSSFWorkbook workbook = new XSSFWorkbook()) {
       XSSFSheet sheet = workbook.createSheet("Budget");
       ExcelPrintLayoutController controller = new ExcelPrintLayoutController();
-      ExcelPrintLayout layout =
-          new ExcelPrintLayout(
-              new ExcelPrintLayout.Area.None(),
+      ResolvedPrintLayout layout =
+          new ResolvedPrintLayout(
+              new PrintAreaSpec.None(),
               ExcelPrintOrientation.PORTRAIT,
-              new ExcelPrintLayout.Scaling.Automatic(),
-              new ExcelPrintLayout.TitleRows.None(),
-              new ExcelPrintLayout.TitleColumns.None(),
-              ExcelHeaderFooterText.blank(),
-              ExcelHeaderFooterText.blank(),
-              new ExcelPrintSetup(
-                  new ExcelPrintMargins(0.35d, 0.55d, 0.6d, 0.45d, 0.3d, 0.3d),
+              new PrintScalingSpec.Automatic(),
+              new PrintTitleRowsSpec.None(),
+              new PrintTitleColumnsSpec.None(),
+              HeaderFooterTextReport.blank(),
+              HeaderFooterTextReport.blank(),
+              new PrintSetupSpec(
+                  new PrintMarginsSpec(0.35d, 0.55d, 0.6d, 0.45d, 0.3d, 0.3d),
                   false,
                   true,
                   true,
@@ -168,15 +177,15 @@ class ExcelPrintLayoutControllerTest {
       sheet.getCTWorksheet().addNewSheetPr().addNewPageSetUpPr().setFitToPage(false);
       sheet.getCTWorksheet().addNewPageSetup().setUsePrinterDefaults(true);
 
-      ExcelPrintLayout layout = controller.printLayout(sheet);
-      ExcelPrintLayout rowsOnlyLayout = controller.printLayout(rowsOnlySheet);
+      ResolvedPrintLayout layout = controller.printLayout(sheet);
+      ResolvedPrintLayout rowsOnlyLayout = controller.printLayout(rowsOnlySheet);
 
-      assertEquals(new ExcelPrintLayout.Area.None(), layout.printArea());
-      assertEquals(new ExcelPrintLayout.Scaling.Automatic(), layout.scaling());
-      assertEquals(new ExcelPrintLayout.TitleRows.None(), layout.repeatingRows());
-      assertEquals(new ExcelPrintLayout.TitleColumns.Band(0, 1), layout.repeatingColumns());
-      assertEquals(new ExcelPrintLayout.TitleRows.Band(0, 1), rowsOnlyLayout.repeatingRows());
-      assertEquals(new ExcelPrintLayout.TitleColumns.None(), rowsOnlyLayout.repeatingColumns());
+      assertEquals(new PrintAreaSpec.None(), layout.printArea());
+      assertEquals(new PrintScalingSpec.Automatic(), layout.scaling());
+      assertEquals(new PrintTitleRowsSpec.None(), layout.repeatingRows());
+      assertEquals(new PrintTitleColumnsSpec.Band(0, 1), layout.repeatingColumns());
+      assertEquals(new PrintTitleRowsSpec.Band(0, 1), rowsOnlyLayout.repeatingRows());
+      assertEquals(new PrintTitleColumnsSpec.None(), rowsOnlyLayout.repeatingColumns());
 
       controller.clearPrintLayout(sheet);
     }
@@ -218,12 +227,11 @@ class ExcelPrintLayoutControllerTest {
       XSSFSheet budget = workbook.createSheet("Budget");
       var scalingSheet = workbook.createSheet("Scaling");
 
-      ExcelPrintLayoutController.applyScaling(budget, new ExcelPrintLayout.Scaling.Automatic());
+      ExcelPrintLayoutController.applyScaling(budget, new PrintScalingSpec.Automatic());
       scalingSheet.getCTWorksheet().addNewSheetPr().addNewPageSetUpPr().setFitToPage(true);
       scalingSheet.getCTWorksheet().addNewPageSetup().setFitToWidth((short) 2);
       scalingSheet.getCTWorksheet().getPageSetup().setFitToHeight((short) 3);
-      ExcelPrintLayoutController.applyScaling(
-          scalingSheet, new ExcelPrintLayout.Scaling.Automatic());
+      ExcelPrintLayoutController.applyScaling(scalingSheet, new PrintScalingSpec.Automatic());
       assertFalse(
           ExcelPrintLayoutController.pageSetup(scalingSheet).orElseThrow().isSetFitToWidth());
       assertFalse(
@@ -231,24 +239,20 @@ class ExcelPrintLayoutControllerTest {
 
       var automaticSheet = workbook.createSheet("Automatic");
       assertEquals(
-          new ExcelPrintLayout.Scaling.Automatic(),
-          ExcelPrintLayoutController.scaling(automaticSheet));
+          new PrintScalingSpec.Automatic(), ExcelPrintLayoutController.scaling(automaticSheet));
       automaticSheet.getCTWorksheet().addNewSheetPr().addNewPageSetUpPr();
       assertEquals(
-          new ExcelPrintLayout.Scaling.Automatic(),
-          ExcelPrintLayoutController.scaling(automaticSheet));
+          new PrintScalingSpec.Automatic(), ExcelPrintLayoutController.scaling(automaticSheet));
 
       var fitWithoutPageSetup = workbook.createSheet("FitWithoutPageSetup");
       fitWithoutPageSetup.getCTWorksheet().addNewSheetPr().addNewPageSetUpPr().setFitToPage(true);
       assertEquals(
-          new ExcelPrintLayout.Scaling.Fit(1, 1),
-          ExcelPrintLayoutController.scaling(fitWithoutPageSetup));
+          new PrintScalingSpec.Fit(1, 1), ExcelPrintLayoutController.scaling(fitWithoutPageSetup));
 
       var fitSheet = workbook.createSheet("Fit");
-      ExcelPrintLayoutController.applyScaling(fitSheet, new ExcelPrintLayout.Scaling.Fit(2, 3));
+      ExcelPrintLayoutController.applyScaling(fitSheet, new PrintScalingSpec.Fit(2, 3));
       assertTrue(fitSheet.getCTWorksheet().isSetPageSetup());
-      assertEquals(
-          new ExcelPrintLayout.Scaling.Fit(2, 3), ExcelPrintLayoutController.scaling(fitSheet));
+      assertEquals(new PrintScalingSpec.Fit(2, 3), ExcelPrintLayoutController.scaling(fitSheet));
     }
   }
 
@@ -263,16 +267,16 @@ class ExcelPrintLayoutControllerTest {
 
       controller.setPrintLayout(
           sheet,
-          new ExcelPrintLayout(
-              new ExcelPrintLayout.Area.None(),
+          new ResolvedPrintLayout(
+              new PrintAreaSpec.None(),
               ExcelPrintOrientation.PORTRAIT,
-              new ExcelPrintLayout.Scaling.Automatic(),
-              new ExcelPrintLayout.TitleRows.None(),
-              new ExcelPrintLayout.TitleColumns.None(),
-              ExcelHeaderFooterText.blank(),
-              ExcelHeaderFooterText.blank(),
-              new ExcelPrintSetup(
-                  ExcelPrintSetup.defaults().margins(),
+              new PrintScalingSpec.Automatic(),
+              new PrintTitleRowsSpec.None(),
+              new PrintTitleColumnsSpec.None(),
+              HeaderFooterTextReport.blank(),
+              HeaderFooterTextReport.blank(),
+              new PrintSetupSpec(
+                  PrintSetupSpec.defaults().margins(),
                   false,
                   false,
                   false,
@@ -488,7 +492,7 @@ class ExcelPrintLayoutControllerTest {
   }
 
   private static void assertPageMarginsNormalization(XSSFWorkbook workbook) {
-    ExcelPrintMargins defaults = ExcelPrintSetup.defaults().margins();
+    PrintMarginsSpec defaults = PrintSetupSpec.defaults().margins();
 
     var defaultMarginsSheet = workbook.createSheet("DefaultMargins");
     ExcelPrintLayoutController.normalizePageMarginsNode(defaultMarginsSheet);
@@ -525,17 +529,17 @@ class ExcelPrintLayoutControllerTest {
     assertTrue(footerChangedSheet.getCTWorksheet().isSetPageMargins());
   }
 
-  private static ExcelPrintLayout factualDefaultPrintLayout() {
-    return new ExcelPrintLayout(
-        new ExcelPrintLayout.Area.None(),
+  private static ResolvedPrintLayout factualDefaultPrintLayout() {
+    return new ResolvedPrintLayout(
+        new PrintAreaSpec.None(),
         ExcelPrintOrientation.PORTRAIT,
-        new ExcelPrintLayout.Scaling.Automatic(),
-        new ExcelPrintLayout.TitleRows.None(),
-        new ExcelPrintLayout.TitleColumns.None(),
-        ExcelHeaderFooterText.blank(),
-        ExcelHeaderFooterText.blank(),
-        new ExcelPrintSetup(
-            new ExcelPrintMargins(0.7d, 0.7d, 0.75d, 0.75d, 0.3d, 0.3d),
+        new PrintScalingSpec.Automatic(),
+        new PrintTitleRowsSpec.None(),
+        new PrintTitleColumnsSpec.None(),
+        HeaderFooterTextReport.blank(),
+        HeaderFooterTextReport.blank(),
+        new PrintSetupSpec(
+            new PrintMarginsSpec(0.7d, 0.7d, 0.75d, 0.75d, 0.3d, 0.3d),
             false,
             false,
             false,

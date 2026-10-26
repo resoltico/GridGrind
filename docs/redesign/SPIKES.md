@@ -1935,3 +1935,30 @@ Inventories: definitions 5→3, converter lines 4176→4117, blank checks 426→
 definitions are source-free named-range/pivot/conditional-formatting models; they must be removed
 by direct core use, not moved into artificial resolved copies. Print and protection source-bearing
 forms and the actual resolved plan/step/target/command cutover remain open.
+
+## WP-40 canonical print settings and materialized text
+
+Deleted engine print layout, setup, margins and header/footer text models. ResolvedPrintLayout
+materializes header/footer sources and shares core print-area/scaling/title-band/setup/margin specs.
+HeaderFooterTextReport is the identical complete text contract and is reused for materialized text;
+blank/empty domain queries do not add wire fields. PrintAreaSpec keeps RangeRef until POI parsing.
+Deleted setup/margin snapshots in favor of core reports and removed report identity construction.
+The outer raw print snapshot remains pending the full read/query cutover.
+
+Compilation caught a RangeRef label boundary, stale qualified names, and redundant fixture wrapping
+(repaired; final source-set compilation 34s). The focused engine suite caught a meaningful diagnostic
+difference: the old engine bands rendered Excel-native row/column coordinates, but core constructors
+used plain index messages. Preserved that assurance in the canonical core constructors using the
+existing ExcelIndexDisplay owner; did not weaken the diagnostic assertions. Core/JSON/engine,
+14 parity and static checks then passed (2m16s).
+
+Task daemon 16731 retained 168 idle workers (5447MiB, no active test executors). Ownership/resource
+evidence is outside the repo; stopped that task daemon at the completed gate and started fresh.
+Nested deterministic check and all retained seeds pass (38s). ./gradlew check passes (4m53s):
+core 352, JSON 348, engine 1477 plus 14 parity, CLI 588, architecture 14 plus 12 rule tests, zero
+failures/errors/skips. All 143 golden cases are unchanged. No active mutation/fuzz campaign ran.
+
+Inventories: snapshots 38→36, converter lines 4117→4032, blank checks 425→424, main Java
+121422→121109. Definitions 3 and Support 206 remain open. Baseline diff empty. Workbook/
+sheet secret materialization, the source-free definition drains, remaining factual models and the
+actual ResolvedPlan/ResolvedStep/ResolvedTarget command cutover still remain WP-40.

@@ -5,6 +5,8 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import dev.erst.gridgrind.core.model.drawing.CommentAnchorReport;
 import dev.erst.gridgrind.core.model.drawing.ResolvedComment;
+import dev.erst.gridgrind.core.model.print.PrintMarginsReport;
+import dev.erst.gridgrind.core.model.print.PrintSetupReport;
 import dev.erst.gridgrind.core.model.style.CellColorReport;
 import dev.erst.gridgrind.core.model.style.CellFillReport;
 import dev.erst.gridgrind.core.model.style.CellFontReport;
@@ -194,9 +196,9 @@ class AdvancedReadEngineTypesTest {
     assertThrows(IllegalArgumentException.class, () -> new CommentAnchorReport(0, 2, 0, 1));
     assertThrows(IllegalArgumentException.class, () -> new CommentAnchorReport(-1, 0, 1, 1));
 
-    ExcelPrintSetupSnapshot setup =
-        new ExcelPrintSetupSnapshot(
-            new ExcelPrintMarginsSnapshot(0.5d, 0.5d, 1.0d, 1.0d, 0.3d, 0.3d),
+    PrintSetupReport setup =
+        new PrintSetupReport(
+            new PrintMarginsReport(0.5d, 0.5d, 1.0d, 1.0d, 0.3d, 0.3d),
             false,
             true,
             false,
@@ -212,16 +214,15 @@ class AdvancedReadEngineTypesTest {
     assertEquals(List.of(10, 20), setup.rowBreaks());
     assertThrows(
         IllegalArgumentException.class,
-        () -> new ExcelPrintMarginsSnapshot(-0.1d, 0.5d, 1.0d, 1.0d, 0.3d, 0.3d));
+        () -> new PrintMarginsReport(-0.1d, 0.5d, 1.0d, 1.0d, 0.3d, 0.3d));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new PrintMarginsReport(Double.POSITIVE_INFINITY, 0.5d, 1.0d, 1.0d, 0.3d, 0.3d));
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new ExcelPrintMarginsSnapshot(Double.POSITIVE_INFINITY, 0.5d, 1.0d, 1.0d, 0.3d, 0.3d));
-    assertThrows(
-        IllegalArgumentException.class,
-        () ->
-            new ExcelPrintSetupSnapshot(
-                new ExcelPrintMarginsSnapshot(0.5d, 0.5d, 1.0d, 1.0d, 0.3d, 0.3d),
+            new PrintSetupReport(
+                new PrintMarginsReport(0.5d, 0.5d, 1.0d, 1.0d, 0.3d, 0.3d),
                 false,
                 true,
                 false,
@@ -236,8 +237,8 @@ class AdvancedReadEngineTypesTest {
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new ExcelPrintSetupSnapshot(
-                new ExcelPrintMarginsSnapshot(0.5d, 0.5d, 1.0d, 1.0d, 0.3d, 0.3d),
+            new PrintSetupReport(
+                new PrintMarginsReport(0.5d, 0.5d, 1.0d, 1.0d, 0.3d, 0.3d),
                 false,
                 true,
                 false,
@@ -252,8 +253,8 @@ class AdvancedReadEngineTypesTest {
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new ExcelPrintSetupSnapshot(
-                new ExcelPrintMarginsSnapshot(0.5d, 0.5d, 1.0d, 1.0d, 0.3d, 0.3d),
+            new PrintSetupReport(
+                new PrintMarginsReport(0.5d, 0.5d, 1.0d, 1.0d, 0.3d, 0.3d),
                 false,
                 true,
                 false,
@@ -268,8 +269,8 @@ class AdvancedReadEngineTypesTest {
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new ExcelPrintSetupSnapshot(
-                new ExcelPrintMarginsSnapshot(0.5d, 0.5d, 1.0d, 1.0d, 0.3d, 0.3d),
+            new PrintSetupReport(
+                new PrintMarginsReport(0.5d, 0.5d, 1.0d, 1.0d, 0.3d, 0.3d),
                 false,
                 true,
                 false,
@@ -284,8 +285,8 @@ class AdvancedReadEngineTypesTest {
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new ExcelPrintSetupSnapshot(
-                new ExcelPrintMarginsSnapshot(0.5d, 0.5d, 1.0d, 1.0d, 0.3d, 0.3d),
+            new PrintSetupReport(
+                new PrintMarginsReport(0.5d, 0.5d, 1.0d, 1.0d, 0.3d, 0.3d),
                 false,
                 true,
                 false,
@@ -300,8 +301,8 @@ class AdvancedReadEngineTypesTest {
     assertThrows(
         NullPointerException.class,
         () ->
-            new ExcelPrintSetupSnapshot(
-                new ExcelPrintMarginsSnapshot(0.5d, 0.5d, 1.0d, 1.0d, 0.3d, 0.3d),
+            new PrintSetupReport(
+                new PrintMarginsReport(0.5d, 0.5d, 1.0d, 1.0d, 0.3d, 0.3d),
                 false,
                 true,
                 false,

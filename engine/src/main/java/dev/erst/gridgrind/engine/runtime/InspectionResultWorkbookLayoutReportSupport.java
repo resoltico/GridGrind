@@ -9,14 +9,15 @@ import dev.erst.gridgrind.core.model.layout.SheetDisplayReport;
 import dev.erst.gridgrind.core.model.layout.SheetLayoutReport;
 import dev.erst.gridgrind.core.model.layout.SheetOutlineSummaryReport;
 import dev.erst.gridgrind.core.model.layout.SheetPresentationReport;
-import dev.erst.gridgrind.core.model.print.HeaderFooterTextReport;
 import dev.erst.gridgrind.core.model.print.PrintAreaReport;
+import dev.erst.gridgrind.core.model.print.PrintAreaSpec;
 import dev.erst.gridgrind.core.model.print.PrintLayoutReport;
-import dev.erst.gridgrind.core.model.print.PrintMarginsReport;
 import dev.erst.gridgrind.core.model.print.PrintScalingReport;
-import dev.erst.gridgrind.core.model.print.PrintSetupReport;
+import dev.erst.gridgrind.core.model.print.PrintScalingSpec;
 import dev.erst.gridgrind.core.model.print.PrintTitleColumnsReport;
+import dev.erst.gridgrind.core.model.print.PrintTitleColumnsSpec;
 import dev.erst.gridgrind.core.model.print.PrintTitleRowsReport;
+import dev.erst.gridgrind.core.model.print.PrintTitleRowsSpec;
 import dev.erst.gridgrind.core.model.protection.SheetProtectionReport;
 import dev.erst.gridgrind.core.model.protection.SheetProtectionSettings;
 import dev.erst.gridgrind.core.model.validation.IgnoredErrorReport;
@@ -25,8 +26,6 @@ import dev.erst.gridgrind.core.vocabulary.CellAddress;
 import dev.erst.gridgrind.core.vocabulary.RangeLabel;
 import dev.erst.gridgrind.core.vocabulary.SheetLabel;
 import dev.erst.gridgrind.excel.ExcelCellReadProjection;
-import dev.erst.gridgrind.excel.ExcelHeaderFooterText;
-import dev.erst.gridgrind.excel.ExcelPrintLayout;
 import dev.erst.gridgrind.excel.ExcelSheetPane;
 import dev.erst.gridgrind.excel.ExcelSheetPresentationSnapshot;
 import dev.erst.gridgrind.excel.ExcelSheetProtectionSettings;
@@ -144,27 +143,9 @@ final class InspectionResultWorkbookLayoutReportSupport {
         toPrintScalingReport(printLayout.printLayout().layout().scaling()),
         toPrintTitleRowsReport(printLayout.printLayout().layout().repeatingRows()),
         toPrintTitleColumnsReport(printLayout.printLayout().layout().repeatingColumns()),
-        toHeaderFooterTextReport(printLayout.printLayout().layout().header()),
-        toHeaderFooterTextReport(printLayout.printLayout().layout().footer()),
-        new PrintSetupReport(
-            new PrintMarginsReport(
-                printLayout.printLayout().setup().margins().left(),
-                printLayout.printLayout().setup().margins().right(),
-                printLayout.printLayout().setup().margins().top(),
-                printLayout.printLayout().setup().margins().bottom(),
-                printLayout.printLayout().setup().margins().header(),
-                printLayout.printLayout().setup().margins().footer()),
-            printLayout.printLayout().setup().printGridlines(),
-            printLayout.printLayout().setup().horizontallyCentered(),
-            printLayout.printLayout().setup().verticallyCentered(),
-            printLayout.printLayout().setup().paperSize(),
-            printLayout.printLayout().setup().draft(),
-            printLayout.printLayout().setup().blackAndWhite(),
-            printLayout.printLayout().setup().copies(),
-            printLayout.printLayout().setup().useFirstPageNumber(),
-            printLayout.printLayout().setup().firstPageNumber(),
-            printLayout.printLayout().setup().rowBreaks(),
-            printLayout.printLayout().setup().columnBreaks()));
+        printLayout.printLayout().layout().header(),
+        printLayout.printLayout().layout().footer(),
+        printLayout.printLayout().setup());
   }
 
   static SheetPresentationReport toSheetPresentationReport(
@@ -207,41 +188,36 @@ final class InspectionResultWorkbookLayoutReportSupport {
     };
   }
 
-  static PrintAreaReport toPrintAreaReport(ExcelPrintLayout.Area printArea) {
+  static PrintAreaReport toPrintAreaReport(PrintAreaSpec printArea) {
     return switch (printArea) {
-      case ExcelPrintLayout.Area.None _ -> new PrintAreaReport.None();
-      case ExcelPrintLayout.Area.Range range ->
-          new PrintAreaReport.Range(new RangeLabel(range.range()));
+      case PrintAreaSpec.None _ -> new PrintAreaReport.None();
+      case PrintAreaSpec.Range range ->
+          new PrintAreaReport.Range(new RangeLabel(range.range().value()));
     };
   }
 
-  static PrintScalingReport toPrintScalingReport(ExcelPrintLayout.Scaling scaling) {
+  static PrintScalingReport toPrintScalingReport(PrintScalingSpec scaling) {
     return switch (scaling) {
-      case ExcelPrintLayout.Scaling.Automatic _ -> new PrintScalingReport.Automatic();
-      case ExcelPrintLayout.Scaling.Fit fit ->
+      case PrintScalingSpec.Automatic _ -> new PrintScalingReport.Automatic();
+      case PrintScalingSpec.Fit fit ->
           new PrintScalingReport.Fit(fit.widthPages(), fit.heightPages());
     };
   }
 
-  static PrintTitleRowsReport toPrintTitleRowsReport(ExcelPrintLayout.TitleRows repeatingRows) {
+  static PrintTitleRowsReport toPrintTitleRowsReport(PrintTitleRowsSpec repeatingRows) {
     return switch (repeatingRows) {
-      case ExcelPrintLayout.TitleRows.None _ -> new PrintTitleRowsReport.None();
-      case ExcelPrintLayout.TitleRows.Band band ->
+      case PrintTitleRowsSpec.None _ -> new PrintTitleRowsReport.None();
+      case PrintTitleRowsSpec.Band band ->
           new PrintTitleRowsReport.Band(band.firstRowIndex(), band.lastRowIndex());
     };
   }
 
-  static PrintTitleColumnsReport toPrintTitleColumnsReport(
-      ExcelPrintLayout.TitleColumns repeatingColumns) {
+  static PrintTitleColumnsReport toPrintTitleColumnsReport(PrintTitleColumnsSpec repeatingColumns) {
     return switch (repeatingColumns) {
-      case ExcelPrintLayout.TitleColumns.None _ -> new PrintTitleColumnsReport.None();
-      case ExcelPrintLayout.TitleColumns.Band band ->
+      case PrintTitleColumnsSpec.None _ -> new PrintTitleColumnsReport.None();
+      case PrintTitleColumnsSpec.Band band ->
           new PrintTitleColumnsReport.Band(band.firstColumnIndex(), band.lastColumnIndex());
     };
-  }
-
-  static HeaderFooterTextReport toHeaderFooterTextReport(ExcelHeaderFooterText text) {
-    return new HeaderFooterTextReport(text.left(), text.center(), text.right());
   }
 
   private static SheetProtectionSettings toSheetProtectionSettings(

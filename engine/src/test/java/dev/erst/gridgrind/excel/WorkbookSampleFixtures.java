@@ -14,6 +14,12 @@ import dev.erst.gridgrind.core.model.drawing.ResolvedPicture;
 import dev.erst.gridgrind.core.model.drawing.ResolvedShape;
 import dev.erst.gridgrind.core.model.drawing.ResolvedSignatureLine;
 import dev.erst.gridgrind.core.model.formula.ResolvedArrayFormula;
+import dev.erst.gridgrind.core.model.print.HeaderFooterTextReport;
+import dev.erst.gridgrind.core.model.print.PrintAreaSpec;
+import dev.erst.gridgrind.core.model.print.PrintScalingSpec;
+import dev.erst.gridgrind.core.model.print.PrintTitleColumnsSpec;
+import dev.erst.gridgrind.core.model.print.PrintTitleRowsSpec;
+import dev.erst.gridgrind.core.model.print.ResolvedPrintLayout;
 import dev.erst.gridgrind.core.model.style.CellAlignmentPatch;
 import dev.erst.gridgrind.core.model.style.CellFontPatch;
 import dev.erst.gridgrind.core.model.style.CellStylePatch;
@@ -347,15 +353,15 @@ final class WorkbookSampleFixtures {
         Optional.empty());
   }
 
-  private static ExcelPrintLayout defaultPrintLayout() {
-    return new ExcelPrintLayout(
-        new ExcelPrintLayout.Area.Range("A1:C20"),
+  private static ResolvedPrintLayout defaultPrintLayout() {
+    return new ResolvedPrintLayout(
+        new PrintAreaSpec.Range(new RangeRef("A1:C20")),
         ExcelPrintOrientation.LANDSCAPE,
-        new ExcelPrintLayout.Scaling.Fit(1, 0),
-        new ExcelPrintLayout.TitleRows.Band(0, 1),
-        new ExcelPrintLayout.TitleColumns.Band(0, 0),
-        new ExcelHeaderFooterText("Left", "Center", "Right"),
-        new ExcelHeaderFooterText("Footer Left", "", "Footer Right"));
+        new PrintScalingSpec.Fit(1, 0),
+        new PrintTitleRowsSpec.Band(0, 1),
+        new PrintTitleColumnsSpec.Band(0, 0),
+        new HeaderFooterTextReport("Left", "Center", "Right"),
+        new HeaderFooterTextReport("Footer Left", "", "Footer Right"));
   }
 
   private static ExcelSheetProtectionSettings protectionSettings() {

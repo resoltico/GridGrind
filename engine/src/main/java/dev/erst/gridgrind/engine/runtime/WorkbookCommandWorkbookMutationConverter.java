@@ -182,7 +182,8 @@ final class WorkbookCommandWorkbookMutationConverter {
       case WorkbookMutationAction.SetPrintLayout setPrintLayout ->
           new WorkbookLayoutCommand.SetPrintLayout(
               WorkbookCommandSelectorSupport.sheetByName(target, action).name().value(),
-              WorkbookCommandLayoutInputConverter.toExcelPrintLayout(setPrintLayout.printLayout()));
+              WorkbookCommandLayoutInputConverter.toResolvedPrintLayout(
+                  setPrintLayout.printLayout()));
       case WorkbookMutationAction.ClearPrintLayout _ ->
           new WorkbookLayoutCommand.ClearPrintLayout(
               WorkbookCommandSelectorSupport.sheetByName(target, action).name().value());

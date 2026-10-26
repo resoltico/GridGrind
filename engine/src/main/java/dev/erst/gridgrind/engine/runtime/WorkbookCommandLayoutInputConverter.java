@@ -2,23 +2,16 @@ package dev.erst.gridgrind.engine.runtime;
 
 import dev.erst.gridgrind.core.model.formula.NamedRangeTarget;
 import dev.erst.gridgrind.core.model.layout.PaneSpec;
-import dev.erst.gridgrind.core.model.print.PrintAreaSpec;
+import dev.erst.gridgrind.core.model.print.HeaderFooterTextReport;
 import dev.erst.gridgrind.core.model.print.PrintLayoutSpec;
-import dev.erst.gridgrind.core.model.print.PrintScalingSpec;
-import dev.erst.gridgrind.core.model.print.PrintSetupSpec;
-import dev.erst.gridgrind.core.model.print.PrintTitleColumnsSpec;
-import dev.erst.gridgrind.core.model.print.PrintTitleRowsSpec;
+import dev.erst.gridgrind.core.model.print.ResolvedPrintLayout;
 import dev.erst.gridgrind.core.model.protection.SheetProtectionSettings;
 import dev.erst.gridgrind.core.model.protection.WorkbookProtectionSpec;
 import dev.erst.gridgrind.core.plan.NamedRangeSelector;
 import dev.erst.gridgrind.core.vocabulary.NamedRangeScope;
 import dev.erst.gridgrind.core.vocabulary.SheetCopyPosition;
-import dev.erst.gridgrind.excel.ExcelHeaderFooterText;
 import dev.erst.gridgrind.excel.ExcelNamedRangeScope;
 import dev.erst.gridgrind.excel.ExcelNamedRangeTarget;
-import dev.erst.gridgrind.excel.ExcelPrintLayout;
-import dev.erst.gridgrind.excel.ExcelPrintMargins;
-import dev.erst.gridgrind.excel.ExcelPrintSetup;
 import dev.erst.gridgrind.excel.ExcelSheetCopyPosition;
 import dev.erst.gridgrind.excel.ExcelSheetPane;
 import dev.erst.gridgrind.excel.ExcelSheetProtectionSettings;
@@ -127,76 +120,21 @@ final class WorkbookCommandLayoutInputConverter {
     };
   }
 
-  static ExcelPrintLayout toExcelPrintLayout(PrintLayoutSpec printLayout) {
-    return new ExcelPrintLayout(
-        toExcelPrintArea(printLayout.printArea()),
+  static ResolvedPrintLayout toResolvedPrintLayout(PrintLayoutSpec printLayout) {
+    return new ResolvedPrintLayout(
+        printLayout.printArea(),
         printLayout.orientation(),
-        toExcelPrintScaling(printLayout.scaling()),
-        toExcelPrintTitleRows(printLayout.repeatingRows()),
-        toExcelPrintTitleColumns(printLayout.repeatingColumns()),
-        new ExcelHeaderFooterText(
+        printLayout.scaling(),
+        printLayout.repeatingRows(),
+        printLayout.repeatingColumns(),
+        new HeaderFooterTextReport(
             WorkbookCommandSourceSupport.inlineText(printLayout.header().left(), "header left"),
             WorkbookCommandSourceSupport.inlineText(printLayout.header().center(), "header center"),
             WorkbookCommandSourceSupport.inlineText(printLayout.header().right(), "header right")),
-        new ExcelHeaderFooterText(
+        new HeaderFooterTextReport(
             WorkbookCommandSourceSupport.inlineText(printLayout.footer().left(), "footer left"),
             WorkbookCommandSourceSupport.inlineText(printLayout.footer().center(), "footer center"),
             WorkbookCommandSourceSupport.inlineText(printLayout.footer().right(), "footer right")),
-        toExcelPrintSetup(printLayout.setup()));
-  }
-
-  private static ExcelPrintSetup toExcelPrintSetup(PrintSetupSpec setup) {
-    return new ExcelPrintSetup(
-        new ExcelPrintMargins(
-            setup.margins().left(),
-            setup.margins().right(),
-            setup.margins().top(),
-            setup.margins().bottom(),
-            setup.margins().header(),
-            setup.margins().footer()),
-        setup.printGridlines(),
-        setup.horizontallyCentered(),
-        setup.verticallyCentered(),
-        setup.paperSize(),
-        setup.draft(),
-        setup.blackAndWhite(),
-        setup.copies(),
-        setup.useFirstPageNumber(),
-        setup.firstPageNumber(),
-        setup.rowBreaks(),
-        setup.columnBreaks());
-  }
-
-  private static ExcelPrintLayout.Area toExcelPrintArea(PrintAreaSpec printArea) {
-    return switch (printArea) {
-      case PrintAreaSpec.None _ -> new ExcelPrintLayout.Area.None();
-      case PrintAreaSpec.Range range -> new ExcelPrintLayout.Area.Range(range.range().value());
-    };
-  }
-
-  private static ExcelPrintLayout.Scaling toExcelPrintScaling(PrintScalingSpec scaling) {
-    return switch (scaling) {
-      case PrintScalingSpec.Automatic _ -> new ExcelPrintLayout.Scaling.Automatic();
-      case PrintScalingSpec.Fit fit ->
-          new ExcelPrintLayout.Scaling.Fit(fit.widthPages(), fit.heightPages());
-    };
-  }
-
-  private static ExcelPrintLayout.TitleRows toExcelPrintTitleRows(
-      PrintTitleRowsSpec repeatingRows) {
-    return switch (repeatingRows) {
-      case PrintTitleRowsSpec.None _ -> new ExcelPrintLayout.TitleRows.None();
-      case PrintTitleRowsSpec.Band band ->
-          new ExcelPrintLayout.TitleRows.Band(band.firstRowIndex(), band.lastRowIndex());
-    };
-  }
-
-  private static ExcelPrintLayout.TitleColumns toExcelPrintTitleColumns(
-      PrintTitleColumnsSpec repeatingColumns) {
-    return switch (repeatingColumns) {
-      case PrintTitleColumnsSpec.None _ -> new ExcelPrintLayout.TitleColumns.None();
-      case PrintTitleColumnsSpec.Band band ->
-          new ExcelPrintLayout.TitleColumns.Band(band.firstColumnIndex(), band.lastColumnIndex());
-    };
+        printLayout.setup());
   }
 }

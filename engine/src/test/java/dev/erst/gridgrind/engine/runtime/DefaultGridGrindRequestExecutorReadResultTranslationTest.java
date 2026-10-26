@@ -21,6 +21,7 @@ import dev.erst.gridgrind.core.vocabulary.ExcelPaneRegion;
 import dev.erst.gridgrind.core.vocabulary.ExcelPrintOrientation;
 import dev.erst.gridgrind.core.vocabulary.ExcelSheetVisibility;
 import dev.erst.gridgrind.core.vocabulary.NamedRangeBackingKind;
+import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.core.vocabulary.RgbHex;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.excel.*;
@@ -137,14 +138,17 @@ class DefaultGridGrindRequestExecutorReadResultTranslationTest
                 new StepId("printLayout"),
                 "Budget",
                 new dev.erst.gridgrind.excel.ExcelPrintLayoutSnapshot(
-                    new dev.erst.gridgrind.excel.ExcelPrintLayout(
-                        new dev.erst.gridgrind.excel.ExcelPrintLayout.Area.Range("A1:B20"),
+                    new dev.erst.gridgrind.core.model.print.ResolvedPrintLayout(
+                        new dev.erst.gridgrind.core.model.print.PrintAreaSpec.Range(
+                            new RangeRef("A1:B20")),
                         ExcelPrintOrientation.LANDSCAPE,
-                        new dev.erst.gridgrind.excel.ExcelPrintLayout.Scaling.Fit(1, 0),
-                        new dev.erst.gridgrind.excel.ExcelPrintLayout.TitleRows.Band(0, 0),
-                        new dev.erst.gridgrind.excel.ExcelPrintLayout.TitleColumns.Band(0, 0),
-                        new dev.erst.gridgrind.excel.ExcelHeaderFooterText("Budget", "", ""),
-                        new dev.erst.gridgrind.excel.ExcelHeaderFooterText("", "Page &P", "")),
+                        new dev.erst.gridgrind.core.model.print.PrintScalingSpec.Fit(1, 0),
+                        new dev.erst.gridgrind.core.model.print.PrintTitleRowsSpec.Band(0, 0),
+                        new dev.erst.gridgrind.core.model.print.PrintTitleColumnsSpec.Band(0, 0),
+                        new dev.erst.gridgrind.core.model.print.HeaderFooterTextReport(
+                            "Budget", "", ""),
+                        new dev.erst.gridgrind.core.model.print.HeaderFooterTextReport(
+                            "", "Page &P", "")),
                     defaultPrintSetupSnapshot())));
     InspectionResult conditionalFormatting =
         InspectionResultConverter.toReadResult(
@@ -563,14 +567,16 @@ class DefaultGridGrindRequestExecutorReadResultTranslationTest
                     new StepId("print-layout"),
                     "Budget",
                     new dev.erst.gridgrind.excel.ExcelPrintLayoutSnapshot(
-                        new dev.erst.gridgrind.excel.ExcelPrintLayout(
-                            new dev.erst.gridgrind.excel.ExcelPrintLayout.Area.None(),
+                        new dev.erst.gridgrind.core.model.print.ResolvedPrintLayout(
+                            new dev.erst.gridgrind.core.model.print.PrintAreaSpec.None(),
                             ExcelPrintOrientation.PORTRAIT,
-                            new dev.erst.gridgrind.excel.ExcelPrintLayout.Scaling.Automatic(),
-                            new dev.erst.gridgrind.excel.ExcelPrintLayout.TitleRows.None(),
-                            new dev.erst.gridgrind.excel.ExcelPrintLayout.TitleColumns.None(),
-                            new dev.erst.gridgrind.excel.ExcelHeaderFooterText("", "", ""),
-                            new dev.erst.gridgrind.excel.ExcelHeaderFooterText("", "", "")),
+                            new dev.erst.gridgrind.core.model.print.PrintScalingSpec.Automatic(),
+                            new dev.erst.gridgrind.core.model.print.PrintTitleRowsSpec.None(),
+                            new dev.erst.gridgrind.core.model.print.PrintTitleColumnsSpec.None(),
+                            new dev.erst.gridgrind.core.model.print.HeaderFooterTextReport(
+                                "", "", ""),
+                            new dev.erst.gridgrind.core.model.print.HeaderFooterTextReport(
+                                "", "", "")),
                         defaultPrintSetupSnapshot()))));
 
     PaneReport.Split pane = assertInstanceOf(PaneReport.Split.class, layout.layout().pane());

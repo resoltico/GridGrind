@@ -15,6 +15,7 @@ import dev.erst.gridgrind.core.model.drawing.ShapeSpec;
 import dev.erst.gridgrind.core.model.layout.PaneSpec;
 import dev.erst.gridgrind.core.model.pivot.PivotTableSpec;
 import dev.erst.gridgrind.core.model.print.PrintLayoutSpec;
+import dev.erst.gridgrind.core.model.print.ResolvedPrintLayout;
 import dev.erst.gridgrind.core.model.protection.SheetProtectionSettings;
 import dev.erst.gridgrind.core.model.style.DifferentialStylePatch;
 import dev.erst.gridgrind.core.model.table.ResolvedTable;
@@ -60,7 +61,7 @@ final class OperationSequenceValueFactory {
     return OperationSequenceLayoutValues.nextPrintLayoutInput(data);
   }
 
-  static ExcelPrintLayout nextExcelPrintLayout(GridGrindFuzzData data) {
+  static ResolvedPrintLayout nextExcelPrintLayout(GridGrindFuzzData data) {
     return OperationSequenceLayoutValues.nextExcelPrintLayout(data);
   }
 

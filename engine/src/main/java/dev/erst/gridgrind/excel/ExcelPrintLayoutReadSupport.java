@@ -1,6 +1,14 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.core.model.print.HeaderFooterTextReport;
+import dev.erst.gridgrind.core.model.print.PrintAreaSpec;
+import dev.erst.gridgrind.core.model.print.PrintMarginsSpec;
+import dev.erst.gridgrind.core.model.print.PrintScalingSpec;
+import dev.erst.gridgrind.core.model.print.PrintSetupSpec;
+import dev.erst.gridgrind.core.model.print.PrintTitleColumnsSpec;
+import dev.erst.gridgrind.core.model.print.PrintTitleRowsSpec;
 import dev.erst.gridgrind.core.vocabulary.ExcelPrintOrientation;
+import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.IntStream;
@@ -22,20 +30,21 @@ import org.openxmlformats.schemas.spreadsheetml.x2006.main.STOrientation;
 final class ExcelPrintLayoutReadSupport {
   private ExcelPrintLayoutReadSupport() {}
 
-  static ExcelPrintLayout.Area printArea(XSSFSheet sheet) {
+  static PrintAreaSpec printArea(XSSFSheet sheet) {
     Optional<String> printArea = storedPrintAreaFormula(sheet);
     if (printArea.isEmpty()) {
-      return new ExcelPrintLayout.Area.None();
+      return new PrintAreaSpec.None();
     }
     AreaReference areaReference =
         new AreaReference(printArea.orElseThrow(), SpreadsheetVersion.EXCEL2007);
-    return new ExcelPrintLayout.Area.Range(
-        new CellRangeAddress(
-                areaReference.getFirstCell().getRow(),
-                areaReference.getLastCell().getRow(),
-                areaReference.getFirstCell().getCol(),
-                areaReference.getLastCell().getCol())
-            .formatAsString());
+    return new PrintAreaSpec.Range(
+        new RangeRef(
+            new CellRangeAddress(
+                    areaReference.getFirstCell().getRow(),
+                    areaReference.getLastCell().getRow(),
+                    areaReference.getFirstCell().getCol(),
+                    areaReference.getLastCell().getCol())
+                .formatAsString()));
   }
 
   static Optional<String> storedPrintAreaFormula(XSSFSheet sheet) {
@@ -70,51 +79,50 @@ final class ExcelPrintLayoutReadSupport {
         : ExcelPrintOrientation.PORTRAIT;
   }
 
-  static ExcelPrintLayout.Scaling scaling(XSSFSheet sheet) {
+  static PrintScalingSpec scaling(XSSFSheet sheet) {
     Optional<CTPageSetUpPr> pageSetUpPr = pageSetUpPr(sheet);
     if (pageSetUpPr.isEmpty()
         || !pageSetUpPr.orElseThrow().isSetFitToPage()
         || !pageSetUpPr.orElseThrow().getFitToPage()) {
-      return new ExcelPrintLayout.Scaling.Automatic();
+      return new PrintScalingSpec.Automatic();
     }
     Optional<CTPageSetup> pageSetup = pageSetup(sheet);
-    return new ExcelPrintLayout.Scaling.Fit(
+    return new PrintScalingSpec.Fit(
         pageSetup.isPresent() ? Math.toIntExact(pageSetup.orElseThrow().getFitToWidth()) : 1,
         pageSetup.isPresent() ? Math.toIntExact(pageSetup.orElseThrow().getFitToHeight()) : 1);
   }
 
-  static ExcelPrintLayout.TitleRows repeatingRows(XSSFSheet sheet) {
+  static PrintTitleRowsSpec repeatingRows(XSSFSheet sheet) {
     CellRangeAddress repeatingRows = sheet.getRepeatingRows();
     if (repeatingRows == null) {
-      return new ExcelPrintLayout.TitleRows.None();
+      return new PrintTitleRowsSpec.None();
     }
-    return new ExcelPrintLayout.TitleRows.Band(
-        repeatingRows.getFirstRow(), repeatingRows.getLastRow());
+    return new PrintTitleRowsSpec.Band(repeatingRows.getFirstRow(), repeatingRows.getLastRow());
   }
 
-  static ExcelPrintLayout.TitleColumns repeatingColumns(XSSFSheet sheet) {
+  static PrintTitleColumnsSpec repeatingColumns(XSSFSheet sheet) {
     CellRangeAddress repeatingColumns = sheet.getRepeatingColumns();
     if (repeatingColumns == null) {
-      return new ExcelPrintLayout.TitleColumns.None();
+      return new PrintTitleColumnsSpec.None();
     }
-    return new ExcelPrintLayout.TitleColumns.Band(
+    return new PrintTitleColumnsSpec.Band(
         repeatingColumns.getFirstColumn(), repeatingColumns.getLastColumn());
   }
 
-  static ExcelHeaderFooterText headerFooterText(HeaderFooter headerFooter) {
-    return new ExcelHeaderFooterText(
+  static HeaderFooterTextReport headerFooterText(HeaderFooter headerFooter) {
+    return new HeaderFooterTextReport(
         Objects.toString(headerFooter.getLeft(), ""),
         Objects.toString(headerFooter.getCenter(), ""),
         Objects.toString(headerFooter.getRight(), ""));
   }
 
-  static ExcelPrintSetup setup(XSSFSheet sheet) {
+  static PrintSetupSpec setup(XSSFSheet sheet) {
     Optional<CTPageSetup> pageSetup = pageSetup(sheet);
-    ExcelPrintSetup defaults = ExcelPrintSetup.defaults();
-    ExcelPrintMargins defaultMargins = defaults.margins();
-    ExcelPrintMargins margins =
+    PrintSetupSpec defaults = PrintSetupSpec.defaults();
+    PrintMarginsSpec defaultMargins = defaults.margins();
+    PrintMarginsSpec margins =
         sheet.getCTWorksheet().isSetPageMargins()
-            ? new ExcelPrintMargins(
+            ? new PrintMarginsSpec(
                 sheet.getMargin(PageMargin.LEFT),
                 sheet.getMargin(PageMargin.RIGHT),
                 sheet.getMargin(PageMargin.TOP),
@@ -122,7 +130,7 @@ final class ExcelPrintLayoutReadSupport {
                 sheet.getMargin(PageMargin.HEADER),
                 sheet.getMargin(PageMargin.FOOTER))
             : defaultMargins;
-    return new ExcelPrintSetup(
+    return new PrintSetupSpec(
         margins,
         sheet.isPrintGridlines(),
         sheet.getHorizontallyCenter(),

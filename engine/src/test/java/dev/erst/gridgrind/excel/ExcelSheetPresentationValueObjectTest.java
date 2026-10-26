@@ -4,6 +4,10 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import dev.erst.gridgrind.core.model.print.PrintMarginsReport;
+import dev.erst.gridgrind.core.model.print.PrintMarginsSpec;
+import dev.erst.gridgrind.core.model.print.PrintSetupReport;
+import dev.erst.gridgrind.core.model.print.PrintSetupSpec;
 import dev.erst.gridgrind.core.model.style.CellColorReport;
 import dev.erst.gridgrind.core.model.style.ColorSpec;
 import dev.erst.gridgrind.core.vocabulary.ExcelIgnoredErrorType;
@@ -177,14 +181,13 @@ class ExcelSheetPresentationValueObjectTest {
 
   @Test
   void printSetupValueObjectsValidateIndexCollections() {
-    ExcelPrintMargins margins = new ExcelPrintMargins(0.5d, 0.6d, 0.7d, 0.8d, 0.2d, 0.3d);
-    ExcelPrintMarginsSnapshot marginsSnapshot =
-        new ExcelPrintMarginsSnapshot(0.5d, 0.6d, 0.7d, 0.8d, 0.2d, 0.3d);
-    ExcelPrintSetup setup =
-        new ExcelPrintSetup(
+    PrintMarginsSpec margins = new PrintMarginsSpec(0.5d, 0.6d, 0.7d, 0.8d, 0.2d, 0.3d);
+    PrintMarginsReport marginsSnapshot = new PrintMarginsReport(0.5d, 0.6d, 0.7d, 0.8d, 0.2d, 0.3d);
+    PrintSetupSpec setup =
+        new PrintSetupSpec(
             margins, true, true, false, 8, true, false, 2, true, 4, List.of(1), List.of(2));
-    ExcelPrintSetupSnapshot snapshot =
-        new ExcelPrintSetupSnapshot(
+    PrintSetupReport snapshot =
+        new PrintSetupReport(
             marginsSnapshot, true, true, false, 8, true, false, 2, true, 4, List.of(1), List.of(2));
 
     assertTrue(setup.printGridlines());
@@ -194,22 +197,22 @@ class ExcelSheetPresentationValueObjectTest {
     assertThrows(
         NullPointerException.class,
         () ->
-            new ExcelPrintSetup(
+            new PrintSetupSpec(
                 null, false, false, false, 1, false, false, 1, false, 1, List.of(), List.of()));
     assertThrows(
         NullPointerException.class,
         () ->
-            new ExcelPrintSetup(
+            new PrintSetupSpec(
                 margins, false, false, false, 1, false, false, 1, false, 1, null, List.of()));
     assertThrows(
         NullPointerException.class,
         () ->
-            new ExcelPrintSetup(
+            new PrintSetupSpec(
                 margins, false, false, false, 1, false, false, 1, false, 1, List.of(), null));
     assertThrows(
         NullPointerException.class,
         () ->
-            new ExcelPrintSetup(
+            new PrintSetupSpec(
                 margins,
                 false,
                 false,
@@ -225,12 +228,12 @@ class ExcelSheetPresentationValueObjectTest {
     assertThrows(
         NullPointerException.class,
         () ->
-            new ExcelPrintSetupSnapshot(
+            new PrintSetupReport(
                 null, false, false, false, 1, false, false, 1, false, 1, List.of(), List.of()));
     assertThrows(
         NullPointerException.class,
         () ->
-            new ExcelPrintSetupSnapshot(
+            new PrintSetupReport(
                 marginsSnapshot,
                 false,
                 false,
@@ -246,7 +249,7 @@ class ExcelSheetPresentationValueObjectTest {
     assertThrows(
         NullPointerException.class,
         () ->
-            new ExcelPrintSetupSnapshot(
+            new PrintSetupReport(
                 marginsSnapshot,
                 false,
                 false,
@@ -262,7 +265,7 @@ class ExcelSheetPresentationValueObjectTest {
     assertThrows(
         NullPointerException.class,
         () ->
-            new ExcelPrintSetupSnapshot(
+            new PrintSetupReport(
                 marginsSnapshot,
                 false,
                 false,

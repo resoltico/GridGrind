@@ -5,6 +5,12 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import dev.erst.gridgrind.core.model.drawing.ResolvedComment;
 import dev.erst.gridgrind.core.model.formula.ResolvedFormula;
+import dev.erst.gridgrind.core.model.print.HeaderFooterTextReport;
+import dev.erst.gridgrind.core.model.print.PrintAreaSpec;
+import dev.erst.gridgrind.core.model.print.PrintScalingSpec;
+import dev.erst.gridgrind.core.model.print.PrintTitleColumnsSpec;
+import dev.erst.gridgrind.core.model.print.PrintTitleRowsSpec;
+import dev.erst.gridgrind.core.model.print.ResolvedPrintLayout;
 import dev.erst.gridgrind.core.model.protection.CellProtectionPatch;
 import dev.erst.gridgrind.core.model.style.BorderSidePatch;
 import dev.erst.gridgrind.core.model.style.CellAlignmentPatch;
@@ -413,14 +419,14 @@ class ExcelWorkbookTest {
           .sheet("Source")
           .layout()
           .setPrintLayout(
-              new ExcelPrintLayout(
-                  new ExcelPrintLayout.Area.Range("A1:C20"),
+              new ResolvedPrintLayout(
+                  new PrintAreaSpec.Range(new RangeRef("A1:C20")),
                   ExcelPrintOrientation.LANDSCAPE,
-                  new ExcelPrintLayout.Scaling.Fit(1, 0),
-                  new ExcelPrintLayout.TitleRows.Band(0, 0),
-                  new ExcelPrintLayout.TitleColumns.None(),
-                  new ExcelHeaderFooterText("Source", "", ""),
-                  new ExcelHeaderFooterText("", "&P", "")));
+                  new PrintScalingSpec.Fit(1, 0),
+                  new PrintTitleRowsSpec.Band(0, 0),
+                  new PrintTitleColumnsSpec.None(),
+                  new HeaderFooterTextReport("Source", "", ""),
+                  new HeaderFooterTextReport("", "&P", "")));
       workbook
           .names()
           .setNamedRange(
@@ -603,14 +609,14 @@ class ExcelWorkbookTest {
       budget
           .layout()
           .setPrintLayout(
-              new ExcelPrintLayout(
-                  new ExcelPrintLayout.Area.Range("A1:B12"),
+              new ResolvedPrintLayout(
+                  new PrintAreaSpec.Range(new RangeRef("A1:B12")),
                   ExcelPrintOrientation.LANDSCAPE,
-                  new ExcelPrintLayout.Scaling.Fit(1, 0),
-                  new ExcelPrintLayout.TitleRows.Band(0, 0),
-                  new ExcelPrintLayout.TitleColumns.Band(0, 0),
-                  new ExcelHeaderFooterText("Budget", "", ""),
-                  new ExcelHeaderFooterText("", "Page &P", "")));
+                  new PrintScalingSpec.Fit(1, 0),
+                  new PrintTitleRowsSpec.Band(0, 0),
+                  new PrintTitleColumnsSpec.Band(0, 0),
+                  new HeaderFooterTextReport("Budget", "", ""),
+                  new HeaderFooterTextReport("", "Page &P", "")));
       workbook
           .persistence()
           .save(
@@ -625,7 +631,7 @@ class ExcelWorkbookTest {
     assertEquals(new ExcelSheetPane.Frozen(1, 1, 1, 1), XlsxRoundTrip.pane(workbookPath, "Budget"));
     assertEquals(125, XlsxRoundTrip.zoomPercent(workbookPath, "Budget"));
     assertEquals(
-        new ExcelPrintLayout.Area.Range("A1:B12"),
+        new PrintAreaSpec.Range(new RangeRef("A1:B12")),
         XlsxRoundTrip.printLayout(workbookPath, "Budget").printArea());
   }
 

@@ -14,6 +14,14 @@ import dev.erst.gridgrind.core.model.drawing.DrawingObjectPayloadReport;
 import dev.erst.gridgrind.core.model.drawing.DrawingObjectReport;
 import dev.erst.gridgrind.core.model.drawing.ResolvedComment;
 import dev.erst.gridgrind.core.model.pivot.PivotTableReport;
+import dev.erst.gridgrind.core.model.print.HeaderFooterTextReport;
+import dev.erst.gridgrind.core.model.print.PrintAreaSpec;
+import dev.erst.gridgrind.core.model.print.PrintMarginsReport;
+import dev.erst.gridgrind.core.model.print.PrintScalingSpec;
+import dev.erst.gridgrind.core.model.print.PrintSetupReport;
+import dev.erst.gridgrind.core.model.print.PrintTitleColumnsSpec;
+import dev.erst.gridgrind.core.model.print.PrintTitleRowsSpec;
+import dev.erst.gridgrind.core.model.print.ResolvedPrintLayout;
 import dev.erst.gridgrind.core.model.protection.CellProtectionReport;
 import dev.erst.gridgrind.core.model.protection.WorkbookProtectionReport;
 import dev.erst.gridgrind.core.model.security.OoxmlEncryptionReport;
@@ -64,6 +72,7 @@ import dev.erst.gridgrind.core.vocabulary.ExcelPictureFormat;
 import dev.erst.gridgrind.core.vocabulary.ExcelPivotDataConsolidateFunction;
 import dev.erst.gridgrind.core.vocabulary.ExcelPrintOrientation;
 import dev.erst.gridgrind.core.vocabulary.ExcelVerticalAlignment;
+import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.core.vocabulary.RgbHex;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.excel.*;
@@ -1019,16 +1028,16 @@ class InspectionResultConverterTest extends DefaultGridGrindRequestExecutorTestS
 
   private static ExcelPrintLayoutSnapshot advancedPrintLayout() {
     return new ExcelPrintLayoutSnapshot(
-        new ExcelPrintLayout(
-            new ExcelPrintLayout.Area.Range("A1:F20"),
+        new ResolvedPrintLayout(
+            new PrintAreaSpec.Range(new RangeRef("A1:F20")),
             ExcelPrintOrientation.LANDSCAPE,
-            new ExcelPrintLayout.Scaling.Fit(1, 0),
-            new ExcelPrintLayout.TitleRows.Band(0, 0),
-            new ExcelPrintLayout.TitleColumns.None(),
-            new ExcelHeaderFooterText("Ops", "Queue", ""),
-            new ExcelHeaderFooterText("", "Internal", "Page &P")),
-        new ExcelPrintSetupSnapshot(
-            new ExcelPrintMarginsSnapshot(0.5d, 0.5d, 1.0d, 1.0d, 0.3d, 0.3d),
+            new PrintScalingSpec.Fit(1, 0),
+            new PrintTitleRowsSpec.Band(0, 0),
+            new PrintTitleColumnsSpec.None(),
+            new HeaderFooterTextReport("Ops", "Queue", ""),
+            new HeaderFooterTextReport("", "Internal", "Page &P")),
+        new PrintSetupReport(
+            new PrintMarginsReport(0.5d, 0.5d, 1.0d, 1.0d, 0.3d, 0.3d),
             true,
             true,
             false,

@@ -1,5 +1,15 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.core.model.print.HeaderFooterTextReport;
+import dev.erst.gridgrind.core.model.print.PrintAreaSpec;
+import dev.erst.gridgrind.core.model.print.PrintMarginsReport;
+import dev.erst.gridgrind.core.model.print.PrintMarginsSpec;
+import dev.erst.gridgrind.core.model.print.PrintScalingSpec;
+import dev.erst.gridgrind.core.model.print.PrintSetupReport;
+import dev.erst.gridgrind.core.model.print.PrintSetupSpec;
+import dev.erst.gridgrind.core.model.print.PrintTitleColumnsSpec;
+import dev.erst.gridgrind.core.model.print.PrintTitleRowsSpec;
+import dev.erst.gridgrind.core.model.print.ResolvedPrintLayout;
 import dev.erst.gridgrind.core.vocabulary.ExcelPrintOrientation;
 import java.util.Objects;
 import java.util.Optional;
@@ -17,7 +27,7 @@ import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTSheetPr;
 /** Applies and reads supported print-layout state for one sheet. */
 final class ExcelPrintLayoutController {
   /** Applies the provided print layout as the authoritative supported print state. */
-  void setPrintLayout(XSSFSheet sheet, ExcelPrintLayout layout) {
+  void setPrintLayout(XSSFSheet sheet, ResolvedPrintLayout layout) {
     Objects.requireNonNull(sheet, "sheet must not be null");
     Objects.requireNonNull(layout, "layout must not be null");
 
@@ -35,11 +45,11 @@ final class ExcelPrintLayoutController {
   /** Clears the supported print layout state from the provided sheet. */
   void clearPrintLayout(XSSFSheet sheet) {
     Objects.requireNonNull(sheet, "sheet must not be null");
-    applyPrintArea(sheet, new ExcelPrintLayout.Area.None());
-    applyRepeatingRows(sheet, new ExcelPrintLayout.TitleRows.None());
-    applyRepeatingColumns(sheet, new ExcelPrintLayout.TitleColumns.None());
-    applyHeader(sheet.getHeader(), ExcelHeaderFooterText.blank());
-    applyFooter(sheet.getFooter(), ExcelHeaderFooterText.blank());
+    applyPrintArea(sheet, new PrintAreaSpec.None());
+    applyRepeatingRows(sheet, new PrintTitleRowsSpec.None());
+    applyRepeatingColumns(sheet, new PrintTitleColumnsSpec.None());
+    applyHeader(sheet.getHeader(), HeaderFooterTextReport.blank());
+    applyFooter(sheet.getFooter(), HeaderFooterTextReport.blank());
     replaceBreaks(
         sheet.getRowBreaks(), java.util.List.of(), sheet::removeRowBreak, sheet::setRowBreak);
     replaceBreaks(
@@ -61,9 +71,9 @@ final class ExcelPrintLayoutController {
   }
 
   /** Returns the supported print layout state currently stored for the provided sheet. */
-  ExcelPrintLayout printLayout(XSSFSheet sheet) {
+  ResolvedPrintLayout printLayout(XSSFSheet sheet) {
     Objects.requireNonNull(sheet, "sheet must not be null");
-    return new ExcelPrintLayout(
+    return new ResolvedPrintLayout(
         ExcelPrintLayoutReadSupport.printArea(sheet),
         ExcelPrintLayoutReadSupport.orientation(sheet),
         ExcelPrintLayoutReadSupport.scaling(sheet),
@@ -77,11 +87,11 @@ final class ExcelPrintLayoutController {
   /** Returns the full factual print-layout snapshot currently stored for the provided sheet. */
   ExcelPrintLayoutSnapshot printLayoutSnapshot(XSSFSheet sheet) {
     Objects.requireNonNull(sheet, "sheet must not be null");
-    ExcelPrintSetup setup = ExcelPrintLayoutReadSupport.setup(sheet);
+    PrintSetupSpec setup = ExcelPrintLayoutReadSupport.setup(sheet);
     return new ExcelPrintLayoutSnapshot(
         printLayout(sheet),
-        new ExcelPrintSetupSnapshot(
-            new ExcelPrintMarginsSnapshot(
+        new PrintSetupReport(
+            new PrintMarginsReport(
                 setup.margins().left(),
                 setup.margins().right(),
                 setup.margins().top(),
@@ -101,12 +111,12 @@ final class ExcelPrintLayoutController {
             setup.columnBreaks()));
   }
 
-  private static void applyPrintArea(XSSFSheet sheet, ExcelPrintLayout.Area printArea) {
+  private static void applyPrintArea(XSSFSheet sheet, PrintAreaSpec printArea) {
     int sheetIndex = sheet.getWorkbook().getSheetIndex(sheet);
     switch (printArea) {
-      case ExcelPrintLayout.Area.None _ -> sheet.getWorkbook().removePrintArea(sheetIndex);
-      case ExcelPrintLayout.Area.Range range -> {
-        ExcelRange parsed = ExcelRange.parse(range.range());
+      case PrintAreaSpec.None _ -> sheet.getWorkbook().removePrintArea(sheetIndex);
+      case PrintAreaSpec.Range range -> {
+        ExcelRange parsed = ExcelRange.parse(range.range().value());
         sheet
             .getWorkbook()
             .setPrintArea(
@@ -123,11 +133,11 @@ final class ExcelPrintLayoutController {
     sheet.getPrintSetup().setLandscape(orientation == ExcelPrintOrientation.LANDSCAPE);
   }
 
-  static void applyScaling(XSSFSheet sheet, ExcelPrintLayout.Scaling scaling) {
+  static void applyScaling(XSSFSheet sheet, PrintScalingSpec scaling) {
     XSSFSheet sheetRef = Objects.requireNonNull(sheet, "sheet must not be null");
     XSSFPrintSetup printSetup = sheetRef.getPrintSetup();
     switch (scaling) {
-      case ExcelPrintLayout.Scaling.Automatic _ -> {
+      case PrintScalingSpec.Automatic _ -> {
         sheetRef.setFitToPage(false);
         CTPageSetup pageSetup =
             Objects.requireNonNull(
@@ -139,7 +149,7 @@ final class ExcelPrintLayoutController {
           pageSetup.unsetFitToHeight();
         }
       }
-      case ExcelPrintLayout.Scaling.Fit fit -> {
+      case PrintScalingSpec.Fit fit -> {
         sheetRef.setFitToPage(true);
         printSetup.setFitWidth((short) fit.widthPages());
         printSetup.setFitHeight((short) fit.heightPages());
@@ -147,38 +157,37 @@ final class ExcelPrintLayoutController {
     }
   }
 
-  private static void applyRepeatingRows(XSSFSheet sheet, ExcelPrintLayout.TitleRows titleRows) {
+  private static void applyRepeatingRows(XSSFSheet sheet, PrintTitleRowsSpec titleRows) {
     switch (titleRows) {
-      case ExcelPrintLayout.TitleRows.None _ -> sheet.setRepeatingRows(null);
-      case ExcelPrintLayout.TitleRows.Band band ->
+      case PrintTitleRowsSpec.None _ -> sheet.setRepeatingRows(null);
+      case PrintTitleRowsSpec.Band band ->
           sheet.setRepeatingRows(
               new CellRangeAddress(band.firstRowIndex(), band.lastRowIndex(), -1, -1));
     }
   }
 
-  private static void applyRepeatingColumns(
-      XSSFSheet sheet, ExcelPrintLayout.TitleColumns titleColumns) {
+  private static void applyRepeatingColumns(XSSFSheet sheet, PrintTitleColumnsSpec titleColumns) {
     switch (titleColumns) {
-      case ExcelPrintLayout.TitleColumns.None _ -> sheet.setRepeatingColumns(null);
-      case ExcelPrintLayout.TitleColumns.Band band ->
+      case PrintTitleColumnsSpec.None _ -> sheet.setRepeatingColumns(null);
+      case PrintTitleColumnsSpec.Band band ->
           sheet.setRepeatingColumns(
               new CellRangeAddress(-1, -1, band.firstColumnIndex(), band.lastColumnIndex()));
     }
   }
 
-  private static void applyHeader(Header header, ExcelHeaderFooterText text) {
+  private static void applyHeader(Header header, HeaderFooterTextReport text) {
     header.setLeft(text.left());
     header.setCenter(text.center());
     header.setRight(text.right());
   }
 
-  private static void applyFooter(Footer footer, ExcelHeaderFooterText text) {
+  private static void applyFooter(Footer footer, HeaderFooterTextReport text) {
     footer.setLeft(text.left());
     footer.setCenter(text.center());
     footer.setRight(text.right());
   }
 
-  private static void applySetup(XSSFSheet sheet, ExcelPrintSetup setup) {
+  private static void applySetup(XSSFSheet sheet, PrintSetupSpec setup) {
     XSSFPrintSetup printSetup = sheet.getPrintSetup();
     applyMargins(sheet, setup.margins());
     sheet.setPrintGridlines(setup.printGridlines());
@@ -199,7 +208,7 @@ final class ExcelPrintLayoutController {
         sheet::setColumnBreak);
   }
 
-  private static void applyMargins(XSSFSheet sheet, ExcelPrintMargins margins) {
+  private static void applyMargins(XSSFSheet sheet, PrintMarginsSpec margins) {
     sheet.setMargin(PageMargin.LEFT, margins.left());
     sheet.setMargin(PageMargin.RIGHT, margins.right());
     sheet.setMargin(PageMargin.TOP, margins.top());
@@ -229,7 +238,7 @@ final class ExcelPrintLayoutController {
     return ExcelPrintLayoutReadSupport.rawPrintAreaFormula(workbook, sheetIndex);
   }
 
-  static ExcelPrintLayout.Scaling scaling(XSSFSheet sheet) {
+  static PrintScalingSpec scaling(XSSFSheet sheet) {
     return ExcelPrintLayoutReadSupport.scaling(sheet);
   }
 

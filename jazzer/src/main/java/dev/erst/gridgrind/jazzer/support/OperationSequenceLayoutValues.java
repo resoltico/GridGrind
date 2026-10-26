@@ -4,12 +4,14 @@ import static dev.erst.gridgrind.jazzer.support.OperationSequenceSelectorSupport
 import static dev.erst.gridgrind.jazzer.support.OperationSequenceValueFactory.*;
 
 import dev.erst.gridgrind.core.model.layout.PaneSpec;
+import dev.erst.gridgrind.core.model.print.HeaderFooterTextReport;
 import dev.erst.gridgrind.core.model.print.HeaderFooterTextSpec;
 import dev.erst.gridgrind.core.model.print.PrintAreaSpec;
 import dev.erst.gridgrind.core.model.print.PrintLayoutSpec;
 import dev.erst.gridgrind.core.model.print.PrintScalingSpec;
 import dev.erst.gridgrind.core.model.print.PrintTitleColumnsSpec;
 import dev.erst.gridgrind.core.model.print.PrintTitleRowsSpec;
+import dev.erst.gridgrind.core.model.print.ResolvedPrintLayout;
 import dev.erst.gridgrind.core.model.protection.SheetProtectionSettings;
 import dev.erst.gridgrind.core.plan.*;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
@@ -113,23 +115,23 @@ final class OperationSequenceLayoutValues {
             TextSourceSpec.inline("")));
   }
 
-  static ExcelPrintLayout nextExcelPrintLayout(GridGrindFuzzData data) {
-    return new ExcelPrintLayout(
+  static ResolvedPrintLayout nextExcelPrintLayout(GridGrindFuzzData data) {
+    return new ResolvedPrintLayout(
         data.consumeBoolean()
-            ? new ExcelPrintLayout.Area.Range("A1:C20")
-            : new ExcelPrintLayout.Area.None(),
+            ? new PrintAreaSpec.Range(new RangeRef("A1:C20"))
+            : new PrintAreaSpec.None(),
         data.consumeBoolean() ? ExcelPrintOrientation.LANDSCAPE : ExcelPrintOrientation.PORTRAIT,
         data.consumeBoolean()
-            ? new ExcelPrintLayout.Scaling.Fit(data.consumeInt(0, 2), data.consumeInt(0, 2))
-            : new ExcelPrintLayout.Scaling.Automatic(),
+            ? new PrintScalingSpec.Fit(data.consumeInt(0, 2), data.consumeInt(0, 2))
+            : new PrintScalingSpec.Automatic(),
         data.consumeBoolean()
-            ? new ExcelPrintLayout.TitleRows.Band(0, data.consumeInt(0, 2))
-            : new ExcelPrintLayout.TitleRows.None(),
+            ? new PrintTitleRowsSpec.Band(0, data.consumeInt(0, 2))
+            : new PrintTitleRowsSpec.None(),
         data.consumeBoolean()
-            ? new ExcelPrintLayout.TitleColumns.Band(0, data.consumeInt(0, 2))
-            : new ExcelPrintLayout.TitleColumns.None(),
-        new ExcelHeaderFooterText("L" + data.consumeInt(0, 9), "", "R" + data.consumeInt(0, 9)),
-        new ExcelHeaderFooterText("", "P" + data.consumeInt(0, 9), ""));
+            ? new PrintTitleColumnsSpec.Band(0, data.consumeInt(0, 2))
+            : new PrintTitleColumnsSpec.None(),
+        new HeaderFooterTextReport("L" + data.consumeInt(0, 9), "", "R" + data.consumeInt(0, 9)),
+        new HeaderFooterTextReport("", "P" + data.consumeInt(0, 9), ""));
   }
 
   static ExcelPaneRegion nextProtocolPaneRegion(GridGrindFuzzData data) {

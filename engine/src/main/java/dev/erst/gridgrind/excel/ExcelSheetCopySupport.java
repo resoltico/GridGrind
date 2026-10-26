@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.core.model.print.ResolvedPrintLayout;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -27,7 +28,7 @@ final class ExcelSheetCopySupport {
         ExcelSheetCommentRepairSupport.commentRewriteSnapshots(expectedComments));
   }
 
-  static void repairPrintLayout(ExcelPrintLayout expectedPrintLayout, ExcelSheet targetSheet) {
+  static void repairPrintLayout(ResolvedPrintLayout expectedPrintLayout, ExcelSheet targetSheet) {
     if (expectedPrintLayout.equals(targetSheet.layout().printLayout())) {
       return;
     }

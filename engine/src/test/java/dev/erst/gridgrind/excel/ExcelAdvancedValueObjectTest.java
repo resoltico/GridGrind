@@ -13,6 +13,14 @@ import dev.erst.gridgrind.core.model.drawing.ResolvedComment;
 import dev.erst.gridgrind.core.model.drawing.ResolvedEmbeddedObject;
 import dev.erst.gridgrind.core.model.drawing.ResolvedPicture;
 import dev.erst.gridgrind.core.model.drawing.ResolvedShape;
+import dev.erst.gridgrind.core.model.print.HeaderFooterTextReport;
+import dev.erst.gridgrind.core.model.print.PrintAreaSpec;
+import dev.erst.gridgrind.core.model.print.PrintMarginsSpec;
+import dev.erst.gridgrind.core.model.print.PrintScalingSpec;
+import dev.erst.gridgrind.core.model.print.PrintSetupSpec;
+import dev.erst.gridgrind.core.model.print.PrintTitleColumnsSpec;
+import dev.erst.gridgrind.core.model.print.PrintTitleRowsSpec;
+import dev.erst.gridgrind.core.model.print.ResolvedPrintLayout;
 import dev.erst.gridgrind.core.model.style.CellColorReport;
 import dev.erst.gridgrind.core.model.style.CellFillSpec;
 import dev.erst.gridgrind.core.model.style.CellFontPatch;
@@ -146,8 +154,8 @@ class ExcelAdvancedValueObjectTest {
                 new CellGradientStopSpec(1.0d, indexedColor)));
     var gradientFill = CellFillSpec.gradient(gradient);
     var printSetup =
-        new ExcelPrintSetup(
-            new ExcelPrintMargins(0.5d, 0.6d, 0.7d, 0.8d, 0.2d, 0.3d),
+        new PrintSetupSpec(
+            new PrintMarginsSpec(0.5d, 0.6d, 0.7d, 0.8d, 0.2d, 0.3d),
             false,
             true,
             true,
@@ -160,14 +168,14 @@ class ExcelAdvancedValueObjectTest {
             List.of(1, 3),
             List.of(2));
     var printLayout =
-        new ExcelPrintLayout(
-            new ExcelPrintLayout.Area.Range("A1:C3"),
+        new ResolvedPrintLayout(
+            new PrintAreaSpec.Range(new RangeRef("A1:C3")),
             ExcelPrintOrientation.LANDSCAPE,
-            new ExcelPrintLayout.Scaling.Fit(1, 0),
-            new ExcelPrintLayout.TitleRows.Band(0, 0),
-            new ExcelPrintLayout.TitleColumns.Band(0, 1),
-            new ExcelHeaderFooterText("Left", "Center", "Right"),
-            new ExcelHeaderFooterText("Footer", "", ""));
+            new PrintScalingSpec.Fit(1, 0),
+            new PrintTitleRowsSpec.Band(0, 0),
+            new PrintTitleColumnsSpec.Band(0, 1),
+            new HeaderFooterTextReport("Left", "Center", "Right"),
+            new HeaderFooterTextReport("Footer", "", ""));
 
     assertEquals("#AA00CC", ColorSpec.rgb(new RgbHex("#aa00cc")).rgb().value());
     assertEquals(6, themeColor.theme());
@@ -180,8 +188,8 @@ class ExcelAdvancedValueObjectTest {
     assertEquals(2, gradient.stops().size());
     assertSame(gradient, gradientFill.gradient());
     assertEquals(8, printSetup.paperSize());
-    assertEquals(ExcelPrintSetup.defaults(), printLayout.setup());
-    assertEquals(new ExcelPrintLayout.Area.None(), ExcelPrintLayout.defaults().printArea());
+    assertEquals(PrintSetupSpec.defaults(), printLayout.setup());
+    assertEquals(new PrintAreaSpec.None(), ResolvedPrintLayout.defaults().printArea());
 
     assertThrows(IllegalArgumentException.class, () -> ColorSpec.rgb(new RgbHex(" ")));
     assertThrows(IllegalArgumentException.class, () -> ColorSpec.rgb(new RgbHex("#12345")));
@@ -284,7 +292,7 @@ class ExcelAdvancedValueObjectTest {
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new ExcelPrintSetup(
+            new PrintSetupSpec(
                 printSetup.margins(),
                 false,
                 false,
@@ -300,7 +308,7 @@ class ExcelAdvancedValueObjectTest {
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new ExcelPrintSetup(
+            new PrintSetupSpec(
                 printSetup.margins(),
                 false,
                 false,
@@ -316,7 +324,7 @@ class ExcelAdvancedValueObjectTest {
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new ExcelPrintSetup(
+            new PrintSetupSpec(
                 printSetup.margins(),
                 false,
                 false,
@@ -332,7 +340,7 @@ class ExcelAdvancedValueObjectTest {
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new ExcelPrintSetup(
+            new PrintSetupSpec(
                 printSetup.margins(),
                 false,
                 false,
@@ -346,7 +354,7 @@ class ExcelAdvancedValueObjectTest {
                 List.of(-1),
                 List.of()));
     assertThrows(
-        IllegalArgumentException.class, () -> new ExcelPrintMargins(0, 0, Double.NaN, 0, 0, 0));
+        IllegalArgumentException.class, () -> new PrintMarginsSpec(0, 0, Double.NaN, 0, 0, 0));
   }
 
   @Test
@@ -763,7 +771,7 @@ class ExcelAdvancedValueObjectTest {
     assertThrows(IllegalArgumentException.class, () -> new CommentAnchorSpec(-1, 0, 1, 1));
     assertThrows(IllegalArgumentException.class, () -> new CommentAnchorSpec(1, 0, 0, 1));
     assertThrows(IllegalArgumentException.class, () -> new CommentAnchorSpec(1, 2, 1, 1));
-    assertThrows(IllegalArgumentException.class, () -> new ExcelPrintMargins(-0.1d, 0, 0, 0, 0, 0));
+    assertThrows(IllegalArgumentException.class, () -> new PrintMarginsSpec(-0.1d, 0, 0, 0, 0, 0));
   }
 
   private static void assertRgbColorSupportValueObjects() throws IOException {

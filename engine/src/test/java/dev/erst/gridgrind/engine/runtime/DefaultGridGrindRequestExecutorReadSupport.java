@@ -4,6 +4,8 @@ import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 
 import dev.erst.gridgrind.core.model.layout.WindowReport;
 import dev.erst.gridgrind.core.model.layout.WindowRowReport;
+import dev.erst.gridgrind.core.model.print.PrintMarginsReport;
+import dev.erst.gridgrind.core.model.print.PrintSetupReport;
 import dev.erst.gridgrind.core.model.protection.CellProtectionReport;
 import dev.erst.gridgrind.core.model.protection.SheetProtectionSettings;
 import dev.erst.gridgrind.core.model.style.CellAlignmentReport;
@@ -243,9 +245,9 @@ class DefaultGridGrindRequestExecutorReadSupport {
         new CellProtectionReport(true, false));
   }
 
-  static ExcelPrintSetupSnapshot defaultPrintSetupSnapshot() {
-    return new ExcelPrintSetupSnapshot(
-        new ExcelPrintMarginsSnapshot(0.0d, 0.0d, 0.0d, 0.0d, 0.0d, 0.0d),
+  static PrintSetupReport defaultPrintSetupSnapshot() {
+    return new PrintSetupReport(
+        new PrintMarginsReport(0.0d, 0.0d, 0.0d, 0.0d, 0.0d, 0.0d),
         false,
         false,
         false,

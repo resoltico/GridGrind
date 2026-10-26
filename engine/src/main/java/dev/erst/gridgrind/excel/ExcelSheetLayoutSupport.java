@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.core.model.print.ResolvedPrintLayout;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -69,7 +70,7 @@ final class ExcelSheetLayoutSupport {
     sheetPresentationController.setPresentation(xssfSheet(), presentation);
   }
 
-  void setPrintLayout(ExcelPrintLayout printLayout) {
+  void setPrintLayout(ResolvedPrintLayout printLayout) {
     Objects.requireNonNull(printLayout, "printLayout must not be null");
     printLayoutController.setPrintLayout(xssfSheet(), printLayout);
   }
@@ -99,7 +100,7 @@ final class ExcelSheetLayoutSupport {
         rowStructureController.rowLayouts(xssfSheet()));
   }
 
-  ExcelPrintLayout printLayout() {
+  ResolvedPrintLayout printLayout() {
     return printLayoutController.printLayout(xssfSheet());
   }
 

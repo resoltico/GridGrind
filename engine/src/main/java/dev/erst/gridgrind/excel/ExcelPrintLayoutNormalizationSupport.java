@@ -1,5 +1,7 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.core.model.print.PrintMarginsSpec;
+import dev.erst.gridgrind.core.model.print.PrintSetupSpec;
 import java.util.Optional;
 import org.apache.poi.ss.usermodel.PageMargin;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
@@ -23,10 +25,10 @@ final class ExcelPrintLayoutNormalizationSupport {
     if (!sheet.getCTWorksheet().isSetHeaderFooter()) {
       return;
     }
-    if (!ExcelPrintLayoutReadSupport.headerFooterText(sheet.getHeader()).isBlank()) {
+    if (!ExcelPrintLayoutReadSupport.headerFooterText(sheet.getHeader()).empty()) {
       return;
     }
-    if (!ExcelPrintLayoutReadSupport.headerFooterText(sheet.getFooter()).isBlank()) {
+    if (!ExcelPrintLayoutReadSupport.headerFooterText(sheet.getFooter()).empty()) {
       return;
     }
     sheet.getCTWorksheet().unsetHeaderFooter();
@@ -53,7 +55,7 @@ final class ExcelPrintLayoutNormalizationSupport {
   }
 
   static boolean isEmptyPageSetup(CTPageSetup pageSetup) {
-    ExcelPrintSetup defaults = ExcelPrintSetup.defaults();
+    PrintSetupSpec defaults = PrintSetupSpec.defaults();
     return !pageSetup.isSetOrientation()
         && !pageSetup.isSetFitToWidth()
         && !pageSetup.isSetFitToHeight()
@@ -93,7 +95,7 @@ final class ExcelPrintLayoutNormalizationSupport {
     if (!sheet.getCTWorksheet().isSetPageMargins()) {
       return;
     }
-    ExcelPrintMargins defaults = ExcelPrintSetup.defaults().margins();
+    PrintMarginsSpec defaults = PrintSetupSpec.defaults().margins();
     if (sheet.getMargin(PageMargin.LEFT) == defaults.left()
         && sheet.getMargin(PageMargin.RIGHT) == defaults.right()
         && sheet.getMargin(PageMargin.TOP) == defaults.top()

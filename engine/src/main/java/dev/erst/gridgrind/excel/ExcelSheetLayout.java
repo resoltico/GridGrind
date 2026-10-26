@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.core.model.print.ResolvedPrintLayout;
 import java.util.List;
 import java.util.Objects;
 
@@ -44,7 +45,7 @@ public final class ExcelSheetLayout {
   }
 
   /** Applies the provided print layout as the authoritative supported print state. */
-  public ExcelSheetLayout setPrintLayout(ExcelPrintLayout printLayout) {
+  public ExcelSheetLayout setPrintLayout(ResolvedPrintLayout printLayout) {
     layoutSupport.setPrintLayout(printLayout);
     return this;
   }
@@ -66,7 +67,7 @@ public final class ExcelSheetLayout {
   }
 
   /** Returns supported print-layout metadata for this sheet. */
-  public ExcelPrintLayout printLayout() {
+  public ResolvedPrintLayout printLayout() {
     return layoutSupport.printLayout();
   }
 

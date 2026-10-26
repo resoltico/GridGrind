@@ -10,6 +10,14 @@ import dev.erst.gridgrind.core.model.drawing.CommentAnchorSpec;
 import dev.erst.gridgrind.core.model.drawing.ResolvedComment;
 import dev.erst.gridgrind.core.model.drawing.ResolvedPicture;
 import dev.erst.gridgrind.core.model.formula.ResolvedFormula;
+import dev.erst.gridgrind.core.model.print.HeaderFooterTextReport;
+import dev.erst.gridgrind.core.model.print.PrintAreaSpec;
+import dev.erst.gridgrind.core.model.print.PrintMarginsSpec;
+import dev.erst.gridgrind.core.model.print.PrintScalingSpec;
+import dev.erst.gridgrind.core.model.print.PrintSetupSpec;
+import dev.erst.gridgrind.core.model.print.PrintTitleColumnsSpec;
+import dev.erst.gridgrind.core.model.print.PrintTitleRowsSpec;
+import dev.erst.gridgrind.core.model.print.ResolvedPrintLayout;
 import dev.erst.gridgrind.core.model.style.CellColorReport;
 import dev.erst.gridgrind.core.model.style.CellFontPatch;
 import dev.erst.gridgrind.core.model.style.ColorSpec;
@@ -137,17 +145,17 @@ class ExcelSheetCopyControllerTest {
       throws IOException {
     try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       workbook.getOrCreateSheet("Source");
-      ExcelPrintLayout advancedPrintLayout =
-          new ExcelPrintLayout(
-              new ExcelPrintLayout.Area.None(),
+      ResolvedPrintLayout advancedPrintLayout =
+          new ResolvedPrintLayout(
+              new PrintAreaSpec.None(),
               ExcelPrintOrientation.PORTRAIT,
-              new ExcelPrintLayout.Scaling.Automatic(),
-              new ExcelPrintLayout.TitleRows.None(),
-              new ExcelPrintLayout.TitleColumns.None(),
-              ExcelHeaderFooterText.blank(),
-              ExcelHeaderFooterText.blank(),
-              new ExcelPrintSetup(
-                  new ExcelPrintMargins(0.35d, 0.55d, 0.6d, 0.45d, 0.3d, 0.3d),
+              new PrintScalingSpec.Automatic(),
+              new PrintTitleRowsSpec.None(),
+              new PrintTitleColumnsSpec.None(),
+              HeaderFooterTextReport.blank(),
+              HeaderFooterTextReport.blank(),
+              new PrintSetupSpec(
+                  new PrintMarginsSpec(0.35d, 0.55d, 0.6d, 0.45d, 0.3d, 0.3d),
                   false,
                   true,
                   true,

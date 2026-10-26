@@ -3,10 +3,17 @@ package dev.erst.gridgrind.excel;
 import static dev.erst.gridgrind.excel.ExcelStyleTestAccess.*;
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.core.model.print.HeaderFooterTextReport;
+import dev.erst.gridgrind.core.model.print.PrintAreaSpec;
+import dev.erst.gridgrind.core.model.print.PrintScalingSpec;
+import dev.erst.gridgrind.core.model.print.PrintTitleColumnsSpec;
+import dev.erst.gridgrind.core.model.print.PrintTitleRowsSpec;
+import dev.erst.gridgrind.core.model.print.ResolvedPrintLayout;
 import dev.erst.gridgrind.core.model.value.CellValue;
 import dev.erst.gridgrind.core.vocabulary.ExcelPaneRegion;
 import dev.erst.gridgrind.core.vocabulary.ExcelPrintOrientation;
 import dev.erst.gridgrind.core.vocabulary.ExcelSheetLayoutLimits;
+import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import org.apache.poi.ss.usermodel.FormulaEvaluator;
 import org.apache.poi.ss.usermodel.PaneType;
 import org.apache.poi.ss.usermodel.Sheet;
@@ -92,26 +99,26 @@ class ExcelSheetLayoutCoverageTest extends ExcelSheetTestSupport {
           layout.snapshot().pane());
       assertSame(layout, layout.setZoom(125));
       assertEquals(125, layout.snapshot().zoomPercent());
-      ExcelPrintLayout printLayout =
-          new ExcelPrintLayout(
-              new ExcelPrintLayout.Area.Range("A1:B20"),
+      ResolvedPrintLayout printLayout =
+          new ResolvedPrintLayout(
+              new PrintAreaSpec.Range(new RangeRef("A1:B20")),
               ExcelPrintOrientation.LANDSCAPE,
-              new ExcelPrintLayout.Scaling.Fit(1, 0),
-              new ExcelPrintLayout.TitleRows.Band(0, 0),
-              new ExcelPrintLayout.TitleColumns.Band(0, 0),
-              new ExcelHeaderFooterText("Budget", "", ""),
-              new ExcelHeaderFooterText("", "Page &P", ""));
+              new PrintScalingSpec.Fit(1, 0),
+              new PrintTitleRowsSpec.Band(0, 0),
+              new PrintTitleColumnsSpec.Band(0, 0),
+              new HeaderFooterTextReport("Budget", "", ""),
+              new HeaderFooterTextReport("", "Page &P", ""));
       assertSame(layout, layout.setPrintLayout(printLayout));
       assertEquals(printLayout, layout.printLayout());
       assertSame(layout, layout.clearPrintLayout());
-      ExcelPrintLayout clearedPrintLayout = layout.printLayout();
-      assertEquals(new ExcelPrintLayout.Area.None(), clearedPrintLayout.printArea());
+      ResolvedPrintLayout clearedPrintLayout = layout.printLayout();
+      assertEquals(new PrintAreaSpec.None(), clearedPrintLayout.printArea());
       assertEquals(ExcelPrintOrientation.PORTRAIT, clearedPrintLayout.orientation());
-      assertEquals(new ExcelPrintLayout.Scaling.Automatic(), clearedPrintLayout.scaling());
-      assertEquals(new ExcelPrintLayout.TitleRows.None(), clearedPrintLayout.repeatingRows());
-      assertEquals(new ExcelPrintLayout.TitleColumns.None(), clearedPrintLayout.repeatingColumns());
-      assertEquals(ExcelHeaderFooterText.blank(), clearedPrintLayout.header());
-      assertEquals(ExcelHeaderFooterText.blank(), clearedPrintLayout.footer());
+      assertEquals(new PrintScalingSpec.Automatic(), clearedPrintLayout.scaling());
+      assertEquals(new PrintTitleRowsSpec.None(), clearedPrintLayout.repeatingRows());
+      assertEquals(new PrintTitleColumnsSpec.None(), clearedPrintLayout.repeatingColumns());
+      assertEquals(HeaderFooterTextReport.blank(), clearedPrintLayout.header());
+      assertEquals(HeaderFooterTextReport.blank(), clearedPrintLayout.footer());
 
       assertSame(layout, layout.unmergeCells("A1:B2"));
       assertEquals(0, poiSheet.getNumMergedRegions());
@@ -180,14 +187,14 @@ class ExcelSheetLayoutCoverageTest extends ExcelSheetTestSupport {
     assertDoesNotThrow(() -> new ExcelSheetPane.Split(1200, 0, 3, 0, ExcelPaneRegion.UPPER_RIGHT));
     assertDoesNotThrow(
         () ->
-            new ExcelPrintLayout(
-                new ExcelPrintLayout.Area.None(),
+            new ResolvedPrintLayout(
+                new PrintAreaSpec.None(),
                 ExcelPrintOrientation.PORTRAIT,
-                new ExcelPrintLayout.Scaling.Automatic(),
-                new ExcelPrintLayout.TitleRows.None(),
-                new ExcelPrintLayout.TitleColumns.None(),
-                ExcelHeaderFooterText.blank(),
-                ExcelHeaderFooterText.blank()));
+                new PrintScalingSpec.Automatic(),
+                new PrintTitleRowsSpec.None(),
+                new PrintTitleColumnsSpec.None(),
+                HeaderFooterTextReport.blank(),
+                HeaderFooterTextReport.blank()));
     assertDoesNotThrow(() -> ExcelSheetViewSupport.requireZoomPercent(10));
     assertDoesNotThrow(() -> ExcelSheetViewSupport.requireZoomPercent(400));
     assertThrows(IllegalArgumentException.class, () -> new ExcelSheetPane.Frozen(0, 0, 0, 0));
@@ -202,46 +209,42 @@ class ExcelSheetLayoutCoverageTest extends ExcelSheetTestSupport {
         IllegalArgumentException.class,
         () -> new ExcelSheetPane.Split(1200, 0, 0, 1, ExcelPaneRegion.LOWER_LEFT));
     assertThrows(NullPointerException.class, () -> new ExcelSheetPane.Split(1200, 0, 0, 0, null));
-    assertTrue(ExcelHeaderFooterText.blank().isBlank());
-    assertFalse(new ExcelHeaderFooterText("Left", "", "").isBlank());
-    assertFalse(new ExcelHeaderFooterText("", "Center", "").isBlank());
-    assertFalse(new ExcelHeaderFooterText("", "", "Right").isBlank());
-    assertThrows(NullPointerException.class, () -> new ExcelHeaderFooterText(null, "", ""));
-    assertThrows(IllegalArgumentException.class, () -> new ExcelPrintLayout.Area.Range(" "));
-    assertThrows(IllegalArgumentException.class, () -> new ExcelPrintLayout.Scaling.Fit(-1, 0));
+    assertTrue(HeaderFooterTextReport.blank().empty());
+    assertFalse(new HeaderFooterTextReport("Left", "", "").empty());
+    assertFalse(new HeaderFooterTextReport("", "Center", "").empty());
+    assertFalse(new HeaderFooterTextReport("", "", "Right").empty());
+    assertThrows(NullPointerException.class, () -> new HeaderFooterTextReport(null, "", ""));
+    assertThrows(IllegalArgumentException.class, () -> new PrintAreaSpec.Range(new RangeRef(" ")));
+    assertThrows(IllegalArgumentException.class, () -> new PrintScalingSpec.Fit(-1, 0));
     assertThrows(
-        IllegalArgumentException.class,
-        () -> new ExcelPrintLayout.Scaling.Fit(Short.MAX_VALUE + 1, 0));
-    assertThrows(IllegalArgumentException.class, () -> new ExcelPrintLayout.TitleRows.Band(-1, 0));
-    assertThrows(IllegalArgumentException.class, () -> new ExcelPrintLayout.TitleRows.Band(0, -1));
-    assertThrows(IllegalArgumentException.class, () -> new ExcelPrintLayout.TitleRows.Band(2, 1));
+        IllegalArgumentException.class, () -> new PrintScalingSpec.Fit(Short.MAX_VALUE + 1, 0));
+    assertThrows(IllegalArgumentException.class, () -> new PrintTitleRowsSpec.Band(-1, 0));
+    assertThrows(IllegalArgumentException.class, () -> new PrintTitleRowsSpec.Band(0, -1));
+    assertThrows(IllegalArgumentException.class, () -> new PrintTitleRowsSpec.Band(2, 1));
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new ExcelPrintLayout.TitleRows.Band(
+            new PrintTitleRowsSpec.Band(
                 0, org.apache.poi.ss.SpreadsheetVersion.EXCEL2007.getLastRowIndex() + 1));
-    assertThrows(
-        IllegalArgumentException.class, () -> new ExcelPrintLayout.TitleColumns.Band(-1, 0));
-    assertThrows(
-        IllegalArgumentException.class, () -> new ExcelPrintLayout.TitleColumns.Band(0, -1));
-    assertThrows(
-        IllegalArgumentException.class, () -> new ExcelPrintLayout.TitleColumns.Band(2, 1));
+    assertThrows(IllegalArgumentException.class, () -> new PrintTitleColumnsSpec.Band(-1, 0));
+    assertThrows(IllegalArgumentException.class, () -> new PrintTitleColumnsSpec.Band(0, -1));
+    assertThrows(IllegalArgumentException.class, () -> new PrintTitleColumnsSpec.Band(2, 1));
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new ExcelPrintLayout.TitleColumns.Band(
+            new PrintTitleColumnsSpec.Band(
                 0, org.apache.poi.ss.SpreadsheetVersion.EXCEL2007.getLastColumnIndex() + 1));
     assertThrows(
         NullPointerException.class,
         () ->
-            new ExcelPrintLayout(
+            new ResolvedPrintLayout(
                 null,
                 ExcelPrintOrientation.PORTRAIT,
-                new ExcelPrintLayout.Scaling.Automatic(),
-                new ExcelPrintLayout.TitleRows.None(),
-                new ExcelPrintLayout.TitleColumns.None(),
-                ExcelHeaderFooterText.blank(),
-                ExcelHeaderFooterText.blank()));
+                new PrintScalingSpec.Automatic(),
+                new PrintTitleRowsSpec.None(),
+                new PrintTitleColumnsSpec.None(),
+                HeaderFooterTextReport.blank(),
+                HeaderFooterTextReport.blank()));
     assertEquals(ExcelPaneRegion.UPPER_LEFT, ExcelPanePoiBridge.fromPoi(PaneType.UPPER_LEFT));
     assertEquals(ExcelPaneRegion.UPPER_RIGHT, ExcelPanePoiBridge.fromPoi(PaneType.UPPER_RIGHT));
     assertEquals(ExcelPaneRegion.LOWER_LEFT, ExcelPanePoiBridge.fromPoi(PaneType.LOWER_LEFT));
@@ -258,20 +261,17 @@ class ExcelSheetLayoutCoverageTest extends ExcelSheetTestSupport {
   @Test
   void reportsExcelNativePrintTitleBandDiagnostics() {
     IllegalArgumentException negativeTitleRow =
-        assertThrows(
-            IllegalArgumentException.class, () -> new ExcelPrintLayout.TitleRows.Band(-1, 0));
+        assertThrows(IllegalArgumentException.class, () -> new PrintTitleRowsSpec.Band(-1, 0));
     assertTrue(negativeTitleRow.getMessage().contains("firstRowIndex -1"));
     assertTrue(negativeTitleRow.getMessage().contains("Excel row 1"));
 
     IllegalArgumentException negativeLastTitleRow =
-        assertThrows(
-            IllegalArgumentException.class, () -> new ExcelPrintLayout.TitleRows.Band(0, -1));
+        assertThrows(IllegalArgumentException.class, () -> new PrintTitleRowsSpec.Band(0, -1));
     assertTrue(negativeLastTitleRow.getMessage().contains("lastRowIndex -1"));
     assertTrue(negativeLastTitleRow.getMessage().contains("Excel row 1"));
 
     IllegalArgumentException descendingTitleRow =
-        assertThrows(
-            IllegalArgumentException.class, () -> new ExcelPrintLayout.TitleRows.Band(2, 1));
+        assertThrows(IllegalArgumentException.class, () -> new PrintTitleRowsSpec.Band(2, 1));
     assertTrue(descendingTitleRow.getMessage().contains("lastRowIndex 1 (Excel row 2)"));
     assertTrue(descendingTitleRow.getMessage().contains("firstRowIndex 2 (Excel row 3)"));
 
@@ -279,26 +279,23 @@ class ExcelSheetLayoutCoverageTest extends ExcelSheetTestSupport {
         assertThrows(
             IllegalArgumentException.class,
             () ->
-                new ExcelPrintLayout.TitleRows.Band(
+                new PrintTitleRowsSpec.Band(
                     0, org.apache.poi.ss.SpreadsheetVersion.EXCEL2007.getLastRowIndex() + 1));
     assertTrue(overflowTitleRow.getMessage().contains("lastRowIndex 1048576 (Excel row 1048577)"));
     assertTrue(overflowTitleRow.getMessage().contains("1048575 (Excel row 1048576)"));
 
     IllegalArgumentException negativeTitleColumn =
-        assertThrows(
-            IllegalArgumentException.class, () -> new ExcelPrintLayout.TitleColumns.Band(-1, 0));
+        assertThrows(IllegalArgumentException.class, () -> new PrintTitleColumnsSpec.Band(-1, 0));
     assertTrue(negativeTitleColumn.getMessage().contains("firstColumnIndex -1"));
     assertTrue(negativeTitleColumn.getMessage().contains("Excel column A"));
 
     IllegalArgumentException negativeLastTitleColumn =
-        assertThrows(
-            IllegalArgumentException.class, () -> new ExcelPrintLayout.TitleColumns.Band(0, -1));
+        assertThrows(IllegalArgumentException.class, () -> new PrintTitleColumnsSpec.Band(0, -1));
     assertTrue(negativeLastTitleColumn.getMessage().contains("lastColumnIndex -1"));
     assertTrue(negativeLastTitleColumn.getMessage().contains("Excel column A"));
 
     IllegalArgumentException descendingTitleColumn =
-        assertThrows(
-            IllegalArgumentException.class, () -> new ExcelPrintLayout.TitleColumns.Band(2, 1));
+        assertThrows(IllegalArgumentException.class, () -> new PrintTitleColumnsSpec.Band(2, 1));
     assertTrue(descendingTitleColumn.getMessage().contains("lastColumnIndex 1 (Excel column B)"));
     assertTrue(descendingTitleColumn.getMessage().contains("firstColumnIndex 2 (Excel column C)"));
 
@@ -306,7 +303,7 @@ class ExcelSheetLayoutCoverageTest extends ExcelSheetTestSupport {
         assertThrows(
             IllegalArgumentException.class,
             () ->
-                new ExcelPrintLayout.TitleColumns.Band(
+                new PrintTitleColumnsSpec.Band(
                     0, org.apache.poi.ss.SpreadsheetVersion.EXCEL2007.getLastColumnIndex() + 1));
     assertTrue(
         overflowTitleColumn.getMessage().contains("lastColumnIndex 16384 (Excel column XFE)"));

@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.core.model.print.ResolvedPrintLayout;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -216,7 +217,7 @@ final class ExcelSheetCopyController {
   private record ExcelSheetCopySnapshot(
       List<ExcelNamedRangeSnapshot> localNamedRanges,
       WorkbookSheetResult.SheetLayout layout,
-      ExcelPrintLayout printLayout,
+      ResolvedPrintLayout printLayout,
       List<WorkbookSheetResult.MergedRegion> mergedRegions,
       List<WorkbookSheetResult.CellComment> comments,
       List<CTDataValidation> dataValidations,

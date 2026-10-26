@@ -9,6 +9,12 @@ import dev.erst.gridgrind.core.model.drawing.ResolvedEmbeddedObject;
 import dev.erst.gridgrind.core.model.drawing.ResolvedPicture;
 import dev.erst.gridgrind.core.model.drawing.ResolvedShape;
 import dev.erst.gridgrind.core.model.formula.ResolvedFormula;
+import dev.erst.gridgrind.core.model.print.HeaderFooterTextReport;
+import dev.erst.gridgrind.core.model.print.PrintAreaSpec;
+import dev.erst.gridgrind.core.model.print.PrintScalingSpec;
+import dev.erst.gridgrind.core.model.print.PrintTitleColumnsSpec;
+import dev.erst.gridgrind.core.model.print.PrintTitleRowsSpec;
+import dev.erst.gridgrind.core.model.print.ResolvedPrintLayout;
 import dev.erst.gridgrind.core.model.style.CellAlignmentPatch;
 import dev.erst.gridgrind.core.model.style.CellColorReport;
 import dev.erst.gridgrind.core.model.style.CellStylePatch;
@@ -165,14 +171,14 @@ class WorkbookCommandExecutorTest {
               new WorkbookLayoutCommand.SetSheetZoom("Budget", 125),
               new WorkbookLayoutCommand.SetPrintLayout(
                   "Budget",
-                  new ExcelPrintLayout(
-                      new ExcelPrintLayout.Area.Range("A1:B3"),
+                  new ResolvedPrintLayout(
+                      new PrintAreaSpec.Range(new RangeRef("A1:B3")),
                       ExcelPrintOrientation.LANDSCAPE,
-                      new ExcelPrintLayout.Scaling.Fit(1, 0),
-                      new ExcelPrintLayout.TitleRows.Band(0, 0),
-                      new ExcelPrintLayout.TitleColumns.Band(0, 0),
-                      new ExcelHeaderFooterText("Budget", "", ""),
-                      new ExcelHeaderFooterText("", "Confidential", ""))),
+                      new PrintScalingSpec.Fit(1, 0),
+                      new PrintTitleRowsSpec.Band(0, 0),
+                      new PrintTitleColumnsSpec.Band(0, 0),
+                      new HeaderFooterTextReport("Budget", "", ""),
+                      new HeaderFooterTextReport("", "Confidential", ""))),
               new WorkbookStructureCommand.UnmergeCells("Budget", "A1:B1")));
       workbook.formulas().markRecalculateOnOpen();
       assertEquals(List.of("History", "Budget", "Ops"), workbook.sheets().sheetNames());
@@ -615,26 +621,26 @@ class WorkbookCommandExecutorTest {
           .sheet("Budget")
           .layout()
           .setPrintLayout(
-              new ExcelPrintLayout(
-                  new ExcelPrintLayout.Area.Range("A1:B3"),
+              new ResolvedPrintLayout(
+                  new PrintAreaSpec.Range(new RangeRef("A1:B3")),
                   ExcelPrintOrientation.LANDSCAPE,
-                  new ExcelPrintLayout.Scaling.Fit(1, 0),
-                  new ExcelPrintLayout.TitleRows.Band(0, 0),
-                  new ExcelPrintLayout.TitleColumns.Band(0, 0),
-                  new ExcelHeaderFooterText("Budget", "", ""),
-                  new ExcelHeaderFooterText("", "Confidential", "")));
+                  new PrintScalingSpec.Fit(1, 0),
+                  new PrintTitleRowsSpec.Band(0, 0),
+                  new PrintTitleColumnsSpec.Band(0, 0),
+                  new HeaderFooterTextReport("Budget", "", ""),
+                  new HeaderFooterTextReport("", "Confidential", "")));
 
       assertSame(
           workbook,
           executor.apply(workbook, List.of(new WorkbookLayoutCommand.ClearPrintLayout("Budget"))));
-      ExcelPrintLayout clearedPrintLayout = workbook.sheet("Budget").layout().printLayout();
-      assertEquals(new ExcelPrintLayout.Area.None(), clearedPrintLayout.printArea());
+      ResolvedPrintLayout clearedPrintLayout = workbook.sheet("Budget").layout().printLayout();
+      assertEquals(new PrintAreaSpec.None(), clearedPrintLayout.printArea());
       assertEquals(ExcelPrintOrientation.PORTRAIT, clearedPrintLayout.orientation());
-      assertEquals(new ExcelPrintLayout.Scaling.Automatic(), clearedPrintLayout.scaling());
-      assertEquals(new ExcelPrintLayout.TitleRows.None(), clearedPrintLayout.repeatingRows());
-      assertEquals(new ExcelPrintLayout.TitleColumns.None(), clearedPrintLayout.repeatingColumns());
-      assertEquals(ExcelHeaderFooterText.blank(), clearedPrintLayout.header());
-      assertEquals(ExcelHeaderFooterText.blank(), clearedPrintLayout.footer());
+      assertEquals(new PrintScalingSpec.Automatic(), clearedPrintLayout.scaling());
+      assertEquals(new PrintTitleRowsSpec.None(), clearedPrintLayout.repeatingRows());
+      assertEquals(new PrintTitleColumnsSpec.None(), clearedPrintLayout.repeatingColumns());
+      assertEquals(HeaderFooterTextReport.blank(), clearedPrintLayout.header());
+      assertEquals(HeaderFooterTextReport.blank(), clearedPrintLayout.footer());
     }
   }
 

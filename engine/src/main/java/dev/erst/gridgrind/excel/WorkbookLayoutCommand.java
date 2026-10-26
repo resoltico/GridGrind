@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.core.model.print.ResolvedPrintLayout;
 import java.util.Objects;
 
 /** Sheet layout commands that control panes, zoom, presentation, and print layout. */
@@ -46,7 +47,7 @@ public sealed interface WorkbookLayoutCommand extends WorkbookCommand
   }
 
   /** Applies one authoritative supported print-layout state to a sheet. */
-  record SetPrintLayout(String sheetName, ExcelPrintLayout printLayout)
+  record SetPrintLayout(String sheetName, ResolvedPrintLayout printLayout)
       implements WorkbookLayoutCommand {
     public SetPrintLayout {
       Objects.requireNonNull(sheetName, "sheetName must not be null");

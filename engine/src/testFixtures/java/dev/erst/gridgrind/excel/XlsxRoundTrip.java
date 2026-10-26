@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.core.model.print.ResolvedPrintLayout;
 import dev.erst.gridgrind.core.model.protection.CellProtectionReport;
 import dev.erst.gridgrind.core.model.style.CellAlignmentReport;
 import dev.erst.gridgrind.core.model.style.CellBorderReport;
@@ -198,7 +199,7 @@ public final class XlsxRoundTrip {
   }
 
   /** Returns the supported print-layout state stored on the named sheet. */
-  public static ExcelPrintLayout printLayout(Path workbookPath, String sheetName)
+  public static ResolvedPrintLayout printLayout(Path workbookPath, String sheetName)
       throws IOException {
     ExcelPrintLayoutController controller = new ExcelPrintLayoutController();
     return readSheet(workbookPath, sheetName, controller::printLayout);

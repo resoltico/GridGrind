@@ -401,14 +401,14 @@ class DefaultGridGrindRequestExecutorCommandTranslationTest
         setSheetPaneSplit.pane());
     assertEquals(ExcelSheetPresentation.defaults(), defaultSheetPresentation.presentation());
     assertEquals(
-        new dev.erst.gridgrind.excel.ExcelPrintLayout(
-            new dev.erst.gridgrind.excel.ExcelPrintLayout.Area.None(),
+        new dev.erst.gridgrind.core.model.print.ResolvedPrintLayout(
+            new dev.erst.gridgrind.core.model.print.PrintAreaSpec.None(),
             ExcelPrintOrientation.PORTRAIT,
-            new dev.erst.gridgrind.excel.ExcelPrintLayout.Scaling.Automatic(),
-            new dev.erst.gridgrind.excel.ExcelPrintLayout.TitleRows.None(),
-            new dev.erst.gridgrind.excel.ExcelPrintLayout.TitleColumns.None(),
-            new dev.erst.gridgrind.excel.ExcelHeaderFooterText("", "", ""),
-            new dev.erst.gridgrind.excel.ExcelHeaderFooterText("", "", "")),
+            new dev.erst.gridgrind.core.model.print.PrintScalingSpec.Automatic(),
+            new dev.erst.gridgrind.core.model.print.PrintTitleRowsSpec.None(),
+            new dev.erst.gridgrind.core.model.print.PrintTitleColumnsSpec.None(),
+            new dev.erst.gridgrind.core.model.print.HeaderFooterTextReport("", "", ""),
+            new dev.erst.gridgrind.core.model.print.HeaderFooterTextReport("", "", "")),
         defaultPrintLayout.printLayout());
   }
 
