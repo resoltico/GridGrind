@@ -1,10 +1,11 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.core.model.style.CellFontPatch;
 import java.util.Objects;
 import java.util.Optional;
 
 /** One ordered rich-text run authored for a string cell value. */
-public record ExcelRichTextRun(String text, Optional<ExcelCellFont> font) {
+public record ExcelRichTextRun(String text, Optional<CellFontPatch> font) {
   public ExcelRichTextRun {
     Objects.requireNonNull(text, "text must not be null");
     Objects.requireNonNull(font, "font must not be null");

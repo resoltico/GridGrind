@@ -11,12 +11,15 @@ import dev.erst.gridgrind.core.model.style.CellBorderSideReport;
 import dev.erst.gridgrind.core.model.style.CellColorReport;
 import dev.erst.gridgrind.core.model.style.CellFillReport;
 import dev.erst.gridgrind.core.model.style.CellFillSpec;
+import dev.erst.gridgrind.core.model.style.CellFontPatch;
 import dev.erst.gridgrind.core.model.style.CellGradientFillReport;
 import dev.erst.gridgrind.core.model.style.CellGradientFillSpec;
 import dev.erst.gridgrind.core.model.style.CellGradientStopSpec;
+import dev.erst.gridgrind.core.model.style.CellStylePatch;
 import dev.erst.gridgrind.core.model.style.CellStyleReport;
 import dev.erst.gridgrind.core.model.style.ColorSpec;
 import dev.erst.gridgrind.core.model.style.FontHeightReport;
+import dev.erst.gridgrind.core.model.style.FontHeightSpec;
 import dev.erst.gridgrind.core.vocabulary.ExcelBorderStyle;
 import dev.erst.gridgrind.core.vocabulary.ExcelFillPattern;
 import dev.erst.gridgrind.core.vocabulary.ExcelHorizontalAlignment;
@@ -37,6 +40,60 @@ import org.junit.jupiter.api.Test;
 
 /** Tests for WorkbookStyleRegistry utilities, merge behavior, and style snapshots. */
 class WorkbookStyleRegistryTest {
+  @Test
+  void equivalentPointAndTwipPatchesReuseStylesAndFonts() throws Exception {
+    try (XSSFWorkbook workbook = new XSSFWorkbook()) {
+      WorkbookStyleRegistry registry = new WorkbookStyleRegistry(workbook);
+      var row = workbook.createSheet("Budget").createRow(0);
+      var points = new FontHeightSpec.Points(new BigDecimal("13.0"));
+      CellFontPatch pointFont =
+          new CellFontPatch(
+              Optional.empty(),
+              Optional.empty(),
+              Optional.empty(),
+              Optional.of(points),
+              Optional.empty(),
+              Optional.empty(),
+              Optional.empty());
+      CellFontPatch twipFont =
+          new CellFontPatch(
+              Optional.empty(),
+              Optional.empty(),
+              Optional.empty(),
+              Optional.of(new FontHeightSpec.Twips(260)),
+              Optional.empty(),
+              Optional.empty(),
+              Optional.empty());
+      CellStylePatch pointPatch =
+          new CellStylePatch(
+              Optional.empty(),
+              Optional.empty(),
+              Optional.of(pointFont),
+              Optional.empty(),
+              Optional.empty(),
+              Optional.empty());
+      CellStylePatch twipPatch =
+          new CellStylePatch(
+              Optional.empty(),
+              Optional.empty(),
+              Optional.of(twipFont),
+              Optional.empty(),
+              Optional.empty(),
+              Optional.empty());
+      int initialStyles = workbook.getNumCellStyles();
+      int initialFonts = workbook.getNumberOfFonts();
+
+      var pointStyle = registry.mergedStyle(row.createCell(0), pointPatch);
+      var twipStyle = registry.mergedStyle(row.createCell(1), twipPatch);
+
+      assertSame(pointStyle, twipStyle);
+      assertEquals(initialStyles + 1, workbook.getNumCellStyles());
+      assertEquals(initialFonts + 1, workbook.getNumberOfFonts());
+      assertSame(points, pointPatch.font().orElseThrow().fontHeight().orElseThrow());
+      assertEquals(new BigDecimal("13.0"), points.points());
+    }
+  }
+
   @Test
   void resolveNumberFormat_returnsGeneralForNullOrBlank() {
     assertEquals("General", ExcelCellStyleSnapshotSupport.resolveNumberFormat(null));
@@ -1260,14 +1317,14 @@ class WorkbookStyleRegistryTest {
     }
   }
 
-  private ExcelCellStyle style(
+  private CellStylePatch style(
       String numberFormat,
       CellAlignmentPatch alignment,
-      ExcelCellFont font,
+      CellFontPatch font,
       CellFillSpec fill,
       CellBorderPatch border,
       CellProtectionPatch protection) {
-    return new ExcelCellStyle(
+    return new CellStylePatch(
         Optional.ofNullable(numberFormat),
         Optional.ofNullable(alignment),
         Optional.ofNullable(font),
@@ -1276,7 +1333,7 @@ class WorkbookStyleRegistryTest {
         Optional.ofNullable(protection));
   }
 
-  private ExcelCellFont font(
+  private CellFontPatch font(
       Boolean bold,
       Boolean italic,
       String fontName,
@@ -1284,11 +1341,11 @@ class WorkbookStyleRegistryTest {
       ColorSpec fontColor,
       Boolean underline,
       Boolean strikeout) {
-    return new ExcelCellFont(
+    return new CellFontPatch(
         Optional.ofNullable(bold),
         Optional.ofNullable(italic),
         Optional.ofNullable(fontName),
-        Optional.ofNullable(fontHeight),
+        Optional.ofNullable(fontHeight).map(height -> new FontHeightSpec.Twips(height.twips())),
         Optional.ofNullable(fontColor),
         Optional.ofNullable(underline),
         Optional.ofNullable(strikeout));
@@ -1316,15 +1373,15 @@ class WorkbookStyleRegistryTest {
     return borderSide(style, null);
   }
 
-  private ExcelCellStyle fillPatch(CellFillSpec fill) {
+  private CellStylePatch fillPatch(CellFillSpec fill) {
     return style(null, null, null, fill, null, null);
   }
 
-  private ExcelCellStyle borderPatch(CellBorderPatch border) {
+  private CellStylePatch borderPatch(CellBorderPatch border) {
     return style(null, null, null, null, border, null);
   }
 
-  private ExcelCellStyle protectionPatch(CellProtectionPatch protection) {
+  private CellStylePatch protectionPatch(CellProtectionPatch protection) {
     return style(null, null, null, null, null, protection);
   }
 

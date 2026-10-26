@@ -53,7 +53,7 @@ class CellValueSpecTest {
                 new ExcelRichTextRun(
                     " FY26",
                     java.util.Optional.of(
-                        new dev.erst.gridgrind.excel.ExcelCellFont(
+                        new dev.erst.gridgrind.core.model.style.CellFontPatch(
                             java.util.Optional.of(Boolean.TRUE),
                             java.util.Optional.empty(),
                             java.util.Optional.empty(),

@@ -2,16 +2,12 @@ package dev.erst.gridgrind.engine.runtime;
 
 import dev.erst.gridgrind.core.model.drawing.CommentSpec;
 import dev.erst.gridgrind.core.model.formula.ArrayFormulaSpec;
-import dev.erst.gridgrind.core.model.style.CellFontPatch;
-import dev.erst.gridgrind.core.model.style.CellStylePatch;
 import dev.erst.gridgrind.core.model.style.FontHeightReport;
 import dev.erst.gridgrind.core.model.style.FontHeightSpec;
 import dev.erst.gridgrind.core.model.style.RichTextRunSpec;
 import dev.erst.gridgrind.core.model.value.CellValueSpec;
 import dev.erst.gridgrind.core.model.value.HyperlinkTarget;
 import dev.erst.gridgrind.excel.ExcelArrayFormulaDefinition;
-import dev.erst.gridgrind.excel.ExcelCellFont;
-import dev.erst.gridgrind.excel.ExcelCellStyle;
 import dev.erst.gridgrind.excel.ExcelCellValue;
 import dev.erst.gridgrind.excel.ExcelComment;
 import dev.erst.gridgrind.excel.ExcelCommentAnchor;
@@ -58,8 +54,7 @@ final class WorkbookCommandCellValueSpecConverter {
 
   static ExcelRichTextRun toExcelRichTextRun(RichTextRunSpec run) {
     return new ExcelRichTextRun(
-        WorkbookCommandSourceSupport.inlineText(run.text(), "rich-text run"),
-        run.font().flatMap(WorkbookCommandCellValueSpecConverter::toExcelCellFont));
+        WorkbookCommandSourceSupport.inlineText(run.text(), "rich-text run"), run.font());
   }
 
   static ExcelHyperlink toExcelHyperlink(HyperlinkTarget target) {
@@ -78,31 +73,6 @@ final class WorkbookCommandCellValueSpecConverter {
         comment.visible(),
         commentRuns(comment),
         commentAnchor(comment));
-  }
-
-  static ExcelCellStyle toExcelCellStyle(CellStylePatch style) {
-    return new ExcelCellStyle(
-        style.numberFormat(),
-        style.alignment(),
-        style.font().flatMap(WorkbookCommandCellValueSpecConverter::toExcelCellFont),
-        style.fill(),
-        style.border(),
-        style.protection());
-  }
-
-  static Optional<ExcelCellFont> toExcelCellFont(CellFontPatch font) {
-    if (font == null) {
-      return Optional.empty();
-    }
-    return Optional.of(
-        new ExcelCellFont(
-            font.bold(),
-            font.italic(),
-            font.fontName(),
-            font.fontHeight().flatMap(WorkbookCommandCellValueSpecConverter::toFontHeightReport),
-            font.fontColor(),
-            font.underline(),
-            font.strikeout()));
   }
 
   static Optional<FontHeightReport> toFontHeightReport(FontHeightSpec fontHeight) {

@@ -3,6 +3,7 @@ package dev.erst.gridgrind.excel;
 import static org.junit.jupiter.api.Assertions.*;
 
 import dev.erst.gridgrind.core.model.style.CellColorReport;
+import dev.erst.gridgrind.core.model.style.CellFontPatch;
 import dev.erst.gridgrind.core.model.style.ColorSpec;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartBarDirection;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartDisplayBlanksAs;
@@ -1144,7 +1145,7 @@ class ExcelSheetCopyControllerTest {
                             new ExcelRichTextRun(
                                 " Review",
                                 Optional.of(
-                                    new ExcelCellFont(
+                                    new CellFontPatch(
                                         Optional.of(true),
                                         Optional.of(false),
                                         Optional.of("Aptos"),

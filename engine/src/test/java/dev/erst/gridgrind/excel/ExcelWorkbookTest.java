@@ -9,12 +9,14 @@ import dev.erst.gridgrind.core.model.style.CellAlignmentPatch;
 import dev.erst.gridgrind.core.model.style.CellBorderPatch;
 import dev.erst.gridgrind.core.model.style.CellColorReport;
 import dev.erst.gridgrind.core.model.style.CellFillSpec;
+import dev.erst.gridgrind.core.model.style.CellFontPatch;
 import dev.erst.gridgrind.core.model.style.CellGradientFillReport;
 import dev.erst.gridgrind.core.model.style.CellGradientFillSpec;
 import dev.erst.gridgrind.core.model.style.CellGradientStopSpec;
+import dev.erst.gridgrind.core.model.style.CellStylePatch;
 import dev.erst.gridgrind.core.model.style.CellStyleReport;
 import dev.erst.gridgrind.core.model.style.ColorSpec;
-import dev.erst.gridgrind.core.model.style.FontHeightReport;
+import dev.erst.gridgrind.core.model.style.FontHeightSpec;
 import dev.erst.gridgrind.core.vocabulary.ExcelBorderStyle;
 import dev.erst.gridgrind.core.vocabulary.ExcelColumnSpan;
 import dev.erst.gridgrind.core.vocabulary.ExcelComparisonOperator;
@@ -1019,7 +1021,7 @@ class ExcelWorkbookTest {
           .cells()
           .applyStyle(
               "A1",
-              new ExcelCellStyle(
+              new CellStylePatch(
                   Optional.empty(),
                   Optional.of(
                       new CellAlignmentPatch(
@@ -1029,11 +1031,11 @@ class ExcelWorkbookTest {
                           Optional.empty(),
                           Optional.empty())),
                   Optional.of(
-                      new ExcelCellFont(
+                      new CellFontPatch(
                           Optional.of(true),
                           Optional.of(false),
                           Optional.of("Aptos"),
-                          Optional.of(FontHeightReport.fromPoints(new BigDecimal("11.5"))),
+                          Optional.of(new FontHeightSpec.Points(new BigDecimal("11.5"))),
                           Optional.of(ColorSpec.rgb(new RgbHex("#1F4E78"))),
                           Optional.of(true),
                           Optional.of(true))),
@@ -1085,7 +1087,7 @@ class ExcelWorkbookTest {
           .cells()
           .applyStyle(
               "A1",
-              new ExcelCellStyle(
+              new CellStylePatch(
                   Optional.empty(),
                   Optional.empty(),
                   Optional.empty(),

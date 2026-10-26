@@ -3,6 +3,8 @@ package dev.erst.gridgrind.excel;
 import static org.junit.jupiter.api.Assertions.*;
 
 import dev.erst.gridgrind.core.model.style.CellAlignmentPatch;
+import dev.erst.gridgrind.core.model.style.CellFontPatch;
+import dev.erst.gridgrind.core.model.style.CellStylePatch;
 import dev.erst.gridgrind.core.vocabulary.ExcelColumnSpan;
 import dev.erst.gridgrind.core.vocabulary.ExcelComparisonOperator;
 import dev.erst.gridgrind.core.vocabulary.ExcelDataValidationErrorStyle;
@@ -144,7 +146,7 @@ class WorkbookCommandTest {
   }
 
   private CreatedCommands createSupportedCommands(
-      List<ExcelCellValue> values, List<List<ExcelCellValue>> rows, ExcelCellStyle style) {
+      List<ExcelCellValue> values, List<List<ExcelCellValue>> rows, CellStylePatch style) {
     return new CreatedCommands(
         new WorkbookSheetCommand.CreateSheet("Budget"),
         new WorkbookSheetCommand.RenameSheet("Budget", "Summary"),
@@ -237,7 +239,7 @@ class WorkbookCommandTest {
         new WorkbookLayoutCommand.AutoSizeColumns("Budget"));
   }
 
-  private void assertCreatedCommands(CreatedCommands commands, ExcelCellStyle style) {
+  private void assertCreatedCommands(CreatedCommands commands, CellStylePatch style) {
     assertEquals("Budget", commands.createSheet().sheetName());
     assertEquals("Summary", commands.renameSheet().newSheetName());
     assertEquals("Archive", commands.deleteSheet().sheetName());
@@ -715,24 +717,58 @@ class WorkbookCommandTest {
     assertThrows(
         NullPointerException.class,
         () ->
-            new WorkbookFormattingCommand.ApplyStyle(null, "A1", ExcelCellStyle.numberFormat("0")));
+            new WorkbookFormattingCommand.ApplyStyle(
+                null,
+                "A1",
+                new CellStylePatch(
+                    Optional.of("0"),
+                    Optional.empty(),
+                    Optional.empty(),
+                    Optional.empty(),
+                    Optional.empty(),
+                    Optional.empty())));
     assertThrows(
         NullPointerException.class,
         () ->
             new WorkbookFormattingCommand.ApplyStyle(
-                "Budget", null, ExcelCellStyle.numberFormat("0")));
+                "Budget",
+                null,
+                new CellStylePatch(
+                    Optional.of("0"),
+                    Optional.empty(),
+                    Optional.empty(),
+                    Optional.empty(),
+                    Optional.empty(),
+                    Optional.empty())));
     assertThrows(
         NullPointerException.class,
         () -> new WorkbookFormattingCommand.ApplyStyle("Budget", "A1", null));
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new WorkbookFormattingCommand.ApplyStyle(" ", "A1", ExcelCellStyle.numberFormat("0")));
+            new WorkbookFormattingCommand.ApplyStyle(
+                " ",
+                "A1",
+                new CellStylePatch(
+                    Optional.of("0"),
+                    Optional.empty(),
+                    Optional.empty(),
+                    Optional.empty(),
+                    Optional.empty(),
+                    Optional.empty())));
     assertThrows(
         IllegalArgumentException.class,
         () ->
             new WorkbookFormattingCommand.ApplyStyle(
-                "Budget", " ", ExcelCellStyle.numberFormat("0")));
+                "Budget",
+                " ",
+                new CellStylePatch(
+                    Optional.of("0"),
+                    Optional.empty(),
+                    Optional.empty(),
+                    Optional.empty(),
+                    Optional.empty(),
+                    Optional.empty())));
   }
 
   @Test
@@ -907,8 +943,8 @@ class WorkbookCommandTest {
                 ExcelDataValidationErrorStyle.STOP, "Too long", "Use a shorter reason.", true)));
   }
 
-  private ExcelCellStyle defaultStyle() {
-    return new ExcelCellStyle(
+  private CellStylePatch defaultStyle() {
+    return new CellStylePatch(
         Optional.of("#,##0.00"),
         Optional.of(
             new CellAlignmentPatch(
@@ -918,7 +954,7 @@ class WorkbookCommandTest {
                 Optional.empty(),
                 Optional.empty())),
         Optional.of(
-            new ExcelCellFont(
+            new CellFontPatch(
                 Optional.of(true),
                 Optional.of(false),
                 Optional.empty(),

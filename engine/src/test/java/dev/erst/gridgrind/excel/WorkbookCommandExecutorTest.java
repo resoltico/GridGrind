@@ -2,7 +2,9 @@ package dev.erst.gridgrind.excel;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.core.model.style.CellAlignmentPatch;
 import dev.erst.gridgrind.core.model.style.CellColorReport;
+import dev.erst.gridgrind.core.model.style.CellStylePatch;
 import dev.erst.gridgrind.core.model.style.ColorSpec;
 import dev.erst.gridgrind.core.vocabulary.ExcelColumnSpan;
 import dev.erst.gridgrind.core.vocabulary.ExcelDataValidationErrorStyle;
@@ -65,8 +67,19 @@ class WorkbookCommandExecutorTest {
               new WorkbookFormattingCommand.ApplyStyle(
                   "Budget",
                   "A1:B1",
-                  ExcelCellStyle.alignment(
-                      ExcelHorizontalAlignment.CENTER, ExcelVerticalAlignment.CENTER)),
+                  new CellStylePatch(
+                      Optional.empty(),
+                      Optional.of(
+                          new CellAlignmentPatch(
+                              Optional.empty(),
+                              Optional.ofNullable(ExcelHorizontalAlignment.CENTER),
+                              Optional.ofNullable(ExcelVerticalAlignment.CENTER),
+                              Optional.empty(),
+                              Optional.empty())),
+                      Optional.empty(),
+                      Optional.empty(),
+                      Optional.empty(),
+                      Optional.empty())),
               new WorkbookCellCommand.AppendRow(
                   "Budget",
                   List.of(ExcelCellValue.text("Total"), ExcelCellValue.formula("SUM(B1:B2)"))),
@@ -287,8 +300,19 @@ class WorkbookCommandExecutorTest {
                   new WorkbookFormattingCommand.ApplyStyle(
                       "Missing",
                       "A1",
-                      ExcelCellStyle.alignment(
-                          ExcelHorizontalAlignment.CENTER, ExcelVerticalAlignment.TOP))));
+                      new CellStylePatch(
+                          Optional.empty(),
+                          Optional.of(
+                              new CellAlignmentPatch(
+                                  Optional.empty(),
+                                  Optional.ofNullable(ExcelHorizontalAlignment.CENTER),
+                                  Optional.ofNullable(ExcelVerticalAlignment.TOP),
+                                  Optional.empty(),
+                                  Optional.empty())),
+                          Optional.empty(),
+                          Optional.empty(),
+                          Optional.empty(),
+                          Optional.empty()))));
       assertThrows(
           SheetNotFoundException.class,
           () ->
@@ -932,8 +956,19 @@ class WorkbookCommandExecutorTest {
           new WorkbookFormattingCommand.ApplyStyle(
               "Budget",
               "A1",
-              ExcelCellStyle.alignment(
-                  ExcelHorizontalAlignment.CENTER, ExcelVerticalAlignment.CENTER)));
+              new CellStylePatch(
+                  Optional.empty(),
+                  Optional.of(
+                      new CellAlignmentPatch(
+                          Optional.empty(),
+                          Optional.ofNullable(ExcelHorizontalAlignment.CENTER),
+                          Optional.ofNullable(ExcelVerticalAlignment.CENTER),
+                          Optional.empty(),
+                          Optional.empty())),
+                  Optional.empty(),
+                  Optional.empty(),
+                  Optional.empty(),
+                  Optional.empty())));
       WorkbookCommandExecutor.applyTabularCommand(
           workbook, new WorkbookTabularCommand.SetAutofilter("Budget", "A1:B2"));
 

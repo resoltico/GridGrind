@@ -4,8 +4,10 @@ import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 
 import dev.erst.gridgrind.core.model.protection.CellProtectionPatch;
 import dev.erst.gridgrind.core.model.style.CellFillSpec;
+import dev.erst.gridgrind.core.model.style.CellFontPatch;
 import dev.erst.gridgrind.core.model.style.CellGradientFillSpec;
 import dev.erst.gridgrind.core.model.style.CellGradientStopSpec;
+import dev.erst.gridgrind.core.model.style.CellStylePatch;
 import dev.erst.gridgrind.core.model.style.ColorSpec;
 import dev.erst.gridgrind.core.vocabulary.ExcelColumnSpan;
 import dev.erst.gridgrind.core.vocabulary.ExcelComparisonOperator;
@@ -16,8 +18,6 @@ import dev.erst.gridgrind.core.vocabulary.RgbHex;
 import dev.erst.gridgrind.excel.*;
 import dev.erst.gridgrind.excel.ExcelArrayFormulaDefinition;
 import dev.erst.gridgrind.excel.ExcelBinaryData;
-import dev.erst.gridgrind.excel.ExcelCellFont;
-import dev.erst.gridgrind.excel.ExcelCellStyle;
 import dev.erst.gridgrind.excel.ExcelCellValue;
 import dev.erst.gridgrind.excel.ExcelComment;
 import dev.erst.gridgrind.excel.ExcelConditionalFormattingBlockDefinition;
@@ -69,7 +69,7 @@ class XlsxRoundTripVerifierTest {
                     new WorkbookFormattingCommand.ApplyStyle(
                         "Budget",
                         "A1",
-                        new ExcelCellStyle(
+                        new CellStylePatch(
                             Optional.empty(),
                             Optional.empty(),
                             Optional.empty(),
@@ -104,7 +104,7 @@ class XlsxRoundTripVerifierTest {
                                     new ExcelRichTextRun(
                                         " Report",
                                         Optional.of(
-                                            new ExcelCellFont(
+                                            new CellFontPatch(
                                                 Optional.of(true),
                                                 Optional.empty(),
                                                 Optional.empty(),
@@ -115,7 +115,7 @@ class XlsxRoundTripVerifierTest {
                     new WorkbookFormattingCommand.ApplyStyle(
                         "Budget",
                         "A1",
-                        new ExcelCellStyle(
+                        new CellStylePatch(
                             Optional.empty(),
                             Optional.empty(),
                             Optional.empty(),

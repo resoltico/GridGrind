@@ -1,6 +1,7 @@
 package dev.erst.gridgrind.excel;
 
 import dev.erst.gridgrind.core.model.style.CellColorReport;
+import dev.erst.gridgrind.core.model.style.CellFontPatch;
 import dev.erst.gridgrind.core.model.style.CellFontReport;
 import dev.erst.gridgrind.core.model.style.FontHeightReport;
 import java.util.ArrayList;
@@ -57,7 +58,7 @@ public final class ExcelRichTextSupport {
     return Optional.of(new ExcelRichTextSnapshot(snapshots));
   }
 
-  private static XSSFFont fontPatch(XSSFWorkbook workbook, ExcelCellFont fontPatch) {
+  private static XSSFFont fontPatch(XSSFWorkbook workbook, CellFontPatch fontPatch) {
     CTFont font = CTFont.Factory.newInstance();
     setBooleanProperty(fontPatch.bold(), font::addNewB);
     setBooleanProperty(fontPatch.italic(), font::addNewI);

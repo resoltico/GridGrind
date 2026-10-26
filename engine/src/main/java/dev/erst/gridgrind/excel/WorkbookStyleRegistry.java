@@ -4,9 +4,12 @@ import dev.erst.gridgrind.core.model.protection.CellProtectionPatch;
 import dev.erst.gridgrind.core.model.style.CellAlignmentPatch;
 import dev.erst.gridgrind.core.model.style.CellBorderPatch;
 import dev.erst.gridgrind.core.model.style.CellFillSpec;
+import dev.erst.gridgrind.core.model.style.CellFontPatch;
 import dev.erst.gridgrind.core.model.style.CellGradientFillReport;
+import dev.erst.gridgrind.core.model.style.CellStylePatch;
 import dev.erst.gridgrind.core.model.style.CellStyleReport;
 import dev.erst.gridgrind.core.model.style.ColorSpec;
+import dev.erst.gridgrind.core.model.style.FontHeightSpec;
 import dev.erst.gridgrind.core.vocabulary.ExcelFillPattern;
 import java.util.HashMap;
 import java.util.Map;
@@ -28,10 +31,22 @@ import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTGradientFill;
  */
 @SuppressWarnings("PMD.CommentRequired")
 public final class WorkbookStyleRegistry {
-  private static final ExcelCellStyle LOCAL_DATE_STYLE_PATCH =
-      ExcelCellStyle.numberFormat("yyyy-mm-dd");
-  private static final ExcelCellStyle LOCAL_DATE_TIME_STYLE_PATCH =
-      ExcelCellStyle.numberFormat("yyyy-mm-dd hh:mm:ss");
+  private static final CellStylePatch LOCAL_DATE_STYLE_PATCH =
+      new CellStylePatch(
+          Optional.of("yyyy-mm-dd"),
+          Optional.empty(),
+          Optional.empty(),
+          Optional.empty(),
+          Optional.empty(),
+          Optional.empty());
+  private static final CellStylePatch LOCAL_DATE_TIME_STYLE_PATCH =
+      new CellStylePatch(
+          Optional.of("yyyy-mm-dd hh:mm:ss"),
+          Optional.empty(),
+          Optional.empty(),
+          Optional.empty(),
+          Optional.empty(),
+          Optional.empty());
 
   private final XSSFWorkbook workbook;
   private final DataFormat dataFormat;
@@ -89,7 +104,7 @@ public final class WorkbookStyleRegistry {
    * Resolves the current cell style and merges the provided style patch on top of it, returning a
    * cached or newly created {@link CellStyle}.
    */
-  CellStyle mergedStyle(Cell cell, ExcelCellStyle stylePatch) {
+  CellStyle mergedStyle(Cell cell, CellStylePatch stylePatch) {
     return styleFor(styleRecord(cell), stylePatch);
   }
 
@@ -112,13 +127,41 @@ public final class WorkbookStyleRegistry {
     return (XSSFCellStyle) cell.getCellStyle();
   }
 
-  private XSSFCellStyle styleFor(XSSFCellStyle baseStyle, ExcelCellStyle stylePatch) {
+  private XSSFCellStyle styleFor(XSSFCellStyle baseStyle, CellStylePatch stylePatch) {
+    CellStylePatch normalized = normalizedStylePatch(stylePatch);
     return cellStyles.computeIfAbsent(
-        new MergedCellStyleKey(baseStyle.getIndex(), stylePatch),
-        key -> createMergedStyle(baseStyle, stylePatch));
+        new MergedCellStyleKey(baseStyle.getIndex(), normalized),
+        key -> createMergedStyle(baseStyle, normalized));
   }
 
-  private XSSFCellStyle createMergedStyle(XSSFCellStyle baseStyle, ExcelCellStyle stylePatch) {
+  private static CellStylePatch normalizedStylePatch(CellStylePatch patch) {
+    if (patch.font().isEmpty()) {
+      return patch;
+    }
+    CellFontPatch font = patch.font().orElseThrow();
+    if (font.fontHeight().isEmpty()
+        || font.fontHeight().orElseThrow() instanceof FontHeightSpec.Twips) {
+      return patch;
+    }
+    CellFontPatch normalizedFont =
+        new CellFontPatch(
+            font.bold(),
+            font.italic(),
+            font.fontName(),
+            Optional.of(new FontHeightSpec.Twips(font.fontHeight().orElseThrow().twips())),
+            font.fontColor(),
+            font.underline(),
+            font.strikeout());
+    return new CellStylePatch(
+        patch.numberFormat(),
+        patch.alignment(),
+        Optional.of(normalizedFont),
+        patch.fill(),
+        patch.border(),
+        patch.protection());
+  }
+
+  private XSSFCellStyle createMergedStyle(XSSFCellStyle baseStyle, CellStylePatch stylePatch) {
     ExcelWorkbookStyleLimits.requireCellStyleCapacity(workbook); // LIM-011
     XSSFCellStyle cellStyle = workbook.createCellStyle();
     cellStyle.cloneStyleFrom(baseStyle);
@@ -200,13 +243,13 @@ public final class WorkbookStyleRegistry {
     protectionPatch.hiddenFormula().ifPresent(cellStyle::setHidden);
   }
 
-  private XSSFFont fontFor(XSSFFont baseFont, ExcelCellFont fontPatch) {
+  private XSSFFont fontFor(XSSFFont baseFont, CellFontPatch fontPatch) {
     return fonts.computeIfAbsent(
         new MergedFontKey(baseFont.getIndex(), fontPatch),
         key -> createMergedFont(baseFont, fontPatch));
   }
 
-  private XSSFFont createMergedFont(XSSFFont baseFont, ExcelCellFont fontPatch) {
+  private XSSFFont createMergedFont(XSSFFont baseFont, CellFontPatch fontPatch) {
     XSSFFont font = workbook.createFont();
     font.getCTFont().set(baseFont.getCTFont());
     fontPatch.bold().ifPresent(font::setBold);
@@ -243,7 +286,7 @@ public final class WorkbookStyleRegistry {
     return snapshotSupport.gradientFillSnapshot(fill);
   }
 
-  private record MergedCellStyleKey(int baseStyleIndex, ExcelCellStyle stylePatch) {}
+  private record MergedCellStyleKey(int baseStyleIndex, CellStylePatch stylePatch) {}
 
-  private record MergedFontKey(int baseFontIndex, ExcelCellFont fontPatch) {}
+  private record MergedFontKey(int baseFontIndex, CellFontPatch fontPatch) {}
 }

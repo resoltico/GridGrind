@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import dev.erst.gridgrind.core.model.style.CellColorReport;
 import dev.erst.gridgrind.core.model.style.CellFillSpec;
+import dev.erst.gridgrind.core.model.style.CellFontPatch;
 import dev.erst.gridgrind.core.model.style.CellFontReport;
 import dev.erst.gridgrind.core.model.style.CellGradientFillSpec;
 import dev.erst.gridgrind.core.model.style.CellGradientStopSpec;
@@ -428,7 +429,7 @@ class ExcelAdvancedValueObjectTest {
                         new ExcelRichTextRun(
                             " Review",
                             Optional.of(
-                                new ExcelCellFont(
+                                new CellFontPatch(
                                     Optional.of(true),
                                     Optional.of(false),
                                     Optional.of("Aptos"),

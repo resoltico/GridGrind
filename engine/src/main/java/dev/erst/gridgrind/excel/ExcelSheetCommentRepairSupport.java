@@ -1,6 +1,8 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.core.model.style.CellFontPatch;
 import dev.erst.gridgrind.core.model.style.CellFontReport;
+import dev.erst.gridgrind.core.model.style.FontHeightSpec;
 import dev.erst.gridgrind.core.vocabulary.ExcelColumnSpan;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingController;
 import java.util.ArrayList;
@@ -323,12 +325,12 @@ final class ExcelSheetCommentRepairSupport {
     return new ExcelRichTextRun(run.text(), Optional.of(toAuthoringFont(run.font())));
   }
 
-  private static ExcelCellFont toAuthoringFont(CellFontReport font) {
-    return new ExcelCellFont(
+  private static CellFontPatch toAuthoringFont(CellFontReport font) {
+    return new CellFontPatch(
         Optional.of(font.bold()),
         Optional.of(font.italic()),
         Optional.of(font.fontName()),
-        Optional.of(font.fontHeight()),
+        Optional.of(font.fontHeight()).map(height -> new FontHeightSpec.Twips(height.twips())),
         Optional.ofNullable(ExcelColorSupport.copyOf(font.fontColor())),
         Optional.of(font.underline()),
         Optional.of(font.strikeout()));

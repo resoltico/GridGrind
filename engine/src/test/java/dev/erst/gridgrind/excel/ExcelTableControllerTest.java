@@ -2,11 +2,13 @@ package dev.erst.gridgrind.excel;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.core.model.style.CellStylePatch;
 import dev.erst.gridgrind.core.vocabulary.AnalysisFindingCode;
 import java.nio.file.Path;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import org.apache.poi.ss.SpreadsheetVersion;
 import org.apache.poi.ss.util.AreaReference;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
@@ -1107,7 +1109,17 @@ class ExcelTableControllerTest {
           "2026-02-06 00:19:17",
           table.getCTTable().getTableColumns().getTableColumnArray(0).getName());
 
-      sheet.cells().applyStyle("A1:B2", ExcelCellStyle.numberFormat("yyyy-mm-dd"));
+      sheet
+          .cells()
+          .applyStyle(
+              "A1:B2",
+              new CellStylePatch(
+                  Optional.of("yyyy-mm-dd"),
+                  Optional.empty(),
+                  Optional.empty(),
+                  Optional.empty(),
+                  Optional.empty(),
+                  Optional.empty()));
 
       assertEquals(
           "2026-02-06", table.getCTTable().getTableColumns().getTableColumnArray(0).getName());

@@ -2,6 +2,8 @@ package dev.erst.gridgrind.excel;
 
 import dev.erst.gridgrind.core.model.customxml.CustomXmlMappingLocator;
 import dev.erst.gridgrind.core.model.style.CellAlignmentPatch;
+import dev.erst.gridgrind.core.model.style.CellFontPatch;
+import dev.erst.gridgrind.core.model.style.CellStylePatch;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartBarDirection;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartDisplayBlanksAs;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartLegendPosition;
@@ -305,8 +307,8 @@ final class WorkbookSampleFixtures {
                 ExcelDataValidationErrorStyle.STOP, "Too long", "Use a shorter reason.", true)));
   }
 
-  private static ExcelCellStyle defaultStyle() {
-    return new ExcelCellStyle(
+  private static CellStylePatch defaultStyle() {
+    return new CellStylePatch(
         Optional.of("#,##0.00"),
         Optional.of(
             new CellAlignmentPatch(
@@ -316,7 +318,7 @@ final class WorkbookSampleFixtures {
                 Optional.empty(),
                 Optional.empty())),
         Optional.of(
-            new ExcelCellFont(
+            new CellFontPatch(
                 Optional.of(true),
                 Optional.of(false),
                 Optional.empty(),

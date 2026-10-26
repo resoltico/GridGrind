@@ -116,7 +116,7 @@ final class FuzzValueDecoders {
       runs.add(
           new RichTextRunSpec(
               TextSourceSpec.inline(FuzzAddressDecoders.nextText(data)),
-              FuzzStyleDecoders.toCellFontInput(fontPatch)));
+              Optional.ofNullable(fontPatch)));
     }
     return new CellValueSpec.RichText(List.copyOf(runs));
   }

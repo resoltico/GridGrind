@@ -8,32 +8,28 @@ import dev.erst.gridgrind.core.model.style.CellFillSpec;
 import dev.erst.gridgrind.core.model.style.CellFontPatch;
 import dev.erst.gridgrind.core.model.style.CellGradientFillSpec;
 import dev.erst.gridgrind.core.model.style.CellGradientStopSpec;
+import dev.erst.gridgrind.core.model.style.CellStylePatch;
 import dev.erst.gridgrind.core.model.style.ColorSpec;
-import dev.erst.gridgrind.core.model.style.FontHeightReport;
 import dev.erst.gridgrind.core.model.style.FontHeightSpec;
 import dev.erst.gridgrind.core.vocabulary.ExcelBorderStyle;
 import dev.erst.gridgrind.core.vocabulary.ExcelFillPattern;
 import dev.erst.gridgrind.core.vocabulary.ExcelHorizontalAlignment;
 import dev.erst.gridgrind.core.vocabulary.ExcelVerticalAlignment;
 import dev.erst.gridgrind.core.vocabulary.RgbHex;
-import dev.erst.gridgrind.excel.ExcelCellFont;
-import dev.erst.gridgrind.excel.ExcelCellStyle;
-import java.math.BigDecimal;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-import org.jspecify.annotations.Nullable;
 
 /** Owns bounded style, color, border, and font decoding for Jazzer inputs. */
 final class FuzzStyleDecoders {
   private FuzzStyleDecoders() {}
 
-  static ExcelCellStyle nextStyle(GridGrindFuzzData data) {
+  static CellStylePatch nextStyle(GridGrindFuzzData data) {
     Objects.requireNonNull(data, "data must not be null");
 
     return switch (data.consumeInt(0, 7)) {
       case 0 ->
-          new ExcelCellStyle(
+          new CellStylePatch(
               Optional.of(data.consumeBoolean() ? "0.00" : "yyyy-mm-dd"),
               Optional.empty(),
               Optional.empty(),
@@ -41,7 +37,7 @@ final class FuzzStyleDecoders {
               Optional.empty(),
               Optional.empty());
       case 1 ->
-          new ExcelCellStyle(
+          new CellStylePatch(
               Optional.empty(),
               Optional.of(nextAlignment(data, true)),
               Optional.empty(),
@@ -49,7 +45,7 @@ final class FuzzStyleDecoders {
               Optional.empty(),
               Optional.empty());
       case 2 ->
-          new ExcelCellStyle(
+          new CellStylePatch(
               Optional.empty(),
               Optional.empty(),
               Optional.of(nextFont(data, true)),
@@ -57,7 +53,7 @@ final class FuzzStyleDecoders {
               Optional.empty(),
               Optional.empty());
       case 3 ->
-          new ExcelCellStyle(
+          new CellStylePatch(
               Optional.empty(),
               Optional.of(nextAlignment(data, true)),
               Optional.of(nextFont(data, true)),
@@ -65,7 +61,7 @@ final class FuzzStyleDecoders {
               Optional.of(nextBorderPatch(data)),
               Optional.ofNullable(nextProtection(data)));
       case 4 ->
-          new ExcelCellStyle(
+          new CellStylePatch(
               Optional.empty(),
               Optional.empty(),
               Optional.of(nextFont(data, false)),
@@ -73,7 +69,7 @@ final class FuzzStyleDecoders {
               Optional.of(nextBorderPatch(data)),
               Optional.empty());
       case 5 ->
-          new ExcelCellStyle(
+          new CellStylePatch(
               Optional.empty(),
               Optional.empty(),
               Optional.empty(),
@@ -81,7 +77,7 @@ final class FuzzStyleDecoders {
               Optional.empty(),
               Optional.ofNullable(nextProtection(data)));
       case 6 ->
-          new ExcelCellStyle(
+          new CellStylePatch(
               Optional.empty(),
               Optional.of(nextAlignment(data, true)),
               Optional.empty(),
@@ -89,7 +85,7 @@ final class FuzzStyleDecoders {
               Optional.of(nextBorderPatch(data)),
               Optional.empty());
       default ->
-          new ExcelCellStyle(
+          new CellStylePatch(
               Optional.empty(),
               Optional.empty(),
               Optional.of(nextFont(data, false)),
@@ -99,10 +95,10 @@ final class FuzzStyleDecoders {
     };
   }
 
-  static ExcelCellFont nextRichTextFontPatch(GridGrindFuzzData data) {
+  static CellFontPatch nextRichTextFontPatch(GridGrindFuzzData data) {
     return switch (data.consumeInt(0, 6)) {
       case 0 ->
-          new ExcelCellFont(
+          new CellFontPatch(
               Optional.of(Boolean.TRUE),
               Optional.empty(),
               Optional.empty(),
@@ -111,7 +107,7 @@ final class FuzzStyleDecoders {
               Optional.empty(),
               Optional.empty());
       case 1 ->
-          new ExcelCellFont(
+          new CellFontPatch(
               Optional.empty(),
               Optional.of(Boolean.FALSE),
               Optional.empty(),
@@ -120,7 +116,7 @@ final class FuzzStyleDecoders {
               Optional.empty(),
               Optional.empty());
       case 2 ->
-          new ExcelCellFont(
+          new CellFontPatch(
               Optional.empty(),
               Optional.empty(),
               Optional.of("Aptos"),
@@ -129,16 +125,16 @@ final class FuzzStyleDecoders {
               Optional.empty(),
               Optional.empty());
       case 3 ->
-          new ExcelCellFont(
+          new CellFontPatch(
               Optional.empty(),
               Optional.empty(),
               Optional.empty(),
-              Optional.of(nextFontHeightReport(data)),
+              Optional.of(nextFontHeightSpec(data)),
               Optional.empty(),
               Optional.empty(),
               Optional.empty());
       case 4 ->
-          new ExcelCellFont(
+          new CellFontPatch(
               Optional.empty(),
               Optional.empty(),
               Optional.empty(),
@@ -147,7 +143,7 @@ final class FuzzStyleDecoders {
               Optional.empty(),
               Optional.empty());
       case 5 ->
-          new ExcelCellFont(
+          new CellFontPatch(
               Optional.empty(),
               Optional.empty(),
               Optional.empty(),
@@ -156,7 +152,7 @@ final class FuzzStyleDecoders {
               Optional.of(Boolean.TRUE),
               Optional.empty());
       default ->
-          new ExcelCellFont(
+          new CellFontPatch(
               Optional.empty(),
               Optional.empty(),
               Optional.empty(),
@@ -165,21 +161,6 @@ final class FuzzStyleDecoders {
               Optional.empty(),
               Optional.of(Boolean.FALSE));
     };
-  }
-
-  static Optional<CellFontPatch> toCellFontInput(@Nullable ExcelCellFont font) {
-    if (font == null) {
-      return Optional.empty();
-    }
-    return Optional.of(
-        new CellFontPatch(
-            font.bold(),
-            font.italic(),
-            font.fontName(),
-            font.fontHeight().map(height -> new FontHeightSpec.Twips(height.twips())),
-            font.fontColor(),
-            font.underline(),
-            font.strikeout()));
   }
 
   private static ExcelHorizontalAlignment nextHorizontalAlignment(GridGrindFuzzData data) {
@@ -200,14 +181,14 @@ final class FuzzStyleDecoders {
             : Optional.empty());
   }
 
-  private static ExcelCellFont nextFont(GridGrindFuzzData data, boolean includeName) {
-    return new ExcelCellFont(
+  private static CellFontPatch nextFont(GridGrindFuzzData data, boolean includeName) {
+    return new CellFontPatch(
         data.consumeBoolean() ? Optional.of(Boolean.TRUE) : Optional.empty(),
         data.consumeBoolean() ? Optional.of(Boolean.FALSE) : Optional.empty(),
         includeName
             ? Optional.of(data.consumeBoolean() ? "Aptos" : "Aptos Display")
             : Optional.empty(),
-        data.consumeBoolean() ? Optional.of(nextFontHeightReport(data)) : Optional.empty(),
+        data.consumeBoolean() ? Optional.of(nextFontHeightSpec(data)) : Optional.empty(),
         data.consumeBoolean() ? Optional.of(nextColor(data)) : Optional.empty(),
         data.consumeBoolean() ? Optional.of(Boolean.TRUE) : Optional.empty(),
         data.consumeBoolean() ? Optional.of(Boolean.FALSE) : Optional.empty());
@@ -251,16 +232,11 @@ final class FuzzStyleDecoders {
     return values[data.consumeInt(0, values.length - 1)];
   }
 
-  private static FontHeightReport nextFontHeightReport(GridGrindFuzzData data) {
+  private static FontHeightSpec nextFontHeightSpec(GridGrindFuzzData data) {
     return switch (data.consumeInt(0, 2)) {
-      case 0 -> FontHeightReport.fromTwips(data.consumeInt(20, 640));
-      case 1 -> FontHeightReport.fromPoints(nextPointHeight(data));
-      default -> FontHeightReport.fromTwips(220);
+      case 0, 1 -> new FontHeightSpec.Twips(data.consumeInt(20, 640));
+      default -> new FontHeightSpec.Twips(220);
     };
-  }
-
-  private static BigDecimal nextPointHeight(GridGrindFuzzData data) {
-    return FontHeightReport.fromTwips(data.consumeInt(20, 640)).points();
   }
 
   private static String nextRgbHex(GridGrindFuzzData data) {

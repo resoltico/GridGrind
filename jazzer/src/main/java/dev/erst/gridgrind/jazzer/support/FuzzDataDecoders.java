@@ -1,9 +1,9 @@
 package dev.erst.gridgrind.jazzer.support;
 
+import dev.erst.gridgrind.core.model.style.CellStylePatch;
 import dev.erst.gridgrind.core.model.value.CellGridSpec;
 import dev.erst.gridgrind.core.model.value.CellRowSpec;
 import dev.erst.gridgrind.core.model.value.CellValueSpec;
-import dev.erst.gridgrind.excel.ExcelCellStyle;
 import dev.erst.gridgrind.excel.ExcelCellValue;
 import java.util.List;
 
@@ -49,7 +49,7 @@ public final class FuzzDataDecoders {
   }
 
   /** Returns a bounded style patch. */
-  public static ExcelCellStyle nextStyle(GridGrindFuzzData data) {
+  public static CellStylePatch nextStyle(GridGrindFuzzData data) {
     return FuzzStyleDecoders.nextStyle(data);
   }
 

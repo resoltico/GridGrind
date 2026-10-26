@@ -1628,3 +1628,40 @@ old converter normalizes to FontHeightReport before MergedCellStyleKey/MergedFon
 Direct core patch consumption must normalize cache identity at the POI adapter, retain authored
 shape elsewhere, and prove value-equivalent style/font reuse with a workbook regression. No extra
 engine patch record is justified by that runtime cache requirement.
+
+## WP-40 canonical font and cell-style patches
+
+Deleted ExcelCellFont and ExcelCellStyle and their identity converters, including the reverse font
+bridge in deterministic input support. Feature APIs and command payloads now accept CellFontPatch
+and CellStylePatch directly. FontHeightSpec exposes exact points/twips queries for POI authoring;
+authored units and decimal scale remain intact in the request model. No compatibility factory was
+added for retired engine convenience methods. Pure construction/validation tests moved beside
+core; sole identity-converter assertions were removed. Initial compile iterations repaired imports,
+fully qualified names, generated Optional expressions and target typing.
+
+WorkbookStyleRegistry normalizes only its cache-key patch to TWIPS, preserving the old reuse of
+value-equivalent POINTS/TWIPS heights. A real POI test proves identical style identity, only one
+additional font/style and unchanged authored POINTS13.0. Its targeted negative control replaced
+normalization with identity, failed on the intended duplicate-style assertion in 24s, and restored
+production in finally. The normal test and exact-unit tests passed (24s); full focused engine/core,
+14 parity and PMD passed (54s). The negative control stayed below the user's 120s interim ceiling;
+no full mutation or active fuzz campaign ran.
+
+Nested replay initially caught duplicate protocol/engine style collectors after model unification
+and one conditional Optional inference. They are consolidated into the core collector, retaining
+unit labels. Its review also fixed the assumption that color-only border patches always have a
+style: a direct JDK probe validates color-only plus POINTS coverage labels. Nested deterministic
+check and every retained seed passed (19s).
+
+./gradlew check passed (4m43s): core 344, JSON 348, engine 1482 plus 14 parity, CLI 588,
+architecture 14 plus 12 rule tests; zero failures/errors/skips. All 143 golden cases are unchanged.
+Inventories: converter lines 4375→4343, main Java lines 122294→122046, blank checks 436→434;
+snapshots 41, definitions 13 and Support 206 remain open. Baseline diff empty. After the previous
+completed gate, this task's daemon 77295 was stopped with 60 idle compiler children (2770MiB
+retained); ownership evidence is outside the repo. The next build started a fresh daemon.
+
+Next factual slice review: RichTextRunReport and CommentAnchorReport are exact core counterparts
+of their engine snapshots. Rich-text list wrapping, comment conversion methods and raw-cell
+projection need producer/consumer migration rather than a substitute wrapper. Comment producers
+already filter absent/blank text/author before constructing the old snapshot; preserve that current
+observable filtering while removing the duplicated record checks.

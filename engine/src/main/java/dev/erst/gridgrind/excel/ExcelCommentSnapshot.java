@@ -1,5 +1,7 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.core.model.style.CellFontPatch;
+import dev.erst.gridgrind.core.model.style.FontHeightSpec;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -46,11 +48,14 @@ public record ExcelCommentSnapshot(
                                 new ExcelRichTextRun(
                                     run.text(),
                                     Optional.of(
-                                        new ExcelCellFont(
+                                        new CellFontPatch(
                                             Optional.of(run.font().bold()),
                                             Optional.of(run.font().italic()),
                                             Optional.of(run.font().fontName()),
-                                            Optional.of(run.font().fontHeight()),
+                                            Optional.of(run.font().fontHeight())
+                                                .map(
+                                                    height ->
+                                                        new FontHeightSpec.Twips(height.twips())),
                                             Optional.ofNullable(
                                                 run.font().fontColor() == null
                                                     ? null

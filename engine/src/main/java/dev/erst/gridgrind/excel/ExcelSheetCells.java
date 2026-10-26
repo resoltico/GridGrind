@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.core.model.style.CellStylePatch;
 import java.util.List;
 import java.util.Objects;
 
@@ -50,7 +51,7 @@ public final class ExcelSheetCells {
   }
 
   /** Applies a style patch to every cell in a rectangular A1-style range. */
-  public ExcelSheetCells applyStyle(String range, ExcelCellStyle style) {
+  public ExcelSheetCells applyStyle(String range, CellStylePatch style) {
     mutationSupport.applyStyle(range, style);
     return this;
   }

@@ -7,8 +7,11 @@ import dev.erst.gridgrind.core.model.style.BorderSidePatch;
 import dev.erst.gridgrind.core.model.style.CellAlignmentPatch;
 import dev.erst.gridgrind.core.model.style.CellBorderPatch;
 import dev.erst.gridgrind.core.model.style.CellFillSpec;
+import dev.erst.gridgrind.core.model.style.CellFontPatch;
+import dev.erst.gridgrind.core.model.style.CellStylePatch;
 import dev.erst.gridgrind.core.model.style.ColorSpec;
 import dev.erst.gridgrind.core.model.style.FontHeightReport;
+import dev.erst.gridgrind.core.model.style.FontHeightSpec;
 import dev.erst.gridgrind.core.vocabulary.ExcelBorderStyle;
 import dev.erst.gridgrind.core.vocabulary.ExcelFillPattern;
 import dev.erst.gridgrind.core.vocabulary.ExcelHorizontalAlignment;
@@ -61,7 +64,7 @@ class ExcelSheetFormattingCoverageTest extends ExcelSheetTestSupport {
           .cells()
           .applyStyle(
               "A1",
-              new ExcelCellStyle(
+              new CellStylePatch(
                   Optional.empty(),
                   Optional.of(
                       new CellAlignmentPatch(
@@ -71,7 +74,7 @@ class ExcelSheetFormattingCoverageTest extends ExcelSheetTestSupport {
                           Optional.empty(),
                           Optional.empty())),
                   Optional.of(
-                      new ExcelCellFont(
+                      new CellFontPatch(
                           Optional.of(Boolean.TRUE),
                           Optional.empty(),
                           Optional.empty(),
@@ -133,8 +136,8 @@ class ExcelSheetFormattingCoverageTest extends ExcelSheetTestSupport {
       ExcelSheet sheet =
           new ExcelSheet(poiSheet, new WorkbookStyleRegistry(poiWorkbook), evaluator);
 
-      ExcelCellStyle style =
-          new ExcelCellStyle(
+      CellStylePatch style =
+          new CellStylePatch(
               Optional.empty(),
               Optional.of(
                   new CellAlignmentPatch(
@@ -144,7 +147,7 @@ class ExcelSheetFormattingCoverageTest extends ExcelSheetTestSupport {
                       Optional.empty(),
                       Optional.empty())),
               Optional.of(
-                  new ExcelCellFont(
+                  new CellFontPatch(
                       Optional.of(Boolean.TRUE),
                       Optional.empty(),
                       Optional.empty(),
@@ -215,7 +218,7 @@ class ExcelSheetFormattingCoverageTest extends ExcelSheetTestSupport {
                           new ExcelRichTextRun(
                               " Report",
                               Optional.of(
-                                  new ExcelCellFont(
+                                  new CellFontPatch(
                                       Optional.of(Boolean.TRUE),
                                       Optional.empty(),
                                       Optional.empty(),
@@ -227,15 +230,15 @@ class ExcelSheetFormattingCoverageTest extends ExcelSheetTestSupport {
           .cells()
           .applyStyle(
               "A1",
-              new ExcelCellStyle(
+              new CellStylePatch(
                   Optional.empty(),
                   Optional.empty(),
                   Optional.of(
-                      new ExcelCellFont(
+                      new CellFontPatch(
                           Optional.empty(),
                           Optional.of(Boolean.TRUE),
                           Optional.of("Aptos"),
-                          Optional.of(FontHeightReport.fromTwips(260)),
+                          Optional.of(new FontHeightSpec.Twips(260)),
                           Optional.of(ColorSpec.rgb(new RgbHex("#112233"))),
                           Optional.empty(),
                           Optional.empty())),
@@ -281,16 +284,16 @@ class ExcelSheetFormattingCoverageTest extends ExcelSheetTestSupport {
           .cells()
           .applyStyle(
               "A1:B2",
-              new ExcelCellStyle(
+              new CellStylePatch(
                   Optional.empty(),
                   Optional.empty(),
                   Optional.of(
-                      new ExcelCellFont(
+                      new CellFontPatch(
                           Optional.empty(),
                           Optional.empty(),
                           Optional.of("Aptos"),
-                          Optional.of(
-                              FontHeightReport.fromPoints(new java.math.BigDecimal("15.2"))),
+                          Optional.of(FontHeightReport.fromPoints(new java.math.BigDecimal("15.2")))
+                              .map(height -> new FontHeightSpec.Twips(height.twips())),
                           Optional.of(ColorSpec.rgb(new RgbHex("#A3A3A3"))),
                           Optional.empty(),
                           Optional.of(Boolean.TRUE))),
@@ -345,7 +348,7 @@ class ExcelSheetFormattingCoverageTest extends ExcelSheetTestSupport {
           .cells()
           .applyStyle(
               "A1:B2",
-              new ExcelCellStyle(
+              new CellStylePatch(
                   Optional.of("0.00"),
                   Optional.of(
                       new CellAlignmentPatch(
@@ -355,7 +358,7 @@ class ExcelSheetFormattingCoverageTest extends ExcelSheetTestSupport {
                           Optional.empty(),
                           Optional.empty())),
                   Optional.of(
-                      new ExcelCellFont(
+                      new CellFontPatch(
                           Optional.of(Boolean.TRUE),
                           Optional.empty(),
                           Optional.empty(),

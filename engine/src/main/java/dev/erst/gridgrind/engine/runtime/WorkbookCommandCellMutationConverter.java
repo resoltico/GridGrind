@@ -95,9 +95,7 @@ final class WorkbookCommandCellMutationConverter {
         RangeSelector.ByRange selector =
             WorkbookCommandSelectorSupport.rangeByRange(target, action);
         yield new WorkbookFormattingCommand.ApplyStyle(
-            selector.sheetName().value(),
-            selector.range().value(),
-            WorkbookCommandCellValueSpecConverter.toExcelCellStyle(applyStyle.style()));
+            selector.sheetName().value(), selector.range().value(), applyStyle.style());
       }
       case CellMutationAction.AppendRow appendRow ->
           new WorkbookCellCommand.AppendRow(

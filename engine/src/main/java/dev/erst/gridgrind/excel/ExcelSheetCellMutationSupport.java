@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.core.model.style.CellStylePatch;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingController;
 import java.util.ArrayList;
 import java.util.List;
@@ -152,7 +153,7 @@ final class ExcelSheetCellMutationSupport {
     drawingController.cleanupEmptyDrawingPatriarch(xssfSheet());
   }
 
-  void applyStyle(String range, ExcelCellStyle style) {
+  void applyStyle(String range, CellStylePatch style) {
     ExcelSheet.requireNonBlank(range, "range");
     Objects.requireNonNull(style, "style must not be null");
 

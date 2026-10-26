@@ -27,13 +27,6 @@ import dev.erst.gridgrind.core.model.formula.NamedRangeTarget;
 import dev.erst.gridgrind.core.model.pivot.PivotTableSpec;
 import dev.erst.gridgrind.core.model.protection.SheetProtectionSettings;
 import dev.erst.gridgrind.core.model.protection.WorkbookProtectionSpec;
-import dev.erst.gridgrind.core.model.style.BorderSidePatch;
-import dev.erst.gridgrind.core.model.style.CellBorderPatch;
-import dev.erst.gridgrind.core.model.style.CellFillSpec;
-import dev.erst.gridgrind.core.model.style.CellFontPatch;
-import dev.erst.gridgrind.core.model.style.CellGradientFillSpec;
-import dev.erst.gridgrind.core.model.style.CellGradientStopSpec;
-import dev.erst.gridgrind.core.model.style.CellStylePatch;
 import dev.erst.gridgrind.core.model.style.ColorSpec;
 import dev.erst.gridgrind.core.model.style.RichTextRunSpec;
 import dev.erst.gridgrind.core.model.table.AutofilterFilterColumnSpec;
@@ -74,8 +67,6 @@ import dev.erst.gridgrind.excel.ExcelAutofilterFilterCriterion;
 import dev.erst.gridgrind.excel.ExcelAutofilterSortCondition;
 import dev.erst.gridgrind.excel.ExcelAutofilterSortState;
 import dev.erst.gridgrind.excel.ExcelBinaryData;
-import dev.erst.gridgrind.excel.ExcelCellFont;
-import dev.erst.gridgrind.excel.ExcelCellStyle;
 import dev.erst.gridgrind.excel.ExcelChartDefinition;
 import dev.erst.gridgrind.excel.ExcelComment;
 import dev.erst.gridgrind.excel.ExcelCommentAnchor;
@@ -654,75 +645,7 @@ class AdvancedMutationCommandConverterTest {
   }
 
   @Test
-  void convertsAdvancedStyleAndConditionalFormattingPayloads() {
-    ExcelCellStyle style =
-        WorkbookCommandCellValueSpecConverter.toExcelCellStyle(
-            new CellStylePatch(
-                Optional.empty(),
-                Optional.empty(),
-                Optional.of(
-                    new CellFontPatch(
-                        Optional.empty(),
-                        Optional.empty(),
-                        Optional.empty(),
-                        Optional.empty(),
-                        Optional.of(ColorSpec.theme(2, 0.4d)),
-                        Optional.of(true),
-                        Optional.empty())),
-                Optional.of(
-                    CellFillSpec.gradient(
-                        CellGradientFillSpec.path(
-                            Optional.of(0.1d),
-                            Optional.of(0.2d),
-                            Optional.of(0.3d),
-                            Optional.of(0.4d),
-                            List.of(
-                                new CellGradientStopSpec(
-                                    0.0d, ColorSpec.rgb(new RgbHex("#112233"))),
-                                new CellGradientStopSpec(1.0d, ColorSpec.theme(5, 0.2d)))))),
-                Optional.of(
-                    new CellBorderPatch(
-                        Optional.empty(),
-                        Optional.ofNullable(new BorderSidePatch(null, ColorSpec.theme(1, 0.15d))),
-                        Optional.empty(),
-                        Optional.empty(),
-                        Optional.empty())),
-                Optional.empty()));
-
-    assertEquals(
-        Optional.of(
-            new ExcelCellFont(
-                Optional.empty(),
-                Optional.empty(),
-                Optional.empty(),
-                Optional.empty(),
-                Optional.of(ColorSpec.theme(2, 0.4d)),
-                Optional.of(true),
-                Optional.empty())),
-        style.font());
-    assertEquals(
-        Optional.of(
-            CellFillSpec.gradient(
-                CellGradientFillSpec.path(
-                    Optional.of(0.1d),
-                    Optional.of(0.2d),
-                    Optional.of(0.3d),
-                    Optional.of(0.4d),
-                    List.of(
-                        new CellGradientStopSpec(0.0d, ColorSpec.rgb(new RgbHex("#112233"))),
-                        new CellGradientStopSpec(1.0d, ColorSpec.theme(5, 0.2d)))))),
-        style.fill());
-    assertEquals(
-        Optional.of(
-            new CellBorderPatch(
-                Optional.empty(),
-                Optional.ofNullable(
-                    new BorderSidePatch(Optional.empty(), Optional.of(ColorSpec.theme(1, 0.15d)))),
-                Optional.empty(),
-                Optional.empty(),
-                Optional.empty())),
-        style.border());
-
+  void convertsAdvancedConditionalFormattingPayloads() {
     assertEquals(
         new ExcelConditionalFormattingRule.ColorScaleRule(
             List.of(

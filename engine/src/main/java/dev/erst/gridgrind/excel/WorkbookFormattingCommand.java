@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.core.model.style.CellStylePatch;
 import dev.erst.gridgrind.excel.validation.ExcelDataValidationDefinition;
 import java.util.Objects;
 
@@ -11,7 +12,7 @@ public sealed interface WorkbookFormattingCommand extends WorkbookCommand
         WorkbookFormattingCommand.SetConditionalFormatting,
         WorkbookFormattingCommand.ClearConditionalFormatting {
 
-  record ApplyStyle(String sheetName, String range, ExcelCellStyle style)
+  record ApplyStyle(String sheetName, String range, CellStylePatch style)
       implements WorkbookFormattingCommand {
     public ApplyStyle {
       Objects.requireNonNull(sheetName, "sheetName must not be null");

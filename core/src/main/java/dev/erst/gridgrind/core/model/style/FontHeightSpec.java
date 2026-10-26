@@ -9,6 +9,22 @@ import java.util.Objects;
 @Union(discriminator = "type", catalog = true, displayOrder = 54)
 public sealed interface FontHeightSpec {
 
+  /** Returns the exact height in whole twips for workbook authoring. */
+  default int twips() {
+    return switch (this) {
+      case Points height -> height.points().multiply(BigDecimal.valueOf(20)).intValueExact();
+      case Twips height -> height.twips();
+    };
+  }
+
+  /** Returns the height in point units for workbook authoring. */
+  default BigDecimal points() {
+    return switch (this) {
+      case Points height -> height.points();
+      case Twips height -> BigDecimal.valueOf(height.twips()).divide(BigDecimal.valueOf(20));
+    };
+  }
+
   /** Font height expressed in point units, such as {@code 11} or {@code 11.5}. */
   @Variant(
       id = "POINTS",

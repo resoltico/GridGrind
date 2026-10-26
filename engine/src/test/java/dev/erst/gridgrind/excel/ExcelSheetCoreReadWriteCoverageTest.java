@@ -8,8 +8,10 @@ import dev.erst.gridgrind.core.model.style.CellAlignmentPatch;
 import dev.erst.gridgrind.core.model.style.CellBorderPatch;
 import dev.erst.gridgrind.core.model.style.CellColorReport;
 import dev.erst.gridgrind.core.model.style.CellFillSpec;
+import dev.erst.gridgrind.core.model.style.CellFontPatch;
+import dev.erst.gridgrind.core.model.style.CellStylePatch;
 import dev.erst.gridgrind.core.model.style.ColorSpec;
-import dev.erst.gridgrind.core.model.style.FontHeightReport;
+import dev.erst.gridgrind.core.model.style.FontHeightSpec;
 import dev.erst.gridgrind.core.vocabulary.ExcelBorderStyle;
 import dev.erst.gridgrind.core.vocabulary.ExcelColumnSpan;
 import dev.erst.gridgrind.core.vocabulary.ExcelFillPattern;
@@ -234,10 +236,32 @@ class ExcelSheetCoreReadWriteCoverageTest extends ExcelSheetTestSupport {
       assertThrows(NullPointerException.class, () -> sheet.layout().setPrintLayout(null));
       assertThrows(
           NullPointerException.class,
-          () -> sheet.cells().applyStyle(null, ExcelCellStyle.numberFormat("0")));
+          () ->
+              sheet
+                  .cells()
+                  .applyStyle(
+                      null,
+                      new CellStylePatch(
+                          Optional.of("0"),
+                          Optional.empty(),
+                          Optional.empty(),
+                          Optional.empty(),
+                          Optional.empty(),
+                          Optional.empty())));
       assertThrows(
           IllegalArgumentException.class,
-          () -> sheet.cells().applyStyle(" ", ExcelCellStyle.numberFormat("0")));
+          () ->
+              sheet
+                  .cells()
+                  .applyStyle(
+                      " ",
+                      new CellStylePatch(
+                          Optional.of("0"),
+                          Optional.empty(),
+                          Optional.empty(),
+                          Optional.empty(),
+                          Optional.empty(),
+                          Optional.empty())));
       assertThrows(NullPointerException.class, () -> sheet.cells().applyStyle("A1", null));
       assertThrows(
           NullPointerException.class,
@@ -324,7 +348,18 @@ class ExcelSheetCoreReadWriteCoverageTest extends ExcelSheetTestSupport {
       assertEquals("A1:", invalidRangeUnmerge.range());
       assertThrows(
           InvalidRangeAddressException.class,
-          () -> sheet.cells().applyStyle("A1:", ExcelCellStyle.numberFormat("0")));
+          () ->
+              sheet
+                  .cells()
+                  .applyStyle(
+                      "A1:",
+                      new CellStylePatch(
+                          Optional.of("0"),
+                          Optional.empty(),
+                          Optional.empty(),
+                          Optional.empty(),
+                          Optional.empty(),
+                          Optional.empty())));
       assertThrows(IllegalArgumentException.class, () -> sheet.layout().mergeCells("A1"));
       assertThrows(IllegalArgumentException.class, () -> sheet.layout().unmergeCells("A1:B2"));
     }
@@ -404,7 +439,7 @@ class ExcelSheetCoreReadWriteCoverageTest extends ExcelSheetTestSupport {
           .cells()
           .applyStyle(
               "A1:B1",
-              new ExcelCellStyle(
+              new CellStylePatch(
                   Optional.of("#,##0.00"),
                   Optional.of(
                       new CellAlignmentPatch(
@@ -414,7 +449,7 @@ class ExcelSheetCoreReadWriteCoverageTest extends ExcelSheetTestSupport {
                           Optional.empty(),
                           Optional.empty())),
                   Optional.of(
-                      new ExcelCellFont(
+                      new CellFontPatch(
                           Optional.of(true),
                           Optional.empty(),
                           Optional.empty(),
@@ -425,7 +460,25 @@ class ExcelSheetCoreReadWriteCoverageTest extends ExcelSheetTestSupport {
                   Optional.empty(),
                   Optional.empty(),
                   Optional.empty()));
-      sheet.cells().applyStyle("C1", ExcelCellStyle.emphasis(null, true));
+      sheet
+          .cells()
+          .applyStyle(
+              "C1",
+              new CellStylePatch(
+                  Optional.empty(),
+                  Optional.empty(),
+                  Optional.of(
+                      new CellFontPatch(
+                          Optional.empty(),
+                          Optional.of(true),
+                          Optional.empty(),
+                          Optional.empty(),
+                          Optional.empty(),
+                          Optional.empty(),
+                          Optional.empty())),
+                  Optional.empty(),
+                  Optional.empty(),
+                  Optional.empty()));
 
       ExcelCellSnapshot styledValue = sheet.cells().snapshotCell("A1");
       assertEquals("#,##0.00", styledValue.style().numberFormat());
@@ -519,7 +572,7 @@ class ExcelSheetCoreReadWriteCoverageTest extends ExcelSheetTestSupport {
           .cells()
           .applyStyle(
               "A1",
-              new ExcelCellStyle(
+              new CellStylePatch(
                   Optional.empty(),
                   Optional.of(
                       new CellAlignmentPatch(
@@ -529,11 +582,11 @@ class ExcelSheetCoreReadWriteCoverageTest extends ExcelSheetTestSupport {
                           Optional.empty(),
                           Optional.empty())),
                   Optional.of(
-                      new ExcelCellFont(
+                      new CellFontPatch(
                           Optional.of(true),
                           Optional.of(false),
                           Optional.of("Aptos"),
-                          Optional.of(FontHeightReport.fromTwips(280)),
+                          Optional.of(new FontHeightSpec.Twips(280)),
                           Optional.of(ColorSpec.rgb(new RgbHex("#1F4E78"))),
                           Optional.of(true),
                           Optional.of(false))),
@@ -552,11 +605,11 @@ class ExcelSheetCoreReadWriteCoverageTest extends ExcelSheetTestSupport {
           .cells()
           .applyStyle(
               "A1",
-              new ExcelCellStyle(
+              new CellStylePatch(
                   Optional.empty(),
                   Optional.empty(),
                   Optional.of(
-                      new ExcelCellFont(
+                      new CellFontPatch(
                           Optional.empty(),
                           Optional.empty(),
                           Optional.empty(),

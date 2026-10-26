@@ -8,10 +8,12 @@ import dev.erst.gridgrind.core.model.style.CellBorderReport;
 import dev.erst.gridgrind.core.model.style.CellBorderSideReport;
 import dev.erst.gridgrind.core.model.style.CellColorReport;
 import dev.erst.gridgrind.core.model.style.CellFillReport;
+import dev.erst.gridgrind.core.model.style.CellFontPatch;
 import dev.erst.gridgrind.core.model.style.CellFontReport;
 import dev.erst.gridgrind.core.model.style.CellStyleReport;
 import dev.erst.gridgrind.core.model.style.ColorSpec;
 import dev.erst.gridgrind.core.model.style.FontHeightReport;
+import dev.erst.gridgrind.core.model.style.FontHeightSpec;
 import dev.erst.gridgrind.core.vocabulary.ExcelFillPattern;
 import dev.erst.gridgrind.core.vocabulary.ExcelHorizontalAlignment;
 import dev.erst.gridgrind.core.vocabulary.ExcelVerticalAlignment;
@@ -48,7 +50,7 @@ class ExcelRichTextSupportTest {
                 new ExcelRichTextRun(
                     " Report",
                     Optional.of(
-                        new ExcelCellFont(
+                        new CellFontPatch(
                             Optional.of(Boolean.TRUE),
                             Optional.empty(),
                             Optional.empty(),
@@ -179,7 +181,7 @@ class ExcelRichTextSupportTest {
                       new ExcelRichTextRun(
                           "Lead",
                           Optional.of(
-                              new ExcelCellFont(
+                              new CellFontPatch(
                                   Optional.of(true),
                                   Optional.empty(),
                                   Optional.empty(),
@@ -191,7 +193,7 @@ class ExcelRichTextSupportTest {
                       new ExcelRichTextRun(
                           "review scheduled",
                           Optional.of(
-                              new ExcelCellFont(
+                              new CellFontPatch(
                                   Optional.empty(),
                                   Optional.of(true),
                                   Optional.empty(),
@@ -223,18 +225,18 @@ class ExcelRichTextSupportTest {
                   new ExcelRichTextRun(
                       "Alpha",
                       Optional.of(
-                          new ExcelCellFont(
+                          new CellFontPatch(
                               Optional.of(Boolean.FALSE),
                               Optional.of(Boolean.FALSE),
                               Optional.of("Courier New"),
-                              Optional.of(FontHeightReport.fromPoints(new BigDecimal("14"))),
+                              Optional.of(new FontHeightSpec.Points(new BigDecimal("14"))),
                               Optional.of(ColorSpec.rgb(new RgbHex("#123456"))),
                               Optional.of(Boolean.FALSE),
                               Optional.of(Boolean.TRUE)))),
                   new ExcelRichTextRun(
                       " Beta",
                       Optional.of(
-                          new ExcelCellFont(
+                          new CellFontPatch(
                               Optional.of(Boolean.TRUE),
                               Optional.empty(),
                               Optional.empty(),
@@ -245,7 +247,7 @@ class ExcelRichTextSupportTest {
                   new ExcelRichTextRun(
                       " Delta",
                       Optional.of(
-                          new ExcelCellFont(
+                          new CellFontPatch(
                               Optional.empty(),
                               Optional.of(Boolean.FALSE),
                               Optional.empty(),
@@ -345,7 +347,7 @@ class ExcelRichTextSupportTest {
                   new ExcelRichTextRun(
                       "Name",
                       Optional.of(
-                          new ExcelCellFont(
+                          new CellFontPatch(
                               Optional.empty(),
                               Optional.empty(),
                               Optional.of("Courier New"),
@@ -356,18 +358,18 @@ class ExcelRichTextSupportTest {
                   new ExcelRichTextRun(
                       " Size",
                       Optional.of(
-                          new ExcelCellFont(
+                          new CellFontPatch(
                               Optional.empty(),
                               Optional.empty(),
                               Optional.empty(),
-                              Optional.of(FontHeightReport.fromPoints(new BigDecimal("13"))),
+                              Optional.of(new FontHeightSpec.Points(new BigDecimal("13"))),
                               Optional.empty(),
                               Optional.empty(),
                               Optional.empty()))),
                   new ExcelRichTextRun(
                       " Color",
                       Optional.of(
-                          new ExcelCellFont(
+                          new CellFontPatch(
                               Optional.empty(),
                               Optional.empty(),
                               Optional.empty(),
@@ -378,7 +380,7 @@ class ExcelRichTextSupportTest {
                   new ExcelRichTextRun(
                       " Underline",
                       Optional.of(
-                          new ExcelCellFont(
+                          new CellFontPatch(
                               Optional.empty(),
                               Optional.empty(),
                               Optional.empty(),
@@ -389,7 +391,7 @@ class ExcelRichTextSupportTest {
                   new ExcelRichTextRun(
                       " Strike",
                       Optional.of(
-                          new ExcelCellFont(
+                          new CellFontPatch(
                               Optional.empty(),
                               Optional.empty(),
                               Optional.empty(),
