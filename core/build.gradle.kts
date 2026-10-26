@@ -11,14 +11,25 @@ plugins {
 
 description = "Canonical workbook model, vocabulary and Java authoring"
 
+// Project dependencies keep runtime resolution under the owning project lock.
+val jsonMutationTests = configurations.create("jsonMutationTests") {
+    isCanBeConsumed = false
+    isCanBeResolved = true
+}
+
+dependencies {
+    jsonMutationTests(project(path = ":json", configuration = "mutationTests"))
+}
+
+tasks.named<info.solidsoft.gradle.pitest.PitestTask>("pitest") {
+    additionalClasspath.from(jsonMutationTests)
+}
+
 configure<PitestPluginExtension> {
-    testSourceSets.add(provider {
-        project(":json").extensions.getByType<org.gradle.api.tasks.SourceSetContainer>().getByName("test")
-    })
     targetClasses.set(
         setOf(
             "dev.erst.gridgrind.core.vocabulary.ProtocolDefinedNameValidation*",
-            "dev.erst.gridgrind.core.vocabulary.ProtocolRgbColorSupport*",
+            "dev.erst.gridgrind.core.vocabulary.RgbHex",
             "dev.erst.gridgrind.core.model.validation.ConditionalFormattingThresholdInput*",
             "dev.erst.gridgrind.core.model.validation.DataValidationRuleInput*",
             "dev.erst.gridgrind.core.catalog.FieldConstraint*",
@@ -36,7 +47,8 @@ configure<PitestPluginExtension> {
             "dev.erst.gridgrind.core.model.validation.ProtocolResidualCoverageTest",
             "dev.erst.gridgrind.core.catalog.FieldConstraintTest",
             "dev.erst.gridgrind.core.catalog.CatalogStepTemplateSupportTest",
-            "dev.erst.gridgrind.core.vocabulary.ProtocolRgbColorSupportTest",
+            "dev.erst.gridgrind.core.vocabulary.RgbHexTest",
+            "dev.erst.gridgrind.json.codec.WireStringPropertyTest",
             "dev.erst.gridgrind.core.validation.WorkbookStaticMaterializationValidationTest",
             "dev.erst.gridgrind.core.validation.WorkbookStaticRequestContractTest",
         ),

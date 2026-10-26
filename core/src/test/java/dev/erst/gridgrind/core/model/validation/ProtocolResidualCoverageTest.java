@@ -19,6 +19,7 @@ import dev.erst.gridgrind.core.source.TextSourceInput;
 import dev.erst.gridgrind.core.vocabulary.ExcelAuthoredDrawingShapeKind;
 import dev.erst.gridgrind.core.vocabulary.ExcelComparisonOperator;
 import dev.erst.gridgrind.core.vocabulary.ExcelDrawingAnchorBehavior;
+import dev.erst.gridgrind.core.vocabulary.RgbHex;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
@@ -27,7 +28,7 @@ import org.junit.jupiter.api.Test;
 class ProtocolResidualCoverageTest {
   @Test
   void colorFactoriesAndOptionalValidationBranchesStayExplicit() {
-    assertEquals(Optional.of(0.25d), CellColorReport.rgb("#112233", 0.25d).tint());
+    assertEquals(Optional.of(0.25d), CellColorReport.rgb(new RgbHex("#112233"), 0.25d).tint());
     assertEquals(Optional.of(-0.5d), CellColorReport.indexed(7, -0.5d).tint());
     assertEquals(
         "rowIndex must not be negative",

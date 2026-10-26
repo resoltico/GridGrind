@@ -15,6 +15,7 @@ import dev.erst.gridgrind.core.vocabulary.ExcelAutofilterSortMethod;
 import dev.erst.gridgrind.core.vocabulary.ExcelIgnoredErrorType;
 import dev.erst.gridgrind.core.vocabulary.RangeLabel;
 import dev.erst.gridgrind.core.vocabulary.RangeRef;
+import dev.erst.gridgrind.core.vocabulary.RgbHex;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
@@ -28,11 +29,11 @@ class ProtocolReportCoverageTest {
             new RangeRef("A1:A3"), true, ColorInput.theme(4, Double.valueOf(0.15d)));
     AutofilterSortConditionReport.FontColor reportedFontColor =
         new AutofilterSortConditionReport.FontColor(
-            new RangeLabel("A1:A3"), false, CellColorReport.rgb("#AABBCC"));
+            new RangeLabel("A1:A3"), false, CellColorReport.rgb(new RgbHex("#AABBCC")));
 
     assertEquals("A1:A3", authoredFontColor.range().value());
     assertFalse(reportedFontColor.descending());
-    assertEquals(CellColorReport.rgb("#AABBCC"), reportedFontColor.color());
+    assertEquals(CellColorReport.rgb(new RgbHex("#AABBCC")), reportedFontColor.color());
     assertThrows(
         IllegalArgumentException.class,
         () -> new AutofilterSortConditionReport.Value(new RangeLabel(" "), false));
@@ -67,7 +68,7 @@ class ProtocolReportCoverageTest {
   void sortStateReportCreatorCoversBlankValidationAndExplicitEmptySortMethod() {
     AutofilterSortConditionReport.FontColor reportedFontColor =
         new AutofilterSortConditionReport.FontColor(
-            new RangeLabel("A1:A3"), false, CellColorReport.rgb("#AABBCC"));
+            new RangeLabel("A1:A3"), false, CellColorReport.rgb(new RgbHex("#AABBCC")));
 
     AutofilterSortStateReport normalized =
         AutofilterSortStateReport.create(

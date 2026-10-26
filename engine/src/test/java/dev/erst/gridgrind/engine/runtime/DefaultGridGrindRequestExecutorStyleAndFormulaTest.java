@@ -33,6 +33,7 @@ import dev.erst.gridgrind.core.vocabulary.ExcelBorderStyle;
 import dev.erst.gridgrind.core.vocabulary.ExcelHorizontalAlignment;
 import dev.erst.gridgrind.core.vocabulary.ExcelVerticalAlignment;
 import dev.erst.gridgrind.core.vocabulary.RangeRef;
+import dev.erst.gridgrind.core.vocabulary.RgbHex;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
 import dev.erst.gridgrind.excel.ExcelWorkbooks;
@@ -189,23 +190,24 @@ class DefaultGridGrindRequestExecutorStyleAndFormulaTest
                                         false,
                                         "Aptos",
                                         new FontHeightInput.Points(new BigDecimal("11.5")),
-                                        ColorInput.rgb("#1F4E78"),
+                                        ColorInput.rgb(new RgbHex("#1F4E78")),
                                         true,
                                         true),
                                     CellFillInput.patternColors(
                                         dev.erst.gridgrind.core.vocabulary.ExcelFillPattern
                                             .THIN_HORIZONTAL_BANDS,
-                                        ColorInput.rgb("#FFF2CC"),
-                                        ColorInput.rgb("#DDEBF7")),
+                                        ColorInput.rgb(new RgbHex("#FFF2CC")),
+                                        ColorInput.rgb(new RgbHex("#DDEBF7"))),
                                     new CellBorderInput(
                                         Optional.ofNullable(
                                             new BorderSideInput(
-                                                ExcelBorderStyle.THIN, ColorInput.rgb("#102030"))),
+                                                ExcelBorderStyle.THIN,
+                                                ColorInput.rgb(new RgbHex("#102030")))),
                                         Optional.empty(),
                                         Optional.ofNullable(
                                             new BorderSideInput(
                                                 ExcelBorderStyle.DOUBLE,
-                                                ColorInput.rgb("#203040"))),
+                                                ColorInput.rgb(new RgbHex("#203040")))),
                                         Optional.empty(),
                                         Optional.empty()),
                                     new CellProtectionInput(
@@ -324,7 +326,7 @@ class DefaultGridGrindRequestExecutorStyleAndFormulaTest
                                             Optional.of(45.0d),
                                             List.of(
                                                 new CellGradientStopInput(
-                                                    0.0d, ColorInput.rgb("#1F497D")),
+                                                    0.0d, ColorInput.rgb(new RgbHex("#1F497D"))),
                                                 new CellGradientStopInput(
                                                     1.0d, ColorInput.theme(4, 0.45d))))),
                                     null,
@@ -352,7 +354,7 @@ class DefaultGridGrindRequestExecutorStyleAndFormulaTest
     CellGradientFillReport.Linear gradient =
         assertInstanceOf(CellGradientFillReport.Linear.class, fillGradient(gradientStyle.fill()));
     assertEquals(45.0d, gradient.degree());
-    assertEquals(CellColorReport.rgb("#1F497D"), gradient.stops().get(0).color());
+    assertEquals(CellColorReport.rgb(new RgbHex("#1F497D")), gradient.stops().get(0).color());
     assertEquals(CellColorReport.theme(4, 0.45d), gradient.stops().get(1).color());
     assertTrue(gradientStyle.protection().locked());
     assertTrue(gradientStyle.protection().hiddenFormula());
@@ -390,7 +392,7 @@ class DefaultGridGrindRequestExecutorStyleAndFormulaTest
                                             Optional.of(45.0d),
                                             List.of(
                                                 new CellGradientStopInput(
-                                                    0.0d, ColorInput.rgb("#1F497D")),
+                                                    0.0d, ColorInput.rgb(new RgbHex("#1F497D"))),
                                                 new CellGradientStopInput(
                                                     1.0d, ColorInput.theme(4, 0.45d))))),
                                     null,
@@ -415,7 +417,7 @@ class DefaultGridGrindRequestExecutorStyleAndFormulaTest
                                             Optional.of(0.4d),
                                             List.of(
                                                 new CellGradientStopInput(
-                                                    0.0d, ColorInput.rgb("#112233")),
+                                                    0.0d, ColorInput.rgb(new RgbHex("#112233"))),
                                                 new CellGradientStopInput(
                                                     1.0d,
                                                     ColorInput.indexed(
@@ -792,7 +794,7 @@ class DefaultGridGrindRequestExecutorStyleAndFormulaTest
                                         false,
                                         null,
                                         null,
-                                        ColorInput.rgb("#AABBCC"),
+                                        ColorInput.rgb(new RgbHex("#AABBCC")),
                                         false,
                                         false))))))),
             exception));

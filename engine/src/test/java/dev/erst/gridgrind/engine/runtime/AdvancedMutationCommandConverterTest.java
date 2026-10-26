@@ -63,6 +63,7 @@ import dev.erst.gridgrind.core.vocabulary.ExcelPictureFormat;
 import dev.erst.gridgrind.core.vocabulary.ExcelPivotDataConsolidateFunction;
 import dev.erst.gridgrind.core.vocabulary.NamedRangeScope;
 import dev.erst.gridgrind.core.vocabulary.RangeRef;
+import dev.erst.gridgrind.core.vocabulary.RgbHex;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.excel.*;
@@ -678,7 +679,8 @@ class AdvancedMutationCommandConverterTest {
                             Optional.of(0.3d),
                             Optional.of(0.4d),
                             List.of(
-                                new CellGradientStopInput(0.0d, ColorInput.rgb("#112233")),
+                                new CellGradientStopInput(
+                                    0.0d, ColorInput.rgb(new RgbHex("#112233"))),
                                 new CellGradientStopInput(1.0d, ColorInput.theme(5, 0.2d)))))),
                 Optional.of(
                     new CellBorderInput(
@@ -738,7 +740,9 @@ class AdvancedMutationCommandConverterTest {
                 List.of(
                     new ConditionalFormattingThresholdInput.Min(),
                     new ConditionalFormattingThresholdInput.Max()),
-                List.of(ColorInput.rgb("#112233"), ColorInput.rgb("#AABBCC")))));
+                List.of(
+                    ColorInput.rgb(new RgbHex("#112233")),
+                    ColorInput.rgb(new RgbHex("#AABBCC"))))));
 
     assertEquals(
         new ExcelConditionalFormattingRule.DataBarRule(
@@ -770,7 +774,9 @@ class AdvancedMutationCommandConverterTest {
                     List.of(
                         new ConditionalFormattingThresholdInput.Formula("A1"),
                         new ConditionalFormattingThresholdInput.Percent(100.0d)),
-                    List.of(ColorInput.rgb("#112233"), ColorInput.rgb("#AABBCC")))));
+                    List.of(
+                        ColorInput.rgb(new RgbHex("#112233")),
+                        ColorInput.rgb(new RgbHex("#AABBCC"))))));
     assertEquals(
         new ExcelConditionalFormattingThreshold(
             ExcelConditionalFormattingThresholdType.FORMULA, "A1", null),
@@ -936,7 +942,7 @@ class AdvancedMutationCommandConverterTest {
             true,
             List.of(
                 new AutofilterSortConditionInput.CellColor(
-                    new RangeRef("B2:B9"), true, ColorInput.rgb("#AABBCC")),
+                    new RangeRef("B2:B9"), true, ColorInput.rgb(new RgbHex("#AABBCC"))),
                 new AutofilterSortConditionInput.FontColor(
                     new RangeRef("C2:C9"), false, ColorInput.theme(4, 0.15d)),
                 new AutofilterSortConditionInput.Icon(new RangeRef("C2:C9"), false, 2))));

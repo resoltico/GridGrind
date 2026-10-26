@@ -12,6 +12,7 @@ import dev.erst.gridgrind.core.model.style.CellGradientStopReport;
 import dev.erst.gridgrind.core.model.style.CellStyleReport;
 import dev.erst.gridgrind.core.model.style.FontHeightReport;
 import dev.erst.gridgrind.core.vocabulary.ExcelBorderStyle;
+import dev.erst.gridgrind.core.vocabulary.RgbHex;
 import dev.erst.gridgrind.excel.ExcelBorderSideSnapshot;
 import dev.erst.gridgrind.excel.ExcelCellFillSnapshot;
 import dev.erst.gridgrind.excel.ExcelCellFontSnapshot;
@@ -53,8 +54,8 @@ final class InspectionResultCellStyleReportSupport {
             switch (color) {
               case ExcelColorSnapshot.Rgb rgb ->
                   rgb.tint().isPresent()
-                      ? CellColorReport.rgb(rgb.rgb(), rgb.tint().orElseThrow())
-                      : CellColorReport.rgb(rgb.rgb());
+                      ? CellColorReport.rgb(new RgbHex(rgb.rgb()), rgb.tint().orElseThrow())
+                      : CellColorReport.rgb(new RgbHex(rgb.rgb()));
               case ExcelColorSnapshot.Theme theme ->
                   theme.tint().isPresent()
                       ? CellColorReport.theme(theme.theme(), theme.tint().orElseThrow())
@@ -73,8 +74,8 @@ final class InspectionResultCellStyleReportSupport {
             switch (color) {
               case ExcelColor.Rgb rgb ->
                   rgb.tint().isPresent()
-                      ? CellColorReport.rgb(rgb.rgb(), rgb.tint().orElseThrow())
-                      : CellColorReport.rgb(rgb.rgb());
+                      ? CellColorReport.rgb(new RgbHex(rgb.rgb()), rgb.tint().orElseThrow())
+                      : CellColorReport.rgb(new RgbHex(rgb.rgb()));
               case ExcelColor.Theme theme ->
                   theme.tint().isPresent()
                       ? CellColorReport.theme(theme.theme(), theme.tint().orElseThrow())

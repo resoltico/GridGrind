@@ -27,6 +27,7 @@ import dev.erst.gridgrind.core.vocabulary.ExcelBorderStyle;
 import dev.erst.gridgrind.core.vocabulary.ExcelFillPattern;
 import dev.erst.gridgrind.core.vocabulary.ExcelHorizontalAlignment;
 import dev.erst.gridgrind.core.vocabulary.ExcelVerticalAlignment;
+import dev.erst.gridgrind.core.vocabulary.RgbHex;
 import dev.erst.gridgrind.excel.ExcelBorderSideSnapshot;
 import dev.erst.gridgrind.excel.ExcelBorderSnapshot;
 import dev.erst.gridgrind.excel.ExcelCellAlignmentSnapshot;
@@ -62,10 +63,10 @@ class ReadbackSupportCoverageTest {
         Optional.empty(),
         InspectionResultCellStyleReportSupport.toCellColorReport((ExcelColor) null));
     assertEquals(
-        Optional.of(CellColorReport.rgb("#112233")),
+        Optional.of(CellColorReport.rgb(new RgbHex("#112233"))),
         InspectionResultCellStyleReportSupport.toCellColorReport(ExcelColor.rgb("#112233")));
     assertEquals(
-        Optional.of(CellColorReport.rgb("#112233", 0.25d)),
+        Optional.of(CellColorReport.rgb(new RgbHex("#112233"), 0.25d)),
         InspectionResultCellStyleReportSupport.toCellColorReport(
             ExcelColor.rgb("#112233", Optional.of(0.25d))));
     assertEquals(
@@ -224,7 +225,7 @@ class ReadbackSupportCoverageTest {
         Optional.empty(),
         InspectionResultCellReportSupport.toRichTextRunReports((ExcelRichTextSnapshot) null));
     assertEquals(
-        CellColorReport.rgb("#112233"),
+        CellColorReport.rgb(new RgbHex("#112233")),
         InspectionResultCellReportSupport.toCellColorReport(ExcelColorSnapshot.rgb("#112233"))
             .orElseThrow());
   }

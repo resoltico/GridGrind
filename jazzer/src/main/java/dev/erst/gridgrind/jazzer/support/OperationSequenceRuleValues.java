@@ -15,6 +15,7 @@ import dev.erst.gridgrind.core.plan.*;
 import dev.erst.gridgrind.core.source.*;
 import dev.erst.gridgrind.core.vocabulary.*;
 import dev.erst.gridgrind.core.vocabulary.RangeRef;
+import dev.erst.gridgrind.core.vocabulary.RgbHex;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.excel.*;
 import dev.erst.gridgrind.excel.validation.ExcelDataValidationDefinition;
@@ -168,7 +169,7 @@ final class OperationSequenceRuleValues {
   private static ColorInput nextColorInput(GridGrindFuzzData data) {
     Optional<Double> tint = nextTint(data);
     return switch (Math.floorMod(data.consumeByte(), 3)) {
-      case 0 -> new ColorInput.Rgb("#102030", tint);
+      case 0 -> new ColorInput.Rgb(new RgbHex("#102030"), tint);
       case 1 -> new ColorInput.Theme(data.consumeInt(0, 11), tint);
       default -> new ColorInput.Indexed(data.consumeInt(0, 63), tint);
     };

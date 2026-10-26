@@ -50,6 +50,7 @@ import dev.erst.gridgrind.core.vocabulary.ExcelPaneRegion;
 import dev.erst.gridgrind.core.vocabulary.ExcelPictureFormat;
 import dev.erst.gridgrind.core.vocabulary.ExcelPivotDataConsolidateFunction;
 import dev.erst.gridgrind.core.vocabulary.RangeLabel;
+import dev.erst.gridgrind.core.vocabulary.RgbHex;
 import dev.erst.gridgrind.core.vocabulary.SheetLabel;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import java.util.Base64;
@@ -325,12 +326,13 @@ class AdvancedDtoCoverageTest {
             .getMessage());
     assertEquals(0, new PaneInput.Split(1, 0, 0, 0, ExcelPaneRegion.UPPER_RIGHT).topRow());
 
-    CellColorReport.Rgb rgb = CellColorReport.rgb("#a1b2c3");
-    assertEquals("#A1B2C3", rgb.rgb());
+    CellColorReport.Rgb rgb = CellColorReport.rgb(new RgbHex("#a1b2c3"));
+    assertEquals("#A1B2C3", rgb.rgb().value());
     assertEquals(
         "tint must be finite",
         assertThrows(
-                IllegalArgumentException.class, () -> CellColorReport.rgb("#ABCDEF", Double.NaN))
+                IllegalArgumentException.class,
+                () -> CellColorReport.rgb(new RgbHex("#ABCDEF"), Double.NaN))
             .getMessage());
 
     CellGradientFillReport gradient =

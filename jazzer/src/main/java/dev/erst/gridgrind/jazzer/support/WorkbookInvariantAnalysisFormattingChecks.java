@@ -104,11 +104,18 @@ final class WorkbookInvariantAnalysisFormattingChecks {
             .colors()
             .forEach(
                 color ->
-                    WorkbookInvariantChecks.requireNonBlank(color, "conditional formatting color"));
+                    WorkbookInvariantChecks.requireNonBlank(
+                        color.value(), "conditional formatting color"));
       }
       case ConditionalFormattingRuleReport.DataBarRule dataBarRule -> {
-        WorkbookInvariantChecks.requireNonBlank(
-            dataBarRule.color(), "conditional formatting color");
+        WorkbookInvariantChecks.require(
+            dataBarRule.color() != null, "conditional formatting color optional must not be null");
+        dataBarRule
+            .color()
+            .ifPresent(
+                color ->
+                    WorkbookInvariantChecks.requireNonBlank(
+                        color.value(), "conditional formatting color"));
         requireConditionalFormattingThresholdShape(dataBarRule.minThreshold());
         requireConditionalFormattingThresholdShape(dataBarRule.maxThreshold());
         WorkbookInvariantChecks.require(

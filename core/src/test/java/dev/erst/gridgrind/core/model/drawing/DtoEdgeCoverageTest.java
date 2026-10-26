@@ -48,6 +48,7 @@ import dev.erst.gridgrind.core.vocabulary.ExcelPictureFormat;
 import dev.erst.gridgrind.core.vocabulary.ExcelPivotDataConsolidateFunction;
 import dev.erst.gridgrind.core.vocabulary.NamedRangeScope;
 import dev.erst.gridgrind.core.vocabulary.RangeLabel;
+import dev.erst.gridgrind.core.vocabulary.RgbHex;
 import dev.erst.gridgrind.core.vocabulary.SheetLabel;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import java.math.BigDecimal;
@@ -565,10 +566,12 @@ class DtoEdgeCoverageTest {
             .getMessage());
     assertEquals(
         "rgb must not be blank",
-        assertThrows(IllegalArgumentException.class, () -> CellColorReport.rgb(" ")).getMessage());
+        assertThrows(IllegalArgumentException.class, () -> CellColorReport.rgb(new RgbHex(" ")))
+            .getMessage());
     assertEquals(
         "rgb must match #RRGGBB",
-        assertThrows(IllegalArgumentException.class, () -> CellColorReport.rgb("#GGGGGG"))
+        assertThrows(
+                IllegalArgumentException.class, () -> CellColorReport.rgb(new RgbHex("#GGGGGG")))
             .getMessage());
     assertEquals(
         "degree must be finite when provided",
@@ -577,7 +580,9 @@ class DtoEdgeCoverageTest {
                 () ->
                     CellGradientFillReport.linear(
                         Double.POSITIVE_INFINITY,
-                        List.of(new CellGradientStopReport(0.0d, CellColorReport.rgb("#AABBCC")))))
+                        List.of(
+                            new CellGradientStopReport(
+                                0.0d, CellColorReport.rgb(new RgbHex("#AABBCC"))))))
             .getMessage());
   }
 

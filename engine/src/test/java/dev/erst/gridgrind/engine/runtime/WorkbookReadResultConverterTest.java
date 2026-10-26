@@ -276,7 +276,8 @@ class InspectionResultConverterTest extends DefaultGridGrindRequestExecutorTestS
         assertInstanceOf(
                 CellColorReport.Rgb.class,
                 sheetLayout.layout().presentation().tabColor().orElseThrow())
-            .rgb());
+            .rgb()
+            .value());
     assertEquals(12, sheetLayout.layout().presentation().sheetDefaults().defaultColumnWidth());
     assertEquals(
         "B2:B12", sheetLayout.layout().presentation().ignoredErrors().getFirst().range().value());

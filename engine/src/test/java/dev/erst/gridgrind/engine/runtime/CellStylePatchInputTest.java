@@ -15,6 +15,7 @@ import dev.erst.gridgrind.core.vocabulary.ExcelBorderStyle;
 import dev.erst.gridgrind.core.vocabulary.ExcelFillPattern;
 import dev.erst.gridgrind.core.vocabulary.ExcelHorizontalAlignment;
 import dev.erst.gridgrind.core.vocabulary.ExcelVerticalAlignment;
+import dev.erst.gridgrind.core.vocabulary.RgbHex;
 import dev.erst.gridgrind.excel.ExcelCellFill;
 import dev.erst.gridgrind.excel.ExcelColor;
 import java.math.BigDecimal;
@@ -39,17 +40,18 @@ class CellStylePatchInputTest {
                 false,
                 "Aptos",
                 new FontHeightInput.Points(new BigDecimal("11.5")),
-                ColorInput.rgb("#00aa55"),
+                ColorInput.rgb(new RgbHex("#00aa55")),
                 true,
                 false),
             CellFillInput.patternColors(
                 ExcelFillPattern.THIN_HORIZONTAL_BANDS,
-                ColorInput.rgb("#FFF2CC"),
-                ColorInput.rgb("#DDEBF7")),
+                ColorInput.rgb(new RgbHex("#FFF2CC")),
+                ColorInput.rgb(new RgbHex("#DDEBF7"))),
             new CellBorderInput(
                 Optional.empty(),
                 Optional.ofNullable(
-                    new BorderSideInput(ExcelBorderStyle.THICK, ColorInput.rgb("#112233"))),
+                    new BorderSideInput(
+                        ExcelBorderStyle.THICK, ColorInput.rgb(new RgbHex("#112233")))),
                 Optional.empty(),
                 Optional.empty(),
                 Optional.empty()),
@@ -139,14 +141,16 @@ class CellStylePatchInputTest {
         IllegalArgumentException.class, () -> fontInput(null, null, null, null, null, null, null));
     assertThrows(
         IllegalArgumentException.class,
-        () -> fontInput(null, null, null, null, ColorInput.rgb("#12"), null, null));
+        () -> fontInput(null, null, null, null, ColorInput.rgb(new RgbHex("#12")), null, null));
     assertThrows(
         IllegalArgumentException.class,
-        () -> fontInput(null, null, null, null, ColorInput.rgb(" "), null, null));
+        () -> fontInput(null, null, null, null, ColorInput.rgb(new RgbHex(" ")), null, null));
     assertThrows(NullPointerException.class, () -> CellFillInput.pattern(null));
     assertThrows(
         IllegalArgumentException.class,
-        () -> CellFillInput.patternForeground(ExcelFillPattern.SOLID, ColorInput.rgb(" ")));
+        () ->
+            CellFillInput.patternForeground(
+                ExcelFillPattern.SOLID, ColorInput.rgb(new RgbHex(" "))));
     assertThrows(
         IllegalArgumentException.class,
         () ->
@@ -185,21 +189,27 @@ class CellStylePatchInputTest {
                 Optional.of(251)));
     assertThrows(
         NullPointerException.class,
-        () -> CellFillInput.patternBackground(null, ColorInput.rgb("#AABBCC")));
+        () -> CellFillInput.patternBackground(null, ColorInput.rgb(new RgbHex("#AABBCC"))));
     assertThrows(
         IllegalArgumentException.class,
-        () -> CellFillInput.patternForeground(ExcelFillPattern.NONE, ColorInput.rgb("#AABBCC")));
+        () ->
+            CellFillInput.patternForeground(
+                ExcelFillPattern.NONE, ColorInput.rgb(new RgbHex("#AABBCC"))));
     assertThrows(
         IllegalArgumentException.class,
-        () -> CellFillInput.patternBackground(ExcelFillPattern.NONE, ColorInput.rgb("#AABBCC")));
+        () ->
+            CellFillInput.patternBackground(
+                ExcelFillPattern.NONE, ColorInput.rgb(new RgbHex("#AABBCC"))));
     assertThrows(
         IllegalArgumentException.class,
         () ->
             CellFillInput.patternColors(
-                ExcelFillPattern.SOLID, ColorInput.rgb("#AABBCC"), ColorInput.rgb("#112233")));
+                ExcelFillPattern.SOLID,
+                ColorInput.rgb(new RgbHex("#AABBCC")),
+                ColorInput.rgb(new RgbHex("#112233"))));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new BorderSideInput(ExcelBorderStyle.NONE, ColorInput.rgb("#AABBCC")));
+        () -> new BorderSideInput(ExcelBorderStyle.NONE, ColorInput.rgb(new RgbHex("#AABBCC"))));
     assertThrows(
         IllegalArgumentException.class,
         () -> new CellProtectionInput(Optional.empty(), Optional.empty()));
@@ -248,7 +258,7 @@ class CellStylePatchInputTest {
         styleInput(
             null,
             null,
-            fontInput(null, null, null, null, ColorInput.rgb("#AABBCC"), null, null),
+            fontInput(null, null, null, null, ColorInput.rgb(new RgbHex("#AABBCC")), null, null),
             null,
             null,
             null));
@@ -263,7 +273,8 @@ class CellStylePatchInputTest {
             null,
             null,
             null,
-            CellFillInput.patternForeground(ExcelFillPattern.SOLID, ColorInput.rgb("#AABBCC")),
+            CellFillInput.patternForeground(
+                ExcelFillPattern.SOLID, ColorInput.rgb(new RgbHex("#AABBCC"))),
             null,
             null));
     assertNotNull(
@@ -304,19 +315,21 @@ class CellStylePatchInputTest {
     CellFillInput.PatternForeground solidFill =
         assertInstanceOf(
             CellFillInput.PatternForeground.class,
-            CellFillInput.patternForeground(ExcelFillPattern.SOLID, ColorInput.rgb("#AABBCC")));
-    assertEquals(ColorInput.rgb("#AABBCC"), solidFill.foregroundColor());
+            CellFillInput.patternForeground(
+                ExcelFillPattern.SOLID, ColorInput.rgb(new RgbHex("#AABBCC"))));
+    assertEquals(ColorInput.rgb(new RgbHex("#AABBCC")), solidFill.foregroundColor());
     assertNotNull(CellFillInput.pattern(ExcelFillPattern.NONE));
     assertNotNull(
         CellFillInput.patternColors(
             ExcelFillPattern.THIN_FORWARD_DIAGONAL,
-            ColorInput.rgb("#AABBCC"),
-            ColorInput.rgb("#112233")));
+            ColorInput.rgb(new RgbHex("#AABBCC")),
+            ColorInput.rgb(new RgbHex("#112233"))));
     CellFillInput.PatternBackground backgroundOnlyPattern =
         assertInstanceOf(
             CellFillInput.PatternBackground.class,
-            CellFillInput.patternBackground(ExcelFillPattern.BRICKS, ColorInput.rgb("#112233")));
-    assertEquals(ColorInput.rgb("#112233"), backgroundOnlyPattern.backgroundColor());
+            CellFillInput.patternBackground(
+                ExcelFillPattern.BRICKS, ColorInput.rgb(new RgbHex("#112233"))));
+    assertEquals(ColorInput.rgb(new RgbHex("#112233")), backgroundOnlyPattern.backgroundColor());
     assertNotNull(new CellProtectionInput(Optional.of(false), Optional.empty()));
     CellProtectionInput hiddenOnlyProtection =
         new CellProtectionInput(Optional.empty(), Optional.of(true));

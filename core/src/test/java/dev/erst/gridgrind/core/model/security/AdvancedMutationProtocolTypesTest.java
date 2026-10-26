@@ -80,6 +80,7 @@ import dev.erst.gridgrind.core.vocabulary.ExcelPivotDataConsolidateFunction;
 import dev.erst.gridgrind.core.vocabulary.ExcelPrintOrientation;
 import dev.erst.gridgrind.core.vocabulary.ProtocolCellAddressValidation;
 import dev.erst.gridgrind.core.vocabulary.RangeRef;
+import dev.erst.gridgrind.core.vocabulary.RgbHex;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import java.util.List;
 import java.util.Optional;
@@ -672,7 +673,7 @@ class AdvancedMutationProtocolTypesTest {
   void autofilterInputsNormalizeAndValidateAcrossAllCriterionFamilies() {
     AutofilterSortConditionInput colorSort =
         new AutofilterSortConditionInput.CellColor(
-            new RangeRef("B2:B9"), true, ColorInput.rgb("#aabbcc"));
+            new RangeRef("B2:B9"), true, ColorInput.rgb(new RgbHex("#aabbcc")));
     AutofilterSortConditionInput iconSort =
         new AutofilterSortConditionInput.Icon(new RangeRef("C2:C9"), false, 2);
     AutofilterSortStateInput sortState =
@@ -690,7 +691,8 @@ class AdvancedMutationProtocolTypesTest {
         assertInstanceOf(AutofilterSortConditionInput.CellColor.class, colorSort);
     AutofilterSortConditionInput.Icon typedIconSort =
         assertInstanceOf(AutofilterSortConditionInput.Icon.class, iconSort);
-    assertEquals("#AABBCC", assertInstanceOf(ColorInput.Rgb.class, typedColorSort.color()).rgb());
+    assertEquals(
+        "#AABBCC", assertInstanceOf(ColorInput.Rgb.class, typedColorSort.color()).rgb().value());
     assertEquals(2, typedIconSort.iconId());
     assertFalse(sortState.caseSensitive());
     assertTrue(sortState.columnSort());
@@ -804,23 +806,24 @@ class AdvancedMutationProtocolTypesTest {
 
   @Test
   void colorAndThresholdInputsNormalizeAndValidate() {
-    ColorInput.Rgb rgb = ColorInput.rgb("#aabbcc");
-    ColorInput.Rgb tintedRgb = ColorInput.rgb("#112233", 0.25d);
+    ColorInput.Rgb rgb = ColorInput.rgb(new RgbHex("#aabbcc"));
+    ColorInput.Rgb tintedRgb = ColorInput.rgb(new RgbHex("#112233"), 0.25d);
     ColorInput.Theme themed = ColorInput.theme(4, 0.5d);
     ColorInput.Indexed indexed = ColorInput.indexed(64);
-    assertEquals("#AABBCC", rgb.rgb());
-    assertEquals("#112233", tintedRgb.rgb());
+    assertEquals("#AABBCC", rgb.rgb().value());
+    assertEquals("#112233", tintedRgb.rgb().value());
     assertEquals(Optional.of(0.25d), tintedRgb.tint());
     assertEquals(4, themed.theme());
     assertEquals(Optional.of(0.5d), themed.tint());
     assertEquals(64, indexed.indexed());
     assertThrows(NullPointerException.class, () -> ColorInput.rgb(null));
-    assertThrows(IllegalArgumentException.class, () -> ColorInput.rgb(" "));
-    assertThrows(IllegalArgumentException.class, () -> ColorInput.rgb("123456"));
+    assertThrows(IllegalArgumentException.class, () -> ColorInput.rgb(new RgbHex(" ")));
+    assertThrows(IllegalArgumentException.class, () -> ColorInput.rgb(new RgbHex("123456")));
     assertThrows(IllegalArgumentException.class, () -> ColorInput.theme(-1));
     assertThrows(IllegalArgumentException.class, () -> ColorInput.indexed(-1));
     assertThrows(
-        IllegalArgumentException.class, () -> ColorInput.rgb("#AABBCC", Double.NEGATIVE_INFINITY));
+        IllegalArgumentException.class,
+        () -> ColorInput.rgb(new RgbHex("#AABBCC"), Double.NEGATIVE_INFINITY));
 
     ConditionalFormattingThresholdInput.Formula threshold =
         new ConditionalFormattingThresholdInput.Formula("A1*2");
@@ -859,7 +862,7 @@ class AdvancedMutationProtocolTypesTest {
             new ConditionalFormattingRuleInput.ColorScaleRule(
                 false,
                 List.of(new ConditionalFormattingThresholdInput.Min()),
-                List.of(ColorInput.rgb("#112233"))));
+                List.of(ColorInput.rgb(new RgbHex("#112233")))));
     assertThrows(
         IllegalArgumentException.class,
         () ->
@@ -868,13 +871,13 @@ class AdvancedMutationProtocolTypesTest {
                 List.of(
                     new ConditionalFormattingThresholdInput.Min(),
                     new ConditionalFormattingThresholdInput.Max()),
-                List.of(ColorInput.rgb("#112233"))));
+                List.of(ColorInput.rgb(new RgbHex("#112233")))));
     assertThrows(
         IllegalArgumentException.class,
         () ->
             new ConditionalFormattingRuleInput.DataBarRule(
                 false,
-                ColorInput.rgb("#112233"),
+                ColorInput.rgb(new RgbHex("#112233")),
                 false,
                 -1,
                 90,
@@ -885,7 +888,7 @@ class AdvancedMutationProtocolTypesTest {
         () ->
             new ConditionalFormattingRuleInput.DataBarRule(
                 false,
-                ColorInput.rgb("#112233"),
+                ColorInput.rgb(new RgbHex("#112233")),
                 false,
                 0,
                 -1,
@@ -896,7 +899,7 @@ class AdvancedMutationProtocolTypesTest {
         () ->
             new ConditionalFormattingRuleInput.DataBarRule(
                 false,
-                ColorInput.rgb("#112233"),
+                ColorInput.rgb(new RgbHex("#112233")),
                 false,
                 10,
                 5,
@@ -923,7 +926,8 @@ class AdvancedMutationProtocolTypesTest {
 
   @Test
   void gradientAndStructuredStyleInputsNormalizeAndValidate() {
-    CellGradientStopInput start = new CellGradientStopInput(0.0d, ColorInput.rgb("#112233"));
+    CellGradientStopInput start =
+        new CellGradientStopInput(0.0d, ColorInput.rgb(new RgbHex("#112233")));
     CellGradientStopInput finish = new CellGradientStopInput(1.0d, ColorInput.theme(5, 0.2d));
     CellGradientFillInput gradient =
         CellGradientFillInput.path(
@@ -951,13 +955,13 @@ class AdvancedMutationProtocolTypesTest {
         CellGradientFillInput.linear(Optional.empty(), List.of(start, finish)));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new CellGradientStopInput(-0.1d, ColorInput.rgb("#112233")));
+        () -> new CellGradientStopInput(-0.1d, ColorInput.rgb(new RgbHex("#112233"))));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new CellGradientStopInput(Double.NaN, ColorInput.rgb("#112233")));
+        () -> new CellGradientStopInput(Double.NaN, ColorInput.rgb(new RgbHex("#112233"))));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new CellGradientStopInput(1.5d, ColorInput.rgb("#112233")));
+        () -> new CellGradientStopInput(1.5d, ColorInput.rgb(new RgbHex("#112233"))));
     assertThrows(NullPointerException.class, () -> new CellGradientStopInput(0.5d, null));
     assertThrows(
         IllegalArgumentException.class,
@@ -1038,7 +1042,8 @@ class AdvancedMutationProtocolTypesTest {
     assertThrows(IllegalArgumentException.class, () -> ColorInput.theme(-1));
     assertThrows(IllegalArgumentException.class, () -> ColorInput.indexed(-1));
     assertThrows(
-        IllegalArgumentException.class, () -> ColorInput.rgb("#112233", Double.POSITIVE_INFINITY));
+        IllegalArgumentException.class,
+        () -> ColorInput.rgb(new RgbHex("#112233"), Double.POSITIVE_INFINITY));
   }
 
   private void assertFillInputsNormalizeAndValidate(CellGradientFillInput gradient) {
@@ -1080,12 +1085,16 @@ class AdvancedMutationProtocolTypesTest {
         IllegalArgumentException.class,
         () ->
             CellFillInput.patternColors(
-                ExcelFillPattern.SOLID, ColorInput.rgb("#112233"), ColorInput.indexed(64)));
+                ExcelFillPattern.SOLID,
+                ColorInput.rgb(new RgbHex("#112233")),
+                ColorInput.indexed(64)));
     assertThrows(
         IllegalArgumentException.class,
         () ->
             CellFillInput.patternColors(
-                ExcelFillPattern.NONE, ColorInput.rgb("#112233"), ColorInput.indexed(64)));
+                ExcelFillPattern.NONE,
+                ColorInput.rgb(new RgbHex("#112233")),
+                ColorInput.indexed(64)));
     assertThrows(
         NullPointerException.class,
         () -> CellFillInput.patternBackground(ExcelFillPattern.FINE_DOTS, null));
@@ -1093,7 +1102,7 @@ class AdvancedMutationProtocolTypesTest {
         NullPointerException.class,
         () ->
             CellFillInput.patternColors(
-                ExcelFillPattern.FINE_DOTS, ColorInput.rgb("#112233"), null));
+                ExcelFillPattern.FINE_DOTS, ColorInput.rgb(new RgbHex("#112233")), null));
   }
 
   private void assertBorderSideInputsNormalizeAndValidate() {
@@ -1297,7 +1306,7 @@ class AdvancedMutationProtocolTypesTest {
     SheetPresentationInput explicitPresentation =
         new SheetPresentationInput(
             new SheetDisplayInput(false, false, true, true, true),
-            java.util.Optional.of(ColorInput.rgb("#112233")),
+            java.util.Optional.of(ColorInput.rgb(new RgbHex("#112233"))),
             new SheetOutlineSummaryInput(false, false),
             new SheetDefaultsInput(12, 18.5d),
             List.of(
@@ -1310,7 +1319,9 @@ class AdvancedMutationProtocolTypesTest {
 
     assertEquals(
         new SheetDisplayInput(false, false, true, true, true), explicitPresentation.display());
-    assertEquals(java.util.Optional.of(ColorInput.rgb("#112233")), explicitPresentation.tabColor());
+    assertEquals(
+        java.util.Optional.of(ColorInput.rgb(new RgbHex("#112233"))),
+        explicitPresentation.tabColor());
     assertEquals(new SheetOutlineSummaryInput(false, false), explicitPresentation.outlineSummary());
     assertEquals(new SheetDefaultsInput(12, 18.5d), explicitPresentation.sheetDefaults());
     assertEquals(SheetDisplayInput.defaults(), defaultedPresentation.display());

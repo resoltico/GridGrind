@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import dev.erst.gridgrind.core.model.style.ColorInput;
 import dev.erst.gridgrind.core.model.value.CellInput;
 import dev.erst.gridgrind.core.source.TextSourceInput;
+import dev.erst.gridgrind.core.vocabulary.RgbHex;
 import dev.erst.gridgrind.excel.ExcelCellValue;
 import dev.erst.gridgrind.excel.ExcelColor;
 import dev.erst.gridgrind.excel.ExcelRichText;
@@ -43,7 +44,7 @@ class CellInputTest {
                                 null,
                                 null,
                                 null,
-                                ColorInput.rgb("#AABBCC"),
+                                ColorInput.rgb(new RgbHex("#AABBCC")),
                                 null,
                                 null))))));
     assertEquals(

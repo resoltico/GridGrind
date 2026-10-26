@@ -241,7 +241,7 @@ final class WorkbookCommandCellInputConverter {
   static ExcelColor toRequiredExcelColor(ColorInput color, String fieldName) {
     Objects.requireNonNull(color, fieldName + " must not be null");
     return switch (color) {
-      case ColorInput.Rgb rgb -> ExcelColor.rgb(rgb.rgb(), rgb.tint());
+      case ColorInput.Rgb rgb -> ExcelColor.rgb(rgb.rgb().value(), rgb.tint());
       case ColorInput.Theme theme -> ExcelColor.theme(theme.theme(), theme.tint());
       case ColorInput.Indexed indexed -> ExcelColor.indexed(indexed.indexed(), indexed.tint());
     };

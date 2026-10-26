@@ -80,6 +80,7 @@ import dev.erst.gridgrind.core.vocabulary.NamedRangeScope;
 import dev.erst.gridgrind.core.vocabulary.PlanId;
 import dev.erst.gridgrind.core.vocabulary.RangeLabel;
 import dev.erst.gridgrind.core.vocabulary.RangeRef;
+import dev.erst.gridgrind.core.vocabulary.RgbHex;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.excel.*;
@@ -502,7 +503,7 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
                                     Boolean.TRUE,
                                     "Aptos",
                                     new FontHeightInput.Twips(260),
-                                    ColorInput.rgb("#112233"),
+                                    ColorInput.rgb(new RgbHex("#112233")),
                                     null,
                                     null),
                                 null,
@@ -663,7 +664,7 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
                         new WorkbookMutationAction.SetSheetPresentation(
                             new SheetPresentationInput(
                                 new SheetDisplayInput(false, false, false, true, true),
-                                Optional.of(ColorInput.rgb("#112233")),
+                                Optional.of(ColorInput.rgb(new RgbHex("#112233"))),
                                 new SheetOutlineSummaryInput(false, false),
                                 new SheetDefaultsInput(11, 18.5d),
                                 List.of(
@@ -1606,10 +1607,10 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
                         Optional.of(true),
                         Optional.empty(),
                         Optional.empty(),
-                        java.util.Optional.of(ColorInput.rgb("#102030")),
+                        java.util.Optional.of(ColorInput.rgb(new RgbHex("#102030"))),
                         Optional.empty(),
                         Optional.empty(),
-                        java.util.Optional.of(ColorInput.rgb("#E0F0AA")),
+                        java.util.Optional.of(ColorInput.rgb(new RgbHex("#E0F0AA"))),
                         java.util.Optional.empty()))),
             new ConditionalFormattingRuleInput.CellValueRule(
                 ExcelComparisonOperator.BETWEEN,
@@ -1637,7 +1638,13 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
                 text(" FY26"),
                 maybe(
                     fontInput(
-                        Boolean.TRUE, null, null, null, ColorInput.rgb("#FF0000"), null, null)))));
+                        Boolean.TRUE,
+                        null,
+                        null,
+                        null,
+                        ColorInput.rgb(new RgbHex("#FF0000")),
+                        null,
+                        null)))));
   }
 
   private static dev.erst.gridgrind.core.plan.AssertionFailure failedAssertion(

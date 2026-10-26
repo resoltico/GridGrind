@@ -76,6 +76,7 @@ import dev.erst.gridgrind.core.vocabulary.ExcelOoxmlHashAlgorithm;
 import dev.erst.gridgrind.core.vocabulary.ExcelOoxmlSignatureState;
 import dev.erst.gridgrind.core.vocabulary.ExcelPrintOrientation;
 import dev.erst.gridgrind.core.vocabulary.RangeRef;
+import dev.erst.gridgrind.core.vocabulary.RgbHex;
 import dev.erst.gridgrind.core.vocabulary.SheetLabel;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.engine.runtime.parity.ParityPlanSupport.PendingMutation;
@@ -376,7 +377,7 @@ final class XlsxParityProbeRegistry {
                 CellGradientFillInput.linear(
                     java.util.Optional.of(45.0d),
                     List.of(
-                        new CellGradientStopInput(0.0d, ColorInput.rgb("#1F497D")),
+                        new CellGradientStopInput(0.0d, ColorInput.rgb(new RgbHex("#1F497D"))),
                         new CellGradientStopInput(1.0d, ColorInput.theme(4, 0.45d)))))),
         java.util.Optional.empty(),
         java.util.Optional.empty());
@@ -457,9 +458,9 @@ final class XlsxParityProbeRegistry {
                                 new ConditionalFormattingThresholdInput.Percentile(50.0d),
                                 new ConditionalFormattingThresholdInput.Max()),
                             List.of(
-                                ColorInput.rgb("#AA2211"),
-                                ColorInput.rgb("#FFDD55"),
-                                ColorInput.rgb("#11CC66")))))));
+                                ColorInput.rgb(new RgbHex("#AA2211")),
+                                ColorInput.rgb(new RgbHex("#FFDD55")),
+                                ColorInput.rgb(new RgbHex("#11CC66"))))))));
     PendingMutation dataBar =
         mutate(
             new RangeSelector.ByRange(new SheetName("Advanced"), new RangeRef("M2:M5")),
@@ -468,7 +469,7 @@ final class XlsxParityProbeRegistry {
                     List.of(
                         new ConditionalFormattingRuleInput.DataBarRule(
                             false,
-                            ColorInput.rgb("#123456"),
+                            ColorInput.rgb(new RgbHex("#123456")),
                             true,
                             10,
                             90,
@@ -672,7 +673,7 @@ final class XlsxParityProbeRegistry {
     for (String part : parts) {
       if (part.startsWith("rgb=")) {
         String expected = "#" + part.substring("rgb=".length());
-        if (!(color instanceof CellColorReport.Rgb rgb) || !expected.equals(rgb.rgb())) {
+        if (!(color instanceof CellColorReport.Rgb rgb) || !expected.equals(rgb.rgb().value())) {
           return false;
         }
       } else if (part.startsWith("theme=")) {

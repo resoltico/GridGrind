@@ -6,7 +6,7 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import dev.erst.gridgrind.core.model.style.DifferentialStyleReport;
 import dev.erst.gridgrind.core.vocabulary.ExcelComparisonOperator;
 import dev.erst.gridgrind.core.vocabulary.ExcelConditionalFormattingIconSet;
-import dev.erst.gridgrind.core.vocabulary.ProtocolRgbColorSupport;
+import dev.erst.gridgrind.core.vocabulary.RgbHex;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -95,12 +95,13 @@ public sealed interface ConditionalFormattingRuleReport
       int priority,
       boolean stopIfTrue,
       List<ConditionalFormattingThresholdReport> thresholds,
-      List<String> colors)
+      List<RgbHex> colors)
       implements ConditionalFormattingRuleReport {
     public ColorScaleRule {
       requirePriority(priority);
       thresholds = copyThresholds(thresholds);
-      colors = copyColors(colors);
+      Objects.requireNonNull(colors, "colors must not be null");
+      colors = List.copyOf(colors);
     }
   }
 
@@ -108,7 +109,7 @@ public sealed interface ConditionalFormattingRuleReport
   record DataBarRule(
       int priority,
       boolean stopIfTrue,
-      String color,
+      @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<RgbHex> color,
       boolean iconOnly,
       int widthMin,
       int widthMax,
@@ -117,7 +118,7 @@ public sealed interface ConditionalFormattingRuleReport
       implements ConditionalFormattingRuleReport {
     public DataBarRule {
       requirePriority(priority);
-      color = ProtocolRgbColorSupport.normalizeRgbHex(color, "color").orElse(null);
+      Objects.requireNonNull(color, "color must not be null");
       if (widthMin < 0) {
         throw new IllegalArgumentException("widthMin must not be negative");
       }
@@ -193,14 +194,5 @@ public sealed interface ConditionalFormattingRuleReport
       Objects.requireNonNull(threshold, "thresholds must not contain null values");
     }
     return copy;
-  }
-
-  private static List<String> copyColors(List<String> colors) {
-    Objects.requireNonNull(colors, "colors must not be null");
-    List<String> copy = new java.util.ArrayList<>(List.copyOf(colors));
-    for (int index = 0; index < copy.size(); index++) {
-      copy.set(index, ProtocolRgbColorSupport.requireRgbHex(copy.get(index), "colors"));
-    }
-    return List.copyOf(copy);
   }
 }

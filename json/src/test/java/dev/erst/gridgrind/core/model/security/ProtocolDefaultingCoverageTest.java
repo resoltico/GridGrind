@@ -95,9 +95,9 @@ import dev.erst.gridgrind.core.vocabulary.ExcelOoxmlWriteHash;
 import dev.erst.gridgrind.core.vocabulary.ExcelPivotDataConsolidateFunction;
 import dev.erst.gridgrind.core.vocabulary.ExcelPrintOrientation;
 import dev.erst.gridgrind.core.vocabulary.PlanId;
-import dev.erst.gridgrind.core.vocabulary.ProtocolRgbColorSupport;
 import dev.erst.gridgrind.core.vocabulary.RangeLabel;
 import dev.erst.gridgrind.core.vocabulary.RangeRef;
+import dev.erst.gridgrind.core.vocabulary.RgbHex;
 import dev.erst.gridgrind.core.vocabulary.SheetLabel;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import java.util.List;
@@ -230,7 +230,6 @@ class ProtocolDefaultingCoverageTest {
     assertEquals(Optional.of("Signed workbook"), explicitSignature.description());
     assertEquals(GridGrindProtocolVersion.current(), report.protocolVersion());
     assertEquals(List.of(), report.warnings());
-    assertEquals(Optional.empty(), ProtocolRgbColorSupport.normalizeRgbHex(null, null));
   }
 
   @Test
@@ -724,7 +723,7 @@ class ProtocolDefaultingCoverageTest {
     TableColumnReport tableColumn = new TableColumnReport(4L, "Owner");
     AutofilterSortConditionReport conditionReport =
         new AutofilterSortConditionReport.CellColor(
-            new RangeLabel("B2:B9"), false, CellColorReport.rgb("#aabbcc"));
+            new RangeLabel("B2:B9"), false, CellColorReport.rgb(new RgbHex("#aabbcc")));
     AutofilterSortConditionReport createdConditionReport =
         new AutofilterSortConditionReport.Icon(new RangeLabel("C2:C9"), true, 2);
     AutofilterSortStateReport stateReport =
@@ -778,7 +777,7 @@ class ProtocolDefaultingCoverageTest {
     SheetPresentationInput explicitPresentation =
         new SheetPresentationInput(
             explicitDisplay,
-            Optional.of(ColorInput.rgb("#aabbcc")),
+            Optional.of(ColorInput.rgb(new RgbHex("#aabbcc"))),
             explicitOutline,
             explicitSheetDefaults,
             List.of(
@@ -809,9 +808,9 @@ class ProtocolDefaultingCoverageTest {
         IllegalArgumentException.class,
         () -> new DifferentialBorderSideReport(Optional.empty(), Optional.empty()));
     assertEquals(
-        Optional.of(CellColorReport.rgb("#aabbcc")),
+        Optional.of(CellColorReport.rgb(new RgbHex("#aabbcc"))),
         new DifferentialBorderSideReport(
-                Optional.empty(), Optional.of(CellColorReport.rgb("#aabbcc")))
+                Optional.empty(), Optional.of(CellColorReport.rgb(new RgbHex("#aabbcc"))))
             .color());
     assertEquals(
         Optional.of(ExcelBorderStyle.NONE),
@@ -821,7 +820,8 @@ class ProtocolDefaultingCoverageTest {
         IllegalArgumentException.class,
         () ->
             new DifferentialBorderSideReport(
-                Optional.of(ExcelBorderStyle.NONE), Optional.of(CellColorReport.rgb("#aabbcc"))));
+                Optional.of(ExcelBorderStyle.NONE),
+                Optional.of(CellColorReport.rgb(new RgbHex("#aabbcc")))));
     assertInstanceOf(AutofilterSortConditionInput.Icon.class, explicitSortCondition);
     assertFalse(explicitFilterColumn.showButton());
     assertEquals(Optional.of(ExcelAutofilterSortMethod.PINYIN), explicitSortState.sortMethod());

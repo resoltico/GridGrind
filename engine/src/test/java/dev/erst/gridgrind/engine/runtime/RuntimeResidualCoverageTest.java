@@ -83,6 +83,7 @@ import dev.erst.gridgrind.core.vocabulary.ExcelPivotDataConsolidateFunction;
 import dev.erst.gridgrind.core.vocabulary.ExcelPrintOrientation;
 import dev.erst.gridgrind.core.vocabulary.NamedRangeScope;
 import dev.erst.gridgrind.core.vocabulary.RangeRef;
+import dev.erst.gridgrind.core.vocabulary.RgbHex;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.excel.ExcelBorder;
 import dev.erst.gridgrind.excel.ExcelBorderSide;
@@ -145,7 +146,9 @@ class RuntimeResidualCoverageTest {
     Optional<ExcelBorder> border =
         WorkbookCommandCellInputConverter.toExcelBorder(
             new CellBorderInput(
-                Optional.of(new BorderSideInput(ExcelBorderStyle.THIN, ColorInput.rgb("#112233"))),
+                Optional.of(
+                    new BorderSideInput(
+                        ExcelBorderStyle.THIN, ColorInput.rgb(new RgbHex("#112233")))),
                 Optional.empty(),
                 Optional.empty(),
                 Optional.empty(),
@@ -181,7 +184,8 @@ class RuntimeResidualCoverageTest {
         Optional.empty(),
         InspectionResultCellReportSupport.toCellColorReport((ExcelColorSnapshot) null));
     assertEquals(
-        Optional.of(dev.erst.gridgrind.core.model.style.CellColorReport.rgb("#112233", 0.25d)),
+        Optional.of(
+            dev.erst.gridgrind.core.model.style.CellColorReport.rgb(new RgbHex("#112233"), 0.25d)),
         InspectionResultCellReportSupport.toCellColorReport(
             ExcelColorSnapshot.rgb("#112233", 0.25d)));
     assertEquals(

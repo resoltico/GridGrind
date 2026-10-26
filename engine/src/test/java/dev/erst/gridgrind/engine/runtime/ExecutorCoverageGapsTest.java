@@ -34,6 +34,7 @@ import dev.erst.gridgrind.core.source.TextSourceInput;
 import dev.erst.gridgrind.core.vocabulary.CellAddress;
 import dev.erst.gridgrind.core.vocabulary.ExcelBorderStyle;
 import dev.erst.gridgrind.core.vocabulary.RangeRef;
+import dev.erst.gridgrind.core.vocabulary.RgbHex;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.excel.ExcelDifferentialBorder;
 import dev.erst.gridgrind.excel.ooxml.ExcelOoxmlOpenOptions;
@@ -198,7 +199,8 @@ class ExecutorCoverageGapsTest {
                 ProblemContextRequestSurfaces.JsonLocation.unavailable()));
     DifferentialBorderInput border =
         new DifferentialBorderInput(
-            Optional.of(new BorderSideInput(ExcelBorderStyle.THIN, ColorInput.rgb("#aabbcc"))),
+            Optional.of(
+                new BorderSideInput(ExcelBorderStyle.THIN, ColorInput.rgb(new RgbHex("#aabbcc")))),
             Optional.empty(),
             Optional.empty(),
             Optional.empty(),

@@ -142,6 +142,7 @@ import dev.erst.gridgrind.core.vocabulary.NamedRangeBackingKind;
 import dev.erst.gridgrind.core.vocabulary.NamedRangeScope;
 import dev.erst.gridgrind.core.vocabulary.RangeLabel;
 import dev.erst.gridgrind.core.vocabulary.RangeRef;
+import dev.erst.gridgrind.core.vocabulary.RgbHex;
 import dev.erst.gridgrind.core.vocabulary.SheetLabel;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.StepId;
@@ -1507,7 +1508,7 @@ class WorkbookInvariantChecksTest {
   }
 
   private static CellColorReport rgb(String rgb) {
-    return CellColorReport.rgb(rgb);
+    return CellColorReport.rgb(new RgbHex(rgb));
   }
 
   private static CellColorReport indexed(int indexed) {

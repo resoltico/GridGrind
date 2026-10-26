@@ -12,6 +12,7 @@ import dev.erst.gridgrind.core.model.validation.DataValidationPromptInput;
 import dev.erst.gridgrind.core.model.validation.DataValidationRuleInput;
 import dev.erst.gridgrind.core.source.TextSourceInput;
 import dev.erst.gridgrind.core.vocabulary.RangeLabel;
+import dev.erst.gridgrind.core.vocabulary.RgbHex;
 import dev.erst.gridgrind.excel.ExcelBorderSide;
 import dev.erst.gridgrind.excel.ExcelConditionalFormattingBlockSnapshot;
 import dev.erst.gridgrind.excel.ExcelConditionalFormattingRuleSnapshot;
@@ -87,12 +88,13 @@ final class InspectionResultValidationReportSupport {
                       InspectionResultValidationReportSupport
                           ::toConditionalFormattingThresholdReport)
                   .toList(),
-              colorScaleRule.colors());
+              colorScaleRule.colors().stream().map(RgbHex::new).toList());
       case ExcelConditionalFormattingRuleSnapshot.DataBarRule dataBarRule ->
           new ConditionalFormattingRuleReport.DataBarRule(
               dataBarRule.priority(),
               dataBarRule.stopIfTrue(),
-              dataBarRule.color(),
+              java.util.Optional.ofNullable(dataBarRule.color())
+                  .map(dev.erst.gridgrind.core.vocabulary.RgbHex::new),
               dataBarRule.iconOnly(),
               dataBarRule.widthMin(),
               dataBarRule.widthMax(),

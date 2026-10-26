@@ -16,6 +16,7 @@ import dev.erst.gridgrind.core.vocabulary.CellAddress;
 import dev.erst.gridgrind.core.vocabulary.ExcelBorderStyle;
 import dev.erst.gridgrind.core.vocabulary.ExcelHorizontalAlignment;
 import dev.erst.gridgrind.core.vocabulary.ExcelVerticalAlignment;
+import dev.erst.gridgrind.core.vocabulary.RgbHex;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.excel.*;
 import java.math.BigDecimal;
@@ -255,7 +256,7 @@ class DefaultGridGrindRequestExecutorReadSupport {
   }
 
   static CellColorReport rgb(String rgb) {
-    return CellColorReport.rgb(rgb);
+    return CellColorReport.rgb(new RgbHex(rgb));
   }
 
   static ExcelSheetProtectionSettings excelProtectionSettings() {

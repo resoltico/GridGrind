@@ -6,6 +6,7 @@ import dev.erst.gridgrind.core.model.style.BorderSideInput;
 import dev.erst.gridgrind.core.model.style.CellBorderInput;
 import dev.erst.gridgrind.core.model.style.ColorInput;
 import dev.erst.gridgrind.core.vocabulary.ExcelBorderStyle;
+import dev.erst.gridgrind.core.vocabulary.RgbHex;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
 
@@ -53,9 +54,9 @@ class CellBorderInputTest {
                 Optional.empty(),
                 Optional.empty(),
                 Optional.empty()));
-    BorderSideInput colorOnly = new BorderSideInput(null, ColorInput.rgb("#a1b2c3"));
+    BorderSideInput colorOnly = new BorderSideInput(null, ColorInput.rgb(new RgbHex("#a1b2c3")));
     assertEquals(Optional.empty(), colorOnly.style());
-    assertEquals(Optional.of(ColorInput.rgb("#A1B2C3")), colorOnly.color());
+    assertEquals(Optional.of(ColorInput.rgb(new RgbHex("#A1B2C3"))), colorOnly.color());
     assertEquals(
         Optional.of(ExcelBorderStyle.THIN),
         WorkbookCommandCellInputConverter.toExcelBorder(

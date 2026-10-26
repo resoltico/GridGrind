@@ -138,7 +138,7 @@ final class WorkbookInvariantCellStyleChecks {
     WorkbookInvariantChecks.require(color != null, label + " must not be null");
     switch (color) {
       case CellColorReport.Rgb rgb ->
-          WorkbookInvariantChecks.requireNonBlank(rgb.rgb(), label + " rgb");
+          WorkbookInvariantChecks.requireNonBlank(rgb.rgb().value(), label + " rgb");
       case CellColorReport.Theme theme ->
           WorkbookInvariantChecks.require(
               theme.theme() >= 0, label + " theme must not be negative");

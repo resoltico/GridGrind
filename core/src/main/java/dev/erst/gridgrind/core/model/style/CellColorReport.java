@@ -3,7 +3,7 @@ package dev.erst.gridgrind.core.model.style;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import dev.erst.gridgrind.core.vocabulary.ProtocolRgbColorSupport;
+import dev.erst.gridgrind.core.vocabulary.RgbHex;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -20,12 +20,12 @@ public sealed interface CellColorReport
   Optional<Double> tint();
 
   /** Returns one color report carrying only explicit RGB data. */
-  static Rgb rgb(String rgb) {
+  static Rgb rgb(RgbHex rgb) {
     return new Rgb(rgb, Optional.empty());
   }
 
   /** Returns one RGB-backed report plus tint metadata. */
-  static Rgb rgb(String rgb, double tint) {
+  static Rgb rgb(RgbHex rgb, double tint) {
     return new Rgb(rgb, Optional.of(tint));
   }
 
@@ -50,10 +50,10 @@ public sealed interface CellColorReport
   }
 
   /** RGB-backed workbook color report. */
-  record Rgb(String rgb, @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<Double> tint)
+  record Rgb(RgbHex rgb, @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<Double> tint)
       implements CellColorReport {
     public Rgb {
-      rgb = ProtocolRgbColorSupport.requireRgbHex(rgb, "rgb");
+      java.util.Objects.requireNonNull(rgb, "rgb must not be null");
       tint = requireFinite(tint, "tint");
     }
   }

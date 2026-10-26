@@ -7,6 +7,7 @@ import dev.erst.gridgrind.core.vocabulary.ExcelBorderStyle;
 import dev.erst.gridgrind.core.vocabulary.ExcelFillPattern;
 import dev.erst.gridgrind.core.vocabulary.ExcelHorizontalAlignment;
 import dev.erst.gridgrind.core.vocabulary.ExcelVerticalAlignment;
+import dev.erst.gridgrind.core.vocabulary.RgbHex;
 import dev.erst.gridgrind.excel.ExcelBorder;
 import dev.erst.gridgrind.excel.ExcelBorderSide;
 import dev.erst.gridgrind.excel.ExcelCellAlignment;
@@ -327,8 +328,8 @@ final class FuzzStyleDecoders {
         switch (color) {
           case ExcelColor.Rgb rgb ->
               rgb.tint().isPresent()
-                  ? ColorInput.rgb(rgb.rgb(), rgb.tint().orElseThrow())
-                  : ColorInput.rgb(rgb.rgb());
+                  ? ColorInput.rgb(new RgbHex(rgb.rgb()), rgb.tint().orElseThrow())
+                  : ColorInput.rgb(new RgbHex(rgb.rgb()));
           case ExcelColor.Theme theme ->
               theme.tint().isPresent()
                   ? ColorInput.theme(theme.theme(), theme.tint().orElseThrow())

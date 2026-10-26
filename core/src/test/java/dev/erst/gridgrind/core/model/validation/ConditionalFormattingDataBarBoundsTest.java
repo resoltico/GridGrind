@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import dev.erst.gridgrind.core.model.style.ColorInput;
+import dev.erst.gridgrind.core.vocabulary.RgbHex;
 import org.junit.jupiter.api.Test;
 
 /** Verifies the inclusive data-bar width bounds published by the protocol catalog. */
@@ -19,7 +20,7 @@ class ConditionalFormattingDataBarBoundsTest {
       int widthMin, int widthMax) {
     return new ConditionalFormattingRuleInput.DataBarRule(
         false,
-        ColorInput.rgb("#112233"),
+        ColorInput.rgb(new RgbHex("#112233")),
         false,
         widthMin,
         widthMax,

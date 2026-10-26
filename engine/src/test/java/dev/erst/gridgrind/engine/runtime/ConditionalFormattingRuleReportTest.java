@@ -13,6 +13,7 @@ import dev.erst.gridgrind.core.vocabulary.ExcelComparisonOperator;
 import dev.erst.gridgrind.core.vocabulary.ExcelConditionalFormattingIconSet;
 import dev.erst.gridgrind.core.vocabulary.ExcelConditionalFormattingThresholdType;
 import dev.erst.gridgrind.core.vocabulary.ExcelConditionalFormattingUnsupportedFeature;
+import dev.erst.gridgrind.core.vocabulary.RgbHex;
 import dev.erst.gridgrind.excel.ExcelBorderSide;
 import dev.erst.gridgrind.excel.ExcelColor;
 import dev.erst.gridgrind.excel.ExcelConditionalFormattingRuleSnapshot;
@@ -53,7 +54,7 @@ class ConditionalFormattingRuleReportTest {
     ConditionalFormattingRuleReport.IconSetRule iconSetRule =
         assertInstanceOf(ConditionalFormattingRuleReport.IconSetRule.class, iconSet);
 
-    assertEquals("#102030", dataBarRule.color());
+    assertEquals("#102030", dataBarRule.color().orElseThrow().value());
     assertEquals(10, dataBarRule.widthMin());
     assertEquals(90, dataBarRule.widthMax());
     assertEquals(ExcelConditionalFormattingIconSet.GYR_3_ARROW, iconSetRule.iconSet());
@@ -109,12 +110,12 @@ class ConditionalFormattingRuleReportTest {
         IllegalArgumentException.class,
         () ->
             new ConditionalFormattingRuleReport.DataBarRule(
-                1, false, "#102030", false, -1, 90, threshold, threshold));
+                1, false, Optional.of(new RgbHex("#102030")), false, -1, 90, threshold, threshold));
     assertThrows(
         IllegalArgumentException.class,
         () ->
             new ConditionalFormattingRuleReport.DataBarRule(
-                1, false, "#102030", false, 10, -1, threshold, threshold));
+                1, false, Optional.of(new RgbHex("#102030")), false, 10, -1, threshold, threshold));
     assertThrows(
         NullPointerException.class,
         () ->
@@ -124,7 +125,7 @@ class ConditionalFormattingRuleReportTest {
         IllegalArgumentException.class,
         () ->
             new ConditionalFormattingRuleReport.ColorScaleRule(
-                -1, false, List.of(threshold), List.of("#102030")));
+                -1, false, List.of(threshold), List.of(new RgbHex("#102030"))));
   }
 
   @Test
@@ -165,14 +166,14 @@ class ConditionalFormattingRuleReportTest {
 
     assertTrue(InspectionResultValidationReportSupport.toDifferentialStyleReport(null).isEmpty());
     assertTrue(InspectionResultValidationReportSupport.toDifferentialBorderReport(null).isEmpty());
-    assertEquals(Optional.of(CellColorReport.rgb("#111111")), report.fontColor());
-    assertEquals(Optional.of(CellColorReport.rgb("#EEEEEE")), report.fillColor());
+    assertEquals(Optional.of(CellColorReport.rgb(new RgbHex("#111111"))), report.fontColor());
+    assertEquals(Optional.of(CellColorReport.rgb(new RgbHex("#EEEEEE"))), report.fillColor());
     assertEquals(
         List.of(ExcelConditionalFormattingUnsupportedFeature.ALIGNMENT),
         report.unsupportedFeatures());
     assertEquals(Optional.of(ExcelBorderStyle.DASHED), borderReport.top().orElseThrow().style());
     assertTrue(sparseBorderReport.top().isEmpty());
-    assertEquals(Optional.of(CellColorReport.rgb("#AABBCC")), borderSideReport.color());
+    assertEquals(Optional.of(CellColorReport.rgb(new RgbHex("#AABBCC"))), borderSideReport.color());
 
     assertThrows(
         IllegalArgumentException.class,

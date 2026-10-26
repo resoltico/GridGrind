@@ -21,6 +21,7 @@ import dev.erst.gridgrind.core.vocabulary.ExcelIgnoredErrorType;
 import dev.erst.gridgrind.core.vocabulary.ExcelPrintOrientation;
 import dev.erst.gridgrind.core.vocabulary.ExcelSheetVisibility;
 import dev.erst.gridgrind.core.vocabulary.RangeRef;
+import dev.erst.gridgrind.core.vocabulary.RgbHex;
 import dev.erst.gridgrind.core.vocabulary.SheetCopyPosition;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.excel.*;
@@ -183,7 +184,7 @@ class DefaultGridGrindRequestExecutorMutationContextTranslationTest
             new WorkbookMutationAction.SetSheetPresentation(
                 new SheetPresentationInput(
                     new SheetDisplayInput(false, false, false, true, true),
-                    Optional.of(ColorInput.rgb("#112233")),
+                    Optional.of(ColorInput.rgb(new RgbHex("#112233"))),
                     new SheetOutlineSummaryInput(false, false),
                     new SheetDefaultsInput(11, 18.5d),
                     List.of(

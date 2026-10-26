@@ -750,3 +750,45 @@ unchanged. External evidence: `ranges-*.log`, inventories, failures, red test XM
 compiler migration logs and `range-observations/`. Baseline diff empty; no supplement.
 Next: RGB fields and remaining names. Optional fields follow the adopted `Optional<T>` rule
 (target architecture section 4); a nullable data-bar color needs that explicit representation.
+
+### WP-21 RGB ownership and optional factual colors
+
+Style RGB fields and color-scale lists now carry `RgbHex`; data-bar RGB is `Optional<RgbHex>`.
+The adopted vocabulary explicitly requires optional fields to use Java Optional and be absent
+on the wire (target architecture section 4). Constructor validation/uppercase normalization is
+owned once by `RgbHex`. Removed `ProtocolRgbColorSupport`, its verification-only constructor
+factory and unused null-normalizer assertion. Meaningful helper tests now exercise the actual
+value constructor in `RgbHexTest`; codec regression covers absent/present report colors and
+round-trip. Independent parity/fuzz checks project scalar text. A factual absent color was
+already allowed by the old model; fuzz validation now checks the optional wrapper and present
+values instead of demanding a String value that the model allowed to be absent.
+
+PIT selection now targets the replacement class/test and the existing value property test.
+A fresh configuration uncovered an unsafe cross-project `json:testRuntimeClasspath` resolution
+while serializing PIT's foreign test SourceSet into Gradle's configuration cache. The first
+owned-variant attempt supplied a test JAR: it ran but missed JSON test discovery (core 162/294,
+132 uncovered: 131 catalog mutants plus one value toString). A class-directory variant restored
+discovery but omitted JSON production classes, yielding 28 baseline test failures. Adding the
+production classes to the same owned dependency runtime restored the intended coverage. The
+final JSON variant exports main/test class directories with their runtime dependencies, and
+core's native PIT task resolves its own configuration. No foreign runtime configuration is
+resolved directly. No test skipping, threshold or report-exclusion changes.
+
+Final advisory mutation execution passed (15s): core 294/294 killed, engine 82/82 killed, zero
+uncovered mutants. The four-mutant reduction from the previous core set reflects retirement of
+the optional RGB helper. RgbHex constructor and toString mutations are covered by the real value
+unit/property tests. Configuration-cache reuse passed (415ms). Earlier failure/discovery logs
+retained (`rgb-mutation*.log`), final mutation XML copied to external `rgb-mutation-results/`.
+The abandoned test-JAR task was removed and jar pruning left only the normal JSON artifact.
+
+Focused core/codec/parity/PMD checks passed; a stale direct String expectation for the now-optional
+report color was corrected without changing the expected color. Discovery goldens passed
+independently (14s); nested fuzz support and replay passed (18s). Full `./gradlew check` passed
+(3m08s), and the final documented/staged state passed (3m04s): core 329, JSON 342, engine 1,511,
+CLI 598, architecture 35; 2,815 tests, no failures/skips, all 141 golden cases unchanged. Named
+modules passed 14 requests, catalog, a response containing observed `#REF!`, and ten values.
+The retired RGB helper is absent from the core JAR. Staged inventories correctly exclude its
+retired file: Support classes 220 -> 219; blank checks 440 unchanged; main Java 126,643 -> 126,622;
+test Java 155,129 -> 155,238. Other model/subtype counts unchanged. Evidence external
+`rgb-*.log`, failures, inventories and migration logs. Baseline diff empty; no supplement.
+Next: defined/table identifier names, preserving factual-name contracts separately where needed.

@@ -2,6 +2,7 @@ package dev.erst.gridgrind.json.codec;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
@@ -161,6 +162,42 @@ class WireStringPropertyTest {
     assertEquals(Optional.of("steps[0].target.addresses[1]"), failure.jsonPath());
     var problem = assertInstanceOf(FieldValidationProblem.class, failure.requestProblem());
     assertEquals(FieldValidationAddressRule.ADDRESS_SYNTAX, problem.rule());
+  }
+
+  @Test
+  void optionalReportColorsRemainAbsentOnWire() {
+    var low =
+        new dev.erst.gridgrind.core.model.validation.ConditionalFormattingThresholdReport(
+            dev.erst.gridgrind.core.vocabulary.ExcelConditionalFormattingThresholdType.NUMBER,
+            "0",
+            0.0d);
+    var high =
+        new dev.erst.gridgrind.core.model.validation.ConditionalFormattingThresholdReport(
+            dev.erst.gridgrind.core.vocabulary.ExcelConditionalFormattingThresholdType.NUMBER,
+            "1",
+            1.0d);
+    var absent =
+        new dev.erst.gridgrind.core.model.validation.ConditionalFormattingRuleReport.DataBarRule(
+            1, false, Optional.empty(), false, 0, 100, low, high);
+    var present =
+        new dev.erst.gridgrind.core.model.validation.ConditionalFormattingRuleReport.DataBarRule(
+            1, false, Optional.of(new RgbHex("#a1b2c3")), false, 0, 100, low, high);
+    String absentJson = GridGrindJsonMapperSupport.WIRE_JSON_MAPPER.writeValueAsString(absent);
+    String presentJson = GridGrindJsonMapperSupport.WIRE_JSON_MAPPER.writeValueAsString(present);
+    assertFalse(GridGrindJsonMapperSupport.JSON_MAPPER.readTree(absentJson).has("color"));
+    assertEquals(
+        "#A1B2C3",
+        GridGrindJsonMapperSupport.JSON_MAPPER.readTree(presentJson).path("color").asString());
+    assertEquals(
+        absent,
+        GridGrindJsonMapperSupport.JSON_MAPPER.readValue(
+            absentJson,
+            dev.erst.gridgrind.core.model.validation.ConditionalFormattingRuleReport.class));
+    assertEquals(
+        present,
+        GridGrindJsonMapperSupport.JSON_MAPPER.readValue(
+            presentJson,
+            dev.erst.gridgrind.core.model.validation.ConditionalFormattingRuleReport.class));
   }
 
   private static List<Domain> domains() {

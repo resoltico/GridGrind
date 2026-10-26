@@ -75,6 +75,7 @@ import dev.erst.gridgrind.core.vocabulary.ExcelSheetVisibility;
 import dev.erst.gridgrind.core.vocabulary.ExcelVerticalAlignment;
 import dev.erst.gridgrind.core.vocabulary.NamedRangeScope;
 import dev.erst.gridgrind.core.vocabulary.RangeRef;
+import dev.erst.gridgrind.core.vocabulary.RgbHex;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.engine.runtime.DefaultGridGrindRequestExecutor;
 import dev.erst.gridgrind.engine.runtime.ExecutionProgressSink;
@@ -1238,7 +1239,8 @@ public final class XlsxParityScenarios {
                                                     Optional.empty(),
                                                     Optional.empty(),
                                                     Optional.empty(),
-                                                    Optional.of(ColorInput.rgb("#204060")),
+                                                    Optional.of(
+                                                        ColorInput.rgb(new RgbHex("#204060"))),
                                                     Optional.empty(),
                                                     Optional.empty())),
                                             richTextRun(
@@ -1248,7 +1250,8 @@ public final class XlsxParityScenarios {
                                                     Optional.of(true),
                                                     Optional.empty(),
                                                     Optional.empty(),
-                                                    Optional.of(ColorInput.rgb("#4080A0")),
+                                                    Optional.of(
+                                                        ColorInput.rgb(new RgbHex("#4080A0"))),
                                                     Optional.empty(),
                                                     Optional.empty())))),
                                     new CellInput.NumberValue(12.5d),
@@ -1277,17 +1280,18 @@ public final class XlsxParityScenarios {
                                     Optional.empty(),
                                     Optional.of("Aptos"),
                                     Optional.of(new FontHeightInput.Points(new BigDecimal("11.5"))),
-                                    Optional.of(ColorInput.rgb("#112233")),
+                                    Optional.of(ColorInput.rgb(new RgbHex("#112233"))),
                                     Optional.empty(),
                                     Optional.empty())),
                             Optional.of(
                                 CellFillInput.patternForeground(
-                                    ExcelFillPattern.SOLID, ColorInput.rgb("#D9EAF7"))),
+                                    ExcelFillPattern.SOLID, ColorInput.rgb(new RgbHex("#D9EAF7")))),
                             Optional.of(
                                 new CellBorderInput(
                                     Optional.of(
                                         new BorderSideInput(
-                                            ExcelBorderStyle.THIN, ColorInput.rgb("#5B7C99"))),
+                                            ExcelBorderStyle.THIN,
+                                            ColorInput.rgb(new RgbHex("#5B7C99")))),
                                     Optional.empty(),
                                     Optional.empty(),
                                     Optional.empty(),
@@ -1369,10 +1373,10 @@ public final class XlsxParityScenarios {
                                             Optional.of(true),
                                             Optional.empty(),
                                             Optional.empty(),
-                                            Optional.of(ColorInput.rgb("#006100")),
+                                            Optional.of(ColorInput.rgb(new RgbHex("#006100"))),
                                             Optional.empty(),
                                             Optional.empty(),
-                                            Optional.of(ColorInput.rgb("#C6EFCE")),
+                                            Optional.of(ColorInput.rgb(new RgbHex("#C6EFCE"))),
                                             Optional.empty()))),
                                 new ConditionalFormattingRuleInput.CellValueRule(
                                     ExcelComparisonOperator.LESS_THAN,
@@ -1385,10 +1389,10 @@ public final class XlsxParityScenarios {
                                             Optional.empty(),
                                             Optional.empty(),
                                             Optional.empty(),
-                                            Optional.of(ColorInput.rgb("#9C0006")),
+                                            Optional.of(ColorInput.rgb(new RgbHex("#9C0006"))),
                                             Optional.empty(),
                                             Optional.empty(),
-                                            Optional.of(ColorInput.rgb("#FFC7CE")),
+                                            Optional.of(ColorInput.rgb(new RgbHex("#FFC7CE"))),
                                             Optional.empty()))))))),
                 mutate(
                     new RangeSelector.ByRange(new SheetName("Ops"), new RangeRef("A2:D4")),

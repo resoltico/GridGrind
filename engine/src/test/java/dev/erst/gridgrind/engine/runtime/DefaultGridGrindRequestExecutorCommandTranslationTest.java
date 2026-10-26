@@ -34,6 +34,7 @@ import dev.erst.gridgrind.core.vocabulary.ExcelPrintOrientation;
 import dev.erst.gridgrind.core.vocabulary.ExcelSheetVisibility;
 import dev.erst.gridgrind.core.vocabulary.NamedRangeScope;
 import dev.erst.gridgrind.core.vocabulary.RangeRef;
+import dev.erst.gridgrind.core.vocabulary.RgbHex;
 import dev.erst.gridgrind.core.vocabulary.SheetCopyPosition;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.excel.*;
@@ -256,7 +257,7 @@ class DefaultGridGrindRequestExecutorCommandTranslationTest
                 new WorkbookMutationAction.SetSheetPresentation(
                     new SheetPresentationInput(
                         new SheetDisplayInput(false, false, false, true, true),
-                        java.util.Optional.of(ColorInput.rgb("#112233")),
+                        java.util.Optional.of(ColorInput.rgb(new RgbHex("#112233"))),
                         new SheetOutlineSummaryInput(false, false),
                         new SheetDefaultsInput(11, 18.5d),
                         List.of(

@@ -13,6 +13,7 @@ import dev.erst.gridgrind.core.vocabulary.ExcelBorderStyle;
 import dev.erst.gridgrind.core.vocabulary.ExcelFillPattern;
 import dev.erst.gridgrind.core.vocabulary.ExcelHorizontalAlignment;
 import dev.erst.gridgrind.core.vocabulary.ExcelVerticalAlignment;
+import dev.erst.gridgrind.core.vocabulary.RgbHex;
 import dev.erst.gridgrind.excel.ExcelFontHeight;
 import java.math.BigDecimal;
 import java.util.Objects;
@@ -169,8 +170,8 @@ public final class WorkbookStyleInputs {
     return switch (data.consumeInt(0, 2)) {
       case 0 ->
           data.consumeBoolean()
-              ? ColorInput.rgb(nextRgbHex(data), nextTint(data))
-              : ColorInput.rgb(nextRgbHex(data));
+              ? ColorInput.rgb(new RgbHex(nextRgbHex(data)), nextTint(data))
+              : ColorInput.rgb(new RgbHex(nextRgbHex(data)));
       case 1 ->
           data.consumeBoolean()
               ? ColorInput.theme(data.consumeInt(0, 9), nextTint(data))

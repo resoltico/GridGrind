@@ -11,6 +11,7 @@ import dev.erst.gridgrind.core.model.validation.ConditionalFormattingDefinitionI
 import dev.erst.gridgrind.core.model.validation.ConditionalFormattingRuleInput;
 import dev.erst.gridgrind.core.vocabulary.ExcelBorderStyle;
 import dev.erst.gridgrind.core.vocabulary.ExcelComparisonOperator;
+import dev.erst.gridgrind.core.vocabulary.RgbHex;
 import dev.erst.gridgrind.excel.ExcelBorderSide;
 import dev.erst.gridgrind.excel.ExcelColor;
 import dev.erst.gridgrind.excel.ExcelConditionalFormattingBlockDefinition;
@@ -39,15 +40,16 @@ class ConditionalFormattingInputTest {
                             Optional.of(true),
                             Optional.of(false),
                             Optional.ofNullable(new FontHeightInput.Points(BigDecimal.valueOf(11))),
-                            Optional.of(ColorInput.rgb("#102030")),
+                            Optional.of(ColorInput.rgb(new RgbHex("#102030"))),
                             Optional.of(true),
                             Optional.of(true),
-                            Optional.of(ColorInput.rgb("#E0F0AA")),
+                            Optional.of(ColorInput.rgb(new RgbHex("#E0F0AA"))),
                             Optional.of(
                                 new DifferentialBorderInput(
                                     Optional.of(
                                         new BorderSideInput(
-                                            ExcelBorderStyle.THIN, ColorInput.rgb("#405060"))),
+                                            ExcelBorderStyle.THIN,
+                                            ColorInput.rgb(new RgbHex("#405060")))),
                                     Optional.empty(),
                                     Optional.empty(),
                                     Optional.empty(),
@@ -66,7 +68,7 @@ class ConditionalFormattingInputTest {
                             Optional.empty(),
                             Optional.empty(),
                             Optional.empty(),
-                            Optional.of(ColorInput.rgb("#AAEECC")),
+                            Optional.of(ColorInput.rgb(new RgbHex("#AAEECC"))),
                             Optional.empty())))));
 
     assertEquals(
@@ -241,11 +243,19 @@ class ConditionalFormattingInputTest {
   void convertsDifferentialBordersWithExplicitSides() {
     DifferentialBorderInput border =
         new DifferentialBorderInput(
-            Optional.of(new BorderSideInput(ExcelBorderStyle.THIN, ColorInput.rgb("#102030"))),
-            Optional.of(new BorderSideInput(ExcelBorderStyle.DASHED, ColorInput.rgb("#203040"))),
-            Optional.of(new BorderSideInput(ExcelBorderStyle.DOUBLE, ColorInput.rgb("#304050"))),
-            Optional.of(new BorderSideInput(ExcelBorderStyle.HAIR, ColorInput.rgb("#405060"))),
-            Optional.of(new BorderSideInput(ExcelBorderStyle.DOTTED, ColorInput.rgb("#506070"))));
+            Optional.of(
+                new BorderSideInput(ExcelBorderStyle.THIN, ColorInput.rgb(new RgbHex("#102030")))),
+            Optional.of(
+                new BorderSideInput(
+                    ExcelBorderStyle.DASHED, ColorInput.rgb(new RgbHex("#203040")))),
+            Optional.of(
+                new BorderSideInput(
+                    ExcelBorderStyle.DOUBLE, ColorInput.rgb(new RgbHex("#304050")))),
+            Optional.of(
+                new BorderSideInput(ExcelBorderStyle.HAIR, ColorInput.rgb(new RgbHex("#405060")))),
+            Optional.of(
+                new BorderSideInput(
+                    ExcelBorderStyle.DOTTED, ColorInput.rgb(new RgbHex("#506070")))));
 
     assertEquals(
         new ExcelDifferentialBorder(
