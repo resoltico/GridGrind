@@ -9,6 +9,7 @@ import dev.erst.gridgrind.core.plan.SheetSelector;
 import dev.erst.gridgrind.core.plan.TableSelector;
 import dev.erst.gridgrind.core.plan.WorkbookSelector;
 import dev.erst.gridgrind.core.vocabulary.CellAddress;
+import dev.erst.gridgrind.core.vocabulary.DefinedName;
 import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 
@@ -54,17 +55,17 @@ public final class Targets {
   }
 
   /** Returns one exact named-range target by name. */
-  public static NamedRangeTarget namedRange(String name) {
+  public static NamedRangeTarget namedRange(DefinedName name) {
     return new NamedRangeTarget(new NamedRangeSelector.ByName(name));
   }
 
   /** Returns one exact sheet-scoped named-range target. */
-  public static NamedRangeTarget namedRangeOnSheet(String name, SheetName sheetName) {
+  public static NamedRangeTarget namedRangeOnSheet(DefinedName name, SheetName sheetName) {
     return new NamedRangeTarget(new NamedRangeSelector.SheetScope(name, sheetName));
   }
 
   /** Returns one exact workbook-scoped named-range target. */
-  public static NamedRangeTarget workbookNamedRange(String name) {
+  public static NamedRangeTarget workbookNamedRange(DefinedName name) {
     return new NamedRangeTarget(new NamedRangeSelector.WorkbookScope(name));
   }
 

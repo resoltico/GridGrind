@@ -5,6 +5,7 @@ import dev.erst.gridgrind.core.model.drawing.DrawingAnchorReport;
 import dev.erst.gridgrind.core.model.drawing.DrawingMarkerReport;
 import dev.erst.gridgrind.core.model.pivot.PivotTableReport;
 import dev.erst.gridgrind.core.vocabulary.CellAddress;
+import dev.erst.gridgrind.core.vocabulary.DefinedName;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartAxisCrosses;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartAxisKind;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartAxisPosition;
@@ -759,7 +760,7 @@ final class XlsxParityOracle {
     if (namedRanges.size() == 1) {
       AreaReference area = namedRangeArea(namedRanges.getFirst());
       return new PivotTableReport.Source.NamedRange(
-          sourceName,
+          new DefinedName(sourceName),
           new SheetName(sourceSheetName(workbook, area, namedRanges.getFirst(), sheetName)),
           new RangeLabel(normalizeArea(area)));
     }

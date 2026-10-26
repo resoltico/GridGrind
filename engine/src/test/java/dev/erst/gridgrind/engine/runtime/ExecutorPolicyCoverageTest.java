@@ -43,6 +43,7 @@ import dev.erst.gridgrind.core.result.WorkbookResultPersistence;
 import dev.erst.gridgrind.core.validation.WorkbookStaticRequestContract;
 import dev.erst.gridgrind.core.validation.WorkbookStaticViolation;
 import dev.erst.gridgrind.core.vocabulary.CellAddress;
+import dev.erst.gridgrind.core.vocabulary.DefinedName;
 import dev.erst.gridgrind.core.vocabulary.ExcelOoxmlWriteCipher;
 import dev.erst.gridgrind.core.vocabulary.ExcelOoxmlWriteHash;
 import dev.erst.gridgrind.core.vocabulary.NamedRangeScope;
@@ -138,7 +139,7 @@ class ExecutorPolicyCoverageTest {
                         new PivotTableInput(
                             "SalesPivot",
                             new SheetName("Budget"),
-                            new PivotTableInput.Source.NamedRange("BudgetSource"),
+                            new PivotTableInput.Source.NamedRange(new DefinedName("BudgetSource")),
                             new PivotTableInput.Anchor(new CellAddress("B3")),
                             List.of(),
                             List.of(),
@@ -164,7 +165,7 @@ class ExecutorPolicyCoverageTest {
                         new PivotTableInput(
                             "SalesPivot",
                             new SheetName("Budget"),
-                            new PivotTableInput.Source.NamedRange("BudgetSource"),
+                            new PivotTableInput.Source.NamedRange(new DefinedName("BudgetSource")),
                             new PivotTableInput.Anchor(new CellAddress("B3")),
                             List.of(),
                             List.of(),
@@ -185,9 +186,10 @@ class ExecutorPolicyCoverageTest {
             IllegalArgumentException.class,
             () ->
                 WorkbookCommandConverter.toCommand(
-                    new NamedRangeSelector.SheetScope("BudgetTotal", new SheetName("Archive")),
+                    new NamedRangeSelector.SheetScope(
+                        new DefinedName("BudgetTotal"), new SheetName("Archive")),
                     new StructuredMutationAction.SetNamedRange(
-                        "BudgetTotal",
+                        new DefinedName("BudgetTotal"),
                         new NamedRangeScope.Sheet(new SheetName("Budget")),
                         NamedRangeTarget.range(new SheetName("Budget"), new RangeRef("B4")))));
     assertEquals(
@@ -198,9 +200,10 @@ class ExecutorPolicyCoverageTest {
             IllegalArgumentException.class,
             () ->
                 WorkbookCommandConverter.toCommand(
-                    new NamedRangeSelector.SheetScope("OtherTotal", new SheetName("Budget")),
+                    new NamedRangeSelector.SheetScope(
+                        new DefinedName("OtherTotal"), new SheetName("Budget")),
                     new StructuredMutationAction.SetNamedRange(
-                        "BudgetTotal",
+                        new DefinedName("BudgetTotal"),
                         new NamedRangeScope.Sheet(new SheetName("Budget")),
                         NamedRangeTarget.range(new SheetName("Budget"), new RangeRef("B4")))));
     assertEquals(
@@ -212,9 +215,9 @@ class ExecutorPolicyCoverageTest {
             IllegalArgumentException.class,
             () ->
                 WorkbookCommandConverter.toCommand(
-                    new NamedRangeSelector.WorkbookScope("BudgetTotal"),
+                    new NamedRangeSelector.WorkbookScope(new DefinedName("BudgetTotal")),
                     new StructuredMutationAction.SetNamedRange(
-                        "BudgetTotal",
+                        new DefinedName("BudgetTotal"),
                         new NamedRangeScope.Sheet(new SheetName("Budget")),
                         NamedRangeTarget.range(new SheetName("Budget"), new RangeRef("B4")))));
     assertEquals(
@@ -226,7 +229,7 @@ class ExecutorPolicyCoverageTest {
             IllegalArgumentException.class,
             () ->
                 WorkbookCommandConverter.toCommand(
-                    new NamedRangeSelector.ByName("BudgetTotal"),
+                    new NamedRangeSelector.ByName(new DefinedName("BudgetTotal")),
                     new StructuredMutationAction.DeleteNamedRange()));
     assertEquals(
         "DELETE_NAMED_RANGE requires target type NAMED_RANGE_WORKBOOK_SCOPE or"
@@ -624,17 +627,17 @@ class ExecutorPolicyCoverageTest {
         pivotTableAction(
             new PivotTableInput.Source.Range(new SheetName("Budget"), new RangeRef("A1:B5")));
     StructuredMutationAction.SetPivotTable pivotFromNamedRange =
-        pivotTableAction(new PivotTableInput.Source.NamedRange("BudgetSource"));
+        pivotTableAction(new PivotTableInput.Source.NamedRange(new DefinedName("BudgetSource")));
     StructuredMutationAction.SetPivotTable pivotFromTable =
         pivotTableAction(new PivotTableInput.Source.Table("BudgetTable"));
     StructuredMutationAction.SetNamedRange sheetScopedNamedRange =
         new StructuredMutationAction.SetNamedRange(
-            "LocalTotal",
+            new DefinedName("LocalTotal"),
             new NamedRangeScope.Sheet(new SheetName("Budget")),
             NamedRangeTarget.formula("SUM(Budget!B2:B4)"));
     StructuredMutationAction.SetNamedRange workbookScopedNamedRange =
         new StructuredMutationAction.SetNamedRange(
-            "BudgetTotal",
+            new DefinedName("BudgetTotal"),
             new NamedRangeScope.Workbook(),
             NamedRangeTarget.formula("SUM(Budget!B2:B4)"));
     StructuredMutationAction.SetConditionalFormatting conditionalFormatting =
@@ -745,19 +748,21 @@ class ExecutorPolicyCoverageTest {
     assertEquals(
         java.util.Optional.empty(),
         ExecutionSelectorDiagnosticFields.sheetNameFor(
-            new NamedRangeSelector.ByName("BudgetTotal")));
+            new NamedRangeSelector.ByName(new DefinedName("BudgetTotal"))));
     assertEquals(
         java.util.Optional.empty(),
         ExecutionSelectorDiagnosticFields.sheetNameFor(
-            new NamedRangeSelector.ByNames(List.of("BudgetTotal", "ForecastTotal"))));
+            new NamedRangeSelector.ByNames(
+                List.of(new DefinedName("BudgetTotal"), new DefinedName("ForecastTotal")))));
     assertEquals(
         java.util.Optional.empty(),
         ExecutionSelectorDiagnosticFields.sheetNameFor(
-            new NamedRangeSelector.WorkbookScope("BudgetTotal")));
+            new NamedRangeSelector.WorkbookScope(new DefinedName("BudgetTotal"))));
     assertEquals(
         java.util.Optional.of("Budget"),
         ExecutionSelectorDiagnosticFields.sheetNameFor(
-            new NamedRangeSelector.SheetScope("BudgetTotal", new SheetName("Budget"))));
+            new NamedRangeSelector.SheetScope(
+                new DefinedName("BudgetTotal"), new SheetName("Budget"))));
     assertEquals(
         java.util.Optional.of("Budget"),
         ExecutionSelectorDiagnosticFields.sheetNameFor(
@@ -823,7 +828,8 @@ class ExecutorPolicyCoverageTest {
         Optional.of("Budget"),
         ExecutionSelectorDiagnosticFields.singleSheetName(
             (NamedRangeSelector)
-                new NamedRangeSelector.SheetScope("LocalTotal", new SheetName("Budget"))));
+                new NamedRangeSelector.SheetScope(
+                    new DefinedName("LocalTotal"), new SheetName("Budget"))));
     assertEquals(
         Optional.of("Budget"),
         ExecutionSelectorDiagnosticFields.singleSheetName(
@@ -831,15 +837,16 @@ class ExecutorPolicyCoverageTest {
                 new NamedRangeSelector.AnyOf(
                     List.of(
                         new NamedRangeSelector.SheetScope(
-                            "LocalTotal", new SheetName("Budget"))))));
+                            new DefinedName("LocalTotal"), new SheetName("Budget"))))));
     assertEquals(
         Optional.empty(),
         ExecutionSelectorDiagnosticFields.singleSheetName(
             new NamedRangeSelector.AnyOf(
                 List.of(
-                    new NamedRangeSelector.SheetScope("LocalTotal", new SheetName("Budget")),
                     new NamedRangeSelector.SheetScope(
-                        "ForecastTotal", new SheetName("Forecast"))))));
+                        new DefinedName("LocalTotal"), new SheetName("Budget")),
+                    new NamedRangeSelector.SheetScope(
+                        new DefinedName("ForecastTotal"), new SheetName("Forecast"))))));
     assertEquals(
         Optional.empty(),
         ExecutionSelectorDiagnosticFields.singleSheetName(
@@ -847,28 +854,33 @@ class ExecutorPolicyCoverageTest {
     assertEquals(
         Optional.empty(),
         ExecutionSelectorDiagnosticFields.singleSheetName(
-            (NamedRangeSelector) new NamedRangeSelector.ByName("BudgetTotal")));
+            (NamedRangeSelector) new NamedRangeSelector.ByName(new DefinedName("BudgetTotal"))));
     assertEquals(
         Optional.empty(),
         ExecutionSelectorDiagnosticFields.singleSheetName(
-            (NamedRangeSelector) new NamedRangeSelector.ByNames(List.of("BudgetTotal"))));
+            (NamedRangeSelector)
+                new NamedRangeSelector.ByNames(List.of(new DefinedName("BudgetTotal")))));
     assertEquals(
         Optional.empty(),
         ExecutionSelectorDiagnosticFields.singleSheetName(
-            (NamedRangeSelector) new NamedRangeSelector.WorkbookScope("BudgetTotal")));
+            (NamedRangeSelector)
+                new NamedRangeSelector.WorkbookScope(new DefinedName("BudgetTotal"))));
     assertEquals(
         Optional.empty(),
         ExecutionSelectorDiagnosticFields.singleSheetName(
-            (NamedRangeSelector.Ref) new NamedRangeSelector.ByName("BudgetTotal")));
+            (NamedRangeSelector.Ref)
+                new NamedRangeSelector.ByName(new DefinedName("BudgetTotal"))));
     assertEquals(
         Optional.empty(),
         ExecutionSelectorDiagnosticFields.singleSheetName(
-            (NamedRangeSelector.Ref) new NamedRangeSelector.WorkbookScope("BudgetTotal")));
+            (NamedRangeSelector.Ref)
+                new NamedRangeSelector.WorkbookScope(new DefinedName("BudgetTotal"))));
     assertEquals(
         Optional.of("Budget"),
         ExecutionSelectorDiagnosticFields.singleSheetName(
             (NamedRangeSelector.Ref)
-                new NamedRangeSelector.SheetScope("BudgetTotal", new SheetName("Budget"))));
+                new NamedRangeSelector.SheetScope(
+                    new DefinedName("BudgetTotal"), new SheetName("Budget"))));
 
     assertEquals(
         Optional.empty(),
@@ -876,49 +888,55 @@ class ExecutorPolicyCoverageTest {
     assertEquals(
         Optional.of("BudgetTotal"),
         ExecutionSelectorDiagnosticFields.singleNamedRangeName(
-            (NamedRangeSelector) new NamedRangeSelector.ByName("BudgetTotal")));
+            (NamedRangeSelector) new NamedRangeSelector.ByName(new DefinedName("BudgetTotal"))));
     assertEquals(
         Optional.of("BudgetTotal"),
         ExecutionSelectorDiagnosticFields.singleNamedRangeName(
-            new NamedRangeSelector.ByNames(List.of("BudgetTotal"))));
+            new NamedRangeSelector.ByNames(List.of(new DefinedName("BudgetTotal")))));
     assertEquals(
         Optional.empty(),
         ExecutionSelectorDiagnosticFields.singleNamedRangeName(
-            new NamedRangeSelector.ByNames(List.of("BudgetTotal", "ForecastTotal"))));
-    assertEquals(
-        Optional.of("BudgetTotal"),
-        ExecutionSelectorDiagnosticFields.singleNamedRangeName(
-            (NamedRangeSelector) new NamedRangeSelector.WorkbookScope("BudgetTotal")));
+            new NamedRangeSelector.ByNames(
+                List.of(new DefinedName("BudgetTotal"), new DefinedName("ForecastTotal")))));
     assertEquals(
         Optional.of("BudgetTotal"),
         ExecutionSelectorDiagnosticFields.singleNamedRangeName(
             (NamedRangeSelector)
-                new NamedRangeSelector.SheetScope("BudgetTotal", new SheetName("Budget"))));
+                new NamedRangeSelector.WorkbookScope(new DefinedName("BudgetTotal"))));
+    assertEquals(
+        Optional.of("BudgetTotal"),
+        ExecutionSelectorDiagnosticFields.singleNamedRangeName(
+            (NamedRangeSelector)
+                new NamedRangeSelector.SheetScope(
+                    new DefinedName("BudgetTotal"), new SheetName("Budget"))));
     assertEquals(
         Optional.of("BudgetTotal"),
         ExecutionSelectorDiagnosticFields.singleNamedRangeName(
             new NamedRangeSelector.AnyOf(
-                List.of(new NamedRangeSelector.WorkbookScope("BudgetTotal")))));
+                List.of(new NamedRangeSelector.WorkbookScope(new DefinedName("BudgetTotal"))))));
     assertEquals(
         Optional.empty(),
         ExecutionSelectorDiagnosticFields.singleNamedRangeName(
             new NamedRangeSelector.AnyOf(
                 List.of(
-                    new NamedRangeSelector.WorkbookScope("BudgetTotal"),
-                    new NamedRangeSelector.WorkbookScope("ForecastTotal")))));
-    assertEquals(
-        Optional.of("BudgetTotal"),
-        ExecutionSelectorDiagnosticFields.singleNamedRangeName(
-            (NamedRangeSelector.Ref) new NamedRangeSelector.ByName("BudgetTotal")));
-    assertEquals(
-        Optional.of("BudgetTotal"),
-        ExecutionSelectorDiagnosticFields.singleNamedRangeName(
-            (NamedRangeSelector.Ref) new NamedRangeSelector.WorkbookScope("BudgetTotal")));
+                    new NamedRangeSelector.WorkbookScope(new DefinedName("BudgetTotal")),
+                    new NamedRangeSelector.WorkbookScope(new DefinedName("ForecastTotal"))))));
     assertEquals(
         Optional.of("BudgetTotal"),
         ExecutionSelectorDiagnosticFields.singleNamedRangeName(
             (NamedRangeSelector.Ref)
-                new NamedRangeSelector.SheetScope("BudgetTotal", new SheetName("Budget"))));
+                new NamedRangeSelector.ByName(new DefinedName("BudgetTotal"))));
+    assertEquals(
+        Optional.of("BudgetTotal"),
+        ExecutionSelectorDiagnosticFields.singleNamedRangeName(
+            (NamedRangeSelector.Ref)
+                new NamedRangeSelector.WorkbookScope(new DefinedName("BudgetTotal"))));
+    assertEquals(
+        Optional.of("BudgetTotal"),
+        ExecutionSelectorDiagnosticFields.singleNamedRangeName(
+            (NamedRangeSelector.Ref)
+                new NamedRangeSelector.SheetScope(
+                    new DefinedName("BudgetTotal"), new SheetName("Budget"))));
   }
 
   private static void assertExceptionAndStepDiagnostics() {

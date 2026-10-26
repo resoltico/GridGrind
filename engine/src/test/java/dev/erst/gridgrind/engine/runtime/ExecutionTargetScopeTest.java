@@ -18,6 +18,7 @@ import dev.erst.gridgrind.core.plan.TableRowSelector;
 import dev.erst.gridgrind.core.plan.TableSelector;
 import dev.erst.gridgrind.core.plan.WorkbookSelector;
 import dev.erst.gridgrind.core.vocabulary.CellAddress;
+import dev.erst.gridgrind.core.vocabulary.DefinedName;
 import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import java.util.List;
@@ -50,7 +51,7 @@ class ExecutionTargetScopeTest {
             new ChartSelector.ByName(new SheetName("Budget"), "Revenue"),
             new TableSelector.ByNameOnSheet("Ledger", new SheetName("Budget")),
             new PivotTableSelector.ByNameOnSheet("Pivot", new SheetName("Budget")),
-            new NamedRangeSelector.SheetScope("Total", new SheetName("Budget")),
+            new NamedRangeSelector.SheetScope(new DefinedName("Total"), new SheetName("Budget")),
             new TableRowSelector.AllRows(
                 new TableSelector.ByNameOnSheet("Ledger", new SheetName("Budget"))),
             new TableRowSelector.ByIndex(
@@ -81,10 +82,11 @@ class ExecutionTargetScopeTest {
             new PivotTableSelector.ByName("Pivot"),
             new PivotTableSelector.ByNames(List.of("Pivot")),
             new NamedRangeSelector.All(),
-            new NamedRangeSelector.AnyOf(List.of(new NamedRangeSelector.ByName("Total"))),
-            new NamedRangeSelector.ByName("Total"),
-            new NamedRangeSelector.ByNames(List.of("Total")),
-            new NamedRangeSelector.WorkbookScope("Total"),
+            new NamedRangeSelector.AnyOf(
+                List.of(new NamedRangeSelector.ByName(new DefinedName("Total")))),
+            new NamedRangeSelector.ByName(new DefinedName("Total")),
+            new NamedRangeSelector.ByNames(List.of(new DefinedName("Total"))),
+            new NamedRangeSelector.WorkbookScope(new DefinedName("Total")),
             new WorkbookSelector.Current())) {
       assertEquals(Optional.empty(), ExecutionTargetScope.exactSheetNames(selector));
     }

@@ -59,6 +59,7 @@ import dev.erst.gridgrind.core.result.WorkbookResult;
 import dev.erst.gridgrind.core.source.BinarySourceInput;
 import dev.erst.gridgrind.core.source.TextSourceInput;
 import dev.erst.gridgrind.core.vocabulary.CellAddress;
+import dev.erst.gridgrind.core.vocabulary.DefinedName;
 import dev.erst.gridgrind.core.vocabulary.ExcelAuthoredDrawingShapeKind;
 import dev.erst.gridgrind.core.vocabulary.ExcelBorderStyle;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartBarDirection;
@@ -1336,12 +1337,12 @@ public final class XlsxParityScenarios {
                     new CellMutationAction.SetComment(comment("Review docs", "GridGrind", true))),
                 mutate(
                     new StructuredMutationAction.SetNamedRange(
-                        "OpsScore",
+                        new DefinedName("OpsScore"),
                         new NamedRangeScope.Workbook(),
                         NamedRangeTarget.range(new SheetName("Ops"), new RangeRef("D3:D4")))),
                 mutate(
                     new StructuredMutationAction.SetNamedRange(
-                        "QueueWindow",
+                        new DefinedName("QueueWindow"),
                         new NamedRangeScope.Sheet(new SheetName("Queue")),
                         NamedRangeTarget.range(new SheetName("Queue"), new RangeRef("A1:B3")))),
                 mutate(
@@ -1558,12 +1559,12 @@ public final class XlsxParityScenarios {
                 new CellMutationAction.SetCell(new CellInput.NumberValue(21d))),
             mutate(
                 new StructuredMutationAction.SetNamedRange(
-                    "ChartCategories",
+                    new DefinedName("ChartCategories"),
                     new NamedRangeScope.Workbook(),
                     NamedRangeTarget.range(new SheetName("Chart"), new RangeRef("A2:A4")))),
             mutate(
                 new StructuredMutationAction.SetNamedRange(
-                    "ChartActual",
+                    new DefinedName("ChartActual"),
                     new NamedRangeScope.Workbook(),
                     NamedRangeTarget.range(new SheetName("Chart"), new RangeRef("C2:C4")))),
             mutate(
@@ -1654,7 +1655,7 @@ public final class XlsxParityScenarios {
                     new CellMutationAction.SetCell(new CellInput.NumberValue(12d))),
                 mutate(
                     new StructuredMutationAction.SetNamedRange(
-                        "PivotSource",
+                        new DefinedName("PivotSource"),
                         new NamedRangeScope.Workbook(),
                         NamedRangeTarget.range(new SheetName("Data"), new RangeRef("A1:D5")))),
                 mutate(
@@ -1682,7 +1683,7 @@ public final class XlsxParityScenarios {
                         new PivotTableInput(
                             "Named Pivot",
                             new SheetName("NamedReport"),
-                            new PivotTableInput.Source.NamedRange("PivotSource"),
+                            new PivotTableInput.Source.NamedRange(new DefinedName("PivotSource")),
                             new PivotTableInput.Anchor(new CellAddress("A3")),
                             List.of("Region"),
                             List.of(),

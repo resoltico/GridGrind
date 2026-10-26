@@ -34,6 +34,7 @@ import dev.erst.gridgrind.core.model.validation.DataValidationHealthReport;
 import dev.erst.gridgrind.core.model.validation.IgnoredErrorReport;
 import dev.erst.gridgrind.core.result.AnalysisSummaryReport;
 import dev.erst.gridgrind.core.vocabulary.CellAddress;
+import dev.erst.gridgrind.core.vocabulary.DefinedNameLabel;
 import dev.erst.gridgrind.core.vocabulary.ExcelDrawingAnchorBehavior;
 import dev.erst.gridgrind.core.vocabulary.ExcelDrawingShapeKind;
 import dev.erst.gridgrind.core.vocabulary.ExcelEmbeddedObjectPackagingKind;
@@ -887,7 +888,8 @@ class DtoEdgeCoverageTest {
             .getMessage());
     assertInstanceOf(
         NamedRangeReport.FormulaReport.class,
-        new NamedRangeReport.FormulaReport("Expr", new NamedRangeScope.Workbook(), "SUM(A1:A2)"));
+        new NamedRangeReport.FormulaReport(
+            new DefinedNameLabel("Expr"), new NamedRangeScope.Workbook(), "SUM(A1:A2)"));
     assertEquals(
         "color must not be null",
         assertThrows(NullPointerException.class, () -> new CellGradientStopReport(0.0d, null))

@@ -15,6 +15,7 @@ import dev.erst.gridgrind.core.model.table.TableColumnReport;
 import dev.erst.gridgrind.core.model.table.TableEntryReport;
 import dev.erst.gridgrind.core.model.table.TableStyleReport;
 import dev.erst.gridgrind.core.vocabulary.CellAddress;
+import dev.erst.gridgrind.core.vocabulary.DefinedName;
 import dev.erst.gridgrind.core.vocabulary.RangeLabel;
 import dev.erst.gridgrind.core.vocabulary.SheetLabel;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
@@ -229,7 +230,7 @@ final class InspectionResultWorkbookStructureReportSupport {
               new SheetName(range.sheetName()), new RangeLabel(range.range()));
       case ExcelPivotTableSnapshot.Source.NamedRange namedRange ->
           new PivotTableReport.Source.NamedRange(
-              namedRange.name(),
+              new DefinedName(namedRange.name()),
               new SheetName(namedRange.sheetName()),
               new RangeLabel(namedRange.range()));
       case ExcelPivotTableSnapshot.Source.Table table ->

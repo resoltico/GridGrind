@@ -61,6 +61,7 @@ import dev.erst.gridgrind.core.source.BinarySourceInput;
 import dev.erst.gridgrind.core.source.SecretReference;
 import dev.erst.gridgrind.core.source.TextSourceInput;
 import dev.erst.gridgrind.core.vocabulary.CellAddress;
+import dev.erst.gridgrind.core.vocabulary.DefinedName;
 import dev.erst.gridgrind.core.vocabulary.ExcelAuthoredDrawingShapeKind;
 import dev.erst.gridgrind.core.vocabulary.ExcelBorderStyle;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartBarDirection;
@@ -1399,10 +1400,12 @@ class AdvancedMutationProtocolTypesTest {
     assertThrows(
         IllegalArgumentException.class,
         () -> ProtocolCellAddressValidation.validateAddress("A1048577"));
-    assertEquals("PivotSource", new PivotTableInput.Source.NamedRange("PivotSource").name());
+    assertEquals(
+        "PivotSource",
+        new PivotTableInput.Source.NamedRange(new DefinedName("PivotSource")).name().value());
     assertThrows(
         IllegalArgumentException.class,
-        () -> new PivotTableInput.Source.NamedRange("Sales Pivot 2026"));
+        () -> new PivotTableInput.Source.NamedRange(new DefinedName("Sales Pivot 2026")));
     assertThrows(
         IllegalArgumentException.class, () -> new PivotTableInput.Source.Table("Sales Table"));
     assertThrows(

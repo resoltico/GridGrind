@@ -67,6 +67,7 @@ import dev.erst.gridgrind.core.source.BinarySourceInput;
 import dev.erst.gridgrind.core.source.SecretReference;
 import dev.erst.gridgrind.core.source.TextSourceInput;
 import dev.erst.gridgrind.core.vocabulary.CellAddress;
+import dev.erst.gridgrind.core.vocabulary.DefinedName;
 import dev.erst.gridgrind.core.vocabulary.ExcelBorderStyle;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartBarDirection;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartBarGrouping;
@@ -333,7 +334,7 @@ class RuntimeResidualCoverageTest {
     assertFalse(
         SourceBackedInputRequirements.requiresStandardInput(
             new StructuredMutationAction.SetNamedRange(
-                "Budget",
+                new DefinedName("Budget"),
                 new NamedRangeScope.Workbook(),
                 NamedRangeTarget.formula("SUM(Budget!A1:A3)"))));
     assertFalse(
@@ -496,7 +497,7 @@ class RuntimeResidualCoverageTest {
             new ChartSelector.ByName(new SheetName("Budget"), "LoadChart"),
             new TableSelector.ByName("BudgetTable"),
             new PivotTableSelector.ByName("Sales Pivot"),
-            new NamedRangeSelector.ByName("BudgetRange"));
+            new NamedRangeSelector.ByName(new DefinedName("BudgetRange")));
     for (Selector selector : noInputSelectors) {
       assertFalse(SourceBackedInputRequirements.requiresStandardInput(selector));
     }

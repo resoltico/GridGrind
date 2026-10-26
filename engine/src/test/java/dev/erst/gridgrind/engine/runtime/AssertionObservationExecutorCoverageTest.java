@@ -14,6 +14,7 @@ import dev.erst.gridgrind.core.plan.WorkbookAssetIntrospectionQuery;
 import dev.erst.gridgrind.core.plan.WorkbookInspectionResult;
 import dev.erst.gridgrind.core.plan.WorkbookSelector;
 import dev.erst.gridgrind.core.result.WorkbookSummary;
+import dev.erst.gridgrind.core.vocabulary.DefinedName;
 import dev.erst.gridgrind.core.vocabulary.SheetLabel;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.StepId;
@@ -88,7 +89,7 @@ class AssertionObservationExecutorCoverageTest {
                 WorkbookInspectionResult.NamedRangesResult.class,
                 AssertionObservationExecutor.zeroMatchPresenceObservation(
                     new StepId("missing-range"),
-                    new NamedRangeSelector.WorkbookScope("MissingTotal")))
+                    new NamedRangeSelector.WorkbookScope(new DefinedName("MissingTotal"))))
             .namedRanges());
     assertEquals(
         List.of(),

@@ -13,6 +13,7 @@ import dev.erst.gridgrind.core.plan.WorkbookAssetIntrospectionQuery;
 import dev.erst.gridgrind.core.plan.WorkbookMutationAction;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import dev.erst.gridgrind.core.source.BinarySourceInput;
+import dev.erst.gridgrind.core.vocabulary.DefinedName;
 import dev.erst.gridgrind.core.vocabulary.ExcelPictureFormat;
 import dev.erst.gridgrind.core.vocabulary.NamedRangeScope;
 import dev.erst.gridgrind.core.vocabulary.PlanId;
@@ -103,16 +104,16 @@ final class WorkbookVisualizationExamples {
                         ExampleCellValues.number(16.0d))))),
         ExampleSteps.step(
             new StepId("step-03-set-categories"),
-            new NamedRangeSelector.WorkbookScope("ChartCategories"),
+            new NamedRangeSelector.WorkbookScope(new DefinedName("ChartCategories")),
             new StructuredMutationAction.SetNamedRange(
-                "ChartCategories",
+                new DefinedName("ChartCategories"),
                 new NamedRangeScope.Workbook(),
                 NamedRangeTarget.range(new SheetName("Ops"), new RangeRef("A2:A4")))),
         ExampleSteps.step(
             new StepId("step-04-set-actual"),
-            new NamedRangeSelector.WorkbookScope("ChartActual"),
+            new NamedRangeSelector.WorkbookScope(new DefinedName("ChartActual")),
             new StructuredMutationAction.SetNamedRange(
-                "ChartActual",
+                new DefinedName("ChartActual"),
                 new NamedRangeScope.Workbook(),
                 NamedRangeTarget.range(new SheetName("Ops"), new RangeRef("C2:C4")))),
         ExampleSteps.step(

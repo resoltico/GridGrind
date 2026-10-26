@@ -9,6 +9,7 @@ import dev.erst.gridgrind.core.model.style.RichTextRunInput;
 import dev.erst.gridgrind.core.model.value.CellInput;
 import dev.erst.gridgrind.core.source.TextSourceInput;
 import dev.erst.gridgrind.core.vocabulary.CellAddress;
+import dev.erst.gridgrind.core.vocabulary.DefinedName;
 import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import java.time.LocalDate;
@@ -116,22 +117,26 @@ class SelectorTypesTest {
     assertEquals(SelectorCardinality.ANY_NUMBER, new NamedRangeSelector.All().cardinality());
     assertEquals(
         SelectorCardinality.ONE_OR_MORE,
-        new NamedRangeSelector.ByName("BudgetTotal").cardinality());
+        new NamedRangeSelector.ByName(new DefinedName("BudgetTotal")).cardinality());
     assertEquals(
         SelectorCardinality.ONE_OR_MORE,
-        new NamedRangeSelector.ByNames(List.of("BudgetTotal", "OpsTotal")).cardinality());
+        new NamedRangeSelector.ByNames(
+                List.of(new DefinedName("BudgetTotal"), new DefinedName("OpsTotal")))
+            .cardinality());
     assertEquals(
         SelectorCardinality.EXACTLY_ONE,
-        new NamedRangeSelector.WorkbookScope("BudgetTotal").cardinality());
+        new NamedRangeSelector.WorkbookScope(new DefinedName("BudgetTotal")).cardinality());
     assertEquals(
         SelectorCardinality.EXACTLY_ONE,
-        new NamedRangeSelector.SheetScope("LocalItem", new SheetName("Budget")).cardinality());
+        new NamedRangeSelector.SheetScope(new DefinedName("LocalItem"), new SheetName("Budget"))
+            .cardinality());
     assertEquals(
         SelectorCardinality.ONE_OR_MORE,
         new NamedRangeSelector.AnyOf(
                 List.of(
-                    new NamedRangeSelector.WorkbookScope("BudgetTotal"),
-                    new NamedRangeSelector.SheetScope("LocalItem", new SheetName("Budget"))))
+                    new NamedRangeSelector.WorkbookScope(new DefinedName("BudgetTotal")),
+                    new NamedRangeSelector.SheetScope(
+                        new DefinedName("LocalItem"), new SheetName("Budget"))))
             .cardinality());
 
     assertEquals(
@@ -250,8 +255,9 @@ class SelectorTypesTest {
     NamedRangeSelector.AnyOf selector =
         new NamedRangeSelector.AnyOf(
             List.of(
-                new NamedRangeSelector.WorkbookScope("BudgetTotal"),
-                new NamedRangeSelector.SheetScope("LocalItem", new SheetName("Budget"))));
+                new NamedRangeSelector.WorkbookScope(new DefinedName("BudgetTotal")),
+                new NamedRangeSelector.SheetScope(
+                    new DefinedName("LocalItem"), new SheetName("Budget"))));
     assertEquals(2, selector.selectors().size());
     assertInstanceOf(NamedRangeSelector.SheetScope.class, selector.selectors().get(1));
     assertThrows(
@@ -259,8 +265,8 @@ class SelectorTypesTest {
         () ->
             new NamedRangeSelector.AnyOf(
                 List.of(
-                    new NamedRangeSelector.WorkbookScope("BudgetTotal"),
-                    new NamedRangeSelector.WorkbookScope("budgettotal"))));
+                    new NamedRangeSelector.WorkbookScope(new DefinedName("BudgetTotal")),
+                    new NamedRangeSelector.WorkbookScope(new DefinedName("budgettotal")))));
   }
 
   @Test

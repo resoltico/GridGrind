@@ -7,6 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import dev.erst.gridgrind.core.model.formula.NamedRangeTarget;
 import dev.erst.gridgrind.core.model.value.CellInput;
 import dev.erst.gridgrind.core.source.TextSourceInput;
+import dev.erst.gridgrind.core.vocabulary.DefinedName;
 import dev.erst.gridgrind.core.vocabulary.ExcelColumnSpan;
 import dev.erst.gridgrind.core.vocabulary.ExcelRowSpan;
 import dev.erst.gridgrind.core.vocabulary.NamedRangeScope;
@@ -71,10 +72,11 @@ class MutationActionTest {
     assertEquals(
         "BudgetTotal",
         new StructuredMutationAction.SetNamedRange(
-                "BudgetTotal",
+                new DefinedName("BudgetTotal"),
                 new NamedRangeScope.Workbook(),
                 NamedRangeTarget.range(new SheetName("Budget"), new RangeRef("B4")))
-            .name());
+            .name()
+            .value());
 
     assertThrows(
         IllegalArgumentException.class, () -> new WorkbookMutationAction.SetSheetZoom(401));
@@ -86,7 +88,7 @@ class MutationActionTest {
         IllegalArgumentException.class,
         () ->
             new StructuredMutationAction.SetNamedRange(
-                " ",
+                new DefinedName(" "),
                 new NamedRangeScope.Workbook(),
                 NamedRangeTarget.range(new SheetName("Budget"), new RangeRef("B4"))));
 

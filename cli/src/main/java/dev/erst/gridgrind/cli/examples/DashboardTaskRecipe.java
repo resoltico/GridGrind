@@ -27,6 +27,7 @@ import dev.erst.gridgrind.core.plan.StructuredMutationAction;
 import dev.erst.gridgrind.core.plan.WorkbookAssetIntrospectionQuery;
 import dev.erst.gridgrind.core.plan.WorkbookMutationAction;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
+import dev.erst.gridgrind.core.vocabulary.DefinedName;
 import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.StepId;
@@ -162,17 +163,17 @@ final class DashboardTaskRecipe {
                         ExampleCellValues.number(16.0d))))),
         ExampleSteps.step(
             new StepId("define-chart-categories"),
-            new NamedRangeSelector.WorkbookScope("DashboardCategories"),
+            new NamedRangeSelector.WorkbookScope(new DefinedName("DashboardCategories")),
             new StructuredMutationAction.SetNamedRange(
-                "DashboardCategories",
+                new DefinedName("DashboardCategories"),
                 new dev.erst.gridgrind.core.vocabulary.NamedRangeScope.Workbook(),
                 dev.erst.gridgrind.core.model.formula.NamedRangeTarget.range(
                     new SheetName("Ops"), new RangeRef("A2:A4")))),
         ExampleSteps.step(
             new StepId("define-dashboard-actual"),
-            new NamedRangeSelector.WorkbookScope("DashboardActual"),
+            new NamedRangeSelector.WorkbookScope(new DefinedName("DashboardActual")),
             new StructuredMutationAction.SetNamedRange(
-                "DashboardActual",
+                new DefinedName("DashboardActual"),
                 new dev.erst.gridgrind.core.vocabulary.NamedRangeScope.Workbook(),
                 dev.erst.gridgrind.core.model.formula.NamedRangeTarget.range(
                     new SheetName("Ops"), new RangeRef("C2:C4")))),

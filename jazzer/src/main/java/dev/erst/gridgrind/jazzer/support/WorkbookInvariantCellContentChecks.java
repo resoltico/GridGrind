@@ -167,7 +167,7 @@ final class WorkbookInvariantCellContentChecks {
   static void requireNamedRangeShape(NamedRangeReport namedRange) {
     WorkbookInvariantChecks.require(namedRange.name() != null, "namedRange name must not be null");
     WorkbookInvariantChecks.require(
-        !namedRange.name().isBlank(), "namedRange name must not be blank");
+        !namedRange.name().value().isBlank(), "namedRange name must not be blank");
     WorkbookInvariantChecks.require(
         namedRange.scope() != null, "namedRange scope must not be null");
     WorkbookInvariantChecks.require(

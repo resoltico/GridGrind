@@ -22,6 +22,7 @@ import dev.erst.gridgrind.core.plan.TableSelector;
 import dev.erst.gridgrind.core.plan.WorkbookMutationAction;
 import dev.erst.gridgrind.core.plan.WorkbookSelector;
 import dev.erst.gridgrind.core.vocabulary.CellAddress;
+import dev.erst.gridgrind.core.vocabulary.DefinedName;
 import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.StepId;
@@ -48,13 +49,16 @@ class AuthoringTargetCoverageTest {
     assertInstanceOf(
         TableSelector.ByNameOnSheet.class,
         Targets.tableOnSheet("BudgetTable", new SheetName("Budget")).selector());
-    assertInstanceOf(NamedRangeSelector.ByName.class, Targets.namedRange("BudgetRange").selector());
+    assertInstanceOf(
+        NamedRangeSelector.ByName.class,
+        Targets.namedRange(new DefinedName("BudgetRange")).selector());
     assertInstanceOf(
         NamedRangeSelector.SheetScope.class,
-        Targets.namedRangeOnSheet("BudgetRange", new SheetName("Budget")).selector());
+        Targets.namedRangeOnSheet(new DefinedName("BudgetRange"), new SheetName("Budget"))
+            .selector());
     assertInstanceOf(
         NamedRangeSelector.WorkbookScope.class,
-        Targets.workbookNamedRange("BudgetRange").selector());
+        Targets.workbookNamedRange(new DefinedName("BudgetRange")).selector());
     assertInstanceOf(
         ChartSelector.ByName.class,
         Targets.chart(new SheetName("Budget"), "RevenueChart").selector());
@@ -274,10 +278,11 @@ class AuthoringTargetCoverageTest {
         CellAssertion.FormulaText.class,
         tableCell.formulaEquals("SUM(A1:A2)").toStep(new StepId("formula")).assertion());
 
-    NamedRangeTarget namedRange = Targets.namedRange("BudgetRange");
+    NamedRangeTarget namedRange = Targets.namedRange(new DefinedName("BudgetRange"));
     NamedRangeTarget namedRangeOnSheet =
-        Targets.namedRangeOnSheet("BudgetRange", new SheetName("Budget"));
-    NamedRangeTarget workbookNamedRange = Targets.workbookNamedRange("BudgetRange");
+        Targets.namedRangeOnSheet(new DefinedName("BudgetRange"), new SheetName("Budget"));
+    NamedRangeTarget workbookNamedRange =
+        Targets.workbookNamedRange(new DefinedName("BudgetRange"));
     assertInstanceOf(NamedRangeSelector.ByName.class, namedRange.selector());
     assertInstanceOf(NamedRangeSelector.SheetScope.class, namedRangeOnSheet.selector());
     assertInstanceOf(NamedRangeSelector.WorkbookScope.class, workbookNamedRange.selector());

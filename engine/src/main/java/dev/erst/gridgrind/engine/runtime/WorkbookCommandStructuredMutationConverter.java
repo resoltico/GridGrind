@@ -101,7 +101,7 @@ final class WorkbookCommandStructuredMutationConverter {
         WorkbookCommandSelectorSupport.ensureNamedRangeIdentity(target, setNamedRange);
         yield new WorkbookMetadataCommand.SetNamedRange(
             new ExcelNamedRangeDefinition(
-                setNamedRange.name(),
+                setNamedRange.name().value(),
                 WorkbookCommandLayoutInputConverter.toExcelNamedRangeScope(setNamedRange.scope()),
                 WorkbookCommandLayoutInputConverter.toExcelNamedRangeTarget(
                     setNamedRange.target())));

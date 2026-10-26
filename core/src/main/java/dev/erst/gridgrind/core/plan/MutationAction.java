@@ -95,10 +95,6 @@ public sealed interface MutationAction
       MutationActionNumericValidation.requireRowHeightPoints(heightPoints);
     }
 
-    static void requireNamedRangeName(String name) {
-      MutationActionNameValidation.requireNamedRangeName(name);
-    }
-
     static void requirePivotTableName(String name) {
       MutationActionNameValidation.requirePivotTableName(name);
     }

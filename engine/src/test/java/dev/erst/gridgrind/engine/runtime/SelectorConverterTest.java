@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import dev.erst.gridgrind.core.plan.*;
 import dev.erst.gridgrind.core.vocabulary.CellAddress;
+import dev.erst.gridgrind.core.vocabulary.DefinedName;
 import dev.erst.gridgrind.core.vocabulary.ExcelColumnSpan;
 import dev.erst.gridgrind.core.vocabulary.ExcelRowSpan;
 import dev.erst.gridgrind.core.vocabulary.RangeRef;
@@ -34,24 +35,27 @@ class SelectorConverterTest {
     assertEquals(
         new ExcelNamedRangeSelection.Selected(
             List.of(new ExcelNamedRangeSelector.ByName("BudgetTotal"))),
-        SelectorConverter.toExcelNamedRangeSelection(new NamedRangeSelector.ByName("BudgetTotal")));
+        SelectorConverter.toExcelNamedRangeSelection(
+            new NamedRangeSelector.ByName(new DefinedName("BudgetTotal"))));
     assertEquals(
         new ExcelNamedRangeSelection.Selected(
             List.of(
                 new ExcelNamedRangeSelector.ByName("BudgetTotal"),
                 new ExcelNamedRangeSelector.ByName("OpsTotal"))),
         SelectorConverter.toExcelNamedRangeSelection(
-            new NamedRangeSelector.ByNames(List.of("BudgetTotal", "OpsTotal"))));
+            new NamedRangeSelector.ByNames(
+                List.of(new DefinedName("BudgetTotal"), new DefinedName("OpsTotal")))));
     assertEquals(
         new ExcelNamedRangeSelection.Selected(
             List.of(new ExcelNamedRangeSelector.WorkbookScope("BudgetTotal"))),
         SelectorConverter.toExcelNamedRangeSelection(
-            new NamedRangeSelector.WorkbookScope("BudgetTotal")));
+            new NamedRangeSelector.WorkbookScope(new DefinedName("BudgetTotal"))));
     assertEquals(
         new ExcelNamedRangeSelection.Selected(
             List.of(new ExcelNamedRangeSelector.SheetScope("LocalItem", "Budget"))),
         SelectorConverter.toExcelNamedRangeSelection(
-            new NamedRangeSelector.SheetScope("LocalItem", new SheetName("Budget"))));
+            new NamedRangeSelector.SheetScope(
+                new DefinedName("LocalItem"), new SheetName("Budget"))));
     assertEquals(
         new ExcelNamedRangeSelection.Selected(
             List.of(
@@ -60,8 +64,9 @@ class SelectorConverterTest {
         SelectorConverter.toExcelNamedRangeSelection(
             new NamedRangeSelector.AnyOf(
                 List.of(
-                    new NamedRangeSelector.WorkbookScope("BudgetTotal"),
-                    new NamedRangeSelector.SheetScope("LocalItem", new SheetName("Budget"))))));
+                    new NamedRangeSelector.WorkbookScope(new DefinedName("BudgetTotal")),
+                    new NamedRangeSelector.SheetScope(
+                        new DefinedName("LocalItem"), new SheetName("Budget"))))));
 
     assertEquals(
         new ExcelTableSelection.All(),

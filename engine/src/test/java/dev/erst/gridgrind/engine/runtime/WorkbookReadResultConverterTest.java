@@ -631,7 +631,8 @@ class InspectionResultConverterTest extends DefaultGridGrindRequestExecutorTestS
 
     assertEquals("Data", ((PivotTableReport.Source.Range) rangePivot.source()).sheetName().value());
     assertEquals(
-        "PivotSource", ((PivotTableReport.Source.NamedRange) namedRangePivot.source()).name());
+        "PivotSource",
+        ((PivotTableReport.Source.NamedRange) namedRangePivot.source()).name().value());
   }
 
   @Test

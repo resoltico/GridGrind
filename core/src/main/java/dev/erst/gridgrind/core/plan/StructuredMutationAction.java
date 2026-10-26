@@ -10,6 +10,7 @@ import dev.erst.gridgrind.core.model.table.AutofilterSortStateInput;
 import dev.erst.gridgrind.core.model.table.TableInput;
 import dev.erst.gridgrind.core.model.validation.ConditionalFormattingDefinitionInput;
 import dev.erst.gridgrind.core.model.validation.DataValidationInput;
+import dev.erst.gridgrind.core.vocabulary.DefinedName;
 import dev.erst.gridgrind.core.vocabulary.NamedRangeScope;
 import java.util.ArrayList;
 import java.util.List;
@@ -160,12 +161,12 @@ public sealed interface StructuredMutationAction extends MutationAction {
         NamedRangeSelector.WorkbookScope.class,
         NamedRangeSelector.SheetScope.class
       })
-  record SetNamedRange(String name, NamedRangeScope scope, NamedRangeTarget target)
+  record SetNamedRange(DefinedName name, NamedRangeScope scope, NamedRangeTarget target)
       implements StructuredMutationAction {
     public SetNamedRange {
       Objects.requireNonNull(scope, "scope must not be null");
       Objects.requireNonNull(target, "target must not be null");
-      MutationAction.Validation.requireNamedRangeName(name);
+      java.util.Objects.requireNonNull(name, "name must not be null");
     }
   }
 

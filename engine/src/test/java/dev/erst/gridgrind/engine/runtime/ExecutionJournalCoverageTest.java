@@ -40,6 +40,7 @@ import dev.erst.gridgrind.core.result.ExecutionJournalLevel;
 import dev.erst.gridgrind.core.result.WorkbookResult;
 import dev.erst.gridgrind.core.result.WorkbookResults;
 import dev.erst.gridgrind.core.vocabulary.CellAddress;
+import dev.erst.gridgrind.core.vocabulary.DefinedName;
 import dev.erst.gridgrind.core.vocabulary.PlanId;
 import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
@@ -175,27 +176,31 @@ class ExecutionJournalCoverageTest {
             new PivotTableSelector.ByNameOnSheet("RevenuePivot", new SheetName("Budget"))));
     assertEquals(
         new ExecutionJournal.Target("NAMED_RANGE", "Named ranges [Gross, Margin]"),
-        summaryTarget(new NamedRangeSelector.ByNames(List.of("Gross", "Margin"))));
+        summaryTarget(
+            new NamedRangeSelector.ByNames(
+                List.of(new DefinedName("Gross"), new DefinedName("Margin")))));
     assertEquals(
         new ExecutionJournal.Target("NAMED_RANGE", "All named ranges"),
         summaryTarget(new NamedRangeSelector.All()));
     assertEquals(
         new ExecutionJournal.Target("NAMED_RANGE", "Named range Gross"),
-        summaryTarget(new NamedRangeSelector.ByName("Gross")));
+        summaryTarget(new NamedRangeSelector.ByName(new DefinedName("Gross"))));
     assertEquals(
         new ExecutionJournal.Target("NAMED_RANGE", "Workbook-scoped named range Gross"),
-        summaryTarget(new NamedRangeSelector.WorkbookScope("Gross")));
+        summaryTarget(new NamedRangeSelector.WorkbookScope(new DefinedName("Gross"))));
     assertEquals(
         new ExecutionJournal.Target("NAMED_RANGE", "Sheet-scoped named range Budget!Margin"),
-        summaryTarget(new NamedRangeSelector.SheetScope("Margin", new SheetName("Budget"))));
+        summaryTarget(
+            new NamedRangeSelector.SheetScope(new DefinedName("Margin"), new SheetName("Budget"))));
 
     ExecutionJournal.Target anyOfSummary =
         summaryTarget(
             new NamedRangeSelector.AnyOf(
                 List.of(
-                    new NamedRangeSelector.ByName("Gross"),
-                    new NamedRangeSelector.WorkbookScope("Margin"),
-                    new NamedRangeSelector.SheetScope("Net", new SheetName("Budget")))));
+                    new NamedRangeSelector.ByName(new DefinedName("Gross")),
+                    new NamedRangeSelector.WorkbookScope(new DefinedName("Margin")),
+                    new NamedRangeSelector.SheetScope(
+                        new DefinedName("Net"), new SheetName("Budget")))));
     assertEquals("NAMED_RANGE", anyOfSummary.kind());
     assertTrue(anyOfSummary.label().startsWith("Named range selector ["));
 
@@ -258,7 +263,9 @@ class ExecutionJournalCoverageTest {
         expandedPivotNames);
 
     List<ExecutionJournal.Target> expandedNamedRangeNames =
-        expandedTargets(new NamedRangeSelector.ByNames(List.of("Gross", "Margin")));
+        expandedTargets(
+            new NamedRangeSelector.ByNames(
+                List.of(new DefinedName("Gross"), new DefinedName("Margin"))));
     assertEquals(
         List.of(
             new ExecutionJournal.Target("NAMED_RANGE", "Named range Gross"),
@@ -269,9 +276,10 @@ class ExecutionJournalCoverageTest {
         expandedTargets(
             new NamedRangeSelector.AnyOf(
                 List.of(
-                    new NamedRangeSelector.ByName("Gross"),
-                    new NamedRangeSelector.WorkbookScope("Margin"),
-                    new NamedRangeSelector.SheetScope("Net", new SheetName("Budget")))));
+                    new NamedRangeSelector.ByName(new DefinedName("Gross")),
+                    new NamedRangeSelector.WorkbookScope(new DefinedName("Margin")),
+                    new NamedRangeSelector.SheetScope(
+                        new DefinedName("Net"), new SheetName("Budget")))));
     assertEquals(
         List.of(
             new ExecutionJournal.Target("NAMED_RANGE", "Named range Gross"),

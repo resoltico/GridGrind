@@ -118,11 +118,14 @@ final class ExecutionSelectorDiagnosticFields {
   static Optional<String> singleNamedRangeName(NamedRangeSelector selector) {
     return switch (selector) {
       case NamedRangeSelector.All _ -> Optional.empty();
-      case NamedRangeSelector.ByName byName -> Optional.of(byName.name());
+      case NamedRangeSelector.ByName byName -> Optional.of(byName.name().value());
       case NamedRangeSelector.ByNames byNames ->
-          byNames.names().size() == 1 ? Optional.of(byNames.names().getFirst()) : Optional.empty();
-      case NamedRangeSelector.WorkbookScope workbookScope -> Optional.of(workbookScope.name());
-      case NamedRangeSelector.SheetScope sheetScope -> Optional.of(sheetScope.name());
+          byNames.names().size() == 1
+              ? Optional.of(byNames.names().getFirst().value())
+              : Optional.empty();
+      case NamedRangeSelector.WorkbookScope workbookScope ->
+          Optional.of(workbookScope.name().value());
+      case NamedRangeSelector.SheetScope sheetScope -> Optional.of(sheetScope.name().value());
       case NamedRangeSelector.AnyOf anyOf ->
           anyOf.selectors().size() == 1
               ? singleNamedRangeName(anyOf.selectors().getFirst())
@@ -132,9 +135,10 @@ final class ExecutionSelectorDiagnosticFields {
 
   static Optional<String> singleNamedRangeName(NamedRangeSelector.Ref selector) {
     return switch (selector) {
-      case NamedRangeSelector.ByName byName -> Optional.of(byName.name());
-      case NamedRangeSelector.WorkbookScope workbookScope -> Optional.of(workbookScope.name());
-      case NamedRangeSelector.SheetScope sheetScope -> Optional.of(sheetScope.name());
+      case NamedRangeSelector.ByName byName -> Optional.of(byName.name().value());
+      case NamedRangeSelector.WorkbookScope workbookScope ->
+          Optional.of(workbookScope.name().value());
+      case NamedRangeSelector.SheetScope sheetScope -> Optional.of(sheetScope.name().value());
     };
   }
 

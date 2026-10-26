@@ -17,6 +17,7 @@ import dev.erst.gridgrind.core.plan.WorkbookInspectionResult;
 import dev.erst.gridgrind.core.plan.WorkbookSelector;
 import dev.erst.gridgrind.core.problem.GridGrindProblemCode;
 import dev.erst.gridgrind.core.vocabulary.CellAddress;
+import dev.erst.gridgrind.core.vocabulary.DefinedName;
 import dev.erst.gridgrind.core.vocabulary.ExcelBorderStyle;
 import dev.erst.gridgrind.core.vocabulary.ExcelFillPattern;
 import dev.erst.gridgrind.core.vocabulary.ExcelHorizontalAlignment;
@@ -106,9 +107,9 @@ class DefaultGridGrindRequestExecutorCoverageTest
     MutationStep setNamedRange =
         new MutationStep(
             new StepId("step-02-set-named-range"),
-            new NamedRangeSelector.WorkbookScope("BudgetTotal"),
+            new NamedRangeSelector.WorkbookScope(new DefinedName("BudgetTotal")),
             new StructuredMutationAction.SetNamedRange(
-                "BudgetTotal",
+                new DefinedName("BudgetTotal"),
                 new NamedRangeScope.Workbook(),
                 NamedRangeTarget.range(new SheetName("Budget"), new RangeRef("B4"))));
     InspectionStep getCells =
@@ -119,7 +120,7 @@ class DefaultGridGrindRequestExecutorCoverageTest
     InspectionStep getNamedRanges =
         new InspectionStep(
             new StepId("step-04-get-named-ranges"),
-            new NamedRangeSelector.WorkbookScope("BudgetTotal"),
+            new NamedRangeSelector.WorkbookScope(new DefinedName("BudgetTotal")),
             new WorkbookIntrospectionQuery.GetNamedRanges());
 
     assertEquals(java.util.Optional.of("Budget"), ExecutionDiagnosticFields.sheetNameFor(setCell));
@@ -164,15 +165,15 @@ class DefaultGridGrindRequestExecutorCoverageTest
     MutationStep setNamedRange =
         new MutationStep(
             new StepId("step-01-set-named-range"),
-            new NamedRangeSelector.WorkbookScope("BudgetExpr"),
+            new NamedRangeSelector.WorkbookScope(new DefinedName("BudgetExpr")),
             new StructuredMutationAction.SetNamedRange(
-                "BudgetExpr",
+                new DefinedName("BudgetExpr"),
                 new NamedRangeScope.Workbook(),
                 NamedRangeTarget.formula("SUM(Budget!A1:A3)")));
     InspectionStep getNamedRanges =
         new InspectionStep(
             new StepId("step-03-get-named-ranges"),
-            new NamedRangeSelector.WorkbookScope("BudgetExpr"),
+            new NamedRangeSelector.WorkbookScope(new DefinedName("BudgetExpr")),
             new WorkbookIntrospectionQuery.GetNamedRanges());
     InspectionStep workbookFindings =
         new InspectionStep(

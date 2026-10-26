@@ -32,6 +32,7 @@ import dev.erst.gridgrind.core.problem.ProblemContextRequestSurfaces;
 import dev.erst.gridgrind.core.result.ExecutionJournal;
 import dev.erst.gridgrind.core.source.TextSourceInput;
 import dev.erst.gridgrind.core.vocabulary.CellAddress;
+import dev.erst.gridgrind.core.vocabulary.DefinedName;
 import dev.erst.gridgrind.core.vocabulary.ExcelBorderStyle;
 import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.core.vocabulary.RgbHex;
@@ -88,13 +89,14 @@ class ExecutorCoverageGapsTest {
             new PivotTableSelector.ByName("BudgetPivot"),
             new PivotTableSelector.ByNames(List.of("BudgetPivot")),
             new NamedRangeSelector.All(),
-            new NamedRangeSelector.ByName("BudgetTotal"),
-            new NamedRangeSelector.ByNames(List.of("BudgetTotal")),
-            new NamedRangeSelector.WorkbookScope("BudgetTotal"),
+            new NamedRangeSelector.ByName(new DefinedName("BudgetTotal")),
+            new NamedRangeSelector.ByNames(List.of(new DefinedName("BudgetTotal"))),
+            new NamedRangeSelector.WorkbookScope(new DefinedName("BudgetTotal")),
             new NamedRangeSelector.AnyOf(
                 List.of(
-                    new NamedRangeSelector.ByName("BudgetTotal"),
-                    new NamedRangeSelector.SheetScope("OpsTotal", new SheetName("Ops")))),
+                    new NamedRangeSelector.ByName(new DefinedName("BudgetTotal")),
+                    new NamedRangeSelector.SheetScope(
+                        new DefinedName("OpsTotal"), new SheetName("Ops")))),
             new TableRowSelector.AllRows(new TableSelector.ByName("BudgetTable")),
             new TableRowSelector.ByIndex(new TableSelector.ByName("BudgetTable"), 0),
             keyedRow,
@@ -163,9 +165,10 @@ class ExecutorCoverageGapsTest {
             new PivotTableSelector.ByName("BudgetPivot"),
             new PivotTableSelector.ByNameOnSheet("BudgetPivot", new SheetName("Budget")),
             new NamedRangeSelector.All(),
-            new NamedRangeSelector.ByName("BudgetTotal"),
-            new NamedRangeSelector.WorkbookScope("BudgetTotal"),
-            new NamedRangeSelector.SheetScope("BudgetTotal", new SheetName("Budget")),
+            new NamedRangeSelector.ByName(new DefinedName("BudgetTotal")),
+            new NamedRangeSelector.WorkbookScope(new DefinedName("BudgetTotal")),
+            new NamedRangeSelector.SheetScope(
+                new DefinedName("BudgetTotal"), new SheetName("Budget")),
             new TableRowSelector.AllRows(new TableSelector.ByName("BudgetTable")),
             new TableRowSelector.ByIndex(new TableSelector.ByName("BudgetTable"), 0),
             keyedRow,
@@ -179,12 +182,14 @@ class ExecutorCoverageGapsTest {
                 new SheetName("Budget"), List.of(new RangeRef("A1:B2"), new RangeRef("C1:D2"))),
             new TableSelector.ByNames(List.of("BudgetTable", "OpsTable")),
             new PivotTableSelector.ByNames(List.of("BudgetPivot", "OpsPivot")),
-            new NamedRangeSelector.ByNames(List.of("BudgetTotal", "OpsTotal")),
+            new NamedRangeSelector.ByNames(
+                List.of(new DefinedName("BudgetTotal"), new DefinedName("OpsTotal"))),
             new NamedRangeSelector.AnyOf(
                 List.of(
-                    new NamedRangeSelector.ByName("BudgetTotal"),
-                    new NamedRangeSelector.WorkbookScope("GrandTotal"),
-                    new NamedRangeSelector.SheetScope("OpsTotal", new SheetName("Ops")))));
+                    new NamedRangeSelector.ByName(new DefinedName("BudgetTotal")),
+                    new NamedRangeSelector.WorkbookScope(new DefinedName("GrandTotal")),
+                    new NamedRangeSelector.SheetScope(
+                        new DefinedName("OpsTotal"), new SheetName("Ops")))));
     GridGrindProblemDetail.Problem problem =
         GridGrindProblems.fromException(
             badRequest(Optional.empty(), Optional.of(11), Optional.empty()),

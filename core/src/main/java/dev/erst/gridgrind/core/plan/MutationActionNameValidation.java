@@ -5,7 +5,6 @@ import dev.erst.gridgrind.core.problem.FieldValidationProblem;
 import dev.erst.gridgrind.core.problem.FieldValidationProblemMappers;
 import dev.erst.gridgrind.core.problem.InvalidRequestException;
 import dev.erst.gridgrind.core.vocabulary.ExcelPivotTableNaming;
-import dev.erst.gridgrind.core.vocabulary.ProtocolDefinedNameValidation;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -19,15 +18,6 @@ final class MutationActionNameValidation {
       throw invalidField(
           FieldValidationProblem.atField(fieldName, FieldValidationBasicRule.NON_BLANK));
     }
-  }
-
-  static void requireNamedRangeName(String name) {
-    Objects.requireNonNull(name, "name must not be null");
-    ProtocolDefinedNameValidation.violation(name)
-        .ifPresent(
-            violation -> {
-              throw invalidField(FieldValidationProblemMappers.definedName("name", violation));
-            });
   }
 
   static void requirePivotTableName(String name) {

@@ -2,6 +2,7 @@ package dev.erst.gridgrind.core.model.formula;
 
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import dev.erst.gridgrind.core.vocabulary.DefinedNameLabel;
 import dev.erst.gridgrind.core.vocabulary.NamedRangeScope;
 import java.util.Objects;
 
@@ -14,7 +15,7 @@ import java.util.Objects;
 public sealed interface NamedRangeReport
     permits NamedRangeReport.RangeReport, NamedRangeReport.FormulaReport {
   /** Defined-name identifier. */
-  String name();
+  DefinedNameLabel name();
 
   /** Workbook or sheet scope of the defined name. */
   NamedRangeScope scope();
@@ -24,13 +25,10 @@ public sealed interface NamedRangeReport
 
   /** Named range that resolves cleanly to a sheet-qualified cell or rectangular range target. */
   record RangeReport(
-      String name, NamedRangeScope scope, String refersToFormula, NamedRangeTarget target)
+      DefinedNameLabel name, NamedRangeScope scope, String refersToFormula, NamedRangeTarget target)
       implements NamedRangeReport {
     public RangeReport {
       Objects.requireNonNull(name, "name must not be null");
-      if (name.isBlank()) {
-        throw new IllegalArgumentException("name must not be blank");
-      }
       Objects.requireNonNull(scope, "scope must not be null");
       Objects.requireNonNull(refersToFormula, "refersToFormula must not be null");
       if (refersToFormula.isBlank()) {
@@ -41,13 +39,10 @@ public sealed interface NamedRangeReport
   }
 
   /** Defined name whose formula cannot be normalized to a typed range target. */
-  record FormulaReport(String name, NamedRangeScope scope, String refersToFormula)
+  record FormulaReport(DefinedNameLabel name, NamedRangeScope scope, String refersToFormula)
       implements NamedRangeReport {
     public FormulaReport {
       Objects.requireNonNull(name, "name must not be null");
-      if (name.isBlank()) {
-        throw new IllegalArgumentException("name must not be blank");
-      }
       Objects.requireNonNull(scope, "scope must not be null");
       Objects.requireNonNull(refersToFormula, "refersToFormula must not be null");
       if (refersToFormula.isBlank()) {

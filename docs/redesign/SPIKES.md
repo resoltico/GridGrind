@@ -792,3 +792,33 @@ retired file: Support classes 220 -> 219; blank checks 440 unchanged; main Java 
 test Java 155,129 -> 155,238. Other model/subtype counts unchanged. Evidence external
 `rgb-*.log`, failures, inventories and migration logs. Baseline diff empty; no supplement.
 Next: defined/table identifier names, preserving factual-name contracts separately where needed.
+
+### WP-21 defined names and observed labels
+
+Named-range selectors, mutations, authoring targets and pivot named-range sources now carry
+`DefinedName`; the constructor retains structured naming failures through the common mapper.
+Case-insensitive selector identities and name-list duplicate rules remain. Deleted obsolete
+mutation name validators/forwarders and the validation helper's verification-only construction
+factory/assertion; its meaningful grammar tests remain. Backend/diagnostic/parity/fuzz consumers
+project text at their boundaries. Core/codec tests initially exposed two stale text/value
+assertions, corrected with independent literal expectations; compiler checks also caught four
+mixed parity/runtime-test comparisons. Failure evidence retained in logs/XML.
+
+A direct external reopened-workbook probe establishes two real factual contracts: a defined name
+`1invalid` is successfully reported, and GET_TABLES reports a stored empty table name. The first
+producer attempt accessed CTDefinedNames before POI serialized its logical name list; the
+repaired producer modifies workbook.xml after writing and preserves the exact original formula.
+Evidence: `name-observations/` source, creation logs, workbook, request/grant and successful result.
+`DefinedNameLabel` preserves the former capability with the old nonblank-only factual contract;
+its generated valid/invalid/codec properties include invalid authoring syntax and reserved names.
+A persisted product regression changes the stored name through ZIP filesystem XML, reopens it,
+asserts `1invalid` and `Data!$A$1`, and verifies response round-trip. Table labels follow next.
+
+Final `./gradlew check` passed (3m34s): core 329, JSON 344, engine 1,512, CLI 598, architecture 35;
+2,818 tests, zero failures/skips; all 141 golden cases unchanged. Focused core/codec/persisted-name
+and all 14 parity checks passed; nested Jazzer support/replay passed (19s). Named modules passed
+14 requests, catalog, response and eleven scalar values. Inventories: blank checks 440 -> 439;
+main Java 126,622 -> 126,670; test Java 155,238 -> 155,391; Support classes 219 unchanged, other
+model/subtype counts unchanged. External evidence `defined-name-*.log`, inventories, failure XML,
+migration logs and the name observation probe. No baseline/supplement or golden snapshot changes.
+Next: table-name values and factual empty table labels, then the remaining WP-21 inventory.

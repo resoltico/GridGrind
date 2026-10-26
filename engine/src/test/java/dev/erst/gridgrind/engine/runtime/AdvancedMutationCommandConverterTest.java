@@ -51,6 +51,7 @@ import dev.erst.gridgrind.core.plan.WorkbookMutationAction;
 import dev.erst.gridgrind.core.source.BinarySourceInput;
 import dev.erst.gridgrind.core.source.TextSourceInput;
 import dev.erst.gridgrind.core.vocabulary.CellAddress;
+import dev.erst.gridgrind.core.vocabulary.DefinedName;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartBarDirection;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartBarGrouping;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartDisplayBlanksAs;
@@ -179,9 +180,9 @@ class AdvancedMutationCommandConverterTest {
         assertInstanceOf(
             WorkbookMetadataCommand.SetNamedRange.class,
             WorkbookCommandConverter.toCommand(
-                new NamedRangeSelector.WorkbookScope("BudgetExpr"),
+                new NamedRangeSelector.WorkbookScope(new DefinedName("BudgetExpr")),
                 new StructuredMutationAction.SetNamedRange(
-                    "BudgetExpr",
+                    new DefinedName("BudgetExpr"),
                     new NamedRangeScope.Workbook(),
                     NamedRangeTarget.formula("SUM(Budget!A1:A3)"))));
     assertEquals(
@@ -411,7 +412,7 @@ class AdvancedMutationCommandConverterTest {
                     new PivotTableInput(
                         "Named Source Pivot",
                         new SheetName("Report"),
-                        new PivotTableInput.Source.NamedRange("PivotSource"),
+                        new PivotTableInput.Source.NamedRange(new DefinedName("PivotSource")),
                         new PivotTableInput.Anchor(new CellAddress("A3")),
                         List.of("Region"),
                         List.of(),

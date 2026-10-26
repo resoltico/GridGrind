@@ -8,6 +8,7 @@ public sealed interface WireString
         RangeRef,
         RangeLabel,
         DefinedName,
+        DefinedNameLabel,
         TableName,
         RgbHex,
         StepId,

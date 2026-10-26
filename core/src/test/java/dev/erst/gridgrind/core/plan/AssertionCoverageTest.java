@@ -26,6 +26,7 @@ import dev.erst.gridgrind.core.result.WorkbookSummary;
 import dev.erst.gridgrind.core.vocabulary.AnalysisFindingCode;
 import dev.erst.gridgrind.core.vocabulary.AnalysisSeverity;
 import dev.erst.gridgrind.core.vocabulary.CellAddress;
+import dev.erst.gridgrind.core.vocabulary.DefinedNameLabel;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartAxisCrosses;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartAxisKind;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartAxisPosition;
@@ -82,7 +83,7 @@ class AssertionCoverageTest {
     CellStyleReport style = style();
     NamedRangeReport namedRange =
         new NamedRangeReport.RangeReport(
-            "BudgetTotal",
+            new DefinedNameLabel("BudgetTotal"),
             new NamedRangeScope.Workbook(),
             "Budget!B2",
             dev.erst.gridgrind.core.model.formula.NamedRangeTarget.range(
@@ -195,7 +196,9 @@ class AssertionCoverageTest {
   void assertionSupportCoversCollectionAndAnalysisValidationBranches() {
     NamedRangeReport namedRange =
         new NamedRangeReport.FormulaReport(
-            "BudgetExpr", new NamedRangeScope.Workbook(), "SUM(Budget!B2:B4)");
+            new DefinedNameLabel("BudgetExpr"),
+            new NamedRangeScope.Workbook(),
+            "SUM(Budget!B2:B4)");
     InspectionResult observation =
         new WorkbookInspectionResult.WorkbookSummaryResult(
             new StepId("summary"),

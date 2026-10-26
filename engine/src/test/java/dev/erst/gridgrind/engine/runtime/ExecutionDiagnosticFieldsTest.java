@@ -25,6 +25,7 @@ import dev.erst.gridgrind.core.plan.TableSelector;
 import dev.erst.gridgrind.core.plan.WorkbookSelector;
 import dev.erst.gridgrind.core.problem.ProblemContextWorkbookSurfaces;
 import dev.erst.gridgrind.core.vocabulary.CellAddress;
+import dev.erst.gridgrind.core.vocabulary.DefinedName;
 import dev.erst.gridgrind.core.vocabulary.NamedRangeScope;
 import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.core.vocabulary.SheetLabel;
@@ -82,12 +83,12 @@ class ExecutionDiagnosticFieldsTest {
   void mutationActionLocationsReflectReachableDiagnosticShapes() {
     StructuredMutationAction.SetNamedRange sheetScopedNamedRange =
         new StructuredMutationAction.SetNamedRange(
-            "BudgetTotal",
+            new DefinedName("BudgetTotal"),
             new NamedRangeScope.Sheet(new SheetName("Budget")),
             NamedRangeTarget.range(new SheetName("Budget"), new RangeRef("B4")));
     StructuredMutationAction.SetNamedRange workbookFormulaNamedRange =
         new StructuredMutationAction.SetNamedRange(
-            "BudgetExpr",
+            new DefinedName("BudgetExpr"),
             new NamedRangeScope.Workbook(),
             NamedRangeTarget.formula("SUM(Budget!B2:B4)"));
     StructuredMutationAction.SetPivotTable pivot =
@@ -149,14 +150,16 @@ class ExecutionDiagnosticFieldsTest {
         new ProblemContextWorkbookSurfaces.ProblemLocation.SheetNamedRange(
             new SheetLabel("Budget"), "BudgetTotal"),
         ExecutionDiagnosticFields.locationFor(
-            new NamedRangeSelector.SheetScope("BudgetTotal", new SheetName("Budget"))));
+            new NamedRangeSelector.SheetScope(
+                new DefinedName("BudgetTotal"), new SheetName("Budget"))));
     assertEquals(
         new ProblemContextWorkbookSurfaces.ProblemLocation.NamedRange("BudgetTotal"),
-        ExecutionDiagnosticFields.locationFor(new NamedRangeSelector.WorkbookScope("BudgetTotal")));
+        ExecutionDiagnosticFields.locationFor(
+            new NamedRangeSelector.WorkbookScope(new DefinedName("BudgetTotal"))));
     assertEquals(
         Optional.of("BudgetTotal"),
         ExecutionSelectorDiagnosticFields.namedRangeNameFor(
-            new NamedRangeSelector.WorkbookScope("BudgetTotal")));
+            new NamedRangeSelector.WorkbookScope(new DefinedName("BudgetTotal"))));
     assertEquals(
         new ProblemContextWorkbookSurfaces.ProblemLocation.Cell(new SheetLabel("Budget"), "B4"),
         ExecutionDiagnosticFields.locationFor(
@@ -204,7 +207,7 @@ class ExecutionDiagnosticFieldsTest {
                 new PivotTableInput(
                     "SalesPivot",
                     new SheetName("Budget"),
-                    new PivotTableInput.Source.NamedRange("BudgetSource"),
+                    new PivotTableInput.Source.NamedRange(new DefinedName("BudgetSource")),
                     new PivotTableInput.Anchor(new CellAddress("C5")),
                     List.of(),
                     List.of(),
@@ -230,9 +233,9 @@ class ExecutionDiagnosticFieldsTest {
     MutationStep formulaNamedRangeStep =
         new MutationStep(
             new StepId("set-name"),
-            new NamedRangeSelector.WorkbookScope("BudgetExpr"),
+            new NamedRangeSelector.WorkbookScope(new DefinedName("BudgetExpr")),
             new StructuredMutationAction.SetNamedRange(
-                "BudgetExpr",
+                new DefinedName("BudgetExpr"),
                 new NamedRangeScope.Workbook(),
                 NamedRangeTarget.formula("SUM(Budget!B2:B4)")));
     AssertionStep formulaAssertionStep =

@@ -115,6 +115,7 @@ import dev.erst.gridgrind.core.result.WorkbookSummary;
 import dev.erst.gridgrind.core.vocabulary.AnalysisFindingCode;
 import dev.erst.gridgrind.core.vocabulary.AnalysisSeverity;
 import dev.erst.gridgrind.core.vocabulary.CellAddress;
+import dev.erst.gridgrind.core.vocabulary.DefinedNameLabel;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartAxisCrosses;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartAxisKind;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartAxisPosition;
@@ -201,7 +202,7 @@ class WorkbookInvariantChecksTest {
                     new StepId("ranges"),
                     List.of(
                         new NamedRangeReport.RangeReport(
-                            "BudgetTotal",
+                            new DefinedNameLabel("BudgetTotal"),
                             new NamedRangeScope.Workbook(),
                             "Budget!$B$4",
                             NamedRangeTarget.range(new SheetName("Budget"), new RangeRef("B4"))))),

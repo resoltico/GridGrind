@@ -301,7 +301,8 @@ final class OperationSequenceMutationFactory {
             case 0x0 ->
                 mutate(
                     new StructuredMutationAction.SetNamedRange(
-                        validName ? namedRangeName : nextNamedRangeName(data, false),
+                        new dev.erst.gridgrind.core.vocabulary.DefinedName(
+                            validName ? namedRangeName : nextNamedRangeName(data, false)),
                         data.consumeBoolean()
                             ? new NamedRangeScope.Workbook()
                             : new NamedRangeScope.Sheet(new SheetName(targetSheet)),
@@ -315,9 +316,11 @@ final class OperationSequenceMutationFactory {
                 mutate(
                     data.consumeBoolean()
                         ? new NamedRangeSelector.WorkbookScope(
-                            validName ? namedRangeName : nextNamedRangeName(data, false))
+                            new dev.erst.gridgrind.core.vocabulary.DefinedName(
+                                validName ? namedRangeName : nextNamedRangeName(data, false)))
                         : new NamedRangeSelector.SheetScope(
-                            validName ? namedRangeName : nextNamedRangeName(data, false),
+                            new dev.erst.gridgrind.core.vocabulary.DefinedName(
+                                validName ? namedRangeName : nextNamedRangeName(data, false)),
                             new SheetName(targetSheet)),
                     new StructuredMutationAction.DeleteNamedRange());
           };

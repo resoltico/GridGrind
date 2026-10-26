@@ -59,6 +59,7 @@ import dev.erst.gridgrind.core.validation.WorkbookStaticViolation;
 import dev.erst.gridgrind.core.vocabulary.AnalysisFindingCode;
 import dev.erst.gridgrind.core.vocabulary.AnalysisSeverity;
 import dev.erst.gridgrind.core.vocabulary.CellAddress;
+import dev.erst.gridgrind.core.vocabulary.DefinedName;
 import dev.erst.gridgrind.core.vocabulary.ExcelFillPattern;
 import dev.erst.gridgrind.core.vocabulary.ExcelHorizontalAlignment;
 import dev.erst.gridgrind.core.vocabulary.ExcelVerticalAlignment;
@@ -130,9 +131,9 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
                                 java.util.Optional.empty(),
                                 java.util.Optional.empty()))),
                     mutate(
-                        new NamedRangeSelector.WorkbookScope("BudgetTotal"),
+                        new NamedRangeSelector.WorkbookScope(new DefinedName("BudgetTotal")),
                         new StructuredMutationAction.SetNamedRange(
-                            "BudgetTotal",
+                            new DefinedName("BudgetTotal"),
                             new NamedRangeScope.Workbook(),
                             NamedRangeTarget.range(new SheetName("Budget"), new RangeRef("F2")))),
                     mutate(
@@ -180,7 +181,7 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
                             new SheetIntrospectionQuery.GetSheetSummary()),
                         inspect(
                             "namedRanges",
-                            new NamedRangeSelector.WorkbookScope("BudgetTotal"),
+                            new NamedRangeSelector.WorkbookScope(new DefinedName("BudgetTotal")),
                             new WorkbookIntrospectionQuery.GetNamedRanges()),
                         inspect(
                             "tables",
@@ -255,11 +256,11 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
                             new PresenceAssertion.SheetPresent()),
                         assertThat(
                             "present-named-range",
-                            new NamedRangeSelector.WorkbookScope("BudgetTotal"),
+                            new NamedRangeSelector.WorkbookScope(new DefinedName("BudgetTotal")),
                             new PresenceAssertion.NamedRangePresent()),
                         assertThat(
                             "absent-named-range",
-                            new NamedRangeSelector.WorkbookScope("MissingTotal"),
+                            new NamedRangeSelector.WorkbookScope(new DefinedName("MissingTotal")),
                             new PresenceAssertion.NamedRangeAbsent()),
                         assertThat(
                             "present-table",
@@ -340,7 +341,7 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
                             new WorkbookFactAssertion.SheetStructureFacts(sheet.sheet())),
                         assertThat(
                             "named-range-facts",
-                            new NamedRangeSelector.WorkbookScope("BudgetTotal"),
+                            new NamedRangeSelector.WorkbookScope(new DefinedName("BudgetTotal")),
                             new WorkbookFactAssertion.NamedRangeFacts(namedRanges.namedRanges())),
                         assertThat(
                             "table-facts",
@@ -480,9 +481,9 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
                                 java.util.Optional.empty(),
                                 java.util.Optional.empty()))),
                     mutate(
-                        new NamedRangeSelector.WorkbookScope("BudgetTotal"),
+                        new NamedRangeSelector.WorkbookScope(new DefinedName("BudgetTotal")),
                         new StructuredMutationAction.SetNamedRange(
-                            "BudgetTotal",
+                            new DefinedName("BudgetTotal"),
                             new NamedRangeScope.Workbook(),
                             NamedRangeTarget.range(new SheetName("Budget"), new RangeRef("F2")))),
                     mutate(
@@ -523,7 +524,7 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
                             new SheetIntrospectionQuery.GetSheetSummary()),
                         inspect(
                             "namedRanges",
-                            new NamedRangeSelector.WorkbookScope("BudgetTotal"),
+                            new NamedRangeSelector.WorkbookScope(new DefinedName("BudgetTotal")),
                             new WorkbookIntrospectionQuery.GetNamedRanges()),
                         inspect(
                             "tables",
@@ -582,7 +583,7 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
             executor,
             workbookPath,
             "present-missing-range",
-            new NamedRangeSelector.WorkbookScope("MissingTotal"),
+            new NamedRangeSelector.WorkbookScope(new DefinedName("MissingTotal")),
             new PresenceAssertion.NamedRangePresent());
     assertTrue(presentMissing.problem().message().contains("EXPECT_NAMED_RANGE_PRESENT"));
     assertEquals(
@@ -664,7 +665,7 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
             executor,
             workbookPath,
             "named-range-facts-mismatch",
-            new NamedRangeSelector.WorkbookScope("BudgetTotal"),
+            new NamedRangeSelector.WorkbookScope(new DefinedName("BudgetTotal")),
             new WorkbookFactAssertion.NamedRangeFacts(List.of()));
     assertTrue(namedRangeMismatch.problem().message().contains("EXPECT_NAMED_RANGE_FACTS"));
     assertEquals(
@@ -1531,7 +1532,7 @@ class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestS
       InspectionResult presence =
           observationExecutor.presenceObservation(
               new StepId("named-range-present"),
-              new NamedRangeSelector.WorkbookScope("MissingBudgetTotal"),
+              new NamedRangeSelector.WorkbookScope(new DefinedName("MissingBudgetTotal")),
               workbook,
               new WorkbookLocation.UnsavedWorkbook());
       WorkbookAssetInspectionResult.ChartsResult charts =

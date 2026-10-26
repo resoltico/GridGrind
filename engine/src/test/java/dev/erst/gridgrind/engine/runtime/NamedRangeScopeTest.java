@@ -3,6 +3,7 @@ package dev.erst.gridgrind.engine.runtime;
 import static org.junit.jupiter.api.Assertions.*;
 
 import dev.erst.gridgrind.core.plan.NamedRangeSelector;
+import dev.erst.gridgrind.core.vocabulary.DefinedName;
 import dev.erst.gridgrind.core.vocabulary.NamedRangeScope;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.excel.ExcelNamedRangeScope;
@@ -26,19 +27,21 @@ class NamedRangeScopeTest {
     assertEquals(
         new ExcelNamedRangeScope.WorkbookScope(),
         WorkbookCommandLayoutInputConverter.toExcelNamedRangeScope(
-            new NamedRangeSelector.WorkbookScope("BudgetTotal")));
+            new NamedRangeSelector.WorkbookScope(new DefinedName("BudgetTotal"))));
     assertEquals(
         new ExcelNamedRangeScope.SheetScope("Budget"),
         WorkbookCommandLayoutInputConverter.toExcelNamedRangeScope(
-            new NamedRangeSelector.SheetScope("LocalItem", new SheetName("Budget"))));
+            new NamedRangeSelector.SheetScope(
+                new DefinedName("LocalItem"), new SheetName("Budget"))));
     assertEquals(
         "BudgetTotal",
         WorkbookCommandLayoutInputConverter.toExcelNamedRangeName(
-            new NamedRangeSelector.WorkbookScope("BudgetTotal")));
+            new NamedRangeSelector.WorkbookScope(new DefinedName("BudgetTotal"))));
     assertEquals(
         "LocalItem",
         WorkbookCommandLayoutInputConverter.toExcelNamedRangeName(
-            new NamedRangeSelector.SheetScope("LocalItem", new SheetName("Budget"))));
+            new NamedRangeSelector.SheetScope(
+                new DefinedName("LocalItem"), new SheetName("Budget"))));
   }
 
   @Test

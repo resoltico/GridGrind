@@ -49,6 +49,7 @@ import dev.erst.gridgrind.core.plan.WorkbookSelector;
 import dev.erst.gridgrind.core.source.BinarySourceInput;
 import dev.erst.gridgrind.core.source.TextSourceInput;
 import dev.erst.gridgrind.core.vocabulary.CellAddress;
+import dev.erst.gridgrind.core.vocabulary.DefinedName;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartAxisCrosses;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartAxisKind;
 import dev.erst.gridgrind.core.vocabulary.ExcelChartAxisPosition;
@@ -212,14 +213,14 @@ class SequenceIntrospectionTest {
         mutationKind(
             mutate(
                 new StructuredMutationAction.SetNamedRange(
-                    "BudgetTotal",
+                    new DefinedName("BudgetTotal"),
                     new NamedRangeScope.Workbook(),
                     NamedRangeTarget.range(new SheetName("Budget"), new RangeRef("B4"))))));
     assertEquals(
         "DELETE_NAMED_RANGE",
         mutationKind(
             mutate(
-                new NamedRangeSelector.WorkbookScope("BudgetTotal"),
+                new NamedRangeSelector.WorkbookScope(new DefinedName("BudgetTotal")),
                 new StructuredMutationAction.DeleteNamedRange())));
     assertEquals(
         "SET_DATA_VALIDATION",

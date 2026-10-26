@@ -17,6 +17,7 @@ import dev.erst.gridgrind.core.plan.WorkbookIntrospectionQuery;
 import dev.erst.gridgrind.core.plan.WorkbookMutationAction;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import dev.erst.gridgrind.core.source.TextSourceInput;
+import dev.erst.gridgrind.core.vocabulary.DefinedName;
 import dev.erst.gridgrind.core.vocabulary.NamedRangeScope;
 import dev.erst.gridgrind.core.vocabulary.PlanId;
 import dev.erst.gridgrind.core.vocabulary.RangeRef;
@@ -215,9 +216,9 @@ final class WorkbookAuditExamples {
                     true))),
         ExampleSteps.step(
             new StepId("step-05-set-named-range"),
-            new NamedRangeSelector.WorkbookScope("ForecastValue"),
+            new NamedRangeSelector.WorkbookScope(new DefinedName("ForecastValue")),
             new StructuredMutationAction.SetNamedRange(
-                "ForecastValue",
+                new DefinedName("ForecastValue"),
                 new NamedRangeScope.Workbook(),
                 NamedRangeTarget.range(new SheetName("Dashboard"), new RangeRef("B4")))),
         ExampleSteps.read(
@@ -234,7 +235,7 @@ final class WorkbookAuditExamples {
             new InspectionSurfaceQuery.GetSheetSchema()),
         ExampleSteps.read(
             new StepId("named-range-surface"),
-            new NamedRangeSelector.ByName("ForecastValue"),
+            new NamedRangeSelector.ByName(new DefinedName("ForecastValue")),
             new InspectionSurfaceQuery.GetNamedRangeSurface()),
         ExampleSteps.read(
             new StepId("formula-health"),
@@ -246,7 +247,7 @@ final class WorkbookAuditExamples {
             new InspectionAnalysisQuery.AnalyzeHyperlinkHealth()),
         ExampleSteps.read(
             new StepId("named-range-health"),
-            new NamedRangeSelector.ByName("ForecastValue"),
+            new NamedRangeSelector.ByName(new DefinedName("ForecastValue")),
             new InspectionAnalysisQuery.AnalyzeNamedRangeHealth()),
         ExampleSteps.read(
             new StepId("workbook-findings"),

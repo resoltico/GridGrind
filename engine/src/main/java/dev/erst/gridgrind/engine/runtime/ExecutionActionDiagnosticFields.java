@@ -93,12 +93,12 @@ final class ExecutionActionDiagnosticFields {
   static Optional<String> namedRangeNameFor(MutationAction action) {
     Objects.requireNonNull(action, "action must not be null");
     if (action instanceof StructuredMutationAction.SetNamedRange setNamedRange) {
-      return Optional.of(setNamedRange.name());
+      return Optional.of(setNamedRange.name().value());
     }
     if (action instanceof StructuredMutationAction.SetPivotTable setPivotTable
         && setPivotTable.pivotTable().source()
             instanceof PivotTableInput.Source.NamedRange namedRange) {
-      return Optional.of(namedRange.name());
+      return Optional.of(namedRange.name().value());
     }
     return Optional.empty();
   }

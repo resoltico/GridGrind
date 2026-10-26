@@ -87,9 +87,11 @@ final class OperationSequenceObservationSupport {
               List.of(
                   data.consumeBoolean()
                       ? new NamedRangeSelector.WorkbookScope(
-                          validName ? workbookNamedRange : nextNamedRangeName(data, false))
+                          new dev.erst.gridgrind.core.vocabulary.DefinedName(
+                              validName ? workbookNamedRange : nextNamedRangeName(data, false)))
                       : new NamedRangeSelector.SheetScope(
-                          validName ? sheetNamedRange : nextNamedRangeName(data, false),
+                          new dev.erst.gridgrind.core.vocabulary.DefinedName(
+                              validName ? sheetNamedRange : nextNamedRangeName(data, false)),
                           new SheetName(sheetName))));
     };
   }

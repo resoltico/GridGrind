@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import dev.erst.gridgrind.core.plan.*;
 import dev.erst.gridgrind.core.plan.InspectionStep;
 import dev.erst.gridgrind.core.vocabulary.CellAddress;
+import dev.erst.gridgrind.core.vocabulary.DefinedName;
 import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.excel.*;
@@ -317,7 +318,7 @@ class DefaultGridGrindRequestExecutorReadContextTranslationTest
             new dev.erst.gridgrind.core.plan.NamedRangeSelector.AnyOf(
                 List.of(
                     new dev.erst.gridgrind.core.plan.NamedRangeSelector.WorkbookScope(
-                        "BudgetTotal"))),
+                        new DefinedName("BudgetTotal")))),
             new InspectionAnalysisQuery.AnalyzeNamedRangeHealth());
     InspectionStep workbookFindings =
         inspect(
@@ -381,7 +382,8 @@ class DefaultGridGrindRequestExecutorReadContextTranslationTest
                 "surface",
                 new dev.erst.gridgrind.core.plan.NamedRangeSelector.AnyOf(
                     List.of(
-                        new dev.erst.gridgrind.core.plan.NamedRangeSelector.ByName("BudgetTotal"))),
+                        new dev.erst.gridgrind.core.plan.NamedRangeSelector.ByName(
+                            new DefinedName("BudgetTotal")))),
                 new InspectionSurfaceQuery.GetNamedRangeSurface()),
             new RuntimeException("x")));
     assertEquals(
@@ -392,7 +394,7 @@ class DefaultGridGrindRequestExecutorReadContextTranslationTest
                 new dev.erst.gridgrind.core.plan.NamedRangeSelector.AnyOf(
                     List.of(
                         new dev.erst.gridgrind.core.plan.NamedRangeSelector.SheetScope(
-                            "BudgetTotal", new SheetName("Budget")))),
+                            new DefinedName("BudgetTotal"), new SheetName("Budget")))),
                 new InspectionSurfaceQuery.GetNamedRangeSurface()),
             new RuntimeException("x")));
     assertNull(
@@ -402,9 +404,9 @@ class DefaultGridGrindRequestExecutorReadContextTranslationTest
                 new dev.erst.gridgrind.core.plan.NamedRangeSelector.AnyOf(
                     List.of(
                         new dev.erst.gridgrind.core.plan.NamedRangeSelector.WorkbookScope(
-                            "BudgetTotal"),
+                            new DefinedName("BudgetTotal")),
                         new dev.erst.gridgrind.core.plan.NamedRangeSelector.WorkbookScope(
-                            "ForecastTotal"))),
+                            new DefinedName("ForecastTotal")))),
                 new InspectionSurfaceQuery.GetNamedRangeSurface()),
             new RuntimeException("x")));
   }

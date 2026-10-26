@@ -90,7 +90,8 @@ final class WorkbookCommandSelectorSupport {
   static void ensureNamedRangeIdentity(
       Selector target, StructuredMutationAction.SetNamedRange action) {
     NamedRangeSelector.ScopedExact selector = namedRangeScopedExact(target, action);
-    if (!WorkbookCommandLayoutInputConverter.toExcelNamedRangeName(selector).equals(action.name())
+    if (!WorkbookCommandLayoutInputConverter.toExcelNamedRangeName(selector)
+            .equals(action.name().value())
         || !WorkbookCommandLayoutInputConverter.toExcelNamedRangeScope(selector)
             .equals(WorkbookCommandLayoutInputConverter.toExcelNamedRangeScope(action.scope()))) {
       throw new IllegalArgumentException(

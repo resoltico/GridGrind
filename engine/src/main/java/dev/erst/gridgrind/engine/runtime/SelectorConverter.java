@@ -70,31 +70,36 @@ final class SelectorConverter {
                   .toList());
       case NamedRangeSelector.ByName byName ->
           new ExcelNamedRangeSelection.Selected(
-              List.of(new ExcelNamedRangeSelector.ByName(byName.name())));
+              List.of(new ExcelNamedRangeSelector.ByName(byName.name().value())));
       case NamedRangeSelector.ByNames byNames ->
           new ExcelNamedRangeSelection.Selected(
               byNames.names().stream()
-                  .map(name -> (ExcelNamedRangeSelector) new ExcelNamedRangeSelector.ByName(name))
+                  .map(
+                      name ->
+                          (ExcelNamedRangeSelector)
+                              new ExcelNamedRangeSelector.ByName(name.value()))
                   .toList());
       case NamedRangeSelector.WorkbookScope workbookScope ->
           new ExcelNamedRangeSelection.Selected(
-              List.of(new ExcelNamedRangeSelector.WorkbookScope(workbookScope.name())));
+              List.of(new ExcelNamedRangeSelector.WorkbookScope(workbookScope.name().value())));
       case NamedRangeSelector.SheetScope sheetScope ->
           new ExcelNamedRangeSelection.Selected(
               List.of(
                   new ExcelNamedRangeSelector.SheetScope(
-                      sheetScope.name(), sheetScope.sheetName().value())));
+                      sheetScope.name().value(), sheetScope.sheetName().value())));
     };
   }
 
   private static ExcelNamedRangeSelector toExcelNamedRangeSelector(
       NamedRangeSelector.Ref selector) {
     return switch (selector) {
-      case NamedRangeSelector.ByName byName -> new ExcelNamedRangeSelector.ByName(byName.name());
+      case NamedRangeSelector.ByName byName ->
+          new ExcelNamedRangeSelector.ByName(byName.name().value());
       case NamedRangeSelector.WorkbookScope workbookScope ->
-          new ExcelNamedRangeSelector.WorkbookScope(workbookScope.name());
+          new ExcelNamedRangeSelector.WorkbookScope(workbookScope.name().value());
       case NamedRangeSelector.SheetScope sheetScope ->
-          new ExcelNamedRangeSelector.SheetScope(sheetScope.name(), sheetScope.sheetName().value());
+          new ExcelNamedRangeSelector.SheetScope(
+              sheetScope.name().value(), sheetScope.sheetName().value());
     };
   }
 

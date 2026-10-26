@@ -140,7 +140,8 @@ final class OperationSequenceTabularValues {
                   validRange ? "A1:C4" : FuzzDataDecoders.nextNonBlankRange(data, false)));
       case 1 ->
           new PivotTableInput.Source.NamedRange(
-              validName ? namedRangeName : nextNamedRangeName(data, false));
+              new dev.erst.gridgrind.core.vocabulary.DefinedName(
+                  validName ? namedRangeName : nextNamedRangeName(data, false)));
       default ->
           new PivotTableInput.Source.Table(
               validName ? tableName : nextTableName(data, false, targetSheet));

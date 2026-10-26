@@ -34,6 +34,7 @@ import dev.erst.gridgrind.core.result.WorkbookResultPersistence;
 import dev.erst.gridgrind.core.validation.WorkbookStaticRequestContract;
 import dev.erst.gridgrind.core.validation.WorkbookStaticViolation;
 import dev.erst.gridgrind.core.vocabulary.CellAddress;
+import dev.erst.gridgrind.core.vocabulary.DefinedName;
 import dev.erst.gridgrind.core.vocabulary.ExcelSheetVisibility;
 import dev.erst.gridgrind.core.vocabulary.NamedRangeBackingKind;
 import dev.erst.gridgrind.core.vocabulary.NamedRangeScope;
@@ -251,7 +252,7 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
                         new CellMutationAction.SetCell(formulaCell("SUM(B2:B3)"))),
                     ExecutorStructuredMutationTargets.namedRange(
                         new StructuredMutationAction.SetNamedRange(
-                            "BudgetTotal",
+                            new DefinedName("BudgetTotal"),
                             new NamedRangeScope.Workbook(),
                             NamedRangeTarget.range(new SheetName("Budget"), new RangeRef("B4"))))),
                 inspect(
@@ -481,7 +482,7 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
                         new dev.erst.gridgrind.core.plan.NamedRangeSelector.AnyOf(
                             List.of(
                                 new dev.erst.gridgrind.core.plan.NamedRangeSelector.WorkbookScope(
-                                    "BudgetTotal"))),
+                                    new DefinedName("BudgetTotal")))),
                         new WorkbookIntrospectionQuery.GetNamedRanges()))));
 
     assertEquals(GridGrindProblemCode.NAMED_RANGE_NOT_FOUND, failure.problem().code());

@@ -35,6 +35,51 @@ class ExampleExecutionFixturesTest {
   @TempDir Path tempDir;
 
   @Test
+  void observedDefinedNameLabelsDoNotAcquireAuthoringRestrictions() throws IOException {
+    Path source = tempDir.resolve("observed-defined-name.xlsx");
+    try (var workbook = new org.apache.poi.xssf.usermodel.XSSFWorkbook()) {
+      workbook.createSheet("Data").createRow(0).createCell(0).setCellValue("Observed");
+      var name = workbook.createName();
+      name.setNameName("ValidName");
+      name.setRefersToFormula("Data!$A$1");
+      try (OutputStream output = Files.newOutputStream(source)) {
+        workbook.write(output);
+      }
+    }
+    try (var archive = java.nio.file.FileSystems.newFileSystem(source)) {
+      Path workbookXml = archive.getPath("/xl/workbook.xml");
+      String xml = Files.readString(workbookXml);
+      assertTrue(xml.contains("name=\"ValidName\""));
+      Files.writeString(workbookXml, xml.replace("name=\"ValidName\"", "name=\"1invalid\""));
+    }
+    WorkbookPlan request =
+        GridGrindJson.readRequest(
+            """
+        {"protocolVersion":"V3","source":{"type":"EXISTING","path":"observed-defined-name.xlsx"},
+        "persistence":{"type":"NONE"},"steps":[{"stepId":"names","target":{"type":"NAMED_RANGE_ALL"},
+        "query":{"type":"GET_NAMED_RANGES"}}]}
+        """);
+    var result =
+        assertInstanceOf(
+            WorkbookResult.Success.class,
+            new DefaultGridGrindRequestExecutor()
+                .execute(request, bindingsForExample(tempDir, request)));
+    var names =
+        assertInstanceOf(
+            dev.erst.gridgrind.core.plan.WorkbookInspectionResult.NamedRangesResult.class,
+            result.inspections().getFirst());
+    var observed =
+        assertInstanceOf(
+            dev.erst.gridgrind.core.model.formula.NamedRangeReport.RangeReport.class,
+            names.namedRanges().getFirst());
+    assertEquals("1invalid", observed.name().value());
+    assertEquals("Data!$A$1", observed.refersToFormula());
+    assertEquals(
+        result,
+        GridGrindJson.readWorkbookResult(GridGrindJsonOutput.writeWorkbookResultBytes(result)));
+  }
+
+  @Test
   void observedMalformedValidationRangesRemainVisible() throws IOException {
     Path source = tempDir.resolve("observed-range.xlsx");
     try (var workbook = new org.apache.poi.xssf.usermodel.XSSFWorkbook()) {

@@ -40,6 +40,7 @@ import dev.erst.gridgrind.core.result.WorkbookFindingsReport;
 import dev.erst.gridgrind.core.vocabulary.AnalysisFindingCode;
 import dev.erst.gridgrind.core.vocabulary.AnalysisSeverity;
 import dev.erst.gridgrind.core.vocabulary.CellAddress;
+import dev.erst.gridgrind.core.vocabulary.DefinedNameLabel;
 import dev.erst.gridgrind.core.vocabulary.ExcelFillPattern;
 import dev.erst.gridgrind.core.vocabulary.ExcelHorizontalAlignment;
 import dev.erst.gridgrind.core.vocabulary.ExcelPaneRegion;
@@ -232,7 +233,8 @@ class WorkbookResultNestedCoverageTest {
     assertEquals("SUM(A1:A2)", formulaCell.formula().orElseThrow());
     assertInstanceOf(
         NamedRangeReport.FormulaReport.class,
-        new NamedRangeReport.FormulaReport("Expr", new NamedRangeScope.Workbook(), "SUM(A1:A2)"));
+        new NamedRangeReport.FormulaReport(
+            new DefinedNameLabel("Expr"), new NamedRangeScope.Workbook(), "SUM(A1:A2)"));
 
     GridGrindProblemDetail.Problem problem =
         GridGrindProblemDetail.Problem.of(

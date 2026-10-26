@@ -47,8 +47,8 @@ final class WorkbookCommandLayoutInputConverter {
 
   static String toExcelNamedRangeName(NamedRangeSelector.ScopedExact selector) {
     return switch (selector) {
-      case NamedRangeSelector.WorkbookScope workbook -> workbook.name();
-      case NamedRangeSelector.SheetScope sheet -> sheet.name();
+      case NamedRangeSelector.WorkbookScope workbook -> workbook.name().value();
+      case NamedRangeSelector.SheetScope sheet -> sheet.name().value();
     };
   }
 

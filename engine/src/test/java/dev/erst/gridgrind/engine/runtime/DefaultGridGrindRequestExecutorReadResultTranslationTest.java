@@ -277,7 +277,8 @@ class DefaultGridGrindRequestExecutorReadResultTranslationTest
         cast(WorkbookInspectionResult.NamedRangesResult.class, namedRanges)
             .namedRanges()
             .getFirst()
-            .name());
+            .name()
+            .value());
     assertEquals(
         "Budget",
         cast(SheetInspectionResult.SheetSummaryResult.class, sheetSummary)

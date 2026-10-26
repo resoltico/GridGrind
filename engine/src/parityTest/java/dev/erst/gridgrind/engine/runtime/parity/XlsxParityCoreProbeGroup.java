@@ -38,6 +38,7 @@ import dev.erst.gridgrind.core.plan.WorkbookMutationAction;
 import dev.erst.gridgrind.core.result.WorkbookResult;
 import dev.erst.gridgrind.core.result.WorkbookSummary;
 import dev.erst.gridgrind.core.vocabulary.CellAddress;
+import dev.erst.gridgrind.core.vocabulary.DefinedName;
 import dev.erst.gridgrind.core.vocabulary.NamedRangeScope;
 import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.core.vocabulary.SheetCopyPosition;
@@ -1637,11 +1638,11 @@ final class XlsxParityCoreProbeGroup {
                 List.of(
                     mutate(
                         new dev.erst.gridgrind.core.plan.NamedRangeSelector.WorkbookScope(
-                            "WorkbookFormulaBudget"),
+                            new DefinedName("WorkbookFormulaBudget")),
                         new StructuredMutationAction.DeleteNamedRange()),
                     mutate(
                         new dev.erst.gridgrind.core.plan.NamedRangeSelector.SheetScope(
-                            "SheetScopedFormulaBudget", new SheetName("Advanced")),
+                            new DefinedName("SheetScopedFormulaBudget"), new SheetName("Advanced")),
                         new StructuredMutationAction.DeleteNamedRange())),
                 inspect(
                     "names",
@@ -1653,8 +1654,8 @@ final class XlsxParityCoreProbeGroup {
         clearedRead.namedRanges().stream()
             .noneMatch(
                 namedRange ->
-                    "WorkbookFormulaBudget".equals(namedRange.name())
-                        || "SheetScopedFormulaBudget".equals(namedRange.name()));
+                    "WorkbookFormulaBudget".equals(namedRange.name().value())
+                        || "SheetScopedFormulaBudget".equals(namedRange.name().value()));
 
     Path restoredPath = context.derivedWorkbook("formula-named-ranges-restored");
     WorkbookInspectionResult.NamedRangesResult restoredRead =
@@ -1665,12 +1666,12 @@ final class XlsxParityCoreProbeGroup {
                 List.of(
                     mutate(
                         new StructuredMutationAction.SetNamedRange(
-                            "WorkbookFormulaBudget",
+                            new DefinedName("WorkbookFormulaBudget"),
                             new NamedRangeScope.Workbook(),
                             NamedRangeTarget.formula("SUM(Advanced!$B$2:$B$5)"))),
                     mutate(
                         new StructuredMutationAction.SetNamedRange(
-                            "SheetScopedFormulaBudget",
+                            new DefinedName("SheetScopedFormulaBudget"),
                             new NamedRangeScope.Sheet(new SheetName("Advanced")),
                             NamedRangeTarget.formula("SUM(Advanced!$C$2:$C$5)")))),
                 inspect(

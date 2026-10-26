@@ -8,6 +8,7 @@ import dev.erst.gridgrind.core.problem.GridGrindRequestProblemSupport;
 import dev.erst.gridgrind.core.problem.ProblemContext;
 import dev.erst.gridgrind.core.problem.ProblemContextRequestSurfaces;
 import dev.erst.gridgrind.core.vocabulary.CellAddress;
+import dev.erst.gridgrind.core.vocabulary.DefinedName;
 import dev.erst.gridgrind.core.vocabulary.ExcelReadLimits;
 import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
@@ -173,12 +174,14 @@ class SelectorValidationSupportTest {
         List.of("x", "y"), SelectorListValidation.copyDistinctValues(List.of("x", "y"), "values"));
     assertEquals(
         List.of(
-            new NamedRangeSelector.WorkbookScope("BudgetTotal"),
-            new NamedRangeSelector.SheetScope("LocalItem", new SheetName("Budget"))),
+            new NamedRangeSelector.WorkbookScope(new DefinedName("BudgetTotal")),
+            new NamedRangeSelector.SheetScope(
+                new DefinedName("LocalItem"), new SheetName("Budget"))),
         SelectorListValidation.copyDistinctNamedRangeRefs(
             List.of(
-                new NamedRangeSelector.WorkbookScope("BudgetTotal"),
-                new NamedRangeSelector.SheetScope("LocalItem", new SheetName("Budget"))),
+                new NamedRangeSelector.WorkbookScope(new DefinedName("BudgetTotal")),
+                new NamedRangeSelector.SheetScope(
+                    new DefinedName("LocalItem"), new SheetName("Budget"))),
             "selectors"));
 
     assertEquals(
@@ -258,8 +261,8 @@ class SelectorValidationSupportTest {
                 () ->
                     SelectorListValidation.copyDistinctNamedRangeRefs(
                         List.of(
-                            new NamedRangeSelector.WorkbookScope("BudgetTotal"),
-                            new NamedRangeSelector.WorkbookScope("budgettotal")),
+                            new NamedRangeSelector.WorkbookScope(new DefinedName("BudgetTotal")),
+                            new NamedRangeSelector.WorkbookScope(new DefinedName("budgettotal"))),
                         "selectors"))
             .getMessage());
   }

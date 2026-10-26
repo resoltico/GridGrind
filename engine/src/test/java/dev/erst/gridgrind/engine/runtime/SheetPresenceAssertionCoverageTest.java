@@ -7,6 +7,7 @@ import dev.erst.gridgrind.core.plan.AssertionStep;
 import dev.erst.gridgrind.core.plan.NamedRangeSelector;
 import dev.erst.gridgrind.core.plan.PresenceAssertion;
 import dev.erst.gridgrind.core.plan.SheetSelector;
+import dev.erst.gridgrind.core.vocabulary.DefinedName;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
@@ -120,7 +121,7 @@ class SheetPresenceAssertionCoverageTest {
               executor.execute(
                   new AssertionStep(
                       new StepId("nr1"),
-                      new NamedRangeSelector.ByName("MissingRange"),
+                      new NamedRangeSelector.ByName(new DefinedName("MissingRange")),
                       new PresenceAssertion.NamedRangeAbsent()),
                   workbook,
                   location));

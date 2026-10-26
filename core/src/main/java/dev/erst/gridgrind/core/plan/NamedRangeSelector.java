@@ -2,6 +2,7 @@ package dev.erst.gridgrind.core.plan;
 
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import dev.erst.gridgrind.core.vocabulary.DefinedName;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import java.util.List;
 
@@ -45,9 +46,9 @@ public sealed interface NamedRangeSelector extends Selector
   }
 
   /** Selects every named range whose name matches across all scopes. */
-  record ByName(String name) implements NamedRangeSelector, Ref {
+  record ByName(DefinedName name) implements NamedRangeSelector, Ref {
     public ByName {
-      name = SelectorValueValidation.requireDefinedName(name, "name");
+      java.util.Objects.requireNonNull(name, "name must not be null");
     }
 
     @Override
@@ -57,9 +58,9 @@ public sealed interface NamedRangeSelector extends Selector
   }
 
   /** Selects every named range whose name appears in the provided name set across all scopes. */
-  record ByNames(List<String> names) implements NamedRangeSelector {
+  record ByNames(List<DefinedName> names) implements NamedRangeSelector {
     public ByNames {
-      names = SelectorListValidation.copyDistinctDefinedNames(names, "names");
+      names = SelectorListValidation.copyDistinctNamedRangeNames(names, "names");
     }
 
     @Override
@@ -69,9 +70,9 @@ public sealed interface NamedRangeSelector extends Selector
   }
 
   /** Selects one workbook-scoped named range by exact name. */
-  record WorkbookScope(String name) implements ScopedExact, Ref {
+  record WorkbookScope(DefinedName name) implements ScopedExact, Ref {
     public WorkbookScope {
-      name = SelectorValueValidation.requireDefinedName(name, "name");
+      java.util.Objects.requireNonNull(name, "name must not be null");
     }
 
     @Override
@@ -81,9 +82,9 @@ public sealed interface NamedRangeSelector extends Selector
   }
 
   /** Selects one sheet-scoped named range by exact name and exact sheet. */
-  record SheetScope(String name, SheetName sheetName) implements ScopedExact, Ref {
+  record SheetScope(DefinedName name, SheetName sheetName) implements ScopedExact, Ref {
     public SheetScope {
-      name = SelectorValueValidation.requireDefinedName(name, "name");
+      java.util.Objects.requireNonNull(name, "name must not be null");
       java.util.Objects.requireNonNull(sheetName, "sheetName must not be null");
     }
 

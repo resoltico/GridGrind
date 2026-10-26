@@ -3,6 +3,7 @@ package dev.erst.gridgrind.core.model.pivot;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import dev.erst.gridgrind.core.vocabulary.CellAddress;
+import dev.erst.gridgrind.core.vocabulary.DefinedName;
 import dev.erst.gridgrind.core.vocabulary.ExcelPivotDataConsolidateFunction;
 import dev.erst.gridgrind.core.vocabulary.ExcelPivotTableNaming;
 import dev.erst.gridgrind.core.vocabulary.ProtocolDefinedNameValidation;
@@ -80,9 +81,9 @@ public sealed interface PivotTableReport
     }
 
     /** Named-range-backed source plus the currently resolved source range. */
-    record NamedRange(String name, SheetName sheetName, RangeLabel range) implements Source {
+    record NamedRange(DefinedName name, SheetName sheetName, RangeLabel range) implements Source {
       public NamedRange {
-        name = ProtocolDefinedNameValidation.validateName(name);
+        java.util.Objects.requireNonNull(name, "name must not be null");
         java.util.Objects.requireNonNull(sheetName, "sheetName must not be null");
         java.util.Objects.requireNonNull(range, "range must not be null");
       }

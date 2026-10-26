@@ -70,6 +70,8 @@ import dev.erst.gridgrind.core.result.WorkbookResult;
 import dev.erst.gridgrind.core.result.WorkbookSummary;
 import dev.erst.gridgrind.core.vocabulary.AnalysisFindingCode;
 import dev.erst.gridgrind.core.vocabulary.CellAddress;
+import dev.erst.gridgrind.core.vocabulary.DefinedName;
+import dev.erst.gridgrind.core.vocabulary.DefinedNameLabel;
 import dev.erst.gridgrind.core.vocabulary.ExcelComparisonOperator;
 import dev.erst.gridgrind.core.vocabulary.ExcelDataValidationErrorStyle;
 import dev.erst.gridgrind.core.vocabulary.ExcelDrawingAnchorBehavior;
@@ -1159,12 +1161,12 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
                             CommentInput.plain(text("Review"), "GridGrind", true))),
                     ExecutorStructuredMutationTargets.namedRange(
                         new StructuredMutationAction.SetNamedRange(
-                            "BudgetTotal",
+                            new DefinedName("BudgetTotal"),
                             new NamedRangeScope.Workbook(),
                             NamedRangeTarget.range(new SheetName("Budget"), new RangeRef("B4")))),
                     ExecutorStructuredMutationTargets.namedRange(
                         new StructuredMutationAction.SetNamedRange(
-                            "LocalItem",
+                            new DefinedName("LocalItem"),
                             new NamedRangeScope.Sheet(new SheetName("Budget")),
                             NamedRangeTarget.range(
                                 new SheetName("Budget"), new RangeRef("A1:B2"))))),
@@ -1217,10 +1219,10 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
             .namedRanges()
             .contains(
                 new NamedRangeReport.RangeReport(
-                    "BudgetTotal",
+                    new DefinedNameLabel("BudgetTotal"),
                     new NamedRangeScope.Workbook(),
                     ranges.namedRanges().stream()
-                        .filter(namedRange -> "BudgetTotal".equals(namedRange.name()))
+                        .filter(namedRange -> "BudgetTotal".equals(namedRange.name().value()))
                         .findFirst()
                         .orElseThrow()
                         .refersToFormula(),
@@ -1230,10 +1232,10 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
             .namedRanges()
             .contains(
                 new NamedRangeReport.RangeReport(
-                    "LocalItem",
+                    new DefinedNameLabel("LocalItem"),
                     new NamedRangeScope.Sheet(new SheetName("Budget")),
                     ranges.namedRanges().stream()
-                        .filter(namedRange -> "LocalItem".equals(namedRange.name()))
+                        .filter(namedRange -> "LocalItem".equals(namedRange.name().value()))
                         .findFirst()
                         .orElseThrow()
                         .refersToFormula(),

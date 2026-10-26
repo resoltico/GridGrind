@@ -27,6 +27,7 @@ import dev.erst.gridgrind.core.result.WorkbookResults;
 import dev.erst.gridgrind.core.source.BinarySourceInput;
 import dev.erst.gridgrind.core.source.TextSourceInput;
 import dev.erst.gridgrind.core.vocabulary.CellAddress;
+import dev.erst.gridgrind.core.vocabulary.DefinedName;
 import dev.erst.gridgrind.core.vocabulary.ExcelPictureFormat;
 import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
@@ -366,7 +367,7 @@ class ExecutorGuardCoverageTest {
 
     StructuredMutationAction.SetNamedRange rangeDefinedNamedRange =
         new StructuredMutationAction.SetNamedRange(
-            "BudgetWindow",
+            new DefinedName("BudgetWindow"),
             new dev.erst.gridgrind.core.vocabulary.NamedRangeScope.Sheet(new SheetName("Budget")),
             dev.erst.gridgrind.core.model.formula.NamedRangeTarget.range(
                 new SheetName("Budget"), new RangeRef("A1:B2")));

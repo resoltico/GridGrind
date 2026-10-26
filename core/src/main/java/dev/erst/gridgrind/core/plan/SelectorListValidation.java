@@ -3,6 +3,7 @@ package dev.erst.gridgrind.core.plan;
 import dev.erst.gridgrind.core.problem.FieldValidationBasicRule;
 import dev.erst.gridgrind.core.problem.FieldValidationProblem;
 import dev.erst.gridgrind.core.vocabulary.CellAddress;
+import dev.erst.gridgrind.core.vocabulary.DefinedName;
 import dev.erst.gridgrind.core.vocabulary.RangeRef;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.WireString;
@@ -63,6 +64,10 @@ final class SelectorListValidation {
       }
     }
     return List.copyOf(values);
+  }
+
+  static List<DefinedName> copyDistinctNamedRangeNames(List<DefinedName> names, String fieldName) {
+    return copyDistinctCaseInsensitive(names, fieldName);
   }
 
   static List<String> copyDistinctDefinedNames(List<String> names, String fieldName) {
@@ -149,14 +154,14 @@ final class SelectorListValidation {
   private static String namedRangeRefIdentity(NamedRangeSelector.Ref selector) {
     return switch (selector) {
       case NamedRangeSelector.ByName byName ->
-          "NAMED_RANGE_BY_NAME|" + byName.name().toUpperCase(Locale.ROOT);
+          "NAMED_RANGE_BY_NAME|" + byName.name().value().toUpperCase(Locale.ROOT);
       case NamedRangeSelector.WorkbookScope workbookScope ->
-          "NAMED_RANGE_WORKBOOK_SCOPE|" + workbookScope.name().toUpperCase(Locale.ROOT);
+          "NAMED_RANGE_WORKBOOK_SCOPE|" + workbookScope.name().value().toUpperCase(Locale.ROOT);
       case NamedRangeSelector.SheetScope sheetScope ->
           "NAMED_RANGE_SHEET_SCOPE|"
               + sheetScope.sheetName().value().toUpperCase(Locale.ROOT)
               + "|"
-              + sheetScope.name().toUpperCase(Locale.ROOT);
+              + sheetScope.name().value().toUpperCase(Locale.ROOT);
     };
   }
 }

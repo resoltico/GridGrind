@@ -33,6 +33,7 @@ import dev.erst.gridgrind.core.problem.GridGrindProblemCode;
 import dev.erst.gridgrind.core.problem.GridGrindProblemDetail;
 import dev.erst.gridgrind.core.problem.RequestWarning;
 import dev.erst.gridgrind.core.vocabulary.CellAddress;
+import dev.erst.gridgrind.core.vocabulary.DefinedNameLabel;
 import dev.erst.gridgrind.core.vocabulary.ExcelFillPattern;
 import dev.erst.gridgrind.core.vocabulary.ExcelHorizontalAlignment;
 import dev.erst.gridgrind.core.vocabulary.ExcelVerticalAlignment;
@@ -384,7 +385,9 @@ class WorkbookResultTest {
   void typedVariantsReplaceNullPaddingAndContextMergersPreserveExistingValues() {
     NamedRangeReport.FormulaReport formulaOnly =
         new NamedRangeReport.FormulaReport(
-            "BudgetExpr", new NamedRangeScope.Workbook(), "SUM(Budget!A1:A3)");
+            new DefinedNameLabel("BudgetExpr"),
+            new NamedRangeScope.Workbook(),
+            "SUM(Budget!A1:A3)");
     SheetProtectionReport.Unprotected unprotected = new SheetProtectionReport.Unprotected();
     dev.erst.gridgrind.core.model.value.CellReport.BlankReport blankCell =
         new dev.erst.gridgrind.core.model.value.CellReport.BlankReport(
@@ -400,7 +403,7 @@ class WorkbookResultTest {
             dev.erst.gridgrind.core.problem.ProblemContextRequestSurfaces.JsonLocation.located(
                 "steps[0]", 4, 12));
 
-    assertEquals("BudgetExpr", formulaOnly.name());
+    assertEquals("BudgetExpr", formulaOnly.name().value());
     assertEquals("SUM(Budget!A1:A3)", formulaOnly.refersToFormula());
     assertInstanceOf(SheetProtectionReport.Unprotected.class, unprotected);
     assertEquals("BLANK", blankCell.type());

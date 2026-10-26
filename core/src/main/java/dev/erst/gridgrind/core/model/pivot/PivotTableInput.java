@@ -6,6 +6,7 @@ import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import dev.erst.gridgrind.core.metadata.ProtocolField;
 import dev.erst.gridgrind.core.vocabulary.CellAddress;
+import dev.erst.gridgrind.core.vocabulary.DefinedName;
 import dev.erst.gridgrind.core.vocabulary.ExcelPivotDataConsolidateFunction;
 import dev.erst.gridgrind.core.vocabulary.ExcelPivotTableNaming;
 import dev.erst.gridgrind.core.vocabulary.ProtocolDefinedNameValidation;
@@ -81,9 +82,9 @@ public record PivotTableInput(
     }
 
     /** Existing contiguous workbook or sheet-scoped named range source. */
-    record NamedRange(String name) implements Source {
+    record NamedRange(DefinedName name) implements Source {
       public NamedRange {
-        name = ProtocolDefinedNameValidation.validateName(name);
+        java.util.Objects.requireNonNull(name, "name must not be null");
       }
     }
 

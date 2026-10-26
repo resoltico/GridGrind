@@ -45,6 +45,7 @@ import dev.erst.gridgrind.core.problem.ProblemContextRequestSurfaces.RequestShap
 import dev.erst.gridgrind.core.vocabulary.AnalysisFindingCode;
 import dev.erst.gridgrind.core.vocabulary.AnalysisSeverity;
 import dev.erst.gridgrind.core.vocabulary.CellAddress;
+import dev.erst.gridgrind.core.vocabulary.DefinedNameLabel;
 import dev.erst.gridgrind.core.vocabulary.ExcelFillPattern;
 import dev.erst.gridgrind.core.vocabulary.ExcelHorizontalAlignment;
 import dev.erst.gridgrind.core.vocabulary.ExcelVerticalAlignment;
@@ -189,7 +190,7 @@ class WorkbookResultEdgeCoverageTest {
                 IllegalArgumentException.class,
                 () ->
                     new NamedRangeReport.FormulaReport(
-                        " ", new NamedRangeScope.Workbook(), "SUM(A1:A2)"))
+                        new DefinedNameLabel(" "), new NamedRangeScope.Workbook(), "SUM(A1:A2)"))
             .getMessage());
     assertEquals(
         "name must not be blank",
@@ -197,7 +198,7 @@ class WorkbookResultEdgeCoverageTest {
                 IllegalArgumentException.class,
                 () ->
                     new NamedRangeReport.RangeReport(
-                        " ",
+                        new DefinedNameLabel(" "),
                         new NamedRangeScope.Workbook(),
                         "Budget!A1",
                         NamedRangeTarget.range(new SheetName("Budget"), new RangeRef("A1"))))
@@ -208,7 +209,7 @@ class WorkbookResultEdgeCoverageTest {
                 IllegalArgumentException.class,
                 () ->
                     new NamedRangeReport.RangeReport(
-                        "BudgetTotal",
+                        new DefinedNameLabel("BudgetTotal"),
                         new NamedRangeScope.Workbook(),
                         " ",
                         NamedRangeTarget.range(new SheetName("Budget"), new RangeRef("A1"))))
@@ -219,7 +220,7 @@ class WorkbookResultEdgeCoverageTest {
                 IllegalArgumentException.class,
                 () ->
                     new NamedRangeReport.FormulaReport(
-                        "BudgetExpr", new NamedRangeScope.Workbook(), " "))
+                        new DefinedNameLabel("BudgetExpr"), new NamedRangeScope.Workbook(), " "))
             .getMessage());
     assertEquals(
         "sheetName must not be blank",

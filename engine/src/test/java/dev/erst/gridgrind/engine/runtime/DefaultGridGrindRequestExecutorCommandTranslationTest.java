@@ -28,6 +28,7 @@ import dev.erst.gridgrind.core.plan.CellMutationAction;
 import dev.erst.gridgrind.core.plan.StructuredMutationAction;
 import dev.erst.gridgrind.core.plan.WorkbookMutationAction;
 import dev.erst.gridgrind.core.vocabulary.CellAddress;
+import dev.erst.gridgrind.core.vocabulary.DefinedName;
 import dev.erst.gridgrind.core.vocabulary.ExcelIgnoredErrorType;
 import dev.erst.gridgrind.core.vocabulary.ExcelPaneRegion;
 import dev.erst.gridgrind.core.vocabulary.ExcelPrintOrientation;
@@ -82,14 +83,14 @@ class DefaultGridGrindRequestExecutorCommandTranslationTest
         command(
             ExecutorStructuredMutationTargets.namedRange(
                 new StructuredMutationAction.SetNamedRange(
-                    "BudgetTotal",
+                    new DefinedName("BudgetTotal"),
                     new NamedRangeScope.Workbook(),
                     NamedRangeTarget.range(new SheetName("Budget"), new RangeRef("B4")))));
     WorkbookCommand deleteNamedRange =
         command(
             mutate(
                 new dev.erst.gridgrind.core.plan.NamedRangeSelector.SheetScope(
-                    "BudgetTotal", new SheetName("Budget")),
+                    new DefinedName("BudgetTotal"), new SheetName("Budget")),
                 new StructuredMutationAction.DeleteNamedRange()));
 
     assertInstanceOf(WorkbookAnnotationCommand.SetHyperlink.class, setHyperlink);
@@ -429,9 +430,10 @@ class DefaultGridGrindRequestExecutorCommandTranslationTest
                 "ranges",
                 new dev.erst.gridgrind.core.plan.NamedRangeSelector.AnyOf(
                     List.of(
-                        new dev.erst.gridgrind.core.plan.NamedRangeSelector.ByName("BudgetTotal"),
+                        new dev.erst.gridgrind.core.plan.NamedRangeSelector.ByName(
+                            new DefinedName("BudgetTotal")),
                         new dev.erst.gridgrind.core.plan.NamedRangeSelector.SheetScope(
-                            "LocalItem", new SheetName("Budget")))),
+                            new DefinedName("LocalItem"), new SheetName("Budget")))),
                 new WorkbookIntrospectionQuery.GetNamedRanges()));
     WorkbookReadCommand sheetSummary =
         readCommand(

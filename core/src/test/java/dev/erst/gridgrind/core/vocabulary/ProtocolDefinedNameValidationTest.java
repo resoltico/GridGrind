@@ -8,7 +8,6 @@ import org.junit.jupiter.api.Test;
 class ProtocolDefinedNameValidationTest {
   @Test
   void acceptsValidNamesWithinTheShippedContract() {
-    assertNotNull(ProtocolDefinedNameValidation.newForVerification());
     assertEquals("Budget_Total", ProtocolDefinedNameValidation.validateName("Budget_Total"));
     assertEquals("XFE1", ProtocolDefinedNameValidation.validateName("XFE1"));
     assertEquals("Ieņēmumi", ProtocolDefinedNameValidation.validateName("Ieņēmumi"));

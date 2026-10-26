@@ -18,6 +18,7 @@ import dev.erst.gridgrind.core.result.AnalysisSummaryReport;
 import dev.erst.gridgrind.core.vocabulary.AnalysisFindingCode;
 import dev.erst.gridgrind.core.vocabulary.AnalysisSeverity;
 import dev.erst.gridgrind.core.vocabulary.CellAddress;
+import dev.erst.gridgrind.core.vocabulary.DefinedName;
 import dev.erst.gridgrind.core.vocabulary.ExcelPivotDataConsolidateFunction;
 import dev.erst.gridgrind.core.vocabulary.RangeLabel;
 import dev.erst.gridgrind.core.vocabulary.SheetLabel;
@@ -98,7 +99,7 @@ class AdvancedInspectionProtocolTypesTest {
   void workbookProtectionAndNamedRangeQueriesKeepSelectorFamiliesSeparate() {
     WorkbookSelector.Current workbookTarget = new WorkbookSelector.Current();
     NamedRangeSelector.WorkbookScope namedRangeTarget =
-        new NamedRangeSelector.WorkbookScope("BudgetTotal");
+        new NamedRangeSelector.WorkbookScope(new DefinedName("BudgetTotal"));
 
     assertEquals(
         "GET_WORKBOOK_PROTECTION",
@@ -106,7 +107,7 @@ class AdvancedInspectionProtocolTypesTest {
     assertEquals(
         "ANALYZE_NAMED_RANGE_HEALTH",
         new InspectionAnalysisQuery.AnalyzeNamedRangeHealth().queryType());
-    assertEquals("BudgetTotal", namedRangeTarget.name());
+    assertEquals("BudgetTotal", namedRangeTarget.name().value());
     assertEquals(WorkbookSelector.Current.class, workbookTarget.getClass());
     assertEquals(PivotTableSelector.All.class, new PivotTableSelector.All().getClass());
   }

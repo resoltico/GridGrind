@@ -23,6 +23,7 @@ import dev.erst.gridgrind.core.plan.CellMutationAction;
 import dev.erst.gridgrind.core.plan.StructuredMutationAction;
 import dev.erst.gridgrind.core.plan.WorkbookMutationAction;
 import dev.erst.gridgrind.core.vocabulary.CellAddress;
+import dev.erst.gridgrind.core.vocabulary.DefinedName;
 import dev.erst.gridgrind.core.vocabulary.ExcelComparisonOperator;
 import dev.erst.gridgrind.core.vocabulary.ExcelPrintOrientation;
 import dev.erst.gridgrind.core.vocabulary.NamedRangeScope;
@@ -186,7 +187,7 @@ class DefaultGridGrindRequestExecutorAuthoringContextTranslationTest
     assertWriteContext(
         ExecutorStructuredMutationTargets.namedRange(
             new StructuredMutationAction.SetNamedRange(
-                "BudgetTotal",
+                new DefinedName("BudgetTotal"),
                 new NamedRangeScope.Workbook(),
                 NamedRangeTarget.range(new SheetName("Budget"), new RangeRef("B4")))),
         exception,
@@ -196,7 +197,8 @@ class DefaultGridGrindRequestExecutorAuthoringContextTranslationTest
         "BudgetTotal");
     assertWriteContext(
         mutate(
-            new dev.erst.gridgrind.core.plan.NamedRangeSelector.WorkbookScope("BudgetTotal"),
+            new dev.erst.gridgrind.core.plan.NamedRangeSelector.WorkbookScope(
+                new DefinedName("BudgetTotal")),
             new StructuredMutationAction.DeleteNamedRange()),
         exception,
         null,
@@ -206,7 +208,7 @@ class DefaultGridGrindRequestExecutorAuthoringContextTranslationTest
     assertWriteContext(
         mutate(
             new dev.erst.gridgrind.core.plan.NamedRangeSelector.SheetScope(
-                "LocalItem", new SheetName("Budget")),
+                new DefinedName("LocalItem"), new SheetName("Budget")),
             new StructuredMutationAction.DeleteNamedRange()),
         exception,
         "Budget",
@@ -246,7 +248,8 @@ class DefaultGridGrindRequestExecutorAuthoringContextTranslationTest
         "BAD!",
         addressFor(
             mutate(
-                new dev.erst.gridgrind.core.plan.NamedRangeSelector.WorkbookScope("BudgetTotal"),
+                new dev.erst.gridgrind.core.plan.NamedRangeSelector.WorkbookScope(
+                    new DefinedName("BudgetTotal")),
                 new StructuredMutationAction.DeleteNamedRange()),
             invalidAddress));
 
