@@ -1328,3 +1328,61 @@ free. AGENTS.md baseline diff is empty; supplement absent. The external metadata
 250 definitions directly from the real grant and independently validates its serialized authority,
 alongside all 14 request examples and two actual responses. Publication of all three schemas and
 schema-driven intake remain open in WP-30; do not treat the external prototype as shipped tooling.
+
+### WP-30 schema publication and metadata-truth checkpoint
+
+JsonSchemas now publishes immutable Draft 2020-12 documents for the real WorkbookPlan,
+ExecutionGrant and WorkbookResult roots. The explicit :json:generateSchemas task writes the three
+committed docs/reference/schema artifacts. Reflection follows canonical components and closed union
+variants; properties forbid unknown fields, model presence/default metadata controls requirements,
+and FieldConstraint/enum metadata supplies scalar rules. Constant defaults are JSON-native values;
+sibling defaults use x-gridgrind-defaultFrom. Request numbers stay JSON numbers; response float/
+double observations admit only the existing NaN/Infinity/-Infinity string encodings alongside numbers.
+Nonblank patterns derive their whitespace characters from the running JDK. Sorted properties and
+metadata-owned variant ids make generation deterministic. The schema comment accurately distinguishes
+these structural/declarative checks from domain, token, constructor and workflow invariants.
+
+The new read-only reference check explicitly declares both schema references and examples as Gradle
+test inputs. When generation is explicitly requested with tests, mustRunAfter orders the producer;
+ordinary check does not regenerate references. A negative control ran the same focused test first
+successfully, changed only a reference file, then observed failure without any rewrite. Restored the
+exact original bytes before full verification. No hash is being used as a substitute for review.
+
+Ten independent NetworkNT tests validate all 14 examples, a serialized canonical grant (including
+paths and a secret-reference object), finite/NaN/+Infinity/-Infinity response values, literal and
+sibling defaults and committed references. Wrong-number, string-version, unknown-field, bad grant
+path, invalid secret-id and invalid numeric-observation controls are rejected. NetworkNT is pinned
+in the version catalog and test-scoped, as selected in S3. Packaged CLI inspection finds neither
+NetworkNT nor Jackson 2 databind classes; its transitive validator dependencies do not ship.
+
+A red cross-consumer test reproduced a metadata defect: SecretReference actually serializes as
+{id: ...}, but the catalog classified it as STRING. Removed that false special case, added its
+colocated plain-type metadata, and shared its unchanged constructor regex with FieldRule metadata.
+This changes no accepted wire representation. The full catalog review proves exactly seven fields
+change from scalar STRING to the secretReferenceType object reference: SET_SHEET_PROTECTION plus
+open/encryption/signature/workbook-protection secret references. The new plain descriptor has one
+required id with the existing identifier grammar; all other existing descriptors/templates are equal.
+Only discovery/10-print-protocol-catalog.json changes in the golden corpus, identically for both
+launchers: one new plain group, 111 -> 112. All other discovery and workbook observations are unchanged.
+No normalization changes. Retained the red test, full before/after catalogs and exact difference proof.
+
+Initial iteration failures were two test-tree casts, three standard PMD findings (including two
+narrow false positives for immutable-map construction and the generator's operator output), and
+stale expected discovery output. Fixed the casts/literal ordering, scoped justified suppressions,
+reviewed the sole golden change, and reran focused checks before the aggregate run. No checks were
+weakened for data validation. ./gradlew check passes in 3m31s: core 329, JSON 377, engine 1512,
+CLI 588, architecture 41; 2847 tests, zero failures/errors/skips, including all 143 golden cases and
+the real value-changing negative control. Named JPMS modules pass the earlier model/grant probes
+and all three public schema documents. No mutation or active fuzz campaign ran.
+
+Published figures: request 506 definitions / 312304 UTF-8 bytes; grant 250 / 147591; response 552 /
+352058. Main Java 123989 -> 124354; tests 154955 -> 155170; JSON files 72 -> 75. Other target counts
+remain unchanged: Spec 75, Patch eight, reports 95, engine snapshots 51, definitions 13, converters
+4701 lines, Support 216, blank checks 437. Creator/default-site and handwritten-descriptor inventories
+remain empty; CLI grant inventory remains empty. Baseline diff is empty; supplement absent.
+
+WP-24's catalog/schema default publication is now delivered alongside its already-empty creator/
+wire-default inventories. WP-43's schema prerequisite is shipped. WP-30 remains open: intake still
+uses the existing structural validators and Jackson failure normalization. The next work replaces
+that path with schema-driven validation and owned domain findings; do not label the new emitter as
+completion of the single-intake pipeline or claim standard schemas prove workbook-state preconditions.

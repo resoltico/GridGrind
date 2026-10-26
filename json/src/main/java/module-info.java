@@ -5,4 +5,5 @@ module dev.erst.gridgrind.json {
   requires static org.jspecify;
 
   exports dev.erst.gridgrind.json.codec;
+  exports dev.erst.gridgrind.json.schema;
 }

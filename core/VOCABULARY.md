@@ -38,3 +38,7 @@ and text, number, boolean and error variants each use `value` for their primitiv
 `CellReport` retains the stored cell type and carries the shared scalar in its optional `value`
 field. Formula text, rich-text runs and temporal metadata stay on the report and follow its
 projection facets. A formula report's scalar value describes the evaluated type.
+
+`SecretReference` retains its object shape with a required `id`; it is a source reference rather
+than a `WireScalar`. Its catalog and schemas describe that same object and its constructor-owned
+identifier grammar. Secret material stays outside the document model.

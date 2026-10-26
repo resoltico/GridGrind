@@ -5,7 +5,6 @@ import dev.erst.gridgrind.core.model.value.CellGridSpec;
 import dev.erst.gridgrind.core.model.value.CellRowSpec;
 import dev.erst.gridgrind.core.model.value.CellValue;
 import dev.erst.gridgrind.core.model.value.CellValueSpec;
-import dev.erst.gridgrind.core.source.SecretReference;
 import dev.erst.gridgrind.core.vocabulary.ExcelReportedCellErrorLiteral;
 import dev.erst.gridgrind.core.vocabulary.ExcelStoredCellErrorLiteral;
 import dev.erst.gridgrind.core.vocabulary.WireScalar;
@@ -24,7 +23,6 @@ public final class CatalogFieldMetadataSupport {
   private static final Set<Class<?>> STRING_FIELD_TYPES =
       Set.of(
           String.class,
-          SecretReference.class,
           java.nio.file.Path.class,
           java.time.LocalDate.class,
           java.time.LocalDateTime.class);

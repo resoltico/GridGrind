@@ -24,3 +24,14 @@ controls demonstrate those checks detect violations. Runtime and XSSF parity tes
 The golden corpus executes every shipped example and recipe through in-process and packaged
 CLI transports, then reopens persisted workbook facts through product inspection. Coverage and
 mutation reports are advisory; behaviour tests, properties and seed replay establish assurance.
+
+JSON emits Draft 2020-12 schemas for requests, execution grants and responses from canonical
+record components, union metadata, field constraints and omission defaults. Run
+`./gradlew :json:generateSchemas` to update [the reference schemas](reference/schema/).
+`JsonSchemas.document` exposes the same immutable documents to Java callers. `default` carries
+literal omission values; `x-gridgrind-defaultFrom` identifies a sibling-derived default. Standard
+schema validation covers structure and declared scalar constraints. Canonical constructors, numeric
+token checks and static/runtime validation additionally enforce domain and workbook-state rules.
+Independent NetworkNT tests validate examples and actual serialized grants/results, reject malformed
+controls, and compare the committed schema artifacts without rewriting them. Their reference and
+example directories are declared test inputs.

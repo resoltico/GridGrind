@@ -579,6 +579,9 @@
     }, {
       "entryIds" : [ "ChartSeriesReport" ],
       "group" : "chartSeriesReportType"
+    }, {
+      "entryIds" : [ "SecretReference" ],
+      "group" : "secretReferenceType"
     } ],
     "protocolVersion" : 1,
     "requestTypeId" : "WorkbookPlan",
