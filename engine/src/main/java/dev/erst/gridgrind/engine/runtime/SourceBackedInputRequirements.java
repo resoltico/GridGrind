@@ -77,7 +77,8 @@ final class SourceBackedInputRequirements {
                     .flatMap(List::stream)
                     .anyMatch(SourceBackedInputRequirements::requiresStandardInput);
             case CellMutationAction.ClearRange _ -> false;
-            case CellMutationAction.SetArrayFormula _ -> false;
+            case CellMutationAction.SetArrayFormula setArrayFormula ->
+                requiresStandardInput(setArrayFormula.formula().source());
             case CellMutationAction.ClearArrayFormula _ -> false;
             case CellMutationAction.SetHyperlink _ -> false;
             case CellMutationAction.ClearHyperlink _ -> false;

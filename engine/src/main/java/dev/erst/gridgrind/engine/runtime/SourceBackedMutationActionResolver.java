@@ -2,6 +2,7 @@ package dev.erst.gridgrind.engine.runtime;
 
 import static dev.erst.gridgrind.engine.runtime.SourceBackedResolutionIdentitySupport.sameReference;
 
+import dev.erst.gridgrind.core.model.formula.ArrayFormulaSpec;
 import dev.erst.gridgrind.core.model.value.CellGridSpec;
 import dev.erst.gridgrind.core.model.value.CellRowSpec;
 import dev.erst.gridgrind.core.model.value.CellValueSpec;
@@ -10,6 +11,7 @@ import dev.erst.gridgrind.core.plan.DrawingMutationAction;
 import dev.erst.gridgrind.core.plan.MutationAction;
 import dev.erst.gridgrind.core.plan.StructuredMutationAction;
 import dev.erst.gridgrind.core.plan.WorkbookMutationAction;
+import dev.erst.gridgrind.core.source.TextSourceSpec;
 import java.io.IOException;
 import java.util.List;
 
@@ -33,6 +35,8 @@ final class SourceBackedMutationActionResolver {
     return switch (action) {
       case CellMutationAction.SetCell setCell -> resolveSetCell(setCell, bindings);
       case CellMutationAction.SetRange setRange -> resolveSetRange(setRange, bindings);
+      case CellMutationAction.SetArrayFormula setArrayFormula ->
+          resolveSetArrayFormula(setArrayFormula, bindings);
       case CellMutationAction.SetComment setComment -> resolveSetComment(setComment, bindings);
       case CellMutationAction.AppendRow appendRow -> resolveAppendRow(appendRow, bindings);
       default -> action;
@@ -92,6 +96,25 @@ final class SourceBackedMutationActionResolver {
     return sameReference(resolvedRows, typedRows.cells())
         ? setRange
         : new CellMutationAction.SetRange(new CellGridSpec.Typed(resolvedRows));
+  }
+
+  private static CellMutationAction resolveSetArrayFormula(
+      CellMutationAction.SetArrayFormula action, ExecutionInputBindings bindings)
+      throws IOException {
+    TextSourceSpec source = action.formula().source();
+    TextSourceSpec resolved =
+        SourceBackedPlanResolver.resolveTextSource(source, bindings, true, "array formula");
+    if (sameReference(resolved, source) || !(resolved instanceof TextSourceSpec.Inline)) {
+      return action;
+    }
+    try {
+      return new CellMutationAction.SetArrayFormula(new ArrayFormulaSpec(resolved));
+    } catch (IllegalArgumentException failure) {
+      if (bindings.collectInputResolutionFailure(failure, source)) {
+        return action;
+      }
+      throw failure;
+    }
   }
 
   private static CellMutationAction resolveSetComment(

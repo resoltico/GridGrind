@@ -1698,3 +1698,33 @@ reference, resolves char[] to String and wipes the supplied array; the source-ba
 preflight does not call it. Preserve owned error paths, resource cleanup and secret handling when
 introducing actual source-resolved forms and ResolvedPlan/ResolvedStep/ResolvedTarget. Do not wrap
 the retired command hierarchy or label remaining authored source references fully resolved.
+
+## WP-40 declared array-formula source gap
+
+Source audit found ArrayFormulaSpec accepts TextSourceSpec (INLINE/UTF8_FILE/STANDARD_INPUT),
+but the old source resolver ignored SET_ARRAY_FORMULA and stdin discovery returned false. The
+converter required INLINE, so valid file-backed formulas reached INTERNAL_ERROR during mutation.
+Three integration regressions failed before the fix (24s): file publication returned INTERNAL_ERROR,
+stdin was not discovered, and invalid materialized syntax was classified INTERNAL_ERROR. Full
+before-state XML and logs are retained outside the repository.
+
+The existing materialization pipeline now resolves array-formula text, reapplies canonical array
+syntax/security validation and collects failures against the original source identity. Stdin discovery
+uses the declared source. File/stdin regressions publish and reopen an actual workbook with normalized
+SUM(1,2); invalid materialized syntax returns INVALID_REQUEST in RESOLVE_INPUTS at
+steps[1].action.formula.source.type and does not publish. The initial test expected the retired
+operations root; corrected to the current declared steps root after inspecting the actual example
+and WorkbookPlan. All three pass (20s). No schema, requirement or golden snapshot changed.
+
+Focused engine/14 parity/PMD passed (43s), nested deterministic check and every retained seed
+passed (23s), ./gradlew check passed (5m16s): core 344, JSON 348, engine 1485 plus 14 parity,
+CLI 588, architecture 14 plus 12 rule tests, zero failures/errors/skips. All 143 golden cases pass.
+Inventories: main Java 121967→121991, tests 153882→153990; snapshots 38, definitions 13,
+converters 4309, Support 206 and blank checks 434 unchanged. Baseline diff empty.
+
+Reflection audit of real record fields finds 16/65 mutation variants and 2/37 selector variants
+contain text/binary/secret sources. The other variants can be shared directly. A Java 26 probe
+proves source-free records can implement closed authored and resolved contracts together while
+only the source-bearing alternative needs a distinct record, with an exhaustive identity switch.
+These are design evidence for the pending resolved-plan/step/target work; those WPs are not
+claimed complete. No active mutation or fuzz campaign ran.
