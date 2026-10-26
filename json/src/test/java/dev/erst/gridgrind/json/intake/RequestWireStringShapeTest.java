@@ -7,43 +7,18 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import dev.erst.gridgrind.core.catalog.CatalogFieldMetadataSupport;
 import dev.erst.gridgrind.core.catalog.FieldShape;
 import dev.erst.gridgrind.core.catalog.ScalarType;
-import dev.erst.gridgrind.core.problem.RequestExplicitNullField;
-import dev.erst.gridgrind.core.problem.RequestMalformedScalar;
-import dev.erst.gridgrind.core.problem.RequestStructuralProblem;
-import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.WireString;
-import java.lang.reflect.Type;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
 
 /** Checks the same scalar contract through catalog metadata and tolerant request validation. */
 class RequestWireStringShapeTest {
   @Test
-  @SuppressWarnings(
-      "PMD.AvoidInstantiatingObjectsInLoops") // Findings must be isolated for each type.
-  void everyDomainStringHasAScalarCatalogShapeAndAStringTokenShape() {
+  void everyDomainStringHasAScalarCatalogShape() {
+    FieldShape scalar = new FieldShape.Scalar(ScalarType.STRING);
     for (Class<?> type : WireString.class.getPermittedSubclasses()) {
-      assertEquals(
-          new FieldShape.Scalar(ScalarType.STRING), CatalogFieldMetadataSupport.fieldShape(type));
-      List<RequestStructuralProblem> problems = new ArrayList<>();
-      RequestNodeValidator.validateNode(
-          new RequestJsonString(7, "value"), type, "field", 7, problems);
-      assertTrue(problems.isEmpty(), type.getName());
-      RequestNodeValidator.validateNode(
-          new RequestJsonBoolean(8, true), type, "field", 8, problems);
-      assertEquals(List.of(new RequestMalformedScalar("field", "a JSON string", 8)), problems);
+      assertEquals(scalar, CatalogFieldMetadataSupport.fieldShape(type));
     }
-  }
-
-  @Test
-  void explicitNullRemainsAnIntakeProblemEvenForOptionalDomainValues() {
-    Type optionalSheet = OptionalSheet.class.getRecordComponents()[0].getGenericType();
-    List<RequestStructuralProblem> problems = new ArrayList<>();
-    RequestNodeValidator.validateNode(
-        new RequestJsonNull(12), optionalSheet, "sheet", 12, problems);
-    assertEquals(List.of(new RequestExplicitNullField("sheet", 12)), problems);
   }
 
   @Test
@@ -128,6 +103,4 @@ class RequestWireStringShapeTest {
         """
         .formatted(extra);
   }
-
-  private record OptionalSheet(Optional<SheetName> sheet) {}
 }

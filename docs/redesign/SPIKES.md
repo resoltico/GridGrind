@@ -1386,3 +1386,52 @@ wire-default inventories. WP-43's schema prerequisite is shipped. WP-30 remains 
 uses the existing structural validators and Jackson failure normalization. The next work replaces
 that path with schema-driven validation and owned domain findings; do not label the new emitter as
 completion of the single-intake pipeline or claim standard schemas prove workbook-state preconditions.
+
+### WP-30 emitted-schema structural traversal checkpoint
+
+RequestSchemaStructure now drives root/record/union/collection shape validation from the emitted
+request schema, over the duplicate-preserving project tree. Required/unknown fields, type/status
+constants, tagged alternatives, structural step alternatives, array items, scalar token kinds and
+Java enum candidates come from that document. Java component types are retained only for numeric
+fidelity and temporal parsing. Structural step payload names/order derive from the canonical sealed
+variants and their schema requirements; no parallel action/assertion/query shape registry remains.
+
+Before switching, compared the new traversal with the old packaged intake for every 17 doctor input
+and 14 example: all 31 ordered structural finding lists were equal. An external package-private
+probe loaded the old shaded JAR first and the new traversal second, so the comparison remained
+independent after switching the working-tree entrypoint. Removed its temporary JUnit comparison once
+the public entrypoint used the new path, avoiding a tautological permanent test. Probe source, logs
+and the pre-switch characterization source are retained externally.
+
+Deleted RequestNodeValidator, RequestRecordValidator, RequestUnionValidator,
+RequestCollectionValidator, RequestNonContainerNodeValidator and RequestNodeTypeClassifier.
+RequestStepFragmentCollector now only binds independently valid steps. Removed obsolete record
+visibility/optional-field reflection from the raw member index. RequestJavaTypes names the remaining
+Java scalar/type-argument contracts; RequestScalarTokens checks numeric and temporal values using
+JDK parsing rather than trial Jackson binding. Canonical constructor/domain failures still use the
+existing binding path at this checkpoint; declared semantic constraints and their error ownership
+must be completed before calling WP-30 done.
+
+Retained primitive-null/required-field inventory checks and retargeted them to the actual schema
+traversal. Retained IEEE precision, temporal, valid-sibling/partial-step and scalar wire round trips.
+Removed five tests solely covering retired dispatcher/JsonIgnore mechanics and a synthetic optional
+carrier already covered through real planId intake. Core models are Jackson-free; CatalogIgnored
+remains owned by the schema producer. The public golden assurance is unchanged.
+
+The numeric review found a real unhandled exponent boundary: 1e2147483648 already produced the owned
+not-representable result, but 1e2147483649 threw BigDecimal's raw NumberFormatException. Retained that
+red failure and now classify the latter as NUMBER_NOT_REPRESENTABLE at the original value token.
+The finite/precision-sensitive decimal behavior is otherwise unchanged. All 48 deterministic
+protocol seeds retain their expectations. No mutation or active fuzz campaign ran.
+
+After focused JSON/static checks and correcting allocation-only PMD findings, ./gradlew check passes
+in 4m25s: core 329, JSON 372, engine 1512, CLI 588, architecture 41; 2842 tests with zero failures/
+errors/skips. All 143 golden cases, including the real changed-value control, are byte-identical
+without re-recording. Inventories: JSON files 75 -> 71, main Java 124354 -> 124123, test Java 155170 ->
+154989, Support 216 -> 215. Blank checks 437 and all model/converter counts remain unchanged.
+AGENTS.md diff main is empty; supplement absent.
+
+Remaining WP-30 work: validate constructor/domain invariants before final treeToValue, retain owned
+paths/codes without Jackson-message inference, retire failure sanitization and its superseded
+helpers/tests, and run the phase gate. Standard schema structural success alone does not establish
+constructor/workbook-state validity; the S3 limitation remains explicit.

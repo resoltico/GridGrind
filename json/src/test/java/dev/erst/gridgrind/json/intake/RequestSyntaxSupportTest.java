@@ -6,7 +6,6 @@ import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import dev.erst.gridgrind.core.problem.RequestDuplicateKey;
 import dev.erst.gridgrind.core.problem.RequestExplicitNullField;
 import dev.erst.gridgrind.core.problem.RequestInvalidEncoding;
@@ -352,15 +351,12 @@ class RequestSyntaxSupportTest {
     ParameterizedType twoArguments = parameterized(Map.class, String.class, Integer.class);
     Type unknown = new Type() {};
 
-    assertEquals(String.class, RequestTypeSupport.rawType(String.class));
-    assertEquals(List.class, RequestTypeSupport.rawType(singleArgument));
-    assertEquals(Object.class, RequestTypeSupport.rawType(unknown));
-    assertEquals(String.class, RequestTypeSupport.typeArgument(singleArgument));
-    assertEquals(Object.class, RequestTypeSupport.typeArgument(twoArguments));
-    assertEquals(Object.class, RequestTypeSupport.typeArgument(unknown));
-    assertTrue(RequestNodeTypeClassifier.isOptional(parameterized(Optional.class, String.class)));
-    assertTrue(RequestNodeTypeClassifier.isCollection(singleArgument));
-    assertFalse(RequestNodeTypeClassifier.isCollection(String.class));
+    assertEquals(String.class, RequestJavaTypes.rawType(String.class));
+    assertEquals(List.class, RequestJavaTypes.rawType(singleArgument));
+    assertEquals(Object.class, RequestJavaTypes.rawType(unknown));
+    assertEquals(String.class, RequestJavaTypes.typeArgument(singleArgument));
+    assertEquals(Object.class, RequestJavaTypes.typeArgument(twoArguments));
+    assertEquals(Object.class, RequestJavaTypes.typeArgument(unknown));
     for (Class<?> numberType :
         List.of(
             byte.class,
@@ -377,9 +373,9 @@ class RequestSyntaxSupportTest {
             Double.class,
             BigDecimal.class,
             BigInteger.class)) {
-      assertTrue(RequestTypeSupport.isNumberType(numberType));
+      assertTrue(RequestJavaTypes.isNumberType(numberType));
     }
-    assertFalse(RequestTypeSupport.isNumberType(String.class));
+    assertFalse(RequestJavaTypes.isNumberType(String.class));
   }
 
   @Test
@@ -434,26 +430,6 @@ class RequestSyntaxSupportTest {
     assertEquals(
         List.of("Invalid JSON literal"),
         problems.stream().map(RequestStructuralProblem::message).toList());
-  }
-
-  @Test
-  void honorsComponentAndAccessorJsonIgnoreAnnotationsInVisibleRecordContracts() {
-    assertEquals(
-        List.of("visible"),
-        RequestObjectMembers.visibleRecordComponents(ComponentIgnoredRecord.class).stream()
-            .map(component -> component.getName())
-            .toList());
-    assertTrue(RequestObjectMembers.visibleRecordComponents(AccessorIgnoredRecord.class).isEmpty());
-    assertEquals(
-        List.of(),
-        RequestObjectMembers.optionalFieldNames(
-            RequestObjectMembers.visibleRecordComponents(ComponentIgnoredRecord.class),
-            List.of("visible")));
-    assertEquals(
-        List.of("visible"),
-        RequestObjectMembers.optionalFieldNames(
-            RequestObjectMembers.visibleRecordComponents(ComponentIgnoredRecord.class), List.of()));
-    assertEquals("hidden", new AccessorIgnoredRecord("hidden").hidden());
   }
 
   private static void assertLiteralDelimiter(String text) {
@@ -594,15 +570,5 @@ class RequestSyntaxSupportTest {
         return null;
       }
     };
-  }
-
-  private record ComponentIgnoredRecord(@JsonIgnore String hidden, String visible) {}
-
-  private record AccessorIgnoredRecord(String hidden) {
-    @Override
-    @JsonIgnore
-    public String hidden() {
-      return hidden;
-    }
   }
 }

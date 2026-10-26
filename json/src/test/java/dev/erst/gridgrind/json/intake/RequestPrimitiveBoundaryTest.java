@@ -71,7 +71,7 @@ class RequestPrimitiveBoundaryTest {
   private static List<RequestStructuralProblem> validateExplicitNull(
       GridGrindProtocolContractSupport.RequestPrimitiveField field) {
     List<RequestStructuralProblem> problems = new ArrayList<>();
-    RequestRecordValidator.validate(
+    RequestSchemaStructure.validateRecord(
         new RequestJsonObject(
             0, List.of(new RequestJsonMember(field.fieldName(), 0, new RequestJsonNull(1)))),
         field.recordType(),
@@ -84,7 +84,7 @@ class RequestPrimitiveBoundaryTest {
   private static List<RequestStructuralProblem> validateOmission(
       GridGrindProtocolContractSupport.RequestPrimitiveField field) {
     List<RequestStructuralProblem> problems = new ArrayList<>();
-    RequestRecordValidator.validate(
+    RequestSchemaStructure.validateRecord(
         new RequestJsonObject(0, List.of()), field.recordType(), "request", 0, problems);
     return problems;
   }

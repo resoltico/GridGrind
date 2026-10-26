@@ -28,7 +28,7 @@ class RequestIeeeNumberExactnessTest {
 
   @Test
   void rejectsNonFiniteAndLossyDoubleTokensAtTheirAuthoredField() {
-    for (String token : List.of("1e400", "12345678901234567")) {
+    for (String token : List.of("1e400", "12345678901234567", "1e2147483648", "1e2147483649")) {
       byte[] bytes = request(token).getBytes(StandardCharsets.UTF_8);
       RequestIntake analysis = GridGrindJson.analyzeRequest(bytes);
 
@@ -69,14 +69,13 @@ class RequestIeeeNumberExactnessTest {
   void rejectsLossyFloatTokensWithoutRejectingExactFloatOrIntegralCreatorValues() {
     List<RequestStructuralProblem> problems = new ArrayList<>();
 
-    RequestNonContainerNodeValidator.validate(
+    RequestScalarTokens.validate(
         new RequestJsonNumber(0, "0.1"), Float.class, "float", 0, problems);
-    RequestNonContainerNodeValidator.validate(
+    RequestScalarTokens.validate(
         new RequestJsonNumber(1, "1.5"), float.class, "exactFloat", 1, problems);
-    RequestNonContainerNodeValidator.validate(
+    RequestScalarTokens.validate(
         new RequestJsonNumber(2, "1.5"), Double.class, "boxedDouble", 2, problems);
-    RequestNonContainerNodeValidator.validate(
-        new RequestJsonNumber(3, "42"), int.class, "integer", 3, problems);
+    RequestScalarTokens.validate(new RequestJsonNumber(3, "42"), int.class, "integer", 3, problems);
 
     RequestNumberNotRepresentable problem =
         assertInstanceOf(RequestNumberNotRepresentable.class, problems.getFirst());

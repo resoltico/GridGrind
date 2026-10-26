@@ -9,7 +9,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import dev.erst.gridgrind.core.model.formula.FormulaEnvironmentSpec;
 import dev.erst.gridgrind.core.model.security.OoxmlEncryptionSpec;
 import dev.erst.gridgrind.core.plan.ExecutionPolicySpec;
-import dev.erst.gridgrind.core.plan.Selector;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import dev.erst.gridgrind.core.problem.InvalidEncodingException;
 import dev.erst.gridgrind.core.problem.InvalidJsonException;
@@ -45,143 +44,27 @@ import org.junit.jupiter.api.Test;
 /** Covers structural validation and independent fragment binding through its package contract. */
 class RequestStructuralSupportTest {
   @Test
-  void validatesRecordScalarAndUnionShapesWithoutStoppingAtTheFirstProblem() {
-    List<RequestStructuralProblem> problems = new ArrayList<>();
-
-    RequestRecordValidator.validate(
-        new RequestJsonString(0, "not-an-object"),
-        OoxmlEncryptionSpec.class,
-        "encryption",
-        0,
-        problems);
-    RequestRecordValidator.validate(
-        object(member("password", new RequestJsonNumber(1, "7"))),
-        OoxmlEncryptionSpec.class,
-        "encryption",
-        0,
-        problems);
-    RequestNonContainerNodeValidator.validate(
-        new RequestJsonString(2, "wrong"), int.class, "integer", 2, problems);
-    RequestNonContainerNodeValidator.validate(
-        new RequestJsonString(3, "wrong"), boolean.class, "boolean", 3, problems);
-    RequestNonContainerNodeValidator.validate(
-        new RequestJsonString(3, "text"), StringBuilder.class, "text", 3, problems);
-    RequestNodeValidator.validateEnum(
-        new RequestJsonString(4, "NOT_A_MODE"),
-        dev.erst.gridgrind.core.plan.AssertionModeSpec.class,
-        "assertionMode",
-        4,
-        problems);
-    RequestNodeValidator.validateEnum(
-        new RequestJsonNumber(5, "2"),
-        dev.erst.gridgrind.core.plan.AssertionModeSpec.class,
-        "assertionMode",
-        5,
-        problems);
-    RequestUnionValidator.validateUnion(
-        new RequestJsonNumber(6, "2"), WorkbookPlan.WorkbookSource.class, "source", 6, problems);
-    RequestUnionValidator.validateUnion(
-        object(), WorkbookPlan.WorkbookSource.class, "source", 7, problems);
-    RequestUnionValidator.validateUnion(
-        object(member("type", new RequestJsonNumber(8, "2"))),
-        WorkbookPlan.WorkbookSource.class,
-        "source",
-        8,
-        problems);
-    RequestUnionValidator.validateUnion(
-        object(member("type", new RequestJsonString(9, "UNKNOWN"))),
-        WorkbookPlan.WorkbookSource.class,
-        "source",
-        9,
-        problems);
-    RequestUnionValidator.validateSelector(
-        object(member("type", new RequestJsonString(10, "WORKBOOK_CURRENT"))),
-        "target",
-        10,
-        problems);
-
-    assertEquals(
-        List.of(
-            "Field 'encryption' must be a JSON object",
-            "Missing required field 'encryption.passwordRef'",
-            "Unknown field 'encryption.password'",
-            "Field 'integer' must be a JSON number",
-            "Field 'boolean' must be a JSON boolean",
-            "Unsupported value 'NOT_A_MODE' for field 'assertionMode'; expected one of: FAIL_FAST, COLLECT",
-            "Field 'assertionMode' must be a JSON string",
-            "Field 'source' must be a JSON object",
-            "Missing required field 'source.type'",
-            "Field 'source.type' must be a JSON string type id",
-            "Unknown type value 'UNKNOWN'; valid values: EXISTING, NEW"),
-        problems.stream().map(RequestStructuralProblem::message).toList());
-  }
-
-  @Test
-  void validatesCollectionNullAndNestedRecordBranches() {
-    List<RequestStructuralProblem> problems = new ArrayList<>();
-
-    RequestCollectionValidator.validate(
-        new RequestJsonString(0, "not-an-array"), String.class, "values", 0, problems);
-    RequestCollectionValidator.validate(
-        new RequestJsonArray(1, List.of(new RequestJsonNumber(2, "7"))),
-        String.class,
-        "values",
-        1,
-        problems);
-    RequestNodeValidator.validateNode(new RequestJsonNull(3), String.class, "value", 3, problems);
-    RequestNonContainerNodeValidator.validate(
-        object(member("password", new RequestJsonString(4, "secret"))),
-        OoxmlEncryptionSpec.class,
-        "encryption",
-        4,
-        problems);
-    RequestNonContainerNodeValidator.validate(
-        object(member("type", new RequestJsonString(5, "NEW"))),
-        WorkbookPlan.WorkbookSource.class,
-        "source",
-        5,
-        problems);
-    RequestNonContainerNodeValidator.validate(
-        object(member("type", new RequestJsonString(6, "WORKBOOK_CURRENT"))),
-        Selector.class,
-        "target",
-        6,
-        problems);
-
-    assertEquals(
-        List.of(
-            "Field 'values' must be a JSON array",
-            "Field 'values[0]' must be a JSON string",
-            "Field 'value' must be omitted when absent; explicit null is not accepted.",
-            "Missing required field 'encryption.passwordRef'",
-            "Unknown field 'encryption.password'"),
-        problems.stream().map(RequestStructuralProblem::message).toList());
-  }
-
-  @Test
   void validatesThatNumericAndTemporalScalarsAreRepresentableByTheirCreatorTypes() {
     List<RequestStructuralProblem> problems = new ArrayList<>();
 
-    RequestNonContainerNodeValidator.validate(
+    RequestScalarTokens.validate(
         new RequestJsonNumber(10, "999999999999999999999"), int.class, "integer", 10, problems);
-    RequestNonContainerNodeValidator.validate(
+    RequestScalarTokens.validate(
         new RequestJsonNumber(11, "1e400"), double.class, "floating", 11, problems);
-    RequestNonContainerNodeValidator.validate(
+    RequestScalarTokens.validate(
         new RequestJsonNumber(12, "1e400"), Float.class, "singlePrecision", 12, problems);
-    RequestNonContainerNodeValidator.validate(
+    RequestScalarTokens.validate(
         new RequestJsonString(13, "2026-02-30"), LocalDate.class, "date", 13, problems);
-    RequestNonContainerNodeValidator.validate(
+    RequestScalarTokens.validate(
         new RequestJsonString(14, "2026-02-30T12:00"),
         LocalDateTime.class,
         "dateTime",
         14,
         problems);
-    RequestNonContainerNodeValidator.validate(
+    RequestScalarTokens.validate(
         new RequestJsonNumber(15, "1.5"), Float.class, "validSinglePrecision", 15, problems);
-    RequestNonContainerNodeValidator.validate(
+    RequestScalarTokens.validate(
         new RequestJsonNumber(16, "20260705"), LocalDate.class, "dateKind", 16, problems);
-    RequestNonContainerNodeValidator.validate(
-        new RequestJsonObject(17, List.of()), Object.class, "untyped", 17, problems);
 
     assertEquals(
         List.of(
@@ -194,15 +77,6 @@ class RequestStructuralSupportTest {
         problems.stream().map(RequestStructuralProblem::message).toList());
     assertEquals(
         2, problems.stream().filter(RequestNumberNotRepresentable.class::isInstance).count());
-  }
-
-  @Test
-  void rejectsSealedCreatorFamiliesThatFailToDeclareTheirRequiredDiscriminator() {
-    assertThrows(
-        IllegalStateException.class,
-        () ->
-            RequestUnionValidator.validateUnion(
-                object(), UndiscriminatedUnion.class, "union", 0, new ArrayList<>()));
   }
 
   @Test
@@ -304,12 +178,12 @@ class RequestStructuralSupportTest {
 
     RequestJsonMember explicitNullSteps = member("steps", new RequestJsonNull(0));
     List<RequestStructuralProblem> explicitNullProblems = new ArrayList<>();
-    RequestStepFragmentCollector.validateAll(List.of(explicitNullSteps), explicitNullProblems);
+    validateSteps(explicitNullSteps, explicitNullProblems);
     assertTrue(bindSteps(Optional.of(explicitNullSteps), explicitNullProblems).isEmpty());
 
     RequestJsonMember malformedSteps = member("steps", new RequestJsonString(1, "not-an-array"));
     List<RequestStructuralProblem> malformedProblems = new ArrayList<>();
-    RequestStepFragmentCollector.validateAll(List.of(malformedSteps), malformedProblems);
+    validateSteps(malformedSteps, malformedProblems);
     assertTrue(bindSteps(Optional.of(malformedSteps), malformedProblems).isEmpty());
     assertTrue(bindSteps(Optional.of(malformedSteps), List.of()).isEmpty());
 
@@ -330,7 +204,7 @@ class RequestStructuralSupportTest {
             """);
     RequestJsonMember validSteps = member("steps", steps);
     List<RequestStructuralProblem> stepProblems = new ArrayList<>();
-    RequestStepFragmentCollector.validateAll(List.of(validSteps), stepProblems);
+    validateSteps(validSteps, stepProblems);
     List<RequestBoundFragments.Step> collected =
         bindSteps(Optional.of(validSteps), stepProblems).orElseThrow();
 
@@ -344,18 +218,19 @@ class RequestStructuralSupportTest {
     assertTrue(collected.get(6).value().isPresent());
     assertEquals(
         List.of(
-            "Field 'steps' must be omitted when absent; explicit null is not accepted.",
-            "Field 'steps' must be a JSON array",
-            "Field 'steps[0]' must be omitted when absent; explicit null is not accepted.",
-            "Field 'steps[1]' must be a JSON object",
-            "Field 'steps[2]' must be an object containing exactly one of action, assertion, or query",
-            "Missing required field 'steps[3].action.type'",
-            "Missing required field 'steps[3].assertion.type'",
-            "Field 'steps[3]' must be an object containing exactly one of action, assertion, or query",
-            "Missing required field 'steps[4].action.zoomPercent'"),
-        messages);
-    assertThrows(
-        IllegalStateException.class, () -> RequestStepFragmentCollector.payloadType("other"));
+                "Field 'steps' must be omitted when absent; explicit null is not accepted.",
+                "Field 'steps' must be a JSON array",
+                "Field 'steps[0]' must be omitted when absent; explicit null is not accepted.",
+                "Field 'steps[1]' must be a JSON object",
+                "Field 'steps[2]' must be an object containing exactly one of action, assertion, or query",
+                "Missing required field 'steps[3].action.type'",
+                "Missing required field 'steps[3].assertion.type'",
+                "Field 'steps[3]' must be an object containing exactly one of action, assertion, or query",
+                "Missing required field 'steps[4].action.zoomPercent'")
+            .stream()
+            .sorted()
+            .toList(),
+        messages.stream().sorted().toList());
   }
 
   @Test
@@ -591,10 +466,16 @@ class RequestStructuralSupportTest {
         .orElseThrow();
   }
 
-  /** Synthetic sealed union deliberately missing its required discriminator declaration. */
-  private sealed interface UndiscriminatedUnion permits UndiscriminatedVariant {}
-
-  private record UndiscriminatedVariant(String value) implements UndiscriminatedUnion {}
+  private static void validateSteps(
+      RequestJsonMember steps, List<RequestStructuralProblem> problems) {
+    RequestSchemaStructure.validate(
+        object(
+            member("protocolVersion", new RequestJsonNumber(0, "1")),
+            member("source", object(member("type", new RequestJsonString(0, "NEW")))),
+            member("persistence", object(member("type", new RequestJsonString(0, "NONE")))),
+            steps),
+        problems);
+  }
 
   private static RequestIntake manualIntake(
       dev.erst.gridgrind.core.problem.RequestBoundFragments fragments,

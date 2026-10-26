@@ -10,7 +10,7 @@ import java.util.Map;
 import java.util.Objects;
 
 /** Classifies creator component types for structural validation. */
-final class RequestTypeSupport {
+final class RequestJavaTypes {
   private static final Map<Class<?>, String> NUMERIC_EXPECTATIONS =
       Map.ofEntries(
           Map.entry(byte.class, "a JSON integer between -128 and 127"),
@@ -34,7 +34,7 @@ final class RequestTypeSupport {
           LocalDate.class, "an ISO-8601 calendar date",
           LocalDateTime.class, "an ISO-8601 local date-time");
 
-  private RequestTypeSupport() {}
+  private RequestJavaTypes() {}
 
   static Class<?> rawType(Type type) {
     return switch (type) {

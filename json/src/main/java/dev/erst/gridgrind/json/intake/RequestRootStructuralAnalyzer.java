@@ -1,6 +1,5 @@
 package dev.erst.gridgrind.json.intake;
 
-import dev.erst.gridgrind.core.catalog.GridGrindProtocolContractSupport;
 import dev.erst.gridgrind.core.model.formula.FormulaEnvironmentSpec;
 import dev.erst.gridgrind.core.plan.ExecutionPolicySpec;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
@@ -14,7 +13,6 @@ import dev.erst.gridgrind.core.problem.RequestMalformedScalar;
 import dev.erst.gridgrind.core.problem.RequestStructuralProblem;
 import dev.erst.gridgrind.core.vocabulary.ProtocolVersion;
 import dev.erst.gridgrind.json.codec.RequestDiagnosticRedactor;
-import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -48,17 +46,7 @@ final class RequestRootStructuralAnalyzer {
     }
 
     RequestObjectMembers.Index members = RequestObjectMembers.index(root);
-    GridGrindProtocolContractSupport.EffectiveObjectContract rootContract =
-        GridGrindProtocolContractSupport.effectiveObjectContract(WorkbookPlan.class);
-    RequestObjectMembers.collectFields(
-        members, "", rootContract.requiredFields(), rootContract.optionalFields(), problems);
-    validateRootScalars(members, problems);
-    validateRootMembers(members, "source", WorkbookPlan.WorkbookSource.class, problems);
-    validateRootMembers(members, "persistence", WorkbookPlan.WorkbookPersistence.class, problems);
-    validateRootMembers(members, "execution", ExecutionPolicySpec.class, problems);
-    validateRootMembers(members, "formulaEnvironment", FormulaEnvironmentSpec.class, problems);
-    List<RequestJsonMember> stepMembers = members.membersNamed("steps");
-    RequestStepFragmentCollector.validateAll(stepMembers, problems);
+    RequestSchemaStructure.validate(root, problems);
 
     return RequestIntakeBinder.bind(
         new RequestBoundFragments(
@@ -114,30 +102,6 @@ final class RequestRootStructuralAnalyzer {
         diagnosticRedactor,
         Optional.of(parsed.root()),
         parsed.warnings());
-  }
-
-  private static void validateRootScalars(
-      RequestObjectMembers.Index root, List<RequestStructuralProblem> problems) {
-    for (RequestJsonMember member : root.membersNamed("protocolVersion")) {
-      RequestNodeValidator.validateNode(
-          member.value(),
-          ProtocolVersion.class,
-          "protocolVersion",
-          member.nameByteOffset(),
-          problems);
-    }
-    validateRootMembers(root, "planId", dev.erst.gridgrind.core.vocabulary.PlanId.class, problems);
-  }
-
-  private static void validateRootMembers(
-      RequestObjectMembers.Index root,
-      String fieldName,
-      Type expectedType,
-      List<RequestStructuralProblem> problems) {
-    for (RequestJsonMember member : root.membersNamed(fieldName)) {
-      RequestNodeValidator.validateNode(
-          member.value(), expectedType, fieldName, member.nameByteOffset(), problems);
-    }
   }
 
   private static <T> Optional<T> bindOrDefault(

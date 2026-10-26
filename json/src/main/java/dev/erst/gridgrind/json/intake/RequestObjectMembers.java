@@ -1,11 +1,8 @@
 package dev.erst.gridgrind.json.intake;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import dev.erst.gridgrind.core.catalog.GridGrindProtocolContractSupport;
 import dev.erst.gridgrind.core.problem.RequestMissingRequiredField;
 import dev.erst.gridgrind.core.problem.RequestStructuralProblem;
 import dev.erst.gridgrind.core.problem.RequestUnknownField;
-import java.lang.reflect.RecordComponent;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -70,24 +67,6 @@ final class RequestObjectMembers {
     }
   }
 
-  static List<RecordComponent> visibleRecordComponents(Class<? extends Record> recordType) {
-    List<RecordComponent> components = new ArrayList<>();
-    for (RecordComponent component : recordType.getRecordComponents()) {
-      if (isVisible(component)) {
-        components.add(component);
-      }
-    }
-    return List.copyOf(components);
-  }
-
-  static List<String> optionalFieldNames(
-      List<RecordComponent> components, List<String> requiredFields) {
-    return components.stream()
-        .map(GridGrindProtocolContractSupport::wireFieldName)
-        .filter(field -> !requiredFields.contains(field))
-        .toList();
-  }
-
   static String childPath(String parent, String child) {
     return RequestJsonPaths.field(parent, child);
   }
@@ -136,9 +115,5 @@ final class RequestObjectMembers {
         Map<String, List<RequestJsonMember>> named, RequestJsonMember member) {
       named.computeIfAbsent(member.name(), _ -> new ArrayList<>()).add(member);
     }
-  }
-
-  private static boolean isVisible(RecordComponent component) {
-    return !component.getAccessor().isAnnotationPresent(JsonIgnore.class);
   }
 }
