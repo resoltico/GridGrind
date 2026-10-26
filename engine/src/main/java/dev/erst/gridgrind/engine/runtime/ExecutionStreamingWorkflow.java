@@ -110,9 +110,7 @@ final class ExecutionStreamingWorkflow {
       writer.save(materializedPath, WorkbookArtifactWriteDisposition.CREATE_NEW);
       HostAcceptanceVerification hostAcceptance =
           hostAcceptanceExecutor.verifyMaterializedTerminalAcceptance(
-              ((dev.erst.gridgrind.engine.api.GridGrindExecutionGrant.Bounded)
-                      bindings.executionGrant())
-                  .hostAcceptancePolicy(),
+              bindings.executionGrant().acceptancePolicy(),
               materializedPath,
               workflowContext.workbookLocation());
       workflowContext.hostAssertions().addAll(hostAcceptance.assertions());

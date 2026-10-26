@@ -10,7 +10,7 @@ public sealed interface CliCommand
         CliCommand.Version,
         CliCommand.License,
         CliCommand.PrintRequestTemplate,
-        CliGrantTemplateCommand,
+        CliCommand.PrintGrantTemplate,
         CliCommand.PrintRecipeCatalog,
         CliCommand.PrintRecipe,
         CliCommand.MaterializeRecipe,
@@ -50,6 +50,13 @@ public sealed interface CliCommand
   /** Requests that a minimal valid request JSON document be emitted as the primary output. */
   record PrintRequestTemplate(Optional<Path> responsePath) implements CliCommand {
     public PrintRequestTemplate {
+      Objects.requireNonNull(responsePath, "responsePath must not be null");
+    }
+  }
+
+  /** Requests the minimal fail-closed authority document. */
+  record PrintGrantTemplate(Optional<Path> responsePath) implements CliCommand {
+    public PrintGrantTemplate {
       Objects.requireNonNull(responsePath, "responsePath must not be null");
     }
   }

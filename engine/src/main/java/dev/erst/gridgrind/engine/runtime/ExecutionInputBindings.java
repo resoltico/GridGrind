@@ -1,7 +1,7 @@
 package dev.erst.gridgrind.engine.runtime;
 
+import dev.erst.gridgrind.core.grant.ExecutionGrant;
 import dev.erst.gridgrind.core.source.SecretReference;
-import dev.erst.gridgrind.engine.api.GridGrindExecutionGrant;
 import dev.erst.gridgrind.engine.api.GridGrindSecretResolver;
 import dev.erst.gridgrind.excel.WorkbookTempFileFactory;
 import java.nio.file.Path;
@@ -13,7 +13,7 @@ public final class ExecutionInputBindings {
   private final Path workingDirectory;
   private final Path tempRoot;
   private final Optional<StandardInputBinding> standardInput;
-  private final GridGrindExecutionGrant executionGrant;
+  private final ExecutionGrant executionGrant;
   private final Optional<GridGrindSecretResolver> secretResolver;
   private final Optional<InputResolutionFailures> inputResolutionFailures;
   private final Optional<InputResolutionOrigins> inputResolutionOrigins;
@@ -21,7 +21,7 @@ public final class ExecutionInputBindings {
 
   /** Creates bindings from one working directory, temp root, and explicit host grant. */
   public ExecutionInputBindings(
-      Path workingDirectory, Path tempRoot, GridGrindExecutionGrant executionGrant) {
+      Path workingDirectory, Path tempRoot, ExecutionGrant executionGrant) {
     this(
         workingDirectory,
         tempRoot,
@@ -35,7 +35,7 @@ public final class ExecutionInputBindings {
       Path workingDirectory,
       Path tempRoot,
       byte[] standardInputBytes,
-      GridGrindExecutionGrant executionGrant) {
+      ExecutionGrant executionGrant) {
     this(
         workingDirectory,
         tempRoot,
@@ -49,7 +49,7 @@ public final class ExecutionInputBindings {
       Path workingDirectory,
       Path tempRoot,
       byte[] standardInputBytes,
-      GridGrindExecutionGrant executionGrant,
+      ExecutionGrant executionGrant,
       GridGrindSecretResolver secretResolver) {
     this(
         workingDirectory,
@@ -64,7 +64,7 @@ public final class ExecutionInputBindings {
       Path workingDirectory,
       Path tempRoot,
       StandardInputBinding standardInput,
-      GridGrindExecutionGrant executionGrant) {
+      ExecutionGrant executionGrant) {
     this(
         workingDirectory,
         tempRoot,
@@ -77,7 +77,7 @@ public final class ExecutionInputBindings {
   public ExecutionInputBindings(
       Path workingDirectory,
       Path tempRoot,
-      GridGrindExecutionGrant executionGrant,
+      ExecutionGrant executionGrant,
       GridGrindSecretResolver secretResolver) {
     this(
         workingDirectory,
@@ -91,7 +91,7 @@ public final class ExecutionInputBindings {
       Path workingDirectory,
       Path tempRoot,
       Optional<StandardInputBinding> standardInput,
-      GridGrindExecutionGrant executionGrant,
+      ExecutionGrant executionGrant,
       Optional<GridGrindSecretResolver> secretResolver) {
     this(
         workingDirectory,
@@ -108,7 +108,7 @@ public final class ExecutionInputBindings {
       Path workingDirectory,
       Path tempRoot,
       Optional<StandardInputBinding> standardInput,
-      GridGrindExecutionGrant executionGrant,
+      ExecutionGrant executionGrant,
       Optional<GridGrindSecretResolver> secretResolver,
       Optional<InputResolutionFailures> inputResolutionFailures,
       Optional<InputResolutionOrigins> inputResolutionOrigins,
@@ -153,13 +153,13 @@ public final class ExecutionInputBindings {
   }
 
   /** Returns the trusted host grant required for this execution. */
-  GridGrindExecutionGrant executionGrant() {
+  ExecutionGrant executionGrant() {
     return executionGrant;
   }
 
   String resolveSecret(SecretReference reference) {
     Objects.requireNonNull(reference, "reference must not be null");
-    GridGrindExecutionGrant.Bounded grant = (GridGrindExecutionGrant.Bounded) executionGrant;
+    ExecutionGrant grant = executionGrant;
     if (!grant.allowedSecretReferences().contains(reference)) {
       throw new ExecutionAuthorityDeniedException(
           "host grant does not permit secret reference " + reference.id());
@@ -178,16 +178,13 @@ public final class ExecutionInputBindings {
     }
   }
 
-  private void requireStandardInputAuthority(GridGrindExecutionGrant grant) {
+  private void requireStandardInputAuthority(ExecutionGrant grant) {
     if (standardInput.isEmpty()) {
       return;
     }
     boolean allowed =
-        switch (grant) {
-          case GridGrindExecutionGrant.Bounded bounded ->
-              bounded.readableResources().stream()
-                  .anyMatch(GridGrindExecutionGrant.ReadAuthority.Stdin.class::isInstance);
-        };
+        grant.readableResources().stream()
+            .anyMatch(ExecutionGrant.ReadAuthority.Stdin.class::isInstance);
     if (!allowed) {
       throw new ExecutionAuthorityDeniedException(
           "host grant does not permit reading the standard-input payload");

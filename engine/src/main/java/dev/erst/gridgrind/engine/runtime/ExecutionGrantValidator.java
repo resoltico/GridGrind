@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.engine.runtime;
 
+import dev.erst.gridgrind.core.grant.ExecutionGrant;
 import dev.erst.gridgrind.core.plan.AssertionStep;
 import dev.erst.gridgrind.core.plan.InspectionStep;
 import dev.erst.gridgrind.core.plan.MutationStep;
@@ -9,7 +10,6 @@ import dev.erst.gridgrind.core.semantics.OperationEffectFootprint;
 import dev.erst.gridgrind.core.semantics.OperationSemantics;
 import dev.erst.gridgrind.core.semantics.WorkbookOperationContracts;
 import dev.erst.gridgrind.core.source.SecretReference;
-import dev.erst.gridgrind.engine.api.GridGrindExecutionGrant;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
@@ -20,23 +20,22 @@ final class ExecutionGrantValidator {
   private ExecutionGrantValidator() {}
 
   static List<ExecutionAuthorityDeniedException> violations(
-      WorkbookPlan request, GridGrindExecutionGrant grant, Path workingDirectory) {
+      WorkbookPlan request, ExecutionGrant grant, Path workingDirectory) {
     Objects.requireNonNull(request, "request must not be null");
     Objects.requireNonNull(grant, "grant must not be null");
     Objects.requireNonNull(workingDirectory, "workingDirectory must not be null");
-    GridGrindExecutionGrant.Bounded bounded = (GridGrindExecutionGrant.Bounded) grant;
     List<ExecutionAuthorityDeniedException> violations = new ArrayList<>();
-    requireSourceAuthority(request, bounded, workingDirectory, violations);
-    requireFormulaEnvironmentAuthority(request, bounded, workingDirectory, violations);
-    requireOperationAuthority(request.steps(), bounded, violations);
-    requirePublicationAuthority(request, bounded, workingDirectory, violations);
-    requireSecretAuthority(request, bounded, violations);
+    requireSourceAuthority(request, grant, workingDirectory, violations);
+    requireFormulaEnvironmentAuthority(request, grant, workingDirectory, violations);
+    requireOperationAuthority(request.steps(), grant, violations);
+    requirePublicationAuthority(request, grant, workingDirectory, violations);
+    requireSecretAuthority(request, grant, violations);
     return List.copyOf(violations);
   }
 
   private static void requireSecretAuthority(
       WorkbookPlan request,
-      GridGrindExecutionGrant.Bounded grant,
+      ExecutionGrant grant,
       List<ExecutionAuthorityDeniedException> violations) {
     for (SecretReference reference : requestedSecretReferences(request)) {
       if (!grant.allowedSecretReferences().contains(reference)) {
@@ -106,7 +105,7 @@ final class ExecutionGrantValidator {
 
   private static void requireSourceAuthority(
       WorkbookPlan request,
-      GridGrindExecutionGrant.Bounded grant,
+      ExecutionGrant grant,
       Path workingDirectory,
       List<ExecutionAuthorityDeniedException> violations) {
     if (request.source() instanceof WorkbookPlan.WorkbookSource.ExistingFile existingFile) {
@@ -120,7 +119,7 @@ final class ExecutionGrantValidator {
 
   private static void requireFormulaEnvironmentAuthority(
       WorkbookPlan request,
-      GridGrindExecutionGrant.Bounded grant,
+      ExecutionGrant grant,
       Path workingDirectory,
       List<ExecutionAuthorityDeniedException> violations) {
     for (var externalWorkbook : request.formulaEnvironment().externalWorkbooks()) {
@@ -133,14 +132,14 @@ final class ExecutionGrantValidator {
   }
 
   private static void requireReadableFile(
-      GridGrindExecutionGrant.Bounded grant,
+      ExecutionGrant grant,
       Path path,
       String resourceKind,
       List<ExecutionAuthorityDeniedException> violations) {
     boolean allowed =
         grant.readableResources().stream()
-            .filter(GridGrindExecutionGrant.ReadAuthority.File.class::isInstance)
-            .map(GridGrindExecutionGrant.ReadAuthority.File.class::cast)
+            .filter(ExecutionGrant.ReadAuthority.File.class::isInstance)
+            .map(ExecutionGrant.ReadAuthority.File.class::cast)
             .anyMatch(resource -> resource.path().equals(path));
     if (!allowed) {
       violations.add(
@@ -151,7 +150,7 @@ final class ExecutionGrantValidator {
 
   private static void requireOperationAuthority(
       List<WorkbookStep> steps,
-      GridGrindExecutionGrant.Bounded grant,
+      ExecutionGrant grant,
       List<ExecutionAuthorityDeniedException> violations) {
     for (WorkbookStep step : steps) {
       OperationFact operation = operationFact(step);
@@ -167,10 +166,10 @@ final class ExecutionGrantValidator {
   private static void requireTargetAuthority(
       WorkbookStep step,
       OperationFact operation,
-      GridGrindExecutionGrant.Bounded grant,
+      ExecutionGrant grant,
       List<ExecutionAuthorityDeniedException> violations) {
-    if (!(grant.workbookTargetAuthority()
-        instanceof GridGrindExecutionGrant.WorkbookTargetAuthority.SelectedSheets selectedSheets)) {
+    if (!(grant.targetAuthority()
+        instanceof ExecutionGrant.WorkbookTargetAuthority.SelectedSheets selectedSheets)) {
       return;
     }
     if (operation.semantics().footprint() == OperationEffectFootprint.CONSERVATIVE_WORKBOOK_WIDE) {
@@ -214,7 +213,7 @@ final class ExecutionGrantValidator {
 
   private static void requirePublicationAuthority(
       WorkbookPlan request,
-      GridGrindExecutionGrant.Bounded grant,
+      ExecutionGrant grant,
       Path workingDirectory,
       List<ExecutionAuthorityDeniedException> violations) {
     switch (request.persistence()) {
@@ -222,7 +221,7 @@ final class ExecutionGrantValidator {
       case WorkbookPlan.WorkbookPersistence.SaveAs saveAs -> {
         Path requestedPath = ExecutionRequestPaths.normalizePath(saveAs.path(), workingDirectory);
         if (!(grant.publicationAuthority()
-                instanceof GridGrindExecutionGrant.PublicationAuthority.SaveAs allowed)
+                instanceof ExecutionGrant.PublicationAuthority.SaveAs allowed)
             || !allowed.path().equals(requestedPath)
             || allowed.ifExists() != saveAs.ifExists()) {
           violations.add(
@@ -232,7 +231,7 @@ final class ExecutionGrantValidator {
       }
       case WorkbookPlan.WorkbookPersistence.Overwrite _ -> {
         if (!(grant.publicationAuthority()
-            instanceof GridGrindExecutionGrant.PublicationAuthority.OverwriteSource)) {
+            instanceof ExecutionGrant.PublicationAuthority.OverwriteSource)) {
           violations.add(
               new ExecutionAuthorityDeniedException(
                   "host grant does not permit overwriting the source workbook"));

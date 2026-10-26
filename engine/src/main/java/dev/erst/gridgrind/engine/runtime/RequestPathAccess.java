@@ -1,8 +1,8 @@
 package dev.erst.gridgrind.engine.runtime;
 
+import dev.erst.gridgrind.core.grant.ExecutionGrant;
 import dev.erst.gridgrind.core.problem.RequestWarning;
 import dev.erst.gridgrind.core.result.WorkbookResultPersistence.PublicationOutcome;
-import dev.erst.gridgrind.engine.api.GridGrindExecutionGrant;
 import dev.erst.gridgrind.excel.WorkbookArtifactWriteDisposition;
 import java.io.IOException;
 import java.io.InputStream;
@@ -26,7 +26,7 @@ import java.util.Optional;
 final class RequestPathAccess implements AutoCloseable {
   private final Path executionRoot;
   private final TempFileFactory tempFileFactory;
-  private final GridGrindExecutionGrant executionGrant;
+  private final ExecutionGrant executionGrant;
 
   // One request owns this capability on one execution thread; insertion order is
   // response-deterministic.
@@ -44,7 +44,7 @@ final class RequestPathAccess implements AutoCloseable {
   private Optional<String> outputPath = Optional.empty();
 
   RequestPathAccess(
-      Path executionRoot, TempFileFactory tempFileFactory, GridGrindExecutionGrant executionGrant) {
+      Path executionRoot, TempFileFactory tempFileFactory, ExecutionGrant executionGrant) {
     this.executionRoot =
         Objects.requireNonNull(executionRoot, "executionRoot must not be null")
             .toAbsolutePath()
@@ -243,11 +243,10 @@ final class RequestPathAccess implements AutoCloseable {
   }
 
   private void requireReadAuthority(Path resolvedPath, String pathRole) {
-    GridGrindExecutionGrant.Bounded bounded = (GridGrindExecutionGrant.Bounded) executionGrant;
     boolean allowed =
-        bounded.readableResources().stream()
-            .filter(GridGrindExecutionGrant.ReadAuthority.File.class::isInstance)
-            .map(GridGrindExecutionGrant.ReadAuthority.File.class::cast)
+        executionGrant.readableResources().stream()
+            .filter(ExecutionGrant.ReadAuthority.File.class::isInstance)
+            .map(ExecutionGrant.ReadAuthority.File.class::cast)
             .anyMatch(resource -> resource.path().equals(resolvedPath));
     if (!allowed) {
       throw new ExecutionAuthorityDeniedException(

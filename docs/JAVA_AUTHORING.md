@@ -23,7 +23,7 @@ GridGrind has two first-class authoring surfaces:
 Both surfaces compile to the same canonical `WorkbookPlan`. The Java layer is not a separate
 execution engine and does not bypass request validation, execution-mode rules, or workbook safety
 checks. It authors the canonical plan; in-process execution is owned by the engine API and requires
-a separate host-owned `GridGrindExecutionGrant`.
+a separate host-owned `ExecutionGrant`.
 
 The authoring API and canonical model belong to `dev.erst.gridgrind.core`. Applications that
 execute plans additionally depend on `dev.erst.gridgrind.engine`; applications that only emit
@@ -54,7 +54,7 @@ adds these types:
 | Type | Owns |
 |:-----|:-----|
 | `GridGrindRequestInputs` | Working directory, caller-owned temp root, required host grant, optional `STANDARD_INPUT` bytes, and optional secret resolver |
-| `GridGrindExecutionGrant` | Exact host authority for readable resources, operation IDs, workbook scope, publication, secret references, and acceptance policy |
+| `ExecutionGrant` | Exact host authority for readable resources, operation IDs, workbook scope, publication, secret references, and acceptance policy |
 | `GridGrindSecretResolver` | Host-owned resolver for granted typed secret references; returns a caller-owned mutable buffer |
 | `GridGrindRequestExecutor` | Transport-neutral execution port returned by `GridGrindEngine.requestExecutor()` |
 
@@ -135,17 +135,17 @@ Core in-process call (the linked example is complete and compile-verified):
 
 ```java
 Path tempRoot = Files.createTempDirectory("gridgrind-java-");
-GridGrindExecutionGrant grant =
-    new GridGrindExecutionGrant.Bounded(
+ExecutionGrant grant =
+    new ExecutionGrant(
         List.of(
-            new GridGrindExecutionGrant.ReadAuthority.File(
+            new ExecutionGrant.ReadAuthority.File(
                 workspace.resolve("authored-inputs/item.txt"))),
         List.of("ENSURE_SHEET", "SET_RANGE", "SET_TABLE", "SET_CELL", "GET_CELLS", "EXPECT_CELL_VALUE"),
-        new GridGrindExecutionGrant.WorkbookTargetAuthority.WorkbookWide(),
-        new GridGrindExecutionGrant.PublicationAuthority.SaveAs(
+        new ExecutionGrant.WorkbookTargetAuthority.WorkbookWide(),
+        new ExecutionGrant.PublicationAuthority.SaveAs(
             workspace.resolve("budget.xlsx"), WorkbookPlan.WorkbookPersistence.IfExists.REPLACE),
         List.of(),
-        GridGrindHostAcceptancePolicy.minimum());
+        AcceptancePolicy.minimum());
 WorkbookResult response =
     GridGrindEngine.requestExecutor().execute(
         plan.toPlan(), new GridGrindRequestInputs(workspace, tempRoot, grant), GridGrindProgressSink.NOOP);

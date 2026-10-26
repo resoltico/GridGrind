@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import dev.erst.gridgrind.core.grant.ExecutionGrant;
 import dev.erst.gridgrind.core.source.SecretReference;
 import java.io.IOException;
 import java.nio.file.DirectoryStream;
@@ -144,7 +145,7 @@ class CliFileSecretResolverTest {
               new FaultInjectingSecureDirectoryStream(nativeDirectory, false, true))) {
         dev.erst.gridgrind.engine.api.GridGrindRequestInputs inputs =
             new dev.erst.gridgrind.engine.api.GridGrindRequestInputs(
-                temporaryDirectory, scratchRoot, CliExecutionGrants.denied(), resolver);
+                temporaryDirectory, scratchRoot, ExecutionGrant.denied(), resolver);
 
         assertDoesNotThrow(
             () ->

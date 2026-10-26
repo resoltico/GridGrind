@@ -2,6 +2,7 @@ package dev.erst.gridgrind.cli;
 
 import dev.erst.gridgrind.cli.discovery.GridGrindCliJson;
 import dev.erst.gridgrind.core.catalog.GridGrindProtocolCatalog;
+import dev.erst.gridgrind.core.grant.ExecutionGrant;
 import dev.erst.gridgrind.json.codec.GridGrindJsonOutput;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -68,26 +69,19 @@ final class GridGrindCliIdentityCommands {
   }
 
   static int grantTemplate(
-      CliGrantTemplateCommand command,
+      CliCommand.PrintGrantTemplate command,
       boolean prettyJson,
       OutputStream stdout,
       OutputStream stderr,
       CliResponseWriter responseWriter)
       throws IOException {
-    CliExecutionGrantDocument template =
-        new CliExecutionGrantDocument(
-            java.util.List.of(),
-            java.util.List.of(),
-            new CliGrantTargetAuthority.WorkbookWide(),
-            new CliGrantPublicationAuthority.None(),
-            java.util.List.of(),
-            new CliGrantAcceptancePolicy.MinimumOnly());
+    ExecutionGrant template = ExecutionGrant.denied();
     return CliCatalogPayloadSupport.writePayload(
         responseWriter,
         command.responsePath(),
         stdout,
         stderr,
-        GridGrindCliJson.writeBytes(template, prettyJson));
+        GridGrindJsonOutput.writeGrantBytes(template, prettyJson));
   }
 
   private static byte[] renderHelpPayload(

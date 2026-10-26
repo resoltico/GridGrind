@@ -1,12 +1,12 @@
 package dev.erst.gridgrind.engine.runtime;
 
 import dev.erst.gridgrind.core.catalog.GridGrindExecutionModeMetadata;
+import dev.erst.gridgrind.core.grant.ExecutionGrant;
 import dev.erst.gridgrind.core.plan.AssertionResult;
 import dev.erst.gridgrind.core.plan.AssertionStep;
 import dev.erst.gridgrind.core.plan.ExecutionModeSpec;
 import dev.erst.gridgrind.core.plan.InspectionResult;
 import dev.erst.gridgrind.core.plan.InspectionStep;
-import dev.erst.gridgrind.engine.api.GridGrindExecutionGrant;
 import dev.erst.gridgrind.excel.ExcelTempFileWriteTargetSupport;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
 import dev.erst.gridgrind.excel.ExcelWorkbooks;
@@ -59,13 +59,13 @@ final class ExecutionStepSupport {
         new ExecutionInputBindings(
             Path.of("."),
             Path.of("tmp", "gridgrind-step-support"),
-            new GridGrindExecutionGrant.Bounded(
+            new ExecutionGrant(
                 List.of(),
                 List.of(),
-                new GridGrindExecutionGrant.WorkbookTargetAuthority.WorkbookWide(),
-                new GridGrindExecutionGrant.PublicationAuthority.None(),
+                new ExecutionGrant.WorkbookTargetAuthority.WorkbookWide(),
+                new ExecutionGrant.PublicationAuthority.None(),
                 List.of(),
-                dev.erst.gridgrind.engine.api.GridGrindHostAcceptancePolicy.minimum())));
+                dev.erst.gridgrind.core.grant.AcceptancePolicy.minimum())));
   }
 
   FormulaAwareMutationStepExecutor mutationStepExecutor() {

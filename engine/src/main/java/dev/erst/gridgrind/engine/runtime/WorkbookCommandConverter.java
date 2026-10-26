@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.engine.runtime;
 
+import dev.erst.gridgrind.core.grant.ExecutionGrant;
 import dev.erst.gridgrind.core.plan.CellMutationAction;
 import dev.erst.gridgrind.core.plan.DrawingMutationAction;
 import dev.erst.gridgrind.core.plan.MutationAction;
@@ -7,7 +8,6 @@ import dev.erst.gridgrind.core.plan.MutationStep;
 import dev.erst.gridgrind.core.plan.Selector;
 import dev.erst.gridgrind.core.plan.StructuredMutationAction;
 import dev.erst.gridgrind.core.plan.WorkbookMutationAction;
-import dev.erst.gridgrind.engine.api.GridGrindExecutionGrant;
 import dev.erst.gridgrind.excel.WorkbookCommand;
 import java.nio.file.Path;
 import java.util.List;
@@ -41,13 +41,13 @@ final class WorkbookCommandConverter {
     return new ExecutionInputBindings(
         Path.of("."),
         Path.of("tmp", "gridgrind-command-conversion"),
-        new GridGrindExecutionGrant.Bounded(
+        new ExecutionGrant(
             List.of(),
             List.of(),
-            new GridGrindExecutionGrant.WorkbookTargetAuthority.WorkbookWide(),
-            new GridGrindExecutionGrant.PublicationAuthority.None(),
+            new ExecutionGrant.WorkbookTargetAuthority.WorkbookWide(),
+            new ExecutionGrant.PublicationAuthority.None(),
             List.of(),
-            dev.erst.gridgrind.engine.api.GridGrindHostAcceptancePolicy.minimum()));
+            dev.erst.gridgrind.core.grant.AcceptancePolicy.minimum()));
   }
 
   /**

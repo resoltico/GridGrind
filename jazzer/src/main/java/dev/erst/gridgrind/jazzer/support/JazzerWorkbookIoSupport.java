@@ -1,6 +1,6 @@
 package dev.erst.gridgrind.jazzer.support;
 
-import dev.erst.gridgrind.engine.api.GridGrindExecutionGrant;
+import dev.erst.gridgrind.core.grant.ExecutionGrant;
 import dev.erst.gridgrind.engine.runtime.ExecutionInputBindings;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
 import dev.erst.gridgrind.excel.ExcelWorkbooks;
@@ -23,13 +23,13 @@ public final class JazzerWorkbookIoSupport {
     return new ExecutionInputBindings(
         normalizedWorkingDirectory,
         normalizedWorkingDirectory.resolve(MANAGED_TEMP_SEGMENT),
-        new GridGrindExecutionGrant.Bounded(
+        new ExecutionGrant(
             List.of(),
             List.of(),
-            new GridGrindExecutionGrant.WorkbookTargetAuthority.WorkbookWide(),
-            new GridGrindExecutionGrant.PublicationAuthority.None(),
+            new ExecutionGrant.WorkbookTargetAuthority.WorkbookWide(),
+            new ExecutionGrant.PublicationAuthority.None(),
             List.of(),
-            dev.erst.gridgrind.engine.api.GridGrindHostAcceptancePolicy.minimum()));
+            dev.erst.gridgrind.core.grant.AcceptancePolicy.minimum()));
   }
 
   /** Opens one workbook using a temp factory rooted next to the workbook path. */

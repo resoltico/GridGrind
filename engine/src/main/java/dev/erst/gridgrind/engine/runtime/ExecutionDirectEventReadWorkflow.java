@@ -103,9 +103,8 @@ final class ExecutionDirectEventReadWorkflow {
           null);
     }
     openPhase.succeed();
-    dev.erst.gridgrind.engine.api.GridGrindHostAcceptancePolicy hostAcceptancePolicy =
-        ((dev.erst.gridgrind.engine.api.GridGrindExecutionGrant.Bounded) bindings.executionGrant())
-            .hostAcceptancePolicy();
+    dev.erst.gridgrind.core.grant.AcceptancePolicy hostAcceptancePolicy =
+        bindings.executionGrant().acceptancePolicy();
     for (int stepIndex = 0; stepIndex < request.steps().size(); stepIndex++) {
       InspectionStep inspectionStep = (InspectionStep) request.steps().get(stepIndex);
       ExecutionJournalRecorder.StepHandle stepHandle = journal.beginStep(stepIndex, inspectionStep);
@@ -188,7 +187,7 @@ final class ExecutionDirectEventReadWorkflow {
   interface MaterializedTerminalAcceptance {
     /** Returns established host acceptance facts or fails before a success response is emitted. */
     HostAcceptanceVerification verify(
-        dev.erst.gridgrind.engine.api.GridGrindHostAcceptancePolicy policy,
+        dev.erst.gridgrind.core.grant.AcceptancePolicy policy,
         java.nio.file.Path workbookPath,
         dev.erst.gridgrind.excel.WorkbookLocation workbookLocation)
         throws IOException, AssertionFailedException;

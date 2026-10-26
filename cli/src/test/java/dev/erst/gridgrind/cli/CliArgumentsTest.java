@@ -12,9 +12,9 @@ import org.junit.jupiter.api.Test;
 class CliArgumentsTest {
   @Test
   void printGrantTemplateParsesIntoDedicatedCommand() {
-    CliGrantTemplateCommand command =
+    CliCommand.PrintGrantTemplate command =
         assertInstanceOf(
-            CliGrantTemplateCommand.class,
+            CliCommand.PrintGrantTemplate.class,
             CliArguments.parse(new String[] {"--print-grant-template"}));
 
     assertTrue(command.responsePath().isEmpty());

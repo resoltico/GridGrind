@@ -4,6 +4,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import dev.erst.gridgrind.core.grant.AcceptancePolicy;
+import dev.erst.gridgrind.core.grant.ExecutionGrant;
 import dev.erst.gridgrind.core.model.formula.FormulaEnvironmentSpec;
 import dev.erst.gridgrind.core.plan.ExecutionModeSpec;
 import dev.erst.gridgrind.core.plan.ExecutionPolicySpec;
@@ -12,8 +14,6 @@ import dev.erst.gridgrind.core.problem.GridGrindProblemCode;
 import dev.erst.gridgrind.core.result.WorkbookResult;
 import dev.erst.gridgrind.core.result.WorkbookResultPersistence;
 import dev.erst.gridgrind.core.vocabulary.ProtocolVersion;
-import dev.erst.gridgrind.engine.api.GridGrindExecutionGrant;
-import dev.erst.gridgrind.engine.api.GridGrindHostAcceptancePolicy;
 import dev.erst.gridgrind.excel.WorkbookExecutionEngine;
 import dev.erst.gridgrind.excel.WorkbookTempFileFactory;
 import java.io.IOException;
@@ -54,13 +54,13 @@ class ExecutionStreamingWorkflowTest {
         new ExecutionInputBindings(
             root,
             root.resolve("scratch"),
-            new GridGrindExecutionGrant.Bounded(
+            new ExecutionGrant(
                 List.of(),
                 List.of(),
-                new GridGrindExecutionGrant.WorkbookTargetAuthority.WorkbookWide(),
-                new GridGrindExecutionGrant.PublicationAuthority.None(),
+                new ExecutionGrant.WorkbookTargetAuthority.WorkbookWide(),
+                new ExecutionGrant.PublicationAuthority.None(),
                 List.of(),
-                GridGrindHostAcceptancePolicy.minimum()));
+                AcceptancePolicy.minimum()));
 
     WorkbookResult.Failure failure =
         assertInstanceOf(
@@ -125,13 +125,13 @@ class ExecutionStreamingWorkflowTest {
     return new ExecutionInputBindings(
         root,
         root.resolve("scratch"),
-        new GridGrindExecutionGrant.Bounded(
+        new ExecutionGrant(
             List.of(),
             List.of(),
-            new GridGrindExecutionGrant.WorkbookTargetAuthority.WorkbookWide(),
-            new GridGrindExecutionGrant.PublicationAuthority.None(),
+            new ExecutionGrant.WorkbookTargetAuthority.WorkbookWide(),
+            new ExecutionGrant.PublicationAuthority.None(),
             List.of(),
-            GridGrindHostAcceptancePolicy.minimum()));
+            AcceptancePolicy.minimum()));
   }
 
   private ExecutionStepSupport stepSupport() {

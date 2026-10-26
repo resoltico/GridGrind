@@ -10,7 +10,7 @@ import dev.erst.gridgrind.core.result.ExecutionJournalLevel;
 import dev.erst.gridgrind.core.result.WorkbookResult;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import dev.erst.gridgrind.engine.api.GridGrindEngine;
-import dev.erst.gridgrind.engine.api.GridGrindExecutionGrant;
+import dev.erst.gridgrind.core.grant.ExecutionGrant;
 import dev.erst.gridgrind.engine.api.GridGrindProgressSink;
 import dev.erst.gridgrind.engine.api.GridGrindRequestInputs;
 import java.io.IOException;
@@ -85,10 +85,10 @@ final class JavaAuthoringWorkflowExample {
     }
   }
 
-  private static GridGrindExecutionGrant executionGrant(Path workspace) {
-    return new GridGrindExecutionGrant.Bounded(
+  private static ExecutionGrant executionGrant(Path workspace) {
+    return new ExecutionGrant(
         List.of(
-            new GridGrindExecutionGrant.ReadAuthority.File(
+            new ExecutionGrant.ReadAuthority.File(
                 workspace.resolve("authored-inputs").resolve("item.txt"))),
         List.of(
             "ENSURE_SHEET",
@@ -97,12 +97,12 @@ final class JavaAuthoringWorkflowExample {
             "SET_CELL",
             "GET_CELLS",
             "EXPECT_CELL_VALUE"),
-        new GridGrindExecutionGrant.WorkbookTargetAuthority.WorkbookWide(),
-        new GridGrindExecutionGrant.PublicationAuthority.SaveAs(
+        new ExecutionGrant.WorkbookTargetAuthority.WorkbookWide(),
+        new ExecutionGrant.PublicationAuthority.SaveAs(
             workspace.resolve("budget.xlsx"),
             WorkbookPlan.WorkbookPersistence.IfExists.REPLACE),
         List.of(),
-        dev.erst.gridgrind.engine.api.GridGrindHostAcceptancePolicy.minimum());
+        dev.erst.gridgrind.core.grant.AcceptancePolicy.minimum());
   }
 
   private static void deleteTreeIfExists(Path root) throws IOException {

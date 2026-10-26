@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import dev.erst.gridgrind.core.grant.AcceptancePolicy;
 import dev.erst.gridgrind.core.model.formula.FormulaEnvironmentSpec;
 import dev.erst.gridgrind.core.model.value.CellRowSpec;
 import dev.erst.gridgrind.core.model.value.CellValue;
@@ -28,7 +29,6 @@ import dev.erst.gridgrind.core.result.WorkbookResult;
 import dev.erst.gridgrind.core.vocabulary.CellAddress;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.StepId;
-import dev.erst.gridgrind.engine.api.GridGrindHostAcceptancePolicy;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
@@ -46,10 +46,10 @@ class HostAcceptanceExecutionTest {
   void failingHostAcceptanceBlocksPublicationEvenWhenTheAuthoredPlanHasNoAssertion() {
     Path output = root.resolve("approved-report.xlsx");
     WorkbookPlan request = reportPlan(output);
-    GridGrindHostAcceptancePolicy policy =
-        new GridGrindHostAcceptancePolicy.RequireAll(
+    AcceptancePolicy policy =
+        new AcceptancePolicy.RequireAll(
             List.of(
-                new GridGrindHostAcceptancePolicy.Requirement.TerminalAssertions(
+                new AcceptancePolicy.Requirement.TerminalAssertions(
                     List.of(
                         new AssertionStep(
                             new StepId("host-total"),
@@ -83,10 +83,10 @@ class HostAcceptanceExecutionTest {
   void successfulHostAcceptanceIsReportedAsHostRequiredEvidence() {
     Path output = root.resolve("approved-report.xlsx");
     WorkbookPlan request = reportPlan(output);
-    GridGrindHostAcceptancePolicy policy =
-        new GridGrindHostAcceptancePolicy.RequireAll(
+    AcceptancePolicy policy =
+        new AcceptancePolicy.RequireAll(
             List.of(
-                new GridGrindHostAcceptancePolicy.Requirement.TerminalAssertions(
+                new AcceptancePolicy.Requirement.TerminalAssertions(
                     List.of(
                         new AssertionStep(
                             new StepId("host-total"),
@@ -119,9 +119,9 @@ class HostAcceptanceExecutionTest {
   void hostRequiredCalculationRunsBeforeFullXssfPublication() {
     Path output = root.resolve("calculated-report.xlsx");
     WorkbookPlan request = reportPlan(output);
-    GridGrindHostAcceptancePolicy policy =
-        new GridGrindHostAcceptancePolicy.RequireAll(
-            List.of(new GridGrindHostAcceptancePolicy.Requirement.RequireCalculation()));
+    AcceptancePolicy policy =
+        new AcceptancePolicy.RequireAll(
+            List.of(new AcceptancePolicy.Requirement.RequireCalculation()));
 
     WorkbookResult.Success success =
         assertInstanceOf(
@@ -285,10 +285,10 @@ class HostAcceptanceExecutionTest {
             new CellMutationAction.SetCell(new CellValueSpec.NumberValue(1))));
   }
 
-  private static GridGrindHostAcceptancePolicy failingHostTotal() {
-    return new GridGrindHostAcceptancePolicy.RequireAll(
+  private static AcceptancePolicy failingHostTotal() {
+    return new AcceptancePolicy.RequireAll(
         List.of(
-            new GridGrindHostAcceptancePolicy.Requirement.TerminalAssertions(
+            new AcceptancePolicy.Requirement.TerminalAssertions(
                 List.of(
                     new AssertionStep(
                         new StepId("host-total"),
@@ -325,10 +325,10 @@ class HostAcceptanceExecutionTest {
                 new CellMutationAction.SetCell(new CellValueSpec.NumberValue(value)))));
   }
 
-  private static GridGrindHostAcceptancePolicy preserveCell(String address) {
-    return new GridGrindHostAcceptancePolicy.RequireAll(
+  private static AcceptancePolicy preserveCell(String address) {
+    return new AcceptancePolicy.RequireAll(
         List.of(
-            new GridGrindHostAcceptancePolicy.Requirement.PreserveInspectionFacts(
+            new AcceptancePolicy.Requirement.PreserveInspectionFacts(
                 List.of(
                     new InspectionStep(
                         new StepId("preserve-unaffected-cell"),

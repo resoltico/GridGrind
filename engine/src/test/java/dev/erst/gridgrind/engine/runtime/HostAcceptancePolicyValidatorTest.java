@@ -3,6 +3,7 @@ package dev.erst.gridgrind.engine.runtime;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import dev.erst.gridgrind.core.grant.AcceptancePolicy;
 import dev.erst.gridgrind.core.model.formula.FormulaEnvironmentSpec;
 import dev.erst.gridgrind.core.plan.AssertionStep;
 import dev.erst.gridgrind.core.plan.CellSelector;
@@ -16,7 +17,6 @@ import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import dev.erst.gridgrind.core.vocabulary.CellAddress;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.StepId;
-import dev.erst.gridgrind.engine.api.GridGrindHostAcceptancePolicy;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 
@@ -27,13 +27,12 @@ class HostAcceptancePolicyValidatorTest {
     List<HostAcceptancePolicyViolationException> violations =
         HostAcceptancePolicyValidator.violations(
             streamingPlan(),
-            new dev.erst.gridgrind.engine.api.GridGrindExecutionGrant.Bounded(
+            new dev.erst.gridgrind.core.grant.ExecutionGrant(
                 List.of(),
                 List.of(),
-                new dev.erst.gridgrind.engine.api.GridGrindExecutionGrant.WorkbookTargetAuthority
+                new dev.erst.gridgrind.core.grant.ExecutionGrant.WorkbookTargetAuthority
                     .WorkbookWide(),
-                new dev.erst.gridgrind.engine.api.GridGrindExecutionGrant.PublicationAuthority
-                    .None(),
+                new dev.erst.gridgrind.core.grant.ExecutionGrant.PublicationAuthority.None(),
                 List.of(),
                 preservationPolicy()));
 
@@ -47,13 +46,12 @@ class HostAcceptancePolicyValidatorTest {
     assertTrue(
         HostAcceptancePolicyValidator.violations(
                 fullPlan(),
-                new dev.erst.gridgrind.engine.api.GridGrindExecutionGrant.Bounded(
+                new dev.erst.gridgrind.core.grant.ExecutionGrant(
                     List.of(),
                     List.of(),
-                    new dev.erst.gridgrind.engine.api.GridGrindExecutionGrant
-                        .WorkbookTargetAuthority.WorkbookWide(),
-                    new dev.erst.gridgrind.engine.api.GridGrindExecutionGrant.PublicationAuthority
-                        .None(),
+                    new dev.erst.gridgrind.core.grant.ExecutionGrant.WorkbookTargetAuthority
+                        .WorkbookWide(),
+                    new dev.erst.gridgrind.core.grant.ExecutionGrant.PublicationAuthority.None(),
                     List.of(),
                     preservationPolicy()))
             .isEmpty());
@@ -64,16 +62,15 @@ class HostAcceptancePolicyValidatorTest {
     List<HostAcceptancePolicyViolationException> violations =
         HostAcceptancePolicyValidator.violations(
             streamingPlan(),
-            new dev.erst.gridgrind.engine.api.GridGrindExecutionGrant.Bounded(
+            new dev.erst.gridgrind.core.grant.ExecutionGrant(
                 List.of(),
                 List.of(),
-                new dev.erst.gridgrind.engine.api.GridGrindExecutionGrant.WorkbookTargetAuthority
+                new dev.erst.gridgrind.core.grant.ExecutionGrant.WorkbookTargetAuthority
                     .WorkbookWide(),
-                new dev.erst.gridgrind.engine.api.GridGrindExecutionGrant.PublicationAuthority
-                    .None(),
+                new dev.erst.gridgrind.core.grant.ExecutionGrant.PublicationAuthority.None(),
                 List.of(),
-                new GridGrindHostAcceptancePolicy.RequireAll(
-                    List.of(new GridGrindHostAcceptancePolicy.Requirement.RequireCalculation()))));
+                new AcceptancePolicy.RequireAll(
+                    List.of(new AcceptancePolicy.Requirement.RequireCalculation()))));
 
     assertEquals(
         List.of("host calculation requires execution.mode.type=FULL_XSSF"),
@@ -85,13 +82,12 @@ class HostAcceptancePolicyValidatorTest {
     List<HostAcceptancePolicyViolationException> violations =
         HostAcceptancePolicyValidator.violations(
             fullPlan(),
-            new dev.erst.gridgrind.engine.api.GridGrindExecutionGrant.Bounded(
+            new dev.erst.gridgrind.core.grant.ExecutionGrant(
                 List.of(),
                 List.of(),
-                new dev.erst.gridgrind.engine.api.GridGrindExecutionGrant.WorkbookTargetAuthority
+                new dev.erst.gridgrind.core.grant.ExecutionGrant.WorkbookTargetAuthority
                     .WorkbookWide(),
-                new dev.erst.gridgrind.engine.api.GridGrindExecutionGrant.PublicationAuthority
-                    .None(),
+                new dev.erst.gridgrind.core.grant.ExecutionGrant.PublicationAuthority.None(),
                 List.of(),
                 opaquePartPolicy()));
 
@@ -106,13 +102,12 @@ class HostAcceptancePolicyValidatorTest {
         List.of("host opaque-part preservation requires execution.mode.type=FULL_XSSF"),
         HostAcceptancePolicyValidator.violations(
                 streamingPlan(),
-                new dev.erst.gridgrind.engine.api.GridGrindExecutionGrant.Bounded(
+                new dev.erst.gridgrind.core.grant.ExecutionGrant(
                     List.of(),
                     List.of(),
-                    new dev.erst.gridgrind.engine.api.GridGrindExecutionGrant
-                        .WorkbookTargetAuthority.WorkbookWide(),
-                    new dev.erst.gridgrind.engine.api.GridGrindExecutionGrant.PublicationAuthority
-                        .None(),
+                    new dev.erst.gridgrind.core.grant.ExecutionGrant.WorkbookTargetAuthority
+                        .WorkbookWide(),
+                    new dev.erst.gridgrind.core.grant.ExecutionGrant.PublicationAuthority.None(),
                     List.of(),
                     opaquePartPolicy()))
             .stream()
@@ -156,10 +151,10 @@ class HostAcceptancePolicyValidatorTest {
 
   @Test
   void permitsTerminalOnlyAcceptanceAcrossExecutionModes() {
-    GridGrindHostAcceptancePolicy policy =
-        new GridGrindHostAcceptancePolicy.RequireAll(
+    AcceptancePolicy policy =
+        new AcceptancePolicy.RequireAll(
             List.of(
-                new GridGrindHostAcceptancePolicy.Requirement.TerminalAssertions(
+                new AcceptancePolicy.Requirement.TerminalAssertions(
                     List.of(
                         new AssertionStep(
                             new StepId("assert-report"),
@@ -169,13 +164,12 @@ class HostAcceptancePolicyValidatorTest {
     assertTrue(
         HostAcceptancePolicyValidator.violations(
                 streamingPlan(),
-                new dev.erst.gridgrind.engine.api.GridGrindExecutionGrant.Bounded(
+                new dev.erst.gridgrind.core.grant.ExecutionGrant(
                     List.of(),
                     List.of(),
-                    new dev.erst.gridgrind.engine.api.GridGrindExecutionGrant
-                        .WorkbookTargetAuthority.WorkbookWide(),
-                    new dev.erst.gridgrind.engine.api.GridGrindExecutionGrant.PublicationAuthority
-                        .None(),
+                    new dev.erst.gridgrind.core.grant.ExecutionGrant.WorkbookTargetAuthority
+                        .WorkbookWide(),
+                    new dev.erst.gridgrind.core.grant.ExecutionGrant.PublicationAuthority.None(),
                     List.of(),
                     policy))
             .isEmpty());
@@ -184,13 +178,12 @@ class HostAcceptancePolicyValidatorTest {
   private static List<String> violationsFor(WorkbookPlan request) {
     return HostAcceptancePolicyValidator.violations(
             request,
-            new dev.erst.gridgrind.engine.api.GridGrindExecutionGrant.Bounded(
+            new dev.erst.gridgrind.core.grant.ExecutionGrant(
                 List.of(),
                 List.of(),
-                new dev.erst.gridgrind.engine.api.GridGrindExecutionGrant.WorkbookTargetAuthority
+                new dev.erst.gridgrind.core.grant.ExecutionGrant.WorkbookTargetAuthority
                     .WorkbookWide(),
-                new dev.erst.gridgrind.engine.api.GridGrindExecutionGrant.PublicationAuthority
-                    .None(),
+                new dev.erst.gridgrind.core.grant.ExecutionGrant.PublicationAuthority.None(),
                 List.of(),
                 opaquePartPolicy()))
         .stream()
@@ -215,10 +208,10 @@ class HostAcceptancePolicyValidatorTest {
         List.of());
   }
 
-  private static GridGrindHostAcceptancePolicy preservationPolicy() {
-    return new GridGrindHostAcceptancePolicy.RequireAll(
+  private static AcceptancePolicy preservationPolicy() {
+    return new AcceptancePolicy.RequireAll(
         List.of(
-            new GridGrindHostAcceptancePolicy.Requirement.PreserveInspectionFacts(
+            new AcceptancePolicy.Requirement.PreserveInspectionFacts(
                 List.of(
                     new InspectionStep(
                         new StepId("preserve-cell"),
@@ -226,10 +219,10 @@ class HostAcceptancePolicyValidatorTest {
                         new SheetIntrospectionQuery.GetCells())))));
   }
 
-  private static GridGrindHostAcceptancePolicy opaquePartPolicy() {
-    return new GridGrindHostAcceptancePolicy.RequireAll(
+  private static AcceptancePolicy opaquePartPolicy() {
+    return new AcceptancePolicy.RequireAll(
         List.of(
-            new GridGrindHostAcceptancePolicy.Requirement.PreserveOpaqueOoxmlParts(
+            new AcceptancePolicy.Requirement.PreserveOpaqueOoxmlParts(
                 List.of("/customXml/item1.xml"))));
   }
 }

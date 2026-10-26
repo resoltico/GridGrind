@@ -5,9 +5,9 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import dev.erst.gridgrind.core.grant.AcceptancePolicy;
+import dev.erst.gridgrind.core.grant.ExecutionGrant;
 import dev.erst.gridgrind.core.source.SecretReference;
-import dev.erst.gridgrind.engine.api.GridGrindExecutionGrant;
-import dev.erst.gridgrind.engine.api.GridGrindHostAcceptancePolicy;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -106,14 +106,14 @@ class ExecutionInputBindingsTest {
     Path root = Files.createTempDirectory("gridgrind-secret-binding-");
     SecretReference reference = new SecretReference("signing-password");
     char[] material = "s3cret".toCharArray();
-    GridGrindExecutionGrant.Bounded permittedGrant =
-        new GridGrindExecutionGrant.Bounded(
+    ExecutionGrant permittedGrant =
+        new ExecutionGrant(
             List.of(),
             List.of(),
-            new GridGrindExecutionGrant.WorkbookTargetAuthority.WorkbookWide(),
-            new GridGrindExecutionGrant.PublicationAuthority.None(),
+            new ExecutionGrant.WorkbookTargetAuthority.WorkbookWide(),
+            new ExecutionGrant.PublicationAuthority.None(),
             List.of(reference),
-            GridGrindHostAcceptancePolicy.minimum());
+            AcceptancePolicy.minimum());
     ExecutionInputBindings permitted =
         new ExecutionInputBindings(
             root, root.resolve("scratch"), permittedGrant, requested -> material);
@@ -144,14 +144,13 @@ class ExecutionInputBindingsTest {
                 .resolveSecret(reference));
   }
 
-  private static GridGrindExecutionGrant.Bounded permittedGrantWithStandardInput(
-      SecretReference reference) {
-    return new GridGrindExecutionGrant.Bounded(
-        List.of(new GridGrindExecutionGrant.ReadAuthority.Stdin()),
+  private static ExecutionGrant permittedGrantWithStandardInput(SecretReference reference) {
+    return new ExecutionGrant(
+        List.of(new ExecutionGrant.ReadAuthority.Stdin()),
         List.of(),
-        new GridGrindExecutionGrant.WorkbookTargetAuthority.WorkbookWide(),
-        new GridGrindExecutionGrant.PublicationAuthority.None(),
+        new ExecutionGrant.WorkbookTargetAuthority.WorkbookWide(),
+        new ExecutionGrant.PublicationAuthority.None(),
         List.of(reference),
-        GridGrindHostAcceptancePolicy.minimum());
+        AcceptancePolicy.minimum());
   }
 }

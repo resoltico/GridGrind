@@ -1,4 +1,4 @@
-package dev.erst.gridgrind.engine.api;
+package dev.erst.gridgrind.core.grant;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -17,7 +17,7 @@ import java.util.List;
 import org.junit.jupiter.api.Test;
 
 /** Verifies host acceptance requirements are non-empty, distinct, and exact. */
-class GridGrindHostAcceptancePolicyTest {
+class AcceptancePolicyTest {
   @Test
   @SuppressWarnings(
       "PMD.AvoidInstantiatingObjectsInLoops") // Each invalid part name exercises one normalization
@@ -36,44 +36,38 @@ class GridGrindHostAcceptancePolicyTest {
 
     assertEquals(
         List.of(assertion),
-        new GridGrindHostAcceptancePolicy.Requirement.TerminalAssertions(List.of(assertion))
-            .assertions());
+        new AcceptancePolicy.Requirement.TerminalAssertions(List.of(assertion)).assertions());
     assertEquals(
         List.of(inspection),
-        new GridGrindHostAcceptancePolicy.Requirement.PreserveInspectionFacts(List.of(inspection))
+        new AcceptancePolicy.Requirement.PreserveInspectionFacts(List.of(inspection))
             .inspections());
     assertEquals(
         List.of("/customXml/item1.xml"),
-        new GridGrindHostAcceptancePolicy.Requirement.PreserveOpaqueOoxmlParts(
-                List.of("/customXml/item1.xml"))
+        new AcceptancePolicy.Requirement.PreserveOpaqueOoxmlParts(List.of("/customXml/item1.xml"))
             .partNames());
 
+    assertThrows(IllegalArgumentException.class, () -> new AcceptancePolicy.RequireAll(List.of()));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new GridGrindHostAcceptancePolicy.RequireAll(List.of()));
+        () -> new AcceptancePolicy.Requirement.TerminalAssertions(List.of()));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new GridGrindHostAcceptancePolicy.Requirement.TerminalAssertions(List.of()));
-    assertThrows(
-        IllegalArgumentException.class,
-        () ->
-            new GridGrindHostAcceptancePolicy.Requirement.TerminalAssertions(
-                List.of(assertion, assertion)));
+        () -> new AcceptancePolicy.Requirement.TerminalAssertions(List.of(assertion, assertion)));
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new GridGrindHostAcceptancePolicy.Requirement.PreserveInspectionFacts(
+            new AcceptancePolicy.Requirement.PreserveInspectionFacts(
                 List.of(inspection, inspection)));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new GridGrindHostAcceptancePolicy.Requirement.PreserveInspectionFacts(List.of()));
+        () -> new AcceptancePolicy.Requirement.PreserveInspectionFacts(List.of()));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new GridGrindHostAcceptancePolicy.Requirement.PreserveOpaqueOoxmlParts(List.of()));
+        () -> new AcceptancePolicy.Requirement.PreserveOpaqueOoxmlParts(List.of()));
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new GridGrindHostAcceptancePolicy.Requirement.PreserveOpaqueOoxmlParts(
+            new AcceptancePolicy.Requirement.PreserveOpaqueOoxmlParts(
                 List.of("/customXml/item1.xml", "/customXml/item1.xml")));
     for (String invalidPartName :
         List.of(
@@ -90,8 +84,7 @@ class GridGrindHostAcceptancePolicyTest {
       assertThrows(
           IllegalArgumentException.class,
           () ->
-              new GridGrindHostAcceptancePolicy.Requirement.PreserveOpaqueOoxmlParts(
-                  List.of(invalidPartName)));
+              new AcceptancePolicy.Requirement.PreserveOpaqueOoxmlParts(List.of(invalidPartName)));
     }
   }
 }

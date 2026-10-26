@@ -1,7 +1,7 @@
 package dev.erst.gridgrind.engine.runtime;
 
+import dev.erst.gridgrind.core.grant.ExecutionGrant;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
-import dev.erst.gridgrind.engine.api.GridGrindExecutionGrant;
 import java.nio.file.Path;
 import java.util.List;
 
@@ -9,25 +9,23 @@ import java.util.List;
 final class ExecutionGrantTestSupport {
   private ExecutionGrantTestSupport() {}
 
-  static GridGrindExecutionGrant.Bounded noPublication() {
+  static ExecutionGrant noPublication() {
     return grant(List.of(), List.of());
   }
 
-  static GridGrindExecutionGrant.Bounded noPublication(
-      List<String> operationIds, List<Path> readableFiles) {
+  static ExecutionGrant noPublication(List<String> operationIds, List<Path> readableFiles) {
     return grant(
         operationIds,
         readableFiles.stream()
-            .<GridGrindExecutionGrant.ReadAuthority>map(
-                GridGrindExecutionGrant.ReadAuthority.File::new)
+            .<ExecutionGrant.ReadAuthority>map(ExecutionGrant.ReadAuthority.File::new)
             .toList());
   }
 
-  static GridGrindExecutionGrant.Bounded noPublicationWithStandardInput(List<String> operationIds) {
-    return grant(operationIds, List.of(new GridGrindExecutionGrant.ReadAuthority.Stdin()));
+  static ExecutionGrant noPublicationWithStandardInput(List<String> operationIds) {
+    return grant(operationIds, List.of(new ExecutionGrant.ReadAuthority.Stdin()));
   }
 
-  static GridGrindExecutionGrant.Bounded forPlan(
+  static ExecutionGrant forPlan(
       WorkbookPlan plan, Path workingDirectory, Path... additionalReadableFiles) {
     Path normalizedWorkingDirectory = workingDirectory.toAbsolutePath().normalize();
     List<Path> readableFiles =
@@ -37,60 +35,56 @@ final class ExecutionGrantTestSupport {
                 java.util.Arrays.stream(additionalReadableFiles)
                     .map(path -> path.toAbsolutePath().normalize()))
             .toList();
-    List<GridGrindExecutionGrant.ReadAuthority> readableResources =
+    List<ExecutionGrant.ReadAuthority> readableResources =
         readableFiles.stream()
-            .<GridGrindExecutionGrant.ReadAuthority>map(
-                GridGrindExecutionGrant.ReadAuthority.File::new)
+            .<ExecutionGrant.ReadAuthority>map(ExecutionGrant.ReadAuthority.File::new)
             .toList();
-    return new GridGrindExecutionGrant.Bounded(
+    return new ExecutionGrant(
         readableResources,
         plan.steps().stream().map(ExecutionGrantPlanOperationIds::forStep).distinct().toList(),
-        new GridGrindExecutionGrant.WorkbookTargetAuthority.WorkbookWide(),
+        new ExecutionGrant.WorkbookTargetAuthority.WorkbookWide(),
         ExecutionGrantPlanResources.publicationAuthority(
             plan.persistence(), normalizedWorkingDirectory),
         ExecutionGrantPlanSecrets.requestedBy(plan),
-        dev.erst.gridgrind.engine.api.GridGrindHostAcceptancePolicy.minimum());
+        dev.erst.gridgrind.core.grant.AcceptancePolicy.minimum());
   }
 
-  static GridGrindExecutionGrant.Bounded overwriteSource(
-      List<String> operationIds, List<Path> readableFiles) {
-    return new GridGrindExecutionGrant.Bounded(
+  static ExecutionGrant overwriteSource(List<String> operationIds, List<Path> readableFiles) {
+    return new ExecutionGrant(
         readableFiles.stream()
-            .<GridGrindExecutionGrant.ReadAuthority>map(
-                GridGrindExecutionGrant.ReadAuthority.File::new)
+            .<ExecutionGrant.ReadAuthority>map(ExecutionGrant.ReadAuthority.File::new)
             .toList(),
         operationIds,
-        new GridGrindExecutionGrant.WorkbookTargetAuthority.WorkbookWide(),
-        new GridGrindExecutionGrant.PublicationAuthority.OverwriteSource(),
+        new ExecutionGrant.WorkbookTargetAuthority.WorkbookWide(),
+        new ExecutionGrant.PublicationAuthority.OverwriteSource(),
         List.of(),
-        dev.erst.gridgrind.engine.api.GridGrindHostAcceptancePolicy.minimum());
+        dev.erst.gridgrind.core.grant.AcceptancePolicy.minimum());
   }
 
-  static GridGrindExecutionGrant.Bounded saveAs(
+  static ExecutionGrant saveAs(
       List<String> operationIds,
       List<Path> readableFiles,
       Path output,
       WorkbookPlan.WorkbookPersistence.IfExists ifExists) {
-    return new GridGrindExecutionGrant.Bounded(
+    return new ExecutionGrant(
         readableFiles.stream()
-            .<GridGrindExecutionGrant.ReadAuthority>map(
-                GridGrindExecutionGrant.ReadAuthority.File::new)
+            .<ExecutionGrant.ReadAuthority>map(ExecutionGrant.ReadAuthority.File::new)
             .toList(),
         operationIds,
-        new GridGrindExecutionGrant.WorkbookTargetAuthority.WorkbookWide(),
-        new GridGrindExecutionGrant.PublicationAuthority.SaveAs(output, ifExists),
+        new ExecutionGrant.WorkbookTargetAuthority.WorkbookWide(),
+        new ExecutionGrant.PublicationAuthority.SaveAs(output, ifExists),
         List.of(),
-        dev.erst.gridgrind.engine.api.GridGrindHostAcceptancePolicy.minimum());
+        dev.erst.gridgrind.core.grant.AcceptancePolicy.minimum());
   }
 
-  private static GridGrindExecutionGrant.Bounded grant(
-      List<String> operationIds, List<GridGrindExecutionGrant.ReadAuthority> readableResources) {
-    return new GridGrindExecutionGrant.Bounded(
+  private static ExecutionGrant grant(
+      List<String> operationIds, List<ExecutionGrant.ReadAuthority> readableResources) {
+    return new ExecutionGrant(
         readableResources,
         operationIds,
-        new GridGrindExecutionGrant.WorkbookTargetAuthority.WorkbookWide(),
-        new GridGrindExecutionGrant.PublicationAuthority.None(),
+        new ExecutionGrant.WorkbookTargetAuthority.WorkbookWide(),
+        new ExecutionGrant.PublicationAuthority.None(),
         List.of(),
-        dev.erst.gridgrind.engine.api.GridGrindHostAcceptancePolicy.minimum());
+        dev.erst.gridgrind.core.grant.AcceptancePolicy.minimum());
   }
 }

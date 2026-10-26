@@ -89,7 +89,7 @@ class OpaqueOoxmlPartPreservationTest {
         assertThrows(
             IllegalArgumentException.class,
             () ->
-                new dev.erst.gridgrind.engine.api.GridGrindHostAcceptancePolicy.Requirement
+                new dev.erst.gridgrind.core.grant.AcceptancePolicy.Requirement
                     .PreserveOpaqueOoxmlParts(List.of("../customXml/item1.xml")));
 
     assertEquals("partNames must contain normalized OOXML part names", exception.getMessage());

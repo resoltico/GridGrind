@@ -8,8 +8,9 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import dev.erst.gridgrind.core.grant.AcceptancePolicy;
+import dev.erst.gridgrind.core.grant.ExecutionGrant;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
-import dev.erst.gridgrind.engine.api.GridGrindExecutionGrant;
 import dev.erst.gridgrind.json.codec.GridGrindJson;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -194,8 +195,7 @@ class CliExecutionBindingsFactoryTest extends GridGrindCliTestSupport {
             new ByteArrayInputStream(standardInput))) {
       assertArrayEquals(standardInput, bindings.inputs().standardInputBytes().orElseThrow());
       assertTrue(bindings.inputs().secretResolver().isEmpty());
-      GridGrindExecutionGrant.Bounded deniedGrant =
-          (GridGrindExecutionGrant.Bounded) bindings.inputs().executionGrant();
+      ExecutionGrant deniedGrant = (ExecutionGrant) bindings.inputs().executionGrant();
       assertTrue(deniedGrant.operationIds().isEmpty());
     } finally {
       CliExecutionBindingsFactory.deleteTreeIfExists(workspace);
@@ -238,9 +238,9 @@ class CliExecutionBindingsFactoryTest extends GridGrindCliTestSupport {
     Path scratchParent = workspace.resolve("scratch");
 
     try {
-      CliGrantReadException exception =
+      java.nio.file.NoSuchFileException exception =
           assertThrows(
-              CliGrantReadException.class,
+              java.nio.file.NoSuchFileException.class,
               () ->
                   CliExecutionBindingsFactory.create(
                       Optional.empty(),
@@ -251,7 +251,7 @@ class CliExecutionBindingsFactoryTest extends GridGrindCliTestSupport {
                       standardInputRequest(),
                       InputStream.nullInputStream()));
 
-      assertEquals(missingGrant, exception.grantPath());
+      assertEquals(missingGrant.toString(), exception.getFile());
       assertTrue(Files.notExists(scratchParent));
     } finally {
       CliExecutionBindingsFactory.deleteTreeIfExists(workspace);
@@ -287,14 +287,14 @@ class CliExecutionBindingsFactoryTest extends GridGrindCliTestSupport {
 
   private static Path writeNoOpGrant() throws IOException {
     Path grantPath = Files.createTempFile("gridgrind-cli-grant-", ".json");
-    CliExecutionGrantDocument grant =
-        new CliExecutionGrantDocument(
+    ExecutionGrant grant =
+        new ExecutionGrant(
             List.of(),
             List.of(),
-            new CliGrantTargetAuthority.WorkbookWide(),
-            new CliGrantPublicationAuthority.None(),
+            new ExecutionGrant.WorkbookTargetAuthority.WorkbookWide(),
+            new ExecutionGrant.PublicationAuthority.None(),
             List.of(),
-            new CliGrantAcceptancePolicy.MinimumOnly());
+            new AcceptancePolicy.MinimumOnly());
     Files.write(grantPath, dev.erst.gridgrind.cli.discovery.GridGrindCliJson.writeBytes(grant));
     return grantPath;
   }

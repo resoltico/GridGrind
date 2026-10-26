@@ -25,6 +25,7 @@ public final class CatalogFieldMetadataSupport {
       Set.of(
           String.class,
           SecretReference.class,
+          java.nio.file.Path.class,
           java.time.LocalDate.class,
           java.time.LocalDateTime.class);
   private static final Set<Class<?>> BOOLEAN_FIELD_TYPES = Set.of(boolean.class, Boolean.class);

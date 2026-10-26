@@ -1,7 +1,7 @@
 package dev.erst.gridgrind.cli;
 
+import dev.erst.gridgrind.core.grant.ExecutionGrant;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
-import dev.erst.gridgrind.engine.api.GridGrindExecutionGrant;
 import dev.erst.gridgrind.engine.api.GridGrindRequestInputs;
 import dev.erst.gridgrind.engine.api.GridGrindRequestRequirements;
 import java.io.IOException;
@@ -37,17 +37,12 @@ final class CliExecutionBindingsFactory {
     Objects.requireNonNull(request, "request must not be null");
     Objects.requireNonNull(stdin, "stdin must not be null");
     Path workingDirectory = executionWorkingDirectory(requestPath, executionRootPath);
-    GridGrindExecutionGrant executionGrant =
-        grantPath
-            .map(
-                path -> {
-                  try {
-                    return CliExecutionGrantReader.read(path, Path.of(""));
-                  } catch (IOException exception) {
-                    throw new CliGrantReadException(path, exception);
-                  }
-                })
-            .orElseGet(CliExecutionGrants::denied);
+    ExecutionGrant executionGrant =
+        grantPath.isPresent()
+            ? dev.erst.gridgrind.json.codec.GridGrindJson.readGrant(
+                Files.readAllBytes(grantPath.orElseThrow().toAbsolutePath().normalize()),
+                Path.of(""))
+            : ExecutionGrant.denied();
     Optional<CliFileSecretResolver> secretResolver =
         secretsProviderPath.map(
             path -> {

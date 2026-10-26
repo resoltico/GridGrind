@@ -1,6 +1,7 @@
 package dev.erst.gridgrind.cli;
 
-import dev.erst.gridgrind.cli.discovery.GridGrindCliJson;
+import dev.erst.gridgrind.core.grant.AcceptancePolicy;
+import dev.erst.gridgrind.core.grant.ExecutionGrant;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import dev.erst.gridgrind.core.source.SecretReference;
 import java.io.IOException;
@@ -18,7 +19,7 @@ final class CliGrantFixtureSupport {
 
   static Path noPublication(List<String> operationIds, List<Path> readablePaths)
       throws IOException {
-    return write(operationIds, readablePaths, new CliGrantPublicationAuthority.None());
+    return write(operationIds, readablePaths, new ExecutionGrant.PublicationAuthority.None());
   }
 
   static Path noPublication(
@@ -29,21 +30,24 @@ final class CliGrantFixtureSupport {
     return write(
         operationIds,
         readablePaths,
-        new CliGrantPublicationAuthority.None(),
+        new ExecutionGrant.PublicationAuthority.None(),
         allowedSecretReferences);
   }
 
   static Path noPublicationWithStandardInput(List<String> operationIds) throws IOException {
     Path grantPath = Files.createTempFile("gridgrind-cli-grant-", ".json");
-    CliExecutionGrantDocument document =
-        new CliExecutionGrantDocument(
-            List.of(new CliExecutionGrantDocument.ReadableResource.Stdin()),
+    grantPath.toFile().deleteOnExit();
+    ExecutionGrant document =
+        new ExecutionGrant(
+            List.of(new ExecutionGrant.ReadAuthority.Stdin()),
             operationIds,
-            new CliGrantTargetAuthority.WorkbookWide(),
-            new CliGrantPublicationAuthority.None(),
+            new ExecutionGrant.WorkbookTargetAuthority.WorkbookWide(),
+            new ExecutionGrant.PublicationAuthority.None(),
             List.of(),
-            new CliGrantAcceptancePolicy.MinimumOnly());
-    Files.write(grantPath, GridGrindCliJson.writeBytes(document));
+            new AcceptancePolicy.MinimumOnly());
+    Files.write(
+        grantPath,
+        dev.erst.gridgrind.json.codec.GridGrindJsonOutput.writeGrantBytes(document, false));
     return grantPath;
   }
 
@@ -56,18 +60,19 @@ final class CliGrantFixtureSupport {
     return write(
         operationIds,
         readablePaths,
-        new CliGrantPublicationAuthority.SaveAs(outputPath.toString(), ifExists));
+        new ExecutionGrant.PublicationAuthority.SaveAs(outputPath, ifExists));
   }
 
   static Path overwriteSource(List<String> operationIds, List<Path> readablePaths)
       throws IOException {
-    return write(operationIds, readablePaths, new CliGrantPublicationAuthority.OverwriteSource());
+    return write(
+        operationIds, readablePaths, new ExecutionGrant.PublicationAuthority.OverwriteSource());
   }
 
   private static Path write(
       List<String> operationIds,
       List<Path> readablePaths,
-      CliGrantPublicationAuthority publicationAuthority)
+      ExecutionGrant.PublicationAuthority publicationAuthority)
       throws IOException {
     return write(operationIds, readablePaths, publicationAuthority, List.of());
   }
@@ -75,22 +80,25 @@ final class CliGrantFixtureSupport {
   private static Path write(
       List<String> operationIds,
       List<Path> readablePaths,
-      CliGrantPublicationAuthority publicationAuthority,
+      ExecutionGrant.PublicationAuthority publicationAuthority,
       List<SecretReference> allowedSecretReferences)
       throws IOException {
     Path grantPath = Files.createTempFile("gridgrind-cli-grant-", ".json");
-    CliExecutionGrantDocument document =
-        new CliExecutionGrantDocument(
+    grantPath.toFile().deleteOnExit();
+    ExecutionGrant document =
+        new ExecutionGrant(
             readablePaths.stream()
-                .map(path -> new CliExecutionGrantDocument.ReadableResource.File(path.toString()))
-                .map(CliExecutionGrantDocument.ReadableResource.class::cast)
+                .map(path -> new ExecutionGrant.ReadAuthority.File(path))
+                .map(ExecutionGrant.ReadAuthority.class::cast)
                 .toList(),
             operationIds,
-            new CliGrantTargetAuthority.WorkbookWide(),
+            new ExecutionGrant.WorkbookTargetAuthority.WorkbookWide(),
             publicationAuthority,
             allowedSecretReferences,
-            new CliGrantAcceptancePolicy.MinimumOnly());
-    Files.write(grantPath, GridGrindCliJson.writeBytes(document));
+            new AcceptancePolicy.MinimumOnly());
+    Files.write(
+        grantPath,
+        dev.erst.gridgrind.json.codec.GridGrindJsonOutput.writeGrantBytes(document, false));
     return grantPath;
   }
 }

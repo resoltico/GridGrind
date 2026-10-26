@@ -1,12 +1,12 @@
 package dev.erst.gridgrind.engine.runtime.parity;
 
+import dev.erst.gridgrind.core.grant.ExecutionGrant;
 import dev.erst.gridgrind.core.plan.AssertionStep;
 import dev.erst.gridgrind.core.plan.InspectionStep;
 import dev.erst.gridgrind.core.plan.MutationStep;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import dev.erst.gridgrind.core.plan.WorkbookStep;
 import dev.erst.gridgrind.core.source.SecretReference;
-import dev.erst.gridgrind.engine.api.GridGrindExecutionGrant;
 import dev.erst.gridgrind.engine.runtime.ExecutionInputBindings;
 import dev.erst.gridgrind.excel.WorkbookTempFileFactory;
 import dev.erst.gridgrind.json.codec.GridGrindJsonOutput;
@@ -31,13 +31,13 @@ final class XlsxParitySupport {
     return new ExecutionInputBindings(
         normalizedRoot,
         managedTempRoot(normalizedRoot),
-        new GridGrindExecutionGrant.Bounded(
+        new ExecutionGrant(
             readableResources(request, normalizedRoot),
             request.steps().stream().map(XlsxParitySupport::operationId).distinct().toList(),
-            new GridGrindExecutionGrant.WorkbookTargetAuthority.WorkbookWide(),
+            new ExecutionGrant.WorkbookTargetAuthority.WorkbookWide(),
             publicationAuthority(request.persistence(), normalizedRoot),
             secrets.keySet().stream().toList(),
-            dev.erst.gridgrind.engine.api.GridGrindHostAcceptancePolicy.minimum()),
+            dev.erst.gridgrind.core.grant.AcceptancePolicy.minimum()),
         reference -> secrets.get(reference).toCharArray());
   }
 
@@ -62,13 +62,13 @@ final class XlsxParitySupport {
     return executionRoot.toAbsolutePath().normalize().resolve(MANAGED_TEMP_SEGMENT);
   }
 
-  private static java.util.List<GridGrindExecutionGrant.ReadAuthority> readableResources(
+  private static java.util.List<ExecutionGrant.ReadAuthority> readableResources(
       WorkbookPlan request, Path executionRoot) {
     java.util.List<Path> paths = new java.util.ArrayList<>();
     collectDeclaredPaths(GridGrindJsonOutput.requestTree(request), executionRoot, paths);
     return paths.stream()
         .distinct()
-        .<GridGrindExecutionGrant.ReadAuthority>map(GridGrindExecutionGrant.ReadAuthority.File::new)
+        .<ExecutionGrant.ReadAuthority>map(ExecutionGrant.ReadAuthority.File::new)
         .toList();
   }
 
@@ -143,16 +143,16 @@ final class XlsxParitySupport {
     };
   }
 
-  private static GridGrindExecutionGrant.PublicationAuthority publicationAuthority(
+  private static ExecutionGrant.PublicationAuthority publicationAuthority(
       WorkbookPlan.WorkbookPersistence persistence, Path executionRoot) {
     return switch (persistence) {
       case WorkbookPlan.WorkbookPersistence.None _ ->
-          new GridGrindExecutionGrant.PublicationAuthority.None();
+          new ExecutionGrant.PublicationAuthority.None();
       case WorkbookPlan.WorkbookPersistence.SaveAs saveAs ->
-          new GridGrindExecutionGrant.PublicationAuthority.SaveAs(
+          new ExecutionGrant.PublicationAuthority.SaveAs(
               resolve(saveAs.path(), executionRoot), saveAs.ifExists());
       case WorkbookPlan.WorkbookPersistence.Overwrite _ ->
-          new GridGrindExecutionGrant.PublicationAuthority.OverwriteSource();
+          new ExecutionGrant.PublicationAuthority.OverwriteSource();
     };
   }
 

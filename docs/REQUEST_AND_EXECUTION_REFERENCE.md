@@ -28,7 +28,7 @@ hand-writing JSON.
 
 ## Host Grants, Secrets, And Acceptance
 
-A workbook plan states requested work; it does not authorize that work. Every Java execution receives a host-owned `GridGrindExecutionGrant`, and CLI execution or bound doctoring receives the equivalent document through `--grant <path>`. A CLI invocation without a grant remains structurally analyzable, but no executable plan is admitted: it fails closed with `AUTHORITY_DENIED` before workbook mutation or publication.
+A workbook plan states requested work; it does not authorize that work. Every Java execution receives a host-owned `ExecutionGrant`, and CLI execution or bound doctoring receives the equivalent document through `--grant <path>`. A CLI invocation without a grant remains structurally analyzable, but no executable plan is admitted: it fails closed with `AUTHORITY_DENIED` before workbook mutation or publication.
 
 Start from `gridgrind --print-grant-template --response grant.json`, then grant only the exact file resources, operation IDs, workbook scope, publication destination, secret references, and acceptance policy required by the request. Grant-relative paths resolve from the CLI process working directory, independently of request-owned path resolution. The plan cannot name, broaden, or embed the grant.
 

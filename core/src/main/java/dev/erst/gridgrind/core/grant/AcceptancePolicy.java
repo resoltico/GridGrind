@@ -1,5 +1,7 @@
-package dev.erst.gridgrind.engine.api;
+package dev.erst.gridgrind.core.grant;
 
+import dev.erst.gridgrind.core.metadata.Union;
+import dev.erst.gridgrind.core.metadata.Variant;
 import dev.erst.gridgrind.core.plan.AssertionStep;
 import dev.erst.gridgrind.core.plan.InspectionStep;
 import java.util.LinkedHashSet;
@@ -8,13 +10,18 @@ import java.util.Objects;
 import java.util.Set;
 
 /** Host-required acceptance policy that authored plans cannot weaken. */
-public sealed interface GridGrindHostAcceptancePolicy
-    permits GridGrindHostAcceptancePolicy.MinimumOnly, GridGrindHostAcceptancePolicy.RequireAll {
+@Union(discriminator = "type")
+public sealed interface AcceptancePolicy
+    permits AcceptancePolicy.MinimumOnly, AcceptancePolicy.RequireAll {
   /** Requires the non-disableable staged-artifact structural verification minimum. */
-  record MinimumOnly() implements GridGrindHostAcceptancePolicy {}
+  @Variant(
+      id = "MINIMUM_ONLY",
+      summary = "Require the non-disableable staged-artifact structural minimum.")
+  record MinimumOnly() implements AcceptancePolicy {}
 
   /** Combines independently typed host requirements without nullable policy fields. */
-  record RequireAll(List<Requirement> requirements) implements GridGrindHostAcceptancePolicy {
+  @Variant(id = "REQUIRE_ALL", summary = "Enforce every declared acceptance requirement.")
+  record RequireAll(List<Requirement> requirements) implements AcceptancePolicy {
     public RequireAll {
       Objects.requireNonNull(requirements, "requirements must not be null");
       if (requirements.isEmpty()) {
@@ -25,12 +32,16 @@ public sealed interface GridGrindHostAcceptancePolicy
   }
 
   /** One independently enforced host acceptance requirement. */
+  @Union(discriminator = "type")
   sealed interface Requirement
       permits Requirement.TerminalAssertions,
           Requirement.PreserveInspectionFacts,
           Requirement.PreserveOpaqueOoxmlParts,
           Requirement.RequireCalculation {
     /** Requires these host-owned assertions after plan execution and before publication. */
+    @Variant(
+        id = "TERMINAL_ASSERTIONS",
+        summary = "Require these assertions before final publication.")
     record TerminalAssertions(List<AssertionStep> assertions) implements Requirement {
       public TerminalAssertions {
         Objects.requireNonNull(assertions, "assertions must not be null");
@@ -52,6 +63,9 @@ public sealed interface GridGrindHostAcceptancePolicy
     /**
      * Requires selected facts captured before mutation to be semantically unchanged at acceptance.
      */
+    @Variant(
+        id = "PRESERVE_INSPECTION_FACTS",
+        summary = "Preserve the selected pre-mutation inspection facts.")
     record PreserveInspectionFacts(List<InspectionStep> inspections) implements Requirement {
       public PreserveInspectionFacts {
         Objects.requireNonNull(inspections, "inspections must not be null");
@@ -71,6 +85,9 @@ public sealed interface GridGrindHostAcceptancePolicy
     }
 
     /** Requires named opaque OOXML package parts to remain byte-identical after serialization. */
+    @Variant(
+        id = "PRESERVE_OPAQUE_OOXML_PARTS",
+        summary = "Preserve the named opaque OOXML parts byte-for-byte.")
     record PreserveOpaqueOoxmlParts(List<String> partNames) implements Requirement {
       public PreserveOpaqueOoxmlParts {
         Objects.requireNonNull(partNames, "partNames must not be null");
@@ -107,11 +124,14 @@ public sealed interface GridGrindHostAcceptancePolicy
     /**
      * Requires a strict all-formula evaluation after every plan mutation and before publication.
      */
+    @Variant(
+        id = "REQUIRE_CALCULATION",
+        summary = "Require strict all-formula evaluation before publication.")
     record RequireCalculation() implements Requirement {}
   }
 
   /** Returns the product minimum acceptance policy. */
-  static GridGrindHostAcceptancePolicy minimum() {
+  static AcceptancePolicy minimum() {
     return new MinimumOnly();
   }
 }

@@ -5,6 +5,8 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import dev.erst.gridgrind.core.grant.AcceptancePolicy;
+import dev.erst.gridgrind.core.grant.ExecutionGrant;
 import dev.erst.gridgrind.core.problem.GridGrindProblemCode;
 import dev.erst.gridgrind.core.problem.ProblemContextRequestSurfaces;
 import dev.erst.gridgrind.core.problem.RequestDoctorReport;
@@ -135,15 +137,14 @@ class GridGrindEngineApiPreflightTest {
     return new GridGrindRequestInputs(
         temporaryDirectory,
         temporaryDirectory.resolve("temp-root"),
-        new GridGrindExecutionGrant.Bounded(
+        new ExecutionGrant(
             List.of(
-                new GridGrindExecutionGrant.ReadAuthority.File(
-                    temporaryDirectory.resolve("source.xlsx"))),
+                new ExecutionGrant.ReadAuthority.File(temporaryDirectory.resolve("source.xlsx"))),
             List.of("SET_RANGE"),
-            new GridGrindExecutionGrant.WorkbookTargetAuthority.WorkbookWide(),
-            new GridGrindExecutionGrant.PublicationAuthority.None(),
+            new ExecutionGrant.WorkbookTargetAuthority.WorkbookWide(),
+            new ExecutionGrant.PublicationAuthority.None(),
             List.of(),
-            GridGrindHostAcceptancePolicy.minimum()));
+            AcceptancePolicy.minimum()));
   }
 
   private static String minimalRequest() {

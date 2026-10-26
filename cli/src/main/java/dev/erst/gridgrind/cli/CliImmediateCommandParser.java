@@ -114,7 +114,7 @@ final class CliImmediateCommandParser {
 
   private static Result parseGrantTemplateCommand(int index, Optional<Path> responsePath) {
     return new Result(
-        new CliGrantTemplateCommand(responsePath), index + 1, "--print-grant-template");
+        new CliCommand.PrintGrantTemplate(responsePath), index + 1, "--print-grant-template");
   }
 
   record Result(CliCommand command, int nextIndex, String commandToken) {

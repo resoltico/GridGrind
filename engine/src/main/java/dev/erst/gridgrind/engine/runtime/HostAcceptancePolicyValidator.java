@@ -1,9 +1,9 @@
 package dev.erst.gridgrind.engine.runtime;
 
+import dev.erst.gridgrind.core.grant.AcceptancePolicy;
+import dev.erst.gridgrind.core.grant.ExecutionGrant;
 import dev.erst.gridgrind.core.plan.ExecutionModeSpec;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
-import dev.erst.gridgrind.engine.api.GridGrindExecutionGrant;
-import dev.erst.gridgrind.engine.api.GridGrindHostAcceptancePolicy;
 import java.util.List;
 import java.util.Objects;
 import org.jspecify.annotations.Nullable;
@@ -13,32 +13,30 @@ final class HostAcceptancePolicyValidator {
   private HostAcceptancePolicyValidator() {}
 
   static List<HostAcceptancePolicyViolationException> violations(
-      WorkbookPlan request, GridGrindExecutionGrant executionGrant) {
+      WorkbookPlan request, ExecutionGrant executionGrant) {
     Objects.requireNonNull(request, "request must not be null");
-    GridGrindExecutionGrant.Bounded grant =
-        (GridGrindExecutionGrant.Bounded)
-            Objects.requireNonNull(executionGrant, "executionGrant must not be null");
-    return switch (grant.hostAcceptancePolicy()) {
-      case GridGrindHostAcceptancePolicy.MinimumOnly _ -> List.of();
-      case GridGrindHostAcceptancePolicy.RequireAll requireAll ->
-          violationsFor(requireAll, request);
+    ExecutionGrant grant =
+        Objects.requireNonNull(executionGrant, "executionGrant must not be null");
+    return switch (grant.acceptancePolicy()) {
+      case AcceptancePolicy.MinimumOnly _ -> List.of();
+      case AcceptancePolicy.RequireAll requireAll -> violationsFor(requireAll, request);
     };
   }
 
   private static List<HostAcceptancePolicyViolationException> violationsFor(
-      GridGrindHostAcceptancePolicy.RequireAll requireAll, WorkbookPlan request) {
-    for (GridGrindHostAcceptancePolicy.Requirement requirement : requireAll.requirements()) {
+      AcceptancePolicy.RequireAll requireAll, WorkbookPlan request) {
+    for (AcceptancePolicy.Requirement requirement : requireAll.requirements()) {
       String message =
           switch (requirement) {
-            case GridGrindHostAcceptancePolicy.Requirement.PreserveInspectionFacts _ ->
+            case AcceptancePolicy.Requirement.PreserveInspectionFacts _ ->
                 fullXssfViolation(
                     request, "host semantic preservation requires execution.mode.type=FULL_XSSF");
-            case GridGrindHostAcceptancePolicy.Requirement.PreserveOpaqueOoxmlParts _ ->
+            case AcceptancePolicy.Requirement.PreserveOpaqueOoxmlParts _ ->
                 opaquePartPreservationViolation(request);
-            case GridGrindHostAcceptancePolicy.Requirement.RequireCalculation _ ->
+            case AcceptancePolicy.Requirement.RequireCalculation _ ->
                 fullXssfViolation(
                     request, "host calculation requires execution.mode.type=FULL_XSSF");
-            case GridGrindHostAcceptancePolicy.Requirement.TerminalAssertions _ -> null;
+            case AcceptancePolicy.Requirement.TerminalAssertions _ -> null;
           };
       if (message != null) {
         return List.of(new HostAcceptancePolicyViolationException(message));

@@ -10,6 +10,8 @@ import dev.erst.gridgrind.cli.discovery.RecipeKeywordMatchReport;
 import dev.erst.gridgrind.cli.examples.GridGrindCliRecipe;
 import dev.erst.gridgrind.cli.examples.GridGrindCliRecipeRegistry;
 import dev.erst.gridgrind.cli.examples.GridGrindShippedExamples;
+import dev.erst.gridgrind.core.grant.AcceptancePolicy;
+import dev.erst.gridgrind.core.grant.ExecutionGrant;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import dev.erst.gridgrind.core.problem.GridGrindProblemCode;
 import dev.erst.gridgrind.core.problem.GridGrindProblemDetail;
@@ -34,14 +36,15 @@ class GridGrindCliCatalogCommandTest extends GridGrindCliTestSupport {
         new GridGrindCli()
             .run(new String[] {"--print-grant-template"}, InputStream.nullInputStream(), stdout);
 
-    CliExecutionGrantDocument grant =
-        GridGrindCliJson.readBytes(stdout.toByteArray(), CliExecutionGrantDocument.class);
+    ExecutionGrant grant =
+        dev.erst.gridgrind.json.codec.GridGrindJson.readGrant(
+            stdout.toByteArray(), java.nio.file.Path.of(""));
 
     assertEquals(0, exitCode);
     assertTrue(grant.readableResources().isEmpty());
     assertTrue(grant.operationIds().isEmpty());
-    assertInstanceOf(CliGrantPublicationAuthority.None.class, grant.publicationAuthority());
-    assertInstanceOf(CliGrantAcceptancePolicy.MinimumOnly.class, grant.acceptancePolicy());
+    assertInstanceOf(ExecutionGrant.PublicationAuthority.None.class, grant.publicationAuthority());
+    assertInstanceOf(AcceptancePolicy.MinimumOnly.class, grant.acceptancePolicy());
   }
 
   @Test

@@ -1,8 +1,8 @@
 package dev.erst.gridgrind.engine.runtime;
 
+import dev.erst.gridgrind.core.grant.ExecutionGrant;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import dev.erst.gridgrind.core.source.SecretReference;
-import dev.erst.gridgrind.engine.api.GridGrindExecutionGrant;
 import dev.erst.gridgrind.excel.OoxmlSecurityTestSupport;
 import dev.erst.gridgrind.json.codec.GridGrindJsonOutput;
 import java.io.IOException;
@@ -46,15 +46,15 @@ final class ExecutionInputBindingsFixtureSupport {
   static ExecutionInputBindings bindings(
       Path workingDirectory,
       WorkbookPlan plan,
-      dev.erst.gridgrind.engine.api.GridGrindHostAcceptancePolicy hostAcceptancePolicy) {
-    GridGrindExecutionGrant.Bounded planGrant = grantForPlan(plan, workingDirectory);
+      dev.erst.gridgrind.core.grant.AcceptancePolicy hostAcceptancePolicy) {
+    ExecutionGrant planGrant = grantForPlan(plan, workingDirectory);
     return new ExecutionInputBindings(
         workingDirectory,
         managedTempRoot(workingDirectory),
-        new GridGrindExecutionGrant.Bounded(
+        new ExecutionGrant(
             planGrant.readableResources(),
             planGrant.operationIds(),
-            planGrant.workbookTargetAuthority(),
+            planGrant.targetAuthority(),
             planGrant.publicationAuthority(),
             planGrant.allowedSecretReferences(),
             java.util.Objects.requireNonNull(
@@ -63,15 +63,15 @@ final class ExecutionInputBindingsFixtureSupport {
 
   static ExecutionInputBindings bindings(
       Path workingDirectory, WorkbookPlan plan, Map<SecretReference, String> secrets) {
-    GridGrindExecutionGrant.Bounded planGrant = grantForPlan(plan, workingDirectory);
-    GridGrindExecutionGrant grant =
-        new GridGrindExecutionGrant.Bounded(
+    ExecutionGrant planGrant = grantForPlan(plan, workingDirectory);
+    ExecutionGrant grant =
+        new ExecutionGrant(
             planGrant.readableResources(),
             planGrant.operationIds(),
-            planGrant.workbookTargetAuthority(),
+            planGrant.targetAuthority(),
             planGrant.publicationAuthority(),
             secrets.keySet().stream().toList(),
-            planGrant.hostAcceptancePolicy());
+            planGrant.acceptancePolicy());
     return new ExecutionInputBindings(
         workingDirectory,
         managedTempRoot(workingDirectory),
@@ -88,20 +88,20 @@ final class ExecutionInputBindingsFixtureSupport {
 
   static ExecutionInputBindings bindings(
       Path workingDirectory, WorkbookPlan plan, byte[] standardInputBytes) {
-    GridGrindExecutionGrant.Bounded planGrant = grantForPlan(plan, workingDirectory);
-    List<GridGrindExecutionGrant.ReadAuthority> resources =
+    ExecutionGrant planGrant = grantForPlan(plan, workingDirectory);
+    List<ExecutionGrant.ReadAuthority> resources =
         java.util.stream.Stream.concat(
                 planGrant.readableResources().stream(),
-                java.util.stream.Stream.of(new GridGrindExecutionGrant.ReadAuthority.Stdin()))
+                java.util.stream.Stream.of(new ExecutionGrant.ReadAuthority.Stdin()))
             .toList();
-    GridGrindExecutionGrant grant =
-        new GridGrindExecutionGrant.Bounded(
+    ExecutionGrant grant =
+        new ExecutionGrant(
             resources,
             planGrant.operationIds(),
-            planGrant.workbookTargetAuthority(),
+            planGrant.targetAuthority(),
             planGrant.publicationAuthority(),
             planGrant.allowedSecretReferences(),
-            planGrant.hostAcceptancePolicy());
+            planGrant.acceptancePolicy());
     return new ExecutionInputBindings(
         workingDirectory, managedTempRoot(workingDirectory), standardInputBytes, grant);
   }
@@ -129,17 +129,16 @@ final class ExecutionInputBindingsFixtureSupport {
 
   static PreparedBindings preparedBindings(
       Path workingDirectory, List<Path> readableFiles, Map<SecretReference, String> secrets) {
-    GridGrindExecutionGrant grant =
-        new GridGrindExecutionGrant.Bounded(
+    ExecutionGrant grant =
+        new ExecutionGrant(
             readableFiles.stream()
-                .<GridGrindExecutionGrant.ReadAuthority>map(
-                    GridGrindExecutionGrant.ReadAuthority.File::new)
+                .<ExecutionGrant.ReadAuthority>map(ExecutionGrant.ReadAuthority.File::new)
                 .toList(),
             List.of(),
-            new GridGrindExecutionGrant.WorkbookTargetAuthority.WorkbookWide(),
-            new GridGrindExecutionGrant.PublicationAuthority.None(),
+            new ExecutionGrant.WorkbookTargetAuthority.WorkbookWide(),
+            new ExecutionGrant.PublicationAuthority.None(),
             secrets.keySet().stream().toList(),
-            dev.erst.gridgrind.engine.api.GridGrindHostAcceptancePolicy.minimum());
+            dev.erst.gridgrind.core.grant.AcceptancePolicy.minimum());
     ExecutionInputBindings bindings =
         new ExecutionInputBindings(
             workingDirectory,
@@ -168,39 +167,36 @@ final class ExecutionInputBindingsFixtureSupport {
     return workingDirectory.toAbsolutePath().normalize().resolve(MANAGED_TEMP_SEGMENT);
   }
 
-  static GridGrindExecutionGrant.Bounded noPublicationGrant() {
+  static ExecutionGrant noPublicationGrant() {
     return noPublicationGrant(List.of(), List.of());
   }
 
-  static GridGrindExecutionGrant.Bounded noPublicationGrant(
-      List<String> operationIds, List<Path> readableFiles) {
-    return new GridGrindExecutionGrant.Bounded(
+  static ExecutionGrant noPublicationGrant(List<String> operationIds, List<Path> readableFiles) {
+    return new ExecutionGrant(
         readableFiles.stream()
-            .<GridGrindExecutionGrant.ReadAuthority>map(
-                GridGrindExecutionGrant.ReadAuthority.File::new)
+            .<ExecutionGrant.ReadAuthority>map(ExecutionGrant.ReadAuthority.File::new)
             .toList(),
         operationIds,
-        new GridGrindExecutionGrant.WorkbookTargetAuthority.WorkbookWide(),
-        new GridGrindExecutionGrant.PublicationAuthority.None(),
+        new ExecutionGrant.WorkbookTargetAuthority.WorkbookWide(),
+        new ExecutionGrant.PublicationAuthority.None(),
         List.of(),
-        dev.erst.gridgrind.engine.api.GridGrindHostAcceptancePolicy.minimum());
+        dev.erst.gridgrind.core.grant.AcceptancePolicy.minimum());
   }
 
-  static GridGrindExecutionGrant.Bounded grantForPlan(WorkbookPlan plan, Path workingDirectory) {
+  static ExecutionGrant grantForPlan(WorkbookPlan plan, Path workingDirectory) {
     Path normalizedWorkingDirectory = workingDirectory.toAbsolutePath().normalize();
-    List<GridGrindExecutionGrant.ReadAuthority> readableResources =
+    List<ExecutionGrant.ReadAuthority> readableResources =
         declaredReadableFiles(plan, normalizedWorkingDirectory).stream()
-            .<GridGrindExecutionGrant.ReadAuthority>map(
-                GridGrindExecutionGrant.ReadAuthority.File::new)
+            .<ExecutionGrant.ReadAuthority>map(ExecutionGrant.ReadAuthority.File::new)
             .toList();
-    return new GridGrindExecutionGrant.Bounded(
+    return new ExecutionGrant(
         readableResources,
         plan.steps().stream().map(ExecutionInputBindingPlanFacts::operationId).distinct().toList(),
-        new GridGrindExecutionGrant.WorkbookTargetAuthority.WorkbookWide(),
+        new ExecutionGrant.WorkbookTargetAuthority.WorkbookWide(),
         ExecutionInputBindingPlanFacts.publicationAuthority(
             plan.persistence(), normalizedWorkingDirectory),
         declaredSecretReferences(plan),
-        dev.erst.gridgrind.engine.api.GridGrindHostAcceptancePolicy.minimum());
+        dev.erst.gridgrind.core.grant.AcceptancePolicy.minimum());
   }
 
   private static List<SecretReference> declaredSecretReferences(WorkbookPlan plan) {
@@ -256,14 +252,14 @@ final class ExecutionInputBindingsFixtureSupport {
     return Map.copyOf(values);
   }
 
-  private static GridGrindExecutionGrant.Bounded standardInputGrant() {
-    return new GridGrindExecutionGrant.Bounded(
-        List.of(new GridGrindExecutionGrant.ReadAuthority.Stdin()),
+  private static ExecutionGrant standardInputGrant() {
+    return new ExecutionGrant(
+        List.of(new ExecutionGrant.ReadAuthority.Stdin()),
         List.of(),
-        new GridGrindExecutionGrant.WorkbookTargetAuthority.WorkbookWide(),
-        new GridGrindExecutionGrant.PublicationAuthority.None(),
+        new ExecutionGrant.WorkbookTargetAuthority.WorkbookWide(),
+        new ExecutionGrant.PublicationAuthority.None(),
         List.of(),
-        dev.erst.gridgrind.engine.api.GridGrindHostAcceptancePolicy.minimum());
+        dev.erst.gridgrind.core.grant.AcceptancePolicy.minimum());
   }
 
   private static List<Path> declaredReadableFiles(WorkbookPlan plan, Path workingDirectory) {

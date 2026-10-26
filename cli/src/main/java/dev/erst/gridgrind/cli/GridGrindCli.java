@@ -209,7 +209,7 @@ public final class GridGrindCli {
       case CliCommand.PrintRequestTemplate cmd ->
           GridGrindCliIdentityCommands.requestTemplate(
               cmd, prettyJson, stdout, stderr, responseWriter);
-      case CliGrantTemplateCommand cmd ->
+      case CliCommand.PrintGrantTemplate cmd ->
           GridGrindCliIdentityCommands.grantTemplate(
               cmd, prettyJson, stdout, stderr, responseWriter);
       case CliCommand.PrintRecipeCatalog cmd ->

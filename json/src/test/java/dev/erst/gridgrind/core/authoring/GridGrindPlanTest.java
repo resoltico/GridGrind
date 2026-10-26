@@ -7,6 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import dev.erst.gridgrind.core.grant.ExecutionGrant;
 import dev.erst.gridgrind.core.model.formula.FormulaEnvironmentSpec;
 import dev.erst.gridgrind.core.model.security.OoxmlPersistenceSecuritySpec;
 import dev.erst.gridgrind.core.plan.AssertionStep;
@@ -24,7 +25,6 @@ import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.StepId;
 import dev.erst.gridgrind.core.vocabulary.TableName;
 import dev.erst.gridgrind.engine.api.GridGrindEngine;
-import dev.erst.gridgrind.engine.api.GridGrindExecutionGrant;
 import dev.erst.gridgrind.engine.api.GridGrindProgressSink;
 import dev.erst.gridgrind.engine.api.GridGrindRequestInputs;
 import dev.erst.gridgrind.json.codec.GridGrindJson;
@@ -245,10 +245,9 @@ class GridGrindPlanTest {
                     new GridGrindRequestInputs(
                         tempDir,
                         tempDir.resolve("temp-root"),
-                        new GridGrindExecutionGrant.Bounded(
+                        new ExecutionGrant(
                             List.of(
-                                new GridGrindExecutionGrant.ReadAuthority.File(
-                                    tempDir.resolve("item.txt"))),
+                                new ExecutionGrant.ReadAuthority.File(tempDir.resolve("item.txt"))),
                             List.of(
                                 "ENSURE_SHEET",
                                 "SET_RANGE",
@@ -256,11 +255,11 @@ class GridGrindPlanTest {
                                 "SET_CELL",
                                 "GET_CELLS",
                                 "EXPECT_CELL_VALUE"),
-                            new GridGrindExecutionGrant.WorkbookTargetAuthority.WorkbookWide(),
-                            new GridGrindExecutionGrant.PublicationAuthority.SaveAs(
+                            new ExecutionGrant.WorkbookTargetAuthority.WorkbookWide(),
+                            new ExecutionGrant.PublicationAuthority.SaveAs(
                                 outputPath, WorkbookPlan.WorkbookPersistence.IfExists.REPLACE),
                             List.of(),
-                            dev.erst.gridgrind.engine.api.GridGrindHostAcceptancePolicy.minimum())),
+                            dev.erst.gridgrind.core.grant.AcceptancePolicy.minimum())),
                     GridGrindProgressSink.NOOP));
 
     assertTrue(Files.exists(outputPath));

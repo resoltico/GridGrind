@@ -1283,3 +1283,48 @@ blank-check counts are unchanged (95 reports, 51 snapshots, 13 definitions, 4701
 217 Support classes, 437 blank checks). AGENTS.md baseline diff is empty; supplement absent.
 Detailed red/green tests, before/after packaged observations, golden failure XML and source-location
 proof are retained in external wp-30 evidence. WP-30 remains open for schema/intake integration.
+
+### WP-43 canonical grant checkpoint, brought forward for WP-30
+
+WP-30 requires a grant schema, while the canonical core grant appears later as WP-43 (whose only
+prerequisite is WP-22). Brought the real grant model forward to satisfy that dependency. No temporary
+model or compatibility alias was introduced. ExecutionGrant is now one core record with the existing
+read, operation, workbook-scope, publication, secret and acceptance authority. AcceptancePolicy and
+its validated requirements moved from engine API to core. Colocated Union/Variant metadata supplies
+the existing wire identities. Retained all collection copying/deduplication, operation-id grammar,
+selected-sheet validation, exact publication collision policy, nonempty acceptance requirements,
+unique assertion/inspection ids and normalized OOXML part-name checks.
+
+Removed the CLI document/authority/policy mirrors, conversion methods, default-grant helper, grant
+reader and redundant read-exception wrapper. The template command is part of CliCommand and renders
+ExecutionGrant.denied() through json. Missing grants still create no owned scratch space; checked
+file I/O now retains the actual failing path and surfaces IO_ERROR instead of a generic internal
+failure (before/after packaged observations retained). Grant paths remain rooted at the CLI process
+working directory, independently of request-root resolution. Json's immutable per-read context
+resolves relative path literals before the core constructor normalizes them. Its Path codec rejects
+non-string, blank, null and invalid path inputs and writes filesystem strings instead of URI forms.
+A generic mapper read of a relative grant path cannot silently use an ambient directory.
+
+Moved the core acceptance invariant test to its owning module. Replaced the deleted conversion-only
+tests with direct core grant codec tests: every authority/policy family, assertion-versus-inspection
+rejection, explicit/absent/different roots, lexical path normalization, plain-string output, unknown
+fields with otherwise complete input, invalid path scalars and fail-closed round trips. Retained all
+engine grant, permission-denial, publication, acceptance and CLI integration tests. Test grant fixtures
+now use the canonical model and schedule their owned temporary grant files for deletion on JVM exit.
+
+Focused authority/acceptance/codec/CLI checks and standard static/architecture checks pass. The first
+test compilation exposed remaining CLI fixture builders; those now create core grants directly.
+The full ./gradlew check passes in 3m46s: core 329, JSON 367, engine 1512, CLI 588, architecture 41;
+2837 tests with zero failures/errors/skips. All 143 golden cases, including the actual value-changing
+negative control, pass without re-recording any snapshot. Nested Jazzer check passes all 106 support
+tests and 94 deterministic seeds in 31s. Named JPMS modules pass the existing 14 requests, catalog,
+response, twelve scalars and factual NaN, plus the canonical grant round trip. The packaged engine
+JAR contains neither retired grant/policy API class. No mutation or active fuzz campaign ran.
+
+The CLI grant-type inventory is empty (11 -> 0). Main Java 124315 -> 123989, test Java 155058 ->
+154955, Support classes 217 -> 216. JSON files 70 -> 72; Spec/Patch 75/eight, reports 95, snapshots
+51, definitions 13, converter lines 4701 and blank checks 437 are unchanged. Core remains POI/Jackson
+free. AGENTS.md baseline diff is empty; supplement absent. The external metadata prototype derives
+250 definitions directly from the real grant and independently validates its serialized authority,
+alongside all 14 request examples and two actual responses. Publication of all three schemas and
+schema-driven intake remain open in WP-30; do not treat the external prototype as shipped tooling.

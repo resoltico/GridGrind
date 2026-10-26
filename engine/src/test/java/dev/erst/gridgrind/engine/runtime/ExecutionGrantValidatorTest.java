@@ -3,6 +3,7 @@ package dev.erst.gridgrind.engine.runtime;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import dev.erst.gridgrind.core.grant.ExecutionGrant;
 import dev.erst.gridgrind.core.model.formula.FormulaEnvironmentSpec;
 import dev.erst.gridgrind.core.model.security.OoxmlEncryptionSpec;
 import dev.erst.gridgrind.core.model.security.OoxmlPersistenceEncryptionSpec;
@@ -18,7 +19,6 @@ import dev.erst.gridgrind.core.vocabulary.ExcelOoxmlWriteCipher;
 import dev.erst.gridgrind.core.vocabulary.ExcelOoxmlWriteHash;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.StepId;
-import dev.erst.gridgrind.engine.api.GridGrindExecutionGrant;
 import java.nio.file.Path;
 import java.util.List;
 import org.junit.jupiter.api.Test;
@@ -32,30 +32,30 @@ class ExecutionGrantValidatorTest {
   void acceptsAnExactlyAuthorizedSaveAsPlan() {
     WorkbookPlan request = saveAsPlan();
     Path output = root.resolve("report.xlsx");
-    GridGrindExecutionGrant grant =
-        new GridGrindExecutionGrant.Bounded(
+    ExecutionGrant grant =
+        new ExecutionGrant(
             List.of(),
             List.of("ENSURE_SHEET"),
-            new GridGrindExecutionGrant.WorkbookTargetAuthority.WorkbookWide(),
-            new GridGrindExecutionGrant.PublicationAuthority.SaveAs(
+            new ExecutionGrant.WorkbookTargetAuthority.WorkbookWide(),
+            new ExecutionGrant.PublicationAuthority.SaveAs(
                 output, WorkbookPlan.WorkbookPersistence.IfExists.REJECT),
             List.of(),
-            dev.erst.gridgrind.engine.api.GridGrindHostAcceptancePolicy.minimum());
+            dev.erst.gridgrind.core.grant.AcceptancePolicy.minimum());
 
     assertTrue(ExecutionGrantValidator.violations(request, grant, root).isEmpty());
   }
 
   @Test
   void rejectsAnOperationAbsentFromTheHostGrant() {
-    GridGrindExecutionGrant grant =
-        new GridGrindExecutionGrant.Bounded(
+    ExecutionGrant grant =
+        new ExecutionGrant(
             List.of(),
             List.of(),
-            new GridGrindExecutionGrant.WorkbookTargetAuthority.WorkbookWide(),
-            new GridGrindExecutionGrant.PublicationAuthority.SaveAs(
+            new ExecutionGrant.WorkbookTargetAuthority.WorkbookWide(),
+            new ExecutionGrant.PublicationAuthority.SaveAs(
                 root.resolve("report.xlsx"), WorkbookPlan.WorkbookPersistence.IfExists.REJECT),
             List.of(),
-            dev.erst.gridgrind.engine.api.GridGrindHostAcceptancePolicy.minimum());
+            dev.erst.gridgrind.core.grant.AcceptancePolicy.minimum());
 
     List<ExecutionAuthorityDeniedException> violations =
         ExecutionGrantValidator.violations(saveAsPlan(), grant, root);
@@ -67,15 +67,15 @@ class ExecutionGrantValidatorTest {
 
   @Test
   void rejectsConservativeWorkbookWideMutationUnderASheetScopedGrant() {
-    GridGrindExecutionGrant grant =
-        new GridGrindExecutionGrant.Bounded(
+    ExecutionGrant grant =
+        new ExecutionGrant(
             List.of(),
             List.of("ENSURE_SHEET"),
-            new GridGrindExecutionGrant.WorkbookTargetAuthority.SelectedSheets(List.of("Budget")),
-            new GridGrindExecutionGrant.PublicationAuthority.SaveAs(
+            new ExecutionGrant.WorkbookTargetAuthority.SelectedSheets(List.of("Budget")),
+            new ExecutionGrant.PublicationAuthority.SaveAs(
                 root.resolve("report.xlsx"), WorkbookPlan.WorkbookPersistence.IfExists.REJECT),
             List.of(),
-            dev.erst.gridgrind.engine.api.GridGrindHostAcceptancePolicy.minimum());
+            dev.erst.gridgrind.core.grant.AcceptancePolicy.minimum());
 
     List<ExecutionAuthorityDeniedException> violations =
         ExecutionGrantValidator.violations(saveAsPlan(), grant, root);
@@ -99,14 +99,14 @@ class ExecutionGrantValidatorTest {
                     new StepId("summary"),
                     new SheetSelector.ByName(new SheetName("Budget")),
                     new dev.erst.gridgrind.core.plan.SheetIntrospectionQuery.GetSheetSummary())));
-    GridGrindExecutionGrant grant =
-        new GridGrindExecutionGrant.Bounded(
+    ExecutionGrant grant =
+        new ExecutionGrant(
             List.of(),
             List.of("GET_SHEET_SUMMARY"),
-            new GridGrindExecutionGrant.WorkbookTargetAuthority.SelectedSheets(List.of("Budget")),
-            new GridGrindExecutionGrant.PublicationAuthority.None(),
+            new ExecutionGrant.WorkbookTargetAuthority.SelectedSheets(List.of("Budget")),
+            new ExecutionGrant.PublicationAuthority.None(),
             List.of(),
-            dev.erst.gridgrind.engine.api.GridGrindHostAcceptancePolicy.minimum());
+            dev.erst.gridgrind.core.grant.AcceptancePolicy.minimum());
 
     assertTrue(ExecutionGrantValidator.violations(request, grant, root).isEmpty());
   }
@@ -124,14 +124,14 @@ class ExecutionGrantValidatorTest {
                     new StepId("summary"),
                     new SheetSelector.ByName(new SheetName("Ledger")),
                     new dev.erst.gridgrind.core.plan.SheetIntrospectionQuery.GetSheetSummary())));
-    GridGrindExecutionGrant grant =
-        new GridGrindExecutionGrant.Bounded(
+    ExecutionGrant grant =
+        new ExecutionGrant(
             List.of(),
             List.of("GET_SHEET_SUMMARY"),
-            new GridGrindExecutionGrant.WorkbookTargetAuthority.SelectedSheets(List.of("Budget")),
-            new GridGrindExecutionGrant.PublicationAuthority.None(),
+            new ExecutionGrant.WorkbookTargetAuthority.SelectedSheets(List.of("Budget")),
+            new ExecutionGrant.PublicationAuthority.None(),
             List.of(),
-            dev.erst.gridgrind.engine.api.GridGrindHostAcceptancePolicy.minimum());
+            dev.erst.gridgrind.core.grant.AcceptancePolicy.minimum());
 
     List<ExecutionAuthorityDeniedException> violations =
         ExecutionGrantValidator.violations(request, grant, root);
@@ -155,14 +155,14 @@ class ExecutionGrantValidatorTest {
                     new StepId("summary"),
                     new SheetSelector.All(),
                     new dev.erst.gridgrind.core.plan.SheetIntrospectionQuery.GetSheetSummary())));
-    GridGrindExecutionGrant grant =
-        new GridGrindExecutionGrant.Bounded(
+    ExecutionGrant grant =
+        new ExecutionGrant(
             List.of(),
             List.of("GET_SHEET_SUMMARY"),
-            new GridGrindExecutionGrant.WorkbookTargetAuthority.SelectedSheets(List.of("Budget")),
-            new GridGrindExecutionGrant.PublicationAuthority.None(),
+            new ExecutionGrant.WorkbookTargetAuthority.SelectedSheets(List.of("Budget")),
+            new ExecutionGrant.PublicationAuthority.None(),
             List.of(),
-            dev.erst.gridgrind.engine.api.GridGrindHostAcceptancePolicy.minimum());
+            dev.erst.gridgrind.core.grant.AcceptancePolicy.minimum());
 
     assertEquals(
         "host grant requires an exactly resolved target footprint for GET_SHEET_SUMMARY",
@@ -171,14 +171,14 @@ class ExecutionGrantValidatorTest {
 
   @Test
   void rejectsMismatchedSaveAsAndOverwritePublicationAuthorities() {
-    GridGrindExecutionGrant noPublication =
-        new GridGrindExecutionGrant.Bounded(
+    ExecutionGrant noPublication =
+        new ExecutionGrant(
             List.of(),
             List.of("ENSURE_SHEET"),
-            new GridGrindExecutionGrant.WorkbookTargetAuthority.WorkbookWide(),
-            new GridGrindExecutionGrant.PublicationAuthority.None(),
+            new ExecutionGrant.WorkbookTargetAuthority.WorkbookWide(),
+            new ExecutionGrant.PublicationAuthority.None(),
             List.of(),
-            dev.erst.gridgrind.engine.api.GridGrindHostAcceptancePolicy.minimum());
+            dev.erst.gridgrind.core.grant.AcceptancePolicy.minimum());
     WorkbookPlan overwrite =
         WorkbookPlan.standard(
             new WorkbookPlan.WorkbookSource.ExistingFile("input.xlsx"),
@@ -195,27 +195,27 @@ class ExecutionGrantValidatorTest {
     assertEquals(
         "host grant does not permit overwriting the source workbook",
         ExecutionGrantValidator.violations(overwrite, noPublication, root).getLast().getMessage());
-    GridGrindExecutionGrant wrongSaveAs =
-        new GridGrindExecutionGrant.Bounded(
+    ExecutionGrant wrongSaveAs =
+        new ExecutionGrant(
             List.of(),
             List.of("ENSURE_SHEET"),
-            new GridGrindExecutionGrant.WorkbookTargetAuthority.WorkbookWide(),
-            new GridGrindExecutionGrant.PublicationAuthority.SaveAs(
+            new ExecutionGrant.WorkbookTargetAuthority.WorkbookWide(),
+            new ExecutionGrant.PublicationAuthority.SaveAs(
                 root.resolve("different.xlsx"), WorkbookPlan.WorkbookPersistence.IfExists.REPLACE),
             List.of(),
-            dev.erst.gridgrind.engine.api.GridGrindHostAcceptancePolicy.minimum());
+            dev.erst.gridgrind.core.grant.AcceptancePolicy.minimum());
     assertEquals(
         "host grant does not permit SAVE_AS publication to " + root.resolve("report.xlsx"),
         ExecutionGrantValidator.violations(saveAsPlan(), wrongSaveAs, root).getLast().getMessage());
-    GridGrindExecutionGrant wrongCollisionPolicy =
-        new GridGrindExecutionGrant.Bounded(
+    ExecutionGrant wrongCollisionPolicy =
+        new ExecutionGrant(
             List.of(),
             List.of("ENSURE_SHEET"),
-            new GridGrindExecutionGrant.WorkbookTargetAuthority.WorkbookWide(),
-            new GridGrindExecutionGrant.PublicationAuthority.SaveAs(
+            new ExecutionGrant.WorkbookTargetAuthority.WorkbookWide(),
+            new ExecutionGrant.PublicationAuthority.SaveAs(
                 root.resolve("report.xlsx"), WorkbookPlan.WorkbookPersistence.IfExists.REPLACE),
             List.of(),
-            dev.erst.gridgrind.engine.api.GridGrindHostAcceptancePolicy.minimum());
+            dev.erst.gridgrind.core.grant.AcceptancePolicy.minimum());
     assertEquals(
         "host grant does not permit SAVE_AS publication to " + root.resolve("report.xlsx"),
         ExecutionGrantValidator.violations(saveAsPlan(), wrongCollisionPolicy, root)
@@ -237,15 +237,15 @@ class ExecutionGrantValidatorTest {
             ExecutionPolicySpec.defaults(),
             FormulaEnvironmentSpec.empty(),
             List.of());
-    GridGrindExecutionGrant noSecretGrant =
-        new GridGrindExecutionGrant.Bounded(
+    ExecutionGrant noSecretGrant =
+        new ExecutionGrant(
             List.of(),
             List.of(),
-            new GridGrindExecutionGrant.WorkbookTargetAuthority.WorkbookWide(),
-            new GridGrindExecutionGrant.PublicationAuthority.SaveAs(
+            new ExecutionGrant.WorkbookTargetAuthority.WorkbookWide(),
+            new ExecutionGrant.PublicationAuthority.SaveAs(
                 root.resolve("report.xlsx"), WorkbookPlan.WorkbookPersistence.IfExists.REJECT),
             List.of(),
-            dev.erst.gridgrind.engine.api.GridGrindHostAcceptancePolicy.minimum());
+            dev.erst.gridgrind.core.grant.AcceptancePolicy.minimum());
 
     assertTrue(
         ExecutionGrantValidator.violations(preservedSourceEncryption, noSecretGrant, root)
@@ -279,15 +279,15 @@ class ExecutionGrantValidatorTest {
             ExecutionPolicySpec.defaults(),
             FormulaEnvironmentSpec.empty(),
             List.of());
-    GridGrindExecutionGrant encryptedGrant =
-        new GridGrindExecutionGrant.Bounded(
+    ExecutionGrant encryptedGrant =
+        new ExecutionGrant(
             List.of(),
             List.of(),
-            new GridGrindExecutionGrant.WorkbookTargetAuthority.WorkbookWide(),
-            new GridGrindExecutionGrant.PublicationAuthority.SaveAs(
+            new ExecutionGrant.WorkbookTargetAuthority.WorkbookWide(),
+            new ExecutionGrant.PublicationAuthority.SaveAs(
                 root.resolve("report.xlsx"), WorkbookPlan.WorkbookPersistence.IfExists.REJECT),
             List.of(encryptionPassword),
-            dev.erst.gridgrind.engine.api.GridGrindHostAcceptancePolicy.minimum());
+            dev.erst.gridgrind.core.grant.AcceptancePolicy.minimum());
 
     assertTrue(ExecutionGrantValidator.violations(encrypted, encryptedGrant, root).isEmpty());
   }

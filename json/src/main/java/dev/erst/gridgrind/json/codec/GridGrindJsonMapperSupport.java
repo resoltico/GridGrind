@@ -99,6 +99,8 @@ public final class GridGrindJsonMapperSupport {
             .setValueInstantiators(new RecordDefaultInstantiators())
             .setSerializerModifier(new RecordDefaultSerialization())
             .setDeserializers(new WireScalarDeserializers())
+            .addDeserializer(java.nio.file.Path.class, new GrantPathDeserializer())
+            .addSerializer(java.nio.file.Path.class, new GrantPathSerializer())
             .addSerializer(WireScalar.class, new WireScalarSerializer())
             .addSerializer(Selector.class, new SelectorJsonSerializer());
     registerStepCodec(module, WorkbookStep.class);

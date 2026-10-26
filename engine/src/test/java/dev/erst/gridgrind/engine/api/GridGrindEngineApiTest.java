@@ -10,6 +10,8 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import dev.erst.gridgrind.core.catalog.GridGrindProtocolCatalog;
+import dev.erst.gridgrind.core.grant.AcceptancePolicy;
+import dev.erst.gridgrind.core.grant.ExecutionGrant;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import dev.erst.gridgrind.core.problem.GridGrindProblemCode;
 import dev.erst.gridgrind.core.problem.GridGrindProblemDetail;
@@ -126,14 +128,14 @@ class GridGrindEngineApiTest {
   @Test
   void publicDoctorTranslatesBothStandardInputAndHostSecretBindings() throws IOException {
     SecretReference reference = new SecretReference("provider-password");
-    GridGrindExecutionGrant.Bounded grant =
-        new GridGrindExecutionGrant.Bounded(
-            List.of(new GridGrindExecutionGrant.ReadAuthority.Stdin()),
+    ExecutionGrant grant =
+        new ExecutionGrant(
+            List.of(new ExecutionGrant.ReadAuthority.Stdin()),
             List.of("SET_CELL"),
-            new GridGrindExecutionGrant.WorkbookTargetAuthority.WorkbookWide(),
-            new GridGrindExecutionGrant.PublicationAuthority.None(),
+            new ExecutionGrant.WorkbookTargetAuthority.WorkbookWide(),
+            new ExecutionGrant.PublicationAuthority.None(),
             List.of(reference),
-            GridGrindHostAcceptancePolicy.minimum());
+            AcceptancePolicy.minimum());
     GridGrindRequestInputs standardInputAndSecret =
         new GridGrindRequestInputs(
             Path.of("engine-api-inputs"),
@@ -319,13 +321,13 @@ class GridGrindEngineApiTest {
         noPublicationGrant());
   }
 
-  private static GridGrindExecutionGrant.Bounded noPublicationGrant() {
-    return new GridGrindExecutionGrant.Bounded(
+  private static ExecutionGrant noPublicationGrant() {
+    return new ExecutionGrant(
         List.of(),
         List.of(),
-        new GridGrindExecutionGrant.WorkbookTargetAuthority.WorkbookWide(),
-        new GridGrindExecutionGrant.PublicationAuthority.None(),
+        new ExecutionGrant.WorkbookTargetAuthority.WorkbookWide(),
+        new ExecutionGrant.PublicationAuthority.None(),
         List.of(),
-        GridGrindHostAcceptancePolicy.minimum());
+        AcceptancePolicy.minimum());
   }
 }

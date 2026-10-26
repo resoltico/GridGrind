@@ -1,6 +1,7 @@
 package dev.erst.gridgrind.json.codec;
 
 import dev.erst.gridgrind.core.catalog.Catalog;
+import dev.erst.gridgrind.core.grant.ExecutionGrant;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import dev.erst.gridgrind.core.problem.RequestDoctorReport;
 import dev.erst.gridgrind.core.problem.RequestIntake;
@@ -9,6 +10,7 @@ import dev.erst.gridgrind.json.intake.GridGrindJsonProblemMessageSupport;
 import dev.erst.gridgrind.json.intake.GridGrindRequestDecoder;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Path;
 import java.util.Objects;
 
 /** Shared JSON codec for the GridGrind protocol. */
@@ -44,6 +46,18 @@ public final class GridGrindJson {
   public static RequestIntake analyzeRequest(byte[] bytes) {
     Objects.requireNonNull(bytes, "bytes must not be null");
     return GridGrindRequestDecoder.analyze(bytes);
+  }
+
+  /** Reads one explicit authority document using the supplied root for its relative paths. */
+  public static ExecutionGrant readGrant(byte[] bytes, Path root) throws IOException {
+    Objects.requireNonNull(bytes, "bytes must not be null");
+    Objects.requireNonNull(root, "root must not be null");
+    return Objects.requireNonNull(
+        GridGrindJsonMapperSupport.JSON_MAPPER
+            .readerFor(ExecutionGrant.class)
+            .withAttribute(GrantPathDeserializer.ROOT_ATTRIBUTE, root.toAbsolutePath().normalize())
+            .readValue(bytes),
+        "Grant document must not be null");
   }
 
   /** Reads a response from an input stream without closing the caller-owned stream. */

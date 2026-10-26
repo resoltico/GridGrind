@@ -4,6 +4,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 
 import dev.erst.gridgrind.cli.discovery.GridGrindCliJson;
+import dev.erst.gridgrind.core.grant.AcceptancePolicy;
+import dev.erst.gridgrind.core.grant.ExecutionGrant;
 import dev.erst.gridgrind.core.problem.GridGrindProblemCode;
 import dev.erst.gridgrind.core.result.WorkbookResult;
 import dev.erst.gridgrind.json.codec.GridGrindJson;
@@ -80,14 +82,14 @@ class GridGrindCliExecutionGrantIntegrationTest {
 
   private Path writeGrant(List<String> operationIds) throws java.io.IOException {
     Path grant = Files.createTempFile("gridgrind-cli-execution-grant-", ".json");
-    CliExecutionGrantDocument document =
-        new CliExecutionGrantDocument(
+    ExecutionGrant document =
+        new ExecutionGrant(
             List.of(),
             operationIds,
-            new CliGrantTargetAuthority.WorkbookWide(),
-            new CliGrantPublicationAuthority.None(),
+            new ExecutionGrant.WorkbookTargetAuthority.WorkbookWide(),
+            new ExecutionGrant.PublicationAuthority.None(),
             List.of(),
-            new CliGrantAcceptancePolicy.MinimumOnly());
+            new AcceptancePolicy.MinimumOnly());
     Files.write(grant, GridGrindCliJson.writeBytes(document));
     return grant;
   }

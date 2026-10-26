@@ -2,6 +2,8 @@ package dev.erst.gridgrind.cli;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.core.grant.AcceptancePolicy;
+import dev.erst.gridgrind.core.grant.ExecutionGrant;
 import dev.erst.gridgrind.core.result.WorkbookResult;
 import dev.erst.gridgrind.json.codec.GridGrindJson;
 import java.io.ByteArrayInputStream;
@@ -135,13 +137,13 @@ class AppTest {
     Files.write(
         grant,
         dev.erst.gridgrind.cli.discovery.GridGrindCliJson.writeBytes(
-            new CliExecutionGrantDocument(
+            new ExecutionGrant(
                 List.of(),
                 List.of(),
-                new CliGrantTargetAuthority.WorkbookWide(),
-                new CliGrantPublicationAuthority.None(),
+                new ExecutionGrant.WorkbookTargetAuthority.WorkbookWide(),
+                new ExecutionGrant.PublicationAuthority.None(),
                 List.of(),
-                new CliGrantAcceptancePolicy.MinimumOnly())));
+                new AcceptancePolicy.MinimumOnly())));
     return grant;
   }
 

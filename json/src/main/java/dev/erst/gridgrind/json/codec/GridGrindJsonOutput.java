@@ -4,6 +4,7 @@ import dev.erst.gridgrind.core.catalog.Catalog;
 import dev.erst.gridgrind.core.catalog.CatalogNote;
 import dev.erst.gridgrind.core.catalog.ProtocolStepTemplate;
 import dev.erst.gridgrind.core.catalog.TypeEntry;
+import dev.erst.gridgrind.core.grant.ExecutionGrant;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import dev.erst.gridgrind.core.problem.RequestDoctorReport;
 import dev.erst.gridgrind.core.result.WorkbookResult;
@@ -39,6 +40,12 @@ public final class GridGrindJsonOutput {
   public static byte[] writeRequestBytes(WorkbookPlan request, boolean pretty) throws IOException {
     Objects.requireNonNull(request, "request must not be null");
     return GridGrindJsonCodecSupport.writeBytes(wireWriteMapper(pretty), request);
+  }
+
+  /** Serializes one authority document with canonical filesystem path strings. */
+  public static byte[] writeGrantBytes(ExecutionGrant grant, boolean pretty) throws IOException {
+    Objects.requireNonNull(grant, "grant must not be null");
+    return GridGrindJsonCodecSupport.writeBytes(wireWriteMapper(pretty), grant);
   }
 
   /** Serializes a response to bytes. */

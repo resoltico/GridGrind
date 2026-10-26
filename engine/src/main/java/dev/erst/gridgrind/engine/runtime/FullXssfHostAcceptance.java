@@ -1,12 +1,11 @@
 package dev.erst.gridgrind.engine.runtime;
 
+import dev.erst.gridgrind.core.grant.AcceptancePolicy;
 import dev.erst.gridgrind.core.model.formula.CalculationPolicySpec;
 import dev.erst.gridgrind.core.model.formula.CalculationStrategySpec;
 import dev.erst.gridgrind.core.plan.AssertionResult;
 import dev.erst.gridgrind.core.plan.WorkbookPlan;
 import dev.erst.gridgrind.core.result.WorkbookExecutionEvidence.Preservation;
-import dev.erst.gridgrind.engine.api.GridGrindExecutionGrant;
-import dev.erst.gridgrind.engine.api.GridGrindHostAcceptancePolicy;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Optional;
@@ -24,8 +23,7 @@ final class FullXssfHostAcceptance {
   }
 
   Context capture(FullXssfWorkflowState state, ExecutionInputBindings bindings) throws IOException {
-    GridGrindHostAcceptancePolicy policy =
-        ((GridGrindExecutionGrant.Bounded) bindings.executionGrant()).hostAcceptancePolicy();
+    AcceptancePolicy policy = bindings.executionGrant().acceptancePolicy();
     state.hostAcceptanceSnapshot(
         acceptanceExecutor.captureBeforeMutation(
             policy,
@@ -107,15 +105,14 @@ final class FullXssfHostAcceptance {
     };
   }
 
-  private static boolean requiresStrictCalculation(GridGrindHostAcceptancePolicy policy) {
+  private static boolean requiresStrictCalculation(AcceptancePolicy policy) {
     return switch (policy) {
-      case GridGrindHostAcceptancePolicy.MinimumOnly _ -> false;
-      case GridGrindHostAcceptancePolicy.RequireAll requireAll ->
+      case AcceptancePolicy.MinimumOnly _ -> false;
+      case AcceptancePolicy.RequireAll requireAll ->
           requireAll.requirements().stream()
-              .anyMatch(
-                  GridGrindHostAcceptancePolicy.Requirement.RequireCalculation.class::isInstance);
+              .anyMatch(AcceptancePolicy.Requirement.RequireCalculation.class::isInstance);
     };
   }
 
-  record Context(GridGrindHostAcceptancePolicy policy) {}
+  record Context(AcceptancePolicy policy) {}
 }

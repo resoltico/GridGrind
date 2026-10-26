@@ -454,17 +454,16 @@ class RequestPreflightTest {
         new ExecutionInputBindings(
             temporaryDirectory,
             temporaryDirectory.resolve("scratch"),
-            new dev.erst.gridgrind.engine.api.GridGrindExecutionGrant.Bounded(
+            new dev.erst.gridgrind.core.grant.ExecutionGrant(
                 List.of(),
                 List.of(),
-                new dev.erst.gridgrind.engine.api.GridGrindExecutionGrant.WorkbookTargetAuthority
+                new dev.erst.gridgrind.core.grant.ExecutionGrant.WorkbookTargetAuthority
                     .WorkbookWide(),
-                new dev.erst.gridgrind.engine.api.GridGrindExecutionGrant.PublicationAuthority
-                    .None(),
+                new dev.erst.gridgrind.core.grant.ExecutionGrant.PublicationAuthority.None(),
                 List.of(),
-                new dev.erst.gridgrind.engine.api.GridGrindHostAcceptancePolicy.RequireAll(
+                new dev.erst.gridgrind.core.grant.AcceptancePolicy.RequireAll(
                     List.of(
-                        new dev.erst.gridgrind.engine.api.GridGrindHostAcceptancePolicy.Requirement
+                        new dev.erst.gridgrind.core.grant.AcceptancePolicy.Requirement
                             .PreserveOpaqueOoxmlParts(List.of("/customXml/item1.xml"))))));
 
     RequestPreflight.Result result = RequestPreflight.verify(request, bindings);

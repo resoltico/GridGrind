@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 
+import dev.erst.gridgrind.core.grant.AcceptancePolicy;
 import dev.erst.gridgrind.core.model.formula.FormulaEnvironmentSpec;
 import dev.erst.gridgrind.core.model.value.CellValueSpec;
 import dev.erst.gridgrind.core.plan.CellMutationAction;
@@ -18,7 +19,6 @@ import dev.erst.gridgrind.core.result.WorkbookResult;
 import dev.erst.gridgrind.core.vocabulary.CellAddress;
 import dev.erst.gridgrind.core.vocabulary.SheetName;
 import dev.erst.gridgrind.core.vocabulary.StepId;
-import dev.erst.gridgrind.engine.api.GridGrindHostAcceptancePolicy;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
@@ -114,11 +114,9 @@ class OpaqueOoxmlPartPreservationExecutionTest {
                 new CellMutationAction.SetCell(new CellValueSpec.NumberValue(2)))));
   }
 
-  private static GridGrindHostAcceptancePolicy preservationPolicy(String partName) {
-    return new GridGrindHostAcceptancePolicy.RequireAll(
-        List.of(
-            new GridGrindHostAcceptancePolicy.Requirement.PreserveOpaqueOoxmlParts(
-                List.of(partName))));
+  private static AcceptancePolicy preservationPolicy(String partName) {
+    return new AcceptancePolicy.RequireAll(
+        List.of(new AcceptancePolicy.Requirement.PreserveOpaqueOoxmlParts(List.of(partName))));
   }
 
   private void appendPart(Path archive, String partName, String contents) throws IOException {

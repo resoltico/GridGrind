@@ -1,10 +1,10 @@
 package dev.erst.gridgrind.engine.runtime;
 
+import dev.erst.gridgrind.core.grant.ExecutionGrant;
 import dev.erst.gridgrind.core.plan.AssertionStep;
 import dev.erst.gridgrind.core.plan.InspectionStep;
 import dev.erst.gridgrind.core.plan.MutationStep;
 import dev.erst.gridgrind.core.plan.WorkbookStep;
-import dev.erst.gridgrind.engine.api.GridGrindExecutionGrant;
 import java.nio.file.Path;
 
 /** Derives operation and publication facts for explicit executor-test input bindings. */
@@ -19,17 +19,17 @@ final class ExecutionInputBindingPlanFacts {
     };
   }
 
-  static GridGrindExecutionGrant.PublicationAuthority publicationAuthority(
+  static ExecutionGrant.PublicationAuthority publicationAuthority(
       dev.erst.gridgrind.core.plan.WorkbookPlan.WorkbookPersistence persistence,
       Path workingDirectory) {
     return switch (persistence) {
       case dev.erst.gridgrind.core.plan.WorkbookPlan.WorkbookPersistence.None _ ->
-          new GridGrindExecutionGrant.PublicationAuthority.None();
+          new ExecutionGrant.PublicationAuthority.None();
       case dev.erst.gridgrind.core.plan.WorkbookPlan.WorkbookPersistence.SaveAs saveAs ->
-          new GridGrindExecutionGrant.PublicationAuthority.SaveAs(
+          new ExecutionGrant.PublicationAuthority.SaveAs(
               resolve(saveAs.path(), workingDirectory), saveAs.ifExists());
       case dev.erst.gridgrind.core.plan.WorkbookPlan.WorkbookPersistence.Overwrite _ ->
-          new GridGrindExecutionGrant.PublicationAuthority.OverwriteSource();
+          new ExecutionGrant.PublicationAuthority.OverwriteSource();
     };
   }
 

@@ -6,9 +6,9 @@ import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import dev.erst.gridgrind.core.grant.ExecutionGrant;
 import dev.erst.gridgrind.core.problem.GridGrindWarningCode;
 import dev.erst.gridgrind.core.problem.RequestWarningLocation;
-import dev.erst.gridgrind.engine.api.GridGrindExecutionGrant;
 import dev.erst.gridgrind.excel.WorkbookArtifactWriteDisposition;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -78,14 +78,14 @@ class RequestPathAccessTest {
   @Test
   void rejectsContainedReadsThatAreOutsideTheHostGrant() throws Exception {
     Files.write(executionRoot.resolve("source.txt"), new byte[] {1});
-    GridGrindExecutionGrant grant =
-        new GridGrindExecutionGrant.Bounded(
+    ExecutionGrant grant =
+        new ExecutionGrant(
             List.of(),
             List.of(),
-            new GridGrindExecutionGrant.WorkbookTargetAuthority.WorkbookWide(),
-            new GridGrindExecutionGrant.PublicationAuthority.None(),
+            new ExecutionGrant.WorkbookTargetAuthority.WorkbookWide(),
+            new ExecutionGrant.PublicationAuthority.None(),
             List.of(),
-            dev.erst.gridgrind.engine.api.GridGrindHostAcceptancePolicy.minimum());
+            dev.erst.gridgrind.core.grant.AcceptancePolicy.minimum());
 
     try (RequestPathAccess access =
         new RequestPathAccess(
