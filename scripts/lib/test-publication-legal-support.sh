@@ -23,7 +23,7 @@ verify_publication_legal_contract() {
         die "container publication must not claim one incomplete aggregate license expression for all image contents"
     fi
     grep -Fq 'labels: ${{ steps.meta.outputs.labels }}' "${container_workflow_path}" && die \
-        "container publication still applies metadata-action's repository-level MIT label to the aggregate image"
+        "container publication still applies metadata-action's repository-level license label to the aggregate image"
     grep -Fq 'COPY LICENSE NOTICE PATENTS.md LICENSE-APACHE-2.0 LICENSE-BSD-2-CLAUSE LICENSE-BSD-3-CLAUSE ./' "${dockerfile_path}" || die \
         "Docker builder stage does not receive the canonical legal files required by fat-JAR packaging"
     runtime_base_ref="$(awk '/^FROM azul\/zulu-openjdk:26-jre@sha256:/{print $2; exit}' "${dockerfile_path}")"

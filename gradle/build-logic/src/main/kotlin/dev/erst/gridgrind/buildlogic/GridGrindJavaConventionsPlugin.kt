@@ -112,12 +112,17 @@ class GridGrindJavaConventionsPlugin : Plugin<Project> {
                     override fun execute(jar: Jar) {
                         pruneJarOutputsTask.expectedArchiveFileNames.add(jar.archiveFileName)
                         jar.dependsOn(pruneJarOutputsTask)
+                        if (jar.name != "shadowJar") {
+                            jar.from(repositoryLayout.repositoryRoot.resolve("LICENSE")) {
+                                it.into("META-INF")
+                            }
+                        }
                         jar.manifest.attributes(
                             mapOf(
                                 "Implementation-Title" to project.name,
                                 "Implementation-Version" to project.version,
                                 "Implementation-Vendor" to "Ervins Strauhmanis",
-                                "Implementation-License" to "MIT",
+                                "Implementation-License" to "MPL-2.0",
                             ),
                         )
                     }

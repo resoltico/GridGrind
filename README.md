@@ -179,12 +179,19 @@ gridgrind --print-recipe --lookup DASHBOARD --response dashboard-request.json
 
 ## Legal
 
-GridGrind's own source code is MIT-licensed. The executable JAR also bundles separately licensed
-components under Apache 2.0, MIT-style, Boost 1.0, BSD 2-Clause, and BSD 3-Clause terms; the Jakarta
+GridGrind's own source code is licensed under the Mozilla Public License 2.0 (`MPL-2.0`).
+The executable JAR also bundles separately licensed components under Apache 2.0, MIT-style,
+Boost 1.0, BSD 2-Clause, and BSD 3-Clause terms; the Jakarta
 API terms are formally the Eclipse Distribution License v1.0, whose SPDX identifier is
 `BSD-3-Clause`. The standalone GitHub release JAR embeds the legal files, while Gradle-generated ZIP
 and TAR launcher distributions also place them beside the launcher. `gridgrind --license` prints
 the GridGrind license, third-party notices, and applicable dependency license texts.
+
+Corresponding source is available in [this repository](https://github.com/resoltico/GridGrind);
+use the matching `v<version>` tag or the source archive on the
+[release page](https://github.com/resoltico/GridGrind/releases) for an official executable release.
+Redistributors of modified executables must make the corresponding modified source available
+and tell recipients how to obtain it, as required by MPL 2.0 Section 3.2.
 
 Public source archives additionally include the Apache-2.0 Gradle wrapper. A byte-identical Apache
 POI Custom XML test workbook is present both in the source tree and in the executable JAR's packaged

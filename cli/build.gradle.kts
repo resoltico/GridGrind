@@ -205,7 +205,7 @@ tasks.named<com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar>("shadowJ
     exclude("META-INF/DEPENDENCIES")
 
     // Bundle the curated attribution notice and license texts into META-INF/.
-    // LICENSE is the MIT license for GridGrind's own code.
+    // LICENSE is the MPL 2.0 license for GridGrind's own code.
     // The Apache, BSD 2-Clause, and component-specific BSD 3-Clause files cover all bundled
     // third-party license families not reproduced directly in NOTICE.
     packagedLegalFileNames.forEach { legalFileName ->

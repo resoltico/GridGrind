@@ -191,6 +191,8 @@ guidance_help_stderr="$(tr -d '\r' < "${help_guidance_stderr_path}")"
 [[ -z "${guidance_help_stderr}" ]] || die "${label} --help-guidance wrote unexpected stderr: ${guidance_help_stderr}"
 license_output="$("${launcher[@]}" --license | tr -d '\r')"
 for required_license_snippet in \
+    'Mozilla Public License Version 2.0' \
+    'https://github.com/resoltico/GridGrind/releases' \
     'Jakarta Activation API' \
     'Jakarta XML Binding API' \
     'Bouncy Castle' \

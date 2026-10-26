@@ -1,9 +1,9 @@
 ---
 afad: "5.0.1"
 domain: LEGAL
-updated: "2026-08-31"
+updated: "2026-10-26"
 route:
-  keywords: [gridgrind, patent, patents, legal, dependencies, mit, apache, bsd, container]
+  keywords: [gridgrind, patent, patents, legal, dependencies, mpl, mit, apache, bsd, container]
   questions: ["what patent rights accompany gridgrind", "does gridgrind offer a patent non-assertion pledge", "what patent terms apply to bundled dependencies"]
 ---
 
@@ -15,17 +15,17 @@ license.
 
 ## GridGrind Code
 
-GridGrind's own code is distributed under the MIT License in [LICENSE](LICENSE). That license
-contains broad copyright permissions but no express patent-license clause or patent-retaliation
-clause.
+GridGrind's own code is distributed under the Mozilla Public License 2.0 (`MPL-2.0`)
+in [LICENSE](LICENSE). Section 2.1(b) grants rights under each contributor's licensable Patent
+Claims, subject to the definitions and limitations in Sections 1 and 2.3. Section 5.2 terminates
+license rights in the patent-litigation circumstances it specifies.
 
 No patent search, freedom-to-operate analysis, patent-clearance opinion, or non-infringement
 determination has been performed or is represented by this repository. Absence of a known patent
 claim is not a representation that no relevant patent exists.
 
-GridGrind does not provide a separate patent covenant, patent non-assertion pledge, contributor
-patent agreement, or express patent grant for its own code. If a formal patent grant is needed,
-obtain qualified legal advice rather than relying on repository prose.
+GridGrind does not provide a separate patent covenant, patent non-assertion pledge, or contributor
+patent agreement beyond the rights granted by its license.
 
 ## Bundled JAR Components
 
@@ -34,7 +34,7 @@ resolved component families and preserves their attribution notices.
 
 | Component family | Distributed terms | Express patent clause |
 |:--|:--|:--|
-| GridGrind | MIT | No |
+| GridGrind | MPL-2.0 | Yes, MPL 2.0 Section 2.1(b), subject to Section 2.3 |
 | Apache POI, XMLBeans, Log4j, Santuario, and Commons | Apache-2.0 | Yes, Apache License 2.0 Section 3 |
 | Apache POI Custom XML recipe workbook | Apache-2.0 | Yes, Apache License 2.0 Section 3 |
 | Jackson, SparseBitSet, and Woodstox Core | Apache-2.0 | Yes, Apache License 2.0 Section 3 |
@@ -46,9 +46,9 @@ resolved component families and preserves their attribution notices.
 
 The Apache License patent grant is component-specific. It applies only to patent claims licensable
 by each Apache-licensed component's contributors that are necessarily infringed by their
-contributions as described in Section 3. It does not create a patent grant for GridGrind's MIT-
-licensed code or for components under other licenses. The termination condition in Apache License
-2.0 Section 3 also remains part of those component licenses.
+contributions as described in Section 3. It does not create a patent grant for GridGrind's MPL-licensed
+code or for components under other licenses. The termination condition in Apache License 2.0
+Section 3 also remains part of those component licenses.
 
 MIT and BSD licenses in this distribution do not contain an express patent-license clause. This
 document does not characterize whether any implied patent rights might arise under a particular
@@ -58,7 +58,7 @@ jurisdiction.
 
 The public source tree also includes the Gradle wrapper under Apache-2.0. The component-specific
 Section 3 patent grant and termination terms described above apply to that artifact; they do not
-extend to GridGrind's MIT-licensed code. The Apache POI Custom XML workbook listed in the JAR table
+extend to GridGrind's MPL-licensed code. The Apache POI Custom XML workbook listed in the JAR table
 is also present as a source fixture. [NOTICE](NOTICE) records the exact provenance and distribution
 scope of both artifacts.
 
@@ -66,16 +66,17 @@ scope of both artifacts.
 
 The published container image includes the GridGrind JAR, an Azul Zulu build of OpenJDK, and
 operating-system and font packages. Those additional components retain their own license and patent
-terms; they are not covered by GridGrind's MIT license or by one combined patent statement. Their
+terms; they are not covered by GridGrind's MPL 2.0 license or by one combined patent statement. Their
 legal materials remain in the image's JRE legal directory and package documentation directories,
 and published images include an SBOM attestation for content inventory.
 
 ## Contributors
 
 The repository currently documents no contributor license agreement, developer certificate of
-origin, or separate contributor patent grant. Contributors must have the right to submit their
-work and should not submit material they know they lack permission to contribute. The legal effect
-of a contribution depends on the applicable facts and law; this document does not determine it.
+origin, or separate contributor patent grant. MPL 2.0 Section 2.5 includes a contributor
+representation of sufficient rights. Contributors must have the right to submit their work and
+should not submit material they know they lack permission to contribute. The legal effect of a
+contribution depends on the applicable facts and law; this document does not determine it.
 
 ## Cryptography and Jurisdiction
 

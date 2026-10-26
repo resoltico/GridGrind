@@ -96,13 +96,13 @@ class GridGrindCliHelpTextTest extends GridGrindCliTestSupport {
   }
 
   @Test
-  void licenseTextContainsMitLicenseWhenResourcePresent() {
-    String mit = "MIT License\n\nCopyright (c) 2026 Ervins Strauhmanis\n";
-    InputStream own = new ByteArrayInputStream(mit.getBytes(StandardCharsets.UTF_8));
+  void licenseTextContainsMplLicenseWhenResourcePresent() {
+    String mpl = "Mozilla Public License Version 2.0\n\nCopyright (c) 2026 Ervins Strauhmanis\n";
+    InputStream own = new ByteArrayInputStream(mpl.getBytes(StandardCharsets.UTF_8));
 
     String result = GridGrindCli.licenseText(own, null, null, null, null);
 
-    assertTrue(result.contains("MIT License"));
+    assertTrue(result.contains("Mozilla Public License Version 2.0"));
     assertTrue(result.contains("Ervins Strauhmanis"));
     assertFalse(result.contains("Third-party notices and licenses:"));
   }
@@ -111,6 +111,9 @@ class GridGrindCliHelpTextTest extends GridGrindCliTestSupport {
   void packagedLicenseTextCoversResolvedRuntimeTerms() {
     String result = GridGrindCli.licenseText(GridGrindCli.class);
 
+    assertTrue(result.contains("Mozilla Public License Version 2.0"));
+    assertTrue(result.contains("https://github.com/resoltico/GridGrind/releases"));
+    assertTrue(result.contains("Copyright (c) 2026 Ervins Strauhmanis"));
     assertTrue(result.contains("Jakarta Activation API"));
     assertTrue(result.contains("Jakarta XML Binding API"));
     assertTrue(result.contains("BSD 3-Clause"));
@@ -122,7 +125,7 @@ class GridGrindCliHelpTextTest extends GridGrindCliTestSupport {
 
   @Test
   void licenseTextContainsThirdPartySectionWhenDependencyLicensesPresent() {
-    InputStream own = new ByteArrayInputStream("MIT License\n".getBytes(StandardCharsets.UTF_8));
+    InputStream own = new ByteArrayInputStream("Mozilla Public License Version 2.0\n".getBytes(StandardCharsets.UTF_8));
     InputStream notice = new ByteArrayInputStream("NOTICE info\n".getBytes(StandardCharsets.UTF_8));
     InputStream apache =
         new ByteArrayInputStream("Apache License\n".getBytes(StandardCharsets.UTF_8));
@@ -132,7 +135,7 @@ class GridGrindCliHelpTextTest extends GridGrindCliTestSupport {
 
     String result = GridGrindCli.licenseText(own, notice, apache, bsd2, bsd3);
 
-    assertTrue(result.contains("MIT License"));
+    assertTrue(result.contains("Mozilla Public License Version 2.0"));
     assertTrue(result.contains("Third-party notices and licenses:"));
     assertTrue(result.contains("NOTICE info"));
     assertTrue(result.contains("Apache License"));
@@ -173,13 +176,13 @@ class GridGrindCliHelpTextTest extends GridGrindCliTestSupport {
   void licenseTextAddsOneTrailingNewlineWhenSourceTextOmitsIt() {
     String text =
         GridGrindCli.licenseText(
-            new ByteArrayInputStream("MIT License".getBytes(StandardCharsets.UTF_8)),
+            new ByteArrayInputStream("Mozilla Public License Version 2.0".getBytes(StandardCharsets.UTF_8)),
             null,
             null,
             null,
             null);
 
-    assertEquals("MIT License\n", text);
+    assertEquals("Mozilla Public License Version 2.0\n", text);
   }
 
   @Test

@@ -66,7 +66,7 @@ Release-build reproducibility is part of that contract too:
 - the GHCR publication workflow emits OCI provenance and SBOM attestations for the published
   multi-arch image in addition to the runnable image tags
 - the workflow uses Docker metadata action for tags only; it deliberately does not apply that
-  action's repository-level MIT label set to the aggregate image, whose JRE, operating-system,
+  action's repository-level license label set to the aggregate image, whose JRE, operating-system,
   font, and application contents have several licenses
 - the image exposes GridGrind legal files under `/usr/share/doc/gridgrind`, retains the Zulu JRE
   and Ubuntu package legal material in their standard locations, and omits
